@@ -1,0 +1,660 @@
+"""
+Главный сервис для расчёта натальной карты
+"""
+from datetime import date, time as time_type
+from typing import Dict, Optional
+from uuid import UUID
+from sqlalchemy.orm import Session
+
+from app.services.time_service import TimeService
+from app.services.geocoding_service import GeocodingService
+from app.services.swisseph_engine import SwissEphemerisEngine
+from app.services.special_points_service import SpecialPointsService
+from app.services.dignity_service import DignityService
+from app.utils.constants import get_zodiac_sign, get_degree_in_sign
+from app.database.repositories import UserRepository, NatalChartRepository
+
+
+class NatalChartService:
+    """Главный сервис для расчёта натальной карты (оркестратор)"""
+    
+    def __init__(self, ephe_path: str = None):
+        """
+        Инициализация сервиса
+        
+        Args:
+            ephe_path: Путь к файлам эфемерид Swiss Ephemeris
+        """
+        self.time_service = TimeService()
+        self.geocoding_service = GeocodingService()
+        self.swisseph_engine = SwissEphemerisEngine(ephe_path)
+        self.special_points_service = SpecialPointsService()
+    
+    def calculate_natal_chart(
+        self,
+        birth_date: date,
+        birth_time: time_type,
+        timezone: str,
+        place: Optional[str] = None,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+        house_system: str = 'P',
+        save_to_db: bool = False,
+        db_session: Optional[Session] = None
+    ) -> Dict:
+        """
+        Расчёт полной натальной карты
+
+        Args:
+            birth_date: Дата рождения
+            birth_time: Время рождения
+            timezone: Временная зона
+            place: Название места (опционально)
+            latitude: Широта (опционально)
+            longitude: Долгота (опционально)
+            house_system: Система домов (по умолчанию Placidus)
+            save_to_db: Сохранить результат в БД (по умолчанию False)
+            db_session: SQLAlchemy сессия (обязательна если save_to_db=True)
+
+        Returns:
+            Словарь с полными данными натальной карты (включая user_id если сохранено в БД)
+        """
+        # 1. Получаем координаты
+        lat, lon, place_name = self.geocoding_service.get_coordinates(
+            place=place,
+            latitude=latitude,
+            longitude=longitude
+        )
+        
+        # 2. Конвертируем время в UTC и получаем юлианский день
+        utc_dt, jd = self.time_service.process_birth_time(
+            birth_date, birth_time, timezone
+        )
+        
+        # 3. Рассчитываем планеты
+        planets = self.swisseph_engine.calculate_planets(jd)
+        
+        # 4. Рассчитываем дома и углы
+        houses, angles = self.swisseph_engine.calculate_houses(jd, lat, lon, house_system)
+        
+        # 5. Определяем дома для планет
+        for planet in planets:
+            planet['house'] = self.swisseph_engine.get_planet_house(
+                planet['longitude'], houses
+            )
+        
+        # 6. Рассчитываем специальные точки
+        special_points = self._calculate_special_points(jd, angles, planets, houses)
+        
+        # 7. Рассчитываем конфигурации (Крест Судьбы)
+        configurations = self._calculate_configurations(special_points, houses)
+        
+        # 8. Формируем результат
+        result = {
+            'user_id': None,  # Будет заполнено если save_to_db=True
+            'birth_data': {
+                'date': birth_date.isoformat(),
+                'time': birth_time.isoformat(),
+                'timezone': timezone,
+                'utc_time': utc_dt.isoformat(),
+                'julian_day': jd,
+                'latitude': lat,
+                'longitude': lon,
+                'place': place_name or place,
+            },
+            'planets': planets,
+            'houses': houses,
+            'angles': angles,
+            'special_points': special_points,
+            'configurations': configurations,
+        }
+
+        # 9. Сохраняем в БД если требуется
+        if save_to_db:
+            if db_session is None:
+                raise ValueError("db_session обязательна при save_to_db=True")
+
+            user_id = self._save_to_database(
+                db_session=db_session,
+                birth_date=birth_date,
+                birth_time=birth_time,
+                timezone=timezone,
+                birth_place=place_name or place or f"{lat}, {lon}",
+                lat=lat,
+                lon=lon,
+                julian_day=jd,
+                planets=planets,
+                houses=houses,
+                angles=angles,
+                special_points=special_points,
+                configurations=configurations,
+            )
+
+            # Читаємо повні дані з БД (включаючи похідні: аспекти, конфігурації, тощо)
+            db_result = self.get_natal_chart_from_db(user_id, db_session)
+            if db_result is not None:
+                # Якщо вдалося прочитати з БД, використовуємо ці дані
+                result = db_result
+            else:
+                # Якщо не вдалося прочитати, додаємо user_id до базового результату
+                result['user_id'] = str(user_id)
+
+        return result
+    
+    def _calculate_special_points(
+        self,
+        jd: float,
+        angles: Dict,
+        planets: list,
+        houses: list
+    ) -> Dict:
+        """Расчёт всех специальных точек"""
+        
+        # Получаем данные для расчёта Фортуны
+        sun = next(p for p in planets if p['name'] == 'Sun')
+        moon = next(p for p in planets if p['name'] == 'Moon')
+        asc_lon = angles['ASC']['longitude']
+        
+        # Рассчитываем узлы
+        north_node_lon, south_node_lon = self.special_points_service.calculate_true_nodes(jd)
+        
+        # Рассчитываем Лилит и Селену
+        black_moon_lon = self.special_points_service.calculate_black_moon(jd)
+        white_moon_lon = self.special_points_service.calculate_white_moon(jd)
+        
+        # Рассчитываем Хирон
+        chiron_lon = self.special_points_service.calculate_chiron(jd)
+        
+        # Рассчитываем Фортуну
+        fortune_lon = self.special_points_service.calculate_part_of_fortune(
+            asc_lon, sun['longitude'], moon['longitude'], sun['house']
+        )
+        
+        # Vertex уже есть в angles
+        vertex_lon = angles['Vertex']['longitude']
+        
+        # Анти-Вертекс
+        anti_vertex_lon = (vertex_lon + 180) % 360
+        
+        # Формируем результат
+        special_points = {}
+        
+        for name, lon in [
+            ('TrueNorthNode', north_node_lon),
+            ('TrueSouthNode', south_node_lon),
+            ('BlackMoon', black_moon_lon),
+            ('WhiteMoon', white_moon_lon),
+            ('Fortune', fortune_lon),
+            ('Vertex', vertex_lon),
+            ('AntiVertex', anti_vertex_lon),
+            ('Chiron', chiron_lon),
+        ]:
+            special_points[name] = {
+                'name': name,
+                'longitude': lon,
+                'sign': get_zodiac_sign(lon),
+                'degree_in_sign': get_degree_in_sign(lon),
+                'house': self.swisseph_engine.get_planet_house(lon, houses),
+            }
+        
+        return special_points
+
+    def _calculate_configurations(self, special_points: Dict, houses: list) -> Dict:
+        """Расчёт астрологических конфигураций"""
+
+        configurations = {}
+
+        # Крест Судьбы
+        north_node_lon = special_points['TrueNorthNode']['longitude']
+        fate_cross_points = self.special_points_service.calculate_fate_cross(north_node_lon)
+
+        # Формируем данные для Креста Судьбы
+        fate_cross_data = {
+            'axis': 'LunarNodes',
+            'points': []
+        }
+
+        for point_name, lon in fate_cross_points.items():
+            fate_cross_data['points'].append({
+                'name': point_name,
+                'longitude': lon,
+                'sign': get_zodiac_sign(lon),
+                'degree_in_sign': get_degree_in_sign(lon),
+                'house': self.swisseph_engine.get_planet_house(lon, houses),
+            })
+
+        configurations['FateCross'] = fate_cross_data
+
+        return configurations
+
+    def _enrich_planets_with_properties(
+        self,
+        planets: list,
+        db_session: Session
+    ) -> list:
+        """
+        Обогатить планеты свойствами знаков и достоинствами
+
+        Добавляет к каждой планете:
+        - element (стихия знака: Fire, Earth, Air, Water)
+        - mode (крест знака: Cardinal, Fixed, Mutable)
+        - dignity (достоинство планеты: domicile, exaltation, detriment, fall, neutral)
+
+        Args:
+            planets: Список планет с базовыми данными
+            db_session: SQLAlchemy сессия
+
+        Returns:
+            Обогащённый список планет
+        """
+        dignity_service = DignityService(db_session)
+
+        for planet in planets:
+            sign = planet['sign']
+            planet_name = planet['name']
+
+            # Получаем свойства знака
+            sign_props = dignity_service.get_sign_properties(sign)
+
+            # Добавляем стихию и крест
+            planet['element'] = sign_props.get('element', '')
+            planet['mode'] = sign_props.get('mode', '')
+
+            # Определяем достоинство
+            planet['dignity'] = dignity_service.calculate_dignity(planet_name, sign)
+
+        return planets
+
+    def _enrich_houses_with_properties(
+        self,
+        houses: list,
+        db_session: Session
+    ) -> list:
+        """
+        Обогатить дома группами и управителями
+
+        Добавляет к каждому дому:
+        - house_group (группа дома: angular, succedent, cadent)
+        - ruler_planet (управитель дома по знаку на куспиде)
+
+        Args:
+            houses: Список домов с базовыми данными
+            db_session: SQLAlchemy сессия
+
+        Returns:
+            Обогащённый список домов
+        """
+        dignity_service = DignityService(db_session)
+
+        for house in houses:
+            house_number = house['number']
+            sign_on_cusp = house['sign']
+
+            # Определяем группу дома
+            house['house_group'] = dignity_service.get_house_group(house_number)
+
+            # Определяем управителя дома
+            house['ruler_planet'] = dignity_service.get_house_ruler(sign_on_cusp)
+
+        return houses
+
+    def _save_to_database(
+        self,
+        db_session: Session,
+        birth_date: date,
+        birth_time: time_type,
+        timezone: str,
+        birth_place: str,
+        lat: float,
+        lon: float,
+        julian_day: float,
+        planets: list,
+        houses: list,
+        angles: Dict,
+        special_points: Dict,
+        configurations: Dict,
+    ) -> UUID:
+        """
+        Сохранить натальную карту в базу данных
+
+        Args:
+            db_session: SQLAlchemy сессия
+            birth_date: Дата рождения
+            birth_time: Время рождения
+            timezone: Временная зона
+            birth_place: Место рождения
+            lat: Широта
+            lon: Долгота
+            julian_day: Юлианский день
+            planets: Данные планет
+            houses: Данные домов
+            angles: Данные углов
+            special_points: Данные специальных точек
+            configurations: Данные конфигураций
+
+        Returns:
+            UUID: ID созданного пользователя
+        """
+        # Создаём repositories
+        user_repo = UserRepository(db_session)
+        natal_repo = NatalChartRepository(db_session)
+
+        # Создаём пользователя
+        user = user_repo.create_user(
+            birth_date=birth_date,
+            birth_time=birth_time,
+            timezone=timezone,
+            birth_place=birth_place,
+            lat=lat,
+            lon=lon,
+            julian_day=julian_day
+        )
+
+        # ОБОГАЩАЕМ ДАННЫЕ перед сохранением (пункт 3.2 спецификации)
+        # Добавляем element, mode, dignity для планет
+        planets = self._enrich_planets_with_properties(planets, db_session)
+
+        # Добавляем house_group, ruler_planet для домов
+        houses = self._enrich_houses_with_properties(houses, db_session)
+
+        # Разделяем Крест Судьбы и другие конфигурации
+        fate_cross = configurations.get('FateCross') if configurations else None
+        # Пока других конфигураций нет, передаём пустой список
+        other_configs = []
+
+        # Сохраняем натальную карту
+        natal_repo.save_full_natal_chart(
+            user_id=user.user_id,
+            planets=planets,
+            houses=houses,
+            angles=angles,
+            special_points=special_points,
+            fate_cross=fate_cross,
+            configurations=other_configs,
+        )
+
+        # ЭТАП 2: Обчислення похідних (пункт 3.3 спецификації)
+        # Імпортуємо нові сервіси
+        from app.services.aspect_service import AspectService
+        from app.services.configuration_service import ConfigurationService
+        from app.services.cosmogram_service import CosmogramService
+
+        # 1. Розрахунок аспектів
+        aspect_service = AspectService(db_session)
+        aspect_service.calculate_aspects(user.user_id)
+
+        # 2. Виявлення конфігурацій та стеллиумів
+        config_service = ConfigurationService(db_session)
+        config_service.detect_configurations(user.user_id)
+        config_service.detect_stelliums(user.user_id)
+
+        # 3. Аналіз космограми
+        cosmogram_service = CosmogramService(db_session)
+        cosmogram_service.analyze_distribution(user.user_id)
+        cosmogram_service.determine_jones_pattern(user.user_id)
+
+        # ЭТАП 3: Сила и статус планет (пункт 3.4 спецификації)
+        from app.services.planet_strength_service import PlanetStrengthService
+        from app.services.special_roles_service import SpecialRolesService
+
+        # 1. Розрахунок сили планет
+        strength_service = PlanetStrengthService(db_session)
+        strength_service.calculate_all_strengths(user.user_id)
+
+        # 2. Визначення спеціальних ролей
+        roles_service = SpecialRolesService(db_session)
+        roles_service.determine_all_roles(user.user_id)
+
+        return user.user_id
+
+    def get_natal_chart_from_db(self, user_id: UUID, db_session: Session) -> Optional[Dict]:
+        """
+        Получить натальную карту из БД
+
+        Args:
+            user_id: UUID пользователя
+            db_session: SQLAlchemy сессия
+
+        Returns:
+            Optional[Dict]: Данные натальной карты или None
+        """
+        user_repo = UserRepository(db_session)
+        user = user_repo.get_user_with_natal_chart(user_id)
+
+        if not user:
+            return None
+
+        # Вычисляем UTC время
+        from datetime import datetime
+        import pytz
+
+        local_tz = pytz.timezone(user.timezone)
+        local_dt = local_tz.localize(datetime.combine(user.birth_date, user.birth_time))
+        utc_dt = local_dt.astimezone(pytz.UTC)
+
+        # Преобразуем ORM модели в словари
+        result = {
+            'user_id': str(user.user_id),
+            'birth_data': {
+                'date': user.birth_date.isoformat(),
+                'time': user.birth_time.isoformat(),
+                'timezone': user.timezone,
+                'utc_time': utc_dt.strftime('%Y-%m-%d %H:%M:%S'),
+                'julian_day': float(user.julian_day) if user.julian_day else None,
+                'latitude': float(user.lat),
+                'longitude': float(user.lon),
+                'place': user.birth_place,
+            },
+            'planets': [
+                {
+                    'name': p.planet,
+                    'longitude': float(p.degree),
+                    'sign': p.sign,
+                    'degree_in_sign': float(p.degree) % 30,  # Вычисляем градус в знаке
+                    'house': p.house_number,
+                    'retrograde': p.retrograde,
+                    'speed': float(p.speed) if p.speed else None,
+                    # Этап 3.2: Обогащение планет
+                    'element': p.element,
+                    'mode': p.mode,
+                    'dignity': p.dignity,
+                    # Этап 3.4: Сила и роли планет
+                    'strength_score': float(p.strength_score) if p.strength_score else None,
+                    'special_roles': p.special_roles or [],
+                }
+                for p in user.planets
+            ],
+            'houses': [
+                {
+                    'number': h.house_number,
+                    'longitude': float(h.cusp_degree),
+                    'sign': h.sign_on_cusp,
+                    # Этап 3.2: Обогащение домов
+                    'ruler_planet': h.ruler_planet,
+                    'house_group': h.house_group,
+                }
+                for h in sorted(user.houses, key=lambda x: x.house_number)
+            ],
+            'angles': {},
+            'special_points': {},
+            'configurations': {},
+            'aspects': None,
+            'aspect_configurations': None,
+            'stelliums': None,
+            'planet_distribution': None,
+            'cosmogram_pattern': None,
+        }
+
+        # Добавляем углы
+        if user.angles:
+            a = user.angles
+            result['angles'] = {
+                'ASC': {
+                    'name': 'ASC',
+                    'longitude': float(a.asc_degree),
+                    'sign': a.asc_sign,
+                    'degree_in_sign': float(a.asc_degree) % 30
+                },
+                'MC': {
+                    'name': 'MC',
+                    'longitude': float(a.mc_degree),
+                    'sign': a.mc_sign,
+                    'degree_in_sign': float(a.mc_degree) % 30
+                },
+                'IC': {
+                    'name': 'IC',
+                    'longitude': float(a.ic_degree),
+                    'sign': a.ic_sign,
+                    'degree_in_sign': float(a.ic_degree) % 30
+                },
+                'DSC': {
+                    'name': 'DSC',
+                    'longitude': float(a.dsc_degree),
+                    'sign': a.dsc_sign,
+                    'degree_in_sign': float(a.dsc_degree) % 30
+                },
+            }
+            if a.vertex_degree:
+                result['angles']['Vertex'] = {
+                    'name': 'Vertex',
+                    'longitude': float(a.vertex_degree),
+                    'sign': a.vertex_sign,
+                    'degree_in_sign': float(a.vertex_degree) % 30
+                }
+
+        # Добавляем специальные точки
+        for sp in user.special_points:
+            result['special_points'][sp.point] = {
+                'name': sp.point,
+                'longitude': float(sp.degree),
+                'sign': sp.sign,
+                'degree_in_sign': float(sp.degree) % 30,  # Вычисляем градус в знаке
+                'house': sp.house_number,
+            }
+
+        # Добавляем Крест Судьбы (если есть)
+        if user.fate_cross:
+            fc = user.fate_cross
+            # Получаем узлы из special_points
+            north_node = next((sp for sp in user.special_points if sp.point == 'TrueNorthNode'), None)
+            south_node = next((sp for sp in user.special_points if sp.point == 'TrueSouthNode'), None)
+
+            if north_node and south_node:
+                result['configurations']['FateCross'] = {
+                    'axis': 'LunarNodes',
+                    'points': [
+                        {
+                            'name': 'Rahu',
+                            'longitude': float(north_node.degree),
+                            'sign': north_node.sign,
+                            'house': north_node.house_number
+                        },
+                        {
+                            'name': 'Ketu',
+                            'longitude': float(south_node.degree),
+                            'sign': south_node.sign,
+                            'house': south_node.house_number
+                        },
+                        {
+                            'name': 'FateCross1',
+                            'longitude': float(fc.point_1_longitude),
+                            'sign': fc.point_1_sign,
+                            'house': fc.point_1_house
+                        },
+                        {
+                            'name': 'FateCross2',
+                            'longitude': float(fc.point_2_longitude),
+                            'sign': fc.point_2_sign,
+                            'house': fc.point_2_house
+                        }
+                    ]
+                }
+
+        # Добавляем другие конфигурации (пока пусто, будет заполнено на этапе 2)
+        for config in user.configurations:
+            result['configurations'][config.type] = {
+                'planets_involved': config.planets_involved,
+                'houses_involved': config.houses_involved,
+                'element': config.element,
+                'mode': config.mode,
+                'strength_score': float(config.strength_score) if config.strength_score else None,
+            }
+
+        # ДОДАЄМО НОВІ ДАНІ (пункт 3.3 спецификації)
+        from app.database.models import (
+            NatalAspect, NatalConfiguration, NatalStellium,
+            NatalPlanetDistribution, CosmogramPattern
+        )
+
+        # 1. Аспекти
+        aspects = db_session.query(NatalAspect).filter(
+            NatalAspect.user_id == user_id
+        ).all()
+        result['aspects'] = [
+            {
+                'planet_1': a.planet_1,
+                'planet_2': a.planet_2,
+                'aspect_type': a.aspect_type,
+                'orb': float(a.orb),
+                'is_major': a.is_major,
+                'harmonic_type': a.harmonic_type
+            }
+            for a in aspects
+        ]
+
+        # 2. Аспектні конфігурації
+        configurations = db_session.query(NatalConfiguration).filter(
+            NatalConfiguration.user_id == user_id
+        ).all()
+        result['aspect_configurations'] = [
+            {
+                'type': c.type,
+                'planets_involved': c.planets_involved.get('planets', []) if isinstance(c.planets_involved, dict) else c.planets_involved,
+                'apex_planet': c.planets_involved.get('apex_planet') if isinstance(c.planets_involved, dict) else None,
+                'strength_score': float(c.strength_score) if c.strength_score else 0.0
+            }
+            for c in configurations
+        ]
+
+        # 3. Стеллиуми
+        stelliums = db_session.query(NatalStellium).filter(
+            NatalStellium.user_id == user_id
+        ).all()
+        result['stelliums'] = [
+            {
+                'type': s.type,
+                'house_number': s.house_number,
+                'sign': s.sign,
+                'planets': s.planets,
+                'count': s.count,
+                'strength_score': float(s.strength_score) if s.strength_score else 0.0
+            }
+            for s in stelliums
+        ]
+
+        # 4. Розподіл планет
+        distribution = db_session.query(NatalPlanetDistribution).filter(
+            NatalPlanetDistribution.user_id == user_id
+        ).first()
+        if distribution:
+            result['planet_distribution'] = {
+                'min_empty_arc': float(distribution.min_empty_arc) if distribution.min_empty_arc else 0.0,
+                'max_empty_arc': float(distribution.max_empty_arc) if distribution.max_empty_arc else 0.0,
+                'cluster_count': distribution.cluster_count,
+                'spread_map': distribution.spread_map
+            }
+
+        # 5. Фігура Джонса
+        pattern = db_session.query(CosmogramPattern).filter(
+            CosmogramPattern.user_id == user_id
+        ).first()
+        if pattern:
+            result['cosmogram_pattern'] = {
+                'pattern_type': pattern.pattern_type,
+                'anchor_planet': pattern.anchor_planet,
+                'empty_arc_degree': float(pattern.empty_arc_degree) if pattern.empty_arc_degree else 0.0,
+                'special_roles': pattern.special_roles or []
+            }
+
+        return result
+

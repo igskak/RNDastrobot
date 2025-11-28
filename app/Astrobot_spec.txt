@@ -1,0 +1,1101 @@
+Продакт-флоу.
+Ты уже имеешь справочники и схему БД (ниже по документу), теперь вопрос: что за чем вызываем и какие модули нужны.
+Ниже — бизнес-процесс подготовки данных для общего анализа гороскопа (то есть всех блоков плана, не только «Общий срез»).
+
+0. Логика уровней
+Удобно мыслить тремя слоями:
+Геометрия — чистая астрономия: координаты, дома, аспекты. 
+Математика над картой — силы, конфигурации, балансы. 
+Смысловые агрегаты — общие срезы, психо-, тематический, кармический, опоры/задачи. 
+Соответственно, бэкенд можно организовать в модули/скрипты:
+astro_engine — расчёт карты (или внешний сервис). 
+geometry_pipeline — сохранение планет/домов/аспектов. 
+metrics_pipeline — силы, роли, балансы. 
+analysis_general, analysis_psych, analysis_thematic, analysis_karma, analysis_support_challenge. 
+Дальше — по шагам.
+
+1. Ввод и нормализация базовых данных
+Шаг 1. Ввод данных пользователя
+Функция/эндпоинт:
+create_birth_profile(payload) 
+Действия:
+Принимаем: date, time, timezone/offset, place (или координаты). 
+Валидируем (формат, разумные диапазоны). 
+При необходимости определяем координаты места (геокодер). 
+Создаём запись в users и возвращаем user_id. 
+
+2. Получение базовых координат (натальная геометрия)
+Шаг 2. Расчёт натальной карты
+Функция:
+calculate_natal_chart(user_id) 
+Внутри:
+Собираем данные из users. 
+Вызываем внешний/внутренний модуль astro_engine: 
+astro_engine.compute(birth_datetime, lat, lon, house_system) 
+На выходе: 
+список планет с долготой, скоростью, ретро, 
+куспиды домов, 
+ASC, MC, узлы, Лилит/Селена, Фортуна (если движок умеет), и т.д. 
+
+Шаг 3. Сохранение геометрии в БД
+Функция:
+persist_geometry(user_id, chart_data) 
+Действия:
+Заполняем natal_planets 
+определяем sign по долготе, 
+временно без силы/ролей. 
+Заполняем natal_houses (12 строк). 
+Заполняем angles. 
+Заполняем natal_special_points (узлы, Лилит, Селена, Фортуна, Крест и т.п.). 
+На этом этапе у тебя в БД есть «сырая карта».
+
+3. Аспекты, конфигурации, стеллиумы
+Шаг 4. Расчёт аспектов
+Функция:
+compute_aspects(user_id) 
+Данные:
+берём natal_planets + natal_special_points 
+используем ref_aspect_types для углов и орбисов 
+Действия:
+Проходим все пары объектов (планеты/точки). 
+Ищем, попадает ли разница долгот в орбис какого-либо аспекта. 
+Пишем в natal_aspects с полями: 
+aspect_type, orb, is_major, harmonic_type. 
+
+Шаг 5. Конфигурации и стеллиумы
+Функции:
+detect_configurations(user_id) 
+detect_stelliums(user_id) 
+Действия:
+По natal_aspects и правилам из ref_configuration_types ищем Т-квадраты, трины, йоды, кресты и т.п. → natal_configurations. 
+По natal_planets ищем ≥3 планеты в одном знаке / доме → natal_stelliums. 
+
+4. Сила, роли и интегральные балансы
+Шаг 6. Расчёт сил и статусов планет
+Функция:
+compute_planet_strengths(user_id) 
+Данные:
+natal_planets, natal_houses, natal_aspects, natal_configurations, ref_sign_properties, возможно ref_planet_role_weights. 
+Действия:
+Для каждой планеты: 
+смотрим знак → достоинство (обитель/изгнание/экзальтация/падение), 
+учитываем дом (угловой/последующий/падающий), 
+учитываем количество/тип аспектов, 
+участие в конфигурациях/стеллиумах. 
+Считаем strength_score. 
+Ставим флаги special_roles (альмутен, Возничий, Дорифор, ручка ведра и т.п.). 
+Обновляем natal_planets. 
+
+Шаг 7. Интегральные балансы по карте
+Функция:
+compute_integral_balances(user_id) 
+Данные: natal_planets, natal_houses, angles, ref_sign_properties.
+Действия:
+Подсчёт планет по стихиям/крестам/полу → user_element_balance, user_mode_balance, user_gender_balance, user_zones_balance. 
+По домам/углам → 
+user_hemisphere_balance, 
+user_quadrant_balance, 
+user_house_group_balance. 
+
+Шаг 8. Космограмма Джонса
+Функция:
+compute_cosmogram(user_id) 
+Данные: natal_planets.longitude, ref_cosmogram_patterns.
+Действия:
+Считаем распределение планет по кругу → natal_planet_distribution. 
+Определяем тип фигуры (Bowl/Bucket/Locomotive/…) → cosmogram_pattern. 
+
+5. Сборка блока «Общий срез»
+Теперь готовим тот самый первый блок общего анализа.
+Шаг 9. Формирование общего среза
+Функция:
+build_general_overview(user_id) 
+Данные:
+angles, natal_planets, natal_aspects, natal_configurations, natal_stelliums, 
+user_element_balance, user_mode_balance, user_zones_balance, user_hemisphere_balance, user_house_group_balance, 
+cosmogram_pattern. 
+Действия по подпунктам плана:
+ASC: 
+берём знак/градус ASC, определяем стихию, крест, зону (из ref_sign_properties), 
+находим планеты в орбисе соединения с ASC, 
+находим управителя ASC (по знаку), его знак/дом/аспекты. 
+Солнце и Луна: 
+из natal_planets берём их знак, дом, 
+из natal_aspects — аспекты к ним, 
+собираем краткие сводки. 
+Космограмма: 
+из cosmogram_pattern берём тип, якорную планету, пустую дугу. 
+Аспектные конфигурации и стеллиумы: 
+выборка из natal_configurations и natal_stelliums основных фигур. 
+Интегральные показатели: 
+доминирующая стихия, крест, бинер, зоны, полусферы, квадранты, угловые/посл./падающие дома — из user_*_balance. 
+Записываем всё одной записью в general_overview_summary.
+На этом этапе у тебя полностью готов блок «Общий срез».
+
+6. Психологический блок (в том же процессе)
+Шаг 10. Психологический профиль планет
+Функция:
+build_psych_profile(user_id) 
+Данные:
+natal_planets, natal_aspects, 
+психологические справочники: ref_planet_psych_functions, ref_planet_in_sign_psych, ref_planet_in_house_psych, ref_aspect_psych. 
+Действия:
+Для каждой планеты: собираем её знак, дом, аспекты. 
+Тянем соответствующие описания из справочников. 
+Собираем в user_planet_psych_profile. 
+
+Шаг 11. Чакральный анализ
+Функция:
+build_chakra_scores(user_id) 
+Данные:
+natal_planets, natal_aspects, ref_chakra_mapping. 
+Действия:
+Считаем вклад каждой планеты в свою чакру (сила ± аспекты). 
+Суммируем по чакрам → user_chakra_scores. 
+По итоговым баллам определяем ведущие/слабые/блокированные. 
+
+Шаг 12. Интегральный психосрез
+Функция:
+build_psych_summary(user_id) 
+Данные:
+user_planet_psych_profile, user_chakra_scores, user_element_balance, user_mode_balance. 
+Результат:
+заполняем user_psych_summary. 
+
+7. Тематический анализ
+Шаг 13. Анализ домов/сфер
+Функция:
+build_house_thematic_summary(user_id) 
+Данные:
+natal_houses, natal_planets, natal_aspects, ref_house_meanings. 
+Действия:
+Для каждого дома: 
+знак на куспиде, включённый знак, управитель (его знак/дом/аспекты), 
+планеты в доме и их аспекты, 
+сигнификаторы темы (по ref_topic_significators, если дом входит в какую-то тему). 
+Запись в house_thematic_summary. 
+
+Шаг 14. Выделение ведущих тем жизни
+Функция:
+build_life_themes_summary(user_id) 
+Данные:
+natal_planets (дом Солнца, силы), 
+natal_stelliums, 
+house_thematic_summary. 
+Результат:
+подсчёт сильных/слабых домов, дома Солнца, дома стеллиумов → life_themes_summary. 
+
+Шаг 15. Темы: здоровье, карьера, отношения, семья, духовность
+Функция:
+build_topic_summaries(user_id) 
+Данные:
+house_thematic_summary, 
+life_themes_summary, 
+ref_topic_significators, ref_topic_house_weights. 
+Результат:
+topic_health_summary, 
+topic_career_summary, 
+topic_relationships_summary, 
+topic_family_summary, 
+topic_spirituality_summary. 
+
+8. Кармический блок
+Шаг 16. Узлы, Сатурн, Лилит/Селена, Фортуна, Крест
+Функции:
+build_nodes_summary(user_id) → user_nodes_summary 
+build_saturn_summary(user_id) → user_saturn_summary 
+build_lilith_selena_summary(user_id) → user_lilith_selena_summary 
+build_fortune_fate_summary(user_id) → user_fortune_fate_summary 
+Каждая функция берёт соответствующие точки/планеты + их аспекты и тянет интерпретационную «семантику» из кармических справочников.
+
+Шаг 17. Кармический статус планет
+Функция:
+build_planet_karma_status(user_id) 
+Данные:
+natal_planets (баллы, достоинства, дома), 
+natal_aspects (напряжённость/гармоничность), 
+natal_configurations, 
+user_nodes_summary, 
+user_lilith_selena_summary, 
+ref_karma_status_rules. 
+Действия:
+Прогоняем правила из ref_karma_status_rules по каждой планете. 
+Определяем статус: талант / задача / опора / проблема. 
+Записываем в user_planet_karma_status. 
+
+Шаг 18. Общий кармический срез
+Функция:
+build_karma_summary(user_id) 
+Данные:
+узлы, Сатурн, Лилит/Селена, Фортуна, статусы планет. 
+Результат:
+user_karma_summary. 
+
+9. Блоки «На что опираемся» и «Что прорабатываем»
+Шаг 19. Опорные факторы
+Функция:
+build_support_profile(user_id) 
+Данные:
+natal_planets (сильные планеты, в обители/экзальтации, в 1 доме, Возничий), 
+natal_stelliums, 
+natal_aspects (трины, гармоничные соединения), 
+user_nodes_summary (Южный Узел + диспозитор), 
+user_lilith_selena_summary (Белая Луна), 
+ref_support_sources. 
+Результат:
+user_support_factors (по каждому источнику опоры), 
+user_support_summary. 
+
+Шаг 20. Факторы задач и проработки
+Функция:
+build_challenge_profile(user_id) 
+Данные:
+natal_planets (баллы < -3, изгнание/падение), 
+user_nodes_summary (Северный Узел + диспозитор), 
+natal_planets.special_roles (Дорифор), 
+user_lilith_selena_summary (диспозитор Лилит), 
+natal_aspects (квадратуры, оппозиции), 
+ref_challenge_sources. 
+Результат:
+user_challenge_factors, 
+user_challenge_summary. 
+
+10. Выход: готовый «общий анализ»
+После выполнения этих шагов у тебя:
+заполнены все «геометрические» таблицы, 
+посчитаны силы, роли, конфигурации, балансы, 
+построены все агрегаты по блокам. 
+Дальше любой API-эндпоинт типа:
+GET /users/{id}/analysis/general 
+GET /users/{id}/analysis/psychological 
+GET /users/{id}/analysis/thematic 
+GET /users/{id}/analysis/karmic 
+просто читает уже готовые таблицы (*_summary + детальные профили) и кормит это в текстовый генератор/бота.
+То есть вся «тяжёлая математика» и бизнес-логика идут один раз на этапе подготовки данных, а не при каждом запросе гороскопа.
+
+
+
+Начнём с цельной картины, а потом разложим бэкенд-процесс как конвейер.
+
+1. Общая архитектура
+Цель:
+БД и бэкенд, которые из сырых астроданных (как в твоём примере) готовят структурированный набор слоёв:
+Общий срез 
+Психологический гороскоп 
+Тематический анализ 
+Кармический блок 
+Блок «На что опираемся» 
+Блок «Что нарабатываем / прорабатываем» 
+Дальше уже любой «астро-бот» может брать эти слои и собирать интерпретации.
+
+2. Модель данных (ТЗ по таблицам)
+2.1. Базовые сущности (геометрия карты)
+2.1.1. 
+users
+Минимум для связи с картой.
+user_id (PK) 
+birth_date 
+birth_time 
+timezone 
+birth_place 
+lat 
+lon 
+julian_day (опционально) 
+
+2.1.2. 
+natal_planets
+Положение всех реальных планет и условно — Хирон, Узлы, фиктивные точки, если считаем их «планетами».
+user_id (FK) 
+planet (Sun, Moon, Mercury, …, Chiron и т.п.) 
+sign 
+degree (0–360) 
+house_number 
+retrograde (bool) 
+speed 
+dignity (domicile | exaltation | detriment | fall | neutral) 
+strength_score (баллы по курсу) 
+element 
+mode 
+special_roles (json: ["almuten","charioteer","doryphoros","aspect_king"] и т.п.) 
+PK: (user_id, planet).
+
+2.1.3. 
+natal_houses
+Куспиды домов.
+user_id 
+house_number (1–12) 
+sign_on_cusp 
+cusp_degree 
+ruler_planet 
+included_sign (nullable) 
+house_group (angular | succedent | cadent) 
+house_length (по дуге, если нужно) 
+PK: (user_id,house_number).
+
+2.1.4. 
+angles
+Главные углы и важные точки.
+user_id 
+asc_sign, asc_degree 
+mc_sign, mc_degree 
+ic_sign, ic_degree 
+dsc_sign, dsc_degree 
+vertex_sign, vertex_degree (опционально) 
+
+2.1.5. 
+natal_aspects
+Все аспекты между объектами.
+user_id 
+planet_1 
+planet_2 
+aspect_type (conjunction, square, trine, sextile, opposition, плюс миноры) 
+orb 
+is_major (bool) 
+harmonic_type (harmonious | tense | neutral) 
+configuration_id (nullable → ссылку на конфигурации) 
+
+2.1.6. 
+natal_configurations
+Фигуры: тау-квадраты, трины, йоды и т.п.
+user_id 
+config_id (PK) 
+type (T_square, Grand_Trine, Cross, Yod, …) 
+planets_involved (json) 
+houses_involved (json) 
+element / mode (если характерно) 
+strength_score 
+
+2.1.7. 
+natal_stelliums
+Стеллиумы по дому/знаку.
+user_id 
+stellium_id (PK) 
+type (house | sign) 
+house_number (nullable) 
+sign (nullable) 
+planets (json) 
+count 
+strength_score 
+
+2.1.8. 
+natal_special_points
+Узлы, Лилит, Селена, Фортуна, Крест Судьбы и т.п.
+user_id 
+point (TrueNode, MeanNode, BlackMoon, WhiteMoon, Fortune, FateCross, …) 
+sign 
+degree 
+house_number 
+PK: (user_id, point).
+
+2.2. Справочники (reference)
+2.2.1. 
+ref_sign_properties
+sign (PK) 
+element 
+mode 
+gender 
+zone (Brahma / Vishnu / Shiva) 
+life_quadrant (детство/юность/зрелость/старость по знакам) 
+ruler 
+exaltation 
+detriment 
+fall 
+
+2.2.2. 
+ref_house_meanings
+house_number (PK) 
+theme_keywords 
+extended_description 
+main_topics (json) 
+
+2.2.3. 
+ref_cosmogram_patterns
+pattern_type (PK) (Bucket, Bowl, Locomotive, Splash и т.п.) 
+criteria (json) 
+description 
+psychological_meaning 
+
+2.2.4. Психологические справочники
+ref_planet_psych_functions 
+planet (PK) 
+function_core, function_extended, archetype, keywords_positive, keywords_shadow, low_level_manifestation, high_level_manifestation 
+ref_planet_in_sign_psych 
+planet, sign (PK) 
+summary, detailed_description, strengths, risks, defense_mechanisms 
+ref_planet_in_house_psych 
+planet, house_number (PK) 
+summary, detailed_description, life_area_focus, inner_conflicts 
+ref_aspect_psych 
+planet_1, planet_2, aspect_type (PK, с фиксированием порядка) 
+role, summary, detailed_description, typical_patterns, shadow_scenarios 
+ref_chakra_mapping 
+planet (PK) 
+chakra_number, chakra_name, function_description 
+
+2.2.5. Кармические справочники
+ref_node_karma 
+node_type (North | South) 
+sign, house_number (PK) 
+karma_theme, detailed_description, talent_vector, task_vector 
+ref_saturn_karma 
+sign, house_number (PK) 
+summary, detailed_description, lesson_type, common_scenarios 
+ref_lilith_karma 
+sign, house_number (PK) 
+shadow_theme, behavior_patterns, temptation_scenarios, recommended_work 
+ref_selena_karma 
+sign, house_number (PK) 
+light_theme, support_scenarios, talent_activation 
+ref_fortune_karma 
+house_number (PK) 
+summary, gain_type, risks_if_ignored 
+ref_fate_cross_karma 
+pattern_type (PK) 
+involved_houses, summary, karmic_tests 
+ref_karma_status_rules 
+rule_id (PK) 
+rule_type (talent | task | problem | support) 
+description 
+condition_astrology (json; условия по баллам, достоинствам, домам, ролям…) 
+effect (json: status, weight) 
+
+2.2.6. Тематические справочники
+ref_topic_significators 
+topic_code (PK: "health", "career", "relationships", "family", "spirituality", …) 
+primary_houses (json) 
+primary_planets (json) 
+secondary_planets (json) 
+description 
+ref_topic_house_weights 
+topic_code, house_number (PK) 
+weight 
+
+2.2.7. Справочники «опор» и «задач»
+ref_support_sources 
+source_code (PK) 
+name 
+description 
+default_weight 
+ref_challenge_sources 
+source_code (PK) 
+name 
+description 
+default_weight 
+
+2.3. Интегральные балансы
+2.3.1. 
+user_element_balance
+user_id (PK) 
+fire, earth, air, water 
+2.3.2. 
+user_mode_balance
+user_id (PK) 
+cardinal, fixed, mutable 
+2.3.3. 
+user_gender_balance
+user_id (PK) 
+masculine, feminine 
+2.3.4. 
+user_zones_balance
+user_id (PK) 
+brahma, vishnu, shiva 
+2.3.5. 
+user_hemisphere_balance
+user_id (PK) 
+northern, southern, eastern, western 
+2.3.6. 
+user_quadrant_balance
+ (по знакам)
+user_id (PK) 
+quadrant_1, quadrant_2, quadrant_3, quadrant_4 
+2.3.7. 
+user_house_group_balance
+user_id (PK) 
+angular_count, succedent_count, cadent_count 
+
+2.4. Блок «Общий срез»
+2.4.1. 
+natal_planet_distribution
+user_id (PK) 
+min_empty_arc 
+max_empty_arc 
+cluster_count 
+spread_map (json) 
+2.4.2. 
+cosmogram_pattern
+user_id (PK) 
+pattern_type 
+anchor_planet 
+empty_arc_degree 
+special_roles (json) 
+notes 
+2.4.3. 
+general_overview_summary
+user_id (PK) 
+ASC блок: 
+asc_sign, asc_degree, asc_element, asc_mode, asc_zone 
+asc_conjunctions (json) 
+asc_ruler (planet, sign, house, aspects) 
+светила: 
+sun_sign, sun_house, sun_aspect_summary (json) 
+moon_sign, moon_house, moon_aspect_summary (json) 
+космограмма: 
+cosmogram_pattern 
+cosmogram_anchor_planet 
+конфигурации и стеллиумы: 
+main_configurations (json) 
+main_stelliums (json) 
+интегральные: 
+dominant_element 
+dominant_mode 
+dominant_zone 
+dominant_hemisphere 
+angularity_ratio 
+notes (опциональное краткое резюме) 
+
+2.5. Психологический блок
+2.5.1. 
+user_planet_psych_profile
+user_id 
+planet 
+sign 
+house_number 
+retrograde 
+dignity 
+strength_score 
+aspect_summary (json) 
+level_code (low | medium | high, если считаем) 
+dominant_traits (json) 
+shadow_traits (json) 
+tension_score 
+harmony_score 
+is_key_planet (bool) 
+PK: (user_id,planet).
+2.5.2. 
+user_chakra_scores
+user_id 
+chakra_number (1–7) 
+chakra_name 
+score 
+status (dominant | balanced | weak | blocked) 
+key_planets (json) 
+issues (json) 
+potentials (json) 
+PK: (user_id,chakra_number).
+2.5.3. 
+user_psych_summary
+user_id (PK) 
+dominant_element 
+dominant_mode 
+ego_core (json) 
+emotional_core (json) 
+mental_core (json) 
+relational_core (json) 
+conflict_axes (json) 
+development_tasks (json) 
+
+2.6. Тематический анализ
+2.6.1. 
+house_thematic_summary
+На каждую сферу/дом.
+user_id 
+house_number 
+cusp_sign, cusp_degree 
+ruler_planet, ruler_sign, ruler_house 
+ruler_aspect_summary (json) 
+planets_in_house (json) 
+planets_aspects_summary (json) 
+included_sign (nullable) 
+house_strength_score 
+tension_score 
+harmony_score 
+key_topics (json) 
+notes 
+PK: (user_id,house_number).
+
+2.6.2. 
+life_themes_summary
+user_id (PK) 
+almuten_planet 
+almuten_score 
+solar_house 
+solar_sign 
+stellium_house (nullable) 
+stellium_sign (nullable) 
+strong_houses (json) 
+weak_houses (json) 
+most_tense_houses (json) 
+most_harmonious_houses (json) 
+
+2.6.3. Тематические подблоки
+topic_health_summary 
+user_id (PK) 
+houses_involved (json) 
+key_planets, malefic_planets, overall_risk_level, weak_zones, strengths, notes 
+topic_career_summary 
+user_id (PK) 
+houses_involved (json) 
+career_vector, dominant_houses, key_planets, money_profile, work_style, overall_potential, notes 
+topic_relationships_summary 
+user_id (PK) 
+houses_involved (json) 
+love_style, partnership_needs, sexual_profile, house_7_pattern, romantic_risks, overall_relationship_tone, notes 
+topic_family_summary 
+user_id (PK) 
+family_background, parenting_style, partnership_role_in_family, child_related_indicators, notes 
+topic_spirituality_summary 
+user_id (PK) 
+spiritual_vector, key_houses, key_planets, crisis_and_transformation, faith_and_worldview, inner_world, notes 
+
+2.7. Кармический блок
+2.7.1. 
+user_nodes_summary
+user_id (PK) 
+north_node_sign, north_node_house 
+south_node_sign, south_node_house 
+north_node_aspects (json) 
+south_node_aspects (json) 
+north_node_dispositor 
+south_node_dispositor 
+main_talents (json) 
+main_tasks (json) 
+
+2.7.2. 
+user_saturn_summary
+user_id (PK) 
+sign 
+house_number 
+retrograde 
+aspects (json) 
+karma_lessons (json) 
+
+2.7.3. 
+user_lilith_selena_summary
+user_id (PK) 
+black_moon_sign, black_moon_house, black_moon_aspects (json), black_moon_dispositor 
+selena_sign, selena_house, selena_aspects (json) 
+shadow_topics (json) 
+support_topics (json) 
+
+2.7.4. 
+user_fortune_fate_summary
+user_id (PK) 
+fortune_house, fortune_sign, fortune_conjunctions (json) 
+fate_cross_houses (json) 
+fate_cross_planets (json) 
+karmic_turning_points (json) 
+
+2.7.5. 
+user_planet_karma_status
+user_id 
+planet 
+house_number 
+sign 
+function_core 
+strength_score 
+dignity 
+aspect_tension_score 
+aspect_harmony_score 
+is_talent (bool) 
+is_task (bool) 
+status_label 
+life_theme (строка/код: дом+функция) 
+explanation 
+PK: (user_id,planet).
+
+2.7.6. 
+user_karma_summary
+user_id (PK) 
+karmic_talents (json) 
+karmic_tasks (json) 
+main_karmic_axes (json) 
+leading_life_themes (json) 
+support_points (json) 
+challenge_points (json) 
+
+2.8. Блок «На что опираемся»
+2.8.1. 
+user_support_factors
+user_id 
+factor_id (PK) 
+source_code (FK → ref_support_sources) 
+object_type (planet | house | sign | aspect | configuration | point) 
+object_id 
+details (json) 
+weight 
+is_core_support (bool) 
+
+2.8.2. 
+user_support_summary
+user_id (PK) 
+top_planet_supports (json) 
+node_based_supports (json) 
+aspect_supports (json) 
+stellium_supports (json) 
+white_moon_supports (json) 
+global_support_themes (json) 
+
+2.9. Блок «Что нарабатываем / прорабатываем»
+2.9.1. 
+user_challenge_factors
+user_id 
+factor_id (PK) 
+source_code (FK → ref_challenge_sources) 
+object_type (planet | sign | house | aspect | point) 
+object_id 
+details (json) 
+weight 
+is_core_challenge (bool) 
+
+2.9.2. 
+user_challenge_summary
+user_id (PK) 
+weak_planets (json) 
+detriment_and_fall (json) 
+north_node_themes (json) 
+doryphoros (json) 
+black_moon_path (json) 
+major_tense_aspects (json) 
+global_challenge_themes (json) 
+
+3. Бэкенд-процесс подготовки данных
+(для общего плана анализа гороскопа)
+Опишу как конвейер шагов: от входа до того, что все таблицы заполнены.
+
+3.1. Вход
+На вход приходит:
+дата рождения 
+время рождения (с таймзоной или местным временем + зона) 
+место (координаты) 
+Бэкенд:
+нормализует время (UTC, локальное, поправка на летнее) 
+считает юлианский день (при необходимости) 
+отдаёт эти данные внешнему астрологическому движку (или своему модулю), который возвращает: 
+долготy планет 
+куспиды домов 
+ASC, MC, Vertex и т.п. 
+фиктивные точки (если считаются движком). 
+
+3.2. Этап 1 — запись базовой геометрии
+Создать запись в users. 
+Записать в: 
+natal_planets (все тела с долготами, знаком, домом, ретро, скоростью) 
+natal_houses (12 строк для домов) 
+angles 
+natal_special_points (узлы, Лилит, Селена, Фортуна и т.п.) 
+На основе ref_sign_properties сразу проставить: 
+element, mode, dignity планет 
+house_group для домов. 
+
+3.3. Этап 2 — вычисление производных: аспекты, конфигурации, стеллиумы
+По natal_planets и natal_special_points рассчитать аспекты → заполнить natal_aspects. 
+На основе аспектов: 
+выявить конфигурации (Т-квадраты, трины, йоды и т.д.) → natal_configurations 
+определить стеллиумы по дому/знаку → natal_stelliums 
+Вычислить «распределение планет по кругу» → natal_planet_distribution 
+Определить фигуру Джонса по ref_cosmogram_patterns → cosmogram_pattern. 
+
+3.4. Этап 3 — сила и статус планет ✅ РЕАЛИЗОВАНО
+На основе:
+ref_sign_properties (достоинства)
+положения в домах
+угловости домов
+участия в конфигурациях
+рассчитать strength_score для каждой планеты → обновить natal_planets.
+Отметить специальные роли:
+альмутен карты
+Возничий
+Дорифор
+король аспектов   → заполнить special_roles в natal_planets.
+
+СТАТУС РЕАЛИЗАЦИИ (дата: 2025-11-28):
+✅ Реализован расчет силы планет (strength_score) на основе:
+   - Достоинств (обитель/экзальтация/изгнание/падение)
+   - Положения в домах (угловые/последующие/падающие)
+   - Участия в аспектах
+   - Участия в конфигурациях
+✅ Реализовано определение специальных ролей:
+   - Альмутен карты (самая сильная планета)
+   - Возничий (планета перед Солнцем)
+   - Дорифор (планета после Солнца)
+   - Король аспектов (планета с наибольшим количеством аспектов)
+✅ Данные сохраняются в таблицу natal_planets (поля strength_score и special_roles)
+
+3.5. Этап 4 — интегральные балансы
+По natal_planets:
+посчитать стихии, кресты, бинер → user_element_balance, user_mode_balance, user_gender_balance, user_zones_balance. 
+По знакам и долготам:
+полусферы, квадранты → user_hemisphere_balance, user_quadrant_balance. 
+По домам:
+угловые/последующие/падающие → user_house_group_balance. 
+
+3.6. Этап 5 — формирование «Общего среза»
+Используя всё выше:
+ASC-блок: 
+из angles + ref_sign_properties → знак/стихия/модальность/зона ASC; 
+поиск планет в соединении с ASC по natal_planets; 
+определение управителя ASC и его аспектов по natal_aspects. 
+Солнце и Луна: 
+из natal_planets → знаки, дома, аспекты; 
+собрать краткое резюме по светилам. 
+Космограмма: 
+из cosmogram_pattern → тип, якорная планета. 
+Конфигурации и стеллиумы: 
+взять ключевые элементы из natal_configurations, natal_stelliums. 
+Интегральные показатели: 
+из всех user_*_balance таблиц. 
+И всё это записать одной строкой в general_overview_summary.
+На этом этапе у тебя полностью готов блок «Общий срез» для общего плана анализа.
+
+3.7. Этап 6 — психология
+Используя:
+natal_planets, natal_aspects, ref_planet_psych_functions, ref_planet_in_sign_psych, ref_planet_in_house_psych, ref_aspect_psych, ref_chakra_mapping: 
+Для каждой планеты собрать психологический профиль → user_planet_psych_profile. 
+Посчитать вклад планет в чакры → user_chakra_scores. 
+На основании профилей и балансов собрать интегральное резюме → user_psych_summary. 
+
+3.8. Этап 7 — тематический анализ
+Для каждого дома: 
+знак на куспиде, управитель, его положение и аспекты, планеты в доме → house_thematic_summary. 
+На основе сил домов, стеллиумов, дома Солнца: 
+альмутен, ведущие дома → life_themes_summary. 
+На основе ref_topic_significators и ref_topic_house_weights: 
+создать topic_health_summary, topic_career_summary, topic_relationships_summary, topic_family_summary, topic_spirituality_summary. 
+
+3.9. Этап 8 — кармический блок
+Узлы → user_nodes_summary (по natal_special_points, аспектам, диспозиторам). 
+Сатурн → user_saturn_summary. 
+Лилит/Селена → user_lilith_selena_summary. 
+Фортуна и Крест Судьбы → user_fortune_fate_summary. 
+По ref_karma_status_rules + всем данным: 
+оценить кармический статус каждой планеты → user_planet_karma_status; 
+сводка → user_karma_summary. 
+
+3.10. Этап 9 — «опоры» и «задачи»
+На основе: 
+natal_planets.strength_score (>+3 и <−3), 
+достоинств (обитель/экзальтация/изгнание/падение), 
+роли Возничего/Дорифория/альмутена, 
+Южного и Северного Узлов + их диспозиторов, 
+Лилит и Белой Луны, 
+тригонов, гармоничных соединений, квадратур, оппозиций, 
+стеллиумов, 
+и справочников ref_support_sources, ref_challenge_sources: 
+сформировать список опор → user_support_factors 
+и список задач → user_challenge_factors. 
+Аггрегировать: 
+user_support_summary 
+user_challenge_summary. 
+
+Итог: после прохождения этого конвейера у тебя в БД лежит полный структурированный набор данных для «Общего плана анализа гороскопа» из курса. Дальше остаётся «только» подключить слой текстовых генераторов, которые будут брать уже готовые структуры и собирать развернутые интерпретации.
+
+Необходимые справочники.
+Я разделю справочники на ядро (обязательно) и расширение (очень желательно, но можно внедрять поэтапно).
+
+1. Ядро: без этого БД не взлетит
+1.1. Базовая астрология
+1️⃣ ref_sign_properties — Знаки Зодиака
+Что в нём нужно:
+знак 
+стихия (огонь/земля/воздух/вода) 
+крест (кардинальный/фиксированный/мутабельный) 
+пол (муж/жен) 
+зона (Брахма/Вишну/Шива) 
+жизненный квадрант по знакам (детство/юность/зрелость/старость) 
+управитель 
+знак экзальтации, изгнания, падения (для каждой планеты — либо отдельная таблица, либо в явном виде) 
+
+2️⃣ ref_house_meanings — Значения домов
+номер дома 
+ключевые темы (кратко) 
+развёрнутое описание (из курса) 
+основные жизненные сферы (json: self, finance, relationships, etc.) 
+
+3️⃣ ref_aspect_types — Типы аспектов
+название (conjunction, square, trine, …) 
+точный угол (0, 90, 120…) 
+базовый орбис 
+класс (major | minor) 
+характер (harmonious | tense | neutral) 
+«цвет» по Щитову (черный/красный/зелёный/синий, если будешь красить аспекты) 
+
+4️⃣ ref_cosmogram_patterns — Фигуры Джонса
+тип фигуры (Bowl, Bucket, Locomotive, Splash…) 
+критерии распознавания (json: диапазон заполнения, наличие «ручки» и т.д.) 
+описание 
+психологический смысл 
+
+5️⃣ ref_configuration_types — Аспектные конфигурации
+тип (Grand_Trine, T_Square, Cross, Yod, Mystic_Rectangle и т.п.) 
+правила (какие аспекты, как соединены) 
+описание 
+интерпретация (кратко) 
+
+1.2. Психологический слой
+6️⃣ ref_planet_psych_functions — Функции планет
+планета 
+психическая функция (ядро) 
+развёрнутое описание 
+архетип (воин, мать, учитель…) 
+положительные проявления 
+теневая сторона 
+низший/высший уровень проявления 
+
+7️⃣ ref_planet_in_sign_psych — Планета в знаке (психология)
+планета 
+знак 
+краткое описание 
+развёрнутое психологическое описание 
+сильные стороны 
+риски/перекосы 
+типичные защиты 
+
+8️⃣ ref_planet_in_house_psych — Планета в доме (поведенческая психология)
+планета 
+дом 
+краткое описание 
+развёрнутое 
+какие темы дома окрашивает 
+типичные внутренние конфликты 
+
+9️⃣ ref_aspect_psych — Психология аспектов
+планета 1 
+планета 2 
+тип аспекта 
+роль (гармонизация/конфликт/усиление/расщепление) 
+краткое описание 
+развёрнутое описание 
+типичные паттерны 
+теневые сценарии 
+
+🔟 ref_chakra_mapping — Планеты и чакры
+планета 
+номер чакры (1–7) 
+название 
+какой психический слой/функцию отражает 
+
+1.3. Кармический слой
+1️⃣1️⃣ ref_node_karma — Лунные Узлы
+тип узла (Северный/Южный) 
+знак 
+дом 
+кармическая тема 
+развёрнутое описание 
+для ЮУ — наработки 
+для СУ — вектор развития 
+
+1️⃣2️⃣ ref_saturn_karma — Сатурн
+знак 
+дом 
+тип уроков 
+сюжеты/страхи 
+что формирует при проработке 
+
+1️⃣3️⃣ ref_lilith_karma — Чёрная Луна
+знак 
+дом 
+искажение / теневой сценарий 
+искушения, «сливы» 
+как не надо 
+
+1️⃣4️⃣ ref_selena_karma — Белая Луна
+знак 
+дом 
+светлые качества 
+где и как поддерживает 
+как активировать «+» качества 
+
+1️⃣5️⃣ ref_fortune_karma — Колесо Фортуны
+дом 
+через что приходят удача/синхронии 
+при каких настройках проявляется 
+риски, если игнорировать 
+
+1️⃣6️⃣ ref_karma_status_rules — Правила кармического статуса планет
+ID правила 
+тип (talent | task | problem | support) 
+условие (json: баллы, достоинство, дом, роль, аспекты) 
+эффект (json: статус + вес) 
+
+1.4. Тематический слой (здоровье, карьера, отношения и т.д.)
+1️⃣7️⃣ ref_topic_significators — Сигнификаторы тем
+код темы (health, career, relationships, family, spirituality, …) 
+основные дома (список) 
+основные планеты 
+вторичные планеты/точки 
+описание 
+
+1️⃣8️⃣ ref_topic_house_weights — Веса домов в теме
+Для каждой темы — насколько важен каждый дом.
+тема 
+дом 
+вес (0–3 условно) 
+
+1.5. «Опоры» и «задачи» (таланты/недостатки)
+1️⃣9️⃣ ref_support_sources — Источники опоры
+код (strong_planet, planet_in_1st, domicile_exaltation, charioteer, south_node_dispositor, harmonious_trine, stellium, white_moon_sign и т.д.) 
+название 
+описание (почему это ресурс) 
+базовый вес 
+
+2️⃣0️⃣ ref_challenge_sources — Источники задач
+код (weak_planet, detriment, fall, north_node, north_node_dispositor, doryphoros, black_moon_dispositor, square, opposition и т.п.) 
+название 
+описание (почему это задача) 
+базовый вес 
+
+3. Расширение / nice-to-have (можно подключать позже)
+Если хочешь сразу делать систему очень «умной», добавляются:
+3.1. Уровни проработки и паттерны
+21️⃣ ref_psych_levels
+код уровня (низший, средний, высокий) 
+описание 
+признаки 
+22️⃣ ref_planet_level_patterns
+планета 
+уровень 
+как проявляется человек 
+куда развиваться 
+23️⃣ ref_psych_trait_patterns
+код паттерна (perfectionism, control_issues, anxious_mind…) 
+описание 
+правило (json, по каким комбинациям аспектов/положений это срабатывает) 
+приоритет 
+
+3.2. Роли планет
+24️⃣ ref_planet_role_weights
+роль (almuten, charioteer, doryphoros, aspect_king, handle, …) 
+описание 
+вес для психо/кармического анализа 
+
+3.3. Конфигурации (смыслы, а не только геометрия)
+25️⃣ ref_configuration_types (если хочешь подробно интерпретировать конфигурации)
+тип конфигурации 
+структура (какие аспекты, сколько планет) 
+ключевой смысл 
+типичные задачи/таланты 
+
+4. Если коротко: минимальный стартовый набор
+Если резюмировать именно «необходимо подготовить сначала», чтобы все блоки работали:
+ref_sign_properties 
+ref_house_meanings 
+ref_aspect_types 
+ref_cosmogram_patterns 
+ref_planet_psych_functions 
+ref_planet_in_sign_psych 
+ref_planet_in_house_psych 
+ref_aspect_psych 
+ref_chakra_mapping 
+ref_node_karma 
+ref_saturn_karma 
+ref_lilith_karma 
+ref_selena_karma 
+ref_fortune_karma 
+ref_karma_status_rules 
+ref_topic_significators 
+ref_topic_house_weights 
+ref_support_sources 
+ref_challenge_sources 
+Остальное можно наращивать уже по мере того, как вы пишете интерпретации и усложняете логику.
+
+

@@ -1,0 +1,176 @@
+"""
+Pydantic модели для валидации данных API
+"""
+from pydantic import BaseModel, Field, field_validator
+from datetime import date as date_type, time as time_type
+from typing import Optional, List, Dict
+from uuid import UUID
+
+
+class BirthDataInput(BaseModel):
+    """Входные данные для расчёта натальной карты"""
+
+    date: date_type = Field(..., description="Дата рождения (YYYY-MM-DD)")
+    time: time_type = Field(..., description="Время рождения (HH:MM:SS)")
+    timezone: str = Field(..., description="Временная зона (например, 'America/New_York', 'Europe/Kiev')")
+    
+    # Место рождения - либо название, либо координаты
+    place: Optional[str] = Field(None, description="Название места рождения (для геокодирования)")
+    latitude: Optional[float] = Field(None, ge=-90, le=90, description="Широта (-90 до 90)")
+    longitude: Optional[float] = Field(None, ge=-180, le=180, description="Долгота (-180 до 180)")
+    
+    # Система домов
+    house_system: str = Field(default="P", description="Система домов (P=Placidus, K=Koch, W=Whole Sign и т.д.)")
+    
+    @field_validator('house_system')
+    @classmethod
+    def validate_house_system(cls, v: str) -> str:
+        """Валидация системы домов"""
+        valid_systems = ['P', 'K', 'O', 'R', 'C', 'E', 'W', 'X', 'H', 'T', 'B', 'M']
+        if v not in valid_systems:
+            raise ValueError(f'Недопустимая система домов: {v}. Допустимые: {", ".join(valid_systems)}')
+        return v
+    
+    @field_validator('timezone')
+    @classmethod
+    def validate_timezone(cls, v: str) -> str:
+        """Валидация временной зоны"""
+        import pytz
+        try:
+            pytz.timezone(v)
+        except pytz.exceptions.UnknownTimeZoneError:
+            raise ValueError(f'Неизвестная временная зона: {v}')
+        return v
+    
+    def model_post_init(self, __context) -> None:
+        """Проверка после инициализации модели"""
+        # Должны быть указаны либо place, либо координаты
+        if not self.place and (self.latitude is None or self.longitude is None):
+            raise ValueError('Необходимо указать либо place, либо latitude и longitude')
+
+
+class PlanetPosition(BaseModel):
+    """Позиция планеты"""
+    name: str
+    longitude: float = Field(..., ge=0, lt=360)
+    latitude: float = Field(default=0.0)
+    distance: float = Field(default=0.0)
+    speed: float = Field(default=0.0)
+    sign: str
+    degree_in_sign: float = Field(..., ge=0, lt=30)
+    house: int = Field(..., ge=1, le=12)
+    retrograde: bool = Field(default=False)
+    # Новые поля из пункта 3.2 спецификации
+    element: Optional[str] = Field(None, description="Стихия знака (Fire, Earth, Air, Water)")
+    mode: Optional[str] = Field(None, description="Крест знака (Cardinal, Fixed, Mutable)")
+    dignity: Optional[str] = Field(None, description="Достоинство планеты (domicile, exaltation, detriment, fall, neutral)")
+    # Новые поля из пункта 3.4 спецификации
+    strength_score: Optional[float] = Field(None, description="Сила планеты (от -20 до +50)")
+    special_roles: Optional[List[str]] = Field(default=[], description="Специальные роли планеты (almuten, charioteer, doryphoros, aspect_king, handle)")
+
+
+class HousePosition(BaseModel):
+    """Позиция куспида дома"""
+    number: int = Field(..., ge=1, le=12)
+    longitude: float = Field(..., ge=0, lt=360)
+    sign: str
+    # Новые поля из пункта 3.2 спецификации
+    ruler_planet: Optional[str] = Field(None, description="Управитель дома (планета-управитель знака на куспиде)")
+    house_group: Optional[str] = Field(None, description="Группа дома (angular, succedent, cadent)")
+
+
+class AnglePosition(BaseModel):
+    """Позиция угла (ASC, MC, etc.)"""
+    name: str
+    longitude: float = Field(..., ge=0, lt=360)
+    sign: str
+    degree_in_sign: float = Field(..., ge=0, lt=30)
+
+
+class SpecialPointPosition(BaseModel):
+    """Позиция специальной точки"""
+    name: str
+    longitude: float = Field(..., ge=0, lt=360)
+    sign: str
+    degree_in_sign: float = Field(..., ge=0, lt=30)
+    house: int = Field(..., ge=1, le=12)
+
+
+class BirthDataOutput(BaseModel):
+    """Выходные данные о рождении"""
+    date: str
+    time: str
+    timezone: str
+    utc_time: str
+    julian_day: float
+    latitude: float
+    longitude: float
+    place: Optional[str] = None
+
+
+class AspectInfo(BaseModel):
+    """Информация об аспекте"""
+    planet_1: str
+    planet_2: str
+    aspect_type: str
+    orb: float
+    is_major: bool
+    harmonic_type: Optional[str] = None
+
+
+class ConfigurationInfo(BaseModel):
+    """Информация об аспектной конфигурации"""
+    type: str
+    planets_involved: List[str]
+    apex_planet: Optional[str] = None
+    strength_score: float
+
+
+class StelliumInfo(BaseModel):
+    """Информация о стеллиуме"""
+    type: str  # 'house' or 'sign'
+    house_number: Optional[int] = None
+    sign: Optional[str] = None
+    planets: List[str]
+    count: int
+    strength_score: float
+
+
+class CosmogramPatternInfo(BaseModel):
+    """Информация о фигуре Джонса"""
+    pattern_type: str
+    anchor_planet: Optional[str] = None
+    empty_arc_degree: float
+    special_roles: List[str] = []
+
+
+class PlanetDistributionInfo(BaseModel):
+    """Информация о распределении планет"""
+    min_empty_arc: float
+    max_empty_arc: float
+    cluster_count: int
+    spread_map: Dict
+
+
+class NatalChartResponse(BaseModel):
+    """Полный ответ с натальной картой"""
+    user_id: Optional[UUID] = None
+    birth_data: BirthDataOutput
+    planets: List[PlanetPosition]
+    houses: List[HousePosition]
+    angles: Dict[str, AnglePosition]
+    special_points: Dict[str, SpecialPointPosition]
+    configurations: Optional[Dict[str, Dict]] = None
+    # Новые поля из пункта 3.3 спецификации
+    aspects: Optional[List[AspectInfo]] = None
+    aspect_configurations: Optional[List[ConfigurationInfo]] = None
+    stelliums: Optional[List[StelliumInfo]] = None
+    cosmogram_pattern: Optional[CosmogramPatternInfo] = None
+    planet_distribution: Optional[PlanetDistributionInfo] = None
+
+
+class ErrorResponse(BaseModel):
+    """Ответ с ошибкой"""
+    error: str
+    detail: Optional[str] = None
+

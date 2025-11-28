@@ -1,0 +1,368 @@
+Table Name,Column Name,Data Type,Constraints,Description
+users,user_id,UUID,PRIMARY KEY,Unique user identifier
+users,birth_date,DATE,NOT NULL,User's birth date
+users,birth_time,TIME,NOT NULL,User's birth time
+users,timezone,VARCHAR(50),NOT NULL,Timezone of birth
+users,birth_place,VARCHAR(255),NOT NULL,Place of birth
+users,lat,DECIMAL(10,7),NOT NULL CHECK (-90 to 90),Latitude of birth location
+users,lon,DECIMAL(10,7),NOT NULL CHECK (-180 to 180),Longitude of birth location
+users,julian_day,DECIMAL(15,6),,Julian day number
+users,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+users,updated_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record update timestamp
+natal_planets,user_id,UUID,FK users(user_id) ON DELETE CASCADE,User reference
+natal_planets,planet,VARCHAR(20),PRIMARY KEY (with user_id),Planet name
+natal_planets,sign,VARCHAR(20),NOT NULL,Zodiac sign
+natal_planets,degree,DECIMAL(10,6),NOT NULL CHECK (0-360),Degree position
+natal_planets,house_number,INTEGER,CHECK (1-12),House number
+natal_planets,retrograde,BOOLEAN,DEFAULT FALSE,Retrograde status
+natal_planets,speed,DECIMAL(10,6),,Planet speed
+natal_planets,dignity,VARCHAR(20),CHECK (domicile/exaltation/detriment/fall/neutral),Planet dignity
+natal_planets,strength_score,DECIMAL(6,2),,Strength score
+natal_planets,element,VARCHAR(10),,Element (Fire/Earth/Air/Water)
+natal_planets,mode,VARCHAR(15),,Mode (Cardinal/Fixed/Mutable)
+natal_planets,special_roles,JSONB,DEFAULT '[]',Special roles array
+natal_planets,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+natal_houses,user_id,UUID,FK users(user_id) ON DELETE CASCADE,User reference
+natal_houses,house_number,INTEGER,PRIMARY KEY (with user_id) CHECK (1-12),House number
+natal_houses,sign_on_cusp,VARCHAR(20),NOT NULL,Sign on house cusp
+natal_houses,cusp_degree,DECIMAL(10,6),NOT NULL,Cusp degree
+natal_houses,ruler_planet,VARCHAR(20),,Ruling planet
+natal_houses,included_sign,VARCHAR(20),,Intercepted sign
+natal_houses,house_group,VARCHAR(15),CHECK (angular/succedent/cadent),House group
+natal_houses,house_length,DECIMAL(10,6),,House size in degrees
+natal_houses,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+angles,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+angles,asc_sign,VARCHAR(20),NOT NULL,Ascendant sign
+angles,asc_degree,DECIMAL(10,6),NOT NULL,Ascendant degree
+angles,mc_sign,VARCHAR(20),NOT NULL,Midheaven sign
+angles,mc_degree,DECIMAL(10,6),NOT NULL,Midheaven degree
+angles,ic_sign,VARCHAR(20),NOT NULL,IC sign
+angles,ic_degree,DECIMAL(10,6),NOT NULL,IC degree
+angles,dsc_sign,VARCHAR(20),NOT NULL,Descendant sign
+angles,dsc_degree,DECIMAL(10,6),NOT NULL,Descendant degree
+angles,vertex_sign,VARCHAR(20),,Vertex sign
+angles,vertex_degree,DECIMAL(10,6),,Vertex degree
+angles,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+natal_aspects,aspect_id,UUID,PRIMARY KEY,Unique aspect identifier
+natal_aspects,user_id,UUID,FK users(user_id) ON DELETE CASCADE,User reference
+natal_aspects,planet_1,VARCHAR(20),NOT NULL,First planet
+natal_aspects,planet_2,VARCHAR(20),NOT NULL,Second planet
+natal_aspects,aspect_type,VARCHAR(30),NOT NULL,Aspect type
+natal_aspects,exact_angle,DECIMAL(6,2),NOT NULL,Exact aspect angle
+natal_aspects,orb,DECIMAL(5,2),NOT NULL,Orb (deviation from exact)
+natal_aspects,applying,BOOLEAN,,Applying aspect
+natal_aspects,class,VARCHAR(10),,Aspect class (major/minor)
+natal_aspects,character,VARCHAR(15),,Aspect character (harmonious/tense/neutral)
+natal_aspects,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+natal_configurations,config_id,UUID,PRIMARY KEY,Unique configuration identifier
+natal_configurations,user_id,UUID,FK users(user_id) ON DELETE CASCADE,User reference
+natal_configurations,type,VARCHAR(50),NOT NULL,Configuration type
+natal_configurations,planets_involved,JSONB,NOT NULL,Array of planets
+natal_configurations,aspects_involved,JSONB,NOT NULL,Array of aspects
+natal_configurations,strength,DECIMAL(5,2),,Configuration strength
+natal_configurations,interpretation,TEXT,,Interpretation text
+natal_configurations,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+natal_stelliums,stellium_id,UUID,PRIMARY KEY,Unique stellium identifier
+natal_stelliums,user_id,UUID,FK users(user_id) ON DELETE CASCADE,User reference
+natal_stelliums,location_type,VARCHAR(10),CHECK (sign/house),Location type
+natal_stelliums,location_value,VARCHAR(20),NOT NULL,Sign or house number
+natal_stelliums,planets,JSONB,NOT NULL,Array of planets
+natal_stelliums,planet_count,INTEGER,NOT NULL,Number of planets
+natal_stelliums,strength,DECIMAL(5,2),,Stellium strength
+natal_stelliums,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+natal_special_points,user_id,UUID,FK users(user_id) ON DELETE CASCADE,User reference
+natal_special_points,point,VARCHAR(30),PRIMARY KEY (with user_id),Point name
+natal_special_points,sign,VARCHAR(20),NOT NULL,Zodiac sign
+natal_special_points,degree,DECIMAL(10,6),NOT NULL CHECK (0-360),Degree position
+natal_special_points,house_number,INTEGER,CHECK (1-12),House number
+natal_special_points,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+natal_planet_distribution,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+natal_planet_distribution,min_empty_arc,DECIMAL(6,2),,Minimum empty arc
+natal_planet_distribution,max_empty_arc,DECIMAL(6,2),,Maximum empty arc
+natal_planet_distribution,cluster_count,INTEGER,,Number of clusters
+natal_planet_distribution,spread_map,JSONB,,Distribution map
+natal_planet_distribution,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+cosmogram_pattern,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+cosmogram_pattern,pattern_type,VARCHAR(30),NOT NULL,Pattern type (Bowl/Bucket/etc)
+cosmogram_pattern,anchor_planet,VARCHAR(20),,Anchor planet
+cosmogram_pattern,empty_arc_degree,DECIMAL(6,2),,Empty arc size
+cosmogram_pattern,special_roles,JSONB,DEFAULT '[]',Special roles
+cosmogram_pattern,notes,TEXT,,Additional notes
+cosmogram_pattern,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+ref_sign_properties,sign,VARCHAR(20),PRIMARY KEY,Zodiac sign name
+ref_sign_properties,element,VARCHAR(10),NOT NULL CHECK (Fire/Earth/Air/Water),Element
+ref_sign_properties,mode,VARCHAR(15),NOT NULL CHECK (Cardinal/Fixed/Mutable),Mode
+ref_sign_properties,gender,VARCHAR(10),NOT NULL CHECK (Masculine/Feminine),Gender
+ref_sign_properties,zone,VARCHAR(10),NOT NULL CHECK (Brahma/Vishnu/Shiva),Zone
+ref_sign_properties,life_quadrant,VARCHAR(20),,Life quadrant
+ref_sign_properties,ruler,VARCHAR(20),,Ruling planet
+ref_sign_properties,exaltation,VARCHAR(20),,Exaltation planet
+ref_sign_properties,detriment,VARCHAR(20),,Detriment planet
+ref_sign_properties,fall,VARCHAR(20),,Fall planet
+ref_sign_properties,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+ref_house_meanings,house_number,INTEGER,PRIMARY KEY CHECK (1-12),House number
+ref_house_meanings,theme_keywords,TEXT,NOT NULL,Theme keywords
+ref_house_meanings,extended_description,TEXT,,Extended description
+ref_house_meanings,main_topics,JSONB,,Main topics array
+ref_house_meanings,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+ref_aspect_types,aspect_type,VARCHAR(30),PRIMARY KEY,Aspect type name
+ref_aspect_types,exact_angle,DECIMAL(6,2),NOT NULL,Exact angle
+ref_aspect_types,base_orb,DECIMAL(5,2),NOT NULL,Base orb
+ref_aspect_types,class,VARCHAR(10),CHECK (major/minor),Aspect class
+ref_aspect_types,character,VARCHAR(15),CHECK (harmonious/tense/neutral),Aspect character
+ref_aspect_types,color,VARCHAR(20),,Color code
+ref_aspect_types,description,TEXT,,Description
+ref_aspect_types,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+ref_chakra_mapping,planet,VARCHAR(20),PRIMARY KEY,Planet name
+ref_chakra_mapping,chakra_number,INTEGER,NOT NULL,Chakra number (1-7)
+ref_chakra_mapping,chakra_name,VARCHAR(50),NOT NULL,Chakra name
+ref_chakra_mapping,function_description,TEXT,,Function description
+ref_chakra_mapping,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+ref_cosmogram_patterns,pattern_type,VARCHAR(30),PRIMARY KEY,Pattern type
+ref_cosmogram_patterns,criteria,JSONB,NOT NULL,Pattern criteria
+ref_cosmogram_patterns,description,TEXT,,Description
+ref_cosmogram_patterns,psychological_meaning,TEXT,,Psychological meaning
+ref_cosmogram_patterns,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+ref_configuration_types,type,VARCHAR(50),PRIMARY KEY,Configuration type
+ref_configuration_types,rules,JSONB,NOT NULL,Configuration rules
+ref_configuration_types,description,TEXT,,Description
+ref_configuration_types,interpretation,TEXT,,Interpretation
+ref_configuration_types,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+ref_planet_psych_functions,planet,VARCHAR(20),PRIMARY KEY,Planet name
+ref_planet_psych_functions,function_core,TEXT,NOT NULL,Core function
+ref_planet_psych_functions,function_extended,TEXT,,Extended function
+ref_planet_psych_functions,archetype,VARCHAR(50),,Archetype
+ref_planet_psych_functions,keywords_positive,TEXT,,Positive keywords
+ref_planet_psych_functions,keywords_shadow,TEXT,,Shadow keywords
+ref_planet_psych_functions,low_level_manifestation,TEXT,,Low level manifestation
+ref_planet_psych_functions,high_level_manifestation,TEXT,,High level manifestation
+ref_planet_psych_functions,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+ref_planet_in_sign_psych,planet,VARCHAR(20),PRIMARY KEY (with sign),Planet name
+ref_planet_in_sign_psych,sign,VARCHAR(20),PRIMARY KEY (with planet),Sign name
+ref_planet_in_sign_psych,summary,TEXT,,Summary
+ref_planet_in_sign_psych,detailed_description,TEXT,,Detailed description
+ref_planet_in_sign_psych,strengths,TEXT,,Strengths
+ref_planet_in_sign_psych,risks,TEXT,,Risks
+ref_planet_in_sign_psych,defense_mechanisms,TEXT,,Defense mechanisms
+ref_planet_in_sign_psych,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+ref_planet_in_house_psych,planet,VARCHAR(20),PRIMARY KEY (with house_number),Planet name
+ref_planet_in_house_psych,house_number,INTEGER,PRIMARY KEY (with planet) CHECK (1-12),House number
+ref_planet_in_house_psych,summary,TEXT,,Summary
+ref_planet_in_house_psych,detailed_description,TEXT,,Detailed description
+ref_planet_in_house_psych,life_area_impact,TEXT,,Life area impact
+ref_planet_in_house_psych,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+ref_aspect_psych,planet_1,VARCHAR(20),PRIMARY KEY (with planet_2 and aspect_type),First planet
+ref_aspect_psych,planet_2,VARCHAR(20),PRIMARY KEY (with planet_1 and aspect_type),Second planet
+ref_aspect_psych,aspect_type,VARCHAR(30),PRIMARY KEY (with planet_1 and planet_2),Aspect type
+ref_aspect_psych,interpretation,TEXT,,Interpretation
+ref_aspect_psych,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+ref_node_karma,node_type,VARCHAR(10),PRIMARY KEY (with sign and house_number),Node type (North/South)
+ref_node_karma,sign,VARCHAR(20),PRIMARY KEY (with node_type and house_number),Sign
+ref_node_karma,house_number,INTEGER,PRIMARY KEY (with node_type and sign) CHECK (1-12),House number
+ref_node_karma,interpretation,TEXT,,Interpretation
+ref_node_karma,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+ref_saturn_karma,sign,VARCHAR(20),PRIMARY KEY (with house_number),Sign
+ref_saturn_karma,house_number,INTEGER,PRIMARY KEY (with sign) CHECK (1-12),House number
+ref_saturn_karma,lesson,TEXT,,Karmic lesson
+ref_saturn_karma,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+ref_lilith_karma,sign,VARCHAR(20),PRIMARY KEY (with house_number),Sign
+ref_lilith_karma,house_number,INTEGER,PRIMARY KEY (with sign) CHECK (1-12),House number
+ref_lilith_karma,shadow_theme,TEXT,,Shadow theme
+ref_lilith_karma,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+ref_selena_karma,sign,VARCHAR(20),PRIMARY KEY (with house_number),Sign
+ref_selena_karma,house_number,INTEGER,PRIMARY KEY (with sign) CHECK (1-12),House number
+ref_selena_karma,light_theme,TEXT,,Light theme
+ref_selena_karma,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+ref_fortune_karma,sign,VARCHAR(20),PRIMARY KEY (with house_number),Sign
+ref_fortune_karma,house_number,INTEGER,PRIMARY KEY (with sign) CHECK (1-12),House number
+ref_fortune_karma,fortune_area,TEXT,,Fortune area
+ref_fortune_karma,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+ref_fate_cross_karma,pattern,VARCHAR(50),PRIMARY KEY,Fate cross pattern
+ref_fate_cross_karma,interpretation,TEXT,,Interpretation
+ref_fate_cross_karma,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+ref_karma_status_rules,status,VARCHAR(20),PRIMARY KEY,Karma status
+ref_karma_status_rules,criteria,JSONB,NOT NULL,Status criteria
+ref_karma_status_rules,description,TEXT,,Description
+ref_karma_status_rules,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+ref_topic_significators,topic,VARCHAR(50),PRIMARY KEY (with significator_type),Topic name
+ref_topic_significators,significator_type,VARCHAR(20),PRIMARY KEY (with topic),Significator type
+ref_topic_significators,significator_value,VARCHAR(50),NOT NULL,Significator value
+ref_topic_significators,weight,DECIMAL(5,2),,Weight/importance
+ref_topic_significators,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+ref_topic_house_weights,topic,VARCHAR(50),PRIMARY KEY (with house_number),Topic name
+ref_topic_house_weights,house_number,INTEGER,PRIMARY KEY (with topic) CHECK (1-12),House number
+ref_topic_house_weights,weight,DECIMAL(5,2),NOT NULL,Weight/importance
+ref_topic_house_weights,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+ref_support_sources,source_type,VARCHAR(50),PRIMARY KEY,Support source type
+ref_support_sources,description,TEXT,,Description
+ref_support_sources,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+ref_challenge_sources,source_type,VARCHAR(50),PRIMARY KEY,Challenge source type
+ref_challenge_sources,description,TEXT,,Description
+ref_challenge_sources,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+user_element_balance,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+user_element_balance,fire_count,INTEGER,DEFAULT 0,Fire element count
+user_element_balance,earth_count,INTEGER,DEFAULT 0,Earth element count
+user_element_balance,air_count,INTEGER,DEFAULT 0,Air element count
+user_element_balance,water_count,INTEGER,DEFAULT 0,Water element count
+user_element_balance,dominant_element,VARCHAR(10),,Dominant element
+user_element_balance,lacking_element,VARCHAR(10),,Lacking element
+user_element_balance,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+user_mode_balance,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+user_mode_balance,cardinal_count,INTEGER,DEFAULT 0,Cardinal mode count
+user_mode_balance,fixed_count,INTEGER,DEFAULT 0,Fixed mode count
+user_mode_balance,mutable_count,INTEGER,DEFAULT 0,Mutable mode count
+user_mode_balance,dominant_mode,VARCHAR(15),,Dominant mode
+user_mode_balance,lacking_mode,VARCHAR(15),,Lacking mode
+user_mode_balance,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+user_gender_balance,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+user_gender_balance,masculine_count,INTEGER,DEFAULT 0,Masculine count
+user_gender_balance,feminine_count,INTEGER,DEFAULT 0,Feminine count
+user_gender_balance,dominant_gender,VARCHAR(10),,Dominant gender
+user_gender_balance,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+user_zones_balance,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+user_zones_balance,brahma_count,INTEGER,DEFAULT 0,Brahma zone count
+user_zones_balance,vishnu_count,INTEGER,DEFAULT 0,Vishnu zone count
+user_zones_balance,shiva_count,INTEGER,DEFAULT 0,Shiva zone count
+user_zones_balance,dominant_zone,VARCHAR(10),,Dominant zone
+user_zones_balance,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+user_hemisphere_balance,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+user_hemisphere_balance,north_count,INTEGER,DEFAULT 0,Northern hemisphere count
+user_hemisphere_balance,south_count,INTEGER,DEFAULT 0,Southern hemisphere count
+user_hemisphere_balance,east_count,INTEGER,DEFAULT 0,Eastern hemisphere count
+user_hemisphere_balance,west_count,INTEGER,DEFAULT 0,Western hemisphere count
+user_hemisphere_balance,dominant_hemisphere,VARCHAR(10),,Dominant hemisphere
+user_hemisphere_balance,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+user_quadrant_balance,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+user_quadrant_balance,q1_count,INTEGER,DEFAULT 0,Quadrant 1 count
+user_quadrant_balance,q2_count,INTEGER,DEFAULT 0,Quadrant 2 count
+user_quadrant_balance,q3_count,INTEGER,DEFAULT 0,Quadrant 3 count
+user_quadrant_balance,q4_count,INTEGER,DEFAULT 0,Quadrant 4 count
+user_quadrant_balance,dominant_quadrant,INTEGER,,Dominant quadrant
+user_quadrant_balance,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+user_house_group_balance,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+user_house_group_balance,angular_count,INTEGER,DEFAULT 0,Angular houses count
+user_house_group_balance,succedent_count,INTEGER,DEFAULT 0,Succedent houses count
+user_house_group_balance,cadent_count,INTEGER,DEFAULT 0,Cadent houses count
+user_house_group_balance,dominant_group,VARCHAR(15),,Dominant house group
+user_house_group_balance,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+general_overview_summary,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+general_overview_summary,chart_shape,VARCHAR(30),,Chart shape pattern
+general_overview_summary,dominant_element,VARCHAR(10),,Dominant element
+general_overview_summary,dominant_mode,VARCHAR(15),,Dominant mode
+general_overview_summary,chart_ruler,VARCHAR(20),,Chart ruler planet
+general_overview_summary,key_themes,JSONB,,Key themes array
+general_overview_summary,strengths_summary,TEXT,,Strengths summary
+general_overview_summary,challenges_summary,TEXT,,Challenges summary
+general_overview_summary,life_purpose_hints,TEXT,,Life purpose hints
+general_overview_summary,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+user_planet_psych_profile,profile_id,UUID,PRIMARY KEY,Unique profile identifier
+user_planet_psych_profile,user_id,UUID,FK users(user_id) ON DELETE CASCADE,User reference
+user_planet_psych_profile,planet,VARCHAR(20),NOT NULL,Planet name
+user_planet_psych_profile,sign,VARCHAR(20),NOT NULL,Sign
+user_planet_psych_profile,house_number,INTEGER,,House number
+user_planet_psych_profile,function_summary,TEXT,,Function summary
+user_planet_psych_profile,manifestation_level,VARCHAR(20),,Manifestation level
+user_planet_psych_profile,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+user_chakra_scores,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+user_chakra_scores,root_score,DECIMAL(5,2),,Root chakra score
+user_chakra_scores,sacral_score,DECIMAL(5,2),,Sacral chakra score
+user_chakra_scores,solar_plexus_score,DECIMAL(5,2),,Solar plexus score
+user_chakra_scores,heart_score,DECIMAL(5,2),,Heart chakra score
+user_chakra_scores,throat_score,DECIMAL(5,2),,Throat chakra score
+user_chakra_scores,third_eye_score,DECIMAL(5,2),,Third eye score
+user_chakra_scores,crown_score,DECIMAL(5,2),,Crown chakra score
+user_chakra_scores,dominant_chakra,VARCHAR(20),,Dominant chakra
+user_chakra_scores,weak_chakra,VARCHAR(20),,Weak chakra
+user_chakra_scores,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+user_psych_summary,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+user_psych_summary,core_identity,TEXT,,Core identity
+user_psych_summary,emotional_nature,TEXT,,Emotional nature
+user_psych_summary,mental_approach,TEXT,,Mental approach
+user_psych_summary,relationship_style,TEXT,,Relationship style
+user_psych_summary,defense_mechanisms,TEXT,,Defense mechanisms
+user_psych_summary,growth_potential,TEXT,,Growth potential
+user_psych_summary,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+house_thematic_summary,summary_id,UUID,PRIMARY KEY,Unique summary identifier
+house_thematic_summary,user_id,UUID,FK users(user_id) ON DELETE CASCADE,User reference
+house_thematic_summary,house_number,INTEGER,CHECK (1-12),House number
+house_thematic_summary,theme_summary,TEXT,,Theme summary
+house_thematic_summary,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+life_themes_summary,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+life_themes_summary,primary_themes,JSONB,,Primary themes array
+life_themes_summary,secondary_themes,JSONB,,Secondary themes array
+life_themes_summary,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+topic_health_summary,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+topic_health_summary,vitality_score,DECIMAL(5,2),,Vitality score
+topic_health_summary,health_summary,TEXT,,Health summary
+topic_health_summary,vulnerabilities,TEXT,,Health vulnerabilities
+topic_health_summary,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+topic_career_summary,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+topic_career_summary,career_potential,TEXT,,Career potential
+topic_career_summary,suitable_fields,JSONB,,Suitable career fields
+topic_career_summary,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+topic_relationships_summary,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+topic_relationships_summary,relationship_style,TEXT,,Relationship style
+topic_relationships_summary,partnership_needs,TEXT,,Partnership needs
+topic_relationships_summary,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+topic_family_summary,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+topic_family_summary,family_patterns,TEXT,,Family patterns
+topic_family_summary,parenting_style,TEXT,,Parenting style
+topic_family_summary,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+topic_spirituality_summary,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+topic_spirituality_summary,spiritual_path,TEXT,,Spiritual path
+topic_spirituality_summary,transcendence_potential,TEXT,,Transcendence potential
+topic_spirituality_summary,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+user_nodes_summary,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+user_nodes_summary,north_node_sign,VARCHAR(20),,North node sign
+user_nodes_summary,north_node_house,INTEGER,,North node house
+user_nodes_summary,south_node_sign,VARCHAR(20),,South node sign
+user_nodes_summary,south_node_house,INTEGER,,South node house
+user_nodes_summary,life_direction,TEXT,,Life direction
+user_nodes_summary,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+user_saturn_summary,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+user_saturn_summary,saturn_sign,VARCHAR(20),,Saturn sign
+user_saturn_summary,saturn_house,INTEGER,,Saturn house
+user_saturn_summary,karmic_lesson,TEXT,,Karmic lesson
+user_saturn_summary,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+user_lilith_selena_summary,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+user_lilith_selena_summary,lilith_sign,VARCHAR(20),,Lilith sign
+user_lilith_selena_summary,lilith_house,INTEGER,,Lilith house
+user_lilith_selena_summary,selena_sign,VARCHAR(20),,Selena sign
+user_lilith_selena_summary,selena_house,INTEGER,,Selena house
+user_lilith_selena_summary,shadow_light_balance,TEXT,,Shadow-light balance
+user_lilith_selena_summary,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+user_fortune_fate_summary,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+user_fortune_fate_summary,fortune_sign,VARCHAR(20),,Part of Fortune sign
+user_fortune_fate_summary,fortune_house,INTEGER,,Part of Fortune house
+user_fortune_fate_summary,fortune_area,TEXT,,Fortune area
+user_fortune_fate_summary,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+user_planet_karma_status,status_id,UUID,PRIMARY KEY,Unique status identifier
+user_planet_karma_status,user_id,UUID,FK users(user_id) ON DELETE CASCADE,User reference
+user_planet_karma_status,planet,VARCHAR(20),NOT NULL,Planet name
+user_planet_karma_status,karma_status,VARCHAR(20),,Karma status
+user_planet_karma_status,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+user_karma_summary,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+user_karma_summary,overall_karma,TEXT,,Overall karma summary
+user_karma_summary,main_lessons,JSONB,,Main karmic lessons
+user_karma_summary,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+user_support_factors,factor_id,UUID,PRIMARY KEY,Unique factor identifier
+user_support_factors,user_id,UUID,FK users(user_id) ON DELETE CASCADE,User reference
+user_support_factors,source_type,VARCHAR(50),,Support source type
+user_support_factors,description,TEXT,,Description
+user_support_factors,strength,DECIMAL(5,2),,Strength score
+user_support_factors,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+user_support_summary,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+user_support_summary,main_strengths,JSONB,,Main strengths array
+user_support_summary,support_summary,TEXT,,Support summary
+user_support_summary,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+user_challenge_factors,factor_id,UUID,PRIMARY KEY,Unique factor identifier
+user_challenge_factors,user_id,UUID,FK users(user_id) ON DELETE CASCADE,User reference
+user_challenge_factors,source_type,VARCHAR(50),,Challenge source type
+user_challenge_factors,description,TEXT,,Description
+user_challenge_factors,intensity,DECIMAL(5,2),,Intensity score
+user_challenge_factors,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+user_challenge_summary,user_id,UUID,PRIMARY KEY FK users(user_id) ON DELETE CASCADE,User reference
+user_challenge_summary,main_challenges,JSONB,,Main challenges array
+user_challenge_summary,challenge_summary,TEXT,,Challenge summary
+user_challenge_summary,created_at,TIMESTAMP,DEFAULT CURRENT_TIMESTAMP,Record creation timestamp
+

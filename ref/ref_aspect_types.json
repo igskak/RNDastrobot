@@ -1,0 +1,165 @@
+[
+  {
+    "code": "CONJUNCTION",
+    "name": "conjunction",
+    "angle_deg": 0,
+    "orb_deg": 5,
+    "class": "major",
+    "harmonic_type": "neutral",
+    "color": null
+  },
+  {
+    "code": "SEXTILE",
+    "name": "sextile",
+    "angle_deg": 60,
+    "orb_deg": 5,
+    "class": "major",
+    "harmonic_type": "harmonious",
+    "color": "red"
+  },
+  {
+    "code": "SQUARE",
+    "name": "square",
+    "angle_deg": 90,
+    "orb_deg": 5,
+    "class": "major",
+    "harmonic_type": "tense",
+    "color": "black"
+  },
+  {
+    "code": "TRINE",
+    "name": "trine",
+    "angle_deg": 120,
+    "orb_deg": 5,
+    "class": "major",
+    "harmonic_type": "harmonious",
+    "color": "red"
+  },
+  {
+    "code": "OPPOSITION",
+    "name": "opposition",
+    "angle_deg": 180,
+    "orb_deg": 5,
+    "class": "major",
+    "harmonic_type": "tense",
+    "color": "black"
+  },
+
+  {
+    "code": "VIGINTILE",
+    "name": "vigintile",
+    "angle_deg": 18,
+    "orb_deg": 1,
+    "class": "minor",
+    "harmonic_type": "neutral",
+    "color": "green"
+  },
+  {
+    "code": "SEMI_NONAGON",
+    "name": "semi_nonagon",
+    "angle_deg": 20,
+    "orb_deg": 1,
+    "class": "minor",
+    "harmonic_type": "neutral",
+    "color": "blue"
+  },
+  {
+    "code": "SEMISEXTILE",
+    "name": "semisextile",
+    "angle_deg": 30,
+    "orb_deg": 2,
+    "class": "minor",
+    "harmonic_type": "harmonious",
+    "color": "red"
+  },
+  {
+    "code": "DECILE",
+    "name": "decile",
+    "angle_deg": 36,
+    "orb_deg": 1,
+    "class": "minor",
+    "harmonic_type": "neutral",
+    "color": "green"
+  },
+  {
+    "code": "NONAGON",
+    "name": "nonagon",
+    "angle_deg": 40,
+    "orb_deg": 1,
+    "class": "minor",
+    "harmonic_type": "neutral",
+    "color": "blue"
+  },
+  {
+    "code": "SEMISQUARE",
+    "name": "semisquare",
+    "angle_deg": 45,
+    "orb_deg": 2,
+    "class": "minor",
+    "harmonic_type": "tense",
+    "color": "black"
+  },
+  {
+    "code": "QUINTILE",
+    "name": "quintile",
+    "angle_deg": 72,
+    "orb_deg": 1,
+    "class": "minor",
+    "harmonic_type": "neutral",
+    "color": "green"
+  },
+  {
+    "code": "BINONAGON",
+    "name": "binonagon",
+    "angle_deg": 80,
+    "orb_deg": 1,
+    "class": "minor",
+    "harmonic_type": "neutral",
+    "color": "blue"
+  },
+  {
+    "code": "SENTAGON",
+    "name": "sentagon",
+    "angle_deg": 100,
+    "orb_deg": 1,
+    "class": "minor",
+    "harmonic_type": "neutral",
+    "color": "blue"
+  },
+  {
+    "code": "TRIDECILE",
+    "name": "tridecile",
+    "angle_deg": 108,
+    "orb_deg": 1,
+    "class": "minor",
+    "harmonic_type": "neutral",
+    "color": "green"
+  },
+  {
+    "code": "SESQUIQUADRATE",
+    "name": "sesquiquadrate",
+    "angle_deg": 135,
+    "orb_deg": 2,
+    "class": "minor",
+    "harmonic_type": "tense",
+    "color": "black"
+  },
+  {
+    "code": "BIQUINTILE",
+    "name": "biquintile",
+    "angle_deg": 144,
+    "orb_deg": 1,
+    "class": "minor",
+    "harmonic_type": "neutral",
+    "color": "green"
+  },
+  {
+    "code": "QUINCUNX",
+    "name": "quincunx",
+    "angle_deg": 150,
+    "orb_deg": 2,
+    "class": "minor",
+    "harmonic_type": "harmonious",
+    "color": "red"
+  }
+]

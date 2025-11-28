@@ -1,0 +1,52 @@
+# ============================================================================
+# Astrobot Python Dependencies
+# ============================================================================
+
+# Database
+psycopg2-binary==2.9.10
+SQLAlchemy==2.0.36
+alembic==1.13.0
+
+# Environment and Configuration
+python-dotenv==1.0.0
+
+# Supabase Client (optional, for direct Supabase API access)
+supabase==2.3.0
+
+# Web Framework (choose one based on your preference)
+# FastAPI (recommended for modern async API)
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.6
+
+# OR Flask (traditional sync framework)
+# flask==3.0.0
+# flask-sqlalchemy==3.1.1
+# flask-cors==4.0.0
+
+# Data Validation and Serialization
+pydantic-settings==2.7.1
+
+# Date and Time
+python-dateutil==2.8.2
+pytz==2023.3
+
+# Logging
+loguru==0.7.2
+
+# Testing
+pytest==7.4.3
+pytest-cov==4.1.0
+pytest-asyncio==0.21.1
+
+# Development Tools
+black==23.12.1
+flake8==7.0.0
+mypy==1.8.0
+
+# Swiss Ephemeris Python Bindings
+pyswisseph==2.10.3.2
+
+# Geocoding
+geopy==2.4.1
+
