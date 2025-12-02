@@ -821,13 +821,29 @@ ref_sign_properties (достоинства)
    - Король аспектов (планета с наибольшим количеством аспектов)
 ✅ Данные сохраняются в таблицу natal_planets (поля strength_score и special_roles)
 
-3.5. Этап 4 — интегральные балансы
+3.5. Этап 4 — интегральные балансы ✅ РЕАЛИЗОВАНО
 По natal_planets:
-посчитать стихии, кресты, бинер → user_element_balance, user_mode_balance, user_gender_balance, user_zones_balance. 
+посчитать стихии, кресты, бинер → user_element_balance, user_mode_balance, user_gender_balance, user_zones_balance.
 По знакам и долготам:
-полусферы, квадранты → user_hemisphere_balance, user_quadrant_balance. 
+полусферы, квадранты → user_hemisphere_balance, user_quadrant_balance.
 По домам:
-угловые/последующие/падающие → user_house_group_balance. 
+угловые/последующие/падающие → user_house_group_balance.
+
+СТАТУС РЕАЛИЗАЦИИ (дата: 2025-11-28):
+✅ Реализован расчет всех 7 типов балансов с учётом весов планет:
+   - Баланс стихий (Fire, Earth, Air, Water)
+   - Баланс крестов/модальностей (Cardinal, Fixed, Mutable)
+   - Баланс полов/бинера (Masculine, Feminine)
+   - Баланс зон Тримурти (Brahma, Vishnu, Shiva)
+   - Баланс полусфер по методу Джонса (Northern, Southern, Eastern, Western)
+   - Баланс квадрантов от углов (Q1, Q2, Q3, Q4)
+   - Баланс групп домов (Angular, Succedent, Cadent)
+✅ Chiron перемещён из специальных точек в планеты (natal_planets)
+✅ Веса планет: Sun=2, Moon=2, остальные=1 (итого 13 единиц)
+✅ Создан сервис BalanceService с 7 методами расчёта
+✅ Интеграция в NatalChartService (автоматический расчёт при создании карты)
+✅ Все тесты проходят (10/10 passed)
+✅ Создана полная документация (IMPLEMENTATION_REPORT_3.5.md)
 
 3.6. Этап 5 — формирование «Общего среза»
 Используя всё выше:

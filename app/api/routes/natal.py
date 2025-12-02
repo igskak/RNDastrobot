@@ -19,7 +19,15 @@ from app.models.schemas import (
     ConfigurationInfo,
     StelliumInfo,
     CosmogramPatternInfo,
-    PlanetDistributionInfo
+    PlanetDistributionInfo,
+    BalancesInfo,
+    ElementBalanceInfo,
+    ModeBalanceInfo,
+    GenderBalanceInfo,
+    ZonesBalanceInfo,
+    HemisphereBalanceInfo,
+    QuadrantBalanceInfo,
+    HouseGroupBalanceInfo
 )
 from app.services.natal_chart_service import NatalChartService
 from app.database.connection import get_db
@@ -85,6 +93,20 @@ async def calculate_natal_chart(
             db_session=db if save_to_db else None
         )
         
+        # Преобразование балансов (пункт 3.5 спецификации)
+        balances_data = None
+        if chart_data.get('balances'):
+            balances_dict = chart_data['balances']
+            balances_data = BalancesInfo(
+                element_balance=ElementBalanceInfo(**balances_dict['element_balance']) if balances_dict.get('element_balance') else None,
+                mode_balance=ModeBalanceInfo(**balances_dict['mode_balance']) if balances_dict.get('mode_balance') else None,
+                gender_balance=GenderBalanceInfo(**balances_dict['gender_balance']) if balances_dict.get('gender_balance') else None,
+                zones_balance=ZonesBalanceInfo(**balances_dict['zones_balance']) if balances_dict.get('zones_balance') else None,
+                hemisphere_balance=HemisphereBalanceInfo(**balances_dict['hemisphere_balance']) if balances_dict.get('hemisphere_balance') else None,
+                quadrant_balance=QuadrantBalanceInfo(**balances_dict['quadrant_balance']) if balances_dict.get('quadrant_balance') else None,
+                house_group_balance=HouseGroupBalanceInfo(**balances_dict['house_group_balance']) if balances_dict.get('house_group_balance') else None,
+            )
+
         # Преобразование в Pydantic модели
         response = NatalChartResponse(
             user_id=UUID(chart_data['user_id']) if chart_data.get('user_id') else None,
@@ -100,6 +122,8 @@ async def calculate_natal_chart(
             stelliums=[StelliumInfo(**s) for s in chart_data['stelliums']] if chart_data.get('stelliums') else None,
             cosmogram_pattern=CosmogramPatternInfo(**chart_data['cosmogram_pattern']) if chart_data.get('cosmogram_pattern') else None,
             planet_distribution=PlanetDistributionInfo(**chart_data['planet_distribution']) if chart_data.get('planet_distribution') else None,
+            # Інтегральні баланси (пункт 3.5 специфікації)
+            balances=balances_data,
         )
 
         if save_to_db:
@@ -176,6 +200,20 @@ async def get_natal_chart(
                 detail=f"Натальная карта для пользователя {user_id} не найдена"
             )
 
+        # Преобразование балансов (пункт 3.5 спецификации)
+        balances_data = None
+        if chart_data.get('balances'):
+            balances_dict = chart_data['balances']
+            balances_data = BalancesInfo(
+                element_balance=ElementBalanceInfo(**balances_dict['element_balance']) if balances_dict.get('element_balance') else None,
+                mode_balance=ModeBalanceInfo(**balances_dict['mode_balance']) if balances_dict.get('mode_balance') else None,
+                gender_balance=GenderBalanceInfo(**balances_dict['gender_balance']) if balances_dict.get('gender_balance') else None,
+                zones_balance=ZonesBalanceInfo(**balances_dict['zones_balance']) if balances_dict.get('zones_balance') else None,
+                hemisphere_balance=HemisphereBalanceInfo(**balances_dict['hemisphere_balance']) if balances_dict.get('hemisphere_balance') else None,
+                quadrant_balance=QuadrantBalanceInfo(**balances_dict['quadrant_balance']) if balances_dict.get('quadrant_balance') else None,
+                house_group_balance=HouseGroupBalanceInfo(**balances_dict['house_group_balance']) if balances_dict.get('house_group_balance') else None,
+            )
+
         # Преобразование в Pydantic модели
         response = NatalChartResponse(
             user_id=UUID(chart_data['user_id']),
@@ -191,6 +229,8 @@ async def get_natal_chart(
             stelliums=[StelliumInfo(**s) for s in chart_data['stelliums']] if chart_data.get('stelliums') else None,
             cosmogram_pattern=CosmogramPatternInfo(**chart_data['cosmogram_pattern']) if chart_data.get('cosmogram_pattern') else None,
             planet_distribution=PlanetDistributionInfo(**chart_data['planet_distribution']) if chart_data.get('planet_distribution') else None,
+            # Інтегральні баланси (пункт 3.5 специфікації)
+            balances=balances_data,
         )
 
         logger.info(f"Натальная карта успешно получена из БД для user_id={user_id}")

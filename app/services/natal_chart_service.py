@@ -11,7 +11,7 @@ from app.services.geocoding_service import GeocodingService
 from app.services.swisseph_engine import SwissEphemerisEngine
 from app.services.special_points_service import SpecialPointsService
 from app.services.dignity_service import DignityService
-from app.utils.constants import get_zodiac_sign, get_degree_in_sign
+from app.utils.constants import get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds
 from app.database.repositories import UserRepository, NatalChartRepository
 
 
@@ -148,37 +148,39 @@ class NatalChartService:
         planets: list,
         houses: list
     ) -> Dict:
-        """Расчёт всех специальных точек"""
-        
+        """
+        Расчёт всех специальных точек
+
+        Примечание: Chiron теперь рассчитывается как планета в calculate_planets(),
+        поэтому здесь его нет.
+        """
+
         # Получаем данные для расчёта Фортуны
         sun = next(p for p in planets if p['name'] == 'Sun')
         moon = next(p for p in planets if p['name'] == 'Moon')
         asc_lon = angles['ASC']['longitude']
-        
+
         # Рассчитываем узлы
         north_node_lon, south_node_lon = self.special_points_service.calculate_true_nodes(jd)
-        
+
         # Рассчитываем Лилит и Селену
         black_moon_lon = self.special_points_service.calculate_black_moon(jd)
         white_moon_lon = self.special_points_service.calculate_white_moon(jd)
-        
-        # Рассчитываем Хирон
-        chiron_lon = self.special_points_service.calculate_chiron(jd)
-        
+
         # Рассчитываем Фортуну
         fortune_lon = self.special_points_service.calculate_part_of_fortune(
             asc_lon, sun['longitude'], moon['longitude'], sun['house']
         )
-        
+
         # Vertex уже есть в angles
         vertex_lon = angles['Vertex']['longitude']
-        
+
         # Анти-Вертекс
         anti_vertex_lon = (vertex_lon + 180) % 360
-        
-        # Формируем результат
+
+        # Формируем результат (без Chiron - он теперь в планетах)
         special_points = {}
-        
+
         for name, lon in [
             ('TrueNorthNode', north_node_lon),
             ('TrueSouthNode', south_node_lon),
@@ -187,16 +189,17 @@ class NatalChartService:
             ('Fortune', fortune_lon),
             ('Vertex', vertex_lon),
             ('AntiVertex', anti_vertex_lon),
-            ('Chiron', chiron_lon),
         ]:
+            degree_in_sign = get_degree_in_sign(lon)
             special_points[name] = {
                 'name': name,
                 'longitude': lon,
                 'sign': get_zodiac_sign(lon),
-                'degree_in_sign': get_degree_in_sign(lon),
+                'degree_in_sign': degree_in_sign,
+                'degree_in_sign_formatted': format_degree_minutes_seconds(degree_in_sign),
                 'house': self.swisseph_engine.get_planet_house(lon, houses),
             }
-        
+
         return special_points
 
     def _calculate_configurations(self, special_points: Dict, houses: list) -> Dict:
@@ -297,6 +300,18 @@ class NatalChartService:
             house['ruler_planet'] = dignity_service.get_house_ruler(sign_on_cusp)
 
         return houses
+
+    def _format_degree(self, degree: float) -> str:
+        """
+        Форматировать градус в формат градусы°минуты'секунды"
+
+        Args:
+            degree: Градус в десятичном формате
+
+        Returns:
+            Строка вида "25°48'04""
+        """
+        return format_degree_minutes_seconds(degree)
 
     def _save_to_database(
         self,
@@ -405,6 +420,12 @@ class NatalChartService:
         roles_service = SpecialRolesService(db_session)
         roles_service.determine_all_roles(user.user_id)
 
+        # ЭТАП 4: Интегральные балансы (пункт 3.5 спецификації)
+        from app.services.balance_service import BalanceService
+
+        balance_service = BalanceService(db_session)
+        balance_service.calculate_all_balances(user.user_id)
+
         return user.user_id
 
     def get_natal_chart_from_db(self, user_id: UUID, db_session: Session) -> Optional[Dict]:
@@ -451,6 +472,7 @@ class NatalChartService:
                     'longitude': float(p.degree),
                     'sign': p.sign,
                     'degree_in_sign': float(p.degree) % 30,  # Вычисляем градус в знаке
+                    'degree_in_sign_formatted': self._format_degree(float(p.degree) % 30),
                     'house': p.house_number,
                     'retrograde': p.retrograde,
                     'speed': float(p.speed) if p.speed else None,
@@ -469,6 +491,8 @@ class NatalChartService:
                     'number': h.house_number,
                     'longitude': float(h.cusp_degree),
                     'sign': h.sign_on_cusp,
+                    'degree_in_sign': float(h.cusp_degree) % 30,  # Вычисляем градус в знаке
+                    'degree_in_sign_formatted': self._format_degree(float(h.cusp_degree) % 30),
                     # Этап 3.2: Обогащение домов
                     'ruler_planet': h.ruler_planet,
                     'house_group': h.house_group,
@@ -493,25 +517,29 @@ class NatalChartService:
                     'name': 'ASC',
                     'longitude': float(a.asc_degree),
                     'sign': a.asc_sign,
-                    'degree_in_sign': float(a.asc_degree) % 30
+                    'degree_in_sign': float(a.asc_degree) % 30,
+                    'degree_in_sign_formatted': self._format_degree(float(a.asc_degree) % 30)
                 },
                 'MC': {
                     'name': 'MC',
                     'longitude': float(a.mc_degree),
                     'sign': a.mc_sign,
-                    'degree_in_sign': float(a.mc_degree) % 30
+                    'degree_in_sign': float(a.mc_degree) % 30,
+                    'degree_in_sign_formatted': self._format_degree(float(a.mc_degree) % 30)
                 },
                 'IC': {
                     'name': 'IC',
                     'longitude': float(a.ic_degree),
                     'sign': a.ic_sign,
-                    'degree_in_sign': float(a.ic_degree) % 30
+                    'degree_in_sign': float(a.ic_degree) % 30,
+                    'degree_in_sign_formatted': self._format_degree(float(a.ic_degree) % 30)
                 },
                 'DSC': {
                     'name': 'DSC',
                     'longitude': float(a.dsc_degree),
                     'sign': a.dsc_sign,
-                    'degree_in_sign': float(a.dsc_degree) % 30
+                    'degree_in_sign': float(a.dsc_degree) % 30,
+                    'degree_in_sign_formatted': self._format_degree(float(a.dsc_degree) % 30)
                 },
             }
             if a.vertex_degree:
@@ -519,7 +547,8 @@ class NatalChartService:
                     'name': 'Vertex',
                     'longitude': float(a.vertex_degree),
                     'sign': a.vertex_sign,
-                    'degree_in_sign': float(a.vertex_degree) % 30
+                    'degree_in_sign': float(a.vertex_degree) % 30,
+                    'degree_in_sign_formatted': self._format_degree(float(a.vertex_degree) % 30)
                 }
 
         # Добавляем специальные точки
@@ -529,6 +558,7 @@ class NatalChartService:
                 'longitude': float(sp.degree),
                 'sign': sp.sign,
                 'degree_in_sign': float(sp.degree) % 30,  # Вычисляем градус в знаке
+                'degree_in_sign_formatted': self._format_degree(float(sp.degree) % 30),
                 'house': sp.house_number,
             }
 
@@ -655,6 +685,97 @@ class NatalChartService:
                 'empty_arc_degree': float(pattern.empty_arc_degree) if pattern.empty_arc_degree else 0.0,
                 'special_roles': pattern.special_roles or []
             }
+
+        # 6. Інтегральні баланси (пункт 3.5 спецификації)
+        from app.database.models import (
+            UserElementBalance, UserModeBalance, UserGenderBalance,
+            UserZonesBalance, UserHemisphereBalance, UserQuadrantBalance,
+            UserHouseGroupBalance
+        )
+
+        balances = {}
+
+        # Баланс стихій
+        element_balance = db_session.query(UserElementBalance).filter(
+            UserElementBalance.user_id == user_id
+        ).first()
+        if element_balance:
+            balances['element_balance'] = {
+                'fire': float(element_balance.fire),
+                'earth': float(element_balance.earth),
+                'air': float(element_balance.air),
+                'water': float(element_balance.water)
+            }
+
+        # Баланс крестів
+        mode_balance = db_session.query(UserModeBalance).filter(
+            UserModeBalance.user_id == user_id
+        ).first()
+        if mode_balance:
+            balances['mode_balance'] = {
+                'cardinal': float(mode_balance.cardinal),
+                'fixed': float(mode_balance.fixed),
+                'mutable': float(mode_balance.mutable)
+            }
+
+        # Баланс полів
+        gender_balance = db_session.query(UserGenderBalance).filter(
+            UserGenderBalance.user_id == user_id
+        ).first()
+        if gender_balance:
+            balances['gender_balance'] = {
+                'masculine': float(gender_balance.masculine),
+                'feminine': float(gender_balance.feminine)
+            }
+
+        # Баланс зон
+        zones_balance = db_session.query(UserZonesBalance).filter(
+            UserZonesBalance.user_id == user_id
+        ).first()
+        if zones_balance:
+            balances['zones_balance'] = {
+                'brahma': float(zones_balance.brahma),
+                'vishnu': float(zones_balance.vishnu),
+                'shiva': float(zones_balance.shiva)
+            }
+
+        # Баланс півсфер
+        hemisphere_balance = db_session.query(UserHemisphereBalance).filter(
+            UserHemisphereBalance.user_id == user_id
+        ).first()
+        if hemisphere_balance:
+            balances['hemisphere_balance'] = {
+                'northern': float(hemisphere_balance.northern),
+                'southern': float(hemisphere_balance.southern),
+                'eastern': float(hemisphere_balance.eastern),
+                'western': float(hemisphere_balance.western)
+            }
+
+        # Баланс квадрантів
+        quadrant_balance = db_session.query(UserQuadrantBalance).filter(
+            UserQuadrantBalance.user_id == user_id
+        ).first()
+        if quadrant_balance:
+            balances['quadrant_balance'] = {
+                'q1': float(quadrant_balance.quadrant_1),
+                'q2': float(quadrant_balance.quadrant_2),
+                'q3': float(quadrant_balance.quadrant_3),
+                'q4': float(quadrant_balance.quadrant_4)
+            }
+
+        # Баланс груп домів
+        house_group_balance = db_session.query(UserHouseGroupBalance).filter(
+            UserHouseGroupBalance.user_id == user_id
+        ).first()
+        if house_group_balance:
+            balances['house_group_balance'] = {
+                'angular': float(house_group_balance.angular_count),
+                'succedent': float(house_group_balance.succedent_count),
+                'cadent': float(house_group_balance.cadent_count)
+            }
+
+        # Додаємо баланси до результату
+        result['balances'] = balances if balances else None
 
         return result
 

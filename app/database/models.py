@@ -374,3 +374,114 @@ class CosmogramPattern(Base):
         Index('idx_cosmogram_pattern_type', 'pattern_type'),
     )
 
+
+# ============================================================================
+# BALANCE TABLES (Integral Balances)
+# ============================================================================
+
+class UserElementBalance(Base):
+    """Модель баланса стихий"""
+    __tablename__ = 'user_element_balance'
+
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), primary_key=True)
+    fire = Column(Integer, default=0)
+    earth = Column(Integer, default=0)
+    air = Column(Integer, default=0)
+    water = Column(Integer, default=0)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # Relationship
+    user = relationship("User")
+
+
+class UserModeBalance(Base):
+    """Модель баланса крестов (модальностей)"""
+    __tablename__ = 'user_mode_balance'
+
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), primary_key=True)
+    cardinal = Column(Integer, default=0)
+    fixed = Column(Integer, default=0)
+    mutable = Column(Integer, default=0)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # Relationship
+    user = relationship("User")
+
+
+class UserGenderBalance(Base):
+    """Модель баланса полов (бинер)"""
+    __tablename__ = 'user_gender_balance'
+
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), primary_key=True)
+    masculine = Column(Integer, default=0)
+    feminine = Column(Integer, default=0)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # Relationship
+    user = relationship("User")
+
+
+class UserZonesBalance(Base):
+    """Модель баланса зон Тримурти"""
+    __tablename__ = 'user_zones_balance'
+
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), primary_key=True)
+    brahma = Column(Integer, default=0)
+    vishnu = Column(Integer, default=0)
+    shiva = Column(Integer, default=0)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # Relationship
+    user = relationship("User")
+
+
+class UserHemisphereBalance(Base):
+    """Модель баланса полусфер"""
+    __tablename__ = 'user_hemisphere_balance'
+
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), primary_key=True)
+    northern = Column(Integer, default=0)
+    southern = Column(Integer, default=0)
+    eastern = Column(Integer, default=0)
+    western = Column(Integer, default=0)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # Relationship
+    user = relationship("User")
+
+
+class UserQuadrantBalance(Base):
+    """Модель баланса квадрантов"""
+    __tablename__ = 'user_quadrant_balance'
+
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), primary_key=True)
+    quadrant_1 = Column(Integer, default=0)
+    quadrant_2 = Column(Integer, default=0)
+    quadrant_3 = Column(Integer, default=0)
+    quadrant_4 = Column(Integer, default=0)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # Relationship
+    user = relationship("User")
+
+
+class UserHouseGroupBalance(Base):
+    """Модель баланса групп домов"""
+    __tablename__ = 'user_house_group_balance'
+
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), primary_key=True)
+    angular_count = Column(Integer, default=0)
+    succedent_count = Column(Integer, default=0)
+    cadent_count = Column(Integer, default=0)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # Relationship
+    user = relationship("User")
+

@@ -13,7 +13,7 @@ ZODIAC_SIGNS_RU = [
     "Весы", "Скорпион", "Стрелец", "Козерог", "Водолей", "Рыбы"
 ]
 
-# Планеты
+# Планеты (включая Chiron)
 PLANETS = {
     0: "Sun",
     1: "Moon",
@@ -25,6 +25,7 @@ PLANETS = {
     7: "Uranus",
     8: "Neptune",
     9: "Pluto",
+    15: "Chiron",  # SE_CHIRON = 15 в Swiss Ephemeris
 }
 
 PLANETS_RU = {
@@ -38,9 +39,10 @@ PLANETS_RU = {
     7: "Уран",
     8: "Нептун",
     9: "Плутон",
+    15: "Хирон",
 }
 
-# Специальные точки
+# Специальные точки (Chiron теперь в PLANETS)
 SPECIAL_POINTS = {
     'TrueNorthNode': 'Северный узел (истинный)',
     'TrueSouthNode': 'Южный узел (истинный)',
@@ -49,7 +51,6 @@ SPECIAL_POINTS = {
     'Fortune': 'Колесо Фортуны',
     'Vertex': 'Вертекс',
     'AntiVertex': 'Анти-Вертекс',
-    'Chiron': 'Хирон',
 }
 
 # Системы домов
@@ -104,13 +105,31 @@ def get_degree_in_sign(longitude: float) -> float:
     return longitude % 30
 
 
+def format_degree_minutes_seconds(degree: float) -> str:
+    """
+    Форматировать градус в формат градусы°минуты'секунды"
+
+    Args:
+        degree: Градус в десятичном формате (0-30)
+
+    Returns:
+        Строка вида "25°48'04""
+    """
+    degrees = int(degree)
+    remainder = (degree - degrees) * 60
+    minutes = int(remainder)
+    seconds = int((remainder - minutes) * 60)
+
+    return f"{degrees}°{minutes:02d}'{seconds:02d}\""
+
+
 def format_zodiac_position(longitude: float) -> str:
     """
     Форматировать позицию в зодиаке
-    
+
     Args:
         longitude: Долгота в градусах (0-360)
-    
+
     Returns:
         Строка вида "24°15' Pisces"
     """
@@ -118,7 +137,7 @@ def format_zodiac_position(longitude: float) -> str:
     degree = get_degree_in_sign(longitude)
     degrees = int(degree)
     minutes = int((degree - degrees) * 60)
-    
+
     return f"{degrees}°{minutes:02d}' {sign}"
 
 

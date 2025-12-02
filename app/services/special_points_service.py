@@ -32,35 +32,58 @@ class SpecialPointsService:
     @staticmethod
     def calculate_black_moon(jd: float) -> float:
         """
-        Расчёт Чёрной Луны (Лилит) - истинный осцилирующий апогей
-        
+        Расчёт Чёрной Луны (Лилит) - средний апогей Луны
+
+        Используется метод MEAN APOGEE, который является стандартом
+        в большинстве астрологических эфемерид и программ (включая ZET).
+
+        Документация Swiss Ephemeris: "most astrologers associate her
+        with the Mean Apogee"
+
         Args:
             jd: Юлианский день
-        
+
         Returns:
             Долгота Чёрной Луны в градусах
         """
-        # Используем истинный осцилирующий апогей (SE_OSCU_APOG)
-        black_moon_data, ret = swe.calc_ut(jd, swe.OSCU_APOG, swe.FLG_SWIEPH)
+        # Используем средний апогей (MEAN_APOG) - стандарт в астрологии
+        black_moon_data, ret = swe.calc_ut(jd, swe.MEAN_APOG, swe.FLG_SWIEPH)
         return black_moon_data[0]
-    
+
     @staticmethod
     def calculate_white_moon(jd: float) -> float:
         """
-        Расчёт Белой Луны (Селены) как анти-Лилит
-        
-        Формула: Селена = Лилит (истинная) + 180°
-        
+        Расчёт Белой Луны (Селены) по формуле ZET
+
+        Используется формула из программы ZET (Zet Geo), которая широко
+        распространена в русскоязычной астрологической школе и авестийской
+        традиции.
+
+        Формула: Селена = (242.4900166227 + 0.1408037548 × (JD - 2451545.0)) mod 360
+
+        Параметры:
+        - Период обращения: 7.0 лет (не 7.022 как в Swiss Ephemeris)
+        - Начальная долгота на J2000.0: 242.4900166227°
+        - Среднее движение: 0.1408037548 град/день
+
         Args:
             jd: Юлианский день
-        
+
         Returns:
             Долгота Белой Луны в градусах
         """
-        black_moon_lon = SpecialPointsService.calculate_black_moon(jd)
-        white_moon_lon = normalize_longitude(black_moon_lon + 180)
-        
-        return white_moon_lon
+        # Константы формулы ZET для Селены
+        J2000 = 2451545.0  # Эпоха J2000.0 (1 января 2000, 12:00 TT)
+        INITIAL_LONGITUDE = 242.4900166227  # Начальная долгота на J2000
+        MEAN_MOTION_PER_DAY = 0.1408037548  # Среднее движение в градусах/день
+
+        # Расчёт количества дней от эпохи J2000
+        days_from_j2000 = jd - J2000
+
+        # Расчёт долготы Селены
+        selena_longitude = (INITIAL_LONGITUDE + MEAN_MOTION_PER_DAY * days_from_j2000) % 360
+
+        return selena_longitude
     
     @staticmethod
     def calculate_chiron(jd: float) -> float:

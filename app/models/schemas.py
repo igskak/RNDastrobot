@@ -58,6 +58,7 @@ class PlanetPosition(BaseModel):
     speed: float = Field(default=0.0)
     sign: str
     degree_in_sign: float = Field(..., ge=0, lt=30)
+    degree_in_sign_formatted: Optional[str] = Field(None, description="Градус в формате 25°48'04\"")
     house: int = Field(..., ge=1, le=12)
     retrograde: bool = Field(default=False)
     # Новые поля из пункта 3.2 спецификации
@@ -74,6 +75,8 @@ class HousePosition(BaseModel):
     number: int = Field(..., ge=1, le=12)
     longitude: float = Field(..., ge=0, lt=360)
     sign: str
+    degree_in_sign: float = Field(..., ge=0, lt=30, description="Градус внутри знака (0-30)")
+    degree_in_sign_formatted: Optional[str] = Field(None, description="Градус в формате 25°48'04\"")
     # Новые поля из пункта 3.2 спецификации
     ruler_planet: Optional[str] = Field(None, description="Управитель дома (планета-управитель знака на куспиде)")
     house_group: Optional[str] = Field(None, description="Группа дома (angular, succedent, cadent)")
@@ -85,6 +88,7 @@ class AnglePosition(BaseModel):
     longitude: float = Field(..., ge=0, lt=360)
     sign: str
     degree_in_sign: float = Field(..., ge=0, lt=30)
+    degree_in_sign_formatted: Optional[str] = Field(None, description="Градус в формате 25°48'04\"")
 
 
 class SpecialPointPosition(BaseModel):
@@ -93,6 +97,7 @@ class SpecialPointPosition(BaseModel):
     longitude: float = Field(..., ge=0, lt=360)
     sign: str
     degree_in_sign: float = Field(..., ge=0, lt=30)
+    degree_in_sign_formatted: Optional[str] = Field(None, description="Градус в формате 25°48'04\"")
     house: int = Field(..., ge=1, le=12)
 
 
@@ -152,6 +157,68 @@ class PlanetDistributionInfo(BaseModel):
     spread_map: Dict
 
 
+class ElementBalanceInfo(BaseModel):
+    """Баланс стихий"""
+    fire: float
+    earth: float
+    air: float
+    water: float
+
+
+class ModeBalanceInfo(BaseModel):
+    """Баланс крестов"""
+    cardinal: float
+    fixed: float
+    mutable: float
+
+
+class GenderBalanceInfo(BaseModel):
+    """Баланс полов"""
+    masculine: float
+    feminine: float
+
+
+class ZonesBalanceInfo(BaseModel):
+    """Баланс зон Тримурти"""
+    brahma: float
+    vishnu: float
+    shiva: float
+
+
+class HemisphereBalanceInfo(BaseModel):
+    """Баланс полусфер"""
+    northern: float
+    southern: float
+    eastern: float
+    western: float
+
+
+class QuadrantBalanceInfo(BaseModel):
+    """Баланс квадрантов"""
+    q1: float
+    q2: float
+    q3: float
+    q4: float
+
+
+class HouseGroupBalanceInfo(BaseModel):
+    """Баланс групп домов"""
+    angular: float
+    succedent: float
+    cadent: float
+
+
+class BalancesInfo(BaseModel):
+    """Все интегральные балансы (пункт 3.5 спецификации)"""
+    element_balance: Optional[ElementBalanceInfo] = None
+    mode_balance: Optional[ModeBalanceInfo] = None
+    gender_balance: Optional[GenderBalanceInfo] = None
+    zones_balance: Optional[ZonesBalanceInfo] = None
+    hemisphere_balance: Optional[HemisphereBalanceInfo] = None
+    quadrant_balance: Optional[QuadrantBalanceInfo] = None
+    house_group_balance: Optional[HouseGroupBalanceInfo] = None
+
+
 class NatalChartResponse(BaseModel):
     """Полный ответ с натальной картой"""
     user_id: Optional[UUID] = None
@@ -167,6 +234,8 @@ class NatalChartResponse(BaseModel):
     stelliums: Optional[List[StelliumInfo]] = None
     cosmogram_pattern: Optional[CosmogramPatternInfo] = None
     planet_distribution: Optional[PlanetDistributionInfo] = None
+    # Новые поля из пункта 3.5 спецификации
+    balances: Optional[BalancesInfo] = None
 
 
 class ErrorResponse(BaseModel):

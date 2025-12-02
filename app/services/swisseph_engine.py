@@ -3,7 +3,7 @@
 """
 import swisseph as swe
 from typing import List, Dict, Tuple
-from app.utils.constants import PLANETS, get_zodiac_sign, get_degree_in_sign
+from app.utils.constants import PLANETS, get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds
 
 
 class SwissEphemerisEngine:
@@ -39,10 +39,12 @@ class SwissEphemerisEngine:
             latitude = planet_data[1]   # Эклиптическая широта
             distance = planet_data[2]   # Расстояние в а.е.
             speed_lon = planet_data[3]  # Скорость по долготе
-            
+
             # Определяем ретроградность (скорость < 0)
             is_retrograde = speed_lon < 0
-            
+
+            degree_in_sign = get_degree_in_sign(longitude)
+
             planets_data.append({
                 'id': planet_id,
                 'name': planet_name,
@@ -51,7 +53,8 @@ class SwissEphemerisEngine:
                 'distance': distance,
                 'speed': speed_lon,
                 'sign': get_zodiac_sign(longitude),
-                'degree_in_sign': get_degree_in_sign(longitude),
+                'degree_in_sign': degree_in_sign,
+                'degree_in_sign_formatted': format_degree_minutes_seconds(degree_in_sign),
                 'retrograde': is_retrograde,
             })
         
@@ -83,51 +86,65 @@ class SwissEphemerisEngine:
         houses_data = []
         for i in range(12):
             house_lon = cusps[i]
+            degree_in_sign = get_degree_in_sign(house_lon)
             houses_data.append({
                 'number': i + 1,  # Дома нумеруются с 1
                 'longitude': house_lon,
                 'sign': get_zodiac_sign(house_lon),
+                'degree_in_sign': degree_in_sign,
+                'degree_in_sign_formatted': format_degree_minutes_seconds(degree_in_sign),
             })
         
         # Обработка углов
         # ascmc[0] = ASC, ascmc[1] = MC, ascmc[2] = ARMC, ascmc[3] = Vertex
+        asc_deg = get_degree_in_sign(ascmc[0])
+        mc_deg = get_degree_in_sign(ascmc[1])
+        vertex_deg = get_degree_in_sign(ascmc[3])
+
         angles_data = {
             'ASC': {
                 'name': 'ASC',
                 'longitude': ascmc[0],
                 'sign': get_zodiac_sign(ascmc[0]),
-                'degree_in_sign': get_degree_in_sign(ascmc[0]),
+                'degree_in_sign': asc_deg,
+                'degree_in_sign_formatted': format_degree_minutes_seconds(asc_deg),
             },
             'MC': {
                 'name': 'MC',
                 'longitude': ascmc[1],
                 'sign': get_zodiac_sign(ascmc[1]),
-                'degree_in_sign': get_degree_in_sign(ascmc[1]),
+                'degree_in_sign': mc_deg,
+                'degree_in_sign_formatted': format_degree_minutes_seconds(mc_deg),
             },
             'Vertex': {
                 'name': 'Vertex',
                 'longitude': ascmc[3],
                 'sign': get_zodiac_sign(ascmc[3]),
-                'degree_in_sign': get_degree_in_sign(ascmc[3]),
+                'degree_in_sign': vertex_deg,
+                'degree_in_sign_formatted': format_degree_minutes_seconds(vertex_deg),
             },
         }
-        
+
         # Добавляем DSC (противоположная точка ASC)
         dsc_lon = (ascmc[0] + 180) % 360
+        dsc_deg = get_degree_in_sign(dsc_lon)
         angles_data['DSC'] = {
             'name': 'DSC',
             'longitude': dsc_lon,
             'sign': get_zodiac_sign(dsc_lon),
-            'degree_in_sign': get_degree_in_sign(dsc_lon),
+            'degree_in_sign': dsc_deg,
+            'degree_in_sign_formatted': format_degree_minutes_seconds(dsc_deg),
         }
-        
+
         # Добавляем IC (противоположная точка MC)
         ic_lon = (ascmc[1] + 180) % 360
+        ic_deg = get_degree_in_sign(ic_lon)
         angles_data['IC'] = {
             'name': 'IC',
             'longitude': ic_lon,
             'sign': get_zodiac_sign(ic_lon),
-            'degree_in_sign': get_degree_in_sign(ic_lon),
+            'degree_in_sign': ic_deg,
+            'degree_in_sign_formatted': format_degree_minutes_seconds(ic_deg),
         }
         
         return houses_data, angles_data
