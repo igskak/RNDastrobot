@@ -384,10 +384,10 @@ class UserElementBalance(Base):
     __tablename__ = 'user_element_balance'
 
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), primary_key=True)
-    fire = Column(Integer, default=0)
-    earth = Column(Integer, default=0)
-    air = Column(Integer, default=0)
-    water = Column(Integer, default=0)
+    fire = Column(Numeric(5, 2), default=0)
+    earth = Column(Numeric(5, 2), default=0)
+    air = Column(Numeric(5, 2), default=0)
+    water = Column(Numeric(5, 2), default=0)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
@@ -400,9 +400,9 @@ class UserModeBalance(Base):
     __tablename__ = 'user_mode_balance'
 
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), primary_key=True)
-    cardinal = Column(Integer, default=0)
-    fixed = Column(Integer, default=0)
-    mutable = Column(Integer, default=0)
+    cardinal = Column(Numeric(5, 2), default=0)
+    fixed = Column(Numeric(5, 2), default=0)
+    mutable = Column(Numeric(5, 2), default=0)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
@@ -415,8 +415,8 @@ class UserGenderBalance(Base):
     __tablename__ = 'user_gender_balance'
 
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), primary_key=True)
-    masculine = Column(Integer, default=0)
-    feminine = Column(Integer, default=0)
+    masculine = Column(Numeric(5, 2), default=0)
+    feminine = Column(Numeric(5, 2), default=0)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
@@ -429,9 +429,9 @@ class UserZonesBalance(Base):
     __tablename__ = 'user_zones_balance'
 
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), primary_key=True)
-    brahma = Column(Integer, default=0)
-    vishnu = Column(Integer, default=0)
-    shiva = Column(Integer, default=0)
+    brahma = Column(Numeric(5, 2), default=0)
+    vishnu = Column(Numeric(5, 2), default=0)
+    shiva = Column(Numeric(5, 2), default=0)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
@@ -444,10 +444,10 @@ class UserHemisphereBalance(Base):
     __tablename__ = 'user_hemisphere_balance'
 
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), primary_key=True)
-    northern = Column(Integer, default=0)
-    southern = Column(Integer, default=0)
-    eastern = Column(Integer, default=0)
-    western = Column(Integer, default=0)
+    northern = Column(Numeric(5, 2), default=0)
+    southern = Column(Numeric(5, 2), default=0)
+    eastern = Column(Numeric(5, 2), default=0)
+    western = Column(Numeric(5, 2), default=0)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
@@ -460,10 +460,10 @@ class UserQuadrantBalance(Base):
     __tablename__ = 'user_quadrant_balance'
 
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), primary_key=True)
-    quadrant_1 = Column(Integer, default=0)
-    quadrant_2 = Column(Integer, default=0)
-    quadrant_3 = Column(Integer, default=0)
-    quadrant_4 = Column(Integer, default=0)
+    quadrant_1 = Column(Numeric(5, 2), default=0)
+    quadrant_2 = Column(Numeric(5, 2), default=0)
+    quadrant_3 = Column(Numeric(5, 2), default=0)
+    quadrant_4 = Column(Numeric(5, 2), default=0)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
@@ -476,9 +476,9 @@ class UserHouseGroupBalance(Base):
     __tablename__ = 'user_house_group_balance'
 
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), primary_key=True)
-    angular_count = Column(Integer, default=0)
-    succedent_count = Column(Integer, default=0)
-    cadent_count = Column(Integer, default=0)
+    angular_count = Column(Numeric(5, 2), default=0)
+    succedent_count = Column(Numeric(5, 2), default=0)
+    cadent_count = Column(Numeric(5, 2), default=0)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 

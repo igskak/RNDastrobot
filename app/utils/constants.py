@@ -13,7 +13,7 @@ ZODIAC_SIGNS_RU = [
     "Весы", "Скорпион", "Стрелец", "Козерог", "Водолей", "Рыбы"
 ]
 
-# Планеты (включая Chiron)
+# Планеты (включая Chiron и Proserpina)
 PLANETS = {
     0: "Sun",
     1: "Moon",
@@ -26,6 +26,8 @@ PLANETS = {
     8: "Neptune",
     9: "Pluto",
     15: "Chiron",  # SE_CHIRON = 15 в Swiss Ephemeris
+    # Примечание: Proserpina не имеет стандартного кода в Swiss Ephemeris
+    # Будет добавлена при необходимости через пользовательские вычисления
 }
 
 PLANETS_RU = {
@@ -40,6 +42,7 @@ PLANETS_RU = {
     8: "Нептун",
     9: "Плутон",
     15: "Хирон",
+    # Proserpina будет добавлена при реализации
 }
 
 # Специальные точки (Chiron теперь в PLANETS)

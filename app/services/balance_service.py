@@ -10,7 +10,10 @@
 - Квадрантам (Q1, Q2, Q3, Q4)
 - Группам домов (Angular, Succedent, Cadent)
 
-Все расчёты учитывают веса планет: Sun=2, Moon=2, остальные=1
+Все расчёты учитывают веса планет:
+- Солнце и Луна: 2 балла
+- Меркурий, Венера, Марс: 1.5 балла
+- Юпитер, Сатурн, Уран, Нептун, Плутон, Прозерпина: 1 балл
 """
 from typing import Dict
 from uuid import UUID
@@ -29,18 +32,22 @@ from app.services.dignity_service import DignityService
 
 
 # Веса планет для расчёта балансов
+# Солнце и Луна - по 2 балла
+# Меркурий, Венера, Марс - по 1.5 балла
+# Юпитер, Сатурн, Уран, Нептун, Плутон, Прозерпина - по 1 баллу
 PLANET_WEIGHTS = {
-    'Sun': 2,
-    'Moon': 2,
-    'Mercury': 1,
-    'Venus': 1,
-    'Mars': 1,
-    'Jupiter': 1,
-    'Saturn': 1,
-    'Uranus': 1,
-    'Neptune': 1,
-    'Pluto': 1,
-    'Chiron': 1,
+    'Sun': 2.0,
+    'Moon': 2.0,
+    'Mercury': 1.5,
+    'Venus': 1.5,
+    'Mars': 1.5,
+    'Jupiter': 1.0,
+    'Saturn': 1.0,
+    'Uranus': 1.0,
+    'Neptune': 1.0,
+    'Pluto': 1.0,
+    'Chiron': 1.0,
+    'Proserpina': 1.0,  # Прозерпина (на будущее)
 }
 
 
@@ -91,17 +98,20 @@ class BalanceService:
         # Коммитим все изменения
         self.db_session.commit()
     
-    def _get_planet_weight(self, planet_name: str) -> int:
+    def _get_planet_weight(self, planet_name: str) -> float:
         """
         Получить вес планеты
-        
+
         Args:
             planet_name: Название планеты
-            
+
         Returns:
-            Вес планеты (Sun=2, Moon=2, остальные=1)
+            Вес планеты:
+            - Sun, Moon: 2.0
+            - Mercury, Venus, Mars: 1.5
+            - Jupiter, Saturn, Uranus, Neptune, Pluto, Proserpina: 1.0
         """
-        return PLANET_WEIGHTS.get(planet_name, 1)
+        return PLANET_WEIGHTS.get(planet_name, 1.0)
     
     def _calculate_element_balance(self, user_id: UUID, planets: list) -> None:
         """
