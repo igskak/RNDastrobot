@@ -152,29 +152,32 @@ class SwissEphemerisEngine:
     def get_planet_house(self, planet_lon: float, houses: List[Dict]) -> int:
         """
         Определить, в каком доме находится планета
-        
+
+        Логика: точка находится в доме, к куспиду которого она ближе всего.
+        Если точка находится ровно посередине между двумя куспидами,
+        она относится к дому с меньшим номером.
+
         Args:
             planet_lon: Долгота планеты
             houses: Список домов с куспидами
-        
+
         Returns:
             Номер дома (1-12)
         """
-        for i in range(12):
-            current_house = houses[i]
-            next_house = houses[(i + 1) % 12]
-            
-            cusp_current = current_house['longitude']
-            cusp_next = next_house['longitude']
-            
-            # Обработка перехода через 0° Овна
-            if cusp_next < cusp_current:
-                if planet_lon >= cusp_current or planet_lon < cusp_next:
-                    return current_house['number']
-            else:
-                if cusp_current <= planet_lon < cusp_next:
-                    return current_house['number']
-        
-        # Если не нашли (не должно происходить), возвращаем 1
-        return 1
+        min_distance = 360.0
+        closest_house = 1
+
+        for house in houses:
+            cusp = house['longitude']
+
+            # Вычисляем расстояние с учётом цикличности (0-360°)
+            distance = abs(planet_lon - cusp)
+            if distance > 180:
+                distance = 360 - distance
+
+            if distance < min_distance:
+                min_distance = distance
+                closest_house = house['number']
+
+        return closest_house
 
