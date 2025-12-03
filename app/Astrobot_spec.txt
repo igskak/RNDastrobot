@@ -787,13 +787,37 @@ natal_special_points (узлы, Лилит, Селена, Фортуна и т.�
 element, mode, dignity планет 
 house_group для домов. 
 
-3.3. Этап 2 — вычисление производных: аспекты, конфигурации, стеллиумы
-По natal_planets и natal_special_points рассчитать аспекты → заполнить natal_aspects. 
-На основе аспектов: 
-выявить конфигурации (Т-квадраты, трины, йоды и т.д.) → natal_configurations 
-определить стеллиумы по дому/знаку → natal_stelliums 
-Вычислить «распределение планет по кругу» → natal_planet_distribution 
-Определить фигуру Джонса по ref_cosmogram_patterns → cosmogram_pattern. 
+3.3. Этап 2 — вычисление производных: аспекты, конфигурации, стеллиумы ✅ РЕАЛИЗОВАНО
+По natal_planets и natal_special_points рассчитать аспекты → заполнить natal_aspects.
+На основе аспектов:
+выявить конфигурации (Т-квадраты, трины, йоды и т.д.) → natal_configurations
+определить стеллиумы по дому/знаку → natal_stelliums
+Вычислить «распределение планет по кругу» → natal_planet_distribution
+Определить фигуру Джонса по ref_cosmogram_patterns → cosmogram_pattern.
+
+СТАТУС РЕАЛИЗАЦИИ (дата: 2025-12-03):
+✅ Реализована система расчёта аспектов с индивидуальными орбисами планет:
+   - Правило: "если в аспекте участвуют планеты с разными орбисами - берём меньший"
+   - 21 планета/точка (Sun, Moon, Mercury, ..., ASC, MC, IC, DSC)
+   - 10 типов аспектов (после исключения 4 минорных)
+   - 210 записей с индивидуальными орбисами в таблице ref_planet_orbs
+✅ Примеры орбисов:
+   - Sun: Conjunction=12°, Trine=10°, Quintile=3°
+   - Moon: Conjunction=10°, Trine=8°, Quintile=3°
+   - Mercury: Conjunction=7°, Trine=5°, Quintile=2°
+   - Pluto: Conjunction=3°, Trine=3°, Quintile=1°
+   - BlackMoon: все аспекты=3°
+✅ Обновлён AspectService:
+   - Метод _get_planet_orbs() с кэшированием
+   - Метод _calculate_allowed_orb() для расчёта минимального орбиса
+   - Поддержка fallback на базовые орбисы из ref_aspect_types
+✅ Реализованы конфигурации аспектов (T-Square, Grand Trine, Yod, Grand Cross и др.)
+✅ Реализованы стеллиумы (по знаку и по дому)
+✅ Реализованы паттерны Джонса (Bowl, Bucket, Locomotive, Splash и др.)
+✅ Создана полная документация:
+   - PLANET_ORBS_SYSTEM.md - описание системы орбисов
+   - PLANET_ORBS_IMPLEMENTATION_REPORT.md - отчёт о реализации
+   - PLANET_ORBS_MIGRATION_GUIDE.md - руководство по миграции
 
 3.4. Этап 3 — сила и статус планет ✅ РЕАЛИЗОВАНО
 На основе:

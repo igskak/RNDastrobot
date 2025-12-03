@@ -86,14 +86,17 @@
 - `analyze_distribution(user_id)` - аналіз розподілу планет
 - `determine_jones_pattern(user_id)` - визначення фігури Джонса
 
-**Фігури Джонса:**
-- Bundle: всі планети в межах ≤120°
-- Bowl: планети в ~півколі (120-210°)
-- Bucket: Bowl + 1-2 планети-"ручка"
-- Locomotive: планети займають ~240° з рівномірним розподілом
-- Seesaw: 2 протилежні групи планет
-- Splay: 3-4 кластери з проміжками
-- Splash: планети рівномірно розподілені
+**Фігури Джонса (оновлені критерії згідно специфікації):**
+
+Використовується **11 планет**: 10 класичних (Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto) + Chiron
+
+- **Bundle**: `occupied_arc ≤ 140°` - всі планети в вузькому секторі
+- **Bowl**: `140° < occupied_arc ≤ 200°` + `empty_hemisphere_check` (пуста півсфера ≥160°) - півколо без ручки
+- **Bucket**: `rim_arc ≤ 200°` + `handle_present` (1 планета або тісне з'єднання ≤10°) - основна група + ручка
+- **Locomotive**: `max_gap 60-160°` + `gaps_above_60_count = 1` - одна пуста зона, решта планет розподілені
+- **Seesaw**: `gaps_above_60_count = 2` + `opposition_check` - дві групи планет в опозиції
+- **Splash**: `max_gap ≤ 60°` + `has_stellium = false` - рівномірний розподіл без скупчень
+- **Splay**: `max_gap ≤ 60°` + `has_stellium = true` - рівномірний розподіл зі стеллиумом (3+ планети в межах 10°)
 
 ### 4. Інтеграція (Фаза 6)
 

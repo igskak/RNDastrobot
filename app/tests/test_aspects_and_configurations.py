@@ -52,6 +52,7 @@ def test_user_id(db_session: Session):
         latitude=birth_data['latitude'],
         longitude=birth_data['longitude'],
         house_system=birth_data['house_system'],
+        save_to_db=True,
         db_session=db_session
     )
     

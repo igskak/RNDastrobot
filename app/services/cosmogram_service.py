@@ -15,10 +15,10 @@ from app.database.models import (
 class CosmogramService:
     """Сервіс для аналізу розподілу планет та визначення фігури Джонса"""
     
-    # Планети для аналізу (10 класичних)
+    # Планети для аналізу (11 планет: 10 класичних + Chiron)
     ANALYSIS_PLANETS = {
         'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
-        'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'
+        'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto', 'Chiron'
     }
     
     def __init__(self, db_session: Session):
@@ -84,6 +84,7 @@ class CosmogramService:
             NatalPlanet.planet.in_(self.ANALYSIS_PLANETS)
         ).all()
         
+        # Мінімум 10 планет для визначення фігури (можна 10 або 11)
         if len(planets) < 10:
             return {}
         
@@ -240,7 +241,16 @@ class CosmogramService:
         occupied_arc: float
     ) -> str:
         """
-        Визначити тип фігури Джонса
+        Визначити тип фігури Джонса за правильними критеріями
+
+        Критерії:
+        - Bundle: occupied_arc ≤ 140° (всі планети в вузькому секторі)
+        - Bowl: 140° < occupied_arc ≤ 200° (півколо, без ручки)
+        - Bucket: як Bowl, але є ручка (1 планета або тісне з'єднання в пустій зоні)
+        - Locomotive: одна пуста зона 60-160° (решта планет розподілені)
+        - Seesaw: ДВІ пусті зони ≥60° кожна (дві групи планет)
+        - Splash: max_gap ≤ 60° і немає стеллиума (рівномірний розподіл)
+        - Splay: max_gap ≤ 60° але Є стеллиум (розподіл зі скупченням)
 
         Args:
             longitudes: Довготи планет
@@ -251,54 +261,205 @@ class CosmogramService:
         Returns:
             str: Тип паттерну
         """
-        cluster_count = len([arc for arc in empty_arcs if arc > 60])
+        # Підрахувати кількість пустих зон ≥60°
+        gaps_above_60 = [arc for arc in empty_arcs if arc >= 60]
+        gaps_count = len(gaps_above_60)
 
-        # Bundle: всі планети в межах 120°
-        if occupied_arc <= 120:
+        # Перевірити наявність стеллиума (3+ планети в межах 10°)
+        has_stellium = self._has_stellium(longitudes)
+
+        # 1. Bundle: всі планети в межах 140°
+        if occupied_arc <= 140:
             return 'Bundle'
 
-        # Bowl: планети в межах 120-210°
-        if 120 < occupied_arc <= 210 and max_empty_arc >= 150:
-            # Перевірити, чи немає "ручки"
-            handle_count = self._count_handle_planets(longitudes, max_empty_arc)
-            if handle_count == 0:
-                return 'Bowl'
-            elif 1 <= handle_count <= 2:
-                return 'Bucket'
+        # 2. Bucket: перевірити наявність ручки (пріоритет перед Bowl та Seesaw)
+        # Ручка - це 1 планета або тісне з'єднання, що стоїть окремо від основної групи
+        handle_info = self._find_handle(longitudes, empty_arcs, max_empty_arc)
+        if handle_info['has_handle']:
+            return 'Bucket'
 
-        # Locomotive: планети займають ~240° з рівномірним розподілом
-        if 210 < occupied_arc <= 270 and 90 <= max_empty_arc <= 150:
+        # 3. Bowl: планети в межах 140-200° (без ручки)
+        # Додаткова перевірка: пуста півсфера (empty_hemisphere_check)
+        if 140 < occupied_arc <= 200:
+            # Перевірити, що є пуста півсфера (max_empty_arc >= 160°)
+            if max_empty_arc >= 160:
+                return 'Bowl'
+
+        # 4. Locomotive: одна пуста зона 60-160°
+        if gaps_count == 1 and 60 <= max_empty_arc <= 160:
             return 'Locomotive'
 
-        # Seesaw: 2 протилежні групи
-        if cluster_count == 2:
-            return 'Seesaw'
+        # 5. Seesaw: ДВІ пусті зони ≥60°
+        # Додаткова перевірка: групи мають бути приблизно в опозиції (opposition_check)
+        if gaps_count == 2:
+            # Обидві зони мають бути ≥60°
+            if all(arc >= 60 for arc in gaps_above_60):
+                # Перевірити опозицію між групами
+                if self._check_opposition_groups(longitudes, empty_arcs):
+                    return 'Seesaw'
 
-        # Splay: 3-4 кластери
-        if 3 <= cluster_count <= 4:
-            return 'Splay'
+        # 6. Splash vs Splay: немає пустих зон ≥60°
+        if max_empty_arc < 60:
+            if has_stellium:
+                return 'Splay'
+            else:
+                return 'Splash'
 
-        # Splash: планети рівномірно розподілені
-        if cluster_count >= 5 and max_empty_arc < 60:
-            return 'Splash'
-
-        # За замовчуванням - Splash
+        # За замовчуванням - Splash (рівномірний розподіл)
         return 'Splash'
 
-    def _count_handle_planets(self, longitudes: List[float], max_empty_arc: float) -> int:
+    def _check_opposition_groups(
+        self,
+        longitudes: List[float],
+        empty_arcs: List[float]
+    ) -> bool:
         """
-        Підрахувати кількість планет у "ручці" (для Bucket)
+        Перевірити, чи дві групи планет знаходяться приблизно в опозиції
+
+        Для Seesaw дві групи мають бути розділені двома пустими зонами ≥60°
+        і знаходитися приблизно навпроти одна одної (різниця ~180°)
 
         Args:
-            longitudes: Довготи планет
+            longitudes: Відсортовані довготи планет
+            empty_arcs: Порожні дуги
+
+        Returns:
+            bool: True, якщо групи в опозиції
+        """
+        # Знайти індекси двох найбільших пустих зон
+        gaps_with_indices = [(arc, i) for i, arc in enumerate(empty_arcs) if arc >= 60]
+
+        if len(gaps_with_indices) != 2:
+            return False
+
+        # Відсортувати за розміром дуги
+        gaps_with_indices.sort(reverse=True)
+        gap1_idx = gaps_with_indices[0][1]
+        gap2_idx = gaps_with_indices[1][1]
+
+        # Визначити центри двох груп планет
+        # Група 1: планети між gap1 і gap2
+        # Група 2: планети між gap2 і gap1
+
+        # Спрощена перевірка: різниця між індексами має бути приблизно половиною кола
+        # Для 10-11 планет це означає, що групи розділені приблизно порівну
+        idx_diff = abs(gap1_idx - gap2_idx)
+        n = len(longitudes)
+
+        # Перевірити, що групи приблизно рівні за кількістю планет
+        # (різниця індексів має бути близькою до n/2)
+        return abs(idx_diff - n/2) < n/4
+
+    def _has_stellium(self, longitudes: List[float]) -> bool:
+        """
+        Перевірити наявність стеллиума (3+ планети в межах 10°)
+
+        Args:
+            longitudes: Відсортовані довготи планет
+
+        Returns:
+            bool: True, якщо є стеллиум
+        """
+        STELLIUM_ORB = 10.0
+        MIN_STELLIUM_COUNT = 3
+
+        if len(longitudes) < MIN_STELLIUM_COUNT:
+            return False
+
+        # Перевірити кожну можливу групу з 3+ планет
+        for i in range(len(longitudes)):
+            group = [longitudes[i]]
+
+            # Додавати наступні планети, поки вони в межах орбісу
+            for j in range(i + 1, len(longitudes)):
+                diff = longitudes[j] - longitudes[i]
+
+                # Врахувати перехід через 0° Овна
+                if diff > 180:
+                    diff = 360 - diff
+
+                if diff <= STELLIUM_ORB:
+                    group.append(longitudes[j])
+                else:
+                    break
+
+            # Якщо знайшли групу з 3+ планет
+            if len(group) >= MIN_STELLIUM_COUNT:
+                return True
+
+        return False
+
+    def _find_handle(
+        self,
+        longitudes: List[float],
+        empty_arcs: List[float],
+        max_empty_arc: float
+    ) -> Dict:
+        """
+        Знайти "ручку" для паттерну Bucket
+
+        Ручка - це 1 планета або тісне з'єднання (2 планети в межах 10°),
+        що знаходиться в пустій зоні напроти основної групи планет.
+
+        Args:
+            longitudes: Відсортовані довготи планет
+            empty_arcs: Порожні дуги
             max_empty_arc: Максимальна порожня дуга
 
         Returns:
-            int: Кількість планет у ручці
+            Dict: {'has_handle': bool, 'handle_planets': List[float]}
         """
-        # Спрощена логіка - потрібно знайти планети в порожній дузі
-        # Поки що повертаємо 0
-        return 0  # TODO: Implement proper handle detection
+        # Визначити основну групу планет (rim) - всі планети крім можливої ручки
+        # Ручка може бути тільки в пустій зоні або поруч з нею
+        # Підрахувати, скільки планет у основній групі
+        # Якщо є 8-9 планет в основній групі, то 1-2 планети можуть бути ручкою
+
+        # Спрощена логіка: якщо є 1-2 планети, що стоять окремо від основної групи
+        # і основна група займає не більше 200°
+
+        # Знайти всі групи планет, розділені пустими зонами ≥60°
+        groups = []
+        current_group = [longitudes[0]]
+
+        for i in range(1, len(longitudes)):
+            gap = empty_arcs[i - 1]
+
+            if gap < 60:  # Планети в одній групі
+                current_group.append(longitudes[i])
+            else:  # Новий кластер
+                groups.append(current_group)
+                current_group = [longitudes[i]]
+
+        # Додати останню групу
+        groups.append(current_group)
+
+        # Для Bucket має бути рівно 2 групи: основна (rim) і ручка (handle)
+        if len(groups) != 2:
+            return {'has_handle': False, 'handle_planets': []}
+
+        # Визначити, яка група є ручкою (1-2 планети), а яка - rim (решта)
+        if len(groups[0]) <= 2 and len(groups[1]) >= 8:
+            handle_group = groups[0]
+            rim_group = groups[1]
+        elif len(groups[1]) <= 2 and len(groups[0]) >= 8:
+            handle_group = groups[1]
+            rim_group = groups[0]
+        else:
+            # Немає чіткого розділення на rim і handle
+            return {'has_handle': False, 'handle_planets': []}
+
+        # Перевірити, що ручка - це 1 планета або тісне з'єднання (≤10°)
+        if len(handle_group) == 2:
+            diff = abs(handle_group[1] - handle_group[0])
+            if diff > 10:  # Не тісне з'єднання
+                return {'has_handle': False, 'handle_planets': []}
+
+        # Перевірити, що rim займає не більше 200°
+        rim_arc = max(rim_group) - min(rim_group)
+        if rim_arc > 200:
+            return {'has_handle': False, 'handle_planets': []}
+
+        return {'has_handle': True, 'handle_planets': handle_group}
 
     def _find_anchor_planet(
         self,
