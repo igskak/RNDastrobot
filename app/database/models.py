@@ -250,6 +250,16 @@ class RefAspectType(Base):
     )
 
 
+class RefPlanetOrb(Base):
+    """Справочник индивидуальных орбисов планет по типам аспектов"""
+    __tablename__ = 'ref_planet_orbs'
+
+    planet = Column(String(20), primary_key=True)
+    aspect_type = Column(String(30), ForeignKey('ref_aspect_types.aspect_type', ondelete='CASCADE'), primary_key=True)
+    orb = Column(Numeric(5, 2), nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+
+
 class RefConfigurationType(Base):
     """Справочник типов аспектных конфигураций"""
     __tablename__ = 'ref_configuration_types'

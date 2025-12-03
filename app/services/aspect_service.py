@@ -7,7 +7,7 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from app.database.models import (
-    NatalPlanet, NatalSpecialPoint, Angle, NatalAspect, RefAspectType
+    NatalPlanet, NatalSpecialPoint, Angle, NatalAspect, RefAspectType, RefPlanetOrb
 )
 
 
@@ -17,6 +17,7 @@ class AspectService:
     def __init__(self, db_session: Session):
         self.db = db_session
         self._aspect_types_cache: Optional[List[RefAspectType]] = None
+        self._planet_orbs_cache: Optional[Dict[Tuple[str, str], float]] = None
     
     def calculate_aspects(self, user_id: UUID) -> List[Dict]:
         """
@@ -100,49 +101,120 @@ class AspectService:
         if self._aspect_types_cache is None:
             self._aspect_types_cache = self.db.query(RefAspectType).all()
         return self._aspect_types_cache
+
+    def _get_planet_orbs(self) -> Dict[Tuple[str, str], float]:
+        """
+        Получить все орбисы планет с кэшированием
+
+        Returns:
+            Dict: Словарь {(planet, aspect_type): orb}
+        """
+        if self._planet_orbs_cache is None:
+            orbs = self.db.query(RefPlanetOrb).all()
+            self._planet_orbs_cache = {
+                (orb.planet, orb.aspect_type): float(orb.orb)
+                for orb in orbs
+            }
+        return self._planet_orbs_cache
+
+    def _calculate_allowed_orb(
+        self,
+        body_a: str,
+        body_b: str,
+        aspect_type: str
+    ) -> float:
+        """
+        Расчет допустимого орбиса для пары тел согласно правилу:
+        "если в аспекте участвуют планеты с разными орбисами - берем меньший"
+
+        Args:
+            body_a: Название первого тела (планета/точка)
+            body_b: Название второго тела
+            aspect_type: Тип аспекта (например, 'Conjunction')
+
+        Returns:
+            float: Минимальный орбис из двух тел
+        """
+        planet_orbs = self._get_planet_orbs()
+
+        # Получить орбис для тела A
+        orb_a = planet_orbs.get((body_a, aspect_type))
+
+        # Получить орбис для тела B
+        orb_b = planet_orbs.get((body_b, aspect_type))
+
+        # Если орбис не найден, использовать базовый из ref_aspect_types
+        if orb_a is None:
+            aspect = self.db.query(RefAspectType).filter(
+                RefAspectType.aspect_type == aspect_type
+            ).first()
+            orb_a = float(aspect.base_orb) if aspect else 5.0
+
+        if orb_b is None:
+            aspect = self.db.query(RefAspectType).filter(
+                RefAspectType.aspect_type == aspect_type
+            ).first()
+            orb_b = float(aspect.base_orb) if aspect else 5.0
+
+        # ГЛАВНОЕ ПРАВИЛО: берем меньший орбис
+        return min(orb_a, orb_b)
     
     def _calculate_aspect_between(
-        self, 
-        obj1: Dict, 
-        obj2: Dict, 
+        self,
+        obj1: Dict,
+        obj2: Dict,
         aspect_types: List[RefAspectType]
     ) -> Optional[Dict]:
         """
-        Розрахунок аспекту між двома об'єктами
-        
+        Розрахунок аспекту між двома об'єктами з використанням індивідуальних орбісів
+
+        Алгоритм:
+        1. Рассчитать угловое расстояние между телами
+        2. Для каждого типа аспекта:
+           - Получить индивидуальный орбис для каждого тела
+           - Применить правило: "берем меньший орбис"
+           - Проверить, попадает ли отклонение в допустимый орбис
+
         Args:
             obj1: Перший об'єкт
             obj2: Другий об'єкт
             aspect_types: Список типів аспектів
-            
+
         Returns:
             Optional[Dict]: Дані аспекту або None
         """
         # Не аспектуємо спецточки між собою
         if obj1['type'] == 'special_point' and obj2['type'] == 'special_point':
             return None
-        
-        # Обчислити різницю довгот
+
+        # 1. Рассчитать угловое расстояние между телами
         diff = abs(obj1['longitude'] - obj2['longitude'])
-        
+
         # Нормалізувати до 0-180
         if diff > 180:
             diff = 360 - diff
-        
-        # Перевірити кожен тип аспекту
+
+        # 2. Проверить каждый тип аспекта
         for aspect_type in aspect_types:
             exact_angle = float(aspect_type.exact_angle)
-            orb = float(aspect_type.base_orb)
-            
-            # Перевірити, чи попадає різниця в орбіс
-            if abs(diff - exact_angle) <= orb:
-                actual_orb = abs(diff - exact_angle)
-                
+
+            # 3. НОВОЕ: Получить индивидуальный орбис для данной пары
+            max_orb = self._calculate_allowed_orb(
+                obj1['name'],
+                obj2['name'],
+                aspect_type.aspect_type
+            )
+
+            # 4. Рассчитать отклонение от точного аспекта
+            deviation = abs(diff - exact_angle)
+
+            # 5. Проверка: если отклонение <= допустимого орбиса
+            if deviation <= max_orb:
                 return {
                     'planet_1': obj1['name'],
                     'planet_2': obj2['name'],
                     'aspect_type': aspect_type.aspect_type,
-                    'orb': actual_orb,
+                    'orb': deviation,  # Фактический орбис (отклонение от точного аспекта)
                     'is_major': aspect_type.class_ == 'major',
                     'harmonic_type': aspect_type.character
                 }
