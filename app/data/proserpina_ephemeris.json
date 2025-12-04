@@ -1,0 +1,1007 @@
+{
+  "1900": {
+    "longitude": 163.5285,
+    "sign": "Virgo",
+    "formatted": "13°31.71' Virgo"
+  },
+  "1901": {
+    "longitude": 164.06985,
+    "sign": "Virgo",
+    "formatted": "14°4.19' Virgo"
+  },
+  "1902": {
+    "longitude": 164.6112,
+    "sign": "Virgo",
+    "formatted": "14°36.67' Virgo"
+  },
+  "1903": {
+    "longitude": 165.15255,
+    "sign": "Virgo",
+    "formatted": "15°9.15' Virgo"
+  },
+  "1904": {
+    "longitude": 165.6939,
+    "sign": "Virgo",
+    "formatted": "15°41.63' Virgo"
+  },
+  "1905": {
+    "longitude": 166.23525,
+    "sign": "Virgo",
+    "formatted": "16°14.12' Virgo"
+  },
+  "1906": {
+    "longitude": 166.7766,
+    "sign": "Virgo",
+    "formatted": "16°46.60' Virgo"
+  },
+  "1907": {
+    "longitude": 167.31795,
+    "sign": "Virgo",
+    "formatted": "17°19.08' Virgo"
+  },
+  "1908": {
+    "longitude": 167.8593,
+    "sign": "Virgo",
+    "formatted": "17°51.56' Virgo"
+  },
+  "1909": {
+    "longitude": 168.40065,
+    "sign": "Virgo",
+    "formatted": "18°24.04' Virgo"
+  },
+  "1910": {
+    "longitude": 168.942,
+    "sign": "Virgo",
+    "formatted": "18°56.52' Virgo"
+  },
+  "1911": {
+    "longitude": 169.48335,
+    "sign": "Virgo",
+    "formatted": "19°29.00' Virgo"
+  },
+  "1912": {
+    "longitude": 170.0247,
+    "sign": "Virgo",
+    "formatted": "20°1.48' Virgo"
+  },
+  "1913": {
+    "longitude": 170.56605,
+    "sign": "Virgo",
+    "formatted": "20°33.96' Virgo"
+  },
+  "1914": {
+    "longitude": 171.1074,
+    "sign": "Virgo",
+    "formatted": "21°6.44' Virgo"
+  },
+  "1915": {
+    "longitude": 171.64875,
+    "sign": "Virgo",
+    "formatted": "21°38.93' Virgo"
+  },
+  "1916": {
+    "longitude": 172.1901,
+    "sign": "Virgo",
+    "formatted": "22°11.41' Virgo"
+  },
+  "1917": {
+    "longitude": 172.73145,
+    "sign": "Virgo",
+    "formatted": "22°43.89' Virgo"
+  },
+  "1918": {
+    "longitude": 173.2728,
+    "sign": "Virgo",
+    "formatted": "23°16.37' Virgo"
+  },
+  "1919": {
+    "longitude": 173.81415,
+    "sign": "Virgo",
+    "formatted": "23°48.85' Virgo"
+  },
+  "1920": {
+    "longitude": 174.3555,
+    "sign": "Virgo",
+    "formatted": "24°21.33' Virgo"
+  },
+  "1921": {
+    "longitude": 174.89685,
+    "sign": "Virgo",
+    "formatted": "24°53.81' Virgo"
+  },
+  "1922": {
+    "longitude": 175.4382,
+    "sign": "Virgo",
+    "formatted": "25°26.29' Virgo"
+  },
+  "1923": {
+    "longitude": 175.97955,
+    "sign": "Virgo",
+    "formatted": "25°58.77' Virgo"
+  },
+  "1924": {
+    "longitude": 176.5209,
+    "sign": "Virgo",
+    "formatted": "26°31.25' Virgo"
+  },
+  "1925": {
+    "longitude": 177.06225,
+    "sign": "Virgo",
+    "formatted": "27°3.74' Virgo"
+  },
+  "1926": {
+    "longitude": 177.6036,
+    "sign": "Virgo",
+    "formatted": "27°36.22' Virgo"
+  },
+  "1927": {
+    "longitude": 178.14495,
+    "sign": "Virgo",
+    "formatted": "28°8.70' Virgo"
+  },
+  "1928": {
+    "longitude": 178.6863,
+    "sign": "Virgo",
+    "formatted": "28°41.18' Virgo"
+  },
+  "1929": {
+    "longitude": 179.22765,
+    "sign": "Virgo",
+    "formatted": "29°13.66' Virgo"
+  },
+  "1930": {
+    "longitude": 179.769,
+    "sign": "Virgo",
+    "formatted": "29°46.14' Virgo"
+  },
+  "1931": {
+    "longitude": 180.31035,
+    "sign": "Libra",
+    "formatted": "0°18.62' Libra"
+  },
+  "1932": {
+    "longitude": 180.8517,
+    "sign": "Libra",
+    "formatted": "0°51.10' Libra"
+  },
+  "1933": {
+    "longitude": 181.39305,
+    "sign": "Libra",
+    "formatted": "1°23.58' Libra"
+  },
+  "1934": {
+    "longitude": 181.9344,
+    "sign": "Libra",
+    "formatted": "1°56.06' Libra"
+  },
+  "1935": {
+    "longitude": 182.47575,
+    "sign": "Libra",
+    "formatted": "2°28.55' Libra"
+  },
+  "1936": {
+    "longitude": 183.0171,
+    "sign": "Libra",
+    "formatted": "3°1.03' Libra"
+  },
+  "1937": {
+    "longitude": 183.55845,
+    "sign": "Libra",
+    "formatted": "3°33.51' Libra"
+  },
+  "1938": {
+    "longitude": 184.0998,
+    "sign": "Libra",
+    "formatted": "4°5.99' Libra"
+  },
+  "1939": {
+    "longitude": 184.64115,
+    "sign": "Libra",
+    "formatted": "4°38.47' Libra"
+  },
+  "1940": {
+    "longitude": 185.1825,
+    "sign": "Libra",
+    "formatted": "5°10.95' Libra"
+  },
+  "1941": {
+    "longitude": 185.72385,
+    "sign": "Libra",
+    "formatted": "5°43.43' Libra"
+  },
+  "1942": {
+    "longitude": 186.2652,
+    "sign": "Libra",
+    "formatted": "6°15.91' Libra"
+  },
+  "1943": {
+    "longitude": 186.80655,
+    "sign": "Libra",
+    "formatted": "6°48.39' Libra"
+  },
+  "1944": {
+    "longitude": 187.3479,
+    "sign": "Libra",
+    "formatted": "7°20.87' Libra"
+  },
+  "1945": {
+    "longitude": 187.88925,
+    "sign": "Libra",
+    "formatted": "7°53.36' Libra"
+  },
+  "1946": {
+    "longitude": 188.4306,
+    "sign": "Libra",
+    "formatted": "8°25.84' Libra"
+  },
+  "1947": {
+    "longitude": 188.97195,
+    "sign": "Libra",
+    "formatted": "8°58.32' Libra"
+  },
+  "1948": {
+    "longitude": 189.5133,
+    "sign": "Libra",
+    "formatted": "9°30.80' Libra"
+  },
+  "1949": {
+    "longitude": 190.05465,
+    "sign": "Libra",
+    "formatted": "10°3.28' Libra"
+  },
+  "1950": {
+    "longitude": 190.596,
+    "sign": "Libra",
+    "formatted": "10°35.76' Libra"
+  },
+  "1951": {
+    "longitude": 191.13735,
+    "sign": "Libra",
+    "formatted": "11°8.24' Libra"
+  },
+  "1952": {
+    "longitude": 191.6787,
+    "sign": "Libra",
+    "formatted": "11°40.72' Libra"
+  },
+  "1953": {
+    "longitude": 192.22005,
+    "sign": "Libra",
+    "formatted": "12°13.20' Libra"
+  },
+  "1954": {
+    "longitude": 192.7614,
+    "sign": "Libra",
+    "formatted": "12°45.68' Libra"
+  },
+  "1955": {
+    "longitude": 193.30275,
+    "sign": "Libra",
+    "formatted": "13°18.17' Libra"
+  },
+  "1956": {
+    "longitude": 193.8441,
+    "sign": "Libra",
+    "formatted": "13°50.65' Libra"
+  },
+  "1957": {
+    "longitude": 194.38545,
+    "sign": "Libra",
+    "formatted": "14°23.13' Libra"
+  },
+  "1958": {
+    "longitude": 194.9268,
+    "sign": "Libra",
+    "formatted": "14°55.61' Libra"
+  },
+  "1959": {
+    "longitude": 195.46815,
+    "sign": "Libra",
+    "formatted": "15°28.09' Libra"
+  },
+  "1960": {
+    "longitude": 196.0095,
+    "sign": "Libra",
+    "formatted": "16°0.57' Libra"
+  },
+  "1961": {
+    "longitude": 196.55085,
+    "sign": "Libra",
+    "formatted": "16°33.05' Libra"
+  },
+  "1962": {
+    "longitude": 197.0922,
+    "sign": "Libra",
+    "formatted": "17°5.53' Libra"
+  },
+  "1963": {
+    "longitude": 197.63355,
+    "sign": "Libra",
+    "formatted": "17°38.01' Libra"
+  },
+  "1964": {
+    "longitude": 198.1749,
+    "sign": "Libra",
+    "formatted": "18°10.49' Libra"
+  },
+  "1965": {
+    "longitude": 198.71625,
+    "sign": "Libra",
+    "formatted": "18°42.98' Libra"
+  },
+  "1966": {
+    "longitude": 199.2576,
+    "sign": "Libra",
+    "formatted": "19°15.46' Libra"
+  },
+  "1967": {
+    "longitude": 199.79895,
+    "sign": "Libra",
+    "formatted": "19°47.94' Libra"
+  },
+  "1968": {
+    "longitude": 200.3403,
+    "sign": "Libra",
+    "formatted": "20°20.42' Libra"
+  },
+  "1969": {
+    "longitude": 200.88165,
+    "sign": "Libra",
+    "formatted": "20°52.90' Libra"
+  },
+  "1970": {
+    "longitude": 201.423,
+    "sign": "Libra",
+    "formatted": "21°25.38' Libra"
+  },
+  "1971": {
+    "longitude": 201.96435,
+    "sign": "Libra",
+    "formatted": "21°57.86' Libra"
+  },
+  "1972": {
+    "longitude": 202.5057,
+    "sign": "Libra",
+    "formatted": "22°30.34' Libra"
+  },
+  "1973": {
+    "longitude": 203.04705,
+    "sign": "Libra",
+    "formatted": "23°2.82' Libra"
+  },
+  "1974": {
+    "longitude": 203.5884,
+    "sign": "Libra",
+    "formatted": "23°35.30' Libra"
+  },
+  "1975": {
+    "longitude": 204.12975,
+    "sign": "Libra",
+    "formatted": "24°7.79' Libra"
+  },
+  "1976": {
+    "longitude": 204.6711,
+    "sign": "Libra",
+    "formatted": "24°40.27' Libra"
+  },
+  "1977": {
+    "longitude": 205.21245,
+    "sign": "Libra",
+    "formatted": "25°12.75' Libra"
+  },
+  "1978": {
+    "longitude": 205.7538,
+    "sign": "Libra",
+    "formatted": "25°45.23' Libra"
+  },
+  "1979": {
+    "longitude": 206.29515,
+    "sign": "Libra",
+    "formatted": "26°17.71' Libra"
+  },
+  "1980": {
+    "longitude": 206.8365,
+    "sign": "Libra",
+    "formatted": "26°50.19' Libra"
+  },
+  "1981": {
+    "longitude": 207.37785,
+    "sign": "Libra",
+    "formatted": "27°22.67' Libra"
+  },
+  "1982": {
+    "longitude": 207.9192,
+    "sign": "Libra",
+    "formatted": "27°55.15' Libra"
+  },
+  "1983": {
+    "longitude": 208.46055,
+    "sign": "Libra",
+    "formatted": "28°27.63' Libra"
+  },
+  "1984": {
+    "longitude": 209.0019,
+    "sign": "Libra",
+    "formatted": "29°0.11' Libra"
+  },
+  "1985": {
+    "longitude": 209.54325,
+    "sign": "Libra",
+    "formatted": "29°32.60' Libra"
+  },
+  "1986": {
+    "longitude": 210.0846,
+    "sign": "Scorpio",
+    "formatted": "0°5.08' Scorpio"
+  },
+  "1987": {
+    "longitude": 210.62595,
+    "sign": "Scorpio",
+    "formatted": "0°37.56' Scorpio"
+  },
+  "1988": {
+    "longitude": 211.1673,
+    "sign": "Scorpio",
+    "formatted": "1°10.04' Scorpio"
+  },
+  "1989": {
+    "longitude": 211.70865,
+    "sign": "Scorpio",
+    "formatted": "1°42.52' Scorpio"
+  },
+  "1990": {
+    "longitude": 212.25,
+    "sign": "Scorpio",
+    "formatted": "2°15.00' Scorpio"
+  },
+  "1991": {
+    "longitude": 212.79135,
+    "sign": "Scorpio",
+    "formatted": "2°47.48' Scorpio"
+  },
+  "1992": {
+    "longitude": 213.3327,
+    "sign": "Scorpio",
+    "formatted": "3°19.96' Scorpio"
+  },
+  "1993": {
+    "longitude": 213.87405,
+    "sign": "Scorpio",
+    "formatted": "3°52.44' Scorpio"
+  },
+  "1994": {
+    "longitude": 214.4154,
+    "sign": "Scorpio",
+    "formatted": "4°24.92' Scorpio"
+  },
+  "1995": {
+    "longitude": 214.95675,
+    "sign": "Scorpio",
+    "formatted": "4°57.40' Scorpio"
+  },
+  "1996": {
+    "longitude": 215.4981,
+    "sign": "Scorpio",
+    "formatted": "5°29.89' Scorpio"
+  },
+  "1997": {
+    "longitude": 216.03945,
+    "sign": "Scorpio",
+    "formatted": "6°2.37' Scorpio"
+  },
+  "1998": {
+    "longitude": 216.5808,
+    "sign": "Scorpio",
+    "formatted": "6°34.85' Scorpio"
+  },
+  "1999": {
+    "longitude": 217.12215,
+    "sign": "Scorpio",
+    "formatted": "7°7.33' Scorpio"
+  },
+  "2000": {
+    "longitude": 217.6635,
+    "sign": "Scorpio",
+    "formatted": "7°39.81' Scorpio"
+  },
+  "2001": {
+    "longitude": 218.20485,
+    "sign": "Scorpio",
+    "formatted": "8°12.29' Scorpio"
+  },
+  "2002": {
+    "longitude": 218.7462,
+    "sign": "Scorpio",
+    "formatted": "8°44.77' Scorpio"
+  },
+  "2003": {
+    "longitude": 219.28755,
+    "sign": "Scorpio",
+    "formatted": "9°17.25' Scorpio"
+  },
+  "2004": {
+    "longitude": 219.8289,
+    "sign": "Scorpio",
+    "formatted": "9°49.73' Scorpio"
+  },
+  "2005": {
+    "longitude": 220.37025,
+    "sign": "Scorpio",
+    "formatted": "10°22.21' Scorpio"
+  },
+  "2006": {
+    "longitude": 220.9116,
+    "sign": "Scorpio",
+    "formatted": "10°54.70' Scorpio"
+  },
+  "2007": {
+    "longitude": 221.45295,
+    "sign": "Scorpio",
+    "formatted": "11°27.18' Scorpio"
+  },
+  "2008": {
+    "longitude": 221.9943,
+    "sign": "Scorpio",
+    "formatted": "11°59.66' Scorpio"
+  },
+  "2009": {
+    "longitude": 222.53565,
+    "sign": "Scorpio",
+    "formatted": "12°32.14' Scorpio"
+  },
+  "2010": {
+    "longitude": 223.077,
+    "sign": "Scorpio",
+    "formatted": "13°4.62' Scorpio"
+  },
+  "2011": {
+    "longitude": 223.61835,
+    "sign": "Scorpio",
+    "formatted": "13°37.10' Scorpio"
+  },
+  "2012": {
+    "longitude": 224.1597,
+    "sign": "Scorpio",
+    "formatted": "14°9.58' Scorpio"
+  },
+  "2013": {
+    "longitude": 224.70105,
+    "sign": "Scorpio",
+    "formatted": "14°42.06' Scorpio"
+  },
+  "2014": {
+    "longitude": 225.2424,
+    "sign": "Scorpio",
+    "formatted": "15°14.54' Scorpio"
+  },
+  "2015": {
+    "longitude": 225.78375,
+    "sign": "Scorpio",
+    "formatted": "15°47.02' Scorpio"
+  },
+  "2016": {
+    "longitude": 226.3251,
+    "sign": "Scorpio",
+    "formatted": "16°19.51' Scorpio"
+  },
+  "2017": {
+    "longitude": 226.86645,
+    "sign": "Scorpio",
+    "formatted": "16°51.99' Scorpio"
+  },
+  "2018": {
+    "longitude": 227.4078,
+    "sign": "Scorpio",
+    "formatted": "17°24.47' Scorpio"
+  },
+  "2019": {
+    "longitude": 227.94915,
+    "sign": "Scorpio",
+    "formatted": "17°56.95' Scorpio"
+  },
+  "2020": {
+    "longitude": 228.4905,
+    "sign": "Scorpio",
+    "formatted": "18°29.43' Scorpio"
+  },
+  "2021": {
+    "longitude": 229.03185,
+    "sign": "Scorpio",
+    "formatted": "19°1.91' Scorpio"
+  },
+  "2022": {
+    "longitude": 229.5732,
+    "sign": "Scorpio",
+    "formatted": "19°34.39' Scorpio"
+  },
+  "2023": {
+    "longitude": 230.11455,
+    "sign": "Scorpio",
+    "formatted": "20°6.87' Scorpio"
+  },
+  "2024": {
+    "longitude": 230.6559,
+    "sign": "Scorpio",
+    "formatted": "20°39.35' Scorpio"
+  },
+  "2025": {
+    "longitude": 231.19725,
+    "sign": "Scorpio",
+    "formatted": "21°11.83' Scorpio"
+  },
+  "2026": {
+    "longitude": 231.7386,
+    "sign": "Scorpio",
+    "formatted": "21°44.32' Scorpio"
+  },
+  "2027": {
+    "longitude": 232.27995,
+    "sign": "Scorpio",
+    "formatted": "22°16.80' Scorpio"
+  },
+  "2028": {
+    "longitude": 232.8213,
+    "sign": "Scorpio",
+    "formatted": "22°49.28' Scorpio"
+  },
+  "2029": {
+    "longitude": 233.36265,
+    "sign": "Scorpio",
+    "formatted": "23°21.76' Scorpio"
+  },
+  "2030": {
+    "longitude": 233.904,
+    "sign": "Scorpio",
+    "formatted": "23°54.24' Scorpio"
+  },
+  "2031": {
+    "longitude": 234.44535,
+    "sign": "Scorpio",
+    "formatted": "24°26.72' Scorpio"
+  },
+  "2032": {
+    "longitude": 234.9867,
+    "sign": "Scorpio",
+    "formatted": "24°59.20' Scorpio"
+  },
+  "2033": {
+    "longitude": 235.52805,
+    "sign": "Scorpio",
+    "formatted": "25°31.68' Scorpio"
+  },
+  "2034": {
+    "longitude": 236.0694,
+    "sign": "Scorpio",
+    "formatted": "26°4.16' Scorpio"
+  },
+  "2035": {
+    "longitude": 236.61075,
+    "sign": "Scorpio",
+    "formatted": "26°36.64' Scorpio"
+  },
+  "2036": {
+    "longitude": 237.1521,
+    "sign": "Scorpio",
+    "formatted": "27°9.13' Scorpio"
+  },
+  "2037": {
+    "longitude": 237.69345,
+    "sign": "Scorpio",
+    "formatted": "27°41.61' Scorpio"
+  },
+  "2038": {
+    "longitude": 238.2348,
+    "sign": "Scorpio",
+    "formatted": "28°14.09' Scorpio"
+  },
+  "2039": {
+    "longitude": 238.77615,
+    "sign": "Scorpio",
+    "formatted": "28°46.57' Scorpio"
+  },
+  "2040": {
+    "longitude": 239.3175,
+    "sign": "Scorpio",
+    "formatted": "29°19.05' Scorpio"
+  },
+  "2041": {
+    "longitude": 239.85885,
+    "sign": "Scorpio",
+    "formatted": "29°51.53' Scorpio"
+  },
+  "2042": {
+    "longitude": 240.4002,
+    "sign": "Sagittarius",
+    "formatted": "0°24.01' Sagittarius"
+  },
+  "2043": {
+    "longitude": 240.94155,
+    "sign": "Sagittarius",
+    "formatted": "0°56.49' Sagittarius"
+  },
+  "2044": {
+    "longitude": 241.4829,
+    "sign": "Sagittarius",
+    "formatted": "1°28.97' Sagittarius"
+  },
+  "2045": {
+    "longitude": 242.02425,
+    "sign": "Sagittarius",
+    "formatted": "2°1.45' Sagittarius"
+  },
+  "2046": {
+    "longitude": 242.5656,
+    "sign": "Sagittarius",
+    "formatted": "2°33.94' Sagittarius"
+  },
+  "2047": {
+    "longitude": 243.10695,
+    "sign": "Sagittarius",
+    "formatted": "3°6.42' Sagittarius"
+  },
+  "2048": {
+    "longitude": 243.6483,
+    "sign": "Sagittarius",
+    "formatted": "3°38.90' Sagittarius"
+  },
+  "2049": {
+    "longitude": 244.18965,
+    "sign": "Sagittarius",
+    "formatted": "4°11.38' Sagittarius"
+  },
+  "2050": {
+    "longitude": 244.731,
+    "sign": "Sagittarius",
+    "formatted": "4°43.86' Sagittarius"
+  },
+  "2051": {
+    "longitude": 245.27235,
+    "sign": "Sagittarius",
+    "formatted": "5°16.34' Sagittarius"
+  },
+  "2052": {
+    "longitude": 245.8137,
+    "sign": "Sagittarius",
+    "formatted": "5°48.82' Sagittarius"
+  },
+  "2053": {
+    "longitude": 246.35505,
+    "sign": "Sagittarius",
+    "formatted": "6°21.30' Sagittarius"
+  },
+  "2054": {
+    "longitude": 246.8964,
+    "sign": "Sagittarius",
+    "formatted": "6°53.78' Sagittarius"
+  },
+  "2055": {
+    "longitude": 247.43775,
+    "sign": "Sagittarius",
+    "formatted": "7°26.26' Sagittarius"
+  },
+  "2056": {
+    "longitude": 247.9791,
+    "sign": "Sagittarius",
+    "formatted": "7°58.75' Sagittarius"
+  },
+  "2057": {
+    "longitude": 248.52045,
+    "sign": "Sagittarius",
+    "formatted": "8°31.23' Sagittarius"
+  },
+  "2058": {
+    "longitude": 249.0618,
+    "sign": "Sagittarius",
+    "formatted": "9°3.71' Sagittarius"
+  },
+  "2059": {
+    "longitude": 249.60315,
+    "sign": "Sagittarius",
+    "formatted": "9°36.19' Sagittarius"
+  },
+  "2060": {
+    "longitude": 250.1445,
+    "sign": "Sagittarius",
+    "formatted": "10°8.67' Sagittarius"
+  },
+  "2061": {
+    "longitude": 250.68585,
+    "sign": "Sagittarius",
+    "formatted": "10°41.15' Sagittarius"
+  },
+  "2062": {
+    "longitude": 251.2272,
+    "sign": "Sagittarius",
+    "formatted": "11°13.63' Sagittarius"
+  },
+  "2063": {
+    "longitude": 251.76855,
+    "sign": "Sagittarius",
+    "formatted": "11°46.11' Sagittarius"
+  },
+  "2064": {
+    "longitude": 252.3099,
+    "sign": "Sagittarius",
+    "formatted": "12°18.59' Sagittarius"
+  },
+  "2065": {
+    "longitude": 252.85125,
+    "sign": "Sagittarius",
+    "formatted": "12°51.07' Sagittarius"
+  },
+  "2066": {
+    "longitude": 253.3926,
+    "sign": "Sagittarius",
+    "formatted": "13°23.56' Sagittarius"
+  },
+  "2067": {
+    "longitude": 253.93395,
+    "sign": "Sagittarius",
+    "formatted": "13°56.04' Sagittarius"
+  },
+  "2068": {
+    "longitude": 254.4753,
+    "sign": "Sagittarius",
+    "formatted": "14°28.52' Sagittarius"
+  },
+  "2069": {
+    "longitude": 255.01665,
+    "sign": "Sagittarius",
+    "formatted": "15°1.00' Sagittarius"
+  },
+  "2070": {
+    "longitude": 255.558,
+    "sign": "Sagittarius",
+    "formatted": "15°33.48' Sagittarius"
+  },
+  "2071": {
+    "longitude": 256.09935,
+    "sign": "Sagittarius",
+    "formatted": "16°5.96' Sagittarius"
+  },
+  "2072": {
+    "longitude": 256.6407,
+    "sign": "Sagittarius",
+    "formatted": "16°38.44' Sagittarius"
+  },
+  "2073": {
+    "longitude": 257.18205,
+    "sign": "Sagittarius",
+    "formatted": "17°10.92' Sagittarius"
+  },
+  "2074": {
+    "longitude": 257.7234,
+    "sign": "Sagittarius",
+    "formatted": "17°43.40' Sagittarius"
+  },
+  "2075": {
+    "longitude": 258.26475,
+    "sign": "Sagittarius",
+    "formatted": "18°15.88' Sagittarius"
+  },
+  "2076": {
+    "longitude": 258.8061,
+    "sign": "Sagittarius",
+    "formatted": "18°48.37' Sagittarius"
+  },
+  "2077": {
+    "longitude": 259.34745,
+    "sign": "Sagittarius",
+    "formatted": "19°20.85' Sagittarius"
+  },
+  "2078": {
+    "longitude": 259.8888,
+    "sign": "Sagittarius",
+    "formatted": "19°53.33' Sagittarius"
+  },
+  "2079": {
+    "longitude": 260.43015,
+    "sign": "Sagittarius",
+    "formatted": "20°25.81' Sagittarius"
+  },
+  "2080": {
+    "longitude": 260.9715,
+    "sign": "Sagittarius",
+    "formatted": "20°58.29' Sagittarius"
+  },
+  "2081": {
+    "longitude": 261.51285,
+    "sign": "Sagittarius",
+    "formatted": "21°30.77' Sagittarius"
+  },
+  "2082": {
+    "longitude": 262.0542,
+    "sign": "Sagittarius",
+    "formatted": "22°3.25' Sagittarius"
+  },
+  "2083": {
+    "longitude": 262.59555,
+    "sign": "Sagittarius",
+    "formatted": "22°35.73' Sagittarius"
+  },
+  "2084": {
+    "longitude": 263.1369,
+    "sign": "Sagittarius",
+    "formatted": "23°8.21' Sagittarius"
+  },
+  "2085": {
+    "longitude": 263.67825,
+    "sign": "Sagittarius",
+    "formatted": "23°40.69' Sagittarius"
+  },
+  "2086": {
+    "longitude": 264.2196,
+    "sign": "Sagittarius",
+    "formatted": "24°13.18' Sagittarius"
+  },
+  "2087": {
+    "longitude": 264.76095,
+    "sign": "Sagittarius",
+    "formatted": "24°45.66' Sagittarius"
+  },
+  "2088": {
+    "longitude": 265.3023,
+    "sign": "Sagittarius",
+    "formatted": "25°18.14' Sagittarius"
+  },
+  "2089": {
+    "longitude": 265.84365,
+    "sign": "Sagittarius",
+    "formatted": "25°50.62' Sagittarius"
+  },
+  "2090": {
+    "longitude": 266.385,
+    "sign": "Sagittarius",
+    "formatted": "26°23.10' Sagittarius"
+  },
+  "2091": {
+    "longitude": 266.92635,
+    "sign": "Sagittarius",
+    "formatted": "26°55.58' Sagittarius"
+  },
+  "2092": {
+    "longitude": 267.4677,
+    "sign": "Sagittarius",
+    "formatted": "27°28.06' Sagittarius"
+  },
+  "2093": {
+    "longitude": 268.00905,
+    "sign": "Sagittarius",
+    "formatted": "28°0.54' Sagittarius"
+  },
+  "2094": {
+    "longitude": 268.5504,
+    "sign": "Sagittarius",
+    "formatted": "28°33.02' Sagittarius"
+  },
+  "2095": {
+    "longitude": 269.09175,
+    "sign": "Sagittarius",
+    "formatted": "29°5.50' Sagittarius"
+  },
+  "2096": {
+    "longitude": 269.6331,
+    "sign": "Sagittarius",
+    "formatted": "29°37.99' Sagittarius"
+  },
+  "2097": {
+    "longitude": 270.17445,
+    "sign": "Capricorn",
+    "formatted": "0°10.47' Capricorn"
+  },
+  "2098": {
+    "longitude": 270.7158,
+    "sign": "Capricorn",
+    "formatted": "0°42.95' Capricorn"
+  },
+  "2099": {
+    "longitude": 271.25715,
+    "sign": "Capricorn",
+    "formatted": "1°15.43' Capricorn"
+  },
+  "2100": {
+    "longitude": 271.7985,
+    "sign": "Capricorn",
+    "formatted": "1°47.91' Capricorn"
+  }
+}

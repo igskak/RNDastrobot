@@ -4,6 +4,7 @@
 import swisseph as swe
 from typing import List, Dict, Tuple
 from app.utils.constants import PLANETS, get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds
+from app.services.special_points_service import SpecialPointsService
 
 
 class SwissEphemerisEngine:
@@ -22,26 +23,34 @@ class SwissEphemerisEngine:
     def calculate_planets(self, jd: float) -> List[Dict]:
         """
         Расчёт позиций планет
-        
+
         Args:
             jd: Юлианский день
-        
+
         Returns:
             Список словарей с данными о планетах
         """
         planets_data = []
-        
-        for planet_id, planet_name in PLANETS.items():
-            # Расчёт позиции планеты
-            planet_data, ret = swe.calc_ut(jd, planet_id, swe.FLG_SWIEPH | swe.FLG_SPEED)
-            
-            longitude = planet_data[0]  # Эклиптическая долгота
-            latitude = planet_data[1]   # Эклиптическая широта
-            distance = planet_data[2]   # Расстояние в а.е.
-            speed_lon = planet_data[3]  # Скорость по долготе
 
-            # Определяем ретроградность (скорость < 0)
-            is_retrograde = speed_lon < 0
+        for planet_id, planet_name in PLANETS.items():
+            # Прозерпина (ID=1000) рассчитывается отдельно методом интерполяции
+            if planet_id == 1000:
+                longitude = SpecialPointsService.calculate_proserpina(jd)
+                latitude = 0.0  # Фиктивная планета, широта = 0
+                distance = 0.0  # Расстояние не определено
+                speed_lon = 0.54135 / 365.25  # Средняя скорость в градусах/день
+                is_retrograde = False  # Прозерпина всегда директная
+            else:
+                # Расчёт позиции планеты через Swiss Ephemeris
+                planet_data, ret = swe.calc_ut(jd, planet_id, swe.FLG_SWIEPH | swe.FLG_SPEED)
+
+                longitude = planet_data[0]  # Эклиптическая долгота
+                latitude = planet_data[1]   # Эклиптическая широта
+                distance = planet_data[2]   # Расстояние в а.е.
+                speed_lon = planet_data[3]  # Скорость по долготе
+
+                # Определяем ретроградность (скорость < 0)
+                is_retrograde = speed_lon < 0
 
             degree_in_sign = get_degree_in_sign(longitude)
 
@@ -57,7 +66,7 @@ class SwissEphemerisEngine:
                 'degree_in_sign_formatted': format_degree_minutes_seconds(degree_in_sign),
                 'retrograde': is_retrograde,
             })
-        
+
         return planets_data
     
     def calculate_houses(

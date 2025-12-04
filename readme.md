@@ -2,6 +2,16 @@
 
 This project combines the Swiss Ephemeris astronomical calculation library with custom natal chart calculation applications.
 
+## Recent Updates
+
+### Proserpina (Прозерпина) Support
+- **Added**: Proserpina calculation using linear interpolation method (школа Михаила Левина)
+- **Method**: Tabular ephemeris with linear interpolation between January 1st values
+- **Speed**: ~0.54135° per year (32.48 arc minutes per year)
+- **Cycle**: ~665 years (full circle)
+- **Data**: Ephemeris table for years 1900-2100 in `app/data/proserpina_ephemeris.json`
+- **Integration**: Proserpina appears in planets list (ID=1000) alongside standard planets
+
 ## Project Structure
 
 ```

@@ -2,13 +2,99 @@
 Сервис для расчёта специальных астрологических точек
 """
 import swisseph as swe
+import json
+import os
+from datetime import datetime
 from typing import Dict, Tuple
 from app.utils.constants import normalize_longitude
 
 
 class SpecialPointsService:
     """Сервис для расчёта специальных точек (узлы, Лилит, Селена, Фортуна и т.д.)"""
-    
+
+    # Кэш для эфемерид Прозерпины
+    _proserpina_ephemeris = None
+
+    @classmethod
+    def _load_proserpina_ephemeris(cls) -> Dict:
+        """
+        Загрузка эфемерид Прозерпины из JSON файла (с кэшированием)
+
+        Returns:
+            Словарь с эфемеридами Прозерпины
+        """
+        if cls._proserpina_ephemeris is None:
+            # Путь к файлу эфемерид
+            current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            ephemeris_path = os.path.join(current_dir, 'data', 'proserpina_ephemeris.json')
+
+            with open(ephemeris_path, 'r', encoding='utf-8') as f:
+                cls._proserpina_ephemeris = json.load(f)
+
+        return cls._proserpina_ephemeris
+
+    @staticmethod
+    def calculate_proserpina(jd: float) -> float:
+        """
+        Расчёт позиции Прозерпины методом линейной интерполяции
+
+        Метод используется в школе Михаила Левина и Константина Дарагана.
+        Прозерпина движется крайне медленно (~0.54135° в год), поэтому
+        используется табличный метод с линейной интерполяцией между
+        значениями на 1 января текущего и следующего года.
+
+        Формула:
+        P_date = P_start + (P_end - P_start) × (D_passed / D_year)
+
+        где:
+        - P_start: координата на 1 января текущего года
+        - P_end: координата на 1 января следующего года
+        - D_passed: количество дней от начала года
+        - D_year: длительность года (365 или 366)
+
+        Args:
+            jd: Юлианский день
+
+        Returns:
+            Долгота Прозерпины в градусах
+        """
+        # Загружаем эфемериды
+        ephemeris = SpecialPointsService._load_proserpina_ephemeris()
+
+        # Конвертируем JD в календарную дату
+        year, month, day, hour = swe.revjul(jd)
+
+        # Получаем позиции на начало текущего и следующего года
+        year_str = str(year)
+        next_year_str = str(year + 1)
+
+        if year_str not in ephemeris or next_year_str not in ephemeris:
+            raise ValueError(f"Эфемериды Прозерпины недоступны для года {year}")
+
+        p_start = ephemeris[year_str]['longitude']
+        p_end = ephemeris[next_year_str]['longitude']
+
+        # Определяем високосный год
+        is_leap = (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0)
+        days_in_year = 366 if is_leap else 365
+
+        # Вычисляем количество дней от начала года
+        # JD для 1 января текущего года в 00:00
+        jd_year_start = swe.julday(year, 1, 1, 0.0)
+        days_passed = jd - jd_year_start
+
+        # Линейная интерполяция
+        # Учитываем переход через 0° (360° -> 0°)
+        delta = p_end - p_start
+        if delta < -180:  # Переход через 0° вперёд
+            delta += 360
+        elif delta > 180:  # Переход через 0° назад
+            delta -= 360
+
+        proserpina_lon = p_start + delta * (days_passed / days_in_year)
+
+        return normalize_longitude(proserpina_lon)
+
     @staticmethod
     def calculate_true_nodes(jd: float) -> Tuple[float, float]:
         """
