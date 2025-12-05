@@ -22,10 +22,13 @@ class ConfigurationService:
         'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto', 'Chiron'
     }
 
-    # Планети для конфігурацій (тільки реальні планети + Хірон, БЕЗ кутів та фіктивних точок)
+    # Планети для конфігурацій (реальні планети + Хірон + фіктивні точки)
     CONFIGURATION_PLANETS = {
         'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
-        'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto', 'Chiron'
+        'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto',
+        'Chiron', 'Proserpina',
+        'BlackMoon', 'WhiteMoon',
+        'TrueNorthNode', 'TrueSouthNode'
     }
 
     # Орбіс для стеллиумів (градуси)
@@ -59,10 +62,20 @@ class ConfigurationService:
         configurations = []
 
         # Шукати різні типи конфігурацій
+        # Базові конфігурації
         configurations.extend(self._find_grand_trines(filtered_aspects))
         configurations.extend(self._find_t_squares(filtered_aspects))
         configurations.extend(self._find_grand_crosses(filtered_aspects))
         configurations.extend(self._find_yods(filtered_aspects))
+
+        # Нові конфігурації
+        configurations.extend(self._find_bisextiles(filtered_aspects))
+        configurations.extend(self._find_trapezoids(filtered_aspects))
+        configurations.extend(self._find_skewed_sails(filtered_aspects))
+        configurations.extend(self._find_chariots(filtered_aspects))
+        configurations.extend(self._find_sails(filtered_aspects))
+        configurations.extend(self._find_open_envelopes(filtered_aspects))
+        configurations.extend(self._find_stars_of_david(filtered_aspects))
 
         # Зберегти в БД
         self._save_configurations(user_id, configurations)
@@ -306,6 +319,376 @@ class ConfigurationService:
                         'apex_planet': apex,
                         'strength_score': 6.0
                     })
+
+        return configurations
+
+    def _find_bisextiles(self, aspects: List[NatalAspect]) -> List[Dict]:
+        """
+        Пошук Бисекстиль (2 секстилі + 1 трин)
+
+        Args:
+            aspects: Список аспектів
+
+        Returns:
+            List[Dict]: Знайдені Бисекстилі
+        """
+        sextiles = [a for a in aspects if a.aspect_type == 'Sextile']
+        trines = [a for a in aspects if a.aspect_type == 'Trine']
+
+        configurations = []
+        seen_combinations: Set[Tuple[frozenset, str]] = set()
+
+        # Шукаємо трин, обидві планети якого в секстилі до третьої (вершина)
+        for trine in trines:
+            trine_planets = {trine.planet_1, trine.planet_2}
+
+            for sextile in sextiles:
+                sextile_planets = {sextile.planet_1, sextile.planet_2}
+
+                # Перевірити, чи одна планета спільна
+                common = trine_planets & sextile_planets
+                if len(common) != 1:
+                    continue
+
+                # Знайти вершину (апекс)
+                apex = (sextile_planets - common).pop()
+                other_trine = (trine_planets - common).pop()
+
+                # Перевірити, чи є секстиль між апексом та другою планетою трину
+                if self._has_aspect_between(apex, other_trine, 'Sextile', sextiles):
+                    all_planets = trine_planets | {apex}
+                    config_key = (frozenset(all_planets), apex)
+                    if config_key not in seen_combinations:
+                        seen_combinations.add(config_key)
+                        configurations.append({
+                            'type': 'Bisextile',
+                            'planets_involved': sorted(list(all_planets)),
+                            'apex_planet': apex,
+                            'strength_score': 7.0
+                        })
+
+        return configurations
+
+    def _find_trapezoids(self, aspects: List[NatalAspect]) -> List[Dict]:
+        """
+        Пошук Трапеція (3 секстилі + 2 трини + 1 опозиція)
+
+        Args:
+            aspects: Список аспектів
+
+        Returns:
+            List[Dict]: Знайдені Трапеції
+        """
+        sextiles = [a for a in aspects if a.aspect_type == 'Sextile']
+        trines = [a for a in aspects if a.aspect_type == 'Trine']
+        oppositions = [a for a in aspects if a.aspect_type == 'Opposition']
+
+        configurations = []
+        seen_combinations: Set[frozenset] = set()
+
+        # Шукаємо опозицію як основу трапеції
+        for opp in oppositions:
+            opp_planets = {opp.planet_1, opp.planet_2}
+
+            # Шукаємо дві додаткові планети, які формують верхнє основання
+            for sext1 in sextiles:
+                sext1_planets = {sext1.planet_1, sext1.planet_2}
+
+                # Одна планета секстилю має бути з опозиції
+                common1 = opp_planets & sext1_planets
+                if len(common1) != 1:
+                    continue
+
+                apex1 = (sext1_planets - common1).pop()
+
+                for sext2 in sextiles:
+                    if sext2 == sext1:
+                        continue
+
+                    sext2_planets = {sext2.planet_1, sext2.planet_2}
+                    common2 = opp_planets & sext2_planets
+
+                    if len(common2) != 1:
+                        continue
+
+                    apex2 = (sext2_planets - common2).pop()
+
+                    if apex1 == apex2:
+                        continue
+
+                    # Перевірити структуру: трини та секстиль між вершинами
+                    all_planets = opp_planets | {apex1, apex2}
+
+                    if len(all_planets) != 4:
+                        continue
+
+                    # Має бути секстиль між вершинами та трини від вершин до протилежних планет опозиції
+                    if (self._has_aspect_between(apex1, apex2, 'Sextile', sextiles) and
+                        self._has_aspect_between(apex1, list(common2)[0], 'Trine', trines) and
+                        self._has_aspect_between(apex2, list(common1)[0], 'Trine', trines)):
+
+                        planets_key = frozenset(all_planets)
+                        if planets_key not in seen_combinations:
+                            seen_combinations.add(planets_key)
+                            configurations.append({
+                                'type': 'Trapezoid',
+                                'planets_involved': sorted(list(all_planets)),
+                                'strength_score': 7.5
+                            })
+
+        return configurations
+
+    def _find_skewed_sails(self, aspects: List[NatalAspect]) -> List[Dict]:
+        """
+        Пошук Косий парус (1 секстиль + 1 трин + 1 опозиція)
+
+        Args:
+            aspects: Список аспектів
+
+        Returns:
+            List[Dict]: Знайдені Косі паруси
+        """
+        sextiles = [a for a in aspects if a.aspect_type == 'Sextile']
+        trines = [a for a in aspects if a.aspect_type == 'Trine']
+        oppositions = [a for a in aspects if a.aspect_type == 'Opposition']
+
+        configurations = []
+        seen_combinations: Set[frozenset] = set()
+
+        # Шукаємо опозицію, одна планета якої має секстиль, а друга - трин до третьої планети
+        for opp in oppositions:
+            opp_planets = {opp.planet_1, opp.planet_2}
+
+            for sext in sextiles:
+                sext_planets = {sext.planet_1, sext.planet_2}
+
+                # Одна планета секстилю має бути з опозиції
+                common_sext = opp_planets & sext_planets
+                if len(common_sext) != 1:
+                    continue
+
+                apex = (sext_planets - common_sext).pop()
+                other_opp = (opp_planets - common_sext).pop()
+
+                # Перевірити, чи є трин між апексом та другою планетою опозиції
+                if self._has_aspect_between(apex, other_opp, 'Trine', trines):
+                    all_planets = opp_planets | {apex}
+                    planets_key = frozenset(all_planets)
+
+                    if planets_key not in seen_combinations:
+                        seen_combinations.add(planets_key)
+                        configurations.append({
+                            'type': 'Skewed_Sail',
+                            'planets_involved': sorted(list(all_planets)),
+                            'apex_planet': apex,
+                            'strength_score': 6.5
+                        })
+
+        return configurations
+
+    def _find_chariots(self, aspects: List[NatalAspect]) -> List[Dict]:
+        """
+        Пошук Повозка (2 секстилі + 2 трини + 2 опозиції)
+
+        Args:
+            aspects: Список аспектів
+
+        Returns:
+            List[Dict]: Знайдені Повозки
+        """
+        sextiles = [a for a in aspects if a.aspect_type == 'Sextile']
+        trines = [a for a in aspects if a.aspect_type == 'Trine']
+        oppositions = [a for a in aspects if a.aspect_type == 'Opposition']
+
+        configurations = []
+        seen_combinations: Set[frozenset] = set()
+
+        # Шукаємо дві опозиції, які формують конверт
+        for i, opp1 in enumerate(oppositions):
+            for opp2 in oppositions[i+1:]:
+                planets1 = {opp1.planet_1, opp1.planet_2}
+                planets2 = {opp2.planet_1, opp2.planet_2}
+                all_planets = planets1 | planets2
+
+                # Має бути 4 різні планети
+                if len(all_planets) != 4:
+                    continue
+
+                planets_list = list(all_planets)
+
+                # Перевірити наявність 2 тринів та 2 секстилів
+                trine_count = 0
+                sextile_count = 0
+
+                for p1 in planets_list:
+                    for p2 in planets_list:
+                        if p1 >= p2:
+                            continue
+                        # Пропустити опозиції
+                        if {p1, p2} == planets1 or {p1, p2} == planets2:
+                            continue
+
+                        if self._has_aspect_between(p1, p2, 'Trine', trines):
+                            trine_count += 1
+                        elif self._has_aspect_between(p1, p2, 'Sextile', sextiles):
+                            sextile_count += 1
+
+                # Повозка: 2 трини + 2 секстилі
+                if trine_count == 2 and sextile_count == 2:
+                    planets_key = frozenset(all_planets)
+                    if planets_key not in seen_combinations:
+                        seen_combinations.add(planets_key)
+                        configurations.append({
+                            'type': 'Chariot',
+                            'planets_involved': sorted(planets_list),
+                            'strength_score': 8.0
+                        })
+
+        return configurations
+
+    def _find_sails(self, aspects: List[NatalAspect]) -> List[Dict]:
+        """
+        Пошук Парус (Большой Тригон + Бисекстиль)
+
+        Args:
+            aspects: Список аспектів
+
+        Returns:
+            List[Dict]: Знайдені Паруси
+        """
+        # Спочатку знаходимо Grand Trines та Bisextiles
+        grand_trines = self._find_grand_trines(aspects)
+        bisextiles = self._find_bisextiles(aspects)
+
+        configurations = []
+        seen_combinations: Set[frozenset] = set()
+
+        # Шукаємо комбінації Grand Trine + Bisextile з спільними планетами
+        for gt in grand_trines:
+            gt_planets = set(gt['planets_involved'])
+
+            for bis in bisextiles:
+                bis_planets = set(bis['planets_involved'])
+
+                # Має бути 2 спільні планети (трин Grand Trine = основа Bisextile)
+                common = gt_planets & bis_planets
+                if len(common) != 2:
+                    continue
+
+                all_planets = gt_planets | bis_planets
+
+                # Парус має 4 планети
+                if len(all_planets) != 4:
+                    continue
+
+                planets_key = frozenset(all_planets)
+                if planets_key not in seen_combinations:
+                    seen_combinations.add(planets_key)
+                    configurations.append({
+                        'type': 'Sail',
+                        'planets_involved': sorted(list(all_planets)),
+                        'apex_planet': bis['apex_planet'],
+                        'strength_score': 8.5
+                    })
+
+        return configurations
+
+    def _find_open_envelopes(self, aspects: List[NatalAspect]) -> List[Dict]:
+        """
+        Пошук Відкритий конверт (Повозка + Бисекстиль)
+
+        Args:
+            aspects: Список аспектів
+
+        Returns:
+            List[Dict]: Знайдені Відкриті конверти
+        """
+        # Спочатку знаходимо Chariots та Bisextiles
+        chariots = self._find_chariots(aspects)
+        bisextiles = self._find_bisextiles(aspects)
+
+        configurations = []
+        seen_combinations: Set[frozenset] = set()
+
+        # Шукаємо комбінації Chariot + Bisextile
+        for chariot in chariots:
+            chariot_planets = set(chariot['planets_involved'])
+
+            for bis in bisextiles:
+                bis_planets = set(bis['planets_involved'])
+
+                # Має бути 2 спільні планети
+                common = chariot_planets & bis_planets
+                if len(common) != 2:
+                    continue
+
+                all_planets = chariot_planets | bis_planets
+
+                # Відкритий конверт має 5 планет
+                if len(all_planets) != 5:
+                    continue
+
+                planets_key = frozenset(all_planets)
+                if planets_key not in seen_combinations:
+                    seen_combinations.add(planets_key)
+                    configurations.append({
+                        'type': 'Open_Envelope',
+                        'planets_involved': sorted(list(all_planets)),
+                        'apex_planet': bis['apex_planet'],
+                        'strength_score': 9.0
+                    })
+
+        return configurations
+
+    def _find_stars_of_david(self, aspects: List[NatalAspect]) -> List[Dict]:
+        """
+        Пошук Зірка Давида (два Grand Trine, з'єднані секстилями)
+
+        Args:
+            aspects: Список аспектів
+
+        Returns:
+            List[Dict]: Знайдені Зірки Давида
+        """
+        grand_trines = self._find_grand_trines(aspects)
+        sextiles = [a for a in aspects if a.aspect_type == 'Sextile']
+
+        configurations = []
+        seen_combinations: Set[frozenset] = set()
+
+        # Шукаємо дві Grand Trines
+        for i, gt1 in enumerate(grand_trines):
+            for gt2 in grand_trines[i+1:]:
+                gt1_planets = set(gt1['planets_involved'])
+                gt2_planets = set(gt2['planets_involved'])
+
+                # Не повинно бути спільних планет
+                if gt1_planets & gt2_planets:
+                    continue
+
+                all_planets = gt1_planets | gt2_planets
+
+                # Має бути 6 планет
+                if len(all_planets) != 6:
+                    continue
+
+                # Перевірити, чи всі планети одного трину з'єднані секстилями з планетами іншого
+                sextile_count = 0
+                for p1 in gt1_planets:
+                    for p2 in gt2_planets:
+                        if self._has_aspect_between(p1, p2, 'Sextile', sextiles):
+                            sextile_count += 1
+
+                # Має бути 6 секстилів (кожна планета одного трину з'єднана з двома планетами іншого)
+                if sextile_count == 6:
+                    planets_key = frozenset(all_planets)
+                    if planets_key not in seen_combinations:
+                        seen_combinations.add(planets_key)
+                        configurations.append({
+                            'type': 'Star_of_David',
+                            'planets_involved': sorted(list(all_planets)),
+                            'strength_score': 10.0
+                        })
 
         return configurations
 

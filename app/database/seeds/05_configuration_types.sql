@@ -52,7 +52,97 @@ INSERT INTO ref_configuration_types (type, rules, description, interpretation) V
    "max_orb_deg": 3
  }'::jsonb,
  'Две планеты в секстиле, обе делают квиконс к третьей (апекс).',
- 'Тонко настроенный кармический вектор; необходимость переключаться и подстраиваться, «палец судьбы» на теме апексной планеты.')
+ 'Тонко настроенный кармический вектор; необходимость переключаться и подстраиваться, «палец судьбы» на теме апексной планеты.'),
+
+-- Bisextile
+('Bisextile',
+ '{
+   "min_planets": 3,
+   "required_aspects": ["sextile", "trine"],
+   "aspect_count": {"sextile": 2, "trine": 1},
+   "structure": "triangle_with_apex",
+   "apex_aspects": ["sextile"],
+   "base_aspect": "trine",
+   "max_orb_deg": 6
+ }'::jsonb,
+ 'Три планеты: две в трине, каждая в секстиле к третьей (вершина).',
+ 'Амортизатор жизненных затруднений. Действует дискретно при попадании в трудности. Секстили побуждают к действию, меньше пассивности. Начинать с вершины, заканчивать по трину.'),
+
+-- Trapezoid
+('Trapezoid',
+ '{
+   "min_planets": 4,
+   "required_aspects": ["sextile", "trine", "opposition"],
+   "aspect_count": {"sextile": 3, "trine": 2, "opposition": 1},
+   "structure": "trapezoid",
+   "max_orb_deg": 6
+ }'::jsonb,
+ 'Четыре планеты: 3 секстиля + 2 трина + 1 оппозиция.',
+ 'Хорошая конфигурация, сочетает в равной мере напряжение и возможности получения результатов. Верхнее основание (секстиль) - накопление энергии, результат после проработки оппозиции.'),
+
+-- Skewed Sail
+('Skewed_Sail',
+ '{
+   "min_planets": 3,
+   "required_aspects": ["sextile", "trine", "opposition"],
+   "aspect_count": {"sextile": 1, "trine": 1, "opposition": 1},
+   "structure": "triangle_mixed",
+   "max_orb_deg": 6
+ }'::jsonb,
+ 'Три планеты: 1 секстиль + 1 трин + 1 оппозиция.',
+ 'Полезная конфигурация, не дает бездельничать. Оппозиция создает напряжение, третья планета помогает в работе с ней. Есть гармоничные пути решения и энергия для реализации.'),
+
+-- Chariot (Closed Envelope)
+('Chariot',
+ '{
+   "min_planets": 4,
+   "required_aspects": ["sextile", "trine", "opposition"],
+   "aspect_count": {"sextile": 2, "trine": 2, "opposition": 2},
+   "structure": "closed_envelope",
+   "max_orb_deg": 6
+ }'::jsonb,
+ 'Четыре планеты: 2 секстиля + 2 трина + 2 оппозиции (Повозка, конверт закрытый).',
+ 'Большие творческие возможности через труд по оппозициям. Развитие рывками: застой сменяется активностью. Кризисы чередуются с отдыхом по трину и секстилю. Сдержанность и активность в характере.'),
+
+-- Sail
+('Sail',
+ '{
+   "min_planets": 4,
+   "required_aspects": ["trine", "sextile"],
+   "aspect_count": {"trine": 3, "sextile": 2},
+   "structure": "composite",
+   "components": ["Grand_Trine", "Bisextile"],
+   "max_orb_deg": 6
+ }'::jsonb,
+ 'Большой Тригон + Бисекстиль (4 планеты).',
+ 'Разнообразные способности, динамическая жизнь с известной долей напряжения и хорошими возможностями для реализации. Включает планета на вершине Бисекстиля. Работа по оппозиции, результаты по Тригону.'),
+
+-- Open Envelope
+('Open_Envelope',
+ '{
+   "min_planets": 5,
+   "required_aspects": ["sextile", "trine", "opposition"],
+   "aspect_count": {"sextile": 4, "trine": 3, "opposition": 2},
+   "structure": "composite",
+   "components": ["Chariot", "Bisextile"],
+   "max_orb_deg": 6
+ }'::jsonb,
+ 'Повозка + Бисекстиль (5 планет, конверт открытый).',
+ 'Планета на вершине Бисекстиля дает дополнительные возможности реализовать потенциал Повозки. Она становится ведущей в конфигурации. Кризисы и проработка оппозиций сохраняются.'),
+
+-- Star of David
+('Star_of_David',
+ '{
+   "min_planets": 6,
+   "required_aspects": ["trine", "sextile"],
+   "aspect_count": {"trine": 6, "sextile": 6},
+   "structure": "double_grand_trine",
+   "components": ["Grand_Trine", "Grand_Trine"],
+   "max_orb_deg": 6,
+   "element_groups": 2
+ }'::jsonb,
+ 'Шесть планет: два Больших Тригона, соединенных секстилями.',
+ 'Очень сильная конфигурация. Защита, помощь, поддержка. Много наработок и талантов в различных сферах. Разносторонний, уравновешенный человек. Мало кризисов, все легко дается. Риск: расслабление, нет мотива работать над собой.')
 
 ON CONFLICT (type) DO NOTHING;
 

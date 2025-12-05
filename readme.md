@@ -4,6 +4,15 @@ This project combines the Swiss Ephemeris astronomical calculation library with 
 
 ## Recent Updates
 
+### Planet Orbs Update (2025-12-05)
+- **Updated**: Planet orbs according to Alyona's professional astrology table
+- **Changes**:
+  - Septener planets (Mercury-Saturn): Sextile/Square/Trine **8° → 5°**
+  - Fictitious points (Nodes, BlackMoon, WhiteMoon): all major aspects → **3°**
+- **Rule**: "If planets have different orbs - use the smaller one"
+- **Files**: `app/database/seeds/02b_planet_orbs.sql`, migration script created
+- **Details**: See `ORBS_UPDATE_SUMMARY.md` for complete changes
+
 ### Proserpina (Прозерпина) Support
 - **Added**: Proserpina calculation using linear interpolation method (школа Михаила Левина)
 - **Method**: Tabular ephemeris with linear interpolation between January 1st values

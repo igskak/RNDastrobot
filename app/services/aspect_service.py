@@ -183,9 +183,9 @@ class AspectService:
         Returns:
             Optional[Dict]: Дані аспекту або None
         """
-        # Не аспектуємо спецточки між собою
-        if obj1['type'] == 'special_point' and obj2['type'] == 'special_point':
-            return None
+        # ИЗМЕНЕНО: Разрешаем аспекты между фиктивными точками для конфигураций
+        # (например, BlackMoon - TrueNorthNode для Повозки)
+        # Старое правило: if obj1['type'] == 'special_point' and obj2['type'] == 'special_point': return None
 
         # 1. Рассчитать угловое расстояние между телами
         diff = abs(obj1['longitude'] - obj2['longitude'])
