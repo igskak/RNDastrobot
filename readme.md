@@ -4,12 +4,13 @@ This project combines the Swiss Ephemeris astronomical calculation library with 
 
 ## Recent Updates
 
-### Planet Orbs Update (2025-12-05)
+### Planet Orbs Update (2025-12-07)
 - **Updated**: Planet orbs according to Alyona's professional astrology table
 - **Changes**:
   - Septener planets (Mercury-Saturn): Sextile/Square/Trine **8° → 5°**
   - Fictitious points (Nodes, BlackMoon, WhiteMoon): all major aspects → **3°**
-- **Rule**: "If planets have different orbs - use the smaller one"
+  - Pluto Conjunction: **3° → 5°**
+- **Rule**: "If planets have different orbs - use the larger one"
 - **Files**: `app/database/seeds/02b_planet_orbs.sql`, migration script created
 - **Details**: See `ORBS_UPDATE_SUMMARY.md` for complete changes
 

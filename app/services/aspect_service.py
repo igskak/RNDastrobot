@@ -125,7 +125,7 @@ class AspectService:
     ) -> float:
         """
         Расчет допустимого орбиса для пары тел согласно правилу:
-        "если в аспекте участвуют планеты с разными орбисами - берем меньший"
+        "если в аспекте участвуют планеты с разными орбисами - берем больший"
 
         Args:
             body_a: Название первого тела (планета/точка)
@@ -133,7 +133,7 @@ class AspectService:
             aspect_type: Тип аспекта (например, 'Conjunction')
 
         Returns:
-            float: Минимальный орбис из двух тел
+            float: Максимальный орбис из двух тел
         """
         planet_orbs = self._get_planet_orbs()
 
@@ -156,8 +156,8 @@ class AspectService:
             ).first()
             orb_b = float(aspect.base_orb) if aspect else 5.0
 
-        # ГЛАВНОЕ ПРАВИЛО: берем меньший орбис
-        return min(orb_a, orb_b)
+        # ГЛАВНОЕ ПРАВИЛО: берем больший орбис
+        return max(orb_a, orb_b)
     
     def _calculate_aspect_between(
         self,

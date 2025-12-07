@@ -21,7 +21,7 @@ INSERT INTO ref_planet_orbs (planet, aspect_type, orb) VALUES
 ('Saturn', 'Conjunction', 7.0),
 ('Uranus', 'Conjunction', 5.0),
 ('Neptune', 'Conjunction', 5.0),
-('Pluto', 'Conjunction', 3.0),
+('Pluto', 'Conjunction', 5.0),
 ('Chiron', 'Conjunction', 5.0),
 ('TrueNorthNode', 'Conjunction', 3.0),
 ('TrueSouthNode', 'Conjunction', 3.0),

@@ -73,11 +73,11 @@ def test_orb_calculation():
         service = AspectService(db)
         
         test_cases = [
-            ('Sun', 'Moon', 'Conjunction', 10.0),      # MIN(12, 10) = 10
-            ('Sun', 'Pluto', 'Conjunction', 3.0),      # MIN(12, 3) = 3
-            ('Mercury', 'BlackMoon', 'Trine', 3.0),    # MIN(5, 3) = 3
-            ('ASC', 'Mars', 'Square', 5.0),            # MIN(5, 5) = 5
-            ('Sun', 'Moon', 'Sextile', 8.0),           # MIN(10, 8) = 8
+            ('Sun', 'Moon', 'Conjunction', 12.0),      # MAX(12, 10) = 12
+            ('Sun', 'Pluto', 'Conjunction', 12.0),     # MAX(12, 5) = 12
+            ('Mercury', 'BlackMoon', 'Trine', 5.0),    # MAX(5, 3) = 5
+            ('ASC', 'Mars', 'Square', 5.0),            # MAX(5, 5) = 5
+            ('Sun', 'Moon', 'Sextile', 10.0),          # MAX(10, 8) = 10
         ]
         
         print("\n📐 Примеры расчёта:")
@@ -99,19 +99,19 @@ def test_aspect_detection():
         
         # Тестовые случаи: (obj1, obj2, ожидаемый_аспект)
         test_cases = [
-            # Солнце на 0°, Луна на 9° -> Соединение (орбис 10°)
+            # Солнце на 0°, Луна на 9° -> Соединение (орбис MAX(12, 10) = 12°)
             (
                 {'name': 'Sun', 'longitude': 0.0, 'type': 'planet'},
                 {'name': 'Moon', 'longitude': 9.0, 'type': 'planet'},
                 'Conjunction'
             ),
-            # Солнце на 0°, Плутон на 4° -> НЕТ соединения (орбис только 3°)
+            # Солнце на 0°, Плутон на 4° -> Соединение (орбис MAX(12, 5) = 12°)
             (
                 {'name': 'Sun', 'longitude': 0.0, 'type': 'planet'},
                 {'name': 'Pluto', 'longitude': 4.0, 'type': 'planet'},
-                None
+                'Conjunction'
             ),
-            # Солнце на 0°, Луна на 120° -> Трин (орбис 8°)
+            # Солнце на 0°, Луна на 120° -> Трин (орбис MAX(10, 8) = 10°)
             (
                 {'name': 'Sun', 'longitude': 0.0, 'type': 'planet'},
                 {'name': 'Moon', 'longitude': 120.0, 'type': 'planet'},
