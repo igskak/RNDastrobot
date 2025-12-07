@@ -123,12 +123,26 @@ class AspectInfo(BaseModel):
     harmonic_type: Optional[str] = None
 
 
+class AspectInConfiguration(BaseModel):
+    """Аспект внутри конфигурации с баллом"""
+    planet_1: str
+    planet_2: str
+    aspect_type: str
+    orb: float
+    orb_planet_1: float
+    orb_planet_2: float
+    min_orb: float
+    max_orb: float
+    score: int  # 1, 2 или 3
+
+
 class ConfigurationInfo(BaseModel):
     """Информация об аспектной конфигурации"""
     type: str
     planets_involved: List[str]
     apex_planet: Optional[str] = None
     strength_score: float
+    aspects: List[AspectInConfiguration] = []
 
 
 class StelliumInfo(BaseModel):

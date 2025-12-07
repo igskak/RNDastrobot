@@ -9,8 +9,9 @@ from sqlalchemy.orm import Session
 
 from app.database.models import (
     NatalPlanet, NatalAspect, NatalConfiguration, NatalStellium,
-    RefConfigurationType
+    NatalConfigurationAspect, RefConfigurationType
 )
+from app.services.aspect_scoring_service import AspectScoringService
 
 
 class ConfigurationService:
@@ -818,21 +819,70 @@ class ConfigurationService:
         # Поки що повертаємо заглушку
         return "Fire"  # TODO: Implement proper element detection
 
+    def _find_aspects_for_configuration(
+        self,
+        config_data: Dict,
+        all_aspects: List[NatalAspect]
+    ) -> List[NatalAspect]:
+        """
+        Найти аспекты, которые формируют данную конфигурацию
+
+        Например, для T-Square с планетами [Moon, Venus, Lilith]:
+        - найти Opposition между Moon-Lilith
+        - найти Square между Moon-Venus
+        - найти Square между Venus-Lilith
+
+        Args:
+            config_data: Данные конфигурации с planets_involved
+            all_aspects: Все аспекты пользователя
+
+        Returns:
+            List[NatalAspect]: Аспекты, формирующие конфигурацию
+        """
+        planets_involved = config_data['planets_involved']
+        config_type = config_data['type']
+        config_aspects = []
+
+        # Для каждой пары планет в конфигурации найти аспект между ними
+        for i, planet1 in enumerate(planets_involved):
+            for planet2 in planets_involved[i+1:]:
+                # Найти аспект между этими планетами
+                for aspect in all_aspects:
+                    if {aspect.planet_1, aspect.planet_2} == {planet1, planet2}:
+                        config_aspects.append(aspect)
+                        break
+
+        return config_aspects
+
     def _save_configurations(self, user_id: UUID, configurations: List[Dict]) -> None:
         """
-        Зберегти конфігурації в БД
+        Зберегти конфігурації в БД з розрахунком балів
 
         Args:
             user_id: ID користувача
             configurations: Список конфігурацій
         """
-        # Видалити старі конфігурації
+        # Видалити старі конфігурації (каскадно видалить і зв'язки з аспектами)
         self.db.query(NatalConfiguration).filter(
             NatalConfiguration.user_id == user_id
         ).delete()
 
+        # Отримати всі аспекти користувача для пошуку
+        all_aspects = self.db.query(NatalAspect).filter(
+            NatalAspect.user_id == user_id
+        ).all()
+
+        # Створити scoring service
+        scoring_service = AspectScoringService(self.db)
+
         # Додати нові конфігурації
         for config_data in configurations:
+            # Знайти аспекти, які формують цю конфігурацію
+            config_aspects = self._find_aspects_for_configuration(config_data, all_aspects)
+
+            # Розрахувати бали
+            total_score, aspect_details = scoring_service.calculate_configuration_score(config_aspects)
+
             # Підготувати planets_involved з apex_planet всередині
             planets_data = {
                 'planets': config_data['planets_involved']
@@ -840,13 +890,24 @@ class ConfigurationService:
             if 'apex_planet' in config_data:
                 planets_data['apex_planet'] = config_data['apex_planet']
 
+            # Створити конфігурацію з реальним балом
             config = NatalConfiguration(
                 user_id=user_id,
                 type=config_data['type'],
                 planets_involved=planets_data,
-                strength_score=Decimal(str(config_data['strength_score']))
+                strength_score=Decimal(str(total_score))
             )
             self.db.add(config)
+            self.db.flush()  # Отримати config_id
+
+            # Зберегти зв'язки з аспектами
+            for aspect_detail in aspect_details:
+                link = NatalConfigurationAspect(
+                    config_id=config.config_id,
+                    aspect_id=aspect_detail['aspect_id'],
+                    aspect_score=aspect_detail['score']
+                )
+                self.db.add(link)
 
         self.db.commit()
 

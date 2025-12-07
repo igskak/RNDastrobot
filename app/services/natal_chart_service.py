@@ -13,6 +13,7 @@ from app.services.special_points_service import SpecialPointsService
 from app.services.dignity_service import DignityService
 from app.utils.constants import get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds
 from app.database.repositories import UserRepository, NatalChartRepository
+from app.database.models import NatalAspect, NatalConfigurationAspect
 
 
 class NatalChartService:
@@ -632,19 +633,51 @@ class NatalChartService:
             for a in aspects
         ]
 
-        # 2. Аспектні конфігурації
+        # 2. Аспектні конфігурації з деталями аспектів
         configurations = db_session.query(NatalConfiguration).filter(
             NatalConfiguration.user_id == user_id
-        ).all()
-        result['aspect_configurations'] = [
-            {
+        ).order_by(NatalConfiguration.type, NatalConfiguration.strength_score.desc()).all()
+
+        result['aspect_configurations'] = []
+        for c in configurations:
+            # Получить аспекты конфигурации с баллами
+            config_aspects = db_session.query(
+                NatalAspect,
+                NatalConfigurationAspect.aspect_score
+            ).join(
+                NatalConfigurationAspect,
+                NatalConfigurationAspect.aspect_id == NatalAspect.aspect_id
+            ).filter(
+                NatalConfigurationAspect.config_id == c.config_id
+            ).all()
+
+            # Формировать детали аспектов
+            aspects_details = []
+            for aspect, score in config_aspects:
+                # Получить орбисы планет из aspect_scoring_service
+                from app.services.aspect_scoring_service import AspectScoringService
+                scoring_service = AspectScoringService(db_session)
+                _, details = scoring_service.calculate_aspect_score(aspect)
+
+                aspects_details.append({
+                    'planet_1': aspect.planet_1,
+                    'planet_2': aspect.planet_2,
+                    'aspect_type': aspect.aspect_type,
+                    'orb': float(aspect.orb),
+                    'orb_planet_1': details['orb_planet_1'],
+                    'orb_planet_2': details['orb_planet_2'],
+                    'min_orb': details['min_orb'],
+                    'max_orb': details['max_orb'],
+                    'score': score
+                })
+
+            result['aspect_configurations'].append({
                 'type': c.type,
                 'planets_involved': c.planets_involved.get('planets', []) if isinstance(c.planets_involved, dict) else c.planets_involved,
                 'apex_planet': c.planets_involved.get('apex_planet') if isinstance(c.planets_involved, dict) else None,
-                'strength_score': float(c.strength_score) if c.strength_score else 0.0
-            }
-            for c in configurations
-        ]
+                'strength_score': float(c.strength_score) if c.strength_score else 0.0,
+                'aspects': aspects_details
+            })
 
         # 3. Стеллиуми
         stelliums = db_session.query(NatalStellium).filter(

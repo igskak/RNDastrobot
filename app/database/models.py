@@ -350,6 +350,26 @@ class NatalStellium(Base):
     )
 
 
+class NatalConfigurationAspect(Base):
+    """Связь между конфигурацией и аспектами с баллами"""
+    __tablename__ = 'natal_configuration_aspects'
+
+    config_id = Column(UUID(as_uuid=True), ForeignKey('natal_configurations.config_id', ondelete='CASCADE'), primary_key=True)
+    aspect_id = Column(UUID(as_uuid=True), ForeignKey('natal_aspects.aspect_id', ondelete='CASCADE'), primary_key=True)
+    aspect_score = Column(Integer, nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+
+    # Relationships
+    configuration = relationship("NatalConfiguration", backref="aspect_links")
+    aspect = relationship("NatalAspect", backref="configuration_links")
+
+    __table_args__ = (
+        CheckConstraint('aspect_score >= 1 AND aspect_score <= 3', name='valid_aspect_score'),
+        Index('idx_config_aspects_config', 'config_id'),
+        Index('idx_config_aspects_aspect', 'aspect_id'),
+    )
+
+
 class NatalPlanetDistribution(Base):
     """Модель распределения планет по кругу"""
     __tablename__ = 'natal_planet_distribution'
