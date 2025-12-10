@@ -85,7 +85,7 @@ class NatalChartService:
             )
         
         # 6. Рассчитываем специальные точки
-        special_points = self._calculate_special_points(jd, angles, planets, houses)
+        special_points = self._calculate_special_points(jd, angles, planets, houses, lat, lon)
         
         # 7. Рассчитываем конфигурации (Крест Судьбы)
         configurations = self._calculate_configurations(special_points, houses)
@@ -147,7 +147,9 @@ class NatalChartService:
         jd: float,
         angles: Dict,
         planets: list,
-        houses: list
+        houses: list,
+        lat: float,
+        lon: float
     ) -> Dict:
         """
         Расчёт всех специальных точек
@@ -170,7 +172,8 @@ class NatalChartService:
 
         # Рассчитываем Фортуну
         fortune_lon = self.special_points_service.calculate_part_of_fortune(
-            asc_lon, sun['longitude'], moon['longitude'], sun['house']
+            asc_lon, sun['longitude'], moon['longitude'], sun['house'],
+            jd=jd, latitude=lat, longitude=lon
         )
 
         # Vertex уже есть в angles

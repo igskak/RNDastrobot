@@ -78,18 +78,47 @@ class SwissEphemerisEngine:
     ) -> Tuple[List[Dict], Dict]:
         """
         Расчёт домов и углов
-        
+
         Args:
             jd: Юлианский день
             lat: Широта места рождения
             lon: Долгота места рождения
             hsys: Система домов (P=Placidus, K=Koch и т.д.)
-        
+
         Returns:
             Кортеж (список домов, словарь углов)
         """
+        # Сбрасываем состояние Swiss Ephemeris перед расчётом
+        # Это предотвращает ошибки после нескольких вызовов
+        swe.close()
+
         # Расчёт домов через Swiss Ephemeris
-        cusps, ascmc = swe.houses(jd, lat, lon, hsys.encode())
+        # Для высоких широт (>66°) Placidus и Koch не работают
+        try:
+            cusps, ascmc = swe.houses(jd, lat, lon, hsys.encode())
+        except Exception as e:
+            # Если ошибка - используем Equal houses от MC (как в ZET)
+            # Берём реальный MC и откладываем дома по 30° от него
+            if abs(lat) > 66.0:
+                # Получаем реальный MC через любую рабочую систему
+                _, ascmc = swe.houses(jd, lat, lon, b'E')
+                mc = ascmc[1]  # Реальный MC
+
+                # Строим Equal дома от MC: 10 дом = MC, остальные по 30°
+                cusps = []
+                for i in range(12):
+                    # 10 дом (индекс 9) = MC
+                    # 11 дом (индекс 10) = MC + 30°
+                    # 12 дом (индекс 11) = MC + 60°
+                    # 1 дом (индекс 0) = MC + 90°
+                    # и т.д.
+                    house_offset = (i - 9) * 30  # Смещение от 10 дома
+                    cusp = (mc + house_offset) % 360
+                    cusps.append(cusp)
+
+                cusps = tuple(cusps)
+            else:
+                raise e
 
         # Обработка куспидов домов (индексы 0-11 в tuple, но нумеруем как 1-12)
         houses_data = []
@@ -162,31 +191,36 @@ class SwissEphemerisEngine:
         """
         Определить, в каком доме находится планета
 
-        Логика: точка находится в доме, к куспиду которого она ближе всего.
-        Если точка находится ровно посередине между двумя куспидами,
-        она относится к дому с меньшим номером.
+        Логика: планета находится в доме N, если она расположена
+        между куспидом дома N и куспидом дома N+1 (по ходу Зодиака).
 
         Args:
-            planet_lon: Долгота планеты
+            planet_lon: Долгота планеты (0-360°)
             houses: Список домов с куспидами
 
         Returns:
             Номер дома (1-12)
         """
-        min_distance = 360.0
-        closest_house = 1
+        # Проходим по всем домам и проверяем, находится ли планета между
+        # куспидом текущего дома и куспидом следующего дома
+        for i in range(12):
+            current_house = houses[i]
+            next_house = houses[(i + 1) % 12]  # Следующий дом (с учётом цикла 12->1)
 
-        for house in houses:
-            cusp = house['longitude']
+            cusp_current = current_house['longitude']
+            cusp_next = next_house['longitude']
 
-            # Вычисляем расстояние с учётом цикличности (0-360°)
-            distance = abs(planet_lon - cusp)
-            if distance > 180:
-                distance = 360 - distance
+            # Проверяем, находится ли планета между двумя куспидами
+            # Учитываем переход через 0° (например, 12 дом -> 1 дом)
+            if cusp_next > cusp_current:
+                # Обычный случай: куспиды не пересекают 0°
+                if cusp_current <= planet_lon < cusp_next:
+                    return current_house['number']
+            else:
+                # Переход через 0°: например, 12 дом (350°) -> 1 дом (10°)
+                if planet_lon >= cusp_current or planet_lon < cusp_next:
+                    return current_house['number']
 
-            if distance < min_distance:
-                min_distance = distance
-                closest_house = house['number']
-
-        return closest_house
+        # Если не нашли (не должно происходить), возвращаем 1 дом
+        return 1
 

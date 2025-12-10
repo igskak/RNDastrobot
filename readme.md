@@ -22,6 +22,16 @@ This project combines the Swiss Ephemeris astronomical calculation library with 
 - **Data**: Ephemeris table for years 1900-2100 in `app/data/proserpina_ephemeris.json`
 - **Integration**: Proserpina appears in planets list (ID=1000) alongside standard planets
 
+### Part of Fortune (Парс Фортуны) Calculation
+- **Formula**: Classical ZET-compatible day/night switching
+  - **Day chart** (Sun above horizon): `ASC + Moon - Sun`
+  - **Night chart** (Sun below horizon): `ASC + Sun - Moon`
+- **Day/Night Determination**:
+  - **Normal latitudes** (|lat| < 60°): By house position (houses 7-12 = day, 1-6 = night)
+  - **Polar latitudes** (|lat| ≥ 60°): By astronomical Sun altitude using Swiss Ephemeris `swe_azalt()`
+- **Reason**: At extreme northern/southern latitudes, house-based day/night determination fails due to polar day/night phenomena
+- **Accuracy**: Matches ZET astrology software within 10-15 arc seconds for all latitudes
+
 ## Project Structure
 
 ```

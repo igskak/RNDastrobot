@@ -38,8 +38,9 @@ from loguru import logger
 router = APIRouter()
 
 # Инициализация сервиса
-# Путь к эфемеридам Swiss Ephemeris
-EPHE_PATH = os.getenv("SWISSEPH_EPHE_PATH", "./swisseph/ephe")
+# Путь к эфемеридам Swiss Ephemeris (абсолютный путь)
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+EPHE_PATH = os.getenv("SWISSEPH_EPHE_PATH", os.path.join(_PROJECT_ROOT, "swisseph", "ephe"))
 natal_service = NatalChartService(ephe_path=EPHE_PATH)
 
 
