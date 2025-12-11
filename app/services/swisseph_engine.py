@@ -38,7 +38,7 @@ class SwissEphemerisEngine:
                 longitude = SpecialPointsService.calculate_proserpina(jd)
                 latitude = 0.0  # Фиктивная планета, широта = 0
                 distance = 0.0  # Расстояние не определено
-                speed_lon = 0.54135 / 365.25  # Средняя скорость в градусах/день
+                speed_lon = 0.461968 / 365.25  # Средняя скорость в градусах/день (27.72' в год)
                 is_retrograde = False  # Прозерпина всегда директная
             else:
                 # Расчёт позиции планеты через Swiss Ephemeris

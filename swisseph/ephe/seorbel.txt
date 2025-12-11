@@ -58,6 +58,23 @@ J2000,JDATE, 242.2205555 + 5143.5418158 * T, 0.05280098949, 0.0, 0.0, 0.0, 0.0, 
 # Hypothetical planet Proserpina, data from Valentin Abramov
 # see also http://www.geocities.ws/rognavaldre/proserpina.html
 J1900,JDATE, 170.73, 79.225630, 0, 0, 0, 0, Proserpina #18
+# Proserpina from ZET (Virtuals.lst) - Keplerian orbital elements
+# Epoch: JD 2445375.5 (10 Feb 1983), Mean anomaly: 187.502320°
+# Semimajor axis: 77.926077235 AU, Eccentricity: 0.08550236
+# Arg. perihelion: 319.538004°, Asc. node: 63.696644°, Inclination: 3.000799°
+# Variant 1: J2000 equinox
+2445375.5, J2000, 187.502320, 77.926077235, 0.08550236, 319.538004, 63.696644, 3.000799, Proserpina_ZET_J2000 #19
+# Variant 2: JDATE (equinox of date)
+2445375.5, JDATE, 187.502320, 77.926077235, 0.08550236, 319.538004, 63.696644, 3.000799, Proserpina_ZET_JDATE #20
+# Variant 3: B1950 equinox
+2445375.5, B1950, 187.502320, 77.926077235, 0.08550236, 319.538004, 63.696644, 3.000799, Proserpina_ZET_B1950 #21
+# Calibration variants with different M0 (J2000 equinox)
+2445375.5, J2000, 155.502320, 77.926077235, 0.08550236, 319.538004, 63.696644, 3.000799, Proserpina_M0_minus32 #22
+2445375.5, J2000, 167.502320, 77.926077235, 0.08550236, 319.538004, 63.696644, 3.000799, Proserpina_M0_minus20 #23
+2445375.5, J2000, 177.502320, 77.926077235, 0.08550236, 319.538004, 63.696644, 3.000799, Proserpina_M0_minus10 #24
+2445375.5, J2000, 197.502320, 77.926077235, 0.08550236, 319.538004, 63.696644, 3.000799, Proserpina_M0_plus10 #25
+2445375.5, J2000, 207.502320, 77.926077235, 0.08550236, 319.538004, 63.696644, 3.000799, Proserpina_M0_plus20 #26
+2445375.5, J2000, 219.502320, 77.926077235, 0.08550236, 319.538004, 63.696644, 3.000799, Proserpina_M0_plus32 #27
 # Waldemath's Second Earth Moon 
 # Elements were derived by D.Koch from Waldemaths original elements as given in 
 # David Walters' book on Vulcan. They differ from Solar Fire (Graham Dawsons) 
