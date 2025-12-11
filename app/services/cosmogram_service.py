@@ -71,10 +71,10 @@ class CosmogramService:
     def determine_jones_pattern(self, user_id: UUID) -> Dict:
         """
         Визначення фігури Джонса
-        
+
         Args:
             user_id: ID користувача
-            
+
         Returns:
             Dict: Дані про фігуру Джонса
         """
@@ -83,39 +83,41 @@ class CosmogramService:
             NatalPlanet.user_id == user_id,
             NatalPlanet.planet.in_(self.ANALYSIS_PLANETS)
         ).all()
-        
+
         # Мінімум 10 планет для визначення фігури (можна 10 або 11)
         if len(planets) < 10:
             return {}
-        
+
         # Отримати довготи та відсортувати
         longitudes = sorted([float(p.degree) for p in planets])
-        
+
         # Обчислити порожні дуги
         empty_arcs = self._calculate_empty_arcs(longitudes)
         max_empty_arc = max(empty_arcs) if empty_arcs else 0
-        
+
         # Обчислити зайняту дугу
         occupied_arc = 360 - max_empty_arc
-        
+
         # Визначити паттерн
         pattern_type = self._identify_pattern(
             longitudes, empty_arcs, max_empty_arc, occupied_arc
         )
-        
-        # Знайти якірну планету (якщо є)
-        anchor_planet = self._find_anchor_planet(planets, pattern_type, longitudes)
-        
+
+        # Знайти ключові планети для паттерну
+        key_planets = self._find_key_planets(
+            planets, pattern_type, longitudes, empty_arcs, max_empty_arc
+        )
+
         pattern_data = {
             'pattern_type': pattern_type,
-            'anchor_planet': anchor_planet,
             'empty_arc_degree': max_empty_arc,
-            'special_roles': []
+            'special_roles': [],
+            **key_planets  # Додаємо ключові планети
         }
-        
+
         # Зберегти в БД
         self._save_pattern(user_id, pattern_data)
-        
+
         return pattern_data
     
     def _calculate_empty_arcs(self, longitudes: List[float]) -> List[float]:
@@ -350,6 +352,33 @@ class CosmogramService:
         # (різниця індексів має бути близькою до n/2)
         return abs(idx_diff - n/2) < n/4
 
+    def _find_stellium_center(self, longitudes: List[float]) -> Optional[float]:
+        """
+        Знайти центральну планету стеллиума (якщо є)
+
+        Args:
+            longitudes: Відсортовані довготи планет
+
+        Returns:
+            Optional[float]: Довгота центральної планети стеллиума або None
+        """
+        # Знайти групи з 3+ планет в межах 10°
+        for i in range(len(longitudes)):
+            group = [longitudes[i]]
+            for j in range(i + 1, len(longitudes)):
+                if longitudes[j] - longitudes[i] <= 10:
+                    group.append(longitudes[j])
+                else:
+                    break
+
+            # Якщо знайшли стеллиум (3+ планети)
+            if len(group) >= 3:
+                # Повернути центральну планету
+                mid_idx = len(group) // 2
+                return group[mid_idx]
+
+        return None
+
     def _has_stellium(self, longitudes: List[float]) -> bool:
         """
         Перевірити наявність стеллиума (3+ планети в межах 10°)
@@ -461,32 +490,144 @@ class CosmogramService:
 
         return {'has_handle': True, 'handle_planets': handle_group}
 
-    def _find_anchor_planet(
+    def _find_key_planets(
         self,
         planets: List[NatalPlanet],
         pattern_type: str,
-        longitudes: List[float]
-    ) -> Optional[str]:
+        longitudes: List[float],
+        empty_arcs: List[float],
+        max_empty_arc: float
+    ) -> Dict:
         """
-        Знайти якірну планету для паттерну
+        Знайти ключові планети для паттерну Джонса
+
+        Згідно з астрологічною традицією:
+        - Bowl (Чаша): краєві планети (перша і остання) - імпульс і мета
+        - Bucket (Корзина/Праща): планета-ручка (1-2 планети) - фокус енергії
+        - Bundle (Зв'язка/Гроздь): центральна і краєві планети - сутність і зони проробки
+        - Locomotive (Локомотив): ведуча і замикаюча планети - гальмують мертву зону
+        - Seesaw (Качелі/Коромисло): краєві планети в кожному секторі - початковий і кінцевий імпульси
+        - Splay (Сгущение): планета з найбільшим статусом + центр стеллиума
+        - Splash (Бризки): планета з найбільшим статусом - точка концентрації
 
         Args:
             planets: Список планет
             pattern_type: Тип паттерну
-            longitudes: Довготи планет
+            longitudes: Відсортовані довготи планет
+            empty_arcs: Порожні дуги
+            max_empty_arc: Максимальна порожня дуга
 
         Returns:
-            Optional[str]: Назва якірної планети
+            Dict: Словник з ключовими планетами
         """
-        # Для Bucket - планета в ручці
-        # Для Locomotive - перша планета в послідовності
-        # Для інших - None або спеціальна логіка
+        # Створити мапу довгота -> планета
+        planet_map = {float(p.degree): p.planet for p in planets}
 
-        if pattern_type == 'Locomotive':
-            # Перша планета
-            return planets[0].planet if planets else None
+        if pattern_type == 'Bowl':
+            # Чаша: краєві планети
+            return {
+                'leading_planet': planet_map.get(longitudes[0]),
+                'closing_planet': planet_map.get(longitudes[-1])
+            }
 
-        return None
+        elif pattern_type == 'Bucket':
+            # Корзина: планета-ручка
+            handle_info = self._find_handle(longitudes, empty_arcs, max_empty_arc)
+            if handle_info['has_handle']:
+                handle_planets = [planet_map.get(lon) for lon in handle_info['handle_planets']]
+                return {
+                    'handle_planet': handle_planets[0] if len(handle_planets) == 1 else None,
+                    'handle_planets': handle_planets if len(handle_planets) > 1 else None
+                }
+            return {}
+
+        elif pattern_type == 'Bundle':
+            # Зв'язка: центральна і краєві планети
+            mid_idx = len(longitudes) // 2
+            return {
+                'central_planet': planet_map.get(longitudes[mid_idx]),
+                'leading_planet': planet_map.get(longitudes[0]),
+                'closing_planet': planet_map.get(longitudes[-1])
+            }
+
+        elif pattern_type == 'Locomotive':
+            # Локомотив: перша після пустого сектора (ведуча) і остання перед ним (замикаюча)
+            # Знайти індекс максимальної пустої дуги
+            max_gap_idx = empty_arcs.index(max_empty_arc)
+            # Ведуча планета - наступна після пустої дуги
+            leading_idx = (max_gap_idx + 1) % len(longitudes)
+            # Замикаюча планета - перед пустою дугою
+            closing_idx = max_gap_idx
+
+            return {
+                'leading_planet': planet_map.get(longitudes[leading_idx]),
+                'closing_planet': planet_map.get(longitudes[closing_idx])
+            }
+
+        elif pattern_type == 'Seesaw':
+            # Качелі: крайні планети в кожному секторі
+            # Знайти дві групи планет
+            gaps_with_indices = [(arc, i) for i, arc in enumerate(empty_arcs) if arc >= 60]
+            if len(gaps_with_indices) >= 2:
+                gaps_with_indices.sort(reverse=True)
+                gap1_idx = gaps_with_indices[0][1]
+                gap2_idx = gaps_with_indices[1][1]
+
+                # Визначити планети на межах груп
+                group1_start = (gap1_idx + 1) % len(longitudes)
+                group1_end = gap2_idx
+                group2_start = (gap2_idx + 1) % len(longitudes)
+                group2_end = gap1_idx
+
+                return {
+                    'group1_leading': planet_map.get(longitudes[group1_start]),
+                    'group1_closing': planet_map.get(longitudes[group1_end]),
+                    'group2_leading': planet_map.get(longitudes[group2_start]),
+                    'group2_closing': planet_map.get(longitudes[group2_end])
+                }
+            return {}
+
+        elif pattern_type == 'Splay':
+            # Сгущение: планета з найбільшим статусом + центр стеллиума
+            # Знайти планету з максимальним strength_score
+            max_strength = 0
+            strongest_planet = None
+            for p in planets:
+                strength = float(p.strength_score) if p.strength_score else 0
+                if strength > max_strength:
+                    max_strength = strength
+                    strongest_planet = p.planet
+
+            # Знайти центр стеллиума (якщо є)
+            stellium_center = self._find_stellium_center(longitudes)
+
+            result = {}
+            if strongest_planet:
+                result['key_planet'] = strongest_planet
+            if stellium_center:
+                result['stellium_center_planet'] = planet_map.get(stellium_center)
+
+            return result
+
+        elif pattern_type == 'Splash':
+            # Бризки: планета з найбільшим статусом
+            # Знайти планету з максимальним strength_score
+            max_strength = 0
+            strongest_planet = None
+            for p in planets:
+                strength = float(p.strength_score) if p.strength_score else 0
+                if strength > max_strength:
+                    max_strength = strength
+                    strongest_planet = p.planet
+
+            if strongest_planet:
+                return {
+                    'key_planet': strongest_planet
+                }
+            return {}
+
+        # За замовчуванням порожній словник
+        return {}
 
     def _save_distribution(self, user_id: UUID, distribution_data: Dict) -> None:
         """
@@ -525,13 +666,21 @@ class CosmogramService:
             CosmogramPattern.user_id == user_id
         ).delete()
 
+        # Підготувати ключові планети для збереження
+        # Зберігаємо всі ключові планети в special_roles як JSONB
+        key_planets_data = {}
+        for key, value in pattern_data.items():
+            if key not in ['pattern_type', 'empty_arc_degree', 'special_roles']:
+                if value is not None:
+                    key_planets_data[key] = value
+
         # Додати нові дані
         pattern = CosmogramPattern(
             user_id=user_id,
             pattern_type=pattern_data['pattern_type'],
-            anchor_planet=pattern_data.get('anchor_planet'),
+            anchor_planet=None,  # Deprecated, використовуємо special_roles
             empty_arc_degree=Decimal(str(pattern_data['empty_arc_degree'])),
-            special_roles=pattern_data.get('special_roles', [])
+            special_roles=key_planets_data  # Зберігаємо ключові планети тут
         )
         self.db.add(pattern)
         self.db.commit()

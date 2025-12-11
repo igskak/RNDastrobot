@@ -158,8 +158,33 @@ class StelliumInfo(BaseModel):
 class CosmogramPatternInfo(BaseModel):
     """Информация о фигуре Джонса"""
     pattern_type: str
-    anchor_planet: Optional[str] = None
     empty_arc_degree: float
+
+    # Ключові планети (залежать від типу паттерну)
+    # Bowl: leading_planet, closing_planet
+    leading_planet: Optional[str] = None
+    closing_planet: Optional[str] = None
+
+    # Bucket: handle_planet або handle_planets
+    handle_planet: Optional[str] = None
+    handle_planets: Optional[List[str]] = None
+
+    # Bundle: central_planet, leading_planet, closing_planet
+    central_planet: Optional[str] = None
+
+    # Seesaw: group1_leading, group1_closing, group2_leading, group2_closing
+    group1_leading: Optional[str] = None
+    group1_closing: Optional[str] = None
+    group2_leading: Optional[str] = None
+    group2_closing: Optional[str] = None
+
+    # Splay: key_planet (планета з найбільшим статусом) + stellium_center_planet
+    # Splash: key_planet (планета з найбільшим статусом)
+    key_planet: Optional[str] = None
+    stellium_center_planet: Optional[str] = None
+
+    # Deprecated (для зворотної сумісності)
+    anchor_planet: Optional[str] = None
     special_roles: List[str] = []
 
 

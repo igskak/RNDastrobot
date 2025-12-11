@@ -715,12 +715,21 @@ class NatalChartService:
             CosmogramPattern.user_id == user_id
         ).first()
         if pattern:
-            result['cosmogram_pattern'] = {
+            # Розпаковуємо ключові планети з special_roles (JSONB)
+            pattern_data = {
                 'pattern_type': pattern.pattern_type,
-                'anchor_planet': pattern.anchor_planet,
                 'empty_arc_degree': float(pattern.empty_arc_degree) if pattern.empty_arc_degree else 0.0,
-                'special_roles': pattern.special_roles or []
             }
+
+            # Додаємо ключові планети з special_roles
+            if pattern.special_roles and isinstance(pattern.special_roles, dict):
+                pattern_data.update(pattern.special_roles)
+
+            # Для зворотної сумісності
+            pattern_data['anchor_planet'] = pattern.anchor_planet
+            pattern_data['special_roles'] = []
+
+            result['cosmogram_pattern'] = pattern_data
 
         # 6. Інтегральні баланси (пункт 3.5 спецификації)
         from app.database.models import (
