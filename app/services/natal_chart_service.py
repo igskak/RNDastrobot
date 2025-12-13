@@ -430,6 +430,12 @@ class NatalChartService:
         balance_service = BalanceService(db_session)
         balance_service.calculate_all_balances(user.user_id)
 
+        # ЭТАП 5: Общий срез (пункт 3.6 спецификації)
+        from app.services.general_overview_service import GeneralOverviewService
+
+        overview_service = GeneralOverviewService(db_session)
+        overview_service.build_general_overview(user.user_id)
+
         return user.user_id
 
     def get_natal_chart_from_db(self, user_id: UUID, db_session: Session) -> Optional[Dict]:

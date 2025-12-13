@@ -1,0 +1,467 @@
+{
+  "user_id": 0,
+  "birth_data": {
+    "date": "1988-01-17",
+    "time": "15:30:00",
+    "timezone": "+3:00",
+    "utc_time": "1988-01-17 12:30:00",
+    "julian_day": 2447178.020833,
+    "latitude": 69.4,
+    "longitude": 32.45,
+    "place": "Заозерск, Мурманская обл., Россия"
+  },
+  "planets": [
+    {
+      "name": "Jupiter",
+      "longitude": 21.591944,
+      "latitude": 0,
+      "distance": 0,
+      "speed": 0,
+      "sign": "Aries",
+      "degree_in_sign": 21.591944,
+      "degree_in_sign_formatted": "21°35'31\"",
+      "house": 11,
+      "retrograde": false,
+      "element": "Fire",
+      "mode": "Cardinal",
+      "dignity": "neutral",
+      "strength_score": 0,
+      "special_roles": []
+    },
+    {
+      "name": "Chiron",
+      "longitude": 84.228056,
+      "latitude": 0,
+      "distance": 0,
+      "speed": 0,
+      "sign": "Gemini",
+      "degree_in_sign": 24.228056,
+      "degree_in_sign_formatted": "24°13'41\"",
+      "house": 1,
+      "retrograde": true,
+      "element": "Air",
+      "mode": "Mutable",
+      "dignity": "neutral",
+      "strength_score": 0,
+      "special_roles": []
+    },
+    {
+      "name": "Mars",
+      "longitude": 245.915833,
+      "latitude": 0,
+      "distance": 0,
+      "speed": 0,
+      "sign": "Sagittarius",
+      "degree_in_sign": 5.915833,
+      "degree_in_sign_formatted": "5°54'57\"",
+      "house": 7,
+      "retrograde": false,
+      "element": "Fire",
+      "mode": "Mutable",
+      "dignity": "neutral",
+      "strength_score": 0,
+      "special_roles": []
+    },
+    {
+      "name": "Mercury",
+      "longitude": 311.888611,
+      "latitude": 0,
+      "distance": 0,
+      "speed": 0,
+      "sign": "Aquarius",
+      "degree_in_sign": 11.888611,
+      "degree_in_sign_formatted": "11°53'19\"",
+      "house": 9,
+      "retrograde": false,
+      "element": "Air",
+      "mode": "Fixed",
+      "dignity": "neutral",
+      "strength_score": 0,
+      "special_roles": []
+    },
+    {
+      "name": "Moon",
+      "longitude": 272.621111,
+      "latitude": 0,
+      "distance": 0,
+      "speed": 0,
+      "sign": "Capricorn",
+      "degree_in_sign": 2.621111,
+      "degree_in_sign_formatted": "2°37'16\"",
+      "house": 7,
+      "retrograde": false,
+      "element": "Earth",
+      "mode": "Cardinal",
+      "dignity": "neutral",
+      "strength_score": 0,
+      "special_roles": []
+    },
+    {
+      "name": "Neptune",
+      "longitude": 278.403056,
+      "latitude": 0,
+      "distance": 0,
+      "speed": 0,
+      "sign": "Capricorn",
+      "degree_in_sign": 8.403056,
+      "degree_in_sign_formatted": "8°24'11\"",
+      "house": 8,
+      "retrograde": false,
+      "element": "Earth",
+      "mode": "Cardinal",
+      "dignity": "neutral",
+      "strength_score": 0,
+      "special_roles": []
+    },
+    {
+      "name": "Pluto",
+      "longitude": 222.348611,
+      "latitude": 0,
+      "distance": 0,
+      "speed": 0,
+      "sign": "Scorpio",
+      "degree_in_sign": 12.348611,
+      "degree_in_sign_formatted": "12°20'55\"",
+      "house": 6,
+      "retrograde": false,
+      "element": "Water",
+      "mode": "Fixed",
+      "dignity": "neutral",
+      "strength_score": 0,
+      "special_roles": []
+    },
+    {
+      "name": "Proserpina",
+      "longitude": 212.536111,
+      "latitude": 0,
+      "distance": 0,
+      "speed": 0,
+      "sign": "Scorpio",
+      "degree_in_sign": 2.536111,
+      "degree_in_sign_formatted": "2°32'10\"",
+      "house": 5,
+      "retrograde": false,
+      "element": "Water",
+      "mode": "Fixed",
+      "dignity": "neutral",
+      "strength_score": 0,
+      "special_roles": []
+    },
+    {
+      "name": "Saturn",
+      "longitude": 267.324444,
+      "latitude": 0,
+      "distance": 0,
+      "speed": 0,
+      "sign": "Sagittarius",
+      "degree_in_sign": 27.324444,
+      "degree_in_sign_formatted": "27°19'28\"",
+      "house": 7,
+      "retrograde": false,
+      "element": "Fire",
+      "mode": "Mutable",
+      "dignity": "neutral",
+      "strength_score": 0,
+      "special_roles": []
+    },
+    {
+      "name": "Sun",
+      "longitude": 296.608889,
+      "latitude": 0,
+      "distance": 0,
+      "speed": 0,
+      "sign": "Capricorn",
+      "degree_in_sign": 26.608889,
+      "degree_in_sign_formatted": "26°36'32\"",
+      "house": 8,
+      "retrograde": false,
+      "element": "Earth",
+      "mode": "Cardinal",
+      "dignity": "neutral",
+      "strength_score": 0,
+      "special_roles": []
+    },
+    {
+      "name": "Uranus",
+      "longitude": 268.616667,
+      "latitude": 0,
+      "distance": 0,
+      "speed": 0,
+      "sign": "Sagittarius",
+      "degree_in_sign": 28.616667,
+      "degree_in_sign_formatted": "28°37'00\"",
+      "house": 7,
+      "retrograde": false,
+      "element": "Fire",
+      "mode": "Mutable",
+      "dignity": "neutral",
+      "strength_score": 0,
+      "special_roles": []
+    },
+    {
+      "name": "Venus",
+      "longitude": 332.258889,
+      "latitude": 0,
+      "distance": 0,
+      "speed": 0,
+      "sign": "Pisces",
+      "degree_in_sign": 2.258889,
+      "degree_in_sign_formatted": "2°15'32\"",
+      "house": 9,
+      "retrograde": false,
+      "element": "Water",
+      "mode": "Mutable",
+      "dignity": "neutral",
+      "strength_score": 0,
+      "special_roles": []
+    }
+  ],
+  "houses": [
+    {
+      "number": 1,
+      "longitude": 64.228889,
+      "sign": "Gemini",
+      "degree_in_sign": 4.228889,
+      "degree_in_sign_formatted": "4°13'44\"",
+      "ruler_planet": "Mercury",
+      "house_group": "angular"
+    },
+    {
+      "number": 2,
+      "longitude": 94.228889,
+      "sign": "Cancer",
+      "degree_in_sign": 4.228889,
+      "degree_in_sign_formatted": "4°13'44\"",
+      "ruler_planet": "Moon",
+      "house_group": "succedent"
+    },
+    {
+      "number": 3,
+      "longitude": 124.228889,
+      "sign": "Leo",
+      "degree_in_sign": 4.228889,
+      "degree_in_sign_formatted": "4°13'44\"",
+      "ruler_planet": "Sun",
+      "house_group": "cadent"
+    },
+    {
+      "number": 4,
+      "longitude": 154.228889,
+      "sign": "Virgo",
+      "degree_in_sign": 4.228889,
+      "degree_in_sign_formatted": "4°13'44\"",
+      "ruler_planet": "Mercury",
+      "house_group": "angular"
+    },
+    {
+      "number": 5,
+      "longitude": 184.228889,
+      "sign": "Libra",
+      "degree_in_sign": 4.228889,
+      "degree_in_sign_formatted": "4°13'44\"",
+      "ruler_planet": "Venus",
+      "house_group": "succedent"
+    },
+    {
+      "number": 6,
+      "longitude": 214.228889,
+      "sign": "Scorpio",
+      "degree_in_sign": 4.228889,
+      "degree_in_sign_formatted": "4°13'44\"",
+      "ruler_planet": "Pluto",
+      "house_group": "cadent"
+    },
+    {
+      "number": 7,
+      "longitude": 244.228889,
+      "sign": "Sagittarius",
+      "degree_in_sign": 4.228889,
+      "degree_in_sign_formatted": "4°13'44\"",
+      "ruler_planet": "Jupiter",
+      "house_group": "angular"
+    },
+    {
+      "number": 8,
+      "longitude": 274.228889,
+      "sign": "Capricorn",
+      "degree_in_sign": 4.228889,
+      "degree_in_sign_formatted": "4°13'44\"",
+      "ruler_planet": "Saturn",
+      "house_group": "succedent"
+    },
+    {
+      "number": 9,
+      "longitude": 304.228889,
+      "sign": "Aquarius",
+      "degree_in_sign": 4.228889,
+      "degree_in_sign_formatted": "4°13'44\"",
+      "ruler_planet": "Uranus",
+      "house_group": "cadent"
+    },
+    {
+      "number": 10,
+      "longitude": 334.228889,
+      "sign": "Pisces",
+      "degree_in_sign": 4.228889,
+      "degree_in_sign_formatted": "4°13'44\"",
+      "ruler_planet": "Neptune",
+      "house_group": "angular"
+    },
+    {
+      "number": 11,
+      "longitude": 4.228889,
+      "sign": "Aries",
+      "degree_in_sign": 4.228889,
+      "degree_in_sign_formatted": "4°13'44\"",
+      "ruler_planet": "Mars",
+      "house_group": "succedent"
+    },
+    {
+      "number": 12,
+      "longitude": 34.228889,
+      "sign": "Taurus",
+      "degree_in_sign": 4.228889,
+      "degree_in_sign_formatted": "4°13'44\"",
+      "ruler_planet": "Venus",
+      "house_group": "cadent"
+    }
+  ],
+  "angles": {
+    "ASC": {
+      "name": "ASC",
+      "longitude": 64.228889,
+      "sign": "Gemini",
+      "degree_in_sign": 4.228889,
+      "degree_in_sign_formatted": "4°13'44\""
+    },
+    "DSC": {
+      "name": "DSC",
+      "longitude": 244.228889,
+      "sign": "Sagittarius",
+      "degree_in_sign": 4.228889,
+      "degree_in_sign_formatted": "4°13'44\""
+    },
+    "MC": {
+      "name": "MC",
+      "longitude": 334.228889,
+      "sign": "Pisces",
+      "degree_in_sign": 4.228889,
+      "degree_in_sign_formatted": "4°13'44\""
+    },
+    "IC": {
+      "name": "IC",
+      "longitude": 154.228889,
+      "sign": "Virgo",
+      "degree_in_sign": 4.228889,
+      "degree_in_sign_formatted": "4°13'44\""
+    },
+    "Vertex": {
+      "name": "Vertex",
+      "longitude": null,
+      "sign": null,
+      "degree_in_sign": null,
+      "degree_in_sign_formatted": null
+    }
+  },
+  "special_points": {
+    "TrueNorthNode": {
+      "name": "TrueNorthNode",
+      "longitude": 354.878889,
+      "sign": "Pisces",
+      "degree_in_sign": 24.878889,
+      "degree_in_sign_formatted": "24°52'44\""
+    },
+    "TrueSouthNode": {
+      "name": "TrueSouthNode",
+      "longitude": 174.878889,
+      "sign": "Virgo",
+      "degree_in_sign": 24.878889,
+      "degree_in_sign_formatted": "24°52'44\""
+    },
+    "BlackMoon": {
+      "name": "BlackMoon",
+      "longitude": 136.970278,
+      "sign": "Leo",
+      "degree_in_sign": 16.970278,
+      "degree_in_sign_formatted": "16°58'13\""
+    },
+    "WhiteMoon": {
+      "name": "WhiteMoon",
+      "longitude": 347.578056,
+      "sign": "Pisces",
+      "degree_in_sign": 17.578056,
+      "degree_in_sign_formatted": "17°34'41\""
+    },
+    "Fortune": {
+      "name": "Fortune",
+      "longitude": 150.907778,
+      "sign": "Virgo",
+      "degree_in_sign": 0.907778,
+      "degree_in_sign_formatted": "0°54'28\""
+    },
+    "Vertex": {
+      "name": "Vertex",
+      "longitude": null,
+      "sign": null,
+      "degree_in_sign": null,
+      "degree_in_sign_formatted": null
+    },
+    "AntiVertex": {
+      "name": "AntiVertex",
+      "longitude": null,
+      "sign": null,
+      "degree_in_sign": null,
+      "degree_in_sign_formatted": null
+    }
+  },
+  "configurations": {
+    "FateCross": {
+      "planets_involved": null,
+      "houses_involved": null,
+      "element": null,
+      "mode": null,
+      "strength_score": 0
+    },
+    "T_Square": {
+      "planets_involved": {
+        "planets": [
+          "TrueSouthNode",
+          "Saturn",
+          "TrueNorthNode"
+        ],
+        "apex_planet": "Saturn"
+      },
+      "houses_involved": null,
+      "element": null,
+      "mode": null,
+      "strength_score": 0
+    },
+    "Bisextile": {
+      "planets_involved": {
+        "planets": [
+          "Proserpina",
+          "Moon",
+          "Venus"
+        ],
+        "apex_planet": "Venus"
+      },
+      "houses_involved": null,
+      "element": null,
+      "mode": null,
+      "strength_score": 0
+    },
+    "Skewed_Sail": {
+      "planets_involved": null,
+      "houses_involved": null,
+      "element": null,
+      "mode": null,
+      "strength_score": 0
+    }
+  },
+  "aspects": [],
+  "aspect_configurations": {},
+  "stelliums": [],
+  "cosmogram_pattern": null,
+  "planet_distribution": {},
+  "balances": {}
+}

@@ -515,3 +515,55 @@ class UserHouseGroupBalance(Base):
     # Relationship
     user = relationship("User")
 
+
+# ============================================================================
+# GENERAL OVERVIEW SUMMARY (Этап 5 - Общий срез)
+# ============================================================================
+
+class GeneralOverviewSummary(Base):
+    """Модель общего среза натальной карты (Этап 5 спецификации)"""
+    __tablename__ = 'general_overview_summary'
+
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), primary_key=True)
+
+    # ASC блок
+    asc_sign = Column(String(20))
+    asc_degree = Column(Numeric(10, 6))
+    asc_element = Column(String(10))
+    asc_mode = Column(String(15))
+    asc_zone = Column(String(10))
+    asc_conjunctions = Column(JSONB)  # Планеты в соединении с ASC
+    asc_ruler = Column(JSONB)  # {planet, sign, house, aspects}
+
+    # Светила
+    sun_sign = Column(String(20))
+    sun_house = Column(Integer)
+    sun_aspect_summary = Column(JSONB)  # Список аспектов Солнца
+    moon_sign = Column(String(20))
+    moon_house = Column(Integer)
+    moon_aspect_summary = Column(JSONB)  # Список аспектов Луны
+
+    # Космограмма
+    cosmogram_pattern = Column(String(30))
+    cosmogram_anchor_planet = Column(String(20))
+    cosmogram_empty_arc = Column(Numeric(6, 2))  # Пустая дуга в градусах
+
+    # Конфигурации и стеллиумы
+    main_configurations = Column(JSONB)  # Ключевые аспектные конфигурации
+    main_stelliums = Column(JSONB)  # Ключевые стеллиумы
+
+    # Интегральные показатели (доминанты)
+    dominant_element = Column(String(10))
+    dominant_mode = Column(String(15))
+    dominant_zone = Column(String(10))
+    dominant_hemisphere = Column(String(10))
+    dominant_gender = Column(String(15))  # Masculine/Feminine (бинер)
+    angularity_ratio = Column(Numeric(5, 2))  # Соотношение планет в угловых домах
+
+    notes = Column(Text)  # Опциональное краткое резюме
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # Relationship
+    user = relationship("User")
+

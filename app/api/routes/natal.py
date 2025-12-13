@@ -27,7 +27,8 @@ from app.models.schemas import (
     ZonesBalanceInfo,
     HemisphereBalanceInfo,
     QuadrantBalanceInfo,
-    HouseGroupBalanceInfo
+    HouseGroupBalanceInfo,
+    GeneralOverviewResponse
 )
 from app.services.natal_chart_service import NatalChartService
 from app.database.connection import get_db
@@ -242,6 +243,81 @@ async def get_natal_chart(
 
     except Exception as e:
         logger.exception(f"Ошибка при получении натальной карты: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Внутренняя ошибка сервера: {str(e)}"
+        )
+
+
+@router.get(
+    "/natal/{user_id}/overview",
+    response_model=GeneralOverviewResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Получить общий срез натальной карты",
+    description="Получает агрегированный общий срез (Этап 5): ASC-блок, светила, космограмму, доминанты",
+    responses={
+        200: {"description": "Общий срез найден"},
+        404: {"model": ErrorResponse, "description": "Общий срез не найден"},
+        500: {"model": ErrorResponse, "description": "Внутренняя ошибка сервера"},
+    }
+)
+async def get_general_overview(
+    user_id: UUID,
+    db: Session = Depends(get_db)
+) -> GeneralOverviewResponse:
+    """
+    Получить общий срез натальной карты
+
+    Возвращает агрегированные данные:
+    - ASC-блок (знак, стихия, модальность, зона, соединения, управитель)
+    - Светила (Солнце и Луна: знак, дом, аспекты)
+    - Космограмма (тип паттерна, якорная планета)
+    - Конфигурации и стеллиумы
+    - Доминанты (стихия, крест, зона, полусфера, angularity)
+    """
+    try:
+        from app.services.general_overview_service import GeneralOverviewService
+
+        overview_service = GeneralOverviewService(db)
+        overview = overview_service.get_overview(user_id)
+
+        if not overview:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Общий срез для пользователя {user_id} не найден"
+            )
+
+        return GeneralOverviewResponse(
+            user_id=overview.user_id,
+            asc_sign=overview.asc_sign,
+            asc_degree=float(overview.asc_degree) if overview.asc_degree else None,
+            asc_element=overview.asc_element,
+            asc_mode=overview.asc_mode,
+            asc_zone=overview.asc_zone,
+            asc_conjunctions=overview.asc_conjunctions,
+            asc_ruler=overview.asc_ruler,
+            sun_sign=overview.sun_sign,
+            sun_house=overview.sun_house,
+            sun_aspects=overview.sun_aspect_summary,
+            moon_sign=overview.moon_sign,
+            moon_house=overview.moon_house,
+            moon_aspects=overview.moon_aspect_summary,
+            cosmogram_pattern=overview.cosmogram_pattern,
+            cosmogram_anchor_planet=overview.cosmogram_anchor_planet,
+            cosmogram_empty_arc=float(overview.cosmogram_empty_arc) if overview.cosmogram_empty_arc else None,
+            main_configurations=overview.main_configurations,
+            main_stelliums=overview.main_stelliums,
+            dominant_element=overview.dominant_element,
+            dominant_mode=overview.dominant_mode,
+            dominant_zone=overview.dominant_zone,
+            dominant_hemisphere=overview.dominant_hemisphere,
+            dominant_gender=overview.dominant_gender,
+            angularity_ratio=float(overview.angularity_ratio) if overview.angularity_ratio else None,
+            notes=overview.notes
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Внутренняя ошибка сервера: {str(e)}"

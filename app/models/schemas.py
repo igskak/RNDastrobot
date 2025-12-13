@@ -277,6 +277,60 @@ class NatalChartResponse(BaseModel):
     balances: Optional[BalancesInfo] = None
 
 
+# ============================================================================
+# General Overview (Этап 5 - Общий срез)
+# ============================================================================
+
+class AscConjunctionInfo(BaseModel):
+    """Информация о планете в соединении с ASC"""
+    planet: str
+    orb: float
+    applying: Optional[bool] = None
+
+
+class AscRulerInfo(BaseModel):
+    """Информация об управителе ASC"""
+    planet: str
+    sign: str
+    house: int
+    aspects: List[Dict] = []
+
+
+class GeneralOverviewResponse(BaseModel):
+    """Полный общий срез натальной карты (Этап 5)"""
+    user_id: UUID
+    # ASC блок
+    asc_sign: Optional[str] = None
+    asc_degree: Optional[float] = None
+    asc_element: Optional[str] = None
+    asc_mode: Optional[str] = None
+    asc_zone: Optional[str] = None
+    asc_conjunctions: Optional[List[AscConjunctionInfo]] = None
+    asc_ruler: Optional[AscRulerInfo] = None
+    # Светила
+    sun_sign: Optional[str] = None
+    sun_house: Optional[int] = None
+    sun_aspects: Optional[List[Dict]] = None
+    moon_sign: Optional[str] = None
+    moon_house: Optional[int] = None
+    moon_aspects: Optional[List[Dict]] = None
+    # Космограмма
+    cosmogram_pattern: Optional[str] = None
+    cosmogram_anchor_planet: Optional[str] = None
+    cosmogram_empty_arc: Optional[float] = None  # Пустая дуга в градусах
+    # Конфигурации и стеллиумы
+    main_configurations: Optional[List[Dict]] = None
+    main_stelliums: Optional[List[Dict]] = None
+    # Доминанты
+    dominant_element: Optional[str] = None
+    dominant_mode: Optional[str] = None
+    dominant_zone: Optional[str] = None
+    dominant_hemisphere: Optional[str] = None
+    dominant_gender: Optional[str] = None  # Masculine/Feminine (бинер)
+    angularity_ratio: Optional[float] = None
+    notes: Optional[str] = None
+
+
 class ErrorResponse(BaseModel):
     """Ответ с ошибкой"""
     error: str
