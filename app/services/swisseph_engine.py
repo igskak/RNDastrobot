@@ -94,29 +94,34 @@ class SwissEphemerisEngine:
 
         # Расчёт домов через Swiss Ephemeris
         # Для высоких широт (>66°) Placidus и Koch не работают
+        polar_mode = False
         try:
             cusps, ascmc = swe.houses(jd, lat, lon, hsys.encode())
         except Exception as e:
             # Если ошибка - используем Equal houses от MC (как в ZET)
             # Берём реальный MC и откладываем дома по 30° от него
             if abs(lat) > 66.0:
-                # Получаем реальный MC через любую рабочую систему
-                _, ascmc = swe.houses(jd, lat, lon, b'E')
-                mc = ascmc[1]  # Реальный MC
+                polar_mode = True
+                # Получаем реальный MC через Equal houses
+                _, ascmc_raw = swe.houses(jd, lat, lon, b'E')
+                mc = ascmc_raw[1]  # Реальный MC
+
+                # ASC = MC + 90° (система Equal Houses от MC, как в ZET)
+                asc_polar = (mc + 90.0) % 360
 
                 # Строим Equal дома от MC: 10 дом = MC, остальные по 30°
                 cusps = []
                 for i in range(12):
-                    # 10 дом (индекс 9) = MC
-                    # 11 дом (индекс 10) = MC + 30°
-                    # 12 дом (индекс 11) = MC + 60°
-                    # 1 дом (индекс 0) = MC + 90°
-                    # и т.д.
                     house_offset = (i - 9) * 30  # Смещение от 10 дома
                     cusp = (mc + house_offset) % 360
                     cusps.append(cusp)
-
                 cusps = tuple(cusps)
+
+                # Переопределяем ascmc с правильным ASC
+                # ascmc: [ASC, MC, ARMC, Vertex, ...]
+                ascmc = list(ascmc_raw)
+                ascmc[0] = asc_polar  # Правильный ASC для полярных широт
+                ascmc[3] = None  # Vertex не определён для полярных широт
             else:
                 raise e
 
@@ -137,7 +142,10 @@ class SwissEphemerisEngine:
         # ascmc[0] = ASC, ascmc[1] = MC, ascmc[2] = ARMC, ascmc[3] = Vertex
         asc_deg = get_degree_in_sign(ascmc[0])
         mc_deg = get_degree_in_sign(ascmc[1])
-        vertex_deg = get_degree_in_sign(ascmc[3])
+
+        # Vertex не определён для полярных широт
+        vertex_lon = ascmc[3] if ascmc[3] is not None else None
+        vertex_deg = get_degree_in_sign(vertex_lon) if vertex_lon is not None else None
 
         angles_data = {
             'ASC': {
@@ -156,10 +164,10 @@ class SwissEphemerisEngine:
             },
             'Vertex': {
                 'name': 'Vertex',
-                'longitude': ascmc[3],
-                'sign': get_zodiac_sign(ascmc[3]),
+                'longitude': vertex_lon,
+                'sign': get_zodiac_sign(vertex_lon) if vertex_lon is not None else None,
                 'degree_in_sign': vertex_deg,
-                'degree_in_sign_formatted': format_degree_minutes_seconds(vertex_deg),
+                'degree_in_sign_formatted': format_degree_minutes_seconds(vertex_deg) if vertex_deg is not None else None,
             },
         }
 

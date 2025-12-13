@@ -205,10 +205,12 @@ class SpecialPointsService:
         Определение дня/ночи:
         - Для обычных широт (|lat| < 60°): по номеру дома (7-12 = день, 1-6 = ночь)
         - Для полярных широт (|lat| >= 60°): по астрономической высоте Солнца над горизонтом
-          (используется Swiss Ephemeris swe_azalt для точного расчёта)
+
+        Для полярных широт: используется астрономический ASC из Equal houses (как в ZET),
+        а не ASC = MC + 90°, который используется для домов.
 
         Args:
-            asc_lon: Долгота Асцендента
+            asc_lon: Долгота Асцендента (будет переопределён для полярных широт)
             sun_lon: Долгота Солнца
             moon_lon: Долгота Луны
             sun_house: Номер дома, в котором находится Солнце (1-12)
@@ -221,31 +223,31 @@ class SpecialPointsService:
         """
         import swisseph as swe
 
-        # Определяем дневная или ночная карта
         is_day_chart = None
+        asc_for_fortune = asc_lon  # По умолчанию используем переданный ASC
 
         # Для полярных широт используем астрономический расчёт
         if latitude is not None and abs(latitude) >= 60.0 and jd is not None and longitude is not None:
-            # Рассчитываем высоту Солнца над горизонтом через Swiss Ephemeris
-            geopos = [longitude, latitude, 0]  # долгота, широта, высота над уровнем моря
-            xin = [sun_lon, 0, 1]  # эклиптические координаты: долгота, широта, расстояние
+            # Для полярных широт берём астрономический ASC из Equal houses (как в ZET)
+            try:
+                _, ascmc = swe.houses(jd, latitude, longitude, b'E')
+                asc_for_fortune = ascmc[0]  # Астрономический ASC
+            except Exception:
+                pass  # Используем переданный ASC
 
-            # azalt возвращает tuple: (азимут, истинная высота, видимая высота)
+            # Рассчитываем высоту Солнца над горизонтом
+            geopos = [longitude, latitude, 0]
+            xin = [sun_lon, 0, 1]
             azimuth, true_altitude, apparent_altitude = swe.azalt(jd, swe.ECL2HOR, geopos, 0, 0, xin)
-
-            is_day_chart = true_altitude > 0  # если > 0, то Солнце над горизонтом = день
+            is_day_chart = true_altitude > 0
         else:
-            # Для обычных широт используем классическую логику по номеру дома
-            # Дома 7-12 = над горизонтом = день
-            # Дома 1-6 = под горизонтом = ночь
+            # Для обычных широт: дома 7-12 = день, 1-6 = ночь
             is_day_chart = 7 <= sun_house <= 12
 
         if is_day_chart:
-            # Дневная формула: ASC + Moon - Sun
-            fortune = asc_lon + moon_lon - sun_lon
+            fortune = asc_for_fortune + moon_lon - sun_lon
         else:
-            # Ночная формула: ASC + Sun - Moon
-            fortune = asc_lon + sun_lon - moon_lon
+            fortune = asc_for_fortune + sun_lon - moon_lon
 
         return normalize_longitude(fortune)
     

@@ -176,11 +176,9 @@ class NatalChartService:
             jd=jd, latitude=lat, longitude=lon
         )
 
-        # Vertex уже есть в angles
+        # Vertex уже есть в angles (может быть None для полярных широт)
         vertex_lon = angles['Vertex']['longitude']
-
-        # Анти-Вертекс
-        anti_vertex_lon = (vertex_lon + 180) % 360
+        anti_vertex_lon = (vertex_lon + 180) % 360 if vertex_lon is not None else None
 
         # Формируем результат (без Chiron - он теперь в планетах)
         special_points = {}
@@ -194,15 +192,25 @@ class NatalChartService:
             ('Vertex', vertex_lon),
             ('AntiVertex', anti_vertex_lon),
         ]:
-            degree_in_sign = get_degree_in_sign(lon)
-            special_points[name] = {
-                'name': name,
-                'longitude': lon,
-                'sign': get_zodiac_sign(lon),
-                'degree_in_sign': degree_in_sign,
-                'degree_in_sign_formatted': format_degree_minutes_seconds(degree_in_sign),
-                'house': self.swisseph_engine.get_planet_house(lon, houses),
-            }
+            if lon is not None:
+                degree_in_sign = get_degree_in_sign(lon)
+                special_points[name] = {
+                    'name': name,
+                    'longitude': lon,
+                    'sign': get_zodiac_sign(lon),
+                    'degree_in_sign': degree_in_sign,
+                    'degree_in_sign_formatted': format_degree_minutes_seconds(degree_in_sign),
+                    'house': self.swisseph_engine.get_planet_house(lon, houses),
+                }
+            else:
+                special_points[name] = {
+                    'name': name,
+                    'longitude': None,
+                    'sign': None,
+                    'degree_in_sign': None,
+                    'degree_in_sign_formatted': None,
+                    'house': None,
+                }
 
         return special_points
 
