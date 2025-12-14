@@ -40,8 +40,7 @@ services:
         generateValue: true
       
       # Swiss Ephemeris Configuration
-      - key: SWISSEPH_EPHE_PATH
-        value: ./swisseph/ephe
+      # SWISSEPH_EPHE_PATH не задаём - код сам вычислит правильный путь
       
       # API Server Configuration
       - key: HOST
