@@ -1,5 +1,6 @@
 /**
- * Отображение табличных данных карты
+ * Отображение табличных данных карты (профессиональный формат)
+ * Стандарт: ГГ°ММ'СС" для координат
  */
 
 class ChartDataRenderer {
@@ -7,17 +8,22 @@ class ChartDataRenderer {
         this.planetsTable = document.getElementById('planetsTable');
         this.housesTable = document.getElementById('housesTable');
         this.aspectsTable = document.getElementById('aspectsTable');
+        this.aspectGridContainer = document.getElementById('aspectGridContainer');
         this.configsContainer = document.getElementById('configurationsContainer');
         this.balancesContainer = document.getElementById('balancesContainer');
+        this.dignitiesContainer = document.getElementById('dignitiesContainer');
     }
 
     /**
      * Отрисовка всех данных
      */
     render(chartData) {
+        this.chartData = chartData;
         this.renderPlanets(chartData.planets);
         this.renderHouses(chartData.houses);
         this.renderAspects(chartData.aspects);
+        this.renderAspectGrid(chartData.aspects, chartData.planets);
+        this.renderDignities(chartData.planets);
         this.renderConfigurations(chartData.aspect_configurations, chartData.stelliums);
         this.renderBalances(chartData.balances, chartData.cosmogram_pattern);
     }
@@ -26,32 +32,37 @@ class ChartDataRenderer {
     static PLANET_ORDER = [
         'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
         'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto',
-        'TrueNode', 'SouthNode', 'Lilith', 'Selena', 'Proserpina', 'Chiron',
+        'Chiron', 'TrueNode', 'SouthNode', 'BlackMoon', 'WhiteMoon', 'Proserpina',
         'PartOfFortune'
     ];
+
+    // Символы аспектов для сетки
+    static ASPECT_GLYPHS = {
+        'Conjunction': '☌', 'Opposition': '☍', 'Trine': '△',
+        'Square': '□', 'Sextile': '⚹', 'Quincunx': '⚻',
+        'Semisextile': '⚺', 'Quintile': 'Q', 'Biquintile': 'bQ'
+    };
 
     renderPlanets(planets) {
         if (!planets || !this.planetsTable) return;
 
-        // Сортируем по заданному порядку
         const sorted = [...planets].sort((a, b) => {
             const iA = ChartDataRenderer.PLANET_ORDER.indexOf(a.name);
             const iB = ChartDataRenderer.PLANET_ORDER.indexOf(b.name);
-            // Если нет в списке — в конец
             return (iA === -1 ? 999 : iA) - (iB === -1 ? 999 : iB);
         });
 
-        // Формат как в Natal_visualisation: Симв., Объект, Знак (с градусом), Дом
+        // Профессиональный формат: Симв. | Объект | Знак ГГ°ММ'СС" | Дом
         this.planetsTable.innerHTML = sorted.map(p => {
-            const degFormatted = p.degree_in_sign_formatted || this.formatDegreeInSign(p.degree_in_sign);
+            const degDMS = this.formatDMS(p.degree_in_sign);
             return `
                 <tr id="row-${p.name}" data-planet="${p.name}">
                     <td class="symbol-cell">${Symbols.planets[p.name] || ''}</td>
                     <td>
                         <strong>${Symbols.planetNamesRu[p.name] || p.name}</strong>
-                        ${p.retrograde ? '<span class="retro-badge">R</span>' : ''}
+                        ${p.retrograde ? '<span class="retro-badge">Rx</span>' : ''}
                     </td>
-                    <td>${Symbols.signs[p.sign] || ''} ${degFormatted}</td>
+                    <td class="mono">${Symbols.signs[p.sign]} ${degDMS}</td>
                     <td class="mono">${p.house}</td>
                 </tr>
             `;
@@ -61,20 +72,23 @@ class ChartDataRenderer {
     renderHouses(houses) {
         if (!houses || !this.housesTable) return;
 
-        // Формат как в Natal_visualisation: Куспид | Знак (с градусом)
+        // Профессиональный формат: Куспид | Знак ГГ°ММ'СС"
         this.housesTable.innerHTML = houses.map(h => {
             const isAngular = [1, 4, 7, 10].includes(h.number);
-            const degFormatted = this.formatDegree(h.degree_in_sign);
+            const degDMS = this.formatDMS(h.degree_in_sign);
             return `
                 <tr class="${isAngular ? 'house-angular' : ''}">
                     <td class="mono">${h.number}${isAngular ? ' ★' : ''}</td>
-                    <td>${Symbols.signs[h.sign] || ''} ${degFormatted}</td>
+                    <td class="mono">${Symbols.signs[h.sign]} ${degDMS}</td>
                 </tr>
             `;
         }).join('');
     }
 
-    formatDegree(deg) {
+    /**
+     * Профессиональный формат: ГГ°ММ'СС"
+     */
+    formatDMS(deg) {
         let d = Math.floor(deg);
         let remainder = (deg - d) * 60;
         let m = Math.floor(remainder);
@@ -84,17 +98,10 @@ class ChartDataRenderer {
         return `${d}°${m.toString().padStart(2, '0')}'${s.toString().padStart(2, '0')}"`;
     }
 
-    formatDegreeInSign(deg) {
+    formatDegreeShort(deg) {
         const d = Math.floor(deg);
         const m = Math.floor((deg - d) * 60);
         return `${d}°${m.toString().padStart(2, '0')}'`;
-    }
-
-    formatLongitude(lon) {
-        const d = Math.floor(lon);
-        const m = Math.floor((lon - d) * 60);
-        const s = Math.floor(((lon - d) * 60 - m) * 60);
-        return `${d}°${m.toString().padStart(2, '0')}'${s.toString().padStart(2, '0')}"`;
     }
 
     renderAspects(aspects) {
@@ -106,20 +113,113 @@ class ChartDataRenderer {
             return a.orb - b.orb;
         });
 
-        // Компактный формат: Планета1 ↔ Планета2 | Тип | Орбис
+        // Профессиональный формат с орбисом
         this.aspectsTable.innerHTML = sorted.map(a => {
             const typeClass = a.harmonic_type === 'harmonious' ? 'aspect-harmonious'
                             : a.harmonic_type === 'tense' ? 'aspect-tense'
                             : 'aspect-neutral';
             return `
-                <tr>
+                <tr data-aspect="${a.planet_1}-${a.planet_2}">
                     <td class="symbol-cell">${Symbols.planets[a.planet_1] || ''}</td>
                     <td class="symbol-cell">${Symbols.planets[a.planet_2] || ''}</td>
                     <td class="${typeClass}">${Symbols.aspects[a.aspect_type] || ''} ${Symbols.aspectNamesRu[a.aspect_type] || a.aspect_type}</td>
-                    <td class="mono">${a.orb.toFixed(1)}°</td>
+                    <td class="mono">${a.orb.toFixed(2)}°</td>
                 </tr>
             `;
         }).join('');
+    }
+
+    /**
+     * Треугольная сетка аспектов (Aspect Grid) — профессиональный стандарт
+     */
+    renderAspectGrid(aspects, planets) {
+        if (!this.aspectGridContainer || !aspects || !planets) return;
+
+        // Только основные планеты для сетки
+        const gridPlanets = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
+                            'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
+        const filtered = planets.filter(p => gridPlanets.includes(p.name))
+                                .sort((a, b) => gridPlanets.indexOf(a.name) - gridPlanets.indexOf(b.name));
+
+        // Карта аспектов
+        const aspectMap = {};
+        aspects.forEach(a => {
+            const key1 = `${a.planet_1}-${a.planet_2}`;
+            const key2 = `${a.planet_2}-${a.planet_1}`;
+            aspectMap[key1] = aspectMap[key2] = a;
+        });
+
+        let html = '<table class="aspect-grid">';
+
+        // Заголовок
+        html += '<tr><th></th>';
+        filtered.forEach(p => {
+            html += `<th title="${Symbols.planetNamesRu[p.name]}">${Symbols.planets[p.name]}</th>`;
+        });
+        html += '</tr>';
+
+        // Строки (треугольная матрица)
+        filtered.forEach((rowPlanet, rowIdx) => {
+            html += `<tr><th title="${Symbols.planetNamesRu[rowPlanet.name]}">${Symbols.planets[rowPlanet.name]}</th>`;
+
+            filtered.forEach((colPlanet, colIdx) => {
+                if (colIdx >= rowIdx) {
+                    html += '<td></td>';
+                } else {
+                    const aspect = aspectMap[`${rowPlanet.name}-${colPlanet.name}`];
+                    if (aspect) {
+                        const glyph = ChartDataRenderer.ASPECT_GLYPHS[aspect.aspect_type] || '•';
+                        const cls = aspect.harmonic_type === 'harmonious' ? 'grid-harmonious'
+                                  : aspect.harmonic_type === 'tense' ? 'grid-tense'
+                                  : 'grid-neutral';
+                        html += `<td class="${cls}" title="${Symbols.aspectNamesRu[aspect.aspect_type]} ${aspect.orb.toFixed(1)}°">${glyph}</td>`;
+                    } else {
+                        html += '<td>–</td>';
+                    }
+                }
+            });
+
+            html += '</tr>';
+        });
+
+        html += '</table>';
+        this.aspectGridContainer.innerHTML = html;
+    }
+
+    /**
+     * Таблица эссенциальных достоинств
+     */
+    renderDignities(planets) {
+        if (!this.dignitiesContainer || !planets) return;
+
+        const dignityLabels = {
+            'domicile': { label: 'Обитель', class: 'dignity-domicile', icon: '🏠' },
+            'exaltation': { label: 'Экзальтация', class: 'dignity-exaltation', icon: '⬆' },
+            'detriment': { label: 'Изгнание', class: 'dignity-detriment', icon: '⬇' },
+            'fall': { label: 'Падение', class: 'dignity-fall', icon: '💫' },
+            'neutral': { label: '', class: '', icon: '' }
+        };
+
+        const withDignity = planets.filter(p => p.dignity && p.dignity !== 'neutral');
+
+        if (withDignity.length === 0) {
+            this.dignitiesContainer.innerHTML = '<p class="text-muted">Нет планет в достоинствах/слабостях</p>';
+            return;
+        }
+
+        let html = '<div class="dignities-list">';
+        withDignity.forEach(p => {
+            const d = dignityLabels[p.dignity] || dignityLabels.neutral;
+            html += `
+                <div class="dignity-item ${d.class}">
+                    <span class="dignity-planet">${Symbols.planets[p.name]} ${Symbols.planetNamesRu[p.name]}</span>
+                    <span class="dignity-label">${d.icon} ${d.label}</span>
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        this.dignitiesContainer.innerHTML = html;
     }
 
     renderConfigurations(configurations, stelliums) {

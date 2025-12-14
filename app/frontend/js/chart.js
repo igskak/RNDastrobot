@@ -2,12 +2,18 @@
  * Главный скрипт страницы натальной карты
  */
 
+let chartWheel = null;
+let chartDataRenderer = null;
+let currentSettings = {
+    houseSystem: 'Placidus',
+    hiddenPlanets: []
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     // Получаем данные карты из сессии
     const chartData = AstroAPI.getChartFromSession();
 
     if (!chartData) {
-        // Если данных нет, возвращаемся на форму
         window.location.href = 'index.html';
         return;
     }
@@ -20,15 +26,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Инициализируем круговую карту
     const svgElement = document.getElementById('chartWheel');
-    const wheel = new ChartWheel(svgElement);
-    wheel.draw(chartData);
+    chartWheel = new ChartWheel(svgElement);
+    chartWheel.draw(chartData);
 
     // Инициализируем таблицы данных
-    const dataRenderer = new ChartDataRenderer();
-    dataRenderer.render(chartData);
+    chartDataRenderer = new ChartDataRenderer();
+    chartDataRenderer.render(chartData);
 
-    // Инициализируем вкладки (старая логика, если есть .tab-btn)
+    // Инициализируем вкладки и настройки
     initTabs();
+    initSettings(chartData);
+    initPanelTabs();
+    initZoomControls();
+    initPinchZoom();
 });
 
 /**
@@ -60,16 +70,216 @@ function initTabs() {
     tabButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const tabId = btn.dataset.tab;
-
-            // Убираем active со всех
             tabButtons.forEach(b => b.classList.remove('active'));
             tabPanes.forEach(p => p.classList.remove('active'));
-
-            // Добавляем active на выбранные
             btn.classList.add('active');
             document.getElementById(tabId).classList.add('active');
         });
     });
+}
+
+/**
+ * Инициализация вкладок панелей (левая/правая)
+ */
+function initPanelTabs() {
+    document.querySelectorAll('.panel-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const panelId = tab.dataset.panelTab;
+            const parent = tab.closest('.side-panel');
+
+            // Переключаем активную вкладку
+            parent.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+            parent.querySelectorAll('.panel-tab-content').forEach(c => c.classList.remove('active'));
+
+            tab.classList.add('active');
+            document.getElementById(panelId).classList.add('active');
+        });
+    });
+}
+
+/**
+ * Инициализация панели настроек
+ */
+function initSettings(chartData) {
+    const settingsToggle = document.getElementById('settingsToggle');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const planetToggles = document.getElementById('planetToggles');
+    const applyBtn = document.getElementById('applySettings');
+
+    // Список планет для переключения
+    const toggleablePlanets = [
+        { id: 'Chiron', label: 'Хирон' },
+        { id: 'TrueNode', label: 'Сев. Узел' },
+        { id: 'SouthNode', label: 'Юж. Узел' },
+        { id: 'BlackMoon', label: 'Лилит' },
+        { id: 'WhiteMoon', label: 'Селена' },
+        { id: 'Proserpina', label: 'Прозерпина' },
+        { id: 'PartOfFortune', label: 'Фортуна' }
+    ];
+
+    // Генерируем чекбоксы
+    if (planetToggles) {
+        planetToggles.innerHTML = toggleablePlanets.map(p => `
+            <label class="planet-toggle">
+                <input type="checkbox" data-planet="${p.id}" checked>
+                <span>${Symbols.planets[p.id] || ''} ${p.label}</span>
+            </label>
+        `).join('');
+    }
+
+    // Переключение панели
+    if (settingsToggle && settingsPanel) {
+        settingsToggle.addEventListener('click', () => {
+            settingsPanel.classList.toggle('hidden');
+        });
+
+        // Закрытие при клике вне панели
+        document.addEventListener('click', (e) => {
+            if (!settingsPanel.contains(e.target) && e.target !== settingsToggle) {
+                settingsPanel.classList.add('hidden');
+            }
+        });
+    }
+
+    // Применение настроек
+    if (applyBtn) {
+        applyBtn.addEventListener('click', () => {
+            applySettings();
+        });
+    }
+}
+
+/**
+ * Применение настроек и перерисовка карты
+ */
+async function applySettings() {
+    const houseSystem = document.getElementById('houseSystemSelect').value;
+    const hiddenPlanets = [];
+
+    document.querySelectorAll('#planetToggles input').forEach(cb => {
+        if (!cb.checked) {
+            hiddenPlanets.push(cb.dataset.planet);
+        }
+    });
+
+    currentSettings.houseSystem = houseSystem;
+    currentSettings.hiddenPlanets = hiddenPlanets;
+
+    // Если система домов изменилась — нужен пересчёт на сервере
+    const formData = AstroAPI.getFormData();
+    if (formData && houseSystem !== 'Placidus') {
+        // Пересчитываем карту с новой системой домов
+        try {
+            const newChartData = await AstroAPI.calculateChart({
+                ...formData,
+                house_system: houseSystem
+            });
+
+            if (newChartData) {
+                window.chartDataCache = newChartData;
+                redrawChart(newChartData, hiddenPlanets);
+            }
+        } catch (err) {
+            console.error('Failed to recalculate chart:', err);
+        }
+    } else {
+        // Просто скрываем/показываем планеты
+        redrawChart(window.chartDataCache, hiddenPlanets);
+    }
+
+    // Закрываем панель
+    document.getElementById('settingsPanel').classList.add('hidden');
+}
+
+/**
+ * Перерисовка карты с учётом скрытых планет
+ */
+function redrawChart(chartData, hiddenPlanets) {
+    // Фильтруем планеты
+    const filteredData = {
+        ...chartData,
+        planets: chartData.planets.filter(p => !hiddenPlanets.includes(p.name)),
+        aspects: chartData.aspects.filter(a =>
+            !hiddenPlanets.includes(a.planet_1) && !hiddenPlanets.includes(a.planet_2)
+        )
+    };
+
+    // Перерисовываем
+    chartWheel.draw(filteredData);
+    chartDataRenderer.render(filteredData);
+}
+
+/**
+ * Инициализация кнопок зума
+ */
+function initZoomControls() {
+    const wrapper = document.getElementById('chartWheelWrapper');
+    const svg = document.getElementById('chartWheel');
+    let scale = 1;
+    let translateX = 0;
+    let translateY = 0;
+
+    const updateTransform = () => {
+        svg.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+    };
+
+    document.getElementById('zoomIn')?.addEventListener('click', () => {
+        scale = Math.min(scale * 1.2, 4);
+        updateTransform();
+    });
+
+    document.getElementById('zoomOut')?.addEventListener('click', () => {
+        scale = Math.max(scale / 1.2, 0.5);
+        updateTransform();
+    });
+
+    document.getElementById('zoomReset')?.addEventListener('click', () => {
+        scale = 1;
+        translateX = 0;
+        translateY = 0;
+        updateTransform();
+    });
+
+    // Сохраняем для pinch-zoom
+    wrapper._zoomState = { scale, translateX, translateY, updateTransform };
+}
+
+/**
+ * Поддержка pinch-zoom на мобильных устройствах
+ */
+function initPinchZoom() {
+    const wrapper = document.getElementById('chartWheelWrapper');
+    const svg = document.getElementById('chartWheel');
+    if (!wrapper || !svg) return;
+
+    let initialDistance = 0;
+    let initialScale = 1;
+
+    wrapper.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+            initialDistance = getDistance(e.touches[0], e.touches[1]);
+            initialScale = wrapper._zoomState?.scale || 1;
+        }
+    }, { passive: true });
+
+    wrapper.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2) {
+            const currentDistance = getDistance(e.touches[0], e.touches[1]);
+            const scaleChange = currentDistance / initialDistance;
+            const newScale = Math.min(Math.max(initialScale * scaleChange, 0.5), 4);
+
+            if (wrapper._zoomState) {
+                wrapper._zoomState.scale = newScale;
+                wrapper._zoomState.updateTransform();
+            }
+        }
+    }, { passive: true });
+
+    function getDistance(touch1, touch2) {
+        const dx = touch1.clientX - touch2.clientX;
+        const dy = touch1.clientY - touch2.clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
 }
 
 

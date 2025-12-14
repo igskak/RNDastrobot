@@ -22,20 +22,25 @@
 
     <!-- Main 3-column layout -->
     <div class="chart-layout">
-        <!-- Left panel: Planets -->
+        <!-- Left panel: Planets & Aspects -->
         <aside class="side-panel left-panel" id="view-planets">
             <div class="panel-tabs">
                 <button class="panel-tab active" data-panel-tab="planets-list">Планеты</button>
                 <button class="panel-tab" data-panel-tab="aspects-list">Аспекты</button>
+                <button class="panel-tab" data-panel-tab="grid-list">Сетка</button>
             </div>
             <div class="panel-content">
                 <div id="planets-list" class="panel-tab-content active">
                     <table class="data-table compact">
                         <thead>
-                            <tr><th>Симв.</th><th>Объект</th><th>Знак</th><th>Дом</th></tr>
+                            <tr><th>Симв.</th><th>Объект</th><th>Позиция</th><th>Дом</th></tr>
                         </thead>
                         <tbody id="planetsTable"></tbody>
                     </table>
+                    <!-- Dignities section -->
+                    <div class="section-divider"></div>
+                    <h4 class="subsection-title">Достоинства</h4>
+                    <div id="dignitiesContainer"></div>
                 </div>
                 <div id="aspects-list" class="panel-tab-content">
                     <table class="data-table compact">
@@ -44,6 +49,10 @@
                         </thead>
                         <tbody id="aspectsTable"></tbody>
                     </table>
+                </div>
+                <div id="grid-list" class="panel-tab-content">
+                    <h4 class="subsection-title">Сетка аспектов</h4>
+                    <div id="aspectGridContainer"></div>
                 </div>
             </div>
         </aside>
@@ -57,8 +66,35 @@
                 <button class="zoom-btn" id="zoomIn" title="Приблизить">+</button>
                 <button class="zoom-btn" id="zoomOut" title="Отдалить">−</button>
                 <button class="zoom-btn" id="zoomReset" title="Сбросить">⟲</button>
+                <button class="zoom-btn" id="settingsToggle" title="Настройки">⚙</button>
             </div>
             <div id="tooltip" class="chart-tooltip"></div>
+
+            <!-- Settings Panel -->
+            <div id="settingsPanel" class="settings-panel hidden">
+                <h4>Настройки отображения</h4>
+
+                <div class="settings-section">
+                    <label class="settings-label">Система домов</label>
+                    <select id="houseSystemSelect" class="settings-select">
+                        <option value="Placidus" selected>Placidus</option>
+                        <option value="Koch">Koch</option>
+                        <option value="Whole_Sign">Whole Sign</option>
+                        <option value="Equal">Equal</option>
+                        <option value="Campanus">Campanus</option>
+                        <option value="Regiomontanus">Regiomontanus</option>
+                    </select>
+                </div>
+
+                <div class="settings-section">
+                    <label class="settings-label">Планеты и точки</label>
+                    <div class="planet-toggles" id="planetToggles">
+                        <!-- Filled dynamically -->
+                    </div>
+                </div>
+
+                <button class="btn-apply" id="applySettings">Применить</button>
+            </div>
         </main>
 
         <!-- Right panel: Houses & Analytics -->
