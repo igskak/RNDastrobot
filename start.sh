@@ -18,11 +18,11 @@ echo "🗂️  Working directory: $(pwd)"
 # Start the application with gunicorn
 echo "✅ Starting gunicorn server..."
 exec gunicorn app.api.main:app \
-    --workers 2 \
+    --workers 1 \
     --worker-class uvicorn.workers.UvicornWorker \
     --bind "0.0.0.0:${PORT}" \
     --timeout 120 \
-    --access-logfile - \
+    --access-logfile /dev/null \
     --error-logfile - \
-    --log-level info
+    --log-level warning
 

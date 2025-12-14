@@ -5,12 +5,27 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from app.api.routes import natal
 import os
+import sys
+import logging
 from dotenv import load_dotenv
 
 # Загрузка переменных окружения
 load_dotenv()
+
+# Настройка логирования для production — минимальный уровень
+if os.getenv('APP_ENV') == 'production':
+    # Отключаем избыточные логи
+    logging.getLogger('sqlalchemy').setLevel(logging.ERROR)
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
+    logging.getLogger('uvicorn.access').setLevel(logging.WARNING)
+
+    # Настраиваем loguru для минимального логирования
+    from loguru import logger
+    logger.remove()  # Удаляем default handler
+    logger.add(sys.stderr, level="WARNING")  # Только WARNING и выше
+
+from app.api.routes import natal
 
 # Путь к frontend
 FRONTEND_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")

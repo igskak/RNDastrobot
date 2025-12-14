@@ -7,12 +7,17 @@ from sqlalchemy.pool import NullPool
 from contextlib import contextmanager
 from typing import Generator
 import os
+import logging
 from dotenv import load_dotenv
 
 from app.database.models import Base
 
 # Загружаем переменные окружения
 load_dotenv()
+
+# Отключаем избыточное логирование SQLAlchemy в production
+if os.getenv('APP_ENV') == 'production' or os.getenv('DEBUG', 'False').lower() != 'true':
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
 
 
 class DatabaseManager:
