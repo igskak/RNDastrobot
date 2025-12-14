@@ -19,10 +19,7 @@ class SwissEphemerisEngine:
             ephe_path: Путь к файлам эфемерид (опционально)
         """
         if ephe_path:
-            logger.info(f"Setting Swiss Ephemeris path to: {ephe_path}")
             swe.set_ephe_path(ephe_path)
-        else:
-            logger.warning("No ephemeris path provided, using default")
     
     def calculate_planets(self, jd: float) -> List[Dict]:
         """

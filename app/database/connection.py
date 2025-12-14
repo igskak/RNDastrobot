@@ -51,7 +51,7 @@ class DatabaseManager:
         self._engine = create_engine(
             database_url,
             poolclass=NullPool,
-            echo=os.getenv('DEBUG', 'False').lower() == 'true',  # SQL логирование в debug режиме
+            echo=False,  # Отключаем SQL логирование полностью
             pool_pre_ping=True,  # Проверка соединения перед использованием
         )
         

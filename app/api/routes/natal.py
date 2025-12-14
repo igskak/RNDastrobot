@@ -42,8 +42,10 @@ router = APIRouter()
 # Путь к эфемеридам Swiss Ephemeris (абсолютный путь)
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 EPHE_PATH = os.getenv("SWISSEPH_EPHE_PATH", os.path.join(_PROJECT_ROOT, "swisseph", "ephe"))
-logger.info(f"Project root: {_PROJECT_ROOT}")
-logger.info(f"Ephemeris path: {EPHE_PATH}")
+# Логируем только в development
+if os.getenv('APP_ENV') != 'production':
+    logger.info(f"Project root: {_PROJECT_ROOT}")
+    logger.info(f"Ephemeris path: {EPHE_PATH}")
 natal_service = NatalChartService(ephe_path=EPHE_PATH)
 
 
@@ -82,8 +84,6 @@ async def calculate_natal_chart(
     - Если save_to_db=True, также возвращает user_id
     """
     try:
-        logger.info(f"Расчёт натальной карты для {birth_data.date} {birth_data.time} (save_to_db={save_to_db})")
-
         # Расчёт натальной карты
         chart_data = natal_service.calculate_natal_chart(
             birth_date=birth_data.date,
@@ -129,11 +129,6 @@ async def calculate_natal_chart(
             # Інтегральні баланси (пункт 3.5 специфікації)
             balances=balances_data,
         )
-
-        if save_to_db:
-            logger.info(f"Натальная карта успешно рассчитана и сохранена в БД (user_id={chart_data['user_id']})")
-        else:
-            logger.info(f"Натальная карта успешно рассчитана")
 
         return response
     
@@ -192,13 +187,10 @@ async def get_natal_chart(
     - Полные данные натальной карты из базы данных
     """
     try:
-        logger.info(f"Запрос натальной карты для user_id={user_id}")
-
         # Получаем данные из БД
         chart_data = natal_service.get_natal_chart_from_db(user_id, db)
 
         if not chart_data:
-            logger.warning(f"Натальная карта не найдена для user_id={user_id}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Натальная карта для пользователя {user_id} не найдена"
@@ -237,7 +229,6 @@ async def get_natal_chart(
             balances=balances_data,
         )
 
-        logger.info(f"Натальная карта успешно получена из БД для user_id={user_id}")
         return response
 
     except HTTPException:
