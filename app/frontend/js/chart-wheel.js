@@ -10,11 +10,11 @@ class ChartWheel {
         this.outerRadius = 230;
 
         // Двойное кольцо: градусная сетка + символы знаков
-        this.degreeRingWidth = 12;      // Внешнее кольцо с градусами
-        this.signRingWidth = 28;         // Кольцо символов знаков
-        this.houseRingWidth = 65;        // Кольцо домов
-        this.planetRadius = 125;         // Радиус планет
-        this.aspectRadius = 70;          // Радиус аспектных линий
+        this.degreeRingWidth = 10;       // Внешнее кольцо с градусами
+        this.signRingWidth = 26;         // Кольцо символов знаков
+        this.houseRingWidth = 40;        // Кольцо домов
+        this.planetRadius = 158;         // Радиус планет (на линии домов)
+        this.aspectRadius = 145;         // Радиус аспектных линий (почти до кольца домов)
 
         // Цвета аспектов по типу
         this.aspectColors = {
@@ -255,11 +255,20 @@ class ChartWheel {
      * Улучшенная отрисовка аспектов:
      * - Цвет по типу аспекта
      * - Сплошные для мажорных, пунктир для минорных
-     * - Толщина зависит от орбиса
+     * - Толщина зависит от орбиса (более тонкие линии)
+     * - Иконки аспектов на середине линии
      */
     drawAspectsEnhanced(aspects, planets) {
         const planetMap = {};
         planets.forEach(p => planetMap[p.name] = p.longitude);
+
+        // Символы аспектов
+        const aspectGlyphs = {
+            'Conjunction': '☌', 'Opposition': '☍', 'Trine': '△',
+            'Square': '□', 'Sextile': '⚹', 'Quincunx': '⚻',
+            'Semisextile': '⚺', 'Quintile': 'Q', 'Biquintile': 'bQ',
+            'Semisquare': '∠', 'Sesquiquadrate': '⚼'
+        };
 
         // Сортируем: сначала слабые (тонкие), потом точные (жирные)
         const sorted = [...aspects].sort((a, b) => b.orb - a.orb);
@@ -272,32 +281,61 @@ class ChartWheel {
             const angle1 = (90 - long1) * Math.PI / 180;
             const angle2 = (90 - long2) * Math.PI / 180;
 
+            const x1 = this.center + this.aspectRadius * Math.cos(angle1);
+            const y1 = this.center - this.aspectRadius * Math.sin(angle1);
+            const x2 = this.center + this.aspectRadius * Math.cos(angle2);
+            const y2 = this.center - this.aspectRadius * Math.sin(angle2);
+
             // Цвет по типу аспекта
             const color = this.aspectColors[aspect.aspect_type] || '#9ca3af';
 
-            // Толщина зависит от орбиса (0° → 2.5px, 10° → 0.5px)
+            // Толщина: более тонкие линии (0° → 1.5px, 10° → 0.3px)
             const maxOrb = 12;
-            const thickness = Math.max(0.5, 2.5 - (aspect.orb / maxOrb) * 2);
+            const thickness = Math.max(0.3, 1.5 - (aspect.orb / maxOrb) * 1.2);
 
             // Мажорные — сплошные, минорные — пунктир
             const isMajor = this.majorAspects.includes(aspect.aspect_type);
-            const dashArray = isMajor ? 'none' : '4,3';
+            const dashArray = isMajor ? 'none' : '3,2';
 
             const line = this.createSvgElement('line', {
-                x1: this.center + this.aspectRadius * Math.cos(angle1),
-                y1: this.center - this.aspectRadius * Math.sin(angle1),
-                x2: this.center + this.aspectRadius * Math.cos(angle2),
-                y2: this.center - this.aspectRadius * Math.sin(angle2),
+                x1, y1, x2, y2,
                 stroke: color,
                 'stroke-width': thickness,
                 'stroke-dasharray': dashArray,
-                opacity: isMajor ? 0.8 : 0.5,
+                opacity: isMajor ? 0.7 : 0.45,
                 class: 'aspect-line',
                 'data-aspect': `${aspect.planet_1}-${aspect.planet_2}`,
                 'data-type': aspect.aspect_type
             });
 
             this.layers.aspects.appendChild(line);
+
+            // Иконка аспекта на середине линии (только для мажорных с орбисом < 5°)
+            if (isMajor && aspect.orb < 5) {
+                const midX = (x1 + x2) / 2;
+                const midY = (y1 + y2) / 2;
+                const glyph = aspectGlyphs[aspect.aspect_type];
+
+                if (glyph) {
+                    // Фон для иконки
+                    this.layers.aspects.appendChild(this.createSvgElement('circle', {
+                        cx: midX, cy: midY, r: 6,
+                        fill: 'white',
+                        stroke: color,
+                        'stroke-width': 0.5,
+                        opacity: 0.9
+                    }));
+
+                    // Иконка
+                    this.layers.aspects.appendChild(this.createSvgElement('text', {
+                        x: midX, y: midY + 3,
+                        'text-anchor': 'middle',
+                        'font-size': '8',
+                        fill: color,
+                        style: 'pointer-events: none;'
+                    }, glyph));
+                }
+            }
         });
     }
 
@@ -336,12 +374,12 @@ class ChartWheel {
                 }));
             }
 
-            // Фоновый круг
+            // Фоновый круг (тонкая обводка как у аспектов)
             group.appendChild(this.createSvgElement('circle', {
-                cx: x, cy: y, r: 11,
+                cx: x, cy: y, r: 10,
                 fill: 'white',
                 stroke: color,
-                'stroke-width': 1.5,
+                'stroke-width': 0.8,
                 class: 'planet-circle'
             }));
 

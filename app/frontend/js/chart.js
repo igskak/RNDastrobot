@@ -11,12 +11,15 @@ let currentSettings = {
 
 document.addEventListener('DOMContentLoaded', () => {
     // Получаем данные карты из сессии
-    const chartData = AstroAPI.getChartFromSession();
+    let chartData = AstroAPI.getChartFromSession();
 
     if (!chartData) {
         window.location.href = 'index.html';
         return;
     }
+
+    // Объединяем special_points с planets для отображения
+    chartData = mergeSpecialPointsIntoPlanets(chartData);
 
     // Сохраняем в глобальный кэш для интерактивности
     window.chartDataCache = chartData;
@@ -40,6 +43,48 @@ document.addEventListener('DOMContentLoaded', () => {
     initZoomControls();
     initPinchZoom();
 });
+
+/**
+ * Объединение special_points с planets для единого отображения
+ */
+function mergeSpecialPointsIntoPlanets(chartData) {
+    if (!chartData.special_points) return chartData;
+
+    // Маппинг имён из API в имена для отображения
+    const nameMapping = {
+        'TrueNorthNode': 'TrueNode',
+        'TrueSouthNode': 'SouthNode',
+        'Fortune': 'PartOfFortune'
+    };
+
+    // Точки для добавления в planets
+    const pointsToAdd = ['TrueNorthNode', 'TrueSouthNode', 'BlackMoon', 'WhiteMoon', 'Fortune'];
+
+    pointsToAdd.forEach(key => {
+        const point = chartData.special_points[key];
+        if (point && point.longitude !== null) {
+            const displayName = nameMapping[key] || key;
+
+            // Проверяем, нет ли уже такой точки в planets
+            const exists = chartData.planets.some(p =>
+                p.name === displayName || p.name === key
+            );
+
+            if (!exists) {
+                chartData.planets.push({
+                    name: displayName,
+                    longitude: point.longitude,
+                    sign: point.sign,
+                    degree_in_sign: point.degree_in_sign,
+                    house: point.house,
+                    retrograde: false
+                });
+            }
+        }
+    });
+
+    return chartData;
+}
 
 /**
  * Обновление заголовка с данными рождения
@@ -170,12 +215,14 @@ async function applySettings() {
     if (formData && houseSystem !== 'Placidus') {
         // Пересчитываем карту с новой системой домов
         try {
-            const newChartData = await AstroAPI.calculateChart({
+            let newChartData = await AstroAPI.calculateChart({
                 ...formData,
                 house_system: houseSystem
             });
 
             if (newChartData) {
+                // Объединяем special_points с planets
+                newChartData = mergeSpecialPointsIntoPlanets(newChartData);
                 window.chartDataCache = newChartData;
                 redrawChart(newChartData, hiddenPlanets);
             }

@@ -37,10 +37,6 @@
                         </thead>
                         <tbody id="planetsTable"></tbody>
                     </table>
-                    <!-- Dignities section -->
-                    <div class="section-divider"></div>
-                    <h4 class="subsection-title">Достоинства</h4>
-                    <div id="dignitiesContainer"></div>
                 </div>
                 <div id="aspects-list" class="panel-tab-content">
                     <table class="data-table compact">
@@ -68,6 +64,17 @@
                 <button class="zoom-btn" id="zoomReset" title="Сбросить">⟲</button>
                 <button class="zoom-btn" id="settingsToggle" title="Настройки">⚙</button>
             </div>
+
+            <!-- Легенда линий аспектов -->
+            <div class="aspect-lines-legend">
+                <span class="legend-item"><span class="line-sample solid"></span> Мажорные</span>
+                <span class="legend-item"><span class="line-sample dashed"></span> Минорные</span>
+                <span class="legend-sep">|</span>
+                <span class="legend-color" style="color:#ef4444">● Напряж.</span>
+                <span class="legend-color" style="color:#3b82f6">● Гармон.</span>
+                <span class="legend-color" style="color:#f59e0b">● Нейтр.</span>
+            </div>
+
             <div id="tooltip" class="chart-tooltip"></div>
 
             <!-- Settings Panel -->
@@ -113,13 +120,8 @@
                         <tbody id="housesTable"></tbody>
                     </table>
 
-                    <!-- Легенда аспектов -->
-                    <div class="aspects-legend">
-                        <div class="legend-title">Легенда аспектов</div>
-                        <div class="legend-item"><span class="legend-dot tense"></span> Напряжённые (90°/180°)</div>
-                        <div class="legend-item"><span class="legend-dot harmonious"></span> Гармоничные (60°/120°)</div>
-                        <div class="legend-item"><span class="legend-dot neutral"></span> Соединения (0°)</div>
-                    </div>
+                    <!-- Эссенциальные достоинства -->
+                    <div id="dignitiesContainer" class="dignities-section"></div>
                 </div>
                 <div id="configs-list" class="panel-tab-content">
                     <div id="configurationsContainer"></div>

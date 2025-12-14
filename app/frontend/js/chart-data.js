@@ -131,13 +131,18 @@ class ChartDataRenderer {
 
     /**
      * Треугольная сетка аспектов (Aspect Grid) — профессиональный стандарт
+     * Включает все точки с которыми строятся аспекты
      */
     renderAspectGrid(aspects, planets) {
         if (!this.aspectGridContainer || !aspects || !planets) return;
 
-        // Только основные планеты для сетки
-        const gridPlanets = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
-                            'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
+        // Все планеты и точки с которыми строятся аспекты (в правильном порядке)
+        const gridPlanets = [
+            'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
+            'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto',
+            'Chiron', 'Proserpina', 'TrueNode', 'SouthNode',
+            'BlackMoon', 'WhiteMoon', 'PartOfFortune'
+        ];
         const filtered = planets.filter(p => gridPlanets.includes(p.name))
                                 .sort((a, b) => gridPlanets.indexOf(a.name) - gridPlanets.indexOf(b.name));
 

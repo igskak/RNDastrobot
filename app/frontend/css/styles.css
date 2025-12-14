@@ -654,24 +654,26 @@ input[type="number"] {
 .aspect-grid {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
-    margin-top: 12px;
+    font-size: 10px;
+    margin-top: 8px;
 }
 
 .aspect-grid th,
 .aspect-grid td {
-    width: 28px;
-    height: 28px;
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
     text-align: center;
     vertical-align: middle;
     border: 1px solid var(--border);
-    font-size: 14px;
+    font-size: 11px;
+    padding: 2px;
 }
 
 .aspect-grid th {
     background: var(--bg-tertiary);
     font-weight: 500;
-    font-size: 13px;
+    font-size: 10px;
 }
 
 .aspect-grid td {
@@ -842,8 +844,58 @@ input[type="number"] {
 }
 
 /* ============================================
-   MOBILE RESPONSIVENESS
+   ASPECT LINES LEGEND
    ============================================ */
+
+.aspect-lines-legend {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.92);
+    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 10px;
+    color: var(--text-secondary);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.aspect-lines-legend .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.aspect-lines-legend .line-sample {
+    display: inline-block;
+    width: 16px;
+    height: 2px;
+    background: #6b7280;
+}
+
+.aspect-lines-legend .line-sample.solid {
+    background: #374151;
+}
+
+.aspect-lines-legend .line-sample.dashed {
+    background: repeating-linear-gradient(
+        90deg,
+        #6b7280 0px, #6b7280 3px,
+        transparent 3px, transparent 5px
+    );
+}
+
+.aspect-lines-legend .legend-sep {
+    color: var(--border);
+    font-size: 12px;
+}
+
+.aspect-lines-legend .legend-color {
+    font-size: 9px;
+}
 
 /* ============================================
    SETTINGS PANEL
