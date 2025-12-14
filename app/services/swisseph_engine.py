@@ -5,6 +5,7 @@ import swisseph as swe
 from typing import List, Dict, Tuple
 from app.utils.constants import PLANETS, get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds
 from app.services.special_points_service import SpecialPointsService
+from loguru import logger
 
 
 class SwissEphemerisEngine:
@@ -13,12 +14,15 @@ class SwissEphemerisEngine:
     def __init__(self, ephe_path: str = None):
         """
         Инициализация движка
-        
+
         Args:
             ephe_path: Путь к файлам эфемерид (опционально)
         """
         if ephe_path:
+            logger.info(f"Setting Swiss Ephemeris path to: {ephe_path}")
             swe.set_ephe_path(ephe_path)
+        else:
+            logger.warning("No ephemeris path provided, using default")
     
     def calculate_planets(self, jd: float) -> List[Dict]:
         """
