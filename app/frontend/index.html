@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AstroBot — Натальная карта</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="logo">🌟 AstroBot</h1>
+            <p class="subtitle">Расчёт натальной карты</p>
+        </header>
+
+        <main class="form-container">
+            <form id="birthDataForm" class="birth-form">
+                <!-- Дата рождения -->
+                <div class="form-group">
+                    <label class="form-label">📅 Дата рождения</label>
+                    <div class="date-inputs">
+                        <input type="number" id="birthDay" min="1" max="31" placeholder="День" required>
+                        <select id="birthMonth" required>
+                            <option value="">Месяц</option>
+                            <option value="01">Январь</option>
+                            <option value="02">Февраль</option>
+                            <option value="03">Март</option>
+                            <option value="04">Апрель</option>
+                            <option value="05">Май</option>
+                            <option value="06">Июнь</option>
+                            <option value="07">Июль</option>
+                            <option value="08">Август</option>
+                            <option value="09">Сентябрь</option>
+                            <option value="10">Октябрь</option>
+                            <option value="11">Ноябрь</option>
+                            <option value="12">Декабрь</option>
+                        </select>
+                        <input type="number" id="birthYear" min="1900" max="2100" placeholder="Год" required>
+                    </div>
+                </div>
+
+                <!-- Время рождения -->
+                <div class="form-group">
+                    <label class="form-label">⏰ Время рождения</label>
+                    <div class="time-inputs">
+                        <input type="number" id="birthHour" min="0" max="23" placeholder="Часы" required>
+                        <span class="time-separator">:</span>
+                        <input type="number" id="birthMinute" min="0" max="59" placeholder="Минуты" required>
+                    </div>
+                </div>
+
+                <!-- Место рождения -->
+                <div class="form-group">
+                    <label class="form-label">📍 Место рождения</label>
+                    <input type="text" id="birthPlace" class="place-input" placeholder="Например: Киев, Украина" required>
+
+                    <div id="coordsContainer" class="coords-display">
+                        <div class="coords-row">
+                            <label class="coords-label">Координаты:</label>
+                            <div class="coords-inputs">
+                                <div class="coord-input-group">
+                                    <input type="text" id="latDeg" class="coord-num" placeholder="48" maxlength="3">°
+                                    <input type="text" id="latMin" class="coord-num" placeholder="52" maxlength="2">'
+                                    <input type="text" id="latSec" class="coord-num coord-sec" placeholder="00.00" maxlength="5">"
+                                    <select id="latDir" class="coord-dir">
+                                        <option value="N">N</option>
+                                        <option value="S">S</option>
+                                    </select>
+                                </div>
+                                <div class="coord-input-group">
+                                    <input type="text" id="lonDeg" class="coord-num" placeholder="2" maxlength="3">°
+                                    <input type="text" id="lonMin" class="coord-num" placeholder="20" maxlength="2">'
+                                    <input type="text" id="lonSec" class="coord-num coord-sec" placeholder="00.00" maxlength="5">"
+                                    <select id="lonDir" class="coord-dir">
+                                        <option value="E">E</option>
+                                        <option value="W">W</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="hint" id="coordsHint">Координаты определяются автоматически, но вы можете их изменить</span>
+                    </div>
+                </div>
+
+                <!-- Часовой пояс -->
+                <div class="form-group">
+                    <label class="form-label">🌐 Часовой пояс</label>
+                    <select id="timezone" required>
+                        <option value="">Выберите часовой пояс</option>
+                    </select>
+                    <span id="timezoneHint" class="hint"></span>
+                </div>
+
+                <!-- Система домов -->
+                <div class="form-group">
+                    <label class="form-label">🏠 Система домов</label>
+                    <select id="houseSystem">
+                        <option value="P" selected>Placidus</option>
+                        <option value="K">Koch</option>
+                        <option value="W">Whole Sign</option>
+                        <option value="E">Equal</option>
+                        <option value="R">Regiomontanus</option>
+                        <option value="C">Campanus</option>
+                    </select>
+                </div>
+
+                <!-- Кнопка -->
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span class="btn-text">🔮 Рассчитать натальную карту</span>
+                    <span class="btn-loader hidden">Расчёт...</span>
+                </button>
+
+                <div id="errorMessage" class="error-message hidden"></div>
+            </form>
+        </main>
+
+        <footer class="footer">
+            <p>AstroBot v1.0 • Swiss Ephemeris</p>
+        </footer>
+    </div>
+
+    <script src="js/timezones.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/form.js"></script>
+</body>
+</html>
+

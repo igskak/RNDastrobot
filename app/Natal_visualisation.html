@@ -1,2906 +1,829 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>Натальная карта — интерактив 2025</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    :root {
-      --bg: #05070b;
-      --bg-elevated: #0d1117;
-      --bg-soft: #111827;
-      --accent: #4f46e5;
-      --accent-soft: rgba(79, 70, 229, 0.35);
-      --accent-strong: rgba(129, 140, 248, 0.9);
-      --accent-warning: #f97316;
-      --accent-soft-warning: rgba(249, 115, 22, 0.25);
-      --border-subtle: rgba(148, 163, 184, 0.25);
-      --text-main: #e5e7eb;
-      --text-muted: #9ca3af;
-      --text-soft: #6b7280;
-      --danger: #f97373;
-      --radius-xl: 18px;
-      --radius-lg: 14px;
-      --shadow-soft: 0 22px 60px rgba(15, 23, 42, 0.65);
-      --shadow-subtle: 0 10px 30px rgba(15, 23, 42, 0.45);
-      --transition-fast: 160ms ease-out;
-      --transition-med: 220ms ease-out;
-      --font-primary: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-        "Segoe UI", sans-serif;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background: radial-gradient(circle at top, #020617 0, #020617 30%, #020617 60%, #020617 100%);
-      color: var(--text-main);
-      font-family: var(--font-primary);
-      -webkit-font-smoothing: antialiased;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background:
-        radial-gradient(circle at 10% 0%, rgba(56, 189, 248, 0.16) 0, transparent 55%),
-        radial-gradient(circle at 90% 15%, rgba(129, 140, 248, 0.18) 0, transparent 55%),
-        radial-gradient(circle at 50% 100%, rgba(248, 250, 252, 0.05) 0, transparent 55%);
-      opacity: 0.7;
-      mix-blend-mode: screen;
-      pointer-events: none;
-      z-index: -1;
-    }
-
-    .app-shell {
-      min-height: 100vh;
-      padding: 18px 14px;
-      display: flex;
-      justify-content: center;
-      align-items: stretch;
-    }
-
-    @media (min-width: 1024px) {
-      .app-shell {
-        padding: 24px 28px;
-      }
-    }
-
-    .app {
-      width: 100%;
-      max-width: 1260px;
-      border-radius: 26px;
-      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.98), #020617 65%, #020617);
-      box-shadow: var(--shadow-soft);
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      padding: 18px 16px 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      backdrop-filter: blur(26px) saturate(140%);
-    }
-
-    @media (min-width: 1024px) {
-      .app {
-        padding: 20px 20px 22px;
-        gap: 18px;
-      }
-    }
-
-    header {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px 16px;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .title-block {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px 12px;
-      align-items: center;
-    }
-
-    .badge {
-      border-radius: 999px;
-      padding: 4px 9px;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: linear-gradient(to right, rgba(56, 189, 248, 0.12), rgba(129, 140, 248, 0.18));
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      color: var(--text-muted);
-    }
-
-    .badge-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 999px;
-      background: radial-gradient(circle at 30% 30%, #facc15, #22c55e);
-      box-shadow: 0 0 8px rgba(34, 197, 94, 0.9);
-    }
-
-    h1 {
-      font-size: 20px;
-      margin: 0;
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-      letter-spacing: 0.02em;
-    }
-
-    h1 span.sub {
-      font-size: 13px;
-      color: var(--text-soft);
-      font-weight: 500;
-    }
-
-    @media (min-width: 768px) {
-      h1 {
-        font-size: 24px;
-      }
-      h1 span.sub {
-        font-size: 14px;
-      }
-    }
-
-    .meta-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px 12px;
-      align-items: center;
-    }
-
-    .meta-chip {
-      border-radius: 999px;
-      padding: 5px 10px;
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .meta-chip strong {
-      color: #e5e7eb;
-      font-weight: 500;
-    }
-
-    .layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-      gap: 14px;
-      align-items: stretch;
-    }
-
-    @media (max-width: 900px) {
-      .layout {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
-
-    .panel {
-      border-radius: var(--radius-xl);
-      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.98));
-      border: 1px solid rgba(148, 163, 184, 0.39);
-      box-shadow: var(--shadow-subtle);
-      padding: 14px 12px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    @media (min-width: 768px) {
-      .panel {
-        padding: 16px 15px 15px;
-        gap: 12px;
-      }
-    }
-
-    .panel::before {
-      content: "";
-      position: absolute;
-      inset: -40%;
-      background:
-        radial-gradient(circle at 10% -10%, rgba(56, 189, 248, 0.06) 0, transparent 40%),
-        radial-gradient(circle at 100% 20%, rgba(129, 140, 248, 0.08) 0, transparent 50%),
-        radial-gradient(circle at 50% 120%, rgba(15, 118, 110, 0.06) 0, transparent 50%);
-      opacity: 0.9;
-      pointer-events: none;
-      mix-blend-mode: screen;
-    }
-
-    .panel-inner {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      height: 100%;
-    }
-
-    .panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .panel-title {
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
-      color: var(--text-soft);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .panel-title-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      border: 2px solid rgba(148, 163, 184, 0.6);
-      box-shadow: 0 0 0 1px rgba(15, 23, 42, 1);
-    }
-
-    .panel-actions {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .segmented {
-      display: inline-flex;
-      padding: 3px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(148, 163, 184, 0.5);
-    }
-
-    .segmented button {
-      border: 0;
-      background: transparent;
-      color: var(--text-soft);
-      font-size: 11px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      transition: background var(--transition-fast), color var(--transition-fast),
-        box-shadow var(--transition-fast), transform var(--transition-fast);
-      white-space: nowrap;
-    }
-
-    .segmented button[data-active="true"] {
-      background: radial-gradient(circle at top, rgba(129, 140, 248, 0.2), rgba(79, 70, 229, 0.9));
-      color: #e5e7eb;
-      box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.7), 0 10px 22px rgba(15, 23, 42, 0.9);
-      transform: translateY(-0.5px);
-    }
-
-    .segmented button span.dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: rgba(148, 163, 184, 0.8);
-    }
-
-    .segmented button[data-active="true"] span.dot {
-      background: #22c55e;
-      box-shadow: 0 0 7px rgba(34, 197, 94, 0.9);
-    }
-
-    .icon-btn {
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      padding: 4px 7px;
-      background: rgba(15, 23, 42, 0.8);
-      color: var(--text-soft);
-      font-size: 11px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: background var(--transition-fast), border-color var(--transition-fast),
-        transform var(--transition-fast), box-shadow var(--transition-fast), color var(--transition-fast);
-    }
-
-    .icon-btn:hover {
-      background: rgba(15, 23, 42, 1);
-      border-color: rgba(129, 140, 248, 0.8);
-      color: #e5e7eb;
-      transform: translateY(-0.5px);
-      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.9);
-    }
-
-    .icon-btn span.icon {
-      font-size: 13px;
-    }
-
-    .chart-wrapper {
-      position: relative;
-      border-radius: 999px;
-      background: radial-gradient(circle at 30% 5%, rgba(148, 163, 184, 0.22), #020617);
-      padding: 10px;
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      box-shadow: inset 0 0 40px rgba(15, 23, 42, 0.9);
-      aspect-ratio: 1;
-    }
-
-    @media (min-width: 768px) {
-      .chart-wrapper {
-        padding: 14px;
-      }
-    }
-
-    .chart-inner {
-      width: 100%;
-      height: 100%;
-      border-radius: 999px;
-      background: radial-gradient(circle at center, #020617, #020617 50%, #020617 100%);
-      box-shadow: inset 0 0 40px rgba(15, 23, 42, 0.95);
-      position: relative;
-      overflow: hidden;
-    }
-
-    svg#natal-wheel {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-
-    .chart-overlay-label {
-      position: absolute;
-      inset: auto 18px 12px 18px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 11px;
-      color: var(--text-soft);
-      pointer-events: none;
-      mix-blend-mode: screen;
-      text-shadow: 0 6px 18px rgba(15, 23, 42, 1);
-    }
-
-    .chart-overlay-label span strong {
-      color: #e5e7eb;
-    }
-
-    .legend-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      font-size: 10px;
-      color: var(--text-soft);
-      margin-top: 4px;
-    }
-
-    .legend-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      border-radius: 999px;
-      padding: 3px 7px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(148, 163, 184, 0.4);
-    }
-
-    .legend-swatch {
-      width: 12px;
-      height: 4px;
-      border-radius: 999px;
-    }
-
-    .legend-swatch.signs {
-      background: rgba(129, 140, 248, 0.9);
-    }
-
-    .legend-swatch.houses {
-      background: rgba(56, 189, 248, 0.9);
-    }
-
-    .legend-swatch.planets {
-      background: rgba(248, 250, 252, 0.95);
-    }
-
-    .legend-swatch.aspects {
-      background: rgba(248, 113, 113, 0.9);
-    }
-
-    .side-panel-content {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      min-height: 0;
-      height: 100%;
-    }
-
-    .tabs {
-      display: inline-flex;
-      border-radius: 999px;
-      padding: 3px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(148, 163, 184, 0.45);
-      align-self: flex-start;
-    }
-
-    .tabs button {
-      border: 0;
-      padding: 5px 10px;
-      font-size: 11px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      border-radius: 999px;
-      background: transparent;
-      color: var(--text-soft);
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: background var(--transition-fast), color var(--transition-fast),
-        transform var(--transition-fast), box-shadow var(--transition-fast);
-    }
-
-    .tabs button[data-active="true"] {
-      background: radial-gradient(circle at top, rgba(148, 163, 184, 0.3), rgba(15, 23, 42, 0.98));
-      color: #e5e7eb;
-      box-shadow: 0 10px 18px rgba(15, 23, 42, 0.95);
-      transform: translateY(-0.5px);
-    }
-
-    .tabs button span.dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 999px;
-      background: rgba(148, 163, 184, 0.7);
-    }
-
-    .tabs button[data-active="true"] span.dot {
-      background: #22c55e;
-      box-shadow: 0 0 8px rgba(34, 197, 94, 1);
-    }
-
-    .scroll-area {
-      flex: 1;
-      min-height: 0;
-      overflow: auto;
-      padding-right: 4px;
-      padding-bottom: 4px;
-      margin-right: -4px;
-    }
-
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 8px;
-    }
-
-    .info-card {
-      border-radius: var(--radius-lg);
-      background: linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.98));
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      padding: 8px 9px 8px;
-      position: relative;
-      overflow: hidden;
-      transition: transform var(--transition-med), box-shadow var(--transition-med),
-        border-color var(--transition-med), background var(--transition-med);
-    }
-
-    .info-card::before {
-      content: "";
-      position: absolute;
-      inset: -40%;
-      background:
-        radial-gradient(circle at 0 0, rgba(129, 140, 248, 0.22) 0, transparent 50%),
-        radial-gradient(circle at 120% 120%, rgba(56, 189, 248, 0.2) 0, transparent 55%);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity var(--transition-med);
-    }
-
-    .info-card:hover {
-      transform: translateY(-1.5px);
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.95);
-      border-color: rgba(129, 140, 248, 0.85);
-      background: linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 1));
-    }
-
-    .info-card:hover::before {
-      opacity: 1;
-    }
-
-    .info-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 4px;
-      margin-bottom: 4px;
-    }
-
-    .info-main {
-      font-size: 13px;
-      font-weight: 500;
-      color: #e5e7eb;
-    }
-
-    .info-tag {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
-      color: var(--text-soft);
-    }
-
-    .info-sub {
-      font-size: 11px;
-      color: var(--text-muted);
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px 10px;
-      margin-bottom: 3px;
-    }
-
-    .pill {
-      border-radius: 999px;
-      padding: 2px 7px;
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      font-size: 10px;
-      color: var(--text-soft);
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .pill-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: rgba(148, 163, 184, 0.9);
-    }
-
-    .pill-dot.good {
-      background: #22c55e;
-    }
-
-    .pill-dot.hard {
-      background: #f97373;
-    }
-
-    .info-footer {
-      font-size: 10px;
-      color: var(--text-soft);
-      display: flex;
-      justify-content: space-between;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .info-footer span.label {
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
-      font-weight: 500;
-    }
-
-    .info-footer span.value {
-      font-variant-numeric: tabular-nums;
-    }
-
-    .tag-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 4px;
-    }
-
-    .soft-tag {
-      border-radius: 999px;
-      padding: 2px 7px;
-      font-size: 10px;
-      background: rgba(15, 23, 42, 0.95);
-      border: 1px dashed rgba(148, 163, 184, 0.5);
-      color: var(--text-soft);
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .soft-tag-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: rgba(148, 163, 184, 0.8);
-    }
-
-    .soft-tag-dot.fire {
-      background: #f97316;
-    }
-    .soft-tag-dot.earth {
-      background: #22c55e;
-    }
-    .soft-tag-dot.air {
-      background: #38bdf8;
-    }
-    .soft-tag-dot.water {
-      background: #6366f1;
-    }
-
-    .tooltip {
-      position: fixed;
-      z-index: 9999;
-      pointer-events: none;
-      padding: 7px 9px;
-      border-radius: 9px;
-      background: rgba(15, 23, 42, 0.98);
-      border: 1px solid rgba(148, 163, 184, 0.7);
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.95);
-      font-size: 11px;
-      color: var(--text-main);
-      display: none;
-      max-width: min(260px, 70vw);
-      backdrop-filter: blur(18px) saturate(140%);
-      white-space: normal;
-    }
-
-    .tooltip-title {
-      font-weight: 500;
-      margin-bottom: 3px;
-    }
-
-    .tooltip-body {
-      color: var(--text-soft);
-    }
-
-    .section-title {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
-      color: var(--text-soft);
-      margin: 10px 2px 6px;
-    }
-
-    .pattern-block {
-      border-radius: 12px;
-      border: 1px dashed rgba(148, 163, 184, 0.55);
-      padding: 6px 8px;
-      background: rgba(15, 23, 42, 0.9);
-      margin-bottom: 6px;
-    }
-
-    .pattern-label {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-bottom: 3px;
-    }
-
-    .pattern-main {
-      font-size: 12px;
-      color: #e5e7eb;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .pattern-chip {
-      border-radius: 999px;
-      padding: 2px 7px;
-      font-size: 10px;
-      background: rgba(15, 23, 42, 0.95);
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      color: var(--text-soft);
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .meter {
-      margin-top: 4px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(30, 64, 175, 0.8);
-      padding: 2px;
-      overflow: hidden;
-    }
-
-    .meter-bar {
-      height: 6px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, rgba(59,130,246,0.8), rgba(96,165,250,0.95));
-      width: 0%;
-      transition: width 220ms ease-out;
-    }
-
-    .meter-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 10px;
-      color: var(--text-soft);
-      margin-top: 3px;
-    }
-
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(51, 65, 85, 0.9);
-      border-radius: 999px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Натальная Карта</title>
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --panel-bg: #16213e;
+            --text-color: #e0e0e0;
+            --border-color: #30344c;
+            --highlight: #e94560;
+            --tab-height: 60px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            text-align: center;
+            padding: 10px;
+            background: var(--panel-bg);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 20;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            flex-shrink: 0;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 18px;
+            color: #bdc3c7;
+        }
+
+        .subtitle {
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 3px;
+        }
+
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .side-panel {
+            width: 300px;
+            background: var(--panel-bg);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            z-index: 5;
+            transition: transform 0.3s ease;
+        }
+
+        .side-panel.right {
+            border-right: none;
+            border-left: 1px solid var(--border-color);
+        }
+
+        .panel-header {
+            padding: 15px;
+            background: rgba(22, 33, 62, 0.95);
+            position: sticky;
+            top: 0;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 14px;
+            z-index: 10;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .data-table th, .data-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .data-table th {
+            color: #888;
+            font-weight: normal;
+            font-size: 11px;
+        }
+
+        .data-table tr:hover {
+            background: rgba(255,255,255,0.05);
+            cursor: pointer;
+        }
+        
+        .data-table tr.active-row {
+            background: rgba(233, 69, 96, 0.2);
+            border-left: 3px solid var(--highlight);
+        }
+
+        .symbol-cell {
+            font-size: 16px;
+            font-weight: bold;
+            width: 30px;
+            text-align: center;
+        }
+
+        /* Center Chart Area */
+        .chart-wrapper {
+            flex: 1;
+            background: #12121c;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: grab;
+            z-index: 1; /* Keep map below overlays */
+        }
+
+        .chart-wrapper:active {
+            cursor: grabbing;
+        }
+
+        #chart-svg-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform-origin: center center;
+            transition: transform 0.1s linear;
+        }
+
+        #chart {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+        }
+
+        /* Controls */
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .zoom-btn {
+            width: 44px;
+            height: 44px;
+            background: rgba(22, 33, 62, 0.8);
+            border: 1px solid var(--border-color);
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            backdrop-filter: blur(4px);
+        }
+
+        .zoom-btn:hover {
+            background: #2a3b66;
+        }
+        
+        .reset-btn {
+            font-size: 12px;
+            height: 34px;
+        }
+
+        /* Tooltip */
+        #tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.95);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+            pointer-events: none;
+            display: none;
+            z-index: 1000;
+            border: 1px solid #444;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            white-space: nowrap;
+        }
+
+        /* Mobile Tabs */
+        .mobile-tabs {
+            display: none;
+            height: var(--tab-height);
+            background: var(--panel-bg);
+            border-top: 1px solid var(--border-color);
+            z-index: 50;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .tab-btn.active {
+            color: var(--highlight);
+            background: rgba(233, 69, 96, 0.05);
+        }
+
+        .tab-icon {
+            font-size: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .main-layout {
+                flex-direction: column;
+                margin-bottom: var(--tab-height); /* Make space for tabs */
+            }
+
+            .side-panel {
+                width: 100%;
+                border-right: none;
+                display: none; /* Hidden by default */
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: var(--bg-color);
+                z-index: 10;
+            }
+
+            .side-panel.active-view {
+                display: flex;
+            }
+
+            .chart-wrapper {
+                display: none; /* Hidden by default */
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+            }
+
+            .chart-wrapper.active-view {
+                display: flex;
+            }
+
+            .mobile-tabs {
+                display: flex;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+            }
+
+            .zoom-controls {
+                bottom: 20px; /* Above tabs */
+            }
+            
+            /* Increase touch targets */
+            .data-table td, .data-table th {
+                padding: 12px 10px;
+            }
+        }
+    </style>
 </head>
 <body>
-<div class="app-shell">
-  <div class="app">
+
     <header>
-      <div class="title-block">
-        <div class="badge">
-          <span class="badge-dot"></span>
-          <span>натальная карта · интерактив</span>
-        </div>
-        <h1 id="chartTitle">
-          <span id="personName">Натальная карта</span>
-          <span class="sub" id="chartMetaShort"></span>
-        </h1>
-      </div>
-      <div class="meta-row" id="metaRow">
-        <!-- meta chips via JS -->
-      </div>
+        <h1>Натальная Карта</h1>
+        <div class="subtitle">11.09.1990 09:39 | Харьков</div>
     </header>
 
-    <main class="layout">
-      <section class="panel">
-        <div class="panel-inner">
-          <div class="panel-header">
-            <div class="panel-title">
-              <span class="panel-title-dot"></span>
-              Колесо
-            </div>
-            <div class="panel-actions">
-              <div class="segmented" id="wheelMode">
-                <button type="button" data-mode="all" data-active="true">
-                  <span class="dot"></span> всё
-                </button>
-                <button type="button" data-mode="planets">
-                  <span class="dot"></span> планеты
-                </button>
-                <button type="button" data-mode="aspects">
-                  <span class="dot"></span> аспекты
-                </button>
-              </div>
-              <button class="icon-btn" type="button" id="toggleLabels">
-                <span class="icon">◎</span>
-                подписи
-              </button>
-            </div>
-          </div>
-
-          <div class="chart-wrapper">
-            <div class="chart-inner">
-              <svg id="natal-wheel" viewBox="-150 -150 300 300" role="img" aria-labelledby="chartTitle"></svg>
-              <div class="chart-overlay-label">
-                <span><strong id="ascLabel">ASC</strong> · <span id="dominantElement"></span></span>
-                <span id="dominantMode"></span>
-              </div>
-            </div>
-          </div>
-
-          <div class="legend-row">
-            <div class="legend-item">
-              <span class="legend-swatch signs"></span>
-              знаки
-            </div>
-            <div class="legend-item">
-              <span class="legend-swatch houses"></span>
-              дома
-            </div>
-            <div class="legend-item">
-              <span class="legend-swatch planets"></span>
-              планеты и точки
-            </div>
-            <div class="legend-item">
-              <span class="legend-swatch aspects"></span>
-              аспекты
-            </div>
-          </div>
+    <div class="main-layout">
+        
+        <!-- Левая панель: Планеты -->
+        <div class="side-panel left" id="view-planets">
+            <div class="panel-header">Планеты и Точки</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Симв.</th>
+                        <th>Объект</th>
+                        <th>Знак</th>
+                        <th>Дом</th>
+                    </tr>
+                </thead>
+                <tbody id="planets-body"></tbody>
+            </table>
         </div>
-      </section>
 
-      <section class="panel">
-        <div class="panel-inner side-panel-content">
-          <div class="panel-header">
-            <div class="panel-title">
-              <span class="panel-title-dot"></span>
-              Структура карты
+        <!-- Центр: Карта -->
+        <div class="chart-wrapper active-view" id="view-map">
+            <div id="tooltip"></div>
+            
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoomIn()">+</button>
+                <button class="zoom-btn" onclick="zoomOut()">−</button>
+                <button class="zoom-btn reset-btn" onclick="resetZoom()">Сброс</button>
             </div>
-            <div class="panel-actions">
-              <div class="tabs" id="infoTabs">
-                <button type="button" data-tab="planets" data-active="true">
-                  <span class="dot"></span> планеты
-                </button>
-                <button type="button" data-tab="houses">
-                  <span class="dot"></span> дома
-                </button>
-                <button type="button" data-tab="aspects">
-                  <span class="dot"></span> аспекты
-                </button>
-              </div>
-            </div>
-          </div>
 
-          <div class="scroll-area">
-            <div id="tab-planets" class="tab-content"></div>
-            <div id="tab-houses" class="tab-content" hidden></div>
-            <div id="tab-aspects" class="tab-content" hidden></div>
-          </div>
+            <div id="chart-svg-container">
+                <svg id="chart" viewBox="0 0 600 600" style="overflow: visible;">
+                    <g id="chart-group">
+                        <!-- Content drawn by JS -->
+                    </g>
+                </svg>
+            </div>
         </div>
-      </section>
-    </main>
 
-    <div class="tooltip" id="tooltip"></div>
-  </div>
-</div>
+        <!-- Правая панель: Дома -->
+        <div class="side-panel right" id="view-houses">
+            <div class="panel-header">Дома (Placidus)</div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Куспид</th>
+                        <th>Знак</th>
+                        <th>Градус</th>
+                    </tr>
+                </thead>
+                <tbody id="houses-body"></tbody>
+            </table>
+            
+            <div class="panel-header" style="margin-top: 20px;">Легенда</div>
+            <div style="padding: 15px; font-size: 13px;">
+                <div style="display:flex; align-items:center; margin-bottom: 12px;">
+                    <span style="width:12px; height:12px; border-radius:50%; background:#e74c3c; margin-right:10px;"></span> Напряженные (90/180)
+                </div>
+                <div style="display:flex; align-items:center; margin-bottom: 12px;">
+                    <span style="width:12px; height:12px; border-radius:50%; background:#2ecc71; margin-right:10px;"></span> Гармоничные (60/120)
+                </div>
+                <div style="display:flex; align-items:center; margin-bottom: 12px;">
+                    <span style="width:12px; height:12px; border-radius:50%; background:#f1c40f; margin-right:10px;"></span> Соединения (0)
+                </div>
+                <div style="display:flex; align-items:center; color: #aaa;">
+                    <span style="margin-right:8px; font-weight:bold; font-size:16px;">Vx</span> Вертекс
+                </div>
+            </div>
+        </div>
 
-<script>
-  // ===============================
-  //        ТВОИ ДАННЫЕ JSON
-  // ===============================
+    </div>
 
-  const natalData = {
-    "user_id": "515561ac-01be-4584-a67a-d42d6b61add2",
-    "birth_data": {
-      "date": "1990-09-11",
-      "time": "09:39:00",
-      "timezone": "Europe/Kiev",
-      "utc_time": "1990-09-11 06:39:00",
-      "julian_day": 2448145.777083,
-      "latitude": 50,
-      "longitude": 36.25,
-      "place": "50.0, 36.25"
-    },
-    "planets": [
-      {
-        "name": "Chiron",
-        "longitude": 114.869634,
-        "latitude": 0,
-        "distance": 0,
-        "speed": 0.078754,
-        "sign": "Cancer",
-        "degree_in_sign": 24.869634000000005,
-        "degree_in_sign_formatted": "24°52'10\"",
-        "house": 10,
-        "retrograde": false,
-        "element": "Water",
-        "mode": "Cardinal",
-        "dignity": "neutral",
-        "strength_score": 19,
-        "special_roles": []
-      },
-      {
-        "name": "Jupiter",
-        "longitude": 124.843051,
-        "latitude": 0,
-        "distance": 0,
-        "speed": 0.189539,
-        "sign": "Leo",
-        "degree_in_sign": 4.843051000000003,
-        "degree_in_sign_formatted": "4°50'34\"",
-        "house": 10,
-        "retrograde": false,
-        "element": "Fire",
-        "mode": "Fixed",
-        "dignity": "neutral",
-        "strength_score": 14,
-        "special_roles": []
-      },
-      {
-        "name": "Mars",
-        "longitude": 65.025312,
-        "latitude": 0,
-        "distance": 0,
-        "speed": 0.430468,
-        "sign": "Gemini",
-        "degree_in_sign": 5.025312,
-        "degree_in_sign_formatted": "5°01'31\"",
-        "house": 8,
-        "retrograde": false,
-        "element": "Air",
-        "mode": "Mutable",
-        "dignity": "neutral",
-        "strength_score": 27,
-        "special_roles": [
-          "almuten"
-        ]
-      },
-      {
-        "name": "Mercury",
-        "longitude": 162.392527,
-        "latitude": 0,
-        "distance": 0,
-        "speed": -0.82285,
-        "sign": "Virgo",
-        "degree_in_sign": 12.392527000000001,
-        "degree_in_sign_formatted": "12°23'33\"",
-        "house": 11,
-        "retrograde": true,
-        "element": "Earth",
-        "mode": "Mutable",
-        "dignity": "domicile",
-        "strength_score": 21,
-        "special_roles": []
-      },
-      {
-        "name": "Moon",
-        "longitude": 70.443798,
-        "latitude": 0,
-        "distance": 0,
-        "speed": 14.219923,
-        "sign": "Gemini",
-        "degree_in_sign": 10.443798000000001,
-        "degree_in_sign_formatted": "10°26'37\"",
-        "house": 9,
-        "retrograde": false,
-        "element": "Air",
-        "mode": "Mutable",
-        "dignity": "neutral",
-        "strength_score": 15,
-        "special_roles": []
-      },
-      {
-        "name": "Neptune",
-        "longitude": 281.840276,
-        "latitude": 0,
-        "distance": 0,
-        "speed": -0.006715,
-        "sign": "Capricorn",
-        "degree_in_sign": 11.840276000000017,
-        "degree_in_sign_formatted": "11°50'24\"",
-        "house": 3,
-        "retrograde": true,
-        "element": "Earth",
-        "mode": "Cardinal",
-        "dignity": "neutral",
-        "strength_score": 5,
-        "special_roles": []
-      },
-      {
-        "name": "Pluto",
-        "longitude": 225.589253,
-        "latitude": 0,
-        "distance": 0,
-        "speed": 0.025432,
-        "sign": "Scorpio",
-        "degree_in_sign": 15.589253000000014,
-        "degree_in_sign_formatted": "15°35'21\"",
-        "house": 2,
-        "retrograde": false,
-        "element": "Water",
-        "mode": "Fixed",
-        "dignity": "domicile",
-        "strength_score": 11,
-        "special_roles": []
-      },
-      {
-        "name": "Saturn",
-        "longitude": 288.821277,
-        "latitude": 0,
-        "distance": 0,
-        "speed": -0.019402,
-        "sign": "Capricorn",
-        "degree_in_sign": 18.82127700000001,
-        "degree_in_sign_formatted": "18°49'16\"",
-        "house": 4,
-        "retrograde": true,
-        "element": "Earth",
-        "mode": "Cardinal",
-        "dignity": "domicile",
-        "strength_score": 24,
-        "special_roles": []
-      },
-      {
-        "name": "Sun",
-        "longitude": 168.279446,
-        "latitude": 0,
-        "distance": 0,
-        "speed": 0.972382,
-        "sign": "Virgo",
-        "degree_in_sign": 18.279446000000007,
-        "degree_in_sign_formatted": "18°16'46\"",
-        "house": 11,
-        "retrograde": false,
-        "element": "Earth",
-        "mode": "Mutable",
-        "dignity": "neutral",
-        "strength_score": 24,
-        "special_roles": [
-          "aspect_king"
-        ]
-      },
-      {
-        "name": "Uranus",
-        "longitude": 275.605656,
-        "latitude": 0,
-        "distance": 0,
-        "speed": -0.002932,
-        "sign": "Capricorn",
-        "degree_in_sign": 5.60565600000001,
-        "degree_in_sign_formatted": "5°36'20\"",
-        "house": 3,
-        "retrograde": true,
-        "element": "Earth",
-        "mode": "Cardinal",
-        "dignity": "neutral",
-        "strength_score": 7,
-        "special_roles": []
-      },
-      {
-        "name": "Venus",
-        "longitude": 154.859055,
-        "latitude": 0,
-        "distance": 0,
-        "speed": 1.237798,
-        "sign": "Virgo",
-        "degree_in_sign": 4.859055000000012,
-        "degree_in_sign_formatted": "4°51'32\"",
-        "house": 11,
-        "retrograde": false,
-        "element": "Earth",
-        "mode": "Mutable",
-        "dignity": "fall",
-        "strength_score": 13,
-        "special_roles": []
-      }
-    ],
-    "houses": [
-      {
-        "number": 1,
-        "longitude": 205.812335,
-        "sign": "Libra",
-        "degree_in_sign": 25.81233499999999,
-        "degree_in_sign_formatted": "25°48'44\"",
-        "ruler_planet": "Venus",
-        "house_group": "angular"
-      },
-      {
-        "number": 2,
-        "longitude": 232.791249,
-        "sign": "Scorpio",
-        "degree_in_sign": 22.791248999999993,
-        "degree_in_sign_formatted": "22°47'28\"",
-        "ruler_planet": "Pluto",
-        "house_group": "succedent"
-      },
-      {
-        "number": 3,
-        "longitude": 266.04459,
-        "sign": "Sagittarius",
-        "degree_in_sign": 26.044590000000028,
-        "degree_in_sign_formatted": "26°02'40\"",
-        "ruler_planet": "Jupiter",
-        "house_group": "cadent"
-      },
-      {
-        "number": 4,
-        "longitude": 303.714719,
-        "sign": "Aquarius",
-        "degree_in_sign": 3.7147190000000023,
-        "degree_in_sign_formatted": "3°42'52\"",
-        "ruler_planet": "Uranus",
-        "house_group": "angular"
-      },
-      {
-        "number": 5,
-        "longitude": 337.832301,
-        "sign": "Pisces",
-        "degree_in_sign": 7.832300999999973,
-        "degree_in_sign_formatted": "7°49'56\"",
-        "ruler_planet": "Neptune",
-        "house_group": "succedent"
-      },
-      {
-        "number": 6,
-        "longitude": 4.886747,
-        "sign": "Aries",
-        "degree_in_sign": 4.886747,
-        "degree_in_sign_formatted": "4°53'12\"",
-        "ruler_planet": "Mars",
-        "house_group": "cadent"
-      },
-      {
-        "number": 7,
-        "longitude": 25.812335,
-        "sign": "Aries",
-        "degree_in_sign": 25.812335,
-        "degree_in_sign_formatted": "25°48'44\"",
-        "ruler_planet": "Mars",
-        "house_group": "angular"
-      },
-      {
-        "number": 8,
-        "longitude": 52.791249,
-        "sign": "Taurus",
-        "degree_in_sign": 22.791249,
-        "degree_in_sign_formatted": "22°47'28\"",
-        "ruler_planet": "Venus",
-        "house_group": "succedent"
-      },
-      {
-        "number": 9,
-        "longitude": 86.04459,
-        "sign": "Gemini",
-        "degree_in_sign": 26.04459,
-        "degree_in_sign_formatted": "26°02'40\"",
-        "ruler_planet": "Mercury",
-        "house_group": "cadent"
-      },
-      {
-        "number": 10,
-        "longitude": 123.714719,
-        "sign": "Leo",
-        "degree_in_sign": 3.7147190000000023,
-        "degree_in_sign_formatted": "3°42'52\"",
-        "ruler_planet": "Sun",
-        "house_group": "angular"
-      },
-      {
-        "number": 11,
-        "longitude": 157.832301,
-        "sign": "Virgo",
-        "degree_in_sign": 7.832301000000001,
-        "degree_in_sign_formatted": "7°49'56\"",
-        "ruler_planet": "Mercury",
-        "house_group": "succedent"
-      },
-      {
-        "number": 12,
-        "longitude": 184.886747,
-        "sign": "Libra",
-        "degree_in_sign": 4.886747000000014,
-        "degree_in_sign_formatted": "4°53'12\"",
-        "ruler_planet": "Venus",
-        "house_group": "cadent"
-      }
-    ],
-    "angles": {
-      "ASC": {
-        "name": "ASC",
-        "longitude": 205.812335,
-        "sign": "Libra",
-        "degree_in_sign": 25.81233499999999,
-        "degree_in_sign_formatted": "25°48'44\""
-      },
-      "MC": {
-        "name": "MC",
-        "longitude": 123.714719,
-        "sign": "Leo",
-        "degree_in_sign": 3.7147190000000023,
-        "degree_in_sign_formatted": "3°42'52\""
-      },
-      "IC": {
-        "name": "IC",
-        "longitude": 303.714719,
-        "sign": "Aquarius",
-        "degree_in_sign": 3.7147190000000023,
-        "degree_in_sign_formatted": "3°42'52\""
-      },
-      "DSC": {
-        "name": "DSC",
-        "longitude": 25.812335,
-        "sign": "Aries",
-        "degree_in_sign": 25.812335,
-        "degree_in_sign_formatted": "25°48'44\""
-      },
-      "Vertex": {
-        "name": "Vertex",
-        "longitude": 55.242749,
-        "sign": "Taurus",
-        "degree_in_sign": 25.242749000000003,
-        "degree_in_sign_formatted": "25°14'33\""
-      }
-    },
-    "special_points": {
-      "TrueNorthNode": {
-        "name": "TrueNorthNode",
-        "longitude": 306.494387,
-        "sign": "Aquarius",
-        "degree_in_sign": 6.4943870000000175,
-        "degree_in_sign_formatted": "6°29'39\"",
-        "house": 4
-      },
-      "TrueSouthNode": {
-        "name": "TrueSouthNode",
-        "longitude": 126.494387,
-        "sign": "Leo",
-        "degree_in_sign": 6.494387000000003,
-        "degree_in_sign_formatted": "6°29'39\"",
-        "house": 10
-      },
-      "BlackMoon": {
-        "name": "BlackMoon",
-        "longitude": 244.771261,
-        "sign": "Sagittarius",
-        "degree_in_sign": 4.77126100000001,
-        "degree_in_sign_formatted": "4°46'16\"",
-        "house": 2
-      },
-      "WhiteMoon": {
-        "name": "WhiteMoon",
-        "longitude": 123.866667,
-        "sign": "Leo",
-        "degree_in_sign": 3.8666670000000067,
-        "degree_in_sign_formatted": "3°52'00\"",
-        "house": 10
-      },
-      "Fortune": {
-        "name": "Fortune",
-        "longitude": 107.976687,
-        "sign": "Cancer",
-        "degree_in_sign": 17.976687,
-        "degree_in_sign_formatted": "17°58'36\"",
-        "house": 10
-      },
-      "Vertex": {
-        "name": "Vertex",
-        "longitude": 55.242749,
-        "sign": "Taurus",
-        "degree_in_sign": 25.242749000000003,
-        "degree_in_sign_formatted": "25°14'33\"",
-        "house": 8
-      },
-      "AntiVertex": {
-        "name": "AntiVertex",
-        "longitude": 235.242749,
-        "sign": "Scorpio",
-        "degree_in_sign": 25.242749000000003,
-        "degree_in_sign_formatted": "25°14'33\"",
-        "house": 2
-      }
-    },
-    "configurations": {
-      "FateCross": {
-        "axis": "LunarNodes",
-        "points": [
-          {
-            "name": "Rahu",
-            "longitude": 306.494387,
-            "sign": "Aquarius",
-            "house": 4
-          },
-          {
-            "name": "Ketu",
-            "longitude": 126.494387,
-            "sign": "Leo",
-            "house": 10
-          },
-          {
-            "name": "FateCross1",
-            "longitude": 36.494387,
-            "sign": "Taurus",
-            "house": 7
-          },
-          {
-            "name": "FateCross2",
-            "longitude": 216.494387,
-            "sign": "Scorpio",
-            "house": 1
-          }
-        ]
-      },
-      "Yod": {
-        "planets_involved": {
-          "planets": [
-            "Jupiter",
-            "Uranus",
-            "Mars"
-          ],
-          "apex_planet": "Uranus"
-        },
-        "houses_involved": null,
-        "element": null,
-        "mode": null,
-        "strength_score": 6
-      }
-    },
-    "aspects": [
-      {
-        "planet_1": "Sun",
-        "planet_2": "Moon",
-        "aspect_type": "Square",
-        "orb": 7.836,
-        "is_major": true,
-        "harmonic_type": "tense"
-      },
-      {
-        "planet_1": "Sun",
-        "planet_2": "Mercury",
-        "aspect_type": "Conjunction",
-        "orb": 5.887,
-        "is_major": true,
-        "harmonic_type": "neutral"
-      },
-      {
-        "planet_1": "Sun",
-        "planet_2": "Saturn",
-        "aspect_type": "Trine",
-        "orb": 0.542,
-        "is_major": true,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Sun",
-        "planet_2": "Uranus",
-        "aspect_type": "Tridecile",
-        "orb": 0.674,
-        "is_major": false,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Sun",
-        "planet_2": "Pluto",
-        "aspect_type": "Sextile",
-        "orb": 2.69,
-        "is_major": true,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Sun",
-        "planet_2": "Fortune",
-        "aspect_type": "Sextile",
-        "orb": 0.303,
-        "is_major": true,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Sun",
-        "planet_2": "WhiteMoon",
-        "aspect_type": "Semisquare",
-        "orb": 0.587,
-        "is_major": false,
-        "harmonic_type": "tense"
-      },
-      {
-        "planet_1": "Sun",
-        "planet_2": "MC",
-        "aspect_type": "Semisquare",
-        "orb": 0.435,
-        "is_major": false,
-        "harmonic_type": "tense"
-      },
-      {
-        "planet_1": "Sun",
-        "planet_2": "IC",
-        "aspect_type": "Sesquiquadrate",
-        "orb": 0.435,
-        "is_major": false,
-        "harmonic_type": "tense"
-      },
-      {
-        "planet_1": "Moon",
-        "planet_2": "Mercury",
-        "aspect_type": "Square",
-        "orb": 1.949,
-        "is_major": true,
-        "harmonic_type": "tense"
-      },
-      {
-        "planet_1": "Moon",
-        "planet_2": "Mars",
-        "aspect_type": "Conjunction",
-        "orb": 5.418,
-        "is_major": true,
-        "harmonic_type": "neutral"
-      },
-      {
-        "planet_1": "Moon",
-        "planet_2": "Neptune",
-        "aspect_type": "Quincunx",
-        "orb": 1.396,
-        "is_major": false,
-        "harmonic_type": "neutral"
-      },
-      {
-        "planet_1": "Moon",
-        "planet_2": "Chiron",
-        "aspect_type": "Semisquare",
-        "orb": 0.574,
-        "is_major": false,
-        "harmonic_type": "tense"
-      },
-      {
-        "planet_1": "Moon",
-        "planet_2": "ASC",
-        "aspect_type": "Sesquiquadrate",
-        "orb": 0.369,
-        "is_major": false,
-        "harmonic_type": "tense"
-      },
-      {
-        "planet_1": "Moon",
-        "planet_2": "DSC",
-        "aspect_type": "Semisquare",
-        "orb": 0.369,
-        "is_major": false,
-        "harmonic_type": "tense"
-      },
-      {
-        "planet_1": "Mercury",
-        "planet_2": "Neptune",
-        "aspect_type": "Trine",
-        "orb": 0.552,
-        "is_major": true,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Mercury",
-        "planet_2": "AntiVertex",
-        "aspect_type": "Quintile",
-        "orb": 0.85,
-        "is_major": false,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Mercury",
-        "planet_2": "TrueNorthNode",
-        "aspect_type": "Biquintile",
-        "orb": 0.102,
-        "is_major": false,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Mercury",
-        "planet_2": "TrueSouthNode",
-        "aspect_type": "Decile",
-        "orb": 0.102,
-        "is_major": false,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Mercury",
-        "planet_2": "Vertex",
-        "aspect_type": "Tridecile",
-        "orb": 0.85,
-        "is_major": false,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Venus",
-        "planet_2": "Mars",
-        "aspect_type": "Square",
-        "orb": 0.166,
-        "is_major": true,
-        "harmonic_type": "tense"
-      },
-      {
-        "planet_1": "Venus",
-        "planet_2": "Jupiter",
-        "aspect_type": "Semisextile",
-        "orb": 0.016,
-        "is_major": false,
-        "harmonic_type": "neutral"
-      },
-      {
-        "planet_1": "Venus",
-        "planet_2": "Saturn",
-        "aspect_type": "Sesquiquadrate",
-        "orb": 1.038,
-        "is_major": false,
-        "harmonic_type": "tense"
-      },
-      {
-        "planet_1": "Venus",
-        "planet_2": "Uranus",
-        "aspect_type": "Trine",
-        "orb": 0.747,
-        "is_major": true,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Venus",
-        "planet_2": "Chiron",
-        "aspect_type": "Nonagon",
-        "orb": 0.011,
-        "is_major": false,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Venus",
-        "planet_2": "BlackMoon",
-        "aspect_type": "Square",
-        "orb": 0.088,
-        "is_major": true,
-        "harmonic_type": "tense"
-      },
-      {
-        "planet_1": "Venus",
-        "planet_2": "WhiteMoon",
-        "aspect_type": "Semisextile",
-        "orb": 0.992,
-        "is_major": false,
-        "harmonic_type": "neutral"
-      },
-      {
-        "planet_1": "Mars",
-        "planet_2": "Jupiter",
-        "aspect_type": "Sextile",
-        "orb": 0.182,
-        "is_major": true,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Mars",
-        "planet_2": "Saturn",
-        "aspect_type": "Sesquiquadrate",
-        "orb": 1.204,
-        "is_major": false,
-        "harmonic_type": "tense"
-      },
-      {
-        "planet_1": "Mars",
-        "planet_2": "Uranus",
-        "aspect_type": "Quincunx",
-        "orb": 0.58,
-        "is_major": false,
-        "harmonic_type": "neutral"
-      },
-      {
-        "planet_1": "Mars",
-        "planet_2": "Neptune",
-        "aspect_type": "Biquintile",
-        "orb": 0.815,
-        "is_major": false,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Mars",
-        "planet_2": "BlackMoon",
-        "aspect_type": "Opposition",
-        "orb": 0.254,
-        "is_major": true,
-        "harmonic_type": "tense"
-      },
-      {
-        "planet_1": "Mars",
-        "planet_2": "TrueNorthNode",
-        "aspect_type": "Trine",
-        "orb": 1.469,
-        "is_major": true,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Mars",
-        "planet_2": "TrueSouthNode",
-        "aspect_type": "Sextile",
-        "orb": 1.469,
-        "is_major": true,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Mars",
-        "planet_2": "WhiteMoon",
-        "aspect_type": "Sextile",
-        "orb": 1.159,
-        "is_major": true,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Mars",
-        "planet_2": "MC",
-        "aspect_type": "Sextile",
-        "orb": 1.311,
-        "is_major": true,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Mars",
-        "planet_2": "IC",
-        "aspect_type": "Trine",
-        "orb": 1.311,
-        "is_major": true,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Mars",
-        "planet_2": "DSC",
-        "aspect_type": "Nonagon",
-        "orb": 0.787,
-        "is_major": false,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Jupiter",
-        "planet_2": "Uranus",
-        "aspect_type": "Quincunx",
-        "orb": 0.763,
-        "is_major": false,
-        "harmonic_type": "neutral"
-      },
-      {
-        "planet_1": "Jupiter",
-        "planet_2": "BlackMoon",
-        "aspect_type": "Trine",
-        "orb": 0.072,
-        "is_major": true,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Jupiter",
-        "planet_2": "TrueNorthNode",
-        "aspect_type": "Opposition",
-        "orb": 1.651,
-        "is_major": true,
-        "harmonic_type": "tense"
-      },
-      {
-        "planet_1": "Jupiter",
-        "planet_2": "TrueSouthNode",
-        "aspect_type": "Conjunction",
-        "orb": 1.651,
-        "is_major": true,
-        "harmonic_type": "neutral"
-      },
-      {
-        "planet_1": "Jupiter",
-        "planet_2": "WhiteMoon",
-        "aspect_type": "Conjunction",
-        "orb": 0.976,
-        "is_major": true,
-        "harmonic_type": "neutral"
-      },
-      {
-        "planet_1": "Jupiter",
-        "planet_2": "MC",
-        "aspect_type": "Conjunction",
-        "orb": 1.128,
-        "is_major": true,
-        "harmonic_type": "neutral"
-      },
-      {
-        "planet_1": "Jupiter",
-        "planet_2": "IC",
-        "aspect_type": "Opposition",
-        "orb": 1.128,
-        "is_major": true,
-        "harmonic_type": "tense"
-      },
-      {
-        "planet_1": "Saturn",
-        "planet_2": "BlackMoon",
-        "aspect_type": "Semisquare",
-        "orb": 0.95,
-        "is_major": false,
-        "harmonic_type": "tense"
-      },
-      {
-        "planet_1": "Saturn",
-        "planet_2": "Fortune",
-        "aspect_type": "Opposition",
-        "orb": 0.845,
-        "is_major": true,
-        "harmonic_type": "tense"
-      },
-      {
-        "planet_1": "Uranus",
-        "planet_2": "AntiVertex",
-        "aspect_type": "Nonagon",
-        "orb": 0.363,
-        "is_major": false,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Uranus",
-        "planet_2": "BlackMoon",
-        "aspect_type": "Semisextile",
-        "orb": 0.834,
-        "is_major": false,
-        "harmonic_type": "neutral"
-      },
-      {
-        "planet_1": "Uranus",
-        "planet_2": "TrueNorthNode",
-        "aspect_type": "Semisextile",
-        "orb": 0.889,
-        "is_major": false,
-        "harmonic_type": "neutral"
-      },
-      {
-        "planet_1": "Uranus",
-        "planet_2": "TrueSouthNode",
-        "aspect_type": "Quincunx",
-        "orb": 0.889,
-        "is_major": false,
-        "harmonic_type": "neutral"
-      },
-      {
-        "planet_1": "Pluto",
-        "planet_2": "Fortune",
-        "aspect_type": "Trine",
-        "orb": 2.387,
-        "is_major": true,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Chiron",
-        "planet_2": "AntiVertex",
-        "aspect_type": "Trine",
-        "orb": 0.373,
-        "is_major": true,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Chiron",
-        "planet_2": "Vertex",
-        "aspect_type": "Sextile",
-        "orb": 0.373,
-        "is_major": true,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "Chiron",
-        "planet_2": "ASC",
-        "aspect_type": "Square",
-        "orb": 0.943,
-        "is_major": true,
-        "harmonic_type": "tense"
-      },
-      {
-        "planet_1": "Chiron",
-        "planet_2": "DSC",
-        "aspect_type": "Square",
-        "orb": 0.943,
-        "is_major": true,
-        "harmonic_type": "tense"
-      },
-      {
-        "planet_1": "AntiVertex",
-        "planet_2": "ASC",
-        "aspect_type": "Semisextile",
-        "orb": 0.57,
-        "is_major": false,
-        "harmonic_type": "neutral"
-      },
-      {
-        "planet_1": "AntiVertex",
-        "planet_2": "DSC",
-        "aspect_type": "Quincunx",
-        "orb": 0.57,
-        "is_major": false,
-        "harmonic_type": "neutral"
-      },
-      {
-        "planet_1": "BlackMoon",
-        "planet_2": "MC",
-        "aspect_type": "Trine",
-        "orb": 1.057,
-        "is_major": true,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "BlackMoon",
-        "planet_2": "IC",
-        "aspect_type": "Sextile",
-        "orb": 1.057,
-        "is_major": true,
-        "harmonic_type": "harmonious"
-      },
-      {
-        "planet_1": "TrueNorthNode",
-        "planet_2": "MC",
-        "aspect_type": "Opposition",
-        "orb": 2.78,
-        "is_major": true,
-        "harmonic_type": "tense"
-      },
-      {
-        "planet_1": "TrueNorthNode",
-        "planet_2": "IC",
-        "aspect_type": "Conjunction",
-        "orb": 2.78,
-        "is_major": true,
-        "harmonic_type": "neutral"
-      },
-      {
-        "planet_1": "TrueSouthNode",
-        "planet_2": "MC",
-        "aspect_type": "Conjunction",
-        "orb": 2.78,
-        "is_major": true,
-        "harmonic_type": "neutral"
-      },
-      {
-        "planet_1": "TrueSouthNode",
-        "planet_2": "IC",
-        "aspect_type": "Opposition",
-        "orb": 2.78,
-        "is_major": true,
-        "harmonic_type": "tense"
-      },
-      {
-        "planet_1": "Vertex",
-        "planet_2": "ASC",
-        "aspect_type": "Quincunx",
-        "orb": 0.57,
-        "is_major": false,
-        "harmonic_type": "neutral"
-      },
-      {
-        "planet_1": "Vertex",
-        "planet_2": "DSC",
-        "aspect_type": "Semisextile",
-        "orb": 0.57,
-        "is_major": false,
-        "harmonic_type": "neutral"
-      },
-      {
-        "planet_1": "WhiteMoon",
-        "planet_2": "MC",
-        "aspect_type": "Conjunction",
-        "orb": 0.152,
-        "is_major": true,
-        "harmonic_type": "neutral"
-      },
-      {
-        "planet_1": "WhiteMoon",
-        "planet_2": "IC",
-        "aspect_type": "Opposition",
-        "orb": 0.152,
-        "is_major": true,
-        "harmonic_type": "tense"
-      },
-      {
-        "planet_1": "ASC",
-        "planet_2": "DSC",
-        "aspect_type": "Opposition",
-        "orb": 0,
-        "is_major": true,
-        "harmonic_type": "tense"
-      },
-      {
-        "planet_1": "MC",
-        "planet_2": "IC",
-        "aspect_type": "Opposition",
-        "orb": 0,
-        "is_major": true,
-        "harmonic_type": "tense"
-      }
-    ],
-    "aspect_configurations": [
-      {
-        "type": "Yod",
-        "planets_involved": [
-          "Jupiter",
-          "Uranus",
-          "Mars"
-        ],
-        "apex_planet": "Uranus",
-        "strength_score": 6
-      },
-      {
-        "type": "Yod",
-        "planets_involved": [
-          "Jupiter",
-          "Uranus",
-          "Mars"
-        ],
-        "apex_planet": "Uranus",
-        "strength_score": 6
-      }
-    ],
-    "stelliums": [
-      {
-        "type": "sign",
-        "house_number": null,
-        "sign": "Virgo",
-        "planets": [
-          "Sun",
-          "Mercury",
-          "Venus"
-        ],
-        "count": 3,
-        "strength_score": 4.5
-      },
-      {
-        "type": "sign",
-        "house_number": null,
-        "sign": "Capricorn",
-        "planets": [
-          "Saturn",
-          "Uranus",
-          "Neptune"
-        ],
-        "count": 3,
-        "strength_score": 4.5
-      },
-      {
-        "type": "house",
-        "house_number": 11,
-        "sign": null,
-        "planets": [
-          "Sun",
-          "Mercury",
-          "Venus"
-        ],
-        "count": 3,
-        "strength_score": 4.5
-      }
-    ],
-    "cosmogram_pattern": {
-      "pattern_type": "Locomotive",
-      "anchor_planet": "Sun",
-      "empty_arc_degree": 136.2,
-      "special_roles": []
-    },
-    "planet_distribution": {
-      "min_empty_arc": 5.42,
-      "max_empty_arc": 136.2,
-      "cluster_count": 1,
-      "spread_map": {
-        "clusters": [
-          {
-            "count": 10,
-            "planets": [
-              "Sun",
-              "Moon",
-              "Mercury",
-              "Venus",
-              "Mars",
-              "Jupiter",
-              "Saturn",
-              "Uranus",
-              "Neptune",
-              "Pluto"
+    <!-- Мобильное меню -->
+    <div class="mobile-tabs">
+        <button class="tab-btn" onclick="switchTab('planets')">
+            <span class="tab-icon">☰</span>
+            Планеты
+        </button>
+        <button class="tab-btn active" onclick="switchTab('map')">
+            <span class="tab-icon">◉</span>
+            Карта
+        </button>
+        <button class="tab-btn" onclick="switchTab('houses')">
+            <span class="tab-icon">☖</span>
+            Дома
+        </button>
+    </div>
+
+    <script>
+        // === МОБИЛЬНАЯ НАВИГАЦИЯ ===
+        function switchTab(viewName) {
+            // Hide all views
+            document.getElementById('view-map').classList.remove('active-view');
+            document.getElementById('view-planets').classList.remove('active-view');
+            document.getElementById('view-houses').classList.remove('active-view');
+            
+            // Show selected
+            document.getElementById('view-' + viewName).classList.add('active-view');
+
+            // Update buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            // Reset zoom if switching back to map to ensure visibility? 
+            // Optional: resetZoom();
+        }
+
+        // === ДАННЫЕ ===
+        const chartData = {
+            ascendant: 205.812335,
+            planets: [
+                { name: "Sun", label: "Солнце", symbol: "☉", long: 168.279446, sign: "Virgo", color: "#f1c40f", house: 11 },
+                { name: "Moon", label: "Луна", symbol: "☽", long: 70.443798, sign: "Gemini", color: "#ecf0f1", house: 8 },
+                { name: "Mercury", label: "Меркурий", symbol: "☿", long: 162.392527, sign: "Virgo", color: "#e67e22", house: 11 },
+                { name: "Venus", label: "Венера", symbol: "♀", long: 154.859055, sign: "Virgo", color: "#2ecc71", house: 10 },
+                { name: "Mars", label: "Марс", symbol: "♂", long: 65.025312, sign: "Gemini", color: "#e74c3c", house: 8 },
+                { name: "Jupiter", label: "Юпитер", symbol: "♃", long: 124.843051, sign: "Leo", color: "#9b59b6", house: 10 },
+                { name: "Saturn", label: "Сатурн", symbol: "♄", long: 288.821277, sign: "Capricorn", color: "#95a5a6", house: 3 },
+                { name: "Uranus", label: "Уран", symbol: "♅", long: 275.605656, sign: "Capricorn", color: "#3498db", house: 3 },
+                { name: "Neptune", label: "Нептун", symbol: "♆", long: 281.840276, sign: "Capricorn", color: "#8e44ad", house: 3 },
+                { name: "Pluto", label: "Плутон", symbol: "♇", long: 225.589253, sign: "Scorpio", color: "#c0392b", house: 1 },
+                { name: "Chiron", label: "Хирон", symbol: "⚷", long: 114.869634, sign: "Cancer", color: "#1abc9c", house: 9 },
+                { name: "Rahu", label: "Раху", symbol: "☊", long: 306.494387, sign: "Aquarius", color: "#7f8c8d", house: 4 },
+                { name: "Ketu", label: "Кету", symbol: "☋", long: 126.494387, sign: "Leo", color: "#7f8c8d", house: 10 },
+                { name: "Lilith", label: "Лилит", symbol: "⚸", long: 225.561522, sign: "Scorpio", color: "#777", stroke: "#e94560", house: 1 },
+                { name: "WhiteMoon", label: "Селена", symbol: "○", long: 45.561522, sign: "Taurus", color: "#ffffff", stroke: "#2ecc71", house: 7 },
+                { name: "Fortune", label: "Фортуна", symbol: "⊗", long: 107.976687, sign: "Cancer", color: "#e67e22", stroke: "#f1c40f", house: 9 },
+                { name: "Vertex", label: "Вертекс", symbol: "Vx", long: 55.242749, sign: "Taurus", color: "#a29bfe", stroke: "#6c5ce7", house: 8 },
+                { name: "AntiVertex", label: "Антивертекс", symbol: "Ax", long: 235.242749, sign: "Scorpio", color: "#a29bfe", stroke: "#6c5ce7", house: 2 }
             ],
-            "cluster_id": 1,
-            "end_degree": 288.821277,
-            "start_degree": 65.025312
-          }
-        ],
-        "total_planets": 10
-      }
-    },
-    "balances": {
-      "element_balance": {
-        "fire": 1,
-        "earth": 8,
-        "air": 3.5,
-        "water": 2
-      },
-      "mode_balance": {
-        "cardinal": 4,
-        "fixed": 2,
-        "mutable": 8.5
-      },
-      "gender_balance": {
-        "masculine": 4.5,
-        "feminine": 10
-      },
-      "zones_balance": {
-        "brahma": 4.5,
-        "vishnu": 7,
-        "shiva": 3
-      },
-      "hemisphere_balance": {
-        "northern": 4,
-        "southern": 10.5,
-        "eastern": 10,
-        "western": 4.5
-      },
-      "quadrant_balance": {
-        "q1": 7,
-        "q2": 3,
-        "q3": 1,
-        "q4": 3.5
-      },
-      "house_group_balance": {
-        "angular": 3,
-        "succedent": 7.5,
-        "cadent": 4
-      }
-    }
-  };
+            houses: [205.812335, 232.791249, 266.04459, 303.714719, 337.832301, 4.886747, 
+                     25.812335, 52.791249, 86.04459, 123.714719, 157.832301, 184.886747],
+            aspects: [
+                { p1: "Sun", p2: "Mercury", type: "Conjunction", deg: 0 },
+                { p1: "Sun", p2: "Pluto", type: "Sextile", deg: 60 },
+                { p1: "Sun", p2: "Saturn", type: "Trine", deg: 120 },
+                { p1: "Sun", p2: "Neptune", type: "Trine", deg: 120 },
+                { p1: "Sun", p2: "Moon", type: "Square", deg: 90 },
+                { p1: "Moon", p2: "Mars", type: "Conjunction", deg: 0 },
+                { p1: "Moon", p2: "Jupiter", type: "Sextile", deg: 60 },
+                { p1: "Moon", p2: "Mercury", type: "Square", deg: 90 },
+                { p1: "Venus", p2: "Mars", type: "Square", deg: 90 },
+                { p1: "Venus", p2: "Uranus", type: "Trine", deg: 120 },
+                { p1: "Mars", p2: "Jupiter", type: "Sextile", deg: 60 },
+                { p1: "Jupiter", p2: "Rahu", type: "Opposition", deg: 180 },
+                { p1: "Saturn", p2: "Neptune", type: "Conjunction", deg: 0 },
+                { p1: "Pluto", p2: "Saturn", type: "Sextile", deg: 60 },
+                { p1: "Jupiter", p2: "Uranus", type: "Quincunx", deg: 150 },
+                { p1: "Mars", p2: "Uranus", type: "Quincunx", deg: 150 }
+            ]
+        };
 
-  // ===============================
-  //       ВСПОМОГАТЕЛЬНЫЕ ДАННЫЕ
-  // ===============================
+        const signs = [
+            { name: "Aries", label: "Овен", symbol: "♈", element: "fire" },
+            { name: "Taurus", label: "Телец", symbol: "♉", element: "earth" },
+            { name: "Gemini", label: "Близнецы", symbol: "♊", element: "air" },
+            { name: "Cancer", label: "Рак", symbol: "♋", element: "water" },
+            { name: "Leo", label: "Лев", symbol: "♌", element: "fire" },
+            { name: "Virgo", label: "Дева", symbol: "♍", element: "earth" },
+            { name: "Libra", label: "Весы", symbol: "♎", element: "air" },
+            { name: "Scorpio", label: "Скорпион", symbol: "♏", element: "water" },
+            { name: "Sagittarius", label: "Стрелец", symbol: "♐", element: "fire" },
+            { name: "Capricorn", label: "Козерог", symbol: "♑", element: "earth" },
+            { name: "Aquarius", label: "Водолей", symbol: "♒", element: "air" },
+            { name: "Pisces", label: "Рыбы", symbol: "♓", element: "water" }
+        ];
 
-  const SIGNS = [
-    "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
-    "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"
-  ];
+        const houseNames = ["I (ASC)", "II", "III", "IV (IC)", "V", "VI", "VII (DSC)", "VIII", "IX", "X (MC)", "XI", "XII"];
 
-  const SIGN_GLYPHS = {
-    Aries: "♈", Taurus: "♉", Gemini: "♊", Cancer: "♋",
-    Leo: "♌", Virgo: "♍", Libra: "♎", Scorpio: "♏",
-    Sagittarius: "♐", Capricorn: "♑", Aquarius: "♒", Pisces: "♓"
-  };
+        const elementColors = {
+            fire: "#e74c3c", earth: "#27ae60", air: "#f1c40f", water: "#3498db"
+        };
+        const aspectColors = {
+            0: "#f1c40f", 60: "#2ecc71", 90: "#e74c3c", 120: "#3498db", 150: "#95a5a6", 180: "#e74c3c"
+        };
 
-  const ELEMENT_LABELS = {
-    fire: "Огонь",
-    earth: "Земля",
-    air: "Воздух",
-    water: "Вода"
-  };
+        const svg = document.getElementById('chart');
+        const chartGroup = document.getElementById('chart-group');
+        const tooltip = document.getElementById('tooltip');
+        
+        // --- ZOOM LOGIC ---
+        let scale = 1;
+        let panning = false;
+        let pointX = 0, pointY = 0, startX = 0, startY = 0;
+        const chartContainer = document.getElementById('chart-svg-container');
+        const wrapper = document.getElementById('view-map'); // Updated target
 
-  const MODE_LABELS = {
-    cardinal: "Кардинальный",
-    fixed: "Фиксированный",
-    mutable: "Мутабельный"
-  };
-
-  const SIGN_ELEMENT = {
-    Aries: "Огонь", Leo: "Огонь", Sagittarius: "Огонь",
-    Taurus: "Земля", Virgo: "Земля", Capricorn: "Земля",
-    Gemini: "Воздух", Libra: "Воздух", Aquarius: "Воздух",
-    Cancer: "Вода", Scorpio: "Вода", Pisces: "Вода"
-  };
-
-  const SIGN_MODE = {
-    Aries: "Кардинальный", Cancer: "Кардинальный", Libra: "Кардинальный", Capricorn: "Кардинальный",
-    Taurus: "Фиксированный", Leo: "Фиксированный", Scorpio: "Фиксированный", Aquarius: "Фиксированный",
-    Gemini: "Мутабельный", Virgo: "Мутабельный", Sagittarius: "Мутабельный", Pisces: "Мутабельный"
-  };
-
-  const ASPECT_LABELS = {
-    Conjunction: "Соединение",
-    Opposition: "Оппозиция",
-    Square: "Квадрат",
-    Trine: "Трин",
-    Sextile: "Секстиль",
-    Semisquare: "Полуквадрат",
-    Sesquiquadrate: "Квинтаквадрат",
-    Semisextile: "Полусекстиль",
-    Quincunx: "Квинконс",
-    Quintile: "Квинтиль",
-    Biquintile: "Биквинтиль",
-    Decile: "Дециль",
-    Tridecile: "Тридециль",
-    Nonagon: "Нонагон"
-  };
-
-  function normalizeDegree(deg) {
-    let d = deg % 360;
-    if (d < 0) d += 360;
-    return d;
-  }
-
-  function polarToCartesian(deg, radius) {
-    const rad = (deg - 90) * Math.PI / 180;
-    return {
-      x: radius * Math.cos(rad),
-      y: radius * Math.sin(rad)
-    };
-  }
-
-  function dominantFromBalance(balanceObj) {
-    if (!balanceObj) return null;
-    let bestKey = null;
-    let bestVal = -Infinity;
-    for (const [k, v] of Object.entries(balanceObj)) {
-      if (v > bestVal) {
-        bestVal = v;
-        bestKey = k;
-      }
-    }
-    return bestKey;
-  }
-
-  function getObjectDegree(name) {
-    const planets = natalData.planets || [];
-    const angles = natalData.angles || {};
-    const special = natalData.special_points || {};
-    const p = planets.find(p => p.name === name);
-    if (p) return normalizeDegree(p.longitude);
-    if (angles[name]) return normalizeDegree(angles[name].longitude);
-    if (special[name]) return normalizeDegree(special[name].longitude);
-    return null;
-  }
-
-  function getObjectMeta(name) {
-    const planets = natalData.planets || [];
-    const angles = natalData.angles || {};
-    const special = natalData.special_points || {};
-    const p = planets.find(p => p.name === name);
-    if (p) return { type: "planet", ...p };
-    if (angles[name]) return { type: "angle", ...angles[name] };
-    if (special[name]) return { type: "point", ...special[name] };
-    return { type: "other", name };
-  }
-
-  // ===============================
-  //      РЕНДЕР ТЕКСТ / МЕТА
-  // ===============================
-
-  function renderMeta() {
-    const birth = natalData.birth_data || {};
-    const angles = natalData.angles || {};
-    const balances = natalData.balances || {};
-
-    const personNameEl = document.getElementById("personName");
-    const metaShortEl = document.getElementById("chartMetaShort");
-    const metaRow = document.getElementById("metaRow");
-
-    personNameEl.textContent = "Натальная карта";
-
-    const pieces = [];
-    if (birth.date) pieces.push(birth.date);
-    if (birth.time) pieces.push(birth.time.slice(0,5));
-    if (birth.timezone) pieces.push(birth.timezone.replace("Europe/", ""));
-    if (angles.ASC?.sign) {
-      const ascSign = angles.ASC.sign;
-      pieces.push(`ASC ${SIGN_GLYPHS[ascSign] || ""} ${ascSign}`);
-    }
-    metaShortEl.textContent = pieces.join(" · ");
-
-    metaRow.innerHTML = "";
-
-    if (birth.place) {
-      metaRow.appendChild(metaChip("Место", birth.place));
-    } else if (birth.latitude != null && birth.longitude != null) {
-      metaRow.appendChild(metaChip("Координаты", `${birth.latitude.toFixed(2)}, ${birth.longitude.toFixed(2)}`));
-    }
-
-    if (natalData.planets?.length) {
-      metaRow.appendChild(metaChip("Планет", natalData.planets.length.toString()));
-    }
-
-    if (natalData.stelliums?.length) {
-      metaRow.appendChild(metaChip("Стеллиумы", natalData.stelliums.length.toString()));
-    }
-
-    if (natalData.cosmogram_pattern?.pattern_type) {
-      metaRow.appendChild(metaChip("Космограмма", natalData.cosmogram_pattern.pattern_type));
-    }
-
-    const elementKey = dominantFromBalance(balances.element_balance);
-    const modeKey = dominantFromBalance(balances.mode_balance);
-
-    const dominantElementEl = document.getElementById("dominantElement");
-    const dominantModeEl = document.getElementById("dominantMode");
-
-    dominantElementEl.textContent = elementKey ? `стихия: ${ELEMENT_LABELS[elementKey] || elementKey}` : "";
-    dominantModeEl.textContent = modeKey ? `тип: ${(MODE_LABELS[modeKey] || modeKey).toLowerCase()}` : "";
-
-    const ascLabel = document.getElementById("ascLabel");
-    if (angles.ASC?.sign) {
-      ascLabel.textContent = `ASC ${SIGN_GLYPHS[angles.ASC.sign] || ""} ${angles.ASC.sign}`;
-    } else {
-      ascLabel.textContent = "ASC";
-    }
-  }
-
-  function metaChip(label, value) {
-    const el = document.createElement("div");
-    el.className = "meta-chip";
-    el.innerHTML = `<span>${label}</span><strong>${value}</strong>`;
-    return el;
-  }
-
-  // ===============================
-  //      РЕНДЕР КОЛЕСА (SVG)
-  // ===============================
-
-  function renderWheel(mode = "all", showLabels = true) {
-    const svg = document.getElementById("natal-wheel");
-    svg.innerHTML = "";
-
-    const baseRadius = 140;
-    const signOuter = baseRadius;
-    const signInner = 100;
-    const houseOuter = 92;
-    const houseInner = 68;
-    const planetRadius = 60;
-    const pointRadius = 52;
-    const centerRadius = 30;
-
-    const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-    const glow = document.createElementNS("http://www.w3.org/2000/svg", "filter");
-    glow.setAttribute("id", "glow");
-    glow.innerHTML = `
-      <feGaussianBlur stdDeviation="1.7" result="coloredBlur"/>
-      <feMerge>
-        <feMergeNode in="coloredBlur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    `;
-    defs.appendChild(glow);
-    svg.appendChild(defs);
-
-    const bgCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    bgCircle.setAttribute("cx", "0");
-    bgCircle.setAttribute("cy", "0");
-    bgCircle.setAttribute("r", signOuter);
-    bgCircle.setAttribute("fill", "#020617");
-    bgCircle.setAttribute("stroke", "rgba(148,163,184,0.6)");
-    bgCircle.setAttribute("stroke-width", "0.6");
-    svg.appendChild(bgCircle);
-
-    SIGNS.forEach((sign, idx) => {
-      const startDeg = idx * 30;
-      const endDeg = startDeg + 30;
-      const largeArc = endDeg - startDeg <= 180 ? 0 : 1;
-
-      const p1 = polarToCartesian(startDeg, signOuter);
-      const p2 = polarToCartesian(endDeg, signOuter);
-      const p3 = polarToCartesian(endDeg, signInner);
-      const p4 = polarToCartesian(startDeg, signInner);
-
-      const pathD = [
-        "M", p1.x, p1.y,
-        "A", signOuter, signOuter, 0, largeArc, 1, p2.x, p2.y,
-        "L", p3.x, p3.y,
-        "A", signInner, signInner, 0, largeArc, 0, p4.x, p4.y,
-        "Z"
-      ].join(" ");
-
-      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      path.setAttribute("d", pathD);
-      path.setAttribute("fill", idx % 2 === 0 ? "rgba(129,140,248,0.09)" : "rgba(15,23,42,0.96)");
-      path.setAttribute("stroke", "rgba(148,163,184,0.6)");
-      path.setAttribute("stroke-width", "0.3");
-      svg.appendChild(path);
-
-      if (showLabels) {
-        const midDeg = startDeg + 15;
-        const labelPos = polarToCartesian(midDeg, (signOuter + signInner) / 2);
-        const signText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        signText.setAttribute("x", labelPos.x);
-        signText.setAttribute("y", labelPos.y + 2);
-        signText.setAttribute("text-anchor", "middle");
-        signText.setAttribute("font-size", "10");
-        signText.setAttribute("fill", "rgba(226,232,240,0.9)");
-        signText.textContent = SIGN_GLYPHS[sign] || sign[0];
-        svg.appendChild(signText);
-      }
-    });
-
-    const houses = natalData.houses || [];
-    if (houses.length) {
-      houses.forEach(h => {
-        const deg = normalizeDegree(h.longitude);
-        const outer = polarToCartesian(deg, houseOuter);
-        const inner = polarToCartesian(deg, houseInner);
-
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.setAttribute("x1", outer.x);
-        line.setAttribute("y1", outer.y);
-        line.setAttribute("x2", inner.x);
-        line.setAttribute("y2", inner.y);
-        line.setAttribute("stroke", "rgba(56,189,248,0.65)");
-        line.setAttribute("stroke-width", "0.8");
-        svg.appendChild(line);
-
-        if (showLabels) {
-          const mid = polarToCartesian(deg, (houseOuter + houseInner) / 2);
-          const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-          label.setAttribute("x", mid.x);
-          label.setAttribute("y", mid.y - 2);
-          label.setAttribute("text-anchor", "middle");
-          label.setAttribute("font-size", "7.5");
-          label.setAttribute("fill", "rgba(148,163,184,0.95)");
-          label.textContent = h.number.toString();
-          svg.appendChild(label);
+        function setTransform() {
+            chartContainer.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
         }
-      });
-    }
 
-    const angles = natalData.angles || {};
+        function zoomIn() { scale *= 1.2; setTransform(); }
+        function zoomOut() { scale /= 1.2; if(scale < 0.5) scale = 0.5; setTransform(); }
+        function resetZoom() { scale = 1; pointX = 0; pointY = 0; setTransform(); }
 
-    function drawAxis(aName, bName, color) {
-      if (!angles[aName] || !angles[bName]) return;
-      const da = normalizeDegree(angles[aName].longitude);
-      const db = normalizeDegree(angles[bName].longitude);
-      const pa = polarToCartesian(da, signOuter);
-      const pb = polarToCartesian(db, signOuter);
-      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-      line.setAttribute("x1", pa.x);
-      line.setAttribute("y1", pa.y);
-      line.setAttribute("x2", pb.x);
-      line.setAttribute("y2", pb.y);
-      line.setAttribute("stroke", color);
-      line.setAttribute("stroke-width", "1.4");
-      line.setAttribute("stroke-opacity", "0.9");
-      line.setAttribute("stroke-dasharray", "2 2");
-      svg.appendChild(line);
-    }
+        wrapper.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = -e.deltaY;
+            (delta > 0) ? (scale *= 1.1) : (scale /= 1.1);
+            if(scale < 0.5) scale = 0.5;
+            if(scale > 5) scale = 5;
+            setTransform();
+        });
 
-    drawAxis("ASC", "DSC", "rgba(248,250,252,0.85)");
-    drawAxis("MC", "IC", "rgba(129,140,248,0.85)");
+        wrapper.addEventListener('touchstart', (e) => {
+             if(e.touches.length === 1) {
+                panning = true;
+                startX = e.touches[0].clientX - pointX;
+                startY = e.touches[0].clientY - pointY;
+             }
+        }, {passive: false});
+        
+        wrapper.addEventListener('touchmove', (e) => {
+            if(panning && e.touches.length === 1) {
+                e.preventDefault(); // Prevent page scroll
+                pointX = e.touches[0].clientX - startX;
+                pointY = e.touches[0].clientY - startY;
+                setTransform();
+            }
+        }, {passive: false});
 
-    const centerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    centerCircle.setAttribute("cx", "0");
-    centerCircle.setAttribute("cy", "0");
-    centerCircle.setAttribute("r", centerRadius);
-    centerCircle.setAttribute("fill", "rgba(15,23,42,0.98)");
-    centerCircle.setAttribute("stroke", "rgba(148,163,184,0.7)");
-    centerCircle.setAttribute("stroke-width", "0.8");
-    svg.appendChild(centerCircle);
+        wrapper.addEventListener('touchend', () => { panning = false; });
 
-    const centerRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    centerRing.setAttribute("cx", "0");
-    centerRing.setAttribute("cy", "0");
-    centerRing.setAttribute("r", centerRadius + 6);
-    centerRing.setAttribute("fill", "none");
-    centerRing.setAttribute("stroke", "rgba(148,163,184,0.6)");
-    centerRing.setAttribute("stroke-width", "0.3");
-    centerRing.setAttribute("stroke-dasharray", "2 4");
-    svg.appendChild(centerRing);
+        wrapper.addEventListener('mousedown', (e) => {
+            panning = true;
+            startX = e.clientX - pointX;
+            startY = e.clientY - pointY;
+            wrapper.style.cursor = "grabbing";
+        });
 
-    const planets = natalData.planets || [];
-    const specialPoints = natalData.special_points || {};
+        wrapper.addEventListener('mouseup', () => {
+            panning = false;
+            wrapper.style.cursor = "grab";
+        });
 
-    if (mode !== "aspects") {
-      planets.forEach((p, index) => {
-        const degree = normalizeDegree(p.longitude);
-        const offsetRadius = planetRadius - (index * 3) / planets.length;
-        const pos = polarToCartesian(degree, offsetRadius);
+        wrapper.addEventListener('mousemove', (e) => {
+            if (!panning) return;
+            e.preventDefault();
+            pointX = e.clientX - startX;
+            pointY = e.clientY - startY;
+            setTransform();
+        });
 
-        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        circle.setAttribute("cx", pos.x);
-        circle.setAttribute("cy", pos.y);
-        circle.setAttribute("r", 4.5);
-        circle.setAttribute("fill", "rgba(248,250,252,0.95)");
-        circle.setAttribute("stroke", "rgba(15,23,42,1)");
-        circle.setAttribute("stroke-width", "0.7");
-        circle.setAttribute("filter", "url(#glow)");
-        circle.dataset.tooltip = planetTooltipContent(p);
-        circle.dataset.tooltipTitle = `${p.name} ${p.sign ? "(" + p.sign + ")" : ""}`;
-        svg.appendChild(circle);
+        // --- DRAWING LOGIC ---
+        const cx = 300, cy = 300;
+        const r_zodiac_outer = 280, r_zodiac_inner = 230, r_houses = 200, r_planets = 180, r_aspects = 140;
 
-        if (showLabels) {
-          const labelPos = polarToCartesian(degree, offsetRadius + 9);
-          const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-          label.setAttribute("x", labelPos.x);
-          label.setAttribute("y", labelPos.y + 3);
-          label.setAttribute("text-anchor", "middle");
-          label.setAttribute("font-size", "7.5");
-          label.setAttribute("fill", "rgba(226,232,240,0.95)");
-          label.textContent = p.name[0];
-          svg.appendChild(label);
+        function getAngle(longitude) {
+            let angle = 180 + (chartData.ascendant - longitude);
+            return angle * (Math.PI / 180);
         }
-      });
 
-      Object.values(specialPoints).forEach(pt => {
-        const degree = normalizeDegree(pt.longitude);
-        const pos = polarToCartesian(degree, pointRadius);
-        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        rect.setAttribute("x", pos.x - 3);
-        rect.setAttribute("y", pos.y - 3);
-        rect.setAttribute("width", 6);
-        rect.setAttribute("height", 6);
-        rect.setAttribute("rx", 1.5);
-        rect.setAttribute("fill", "rgba(96,165,250,0.9)");
-        rect.setAttribute("stroke", "rgba(15,23,42,1)");
-        rect.setAttribute("stroke-width", "0.6");
-        rect.dataset.tooltipTitle = pt.name;
-        rect.dataset.tooltip =
-          `Знак: ${SIGN_GLYPHS[pt.sign] || ""} ${pt.sign}<br/>` +
-          `Долгота: ${normalizeDegree(pt.longitude).toFixed(2)}°` +
-          (pt.house != null ? `<br/>Дом: ${pt.house}` : "");
-        svg.appendChild(rect);
-      });
-    }
+        function toCartesian(radius, angleRad) {
+            return {
+                x: cx + radius * Math.cos(angleRad),
+                y: cy + radius * Math.sin(angleRad)
+            };
+        }
 
-    if (mode !== "planets") {
-      const aspects = natalData.aspects || [];
-      aspects.forEach(a => {
-        const d1 = getObjectDegree(a.planet_1);
-        const d2 = getObjectDegree(a.planet_2);
-        if (d1 == null || d2 == null) return;
+        function formatDeg(deg) {
+            let d = Math.floor(deg);
+            let m = Math.floor((deg - d) * 60);
+            return `${d}°${m.toString().padStart(2, '0')}'`;
+        }
 
-        const pos1 = polarToCartesian(d1, planetRadius);
-        const pos2 = polarToCartesian(d2, planetRadius);
+        function createEl(type, attrs) {
+            const el = document.createElementNS("http://www.w3.org/2000/svg", type);
+            for(let key in attrs) el.setAttribute(key, attrs[key]);
+            return el;
+        }
 
-        const harm = a.harmonic_type || "neutral";
-        const isMajor = !!a.is_major;
+        function drawZodiac() {
+            for (let i = 0; i < 12; i++) {
+                const sign = signs[i];
+                const startLong = i * 30;
+                const endLong = (i + 1) * 30;
+                const startAngle = getAngle(startLong);
+                const endAngle = getAngle(endLong);
+                
+                const p1 = toCartesian(r_zodiac_outer, startAngle);
+                const p2 = toCartesian(r_zodiac_outer, endAngle);
+                const p3 = toCartesian(r_zodiac_inner, endAngle);
+                const p4 = toCartesian(r_zodiac_inner, startAngle);
 
-        let stroke;
-        if (harm === "harmonious") stroke = "rgba(52,211,153,0.9)";
-        else if (harm === "tense") stroke = "rgba(248,113,113,0.95)";
-        else stroke = "rgba(148,163,184,0.9)";
+                const pathData = `M ${p1.x} ${p1.y} A ${r_zodiac_outer} ${r_zodiac_outer} 0 0 0 ${p2.x} ${p2.y} L ${p3.x} ${p3.y} A ${r_zodiac_inner} ${r_zodiac_inner} 0 0 1 ${p4.x} ${p4.y} Z`;
+                
+                const path = createEl("path", {
+                    d: pathData, 
+                    fill: elementColors[sign.element], 
+                    stroke: "#1a1a2e", "stroke-width": 1, "fill-opacity": 0.2
+                });
+                chartGroup.appendChild(path);
 
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.setAttribute("x1", pos1.x);
-        line.setAttribute("y1", pos1.y);
-        line.setAttribute("x2", pos2.x);
-        line.setAttribute("y2", pos2.y);
-        line.setAttribute("stroke", stroke);
-        line.setAttribute("stroke-width", isMajor ? "1.1" : "0.7");
-        line.setAttribute("stroke-dasharray", harm === "harmonious" ? "1.5 3" : "3 2");
-        line.setAttribute("opacity", isMajor ? "0.95" : "0.6");
+                const midAngle = getAngle(startLong + 15);
+                const textPos = toCartesian((r_zodiac_outer + r_zodiac_inner) / 2, midAngle);
+                const text = createEl("text", {
+                    x: textPos.x, y: textPos.y + 6, "text-anchor": "middle",
+                    fill: elementColors[sign.element], "font-size": "20px", "font-weight": "bold"
+                });
+                text.textContent = sign.symbol;
+                chartGroup.appendChild(text);
 
-        const label = ASPECT_LABELS[a.aspect_type] || a.aspect_type;
-        const tone =
-          harm === "harmonious" ? "гармоничный" :
-          harm === "tense" ? "напряжённый" :
-          "нейтральный";
+                const lS = toCartesian(r_zodiac_inner, startAngle);
+                const lE = toCartesian(r_zodiac_outer, startAngle);
+                chartGroup.appendChild(createEl("line", { x1: lS.x, y1: lS.y, x2: lE.x, y2: lE.y, stroke: "#555" }));
+            }
+        }
 
-        line.dataset.tooltipTitle = `${a.planet_1} – ${a.planet_2}`;
-        line.dataset.tooltip =
-          `Аспект: ${label}<br/>Орб: ${a.orb.toFixed(3)}°<br/>` +
-          `Тип: ${tone}<br/>${isMajor ? "Главный аспект" : "Минорный аспект"}`;
-        svg.appendChild(line);
-      });
-    }
+        function drawHouses() {
+            chartData.houses.forEach((cusp, index) => {
+                const angle = getAngle(cusp);
+                const p1 = toCartesian(r_zodiac_inner, angle);
+                const p2 = toCartesian(r_aspects, angle);
+                const isAngle = index % 3 === 0;
+                
+                chartGroup.appendChild(createEl("line", {
+                    x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y,
+                    stroke: isAngle ? "#888" : "#444", "stroke-width": isAngle ? 2 : 1
+                }));
 
-    attachTooltipHandlers(svg);
-  }
+                let next = chartData.houses[(index + 1) % 12];
+                if (next < cusp) next += 360;
+                let mid = (cusp + next) / 2;
+                if (mid > 360) mid -= 360;
+                
+                const tPos = toCartesian(r_houses - 10, getAngle(mid));
+                const text = createEl("text", {
+                    x: tPos.x, y: tPos.y + 4, "text-anchor": "middle",
+                    fill: "#666", "font-size": "10px"
+                });
+                text.textContent = index + 1;
+                chartGroup.appendChild(text);
 
-  function planetTooltipContent(p) {
-    const pieces = [];
-    if (p.sign) pieces.push(`Знак: ${SIGN_GLYPHS[p.sign] || ""} ${p.sign}`);
-    if (p.degree_in_sign_formatted) pieces.push(`Позиция: ${p.degree_in_sign_formatted}`);
-    if (p.house != null) pieces.push(`Дом: ${p.house}`);
-    if (p.dignity && p.dignity !== "neutral") {
-      const label = {
-        domicile: "управитель",
-        exaltation: "экзальтация",
-        detriment: "изгнание",
-        fall: "падение"
-      }[p.dignity] || p.dignity;
-      pieces.push(`Статус: ${label}`);
-    }
-    if (p.retrograde) pieces.push("Ретроградная");
-    pieces.push(`Баллы силы: ${p.strength_score}`);
-    if (p.special_roles?.length) {
-      pieces.push(`Роли: ${p.special_roles.join(", ")}`);
-    }
-    return pieces.join("<br/>");
-  }
+                if ([0,3,6,9].includes(index)) {
+                    const lab = index === 0 ? "ASC" : index === 3 ? "IC" : index === 6 ? "DSC" : "MC";
+                    const lPos = toCartesian(r_zodiac_inner + 15, angle);
+                    const lText = createEl("text", {
+                        x: lPos.x, y: lPos.y + 4, "text-anchor": "middle",
+                        fill: "#fff", "font-weight": "bold", "font-size": "12px"
+                    });
+                    lText.textContent = lab;
+                    chartGroup.appendChild(lText);
+                }
+            });
+        }
 
-  // ===============================
-  //      РЕНДЕР КАРТОЧЕК
-  // ===============================
+        function drawAspects() {
+            chartData.aspects.forEach(asp => {
+                const p1 = chartData.planets.find(p => p.name === asp.p1);
+                const p2 = chartData.planets.find(p => p.name === asp.p2);
+                if(p1 && p2) {
+                    const pos1 = toCartesian(r_aspects - 10, getAngle(p1.long));
+                    const pos2 = toCartesian(r_aspects - 10, getAngle(p2.long));
+                    chartGroup.appendChild(createEl("line", {
+                        x1: pos1.x, y1: pos1.y, x2: pos2.x, y2: pos2.y,
+                        stroke: aspectColors[asp.deg] || "#fff", "stroke-width": 1, opacity: 0.6
+                    }));
+                }
+            });
+        }
 
-  function renderTabPlanets() {
-    const container = document.getElementById("tab-planets");
-    const planets = natalData.planets || [];
-    if (!planets.length) {
-      container.innerHTML = `<div class="no-data">Нет данных о планетах в карте.</div>`;
-      return;
-    }
+        function drawPlanets() {
+            chartData.planets.forEach(p => {
+                const angle = getAngle(p.long);
+                const pos = toCartesian(r_planets, angle);
+                const lEnd = toCartesian(r_zodiac_inner, angle);
+                
+                chartGroup.appendChild(createEl("line", {
+                    x1: pos.x, y1: pos.y, x2: lEnd.x, y2: lEnd.y,
+                    stroke: p.color, opacity: 0.5
+                }));
 
-    const grid = document.createElement("div");
-    grid.className = "card-grid";
+                const grp = createEl("g", { class: "planet-group", "data-name": p.name });
+                
+                const circleColor = p.stroke || p.color; // Use stroke color if defined (for special points)
+                
+                const circle = createEl("circle", {
+                    cx: pos.x, cy: pos.y, r: 11, fill: "#1a1a2e", stroke: circleColor, "stroke-width": 2
+                });
+                
+                const textStyle = (p.name === 'Vertex' || p.name === 'AntiVertex') ? "font-size: 10px;" : "font-size: 14px;";
+                const textYOffset = (p.name === 'Vertex' || p.name === 'AntiVertex') ? 4 : 5;
 
-    planets.forEach(p => {
-      const el = document.createElement("article");
-      el.className = "info-card";
+                const text = createEl("text", {
+                    x: pos.x, y: pos.y + textYOffset, "text-anchor": "middle", fill: p.color,
+                    "font-weight": "bold", style: `pointer-events: none; ${textStyle}`
+                });
+                text.textContent = p.symbol;
 
-      const signElement = SIGN_ELEMENT[p.sign] || "—";
-      const signMode = SIGN_MODE[p.sign] || "—";
-      const glyph = p.name[0];
-      const dignityLabel = {
-        domicile: "управитель",
-        exaltation: "экзальтация",
-        detriment: "изгнание",
-        fall: "падение",
-        neutral: "нейтрально"
-      }[p.dignity || "neutral"];
+                grp.appendChild(circle);
+                grp.appendChild(text);
+                
+                grp.addEventListener("mouseenter", (e) => highlightPlanet(p.name, true, e));
+                grp.addEventListener("mouseleave", () => highlightPlanet(p.name, false));
+                
+                // Touch support for tooltips
+                grp.addEventListener("touchstart", (e) => {
+                    e.preventDefault(); // Stop zoom/scroll momentarily
+                    highlightPlanet(p.name, true, e.touches[0]);
+                });
 
-      const roles = (p.special_roles || []).map(r => {
-        if (r === "almuten") return "альмутен";
-        if (r === "aspect_king") return "центр аспектов";
-        return r;
-      });
+                chartGroup.appendChild(grp);
+            });
+        }
 
-      el.innerHTML = `
-        <div class="info-card-header">
-          <div class="info-main">${glyph} ${p.name}</div>
-          <div class="info-tag">${p.sign ? (SIGN_GLYPHS[p.sign] || "") + " " + p.sign : ""}</div>
-        </div>
-        <div class="info-sub">
-          <span class="pill">
-            <span class="pill-dot"></span>
-            дом ${p.house ?? "—"}
-          </span>
-          <span class="pill">
-            <span class="pill-dot"></span>
-            ${signElement.toLowerCase()}
-          </span>
-          <span class="pill">
-            <span class="pill-dot"></span>
-            ${signMode.toLowerCase()}
-          </span>
-        </div>
-        <div class="info-footer">
-          <span class="label">позиция</span>
-          <span class="value">
-            ${p.degree_in_sign_formatted || normalizeDegree(p.longitude).toFixed(2) + "°"}
-          </span>
-        </div>
-        <div class="tag-row">
-          <span class="soft-tag">
-            <span class="soft-tag-dot"></span>
-            статус: ${dignityLabel}
-          </span>
-          <span class="soft-tag">
-            <span class="soft-tag-dot"></span>
-            сила: ${p.strength_score}
-          </span>
-          ${p.retrograde ? `
-            <span class="soft-tag">
-              <span class="soft-tag-dot"></span>
-              ретроградная
-            </span>` : ""}
-          ${roles.map(r => `
-            <span class="soft-tag">
-              <span class="soft-tag-dot"></span>
-              ${r}
-            </span>`).join("")}
-        </div>
-      `;
-      grid.appendChild(el);
-    });
+        function populateSidePanels() {
+            const pBody = document.getElementById('planets-body');
+            chartData.planets.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.id = `row-${p.name}`;
+                const sign = signs.find(s => s.name === p.sign);
+                const deg = p.long % 30;
+                
+                tr.innerHTML = `
+                    <td class="symbol-cell" style="color:${p.color}">${p.symbol}</td>
+                    <td><strong>${p.label}</strong></td>
+                    <td>${sign.symbol} ${formatDeg(deg)}</td>
+                    <td>${p.house}</td>
+                `;
+                tr.onclick = () => { 
+                    // On mobile, switch to map view when clicking a planet
+                    if (window.innerWidth <= 900) {
+                        switchTab('map');
+                        setTimeout(() => highlightPlanet(p.name, true), 300);
+                    } else {
+                        highlightPlanet(p.name, true); 
+                    }
+                };
+                pBody.appendChild(tr);
+            });
 
-    container.innerHTML = "";
-    container.appendChild(grid);
-  }
+            const hBody = document.getElementById('houses-body');
+            chartData.houses.forEach((h, i) => {
+                const tr = document.createElement('tr');
+                const signIndex = Math.floor(h / 30);
+                const sign = signs[signIndex];
+                const deg = h % 30;
+                
+                tr.innerHTML = `
+                    <td><strong>${houseNames[i]}</strong></td>
+                    <td style="color:${elementColors[sign.element]}">${sign.symbol} ${sign.label}</td>
+                    <td>${formatDeg(deg)}</td>
+                `;
+                hBody.appendChild(tr);
+            });
+        }
 
-  function renderTabHouses() {
-    const container = document.getElementById("tab-houses");
-    const houses = natalData.houses || [];
-    if (!houses.length) {
-      container.innerHTML = `<div class="no-data">Нет данных о домах.</div>`;
-      return;
-    }
-    const grid = document.createElement("div");
-    grid.className = "card-grid";
+        function highlightPlanet(name, active, event) {
+            document.querySelectorAll('.planet-group circle').forEach(c => {
+                c.setAttribute('fill', '#1a1a2e');
+                c.setAttribute('r', '11');
+            });
+            document.querySelectorAll('.data-table tr').forEach(r => r.classList.remove('active-row'));
+            tooltip.style.display = 'none';
 
-    houses.forEach(h => {
-      const el = document.createElement("article");
-      el.className = "info-card";
-      const signElement = SIGN_ELEMENT[h.sign] || "—";
-      const elementClass = {
-        "Огонь": "fire",
-        "Земля": "earth",
-        "Воздух": "air",
-        "Вода": "water"
-      }[signElement] || "";
+            if (active) {
+                const row = document.getElementById(`row-${name}`);
+                if(row) {
+                    row.classList.add('active-row');
+                    if (window.innerWidth > 900) {
+                         row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }
 
-      const houseGroupLabel = {
-        angular: "угловой",
-        succedent: "последующий",
-        cadent: "падающий"
-      }[h.house_group] || h.house_group || "—";
+                const pGroup = document.querySelector(`.planet-group[data-name="${name}"]`);
+                if(pGroup) {
+                    const circle = pGroup.querySelector('circle');
+                    circle.setAttribute('fill', '#333');
+                    circle.setAttribute('r', '14');
+                    
+                    const p = chartData.planets.find(pl => pl.name === name);
+                    const sign = signs.find(s => s.name === p.sign);
+                    tooltip.innerHTML = `
+                        <strong style="color:${p.color}">${p.label} (${p.symbol})</strong><br>
+                        ${sign.label} ${formatDeg(p.long % 30)}<br>
+                        Дом ${p.house}
+                    `;
+                    tooltip.style.display = 'block';
+                    
+                    if(event) {
+                         moveTooltip(event);
+                    } else {
+                        const rect = wrapper.getBoundingClientRect();
+                        tooltip.style.left = (rect.width/2 - 60) + "px"; // Center fallback
+                        tooltip.style.top = (rect.height/2 - 60) + "px";
+                    }
+                }
+            }
+        }
+        
+        function moveTooltip(e) {
+             const rect = wrapper.getBoundingClientRect();
+             // Adjust for touch or mouse coordinates relative to container
+             let clientX = e.clientX;
+             let clientY = e.clientY;
+             
+             // Simple bounds check to keep tooltip on screen
+             let x = clientX - rect.left + 15;
+             let y = clientY - rect.top;
+             
+             if (x + 150 > rect.width) x -= 160; // Flip left if near edge
+             if (y + 80 > rect.height) y -= 60; // Flip up if near bottom
 
-      el.innerHTML = `
-        <div class="info-card-header">
-          <div class="info-main">Дом ${h.number}</div>
-          <div class="info-tag">${h.sign ? (SIGN_GLYPHS[h.sign] || "") + " " + h.sign : ""}</div>
-        </div>
-        <div class="info-sub">
-          <span class="pill">
-            <span class="pill-dot"></span>
-            куспид ${h.degree_in_sign_formatted || normalizeDegree(h.longitude).toFixed(2) + "°"}
-          </span>
-          <span class="pill">
-            <span class="pill-dot"></span>
-            тип: ${houseGroupLabel}
-          </span>
-          <span class="pill">
-            <span class="pill-dot"></span>
-            управитель: ${h.ruler_planet || "—"}
-          </span>
-        </div>
-        <div class="tag-row">
-          <span class="soft-tag">
-            <span class="soft-tag-dot ${elementClass}"></span>
-            стихия: ${signElement.toLowerCase()}
-          </span>
-        </div>
-        <div class="info-footer">
-          <span class="label">ось</span>
-          <span class="value">${h.number} / ${(h.number + 6 - 1) % 12 + 1}</span>
-        </div>
-      `;
-      grid.appendChild(el);
-    });
+             tooltip.style.left = x + "px";
+             tooltip.style.top = y + "px";
+        }
+        
+        wrapper.addEventListener('mousemove', (e) => {
+            if(tooltip.style.display === 'block' && !panning) {
+                moveTooltip(e);
+            }
+        });
 
-    container.innerHTML = "";
-    container.appendChild(grid);
-  }
+        // Init
+        drawZodiac();
+        drawHouses();
+        drawAspects();
+        drawPlanets();
+        populateSidePanels();
 
-  function renderTabAspects() {
-    const container = document.getElementById("tab-aspects");
-    const aspects = natalData.aspects || [];
-    if (!aspects.length) {
-      container.innerHTML = `<div class="no-data">Аспектов в карте не найдено.</div>`;
-      return;
-    }
-    const grid = document.createElement("div");
-    grid.className = "card-grid";
-
-    const sorted = aspects.slice().sort((a, b) => {
-      if (!!a.is_major === !!b.is_major) {
-        return Math.abs(a.orb) - Math.abs(b.orb);
-      }
-      return a.is_major ? -1 : 1;
-    });
-
-    sorted.forEach(a => {
-      const el = document.createElement("article");
-      el.className = "info-card";
-
-      const meta1 = getObjectMeta(a.planet_1);
-      const meta2 = getObjectMeta(a.planet_2);
-
-      const label = ASPECT_LABELS[a.aspect_type] || a.aspect_type;
-      const harm = a.harmonic_type || "neutral";
-      const tone =
-        harm === "harmonious" ? "гармоничный" :
-        harm === "tense" ? "напряжённый" :
-        "нейтральный";
-      const toneDotClass =
-        harm === "harmonious" ? "good" :
-        harm === "tense" ? "hard" : "";
-
-      const signStr1 = meta1.sign ? (SIGN_GLYPHS[meta1.sign] || "") + " " + meta1.sign : "";
-      const signStr2 = meta2.sign ? (SIGN_GLYPHS[meta2.sign] || "") + " " + meta2.sign : "";
-
-      el.innerHTML = `
-        <div class="info-card-header">
-          <div class="info-main">${a.planet_1} · ${a.planet_2}</div>
-          <div class="info-tag">${label}</div>
-        </div>
-        <div class="info-sub">
-          <span class="pill">
-            <span class="pill-dot ${toneDotClass}"></span>
-            ${tone}
-          </span>
-          <span class="pill">
-            <span class="pill-dot"></span>
-            орб: ${a.orb.toFixed(3)}°
-          </span>
-          <span class="pill">
-            <span class="pill-dot"></span>
-            ${a.is_major ? "главный аспект" : "минорный"}
-          </span>
-        </div>
-        <div class="info-footer">
-          <span class="label">фон</span>
-          <span class="value">
-            ${signStr1} · ${signStr2}
-          </span>
-        </div>
-      `;
-      grid.appendChild(el);
-    });
-
-    const patternsBlock = document.createElement("div");
-    patternsBlock.innerHTML = buildPatternsHtml();
-    container.innerHTML = "";
-    container.appendChild(grid);
-    container.appendChild(patternsBlock);
-  }
-
-  function buildPatternsHtml() {
-    const cosm = natalData.cosmogram_pattern || {};
-    const stelliums = natalData.stelliums || [];
-    const balances = natalData.balances || {};
-    const yods = (natalData.aspect_configurations || []).filter(c => c.type === "Yod");
-
-    let html = "";
-
-    if (cosm.pattern_type) {
-      html += `
-        <div class="section-title">космограмма & распределение</div>
-        <div class="pattern-block">
-          <div class="pattern-label">Тип космограммы</div>
-          <div class="pattern-main">
-            <span>${cosm.pattern_type}</span>
-            ${cosm.anchor_planet ? `<span class="pattern-chip">опорная: ${cosm.anchor_planet}</span>` : ""}
-            ${cosm.empty_arc_degree ? `<span class="pattern-chip">пустой сектор: ${cosm.empty_arc_degree}°</span>` : ""}
-          </div>
-        </div>
-      `;
-    }
-
-    if (yods.length) {
-      const y = yods[0];
-      html += `
-        <div class="section-title">фигуры аспектов</div>
-        <div class="pattern-block">
-          <div class="pattern-label">Йод</div>
-          <div class="pattern-main">
-            <span class="pattern-chip">планеты: ${y.planets_involved.join(", ")}</span>
-            <span class="pattern-chip">апекс: ${y.apex_planet}</span>
-            <span class="pattern-chip">балл: ${y.strength_score}</span>
-          </div>
-        </div>
-      `;
-    }
-
-    if (stelliums.length) {
-      html += `<div class="section-title">стеллиумы</div>`;
-      stelliums.forEach(s => {
-        const where = s.type === "sign"
-          ? `в знаке ${SIGN_GLYPHS[s.sign] || ""} ${s.sign}`
-          : `в доме ${s.house_number}`;
-        html += `
-          <div class="pattern-block">
-            <div class="pattern-label">${where}</div>
-            <div class="pattern-main">
-              <span>планеты: ${s.planets.join(", ")}</span>
-              <span class="pattern-chip">кол-во: ${s.count}</span>
-              <span class="pattern-chip">балл: ${s.strength_score}</span>
-            </div>
-          </div>
-        `;
-      });
-    }
-
-    if (balances.element_balance || balances.mode_balance) {
-      html += `<div class="section-title">баланс стихий и модусов</div>`;
-
-      if (balances.element_balance) {
-        const eb = balances.element_balance;
-        const total = Object.values(eb).reduce((a, b) => a + b, 0) || 1;
-        html += `
-          <div class="pattern-block">
-            <div class="pattern-label">Стихии</div>
-            ${Object.entries(eb).map(([k, v]) => {
-              const percent = Math.round(v / total * 100);
-              return `
-                <div class="meter">
-                  <div class="meter-bar" style="width:${percent}%"></div>
-                </div>
-                <div class="meter-row">
-                  <span>${ELEMENT_LABELS[k] || k}</span>
-                  <span>${v} (${percent}%)</span>
-                </div>
-              `;
-            }).join("")}
-          </div>
-        `;
-      }
-
-      if (balances.mode_balance) {
-        const mb = balances.mode_balance;
-        const total = Object.values(mb).reduce((a, b) => a + b, 0) || 1;
-        html += `
-          <div class="pattern-block">
-            <div class="pattern-label">Кресты (модусы)</div>
-            ${Object.entries(mb).map(([k, v]) => {
-              const percent = Math.round(v / total * 100);
-              return `
-                <div class="meter">
-                  <div class="meter-bar" style="width:${percent}%"></div>
-                </div>
-                <div class="meter-row">
-                  <span>${MODE_LABELS[k] || k}</span>
-                  <span>${v} (${percent}%)</span>
-                </div>
-              `;
-            }).join("")}
-          </div>
-        `;
-      }
-    }
-
-    return html;
-  }
-
-  // ===============================
-  //          ТАБЫ / КНОПКИ
-  // ===============================
-
-  function setupTabs() {
-    const tabsRoot = document.getElementById("infoTabs");
-    tabsRoot.addEventListener("click", e => {
-      const btn = e.target.closest("button[data-tab]");
-      if (!btn) return;
-      const tab = btn.dataset.tab;
-
-      tabsRoot.querySelectorAll("button[data-tab]").forEach(b => {
-        b.dataset.active = (b.dataset.tab === tab).toString();
-      });
-
-      document.querySelectorAll(".tab-content").forEach(el => {
-        el.hidden = el.id !== "tab-" + tab;
-      });
-    });
-  }
-
-  function setupWheelControls() {
-    const wheelMode = document.getElementById("wheelMode");
-    const toggleLabelsBtn = document.getElementById("toggleLabels");
-    let currentMode = "all";
-    let showLabels = true;
-
-    wheelMode.addEventListener("click", e => {
-      const btn = e.target.closest("button[data-mode]");
-      if (!btn) return;
-      const mode = btn.dataset.mode;
-      currentMode = mode;
-      wheelMode.querySelectorAll("button[data-mode]").forEach(b => {
-        b.dataset.active = (b.dataset.mode === mode).toString();
-      });
-      renderWheel(currentMode, showLabels);
-    });
-
-    toggleLabelsBtn.addEventListener("click", () => {
-      showLabels = !showLabels;
-      toggleLabelsBtn.classList.toggle("active", showLabels);
-      toggleLabelsBtn.style.borderColor = showLabels
-        ? "rgba(129,140,248,0.85)"
-        : "rgba(148,163,184,0.5)";
-      renderWheel(currentMode, showLabels);
-    });
-  }
-
-  // ===============================
-  //          TOOLTIP SYSTEM
-  // ===============================
-
-  function attachTooltipHandlers(root) {
-    const tooltip = document.getElementById("tooltip");
-
-    function showTooltip(evt, title, body) {
-      if (!title && !body) return;
-      tooltip.style.display = "block";
-      tooltip.innerHTML = `
-        ${title ? `<div class="tooltip-title">${title}</div>` : ""}
-        ${body ? `<div class="tooltip-body">${body}</div>` : ""}
-      `;
-      const rect = tooltip.getBoundingClientRect();
-      let x = evt.clientX + 12;
-      let y = evt.clientY + 12;
-      if (x + rect.width > window.innerWidth - 8) {
-        x = evt.clientX - rect.width - 12;
-      }
-      if (y + rect.height > window.innerHeight - 8) {
-        y = evt.clientY - rect.height - 12;
-      }
-      tooltip.style.left = x + "px";
-      tooltip.style.top = y + "px";
-    }
-
-    function hideTooltip() {
-      tooltip.style.display = "none";
-    }
-
-    root.addEventListener("pointermove", evt => {
-      const target = evt.target;
-      if (target && (target.dataset.tooltip || target.dataset.tooltipTitle)) {
-        showTooltip(evt, target.dataset.tooltipTitle, target.dataset.tooltip);
-      } else {
-        hideTooltip();
-      }
-    });
-
-    root.addEventListener("pointerleave", hideTooltip);
-  }
-
-  // ===============================
-  //         ИНИЦИАЛИЗАЦИЯ
-  // ===============================
-
-  function init() {
-    renderMeta();
-    renderWheel("all", true);
-    renderTabPlanets();
-    renderTabHouses();
-    renderTabAspects();
-    setupTabs();
-    setupWheelControls();
-  }
-
-  document.addEventListener("DOMContentLoaded", init);
-</script>
+    </script>
 </body>
 </html>

@@ -59,7 +59,7 @@ natal_service = NatalChartService(ephe_path=EPHE_PATH)
 )
 async def calculate_natal_chart(
     birth_data: BirthDataInput,
-    save_to_db: bool = Query(False, description="Сохранить результат в базу данных"),
+    save_to_db: bool = Query(True, description="Сохранить результат в базу данных"),
     db: Session = Depends(get_db)
 ) -> NatalChartResponse:
     """

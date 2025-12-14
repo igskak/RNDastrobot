@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Натальная карта — AstroBot</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/chart-layout.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body class="chart-page">
+    <!-- Header -->
+    <header class="chart-header-compact">
+        <a href="/" class="back-btn-compact">←</a>
+        <div class="birth-info-compact">
+            <h2 id="birthDate">Натальная карта</h2>
+            <p id="birthPlace"></p>
+        </div>
+    </header>
+
+    <!-- Main 3-column layout -->
+    <div class="chart-layout">
+        <!-- Left panel: Planets -->
+        <aside class="side-panel left-panel" id="view-planets">
+            <div class="panel-tabs">
+                <button class="panel-tab active" data-panel-tab="planets-list">Планеты</button>
+                <button class="panel-tab" data-panel-tab="aspects-list">Аспекты</button>
+            </div>
+            <div class="panel-content">
+                <div id="planets-list" class="panel-tab-content active">
+                    <table class="data-table compact">
+                        <thead>
+                            <tr><th></th><th>Объект</th><th>Знак</th><th>Градус</th><th>Дом</th></tr>
+                        </thead>
+                        <tbody id="planetsTable"></tbody>
+                    </table>
+                </div>
+                <div id="aspects-list" class="panel-tab-content">
+                    <table class="data-table compact">
+                        <thead>
+                            <tr><th>Планета 1</th><th>Аспект</th><th>Планета 2</th><th>Орбис</th></tr>
+                        </thead>
+                        <tbody id="aspectsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center: Chart wheel -->
+        <main class="chart-center" id="view-chart">
+            <div class="chart-wheel-wrapper" id="chartWheelWrapper">
+                <svg id="chartWheel" viewBox="0 0 500 500"></svg>
+            </div>
+            <div class="zoom-controls-float">
+                <button class="zoom-btn" id="zoomIn" title="Приблизить">+</button>
+                <button class="zoom-btn" id="zoomOut" title="Отдалить">−</button>
+                <button class="zoom-btn" id="zoomReset" title="Сбросить">⟲</button>
+            </div>
+            <div id="tooltip" class="chart-tooltip"></div>
+        </main>
+
+        <!-- Right panel: Houses & Analytics -->
+        <aside class="side-panel right-panel" id="view-houses">
+            <div class="panel-tabs">
+                <button class="panel-tab active" data-panel-tab="houses-list">Дома</button>
+                <button class="panel-tab" data-panel-tab="configs-list">Конфигурации</button>
+                <button class="panel-tab" data-panel-tab="balances-list">Балансы</button>
+            </div>
+            <div class="panel-content">
+                <div id="houses-list" class="panel-tab-content active">
+                    <table class="data-table compact">
+                        <thead>
+                            <tr><th>Дом</th><th>Знак</th><th>В знаке</th><th>Долгота</th></tr>
+                        </thead>
+                        <tbody id="housesTable"></tbody>
+                    </table>
+
+                    <!-- Легенда аспектов -->
+                    <div class="aspects-legend">
+                        <div class="legend-title">Легенда аспектов</div>
+                        <div class="legend-item"><span class="legend-dot tense"></span> Напряжённые (90°/180°)</div>
+                        <div class="legend-item"><span class="legend-dot harmonious"></span> Гармоничные (60°/120°)</div>
+                        <div class="legend-item"><span class="legend-dot neutral"></span> Соединения (0°)</div>
+                    </div>
+                </div>
+                <div id="configs-list" class="panel-tab-content">
+                    <div id="configurationsContainer"></div>
+                </div>
+                <div id="balances-list" class="panel-tab-content">
+                    <div id="balancesContainer"></div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Mobile bottom tabs -->
+    <nav class="mobile-nav">
+        <button class="mobile-tab" data-view="planets">
+            <span class="mobile-tab-icon">☰</span>
+            <span>Планеты</span>
+        </button>
+        <button class="mobile-tab active" data-view="chart">
+            <span class="mobile-tab-icon">◉</span>
+            <span>Карта</span>
+        </button>
+        <button class="mobile-tab" data-view="houses">
+            <span class="mobile-tab-icon">☖</span>
+            <span>Дома</span>
+        </button>
+    </nav>
+
+    <script src="js/api.js"></script>
+    <script src="js/symbols.js"></script>
+    <script src="js/chart-wheel.js"></script>
+    <script src="js/chart-data.js"></script>
+    <script src="js/chart.js"></script>
+    <script src="js/chart-layout.js"></script>
+</body>
+</html>
+
