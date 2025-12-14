@@ -105,7 +105,8 @@ class ChartWheel {
     drawHouses(houses) {
         const innerR = this.outerRadius - this.signRingWidth;
         const houseInnerR = innerR - this.houseRingWidth;
-        
+        const aspectR = houseInnerR * 0.6; // Внутренний радиус для аспектов
+
         // Круг домов
         this.svg.appendChild(this.createSvgElement('circle', {
             cx: this.center,
@@ -119,18 +120,20 @@ class ChartWheel {
         houses.forEach((house, idx) => {
             // Угол куспида (от 0° Овна, против часовой стрелки)
             const angle = (90 - house.longitude) * Math.PI / 180;
-            
-            // Линия куспида
+
+            // Линия куспида — для угловых домов тянется до центра
             const isAngular = [1, 4, 7, 10].includes(house.number);
+            const lineInnerR = isAngular ? aspectR : houseInnerR;
+
             this.svg.appendChild(this.createSvgElement('line', {
-                x1: this.center + houseInnerR * Math.cos(angle),
-                y1: this.center - houseInnerR * Math.sin(angle),
+                x1: this.center + lineInnerR * Math.cos(angle),
+                y1: this.center - lineInnerR * Math.sin(angle),
                 x2: this.center + innerR * Math.cos(angle),
                 y2: this.center - innerR * Math.sin(angle),
                 stroke: isAngular ? '#6366f1' : '#d1d5db',
                 'stroke-width': isAngular ? 2 : 1
             }));
-            
+
             // Номер дома
             const nextHouse = houses[(idx + 1) % 12];
             let midLong = (house.longitude + nextHouse.longitude) / 2;
@@ -139,7 +142,7 @@ class ChartWheel {
             }
             const midAngle = (90 - midLong) * Math.PI / 180;
             const textR = houseInnerR + this.houseRingWidth / 2;
-            
+
             this.svg.appendChild(this.createSvgElement('text', {
                 x: this.center + textR * Math.cos(midAngle),
                 y: this.center - textR * Math.sin(midAngle) + 4,

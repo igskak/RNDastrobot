@@ -41,20 +41,21 @@ class ChartDataRenderer {
             return (iA === -1 ? 999 : iA) - (iB === -1 ? 999 : iB);
         });
 
-        this.planetsTable.innerHTML = sorted.map(p => `
-            <tr id="row-${p.name}" data-planet="${p.name}">
-                <td><span class="planet-icon">${Symbols.planets[p.name] || ''}</span></td>
-                <td>
-                    ${Symbols.planetNamesRu[p.name] || p.name}
-                    ${p.retrograde ? '<span class="retro-badge">R</span>' : ''}
-                </td>
-                <td>
-                    ${Symbols.signs[p.sign] || ''} ${Symbols.signNamesRu[p.sign] || p.sign}
-                </td>
-                <td class="mono">${p.degree_in_sign_formatted || p.degree_in_sign.toFixed(2) + '°'}</td>
-                <td class="mono">${p.house}</td>
-            </tr>
-        `).join('');
+        // Формат как в Natal_visualisation: Симв., Объект, Знак (с градусом), Дом
+        this.planetsTable.innerHTML = sorted.map(p => {
+            const degFormatted = p.degree_in_sign_formatted || this.formatDegreeInSign(p.degree_in_sign);
+            return `
+                <tr id="row-${p.name}" data-planet="${p.name}">
+                    <td class="symbol-cell">${Symbols.planets[p.name] || ''}</td>
+                    <td>
+                        <strong>${Symbols.planetNamesRu[p.name] || p.name}</strong>
+                        ${p.retrograde ? '<span class="retro-badge">R</span>' : ''}
+                    </td>
+                    <td>${Symbols.signs[p.sign] || ''} ${degFormatted}</td>
+                    <td class="mono">${p.house}</td>
+                </tr>
+            `;
+        }).join('');
     }
 
     renderHouses(houses) {
@@ -90,32 +91,24 @@ class ChartDataRenderer {
 
     renderAspects(aspects) {
         if (!aspects || !this.aspectsTable) return;
-        
+
         // Сортируем: сначала мажорные, потом по орбису
         const sorted = [...aspects].sort((a, b) => {
             if (a.is_major !== b.is_major) return b.is_major - a.is_major;
             return a.orb - b.orb;
         });
-        
+
+        // Компактный формат: Планета1 ↔ Планета2 | Тип | Орбис
         this.aspectsTable.innerHTML = sorted.map(a => {
-            const typeClass = a.harmonic_type === 'harmonious' ? 'aspect-harmonious' 
-                            : a.harmonic_type === 'tense' ? 'aspect-tense' 
+            const typeClass = a.harmonic_type === 'harmonious' ? 'aspect-harmonious'
+                            : a.harmonic_type === 'tense' ? 'aspect-tense'
                             : 'aspect-neutral';
             return `
                 <tr>
-                    <td>
-                        <span class="planet-icon">${Symbols.planets[a.planet_1] || ''}</span>
-                        ${Symbols.planetNamesRu[a.planet_1] || a.planet_1}
-                    </td>
-                    <td class="${typeClass}">
-                        ${Symbols.aspects[a.aspect_type] || ''} 
-                        ${Symbols.aspectNamesRu[a.aspect_type] || a.aspect_type}
-                    </td>
-                    <td>
-                        <span class="planet-icon">${Symbols.planets[a.planet_2] || ''}</span>
-                        ${Symbols.planetNamesRu[a.planet_2] || a.planet_2}
-                    </td>
-                    <td class="mono">${a.orb.toFixed(2)}°</td>
+                    <td class="symbol-cell">${Symbols.planets[a.planet_1] || ''}</td>
+                    <td class="symbol-cell">${Symbols.planets[a.planet_2] || ''}</td>
+                    <td class="${typeClass}">${Symbols.aspects[a.aspect_type] || ''} ${Symbols.aspectNamesRu[a.aspect_type] || a.aspect_type}</td>
+                    <td class="mono">${a.orb.toFixed(1)}°</td>
                 </tr>
             `;
         }).join('');
