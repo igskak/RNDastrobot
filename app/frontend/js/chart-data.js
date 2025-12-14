@@ -61,19 +61,27 @@ class ChartDataRenderer {
     renderHouses(houses) {
         if (!houses || !this.housesTable) return;
 
+        // Формат как в Natal_visualisation: Куспид | Знак (с градусом)
         this.housesTable.innerHTML = houses.map(h => {
             const isAngular = [1, 4, 7, 10].includes(h.number);
+            const degFormatted = this.formatDegree(h.degree_in_sign);
             return `
                 <tr class="${isAngular ? 'house-angular' : ''}">
                     <td class="mono">${h.number}${isAngular ? ' ★' : ''}</td>
-                    <td>
-                        ${Symbols.signs[h.sign] || ''} ${Symbols.signNamesRu[h.sign] || h.sign}
-                    </td>
-                    <td class="mono">${this.formatDegreeInSign(h.degree_in_sign)}</td>
-                    <td class="mono">${this.formatLongitude(h.longitude)}</td>
+                    <td>${Symbols.signs[h.sign] || ''} ${degFormatted}</td>
                 </tr>
             `;
         }).join('');
+    }
+
+    formatDegree(deg) {
+        let d = Math.floor(deg);
+        let remainder = (deg - d) * 60;
+        let m = Math.floor(remainder);
+        let s = Math.round((remainder - m) * 60);
+        if (s === 60) { s = 0; m += 1; }
+        if (m === 60) { m = 0; d += 1; }
+        return `${d}°${m.toString().padStart(2, '0')}'${s.toString().padStart(2, '0')}"`;
     }
 
     formatDegreeInSign(deg) {
