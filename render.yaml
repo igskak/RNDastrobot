@@ -1,0 +1,61 @@
+services:
+  # Web Service - FastAPI Backend + Frontend
+  - type: web
+    name: astrobot
+    runtime: python
+    plan: free
+    region: frankfurt
+    branch: master
+    buildCommand: "./build.sh"
+    startCommand: "./start.sh"
+    envVars:
+      # Database Configuration (Supabase PostgreSQL)
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_NAME
+        value: postgres
+      - key: DB_USER
+        value: postgres
+      - key: DB_PASSWORD
+        sync: false
+      
+      # Supabase Configuration
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      
+      # Application Configuration
+      - key: APP_ENV
+        value: production
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      
+      # Swiss Ephemeris Configuration
+      - key: SWISSEPH_EPHE_PATH
+        value: ./swisseph/ephe
+      
+      # API Server Configuration
+      - key: HOST
+        value: "0.0.0.0"
+      - key: PORT
+        value: "10000"
+      
+      # Logging
+      - key: LOG_LEVEL
+        value: INFO
+      - key: LOG_FILE
+        value: /tmp/astrobot.log
+      
+      # Python
+      - key: PYTHON_VERSION
+        value: "3.11"
+

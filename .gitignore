@@ -66,14 +66,12 @@ bin/swetest
 bin/swevents
 
 # Swiss Ephemeris data files (большие бинарные файлы)
-# Оставляем только необходимые для работы
-ephe/ep4/
-ephe/sat/
-ephe/*.se1
-
-# Большие эфемеридные файлы (>100MB)
+# Исключаем только очень большие файлы (>100MB)
+# .se1 файлы нужны для работы (каждый ~200-600KB)
 swisseph/ephe/de406.eph
+swisseph/ephe/de*.eph
 swisseph/ephe/*.eph
+!swisseph/ephe/*.se1
 
 # Documentation (временные файлы)
 *.pdf
