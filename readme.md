@@ -125,6 +125,92 @@ Custom applications for astrological natal chart calculations:
 - Application documentation: `app/README.md`
 - Swiss Ephemeris website: https://www.astro.com/swisseph
 
+## План имплементации характеристик
+
+### Уровень 1 — Простые (нет зависимостей)
+
+| # | Характеристика | Где хранить | Сервис |
+|---|----------------|-------------|--------|
+| 1.1 | **Критические градусы** | `NatalPlanet.critical_degrees: JSONB` | `PlanetCharacteristicsService` |
+| 1.2 | **Скорость планеты** | `NatalPlanet.speed_percent: Numeric` | `PlanetCharacteristicsService` |
+| 1.3 | **Сигнификатор дома** | `NatalHouse.significator: String` | `HouseService` (уже есть?) |
+
+### Уровень 2 — Солнечные (зависят от позиции Солнца)
+
+| # | Характеристика | Где хранить | Зависимость |
+|---|----------------|-------------|-------------|
+| 2.1 | **Казими** | `NatalPlanet.sun_relation: String` | Расстояние до Солнца 0–17' |
+| 2.2 | **Сожжение** | ↑ `'combust'` | 17'–3° |
+| 2.3 | **В лучах Солнца** | ↑ `'under_rays'` | 3°–9° |
+| 2.4 | *(норма)* | ↑ `null` | >9° |
+
+### Уровень 3 — Домовые (зависят от куспидов)
+
+| # | Характеристика | Где хранить | Зависимость |
+|---|----------------|-------------|-------------|
+| 3.1 | **Включённый знак** | `NatalHouse.intercepted_sign: String` | Знак без куспидов внутри дома |
+| 3.2 | **Соуправители** | `NatalHouse.co_rulers: JSONB` | Включённый знак ИЛИ 2 управителя |
+| 3.3 | **Во включённом знаке** | `NatalPlanet.in_intercepted_sign: Boolean` | Зависит от 3.1 |
+| 3.4 | **Элевация** | `NatalPlanet.is_elevated: Boolean` | Планета в 9/10 ближе всех к MC |
+
+### Уровень 4 — Аспектные (зависят от аспектов)
+
+| # | Характеристика | Где хранить | Зависимость |
+|---|----------------|-------------|-------------|
+| 4.1 | **Партильный аспект** | `NatalAspect.is_partile: Boolean` | orb < 1° (или 0.5°?) |
+| 4.2 | **Планета в шахте** | `NatalPlanet.is_peregrine: Boolean` | Нет мажорных аспектов |
+| 4.3 | **Только напряженные** | `NatalPlanet.aspect_harmony: String` | Все аспекты tense |
+| 4.4 | **Только гармоничные** | ↑ `'harmonious'` / `'tense'` / `'mixed'` | Все аспекты harmonious |
+
+### Уровень 5 — Эфемеридные (нужны данные ±дней)
+
+| # | Характеристика | Где хранить | Зависимость |
+|---|----------------|-------------|-------------|
+| 5.1 | **Стационарность** | `NatalPlanet.is_stationary: Boolean` | Скорость ±2 дня |
+| 5.2 | **Тип стационарности** | `NatalPlanet.stationary_type: String` | `'SR'` (перед ретро) / `'SD'` (перед директ) |
+
+### Уровень 6 — Комплексные (агрегация)
+
+| # | Характеристика | Где хранить | Зависимость |
+|---|----------------|-------------|-------------|
+| 6.1 | **Кармический статус** | `NatalPlanet.karmic_score: Numeric` | Формула из Астрокурс (все факторы) |
+
+### Ожидают вводные:
+
+| # | Характеристика | Что нужно |
+|---|----------------|-----------|
+| — | Центр цепочки | Правила построения цепочек диспозиций |
+
+---
+
+### Новые поля в моделях:
+
+**NatalPlanet** (добавить):
+```
+speed_percent        Numeric(6,2)   -- скорость в % от средней
+critical_degrees     JSONB          -- ["jubilee","anareta",...]
+sun_relation         String(15)     -- 'cazimi'/'combust'/'under_rays'/null
+in_intercepted_sign  Boolean        -- планета во включённом знаке
+is_elevated          Boolean        -- элевация (самая высокая)
+is_peregrine         Boolean        -- в шахте (без аспектов)
+aspect_harmony       String(15)     -- 'harmonious'/'tense'/'mixed'
+is_stationary        Boolean        -- стационарная
+stationary_type      String(5)      -- 'SR'/'SD'
+karmic_score         Numeric(6,2)   -- итоговый кармический балл
+```
+
+**NatalHouse** (добавить):
+```
+intercepted_sign     String(20)     -- включённый знак (уже есть как included_sign!)
+co_rulers            JSONB          -- соуправители
+significator         String(20)     -- естественный сигнификатор
+```
+
+**NatalAspect** (добавить):
+```
+is_partile           Boolean        -- партильный аспект
+```
+
 ## Support
 
 For Swiss Ephemeris support:

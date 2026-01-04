@@ -11,6 +11,7 @@ from app.services.geocoding_service import GeocodingService
 from app.services.swisseph_engine import SwissEphemerisEngine
 from app.services.special_points_service import SpecialPointsService
 from app.services.dignity_service import DignityService
+from app.services.planet_characteristics_service import PlanetCharacteristicsService
 from app.utils.constants import get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds
 from app.database.repositories import UserRepository, NatalChartRepository
 from app.database.models import NatalAspect, NatalConfigurationAspect
@@ -86,11 +87,18 @@ class NatalChartService:
         
         # 6. Рассчитываем специальные точки
         special_points = self._calculate_special_points(jd, angles, planets, houses, lat, lon)
-        
+
         # 7. Рассчитываем конфигурации (Крест Судьбы)
         configurations = self._calculate_configurations(special_points, houses)
-        
-        # 8. Формируем результат
+
+        # 8. Обогащаем данные характеристиками (без БД — без аспектов)
+        planets = self._enrich_planets_basic(planets, houses)
+        houses = self._enrich_houses_basic(houses)
+
+        # 8.1. Добавляем связи дом-планета
+        planets, houses = self._enrich_house_planet_relations(planets, houses)
+
+        # 9. Формируем результат
         result = {
             'user_id': None,  # Будет заполнено если save_to_db=True
             'birth_data': {
@@ -110,7 +118,7 @@ class NatalChartService:
             'configurations': configurations,
         }
 
-        # 9. Сохраняем в БД если требуется
+        # 10. Сохраняем в БД если требуется
         if save_to_db:
             if db_session is None:
                 raise ValueError("db_session обязательна при save_to_db=True")
@@ -242,9 +250,72 @@ class NatalChartService:
 
         return configurations
 
+    def _enrich_planets_basic(self, planets: list, houses: list) -> list:
+        """
+        Базовое обогащение планет (без БД и аспектов).
+        Используется при расчёте без сохранения в БД.
+        """
+        # Добавляем dignity, element, mode
+        for planet in planets:
+            sign = planet['sign']
+            planet_name = planet['name']
+
+            # Element и Mode
+            planet['element'] = PlanetCharacteristicsService.get_sign_element(sign)
+            planet['mode'] = PlanetCharacteristicsService.get_sign_mode(sign)
+
+            # Dignity
+            planet['dignity'] = PlanetCharacteristicsService.get_dignity(planet_name, sign)
+
+        # Уровни 1-5: Характеристики (без аспектов — шахта и гармония будут None)
+        planets = PlanetCharacteristicsService.enrich_planets(planets, houses, aspects=[])
+        return planets
+
+    def _enrich_houses_basic(self, houses: list) -> list:
+        """
+        Базовое обогащение домов (без БД).
+        Используется при расчёте без сохранения в БД.
+
+        Добавляет:
+        - house_group (angular/succedent/cadent)
+        - ruler_planet (управитель дома по знаку на куспиде)
+        - significator (естественный сигнификатор)
+        - included_sign (включённый знак)
+        - co_rulers (соуправители)
+        """
+        from app.services.dignity_service import DignityService
+
+        # Создаём DignityService без БД-сессии (использует fallback данные)
+        dignity_service = DignityService(db_session=None)
+
+        for house in houses:
+            house_number = house['number']
+            sign_on_cusp = house['sign']
+
+            # Определяем группу дома
+            house['house_group'] = dignity_service.get_house_group(house_number)
+
+            # Определяем управителя дома
+            house['ruler_planet'] = dignity_service.get_house_ruler(sign_on_cusp)
+
+        # Уровень 1: Сигнификаторы + included_sign
+        houses = PlanetCharacteristicsService.enrich_houses(houses)
+
+        # Определяем соуправителей (после enrich_houses, т.к. нужен included_sign)
+        for house in houses:
+            sign_on_cusp = house['sign']
+            included_sign = house.get('included_sign')
+            house['co_rulers'] = dignity_service.get_house_co_rulers(
+                sign_on_cusp, included_sign
+            )
+
+        return houses
+
     def _enrich_planets_with_properties(
         self,
         planets: list,
+        houses: list,
+        aspects: list,
         db_session: Session
     ) -> list:
         """
@@ -254,9 +325,18 @@ class NatalChartService:
         - element (стихия знака: Fire, Earth, Air, Water)
         - mode (крест знака: Cardinal, Fixed, Mutable)
         - dignity (достоинство планеты: domicile, exaltation, detriment, fall, neutral)
+        - speed_percent (скорость в % от средней)
+        - critical_degrees (критические градусы: jubilee, middle, anareta, royal, destructive)
+        - sun_relation (казими/сожжение/в лучах)
+        - in_intercepted_sign (планета во включённом знаке)
+        - is_elevated (планета в элевации)
+        - is_peregrine (шахта — без аспектов)
+        - aspect_harmony (harmonic/tense/mixed)
 
         Args:
             planets: Список планет с базовыми данными
+            houses: Список домов (для расчёта включённых знаков)
+            aspects: Список аспектов (для шахты и гармонии)
             db_session: SQLAlchemy сессия
 
         Returns:
@@ -278,6 +358,9 @@ class NatalChartService:
             # Определяем достоинство
             planet['dignity'] = dignity_service.calculate_dignity(planet_name, sign)
 
+        # Уровни 1-4: Характеристики планет
+        planets = PlanetCharacteristicsService.enrich_planets(planets, houses, aspects)
+
         return planets
 
     def _enrich_houses_with_properties(
@@ -291,6 +374,8 @@ class NatalChartService:
         Добавляет к каждому дому:
         - house_group (группа дома: angular, succedent, cadent)
         - ruler_planet (управитель дома по знаку на куспиде)
+        - co_rulers (соуправители по Астрокурсу)
+        - significator (естественный сигнификатор: 1=Mars, 2=Venus...)
 
         Args:
             houses: Список домов с базовыми данными
@@ -311,7 +396,133 @@ class NatalChartService:
             # Определяем управителя дома
             house['ruler_planet'] = dignity_service.get_house_ruler(sign_on_cusp)
 
+        # Уровень 1: Сигнификаторы домов + включённые знаки
+        houses = PlanetCharacteristicsService.enrich_houses(houses)
+
+        # Определяем соуправителей (после enrich_houses, т.к. нужен included_sign)
+        for house in houses:
+            sign_on_cusp = house['sign']
+            included_sign = house.get('included_sign')
+            house['co_rulers'] = dignity_service.get_house_co_rulers(
+                sign_on_cusp, included_sign
+            )
+
         return houses
+
+    def _enrich_house_planet_relations(
+        self,
+        planets: list,
+        houses: list
+    ) -> tuple:
+        """
+        Обогатить связи между домами и планетами.
+
+        Добавляет:
+        - planets: ruled_houses (какими домами управляет планета)
+        - houses: ruler_in_house (в каком доме находится управитель)
+        - houses: planets_in_house (какие планеты в доме)
+
+        Args:
+            planets: Список планет с данными
+            houses: Список домов с данными (должен содержать ruler_planet)
+
+        Returns:
+            Tuple (planets, houses) с добавленными полями
+        """
+        # Создаём индекс: планета -> номер дома где находится
+        # Поле может называться 'house' (при расчёте) или 'house_number' (из БД)
+        planet_to_house = {}
+        for planet in planets:
+            planet_name = planet.get('name')
+            house_num = planet.get('house') or planet.get('house_number')
+            if planet_name and house_num:
+                planet_to_house[planet_name] = house_num
+
+        # Создаём индекс: планета -> список домов которыми управляет
+        planet_ruled_houses = {}
+        for house in houses:
+            ruler = house.get('ruler_planet')
+            house_num = house.get('number')
+            if ruler and house_num:
+                if ruler not in planet_ruled_houses:
+                    planet_ruled_houses[ruler] = []
+                planet_ruled_houses[ruler].append(house_num)
+
+        # 1. Заполняем ruled_houses для планет
+        for planet in planets:
+            planet_name = planet.get('name')
+            planet['ruled_houses'] = planet_ruled_houses.get(planet_name, [])
+
+        # 2. Заполняем ruler_in_house и planets_in_house для домов
+        for house in houses:
+            house_num = house.get('number')
+            ruler = house.get('ruler_planet')
+
+            # В каком доме находится управитель
+            house['ruler_in_house'] = planet_to_house.get(ruler) if ruler else None
+
+            # Какие планеты в этом доме
+            planets_in = [
+                p.get('name') for p in planets
+                if (p.get('house') or p.get('house_number')) == house_num
+            ]
+            house['planets_in_house'] = planets_in
+
+        return planets, houses
+
+    def _update_planet_aspect_characteristics(
+        self,
+        user_id: UUID,
+        db_session: Session
+    ) -> None:
+        """
+        Обновить характеристики планет, зависящие от аспектов.
+
+        Вызывается после расчёта аспектов для добавления:
+        - is_peregrine (шахта)
+        - aspect_harmony (harmonic/tense/mixed)
+
+        Args:
+            user_id: ID пользователя
+            db_session: SQLAlchemy сессия
+        """
+        from app.database.models import NatalPlanet, NatalAspect
+
+        # Получаем все аспекты пользователя
+        aspects = db_session.query(NatalAspect).filter(
+            NatalAspect.user_id == user_id
+        ).all()
+
+        aspects_list = [
+            {'planet_1': a.planet_1, 'planet_2': a.planet_2, 'aspect_type': a.aspect_type, 'orb': float(a.orb)}
+            for a in aspects
+        ]
+
+        # Обогащаем аспекты (партильность)
+        aspects_list = PlanetCharacteristicsService.enrich_aspects(aspects_list)
+
+        # Обновляем is_partile в БД
+        for aspect_db, aspect_data in zip(aspects, aspects_list):
+            aspect_db.is_partile = aspect_data.get('is_partile', False)
+
+        # Получаем все планеты пользователя
+        planets = db_session.query(NatalPlanet).filter(
+            NatalPlanet.user_id == user_id
+        ).all()
+
+        planets_list = [{'name': p.planet} for p in planets]
+
+        # Находим планеты в шахте
+        peregrine_planets = PlanetCharacteristicsService.find_peregrine_planets(planets_list, aspects_list)
+
+        # Обновляем характеристики каждой планеты
+        for planet in planets:
+            planet.is_peregrine = planet.planet in peregrine_planets
+            planet.aspect_harmony = PlanetCharacteristicsService.calculate_aspect_harmony(
+                planet.planet, aspects_list
+            )
+
+        db_session.flush()
 
     def _format_degree(self, degree: float) -> str:
         """
@@ -378,11 +589,22 @@ class NatalChartService:
         )
 
         # ОБОГАЩАЕМ ДАННЫЕ перед сохранением (пункт 3.2 спецификации)
-        # Добавляем element, mode, dignity для планет
-        planets = self._enrich_planets_with_properties(planets, db_session)
+        # ВАЖНО: сначала дома, потом планеты (планетам нужны дома для включённых знаков)
+        # Примечание: характеристики шахты и гармонии будут добавлены после расчёта аспектов
 
-        # Добавляем house_group, ruler_planet для домов
+        # Добавляем house_group, ruler_planet, significator, included_sign для домов
         houses = self._enrich_houses_with_properties(houses, db_session)
+
+        # Добавляем element, mode, dignity, speed_percent, critical_degrees,
+        # sun_relation, in_intercepted_sign, is_elevated для планет
+        # (аспекты ещё не вычислены, поэтому передаём пустой список)
+        planets = self._enrich_planets_with_properties(planets, houses, [], db_session)
+
+        # Добавляем связи дом-планета:
+        # - ruled_houses для планет (какими домами управляет)
+        # - ruler_in_house для домов (где находится управитель)
+        # - planets_in_house для домов (какие планеты в доме)
+        planets, houses = self._enrich_house_planet_relations(planets, houses)
 
         # Разделяем Крест Судьбы и другие конфигурации
         fate_cross = configurations.get('FateCross') if configurations else None
@@ -409,6 +631,9 @@ class NatalChartService:
         # 1. Розрахунок аспектів
         aspect_service = AspectService(db_session)
         aspect_service.calculate_aspects(user.user_id)
+
+        # 1.1 Обновляем характеристики планет зависящие от аспектов (шахта, гармония)
+        self._update_planet_aspect_characteristics(user.user_id, db_session)
 
         # 2. Виявлення конфігурацій та стеллиумів
         config_service = ConfigurationService(db_session)

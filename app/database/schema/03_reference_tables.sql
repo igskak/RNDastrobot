@@ -16,6 +16,7 @@ CREATE TABLE ref_sign_properties (
     zone VARCHAR(10) NOT NULL CHECK (zone IN ('Brahma', 'Vishnu', 'Shiva')),
     life_quadrant VARCHAR(20),
     ruler VARCHAR(20),
+    co_ruler VARCHAR(20),  -- Соуправитель знака (по Астрокурсу)
     exaltation VARCHAR(20),
     detriment VARCHAR(20),
     fall VARCHAR(20),

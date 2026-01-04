@@ -48,7 +48,7 @@ class User(Base):
 class NatalPlanet(Base):
     """Модель планеты в натальной карте"""
     __tablename__ = 'natal_planets'
-    
+
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), primary_key=True)
     planet = Column(String(20), primary_key=True)
     sign = Column(String(20), nullable=False)
@@ -62,14 +62,32 @@ class NatalPlanet(Base):
     mode = Column(String(15))
     special_roles = Column(JSONB, default=[])
     created_at = Column(DateTime, server_default=func.now())
-    
+
+    # Новые поля характеристик (миграция 005)
+    speed_percent = Column(Numeric(6, 2))  # Скорость в % от средней
+    critical_degrees = Column(JSONB, default=[])  # ["jubilee", "anareta", ...]
+    sun_relation = Column(String(15))  # cazimi/combust/under_rays
+    in_intercepted_sign = Column(Boolean, default=False)  # Во включённом знаке
+    is_elevated = Column(Boolean, default=False)  # Элевация
+    is_peregrine = Column(Boolean, default=False)  # В шахте (без аспектов)
+    aspect_harmony = Column(String(15))  # harmonious/tense/mixed
+    is_stationary = Column(Boolean, default=False)  # Стационарная
+    stationary_type = Column(String(5))  # SR/SD
+    karmic_score = Column(Numeric(6, 2))  # Кармический статус
+
+    # Миграция 007: Связи планета-дом
+    ruled_houses = Column(JSONB, default=[])  # Номера домов, которыми управляет планета
+
     # Relationship
     user = relationship("User", back_populates="planets")
-    
+
     __table_args__ = (
         CheckConstraint('degree >= 0 AND degree < 360', name='valid_degree'),
         CheckConstraint('house_number >= 1 AND house_number <= 12', name='valid_house'),
         CheckConstraint("dignity IN ('domicile', 'exaltation', 'detriment', 'fall', 'neutral')", name='valid_dignity'),
+        CheckConstraint("sun_relation IS NULL OR sun_relation IN ('cazimi', 'combust', 'under_rays')", name='valid_sun_relation'),
+        CheckConstraint("aspect_harmony IS NULL OR aspect_harmony IN ('harmonious', 'tense', 'mixed')", name='valid_aspect_harmony'),
+        CheckConstraint("stationary_type IS NULL OR stationary_type IN ('SR', 'SD')", name='valid_stationary_type'),
         Index('idx_natal_planets_sign', 'sign'),
         Index('idx_natal_planets_house', 'house_number'),
         Index('idx_natal_planets_strength', 'strength_score'),
@@ -79,20 +97,28 @@ class NatalPlanet(Base):
 class NatalHouse(Base):
     """Модель дома в натальной карте"""
     __tablename__ = 'natal_houses'
-    
+
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), primary_key=True)
     house_number = Column(Integer, primary_key=True)
     sign_on_cusp = Column(String(20), nullable=False)
     cusp_degree = Column(Numeric(10, 6), nullable=False)
     ruler_planet = Column(String(20))
-    included_sign = Column(String(20))
+    included_sign = Column(String(20))  # Включённый знак (уже был)
     house_group = Column(String(15))
     house_length = Column(Numeric(10, 6))
     created_at = Column(DateTime, server_default=func.now())
-    
+
+    # Новые поля характеристик (миграция 005)
+    co_rulers = Column(JSONB, default=[])  # Соуправители дома
+    significator = Column(String(20))  # Естественный сигнификатор (Mars для 1, Venus для 2...)
+
+    # Миграция 007: Связи дом-планета
+    ruler_in_house = Column(Integer)  # В каком доме находится управитель
+    planets_in_house = Column(JSONB, default=[])  # Список планет в доме
+
     # Relationship
     user = relationship("User", back_populates="houses")
-    
+
     __table_args__ = (
         CheckConstraint('house_number >= 1 AND house_number <= 12', name='valid_house_number'),
         CheckConstraint("house_group IN ('angular', 'succedent', 'cadent')", name='valid_house_group'),
@@ -216,6 +242,7 @@ class RefSignProperties(Base):
     zone = Column(String(10), nullable=False)
     life_quadrant = Column(String(20))
     ruler = Column(String(20))
+    co_ruler = Column(String(20))  # Соуправитель знака (по Астрокурсу)
     exaltation = Column(String(20))
     detriment = Column(String(20))
     fall = Column(String(20))
@@ -311,6 +338,9 @@ class NatalAspect(Base):
     harmonic_type = Column(String(15))
     configuration_id = Column(UUID(as_uuid=True))
     created_at = Column(DateTime, server_default=func.now())
+
+    # Новое поле (миграция 005)
+    is_partile = Column(Boolean, default=False)  # Партильный аспект (orb < 1°)
 
     # Relationship
     user = relationship("User")

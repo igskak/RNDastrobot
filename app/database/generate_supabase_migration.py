@@ -31,6 +31,7 @@ SEED_FILES = [
     'seeds/04_chakra_mapping.sql',
     'seeds/05_configuration_types.sql',
     'seeds/06_cosmogram_patterns.sql',
+    'seeds/07_psych_reference_tables.sql',
 ]
 
 # Вихідний файл

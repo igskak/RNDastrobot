@@ -68,6 +68,17 @@ class PlanetPosition(BaseModel):
     # Новые поля из пункта 3.4 спецификации
     strength_score: Optional[float] = Field(None, description="Сила планеты (от -20 до +50)")
     special_roles: Optional[List[str]] = Field(default=[], description="Специальные роли планеты (almuten, charioteer, doryphoros, aspect_king, handle)")
+    # Новые поля характеристик (миграция 005)
+    speed_percent: Optional[float] = Field(None, description="Скорость в % от средней (100% = норма)")
+    critical_degrees: Optional[List[str]] = Field(default=[], description="Критические градусы: jubilee, middle, anareta, royal, destructive")
+    sun_relation: Optional[str] = Field(None, description="Отношение к Солнцу: cazimi, combust, under_rays")
+    in_intercepted_sign: Optional[bool] = Field(default=False, description="Планета во включённом знаке")
+    is_elevated: Optional[bool] = Field(default=False, description="Элевация - самая высокая планета")
+    is_peregrine: Optional[bool] = Field(default=False, description="В шахте - без мажорных аспектов")
+    aspect_harmony: Optional[str] = Field(None, description="Тип аспектов: harmonious, tense, mixed")
+    is_stationary: Optional[bool] = Field(default=False, description="Стационарная планета")
+    stationary_type: Optional[str] = Field(None, description="Тип стационарности: SR (перед ретро), SD (перед директ)")
+    karmic_score: Optional[float] = Field(None, description="Кармический статус")
 
 
 class HousePosition(BaseModel):
@@ -80,6 +91,10 @@ class HousePosition(BaseModel):
     # Новые поля из пункта 3.2 спецификации
     ruler_planet: Optional[str] = Field(None, description="Управитель дома (планета-управитель знака на куспиде)")
     house_group: Optional[str] = Field(None, description="Группа дома (angular, succedent, cadent)")
+    # Новые поля характеристик (миграция 005)
+    included_sign: Optional[str] = Field(None, description="Включённый знак (знак без куспидов внутри дома)")
+    co_rulers: Optional[List[str]] = Field(default=[], description="Соуправители дома")
+    significator: Optional[str] = Field(None, description="Естественный сигнификатор дома")
 
 
 class AnglePosition(BaseModel):
@@ -121,6 +136,7 @@ class AspectInfo(BaseModel):
     orb: float
     is_major: bool
     harmonic_type: Optional[str] = None
+    is_partile: Optional[bool] = Field(default=False, description="Партильный (точный) аспект")
 
 
 class AspectInConfiguration(BaseModel):

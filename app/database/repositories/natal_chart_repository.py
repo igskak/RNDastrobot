@@ -35,13 +35,15 @@ class NatalChartRepository:
                 planet=planet_data['name'],
                 sign=planet_data['sign'],
                 degree=planet_data['longitude'],
-                house_number=planet_data.get('house'),
-                retrograde=planet_data.get('retrograde', False),
+                house_number=planet_data.get('house') or planet_data.get('house_number'),
+                retrograde=planet_data.get('retrograde') or planet_data.get('is_retrograde', False),
                 speed=planet_data.get('speed'),
                 # Новые поля из пункта 3.2 спецификации
                 element=planet_data.get('element'),
                 mode=planet_data.get('mode'),
                 dignity=planet_data.get('dignity'),
+                # Миграция 007: связи планета-дом
+                ruled_houses=planet_data.get('ruled_houses', []),
             )
             self.session.add(planet)
         
@@ -68,6 +70,12 @@ class NatalChartRepository:
                 # Новые поля из пункта 3.2 спецификации
                 ruler_planet=house_data.get('ruler_planet'),
                 house_group=house_data.get('house_group'),
+                included_sign=house_data.get('included_sign'),
+                co_rulers=house_data.get('co_rulers', []),
+                significator=house_data.get('significator'),
+                # Миграция 007: связи дом-планета
+                ruler_in_house=house_data.get('ruler_in_house'),
+                planets_in_house=house_data.get('planets_in_house', []),
             )
             self.session.add(house)
         
