@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Полная натальная карта — AstroBot</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/natal-full.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body class="natal-full-page">
+    <!-- Header -->
+    <header class="natal-header">
+        <div class="header-content">
+            <a href="/" class="back-btn">← Назад</a>
+            <div class="birth-info">
+                <h1 id="chartTitle">Натальная карта</h1>
+                <p id="birthDetails" class="birth-details"></p>
+            </div>
+            <a href="chart.html" class="view-chart-btn">Круговая карта</a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="natal-content">
+        <!-- Section 1: Birth Data & Key Info -->
+        <section class="section" id="birthDataSection">
+            <h2 class="section-title">Данные рождения</h2>
+            <div class="info-grid">
+                <div class="info-card">
+                    <span class="info-label">Дата и время</span>
+                    <span class="info-value" id="birthDateTime"></span>
+                </div>
+                <div class="info-card">
+                    <span class="info-label">Место</span>
+                    <span class="info-value" id="birthPlace"></span>
+                </div>
+                <div class="info-card">
+                    <span class="info-label">ASC (Асцендент)</span>
+                    <span class="info-value" id="ascValue"></span>
+                </div>
+                <div class="info-card">
+                    <span class="info-label">MC (Середина неба)</span>
+                    <span class="info-value" id="mcValue"></span>
+                </div>
+                <div class="info-card" id="jonesPatternCard">
+                    <span class="info-label">Фигура Джонса</span>
+                    <span class="info-value" id="jonesPattern"></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Planets Table -->
+        <section class="section" id="planetsSection">
+            <h2 class="section-title">Планеты</h2>
+            <div class="table-wrapper">
+                <table class="data-table planets-table">
+                    <thead>
+                        <tr>
+                            <th>Планета</th>
+                            <th>Знак</th>
+                            <th>Градус</th>
+                            <th>Дом</th>
+                            <th>R</th>
+                            <th>Достоинство</th>
+                            <th>Особенности</th>
+                        </tr>
+                    </thead>
+                    <tbody id="planetsTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section 3: Houses Table -->
+        <section class="section" id="housesSection">
+            <h2 class="section-title">Дома</h2>
+            <div class="table-wrapper">
+                <table class="data-table houses-table">
+                    <thead>
+                        <tr>
+                            <th>Дом</th>
+                            <th>Знак</th>
+                            <th>Градус</th>
+                            <th>Управитель</th>
+                            <th>Упр. в доме</th>
+                            <th>Планеты в доме</th>
+                        </tr>
+                    </thead>
+                    <tbody id="housesTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section 4: Aspects -->
+        <section class="section" id="aspectsSection">
+            <h2 class="section-title">Аспекты</h2>
+            
+            <!-- Major Aspects -->
+            <div class="subsection">
+                <h3 class="subsection-title">Мажорные аспекты</h3>
+                <div id="majorAspectsContainer"></div>
+            </div>
+
+            <!-- Minor Aspects (collapsible) -->
+            <details class="subsection collapsible">
+                <summary class="subsection-title">Минорные аспекты</summary>
+                <div id="minorAspectsContainer"></div>
+            </details>
+        </section>
+
+        <!-- Section 5: Configurations -->
+        <section class="section" id="configurationsSection">
+            <h2 class="section-title">Конфигурации</h2>
+            <div id="configurationsContainer"></div>
+        </section>
+
+        <!-- Section 6: Stelliums -->
+        <section class="section" id="stelliumsSection">
+            <h2 class="section-title">Стеллиумы</h2>
+            <div id="stelliumsContainer"></div>
+        </section>
+
+        <!-- Section 7: Special Points -->
+        <section class="section" id="specialPointsSection">
+            <h2 class="section-title">Специальные точки</h2>
+            <div class="table-wrapper">
+                <table class="data-table special-points-table">
+                    <thead>
+                        <tr>
+                            <th>Точка</th>
+                            <th>Знак</th>
+                            <th>Градус</th>
+                            <th>Дом</th>
+                        </tr>
+                    </thead>
+                    <tbody id="specialPointsTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/symbols.js"></script>
+    <script src="js/natal-full.js"></script>
+</body>
+</html>
+

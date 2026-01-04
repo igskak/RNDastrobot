@@ -726,6 +726,8 @@ class NatalChartService:
                     # Этап 3.4: Сила и роли планет
                     'strength_score': float(p.strength_score) if p.strength_score else None,
                     'special_roles': p.special_roles or [],
+                    # Миграция 007: Связи планета-дом
+                    'ruled_houses': p.ruled_houses or [],
                 }
                 for p in user.planets
             ],
@@ -739,6 +741,12 @@ class NatalChartService:
                     # Этап 3.2: Обогащение домов
                     'ruler_planet': h.ruler_planet,
                     'house_group': h.house_group,
+                    # Миграция 007: Связи дом-планета
+                    'ruler_in_house': h.ruler_in_house,
+                    'planets_in_house': h.planets_in_house or [],
+                    'co_rulers': h.co_rulers or [],
+                    'significator': h.significator,
+                    'included_sign': h.included_sign,
                 }
                 for h in sorted(user.houses, key=lambda x: x.house_number)
             ],

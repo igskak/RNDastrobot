@@ -87,6 +87,15 @@ async def chart_page():
     raise HTTPException(status_code=404, detail="Chart page not found")
 
 
+@app.get("/natal-full.html")
+async def natal_full_page():
+    """Страница полной натальной карты (табличный вид)"""
+    natal_full_path = os.path.join(FRONTEND_PATH, "natal-full.html")
+    if os.path.exists(natal_full_path):
+        return FileResponse(natal_full_path)
+    raise HTTPException(status_code=404, detail="Natal full page not found")
+
+
 @app.get("/health")
 async def health_check():
     """Проверка здоровья сервиса"""
