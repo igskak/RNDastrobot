@@ -359,9 +359,15 @@ function createPlanetRow(planet, houses) {
         else if (plus > minus) karmaClass = 'karma-positive';
         else karmaClass = 'karma-neutral';
 
-        // Формат: -5|+2 или просто итог если столбики не заданы
+        // Формат: итог (-minus|+plus)
         if (minus > 0 || plus > 0) {
-            tdKarma.innerHTML = `<span class="${karmaClass}" title="Итог: ${total || Math.max(minus, plus)}">-${minus}|+${plus}</span>`;
+            // Вычисляем итог по методичке: суммируем только столбики > 3
+            let calculatedTotal = 0;
+            if (minus > 3) calculatedTotal += minus;
+            if (plus > 3) calculatedTotal += plus;
+            if (calculatedTotal === 0) calculatedTotal = Math.max(minus, plus);
+
+            tdKarma.innerHTML = `<span class="${karmaClass}">${calculatedTotal} (-${minus}|+${plus})</span>`;
         } else if (total) {
             tdKarma.innerHTML = `<span class="${karmaClass}">${total}</span>`;
         }
