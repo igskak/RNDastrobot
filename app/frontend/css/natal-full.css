@@ -493,6 +493,18 @@
     margin-top: 4px;
 }
 
+.config-aspects-list {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+}
+
+.config-aspect-item {
+    font-size: 10px;
+    color: var(--text-secondary);
+    padding: 2px 0;
+}
+
 /* Balances (compact single line) */
 .balances-compact {
     display: flex;
@@ -512,6 +524,7 @@
     display: flex;
     align-items: center;
     gap: 4px;
+    white-space: nowrap;
 }
 
 .balance-icon {
@@ -520,11 +533,13 @@
 
 .balance-label {
     color: var(--text-secondary);
+    white-space: nowrap;
 }
 
 .balance-value {
     font-weight: 600;
     font-family: 'JetBrains Mono', monospace;
+    white-space: nowrap;
 }
 
 .balance-divider {

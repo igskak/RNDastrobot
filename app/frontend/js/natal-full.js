@@ -35,6 +35,18 @@ const getSignName = (name) => S().signNamesRu?.[name] || name;
 const getAspectSymbol = (name) => S().aspects?.[name] || '?';
 const getAspectName = (name) => S().aspectNamesRu?.[name] || name;
 
+// Русские названия фигур Джонса
+const PATTERN_NAMES_RU = {
+    'Splash': 'Всплеск',
+    'Bundle': 'Связка',
+    'Locomotive': 'Локомотив',
+    'Bowl': 'Чаша',
+    'Bucket': 'Корзина',
+    'Seesaw': 'Качели',
+    'Splay': 'Веер'
+};
+const getPatternName = (name) => PATTERN_NAMES_RU[name] || name;
+
 let chartData = null;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -128,9 +140,9 @@ function renderSummaryBar(data) {
             `${getSignName(moon.sign)} ${formatDegree(moon)}`;
     }
 
-    // Pattern
+    // Pattern (фигура Джонса)
     if (pattern) {
-        let patternText = pattern.pattern_type || '—';
+        let patternText = getPatternName(pattern.pattern_type) || '—';
         if (pattern.handle_planet) {
             patternText += ` (${getPlanetName(pattern.handle_planet)})`;
         }
@@ -158,12 +170,29 @@ function renderSummaryBar(data) {
 
 function getMaxBalance(balanceObj) {
     if (!balanceObj) return null;
+
+    // Словари для русификации (поддержка обоих регистров)
+    const labels = {
+        // Стихии
+        'Fire': 'огонь', 'fire': 'огонь',
+        'Earth': 'земля', 'earth': 'земля',
+        'Air': 'воздух', 'air': 'воздух',
+        'Water': 'вода', 'water': 'вода',
+        // Кресты
+        'Cardinal': 'кардинальный', 'cardinal': 'кардинальный',
+        'Fixed': 'фиксированный', 'fixed': 'фиксированный',
+        'Mutable': 'мутабельный', 'mutable': 'мутабельный',
+        // Полярность
+        'Masculine': 'мужской', 'masculine': 'мужской',
+        'Feminine': 'женский', 'feminine': 'женский'
+    };
+
     let max = { label: '', value: 0, pct: 0 };
     let total = 0;
     for (const [key, val] of Object.entries(balanceObj)) {
         total += val;
         if (val > max.value) {
-            max = { label: key, value: val };
+            max = { label: labels[key] || key, value: val };
         }
     }
     max.pct = total > 0 ? Math.round((max.value / total) * 100) : 0;
@@ -578,7 +607,7 @@ function createConfigCard(config) {
 
     const strength = document.createElement('div');
     strength.className = 'config-strength';
-    strength.textContent = config.strength_score ? `${config.strength_score.toFixed(0)}%` : '';
+    strength.textContent = config.strength_score ? config.strength_score.toFixed(0) : '';
 
     header.appendChild(type);
     header.appendChild(strength);
@@ -597,6 +626,27 @@ function createConfigCard(config) {
         details.className = 'config-details';
         details.textContent = `Апекс: ${getPlanetName(config.apex_planet)}`;
         card.appendChild(details);
+    }
+
+    // Аспекты конфигурации
+    if (config.aspects && config.aspects.length > 0) {
+        const aspectsList = document.createElement('div');
+        aspectsList.className = 'config-aspects-list';
+
+        config.aspects.forEach(asp => {
+            const aspectItem = document.createElement('div');
+            aspectItem.className = 'config-aspect-item';
+
+            const p1 = getPlanetName(asp.planet_1);
+            const p2 = getPlanetName(asp.planet_2);
+            const symbol = getAspectSymbol(asp.aspect_type);
+            const orb = asp.orb.toFixed(1);
+
+            aspectItem.textContent = `${p1} ${symbol} ${p2} (${orb}°)`;
+            aspectsList.appendChild(aspectItem);
+        });
+
+        card.appendChild(aspectsList);
     }
 
     return card;
@@ -618,7 +668,7 @@ function createStelliumCard(stellium) {
 
     const count = document.createElement('div');
     count.className = 'config-strength';
-    count.textContent = `${stellium.count}`;
+    count.textContent = stellium.count;
 
     header.appendChild(type);
     header.appendChild(count);
@@ -631,6 +681,19 @@ function createStelliumCard(stellium) {
         .join(' ');
     planets.textContent = planetSymbols;
     card.appendChild(planets);
+
+    // Список планет с названиями
+    const planetsList = document.createElement('div');
+    planetsList.className = 'config-aspects-list';
+
+    stellium.planets.forEach(planetName => {
+        const planetItem = document.createElement('div');
+        planetItem.className = 'config-aspect-item';
+        planetItem.textContent = getPlanetName(planetName);
+        planetsList.appendChild(planetItem);
+    });
+
+    card.appendChild(planetsList);
 
     return card;
 }
@@ -652,7 +715,10 @@ function renderBalances(balances, pattern) {
     // Элементы (на русском)
     if (balances.element_balance) {
         const group = createBalanceGroup('Стихии:', balances.element_balance, {
-            'Fire': 'Огонь', 'Earth': 'Земля', 'Air': 'Воздух', 'Water': 'Вода'
+            'Fire': 'Огонь', 'fire': 'Огонь',
+            'Earth': 'Земля', 'earth': 'Земля',
+            'Air': 'Воздух', 'air': 'Воздух',
+            'Water': 'Вода', 'water': 'Вода'
         });
         row.appendChild(group);
     }
@@ -660,7 +726,9 @@ function renderBalances(balances, pattern) {
     // Кресты (на русском)
     if (balances.mode_balance) {
         const group = createBalanceGroup('Кресты:', balances.mode_balance, {
-            'Cardinal': 'Кард', 'Fixed': 'Фикс', 'Mutable': 'Мут'
+            'Cardinal': 'Кардинальный', 'cardinal': 'Кардинальный',
+            'Fixed': 'Фиксированный', 'fixed': 'Фиксированный',
+            'Mutable': 'Мутабельный', 'mutable': 'Мутабельный'
         });
         row.appendChild(group);
     }
@@ -668,7 +736,8 @@ function renderBalances(balances, pattern) {
     // Полярность (на русском)
     if (balances.gender_balance) {
         const group = createBalanceGroup('Полярность:', balances.gender_balance, {
-            'Masculine': 'Муж', 'Feminine': 'Жен'
+            'Masculine': 'Мужской', 'masculine': 'Мужской',
+            'Feminine': 'Женский', 'feminine': 'Женский'
         });
         row.appendChild(group);
     }
