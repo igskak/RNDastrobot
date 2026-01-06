@@ -16,14 +16,14 @@ const DIGNITY_CODES = {
     'domicile': 'H', 'exaltation': 'X', 'detriment': 'D', 'fall': 'F'
 };
 
-// Особенности планет (иконки)
-const FEATURE_ICONS = {
+// Особенности планет (текстовые метки)
+const FEATURE_LABELS = {
     // Критические градусы
-    'anareta': '💀', 'royal': '👑', 'jubilee': '🎉', 'destructive': '☠️', 'middle': '◆',
+    'anareta': 'анарета', 'royal': 'корол.', 'jubilee': 'юбилей', 'destructive': 'деструкт.', 'middle': 'сред.',
     // Отношение к Солнцу
-    'combust': '🔥', 'cazimi': '☀️', 'under_rays': '🌅',
+    'combust': 'сожж.', 'cazimi': 'казими', 'under_rays': 'в лучах',
     // Специальные роли
-    'handle': '🎯', 'aspect_king': '🌟', 'doryphoros': '⚔️', 'charioteer': '🛡️', 'almuten': '🏆'
+    'handle': 'ручка', 'aspect_king': 'король', 'doryphoros': 'дориф.', 'charioteer': 'возн.', 'almuten': 'альмут.'
 };
 
 // Хелперы для доступа к символам из symbols.js
@@ -285,50 +285,43 @@ function createPlanetRow(planet, houses) {
     }
     tr.appendChild(tdSpeed);
 
-    // 7. Особенности (иконки)
+    // 7. Особенности (текстом)
     const tdFeatures = document.createElement('td');
+    tdFeatures.className = 'features-cell';
     const features = [];
 
     // Критические градусы
     if (planet.critical_degrees?.length > 0) {
         planet.critical_degrees.forEach(deg => {
-            const icon = FEATURE_ICONS[deg] || '';
-            if (icon) features.push(`<span class="feat" title="${deg}">${icon}</span>`);
+            const label = FEATURE_LABELS[deg];
+            if (label) features.push(label);
         });
     }
 
     // Отношение к Солнцу
     if (planet.sun_relation) {
-        const icon = FEATURE_ICONS[planet.sun_relation] || '☀';
-        features.push(`<span class="feat" title="${planet.sun_relation}">${icon}</span>`);
+        const label = FEATURE_LABELS[planet.sun_relation] || planet.sun_relation;
+        features.push(label);
     }
 
     // Элевация
-    if (planet.is_elevated) {
-        features.push(`<span class="feat" title="Элевация">🏔️</span>`);
-    }
+    if (planet.is_elevated) features.push('элев.');
 
     // В шахте
-    if (planet.is_peregrine) {
-        features.push(`<span class="feat" title="В шахте">⛏️</span>`);
-    }
+    if (planet.is_peregrine) features.push('шахта');
 
     // Во включённом знаке
-    if (planet.in_intercepted_sign) {
-        features.push(`<span class="feat" title="Включённый знак">⬛</span>`);
-    }
+    if (planet.in_intercepted_sign) features.push('вкл.');
 
     // Special roles
     if (planet.special_roles?.length > 0) {
         planet.special_roles.forEach(role => {
-            const icon = FEATURE_ICONS[role] || '';
-            if (icon) features.push(`<span class="feat" title="${role}">${icon}</span>`);
+            const label = FEATURE_LABELS[role] || role;
+            features.push(label);
         });
     }
 
-    tdFeatures.innerHTML = features.length > 0
-        ? `<span class="features-container">${features.join('')}</span>`
-        : '—';
+    tdFeatures.textContent = features.length > 0 ? features.join(', ') : '—';
     tr.appendChild(tdFeatures);
 
     // 8. Управляемые дома
