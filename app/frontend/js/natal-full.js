@@ -47,6 +47,18 @@ const PATTERN_NAMES_RU = {
 };
 const getPatternName = (name) => PATTERN_NAMES_RU[name] || name;
 
+// Русские названия конфигураций
+const CONFIG_NAMES_RU = {
+    'T_Square': 'Тау-квадрат',
+    'Grand_Trine': 'Большой трин',
+    'Grand_Cross': 'Большой крест',
+    'Yod': 'Йод (Перст Судьбы)',
+    'Mystic_Rectangle': 'Мистический прямоугольник',
+    'Kite': 'Воздушный змей',
+    'Star_of_David': 'Звезда Давида'
+};
+const getConfigName = (type) => CONFIG_NAMES_RU[type] || type.replace(/_/g, ' ');
+
 let chartData = null;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -654,7 +666,7 @@ function createConfigCard(config) {
 
     const type = document.createElement('div');
     type.className = 'config-type';
-    type.textContent = config.type.replace(/_/g, ' ');
+    type.textContent = getConfigName(config.type);
 
     const strength = document.createElement('div');
     strength.className = 'config-strength';
