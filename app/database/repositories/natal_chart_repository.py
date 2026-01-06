@@ -42,6 +42,18 @@ class NatalChartRepository:
                 element=planet_data.get('element'),
                 mode=planet_data.get('mode'),
                 dignity=planet_data.get('dignity'),
+                # Миграция 005: расширенные характеристики
+                speed_percent=planet_data.get('speed_percent'),
+                critical_degrees=planet_data.get('critical_degrees', []),
+                sun_relation=planet_data.get('sun_relation'),
+                in_intercepted_sign=planet_data.get('in_intercepted_sign', False),
+                is_elevated=planet_data.get('is_elevated', False),
+                is_peregrine=planet_data.get('is_peregrine', False),
+                aspect_harmony=planet_data.get('aspect_harmony'),
+                is_stationary=planet_data.get('is_stationary', False),
+                stationary_type=planet_data.get('stationary_type'),
+                karmic_score=planet_data.get('karmic_score'),
+                special_roles=planet_data.get('special_roles', []),
                 # Миграция 007: связи планета-дом
                 ruled_houses=planet_data.get('ruled_houses', []),
             )

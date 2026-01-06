@@ -726,6 +726,17 @@ class NatalChartService:
                     # Этап 3.4: Сила и роли планет
                     'strength_score': float(p.strength_score) if p.strength_score else None,
                     'special_roles': p.special_roles or [],
+                    # Миграция 005: расширенные характеристики
+                    'speed_percent': float(p.speed_percent) if p.speed_percent else None,
+                    'critical_degrees': p.critical_degrees or [],
+                    'sun_relation': p.sun_relation,
+                    'in_intercepted_sign': p.in_intercepted_sign or False,
+                    'is_elevated': p.is_elevated or False,
+                    'is_peregrine': p.is_peregrine or False,
+                    'aspect_harmony': p.aspect_harmony,
+                    'is_stationary': p.is_stationary or False,
+                    'stationary_type': p.stationary_type,
+                    'karmic_score': float(p.karmic_score) if p.karmic_score else None,
                     # Миграция 007: Связи планета-дом
                     'ruled_houses': p.ruled_houses or [],
                 }

@@ -122,8 +122,8 @@ class PlanetCharacteristicsService:
     SUN_RELATION_ORBS = {
         'cazimi': 17 / 60,      # 0°17' = 0.283°
         'combust': 3.0,         # до 3°
-        'under_beams': 9.0,     # до 9° (базовый)
-        'under_beams_strong': 12.0,  # до 12° если Солнце сильное
+        'under_rays': 9.0,      # до 9° (базовый) - "в лучах"
+        'under_rays_strong': 12.0,  # до 12° если Солнце сильное
     }
 
     # =========================================================================
@@ -222,7 +222,7 @@ class PlanetCharacteristicsService:
             sun_is_strong: Солнце в сильном положении (расширяет орбис лучей до 12°)
 
         Returns:
-            'cazimi' | 'combust' | 'under_beams' | None
+            'cazimi' | 'combust' | 'under_rays' | None
         """
         # Солнце не может быть в отношении к себе
         if planet_name == 'Sun':
@@ -243,16 +243,16 @@ class PlanetCharacteristicsService:
         if diff <= cls.SUN_RELATION_ORBS['combust']:
             # Луна не считается сожжённой
             if planet_name == 'Moon':
-                return 'under_beams'
+                return 'under_rays'
             return 'combust'
 
         # Определяем границу для лучей
-        beams_limit = (cls.SUN_RELATION_ORBS['under_beams_strong']
-                       if sun_is_strong
-                       else cls.SUN_RELATION_ORBS['under_beams'])
+        rays_limit = (cls.SUN_RELATION_ORBS['under_rays_strong']
+                      if sun_is_strong
+                      else cls.SUN_RELATION_ORBS['under_rays'])
 
-        if diff <= beams_limit:
-            return 'under_beams'
+        if diff <= rays_limit:
+            return 'under_rays'
 
         return None
 
@@ -526,7 +526,7 @@ class PlanetCharacteristicsService:
         - В сердце Солнца, кроме Луны (sun_relation == 'cazimi' and name != 'Moon')
 
         +1 балл:
-        - В лучах Солнца, кроме Луны (sun_relation == 'under_beams' and name != 'Moon')
+        - В лучах Солнца, кроме Луны (sun_relation == 'under_rays' and name != 'Moon')
 
         ±1 балл:
         - В элевации (is_elevated)
@@ -578,7 +578,7 @@ class PlanetCharacteristicsService:
             score += 2
 
         # === +1 балл ===
-        if planet.get('sun_relation') == 'under_beams' and name != 'Moon':
+        if planet.get('sun_relation') == 'under_rays' and name != 'Moon':
             score += 1
 
         # === ±1 балл (добавляем в обе стороны = 0, но отмечаем как особый опыт) ===

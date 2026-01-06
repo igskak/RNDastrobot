@@ -79,6 +79,8 @@ class PlanetPosition(BaseModel):
     is_stationary: Optional[bool] = Field(default=False, description="Стационарная планета")
     stationary_type: Optional[str] = Field(None, description="Тип стационарности: SR (перед ретро), SD (перед директ)")
     karmic_score: Optional[float] = Field(None, description="Кармический статус")
+    # Миграция 007: связи планета-дом
+    ruled_houses: Optional[List[int]] = Field(default=[], description="Дома, которыми управляет планета")
 
 
 class HousePosition(BaseModel):
@@ -95,6 +97,9 @@ class HousePosition(BaseModel):
     included_sign: Optional[str] = Field(None, description="Включённый знак (знак без куспидов внутри дома)")
     co_rulers: Optional[List[str]] = Field(default=[], description="Соуправители дома")
     significator: Optional[str] = Field(None, description="Естественный сигнификатор дома")
+    # Миграция 007: Связи дом-планета
+    ruler_in_house: Optional[int] = Field(None, description="В каком доме находится управитель")
+    planets_in_house: Optional[List[str]] = Field(default=[], description="Планеты в доме")
 
 
 class AnglePosition(BaseModel):

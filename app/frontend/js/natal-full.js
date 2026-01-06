@@ -1,73 +1,46 @@
 /**
- * Natal Full Page — Tabular Display
+ * Natal Full Page — Compact Tabular Display
+ * Оптимизировано для астрологов: всё на одном экране
+ * Использует символы из symbols.js (window.Symbols)
  */
 
-// Порядок планет для отображения
+// Порядок планет
 const PLANET_ORDER = [
     'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
     'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto',
     'Chiron', 'Proserpina'
 ];
 
-// Названия планет на русском
-const PLANET_NAMES = {
-    'Sun': 'Солнце',
-    'Moon': 'Луна',
-    'Mercury': 'Меркурий',
-    'Venus': 'Венера',
-    'Mars': 'Марс',
-    'Jupiter': 'Юпитер',
-    'Saturn': 'Сатурн',
-    'Uranus': 'Уран',
-    'Neptune': 'Нептун',
-    'Pluto': 'Плутон',
-    'Chiron': 'Хирон',
-    'Proserpina': 'Прозерпина',
-    'TrueNode': 'Раху (Сев. узел)',
-    'SouthNode': 'Кету (Юж. узел)',
-    'BlackMoon': 'Лилит',
-    'WhiteMoon': 'Селена',
-    'PartOfFortune': 'Парс Фортуны',
-    'Vertex': 'Вертекс'
+// Достоинства (короткие коды)
+const DIGNITY_CODES = {
+    'domicile': 'H', 'exaltation': 'X', 'detriment': 'D', 'fall': 'F'
 };
 
-// Названия знаков
-const SIGN_NAMES = {
-    'Aries': 'Овен', 'Taurus': 'Телец', 'Gemini': 'Близнецы',
-    'Cancer': 'Рак', 'Leo': 'Лев', 'Virgo': 'Дева',
-    'Libra': 'Весы', 'Scorpio': 'Скорпион', 'Sagittarius': 'Стрелец',
-    'Capricorn': 'Козерог', 'Aquarius': 'Водолей', 'Pisces': 'Рыбы'
+// Особенности планет (иконки)
+const FEATURE_ICONS = {
+    // Критические градусы
+    'anareta': '💀', 'royal': '👑', 'jubilee': '🎉', 'destructive': '☠️', 'middle': '◆',
+    // Отношение к Солнцу
+    'combust': '🔥', 'cazimi': '☀️', 'under_rays': '🌅',
+    // Специальные роли
+    'handle': '🎯', 'aspect_king': '🌟', 'doryphoros': '⚔️', 'charioteer': '🛡️', 'almuten': '🏆'
 };
 
-// Названия достоинств
-const DIGNITY_NAMES = {
-    'domicile': 'Обитель',
-    'exaltation': 'Экзальтация',
-    'detriment': 'Изгнание',
-    'fall': 'Падение',
-    'neutral': 'Нейтрально'
-};
-
-// Названия аспектов
-const ASPECT_NAMES = {
-    'Conjunction': 'Соединение',
-    'Opposition': 'Оппозиция',
-    'Trine': 'Трин',
-    'Square': 'Квадрат',
-    'Sextile': 'Секстиль',
-    'Semisextile': 'Полусекстиль',
-    'Quincunx': 'Квинконс',
-    'Semisquare': 'Полуквадрат',
-    'Sesquiquadrate': 'Полутораквадрат',
-    'Quintile': 'Квинтиль',
-    'Biquintile': 'Биквинтиль'
-};
+// Хелперы для доступа к символам из symbols.js
+const S = () => window.Symbols || {};
+const getPlanetSymbol = (name) => S().planets?.[name] || '';
+const getSignSymbol = (name) => S().signs?.[name] || '';
+const getPlanetName = (name) => S().planetNamesRu?.[name] || name;
+const getSignName = (name) => S().signNamesRu?.[name] || name;
+const getAspectSymbol = (name) => S().aspects?.[name] || '?';
+const getAspectName = (name) => S().aspectNamesRu?.[name] || name;
 
 let chartData = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Получаем данные из sessionStorage (используем тот же ключ, что и chart.html)
     const storedData = sessionStorage.getItem('natalChart');
+    console.log('storedData:', storedData ? 'found' : 'NOT FOUND');
+
     if (!storedData) {
         alert('Нет данных натальной карты. Перенаправление на главную страницу.');
         window.location.href = '/';
@@ -75,236 +48,378 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     chartData = JSON.parse(storedData);
+    console.log('chartData:', chartData);
+    console.log('planets:', chartData.planets);
+    console.log('houses:', chartData.houses);
+
     renderFullChart(chartData);
+    setupLegendToggle();
 });
 
+function setupLegendToggle() {
+    const btn = document.getElementById('legendToggle');
+    const panel = document.getElementById('legendPanel');
+    if (btn && panel) {
+        btn.addEventListener('click', () => {
+            panel.classList.toggle('hidden');
+        });
+    }
+}
+
 function renderFullChart(data) {
-    // 1. Заголовок и данные рождения
+    // DEBUG: проверяем данные
+    console.log('=== DEBUG natal-full.js ===');
+    console.log('planets[0]:', data.planets?.[0]);
+    console.log('planets[0].ruled_houses:', data.planets?.[0]?.ruled_houses);
+    console.log('planets[0].speed_percent:', data.planets?.[0]?.speed_percent);
+    console.log('planets[0].speed:', data.planets?.[0]?.speed);
+    console.log('houses[0]:', data.houses?.[0]);
+    console.log('houses[0].ruler_planet:', data.houses?.[0]?.ruler_planet);
+
     renderHeader(data);
-    renderBirthData(data);
-    
-    // 2. Таблица планет
-    renderPlanetsTable(data.planets);
-    
-    // 3. Таблица домов
-    renderHousesTable(data.houses);
-    
-    // 4. Аспекты
-    renderAspects(data.aspects || []);
-
-    // 5. Конфигурации
-    renderConfigurations(data.aspect_configurations || []);
-
-    // 6. Стеллиумы
-    renderStelliums(data.stelliums || []);
-
-    // 7. Специальные точки
+    renderSummaryBar(data);
+    renderPlanetsTable(data.planets, data.houses);
+    renderHousesTable(data.houses, data.planets);
+    renderAspectsTable(data.aspects || []);
+    renderConfigurations(data.aspect_configurations || [], data.stelliums || []);
+    renderBalances(data.balances, data.cosmogram_pattern);
     renderSpecialPoints(data.special_points || {});
 }
 
 function renderHeader(data) {
     const birthData = data.birth_data;
-    document.getElementById('chartTitle').textContent = 
+    document.getElementById('chartTitle').textContent =
         `Натальная карта — ${birthData.place || 'Неизвестное место'}`;
-    
-    const dateTime = `${birthData.date} ${birthData.time} (${birthData.timezone})`;
-    document.getElementById('birthDetails').textContent = dateTime;
+    document.getElementById('birthDetails').textContent =
+        `${birthData.date} ${birthData.time} (${birthData.timezone})`;
 }
 
-function renderBirthData(data) {
-    const birthData = data.birth_data;
+function renderSummaryBar(data) {
     const angles = data.angles;
+    const planets = data.planets;
+    const pattern = data.cosmogram_pattern;
+    const balances = data.balances;
 
-    document.getElementById('birthDateTime').textContent =
-        `${birthData.date} ${birthData.time}`;
-
-    document.getElementById('birthPlace').textContent =
-        `${birthData.place || 'Неизвестно'} (${birthData.latitude.toFixed(2)}°, ${birthData.longitude.toFixed(2)}°)`;
-
-    // angles - это объект, а не массив
-    if (angles && angles.ASC) {
-        document.getElementById('ascValue').textContent =
-            `${SIGN_NAMES[angles.ASC.sign]} ${angles.ASC.degree_in_sign_formatted}`;
+    // ASC
+    if (angles?.ASC) {
+        const asc = angles.ASC;
+        document.getElementById('summaryAsc').textContent =
+            `${getSignSymbol(asc.sign)} ${getSignName(asc.sign)} ${formatDegree(asc)}`;
     }
 
-    if (angles && angles.MC) {
-        document.getElementById('mcValue').textContent =
-            `${SIGN_NAMES[angles.MC.sign]} ${angles.MC.degree_in_sign_formatted}`;
+    // MC
+    if (angles?.MC) {
+        const mc = angles.MC;
+        document.getElementById('summaryMc').textContent =
+            `${getSignSymbol(mc.sign)} ${getSignName(mc.sign)} ${formatDegree(mc)}`;
     }
 
-    // Фигура Джонса
-    if (data.cosmogram_pattern) {
-        const pattern = data.cosmogram_pattern;
-        document.getElementById('jonesPattern').textContent = pattern.pattern_type;
+    // Sun
+    const sun = planets?.find(p => p.name === 'Sun');
+    if (sun) {
+        document.getElementById('summarySun').textContent =
+            `${getSignName(sun.sign)} ${formatDegree(sun)}`;
+    }
+
+    // Moon
+    const moon = planets?.find(p => p.name === 'Moon');
+    if (moon) {
+        document.getElementById('summaryMoon').textContent =
+            `${getSignName(moon.sign)} ${formatDegree(moon)}`;
+    }
+
+    // Pattern
+    if (pattern) {
+        let patternText = pattern.pattern_type || '—';
+        if (pattern.handle_planet) {
+            patternText += ` (${getPlanetName(pattern.handle_planet)})`;
+        }
+        document.getElementById('summaryPattern').textContent = patternText;
+    }
+
+    // Dominants
+    if (balances) {
+        const dominants = [];
+        if (balances.element_balance) {
+            const maxEl = getMaxBalance(balances.element_balance);
+            if (maxEl) dominants.push(`🌍${maxEl.label} ${maxEl.pct}%`);
+        }
+        if (balances.mode_balance) {
+            const maxMode = getMaxBalance(balances.mode_balance);
+            if (maxMode) dominants.push(`${maxMode.label} ${maxMode.pct}%`);
+        }
+        if (balances.gender_balance) {
+            const maxGender = getMaxBalance(balances.gender_balance);
+            if (maxGender) dominants.push(`${maxGender.label} ${maxGender.pct}%`);
+        }
+        document.getElementById('summaryDominants').textContent = dominants.join(' │ ');
     }
 }
 
-function renderPlanetsTable(planets) {
+function getMaxBalance(balanceObj) {
+    if (!balanceObj) return null;
+    let max = { label: '', value: 0, pct: 0 };
+    let total = 0;
+    for (const [key, val] of Object.entries(balanceObj)) {
+        total += val;
+        if (val > max.value) {
+            max = { label: key, value: val };
+        }
+    }
+    max.pct = total > 0 ? Math.round((max.value / total) * 100) : 0;
+    return max;
+}
+
+function formatDegreeFull(deg) {
+    // Формат: 27°16'28"
+    if (deg === null || deg === undefined) return '—';
+    const d = Math.floor(deg);
+    const minFloat = (deg - d) * 60;
+    const m = Math.floor(minFloat);
+    const s = Math.round((minFloat - m) * 60);
+    return `${d}°${String(m).padStart(2, '0')}'${String(s).padStart(2, '0')}"`;
+}
+
+function formatDegree(item) {
+    // Используем готовый formatted если есть, иначе вычисляем
+    if (item.degree_in_sign_formatted) return item.degree_in_sign_formatted;
+    return formatDegreeFull(item.degree_in_sign);
+}
+
+function renderPlanetsTable(planets, houses) {
     const tbody = document.getElementById('planetsTableBody');
     tbody.innerHTML = '';
-    
-    // Сортируем планеты по порядку
+
+    // Если ruled_houses нет в данных, вычислим на лету из houses.ruler_planet
+    const planetRuledHouses = {};
+    if (houses) {
+        houses.forEach(h => {
+            const ruler = h.ruler_planet;
+            if (ruler) {
+                if (!planetRuledHouses[ruler]) planetRuledHouses[ruler] = [];
+                planetRuledHouses[ruler].push(h.number);
+            }
+        });
+    }
+
     const sortedPlanets = planets
         .filter(p => PLANET_ORDER.includes(p.name))
         .sort((a, b) => PLANET_ORDER.indexOf(a.name) - PLANET_ORDER.indexOf(b.name));
-    
+
     sortedPlanets.forEach(planet => {
-        const row = createPlanetRow(planet);
+        // Если ruled_houses пустой или undefined, используем вычисленный
+        if (!planet.ruled_houses || planet.ruled_houses.length === 0) {
+            planet.ruled_houses = planetRuledHouses[planet.name] || [];
+        }
+        const row = createPlanetRow(planet, houses);
         tbody.appendChild(row);
     });
 }
 
-function createPlanetRow(planet) {
+function createPlanetRow(planet, houses) {
     const tr = document.createElement('tr');
 
-    // Планета
+    // 1. Планета (символ + название)
     const tdName = document.createElement('td');
-    tdName.className = 'planet-name';
-    tdName.textContent = PLANET_NAMES[planet.name] || planet.name;
+    tdName.innerHTML = `<span class="planet-cell">
+        <span class="planet-symbol">${getPlanetSymbol(planet.name)}</span>
+        <span class="planet-name">${getPlanetName(planet.name)}</span>
+    </span>`;
     tr.appendChild(tdName);
 
-    // Знак
-    const tdSign = document.createElement('td');
-    tdSign.textContent = SIGN_NAMES[planet.sign] || planet.sign;
-    tr.appendChild(tdSign);
+    // 2. Позиция (знак + градус)
+    const tdPos = document.createElement('td');
+    tdPos.className = 'position-cell';
+    const signSym = getSignSymbol(planet.sign);
+    const signName = getSignName(planet.sign);
+    const deg = formatDegree(planet);
+    tdPos.innerHTML = `<span class="sign-symbol">${signSym}</span>${signName} ${deg}`;
+    tr.appendChild(tdPos);
 
-    // Градус
-    const tdDegree = document.createElement('td');
-    tdDegree.textContent = planet.degree_in_sign_formatted || `${planet.degree_in_sign.toFixed(2)}°`;
-    tr.appendChild(tdDegree);
-
-    // Дом
+    // 3. Дом
     const tdHouse = document.createElement('td');
+    const isAngular = [1, 4, 7, 10].includes(planet.house);
+    tdHouse.className = isAngular ? 'angular-house' : '';
     tdHouse.textContent = planet.house || '—';
     tr.appendChild(tdHouse);
 
-    // Ретроградность
-    const tdRetro = document.createElement('td');
-    if (planet.retrograde) {
-        const badge = document.createElement('span');
-        badge.className = 'retrograde-badge';
-        badge.textContent = 'R';
-        tdRetro.appendChild(badge);
-    } else {
-        tdRetro.textContent = '—';
-    }
-    tr.appendChild(tdRetro);
-
-    // Достоинство
+    // 4. Достоинство (компактный код)
     const tdDignity = document.createElement('td');
     if (planet.dignity && planet.dignity !== 'neutral') {
-        const badge = document.createElement('span');
-        badge.className = `dignity-badge dignity-${planet.dignity}`;
-        badge.textContent = DIGNITY_NAMES[planet.dignity] || planet.dignity;
-        tdDignity.appendChild(badge);
+        const code = DIGNITY_CODES[planet.dignity] || planet.dignity[0].toUpperCase();
+        tdDignity.innerHTML = `<span class="dignity-badge dignity-${planet.dignity}">${code}</span>`;
     } else {
         tdDignity.textContent = '—';
     }
     tr.appendChild(tdDignity);
 
-    // Особенности
+    // 5. Движение (D/R/S)
+    const tdMove = document.createElement('td');
+    if (planet.is_stationary) {
+        tdMove.innerHTML = `<span class="move-badge move-s">S</span>`;
+    } else if (planet.retrograde) {
+        tdMove.innerHTML = `<span class="move-badge move-r">R</span>`;
+    } else {
+        tdMove.innerHTML = `<span class="move-badge move-d">D</span>`;
+    }
+    tr.appendChild(tdMove);
+
+    // 6. Скорость (speed_percent или вычисляем из speed)
+    const tdSpeed = document.createElement('td');
+    tdSpeed.className = 'speed-cell';
+    let speedPct = planet.speed_percent;
+
+    // Если speed_percent нет, но есть speed — показываем скорость
+    if ((speedPct === undefined || speedPct === null) && planet.speed !== undefined) {
+        // Показываем raw speed если нет процентов
+        const rawSpeed = Math.abs(planet.speed).toFixed(2);
+        tdSpeed.textContent = rawSpeed > 0 ? `${rawSpeed}°/д` : '—';
+    } else if (speedPct !== undefined && speedPct !== null) {
+        let speedClass = '';
+        if (speedPct < 80) speedClass = 'speed-slow';
+        else if (speedPct > 120) speedClass = 'speed-very-fast';
+        else if (speedPct > 100) speedClass = 'speed-fast';
+        tdSpeed.innerHTML = `<span class="${speedClass}">${Math.round(speedPct)}%</span>`;
+    } else {
+        tdSpeed.textContent = '—';
+    }
+    tr.appendChild(tdSpeed);
+
+    // 7. Особенности (иконки)
     const tdFeatures = document.createElement('td');
-    const featuresContainer = document.createElement('div');
-    featuresContainer.className = 'features-container';
+    const features = [];
 
     // Критические градусы
-    if (planet.critical_degrees && planet.critical_degrees.length > 0) {
+    if (planet.critical_degrees?.length > 0) {
         planet.critical_degrees.forEach(deg => {
-            const badge = createFeatureBadge(deg, 'critical');
-            featuresContainer.appendChild(badge);
+            const icon = FEATURE_ICONS[deg] || '';
+            if (icon) features.push(`<span class="feat" title="${deg}">${icon}</span>`);
         });
     }
 
     // Отношение к Солнцу
     if (planet.sun_relation) {
-        const sunBadge = createFeatureBadge(planet.sun_relation, 'critical');
-        featuresContainer.appendChild(sunBadge);
+        const icon = FEATURE_ICONS[planet.sun_relation] || '☀';
+        features.push(`<span class="feat" title="${planet.sun_relation}">${icon}</span>`);
     }
 
     // Элевация
     if (planet.is_elevated) {
-        const elevBadge = createFeatureBadge('Элевация', 'elevated');
-        featuresContainer.appendChild(elevBadge);
+        features.push(`<span class="feat" title="Элевация">🏔️</span>`);
     }
 
     // В шахте
     if (planet.is_peregrine) {
-        const perBadge = createFeatureBadge('Шахта', 'peregrine');
-        featuresContainer.appendChild(perBadge);
-    }
-
-    // Стационарность
-    if (planet.is_stationary) {
-        const statBadge = createFeatureBadge(`Стац. ${planet.stationary_type || ''}`, 'critical');
-        featuresContainer.appendChild(statBadge);
+        features.push(`<span class="feat" title="В шахте">⛏️</span>`);
     }
 
     // Во включённом знаке
     if (planet.in_intercepted_sign) {
-        const intBadge = createFeatureBadge('Вкл. знак', 'peregrine');
-        featuresContainer.appendChild(intBadge);
+        features.push(`<span class="feat" title="Включённый знак">⬛</span>`);
     }
 
-    if (featuresContainer.children.length === 0) {
-        tdFeatures.textContent = '—';
-    } else {
-        tdFeatures.appendChild(featuresContainer);
+    // Special roles
+    if (planet.special_roles?.length > 0) {
+        planet.special_roles.forEach(role => {
+            const icon = FEATURE_ICONS[role] || '';
+            if (icon) features.push(`<span class="feat" title="${role}">${icon}</span>`);
+        });
     }
+
+    tdFeatures.innerHTML = features.length > 0
+        ? `<span class="features-container">${features.join('')}</span>`
+        : '—';
     tr.appendChild(tdFeatures);
+
+    // 8. Управляемые дома
+    const tdRuled = document.createElement('td');
+    tdRuled.className = 'ruled-houses';
+    if (planet.ruled_houses?.length > 0) {
+        tdRuled.textContent = planet.ruled_houses.join(',');
+    } else {
+        tdRuled.textContent = '—';
+    }
+    tr.appendChild(tdRuled);
 
     return tr;
 }
 
-function createFeatureBadge(text, type = '') {
-    const badge = document.createElement('span');
-    badge.className = `feature-badge ${type}`;
-    badge.textContent = text;
-    return badge;
-}
-
-function renderHousesTable(houses) {
+function renderHousesTable(houses, planets) {
     const tbody = document.getElementById('housesTableBody');
     tbody.innerHTML = '';
+
+    // Построим карту: дом -> планеты
+    const planetsByHouse = {};
+    planets?.forEach(p => {
+        if (p.house) {
+            if (!planetsByHouse[p.house]) planetsByHouse[p.house] = [];
+            planetsByHouse[p.house].push(p.name);
+        }
+    });
+
+    // Построим карту: планета -> дом (для ruler_in_house)
+    const planetToHouse = {};
+    planets?.forEach(p => {
+        if (p.house) planetToHouse[p.name] = p.house;
+    });
 
     houses.forEach(house => {
         const tr = document.createElement('tr');
 
-        // Дом
+        // 1. Дом
         const tdNum = document.createElement('td');
+        const isAngular = [1, 4, 7, 10].includes(house.number);
+        tdNum.className = isAngular ? 'angular-house' : '';
         tdNum.textContent = house.number;
-        if ([1, 4, 7, 10].includes(house.number)) {
-            tdNum.style.fontWeight = '600';
-            tdNum.style.color = 'var(--accent)';
-        }
         tr.appendChild(tdNum);
 
-        // Знак
+        // 2. Знак (символ + название + градус)
         const tdSign = document.createElement('td');
-        tdSign.textContent = SIGN_NAMES[house.sign] || house.sign;
+        tdSign.className = 'position-cell';
+        const signSym = getSignSymbol(house.sign);
+        const deg = formatDegree(house);
+        tdSign.innerHTML = `${signSym} ${getSignName(house.sign)} ${deg}`;
         tr.appendChild(tdSign);
 
-        // Градус
-        const tdDegree = document.createElement('td');
-        tdDegree.textContent = house.degree_in_sign_formatted || `${house.degree_in_sign.toFixed(2)}°`;
-        tr.appendChild(tdDegree);
-
-        // Управитель
+        // 3. Управитель + соуправители
         const tdRuler = document.createElement('td');
-        tdRuler.textContent = PLANET_NAMES[house.ruler_planet] || house.ruler_planet || '—';
+        let rulerText = getPlanetName(house.ruler_planet);
+        if (house.co_rulers && house.co_rulers.length > 0) {
+            const coRulerNames = house.co_rulers.map(p => getPlanetName(p)).join(', ');
+            rulerText += ` (${coRulerNames})`;
+        }
+        tdRuler.textContent = rulerText;
         tr.appendChild(tdRuler);
 
-        // Управитель в доме
+        // 4. Управитель в доме
         const tdRulerHouse = document.createElement('td');
-        tdRulerHouse.textContent = house.ruler_in_house || '—';
+        const rulerHouse = house.ruler_in_house || planetToHouse[house.ruler_planet];
+        tdRulerHouse.textContent = rulerHouse || '—';
         tr.appendChild(tdRulerHouse);
 
-        // Планеты в доме
+        // 5. Включённый знак (текстом)
+        const tdIncluded = document.createElement('td');
+        if (house.included_sign) {
+            tdIncluded.textContent = getSignName(house.included_sign);
+            tdIncluded.className = 'included-sign';
+        } else {
+            tdIncluded.textContent = '—';
+        }
+        tr.appendChild(tdIncluded);
+
+        // 6. Планеты в доме (текстом)
         const tdPlanets = document.createElement('td');
-        if (house.planets_in_house && house.planets_in_house.length > 0) {
-            const planetNames = house.planets_in_house
-                .map(p => PLANET_NAMES[p] || p)
-                .join(', ');
-            tdPlanets.textContent = planetNames;
+        const housePlanets = house.planets_in_house || planetsByHouse[house.number] || [];
+        if (housePlanets.length > 0) {
+            // Короткие имена планет
+            const shortNames = housePlanets.map(p => {
+                const name = getPlanetName(p);
+                // Сокращаем длинные названия
+                if (name.length > 4) return name.substring(0, 3);
+                return name;
+            });
+            tdPlanets.textContent = shortNames.join(', ');
+            tdPlanets.title = housePlanets.map(p => getPlanetName(p)).join(', ');
         } else {
             tdPlanets.textContent = '—';
         }
@@ -314,123 +429,147 @@ function renderHousesTable(houses) {
     });
 }
 
-function renderAspects(aspects) {
-    const majorContainer = document.getElementById('majorAspectsContainer');
-    const minorContainer = document.getElementById('minorAspectsContainer');
+// Глобальное состояние сортировки аспектов
+let aspectsSortState = { field: 'type', ascending: true };
+let currentMajorAspects = [];
 
-    majorContainer.innerHTML = '';
-    minorContainer.innerHTML = '';
+function renderAspectsTable(aspects) {
+    const majorBody = document.getElementById('aspectsTableBody');
+    const minorBody = document.getElementById('minorAspectsTableBody');
+
+    majorBody.innerHTML = '';
+    minorBody.innerHTML = '';
 
     if (!aspects || aspects.length === 0) {
-        majorContainer.innerHTML = '<p style="color: var(--text-secondary);">Нет аспектов</p>';
-        minorContainer.innerHTML = '<p style="color: var(--text-secondary);">Нет минорных аспектов</p>';
+        majorBody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-secondary)">Нет аспектов</td></tr>';
         return;
     }
 
-    // Разделяем на мажорные и минорные
-    const majorAspects = aspects.filter(a => a.is_major);
+    currentMajorAspects = aspects.filter(a => a.is_major);
     const minorAspects = aspects.filter(a => !a.is_major);
 
-    // Группируем мажорные по типу
-    if (majorAspects.length > 0) {
-        const majorGroups = groupAspectsByType(majorAspects);
-        renderAspectGroups(majorGroups, majorContainer);
-    } else {
-        majorContainer.innerHTML = '<p style="color: var(--text-secondary);">Нет мажорных аспектов</p>';
-    }
+    // Сортируем и рендерим мажорные
+    renderSortedMajorAspects();
 
-    // Минорные аспекты
-    if (minorAspects.length > 0) {
-        const minorGroups = groupAspectsByType(minorAspects);
-        renderAspectGroups(minorGroups, minorContainer);
-    } else {
-        minorContainer.innerHTML = '<p style="color: var(--text-secondary);">Нет минорных аспектов</p>';
-    }
-}
-
-function groupAspectsByType(aspects) {
-    const groups = {};
-    aspects.forEach(aspect => {
-        const type = aspect.aspect_type;
-        if (!groups[type]) {
-            groups[type] = [];
-        }
-        groups[type].push(aspect);
+    minorAspects.forEach(aspect => {
+        const row = createAspectRow(aspect);
+        minorBody.appendChild(row);
     });
-    return groups;
+
+    // Инициализируем обработчики сортировки
+    initAspectsSortHandlers();
 }
 
-function renderAspectGroups(groups, container) {
-    const typeOrder = ['Conjunction', 'Opposition', 'Trine', 'Square', 'Sextile',
-                       'Semisextile', 'Quincunx', 'Semisquare', 'Sesquiquadrate',
-                       'Quintile', 'Biquintile'];
+function renderSortedMajorAspects() {
+    const majorBody = document.getElementById('aspectsTableBody');
+    majorBody.innerHTML = '';
 
-    typeOrder.forEach(type => {
-        if (groups[type]) {
-            const groupDiv = document.createElement('div');
-            groupDiv.className = 'aspect-group';
+    const typeOrder = ['Conjunction', 'Opposition', 'Trine', 'Square', 'Sextile'];
+    const sorted = [...currentMajorAspects].sort((a, b) => {
+        if (aspectsSortState.field === 'type') {
+            const aIdx = typeOrder.indexOf(a.aspect_type);
+            const bIdx = typeOrder.indexOf(b.aspect_type);
+            const cmp = aIdx - bIdx;
+            return aspectsSortState.ascending ? cmp : -cmp;
+        } else {
+            const cmp = a.orb - b.orb;
+            return aspectsSortState.ascending ? cmp : -cmp;
+        }
+    });
 
-            const title = document.createElement('div');
-            title.className = 'aspect-group-title';
-            title.textContent = `${ASPECT_NAMES[type] || type} (${groups[type].length})`;
-            groupDiv.appendChild(title);
+    sorted.forEach(aspect => {
+        const row = createAspectRow(aspect);
+        majorBody.appendChild(row);
+    });
+}
 
-            const listDiv = document.createElement('div');
-            listDiv.className = 'aspect-list';
-
-            groups[type].forEach(aspect => {
-                const item = createAspectItem(aspect);
-                listDiv.appendChild(item);
+function initAspectsSortHandlers() {
+    document.querySelectorAll('#aspectsSection th.sortable').forEach(th => {
+        th.style.cursor = 'pointer';
+        th.onclick = () => {
+            const field = th.dataset.sort;
+            if (aspectsSortState.field === field) {
+                aspectsSortState.ascending = !aspectsSortState.ascending;
+            } else {
+                aspectsSortState.field = field;
+                aspectsSortState.ascending = true;
+            }
+            // Обновляем индикаторы
+            document.querySelectorAll('#aspectsSection th.sortable').forEach(h => {
+                h.textContent = h.dataset.sort === 'type' ? 'Тип ⇅' : 'Орб ⇅';
             });
-
-            groupDiv.appendChild(listDiv);
-            container.appendChild(groupDiv);
-        }
+            th.textContent = (field === 'type' ? 'Тип ' : 'Орб ') + (aspectsSortState.ascending ? '↑' : '↓');
+            renderSortedMajorAspects();
+        };
     });
 }
 
-function createAspectItem(aspect) {
-    const div = document.createElement('div');
-    div.className = `aspect-item ${aspect.harmonic_type || 'neutral'}`;
+function createAspectRow(aspect) {
+    const tr = document.createElement('tr');
 
-    const planetsSpan = document.createElement('span');
-    planetsSpan.className = 'aspect-planets';
-    const p1 = PLANET_NAMES[aspect.planet_1] || aspect.planet_1;
-    const p2 = PLANET_NAMES[aspect.planet_2] || aspect.planet_2;
-    planetsSpan.textContent = `${p1} — ${p2}`;
-
-    const typeSpan = document.createElement('span');
-    typeSpan.className = 'aspect-type';
-    typeSpan.textContent = ASPECT_NAMES[aspect.aspect_type] || aspect.aspect_type;
-
-    const orbSpan = document.createElement('span');
-    orbSpan.className = 'aspect-orb';
-    orbSpan.textContent = `орб: ${aspect.orb.toFixed(2)}°`;
-    if (aspect.is_partile) {
-        orbSpan.textContent += ' (партильный)';
-        orbSpan.style.fontWeight = '600';
+    // Определяем класс по гармоничности
+    if (aspect.harmonic_type === 'harmonious') {
+        tr.className = 'aspect-row-harmonious';
+    } else if (aspect.harmonic_type === 'tense') {
+        tr.className = 'aspect-row-tense';
+    } else {
+        tr.className = 'aspect-row-neutral';
     }
 
-    div.appendChild(planetsSpan);
-    div.appendChild(typeSpan);
-    div.appendChild(orbSpan);
+    // 1. Символ + название аспекта
+    const tdSymbol = document.createElement('td');
+    tdSymbol.className = 'aspect-symbol';
+    const sym = getAspectSymbol(aspect.aspect_type);
+    const name = getAspectName(aspect.aspect_type);
+    tdSymbol.innerHTML = `${sym} <span class="aspect-name">${name}</span>`;
+    tr.appendChild(tdSymbol);
 
-    return div;
+    // 2. Планеты
+    const tdPlanets = document.createElement('td');
+    const p1 = getPlanetName(aspect.planet_1);
+    const p2 = getPlanetName(aspect.planet_2);
+    tdPlanets.textContent = `${p1} — ${p2}`;
+    tr.appendChild(tdPlanets);
+
+    // 3. Орб
+    const tdOrb = document.createElement('td');
+    tdOrb.className = 'aspect-orb';
+    const orbStr = aspect.orb.toFixed(1) + '°';
+    const partile = aspect.is_partile ? '<span class="partile-badge">⭐</span>' : '';
+    tdOrb.innerHTML = orbStr + partile;
+    tr.appendChild(tdOrb);
+
+    return tr;
 }
 
-function renderConfigurations(configurations) {
+function renderConfigurations(configurations, stelliums) {
     const container = document.getElementById('configurationsContainer');
+    container.innerHTML = '';
 
-    if (!configurations || configurations.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-secondary);">Нет аспектных конфигураций</p>';
+    const hasConfigs = configurations && configurations.length > 0;
+    const hasStelliums = stelliums && stelliums.length > 0;
+
+    if (!hasConfigs && !hasStelliums) {
+        container.innerHTML = '<p style="color: var(--text-secondary);">Нет конфигураций</p>';
         return;
     }
 
-    container.innerHTML = '';
-    configurations.forEach(config => {
+    const row = document.createElement('div');
+    row.className = 'configs-row';
+
+    // Конфигурации
+    configurations?.forEach(config => {
         const card = createConfigCard(config);
-        container.appendChild(card);
+        row.appendChild(card);
     });
+
+    // Стеллиумы
+    stelliums?.forEach(stellium => {
+        const card = createStelliumCard(stellium);
+        row.appendChild(card);
+    });
+
+    container.appendChild(row);
 }
 
 function createConfigCard(config) {
@@ -446,7 +585,7 @@ function createConfigCard(config) {
 
     const strength = document.createElement('div');
     strength.className = 'config-strength';
-    strength.textContent = `Сила: ${config.strength_score?.toFixed(1) || 'N/A'}`;
+    strength.textContent = config.strength_score ? `${config.strength_score.toFixed(0)}%` : '';
 
     header.appendChild(type);
     header.appendChild(strength);
@@ -454,36 +593,20 @@ function createConfigCard(config) {
 
     const planets = document.createElement('div');
     planets.className = 'config-planets';
-    const planetNames = config.planets_involved
-        .map(p => PLANET_NAMES[p] || p)
-        .join(', ');
-    planets.textContent = `Планеты: ${planetNames}`;
+    const planetSymbols = config.planets_involved
+        .map(p => getPlanetSymbol(p))
+        .join(' ');
+    planets.textContent = planetSymbols;
     card.appendChild(planets);
 
     if (config.apex_planet) {
-        const apex = document.createElement('div');
-        apex.style.fontSize = '13px';
-        apex.style.color = 'var(--text-secondary)';
-        apex.textContent = `Апекс: ${PLANET_NAMES[config.apex_planet] || config.apex_planet}`;
-        card.appendChild(apex);
+        const details = document.createElement('div');
+        details.className = 'config-details';
+        details.textContent = `Апекс: ${getPlanetName(config.apex_planet)}`;
+        card.appendChild(details);
     }
 
     return card;
-}
-
-function renderStelliums(stelliums) {
-    const container = document.getElementById('stelliumsContainer');
-
-    if (!stelliums || stelliums.length === 0) {
-        container.innerHTML = '<p style="color: var--text-secondary);">Нет стеллиумов</p>';
-        return;
-    }
-
-    container.innerHTML = '';
-    stelliums.forEach(stellium => {
-        const card = createStelliumCard(stellium);
-        container.appendChild(card);
-    });
 }
 
 function createStelliumCard(stellium) {
@@ -496,13 +619,13 @@ function createStelliumCard(stellium) {
     const type = document.createElement('div');
     type.className = 'config-type';
     const location = stellium.type === 'sign'
-        ? (SIGN_NAMES[stellium.sign] || stellium.sign)
+        ? `${getSignSymbol(stellium.sign)} ${getSignName(stellium.sign)}`
         : `Дом ${stellium.house_number}`;
-    type.textContent = `Стеллиум в ${location}`;
+    type.textContent = `Стеллиум: ${location}`;
 
     const count = document.createElement('div');
     count.className = 'config-strength';
-    count.textContent = `${stellium.count} планет`;
+    count.textContent = `${stellium.count}`;
 
     header.appendChild(type);
     header.appendChild(count);
@@ -510,29 +633,89 @@ function createStelliumCard(stellium) {
 
     const planets = document.createElement('div');
     planets.className = 'config-planets';
-    const planetNames = stellium.planets
-        .map(p => PLANET_NAMES[p] || p)
-        .join(', ');
-    planets.textContent = planetNames;
+    const planetSymbols = stellium.planets
+        .map(p => getPlanetSymbol(p))
+        .join(' ');
+    planets.textContent = planetSymbols;
     card.appendChild(planets);
 
     return card;
 }
 
+function renderBalances(balances, pattern) {
+    const container = document.getElementById('balancesContainer');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (!balances) {
+        container.innerHTML = '<p style="color: var(--text-secondary);">Нет данных о балансах</p>';
+        return;
+    }
+
+    const row = document.createElement('div');
+    row.className = 'balances-compact';
+
+    // Элементы (на русском)
+    if (balances.element_balance) {
+        const group = createBalanceGroup('Стихии:', balances.element_balance, {
+            'Fire': 'Огонь', 'Earth': 'Земля', 'Air': 'Воздух', 'Water': 'Вода'
+        });
+        row.appendChild(group);
+    }
+
+    // Кресты (на русском)
+    if (balances.mode_balance) {
+        const group = createBalanceGroup('Кресты:', balances.mode_balance, {
+            'Cardinal': 'Кард', 'Fixed': 'Фикс', 'Mutable': 'Мут'
+        });
+        row.appendChild(group);
+    }
+
+    // Полярность (на русском)
+    if (balances.gender_balance) {
+        const group = createBalanceGroup('Полярность:', balances.gender_balance, {
+            'Masculine': 'Муж', 'Feminine': 'Жен'
+        });
+        row.appendChild(group);
+    }
+
+    container.appendChild(row);
+}
+
+function createBalanceGroup(icon, data, labels) {
+    const group = document.createElement('div');
+    group.className = 'balance-group';
+
+    // Иконка группы
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'balance-icon';
+    iconSpan.textContent = icon;
+    group.appendChild(iconSpan);
+
+    // Значения
+    let total = 0;
+    for (const val of Object.values(data)) total += val;
+
+    for (const [key, val] of Object.entries(data)) {
+        const item = document.createElement('span');
+        item.className = 'balance-item';
+        const pct = total > 0 ? Math.round((val / total) * 100) : 0;
+        const label = labels[key] || key;
+        item.innerHTML = `<span class="balance-label">${label}</span><span class="balance-value">${pct}%</span>`;
+        group.appendChild(item);
+    }
+
+    return group;
+}
+
 function renderSpecialPoints(specialPoints) {
     const tbody = document.getElementById('specialPointsTableBody');
+    if (!tbody) return;
     tbody.innerHTML = '';
 
-    // special_points - это объект, а не массив
     if (!specialPoints || typeof specialPoints !== 'object') {
-        const tr = document.createElement('tr');
-        const td = document.createElement('td');
-        td.colSpan = 4;
-        td.style.textAlign = 'center';
-        td.style.color = 'var(--text-secondary)';
-        td.textContent = 'Нет специальных точек';
-        tr.appendChild(td);
-        tbody.appendChild(tr);
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-secondary)">Нет специальных точек</td></tr>';
         return;
     }
 
@@ -545,22 +728,23 @@ function renderSpecialPoints(specialPoints) {
             hasPoints = true;
             const tr = document.createElement('tr');
 
-            // Точка
+            // 1. Точка (символ + название)
             const tdName = document.createElement('td');
-            tdName.textContent = PLANET_NAMES[pointName] || pointName;
+            tdName.innerHTML = `<span class="planet-cell">
+                <span class="planet-symbol">${getPlanetSymbol(pointName)}</span>
+                <span class="planet-name">${getPlanetName(pointName)}</span>
+            </span>`;
             tr.appendChild(tdName);
 
-            // Знак
-            const tdSign = document.createElement('td');
-            tdSign.textContent = SIGN_NAMES[point.sign] || point.sign;
-            tr.appendChild(tdSign);
+            // 2. Позиция
+            const tdPos = document.createElement('td');
+            tdPos.className = 'position-cell';
+            const signSym = getSignSymbol(point.sign);
+            const deg = formatDegree(point);
+            tdPos.innerHTML = `${signSym} ${getSignName(point.sign)} ${deg}`;
+            tr.appendChild(tdPos);
 
-            // Градус
-            const tdDegree = document.createElement('td');
-            tdDegree.textContent = point.degree_in_sign_formatted || `${point.degree_in_sign.toFixed(2)}°`;
-            tr.appendChild(tdDegree);
-
-            // Дом
+            // 3. Дом
             const tdHouse = document.createElement('td');
             tdHouse.textContent = point.house || '—';
             tr.appendChild(tdHouse);
@@ -570,14 +754,7 @@ function renderSpecialPoints(specialPoints) {
     });
 
     if (!hasPoints) {
-        const tr = document.createElement('tr');
-        const td = document.createElement('td');
-        td.colSpan = 4;
-        td.style.textAlign = 'center';
-        td.style.color = 'var(--text-secondary)';
-        td.textContent = 'Нет специальных точек';
-        tr.appendChild(td);
-        tbody.appendChild(tr);
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-secondary)">Нет специальных точек</td></tr>';
     }
 }
 

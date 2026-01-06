@@ -19,53 +19,100 @@
                 <h1 id="chartTitle">Натальная карта</h1>
                 <p id="birthDetails" class="birth-details"></p>
             </div>
-            <a href="chart.html" class="view-chart-btn">Круговая карта</a>
+            <div class="header-actions">
+                <a href="chart.html" class="view-chart-btn">🔮 Круговая карта</a>
+                <button class="legend-toggle-btn" id="legendToggle">📋 Легенда</button>
+            </div>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="natal-content">
-        <!-- Section 1: Birth Data & Key Info -->
-        <section class="section" id="birthDataSection">
-            <h2 class="section-title">Данные рождения</h2>
-            <div class="info-grid">
-                <div class="info-card">
-                    <span class="info-label">Дата и время</span>
-                    <span class="info-value" id="birthDateTime"></span>
-                </div>
-                <div class="info-card">
-                    <span class="info-label">Место</span>
-                    <span class="info-value" id="birthPlace"></span>
-                </div>
-                <div class="info-card">
-                    <span class="info-label">ASC (Асцендент)</span>
-                    <span class="info-value" id="ascValue"></span>
-                </div>
-                <div class="info-card">
-                    <span class="info-label">MC (Середина неба)</span>
-                    <span class="info-value" id="mcValue"></span>
-                </div>
-                <div class="info-card" id="jonesPatternCard">
-                    <span class="info-label">Фигура Джонса</span>
-                    <span class="info-value" id="jonesPattern"></span>
+    <!-- Compact Summary Bar -->
+    <div class="summary-bar" id="summaryBar">
+        <div class="summary-content">
+            <div class="summary-item">
+                <span class="summary-label">ASC</span>
+                <span class="summary-value" id="summaryAsc"></span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">MC</span>
+                <span class="summary-value" id="summaryMc"></span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">☉</span>
+                <span class="summary-value" id="summarySun"></span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">☽</span>
+                <span class="summary-value" id="summaryMoon"></span>
+            </div>
+            <div class="summary-divider"></div>
+            <div class="summary-item">
+                <span class="summary-label">Фигура</span>
+                <span class="summary-value" id="summaryPattern"></span>
+            </div>
+            <div class="summary-item dominants" id="summaryDominants"></div>
+        </div>
+    </div>
+
+    <!-- Legend Panel (hidden by default) -->
+    <div class="legend-panel hidden" id="legendPanel">
+        <div class="legend-content">
+            <div class="legend-group">
+                <div class="legend-title">Достоинство</div>
+                <div class="legend-items">
+                    <span class="legend-item"><span class="dignity-badge dignity-domicile">H</span> Обитель</span>
+                    <span class="legend-item"><span class="dignity-badge dignity-exaltation">X</span> Экзальтация</span>
+                    <span class="legend-item"><span class="dignity-badge dignity-detriment">D</span> Детримент</span>
+                    <span class="legend-item"><span class="dignity-badge dignity-fall">F</span> Падение</span>
                 </div>
             </div>
-        </section>
+            <div class="legend-group">
+                <div class="legend-title">Движение</div>
+                <div class="legend-items">
+                    <span class="legend-item"><span class="move-badge move-d">D</span> Директ</span>
+                    <span class="legend-item"><span class="move-badge move-r">R</span> Ретро</span>
+                    <span class="legend-item"><span class="move-badge move-s">S</span> Стационар</span>
+                </div>
+            </div>
+            <div class="legend-group">
+                <div class="legend-title">Особенности</div>
+                <div class="legend-items">
+                    <span class="legend-item"><span class="feat-icon">🔴</span> ana = анарета</span>
+                    <span class="legend-item"><span class="feat-icon">⭐</span> roy = королевский</span>
+                    <span class="legend-item"><span class="feat-icon">🔥</span> comb = сожжён</span>
+                    <span class="legend-item"><span class="feat-icon">☀️</span> caz = казими</span>
+                    <span class="legend-item"><span class="feat-icon">🐢</span> slow = медленный</span>
+                    <span class="legend-item"><span class="feat-icon">🚀</span> fast = быстрый</span>
+                    <span class="legend-item"><span class="feat-icon">⬛</span> int = включённый знак</span>
+                    <span class="legend-item"><span class="feat-icon">🎯</span> hdl = ручка</span>
+                    <span class="legend-item"><span class="feat-icon">👑</span> king = король асп.</span>
+                    <span class="legend-item"><span class="feat-icon">🏔️</span> elev = элевация</span>
+                    <span class="legend-item"><span class="feat-icon">⚔️</span> dory = дорифорий</span>
+                    <span class="legend-item"><span class="feat-icon">🛡️</span> char = возничий</span>
+                    <span class="legend-item"><span class="feat-icon">⛏️</span> mine = в шахте</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <!-- Section 2: Planets Table -->
+    <!-- Main Content -->
+    <main class="natal-content">
+
+        <!-- Section 1: Planets Table (Full) -->
         <section class="section" id="planetsSection">
-            <h2 class="section-title">Планеты</h2>
+            <h2 class="section-title">🪐 Планеты</h2>
             <div class="table-wrapper">
-                <table class="data-table planets-table">
+                <table class="data-table planets-table compact-table">
                     <thead>
                         <tr>
                             <th>Планета</th>
-                            <th>Знак</th>
-                            <th>Градус</th>
+                            <th>Позиция</th>
                             <th>Дом</th>
-                            <th>R</th>
-                            <th>Достоинство</th>
+                            <th>Дост</th>
+                            <th>Движ</th>
+                            <th>Скор</th>
                             <th>Особенности</th>
+                            <th>Упр.</th>
                         </tr>
                     </thead>
                     <tbody id="planetsTableBody"></tbody>
@@ -73,72 +120,82 @@
             </div>
         </section>
 
-        <!-- Section 3: Houses Table -->
-        <section class="section" id="housesSection">
-            <h2 class="section-title">Дома</h2>
-            <div class="table-wrapper">
-                <table class="data-table houses-table">
-                    <thead>
-                        <tr>
-                            <th>Дом</th>
-                            <th>Знак</th>
-                            <th>Градус</th>
-                            <th>Управитель</th>
-                            <th>Упр. в доме</th>
-                            <th>Планеты в доме</th>
-                        </tr>
-                    </thead>
-                    <tbody id="housesTableBody"></tbody>
-                </table>
-            </div>
-        </section>
+        <!-- Two Column Layout: Houses + Aspects -->
+        <div class="two-columns">
+            <!-- Section 2: Houses Table -->
+            <section class="section" id="housesSection">
+                <h2 class="section-title">🏠 Дома</h2>
+                <div class="table-wrapper">
+                    <table class="data-table houses-table compact-table">
+                        <thead>
+                            <tr>
+                                <th>Дом</th>
+                                <th>Знак</th>
+                                <th>Упр. (соупр.)</th>
+                                <th>↳в</th>
+                                <th>Вкл</th>
+                                <th>Планеты</th>
+                            </tr>
+                        </thead>
+                        <tbody id="housesTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
 
-        <!-- Section 4: Aspects -->
-        <section class="section" id="aspectsSection">
-            <h2 class="section-title">Аспекты</h2>
-            
-            <!-- Major Aspects -->
-            <div class="subsection">
-                <h3 class="subsection-title">Мажорные аспекты</h3>
-                <div id="majorAspectsContainer"></div>
-            </div>
+            <!-- Section 3: Aspects -->
+            <section class="section" id="aspectsSection">
+                <h2 class="section-title">🔗 Аспекты</h2>
+                <div class="table-wrapper">
+                    <table class="data-table aspects-table compact-table">
+                        <thead>
+                            <tr>
+                                <th class="sortable" data-sort="type">Тип ⇅</th>
+                                <th>Аспект</th>
+                                <th class="sortable" data-sort="orb">Орб ⇅</th>
+                            </tr>
+                        </thead>
+                        <tbody id="aspectsTableBody"></tbody>
+                    </table>
+                </div>
+                <details class="minor-aspects-toggle">
+                    <summary>Минорные аспекты</summary>
+                    <div class="table-wrapper">
+                        <table class="data-table aspects-table compact-table">
+                            <tbody id="minorAspectsTableBody"></tbody>
+                        </table>
+                    </div>
+                </details>
+            </section>
+        </div>
 
-            <!-- Minor Aspects (collapsible) -->
-            <details class="subsection collapsible">
-                <summary class="subsection-title">Минорные аспекты</summary>
-                <div id="minorAspectsContainer"></div>
-            </details>
-        </section>
-
-        <!-- Section 5: Configurations -->
+        <!-- Section 4: Configurations & Stelliums -->
         <section class="section" id="configurationsSection">
-            <h2 class="section-title">Конфигурации</h2>
-            <div id="configurationsContainer"></div>
+            <h2 class="section-title">⭐ Конфигурации</h2>
+            <div class="configs-row" id="configurationsContainer"></div>
         </section>
 
-        <!-- Section 6: Stelliums -->
-        <section class="section" id="stelliumsSection">
-            <h2 class="section-title">Стеллиумы</h2>
-            <div id="stelliumsContainer"></div>
+        <!-- Section 5: Balances (Compact) -->
+        <section class="section balances-section" id="balancesSection">
+            <h2 class="section-title">📊 Балансы</h2>
+            <div class="balances-compact" id="balancesContainer"></div>
         </section>
 
-        <!-- Section 7: Special Points -->
-        <section class="section" id="specialPointsSection">
-            <h2 class="section-title">Специальные точки</h2>
+        <!-- Section 6: Special Points (Compact) -->
+        <details class="section collapsible-section">
+            <summary class="section-title clickable">📍 Специальные точки</summary>
             <div class="table-wrapper">
-                <table class="data-table special-points-table">
+                <table class="data-table special-points-table compact-table">
                     <thead>
                         <tr>
                             <th>Точка</th>
-                            <th>Знак</th>
-                            <th>Градус</th>
+                            <th>Позиция</th>
                             <th>Дом</th>
                         </tr>
                     </thead>
                     <tbody id="specialPointsTableBody"></tbody>
                 </table>
             </div>
-        </section>
+        </details>
     </main>
 
     <script src="js/symbols.js"></script>
