@@ -229,16 +229,22 @@ class ChartDataRenderer {
 
     renderConfigurations(configurations, stelliums) {
         if (!this.configsContainer) return;
-        
+
         let html = '';
-        
-        // Конфигурации
+
+        // Конфигурации (сортируем по силе)
         if (configurations && configurations.length > 0) {
+            const sortedConfigs = [...configurations].sort((a, b) => {
+                const strengthA = a.strength_score || 0;
+                const strengthB = b.strength_score || 0;
+                return strengthB - strengthA;
+            });
+
             html += '<h3 style="margin-bottom: 12px; font-size: 15px;">Аспектные конфигурации</h3>';
-            html += configurations.map(c => `
+            html += sortedConfigs.map(c => `
                 <div class="config-card">
                     <h4>
-                        ${Symbols.configIcons[c.type] || '◆'} 
+                        ${Symbols.configIcons[c.type] || '◆'}
                         ${this.formatConfigType(c.type)}
                     </h4>
                     ${c.apex_planet ? `<p>Апекс: ${Symbols.planetNamesRu[c.apex_planet] || c.apex_planet}</p>` : ''}
@@ -254,10 +260,14 @@ class ChartDataRenderer {
             `).join('');
         }
         
-        // Стеллиумы
+        // Стеллиумы (сортируем по количеству планет)
         if (stelliums && stelliums.length > 0) {
+            const sortedStelliums = [...stelliums].sort((a, b) => {
+                return (b.count || 0) - (a.count || 0);
+            });
+
             html += '<h3 style="margin: 20px 0 12px; font-size: 15px;">Стеллиумы</h3>';
-            html += stelliums.map(s => `
+            html += sortedStelliums.map(s => `
                 <div class="config-card">
                     <h4>
                         ⭐ ${s.type === 'house' ? `${s.house_number} дом` : Symbols.signNamesRu[s.sign] || s.sign}

@@ -619,14 +619,25 @@ function renderConfigurations(configurations, stelliums) {
     const row = document.createElement('div');
     row.className = 'configs-row';
 
+    // Сортируем конфигурации по силе (от большей к меньшей)
+    const sortedConfigs = configurations ? [...configurations].sort((a, b) => {
+        const strengthA = a.strength_score || 0;
+        const strengthB = b.strength_score || 0;
+        return strengthB - strengthA;
+    }) : [];
+
     // Конфигурации
-    configurations?.forEach(config => {
+    sortedConfigs.forEach(config => {
         const card = createConfigCard(config);
         row.appendChild(card);
     });
 
-    // Стеллиумы
-    stelliums?.forEach(stellium => {
+    // Стеллиумы (сортируем по количеству планет)
+    const sortedStelliums = stelliums ? [...stelliums].sort((a, b) => {
+        return (b.count || 0) - (a.count || 0);
+    }) : [];
+
+    sortedStelliums.forEach(stellium => {
         const card = createStelliumCard(stellium);
         row.appendChild(card);
     });
