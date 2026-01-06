@@ -73,7 +73,9 @@ class NatalPlanet(Base):
     aspect_harmony = Column(String(15))  # harmonious/tense/mixed
     is_stationary = Column(Boolean, default=False)  # Стационарная
     stationary_type = Column(String(5))  # SR/SD
-    karmic_score = Column(Numeric(6, 2))  # Кармический статус
+    karmic_score = Column(Numeric(6, 2))  # Итоговый кармический статус
+    karmic_minus_score = Column(Integer, default=0)  # Минусовой столбик
+    karmic_plus_score = Column(Integer, default=0)  # Плюсовой столбик
 
     # Миграция 007: Связи планета-дом
     ruled_houses = Column(JSONB, default=[])  # Номера домов, которыми управляет планета

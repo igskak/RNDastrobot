@@ -282,7 +282,22 @@ function createPlanetRow(planet, houses) {
     }
     tr.appendChild(tdDignity);
 
-    // 5. Движение (D/R/S)
+    // 5. Гармония аспектов (harmonious/tense/mixed)
+    const tdHarmony = document.createElement('td');
+    if (planet.aspect_harmony) {
+        const harmonyLabels = {
+            'harmonious': { text: '✓', class: 'harmony-good', title: 'Гармоничные аспекты' },
+            'tense': { text: '✗', class: 'harmony-bad', title: 'Напряжённые аспекты' },
+            'mixed': { text: '~', class: 'harmony-mixed', title: 'Смешанные аспекты' }
+        };
+        const h = harmonyLabels[planet.aspect_harmony] || { text: '?', class: '', title: '' };
+        tdHarmony.innerHTML = `<span class="harmony-badge ${h.class}" title="${h.title}">${h.text}</span>`;
+    } else {
+        tdHarmony.textContent = '—';
+    }
+    tr.appendChild(tdHarmony);
+
+    // 6. Движение (D/R/S)
     const tdMove = document.createElement('td');
     if (planet.is_stationary) {
         tdMove.innerHTML = `<span class="move-badge move-s">S</span>`;
@@ -293,7 +308,7 @@ function createPlanetRow(planet, houses) {
     }
     tr.appendChild(tdMove);
 
-    // 6. Скорость (speed_percent или вычисляем из speed)
+    // 7. Скорость (speed_percent или вычисляем из speed)
     const tdSpeed = document.createElement('td');
     tdSpeed.className = 'speed-cell';
     let speedPct = planet.speed_percent;
@@ -314,7 +329,32 @@ function createPlanetRow(planet, houses) {
     }
     tr.appendChild(tdSpeed);
 
-    // 7. Особенности (текстом)
+    // 8. Кармический статус (minus / plus → итог)
+    const tdKarma = document.createElement('td');
+    tdKarma.className = 'karma-cell';
+    const minus = planet.karmic_minus_score || 0;
+    const plus = planet.karmic_plus_score || 0;
+    const total = planet.karmic_score;
+
+    if (minus > 0 || plus > 0 || total) {
+        // Определяем цвет по преобладанию
+        let karmaClass = '';
+        if (minus > plus) karmaClass = 'karma-negative';
+        else if (plus > minus) karmaClass = 'karma-positive';
+        else karmaClass = 'karma-neutral';
+
+        // Формат: -5|+2 или просто итог если столбики не заданы
+        if (minus > 0 || plus > 0) {
+            tdKarma.innerHTML = `<span class="${karmaClass}" title="Итог: ${total || Math.max(minus, plus)}">-${minus}|+${plus}</span>`;
+        } else if (total) {
+            tdKarma.innerHTML = `<span class="${karmaClass}">${total}</span>`;
+        }
+    } else {
+        tdKarma.textContent = '—';
+    }
+    tr.appendChild(tdKarma);
+
+    // 9. Особенности (текстом)
     const tdFeatures = document.createElement('td');
     tdFeatures.className = 'features-cell';
     const features = [];
@@ -353,7 +393,7 @@ function createPlanetRow(planet, houses) {
     tdFeatures.textContent = features.length > 0 ? features.join(', ') : '—';
     tr.appendChild(tdFeatures);
 
-    // 8. Управляемые дома
+    // 10. Управляемые дома
     const tdRuled = document.createElement('td');
     tdRuled.className = 'ruled-houses';
     if (planet.ruled_houses?.length > 0) {

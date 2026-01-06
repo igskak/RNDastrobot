@@ -92,7 +92,7 @@ class NatalChartService:
         configurations = self._calculate_configurations(special_points, houses)
 
         # 8. Обогащаем данные характеристиками (без БД — без аспектов)
-        planets = self._enrich_planets_basic(planets, houses)
+        planets = self._enrich_planets_basic(planets, houses, angles, special_points)
         houses = self._enrich_houses_basic(houses)
 
         # 8.1. Добавляем связи дом-планета
@@ -250,7 +250,13 @@ class NatalChartService:
 
         return configurations
 
-    def _enrich_planets_basic(self, planets: list, houses: list) -> list:
+    def _enrich_planets_basic(
+        self,
+        planets: list,
+        houses: list,
+        angles: dict = None,
+        special_points: dict = None
+    ) -> list:
         """
         Базовое обогащение планет (без БД и аспектов).
         Используется при расчёте без сохранения в БД.
@@ -267,8 +273,11 @@ class NatalChartService:
             # Dignity
             planet['dignity'] = PlanetCharacteristicsService.get_dignity(planet_name, sign)
 
-        # Уровни 1-5: Характеристики (без аспектов — шахта и гармония будут None)
-        planets = PlanetCharacteristicsService.enrich_planets(planets, houses, aspects=[])
+        # Уровни 1-6: Характеристики (без аспектов — шахта и гармония будут None)
+        planets = PlanetCharacteristicsService.enrich_planets(
+            planets, houses, aspects=[],
+            angles=angles, special_points=special_points
+        )
         return planets
 
     def _enrich_houses_basic(self, houses: list) -> list:
@@ -316,7 +325,9 @@ class NatalChartService:
         planets: list,
         houses: list,
         aspects: list,
-        db_session: Session
+        db_session: Session,
+        angles: dict = None,
+        special_points: dict = None
     ) -> list:
         """
         Обогатить планеты свойствами знаков и достоинствами
@@ -332,12 +343,15 @@ class NatalChartService:
         - is_elevated (планета в элевации)
         - is_peregrine (шахта — без аспектов)
         - aspect_harmony (harmonic/tense/mixed)
+        - karmic_minus_score, karmic_plus_score, karmic_score
 
         Args:
             planets: Список планет с базовыми данными
             houses: Список домов (для расчёта включённых знаков)
             aspects: Список аспектов (для шахты и гармонии)
             db_session: SQLAlchemy сессия
+            angles: Углы карты (для кармического статуса)
+            special_points: Специальные точки (для кармического статуса)
 
         Returns:
             Обогащённый список планет
@@ -358,8 +372,11 @@ class NatalChartService:
             # Определяем достоинство
             planet['dignity'] = dignity_service.calculate_dignity(planet_name, sign)
 
-        # Уровни 1-4: Характеристики планет
-        planets = PlanetCharacteristicsService.enrich_planets(planets, houses, aspects)
+        # Уровни 1-6: Характеристики планет
+        planets = PlanetCharacteristicsService.enrich_planets(
+            planets, houses, aspects,
+            angles=angles, special_points=special_points
+        )
 
         return planets
 
@@ -596,9 +613,12 @@ class NatalChartService:
         houses = self._enrich_houses_with_properties(houses, db_session)
 
         # Добавляем element, mode, dignity, speed_percent, critical_degrees,
-        # sun_relation, in_intercepted_sign, is_elevated для планет
+        # sun_relation, in_intercepted_sign, is_elevated, karmic_score для планет
         # (аспекты ещё не вычислены, поэтому передаём пустой список)
-        planets = self._enrich_planets_with_properties(planets, houses, [], db_session)
+        planets = self._enrich_planets_with_properties(
+            planets, houses, [], db_session,
+            angles=angles, special_points=special_points
+        )
 
         # Добавляем связи дом-планета:
         # - ruled_houses для планет (какими домами управляет)
@@ -737,6 +757,8 @@ class NatalChartService:
                     'is_stationary': p.is_stationary or False,
                     'stationary_type': p.stationary_type,
                     'karmic_score': float(p.karmic_score) if p.karmic_score else None,
+                    'karmic_minus_score': p.karmic_minus_score or 0,
+                    'karmic_plus_score': p.karmic_plus_score or 0,
                     # Миграция 007: Связи планета-дом
                     'ruled_houses': p.ruled_houses or [],
                 }

@@ -53,6 +53,8 @@ class NatalChartRepository:
                 is_stationary=planet_data.get('is_stationary', False),
                 stationary_type=planet_data.get('stationary_type'),
                 karmic_score=planet_data.get('karmic_score'),
+                karmic_minus_score=planet_data.get('karmic_minus_score', 0),
+                karmic_plus_score=planet_data.get('karmic_plus_score', 0),
                 special_roles=planet_data.get('special_roles', []),
                 # Миграция 007: связи планета-дом
                 ruled_houses=planet_data.get('ruled_houses', []),

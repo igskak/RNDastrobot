@@ -78,7 +78,9 @@ class PlanetPosition(BaseModel):
     aspect_harmony: Optional[str] = Field(None, description="Тип аспектов: harmonious, tense, mixed")
     is_stationary: Optional[bool] = Field(default=False, description="Стационарная планета")
     stationary_type: Optional[str] = Field(None, description="Тип стационарности: SR (перед ретро), SD (перед директ)")
-    karmic_score: Optional[float] = Field(None, description="Кармический статус")
+    karmic_score: Optional[float] = Field(None, description="Итоговый кармический статус")
+    karmic_minus_score: Optional[int] = Field(default=0, description="Минусовой столбик кармического статуса")
+    karmic_plus_score: Optional[int] = Field(default=0, description="Плюсовой столбик кармического статуса")
     # Миграция 007: связи планета-дом
     ruled_houses: Optional[List[int]] = Field(default=[], description="Дома, которыми управляет планета")
 

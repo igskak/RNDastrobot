@@ -502,107 +502,329 @@ class PlanetCharacteristicsService:
     # УРОВЕНЬ 6: Кармический статус
     # =========================================================================
 
+    # =========================================================================
+    # Вспомогательные методы для кармического статуса
+    # =========================================================================
+
+    @staticmethod
+    def _normalize_angle(angle: float) -> float:
+        """Нормализовать угол к диапазону 0-360"""
+        angle = angle % 360
+        if angle < 0:
+            angle += 360
+        return angle
+
+    @staticmethod
+    def _angular_distance(lon1: float, lon2: float) -> float:
+        """Кратчайшее угловое расстояние между двумя долготами (0-180)"""
+        diff = abs(lon1 - lon2)
+        if diff > 180:
+            diff = 360 - diff
+        return diff
+
     @classmethod
-    def calculate_karmic_score(cls, planet: Dict[str, Any]) -> int:
+    def _is_on_angle(
+        cls,
+        planet_lon: float,
+        angle_lon: float,
+        orb: float = 5.0
+    ) -> bool:
+        """Проверить, находится ли планета на угле (в пределах орбиса)"""
+        return cls._angular_distance(planet_lon, angle_lon) <= orb
+
+    @classmethod
+    def _has_aspect_to_point(
+        cls,
+        planet_name: str,
+        point_name: str,
+        aspects: List[Dict[str, Any]],
+        aspect_types: List[str]
+    ) -> bool:
         """
-        Рассчитать кармический статус планеты.
+        Проверить, есть ли у планеты аспект к точке.
 
-        Правила начисления баллов (из спецификации):
+        Args:
+            planet_name: Название планеты
+            point_name: Название точки (BlackMoon, TrueNorthNode, etc.)
+            aspects: Список аспектов
+            aspect_types: Типы аспектов для проверки (Conjunction, Trine, etc.)
 
-        -2 балла:
-        - В поражении по аспектам (aspect_harmony == 'tense')
-        - В Изгнании или Падении (dignity in ['detriment', 'fall'])
-        - В ретро-движении (is_retrograde)
-        - В сожжении (sun_relation == 'combust')
+        Returns:
+            True если аспект найден
+        """
+        for aspect in aspects:
+            p1 = aspect.get('planet_1', '')
+            p2 = aspect.get('planet_2', '')
+            aspect_type = aspect.get('aspect_type', '')
 
-        -1 балл:
-        - Во включенном знаке (in_intercepted_sign)
-        - В шахте (is_peregrine)
+            # Проверяем оба направления
+            if aspect_type in aspect_types:
+                if (p1 == planet_name and p2 == point_name) or \
+                   (p1 == point_name and p2 == planet_name):
+                    return True
+        return False
 
-        +2 балла:
-        - Гармонично аспектирована (aspect_harmony == 'harmonious')
-        - В Обители или Экзальтации (dignity in ['domicile', 'exaltation'])
-        - Быстрая в движении (speed_percent > 100)
-        - В сердце Солнца, кроме Луны (sun_relation == 'cazimi' and name != 'Moon')
+    @classmethod
+    def _is_in_ophiuchus_sector(cls, sign: str, degree_in_sign: float) -> bool:
+        """
+        Проверить, находится ли планета в секторе Змееносца.
+        Сектор: 23°-30° Скорпиона + 0°-7° Стрельца
+        """
+        if sign == 'Scorpio' and degree_in_sign >= 23:
+            return True
+        if sign == 'Sagittarius' and degree_in_sign <= 7:
+            return True
+        return False
 
-        +1 балл:
-        - В лучах Солнца, кроме Луны (sun_relation == 'under_rays' and name != 'Moon')
+    @classmethod
+    def calculate_karmic_score(
+        cls,
+        planet: Dict[str, Any],
+        aspects: List[Dict[str, Any]] = None,
+        angles: Dict[str, float] = None,
+        special_points: Dict[str, Any] = None,
+        all_planets: List[Dict[str, Any]] = None
+    ) -> Dict[str, int]:
+        """
+        Рассчитать кармический статус планеты по методичке Алёны.
 
-        ±1 балл:
-        - В элевации (is_elevated)
-        - Стационарная (is_stationary)
-        - В градусе Юбилея или Анареты (critical_degrees)
+        ГЛАВНОЕ: Считаем отдельно минусовой и плюсовой столбик.
+        Столбики НЕ складываем. Если модуль столбика > 3 — суммируем модули.
 
         Args:
             planet: Словарь с данными планеты
+            aspects: Список аспектов карты
+            angles: Углы {ASC: lon, MC: lon, IC: lon, DSC: lon}
+            special_points: Специальные точки {BlackMoon: {longitude: ...}, ...}
+            all_planets: Все планеты карты (для проверки соединений)
 
         Returns:
-            Кармический балл (может быть отрицательным)
+            Dict с ключами: minus_score, plus_score, total
         """
-        score = 0
+        aspects = aspects or []
+        angles = angles or {}
+        special_points = special_points or {}
+        all_planets = all_planets or []
+
+        minus_score = 0
+        plus_score = 0
+
         name = planet.get('name', '')
-
-        # === -2 балла ===
-        if planet.get('aspect_harmony') == 'tense':
-            score -= 2
-
+        longitude = planet.get('longitude', 0.0)
+        sign = planet.get('sign', '')
+        degree_in_sign = planet.get('degree_in_sign', 0.0)
+        house_number = planet.get('house') or planet.get('house_number')
+        ruled_houses = planet.get('ruled_houses', [])
+        special_roles = planet.get('special_roles', [])
         dignity = planet.get('dignity', '')
+
+        # Категория планеты
+        luminaries = {'Sun', 'Moon'}
+        personal = {'Mercury', 'Venus', 'Mars'}
+        outer = {'Uranus', 'Neptune', 'Pluto'}
+
+        # =====================================================================
+        # МИНУСОВОЙ СТОЛБИК (-2 балла)
+        # =====================================================================
+
+        # В поражении по аспектам
+        if planet.get('aspect_harmony') == 'tense':
+            minus_score += 2
+
+        # В Изгнании или Падении
         if dignity in ('detriment', 'fall'):
-            score -= 2
+            minus_score += 2
 
+        # В ретро-движении
         if planet.get('is_retrograde'):
-            score -= 2
+            minus_score += 2
 
+        # В сожжении
         if planet.get('sun_relation') == 'combust':
-            score -= 2
+            minus_score += 2
 
-        # === -1 балл ===
+        # Управляет 4 или 12 домом
+        if 4 in ruled_houses or 12 in ruled_houses:
+            minus_score += 2
+
+        # На ASC со стороны 12 дома (в 12 доме, близко к ASC)
+        asc_lon = angles.get('ASC')
+        if asc_lon is not None and house_number == 12:
+            if cls._is_on_angle(longitude, asc_lon, orb=5.0):
+                minus_score += 2
+
+        # На IC (±5°)
+        ic_lon = angles.get('IC')
+        if ic_lon is not None and cls._is_on_angle(longitude, ic_lon, orb=5.0):
+            minus_score += 2
+
+        # В соединении с Лилит (BlackMoon)
+        if cls._has_aspect_to_point(name, 'BlackMoon', aspects, ['Conjunction']):
+            minus_score += 2
+
+        # Затмение: для Солнца/Луны — соединение с Узлами ≤3°
+        if name in luminaries:
+            north_node = special_points.get('TrueNorthNode', {})
+            south_node = special_points.get('TrueSouthNode', {})
+            nn_lon = north_node.get('longitude')
+            sn_lon = south_node.get('longitude')
+            if nn_lon is not None and cls._angular_distance(longitude, nn_lon) <= 3:
+                minus_score += 2
+            if sn_lon is not None and cls._angular_distance(longitude, sn_lon) <= 3:
+                minus_score += 2
+
+        # =====================================================================
+        # МИНУСОВОЙ СТОЛБИК (-1 балл)
+        # =====================================================================
+
+        # Во включенном знаке
         if planet.get('in_intercepted_sign'):
-            score -= 1
+            minus_score += 1
 
+        # В шахте (без мажорных аспектов)
         if planet.get('is_peregrine'):
-            score -= 1
+            minus_score += 1
 
-        # === +2 балла ===
+        # В 4 или 12 доме
+        if house_number in (4, 12):
+            minus_score += 1
+
+        # Квадратура к Лунным Узлам
+        if cls._has_aspect_to_point(name, 'TrueNorthNode', aspects, ['Square']) or \
+           cls._has_aspect_to_point(name, 'TrueSouthNode', aspects, ['Square']):
+            minus_score += 1
+
+        # =====================================================================
+        # ПЛЮСОВОЙ СТОЛБИК (+2 балла)
+        # =====================================================================
+
+        # Гармонично аспектирована
         if planet.get('aspect_harmony') == 'harmonious':
-            score += 2
+            plus_score += 2
 
+        # В Обители или Экзальтации
         if dignity in ('domicile', 'exaltation'):
-            score += 2
+            plus_score += 2
 
+        # Быстрая в движении (> 100% от средней)
         speed_percent = planet.get('speed_percent')
         if speed_percent is not None and speed_percent > 100:
-            score += 2
+            plus_score += 2
 
+        # В сердце Солнца (Казими), кроме Луны
         if planet.get('sun_relation') == 'cazimi' and name != 'Moon':
-            score += 2
+            plus_score += 2
 
-        # === +1 балл ===
+        # Управляет 1 или 10 домом
+        if 1 in ruled_houses or 10 in ruled_houses:
+            plus_score += 2
+
+        # На ASC со стороны 1 дома (в 1 доме, близко к ASC)
+        if asc_lon is not None and house_number == 1:
+            if cls._is_on_angle(longitude, asc_lon, orb=5.0):
+                plus_score += 2
+
+        # На MC (±5°)
+        mc_lon = angles.get('MC')
+        if mc_lon is not None and cls._is_on_angle(longitude, mc_lon, orb=5.0):
+            plus_score += 2
+
+        # =====================================================================
+        # ПЛЮСОВОЙ СТОЛБИК (+1 балл)
+        # =====================================================================
+
+        # В лучах Солнца, кроме Луны
         if planet.get('sun_relation') == 'under_rays' and name != 'Moon':
-            score += 1
+            plus_score += 1
 
-        # === ±1 балл (добавляем в обе стороны = 0, но отмечаем как особый опыт) ===
-        # Для простоты: +1 для положительных, -1 для отрицательных
-        # Элевация — позитивный опыт
+        # В 1 или 10 доме
+        if house_number in (1, 10):
+            plus_score += 1
+
+        # Гармоничные аспекты к Узлам (трин, секстиль)
+        harmonious_aspects = ['Trine', 'Sextile']
+        if cls._has_aspect_to_point(name, 'TrueNorthNode', aspects, harmonious_aspects) or \
+           cls._has_aspect_to_point(name, 'TrueSouthNode', aspects, harmonious_aspects):
+            plus_score += 1
+
+        # Возничий (Charioteer) — из special_roles
+        if 'charioteer' in special_roles or 'doryphoros' in special_roles:
+            plus_score += 1
+
+        # =====================================================================
+        # ±1 БАЛЛ (в оба столбика)
+        # =====================================================================
+
+        # Элевация
         if planet.get('is_elevated'):
-            score += 1
+            plus_score += 1
+            minus_score += 1
 
-        # Стационарность — амбивалентный опыт, +1
+        # Стационарность
         if planet.get('is_stationary'):
-            score += 1
+            plus_score += 1
+            minus_score += 1
 
-        # Критические градусы
+        # Ручка корзины/ведра
+        if 'handle' in special_roles or 'bucket_handle' in special_roles:
+            plus_score += 1
+            minus_score += 1
+
+        # Король аспектов
+        if 'aspect_king' in special_roles:
+            plus_score += 1
+            minus_score += 1
+
+        # Сектор Змееносца
+        if cls._is_in_ophiuchus_sector(sign, degree_in_sign):
+            plus_score += 1
+            minus_score += 1
+
+        # Юбилей (первые 3° знака) и Анарета (последние 3° знака)
         critical = planet.get('critical_degrees', [])
         if 'jubilee' in critical:
-            score += 1
+            plus_score += 1
+            minus_score += 1
         if 'anareta' in critical:
-            score -= 1  # Анарета — негативный
-        if 'royal' in critical:
-            score += 1
-        if 'destructive' in critical:
-            score -= 1
+            plus_score += 1
+            minus_score += 1
 
-        return score
+        # Соединение с Узлами (для светил и личностных планет)
+        if name in luminaries | personal:
+            if cls._has_aspect_to_point(name, 'TrueNorthNode', aspects, ['Conjunction']) or \
+               cls._has_aspect_to_point(name, 'TrueSouthNode', aspects, ['Conjunction']):
+                plus_score += 1
+                minus_score += 1
+
+        # Соединение Солнце-Луна (для светил)
+        if name in luminaries:
+            other_luminary = 'Moon' if name == 'Sun' else 'Sun'
+            if cls._has_aspect_to_point(name, other_luminary, aspects, ['Conjunction']):
+                plus_score += 1
+                minus_score += 1
+
+        # Высшие планеты + Луна соединение
+        if name == 'Moon':
+            for outer_planet in outer:
+                if cls._has_aspect_to_point(name, outer_planet, aspects, ['Conjunction']):
+                    plus_score += 1
+                    minus_score += 1
+                    break
+
+        # =====================================================================
+        # ИТОГОВЫЙ РАСЧЁТ
+        # =====================================================================
+        # Если любой столбик > 3, суммируем модули
+        if minus_score > 3 or plus_score > 3:
+            total = minus_score + plus_score
+        else:
+            total = max(minus_score, plus_score)
+
+        return {
+            'minus_score': minus_score,
+            'plus_score': plus_score,
+            'total': total
+        }
 
     # =========================================================================
     # Публичные методы для обогащения данных
@@ -614,16 +836,20 @@ class PlanetCharacteristicsService:
         planets: List[Dict[str, Any]],
         houses: List[Dict[str, Any]] = None,
         aspects: List[Dict[str, Any]] = None,
-        sun_is_strong: bool = False
+        sun_is_strong: bool = False,
+        angles: Dict[str, Any] = None,
+        special_points: Dict[str, Any] = None
     ) -> List[Dict[str, Any]]:
         """
-        Обогатить список планет характеристиками Уровней 1-4.
+        Обогатить список планет характеристиками Уровней 1-6.
 
         Args:
             planets: Список словарей с данными планет
             houses: Список домов (для расчёта включённых знаков)
             aspects: Список аспектов (для шахты и гармонии)
             sun_is_strong: Солнце в сильном положении (для расширения орбиса лучей)
+            angles: Углы карты (для кармического статуса)
+            special_points: Специальные точки (для кармического статуса)
 
         Returns:
             Обогащённый список планет
@@ -643,6 +869,17 @@ class PlanetCharacteristicsService:
 
         # УРОВЕНЬ 4: Находим планеты в шахте
         peregrine_planets = cls.find_peregrine_planets(planets, aspects or [])
+
+        # Подготовка данных для кармического статуса
+        # Извлекаем долготы углов
+        angles_lon = {}
+        if angles:
+            for angle_name in ('ASC', 'MC', 'IC', 'DSC'):
+                angle_data = angles.get(angle_name, {})
+                if isinstance(angle_data, dict):
+                    angles_lon[angle_name] = angle_data.get('longitude')
+                elif isinstance(angle_data, (int, float)):
+                    angles_lon[angle_name] = angle_data
 
         for planet in planets:
             name = planet.get('name', '')
@@ -684,7 +921,16 @@ class PlanetCharacteristicsService:
             planet['stationary_type'] = stationary_type
 
             # УРОВЕНЬ 6: Кармический статус (рассчитывается после всех других характеристик)
-            planet['karmic_score'] = cls.calculate_karmic_score(planet)
+            karmic_result = cls.calculate_karmic_score(
+                planet,
+                aspects=aspects or [],
+                angles=angles_lon,
+                special_points=special_points or {},
+                all_planets=planets
+            )
+            planet['karmic_minus_score'] = karmic_result['minus_score']
+            planet['karmic_plus_score'] = karmic_result['plus_score']
+            planet['karmic_score'] = karmic_result['total']
 
         return planets
 
