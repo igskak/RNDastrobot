@@ -55,7 +55,11 @@ const CONFIG_NAMES_RU = {
     'Yod': 'Йод (Перст Судьбы)',
     'Mystic_Rectangle': 'Мистический прямоугольник',
     'Kite': 'Воздушный змей',
-    'Star_of_David': 'Звезда Давида'
+    'Star_of_David': 'Звезда Давида',
+    'Bisextile': 'Бисекстиль',
+    'Sail': 'Парус',
+    'Skewed_Sail': 'Косой парус',
+    'Chariot': 'Повозка'
 };
 const getConfigName = (type) => CONFIG_NAMES_RU[type] || type.replace(/_/g, ' ');
 

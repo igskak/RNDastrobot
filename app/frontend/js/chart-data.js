@@ -299,7 +299,11 @@ class ChartDataRenderer {
             'Yod': 'Йод (Перст Судьбы)',
             'Mystic_Rectangle': 'Мистический прямоугольник',
             'Kite': 'Воздушный змей',
-            'Star_of_David': 'Звезда Давида'
+            'Star_of_David': 'Звезда Давида',
+            'Bisextile': 'Бисекстиль',
+            'Sail': 'Парус',
+            'Skewed_Sail': 'Косой парус',
+            'Chariot': 'Повозка'
         };
         return names[type] || type.replace(/_/g, ' ');
     }
