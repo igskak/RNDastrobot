@@ -234,8 +234,11 @@ class AspectService:
             NatalAspect.user_id == user_id
         ).delete()
 
+        # Фильтруем гарантированные математические оппозиции
+        filtered_aspects = self._filter_trivial_aspects(aspects)
+
         # Додати нові аспекти
-        for aspect_data in aspects:
+        for aspect_data in filtered_aspects:
             aspect = NatalAspect(
                 user_id=user_id,
                 planet_1=aspect_data['planet_1'],
@@ -248,6 +251,49 @@ class AspectService:
             self.db.add(aspect)
 
         self.db.commit()
+
+    def _filter_trivial_aspects(self, aspects: List[Dict]) -> List[Dict]:
+        """
+        Фильтрует математически гарантированные оппозиции, которые всегда присутствуют
+        на каждой натальной карте и не несут астрологической информации.
+
+        Исключаемые аспекты:
+        1. TrueNorthNode ☊ TrueSouthNode (Opposition) - математически south = north + 180°
+        2. ASC ☊ DSC (Opposition) - математически dsc = asc + 180°
+        3. MC ☊ IC (Opposition) - математически ic = mc + 180°
+        4. Vertex ☊ AntiVertex (Opposition) - математически anti_vertex = vertex + 180°
+
+        Args:
+            aspects: Список всех найденных аспектов
+
+        Returns:
+            Отфильтрованный список аспектов без тривиальных
+        """
+        # Определяем пары, которые нужно исключить (только оппозиции)
+        trivial_pairs = [
+            # Лунные узлы
+            frozenset(['TrueNorthNode', 'TrueSouthNode']),
+            # Оси углов
+            frozenset(['ASC', 'DSC']),
+            frozenset(['MC', 'IC']),
+            # Вертекс (если определён)
+            frozenset(['Vertex', 'AntiVertex']),
+        ]
+
+        filtered = []
+        for aspect in aspects:
+            pair = frozenset([aspect['planet_1'], aspect['planet_2']])
+
+            # Исключаем только если это оппозиция И это одна из тривиальных пар
+            is_trivial = (
+                aspect['aspect_type'] == 'Opposition' and
+                pair in trivial_pairs
+            )
+
+            if not is_trivial:
+                filtered.append(aspect)
+
+        return filtered
 
     def get_aspects_for_planet(self, user_id: UUID, planet_name: str) -> List[NatalAspect]:
         """

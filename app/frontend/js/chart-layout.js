@@ -108,6 +108,54 @@
         }
     }
 
+    let activeAspectHighlight = null;
+
+    function highlightAspect(aspectKey, active) {
+        // Сбрасываем все выделения аспектов
+        document.querySelectorAll('.aspect-line').forEach(line => {
+            line.style.opacity = '';
+            line.style.strokeWidth = '';
+        });
+        document.querySelectorAll('tr[data-aspect]').forEach(row => {
+            row.classList.remove('active-row');
+        });
+
+        if (active && aspectKey) {
+            activeAspectHighlight = aspectKey;
+
+            // Выделяем линию аспекта на карте
+            const aspectLine = document.querySelector(`.aspect-line[data-aspect="${aspectKey}"]`);
+            if (aspectLine) {
+                aspectLine.style.opacity = '1';
+                aspectLine.style.strokeWidth = '3';
+            }
+
+            // Выделяем строку в таблице
+            const row = document.querySelector(`tr[data-aspect="${aspectKey}"]`);
+            if (row) {
+                row.classList.add('active-row');
+            }
+
+            // Подсветка связанных планет
+            const [p1, p2] = aspectKey.split('-');
+            [p1, p2].forEach(pName => {
+                const group = document.querySelector(`.planet-group[data-planet="${pName}"]`);
+                if (group) {
+                    const circle = group.querySelector('.planet-circle');
+                    if (circle) {
+                        circle.setAttribute('r', '15');
+                    }
+                }
+            });
+        } else {
+            activeAspectHighlight = null;
+            // Сбрасываем размеры планет
+            document.querySelectorAll('.planet-group .planet-circle').forEach(c => {
+                c.setAttribute('r', '12');
+            });
+        }
+    }
+
     function moveTooltip(e, container, tooltip) {
         if (!container || !tooltip) return;
         const rect = container.getBoundingClientRect();
@@ -245,19 +293,45 @@
         document.addEventListener('click', (e) => {
             const row = e.target.closest('tr[data-planet]');
             if (row) {
+                highlightAspect(null, false); // сбросить выделение аспекта
                 highlightPlanet(row.dataset.planet, true, e);
+            }
+        });
+
+        // --- Click on aspect row in table ---
+        document.addEventListener('click', (e) => {
+            const row = e.target.closest('tr[data-aspect]');
+            if (row && !row.hasAttribute('data-planet')) {
+                e.stopPropagation();
+                highlightPlanet(null, false); // сбросить выделение планеты
+                highlightAspect(row.dataset.aspect, true);
+            }
+        });
+
+        // --- Click on aspect line on chart ---
+        document.addEventListener('click', (e) => {
+            const line = e.target.closest('.aspect-line');
+            if (line) {
+                e.stopPropagation();
+                highlightPlanet(null, false);
+                highlightAspect(line.dataset.aspect, true);
             }
         });
 
         // --- Click elsewhere to clear highlight ---
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('.planet-group') && !e.target.closest('tr[data-planet]')) {
+            if (!e.target.closest('.planet-group') &&
+                !e.target.closest('tr[data-planet]') &&
+                !e.target.closest('tr[data-aspect]') &&
+                !e.target.closest('.aspect-line')) {
                 highlightPlanet(null, false);
+                highlightAspect(null, false);
             }
         });
     });
 
     // Expose for external use
     window.highlightPlanet = highlightPlanet;
+    window.highlightAspect = highlightAspect;
 })();
 

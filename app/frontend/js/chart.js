@@ -32,6 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
     chartWheel = new ChartWheel(svgElement);
     chartWheel.draw(chartData);
 
+    // Сохраняем в глобальную область для фильтров
+    window.chartWheel = chartWheel;
+
     // Инициализируем таблицы данных
     chartDataRenderer = new ChartDataRenderer();
     chartDataRenderer.render(chartData);
@@ -285,6 +288,24 @@ function initZoomControls() {
         translateX = 0;
         translateY = 0;
         updateTransform();
+    });
+
+    // Фильтры аспектов
+    document.querySelectorAll('.legend-item.clickable').forEach(item => {
+        item.addEventListener('click', () => {
+            const filter = item.dataset.filter;
+
+            // Обновляем активное состояние
+            document.querySelectorAll('.legend-item.clickable').forEach(i => {
+                i.classList.remove('active');
+            });
+            item.classList.add('active');
+
+            // Применяем фильтр
+            if (window.chartWheel) {
+                window.chartWheel.setAspectFilter(filter);
+            }
+        });
     });
 
     // Сохраняем для pinch-zoom

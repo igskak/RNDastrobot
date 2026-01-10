@@ -12,6 +12,124 @@ class ChartDataRenderer {
         this.configsContainer = document.getElementById('configurationsContainer');
         this.balancesContainer = document.getElementById('balancesContainer');
         this.dignitiesContainer = document.getElementById('dignitiesContainer');
+
+        // Состояние фильтра аспектов (все включены по умолчанию)
+        this.aspectFilterPlanets = new Set();
+        this.aspectTypeFilter = 'all'; // 'all', 'major', 'minor'
+        this.initAspectsSettings();
+    }
+
+    // Все планеты/точки для фильтра аспектов
+    static ASPECT_FILTER_ITEMS = [
+        { id: 'Sun', label: 'Солнце' },
+        { id: 'Moon', label: 'Луна' },
+        { id: 'Mercury', label: 'Меркурий' },
+        { id: 'Venus', label: 'Венера' },
+        { id: 'Mars', label: 'Марс' },
+        { id: 'Jupiter', label: 'Юпитер' },
+        { id: 'Saturn', label: 'Сатурн' },
+        { id: 'Uranus', label: 'Уран' },
+        { id: 'Neptune', label: 'Нептун' },
+        { id: 'Pluto', label: 'Плутон' },
+        { id: 'Chiron', label: 'Хирон' },
+        { id: 'Proserpina', label: 'Прозерпина' },
+        { id: 'TrueNode', label: 'Сев. Узел' },
+        { id: 'SouthNode', label: 'Юж. Узел' },
+        { id: 'BlackMoon', label: 'Лилит' },
+        { id: 'WhiteMoon', label: 'Селена' },
+        { id: 'PartOfFortune', label: 'Фортуна' }
+    ];
+
+    initAspectsSettings() {
+        const settingsBtn = document.getElementById('aspectsSettingsBtn');
+        const settingsPanel = document.getElementById('aspectsSettingsPanel');
+        const togglesContainer = document.getElementById('aspectsPlanetToggles');
+        const resetBtn = document.getElementById('aspectsResetBtn');
+        const majorBtn = document.getElementById('aspectsMajorBtn');
+        const minorBtn = document.getElementById('aspectsMinorBtn');
+
+        if (!settingsBtn || !settingsPanel || !togglesContainer) return;
+
+        // Все планеты включены по умолчанию
+        ChartDataRenderer.ASPECT_FILTER_ITEMS.forEach(item => {
+            this.aspectFilterPlanets.add(item.id);
+        });
+
+        // Генерируем чекбоксы
+        togglesContainer.innerHTML = ChartDataRenderer.ASPECT_FILTER_ITEMS.map(item => `
+            <label class="aspect-planet-toggle">
+                <input type="checkbox" data-planet="${item.id}" checked>
+                <span class="symbol">${Symbols.planets[item.id] || ''}</span>
+                <span>${item.label}</span>
+            </label>
+        `).join('');
+
+        // Переключение панели
+        settingsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            settingsPanel.classList.toggle('hidden');
+        });
+
+        // Обработка чекбоксов
+        togglesContainer.addEventListener('change', (e) => {
+            if (e.target.type !== 'checkbox') return;
+            const planetId = e.target.dataset.planet;
+            if (e.target.checked) {
+                this.aspectFilterPlanets.add(planetId);
+            } else {
+                this.aspectFilterPlanets.delete(planetId);
+            }
+            this.reRenderAspects();
+        });
+
+        // Кнопка "Сбросить" — все галочки, все типы аспектов
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                this.aspectTypeFilter = 'all';
+                ChartDataRenderer.ASPECT_FILTER_ITEMS.forEach(item => {
+                    this.aspectFilterPlanets.add(item.id);
+                });
+                this.updatePlanetCheckboxes();
+                this.reRenderAspects();
+            });
+        }
+
+        // Кнопка "Мажорные"
+        if (majorBtn) {
+            majorBtn.addEventListener('click', () => {
+                this.aspectTypeFilter = 'major';
+                this.reRenderAspects();
+            });
+        }
+
+        // Кнопка "Минорные"
+        if (minorBtn) {
+            minorBtn.addEventListener('click', () => {
+                this.aspectTypeFilter = 'minor';
+                this.reRenderAspects();
+            });
+        }
+
+        // Закрытие при клике вне панели
+        document.addEventListener('click', (e) => {
+            if (!settingsPanel.contains(e.target) && e.target !== settingsBtn) {
+                settingsPanel.classList.add('hidden');
+            }
+        });
+    }
+
+    updatePlanetCheckboxes() {
+        const togglesContainer = document.getElementById('aspectsPlanetToggles');
+        if (!togglesContainer) return;
+        togglesContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.checked = this.aspectFilterPlanets.has(cb.dataset.planet);
+        });
+    }
+
+    reRenderAspects() {
+        if (this.chartData) {
+            this.renderAspects(this.chartData.aspects);
+        }
     }
 
     /**
@@ -52,15 +170,15 @@ class ChartDataRenderer {
             return (iA === -1 ? 999 : iA) - (iB === -1 ? 999 : iB);
         });
 
-        // Профессиональный формат: Симв. | Объект | Знак ГГ°ММ'СС" | Дом
+        // Компактный формат: Симв. (SVG) | Знак ГГ°ММ'СС" | Дом
         this.planetsTable.innerHTML = sorted.map(p => {
             const degDMS = this.formatDMS(p.degree_in_sign);
+            const planetIcon = this.createPlanetIconSVG(p);
             return `
                 <tr id="row-${p.name}" data-planet="${p.name}">
-                    <td class="symbol-cell">${Symbols.planets[p.name] || ''}</td>
-                    <td>
-                        <strong>${Symbols.planetNamesRu[p.name] || p.name}</strong>
-                        ${p.retrograde ? '<span class="retro-badge">Rx</span>' : ''}
+                    <td class="symbol-cell">
+                        ${planetIcon}
+                        ${p.retrograde ? '<span class="retro-badge-small">Rx</span>' : ''}
                     </td>
                     <td class="mono">${Symbols.signs[p.sign]} ${degDMS}</td>
                     <td class="mono">${p.house}</td>
@@ -98,6 +216,23 @@ class ChartDataRenderer {
         return `${d}°${m.toString().padStart(2, '0')}'${s.toString().padStart(2, '0')}"`;
     }
 
+    /**
+     * Создаёт SVG-иконку планеты (цвет по стихии)
+     */
+    createPlanetIconSVG(planet) {
+        const element = Symbols.signElements[planet.sign];
+        const color = Symbols.elementColors[element] || '#374151';
+        const symbol = Symbols.planets[planet.name] || planet.name.charAt(0);
+
+        return `
+            <span class="planet-icon-svg">
+                <svg width="28" height="28" viewBox="0 0 28 28">
+                    <text x="14" y="22" text-anchor="middle" font-size="22" font-weight="600" fill="${color}">${symbol}</text>
+                </svg>
+            </span>
+        `;
+    }
+
     formatDegreeShort(deg) {
         const d = Math.floor(deg);
         const m = Math.floor((deg - d) * 60);
@@ -107,8 +242,21 @@ class ChartDataRenderer {
     renderAspects(aspects) {
         if (!aspects || !this.aspectsTable) return;
 
+        // Фильтруем по включённым планетам
+        let filtered = aspects.filter(a =>
+            this.aspectFilterPlanets.has(a.planet_1) &&
+            this.aspectFilterPlanets.has(a.planet_2)
+        );
+
+        // Фильтруем по типу аспектов (мажорные/минорные)
+        if (this.aspectTypeFilter === 'major') {
+            filtered = filtered.filter(a => a.is_major);
+        } else if (this.aspectTypeFilter === 'minor') {
+            filtered = filtered.filter(a => !a.is_major);
+        }
+
         // Сортируем: сначала мажорные, потом по орбису
-        const sorted = [...aspects].sort((a, b) => {
+        const sorted = [...filtered].sort((a, b) => {
             if (a.is_major !== b.is_major) return b.is_major - a.is_major;
             return a.orb - b.orb;
         });

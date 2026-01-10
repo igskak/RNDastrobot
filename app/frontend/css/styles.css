@@ -869,6 +869,25 @@ input[type="number"] {
     gap: 4px;
 }
 
+.aspect-lines-legend .legend-item.clickable {
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    opacity: 0.6;
+}
+
+.aspect-lines-legend .legend-item.clickable:hover {
+    background: rgba(0, 0, 0, 0.05);
+    opacity: 0.9;
+}
+
+.aspect-lines-legend .legend-item.clickable.active {
+    opacity: 1;
+    font-weight: 600;
+    background: rgba(59, 130, 246, 0.1);
+}
+
 .aspect-lines-legend .line-sample {
     display: inline-block;
     width: 16px;

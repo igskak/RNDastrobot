@@ -84,6 +84,31 @@
     font-size: 16px;
 }
 
+/* Planet icon with circle (like in chart wheel) */
+.planet-icon-svg {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.planet-icon-svg svg {
+    display: block;
+}
+
+.retro-badge-small {
+    position: absolute;
+    top: -4px;
+    right: -6px;
+    font-size: 7px;
+    font-weight: 700;
+    color: #dc2626;
+    background: white;
+    padding: 1px 2px;
+    border-radius: 2px;
+    line-height: 1;
+}
+
 /* Panel tabs */
 .panel-tabs {
     display: flex;
@@ -310,4 +335,88 @@
     .zoom-controls-float {
         bottom: 20px;
     }
+}
+
+/* Aspects settings panel */
+.aspects-header {
+    display: flex;
+    justify-content: flex-end;
+    padding: 4px 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.aspects-settings-btn {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all var(--transition);
+}
+.aspects-settings-btn:hover {
+    background: var(--bg-tertiary);
+    color: var(--accent);
+}
+
+.aspects-settings-panel {
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border);
+    padding: 8px;
+}
+.aspects-settings-panel.hidden {
+    display: none;
+}
+
+.aspects-settings-title {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.aspects-filter-buttons {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.aspects-filter-btn {
+    padding: 4px 10px;
+    font-size: 11px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all var(--transition);
+}
+.aspects-filter-btn:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
+
+.aspects-planet-toggles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+}
+
+.aspect-planet-toggle {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--text-primary);
+}
+.aspect-planet-toggle input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+}
+.aspect-planet-toggle .symbol {
+    font-size: 14px;
 }

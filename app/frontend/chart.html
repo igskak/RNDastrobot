@@ -34,12 +34,24 @@
                 <div id="planets-list" class="panel-tab-content active">
                     <table class="data-table compact">
                         <thead>
-                            <tr><th>Симв.</th><th>Объект</th><th>Позиция</th><th>Дом</th></tr>
+                            <tr><th>Симв.</th><th>Позиция</th><th>Дом</th></tr>
                         </thead>
                         <tbody id="planetsTable"></tbody>
                     </table>
                 </div>
                 <div id="aspects-list" class="panel-tab-content">
+                    <div class="aspects-header">
+                        <button class="aspects-settings-btn" id="aspectsSettingsBtn" title="Настройки отображения">⚙</button>
+                    </div>
+                    <div class="aspects-settings-panel hidden" id="aspectsSettingsPanel">
+                        <div class="aspects-settings-title">Показывать аспекты с:</div>
+                        <div class="aspects-filter-buttons">
+                            <button class="aspects-filter-btn" id="aspectsResetBtn">Сбросить</button>
+                            <button class="aspects-filter-btn" id="aspectsMajorBtn">Мажорные</button>
+                            <button class="aspects-filter-btn" id="aspectsMinorBtn">Минорные</button>
+                        </div>
+                        <div class="aspects-planet-toggles" id="aspectsPlanetToggles"></div>
+                    </div>
                     <table class="data-table compact">
                         <thead>
                             <tr><th colspan="2">Аспект</th><th>Тип</th><th>Орбис</th></tr>
@@ -68,8 +80,15 @@
 
             <!-- Легенда линий аспектов -->
             <div class="aspect-lines-legend">
-                <span class="legend-item"><span class="line-sample solid"></span> Мажорные</span>
-                <span class="legend-item"><span class="line-sample dashed"></span> Минорные</span>
+                <span class="legend-item clickable active" data-filter="all" id="filterAll">
+                    <span class="line-sample solid"></span> Все
+                </span>
+                <span class="legend-item clickable" data-filter="major" id="filterMajor">
+                    <span class="line-sample solid"></span> Мажорные
+                </span>
+                <span class="legend-item clickable" data-filter="minor" id="filterMinor">
+                    <span class="line-sample dashed"></span> Минорные
+                </span>
                 <span class="legend-sep">|</span>
                 <span class="legend-color" style="color:#ef4444">● Напряж.</span>
                 <span class="legend-color" style="color:#3b82f6">● Гармон.</span>

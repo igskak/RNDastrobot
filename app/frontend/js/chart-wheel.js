@@ -44,6 +44,9 @@ class ChartWheel {
         // Интерактивность
         this.hoveredAspect = null;
         this.selectedPlanet = null;
+
+        // Фильтры аспектов
+        this.aspectFilter = 'all'; // 'all', 'major', 'minor'
     }
 
     /**
@@ -136,9 +139,10 @@ class ChartWheel {
             'stroke-width': 1
         }));
 
-        // 12 секторов знаков
+        // 12 секторов знаков (против часовой стрелки, начиная с Овна на 9 часов)
         for (let i = 0; i < 12; i++) {
-            const startAngle = i * 30 - 90;
+            // Овен начинается на 180° (9 часов), далее против часовой стрелки
+            const startAngle = 180 - i * 30;
             const sign = this.getSignByIndex(i);
             const element = Symbols.signElements[sign];
             const color = this.elementColors[element] || '#6b7280';
@@ -278,6 +282,13 @@ class ChartWheel {
             const long2 = planetMap[aspect.planet_2];
             if (long1 === undefined || long2 === undefined) return;
 
+            // Мажорные — сплошные, минорные — пунктир
+            const isMajor = this.majorAspects.includes(aspect.aspect_type);
+
+            // Фильтрация по типу аспекта
+            if (this.aspectFilter === 'major' && !isMajor) return;
+            if (this.aspectFilter === 'minor' && isMajor) return;
+
             const angle1 = (90 - long1) * Math.PI / 180;
             const angle2 = (90 - long2) * Math.PI / 180;
 
@@ -293,8 +304,6 @@ class ChartWheel {
             const maxOrb = 12;
             const thickness = Math.max(0.3, 1.5 - (aspect.orb / maxOrb) * 1.2);
 
-            // Мажорные — сплошные, минорные — пунктир
-            const isMajor = this.majorAspects.includes(aspect.aspect_type);
             const dashArray = isMajor ? 'none' : '3,2';
 
             const line = this.createSvgElement('line', {
@@ -305,7 +314,8 @@ class ChartWheel {
                 opacity: isMajor ? 0.7 : 0.45,
                 class: 'aspect-line',
                 'data-aspect': `${aspect.planet_1}-${aspect.planet_2}`,
-                'data-type': aspect.aspect_type
+                'data-type': aspect.aspect_type,
+                'data-major': isMajor ? 'true' : 'false'
             });
 
             this.layers.aspects.appendChild(line);
@@ -383,11 +393,11 @@ class ChartWheel {
                 class: 'planet-circle'
             }));
 
-            // Символ планеты
+            // Символ планеты (увеличен размер)
             group.appendChild(this.createSvgElement('text', {
-                x: x, y: y + 4,
+                x: x, y: y + 5,
                 'text-anchor': 'middle',
-                'font-size': '11',
+                'font-size': '15',
                 'font-weight': '600',
                 fill: color,
                 style: 'pointer-events: none;'
@@ -540,6 +550,17 @@ class ChartWheel {
         Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
         if (text) el.textContent = text;
         return el;
+    }
+
+    /**
+     * Установить фильтр аспектов и перерисовать
+     * @param {string} filter - 'all', 'major', 'minor'
+     */
+    setAspectFilter(filter) {
+        this.aspectFilter = filter;
+        if (this.chartData) {
+            this.draw(this.chartData);
+        }
     }
 
     /**
