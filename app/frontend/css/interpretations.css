@@ -136,7 +136,7 @@
 
 .profile-text {
     color: #1d1d1f;
-    line-height: 1.8;
+    line-height: 1.6;
     white-space: pre-wrap;
     font-size: 1rem;
 }
@@ -148,17 +148,18 @@
 .profile-text h4 {
     color: #1d1d1f;
     font-weight: 600;
-    margin-top: 1rem;
-    margin-bottom: 0.5rem;
+    margin-top: 0.8rem;
+    margin-bottom: 0.3rem;
 }
 
 .profile-text h1 { font-size: 1.5rem; }
 .profile-text h2 { font-size: 1.3rem; }
-.profile-text h3 { font-size: 1.1rem; }
+.profile-text h3 { font-size: 1.1rem; margin-top: 1rem; }
 .profile-text h4 { font-size: 1rem; }
 
 .profile-text p {
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.4rem;
+    margin-top: 0;
 }
 
 .profile-text strong,
@@ -174,13 +175,13 @@
 
 .profile-text ul,
 .profile-text ol {
-    margin: 0.6rem 0;
+    margin: 0.3rem 0;
     padding-left: 1.5rem;
 }
 
 .profile-text li {
-    margin-bottom: 0.3rem;
-    line-height: 1.6;
+    margin-bottom: 0.2rem;
+    line-height: 1.5;
 }
 
 .profile-text code {
