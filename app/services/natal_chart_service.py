@@ -1104,3 +1104,65 @@ class NatalChartService:
 
         return result
 
+    def get_natal_chart_for_interpretation(self, user_id: UUID, db_session: Session) -> Optional[Dict]:
+        """
+        Получить минимальные данные натальной карты для интерпретации.
+        Оптимизированный метод - загружает только планеты и аспекты.
+
+        Args:
+            user_id: UUID пользователя
+            db_session: SQLAlchemy сессия
+
+        Returns:
+            Optional[Dict]: Минимальные данные для интерпретации или None
+        """
+        from sqlalchemy.orm import joinedload
+        from app.database.models import User, NatalPlanet, NatalAspect
+
+        # Загружаем только пользователя и планеты
+        user = (
+            db_session.query(User)
+            .filter(User.user_id == user_id)
+            .options(joinedload(User.planets))
+            .first()
+        )
+
+        if not user:
+            return None
+
+        # Загружаем аспекты отдельным запросом
+        aspects = db_session.query(NatalAspect).filter(
+            NatalAspect.user_id == user_id
+        ).all()
+
+        return {
+            'user_id': str(user.user_id),
+            'planets': [
+                {
+                    'name': p.planet,
+                    'sign': p.sign,
+                    'degree_in_sign': float(p.degree) % 30,
+                    'house': p.house_number,
+                    'retrograde': p.retrograde,
+                    'dignity': p.dignity,
+                    'special_roles': p.special_roles or [],
+                    'critical_degrees': p.critical_degrees or [],
+                    'sun_relation': p.sun_relation,
+                    'aspect_harmony': p.aspect_harmony,
+                    'is_peregrine': p.is_peregrine or False,
+                    'is_stationary': p.is_stationary or False,
+                }
+                for p in user.planets
+            ],
+            'aspects': [
+                {
+                    'planet_1': a.planet_1,
+                    'planet_2': a.planet_2,
+                    'aspect_type': a.aspect_type,
+                    'orb': float(a.orb),
+                    'is_partile': a.is_partile or False,
+                }
+                for a in aspects
+            ]
+        }
+

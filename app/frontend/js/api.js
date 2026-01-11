@@ -54,10 +54,15 @@ function formatTime(hour, minute) {
 
 /**
  * Сохранение данных карты в sessionStorage
- * @param {Object} chartData 
+ * @param {Object} chartData
  */
 function saveChartToSession(chartData) {
     sessionStorage.setItem('natalChart', JSON.stringify(chartData));
+
+    // Сохраняем user_id отдельно для быстрого доступа
+    if (chartData.user_id) {
+        localStorage.setItem('currentUserId', chartData.user_id);
+    }
 }
 
 /**

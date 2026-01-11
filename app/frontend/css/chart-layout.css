@@ -40,6 +40,29 @@
     color: var(--accent);
 }
 
+.header-nav-buttons {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.header-nav-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    background: var(--bg-tertiary);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all var(--transition);
+}
+
+.header-nav-btn:hover {
+    background: var(--accent-light);
+    color: var(--accent);
+}
+
 .birth-info-compact h2 {
     font-size: 16px;
     font-weight: 600;

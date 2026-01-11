@@ -1,0 +1,284 @@
+
+  "planets": [
+    {
+      "name": "Sun",
+      "sign": "Cancer",
+      "degree_in_sign": 4.720422,
+      "degree_in_sign_formatted": "4°43'13\"",
+      "house": 8,
+      "retrograde": false,
+      "element": "Water",
+      "mode": "Cardinal",
+      "dignity": "neutral",
+      "strength_score": 24,
+      "special_roles": [],
+      "critical_degrees": [],
+      "sun_relation": null,
+      "aspect_harmony": "mixed",
+      "is_peregrine": false,
+      "is_stationary": false,
+      "stationary_type": null,
+      "is_elevated": false,
+      "in_intercepted_sign": true
+    },
+    {
+      "name": "Moon",
+      "sign": "Leo",
+      "degree_in_sign": 25.294757,
+      "degree_in_sign_formatted": "25°17'41\"",
+      "house": 9,
+      "retrograde": false,
+      "element": "Fire",
+      "mode": "Fixed",
+      "dignity": "neutral",
+      "strength_score": 28,
+      "special_roles": [],
+      "critical_degrees": [],
+      "sun_relation": null,
+      "aspect_harmony": "mixed",
+      "is_peregrine": false,
+      "is_stationary": false,
+      "stationary_type": null,
+      "is_elevated": true,
+      "in_intercepted_sign": false
+    },
+    {
+      "name": "Mercury",
+      "sign": "Gemini",
+      "degree_in_sign": 27.274591,
+      "degree_in_sign_formatted": "27°16'28\"",
+      "house": 8,
+      "retrograde": false,
+      "element": "Air",
+      "mode": "Mutable",
+      "dignity": "domicile",
+      "strength_score": 19,
+      "special_roles": [],
+      "critical_degrees": [],
+      "sun_relation": "under_rays",
+      "aspect_harmony": "harmonious",
+      "is_peregrine": false,
+      "is_stationary": false,
+      "stationary_type": null,
+      "is_elevated": false,
+      "in_intercepted_sign": false
+    },
+    {
+      "name": "Venus",
+      "sign": "Gemini",
+      "degree_in_sign": 1.876091,
+      "degree_in_sign_formatted": "1°52'33\"",
+      "house": 7,
+      "retrograde": false,
+      "element": "Air",
+      "mode": "Mutable",
+      "dignity": "neutral",
+      "strength_score": 15,
+      "special_roles": [],
+      "critical_degrees": [],
+      "sun_relation": null,
+      "aspect_harmony": "tense",
+      "is_peregrine": false,
+      "is_stationary": false,
+      "stationary_type": null,
+      "is_elevated": false,
+      "in_intercepted_sign": false
+    },
+    {
+      "name": "Mars",
+      "sign": "Aries",
+      "degree_in_sign": 18.938464,
+      "degree_in_sign_formatted": "18°56'18\"",
+      "house": 5,
+      "retrograde": false,
+      "element": "Fire",
+      "mode": "Cardinal",
+      "dignity": "domicile",
+      "strength_score": 29,
+      "special_roles": ["almuten"],
+      "critical_degrees": ["royal"],
+      "sun_relation": null,
+      "aspect_harmony": "tense",
+      "is_peregrine": false,
+      "is_stationary": false,
+      "stationary_type": null,
+      "is_elevated": false,
+      "in_intercepted_sign": false
+    },
+    {
+      "name": "Jupiter",
+      "sign": "Cancer",
+      "degree_in_sign": 18.323281,
+      "degree_in_sign_formatted": "18°19'23\"",
+      "house": 8,
+      "retrograde": false,
+      "element": "Water",
+      "mode": "Cardinal",
+      "dignity": "exaltation",
+      "strength_score": 26,
+      "special_roles": ["aspect_king"],
+      "critical_degrees": [],
+      "sun_relation": null,
+      "aspect_harmony": "tense",
+      "is_peregrine": false,
+      "is_stationary": false,
+      "stationary_type": null,
+      "is_elevated": false,
+      "in_intercepted_sign": true
+    },
+    {
+      "name": "Saturn",
+      "sign": "Capricorn",
+      "degree_in_sign": 23.326168,
+      "degree_in_sign_formatted": "23°19'34\"",
+      "house": 2,
+      "retrograde": true,
+      "element": "Earth",
+      "mode": "Cardinal",
+      "dignity": "domicile",
+      "strength_score": 26,
+      "special_roles": [],
+      "critical_degrees": [],
+      "sun_relation": null,
+      "aspect_harmony": "tense",
+      "is_peregrine": false,
+      "is_stationary": false,
+      "stationary_type": null,
+      "is_elevated": false,
+      "in_intercepted_sign": true
+    }
+  ],
+  "aspects": [
+    {
+      "planet_1": "Sun",
+      "planet_2": "Moon",
+      "aspect_type": "Sextile",
+      "orb": 9.426,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Sun",
+      "planet_2": "Mercury",
+      "aspect_type": "Conjunction",
+      "orb": 7.446,
+      "harmonic_type": "neutral",
+      "is_partile": false,
+      "note": "Mercury under Sun's rays (under_rays)"
+    },
+    {
+      "planet_1": "Moon",
+      "planet_2": "Mercury",
+      "aspect_type": "Sextile",
+      "orb": 1.98,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Moon",
+      "planet_2": "Venus",
+      "aspect_type": "Square",
+      "orb": 6.581,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Moon",
+      "planet_2": "Mars",
+      "aspect_type": "Trine",
+      "orb": 6.356,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Mars",
+      "planet_2": "Jupiter",
+      "aspect_type": "Square",
+      "orb": 0.615,
+      "harmonic_type": "tense",
+      "is_partile": true,
+      "note": "Partile aspect - very strong!"
+    },
+    {
+      "planet_1": "Mars",
+      "planet_2": "Saturn",
+      "aspect_type": "Square",
+      "orb": 4.388,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Jupiter",
+      "planet_2": "Saturn",
+      "aspect_type": "Opposition",
+      "orb": 5.003,
+      "harmonic_type": "tense",
+      "is_partile": false
+    }
+  ],
+  "aspect_summary": {
+    "Sun": {
+      "conjunctions": ["Mercury (under_rays)"],
+      "partile_aspects": [],
+      "harmonious": ["Sextile Moon"],
+      "tense": [],
+      "aspect_harmony": "mixed"
+    },
+    "Moon": {
+      "conjunctions": [],
+      "partile_aspects": [],
+      "harmonious": ["Sextile Sun", "Sextile Mercury", "Trine Mars"],
+      "tense": ["Square Venus"],
+      "aspect_harmony": "mixed"
+    },
+    "Mercury": {
+      "conjunctions": ["Sun (under_rays)"],
+      "partile_aspects": [],
+      "harmonious": ["Sextile Moon"],
+      "tense": [],
+      "aspect_harmony": "harmonious"
+    },
+    "Venus": {
+      "conjunctions": [],
+      "partile_aspects": [],
+      "harmonious": [],
+      "tense": ["Square Moon"],
+      "aspect_harmony": "tense"
+    },
+    "Mars": {
+      "conjunctions": [],
+      "partile_aspects": ["Square Jupiter (0.615°)"],
+      "harmonious": ["Trine Moon"],
+      "tense": ["Square Jupiter (partile!)", "Square Saturn"],
+      "aspect_harmony": "tense",
+      "note": "Apex of T-Square: Mars-Jupiter-Saturn"
+    },
+    "Jupiter": {
+      "conjunctions": [],
+      "partile_aspects": ["Square Mars (0.615°)"],
+      "harmonious": [],
+      "tense": ["Square Mars (partile!)", "Opposition Saturn"],
+      "aspect_harmony": "tense",
+      "note": "In T-Square with Mars and Saturn"
+    },
+    "Saturn": {
+      "conjunctions": [],
+      "partile_aspects": [],
+      "harmonious": [],
+      "tense": ["Square Mars", "Opposition Jupiter"],
+      "aspect_harmony": "tense",
+      "note": "In T-Square with Mars and Jupiter"
+    }
+  },
+  "special_notes": {
+    "doryphoros": "None (no Mercury/Venus/Mars within 15° after Sun)",
+    "charioteer": "None (no classical planets within 5° before Sun)",
+    "almuten": "Mars (highest strength_score: 29)",
+    "aspect_king": "Jupiter (most major aspects)",
+    "t_square": "Mars-Jupiter-Saturn (apex: Mars)",
+    "mercury_sun_relation": "Mercury under Sun's rays (7.446° from Sun)",
+    "partile_aspects": ["Mars Square Jupiter (0.615°)"],
+    "elevated_planet": "Moon (highest in chart)"
+  }
+}
+

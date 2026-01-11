@@ -10,8 +10,9 @@ import sys
 import logging
 from dotenv import load_dotenv
 
-# Загрузка переменных окружения
-load_dotenv()
+# Загрузка переменных окружения (из app/.env)
+_APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+load_dotenv(os.path.join(_APP_DIR, '.env'))
 
 # Настройка логирования для production — минимальный уровень
 if os.getenv('APP_ENV') == 'production':
@@ -25,7 +26,7 @@ if os.getenv('APP_ENV') == 'production':
     logger.remove()  # Удаляем default handler
     logger.add(sys.stderr, level="WARNING")  # Только WARNING и выше
 
-from app.api.routes import natal
+from app.api.routes import natal, interpretations
 
 # Путь к frontend
 FRONTEND_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")
@@ -50,6 +51,7 @@ app.add_middleware(
 
 # Подключение роутеров
 app.include_router(natal.router, prefix="/api/v1", tags=["Natal Charts"])
+app.include_router(interpretations.router, prefix="/api/v1", tags=["Interpretations"])
 
 # Статические файлы (CSS, JS)
 if os.path.exists(FRONTEND_PATH):
@@ -94,6 +96,15 @@ async def natal_full_page():
     if os.path.exists(natal_full_path):
         return FileResponse(natal_full_path)
     raise HTTPException(status_code=404, detail="Natal full page not found")
+
+
+@app.get("/interpretations.html")
+async def interpretations_page():
+    """Страница интерпретаций (психологический профиль)"""
+    interpretations_path = os.path.join(FRONTEND_PATH, "interpretations.html")
+    if os.path.exists(interpretations_path):
+        return FileResponse(interpretations_path)
+    raise HTTPException(status_code=404, detail="Interpretations page not found")
 
 
 @app.get("/health")

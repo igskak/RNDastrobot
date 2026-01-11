@@ -599,3 +599,34 @@ class GeneralOverviewSummary(Base):
     # Relationship
     user = relationship("User")
 
+
+# ============================================================================
+# INTERPRETATIONS CACHE (OpenAI интерпретации)
+# ============================================================================
+
+class NatalInterpretation(Base):
+    """Модель кэша интерпретаций от OpenAI"""
+    __tablename__ = 'natal_interpretations'
+
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), primary_key=True)
+    interpretation_type = Column(String(50), primary_key=True)  # 'psychological_profile', 'career', etc.
+    content = Column(JSONB, nullable=False)  # Структурированный ответ от OpenAI
+    chart_hash = Column(String(64), nullable=False)  # SHA256 хэш для инвалидации
+    openai_model = Column(String(50))  # 'gpt-4.1'
+    openai_prompt_id = Column(String(100))  # ID промпта в OpenAI Playground
+    prompt_version = Column(String(20))  # '1.0', '1.1'
+    tokens_used = Column(Integer)
+    cost_usd = Column(Numeric(10, 4))
+    generation_time_ms = Column(Integer)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # Relationship
+    user = relationship("User")
+
+    __table_args__ = (
+        Index('idx_interpretations_hash', 'chart_hash'),
+        Index('idx_interpretations_type', 'interpretation_type'),
+        Index('idx_interpretations_created', 'created_at'),
+    )
+

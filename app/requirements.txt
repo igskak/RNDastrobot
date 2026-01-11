@@ -53,3 +53,6 @@ pyswisseph==2.10.3.2
 # Geocoding
 geopy==2.4.1
 
+# OpenAI API
+openai>=1.60.0
+

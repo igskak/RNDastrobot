@@ -82,6 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderFullChart(chartData);
     setupLegendToggle();
+    updateInterpretationLinks(chartData);
 });
 
 function setupLegendToggle() {
@@ -893,3 +894,15 @@ function renderSpecialPoints(specialPoints) {
     }
 }
 
+/**
+ * Обновление ссылок на интерпретации с user_id
+ */
+function updateInterpretationLinks(chartData) {
+    const userId = chartData.user_id || localStorage.getItem('currentUserId');
+    if (!userId) return;
+
+    const links = document.querySelectorAll('a[href="interpretations.html"]');
+    links.forEach(link => {
+        link.href = `interpretations.html?user_id=${userId}`;
+    });
+}

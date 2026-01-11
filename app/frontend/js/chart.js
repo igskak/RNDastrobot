@@ -27,6 +27,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Обновляем заголовок
     updateHeader(chartData);
 
+    // Обновляем ссылки на интерпретации
+    updateInterpretationLinks(chartData);
+
     // Инициализируем круговую карту
     const svgElement = document.getElementById('chartWheel');
     chartWheel = new ChartWheel(svgElement);
@@ -87,6 +90,19 @@ function mergeSpecialPointsIntoPlanets(chartData) {
     });
 
     return chartData;
+}
+
+/**
+ * Обновление ссылок на интерпретации с user_id
+ */
+function updateInterpretationLinks(chartData) {
+    const userId = chartData.user_id || localStorage.getItem('currentUserId');
+    if (!userId) return;
+
+    const links = document.querySelectorAll('a[href="interpretations.html"]');
+    links.forEach(link => {
+        link.href = `interpretations.html?user_id=${userId}`;
+    });
 }
 
 /**

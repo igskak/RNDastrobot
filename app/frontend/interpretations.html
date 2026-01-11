@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Психологический профиль — AstroBot</title>
+    <link rel="stylesheet" href="css/styles.css?v=2">
+    <link rel="stylesheet" href="css/interpretations.css?v=3">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body class="interpretations-page">
+    <!-- Header -->
+    <header class="natal-header">
+        <div class="header-content">
+            <a href="/" class="back-btn">← Новый расчёт</a>
+            <div class="birth-info">
+                <h1>Психологический профиль</h1>
+                <p id="birthDetails" class="birth-details"></p>
+            </div>
+            <div class="header-actions">
+                <a href="natal-full.html" class="view-chart-btn">📊 Таблицы</a>
+                <a href="chart.html" class="view-chart-btn">🔮 Карта</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="interpretations-main">
+        <!-- Loading State -->
+        <div class="loading-container" id="loadingState">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">Генерация психологического профиля...</p>
+            <p class="loading-hint">Это может занять 10-30 секунд</p>
+        </div>
+
+        <!-- Error State -->
+        <div class="error-container hidden" id="errorState">
+            <div class="error-icon">⚠️</div>
+            <h2 class="error-title">Ошибка</h2>
+            <p class="error-message" id="errorMessage"></p>
+            <button class="retry-btn" id="retryBtn">Попробовать снова</button>
+        </div>
+
+        <!-- Content -->
+        <div class="content-container hidden" id="contentState">
+            <!-- Meta info -->
+            <div class="meta-bar">
+                <span class="meta-item" id="metaModel"></span>
+                <span class="meta-item" id="metaTokens"></span>
+                <span class="meta-item" id="metaTime"></span>
+                <span class="meta-item cached" id="metaCached"></span>
+            </div>
+
+            <!-- Profile Content -->
+            <div class="profile-content" id="profileContent">
+                <!-- Будет заполнено через JS -->
+            </div>
+
+            <!-- Actions -->
+            <div class="actions-bar">
+                <button class="action-btn regenerate" id="regenerateBtn">🔄 Регенерировать</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/interpretations.js"></script>
+</body>
+</html>
+

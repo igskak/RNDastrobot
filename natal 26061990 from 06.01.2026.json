@@ -1,0 +1,2213 @@
+{
+  "user_id": "59a7c8ea-dc38-4564-a41d-60777cd4c09b",
+  "birth_data": {
+    "date": "1990-06-26",
+    "time": "18:15:00",
+    "timezone": "Europe/Kiev",
+    "utc_time": "1990-06-26 14:15:00",
+    "julian_day": 2448069.09375,
+    "latitude": 50,
+    "longitude": 36.25,
+    "place": "50.0, 36.25"
+  },
+  "planets": [
+    {
+      "name": "Chiron",
+      "longitude": 107.208235,
+      "latitude": 0,
+      "distance": 0,
+      "speed": 0.10526,
+      "sign": "Cancer",
+      "degree_in_sign": 17.208235000000002,
+      "degree_in_sign_formatted": "17°12'29\"",
+      "house": 8,
+      "retrograde": false,
+      "element": "Water",
+      "mode": "Cardinal",
+      "dignity": "neutral",
+      "strength_score": 23,
+      "special_roles": [],
+      "speed_percent": 526.3,
+      "critical_degrees": [],
+      "sun_relation": null,
+      "in_intercepted_sign": true,
+      "is_elevated": false,
+      "is_peregrine": false,
+      "aspect_harmony": "tense",
+      "is_stationary": false,
+      "stationary_type": null,
+      "karmic_score": 2,
+      "karmic_minus_score": 2,
+      "karmic_plus_score": 2,
+      "ruled_houses": []
+    },
+    {
+      "name": "Neptune",
+      "longitude": 283.429597,
+      "latitude": 0,
+      "distance": 0,
+      "speed": -0.02665,
+      "sign": "Capricorn",
+      "degree_in_sign": 13.429597000000001,
+      "degree_in_sign_formatted": "13°25'46\"",
+      "house": 2,
+      "retrograde": true,
+      "element": "Earth",
+      "mode": "Cardinal",
+      "dignity": "neutral",
+      "strength_score": 23,
+      "special_roles": [],
+      "speed_percent": 444.16,
+      "critical_degrees": [],
+      "sun_relation": null,
+      "in_intercepted_sign": true,
+      "is_elevated": false,
+      "is_peregrine": false,
+      "aspect_harmony": "mixed",
+      "is_stationary": false,
+      "stationary_type": null,
+      "karmic_score": 4,
+      "karmic_minus_score": 4,
+      "karmic_plus_score": 2,
+      "ruled_houses": [
+        4
+      ]
+    },
+    {
+      "name": "Jupiter",
+      "longitude": 108.323281,
+      "latitude": 0,
+      "distance": 0,
+      "speed": 0.221613,
+      "sign": "Cancer",
+      "degree_in_sign": 18.323280999999994,
+      "degree_in_sign_formatted": "18°19'23\"",
+      "house": 8,
+      "retrograde": false,
+      "element": "Water",
+      "mode": "Cardinal",
+      "dignity": "exaltation",
+      "strength_score": 26,
+      "special_roles": [
+        "aspect_king"
+      ],
+      "speed_percent": 266.68,
+      "critical_degrees": [],
+      "sun_relation": null,
+      "in_intercepted_sign": true,
+      "is_elevated": false,
+      "is_peregrine": false,
+      "aspect_harmony": "tense",
+      "is_stationary": false,
+      "stationary_type": null,
+      "karmic_score": 4,
+      "karmic_minus_score": 2,
+      "karmic_plus_score": 4,
+      "ruled_houses": [
+        2
+      ]
+    },
+    {
+      "name": "Mars",
+      "longitude": 18.938464,
+      "latitude": 0,
+      "distance": 0,
+      "speed": 0.70388,
+      "sign": "Aries",
+      "degree_in_sign": 18.938464,
+      "degree_in_sign_formatted": "18°56'18\"",
+      "house": 5,
+      "retrograde": false,
+      "element": "Fire",
+      "mode": "Cardinal",
+      "dignity": "domicile",
+      "strength_score": 29,
+      "special_roles": [
+        "almuten"
+      ],
+      "speed_percent": 134.33,
+      "critical_degrees": [
+        "royal"
+      ],
+      "sun_relation": null,
+      "in_intercepted_sign": false,
+      "is_elevated": false,
+      "is_peregrine": false,
+      "aspect_harmony": "tense",
+      "is_stationary": false,
+      "stationary_type": null,
+      "karmic_score": 4,
+      "karmic_minus_score": 1,
+      "karmic_plus_score": 4,
+      "ruled_houses": [
+        5
+      ]
+    },
+    {
+      "name": "Mercury",
+      "longitude": 87.274591,
+      "latitude": 0,
+      "distance": 0,
+      "speed": 2.131334,
+      "sign": "Gemini",
+      "degree_in_sign": 27.274591,
+      "degree_in_sign_formatted": "27°16'28\"",
+      "house": 8,
+      "retrograde": false,
+      "element": "Air",
+      "mode": "Mutable",
+      "dignity": "domicile",
+      "strength_score": 19,
+      "special_roles": [],
+      "speed_percent": 154.08,
+      "critical_degrees": [],
+      "sun_relation": "under_rays",
+      "in_intercepted_sign": false,
+      "is_elevated": false,
+      "is_peregrine": false,
+      "aspect_harmony": "harmonious",
+      "is_stationary": false,
+      "stationary_type": null,
+      "karmic_score": 7,
+      "karmic_minus_score": 1,
+      "karmic_plus_score": 7,
+      "ruled_houses": [
+        8,
+        10
+      ]
+    },
+    {
+      "name": "Moon",
+      "longitude": 145.294757,
+      "latitude": 0,
+      "distance": 0,
+      "speed": 13.444962,
+      "sign": "Leo",
+      "degree_in_sign": 25.294757000000004,
+      "degree_in_sign_formatted": "25°17'41\"",
+      "house": 9,
+      "retrograde": false,
+      "element": "Fire",
+      "mode": "Fixed",
+      "dignity": "neutral",
+      "strength_score": 28,
+      "special_roles": [],
+      "speed_percent": 102.04,
+      "critical_degrees": [],
+      "sun_relation": null,
+      "in_intercepted_sign": false,
+      "is_elevated": true,
+      "is_peregrine": false,
+      "aspect_harmony": "mixed",
+      "is_stationary": false,
+      "stationary_type": null,
+      "karmic_score": 3,
+      "karmic_minus_score": 2,
+      "karmic_plus_score": 3,
+      "ruled_houses": []
+    },
+    {
+      "name": "Pluto",
+      "longitude": 225.203324,
+      "latitude": 0,
+      "distance": 0,
+      "speed": -0.015452,
+      "sign": "Scorpio",
+      "degree_in_sign": 15.20332400000001,
+      "degree_in_sign_formatted": "15°12'11\"",
+      "house": 12,
+      "retrograde": true,
+      "element": "Water",
+      "mode": "Fixed",
+      "dignity": "domicile",
+      "strength_score": 19,
+      "special_roles": [],
+      "speed_percent": 386.3,
+      "critical_degrees": [],
+      "sun_relation": null,
+      "in_intercepted_sign": false,
+      "is_elevated": false,
+      "is_peregrine": false,
+      "aspect_harmony": "harmonious",
+      "is_stationary": false,
+      "stationary_type": null,
+      "karmic_score": 10,
+      "karmic_minus_score": 4,
+      "karmic_plus_score": 6,
+      "ruled_houses": [
+        1,
+        12
+      ]
+    },
+    {
+      "name": "Proserpina",
+      "longitude": 212.531791,
+      "latitude": 0,
+      "distance": 0,
+      "speed": 0.001265,
+      "sign": "Scorpio",
+      "degree_in_sign": 2.5317909999999983,
+      "degree_in_sign_formatted": "2°31'54\"",
+      "house": 11,
+      "retrograde": false,
+      "element": "Water",
+      "mode": "Fixed",
+      "dignity": "neutral",
+      "strength_score": 24,
+      "special_roles": [],
+      "speed_percent": 97.29,
+      "critical_degrees": [],
+      "sun_relation": null,
+      "in_intercepted_sign": false,
+      "is_elevated": false,
+      "is_peregrine": false,
+      "aspect_harmony": "harmonious",
+      "is_stationary": false,
+      "stationary_type": null,
+      "karmic_score": 1,
+      "karmic_minus_score": 1,
+      "karmic_plus_score": 0,
+      "ruled_houses": []
+    },
+    {
+      "name": "Saturn",
+      "longitude": 293.326168,
+      "latitude": 0,
+      "distance": 0,
+      "speed": -0.067989,
+      "sign": "Capricorn",
+      "degree_in_sign": 23.326167999999996,
+      "degree_in_sign_formatted": "23°19'34\"",
+      "house": 2,
+      "retrograde": true,
+      "element": "Earth",
+      "mode": "Cardinal",
+      "dignity": "domicile",
+      "strength_score": 26,
+      "special_roles": [],
+      "speed_percent": 202.95,
+      "critical_degrees": [],
+      "sun_relation": null,
+      "in_intercepted_sign": true,
+      "is_elevated": false,
+      "is_peregrine": false,
+      "aspect_harmony": "tense",
+      "is_stationary": false,
+      "stationary_type": null,
+      "karmic_score": 4,
+      "karmic_minus_score": 2,
+      "karmic_plus_score": 4,
+      "ruled_houses": []
+    },
+    {
+      "name": "Sun",
+      "longitude": 94.720422,
+      "latitude": 0,
+      "distance": 0,
+      "speed": 0.95403,
+      "sign": "Cancer",
+      "degree_in_sign": 4.720421999999999,
+      "degree_in_sign_formatted": "4°43'13\"",
+      "house": 8,
+      "retrograde": false,
+      "element": "Water",
+      "mode": "Cardinal",
+      "dignity": "neutral",
+      "strength_score": 24,
+      "special_roles": [],
+      "speed_percent": 96.8,
+      "critical_degrees": [],
+      "sun_relation": null,
+      "in_intercepted_sign": true,
+      "is_elevated": false,
+      "is_peregrine": false,
+      "aspect_harmony": "mixed",
+      "is_stationary": false,
+      "stationary_type": null,
+      "karmic_score": 2,
+      "karmic_minus_score": 2,
+      "karmic_plus_score": 0,
+      "ruled_houses": [
+        9
+      ]
+    },
+    {
+      "name": "Uranus",
+      "longitude": 277.722815,
+      "latitude": 0,
+      "distance": 0,
+      "speed": -0.040531,
+      "sign": "Capricorn",
+      "degree_in_sign": 7.7228150000000255,
+      "degree_in_sign_formatted": "7°43'22\"",
+      "house": 2,
+      "retrograde": true,
+      "element": "Earth",
+      "mode": "Cardinal",
+      "dignity": "neutral",
+      "strength_score": 22,
+      "special_roles": [],
+      "speed_percent": 346.42,
+      "critical_degrees": [],
+      "sun_relation": null,
+      "in_intercepted_sign": true,
+      "is_elevated": false,
+      "is_peregrine": false,
+      "aspect_harmony": "tense",
+      "is_stationary": false,
+      "stationary_type": null,
+      "karmic_score": 2,
+      "karmic_minus_score": 2,
+      "karmic_plus_score": 2,
+      "ruled_houses": [
+        3
+      ]
+    },
+    {
+      "name": "Venus",
+      "longitude": 61.876091,
+      "latitude": 0,
+      "distance": 0,
+      "speed": 1.184959,
+      "sign": "Gemini",
+      "degree_in_sign": 1.8760910000000024,
+      "degree_in_sign_formatted": "1°52'33\"",
+      "house": 7,
+      "retrograde": false,
+      "element": "Air",
+      "mode": "Mutable",
+      "dignity": "neutral",
+      "strength_score": 15,
+      "special_roles": [],
+      "speed_percent": 98.75,
+      "critical_degrees": [],
+      "sun_relation": null,
+      "in_intercepted_sign": false,
+      "is_elevated": false,
+      "is_peregrine": false,
+      "aspect_harmony": "tense",
+      "is_stationary": false,
+      "stationary_type": null,
+      "karmic_score": 1,
+      "karmic_minus_score": 1,
+      "karmic_plus_score": 0,
+      "ruled_houses": [
+        6,
+        7,
+        11
+      ]
+    }
+  ],
+  "houses": [
+    {
+      "number": 1,
+      "longitude": 233.222346,
+      "sign": "Scorpio",
+      "degree_in_sign": 23.222345999999987,
+      "degree_in_sign_formatted": "23°13'20\"",
+      "ruler_planet": "Pluto",
+      "house_group": "angular",
+      "included_sign": null,
+      "co_rulers": [
+        "Mars"
+      ],
+      "significator": "Mars",
+      "ruler_in_house": 12,
+      "planets_in_house": []
+    },
+    {
+      "number": 2,
+      "longitude": 264.341487,
+      "sign": "Sagittarius",
+      "degree_in_sign": 24.341486999999972,
+      "degree_in_sign_formatted": "24°20'29\"",
+      "ruler_planet": "Jupiter",
+      "house_group": "succedent",
+      "included_sign": "Capricorn",
+      "co_rulers": [
+        "Neptune",
+        "Saturn",
+        "Uranus"
+      ],
+      "significator": "Venus",
+      "ruler_in_house": 8,
+      "planets_in_house": [
+        "Saturn",
+        "Uranus",
+        "Neptune"
+      ]
+    },
+    {
+      "number": 3,
+      "longitude": 303.914703,
+      "sign": "Aquarius",
+      "degree_in_sign": 3.9147029999999745,
+      "degree_in_sign_formatted": "3°54'52\"",
+      "ruler_planet": "Uranus",
+      "house_group": "cadent",
+      "included_sign": null,
+      "co_rulers": [
+        "Saturn"
+      ],
+      "significator": "Mercury",
+      "ruler_in_house": 2,
+      "planets_in_house": []
+    },
+    {
+      "number": 4,
+      "longitude": 343.12357,
+      "sign": "Pisces",
+      "degree_in_sign": 13.123569999999972,
+      "degree_in_sign_formatted": "13°07'24\"",
+      "ruler_planet": "Neptune",
+      "house_group": "angular",
+      "included_sign": null,
+      "co_rulers": [
+        "Jupiter"
+      ],
+      "significator": "Moon",
+      "ruler_in_house": 2,
+      "planets_in_house": []
+    },
+    {
+      "number": 5,
+      "longitude": 13.404916,
+      "sign": "Aries",
+      "degree_in_sign": 13.404916,
+      "degree_in_sign_formatted": "13°24'17\"",
+      "ruler_planet": "Mars",
+      "house_group": "succedent",
+      "included_sign": null,
+      "co_rulers": [],
+      "significator": "Sun",
+      "ruler_in_house": 5,
+      "planets_in_house": [
+        "Mars"
+      ]
+    },
+    {
+      "number": 6,
+      "longitude": 35.727246,
+      "sign": "Taurus",
+      "degree_in_sign": 5.727246000000001,
+      "degree_in_sign_formatted": "5°43'38\"",
+      "ruler_planet": "Venus",
+      "house_group": "cadent",
+      "included_sign": null,
+      "co_rulers": [],
+      "significator": "Mercury",
+      "ruler_in_house": 7,
+      "planets_in_house": []
+    },
+    {
+      "number": 7,
+      "longitude": 53.222346,
+      "sign": "Taurus",
+      "degree_in_sign": 23.222346,
+      "degree_in_sign_formatted": "23°13'20\"",
+      "ruler_planet": "Venus",
+      "house_group": "angular",
+      "included_sign": null,
+      "co_rulers": [],
+      "significator": "Venus",
+      "ruler_in_house": 7,
+      "planets_in_house": [
+        "Venus"
+      ]
+    },
+    {
+      "number": 8,
+      "longitude": 84.341487,
+      "sign": "Gemini",
+      "degree_in_sign": 24.341487,
+      "degree_in_sign_formatted": "24°20'29\"",
+      "ruler_planet": "Mercury",
+      "house_group": "succedent",
+      "included_sign": "Cancer",
+      "co_rulers": [
+        "Moon"
+      ],
+      "significator": "Pluto",
+      "ruler_in_house": 8,
+      "planets_in_house": [
+        "Sun",
+        "Mercury",
+        "Jupiter",
+        "Chiron"
+      ]
+    },
+    {
+      "number": 9,
+      "longitude": 123.914703,
+      "sign": "Leo",
+      "degree_in_sign": 3.914703000000003,
+      "degree_in_sign_formatted": "3°54'52\"",
+      "ruler_planet": "Sun",
+      "house_group": "cadent",
+      "included_sign": null,
+      "co_rulers": [],
+      "significator": "Jupiter",
+      "ruler_in_house": 8,
+      "planets_in_house": [
+        "Moon"
+      ]
+    },
+    {
+      "number": 10,
+      "longitude": 163.12357,
+      "sign": "Virgo",
+      "degree_in_sign": 13.12357,
+      "degree_in_sign_formatted": "13°07'24\"",
+      "ruler_planet": "Mercury",
+      "house_group": "angular",
+      "included_sign": null,
+      "co_rulers": [
+        "Proserpina"
+      ],
+      "significator": "Saturn",
+      "ruler_in_house": 8,
+      "planets_in_house": []
+    },
+    {
+      "number": 11,
+      "longitude": 193.404916,
+      "sign": "Libra",
+      "degree_in_sign": 13.404915999999986,
+      "degree_in_sign_formatted": "13°24'17\"",
+      "ruler_planet": "Venus",
+      "house_group": "succedent",
+      "included_sign": null,
+      "co_rulers": [
+        "Chiron"
+      ],
+      "significator": "Uranus",
+      "ruler_in_house": 7,
+      "planets_in_house": [
+        "Proserpina"
+      ]
+    },
+    {
+      "number": 12,
+      "longitude": 215.727246,
+      "sign": "Scorpio",
+      "degree_in_sign": 5.727246000000008,
+      "degree_in_sign_formatted": "5°43'38\"",
+      "ruler_planet": "Pluto",
+      "house_group": "cadent",
+      "included_sign": null,
+      "co_rulers": [
+        "Mars"
+      ],
+      "significator": "Neptune",
+      "ruler_in_house": 12,
+      "planets_in_house": [
+        "Pluto"
+      ]
+    }
+  ],
+  "angles": {
+    "ASC": {
+      "name": "ASC",
+      "longitude": 233.222346,
+      "sign": "Scorpio",
+      "degree_in_sign": 23.222345999999987,
+      "degree_in_sign_formatted": "23°13'20\""
+    },
+    "MC": {
+      "name": "MC",
+      "longitude": 163.12357,
+      "sign": "Virgo",
+      "degree_in_sign": 13.12357,
+      "degree_in_sign_formatted": "13°07'24\""
+    },
+    "IC": {
+      "name": "IC",
+      "longitude": 343.12357,
+      "sign": "Pisces",
+      "degree_in_sign": 13.123569999999972,
+      "degree_in_sign_formatted": "13°07'24\""
+    },
+    "DSC": {
+      "name": "DSC",
+      "longitude": 53.222346,
+      "sign": "Taurus",
+      "degree_in_sign": 23.222346,
+      "degree_in_sign_formatted": "23°13'20\""
+    },
+    "Vertex": {
+      "name": "Vertex",
+      "longitude": 95.207456,
+      "sign": "Cancer",
+      "degree_in_sign": 5.207455999999993,
+      "degree_in_sign_formatted": "5°12'26\""
+    }
+  },
+  "special_points": {
+    "TrueNorthNode": {
+      "name": "TrueNorthNode",
+      "longitude": 307.631578,
+      "sign": "Aquarius",
+      "degree_in_sign": 7.63157799999999,
+      "degree_in_sign_formatted": "7°37'53\"",
+      "house": 3
+    },
+    "TrueSouthNode": {
+      "name": "TrueSouthNode",
+      "longitude": 127.631578,
+      "sign": "Leo",
+      "degree_in_sign": 7.631578000000005,
+      "degree_in_sign_formatted": "7°37'53\"",
+      "house": 9
+    },
+    "BlackMoon": {
+      "name": "BlackMoon",
+      "longitude": 236.19369,
+      "sign": "Scorpio",
+      "degree_in_sign": 26.193690000000004,
+      "degree_in_sign_formatted": "26°11'37\"",
+      "house": 1
+    },
+    "WhiteMoon": {
+      "name": "WhiteMoon",
+      "longitude": 113.069365,
+      "sign": "Cancer",
+      "degree_in_sign": 23.069365000000005,
+      "degree_in_sign_formatted": "23°04'09\"",
+      "house": 8
+    },
+    "Fortune": {
+      "name": "Fortune",
+      "longitude": 283.796681,
+      "sign": "Capricorn",
+      "degree_in_sign": 13.796680999999978,
+      "degree_in_sign_formatted": "13°47'48\"",
+      "house": 2
+    },
+    "Vertex": {
+      "name": "Vertex",
+      "longitude": 95.207456,
+      "sign": "Cancer",
+      "degree_in_sign": 5.207455999999993,
+      "degree_in_sign_formatted": "5°12'26\"",
+      "house": 8
+    },
+    "AntiVertex": {
+      "name": "AntiVertex",
+      "longitude": 275.207456,
+      "sign": "Capricorn",
+      "degree_in_sign": 5.207455999999979,
+      "degree_in_sign_formatted": "5°12'26\"",
+      "house": 2
+    }
+  },
+  "configurations": {
+    "FateCross": {
+      "axis": "LunarNodes",
+      "points": [
+        {
+          "name": "Rahu",
+          "longitude": 307.631578,
+          "sign": "Aquarius",
+          "house": 3
+        },
+        {
+          "name": "Ketu",
+          "longitude": 127.631578,
+          "sign": "Leo",
+          "house": 9
+        },
+        {
+          "name": "FateCross1",
+          "longitude": 37.631578,
+          "sign": "Taurus",
+          "house": 6
+        },
+        {
+          "name": "FateCross2",
+          "longitude": 217.631578,
+          "sign": "Scorpio",
+          "house": 12
+        }
+      ]
+    },
+    "T_Square": {
+      "planets_involved": {
+        "planets": [
+          "Mars",
+          "Saturn",
+          "WhiteMoon"
+        ],
+        "apex_planet": "Mars"
+      },
+      "houses_involved": null,
+      "element": null,
+      "mode": null,
+      "strength_score": 6
+    },
+    "Bisextile": {
+      "planets_involved": {
+        "planets": [
+          "Mercury",
+          "Moon",
+          "Proserpina"
+        ],
+        "apex_planet": "Moon"
+      },
+      "houses_involved": null,
+      "element": null,
+      "mode": null,
+      "strength_score": 4
+    },
+    "Skewed_Sail": {
+      "planets_involved": {
+        "planets": [
+          "Jupiter",
+          "Neptune",
+          "Pluto"
+        ],
+        "apex_planet": "Pluto"
+      },
+      "houses_involved": null,
+      "element": null,
+      "mode": null,
+      "strength_score": 5
+    }
+  },
+  "aspects": [
+    {
+      "planet_1": "Saturn",
+      "planet_2": "Chiron",
+      "aspect_type": "Opposition",
+      "orb": 6.118,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Saturn",
+      "planet_2": "Moon",
+      "aspect_type": "Quincunx",
+      "orb": 1.969,
+      "is_major": false,
+      "harmonic_type": "neutral",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Saturn",
+      "planet_2": "Mars",
+      "aspect_type": "Square",
+      "orb": 4.388,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Saturn",
+      "planet_2": "Jupiter",
+      "aspect_type": "Opposition",
+      "orb": 5.003,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Saturn",
+      "planet_2": "BlackMoon",
+      "aspect_type": "Sextile",
+      "orb": 2.868,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Uranus",
+      "planet_2": "Proserpina",
+      "aspect_type": "Sextile",
+      "orb": 5.191,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Uranus",
+      "planet_2": "Sun",
+      "aspect_type": "Opposition",
+      "orb": 3.002,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Uranus",
+      "planet_2": "Moon",
+      "aspect_type": "Sesquiquadrate",
+      "orb": 2.572,
+      "is_major": false,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Uranus",
+      "planet_2": "Vertex",
+      "aspect_type": "Opposition",
+      "orb": 2.515,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Uranus",
+      "planet_2": "AntiVertex",
+      "aspect_type": "Conjunction",
+      "orb": 2.515,
+      "is_major": true,
+      "harmonic_type": "neutral",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Neptune",
+      "planet_2": "Pluto",
+      "aspect_type": "Sextile",
+      "orb": 1.774,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Neptune",
+      "planet_2": "Chiron",
+      "aspect_type": "Opposition",
+      "orb": 3.779,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Neptune",
+      "planet_2": "Proserpina",
+      "aspect_type": "Quintile",
+      "orb": 1.102,
+      "is_major": false,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Neptune",
+      "planet_2": "Sun",
+      "aspect_type": "Opposition",
+      "orb": 8.709,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Neptune",
+      "planet_2": "Moon",
+      "aspect_type": "Sesquiquadrate",
+      "orb": 3.135,
+      "is_major": false,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Neptune",
+      "planet_2": "Jupiter",
+      "aspect_type": "Opposition",
+      "orb": 4.894,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Pluto",
+      "planet_2": "Chiron",
+      "aspect_type": "Trine",
+      "orb": 2.005,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Pluto",
+      "planet_2": "Mercury",
+      "aspect_type": "Sesquiquadrate",
+      "orb": 2.929,
+      "is_major": false,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Pluto",
+      "planet_2": "Jupiter",
+      "aspect_type": "Trine",
+      "orb": 3.12,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Pluto",
+      "planet_2": "Fortune",
+      "aspect_type": "Sextile",
+      "orb": 1.407,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Pluto",
+      "planet_2": "MC",
+      "aspect_type": "Sextile",
+      "orb": 2.08,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Pluto",
+      "planet_2": "IC",
+      "aspect_type": "Trine",
+      "orb": 2.08,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Chiron",
+      "planet_2": "Mars",
+      "aspect_type": "Square",
+      "orb": 1.73,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Chiron",
+      "planet_2": "Jupiter",
+      "aspect_type": "Conjunction",
+      "orb": 1.115,
+      "is_major": true,
+      "harmonic_type": "neutral",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Chiron",
+      "planet_2": "Fortune",
+      "aspect_type": "Opposition",
+      "orb": 3.412,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Chiron",
+      "planet_2": "MC",
+      "aspect_type": "Sextile",
+      "orb": 4.085,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Chiron",
+      "planet_2": "IC",
+      "aspect_type": "Trine",
+      "orb": 4.085,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Proserpina",
+      "planet_2": "Sun",
+      "aspect_type": "Trine",
+      "orb": 2.189,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Proserpina",
+      "planet_2": "Moon",
+      "aspect_type": "Sextile",
+      "orb": 7.237,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Proserpina",
+      "planet_2": "Mercury",
+      "aspect_type": "Trine",
+      "orb": 5.257,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Proserpina",
+      "planet_2": "TrueNorthNode",
+      "aspect_type": "Square",
+      "orb": 5.1,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Proserpina",
+      "planet_2": "TrueSouthNode",
+      "aspect_type": "Square",
+      "orb": 5.1,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Proserpina",
+      "planet_2": "Vertex",
+      "aspect_type": "Trine",
+      "orb": 2.676,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Proserpina",
+      "planet_2": "AntiVertex",
+      "aspect_type": "Sextile",
+      "orb": 2.676,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Sun",
+      "planet_2": "Moon",
+      "aspect_type": "Sextile",
+      "orb": 9.426,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Sun",
+      "planet_2": "Mercury",
+      "aspect_type": "Conjunction",
+      "orb": 7.446,
+      "is_major": true,
+      "harmonic_type": "neutral",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Sun",
+      "planet_2": "TrueNorthNode",
+      "aspect_type": "Quincunx",
+      "orb": 2.911,
+      "is_major": false,
+      "harmonic_type": "neutral",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Sun",
+      "planet_2": "Fortune",
+      "aspect_type": "Opposition",
+      "orb": 9.076,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Sun",
+      "planet_2": "MC",
+      "aspect_type": "Sextile",
+      "orb": 8.403,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Sun",
+      "planet_2": "IC",
+      "aspect_type": "Trine",
+      "orb": 8.403,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Sun",
+      "planet_2": "DSC",
+      "aspect_type": "Nonagon",
+      "orb": 1.498,
+      "is_major": false,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Moon",
+      "planet_2": "Mercury",
+      "aspect_type": "Sextile",
+      "orb": 1.98,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Moon",
+      "planet_2": "Venus",
+      "aspect_type": "Square",
+      "orb": 6.581,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Moon",
+      "planet_2": "Mars",
+      "aspect_type": "Trine",
+      "orb": 6.356,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Moon",
+      "planet_2": "ASC",
+      "aspect_type": "Square",
+      "orb": 2.072,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Moon",
+      "planet_2": "DSC",
+      "aspect_type": "Square",
+      "orb": 2.072,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Mercury",
+      "planet_2": "BlackMoon",
+      "aspect_type": "Quincunx",
+      "orb": 1.081,
+      "is_major": false,
+      "harmonic_type": "neutral",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Mercury",
+      "planet_2": "AntiVertex",
+      "aspect_type": "Opposition",
+      "orb": 7.933,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Venus",
+      "planet_2": "BlackMoon",
+      "aspect_type": "Opposition",
+      "orb": 5.682,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Mars",
+      "planet_2": "WhiteMoon",
+      "aspect_type": "Square",
+      "orb": 4.131,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Jupiter",
+      "planet_2": "WhiteMoon",
+      "aspect_type": "Conjunction",
+      "orb": 4.746,
+      "is_major": true,
+      "harmonic_type": "neutral",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Jupiter",
+      "planet_2": "Fortune",
+      "aspect_type": "Opposition",
+      "orb": 4.527,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Jupiter",
+      "planet_2": "ASC",
+      "aspect_type": "Trine",
+      "orb": 4.899,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Jupiter",
+      "planet_2": "DSC",
+      "aspect_type": "Sextile",
+      "orb": 4.899,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "BlackMoon",
+      "planet_2": "ASC",
+      "aspect_type": "Conjunction",
+      "orb": 2.971,
+      "is_major": true,
+      "harmonic_type": "neutral",
+      "is_partile": false
+    },
+    {
+      "planet_1": "BlackMoon",
+      "planet_2": "DSC",
+      "aspect_type": "Opposition",
+      "orb": 2.971,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "AntiVertex",
+      "planet_2": "MC",
+      "aspect_type": "Trine",
+      "orb": 7.916,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Saturn",
+      "planet_2": "ASC",
+      "aspect_type": "Sextile",
+      "orb": 0.104,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Sun",
+      "planet_2": "Vertex",
+      "aspect_type": "Conjunction",
+      "orb": 0.487,
+      "is_major": true,
+      "harmonic_type": "neutral",
+      "is_partile": false
+    },
+    {
+      "planet_1": "MC",
+      "planet_2": "IC",
+      "aspect_type": "Opposition",
+      "orb": 0,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Uranus",
+      "planet_2": "ASC",
+      "aspect_type": "Semisquare",
+      "orb": 0.5,
+      "is_major": false,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Mars",
+      "planet_2": "TrueNorthNode",
+      "aspect_type": "Quintile",
+      "orb": 0.693,
+      "is_major": false,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Uranus",
+      "planet_2": "Venus",
+      "aspect_type": "Biquintile",
+      "orb": 0.153,
+      "is_major": false,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "WhiteMoon",
+      "planet_2": "DSC",
+      "aspect_type": "Sextile",
+      "orb": 0.153,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Neptune",
+      "planet_2": "MC",
+      "aspect_type": "Trine",
+      "orb": 0.306,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "TrueSouthNode",
+      "planet_2": "BlackMoon",
+      "aspect_type": "Tridecile",
+      "orb": 0.562,
+      "is_major": false,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Mercury",
+      "planet_2": "TrueSouthNode",
+      "aspect_type": "Nonagon",
+      "orb": 0.357,
+      "is_major": false,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Fortune",
+      "planet_2": "MC",
+      "aspect_type": "Trine",
+      "orb": 0.673,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "TrueNorthNode",
+      "planet_2": "BlackMoon",
+      "aspect_type": "Quintile",
+      "orb": 0.562,
+      "is_major": false,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Chiron",
+      "planet_2": "Venus",
+      "aspect_type": "Semisquare",
+      "orb": 0.332,
+      "is_major": false,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "TrueSouthNode",
+      "planet_2": "IC",
+      "aspect_type": "Biquintile",
+      "orb": 0.508,
+      "is_major": false,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Neptune",
+      "planet_2": "Fortune",
+      "aspect_type": "Conjunction",
+      "orb": 0.367,
+      "is_major": true,
+      "harmonic_type": "neutral",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Moon",
+      "planet_2": "BlackMoon",
+      "aspect_type": "Square",
+      "orb": 0.899,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Proserpina",
+      "planet_2": "Fortune",
+      "aspect_type": "Quintile",
+      "orb": 0.735,
+      "is_major": false,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "TrueNorthNode",
+      "planet_2": "IC",
+      "aspect_type": "Decile",
+      "orb": 0.508,
+      "is_major": false,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Proserpina",
+      "planet_2": "Venus",
+      "aspect_type": "Quincunx",
+      "orb": 0.656,
+      "is_major": false,
+      "harmonic_type": "neutral",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Sun",
+      "planet_2": "AntiVertex",
+      "aspect_type": "Opposition",
+      "orb": 0.487,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "TrueSouthNode",
+      "planet_2": "MC",
+      "aspect_type": "Decile",
+      "orb": 0.508,
+      "is_major": false,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "WhiteMoon",
+      "planet_2": "ASC",
+      "aspect_type": "Trine",
+      "orb": 0.153,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "ASC",
+      "planet_2": "DSC",
+      "aspect_type": "Opposition",
+      "orb": 0,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Vertex",
+      "planet_2": "AntiVertex",
+      "aspect_type": "Opposition",
+      "orb": 0,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Saturn",
+      "planet_2": "DSC",
+      "aspect_type": "Trine",
+      "orb": 0.104,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Mars",
+      "planet_2": "Jupiter",
+      "aspect_type": "Square",
+      "orb": 0.615,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Uranus",
+      "planet_2": "DSC",
+      "aspect_type": "Sesquiquadrate",
+      "orb": 0.5,
+      "is_major": false,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Mars",
+      "planet_2": "IC",
+      "aspect_type": "Decile",
+      "orb": 0.185,
+      "is_major": false,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "TrueNorthNode",
+      "planet_2": "TrueSouthNode",
+      "aspect_type": "Opposition",
+      "orb": 0,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "BlackMoon",
+      "planet_2": "AntiVertex",
+      "aspect_type": "Nonagon",
+      "orb": 0.986,
+      "is_major": false,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Neptune",
+      "planet_2": "IC",
+      "aspect_type": "Sextile",
+      "orb": 0.306,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Moon",
+      "planet_2": "Jupiter",
+      "aspect_type": "Decile",
+      "orb": 0.971,
+      "is_major": false,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "TrueNorthNode",
+      "planet_2": "MC",
+      "aspect_type": "Biquintile",
+      "orb": 0.508,
+      "is_major": false,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Fortune",
+      "planet_2": "IC",
+      "aspect_type": "Sextile",
+      "orb": 0.673,
+      "is_major": true,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Saturn",
+      "planet_2": "WhiteMoon",
+      "aspect_type": "Opposition",
+      "orb": 0.257,
+      "is_major": true,
+      "harmonic_type": "tense",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Mars",
+      "planet_2": "TrueSouthNode",
+      "aspect_type": "Tridecile",
+      "orb": 0.693,
+      "is_major": false,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Mars",
+      "planet_2": "MC",
+      "aspect_type": "Biquintile",
+      "orb": 0.185,
+      "is_major": false,
+      "harmonic_type": "harmonious",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Uranus",
+      "planet_2": "TrueNorthNode",
+      "aspect_type": "Semisextile",
+      "orb": 0.091,
+      "is_major": false,
+      "harmonic_type": "neutral",
+      "is_partile": false
+    },
+    {
+      "planet_1": "Uranus",
+      "planet_2": "TrueSouthNode",
+      "aspect_type": "Quincunx",
+      "orb": 0.091,
+      "is_major": false,
+      "harmonic_type": "neutral",
+      "is_partile": false
+    }
+  ],
+  "aspect_configurations": [
+    {
+      "type": "Bisextile",
+      "planets_involved": [
+        "Moon",
+        "Proserpina",
+        "Sun"
+      ],
+      "apex_planet": "Moon",
+      "strength_score": 4,
+      "aspects": [
+        {
+          "planet_1": "Proserpina",
+          "planet_2": "Sun",
+          "aspect_type": "Trine",
+          "orb": 2.189,
+          "orb_planet_1": 8,
+          "orb_planet_2": 10,
+          "min_orb": 8,
+          "max_orb": 10,
+          "score": 2
+        },
+        {
+          "planet_1": "Sun",
+          "planet_2": "Moon",
+          "aspect_type": "Sextile",
+          "orb": 9.426,
+          "orb_planet_1": 10,
+          "orb_planet_2": 8,
+          "min_orb": 8,
+          "max_orb": 10,
+          "score": 1
+        },
+        {
+          "planet_1": "Proserpina",
+          "planet_2": "Moon",
+          "aspect_type": "Sextile",
+          "orb": 7.237,
+          "orb_planet_1": 6,
+          "orb_planet_2": 8,
+          "min_orb": 6,
+          "max_orb": 8,
+          "score": 1
+        }
+      ]
+    },
+    {
+      "type": "Bisextile",
+      "planets_involved": [
+        "Mercury",
+        "Moon",
+        "Proserpina"
+      ],
+      "apex_planet": "Moon",
+      "strength_score": 4,
+      "aspects": [
+        {
+          "planet_1": "Proserpina",
+          "planet_2": "Mercury",
+          "aspect_type": "Trine",
+          "orb": 5.257,
+          "orb_planet_1": 8,
+          "orb_planet_2": 5,
+          "min_orb": 5,
+          "max_orb": 8,
+          "score": 1
+        },
+        {
+          "planet_1": "Moon",
+          "planet_2": "Mercury",
+          "aspect_type": "Sextile",
+          "orb": 1.98,
+          "orb_planet_1": 8,
+          "orb_planet_2": 5,
+          "min_orb": 5,
+          "max_orb": 8,
+          "score": 2
+        },
+        {
+          "planet_1": "Proserpina",
+          "planet_2": "Moon",
+          "aspect_type": "Sextile",
+          "orb": 7.237,
+          "orb_planet_1": 6,
+          "orb_planet_2": 8,
+          "min_orb": 6,
+          "max_orb": 8,
+          "score": 1
+        }
+      ]
+    },
+    {
+      "type": "Skewed_Sail",
+      "planets_involved": [
+        "Chiron",
+        "Neptune",
+        "Pluto"
+      ],
+      "apex_planet": "Pluto",
+      "strength_score": 6,
+      "aspects": [
+        {
+          "planet_1": "Neptune",
+          "planet_2": "Chiron",
+          "aspect_type": "Opposition",
+          "orb": 3.779,
+          "orb_planet_1": 5,
+          "orb_planet_2": 5,
+          "min_orb": 5,
+          "max_orb": 5,
+          "score": 2
+        },
+        {
+          "planet_1": "Pluto",
+          "planet_2": "Chiron",
+          "aspect_type": "Trine",
+          "orb": 2.005,
+          "orb_planet_1": 3,
+          "orb_planet_2": 3,
+          "min_orb": 3,
+          "max_orb": 3,
+          "score": 2
+        },
+        {
+          "planet_1": "Neptune",
+          "planet_2": "Pluto",
+          "aspect_type": "Sextile",
+          "orb": 1.774,
+          "orb_planet_1": 3,
+          "orb_planet_2": 3,
+          "min_orb": 3,
+          "max_orb": 3,
+          "score": 2
+        }
+      ]
+    },
+    {
+      "type": "Skewed_Sail",
+      "planets_involved": [
+        "Jupiter",
+        "Neptune",
+        "Pluto"
+      ],
+      "apex_planet": "Pluto",
+      "strength_score": 5,
+      "aspects": [
+        {
+          "planet_1": "Neptune",
+          "planet_2": "Jupiter",
+          "aspect_type": "Opposition",
+          "orb": 4.894,
+          "orb_planet_1": 5,
+          "orb_planet_2": 7,
+          "min_orb": 5,
+          "max_orb": 7,
+          "score": 2
+        },
+        {
+          "planet_1": "Pluto",
+          "planet_2": "Jupiter",
+          "aspect_type": "Trine",
+          "orb": 3.12,
+          "orb_planet_1": 3,
+          "orb_planet_2": 5,
+          "min_orb": 3,
+          "max_orb": 5,
+          "score": 1
+        },
+        {
+          "planet_1": "Neptune",
+          "planet_2": "Pluto",
+          "aspect_type": "Sextile",
+          "orb": 1.774,
+          "orb_planet_1": 3,
+          "orb_planet_2": 3,
+          "min_orb": 3,
+          "max_orb": 3,
+          "score": 2
+        }
+      ]
+    },
+    {
+      "type": "Skewed_Sail",
+      "planets_involved": [
+        "Proserpina",
+        "Sun",
+        "Uranus"
+      ],
+      "apex_planet": "Proserpina",
+      "strength_score": 5,
+      "aspects": [
+        {
+          "planet_1": "Proserpina",
+          "planet_2": "Sun",
+          "aspect_type": "Trine",
+          "orb": 2.189,
+          "orb_planet_1": 8,
+          "orb_planet_2": 10,
+          "min_orb": 8,
+          "max_orb": 10,
+          "score": 2
+        },
+        {
+          "planet_1": "Uranus",
+          "planet_2": "Sun",
+          "aspect_type": "Opposition",
+          "orb": 3.002,
+          "orb_planet_1": 5,
+          "orb_planet_2": 12,
+          "min_orb": 5,
+          "max_orb": 12,
+          "score": 2
+        },
+        {
+          "planet_1": "Uranus",
+          "planet_2": "Proserpina",
+          "aspect_type": "Sextile",
+          "orb": 5.191,
+          "orb_planet_1": 3,
+          "orb_planet_2": 6,
+          "min_orb": 3,
+          "max_orb": 6,
+          "score": 1
+        }
+      ]
+    },
+    {
+      "type": "T_Square",
+      "planets_involved": [
+        "Jupiter",
+        "Mars",
+        "Saturn"
+      ],
+      "apex_planet": "Mars",
+      "strength_score": 7,
+      "aspects": [
+        {
+          "planet_1": "Saturn",
+          "planet_2": "Jupiter",
+          "aspect_type": "Opposition",
+          "orb": 5.003,
+          "orb_planet_1": 7,
+          "orb_planet_2": 7,
+          "min_orb": 7,
+          "max_orb": 7,
+          "score": 2
+        },
+        {
+          "planet_1": "Mars",
+          "planet_2": "Jupiter",
+          "aspect_type": "Square",
+          "orb": 0.615,
+          "orb_planet_1": 5,
+          "orb_planet_2": 5,
+          "min_orb": 5,
+          "max_orb": 5,
+          "score": 3
+        },
+        {
+          "planet_1": "Saturn",
+          "planet_2": "Mars",
+          "aspect_type": "Square",
+          "orb": 4.388,
+          "orb_planet_1": 5,
+          "orb_planet_2": 5,
+          "min_orb": 5,
+          "max_orb": 5,
+          "score": 2
+        }
+      ]
+    },
+    {
+      "type": "T_Square",
+      "planets_involved": [
+        "Mars",
+        "Saturn",
+        "WhiteMoon"
+      ],
+      "apex_planet": "Mars",
+      "strength_score": 6,
+      "aspects": [
+        {
+          "planet_1": "Mars",
+          "planet_2": "WhiteMoon",
+          "aspect_type": "Square",
+          "orb": 4.131,
+          "orb_planet_1": 5,
+          "orb_planet_2": 3,
+          "min_orb": 3,
+          "max_orb": 5,
+          "score": 1
+        },
+        {
+          "planet_1": "Saturn",
+          "planet_2": "WhiteMoon",
+          "aspect_type": "Opposition",
+          "orb": 0.257,
+          "orb_planet_1": 7,
+          "orb_planet_2": 3,
+          "min_orb": 3,
+          "max_orb": 7,
+          "score": 3
+        },
+        {
+          "planet_1": "Saturn",
+          "planet_2": "Mars",
+          "aspect_type": "Square",
+          "orb": 4.388,
+          "orb_planet_1": 5,
+          "orb_planet_2": 5,
+          "min_orb": 5,
+          "max_orb": 5,
+          "score": 2
+        }
+      ]
+    },
+    {
+      "type": "T_Square",
+      "planets_involved": [
+        "Proserpina",
+        "TrueNorthNode",
+        "TrueSouthNode"
+      ],
+      "apex_planet": "Proserpina",
+      "strength_score": 5,
+      "aspects": [
+        {
+          "planet_1": "Proserpina",
+          "planet_2": "TrueSouthNode",
+          "aspect_type": "Square",
+          "orb": 5.1,
+          "orb_planet_1": 8,
+          "orb_planet_2": 3,
+          "min_orb": 3,
+          "max_orb": 8,
+          "score": 1
+        },
+        {
+          "planet_1": "Proserpina",
+          "planet_2": "TrueNorthNode",
+          "aspect_type": "Square",
+          "orb": 5.1,
+          "orb_planet_1": 8,
+          "orb_planet_2": 3,
+          "min_orb": 3,
+          "max_orb": 8,
+          "score": 1
+        },
+        {
+          "planet_1": "TrueNorthNode",
+          "planet_2": "TrueSouthNode",
+          "aspect_type": "Opposition",
+          "orb": 0,
+          "orb_planet_1": 3,
+          "orb_planet_2": 3,
+          "min_orb": 3,
+          "max_orb": 3,
+          "score": 3
+        }
+      ]
+    },
+    {
+      "type": "T_Square",
+      "planets_involved": [
+        "BlackMoon",
+        "Moon",
+        "Venus"
+      ],
+      "apex_planet": "Moon",
+      "strength_score": 5,
+      "aspects": [
+        {
+          "planet_1": "Moon",
+          "planet_2": "BlackMoon",
+          "aspect_type": "Square",
+          "orb": 0.899,
+          "orb_planet_1": 8,
+          "orb_planet_2": 3,
+          "min_orb": 3,
+          "max_orb": 8,
+          "score": 3
+        },
+        {
+          "planet_1": "Moon",
+          "planet_2": "Venus",
+          "aspect_type": "Square",
+          "orb": 6.581,
+          "orb_planet_1": 8,
+          "orb_planet_2": 5,
+          "min_orb": 5,
+          "max_orb": 8,
+          "score": 1
+        },
+        {
+          "planet_1": "Venus",
+          "planet_2": "BlackMoon",
+          "aspect_type": "Opposition",
+          "orb": 5.682,
+          "orb_planet_1": 7,
+          "orb_planet_2": 3,
+          "min_orb": 3,
+          "max_orb": 7,
+          "score": 1
+        }
+      ]
+    },
+    {
+      "type": "T_Square",
+      "planets_involved": [
+        "Chiron",
+        "Mars",
+        "Saturn"
+      ],
+      "apex_planet": "Mars",
+      "strength_score": 5,
+      "aspects": [
+        {
+          "planet_1": "Saturn",
+          "planet_2": "Chiron",
+          "aspect_type": "Opposition",
+          "orb": 6.118,
+          "orb_planet_1": 7,
+          "orb_planet_2": 5,
+          "min_orb": 5,
+          "max_orb": 7,
+          "score": 1
+        },
+        {
+          "planet_1": "Saturn",
+          "planet_2": "Mars",
+          "aspect_type": "Square",
+          "orb": 4.388,
+          "orb_planet_1": 5,
+          "orb_planet_2": 5,
+          "min_orb": 5,
+          "max_orb": 5,
+          "score": 2
+        },
+        {
+          "planet_1": "Chiron",
+          "planet_2": "Mars",
+          "aspect_type": "Square",
+          "orb": 1.73,
+          "orb_planet_1": 3,
+          "orb_planet_2": 5,
+          "min_orb": 3,
+          "max_orb": 5,
+          "score": 2
+        }
+      ]
+    }
+  ],
+  "stelliums": [
+    {
+      "type": "sign",
+      "house_number": null,
+      "sign": "Capricorn",
+      "planets": [
+        "Neptune",
+        "Saturn",
+        "Uranus"
+      ],
+      "count": 3,
+      "strength_score": 4.5
+    },
+    {
+      "type": "house",
+      "house_number": 2,
+      "sign": null,
+      "planets": [
+        "Neptune",
+        "Saturn",
+        "Uranus"
+      ],
+      "count": 3,
+      "strength_score": 4.5
+    }
+  ],
+  "cosmogram_pattern": {
+    "pattern_type": "Seesaw",
+    "empty_arc_degree": 85.61,
+    "leading_planet": null,
+    "closing_planet": null,
+    "handle_planet": null,
+    "handle_planets": null,
+    "central_planet": null,
+    "group1_leading": "Mars",
+    "group1_closing": "Moon",
+    "group2_leading": "Pluto",
+    "group2_closing": "Saturn",
+    "key_planet": null,
+    "stellium_center_planet": null,
+    "anchor_planet": null,
+    "special_roles": []
+  },
+  "planet_distribution": {
+    "min_empty_arc": 1.12,
+    "max_empty_arc": 85.61,
+    "cluster_count": 2,
+    "spread_map": {
+      "clusters": [
+        {
+          "count": 4,
+          "planets": [
+            "Neptune",
+            "Pluto",
+            "Saturn",
+            "Uranus"
+          ],
+          "cluster_id": 1,
+          "end_degree": 293.326168,
+          "start_degree": 225.203324
+        },
+        {
+          "count": 7,
+          "planets": [
+            "Chiron",
+            "Jupiter",
+            "Mars",
+            "Mercury",
+            "Moon",
+            "Sun",
+            "Venus"
+          ],
+          "cluster_id": 2,
+          "end_degree": 145.294757,
+          "start_degree": 18.938464
+        }
+      ],
+      "total_planets": 11
+    }
+  },
+  "balances": {
+    "element_balance": {
+      "fire": 4,
+      "earth": 3,
+      "air": 3.5,
+      "water": 6.3
+    },
+    "mode_balance": {
+      "cardinal": 8.3,
+      "fixed": 5.5,
+      "mutable": 3
+    },
+    "gender_balance": {
+      "masculine": 7.5,
+      "feminine": 9.3
+    },
+    "zones_balance": {
+      "brahma": 8.3,
+      "vishnu": 5,
+      "shiva": 3.5
+    },
+    "hemisphere_balance": {
+      "northern": 5.5,
+      "southern": 11.3,
+      "eastern": 6,
+      "western": 10.8
+    },
+    "quadrant_balance": {
+      "q1": 2,
+      "q2": 4,
+      "q3": 1.5,
+      "q4": 9.3
+    },
+    "house_group_balance": {
+      "angular": 2,
+      "succedent": 10.8,
+      "cadent": 4
+    }
+  }
+}
