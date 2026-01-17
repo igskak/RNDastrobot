@@ -4,21 +4,22 @@ This project combines the Swiss Ephemeris astronomical calculation library with 
 
 ## Recent Updates
 
-### Chat with OpenAI Agent (2026-01-17)
-- **Added**: Chat widget on natal chart page (`natal-full.html`)
+### ChatKit Integration with Minimize/Maximize (2026-01-17)
+- **Updated**: Migrated to OpenAI ChatKit widget with collapsible UI
 - **Features**:
-  - Minimalist design matching application style
-  - Collapsible/expandable interface
-  - Integration with OpenAI Workflow API (Agent Builder)
-  - Automatic chart data injection from sessionStorage
-  - Thread-based conversation history
+  - **Minimize/Maximize**: Chat window can be collapsed to a floating button
+  - **Custom Header**: Branded header with minimize button
+  - **Smooth Transitions**: CSS animations for minimize/maximize actions
+  - **Mobile Responsive**: Adapts to mobile screens (above bottom navigation)
+- **Implementation**:
+  - **Frontend**: `chatkit-init.js` + `chat.css`
+  - **Structure**: Wrapper with header + ChatKit body + floating toggle button
+  - **Backend**: Uses ChatKit Sessions API (`/api/v1/chat/session`)
 - **Architecture**:
   - **Orchestrator Agent**: Routes requests to specialized agents
   - **Psychological Agent**: Analyzes psychological profile using 7 classical planets
   - **General Agent**: Handles other astrology questions
-- **Backend**: `POST /api/v1/chat/message` endpoint
-- **Frontend**: `js/chat.js` + `css/chat.css`
-- **Configuration**: `OPENAI_WORKFLOW_ID` in `.env`
+- **Configuration**: `OPENAI_API_KEY` in `.env`
 
 ### Planet Orbs Update (2025-12-07)
 - **Updated**: Planet orbs according to Alyona's professional astrology table

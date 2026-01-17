@@ -20,6 +20,7 @@ CREATE TABLE ref_sign_properties (
     exaltation VARCHAR(20),
     detriment VARCHAR(20),
     fall VARCHAR(20),
+    qualities TEXT,  -- Качества знака: позитивные, негативные, чего не хватает
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

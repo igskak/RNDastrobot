@@ -130,11 +130,45 @@
         console.log('ChatKit виджет инициализирован');
     }
 
+    /**
+     * Инициализация кнопок сворачивания/разворачивания
+     */
+    function initToggleButtons() {
+        const wrapper = document.getElementById('chatkitWrapper');
+        const minimizeBtn = document.getElementById('chatkitMinimize');
+        const toggleBtn = document.getElementById('chatkitToggle');
+
+        if (!wrapper || !minimizeBtn || !toggleBtn) {
+            console.warn('ChatKit: кнопки управления не найдены');
+            return;
+        }
+
+        // Сворачивание чата
+        minimizeBtn.addEventListener('click', () => {
+            wrapper.classList.add('minimized');
+            toggleBtn.classList.remove('hidden');
+            console.log('ChatKit: свёрнут');
+        });
+
+        // Разворачивание чата
+        toggleBtn.addEventListener('click', () => {
+            wrapper.classList.remove('minimized');
+            toggleBtn.classList.add('hidden');
+            console.log('ChatKit: развёрнут');
+        });
+
+        console.log('ChatKit: кнопки управления инициализированы');
+    }
+
     // Инициализация при загрузке страницы
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initChatKit);
+        document.addEventListener('DOMContentLoaded', () => {
+            initChatKit();
+            initToggleButtons();
+        });
     } else {
         initChatKit();
+        initToggleButtons();
     }
 })();
 
