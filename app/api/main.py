@@ -26,7 +26,7 @@ if os.getenv('APP_ENV') == 'production':
     logger.remove()  # Удаляем default handler
     logger.add(sys.stderr, level="WARNING")  # Только WARNING и выше
 
-from app.api.routes import natal, interpretations
+from app.api.routes import natal, interpretations, chat
 
 # Путь к frontend
 FRONTEND_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")
@@ -52,6 +52,7 @@ app.add_middleware(
 # Подключение роутеров
 app.include_router(natal.router, prefix="/api/v1", tags=["Natal Charts"])
 app.include_router(interpretations.router, prefix="/api/v1", tags=["Interpretations"])
+app.include_router(chat.router, prefix="/api/v1", tags=["Chat"])
 
 # Статические файлы (CSS, JS)
 if os.path.exists(FRONTEND_PATH):

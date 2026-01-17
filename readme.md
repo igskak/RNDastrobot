@@ -4,6 +4,22 @@ This project combines the Swiss Ephemeris astronomical calculation library with 
 
 ## Recent Updates
 
+### Chat with OpenAI Agent (2026-01-17)
+- **Added**: Chat widget on natal chart page (`natal-full.html`)
+- **Features**:
+  - Minimalist design matching application style
+  - Collapsible/expandable interface
+  - Integration with OpenAI Workflow API (Agent Builder)
+  - Automatic chart data injection from sessionStorage
+  - Thread-based conversation history
+- **Architecture**:
+  - **Orchestrator Agent**: Routes requests to specialized agents
+  - **Psychological Agent**: Analyzes psychological profile using 7 classical planets
+  - **General Agent**: Handles other astrology questions
+- **Backend**: `POST /api/v1/chat/message` endpoint
+- **Frontend**: `js/chat.js` + `css/chat.css`
+- **Configuration**: `OPENAI_WORKFLOW_ID` in `.env`
+
 ### Planet Orbs Update (2025-12-07)
 - **Updated**: Planet orbs according to Alyona's professional astrology table
 - **Changes**:

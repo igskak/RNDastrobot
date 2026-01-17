@@ -14,22 +14,23 @@ from loguru import logger
 
 class OpenAIService:
     """Сервис для генерации интерпретаций через OpenAI API"""
-    
+
     # Классические планеты для психопрофиля
     CLASSICAL_PLANETS = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn']
-    
+
     def __init__(self):
         """Инициализация клиента OpenAI"""
         self.api_key = os.getenv('OPENAI_API_KEY')
         self.model = os.getenv('OPENAI_MODEL', 'gpt-4.1')
         self.prompt_id = os.getenv('OPENAI_PROMPT_ID')
         self.prompt_version = os.getenv('OPENAI_PROMPT_VERSION', '1.0')
-        
+        self.workflow_id = os.getenv('OPENAI_WORKFLOW_ID', 'wf_696ac18a25408190a38d8f44318c8c5a0b7269c5cba0bf81')
+
         if not self.api_key:
             raise ValueError("OPENAI_API_KEY не найден в переменных окружения")
-        
+
         self.client = OpenAI(api_key=self.api_key)
-        logger.info(f"OpenAI сервис инициализирован (модель: {self.model})")
+        logger.info(f"OpenAI сервис инициализирован (модель: {self.model}, workflow: {self.workflow_id})")
     
     @staticmethod
     def calculate_chart_hash(chart_data: Dict[str, Any]) -> str:
@@ -196,6 +197,76 @@ class OpenAIService:
 
         except Exception as e:
             logger.error(f"Ошибка OpenAI API: {str(e)}")
+            raise
+
+    async def create_chatkit_session(
+        self,
+        user_id: str,
+        chart_data: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        Создать ChatKit сессию и вернуть client_secret для фронтенда.
+
+        Для простой интеграции ChatKit:
+        - Backend создаёт сессию и возвращает client_secret
+        - Frontend использует ChatKit.js виджет с этим токеном
+        - Всё общение идёт напрямую через ChatKit виджет
+
+        Args:
+            user_id: Идентификатор пользователя
+            chart_data: Данные натальной карты для передачи в workflow (опционально)
+
+        Returns:
+            Словарь с результатом:
+            {
+                'client_secret': str,  # Токен для ChatKit виджета
+                'session_id': str,     # ID сессии
+            }
+        """
+        logger.info(f"Создание ChatKit сессии для workflow {self.workflow_id}")
+
+        try:
+            # Подготовка state_variables с данными карты
+            state_variables: Dict[str, Any] = {}
+
+            if chart_data:
+                # 1) Полные данные карты для общего агента
+                state_variables["chart_data"] = json.dumps(
+                    chart_data,
+                    ensure_ascii=False,
+                )
+
+                # 2) Очищенные данные для психо-профиля
+                try:
+                    psych_data = self.prepare_psychological_profile_data(chart_data)
+                    state_variables["prepare_psychological_profile_data"] = json.dumps(
+                        psych_data,
+                        ensure_ascii=False,
+                    )
+                except Exception as prep_err:
+                    # Не роняем создание сессии, просто логируем проблему подготовки
+                    logger.error(
+                        f"Ошибка подготовки prepare_psychological_profile_data: {prep_err}"
+                    )
+
+            # Создаём ChatKit сессию через OpenAI SDK
+            session = self.client.beta.chatkit.sessions.create(
+                user=user_id,
+                workflow={
+                    "id": self.workflow_id,
+                    "state_variables": state_variables if state_variables else None
+                }
+            )
+
+            logger.info(f"ChatKit сессия создана: {session.id}")
+
+            return {
+                'client_secret': session.client_secret,
+                'session_id': session.id
+            }
+
+        except Exception as e:
+            logger.error(f"Ошибка при создании ChatKit сессии: {str(e)}")
             raise
 
 

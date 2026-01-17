@@ -1,0 +1,140 @@
+/**
+ * ChatKit инициализация для интеграции с OpenAI Agent Builder workflow
+ * 
+ * Использует простую интеграцию ChatKit:
+ * - Backend создаёт сессию и возвращает client_secret
+ * - Frontend использует ChatKit.js виджет с этим токеном
+ */
+
+(function() {
+    'use strict';
+
+    const USERID_STORAGE_KEY = 'astrobot_user_id';
+    const API_BASE = '/api/v1';
+
+    /**
+     * Получить user_id для чата
+     *
+     * Приоритет:
+     * 1) user_id сохранённой натальной карты (localStorage.currentUserId) — UUID из БД
+     * 2) fallback: анонимный id в localStorage[USERID_STORAGE_KEY]
+     */
+    function getUserId() {
+        // 1. Если уже есть сохранённая натальная карта — используем её user_id
+        const chartUserId = localStorage.getItem('currentUserId');
+        if (chartUserId) {
+            return chartUserId; // это чистый UUID, совпадает с user_id в БД
+        }
+
+        // 2. Иначе используем (или создаём) анонимный id
+        let userId = localStorage.getItem(USERID_STORAGE_KEY);
+        if (!userId) {
+            userId = 'user_' + crypto.randomUUID();
+            localStorage.setItem(USERID_STORAGE_KEY, userId);
+        }
+        return userId;
+    }
+
+    // Данные карты теперь загружаются на backend по user_id из БД
+    // Эта функция больше не нужна, но оставляем для обратной совместимости
+    function getChartData() {
+        return null; // Backend сам загрузит карту из БД
+    }
+
+    /**
+     * Создать ChatKit сессию через backend API
+     * Backend сам загрузит натальную карту из БД по user_id
+     */
+    async function createChatSession(userId) {
+        const response = await fetch(`${API_BASE}/chat/session`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                user_id: userId
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Ошибка создания сессии');
+        }
+
+        return response.json();
+    }
+
+    /**
+     * Инициализация ChatKit виджета
+     */
+    async function initChatKit() {
+        console.log('ChatKit: начало инициализации');
+
+        const container = document.getElementById('chatkit-container');
+        if (!container) {
+            console.error('ChatKit container not found');
+            return;
+        }
+        console.log('ChatKit: контейнер найден');
+
+        const userId = getUserId();
+        console.log('ChatKit: userId =', userId);
+
+        // Получаем client_secret заранее
+        // Backend сам загрузит натальную карту из БД по user_id
+        console.log('ChatKit: запрос client_secret...');
+        let clientSecret;
+        try {
+            const session = await createChatSession(userId);
+            clientSecret = session.client_secret;
+            console.log('ChatKit: сессия создана, session_id =', session.session_id);
+        } catch (error) {
+            console.error('ChatKit: ошибка создания сессии:', error);
+            container.innerHTML = '<div style="color: #ff6b6b; padding: 20px; text-align: center;">Ошибка подключения к чату. Попробуйте обновить страницу.</div>';
+            return;
+        }
+
+        // Проверяем загрузку ChatKit
+        console.log('ChatKit: проверка customElements...');
+        let isRegistered = window.customElements?.get('openai-chatkit');
+
+        if (!isRegistered) {
+            console.log('ChatKit: ожидание загрузки скрипта...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            isRegistered = window.customElements?.get('openai-chatkit');
+        }
+
+        if (!isRegistered) {
+            console.error('ChatKit: web component не зарегистрирован');
+            container.innerHTML = '<div style="color: #ff6b6b; padding: 20px; text-align: center;">ChatKit не загружен. Проверьте подключение к интернету.</div>';
+            return;
+        }
+
+        // Создаём ChatKit элемент
+        console.log('ChatKit: создание элемента...');
+        const chatkit = document.createElement('openai-chatkit');
+
+        // Используем setOptions() для Vanilla JS (согласно документации)
+        if (typeof chatkit.setOptions === 'function') {
+            chatkit.setOptions({
+                api: {
+                    getClientSecret: async () => clientSecret
+                }
+            });
+        } else {
+            // Fallback: устанавливаем client-secret как атрибут
+            chatkit.setAttribute('client-secret', clientSecret);
+        }
+
+        container.appendChild(chatkit);
+        console.log('ChatKit виджет инициализирован');
+    }
+
+    // Инициализация при загрузке страницы
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initChatKit);
+    } else {
+        initChatKit();
+    }
+})();
+

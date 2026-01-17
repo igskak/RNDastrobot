@@ -265,44 +265,54 @@
 
         // --- Planet hover on SVG (using event delegation) ---
         document.addEventListener('mouseenter', (e) => {
-            const group = e.target.closest('.planet-group');
-            if (group) {
-                highlightPlanet(group.dataset.planet, true, e);
+            if (e.target && typeof e.target.closest === 'function') {
+                const group = e.target.closest('.planet-group');
+                if (group) {
+                    highlightPlanet(group.dataset.planet, true, e);
+                }
             }
         }, true);
 
         document.addEventListener('mouseleave', (e) => {
-            const group = e.target.closest('.planet-group');
-            if (group) {
-                highlightPlanet(null, false);
+            if (e.target && typeof e.target.closest === 'function') {
+                const group = e.target.closest('.planet-group');
+                if (group) {
+                    highlightPlanet(null, false);
+                }
             }
         }, true);
 
         // --- Click on planet group ---
         document.addEventListener('click', (e) => {
-            const group = e.target.closest('.planet-group');
-            if (group) {
-                e.stopPropagation();
-                highlightPlanet(group.dataset.planet, true, e);
+            if (e.target && typeof e.target.closest === 'function') {
+                const group = e.target.closest('.planet-group');
+                if (group) {
+                    e.stopPropagation();
+                    highlightPlanet(group.dataset.planet, true, e);
+                }
             }
         });
 
         // --- Click on table row to highlight ---
         document.addEventListener('click', (e) => {
-            const row = e.target.closest('tr[data-planet]');
-            if (row) {
-                highlightAspect(null, false); // сбросить выделение аспекта
-                highlightPlanet(row.dataset.planet, true, e);
+            if (e.target && typeof e.target.closest === 'function') {
+                const row = e.target.closest('tr[data-planet]');
+                if (row) {
+                    highlightAspect(null, false); // сбросить выделение аспекта
+                    highlightPlanet(row.dataset.planet, true, e);
+                }
             }
         });
 
         // --- Click on aspect row in table ---
         document.addEventListener('click', (e) => {
-            const row = e.target.closest('tr[data-aspect]');
-            if (row && !row.hasAttribute('data-planet')) {
-                e.stopPropagation();
-                highlightPlanet(null, false); // сбросить выделение планеты
-                highlightAspect(row.dataset.aspect, true);
+            if (e.target && typeof e.target.closest === 'function') {
+                const row = e.target.closest('tr[data-aspect]');
+                if (row && !row.hasAttribute('data-planet')) {
+                    e.stopPropagation();
+                    highlightPlanet(null, false); // сбросить выделение планеты
+                    highlightAspect(row.dataset.aspect, true);
+                }
             }
         });
 
