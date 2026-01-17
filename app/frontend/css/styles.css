@@ -761,9 +761,9 @@ input[type="number"] {
     border-left: 3px solid var(--accent);
 }
 
-/* Planet circles on hover */
-.planet-group:hover .planet-circle {
-    stroke-width: 2.5;
+/* Planet symbols on hover - make text bold */
+.planet-group:hover .planet-symbol-text {
+    font-weight: 900;
     filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.4));
 }
 

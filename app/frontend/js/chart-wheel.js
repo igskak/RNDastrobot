@@ -50,6 +50,19 @@ class ChartWheel {
     }
 
     /**
+     * Преобразование эклиптической долготы в угол на карте
+     * ASC слева (180°), долготы идут против часовой стрелки
+     */
+    longitudeToAngle(longitude) {
+        const ascendant = this.chartData.angles?.ASC?.longitude || 0;
+        let angle = 180 - (longitude - ascendant);
+        // Нормализация к диапазону 0-360°
+        while (angle < 0) angle += 360;
+        while (angle >= 360) angle -= 360;
+        return angle;
+    }
+
+    /**
      * Отрисовка полной карты
      */
     draw(chartData) {
@@ -139,19 +152,27 @@ class ChartWheel {
             'stroke-width': 1
         }));
 
-        // 12 секторов знаков (против часовой стрелки, начиная с Овна на 9 часов)
+        // 12 секторов знаков (против часовой стрелки)
+        // ASC должен быть слева (180°), поэтому знаки вращаются относительно ASC
         for (let i = 0; i < 12; i++) {
-            // Овен начинается на 180° (9 часов), далее против часовой стрелки
-            const startAngle = 180 - i * 30;
+            // Эклиптическая долгота знака (Овен 0-30°, Телец 30-60° и т.д.)
+            const signStartLong = i * 30;
+            const signEndLong = signStartLong + 30;
+
+            // Преобразуем в углы на карте
+            const signStartAngle = this.longitudeToAngle(signStartLong);
+            const signEndAngle = this.longitudeToAngle(signEndLong);
+
             const sign = this.getSignByIndex(i);
             const element = Symbols.signElements[sign];
             const color = this.elementColors[element] || '#6b7280';
 
-            // Сектор с цветом стихии (полупрозрачный)
-            this.drawArc(signOuterR, signInnerR, startAngle, startAngle + 30, color + '18', this.layers.signs);
+            // Сектор с цветом стихии
+            // signEndAngle < signStartAngle (т.к. долготы растут против часовой)
+            this.drawArc(signOuterR, signInnerR, signEndAngle, signStartAngle, color + '18', this.layers.signs);
 
-            // Разделительная линия знаков (жирнее)
-            const lineAngle = startAngle * Math.PI / 180;
+            // Разделительная линия знаков (на границе signEndAngle)
+            const lineAngle = signEndAngle * Math.PI / 180;
             this.layers.signs.appendChild(this.createSvgElement('line', {
                 x1: this.center + signInnerR * Math.cos(lineAngle),
                 y1: this.center + signInnerR * Math.sin(lineAngle),
@@ -161,9 +182,10 @@ class ChartWheel {
                 'stroke-width': 1.5
             }));
 
-            // Градусные метки (каждые 5°)
+            // Градусные метки (каждые 5° внутри знака)
             for (let deg = 0; deg < 30; deg += 5) {
-                const tickAngle = (startAngle + deg) * Math.PI / 180;
+                const tickLong = signStartLong + deg;
+                const tickAngle = this.longitudeToAngle(tickLong) * Math.PI / 180;
                 const tickOuter = degreeR;
                 const tickInner = deg % 10 === 0 ? signOuterR + 2 : signOuterR + 5;
 
@@ -177,8 +199,9 @@ class ChartWheel {
                 }));
             }
 
-            // Символ знака
-            const midAngle = (startAngle + 15) * Math.PI / 180;
+            // Символ знака (в середине сектора)
+            const midLong = signStartLong + 15;
+            const midAngle = this.longitudeToAngle(midLong) * Math.PI / 180;
             const textR = signInnerR + this.signRingWidth / 2;
             this.layers.signs.appendChild(this.createSvgElement('text', {
                 x: this.center + textR * Math.cos(midAngle),
@@ -207,7 +230,8 @@ class ChartWheel {
         }));
 
         houses.forEach((house, idx) => {
-            const angle = (90 - house.longitude) * Math.PI / 180;
+            // Используем единую функцию преобразования
+            const angle = this.longitudeToAngle(house.longitude) * Math.PI / 180;
             const isAngular = [1, 4, 7, 10].includes(house.number);
 
             // Угловые дома — линия выходит к центру
@@ -215,25 +239,27 @@ class ChartWheel {
 
             this.layers.houses.appendChild(this.createSvgElement('line', {
                 x1: this.center + lineInnerR * Math.cos(angle),
-                y1: this.center - lineInnerR * Math.sin(angle),
+                y1: this.center + lineInnerR * Math.sin(angle),
                 x2: this.center + signInnerR * Math.cos(angle),
-                y2: this.center - signInnerR * Math.sin(angle),
+                y2: this.center + signInnerR * Math.sin(angle),
                 stroke: isAngular ? '#6366f1' : '#c7d2db',
                 'stroke-width': isAngular ? 2.5 : 1
             }));
 
-            // Номер дома в секторе
+            // Номер дома в секторе (дома идут против часовой: 1→2→3→...→12)
+            // Дом N занимает сектор от куспида N до куспида N+1 (против часовой)
             const nextHouse = houses[(idx + 1) % 12];
+            // Середина сектора: от house.longitude против часовой к nextHouse.longitude
             let midLong = (house.longitude + nextHouse.longitude) / 2;
             if (nextHouse.longitude < house.longitude) {
                 midLong = ((house.longitude + nextHouse.longitude + 360) / 2) % 360;
             }
-            const midAngle = (90 - midLong) * Math.PI / 180;
+            const midAngle = this.longitudeToAngle(midLong) * Math.PI / 180;
             const textR = houseInnerR + this.houseRingWidth / 2;
 
             this.layers.houses.appendChild(this.createSvgElement('text', {
                 x: this.center + textR * Math.cos(midAngle),
-                y: this.center - textR * Math.sin(midAngle) + 4,
+                y: this.center + textR * Math.sin(midAngle) + 4,
                 'text-anchor': 'middle',
                 'font-size': '10',
                 'font-weight': isAngular ? '700' : '400',
@@ -289,13 +315,13 @@ class ChartWheel {
             if (this.aspectFilter === 'major' && !isMajor) return;
             if (this.aspectFilter === 'minor' && isMajor) return;
 
-            const angle1 = (90 - long1) * Math.PI / 180;
-            const angle2 = (90 - long2) * Math.PI / 180;
+            const angle1 = this.longitudeToAngle(long1) * Math.PI / 180;
+            const angle2 = this.longitudeToAngle(long2) * Math.PI / 180;
 
             const x1 = this.center + this.aspectRadius * Math.cos(angle1);
-            const y1 = this.center - this.aspectRadius * Math.sin(angle1);
+            const y1 = this.center + this.aspectRadius * Math.sin(angle1);
             const x2 = this.center + this.aspectRadius * Math.cos(angle2);
-            const y2 = this.center - this.aspectRadius * Math.sin(angle2);
+            const y2 = this.center + this.aspectRadius * Math.sin(angle2);
 
             // Цвет по типу аспекта
             const color = this.aspectColors[aspect.aspect_type] || '#9ca3af';
@@ -359,7 +385,7 @@ class ChartWheel {
             const angle = displayAngle * Math.PI / 180;
             const r = this.planetRadius + radiusOffset;
             const x = this.center + r * Math.cos(angle);
-            const y = this.center - r * Math.sin(angle);
+            const y = this.center + r * Math.sin(angle);
             const element = Symbols.signElements[planet.sign];
             const color = this.elementColors[element] || '#374151';
 
@@ -371,10 +397,11 @@ class ChartWheel {
             });
 
             // Выноска (линия от реальной позиции к отображаемой)
-            if (radiusOffset !== 0 || displayAngle !== (90 - planet.longitude)) {
-                const realAngle = (90 - planet.longitude) * Math.PI / 180;
+            const realAngleCalc = this.longitudeToAngle(planet.longitude);
+            if (radiusOffset !== 0 || displayAngle !== realAngleCalc) {
+                const realAngle = realAngleCalc * Math.PI / 180;
                 const realX = this.center + this.planetRadius * Math.cos(realAngle);
-                const realY = this.center - this.planetRadius * Math.sin(realAngle);
+                const realY = this.center + this.planetRadius * Math.sin(realAngle);
                 group.appendChild(this.createSvgElement('line', {
                     x1: realX, y1: realY,
                     x2: x, y2: y,
@@ -384,12 +411,10 @@ class ChartWheel {
                 }));
             }
 
-            // Фоновый круг (тонкая обводка как у аспектов)
+            // Фоновый круг (прозрачный, для интерактивности)
             group.appendChild(this.createSvgElement('circle', {
                 cx: x, cy: y, r: 10,
-                fill: 'white',
-                stroke: color,
-                'stroke-width': 0.8,
+                fill: 'transparent',
                 class: 'planet-circle'
             }));
 
@@ -400,14 +425,15 @@ class ChartWheel {
                 'font-size': '15',
                 'font-weight': '600',
                 fill: color,
+                class: 'planet-symbol-text',
                 style: 'pointer-events: none;'
             }, Symbols.planets[planet.name] || planet.name.charAt(0)));
 
-            // Ретроградность — «Rx» (профессиональный стандарт)
+            // Ретроградность — «Rx» (компактно, справа сверху от символа)
             if (planet.retrograde) {
                 group.appendChild(this.createSvgElement('text', {
-                    x: x + 11, y: y - 6,
-                    'font-size': '7',
+                    x: x + 8, y: y - 4,
+                    'font-size': '8',
                     'font-weight': '700',
                     fill: '#dc2626',
                     style: 'pointer-events: none;'
@@ -428,8 +454,8 @@ class ChartWheel {
         const sorted = planets
             .map(p => ({
                 planet: p,
-                originalAngle: 90 - p.longitude,
-                displayAngle: 90 - p.longitude,
+                originalAngle: this.longitudeToAngle(p.longitude),
+                displayAngle: this.longitudeToAngle(p.longitude),
                 radiusOffset: 0
             }))
             .sort((a, b) => a.originalAngle - b.originalAngle);
@@ -465,25 +491,25 @@ class ChartWheel {
 
         // ASC — горизонтальная линия слева, выходит за круг
         if (angles.ASC) {
-            const ascAngle = (90 - angles.ASC.longitude) * Math.PI / 180;
+            const ascAngle = this.longitudeToAngle(angles.ASC.longitude) * Math.PI / 180;
             this.drawAngleMarkerEnhanced(ascAngle, signInnerR, 'ASC', '#6366f1');
         }
 
         // MC — вертикальная линия сверху
         if (angles.MC) {
-            const mcAngle = (90 - angles.MC.longitude) * Math.PI / 180;
+            const mcAngle = this.longitudeToAngle(angles.MC.longitude) * Math.PI / 180;
             this.drawAngleMarkerEnhanced(mcAngle, signInnerR, 'MC', '#6366f1');
         }
 
         // DSC — напротив ASC
         if (angles.DSC) {
-            const dscAngle = (90 - angles.DSC.longitude) * Math.PI / 180;
+            const dscAngle = this.longitudeToAngle(angles.DSC.longitude) * Math.PI / 180;
             this.drawAngleMarkerEnhanced(dscAngle, signInnerR, 'DSC', '#9ca3af');
         }
 
         // IC — напротив MC
         if (angles.IC) {
-            const icAngle = (90 - angles.IC.longitude) * Math.PI / 180;
+            const icAngle = this.longitudeToAngle(angles.IC.longitude) * Math.PI / 180;
             this.drawAngleMarkerEnhanced(icAngle, signInnerR, 'IC', '#9ca3af');
         }
     }
@@ -494,9 +520,9 @@ class ChartWheel {
         // Линия выносная за пределы круга
         this.layers.angles.appendChild(this.createSvgElement('line', {
             x1: this.center + this.aspectRadius * Math.cos(angle),
-            y1: this.center - this.aspectRadius * Math.sin(angle),
+            y1: this.center + this.aspectRadius * Math.sin(angle),
             x2: this.center + outerR * Math.cos(angle),
-            y2: this.center - outerR * Math.sin(angle),
+            y2: this.center + outerR * Math.sin(angle),
             stroke: color,
             'stroke-width': label === 'ASC' || label === 'MC' ? 2.5 : 1.5
         }));
@@ -505,7 +531,7 @@ class ChartWheel {
         const labelR = outerR + 10;
         this.layers.labels.appendChild(this.createSvgElement('text', {
             x: this.center + labelR * Math.cos(angle),
-            y: this.center - labelR * Math.sin(angle) + 4,
+            y: this.center + labelR * Math.sin(angle) + 4,
             'text-anchor': 'middle',
             'font-size': '10',
             'font-weight': '700',
@@ -535,7 +561,7 @@ class ChartWheel {
         const angle = angleDeg * Math.PI / 180;
         return {
             x: this.center + r * Math.cos(angle),
-            y: this.center + r * Math.sin(angle)
+            y: this.center + r * Math.sin(angle)  // Зеркальное отображение по горизонтальной оси
         };
     }
 
@@ -583,6 +609,12 @@ class ChartWheel {
 
     onPlanetHover(e, isEnter) {
         const planetName = e.currentTarget.dataset.planet;
+
+        // Подсветка символа планеты - делаем жирным
+        const symbolText = e.currentTarget.querySelector('.planet-symbol-text');
+        if (symbolText) {
+            symbolText.setAttribute('font-weight', isEnter ? '900' : '600');
+        }
 
         // Подсветка строки в таблице
         const row = document.getElementById(`row-${planetName}`);
