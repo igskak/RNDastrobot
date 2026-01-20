@@ -151,8 +151,9 @@ python scripts/test_natal_chart_with_proserpina.py
 
 ### Тест через HTTP API
 ```bash
-# Сначала запустите сервер
-python -m uvicorn app.api.main:app --reload
+# Сначала запустите сервер (из корня проекта)
+source .venv/bin/activate && pip install -r app/requirements.txt
+bash app/start_api.sh
 
 # В другом терминале
 python scripts/test_api_proserpina.py

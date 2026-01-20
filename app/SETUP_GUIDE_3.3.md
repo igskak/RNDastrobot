@@ -113,9 +113,9 @@ pytest tests/test_aspects_and_configurations.py::TestAspectService::test_calcula
 ### 3.1 Розрахунок натальної карти через API
 
 ```bash
-# Запустити API сервер
-cd app/api
-uvicorn main:app --reload
+# Запустити API сервер (з кореня проекту swisseph/)
+source .venv/bin/activate && pip install -r app/requirements.txt
+bash app/start_api.sh
 ```
 
 ### 3.2 Відправити запит

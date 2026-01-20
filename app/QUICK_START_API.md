@@ -3,8 +3,12 @@
 ## ✅ НАЙПРОСТІШИЙ СПОСІБ
 
 ```bash
-cd /Users/ihorskakovskyi/RNDastro/swisseph/app
-./start_api.sh
+# 1. Встановити залежності (перший раз)
+cd /Users/ihorskakovskyi/RNDastro/swisseph
+source .venv/bin/activate && pip install -r app/requirements.txt
+
+# 2. Запустити сервер
+bash app/start_api.sh
 ```
 
 **Готово!** Скрипт автоматично:

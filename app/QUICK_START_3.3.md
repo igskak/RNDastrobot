@@ -57,9 +57,9 @@ tests/test_aspects_and_configurations.py::TestIntegration::test_full_natal_chart
 ### 3️⃣ Тестовий розрахунок (5 хв)
 
 ```bash
-# Запустити API
-cd app/api
-uvicorn main:app --reload
+# Запустити API (з кореня проекту swisseph/)
+source .venv/bin/activate && pip install -r app/requirements.txt
+bash app/start_api.sh
 ```
 
 **В іншому терміналі:**
@@ -162,8 +162,8 @@ pip install -r requirements.txt
 ### API не повертає нові поля
 ```bash
 # Перезапустити API
-# Ctrl+C в терміналі з uvicorn
-uvicorn main:app --reload
+# Ctrl+C в терміналі з сервером
+bash app/start_api.sh
 ```
 
 ---

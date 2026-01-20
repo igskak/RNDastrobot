@@ -15,11 +15,17 @@ This project combines the Swiss Ephemeris astronomical calculation library with 
   - **Frontend**: `chatkit-init.js` + `chat.css`
   - **Structure**: Wrapper with header + ChatKit body + floating toggle button
   - **Backend**: Uses ChatKit Sessions API (`/api/v1/chat/session`)
+  - **Token Refresh**: Dynamic `client_secret` refresh to prevent 401 errors when switching tabs
 - **Architecture**:
   - **Orchestrator Agent**: Routes requests to specialized agents
   - **Psychological Agent**: Analyzes psychological profile using 7 classical planets
   - **General Agent**: Handles other astrology questions
 - **Configuration**: `OPENAI_API_KEY` in `.env`
+- **Important**:
+  - ChatKit `client_secret` tokens expire quickly (~1-5 minutes)
+  - `getClientSecret()` function requests fresh token on each call (prevents 401 errors)
+  - Chat history persists via `user_id` on OpenAI backend (not tied to session tokens)
+  - Creating new session ≠ creating new chat (sessions are just auth tokens)
 
 ### Planet Orbs Update (2025-12-07)
 - **Updated**: Planet orbs according to Alyona's professional astrology table
@@ -72,6 +78,23 @@ swisseph/                    # Root project directory
 ```
 
 ## Quick Start
+
+### Running API Server
+
+```bash
+# 1. Install dependencies (first time only)
+source .venv/bin/activate && pip install -r app/requirements.txt
+
+# 2. Start the API server
+bash app/start_api.sh
+
+# Server will be available at:
+# - API: http://localhost:8000
+# - Swagger UI: http://localhost:8000/api/docs
+# - Health check: http://localhost:8000/health
+```
+
+### Running CLI Tools
 
 ```bash
 # Build everything

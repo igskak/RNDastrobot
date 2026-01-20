@@ -80,16 +80,21 @@
         const userId = getUserId();
         console.log('ChatKit: userId =', userId);
 
-        // Получаем client_secret заранее
-        // Backend сам загрузит натальную карту из БД по user_id
-        console.log('ChatKit: запрос client_secret...');
-        let clientSecret;
-        try {
+        // Функция для получения свежего client_secret
+        // Вызывается ChatKit каждый раз при необходимости (токены истекают быстро)
+        async function getClientSecret() {
+            console.log('ChatKit: запрос нового client_secret...');
             const session = await createChatSession(userId);
-            clientSecret = session.client_secret;
-            console.log('ChatKit: сессия создана, session_id =', session.session_id);
+            console.log('ChatKit: получен свежий токен, session_id =', session.session_id);
+            return session.client_secret;
+        }
+
+        // Проверяем первоначальное подключение к backend
+        try {
+            await getClientSecret();
+            console.log('ChatKit: первичная проверка подключения успешна');
         } catch (error) {
-            console.error('ChatKit: ошибка создания сессии:', error);
+            console.error('ChatKit: ошибка подключения к backend:', error);
             container.innerHTML = '<div style="color: #ff6b6b; padding: 20px; text-align: center;">Ошибка подключения к чату. Попробуйте обновить страницу.</div>';
             return;
         }
@@ -115,15 +120,18 @@
         const chatkit = document.createElement('openai-chatkit');
 
         // Используем setOptions() для Vanilla JS (согласно документации)
+        // getClientSecret вызывается ChatKit каждый раз при необходимости обновления токена
         if (typeof chatkit.setOptions === 'function') {
             chatkit.setOptions({
                 api: {
-                    getClientSecret: async () => clientSecret
+                    getClientSecret: getClientSecret  // ✅ Динамическое обновление токена
                 }
             });
         } else {
-            // Fallback: устанавливаем client-secret как атрибут
-            chatkit.setAttribute('client-secret', clientSecret);
+            // Fallback: получаем токен и устанавливаем как атрибут
+            // (в этом случае динамическое обновление не работает)
+            const initialSecret = await getClientSecret();
+            chatkit.setAttribute('client-secret', initialSecret);
         }
 
         container.appendChild(chatkit);

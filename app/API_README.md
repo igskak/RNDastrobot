@@ -7,8 +7,8 @@ API для расчёта натальных карт и астрологиче�
 ### 1. Установка зависимостей
 
 ```bash
-cd app
-pip install -r requirements.txt
+# Из корня проекта (swisseph/)
+source .venv/bin/activate && pip install -r app/requirements.txt
 ```
 
 ### 2. Настройка окружения
@@ -22,17 +22,13 @@ cp .env.example .env
 ### 3. Запуск сервера
 
 ```bash
-python -m app.api.main
+# Из корня проекта (swisseph/)
+bash app/start_api.sh
 ```
 
-Или через uvicorn:
-
-```bash
-uvicorn app.api.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-API: `http://localhost:8000`  
+API: `http://localhost:8000`
 Swagger: `http://localhost:8000/api/docs`
+Health: `http://localhost:8000/health`
 
 ## 📚 API Endpoints
 
