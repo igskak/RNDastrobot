@@ -84,10 +84,10 @@ class OpenAIService:
     def prepare_psychological_profile_data(self, chart_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Подготовить данные для отправки в OpenAI (только 7 планет)
-        
+
         Args:
             chart_data: Полные данные натальной карты
-            
+
         Returns:
             Очищенные данные для психопрофиля
         """
@@ -116,7 +116,7 @@ class OpenAIService:
             for p in chart_data.get('planets', [])
             if p['name'] in self.CLASSICAL_PLANETS
         ]
-        
+
         aspects = [
             {
                 'planet_1': a['planet_1'],
@@ -127,14 +127,82 @@ class OpenAIService:
                 'harmonic_type': a.get('harmonic_type'),
             }
             for a in chart_data.get('aspects', [])
-            if a['planet_1'] in self.CLASSICAL_PLANETS 
+            if a['planet_1'] in self.CLASSICAL_PLANETS
             and a['planet_2'] in self.CLASSICAL_PLANETS
         ]
-        
+
         return {
             'planets': planets,
             'aspects': aspects
         }
+
+    def build_planet_sign_psych(self, psych_data: Dict[str, Any]) -> list:
+        """
+        Собрать психологический контекст для всех планет с их знаками.
+
+        Для каждой планеты из psych_data извлекает:
+        - функции психики планеты из ref_planet_psych_functions
+        - качества знака из ref_sign_properties
+
+        Args:
+            psych_data: Результат prepare_psychological_profile_data
+
+        Returns:
+            Список объектов вида:
+            [
+                {
+                    "planet_name": "Sun",
+                    "sign_name": "Cancer",
+                    "planet_psych_functions": "...",
+                    "sign_qualities": "..."
+                },
+                ...
+            ]
+        """
+        from app.database.connection import get_db_session
+        from sqlalchemy import text
+
+        result = []
+
+        try:
+            with get_db_session() as session:
+                for p in psych_data.get("planets", []):
+                    planet = p["name"]
+                    sign = p["sign"]
+
+                    # Получаем функции психики планеты
+                    func = session.execute(
+                        text("""
+                            SELECT function_extended
+                            FROM ref_planet_psych_functions
+                            WHERE planet = :planet
+                        """),
+                        {"planet": planet},
+                    ).scalar()
+
+                    # Получаем качества знака
+                    qualities = session.execute(
+                        text("""
+                            SELECT qualities
+                            FROM ref_sign_properties
+                            WHERE sign = :sign
+                        """),
+                        {"sign": sign},
+                    ).scalar()
+
+                    result.append({
+                        "planet_name": planet,
+                        "sign_name": sign,
+                        "planet_psych_functions": func or "",
+                        "sign_qualities": qualities or "",
+                    })
+
+        except Exception as e:
+            logger.error(f"Ошибка при сборе planet_sign_psych: {e}")
+            # Возвращаем пустой список в случае ошибки
+            return []
+
+        return result
     
     async def generate_psychological_profile(
         self,
@@ -243,6 +311,16 @@ class OpenAIService:
                         psych_data,
                         ensure_ascii=False,
                     )
+
+                    # 3) Психологические функции планет + качества знаков (вариант B)
+                    planet_sign_psych = self.build_planet_sign_psych(psych_data)
+                    if planet_sign_psych:
+                        state_variables["planet_sign_psych"] = json.dumps(
+                            planet_sign_psych,
+                            ensure_ascii=False,
+                        )
+                        logger.info(f"Добавлено planet_sign_psych для {len(planet_sign_psych)} планет")
+
                 except Exception as prep_err:
                     # Не роняем создание сессии, просто логируем проблему подготовки
                     logger.error(
