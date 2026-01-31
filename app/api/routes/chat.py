@@ -80,8 +80,8 @@ async def create_chat_session(
                 detail=f"Некорректный формат user_id: {request.user_id}"
             )
 
-        # Загружаем натальную карту из БД (если есть)
-        chart_data = natal_service.get_natal_chart_for_interpretation(user_uuid, db)
+        # Загружаем полную натальную карту из БД (если есть)
+        chart_data = natal_service.get_natal_chart_from_db(user_uuid, db)
 
         if chart_data:
             logger.info(f"Натальная карта загружена для пользователя {request.user_id}")
