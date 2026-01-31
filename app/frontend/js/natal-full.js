@@ -363,10 +363,10 @@ function createPlanetRow(planet, houses) {
         // Формат: итог (-minus|+plus)
         if (minus > 0 || plus > 0) {
             // Вычисляем итог по методичке: суммируем только столбики > 3
+            // Если оба ≤ 3, итог = 0
             let calculatedTotal = 0;
             if (minus > 3) calculatedTotal += minus;
             if (plus > 3) calculatedTotal += plus;
-            if (calculatedTotal === 0) calculatedTotal = Math.max(minus, plus);
 
             tdKarma.innerHTML = `<span class="${karmaClass}">${calculatedTotal} (-${minus}|+${plus})</span>`;
         } else if (total) {

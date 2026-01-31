@@ -36,7 +36,10 @@ class User(Base):
     special_points = relationship("NatalSpecialPoint", back_populates="user", cascade="all, delete-orphan")
     configurations = relationship("NatalConfiguration", back_populates="user", cascade="all, delete-orphan")
     fate_cross = relationship("FateCrossPoints", back_populates="user", uselist=False, cascade="all, delete-orphan")
-    
+    solar_returns = relationship("SolarReturn", back_populates="user", cascade="all, delete-orphan")
+    progressions = relationship("Progression", back_populates="user", cascade="all, delete-orphan")
+    directions = relationship("Direction", back_populates="user", cascade="all, delete-orphan")
+
     __table_args__ = (
         CheckConstraint('lat >= -90 AND lat <= 90', name='valid_latitude'),
         CheckConstraint('lon >= -180 AND lon <= 180', name='valid_longitude'),
@@ -598,6 +601,121 @@ class GeneralOverviewSummary(Base):
 
     # Relationship
     user = relationship("User")
+
+
+# ============================================================================
+# PROGNOSTICS (Прогностика: Соляры, Лунары и т.д.)
+# ============================================================================
+
+class SolarReturn(Base):
+    """Модель соларной карты (годовой прогноз)"""
+    __tablename__ = 'solar_returns'
+
+    solar_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
+    year = Column(Integer, nullable=False)  # Год соляра
+
+    # Момент соляра
+    solar_datetime = Column(DateTime(timezone=True), nullable=False)  # Точный момент возврата Солнца
+    julian_day = Column(Numeric(15, 6), nullable=False)  # JD момента соляра
+
+    # Место соляра (может отличаться от места рождения)
+    location_lat = Column(Numeric(9, 6), nullable=False)
+    location_lon = Column(Numeric(9, 6), nullable=False)
+    location_name = Column(String(200))
+
+    # Параметры расчёта
+    house_system = Column(String(1), default='P')
+
+    # Полные данные карты (JSON для быстрого доступа)
+    chart_data = Column(JSONB)
+
+    # Метаданные
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # Relationship
+    user = relationship("User", back_populates="solar_returns")
+
+    __table_args__ = (
+        # Уникальный индекс: один соляр на пользователя на год
+        Index('idx_solar_returns_user_year', 'user_id', 'year', unique=True),
+        Index('idx_solar_returns_year', 'year'),
+    )
+
+
+class Progression(Base):
+    """Модель вторичной прогрессии (Secondary Progression)"""
+    __tablename__ = 'progressions'
+
+    progression_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
+    target_date = Column(Date, nullable=False)  # Дата, на которую рассчитана прогрессия
+
+    # Прогрессивный момент
+    progressed_jd = Column(Numeric(15, 6), nullable=False)  # JD прогрессивной карты
+
+    # Полные данные карты (JSON для быстрого доступа)
+    chart_data = Column(JSONB)
+
+    # Метаданные
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # Relationship
+    user = relationship("User", back_populates="progressions")
+
+    __table_args__ = (
+        # Уникальный индекс: одна прогрессия на пользователя на дату
+        Index('idx_progressions_user_date', 'user_id', 'target_date', unique=True),
+        Index('idx_progressions_target_date', 'target_date'),
+    )
+
+
+class Direction(Base):
+    """
+    Модель дирекций (Directions) — прогностический метод.
+
+    Типы дирекций (как в ZET):
+    - solar_arc: Solar Arc Directions (дуга = движение прогрессивного Солнца)
+    - symbolic: Symbolic Directions (1° = 1 год)
+    - equatorial: Equatorial/Naibod Directions (ключ Найбода)
+    """
+    __tablename__ = 'directions'
+
+    direction_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
+    target_date = Column(Date, nullable=False)  # Дата, на которую рассчитана дирекция
+
+    # Тип дирекции
+    direction_type = Column(String(20), nullable=False)  # solar_arc, symbolic, equatorial
+
+    # Дуга дирекции (в градусах)
+    arc_degrees = Column(Numeric(10, 6), nullable=False)
+
+    # Возраст на момент дирекции (в годах)
+    age_years = Column(Numeric(8, 4))
+
+    # Полные данные карты (JSON для быстрого доступа)
+    chart_data = Column(JSONB)
+
+    # Метаданные
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # Relationship
+    user = relationship("User", back_populates="directions")
+
+    __table_args__ = (
+        # Уникальный индекс: одна дирекция на пользователя на дату и тип
+        Index('idx_directions_user_date_type', 'user_id', 'target_date', 'direction_type', unique=True),
+        Index('idx_directions_target_date', 'target_date'),
+        Index('idx_directions_type', 'direction_type'),
+        CheckConstraint(
+            "direction_type IN ('solar_arc', 'symbolic', 'equatorial')",
+            name='valid_direction_type'
+        ),
+    )
 
 
 # ============================================================================

@@ -1,0 +1,155 @@
+"""
+API эндпоинты для работы с соларными картами (Solar Return)
+"""
+from fastapi import APIRouter, HTTPException, status, Depends
+from sqlalchemy.orm import Session
+from uuid import UUID
+import os
+
+from app.models.schemas import (
+    SolarReturnRequest,
+    SolarReturnResponse,
+    SolarReturnListResponse,
+    SolarReturnListItem,
+    ErrorResponse,
+)
+from app.database.connection import get_db
+from app.services.solar_return_service import SolarReturnService
+
+router = APIRouter(prefix="/solar", tags=["Solar Return"])
+
+# Путь к эфемеридам
+EPHE_PATH = os.environ.get('SWISSEPH_EPHE_PATH') or os.environ.get('EPHEMERIS_PATH', './ephe')
+
+
+@router.post(
+    "/calculate",
+    response_model=SolarReturnResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Расчёт соларной карты",
+    description="Рассчитывает соларную карту (годовой прогноз) для пользователя",
+    responses={
+        404: {"model": ErrorResponse, "description": "Пользователь не найден"},
+        400: {"model": ErrorResponse, "description": "Ошибка в параметрах запроса"},
+    }
+)
+async def calculate_solar_return(
+    request: SolarReturnRequest,
+    db: Session = Depends(get_db)
+) -> SolarReturnResponse:
+    """
+    Расчёт соларной карты
+    
+    **Соляр** — карта на момент точного возвращения Солнца на натальную позицию.
+    Используется для годового прогноза.
+    
+    **Входные данные:**
+    - `user_id`: UUID пользователя с сохранённой натальной картой
+    - `year`: Год соляра (1900-2100)
+    - `location_latitude/longitude`: Место соляра (опционально, по умолчанию = место рождения)
+    - `location_name`: Название места соляра
+    - `house_system`: Система домов (по умолчанию 'P' - Placidus)
+    - `save_to_db`: Сохранить результат в БД (по умолчанию True)
+    
+    **Возвращает:**
+    - Полные данные соларной карты: планеты, дома, углы
+    """
+    try:
+        solar_service = SolarReturnService(db_session=db, ephe_path=EPHE_PATH)
+        
+        result = solar_service.calculate_solar_return(
+            user_id=request.user_id,
+            year=request.year,
+            location_lat=request.location_latitude,
+            location_lon=request.location_longitude,
+            location_name=request.location_name,
+            house_system=request.house_system,
+            save_to_db=request.save_to_db
+        )
+        
+        return result
+        
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка расчёта соляра: {str(e)}"
+        )
+
+
+@router.get(
+    "/{user_id}/{year}",
+    response_model=SolarReturnResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Получить сохранённый соляр",
+    description="Получает ранее рассчитанный соляр из БД",
+    responses={
+        404: {"model": ErrorResponse, "description": "Соляр не найден"},
+    }
+)
+async def get_solar_return(
+    user_id: UUID,
+    year: int,
+    db: Session = Depends(get_db)
+) -> SolarReturnResponse:
+    """
+    Получить сохранённый соляр
+    
+    **Параметры:**
+    - `user_id`: UUID пользователя
+    - `year`: Год соляра
+    """
+    try:
+        solar_service = SolarReturnService(db_session=db, ephe_path=EPHE_PATH)
+        result = solar_service.get_solar_return(user_id, year)
+        
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Соляр для пользователя {user_id} за {year} год не найден"
+            )
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка получения соляра: {str(e)}"
+        )
+
+
+@router.get(
+    "/{user_id}",
+    response_model=SolarReturnListResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Список соляров пользователя",
+    description="Получает список всех рассчитанных соляров пользователя",
+)
+async def list_solar_returns(
+    user_id: UUID,
+    db: Session = Depends(get_db)
+) -> SolarReturnListResponse:
+    """
+    Получить список всех соляров пользователя
+    """
+    try:
+        solar_service = SolarReturnService(db_session=db, ephe_path=EPHE_PATH)
+        solars = solar_service.list_solar_returns(user_id)
+        
+        return SolarReturnListResponse(
+            user_id=user_id,
+            solar_returns=[SolarReturnListItem(**s) for s in solars]
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка получения списка соляров: {str(e)}"
+        )
+

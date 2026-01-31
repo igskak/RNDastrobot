@@ -359,3 +359,79 @@ class ErrorResponse(BaseModel):
     error: str
     detail: Optional[str] = None
 
+
+# ============================================================================
+# SOLAR RETURN (Соляр)
+# ============================================================================
+
+class SolarReturnRequest(BaseModel):
+    """Запрос на расчёт соляра"""
+    user_id: UUID = Field(..., description="UUID пользователя с сохранённой натальной картой")
+    year: int = Field(..., ge=1900, le=2100, description="Год соляра")
+
+    # Место соляра (опционально, по умолчанию = место рождения)
+    location_latitude: Optional[float] = Field(None, ge=-90, le=90, description="Широта места соляра")
+    location_longitude: Optional[float] = Field(None, ge=-180, le=180, description="Долгота места соляра")
+    location_name: Optional[str] = Field(None, description="Название места соляра")
+
+    # Параметры расчёта
+    house_system: str = Field(default="P", description="Система домов")
+    save_to_db: bool = Field(default=True, description="Сохранить результат в БД")
+
+    @field_validator('house_system')
+    @classmethod
+    def validate_house_system(cls, v: str) -> str:
+        valid_systems = ['P', 'K', 'O', 'R', 'C', 'E', 'W', 'X', 'H', 'T', 'B', 'M']
+        if v not in valid_systems:
+            raise ValueError(f'Недопустимая система домов: {v}')
+        return v
+
+
+class SolarLocationInfo(BaseModel):
+    """Информация о месте соляра"""
+    latitude: float
+    longitude: float
+    name: Optional[str] = None
+
+
+class SolarInfo(BaseModel):
+    """Информация о соляре"""
+    year: int
+    solar_datetime_utc: str
+    solar_datetime_local: str
+    julian_day: float
+    natal_sun_longitude: float
+    location: SolarLocationInfo
+    house_system: str
+    timezone: str
+
+
+class SolarBirthData(BaseModel):
+    """Данные рождения для соляра"""
+    user_id: str
+    birth_date: str
+    birth_time: Optional[str] = None
+    birth_place: Optional[str] = None
+
+
+class SolarReturnResponse(BaseModel):
+    """Полный ответ с соларной картой"""
+    solar_info: SolarInfo
+    birth_data: SolarBirthData
+    planets: List[PlanetPosition]
+    houses: List[HousePosition]
+    angles: Dict[str, AnglePosition]
+
+
+class SolarReturnListItem(BaseModel):
+    """Элемент списка соляров"""
+    year: int
+    solar_datetime: Optional[str] = None
+    location_name: Optional[str] = None
+
+
+class SolarReturnListResponse(BaseModel):
+    """Список соляров пользователя"""
+    user_id: UUID
+    solar_returns: List[SolarReturnListItem]
+

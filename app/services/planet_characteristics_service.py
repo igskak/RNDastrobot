@@ -815,14 +815,12 @@ class PlanetCharacteristicsService:
         # ИТОГОВЫЙ РАСЧЁТ
         # =====================================================================
         # Суммируем модули только тех столбиков, которые > 3
+        # Если оба ≤ 3, итог = 0
         total = 0
         if minus_score > 3:
             total += minus_score
         if plus_score > 3:
             total += plus_score
-        # Если ни один столбик не > 3, берём максимальный
-        if total == 0:
-            total = max(minus_score, plus_score)
 
         return {
             'minus_score': minus_score,
