@@ -112,6 +112,15 @@ async def interpretations_page():
     raise HTTPException(status_code=404, detail="Interpretations page not found")
 
 
+@app.get("/forecast.html")
+async def forecast_page():
+    """Страница прогностики"""
+    forecast_path = os.path.join(FRONTEND_PATH, "forecast.html")
+    if os.path.exists(forecast_path):
+        return FileResponse(forecast_path)
+    raise HTTPException(status_code=404, detail="Forecast page not found")
+
+
 @app.get("/health")
 async def health_check():
     """Проверка здоровья сервиса"""

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Прогностика — AstroBot</title>
+    <link rel="stylesheet" href="css/styles.css?v=2">
+    <link rel="stylesheet" href="css/forecast.css?v=2">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body class="forecast-page">
+    <!-- Header -->
+    <header class="forecast-header">
+        <a href="chart.html" class="back-btn-compact">←</a>
+        <div class="header-title">
+            🔮 Прогностика
+            <div class="header-subtitle" id="headerSubtitle"></div>
+        </div>
+    </header>
+
+    <!-- Controls -->
+    <div class="forecast-controls" id="forecastControls">
+        <div class="control-group">
+            <label>Метод:</label>
+            <select id="methodSelect">
+                <option value="transits">Транзиты</option>
+                <option value="progressions">Прогрессии</option>
+                <option value="directions_solar_arc">Дирекции (солн. дуга)</option>
+                <option value="directions_symbolic">Дирекции (символ.)</option>
+                <option value="directions_equatorial">Дирекции (Найбод)</option>
+            </select>
+        </div>
+        <div class="control-separator"></div>
+        <div class="control-group" id="dateRangeGroup">
+            <label>С:</label>
+            <input type="date" id="startDate">
+            <label>По:</label>
+            <input type="date" id="endDate">
+            <div class="date-presets" id="datePresets">
+                <button class="preset-btn" data-months="1">1 мес</button>
+                <button class="preset-btn" data-months="3">3 мес</button>
+                <button class="preset-btn active" data-months="6">6 мес</button>
+                <button class="preset-btn" data-months="12">1 год</button>
+            </div>
+        </div>
+        <div class="control-group" id="singleDateGroup" style="display:none">
+            <label>Дата:</label>
+            <input type="date" id="singleDate">
+            <button class="preset-btn today-btn" id="btnToday">Сегодня</button>
+        </div>
+        <div class="control-group" id="solarYearGroup" style="display:none">
+            <label>Год:</label>
+            <input type="number" id="solarYear" min="1900" max="2100" style="width:80px">
+        </div>
+        <button class="btn-calculate" id="btnCalculate">Рассчитать</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="forecast-tabs">
+        <button class="forecast-tab active" data-tab="timeline">📊 Timeline</button>
+        <button class="forecast-tab" data-tab="biwheel">🎯 Biwheel</button>
+        <button class="forecast-tab" data-tab="table">📋 Таблица</button>
+        <button class="forecast-tab" data-tab="solar">☀️ Соляр</button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="forecast-content">
+        <!-- Timeline Tab -->
+        <div class="forecast-pane active" id="pane-timeline">
+            <div class="forecast-empty" id="timelineEmpty">
+                <div class="empty-icon">📊</div>
+                <div>Выберите период и нажмите «Рассчитать»</div>
+            </div>
+            <div class="forecast-loading" id="timelineLoading" style="display:none">
+                <div class="spinner"></div>
+                <div>Загрузка транзитов...</div>
+            </div>
+            <div class="timeline-container" id="timelineContainer" style="display:none">
+                <div class="active-events-summary" id="activeEventsSummary"></div>
+                <div class="timeline-filters">
+                    <label class="tl-filter"><input type="checkbox" id="filterMajor" checked> Мажорные</label>
+                    <label class="tl-filter"><input type="checkbox" id="filterNoMoon" checked> Без Луны</label>
+                    <div class="tl-separator"></div>
+                    <button class="tl-filter-btn active" data-planet-group="outer" title="Юпитер, Сатурн, Уран, Нептун, Плутон">Внешние</button>
+                    <button class="tl-filter-btn active" data-planet-group="inner" title="Солнце, Меркурий, Венера, Марс">Внутренние</button>
+                    <button class="tl-filter-btn active" data-planet-group="nodes" title="Сев. и Юж. узлы, Лилит, Хирон">Узлы/Точки</button>
+                    <span class="tl-event-count" id="tlEventCount"></span>
+                </div>
+                <div class="timeline-canvas-wrapper">
+                    <canvas id="timelineCanvas"></canvas>
+                </div>
+            </div>
+            <div class="timeline-legend" id="timelineLegend" style="display:none"></div>
+        </div>
+
+        <!-- Biwheel Tab -->
+        <div class="forecast-pane" id="pane-biwheel">
+            <div class="forecast-empty" id="biwheelEmpty">
+                <div class="empty-icon">🎯</div>
+                <div>Выберите дату и метод, нажмите «Рассчитать»</div>
+            </div>
+            <div class="forecast-loading" id="biwheelLoading" style="display:none">
+                <div class="spinner"></div>
+                <div>Загрузка...</div>
+            </div>
+            <div class="biwheel-container" id="biwheelContainer" style="display:none">
+                <div class="biwheel-svg-wrapper">
+                    <svg id="biwheelSvg" viewBox="0 0 600 600"></svg>
+                </div>
+                <div class="biwheel-info">
+                    <div class="biwheel-aspects-list" id="biwheelAspects"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table Tab -->
+        <div class="forecast-pane" id="pane-table">
+            <div class="forecast-empty" id="tableEmpty">
+                <div class="empty-icon">📋</div>
+                <div>Данные появятся после расчёта</div>
+            </div>
+            <div class="forecast-table-container" id="tableContainer" style="display:none">
+                <table class="forecast-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable" data-sort="date">Дата ⇅</th>
+                            <th class="sortable" data-sort="method">Метод ⇅</th>
+                            <th class="sortable" data-sort="transit">Транзит ⇅</th>
+                            <th class="sortable" data-sort="aspect">Аспект ⇅</th>
+                            <th class="sortable" data-sort="natal">Натал ⇅</th>
+                            <th class="sortable" data-sort="orb">Орб ⇅</th>
+                            <th class="sortable" data-sort="type">Тип ⇅</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Solar Tab -->
+        <div class="forecast-pane" id="pane-solar">
+            <div class="forecast-empty" id="solarEmpty">
+                <div class="empty-icon">☀️</div>
+                <div>Выберите год соляра и нажмите «Рассчитать»</div>
+            </div>
+            <div class="forecast-loading" id="solarLoading" style="display:none">
+                <div class="spinner"></div>
+                <div>Расчёт соляра...</div>
+            </div>
+            <div class="solar-container" id="solarContainer" style="display:none">
+                <div class="solar-info-bar" id="solarInfoBar"></div>
+                <div class="solar-chart-section">
+                    <div class="solar-wheel-wrapper">
+                        <svg id="solarWheel" viewBox="0 0 500 500"></svg>
+                    </div>
+                </div>
+                <div class="solar-data-section" id="solarDataSection"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tooltip for timeline -->
+    <div class="timeline-tooltip" id="timelineTooltip"></div>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/symbols.js"></script>
+    <script src="js/chart-wheel.js"></script>
+    <script src="js/forecast-timeline.js?v=2"></script>
+    <script src="js/forecast-biwheel.js?v=2"></script>
+    <script src="js/forecast.js?v=2"></script>
+</body>
+</html>
+
