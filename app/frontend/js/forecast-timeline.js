@@ -27,12 +27,15 @@
     const DEFAULT_COLOR = '#9ca3af';
 
     // ─── State ──────────────────────────────────────────
-    let canvas, ctx;
+    let canvas, ctx, wrapper;
     let events = [];
     let startMs, endMs, totalMs;
-    let rows = []; // { label, color, x1, x2, xExact, event }
+    let rows = [];
     let hoveredRow = -1;
     let canvasW, canvasH;
+    let scrollTop = 0;
+    let totalContentH = 0;
+    let boundScroll = false;
 
     // ─── Public render ──────────────────────────────────
     function render(evts, startDate, endDate) {
@@ -45,11 +48,10 @@
         canvas = document.getElementById('timelineCanvas');
         if (!canvas) return;
         ctx = canvas.getContext('2d');
+        wrapper = canvas.parentElement;
 
-        // Sort events by t_exact
         events.sort((a, b) => new Date(a.t_exact) - new Date(b.t_exact));
 
-        // Build rows
         buildRows();
         setupCanvas();
         draw();
@@ -58,49 +60,96 @@
     }
 
     function buildRows() {
-        rows = events.map(ev => {
-            const tEnter = new Date(ev.t_enter).getTime();
-            const tExact = new Date(ev.t_exact).getTime();
-            const tLeave = new Date(ev.t_leave).getTime();
-
-            const pSym = Symbols?.planets?.[ev.transit_body] || ev.transit_body;
-            const nSym = Symbols?.planets?.[ev.natal_body] || ev.natal_body;
-            const aSym = Symbols?.aspects?.[ev.aspect_type] || '';
-            const label = `${pSym} ${aSym} ${nSym}`;
-            const color = ASPECT_COLORS[ev.aspect_type] || DEFAULT_COLOR;
-
-            return {
-                label,
-                color,
-                x1: Math.max(tEnter, startMs),
-                x2: Math.min(tLeave, endMs),
-                xExact: tExact,
-                event: ev,
-            };
+        // Group events by transit+aspect+natal into single Gantt rows
+        const grouped = new Map();
+        events.forEach(ev => {
+            const key = `${ev.transit_body}|${ev.aspect_type}|${ev.natal_body}`;
+            if (!grouped.has(key)) {
+                const pSym = Symbols?.planets?.[ev.transit_body] || ev.transit_body;
+                const nSym = Symbols?.planets?.[ev.natal_body] || ev.natal_body;
+                const aSym = Symbols?.aspects?.[ev.aspect_type] || '';
+                grouped.set(key, {
+                    label: `${pSym} ${aSym} ${nSym}`,
+                    color: ASPECT_COLORS[ev.aspect_type] || DEFAULT_COLOR,
+                    spans: [],
+                    events: [],
+                });
+            }
+            const g = grouped.get(key);
+            g.spans.push({
+                x1: Math.max(new Date(ev.t_enter).getTime(), startMs),
+                x2: Math.min(new Date(ev.t_leave).getTime(), endMs),
+                xExact: new Date(ev.t_exact).getTime(),
+            });
+            g.events.push(ev);
+        });
+        rows = Array.from(grouped.values());
+        // Sort: slow planets first, then by first exact date
+        const PLANET_ORDER = ['Pluto','Neptune','Uranus','Saturn','Jupiter','Chiron','NorthNode','SouthNode','BlackMoon','WhiteMoon','Mars','Venus','Mercury','Sun','Moon'];
+        rows.sort((a, b) => {
+            const pa = PLANET_ORDER.indexOf(a.events[0].transit_body);
+            const pb = PLANET_ORDER.indexOf(b.events[0].transit_body);
+            if (pa !== pb) return pa - pb;
+            return a.spans[0].xExact - b.spans[0].xExact;
         });
     }
 
     function setupCanvas() {
-        const wrapper = canvas.parentElement;
         canvasW = wrapper.clientWidth || 800;
-        canvasH = HEADER_HEIGHT + rows.length * ROW_HEIGHT + 10;
+        totalContentH = HEADER_HEIGHT + rows.length * ROW_HEIGHT + 10;
+        // Canvas = visible viewport height (capped), wrapper scrolls
+        const viewH = Math.min(totalContentH, wrapper.clientHeight || 600);
+        canvasH = viewH;
         canvas.width = canvasW * DPR;
         canvas.height = canvasH * DPR;
         canvas.style.width = canvasW + 'px';
         canvas.style.height = canvasH + 'px';
         ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+        // Spacer for native scroll
+        let spacer = wrapper.querySelector('.tl-spacer');
+        if (!spacer) {
+            spacer = document.createElement('div');
+            spacer.className = 'tl-spacer';
+            spacer.style.cssText = 'width:1px;pointer-events:none;';
+            wrapper.appendChild(spacer);
+        }
+        spacer.style.height = totalContentH + 'px';
+        // Sticky canvas
+        canvas.style.position = 'sticky';
+        canvas.style.top = '0';
+        canvas.style.zIndex = '1';
+
+        if (!boundScroll) {
+            boundScroll = true;
+            wrapper.addEventListener('scroll', () => {
+                scrollTop = wrapper.scrollTop;
+                draw();
+            }, { passive: true });
+        }
+        scrollTop = wrapper.scrollTop;
     }
 
-    // ─── Drawing ────────────────────────────────────────
+    // ─── Drawing (virtual scroll) ────────────────────────
+    function getVisibleRange() {
+        const firstRow = Math.max(0, Math.floor((scrollTop - HEADER_HEIGHT) / ROW_HEIGHT));
+        const lastRow = Math.min(rows.length - 1, Math.ceil((scrollTop + canvasH - HEADER_HEIGHT) / ROW_HEIGHT));
+        return { firstRow, lastRow };
+    }
+
     function draw() {
         ctx.clearRect(0, 0, canvasW, canvasH);
-        drawHeader();
+        ctx.save();
+        ctx.translate(0, -scrollTop);
         drawGrid();
         drawBars();
         drawTodayLine();
         if (hoveredRow >= 0 && hoveredRow < rows.length) {
             highlightRow(hoveredRow);
         }
+        ctx.restore();
+        // Header on top (not scrolled)
+        drawHeader();
     }
 
     function drawTodayLine() {
@@ -178,9 +227,10 @@
     }
 
     function drawGrid() {
+        const { firstRow, lastRow } = getVisibleRange();
         ctx.strokeStyle = '#f0f0f0';
         ctx.lineWidth = 0.5;
-        for (let i = 0; i < rows.length; i++) {
+        for (let i = firstRow; i <= lastRow; i++) {
             const y = HEADER_HEIGHT + i * ROW_HEIGHT + ROW_HEIGHT;
             ctx.beginPath();
             ctx.moveTo(LEFT_LABEL_WIDTH, y);
@@ -190,11 +240,13 @@
     }
 
     function drawBars() {
+        const { firstRow, lastRow } = getVisibleRange();
         ctx.font = '12px Inter, sans-serif';
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
 
-        rows.forEach((row, i) => {
+        for (let i = firstRow; i <= lastRow; i++) {
+            const row = rows[i];
             const y = HEADER_HEIGHT + i * ROW_HEIGHT;
             const cy = y + ROW_HEIGHT / 2;
 
@@ -202,35 +254,35 @@
             ctx.fillStyle = '#374151';
             ctx.fillText(row.label, LEFT_LABEL_WIDTH - 8, cy);
 
-            // Bar
-            const x1 = dateToX(row.x1);
-            const x2 = dateToX(row.x2);
-            const barW = Math.max(x2 - x1, 2);
+            // Draw each span
             const barH = ROW_HEIGHT * 0.5;
             const barY = cy - barH / 2;
-            const xExact = dateToX(row.xExact);
+            row.spans.forEach(span => {
+                const x1 = dateToX(span.x1);
+                const x2 = dateToX(span.x2);
+                const barW = Math.max(x2 - x1, 2);
+                const xExact = dateToX(span.xExact);
 
-            // Intensity gradient: low opacity at edges → full at exact
-            const grad = ctx.createLinearGradient(x1, 0, x2, 0);
-            const t = barW > 2 ? Math.max(0, Math.min(1, (xExact - x1) / barW)) : 0.5;
-            const c = row.color;
-            grad.addColorStop(0, c + '18');          // ~9% at enter
-            grad.addColorStop(Math.max(t - 0.05, 0), c + '60'); // ramp up
-            grad.addColorStop(t, c + 'CC');           // ~80% at exact
-            grad.addColorStop(Math.min(t + 0.05, 1), c + '60'); // ramp down
-            grad.addColorStop(1, c + '18');           // ~9% at leave
+                const grad = ctx.createLinearGradient(x1, 0, x2, 0);
+                const t = barW > 2 ? Math.max(0, Math.min(1, (xExact - x1) / barW)) : 0.5;
+                const c = row.color;
+                grad.addColorStop(0, c + '18');
+                grad.addColorStop(Math.max(t - 0.05, 0), c + '60');
+                grad.addColorStop(t, c + 'CC');
+                grad.addColorStop(Math.min(t + 0.05, 1), c + '60');
+                grad.addColorStop(1, c + '18');
 
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.roundRect(x1, barY, barW, barH, 3);
-            ctx.fill();
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.roundRect(x1, barY, barW, barH, 3);
+                ctx.fill();
 
-            // Exact marker
-            ctx.fillStyle = row.color;
-            ctx.beginPath();
-            ctx.arc(xExact, cy, 3, 0, Math.PI * 2);
-            ctx.fill();
-        });
+                ctx.fillStyle = row.color;
+                ctx.beginPath();
+                ctx.arc(xExact, cy, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
     }
 
     function highlightRow(idx) {
@@ -247,23 +299,43 @@
         canvas.style.cursor = 'pointer';
     }
 
-    function onClick(e) {
+    // Find which span in a row the mouseX hits
+    function findSpanAt(row, mouseX) {
+        for (let si = 0; si < row.spans.length; si++) {
+            const x1 = dateToX(row.spans[si].x1);
+            const x2 = dateToX(row.spans[si].x2);
+            if (mouseX >= x1 - 2 && mouseX <= x2 + 2) return si;
+        }
+        return row.spans.length > 0 ? 0 : -1; // fallback to first
+    }
+
+    function mouseToRow(e) {
         const rect = canvas.getBoundingClientRect();
-        const mouseY = e.clientY - rect.top;
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top + scrollTop;
         const rowIdx = Math.floor((mouseY - HEADER_HEIGHT) / ROW_HEIGHT);
+        return { mouseX, rowIdx };
+    }
+
+    function onClick(e) {
+        const { mouseX, rowIdx } = mouseToRow(e);
         if (rowIdx >= 0 && rowIdx < rows.length) {
-            const ev = rows[rowIdx].event;
+            const row = rows[rowIdx];
+            const si = findSpanAt(row, mouseX);
+            const ev = si >= 0 ? row.events[si] : row.events[0];
             const exactDate = ev.t_exact ? ev.t_exact.split('T')[0] : null;
             if (exactDate && window.ForecastNavigation) {
-                window.ForecastNavigation.goToBiwheel(exactDate);
+                window.ForecastNavigation.goToBiwheel(exactDate, {
+                    transitBody: ev.transit_body,
+                    aspectType: ev.aspect_type,
+                    natalBody: ev.natal_body,
+                });
             }
         }
     }
 
     function onMouseMove(e) {
-        const rect = canvas.getBoundingClientRect();
-        const mouseY = e.clientY - rect.top;
-        const rowIdx = Math.floor((mouseY - HEADER_HEIGHT) / ROW_HEIGHT);
+        const { mouseX, rowIdx } = mouseToRow(e);
 
         if (rowIdx !== hoveredRow) {
             hoveredRow = rowIdx;
@@ -274,10 +346,12 @@
         const tooltip = document.getElementById('timelineTooltip');
         if (rowIdx >= 0 && rowIdx < rows.length) {
             const row = rows[rowIdx];
-            const ev = row.event;
+            const si = findSpanAt(row, mouseX);
+            const ev = si >= 0 ? row.events[si] : row.events[0];
             const pSym = Symbols?.planets?.[ev.transit_body] || ev.transit_body;
             const nSym = Symbols?.planets?.[ev.natal_body] || ev.natal_body;
             const aSym = Symbols?.aspects?.[ev.aspect_type] || ev.aspect_type;
+            const countInfo = row.events.length > 1 ? `<div class="tt-row"><span class="tt-label">Вхождений:</span> ${row.events.length}</div>` : '';
 
             tooltip.innerHTML = `
                 <div class="tt-title">${pSym} ${ev.transit_body} ${aSym} ${nSym} ${ev.natal_body}</div>
@@ -285,7 +359,7 @@
                 <div class="tt-row"><span class="tt-label">Точный:</span> ${formatDateTime(ev.t_exact)}</div>
                 <div class="tt-row"><span class="tt-label">Выход:</span> ${formatDateTime(ev.t_leave)}</div>
                 <div class="tt-row"><span class="tt-label">Орб:</span> ${ev.min_orb?.toFixed(2)}°</div>
-                <div class="tt-row"><span class="tt-label">Тип:</span> ${ev.is_major ? 'Мажорный' : 'Минорный'}</div>
+                ${countInfo}
             `;
             tooltip.classList.add('visible');
             tooltip.style.left = (e.clientX + 12) + 'px';

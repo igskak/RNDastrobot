@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Прогностика — AstroBot</title>
     <link rel="stylesheet" href="css/styles.css?v=2">
-    <link rel="stylesheet" href="css/forecast.css?v=2">
+    <link rel="stylesheet" href="css/forecast.css?v=9">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -18,7 +18,66 @@
             🔮 Прогностика
             <div class="header-subtitle" id="headerSubtitle"></div>
         </div>
+        <button class="help-btn" id="btnHelp" title="Как пользоваться">?</button>
     </header>
+
+    <!-- Help overlay -->
+    <div class="help-overlay" id="helpOverlay" style="display:none">
+        <div class="help-panel">
+            <button class="help-close" id="helpClose">✕</button>
+            <h2>Прогностика — быстрый старт</h2>
+
+            <div class="help-section">
+                <h3>⚡ Общий принцип</h3>
+                <p>Выберите <b>метод</b> → задайте <b>период/дату</b> → нажмите <b>«Рассчитать»</b>. Результат отобразится на активной вкладке. Переключайтесь между вкладками — данные сохраняются.</p>
+            </div>
+
+            <div class="help-section">
+                <h3>📊 Timeline (Ганнт)</h3>
+                <p>Каждая строка — уникальный аспект (напр. «♄ △ ☉»). Если аспект повторяется за период — на одной строке несколько баров. Яркость бара нарастает к моменту точного аспекта (●). Красная пунктирная линия — <b>сегодня</b>.</p>
+                <p>Строки отсортированы: медленные планеты (Плутон → Нептун → …) вверху, быстрые (Луна) внизу.</p>
+                <p>Над таймлайном — <b>сводка активных транзитов</b> на текущую дату.</p>
+                <p><b>Наведение</b> на бар → тултип с датами входа/точного/выхода и числом вхождений.</p>
+                <p><b>Клик по бару</b> → автопереход на Biwheel на дату точного аспекта.</p>
+                <p><b>Фильтры:</b> Мажорные/минорные, без Луны, группы планет (Внешние, Внутренние, Узлы/Точки).</p>
+            </div>
+
+            <div class="help-section">
+                <h3>🎯 Biwheel</h3>
+                <p>Двойное колесо: натал (внутри) + прогностические позиции (снаружи). Справа — скроллируемый список аспектов. Работает для всех методов: транзиты, прогрессии, дирекции.</p>
+                <p><b>Масштаб:</b> колесо мыши или кнопки +/− в правом нижнем углу. <b>Панорама:</b> зажмите и перетащите. Кнопка ⟳ — сброс вида. На тач-экранах — pinch для zoom.</p>
+            </div>
+
+            <div class="help-section">
+                <h3>📋 Таблица</h3>
+                <p>Все аспекты в табличном виде. <b>Клик по заголовку столбца</b> — сортировка (дата, метод, транзитная планета, аспект, натальная планета, орб, тип). Повторный клик — обратный порядок.</p>
+            </div>
+
+            <div class="help-section">
+                <h3>☀️ Соляр</h3>
+                <p>Солнечное возвращение на выбранный год. Показывает карту соляра с позициями планет и домов.</p>
+            </div>
+
+            <div class="help-section">
+                <h3>🔧 Методы</h3>
+                <table class="help-methods">
+                    <tr><td><b>Транзиты</b></td><td>Реальные позиции планет за период. Используйте пресеты дат (1–12 мес) для быстрого выбора.</td></tr>
+                    <tr><td><b>Прогрессии</b></td><td>Вторичные прогрессии (день = год). Задаётся конкретная дата.</td></tr>
+                    <tr><td><b>Дирекции</b></td><td>Солнечная дуга, символические (1°/год), экваториальные (Найбод). Задаётся дата.</td></tr>
+                </table>
+            </div>
+
+            <div class="help-section help-tips">
+                <h3>💡 Советы</h3>
+                <ul>
+                    <li>Начните с транзитов на 6 мес — увидите общую картину на Timeline</li>
+                    <li>Кликните интересный транзит → Biwheel покажет карту на эту дату</li>
+                    <li>Отключите внутренние планеты, чтобы сфокусироваться на медленных транзитах</li>
+                    <li>В таблице отсортируйте по орбу — точные аспекты будут сверху</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 
     <!-- Controls -->
     <div class="forecast-controls" id="forecastControls">
@@ -53,6 +112,20 @@
         <div class="control-group" id="solarYearGroup" style="display:none">
             <label>Год:</label>
             <input type="number" id="solarYear" min="1900" max="2100" style="width:80px">
+        </div>
+        <div class="control-group" id="solarLocationGroup" style="display:none">
+            <label class="checkbox-label">
+                <input type="checkbox" id="solarUseCurrentLocation"> На текущее место
+            </label>
+            <div id="solarLocationFields" style="display:none; margin-left:10px;">
+                <div class="solar-place-wrapper">
+                    <input type="text" id="solarLocationName" placeholder="Введите город..." autocomplete="off">
+                    <div id="solarPlaceSuggestions" class="place-suggestions"></div>
+                </div>
+                <span class="solar-coords-display" id="solarCoordsDisplay"></span>
+                <input type="hidden" id="solarLocationLat">
+                <input type="hidden" id="solarLocationLon">
+            </div>
         </div>
         <button class="btn-calculate" id="btnCalculate">Рассчитать</button>
     </div>
@@ -106,11 +179,18 @@
                 <div>Загрузка...</div>
             </div>
             <div class="biwheel-container" id="biwheelContainer" style="display:none">
-                <div class="biwheel-svg-wrapper">
-                    <svg id="biwheelSvg" viewBox="0 0 600 600"></svg>
-                </div>
-                <div class="biwheel-info">
-                    <div class="biwheel-aspects-list" id="biwheelAspects"></div>
+                <div class="biwheel-main">
+                    <div class="biwheel-svg-wrapper" id="biwheelSvgWrapper">
+                        <svg id="biwheelSvg" viewBox="0 0 600 600"></svg>
+                        <div class="biwheel-zoom-controls">
+                            <button class="bw-zoom-btn" id="bwZoomIn" title="Приблизить">+</button>
+                            <button class="bw-zoom-btn" id="bwZoomReset" title="Сбросить">⟳</button>
+                            <button class="bw-zoom-btn" id="bwZoomOut" title="Отдалить">−</button>
+                        </div>
+                    </div>
+                    <div class="biwheel-sidebar">
+                        <div class="biwheel-aspects-list" id="biwheelAspects"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -168,9 +248,9 @@
     <script src="js/api.js"></script>
     <script src="js/symbols.js"></script>
     <script src="js/chart-wheel.js"></script>
-    <script src="js/forecast-timeline.js?v=2"></script>
-    <script src="js/forecast-biwheel.js?v=2"></script>
-    <script src="js/forecast.js?v=2"></script>
+    <script src="js/forecast-timeline.js?v=5"></script>
+    <script src="js/forecast-biwheel.js?v=6"></script>
+    <script src="js/forecast.js?v=3"></script>
 </body>
 </html>
 

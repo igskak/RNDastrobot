@@ -90,6 +90,12 @@ function initTabs() {
 
 // ─── Controls ───────────────────────────────────────────
 function initControls() {
+    // Help overlay
+    const helpOverlay = document.getElementById('helpOverlay');
+    document.getElementById('btnHelp')?.addEventListener('click', () => helpOverlay.style.display = 'flex');
+    document.getElementById('helpClose')?.addEventListener('click', () => helpOverlay.style.display = 'none');
+    helpOverlay?.addEventListener('click', e => { if (e.target === helpOverlay) helpOverlay.style.display = 'none'; });
+
     document.getElementById('methodSelect').addEventListener('change', e => {
         ForecastState.method = e.target.value;
         updateControlsVisibility();
@@ -131,7 +137,87 @@ function initControls() {
             if (ForecastState.tableRows.length) renderTableRows();
         });
     });
+    // Solar location checkbox toggle
+    const solarUseLocation = document.getElementById('solarUseCurrentLocation');
+    if (solarUseLocation) {
+        solarUseLocation.addEventListener('change', () => {
+            const fields = document.getElementById('solarLocationFields');
+            fields.style.display = solarUseLocation.checked ? 'inline-flex' : 'none';
+        });
+    }
+    // Solar location geocoding with autocomplete
+    initSolarPlaceAutocomplete();
     updateControlsVisibility();
+}
+
+// ─── Solar Place Autocomplete with Geocoding ─────────────
+let solarGeoDebounce = null;
+
+function initSolarPlaceAutocomplete() {
+    const input = document.getElementById('solarLocationName');
+    const suggestions = document.getElementById('solarPlaceSuggestions');
+    if (!input || !suggestions) return;
+
+    input.addEventListener('input', (e) => {
+        clearTimeout(solarGeoDebounce);
+        const query = e.target.value.trim();
+        if (query.length < 2) {
+            suggestions.classList.remove('active');
+            return;
+        }
+        solarGeoDebounce = setTimeout(() => geocodeSolarPlace(query), 400);
+    });
+
+    input.addEventListener('blur', () => {
+        // Delay to allow click on suggestion
+        setTimeout(() => suggestions.classList.remove('active'), 200);
+    });
+
+    input.addEventListener('focus', () => {
+        if (suggestions.children.length > 0) {
+            suggestions.classList.add('active');
+        }
+    });
+}
+
+async function geocodeSolarPlace(query) {
+    const suggestions = document.getElementById('solarPlaceSuggestions');
+    try {
+        const response = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`,
+            { headers: { 'Accept-Language': 'ru' } }
+        );
+        const data = await response.json();
+
+        suggestions.innerHTML = '';
+        if (data && data.length > 0) {
+            data.forEach(place => {
+                const div = document.createElement('div');
+                div.className = 'place-suggestion';
+                div.textContent = place.display_name;
+                div.addEventListener('click', () => selectSolarPlace(place));
+                suggestions.appendChild(div);
+            });
+            suggestions.classList.add('active');
+        } else {
+            suggestions.classList.remove('active');
+        }
+    } catch (err) {
+        console.error('Geocoding error:', err);
+        suggestions.classList.remove('active');
+    }
+}
+
+function selectSolarPlace(place) {
+    const lat = parseFloat(place.lat);
+    const lon = parseFloat(place.lon);
+    const name = place.display_name.split(',')[0]; // Short name
+
+    document.getElementById('solarLocationName').value = name;
+    document.getElementById('solarLocationLat').value = lat;
+    document.getElementById('solarLocationLon').value = lon;
+    document.getElementById('solarCoordsDisplay').textContent = `(${lat.toFixed(2)}°, ${lon.toFixed(2)}°)`;
+    document.getElementById('solarPlaceSuggestions').classList.remove('active');
 }
 
 function updateControlsVisibility() {
@@ -140,15 +226,18 @@ function updateControlsVisibility() {
     const dateRange = document.getElementById('dateRangeGroup');
     const singleDate = document.getElementById('singleDateGroup');
     const solarYear = document.getElementById('solarYearGroup');
+    const solarLocation = document.getElementById('solarLocationGroup');
     const methodSelect = document.getElementById('methodSelect');
 
     dateRange.style.display = 'none';
     singleDate.style.display = 'none';
     solarYear.style.display = 'none';
+    solarLocation.style.display = 'none';
     methodSelect.closest('.control-group').style.display = '';
 
     if (tab === 'solar') {
         solarYear.style.display = '';
+        solarLocation.style.display = '';
         methodSelect.closest('.control-group').style.display = 'none';
     } else if (tab === 'timeline') {
         dateRange.style.display = '';
@@ -186,10 +275,12 @@ async function onCalculate() {
 
 // ─── Navigation (timeline → biwheel) ────────────────────
 window.ForecastNavigation = {
-    goToBiwheel(dateStr) {
+    goToBiwheel(dateStr, highlightAspect) {
         // Set date inputs
         document.getElementById('startDate').value = dateStr;
         document.getElementById('singleDate').value = dateStr;
+        // Store highlight info for biwheel to pick up after render
+        ForecastState.highlightAspect = highlightAspect || null;
         // Switch to biwheel tab
         document.querySelectorAll('.forecast-tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.forecast-pane').forEach(p => p.classList.remove('active'));
@@ -400,11 +491,30 @@ async function calculateSolar() {
     const year = parseInt(document.getElementById('solarYear').value);
     if (!year || year < 1900 || year > 2100) throw new Error('Укажите год (1900-2100)');
 
-    const data = await apiPost('/solar/calculate', {
+    // Build request payload
+    const payload = {
         user_id: ForecastState.userId,
         year: year,
         save_to_db: false,
-    });
+    };
+
+    // Check if using custom location
+    const useCurrentLocation = document.getElementById('solarUseCurrentLocation')?.checked;
+    if (useCurrentLocation) {
+        const lat = parseFloat(document.getElementById('solarLocationLat').value);
+        const lon = parseFloat(document.getElementById('solarLocationLon').value);
+        const name = document.getElementById('solarLocationName').value?.trim();
+
+        if (!isNaN(lat) && !isNaN(lon)) {
+            payload.location_latitude = lat;
+            payload.location_longitude = lon;
+            if (name) payload.location_name = name;
+        } else {
+            throw new Error('Выберите место из списка подсказок');
+        }
+    }
+
+    const data = await apiPost('/solar/calculate', payload);
     ForecastState.solarData = data;
     showState('solar', 'content');
     renderSolar(data);

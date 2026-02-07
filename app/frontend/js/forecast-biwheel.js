@@ -54,6 +54,9 @@
         svg = document.getElementById('biwheelSvg');
         if (!svg) return;
         svg.innerHTML = '';
+        // Reset zoom/pan on new render
+        zoomLevel = 1; panX = 0; panY = 0;
+        svg.setAttribute('viewBox', '0 0 600 600');
         ascLong = natalData.angles?.ASC?.longitude || 0;
 
         drawBackground();
@@ -75,6 +78,39 @@
 
         // Aspects table
         renderAspectsTable(aspects, progData._method);
+
+        // Highlight aspect from timeline click
+        if (window.ForecastState?.highlightAspect) {
+            applyHighlight(window.ForecastState.highlightAspect);
+            window.ForecastState.highlightAspect = null;
+        }
+    }
+
+    function applyHighlight(h) {
+        if (!h || !svg) return;
+        // Dim all aspect lines, then brighten the matching one
+        svg.querySelectorAll('line[data-transit]').forEach(line => {
+            if (line.dataset.transit === h.transitBody &&
+                line.dataset.natal === h.natalBody &&
+                line.dataset.aspect === h.aspectType) {
+                line.setAttribute('stroke-width', '3');
+                line.setAttribute('opacity', '1');
+                line.classList.add('bw-highlight-line');
+            } else {
+                line.setAttribute('opacity', '0.12');
+            }
+        });
+        // Highlight matching row in aspects table
+        const container = document.getElementById('biwheelAspects');
+        if (container) {
+            container.querySelectorAll('tbody tr').forEach(tr => {
+                const title = tr.getAttribute('title') || '';
+                if (title === `${h.transitBody} ${h.aspectType} ${h.natalBody}`) {
+                    tr.classList.add('bw-highlight-row');
+                    tr.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                }
+            });
+        }
     }
 
     // ─── Background ─────────────────────────────────────
@@ -233,32 +269,174 @@
             const nAngle = longToAngle(nLong) * Math.PI / 180;
             const pAngle = longToAngle(pLong) * Math.PI / 180;
             const color = ASPECT_COLORS[a.aspectType] || '#9ca3af';
-            svg.appendChild(el('line', {
+            const line = el('line', {
                 x1: C + ASPECT_R * Math.cos(nAngle), y1: C + ASPECT_R * Math.sin(nAngle),
                 x2: C + ASPECT_R * Math.cos(pAngle), y2: C + ASPECT_R * Math.sin(pAngle),
                 stroke: color, 'stroke-width': a.isMajor ? 1.2 : 0.7,
                 'stroke-dasharray': a.isMajor ? 'none' : '3,3',
                 opacity: a.isMajor ? 0.6 : 0.35,
-            }));
+                'data-transit': a.transitBody, 'data-natal': a.natalBody, 'data-aspect': a.aspectType,
+            });
+            svg.appendChild(line);
         });
     }
+
+    let lastAspects = [];
+    let sortCol = 'orb';
+    let sortAsc = true;
 
     function renderAspectsTable(aspects, method) {
         const container = document.getElementById('biwheelAspects');
         if (!container) return;
         if (!aspects.length) {
-            container.innerHTML = '<p style="padding:12px;color:var(--text-secondary);font-size:0.8rem">Нет аспектов</p>';
+            container.innerHTML = '<p style="padding:12px;color:var(--text-secondary);font-size:1rem">Нет аспектов</p>';
             return;
         }
-        let html = '<table><thead><tr><th>Транзит</th><th>Аспект</th><th>Натал</th><th>Орб</th></tr></thead><tbody>';
-        aspects.forEach(a => {
+        lastAspects = aspects;
+        buildAspectsHTML(container);
+    }
+
+    function buildAspectsHTML(container) {
+        const sorted = [...lastAspects].sort((a, b) => {
+            let va, vb;
+            if (sortCol === 'transit') { va = a.transitBody; vb = b.transitBody; }
+            else if (sortCol === 'natal') { va = a.natalBody; vb = b.natalBody; }
+            else if (sortCol === 'aspect') { va = a.aspectType; vb = b.aspectType; }
+            else { va = a.orb ?? 99; vb = b.orb ?? 99; }
+            const cmp = typeof va === 'string' ? va.localeCompare(vb) : va - vb;
+            return sortAsc ? cmp : -cmp;
+        });
+
+        const arrow = col => col === sortCol ? (sortAsc ? ' ↑' : ' ↓') : '';
+        let html = `<table><thead><tr>
+            <th data-col="transit">Тр.${arrow('transit')}</th>
+            <th data-col="aspect">${arrow('aspect')}</th>
+            <th data-col="natal">Нат.${arrow('natal')}</th>
+            <th data-col="orb">Орб${arrow('orb')}</th>
+        </tr></thead><tbody>`;
+        sorted.forEach(a => {
             const tSym = Symbols?.planets?.[a.transitBody] || a.transitBody;
             const nSym = Symbols?.planets?.[a.natalBody] || a.natalBody;
             const aSym = Symbols?.aspects?.[a.aspectType] || a.aspectType;
-            html += `<tr><td>${tSym} ${a.transitBody}</td><td>${aSym}</td><td>${nSym} ${a.natalBody}</td><td>${a.orb?.toFixed(2)}°</td></tr>`;
+            html += `<tr title="${a.transitBody} ${a.aspectType} ${a.natalBody}"><td>${tSym}</td><td>${aSym}</td><td>${nSym}</td><td>${a.orb?.toFixed(2)}°</td></tr>`;
         });
         html += '</tbody></table>';
         container.innerHTML = html;
+
+        container.querySelectorAll('th[data-col]').forEach(th => {
+            th.addEventListener('click', () => {
+                const col = th.dataset.col;
+                if (sortCol === col) sortAsc = !sortAsc;
+                else { sortCol = col; sortAsc = true; }
+                buildAspectsHTML(container);
+            });
+        });
+    }
+
+    // ─── Zoom & Pan ────────────────────────────────────────
+    let zoomLevel = 1;
+    const ZOOM_MIN = 0.5, ZOOM_MAX = 4, ZOOM_STEP = 0.15;
+    let panX = 0, panY = 0;
+    let isPanning = false, panStartX = 0, panStartY = 0;
+
+    function applyViewBox() {
+        if (!svg) return;
+        const size = 600;
+        const w = size / zoomLevel;
+        const h = size / zoomLevel;
+        const cx = size / 2 + panX;
+        const cy = size / 2 + panY;
+        svg.setAttribute('viewBox', `${cx - w/2} ${cy - h/2} ${w} ${h}`);
+    }
+
+    function resetView() {
+        zoomLevel = 1; panX = 0; panY = 0;
+        applyViewBox();
+    }
+
+    function initZoomPan() {
+        const wrapper = document.getElementById('biwheelSvgWrapper');
+        if (!wrapper) return;
+
+        // Wheel zoom
+        wrapper.addEventListener('wheel', e => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
+            zoomLevel = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoomLevel + delta));
+            applyViewBox();
+        }, { passive: false });
+
+        // Mouse drag pan
+        wrapper.addEventListener('mousedown', e => {
+            if (e.button !== 0) return;
+            isPanning = true;
+            panStartX = e.clientX; panStartY = e.clientY;
+        });
+        window.addEventListener('mousemove', e => {
+            if (!isPanning) return;
+            const scale = 600 / (zoomLevel * (wrapper.clientWidth || 600));
+            panX -= (e.clientX - panStartX) * scale;
+            panY -= (e.clientY - panStartY) * scale;
+            panStartX = e.clientX; panStartY = e.clientY;
+            applyViewBox();
+        });
+        window.addEventListener('mouseup', () => { isPanning = false; });
+
+        // Touch pinch zoom + pan
+        let lastTouchDist = 0, lastTouchMid = null;
+        wrapper.addEventListener('touchstart', e => {
+            if (e.touches.length === 2) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                lastTouchDist = Math.hypot(dx, dy);
+                lastTouchMid = { x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+                                 y: (e.touches[0].clientY + e.touches[1].clientY) / 2 };
+            } else if (e.touches.length === 1) {
+                isPanning = true;
+                panStartX = e.touches[0].clientX;
+                panStartY = e.touches[0].clientY;
+            }
+        }, { passive: true });
+        wrapper.addEventListener('touchmove', e => {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const dist = Math.hypot(dx, dy);
+                if (lastTouchDist > 0) {
+                    const ratio = dist / lastTouchDist;
+                    zoomLevel = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoomLevel * ratio));
+                    applyViewBox();
+                }
+                lastTouchDist = dist;
+            } else if (e.touches.length === 1 && isPanning) {
+                const scale = 600 / (zoomLevel * (wrapper.clientWidth || 600));
+                panX -= (e.touches[0].clientX - panStartX) * scale;
+                panY -= (e.touches[0].clientY - panStartY) * scale;
+                panStartX = e.touches[0].clientX;
+                panStartY = e.touches[0].clientY;
+                applyViewBox();
+            }
+        }, { passive: false });
+        wrapper.addEventListener('touchend', () => { isPanning = false; lastTouchDist = 0; });
+
+        // Buttons
+        document.getElementById('bwZoomIn')?.addEventListener('click', () => {
+            zoomLevel = Math.min(ZOOM_MAX, zoomLevel + ZOOM_STEP * 2);
+            applyViewBox();
+        });
+        document.getElementById('bwZoomOut')?.addEventListener('click', () => {
+            zoomLevel = Math.max(ZOOM_MIN, zoomLevel - ZOOM_STEP * 2);
+            applyViewBox();
+        });
+        document.getElementById('bwZoomReset')?.addEventListener('click', resetView);
+    }
+
+    // Init zoom once DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initZoomPan);
+    } else {
+        initZoomPan();
     }
 
     window.ForecastBiwheel = { render };
