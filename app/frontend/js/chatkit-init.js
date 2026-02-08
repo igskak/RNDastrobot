@@ -137,12 +137,6 @@
             chatkitOptions.onClientTool = async ({ name, params }) => {
                 console.log(`ChatKit [prognostic]: onClientTool вызван — ${name}`, params);
 
-                // === ВРЕМЕННЫЙ ТЕСТ: минимальный ответ без бэкенда ===
-                const minimal = { method: name, status: "ok", note: "test minimal response" };
-                console.log(`ChatKit [prognostic]: ТЕСТ — возвращаем минимальный объект`, minimal);
-                return minimal;
-                // === КОНЕЦ ТЕСТОВОГО БЛОКА ===
-
                 try {
                     const resp = await fetch(`${API_BASE}/chat/prognostic-tool`, {
                         method: 'POST',
@@ -163,7 +157,9 @@
                     const result = await resp.json();
                     const resultStr = JSON.stringify(result);
                     console.log(`ChatKit [prognostic]: tool ${name} ответ (${resultStr.length} chars)`, result);
-                    return result;
+
+                    // ТЕСТ: возвращаем данные как строку в плоском объекте
+                    return { data: resultStr };
                 } catch (e) {
                     console.error(`ChatKit [prognostic]: ошибка tool ${name}:`, e);
                     return { error: e.message };
