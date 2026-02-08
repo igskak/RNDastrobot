@@ -6,6 +6,7 @@
     <title>Прогностика — AstroBot</title>
     <link rel="stylesheet" href="css/styles.css?v=2">
     <link rel="stylesheet" href="css/forecast.css?v=9">
+    <link rel="stylesheet" href="css/chat.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -244,6 +245,23 @@
     <!-- Tooltip for timeline -->
     <div class="timeline-tooltip" id="timelineTooltip"></div>
 
+    <!-- ChatKit Widget Container (прогностический агент) -->
+    <div class="chatkit-wrapper" id="chatkitWrapper">
+        <div class="chatkit-header">
+            <span class="chatkit-title">🔮 Прогностика</span>
+            <button class="chatkit-minimize" id="chatkitMinimize" title="Свернуть">−</button>
+        </div>
+        <div class="chatkit-body" id="chatkit-container" data-mode="prognostic"></div>
+    </div>
+
+    <!-- Кнопка для открытия свёрнутого чата -->
+    <button class="chatkit-toggle hidden" id="chatkitToggle" title="Открыть чат">
+        💬
+    </button>
+
+    <!-- ChatKit.js Script -->
+    <script src="https://cdn.platform.openai.com/deployments/chatkit/chatkit.js"></script>
+
     <!-- Scripts -->
     <script src="js/api.js"></script>
     <script src="js/symbols.js"></script>
@@ -251,6 +269,7 @@
     <script src="js/forecast-timeline.js?v=5"></script>
     <script src="js/forecast-biwheel.js?v=6"></script>
     <script src="js/forecast.js?v=3"></script>
+    <script src="js/chatkit-init.js"></script>
 </body>
 </html>
 

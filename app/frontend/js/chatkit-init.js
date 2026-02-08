@@ -43,17 +43,18 @@
 
     /**
      * Создать ChatKit сессию через backend API
-     * Backend сам загрузит натальную карту из БД по user_id
+     * @param {string} userId
+     * @param {string} mode — "natal" | "prognostic"
      */
-    async function createChatSession(userId) {
-        const response = await fetch(`${API_BASE}/chat/session`, {
+    async function createChatSession(userId, mode) {
+        const endpoint = mode === 'prognostic'
+            ? `${API_BASE}/chat/prognostic-session`
+            : `${API_BASE}/chat/session`;
+
+        const response = await fetch(endpoint, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                user_id: userId
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId })
         });
 
         if (!response.ok) {
@@ -78,39 +79,29 @@
         console.log('ChatKit: контейнер найден');
 
         const userId = getUserId();
-        console.log('ChatKit: userId =', userId);
+        // Режим: "prognostic" если контейнер имеет data-mode="prognostic", иначе "natal"
+        const mode = container.dataset.mode || 'natal';
+        console.log('ChatKit: userId =', userId, ', mode =', mode);
 
         // Функция для получения свежего client_secret
         // Вызывается ChatKit каждый раз при необходимости (токены истекают быстро)
         async function getClientSecret() {
-            console.log('ChatKit: запрос нового client_secret...');
-            const session = await createChatSession(userId);
-            console.log('ChatKit: получен свежий токен, session_id =', session.session_id);
+            console.log(`ChatKit [${mode}]: запрос нового client_secret...`);
+            const session = await createChatSession(userId, mode);
+            console.log(`ChatKit [${mode}]: получен свежий токен, session_id =`, session.session_id);
             return session.client_secret;
         }
 
-        // Проверяем первоначальное подключение к backend
+        // Ожидаем регистрации web component (без хардкода таймаута)
+        console.log('ChatKit: ожидание регистрации web component...');
         try {
-            await getClientSecret();
-            console.log('ChatKit: первичная проверка подключения успешна');
-        } catch (error) {
-            console.error('ChatKit: ошибка подключения к backend:', error);
-            container.innerHTML = '<div style="color: #ff6b6b; padding: 20px; text-align: center;">Ошибка подключения к чату. Попробуйте обновить страницу.</div>';
-            return;
-        }
-
-        // Проверяем загрузку ChatKit
-        console.log('ChatKit: проверка customElements...');
-        let isRegistered = window.customElements?.get('openai-chatkit');
-
-        if (!isRegistered) {
-            console.log('ChatKit: ожидание загрузки скрипта...');
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            isRegistered = window.customElements?.get('openai-chatkit');
-        }
-
-        if (!isRegistered) {
-            console.error('ChatKit: web component не зарегистрирован');
+            await Promise.race([
+                customElements.whenDefined('openai-chatkit'),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000))
+            ]);
+            console.log('ChatKit: web component зарегистрирован');
+        } catch {
+            console.error('ChatKit: web component не зарегистрирован за 10с');
             container.innerHTML = '<div style="color: #ff6b6b; padding: 20px; text-align: center;">ChatKit не загружен. Проверьте подключение к интернету.</div>';
             return;
         }
@@ -119,17 +110,59 @@
         console.log('ChatKit: создание элемента...');
         const chatkit = document.createElement('openai-chatkit');
 
-        // Используем setOptions() для Vanilla JS (согласно документации)
-        // getClientSecret вызывается ChatKit каждый раз при необходимости обновления токена
-        if (typeof chatkit.setOptions === 'function') {
-            chatkit.setOptions({
-                api: {
-                    getClientSecret: getClientSecret  // ✅ Динамическое обновление токена
+        // Собираем options для setOptions()
+        const chatkitOptions = {
+            api: {
+                getClientSecret: getClientSecret
+            },
+            composer: {
+                placeholder: mode === 'prognostic'
+                    ? 'Задайте вопрос о прогнозе...'
+                    : 'Спросите о натальной карте...'
+            },
+            startScreen: {
+                greeting: mode === 'prognostic'
+                    ? 'Спросите о прогностике человека'
+                    : '✨ Спросите о натальной карте',
+                prompts: mode === 'prognostic' ? [
+                    { label: 'Транзиты на сегодня', prompt: 'Какие транзиты активны сегодня и как они влияют на мою карту?' },
+                    { label: 'Прогноз на месяц', prompt: 'Дай прогноз на ближайший месяц по транзитам и прогрессиям' },
+                    { label: 'Соляр на этот год', prompt: 'Построй и интерпретируй мой соляр на текущий год' },
+                ] : []
+            }
+        };
+
+        // Client-side tool handler для прогностического режима
+        if (mode === 'prognostic') {
+            chatkitOptions.onClientTool = async ({ name, params }) => {
+                console.log(`ChatKit [prognostic]: onClientTool вызван — ${name}`, params);
+                try {
+                    const resp = await fetch(`${API_BASE}/chat/prognostic-tool`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user_id: userId,
+                            tool_name: name,
+                            arguments: params || {}
+                        })
+                    });
+                    if (!resp.ok) {
+                        const err = await resp.json().catch(() => ({}));
+                        return { error: err.detail || `Tool ${name} failed` };
+                    }
+                    return await resp.json();
+                } catch (e) {
+                    console.error(`ChatKit: ошибка tool ${name}:`, e);
+                    return { error: e.message };
                 }
-            });
+            };
+        }
+
+        // Используем setOptions() для Vanilla JS (согласно документации)
+        if (typeof chatkit.setOptions === 'function') {
+            chatkit.setOptions(chatkitOptions);
         } else {
             // Fallback: получаем токен и устанавливаем как атрибут
-            // (в этом случае динамическое обновление не работает)
             const initialSecret = await getClientSecret();
             chatkit.setAttribute('client-secret', initialSecret);
         }

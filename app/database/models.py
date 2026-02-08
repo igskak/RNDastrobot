@@ -39,6 +39,8 @@ class User(Base):
     solar_returns = relationship("SolarReturn", back_populates="user", cascade="all, delete-orphan")
     progressions = relationship("Progression", back_populates="user", cascade="all, delete-orphan")
     directions = relationship("Direction", back_populates="user", cascade="all, delete-orphan")
+    transit_events_cache = relationship("TransitEventsCache", back_populates="user", cascade="all, delete-orphan")
+    prognostic_interpretations = relationship("PrognosticInterpretation", back_populates="user", cascade="all, delete-orphan")
 
     __table_args__ = (
         CheckConstraint('lat >= -90 AND lat <= 90', name='valid_latitude'),
@@ -719,6 +721,47 @@ class Direction(Base):
 
 
 # ============================================================================
+# TRANSIT EVENTS CACHE (кэш тяжёлых расчётов транзитных событий)
+# ============================================================================
+
+class TransitEventsCache(Base):
+    """
+    Кэш результатов find_transit_events.
+
+    Расчёт транзитных событий за период — самая тяжёлая операция (перебор шагов).
+    Кэш драматически ускоряет повторные запросы и необходим для AI-чатбота.
+    """
+    __tablename__ = 'transit_events_cache'
+
+    cache_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=False)
+    timezone = Column(String(50), nullable=False)
+
+    # Параметры расчёта (для точного попадания в кэш)
+    step_hours = Column(Integer, nullable=False, default=6)
+    transit_bodies = Column(JSONB)   # null = все тела
+    natal_bodies = Column(JSONB)     # null = все объекты
+    aspect_filter = Column(JSONB)    # null = все аспекты
+
+    # Результат
+    events_data = Column(JSONB, nullable=False)  # Полный список событий
+    events_count = Column(Integer, nullable=False, default=0)
+
+    # Метаданные
+    created_at = Column(DateTime, server_default=func.now())
+
+    # Relationship
+    user = relationship("User", back_populates="transit_events_cache")
+
+    __table_args__ = (
+        Index('idx_tec_user_period', 'user_id', 'start_date', 'end_date'),
+        Index('idx_tec_created', 'created_at'),
+    )
+
+
+# ============================================================================
 # INTERPRETATIONS CACHE (OpenAI интерпретации)
 # ============================================================================
 
@@ -746,5 +789,59 @@ class NatalInterpretation(Base):
         Index('idx_interpretations_hash', 'chart_hash'),
         Index('idx_interpretations_type', 'interpretation_type'),
         Index('idx_interpretations_created', 'created_at'),
+    )
+
+
+# ============================================================================
+# PROGNOSTIC INTERPRETATIONS CACHE (AI-интерпретации прогностики)
+# ============================================================================
+
+class PrognosticInterpretation(Base):
+    """
+    Кэш AI-интерпретаций прогностических данных.
+
+    Каждый вызов OpenAI стоит денег и занимает секунды.
+    Кэшируем по: user + method + period/date + content_hash.
+    """
+    __tablename__ = 'prognostic_interpretations'
+
+    interpretation_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
+
+    # Тип прогностики
+    method = Column(String(30), nullable=False)  # transits, progressions, directions, solar_return
+
+    # Период / дата запроса
+    period_start = Column(Date)       # начало периода (для транзитов)
+    period_end = Column(Date)         # конец периода (для транзитов)
+    target_date = Column(Date)        # конкретная дата (для прогрессий/дирекций)
+    year = Column(Integer)            # год (для соляра)
+
+    # Сырые астро-данные, отправленные в AI
+    raw_data = Column(JSONB)
+
+    # AI-интерпретация
+    interpretation = Column(JSONB, nullable=False)
+    content_hash = Column(String(64), nullable=False)  # SHA256 для инвалидации
+
+    # Метаданные AI
+    openai_model = Column(String(50))
+    tokens_used = Column(Integer)
+    generation_time_ms = Column(Integer)
+
+    # Метаданные
+    created_at = Column(DateTime, server_default=func.now())
+
+    # Relationship
+    user = relationship("User", back_populates="prognostic_interpretations")
+
+    __table_args__ = (
+        CheckConstraint(
+            "method IN ('transits', 'progressions', 'directions', 'solar_return')",
+            name='valid_prognostic_method'
+        ),
+        Index('idx_pi_user_method', 'user_id', 'method'),
+        Index('idx_pi_content_hash', 'content_hash'),
+        Index('idx_pi_created', 'created_at'),
     )
 

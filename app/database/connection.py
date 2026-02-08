@@ -3,7 +3,7 @@ Database connection manager для PostgreSQL/Supabase
 """
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.pool import NullPool
+from sqlalchemy.pool import QueuePool
 from contextlib import contextmanager
 from typing import Generator
 import os
@@ -46,13 +46,15 @@ class DatabaseManager:
         if not database_url:
             raise ValueError("DATABASE_URL не найден в переменных окружения")
         
-        # Создаём engine
-        # Для Supabase используем NullPool, чтобы не держать постоянные соединения
+        # Создаём engine с пулом соединений (переиспользуем TCP-коннекты)
         self._engine = create_engine(
             database_url,
-            poolclass=NullPool,
-            echo=False,  # Отключаем SQL логирование полностью
-            pool_pre_ping=True,  # Проверка соединения перед использованием
+            poolclass=QueuePool,
+            pool_size=3,
+            max_overflow=5,
+            pool_recycle=600,      # Пересоздавать соединения каждые 10 мин
+            pool_pre_ping=True,    # Проверка соединения перед использованием
+            echo=False,
         )
         
         # Создаём session factory

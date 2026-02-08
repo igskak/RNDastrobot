@@ -11,8 +11,13 @@ from datetime import date, time, datetime, timedelta
 from sqlalchemy.orm import Session
 import swisseph as swe
 
+import json
+from decimal import Decimal
+from loguru import logger
+
 from app.database.models import (
-    User, NatalPlanet, NatalSpecialPoint, Angle, NatalHouse, RefAspectType, RefPlanetOrb
+    User, NatalPlanet, NatalSpecialPoint, Angle, NatalHouse, RefAspectType, RefPlanetOrb,
+    TransitEventsCache
 )
 from app.services.swisseph_engine import SwissEphemerisEngine
 from app.services.time_service import TimeService
@@ -247,6 +252,8 @@ class TransitService:
         transit_bodies: Optional[List[str]] = None,
         natal_bodies: Optional[List[str]] = None,
         aspect_types: Optional[List[str]] = None,
+        use_cache: bool = True,
+        save_to_db: bool = True,
     ) -> List[Dict]:
         """
         Поиск транзитных событий на период (как в ZET Aspects Diagram).
@@ -265,10 +272,21 @@ class TransitService:
             transit_bodies: Фильтр транзитных тел (None = все)
             natal_bodies: Фильтр натальных объектов (None = все)
             aspect_types: Фильтр типов аспектов (None = все)
+            use_cache: Проверить кэш перед расчётом (по умолчанию True)
+            save_to_db: Сохранить результат в кэш (по умолчанию True)
 
         Returns:
             Список событий с t_enter, t_exact, t_leave
         """
+        # 0. Проверить кэш
+        if use_cache:
+            cached = self.get_cached_transit_events(
+                user_id, start_date, end_date, timezone,
+                step_hours, transit_bodies, natal_bodies, aspect_types
+            )
+            if cached is not None:
+                return cached
+
         # 1. Загрузить натальные данные
         natal_data = self._load_natal_data(user_id)
         if natal_data is None:
@@ -364,6 +382,16 @@ class TransitService:
         # 7. Отсортировать по t_enter
         events.sort(key=lambda e: e['t_enter'])
 
+        # 8. Сохранить в кэш
+        if save_to_db:
+            try:
+                self._save_transit_events_cache(
+                    user_id, start_date, end_date, timezone,
+                    step_hours, transit_bodies, natal_bodies, aspect_types, events
+                )
+            except Exception as e:
+                logger.warning(f"Failed to cache transit events: {e}")
+
         return events
 
     def _format_transit_event(self, aspect_data: Dict, timezone: str) -> Dict:
@@ -391,4 +419,85 @@ class TransitService:
 
         utc_dt = datetime(year, month, day, hours, minutes, seconds)
         return utc_dt.isoformat() + 'Z'
+
+    # ========================================================================
+    # Cache methods
+    # ========================================================================
+
+    def get_cached_transit_events(
+        self,
+        user_id: UUID,
+        start_date: date,
+        end_date: date,
+        timezone: str,
+        step_hours: int = 6,
+        transit_bodies: Optional[List[str]] = None,
+        natal_bodies: Optional[List[str]] = None,
+        aspect_types: Optional[List[str]] = None,
+    ) -> Optional[List[Dict]]:
+        """
+        Получить кэшированные транзитные события.
+
+        Ищет точное совпадение по user_id + period + параметрам расчёта.
+        Возвращает None если кэш не найден.
+        """
+        query = self.db.query(TransitEventsCache).filter(
+            TransitEventsCache.user_id == user_id,
+            TransitEventsCache.start_date == start_date,
+            TransitEventsCache.end_date == end_date,
+            TransitEventsCache.timezone == timezone,
+            TransitEventsCache.step_hours == step_hours,
+        )
+
+        # Фильтры: null в БД = все тела, сортированный JSON для сравнения
+        tb_json = sorted(transit_bodies) if transit_bodies else None
+        nb_json = sorted(natal_bodies) if natal_bodies else None
+        af_json = sorted(aspect_types) if aspect_types else None
+
+        cached = query.all()
+        for entry in cached:
+            stored_tb = sorted(entry.transit_bodies) if entry.transit_bodies else None
+            stored_nb = sorted(entry.natal_bodies) if entry.natal_bodies else None
+            stored_af = sorted(entry.aspect_filter) if entry.aspect_filter else None
+
+            if stored_tb == tb_json and stored_nb == nb_json and stored_af == af_json:
+                logger.info(
+                    f"Transit events cache HIT: user={user_id}, "
+                    f"period={start_date}..{end_date}, events={entry.events_count}"
+                )
+                return entry.events_data
+
+        return None
+
+    def _save_transit_events_cache(
+        self,
+        user_id: UUID,
+        start_date: date,
+        end_date: date,
+        timezone: str,
+        step_hours: int,
+        transit_bodies: Optional[List[str]],
+        natal_bodies: Optional[List[str]],
+        aspect_types: Optional[List[str]],
+        events: List[Dict],
+    ) -> None:
+        """Сохранить результат find_transit_events в кэш."""
+        cache_entry = TransitEventsCache(
+            user_id=user_id,
+            start_date=start_date,
+            end_date=end_date,
+            timezone=timezone,
+            step_hours=step_hours,
+            transit_bodies=sorted(transit_bodies) if transit_bodies else None,
+            natal_bodies=sorted(natal_bodies) if natal_bodies else None,
+            aspect_filter=sorted(aspect_types) if aspect_types else None,
+            events_data=events,
+            events_count=len(events),
+        )
+        self.db.add(cache_entry)
+        self.db.commit()
+        logger.info(
+            f"Transit events cached: user={user_id}, "
+            f"period={start_date}..{end_date}, events={len(events)}"
+        )
 

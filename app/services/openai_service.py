@@ -7,8 +7,10 @@
 import os
 import json
 import hashlib
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
+from uuid import UUID
 from openai import OpenAI
+from sqlalchemy.orm import Session
 from loguru import logger
 
 
@@ -25,12 +27,13 @@ class OpenAIService:
         self.prompt_id = os.getenv('OPENAI_PROMPT_ID')
         self.prompt_version = os.getenv('OPENAI_PROMPT_VERSION', '1.0')
         self.workflow_id = os.getenv('OPENAI_WORKFLOW_ID', 'wf_696ac18a25408190a38d8f44318c8c5a0b7269c5cba0bf81')
+        self.prognostic_workflow_id = os.getenv('OPENAI_PROGNOSTIC_WORKFLOW_ID', 'wf_6987cc5e9ff08190aeac925da8e921ea00c988f7d7727d42')
 
         if not self.api_key:
             raise ValueError("OPENAI_API_KEY не найден в переменных окружения")
 
         self.client = OpenAI(api_key=self.api_key)
-        logger.info(f"OpenAI сервис инициализирован (модель: {self.model}, workflow: {self.workflow_id})")
+        logger.info(f"OpenAI сервис инициализирован (модель: {self.model}, workflow: {self.workflow_id}, prognostic: {self.prognostic_workflow_id})")
     
     @staticmethod
     def calculate_chart_hash(chart_data: Dict[str, Any]) -> str:
@@ -267,31 +270,156 @@ class OpenAIService:
             logger.error(f"Ошибка OpenAI API: {str(e)}")
             raise
 
+    # ------------------------------------------------------------------
+    # Prognostic Chat (Responses API + function calling)
+    # ------------------------------------------------------------------
+
+    async def prognostic_chat(
+        self,
+        user_id: UUID,
+        message: str,
+        db_session: Session,
+        previous_response_id: Optional[str] = None,
+        chart_summary: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Прогностический чат с AI через Responses API + tool calling.
+
+        AI решает какие прогностические методы вызвать на основе вопроса,
+        бэкенд исполняет tool calls и возвращает результаты.
+
+        Args:
+            user_id: UUID пользователя
+            message: Сообщение пользователя
+            db_session: SQLAlchemy сессия
+            previous_response_id: ID предыдущего ответа для продолжения диалога
+            chart_summary: Краткое описание натальной карты (для контекста AI)
+
+        Returns:
+            {
+                'response_text': str,       # Текстовый ответ AI
+                'response_id': str,         # ID ответа для продолжения диалога
+                'tools_called': List[str],  # Какие tool-функции были вызваны
+                'tokens': int,
+            }
+        """
+        from app.services.prognostic_tools_service import PROGNOSTIC_TOOLS, PrognosticToolsService
+
+        tool_service = PrognosticToolsService(user_id=user_id, db_session=db_session)
+
+        # Системный промпт для прогностического агента
+        system_instructions = (
+            "Ты — профессиональный астролог-консультант. "
+            "У тебя есть инструменты для получения прогностических данных пользователя. "
+            "Используй их чтобы ответить на вопрос. "
+            "Правила:\n"
+            "1. Для вопросов о текущем моменте → get_current_transits\n"
+            "2. Для прогноза на период (неделя/месяц) → get_transit_events\n"
+            "3. Для внутренних изменений → get_progressions\n"
+            "4. Для ключевых жизненных событий → get_directions\n"
+            "5. Для годового прогноза → get_solar_return\n"
+            "6. Для комплексного прогноза комбинируй несколько методов\n"
+            "7. Отвечай на русском языке, развёрнуто и понятно\n"
+            "8. Не упоминай технические детали (орбы, градусы) — интерпретируй смысл\n"
+        )
+        if chart_summary:
+            system_instructions += f"\nДанные натальной карты:\n{chart_summary}\n"
+
+        # Собираем input
+        input_messages: List[Dict[str, Any]] = [
+            {"role": "developer", "content": system_instructions},
+        ]
+        if not previous_response_id:
+            input_messages.append({"role": "user", "content": message})
+
+        tools_called: List[str] = []
+        max_iterations = 5  # защита от бесконечного цикла
+
+        try:
+            # Первый вызов
+            create_kwargs: Dict[str, Any] = {
+                "model": self.model,
+                "input": input_messages if not previous_response_id else [{"role": "user", "content": message}],
+                "tools": PROGNOSTIC_TOOLS,
+            }
+            if previous_response_id:
+                create_kwargs["previous_response_id"] = previous_response_id
+
+            response = self.client.responses.create(**create_kwargs)
+
+            # Tool execution loop
+            for _ in range(max_iterations):
+                # Ищем tool calls в output
+                function_calls = [
+                    item for item in response.output
+                    if item.type == "function_call"
+                ]
+
+                if not function_calls:
+                    break  # AI дал финальный ответ
+
+                # Исполняем каждый tool call
+                tool_results = []
+                for fc in function_calls:
+                    tool_name = fc.name
+                    arguments = json.loads(fc.arguments)
+                    tools_called.append(tool_name)
+
+                    logger.info(f"Prognostic tool call: {tool_name}({arguments})")
+                    result_json = tool_service.dispatch(tool_name, arguments)
+
+                    tool_results.append({
+                        "type": "function_call_output",
+                        "call_id": fc.call_id,
+                        "output": result_json,
+                    })
+
+                # Отправляем результаты обратно в AI
+                response = self.client.responses.create(
+                    model=self.model,
+                    previous_response_id=response.id,
+                    input=tool_results,
+                    tools=PROGNOSTIC_TOOLS,
+                )
+
+            # Извлекаем финальный текст
+            response_text = response.output_text or ""
+            tokens = response.usage.total_tokens if hasattr(response, 'usage') and response.usage else 0
+
+            logger.info(f"Prognostic chat done: {len(tools_called)} tools called, {tokens} tokens")
+
+            return {
+                "response_text": response_text,
+                "response_id": response.id,
+                "tools_called": tools_called,
+                "tokens": tokens,
+            }
+
+        except Exception as e:
+            logger.error(f"Prognostic chat error: {e}")
+            raise
+
     async def create_chatkit_session(
         self,
         user_id: str,
-        chart_data: Optional[Dict[str, Any]] = None
+        chart_data: Optional[Dict[str, Any]] = None,
+        timezone: Optional[str] = None,
+        workflow: str = "natal",
     ) -> Dict[str, Any]:
         """
         Создать ChatKit сессию и вернуть client_secret для фронтенда.
 
-        Для простой интеграции ChatKit:
-        - Backend создаёт сессию и возвращает client_secret
-        - Frontend использует ChatKit.js виджет с этим токеном
-        - Всё общение идёт напрямую через ChatKit виджет
-
         Args:
             user_id: Идентификатор пользователя
             chart_data: Данные натальной карты для передачи в workflow (опционально)
+            timezone: Таймзона пользователя
+            workflow: Какой workflow использовать — "natal" (по умолчанию) или "prognostic"
 
         Returns:
-            Словарь с результатом:
-            {
-                'client_secret': str,  # Токен для ChatKit виджета
-                'session_id': str,     # ID сессии
-            }
+            {'client_secret': str, 'session_id': str}
         """
-        logger.info(f"Создание ChatKit сессии для workflow {self.workflow_id}")
+        wf_id = self.prognostic_workflow_id if workflow == "prognostic" else self.workflow_id
+        logger.info(f"Создание ChatKit сессии для workflow {wf_id} ({workflow})")
 
         try:
             # Подготовка state_variables с данными карты
@@ -327,11 +455,26 @@ class OpenAIService:
                         f"Ошибка подготовки prepare_psychological_profile_data: {prep_err}"
                     )
 
+            # Добавляем state variables для прогностики
+            state_variables["user_id"] = user_id
+
+            if timezone:
+                state_variables["timezone"] = timezone
+
+            if chart_data:
+                # Краткое описание карты для прогностического промпта
+                planets = chart_data.get("planets", [])
+                summary = ", ".join(
+                    f"{p.get('name', '?')}: {p.get('sign', '?')}" for p in planets[:10]
+                )
+                if summary:
+                    state_variables["chart_summary"] = summary
+
             # Создаём ChatKit сессию через OpenAI SDK
             session = self.client.beta.chatkit.sessions.create(
                 user=user_id,
                 workflow={
-                    "id": self.workflow_id,
+                    "id": wf_id,
                     "state_variables": state_variables if state_variables else None
                 }
             )
