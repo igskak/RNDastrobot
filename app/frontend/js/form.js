@@ -78,11 +78,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 house_system: houseSystem
             };
 
+            // Всегда передаём place (название города)
+            if (placeInput.value.trim()) {
+                requestData.place = placeInput.value.trim();
+            }
+
             if (coords.lat !== null && coords.lon !== null) {
                 requestData.latitude = coords.lat;
                 requestData.longitude = coords.lon;
-            } else {
-                requestData.place = placeInput.value;
             }
 
             // Сохраняем данные формы

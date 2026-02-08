@@ -9,21 +9,66 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <style>
-        .clients-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-        .clients-table th, .clients-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border-color, #333); }
-        .clients-table th { color: var(--text-secondary, #999); font-weight: 500; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .clients-table tr:hover { background: rgba(255,255,255,0.03); }
-        .clients-actions { display: flex; gap: 8px; }
-        .btn-open { background: #3b82f6; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        .clients-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        .clients-table th,
+        .clients-table td {
+            padding: 12px 14px;
+            text-align: left;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--border-color, #333);
+        }
+        .clients-table th {
+            color: var(--text-secondary, #999);
+            font-weight: 500;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .clients-table tbody tr:hover {
+            background: rgba(255,255,255,0.03);
+        }
+        .clients-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            white-space: nowrap;
+        }
+        .btn-open {
+            background: #3b82f6; color: #fff; border: none;
+            padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px;
+            line-height: 1;
+        }
         .btn-open:hover { background: #2563eb; }
-        .btn-delete { background: transparent; color: #ef4444; border: 1px solid #ef4444; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        .btn-delete {
+            background: transparent; color: #ef4444; border: 1px solid #ef4444;
+            padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px;
+            line-height: 1;
+        }
         .btn-delete:hover { background: #ef4444; color: #fff; }
-        .btn-new { display: inline-flex; align-items: center; gap: 6px; background: #22c55e; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 500; text-decoration: none; }
+        .btn-new {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: #22c55e; color: #fff; border: none;
+            padding: 10px 20px; border-radius: 8px; cursor: pointer;
+            font-size: 15px; font-weight: 500; text-decoration: none;
+        }
         .btn-new:hover { background: #16a34a; }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-secondary, #999); }
+        .top-bar {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 8px;
+        }
+        .empty-state {
+            text-align: center; padding: 60px 20px;
+            color: var(--text-secondary, #999);
+        }
         .empty-state p { margin-top: 12px; font-size: 15px; }
-        .loading { text-align: center; padding: 40px; color: var(--text-secondary, #999); }
+        .loading {
+            text-align: center; padding: 40px;
+            color: var(--text-secondary, #999);
+        }
     </style>
 </head>
 <body>

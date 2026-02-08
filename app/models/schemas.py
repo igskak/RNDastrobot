@@ -15,6 +15,13 @@ class BirthDataInput(BaseModel):
     date: date_type = Field(..., description="Дата рождения (YYYY-MM-DD)")
     time: time_type = Field(..., description="Время рождения (HH:MM:SS)")
     timezone: str = Field(..., description="Временная зона (например, 'America/New_York', 'Europe/Kiev')")
+
+    @field_validator('first_name', 'last_name', mode='before')
+    @classmethod
+    def empty_str_to_none(cls, v):
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v.strip() if isinstance(v, str) else v
     
     # Место рождения - либо название, либо координаты
     place: Optional[str] = Field(None, description="Название места рождения (для геокодирования)")
