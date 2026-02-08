@@ -172,12 +172,20 @@ class PrognosticToolsService:
             user_id=self.user_id, start_date=start, end_date=end, timezone=tz,
         )
 
+        summarized = self._summarize_transit_events(events)
+        # Ограничиваем размер для ChatKit (сортируем по orb)
+        summarized.sort(key=lambda e: abs(e.get("orb") or 99))
+        top = summarized[:self.MAX_ASPECTS_FOR_AI]
         return {
             "method": "transits",
             "period": f"{start.isoformat()} — {end.isoformat()}",
             "total_events": len(events),
-            "events": self._summarize_transit_events(events),
+            "shown_events": len(top),
+            "events": top,
         }
+
+    # Максимум аспектов в ответе tool (ChatKit ограничивает размер)
+    MAX_ASPECTS_FOR_AI = 25
 
     def _handle_current_transits(self, args: Dict[str, Any]) -> Dict:
         """Текущие транзиты (на данный момент)."""
@@ -191,12 +199,17 @@ class PrognosticToolsService:
         )
 
         aspects = result.get("aspects", [])
+        formatted = self._format_aspects_for_ai(aspects)
+        # Сортируем по точности (маленький orb = сильнее) и обрезаем
+        formatted.sort(key=lambda a: abs(a.get("orb") or 99))
+        top = formatted[:self.MAX_ASPECTS_FOR_AI]
         return {
             "method": "current_transits",
             "datetime": now.isoformat() + "Z",
             "timezone": tz,
             "total_aspects": len(aspects),
-            "aspects": self._format_aspects_for_ai(aspects),
+            "shown_aspects": len(top),
+            "aspects": top,
         }
 
     def _handle_progressions(self, args: Dict[str, Any]) -> Dict:
@@ -207,12 +220,16 @@ class PrognosticToolsService:
         result = svc.calculate_progression(user_id=self.user_id, target_date=target)
 
         aspects = result.get("aspects_to_natal", [])
+        formatted = self._format_aspects_for_ai(aspects)
+        formatted.sort(key=lambda a: abs(a.get("orb") or 99))
+        top = formatted[:self.MAX_ASPECTS_FOR_AI]
         return {
             "method": "progressions",
             "target_date": target.isoformat(),
             "age_years": result.get("progression_info", {}).get("age_years"),
             "total_aspects": len(aspects),
-            "aspects": self._format_aspects_for_ai(aspects),
+            "shown_aspects": len(top),
+            "aspects": top,
             "progressed_planets_summary": self._summarize_progressed_planets(
                 result.get("progressed_planets", [])
             ),
@@ -229,6 +246,9 @@ class PrognosticToolsService:
         )
 
         aspects = result.get("aspects_to_natal", [])
+        formatted = self._format_aspects_for_ai(aspects)
+        formatted.sort(key=lambda a: abs(a.get("orb") or 99))
+        top = formatted[:self.MAX_ASPECTS_FOR_AI]
         info = result.get("direction_info", {})
         return {
             "method": "directions",
@@ -237,7 +257,8 @@ class PrognosticToolsService:
             "arc_degrees": info.get("arc_degrees"),
             "arc_formatted": info.get("arc_formatted"),
             "total_aspects": len(aspects),
-            "aspects": self._format_aspects_for_ai(aspects),
+            "shown_aspects": len(top),
+            "aspects": top,
         }
 
     def _handle_solar_return(self, args: Dict[str, Any]) -> Dict:
@@ -273,35 +294,35 @@ class PrognosticToolsService:
     @staticmethod
     def _summarize_transit_events(events: List[Dict]) -> List[Dict]:
         """Компактный формат транзитных событий для AI."""
-        return [
-            {
-                "transit": e.get("transit_body"),
-                "aspect": e.get("aspect_type"),
-                "natal": e.get("natal_body"),
-                "natal_type": e.get("natal_type"),
+        result = []
+        for e in events:
+            orb_raw = e.get("min_orb")
+            orb = round(orb_raw, 1) if isinstance(orb_raw, (int, float)) else orb_raw
+            result.append({
+                "tr": e.get("transit_body"),
+                "asp": e.get("aspect_type"),
+                "nat": e.get("natal_body"),
                 "exact": e.get("t_exact"),
-                "enter": e.get("t_enter"),
-                "leave": e.get("t_leave"),
-                "orb": e.get("min_orb"),
-                "is_major": e.get("is_major"),
-                "harmonic": e.get("harmonic_type"),
-            }
-            for e in events
-        ]
+                "orb": orb,
+                "major": e.get("is_major"),
+            })
+        return result
 
     @staticmethod
     def _format_aspects_for_ai(aspects: List[Dict]) -> List[Dict]:
         """Компактный формат аспектов для AI."""
-        return [
-            {
-                "planet1": a.get("planet1") or a.get("transit_planet") or a.get("progressed_planet") or a.get("directed_object"),
-                "aspect": a.get("aspect_type") or a.get("aspect"),
-                "planet2": a.get("planet2") or a.get("natal_planet") or a.get("natal_object"),
-                "orb": a.get("orb"),
-                "is_applying": a.get("is_applying"),
-            }
-            for a in aspects
-        ]
+        result = []
+        for a in aspects:
+            orb_raw = a.get("orb")
+            orb = round(orb_raw, 1) if isinstance(orb_raw, (int, float)) else orb_raw
+            result.append({
+                "p1": a.get("planet1") or a.get("transit_planet") or a.get("progressed_planet") or a.get("directed_object"),
+                "asp": a.get("aspect_type") or a.get("aspect"),
+                "p2": a.get("planet2") or a.get("natal_planet") or a.get("natal_object"),
+                "orb": orb,
+                "app": a.get("is_applying"),
+            })
+        return result
 
     @staticmethod
     def _summarize_progressed_planets(planets: List[Dict]) -> List[Dict]:
