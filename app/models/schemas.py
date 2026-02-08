@@ -10,6 +10,8 @@ from uuid import UUID
 class BirthDataInput(BaseModel):
     """Входные данные для расчёта натальной карты"""
 
+    first_name: Optional[str] = Field(None, description="Имя пользователя")
+    last_name: Optional[str] = Field(None, description="Фамилия пользователя")
     date: date_type = Field(..., description="Дата рождения (YYYY-MM-DD)")
     time: time_type = Field(..., description="Время рождения (HH:MM:SS)")
     timezone: str = Field(..., description="Временная зона (например, 'America/New_York', 'Europe/Kiev')")
@@ -125,6 +127,8 @@ class SpecialPointPosition(BaseModel):
 
 class BirthDataOutput(BaseModel):
     """Выходные данные о рождении"""
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     date: str
     time: str
     timezone: str

@@ -42,7 +42,9 @@ class NatalChartService:
         longitude: Optional[float] = None,
         house_system: str = 'P',
         save_to_db: bool = False,
-        db_session: Optional[Session] = None
+        db_session: Optional[Session] = None,
+        first_name: Optional[str] = None,
+        last_name: Optional[str] = None,
     ) -> Dict:
         """
         Расчёт полной натальной карты
@@ -102,6 +104,8 @@ class NatalChartService:
         result = {
             'user_id': None,  # Будет заполнено если save_to_db=True
             'birth_data': {
+                'first_name': first_name,
+                'last_name': last_name,
                 'date': birth_date.isoformat(),
                 'time': birth_time.isoformat(),
                 'timezone': timezone,
@@ -137,6 +141,8 @@ class NatalChartService:
                 angles=angles,
                 special_points=special_points,
                 configurations=configurations,
+                first_name=first_name,
+                last_name=last_name,
             )
 
             # Читаємо повні дані з БД (включаючи похідні: аспекти, конфігурації, тощо)
@@ -568,6 +574,8 @@ class NatalChartService:
         angles: Dict,
         special_points: Dict,
         configurations: Dict,
+        first_name: Optional[str] = None,
+        last_name: Optional[str] = None,
     ) -> UUID:
         """
         Сохранить натальную карту в базу данных
@@ -586,6 +594,8 @@ class NatalChartService:
             angles: Данные углов
             special_points: Данные специальных точек
             configurations: Данные конфигураций
+            first_name: Имя пользователя
+            last_name: Фамилия пользователя
 
         Returns:
             UUID: ID созданного пользователя
@@ -602,7 +612,9 @@ class NatalChartService:
             birth_place=birth_place,
             lat=lat,
             lon=lon,
-            julian_day=julian_day
+            julian_day=julian_day,
+            first_name=first_name,
+            last_name=last_name,
         )
 
         # ОБОГАЩАЕМ ДАННЫЕ перед сохранением (пункт 3.2 спецификации)
@@ -720,6 +732,8 @@ class NatalChartService:
         result = {
             'user_id': str(user.user_id),
             'birth_data': {
+                'first_name': user.first_name,
+                'last_name': user.last_name,
                 'date': user.birth_date.isoformat(),
                 'time': user.birth_time.isoformat(),
                 'timezone': user.timezone,
@@ -895,15 +909,9 @@ class NatalChartService:
             }
 
         # ДОДАЄМО НОВІ ДАНІ (пункт 3.3 спецификації)
-        from app.database.models import (
-            NatalAspect, NatalConfiguration, NatalStellium,
-            NatalPlanetDistribution, CosmogramPattern
-        )
+        # Все данные уже eager-loaded через get_user_with_natal_chart()
 
-        # 1. Аспекти
-        aspects = db_session.query(NatalAspect).filter(
-            NatalAspect.user_id == user_id
-        ).all()
+        # 1. Аспекти (eager-loaded через user.natal_aspects)
         result['aspects'] = [
             {
                 'planet_1': a.planet_1,
@@ -913,46 +921,42 @@ class NatalChartService:
                 'is_major': a.is_major,
                 'harmonic_type': a.harmonic_type
             }
-            for a in aspects
+            for a in user.natal_aspects
         ]
 
         # 2. Аспектні конфігурації з деталями аспектів
-        configurations = db_session.query(NatalConfiguration).filter(
-            NatalConfiguration.user_id == user_id
-        ).order_by(NatalConfiguration.type, NatalConfiguration.strength_score.desc()).all()
+        # Один экземпляр scoring_service с кэшем орбисов (вместо N+1)
+        from app.services.aspect_scoring_service import AspectScoringService
+        scoring_service = AspectScoringService(db_session)
+
+        # Построить индекс аспектов по aspect_id для быстрого поиска
+        aspects_by_id = {a.aspect_id: a for a in user.natal_aspects}
+
+        # Сортируем конфигурации (уже eager-loaded)
+        sorted_configs = sorted(
+            user.configurations,
+            key=lambda c: (c.type, -(float(c.strength_score) if c.strength_score else 0))
+        )
 
         result['aspect_configurations'] = []
-        for c in configurations:
-            # Получить аспекты конфигурации с баллами
-            config_aspects = db_session.query(
-                NatalAspect,
-                NatalConfigurationAspect.aspect_score
-            ).join(
-                NatalConfigurationAspect,
-                NatalConfigurationAspect.aspect_id == NatalAspect.aspect_id
-            ).filter(
-                NatalConfigurationAspect.config_id == c.config_id
-            ).all()
-
-            # Формировать детали аспектов
+        for c in sorted_configs:
+            # aspect_links уже eager-loaded через selectinload
             aspects_details = []
-            for aspect, score in config_aspects:
-                # Получить орбисы планет из aspect_scoring_service
-                from app.services.aspect_scoring_service import AspectScoringService
-                scoring_service = AspectScoringService(db_session)
-                _, details = scoring_service.calculate_aspect_score(aspect)
-
-                aspects_details.append({
-                    'planet_1': aspect.planet_1,
-                    'planet_2': aspect.planet_2,
-                    'aspect_type': aspect.aspect_type,
-                    'orb': float(aspect.orb),
-                    'orb_planet_1': details['orb_planet_1'],
-                    'orb_planet_2': details['orb_planet_2'],
-                    'min_orb': details['min_orb'],
-                    'max_orb': details['max_orb'],
-                    'score': score
-                })
+            for link in (c.aspect_links or []):
+                aspect = aspects_by_id.get(link.aspect_id) or link.aspect
+                if aspect:
+                    _, details = scoring_service.calculate_aspect_score(aspect)
+                    aspects_details.append({
+                        'planet_1': aspect.planet_1,
+                        'planet_2': aspect.planet_2,
+                        'aspect_type': aspect.aspect_type,
+                        'orb': float(aspect.orb),
+                        'orb_planet_1': details['orb_planet_1'],
+                        'orb_planet_2': details['orb_planet_2'],
+                        'min_orb': details['min_orb'],
+                        'max_orb': details['max_orb'],
+                        'score': link.aspect_score
+                    })
 
             result['aspect_configurations'].append({
                 'type': c.type,
@@ -962,10 +966,7 @@ class NatalChartService:
                 'aspects': aspects_details
             })
 
-        # 3. Стеллиуми
-        stelliums = db_session.query(NatalStellium).filter(
-            NatalStellium.user_id == user_id
-        ).all()
+        # 3. Стеллиуми (eager-loaded)
         result['stelliums'] = [
             {
                 'type': s.type,
@@ -975,13 +976,11 @@ class NatalChartService:
                 'count': s.count,
                 'strength_score': float(s.strength_score) if s.strength_score else 0.0
             }
-            for s in stelliums
+            for s in user.natal_stelliums
         ]
 
-        # 4. Розподіл планет
-        distribution = db_session.query(NatalPlanetDistribution).filter(
-            NatalPlanetDistribution.user_id == user_id
-        ).first()
+        # 4. Розподіл планет (eager-loaded)
+        distribution = user.planet_distribution
         if distribution:
             result['planet_distribution'] = {
                 'min_empty_arc': float(distribution.min_empty_arc) if distribution.min_empty_arc else 0.0,
@@ -990,116 +989,71 @@ class NatalChartService:
                 'spread_map': distribution.spread_map
             }
 
-        # 5. Фігура Джонса
-        pattern = db_session.query(CosmogramPattern).filter(
-            CosmogramPattern.user_id == user_id
-        ).first()
+        # 5. Фігура Джонса (eager-loaded)
+        pattern = user.cosmogram_pattern
         if pattern:
-            # Розпаковуємо ключові планети з special_roles (JSONB)
             pattern_data = {
                 'pattern_type': pattern.pattern_type,
                 'empty_arc_degree': float(pattern.empty_arc_degree) if pattern.empty_arc_degree else 0.0,
             }
-
-            # Додаємо ключові планети з special_roles
             if pattern.special_roles and isinstance(pattern.special_roles, dict):
                 pattern_data.update(pattern.special_roles)
-
-            # Для зворотної сумісності
             pattern_data['anchor_planet'] = pattern.anchor_planet
             pattern_data['special_roles'] = []
-
             result['cosmogram_pattern'] = pattern_data
 
-        # 6. Інтегральні баланси (пункт 3.5 спецификації)
-        from app.database.models import (
-            UserElementBalance, UserModeBalance, UserGenderBalance,
-            UserZonesBalance, UserHemisphereBalance, UserQuadrantBalance,
-            UserHouseGroupBalance
-        )
-
+        # 6. Інтегральні баланси (все eager-loaded через relationships)
         balances = {}
 
-        # Баланс стихій
-        element_balance = db_session.query(UserElementBalance).filter(
-            UserElementBalance.user_id == user_id
-        ).first()
-        if element_balance:
+        eb = user.element_balance
+        if eb:
             balances['element_balance'] = {
-                'fire': float(element_balance.fire),
-                'earth': float(element_balance.earth),
-                'air': float(element_balance.air),
-                'water': float(element_balance.water)
+                'fire': float(eb.fire), 'earth': float(eb.earth),
+                'air': float(eb.air), 'water': float(eb.water)
             }
 
-        # Баланс крестів
-        mode_balance = db_session.query(UserModeBalance).filter(
-            UserModeBalance.user_id == user_id
-        ).first()
-        if mode_balance:
+        mb = user.mode_balance
+        if mb:
             balances['mode_balance'] = {
-                'cardinal': float(mode_balance.cardinal),
-                'fixed': float(mode_balance.fixed),
-                'mutable': float(mode_balance.mutable)
+                'cardinal': float(mb.cardinal), 'fixed': float(mb.fixed),
+                'mutable': float(mb.mutable)
             }
 
-        # Баланс полів
-        gender_balance = db_session.query(UserGenderBalance).filter(
-            UserGenderBalance.user_id == user_id
-        ).first()
-        if gender_balance:
+        gb = user.gender_balance
+        if gb:
             balances['gender_balance'] = {
-                'masculine': float(gender_balance.masculine),
-                'feminine': float(gender_balance.feminine)
+                'masculine': float(gb.masculine), 'feminine': float(gb.feminine)
             }
 
-        # Баланс зон
-        zones_balance = db_session.query(UserZonesBalance).filter(
-            UserZonesBalance.user_id == user_id
-        ).first()
-        if zones_balance:
+        zb = user.zones_balance
+        if zb:
             balances['zones_balance'] = {
-                'brahma': float(zones_balance.brahma),
-                'vishnu': float(zones_balance.vishnu),
-                'shiva': float(zones_balance.shiva)
+                'brahma': float(zb.brahma), 'vishnu': float(zb.vishnu),
+                'shiva': float(zb.shiva)
             }
 
-        # Баланс півсфер
-        hemisphere_balance = db_session.query(UserHemisphereBalance).filter(
-            UserHemisphereBalance.user_id == user_id
-        ).first()
-        if hemisphere_balance:
+        hb = user.hemisphere_balance
+        if hb:
             balances['hemisphere_balance'] = {
-                'northern': float(hemisphere_balance.northern),
-                'southern': float(hemisphere_balance.southern),
-                'eastern': float(hemisphere_balance.eastern),
-                'western': float(hemisphere_balance.western)
+                'northern': float(hb.northern), 'southern': float(hb.southern),
+                'eastern': float(hb.eastern), 'western': float(hb.western)
             }
 
-        # Баланс квадрантів
-        quadrant_balance = db_session.query(UserQuadrantBalance).filter(
-            UserQuadrantBalance.user_id == user_id
-        ).first()
-        if quadrant_balance:
+        qb = user.quadrant_balance
+        if qb:
             balances['quadrant_balance'] = {
-                'q1': float(quadrant_balance.quadrant_1),
-                'q2': float(quadrant_balance.quadrant_2),
-                'q3': float(quadrant_balance.quadrant_3),
-                'q4': float(quadrant_balance.quadrant_4)
+                'q1': float(qb.quadrant_1), 'q2': float(qb.quadrant_2),
+                'q3': float(qb.quadrant_3), 'q4': float(qb.quadrant_4)
             }
 
-        # Баланс груп домів
-        house_group_balance = db_session.query(UserHouseGroupBalance).filter(
-            UserHouseGroupBalance.user_id == user_id
-        ).first()
-        if house_group_balance:
+        hgb = user.house_group_balance
+        if hgb:
             balances['house_group_balance'] = {
-                'angular': float(house_group_balance.angular_count),
-                'succedent': float(house_group_balance.succedent_count),
-                'cadent': float(house_group_balance.cadent_count)
+                'angular': float(hgb.angular_count),
+                'succedent': float(hgb.succedent_count),
+                'cadent': float(hgb.cadent_count)
             }
 
-        # Додаємо баланси до результату
         result['balances'] = balances if balances else None
 
         return result

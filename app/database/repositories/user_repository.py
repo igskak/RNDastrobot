@@ -23,11 +23,13 @@ class UserRepository:
         birth_place: str,
         lat: float,
         lon: float,
-        julian_day: float
+        julian_day: float,
+        first_name: Optional[str] = None,
+        last_name: Optional[str] = None,
     ) -> User:
         """
         Создать нового пользователя
-        
+
         Args:
             birth_date: Дата рождения
             birth_time: Время рождения
@@ -36,11 +38,15 @@ class UserRepository:
             lat: Широта
             lon: Долгота
             julian_day: Юлианский день
-            
+            first_name: Имя
+            last_name: Фамилия
+
         Returns:
             User: Созданный пользователь
         """
         user = User(
+            first_name=first_name,
+            last_name=last_name,
             birth_date=birth_date,
             birth_time=birth_time,
             timezone=timezone,
@@ -69,16 +75,18 @@ class UserRepository:
     
     def get_user_with_natal_chart(self, user_id: UUID) -> Optional[User]:
         """
-        Получить пользователя со всеми данными натальной карты
-        
+        Получить пользователя со всеми данными натальной карты.
+        Eager loading всех связанных таблиц — один SQL-запрос вместо 14+.
+
         Args:
             user_id: UUID пользователя
-            
+
         Returns:
             Optional[User]: Пользователь с загруженными relationships или None
         """
-        from sqlalchemy.orm import joinedload
-        
+        from sqlalchemy.orm import joinedload, selectinload
+        from app.database.models import NatalConfiguration
+
         return (
             self.session.query(User)
             .filter(User.user_id == user_id)
@@ -87,7 +95,21 @@ class UserRepository:
                 joinedload(User.houses),
                 joinedload(User.angles),
                 joinedload(User.special_points),
-                joinedload(User.configurations),
+                selectinload(User.configurations).selectinload(NatalConfiguration.aspect_links),
+                joinedload(User.fate_cross),
+                # Аспекты, стеллиумы, распределение, паттерн
+                selectinload(User.natal_aspects),
+                selectinload(User.natal_stelliums),
+                joinedload(User.planet_distribution),
+                joinedload(User.cosmogram_pattern),
+                # 7 балансов
+                joinedload(User.element_balance),
+                joinedload(User.mode_balance),
+                joinedload(User.gender_balance),
+                joinedload(User.zones_balance),
+                joinedload(User.hemisphere_balance),
+                joinedload(User.quadrant_balance),
+                joinedload(User.house_group_balance),
             )
             .first()
         )

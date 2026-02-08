@@ -7,9 +7,15 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 </head>
 <body>
+    <!-- Page Loader -->
+    <div class="page-loader" id="pageLoader">
+        <div class="pl-spinner"></div>
+        <div class="pl-text">Загрузка...</div>
+    </div>
+
     <div class="container">
         <header class="header">
             <h1 class="logo">🌟 AstroBot</h1>
@@ -18,6 +24,15 @@
 
         <main class="form-container">
             <form id="birthDataForm" class="birth-form">
+                <!-- Имя и Фамилия -->
+                <div class="form-group">
+                    <label class="form-label">👤 Имя и Фамилия</label>
+                    <div class="name-inputs">
+                        <input type="text" id="firstName" placeholder="Имя" required>
+                        <input type="text" id="lastName" placeholder="Фамилия" required>
+                    </div>
+                </div>
+
                 <!-- Дата рождения -->
                 <div class="form-group">
                     <label class="form-label">📅 Дата рождения</label>

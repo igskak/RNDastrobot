@@ -8,9 +8,15 @@
     <link rel="stylesheet" href="css/interpretations.css?v=4">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 </head>
 <body class="interpretations-page">
+    <!-- Page Loader -->
+    <div class="page-loader" id="pageLoader">
+        <div class="pl-spinner"></div>
+        <div class="pl-text">Загрузка...</div>
+    </div>
+
     <!-- Header -->
     <header class="natal-header">
         <div class="header-content">

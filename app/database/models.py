@@ -19,6 +19,8 @@ class User(Base):
     __tablename__ = 'users'
     
     user_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    first_name = Column(String(100))
+    last_name = Column(String(100))
     birth_date = Column(Date, nullable=False)
     birth_time = Column(Time, nullable=False)
     timezone = Column(String(50), nullable=False)
@@ -41,6 +43,18 @@ class User(Base):
     directions = relationship("Direction", back_populates="user", cascade="all, delete-orphan")
     transit_events_cache = relationship("TransitEventsCache", back_populates="user", cascade="all, delete-orphan")
     prognostic_interpretations = relationship("PrognosticInterpretation", back_populates="user", cascade="all, delete-orphan")
+    # Relationships для eager loading (оптимизация запросов)
+    natal_aspects = relationship("NatalAspect", back_populates="user", cascade="all, delete-orphan")
+    natal_stelliums = relationship("NatalStellium", back_populates="user", cascade="all, delete-orphan")
+    planet_distribution = relationship("NatalPlanetDistribution", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    cosmogram_pattern = relationship("CosmogramPattern", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    element_balance = relationship("UserElementBalance", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    mode_balance = relationship("UserModeBalance", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    gender_balance = relationship("UserGenderBalance", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    zones_balance = relationship("UserZonesBalance", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    hemisphere_balance = relationship("UserHemisphereBalance", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    quadrant_balance = relationship("UserQuadrantBalance", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    house_group_balance = relationship("UserHouseGroupBalance", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
     __table_args__ = (
         CheckConstraint('lat >= -90 AND lat <= 90', name='valid_latitude'),
@@ -350,7 +364,7 @@ class NatalAspect(Base):
     is_partile = Column(Boolean, default=False)  # Партильный аспект (orb < 1°)
 
     # Relationship
-    user = relationship("User")
+    user = relationship("User", back_populates="natal_aspects")
 
     __table_args__ = (
         CheckConstraint("harmonic_type IN ('harmonious', 'tense', 'neutral')", name='valid_harmonic_type'),
@@ -376,7 +390,7 @@ class NatalStellium(Base):
     created_at = Column(DateTime, server_default=func.now())
 
     # Relationship
-    user = relationship("User")
+    user = relationship("User", back_populates="natal_stelliums")
 
     __table_args__ = (
         CheckConstraint("type IN ('house', 'sign')", name='valid_stellium_type'),
@@ -419,7 +433,7 @@ class NatalPlanetDistribution(Base):
     created_at = Column(DateTime, server_default=func.now())
 
     # Relationship
-    user = relationship("User")
+    user = relationship("User", back_populates="planet_distribution")
 
 
 class CosmogramPattern(Base):
@@ -435,7 +449,7 @@ class CosmogramPattern(Base):
     created_at = Column(DateTime, server_default=func.now())
 
     # Relationship
-    user = relationship("User")
+    user = relationship("User", back_populates="cosmogram_pattern")
 
     __table_args__ = (
         Index('idx_cosmogram_pattern_type', 'pattern_type'),
@@ -459,7 +473,7 @@ class UserElementBalance(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     # Relationship
-    user = relationship("User")
+    user = relationship("User", back_populates="element_balance")
 
 
 class UserModeBalance(Base):
@@ -474,7 +488,7 @@ class UserModeBalance(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     # Relationship
-    user = relationship("User")
+    user = relationship("User", back_populates="mode_balance")
 
 
 class UserGenderBalance(Base):
@@ -488,7 +502,7 @@ class UserGenderBalance(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     # Relationship
-    user = relationship("User")
+    user = relationship("User", back_populates="gender_balance")
 
 
 class UserZonesBalance(Base):
@@ -503,7 +517,7 @@ class UserZonesBalance(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     # Relationship
-    user = relationship("User")
+    user = relationship("User", back_populates="zones_balance")
 
 
 class UserHemisphereBalance(Base):
@@ -519,7 +533,7 @@ class UserHemisphereBalance(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     # Relationship
-    user = relationship("User")
+    user = relationship("User", back_populates="hemisphere_balance")
 
 
 class UserQuadrantBalance(Base):
@@ -535,7 +549,7 @@ class UserQuadrantBalance(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     # Relationship
-    user = relationship("User")
+    user = relationship("User", back_populates="quadrant_balance")
 
 
 class UserHouseGroupBalance(Base):
@@ -550,7 +564,7 @@ class UserHouseGroupBalance(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     # Relationship
-    user = relationship("User")
+    user = relationship("User", back_populates="house_group_balance")
 
 
 # ============================================================================

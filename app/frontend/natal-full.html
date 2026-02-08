@@ -8,9 +8,15 @@
     <link rel="stylesheet" href="css/natal-full.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 </head>
 <body class="natal-full-page">
+    <!-- Page Loader -->
+    <div class="page-loader" id="pageLoader">
+        <div class="pl-spinner"></div>
+        <div class="pl-text">Загрузка таблиц...</div>
+    </div>
+
     <!-- Header -->
     <header class="natal-header">
         <div class="header-content">
@@ -20,7 +26,6 @@
                 <p id="birthDetails" class="birth-details"></p>
             </div>
             <div class="header-actions">
-                <a href="interpretations.html" class="view-chart-btn">🧠 Интерпретация</a>
                 <a href="chart.html" class="view-chart-btn">🔮 Круговая карта</a>
                 <button class="legend-toggle-btn" id="legendToggle">📋 Легенда</button>
             </div>
@@ -209,6 +214,7 @@
         </details>
     </main>
 
+    <script src="js/api.js"></script>
     <script src="js/symbols.js"></script>
     <script src="js/natal-full.js"></script>
 </body>

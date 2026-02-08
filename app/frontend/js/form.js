@@ -55,6 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // Собираем данные
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
             const day = parseInt(document.getElementById('birthDay').value);
             const month = document.getElementById('birthMonth').value;
             const year = parseInt(document.getElementById('birthYear').value);
@@ -68,6 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Формируем запрос
             const requestData = {
+                first_name: firstName,
+                last_name: lastName,
                 date: AstroAPI.formatDate(day, month, year),
                 time: AstroAPI.formatTime(hour, minute),
                 timezone: timezone,
@@ -83,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Сохраняем данные формы
             AstroAPI.saveFormData({
+                firstName, lastName,
                 day, month, year, hour, minute,
                 place: placeInput.value,
                 timezone, houseSystem,
@@ -97,6 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
             AstroAPI.saveChartToSession(chartData);
             
             // Переходим на страницу результата
+            showPageLoader();
             window.location.href = 'chart.html';
 
         } catch (error) {
@@ -114,6 +120,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Восстановление данных формы при возврате
     const savedFormData = AstroAPI.getFormData();
     if (savedFormData) {
+        document.getElementById('firstName').value = savedFormData.firstName || '';
+        document.getElementById('lastName').value = savedFormData.lastName || '';
         document.getElementById('birthDay').value = savedFormData.day || '';
         document.getElementById('birthMonth').value = savedFormData.month || '';
         document.getElementById('birthYear').value = savedFormData.year || '';

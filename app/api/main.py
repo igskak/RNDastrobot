@@ -68,10 +68,10 @@ if os.path.exists(FRONTEND_PATH):
 
 @app.get("/")
 async def root():
-    """Главная страница - форма ввода данных"""
-    index_path = os.path.join(FRONTEND_PATH, "index.html")
-    if os.path.exists(index_path):
-        return FileResponse(index_path)
+    """Главная страница - база клиентов"""
+    clients_path = os.path.join(FRONTEND_PATH, "clients.html")
+    if os.path.exists(clients_path):
+        return FileResponse(clients_path)
     return {
         "message": "Astrobot API",
         "version": "1.0.0",
@@ -79,10 +79,19 @@ async def root():
     }
 
 
+@app.get("/new")
+async def new_chart_page():
+    """Страница создания новой натальной карты"""
+    index_path = os.path.join(FRONTEND_PATH, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    raise HTTPException(status_code=404, detail="Form page not found")
+
+
 @app.get("/index.html")
 async def index_page():
-    """Главная страница (альтернативный путь)"""
-    return await root()
+    """Форма ввода (альтернативный путь)"""
+    return await new_chart_page()
 
 
 @app.get("/chart.html")

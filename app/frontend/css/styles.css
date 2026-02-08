@@ -91,6 +91,16 @@ body {
     margin-bottom: 8px;
 }
 
+/* Name inputs */
+.name-inputs {
+    display: flex;
+    gap: 8px;
+}
+
+.name-inputs input {
+    flex: 1;
+}
+
 /* Date inputs */
 .date-inputs, .time-inputs {
     display: flex;
@@ -220,6 +230,39 @@ input[type="number"] {
 
 .hidden {
     display: none !important;
+}
+
+/* Global Page Loader */
+.page-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: var(--bg-primary, #ffffff);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    transition: opacity 0.3s;
+}
+.page-loader.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+.page-loader .pl-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(147, 130, 255, 0.2);
+    border-top-color: #9382ff;
+    border-radius: 50%;
+    animation: pl-spin 0.8s linear infinite;
+}
+.page-loader .pl-text {
+    color: #6e6e73;
+    font-size: 0.95rem;
+}
+@keyframes pl-spin {
+    to { transform: rotate(360deg); }
 }
 
 /* Hints */

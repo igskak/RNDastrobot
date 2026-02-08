@@ -32,6 +32,8 @@ from app.models.schemas import (
 )
 from app.services.natal_chart_service import NatalChartService
 from app.database.connection import get_db
+from app.database.repositories.user_repository import UserRepository
+from app.database.models import User
 from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 import os
 from loguru import logger
@@ -94,7 +96,9 @@ async def calculate_natal_chart(
             longitude=birth_data.longitude,
             house_system=birth_data.house_system,
             save_to_db=save_to_db,
-            db_session=db if save_to_db else None
+            db_session=db if save_to_db else None,
+            first_name=birth_data.first_name,
+            last_name=birth_data.last_name,
         )
         
         # Преобразование балансов (пункт 3.5 спецификации)
@@ -329,4 +333,59 @@ async def test_natal():
         "message": "Natal charts module is working",
         "ephe_path": EPHE_PATH
     }
+
+
+@router.get(
+    "/users",
+    summary="Список всех пользователей",
+    description="Возвращает список всех пользователей с основными данными",
+)
+async def list_users(db: Session = Depends(get_db)):
+    """Получить список всех пользователей"""
+    try:
+        users = db.query(User).order_by(User.created_at.desc()).all()
+        return [
+            {
+                "user_id": str(u.user_id),
+                "first_name": u.first_name,
+                "last_name": u.last_name,
+                "birth_date": u.birth_date.isoformat() if u.birth_date else None,
+                "birth_place": u.birth_place,
+                "created_at": u.created_at.isoformat() if u.created_at else None,
+            }
+            for u in users
+        ]
+    except Exception as e:
+        logger.exception(f"Ошибка при получении списка пользователей: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Внутренняя ошибка сервера: {str(e)}"
+        )
+
+
+@router.delete(
+    "/users/{user_id}",
+    summary="Удалить пользователя",
+    description="Удаляет пользователя и все связанные данные (каскадно)",
+)
+async def delete_user(user_id: UUID, db: Session = Depends(get_db)):
+    """Удалить пользователя по ID"""
+    try:
+        user_repo = UserRepository(db)
+        deleted = user_repo.delete_user(user_id)
+        if not deleted:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Пользователь {user_id} не найден"
+            )
+        db.commit()
+        return {"status": "ok", "message": f"Пользователь {user_id} удалён"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Ошибка при удалении пользователя: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Внутренняя ошибка сервера: {str(e)}"
+        )
 

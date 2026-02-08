@@ -91,6 +91,44 @@ function getFormData() {
     return data ? JSON.parse(data) : null;
 }
 
+/**
+ * Скрыть глобальный лоадер страницы
+ */
+function hidePageLoader() {
+    const loader = document.getElementById('pageLoader');
+    if (!loader) return;
+    loader.classList.add('fade-out');
+    setTimeout(() => loader.remove(), 300);
+}
+
+/**
+ * Показать лоадер (создаёт его, если нет в DOM)
+ */
+function showPageLoader() {
+    if (document.getElementById('pageLoader')) return;
+    const loader = document.createElement('div');
+    loader.className = 'page-loader';
+    loader.id = 'pageLoader';
+    loader.innerHTML = '<div class="pl-spinner"></div><div class="pl-text">Загрузка...</div>';
+    document.body.prepend(loader);
+}
+
+// Автоматически скрываем лоадер когда страница готова
+document.addEventListener('DOMContentLoaded', () => {
+    // Небольшая задержка чтобы дать JS-рендерингу отработать
+    requestAnimationFrame(() => hidePageLoader());
+});
+
+// Показываем лоадер при переходе по ссылкам (убирает белый экран)
+document.addEventListener('click', (e) => {
+    const link = e.target.closest('a[href]');
+    if (!link) return;
+    const href = link.getAttribute('href');
+    // Только локальные переходы на .html страницы
+    if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('javascript') || link.target === '_blank') return;
+    showPageLoader();
+});
+
 // Экспорт для использования
 window.AstroAPI = {
     calculateNatalChart,
@@ -101,4 +139,5 @@ window.AstroAPI = {
     saveFormData,
     getFormData
 };
+window.hidePageLoader = hidePageLoader;
 
