@@ -245,8 +245,8 @@ class PrognosticToolsService:
         user = self.user
 
         # Координаты места рождения для соляра (по умолчанию)
-        lat = float(user.birth_lat) if user.birth_lat else 0.0
-        lon = float(user.birth_lon) if user.birth_lon else 0.0
+        lat = float(user.lat) if user.lat else 0.0
+        lon = float(user.lon) if user.lon else 0.0
 
         svc = SolarReturnService(db_session=self.db, ephe_path=EPHE_PATH)
         result = svc.calculate_solar_return(
