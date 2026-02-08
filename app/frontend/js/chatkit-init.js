@@ -147,12 +147,18 @@
                         })
                     });
                     if (!resp.ok) {
-                        const err = await resp.json().catch(() => ({}));
-                        return { error: err.detail || `Tool ${name} failed` };
+                        const errText = await resp.text().catch(() => '');
+                        console.error(`ChatKit [prognostic]: backend вернул ${resp.status}`, errText);
+                        let detail = `Tool ${name} failed (${resp.status})`;
+                        try { detail = JSON.parse(errText).detail || detail; } catch {}
+                        return { error: detail };
                     }
-                    return await resp.json();
+                    const result = await resp.json();
+                    const resultStr = JSON.stringify(result);
+                    console.log(`ChatKit [prognostic]: tool ${name} ответ (${resultStr.length} chars)`, result);
+                    return result;
                 } catch (e) {
-                    console.error(`ChatKit: ошибка tool ${name}:`, e);
+                    console.error(`ChatKit [prognostic]: ошибка tool ${name}:`, e);
                     return { error: e.message };
                 }
             };
