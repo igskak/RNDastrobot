@@ -21,7 +21,12 @@ from app.database.models import (
 )
 from app.services.swisseph_engine import SwissEphemerisEngine
 from app.services.time_service import TimeService
-from app.utils.constants import get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds
+from app.services.special_points_service import SpecialPointsService
+from app.utils.constants import (
+    get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds,
+    PROGNOSTIC_EXCLUDED_NATAL_TARGETS, PROGNOSTIC_EXACT_ORB, PROGNOSTIC_DEFAULT_ORB,
+    TRANSIT_FOCUSED_BODIES, TRANSIT_FOCUSED_NATAL_TARGETS,
+)
 
 
 class TransitService:
@@ -60,8 +65,9 @@ class TransitService:
         # 2. Рассчитать транзитный JD
         utc_dt, jd_transit = TimeService.process_birth_time(transit_date, transit_time, timezone)
 
-        # 3. Рассчитать транзитные планеты
+        # 3. Рассчитать транзитные планеты + узлы и Лилит
         transit_planets = self.swisseph_engine.calculate_planets(jd_transit)
+        transit_planets.extend(self._calculate_transit_special_bodies(jd_transit))
 
         # 4. Определить натальные дома для транзитных планет
         for planet in transit_planets:
@@ -84,8 +90,8 @@ class TransitService:
             'aspects': aspects,
         }
 
-    def _load_natal_data(self, user_id: UUID) -> Optional[Dict]:
-        """Загрузить натальные данные из БД"""
+    def _load_natal_data(self, user_id: UUID, apply_exclusions: bool = True) -> Optional[Dict]:
+        """Загрузить натальные данные из БД. apply_exclusions=False — не применять PROGNOSTIC_EXCLUDED."""
         # Проверяем существование пользователя
         user = self.db.query(User).filter(User.user_id == user_id).first()
         if not user:
@@ -131,12 +137,20 @@ class TransitService:
             for h in houses
         ]
 
+        # Фильтруем исключённые натальные цели для прогностики
+        all_objects = natal_planets + natal_special_points + natal_angles
+        if apply_exclusions:
+            all_objects = [
+                o for o in all_objects
+                if o['name'] not in PROGNOSTIC_EXCLUDED_NATAL_TARGETS
+            ]
+
         return {
             'planets': natal_planets,
             'special_points': natal_special_points,
             'angles': natal_angles,
             'houses': natal_houses,
-            'all_objects': natal_planets + natal_special_points + natal_angles,
+            'all_objects': all_objects,
         }
 
     def _get_aspect_types(self) -> List[RefAspectType]:
@@ -164,23 +178,19 @@ class TransitService:
 
     def _calculate_allowed_orb(self, body_a: str, body_b: str, aspect_type: str) -> float:
         """
-        Расчёт допустимого орбиса для пары тел.
-        Правило: берём МАКСИМАЛЬНЫЙ орбис из двух тел.
+        Фиксированный орбис 1° для всех тел в транзитах.
         """
-        planet_orbs = self._get_planet_orbs()
-        base_orbs = self._get_base_orbs()
+        return PROGNOSTIC_DEFAULT_ORB
 
-        orb_a = planet_orbs.get((body_a, aspect_type))
-        orb_b = planet_orbs.get((body_b, aspect_type))
-
-        # Fallback на base_orb из ref_aspect_types (кэшировано)
-        fallback_orb = base_orbs.get(aspect_type, 5.0)
-        if orb_a is None:
-            orb_a = fallback_orb
-        if orb_b is None:
-            orb_b = fallback_orb
-
-        return max(orb_a, orb_b)
+    def _calculate_transit_special_bodies(self, jd: float) -> List[Dict]:
+        """Рассчитать транзитные позиции узлов и Лилит."""
+        north, south = SpecialPointsService.calculate_true_nodes(jd)
+        lilith = SpecialPointsService.calculate_black_moon(jd)
+        return [
+            {'name': 'TrueNorthNode', 'longitude': north, 'type': 'transit_planet'},
+            {'name': 'TrueSouthNode', 'longitude': south, 'type': 'transit_planet'},
+            {'name': 'BlackMoon', 'longitude': lilith, 'type': 'transit_planet'},
+        ]
 
     def _calculate_transit_aspects(
         self,
@@ -234,6 +244,7 @@ class TransitService:
                     'natal_object_type': natal_obj['type'],
                     'aspect_type': aspect_type.aspect_type,
                     'orb': round(deviation, 4),
+                    'is_exact': deviation <= PROGNOSTIC_EXACT_ORB,
                     'is_major': aspect_type.class_ == 'major',
                     'harmonic_type': aspect_type.character,
                 }
@@ -278,7 +289,13 @@ class TransitService:
         Returns:
             Список событий с t_enter, t_exact, t_leave
         """
-        # 0. Проверить кэш
+        # 0. Применить фокусные дефолты (медленные → личностные/социальные)
+        if transit_bodies is None:
+            transit_bodies = list(TRANSIT_FOCUSED_BODIES)
+        if natal_bodies is None:
+            natal_bodies = list(TRANSIT_FOCUSED_NATAL_TARGETS)
+
+        # 0.5. Проверить кэш (после применения дефолтов, чтобы ключ был корректным)
         if use_cache:
             cached = self.get_cached_transit_events(
                 user_id, start_date, end_date, timezone,
@@ -287,8 +304,8 @@ class TransitService:
             if cached is not None:
                 return cached
 
-        # 1. Загрузить натальные данные
-        natal_data = self._load_natal_data(user_id)
+        # 1. Загрузить натальные данные (без blacklist — allowlist сам фильтрует)
+        natal_data = self._load_natal_data(user_id, apply_exclusions=False)
         if natal_data is None:
             raise ValueError(f"Natal chart not found for user_id={user_id}")
 
@@ -316,8 +333,9 @@ class TransitService:
 
         jd = jd_start
         while jd <= jd_end:
-            # Рассчитать транзитные позиции
+            # Рассчитать транзитные позиции (планеты + узлы + Лилит)
             transit_planets = self.swisseph_engine.calculate_planets(jd)
+            transit_planets.extend(self._calculate_transit_special_bodies(jd))
 
             # Фильтр транзитных тел
             if transit_bodies:
@@ -406,6 +424,7 @@ class TransitService:
             't_leave': self._jd_to_iso(aspect_data['jd_leave'], timezone),
             'min_orb': round(aspect_data['min_orb'], 4),
             'max_allowed_orb': aspect_data['max_allowed_orb'],
+            'is_exact': aspect_data['min_orb'] <= PROGNOSTIC_EXACT_ORB,
             'is_major': aspect_data['is_major'],
             'harmonic_type': aspect_data['harmonic_type'],
         }

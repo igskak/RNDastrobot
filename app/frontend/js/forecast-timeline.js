@@ -85,7 +85,7 @@
         });
         rows = Array.from(grouped.values());
         // Sort: slow planets first, then by first exact date
-        const PLANET_ORDER = ['Pluto','Neptune','Uranus','Saturn','Jupiter','Chiron','NorthNode','SouthNode','BlackMoon','WhiteMoon','Mars','Venus','Mercury','Sun','Moon'];
+        const PLANET_ORDER = ['Pluto','Neptune','Uranus','Chiron','Saturn','Jupiter','TrueNorthNode','TrueSouthNode','BlackMoon','Proserpina','Mars','Venus','Mercury','Sun','Moon'];
         rows.sort((a, b) => {
             const pa = PLANET_ORDER.indexOf(a.events[0].transit_body);
             const pb = PLANET_ORDER.indexOf(b.events[0].transit_body);

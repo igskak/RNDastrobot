@@ -309,11 +309,12 @@ async function apiPost(endpoint, body) {
     return resp.json();
 }
 
-// ─── Planet groups for filtering ─────────────────────────
+// ─── Planet priority & groups for filtering ──────────────
+const PLANET_PRIORITY = ['Pluto','Neptune','Uranus','Chiron','Saturn','Jupiter','TrueNorthNode','TrueSouthNode','BlackMoon','Proserpina','Mars','Venus','Mercury','Sun','Moon'];
 const PLANET_GROUPS = {
-    outer: ['Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'],
-    inner: ['Sun', 'Mercury', 'Venus', 'Mars'],
-    nodes: ['North Node', 'South Node', 'Lilith', 'Chiron', 'NorthNode', 'SouthNode', 'Mean Node', 'True Node'],
+    slow: ['Pluto', 'Neptune', 'Uranus', 'Chiron', 'Saturn', 'Jupiter'],
+    fast: ['Mars', 'Venus', 'Mercury', 'Sun'],
+    nodes: ['TrueNorthNode', 'TrueSouthNode', 'BlackMoon', 'Proserpina', 'NorthNode', 'SouthNode', 'North Node', 'South Node', 'Lilith', 'Mean Node', 'True Node'],
 };
 
 // ─── Timeline filtering & rendering ─────────────────────
@@ -638,16 +639,23 @@ function populateTableFromAspects(aspects, method, date) {
         return;
     }
     const methodClass = method.startsWith('directions') ? 'direction' : 'progression';
-    ForecastState.tableRows = aspects.map(a => ({
-        date: date,
-        method: getMethodLabel(method),
-        methodClass,
-        transit: a.progressed_planet || a.directed_object || '—',
-        aspect: a.aspect_type,
-        natal: a.natal_object || '—',
-        orb: a.orb ?? 99,
-        type: a.is_major ? 'Мажор' : 'Минор',
-    }));
+    ForecastState.tableRows = aspects.map(a => {
+        const body = a.progressed_planet || a.directed_object || '—';
+        const idx = PLANET_PRIORITY.indexOf(body);
+        return {
+            date: date,
+            method: getMethodLabel(method),
+            methodClass,
+            transit: body,
+            aspect: a.aspect_type,
+            natal: a.natal_object || '—',
+            orb: a.orb ?? 99,
+            type: a.is_major ? 'Мажор' : 'Минор',
+            _priority: idx < 0 ? 999 : idx,
+        };
+    });
+    // Sort: slow planets first, then by orb
+    ForecastState.tableRows.sort((a, b) => a._priority - b._priority || a.orb - b.orb);
     renderTableRows();
 }
 

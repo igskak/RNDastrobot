@@ -19,7 +19,12 @@ from app.database.models import (
 )
 from app.services.swisseph_engine import SwissEphemerisEngine
 from app.services.time_service import TimeService
-from app.utils.constants import get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds
+from app.services.special_points_service import SpecialPointsService
+from app.utils.constants import (
+    get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds,
+    PROGNOSTIC_EXCLUDED_NATAL_TARGETS, PROGNOSTIC_EXACT_ORB,
+    PROGNOSTIC_DEFAULT_ORB, PROGNOSTIC_MOON_ORB,
+)
 
 
 # Коэффициент: 1 тропический год в днях
@@ -94,8 +99,9 @@ class ProgressionService:
         # 2. Рассчитать прогрессивный JD
         progressed_jd = self.calculate_progressed_jd(birth_jd, birth_date_val, target_date)
         
-        # 3. Рассчитать прогрессивные планеты
+        # 3. Рассчитать прогрессивные планеты + узлы и Лилит
         progressed_planets = self.swisseph_engine.calculate_planets(progressed_jd)
+        progressed_planets.extend(self._calculate_progressed_special_bodies(progressed_jd))
         
         # 4. Загрузить натальные данные для аспектов и домов
         natal_data = self._load_natal_data(user_id)
@@ -185,12 +191,19 @@ class ProgressionService:
             for h in houses
         ]
 
+        # Фильтруем исключённые натальные цели для прогностики
+        all_objects = natal_planets + natal_special_points + natal_angles
+        all_objects = [
+            o for o in all_objects
+            if o['name'] not in PROGNOSTIC_EXCLUDED_NATAL_TARGETS
+        ]
+
         return {
             'planets': natal_planets,
             'special_points': natal_special_points,
             'angles': natal_angles,
             'houses': natal_houses,
-            'all_objects': natal_planets + natal_special_points + natal_angles,
+            'all_objects': all_objects,
         }
 
     def _get_aspect_types(self) -> List[RefAspectType]:
@@ -218,25 +231,23 @@ class ProgressionService:
 
     def _calculate_allowed_orb(self, body_a: str, body_b: str, aspect_type: str) -> float:
         """
-        Расчёт допустимого орбиса для пары тел.
-        Для прогрессий используем уменьшенные орбисы (1° для мажорных).
+        Фиксированный орбис для прогрессий:
+        - 3° если прогрессивная Луна (body_a = 'Moon')
+        - 1° для всех остальных
         """
-        planet_orbs = self._get_planet_orbs()
-        base_orbs = self._get_base_orbs()
+        if body_a == 'Moon':
+            return PROGNOSTIC_MOON_ORB
+        return PROGNOSTIC_DEFAULT_ORB
 
-        orb_a = planet_orbs.get((body_a, aspect_type))
-        orb_b = planet_orbs.get((body_b, aspect_type))
-
-        fallback_orb = base_orbs.get(aspect_type, 5.0)
-        if orb_a is None:
-            orb_a = fallback_orb
-        if orb_b is None:
-            orb_b = fallback_orb
-
-        # Для прогрессий орбисы обычно меньше — делим на 5 (стандарт ZET)
-        # Но не меньше 1° для мажорных
-        max_orb = max(orb_a, orb_b) / 5.0
-        return max(max_orb, 1.0)
+    def _calculate_progressed_special_bodies(self, jd: float) -> List[Dict]:
+        """Рассчитать прогрессивные позиции узлов и Лилит."""
+        north, south = SpecialPointsService.calculate_true_nodes(jd)
+        lilith = SpecialPointsService.calculate_black_moon(jd)
+        return [
+            {'name': 'TrueNorthNode', 'longitude': north, 'type': 'progressed_planet'},
+            {'name': 'TrueSouthNode', 'longitude': south, 'type': 'progressed_planet'},
+            {'name': 'BlackMoon', 'longitude': lilith, 'type': 'progressed_planet'},
+        ]
 
     def _calculate_progression_aspects(
         self,
@@ -281,6 +292,7 @@ class ProgressionService:
                     'natal_object_type': natal_obj['type'],
                     'aspect_type': aspect_type.aspect_type,
                     'orb': round(deviation, 4),
+                    'is_exact': deviation <= PROGNOSTIC_EXACT_ORB,
                     'is_major': aspect_type.class_ == 'major',
                     'harmonic_type': aspect_type.character,
                 }

@@ -57,6 +57,32 @@ SPECIAL_POINTS = {
     'AntiVertex': 'Анти-Вертекс',
 }
 
+# ===== Прогностика: настройки фильтрации =====
+
+# Натальные точки, исключённые из целей в прогностике (транзиты, прогрессии, дирекции)
+PROGNOSTIC_EXCLUDED_NATAL_TARGETS = frozenset({
+    'Fortune', 'Vertex', 'AntiVertex', 'WhiteMoon', 'BlackMoon',
+})
+
+# Порог точного аспекта в прогностике: ±15 минут дуги = 0.25°
+PROGNOSTIC_EXACT_ORB = 0.25
+
+# Фиксированный орбис для прогностики (все планеты кроме Луны в прогрессиях)
+PROGNOSTIC_DEFAULT_ORB = 1.0
+
+# Орбис Луны в прогрессиях
+PROGNOSTIC_MOON_ORB = 3.0
+
+# Фокусный режим транзитов: только медленные планеты → личностные/социальные + узлы/Лилит
+TRANSIT_FOCUSED_BODIES = frozenset({
+    'Pluto', 'Neptune', 'Uranus', 'Chiron', 'Saturn', 'Jupiter',
+})
+TRANSIT_FOCUSED_NATAL_TARGETS = frozenset({
+    'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',       # быстрые (личностные)
+    'Jupiter', 'Saturn',                               # социальные
+    'TrueNorthNode', 'TrueSouthNode', 'BlackMoon',    # узлы и Лилит
+})
+
 # Системы домов
 HOUSE_SYSTEMS = {
     'P': 'Placidus',

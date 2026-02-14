@@ -158,21 +158,7 @@
                     const resultStr = JSON.stringify(result);
                     console.log(`ChatKit [prognostic]: tool ${name} ответ (${resultStr.length} chars)`, result);
 
-                    // ТЕСТ: лимитируем массивы до 20 элементов и возвращаем как строку
-                    const limited = { ...result };
-                    if (Array.isArray(limited.aspects) && limited.aspects.length > 20) {
-                        limited.total_aspects = limited.aspects.length;
-                        limited.aspects = limited.aspects.slice(0, 20);
-                        limited.note = 'Showing top 20 aspects out of ' + limited.total_aspects;
-                    }
-                    if (Array.isArray(limited.events) && limited.events.length > 20) {
-                        limited.total_events = limited.events.length;
-                        limited.events = limited.events.slice(0, 20);
-                        limited.note = 'Showing top 20 events out of ' + limited.total_events;
-                    }
-                    const limitedStr = JSON.stringify(limited);
-                    console.log(`ChatKit [prognostic]: tool ${name} limited (${limitedStr.length} chars)`);
-                    return { data: limitedStr };
+                    return { data: resultStr };
                 } catch (e) {
                     console.error(`ChatKit [prognostic]: ошибка tool ${name}:`, e);
                     return { error: e.message };

@@ -46,7 +46,7 @@
                 <p>Над таймлайном — <b>сводка активных транзитов</b> на текущую дату.</p>
                 <p><b>Наведение</b> на бар → тултип с датами входа/точного/выхода и числом вхождений.</p>
                 <p><b>Клик по бару</b> → автопереход на Biwheel на дату точного аспекта.</p>
-                <p><b>Фильтры:</b> Мажорные/минорные, без Луны, группы планет (Внешние, Внутренние, Узлы/Точки).</p>
+                <p><b>Фильтры:</b> Мажорные/минорные, без Луны, группы планет (Медленные, Быстрые, Узлы/Точки).</p>
             </div>
 
             <div class="help-section">
@@ -79,7 +79,7 @@
                 <ul>
                     <li>Начните с транзитов на 6 мес — увидите общую картину на Timeline</li>
                     <li>Кликните интересный транзит → Biwheel покажет карту на эту дату</li>
-                    <li>Отключите внутренние планеты, чтобы сфокусироваться на медленных транзитах</li>
+                    <li>Отключите быстрые планеты, чтобы сфокусироваться на медленных транзитах</li>
                     <li>В таблице отсортируйте по орбу — точные аспекты будут сверху</li>
                 </ul>
             </div>
@@ -163,9 +163,9 @@
                     <label class="tl-filter"><input type="checkbox" id="filterMajor" checked> Мажорные</label>
                     <label class="tl-filter"><input type="checkbox" id="filterNoMoon" checked> Без Луны</label>
                     <div class="tl-separator"></div>
-                    <button class="tl-filter-btn active" data-planet-group="outer" title="Юпитер, Сатурн, Уран, Нептун, Плутон">Внешние</button>
-                    <button class="tl-filter-btn active" data-planet-group="inner" title="Солнце, Меркурий, Венера, Марс">Внутренние</button>
-                    <button class="tl-filter-btn active" data-planet-group="nodes" title="Сев. и Юж. узлы, Лилит, Хирон">Узлы/Точки</button>
+                    <button class="tl-filter-btn active" data-planet-group="slow" title="Плутон, Нептун, Уран, Хирон, Сатурн, Юпитер">Медленные</button>
+                    <button class="tl-filter-btn active" data-planet-group="fast" title="Марс, Венера, Меркурий, Солнце">Быстрые</button>
+                    <button class="tl-filter-btn active" data-planet-group="nodes" title="Сев. и Юж. узлы, Лилит, Прозерпина">Узлы/Точки</button>
                     <span class="tl-event-count" id="tlEventCount"></span>
                 </div>
                 <div class="timeline-canvas-wrapper">

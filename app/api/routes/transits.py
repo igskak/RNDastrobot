@@ -59,6 +59,7 @@ class TransitAspectInfo(BaseModel):
     natal_object_type: str
     aspect_type: str
     orb: float
+    is_exact: bool = Field(default=False, description="Точный аспект (±15 минут дуги)")
     is_major: bool
     harmonic_type: Optional[str] = None
 
@@ -122,6 +123,7 @@ class TransitEventInfo(BaseModel):
     t_leave: str = Field(..., description="Момент выхода из орбиса (ISO)")
     min_orb: float = Field(..., description="Минимальный орбис (градусы)")
     max_allowed_orb: float = Field(..., description="Допустимый орбис для пары")
+    is_exact: bool = Field(default=False, description="Точный аспект (±15 минут дуги)")
     is_major: bool
     harmonic_type: Optional[str] = None
 

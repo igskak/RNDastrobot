@@ -278,6 +278,7 @@ class PrognosticToolsService:
                 "aspect": e.get("aspect_type"),
                 "natal": e.get("natal_body"),
                 "natal_type": e.get("natal_type"),
+                "is_exact": e.get("is_exact", False),
                 "exact": e.get("t_exact"),
                 "enter": e.get("t_enter"),
                 "leave": e.get("t_leave"),
@@ -297,6 +298,7 @@ class PrognosticToolsService:
                 "aspect": a.get("aspect_type") or a.get("aspect"),
                 "planet2": a.get("planet2") or a.get("natal_planet") or a.get("natal_object"),
                 "orb": a.get("orb"),
+                "is_exact": a.get("is_exact", False),
                 "is_applying": a.get("is_applying"),
             }
             for a in aspects

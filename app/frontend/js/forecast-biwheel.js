@@ -281,8 +281,10 @@
         });
     }
 
+    const BW_PLANET_ORDER = ['Pluto','Neptune','Uranus','Chiron','Saturn','Jupiter','TrueNorthNode','TrueSouthNode','BlackMoon','Proserpina','Mars','Venus','Mercury','Sun','Moon'];
+
     let lastAspects = [];
-    let sortCol = 'orb';
+    let sortCol = 'transit_priority';
     let sortAsc = true;
 
     function renderAspectsTable(aspects, method) {
@@ -299,7 +301,12 @@
     function buildAspectsHTML(container) {
         const sorted = [...lastAspects].sort((a, b) => {
             let va, vb;
-            if (sortCol === 'transit') { va = a.transitBody; vb = b.transitBody; }
+            if (sortCol === 'transit_priority') {
+                const ia = BW_PLANET_ORDER.indexOf(a.transitBody);
+                const ib = BW_PLANET_ORDER.indexOf(b.transitBody);
+                va = ia < 0 ? 999 : ia;
+                vb = ib < 0 ? 999 : ib;
+            } else if (sortCol === 'transit') { va = a.transitBody; vb = b.transitBody; }
             else if (sortCol === 'natal') { va = a.natalBody; vb = b.natalBody; }
             else if (sortCol === 'aspect') { va = a.aspectType; vb = b.aspectType; }
             else { va = a.orb ?? 99; vb = b.orb ?? 99; }

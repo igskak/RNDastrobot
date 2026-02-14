@@ -23,7 +23,10 @@ from app.database.models import (
     RefAspectType, RefPlanetOrb, Direction
 )
 from app.services.swisseph_engine import SwissEphemerisEngine
-from app.utils.constants import get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds
+from app.utils.constants import (
+    get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds,
+    PROGNOSTIC_EXCLUDED_NATAL_TARGETS, PROGNOSTIC_EXACT_ORB, PROGNOSTIC_DEFAULT_ORB,
+)
 
 
 # Константы
@@ -286,12 +289,19 @@ class DirectionService:
             for h in houses
         ]
 
+        # Фильтруем исключённые натальные цели для прогностики
+        all_objects = natal_planets + natal_special_points + natal_angles
+        all_objects = [
+            o for o in all_objects
+            if o['name'] not in PROGNOSTIC_EXCLUDED_NATAL_TARGETS
+        ]
+
         return {
             'planets': natal_planets,
             'special_points': natal_special_points,
             'angles': natal_angles,
             'houses': natal_houses,
-            'all_objects': natal_planets + natal_special_points + natal_angles,
+            'all_objects': all_objects,
         }
 
     def _get_aspect_types(self) -> List[RefAspectType]:
@@ -319,24 +329,9 @@ class DirectionService:
 
     def _calculate_allowed_orb(self, body_a: str, body_b: str, aspect_type: str) -> float:
         """
-        Расчёт допустимого орбиса для пары тел.
-        Для дирекций используем уменьшенные орбисы (как в прогрессиях): 1° для мажорных.
+        Фиксированный орбис 1° для всех тел в дирекциях.
         """
-        planet_orbs = self._get_planet_orbs()
-        base_orbs = self._get_base_orbs()
-
-        orb_a = planet_orbs.get((body_a, aspect_type))
-        orb_b = planet_orbs.get((body_b, aspect_type))
-
-        fallback_orb = base_orbs.get(aspect_type, 5.0)
-        if orb_a is None:
-            orb_a = fallback_orb
-        if orb_b is None:
-            orb_b = fallback_orb
-
-        # Для дирекций орбисы уменьшаем в 5 раз (как в прогрессиях), минимум 1°
-        max_orb = max(orb_a, orb_b) / 5.0
-        return max(max_orb, 1.0)
+        return PROGNOSTIC_DEFAULT_ORB
 
     def _calculate_direction_aspects(
         self,
@@ -386,6 +381,7 @@ class DirectionService:
                     'natal_type': natal_obj['type'],
                     'aspect_type': aspect_type.aspect_type,
                     'orb': round(deviation, 4),
+                    'is_exact': deviation <= PROGNOSTIC_EXACT_ORB,
                     'is_major': aspect_type.class_ == 'major',
                     'harmonic_type': aspect_type.character,
                 }
