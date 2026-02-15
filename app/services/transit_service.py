@@ -31,6 +31,7 @@ from app.utils.constants import (
 
 class TransitService:
     """Сервис для расчёта транзитов к натальной карте"""
+    _BOUNDARY_SEARCH_DAYS = 120
 
     def __init__(self, db_session: Session, ephe_path: str = None):
         self.db = db_session
@@ -186,11 +187,25 @@ class TransitService:
         """Рассчитать транзитные позиции узлов и Лилит."""
         north, south = SpecialPointsService.calculate_true_nodes(jd)
         lilith = SpecialPointsService.calculate_black_moon(jd)
-        return [
-            {'name': 'TrueNorthNode', 'longitude': north, 'type': 'transit_planet'},
-            {'name': 'TrueSouthNode', 'longitude': south, 'type': 'transit_planet'},
-            {'name': 'BlackMoon', 'longitude': lilith, 'type': 'transit_planet'},
+        special_longs = [
+            ('TrueNorthNode', north),
+            ('TrueSouthNode', south),
+            ('BlackMoon', lilith),
         ]
+        bodies: List[Dict] = []
+        for name, longitude in special_longs:
+            degree_in_sign = get_degree_in_sign(longitude)
+            bodies.append({
+                'name': name,
+                'longitude': longitude,
+                'sign': get_zodiac_sign(longitude),
+                'degree_in_sign': degree_in_sign,
+                'degree_in_sign_formatted': format_degree_minutes_seconds(degree_in_sign),
+                'retrograde': False,
+                'speed': 0.0,
+                'type': 'transit_planet',
+            })
+        return bodies
 
     def _calculate_transit_aspects(
         self,
@@ -302,7 +317,8 @@ class TransitService:
                 step_hours, transit_bodies, natal_bodies, aspect_types
             )
             if cached is not None:
-                return cached
+                if not self._cache_maybe_boundary_clipped(cached, start_date, end_date):
+                    return cached
 
         # 1. Загрузить натальные данные (без blacklist — allowlist сам фильтрует)
         natal_data = self._load_natal_data(user_id, apply_exclusions=False)
@@ -318,6 +334,8 @@ class TransitService:
         natal_objects = natal_data['all_objects']
         if natal_bodies:
             natal_objects = [o for o in natal_objects if o['name'] in natal_bodies]
+        natal_obj_by_name = {o['name']: o for o in natal_objects}
+        aspect_type_by_name = {a.aspect_type: a for a in all_aspect_types}
 
         # 4. Рассчитать JD границ периода
         _, jd_start = TimeService.process_birth_time(start_date, time(0, 0), timezone)
@@ -388,13 +406,61 @@ class TransitService:
             for key in completed_keys:
                 aspect_data = active_aspects.pop(key)
                 aspect_data['jd_leave'] = jd
+                if abs(aspect_data['jd_enter'] - jd_start) < 1e-9:
+                    aspect_data['jd_enter'] = self._find_aspect_boundary_jd(
+                        anchor_jd=jd_start,
+                        direction=-1,
+                        step_jd=step_jd,
+                        transit_body=aspect_data['transit_body'],
+                        natal_longitude=float(natal_obj_by_name[aspect_data['natal_body']]['longitude']),
+                        exact_angle=float(aspect_type_by_name[aspect_data['aspect_type']].exact_angle),
+                        max_orb=float(aspect_data['max_allowed_orb']),
+                    )
+                exact_jd, min_orb = self._find_aspect_exact_and_orb(
+                    jd_enter=aspect_data['jd_enter'],
+                    jd_leave=aspect_data['jd_leave'],
+                    step_jd=step_jd,
+                    transit_body=aspect_data['transit_body'],
+                    natal_longitude=float(natal_obj_by_name[aspect_data['natal_body']]['longitude']),
+                    exact_angle=float(aspect_type_by_name[aspect_data['aspect_type']].exact_angle),
+                )
+                aspect_data['jd_exact'] = exact_jd
+                aspect_data['min_orb'] = min_orb
                 events.append(self._format_transit_event(aspect_data, timezone))
 
             jd += step_jd
 
         # 6. Закрыть аспекты, которые ещё активны в конце периода
         for key, aspect_data in active_aspects.items():
-            aspect_data['jd_leave'] = jd_end
+            if abs(aspect_data['jd_enter'] - jd_start) < 1e-9:
+                aspect_data['jd_enter'] = self._find_aspect_boundary_jd(
+                    anchor_jd=jd_start,
+                    direction=-1,
+                    step_jd=step_jd,
+                    transit_body=aspect_data['transit_body'],
+                    natal_longitude=float(natal_obj_by_name[aspect_data['natal_body']]['longitude']),
+                    exact_angle=float(aspect_type_by_name[aspect_data['aspect_type']].exact_angle),
+                    max_orb=float(aspect_data['max_allowed_orb']),
+                )
+            aspect_data['jd_leave'] = self._find_aspect_boundary_jd(
+                anchor_jd=jd_end,
+                direction=1,
+                step_jd=step_jd,
+                transit_body=aspect_data['transit_body'],
+                natal_longitude=float(natal_obj_by_name[aspect_data['natal_body']]['longitude']),
+                exact_angle=float(aspect_type_by_name[aspect_data['aspect_type']].exact_angle),
+                max_orb=float(aspect_data['max_allowed_orb']),
+            )
+            exact_jd, min_orb = self._find_aspect_exact_and_orb(
+                jd_enter=aspect_data['jd_enter'],
+                jd_leave=aspect_data['jd_leave'],
+                step_jd=step_jd,
+                transit_body=aspect_data['transit_body'],
+                natal_longitude=float(natal_obj_by_name[aspect_data['natal_body']]['longitude']),
+                exact_angle=float(aspect_type_by_name[aspect_data['aspect_type']].exact_angle),
+            )
+            aspect_data['jd_exact'] = exact_jd
+            aspect_data['min_orb'] = min_orb
             events.append(self._format_transit_event(aspect_data, timezone))
 
         # 7. Отсортировать по t_enter
@@ -411,6 +477,203 @@ class TransitService:
                 logger.warning(f"Failed to cache transit events: {e}")
 
         return events
+
+    def _cache_maybe_boundary_clipped(
+        self,
+        cached_events: List[Dict],
+        start_date: date,
+        end_date: date,
+    ) -> bool:
+        """Проверка старого кэша: t_enter/t_leave могли быть обрезаны границами периода."""
+        start_iso = f"{start_date.isoformat()}T00:00:00Z"
+        end_iso = f"{end_date.isoformat()}T23:59:59Z"
+        for ev in cached_events or []:
+            if ev.get('t_enter') == start_iso or ev.get('t_leave') == end_iso:
+                return True
+        return False
+
+    def _find_aspect_boundary_jd(
+        self,
+        anchor_jd: float,
+        direction: int,
+        step_jd: float,
+        transit_body: str,
+        natal_longitude: float,
+        exact_angle: float,
+        max_orb: float,
+    ) -> float:
+        """
+        Найти реальную границу аспекта (вход/выход из орбиса) за пределами окна сканирования.
+        direction: -1 для поиска входа назад, +1 для поиска выхода вперёд.
+        """
+        if direction not in (-1, 1):
+            return anchor_jd
+
+        anchor_active = self._is_aspect_active_at_jd(
+            anchor_jd, transit_body, natal_longitude, exact_angle, max_orb
+        )
+        if not anchor_active:
+            return anchor_jd
+
+        max_steps = max(1, int(self._BOUNDARY_SEARCH_DAYS / max(step_jd, 1e-6)))
+        prev_jd = anchor_jd
+
+        for _ in range(max_steps):
+            probe_jd = prev_jd + direction * step_jd
+            probe_active = self._is_aspect_active_at_jd(
+                probe_jd, transit_body, natal_longitude, exact_angle, max_orb
+            )
+
+            if not probe_active:
+                if direction == -1:
+                    left, right = probe_jd, prev_jd  # inactive -> active
+                else:
+                    left, right = prev_jd, probe_jd  # active -> inactive
+                return self._binary_search_boundary_jd(
+                    left, right, direction, transit_body, natal_longitude, exact_angle, max_orb
+                )
+
+            prev_jd = probe_jd
+
+        return anchor_jd
+
+    def _binary_search_boundary_jd(
+        self,
+        left_jd: float,
+        right_jd: float,
+        direction: int,
+        transit_body: str,
+        natal_longitude: float,
+        exact_angle: float,
+        max_orb: float,
+    ) -> float:
+        """Уточнить границу аспекта бинарным поиском."""
+        left = left_jd
+        right = right_jd
+        for _ in range(24):
+            mid = (left + right) / 2.0
+            mid_active = self._is_aspect_active_at_jd(
+                mid, transit_body, natal_longitude, exact_angle, max_orb
+            )
+            if direction == -1:
+                # Ищем переход inactive -> active (вход)
+                if mid_active:
+                    right = mid
+                else:
+                    left = mid
+            else:
+                # Ищем переход active -> inactive (выход)
+                if mid_active:
+                    left = mid
+                else:
+                    right = mid
+        return (left + right) / 2.0
+
+    def _find_aspect_exact_and_orb(
+        self,
+        jd_enter: float,
+        jd_leave: float,
+        step_jd: float,
+        transit_body: str,
+        natal_longitude: float,
+        exact_angle: float,
+    ) -> Tuple[float, float]:
+        """Найти точный момент аспекта и минимальный орбис на полном интервале события."""
+        if jd_leave < jd_enter:
+            jd_enter, jd_leave = jd_leave, jd_enter
+        if abs(jd_leave - jd_enter) < 1e-9:
+            dev = self._aspect_deviation_at_jd(
+                jd_enter, transit_body, natal_longitude, exact_angle
+            )
+            return jd_enter, dev
+
+        sample_step = max(min(step_jd / 2.0, 1.0 / 12.0), 1.0 / 48.0)
+        best_jd = jd_enter
+        best_dev = float('inf')
+
+        jd = jd_enter
+        while jd <= jd_leave:
+            dev = self._aspect_deviation_at_jd(
+                jd, transit_body, natal_longitude, exact_angle
+            )
+            if dev < best_dev:
+                best_dev = dev
+                best_jd = jd
+            jd += sample_step
+
+        end_dev = self._aspect_deviation_at_jd(
+            jd_leave, transit_body, natal_longitude, exact_angle
+        )
+        if end_dev < best_dev:
+            best_dev = end_dev
+            best_jd = jd_leave
+
+        left = max(jd_enter, best_jd - sample_step)
+        right = min(jd_leave, best_jd + sample_step)
+        if right <= left:
+            return best_jd, best_dev
+
+        for _ in range(28):
+            m1 = left + (right - left) / 3.0
+            m2 = right - (right - left) / 3.0
+            d1 = self._aspect_deviation_at_jd(m1, transit_body, natal_longitude, exact_angle)
+            d2 = self._aspect_deviation_at_jd(m2, transit_body, natal_longitude, exact_angle)
+            if d1 <= d2:
+                right = m2
+            else:
+                left = m1
+
+        refined_jd = (left + right) / 2.0
+        refined_dev = self._aspect_deviation_at_jd(
+            refined_jd, transit_body, natal_longitude, exact_angle
+        )
+        if refined_dev < best_dev:
+            return refined_jd, refined_dev
+        return best_jd, best_dev
+
+    def _is_aspect_active_at_jd(
+        self,
+        jd: float,
+        transit_body: str,
+        natal_longitude: float,
+        exact_angle: float,
+        max_orb: float,
+    ) -> bool:
+        """Проверить, активен ли аспект для конкретной пары на момент JD."""
+        transit_longitude = self._get_transit_body_longitude(jd, transit_body)
+        if transit_longitude is None:
+            return False
+
+        diff = abs(transit_longitude - natal_longitude)
+        if diff > 180:
+            diff = 360 - diff
+        deviation = abs(diff - exact_angle)
+        return deviation <= max_orb
+
+    def _aspect_deviation_at_jd(
+        self,
+        jd: float,
+        transit_body: str,
+        natal_longitude: float,
+        exact_angle: float,
+    ) -> float:
+        """Отклонение аспекта (orb deviation) на момент JD."""
+        transit_longitude = self._get_transit_body_longitude(jd, transit_body)
+        if transit_longitude is None:
+            return float('inf')
+        diff = abs(transit_longitude - natal_longitude)
+        if diff > 180:
+            diff = 360 - diff
+        return abs(diff - exact_angle)
+
+    def _get_transit_body_longitude(self, jd: float, transit_body: str) -> Optional[float]:
+        """Получить долготу транзитного тела на момент JD."""
+        transit_planets = self.swisseph_engine.calculate_planets(jd)
+        transit_planets.extend(self._calculate_transit_special_bodies(jd))
+        for body in transit_planets:
+            if body['name'] == transit_body:
+                return float(body['longitude'])
+        return None
 
     def _format_transit_event(self, aspect_data: Dict, timezone: str) -> Dict:
         """Форматировать событие транзита для ответа API"""
@@ -519,4 +782,3 @@ class TransitService:
             f"Transit events cached: user={user_id}, "
             f"period={start_date}..{end_date}, events={len(events)}"
         )
-

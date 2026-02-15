@@ -15,6 +15,7 @@ class ChartWheel {
         this.houseRingWidth = 40;        // Кольцо домов
         this.planetRadius = 158;         // Радиус планет (на линии домов)
         this.aspectRadius = 145;         // Радиус аспектных линий (почти до кольца домов)
+        this.natalGlyphBaseSize = 18;    // Натальные точки +20% к базовому размеру
 
         // Цвета аспектов по типу
         this.aspectColors = {
@@ -47,19 +48,34 @@ class ChartWheel {
 
         // Фильтры аспектов
         this.aspectFilter = 'all'; // 'all', 'major', 'minor'
+
+        // Ориентация карты
+        // mode: 'aries' (по умолчанию) или 'asc'
+        // direction: 'clockwise' или 'counterclockwise'
+        this.orientationMode = 'asc';
+        this.orientationDirection = 'counterclockwise';
     }
 
     /**
      * Преобразование эклиптической долготы в угол на карте
-     * ASC слева (180°), долготы идут против часовой стрелки
+     * Базовая точка слева (180°)
      */
     longitudeToAngle(longitude) {
-        const ascendant = this.chartData.angles?.ASC?.longitude || 0;
-        let angle = 180 - (longitude - ascendant);
+        const reference = this.getOrientationReference();
+        let angle = this.orientationDirection === 'clockwise'
+            ? 180 + (longitude - reference)
+            : 180 - (longitude - reference);
         // Нормализация к диапазону 0-360°
         while (angle < 0) angle += 360;
         while (angle >= 360) angle -= 360;
         return angle;
+    }
+
+    getOrientationReference() {
+        if (this.orientationMode === 'asc') {
+            return this.chartData?.angles?.ASC?.longitude || 0;
+        }
+        return 0;
     }
 
     /**
@@ -152,8 +168,8 @@ class ChartWheel {
             'stroke-width': 1
         }));
 
-        // 12 секторов знаков (против часовой стрелки)
-        // ASC должен быть слева (180°), поэтому знаки вращаются относительно ASC
+        // 12 секторов знаков
+        // Левый горизонт (180°) — базовая точка, порядок зависит от ориентации
         for (let i = 0; i < 12; i++) {
             // Эклиптическая долгота знака (Овен 0-30°, Телец 30-60° и т.д.)
             const signStartLong = i * 30;
@@ -168,7 +184,6 @@ class ChartWheel {
             const color = this.elementColors[element] || '#6b7280';
 
             // Сектор с цветом стихии
-            // signEndAngle < signStartAngle (т.к. долготы растут против часовой)
             this.drawArc(signOuterR, signInnerR, signEndAngle, signStartAngle, color + '18', this.layers.signs);
 
             // Разделительная линия знаков (на границе signEndAngle)
@@ -209,7 +224,8 @@ class ChartWheel {
                 'text-anchor': 'middle',
                 'font-size': '13',
                 'font-weight': '500',
-                fill: color
+                fill: color,
+                class: 'sign-symbol-text'
             }, Symbols.signs[sign]));
         }
     }
@@ -233,17 +249,37 @@ class ChartWheel {
             // Используем единую функцию преобразования
             const angle = this.longitudeToAngle(house.longitude) * Math.PI / 180;
             const isAngular = [1, 4, 7, 10].includes(house.number);
+            const cuspGroup = this.createSvgElement('g', {
+                class: 'house-cusp-group',
+                'data-house': String(house.number),
+                'data-sign': house.sign || '',
+                'data-degree-in-sign': String(house.degree_in_sign ?? 0),
+                'data-longitude': String(house.longitude ?? 0),
+                style: 'cursor: pointer;'
+            });
 
             // Угловые дома — линия выходит к центру
             const lineInnerR = isAngular ? this.aspectRadius : houseInnerR;
 
-            this.layers.houses.appendChild(this.createSvgElement('line', {
+            // Увеличенная прозрачная зона захвата для hover
+            cuspGroup.appendChild(this.createSvgElement('line', {
+                x1: this.center + lineInnerR * Math.cos(angle),
+                y1: this.center + lineInnerR * Math.sin(angle),
+                x2: this.center + signInnerR * Math.cos(angle),
+                y2: this.center + signInnerR * Math.sin(angle),
+                stroke: 'transparent',
+                'stroke-width': 10,
+                class: 'house-cusp-hit'
+            }));
+
+            cuspGroup.appendChild(this.createSvgElement('line', {
                 x1: this.center + lineInnerR * Math.cos(angle),
                 y1: this.center + lineInnerR * Math.sin(angle),
                 x2: this.center + signInnerR * Math.cos(angle),
                 y2: this.center + signInnerR * Math.sin(angle),
                 stroke: isAngular ? '#6366f1' : '#c7d2db',
-                'stroke-width': isAngular ? 2.5 : 1
+                'stroke-width': isAngular ? 2.5 : 1,
+                class: 'house-cusp-line'
             }));
 
             // Номер дома в секторе (дома идут против часовой: 1→2→3→...→12)
@@ -257,14 +293,17 @@ class ChartWheel {
             const midAngle = this.longitudeToAngle(midLong) * Math.PI / 180;
             const textR = houseInnerR + this.houseRingWidth / 2;
 
-            this.layers.houses.appendChild(this.createSvgElement('text', {
+            cuspGroup.appendChild(this.createSvgElement('text', {
                 x: this.center + textR * Math.cos(midAngle),
                 y: this.center + textR * Math.sin(midAngle) + 4,
                 'text-anchor': 'middle',
                 'font-size': '10',
                 'font-weight': isAngular ? '700' : '400',
-                fill: isAngular ? '#6366f1' : '#9ca3af'
+                fill: isAngular ? '#6366f1' : '#9ca3af',
+                style: 'pointer-events: none;'
             }, house.number.toString()));
+
+            this.layers.houses.appendChild(cuspGroup);
         });
     }
 
@@ -368,6 +407,7 @@ class ChartWheel {
                         'text-anchor': 'middle',
                         'font-size': '8',
                         fill: color,
+                        class: 'aspect-symbol-text',
                         style: 'pointer-events: none;'
                     }, glyph));
                 }
@@ -388,6 +428,8 @@ class ChartWheel {
             const y = this.center + r * Math.sin(angle);
             const element = Symbols.signElements[planet.sign];
             const color = this.elementColors[element] || '#374151';
+            const glyphScale = Symbols.planetGlyphScale?.[planet.name] || 1;
+            const glyphSize = this.natalGlyphBaseSize * glyphScale;
 
             // Группа для интерактивности
             const group = this.createSvgElement('g', {
@@ -420,9 +462,9 @@ class ChartWheel {
 
             // Символ планеты (увеличен размер)
             group.appendChild(this.createSvgElement('text', {
-                x: x, y: y + 5,
+                x: x, y: y + glyphSize * 0.33,
                 'text-anchor': 'middle',
-                'font-size': '15',
+                'font-size': glyphSize.toFixed(2),
                 'font-weight': '600',
                 fill: color,
                 class: 'planet-symbol-text',
@@ -448,7 +490,7 @@ class ChartWheel {
      * Anti-collision: радиальные и угловые смещения для тесных соединений
      */
     calculatePlanetPositionsEnhanced(planets) {
-        const minAngularGap = 8;  // Минимальный угол между глифами
+        const minAngularGap = 9.6;  // Увеличен под глифы +20%
         const radialStep = 12;     // Шаг радиального смещения
 
         const sorted = planets
@@ -590,20 +632,47 @@ class ChartWheel {
     }
 
     /**
+     * Установить ориентацию карты и перерисовать
+     * @param {string} mode - 'aries' | 'asc'
+     */
+    setOrientationMode(mode, options = {}) {
+        const { redraw = true } = options;
+        this.orientationMode = mode === 'asc' ? 'asc' : 'aries';
+        // Движение от левой точки (9 часов) выполняем против часовой стрелки.
+        this.orientationDirection = 'counterclockwise';
+        if (redraw && this.chartData) {
+            this.draw(this.chartData);
+        }
+    }
+
+    /**
      * Привязка интерактивных событий
      */
     bindEvents() {
         // Hover на планетах — подсветка аспектов
+        const useLocalPlanetTooltip = !this.svg.closest('#view-chart');
         this.svg.querySelectorAll('.planet-group').forEach(group => {
             group.addEventListener('mouseenter', (e) => this.onPlanetHover(e, true));
             group.addEventListener('mouseleave', (e) => this.onPlanetHover(e, false));
             group.addEventListener('click', (e) => this.onPlanetClick(e));
+            if (useLocalPlanetTooltip) {
+                group.addEventListener('mouseenter', (e) => this.onPlanetTooltipHover(e, true));
+                group.addEventListener('mousemove', (e) => this.onPlanetTooltipHover(e, true));
+                group.addEventListener('mouseleave', (e) => this.onPlanetTooltipHover(e, false));
+            }
         });
 
         // Hover на аспектах
         this.svg.querySelectorAll('.aspect-line').forEach(line => {
             line.addEventListener('mouseenter', (e) => this.onAspectHover(e, true));
             line.addEventListener('mouseleave', (e) => this.onAspectHover(e, false));
+        });
+
+        // Hover на куспидах домов
+        this.svg.querySelectorAll('.house-cusp-group').forEach(group => {
+            group.addEventListener('mouseenter', (e) => this.onHouseCuspHover(e, true));
+            group.addEventListener('mousemove', (e) => this.onHouseCuspHover(e, true));
+            group.addEventListener('mouseleave', (e) => this.onHouseCuspHover(e, false));
         });
     }
 
@@ -637,25 +706,16 @@ class ChartWheel {
         const planet = this.chartData.planets.find(p => p.name === planetName);
         if (!planet) return;
 
-        // Показываем тултип с данными
-        const tooltip = document.getElementById('tooltip');
-        if (tooltip) {
-            const degFormatted = this.formatDMS(planet.degree_in_sign);
-            tooltip.innerHTML = `
-                <strong>${Symbols.planets[planetName]} ${Symbols.planetNamesRu[planetName]}</strong><br>
-                ${Symbols.signs[planet.sign]} ${Symbols.signNamesRu[planet.sign]} ${degFormatted}<br>
-                Дом: ${planet.house}${planet.retrograde ? ' <span style="color:#dc2626">Rx</span>' : ''}
-            `;
-
-            // Позиция тултипа
-            const rect = this.svg.getBoundingClientRect();
-            tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
-            tooltip.style.top = (e.clientY - rect.top - 10) + 'px';
-            tooltip.style.display = 'block';
-
-            // Скрываем через 3 сек
-            setTimeout(() => { tooltip.style.display = 'none'; }, 3000);
-        }
+        const nameRu = Symbols.planetNamesRu[planetName] || planetName;
+        const symbol = Symbols.planets[planetName] || '';
+        const signRu = Symbols.signNamesRu[planet.sign] || planet.sign || '—';
+        const signSymbol = Symbols.signs[planet.sign] || '';
+        const degFormatted = this.formatDMS(planet.degree_in_sign ?? 0);
+        this.showTooltip(`
+            <strong><span class="astro-symbol">${symbol}</span> ${nameRu}</strong><br>
+            <span class="astro-symbol">${signSymbol}</span> ${signRu} ${degFormatted}<br>
+            Дом: ${planet.house ?? '—'}${planet.retrograde ? ' <span style="color:#dc2626">Rx</span>' : ''}
+        `, e);
     }
 
     onAspectHover(e, isEnter) {
@@ -683,6 +743,120 @@ class ChartWheel {
         e.currentTarget.style.strokeWidth = isEnter ? '3' : '';
     }
 
+    onPlanetTooltipHover(e, isEnter) {
+        if (!isEnter) {
+            this.hideTooltip();
+            return;
+        }
+        const planetName = e.currentTarget.dataset.planet;
+        const planet = this.chartData?.planets?.find(p => p.name === planetName);
+        if (!planet) return;
+
+        const nameRu = Symbols.planetNamesRu[planetName] || planetName;
+        const symbol = Symbols.planets[planetName] || '';
+        const signRu = Symbols.signNamesRu[planet.sign] || planet.sign || '—';
+        const signSymbol = Symbols.signs[planet.sign] || '';
+        const degFormatted = this.formatDMS(planet.degree_in_sign ?? 0);
+
+        this.showTooltip(`
+            <strong><span class="astro-symbol">${symbol}</span> ${nameRu}</strong><br>
+            <span class="astro-symbol">${signSymbol}</span> ${signRu} ${degFormatted}<br>
+            Дом: ${planet.house ?? '—'}${planet.retrograde ? ' <span style="color:#dc2626">Rx</span>' : ''}
+        `, e);
+    }
+
+    onHouseCuspHover(e, isEnter) {
+        const group = e.currentTarget;
+        const line = group.querySelector('.house-cusp-line');
+        const houseNumber = Number(group.dataset.house || 0);
+
+        if (!isEnter) {
+            if (line) {
+                line.style.strokeWidth = '';
+                line.style.opacity = '';
+            }
+            const row = document.getElementById(`row-house-${houseNumber}`);
+            if (row) row.classList.remove('active-row');
+            this.hideTooltip();
+            return;
+        }
+
+        if (line) {
+            line.style.strokeWidth = [1, 4, 7, 10].includes(houseNumber) ? '3.2' : '2.2';
+            line.style.opacity = '1';
+        }
+
+        const row = document.getElementById(`row-house-${houseNumber}`);
+        if (row) row.classList.add('active-row');
+
+        const sign = group.dataset.sign || '';
+        const signRu = Symbols.signNamesRu[sign] || sign || '—';
+        const signSymbol = Symbols.signs[sign] || '';
+        const degreeInSign = Number(group.dataset.degreeInSign || 0);
+        const longitude = Number(group.dataset.longitude || 0);
+        const degFormatted = this.formatDMS(degreeInSign);
+        const lonFormatted = this.formatDMS(longitude);
+
+        this.showTooltip(`
+            <strong>Куспид дома ${houseNumber}</strong><br>
+            <span class="astro-symbol">${signSymbol}</span> ${signRu} ${degFormatted}<br>
+            Долгота: ${lonFormatted}
+        `, e);
+    }
+
+    ensureTooltip() {
+        if (this.tooltipEl && this.tooltipEl.isConnected) return this.tooltipEl;
+
+        const host = this.svg.closest('.chart-center, .solar-wheel-wrapper, .biwheel-svg-wrapper')
+            || this.svg.parentElement
+            || document.body;
+        if (host instanceof HTMLElement && getComputedStyle(host).position === 'static') {
+            host.style.position = 'relative';
+        }
+
+        this.tooltipEl = host.querySelector('.chart-tooltip');
+        if (!this.tooltipEl) {
+            this.tooltipEl = document.createElement('div');
+            this.tooltipEl.className = 'chart-tooltip';
+            host.appendChild(this.tooltipEl);
+        }
+
+        return this.tooltipEl;
+    }
+
+    showTooltip(html, event) {
+        const tooltip = this.ensureTooltip();
+        if (!tooltip || !event) return;
+        tooltip.innerHTML = html;
+        tooltip.style.display = 'block';
+        this.moveTooltip(event);
+    }
+
+    moveTooltip(event) {
+        const tooltip = this.ensureTooltip();
+        if (!tooltip || !event) return;
+
+        const host = tooltip.parentElement;
+        if (!host) return;
+
+        const rect = host.getBoundingClientRect();
+        let x = event.clientX - rect.left + 14;
+        let y = event.clientY - rect.top + 6;
+
+        const maxX = rect.width - tooltip.offsetWidth - 8;
+        const maxY = rect.height - tooltip.offsetHeight - 8;
+        x = Math.max(8, Math.min(x, Math.max(8, maxX)));
+        y = Math.max(8, Math.min(y, Math.max(8, maxY)));
+
+        tooltip.style.left = `${x}px`;
+        tooltip.style.top = `${y}px`;
+    }
+
+    hideTooltip() {
+        const tooltip = this.ensureTooltip();
+        if (tooltip) tooltip.style.display = 'none';
+    }
+
     formatDMS(deg) {
         const d = Math.floor(deg);
         const mFull = (deg - d) * 60;
@@ -693,4 +867,3 @@ class ChartWheel {
 }
 
 window.ChartWheel = ChartWheel;
-

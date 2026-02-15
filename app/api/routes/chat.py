@@ -57,6 +57,7 @@ class PrognosticToolRequest(BaseModel):
     user_id: str
     tool_name: str
     arguments: Dict[str, Any] = {}
+    frontend_context: Optional[Dict[str, Any]] = None
 
 
 # ============================================================================
@@ -292,7 +293,11 @@ async def execute_prognostic_tool(
                 detail=f"Некорректный формат user_id: {request.user_id}"
             )
 
-        service = PrognosticToolsService(user_id=user_uuid, db_session=db)
+        service = PrognosticToolsService(
+            user_id=user_uuid,
+            db_session=db,
+            frontend_context=request.frontend_context,
+        )
         result_json = service.dispatch(request.tool_name, request.arguments)
 
         import json as _json

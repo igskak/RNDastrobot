@@ -2,6 +2,18 @@
    AstroBot — Светлая минималистичная тема
    ============================================ */
 
+@font-face {
+    font-family: 'Noto Sans Symbols Local';
+    src: url('../fonts/NotoSansSymbols.ttf') format('truetype');
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Noto Sans Symbols 2 Local';
+    src: url('../fonts/NotoSansSymbols2.ttf') format('truetype');
+    font-display: swap;
+}
+
 :root {
     --bg-primary: #fafafa;
     --bg-secondary: #ffffff;
@@ -24,6 +36,7 @@
     --radius-md: 12px;
     --radius-lg: 16px;
     --transition: 0.2s ease;
+    --font-symbol: 'Noto Sans Symbols Local', 'Noto Sans Symbols 2 Local', 'Segoe UI Symbol', 'Apple Symbols', sans-serif;
 }
 
 * {
@@ -38,6 +51,18 @@ body {
     color: var(--text-primary);
     line-height: 1.6;
     min-height: 100vh;
+}
+
+.astro-symbol,
+.planet-symbol,
+.planet-symbol-text,
+.sign-symbol-text,
+.aspect-symbol-text,
+.symbol-cell,
+.planet-icon {
+    font-family: var(--font-symbol);
+    font-variant-ligatures: none;
+    text-rendering: geometricPrecision;
 }
 
 /* ============ LAYOUT ============ */
@@ -1108,4 +1133,3 @@ input[type="number"] {
         min-width: auto;
     }
 }
-

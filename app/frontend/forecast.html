@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Прогностика — AstroBot</title>
-    <link rel="stylesheet" href="css/styles.css?v=2">
-    <link rel="stylesheet" href="css/forecast.css?v=9">
+    <link rel="stylesheet" href="css/styles.css?v=3">
+    <link rel="stylesheet" href="css/forecast.css?v=21">
     <link rel="stylesheet" href="css/chat.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -43,10 +43,16 @@
                 <h3>📊 Timeline (Ганнт)</h3>
                 <p>Каждая строка — уникальный аспект (напр. «♄ △ ☉»). Если аспект повторяется за период — на одной строке несколько баров. Яркость бара нарастает к моменту точного аспекта (●). Красная пунктирная линия — <b>сегодня</b>.</p>
                 <p>Строки отсортированы: медленные планеты (Плутон → Нептун → …) вверху, быстрые (Луна) внизу.</p>
-                <p>Над таймлайном — <b>сводка активных транзитов</b> на текущую дату.</p>
-                <p><b>Наведение</b> на бар → тултип с датами входа/точного/выхода и числом вхождений.</p>
+                <p><b>Наведение</b> на бар → тултип с датами входа/точного/выхода, орбом и числом вхождений. Для дат вне выбранного периода ставится пометка <b>«вне диапазона»</b>. Если вхождений несколько, показывается список всех повторов (#1, #2, ...).</p>
                 <p><b>Клик по бару</b> → автопереход на Biwheel на дату точного аспекта.</p>
-                <p><b>Фильтры:</b> Мажорные/минорные, без Луны, группы планет (Медленные, Быстрые, Узлы/Точки).</p>
+                <p><b>Фильтры:</b> мажорные/минорные и группы планет. <b>Медленные</b> фильтруют по транзитной планете, <b>Быстрые</b> и <b>Узлы/Точки</b> — по натальной цели аспекта.</p>
+            </div>
+
+            <div class="help-section">
+                <h3>⚡ Активные транзиты сейчас</h3>
+                <p>Этот блок показывает только те аспекты, которые <b>идут прямо сейчас</b>: текущий момент попадает между входом в орбис и выходом из орбиса (<b>t_enter ≤ сейчас ≤ t_leave</b>).</p>
+                <p>Значок на карточке: <b>точный через Nд</b> — пик ещё впереди, <b>сегодня!</b> — точный аспект сегодня, <b>точный Nд назад</b> — пик уже прошёл, но аспект всё ещё действует в орбисе.</p>
+                <p>Важно: это не список «самых сильных» и не прогноз на весь период, а <b>моментальный срез активных влияний</b> на текущую дату/время.</p>
             </div>
 
             <div class="help-section">
@@ -116,15 +122,31 @@
             <input type="date" id="singleDate">
             <button class="preset-btn today-btn" id="btnToday">Сегодня</button>
         </div>
+        <div class="control-group" id="transitScaleGroup" style="display:none">
+            <button class="bw-time-nav-btn" id="btnScalePrev" title="Назад на шаг">←</button>
+            <button class="bw-time-nav-btn" id="btnScalePlay" title="Автопрокрутка">▶</button>
+            <button class="bw-time-nav-btn" id="btnScaleNext" title="Вперед на шаг">→</button>
+            <label for="biwheelStepSelect">Шаг:</label>
+            <select id="biwheelStepSelect">
+                <option value="day">День</option>
+                <option value="week">Неделя</option>
+                <option value="month">Месяц</option>
+            </select>
+        </div>
         <div class="control-group" id="solarYearGroup" style="display:none">
             <label>Год:</label>
             <input type="number" id="solarYear" min="1900" max="2100" style="width:80px">
         </div>
+        <div class="control-group" id="solarOrientationGroup" style="display:none">
+            <label>Ориентация:</label>
+            <select id="solarOrientationSelect">
+                <option value="aries" selected>От Овна</option>
+                <option value="asc">От Асцендента</option>
+            </select>
+        </div>
         <div class="control-group" id="solarLocationGroup" style="display:none">
-            <label class="checkbox-label">
-                <input type="checkbox" id="solarUseCurrentLocation"> На текущее место
-            </label>
-            <div id="solarLocationFields" style="display:none; margin-left:10px;">
+            <label>Место:</label>
+            <div id="solarLocationFields" style="display:inline-flex; margin-left:10px;">
                 <div class="solar-place-wrapper">
                     <input type="text" id="solarLocationName" placeholder="Введите город..." autocomplete="off">
                     <div id="solarPlaceSuggestions" class="place-suggestions"></div>
@@ -161,11 +183,6 @@
                 <div class="active-events-summary" id="activeEventsSummary"></div>
                 <div class="timeline-filters">
                     <label class="tl-filter"><input type="checkbox" id="filterMajor" checked> Мажорные</label>
-                    <label class="tl-filter"><input type="checkbox" id="filterNoMoon" checked> Без Луны</label>
-                    <div class="tl-separator"></div>
-                    <button class="tl-filter-btn active" data-planet-group="slow" title="Плутон, Нептун, Уран, Хирон, Сатурн, Юпитер">Медленные</button>
-                    <button class="tl-filter-btn active" data-planet-group="fast" title="Марс, Венера, Меркурий, Солнце">Быстрые</button>
-                    <button class="tl-filter-btn active" data-planet-group="nodes" title="Сев. и Юж. узлы, Лилит, Прозерпина">Узлы/Точки</button>
                     <span class="tl-event-count" id="tlEventCount"></span>
                 </div>
                 <div class="timeline-canvas-wrapper">
@@ -186,13 +203,73 @@
                 <div>Загрузка...</div>
             </div>
             <div class="biwheel-container" id="biwheelContainer" style="display:none">
+                <div class="biwheel-time-controls" id="biwheelTimeControls" style="display:none">
+                    <input type="range" id="biwheelTimeSlider" min="0" max="0" value="0" step="1">
+                    <span class="bw-time-current" id="biwheelScaleCurrent">—</span>
+                    <span class="bw-time-range" id="biwheelScaleRange"></span>
+                </div>
+                <div class="bw-time-ticks" id="biwheelScaleTicks" style="display:none"></div>
                 <div class="biwheel-main">
-                    <div class="biwheel-svg-wrapper" id="biwheelSvgWrapper">
-                        <svg id="biwheelSvg" viewBox="0 0 600 600"></svg>
-                        <div class="biwheel-zoom-controls">
-                            <button class="bw-zoom-btn" id="bwZoomIn" title="Приблизить">+</button>
-                            <button class="bw-zoom-btn" id="bwZoomReset" title="Сбросить">⟳</button>
-                            <button class="bw-zoom-btn" id="bwZoomOut" title="Отдалить">−</button>
+                    <div class="biwheel-leftbar">
+                        <div class="biwheel-ingresses-list" id="biwheelIngresses"></div>
+                    </div>
+                    <div class="biwheel-chart-area">
+                        <div class="biwheel-svg-wrapper" id="biwheelSvgWrapper">
+                            <svg id="biwheelSvg" viewBox="0 0 600 600"></svg>
+                            <div class="bw-settings-panel hidden" id="bwSettingsPanel">
+                                <div class="bw-settings-dialog">
+                                    <button class="bw-settings-close" id="bwSettingsClose" title="Закрыть">✕</button>
+                                    <div class="bw-settings-title">Ориентация карты</div>
+                                    <select id="biwheelOrientationSelect" class="bw-settings-select">
+                                        <option value="aries" selected>От Овна</option>
+                                        <option value="asc">От Асцендента</option>
+                                    </select>
+                                    <div class="bw-settings-title">Размер натальных точек</div>
+                                    <div class="bw-size-control">
+                                        <input type="range" id="bwNatalScaleRange" min="80" max="170" step="5" value="120">
+                                        <span id="bwNatalScaleValue">120%</span>
+                                    </div>
+                                    <div class="bw-settings-title">Размер транзитных точек</div>
+                                    <div class="bw-size-control">
+                                        <input type="range" id="bwTransitScaleRange" min="80" max="170" step="5" value="100">
+                                        <span id="bwTransitScaleValue">100%</span>
+                                    </div>
+                                    <div class="bw-settings-title">Показывать аспекты с:</div>
+                                    <div class="bw-settings-row">
+                                        <button class="bw-settings-action" id="bwResetFiltersModal">Сбросить</button>
+                                        <button class="bw-settings-action" id="bwMajorOnlyModal">Мажорные</button>
+                                        <button class="bw-settings-action" id="bwMinorOnlyModal">Минорные</button>
+                                    </div>
+                                    <div class="bw-planet-groups">
+                                        <div class="bw-planet-group-block">
+                                            <div class="bw-settings-subtitle">Транзитные</div>
+                                            <div class="bw-planet-toggles" id="bwTransitTogglesModal"></div>
+                                        </div>
+                                        <div class="bw-planet-group-block">
+                                            <div class="bw-settings-subtitle">Натальные</div>
+                                            <div class="bw-planet-toggles" id="bwNatalTogglesModal"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="biwheel-zoom-controls">
+                                <button class="bw-zoom-btn" id="bwZoomIn" title="Приблизить">+</button>
+                                <button class="bw-zoom-btn" id="bwZoomOut" title="Отдалить">−</button>
+                                <button class="bw-zoom-btn" id="bwZoomReset" title="Сбросить">⟳</button>
+                                <button class="bw-zoom-btn bw-settings-btn" id="bwSettingsBtn" title="Настройки">⚙</button>
+                            </div>
+                        </div>
+                        <div class="biwheel-aspect-bar" id="bwAspectFilters">
+                            <div class="bw-layer-legend" id="bwLayerLegend">
+                                <span class="bw-legend-item"><span class="bw-legend-mark bw-legend-natal"></span>Натал</span>
+                                <span class="bw-legend-item"><span class="bw-legend-mark bw-legend-transit"></span>Транзиты</span>
+                                <span class="bw-legend-item"><span class="bw-legend-mark bw-legend-progression"></span>Прогрессии</span>
+                                <span class="bw-legend-item"><span class="bw-legend-mark bw-legend-direction"></span>Дирекции</span>
+                            </div>
+                            <button class="bw-filter-btn" data-filter="all" id="bwFilterAll">Все</button>
+                            <button class="bw-filter-btn active" data-filter="major" id="bwFilterMajor">Мажорные</button>
+                            <button class="bw-filter-btn" data-filter="minor" id="bwFilterMinor">Минорные</button>
+                            <button class="bw-filter-btn" id="bwClearFocusBtn">Сброс фокуса</button>
                         </div>
                     </div>
                     <div class="biwheel-sidebar">
@@ -209,6 +286,35 @@
                 <div>Данные появятся после расчёта</div>
             </div>
             <div class="forecast-table-container" id="tableContainer" style="display:none">
+                <div class="table-filters-toolbar">
+                    <button type="button" class="table-filters-toggle" id="tableFiltersToggle" aria-expanded="false">
+                        Фильтры
+                    </button>
+                    <span class="table-filters-count" id="tableFiltersCount" style="display:none">0</span>
+                </div>
+                <div class="table-filters table-filters-collapsed" id="tableFilters">
+                    <label>События</label>
+                    <select id="tableFilterKind">
+                        <option value="all">Все</option>
+                        <option value="aspect">Только аспекты</option>
+                        <option value="ingress">Только ингрессии</option>
+                    </select>
+                    <label>Тип</label>
+                    <select id="tableFilterStrength">
+                        <option value="all">Все</option>
+                        <option value="major">Мажорные</option>
+                        <option value="minor">Минорные</option>
+                    </select>
+                    <label>Аспект</label>
+                    <select id="tableFilterAspect">
+                        <option value="all">Все</option>
+                    </select>
+                    <label>Макс. орб</label>
+                    <input id="tableFilterMaxOrb" type="number" min="0" step="0.1" placeholder="без лимита">
+                    <label>Поиск</label>
+                    <input id="tableFilterSearch" type="text" placeholder="планета, знак, дом...">
+                    <button type="button" class="preset-btn" id="tableFilterReset">Сброс</button>
+                </div>
                 <table class="forecast-table">
                     <thead>
                         <tr>
@@ -223,6 +329,21 @@
                     </thead>
                     <tbody id="tableBody"></tbody>
                 </table>
+                <div class="ingress-section" id="ingressSection" style="display:none">
+                    <div class="ingress-section-title">Ингрессии</div>
+                    <table class="forecast-table ingress-table">
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Метод</th>
+                                <th>Объект</th>
+                                <th>Тип ингрессии</th>
+                                <th>Переход</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ingressTableBody"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -238,12 +359,19 @@
             </div>
             <div class="solar-container" id="solarContainer" style="display:none">
                 <div class="solar-info-bar" id="solarInfoBar"></div>
-                <div class="solar-chart-section">
-                    <div class="solar-wheel-wrapper">
-                        <svg id="solarWheel" viewBox="0 0 500 500"></svg>
+                <div class="solar-main-row">
+                    <div class="solar-chart-section">
+                        <div class="solar-wheel-wrapper" id="solarWheelWrapper">
+                            <svg id="solarWheel" viewBox="0 0 500 500"></svg>
+                            <div class="biwheel-zoom-controls">
+                                <button class="bw-zoom-btn" id="solarZoomIn" title="Приблизить">+</button>
+                                <button class="bw-zoom-btn" id="solarZoomOut" title="Отдалить">−</button>
+                                <button class="bw-zoom-btn" id="solarZoomReset" title="Сбросить">⟳</button>
+                            </div>
+                        </div>
                     </div>
+                    <div class="solar-data-section" id="solarDataSection"></div>
                 </div>
-                <div class="solar-data-section" id="solarDataSection"></div>
             </div>
         </div>
     </div>
@@ -270,12 +398,11 @@
 
     <!-- Scripts -->
     <script src="js/api.js"></script>
-    <script src="js/symbols.js"></script>
+    <script src="js/symbols.js?v=3"></script>
     <script src="js/chart-wheel.js"></script>
-    <script src="js/forecast-timeline.js?v=5"></script>
-    <script src="js/forecast-biwheel.js?v=6"></script>
-    <script src="js/forecast.js?v=3"></script>
+    <script src="js/forecast-timeline.js?v=6"></script>
+    <script src="js/forecast-biwheel.js?v=17"></script>
+    <script src="js/forecast.js?v=13"></script>
     <script src="js/chatkit-init.js"></script>
 </body>
 </html>
-

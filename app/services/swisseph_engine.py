@@ -210,6 +210,15 @@ class SwissEphemerisEngine:
         Returns:
             Номер дома (1-12)
         """
+        # Защита от неполных/отсутствующих данных домов в БД:
+        # не роняем прогнозные эндпоинты, возвращаем fallback-дом.
+        if not houses or len(houses) < 12:
+            logger.warning(
+                "get_planet_house fallback: invalid houses data (len={})",
+                len(houses) if houses is not None else 0
+            )
+            return 1
+
         # Проходим по всем домам и проверяем, находится ли планета между
         # куспидом текущего дома и куспидом следующего дома
         for i in range(12):
@@ -232,4 +241,3 @@ class SwissEphemerisEngine:
 
         # Если не нашли (не должно происходить), возвращаем 1 дом
         return 1
-

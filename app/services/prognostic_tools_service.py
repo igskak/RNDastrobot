@@ -121,9 +121,15 @@ PROGNOSTIC_TOOLS: List[Dict[str, Any]] = [
 class PrognosticToolsService:
     """Сервис для выполнения tool-вызовов от AI агента."""
 
-    def __init__(self, user_id: UUID, db_session: Session):
+    def __init__(
+        self,
+        user_id: UUID,
+        db_session: Session,
+        frontend_context: Optional[Dict[str, Any]] = None,
+    ):
         self.user_id = user_id
         self.db = db_session
+        self.frontend_context = frontend_context or {}
         self._user: Optional[User] = None
 
     @property
@@ -163,8 +169,43 @@ class PrognosticToolsService:
 
     def _handle_transit_events(self, args: Dict[str, Any]) -> Dict:
         """Транзитные события за период."""
-        start = date.fromisoformat(args["start_date"])
-        end = date.fromisoformat(args["end_date"])
+        start_str = args.get("start_date")
+        end_str = args.get("end_date")
+
+        transits_ctx = self._get_calculated_ctx("transits")
+        ctx_start_str = transits_ctx.get("period_start")
+        ctx_end_str = transits_ctx.get("period_end")
+        cached_events = transits_ctx.get("events") if isinstance(transits_ctx.get("events"), list) else None
+
+        if not start_str and ctx_start_str:
+            start_str = ctx_start_str
+        if not end_str and ctx_end_str:
+            end_str = ctx_end_str
+
+        if not start_str or not end_str:
+            raise ValueError("Нужны start_date и end_date (YYYY-MM-DD) или предварительный расчет периода на странице прогностики")
+
+        start = date.fromisoformat(start_str)
+        end = date.fromisoformat(end_str)
+        if end < start:
+            raise ValueError("end_date не может быть раньше start_date")
+
+        if (
+            cached_events is not None
+            and ctx_start_str
+            and ctx_end_str
+            and start_str >= ctx_start_str
+            and end_str <= ctx_end_str
+        ):
+            filtered = self._filter_transit_events_by_period(cached_events, start_str, end_str)
+            return {
+                "method": "transits",
+                "source": "frontend_context",
+                "period": f"{start.isoformat()} — {end.isoformat()}",
+                "total_events": len(filtered),
+                "events": self._summarize_transit_events(filtered),
+            }
+
         tz = self.user.timezone or "UTC"
 
         svc = TransitService(db_session=self.db, ephe_path=EPHE_PATH)
@@ -173,6 +214,7 @@ class PrognosticToolsService:
         )
         return {
             "method": "transits",
+            "source": "backend_calculation",
             "period": f"{start.isoformat()} — {end.isoformat()}",
             "total_events": len(events),
             "events": self._summarize_transit_events(events),
@@ -200,7 +242,29 @@ class PrognosticToolsService:
 
     def _handle_progressions(self, args: Dict[str, Any]) -> Dict:
         """Вторичные прогрессии."""
-        target = date.fromisoformat(args["target_date"]) if args.get("target_date") else date.today()
+        target = date.fromisoformat(args["target_date"]) if args.get("target_date") else None
+        progressions_ctx = self._get_calculated_ctx("progressions")
+        ctx_target_str = progressions_ctx.get("target_date")
+        ctx_data = progressions_ctx.get("data") if isinstance(progressions_ctx.get("data"), dict) else None
+
+        if target is None and ctx_target_str:
+            target = date.fromisoformat(ctx_target_str)
+        if target is None:
+            target = date.today()
+
+        if ctx_data and ctx_target_str == target.isoformat():
+            aspects = ctx_data.get("aspects_to_natal", [])
+            return {
+                "method": "progressions",
+                "source": "frontend_context",
+                "target_date": target.isoformat(),
+                "age_years": ctx_data.get("progression_info", {}).get("age_years"),
+                "total_aspects": len(aspects),
+                "aspects": self._format_aspects_for_ai(aspects),
+                "progressed_planets_summary": self._summarize_progressed_planets(
+                    ctx_data.get("progressed_planets", [])
+                ),
+            }
 
         svc = ProgressionService(db_session=self.db, ephe_path=EPHE_PATH)
         result = svc.calculate_progression(user_id=self.user_id, target_date=target)
@@ -208,6 +272,7 @@ class PrognosticToolsService:
         aspects = result.get("aspects_to_natal", [])
         return {
             "method": "progressions",
+            "source": "backend_calculation",
             "target_date": target.isoformat(),
             "age_years": result.get("progression_info", {}).get("age_years"),
             "total_aspects": len(aspects),
@@ -219,8 +284,31 @@ class PrognosticToolsService:
 
     def _handle_directions(self, args: Dict[str, Any]) -> Dict:
         """Дирекции солнечной дуги."""
-        target = date.fromisoformat(args["target_date"]) if args.get("target_date") else date.today()
+        target = date.fromisoformat(args["target_date"]) if args.get("target_date") else None
         direction_type = args.get("direction_type", "solar_arc")
+        directions_ctx = self._get_calculated_ctx("directions")
+        ctx_target_str = directions_ctx.get("target_date")
+        ctx_direction_type = directions_ctx.get("direction_type")
+        ctx_data = directions_ctx.get("data") if isinstance(directions_ctx.get("data"), dict) else None
+
+        if target is None and ctx_target_str:
+            target = date.fromisoformat(ctx_target_str)
+        if target is None:
+            target = date.today()
+
+        if ctx_data and ctx_target_str == target.isoformat() and ctx_direction_type == direction_type:
+            aspects = ctx_data.get("aspects_to_natal", [])
+            info = ctx_data.get("direction_info", {})
+            return {
+                "method": "directions",
+                "source": "frontend_context",
+                "target_date": target.isoformat(),
+                "direction_type": direction_type,
+                "arc_degrees": info.get("arc_degrees"),
+                "arc_formatted": info.get("arc_formatted"),
+                "total_aspects": len(aspects),
+                "aspects": self._format_aspects_for_ai(aspects),
+            }
 
         svc = DirectionService(db_session=self.db, ephe_path=EPHE_PATH)
         result = svc.calculate_direction(
@@ -231,6 +319,7 @@ class PrognosticToolsService:
         info = result.get("direction_info", {})
         return {
             "method": "directions",
+            "source": "backend_calculation",
             "target_date": target.isoformat(),
             "direction_type": direction_type,
             "arc_degrees": info.get("arc_degrees"),
@@ -241,7 +330,28 @@ class PrognosticToolsService:
 
     def _handle_solar_return(self, args: Dict[str, Any]) -> Dict:
         """Солярная карта (годовой прогноз)."""
-        year = args.get("year", date.today().year)
+        year = args.get("year")
+        solar_ctx = self._get_calculated_ctx("solar_return")
+        ctx_year = solar_ctx.get("year")
+        ctx_data = solar_ctx.get("data") if isinstance(solar_ctx.get("data"), dict) else None
+
+        if year is None and isinstance(ctx_year, int):
+            year = ctx_year
+        if year is None:
+            year = date.today().year
+
+        if ctx_data and ctx_year == year:
+            planets = ctx_data.get("planets", [])
+            return {
+                "method": "solar_return",
+                "source": "frontend_context",
+                "year": year,
+                "solar_datetime": ctx_data.get("solar_info", {}).get("solar_datetime_local"),
+                "planets_summary": self._summarize_solar_planets(planets),
+                "houses": ctx_data.get("houses", []),
+                "angles": ctx_data.get("angles", {}),
+            }
+
         user = self.user
 
         # Координаты места рождения для соляра (по умолчанию)
@@ -258,6 +368,7 @@ class PrognosticToolsService:
         planets = result.get("planets", [])
         return {
             "method": "solar_return",
+            "source": "backend_calculation",
             "year": year,
             "solar_datetime": result.get("solar_info", {}).get("solar_datetime_local"),
             "planets_summary": self._summarize_solar_planets(planets),
@@ -266,8 +377,45 @@ class PrognosticToolsService:
         }
 
     # ------------------------------------------------------------------
-    # Helpers — форматирование данных для AI
+    # Helpers — frontend context + форматирование данных для AI
     # ------------------------------------------------------------------
+
+    def _get_calculated_ctx(self, key: str) -> Dict[str, Any]:
+        calculated = self.frontend_context.get("calculated")
+        if not isinstance(calculated, dict):
+            return {}
+        value = calculated.get(key)
+        return value if isinstance(value, dict) else {}
+
+    @staticmethod
+    def _date_in_period(period_start: Optional[str], period_end: Optional[str], value: Optional[str]) -> bool:
+        if not period_start or not period_end or not value:
+            return False
+        return period_start <= value <= period_end
+
+    def _filter_transit_events_by_period(self, events: List[Dict], start_str: str, end_str: str) -> List[Dict]:
+        if not events:
+            return []
+
+        filtered = []
+        for event in events:
+            if not isinstance(event, dict):
+                continue
+            exact = event.get("t_exact")
+            enter = event.get("t_enter")
+            leave = event.get("t_leave")
+            if (
+                self._date_in_period(start_str, end_str, exact)
+                or self._date_in_period(start_str, end_str, enter)
+                or self._date_in_period(start_str, end_str, leave)
+            ):
+                filtered.append(event)
+                continue
+
+            if enter and leave and enter <= end_str and leave >= start_str:
+                filtered.append(event)
+
+        return filtered
 
     @staticmethod
     def _summarize_transit_events(events: List[Dict]) -> List[Dict]:

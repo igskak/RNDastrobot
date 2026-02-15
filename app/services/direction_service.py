@@ -26,6 +26,7 @@ from app.services.swisseph_engine import SwissEphemerisEngine
 from app.utils.constants import (
     get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds,
     PROGNOSTIC_EXCLUDED_NATAL_TARGETS, PROGNOSTIC_EXACT_ORB, PROGNOSTIC_DEFAULT_ORB,
+    PLANETS,
 )
 
 
@@ -92,6 +93,7 @@ class DirectionService:
 
         # 4. Загрузить натальные данные
         natal_data = self._load_natal_data(user_id)
+        directed_houses = self._apply_arc_to_houses(natal_data['houses'], arc_degrees)
 
         # 5. Применить дугу ко всем точкам карты
         directed_planets = self._apply_arc_to_objects(natal_data['planets'], arc_degrees)
@@ -100,16 +102,30 @@ class DirectionService:
             natal_data['special_points'], arc_degrees
         )
 
-        # 6. Определить натальные дома для направленных планет
-        for planet in directed_planets:
-            planet['natal_house'] = self.swisseph_engine.get_planet_house(
-                planet['longitude'], natal_data['houses']
+        # 6. Определить натальные и дирекционные дома для направленных объектов
+        directed_objects = directed_planets + directed_angles + directed_special_points
+        for obj in directed_objects:
+            obj['natal_house'] = self.swisseph_engine.get_planet_house(
+                obj['longitude'], natal_data['houses']
             )
+            obj['directed_house'] = self.swisseph_engine.get_planet_house(
+                obj['longitude'], directed_houses
+            )
+            # Поле house используется фронтендом в подсказке
+            obj['house'] = obj['directed_house']
 
         # 7. Рассчитать аспекты направленное→натал
         aspects = self._calculate_direction_aspects(
-            directed_objects=directed_planets + directed_angles + directed_special_points,
+            directed_objects=directed_objects,
             natal_data=natal_data
+        )
+        planet_ingresses = self._calculate_planet_ingresses(
+            directed_planets=directed_planets,
+            natal_data=natal_data,
+        )
+        house_cusp_ingresses = self._calculate_house_cusp_ingresses(
+            natal_houses=natal_data['houses'],
+            directed_houses=directed_houses,
         )
 
         # 8. Формируем результат
@@ -133,7 +149,10 @@ class DirectionService:
             'directed_angles': directed_angles,
             'directed_special_points': directed_special_points,
             'natal_houses': natal_data['houses'],  # Дома остаются натальными
+            'directed_houses': directed_houses,
             'aspects_to_natal': aspects,
+            'planet_ingresses': planet_ingresses,
+            'house_cusp_ingresses': house_cusp_ingresses,
         }
 
         # 9. Сохранить в БД если нужно
@@ -232,6 +251,27 @@ class DirectionService:
             }
             directed.append(directed_obj)
         return directed
+
+    def _apply_arc_to_houses(
+        self,
+        houses: List[Dict],
+        arc_degrees: float
+    ) -> List[Dict]:
+        """Применить дугу дирекции к куспидам домов."""
+        directed_houses: List[Dict] = []
+        for house in houses:
+            new_lon = (house['longitude'] + arc_degrees) % 360
+            degree_in_sign = get_degree_in_sign(new_lon)
+            directed_houses.append({
+                'number': house['number'],
+                'longitude': new_lon,
+                'natal_longitude': house['longitude'],
+                'sign': get_zodiac_sign(new_lon),
+                'degree_in_sign': degree_in_sign,
+                'degree_in_sign_formatted': format_degree_minutes_seconds(degree_in_sign),
+                'arc_applied': arc_degrees,
+            })
+        return directed_houses
 
     def _get_method_description(self, direction_type: str) -> str:
         """Получить описание метода дирекции"""
@@ -355,6 +395,106 @@ class DirectionService:
 
         return aspects
 
+    def _calculate_planet_ingresses(
+        self,
+        directed_planets: List[Dict],
+        natal_data: Dict,
+    ) -> List[Dict]:
+        """Определить ингрессии планет в знак и дом (натал -> дирекция)."""
+        planet_names = set(PLANETS.values())
+        natal_planets = [p for p in natal_data['planets'] if p['name'] in planet_names]
+        natal_by_name = {p['name']: p for p in natal_planets}
+        natal_houses = natal_data['houses']
+
+        ingresses: List[Dict] = []
+        for directed in directed_planets:
+            name = directed.get('name')
+            if name not in planet_names:
+                continue
+
+            natal = natal_by_name.get(name)
+            if not natal:
+                continue
+
+            natal_lon = float(natal['longitude'])
+            natal_sign = get_zodiac_sign(natal_lon)
+            natal_house = self.swisseph_engine.get_planet_house(natal_lon, natal_houses)
+            directed_sign = directed.get('sign')
+            directed_house = directed.get('directed_house')
+
+            if directed_sign and directed_sign != natal_sign:
+                ingresses.append({
+                    'body': name,
+                    'ingress_type': 'sign',
+                    'from_sign': natal_sign,
+                    'to_sign': directed_sign,
+                    'from_house': natal_house,
+                    'to_house': directed_house,
+                    'from_longitude': natal_lon,
+                    'to_longitude': directed.get('longitude'),
+                    'from_degree_in_sign_formatted': format_degree_minutes_seconds(
+                        get_degree_in_sign(natal_lon)
+                    ),
+                    'to_degree_in_sign_formatted': directed.get('degree_in_sign_formatted'),
+                })
+
+            if (
+                natal_house is not None
+                and directed_house is not None
+                and directed_house != natal_house
+            ):
+                ingresses.append({
+                    'body': name,
+                    'ingress_type': 'house',
+                    'from_sign': natal_sign,
+                    'to_sign': directed_sign,
+                    'from_house': natal_house,
+                    'to_house': directed_house,
+                    'from_longitude': natal_lon,
+                    'to_longitude': directed.get('longitude'),
+                    'from_degree_in_sign_formatted': format_degree_minutes_seconds(
+                        get_degree_in_sign(natal_lon)
+                    ),
+                    'to_degree_in_sign_formatted': directed.get('degree_in_sign_formatted'),
+                })
+
+        return ingresses
+
+    def _calculate_house_cusp_ingresses(
+        self,
+        natal_houses: List[Dict],
+        directed_houses: List[Dict],
+    ) -> List[Dict]:
+        """Ингрессии куспидов домов в знаки (натал -> дирекция)."""
+        natal_by_number = {h['number']: h for h in natal_houses}
+        ingresses: List[Dict] = []
+
+        for directed in directed_houses:
+            house_number = directed.get('number')
+            natal = natal_by_number.get(house_number)
+            if not natal:
+                continue
+
+            natal_lon = float(natal['longitude'])
+            natal_sign = get_zodiac_sign(natal_lon)
+            directed_sign = directed.get('sign')
+            if not directed_sign or directed_sign == natal_sign:
+                continue
+
+            ingresses.append({
+                'house_number': house_number,
+                'from_sign': natal_sign,
+                'to_sign': directed_sign,
+                'from_longitude': natal_lon,
+                'to_longitude': directed.get('longitude'),
+                'from_degree_in_sign_formatted': format_degree_minutes_seconds(
+                    get_degree_in_sign(natal_lon)
+                ),
+                'to_degree_in_sign_formatted': directed.get('degree_in_sign_formatted'),
+            })
+
+        return ingresses
+
     def _check_aspect(
         self,
         dir_obj: Dict,
@@ -455,4 +595,3 @@ class DirectionService:
             }
             for d in directions
         ]
-

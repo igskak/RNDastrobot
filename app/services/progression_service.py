@@ -24,6 +24,7 @@ from app.utils.constants import (
     get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds,
     PROGNOSTIC_EXCLUDED_NATAL_TARGETS, PROGNOSTIC_EXACT_ORB,
     PROGNOSTIC_DEFAULT_ORB, PROGNOSTIC_MOON_ORB,
+    PLANETS,
 )
 
 
@@ -102,26 +103,45 @@ class ProgressionService:
         # 3. Рассчитать прогрессивные планеты + узлы и Лилит
         progressed_planets = self.swisseph_engine.calculate_planets(progressed_jd)
         progressed_planets.extend(self._calculate_progressed_special_bodies(progressed_jd))
+
+        # 3.1 Рассчитать прогрессивные куспиды домов
+        progressed_houses, _ = self.swisseph_engine.calculate_houses(
+            jd=progressed_jd,
+            lat=float(user.lat),
+            lon=float(user.lon),
+            hsys='P',
+        )
         
         # 4. Загрузить натальные данные для аспектов и домов
         natal_data = self._load_natal_data(user_id)
         
-        # 5. Определить натальные дома для прогрессивных планет
+        # 5. Определить натальные и прогрессивные дома для прогрессивных планет
         for planet in progressed_planets:
             planet['natal_house'] = self.swisseph_engine.get_planet_house(
                 planet['longitude'], natal_data['houses']
             )
+            planet['progressed_house'] = self.swisseph_engine.get_planet_house(
+                planet['longitude'], progressed_houses
+            )
+            # Поле house используется фронтендом в подсказке
+            planet['house'] = planet['progressed_house']
         
         # 6. Рассчитать аспекты прогрессия→натал
         aspects = self._calculate_progression_aspects(progressed_planets, natal_data)
         
-        # 7. Рассчитать возраст
+        # 7. Рассчитать ингрессии планет (знак/дом)
+        planet_ingresses = self._calculate_planet_ingresses(
+            progressed_planets=progressed_planets,
+            natal_data=natal_data,
+        )
+
+        # 8. Рассчитать возраст
         age_years = (target_date - birth_date_val).days / TROPICAL_YEAR_DAYS
         
-        # 8. Конвертировать прогрессивный JD в дату
+        # 9. Конвертировать прогрессивный JD в дату
         progressed_date = self._jd_to_date(progressed_jd)
         
-        # 9. Формируем результат
+        # 10. Формируем результат
         result = {
             'progression_info': {
                 'target_date': target_date.isoformat(),
@@ -140,10 +160,12 @@ class ProgressionService:
             },
             'progressed_planets': progressed_planets,
             'natal_houses': natal_data['houses'],  # Дома остаются натальными
+            'progressed_houses': progressed_houses,
             'aspects_to_natal': aspects,
+            'planet_ingresses': planet_ingresses,
         }
         
-        # 10. Сохранить в БД если нужно
+        # 11. Сохранить в БД если нужно
         if save_to_db:
             self._save_progression(user_id, target_date, result)
 
@@ -243,11 +265,25 @@ class ProgressionService:
         """Рассчитать прогрессивные позиции узлов и Лилит."""
         north, south = SpecialPointsService.calculate_true_nodes(jd)
         lilith = SpecialPointsService.calculate_black_moon(jd)
-        return [
-            {'name': 'TrueNorthNode', 'longitude': north, 'type': 'progressed_planet'},
-            {'name': 'TrueSouthNode', 'longitude': south, 'type': 'progressed_planet'},
-            {'name': 'BlackMoon', 'longitude': lilith, 'type': 'progressed_planet'},
+        special_longs = [
+            ('TrueNorthNode', north),
+            ('TrueSouthNode', south),
+            ('BlackMoon', lilith),
         ]
+        bodies: List[Dict] = []
+        for name, longitude in special_longs:
+            degree_in_sign = get_degree_in_sign(longitude)
+            bodies.append({
+                'name': name,
+                'longitude': longitude,
+                'sign': get_zodiac_sign(longitude),
+                'degree_in_sign': degree_in_sign,
+                'degree_in_sign_formatted': format_degree_minutes_seconds(degree_in_sign),
+                'retrograde': False,
+                'speed': 0.0,
+                'type': 'progressed_planet',
+            })
+        return bodies
 
     def _calculate_progression_aspects(
         self,
@@ -266,6 +302,71 @@ class ProgressionService:
                     aspects.append(aspect)
 
         return aspects
+
+    def _calculate_planet_ingresses(
+        self,
+        progressed_planets: List[Dict],
+        natal_data: Dict,
+    ) -> List[Dict]:
+        """Определить ингрессии планет в знак и дом (натал -> прогрессия)."""
+        planet_names = set(PLANETS.values())
+        natal_planets = [p for p in natal_data['planets'] if p['name'] in planet_names]
+        natal_by_name = {p['name']: p for p in natal_planets}
+        natal_houses = natal_data['houses']
+
+        ingresses: List[Dict] = []
+        for progressed in progressed_planets:
+            name = progressed.get('name')
+            if name not in planet_names:
+                continue
+
+            natal = natal_by_name.get(name)
+            if not natal:
+                continue
+
+            natal_lon = float(natal['longitude'])
+            natal_sign = get_zodiac_sign(natal_lon)
+            natal_house = self.swisseph_engine.get_planet_house(natal_lon, natal_houses)
+            progressed_sign = progressed.get('sign')
+            progressed_house = progressed.get('progressed_house')
+
+            if progressed_sign and progressed_sign != natal_sign:
+                ingresses.append({
+                    'body': name,
+                    'ingress_type': 'sign',
+                    'from_sign': natal_sign,
+                    'to_sign': progressed_sign,
+                    'from_house': natal_house,
+                    'to_house': progressed_house,
+                    'from_longitude': natal_lon,
+                    'to_longitude': progressed.get('longitude'),
+                    'from_degree_in_sign_formatted': format_degree_minutes_seconds(
+                        get_degree_in_sign(natal_lon)
+                    ),
+                    'to_degree_in_sign_formatted': progressed.get('degree_in_sign_formatted'),
+                })
+
+            if (
+                natal_house is not None
+                and progressed_house is not None
+                and progressed_house != natal_house
+            ):
+                ingresses.append({
+                    'body': name,
+                    'ingress_type': 'house',
+                    'from_sign': natal_sign,
+                    'to_sign': progressed_sign,
+                    'from_house': natal_house,
+                    'to_house': progressed_house,
+                    'from_longitude': natal_lon,
+                    'to_longitude': progressed.get('longitude'),
+                    'from_degree_in_sign_formatted': format_degree_minutes_seconds(
+                        get_degree_in_sign(natal_lon)
+                    ),
+                    'to_degree_in_sign_formatted': progressed.get('degree_in_sign_formatted'),
+                })
+
+        return ingresses
 
     def _check_aspect(
         self,
@@ -361,4 +462,3 @@ class ProgressionService:
             }
             for p in progs
         ]
-

@@ -180,7 +180,7 @@ class ChartDataRenderer {
                         ${planetIcon}
                         ${p.retrograde ? '<span class="retro-badge-small">Rx</span>' : ''}
                     </td>
-                    <td class="mono">${Symbols.signs[p.sign]} ${degDMS}</td>
+                    <td class="mono"><span class="astro-symbol">${Symbols.signs[p.sign]}</span> ${degDMS}</td>
                     <td class="mono">${p.house}</td>
                 </tr>
             `;
@@ -195,9 +195,9 @@ class ChartDataRenderer {
             const isAngular = [1, 4, 7, 10].includes(h.number);
             const degDMS = this.formatDMS(h.degree_in_sign);
             return `
-                <tr class="${isAngular ? 'house-angular' : ''}">
+                <tr id="row-house-${h.number}" class="${isAngular ? 'house-angular' : ''}">
                     <td class="mono">${h.number}${isAngular ? ' ★' : ''}</td>
-                    <td class="mono">${Symbols.signs[h.sign]} ${degDMS}</td>
+                    <td class="mono"><span class="astro-symbol">${Symbols.signs[h.sign]}</span> ${degDMS}</td>
                 </tr>
             `;
         }).join('');
@@ -223,11 +223,14 @@ class ChartDataRenderer {
         const element = Symbols.signElements[planet.sign];
         const color = Symbols.elementColors[element] || '#374151';
         const symbol = Symbols.planets[planet.name] || planet.name.charAt(0);
+        const glyphScale = Symbols.planetGlyphScale?.[planet.name] || 1;
+        const glyphSize = 22 * glyphScale;
+        const glyphY = 14 + glyphSize * 0.36;
 
         return `
             <span class="planet-icon-svg">
                 <svg width="28" height="28" viewBox="0 0 28 28">
-                    <text x="14" y="22" text-anchor="middle" font-size="22" font-weight="600" fill="${color}">${symbol}</text>
+                    <text x="14" y="${glyphY.toFixed(2)}" text-anchor="middle" font-size="${glyphSize.toFixed(2)}" font-weight="600" fill="${color}" class="planet-symbol-text">${symbol}</text>
                 </svg>
             </span>
         `;
@@ -268,9 +271,9 @@ class ChartDataRenderer {
                             : 'aspect-neutral';
             return `
                 <tr data-aspect="${a.planet_1}-${a.planet_2}">
-                    <td class="symbol-cell">${Symbols.planets[a.planet_1] || ''}</td>
-                    <td class="symbol-cell">${Symbols.planets[a.planet_2] || ''}</td>
-                    <td class="${typeClass}">${Symbols.aspects[a.aspect_type] || ''} ${Symbols.aspectNamesRu[a.aspect_type] || a.aspect_type}</td>
+                    <td class="symbol-cell"><span class="astro-symbol">${Symbols.planets[a.planet_1] || ''}</span></td>
+                    <td class="symbol-cell"><span class="astro-symbol">${Symbols.planets[a.planet_2] || ''}</span></td>
+                    <td class="${typeClass}"><span class="astro-symbol">${Symbols.aspects[a.aspect_type] || ''}</span> ${Symbols.aspectNamesRu[a.aspect_type] || a.aspect_type}</td>
                     <td class="mono">${a.orb.toFixed(2)}°</td>
                 </tr>
             `;
@@ -307,13 +310,13 @@ class ChartDataRenderer {
         // Заголовок
         html += '<tr><th></th>';
         filtered.forEach(p => {
-            html += `<th title="${Symbols.planetNamesRu[p.name]}">${Symbols.planets[p.name]}</th>`;
+            html += `<th title="${Symbols.planetNamesRu[p.name]}"><span class="astro-symbol">${Symbols.planets[p.name]}</span></th>`;
         });
         html += '</tr>';
 
         // Строки (треугольная матрица)
         filtered.forEach((rowPlanet, rowIdx) => {
-            html += `<tr><th title="${Symbols.planetNamesRu[rowPlanet.name]}">${Symbols.planets[rowPlanet.name]}</th>`;
+            html += `<tr><th title="${Symbols.planetNamesRu[rowPlanet.name]}"><span class="astro-symbol">${Symbols.planets[rowPlanet.name]}</span></th>`;
 
             filtered.forEach((colPlanet, colIdx) => {
                 if (colIdx >= rowIdx) {
@@ -325,7 +328,7 @@ class ChartDataRenderer {
                         const cls = aspect.harmonic_type === 'harmonious' ? 'grid-harmonious'
                                   : aspect.harmonic_type === 'tense' ? 'grid-tense'
                                   : 'grid-neutral';
-                        html += `<td class="${cls}" title="${Symbols.aspectNamesRu[aspect.aspect_type]} ${aspect.orb.toFixed(1)}°">${glyph}</td>`;
+                        html += `<td class="${cls}" title="${Symbols.aspectNamesRu[aspect.aspect_type]} ${aspect.orb.toFixed(1)}°"><span class="astro-symbol">${glyph}</span></td>`;
                     } else {
                         html += '<td>–</td>';
                     }
@@ -568,4 +571,3 @@ class ChartDataRenderer {
 }
 
 window.ChartDataRenderer = ChartDataRenderer;
-

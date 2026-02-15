@@ -301,6 +301,7 @@
 
 .planet-symbol {
     font-size: 14px;
+    font-family: var(--font-symbol);
 }
 
 .planet-name {
@@ -315,6 +316,7 @@
 
 .sign-symbol {
     margin-right: 4px;
+    font-family: var(--font-symbol);
 }
 
 /* Dignity badges (compact) */
@@ -630,4 +632,3 @@
         gap: 8px;
     }
 }
-

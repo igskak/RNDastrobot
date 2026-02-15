@@ -44,6 +44,8 @@ class DirectedObjectInfo(BaseModel):
     arc_applied: float
     type: str
     natal_house: Optional[int] = None
+    directed_house: Optional[int] = None
+    house: Optional[int] = None
 
 
 class DirectionAspectInfo(BaseModel):
@@ -68,6 +70,31 @@ class DirectionInfoBlock(BaseModel):
     method_description: str
 
 
+class PlanetIngressInfo(BaseModel):
+    """Ингрессия планеты (в знак или дом)."""
+    body: str
+    ingress_type: str = Field(..., description="sign | house")
+    from_sign: Optional[str] = None
+    to_sign: Optional[str] = None
+    from_house: Optional[int] = None
+    to_house: Optional[int] = None
+    from_longitude: Optional[float] = None
+    to_longitude: Optional[float] = None
+    from_degree_in_sign_formatted: Optional[str] = None
+    to_degree_in_sign_formatted: Optional[str] = None
+
+
+class HouseCuspIngressInfo(BaseModel):
+    """Ингрессия куспида дома в знак."""
+    house_number: int
+    from_sign: str
+    to_sign: str
+    from_longitude: Optional[float] = None
+    to_longitude: Optional[float] = None
+    from_degree_in_sign_formatted: Optional[str] = None
+    to_degree_in_sign_formatted: Optional[str] = None
+
+
 class BirthDataBlock(BaseModel):
     """Данные рождения"""
     user_id: str
@@ -81,6 +108,9 @@ class NatalHouseInfo(BaseModel):
     """Информация о натальном доме"""
     number: int
     longitude: float
+    sign: Optional[str] = None
+    degree_in_sign: Optional[float] = None
+    degree_in_sign_formatted: Optional[str] = None
 
 
 class DirectionResponse(BaseModel):
@@ -91,7 +121,10 @@ class DirectionResponse(BaseModel):
     directed_angles: List[DirectedObjectInfo]
     directed_special_points: List[DirectedObjectInfo]
     natal_houses: List[NatalHouseInfo]
+    directed_houses: List[NatalHouseInfo]
     aspects_to_natal: List[DirectionAspectInfo]
+    planet_ingresses: List[PlanetIngressInfo] = Field(default_factory=list)
+    house_cusp_ingresses: List[HouseCuspIngressInfo] = Field(default_factory=list)
 
 
 class DirectionListItem(BaseModel):
@@ -177,4 +210,3 @@ async def list_directions(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Ошибка получения списка дирекций: {str(e)}"
         )
-

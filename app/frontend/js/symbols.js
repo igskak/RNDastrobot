@@ -14,7 +14,7 @@ const PLANET_SYMBOLS = {
     'Neptune': '♆',
     'Pluto': '♇',
     'Chiron': '⚷',
-    'Proserpina': '⯓',
+    'Proserpina': '[·]',
     'TrueNode': '☊',
     'TrueNorthNode': '☊',
     'TrueSouthNode': '☋',
@@ -143,6 +143,12 @@ const CONFIG_ICONS = {
     'Stellium': '⭐'
 };
 
+const PLANET_GLYPH_SCALE = {
+    'Sun': 1.16,
+    'Mercury': 1.18,
+    'Uranus': 1.08
+};
+
 window.Symbols = {
     planets: PLANET_SYMBOLS,
     signs: SIGN_SYMBOLS,
@@ -152,6 +158,6 @@ window.Symbols = {
     aspectNamesRu: ASPECT_NAMES_RU,
     elementColors: ELEMENT_COLORS,
     signElements: SIGN_ELEMENTS,
-    configIcons: CONFIG_ICONS
+    configIcons: CONFIG_ICONS,
+    planetGlyphScale: PLANET_GLYPH_SCALE
 };
-

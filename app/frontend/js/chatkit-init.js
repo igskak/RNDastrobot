@@ -41,6 +41,41 @@
         return null; // Backend сам загрузит карту из БД
     }
 
+    function getPrognosticFrontendContext() {
+        if (typeof window.getForecastChatContext === 'function') {
+            try {
+                return window.getForecastChatContext();
+            } catch (e) {
+                console.warn('ChatKit [prognostic]: не удалось собрать контекст forecast:', e);
+            }
+        }
+        return null;
+    }
+
+    function withContextDefaults(toolName, params, context) {
+        const next = { ...(params || {}) };
+        const controls = context?.controls || {};
+        const calculated = context?.calculated || {};
+
+        if (toolName === 'get_transit_events') {
+            const transits = calculated.transits || {};
+            if (!next.start_date) next.start_date = transits.period_start || controls.start_date;
+            if (!next.end_date) next.end_date = transits.period_end || controls.end_date;
+        } else if (toolName === 'get_progressions') {
+            const progressions = calculated.progressions || {};
+            if (!next.target_date) next.target_date = progressions.target_date || controls.single_date;
+        } else if (toolName === 'get_directions') {
+            const directions = calculated.directions || {};
+            if (!next.target_date) next.target_date = directions.target_date || controls.single_date;
+            if (!next.direction_type) next.direction_type = directions.direction_type;
+        } else if (toolName === 'get_solar_return') {
+            const solar = calculated.solar_return || {};
+            if (next.year === undefined || next.year === null) next.year = solar.year || controls.solar_year;
+        }
+
+        return next;
+    }
+
     /**
      * Создать ChatKit сессию через backend API
      * @param {string} userId
@@ -138,13 +173,16 @@
                 console.log(`ChatKit [prognostic]: onClientTool вызван — ${name}`, params);
 
                 try {
+                    const frontendContext = getPrognosticFrontendContext();
+                    const mergedParams = withContextDefaults(name, params, frontendContext);
                     const resp = await fetch(`${API_BASE}/chat/prognostic-tool`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             user_id: userId,
                             tool_name: name,
-                            arguments: params || {}
+                            arguments: mergedParams,
+                            frontend_context: frontendContext
                         })
                     });
                     if (!resp.ok) {
@@ -220,4 +258,3 @@
         initToggleButtons();
     }
 })();
-

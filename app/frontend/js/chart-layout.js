@@ -93,8 +93,8 @@
                     const symbol = Symbols.planets[planet.name] || '';
 
                     tooltip.innerHTML = `
-                        <strong>${symbol} ${nameRu}</strong><br>
-                        ${signSymbol} ${signRu} ${planet.degree_in_sign_formatted || planet.degree_in_sign.toFixed(2) + '°'}<br>
+                        <strong><span class="astro-symbol">${symbol}</span> ${nameRu}</strong><br>
+                        <span class="astro-symbol">${signSymbol}</span> ${signRu} ${planet.degree_in_sign_formatted || planet.degree_in_sign.toFixed(2) + '°'}<br>
                         Дом ${planet.house}
                     `;
                     tooltip.style.display = 'block';
@@ -342,4 +342,3 @@
     window.highlightPlanet = highlightPlanet;
     window.highlightAspect = highlightAspect;
 })();
-

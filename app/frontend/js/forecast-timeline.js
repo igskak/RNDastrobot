@@ -351,15 +351,23 @@
             const pSym = Symbols?.planets?.[ev.transit_body] || ev.transit_body;
             const nSym = Symbols?.planets?.[ev.natal_body] || ev.natal_body;
             const aSym = Symbols?.aspects?.[ev.aspect_type] || ev.aspect_type;
-            const countInfo = row.events.length > 1 ? `<div class="tt-row"><span class="tt-label">Вхождений:</span> ${row.events.length}</div>` : '';
+            const isMulti = row.events.length > 1;
+            const countInfo = isMulti ? `<div class="tt-row"><span class="tt-label">Вхождений:</span> ${row.events.length}</div>` : '';
+            const singleEntry = !isMulti ? `
+                <div class="tt-row"><span class="tt-label">Вход:</span> ${formatTimelineBoundDateTime(ev.t_enter)}</div>
+                <div class="tt-row"><span class="tt-label">Точный:</span> ${formatTimelineBoundDateTime(ev.t_exact)}</div>
+                <div class="tt-row"><span class="tt-label">Выход:</span> ${formatTimelineBoundDateTime(ev.t_leave)}</div>
+            ` : '';
+            const allEntries = isMulti
+                ? `<div class="tt-row"><span class="tt-label">Все вхождения:</span></div>${buildAllEntriesHtml(row.events)}`
+                : '';
 
             tooltip.innerHTML = `
                 <div class="tt-title">${pSym} ${ev.transit_body} ${aSym} ${nSym} ${ev.natal_body}</div>
-                <div class="tt-row"><span class="tt-label">Вход:</span> ${formatDateTime(ev.t_enter)}</div>
-                <div class="tt-row"><span class="tt-label">Точный:</span> ${formatDateTime(ev.t_exact)}</div>
-                <div class="tt-row"><span class="tt-label">Выход:</span> ${formatDateTime(ev.t_leave)}</div>
+                ${singleEntry}
                 <div class="tt-row"><span class="tt-label">Орб:</span> ${ev.min_orb?.toFixed(2)}°</div>
                 ${countInfo}
+                ${allEntries}
             `;
             tooltip.classList.add('visible');
             tooltip.style.left = (e.clientX + 12) + 'px';
@@ -382,6 +390,24 @@
         return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}, ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
     }
 
+    function formatTimelineBoundDateTime(isoStr) {
+        if (!isoStr) return '—';
+        const ts = new Date(isoStr).getTime();
+        const base = formatDateTime(isoStr);
+        if (Number.isNaN(ts)) return base;
+        if (ts < startMs || ts > endMs) return `${base} (вне диапазона)`;
+        return base;
+    }
+
+    function buildAllEntriesHtml(eventsList) {
+        const sorted = [...(eventsList || [])].sort((a, b) => new Date(a.t_exact) - new Date(b.t_exact));
+        return sorted.map((item, idx) => `
+            <div class="tt-row"><span class="tt-label">#${idx + 1} вход:</span> ${formatTimelineBoundDateTime(item.t_enter)}</div>
+            <div class="tt-row"><span class="tt-label">#${idx + 1} точный:</span> ${formatTimelineBoundDateTime(item.t_exact)}</div>
+            <div class="tt-row"><span class="tt-label">#${idx + 1} выход:</span> ${formatTimelineBoundDateTime(item.t_leave)}</div>
+        `).join('');
+    }
+
     // ─── Legend ──────────────────────────────────────────
     function renderLegend() {
         const container = document.getElementById('timelineLegend');
@@ -400,4 +426,3 @@
     // ─── Export ──────────────────────────────────────────
     window.ForecastTimeline = { render };
 })();
-

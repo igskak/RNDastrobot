@@ -39,6 +39,8 @@ class ProgressedPlanetInfo(BaseModel):
     retrograde: bool
     speed: float
     natal_house: int = Field(..., description="В каком натальном доме находится прогрессивная планета")
+    progressed_house: Optional[int] = Field(None, description="В каком прогрессивном доме находится планета")
+    house: Optional[int] = Field(None, description="Alias для отображения дома на карте")
 
 
 class ProgressionAspectInfo(BaseModel):
@@ -62,6 +64,20 @@ class ProgressionInfoBlock(BaseModel):
     rate: str
 
 
+class PlanetIngressInfo(BaseModel):
+    """Ингрессия планеты (в знак или дом)."""
+    body: str
+    ingress_type: str = Field(..., description="sign | house")
+    from_sign: Optional[str] = None
+    to_sign: Optional[str] = None
+    from_house: Optional[int] = None
+    to_house: Optional[int] = None
+    from_longitude: Optional[float] = None
+    to_longitude: Optional[float] = None
+    from_degree_in_sign_formatted: Optional[str] = None
+    to_degree_in_sign_formatted: Optional[str] = None
+
+
 class BirthDataBlock(BaseModel):
     """Данные рождения"""
     user_id: str
@@ -75,6 +91,9 @@ class NatalHouseInfo(BaseModel):
     """Информация о натальном доме"""
     number: int
     longitude: float
+    sign: Optional[str] = None
+    degree_in_sign: Optional[float] = None
+    degree_in_sign_formatted: Optional[str] = None
 
 
 class ProgressionResponse(BaseModel):
@@ -83,7 +102,9 @@ class ProgressionResponse(BaseModel):
     birth_data: BirthDataBlock
     progressed_planets: List[ProgressedPlanetInfo]
     natal_houses: List[NatalHouseInfo]
+    progressed_houses: List[NatalHouseInfo]
     aspects_to_natal: List[ProgressionAspectInfo]
+    planet_ingresses: List[PlanetIngressInfo] = Field(default_factory=list)
 
 
 class ProgressionListItem(BaseModel):
@@ -165,4 +186,3 @@ async def list_progressions(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Ошибка получения списка прогрессий: {str(e)}"
         )
-

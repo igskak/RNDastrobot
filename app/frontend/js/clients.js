@@ -6,120 +6,296 @@ const API_BASE = window.location.hostname === 'localhost'
     ? 'http://localhost:8000/api/v1'
     : '/api/v1';
 
+const state = {
+    users: [],
+    filteredUsers: [],
+    searchTerm: '',
+    sortBy: 'created_desc'
+};
+
+let toastTimer = null;
+
+const refs = {};
+
 document.addEventListener('DOMContentLoaded', () => {
+    cacheElements();
+    bindEvents();
     loadClients();
 });
 
-async function loadClients() {
-    const loading = document.getElementById('loading');
-    const emptyState = document.getElementById('emptyState');
-    const table = document.getElementById('clientsTable');
-    const tbody = document.getElementById('clientsBody');
-    const countEl = document.getElementById('clientCount');
+function cacheElements() {
+    refs.loading = document.getElementById('loading');
+    refs.emptyState = document.getElementById('emptyState');
+    refs.noResultsState = document.getElementById('noResultsState');
+    refs.tableWrap = document.getElementById('tableWrap');
+    refs.tbody = document.getElementById('clientsBody');
+    refs.countEl = document.getElementById('clientCount');
+    refs.searchInput = document.getElementById('searchInput');
+    refs.sortSelect = document.getElementById('sortSelect');
+    refs.resultsMeta = document.getElementById('resultsMeta');
+    refs.toast = document.getElementById('toast');
+}
 
-    try {
-        const response = await fetch(`${API_BASE}/users`);
-        if (!response.ok) throw new Error('Ошибка загрузки');
-        const users = await response.json();
+function bindEvents() {
+    refs.searchInput.addEventListener('input', (event) => {
+        state.searchTerm = event.target.value.trim().toLowerCase();
+        renderUsers();
+    });
 
-        loading.classList.add('hidden');
+    refs.sortSelect.addEventListener('change', (event) => {
+        state.sortBy = event.target.value;
+        renderUsers();
+    });
 
-        if (!users || users.length === 0) {
-            emptyState.classList.remove('hidden');
+    refs.tbody.addEventListener('click', async (event) => {
+        const actionBtn = event.target.closest('button[data-action]');
+        if (!actionBtn) return;
+
+        const { action, userId } = actionBtn.dataset;
+        if (!userId) return;
+
+        if (action === 'open') {
+            await openChart(userId);
             return;
         }
 
-        countEl.textContent = `Всего: ${users.length}`;
-        tbody.innerHTML = '';
+        if (action === 'delete') {
+            await handleDelete(userId, actionBtn);
+        }
+    });
+}
 
-        for (const u of users) {
-            const tr = document.createElement('tr');
-            const name = [u.first_name, u.last_name].filter(Boolean).join(' ') || '—';
-            const birthDate = u.birth_date ? formatDate(u.birth_date) : '—';
-            const place = u.birth_place || '—';
-            const created = u.created_at ? formatDateTime(u.created_at) : '—';
+async function loadClients() {
+    refs.loading.textContent = 'Загрузка...';
+    refs.loading.classList.remove('hidden');
+    refs.emptyState.classList.add('hidden');
+    refs.noResultsState.classList.add('hidden');
+    refs.tableWrap.classList.add('hidden');
 
-            tr.innerHTML = `
-                <td><strong>${escapeHtml(name)}</strong></td>
-                <td>${birthDate}</td>
-                <td>${escapeHtml(place)}</td>
-                <td>${created}</td>
-                <td class="clients-actions">
-                    <button class="btn-open" onclick="openChart('${u.user_id}')">Открыть</button>
-                    <button class="btn-delete" onclick="deleteUser('${u.user_id}', this)">Удалить</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
+    try {
+        const response = await fetch(`${API_BASE}/users`);
+        if (!response.ok) throw new Error('Не удалось получить список клиентов');
+
+        const users = await response.json();
+        state.users = Array.isArray(users) ? users : [];
+
+        refs.loading.classList.add('hidden');
+
+        if (state.users.length === 0) {
+            refs.emptyState.classList.remove('hidden');
+            refs.countEl.textContent = '';
+            refs.resultsMeta.textContent = '';
+            return;
         }
 
-        table.classList.remove('hidden');
-    } catch (err) {
-        loading.textContent = 'Ошибка загрузки: ' + err.message;
-        console.error(err);
+        renderUsers();
+    } catch (error) {
+        refs.loading.textContent = `Ошибка загрузки: ${error.message}`;
+        console.error(error);
     }
+}
+
+function renderUsers() {
+    const filtered = filterUsers(state.users, state.searchTerm);
+    const sorted = sortUsers(filtered, state.sortBy);
+    state.filteredUsers = sorted;
+
+    refs.tbody.innerHTML = '';
+
+    if (state.users.length > 0 && sorted.length === 0) {
+        refs.tableWrap.classList.add('hidden');
+        refs.noResultsState.classList.remove('hidden');
+    } else {
+        refs.noResultsState.classList.add('hidden');
+
+        for (const user of sorted) {
+            refs.tbody.appendChild(buildUserRow(user));
+        }
+
+        refs.tableWrap.classList.remove('hidden');
+    }
+
+    updateCounters();
+}
+
+function buildUserRow(user) {
+    const tr = document.createElement('tr');
+
+    const userId = String(user.user_id || '');
+    const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || '—';
+    const birthDate = user.birth_date ? formatDate(user.birth_date) : '—';
+    const place = user.birth_place || '—';
+    const created = user.created_at ? formatDateTime(user.created_at) : '—';
+
+    tr.innerHTML = `
+        <td data-label="Имя"><strong>${escapeHtml(name)}</strong></td>
+        <td data-label="Дата рождения">${escapeHtml(birthDate)}</td>
+        <td data-label="Место">${escapeHtml(place)}</td>
+        <td data-label="Создан">${escapeHtml(created)}</td>
+        <td data-label="Действия" class="clients-actions">
+            <button class="btn-open" data-action="open" data-user-id="${escapeHtml(userId)}">Открыть</button>
+            <button class="btn-delete" data-action="delete" data-user-id="${escapeHtml(userId)}">Удалить</button>
+        </td>
+    `;
+
+    return tr;
+}
+
+function filterUsers(users, searchTerm) {
+    if (!searchTerm) return [...users];
+
+    return users.filter((user) => {
+        const name = [user.first_name, user.last_name].filter(Boolean).join(' ').toLowerCase();
+        const place = (user.birth_place || '').toLowerCase();
+        const birthDate = user.birth_date ? formatDate(user.birth_date).toLowerCase() : '';
+
+        return name.includes(searchTerm) || place.includes(searchTerm) || birthDate.includes(searchTerm);
+    });
+}
+
+function sortUsers(users, sortBy) {
+    const list = [...users];
+
+    const compareDate = (a, b, field, dir = 1) => {
+        const aDate = a[field] ? new Date(a[field]).getTime() : 0;
+        const bDate = b[field] ? new Date(b[field]).getTime() : 0;
+        return (aDate - bDate) * dir;
+    };
+
+    if (sortBy === 'created_asc') {
+        return list.sort((a, b) => compareDate(a, b, 'created_at', 1));
+    }
+
+    if (sortBy === 'created_desc') {
+        return list.sort((a, b) => compareDate(a, b, 'created_at', -1));
+    }
+
+    if (sortBy === 'birth_asc') {
+        return list.sort((a, b) => compareDate(a, b, 'birth_date', 1));
+    }
+
+    if (sortBy === 'birth_desc') {
+        return list.sort((a, b) => compareDate(a, b, 'birth_date', -1));
+    }
+
+    if (sortBy === 'name_desc') {
+        return list.sort((a, b) => getName(b).localeCompare(getName(a), 'ru'));
+    }
+
+    return list.sort((a, b) => getName(a).localeCompare(getName(b), 'ru'));
+}
+
+function getName(user) {
+    return [user.first_name, user.last_name].filter(Boolean).join(' ').trim();
+}
+
+function updateCounters() {
+    const total = state.users.length;
+    const shown = state.filteredUsers.length;
+
+    refs.countEl.textContent = `Всего клиентов: ${total}`;
+
+    if (state.searchTerm) {
+        refs.resultsMeta.textContent = `Показано: ${shown} из ${total}`;
+        return;
+    }
+
+    refs.resultsMeta.textContent = `Показано: ${shown}`;
 }
 
 async function openChart(userId) {
     try {
         const response = await fetch(`${API_BASE}/natal/${userId}`);
         if (!response.ok) throw new Error('Карта не найдена');
-        const chartData = await response.json();
 
+        const chartData = await response.json();
         AstroAPI.saveChartToSession(chartData);
+
         showPageLoader();
         window.location.href = '/chart.html';
-    } catch (err) {
-        alert('Ошибка: ' + err.message);
+    } catch (error) {
+        showToast(`Ошибка: ${error.message}`, 'error');
     }
 }
 
-async function deleteUser(userId, btn) {
-    if (!confirm('Удалить пользователя и все его данные?')) return;
+async function handleDelete(userId, button) {
+    if (button.dataset.confirming !== 'true') {
+        button.dataset.confirming = 'true';
+        button.classList.add('confirming');
+        button.textContent = 'Подтвердить';
 
-    btn.disabled = true;
-    btn.textContent = '...';
+        setTimeout(() => {
+            if (button.dataset.confirming !== 'true') return;
+            button.dataset.confirming = 'false';
+            button.classList.remove('confirming');
+            button.textContent = 'Удалить';
+        }, 4000);
+
+        showToast('Нажмите «Подтвердить», чтобы удалить клиента', 'warning');
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = '...';
 
     try {
         const response = await fetch(`${API_BASE}/users/${userId}`, { method: 'DELETE' });
         if (!response.ok) throw new Error('Ошибка удаления');
 
-        // Удаляем строку из таблицы
-        btn.closest('tr').remove();
+        state.users = state.users.filter((user) => String(user.user_id) !== String(userId));
 
-        // Обновляем счётчик
-        const rows = document.getElementById('clientsBody').querySelectorAll('tr');
-        const countEl = document.getElementById('clientCount');
-        if (rows.length === 0) {
-            document.getElementById('clientsTable').classList.add('hidden');
-            document.getElementById('emptyState').classList.remove('hidden');
-            countEl.textContent = '';
+        if (state.users.length === 0) {
+            refs.tableWrap.classList.add('hidden');
+            refs.noResultsState.classList.add('hidden');
+            refs.emptyState.classList.remove('hidden');
+            refs.countEl.textContent = '';
+            refs.resultsMeta.textContent = '';
         } else {
-            countEl.textContent = `Всего: ${rows.length}`;
+            renderUsers();
         }
-    } catch (err) {
-        alert('Ошибка: ' + err.message);
-        btn.disabled = false;
-        btn.textContent = 'Удалить';
+
+        showToast('Клиент удалён', 'success');
+    } catch (error) {
+        button.disabled = false;
+        button.dataset.confirming = 'false';
+        button.classList.remove('confirming');
+        button.textContent = 'Удалить';
+        showToast(`Ошибка: ${error.message}`, 'error');
     }
+}
+
+function showToast(message, type = 'info') {
+    refs.toast.textContent = message;
+    refs.toast.className = `toast ${type}`;
+
+    requestAnimationFrame(() => {
+        refs.toast.classList.add('visible');
+    });
+
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+        refs.toast.classList.remove('visible');
+    }, 2800);
 }
 
 function formatDate(isoDate) {
-    const [y, m, d] = isoDate.split('-');
-    return `${d}.${m}.${y}`;
+    const parts = isoDate.split('-');
+    if (parts.length !== 3) return isoDate;
+    return `${parts[2]}.${parts[1]}.${parts[0]}`;
 }
 
 function formatDateTime(isoStr) {
-    try {
-        const dt = new Date(isoStr);
-        return dt.toLocaleDateString('ru-RU') + ' ' + dt.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-    } catch {
-        return isoStr;
-    }
+    const dt = new Date(isoStr);
+    if (Number.isNaN(dt.getTime())) return isoStr;
+
+    return `${dt.toLocaleDateString('ru-RU')} ${dt.toLocaleTimeString('ru-RU', {
+        hour: '2-digit',
+        minute: '2-digit'
+    })}`;
 }
 
 function escapeHtml(str) {
     const div = document.createElement('div');
-    div.textContent = str;
+    div.textContent = String(str);
     return div.innerHTML;
 }
-

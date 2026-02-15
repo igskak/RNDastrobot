@@ -6,7 +6,8 @@ let chartWheel = null;
 let chartDataRenderer = null;
 let currentSettings = {
     houseSystem: 'Placidus',
-    hiddenPlanets: []
+    hiddenPlanets: [],
+    orientation: 'aries'
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -33,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Инициализируем круговую карту
     const svgElement = document.getElementById('chartWheel');
     chartWheel = new ChartWheel(svgElement);
+    chartWheel.setOrientationMode(currentSettings.orientation, { redraw: false });
     chartWheel.draw(chartData);
 
     // Сохраняем в глобальную область для фильтров
@@ -169,6 +171,7 @@ function initSettings(chartData) {
     const settingsPanel = document.getElementById('settingsPanel');
     const planetToggles = document.getElementById('planetToggles');
     const applyBtn = document.getElementById('applySettings');
+    const orientationSelect = document.getElementById('orientationSelect');
 
     // Список планет для переключения
     const toggleablePlanets = [
@@ -186,7 +189,7 @@ function initSettings(chartData) {
         planetToggles.innerHTML = toggleablePlanets.map(p => `
             <label class="planet-toggle">
                 <input type="checkbox" data-planet="${p.id}" checked>
-                <span>${Symbols.planets[p.id] || ''} ${p.label}</span>
+                <span><span class="astro-symbol">${Symbols.planets[p.id] || ''}</span> ${p.label}</span>
             </label>
         `).join('');
     }
@@ -205,6 +208,10 @@ function initSettings(chartData) {
         });
     }
 
+    if (orientationSelect) {
+        orientationSelect.value = currentSettings.orientation;
+    }
+
     // Применение настроек
     if (applyBtn) {
         applyBtn.addEventListener('click', () => {
@@ -218,6 +225,7 @@ function initSettings(chartData) {
  */
 async function applySettings() {
     const houseSystem = document.getElementById('houseSystemSelect').value;
+    const orientation = document.getElementById('orientationSelect')?.value || 'aries';
     const hiddenPlanets = [];
 
     document.querySelectorAll('#planetToggles input').forEach(cb => {
@@ -228,6 +236,7 @@ async function applySettings() {
 
     currentSettings.houseSystem = houseSystem;
     currentSettings.hiddenPlanets = hiddenPlanets;
+    currentSettings.orientation = orientation;
 
     // Если система домов изменилась — нужен пересчёт на сервере
     const formData = AstroAPI.getFormData();
@@ -243,14 +252,14 @@ async function applySettings() {
                 // Объединяем special_points с planets
                 newChartData = mergeSpecialPointsIntoPlanets(newChartData);
                 window.chartDataCache = newChartData;
-                redrawChart(newChartData, hiddenPlanets);
+                redrawChart(newChartData, hiddenPlanets, orientation);
             }
         } catch (err) {
             console.error('Failed to recalculate chart:', err);
         }
     } else {
         // Просто скрываем/показываем планеты
-        redrawChart(window.chartDataCache, hiddenPlanets);
+        redrawChart(window.chartDataCache, hiddenPlanets, orientation);
     }
 
     // Закрываем панель
@@ -260,7 +269,7 @@ async function applySettings() {
 /**
  * Перерисовка карты с учётом скрытых планет
  */
-function redrawChart(chartData, hiddenPlanets) {
+function redrawChart(chartData, hiddenPlanets, orientation = currentSettings.orientation) {
     // Фильтруем планеты
     const filteredData = {
         ...chartData,
@@ -271,6 +280,9 @@ function redrawChart(chartData, hiddenPlanets) {
     };
 
     // Перерисовываем
+    if (chartWheel) {
+        chartWheel.setOrientationMode(orientation, { redraw: false });
+    }
     chartWheel.draw(filteredData);
     chartDataRenderer.render(filteredData);
 }
@@ -365,6 +377,4 @@ function initPinchZoom() {
         return Math.sqrt(dx * dx + dy * dy);
     }
 }
-
-
 

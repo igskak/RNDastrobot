@@ -105,6 +105,7 @@
     width: 30px;
     text-align: center;
     font-size: 16px;
+    font-family: var(--font-symbol);
 }
 
 /* Planet icon with circle (like in chart wheel) */
@@ -442,4 +443,5 @@
 }
 .aspect-planet-toggle .symbol {
     font-size: 14px;
+    font-family: var(--font-symbol);
 }
