@@ -20,6 +20,7 @@ const ForecastState = {
     directionData: null,
     solarData: null,
     solarOrientation: 'aries',
+    solarPointScale: 1.0,
     solarWheel: null,
     // Table data for sorting
     tableRowsRaw: [],
@@ -47,7 +48,18 @@ const ForecastState = {
     directionType: null,
     solarCalculatedYear: null,
     tableDataKey: null,
+    timezone: 'UTC',
 };
+
+function clampChartPointScale(v) {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return 1;
+    return Math.min(1.7, Math.max(0.8, n));
+}
+
+function readChartPointScale() {
+    return clampChartPointScale(parseFloat(localStorage.getItem('solarPointScale') || '1.2'));
+}
 
 function buildForecastChatContext() {
     const method = document.getElementById('methodSelect')?.value || ForecastState.method || 'transits';
@@ -141,12 +153,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     ForecastState.natalData = natalData;
     ForecastState.userId = natalData.user_id || localStorage.getItem('currentUserId');
+    ForecastState.timezone = natalData.birth_data?.timezone
+        || Intl.DateTimeFormat().resolvedOptions().timeZone
+        || 'UTC';
 
     updateHeaderInfo(natalData);
     initDefaults();
     initTabs();
     initControls();
 });
+
+function getForecastTimezone() {
+    return ForecastState.timezone || 'UTC';
+}
 
 function updateHeaderInfo(data) {
     const el = document.getElementById('headerSubtitle');
@@ -165,6 +184,11 @@ function initDefaults() {
     applyDatePreset(6); // default 6 months
     document.getElementById('singleDate').value = fmt(today);
     document.getElementById('solarYear').value = today.getFullYear();
+    ForecastState.solarPointScale = readChartPointScale();
+    const solarScaleRange = document.getElementById('solarPointScaleRange');
+    const solarScaleValue = document.getElementById('solarPointScaleValue');
+    if (solarScaleRange) solarScaleRange.value = String(Math.round(ForecastState.solarPointScale * 100));
+    if (solarScaleValue) solarScaleValue.textContent = `${Math.round(ForecastState.solarPointScale * 100)}%`;
     const stepSelect = document.getElementById('biwheelStepSelect');
     if (stepSelect) stepSelect.value = ForecastState.transitScaleUnit;
 }
@@ -359,6 +383,35 @@ function initControls() {
             }
         });
     }
+    const solarPointScaleRange = document.getElementById('solarPointScaleRange');
+    const solarPointScaleValue = document.getElementById('solarPointScaleValue');
+    if (solarPointScaleRange) {
+        solarPointScaleRange.addEventListener('input', e => {
+            ForecastState.solarPointScale = clampChartPointScale((Number(e.target.value) || 100) / 100);
+            localStorage.setItem('solarPointScale', String(ForecastState.solarPointScale));
+            if (solarPointScaleValue) {
+                solarPointScaleValue.textContent = `${Math.round(ForecastState.solarPointScale * 100)}%`;
+            }
+            if (ForecastState.solarData) {
+                renderSolarChart(ForecastState.solarData);
+            }
+        });
+    }
+    const solarSettingsBtn = document.getElementById('solarSettingsBtn');
+    const solarSettingsPanel = document.getElementById('solarSettingsPanel');
+    if (solarSettingsBtn && solarSettingsPanel) {
+        solarSettingsBtn.addEventListener('click', () => {
+            solarSettingsPanel.classList.remove('hidden');
+        });
+        solarSettingsPanel.addEventListener('click', e => {
+            if (e.target === solarSettingsPanel) {
+                solarSettingsPanel.classList.add('hidden');
+            }
+        });
+        document.getElementById('solarSettingsClose')?.addEventListener('click', () => {
+            solarSettingsPanel.classList.add('hidden');
+        });
+    }
 
     const stepSelect = document.getElementById('biwheelStepSelect');
     if (stepSelect) {
@@ -394,9 +447,14 @@ function applySolarViewBox() {
 }
 
 function resetSolarView() {
+    const svg = document.getElementById('solarWheel');
     solarZoomLevel = 1;
     solarPanX = 0;
     solarPanY = 0;
+    if (svg) {
+        svg.setAttribute('viewBox', `0 0 ${SOLAR_VIEWBOX_SIZE} ${SOLAR_VIEWBOX_SIZE}`);
+        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    }
     applySolarViewBox();
 }
 
@@ -720,78 +778,38 @@ function toggleTransitScalePlayback() {
     else startTransitScalePlayback();
 }
 
-// ─── Solar Place Autocomplete with Geocoding ─────────────
-let solarGeoDebounce = null;
-
 function initSolarPlaceAutocomplete() {
     const input = document.getElementById('solarLocationName');
     const suggestions = document.getElementById('solarPlaceSuggestions');
     if (!input || !suggestions) return;
 
-    input.addEventListener('input', (e) => {
-        clearTimeout(solarGeoDebounce);
-        const query = e.target.value.trim();
-        // Force explicit place selection from suggestions for valid coords.
-        document.getElementById('solarLocationLat').value = '';
-        document.getElementById('solarLocationLon').value = '';
-        document.getElementById('solarCoordsDisplay').textContent = '';
-        if (query.length < 2) {
-            suggestions.classList.remove('active');
-            return;
-        }
-        solarGeoDebounce = setTimeout(() => geocodeSolarPlace(query), 400);
-    });
+    let bound = false;
+    const bind = () => {
+        if (bound || !window.PlaceAutocomplete) return;
+        bound = true;
+        PlaceAutocomplete.attach({
+            input,
+            suggestions,
+            minChars: 2,
+            debounceMs: 350,
+            limit: 5,
+            language: 'ru',
+            getLabel: (item) => item.shortName || item.displayName,
+            onInput: () => {
+                // Force explicit place selection from suggestions for valid coords.
+                document.getElementById('solarLocationLat').value = '';
+                document.getElementById('solarLocationLon').value = '';
+                document.getElementById('solarCoordsDisplay').textContent = '';
+            },
+            onSelect: (item) => {
+                document.getElementById('solarLocationLat').value = item.lat;
+                document.getElementById('solarLocationLon').value = item.lon;
+                document.getElementById('solarCoordsDisplay').textContent = `(${item.lat.toFixed(2)}°, ${item.lon.toFixed(2)}°)`;
+            }
+        });
+    };
 
-    input.addEventListener('blur', () => {
-        // Delay to allow click on suggestion
-        setTimeout(() => suggestions.classList.remove('active'), 200);
-    });
-
-    input.addEventListener('focus', () => {
-        if (suggestions.children.length > 0) {
-            suggestions.classList.add('active');
-        }
-    });
-}
-
-async function geocodeSolarPlace(query) {
-    const suggestions = document.getElementById('solarPlaceSuggestions');
-    try {
-        const response = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`,
-            { headers: { 'Accept-Language': 'ru' } }
-        );
-        const data = await response.json();
-
-        suggestions.innerHTML = '';
-        if (data && data.length > 0) {
-            data.forEach(place => {
-                const div = document.createElement('div');
-                div.className = 'place-suggestion';
-                div.textContent = place.display_name;
-                div.addEventListener('click', () => selectSolarPlace(place));
-                suggestions.appendChild(div);
-            });
-            suggestions.classList.add('active');
-        } else {
-            suggestions.classList.remove('active');
-        }
-    } catch (err) {
-        console.error('Geocoding error:', err);
-        suggestions.classList.remove('active');
-    }
-}
-
-function selectSolarPlace(place) {
-    const lat = parseFloat(place.lat);
-    const lon = parseFloat(place.lon);
-    const name = place.display_name.split(',')[0]; // Short name
-
-    document.getElementById('solarLocationName').value = name;
-    document.getElementById('solarLocationLat').value = lat;
-    document.getElementById('solarLocationLon').value = lon;
-    document.getElementById('solarCoordsDisplay').textContent = `(${lat.toFixed(2)}°, ${lon.toFixed(2)}°)`;
-    document.getElementById('solarPlaceSuggestions').classList.remove('active');
+    input.addEventListener('focus', bind, { once: true });
 }
 
 function updateControlsVisibility() {
@@ -1081,7 +1099,7 @@ async function fetchTransitBiwheelData(dateStr) {
         user_id: ForecastState.userId,
         date: dateStr,
         time: '12:00:00',
-        timezone: 'UTC',
+        timezone: getForecastTimezone(),
     }).then((data) => {
         data._method = 'transits';
         ForecastState.transitBiwheelCache[dateStr] = data;
@@ -1122,7 +1140,7 @@ async function ensureTransitPeriodData(startDate, endDate, { showLoading = false
         user_id: ForecastState.userId,
         start_date: startDate,
         end_date: endDate,
-        timezone: 'UTC',
+        timezone: getForecastTimezone(),
         step_hours: 6,
     });
     ForecastState.transitPeriodCache[key] = data;
@@ -1298,7 +1316,6 @@ async function calculateSolar() {
     ForecastState.solarCalculatedYear = year;
     showState('solar', 'content');
     renderSolar(data);
-    resetSolarView();
 }
 
 function renderSolar(data) {
@@ -1319,8 +1336,12 @@ function renderSolar(data) {
 function renderSolarChart(data) {
     const svg = document.getElementById('solarWheel');
     if (!svg) return;
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
     if (!ForecastState.solarWheel) {
         ForecastState.solarWheel = new ChartWheel(svg);
+    }
+    if (typeof ForecastState.solarWheel.setPointScale === 'function') {
+        ForecastState.solarWheel.setPointScale(ForecastState.solarPointScale, { redraw: false });
     }
     ForecastState.solarWheel.setOrientationMode(ForecastState.solarOrientation, { redraw: false });
     ForecastState.solarWheel.draw({
@@ -1329,6 +1350,7 @@ function renderSolarChart(data) {
         angles: data.angles,
         aspects: [],
     });
+    resetSolarView();
 }
 
 function renderSolarPlanetsTable(data) {

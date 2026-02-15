@@ -128,7 +128,7 @@ class ProgressionListResponse(BaseModel):
     summary="Расчёт вторичной прогрессии",
     description="Рассчитывает прогрессивную карту на указанную дату (метод: 1 день = 1 год)",
 )
-async def calculate_progression(
+def calculate_progression(
     request: ProgressionRequest,
     db: Session = Depends(get_db)
 ):
@@ -168,7 +168,7 @@ async def calculate_progression(
     summary="Список прогрессий пользователя",
     description="Получить список всех сохранённых прогрессий пользователя",
 )
-async def list_progressions(
+def list_progressions(
     user_id: UUID,
     db: Session = Depends(get_db)
 ):

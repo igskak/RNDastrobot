@@ -18,6 +18,7 @@ class AspectService:
         self.db = db_session
         self._aspect_types_cache: Optional[List[RefAspectType]] = None
         self._planet_orbs_cache: Optional[Dict[Tuple[str, str], float]] = None
+        self._base_orbs_cache: Optional[Dict[str, float]] = None
     
     def calculate_aspects(self, user_id: UUID) -> List[Dict]:
         """
@@ -117,6 +118,15 @@ class AspectService:
             }
         return self._planet_orbs_cache
 
+    def _get_base_orbs(self) -> Dict[str, float]:
+        """Получить базовые орбисы аспектов с кешированием."""
+        if self._base_orbs_cache is None:
+            self._base_orbs_cache = {
+                aspect.aspect_type: float(aspect.base_orb)
+                for aspect in self._get_aspect_types()
+            }
+        return self._base_orbs_cache
+
     def _calculate_allowed_orb(
         self,
         body_a: str,
@@ -136,6 +146,7 @@ class AspectService:
             float: Максимальный орбис из двух тел
         """
         planet_orbs = self._get_planet_orbs()
+        base_orbs = self._get_base_orbs()
 
         # Получить орбис для тела A
         orb_a = planet_orbs.get((body_a, aspect_type))
@@ -145,16 +156,10 @@ class AspectService:
 
         # Если орбис не найден, использовать базовый из ref_aspect_types
         if orb_a is None:
-            aspect = self.db.query(RefAspectType).filter(
-                RefAspectType.aspect_type == aspect_type
-            ).first()
-            orb_a = float(aspect.base_orb) if aspect else 5.0
+            orb_a = base_orbs.get(aspect_type, 5.0)
 
         if orb_b is None:
-            aspect = self.db.query(RefAspectType).filter(
-                RefAspectType.aspect_type == aspect_type
-            ).first()
-            orb_b = float(aspect.base_orb) if aspect else 5.0
+            orb_b = base_orbs.get(aspect_type, 5.0)
 
         # ГЛАВНОЕ ПРАВИЛО: берем больший орбис
         return max(orb_a, orb_b)
@@ -330,4 +335,3 @@ class AspectService:
             NatalAspect.user_id == user_id,
             NatalAspect.aspect_type == aspect_type
         ).all()
-

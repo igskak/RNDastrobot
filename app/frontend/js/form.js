@@ -13,33 +13,41 @@ document.addEventListener('DOMContentLoaded', () => {
     // Заполняем список часовых поясов
     Timezones.populate(timezoneSelect);
 
-    // Автоопределение часового пояса и координат при вводе места
-    let debounceTimer;
-    placeInput.addEventListener('input', (e) => {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(async () => {
-            const place = e.target.value.trim();
-            if (place.length < 2) return;
-
-            // Определяем часовой пояс
-            const guessedTz = Timezones.guess(place);
-            if (guessedTz) {
-                timezoneSelect.value = guessedTz;
-                timezoneHint.textContent = '✓ Часовой пояс определён автоматически';
-                timezoneHint.style.color = '#22c55e';
-            }
-
-            // Пытаемся получить координаты через geocoding
-            try {
-                const coords = await geocodePlace(place);
-                if (coords) {
-                    setCoordinatesDMS(coords.lat, coords.lon);
+    const placeSuggestions = document.getElementById('birthPlaceSuggestions');
+    let placeAutocompleteBound = false;
+    function bindPlaceAutocomplete() {
+        if (placeAutocompleteBound || !window.PlaceAutocomplete || !placeInput || !placeSuggestions) return;
+        placeAutocompleteBound = true;
+        PlaceAutocomplete.attach({
+            input: placeInput,
+            suggestions: placeSuggestions,
+            minChars: 2,
+            debounceMs: 350,
+            limit: 5,
+            language: 'ru',
+            getLabel: (item) => item.shortName || item.displayName,
+            onInput: (place) => {
+                const guessedTz = Timezones.guess(place);
+                if (guessedTz) {
+                    timezoneSelect.value = guessedTz;
+                    timezoneHint.textContent = '✓ Часовой пояс определён автоматически';
+                    timezoneHint.style.color = '#22c55e';
                 }
-            } catch (err) {
-                console.log('Geocoding недоступен:', err);
+            },
+            onSelect: (item) => {
+                if (Number.isFinite(item.lat) && Number.isFinite(item.lon)) {
+                    setCoordinatesDMS(item.lat, item.lon);
+                }
+                const guessedTz = Timezones.guess(item.displayName || item.shortName);
+                if (guessedTz) {
+                    timezoneSelect.value = guessedTz;
+                    timezoneHint.textContent = '✓ Часовой пояс определён автоматически';
+                    timezoneHint.style.color = '#22c55e';
+                }
             }
-        }, 500);
-    });
+        });
+    }
+    placeInput?.addEventListener('focus', bindPlaceAutocomplete, { once: true });
 
     // Обработка отправки формы
     form.addEventListener('submit', async (e) => {
@@ -141,28 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * Геокодинг места через Nominatim API
- */
-async function geocodePlace(place) {
-    try {
-        const response = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(place)}&limit=1`,
-            { headers: { 'Accept-Language': 'ru' } }
-        );
-        const data = await response.json();
-        if (data && data.length > 0) {
-            return {
-                lat: parseFloat(data[0].lat),
-                lon: parseFloat(data[0].lon)
-            };
-        }
-    } catch (err) {
-        console.error('Geocoding error:', err);
-    }
-    return null;
-}
-
-/**
  * Установка координат в DMS формате
  */
 function setCoordinatesDMS(lat, lon) {
@@ -218,4 +204,3 @@ function decimalToDMS(decimal) {
     const sec = (minFloat - min) * 60;
     return { deg, min, sec };
 }
-

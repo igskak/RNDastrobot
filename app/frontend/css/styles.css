@@ -144,6 +144,44 @@ body {
     font-weight: 500;
 }
 
+/* Shared place autocomplete */
+.place-autocomplete-wrapper {
+    position: relative;
+}
+
+.place-suggestions {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    right: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 120;
+    display: none;
+}
+
+.place-suggestions.active {
+    display: block;
+}
+
+.place-suggestion {
+    padding: 8px 10px;
+    cursor: pointer;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+}
+
+.place-suggestion:last-child {
+    border-bottom: none;
+}
+
+.place-suggestion:hover {
+    background: var(--accent-light);
+}
+
 /* Inputs */
 input, select {
     width: 100%;
@@ -1042,6 +1080,23 @@ input[type="number"] {
 .settings-select:focus {
     outline: none;
     border-color: var(--accent);
+}
+
+.settings-size-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.settings-size-control input[type="range"] {
+    flex: 1;
+}
+
+.settings-size-control span {
+    min-width: 44px;
+    text-align: right;
+    font-size: 12px;
+    color: var(--text-secondary);
 }
 
 .planet-toggles {

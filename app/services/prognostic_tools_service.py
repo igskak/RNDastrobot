@@ -460,8 +460,12 @@ class PrognosticToolsService:
                 "planet": p.get("name") or p.get("planet"),
                 "sign": p.get("sign"),
                 "degree": p.get("degree_in_sign"),
-                "house": p.get("natal_house"),
-                "is_retrograde": p.get("is_retrograde"),
+                # Для прогрессий `house` должен отражать прогрессивный дом,
+                # чтобы не путать AI с натальным положением.
+                "house": p.get("progressed_house") or p.get("house") or p.get("natal_house"),
+                "natal_house": p.get("natal_house"),
+                "progressed_house": p.get("progressed_house") or p.get("house"),
+                "is_retrograde": p.get("is_retrograde", p.get("retrograde")),
             }
             for p in planets
         ]

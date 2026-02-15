@@ -80,12 +80,93 @@ class PlanetStrengthService:
         planets = self.db.query(NatalPlanet).filter(
             NatalPlanet.user_id == user_id
         ).all()
-        
+        if not planets:
+            self.db.commit()
+            return
+
+        # Загружаем связанные данные один раз, чтобы избежать N+1 запросов.
+        houses = self.db.query(NatalHouse).filter(
+            NatalHouse.user_id == user_id
+        ).all()
+        aspects = self.db.query(NatalAspect).filter(
+            NatalAspect.user_id == user_id
+        ).all()
+        configurations = self.db.query(NatalConfiguration).filter(
+            NatalConfiguration.user_id == user_id
+        ).all()
+        stelliums = self.db.query(NatalStellium).filter(
+            NatalStellium.user_id == user_id
+        ).all()
+
+        house_group_by_number = {
+            house.house_number: house.house_group
+            for house in houses
+        }
+
+        aspects_by_planet: Dict[str, List[NatalAspect]] = {}
+        for aspect in aspects:
+            aspects_by_planet.setdefault(aspect.planet_1, []).append(aspect)
+            aspects_by_planet.setdefault(aspect.planet_2, []).append(aspect)
+
+        configuration_score_by_planet: Dict[str, float] = {}
+        for config in configurations:
+            config_score = self.CONFIGURATION_WEIGHTS.get(config.type, 0.0)
+            if config_score <= 0.0 or not config.planets_involved:
+                continue
+            for planet_name in config.planets_involved:
+                configuration_score_by_planet[planet_name] = (
+                    configuration_score_by_planet.get(planet_name, 0.0) + config_score
+                )
+
+        stellium_planets = set()
+        for stellium in stelliums:
+            if stellium.planets:
+                stellium_planets.update(stellium.planets)
+
         for planet in planets:
-            strength = self._calculate_planet_strength(user_id, planet)
+            strength = self._calculate_planet_strength_prefetched(
+                planet=planet,
+                house_group=house_group_by_number.get(planet.house_number),
+                aspects=aspects_by_planet.get(planet.planet, []),
+                configuration_score=configuration_score_by_planet.get(planet.planet, 0.0),
+                in_stellium=planet.planet in stellium_planets,
+            )
             planet.strength_score = round(strength, 2)
         
         self.db.commit()
+
+    def _calculate_planet_strength_prefetched(
+        self,
+        planet: NatalPlanet,
+        house_group: str,
+        aspects: List[NatalAspect],
+        configuration_score: float,
+        in_stellium: bool,
+    ) -> float:
+        """Расчёт силы планеты на предзагруженных данных (без дополнительных SQL)."""
+        strength = 0.0
+        strength += self._get_dignity_score(planet.dignity)
+        strength += self.HOUSE_GROUP_WEIGHTS.get(house_group, 0.0)
+        strength += self._calculate_aspect_score_prefetched(planet.planet, aspects)
+        strength += configuration_score
+        if in_stellium:
+            strength += self.STELLIUM_WEIGHT
+        if planet.retrograde:
+            strength += self.RETROGRADE_PENALTY
+        return strength
+
+    def _calculate_aspect_score_prefetched(self, planet_name: str, aspects: List[NatalAspect]) -> float:
+        """Баллы за аспекты на предзагруженных данных."""
+        score = 0.0
+        for aspect in aspects:
+            if aspect.harmonic_type:
+                score += self.ASPECT_WEIGHTS.get(aspect.harmonic_type, 0.0)
+
+            if aspect.aspect_type == 'conjunction':
+                other_planet = aspect.planet_2 if aspect.planet_1 == planet_name else aspect.planet_1
+                score += self.CONJUNCTION_WEIGHTS.get(other_planet, 0.0)
+
+        return score
     
     def _calculate_planet_strength(self, user_id: UUID, planet: NatalPlanet) -> float:
         """
@@ -206,4 +287,3 @@ class PlanetStrengthService:
                 return self.STELLIUM_WEIGHT
 
         return 0.0
-

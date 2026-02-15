@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Прогностика — AstroBot</title>
     <link rel="stylesheet" href="css/styles.css?v=3">
-    <link rel="stylesheet" href="css/forecast.css?v=21">
+    <link rel="stylesheet" href="css/forecast.css?v=28">
     <link rel="stylesheet" href="css/chat.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -146,7 +146,7 @@
         </div>
         <div class="control-group" id="solarLocationGroup" style="display:none">
             <label>Место:</label>
-            <div id="solarLocationFields" style="display:inline-flex; margin-left:10px;">
+            <div id="solarLocationFields">
                 <div class="solar-place-wrapper">
                     <input type="text" id="solarLocationName" placeholder="Введите город..." autocomplete="off">
                     <div id="solarPlaceSuggestions" class="place-suggestions"></div>
@@ -363,10 +363,21 @@
                     <div class="solar-chart-section">
                         <div class="solar-wheel-wrapper" id="solarWheelWrapper">
                             <svg id="solarWheel" viewBox="0 0 500 500"></svg>
+                            <div class="bw-settings-panel hidden" id="solarSettingsPanel">
+                                <div class="bw-settings-dialog solar-settings-dialog">
+                                    <button class="bw-settings-close" id="solarSettingsClose" title="Закрыть">✕</button>
+                                    <div class="bw-settings-title">Размер точек соляра</div>
+                                    <div class="bw-size-control">
+                                        <input type="range" id="solarPointScaleRange" min="80" max="170" step="5" value="100">
+                                        <span id="solarPointScaleValue">100%</span>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="biwheel-zoom-controls">
                                 <button class="bw-zoom-btn" id="solarZoomIn" title="Приблизить">+</button>
                                 <button class="bw-zoom-btn" id="solarZoomOut" title="Отдалить">−</button>
                                 <button class="bw-zoom-btn" id="solarZoomReset" title="Сбросить">⟳</button>
+                                <button class="bw-zoom-btn bw-settings-btn" id="solarSettingsBtn" title="Настройки">⚙</button>
                             </div>
                         </div>
                     </div>
@@ -399,10 +410,11 @@
     <!-- Scripts -->
     <script src="js/api.js"></script>
     <script src="js/symbols.js?v=3"></script>
-    <script src="js/chart-wheel.js"></script>
+    <script src="js/place-autocomplete.js?v=1"></script>
+    <script src="js/chart-wheel.js?v=2"></script>
     <script src="js/forecast-timeline.js?v=6"></script>
     <script src="js/forecast-biwheel.js?v=17"></script>
-    <script src="js/forecast.js?v=13"></script>
+    <script src="js/forecast.js?v=20"></script>
     <script src="js/chatkit-init.js"></script>
 </body>
 </html>

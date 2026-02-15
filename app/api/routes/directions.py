@@ -150,7 +150,7 @@ class DirectionListResponse(BaseModel):
     summary="Расчёт дирекции",
     description="Рассчитывает дирекционную карту на указанную дату",
 )
-async def calculate_direction(
+def calculate_direction(
     request: DirectionRequest,
     db: Session = Depends(get_db)
 ):
@@ -192,7 +192,7 @@ async def calculate_direction(
     summary="Список дирекций пользователя",
     description="Получить список всех сохранённых дирекций пользователя",
 )
-async def list_directions(
+def list_directions(
     user_id: UUID,
     db: Session = Depends(get_db)
 ):

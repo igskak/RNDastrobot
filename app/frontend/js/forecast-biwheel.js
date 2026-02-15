@@ -975,6 +975,26 @@
         applyFocusState();
     }
 
+    function tryClearFocusFromChartClick(event) {
+        if (!focusState.mode || !event?.target) return;
+        const interactive = event.target.closest('.bw-planet-group, .bw-aspect-line, .bw-house-cusp');
+        if (interactive) return;
+        clearFocus();
+    }
+
+    function tryClearFocusFromEsc(event) {
+        if (event.key !== 'Escape' || !focusState.mode) return;
+        const target = event.target;
+        const isTypingTarget = target && (
+            target.tagName === 'INPUT' ||
+            target.tagName === 'TEXTAREA' ||
+            target.tagName === 'SELECT' ||
+            target.isContentEditable
+        );
+        if (isTypingTarget) return;
+        clearFocus();
+    }
+
     function matchesFocusLine(line) {
         if (!focusState.mode) return true;
         if (focusState.mode === 'aspect') {
@@ -1175,6 +1195,11 @@
         document.getElementById('bwClearFocusBtn')?.addEventListener('click', () => {
             clearFocus();
         });
+        const chartSvg = document.getElementById('biwheelSvg');
+        if (chartSvg) {
+            chartSvg.addEventListener('click', tryClearFocusFromChartClick);
+        }
+        document.addEventListener('keydown', tryClearFocusFromEsc);
 
         const settingsBtn = document.getElementById('bwSettingsBtn');
         const settingsPanel = document.getElementById('bwSettingsPanel');

@@ -17,6 +17,11 @@ let toastTimer = null;
 
 const refs = {};
 
+function getAdminHeaders() {
+    const token = localStorage.getItem('adminApiToken');
+    return token ? { 'X-Admin-Token': token } : {};
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     cacheElements();
     bindEvents();
@@ -73,7 +78,9 @@ async function loadClients() {
     refs.tableWrap.classList.add('hidden');
 
     try {
-        const response = await fetch(`${API_BASE}/users`);
+        const response = await fetch(`${API_BASE}/users`, {
+            headers: getAdminHeaders()
+        });
         if (!response.ok) throw new Error('Не удалось получить список клиентов');
 
         const users = await response.json();
@@ -239,7 +246,10 @@ async function handleDelete(userId, button) {
     button.textContent = '...';
 
     try {
-        const response = await fetch(`${API_BASE}/users/${userId}`, { method: 'DELETE' });
+        const response = await fetch(`${API_BASE}/users/${userId}`, {
+            method: 'DELETE',
+            headers: getAdminHeaders()
+        });
         if (!response.ok) throw new Error('Ошибка удаления');
 
         state.users = state.users.filter((user) => String(user.user_id) !== String(userId));
