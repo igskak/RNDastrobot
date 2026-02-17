@@ -7,17 +7,16 @@ from typing import Optional, Dict, Any, List, Literal
 from uuid import UUID
 from sqlalchemy.orm import Session
 from loguru import logger
-import os
 
 from app.services.openai_service import get_openai_service
 from app.services.natal_chart_service import NatalChartService
 from app.services.prognostic_tools_service import PrognosticToolsService
 from app.services.forecast_run_service import ForecastRunService
 from app.database.connection import get_db
+from app.utils.ephemeris import get_ephemeris_path
 
 # Инициализация natal_service для загрузки карт из БД
-_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-EPHE_PATH = os.getenv("SWISSEPH_EPHE_PATH", os.path.join(_PROJECT_ROOT, "swisseph", "ephe"))
+EPHE_PATH = get_ephemeris_path()
 natal_service = NatalChartService(ephe_path=EPHE_PATH)
 
 router = APIRouter()

@@ -4,7 +4,6 @@ API эндпоинты для работы с соларными картами 
 from fastapi import APIRouter, HTTPException, status, Depends
 from sqlalchemy.orm import Session
 from uuid import UUID
-import os
 
 from app.models.schemas import (
     SolarReturnRequest,
@@ -15,11 +14,12 @@ from app.models.schemas import (
 )
 from app.database.connection import get_db
 from app.services.solar_return_service import SolarReturnService
+from app.utils.ephemeris import get_ephemeris_path
 
 router = APIRouter(prefix="/solar", tags=["Solar Return"])
 
 # Путь к эфемеридам
-EPHE_PATH = os.environ.get('SWISSEPH_EPHE_PATH') or os.environ.get('EPHEMERIS_PATH', './ephe')
+EPHE_PATH = get_ephemeris_path()
 
 
 @router.post(
@@ -152,4 +152,3 @@ def list_solar_returns(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Ошибка получения списка соляров: {str(e)}"
         )
-

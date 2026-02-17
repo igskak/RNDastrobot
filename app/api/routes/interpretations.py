@@ -13,14 +13,13 @@ from app.database.connection import get_db
 from app.database.models import NatalInterpretation, User
 from app.services.openai_service import get_openai_service, OpenAIService
 from app.services.natal_chart_service import NatalChartService
+from app.utils.ephemeris import get_ephemeris_path
 from loguru import logger
-import os
 
 router = APIRouter()
 
 # Инициализация сервисов
-_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-EPHE_PATH = os.getenv("SWISSEPH_EPHE_PATH", os.path.join(_PROJECT_ROOT, "swisseph", "ephe"))
+EPHE_PATH = get_ephemeris_path()
 natal_service = NatalChartService(ephe_path=EPHE_PATH)
 
 
@@ -189,4 +188,3 @@ async def get_interpretation(
         tokens_used=cached.tokens_used,
         generation_time_ms=cached.generation_time_ms
     )
-

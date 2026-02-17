@@ -7,17 +7,16 @@ from uuid import UUID
 from pydantic import BaseModel, Field, field_validator
 from datetime import date as date_type
 from typing import List, Optional
-import os
 
 from app.services.progression_service import ProgressionService
 from app.database.connection import get_db
+from app.utils.ephemeris import get_ephemeris_path
 from loguru import logger
 
 router = APIRouter()
 
 # Путь к эфемеридам
-_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-EPHE_PATH = os.getenv("SWISSEPH_EPHE_PATH", os.path.join(_PROJECT_ROOT, "swisseph", "ephe"))
+EPHE_PATH = get_ephemeris_path()
 
 
 # === Pydantic Schemas ===

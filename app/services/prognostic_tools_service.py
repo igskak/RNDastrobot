@@ -7,7 +7,6 @@ Prognostic Tools Service — tool-функции для AI chatbot (function cal
 Используется OpenAI Responses API с tools (function calling):
 AI агент решает какие методы вызвать на основе вопроса пользователя.
 """
-import os
 import json
 from typing import Dict, Any, List, Optional
 from uuid import UUID
@@ -21,9 +20,9 @@ from app.services.direction_service import DirectionService
 from app.services.solar_return_service import SolarReturnService
 from app.services.forecast_run_service import ForecastRunService
 from app.database.models import User
+from app.utils.ephemeris import get_ephemeris_path
 
-_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-EPHE_PATH = os.getenv("SWISSEPH_EPHE_PATH", os.path.join(_PROJECT_ROOT, "swisseph", "ephe"))
+EPHE_PATH = get_ephemeris_path()
 
 
 # ============================================================================

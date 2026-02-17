@@ -34,6 +34,7 @@ from app.services.natal_chart_service import NatalChartService
 from app.database.connection import get_db
 from app.database.repositories.user_repository import UserRepository
 from app.database.models import User
+from app.utils.ephemeris import get_ephemeris_path
 from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 import os
 from loguru import logger
@@ -41,12 +42,9 @@ from loguru import logger
 router = APIRouter()
 
 # Инициализация сервиса
-# Путь к эфемеридам Swiss Ephemeris (абсолютный путь)
-_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-EPHE_PATH = os.getenv("SWISSEPH_EPHE_PATH", os.path.join(_PROJECT_ROOT, "swisseph", "ephe"))
+EPHE_PATH = get_ephemeris_path()
 # Логируем только в development
 if os.getenv('APP_ENV') != 'production':
-    logger.info(f"Project root: {_PROJECT_ROOT}")
     logger.info(f"Ephemeris path: {EPHE_PATH}")
 natal_service = NatalChartService(ephe_path=EPHE_PATH)
 
