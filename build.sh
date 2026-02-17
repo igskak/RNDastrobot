@@ -34,6 +34,9 @@ if [ ! -d "swisseph/ephe" ]; then
     echo "❌ Error: Ephemeris files not found!"
     exit 1
 fi
+if [ ! -f "swisseph/ephe/seas_18.se1" ]; then
+    echo "❌ Error: Required SwissEph file swisseph/ephe/seas_18.se1 not found!"
+    exit 1
+fi
 
 echo "✅ Build completed successfully!"
-

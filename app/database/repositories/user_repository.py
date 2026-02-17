@@ -146,13 +146,16 @@ class UserRepository:
         Returns:
             bool: True если удалён, False если не найден
         """
-        user = self.get_user_by_id(user_id)
-        if not user:
-            return False
-        
-        self.session.delete(user)
+        # Используем прямой DELETE, чтобы не триггерить ORM-загрузку всех
+        # relationships (это может падать, если на проде часть таблиц ещё
+        # не создана миграциями). Очистка зависимых строк остаётся на FK CASCADE.
+        deleted_rows = (
+            self.session.query(User)
+            .filter(User.user_id == user_id)
+            .delete(synchronize_session=False)
+        )
         self.session.flush()
-        return True
+        return deleted_rows > 0
     
     def find_users_by_location(
         self,
@@ -179,4 +182,3 @@ class UserRepository:
             )
             .all()
         )
-

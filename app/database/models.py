@@ -213,6 +213,12 @@ class NatalConfiguration(Base):
 
     # Relationship
     user = relationship("User", back_populates="configurations")
+    aspect_links = relationship(
+        "NatalConfigurationAspect",
+        back_populates="configuration",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
     __table_args__ = (
         CheckConstraint(
@@ -366,6 +372,12 @@ class NatalAspect(Base):
 
     # Relationship
     user = relationship("User", back_populates="natal_aspects")
+    configuration_links = relationship(
+        "NatalConfigurationAspect",
+        back_populates="aspect",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
     __table_args__ = (
         CheckConstraint("harmonic_type IN ('harmonious', 'tense', 'neutral')", name='valid_harmonic_type'),
@@ -412,8 +424,16 @@ class NatalConfigurationAspect(Base):
     created_at = Column(DateTime, server_default=func.now())
 
     # Relationships
-    configuration = relationship("NatalConfiguration", backref="aspect_links")
-    aspect = relationship("NatalAspect", backref="configuration_links")
+    configuration = relationship(
+        "NatalConfiguration",
+        back_populates="aspect_links",
+        passive_deletes=True,
+    )
+    aspect = relationship(
+        "NatalAspect",
+        back_populates="configuration_links",
+        passive_deletes=True,
+    )
 
     __table_args__ = (
         CheckConstraint('aspect_score >= 1 AND aspect_score <= 3', name='valid_aspect_score'),

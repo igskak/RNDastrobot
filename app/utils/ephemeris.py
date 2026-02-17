@@ -19,8 +19,11 @@ def get_ephemeris_path() -> str:
     2) Known project-relative defaults
     """
     explicit_path = os.getenv("SWISSEPH_EPHE_PATH") or os.getenv("EPHEMERIS_PATH")
+    explicit_resolved = None
     if explicit_path:
-        return str(Path(explicit_path).expanduser().resolve())
+        explicit_resolved = Path(explicit_path).expanduser().resolve()
+        if _is_valid_ephemeris_dir(explicit_resolved):
+            return str(explicit_resolved)
 
     # .../swisseph/app/utils/ephemeris.py -> .../swisseph/app
     app_dir = Path(__file__).resolve().parents[1]
@@ -38,10 +41,12 @@ def get_ephemeris_path() -> str:
         if _is_valid_ephemeris_dir(candidate):
             return str(candidate)
 
+    if explicit_resolved and explicit_resolved.is_dir():
+        return str(explicit_resolved)
+
     for candidate in candidates:
         if candidate.is_dir():
             return str(candidate)
 
     # Fallback to canonical default path even if directory is not yet mounted.
     return str(candidates[0])
-

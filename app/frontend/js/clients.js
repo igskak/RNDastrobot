@@ -250,7 +250,18 @@ async function handleDelete(userId, button) {
             method: 'DELETE',
             headers: getAdminHeaders()
         });
-        if (!response.ok) throw new Error('Ошибка удаления');
+        if (!response.ok) {
+            let message = 'Ошибка удаления';
+            try {
+                const payload = await response.json();
+                if (payload && typeof payload.detail === 'string' && payload.detail.trim()) {
+                    message = payload.detail;
+                }
+            } catch (_) {
+                // ignore json parse errors for non-json responses
+            }
+            throw new Error(message);
+        }
 
         state.users = state.users.filter((user) => String(user.user_id) !== String(userId));
 

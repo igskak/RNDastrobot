@@ -5,6 +5,7 @@ import swisseph as swe
 from typing import List, Dict, Tuple
 from app.utils.constants import PLANETS, get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds
 from app.services.special_points_service import SpecialPointsService
+from app.utils.ephemeris import get_ephemeris_path
 from loguru import logger
 
 
@@ -18,8 +19,12 @@ class SwissEphemerisEngine:
         Args:
             ephe_path: Путь к файлам эфемерид (опционально)
         """
-        if ephe_path:
-            swe.set_ephe_path(ephe_path)
+        self.ephe_path = ephe_path or get_ephemeris_path()
+        self._ensure_ephe_path()
+
+    def _ensure_ephe_path(self) -> None:
+        """Гарантированно применяет путь к файлам эфемерид."""
+        swe.set_ephe_path(self.ephe_path)
     
     def calculate_planets(self, jd: float) -> List[Dict]:
         """
@@ -31,6 +36,7 @@ class SwissEphemerisEngine:
         Returns:
             Список словарей с данными о планетах
         """
+        self._ensure_ephe_path()
         planets_data = []
 
         for planet_id, planet_name in PLANETS.items():
@@ -43,7 +49,14 @@ class SwissEphemerisEngine:
                 is_retrograde = False  # Прозерпина всегда директная
             else:
                 # Расчёт позиции планеты через Swiss Ephemeris
-                planet_data, ret = swe.calc_ut(jd, planet_id, swe.FLG_SWIEPH | swe.FLG_SPEED)
+                try:
+                    planet_data, ret = swe.calc_ut(jd, planet_id, swe.FLG_SWIEPH | swe.FLG_SPEED)
+                except Exception as e:
+                    # После swe.close() глобальный ephe_path может сбрасываться.
+                    # Повторно применяем путь и делаем один retry.
+                    self._ensure_ephe_path()
+                    logger.warning("SwissEph calc_ut retry after path reset: {}", str(e))
+                    planet_data, ret = swe.calc_ut(jd, planet_id, swe.FLG_SWIEPH | swe.FLG_SPEED)
 
                 longitude = planet_data[0]  # Эклиптическая долгота
                 latitude = planet_data[1]   # Эклиптическая широта
@@ -92,6 +105,7 @@ class SwissEphemerisEngine:
         # Сбрасываем состояние Swiss Ephemeris перед расчётом
         # Это предотвращает ошибки после нескольких вызовов
         swe.close()
+        self._ensure_ephe_path()
 
         # Расчёт домов через Swiss Ephemeris
         # Для высоких широт (>66°) Placidus и Koch не работают
