@@ -43,6 +43,7 @@ class User(Base):
     directions = relationship("Direction", back_populates="user", cascade="all, delete-orphan")
     transit_events_cache = relationship("TransitEventsCache", back_populates="user", cascade="all, delete-orphan")
     prognostic_interpretations = relationship("PrognosticInterpretation", back_populates="user", cascade="all, delete-orphan")
+    forecast_runs = relationship("ForecastRun", back_populates="user", cascade="all, delete-orphan")
     # Relationships для eager loading (оптимизация запросов)
     natal_aspects = relationship("NatalAspect", back_populates="user", cascade="all, delete-orphan")
     natal_stelliums = relationship("NatalStellium", back_populates="user", cascade="all, delete-orphan")
@@ -859,3 +860,55 @@ class PrognosticInterpretation(Base):
         Index('idx_pi_created', 'created_at'),
     )
 
+
+# ============================================================================
+# FORECAST RUNS (active прогнозный контекст для ChatKit/Agent Builder)
+# ============================================================================
+
+class ForecastRun(Base):
+    """
+    Снимок рассчитанной прогностики (контекст активного вопроса в чате).
+
+    Хранит конкретный метод + период/дату/место + JSON-данные расчёта.
+    """
+    __tablename__ = 'forecast_runs'
+
+    run_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
+
+    method = Column(String(30), nullable=False)  # transits, progressions, directions, solar_return
+    direction_type = Column(String(20))
+
+    period_start = Column(Date)
+    period_end = Column(Date)
+    target_date = Column(Date)
+    year = Column(Integer)
+
+    timezone = Column(String(50))
+    location_name = Column(String(200))
+    location_lat = Column(Numeric(9, 6))
+    location_lon = Column(Numeric(9, 6))
+
+    context_data = Column(JSONB, nullable=False, default=dict)
+    context_hash = Column(String(64))
+
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    user = relationship("User", back_populates="forecast_runs")
+
+    __table_args__ = (
+        CheckConstraint(
+            "method IN ('transits', 'progressions', 'directions', 'solar_return')",
+            name='valid_forecast_run_method'
+        ),
+        CheckConstraint(
+            "direction_type IS NULL OR direction_type IN ('solar_arc', 'symbolic', 'equatorial')",
+            name='valid_forecast_run_direction_type'
+        ),
+        Index('idx_forecast_runs_user_active', 'user_id', 'is_active'),
+        Index('idx_forecast_runs_user_created', 'user_id', 'created_at'),
+        Index('idx_forecast_runs_method', 'method'),
+        Index('idx_forecast_runs_context_hash', 'context_hash'),
+    )

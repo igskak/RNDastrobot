@@ -2,8 +2,8 @@
 API эндпоинты для чата с OpenAI агентом (ChatKit интеграция + прогностический чат)
 """
 from fastapi import APIRouter, HTTPException, status, Depends
-from pydantic import BaseModel
-from typing import Optional, Dict, Any, List
+from pydantic import BaseModel, Field
+from typing import Optional, Dict, Any, List, Literal
 from uuid import UUID
 from sqlalchemy.orm import Session
 from loguru import logger
@@ -12,6 +12,7 @@ import os
 from app.services.openai_service import get_openai_service
 from app.services.natal_chart_service import NatalChartService
 from app.services.prognostic_tools_service import PrognosticToolsService
+from app.services.forecast_run_service import ForecastRunService
 from app.database.connection import get_db
 
 # Инициализация natal_service для загрузки карт из БД
@@ -58,6 +59,30 @@ class PrognosticToolRequest(BaseModel):
     tool_name: str
     arguments: Dict[str, Any] = {}
     frontend_context: Optional[Dict[str, Any]] = None
+
+
+class SaveForecastRunRequest(BaseModel):
+    """Запрос на сохранение snapshot рассчитанной прогностики."""
+    user_id: str
+    method: Literal["transits", "progressions", "directions", "solar_return"]
+    context_data: Dict[str, Any] = Field(default_factory=dict)
+    period_start: Optional[str] = None
+    period_end: Optional[str] = None
+    target_date: Optional[str] = None
+    year: Optional[int] = None
+    timezone: Optional[str] = None
+    direction_type: Optional[Literal["solar_arc", "symbolic", "equatorial"]] = None
+    location_name: Optional[str] = None
+    location_lat: Optional[float] = None
+    location_lon: Optional[float] = None
+
+
+class SaveForecastRunResponse(BaseModel):
+    """Ответ после сохранения snapshot прогностики."""
+    run_id: str
+    method: str
+    is_active: bool = True
+    created_at: Optional[str] = None
 
 
 # ============================================================================
@@ -312,4 +337,58 @@ async def execute_prognostic_tool(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Ошибка выполнения tool: {str(e)}"
+        )
+
+
+@router.post(
+    "/chat/forecast-run",
+    response_model=SaveForecastRunResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Сохранить активный forecast run",
+    description="Сохраняет snapshot текущей рассчитанной прогностики для контекста ChatKit/Agent Builder"
+)
+async def save_forecast_run(
+    request: SaveForecastRunRequest,
+    db: Session = Depends(get_db)
+) -> SaveForecastRunResponse:
+    """Сохранить snapshot текущего расчета прогностики и сделать его активным."""
+    try:
+        user_id_clean = request.user_id.replace("user_", "") if request.user_id.startswith("user_") else request.user_id
+        try:
+            user_uuid = UUID(user_id_clean)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Некорректный формат user_id: {request.user_id}"
+            )
+
+        service = ForecastRunService(db)
+        run = service.create_active_run(
+            user_id=user_uuid,
+            method=request.method,
+            context_data=request.context_data,
+            period_start=request.period_start,
+            period_end=request.period_end,
+            target_date=request.target_date,
+            year=request.year,
+            timezone=request.timezone,
+            direction_type=request.direction_type,
+            location_name=request.location_name,
+            location_lat=request.location_lat,
+            location_lon=request.location_lon,
+        )
+
+        return SaveForecastRunResponse(
+            run_id=str(run.run_id),
+            method=run.method,
+            is_active=run.is_active,
+            created_at=run.created_at.isoformat() if run.created_at else None,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Ошибка сохранения forecast run: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка сохранения forecast run: {str(e)}"
         )

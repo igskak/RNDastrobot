@@ -11,14 +11,18 @@ const API_BASE = window.location.hostname === 'localhost'
 const ForecastState = {
     userId: null,
     natalData: null,
-    currentTab: 'timeline',
+    currentTab: 'biwheel',
     method: 'transits',
     // cached results
     transitEvents: null,
     transitMoment: null,
     progressionData: null,
     directionData: null,
+    combinedBiwheelData: null,
+    combinedBiwheelCache: {},
+    combinedBiwheelInFlight: {},
     solarData: null,
+    solarCache: {},
     solarOrientation: 'aries',
     solarPointScale: 1.0,
     solarWheel: null,
@@ -39,6 +43,7 @@ const ForecastState = {
     transitBiwheelBusy: false,
     transitBiwheelInFlight: {},
     transitPrewarmSeq: 0,
+    combinedPeriodPrewarmSeq: 0,
     transitPeriodCache: {},
     transitPeriodKey: null,
     transitCalculatedRange: null,
@@ -49,7 +54,14 @@ const ForecastState = {
     solarCalculatedYear: null,
     tableDataKey: null,
     timezone: 'UTC',
+    activeRunId: null,
+    activeRunMethod: null,
 };
+window.ForecastState = ForecastState;
+
+const SOLAR_LOCATION_STORAGE_KEY = 'forecastSolarLocation';
+const SOLAR_YEAR_STORAGE_KEY = 'forecastSolarYear';
+const DIRECTION_TYPE_STORAGE_KEY = 'forecastDirectionType';
 
 function clampChartPointScale(v) {
     const n = Number(v);
@@ -69,15 +81,23 @@ function buildForecastChatContext() {
     const solarYearRaw = document.getElementById('solarYear')?.value;
     const solarYear = solarYearRaw ? parseInt(solarYearRaw, 10) : null;
 
+    const solarLatRaw = parseFloat(document.getElementById('solarLocationLat')?.value);
+    const solarLonRaw = parseFloat(document.getElementById('solarLocationLon')?.value);
+
     const context = {
         page: 'forecast',
         active_tab: ForecastState.currentTab,
         selected_method: method,
+        active_run_id: ForecastState.activeRunId || null,
+        active_run_method: ForecastState.activeRunMethod || null,
         controls: {
             start_date: startDate,
             end_date: endDate,
             single_date: singleDate,
             solar_year: Number.isNaN(solarYear) ? null : solarYear,
+            solar_location_name: document.getElementById('solarLocationName')?.value?.trim() || null,
+            solar_location_lat: Number.isFinite(solarLatRaw) ? solarLatRaw : null,
+            solar_location_lon: Number.isFinite(solarLonRaw) ? solarLonRaw : null,
         },
         calculated: {
             transits: null,
@@ -132,6 +152,18 @@ function buildForecastChatContext() {
 
 window.getForecastChatContext = buildForecastChatContext;
 
+async function saveActiveForecastRun(payload) {
+    try {
+        const result = await apiPost('/chat/forecast-run', payload);
+        ForecastState.activeRunId = result.run_id || null;
+        ForecastState.activeRunMethod = result.method || null;
+        return result;
+    } catch (err) {
+        console.warn('Не удалось сохранить forecast run:', err);
+        return null;
+    }
+}
+
 // ─── Solar Zoom/Pan ─────────────────────────────────────
 let solarZoomLevel = 1;
 let solarPanX = 0;
@@ -181,9 +213,12 @@ function initDefaults() {
     const today = new Date();
     const fmt = d => d.toISOString().split('T')[0];
     document.getElementById('startDate').value = fmt(today);
-    applyDatePreset(6); // default 6 months
+    applyDatePreset(6, 'months'); // default 6 months
     document.getElementById('singleDate').value = fmt(today);
-    document.getElementById('solarYear').value = today.getFullYear();
+    const savedSolarYear = parseInt(localStorage.getItem(SOLAR_YEAR_STORAGE_KEY), 10);
+    document.getElementById('solarYear').value = (
+        Number.isFinite(savedSolarYear) && savedSolarYear >= 1900 && savedSolarYear <= 2100
+    ) ? savedSolarYear : today.getFullYear();
     ForecastState.solarPointScale = readChartPointScale();
     const solarScaleRange = document.getElementById('solarPointScaleRange');
     const solarScaleValue = document.getElementById('solarPointScaleValue');
@@ -191,18 +226,31 @@ function initDefaults() {
     if (solarScaleValue) solarScaleValue.textContent = `${Math.round(ForecastState.solarPointScale * 100)}%`;
     const stepSelect = document.getElementById('biwheelStepSelect');
     if (stepSelect) stepSelect.value = ForecastState.transitScaleUnit;
+    ForecastState.directionType = normalizeDirectionType(localStorage.getItem(DIRECTION_TYPE_STORAGE_KEY) || 'solar_arc');
+    const directionTypeSelect = document.getElementById('bwDirectionTypeSelect');
+    if (directionTypeSelect) directionTypeSelect.value = ForecastState.directionType;
+    restoreSolarLocationFromStorage();
 }
 
-function applyDatePreset(months) {
+function applyDatePreset(value, unit = 'months') {
     const today = new Date();
     const fmt = d => d.toISOString().split('T')[0];
     document.getElementById('startDate').value = fmt(today);
     const end = new Date(today);
-    end.setMonth(end.getMonth() + months);
+    if (unit === 'days') {
+        end.setDate(end.getDate() + value);
+    } else {
+        end.setMonth(end.getMonth() + value);
+    }
     document.getElementById('endDate').value = fmt(end);
     // Update active preset button
     document.querySelectorAll('.date-presets .preset-btn').forEach(b => {
-        b.classList.toggle('active', parseInt(b.dataset.months) === months);
+        const months = b.dataset.months ? parseInt(b.dataset.months, 10) : null;
+        const days = b.dataset.days ? parseInt(b.dataset.days, 10) : null;
+        const matches = unit === 'days'
+            ? days === value
+            : months === value;
+        b.classList.toggle('active', matches);
     });
 }
 
@@ -291,10 +339,11 @@ function initControls() {
     document.getElementById('helpClose')?.addEventListener('click', () => helpOverlay.style.display = 'none');
     helpOverlay?.addEventListener('click', e => { if (e.target === helpOverlay) helpOverlay.style.display = 'none'; });
 
-    document.getElementById('methodSelect').addEventListener('change', e => {
-        ForecastState.method = e.target.value;
-        updateControlsVisibility();
-    });
+    const methodSelect = document.getElementById('methodSelect');
+    if (methodSelect) {
+        methodSelect.value = 'transits';
+        ForecastState.method = 'transits';
+    }
     document.getElementById('btnCalculate').addEventListener('click', onCalculate);
     // Timeline filter re-render
     ['filterMajor'].forEach(id => {
@@ -305,7 +354,13 @@ function initControls() {
     });
     // Date presets
     document.querySelectorAll('.date-presets .preset-btn').forEach(btn => {
-        btn.addEventListener('click', () => applyDatePreset(parseInt(btn.dataset.months)));
+        btn.addEventListener('click', () => {
+            if (btn.dataset.days) {
+                applyDatePreset(parseInt(btn.dataset.days, 10), 'days');
+                return;
+            }
+            applyDatePreset(parseInt(btn.dataset.months, 10), 'months');
+        });
     });
     ['startDate', 'endDate'].forEach(id => {
         const el = document.getElementById(id);
@@ -430,6 +485,24 @@ function initControls() {
     document.getElementById('btnScaleNext')?.addEventListener('click', () => shiftTransitScale(1));
     document.getElementById('btnScalePlay')?.addEventListener('click', toggleTransitScalePlayback);
     document.getElementById('biwheelTimeSlider')?.addEventListener('input', onTransitScaleSliderInput);
+    const directionTypeSelect = document.getElementById('bwDirectionTypeSelect');
+    if (directionTypeSelect) {
+        directionTypeSelect.value = normalizeDirectionType(ForecastState.directionType || 'solar_arc');
+        directionTypeSelect.addEventListener('change', async e => {
+            const nextType = normalizeDirectionType(e.target.value);
+            ForecastState.directionType = nextType;
+            localStorage.setItem(DIRECTION_TYPE_STORAGE_KEY, nextType);
+            ForecastState.combinedPeriodPrewarmSeq += 1;
+            if (ForecastState.currentTab === 'biwheel' || ForecastState.currentTab === 'table') {
+                try {
+                    await calculateAllForecastViews();
+                    await renderCurrentTabFromCache();
+                } catch (err) {
+                    console.error('Direction type switch error:', err);
+                }
+            }
+        });
+    }
 
     toggleTableFilters(false);
     updateTableFiltersBadge();
@@ -658,6 +731,28 @@ function scheduleTransitBiwheelPrewarm(centerDate) {
     })();
 }
 
+function scheduleCombinedPeriodPrewarm(directionType) {
+    const method = document.getElementById('methodSelect')?.value;
+    if (method !== 'transits') return;
+    const points = ForecastState.transitScalePoints || [];
+    if (!points.length) return;
+
+    const normalizedDirectionType = normalizeDirectionType(directionType);
+    const seq = ++ForecastState.combinedPeriodPrewarmSeq;
+    (async () => {
+        for (const dateStr of points) {
+            if (seq !== ForecastState.combinedPeriodPrewarmSeq) return;
+            const key = getCombinedPointKey(dateStr, normalizedDirectionType);
+            if (ForecastState.combinedBiwheelCache[key]) continue;
+            try {
+                await ensureCombinedBiwheelData(dateStr, { directionType: normalizedDirectionType });
+            } catch (err) {
+                console.debug('Combined period prewarm skipped:', dateStr, err?.message || err);
+            }
+        }
+    })();
+}
+
 function renderTransitScaleTicks(container, points, activeIndex) {
     if (!container) return;
     if (!points || points.length === 0) {
@@ -800,11 +895,13 @@ function initSolarPlaceAutocomplete() {
                 document.getElementById('solarLocationLat').value = '';
                 document.getElementById('solarLocationLon').value = '';
                 document.getElementById('solarCoordsDisplay').textContent = '';
+                persistSolarLocationToStorage();
             },
             onSelect: (item) => {
                 document.getElementById('solarLocationLat').value = item.lat;
                 document.getElementById('solarLocationLon').value = item.lon;
                 document.getElementById('solarCoordsDisplay').textContent = `(${item.lat.toFixed(2)}°, ${item.lon.toFixed(2)}°)`;
+                persistSolarLocationToStorage();
             }
         });
     };
@@ -812,15 +909,57 @@ function initSolarPlaceAutocomplete() {
     input.addEventListener('focus', bind, { once: true });
 }
 
+function getSolarCacheKey(year, lat, lon, name) {
+    const latKey = Number.isFinite(lat) ? lat.toFixed(5) : 'NaN';
+    const lonKey = Number.isFinite(lon) ? lon.toFixed(5) : 'NaN';
+    const nameKey = (name || '').trim().toLowerCase();
+    return `${year}|${latKey}|${lonKey}|${nameKey}`;
+}
+
+function persistSolarLocationToStorage() {
+    const name = document.getElementById('solarLocationName')?.value?.trim() || '';
+    const lat = parseFloat(document.getElementById('solarLocationLat')?.value);
+    const lon = parseFloat(document.getElementById('solarLocationLon')?.value);
+    const payload = {
+        name,
+        lat: Number.isFinite(lat) ? lat : null,
+        lon: Number.isFinite(lon) ? lon : null,
+    };
+    localStorage.setItem(SOLAR_LOCATION_STORAGE_KEY, JSON.stringify(payload));
+}
+
+function restoreSolarLocationFromStorage() {
+    const raw = localStorage.getItem(SOLAR_LOCATION_STORAGE_KEY);
+    if (!raw) return;
+    let parsed;
+    try {
+        parsed = JSON.parse(raw);
+    } catch {
+        return;
+    }
+    const nameInput = document.getElementById('solarLocationName');
+    const latInput = document.getElementById('solarLocationLat');
+    const lonInput = document.getElementById('solarLocationLon');
+    const coordsDisplay = document.getElementById('solarCoordsDisplay');
+    if (!nameInput || !latInput || !lonInput || !coordsDisplay) return;
+
+    if (typeof parsed?.name === 'string') nameInput.value = parsed.name;
+    if (Number.isFinite(parsed?.lat)) latInput.value = String(parsed.lat);
+    if (Number.isFinite(parsed?.lon)) lonInput.value = String(parsed.lon);
+    if (Number.isFinite(parsed?.lat) && Number.isFinite(parsed?.lon)) {
+        coordsDisplay.textContent = `(${parsed.lat.toFixed(2)}°, ${parsed.lon.toFixed(2)}°)`;
+    } else {
+        coordsDisplay.textContent = '';
+    }
+}
+
 function updateControlsVisibility() {
     const tab = ForecastState.currentTab;
-    const method = document.getElementById('methodSelect').value;
     const dateRange = document.getElementById('dateRangeGroup');
     const singleDate = document.getElementById('singleDateGroup');
     const solarYear = document.getElementById('solarYearGroup');
     const solarOrientation = document.getElementById('solarOrientationGroup');
     const solarLocation = document.getElementById('solarLocationGroup');
-    const methodSelect = document.getElementById('methodSelect');
     const biwheelTimeControls = document.getElementById('biwheelTimeControls');
     const transitScaleGroup = document.getElementById('transitScaleGroup');
     const biwheelScaleTicks = document.getElementById('biwheelScaleTicks');
@@ -830,25 +969,17 @@ function updateControlsVisibility() {
     solarYear.style.display = 'none';
     solarOrientation.style.display = 'none';
     solarLocation.style.display = 'none';
-    methodSelect.closest('.control-group').style.display = '';
 
     if (tab === 'solar') {
         solarYear.style.display = '';
         solarOrientation.style.display = '';
         solarLocation.style.display = '';
-        methodSelect.closest('.control-group').style.display = 'none';
-    } else if (tab === 'timeline') {
+    } else if (tab === 'timeline' || tab === 'biwheel' || tab === 'table') {
         dateRange.style.display = '';
-    } else if (tab === 'biwheel' || tab === 'table') {
-        if (method === 'transits') {
-            dateRange.style.display = '';
-        } else {
-            singleDate.style.display = '';
-        }
     }
 
     if (biwheelTimeControls) {
-        const showTimeControls = tab === 'biwheel' && method === 'transits';
+        const showTimeControls = tab === 'biwheel';
         biwheelTimeControls.style.display = showTimeControls ? 'flex' : 'none';
         if (biwheelScaleTicks) biwheelScaleTicks.style.display = showTimeControls ? '' : 'none';
         if (transitScaleGroup) transitScaleGroup.style.display = showTimeControls ? 'flex' : 'none';
@@ -951,17 +1082,21 @@ function getFilteredTimelineEvents() {
 }
 
 function renderTimeline() {
-    const evts = getFilteredTimelineEvents();
+    const rawEvents = getFilteredTimelineEvents();
+    const s = document.getElementById('startDate').value;
+    const e = document.getElementById('endDate').value;
+    const normalized = window.ForecastTimelineUtils?.normalizeTimelineEvents
+        ? window.ForecastTimelineUtils.normalizeTimelineEvents(rawEvents, s, e)
+        : { events: rawEvents };
+    const evts = normalized.events || [];
     const counter = document.getElementById('tlEventCount');
     if (counter) {
-        const total = ForecastState.transitEvents?.events?.length || 0;
-        counter.textContent = `${evts.length} из ${total} событий`;
+        const totalRaw = ForecastState.transitEvents?.events?.length || 0;
+        counter.textContent = `${evts.length} из ${totalRaw} событий`;
     }
     renderActiveEventsSummary(evts);
     requestAnimationFrame(() => {
         if (window.ForecastTimeline) {
-            const s = document.getElementById('startDate').value;
-            const e = document.getElementById('endDate').value;
             window.ForecastTimeline.render(evts, s, e);
         }
     });
@@ -1016,23 +1151,7 @@ async function calculateTimeline() {
 
 // ─── Biwheel calculation ────────────────────────────────
 async function calculateBiwheel() {
-    const method = document.getElementById('methodSelect').value;
-    if (method === 'transits') {
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
-        await ensureTransitPeriodData(startDate, endDate, { showLoading: true });
-        refreshTransitScale(ForecastState.pendingBiwheelDate || ForecastState.transitMoment || startDate);
-        const selectedDate = getTransitScaleDateByIndex(ForecastState.transitScaleIndex);
-        if (!selectedDate) throw new Error('Укажите корректный период (С/По)');
-        await calculateTransitBiwheelAt(selectedDate, { showLoading: true });
-        return;
-    }
-
-    showState('biwheel', 'loading');
-    const targetDate = document.getElementById('singleDate').value;
-    const progData = await ensurePrognosticPointData(method, targetDate);
-    showState('biwheel', 'content');
-    renderBiwheelData(progData);
+    await calculateAllForecastViews();
 }
 
 async function calculateTransitBiwheelAt(dateStr, { showLoading = false } = {}) {
@@ -1043,9 +1162,11 @@ async function calculateTransitBiwheelAt(dateStr, { showLoading = false } = {}) 
     }
 
     ForecastState.transitBiwheelBusy = true;
-    let progData;
+    let combinedData;
     try {
-        progData = await fetchTransitBiwheelData(dateStr);
+        const method = document.getElementById('methodSelect')?.value || ForecastState.method || 'transits';
+        const directionType = resolveDirectionTypeForCombined(method);
+        combinedData = await ensureCombinedBiwheelData(dateStr, { directionType });
     } finally {
         ForecastState.transitBiwheelBusy = false;
     }
@@ -1053,24 +1174,15 @@ async function calculateTransitBiwheelAt(dateStr, { showLoading = false } = {}) 
     if (requestSeq !== ForecastState.biwheelRequestSeq) return;
 
     ForecastState.transitMoment = dateStr;
+    ForecastState.combinedBiwheelData = combinedData;
     showState('biwheel', 'content');
-    renderBiwheelData(progData);
+    renderBiwheelData(combinedData);
     scheduleTransitBiwheelPrewarm(dateStr);
 }
 
 // ─── Table calculation ──────────────────────────────────
 async function calculateTable() {
-    const method = document.getElementById('methodSelect').value;
-    if (method === 'transits') {
-        await calculateTimeline();
-        return;
-    }
-    // For progressions/directions, calc single point and show aspects
-    showState('table', 'loading');
-    const targetDate = document.getElementById('singleDate').value;
-    const data = await ensurePrognosticPointData(method, targetDate);
-    populateTableFromPrognosticData(data, method, targetDate);
-    ForecastState.tableDataKey = getPrognosticPointKey(method, targetDate);
+    await calculateAllForecastViews();
     showState('table', 'content');
 }
 
@@ -1084,6 +1196,39 @@ function getTransitTableKey(startDate, endDate) {
 
 function getPrognosticPointKey(method, targetDate) {
     return `${method}|${targetDate}`;
+}
+
+function getCombinedPointKey(targetDate, directionType) {
+    return `combined|${targetDate}|${directionType || 'solar_arc'}`;
+}
+
+function getCombinedTableKey(targetDate, directionType, startDate = '', endDate = '') {
+    return `combined_table|${targetDate}|${directionType || 'solar_arc'}|${startDate}|${endDate}`;
+}
+
+function normalizeDirectionType(directionType) {
+    const value = String(directionType || '').trim();
+    return ['solar_arc', 'symbolic', 'equatorial'].includes(value) ? value : 'solar_arc';
+}
+
+function resolveDirectionTypeForCombined(method) {
+    if (method && method.startsWith('directions_')) {
+        return normalizeDirectionType(method.replace('directions_', ''));
+    }
+    return normalizeDirectionType(ForecastState.directionType || 'solar_arc');
+}
+
+function resolveBiwheelTargetDate(method) {
+    if (method === 'transits') {
+        const startDate = document.getElementById('startDate')?.value;
+        refreshTransitScale(ForecastState.pendingBiwheelDate || ForecastState.transitMoment || startDate);
+        const selectedDate = getTransitScaleDateByIndex(ForecastState.transitScaleIndex);
+        if (!selectedDate) throw new Error('Укажите корректный период (С/По)');
+        return selectedDate;
+    }
+    const targetDate = document.getElementById('singleDate')?.value;
+    if (!targetDate) throw new Error('Укажите дату');
+    return targetDate;
 }
 
 async function fetchTransitBiwheelData(dateStr) {
@@ -1167,7 +1312,7 @@ async function ensurePrognosticPointData(method, targetDate) {
         ForecastState.progressionData = data;
         ForecastState.progressionTargetDate = targetDate;
     } else {
-        const dirType = method.replace('directions_', '');
+        const dirType = normalizeDirectionType(method.replace('directions_', ''));
         data = await apiPost('/directions/calculate', {
             user_id: ForecastState.userId,
             target_date: targetDate,
@@ -1182,34 +1327,163 @@ async function ensurePrognosticPointData(method, targetDate) {
     return data;
 }
 
+async function ensureCombinedBiwheelData(targetDate, { directionType = 'solar_arc' } = {}) {
+    if (!targetDate) throw new Error('Укажите дату');
+    const normalizedDirectionType = normalizeDirectionType(directionType);
+    const key = getCombinedPointKey(targetDate, normalizedDirectionType);
+    if (ForecastState.combinedBiwheelCache[key]) {
+        ForecastState.combinedBiwheelData = ForecastState.combinedBiwheelCache[key];
+        return ForecastState.combinedBiwheelData;
+    }
+    if (ForecastState.combinedBiwheelInFlight[key]) {
+        return ForecastState.combinedBiwheelInFlight[key];
+    }
+
+    const requestPromise = Promise.all([
+        fetchTransitBiwheelData(targetDate),
+        ensurePrognosticPointData('progressions', targetDate),
+        ensurePrognosticPointData(`directions_${normalizedDirectionType}`, targetDate),
+    ]).then(([transitData, progressionData, directionData]) => {
+        const combined = {
+            _method: 'combined',
+            _combined: true,
+            _targetDate: targetDate,
+            _directionType: normalizedDirectionType,
+            _layers: {
+                transit: transitData || null,
+                progression: progressionData || null,
+                direction: directionData || null,
+            },
+        };
+        ForecastState.combinedBiwheelCache[key] = combined;
+        ForecastState.combinedBiwheelData = combined;
+        ForecastState.transitMoment = targetDate;
+        ForecastState.progressionData = progressionData || null;
+        ForecastState.progressionTargetDate = targetDate;
+        ForecastState.directionData = directionData || null;
+        ForecastState.directionTargetDate = targetDate;
+        ForecastState.directionType = normalizedDirectionType;
+        return combined;
+    }).finally(() => {
+        delete ForecastState.combinedBiwheelInFlight[key];
+    });
+
+    ForecastState.combinedBiwheelInFlight[key] = requestPromise;
+    return requestPromise;
+}
+
 async function calculateAllForecastViews(forcedMethod = null) {
     const method = forcedMethod || document.getElementById('methodSelect').value;
+    const startDate = document.getElementById('startDate')?.value;
+    const endDate = document.getElementById('endDate')?.value;
     if (method === 'transits') {
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
-        const transitData = await ensureTransitPeriodData(startDate, endDate, { showLoading: true });
+        await ensureTransitPeriodData(startDate, endDate, { showLoading: true });
         showState('timeline', 'content');
         renderTimeline();
-        populateTable(transitData.events, 'transit');
-        ForecastState.tableDataKey = getTransitTableKey(startDate, endDate);
+    }
 
-        refreshTransitScale(ForecastState.pendingBiwheelDate || ForecastState.transitMoment || startDate);
-        const selectedDate = getTransitScaleDateByIndex(ForecastState.transitScaleIndex);
-        if (selectedDate) {
-            await calculateTransitBiwheelAt(selectedDate, { showLoading: false });
-        }
+    const targetDate = resolveBiwheelTargetDate(method);
+    const directionType = resolveDirectionTypeForCombined(method);
+    showState('biwheel', 'loading');
+    const combinedData = await ensureCombinedBiwheelData(targetDate, { directionType });
+    renderBiwheelData(combinedData);
+    showState('biwheel', 'content');
+    if (method === 'transits') {
+        scheduleCombinedPeriodPrewarm(directionType);
+    }
+
+    populateTableFromCombinedData(combinedData, targetDate, {
+        transitPeriodEvents: method === 'transits' ? (ForecastState.transitEvents?.events || []) : [],
+    });
+    ForecastState.tableDataKey = getCombinedTableKey(
+        targetDate,
+        directionType,
+        method === 'transits' ? startDate : '',
+        method === 'transits' ? endDate : ''
+    );
+    showState('table', 'content');
+
+    if (method === 'transits') {
+        await saveActiveForecastRun({
+            user_id: ForecastState.userId,
+            method: 'transits',
+            period_start: startDate,
+            period_end: endDate,
+            target_date: targetDate,
+            timezone: getForecastTimezone(),
+            context_data: {
+                transits: {
+                    period_start: startDate,
+                    period_end: endDate,
+                    selected_date: targetDate,
+                    total_events: ForecastState.transitEvents?.events?.length || 0,
+                    events: ForecastState.transitEvents?.events || [],
+                },
+                progressions: {
+                    target_date: targetDate,
+                    data: combinedData?._layers?.progression || null,
+                },
+                directions: {
+                    target_date: targetDate,
+                    direction_type: directionType,
+                    data: combinedData?._layers?.direction || null,
+                },
+            },
+        });
         return;
     }
 
-    const targetDate = document.getElementById('singleDate').value;
-    showState('biwheel', 'loading');
-    const prognosticData = await ensurePrognosticPointData(method, targetDate);
-    renderBiwheelData(prognosticData);
-    showState('biwheel', 'content');
+    if (method === 'progressions') {
+        await saveActiveForecastRun({
+            user_id: ForecastState.userId,
+            method: 'progressions',
+            target_date: targetDate,
+            timezone: getForecastTimezone(),
+            context_data: {
+                progressions: {
+                    target_date: targetDate,
+                    data: combinedData?._layers?.progression || null,
+                },
+                directions: {
+                    target_date: targetDate,
+                    direction_type: directionType,
+                    data: combinedData?._layers?.direction || null,
+                },
+                transits: {
+                    period_start: targetDate,
+                    period_end: targetDate,
+                    selected_date: targetDate,
+                    events: combinedData?._layers?.transit?.aspects || [],
+                },
+            },
+        });
+        return;
+    }
 
-    populateTableFromPrognosticData(prognosticData, method, targetDate);
-    ForecastState.tableDataKey = getPrognosticPointKey(method, targetDate);
-    showState('table', 'content');
+    await saveActiveForecastRun({
+        user_id: ForecastState.userId,
+        method: 'directions',
+        target_date: targetDate,
+        direction_type: directionType,
+        timezone: getForecastTimezone(),
+        context_data: {
+            directions: {
+                target_date: targetDate,
+                direction_type: directionType,
+                data: combinedData?._layers?.direction || null,
+            },
+            progressions: {
+                target_date: targetDate,
+                data: combinedData?._layers?.progression || null,
+            },
+            transits: {
+                period_start: targetDate,
+                period_end: targetDate,
+                selected_date: targetDate,
+                events: combinedData?._layers?.transit?.aspects || [],
+            },
+        },
+    });
 }
 
 async function renderCurrentTabFromCache() {
@@ -1220,7 +1494,20 @@ async function renderCurrentTabFromCache() {
             showState('solar', 'content');
             renderSolar(ForecastState.solarData);
         } else {
-            showState('solar', 'empty');
+            const year = parseInt(document.getElementById('solarYear').value, 10);
+            const lat = parseFloat(document.getElementById('solarLocationLat')?.value);
+            const lon = parseFloat(document.getElementById('solarLocationLon')?.value);
+            const name = document.getElementById('solarLocationName')?.value?.trim() || '';
+            const key = getSolarCacheKey(year, lat, lon, name);
+            const cached = ForecastState.solarCache[key];
+            if (cached) {
+                ForecastState.solarData = cached;
+                ForecastState.solarCalculatedYear = year;
+                showState('solar', 'content');
+                renderSolar(cached);
+            } else {
+                showState('solar', 'empty');
+            }
         }
         return;
     }
@@ -1236,28 +1523,22 @@ async function renderCurrentTabFromCache() {
     }
 
     if (tab === 'biwheel') {
-        if (method === 'transits') {
-            const startDate = document.getElementById('startDate').value;
-            refreshTransitScale(ForecastState.pendingBiwheelDate || ForecastState.transitMoment || startDate);
-            const selectedDate = getTransitScaleDateByIndex(ForecastState.transitScaleIndex);
-            const cached = selectedDate ? ForecastState.transitBiwheelCache[selectedDate] : null;
-            if (cached) {
-                ForecastState.transitMoment = selectedDate;
-                showState('biwheel', 'content');
-                renderBiwheelData(cached);
-                scheduleTransitBiwheelPrewarm(selectedDate);
-            } else {
-                showState('biwheel', 'empty');
-            }
+        const directionType = resolveDirectionTypeForCombined(method);
+        let targetDate = null;
+        try {
+            targetDate = resolveBiwheelTargetDate(method);
+        } catch {
+            showState('biwheel', 'empty');
             return;
         }
-
-        const targetDate = document.getElementById('singleDate').value;
-        const progKey = getPrognosticPointKey(method, targetDate);
-        const data = ForecastState.prognosticPointCache[progKey];
+        const key = getCombinedPointKey(targetDate, directionType);
+        const data = ForecastState.combinedBiwheelCache[key];
         if (data) {
             showState('biwheel', 'content');
             renderBiwheelData(data);
+            if (method === 'transits') {
+                scheduleTransitBiwheelPrewarm(targetDate);
+            }
         } else {
             showState('biwheel', 'empty');
         }
@@ -1265,22 +1546,39 @@ async function renderCurrentTabFromCache() {
     }
 
     if (tab === 'table') {
-        let expectedKey = null;
+        let expectedKeys = [];
         if (method === 'transits') {
-            expectedKey = getTransitTableKey(
-                document.getElementById('startDate').value,
-                document.getElementById('endDate').value
-            );
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const directionType = resolveDirectionTypeForCombined(method);
+            let selectedDate = ForecastState.transitMoment || startDate;
+            refreshTransitScale(ForecastState.pendingBiwheelDate || selectedDate || startDate);
+            selectedDate = getTransitScaleDateByIndex(ForecastState.transitScaleIndex) || selectedDate;
+            expectedKeys = [
+                getTransitTableKey(startDate, endDate),
+                getCombinedTableKey(selectedDate, directionType, startDate, endDate),
+            ];
         } else {
-            expectedKey = getPrognosticPointKey(method, document.getElementById('singleDate').value);
+            const targetDate = document.getElementById('singleDate').value;
+            const directionType = resolveDirectionTypeForCombined(method);
+            expectedKeys = [
+                getCombinedTableKey(targetDate, directionType),
+                getPrognosticPointKey(method, targetDate),
+            ];
         }
 
-        if (ForecastState.tableDataKey && ForecastState.tableDataKey === expectedKey) {
+        if (ForecastState.tableDataKey && expectedKeys.includes(ForecastState.tableDataKey)) {
             showState('table', 'content');
             if (ForecastState.tableRowsRaw.length) {
                 if (ForecastState.tableRows.length) renderTableRows();
                 else applyTableFiltersAndRender();
+            } else {
+                document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">Нет данных</td></tr>';
             }
+        } else if (ForecastState.tableRowsRaw.length && ForecastState.tableDataKey) {
+            showState('table', 'content');
+            if (ForecastState.tableRows.length) renderTableRows();
+            else applyTableFiltersAndRender();
         } else {
             showState('table', 'empty');
         }
@@ -1290,8 +1588,9 @@ async function renderCurrentTabFromCache() {
 // ─── Solar calculation ──────────────────────────────────
 async function calculateSolar() {
     showState('solar', 'loading');
-    const year = parseInt(document.getElementById('solarYear').value);
+    const year = parseInt(document.getElementById('solarYear').value, 10);
     if (!year || year < 1900 || year > 2100) throw new Error('Укажите год (1900-2100)');
+    localStorage.setItem(SOLAR_YEAR_STORAGE_KEY, String(year));
 
     // Build request payload
     const payload = {
@@ -1307,13 +1606,55 @@ async function calculateSolar() {
         payload.location_latitude = lat;
         payload.location_longitude = lon;
         if (name) payload.location_name = name;
+        persistSolarLocationToStorage();
     } else {
         throw new Error('Выберите место из списка подсказок');
     }
 
+    const cacheKey = getSolarCacheKey(year, lat, lon, name || '');
+    const cached = ForecastState.solarCache[cacheKey];
+    if (cached) {
+        ForecastState.solarData = cached;
+        ForecastState.solarCalculatedYear = year;
+        await saveActiveForecastRun({
+            user_id: ForecastState.userId,
+            method: 'solar_return',
+            year: year,
+            timezone: getForecastTimezone(),
+            location_name: name || null,
+            location_lat: isNaN(lat) ? null : lat,
+            location_lon: isNaN(lon) ? null : lon,
+            context_data: {
+                solar_return: {
+                    year: year,
+                    data: cached,
+                },
+            },
+        });
+        showState('solar', 'content');
+        renderSolar(cached);
+        return;
+    }
+
     const data = await apiPost('/solar/calculate', payload);
+    ForecastState.solarCache[cacheKey] = data;
     ForecastState.solarData = data;
     ForecastState.solarCalculatedYear = year;
+    await saveActiveForecastRun({
+        user_id: ForecastState.userId,
+        method: 'solar_return',
+        year: year,
+        timezone: getForecastTimezone(),
+        location_name: name || null,
+        location_lat: isNaN(lat) ? null : lat,
+        location_lon: isNaN(lon) ? null : lon,
+        context_data: {
+            solar_return: {
+                year: year,
+                data: data,
+            },
+        },
+    });
     showState('solar', 'content');
     renderSolar(data);
 }
@@ -1411,6 +1752,7 @@ function getMethodLabel(method) {
         'transit': 'Транзит',
         'transits': 'Транзит',
         'progressions': 'Прогрессия',
+        'directions': 'Дирекция',
         'directions_solar_arc': 'Дир. (сол.)',
         'directions_symbolic': 'Дир. (симв.)',
         'directions_equatorial': 'Дир. (Найб.)',
@@ -1665,6 +2007,151 @@ function populateTableFromPrognosticData(data, method, date) {
         updateTableFiltersBadge();
     } else {
         ForecastState.tableRowsRaw = aspectRows.sort((a, b) => a._priority - b._priority || a.orb - b.orb);
+        refreshTableAspectFilterOptions(ForecastState.tableRowsRaw);
+        resetTableFilters();
+        applyTableFiltersAndRender();
+    }
+
+    renderIngressSection(ingressRows);
+}
+
+function populateTableFromCombinedData(combinedData, targetDate, { transitPeriodEvents = [] } = {}) {
+    const layers = combinedData?._layers || {};
+    const transitLayer = layers.transit || null;
+    const progressionLayer = layers.progression || null;
+    const directionLayer = layers.direction || null;
+    const directionType = normalizeDirectionType(combinedData?._directionType || ForecastState.directionType || 'solar_arc');
+
+    const rows = [];
+    const ingressRows = [];
+    const pushAspectRow = ({
+        date,
+        method,
+        methodClass,
+        transit,
+        aspect,
+        natal,
+        orb,
+        isMajor,
+    }) => {
+        const idx = PLANET_PRIORITY.indexOf(transit);
+        rows.push({
+            date: date || targetDate || '—',
+            method: getMethodLabel(method),
+            methodClass,
+            transit: transit || '—',
+            aspect: aspect || '—',
+            natal: natal || '—',
+            orb: typeof orb === 'number' ? orb : 99,
+            hasOrb: typeof orb === 'number',
+            isMajor: !!isMajor,
+            rowKind: 'aspect',
+            type: isMajor ? 'Мажор' : 'Минор',
+            _priority: idx < 0 ? 999 : idx,
+        });
+    };
+
+    const pushIngressRows = (data, method, date) => {
+        const methodClass = method.startsWith('directions') ? 'direction' : 'progression';
+        (data?.planet_ingresses || []).forEach(ing => {
+            const body = ing.body || '—';
+            const ingressType = ing.ingress_type === 'house' ? 'Ингрессия дома' : 'Ингрессия знака';
+            const fromLabel = ing.ingress_type === 'house'
+                ? `Дом ${ing.from_house ?? '—'}`
+                : formatSignLabel(ing.from_sign);
+            const toLabel = ing.ingress_type === 'house'
+                ? `Дом ${ing.to_house ?? '—'}`
+                : formatSignLabel(ing.to_sign);
+            ingressRows.push({
+                date: date || targetDate || '—',
+                method: getMethodLabel(method),
+                methodClass,
+                object: `${(Symbols?.planets?.[body] || '')} ${body}`.trim(),
+                ingressType,
+                transition: `${fromLabel} → ${toLabel}`,
+            });
+        });
+        (data?.house_cusp_ingresses || []).forEach(ing => {
+            ingressRows.push({
+                date: date || targetDate || '—',
+                method: getMethodLabel(method),
+                methodClass,
+                object: `Куспид ${ing.house_number} дома`,
+                ingressType: 'Ингрессия куспида',
+                transition: `${formatSignLabel(ing.from_sign)} → ${formatSignLabel(ing.to_sign)}`,
+            });
+        });
+    };
+
+    if (Array.isArray(transitPeriodEvents) && transitPeriodEvents.length) {
+        transitPeriodEvents.forEach(ev => {
+            pushAspectRow({
+                date: ev.t_exact ? ev.t_exact.split('T')[0] : targetDate,
+                method: 'transits',
+                methodClass: 'transit',
+                transit: ev.transit_body,
+                aspect: ev.aspect_type,
+                natal: ev.natal_body,
+                orb: ev.min_orb,
+                isMajor: ev.is_major,
+            });
+        });
+    } else {
+        (transitLayer?.aspects || []).forEach(a => {
+            pushAspectRow({
+                date: targetDate,
+                method: 'transits',
+                methodClass: 'transit',
+                transit: a.transit_planet,
+                aspect: a.aspect_type,
+                natal: a.natal_object,
+                orb: a.orb,
+                isMajor: a.is_major,
+            });
+        });
+    }
+
+    (progressionLayer?.aspects_to_natal || []).forEach(a => {
+        pushAspectRow({
+            date: targetDate,
+            method: 'progressions',
+            methodClass: 'progression',
+            transit: a.progressed_planet,
+            aspect: a.aspect_type,
+            natal: a.natal_object,
+            orb: a.orb,
+            isMajor: a.is_major,
+        });
+    });
+    pushIngressRows(progressionLayer, 'progressions', targetDate);
+
+    const directionMethodKey = `directions_${directionType}`;
+    (directionLayer?.aspects_to_natal || []).forEach(a => {
+        pushAspectRow({
+            date: targetDate,
+            method: directionMethodKey,
+            methodClass: 'direction',
+            transit: a.directed_object,
+            aspect: a.aspect_type,
+            natal: a.natal_object,
+            orb: a.orb,
+            isMajor: a.is_major,
+        });
+    });
+    pushIngressRows(directionLayer, directionMethodKey, targetDate);
+
+    if (!rows.length) {
+        document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">Нет аспектов</td></tr>';
+        ForecastState.tableRowsRaw = [];
+        ForecastState.tableRows = [];
+        refreshTableAspectFilterOptions([]);
+        resetTableFilters();
+        updateTableFiltersBadge();
+    } else {
+        ForecastState.tableRowsRaw = rows.sort((a, b) => {
+            if (a.date !== b.date) return String(a.date).localeCompare(String(b.date));
+            return (a._priority ?? 999) - (b._priority ?? 999) || (a.orb ?? 99) - (b.orb ?? 99);
+        });
         refreshTableAspectFilterOptions(ForecastState.tableRowsRaw);
         resetTableFilters();
         applyTableFiltersAndRender();

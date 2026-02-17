@@ -11,7 +11,7 @@
 .natal-header {
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border);
-    padding: 12px 24px;
+    padding: 6px 12px;
     position: sticky;
     top: 0;
     z-index: 100;
@@ -24,22 +24,23 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    gap: 10px;
 }
 
 .header-actions {
     display: flex;
-    gap: 8px;
+    gap: 6px;
+    flex-shrink: 0;
 }
 
 .back-btn, .view-chart-btn, .legend-toggle-btn {
-    padding: 8px 14px;
+    padding: 5px 10px;
     background: var(--bg-tertiary);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     color: var(--text-primary);
     text-decoration: none;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     transition: all var(--transition);
     white-space: nowrap;
@@ -55,17 +56,23 @@
 .birth-info {
     flex: 1;
     text-align: center;
+    min-width: 0;
 }
 
 .birth-info h1 {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
+    line-height: 1.2;
 }
 
 .birth-details {
-    font-size: 13px;
+    font-size: 12px;
+    line-height: 1.2;
     color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* ============================================
@@ -74,7 +81,7 @@
 .summary-bar {
     background: var(--bg-tertiary);
     border-bottom: 1px solid var(--border);
-    padding: 10px 24px;
+    padding: 8px 12px;
 }
 
 .summary-content {
@@ -82,7 +89,7 @@
     margin: 0 auto;
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 12px;
     flex-wrap: wrap;
 }
 
@@ -598,21 +605,45 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+    .natal-header {
+        padding: 5px 10px;
+    }
+
     .natal-content {
         padding: 12px;
     }
 
     .header-content {
-        flex-direction: column;
-        gap: 8px;
+        gap: 6px;
     }
 
     .birth-info {
         text-align: left;
     }
 
+    .birth-info h1 {
+        font-size: 14px;
+    }
+
+    .birth-details {
+        font-size: 11px;
+    }
+
+    .back-btn, .view-chart-btn, .legend-toggle-btn {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+
+    .header-actions {
+        gap: 4px;
+    }
+
+    .summary-bar {
+        padding: 6px 10px;
+    }
+
     .summary-content {
-        gap: 12px;
+        gap: 8px;
     }
 
     .two-columns {

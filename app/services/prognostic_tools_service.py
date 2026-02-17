@@ -19,6 +19,7 @@ from app.services.transit_service import TransitService
 from app.services.progression_service import ProgressionService
 from app.services.direction_service import DirectionService
 from app.services.solar_return_service import SolarReturnService
+from app.services.forecast_run_service import ForecastRunService
 from app.database.models import User
 
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -30,6 +31,25 @@ EPHE_PATH = os.getenv("SWISSEPH_EPHE_PATH", os.path.join(_PROJECT_ROOT, "swissep
 # ============================================================================
 
 PROGNOSTIC_TOOLS: List[Dict[str, Any]] = [
+    {
+        "type": "function",
+        "name": "get_active_forecast_context",
+        "description": (
+            "Получить активный контекст уже рассчитанной прогностики (метод, дата/период, место, таймзона). "
+            "Вызывай перед интерпретацией, если пользователь спрашивает про 'эту прогностику'."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "run_id": {
+                    "type": "string",
+                    "description": "ID снимка прогностики. Если не указан, вернётся текущий активный контекст."
+                },
+            },
+            "required": [],
+            "additionalProperties": False,
+        },
+    },
     {
         "type": "function",
         "name": "get_transit_events",
@@ -131,6 +151,7 @@ class PrognosticToolsService:
         self.db = db_session
         self.frontend_context = frontend_context or {}
         self._user: Optional[User] = None
+        self._forecast_run_cache = None
 
     @property
     def user(self) -> User:
@@ -147,6 +168,7 @@ class PrognosticToolsService:
     def dispatch(self, tool_name: str, arguments: Dict[str, Any]) -> str:
         """Выполнить tool-функцию и вернуть JSON-строку результата."""
         handlers = {
+            "get_active_forecast_context": self._handle_active_forecast_context,
             "get_transit_events": self._handle_transit_events,
             "get_current_transits": self._handle_current_transits,
             "get_progressions": self._handle_progressions,
@@ -167,10 +189,54 @@ class PrognosticToolsService:
     # Tool handlers
     # ------------------------------------------------------------------
 
+    def _handle_active_forecast_context(self, args: Dict[str, Any]) -> Dict:
+        """Активный snapshot прогностики для Agent Builder."""
+        requested_run_id = args.get("run_id")
+        run = self._resolve_forecast_run(requested_run_id=requested_run_id)
+
+        if run:
+            return {
+                "source": "forecast_runs_db",
+                "context": self._serialize_forecast_run(run),
+            }
+
+        method = self.frontend_context.get("selected_method")
+        controls = self.frontend_context.get("controls") if isinstance(self.frontend_context.get("controls"), dict) else {}
+        calculated = self.frontend_context.get("calculated") if isinstance(self.frontend_context.get("calculated"), dict) else {}
+
+        if method or controls or calculated:
+            return {
+                "source": "frontend_context",
+                "context": {
+                    "run_id": None,
+                    "method": method,
+                    "controls": controls,
+                    "calculated": calculated,
+                },
+            }
+
+        return {
+            "source": "none",
+            "context": None,
+            "message": "Активный контекст прогностики не найден. Попросите пользователя сначала выполнить расчёт на странице прогностики.",
+        }
+
     def _handle_transit_events(self, args: Dict[str, Any]) -> Dict:
         """Транзитные события за период."""
         start_str = args.get("start_date")
         end_str = args.get("end_date")
+
+        run = self._resolve_forecast_run(requested_run_id=args.get("run_id"))
+        run_ctx = self._extract_run_context(run, "transits")
+
+        run_start_str = run_ctx.get("period_start")
+        run_end_str = run_ctx.get("period_end")
+        run_events = run_ctx.get("events") if isinstance(run_ctx.get("events"), list) else None
+
+        if not start_str and run_start_str:
+            start_str = run_start_str
+        if not end_str and run_end_str:
+            end_str = run_end_str
 
         transits_ctx = self._get_calculated_ctx("transits")
         ctx_start_str = transits_ctx.get("period_start")
@@ -189,6 +255,23 @@ class PrognosticToolsService:
         end = date.fromisoformat(end_str)
         if end < start:
             raise ValueError("end_date не может быть раньше start_date")
+
+        if (
+            run_events is not None
+            and run_start_str
+            and run_end_str
+            and start_str >= run_start_str
+            and end_str <= run_end_str
+        ):
+            filtered = self._filter_transit_events_by_period(run_events, start_str, end_str)
+            return {
+                "method": "transits",
+                "source": "forecast_runs_db",
+                "run_id": str(run.run_id) if run else None,
+                "period": f"{start.isoformat()} — {end.isoformat()}",
+                "total_events": len(filtered),
+                "events": self._summarize_transit_events(filtered),
+            }
 
         if (
             cached_events is not None
@@ -243,6 +326,14 @@ class PrognosticToolsService:
     def _handle_progressions(self, args: Dict[str, Any]) -> Dict:
         """Вторичные прогрессии."""
         target = date.fromisoformat(args["target_date"]) if args.get("target_date") else None
+        run = self._resolve_forecast_run(requested_run_id=args.get("run_id"))
+        run_ctx = self._extract_run_context(run, "progressions")
+        run_target_str = run_ctx.get("target_date")
+        run_data = run_ctx.get("data") if isinstance(run_ctx.get("data"), dict) else None
+
+        if target is None and run_target_str:
+            target = date.fromisoformat(run_target_str)
+
         progressions_ctx = self._get_calculated_ctx("progressions")
         ctx_target_str = progressions_ctx.get("target_date")
         ctx_data = progressions_ctx.get("data") if isinstance(progressions_ctx.get("data"), dict) else None
@@ -251,6 +342,21 @@ class PrognosticToolsService:
             target = date.fromisoformat(ctx_target_str)
         if target is None:
             target = date.today()
+
+        if run_data and run_target_str == target.isoformat():
+            aspects = run_data.get("aspects_to_natal", [])
+            return {
+                "method": "progressions",
+                "source": "forecast_runs_db",
+                "run_id": str(run.run_id) if run else None,
+                "target_date": target.isoformat(),
+                "age_years": run_data.get("progression_info", {}).get("age_years"),
+                "total_aspects": len(aspects),
+                "aspects": self._format_aspects_for_ai(aspects),
+                "progressed_planets_summary": self._summarize_progressed_planets(
+                    run_data.get("progressed_planets", [])
+                ),
+            }
 
         if ctx_data and ctx_target_str == target.isoformat():
             aspects = ctx_data.get("aspects_to_natal", [])
@@ -286,6 +392,17 @@ class PrognosticToolsService:
         """Дирекции солнечной дуги."""
         target = date.fromisoformat(args["target_date"]) if args.get("target_date") else None
         direction_type = args.get("direction_type", "solar_arc")
+        run = self._resolve_forecast_run(requested_run_id=args.get("run_id"))
+        run_ctx = self._extract_run_context(run, "directions")
+        run_target_str = run_ctx.get("target_date")
+        run_direction_type = run_ctx.get("direction_type")
+        run_data = run_ctx.get("data") if isinstance(run_ctx.get("data"), dict) else None
+
+        if target is None and run_target_str:
+            target = date.fromisoformat(run_target_str)
+        if (not args.get("direction_type")) and run_direction_type:
+            direction_type = run_direction_type
+
         directions_ctx = self._get_calculated_ctx("directions")
         ctx_target_str = directions_ctx.get("target_date")
         ctx_direction_type = directions_ctx.get("direction_type")
@@ -295,6 +412,21 @@ class PrognosticToolsService:
             target = date.fromisoformat(ctx_target_str)
         if target is None:
             target = date.today()
+
+        if run_data and run_target_str == target.isoformat() and run_direction_type == direction_type:
+            aspects = run_data.get("aspects_to_natal", [])
+            info = run_data.get("direction_info", {})
+            return {
+                "method": "directions",
+                "source": "forecast_runs_db",
+                "run_id": str(run.run_id) if run else None,
+                "target_date": target.isoformat(),
+                "direction_type": direction_type,
+                "arc_degrees": info.get("arc_degrees"),
+                "arc_formatted": info.get("arc_formatted"),
+                "total_aspects": len(aspects),
+                "aspects": self._format_aspects_for_ai(aspects),
+            }
 
         if ctx_data and ctx_target_str == target.isoformat() and ctx_direction_type == direction_type:
             aspects = ctx_data.get("aspects_to_natal", [])
@@ -331,6 +463,14 @@ class PrognosticToolsService:
     def _handle_solar_return(self, args: Dict[str, Any]) -> Dict:
         """Солярная карта (годовой прогноз)."""
         year = args.get("year")
+        run = self._resolve_forecast_run(requested_run_id=args.get("run_id"))
+        run_ctx = self._extract_run_context(run, "solar_return")
+        run_year = run_ctx.get("year")
+        run_data = run_ctx.get("data") if isinstance(run_ctx.get("data"), dict) else None
+
+        if year is None and isinstance(run_year, int):
+            year = run_year
+
         solar_ctx = self._get_calculated_ctx("solar_return")
         ctx_year = solar_ctx.get("year")
         ctx_data = solar_ctx.get("data") if isinstance(solar_ctx.get("data"), dict) else None
@@ -339,6 +479,19 @@ class PrognosticToolsService:
             year = ctx_year
         if year is None:
             year = date.today().year
+
+        if run_data and run_year == year:
+            planets = run_data.get("planets", [])
+            return {
+                "method": "solar_return",
+                "source": "forecast_runs_db",
+                "run_id": str(run.run_id) if run else None,
+                "year": year,
+                "solar_datetime": run_data.get("solar_info", {}).get("solar_datetime_local"),
+                "planets_summary": self._summarize_solar_planets(planets),
+                "houses": run_data.get("houses", []),
+                "angles": run_data.get("angles", {}),
+            }
 
         if ctx_data and ctx_year == year:
             planets = ctx_data.get("planets", [])
@@ -385,6 +538,35 @@ class PrognosticToolsService:
         if not isinstance(calculated, dict):
             return {}
         value = calculated.get(key)
+        return value if isinstance(value, dict) else {}
+
+    def _resolve_forecast_run(self, requested_run_id: Optional[str] = None):
+        if requested_run_id:
+            service = ForecastRunService(self.db)
+            return service.get_run(self.user_id, requested_run_id)
+
+        if self._forecast_run_cache is not None:
+            return self._forecast_run_cache
+
+        frontend_run_id = self.frontend_context.get("active_run_id")
+        service = ForecastRunService(self.db)
+        if isinstance(frontend_run_id, str) and frontend_run_id.strip():
+            self._forecast_run_cache = service.get_run(self.user_id, frontend_run_id)
+            if self._forecast_run_cache:
+                return self._forecast_run_cache
+
+        self._forecast_run_cache = service.get_active_run(self.user_id)
+        return self._forecast_run_cache
+
+    @staticmethod
+    def _serialize_forecast_run(run) -> Dict[str, Any]:
+        return ForecastRunService.serialize_run(run)
+
+    @staticmethod
+    def _extract_run_context(run, method_key: str) -> Dict[str, Any]:
+        if not run or not isinstance(run.context_data, dict):
+            return {}
+        value = run.context_data.get(method_key)
         return value if isinstance(value, dict) else {}
 
     @staticmethod

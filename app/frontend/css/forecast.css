@@ -14,8 +14,8 @@
 .forecast-header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 16px;
+    gap: 10px;
+    padding: 6px 12px;
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
@@ -23,32 +23,39 @@
 .forecast-header .back-btn-compact {
     text-decoration: none;
     color: var(--text-secondary);
-    font-size: 1.2rem;
-    padding: 4px 8px;
+    font-size: 1.05rem;
+    padding: 2px 6px;
     border-radius: var(--radius-sm);
     transition: var(--transition);
 }
 .forecast-header .back-btn-compact:hover { background: var(--bg-primary); }
 .forecast-header .header-title {
     flex: 1;
-    font-size: 0.95rem;
+    min-width: 0;
+    font-size: 0.88rem;
     font-weight: 600;
+    line-height: 1.2;
     color: var(--text-primary);
 }
 .forecast-header .header-subtitle {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
+    line-height: 1.2;
+    margin-top: 1px;
     color: var(--text-secondary);
     font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Help button & overlay */
 .help-btn {
-    width: 28px; height: 28px;
+    width: 24px; height: 24px;
     border-radius: 50%;
     border: 1px solid var(--border);
     background: var(--bg-primary);
     color: var(--text-secondary);
-    font-size: 0.85rem;
+    font-size: 0.76rem;
     font-weight: 600;
     cursor: pointer;
     transition: var(--transition);
@@ -465,33 +472,35 @@
 .biwheel-time-controls {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 4px 8px;
+    gap: 4px;
+    padding: 2px 8px;
     border-bottom: 1px solid var(--border);
     background: var(--bg-secondary);
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    min-height: 28px;
 }
 .biwheel-time-controls label {
-    font-size: 0.76rem;
+    font-size: 0.72rem;
     color: var(--text-secondary);
 }
 #biwheelStepSelect {
-    padding: 4px 8px;
+    padding: 3px 6px;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     background: var(--bg-primary);
     color: var(--text-primary);
-    font-size: 0.76rem;
+    font-size: 0.72rem;
 }
 #biwheelTimeSlider {
     flex: 1;
-    min-width: 180px;
+    min-width: 140px;
+    height: 14px;
 }
 .bw-time-nav-btn {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: 5px;
     background: var(--bg-primary);
     color: var(--text-primary);
     cursor: pointer;
@@ -502,32 +511,41 @@
     cursor: not-allowed;
 }
 #btnScalePlay {
-    font-size: 0.78rem;
+    font-size: 0.72rem;
 }
 #transitScaleGroup {
     margin-left: 4px;
+    gap: 4px;
 }
 .bw-time-current {
-    font-size: 0.76rem;
+    font-size: 0.72rem;
     font-weight: 600;
+    line-height: 1;
     color: var(--text-primary);
+    white-space: nowrap;
 }
 .bw-time-range {
-    margin-left: auto;
-    font-size: 0.72rem;
+    margin-left: 6px;
+    font-size: 0.66rem;
+    line-height: 1;
     color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex: 0 1 270px;
 }
 .bw-time-ticks {
     position: relative;
-    height: 14px;
-    margin: 0 8px 1px;
+    height: 10px;
+    margin: 0 8px 0;
     border-bottom: 1px dashed var(--border);
 }
 .bw-scale-tick {
     position: absolute;
-    top: 1px;
+    top: 0;
     transform: translateX(-50%);
-    font-size: 0.66rem;
+    font-size: 0.6rem;
     color: var(--text-secondary);
     white-space: nowrap;
     line-height: 1;
@@ -552,8 +570,10 @@
     overflow: hidden;
 }
 .biwheel-leftbar {
-    width: 280px;
-    flex-shrink: 0;
+    width: fit-content;
+    min-width: 140px;
+    max-width: min(42vw, 520px);
+    flex: 0 0 auto;
     border-right: 1px solid var(--border, #333);
     overflow: hidden;
     display: flex;
@@ -608,12 +628,73 @@
 /* Sidebar with aspects */
 .biwheel-sidebar {
     width: auto;
+    min-width: 160px;
     flex-shrink: 0;
     border-left: 1px solid var(--border, #333);
     overflow: hidden;
     display: flex;
     flex-direction: column;
     background: var(--bg-secondary, #1a1a2e);
+}
+.bw-table-toggle {
+    width: 22px;
+    height: 22px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 4px;
+    padding: 0;
+    font-size: 0.8rem;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.bw-table-toggle:hover {
+    color: var(--text-primary);
+    background: rgba(9, 30, 66, 0.08);
+}
+.bw-table-toggle:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+.bw-panel-collapsed {
+    display: none !important;
+}
+.bw-th-with-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+.bw-edge-toggle {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 8;
+    width: 20px;
+    height: 24px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-secondary, #1a1a2e);
+    color: var(--text-secondary);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+.bw-edge-toggle:hover {
+    color: var(--text-primary);
+    border-color: var(--accent);
+}
+.bw-edge-left {
+    left: 6px;
+}
+.bw-edge-right {
+    right: 6px;
 }
 .biwheel-sidebar-controls {
     padding: 8px 10px;
@@ -811,6 +892,37 @@
     font-size: 0.7rem;
     color: var(--text-secondary);
 }
+.bw-legend-toggle {
+    cursor: pointer;
+    user-select: none;
+    transition: opacity 0.15s ease, color 0.15s ease;
+}
+.bw-legend-toggle:hover {
+    color: var(--text-primary);
+}
+.bw-legend-toggle.inactive {
+    opacity: 0.4;
+}
+.bw-legend-toggle.active {
+    opacity: 1;
+}
+.bw-legend-direction-item {
+    gap: 6px;
+}
+.bw-direction-type-select {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1px 6px;
+    font-size: 0.66rem;
+    line-height: 1.2;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+.bw-direction-type-select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
 .bw-legend-mark {
     display: inline-block;
     width: 12px;
@@ -848,7 +960,7 @@
     min-height: 0;
 }
 .biwheel-ingresses-list table {
-    width: 100%;
+    width: max-content;
     font-size: 0.78rem;
     border-collapse: collapse;
     white-space: nowrap;
@@ -870,7 +982,7 @@
 }
 .biwheel-ingresses-list .bw-ingress-object,
 .biwheel-ingresses-list .bw-ingress-transition {
-    white-space: normal;
+    white-space: nowrap;
     line-height: 1.2;
 }
 .biwheel-aspects-list table {
@@ -1156,6 +1268,31 @@
    Responsive
    ============================================ */
 @media (max-width: 768px) {
+    .forecast-header {
+        gap: 8px;
+        padding: 5px 10px;
+    }
+    .forecast-header .header-title {
+        font-size: 0.84rem;
+    }
+    .forecast-header .header-subtitle {
+        font-size: 0.68rem;
+    }
+    .biwheel-time-controls {
+        gap: 4px;
+        padding: 2px 6px;
+        min-height: 26px;
+    }
+    #biwheelTimeSlider {
+        min-width: 110px;
+    }
+    .bw-time-current {
+        font-size: 0.68rem;
+    }
+    .bw-time-range {
+        font-size: 0.62rem;
+        flex-basis: 170px;
+    }
     .forecast-controls {
         padding: 8px 10px;
         gap: 6px;
@@ -1182,7 +1319,7 @@
     .biwheel-svg-wrapper { min-height: 300px; }
     .biwheel-aspect-bar { flex-wrap: wrap; }
     #transitScaleGroup { margin-left: 0; }
-    .bw-time-ticks { margin: 0 6px 1px; }
+    .bw-time-ticks { margin: 0 4px 0; height: 9px; }
     .bw-time-range { width: 100%; margin-left: 0; }
     #biwheelTimeSlider { min-width: 120px; }
     .bw-planet-toggles { grid-template-columns: repeat(3, minmax(0, 1fr)); }

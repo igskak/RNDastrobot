@@ -36,13 +36,24 @@
     let scrollTop = 0;
     let totalContentH = 0;
     let boundScroll = false;
+    let boundCanvasEvents = false;
 
     // ─── Public render ──────────────────────────────────
     function render(evts, startDate, endDate) {
-        events = evts || [];
-        startMs = new Date(startDate).getTime();
-        endMs = new Date(endDate).getTime();
-        totalMs = endMs - startMs;
+        const normalized = window.ForecastTimelineUtils?.normalizeTimelineEvents
+            ? window.ForecastTimelineUtils.normalizeTimelineEvents(evts || [], startDate, endDate)
+            : { events: evts || [], range: null };
+        events = normalized.events || [];
+
+        if (normalized.range) {
+            startMs = normalized.range.startMs;
+            endMs = normalized.range.endMs;
+            totalMs = normalized.range.totalMs;
+        } else {
+            startMs = new Date(startDate).getTime();
+            endMs = new Date(endDate).getTime();
+            totalMs = endMs - startMs;
+        }
         if (totalMs <= 0) return;
 
         canvas = document.getElementById('timelineCanvas');
@@ -63,7 +74,9 @@
         // Group events by transit+aspect+natal into single Gantt rows
         const grouped = new Map();
         events.forEach(ev => {
-            const key = `${ev.transit_body}|${ev.aspect_type}|${ev.natal_body}`;
+            const key = window.ForecastTimelineUtils?.buildTimelineRowKey
+                ? window.ForecastTimelineUtils.buildTimelineRowKey(ev)
+                : `${ev.transit_body}|${ev.aspect_type}|${ev.natal_body}`;
             if (!grouped.has(key)) {
                 const pSym = Symbols?.planets?.[ev.transit_body] || ev.transit_body;
                 const nSym = Symbols?.planets?.[ev.natal_body] || ev.natal_body;
@@ -293,6 +306,8 @@
 
     // ─── Interaction ────────────────────────────────────
     function bindEvents() {
+        if (boundCanvasEvents) return;
+        boundCanvasEvents = true;
         canvas.addEventListener('mousemove', onMouseMove);
         canvas.addEventListener('mouseleave', onMouseLeave);
         canvas.addEventListener('click', onClick);

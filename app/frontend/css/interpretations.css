@@ -13,6 +13,79 @@
     padding: 2rem;
 }
 
+/* Compact Header (consistent with chart/forecast) */
+.interpretations-page .natal-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    padding: 6px 12px;
+}
+
+.interpretations-page .header-content {
+    max-width: 1600px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.interpretations-page .header-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.interpretations-page .back-btn,
+.interpretations-page .view-chart-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 10px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    line-height: 1.2;
+    transition: var(--transition);
+}
+
+.interpretations-page .back-btn:hover,
+.interpretations-page .view-chart-btn:hover {
+    background: var(--accent-light);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.interpretations-page .birth-info {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+}
+
+.interpretations-page .birth-info h1 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 1px;
+    line-height: 1.2;
+}
+
+.interpretations-page .birth-details {
+    font-size: 12px;
+    line-height: 1.2;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /* Loading State */
 .loading-container {
     display: flex;
@@ -273,3 +346,38 @@
     display: none !important;
 }
 
+@media (max-width: 768px) {
+    .interpretations-page .natal-header {
+        padding: 5px 10px;
+    }
+
+    .interpretations-page .header-content {
+        gap: 6px;
+    }
+
+    .interpretations-page .back-btn,
+    .interpretations-page .view-chart-btn {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+
+    .interpretations-page .header-actions {
+        gap: 4px;
+    }
+
+    .interpretations-page .birth-info {
+        text-align: left;
+    }
+
+    .interpretations-page .birth-info h1 {
+        font-size: 14px;
+    }
+
+    .interpretations-page .birth-details {
+        font-size: 11px;
+    }
+
+    .interpretations-main {
+        padding: 1rem;
+    }
+}
