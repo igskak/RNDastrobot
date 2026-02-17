@@ -67,18 +67,13 @@ let chartData = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     const storedData = sessionStorage.getItem('natalChart');
-    console.log('storedData:', storedData ? 'found' : 'NOT FOUND');
 
     if (!storedData) {
-        alert('Нет данных натальной карты. Перенаправление на главную страницу.');
         window.location.href = '/';
         return;
     }
 
     chartData = JSON.parse(storedData);
-    console.log('chartData:', chartData);
-    console.log('planets:', chartData.planets);
-    console.log('houses:', chartData.houses);
 
     renderFullChart(chartData);
     setupLegendToggle();
@@ -96,15 +91,6 @@ function setupLegendToggle() {
 }
 
 function renderFullChart(data) {
-    // DEBUG: проверяем данные
-    console.log('=== DEBUG natal-full.js ===');
-    console.log('planets[0]:', data.planets?.[0]);
-    console.log('planets[0].ruled_houses:', data.planets?.[0]?.ruled_houses);
-    console.log('planets[0].speed_percent:', data.planets?.[0]?.speed_percent);
-    console.log('planets[0].speed:', data.planets?.[0]?.speed);
-    console.log('houses[0]:', data.houses?.[0]);
-    console.log('houses[0].ruler_planet:', data.houses?.[0]?.ruler_planet);
-
     renderHeader(data);
     renderSummaryBar(data);
     renderPlanetsTable(data.planets, data.houses);

@@ -1,7 +1,7 @@
 """
 API эндпоинты для работы с натальными картами
 """
-from fastapi import APIRouter, HTTPException, status, Depends, Query
+from fastapi import APIRouter, HTTPException, status, Depends, Query, Header
 from sqlalchemy.orm import Session
 from uuid import UUID
 from typing import Optional
@@ -51,6 +51,27 @@ if os.getenv('APP_ENV') != 'production':
 natal_service = NatalChartService(ephe_path=EPHE_PATH)
 
 
+def require_admin_access(x_admin_token: Optional[str] = Header(None, alias="X-Admin-Token")) -> None:
+    """
+    Ограничение админ-эндпоинтов:
+    - Если ADMIN_API_TOKEN задан, токен обязателен в любом окружении.
+    - В production без ADMIN_API_TOKEN доступ запрещён (fail-closed).
+    """
+    expected_token = os.getenv("ADMIN_API_TOKEN")
+    is_production = os.getenv("APP_ENV", "development").lower() == "production"
+
+    if expected_token:
+        if x_admin_token != expected_token:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Доступ запрещён")
+        return
+
+    if is_production:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Admin endpoints disabled: ADMIN_API_TOKEN is not configured",
+        )
+
+
 @router.post(
     "/natal/calculate",
     response_model=NatalChartResponse,
@@ -63,7 +84,7 @@ natal_service = NatalChartService(ephe_path=EPHE_PATH)
         500: {"model": ErrorResponse, "description": "Внутренняя ошибка сервера"},
     }
 )
-async def calculate_natal_chart(
+def calculate_natal_chart(
     birth_data: BirthDataInput,
     save_to_db: bool = Query(True, description="Сохранить результат в базу данных"),
     db: Session = Depends(get_db)
@@ -177,7 +198,7 @@ async def calculate_natal_chart(
         500: {"model": ErrorResponse, "description": "Внутренняя ошибка сервера"},
     }
 )
-async def get_natal_chart(
+def get_natal_chart(
     user_id: UUID,
     db: Session = Depends(get_db)
 ) -> NatalChartResponse:
@@ -258,7 +279,7 @@ async def get_natal_chart(
         500: {"model": ErrorResponse, "description": "Внутренняя ошибка сервера"},
     }
 )
-async def get_general_overview(
+def get_general_overview(
     user_id: UUID,
     db: Session = Depends(get_db)
 ) -> GeneralOverviewResponse:
@@ -326,7 +347,7 @@ async def get_general_overview(
     summary="Тестовый эндпоинт",
     description="Проверка работоспособности модуля натальных карт"
 )
-async def test_natal():
+def test_natal():
     """Тестовый эндпоинт для проверки работы модуля"""
     return {
         "status": "ok",
@@ -340,7 +361,10 @@ async def test_natal():
     summary="Список всех пользователей",
     description="Возвращает список всех пользователей с основными данными",
 )
-async def list_users(db: Session = Depends(get_db)):
+def list_users(
+    db: Session = Depends(get_db),
+    _: None = Depends(require_admin_access)
+):
     """Получить список всех пользователей"""
     try:
         users = db.query(User).order_by(User.created_at.desc()).all()
@@ -368,7 +392,11 @@ async def list_users(db: Session = Depends(get_db)):
     summary="Удалить пользователя",
     description="Удаляет пользователя и все связанные данные (каскадно)",
 )
-async def delete_user(user_id: UUID, db: Session = Depends(get_db)):
+def delete_user(
+    user_id: UUID,
+    db: Session = Depends(get_db),
+    _: None = Depends(require_admin_access)
+):
     """Удалить пользователя по ID"""
     try:
         user_repo = UserRepository(db)
@@ -388,4 +416,3 @@ async def delete_user(user_id: UUID, db: Session = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Внутренняя ошибка сервера: {str(e)}"
         )
-

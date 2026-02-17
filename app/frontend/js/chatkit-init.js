@@ -56,6 +56,11 @@
         const next = { ...(params || {}) };
         const controls = context?.controls || {};
         const calculated = context?.calculated || {};
+        const activeRunId = context?.active_run_id;
+
+        if (activeRunId && !next.run_id) {
+            next.run_id = activeRunId;
+        }
 
         if (toolName === 'get_transit_events') {
             const transits = calculated.transits || {};

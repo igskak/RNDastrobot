@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse
 import os
 import sys
 import logging
+from typing import List
 from dotenv import load_dotenv
 
 # Загрузка переменных окружения (из app/.env)
@@ -40,14 +41,36 @@ app = FastAPI(
     redoc_url="/api/redoc",
 )
 
+def _resolve_cors_origins() -> List[str]:
+    raw = os.getenv("CORS_ALLOW_ORIGINS", "").strip()
+    if raw:
+        if raw == "*":
+            return ["*"]
+        return [origin.strip() for origin in raw.split(",") if origin.strip()]
+
+    # Без явной настройки в production CORS не открываем.
+    if os.getenv("APP_ENV", "development").lower() == "production":
+        return []
+
+    # Dev defaults для локальной разработки.
+    return [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ]
+
+
 # CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # В продакшене указать конкретные домены
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+cors_origins = _resolve_cors_origins()
+if cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials="*" not in cors_origins,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 # Подключение роутеров
 app.include_router(natal.router, prefix="/api/v1", tags=["Natal Charts"])
@@ -149,4 +172,3 @@ if __name__ == "__main__":
         reload=True,
         log_level="info"
     )
-

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AstroBot — Натальная карта</title>
-    <link rel="stylesheet" href="css/styles.css?v=3">
+    <link rel="stylesheet" href="css/styles.css?v=5">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
@@ -70,7 +70,10 @@
                 <!-- Место рождения -->
                 <div class="form-group">
                     <label class="form-label">📍 Место рождения</label>
-                    <input type="text" id="birthPlace" class="place-input" placeholder="Например: Киев, Украина" required>
+                    <div class="place-autocomplete-wrapper">
+                        <input type="text" id="birthPlace" class="place-input" placeholder="Например: Киев, Украина" required autocomplete="off">
+                        <div id="birthPlaceSuggestions" class="place-suggestions"></div>
+                    </div>
 
                     <div id="coordsContainer" class="coords-display">
                         <div class="coords-row">
@@ -139,6 +142,7 @@
 
     <script src="js/timezones.js"></script>
     <script src="js/api.js"></script>
-    <script src="js/form.js"></script>
+    <script src="js/place-autocomplete.js?v=1"></script>
+    <script src="js/form.js?v=3"></script>
 </body>
 </html>

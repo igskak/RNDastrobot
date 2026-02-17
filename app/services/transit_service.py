@@ -10,6 +10,7 @@ from uuid import UUID
 from datetime import date, time, datetime, timedelta
 from sqlalchemy.orm import Session
 import swisseph as swe
+import pytz
 
 import json
 from decimal import Decimal
@@ -38,6 +39,7 @@ class TransitService:
         self.swisseph_engine = SwissEphemerisEngine(ephe_path)
         self._aspect_types_cache: Optional[List[RefAspectType]] = None
         self._planet_orbs_cache: Optional[Dict[Tuple[str, str], float]] = None
+        self._transit_positions_cache: Dict[float, Dict[str, float]] = {}
 
     def calculate_transits(
         self,
@@ -58,6 +60,8 @@ class TransitService:
         Returns:
             Dict с транзитными данными и аспектами к наталу
         """
+        self._transit_positions_cache.clear()
+
         # 1. Загрузить натальные данные
         natal_data = self._load_natal_data(user_id)
         if natal_data is None:
@@ -304,6 +308,8 @@ class TransitService:
         Returns:
             Список событий с t_enter, t_exact, t_leave
         """
+        self._transit_positions_cache.clear()
+
         # 0. Применить фокусные дефолты (медленные → личностные/социальные)
         if transit_bodies is None:
             transit_bodies = list(TRANSIT_FOCUSED_BODIES)
@@ -317,7 +323,7 @@ class TransitService:
                 step_hours, transit_bodies, natal_bodies, aspect_types
             )
             if cached is not None:
-                if not self._cache_maybe_boundary_clipped(cached, start_date, end_date):
+                if not self._cache_maybe_boundary_clipped(cached, start_date, end_date, timezone):
                     return cached
 
         # 1. Загрузить натальные данные (без blacklist — allowlist сам фильтрует)
@@ -483,14 +489,26 @@ class TransitService:
         cached_events: List[Dict],
         start_date: date,
         end_date: date,
+        timezone: str,
     ) -> bool:
         """Проверка старого кэша: t_enter/t_leave могли быть обрезаны границами периода."""
-        start_iso = f"{start_date.isoformat()}T00:00:00Z"
-        end_iso = f"{end_date.isoformat()}T23:59:59Z"
+        start_iso = self._day_boundary_iso(start_date, timezone, is_end=False)
+        end_iso = self._day_boundary_iso(end_date, timezone, is_end=True)
+        start_iso_legacy = f"{start_date.isoformat()}T00:00:00Z"
+        end_iso_legacy = f"{end_date.isoformat()}T23:59:59Z"
         for ev in cached_events or []:
-            if ev.get('t_enter') == start_iso or ev.get('t_leave') == end_iso:
+            if (
+                ev.get('t_enter') in (start_iso, start_iso_legacy)
+                or ev.get('t_leave') in (end_iso, end_iso_legacy)
+            ):
                 return True
         return False
+
+    def _day_boundary_iso(self, target_date: date, timezone: str, is_end: bool) -> str:
+        tz = pytz.timezone(timezone)
+        local_time = time(23, 59, 59) if is_end else time(0, 0, 0)
+        local_dt = tz.localize(datetime.combine(target_date, local_time))
+        return local_dt.isoformat(timespec='seconds')
 
     def _find_aspect_boundary_jd(
         self,
@@ -668,12 +686,25 @@ class TransitService:
 
     def _get_transit_body_longitude(self, jd: float, transit_body: str) -> Optional[float]:
         """Получить долготу транзитного тела на момент JD."""
+        positions = self._get_transit_positions(jd)
+        return positions.get(transit_body)
+
+    def _get_transit_positions(self, jd: float) -> Dict[str, float]:
+        """
+        Получить словарь долгот всех транзитных тел на момент JD с кешированием.
+        Ключ кеша нормализован по точности float, чтобы повторные вычисления
+        в бинарном/тернарном поиске не пересчитывали ephemeris заново.
+        """
+        cache_key = round(jd, 10)
+        cached = self._transit_positions_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         transit_planets = self.swisseph_engine.calculate_planets(jd)
         transit_planets.extend(self._calculate_transit_special_bodies(jd))
-        for body in transit_planets:
-            if body['name'] == transit_body:
-                return float(body['longitude'])
-        return None
+        positions = {body['name']: float(body['longitude']) for body in transit_planets}
+        self._transit_positions_cache[cache_key] = positions
+        return positions
 
     def _format_transit_event(self, aspect_data: Dict, timezone: str) -> Dict:
         """Форматировать событие транзита для ответа API"""
@@ -699,8 +730,10 @@ class TransitService:
         minutes = int((hour_frac - hours) * 60)
         seconds = int(((hour_frac - hours) * 60 - minutes) * 60)
 
-        utc_dt = datetime(year, month, day, hours, minutes, seconds)
-        return utc_dt.isoformat() + 'Z'
+        utc_dt = datetime(year, month, day, hours, minutes, seconds, tzinfo=pytz.UTC)
+        target_tz = pytz.timezone(timezone)
+        local_dt = utc_dt.astimezone(target_tz)
+        return local_dt.isoformat(timespec='seconds')
 
     # ========================================================================
     # Cache methods

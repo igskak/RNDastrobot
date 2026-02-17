@@ -33,7 +33,7 @@ EPHE_PATH = os.environ.get('SWISSEPH_EPHE_PATH') or os.environ.get('EPHEMERIS_PA
         400: {"model": ErrorResponse, "description": "Ошибка в параметрах запроса"},
     }
 )
-async def calculate_solar_return(
+def calculate_solar_return(
     request: SolarReturnRequest,
     db: Session = Depends(get_db)
 ) -> SolarReturnResponse:
@@ -91,7 +91,7 @@ async def calculate_solar_return(
         404: {"model": ErrorResponse, "description": "Соляр не найден"},
     }
 )
-async def get_solar_return(
+def get_solar_return(
     user_id: UUID,
     year: int,
     db: Session = Depends(get_db)
@@ -131,7 +131,7 @@ async def get_solar_return(
     summary="Список соляров пользователя",
     description="Получает список всех рассчитанных соляров пользователя",
 )
-async def list_solar_returns(
+def list_solar_returns(
     user_id: UUID,
     db: Session = Depends(get_db)
 ) -> SolarReturnListResponse:

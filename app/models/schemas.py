@@ -6,6 +6,41 @@ from datetime import date as date_type, time as time_type
 from typing import Optional, List, Dict
 from uuid import UUID
 
+VALID_HOUSE_SYSTEMS = ['P', 'K', 'O', 'R', 'C', 'E', 'W', 'X', 'H', 'T', 'B', 'M']
+HOUSE_SYSTEM_ALIASES = {
+    'P': 'P',
+    'K': 'K',
+    'O': 'O',
+    'R': 'R',
+    'C': 'C',
+    'E': 'E',
+    'W': 'W',
+    'X': 'X',
+    'H': 'H',
+    'T': 'T',
+    'B': 'B',
+    'M': 'M',
+    'PLACIDUS': 'P',
+    'KOCH': 'K',
+    'PORPHYRY': 'O',
+    'REGIOMONTANUS': 'R',
+    'CAMPANUS': 'C',
+    'EQUAL': 'E',
+    'WHOLE_SIGN': 'W',
+    'WHOLESIGN': 'W',
+    'AXIAL_ROTATION': 'X',
+    'HORIZONTAL': 'H',
+    'TOPOCENTRIC': 'T',
+    'ALCABITIUS': 'B',
+    'MORINUS': 'M',
+}
+
+
+def normalize_house_system_code(value: str) -> str:
+    """Нормализовать код/название системы домов к 1-буквенному коду Swiss Ephemeris."""
+    normalized = str(value or '').strip().upper().replace('-', '_').replace(' ', '_')
+    return HOUSE_SYSTEM_ALIASES.get(normalized, normalized)
+
 
 class BirthDataInput(BaseModel):
     """Входные данные для расчёта натальной карты"""
@@ -35,10 +70,10 @@ class BirthDataInput(BaseModel):
     @classmethod
     def validate_house_system(cls, v: str) -> str:
         """Валидация системы домов"""
-        valid_systems = ['P', 'K', 'O', 'R', 'C', 'E', 'W', 'X', 'H', 'T', 'B', 'M']
-        if v not in valid_systems:
-            raise ValueError(f'Недопустимая система домов: {v}. Допустимые: {", ".join(valid_systems)}')
-        return v
+        code = normalize_house_system_code(v)
+        if code not in VALID_HOUSE_SYSTEMS:
+            raise ValueError(f'Недопустимая система домов: {v}. Допустимые: {", ".join(VALID_HOUSE_SYSTEMS)}')
+        return code
     
     @field_validator('timezone')
     @classmethod
@@ -392,10 +427,10 @@ class SolarReturnRequest(BaseModel):
     @field_validator('house_system')
     @classmethod
     def validate_house_system(cls, v: str) -> str:
-        valid_systems = ['P', 'K', 'O', 'R', 'C', 'E', 'W', 'X', 'H', 'T', 'B', 'M']
-        if v not in valid_systems:
+        code = normalize_house_system_code(v)
+        if code not in VALID_HOUSE_SYSTEMS:
             raise ValueError(f'Недопустимая система домов: {v}')
-        return v
+        return code
 
 
 class SolarLocationInfo(BaseModel):
@@ -445,4 +480,3 @@ class SolarReturnListResponse(BaseModel):
     """Список соляров пользователя"""
     user_id: UUID
     solar_returns: List[SolarReturnListItem]
-

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Натальная карта — AstroBot</title>
     <link rel="stylesheet" href="css/styles.css?v=3">
-    <link rel="stylesheet" href="css/chart-layout.css?v=2">
+    <link rel="stylesheet" href="css/chart-layout.css?v=3">
     <link rel="stylesheet" href="css/chat.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -122,13 +122,29 @@
                 <div class="settings-section">
                     <label class="settings-label">Система домов</label>
                     <select id="houseSystemSelect" class="settings-select">
-                        <option value="Placidus" selected>Placidus</option>
-                        <option value="Koch">Koch</option>
-                        <option value="Whole_Sign">Whole Sign</option>
-                        <option value="Equal">Equal</option>
-                        <option value="Campanus">Campanus</option>
-                        <option value="Regiomontanus">Regiomontanus</option>
+                        <option value="P" selected>Placidus</option>
+                        <option value="K">Koch</option>
+                        <option value="W">Whole Sign</option>
+                        <option value="E">Equal</option>
+                        <option value="C">Campanus</option>
+                        <option value="R">Regiomontanus</option>
                     </select>
+                </div>
+
+                <div class="settings-section">
+                    <label class="settings-label">Размер планет</label>
+                    <div class="settings-size-control">
+                        <input type="range" id="planetScaleRange" min="80" max="170" step="5" value="120">
+                        <span id="planetScaleValue">120%</span>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <label class="settings-label">Размер точек</label>
+                    <div class="settings-size-control">
+                        <input type="range" id="pointScaleRange" min="80" max="170" step="5" value="100">
+                        <span id="pointScaleValue">100%</span>
+                    </div>
                 </div>
 
                 <div class="settings-section">
@@ -138,7 +154,6 @@
                     </div>
                 </div>
 
-                <button class="btn-apply" id="applySettings">Применить</button>
             </div>
         </main>
 
@@ -206,9 +221,9 @@
 
     <script src="js/api.js"></script>
     <script src="js/symbols.js?v=3"></script>
-    <script src="js/chart-wheel.js"></script>
+    <script src="js/chart-wheel.js?v=2"></script>
     <script src="js/chart-data.js"></script>
-    <script src="js/chart.js"></script>
+    <script src="js/chart.js?v=6"></script>
     <script src="js/chart-layout.js"></script>
     <script src="js/chatkit-init.js"></script>
 </body>

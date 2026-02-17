@@ -144,7 +144,7 @@ class TransitPeriodResponse(BaseModel):
     summary="Расчёт транзитов",
     description="Рассчитывает транзиты к сохранённой натальной карте пользователя",
 )
-async def calculate_transits(
+def calculate_transits(
     request: TransitRequest,
     db: Session = Depends(get_db)
 ):
@@ -186,7 +186,7 @@ async def calculate_transits(
     summary="Поиск транзитных событий на период",
     description="Находит все интервалы транзитных аспектов на указанный период (как в ZET Aspects Diagram)",
 )
-async def find_transit_events(
+def find_transit_events(
     request: TransitPeriodRequest,
     db: Session = Depends(get_db)
 ):

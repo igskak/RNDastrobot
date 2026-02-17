@@ -34,10 +34,46 @@
         Conjunction: '#6366f1', Opposition: '#ef4444', Trine: '#22c55e',
         Square: '#f97316', Sextile: '#06b6d4', Quincunx: '#a855f7',
     };
+    const PROGNOSTIC_LAYERS = {
+        transit: {
+            color: '#6366f1',
+            markerShape: 'circle',
+            label: 'Транзит',
+            tableMethod: 'transits',
+            radius: PROGNOSTIC_PLANET_R,
+        },
+        progression: {
+            color: '#a855f7',
+            markerShape: 'diamond',
+            label: 'Прогрессия',
+            tableMethod: 'progressions',
+            radius: PROGNOSTIC_PLANET_R + 14,
+        },
+        direction: {
+            color: '#ca8a04',
+            markerShape: 'square',
+            label: 'Дирекция',
+            tableMethod: 'directions',
+            radius: PROGNOSTIC_PLANET_R + 28,
+        },
+        solar_return: {
+            color: '#0f766e',
+            markerShape: 'triangle',
+            label: 'Соляр',
+            tableMethod: 'solar_return',
+            radius: PROGNOSTIC_PLANET_R + 14,
+        },
+    };
 
     let svg, ascLong = 0;
     let orientationMode = 'aries';
     let aspectFilter = 'major';
+    let layerVisibility = {
+        natal: true,
+        transit: true,
+        progression: true,
+        direction: true,
+    };
     let enabledTransitBodies = new Set();
     let enabledNatalBodies = new Set();
     let transitFiltersInitialized = false;
@@ -48,6 +84,7 @@
     let transitPointScale = 1.0;
     let focusState = {
         mode: null,
+        method: null,
         transitBody: null,
         natalBody: null,
         aspectType: null,
@@ -55,6 +92,9 @@
         planetName: null,
     };
     let hoverTooltip = null;
+    let ingressesCollapsed = false;
+    let aspectsCollapsed = false;
+    let ingressesAvailable = false;
 
     function el(tag, attrs, text) {
         const e = document.createElementNS(NS, tag);
@@ -134,39 +174,63 @@
         svg.setAttribute('viewBox', '0 0 600 600');
         ascLong = natalData.angles?.ASC?.longitude || 0;
 
+        const layers = buildPrognosticLayers(progData);
+        updateLayerLegendUI();
+
         drawBackground();
         drawSignRing();
-        drawHouses(natalData.houses, { layer: 'natal', layerLabel: 'Натал' });
-        const progMeta = getProgMeta(progData);
-        const progHouses = extractProgHouses(progData);
-        if (progHouses.length) {
-            drawHouses(progHouses, {
-                layer: 'prognostic',
-                method: progMeta.method,
-                layerLabel: getPrognosticHouseLayerLabel(progMeta.method),
-            });
+
+        if (layerVisibility.natal) {
+            drawHouses(natalData.houses, { layer: 'natal', layerLabel: 'Натал' });
         }
+
+        layers.forEach(layer => {
+            if (!isLayerVisible(layer.method)) return;
+            if (!layer.houses?.length) return;
+            drawHouses(layer.houses, {
+                layer: 'prognostic',
+                method: layer.method,
+                layerLabel: getPrognosticHouseLayerLabel(layer.method),
+            });
+        });
+
         drawAspectCircle();
 
-        // Natal planets (inner)
-        drawPlanets(natalData.planets, NATAL_PLANET_R, '#374151', NATAL_PLANET_SYMBOL_SIZE, true, 'natal');
+        if (layerVisibility.natal) {
+            drawPlanets(natalData.planets, NATAL_PLANET_R, '#374151', NATAL_PLANET_SYMBOL_SIZE, true, 'natal');
+        }
 
-        // Prognostic planets (outer ring)
-        const progPlanets = extractProgPlanets(progData);
-        drawOuterRing();
-        drawPlanets(progPlanets, PROGNOSTIC_PLANET_R, '#6366f1', PROG_PLANET_SYMBOL_SIZE, false, 'prognostic');
+        layers.forEach(layer => {
+            if (!isLayerVisible(layer.method)) return;
+            drawOuterRing(layer.method);
+            drawPlanets(
+                layer.planets,
+                getLayerRadius(layer.method),
+                layer.color,
+                PROG_PLANET_SYMBOL_SIZE,
+                false,
+                'prognostic'
+            );
+        });
 
-        // Cross-aspect lines
-        const aspects = extractAspects(progData);
+        const aspects = layers.flatMap(layer => layer.aspects || []);
         syncBodyFilters(aspects);
         const filteredAspects = getFilteredAspects(aspects);
-        drawCrossAspects(filteredAspects, natalData.planets, progPlanets);
 
-        // Ingresses table (for progressions / directions)
-        renderIngressesTable(extractIngresses(progData), progData?._method);
+        const natalMap = {};
+        (natalData.planets || []).forEach(p => { natalMap[p.name] = p.longitude; });
+        layers.forEach(layer => {
+            if (!isLayerVisible(layer.method)) return;
+            const layerAspects = filteredAspects.filter(a => a.method === layer.method);
+            drawCrossAspects(layerAspects, natalMap, layer.planets, layer.method);
+        });
 
-        // Aspects table
-        renderAspectsTable(filteredAspects, progData._method);
+        const ingresses = layers
+            .filter(layer => isLayerVisible(layer.method))
+            .flatMap(layer => layer.ingresses || []);
+        renderIngressesTable(ingresses);
+
+        renderAspectsTable(filteredAspects);
 
         // Highlight aspect from timeline click
         if (window.ForecastState?.highlightAspect) {
@@ -179,12 +243,18 @@
 
     function applyHighlight(h) {
         if (!h || !svg) return;
-        setFocusAspect(h.transitBody, h.natalBody, h.aspectType);
+        setFocusAspect(h.transitBody, h.natalBody, h.aspectType, h.method || null);
         const container = document.getElementById('biwheelAspects');
         if (container) {
             container.querySelectorAll('tbody tr').forEach(tr => {
-                const title = tr.getAttribute('title') || '';
-                if (title === `${h.transitBody} ${h.aspectType} ${h.natalBody}`) {
+                const trMethod = tr.dataset.method || '';
+                const methodMatches = !h.method || !trMethod || trMethod === h.method;
+                if (
+                    methodMatches &&
+                    tr.dataset.transit === h.transitBody &&
+                    tr.dataset.aspect === h.aspectType &&
+                    tr.dataset.natal === h.natalBody
+                ) {
                     tr.scrollIntoView({ block: 'center', behavior: 'smooth' });
                 }
             });
@@ -319,26 +389,71 @@
         svg.appendChild(el('circle', { cx:C, cy:C, r:ASPECT_R, fill:'none', stroke:'#e5e7eb', 'stroke-width':0.5 }));
     }
 
-    function drawOuterRing() {
-        svg.appendChild(el('circle', { cx:C, cy:C, r:PROGNOSTIC_PLANET_R + 10, fill:'none', stroke:'#6366f120', 'stroke-width':0.5 }));
-        svg.appendChild(el('circle', { cx:C, cy:C, r:PROGNOSTIC_PLANET_R - 10, fill:'none', stroke:'#6366f120', 'stroke-width':0.5 }));
+    function drawOuterRing(method = 'transit') {
+        const cfg = getLayerConfig(method);
+        const r = getLayerRadius(method);
+        svg.appendChild(el('circle', { cx:C, cy:C, r:r + 10, fill:'none', stroke:`${cfg.color}20`, 'stroke-width':0.5 }));
+        svg.appendChild(el('circle', { cx:C, cy:C, r:r - 10, fill:'none', stroke:`${cfg.color}20`, 'stroke-width':0.5 }));
     }
 
     // ─── Draw planets ───────────────────────────────────
-    function getProgMarkerShape(method) {
-        if (method === 'progression') return 'diamond';
-        if (method === 'direction') return 'square';
-        if (method === 'solar_return') return 'triangle';
-        return 'circle';
+    function getLayerConfig(method) {
+        return PROGNOSTIC_LAYERS[method] || PROGNOSTIC_LAYERS.transit;
     }
 
-    function getProgMeta(data) {
-        if (!data) return { method: 'transit', color: '#6366f1' };
-        if (data.transit_planets) return { method: 'transit', color: '#6366f1' };
-        if (data.progressed_planets) return { method: 'progression', color: '#a855f7' };
-        if (data.directed_planets) return { method: 'direction', color: '#ca8a04' };
-        if (data.solar_planets || data.solar_return_planets) return { method: 'solar_return', color: '#0f766e' };
-        return { method: 'transit', color: '#6366f1' };
+    function getLayerRadius(method) {
+        return getLayerConfig(method).radius || PROGNOSTIC_PLANET_R;
+    }
+
+    function isLayerVisible(method) {
+        return layerVisibility[method] !== false;
+    }
+
+    function getProgMarkerShape(method) {
+        return getLayerConfig(method).markerShape || 'circle';
+    }
+
+    function getProgMeta(data, forcedMethod = null) {
+        const method = forcedMethod || (
+            data?.transit_planets ? 'transit'
+                : data?.progressed_planets ? 'progression'
+                    : data?.directed_planets ? 'direction'
+                        : (data?.solar_planets || data?.solar_return_planets) ? 'solar_return'
+                            : 'transit'
+        );
+        const cfg = getLayerConfig(method);
+        return { method, color: cfg.color };
+    }
+
+    function buildPrognosticLayers(data) {
+        if (!data) return [];
+        if (data._combined && data._layers) {
+            return [
+                { method: 'transit', methodKey: 'transits', payload: data._layers.transit },
+                { method: 'progression', methodKey: 'progressions', payload: data._layers.progression },
+                { method: 'direction', methodKey: 'directions', payload: data._layers.direction },
+            ].filter(layer => layer.payload).map(layer => ({
+                ...layer,
+                color: getLayerConfig(layer.method).color,
+                planets: extractProgPlanets(layer.payload, layer.method),
+                houses: extractProgHouses(layer.payload, layer.method),
+                aspects: extractAspects(layer.payload, layer.method, layer.methodKey),
+                ingresses: extractIngresses(layer.payload, layer.methodKey),
+            }));
+        }
+
+        const meta = getProgMeta(data);
+        const methodKey = data?._method || getLayerConfig(meta.method).tableMethod;
+        return [{
+            method: meta.method,
+            methodKey,
+            payload: data,
+            color: meta.color,
+            planets: extractProgPlanets(data, meta.method),
+            houses: extractProgHouses(data, meta.method),
+            aspects: extractAspects(data, meta.method, methodKey),
+            ingresses: extractIngresses(data, methodKey),
+        }];
     }
 
     function drawProgMarker(point, shape, color, glyphSize) {
@@ -430,6 +545,7 @@
             const group = el('g', {
                 class: `bw-planet-group ${isNatal ? 'bw-natal-planet' : 'bw-prog-planet'}`,
                 'data-planet-role': isNatal ? 'natal' : 'transit',
+                'data-method': isNatal ? 'natal' : (planet._method || 'transit'),
                 'data-planet-name': planet.name,
                 'data-sign': planet.sign || '',
                 'data-degree-in-sign': String(planet.degree_in_sign ?? 0),
@@ -521,9 +637,31 @@
         if (tooltip) tooltip.style.display = 'none';
     }
 
+    function applyPanelCollapseStates() {
+        const leftbar = document.querySelector('.biwheel-leftbar');
+        const sidebar = document.querySelector('.biwheel-sidebar');
+        const ingressesList = document.getElementById('biwheelIngresses');
+        const aspectsList = document.getElementById('biwheelAspects');
+        const openIngressesBtn = document.getElementById('bwOpenIngresses');
+        const openAspectsBtn = document.getElementById('bwOpenAspects');
+
+        const showIngressPanel = ingressesAvailable && !ingressesCollapsed;
+        if (leftbar) leftbar.style.display = showIngressPanel ? 'flex' : 'none';
+        if (ingressesList) ingressesList.classList.toggle('bw-panel-collapsed', !showIngressPanel);
+        if (openIngressesBtn) openIngressesBtn.style.display = ingressesAvailable && ingressesCollapsed ? 'inline-flex' : 'none';
+
+        const showAspectsPanel = !aspectsCollapsed;
+        if (sidebar) sidebar.style.display = showAspectsPanel ? 'flex' : 'none';
+        if (aspectsList) aspectsList.classList.toggle('bw-panel-collapsed', !showAspectsPanel);
+        if (openAspectsBtn) openAspectsBtn.style.display = aspectsCollapsed ? 'inline-flex' : 'none';
+    }
+
     function onPlanetHover(event) {
         const group = event.currentTarget;
-        const role = group.getAttribute('data-planet-role') === 'natal' ? 'Натал' : 'Прогностика';
+        const methodKey = group.getAttribute('data-method') || '';
+        const role = group.getAttribute('data-planet-role') === 'natal'
+            ? 'Натал'
+            : getPrognosticHouseLayerLabel(methodKey);
         const name = group.getAttribute('data-planet-name') || '';
         const sign = group.getAttribute('data-sign') || '';
         const house = group.getAttribute('data-house') || '—';
@@ -579,8 +717,8 @@
         hideHoverTooltip();
     }
 
-    function extractProgPlanets(data) {
-        const meta = getProgMeta(data);
+    function extractProgPlanets(data, forcedMethod = null) {
+        const meta = getProgMeta(data, forcedMethod);
         const enrich = p => ({
             ...p,
             house: p.house ?? p.progressed_house ?? p.directed_house ?? p.natal_house ?? '',
@@ -599,26 +737,32 @@
         return [];
     }
 
-    function extractProgHouses(data) {
+    function extractProgHouses(data, forcedMethod = null) {
+        const meta = getProgMeta(data, forcedMethod);
         if (!data) return [];
-        if (Array.isArray(data.progressed_houses)) return data.progressed_houses;
-        if (Array.isArray(data.directed_houses)) return data.directed_houses;
+        if (meta.method === 'progression' && Array.isArray(data.progressed_houses)) return data.progressed_houses;
+        if (meta.method === 'direction' && Array.isArray(data.directed_houses)) return data.directed_houses;
         return [];
     }
 
     function getPrognosticHouseLayerLabel(method) {
+        if (method === 'transit') return 'Транзит';
         if (method === 'progression') return 'Прогрессия';
         if (method === 'direction') return 'Дирекция';
         if (method === 'solar_return') return 'Соляр';
         return 'Прогностика';
     }
 
-    function extractAspects(data) {
+    function extractAspects(data, method = null, methodKey = null) {
         if (!data) return [];
+        const meta = getProgMeta(data, method);
+        const effectiveMethodKey = methodKey || getLayerConfig(meta.method).tableMethod;
         if (data.aspects) {
             return data.aspects.map(a => ({
                 transitBody: a.transit_planet, natalBody: a.natal_object,
                 aspectType: a.aspect_type, orb: a.orb, isMajor: a.is_major,
+                method: meta.method,
+                methodKey: effectiveMethodKey,
             }));
         }
         if (data.aspects_to_natal) {
@@ -626,14 +770,30 @@
                 transitBody: a.progressed_planet || a.directed_object,
                 natalBody: a.natal_object, aspectType: a.aspect_type,
                 orb: a.orb, isMajor: a.is_major,
+                method: meta.method,
+                methodKey: effectiveMethodKey,
             }));
         }
         return [];
     }
 
-    function extractIngresses(data) {
+    function getMethodLabelShort(methodKey) {
+        if (methodKey === 'progressions') return 'Прогрессия';
+        if (methodKey === 'directions') return 'Дирекция';
+        if (methodKey === 'solar_return') return 'Соляр';
+        return 'Транзит';
+    }
+
+    function getMethodBadgeClass(methodKey) {
+        if (methodKey === 'progressions') return 'progression';
+        if (methodKey === 'directions') return 'direction';
+        if (methodKey === 'solar_return') return 'direction';
+        return 'transit';
+    }
+
+    function extractIngresses(data, methodKey = null) {
         if (!data) return [];
-        const method = data?._method;
+        const method = methodKey || data?._method;
         const methodSupported = method === 'progressions' || method === 'directions';
         if (!methodSupported) return [];
 
@@ -642,7 +802,7 @@
         const fmtSign = sign => {
             if (!sign) return '—';
             const sym = Symbols?.signs?.[sign] || '';
-            return `${sym ? sym + ' ' : ''}${sign}`;
+            return sym || sign;
         };
 
         (data.planet_ingresses || []).forEach(ing => {
@@ -657,8 +817,11 @@
                 : fmtSign(ing.to_sign);
             list.push({
                 date: targetDate,
-                object: `${bodySym ? bodySym + ' ' : ''}${body}`,
+                object: bodySym || body,
                 transition: `${fromPart} → ${toPart}`,
+                method: method,
+                methodLabel: getMethodLabelShort(method),
+                methodClass: getMethodBadgeClass(method),
             });
         });
 
@@ -667,17 +830,19 @@
                 date: targetDate,
                 object: `Куспид ${ing.house_number} дома`,
                 transition: `${fmtSign(ing.from_sign)} → ${fmtSign(ing.to_sign)}`,
+                method: method,
+                methodLabel: getMethodLabelShort(method),
+                methodClass: getMethodBadgeClass(method),
             });
         });
 
         return list;
     }
 
-    function drawCrossAspects(aspects, natalPlanets, progPlanets) {
-        const natalMap = {};
-        natalPlanets.forEach(p => natalMap[p.name] = p.longitude);
+    function drawCrossAspects(aspects, natalMap, progPlanets, method = 'transit') {
+        const layerCfg = getLayerConfig(method);
         const progMap = {};
-        progPlanets.forEach(p => progMap[p.name] = p.longitude);
+        (progPlanets || []).forEach(p => progMap[p.name] = p.longitude);
 
         aspects.forEach(a => {
             const nLong = natalMap[a.natalBody];
@@ -685,14 +850,15 @@
             if (nLong == null || pLong == null) return;
             const nAngle = longToAngle(nLong) * Math.PI / 180;
             const pAngle = longToAngle(pLong) * Math.PI / 180;
-            const color = ASPECT_COLORS[a.aspectType] || '#9ca3af';
+            const aspectColor = ASPECT_COLORS[a.aspectType] || '#9ca3af';
+            const color = aspectColor === '#9ca3af' ? layerCfg.color : aspectColor;
             const line = el('line', {
                 x1: C + ASPECT_R * Math.cos(nAngle), y1: C + ASPECT_R * Math.sin(nAngle),
                 x2: C + ASPECT_R * Math.cos(pAngle), y2: C + ASPECT_R * Math.sin(pAngle),
                 stroke: color, 'stroke-width': a.isMajor ? 1.3 : 0.7,
                 'stroke-dasharray': a.isMajor ? 'none' : '4,4',
                 opacity: a.isMajor ? 0.5 : 0.22,
-                'data-transit': a.transitBody, 'data-natal': a.natalBody, 'data-aspect': a.aspectType,
+                'data-transit': a.transitBody, 'data-natal': a.natalBody, 'data-aspect': a.aspectType, 'data-method': a.method || method,
                 class: `bw-aspect-line ${a.isMajor ? 'bw-aspect-major' : 'bw-aspect-minor'}`
             });
             svg.appendChild(line);
@@ -705,15 +871,25 @@
     let sortCol = 'transit_priority';
     let sortAsc = true;
 
-    function renderAspectsTable(aspects, method) {
+    function renderAspectsTable(aspects) {
         const container = document.getElementById('biwheelAspects');
         if (!container) return;
         if (!aspects.length) {
-            container.innerHTML = '<p style="padding:12px;color:var(--text-secondary);font-size:1rem">Нет аспектов</p>';
+            container.innerHTML = `<table><thead><tr>
+                <th class="bw-th-with-toggle">Аспекты <button type="button" class="bw-table-toggle" id="bwToggleAspectsInTable" aria-expanded="true" aria-label="Свернуть таблицу аспектов" title="Свернуть таблицу аспектов">▾</button></th>
+            </tr></thead><tbody><tr><td style="padding:12px;color:var(--text-secondary);font-size:1rem">Нет аспектов</td></tr></tbody></table>`;
+            lastAspects = [];
+            container.querySelector('#bwToggleAspectsInTable')?.addEventListener('click', (event) => {
+                event.stopPropagation();
+                aspectsCollapsed = true;
+                applyPanelCollapseStates();
+            });
+            applyPanelCollapseStates();
             return;
         }
         lastAspects = aspects;
         buildAspectsHTML(container);
+        applyPanelCollapseStates();
     }
 
     function compactDate(dateStr) {
@@ -724,25 +900,22 @@
         return `${d}.${m}.${y.slice(-2)}`;
     }
 
-    function setIngressSidebarVisible(visible) {
-        const leftbar = document.querySelector('.biwheel-leftbar');
-        if (!leftbar) return;
-        leftbar.style.display = visible ? 'flex' : 'none';
-    }
-
-    function renderIngressesTable(ingresses, method) {
+    function renderIngressesTable(ingresses) {
         const container = document.getElementById('biwheelIngresses');
         if (!container) return;
-        const supported = method === 'progressions' || method === 'directions';
-        if (!supported || !ingresses?.length) {
+        if (!ingresses?.length) {
+            ingressesAvailable = false;
+            ingressesCollapsed = false;
             container.innerHTML = '';
             container.style.display = 'none';
-            setIngressSidebarVisible(false);
+            applyPanelCollapseStates();
             return;
         }
+        ingressesAvailable = true;
 
         let html = `<table><thead><tr>
-            <th>Дата</th>
+            <th class="bw-th-with-toggle"><span>Дата</span><button type="button" class="bw-table-toggle" id="bwToggleIngressesInTable" aria-expanded="true" aria-label="Свернуть таблицу переходов" title="Свернуть таблицу переходов">▾</button></th>
+            <th>Метод</th>
             <th>Объект</th>
             <th>Переход</th>
         </tr></thead><tbody>`;
@@ -750,6 +923,7 @@
         ingresses.forEach(row => {
             html += `<tr>
                 <td>${compactDate(row.date)}</td>
+                <td><span class="method-badge ${row.methodClass || ''}">${row.methodLabel || row.method || ''}</span></td>
                 <td class="bw-ingress-object">${row.object}</td>
                 <td class="bw-ingress-transition">${row.transition}</td>
             </tr>`;
@@ -757,7 +931,12 @@
         html += '</tbody></table>';
         container.innerHTML = html;
         container.style.display = '';
-        setIngressSidebarVisible(true);
+        container.querySelector('#bwToggleIngressesInTable')?.addEventListener('click', (event) => {
+            event.stopPropagation();
+            ingressesCollapsed = true;
+            applyPanelCollapseStates();
+        });
+        applyPanelCollapseStates();
     }
 
     function bodyPriority(name) {
@@ -806,12 +985,31 @@
 
     function getFilteredAspects(aspects) {
         return aspects.filter(a => {
+            if (!layerVisibility.natal) return false;
+            if (a.method && !isLayerVisible(a.method)) return false;
             if (aspectFilter === 'major' && !a.isMajor) return false;
             if (aspectFilter === 'minor' && a.isMajor) return false;
             if (!enabledTransitBodies.has(a.transitBody)) return false;
             if (!enabledNatalBodies.has(a.natalBody)) return false;
             return true;
         });
+    }
+
+    function updateLayerLegendUI() {
+        const legendItems = document.querySelectorAll('.bw-legend-toggle[data-layer]');
+        legendItems.forEach(node => {
+            const layer = node.dataset.layer;
+            const active = layerVisibility[layer] !== false;
+            node.classList.toggle('active', active);
+            node.classList.toggle('inactive', !active);
+        });
+    }
+
+    function toggleLayerVisibility(layer) {
+        if (!Object.prototype.hasOwnProperty.call(layerVisibility, layer)) return;
+        layerVisibility[layer] = !layerVisibility[layer];
+        updateLayerLegendUI();
+        rerenderLast();
     }
 
     function renderSettingsToggles(transitBodies, natalBodies) {
@@ -880,10 +1078,17 @@
     function resetAspectFilters() {
         if (!lastProgData) return;
         aspectFilter = 'major';
+        layerVisibility = {
+            natal: true,
+            transit: true,
+            progression: true,
+            direction: true,
+        };
         enabledTransitBodies = new Set();
         enabledNatalBodies = new Set();
         transitFiltersInitialized = false;
         natalFiltersInitialized = false;
+        updateLayerLegendUI();
         rerenderLast();
     }
 
@@ -895,6 +1100,9 @@
                 const ib = BW_PLANET_ORDER.indexOf(b.transitBody);
                 va = ia < 0 ? 999 : ia;
                 vb = ib < 0 ? 999 : ib;
+            } else if (sortCol === 'method') {
+                va = a.method || '';
+                vb = b.method || '';
             } else if (sortCol === 'transit') { va = a.transitBody; vb = b.transitBody; }
             else if (sortCol === 'natal') { va = a.natalBody; vb = b.natalBody; }
             else if (sortCol === 'aspect') { va = a.aspectType; vb = b.aspectType; }
@@ -905,6 +1113,7 @@
 
         const arrow = col => col === sortCol ? (sortAsc ? ' ↑' : ' ↓') : '';
         let html = `<table><thead><tr>
+            <th data-col="method" class="bw-th-with-toggle"><span>М.${arrow('method')}</span><button type="button" class="bw-table-toggle" id="bwToggleAspectsInTable" aria-expanded="true" aria-label="Свернуть таблицу аспектов" title="Свернуть таблицу аспектов">▾</button></th>
             <th data-col="transit">Тр.${arrow('transit')}</th>
             <th data-col="aspect">${arrow('aspect')}</th>
             <th data-col="natal">Нат.${arrow('natal')}</th>
@@ -914,7 +1123,9 @@
             const tSym = Symbols?.planets?.[a.transitBody] || a.transitBody;
             const nSym = Symbols?.planets?.[a.natalBody] || a.natalBody;
             const aSym = Symbols?.aspects?.[a.aspectType] || a.aspectType;
-            html += `<tr title="${a.transitBody} ${a.aspectType} ${a.natalBody}" data-transit="${a.transitBody}" data-natal="${a.natalBody}" data-aspect="${a.aspectType}"><td><span class="astro-symbol">${tSym}</span></td><td><span class="astro-symbol">${aSym}</span></td><td><span class="astro-symbol">${nSym}</span></td><td>${a.orb?.toFixed(2)}°</td></tr>`;
+            const methodLabel = getMethodLabelShort(a.methodKey || getLayerConfig(a.method || 'transit').tableMethod);
+            const methodClass = getMethodBadgeClass(a.methodKey || getLayerConfig(a.method || 'transit').tableMethod);
+            html += `<tr title="${methodLabel}: ${a.transitBody} ${a.aspectType} ${a.natalBody}" data-method="${a.method || ''}" data-transit="${a.transitBody}" data-natal="${a.natalBody}" data-aspect="${a.aspectType}"><td><span class="method-badge ${methodClass}">${methodLabel}</span></td><td><span class="astro-symbol">${tSym}</span></td><td><span class="astro-symbol">${aSym}</span></td><td><span class="astro-symbol">${nSym}</span></td><td>${a.orb?.toFixed(2)}°</td></tr>`;
         });
         html += '</tbody></table>';
         container.innerHTML = html;
@@ -927,17 +1138,23 @@
                 buildAspectsHTML(container);
             });
         });
+        container.querySelector('#bwToggleAspectsInTable')?.addEventListener('click', (event) => {
+            event.stopPropagation();
+            aspectsCollapsed = true;
+            applyPanelCollapseStates();
+        });
         container.querySelectorAll('tbody tr').forEach(tr => {
             tr.addEventListener('click', () => {
-                setFocusAspect(tr.dataset.transit, tr.dataset.natal, tr.dataset.aspect);
+                setFocusAspect(tr.dataset.transit, tr.dataset.natal, tr.dataset.aspect, tr.dataset.method || null);
             });
         });
         applyFocusState();
     }
 
-    function setFocusAspect(transitBody, natalBody, aspectType) {
+    function setFocusAspect(transitBody, natalBody, aspectType, method = null) {
         focusState = {
             mode: 'aspect',
+            method,
             transitBody,
             natalBody,
             aspectType,
@@ -954,6 +1171,7 @@
         }
         focusState = {
             mode: 'planet',
+            method: null,
             transitBody: null,
             natalBody: null,
             aspectType: null,
@@ -966,6 +1184,7 @@
     function clearFocus() {
         focusState = {
             mode: null,
+            method: null,
             transitBody: null,
             natalBody: null,
             aspectType: null,
@@ -975,10 +1194,32 @@
         applyFocusState();
     }
 
+    function tryClearFocusFromChartClick(event) {
+        if (!focusState.mode || !event?.target) return;
+        const interactive = event.target.closest('.bw-planet-group, .bw-aspect-line, .bw-house-cusp');
+        if (interactive) return;
+        clearFocus();
+    }
+
+    function tryClearFocusFromEsc(event) {
+        if (event.key !== 'Escape' || !focusState.mode) return;
+        const target = event.target;
+        const isTypingTarget = target && (
+            target.tagName === 'INPUT' ||
+            target.tagName === 'TEXTAREA' ||
+            target.tagName === 'SELECT' ||
+            target.isContentEditable
+        );
+        if (isTypingTarget) return;
+        clearFocus();
+    }
+
     function matchesFocusLine(line) {
         if (!focusState.mode) return true;
         if (focusState.mode === 'aspect') {
-            return line.dataset.transit === focusState.transitBody &&
+            const methodMatches = !focusState.method || line.dataset.method === focusState.method;
+            return methodMatches &&
+                line.dataset.transit === focusState.transitBody &&
                 line.dataset.natal === focusState.natalBody &&
                 line.dataset.aspect === focusState.aspectType;
         }
@@ -1030,6 +1271,7 @@
             table.querySelectorAll('tbody tr').forEach(tr => {
                 const active = matchesFocusLine({
                     dataset: {
+                        method: tr.dataset.method,
                         transit: tr.dataset.transit,
                         natal: tr.dataset.natal,
                         aspect: tr.dataset.aspect,
@@ -1153,6 +1395,7 @@
         natalPointScale = readSavedScale('bwNatalPointScale', 1.2);
         transitPointScale = readSavedScale('bwTransitPointScale', 1.0);
         updateScaleControlsUI();
+        updateLayerLegendUI();
 
         document.querySelectorAll('.bw-filter-btn[data-filter]').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -1160,6 +1403,37 @@
                 rerenderLast();
             });
         });
+        document.querySelectorAll('.bw-legend-toggle[data-layer]').forEach(item => {
+            item.addEventListener('click', (event) => {
+                if (event.target && event.target.closest('.bw-direction-type-select')) return;
+                const layer = item.dataset.layer;
+                if (!layer) return;
+                toggleLayerVisibility(layer);
+            });
+        });
+        const directionTypeSelect = document.getElementById('bwDirectionTypeSelect');
+        if (directionTypeSelect) {
+            ['click', 'mousedown', 'pointerdown'].forEach(evt => {
+                directionTypeSelect.addEventListener(evt, e => e.stopPropagation());
+            });
+        }
+        const openIngressesBtn = document.getElementById('bwOpenIngresses');
+        const openAspectsBtn = document.getElementById('bwOpenAspects');
+        if (openIngressesBtn) {
+            openIngressesBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                ingressesCollapsed = false;
+                applyPanelCollapseStates();
+            });
+        }
+        if (openAspectsBtn) {
+            openAspectsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                aspectsCollapsed = false;
+                applyPanelCollapseStates();
+            });
+        }
+        applyPanelCollapseStates();
         document.getElementById('bwNatalScaleRange')?.addEventListener('input', e => {
             natalPointScale = clampPointScale((Number(e.target.value) || 120) / 100);
             localStorage.setItem('bwNatalPointScale', String(natalPointScale));
@@ -1175,6 +1449,11 @@
         document.getElementById('bwClearFocusBtn')?.addEventListener('click', () => {
             clearFocus();
         });
+        const chartSvg = document.getElementById('biwheelSvg');
+        if (chartSvg) {
+            chartSvg.addEventListener('click', tryClearFocusFromChartClick);
+        }
+        document.addEventListener('keydown', tryClearFocusFromEsc);
 
         const settingsBtn = document.getElementById('bwSettingsBtn');
         const settingsPanel = document.getElementById('bwSettingsPanel');

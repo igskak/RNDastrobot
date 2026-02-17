@@ -13,16 +13,16 @@
 .chart-header-compact {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 16px;
+    gap: 8px;
+    padding: 6px 12px;
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
 }
 
 .back-btn-compact {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -44,11 +44,12 @@
     display: flex;
     gap: 8px;
     margin-left: auto;
+    flex-shrink: 0;
 }
 
 .header-nav-btn {
-    padding: 6px 12px;
-    font-size: 13px;
+    padding: 4px 10px;
+    font-size: 12px;
     font-weight: 500;
     background: var(--bg-tertiary);
     border-radius: 6px;
@@ -63,15 +64,25 @@
     color: var(--accent);
 }
 
+.birth-info-compact {
+    min-width: 0;
+}
+
 .birth-info-compact h2 {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 600;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
+    line-height: 1.2;
 }
 
 .birth-info-compact p {
-    font-size: 13px;
+    font-size: 12px;
+    line-height: 1.2;
     color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: min(42vw, 420px);
 }
 
 /* Main 3-column layout */
@@ -300,6 +311,25 @@
 
 /* ============ RESPONSIVE ============ */
 @media (max-width: 1024px) {
+    .chart-header-compact {
+        padding: 5px 10px;
+        gap: 6px;
+    }
+
+    .header-nav-btn {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+
+    .birth-info-compact h2 {
+        font-size: 14px;
+    }
+
+    .birth-info-compact p {
+        font-size: 11px;
+        max-width: 48vw;
+    }
+
     .chart-page {
         height: 100vh;
         height: -webkit-fill-available;

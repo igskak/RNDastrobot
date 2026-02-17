@@ -8,6 +8,9 @@ class ChartWheel {
         this.svg = svgElement;
         this.center = 250;
         this.outerRadius = 230;
+        const initialScale = this.readPointScale();
+        this.planetScale = initialScale;
+        this.pointScale = initialScale;
 
         // Двойное кольцо: градусная сетка + символы знаков
         this.degreeRingWidth = 10;       // Внешнее кольцо с градусами
@@ -54,6 +57,16 @@ class ChartWheel {
         // direction: 'clockwise' или 'counterclockwise'
         this.orientationMode = 'asc';
         this.orientationDirection = 'counterclockwise';
+    }
+
+    readPointScale() {
+        return this.clampPointScale(1);
+    }
+
+    clampPointScale(value) {
+        const n = Number(value);
+        if (!Number.isFinite(n)) return 1;
+        return Math.min(1.7, Math.max(0.8, n));
     }
 
     /**
@@ -429,7 +442,8 @@ class ChartWheel {
             const element = Symbols.signElements[planet.sign];
             const color = this.elementColors[element] || '#374151';
             const glyphScale = Symbols.planetGlyphScale?.[planet.name] || 1;
-            const glyphSize = this.natalGlyphBaseSize * glyphScale;
+            const scale = this.isPointBody(planet.name) ? this.pointScale : this.planetScale;
+            const glyphSize = this.natalGlyphBaseSize * glyphScale * scale;
 
             // Группа для интерактивности
             const group = this.createSvgElement('g', {
@@ -455,7 +469,7 @@ class ChartWheel {
 
             // Фоновый круг (прозрачный, для интерактивности)
             group.appendChild(this.createSvgElement('circle', {
-                cx: x, cy: y, r: 10,
+                cx: x, cy: y, r: 10 * scale,
                 fill: 'transparent',
                 class: 'planet-circle'
             }));
@@ -474,8 +488,8 @@ class ChartWheel {
             // Ретроградность — «Rx» (компактно, справа сверху от символа)
             if (planet.retrograde) {
                 group.appendChild(this.createSvgElement('text', {
-                    x: x + 8, y: y - 4,
-                    'font-size': '8',
+                    x: x + (8 * scale), y: y - (4 * scale),
+                    'font-size': (8 * Math.min(1.25, scale)).toFixed(2),
                     'font-weight': '700',
                     fill: '#dc2626',
                     style: 'pointer-events: none;'
@@ -643,6 +657,45 @@ class ChartWheel {
         if (redraw && this.chartData) {
             this.draw(this.chartData);
         }
+    }
+
+    /**
+     * Установить масштаб точек и (опционально) перерисовать карту
+     */
+    setPointScale(scale, options = {}) {
+        const { redraw = true } = options;
+        const clamped = this.clampPointScale(scale);
+        this.planetScale = clamped;
+        this.pointScale = clamped;
+        if (redraw && this.chartData) {
+            this.draw(this.chartData);
+        }
+    }
+
+    setPointScales(scales = {}, options = {}) {
+        const { redraw = true } = options;
+        if (typeof scales.planets !== 'undefined') {
+            this.planetScale = this.clampPointScale(scales.planets);
+        }
+        if (typeof scales.points !== 'undefined') {
+            this.pointScale = this.clampPointScale(scales.points);
+        }
+        if (redraw && this.chartData) {
+            this.draw(this.chartData);
+        }
+    }
+
+    isPointBody(name) {
+        return [
+            'TrueNode',
+            'TrueNorthNode',
+            'SouthNode',
+            'TrueSouthNode',
+            'BlackMoon',
+            'WhiteMoon',
+            'PartOfFortune',
+            'Fortune'
+        ].includes(name);
     }
 
     /**

@@ -9,15 +9,17 @@ const API_BASE_URL = window.location.hostname === 'localhost'
 /**
  * Расчёт натальной карты
  * @param {Object} birthData - Данные рождения
+ * @param {Object} options - Дополнительные настройки запроса
  * @returns {Promise<Object>} - Результат расчёта
  */
-async function calculateNatalChart(birthData) {
+async function calculateNatalChart(birthData, options = {}) {
     const response = await fetch(`${API_BASE_URL}/natal/calculate`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(birthData),
+        signal: options.signal,
     });
 
     if (!response.ok) {
@@ -140,4 +142,3 @@ window.AstroAPI = {
     getFormData
 };
 window.hidePageLoader = hidePageLoader;
-
