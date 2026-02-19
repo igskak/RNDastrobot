@@ -1,0 +1,852 @@
+{
+  "app": {
+    "language": "Язык"
+  },
+  "astro": {
+    "aspect": {
+      "Biquintile": "Биквинтиль",
+      "Conjunction": "Соединение",
+      "Novile": "Новиль",
+      "Opposition": "Оппозиция",
+      "Quincunx": "Квинконс",
+      "Quintile": "Квинтиль",
+      "Semisextile": "Полусекстиль",
+      "Semisquare": "Полуквадрат",
+      "Septile": "Септиль",
+      "Sesquiquadrate": "Полутораквадрат",
+      "Sextile": "Секстиль",
+      "Square": "Квадрат",
+      "Trine": "Трин"
+    },
+    "configuration": {
+      "Bisextile": "Бисекстиль",
+      "Chariot": "Колесница",
+      "Grand_Cross": "Большой крест",
+      "Grand_Trine": "Большой трин",
+      "Kite": "Воздушный змей",
+      "Mystic_Rectangle": "Мистический прямоугольник",
+      "Sail": "Парус",
+      "Skewed_Sail": "Косой парус",
+      "Star_of_David": "Звезда Давида",
+      "T_Square": "Т-квадрат",
+      "Yod": "Йод"
+    },
+    "dignity": {
+      "detriment": "Изгнание",
+      "domicile": "Обитель",
+      "exaltation": "Экзальтация",
+      "fall": "Падение"
+    },
+    "element": {
+      "Air": "Воздух",
+      "Earth": "Земля",
+      "Fire": "Огонь",
+      "Water": "Вода"
+    },
+    "feature": {
+      "short": {
+        "almuten": "альмут.",
+        "anareta": "анарета",
+        "aspect_king": "король",
+        "cazimi": "казими",
+        "charioteer": "возн.",
+        "combust": "сожж.",
+        "destructive": "деструкт.",
+        "doryphoros": "дориф.",
+        "elevated": "элев.",
+        "handle": "ручка",
+        "intercepted": "вкл.",
+        "jubilee": "юбилей",
+        "middle": "сред.",
+        "peregrine": "шахта",
+        "royal": "корол.",
+        "under_rays": "в лучах"
+      }
+    },
+    "houseSystem": {
+      "campanus": "Кампанус",
+      "equal": "Равнодомная",
+      "koch": "Кох",
+      "placidus": "Плацидус",
+      "regiomontanus": "Региомонтанус",
+      "wholeSign": "Целые знаки"
+    },
+    "mode": {
+      "short": {
+        "Cardinal": "Кардинальный",
+        "Fixed": "Фиксированный",
+        "Mutable": "Мутабельный"
+      }
+    },
+    "pattern": {
+      "Bowl": "Чаша",
+      "Bucket": "Ведро",
+      "Bundle": "Пучок",
+      "Locomotive": "Локомотив",
+      "Seesaw": "Качели",
+      "Splash": "Распыление",
+      "Splay": "Веер"
+    },
+    "planet": {
+      "BlackMoon": "Черная Луна",
+      "Chiron": "Хирон",
+      "Jupiter": "Юпитер",
+      "Mars": "Марс",
+      "Mercury": "Меркурий",
+      "Moon": "Луна",
+      "Neptune": "Нептун",
+      "PartOfFortune": "Часть Фортуны",
+      "Pluto": "Плутон",
+      "Proserpina": "Прозерпина",
+      "Saturn": "Сатурн",
+      "SouthNode": "Южный узел",
+      "Sun": "Солнце",
+      "TrueNode": "Северный узел",
+      "Uranus": "Уран",
+      "Venus": "Венера",
+      "Vertex": "Вертекс",
+      "WhiteMoon": "Белая Луна"
+    },
+    "polarity": {
+      "Feminine": "Женский",
+      "Masculine": "Мужской"
+    },
+    "sign": {
+      "Aquarius": "Водолей",
+      "Aries": "Овен",
+      "Cancer": "Рак",
+      "Capricorn": "Козерог",
+      "Gemini": "Близнецы",
+      "Leo": "Лев",
+      "Libra": "Весы",
+      "Pisces": "Рыбы",
+      "Sagittarius": "Стрелец",
+      "Scorpio": "Скорпион",
+      "Taurus": "Телец",
+      "Virgo": "Дева"
+    }
+  },
+  "chatkit": {
+    "errors": {
+      "loadFailed": "Не удалось инициализировать чат",
+      "sessionCreate": "Не удалось создать сессию чата"
+    },
+    "natal": {
+      "composerPlaceholder": "Введите ваш вопрос по этой карте...",
+      "greeting": "Спросите меня что угодно об этой натальной карте."
+    },
+    "prognostic": {
+      "composerPlaceholder": "Спросите о текущих тенденциях и тайминге...",
+      "greeting": "Я помогу объяснить активные транзиты, дирекции и прогрессии.",
+      "prompts": {
+        "monthly": {
+          "label": "Обзор месяца",
+          "prompt": "Дайте практический прогноз на этот месяц."
+        },
+        "solar": {
+          "label": "Фокус соляра",
+          "prompt": "Объясните ключевые темы карты соляра."
+        },
+        "transitsToday": {
+          "label": "Транзиты сегодня",
+          "prompt": "Кратко опишите самые важные активные сегодня транзиты."
+        }
+      }
+    }
+  },
+  "common": {
+    "all": "Все",
+    "back": "Назад",
+    "calculate": "Рассчитать",
+    "close": "Закрыть",
+    "date": "Дата",
+    "day": "День",
+    "displaySettings": "Настройки отображения",
+    "error": "Ошибка",
+    "errorWithMessage": "Ошибка: {message}",
+    "footer": "Астрологические расчеты на базе Swiss Ephemeris и современных астрономических стандартов",
+    "from": "От",
+    "house": "Дом",
+    "loading": "Загрузка...",
+    "location": "Место",
+    "longitude": "Долгота",
+    "major": "Мажорные",
+    "majorShort": "Мж",
+    "method": {
+      "direction": "Дирекции",
+      "directionNaibod": "Дирекции (Найбод)",
+      "directionSolarArc": "Дирекции (Солнечная дуга)",
+      "directionSymbolic": "Дирекции (Символические)",
+      "progression": "Прогрессии",
+      "solar": "Соляр",
+      "transit": "Транзиты"
+    },
+    "minimize": "Свернуть",
+    "minor": "Минорные",
+    "minorShort": "Мн",
+    "month": {
+      "long": {
+        "april": "Апрель",
+        "august": "Август",
+        "december": "Декабрь",
+        "february": "Февраль",
+        "january": "Январь",
+        "july": "Июль",
+        "june": "Июнь",
+        "march": "Март",
+        "may": "Май",
+        "november": "Ноябрь",
+        "october": "Октябрь",
+        "september": "Сентябрь"
+      }
+    },
+    "notAvailable": "Н/Д",
+    "openChat": "Открыть чат",
+    "orb": "Орбис",
+    "pause": "Пауза",
+    "planet": "Планета",
+    "position": "Положение",
+    "reset": "Сбросить",
+    "resetView": "Сбросить вид",
+    "retry": "Повторить",
+    "settings": "Настройки",
+    "to": "До",
+    "today": "Сегодня",
+    "week": "Неделя",
+    "year": "Год",
+    "zoomIn": "Увеличить",
+    "zoomOut": "Уменьшить",
+    "direction": {
+      "northShort": "С",
+      "southShort": "Ю",
+      "eastShort": "В",
+      "westShort": "З"
+    },
+    "brandName": "AstroBot",
+    "monthLabel": "Месяц"
+  },
+  "i18n": {
+    "loading": "Загрузка...",
+    "sample_only_en": "English fallback value",
+    "sample_with_param": "Привет, {name}!"
+  },
+  "locale": {
+    "name": {
+      "en": "Английский",
+      "ru": "Русский",
+      "uk": "Украинский"
+    }
+  },
+  "page": {
+    "chart": {
+      "aspects": {
+        "settings": {
+          "showWith": "Показывать аспекты с",
+          "title": "Настройки аспектов"
+        }
+      },
+      "balances": {
+        "angular": "Угловые",
+        "cadent": "Падающие",
+        "cosmogramTitle": "Паттерн космограммы",
+        "east": "Восток",
+        "elementsTitle": "Стихии",
+        "emptyArc": "Пустая дуга: {value}°",
+        "handle": "Ручка: {planet}",
+        "hemispheresTitle": "Полушария",
+        "houseGroupsTitle": "Группы домов",
+        "leading": "Ведущая: {planet}",
+        "modesTitle": "Модальности",
+        "north": "Север",
+        "south": "Юг",
+        "succedent": "Последующие",
+        "west": "Запад"
+      },
+      "chat": {
+        "title": "Вопрос по этой карте"
+      },
+      "configurations": {
+        "apex": "Вершина: {planet}",
+        "houseLabel": "Дом {house}",
+        "planetCount": "Планет: {count}",
+        "stelliums": "Стеллиумы",
+        "strength": "Сила: {value}",
+        "title": "Аспектные конфигурации"
+      },
+      "empty": {
+        "noBalances": "Нет данных баланса",
+        "noConfigurations": "Конфигурации не найдены",
+        "noDignities": "Нет данных по достоинствам"
+      },
+      "grid": {
+        "title": "Аспектная сетка"
+      },
+      "header": {
+        "defaultTitle": "Натальная карта"
+      },
+      "houseCusp": "Куспид дома {house}",
+      "legend": {
+        "harmonious": "Гармоничный",
+        "neutral": "Нейтральный",
+        "tense": "Напряженный"
+      },
+      "loading": "Загрузка данных карты...",
+      "mobile": {
+        "chart": "Карта"
+      },
+      "nav": {
+        "forecast": "Прогноз",
+        "tables": "Таблицы"
+      },
+      "settings": {
+        "houseSystem": {
+          "label": "Система домов"
+        },
+        "orientation": {
+          "aries": "Овен 0°",
+          "asc": "Асцендент (ASC)",
+          "label": "Ориентация колеса"
+        },
+        "planetSize": "Размер планет",
+        "planetsAndPoints": "Планеты и точки",
+        "pointSize": "Размер точек"
+      },
+      "table": {
+        "aspects": {
+          "aspect": "Аспект",
+          "orb": "Орбис",
+          "type": "Тип"
+        },
+        "houses": {
+          "cusp": "Куспид дома",
+          "sign": "Знак"
+        },
+        "planets": {
+          "house": "Дом",
+          "position": "Положение",
+          "symbol": "Символ"
+        }
+      },
+      "tabs": {
+        "aspects": "Аспекты",
+        "balances": "Балансы",
+        "configurations": "Конфигурации",
+        "grid": "Аспектная сетка",
+        "houses": "Дома",
+        "planets": "Планеты"
+      },
+      "title": "Натальная карта"
+    },
+    "chat": {
+      "errors": {
+        "assistantFallback": "Извините, произошла ошибка. Попробуйте ещё раз.",
+        "sendFailed": "Не удалось отправить сообщение"
+      }
+    },
+    "clients": {
+      "title": "База клиентов",
+      "subtitle": "Сохраненные клиенты и карты",
+      "listAriaLabel": "Список клиентов",
+      "newCard": "Новая карта",
+      "searchPlaceholder": "Поиск по имени/месту",
+      "searchAriaLabel": "Поиск клиентов",
+      "sortAriaLabel": "Сортировка клиентов",
+      "sort": {
+        "createdDesc": "Сначала новые",
+        "createdAsc": "Сначала старые",
+        "nameAsc": "Имя А-Я",
+        "nameDesc": "Имя Я-А",
+        "birthAsc": "Дата рождения: сначала старые",
+        "birthDesc": "Дата рождения: сначала новые"
+      },
+      "counters": {
+        "total": "Всего: {total}",
+        "shown": "Показано: {shown}",
+        "shownOf": "Показано: {shown} из {total}"
+      },
+      "empty": "Пока нет клиентов",
+      "createFirstCard": "Создать первую карту",
+      "noResults": "Ничего не найдено",
+      "table": {
+        "name": "Имя",
+        "birthDate": "Дата рождения",
+        "place": "Место",
+        "created": "Создано",
+        "actions": "Действия"
+      },
+      "actions": {
+        "open": "Открыть",
+        "delete": "Удалить",
+        "confirmDelete": "Подтвердить?"
+      },
+      "messages": {
+        "confirmDeleteHint": "Нажмите удалить еще раз для подтверждения",
+        "deleted": "Клиент удален"
+      },
+      "errors": {
+        "fetchList": "Не удалось загрузить список клиентов",
+        "loadingWithMessage": "Ошибка загрузки: {message}",
+        "chartNotFound": "Данные карты не найдены",
+        "deleteFailed": "Не удалось удалить клиента"
+      }
+    },
+    "forecast": {
+      "biwheel": {
+        "clearFocus": "Сбросить фокус",
+        "collapseAspects": "Свернуть таблицу аспектов",
+        "collapseIngresses": "Свернуть таблицу ингрессий",
+        "empty": "Нет данных би-колеса",
+        "legend": {
+          "directionType": "Тип дирекций",
+          "directions": "Дирекции",
+          "natal": "Натал",
+          "progressions": "Прогрессии",
+          "toggleDirection": "Показать/скрыть дирекции",
+          "toggleNatal": "Показать/скрыть натальные точки",
+          "toggleProgression": "Показать/скрыть прогрессии",
+          "toggleTransit": "Показать/скрыть транзиты",
+          "transits": "Транзиты"
+        },
+        "openAspects": "Развернуть таблицу аспектов",
+        "openIngresses": "Развернуть таблицу ингрессий",
+        "prognostic": "Прогностическая карта",
+        "settings": {
+          "natal": "Натальный слой",
+          "natalPointSize": "Размер натальных точек",
+          "orientation": "Ориентация",
+          "showAspectsWith": "Показывать аспекты с",
+          "transit": "Слой транзитов/прогрессий",
+          "transitPointSize": "Размер транзитных точек"
+        }
+      },
+      "chat": {
+        "title": "Чат прогноза"
+      },
+      "directionType": {
+        "equatorial": "Найбод (экваториальные)",
+        "solarArc": "Солнечная дуга",
+        "symbolic": "Символические"
+      },
+      "errors": {
+        "dateRequired": "Требуется указать дату",
+        "datesRequired": "Требуется указать дату начала и конца",
+        "invalidRange": "Некорректный диапазон дат",
+        "selectLocationFromList": "Выберите локацию из списка автодополнения",
+        "transitDateMissing": "Требуется указать дату транзита",
+        "yearRange": "Год должен быть между 1900 и 2100"
+      },
+      "header": {
+        "title": "Прогноз и тенденции"
+      },
+      "help": {
+        "openTitle": "Как читать эту страницу",
+        "sections": {
+          "activeNow": {
+            "text1": "Блок <strong>Активно сейчас</strong> выделяет события, ближайшие к текущей дате.",
+            "text2": "Метки показывают, точное ли событие сегодня, было недавно или ожидается скоро.",
+            "text3": "Это самый быстрый способ увидеть основной фон текущего периода.",
+            "title": "Активно сейчас"
+          },
+          "biwheel": {
+            "text1": "Би-колесо накладывает натальную карту на транзиты/прогрессии или дирекции.",
+            "text2": "В легенде можно включать и отключать отдельные слои для более чистого просмотра.",
+            "text3": "Настройки позволяют менять ориентацию и размер точек.",
+            "text4": "Таблицы аспектов и ингрессий можно разворачивать для детального анализа.",
+            "title": "Би-колесо"
+          },
+          "principle": {
+            "text": "Выберите метод прогноза, задайте период и место, затем нажмите <strong>Рассчитать</strong>. Данные отображаются в виде таймлайна, таблицы, би-колеса и соляра.",
+            "title": "С чего начать"
+          },
+          "solar": {
+            "text": "Вкладка соляра показывает карту возврата Солнца, локальное и UTC время, а также параметры отображения. Это удобно для оценки тем года.",
+            "title": "Соляр"
+          },
+          "table": {
+            "text": "Таблица поддерживает сортировку и фильтры по типу, аспекту, орбису и текстовому поиску. Используйте ее для точного отбора нужных событий.",
+            "title": "Таблица событий"
+          },
+          "timeline": {
+            "text1": "<strong>Таймлайн</strong> показывает события в хронологическом порядке.",
+            "text2": "Каждый элемент содержит тип события, дату и ключевые параметры аспекта или ингрессии.",
+            "text3": "Кнопки шага и проигрывания позволяют двигаться по периоду постепенно.",
+            "text4": "Наведите курсор на элемент, чтобы увидеть подробную подсказку.",
+            "text5": "Счетчик сверху показывает, сколько событий отображено из всего диапазона.",
+            "text6": "Если событий нет, проверьте диапазон дат и фильтры.",
+            "title": "Таймлайн"
+          },
+          "tips": {
+            "item1": "Начинайте с периода 1-3 месяца, чтобы не перегружать интерфейс событиями.",
+            "item2": "Используйте максимальный орбис 2-3.5 для более точной выборки.",
+            "item3": "Сравнивайте таймлайн и би-колесо: так проще проверить контекст события.",
+            "item4": "После фильтрации откройте чат прогноза для интерпретации найденных событий.",
+            "title": "Практические советы"
+          }
+        },
+        "title": "Гайд по прогнозу"
+      },
+      "presets": {
+        "oneDay": "1 день",
+        "oneMonth": "1 месяц",
+        "oneYear": "1 год",
+        "sixMonths": "6 месяцев",
+        "threeMonths": "3 месяца"
+      },
+      "scale": {
+        "nextStep": "Следующий шаг",
+        "play": "Запустить таймлайн",
+        "prevStep": "Предыдущий шаг",
+        "range": "{start} - {end} ({count})",
+        "step": "Шаг"
+      },
+      "solar": {
+        "empty": "Соляр не загружен",
+        "info": {
+          "localDate": "Локальная дата-время",
+          "utcDate": "UTC дата-время"
+        },
+        "loading": "Загрузка соляра...",
+        "locationPlaceholder": "Город для соляра",
+        "orientation": "Ориентация",
+        "orientationAries": "Овен 0°",
+        "orientationAsc": "Асцендент",
+        "settings": {
+          "pointSize": "Размер точек"
+        }
+      },
+      "table": {
+        "columns": {
+          "aspectSort": "Аспект ⇅",
+          "dateSort": "Дата ⇅",
+          "ingressType": "Тип ингрессии",
+          "method": "Метод",
+          "methodShort": "М",
+          "methodSort": "Метод ⇅",
+          "natalShort": "Н",
+          "natalSort": "Натал ⇅",
+          "object": "Объект",
+          "orbSort": "Орбис ⇅",
+          "transitShort": "Т",
+          "transitSort": "Транзит ⇅",
+          "transition": "Переход",
+          "typeSort": "Тип ⇅"
+        },
+        "empty": "Нет данных таблицы прогноза",
+        "filters": {
+          "aspect": "Аспект",
+          "buttonClosed": "Фильтры",
+          "buttonOpen": "Скрыть фильтры",
+          "events": "События",
+          "maxOrb": "Макс. орбис",
+          "maxOrbPlaceholder": "напр. 3.5",
+          "onlyAspects": "Только аспекты",
+          "onlyIngresses": "Только ингрессии",
+          "search": "Поиск",
+          "searchPlaceholder": "Планета/аспект/знак",
+          "type": "Тип"
+        },
+        "houseLabel": "Дом {house}",
+        "ingress": {
+          "cusp": "Ингрессия куспида дома",
+          "cuspLabel": "Куспид дома {house}",
+          "house": "Ингрессия дома",
+          "sign": "Ингрессия знака"
+        },
+        "ingresses": {
+          "title": "Ингрессии"
+        },
+        "noAspects": "Нет аспектов",
+        "noData": "Нет данных",
+        "noEvents": "Нет событий в диапазоне",
+        "noRowsByFilters": "По фильтрам ничего не найдено"
+      },
+      "tabs": {
+        "biwheel": "Би-колесо",
+        "solar": "Соляр",
+        "table": "Таблица",
+        "timeline": "Таймлайн"
+      },
+      "timeline": {
+        "activeNow": {
+          "empty": "Нет точных попаданий рядом с сегодня",
+          "exactDaysAgo": "Точно {days} дн. назад",
+          "exactInDays": "Точно через {days} дн.",
+          "exactToday": "Точно сегодня",
+          "title": "Активно сейчас"
+        },
+        "empty": "Нет событий таймлайна",
+        "eventCount": "Показано {shown} / всего {total}",
+        "loading": "Загрузка таймлайна...",
+        "tooltip": {
+          "allEntries": "Все записи",
+          "enter": "Вход",
+          "entries": "Записи",
+          "exact": "Точно",
+          "leave": "Выход",
+          "outOfRange": "вне диапазона"
+        }
+      },
+      "title": "Прогноз"
+    },
+    "index": {
+      "errors": {
+        "calculateFailed": "Не удалось рассчитать карту"
+      },
+      "form": {
+        "birthDate": {
+          "dayPlaceholder": "ДД",
+          "label": "Дата рождения",
+          "monthPlaceholder": "ММ",
+          "yearPlaceholder": "ГГГГ"
+        },
+        "birthPlace": {
+          "label": "Место рождения",
+          "placeholder": "Начните вводить город и выберите из списка"
+        },
+        "birthTime": {
+          "hoursPlaceholder": "ЧЧ",
+          "label": "Время рождения",
+          "minutesPlaceholder": "ММ"
+        },
+        "coordinates": {
+          "hint": "Заполняется автоматически из выбранного места",
+          "label": "Координаты"
+        },
+        "fullName": {
+          "firstNamePlaceholder": "Имя",
+          "label": "Полное имя",
+          "lastNamePlaceholder": "Фамилия"
+        },
+        "houseSystem": {
+          "label": "Система домов"
+        },
+        "submit": {
+          "idle": "Рассчитать натальную карту",
+          "loading": "Расчет..."
+        },
+        "timezone": {
+          "autoDetected": "Часовой пояс определен автоматически",
+          "label": "Часовой пояс",
+          "placeholder": "Выберите часовой пояс"
+        }
+      },
+      "subtitle": "Профессиональные астрологические расчеты карт на базе Swiss Ephemeris",
+      "title": "Калькулятор натальной карты",
+      "logo": "AstroBot"
+    },
+    "interpretations": {
+      "actions": {
+        "regenerate": "Сгенерировать заново"
+      },
+      "backToNew": "Новая карта",
+      "empty": "Нет контента интерпретации",
+      "errors": {
+        "loadFailed": "Не удалось загрузить интерпретацию",
+        "userIdMissing": "Отсутствует id пользователя. Сначала создайте карту."
+      },
+      "header": "Психологический профиль",
+      "loading": {
+        "hint": "Это может занять до 15-20 секунд",
+        "text": "Генерируем интерпретацию..."
+      },
+      "meta": {
+        "cached": "Кэшировано",
+        "model": "Модель: {value}",
+        "time": "Время: {value} мс",
+        "tokens": "Токены: {value}"
+      },
+      "nav": {
+        "chart": "Карта",
+        "tables": "Таблицы"
+      },
+      "title": "Интерпретации"
+    },
+    "natalFull": {
+      "balances": {
+        "elements": "Стихии:",
+        "modes": "Модальности:",
+        "polarity": "Полярность:"
+      },
+      "config": {
+        "apex": "Вершина: {planet}",
+        "house": "Дом {house}",
+        "stellium": "Стеллиум: {location}"
+      },
+      "empty": {
+        "noBalances": "Нет данных о балансах",
+        "noConfigurations": "Нет конфигураций"
+      },
+      "header": {
+        "defaultTitle": "Натальная карта",
+        "title": "Натальная карта - {place}",
+        "unknownPlace": "Неизвестное место"
+      },
+      "legend": {
+        "dignity": {
+          "detriment": "Изгнание",
+          "domicile": "Обитель",
+          "exaltation": "Экзальтация",
+          "fall": "Падение",
+          "title": "Достоинства"
+        },
+        "features": {
+          "almuten": "Альмутен",
+          "anareta": "Анарета",
+          "aspectKing": "Король аспектов",
+          "cazimi": "Казими",
+          "charioteer": "Возничий",
+          "combust": "Сожжение",
+          "doryphoros": "Дорифорий",
+          "elevated": "Возвышение",
+          "handle": "Ручка",
+          "intercepted": "В перехваченном знаке",
+          "peregrine": "Перегрин",
+          "royal": "Королевский градус",
+          "title": "Особенности",
+          "underRays": "Под лучами"
+        },
+        "harmony": {
+          "bad": "Напряженные аспекты",
+          "good": "Гармоничные аспекты",
+          "mixed": "Смешанные аспекты",
+          "title": "Гармония аспектов"
+        },
+        "motion": {
+          "direct": "Директное",
+          "retrograde": "Ретроградное",
+          "stationary": "Стационарное",
+          "title": "Движение"
+        }
+      },
+      "loading": "Загрузка карты...",
+      "nav": {
+        "legend": "Легенда",
+        "wheel": "Колесо"
+      },
+      "sections": {
+        "aspects": "Аспекты",
+        "balances": "Балансы",
+        "configurations": "Конфигурации",
+        "houses": "Дома",
+        "minorAspects": "Минорные аспекты",
+        "planets": "Планеты",
+        "specialPoints": "Особые точки"
+      },
+      "summary": {
+        "figure": "Фигура"
+      },
+      "table": {
+        "aspects": {
+          "aspect": "Аспект",
+          "orbSort": "Орбис ⇅",
+          "typeSort": "Тип ⇅"
+        },
+        "houses": {
+          "house": "Дом",
+          "included": "Включенный знак",
+          "planets": "Планеты в доме",
+          "ruler": "Управитель",
+          "rulerIn": "Управитель в доме",
+          "sign": "Знак"
+        },
+        "planets": {
+          "aspects": "Аспекты",
+          "dignity": "Достоинство",
+          "features": "Особенности",
+          "house": "Дом",
+          "karma": "Карма",
+          "motion": "Движение",
+          "planet": "Планета",
+          "position": "Положение",
+          "ruler": "Управляемые дома",
+          "speed": "Скорость"
+        },
+        "specialPoints": {
+          "house": "Дом",
+          "point": "Точка",
+          "position": "Положение"
+        }
+      },
+      "title": "Табличный вид натальной карты",
+      "units": {
+        "degPerDay": "{value}°/день"
+      }
+    }
+  },
+  "timezones": {
+    "label": {
+      "cityWithOffset": "{city} ({offset})",
+      "utc": "UTC (Всемирное координированное время)"
+    },
+    "city": {
+      "kyiv": "Киев",
+      "moscow": "Москва",
+      "london": "Лондон",
+      "paris": "Париж",
+      "berlin": "Берлин",
+      "rome": "Рим",
+      "madrid": "Мадрид",
+      "warsaw": "Варшава",
+      "prague": "Прага",
+      "vienna": "Вена",
+      "athens": "Афины",
+      "istanbul": "Стамбул",
+      "helsinki": "Хельсинки",
+      "stockholm": "Стокгольм",
+      "amsterdam": "Амстердам",
+      "brussels": "Брюссель",
+      "lisbon": "Лиссабон",
+      "bucharest": "Бухарест",
+      "sofia": "София",
+      "budapest": "Будапешт",
+      "belgrade": "Белград",
+      "riga": "Рига",
+      "vilnius": "Вильнюс",
+      "tallinn": "Таллин",
+      "minsk": "Минск",
+      "chisinau": "Кишинёв",
+      "kaliningrad": "Калининград",
+      "samara": "Самара",
+      "yekaterinburg": "Екатеринбург",
+      "novosibirsk": "Новосибирск",
+      "krasnoyarsk": "Красноярск",
+      "irkutsk": "Иркутск",
+      "vladivostok": "Владивосток",
+      "almaty": "Алматы",
+      "tashkent": "Ташкент",
+      "baku": "Баку",
+      "tbilisi": "Тбилиси",
+      "yerevan": "Ереван",
+      "bishkek": "Бишкек",
+      "dushanbe": "Душанбе",
+      "ashgabat": "Ашхабад",
+      "dubai": "Дубай",
+      "jerusalem": "Иерусалим",
+      "tehran": "Тегеран",
+      "kolkata": "Дели",
+      "bangkok": "Бангкок",
+      "singapore": "Сингапур",
+      "hong_kong": "Гонконг",
+      "beijing": "Пекин",
+      "tokyo": "Токио",
+      "seoul": "Сеул",
+      "new_york": "Нью-Йорк",
+      "chicago": "Чикаго",
+      "denver": "Денвер",
+      "los_angeles": "Лос-Анджелес",
+      "toronto": "Торонто",
+      "vancouver": "Ванкувер",
+      "mexico_city": "Мехико",
+      "sao_paulo": "Сан-Паулу",
+      "buenos_aires": "Буэнос-Айрес",
+      "sydney": "Сидней",
+      "melbourne": "Мельбурн",
+      "perth": "Перт",
+      "auckland": "Окленд",
+      "cairo": "Каир",
+      "johannesburg": "Йоханнесбург",
+      "lagos": "Лагос",
+      "utc": "UTC"
+    }
+  }
+}

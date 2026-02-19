@@ -5,6 +5,22 @@
 (function() {
     'use strict';
 
+    function t(key, params) {
+        return window.FrontendI18n?.t?.(key, params) || key;
+    }
+
+    function getPlanetName(name) {
+        const key = `astro.planet.${name}`;
+        const translated = t(key);
+        return translated === key ? (Symbols.planetNamesRu[name] || name) : translated;
+    }
+
+    function getSignName(name) {
+        const key = `astro.sign.${name}`;
+        const translated = t(key);
+        return translated === key ? (Symbols.signNamesRu[name] || name) : translated;
+    }
+
     // ========== ZOOM / PAN STATE ==========
     let scale = 1;
     let pointX = 0, pointY = 0;
@@ -87,15 +103,15 @@
             if (tooltip && event && window.chartDataCache) {
                 const planet = window.chartDataCache.planets?.find(p => p.name === planetName);
                 if (planet) {
-                    const signRu = Symbols.signNamesRu[planet.sign] || planet.sign;
+                    const signRu = getSignName(planet.sign);
                     const signSymbol = Symbols.signs[planet.sign] || '';
-                    const nameRu = Symbols.planetNamesRu[planet.name] || planet.name;
+                    const nameRu = getPlanetName(planet.name);
                     const symbol = Symbols.planets[planet.name] || '';
 
                     tooltip.innerHTML = `
                         <strong><span class="astro-symbol">${symbol}</span> ${nameRu}</strong><br>
                         <span class="astro-symbol">${signSymbol}</span> ${signRu} ${planet.degree_in_sign_formatted || planet.degree_in_sign.toFixed(2) + '°'}<br>
-                        Дом ${planet.house}
+                        ${t('common.house')}: ${planet.house}
                     `;
                     tooltip.style.display = 'block';
                     moveTooltip(event, chartCenter, tooltip);

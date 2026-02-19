@@ -13,6 +13,7 @@ from app.services.natal_chart_service import NatalChartService
 from app.services.prognostic_tools_service import PrognosticToolsService
 from app.services.forecast_run_service import ForecastRunService
 from app.database.connection import get_db
+from app.i18n.context import get_current_locale
 from app.utils.ephemeris import get_ephemeris_path
 
 # Инициализация natal_service для загрузки карт из БД
@@ -117,6 +118,7 @@ async def create_chat_session(
     """
     try:
         logger.info(f"Создание ChatKit сессии для пользователя: {request.user_id}")
+        locale = get_current_locale()
 
         # Парсим user_id в UUID (убираем префикс "user_" если есть)
         user_id_clean = request.user_id.replace("user_", "") if request.user_id.startswith("user_") else request.user_id
@@ -148,6 +150,7 @@ async def create_chat_session(
             user_id=request.user_id,
             chart_data=chart_data,
             timezone=user_tz,
+            locale=locale,
         )
 
         logger.info(f"ChatKit сессия создана: {result['session_id']}")
@@ -182,6 +185,7 @@ async def create_prognostic_session(
 ) -> CreateSessionResponse:
     """Создать ChatKit сессию для прогностического чата (отдельный workflow)."""
     try:
+        locale = get_current_locale()
         user_id_clean = request.user_id.replace("user_", "") if request.user_id.startswith("user_") else request.user_id
         try:
             user_uuid = UUID(user_id_clean)
@@ -201,6 +205,7 @@ async def create_prognostic_session(
             user_id=request.user_id,
             chart_data=chart_data,
             timezone=user_tz,
+            locale=locale,
             workflow="prognostic",
         )
 
@@ -247,6 +252,7 @@ async def prognostic_chat(
     - `tokens`: Кол-во использованных токенов
     """
     try:
+        locale = get_current_locale()
         # Парсим user_id
         user_id_clean = request.user_id.replace("user_", "") if request.user_id.startswith("user_") else request.user_id
         try:
@@ -272,6 +278,7 @@ async def prognostic_chat(
             user_id=user_uuid,
             message=request.message,
             db_session=db,
+            locale=locale,
             previous_response_id=request.previous_response_id,
             chart_summary=chart_summary,
         )

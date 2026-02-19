@@ -1,138 +1,142 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Натальная карта — AstroBot</title>
-    <link rel="stylesheet" href="css/styles.css?v=3">
-    <link rel="stylesheet" href="css/chart-layout.css?v=3">
-    <link rel="stylesheet" href="css/chat.css">
+    <title data-i18n="page.chart.title"></title>
+    <link rel="stylesheet" href="bundles/chart.bundle.css?v=1">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=1">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <script>window.__APP_BUILD_ID__ = '2026-02-19-1';</script>
 </head>
 <body class="chart-page">
-    <!-- Page Loader -->
     <div class="page-loader" id="pageLoader">
         <div class="pl-spinner"></div>
-        <div class="pl-text">Загрузка карты...</div>
+        <div class="pl-text" data-i18n="page.chart.loading"></div>
     </div>
 
-    <!-- Header -->
     <header class="chart-header-compact">
-        <a href="/" class="back-btn-compact">←</a>
+        <a href="/" class="back-btn-compact" data-i18n-aria-label="common.back" data-i18n-title="common.back">←</a>
         <div class="birth-info-compact">
-            <h2 id="birthDate">Натальная карта</h2>
+            <h2 id="birthDate" data-i18n="page.chart.header.defaultTitle"></h2>
             <p id="birthPlace"></p>
         </div>
         <div class="header-nav-buttons">
-            <a href="natal-full.html" class="header-nav-btn">📊 Таблицы</a>
-            <a href="forecast.html" class="header-nav-btn">🔮 Прогностика</a>
+            <a href="natal-full.html" class="header-nav-btn">📊 <span data-i18n="page.chart.nav.tables"></span></a>
+            <a href="forecast.html" class="header-nav-btn">🔮 <span data-i18n="page.chart.nav.forecast"></span></a>
         </div>
     </header>
 
-    <!-- Main 3-column layout -->
     <div class="chart-layout">
-        <!-- Left panel: Planets & Aspects -->
         <aside class="side-panel left-panel" id="view-planets">
             <div class="panel-tabs">
-                <button class="panel-tab active" data-panel-tab="planets-list">Планеты</button>
-                <button class="panel-tab" data-panel-tab="aspects-list">Аспекты</button>
-                <button class="panel-tab" data-panel-tab="grid-list">Сетка</button>
+                <button class="panel-tab active" data-panel-tab="planets-list" data-i18n="page.chart.tabs.planets"></button>
+                <button class="panel-tab" data-panel-tab="aspects-list" data-i18n="page.chart.tabs.aspects"></button>
+                <button class="panel-tab" data-panel-tab="grid-list" data-i18n="page.chart.tabs.grid"></button>
             </div>
             <div class="panel-content">
                 <div id="planets-list" class="panel-tab-content active">
                     <table class="data-table compact">
                         <thead>
-                            <tr><th>Симв.</th><th>Позиция</th><th>Дом</th></tr>
+                            <tr>
+                                <th data-i18n="page.chart.table.planets.symbol"></th>
+                                <th data-i18n="page.chart.table.planets.position"></th>
+                                <th data-i18n="page.chart.table.planets.house"></th>
+                            </tr>
                         </thead>
                         <tbody id="planetsTable"></tbody>
                     </table>
                 </div>
                 <div id="aspects-list" class="panel-tab-content">
                     <div class="aspects-header">
-                        <button class="aspects-settings-btn" id="aspectsSettingsBtn" title="Настройки отображения">⚙</button>
+                        <button class="aspects-settings-btn" id="aspectsSettingsBtn" data-i18n-title="page.chart.aspects.settings.title">⚙</button>
                     </div>
                     <div class="aspects-settings-panel hidden" id="aspectsSettingsPanel">
-                        <div class="aspects-settings-title">Показывать аспекты с:</div>
+                        <div class="aspects-settings-title" data-i18n="page.chart.aspects.settings.showWith"></div>
                         <div class="aspects-filter-buttons">
-                            <button class="aspects-filter-btn" id="aspectsResetBtn">Сбросить</button>
-                            <button class="aspects-filter-btn" id="aspectsMajorBtn">Мажорные</button>
-                            <button class="aspects-filter-btn" id="aspectsMinorBtn">Минорные</button>
+                            <button class="aspects-filter-btn" id="aspectsResetBtn" data-i18n="common.reset"></button>
+                            <button class="aspects-filter-btn" id="aspectsMajorBtn" data-i18n="common.major"></button>
+                            <button class="aspects-filter-btn" id="aspectsMinorBtn" data-i18n="common.minor"></button>
                         </div>
                         <div class="aspects-planet-toggles" id="aspectsPlanetToggles"></div>
                     </div>
                     <table class="data-table compact">
                         <thead>
-                            <tr><th colspan="2">Аспект</th><th>Тип</th><th>Орбис</th></tr>
+                            <tr>
+                                <th colspan="2" data-i18n="page.chart.table.aspects.aspect"></th>
+                                <th data-i18n="page.chart.table.aspects.type"></th>
+                                <th data-i18n="page.chart.table.aspects.orb"></th>
+                            </tr>
                         </thead>
                         <tbody id="aspectsTable"></tbody>
                     </table>
                 </div>
                 <div id="grid-list" class="panel-tab-content">
-                    <h4 class="subsection-title">Сетка аспектов</h4>
+                    <h4 class="subsection-title" data-i18n="page.chart.grid.title"></h4>
                     <div id="aspectGridContainer"></div>
                 </div>
             </div>
         </aside>
 
-        <!-- Center: Chart wheel -->
         <main class="chart-center" id="view-chart">
             <div class="chart-wheel-wrapper" id="chartWheelWrapper">
                 <svg id="chartWheel" viewBox="0 0 500 500"></svg>
             </div>
             <div class="zoom-controls-float">
-                <button class="zoom-btn" id="zoomIn" title="Приблизить">+</button>
-                <button class="zoom-btn" id="zoomOut" title="Отдалить">−</button>
-                <button class="zoom-btn" id="zoomReset" title="Сбросить">⟲</button>
-                <button class="zoom-btn" id="settingsToggle" title="Настройки">⚙</button>
+                <button class="zoom-btn" id="zoomIn" data-i18n-title="common.zoomIn">+</button>
+                <button class="zoom-btn" id="zoomOut" data-i18n-title="common.zoomOut">−</button>
+                <button class="zoom-btn" id="zoomReset" data-i18n-title="common.resetView">⟲</button>
+                <button class="zoom-btn" id="settingsToggle" data-i18n-title="common.settings">⚙</button>
             </div>
 
-            <!-- Легенда линий аспектов -->
             <div class="aspect-lines-legend">
                 <span class="legend-item clickable active" data-filter="all" id="filterAll">
-                    <span class="line-sample solid"></span> Все
+                    <span class="line-sample solid"></span>
+                    <span data-i18n="common.all"></span>
                 </span>
                 <span class="legend-item clickable" data-filter="major" id="filterMajor">
-                    <span class="line-sample solid"></span> Мажорные
+                    <span class="line-sample solid"></span>
+                    <span data-i18n="common.major"></span>
                 </span>
                 <span class="legend-item clickable" data-filter="minor" id="filterMinor">
-                    <span class="line-sample dashed"></span> Минорные
+                    <span class="line-sample dashed"></span>
+                    <span data-i18n="common.minor"></span>
                 </span>
                 <span class="legend-sep">|</span>
-                <span class="legend-color" style="color:#ef4444">● Напряж.</span>
-                <span class="legend-color" style="color:#3b82f6">● Гармон.</span>
-                <span class="legend-color" style="color:#f59e0b">● Нейтр.</span>
+                <span class="legend-color" style="color:#ef4444">● <span data-i18n="page.chart.legend.tense"></span></span>
+                <span class="legend-color" style="color:#3b82f6">● <span data-i18n="page.chart.legend.harmonious"></span></span>
+                <span class="legend-color" style="color:#f59e0b">● <span data-i18n="page.chart.legend.neutral"></span></span>
             </div>
 
             <div id="tooltip" class="chart-tooltip"></div>
 
-            <!-- Settings Panel -->
             <div id="settingsPanel" class="settings-panel hidden">
-                <h4>Настройки отображения</h4>
+                <h4 data-i18n="common.displaySettings"></h4>
 
                 <div class="settings-section">
-                    <label class="settings-label">Ориентация карты</label>
+                    <label class="settings-label" data-i18n="page.chart.settings.orientation.label"></label>
                     <select id="orientationSelect" class="settings-select">
-                        <option value="aries" selected>От Овна (по умолчанию)</option>
-                        <option value="asc">От Асцендента</option>
+                        <option value="aries" selected data-i18n="page.chart.settings.orientation.aries"></option>
+                        <option value="asc" data-i18n="page.chart.settings.orientation.asc"></option>
                     </select>
                 </div>
 
                 <div class="settings-section">
-                    <label class="settings-label">Система домов</label>
+                    <label class="settings-label" data-i18n="page.chart.settings.houseSystem.label"></label>
                     <select id="houseSystemSelect" class="settings-select">
-                        <option value="P" selected>Placidus</option>
-                        <option value="K">Koch</option>
-                        <option value="W">Whole Sign</option>
-                        <option value="E">Equal</option>
-                        <option value="C">Campanus</option>
-                        <option value="R">Regiomontanus</option>
+                        <option value="P" selected data-i18n="astro.houseSystem.placidus"></option>
+                        <option value="K" data-i18n="astro.houseSystem.koch"></option>
+                        <option value="W" data-i18n="astro.houseSystem.wholeSign"></option>
+                        <option value="E" data-i18n="astro.houseSystem.equal"></option>
+                        <option value="C" data-i18n="astro.houseSystem.campanus"></option>
+                        <option value="R" data-i18n="astro.houseSystem.regiomontanus"></option>
                     </select>
                 </div>
 
                 <div class="settings-section">
-                    <label class="settings-label">Размер планет</label>
+                    <label class="settings-label" data-i18n="page.chart.settings.planetSize"></label>
                     <div class="settings-size-control">
                         <input type="range" id="planetScaleRange" min="80" max="170" step="5" value="120">
                         <span id="planetScaleValue">120%</span>
@@ -140,7 +144,7 @@
                 </div>
 
                 <div class="settings-section">
-                    <label class="settings-label">Размер точек</label>
+                    <label class="settings-label" data-i18n="page.chart.settings.pointSize"></label>
                     <div class="settings-size-control">
                         <input type="range" id="pointScaleRange" min="80" max="170" step="5" value="100">
                         <span id="pointScaleValue">100%</span>
@@ -148,32 +152,30 @@
                 </div>
 
                 <div class="settings-section">
-                    <label class="settings-label">Планеты и точки</label>
-                    <div class="planet-toggles" id="planetToggles">
-                        <!-- Filled dynamically -->
-                    </div>
+                    <label class="settings-label" data-i18n="page.chart.settings.planetsAndPoints"></label>
+                    <div class="planet-toggles" id="planetToggles"></div>
                 </div>
-
             </div>
         </main>
 
-        <!-- Right panel: Houses & Analytics -->
         <aside class="side-panel right-panel" id="view-houses">
             <div class="panel-tabs">
-                <button class="panel-tab active" data-panel-tab="houses-list">Дома</button>
-                <button class="panel-tab" data-panel-tab="configs-list">Конфигурации</button>
-                <button class="panel-tab" data-panel-tab="balances-list">Балансы</button>
+                <button class="panel-tab active" data-panel-tab="houses-list" data-i18n="page.chart.tabs.houses"></button>
+                <button class="panel-tab" data-panel-tab="configs-list" data-i18n="page.chart.tabs.configurations"></button>
+                <button class="panel-tab" data-panel-tab="balances-list" data-i18n="page.chart.tabs.balances"></button>
             </div>
             <div class="panel-content">
                 <div id="houses-list" class="panel-tab-content active">
                     <table class="data-table compact">
                         <thead>
-                            <tr><th>Куспид</th><th>Знак</th></tr>
+                            <tr>
+                                <th data-i18n="page.chart.table.houses.cusp"></th>
+                                <th data-i18n="page.chart.table.houses.sign"></th>
+                            </tr>
                         </thead>
                         <tbody id="housesTable"></tbody>
                     </table>
 
-                    <!-- Эссенциальные достоинства -->
                     <div id="dignitiesContainer" class="dignities-section"></div>
                 </div>
                 <div id="configs-list" class="panel-tab-content">
@@ -186,45 +188,34 @@
         </aside>
     </div>
 
-    <!-- Mobile bottom tabs -->
     <nav class="mobile-nav">
         <button class="mobile-tab" data-view="planets">
             <span class="mobile-tab-icon">☰</span>
-            <span>Планеты</span>
+            <span data-i18n="page.chart.tabs.planets"></span>
         </button>
         <button class="mobile-tab active" data-view="chart">
             <span class="mobile-tab-icon">◉</span>
-            <span>Карта</span>
+            <span data-i18n="page.chart.mobile.chart"></span>
         </button>
         <button class="mobile-tab" data-view="houses">
             <span class="mobile-tab-icon">☖</span>
-            <span>Дома</span>
+            <span data-i18n="page.chart.tabs.houses"></span>
         </button>
     </nav>
 
-    <!-- ChatKit Widget Container -->
-    <div class="chatkit-wrapper" id="chatkitWrapper">
+    <div class="chatkit-wrapper minimized" id="chatkitWrapper">
         <div class="chatkit-header">
-            <span class="chatkit-title">🤖 AstroBot</span>
-            <button class="chatkit-minimize" id="chatkitMinimize" title="Свернуть">−</button>
+            <span class="chatkit-title" data-i18n="page.chart.chat.title"></span>
+            <button class="chatkit-minimize" id="chatkitMinimize" data-i18n-title="common.minimize">−</button>
         </div>
         <div class="chatkit-body" id="chatkit-container"></div>
     </div>
 
-    <!-- Кнопка для открытия свёрнутого чата -->
-    <button class="chatkit-toggle hidden" id="chatkitToggle" title="Открыть чат">
+    <button class="chatkit-toggle" id="chatkitToggle" data-i18n-title="common.openChat">
         💬
     </button>
 
-    <!-- ChatKit.js Script (async — не блокирует рендер) -->
-    <script async src="https://cdn.platform.openai.com/deployments/chatkit/chatkit.js"></script>
-
-    <script src="js/api.js"></script>
-    <script src="js/symbols.js?v=3"></script>
-    <script src="js/chart-wheel.js?v=2"></script>
-    <script src="js/chart-data.js"></script>
-    <script src="js/chart.js?v=6"></script>
-    <script src="js/chart-layout.js"></script>
-    <script src="js/chatkit-init.js"></script>
+    <script type="module" src="js/bundles/chart.bundle.js?v=2"></script>
+    <script src="js/locale-switcher.js?v=3"></script>
 </body>
 </html>

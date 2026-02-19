@@ -6,6 +6,17 @@ const API_BASE_URL = window.location.hostname === 'localhost'
     ? 'http://localhost:8000/api/v1'
     : '/api/v1';
 
+function t(key, params) {
+    return window.FrontendI18n?.t?.(key, params) || key;
+}
+
+function withLocaleHeaders(headers = {}) {
+    if (window.AstroAPI?.withLocaleHeaders) {
+        return window.AstroAPI.withLocaleHeaders(headers);
+    }
+    return headers;
+}
+
 class ChatWidget {
     constructor() {
         this.threadId = null;
@@ -111,9 +122,9 @@ class ChatWidget {
             // Отправляем запрос
             const response = await fetch(`${API_BASE_URL}/chat/message`, {
                 method: 'POST',
-                headers: {
+                headers: withLocaleHeaders({
                     'Content-Type': 'application/json',
-                },
+                }),
                 body: JSON.stringify({
                     message: message,
                     chart_data: chartData,
@@ -123,7 +134,7 @@ class ChatWidget {
             
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.detail || 'Ошибка при отправке сообщения');
+                throw new Error(error.message || error.detail || t('page.chat.errors.sendFailed'));
             }
             
             const data = await response.json();
@@ -141,7 +152,7 @@ class ChatWidget {
             console.error('Ошибка чата:', error);
             loadingMsg.remove();
             this.addMessage(
-                'Извините, произошла ошибка. Попробуйте ещё раз.',
+                t('page.chat.errors.assistantFallback'),
                 'assistant'
             );
         } finally {
@@ -168,4 +179,3 @@ class ChatWidget {
 document.addEventListener('DOMContentLoaded', () => {
     window.chatWidget = new ChatWidget();
 });
-

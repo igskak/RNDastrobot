@@ -806,6 +806,7 @@ class NatalInterpretation(Base):
 
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), primary_key=True)
     interpretation_type = Column(String(50), primary_key=True)  # 'psychological_profile', 'career', etc.
+    locale = Column(String(5), primary_key=True, nullable=False, default='en', server_default='en')
     content = Column(JSONB, nullable=False)  # Структурированный ответ от OpenAI
     chart_hash = Column(String(64), nullable=False)  # SHA256 хэш для инвалидации
     openai_model = Column(String(50))  # 'gpt-4.1'
@@ -821,8 +822,10 @@ class NatalInterpretation(Base):
     user = relationship("User")
 
     __table_args__ = (
+        CheckConstraint("locale IN ('en', 'uk', 'ru')", name='ck_natal_interpretations_locale'),
         Index('idx_interpretations_hash', 'chart_hash'),
         Index('idx_interpretations_type', 'interpretation_type'),
+        Index('idx_interpretations_locale', 'locale'),
         Index('idx_interpretations_created', 'created_at'),
     )
 
@@ -842,6 +845,7 @@ class PrognosticInterpretation(Base):
 
     interpretation_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
+    locale = Column(String(5), nullable=False, default='en', server_default='en')
 
     # Тип прогностики
     method = Column(String(30), nullable=False)  # transits, progressions, directions, solar_return
@@ -871,12 +875,15 @@ class PrognosticInterpretation(Base):
     user = relationship("User", back_populates="prognostic_interpretations")
 
     __table_args__ = (
+        CheckConstraint("locale IN ('en', 'uk', 'ru')", name='ck_prognostic_interpretations_locale'),
         CheckConstraint(
             "method IN ('transits', 'progressions', 'directions', 'solar_return')",
             name='valid_prognostic_method'
         ),
         Index('idx_pi_user_method', 'user_id', 'method'),
+        Index('idx_pi_user_method_locale', 'user_id', 'method', 'locale'),
         Index('idx_pi_content_hash', 'content_hash'),
+        Index('idx_pi_locale', 'locale'),
         Index('idx_pi_created', 'created_at'),
     )
 

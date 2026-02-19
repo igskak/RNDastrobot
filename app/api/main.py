@@ -1,8 +1,9 @@
 """
 FastAPI приложение для Astrobot
 """
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
@@ -28,6 +29,8 @@ if os.getenv('APP_ENV') == 'production':
     logger.add(sys.stderr, level="WARNING")  # Только WARNING и выше
 
 from app.api.routes import natal, interpretations, chat, transits, solar, progressions, directions
+from app.api.error_handlers import register_error_handlers
+from app.api.locale_dependency import locale_context_dependency
 
 # Путь к frontend
 FRONTEND_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")
@@ -39,7 +42,13 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
+    dependencies=[Depends(locale_context_dependency)],
 )
+
+register_error_handlers(app)
+
+# Сжатие уменьшает время передачи JS/CSS/JSON на медленных каналах.
+app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 def _resolve_cors_origins() -> List[str]:
     raw = os.getenv("CORS_ALLOW_ORIGINS", "").strip()
@@ -72,6 +81,15 @@ if cors_origins:
         allow_headers=["*"],
     )
 
+
+@app.middleware("http")
+async def static_cache_headers(request: Request, call_next):
+    response = await call_next(request)
+    path = request.url.path
+    if path.startswith(("/css/", "/js/", "/bundles/", "/locales/", "/assets/", "/fonts/")):
+        response.headers.setdefault("Cache-Control", "public, max-age=31536000, immutable")
+    return response
+
 # Подключение роутеров
 app.include_router(natal.router, prefix="/api/v1", tags=["Natal Charts"])
 app.include_router(interpretations.router, prefix="/api/v1", tags=["Interpretations"])
@@ -85,6 +103,12 @@ app.include_router(directions.router, prefix="/api/v1", tags=["Directions"])
 if os.path.exists(FRONTEND_PATH):
     app.mount("/css", StaticFiles(directory=os.path.join(FRONTEND_PATH, "css")), name="css")
     app.mount("/js", StaticFiles(directory=os.path.join(FRONTEND_PATH, "js")), name="js")
+    if os.path.exists(os.path.join(FRONTEND_PATH, "bundles")):
+        app.mount("/bundles", StaticFiles(directory=os.path.join(FRONTEND_PATH, "bundles")), name="bundles")
+    if os.path.exists(os.path.join(FRONTEND_PATH, "fonts")):
+        app.mount("/fonts", StaticFiles(directory=os.path.join(FRONTEND_PATH, "fonts")), name="fonts")
+    if os.path.exists(os.path.join(FRONTEND_PATH, "locales")):
+        app.mount("/locales", StaticFiles(directory=os.path.join(FRONTEND_PATH, "locales")), name="locales")
     if os.path.exists(os.path.join(FRONTEND_PATH, "assets")):
         app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_PATH, "assets")), name="assets")
 

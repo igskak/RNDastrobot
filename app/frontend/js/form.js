@@ -2,6 +2,10 @@
  * Логика формы ввода данных рождения
  */
 
+function t(key, params) {
+    return window.FrontendI18n?.t?.(key, params) || key;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('birthDataForm');
     const placeInput = document.getElementById('birthPlace');
@@ -12,6 +16,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Заполняем список часовых поясов
     Timezones.populate(timezoneSelect);
+    document.addEventListener('frontend:locale-changed', () => {
+        const selectedTimezone = timezoneSelect.value;
+        Timezones.populate(timezoneSelect);
+        if (selectedTimezone) {
+            timezoneSelect.value = selectedTimezone;
+        }
+    });
 
     const placeSuggestions = document.getElementById('birthPlaceSuggestions');
     let placeAutocompleteBound = false;
@@ -24,13 +35,12 @@ document.addEventListener('DOMContentLoaded', () => {
             minChars: 2,
             debounceMs: 350,
             limit: 5,
-            language: 'ru',
             getLabel: (item) => item.shortName || item.displayName,
             onInput: (place) => {
                 const guessedTz = Timezones.guess(place);
                 if (guessedTz) {
                     timezoneSelect.value = guessedTz;
-                    timezoneHint.textContent = '✓ Часовой пояс определён автоматически';
+                    timezoneHint.textContent = t('page.index.form.timezone.autoDetected');
                     timezoneHint.style.color = '#22c55e';
                 }
             },
@@ -41,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const guessedTz = Timezones.guess(item.displayName || item.shortName);
                 if (guessedTz) {
                     timezoneSelect.value = guessedTz;
-                    timezoneHint.textContent = '✓ Часовой пояс определён автоматически';
+                    timezoneHint.textContent = t('page.index.form.timezone.autoDetected');
                     timezoneHint.style.color = '#22c55e';
                 }
             }
@@ -113,12 +123,12 @@ document.addEventListener('DOMContentLoaded', () => {
             AstroAPI.saveChartToSession(chartData);
             
             // Переходим на страницу результата
-            showPageLoader();
+            window.showPageLoader?.();
             window.location.href = 'chart.html';
 
         } catch (error) {
             console.error('Ошибка:', error);
-            errorMessage.textContent = error.message || 'Произошла ошибка при расчёте карты';
+            errorMessage.textContent = error.message || t('page.index.errors.calculateFailed');
             errorMessage.classList.remove('hidden');
         } finally {
             // Убираем загрузку

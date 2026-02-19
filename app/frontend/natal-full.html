@@ -1,38 +1,36 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Полная натальная карта — AstroBot</title>
-    <link rel="stylesheet" href="css/styles.css?v=3">
-    <link rel="stylesheet" href="css/natal-full.css?v=2">
+    <title data-i18n="page.natalFull.title"></title>
+    <link rel="stylesheet" href="bundles/natal-full.bundle.css?v=1">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=1">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <script>window.__APP_BUILD_ID__ = '2026-02-19-1';</script>
 </head>
 <body class="natal-full-page">
-    <!-- Page Loader -->
     <div class="page-loader" id="pageLoader">
         <div class="pl-spinner"></div>
-        <div class="pl-text">Загрузка таблиц...</div>
+        <div class="pl-text" data-i18n="page.natalFull.loading"></div>
     </div>
 
-    <!-- Header -->
     <header class="natal-header">
         <div class="header-content">
-            <a href="/" class="back-btn">← Назад</a>
+            <a href="/" class="back-btn" data-i18n="common.back"></a>
             <div class="birth-info">
-                <h1 id="chartTitle">Натальная карта</h1>
+                <h1 id="chartTitle" data-i18n="page.natalFull.header.defaultTitle"></h1>
                 <p id="birthDetails" class="birth-details"></p>
             </div>
             <div class="header-actions">
-                <a href="chart.html" class="view-chart-btn">🔮 Круговая карта</a>
-                <button class="legend-toggle-btn" id="legendToggle">📋 Легенда</button>
+                <a href="chart.html" class="view-chart-btn">🔮 <span data-i18n="page.natalFull.nav.wheel"></span></a>
+                <button class="legend-toggle-btn" id="legendToggle">📋 <span data-i18n="page.natalFull.nav.legend"></span></button>
             </div>
         </div>
     </header>
 
-    <!-- Compact Summary Bar -->
     <div class="summary-bar" id="summaryBar">
         <div class="summary-content">
             <div class="summary-item">
@@ -53,82 +51,78 @@
             </div>
             <div class="summary-divider"></div>
             <div class="summary-item">
-                <span class="summary-label">Фигура</span>
+                <span class="summary-label" data-i18n="page.natalFull.summary.figure"></span>
                 <span class="summary-value" id="summaryPattern"></span>
             </div>
             <div class="summary-item dominants" id="summaryDominants"></div>
         </div>
     </div>
 
-    <!-- Legend Panel (hidden by default) -->
     <div class="legend-panel hidden" id="legendPanel">
         <div class="legend-content">
             <div class="legend-group">
-                <div class="legend-title">Достоинство</div>
+                <div class="legend-title" data-i18n="page.natalFull.legend.dignity.title"></div>
                 <div class="legend-items">
-                    <span class="legend-item"><span class="dignity-badge dignity-domicile">H</span> Обитель</span>
-                    <span class="legend-item"><span class="dignity-badge dignity-exaltation">X</span> Экзальтация</span>
-                    <span class="legend-item"><span class="dignity-badge dignity-detriment">D</span> Детримент</span>
-                    <span class="legend-item"><span class="dignity-badge dignity-fall">F</span> Падение</span>
+                    <span class="legend-item"><span class="dignity-badge dignity-domicile">H</span> <span data-i18n="page.natalFull.legend.dignity.domicile"></span></span>
+                    <span class="legend-item"><span class="dignity-badge dignity-exaltation">X</span> <span data-i18n="page.natalFull.legend.dignity.exaltation"></span></span>
+                    <span class="legend-item"><span class="dignity-badge dignity-detriment">D</span> <span data-i18n="page.natalFull.legend.dignity.detriment"></span></span>
+                    <span class="legend-item"><span class="dignity-badge dignity-fall">F</span> <span data-i18n="page.natalFull.legend.dignity.fall"></span></span>
                 </div>
             </div>
             <div class="legend-group">
-                <div class="legend-title">Движение</div>
+                <div class="legend-title" data-i18n="page.natalFull.legend.motion.title"></div>
                 <div class="legend-items">
-                    <span class="legend-item"><span class="move-badge move-d">D</span> Директ</span>
-                    <span class="legend-item"><span class="move-badge move-r">R</span> Ретро</span>
-                    <span class="legend-item"><span class="move-badge move-s">S</span> Стационар</span>
+                    <span class="legend-item"><span class="move-badge move-d">D</span> <span data-i18n="page.natalFull.legend.motion.direct"></span></span>
+                    <span class="legend-item"><span class="move-badge move-r">R</span> <span data-i18n="page.natalFull.legend.motion.retrograde"></span></span>
+                    <span class="legend-item"><span class="move-badge move-s">S</span> <span data-i18n="page.natalFull.legend.motion.stationary"></span></span>
                 </div>
             </div>
             <div class="legend-group">
-                <div class="legend-title">Гармония аспектов</div>
+                <div class="legend-title" data-i18n="page.natalFull.legend.harmony.title"></div>
                 <div class="legend-items">
-                    <span class="legend-item"><span class="harmony-badge harmony-good">✓</span> Гармоничные</span>
-                    <span class="legend-item"><span class="harmony-badge harmony-bad">✗</span> Напряжённые</span>
-                    <span class="legend-item"><span class="harmony-badge harmony-mixed">~</span> Смешанные</span>
+                    <span class="legend-item"><span class="harmony-badge harmony-good">✓</span> <span data-i18n="page.natalFull.legend.harmony.good"></span></span>
+                    <span class="legend-item"><span class="harmony-badge harmony-bad">✗</span> <span data-i18n="page.natalFull.legend.harmony.bad"></span></span>
+                    <span class="legend-item"><span class="harmony-badge harmony-mixed">~</span> <span data-i18n="page.natalFull.legend.harmony.mixed"></span></span>
                 </div>
             </div>
             <div class="legend-group">
-                <div class="legend-title">Особенности</div>
+                <div class="legend-title" data-i18n="page.natalFull.legend.features.title"></div>
                 <div class="legend-items legend-text">
-                    <span class="legend-item"><b>сожж.</b> — сожжение</span>
-                    <span class="legend-item"><b>казими</b> — в сердце Солнца</span>
-                    <span class="legend-item"><b>в лучах</b> — под лучами</span>
-                    <span class="legend-item"><b>элев.</b> — элевация</span>
-                    <span class="legend-item"><b>шахта</b> — в шахте</span>
-                    <span class="legend-item"><b>вкл.</b> — включённый знак</span>
-                    <span class="legend-item"><b>король</b> — король аспектов</span>
-                    <span class="legend-item"><b>альмут.</b> — альмутен</span>
-                    <span class="legend-item"><b>ручка</b> — ручка корзины</span>
-                    <span class="legend-item"><b>дориф.</b> — дорифорий</span>
-                    <span class="legend-item"><b>возн.</b> — возничий</span>
-                    <span class="legend-item"><b>анарета</b> — градус анареты</span>
-                    <span class="legend-item"><b>корол.</b> — королевский градус</span>
+                    <span class="legend-item"><b data-i18n="astro.feature.short.combust"></b> <span data-i18n="page.natalFull.legend.features.combust"></span></span>
+                    <span class="legend-item"><b data-i18n="astro.feature.short.cazimi"></b> <span data-i18n="page.natalFull.legend.features.cazimi"></span></span>
+                    <span class="legend-item"><b data-i18n="astro.feature.short.under_rays"></b> <span data-i18n="page.natalFull.legend.features.underRays"></span></span>
+                    <span class="legend-item"><b data-i18n="astro.feature.short.elevated"></b> <span data-i18n="page.natalFull.legend.features.elevated"></span></span>
+                    <span class="legend-item"><b data-i18n="astro.feature.short.peregrine"></b> <span data-i18n="page.natalFull.legend.features.peregrine"></span></span>
+                    <span class="legend-item"><b data-i18n="astro.feature.short.intercepted"></b> <span data-i18n="page.natalFull.legend.features.intercepted"></span></span>
+                    <span class="legend-item"><b data-i18n="astro.feature.short.aspect_king"></b> <span data-i18n="page.natalFull.legend.features.aspectKing"></span></span>
+                    <span class="legend-item"><b data-i18n="astro.feature.short.almuten"></b> <span data-i18n="page.natalFull.legend.features.almuten"></span></span>
+                    <span class="legend-item"><b data-i18n="astro.feature.short.handle"></b> <span data-i18n="page.natalFull.legend.features.handle"></span></span>
+                    <span class="legend-item"><b data-i18n="astro.feature.short.doryphoros"></b> <span data-i18n="page.natalFull.legend.features.doryphoros"></span></span>
+                    <span class="legend-item"><b data-i18n="astro.feature.short.charioteer"></b> <span data-i18n="page.natalFull.legend.features.charioteer"></span></span>
+                    <span class="legend-item"><b data-i18n="astro.feature.short.anareta"></b> <span data-i18n="page.natalFull.legend.features.anareta"></span></span>
+                    <span class="legend-item"><b data-i18n="astro.feature.short.royal"></b> <span data-i18n="page.natalFull.legend.features.royal"></span></span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Main Content -->
     <main class="natal-content">
-
-        <!-- Section 1: Planets Table (Full) -->
         <section class="section" id="planetsSection">
-            <h2 class="section-title">🪐 Планеты</h2>
+            <h2 class="section-title">🪐 <span data-i18n="page.natalFull.sections.planets"></span></h2>
             <div class="table-wrapper">
                 <table class="data-table planets-table compact-table">
                     <thead>
                         <tr>
-                            <th>Планета</th>
-                            <th>Позиция</th>
-                            <th>Дом</th>
-                            <th>Дост</th>
-                            <th>Асп</th>
-                            <th>Движ</th>
-                            <th>Скор</th>
-                            <th>Карма</th>
-                            <th>Особенности</th>
-                            <th>Упр.</th>
+                            <th data-i18n="page.natalFull.table.planets.planet"></th>
+                            <th data-i18n="page.natalFull.table.planets.position"></th>
+                            <th data-i18n="page.natalFull.table.planets.house"></th>
+                            <th data-i18n="page.natalFull.table.planets.dignity"></th>
+                            <th data-i18n="page.natalFull.table.planets.aspects"></th>
+                            <th data-i18n="page.natalFull.table.planets.motion"></th>
+                            <th data-i18n="page.natalFull.table.planets.speed"></th>
+                            <th data-i18n="page.natalFull.table.planets.karma"></th>
+                            <th data-i18n="page.natalFull.table.planets.features"></th>
+                            <th data-i18n="page.natalFull.table.planets.ruler"></th>
                         </tr>
                     </thead>
                     <tbody id="planetsTableBody"></tbody>
@@ -136,21 +130,19 @@
             </div>
         </section>
 
-        <!-- Two Column Layout: Houses + Aspects -->
         <div class="two-columns">
-            <!-- Section 2: Houses Table -->
             <section class="section" id="housesSection">
-                <h2 class="section-title">🏠 Дома</h2>
+                <h2 class="section-title">🏠 <span data-i18n="page.natalFull.sections.houses"></span></h2>
                 <div class="table-wrapper">
                     <table class="data-table houses-table compact-table">
                         <thead>
                             <tr>
-                                <th>Дом</th>
-                                <th>Знак</th>
-                                <th>Упр. (соупр.)</th>
-                                <th>↳в</th>
-                                <th>Вкл</th>
-                                <th>Планеты</th>
+                                <th data-i18n="page.natalFull.table.houses.house"></th>
+                                <th data-i18n="page.natalFull.table.houses.sign"></th>
+                                <th data-i18n="page.natalFull.table.houses.ruler"></th>
+                                <th data-i18n="page.natalFull.table.houses.rulerIn"></th>
+                                <th data-i18n="page.natalFull.table.houses.included"></th>
+                                <th data-i18n="page.natalFull.table.houses.planets"></th>
                             </tr>
                         </thead>
                         <tbody id="housesTableBody"></tbody>
@@ -158,23 +150,22 @@
                 </div>
             </section>
 
-            <!-- Section 3: Aspects -->
             <section class="section" id="aspectsSection">
-                <h2 class="section-title">🔗 Аспекты</h2>
+                <h2 class="section-title">🔗 <span data-i18n="page.natalFull.sections.aspects"></span></h2>
                 <div class="table-wrapper">
                     <table class="data-table aspects-table compact-table">
                         <thead>
                             <tr>
-                                <th class="sortable" data-sort="type">Тип ⇅</th>
-                                <th>Аспект</th>
-                                <th class="sortable" data-sort="orb">Орб ⇅</th>
+                                <th class="sortable" data-sort="type" data-i18n="page.natalFull.table.aspects.typeSort"></th>
+                                <th data-i18n="page.natalFull.table.aspects.aspect"></th>
+                                <th class="sortable" data-sort="orb" data-i18n="page.natalFull.table.aspects.orbSort"></th>
                             </tr>
                         </thead>
                         <tbody id="aspectsTableBody"></tbody>
                     </table>
                 </div>
                 <details class="minor-aspects-toggle">
-                    <summary>Минорные аспекты</summary>
+                    <summary data-i18n="page.natalFull.sections.minorAspects"></summary>
                     <div class="table-wrapper">
                         <table class="data-table aspects-table compact-table">
                             <tbody id="minorAspectsTableBody"></tbody>
@@ -184,28 +175,25 @@
             </section>
         </div>
 
-        <!-- Section 4: Configurations & Stelliums -->
         <section class="section" id="configurationsSection">
-            <h2 class="section-title">⭐ Конфигурации</h2>
+            <h2 class="section-title">⭐ <span data-i18n="page.natalFull.sections.configurations"></span></h2>
             <div class="configs-row" id="configurationsContainer"></div>
         </section>
 
-        <!-- Section 5: Balances (Compact) -->
         <section class="section balances-section" id="balancesSection">
-            <h2 class="section-title">📊 Балансы</h2>
+            <h2 class="section-title">📊 <span data-i18n="page.natalFull.sections.balances"></span></h2>
             <div class="balances-compact" id="balancesContainer"></div>
         </section>
 
-        <!-- Section 6: Special Points (Compact) -->
         <details class="section collapsible-section">
-            <summary class="section-title clickable">📍 Специальные точки</summary>
+            <summary class="section-title clickable">📍 <span data-i18n="page.natalFull.sections.specialPoints"></span></summary>
             <div class="table-wrapper">
                 <table class="data-table special-points-table compact-table">
                     <thead>
                         <tr>
-                            <th>Точка</th>
-                            <th>Позиция</th>
-                            <th>Дом</th>
+                            <th data-i18n="page.natalFull.table.specialPoints.point"></th>
+                            <th data-i18n="page.natalFull.table.specialPoints.position"></th>
+                            <th data-i18n="page.natalFull.table.specialPoints.house"></th>
                         </tr>
                     </thead>
                     <tbody id="specialPointsTableBody"></tbody>
@@ -214,8 +202,7 @@
         </details>
     </main>
 
-    <script src="js/api.js"></script>
-    <script src="js/symbols.js?v=3"></script>
-    <script src="js/natal-full.js"></script>
+    <script type="module" src="js/bundles/natal-full.bundle.js?v=2"></script>
+    <script src="js/locale-switcher.js?v=3"></script>
 </body>
 </html>

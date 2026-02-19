@@ -19,25 +19,47 @@ class ChartDataRenderer {
         this.initAspectsSettings();
     }
 
+    t(key, params) {
+        return window.FrontendI18n?.t?.(key, params) || key;
+    }
+
+    planetName(name) {
+        const key = `astro.planet.${name}`;
+        const translated = this.t(key);
+        return translated === key ? (Symbols.planetNamesRu[name] || name) : translated;
+    }
+
+    signName(name) {
+        const key = `astro.sign.${name}`;
+        const translated = this.t(key);
+        return translated === key ? (Symbols.signNamesRu[name] || name) : translated;
+    }
+
+    aspectName(name) {
+        const key = `astro.aspect.${name}`;
+        const translated = this.t(key);
+        return translated === key ? (Symbols.aspectNamesRu[name] || name) : translated;
+    }
+
     // Все планеты/точки для фильтра аспектов
     static ASPECT_FILTER_ITEMS = [
-        { id: 'Sun', label: 'Солнце' },
-        { id: 'Moon', label: 'Луна' },
-        { id: 'Mercury', label: 'Меркурий' },
-        { id: 'Venus', label: 'Венера' },
-        { id: 'Mars', label: 'Марс' },
-        { id: 'Jupiter', label: 'Юпитер' },
-        { id: 'Saturn', label: 'Сатурн' },
-        { id: 'Uranus', label: 'Уран' },
-        { id: 'Neptune', label: 'Нептун' },
-        { id: 'Pluto', label: 'Плутон' },
-        { id: 'Chiron', label: 'Хирон' },
-        { id: 'Proserpina', label: 'Прозерпина' },
-        { id: 'TrueNode', label: 'Сев. Узел' },
-        { id: 'SouthNode', label: 'Юж. Узел' },
-        { id: 'BlackMoon', label: 'Лилит' },
-        { id: 'WhiteMoon', label: 'Селена' },
-        { id: 'PartOfFortune', label: 'Фортуна' }
+        { id: 'Sun' },
+        { id: 'Moon' },
+        { id: 'Mercury' },
+        { id: 'Venus' },
+        { id: 'Mars' },
+        { id: 'Jupiter' },
+        { id: 'Saturn' },
+        { id: 'Uranus' },
+        { id: 'Neptune' },
+        { id: 'Pluto' },
+        { id: 'Chiron' },
+        { id: 'Proserpina' },
+        { id: 'TrueNode' },
+        { id: 'SouthNode' },
+        { id: 'BlackMoon' },
+        { id: 'WhiteMoon' },
+        { id: 'PartOfFortune' }
     ];
 
     initAspectsSettings() {
@@ -60,7 +82,7 @@ class ChartDataRenderer {
             <label class="aspect-planet-toggle">
                 <input type="checkbox" data-planet="${item.id}" checked>
                 <span class="symbol">${Symbols.planets[item.id] || ''}</span>
-                <span>${item.label}</span>
+                <span>${this.planetName(item.id)}</span>
             </label>
         `).join('');
 
@@ -273,7 +295,7 @@ class ChartDataRenderer {
                 <tr data-aspect="${a.planet_1}-${a.planet_2}">
                     <td class="symbol-cell"><span class="astro-symbol">${Symbols.planets[a.planet_1] || ''}</span></td>
                     <td class="symbol-cell"><span class="astro-symbol">${Symbols.planets[a.planet_2] || ''}</span></td>
-                    <td class="${typeClass}"><span class="astro-symbol">${Symbols.aspects[a.aspect_type] || ''}</span> ${Symbols.aspectNamesRu[a.aspect_type] || a.aspect_type}</td>
+                    <td class="${typeClass}"><span class="astro-symbol">${Symbols.aspects[a.aspect_type] || ''}</span> ${this.aspectName(a.aspect_type)}</td>
                     <td class="mono">${a.orb.toFixed(2)}°</td>
                 </tr>
             `;
@@ -310,13 +332,13 @@ class ChartDataRenderer {
         // Заголовок
         html += '<tr><th></th>';
         filtered.forEach(p => {
-            html += `<th title="${Symbols.planetNamesRu[p.name]}"><span class="astro-symbol">${Symbols.planets[p.name]}</span></th>`;
+            html += `<th title="${this.planetName(p.name)}"><span class="astro-symbol">${Symbols.planets[p.name]}</span></th>`;
         });
         html += '</tr>';
 
         // Строки (треугольная матрица)
         filtered.forEach((rowPlanet, rowIdx) => {
-            html += `<tr><th title="${Symbols.planetNamesRu[rowPlanet.name]}"><span class="astro-symbol">${Symbols.planets[rowPlanet.name]}</span></th>`;
+            html += `<tr><th title="${this.planetName(rowPlanet.name)}"><span class="astro-symbol">${Symbols.planets[rowPlanet.name]}</span></th>`;
 
             filtered.forEach((colPlanet, colIdx) => {
                 if (colIdx >= rowIdx) {
@@ -328,7 +350,7 @@ class ChartDataRenderer {
                         const cls = aspect.harmonic_type === 'harmonious' ? 'grid-harmonious'
                                   : aspect.harmonic_type === 'tense' ? 'grid-tense'
                                   : 'grid-neutral';
-                        html += `<td class="${cls}" title="${Symbols.aspectNamesRu[aspect.aspect_type]} ${aspect.orb.toFixed(1)}°"><span class="astro-symbol">${glyph}</span></td>`;
+                        html += `<td class="${cls}" title="${this.aspectName(aspect.aspect_type)} ${aspect.orb.toFixed(1)}°"><span class="astro-symbol">${glyph}</span></td>`;
                     } else {
                         html += '<td>–</td>';
                     }
@@ -349,17 +371,17 @@ class ChartDataRenderer {
         if (!this.dignitiesContainer || !planets) return;
 
         const dignityLabels = {
-            'domicile': { label: 'Обитель', class: 'dignity-domicile', icon: '🏠' },
-            'exaltation': { label: 'Экзальтация', class: 'dignity-exaltation', icon: '⬆' },
-            'detriment': { label: 'Изгнание', class: 'dignity-detriment', icon: '⬇' },
-            'fall': { label: 'Падение', class: 'dignity-fall', icon: '💫' },
+            'domicile': { label: this.t('astro.dignity.domicile'), class: 'dignity-domicile', icon: '🏠' },
+            'exaltation': { label: this.t('astro.dignity.exaltation'), class: 'dignity-exaltation', icon: '⬆' },
+            'detriment': { label: this.t('astro.dignity.detriment'), class: 'dignity-detriment', icon: '⬇' },
+            'fall': { label: this.t('astro.dignity.fall'), class: 'dignity-fall', icon: '💫' },
             'neutral': { label: '', class: '', icon: '' }
         };
 
         const withDignity = planets.filter(p => p.dignity && p.dignity !== 'neutral');
 
         if (withDignity.length === 0) {
-            this.dignitiesContainer.innerHTML = '<p class="text-muted">Нет планет в достоинствах/слабостях</p>';
+            this.dignitiesContainer.innerHTML = `<p class="text-muted">${this.t('page.chart.empty.noDignities')}</p>`;
             return;
         }
 
@@ -368,7 +390,7 @@ class ChartDataRenderer {
             const d = dignityLabels[p.dignity] || dignityLabels.neutral;
             html += `
                 <div class="dignity-item ${d.class}">
-                    <span class="dignity-planet">${Symbols.planets[p.name]} ${Symbols.planetNamesRu[p.name]}</span>
+                    <span class="dignity-planet">${Symbols.planets[p.name]} ${this.planetName(p.name)}</span>
                     <span class="dignity-label">${d.icon} ${d.label}</span>
                 </div>
             `;
@@ -391,19 +413,19 @@ class ChartDataRenderer {
                 return strengthB - strengthA;
             });
 
-            html += '<h3 style="margin-bottom: 12px; font-size: 15px;">Аспектные конфигурации</h3>';
+            html += `<h3 style="margin-bottom: 12px; font-size: 15px;">${this.t('page.chart.configurations.title')}</h3>`;
             html += sortedConfigs.map(c => `
                 <div class="config-card">
                     <h4>
                         ${Symbols.configIcons[c.type] || '◆'}
                         ${this.formatConfigType(c.type)}
                     </h4>
-                    ${c.apex_planet ? `<p>Апекс: ${Symbols.planetNamesRu[c.apex_planet] || c.apex_planet}</p>` : ''}
-                    <p>Сила: ${c.strength_score.toFixed(1)}</p>
+                    ${c.apex_planet ? `<p>${this.t('page.chart.configurations.apex', { planet: this.planetName(c.apex_planet) })}</p>` : ''}
+                    <p>${this.t('page.chart.configurations.strength', { value: c.strength_score.toFixed(1) })}</p>
                     <div class="config-planets">
                         ${c.planets_involved.map(p => `
                             <span class="planet-tag">
-                                ${Symbols.planets[p] || ''} ${Symbols.planetNamesRu[p] || p}
+                                ${Symbols.planets[p] || ''} ${this.planetName(p)}
                             </span>
                         `).join('')}
                     </div>
@@ -417,17 +439,19 @@ class ChartDataRenderer {
                 return (b.count || 0) - (a.count || 0);
             });
 
-            html += '<h3 style="margin: 20px 0 12px; font-size: 15px;">Стеллиумы</h3>';
+            html += `<h3 style="margin: 20px 0 12px; font-size: 15px;">${this.t('page.chart.configurations.stelliums')}</h3>`;
             html += sortedStelliums.map(s => `
                 <div class="config-card">
                     <h4>
-                        ⭐ ${s.type === 'house' ? `${s.house_number} дом` : Symbols.signNamesRu[s.sign] || s.sign}
+                        ⭐ ${s.type === 'house'
+                            ? this.t('page.chart.configurations.houseLabel', { house: s.house_number })
+                            : this.signName(s.sign)}
                     </h4>
-                    <p>${s.count} планет</p>
+                    <p>${this.t('page.chart.configurations.planetCount', { count: s.count })}</p>
                     <div class="config-planets">
                         ${s.planets.map(p => `
                             <span class="planet-tag">
-                                ${Symbols.planets[p] || ''} ${Symbols.planetNamesRu[p] || p}
+                                ${Symbols.planets[p] || ''} ${this.planetName(p)}
                             </span>
                         `).join('')}
                     </div>
@@ -436,27 +460,16 @@ class ChartDataRenderer {
         }
         
         if (!html) {
-            html = '<p style="color: #6e6e73; text-align: center; padding: 40px;">Нет значимых конфигураций</p>';
+            html = `<p style="color: #6e6e73; text-align: center; padding: 40px;">${this.t('page.chart.empty.noConfigurations')}</p>`;
         }
         
         this.configsContainer.innerHTML = html;
     }
 
     formatConfigType(type) {
-        const names = {
-            'T_Square': 'Тау-квадрат',
-            'Grand_Trine': 'Большой трин',
-            'Grand_Cross': 'Большой крест',
-            'Yod': 'Йод (Перст Судьбы)',
-            'Mystic_Rectangle': 'Мистический прямоугольник',
-            'Kite': 'Воздушный змей',
-            'Star_of_David': 'Звезда Давида',
-            'Bisextile': 'Бисекстиль',
-            'Sail': 'Парус',
-            'Skewed_Sail': 'Косой парус',
-            'Chariot': 'Повозка'
-        };
-        return names[type] || type.replace(/_/g, ' ');
+        const key = `astro.configuration.${type}`;
+        const translated = this.t(key);
+        return translated === key ? type.replace(/_/g, ' ') : translated;
     }
 
     renderBalances(balances, cosmogramPattern) {
@@ -468,19 +481,19 @@ class ChartDataRenderer {
         if (cosmogramPattern) {
             html += `
                 <div class="balance-section">
-                    <div class="balance-title">🪐 Космограмма (паттерн Джонса)</div>
+                    <div class="balance-title">${this.t('page.chart.balances.cosmogramTitle')}</div>
                     <div class="config-card">
                         <h4>${this.formatPatternType(cosmogramPattern.pattern_type)}</h4>
-                        <p>Пустая дуга: ${cosmogramPattern.empty_arc_degree.toFixed(0)}°</p>
-                        ${cosmogramPattern.handle_planet ? `<p>Ручка: ${Symbols.planetNamesRu[cosmogramPattern.handle_planet] || cosmogramPattern.handle_planet}</p>` : ''}
-                        ${cosmogramPattern.leading_planet ? `<p>Ведущая: ${Symbols.planetNamesRu[cosmogramPattern.leading_planet] || cosmogramPattern.leading_planet}</p>` : ''}
+                        <p>${this.t('page.chart.balances.emptyArc', { value: cosmogramPattern.empty_arc_degree.toFixed(0) })}</p>
+                        ${cosmogramPattern.handle_planet ? `<p>${this.t('page.chart.balances.handle', { planet: this.planetName(cosmogramPattern.handle_planet) })}</p>` : ''}
+                        ${cosmogramPattern.leading_planet ? `<p>${this.t('page.chart.balances.leading', { planet: this.planetName(cosmogramPattern.leading_planet) })}</p>` : ''}
                     </div>
                 </div>
             `;
         }
 
         if (!balances) {
-            this.balancesContainer.innerHTML = html || '<p style="color: #6e6e73; text-align: center; padding: 40px;">Нет данных о балансах</p>';
+            this.balancesContainer.innerHTML = html || `<p style="color: #6e6e73; text-align: center; padding: 40px;">${this.t('page.chart.empty.noBalances')}</p>`;
             return;
         }
 
@@ -488,11 +501,11 @@ class ChartDataRenderer {
         if (balances.element_balance) {
             const eb = balances.element_balance;
             const total = eb.fire + eb.earth + eb.air + eb.water;
-            html += this.renderBalanceSection('🔥 Стихии', [
-                { label: 'Огонь', value: eb.fire, total, colorClass: 'bar-fire' },
-                { label: 'Земля', value: eb.earth, total, colorClass: 'bar-earth' },
-                { label: 'Воздух', value: eb.air, total, colorClass: 'bar-air' },
-                { label: 'Вода', value: eb.water, total, colorClass: 'bar-water' }
+            html += this.renderBalanceSection(this.t('page.chart.balances.elementsTitle'), [
+                { label: this.t('astro.element.Fire'), value: eb.fire, total, colorClass: 'bar-fire' },
+                { label: this.t('astro.element.Earth'), value: eb.earth, total, colorClass: 'bar-earth' },
+                { label: this.t('astro.element.Air'), value: eb.air, total, colorClass: 'bar-air' },
+                { label: this.t('astro.element.Water'), value: eb.water, total, colorClass: 'bar-water' }
             ]);
         }
 
@@ -500,10 +513,10 @@ class ChartDataRenderer {
         if (balances.mode_balance) {
             const mb = balances.mode_balance;
             const total = mb.cardinal + mb.fixed + mb.mutable;
-            html += this.renderBalanceSection('✚ Кресты', [
-                { label: 'Кардин.', value: mb.cardinal, total, color: '#ef4444' },
-                { label: 'Фиксир.', value: mb.fixed, total, color: '#f59e0b' },
-                { label: 'Мутабел.', value: mb.mutable, total, color: '#22c55e' }
+            html += this.renderBalanceSection(this.t('page.chart.balances.modesTitle'), [
+                { label: this.t('astro.mode.short.Cardinal'), value: mb.cardinal, total, color: '#ef4444' },
+                { label: this.t('astro.mode.short.Fixed'), value: mb.fixed, total, color: '#f59e0b' },
+                { label: this.t('astro.mode.short.Mutable'), value: mb.mutable, total, color: '#22c55e' }
             ]);
         }
 
@@ -512,11 +525,11 @@ class ChartDataRenderer {
             const hb = balances.hemisphere_balance;
             const nsTotal = hb.northern + hb.southern;
             const ewTotal = hb.eastern + hb.western;
-            html += this.renderBalanceSection('🧭 Полусферы', [
-                { label: 'Север', value: hb.northern, total: nsTotal, color: '#3b82f6' },
-                { label: 'Юг', value: hb.southern, total: nsTotal, color: '#f97316' },
-                { label: 'Восток', value: hb.eastern, total: ewTotal, color: '#8b5cf6' },
-                { label: 'Запад', value: hb.western, total: ewTotal, color: '#ec4899' }
+            html += this.renderBalanceSection(this.t('page.chart.balances.hemispheresTitle'), [
+                { label: this.t('page.chart.balances.north'), value: hb.northern, total: nsTotal, color: '#3b82f6' },
+                { label: this.t('page.chart.balances.south'), value: hb.southern, total: nsTotal, color: '#f97316' },
+                { label: this.t('page.chart.balances.east'), value: hb.eastern, total: ewTotal, color: '#8b5cf6' },
+                { label: this.t('page.chart.balances.west'), value: hb.western, total: ewTotal, color: '#ec4899' }
             ]);
         }
 
@@ -524,10 +537,10 @@ class ChartDataRenderer {
         if (balances.house_group_balance) {
             const hgb = balances.house_group_balance;
             const total = hgb.angular + hgb.succedent + hgb.cadent;
-            html += this.renderBalanceSection('🏠 Группы домов', [
-                { label: 'Угловые', value: hgb.angular, total, color: '#6366f1' },
-                { label: 'Последующ.', value: hgb.succedent, total, color: '#14b8a6' },
-                { label: 'Падающие', value: hgb.cadent, total, color: '#a855f7' }
+            html += this.renderBalanceSection(this.t('page.chart.balances.houseGroupsTitle'), [
+                { label: this.t('page.chart.balances.angular'), value: hgb.angular, total, color: '#6366f1' },
+                { label: this.t('page.chart.balances.succedent'), value: hgb.succedent, total, color: '#14b8a6' },
+                { label: this.t('page.chart.balances.cadent'), value: hgb.cadent, total, color: '#a855f7' }
             ]);
         }
 
@@ -557,16 +570,10 @@ class ChartDataRenderer {
     }
 
     formatPatternType(type) {
-        const names = {
-            'Bowl': '🥣 Чаша (Bowl)',
-            'Bucket': '🪣 Ведро (Bucket)',
-            'Locomotive': '🚂 Локомотив',
-            'Bundle': '📦 Связка (Bundle)',
-            'Splash': '💦 Брызги (Splash)',
-            'Splay': '🌟 Веер (Splay)',
-            'Seesaw': '⚖️ Качели (Seesaw)'
-        };
-        return names[type] || type;
+        const patternKey = `astro.pattern.${type}`;
+        const translated = this.t(patternKey);
+        if (translated !== patternKey) return translated;
+        return type;
     }
 }
 

@@ -1,0 +1,852 @@
+{
+  "app": {
+    "language": "Мова"
+  },
+  "astro": {
+    "aspect": {
+      "Biquintile": "Біквінтіль",
+      "Conjunction": "Зʼєднання",
+      "Novile": "Новіль",
+      "Opposition": "Опозиція",
+      "Quincunx": "Квінконс",
+      "Quintile": "Квінтіль",
+      "Semisextile": "Напівсекстиль",
+      "Semisquare": "Напівквадрат",
+      "Septile": "Септіль",
+      "Sesquiquadrate": "Півтораквадрат",
+      "Sextile": "Секстиль",
+      "Square": "Квадрат",
+      "Trine": "Трин"
+    },
+    "configuration": {
+      "Bisextile": "Бісекстиль",
+      "Chariot": "Колісниця",
+      "Grand_Cross": "Великий хрест",
+      "Grand_Trine": "Великий трин",
+      "Kite": "Повітряний змій",
+      "Mystic_Rectangle": "Містичний прямокутник",
+      "Sail": "Вітрило",
+      "Skewed_Sail": "Косе вітрило",
+      "Star_of_David": "Зірка Давида",
+      "T_Square": "Т-квадрат",
+      "Yod": "Йод"
+    },
+    "dignity": {
+      "detriment": "Вигнання",
+      "domicile": "Обитель",
+      "exaltation": "Екзальтація",
+      "fall": "Падіння"
+    },
+    "element": {
+      "Air": "Повітря",
+      "Earth": "Земля",
+      "Fire": "Вогонь",
+      "Water": "Вода"
+    },
+    "feature": {
+      "short": {
+        "almuten": "альмут.",
+        "anareta": "анарета",
+        "aspect_king": "король",
+        "cazimi": "казимі",
+        "charioteer": "візн.",
+        "combust": "спал.",
+        "destructive": "дестр.",
+        "doryphoros": "доріф.",
+        "elevated": "підн.",
+        "handle": "ручка",
+        "intercepted": "перех.",
+        "jubilee": "ювілей",
+        "middle": "серед.",
+        "peregrine": "перегр.",
+        "royal": "корол.",
+        "under_rays": "в променях"
+      }
+    },
+    "houseSystem": {
+      "campanus": "Кампанус",
+      "equal": "Рівнодомна",
+      "koch": "Кох",
+      "placidus": "Плацидус",
+      "regiomontanus": "Регіомонтанус",
+      "wholeSign": "Цілі знаки"
+    },
+    "mode": {
+      "short": {
+        "Cardinal": "Кардинальний",
+        "Fixed": "Фіксований",
+        "Mutable": "Мутабельний"
+      }
+    },
+    "pattern": {
+      "Bowl": "Чаша",
+      "Bucket": "Відро",
+      "Bundle": "Пучок",
+      "Locomotive": "Локомотив",
+      "Seesaw": "Гойдалка",
+      "Splash": "Розсип",
+      "Splay": "Віяло"
+    },
+    "planet": {
+      "BlackMoon": "Чорний Місяць",
+      "Chiron": "Хірон",
+      "Jupiter": "Юпітер",
+      "Mars": "Марс",
+      "Mercury": "Меркурій",
+      "Moon": "Місяць",
+      "Neptune": "Нептун",
+      "PartOfFortune": "Частка Фортуни",
+      "Pluto": "Плутон",
+      "Proserpina": "Прозерпіна",
+      "Saturn": "Сатурн",
+      "SouthNode": "Південний вузол",
+      "Sun": "Сонце",
+      "TrueNode": "Північний вузол",
+      "Uranus": "Уран",
+      "Venus": "Венера",
+      "Vertex": "Вертекс",
+      "WhiteMoon": "Білий Місяць"
+    },
+    "polarity": {
+      "Feminine": "Жіночий",
+      "Masculine": "Чоловічий"
+    },
+    "sign": {
+      "Aquarius": "Водолій",
+      "Aries": "Овен",
+      "Cancer": "Рак",
+      "Capricorn": "Козоріг",
+      "Gemini": "Близнюки",
+      "Leo": "Лев",
+      "Libra": "Терези",
+      "Pisces": "Риби",
+      "Sagittarius": "Стрілець",
+      "Scorpio": "Скорпіон",
+      "Taurus": "Телець",
+      "Virgo": "Діва"
+    }
+  },
+  "chatkit": {
+    "errors": {
+      "loadFailed": "Не вдалося ініціалізувати чат",
+      "sessionCreate": "Не вдалося створити сесію чату"
+    },
+    "natal": {
+      "composerPlaceholder": "Введіть ваше запитання щодо цієї карти...",
+      "greeting": "Питайте будь-що про цю натальну карту."
+    },
+    "prognostic": {
+      "composerPlaceholder": "Запитайте про поточні тенденції та таймінг...",
+      "greeting": "Я допоможу пояснити активні транзити, дирекції та прогресії.",
+      "prompts": {
+        "monthly": {
+          "label": "Огляд місяця",
+          "prompt": "Дайте практичний прогноз на цей місяць."
+        },
+        "solar": {
+          "label": "Фокус соляра",
+          "prompt": "Поясніть ключові теми з карти соляра."
+        },
+        "transitsToday": {
+          "label": "Транзити сьогодні",
+          "prompt": "Підсумуйте найважливіші транзити, активні сьогодні."
+        }
+      }
+    }
+  },
+  "common": {
+    "all": "Усі",
+    "back": "Назад",
+    "calculate": "Розрахувати",
+    "close": "Закрити",
+    "date": "Дата",
+    "day": "День",
+    "displaySettings": "Налаштування відображення",
+    "error": "Помилка",
+    "errorWithMessage": "Помилка: {message}",
+    "footer": "Астрологічні розрахунки на базі Swiss Ephemeris і сучасних астрономічних стандартів",
+    "from": "Від",
+    "house": "Дім",
+    "loading": "Завантаження...",
+    "location": "Місце",
+    "longitude": "Довгота",
+    "major": "Мажорні",
+    "majorShort": "Мж",
+    "method": {
+      "direction": "Дирекції",
+      "directionNaibod": "Дирекції (Найбод)",
+      "directionSolarArc": "Дирекції (Сонячна дуга)",
+      "directionSymbolic": "Дирекції (Символічні)",
+      "progression": "Прогресії",
+      "solar": "Соляр",
+      "transit": "Транзити"
+    },
+    "minimize": "Згорнути",
+    "minor": "Мінорні",
+    "minorShort": "Мн",
+    "month": {
+      "long": {
+        "april": "Квітень",
+        "august": "Серпень",
+        "december": "Грудень",
+        "february": "Лютий",
+        "january": "Січень",
+        "july": "Липень",
+        "june": "Червень",
+        "march": "Березень",
+        "may": "Травень",
+        "november": "Листопад",
+        "october": "Жовтень",
+        "september": "Вересень"
+      }
+    },
+    "notAvailable": "Н/Д",
+    "openChat": "Відкрити чат",
+    "orb": "Орбіс",
+    "pause": "Пауза",
+    "planet": "Планета",
+    "position": "Положення",
+    "reset": "Скинути",
+    "resetView": "Скинути вигляд",
+    "retry": "Повторити",
+    "settings": "Налаштування",
+    "to": "До",
+    "today": "Сьогодні",
+    "week": "Тиждень",
+    "year": "Рік",
+    "zoomIn": "Збільшити",
+    "zoomOut": "Зменшити",
+    "direction": {
+      "northShort": "Пн",
+      "southShort": "Пд",
+      "eastShort": "Сх",
+      "westShort": "Зх"
+    },
+    "brandName": "AstroBot",
+    "monthLabel": "Місяць"
+  },
+  "i18n": {
+    "loading": "Завантаження...",
+    "sample_only_en": "English fallback value",
+    "sample_with_param": "Привіт, {name}!"
+  },
+  "locale": {
+    "name": {
+      "en": "Англійська",
+      "ru": "Російська",
+      "uk": "Українська"
+    }
+  },
+  "page": {
+    "chart": {
+      "aspects": {
+        "settings": {
+          "showWith": "Показувати аспекти з",
+          "title": "Налаштування аспектів"
+        }
+      },
+      "balances": {
+        "angular": "Кутові",
+        "cadent": "Падаючі",
+        "cosmogramTitle": "Патерн космограми",
+        "east": "Схід",
+        "elementsTitle": "Стихії",
+        "emptyArc": "Порожня дуга: {value}°",
+        "handle": "Ручка: {planet}",
+        "hemispheresTitle": "Півкулі",
+        "houseGroupsTitle": "Групи домів",
+        "leading": "Ведуча: {planet}",
+        "modesTitle": "Модальності",
+        "north": "Північ",
+        "south": "Південь",
+        "succedent": "Наступні",
+        "west": "Захід"
+      },
+      "chat": {
+        "title": "Питання по цій карті"
+      },
+      "configurations": {
+        "apex": "Вершина: {planet}",
+        "houseLabel": "Дім {house}",
+        "planetCount": "Планет: {count}",
+        "stelliums": "Стелліуми",
+        "strength": "Сила: {value}",
+        "title": "Аспектні конфігурації"
+      },
+      "empty": {
+        "noBalances": "Немає даних балансу",
+        "noConfigurations": "Конфігурацій не знайдено",
+        "noDignities": "Немає даних по гідностях"
+      },
+      "grid": {
+        "title": "Аспектна сітка"
+      },
+      "header": {
+        "defaultTitle": "Натальна карта"
+      },
+      "houseCusp": "Куспід дому {house}",
+      "legend": {
+        "harmonious": "Гармонійний",
+        "neutral": "Нейтральний",
+        "tense": "Напружений"
+      },
+      "loading": "Завантаження даних карти...",
+      "mobile": {
+        "chart": "Карта"
+      },
+      "nav": {
+        "forecast": "Прогноз",
+        "tables": "Таблиці"
+      },
+      "settings": {
+        "houseSystem": {
+          "label": "Система домів"
+        },
+        "orientation": {
+          "aries": "Овен 0°",
+          "asc": "Асцендент (ASC)",
+          "label": "Орієнтація колеса"
+        },
+        "planetSize": "Розмір планет",
+        "planetsAndPoints": "Планети та точки",
+        "pointSize": "Розмір точок"
+      },
+      "table": {
+        "aspects": {
+          "aspect": "Аспект",
+          "orb": "Орбіс",
+          "type": "Тип"
+        },
+        "houses": {
+          "cusp": "Куспід дому",
+          "sign": "Знак"
+        },
+        "planets": {
+          "house": "Дім",
+          "position": "Положення",
+          "symbol": "Символ"
+        }
+      },
+      "tabs": {
+        "aspects": "Аспекти",
+        "balances": "Баланси",
+        "configurations": "Конфігурації",
+        "grid": "Аспектна сітка",
+        "houses": "Доми",
+        "planets": "Планети"
+      },
+      "title": "Натальна карта"
+    },
+    "chat": {
+      "errors": {
+        "assistantFallback": "Вибачте, сталася помилка. Спробуйте ще раз.",
+        "sendFailed": "Не вдалося надіслати повідомлення"
+      }
+    },
+    "clients": {
+      "title": "База клієнтів",
+      "subtitle": "Збережені клієнти та карти",
+      "listAriaLabel": "Список клієнтів",
+      "newCard": "Нова карта",
+      "searchPlaceholder": "Пошук за ім'ям/місцем",
+      "searchAriaLabel": "Пошук клієнтів",
+      "sortAriaLabel": "Сортування клієнтів",
+      "sort": {
+        "createdDesc": "Спочатку новіші",
+        "createdAsc": "Спочатку старіші",
+        "nameAsc": "Ім'я А-Я",
+        "nameDesc": "Ім'я Я-А",
+        "birthAsc": "Дата народження: спочатку старіші",
+        "birthDesc": "Дата народження: спочатку новіші"
+      },
+      "counters": {
+        "total": "Всього: {total}",
+        "shown": "Показано: {shown}",
+        "shownOf": "Показано: {shown} з {total}"
+      },
+      "empty": "Ще немає клієнтів",
+      "createFirstCard": "Створити першу карту",
+      "noResults": "Нічого не знайдено",
+      "table": {
+        "name": "Ім'я",
+        "birthDate": "Дата народження",
+        "place": "Місце",
+        "created": "Створено",
+        "actions": "Дії"
+      },
+      "actions": {
+        "open": "Відкрити",
+        "delete": "Видалити",
+        "confirmDelete": "Підтвердити?"
+      },
+      "messages": {
+        "confirmDeleteHint": "Натисніть видалити ще раз для підтвердження",
+        "deleted": "Клієнта видалено"
+      },
+      "errors": {
+        "fetchList": "Не вдалося завантажити список клієнтів",
+        "loadingWithMessage": "Помилка завантаження: {message}",
+        "chartNotFound": "Дані карти не знайдено",
+        "deleteFailed": "Не вдалося видалити клієнта"
+      }
+    },
+    "forecast": {
+      "biwheel": {
+        "clearFocus": "Скинути фокус",
+        "collapseAspects": "Згорнути таблицю аспектів",
+        "collapseIngresses": "Згорнути таблицю інгресій",
+        "empty": "Немає даних бі-колеса",
+        "legend": {
+          "directionType": "Тип дирекцій",
+          "directions": "Дирекції",
+          "natal": "Натал",
+          "progressions": "Прогресії",
+          "toggleDirection": "Показати/сховати дирекції",
+          "toggleNatal": "Показати/сховати натальні точки",
+          "toggleProgression": "Показати/сховати прогресії",
+          "toggleTransit": "Показати/сховати транзити",
+          "transits": "Транзити"
+        },
+        "openAspects": "Розгорнути таблицю аспектів",
+        "openIngresses": "Розгорнути таблицю інгресій",
+        "prognostic": "Прогностична карта",
+        "settings": {
+          "natal": "Натальний шар",
+          "natalPointSize": "Розмір натальних точок",
+          "orientation": "Орієнтація",
+          "showAspectsWith": "Показувати аспекти з",
+          "transit": "Шар транзитів/прогресій",
+          "transitPointSize": "Розмір транзитних точок"
+        }
+      },
+      "chat": {
+        "title": "Чат прогнозу"
+      },
+      "directionType": {
+        "equatorial": "Найбод (екваторіальні)",
+        "solarArc": "Сонячна дуга",
+        "symbolic": "Символічні"
+      },
+      "errors": {
+        "dateRequired": "Потрібно вказати дату",
+        "datesRequired": "Потрібно вказати дату початку та кінця",
+        "invalidRange": "Некоректний діапазон дат",
+        "selectLocationFromList": "Оберіть локацію зі списку автодоповнення",
+        "transitDateMissing": "Потрібно вказати дату транзиту",
+        "yearRange": "Рік має бути між 1900 і 2100"
+      },
+      "header": {
+        "title": "Прогноз і тенденції"
+      },
+      "help": {
+        "openTitle": "Як читати цю сторінку",
+        "sections": {
+          "activeNow": {
+            "text1": "Блок <strong>Активно зараз</strong> виділяє події, найближчі до поточної дати.",
+            "text2": "Позначки показують, чи подія точна сьогодні, була нещодавно або очікується скоро.",
+            "text3": "Це найшвидший спосіб побачити головний фон поточного періоду.",
+            "title": "Активно зараз"
+          },
+          "biwheel": {
+            "text1": "Бі-колесо накладає натальну карту на транзити/прогресії або дирекції.",
+            "text2": "У легенді можна вмикати та вимикати окремі шари для чистішого перегляду.",
+            "text3": "Налаштування дозволяють змінити орієнтацію та розмір точок.",
+            "text4": "Таблиці аспектів та інгресій можна розгортати для детального аналізу.",
+            "title": "Бі-колесо"
+          },
+          "principle": {
+            "text": "Оберіть метод прогнозу, задайте період і місце, потім натисніть <strong>Розрахувати</strong>. Дані відображаються у вигляді таймлайну, таблиці, бі-колеса та соляру.",
+            "title": "З чого почати"
+          },
+          "solar": {
+            "text": "Вкладка соляру показує карту повернення Сонця, локальний та UTC час, а також параметри відображення. Це зручно для оцінки тем року.",
+            "title": "Соляр"
+          },
+          "table": {
+            "text": "Таблиця підтримує сортування й фільтри за типом, аспектом, орбісом і текстовим пошуком. Використовуйте її для точного відбору потрібних подій.",
+            "title": "Таблиця подій"
+          },
+          "timeline": {
+            "text1": "<strong>Таймлайн</strong> показує події в хронологічному порядку.",
+            "text2": "Кожен елемент містить тип події, дату та ключові параметри аспекту або інгресії.",
+            "text3": "Кнопки кроку і програвання дозволяють рухатися по періоду поступово.",
+            "text4": "Наведіть курсор на елемент для детальнішої підказки.",
+            "text5": "Лічильник зверху показує, скільки подій відображено з усього діапазону.",
+            "text6": "Якщо подій немає, перевірте діапазон дат і фільтри.",
+            "title": "Таймлайн"
+          },
+          "tips": {
+            "item1": "Починайте з періоду 1-3 місяці, щоб не перевантажувати інтерфейс подіями.",
+            "item2": "Використовуйте максимальний орбіс 2-3.5 для більш точної вибірки.",
+            "item3": "Порівнюйте таймлайн і бі-колесо: так легше перевірити контекст події.",
+            "item4": "Після фільтрації відкрийте чат прогнозу для інтерпретації знайдених подій.",
+            "title": "Практичні поради"
+          }
+        },
+        "title": "Гайд по прогнозу"
+      },
+      "presets": {
+        "oneDay": "1 день",
+        "oneMonth": "1 місяць",
+        "oneYear": "1 рік",
+        "sixMonths": "6 місяців",
+        "threeMonths": "3 місяці"
+      },
+      "scale": {
+        "nextStep": "Наступний крок",
+        "play": "Запустити таймлайн",
+        "prevStep": "Попередній крок",
+        "range": "{start} - {end} ({count})",
+        "step": "Крок"
+      },
+      "solar": {
+        "empty": "Соляр не завантажено",
+        "info": {
+          "localDate": "Локальна дата-час",
+          "utcDate": "UTC дата-час"
+        },
+        "loading": "Завантаження соляру...",
+        "locationPlaceholder": "Місто для соляру",
+        "orientation": "Орієнтація",
+        "orientationAries": "Овен 0°",
+        "orientationAsc": "Асцендент",
+        "settings": {
+          "pointSize": "Розмір точок"
+        }
+      },
+      "table": {
+        "columns": {
+          "aspectSort": "Аспект ⇅",
+          "dateSort": "Дата ⇅",
+          "ingressType": "Тип інгресії",
+          "method": "Метод",
+          "methodShort": "М",
+          "methodSort": "Метод ⇅",
+          "natalShort": "Н",
+          "natalSort": "Натал ⇅",
+          "object": "Обʼєкт",
+          "orbSort": "Орбіс ⇅",
+          "transitShort": "Т",
+          "transitSort": "Транзит ⇅",
+          "transition": "Переход",
+          "typeSort": "Тип ⇅"
+        },
+        "empty": "Немає даних таблиці прогнозу",
+        "filters": {
+          "aspect": "Аспект",
+          "buttonClosed": "Фільтри",
+          "buttonOpen": "Сховати фільтри",
+          "events": "Події",
+          "maxOrb": "Макс. орбіс",
+          "maxOrbPlaceholder": "напр. 3.5",
+          "onlyAspects": "Лише аспекти",
+          "onlyIngresses": "Лише інгресії",
+          "search": "Пошук",
+          "searchPlaceholder": "Планета/аспект/знак",
+          "type": "Тип"
+        },
+        "houseLabel": "Дім {house}",
+        "ingress": {
+          "cusp": "Інгресія куспіда дому",
+          "cuspLabel": "Куспід дому {house}",
+          "house": "Інгресія дому",
+          "sign": "Інгресія знака"
+        },
+        "ingresses": {
+          "title": "Інгресії"
+        },
+        "noAspects": "Немає аспектів",
+        "noData": "Немає даних",
+        "noEvents": "Немає подій у діапазоні",
+        "noRowsByFilters": "За фільтрами нічого не знайдено"
+      },
+      "tabs": {
+        "biwheel": "Бі-колесо",
+        "solar": "Соляр",
+        "table": "Таблиця",
+        "timeline": "Таймлайн"
+      },
+      "timeline": {
+        "activeNow": {
+          "empty": "Немає точних попадань біля сьогодні",
+          "exactDaysAgo": "Точно {days} дн. тому",
+          "exactInDays": "Точно через {days} дн.",
+          "exactToday": "Точно сьогодні",
+          "title": "Активно зараз"
+        },
+        "empty": "Немає подій таймлайну",
+        "eventCount": "Показано {shown} / всього {total}",
+        "loading": "Завантаження таймлайну...",
+        "tooltip": {
+          "allEntries": "Усі записи",
+          "enter": "Вхід",
+          "entries": "Записи",
+          "exact": "Точно",
+          "leave": "Вихід",
+          "outOfRange": "поза діапазоном"
+        }
+      },
+      "title": "Прогноз"
+    },
+    "index": {
+      "errors": {
+        "calculateFailed": "Не вдалося розрахувати карту"
+      },
+      "form": {
+        "birthDate": {
+          "dayPlaceholder": "ДД",
+          "label": "Дата народження",
+          "monthPlaceholder": "ММ",
+          "yearPlaceholder": "РРРР"
+        },
+        "birthPlace": {
+          "label": "Місце народження",
+          "placeholder": "Почніть вводити місто і виберіть зі списку"
+        },
+        "birthTime": {
+          "hoursPlaceholder": "ГГ",
+          "label": "Час народження",
+          "minutesPlaceholder": "ХХ"
+        },
+        "coordinates": {
+          "hint": "Заповнюється автоматично з вибраного місця",
+          "label": "Координати"
+        },
+        "fullName": {
+          "firstNamePlaceholder": "Імʼя",
+          "label": "Повне імʼя",
+          "lastNamePlaceholder": "Прізвище"
+        },
+        "houseSystem": {
+          "label": "Система домів"
+        },
+        "submit": {
+          "idle": "Розрахувати натальну карту",
+          "loading": "Розрахунок..."
+        },
+        "timezone": {
+          "autoDetected": "Часовий пояс визначено автоматично",
+          "label": "Часовий пояс",
+          "placeholder": "Виберіть часовий пояс"
+        }
+      },
+      "subtitle": "Професійні астрологічні розрахунки карт на базі Swiss Ephemeris",
+      "title": "Калькулятор натальної карти",
+      "logo": "AstroBot"
+    },
+    "interpretations": {
+      "actions": {
+        "regenerate": "Згенерувати повторно"
+      },
+      "backToNew": "Нова карта",
+      "empty": "Немає контенту інтерпретації",
+      "errors": {
+        "loadFailed": "Не вдалося завантажити інтерпретацію",
+        "userIdMissing": "Відсутній id користувача. Спершу створіть карту."
+      },
+      "header": "Психологічний профіль",
+      "loading": {
+        "hint": "Це може зайняти до 15-20 секунд",
+        "text": "Генеруємо інтерпретацію..."
+      },
+      "meta": {
+        "cached": "Кешовано",
+        "model": "Модель: {value}",
+        "time": "Час: {value} мс",
+        "tokens": "Токени: {value}"
+      },
+      "nav": {
+        "chart": "Карта",
+        "tables": "Таблиці"
+      },
+      "title": "Інтерпретації"
+    },
+    "natalFull": {
+      "balances": {
+        "elements": "Стихії:",
+        "modes": "Модальності:",
+        "polarity": "Полярність:"
+      },
+      "config": {
+        "apex": "Вершина: {planet}",
+        "house": "Дім {house}",
+        "stellium": "Стелліум: {location}"
+      },
+      "empty": {
+        "noBalances": "Немає даних балансів",
+        "noConfigurations": "Немає конфігурацій"
+      },
+      "header": {
+        "defaultTitle": "Натальна карта",
+        "title": "Натальна карта - {place}",
+        "unknownPlace": "Невідоме місце"
+      },
+      "legend": {
+        "dignity": {
+          "detriment": "Вигнання",
+          "domicile": "Обитель",
+          "exaltation": "Екзальтація",
+          "fall": "Падіння",
+          "title": "Гідності"
+        },
+        "features": {
+          "almuten": "Альмутен",
+          "anareta": "Анарета",
+          "aspectKing": "Король аспектів",
+          "cazimi": "Казимі",
+          "charioteer": "Візничий",
+          "combust": "Спалення",
+          "doryphoros": "Доріфорій",
+          "elevated": "Піднесення",
+          "handle": "Ручка",
+          "intercepted": "В перехопленому знаку",
+          "peregrine": "Перегрин",
+          "royal": "Королівський градус",
+          "title": "Особливості",
+          "underRays": "Під променями"
+        },
+        "harmony": {
+          "bad": "Напружені аспекти",
+          "good": "Гармонійні аспекти",
+          "mixed": "Змішані аспекти",
+          "title": "Гармонія аспектів"
+        },
+        "motion": {
+          "direct": "Директний",
+          "retrograde": "Ретроградний",
+          "stationary": "Стаціонарний",
+          "title": "Рух"
+        }
+      },
+      "loading": "Завантаження карти...",
+      "nav": {
+        "legend": "Легенда",
+        "wheel": "Колесо"
+      },
+      "sections": {
+        "aspects": "Аспекти",
+        "balances": "Баланси",
+        "configurations": "Конфігурації",
+        "houses": "Доми",
+        "minorAspects": "Мінорні аспекти",
+        "planets": "Планети",
+        "specialPoints": "Особливі точки"
+      },
+      "summary": {
+        "figure": "Фігура"
+      },
+      "table": {
+        "aspects": {
+          "aspect": "Аспект",
+          "orbSort": "Орбіс ⇅",
+          "typeSort": "Тип ⇅"
+        },
+        "houses": {
+          "house": "Дім",
+          "included": "Включений знак",
+          "planets": "Планети в домі",
+          "ruler": "Управитель",
+          "rulerIn": "Управитель в домі",
+          "sign": "Знак"
+        },
+        "planets": {
+          "aspects": "Аспекти",
+          "dignity": "Гідність",
+          "features": "Особливості",
+          "house": "Дім",
+          "karma": "Карма",
+          "motion": "Рух",
+          "planet": "Планета",
+          "position": "Положення",
+          "ruler": "Керовані доми",
+          "speed": "Швидкість"
+        },
+        "specialPoints": {
+          "house": "Дім",
+          "point": "Точка",
+          "position": "Положення"
+        }
+      },
+      "title": "Табличний перегляд натальної карти",
+      "units": {
+        "degPerDay": "{value}°/день"
+      }
+    }
+  },
+  "timezones": {
+    "label": {
+      "cityWithOffset": "{city} ({offset})",
+      "utc": "UTC (Всесвітній координований час)"
+    },
+    "city": {
+      "kyiv": "Київ",
+      "moscow": "Москва",
+      "london": "Лондон",
+      "paris": "Париж",
+      "berlin": "Берлін",
+      "rome": "Рим",
+      "madrid": "Мадрид",
+      "warsaw": "Варшава",
+      "prague": "Прага",
+      "vienna": "Відень",
+      "athens": "Афіни",
+      "istanbul": "Стамбул",
+      "helsinki": "Гельсінкі",
+      "stockholm": "Стокгольм",
+      "amsterdam": "Амстердам",
+      "brussels": "Брюссель",
+      "lisbon": "Лісабон",
+      "bucharest": "Бухарест",
+      "sofia": "Софія",
+      "budapest": "Будапешт",
+      "belgrade": "Белград",
+      "riga": "Рига",
+      "vilnius": "Вільнюс",
+      "tallinn": "Таллінн",
+      "minsk": "Мінськ",
+      "chisinau": "Кишинів",
+      "kaliningrad": "Калінінград",
+      "samara": "Самара",
+      "yekaterinburg": "Єкатеринбург",
+      "novosibirsk": "Новосибірськ",
+      "krasnoyarsk": "Красноярськ",
+      "irkutsk": "Іркутськ",
+      "vladivostok": "Владивосток",
+      "almaty": "Алмати",
+      "tashkent": "Ташкент",
+      "baku": "Баку",
+      "tbilisi": "Тбілісі",
+      "yerevan": "Єреван",
+      "bishkek": "Бішкек",
+      "dushanbe": "Душанбе",
+      "ashgabat": "Ашгабат",
+      "dubai": "Дубай",
+      "jerusalem": "Єрусалим",
+      "tehran": "Тегеран",
+      "kolkata": "Колката",
+      "bangkok": "Бангкок",
+      "singapore": "Сінгапур",
+      "hong_kong": "Гонконг",
+      "beijing": "Пекін",
+      "tokyo": "Токіо",
+      "seoul": "Сеул",
+      "new_york": "Нью-Йорк",
+      "chicago": "Чикаго",
+      "denver": "Денвер",
+      "los_angeles": "Лос-Анджелес",
+      "toronto": "Торонто",
+      "vancouver": "Ванкувер",
+      "mexico_city": "Мехіко",
+      "sao_paulo": "Сан-Паулу",
+      "buenos_aires": "Буенос-Айрес",
+      "sydney": "Сідней",
+      "melbourne": "Мельбурн",
+      "perth": "Перт",
+      "auckland": "Окленд",
+      "cairo": "Каїр",
+      "johannesburg": "Йоганнесбург",
+      "lagos": "Лагос",
+      "utc": "UTC"
+    }
+  }
+}

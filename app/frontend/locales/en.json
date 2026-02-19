@@ -1,0 +1,852 @@
+{
+  "app": {
+    "language": "Language"
+  },
+  "astro": {
+    "aspect": {
+      "Biquintile": "Biquintile",
+      "Conjunction": "Conjunction",
+      "Novile": "Novile",
+      "Opposition": "Opposition",
+      "Quincunx": "Quincunx",
+      "Quintile": "Quintile",
+      "Semisextile": "Semisextile",
+      "Semisquare": "Semisquare",
+      "Septile": "Septile",
+      "Sesquiquadrate": "Sesquiquadrate",
+      "Sextile": "Sextile",
+      "Square": "Square",
+      "Trine": "Trine"
+    },
+    "configuration": {
+      "Bisextile": "Bisextile",
+      "Chariot": "Chariot",
+      "Grand_Cross": "Grand cross",
+      "Grand_Trine": "Grand trine",
+      "Kite": "Kite",
+      "Mystic_Rectangle": "Mystic rectangle",
+      "Sail": "Sail",
+      "Skewed_Sail": "Skewed sail",
+      "Star_of_David": "Star of David",
+      "T_Square": "T-square",
+      "Yod": "Yod"
+    },
+    "dignity": {
+      "detriment": "Detriment",
+      "domicile": "Domicile",
+      "exaltation": "Exaltation",
+      "fall": "Fall"
+    },
+    "element": {
+      "Air": "Air",
+      "Earth": "Earth",
+      "Fire": "Fire",
+      "Water": "Water"
+    },
+    "feature": {
+      "short": {
+        "almuten": "almuten",
+        "anareta": "anareta",
+        "aspect_king": "aspect king",
+        "cazimi": "cazimi",
+        "charioteer": "chariot.",
+        "combust": "comb.",
+        "destructive": "destructive",
+        "doryphoros": "doryph.",
+        "elevated": "elev.",
+        "handle": "handle",
+        "intercepted": "intrcpt.",
+        "jubilee": "jubilee",
+        "middle": "middle",
+        "peregrine": "peregrine",
+        "royal": "royal",
+        "under_rays": "under rays"
+      }
+    },
+    "houseSystem": {
+      "campanus": "Campanus",
+      "equal": "Equal",
+      "koch": "Koch",
+      "placidus": "Placidus",
+      "regiomontanus": "Regiomontanus",
+      "wholeSign": "Whole Sign"
+    },
+    "mode": {
+      "short": {
+        "Cardinal": "Cardinal",
+        "Fixed": "Fixed",
+        "Mutable": "Mutable"
+      }
+    },
+    "pattern": {
+      "Bowl": "Bowl",
+      "Bucket": "Bucket",
+      "Bundle": "Bundle",
+      "Locomotive": "Locomotive",
+      "Seesaw": "Seesaw",
+      "Splash": "Splash",
+      "Splay": "Splay"
+    },
+    "planet": {
+      "BlackMoon": "Black Moon",
+      "Chiron": "Chiron",
+      "Jupiter": "Jupiter",
+      "Mars": "Mars",
+      "Mercury": "Mercury",
+      "Moon": "Moon",
+      "Neptune": "Neptune",
+      "PartOfFortune": "Part of Fortune",
+      "Pluto": "Pluto",
+      "Proserpina": "Proserpina",
+      "Saturn": "Saturn",
+      "SouthNode": "South Node",
+      "Sun": "Sun",
+      "TrueNode": "North Node",
+      "Uranus": "Uranus",
+      "Venus": "Venus",
+      "Vertex": "Vertex",
+      "WhiteMoon": "White Moon"
+    },
+    "polarity": {
+      "Feminine": "Feminine",
+      "Masculine": "Masculine"
+    },
+    "sign": {
+      "Aquarius": "Aquarius",
+      "Aries": "Aries",
+      "Cancer": "Cancer",
+      "Capricorn": "Capricorn",
+      "Gemini": "Gemini",
+      "Leo": "Leo",
+      "Libra": "Libra",
+      "Pisces": "Pisces",
+      "Sagittarius": "Sagittarius",
+      "Scorpio": "Scorpio",
+      "Taurus": "Taurus",
+      "Virgo": "Virgo"
+    }
+  },
+  "chatkit": {
+    "errors": {
+      "loadFailed": "Failed to initialize chat",
+      "sessionCreate": "Failed to create chat session"
+    },
+    "natal": {
+      "composerPlaceholder": "Type your question about this chart...",
+      "greeting": "Ask me anything about this natal chart."
+    },
+    "prognostic": {
+      "composerPlaceholder": "Ask about current trends and timing...",
+      "greeting": "I can help explain active transits, directions and progressions.",
+      "prompts": {
+        "monthly": {
+          "label": "Month overview",
+          "prompt": "Give a practical forecast for this month."
+        },
+        "solar": {
+          "label": "Solar return focus",
+          "prompt": "Explain key themes from the solar return chart."
+        },
+        "transitsToday": {
+          "label": "Today's transits",
+          "prompt": "Summarize the most important transits active today."
+        }
+      }
+    }
+  },
+  "common": {
+    "all": "All",
+    "back": "Back",
+    "calculate": "Calculate",
+    "close": "Close",
+    "date": "Date",
+    "day": "Day",
+    "displaySettings": "Display settings",
+    "error": "Error",
+    "errorWithMessage": "Error: {message}",
+    "footer": "Astrology calculations based on Swiss Ephemeris and modern astronomical standards",
+    "from": "From",
+    "house": "House",
+    "loading": "Loading...",
+    "location": "Location",
+    "longitude": "Longitude",
+    "major": "Major",
+    "majorShort": "M",
+    "method": {
+      "direction": "Directions",
+      "directionNaibod": "Directions (Naibod)",
+      "directionSolarArc": "Directions (Solar Arc)",
+      "directionSymbolic": "Directions (Symbolic)",
+      "progression": "Progressions",
+      "solar": "Solar return",
+      "transit": "Transits"
+    },
+    "minimize": "Minimize",
+    "minor": "Minor",
+    "minorShort": "m",
+    "month": {
+      "long": {
+        "april": "April",
+        "august": "August",
+        "december": "December",
+        "february": "February",
+        "january": "January",
+        "july": "July",
+        "june": "June",
+        "march": "March",
+        "may": "May",
+        "november": "November",
+        "october": "October",
+        "september": "September"
+      }
+    },
+    "notAvailable": "N/A",
+    "openChat": "Open chat",
+    "orb": "Orb",
+    "pause": "Pause",
+    "planet": "Planet",
+    "position": "Position",
+    "reset": "Reset",
+    "resetView": "Reset view",
+    "retry": "Retry",
+    "settings": "Settings",
+    "to": "To",
+    "today": "Today",
+    "week": "Week",
+    "year": "Year",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "direction": {
+      "northShort": "N",
+      "southShort": "S",
+      "eastShort": "E",
+      "westShort": "W"
+    },
+    "brandName": "AstroBot",
+    "monthLabel": "Month"
+  },
+  "i18n": {
+    "loading": "Loading...",
+    "sample_only_en": "English fallback value",
+    "sample_with_param": "Hello, {name}!"
+  },
+  "locale": {
+    "name": {
+      "en": "English",
+      "ru": "Russian",
+      "uk": "Ukrainian"
+    }
+  },
+  "page": {
+    "chart": {
+      "aspects": {
+        "settings": {
+          "showWith": "Show aspects with",
+          "title": "Aspect settings"
+        }
+      },
+      "balances": {
+        "angular": "Angular",
+        "cadent": "Cadent",
+        "cosmogramTitle": "Cosmogram pattern",
+        "east": "East",
+        "elementsTitle": "Elements",
+        "emptyArc": "Empty arc: {value}°",
+        "handle": "Handle: {planet}",
+        "hemispheresTitle": "Hemispheres",
+        "houseGroupsTitle": "House groups",
+        "leading": "Leading: {planet}",
+        "modesTitle": "Modes",
+        "north": "North",
+        "south": "South",
+        "succedent": "Succedent",
+        "west": "West"
+      },
+      "chat": {
+        "title": "Ask about this chart"
+      },
+      "configurations": {
+        "apex": "Apex: {planet}",
+        "houseLabel": "House {house}",
+        "planetCount": "Planets: {count}",
+        "stelliums": "Stelliums",
+        "strength": "Strength: {value}",
+        "title": "Aspect configurations"
+      },
+      "empty": {
+        "noBalances": "No balances data",
+        "noConfigurations": "No configurations found",
+        "noDignities": "No dignities data"
+      },
+      "grid": {
+        "title": "Aspect grid"
+      },
+      "header": {
+        "defaultTitle": "Natal chart"
+      },
+      "houseCusp": "House {house} cusp",
+      "legend": {
+        "harmonious": "Harmonious",
+        "neutral": "Neutral",
+        "tense": "Tense"
+      },
+      "loading": "Loading chart data...",
+      "mobile": {
+        "chart": "Chart"
+      },
+      "nav": {
+        "forecast": "Forecast",
+        "tables": "Tables"
+      },
+      "settings": {
+        "houseSystem": {
+          "label": "House system"
+        },
+        "orientation": {
+          "aries": "Aries 0°",
+          "asc": "Ascendant (ASC)",
+          "label": "Wheel orientation"
+        },
+        "planetSize": "Planet size",
+        "planetsAndPoints": "Planets and points",
+        "pointSize": "Point size"
+      },
+      "table": {
+        "aspects": {
+          "aspect": "Aspect",
+          "orb": "Orb",
+          "type": "Type"
+        },
+        "houses": {
+          "cusp": "House cusp",
+          "sign": "Sign"
+        },
+        "planets": {
+          "house": "House",
+          "position": "Position",
+          "symbol": "Symbol"
+        }
+      },
+      "tabs": {
+        "aspects": "Aspects",
+        "balances": "Balances",
+        "configurations": "Configurations",
+        "grid": "Aspect grid",
+        "houses": "Houses",
+        "planets": "Planets"
+      },
+      "title": "Natal Chart"
+    },
+    "chat": {
+      "errors": {
+        "assistantFallback": "Sorry, something went wrong. Please try again.",
+        "sendFailed": "Failed to send message"
+      }
+    },
+    "clients": {
+      "actions": {
+        "confirmDelete": "Confirm?",
+        "delete": "Delete",
+        "open": "Open"
+      },
+      "counters": {
+        "shown": "Shown: {shown}",
+        "shownOf": "Shown: {shown} of {total}",
+        "total": "Total: {total}"
+      },
+      "createFirstCard": "Create first chart",
+      "empty": "No clients yet",
+      "errors": {
+        "chartNotFound": "Chart data not found",
+        "deleteFailed": "Failed to delete client",
+        "fetchList": "Failed to load clients list",
+        "loadingWithMessage": "Loading error: {message}"
+      },
+      "listAriaLabel": "Client list",
+      "messages": {
+        "confirmDeleteHint": "Click delete again to confirm",
+        "deleted": "Client deleted"
+      },
+      "newCard": "New chart",
+      "noResults": "No matches",
+      "searchAriaLabel": "Search clients",
+      "searchPlaceholder": "Search by name/place",
+      "sort": {
+        "birthAsc": "Birth date oldest first",
+        "birthDesc": "Birth date newest first",
+        "createdAsc": "Created oldest first",
+        "createdDesc": "Created newest first",
+        "nameAsc": "Name A-Z",
+        "nameDesc": "Name Z-A"
+      },
+      "sortAriaLabel": "Sort clients",
+      "subtitle": "Saved clients and charts",
+      "table": {
+        "actions": "Actions",
+        "birthDate": "Birth date",
+        "created": "Created",
+        "name": "Name",
+        "place": "Place"
+      },
+      "title": "Client database"
+    },
+    "forecast": {
+      "biwheel": {
+        "clearFocus": "Clear focus",
+        "collapseAspects": "Collapse aspects table",
+        "collapseIngresses": "Collapse ingresses table",
+        "empty": "No bi-wheel data",
+        "legend": {
+          "directionType": "Direction type",
+          "directions": "Directions",
+          "natal": "Natal",
+          "progressions": "Progressions",
+          "toggleDirection": "Toggle directions",
+          "toggleNatal": "Toggle natal points",
+          "toggleProgression": "Toggle progressions",
+          "toggleTransit": "Toggle transits",
+          "transits": "Transits"
+        },
+        "openAspects": "Expand aspects table",
+        "openIngresses": "Expand ingresses table",
+        "prognostic": "Prognostic",
+        "settings": {
+          "natal": "Natal layer",
+          "natalPointSize": "Natal point size",
+          "orientation": "Orientation",
+          "showAspectsWith": "Show aspects with",
+          "transit": "Transit/progression layer",
+          "transitPointSize": "Transit point size"
+        }
+      },
+      "chat": {
+        "title": "Forecast chat"
+      },
+      "directionType": {
+        "equatorial": "Naibod (equatorial)",
+        "solarArc": "Solar Arc",
+        "symbolic": "Symbolic"
+      },
+      "errors": {
+        "dateRequired": "Date is required",
+        "datesRequired": "Start and end dates are required",
+        "invalidRange": "Invalid date range",
+        "selectLocationFromList": "Select a location from autocomplete list",
+        "transitDateMissing": "Transit date is required",
+        "yearRange": "Year must be between 1900 and 2100"
+      },
+      "header": {
+        "title": "Forecast and trends"
+      },
+      "help": {
+        "openTitle": "How to read this page",
+        "sections": {
+          "activeNow": {
+            "text1": "Text1",
+            "text2": "Text2",
+            "text3": "Text3",
+            "title": "Title"
+          },
+          "biwheel": {
+            "text1": "Text1",
+            "text2": "Text2",
+            "text3": "Text3",
+            "text4": "Text4",
+            "title": "Title"
+          },
+          "principle": {
+            "text": "Text",
+            "title": "Title"
+          },
+          "solar": {
+            "text": "Text",
+            "title": "Title"
+          },
+          "table": {
+            "text": "Text",
+            "title": "Title"
+          },
+          "timeline": {
+            "text1": "Text1",
+            "text2": "Text2",
+            "text3": "Text3",
+            "text4": "Text4",
+            "text5": "Text5",
+            "text6": "Text6",
+            "title": "Title"
+          },
+          "tips": {
+            "item1": "Item1",
+            "item2": "Item2",
+            "item3": "Item3",
+            "item4": "Item4",
+            "title": "Title"
+          }
+        },
+        "title": "Forecast guide"
+      },
+      "presets": {
+        "oneDay": "1 day",
+        "oneMonth": "1 month",
+        "oneYear": "1 year",
+        "sixMonths": "6 months",
+        "threeMonths": "3 months"
+      },
+      "scale": {
+        "nextStep": "Next step",
+        "play": "Play timeline",
+        "prevStep": "Previous step",
+        "range": "{start} - {end} ({count})",
+        "step": "Step"
+      },
+      "solar": {
+        "empty": "Solar return not loaded",
+        "info": {
+          "localDate": "Local date-time",
+          "utcDate": "UTC date-time"
+        },
+        "loading": "Loading solar return...",
+        "locationPlaceholder": "City for solar return",
+        "orientation": "Orientation",
+        "orientationAries": "Aries 0°",
+        "orientationAsc": "Ascendant",
+        "settings": {
+          "pointSize": "Point size"
+        }
+      },
+      "table": {
+        "columns": {
+          "aspectSort": "Aspect ⇅",
+          "dateSort": "Date ⇅",
+          "ingressType": "Ingress type",
+          "method": "Method",
+          "methodShort": "M",
+          "methodSort": "Method ⇅",
+          "natalShort": "N",
+          "natalSort": "Natal ⇅",
+          "object": "Object",
+          "orbSort": "Orb ⇅",
+          "transitShort": "T",
+          "transitSort": "Transit ⇅",
+          "transition": "Transition",
+          "typeSort": "Type ⇅"
+        },
+        "empty": "No forecast table data",
+        "filters": {
+          "aspect": "Aspect",
+          "buttonClosed": "Filters",
+          "buttonOpen": "Hide filters",
+          "events": "Events",
+          "maxOrb": "Max orb",
+          "maxOrbPlaceholder": "e.g. 3.5",
+          "onlyAspects": "Aspects only",
+          "onlyIngresses": "Ingresses only",
+          "search": "Search",
+          "searchPlaceholder": "Planet/aspect/sign",
+          "type": "Type"
+        },
+        "houseLabel": "House {house}",
+        "ingress": {
+          "cusp": "House cusp ingress",
+          "cuspLabel": "House {house} cusp",
+          "house": "House ingress",
+          "sign": "Sign ingress"
+        },
+        "ingresses": {
+          "title": "Ingresses"
+        },
+        "noAspects": "No aspects",
+        "noData": "No data",
+        "noEvents": "No events in range",
+        "noRowsByFilters": "No rows match filters"
+      },
+      "tabs": {
+        "biwheel": "Bi-wheel",
+        "solar": "Solar return",
+        "table": "Table",
+        "timeline": "Timeline"
+      },
+      "timeline": {
+        "activeNow": {
+          "empty": "No exact hits near today",
+          "exactDaysAgo": "Exact {days} day(s) ago",
+          "exactInDays": "Exact in {days} day(s)",
+          "exactToday": "Exact today",
+          "title": "Active now"
+        },
+        "empty": "No timeline events",
+        "eventCount": "{shown} shown / {total} total",
+        "loading": "Loading timeline...",
+        "tooltip": {
+          "allEntries": "All entries",
+          "enter": "Enter",
+          "entries": "Entries",
+          "exact": "Exact",
+          "leave": "Leave",
+          "outOfRange": "outside range"
+        }
+      },
+      "title": "Forecast"
+    },
+    "index": {
+      "errors": {
+        "calculateFailed": "Failed to calculate chart"
+      },
+      "form": {
+        "birthDate": {
+          "dayPlaceholder": "DD",
+          "label": "Birth date",
+          "monthPlaceholder": "MM",
+          "yearPlaceholder": "YYYY"
+        },
+        "birthPlace": {
+          "label": "Birth place",
+          "placeholder": "Start typing a city and choose from the list"
+        },
+        "birthTime": {
+          "hoursPlaceholder": "HH",
+          "label": "Birth time",
+          "minutesPlaceholder": "MM"
+        },
+        "coordinates": {
+          "hint": "Filled automatically from selected place",
+          "label": "Coordinates"
+        },
+        "fullName": {
+          "firstNamePlaceholder": "First name",
+          "label": "Full name",
+          "lastNamePlaceholder": "Last name"
+        },
+        "houseSystem": {
+          "label": "House system"
+        },
+        "submit": {
+          "idle": "Calculate natal chart",
+          "loading": "Calculating..."
+        },
+        "timezone": {
+          "autoDetected": "Auto-detected timezone",
+          "label": "Timezone",
+          "placeholder": "Select timezone"
+        }
+      },
+      "subtitle": "Professional astrology chart calculations powered by Swiss Ephemeris",
+      "title": "Natal Chart Calculator",
+      "logo": "AstroBot"
+    },
+    "interpretations": {
+      "actions": {
+        "regenerate": "Regenerate"
+      },
+      "backToNew": "New chart",
+      "empty": "No interpretation content",
+      "errors": {
+        "loadFailed": "Failed to load interpretation",
+        "userIdMissing": "User id is missing. Create chart first."
+      },
+      "header": "Psychological profile",
+      "loading": {
+        "hint": "This can take up to 15-20 seconds",
+        "text": "Generating interpretation..."
+      },
+      "meta": {
+        "cached": "Cached",
+        "model": "Model: {value}",
+        "time": "Time: {value} ms",
+        "tokens": "Tokens: {value}"
+      },
+      "nav": {
+        "chart": "Chart",
+        "tables": "Tables"
+      },
+      "title": "Interpretations"
+    },
+    "natalFull": {
+      "balances": {
+        "elements": "Elements:",
+        "modes": "Modes:",
+        "polarity": "Polarity:"
+      },
+      "config": {
+        "apex": "Apex: {planet}",
+        "house": "House {house}",
+        "stellium": "Stellium: {location}"
+      },
+      "empty": {
+        "noBalances": "No balance data",
+        "noConfigurations": "No configurations"
+      },
+      "header": {
+        "defaultTitle": "Natal chart",
+        "title": "Natal chart - {place}",
+        "unknownPlace": "Unknown place"
+      },
+      "legend": {
+        "dignity": {
+          "detriment": "Detriment",
+          "domicile": "Domicile",
+          "exaltation": "Exaltation",
+          "fall": "Fall",
+          "title": "Dignities"
+        },
+        "features": {
+          "almuten": "Almuten",
+          "anareta": "Anareta",
+          "aspectKing": "Aspect king",
+          "cazimi": "Cazimi",
+          "charioteer": "Charioteer",
+          "combust": "Combustion",
+          "doryphoros": "Doryphoros",
+          "elevated": "Elevated",
+          "handle": "Handle",
+          "intercepted": "In intercepted sign",
+          "peregrine": "Peregrine",
+          "royal": "Royal degree",
+          "title": "Features",
+          "underRays": "Under rays"
+        },
+        "harmony": {
+          "bad": "Tense aspects",
+          "good": "Harmonious aspects",
+          "mixed": "Mixed aspects",
+          "title": "Aspect harmony"
+        },
+        "motion": {
+          "direct": "Direct",
+          "retrograde": "Retrograde",
+          "stationary": "Stationary",
+          "title": "Motion"
+        }
+      },
+      "loading": "Loading chart...",
+      "nav": {
+        "legend": "Legend",
+        "wheel": "Wheel"
+      },
+      "sections": {
+        "aspects": "Aspects",
+        "balances": "Balances",
+        "configurations": "Configurations",
+        "houses": "Houses",
+        "minorAspects": "Minor aspects",
+        "planets": "Planets",
+        "specialPoints": "Special points"
+      },
+      "summary": {
+        "figure": "Figure"
+      },
+      "table": {
+        "aspects": {
+          "aspect": "Aspect",
+          "orbSort": "Orb ⇅",
+          "typeSort": "Type ⇅"
+        },
+        "houses": {
+          "house": "House",
+          "included": "Included sign",
+          "planets": "Planets in house",
+          "ruler": "Ruler",
+          "rulerIn": "Ruler in house",
+          "sign": "Sign"
+        },
+        "planets": {
+          "aspects": "Aspects",
+          "dignity": "Dignity",
+          "features": "Features",
+          "house": "House",
+          "karma": "Karma",
+          "motion": "Motion",
+          "planet": "Planet",
+          "position": "Position",
+          "ruler": "Ruled houses",
+          "speed": "Speed"
+        },
+        "specialPoints": {
+          "house": "House",
+          "point": "Point",
+          "position": "Position"
+        }
+      },
+      "title": "Natal chart table view",
+      "units": {
+        "degPerDay": "{value}°/day"
+      }
+    }
+  },
+  "timezones": {
+    "label": {
+      "cityWithOffset": "{city} ({offset})",
+      "utc": "UTC (Coordinated Universal Time)"
+    },
+    "city": {
+      "kyiv": "Kyiv",
+      "moscow": "Moscow",
+      "london": "London",
+      "paris": "Paris",
+      "berlin": "Berlin",
+      "rome": "Rome",
+      "madrid": "Madrid",
+      "warsaw": "Warsaw",
+      "prague": "Prague",
+      "vienna": "Vienna",
+      "athens": "Athens",
+      "istanbul": "Istanbul",
+      "helsinki": "Helsinki",
+      "stockholm": "Stockholm",
+      "amsterdam": "Amsterdam",
+      "brussels": "Brussels",
+      "lisbon": "Lisbon",
+      "bucharest": "Bucharest",
+      "sofia": "Sofia",
+      "budapest": "Budapest",
+      "belgrade": "Belgrade",
+      "riga": "Riga",
+      "vilnius": "Vilnius",
+      "tallinn": "Tallinn",
+      "minsk": "Minsk",
+      "chisinau": "Chisinau",
+      "kaliningrad": "Kaliningrad",
+      "samara": "Samara",
+      "yekaterinburg": "Yekaterinburg",
+      "novosibirsk": "Novosibirsk",
+      "krasnoyarsk": "Krasnoyarsk",
+      "irkutsk": "Irkutsk",
+      "vladivostok": "Vladivostok",
+      "almaty": "Almaty",
+      "tashkent": "Tashkent",
+      "baku": "Baku",
+      "tbilisi": "Tbilisi",
+      "yerevan": "Yerevan",
+      "bishkek": "Bishkek",
+      "dushanbe": "Dushanbe",
+      "ashgabat": "Ashgabat",
+      "dubai": "Dubai",
+      "jerusalem": "Jerusalem",
+      "tehran": "Tehran",
+      "kolkata": "Kolkata",
+      "bangkok": "Bangkok",
+      "singapore": "Singapore",
+      "hong_kong": "Hong Kong",
+      "beijing": "Beijing",
+      "tokyo": "Tokyo",
+      "seoul": "Seoul",
+      "new_york": "New York",
+      "chicago": "Chicago",
+      "denver": "Denver",
+      "los_angeles": "Los Angeles",
+      "toronto": "Toronto",
+      "vancouver": "Vancouver",
+      "mexico_city": "Mexico City",
+      "sao_paulo": "Sao Paulo",
+      "buenos_aires": "Buenos Aires",
+      "sydney": "Sydney",
+      "melbourne": "Melbourne",
+      "perth": "Perth",
+      "auckland": "Auckland",
+      "cairo": "Cairo",
+      "johannesburg": "Johannesburg",
+      "lagos": "Lagos",
+      "utc": "UTC"
+    }
+  }
+}

@@ -1,0 +1,226 @@
+{
+  "generated_at": "2026-02-18T23:21:30.804393+00:00",
+  "summary": {
+    "ru_rows_scanned": 54,
+    "uk_candidates": 0,
+    "ambiguous_cyrillic": 10,
+    "ru_confident": 44,
+    "en_or_empty": 0,
+    "tables_scanned": 20
+  },
+  "per_table": {
+    "ref_aspect_psych_i18n": {
+      "ru_rows_scanned": 0,
+      "uk_candidates": 0,
+      "ambiguous_cyrillic": 0
+    },
+    "ref_aspect_types_i18n": {
+      "ru_rows_scanned": 14,
+      "uk_candidates": 0,
+      "ambiguous_cyrillic": 8
+    },
+    "ref_chakra_mapping_i18n": {
+      "ru_rows_scanned": 0,
+      "uk_candidates": 0,
+      "ambiguous_cyrillic": 0
+    },
+    "ref_challenge_sources_i18n": {
+      "ru_rows_scanned": 0,
+      "uk_candidates": 0,
+      "ambiguous_cyrillic": 0
+    },
+    "ref_configuration_types_i18n": {
+      "ru_rows_scanned": 11,
+      "uk_candidates": 0,
+      "ambiguous_cyrillic": 0
+    },
+    "ref_cosmogram_patterns_i18n": {
+      "ru_rows_scanned": 7,
+      "uk_candidates": 0,
+      "ambiguous_cyrillic": 0
+    },
+    "ref_fate_cross_karma_i18n": {
+      "ru_rows_scanned": 0,
+      "uk_candidates": 0,
+      "ambiguous_cyrillic": 0
+    },
+    "ref_fortune_karma_i18n": {
+      "ru_rows_scanned": 0,
+      "uk_candidates": 0,
+      "ambiguous_cyrillic": 0
+    },
+    "ref_house_meanings_i18n": {
+      "ru_rows_scanned": 0,
+      "uk_candidates": 0,
+      "ambiguous_cyrillic": 0
+    },
+    "ref_karma_status_rules_i18n": {
+      "ru_rows_scanned": 0,
+      "uk_candidates": 0,
+      "ambiguous_cyrillic": 0
+    },
+    "ref_lilith_karma_i18n": {
+      "ru_rows_scanned": 0,
+      "uk_candidates": 0,
+      "ambiguous_cyrillic": 0
+    },
+    "ref_node_karma_i18n": {
+      "ru_rows_scanned": 0,
+      "uk_candidates": 0,
+      "ambiguous_cyrillic": 0
+    },
+    "ref_planet_in_house_psych_i18n": {
+      "ru_rows_scanned": 0,
+      "uk_candidates": 0,
+      "ambiguous_cyrillic": 0
+    },
+    "ref_planet_in_sign_psych_i18n": {
+      "ru_rows_scanned": 0,
+      "uk_candidates": 0,
+      "ambiguous_cyrillic": 0
+    },
+    "ref_planet_psych_functions_i18n": {
+      "ru_rows_scanned": 10,
+      "uk_candidates": 0,
+      "ambiguous_cyrillic": 2
+    },
+    "ref_saturn_karma_i18n": {
+      "ru_rows_scanned": 0,
+      "uk_candidates": 0,
+      "ambiguous_cyrillic": 0
+    },
+    "ref_selena_karma_i18n": {
+      "ru_rows_scanned": 0,
+      "uk_candidates": 0,
+      "ambiguous_cyrillic": 0
+    },
+    "ref_sign_properties_i18n": {
+      "ru_rows_scanned": 12,
+      "uk_candidates": 0,
+      "ambiguous_cyrillic": 0
+    },
+    "ref_support_sources_i18n": {
+      "ru_rows_scanned": 0,
+      "uk_candidates": 0,
+      "ambiguous_cyrillic": 0
+    },
+    "ref_topic_significators_i18n": {
+      "ru_rows_scanned": 0,
+      "uk_candidates": 0,
+      "ambiguous_cyrillic": 0
+    }
+  },
+  "findings_count": 10,
+  "findings": [
+    {
+      "table": "ref_aspect_types_i18n",
+      "key": {
+        "aspect_type": "Opposition"
+      },
+      "locale": "ru",
+      "detected": "ambiguous_cyrillic",
+      "uk_score": 0,
+      "ru_score": 0,
+      "sample": "Opposition Оппозиция — противостояние, поляризация"
+    },
+    {
+      "table": "ref_aspect_types_i18n",
+      "key": {
+        "aspect_type": "Semisextile"
+      },
+      "locale": "ru",
+      "detected": "ambiguous_cyrillic",
+      "uk_score": 0,
+      "ru_score": 0,
+      "sample": "Semisextile Полусекстиль (30°) — слабая связь"
+    },
+    {
+      "table": "ref_aspect_types_i18n",
+      "key": {
+        "aspect_type": "Decile"
+      },
+      "locale": "ru",
+      "detected": "ambiguous_cyrillic",
+      "uk_score": 0,
+      "ru_score": 0,
+      "sample": "Decile Дециль (36°) — творческая гармония"
+    },
+    {
+      "table": "ref_aspect_types_i18n",
+      "key": {
+        "aspect_type": "Nonagon"
+      },
+      "locale": "ru",
+      "detected": "ambiguous_cyrillic",
+      "uk_score": 0,
+      "ru_score": 0,
+      "sample": "Nonagon Нонагон (40°) — духовное развитие"
+    },
+    {
+      "table": "ref_aspect_types_i18n",
+      "key": {
+        "aspect_type": "Quintile"
+      },
+      "locale": "ru",
+      "detected": "ambiguous_cyrillic",
+      "uk_score": 0,
+      "ru_score": 0,
+      "sample": "Quintile Квинтиль (72°) — творческий талант"
+    },
+    {
+      "table": "ref_aspect_types_i18n",
+      "key": {
+        "aspect_type": "Sesquiquadrate"
+      },
+      "locale": "ru",
+      "detected": "ambiguous_cyrillic",
+      "uk_score": 0,
+      "ru_score": 0,
+      "sample": "Sesquiquadrate Полутораквадрат (135°) — среднее напряжение"
+    },
+    {
+      "table": "ref_aspect_types_i18n",
+      "key": {
+        "aspect_type": "Biquintile"
+      },
+      "locale": "ru",
+      "detected": "ambiguous_cyrillic",
+      "uk_score": 0,
+      "ru_score": 0,
+      "sample": "Biquintile Биквинтиль (144°) — двойной талант"
+    },
+    {
+      "table": "ref_aspect_types_i18n",
+      "key": {
+        "aspect_type": "Quincunx"
+      },
+      "locale": "ru",
+      "detected": "ambiguous_cyrillic",
+      "uk_score": 0,
+      "ru_score": 0,
+      "sample": "Quincunx Квинконс (150°) — необходимость адаптации"
+    },
+    {
+      "table": "ref_planet_psych_functions_i18n",
+      "key": {
+        "planet": "Saturn"
+      },
+      "locale": "ru",
+      "detected": "ambiguous_cyrillic",
+      "uk_score": 0,
+      "ru_score": 0,
+      "sample": "Saturn Дисциплина, самообладание - дисциплина, самообладание\n- упорство, напор\n- ответственность, долг\n- контроль и самоограничения\n- концентрация усилий в одном направлении и сосредоточенность на цели     "
+    },
+    {
+      "table": "ref_planet_psych_functions_i18n",
+      "key": {
+        "planet": "Neptune"
+      },
+      "locale": "ru",
+      "detected": "ambiguous_cyrillic",
+      "uk_score": 0,
+      "ru_score": 0,
+      "sample": "Neptune Воображение, интуиция - воображение\n- интуиция\n- творчество, вдохновение     "
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+import '../js/i18n.js';
+import '../js/i18n-ui.js';
+import '../js/locale-formatters.js';
+import '../js/locale-switcher.js';
+import '../js/api.js';
+import '../js/symbols.js';
+import '../js/chart-wheel.js';
+import '../js/chart-data.js';
+import '../js/chart.js';
+import '../js/chart-layout.js';
+import '../js/chatkit-init.js';

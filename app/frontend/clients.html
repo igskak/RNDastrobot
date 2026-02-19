@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AstroBot — База клиентов</title>
-    <link rel="stylesheet" href="css/styles.css?v=5">
+    <title data-i18n="page.clients.title"></title>
+    <link rel="stylesheet" href="bundles/clients.bundle.css?v=1">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=1">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <script>window.__APP_BUILD_ID__ = '2026-02-19-1';</script>
     <style>
         .clients-page .container {
             max-width: 1120px;
@@ -254,57 +256,57 @@
 <body class="clients-page">
     <div class="page-loader" id="pageLoader">
         <div class="pl-spinner"></div>
-        <div class="pl-text">Загрузка...</div>
+        <div class="pl-text" data-i18n="common.loading"></div>
     </div>
 
     <div class="container">
         <header class="header">
-            <h1 class="logo">🌟 AstroBot</h1>
-            <p class="subtitle">База клиентов</p>
+            <h1 class="logo">🌟 <span data-i18n="common.brandName"></span></h1>
+            <p class="subtitle" data-i18n="page.clients.subtitle"></p>
         </header>
 
         <main class="form-container">
-            <section class="clients-card" aria-label="Список клиентов">
+            <section class="clients-card" data-i18n-aria-label="page.clients.listAriaLabel">
                 <div class="top-bar">
                     <span id="clientCount" class="clients-meta" aria-live="polite"></span>
-                    <a href="/new" class="btn-new">➕ Новая карта</a>
+                    <a href="/new" class="btn-new">➕ <span data-i18n="page.clients.newCard"></span></a>
                 </div>
 
                 <div class="controls">
-                    <input id="searchInput" class="search-input" type="search" placeholder="Поиск по имени, месту или дате рождения" aria-label="Поиск клиентов">
-                    <select id="sortSelect" aria-label="Сортировка">
-                        <option value="created_desc">Сначала новые</option>
-                        <option value="created_asc">Сначала старые</option>
-                        <option value="name_asc">Имя: А → Я</option>
-                        <option value="name_desc">Имя: Я → А</option>
-                        <option value="birth_asc">Дата рождения: от ранней</option>
-                        <option value="birth_desc">Дата рождения: от поздней</option>
+                    <input id="searchInput" class="search-input" type="search" data-i18n-placeholder="page.clients.searchPlaceholder" data-i18n-aria-label="page.clients.searchAriaLabel">
+                    <select id="sortSelect" data-i18n-aria-label="page.clients.sortAriaLabel">
+                        <option value="created_desc" data-i18n="page.clients.sort.createdDesc"></option>
+                        <option value="created_asc" data-i18n="page.clients.sort.createdAsc"></option>
+                        <option value="name_asc" data-i18n="page.clients.sort.nameAsc"></option>
+                        <option value="name_desc" data-i18n="page.clients.sort.nameDesc"></option>
+                        <option value="birth_asc" data-i18n="page.clients.sort.birthAsc"></option>
+                        <option value="birth_desc" data-i18n="page.clients.sort.birthDesc"></option>
                     </select>
                 </div>
 
                 <div id="resultsMeta" class="results-meta" aria-live="polite"></div>
 
-                <div id="loading" class="loading">Загрузка...</div>
+                <div id="loading" class="loading" data-i18n="common.loading"></div>
 
                 <div id="emptyState" class="empty-state hidden">
                     <div style="font-size: 44px;">📋</div>
-                    <p>Пока нет ни одного клиента</p>
-                    <a href="/new" class="btn-new" style="margin-top: 18px;">➕ Создать первую карту</a>
+                    <p data-i18n="page.clients.empty"></p>
+                    <a href="/new" class="btn-new" style="margin-top: 18px;">➕ <span data-i18n="page.clients.createFirstCard"></span></a>
                 </div>
 
                 <div id="noResultsState" class="empty-state hidden">
                     <div style="font-size: 44px;">🔎</div>
-                    <p>По вашему запросу ничего не найдено</p>
+                    <p data-i18n="page.clients.noResults"></p>
                 </div>
 
                 <div id="tableWrap" class="table-wrap hidden">
                     <table id="clientsTable" class="clients-table">
                         <thead>
                             <tr>
-                                <th>Имя</th>
-                                <th>Дата рождения</th>
-                                <th>Место</th>
-                                <th>Создан</th>
+                                <th data-i18n="page.clients.table.name"></th>
+                                <th data-i18n="page.clients.table.birthDate"></th>
+                                <th data-i18n="page.clients.table.place"></th>
+                                <th data-i18n="page.clients.table.created"></th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -315,13 +317,13 @@
         </main>
 
         <footer class="footer">
-            <p>AstroBot v1.0 • Swiss Ephemeris</p>
+            <p data-i18n="common.footer"></p>
         </footer>
     </div>
 
-    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div id="toast" class="toast"></div>
 
-    <script src="js/api.js"></script>
-    <script src="js/clients.js"></script>
+    <script type="module" src="js/bundles/clients.bundle.js?v=2"></script>
+    <script src="js/locale-switcher.js?v=3"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 """
 API эндпоинты для интерпретаций натальных карт через OpenAI
 """
-from fastapi import APIRouter, HTTPException, status, Depends, Query
+from fastapi import APIRouter, HTTPException, status, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from uuid import UUID
@@ -10,7 +10,8 @@ from pydantic import BaseModel
 import time
 
 from app.database.connection import get_db
-from app.database.models import NatalInterpretation, User
+from app.database.models import NatalInterpretation
+from app.i18n.context import get_current_locale
 from app.services.openai_service import get_openai_service, OpenAIService
 from app.services.natal_chart_service import NatalChartService
 from app.utils.ephemeris import get_ephemeris_path
@@ -68,6 +69,7 @@ async def generate_interpretation(
     - Иначе генерирует через OpenAI и сохраняет в кэш
     """
     start_time = time.time()
+    locale = get_current_locale()
 
     try:
         # 1. Получаем данные карты из БД (оптимизированный метод)
@@ -92,6 +94,7 @@ async def generate_interpretation(
                 select(NatalInterpretation).where(
                     NatalInterpretation.user_id == user_id,
                     NatalInterpretation.interpretation_type == request.interpretation_type,
+                    NatalInterpretation.locale == locale,
                     NatalInterpretation.chart_hash == chart_hash
                 )
             ).scalar_one_or_none()
@@ -113,7 +116,7 @@ async def generate_interpretation(
         # 4. Генерируем через OpenAI (только здесь инициализируем клиент)
         logger.info(f"Генерация интерпретации для {user_id}/{request.interpretation_type}")
         openai_service = get_openai_service()
-        result = await openai_service.generate_psychological_profile(chart_data)
+        result = await openai_service.generate_psychological_profile(chart_data, locale=locale)
         
         generation_time_ms = int((time.time() - start_time) * 1000)
         
@@ -121,6 +124,7 @@ async def generate_interpretation(
         interpretation = NatalInterpretation(
             user_id=user_id,
             interpretation_type=request.interpretation_type,
+            locale=locale,
             content=result['content'],
             chart_hash=chart_hash,
             openai_model=result['model'],
@@ -166,10 +170,12 @@ async def get_interpretation(
     db: Session = Depends(get_db)
 ) -> InterpretationResponse:
     """Получить сохранённую интерпретацию (без генерации)"""
+    locale = get_current_locale()
     cached = db.execute(
         select(NatalInterpretation).where(
             NatalInterpretation.user_id == user_id,
-            NatalInterpretation.interpretation_type == interpretation_type
+            NatalInterpretation.interpretation_type == interpretation_type,
+            NatalInterpretation.locale == locale
         )
     ).scalar_one_or_none()
     

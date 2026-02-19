@@ -5,6 +5,14 @@
 (function() {
     'use strict';
 
+    function t(key, params) {
+        return window.FrontendI18n?.t?.(key, params) || key;
+    }
+
+    function getLocale() {
+        return window.FrontendI18n?.getLocale?.() || 'en';
+    }
+
     // ─── Constants ──────────────────────────────────────
     const ROW_HEIGHT = 24;
     const HEADER_HEIGHT = 40;
@@ -179,11 +187,11 @@
         ctx.lineTo(x, canvasH);
         ctx.stroke();
         ctx.setLineDash([]);
-        // "Сегодня" label at top
+        // "Today" label at top
         ctx.fillStyle = '#ef4444';
         ctx.font = 'bold 10px Inter, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('Сегодня', x, HEADER_HEIGHT - 14);
+        ctx.fillText(t('common.today'), x, HEADER_HEIGHT - 14);
         // Small triangle marker
         ctx.beginPath();
         ctx.moveTo(x - 4, HEADER_HEIGHT - 1);
@@ -235,8 +243,7 @@
     }
 
     function formatTickDate(d) {
-        const months = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
-        return `${d.getDate()} ${months[d.getMonth()]}`;
+        return new Intl.DateTimeFormat(getLocale(), { day: 'numeric', month: 'short' }).format(d);
     }
 
     function drawGrid() {
@@ -367,20 +374,22 @@
             const nSym = Symbols?.planets?.[ev.natal_body] || ev.natal_body;
             const aSym = Symbols?.aspects?.[ev.aspect_type] || ev.aspect_type;
             const isMulti = row.events.length > 1;
-            const countInfo = isMulti ? `<div class="tt-row"><span class="tt-label">Вхождений:</span> ${row.events.length}</div>` : '';
+            const countInfo = isMulti
+                ? `<div class="tt-row"><span class="tt-label">${t('page.forecast.timeline.tooltip.entries')}:</span> ${row.events.length}</div>`
+                : '';
             const singleEntry = !isMulti ? `
-                <div class="tt-row"><span class="tt-label">Вход:</span> ${formatTimelineBoundDateTime(ev.t_enter)}</div>
-                <div class="tt-row"><span class="tt-label">Точный:</span> ${formatTimelineBoundDateTime(ev.t_exact)}</div>
-                <div class="tt-row"><span class="tt-label">Выход:</span> ${formatTimelineBoundDateTime(ev.t_leave)}</div>
+                <div class="tt-row"><span class="tt-label">${t('page.forecast.timeline.tooltip.enter')}:</span> ${formatTimelineBoundDateTime(ev.t_enter)}</div>
+                <div class="tt-row"><span class="tt-label">${t('page.forecast.timeline.tooltip.exact')}:</span> ${formatTimelineBoundDateTime(ev.t_exact)}</div>
+                <div class="tt-row"><span class="tt-label">${t('page.forecast.timeline.tooltip.leave')}:</span> ${formatTimelineBoundDateTime(ev.t_leave)}</div>
             ` : '';
             const allEntries = isMulti
-                ? `<div class="tt-row"><span class="tt-label">Все вхождения:</span></div>${buildAllEntriesHtml(row.events)}`
+                ? `<div class="tt-row"><span class="tt-label">${t('page.forecast.timeline.tooltip.allEntries')}:</span></div>${buildAllEntriesHtml(row.events)}`
                 : '';
 
             tooltip.innerHTML = `
                 <div class="tt-title">${pSym} ${ev.transit_body} ${aSym} ${nSym} ${ev.natal_body}</div>
                 ${singleEntry}
-                <div class="tt-row"><span class="tt-label">Орб:</span> ${ev.min_orb?.toFixed(2)}°</div>
+                <div class="tt-row"><span class="tt-label">${t('common.orb')}:</span> ${ev.min_orb?.toFixed(2)}°</div>
                 ${countInfo}
                 ${allEntries}
             `;
@@ -401,8 +410,14 @@
     function formatDateTime(isoStr) {
         if (!isoStr) return '—';
         const d = new Date(isoStr);
-        const months = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
-        return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}, ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+        return new Intl.DateTimeFormat(getLocale(), {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+        }).format(d).replace(',', '');
     }
 
     function formatTimelineBoundDateTime(isoStr) {
@@ -410,16 +425,16 @@
         const ts = new Date(isoStr).getTime();
         const base = formatDateTime(isoStr);
         if (Number.isNaN(ts)) return base;
-        if (ts < startMs || ts > endMs) return `${base} (вне диапазона)`;
+        if (ts < startMs || ts > endMs) return `${base} (${t('page.forecast.timeline.tooltip.outOfRange')})`;
         return base;
     }
 
     function buildAllEntriesHtml(eventsList) {
         const sorted = [...(eventsList || [])].sort((a, b) => new Date(a.t_exact) - new Date(b.t_exact));
         return sorted.map((item, idx) => `
-            <div class="tt-row"><span class="tt-label">#${idx + 1} вход:</span> ${formatTimelineBoundDateTime(item.t_enter)}</div>
-            <div class="tt-row"><span class="tt-label">#${idx + 1} точный:</span> ${formatTimelineBoundDateTime(item.t_exact)}</div>
-            <div class="tt-row"><span class="tt-label">#${idx + 1} выход:</span> ${formatTimelineBoundDateTime(item.t_leave)}</div>
+            <div class="tt-row"><span class="tt-label">#${idx + 1} ${t('page.forecast.timeline.tooltip.enter').toLowerCase()}:</span> ${formatTimelineBoundDateTime(item.t_enter)}</div>
+            <div class="tt-row"><span class="tt-label">#${idx + 1} ${t('page.forecast.timeline.tooltip.exact').toLowerCase()}:</span> ${formatTimelineBoundDateTime(item.t_exact)}</div>
+            <div class="tt-row"><span class="tt-label">#${idx + 1} ${t('page.forecast.timeline.tooltip.leave').toLowerCase()}:</span> ${formatTimelineBoundDateTime(item.t_leave)}</div>
         `).join('');
     }
 

@@ -40,6 +40,8 @@ ENV/
 # Logs
 logs/
 *.log
+node_modules/
+frontend/bundles/assets/
 
 # Database
 *.db
@@ -54,4 +56,3 @@ Thumbs.db
 *.o
 bin/natal_chart
 bin/natal_chart_json
-

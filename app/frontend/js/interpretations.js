@@ -23,6 +23,17 @@ const metaTokens = document.getElementById('metaTokens');
 const metaTime = document.getElementById('metaTime');
 const metaCached = document.getElementById('metaCached');
 
+function t(key, params) {
+    return window.FrontendI18n?.t?.(key, params) || key;
+}
+
+function withLocaleHeaders(headers = {}) {
+    if (window.AstroAPI?.withLocaleHeaders) {
+        return window.AstroAPI.withLocaleHeaders(headers);
+    }
+    return headers;
+}
+
 /**
  * Инициализация страницы
  */
@@ -32,7 +43,7 @@ async function init() {
     currentUserId = urlParams.get('user_id') || localStorage.getItem('currentUserId');
     
     if (!currentUserId) {
-        showError('User ID не найден. Пожалуйста, сначала рассчитайте натальную карту.');
+        showError(t('page.interpretations.errors.userIdMissing'));
         return;
     }
     
@@ -48,7 +59,9 @@ async function init() {
  */
 async function loadBirthDetails() {
     try {
-        const response = await fetch(`/api/v1/natal/${currentUserId}`);
+        const response = await fetch(`/api/v1/natal/${currentUserId}`, {
+            headers: withLocaleHeaders(),
+        });
         if (response.ok) {
             const data = await response.json();
             if (data.birth_data) {
@@ -56,7 +69,7 @@ async function loadBirthDetails() {
             }
         }
     } catch (e) {
-        console.warn('Не удалось загрузить данные рождения:', e);
+        console.warn('Failed to load birth details:', e);
     }
 }
 
@@ -69,7 +82,7 @@ async function loadInterpretation(forceRegenerate = false) {
     try {
         const response = await fetch(`/api/v1/interpretations/${currentUserId}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: withLocaleHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({
                 interpretation_type: 'psychological_profile',
                 force_regenerate: forceRegenerate
@@ -78,7 +91,7 @@ async function loadInterpretation(forceRegenerate = false) {
         
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.detail || 'Ошибка загрузки интерпретации');
+            throw new Error(error.message || error.detail || t('page.interpretations.errors.loadFailed'));
         }
         
         currentInterpretation = await response.json();
@@ -117,10 +130,10 @@ function showContent(data) {
     contentState.classList.remove('hidden');
     
     // Мета-информация
-    metaModel.textContent = `Модель: ${data.model || 'N/A'}`;
-    metaTokens.textContent = `Токены: ${data.tokens_used || 'N/A'}`;
-    metaTime.textContent = `Время: ${data.generation_time_ms}ms`;
-    metaCached.textContent = data.cached ? '✓ Из кэша' : '';
+    metaModel.textContent = t('page.interpretations.meta.model', { value: data.model || t('common.notAvailable') });
+    metaTokens.textContent = t('page.interpretations.meta.tokens', { value: data.tokens_used || t('common.notAvailable') });
+    metaTime.textContent = t('page.interpretations.meta.time', { value: data.generation_time_ms });
+    metaCached.textContent = data.cached ? t('page.interpretations.meta.cached') : '';
     metaCached.style.display = data.cached ? 'inline' : 'none';
     
     // Рендерим контент
@@ -134,7 +147,7 @@ function renderProfile(content) {
     profileContent.innerHTML = '';
 
     if (!content) {
-        profileContent.innerHTML = '<p class="profile-text">Данные отсутствуют</p>';
+        profileContent.innerHTML = `<p class="profile-text">${t('page.interpretations.empty')}</p>`;
         return;
     }
 
@@ -206,21 +219,12 @@ function renderMarkdown(text) {
  * Форматирование названия секции
  */
 function formatSectionTitle(key) {
-    const titles = {
-        'summary': 'Краткое резюме',
-        'personality': 'Личность',
-        'strengths': 'Сильные стороны',
-        'weaknesses': 'Слабые стороны',
-        'challenges': 'Вызовы',
-        'recommendations': 'Рекомендации',
-        'emotional_nature': 'Эмоциональная природа',
-        'communication_style': 'Стиль коммуникации',
-        'relationships': 'Отношения',
-        'career': 'Карьера',
-        'health': 'Здоровье',
-        'spirituality': 'Духовность'
-    };
-    return titles[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    const translationKey = `page.interpretations.sections.${key}`;
+    const localized = t(translationKey);
+    if (localized !== translationKey) {
+        return localized;
+    }
+    return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 }
 
 /**
@@ -235,7 +239,11 @@ function escapeHtml(text) {
 // Event Listeners
 retryBtn.addEventListener('click', () => loadInterpretation(false));
 regenerateBtn.addEventListener('click', () => loadInterpretation(true));
+document.addEventListener('frontend:locale-changed', () => {
+    if (currentInterpretation) {
+        showContent(currentInterpretation);
+    }
+});
 
 // Init
 document.addEventListener('DOMContentLoaded', init);
-

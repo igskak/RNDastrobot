@@ -5,6 +5,22 @@
 (function() {
     'use strict';
 
+    function t(key, params) {
+        return window.FrontendI18n?.t?.(key, params) || key;
+    }
+
+    function getPlanetName(name) {
+        const key = `astro.planet.${name}`;
+        const translated = t(key);
+        return translated === key ? (Symbols?.planetNamesRu?.[name] || name) : translated;
+    }
+
+    function getSignName(name) {
+        const key = `astro.sign.${name}`;
+        const translated = t(key);
+        return translated === key ? (Symbols?.signNamesRu?.[name] || name) : translated;
+    }
+
     const C = 300; // center
     const NS = 'http://www.w3.org/2000/svg';
 
@@ -38,28 +54,28 @@
         transit: {
             color: '#6366f1',
             markerShape: 'circle',
-            label: 'Транзит',
+            label: 'transit',
             tableMethod: 'transits',
             radius: PROGNOSTIC_PLANET_R,
         },
         progression: {
             color: '#a855f7',
             markerShape: 'diamond',
-            label: 'Прогрессия',
+            label: 'progression',
             tableMethod: 'progressions',
             radius: PROGNOSTIC_PLANET_R + 14,
         },
         direction: {
             color: '#ca8a04',
             markerShape: 'square',
-            label: 'Дирекция',
+            label: 'direction',
             tableMethod: 'directions',
             radius: PROGNOSTIC_PLANET_R + 28,
         },
         solar_return: {
             color: '#0f766e',
             markerShape: 'triangle',
-            label: 'Соляр',
+            label: 'solar_return',
             tableMethod: 'solar_return',
             radius: PROGNOSTIC_PLANET_R + 14,
         },
@@ -181,7 +197,7 @@
         drawSignRing();
 
         if (layerVisibility.natal) {
-            drawHouses(natalData.houses, { layer: 'natal', layerLabel: 'Натал' });
+            drawHouses(natalData.houses, { layer: 'natal', layerLabel: t('page.forecast.biwheel.legend.natal') });
         }
 
         layers.forEach(layer => {
@@ -314,7 +330,7 @@
         const layer = options.layer || 'natal';
         const isPrognostic = layer === 'prognostic';
         const method = options.method || 'transit';
-        const layerLabel = options.layerLabel || (isPrognostic ? 'Прогностика' : 'Натал');
+        const layerLabel = options.layerLabel || (isPrognostic ? t('page.forecast.biwheel.prognostic') : t('page.forecast.biwheel.legend.natal'));
         const prognosticColorByMethod = {
             progression: '#a855f7',
             direction: '#ca8a04',
@@ -541,7 +557,7 @@
                 : (planet._color || defaultColor);
             const isNatal = layerType === 'natal';
             const markerShape = planet._markerShape || 'circle';
-            const label = Symbols?.planetNamesRu?.[planet.name] || planet.name;
+            const label = getPlanetName(planet.name);
             const group = el('g', {
                 class: `bw-planet-group ${isNatal ? 'bw-natal-planet' : 'bw-prog-planet'}`,
                 'data-planet-role': isNatal ? 'natal' : 'transit',
@@ -551,7 +567,7 @@
                 'data-degree-in-sign': String(planet.degree_in_sign ?? 0),
                 'data-house': String(planet.house ?? ''),
                 'data-retrograde': planet.retrograde ? 'true' : 'false',
-                'aria-label': `${isNatal ? 'Натал' : 'Прогностика'} ${label}`
+                'aria-label': `${isNatal ? t('page.forecast.biwheel.legend.natal') : t('page.forecast.biwheel.prognostic')} ${label}`
             });
 
             if (!isNatal) {
@@ -660,7 +676,7 @@
         const group = event.currentTarget;
         const methodKey = group.getAttribute('data-method') || '';
         const role = group.getAttribute('data-planet-role') === 'natal'
-            ? 'Натал'
+            ? t('page.forecast.biwheel.legend.natal')
             : getPrognosticHouseLayerLabel(methodKey);
         const name = group.getAttribute('data-planet-name') || '';
         const sign = group.getAttribute('data-sign') || '';
@@ -668,14 +684,14 @@
         const retro = group.getAttribute('data-retrograde') === 'true';
         const degree = Number(group.getAttribute('data-degree-in-sign') || 0);
         const symbol = Symbols?.planets?.[name] || '';
-        const nameRu = Symbols?.planetNamesRu?.[name] || name;
+        const nameRu = getPlanetName(name);
         const signSymbol = Symbols?.signs?.[sign] || '';
-        const signRu = Symbols?.signNamesRu?.[sign] || sign || '—';
+        const signRu = getSignName(sign);
 
         showHoverTooltip(`
             <strong>${role}: <span class="astro-symbol">${symbol}</span> ${nameRu}</strong><br>
             <span class="astro-symbol">${signSymbol}</span> ${signRu} ${formatDMS(degree)}<br>
-            Дом: ${house}${retro ? ' <span style="color:#dc2626">Rx</span>' : ''}
+            ${t('common.house')}: ${house}${retro ? ' <span style="color:#dc2626">Rx</span>' : ''}
         `, event);
     }
 
@@ -687,9 +703,9 @@
         const group = event.currentTarget;
         const line = group.querySelector('.bw-house-cusp-line');
         const houseNumber = Number(group.getAttribute('data-house') || 0);
-        const layerLabel = group.getAttribute('data-layer-label') || 'Натал';
+        const layerLabel = group.getAttribute('data-layer-label') || t('page.forecast.biwheel.legend.natal');
         const sign = group.getAttribute('data-sign') || '';
-        const signRu = Symbols?.signNamesRu?.[sign] || sign || '—';
+        const signRu = getSignName(sign);
         const signSymbol = Symbols?.signs?.[sign] || '';
         const degree = Number(group.getAttribute('data-degree-in-sign') || 0);
         const longitude = Number(group.getAttribute('data-longitude') || 0);
@@ -701,9 +717,9 @@
         }
 
         showHoverTooltip(`
-            <strong>${layerLabel}: куспид дома ${houseNumber}</strong><br>
+            <strong>${layerLabel}: ${t('page.forecast.table.ingress.cuspLabel', { house: houseNumber }).toLowerCase()}</strong><br>
             <span class="astro-symbol">${signSymbol}</span> ${signRu} ${formatDMS(degree)}<br>
-            Долгота: ${formatDMS(longitude)}
+            ${t('common.longitude')}: ${formatDMS(longitude)}
         `, event);
     }
 
@@ -746,11 +762,11 @@
     }
 
     function getPrognosticHouseLayerLabel(method) {
-        if (method === 'transit') return 'Транзит';
-        if (method === 'progression') return 'Прогрессия';
-        if (method === 'direction') return 'Дирекция';
-        if (method === 'solar_return') return 'Соляр';
-        return 'Прогностика';
+        if (method === 'transit') return t('common.method.transit');
+        if (method === 'progression') return t('common.method.progression');
+        if (method === 'direction') return t('common.method.direction');
+        if (method === 'solar_return') return t('common.method.solar');
+        return t('page.forecast.biwheel.prognostic');
     }
 
     function extractAspects(data, method = null, methodKey = null) {
@@ -778,10 +794,10 @@
     }
 
     function getMethodLabelShort(methodKey) {
-        if (methodKey === 'progressions') return 'Прогрессия';
-        if (methodKey === 'directions') return 'Дирекция';
-        if (methodKey === 'solar_return') return 'Соляр';
-        return 'Транзит';
+        if (methodKey === 'progressions') return t('common.method.progression');
+        if (methodKey === 'directions') return t('common.method.direction');
+        if (methodKey === 'solar_return') return t('common.method.solar');
+        return t('common.method.transit');
     }
 
     function getMethodBadgeClass(methodKey) {
@@ -810,10 +826,10 @@
             const bodySym = Symbols?.planets?.[body] || '';
             const isHouseIngress = ing.ingress_type === 'house';
             const fromPart = isHouseIngress
-                ? `Дом ${ing.from_house ?? '—'}`
+                ? t('page.forecast.table.houseLabel', { house: ing.from_house ?? t('common.notAvailable') })
                 : fmtSign(ing.from_sign);
             const toPart = isHouseIngress
-                ? `Дом ${ing.to_house ?? '—'}`
+                ? t('page.forecast.table.houseLabel', { house: ing.to_house ?? t('common.notAvailable') })
                 : fmtSign(ing.to_sign);
             list.push({
                 date: targetDate,
@@ -828,7 +844,7 @@
         (data.house_cusp_ingresses || []).forEach(ing => {
             list.push({
                 date: targetDate,
-                object: `Куспид ${ing.house_number} дома`,
+                object: t('page.forecast.table.ingress.cuspLabel', { house: ing.house_number }),
                 transition: `${fmtSign(ing.from_sign)} → ${fmtSign(ing.to_sign)}`,
                 method: method,
                 methodLabel: getMethodLabelShort(method),
@@ -876,8 +892,8 @@
         if (!container) return;
         if (!aspects.length) {
             container.innerHTML = `<table><thead><tr>
-                <th class="bw-th-with-toggle">Аспекты <button type="button" class="bw-table-toggle" id="bwToggleAspectsInTable" aria-expanded="true" aria-label="Свернуть таблицу аспектов" title="Свернуть таблицу аспектов">▾</button></th>
-            </tr></thead><tbody><tr><td style="padding:12px;color:var(--text-secondary);font-size:1rem">Нет аспектов</td></tr></tbody></table>`;
+                <th class="bw-th-with-toggle">${t('page.chart.tabs.aspects')} <button type="button" class="bw-table-toggle" id="bwToggleAspectsInTable" aria-expanded="true" aria-label="${t('page.forecast.biwheel.collapseAspects')}" title="${t('page.forecast.biwheel.collapseAspects')}">▾</button></th>
+            </tr></thead><tbody><tr><td style="padding:12px;color:var(--text-secondary);font-size:1rem">${t('page.forecast.table.noAspects')}</td></tr></tbody></table>`;
             lastAspects = [];
             container.querySelector('#bwToggleAspectsInTable')?.addEventListener('click', (event) => {
                 event.stopPropagation();
@@ -914,10 +930,10 @@
         ingressesAvailable = true;
 
         let html = `<table><thead><tr>
-            <th class="bw-th-with-toggle"><span>Дата</span><button type="button" class="bw-table-toggle" id="bwToggleIngressesInTable" aria-expanded="true" aria-label="Свернуть таблицу переходов" title="Свернуть таблицу переходов">▾</button></th>
-            <th>Метод</th>
-            <th>Объект</th>
-            <th>Переход</th>
+            <th class="bw-th-with-toggle"><span>${t('common.date')}</span><button type="button" class="bw-table-toggle" id="bwToggleIngressesInTable" aria-expanded="true" aria-label="${t('page.forecast.biwheel.collapseIngresses')}" title="${t('page.forecast.biwheel.collapseIngresses')}">▾</button></th>
+            <th>${t('page.forecast.table.columns.method')}</th>
+            <th>${t('page.forecast.table.columns.object')}</th>
+            <th>${t('page.forecast.table.columns.transition')}</th>
         </tr></thead><tbody>`;
 
         ingresses.forEach(row => {
@@ -953,12 +969,7 @@
     }
 
     function getSettingsBodyLabel(name) {
-        const compact = {
-            TrueNorthNode: 'Сев. узел',
-            TrueSouthNode: 'Юж. узел',
-            BlackMoon: 'Лилит',
-        };
-        return compact[name] || (Symbols?.planetNamesRu?.[name] || name);
+        return getPlanetName(name);
     }
 
     function syncBodyFilters(aspects) {
@@ -1113,11 +1124,11 @@
 
         const arrow = col => col === sortCol ? (sortAsc ? ' ↑' : ' ↓') : '';
         let html = `<table><thead><tr>
-            <th data-col="method" class="bw-th-with-toggle"><span>М.${arrow('method')}</span><button type="button" class="bw-table-toggle" id="bwToggleAspectsInTable" aria-expanded="true" aria-label="Свернуть таблицу аспектов" title="Свернуть таблицу аспектов">▾</button></th>
-            <th data-col="transit">Тр.${arrow('transit')}</th>
+            <th data-col="method" class="bw-th-with-toggle"><span>${t('page.forecast.table.columns.methodShort')}${arrow('method')}</span><button type="button" class="bw-table-toggle" id="bwToggleAspectsInTable" aria-expanded="true" aria-label="${t('page.forecast.biwheel.collapseAspects')}" title="${t('page.forecast.biwheel.collapseAspects')}">▾</button></th>
+            <th data-col="transit">${t('page.forecast.table.columns.transitShort')}${arrow('transit')}</th>
             <th data-col="aspect">${arrow('aspect')}</th>
-            <th data-col="natal">Нат.${arrow('natal')}</th>
-            <th data-col="orb">Орб${arrow('orb')}</th>
+            <th data-col="natal">${t('page.forecast.table.columns.natalShort')}${arrow('natal')}</th>
+            <th data-col="orb">${t('common.orb')}${arrow('orb')}</th>
         </tr></thead><tbody>`;
         sorted.forEach(a => {
             const tSym = Symbols?.planets?.[a.transitBody] || a.transitBody;

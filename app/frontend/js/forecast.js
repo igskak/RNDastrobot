@@ -7,6 +7,22 @@ const API_BASE = window.location.hostname === 'localhost'
     ? 'http://localhost:8000/api/v1'
     : '/api/v1';
 
+function t(key, params) {
+    return window.FrontendI18n?.t?.(key, params) || key;
+}
+
+function getPlanetName(name) {
+    const key = `astro.planet.${name}`;
+    const translated = t(key);
+    return translated === key ? (Symbols?.planetNamesRu?.[name] || name) : translated;
+}
+
+function getSignName(name) {
+    const key = `astro.sign.${name}`;
+    const translated = t(key);
+    return translated === key ? (Symbols?.signNamesRu?.[name] || name) : translated;
+}
+
 // ─── State ──────────────────────────────────────────────
 const ForecastState = {
     userId: null,
@@ -159,7 +175,7 @@ async function saveActiveForecastRun(payload) {
         ForecastState.activeRunMethod = result.method || null;
         return result;
     } catch (err) {
-        console.warn('Не удалось сохранить forecast run:', err);
+        console.warn('Forecast run save failed:', err);
         return null;
     }
 }
@@ -204,8 +220,11 @@ function updateHeaderInfo(data) {
     if (el && data.birth_data) {
         const bd = data.birth_data;
         const d = new Date(bd.date);
-        const months = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
-        el.textContent = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}, ${bd.time?.slice(0,5) || ''}`;
+        const locale = window.FrontendI18n?.getLocale?.() || 'en';
+        const dateText = Number.isNaN(d.getTime())
+            ? bd.date
+            : new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(d);
+        el.textContent = `${dateText}, ${bd.time?.slice(0,5) || ''}`;
     }
 }
 
@@ -655,7 +674,9 @@ function updateTransitScaleControls() {
 
     const selectedDate = getTransitScaleDateByIndex(ForecastState.transitScaleIndex);
     currentEl.textContent = selectedDate || '—';
-    rangeEl.textContent = hasPoints ? `${points[0]} → ${points[points.length - 1]} (${points.length} точек)` : '';
+    rangeEl.textContent = hasPoints
+        ? t('page.forecast.scale.range', { start: points[0], end: points[points.length - 1], count: points.length })
+        : '';
     renderTransitScaleTicks(ticksEl, points, ForecastState.transitScaleIndex);
     updateTransitPlaybackButton();
 }
@@ -666,7 +687,7 @@ function updateTransitPlaybackButton() {
     const atEnd = ForecastState.transitScalePoints.length > 0 &&
         ForecastState.transitScaleIndex >= ForecastState.transitScalePoints.length - 1;
     playBtn.textContent = ForecastState.isScalePlaying ? '⏸' : '▶';
-    playBtn.title = ForecastState.isScalePlaying ? 'Пауза' : 'Автопрокрутка';
+    playBtn.title = ForecastState.isScalePlaying ? t('common.pause') : t('page.forecast.scale.play');
     playBtn.disabled = ForecastState.transitScalePoints.length === 0 || (atEnd && !ForecastState.isScalePlaying);
 }
 
@@ -888,7 +909,6 @@ function initSolarPlaceAutocomplete() {
             minChars: 2,
             debounceMs: 350,
             limit: 5,
-            language: 'ru',
             getLabel: (item) => item.shortName || item.displayName,
             onInput: () => {
                 // Force explicit place selection from suggestions for valid coords.
@@ -1009,7 +1029,7 @@ async function onCalculate() {
         }
     } catch (err) {
         console.error('Forecast error:', err);
-        alert('Ошибка расчёта: ' + err.message);
+        alert(t('common.errorWithMessage', { message: err.message }));
     } finally {
         btn.disabled = false;
     }
@@ -1041,9 +1061,12 @@ window.ForecastNavigation = {
 
 // ─── API helpers ────────────────────────────────────────
 async function apiPost(endpoint, body) {
+    const withLocaleHeaders = window.AstroAPI?.withLocaleHeaders
+        ? window.AstroAPI.withLocaleHeaders
+        : (headers) => headers;
     const resp = await fetch(`${API_BASE}${endpoint}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: withLocaleHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(body),
     });
     if (!resp.ok) {
@@ -1092,7 +1115,7 @@ function renderTimeline() {
     const counter = document.getElementById('tlEventCount');
     if (counter) {
         const totalRaw = ForecastState.transitEvents?.events?.length || 0;
-        counter.textContent = `${evts.length} из ${totalRaw} событий`;
+        counter.textContent = t('page.forecast.timeline.eventCount', { shown: evts.length, total: totalRaw });
     }
     renderActiveEventsSummary(evts);
     requestAnimationFrame(() => {
@@ -1112,7 +1135,7 @@ function renderActiveEventsSummary(events) {
         return now >= enter && now <= leave;
     });
     if (!active.length) {
-        container.innerHTML = '<div class="aes-empty">Нет активных транзитов на сегодня</div>';
+        container.innerHTML = `<div class="aes-empty">${t('page.forecast.timeline.activeNow.empty')}</div>`;
         return;
     }
     const chips = active.map(ev => {
@@ -1122,16 +1145,18 @@ function renderActiveEventsSummary(events) {
         const harmony = getAspectHarmony(ev.aspect_type);
         const exact = new Date(ev.t_exact);
         const daysToExact = Math.round((exact - now) / 86400000);
-        const exactLabel = daysToExact === 0 ? 'сегодня!'
-            : daysToExact > 0 ? `точный через ${daysToExact}д`
-            : `точный ${Math.abs(daysToExact)}д назад`;
-        return `<div class="aes-chip ${harmony}" title="${ev.transit_body} ${ev.aspect_type} ${ev.natal_body}\nОрб: ${ev.min_orb?.toFixed(2)}°\n${exactLabel}">
+        const exactLabel = daysToExact === 0
+            ? t('page.forecast.timeline.activeNow.exactToday')
+            : daysToExact > 0
+                ? t('page.forecast.timeline.activeNow.exactInDays', { days: daysToExact })
+                : t('page.forecast.timeline.activeNow.exactDaysAgo', { days: Math.abs(daysToExact) });
+        return `<div class="aes-chip ${harmony}" title="${ev.transit_body} ${ev.aspect_type} ${ev.natal_body}\n${t('common.orb')}: ${ev.min_orb?.toFixed(2)}°\n${exactLabel}">
             <span class="aes-planets">${pSym} ${aSym} ${nSym}</span>
             <span class="aes-exact">${exactLabel}</span>
         </div>`;
     });
     container.innerHTML = `
-        <div class="aes-header">⚡ Активные транзиты сейчас <span class="aes-count">${active.length}</span></div>
+        <div class="aes-header">⚡ ${t('page.forecast.timeline.activeNow.title')} <span class="aes-count">${active.length}</span></div>
         <div class="aes-chips">${chips.join('')}</div>
     `;
 }
@@ -1155,7 +1180,7 @@ async function calculateBiwheel() {
 }
 
 async function calculateTransitBiwheelAt(dateStr, { showLoading = false } = {}) {
-    if (!dateStr) throw new Error('Не выбрана дата транзита');
+    if (!dateStr) throw new Error(t('page.forecast.errors.transitDateMissing'));
     const requestSeq = ++ForecastState.biwheelRequestSeq;
     if (showLoading) {
         showState('biwheel', 'loading');
@@ -1223,16 +1248,16 @@ function resolveBiwheelTargetDate(method) {
         const startDate = document.getElementById('startDate')?.value;
         refreshTransitScale(ForecastState.pendingBiwheelDate || ForecastState.transitMoment || startDate);
         const selectedDate = getTransitScaleDateByIndex(ForecastState.transitScaleIndex);
-        if (!selectedDate) throw new Error('Укажите корректный период (С/По)');
+        if (!selectedDate) throw new Error(t('page.forecast.errors.invalidRange'));
         return selectedDate;
     }
     const targetDate = document.getElementById('singleDate')?.value;
-    if (!targetDate) throw new Error('Укажите дату');
+    if (!targetDate) throw new Error(t('page.forecast.errors.dateRequired'));
     return targetDate;
 }
 
 async function fetchTransitBiwheelData(dateStr) {
-    if (!dateStr) throw new Error('Не выбрана дата транзита');
+    if (!dateStr) throw new Error(t('page.forecast.errors.transitDateMissing'));
     if (ForecastState.transitBiwheelCache[dateStr]) {
         return ForecastState.transitBiwheelCache[dateStr];
     }
@@ -1266,7 +1291,7 @@ function renderBiwheelData(data) {
 }
 
 async function ensureTransitPeriodData(startDate, endDate, { showLoading = false } = {}) {
-    if (!startDate || !endDate) throw new Error('Укажите даты');
+    if (!startDate || !endDate) throw new Error(t('page.forecast.errors.datesRequired'));
     const key = getTransitPeriodKey(startDate, endDate);
 
     if (ForecastState.transitPeriodKey === key && ForecastState.transitEvents) {
@@ -1296,7 +1321,7 @@ async function ensureTransitPeriodData(startDate, endDate, { showLoading = false
 }
 
 async function ensurePrognosticPointData(method, targetDate) {
-    if (!targetDate) throw new Error('Укажите дату');
+    if (!targetDate) throw new Error(t('page.forecast.errors.dateRequired'));
     const key = getPrognosticPointKey(method, targetDate);
     if (ForecastState.prognosticPointCache[key]) {
         return ForecastState.prognosticPointCache[key];
@@ -1328,7 +1353,7 @@ async function ensurePrognosticPointData(method, targetDate) {
 }
 
 async function ensureCombinedBiwheelData(targetDate, { directionType = 'solar_arc' } = {}) {
-    if (!targetDate) throw new Error('Укажите дату');
+    if (!targetDate) throw new Error(t('page.forecast.errors.dateRequired'));
     const normalizedDirectionType = normalizeDirectionType(directionType);
     const key = getCombinedPointKey(targetDate, normalizedDirectionType);
     if (ForecastState.combinedBiwheelCache[key]) {
@@ -1570,11 +1595,11 @@ async function renderCurrentTabFromCache() {
         if (ForecastState.tableDataKey && expectedKeys.includes(ForecastState.tableDataKey)) {
             showState('table', 'content');
             if (ForecastState.tableRowsRaw.length) {
-                if (ForecastState.tableRows.length) renderTableRows();
-                else applyTableFiltersAndRender();
-            } else {
-                document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">Нет данных</td></tr>';
-            }
+            if (ForecastState.tableRows.length) renderTableRows();
+            else applyTableFiltersAndRender();
+        } else {
+            document.getElementById('tableBody').innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">${t('page.forecast.table.noData')}</td></tr>`;
+        }
         } else if (ForecastState.tableRowsRaw.length && ForecastState.tableDataKey) {
             showState('table', 'content');
             if (ForecastState.tableRows.length) renderTableRows();
@@ -1589,7 +1614,7 @@ async function renderCurrentTabFromCache() {
 async function calculateSolar() {
     showState('solar', 'loading');
     const year = parseInt(document.getElementById('solarYear').value, 10);
-    if (!year || year < 1900 || year > 2100) throw new Error('Укажите год (1900-2100)');
+    if (!year || year < 1900 || year > 2100) throw new Error(t('page.forecast.errors.yearRange'));
     localStorage.setItem(SOLAR_YEAR_STORAGE_KEY, String(year));
 
     // Build request payload
@@ -1608,7 +1633,7 @@ async function calculateSolar() {
         if (name) payload.location_name = name;
         persistSolarLocationToStorage();
     } else {
-        throw new Error('Выберите место из списка подсказок');
+        throw new Error(t('page.forecast.errors.selectLocationFromList'));
     }
 
     const cacheKey = getSolarCacheKey(year, lat, lon, name || '');
@@ -1664,10 +1689,10 @@ function renderSolar(data) {
     const infoBar = document.getElementById('solarInfoBar');
     const si = data.solar_info;
     infoBar.innerHTML = `
-        <div class="solar-info-item"><div class="si-label">Год</div><div class="si-value">${si.year}</div></div>
-        <div class="solar-info-item"><div class="si-label">Дата соляра (UTC)</div><div class="si-value">${si.solar_datetime_utc}</div></div>
-        <div class="solar-info-item"><div class="si-label">Локальное</div><div class="si-value">${si.solar_datetime_local}</div></div>
-        <div class="solar-info-item"><div class="si-label">Место</div><div class="si-value">${si.location?.name || '—'}</div></div>
+        <div class="solar-info-item"><div class="si-label">${t('common.year')}</div><div class="si-value">${si.year}</div></div>
+        <div class="solar-info-item"><div class="si-label">${t('page.forecast.solar.info.utcDate')}</div><div class="si-value">${si.solar_datetime_utc}</div></div>
+        <div class="solar-info-item"><div class="si-label">${t('page.forecast.solar.info.localDate')}</div><div class="si-value">${si.solar_datetime_local}</div></div>
+        <div class="solar-info-item"><div class="si-label">${t('common.location')}</div><div class="si-value">${si.location?.name || t('common.notAvailable')}</div></div>
     `;
     renderSolarChart(data);
     // Planets table
@@ -1696,12 +1721,12 @@ function renderSolarChart(data) {
 
 function renderSolarPlanetsTable(data) {
     const container = document.getElementById('solarDataSection');
-    let html = '<table class="forecast-table"><thead><tr><th>Планета</th><th>Позиция</th><th>Дом</th><th>R</th></tr></thead><tbody>';
+    let html = `<table class="forecast-table"><thead><tr><th>${t('common.planet')}</th><th>${t('common.position')}</th><th>${t('common.house')}</th><th>R</th></tr></thead><tbody>`;
     data.planets.forEach(p => {
         const sym = (Symbols?.planets?.[p.name]) || p.name;
         const signSym = (Symbols?.signs?.[p.sign]) || p.sign;
         html += `<tr>
-            <td>${sym} ${p.name}</td>
+            <td>${sym} ${getPlanetName(p.name)}</td>
             <td>${signSym} ${p.degree_in_sign_formatted || p.degree_in_sign.toFixed(1) + '°'}</td>
             <td>${p.house}</td>
             <td>${p.retrograde ? 'R' : ''}</td>
@@ -1749,13 +1774,13 @@ function getAspectHarmony(aspectType) {
 
 function getMethodLabel(method) {
     const map = {
-        'transit': 'Транзит',
-        'transits': 'Транзит',
-        'progressions': 'Прогрессия',
-        'directions': 'Дирекция',
-        'directions_solar_arc': 'Дир. (сол.)',
-        'directions_symbolic': 'Дир. (симв.)',
-        'directions_equatorial': 'Дир. (Найб.)',
+        'transit': t('common.method.transit'),
+        'transits': t('common.method.transit'),
+        'progressions': t('common.method.progression'),
+        'directions': t('common.method.direction'),
+        'directions_solar_arc': t('common.method.directionSolarArc'),
+        'directions_symbolic': t('common.method.directionSymbolic'),
+        'directions_equatorial': t('common.method.directionNaibod'),
     };
     return map[method] || method;
 }
@@ -1768,7 +1793,9 @@ function toggleTableFilters(forceOpen = null) {
     const shouldOpen = forceOpen === null ? isCollapsed : !!forceOpen;
     panel.classList.toggle('table-filters-collapsed', !shouldOpen);
     btn.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
-    btn.textContent = shouldOpen ? 'Фильтры ▲' : 'Фильтры ▼';
+    btn.textContent = shouldOpen
+        ? t('page.forecast.table.filters.buttonOpen')
+        : t('page.forecast.table.filters.buttonClosed');
 }
 
 function updateTableFiltersBadge() {
@@ -1803,7 +1830,7 @@ function refreshTableAspectFilterOptions(rows) {
     if (!aspectSelect) return;
     const current = aspectSelect.value || 'all';
     const uniq = [...new Set((rows || []).map(r => r.aspect).filter(Boolean))].sort();
-    aspectSelect.innerHTML = ['<option value="all">Все</option>']
+    aspectSelect.innerHTML = [`<option value="all">${t('common.all')}</option>`]
         .concat(uniq.map(a => `<option value="${a}">${a}</option>`))
         .join('');
     aspectSelect.value = uniq.includes(current) ? current : 'all';
@@ -1845,7 +1872,7 @@ function populateTable(events, method) {
     hideIngressSection();
     showState('table', 'content');
     if (!events || events.length === 0) {
-        document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">Нет событий</td></tr>';
+        document.getElementById('tableBody').innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">${t('page.forecast.table.noEvents')}</td></tr>`;
         ForecastState.tableRowsRaw = [];
         ForecastState.tableRows = [];
         return;
@@ -1861,7 +1888,7 @@ function populateTable(events, method) {
         hasOrb: typeof ev.min_orb === 'number',
         isMajor: !!ev.is_major,
         rowKind: 'aspect',
-        type: ev.is_major ? 'Мажор' : 'Минор',
+        type: ev.is_major ? t('common.majorShort') : t('common.minorShort'),
     }));
     refreshTableAspectFilterOptions(ForecastState.tableRowsRaw);
     resetTableFilters();
@@ -1873,7 +1900,7 @@ function populateTableFromAspects(aspects, method, date) {
     hideIngressSection();
     showState('table', 'content');
     if (!aspects || aspects.length === 0) {
-        document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">Нет аспектов</td></tr>';
+        document.getElementById('tableBody').innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">${t('page.forecast.table.noAspects')}</td></tr>`;
         ForecastState.tableRowsRaw = [];
         ForecastState.tableRows = [];
         return;
@@ -1893,7 +1920,7 @@ function populateTableFromAspects(aspects, method, date) {
             hasOrb: typeof a.orb === 'number',
             isMajor: !!a.is_major,
             rowKind: 'aspect',
-            type: a.is_major ? 'Мажор' : 'Минор',
+            type: a.is_major ? t('common.majorShort') : t('common.minorShort'),
             _priority: idx < 0 ? 999 : idx,
         };
     });
@@ -1905,9 +1932,9 @@ function populateTableFromAspects(aspects, method, date) {
 }
 
 function formatSignLabel(sign) {
-    if (!sign) return '—';
+    if (!sign) return t('common.notAvailable');
     const sym = Symbols?.signs?.[sign] || '';
-    const ru = Symbols?.signNamesRu?.[sign] || sign;
+    const ru = getSignName(sign);
     return `${sym ? sym + ' ' : ''}${ru}`;
 }
 
@@ -1960,32 +1987,32 @@ function populateTableFromPrognosticData(data, method, date) {
             hasOrb: typeof a.orb === 'number',
             isMajor: !!a.is_major,
             rowKind: 'aspect',
-            type: a.is_major ? 'Мажор' : 'Минор',
+            type: a.is_major ? t('common.majorShort') : t('common.minorShort'),
             _priority: idx < 0 ? 999 : idx,
         };
     });
 
     planetIngresses.forEach(ing => {
         const body = ing.body || '—';
-        const ingressType = ing.ingress_type === 'house' ? 'Ингрессия дома' : 'Ингрессия знака';
+        const ingressType = ing.ingress_type === 'house' ? t('page.forecast.table.ingress.house') : t('page.forecast.table.ingress.sign');
         const fromLabel = ing.ingress_type === 'house'
-            ? `Дом ${ing.from_house ?? '—'}`
+            ? t('page.forecast.table.houseLabel', { house: ing.from_house ?? t('common.notAvailable') })
             : formatSignLabel(ing.from_sign);
         const toLabel = ing.ingress_type === 'house'
-            ? `Дом ${ing.to_house ?? '—'}`
+            ? t('page.forecast.table.houseLabel', { house: ing.to_house ?? t('common.notAvailable') })
             : formatSignLabel(ing.to_sign);
         ingressRows.push({
             date: date,
             method: getMethodLabel(method),
             methodClass,
-            object: `${(Symbols?.planets?.[body] || '')} ${body}`.trim(),
+            object: `${(Symbols?.planets?.[body] || '')} ${getPlanetName(body)}`.trim(),
             ingressType,
             transition: `${fromLabel} → ${toLabel}`,
         });
     });
 
     cuspIngresses.forEach(ing => {
-        const houseLabel = `Куспид ${ing.house_number} дома`;
+        const houseLabel = t('page.forecast.table.ingress.cuspLabel', { house: ing.house_number });
         const fromLabel = formatSignLabel(ing.from_sign);
         const toLabel = formatSignLabel(ing.to_sign);
         ingressRows.push({
@@ -1993,13 +2020,13 @@ function populateTableFromPrognosticData(data, method, date) {
             method: getMethodLabel(method),
             methodClass,
             object: houseLabel,
-            ingressType: 'Ингрессия куспида',
+            ingressType: t('page.forecast.table.ingress.cusp'),
             transition: `${fromLabel} → ${toLabel}`,
         });
     });
 
     if (aspectRows.length === 0) {
-        document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">Нет аспектов</td></tr>';
+        document.getElementById('tableBody').innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">${t('page.forecast.table.noAspects')}</td></tr>`;
         ForecastState.tableRowsRaw = [];
         ForecastState.tableRows = [];
         refreshTableAspectFilterOptions([]);
@@ -2046,7 +2073,7 @@ function populateTableFromCombinedData(combinedData, targetDate, { transitPeriod
             hasOrb: typeof orb === 'number',
             isMajor: !!isMajor,
             rowKind: 'aspect',
-            type: isMajor ? 'Мажор' : 'Минор',
+            type: isMajor ? t('common.majorShort') : t('common.minorShort'),
             _priority: idx < 0 ? 999 : idx,
         });
     };
@@ -2055,18 +2082,18 @@ function populateTableFromCombinedData(combinedData, targetDate, { transitPeriod
         const methodClass = method.startsWith('directions') ? 'direction' : 'progression';
         (data?.planet_ingresses || []).forEach(ing => {
             const body = ing.body || '—';
-            const ingressType = ing.ingress_type === 'house' ? 'Ингрессия дома' : 'Ингрессия знака';
+            const ingressType = ing.ingress_type === 'house' ? t('page.forecast.table.ingress.house') : t('page.forecast.table.ingress.sign');
             const fromLabel = ing.ingress_type === 'house'
-                ? `Дом ${ing.from_house ?? '—'}`
+                ? t('page.forecast.table.houseLabel', { house: ing.from_house ?? t('common.notAvailable') })
                 : formatSignLabel(ing.from_sign);
             const toLabel = ing.ingress_type === 'house'
-                ? `Дом ${ing.to_house ?? '—'}`
+                ? t('page.forecast.table.houseLabel', { house: ing.to_house ?? t('common.notAvailable') })
                 : formatSignLabel(ing.to_sign);
             ingressRows.push({
                 date: date || targetDate || '—',
                 method: getMethodLabel(method),
                 methodClass,
-                object: `${(Symbols?.planets?.[body] || '')} ${body}`.trim(),
+                object: `${(Symbols?.planets?.[body] || '')} ${getPlanetName(body)}`.trim(),
                 ingressType,
                 transition: `${fromLabel} → ${toLabel}`,
             });
@@ -2076,8 +2103,8 @@ function populateTableFromCombinedData(combinedData, targetDate, { transitPeriod
                 date: date || targetDate || '—',
                 method: getMethodLabel(method),
                 methodClass,
-                object: `Куспид ${ing.house_number} дома`,
-                ingressType: 'Ингрессия куспида',
+                object: t('page.forecast.table.ingress.cuspLabel', { house: ing.house_number }),
+                ingressType: t('page.forecast.table.ingress.cusp'),
                 transition: `${formatSignLabel(ing.from_sign)} → ${formatSignLabel(ing.to_sign)}`,
             });
         });
@@ -2141,7 +2168,7 @@ function populateTableFromCombinedData(combinedData, targetDate, { transitPeriod
     pushIngressRows(directionLayer, directionMethodKey, targetDate);
 
     if (!rows.length) {
-        document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">Нет аспектов</td></tr>';
+        document.getElementById('tableBody').innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">${t('page.forecast.table.noAspects')}</td></tr>`;
         ForecastState.tableRowsRaw = [];
         ForecastState.tableRows = [];
         refreshTableAspectFilterOptions([]);
@@ -2173,7 +2200,7 @@ function renderTableRows() {
     });
     const tbody = document.getElementById('tableBody');
     if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">Нет строк по текущим фильтрам</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">${t('page.forecast.table.noRowsByFilters')}</td></tr>`;
         document.querySelectorAll('.forecast-table th.sortable').forEach(th => {
             const c = th.dataset.sort;
             th.classList.toggle('sort-active', c === col);

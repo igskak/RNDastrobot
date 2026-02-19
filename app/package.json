@@ -1,0 +1,10 @@
+{
+  "name": "astrobot-frontend-build",
+  "private": true,
+  "scripts": {
+    "build:frontend": "node scripts/build-frontend-bundles.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.9"
+  }
+}

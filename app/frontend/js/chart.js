@@ -29,6 +29,10 @@ const HOUSE_SYSTEM_ALIASES = {
     'WHOLESIGN': 'W'
 };
 
+function t(key, params) {
+    return window.FrontendI18n?.t?.(key, params) || key;
+}
+
 function normalizeHouseSystemCode(value) {
     const raw = String(value || 'P').trim().toUpperCase().replace(/[\s-]+/g, '_');
     return HOUSE_SYSTEM_ALIASES[raw] || 'P';
@@ -110,6 +114,15 @@ document.addEventListener('DOMContentLoaded', () => {
     initPanelTabs();
     initZoomControls();
     initPinchZoom();
+
+    document.addEventListener('frontend:locale-changed', () => {
+        if (!window.chartDataCache) return;
+        updateHeader(window.chartDataCache);
+        if (chartDataRenderer && typeof chartDataRenderer.render === 'function') {
+            const hidden = currentSettings.hiddenPlanets || [];
+            redrawChart(window.chartDataCache, hidden, currentSettings.orientation);
+        }
+    });
 });
 
 /**
@@ -174,11 +187,11 @@ function updateHeader(chartData) {
     const birthData = chartData.birth_data;
     const formData = AstroAPI.getFormData();
     
-    // Форматируем дату
     const date = new Date(birthData.date);
-    const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-                    'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
-    const dateStr = `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+    const locale = window.FrontendI18n?.getLocale?.() || 'en';
+    const dateStr = Number.isNaN(date.getTime())
+        ? birthData.date
+        : new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
     const timeStr = birthData.time.slice(0, 5);
     
     document.getElementById('birthDate').textContent = `${dateStr}, ${timeStr}`;
@@ -238,23 +251,24 @@ function initSettings(chartData) {
 
     // Список планет для переключения
     const toggleablePlanets = [
-        { id: 'Chiron', label: 'Хирон' },
-        { id: 'TrueNode', label: 'Сев. Узел' },
-        { id: 'SouthNode', label: 'Юж. Узел' },
-        { id: 'BlackMoon', label: 'Лилит' },
-        { id: 'WhiteMoon', label: 'Селена' },
-        { id: 'Proserpina', label: 'Прозерпина' },
-        { id: 'PartOfFortune', label: 'Фортуна' }
+        'Chiron',
+        'TrueNode',
+        'SouthNode',
+        'BlackMoon',
+        'WhiteMoon',
+        'Proserpina',
+        'PartOfFortune',
     ];
 
     // Генерируем чекбоксы
     if (planetToggles) {
-        planetToggles.innerHTML = toggleablePlanets.map(p => `
+        planetToggles.innerHTML = toggleablePlanets.map((planetId) => `
             <label class="planet-toggle">
-                <input type="checkbox" data-planet="${p.id}" checked>
-                <span><span class="astro-symbol">${Symbols.planets[p.id] || ''}</span> ${p.label}</span>
+                <input type="checkbox" data-planet="${planetId}" checked>
+                <span><span class="astro-symbol">${Symbols.planets[planetId] || ''}</span> <span data-i18n="astro.planet.${planetId}"></span></span>
             </label>
         `).join('');
+        window.FrontendI18nUi?.applyI18n?.(document);
     }
 
     // Переключение панели

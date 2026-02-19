@@ -7,9 +7,15 @@
         return String(displayName || '').split(',')[0]?.trim() || '';
     }
 
+    function resolveLanguage(rawLocale) {
+        const normalized = window.FrontendI18n?.normalizeLocale?.(rawLocale);
+        if (normalized) return normalized;
+        return window.FrontendI18n?.getLocale?.() || 'en';
+    }
+
     async function searchPlaces(query, options = {}) {
         const limit = Number(options.limit) || 5;
-        const language = options.language || 'ru';
+        const language = resolveLanguage(options.language);
         const params = new URLSearchParams({
             format: 'json',
             q: query,
@@ -41,7 +47,10 @@
         const minChars = Number(config.minChars) || 2;
         const debounceMs = Number(config.debounceMs) || 350;
         const limit = Number(config.limit) || 5;
-        const language = config.language || 'ru';
+        const getLanguage = typeof config.getLanguage === 'function'
+            ? config.getLanguage
+            : () => resolveLanguage(config.language);
+
         const getLabel = typeof config.getLabel === 'function'
             ? config.getLabel
             : ((item) => item.shortName || item.displayName);
@@ -79,7 +88,7 @@
         async function lookup(query) {
             const seq = ++inFlightSeq;
             try {
-                const items = await searchPlaces(query, { limit, language });
+                const items = await searchPlaces(query, { limit, language: getLanguage() });
                 if (seq !== inFlightSeq) return;
                 render(items);
             } catch (err) {
@@ -119,4 +128,3 @@
         searchPlaces
     };
 })();
-

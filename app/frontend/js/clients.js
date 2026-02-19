@@ -17,9 +17,32 @@ let toastTimer = null;
 
 const refs = {};
 
+function t(key, params) {
+    return window.FrontendI18n?.t?.(key, params) || key;
+}
+
+function withLocaleHeaders(headers = {}) {
+    if (window.AstroAPI?.withLocaleHeaders) {
+        return window.AstroAPI.withLocaleHeaders(headers);
+    }
+    return headers;
+}
+
+function getNameCollator() {
+    if (window.LocaleFormatters?.getCollator) {
+        return window.LocaleFormatters.getCollator({
+            sensitivity: 'base',
+            numeric: true,
+        });
+    }
+    const locale = window.FrontendI18n?.getLocale?.() || 'en';
+    return new Intl.Collator(locale, { sensitivity: 'base', numeric: true });
+}
+
 function getAdminHeaders() {
     const token = localStorage.getItem('adminApiToken');
-    return token ? { 'X-Admin-Token': token } : {};
+    const headers = token ? { 'X-Admin-Token': token } : {};
+    return withLocaleHeaders(headers);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -68,10 +91,17 @@ function bindEvents() {
             await handleDelete(userId, actionBtn);
         }
     });
+
+    document.addEventListener('frontend:locale-changed', () => {
+        if (refs.loading && !refs.loading.classList.contains('hidden') && !state.users.length) {
+            refs.loading.textContent = t('common.loading');
+        }
+        renderUsers();
+    });
 }
 
 async function loadClients() {
-    refs.loading.textContent = 'Загрузка...';
+    refs.loading.textContent = t('common.loading');
     refs.loading.classList.remove('hidden');
     refs.emptyState.classList.add('hidden');
     refs.noResultsState.classList.add('hidden');
@@ -81,7 +111,7 @@ async function loadClients() {
         const response = await fetch(`${API_BASE}/users`, {
             headers: getAdminHeaders()
         });
-        if (!response.ok) throw new Error('Не удалось получить список клиентов');
+        if (!response.ok) throw new Error(t('page.clients.errors.fetchList'));
 
         const users = await response.json();
         state.users = Array.isArray(users) ? users : [];
@@ -97,7 +127,7 @@ async function loadClients() {
 
         renderUsers();
     } catch (error) {
-        refs.loading.textContent = `Ошибка загрузки: ${error.message}`;
+        refs.loading.textContent = t('page.clients.errors.loadingWithMessage', { message: error.message });
         console.error(error);
     }
 }
@@ -129,19 +159,26 @@ function buildUserRow(user) {
     const tr = document.createElement('tr');
 
     const userId = String(user.user_id || '');
-    const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || '—';
-    const birthDate = user.birth_date ? formatDate(user.birth_date) : '—';
-    const place = user.birth_place || '—';
-    const created = user.created_at ? formatDateTime(user.created_at) : '—';
+    const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || t('common.notAvailable');
+    const birthDate = user.birth_date ? formatDate(user.birth_date) : t('common.notAvailable');
+    const place = user.birth_place || t('common.notAvailable');
+    const created = user.created_at ? formatDateTime(user.created_at) : t('common.notAvailable');
+    const labelName = escapeHtml(t('page.clients.table.name'));
+    const labelBirthDate = escapeHtml(t('page.clients.table.birthDate'));
+    const labelPlace = escapeHtml(t('page.clients.table.place'));
+    const labelCreated = escapeHtml(t('page.clients.table.created'));
+    const labelActions = escapeHtml(t('page.clients.table.actions'));
+    const openLabel = escapeHtml(t('page.clients.actions.open'));
+    const deleteLabel = escapeHtml(t('page.clients.actions.delete'));
 
     tr.innerHTML = `
-        <td data-label="Имя"><strong>${escapeHtml(name)}</strong></td>
-        <td data-label="Дата рождения">${escapeHtml(birthDate)}</td>
-        <td data-label="Место">${escapeHtml(place)}</td>
-        <td data-label="Создан">${escapeHtml(created)}</td>
-        <td data-label="Действия" class="clients-actions">
-            <button class="btn-open" data-action="open" data-user-id="${escapeHtml(userId)}">Открыть</button>
-            <button class="btn-delete" data-action="delete" data-user-id="${escapeHtml(userId)}">Удалить</button>
+        <td data-label="${labelName}"><strong>${escapeHtml(name)}</strong></td>
+        <td data-label="${labelBirthDate}">${escapeHtml(birthDate)}</td>
+        <td data-label="${labelPlace}">${escapeHtml(place)}</td>
+        <td data-label="${labelCreated}">${escapeHtml(created)}</td>
+        <td data-label="${labelActions}" class="clients-actions">
+            <button class="btn-open" data-action="open" data-user-id="${escapeHtml(userId)}">${openLabel}</button>
+            <button class="btn-delete" data-action="delete" data-user-id="${escapeHtml(userId)}">${deleteLabel}</button>
         </td>
     `;
 
@@ -186,10 +223,12 @@ function sortUsers(users, sortBy) {
     }
 
     if (sortBy === 'name_desc') {
-        return list.sort((a, b) => getName(b).localeCompare(getName(a), 'ru'));
+        const collator = getNameCollator();
+        return list.sort((a, b) => collator.compare(getName(b), getName(a)));
     }
 
-    return list.sort((a, b) => getName(a).localeCompare(getName(b), 'ru'));
+    const collator = getNameCollator();
+    return list.sort((a, b) => collator.compare(getName(a), getName(b)));
 }
 
 function getName(user) {
@@ -200,28 +239,30 @@ function updateCounters() {
     const total = state.users.length;
     const shown = state.filteredUsers.length;
 
-    refs.countEl.textContent = `Всего клиентов: ${total}`;
+    refs.countEl.textContent = t('page.clients.counters.total', { total });
 
     if (state.searchTerm) {
-        refs.resultsMeta.textContent = `Показано: ${shown} из ${total}`;
+        refs.resultsMeta.textContent = t('page.clients.counters.shownOf', { shown, total });
         return;
     }
 
-    refs.resultsMeta.textContent = `Показано: ${shown}`;
+    refs.resultsMeta.textContent = t('page.clients.counters.shown', { shown });
 }
 
 async function openChart(userId) {
     try {
-        const response = await fetch(`${API_BASE}/natal/${userId}`);
-        if (!response.ok) throw new Error('Карта не найдена');
+        const response = await fetch(`${API_BASE}/natal/${userId}`, {
+            headers: withLocaleHeaders(),
+        });
+        if (!response.ok) throw new Error(t('page.clients.errors.chartNotFound'));
 
         const chartData = await response.json();
         AstroAPI.saveChartToSession(chartData);
 
-        showPageLoader();
+        window.showPageLoader?.();
         window.location.href = '/chart.html';
     } catch (error) {
-        showToast(`Ошибка: ${error.message}`, 'error');
+        showToast(t('common.errorWithMessage', { message: error.message }), 'error');
     }
 }
 
@@ -229,16 +270,16 @@ async function handleDelete(userId, button) {
     if (button.dataset.confirming !== 'true') {
         button.dataset.confirming = 'true';
         button.classList.add('confirming');
-        button.textContent = 'Подтвердить';
+        button.textContent = t('page.clients.actions.confirmDelete');
 
         setTimeout(() => {
             if (button.dataset.confirming !== 'true') return;
             button.dataset.confirming = 'false';
             button.classList.remove('confirming');
-            button.textContent = 'Удалить';
+            button.textContent = t('page.clients.actions.delete');
         }, 4000);
 
-        showToast('Нажмите «Подтвердить», чтобы удалить клиента', 'warning');
+        showToast(t('page.clients.messages.confirmDeleteHint'), 'warning');
         return;
     }
 
@@ -251,10 +292,12 @@ async function handleDelete(userId, button) {
             headers: getAdminHeaders()
         });
         if (!response.ok) {
-            let message = 'Ошибка удаления';
+            let message = t('page.clients.errors.deleteFailed');
             try {
                 const payload = await response.json();
-                if (payload && typeof payload.detail === 'string' && payload.detail.trim()) {
+                if (payload && typeof payload.message === 'string' && payload.message.trim()) {
+                    message = payload.message;
+                } else if (payload && typeof payload.detail === 'string' && payload.detail.trim()) {
                     message = payload.detail;
                 }
             } catch (_) {
@@ -275,13 +318,13 @@ async function handleDelete(userId, button) {
             renderUsers();
         }
 
-        showToast('Клиент удалён', 'success');
+        showToast(t('page.clients.messages.deleted'), 'success');
     } catch (error) {
         button.disabled = false;
         button.dataset.confirming = 'false';
         button.classList.remove('confirming');
-        button.textContent = 'Удалить';
-        showToast(`Ошибка: ${error.message}`, 'error');
+        button.textContent = t('page.clients.actions.delete');
+        showToast(t('common.errorWithMessage', { message: error.message }), 'error');
     }
 }
 
@@ -308,8 +351,11 @@ function formatDate(isoDate) {
 function formatDateTime(isoStr) {
     const dt = new Date(isoStr);
     if (Number.isNaN(dt.getTime())) return isoStr;
-
-    return `${dt.toLocaleDateString('ru-RU')} ${dt.toLocaleTimeString('ru-RU', {
+    if (window.LocaleFormatters?.formatDateTime) {
+        return window.LocaleFormatters.formatDateTime(dt);
+    }
+    const locale = window.FrontendI18n?.getLocale?.() || 'en';
+    return `${dt.toLocaleDateString(locale)} ${dt.toLocaleTimeString(locale, {
         hour: '2-digit',
         minute: '2-digit'
     })}`;

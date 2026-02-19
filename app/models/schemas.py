@@ -3,7 +3,7 @@ Pydantic модели для валидации данных API
 """
 from pydantic import BaseModel, Field, field_validator
 from datetime import date as date_type, time as time_type
-from typing import Optional, List, Dict
+from typing import Any, Optional, List, Dict
 from uuid import UUID
 
 VALID_HOUSE_SYSTEMS = ['P', 'K', 'O', 'R', 'C', 'E', 'W', 'X', 'H', 'T', 'B', 'M']
@@ -402,8 +402,11 @@ class GeneralOverviewResponse(BaseModel):
 
 class ErrorResponse(BaseModel):
     """Ответ с ошибкой"""
-    error: str
-    detail: Optional[str] = None
+    error_code: str
+    message: str
+    detail: Optional[Any] = None
+    # Legacy alias for backward compatibility with old clients
+    error: Optional[str] = None
 
 
 # ============================================================================

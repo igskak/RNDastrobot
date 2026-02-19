@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  i18n-and-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r app/requirements.txt
+
+      - name: I18N missing-key checker (fail-fast)
+        run: node app/scripts/check-i18n-missing-keys.cjs
+
+      - name: I18N hardcoded-string checker (fail-fast)
+        run: node app/scripts/check-i18n-hardcoded-strings.cjs
+
+      - name: I18N untranslated-value checker (fail-fast)
+        run: node app/scripts/check-i18n-untranslated-values.cjs
+
+      - name: Checker unit tests
+        run: |
+          node --test \
+            app/tests/test_i18n_missing_keys_checker.test.cjs \
+            app/tests/test_i18n_hardcoded_strings_checker.test.cjs \
+            app/tests/test_i18n_untranslated_values_checker.test.cjs \
+            app/tests/test_i18n_ci_wiring.test.cjs
+
+      - name: Frontend i18n regressions
+        run: |
+          node --test \
+            app/tests/test_frontend_i18n.test.cjs \
+            app/tests/test_frontend_i18n_ui.test.cjs \
+            app/tests/test_frontend_api_client.test.cjs \
+            app/tests/test_frontend_timezones.test.cjs \
+            app/tests/test_forecast_timeline_utils.test.cjs
+
+      - name: API + AI i18n regressions
+        run: python -m pytest -q app/tests/test_api_i18n.py app/tests/test_ai_i18n_bl05.py

@@ -13,6 +13,10 @@ from openai import OpenAI
 from sqlalchemy.orm import Session
 from loguru import logger
 
+from app.i18n.context import get_current_locale
+from app.i18n.locale import DEFAULT_LOCALE, normalize_locale
+from app.i18n.reference_lookup import LocalizedReferenceLookup
+
 
 class OpenAIService:
     """Сервис для генерации интерпретаций через OpenAI API"""
@@ -34,6 +38,15 @@ class OpenAIService:
 
         self.client = OpenAI(api_key=self.api_key)
         logger.info(f"OpenAI сервис инициализирован (модель: {self.model}, workflow: {self.workflow_id}, prognostic: {self.prognostic_workflow_id})")
+
+    @staticmethod
+    def _resolve_locale(locale: Optional[str]) -> str:
+        """Normalize locale and guarantee fallback to en."""
+        return (
+            normalize_locale(locale)
+            or normalize_locale(get_current_locale())
+            or DEFAULT_LOCALE
+        )
     
     @staticmethod
     def calculate_chart_hash(chart_data: Dict[str, Any]) -> str:
@@ -139,7 +152,11 @@ class OpenAIService:
             'aspects': aspects
         }
 
-    def build_planet_sign_psych(self, psych_data: Dict[str, Any]) -> list:
+    def build_planet_sign_psych(
+        self,
+        psych_data: Dict[str, Any],
+        locale: Optional[str] = None,
+    ) -> list:
         """
         Собрать психологический контекст для всех планет с их знаками.
 
@@ -163,35 +180,38 @@ class OpenAIService:
             ]
         """
         from app.database.connection import get_db_session
-        from sqlalchemy import text
 
+        resolved_locale = self._resolve_locale(locale)
         result = []
 
         try:
             with get_db_session() as session:
+                lookup = LocalizedReferenceLookup(session)
                 for p in psych_data.get("planets", []):
                     planet = p["name"]
                     sign = p["sign"]
 
-                    # Получаем функции психики планеты
-                    func = session.execute(
-                        text("""
-                            SELECT function_extended
-                            FROM ref_planet_psych_functions
-                            WHERE planet = :planet
-                        """),
-                        {"planet": planet},
-                    ).scalar()
+                    # Получаем локализованные функции психики планеты с fallback -> en
+                    func = lookup.fetch_localized_scalar(
+                        base_table="ref_planet_psych_functions",
+                        key_column="planet",
+                        key_value=planet,
+                        base_value_column="function_extended",
+                        i18n_table="ref_planet_psych_functions_i18n",
+                        i18n_value_column="function_extended",
+                        locale=resolved_locale,
+                    )
 
-                    # Получаем качества знака
-                    qualities = session.execute(
-                        text("""
-                            SELECT qualities
-                            FROM ref_sign_properties
-                            WHERE sign = :sign
-                        """),
-                        {"sign": sign},
-                    ).scalar()
+                    # Получаем локализованные качества знака с fallback -> en
+                    qualities = lookup.fetch_localized_scalar(
+                        base_table="ref_sign_properties",
+                        key_column="sign",
+                        key_value=sign,
+                        base_value_column="qualities",
+                        i18n_table="ref_sign_properties_i18n",
+                        i18n_value_column="qualities",
+                        locale=resolved_locale,
+                    )
 
                     result.append({
                         "planet_name": planet,
@@ -209,7 +229,8 @@ class OpenAIService:
     
     async def generate_psychological_profile(
         self,
-        chart_data: Dict[str, Any]
+        chart_data: Dict[str, Any],
+        locale: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Генерация психологического профиля через OpenAI API
@@ -230,6 +251,7 @@ class OpenAIService:
         """
         profile_data = self.prepare_psychological_profile_data(chart_data)
         data_json = json.dumps(profile_data, ensure_ascii=False, indent=2)
+        resolved_locale = self._resolve_locale(locale)
         
         logger.info(f"Отправка запроса в OpenAI (модель: {self.model}, prompt_id: {self.prompt_id})")
         logger.debug(f"Размер данных: {len(data_json)} символов")
@@ -240,7 +262,8 @@ class OpenAIService:
                 prompt={
                     "id": self.prompt_id,
                     "variables": {
-                        "chart_data": data_json
+                        "chart_data": data_json,
+                        "locale": resolved_locale,
                     }
                 }
             )
@@ -279,6 +302,7 @@ class OpenAIService:
         user_id: UUID,
         message: str,
         db_session: Session,
+        locale: Optional[str] = None,
         previous_response_id: Optional[str] = None,
         chart_summary: Optional[str] = None,
     ) -> Dict[str, Any]:
@@ -306,6 +330,7 @@ class OpenAIService:
         from app.services.prognostic_tools_service import PROGNOSTIC_TOOLS, PrognosticToolsService
 
         tool_service = PrognosticToolsService(user_id=user_id, db_session=db_session)
+        resolved_locale = self._resolve_locale(locale)
 
         # Системный промпт для прогностического агента
         system_instructions = (
@@ -320,18 +345,18 @@ class OpenAIService:
             "5. Для ключевых жизненных событий → get_directions\n"
             "6. Для годового прогноза → get_solar_return\n"
             "7. Для комплексного прогноза комбинируй несколько методов\n"
-            "8. Отвечай на русском языке, развёрнуто и понятно\n"
+            "8. Отвечай на языке пользователя согласно его локали (en/uk/ru), развёрнуто и понятно\n"
             "9. Не упоминай технические детали (орбы, градусы) — интерпретируй смысл\n"
         )
         if chart_summary:
             system_instructions += f"\nДанные натальной карты:\n{chart_summary}\n"
+        system_instructions += f"\n10. Предпочтительная локаль пользователя: {resolved_locale}\n"
 
         # Собираем input
         input_messages: List[Dict[str, Any]] = [
             {"role": "developer", "content": system_instructions},
+            {"role": "user", "content": message},
         ]
-        if not previous_response_id:
-            input_messages.append({"role": "user", "content": message})
 
         tools_called: List[str] = []
         max_iterations = 5  # защита от бесконечного цикла
@@ -340,7 +365,7 @@ class OpenAIService:
             # Первый вызов
             create_kwargs: Dict[str, Any] = {
                 "model": self.model,
-                "input": input_messages if not previous_response_id else [{"role": "user", "content": message}],
+                "input": input_messages,
                 "tools": PROGNOSTIC_TOOLS,
             }
             if previous_response_id:
@@ -405,6 +430,7 @@ class OpenAIService:
         user_id: str,
         chart_data: Optional[Dict[str, Any]] = None,
         timezone: Optional[str] = None,
+        locale: Optional[str] = None,
         workflow: str = "natal",
     ) -> Dict[str, Any]:
         """
@@ -420,6 +446,7 @@ class OpenAIService:
             {'client_secret': str, 'session_id': str}
         """
         wf_id = self.prognostic_workflow_id if workflow == "prognostic" else self.workflow_id
+        resolved_locale = self._resolve_locale(locale)
         logger.info(f"Создание ChatKit сессии для workflow {wf_id} ({workflow})")
 
         try:
@@ -442,7 +469,10 @@ class OpenAIService:
                     )
 
                     # 3) Психологические функции планет + качества знаков (вариант B)
-                    planet_sign_psych = self.build_planet_sign_psych(psych_data)
+                    planet_sign_psych = self.build_planet_sign_psych(
+                        psych_data,
+                        locale=resolved_locale,
+                    )
                     if planet_sign_psych:
                         state_variables["planet_sign_psych"] = json.dumps(
                             planet_sign_psych,
@@ -458,6 +488,7 @@ class OpenAIService:
 
             # Добавляем state variables для прогностики
             state_variables["user_id"] = user_id
+            state_variables["locale"] = resolved_locale
 
             if timezone:
                 state_variables["timezone"] = timezone

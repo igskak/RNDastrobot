@@ -69,6 +69,22 @@ class ChartWheel {
         return Math.min(1.7, Math.max(0.8, n));
     }
 
+    t(key, params) {
+        return window.FrontendI18n?.t?.(key, params) || key;
+    }
+
+    getPlanetName(name) {
+        const key = `astro.planet.${name}`;
+        const translated = this.t(key);
+        return translated === key ? (Symbols.planetNamesRu[name] || name) : translated;
+    }
+
+    getSignName(name) {
+        const key = `astro.sign.${name}`;
+        const translated = this.t(key);
+        return translated === key ? (Symbols.signNamesRu[name] || name) : translated;
+    }
+
     /**
      * Преобразование эклиптической долготы в угол на карте
      * Базовая точка слева (180°)
@@ -759,15 +775,16 @@ class ChartWheel {
         const planet = this.chartData.planets.find(p => p.name === planetName);
         if (!planet) return;
 
-        const nameRu = Symbols.planetNamesRu[planetName] || planetName;
+        const nameRu = this.getPlanetName(planetName);
         const symbol = Symbols.planets[planetName] || '';
-        const signRu = Symbols.signNamesRu[planet.sign] || planet.sign || '—';
+        const signRu = this.getSignName(planet.sign);
         const signSymbol = Symbols.signs[planet.sign] || '';
         const degFormatted = this.formatDMS(planet.degree_in_sign ?? 0);
+        const house = planet.house ?? this.t('common.notAvailable');
         this.showTooltip(`
             <strong><span class="astro-symbol">${symbol}</span> ${nameRu}</strong><br>
             <span class="astro-symbol">${signSymbol}</span> ${signRu} ${degFormatted}<br>
-            Дом: ${planet.house ?? '—'}${planet.retrograde ? ' <span style="color:#dc2626">Rx</span>' : ''}
+            ${this.t('common.house')}: ${house}${planet.retrograde ? ' <span style=\"color:#dc2626\">Rx</span>' : ''}
         `, e);
     }
 
@@ -805,16 +822,17 @@ class ChartWheel {
         const planet = this.chartData?.planets?.find(p => p.name === planetName);
         if (!planet) return;
 
-        const nameRu = Symbols.planetNamesRu[planetName] || planetName;
+        const nameRu = this.getPlanetName(planetName);
         const symbol = Symbols.planets[planetName] || '';
-        const signRu = Symbols.signNamesRu[planet.sign] || planet.sign || '—';
+        const signRu = this.getSignName(planet.sign);
         const signSymbol = Symbols.signs[planet.sign] || '';
         const degFormatted = this.formatDMS(planet.degree_in_sign ?? 0);
+        const house = planet.house ?? this.t('common.notAvailable');
 
         this.showTooltip(`
             <strong><span class="astro-symbol">${symbol}</span> ${nameRu}</strong><br>
             <span class="astro-symbol">${signSymbol}</span> ${signRu} ${degFormatted}<br>
-            Дом: ${planet.house ?? '—'}${planet.retrograde ? ' <span style="color:#dc2626">Rx</span>' : ''}
+            ${this.t('common.house')}: ${house}${planet.retrograde ? ' <span style=\"color:#dc2626\">Rx</span>' : ''}
         `, e);
     }
 
@@ -843,7 +861,7 @@ class ChartWheel {
         if (row) row.classList.add('active-row');
 
         const sign = group.dataset.sign || '';
-        const signRu = Symbols.signNamesRu[sign] || sign || '—';
+        const signRu = this.getSignName(sign);
         const signSymbol = Symbols.signs[sign] || '';
         const degreeInSign = Number(group.dataset.degreeInSign || 0);
         const longitude = Number(group.dataset.longitude || 0);
@@ -851,9 +869,9 @@ class ChartWheel {
         const lonFormatted = this.formatDMS(longitude);
 
         this.showTooltip(`
-            <strong>Куспид дома ${houseNumber}</strong><br>
+            <strong>${this.t('page.chart.houseCusp', { house: houseNumber })}</strong><br>
             <span class="astro-symbol">${signSymbol}</span> ${signRu} ${degFormatted}<br>
-            Долгота: ${lonFormatted}
+            ${this.t('common.longitude')}: ${lonFormatted}
         `, e);
     }
 
