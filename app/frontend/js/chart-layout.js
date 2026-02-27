@@ -124,6 +124,12 @@
 
     let activeAspectHighlight = null;
 
+    function setAspectPlanetFilter(planetName) {
+        document.dispatchEvent(new CustomEvent('chart:aspect-planet-filter', {
+            detail: { planetName: planetName || null }
+        }));
+    }
+
     function highlightAspect(aspectKey, active) {
         // Сбрасываем все выделения аспектов
         document.querySelectorAll('.aspect-line').forEach(line => {
@@ -279,25 +285,6 @@
             switchMobileView('chart');
         }
 
-        // --- Planet hover on SVG (using event delegation) ---
-        document.addEventListener('mouseenter', (e) => {
-            if (e.target && typeof e.target.closest === 'function') {
-                const group = e.target.closest('.planet-group');
-                if (group) {
-                    highlightPlanet(group.dataset.planet, true, e);
-                }
-            }
-        }, true);
-
-        document.addEventListener('mouseleave', (e) => {
-            if (e.target && typeof e.target.closest === 'function') {
-                const group = e.target.closest('.planet-group');
-                if (group) {
-                    highlightPlanet(null, false);
-                }
-            }
-        }, true);
-
         // --- Click on planet group ---
         document.addEventListener('click', (e) => {
             if (e.target && typeof e.target.closest === 'function') {
@@ -305,6 +292,7 @@
                 if (group) {
                     e.stopPropagation();
                     highlightPlanet(group.dataset.planet, true, e);
+                    setAspectPlanetFilter(group.dataset.planet);
                 }
             }
         });
@@ -316,6 +304,7 @@
                 if (row) {
                     highlightAspect(null, false); // сбросить выделение аспекта
                     highlightPlanet(row.dataset.planet, true, e);
+                    setAspectPlanetFilter(row.dataset.planet);
                 }
             }
         });
@@ -347,9 +336,12 @@
             if (!e.target.closest('.planet-group') &&
                 !e.target.closest('tr[data-planet]') &&
                 !e.target.closest('tr[data-aspect]') &&
-                !e.target.closest('.aspect-line')) {
+                !e.target.closest('.aspect-line') &&
+                !e.target.closest('#aspects-list') &&
+                !e.target.closest('.aspect-lines-legend')) {
                 highlightPlanet(null, false);
                 highlightAspect(null, false);
+                setAspectPlanetFilter(null);
             }
         });
     });

@@ -13,10 +13,12 @@ class ChartDataRenderer {
         this.balancesContainer = document.getElementById('balancesContainer');
         this.dignitiesContainer = document.getElementById('dignitiesContainer');
 
-        // Состояние фильтра аспектов (все включены по умолчанию)
-        this.aspectFilterPlanets = new Set();
         this.aspectTypeFilter = 'all'; // 'all', 'major', 'minor'
-        this.initAspectsSettings();
+        this.aspectPlanetFilter = null;
+        this.aspectSortState = { field: 'planet', ascending: true };
+        this.aspectSortHeaders = [];
+        this.hoveredAspectKey = null;
+        this.initAspectSortHeaders();
     }
 
     t(key, params) {
@@ -41,111 +43,93 @@ class ChartDataRenderer {
         return translated === key ? (Symbols.aspectNamesRu[name] || name) : translated;
     }
 
-    // Все планеты/точки для фильтра аспектов
-    static ASPECT_FILTER_ITEMS = [
-        { id: 'Sun' },
-        { id: 'Moon' },
-        { id: 'Mercury' },
-        { id: 'Venus' },
-        { id: 'Mars' },
-        { id: 'Jupiter' },
-        { id: 'Saturn' },
-        { id: 'Uranus' },
-        { id: 'Neptune' },
-        { id: 'Pluto' },
-        { id: 'Chiron' },
-        { id: 'Proserpina' },
-        { id: 'TrueNode' },
-        { id: 'SouthNode' },
-        { id: 'BlackMoon' },
-        { id: 'WhiteMoon' },
-        { id: 'PartOfFortune' }
+    // Порядок тел для аспектной сетки и сортировки списка аспектов
+    static ASPECT_SORT_ORDER = [
+        'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
+        'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto',
+        'Chiron', 'Proserpina',
+        'TrueNode', 'SouthNode',
+        'BlackMoon', 'WhiteMoon', 'PartOfFortune',
+        'ASC', 'MC', 'IC', 'DSC', 'Vertex', 'AntiVertex'
     ];
 
-    initAspectsSettings() {
-        const settingsBtn = document.getElementById('aspectsSettingsBtn');
-        const settingsPanel = document.getElementById('aspectsSettingsPanel');
-        const togglesContainer = document.getElementById('aspectsPlanetToggles');
-        const resetBtn = document.getElementById('aspectsResetBtn');
-        const majorBtn = document.getElementById('aspectsMajorBtn');
-        const minorBtn = document.getElementById('aspectsMinorBtn');
+    // Алиясы имён из API к отображаемым ключам
+    static ASPECT_NAME_ALIASES = {
+        TrueNorthNode: 'TrueNode',
+        TrueSouthNode: 'SouthNode',
+        Fortune: 'PartOfFortune'
+    };
 
-        if (!settingsBtn || !settingsPanel || !togglesContainer) return;
+    static ASPECT_SORT_RANK = ChartDataRenderer.ASPECT_SORT_ORDER
+        .reduce((acc, name, idx) => {
+            acc[name] = idx;
+            return acc;
+        }, {});
 
-        // Все планеты включены по умолчанию
-        ChartDataRenderer.ASPECT_FILTER_ITEMS.forEach(item => {
-            this.aspectFilterPlanets.add(item.id);
-        });
+    static ASPECT_TYPE_ORDER = [
+        'Conjunction',
+        'Opposition',
+        'Trine',
+        'Square',
+        'Sextile',
+        'Quincunx',
+        'Semisquare',
+        'Semisextile',
+        'Quintile',
+        'Biquintile'
+    ];
 
-        // Генерируем чекбоксы
-        togglesContainer.innerHTML = ChartDataRenderer.ASPECT_FILTER_ITEMS.map(item => `
-            <label class="aspect-planet-toggle">
-                <input type="checkbox" data-planet="${item.id}" checked>
-                <span class="symbol">${Symbols.planets[item.id] || ''}</span>
-                <span>${this.planetName(item.id)}</span>
-            </label>
-        `).join('');
+    static ASPECT_TYPE_RANK = ChartDataRenderer.ASPECT_TYPE_ORDER
+        .reduce((acc, name, idx) => {
+            acc[name] = idx;
+            return acc;
+        }, {});
 
-        // Переключение панели
-        settingsBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            settingsPanel.classList.toggle('hidden');
-        });
-
-        // Обработка чекбоксов
-        togglesContainer.addEventListener('change', (e) => {
-            if (e.target.type !== 'checkbox') return;
-            const planetId = e.target.dataset.planet;
-            if (e.target.checked) {
-                this.aspectFilterPlanets.add(planetId);
-            } else {
-                this.aspectFilterPlanets.delete(planetId);
-            }
-            this.reRenderAspects();
-        });
-
-        // Кнопка "Сбросить" — все галочки, все типы аспектов
-        if (resetBtn) {
-            resetBtn.addEventListener('click', () => {
-                this.aspectTypeFilter = 'all';
-                ChartDataRenderer.ASPECT_FILTER_ITEMS.forEach(item => {
-                    this.aspectFilterPlanets.add(item.id);
-                });
-                this.updatePlanetCheckboxes();
-                this.reRenderAspects();
+    initAspectSortHeaders() {
+        this.aspectSortHeaders = [...document.querySelectorAll('#aspects-list th.sortable[data-sort]')];
+        this.aspectSortHeaders.forEach((header) => {
+            header.addEventListener('click', () => {
+                this.toggleAspectSort(header.dataset.sort);
             });
-        }
+        });
+        this.updateAspectSortHeaders();
+    }
 
-        // Кнопка "Мажорные"
-        if (majorBtn) {
-            majorBtn.addEventListener('click', () => {
-                this.aspectTypeFilter = 'major';
-                this.reRenderAspects();
-            });
+    toggleAspectSort(field) {
+        if (!field) return;
+        if (this.aspectSortState.field === field) {
+            this.aspectSortState.ascending = !this.aspectSortState.ascending;
+        } else {
+            this.aspectSortState.field = field;
+            this.aspectSortState.ascending = true;
         }
+        this.updateAspectSortHeaders();
+        this.reRenderAspects();
+    }
 
-        // Кнопка "Минорные"
-        if (minorBtn) {
-            minorBtn.addEventListener('click', () => {
-                this.aspectTypeFilter = 'minor';
-                this.reRenderAspects();
-            });
-        }
-
-        // Закрытие при клике вне панели
-        document.addEventListener('click', (e) => {
-            if (!settingsPanel.contains(e.target) && e.target !== settingsBtn) {
-                settingsPanel.classList.add('hidden');
-            }
+    updateAspectSortHeaders() {
+        this.aspectSortHeaders.forEach((header) => {
+            const isActive = this.aspectSortState.field === header.dataset.sort;
+            header.classList.toggle('sort-active', isActive);
+            header.classList.toggle('sort-desc', isActive && !this.aspectSortState.ascending);
+            header.setAttribute('aria-sort', isActive
+                ? (this.aspectSortState.ascending ? 'ascending' : 'descending')
+                : 'none');
         });
     }
 
-    updatePlanetCheckboxes() {
-        const togglesContainer = document.getElementById('aspectsPlanetToggles');
-        if (!togglesContainer) return;
-        togglesContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-            cb.checked = this.aspectFilterPlanets.has(cb.dataset.planet);
-        });
+    setAspectTypeFilter(filter) {
+        const nextFilter = filter === 'major' || filter === 'minor' ? filter : 'all';
+        if (nextFilter === this.aspectTypeFilter) return;
+        this.aspectTypeFilter = nextFilter;
+        this.reRenderAspects();
+    }
+
+    setAspectPlanetFilter(planetName) {
+        const normalizedName = planetName ? this.normalizeAspectBodyName(String(planetName)) : null;
+        if (normalizedName === this.aspectPlanetFilter) return;
+        this.aspectPlanetFilter = normalizedName;
+        this.reRenderAspects();
     }
 
     reRenderAspects() {
@@ -264,37 +248,146 @@ class ChartDataRenderer {
         return `${d}°${m.toString().padStart(2, '0')}'`;
     }
 
+    normalizeAspectBodyName(name) {
+        return ChartDataRenderer.ASPECT_NAME_ALIASES[name] || name;
+    }
+
+    getAspectRank(name) {
+        const normalizedName = this.normalizeAspectBodyName(name);
+        return ChartDataRenderer.ASPECT_SORT_RANK[normalizedName] ?? 999;
+    }
+
+    normalizeAspectForDisplay(aspect) {
+        const rank1 = Number.isInteger(aspect.left_rank) ? aspect.left_rank : this.getAspectRank(aspect.planet_1);
+        const rank2 = Number.isInteger(aspect.right_rank) ? aspect.right_rank : this.getAspectRank(aspect.planet_2);
+
+        let leftPlanet = aspect.left_planet || aspect.planet_1;
+        let rightPlanet = aspect.right_planet || aspect.planet_2;
+        let leftRank = rank1;
+        let rightRank = rank2;
+
+        // Fallback, если backend ещё не прислал normalized-поля.
+        if (!aspect.left_planet || !aspect.right_planet) {
+            if (rank2 < rank1 || (rank1 === rank2 && String(aspect.planet_2) < String(aspect.planet_1))) {
+                leftPlanet = aspect.planet_2;
+                rightPlanet = aspect.planet_1;
+                leftRank = rank2;
+                rightRank = rank1;
+            }
+        }
+
+        return {
+            ...aspect,
+            left_planet: this.normalizeAspectBodyName(leftPlanet),
+            right_planet: this.normalizeAspectBodyName(rightPlanet),
+            left_rank: leftRank,
+            right_rank: rightRank
+        };
+    }
+
+    getAspectTypeRank(aspectType) {
+        return ChartDataRenderer.ASPECT_TYPE_RANK[aspectType] ?? 999;
+    }
+
+    buildAspectKey(planetA, planetB) {
+        const left = this.normalizeAspectBodyName(planetA);
+        const right = this.normalizeAspectBodyName(planetB);
+        const leftRank = this.getAspectRank(left);
+        const rightRank = this.getAspectRank(right);
+
+        if (leftRank < rightRank) return `${left}-${right}`;
+        if (rightRank < leftRank) return `${right}-${left}`;
+        return left <= right ? `${left}-${right}` : `${right}-${left}`;
+    }
+
+    getAspectKey(aspect) {
+        if (!aspect) return null;
+        const left = aspect.left_planet || aspect.planet_1;
+        const right = aspect.right_planet || aspect.planet_2;
+        if (!left || !right) return null;
+        return this.buildAspectKey(left, right);
+    }
+
+    compareAspectsByPlanet(a, b) {
+        if (a.left_rank !== b.left_rank) return a.left_rank - b.left_rank;
+        if (a.orb !== b.orb) return a.orb - b.orb;
+        if (a.right_rank !== b.right_rank) return a.right_rank - b.right_rank;
+        return this.getAspectTypeRank(a.aspect_type) - this.getAspectTypeRank(b.aspect_type);
+    }
+
+    compareAspectsByType(a, b) {
+        const typeRankDiff = this.getAspectTypeRank(a.aspect_type) - this.getAspectTypeRank(b.aspect_type);
+        if (typeRankDiff !== 0) return typeRankDiff;
+        if (a.left_rank !== b.left_rank) return a.left_rank - b.left_rank;
+        if (a.right_rank !== b.right_rank) return a.right_rank - b.right_rank;
+        return a.orb - b.orb;
+    }
+
+    compareAspectsByOrb(a, b) {
+        // Сохранено текущее поведение: мажорные выше минорных, затем орбис.
+        if (a.is_major !== b.is_major) return Number(b.is_major) - Number(a.is_major);
+        if (a.orb !== b.orb) return a.orb - b.orb;
+        if (a.left_rank !== b.left_rank) return a.left_rank - b.left_rank;
+        return a.right_rank - b.right_rank;
+    }
+
     renderAspects(aspects) {
-        if (!aspects || !this.aspectsTable) return;
+        if (!this.aspectsTable) return;
+        if (!aspects || aspects.length === 0) {
+            this.aspectsTable.innerHTML = '';
+            return;
+        }
 
-        // Фильтруем по включённым планетам
-        let filtered = aspects.filter(a =>
-            this.aspectFilterPlanets.has(a.planet_1) &&
-            this.aspectFilterPlanets.has(a.planet_2)
-        );
+        let filtered = aspects;
 
-        // Фильтруем по типу аспектов (мажорные/минорные)
         if (this.aspectTypeFilter === 'major') {
             filtered = filtered.filter(a => a.is_major);
         } else if (this.aspectTypeFilter === 'minor') {
             filtered = filtered.filter(a => !a.is_major);
         }
 
-        // Сортируем: сначала мажорные, потом по орбису
-        const sorted = [...filtered].sort((a, b) => {
-            if (a.is_major !== b.is_major) return b.is_major - a.is_major;
-            return a.orb - b.orb;
+        if (this.aspectPlanetFilter) {
+            filtered = filtered.filter((a) => {
+                const p1 = this.normalizeAspectBodyName(a.planet_1);
+                const p2 = this.normalizeAspectBodyName(a.planet_2);
+                return p1 === this.aspectPlanetFilter || p2 === this.aspectPlanetFilter;
+            });
+        }
+
+        const normalized = filtered.map(a => this.normalizeAspectForDisplay(a));
+        const sorted = [...normalized].sort((a, b) => {
+            let diff = 0;
+            switch (this.aspectSortState.field) {
+                case 'type':
+                    diff = this.compareAspectsByType(a, b);
+                    break;
+                case 'orb':
+                    diff = this.compareAspectsByOrb(a, b);
+                    break;
+                case 'planet':
+                default:
+                    diff = this.compareAspectsByPlanet(a, b);
+                    break;
+            }
+
+            return this.aspectSortState.ascending ? diff : -diff;
         });
+
+        if (sorted.length === 0) {
+            this.aspectsTable.innerHTML = '<tr><td colspan="4" class="text-muted">—</td></tr>';
+            return;
+        }
 
         // Профессиональный формат с орбисом
         this.aspectsTable.innerHTML = sorted.map(a => {
             const typeClass = a.harmonic_type === 'harmonious' ? 'aspect-harmonious'
                             : a.harmonic_type === 'tense' ? 'aspect-tense'
                             : 'aspect-neutral';
+            const aspectKey = this.getAspectKey(a);
             return `
-                <tr data-aspect="${a.planet_1}-${a.planet_2}">
-                    <td class="symbol-cell"><span class="astro-symbol">${Symbols.planets[a.planet_1] || ''}</span></td>
-                    <td class="symbol-cell"><span class="astro-symbol">${Symbols.planets[a.planet_2] || ''}</span></td>
+                <tr data-aspect="${aspectKey || ''}" data-aspect-key="${aspectKey || ''}">
+                    <td class="symbol-cell"><span class="astro-symbol">${Symbols.planets[a.left_planet] || ''}</span></td>
+                    <td class="symbol-cell"><span class="astro-symbol">${Symbols.planets[a.right_planet] || ''}</span></td>
                     <td class="${typeClass}"><span class="astro-symbol">${Symbols.aspects[a.aspect_type] || ''}</span> ${this.aspectName(a.aspect_type)}</td>
                     <td class="mono">${a.orb.toFixed(2)}°</td>
                 </tr>
@@ -309,22 +402,24 @@ class ChartDataRenderer {
     renderAspectGrid(aspects, planets) {
         if (!this.aspectGridContainer || !aspects || !planets) return;
 
-        // Все планеты и точки с которыми строятся аспекты (в правильном порядке)
-        const gridPlanets = [
-            'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
-            'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto',
-            'Chiron', 'Proserpina', 'TrueNode', 'SouthNode',
-            'BlackMoon', 'WhiteMoon', 'PartOfFortune'
-        ];
-        const filtered = planets.filter(p => gridPlanets.includes(p.name))
-                                .sort((a, b) => gridPlanets.indexOf(a.name) - gridPlanets.indexOf(b.name));
+        const maxGridRank = this.getAspectRank('PartOfFortune');
+        const gridPlanets = new Map();
+        planets.forEach((p) => {
+            const normalizedName = this.normalizeAspectBodyName(p.name);
+            const rank = this.getAspectRank(normalizedName);
+            if (rank > maxGridRank || gridPlanets.has(normalizedName)) return;
+            gridPlanets.set(normalizedName, { ...p, name: normalizedName });
+        });
+        const filtered = [...gridPlanets.values()]
+            .sort((a, b) => this.getAspectRank(a.name) - this.getAspectRank(b.name));
 
         // Карта аспектов
         const aspectMap = {};
         aspects.forEach(a => {
-            const key1 = `${a.planet_1}-${a.planet_2}`;
-            const key2 = `${a.planet_2}-${a.planet_1}`;
-            aspectMap[key1] = aspectMap[key2] = a;
+            const key = this.getAspectKey(a);
+            if (key) {
+                aspectMap[key] = a;
+            }
         });
 
         let html = '<table class="aspect-grid">';
@@ -344,13 +439,14 @@ class ChartDataRenderer {
                 if (colIdx >= rowIdx) {
                     html += '<td></td>';
                 } else {
-                    const aspect = aspectMap[`${rowPlanet.name}-${colPlanet.name}`];
+                    const aspectKey = this.buildAspectKey(rowPlanet.name, colPlanet.name);
+                    const aspect = aspectMap[aspectKey];
                     if (aspect) {
                         const glyph = ChartDataRenderer.ASPECT_GLYPHS[aspect.aspect_type] || '•';
                         const cls = aspect.harmonic_type === 'harmonious' ? 'grid-harmonious'
                                   : aspect.harmonic_type === 'tense' ? 'grid-tense'
                                   : 'grid-neutral';
-                        html += `<td class="${cls}" title="${this.aspectName(aspect.aspect_type)} ${aspect.orb.toFixed(1)}°"><span class="astro-symbol">${glyph}</span></td>`;
+                        html += `<td class="${cls}" data-aspect-key="${aspectKey}" title="${this.aspectName(aspect.aspect_type)} ${aspect.orb.toFixed(1)}°"><span class="astro-symbol">${glyph}</span></td>`;
                     } else {
                         html += '<td>–</td>';
                     }
@@ -362,6 +458,39 @@ class ChartDataRenderer {
 
         html += '</table>';
         this.aspectGridContainer.innerHTML = html;
+    }
+
+    clearHoveredAspect() {
+        this.hoveredAspectKey = null;
+        if (this.aspectsTable) {
+            this.aspectsTable.querySelectorAll('tr.aspect-hover-row').forEach((row) => {
+                row.classList.remove('aspect-hover-row');
+            });
+        }
+        if (this.aspectGridContainer) {
+            this.aspectGridContainer.querySelectorAll('td.grid-hover').forEach((cell) => {
+                cell.classList.remove('grid-hover');
+            });
+        }
+    }
+
+    setHoveredAspect(aspectKey, options = {}) {
+        const surface = options.surface === 'grid' ? 'grid' : 'table';
+        this.clearHoveredAspect();
+        if (!aspectKey) return;
+
+        this.hoveredAspectKey = aspectKey;
+
+        if (surface === 'table' && this.aspectsTable) {
+            const row = this.aspectsTable.querySelector(`tr[data-aspect-key="${aspectKey}"]`);
+            if (row) row.classList.add('aspect-hover-row');
+            return;
+        }
+
+        if (surface === 'grid' && this.aspectGridContainer) {
+            const cell = this.aspectGridContainer.querySelector(`td[data-aspect-key="${aspectKey}"]`);
+            if (cell) cell.classList.add('grid-hover');
+        }
     }
 
     /**

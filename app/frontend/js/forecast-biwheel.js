@@ -30,7 +30,7 @@
     const SIGN_RING = 22;
     const HOUSE_RING = 30;
     const SIGN_SYMBOL_SIZE = 13;
-    const NATAL_PLANET_SYMBOL_SIZE = 15;
+    const NATAL_PLANET_SYMBOL_SIZE = 14;
     const PROG_PLANET_SYMBOL_SIZE = 14;
     const RETRO_SYMBOL_SIZE = 8;
     // Keep aspect field close to natal wheel proportions:
@@ -40,10 +40,12 @@
     const HOUSE_INNER_R = SIGN_INNER_R - HOUSE_RING;
     const WHEEL_ORDER = ['natal', 'transit', 'progression', 'direction'];
     const WHEEL_INSET = 2;
-    const WHEEL_GAP = 1.5;
+    const WHEEL_GAP = 0;
     const WHEEL_BAND_WIDTH =
         (SIGN_INNER_R - ASPECT_R - (WHEEL_INSET * 2) - (WHEEL_GAP * (WHEEL_ORDER.length - 1))) / WHEEL_ORDER.length;
     const PROGNOSTIC_GLYPH_COLOR = '#111111';
+    const WHEEL_SEPARATOR_COLOR = '#94a3b8';
+    const WHEEL_SEPARATOR_WIDTH = 0.9;
 
     // Colors
     const ELEMENT_COLORS = {
@@ -91,7 +93,7 @@
     let natalFiltersInitialized = false;
     let lastNatalData = null;
     let lastProgData = null;
-    let natalPointScale = 1.2;
+    let natalPointScale = 1.0;
     let transitPointScale = 1.0;
     let focusState = {
         mode: null,
@@ -204,6 +206,7 @@
             if (!isLayerVisible(layer.method)) return;
             drawMethodRing(layer.method);
         });
+        drawWheelSeparators(layers);
 
         if (layerVisibility.natal) {
             drawHouses(natalData.houses, { layer: 'natal', layerLabel: t('page.forecast.biwheel.legend.natal') });
@@ -349,10 +352,10 @@
             const angle = longToAngle(h.longitude) * Math.PI / 180;
             const isAngular = [1,4,7,10].includes(h.number);
             const innerR = isPrognostic
-                ? wheelBand.inner + 0.6
+                ? wheelBand.inner
                 : (isAngular ? ASPECT_R : HOUSE_INNER_R);
             const outerR = isPrognostic
-                ? wheelBand.outer - 0.6
+                ? wheelBand.outer
                 : SIGN_INNER_R;
             const strokeColor = isPrognostic
                 ? progColor
@@ -430,11 +433,11 @@
     function drawMethodRing(method = 'transit') {
         const band = getWheelBand(method);
         const styleByMethod = {
-            natal: { color: '#374151', fillAlpha: '26', borderAlpha: 'B0', borderWidth: 1.0, dash: null },
-            transit: { color: getLayerConfig('transit').color, fillAlpha: '5E', borderAlpha: 'F0', borderWidth: 1.2, dash: null },
-            progression: { color: getLayerConfig('progression').color, fillAlpha: '52', borderAlpha: 'E8', borderWidth: 1.2, dash: '3.2,2.2' },
-            direction: { color: getLayerConfig('direction').color, fillAlpha: '54', borderAlpha: 'EA', borderWidth: 1.2, dash: '1.4,2.0' },
-            solar_return: { color: getLayerConfig('solar_return').color, fillAlpha: '50', borderAlpha: 'E0', borderWidth: 1.2, dash: '5,2' },
+            natal: { color: '#374151', fillAlpha: '26' },
+            transit: { color: getLayerConfig('transit').color, fillAlpha: '5E' },
+            progression: { color: getLayerConfig('progression').color, fillAlpha: '52' },
+            direction: { color: getLayerConfig('direction').color, fillAlpha: '54' },
+            solar_return: { color: getLayerConfig('solar_return').color, fillAlpha: '50' },
         };
         const style = styleByMethod[method] || styleByMethod.transit;
         svg.appendChild(el('circle', {
@@ -447,26 +450,35 @@
             class: 'bw-method-ring',
             'data-layer': method,
         }));
-        const innerAttrs = {
-            cx: C,
-            cy: C,
-            r: band.inner,
-            fill: 'none',
-            stroke: withAlpha(style.color, style.borderAlpha),
-            'stroke-width': style.borderWidth,
-        };
-        if (style.dash) innerAttrs['stroke-dasharray'] = style.dash;
-        svg.appendChild(el('circle', innerAttrs));
-        const outerAttrs = {
-            cx: C,
-            cy: C,
-            r: band.outer,
-            fill: 'none',
-            stroke: withAlpha(style.color, style.borderAlpha),
-            'stroke-width': style.borderWidth,
-        };
-        if (style.dash) outerAttrs['stroke-dasharray'] = style.dash;
-        svg.appendChild(el('circle', outerAttrs));
+    }
+
+    function drawWheelSeparators(layers = []) {
+        const radii = new Set();
+        if (layerVisibility.natal) {
+            const natalBand = getWheelBand('natal');
+            radii.add(natalBand.inner.toFixed(3));
+            radii.add(natalBand.outer.toFixed(3));
+        }
+        layers.forEach(layer => {
+            if (!isLayerVisible(layer.method)) return;
+            const band = getWheelBand(layer.method);
+            radii.add(band.inner.toFixed(3));
+            radii.add(band.outer.toFixed(3));
+        });
+        [...radii]
+            .map(value => Number(value))
+            .sort((a, b) => a - b)
+            .forEach(radius => {
+                svg.appendChild(el('circle', {
+                    cx: C,
+                    cy: C,
+                    r: radius,
+                    fill: 'none',
+                    stroke: WHEEL_SEPARATOR_COLOR,
+                    'stroke-width': WHEEL_SEPARATOR_WIDTH,
+                    opacity: '0.75',
+                }));
+            });
     }
 
     // ─── Draw planets ───────────────────────────────────
@@ -585,13 +597,13 @@
             group.appendChild(glyph);
 
             if (planet.retrograde) {
-                const rxScale = Math.min(1.25, layerScale);
+                const rxScale = Math.min(1.1, layerScale);
                 group.appendChild(el('text', {
-                    x: p.x + glyphSize * 0.5, y: p.y - glyphSize * 0.25,
+                    x: p.x + glyphSize * 0.36, y: p.y + glyphSize * 0.42,
                     'font-size': String((RETRO_SYMBOL_SIZE * rxScale).toFixed(2)), fill:'#dc2626',
                     'font-weight':'700',
                     class: 'bw-retro-mark'
-                }, 'Rx'));
+                }, 'R'));
             }
 
             group.addEventListener('click', () => {
@@ -692,7 +704,7 @@
         showHoverTooltip(`
             <strong>${role}: <span class="astro-symbol">${symbol}</span> ${nameRu}</strong><br>
             <span class="astro-symbol">${signSymbol}</span> ${signRu} ${formatDMS(degree)}<br>
-            ${t('common.house')}: ${house}${retro ? ' <span style="color:#dc2626">Rx</span>' : ''}
+            ${t('common.house')}: ${house}${retro ? ' <span style="color:#dc2626">R</span>' : ''}
         `, event);
     }
 
@@ -1548,7 +1560,7 @@
     }
 
     function initAspectControls() {
-        natalPointScale = readSavedScale('bwNatalPointScale', 1.2);
+        natalPointScale = readSavedScale('bwNatalPointScale', 1.0);
         transitPointScale = readSavedScale('bwTransitPointScale', 1.0);
         updateScaleControlsUI();
         updateLayerLegendUI();
@@ -1591,7 +1603,7 @@
         }
         applyPanelCollapseStates();
         document.getElementById('bwNatalScaleRange')?.addEventListener('input', e => {
-            natalPointScale = clampPointScale((Number(e.target.value) || 120) / 100);
+            natalPointScale = clampPointScale((Number(e.target.value) || 100) / 100);
             localStorage.setItem('bwNatalPointScale', String(natalPointScale));
             updateScaleControlsUI();
             rerenderLast();

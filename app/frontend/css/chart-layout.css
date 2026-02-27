@@ -391,87 +391,28 @@
     }
 }
 
-/* Aspects settings panel */
-.aspects-header {
-    display: flex;
-    justify-content: flex-end;
-    padding: 4px 8px;
-    border-bottom: 1px solid var(--border);
+/* Aspects table sorting */
+#aspects-list .data-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
 }
 
-.aspects-settings-btn {
-    background: none;
-    border: none;
-    font-size: 16px;
-    cursor: pointer;
+#aspects-list .data-table th.sortable::after {
+    content: ' \21C5';
     color: var(--text-secondary);
-    padding: 4px 8px;
-    border-radius: 4px;
-    transition: all var(--transition);
+    font-size: 0.72em;
 }
-.aspects-settings-btn:hover {
-    background: var(--bg-tertiary);
+
+#aspects-list .data-table th.sortable.sort-active {
     color: var(--accent);
 }
 
-.aspects-settings-panel {
-    background: var(--bg-tertiary);
-    border-bottom: 1px solid var(--border);
-    padding: 8px;
-}
-.aspects-settings-panel.hidden {
-    display: none;
+#aspects-list .data-table th.sortable.sort-active::after {
+    content: ' \2191';
+    color: var(--accent);
 }
 
-.aspects-settings-title {
-    font-size: 11px;
-    color: var(--text-secondary);
-    margin-bottom: 6px;
-    font-weight: 500;
-}
-
-.aspects-filter-buttons {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 8px;
-}
-
-.aspects-filter-btn {
-    padding: 4px 10px;
-    font-size: 11px;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all var(--transition);
-}
-.aspects-filter-btn:hover {
-    background: var(--accent);
-    color: white;
-    border-color: var(--accent);
-}
-
-.aspects-planet-toggles {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 8px;
-}
-
-.aspect-planet-toggle {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 12px;
-    cursor: pointer;
-    color: var(--text-primary);
-}
-.aspect-planet-toggle input[type="checkbox"] {
-    width: 14px;
-    height: 14px;
-    cursor: pointer;
-}
-.aspect-planet-toggle .symbol {
-    font-size: 14px;
-    font-family: var(--font-symbol);
+#aspects-list .data-table th.sortable.sort-active.sort-desc::after {
+    content: ' \2193';
 }

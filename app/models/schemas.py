@@ -185,6 +185,10 @@ class AspectInfo(BaseModel):
     """Информация об аспекте"""
     planet_1: str
     planet_2: str
+    left_planet: Optional[str] = Field(None, description="Левая планета в нормализованной паре для отображения")
+    right_planet: Optional[str] = Field(None, description="Правая планета в нормализованной паре для отображения")
+    left_rank: Optional[int] = Field(None, description="Позиция левой планеты в порядке аспектной сетки")
+    right_rank: Optional[int] = Field(None, description="Позиция правой планеты в порядке аспектной сетки")
     aspect_type: str
     orb: float
     is_major: bool

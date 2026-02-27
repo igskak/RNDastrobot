@@ -2,7 +2,7 @@
 Главный сервис для расчёта натальной карты
 """
 from datetime import date, time as time_type
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 from uuid import UUID
 from sqlalchemy.orm import Session
 
@@ -20,6 +20,22 @@ from app.database.models import NatalAspect, NatalConfigurationAspect
 
 class NatalChartService:
     """Главный сервис для расчёта натальной карты (оркестратор)"""
+
+    # Единый порядок тел для UI-группировки аспектов (как в аспектной сетке).
+    ASPECT_DISPLAY_ORDER = (
+        'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
+        'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto',
+        'Chiron', 'Proserpina',
+        'TrueNode', 'SouthNode',
+        'BlackMoon', 'WhiteMoon', 'PartOfFortune',
+        'ASC', 'MC', 'IC', 'DSC', 'Vertex', 'AntiVertex'
+    )
+    ASPECT_NAME_ALIASES = {
+        'TrueNorthNode': 'TrueNode',
+        'TrueSouthNode': 'SouthNode',
+        'Fortune': 'PartOfFortune',
+    }
+    ASPECT_DISPLAY_RANK = {name: idx for idx, name in enumerate(ASPECT_DISPLAY_ORDER)}
     
     def __init__(self, ephe_path: str = None):
         """
@@ -33,6 +49,54 @@ class NatalChartService:
         self.swisseph_engine = SwissEphemerisEngine(ephe_path)
         self.special_points_service = SpecialPointsService()
         self.karmic_analysis_service = KarmicAnalysisService()
+
+    @classmethod
+    def _normalize_aspect_name_for_order(cls, name: Optional[str]) -> Optional[str]:
+        """Привести имя точки/планеты к каноническому для ранжирования."""
+        if not name:
+            return name
+        return cls.ASPECT_NAME_ALIASES.get(name, name)
+
+    @classmethod
+    def _get_aspect_rank(cls, name: Optional[str]) -> int:
+        """Получить rank по порядку аспектной сетки; неизвестные в конец."""
+        normalized = cls._normalize_aspect_name_for_order(name)
+        return cls.ASPECT_DISPLAY_RANK.get(normalized, 999)
+
+    @classmethod
+    def _normalize_aspect_pair(cls, planet_1: str, planet_2: str) -> Tuple[str, str, int, int]:
+        """
+        Нормализовать пару аспектов в детерминированный left/right порядок.
+        """
+        rank_1 = cls._get_aspect_rank(planet_1)
+        rank_2 = cls._get_aspect_rank(planet_2)
+
+        if rank_1 < rank_2:
+            return planet_1, planet_2, rank_1, rank_2
+        if rank_2 < rank_1:
+            return planet_2, planet_1, rank_2, rank_1
+
+        # tie-break для стабильного порядка неизвестных/равных alias-рангов
+        if planet_1 <= planet_2:
+            return planet_1, planet_2, rank_1, rank_2
+        return planet_2, planet_1, rank_2, rank_1
+
+    @classmethod
+    def _enrich_aspect_for_display(cls, aspect_data: Dict) -> Dict:
+        """
+        Добавить к аспекту поля left/right + rank для фронтенд-сортировки/отрисовки.
+        """
+        left_planet, right_planet, left_rank, right_rank = cls._normalize_aspect_pair(
+            aspect_data['planet_1'],
+            aspect_data['planet_2'],
+        )
+        return {
+            **aspect_data,
+            'left_planet': left_planet,
+            'right_planet': right_planet,
+            'left_rank': left_rank,
+            'right_rank': right_rank,
+        }
     
     def calculate_natal_chart(
         self,
@@ -920,14 +984,14 @@ class NatalChartService:
 
         # 1. Аспекти (eager-loaded через user.natal_aspects)
         result['aspects'] = [
-            {
+            self._enrich_aspect_for_display({
                 'planet_1': a.planet_1,
                 'planet_2': a.planet_2,
                 'aspect_type': a.aspect_type,
                 'orb': float(a.orb),
                 'is_major': a.is_major,
                 'harmonic_type': a.harmonic_type
-            }
+            })
             for a in user.natal_aspects
         ]
 
@@ -1116,13 +1180,13 @@ class NatalChartService:
                 for p in user.planets
             ],
             'aspects': [
-                {
+                self._enrich_aspect_for_display({
                     'planet_1': a.planet_1,
                     'planet_2': a.planet_2,
                     'aspect_type': a.aspect_type,
                     'orb': float(a.orb),
                     'is_partile': a.is_partile or False,
-                }
+                })
                 for a in aspects
             ]
         }

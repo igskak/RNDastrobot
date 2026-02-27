@@ -48,6 +48,7 @@ class ChartWheel {
         // Интерактивность
         this.hoveredAspect = null;
         this.selectedPlanet = null;
+        this.aspectLookupByKey = {};
 
         // Фильтры аспектов
         this.aspectFilter = 'all'; // 'all', 'major', 'minor'
@@ -57,6 +58,23 @@ class ChartWheel {
         // direction: 'clockwise' или 'counterclockwise'
         this.orientationMode = 'asc';
         this.orientationDirection = 'counterclockwise';
+
+        this.aspectNameAliases = {
+            TrueNorthNode: 'TrueNode',
+            TrueSouthNode: 'SouthNode',
+            Fortune: 'PartOfFortune'
+        };
+        this.aspectSortRank = [
+            'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
+            'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto',
+            'Chiron', 'Proserpina',
+            'TrueNode', 'SouthNode',
+            'BlackMoon', 'WhiteMoon', 'PartOfFortune',
+            'ASC', 'MC', 'IC', 'DSC', 'Vertex', 'AntiVertex'
+        ].reduce((acc, name, idx) => {
+            acc[name] = idx;
+            return acc;
+        }, {});
     }
 
     readPointScale() {
@@ -85,6 +103,59 @@ class ChartWheel {
         return translated === key ? (Symbols.signNamesRu[name] || name) : translated;
     }
 
+    normalizeAspectBodyName(name) {
+        if (!name) return name;
+        return this.aspectNameAliases[name] || name;
+    }
+
+    getAspectRank(name) {
+        const normalizedName = this.normalizeAspectBodyName(name);
+        return this.aspectSortRank[normalizedName] ?? 999;
+    }
+
+    buildAspectKey(planetA, planetB) {
+        const left = this.normalizeAspectBodyName(planetA);
+        const right = this.normalizeAspectBodyName(planetB);
+        const leftRank = this.getAspectRank(left);
+        const rightRank = this.getAspectRank(right);
+
+        if (leftRank < rightRank) return `${left}-${right}`;
+        if (rightRank < leftRank) return `${right}-${left}`;
+        return left <= right ? `${left}-${right}` : `${right}-${left}`;
+    }
+
+    getAspectHarmonicLabel(harmonicType) {
+        if (harmonicType === 'harmonious') return this.t('page.chart.legend.harmonious');
+        if (harmonicType === 'tense') return this.t('page.chart.legend.tense');
+        return this.t('page.chart.legend.neutral');
+    }
+
+    getAspectTooltipHtml(aspectData) {
+        const leftPlanet = this.normalizeAspectBodyName(aspectData?.left_planet || aspectData?.planet_1);
+        const rightPlanet = this.normalizeAspectBodyName(aspectData?.right_planet || aspectData?.planet_2);
+        const leftSymbol = Symbols.planets[leftPlanet] || '';
+        const rightSymbol = Symbols.planets[rightPlanet] || '';
+        const leftName = this.getPlanetName(leftPlanet);
+        const rightName = this.getPlanetName(rightPlanet);
+        const aspectType = aspectData?.aspect_type || '';
+        const aspectSymbol = Symbols.aspects[aspectType] || '';
+        const aspectName = this.t(`astro.aspect.${aspectType}`);
+        const aspectLabel = aspectName === `astro.aspect.${aspectType}` ? (Symbols.aspectNamesRu[aspectType] || aspectType) : aspectName;
+        const orb = Number(aspectData?.orb);
+        const orbLabel = Number.isFinite(orb) ? `${orb.toFixed(2)}°` : this.t('common.notAvailable');
+        const harmonicLabel = this.getAspectHarmonicLabel(aspectData?.harmonic_type);
+
+        return `
+            <strong><span class="astro-symbol">${leftSymbol}</span> ${leftName} ${aspectSymbol} ${aspectLabel} <span class="astro-symbol">${rightSymbol}</span> ${rightName}</strong><br>
+            ${this.t('common.orb')}: ${orbLabel}<br>
+            ${harmonicLabel}
+        `;
+    }
+
+    dispatchAspectHover(type, detail = {}) {
+        document.dispatchEvent(new CustomEvent(type, { detail }));
+    }
+
     /**
      * Преобразование эклиптической долготы в угол на карте
      * Базовая точка слева (180°)
@@ -111,8 +182,11 @@ class ChartWheel {
      * Отрисовка полной карты
      */
     draw(chartData) {
+        this.dispatchAspectHover('chart:aspect-leave', { source: 'wheel' });
+        this.hideTooltip();
         this.svg.innerHTML = '';
         this.chartData = chartData;
+        this.aspectLookupByKey = {};
 
         // Создаём группы для слоёв (порядок важен для z-index)
         this.createLayers();
@@ -358,7 +432,11 @@ class ChartWheel {
      */
     drawAspectsEnhanced(aspects, planets) {
         const planetMap = {};
-        planets.forEach(p => planetMap[p.name] = p.longitude);
+        planets.forEach((p) => {
+            const normalizedName = this.normalizeAspectBodyName(p.name);
+            planetMap[p.name] = p.longitude;
+            planetMap[normalizedName] = p.longitude;
+        });
 
         // Символы аспектов
         const aspectGlyphs = {
@@ -372,9 +450,19 @@ class ChartWheel {
         const sorted = [...aspects].sort((a, b) => b.orb - a.orb);
 
         sorted.forEach(aspect => {
-            const long1 = planetMap[aspect.planet_1];
-            const long2 = planetMap[aspect.planet_2];
+            const planet1 = this.normalizeAspectBodyName(aspect.planet_1);
+            const planet2 = this.normalizeAspectBodyName(aspect.planet_2);
+            const long1 = planetMap[aspect.planet_1] ?? planetMap[planet1];
+            const long2 = planetMap[aspect.planet_2] ?? planetMap[planet2];
             if (long1 === undefined || long2 === undefined) return;
+            const aspectKey = this.buildAspectKey(planet1, planet2);
+            this.aspectLookupByKey[aspectKey] = {
+                ...aspect,
+                planet_1: planet1,
+                planet_2: planet2,
+                left_planet: this.normalizeAspectBodyName(aspect.left_planet || planet1),
+                right_planet: this.normalizeAspectBodyName(aspect.right_planet || planet2)
+            };
 
             // Мажорные — сплошные, минорные — пунктир
             const isMajor = this.majorAspects.includes(aspect.aspect_type);
@@ -407,7 +495,10 @@ class ChartWheel {
                 'stroke-dasharray': dashArray,
                 opacity: isMajor ? 0.7 : 0.45,
                 class: 'aspect-line',
-                'data-aspect': `${aspect.planet_1}-${aspect.planet_2}`,
+                'data-aspect': aspectKey,
+                'data-aspect-key': aspectKey,
+                'data-planet-1': planet1,
+                'data-planet-2': planet2,
                 'data-type': aspect.aspect_type,
                 'data-major': isMajor ? 'true' : 'false'
             });
@@ -501,15 +592,15 @@ class ChartWheel {
                 style: 'pointer-events: none;'
             }, Symbols.planets[planet.name] || planet.name.charAt(0)));
 
-            // Ретроградность — «Rx» (компактно, справа сверху от символа)
+            // Ретроградность — «R» (компактно, справа снизу от символа)
             if (planet.retrograde) {
                 group.appendChild(this.createSvgElement('text', {
-                    x: x + (8 * scale), y: y - (4 * scale),
+                    x: x + glyphSize * 0.36, y: y + glyphSize * 0.42,
                     'font-size': (8 * Math.min(1.25, scale)).toFixed(2),
                     'font-weight': '700',
                     fill: '#dc2626',
                     style: 'pointer-events: none;'
-                }, 'Rx'));
+                }, 'R'));
             }
 
             this.layers.planets.appendChild(group);
@@ -734,6 +825,7 @@ class ChartWheel {
         // Hover на аспектах
         this.svg.querySelectorAll('.aspect-line').forEach(line => {
             line.addEventListener('mouseenter', (e) => this.onAspectHover(e, true));
+            line.addEventListener('mousemove', (e) => this.onAspectHoverMove(e));
             line.addEventListener('mouseleave', (e) => this.onAspectHover(e, false));
         });
 
@@ -784,15 +876,16 @@ class ChartWheel {
         this.showTooltip(`
             <strong><span class="astro-symbol">${symbol}</span> ${nameRu}</strong><br>
             <span class="astro-symbol">${signSymbol}</span> ${signRu} ${degFormatted}<br>
-            ${this.t('common.house')}: ${house}${planet.retrograde ? ' <span style=\"color:#dc2626\">Rx</span>' : ''}
+            ${this.t('common.house')}: ${house}${planet.retrograde ? ' <span style=\"color:#dc2626\">R</span>' : ''}
         `, e);
     }
 
     onAspectHover(e, isEnter) {
-        const aspect = e.currentTarget.dataset.aspect;
-        if (!aspect) return;
+        const aspectKey = e.currentTarget.dataset.aspectKey || e.currentTarget.dataset.aspect;
+        if (!aspectKey) return;
 
-        const [p1, p2] = aspect.split('-');
+        const p1 = e.currentTarget.dataset.planet1 || '';
+        const p2 = e.currentTarget.dataset.planet2 || '';
 
         // Подсветка планет
         [p1, p2].forEach(pName => {
@@ -811,6 +904,30 @@ class ChartWheel {
         // Выделение самой линии
         e.currentTarget.style.opacity = isEnter ? '1' : '';
         e.currentTarget.style.strokeWidth = isEnter ? '3' : '';
+
+        if (isEnter) {
+            const aspectData = this.aspectLookupByKey[aspectKey];
+            if (aspectData) {
+                this.showTooltip(this.getAspectTooltipHtml(aspectData), e);
+            }
+            this.dispatchAspectHover('chart:aspect-hover', {
+                source: 'wheel',
+                aspectKey,
+                aspect: aspectData || null
+            });
+            return;
+        }
+
+        this.hideTooltip();
+        this.dispatchAspectHover('chart:aspect-leave', {
+            source: 'wheel',
+            aspectKey
+        });
+    }
+
+    onAspectHoverMove(e) {
+        if (!this.tooltipEl || this.tooltipEl.style.display !== 'block') return;
+        this.moveTooltip(e);
     }
 
     onPlanetTooltipHover(e, isEnter) {
@@ -832,7 +949,7 @@ class ChartWheel {
         this.showTooltip(`
             <strong><span class="astro-symbol">${symbol}</span> ${nameRu}</strong><br>
             <span class="astro-symbol">${signSymbol}</span> ${signRu} ${degFormatted}<br>
-            ${this.t('common.house')}: ${house}${planet.retrograde ? ' <span style=\"color:#dc2626\">Rx</span>' : ''}
+            ${this.t('common.house')}: ${house}${planet.retrograde ? ' <span style=\"color:#dc2626\">R</span>' : ''}
         `, e);
     }
 

@@ -50,24 +50,12 @@
                     </table>
                 </div>
                 <div id="aspects-list" class="panel-tab-content">
-                    <div class="aspects-header">
-                        <button class="aspects-settings-btn" id="aspectsSettingsBtn" data-i18n-title="page.chart.aspects.settings.title">⚙</button>
-                    </div>
-                    <div class="aspects-settings-panel hidden" id="aspectsSettingsPanel">
-                        <div class="aspects-settings-title" data-i18n="page.chart.aspects.settings.showWith"></div>
-                        <div class="aspects-filter-buttons">
-                            <button class="aspects-filter-btn" id="aspectsResetBtn" data-i18n="common.reset"></button>
-                            <button class="aspects-filter-btn" id="aspectsMajorBtn" data-i18n="common.major"></button>
-                            <button class="aspects-filter-btn" id="aspectsMinorBtn" data-i18n="common.minor"></button>
-                        </div>
-                        <div class="aspects-planet-toggles" id="aspectsPlanetToggles"></div>
-                    </div>
                     <table class="data-table compact">
                         <thead>
                             <tr>
-                                <th colspan="2" data-i18n="page.chart.table.aspects.aspect"></th>
-                                <th data-i18n="page.chart.table.aspects.type"></th>
-                                <th data-i18n="page.chart.table.aspects.orb"></th>
+                                <th colspan="2" class="sortable" data-sort="planet" data-i18n="page.chart.table.aspects.aspect"></th>
+                                <th class="sortable" data-sort="type" data-i18n="page.chart.table.aspects.type"></th>
+                                <th class="sortable" data-sort="orb" data-i18n="page.chart.table.aspects.orb"></th>
                             </tr>
                         </thead>
                         <tbody id="aspectsTable"></tbody>

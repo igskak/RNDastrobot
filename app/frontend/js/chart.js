@@ -6,6 +6,7 @@ let chartWheel = null;
 let chartDataRenderer = null;
 let inFlightRecalcPromise = null;
 let inFlightRecalcKey = null;
+let currentHoveredAspectKey = null;
 const HOUSE_SYSTEM_ALIASES = {
     'P': 'P',
     'K': 'K',
@@ -107,6 +108,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // Инициализируем таблицы данных
     chartDataRenderer = new ChartDataRenderer();
     chartDataRenderer.render(chartData);
+    chartDataRenderer.setAspectTypeFilter('all');
+
+    document.addEventListener('chart:aspect-planet-filter', (event) => {
+        const planetName = event?.detail?.planetName || null;
+        if (chartDataRenderer) {
+            chartDataRenderer.setAspectPlanetFilter(planetName);
+        }
+    });
+
+    document.addEventListener('chart:aspect-hover', (event) => {
+        const aspectKey = event?.detail?.aspectKey || null;
+        currentHoveredAspectKey = aspectKey;
+        syncHoveredAspectToActiveSurface();
+    });
+
+    document.addEventListener('chart:aspect-leave', () => {
+        currentHoveredAspectKey = null;
+        if (chartDataRenderer?.clearHoveredAspect) {
+            chartDataRenderer.clearHoveredAspect();
+        }
+    });
 
     // Инициализируем вкладки и настройки
     initTabs();
@@ -122,6 +144,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const hidden = currentSettings.hiddenPlanets || [];
             redrawChart(window.chartDataCache, hidden, currentSettings.orientation);
         }
+    });
+
+    window.addEventListener('resize', () => {
+        syncHoveredAspectToActiveSurface();
     });
 });
 
@@ -232,8 +258,45 @@ function initPanelTabs() {
 
             tab.classList.add('active');
             document.getElementById(panelId).classList.add('active');
+            syncHoveredAspectToActiveSurface();
         });
     });
+}
+
+function isElementVisible(element) {
+    if (!element) return false;
+    if (element.offsetParent === null) return false;
+    const style = window.getComputedStyle(element);
+    return style.display !== 'none' && style.visibility !== 'hidden';
+}
+
+function getActiveAspectSurface() {
+    const leftPanel = document.getElementById('view-planets');
+    if (!leftPanel || !isElementVisible(leftPanel)) return null;
+
+    const aspectsPane = document.getElementById('aspects-list');
+    const gridPane = document.getElementById('grid-list');
+
+    if (aspectsPane?.classList.contains('active')) return 'table';
+    if (gridPane?.classList.contains('active')) return 'grid';
+    return null;
+}
+
+function syncHoveredAspectToActiveSurface() {
+    if (!chartDataRenderer || typeof chartDataRenderer.setHoveredAspect !== 'function') return;
+
+    if (!currentHoveredAspectKey) {
+        chartDataRenderer.clearHoveredAspect?.();
+        return;
+    }
+
+    const surface = getActiveAspectSurface();
+    if (!surface) {
+        chartDataRenderer.clearHoveredAspect?.();
+        return;
+    }
+
+    chartDataRenderer.setHoveredAspect(currentHoveredAspectKey, { surface });
 }
 
 /**
@@ -464,6 +527,7 @@ function redrawChart(chartData, hiddenPlanets, orientation = currentSettings.ori
     }
     chartWheel.draw(filteredData);
     chartDataRenderer.render(filteredData);
+    syncHoveredAspectToActiveSurface();
 }
 
 /**
@@ -511,6 +575,9 @@ function initZoomControls() {
             // Применяем фильтр
             if (window.chartWheel) {
                 window.chartWheel.setAspectFilter(filter);
+            }
+            if (chartDataRenderer) {
+                chartDataRenderer.setAspectTypeFilter(filter);
             }
         });
     });

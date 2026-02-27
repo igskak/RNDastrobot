@@ -241,6 +241,11 @@
     "chart": {
       "aspects": {
         "settings": {
+          "sortBy": "Sort",
+          "sortModes": {
+            "orb": "By orb",
+            "planet": "By planets"
+          },
           "showWith": "Show aspects with",
           "title": "Aspect settings"
         }
