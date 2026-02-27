@@ -20,6 +20,7 @@ from app.models.schemas import (
     StelliumInfo,
     CosmogramPatternInfo,
     PlanetDistributionInfo,
+    KarmicAnalysisInfo,
     BalancesInfo,
     ElementBalanceInfo,
     ModeBalanceInfo,
@@ -151,6 +152,7 @@ def calculate_natal_chart(
             planet_distribution=PlanetDistributionInfo(**chart_data['planet_distribution']) if chart_data.get('planet_distribution') else None,
             # Інтегральні баланси (пункт 3.5 специфікації)
             balances=balances_data,
+            karmic_analysis=KarmicAnalysisInfo(**chart_data['karmic_analysis']),
         )
 
         return response
@@ -250,6 +252,7 @@ def get_natal_chart(
             planet_distribution=PlanetDistributionInfo(**chart_data['planet_distribution']) if chart_data.get('planet_distribution') else None,
             # Інтегральні баланси (пункт 3.5 специфікації)
             balances=balances_data,
+            karmic_analysis=KarmicAnalysisInfo(**chart_data['karmic_analysis']),
         )
 
         return response

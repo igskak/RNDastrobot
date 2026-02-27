@@ -1,13 +1,20 @@
 #define _GNU_SOURCE // Needed for shared library info (see print_library_info() below)
 #define __USE_GNU
 #include <dlfcn.h>       // Needed for shared library info
-#include <openssl/sha.h> // Needed for SHA1 hash of library binary
 #include <time.h>       
 #include <unistd.h>
 #include <getopt.h>      // For long options
 #include <sys/types.h>
 #include <pwd.h>         // Needed for getting current username
 #include "setest.h"
+
+#if defined(__APPLE__)
+#include <CommonCrypto/CommonDigest.h>
+#define SHA1_HASH(data, len, out) CC_SHA1((data), (CC_LONG)(len), (out))
+#else
+#include <openssl/sha.h>
+#define SHA1_HASH(data, len, out) SHA1((data), (len), (out))
+#endif
 
 extern const char* HELPFILE;
 
@@ -457,7 +464,7 @@ void sha1_from_file(const char *name, SHA1HASH* hash) {
   fread(buffer, fileLen, 1, file);
   fclose(file);
 
-  SHA1(buffer, fileLen, hash->key );
+  SHA1_HASH(buffer, fileLen, hash->key);
 
   free(buffer);
 }
@@ -527,4 +534,3 @@ int get_disabled(const t_section section,test_context *ctx) {
   }
   return disabled;
 }
-

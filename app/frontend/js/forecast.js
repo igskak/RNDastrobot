@@ -64,6 +64,12 @@ const ForecastState = {
     transitPeriodKey: null,
     transitCalculatedRange: null,
     prognosticPointCache: {},
+    pointData: null,
+    ingressSummaryData: null,
+    ingressSummaryError: null,
+    ingressSummaryCache: {},
+    ingressSummaryInFlight: {},
+    ingressSummaryKey: null,
     progressionTargetDate: null,
     directionTargetDate: null,
     directionType: null,
@@ -78,6 +84,7 @@ window.ForecastState = ForecastState;
 const SOLAR_LOCATION_STORAGE_KEY = 'forecastSolarLocation';
 const SOLAR_YEAR_STORAGE_KEY = 'forecastSolarYear';
 const DIRECTION_TYPE_STORAGE_KEY = 'forecastDirectionType';
+const INGRESS_SUMMARY_CACHE_VERSION = 'v5';
 
 function clampChartPointScale(v) {
     const n = Number(v);
@@ -384,7 +391,7 @@ function initControls() {
     ['startDate', 'endDate'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
-            el.addEventListener('change', () => {
+            el.addEventListener('change', async () => {
                 if (ForecastState.currentTab === 'biwheel' && document.getElementById('methodSelect').value === 'transits') {
                     refreshTransitScale(ForecastState.transitMoment);
                     const selectedDate = getTransitScaleDateByIndex(ForecastState.transitScaleIndex);
@@ -392,6 +399,16 @@ function initControls() {
                         calculateTransitBiwheelAt(selectedDate, { showLoading: false }).catch(err => {
                             console.error('Transit biwheel range error:', err);
                         });
+                    }
+                    const directionType = resolveDirectionTypeForCombined('transits');
+                    const period = resolvePrognosticPeriod(selectedDate || ForecastState.transitMoment || '');
+                    try {
+                        await ensureIngressSummaryData(period.startDate, period.endDate, directionType);
+                        if (window.ForecastBiwheel?.hasLastRender?.()) {
+                            window.ForecastBiwheel.rerenderLast();
+                        }
+                    } catch (err) {
+                        console.error('Ingress summary period change error:', err);
                     }
                 }
             });
@@ -1038,6 +1055,11 @@ async function onCalculate() {
 // ─── Navigation (timeline → biwheel) ────────────────────
 window.ForecastNavigation = {
     goToBiwheel(dateStr, highlightAspect) {
+        const methodSelect = document.getElementById('methodSelect');
+        if (methodSelect && methodSelect.value !== 'transits') {
+            methodSelect.value = 'transits';
+        }
+        ForecastState.method = 'transits';
         // Set date inputs
         document.getElementById('startDate').value = dateStr;
         document.getElementById('endDate').value = dateStr;
@@ -1199,6 +1221,7 @@ async function calculateTransitBiwheelAt(dateStr, { showLoading = false } = {}) 
     if (requestSeq !== ForecastState.biwheelRequestSeq) return;
 
     ForecastState.transitMoment = dateStr;
+    ForecastState.pointData = combinedData;
     ForecastState.combinedBiwheelData = combinedData;
     showState('biwheel', 'content');
     renderBiwheelData(combinedData);
@@ -1229,6 +1252,10 @@ function getCombinedPointKey(targetDate, directionType) {
 
 function getCombinedTableKey(targetDate, directionType, startDate = '', endDate = '') {
     return `combined_table|${targetDate}|${directionType || 'solar_arc'}|${startDate}|${endDate}`;
+}
+
+function getIngressSummaryKey(startDate, endDate, directionType) {
+    return `ingress_summary|${INGRESS_SUMMARY_CACHE_VERSION}|${startDate}|${endDate}|${directionType || 'solar_arc'}`;
 }
 
 function normalizeDirectionType(directionType) {
@@ -1397,11 +1424,74 @@ async function ensureCombinedBiwheelData(targetDate, { directionType = 'solar_ar
     return requestPromise;
 }
 
+function resolvePrognosticPeriod(targetDate) {
+    const startRaw = document.getElementById('startDate')?.value;
+    const endRaw = document.getElementById('endDate')?.value;
+    const start = parseInputDate(startRaw);
+    const end = parseInputDate(endRaw);
+    if (start && end) {
+        if (end >= start) {
+            return { startDate: formatInputDate(start), endDate: formatInputDate(end) };
+        }
+        return { startDate: formatInputDate(end), endDate: formatInputDate(start) };
+    }
+    return { startDate: targetDate, endDate: targetDate };
+}
+
+async function ensureIngressSummaryData(startDate, endDate, directionType) {
+    if (!startDate || !endDate) {
+        ForecastState.ingressSummaryData = null;
+        ForecastState.ingressSummaryError = null;
+        ForecastState.ingressSummaryKey = null;
+        return null;
+    }
+
+    const normalizedDirectionType = normalizeDirectionType(directionType);
+    const key = getIngressSummaryKey(startDate, endDate, normalizedDirectionType);
+    if (ForecastState.ingressSummaryKey === key && ForecastState.ingressSummaryData) {
+        return ForecastState.ingressSummaryData;
+    }
+    if (ForecastState.ingressSummaryCache[key]) {
+        ForecastState.ingressSummaryData = ForecastState.ingressSummaryCache[key];
+        ForecastState.ingressSummaryError = null;
+        ForecastState.ingressSummaryKey = key;
+        return ForecastState.ingressSummaryData;
+    }
+    if (ForecastState.ingressSummaryInFlight[key]) {
+        return ForecastState.ingressSummaryInFlight[key];
+    }
+
+    const requestPromise = apiPost('/ingresses/period-summary', {
+        user_id: ForecastState.userId,
+        start_date: startDate,
+        end_date: endDate,
+        timezone: getForecastTimezone(),
+        direction_type: normalizedDirectionType,
+    }).then((data) => {
+        ForecastState.ingressSummaryCache[key] = data;
+        ForecastState.ingressSummaryData = data;
+        ForecastState.ingressSummaryError = null;
+        ForecastState.ingressSummaryKey = key;
+        return data;
+    }).catch((err) => {
+        ForecastState.ingressSummaryData = null;
+        ForecastState.ingressSummaryError = err?.message || t('common.error');
+        ForecastState.ingressSummaryKey = key;
+        throw err;
+    }).finally(() => {
+        delete ForecastState.ingressSummaryInFlight[key];
+    });
+
+    ForecastState.ingressSummaryInFlight[key] = requestPromise;
+    return requestPromise;
+}
+
 async function calculateAllForecastViews(forcedMethod = null) {
     const method = forcedMethod || document.getElementById('methodSelect').value;
     const startDate = document.getElementById('startDate')?.value;
     const endDate = document.getElementById('endDate')?.value;
-    if (method === 'transits') {
+    const needTransitPeriod = method === 'transits' && ForecastState.currentTab !== 'biwheel';
+    if (needTransitPeriod) {
         await ensureTransitPeriodData(startDate, endDate, { showLoading: true });
         showState('timeline', 'content');
         renderTimeline();
@@ -1409,8 +1499,15 @@ async function calculateAllForecastViews(forcedMethod = null) {
 
     const targetDate = resolveBiwheelTargetDate(method);
     const directionType = resolveDirectionTypeForCombined(method);
+    const period = resolvePrognosticPeriod(targetDate);
     showState('biwheel', 'loading');
     const combinedData = await ensureCombinedBiwheelData(targetDate, { directionType });
+    ForecastState.pointData = combinedData;
+    try {
+        await ensureIngressSummaryData(period.startDate, period.endDate, directionType);
+    } catch (err) {
+        console.error('Ingress summary load error:', err);
+    }
     renderBiwheelData(combinedData);
     showState('biwheel', 'content');
     if (method === 'transits') {
@@ -1418,7 +1515,7 @@ async function calculateAllForecastViews(forcedMethod = null) {
     }
 
     populateTableFromCombinedData(combinedData, targetDate, {
-        transitPeriodEvents: method === 'transits' ? (ForecastState.transitEvents?.events || []) : [],
+        transitPeriodEvents: needTransitPeriod ? (ForecastState.transitEvents?.events || []) : [],
     });
     ForecastState.tableDataKey = getCombinedTableKey(
         targetDate,
@@ -1441,8 +1538,8 @@ async function calculateAllForecastViews(forcedMethod = null) {
                     period_start: startDate,
                     period_end: endDate,
                     selected_date: targetDate,
-                    total_events: ForecastState.transitEvents?.events?.length || 0,
-                    events: ForecastState.transitEvents?.events || [],
+                    total_events: needTransitPeriod ? (ForecastState.transitEvents?.events?.length || 0) : 0,
+                    events: needTransitPeriod ? (ForecastState.transitEvents?.events || []) : [],
                 },
                 progressions: {
                     target_date: targetDate,
@@ -1559,6 +1656,7 @@ async function renderCurrentTabFromCache() {
         const key = getCombinedPointKey(targetDate, directionType);
         const data = ForecastState.combinedBiwheelCache[key];
         if (data) {
+            ForecastState.pointData = data;
             showState('biwheel', 'content');
             renderBiwheelData(data);
             if (method === 'transits') {

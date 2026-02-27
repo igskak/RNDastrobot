@@ -257,6 +257,96 @@ class CosmogramPatternInfo(BaseModel):
     special_roles: List[str] = []
 
 
+class KarmicAspectInfo(BaseModel):
+    """Аспект между планетами для кармического read-model."""
+    planet_1: str
+    planet_2: str
+    aspect_type: str
+    orb: Optional[float] = None
+
+
+class KarmicNodeInfo(BaseModel):
+    """Агрегированный анализ лунного узла."""
+    sign: Optional[str] = None
+    house: Optional[int] = None
+    dispositor_planet: Optional[str] = None
+    conjunctions_orb3: List[str] = Field(default_factory=list)
+    helper_planets: List[str] = Field(default_factory=list)
+    blocker_planets: List[str] = Field(default_factory=list)
+
+
+class KarmicNodesInfo(BaseModel):
+    """Анализ северного и южного узлов."""
+    north_node: KarmicNodeInfo
+    south_node: KarmicNodeInfo
+
+
+class SaturnAnalysisInfo(BaseModel):
+    """Анализ Сатурна в кармическом контексте."""
+    sign: Optional[str] = None
+    house: Optional[int] = None
+    dispositor_planet: Optional[str] = None
+    helper_planets: List[str] = Field(default_factory=list)
+    blocker_planets: List[str] = Field(default_factory=list)
+
+
+class LunarPointAnalysisInfo(BaseModel):
+    """Анализ фиктивной лунной точки."""
+    sign: Optional[str] = None
+    house: Optional[int] = None
+    dispositor_planet: Optional[str] = None
+    aspected_planets: List[str] = Field(default_factory=list)
+
+
+class LunarPointsAnalysisInfo(BaseModel):
+    """Анализ Лилит и Селены."""
+    black_moon: LunarPointAnalysisInfo
+    white_moon: LunarPointAnalysisInfo
+
+
+class KarmicStatusInfo(BaseModel):
+    """Срез кармического статуса планет."""
+    support_planets_plus_3: List[str] = Field(default_factory=list)
+    development_planets_minus_3: List[str] = Field(default_factory=list)
+    top_karmic_planets: List[str] = Field(default_factory=list)
+
+
+class KarmicSupportInfo(BaseModel):
+    """Кармическая поддержка и ресурсы."""
+    first_house_planets: List[str] = Field(default_factory=list)
+    domicile_or_exaltation_planets: List[str] = Field(default_factory=list)
+    south_node_sign_dispositor: Optional[str] = None
+    charioteer_planet: Optional[str] = None
+    harmonic_trines: List[KarmicAspectInfo] = Field(default_factory=list)
+    stelliums: List[StelliumInfo] = Field(default_factory=list)
+
+
+class KarmicDevelopmentInfo(BaseModel):
+    """Кармические задачи и зоны развития."""
+    north_node_sign_dispositor: Optional[str] = None
+    doryphoros_planet: Optional[str] = None
+    black_moon_dispositor: Optional[str] = None
+    challenging_aspects: List[KarmicAspectInfo] = Field(default_factory=list)
+
+
+class KarmicJonesPatternInfo(BaseModel):
+    """Jones pattern блок для кармического read-model."""
+    type: Optional[str] = None
+    leading_planet: Optional[str] = None
+    handle_planet: Optional[str] = None
+
+
+class KarmicAnalysisInfo(BaseModel):
+    """Полный backend-ready кармический read-model."""
+    nodes: KarmicNodesInfo
+    saturn_analysis: SaturnAnalysisInfo
+    lunar_points_analysis: LunarPointsAnalysisInfo
+    karmic_status: KarmicStatusInfo
+    karmic_support: KarmicSupportInfo
+    karmic_development: KarmicDevelopmentInfo
+    jones_pattern: KarmicJonesPatternInfo
+
+
 class PlanetDistributionInfo(BaseModel):
     """Информация о распределении планет"""
     min_empty_arc: float
@@ -344,6 +434,8 @@ class NatalChartResponse(BaseModel):
     planet_distribution: Optional[PlanetDistributionInfo] = None
     # Новые поля из пункта 3.5 спецификации
     balances: Optional[BalancesInfo] = None
+    # Агрегированный кармический read-model для AI/UI
+    karmic_analysis: KarmicAnalysisInfo
 
 
 # ============================================================================

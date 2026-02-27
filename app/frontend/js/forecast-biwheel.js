@@ -33,14 +33,17 @@
     const NATAL_PLANET_SYMBOL_SIZE = 15;
     const PROG_PLANET_SYMBOL_SIZE = 14;
     const RETRO_SYMBOL_SIZE = 8;
-    // Natal must stay on the inner ring; prognostic must stay on the outer ring.
-    const NATAL_PLANET_R = 190;
-    const PROGNOSTIC_PLANET_R = 214;
     // Keep aspect field close to natal wheel proportions:
     // make the aspect working area noticeably larger and reduce dead space before houses.
-    const ASPECT_R = 182;
+    const ASPECT_R = 124;
     const SIGN_INNER_R = OUTER_R - DEGREE_RING - SIGN_RING;
     const HOUSE_INNER_R = SIGN_INNER_R - HOUSE_RING;
+    const WHEEL_ORDER = ['natal', 'transit', 'progression', 'direction'];
+    const WHEEL_INSET = 2;
+    const WHEEL_GAP = 1.5;
+    const WHEEL_BAND_WIDTH =
+        (SIGN_INNER_R - ASPECT_R - (WHEEL_INSET * 2) - (WHEEL_GAP * (WHEEL_ORDER.length - 1))) / WHEEL_ORDER.length;
+    const PROGNOSTIC_GLYPH_COLOR = '#111111';
 
     // Colors
     const ELEMENT_COLORS = {
@@ -52,32 +55,24 @@
     };
     const PROGNOSTIC_LAYERS = {
         transit: {
-            color: '#6366f1',
-            markerShape: 'circle',
+            color: '#0ea5e9',
             label: 'transit',
             tableMethod: 'transits',
-            radius: PROGNOSTIC_PLANET_R,
         },
         progression: {
-            color: '#a855f7',
-            markerShape: 'diamond',
+            color: '#c026d3',
             label: 'progression',
             tableMethod: 'progressions',
-            radius: PROGNOSTIC_PLANET_R + 14,
         },
         direction: {
-            color: '#ca8a04',
-            markerShape: 'square',
+            color: '#f97316',
             label: 'direction',
             tableMethod: 'directions',
-            radius: PROGNOSTIC_PLANET_R + 28,
         },
         solar_return: {
-            color: '#0f766e',
-            markerShape: 'triangle',
+            color: '#14b8a6',
             label: 'solar_return',
             tableMethod: 'solar_return',
-            radius: PROGNOSTIC_PLANET_R + 14,
         },
     };
 
@@ -178,6 +173,13 @@
         svg.appendChild(el('path', { d, fill }));
     }
 
+    function withAlpha(color, alphaHex) {
+        if (typeof color === 'string' && /^#[0-9a-fA-F]{6}$/.test(color)) {
+            return `${color}${alphaHex}`;
+        }
+        return color;
+    }
+
     // ─── Public render ──────────────────────────────────
     function render(natalData, progData) {
         lastNatalData = natalData;
@@ -195,6 +197,13 @@
 
         drawBackground();
         drawSignRing();
+        if (layerVisibility.natal) {
+            drawMethodRing('natal');
+        }
+        layers.forEach(layer => {
+            if (!isLayerVisible(layer.method)) return;
+            drawMethodRing(layer.method);
+        });
 
         if (layerVisibility.natal) {
             drawHouses(natalData.houses, { layer: 'natal', layerLabel: t('page.forecast.biwheel.legend.natal') });
@@ -213,19 +222,19 @@
         drawAspectCircle();
 
         if (layerVisibility.natal) {
-            drawPlanets(natalData.planets, NATAL_PLANET_R, '#374151', NATAL_PLANET_SYMBOL_SIZE, true, 'natal');
+            drawPlanets(natalData.planets, getLayerRadius('natal'), '#374151', NATAL_PLANET_SYMBOL_SIZE, true, 'natal', 'natal');
         }
 
         layers.forEach(layer => {
             if (!isLayerVisible(layer.method)) return;
-            drawOuterRing(layer.method);
             drawPlanets(
                 layer.planets,
                 getLayerRadius(layer.method),
                 layer.color,
                 PROG_PLANET_SYMBOL_SIZE,
                 false,
-                'prognostic'
+                'prognostic',
+                layer.method
             );
         });
 
@@ -241,9 +250,7 @@
             drawCrossAspects(layerAspects, natalMap, layer.planets, layer.method);
         });
 
-        const ingresses = layers
-            .filter(layer => isLayerVisible(layer.method))
-            .flatMap(layer => layer.ingresses || []);
+        const ingresses = getIngressRowsForRender();
         renderIngressesTable(ingresses);
 
         renderAspectsTable(filteredAspects);
@@ -331,29 +338,29 @@
         const isPrognostic = layer === 'prognostic';
         const method = options.method || 'transit';
         const layerLabel = options.layerLabel || (isPrognostic ? t('page.forecast.biwheel.prognostic') : t('page.forecast.biwheel.legend.natal'));
-        const prognosticColorByMethod = {
-            progression: '#a855f7',
-            direction: '#ca8a04',
-            solar_return: '#0f766e',
-            transit: '#6366f1',
-        };
-        const progColor = prognosticColorByMethod[method] || '#6366f1';
+        const progColor = getLayerConfig(method).color;
 
         if (!isPrognostic) {
-            svg.appendChild(el('circle', { cx:C, cy:C, r:HOUSE_INNER_R, fill:'white', stroke:'#d1d5db', 'stroke-width':0.5 }));
+            // Keep only the inner/aspect field clean without covering prognostic rings.
+            svg.appendChild(el('circle', { cx:C, cy:C, r:ASPECT_R, fill:'#fafafa', stroke:'#d1d5db', 'stroke-width':0.5 }));
         }
+        const wheelBand = isPrognostic ? getWheelBand(method) : null;
         houses.forEach((h, i) => {
             const angle = longToAngle(h.longitude) * Math.PI / 180;
             const isAngular = [1,4,7,10].includes(h.number);
-            const innerR = isAngular ? ASPECT_R + (isPrognostic ? 3 : 0) : HOUSE_INNER_R + (isPrognostic ? 3 : 0);
-            const outerR = SIGN_INNER_R - (isPrognostic ? 2 : 0);
+            const innerR = isPrognostic
+                ? wheelBand.inner + 0.6
+                : (isAngular ? ASPECT_R : HOUSE_INNER_R);
+            const outerR = isPrognostic
+                ? wheelBand.outer - 0.6
+                : SIGN_INNER_R;
             const strokeColor = isPrognostic
                 ? progColor
                 : (isAngular ? '#6366f1' : '#c7d2db');
             const strokeWidth = isPrognostic
-                ? (isAngular ? 1.15 : 0.8)
+                ? (isAngular ? 2.6 : 2.2)
                 : (isAngular ? 1.5 : 0.5);
-            const strokeDash = isPrognostic ? '3,2' : null;
+            const strokeDash = isPrognostic ? '4,3' : null;
             const cuspGroup = el('g', {
                 class: 'bw-house-cusp',
                 'data-house': String(h.number),
@@ -368,7 +375,7 @@
             cuspGroup.appendChild(el('line', {
                 x1: C + innerR * Math.cos(angle), y1: C + innerR * Math.sin(angle),
                 x2: C + outerR * Math.cos(angle), y2: C + outerR * Math.sin(angle),
-                stroke:'transparent', 'stroke-width':8,
+                stroke:'transparent', 'stroke-width': isPrognostic ? 10 : 8,
                 class: 'bw-house-cusp-hit'
             }));
             const visibleLineAttrs = {
@@ -405,11 +412,61 @@
         svg.appendChild(el('circle', { cx:C, cy:C, r:ASPECT_R, fill:'none', stroke:'#e5e7eb', 'stroke-width':0.5 }));
     }
 
-    function drawOuterRing(method = 'transit') {
-        const cfg = getLayerConfig(method);
-        const r = getLayerRadius(method);
-        svg.appendChild(el('circle', { cx:C, cy:C, r:r + 10, fill:'none', stroke:`${cfg.color}20`, 'stroke-width':0.5 }));
-        svg.appendChild(el('circle', { cx:C, cy:C, r:r - 10, fill:'none', stroke:`${cfg.color}20`, 'stroke-width':0.5 }));
+    function getWheelBand(methodOrLayer = 'transit') {
+        const normalized = methodOrLayer === 'solar_return'
+            ? 'direction'
+            : methodOrLayer;
+        const idx = WHEEL_ORDER.indexOf(normalized);
+        const safeIdx = idx === -1 ? 1 : idx;
+        const inner = ASPECT_R + WHEEL_INSET + safeIdx * (WHEEL_BAND_WIDTH + WHEEL_GAP);
+        const outer = inner + WHEEL_BAND_WIDTH;
+        return {
+            inner,
+            outer,
+            center: inner + (WHEEL_BAND_WIDTH / 2),
+        };
+    }
+
+    function drawMethodRing(method = 'transit') {
+        const band = getWheelBand(method);
+        const styleByMethod = {
+            natal: { color: '#374151', fillAlpha: '26', borderAlpha: 'B0', borderWidth: 1.0, dash: null },
+            transit: { color: getLayerConfig('transit').color, fillAlpha: '5E', borderAlpha: 'F0', borderWidth: 1.2, dash: null },
+            progression: { color: getLayerConfig('progression').color, fillAlpha: '52', borderAlpha: 'E8', borderWidth: 1.2, dash: '3.2,2.2' },
+            direction: { color: getLayerConfig('direction').color, fillAlpha: '54', borderAlpha: 'EA', borderWidth: 1.2, dash: '1.4,2.0' },
+            solar_return: { color: getLayerConfig('solar_return').color, fillAlpha: '50', borderAlpha: 'E0', borderWidth: 1.2, dash: '5,2' },
+        };
+        const style = styleByMethod[method] || styleByMethod.transit;
+        svg.appendChild(el('circle', {
+            cx: C,
+            cy: C,
+            r: band.center,
+            fill: 'none',
+            stroke: withAlpha(style.color, style.fillAlpha),
+            'stroke-width': WHEEL_BAND_WIDTH.toFixed(2),
+            class: 'bw-method-ring',
+            'data-layer': method,
+        }));
+        const innerAttrs = {
+            cx: C,
+            cy: C,
+            r: band.inner,
+            fill: 'none',
+            stroke: withAlpha(style.color, style.borderAlpha),
+            'stroke-width': style.borderWidth,
+        };
+        if (style.dash) innerAttrs['stroke-dasharray'] = style.dash;
+        svg.appendChild(el('circle', innerAttrs));
+        const outerAttrs = {
+            cx: C,
+            cy: C,
+            r: band.outer,
+            fill: 'none',
+            stroke: withAlpha(style.color, style.borderAlpha),
+            'stroke-width': style.borderWidth,
+        };
+        if (style.dash) outerAttrs['stroke-dasharray'] = style.dash;
+        svg.appendChild(el('circle', outerAttrs));
     }
 
     // ─── Draw planets ───────────────────────────────────
@@ -418,15 +475,12 @@
     }
 
     function getLayerRadius(method) {
-        return getLayerConfig(method).radius || PROGNOSTIC_PLANET_R;
+        if (method === 'natal') return getWheelBand('natal').center;
+        return getWheelBand(method).center;
     }
 
     function isLayerVisible(method) {
         return layerVisibility[method] !== false;
-    }
-
-    function getProgMarkerShape(method) {
-        return getLayerConfig(method).markerShape || 'circle';
     }
 
     function getProgMeta(data, forcedMethod = null) {
@@ -472,66 +526,11 @@
         }];
     }
 
-    function drawProgMarker(point, shape, color, glyphSize) {
-        const markerR = Math.max(8, glyphSize * 0.62);
-        const markerHalf = markerR - 1;
-        if (shape === 'diamond') {
-            const d = [
-                `M ${point.x} ${point.y - markerR}`,
-                `L ${point.x + markerR} ${point.y}`,
-                `L ${point.x} ${point.y + markerR}`,
-                `L ${point.x - markerR} ${point.y}`,
-                'Z'
-            ].join(' ');
-            return el('path', {
-                d,
-                fill: 'none',
-                stroke: color,
-                'stroke-width': '1.2',
-                class: 'bw-prog-marker'
-            });
-        }
-        if (shape === 'square') {
-            return el('rect', {
-                x: point.x - markerHalf,
-                y: point.y - markerHalf,
-                width: markerHalf * 2,
-                height: markerHalf * 2,
-                fill: 'none',
-                stroke: color,
-                'stroke-width': '1.2',
-                class: 'bw-prog-marker'
-            });
-        }
-        if (shape === 'triangle') {
-            const d = [
-                `M ${point.x} ${point.y - markerR}`,
-                `L ${point.x + markerR * 0.94} ${point.y + markerR * 0.72}`,
-                `L ${point.x - markerR * 0.94} ${point.y + markerR * 0.72}`,
-                'Z'
-            ].join(' ');
-            return el('path', {
-                d,
-                fill: 'none',
-                stroke: color,
-                'stroke-width': '1.2',
-                class: 'bw-prog-marker'
-            });
-        }
-        return el('circle', {
-            cx: point.x,
-            cy: point.y,
-            r: markerR,
-            fill: 'none',
-            stroke: color,
-            'stroke-width': '1.2',
-            class: 'bw-prog-marker'
-        });
-    }
-
-    function drawPlanets(planets, radius, defaultColor, fontSize, colorByElement = false, layerType = 'natal') {
+    function drawPlanets(planets, radius, defaultColor, fontSize, colorByElement = false, layerType = 'natal', layerMethod = 'natal') {
         if (!planets || !planets.length) return;
         const layerScale = layerType === 'natal' ? natalPointScale : transitPointScale;
+        const wheelBand = getWheelBand(layerMethod);
+        const maxOffset = Math.max(0, (wheelBand.outer - wheelBand.inner) / 2 - 2);
         let positions = planets.map(p => ({
             planet: p,
             angle: longToAngle(p.longitude),
@@ -539,24 +538,30 @@
         })).sort((a, b) => a.angle - b.angle);
 
         const MIN_GAP = (layerType === 'natal' ? 12 : 10) * layerScale;
+        let clusterIndex = 0;
         for (let i = 1; i < positions.length; i++) {
             let diff = positions[i].angle - positions[i - 1].angle;
             if (diff < 0) diff += 360;
-            if (diff < MIN_GAP) positions[i].offset = Math.round(14 * layerScale);
+            if (diff < MIN_GAP) {
+                clusterIndex += 1;
+                const direction = clusterIndex % 2 === 0 ? -1 : 1;
+                positions[i].offset = direction * Math.min(maxOffset, 6 * layerScale);
+            } else {
+                clusterIndex = 0;
+            }
         }
 
         positions.forEach(({ planet, angle, offset }) => {
-            const r = radius + offset;
+            const r = Math.max(wheelBand.inner + 1.2, Math.min(wheelBand.outer - 1.2, radius + offset));
             const p = polar(r, angle);
             const sym = Symbols?.planets?.[planet.name] || planet.name.slice(0, 2);
             const glyphScale = Symbols?.planetGlyphScale?.[planet.name] || 1;
             const glyphSize = fontSize * glyphScale * layerScale;
             const element = Symbols?.signElements?.[planet.sign];
-            const color = colorByElement
-                ? (ELEMENT_COLORS[element] || defaultColor)
-                : (planet._color || defaultColor);
             const isNatal = layerType === 'natal';
-            const markerShape = planet._markerShape || 'circle';
+            const color = isNatal
+                ? (colorByElement ? (ELEMENT_COLORS[element] || defaultColor) : defaultColor)
+                : PROGNOSTIC_GLYPH_COLOR;
             const label = getPlanetName(planet.name);
             const group = el('g', {
                 class: `bw-planet-group ${isNatal ? 'bw-natal-planet' : 'bw-prog-planet'}`,
@@ -570,15 +575,11 @@
                 'aria-label': `${isNatal ? t('page.forecast.biwheel.legend.natal') : t('page.forecast.biwheel.prognostic')} ${label}`
             });
 
-            if (!isNatal) {
-                group.appendChild(drawProgMarker(p, markerShape, color, glyphSize));
-            }
-
             const glyph = el('text', {
                 x: p.x, y: p.y + glyphSize * 0.35,
                 'text-anchor':'middle', 'font-size': glyphSize.toFixed(2), fill: color,
                 'font-weight': isNatal ? '700' : '600',
-                opacity: isNatal ? '1' : '0.9',
+                opacity: '1',
                 class: `bw-planet-glyph ${isNatal ? 'bw-planet-natal' : 'bw-planet-prog'}`,
             }, sym);
             group.appendChild(glyph);
@@ -712,7 +713,7 @@
         const defaultWidth = Number(group.getAttribute('data-default-stroke-width') || 1);
 
         if (line) {
-            line.setAttribute('stroke-width', String((defaultWidth + 0.7).toFixed(2)));
+            line.setAttribute('stroke-width', String((defaultWidth + 0.9).toFixed(2)));
             line.setAttribute('opacity', '1');
         }
 
@@ -740,7 +741,6 @@
             house: p.house ?? p.progressed_house ?? p.directed_house ?? p.natal_house ?? '',
             _color: meta.color,
             _method: meta.method,
-            _markerShape: getProgMarkerShape(meta.method),
         });
         if (!data) return [];
         if (data.transit_planets) return data.transit_planets.map(enrich);
@@ -908,17 +908,136 @@
         applyPanelCollapseStates();
     }
 
-    function compactDate(dateStr) {
-        if (!dateStr) return '—';
-        const parts = String(dateStr).slice(0, 10).split('-');
-        if (parts.length !== 3) return dateStr;
-        const [y, m, d] = parts;
-        return `${d}.${m}.${y.slice(-2)}`;
+    function escapeHtml(text) {
+        return String(text ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function formatDateShort6(value) {
+        const raw = String(value || '').trim();
+        if (!raw || raw === '—') return '—';
+        const direct = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (direct) return `${direct[3]}.${direct[2]}.${direct[1].slice(2)}`;
+        const dt = new Date(raw);
+        if (Number.isNaN(dt.getTime())) return raw;
+        const dd = String(dt.getDate()).padStart(2, '0');
+        const mm = String(dt.getMonth() + 1).padStart(2, '0');
+        const yy = String(dt.getFullYear()).slice(-2);
+        return `${dd}.${mm}.${yy}`;
+    }
+
+    function formatIngressValue(value, ingressType) {
+        if (value === null || value === undefined || value === '') return '—';
+        if (ingressType === 'house' && Number.isFinite(Number(value))) {
+            return `H${value}`;
+        }
+        if (ingressType === 'sign' && typeof value === 'string') {
+            const symbol = Symbols?.signs?.[value] || '';
+            const name = getSignName(value);
+            return `${symbol ? `${symbol} ` : ''}${name}`.trim();
+        }
+        return String(value);
+    }
+
+    function formatLegacyHoverLine(line) {
+        const safe = escapeHtml(String(line || ''));
+        return safe.replace(/(\d{4}-\d{2}-\d{2})/g, (_, m1) => formatDateShort6(m1));
+    }
+
+    function buildIngressHoverHtml(row) {
+        const details = Array.isArray(row.hoverDetails) ? row.hoverDetails : [];
+        if (details.length) {
+            const blocks = details.map((detail) => {
+                const ingressType = detail?.ingress_type || 'none';
+                if (ingressType === 'none') {
+                    const fromLabel = formatIngressValue(detail?.from, ingressType);
+                    const toLabel = formatIngressValue(detail?.to, ingressType);
+                    const periodStart = formatDateShort6(detail?.times?.before);
+                    const periodEnd = formatDateShort6(detail?.times?.exact);
+                    return `<div class="bw-hover-item">
+                        <div class="bw-hover-head">${escapeHtml(t('page.forecast.table.noEvents') || 'No intermediate transitions')}.</div>
+                        <div class="bw-hover-times">${escapeHtml(periodStart)} → ${escapeHtml(periodEnd)}</div>
+                        <div class="bw-hover-times">${escapeHtml(fromLabel)} → ${escapeHtml(toLabel)}</div>
+                    </div>`;
+                }
+                const label = ingressType === 'house'
+                    ? t('page.forecast.table.ingress.house')
+                    : ingressType === 'sign'
+                        ? t('page.forecast.table.ingress.sign')
+                        : t('page.forecast.table.columns.transition');
+                const fromLabel = formatIngressValue(detail?.from, ingressType);
+                const toLabel = formatIngressValue(detail?.to, ingressType);
+                const before = formatDateShort6(detail?.times?.before);
+                const exact = formatDateShort6(detail?.times?.exact);
+                const after = formatDateShort6(detail?.times?.after);
+                return `<div class="bw-hover-item">
+                    <div class="bw-hover-head">${escapeHtml(label)}: ${escapeHtml(fromLabel)} → ${escapeHtml(toLabel)}</div>
+                    <div class="bw-hover-times">-1° ${escapeHtml(before)} · 0° ${escapeHtml(exact)} · +1° ${escapeHtml(after)}</div>
+                </div>`;
+            }).join('');
+            return `<div class="bw-hover-wrap">${blocks}</div>`;
+        }
+
+        const lines = Array.isArray(row.hoverLines) ? row.hoverLines.filter(Boolean) : [];
+        if (!lines.length) return '';
+        return `<div class="bw-hover-wrap">${lines.map((line) => `<div class="bw-hover-item"><div class="bw-hover-head">${formatLegacyHoverLine(line)}</div></div>`).join('')}</div>`;
+    }
+
+    function getIngressRowsForRender() {
+        const summaryRows = window.ForecastState?.ingressSummaryData?.rows;
+        if (!Array.isArray(summaryRows) || !summaryRows.length) {
+            return [];
+        }
+        return summaryRows
+            .filter((row) => {
+                if (row.method === 'progressions') return isLayerVisible('progression');
+                if (row.method === 'directions') return isLayerVisible('direction');
+                return true;
+            })
+            .map((row) => {
+            const methodKey = row.method || '';
+            const methodLabel = methodKey === 'progressions'
+                ? t('common.method.progression')
+                : t('common.method.direction');
+            const methodClass = row.method_class || (methodKey === 'progressions' ? 'progression' : 'direction');
+            let objectLabel = row.object || '';
+            if (row.object_key && !String(row.object_key).startsWith('Cusp')) {
+                const symbol = Symbols?.planets?.[row.object_key] || '';
+                const name = getPlanetName(row.object_key);
+                objectLabel = `${symbol ? `${symbol} ` : ''}${name}`.trim();
+            }
+            return {
+                ...row,
+                object: objectLabel,
+                methodLabel,
+                methodClass,
+                hoverDetails: Array.isArray(row.hover_details) ? row.hover_details : (Array.isArray(row.hoverDetails) ? row.hoverDetails : []),
+                hoverLines: Array.isArray(row.hover_lines) && row.hover_lines.length
+                    ? row.hover_lines
+                    : (Array.isArray(row.hover_details) ? row.hover_details.map((item) => item?.text).filter(Boolean) : (row.hoverLines || [])),
+            };
+        });
     }
 
     function renderIngressesTable(ingresses) {
         const container = document.getElementById('biwheelIngresses');
         if (!container) return;
+        if (window.ForecastState?.ingressSummaryError) {
+            ingressesAvailable = true;
+            container.style.display = '';
+            container.innerHTML = `<table><thead><tr>
+                <th>${t('page.forecast.table.columns.object')}</th>
+                <th>${t('page.forecast.table.columns.method')}</th>
+                <th>${t('page.forecast.table.columns.transition')}</th>
+            </tr></thead><tbody><tr>
+                <td colspan="3" style="padding:10px;color:var(--text-secondary)">${escapeHtml(window.ForecastState.ingressSummaryError)}</td>
+            </tr></tbody></table>`;
+            applyPanelCollapseStates();
+            return;
+        }
         if (!ingresses?.length) {
             ingressesAvailable = false;
             ingressesCollapsed = false;
@@ -930,18 +1049,20 @@
         ingressesAvailable = true;
 
         let html = `<table><thead><tr>
-            <th class="bw-th-with-toggle"><span>${t('common.date')}</span><button type="button" class="bw-table-toggle" id="bwToggleIngressesInTable" aria-expanded="true" aria-label="${t('page.forecast.biwheel.collapseIngresses')}" title="${t('page.forecast.biwheel.collapseIngresses')}">▾</button></th>
-            <th>${t('page.forecast.table.columns.method')}</th>
             <th>${t('page.forecast.table.columns.object')}</th>
+            <th class="bw-th-with-toggle"><span>${t('page.forecast.table.columns.method')}</span><button type="button" class="bw-table-toggle" id="bwToggleIngressesInTable" aria-expanded="true" aria-label="${t('page.forecast.biwheel.collapseIngresses')}" title="${t('page.forecast.biwheel.collapseIngresses')}">▾</button></th>
             <th>${t('page.forecast.table.columns.transition')}</th>
         </tr></thead><tbody>`;
 
         ingresses.forEach(row => {
+            const hoverHtml = buildIngressHoverHtml(row);
+            const transitionHtml = hoverHtml
+                ? `<span class="bw-ingress-transition-hover" data-hover-html="${encodeURIComponent(hoverHtml)}">${escapeHtml(row.transition || '')}</span>`
+                : escapeHtml(row.transition || '');
             html += `<tr>
-                <td>${compactDate(row.date)}</td>
-                <td><span class="method-badge ${row.methodClass || ''}">${row.methodLabel || row.method || ''}</span></td>
-                <td class="bw-ingress-object">${row.object}</td>
-                <td class="bw-ingress-transition">${row.transition}</td>
+                <td class="bw-ingress-object">${escapeHtml(row.object || '')}</td>
+                <td><span class="method-badge ${row.methodClass || ''}">${escapeHtml(row.methodLabel || row.method || '')}</span></td>
+                <td class="bw-ingress-transition">${transitionHtml}</td>
             </tr>`;
         });
         html += '</tbody></table>';
@@ -951,6 +1072,30 @@
             event.stopPropagation();
             ingressesCollapsed = true;
             applyPanelCollapseStates();
+        });
+        container.querySelectorAll('.bw-ingress-transition-hover').forEach((node) => {
+            const getHoverHtml = () => {
+                const raw = node.getAttribute('data-hover-html') || '';
+                if (!raw) return '';
+                try {
+                    return decodeURIComponent(raw);
+                } catch {
+                    return raw;
+                }
+            };
+            node.addEventListener('mouseenter', (event) => {
+                const html = getHoverHtml();
+                if (!html) return;
+                showHoverTooltip(html, event);
+            });
+            node.addEventListener('mousemove', (event) => {
+                const tooltip = ensureHoverTooltip();
+                if (!tooltip || tooltip.style.display === 'none') return;
+                placeHoverTooltip(event, tooltip);
+            });
+            node.addEventListener('mouseleave', () => {
+                hideHoverTooltip();
+            });
         });
         applyPanelCollapseStates();
     }

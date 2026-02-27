@@ -23,10 +23,31 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Install Node dependencies
+        run: npm ci --prefix app
+
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r app/requirements.txt
+
+      - name: Build native binaries
+        run: make all
+
+      - name: Run Swiss Ephemeris regression tests
+        run: make test
+
+      - name: Build frontend bundles
+        run: npm --prefix app run build:frontend
+
+      - name: Python syntax smoke checks
+        run: python -m compileall -q app/api app/services app/models app/utils app/i18n
+
+      - name: Python lint (scoped baseline)
+        run: flake8 app/utils/ephemeris.py app/i18n/context.py app/i18n/errors.py --count
+
+      - name: Python typecheck (scoped baseline)
+        run: mypy --follow-imports=skip app/utils/ephemeris.py app/i18n/context.py app/i18n/errors.py
 
       - name: I18N missing-key checker (fail-fast)
         run: node app/scripts/check-i18n-missing-keys.cjs
@@ -54,5 +75,5 @@ jobs:
             app/tests/test_frontend_timezones.test.cjs \
             app/tests/test_forecast_timeline_utils.test.cjs
 
-      - name: API + AI i18n regressions
-        run: python -m pytest -q app/tests/test_api_i18n.py app/tests/test_ai_i18n_bl05.py
+      - name: Python regression suite (incl e2e smoke)
+        run: python -m pytest -q app/tests

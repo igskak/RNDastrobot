@@ -11,6 +11,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from app.services.natal_chart_service import NatalChartService
 from app.services.special_points_service import SpecialPointsService
+from app.utils.ephemeris import get_ephemeris_path
+from app.utils.constants import PLANETS
 
 
 class TestNatalChartService:
@@ -19,7 +21,7 @@ class TestNatalChartService:
     @pytest.fixture
     def natal_service(self):
         """Фикстура для создания сервиса"""
-        return NatalChartService(ephe_path="../swisseph/ephe")
+        return NatalChartService(ephe_path=get_ephemeris_path())
     
     def test_calculate_natal_chart_with_coordinates(self, natal_service):
         """Тест расчёта натальной карты с координатами"""
@@ -41,8 +43,8 @@ class TestNatalChartService:
         assert 'special_points' in result
         assert 'configurations' in result
         
-        # Проверяем количество планет (10 основных)
-        assert len(result['planets']) == 10
+        # Проверяем количество планет по текущему справочнику проекта
+        assert len(result['planets']) == len(PLANETS)
         
         # Проверяем количество домов (12)
         assert len(result['houses']) == 12
@@ -60,7 +62,8 @@ class TestNatalChartService:
         assert 'BlackMoon' in result['special_points']
         assert 'WhiteMoon' in result['special_points']
         assert 'Fortune' in result['special_points']
-        assert 'Chiron' in result['special_points']
+        assert 'Chiron' not in result['special_points']
+        assert any(planet['name'] == 'Chiron' for planet in result['planets'])
         
         # Проверяем конфигурации
         assert 'FateCross' in result['configurations']
@@ -71,14 +74,13 @@ class TestSpecialPointsService:
     """Тесты для SpecialPointsService"""
     
     def test_calculate_white_moon(self):
-        """Тест расчёта Белой Луны (Селены)"""
+        """Тест расчёта Белой Луны (Селены) по формуле ZET."""
         jd = 2447959.3125  # Пример юлианского дня
-        
-        black_moon = SpecialPointsService.calculate_black_moon(jd)
         white_moon = SpecialPointsService.calculate_white_moon(jd)
-        
-        # Белая Луна должна быть на 180° от Чёрной
-        expected_white = (black_moon + 180) % 360
+
+        # Формула ZET:
+        # Selena = (242.4900166227 + 0.1408037548 * (JD - 2451545.0)) mod 360
+        expected_white = (242.4900166227 + 0.1408037548 * (jd - 2451545.0)) % 360
         assert abs(white_moon - expected_white) < 0.001
     
     def test_calculate_fate_cross(self):
@@ -128,4 +130,3 @@ class TestSpecialPointsService:
         # Ночная формула: ASC + Sun - Moon
         expected = (asc_lon + sun_lon - moon_lon) % 360
         assert abs(fortune - expected) < 0.001
-

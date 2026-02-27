@@ -12,13 +12,13 @@ test('CI workflow wires i18n checkers before regression tests', () => {
     const hardcodedCmd = 'node app/scripts/check-i18n-hardcoded-strings.cjs';
     const untranslatedCmd = 'node app/scripts/check-i18n-untranslated-values.cjs';
     const frontendTestsCmd = 'app/tests/test_frontend_i18n.test.cjs';
-    const backendTestsCmd = 'python -m pytest -q app/tests/test_api_i18n.py app/tests/test_ai_i18n_bl05.py';
+    const backendTestsCmd = 'python -m pytest -q app/tests';
 
     assert.ok(content.includes(missingCmd), 'Missing-key checker is not wired in CI');
     assert.ok(content.includes(hardcodedCmd), 'Hardcoded checker is not wired in CI');
     assert.ok(content.includes(untranslatedCmd), 'Untranslated-value checker is not wired in CI');
     assert.ok(content.includes(frontendTestsCmd), 'Frontend regression tests are not wired in CI');
-    assert.ok(content.includes(backendTestsCmd), 'Backend i18n regression tests are not wired in CI');
+    assert.ok(content.includes(backendTestsCmd), 'Python regression suite is not wired in CI');
 
     const missingIndex = content.indexOf(missingCmd);
     const hardcodedIndex = content.indexOf(hardcodedCmd);
@@ -28,5 +28,5 @@ test('CI workflow wires i18n checkers before regression tests', () => {
 
     assert.ok(missingIndex >= 0 && hardcodedIndex >= 0 && untranslatedIndex >= 0, 'Checker commands not found');
     assert.ok(frontendTestsIndex > untranslatedIndex, 'Frontend tests must run after i18n checkers');
-    assert.ok(backendTestsIndex > untranslatedIndex, 'Backend tests must run after i18n checkers');
+    assert.ok(backendTestsIndex > untranslatedIndex, 'Python tests must run after i18n checkers');
 });

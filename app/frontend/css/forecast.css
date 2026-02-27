@@ -596,6 +596,35 @@
     height: 100%;
     touch-action: none;
 }
+.biwheel-svg-wrapper .chart-tooltip {
+    max-width: 360px;
+    white-space: normal;
+}
+.biwheel-svg-wrapper .chart-tooltip .bw-hover-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.biwheel-svg-wrapper .chart-tooltip .bw-hover-item {
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+}
+.biwheel-svg-wrapper .chart-tooltip .bw-hover-item:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+.biwheel-svg-wrapper .chart-tooltip .bw-hover-head {
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: var(--text-primary);
+}
+.biwheel-svg-wrapper .chart-tooltip .bw-hover-times {
+    margin-top: 2px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.72rem;
+    line-height: 1.3;
+    color: var(--text-secondary);
+}
 /* Zoom controls */
 .biwheel-zoom-controls {
     position: absolute;
@@ -936,16 +965,16 @@
 }
 .bw-legend-transit {
     border-radius: 50%;
-    color: #6366f1;
+    color: #0ea5e9;
 }
 .bw-legend-progression {
     width: 10px;
     height: 10px;
     transform: rotate(45deg);
-    color: #a855f7;
+    color: #c026d3;
 }
 .bw-legend-direction {
-    color: #ca8a04;
+    color: #f97316;
 }
 .biwheel-aspects-list {
     flex: 1;
@@ -1168,9 +1197,9 @@
     border-radius: 3px;
     font-weight: 500;
 }
-.method-badge.transit { background: rgba(99,102,241,0.12); color: #6366f1; }
-.method-badge.progression { background: rgba(168,85,247,0.12); color: #a855f7; }
-.method-badge.direction { background: rgba(234,179,8,0.12); color: #ca8a04; }
+.method-badge.transit { background: rgba(14,165,233,0.16); color: #0ea5e9; }
+.method-badge.progression { background: rgba(192,38,211,0.16); color: #c026d3; }
+.method-badge.direction { background: rgba(249,115,22,0.16); color: #f97316; }
 
 /* ============================================
    Solar Return Tab Styles

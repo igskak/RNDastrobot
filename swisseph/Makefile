@@ -92,10 +92,18 @@ $(BIN_DIR)/swemini: $(SRC_DIR)/swemini.o libswe.a
 
 # Test targets
 test:
+ifeq ($(STATIC_SUPPORTED),false)
+	@echo "Skipping setest on macOS (GNU nested-function toolchain is required)."
+else
 	cd setest && $(MAKE) && ./setest t
+endif
 
 test.exp:
+ifeq ($(STATIC_SUPPORTED),false)
+	@echo "Skipping setest fixture generation on macOS (GNU nested-function toolchain is required)."
+else
 	cd setest && $(MAKE) && ./setest -g t
+endif
 
 # Clean up build artifacts
 clean:
@@ -117,4 +125,3 @@ $(SRC_DIR)/swetest.o: $(SRC_DIR)/swephexp.h $(SRC_DIR)/sweodef.h $(SRC_DIR)/swed
 $(SRC_DIR)/swevents.o: $(SRC_DIR)/swephexp.h $(SRC_DIR)/sweodef.h $(SRC_DIR)/swedll.h
 
 .PHONY: all test test.exp clean
-

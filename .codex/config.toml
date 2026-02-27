@@ -1,0 +1,12 @@
+# Project-level Codex defaults.
+# Keep this file in repo as the shared baseline.
+
+model = "gpt-5.3-codex"
+model_reasoning_effort = "high"
+web_search_mode = "cached"
+review_model = "gpt-5.3-codex"
+
+[profiles.review]
+model = "gpt-5.3-codex"
+model_reasoning_effort = "high"
+web_search_mode = "cached"

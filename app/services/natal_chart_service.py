@@ -10,6 +10,7 @@ from app.services.time_service import TimeService
 from app.services.geocoding_service import GeocodingService
 from app.services.swisseph_engine import SwissEphemerisEngine
 from app.services.special_points_service import SpecialPointsService
+from app.services.karmic_analysis_service import KarmicAnalysisService
 from app.services.dignity_service import DignityService
 from app.services.planet_characteristics_service import PlanetCharacteristicsService
 from app.utils.constants import get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds
@@ -31,6 +32,7 @@ class NatalChartService:
         self.geocoding_service = GeocodingService()
         self.swisseph_engine = SwissEphemerisEngine(ephe_path)
         self.special_points_service = SpecialPointsService()
+        self.karmic_analysis_service = KarmicAnalysisService()
     
     def calculate_natal_chart(
         self,
@@ -154,7 +156,12 @@ class NatalChartService:
                 # Якщо не вдалося прочитати, додаємо user_id до базового результату
                 result['user_id'] = str(user_id)
 
+        self._append_karmic_analysis(result)
         return result
+
+    def _append_karmic_analysis(self, chart_data: Dict) -> None:
+        """Append backend-ready karmic analysis block to chart_data."""
+        chart_data['karmic_analysis'] = self.karmic_analysis_service.build(chart_data)
     
     def _calculate_special_points(
         self,
@@ -1055,7 +1062,7 @@ class NatalChartService:
             }
 
         result['balances'] = balances if balances else None
-
+        self._append_karmic_analysis(result)
         return result
 
     def get_natal_chart_for_interpretation(self, user_id: UUID, db_session: Session) -> Optional[Dict]:
@@ -1119,4 +1126,3 @@ class NatalChartService:
                 for a in aspects
             ]
         }
-

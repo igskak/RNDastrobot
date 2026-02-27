@@ -21,18 +21,25 @@ test:	all
 
 # Include path to a recent swisseph directory, the include file swephexp.h is needed
 #INCL = -I../sweph
-INCL = -I..
+INCL = -I.. -I../src
 
 CFLAGS = -std=gnu99 -fms-extensions -g -Wall -pthread -fPIC 
 LIBS = ../libswe.a -lm  
 LIBSX = ../libswe.a -lm  
 CC=gcc	
+UNAME_S := $(shell uname -s)
+
+ifeq ($(UNAME_S),Darwin)
+  CRYPTO_LIBS =
+else
+  CRYPTO_LIBS = -lcrypto
+endif
 
 setest: $(OBJECTS)
-	$(CC) $(CFLAGS) -o setest $(OBJECTS) $(LIBS) -ldl  -lcrypto
+	$(CC) $(CFLAGS) -o setest $(OBJECTS) $(LIBS) -ldl $(CRYPTO_LIBS)
 
 setestx: $(OBJECTS)
-	$(CC) $(CFLAGS) -o setestx $(OBJECTS) $(LIBSX) -ldl  -lcrypto
+	$(CC) $(CFLAGS) -o setestx $(OBJECTS) $(LIBSX) -ldl $(CRYPTO_LIBS)
 
 generated_tests.c: suite_*.c testsuite.m4 testsuite_end.m4 globals_suite.c
 	m4 testsuite.m4 globals_suite.c suite_*.c testsuite_end.m4 >generated_tests.c

@@ -18,7 +18,10 @@ def get_ephemeris_path() -> str:
     1) SWISSEPH_EPHE_PATH / EPHEMERIS_PATH (explicit env override)
     2) Known project-relative defaults
     """
-    explicit_path = os.getenv("SWISSEPH_EPHE_PATH") or os.getenv("EPHEMERIS_PATH")
+    explicit_path = (
+        os.getenv("SWISSEPH_EPHE_PATH")
+        or os.getenv("EPHEMERIS_PATH")
+    )
     explicit_resolved = None
     if explicit_path:
         explicit_resolved = Path(explicit_path).expanduser().resolve()
