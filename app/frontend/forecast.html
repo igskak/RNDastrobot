@@ -339,6 +339,43 @@
             <div class="solar-container" id="solarContainer" style="display:none">
                 <div class="solar-info-bar" id="solarInfoBar"></div>
                 <div class="solar-main-row">
+                    <aside class="solar-data-section" id="solarDataSection">
+                        <div class="solar-panel-tabs">
+                            <button class="solar-panel-tab active" data-solar-panel-tab="solar-planets-list" data-i18n="page.chart.tabs.planets"></button>
+                            <button class="solar-panel-tab" data-solar-panel-tab="solar-aspects-list" data-i18n="page.chart.tabs.aspects"></button>
+                            <button class="solar-panel-tab" data-solar-panel-tab="solar-grid-list" data-i18n="page.chart.tabs.grid"></button>
+                        </div>
+                        <div class="solar-panel-content">
+                            <div id="solar-planets-list" class="solar-panel-pane active">
+                                <table class="data-table compact">
+                                    <thead>
+                                        <tr>
+                                            <th data-i18n="page.chart.table.planets.symbol"></th>
+                                            <th data-i18n="page.chart.table.planets.position"></th>
+                                            <th data-i18n="page.chart.table.planets.house"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="solarPlanetsTable"></tbody>
+                                </table>
+                            </div>
+                            <div id="solar-aspects-list" class="solar-panel-pane">
+                                <table class="data-table compact">
+                                    <thead>
+                                        <tr>
+                                            <th colspan="2" class="sortable" data-sort="planet" data-i18n="page.chart.table.aspects.aspect"></th>
+                                            <th class="sortable" data-sort="type" data-i18n="page.chart.table.aspects.type"></th>
+                                            <th class="sortable" data-sort="orb" data-i18n="page.chart.table.aspects.orb"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="solarAspectsTable"></tbody>
+                                </table>
+                            </div>
+                            <div id="solar-grid-list" class="solar-panel-pane">
+                                <h4 class="subsection-title" data-i18n="page.chart.grid.title"></h4>
+                                <div id="solarAspectGridContainer"></div>
+                            </div>
+                        </div>
+                    </aside>
                     <div class="solar-chart-section">
                         <div class="solar-wheel-wrapper" id="solarWheelWrapper">
                             <svg id="solarWheel" viewBox="0 0 500 500"></svg>
@@ -360,7 +397,6 @@
                             </div>
                         </div>
                     </div>
-                    <div class="solar-data-section" id="solarDataSection"></div>
                 </div>
             </div>
         </div>

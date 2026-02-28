@@ -6,6 +6,7 @@ import '../js/api.js';
 import '../js/symbols.js';
 import '../js/place-autocomplete.js';
 import '../js/chart-wheel.js';
+import '../js/chart-data.js';
 import '../js/forecast-timeline-utils.js';
 import '../js/forecast-timeline.js';
 import '../js/forecast-biwheel.js';

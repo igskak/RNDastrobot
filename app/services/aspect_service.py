@@ -32,21 +32,43 @@ class AspectService:
         """
         # Отримати всі об'єкти для аспектування
         objects = self._get_all_objects(user_id)
-        
-        # Отримати типи аспектів
-        aspect_types = self._get_aspect_types()
-        
-        # Розрахувати аспекти між усіма парами
-        aspects = []
-        for i, obj1 in enumerate(objects):
-            for obj2 in objects[i+1:]:
-                aspect = self._calculate_aspect_between(obj1, obj2, aspect_types)
-                if aspect:
-                    aspects.append(aspect)
+
+        # Історично метод повертає нефільтрований список, а тривіальні аспекти
+        # прибираються лише при збереженні в БД.
+        aspects = self.calculate_aspects_for_objects(objects, filter_trivial=False)
         
         # Зберегти в БД
         self._save_aspects(user_id, aspects)
         
+        return aspects
+
+    def calculate_aspects_for_objects(
+        self,
+        objects: List[Dict],
+        filter_trivial: bool = True
+    ) -> List[Dict]:
+        """
+        Розрахувати аспекти для довільного набору об'єктів без збереження в БД.
+
+        Args:
+            objects: Список об'єктів у форматі
+                {'name': str, 'longitude': float, 'type': str}
+            filter_trivial: Прибрати математично тривіальні опозиції
+
+        Returns:
+            List[Dict]: Список знайдених аспектів
+        """
+        aspect_types = self._get_aspect_types()
+        aspects: List[Dict] = []
+
+        for i, obj1 in enumerate(objects):
+            for obj2 in objects[i + 1:]:
+                aspect = self._calculate_aspect_between(obj1, obj2, aspect_types)
+                if aspect:
+                    aspects.append(aspect)
+
+        if filter_trivial:
+            return self._filter_trivial_aspects(aspects)
         return aspects
     
     def _get_all_objects(self, user_id: UUID) -> List[Dict]:

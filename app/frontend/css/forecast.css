@@ -1265,19 +1265,97 @@
     touch-action: none;
 }
 .solar-data-section {
-    width: max-content;
-    max-width: none;
-    overflow: auto;
-    padding: 8px 4px 8px 0;
-    min-width: 0;
+    width: min(420px, 36vw);
+    min-width: 320px;
+    max-width: 460px;
+    overflow: hidden;
+    padding: 0;
     min-height: 0;
-    border-left: 1px solid var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
     align-self: stretch;
-    flex: 0 0 auto;
+    flex: 0 0 min(420px, 36vw);
 }
-.solar-data-section .forecast-table {
-    width: max-content;
-    min-width: 0;
+.solar-panel-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-tertiary);
+}
+.solar-panel-tab {
+    flex: 1;
+    padding: 10px 8px;
+    background: none;
+    border: none;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+}
+.solar-panel-tab:hover {
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+}
+.solar-panel-tab.active {
+    color: var(--accent);
+    background: var(--bg-secondary);
+}
+.solar-panel-tab.active::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: var(--accent);
+}
+.solar-panel-content {
+    height: 100%;
+    max-height: 100%;
+    overflow: auto;
+    padding: 8px 10px;
+}
+.solar-panel-pane {
+    display: none;
+}
+.solar-panel-pane.active {
+    display: block;
+}
+.solar-data-section .data-table {
+    width: 100%;
+}
+#solar-aspects-list .data-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+#solar-aspects-list .data-table th.sortable::after {
+    content: " ⇅";
+    font-size: 0.65rem;
+    color: var(--text-muted);
+}
+#solar-aspects-list .data-table th.sortable.sort-active {
+    color: var(--accent);
+}
+#solar-aspects-list .data-table th.sortable.sort-active::after {
+    content: " ↑";
+    color: var(--accent);
+}
+#solar-aspects-list .data-table th.sortable.sort-active.sort-desc::after {
+    content: " ↓";
+}
+#solarWheel .aspect-line.solar-aspect-focus {
+    opacity: 1 !important;
+    stroke-width: 3.2 !important;
+    filter: drop-shadow(0 0 2px currentColor);
+}
+#solarWheel .planet-group.solar-planet-focus .planet-circle {
+    stroke-width: 3 !important;
+}
+#solarWheel .planet-group.solar-planet-focus .planet-symbol-text {
+    font-weight: 900;
+    filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.45));
 }
 .solar-info-bar {
     display: flex;
@@ -1375,14 +1453,11 @@
     .solar-data-section {
         width: 100%;
         max-width: 100%;
-        padding: 6px 0 8px;
-        border-left: none;
-        border-top: 1px solid var(--border);
-    }
-    .solar-data-section .forecast-table {
-        width: 100%;
         min-width: 0;
+        flex: 0 0 auto;
+        min-height: 330px;
     }
+    .solar-panel-content { max-height: 44vh; }
     .solar-wheel-wrapper { max-width: 100%; }
     #solarLocationFields {
         margin-left: 0;
@@ -1399,7 +1474,7 @@
 
 @media (min-width: 769px) and (max-width: 1200px) {
     .solar-main-row {
-        grid-template-columns: 1fr;
+        flex-direction: column;
     }
     .solar-chart-section {
         padding: 8px 4px 10px;
@@ -1410,9 +1485,11 @@
         max-height: none;
     }
     .solar-data-section {
-        border-left: none;
-        border-top: 1px solid var(--border);
-        padding-top: 10px;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        flex: 0 0 auto;
+        min-height: 340px;
     }
 }
 .forecast-loading .spinner {

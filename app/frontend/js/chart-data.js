@@ -4,14 +4,21 @@
  */
 
 class ChartDataRenderer {
-    constructor() {
-        this.planetsTable = document.getElementById('planetsTable');
-        this.housesTable = document.getElementById('housesTable');
-        this.aspectsTable = document.getElementById('aspectsTable');
-        this.aspectGridContainer = document.getElementById('aspectGridContainer');
-        this.configsContainer = document.getElementById('configurationsContainer');
-        this.balancesContainer = document.getElementById('balancesContainer');
-        this.dignitiesContainer = document.getElementById('dignitiesContainer');
+    constructor(options = {}) {
+        const resolveElement = (explicit, explicitId, fallbackId) => {
+            if (explicit) return explicit;
+            if (explicitId) return document.getElementById(explicitId);
+            return document.getElementById(fallbackId);
+        };
+
+        this.planetsTable = resolveElement(options.planetsTable, options.planetsTableId, 'planetsTable');
+        this.housesTable = resolveElement(options.housesTable, options.housesTableId, 'housesTable');
+        this.aspectsTable = resolveElement(options.aspectsTable, options.aspectsTableId, 'aspectsTable');
+        this.aspectGridContainer = resolveElement(options.aspectGridContainer, options.aspectGridContainerId, 'aspectGridContainer');
+        this.configsContainer = resolveElement(options.configsContainer, options.configsContainerId, 'configurationsContainer');
+        this.balancesContainer = resolveElement(options.balancesContainer, options.balancesContainerId, 'balancesContainer');
+        this.dignitiesContainer = resolveElement(options.dignitiesContainer, options.dignitiesContainerId, 'dignitiesContainer');
+        this.aspectSortHeadersSelector = options.aspectSortHeadersSelector || '#aspects-list th.sortable[data-sort]';
 
         this.aspectTypeFilter = 'all'; // 'all', 'major', 'minor'
         this.aspectPlanetFilter = null;
@@ -125,7 +132,7 @@ class ChartDataRenderer {
         }, {});
 
     initAspectSortHeaders() {
-        this.aspectSortHeaders = [...document.querySelectorAll('#aspects-list th.sortable[data-sort]')];
+        this.aspectSortHeaders = [...document.querySelectorAll(this.aspectSortHeadersSelector)];
         this.aspectSortHeaders.forEach((header) => {
             header.addEventListener('click', () => {
                 this.toggleAspectSort(header.dataset.sort);

@@ -4,7 +4,7 @@ Solar Return Service - расчёт соларной карты (годовой 
 Соляр — карта на момент точного возвращения Солнца на натальную позицию.
 Реализация по образцу ZET.
 """
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 from uuid import UUID
 from datetime import date, time, datetime
 from decimal import Decimal
@@ -139,6 +139,9 @@ class SolarReturnService:
             planet['house'] = self.swisseph_engine.get_planet_house(
                 planet['longitude'], solar_houses
             )
+
+        # 8.1 Рассчитать аспекты внутри солярной карты
+        solar_aspects = self._calculate_solar_aspects(solar_planets)
         
         # 9. Формируем результат
         result = self._build_solar_response(
@@ -153,7 +156,8 @@ class SolarReturnService:
             solar_planets=solar_planets,
             solar_houses=solar_houses,
             solar_angles=solar_angles,
-            natal_sun_lon=natal_sun_lon
+            natal_sun_lon=natal_sun_lon,
+            solar_aspects=solar_aspects,
         )
         
         # 10. Сохранить в БД если нужно
@@ -175,7 +179,8 @@ class SolarReturnService:
         solar_planets: List[Dict],
         solar_houses: List[Dict],
         solar_angles: Dict,
-        natal_sun_lon: float
+        natal_sun_lon: float,
+        solar_aspects: List[Dict],
     ) -> Dict:
         """Сформировать ответ с данными соляра"""
         return {
@@ -202,7 +207,32 @@ class SolarReturnService:
             'planets': solar_planets,
             'houses': solar_houses,
             'angles': solar_angles,
+            'aspects': solar_aspects,
         }
+
+    def _calculate_solar_aspects(self, solar_planets: List[Dict]) -> List[Dict]:
+        """
+        Рассчитать аспекты между объектами солярной карты (планеты/точки).
+
+        Используется та же логика орбисов и классификации, что и для натала.
+        """
+        objects = []
+        for planet in solar_planets:
+            name = planet.get('name')
+            longitude = planet.get('longitude')
+            if not name or longitude is None:
+                continue
+            objects.append({
+                'name': name,
+                'longitude': float(longitude),
+                'type': 'planet',
+            })
+
+        if len(objects) < 2:
+            return []
+
+        aspect_service = AspectService(self.db)
+        return aspect_service.calculate_aspects_for_objects(objects)
 
     def _save_solar_return(self, user_id: UUID, year: int, result: Dict) -> None:
         """Сохранить соляр в БД"""
@@ -274,4 +304,3 @@ class SolarReturnService:
             }
             for s in solars
         ]
-

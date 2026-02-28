@@ -108,6 +108,25 @@ class TestAspectService:
         for aspect in sun_aspects:
             assert aspect.planet_1 == 'Sun' or aspect.planet_2 == 'Sun'
 
+    def test_calculate_aspects_for_objects(self, db_session: Session):
+        """Тест расчёта аспектов для произвольного набора объектов без записи в БД"""
+        aspect_service = AspectService(db_session)
+        objects = [
+            {'name': 'Sun', 'longitude': 0.0, 'type': 'planet'},
+            {'name': 'Moon', 'longitude': 120.0, 'type': 'planet'},   # Трин к Солнцу
+            {'name': 'Mars', 'longitude': 90.0, 'type': 'planet'},    # Квадрат к Солнцу
+        ]
+
+        aspects = aspect_service.calculate_aspects_for_objects(objects)
+
+        assert len(aspects) >= 2, "Should detect at least Sun-Moon and Sun-Mars aspects"
+        pairs = {
+            (a['planet_1'], a['planet_2'], a['aspect_type'])
+            for a in aspects
+        }
+        assert ('Sun', 'Moon', 'Trine') in pairs or ('Moon', 'Sun', 'Trine') in pairs
+        assert ('Sun', 'Mars', 'Square') in pairs or ('Mars', 'Sun', 'Square') in pairs
+
 
 class TestConfigurationService:
     """Тести для ConfigurationService"""
@@ -228,4 +247,3 @@ class TestIntegration:
 
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])
-

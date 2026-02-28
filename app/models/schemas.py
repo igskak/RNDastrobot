@@ -566,6 +566,7 @@ class SolarReturnResponse(BaseModel):
     planets: List[PlanetPosition]
     houses: List[HousePosition]
     angles: Dict[str, AnglePosition]
+    aspects: Optional[List[AspectInfo]] = None
 
 
 class SolarReturnListItem(BaseModel):

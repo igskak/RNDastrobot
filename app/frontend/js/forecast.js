@@ -72,6 +72,11 @@ const ForecastState = {
     solarOrientation: 'aries',
     solarPointScale: 1.0,
     solarWheel: null,
+    solarDataRenderer: null,
+    solarPanelTab: 'solar-planets-list',
+    solarHoveredAspectKey: null,
+    solarPinnedAspectKey: null,
+    solarAspectInteractionsInit: false,
     // Table data for sorting
     tableRowsRaw: [],
     tableRows: [],
@@ -387,6 +392,216 @@ function initTabs() {
     });
 }
 
+function activateSolarPanelTab(tabId) {
+    const nextTab = tabId || 'solar-planets-list';
+    const tabButtons = document.querySelectorAll('.solar-panel-tab');
+    const panes = document.querySelectorAll('.solar-panel-pane');
+
+    tabButtons.forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.solarPanelTab === nextTab);
+    });
+    panes.forEach((pane) => {
+        pane.classList.toggle('active', pane.id === nextTab);
+    });
+    ForecastState.solarPanelTab = nextTab;
+    syncSolarHoveredAspectToActiveSurface();
+}
+
+function initSolarPanelTabs() {
+    const tabButtons = document.querySelectorAll('.solar-panel-tab');
+    if (!tabButtons.length) return;
+
+    tabButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            activateSolarPanelTab(btn.dataset.solarPanelTab);
+        });
+    });
+
+    activateSolarPanelTab(ForecastState.solarPanelTab || 'solar-planets-list');
+}
+
+function getSolarDataRenderer() {
+    if (!window.ChartDataRenderer) return null;
+    if (!ForecastState.solarDataRenderer) {
+        ForecastState.solarDataRenderer = new window.ChartDataRenderer({
+            planetsTableId: 'solarPlanetsTable',
+            aspectsTableId: 'solarAspectsTable',
+            aspectGridContainerId: 'solarAspectGridContainer',
+            aspectSortHeadersSelector: '#solar-aspects-list th.sortable[data-sort]',
+        });
+    }
+    return ForecastState.solarDataRenderer;
+}
+
+function getSolarFocusedAspectKey() {
+    return ForecastState.solarPinnedAspectKey || ForecastState.solarHoveredAspectKey || null;
+}
+
+function getActiveSolarAspectSurface() {
+    const aspectsPane = document.getElementById('solar-aspects-list');
+    const gridPane = document.getElementById('solar-grid-list');
+    if (aspectsPane?.classList.contains('active')) return 'table';
+    if (gridPane?.classList.contains('active')) return 'grid';
+    return null;
+}
+
+function syncSolarHoveredAspectToActiveSurface() {
+    const renderer = getSolarDataRenderer();
+    if (!renderer || typeof renderer.setHoveredAspect !== 'function') return;
+
+    const aspectKey = getSolarFocusedAspectKey();
+    const surface = getActiveSolarAspectSurface();
+
+    if (!aspectKey || !surface) {
+        renderer.clearHoveredAspect?.();
+        return;
+    }
+
+    renderer.setHoveredAspect(aspectKey, { surface });
+}
+
+function findSolarAspectLine(aspectKey) {
+    const svg = document.getElementById('solarWheel');
+    if (!svg || !aspectKey) return null;
+    const lines = svg.querySelectorAll('.aspect-line');
+    for (const line of lines) {
+        if (line.dataset.aspectKey === aspectKey) return line;
+    }
+    return null;
+}
+
+function applySolarAspectFocus() {
+    const svg = document.getElementById('solarWheel');
+    if (!svg) return;
+
+    svg.querySelectorAll('.aspect-line.solar-aspect-focus')
+        .forEach((line) => line.classList.remove('solar-aspect-focus'));
+    svg.querySelectorAll('.planet-group.solar-planet-focus')
+        .forEach((group) => group.classList.remove('solar-planet-focus'));
+
+    const aspectKey = getSolarFocusedAspectKey();
+    if (!aspectKey) {
+        syncSolarHoveredAspectToActiveSurface();
+        return;
+    }
+
+    const line = findSolarAspectLine(aspectKey);
+    if (!line) {
+        if (ForecastState.solarPinnedAspectKey === aspectKey) ForecastState.solarPinnedAspectKey = null;
+        if (ForecastState.solarHoveredAspectKey === aspectKey) ForecastState.solarHoveredAspectKey = null;
+        syncSolarHoveredAspectToActiveSurface();
+        return;
+    }
+
+    line.classList.add('solar-aspect-focus');
+    const bodies = [line.dataset.planet1, line.dataset.planet2].filter(Boolean);
+    bodies.forEach((bodyName) => {
+        svg.querySelector(`[data-planet="${bodyName}"]`)?.classList.add('solar-planet-focus');
+    });
+
+    syncSolarHoveredAspectToActiveSurface();
+}
+
+function setSolarHoveredAspectKey(aspectKey) {
+    ForecastState.solarHoveredAspectKey = aspectKey || null;
+    applySolarAspectFocus();
+}
+
+function toggleSolarPinnedAspect(aspectKey) {
+    const normalizedKey = aspectKey || null;
+    ForecastState.solarPinnedAspectKey = ForecastState.solarPinnedAspectKey === normalizedKey ? null : normalizedKey;
+    ForecastState.solarHoveredAspectKey = ForecastState.solarPinnedAspectKey;
+    applySolarAspectFocus();
+}
+
+function initSolarAspectInteractions() {
+    if (ForecastState.solarAspectInteractionsInit) return;
+    ForecastState.solarAspectInteractionsInit = true;
+
+    const aspectsPane = document.getElementById('solar-aspects-list');
+    if (aspectsPane) {
+        aspectsPane.addEventListener('mouseover', (event) => {
+            if (ForecastState.solarPinnedAspectKey) return;
+            if (!(event.target instanceof Element)) return;
+            const row = event.target.closest('tr[data-aspect-key]');
+            const key = row?.dataset?.aspectKey;
+            if (key) setSolarHoveredAspectKey(key);
+        });
+
+        aspectsPane.addEventListener('mouseout', (event) => {
+            if (ForecastState.solarPinnedAspectKey) return;
+            if (!(event.target instanceof Element)) return;
+            const row = event.target.closest('tr[data-aspect-key]');
+            if (!row) return;
+            if (row.contains(event.relatedTarget)) return;
+            setSolarHoveredAspectKey(null);
+        });
+
+        aspectsPane.addEventListener('click', (event) => {
+            if (!(event.target instanceof Element)) return;
+            const row = event.target.closest('tr[data-aspect-key]');
+            const key = row?.dataset?.aspectKey;
+            if (!key) return;
+            toggleSolarPinnedAspect(key);
+        });
+    }
+
+    const gridPane = document.getElementById('solar-grid-list');
+    if (gridPane) {
+        gridPane.addEventListener('mouseover', (event) => {
+            if (ForecastState.solarPinnedAspectKey) return;
+            if (!(event.target instanceof Element)) return;
+            const cell = event.target.closest('td[data-aspect-key]');
+            const key = cell?.dataset?.aspectKey;
+            if (key) setSolarHoveredAspectKey(key);
+        });
+
+        gridPane.addEventListener('mouseout', (event) => {
+            if (ForecastState.solarPinnedAspectKey) return;
+            if (!(event.target instanceof Element)) return;
+            const cell = event.target.closest('td[data-aspect-key]');
+            if (!cell) return;
+            if (cell.contains(event.relatedTarget)) return;
+            setSolarHoveredAspectKey(null);
+        });
+
+        gridPane.addEventListener('click', (event) => {
+            if (!(event.target instanceof Element)) return;
+            const cell = event.target.closest('td[data-aspect-key]');
+            const key = cell?.dataset?.aspectKey;
+            if (!key) return;
+            toggleSolarPinnedAspect(key);
+        });
+    }
+
+    document.addEventListener('chart:aspect-hover', (event) => {
+        const key = event?.detail?.aspectKey;
+        if (!key || ForecastState.currentTab !== 'solar') return;
+        if (!findSolarAspectLine(key)) return;
+        if (ForecastState.solarPinnedAspectKey) return;
+        setSolarHoveredAspectKey(key);
+    });
+
+    document.addEventListener('chart:aspect-leave', (event) => {
+        const key = event?.detail?.aspectKey || null;
+        if (ForecastState.currentTab !== 'solar') return;
+        if (ForecastState.solarPinnedAspectKey) return;
+        if (key && ForecastState.solarHoveredAspectKey && key !== ForecastState.solarHoveredAspectKey) return;
+        setSolarHoveredAspectKey(null);
+    });
+
+    const solarWheel = document.getElementById('solarWheel');
+    if (solarWheel) {
+        solarWheel.addEventListener('click', (event) => {
+            if (!(event.target instanceof Element)) return;
+            const line = event.target.closest('.aspect-line');
+            const key = line?.dataset?.aspectKey;
+            if (!key) return;
+            toggleSolarPinnedAspect(key);
+        });
+    }
+}
+
 // ─── Controls ───────────────────────────────────────────
 function initControls() {
     // Help overlay
@@ -479,6 +694,8 @@ function initControls() {
     // Solar location geocoding with autocomplete
     initSolarPlaceAutocomplete();
     initSolarZoomPan();
+    initSolarPanelTabs();
+    initSolarAspectInteractions();
 
     const orientationSelect = document.getElementById('biwheelOrientationSelect');
     if (orientationSelect) {
@@ -1842,26 +2059,26 @@ function renderSolarChart(data) {
         planets: data.planets,
         houses: data.houses,
         angles: data.angles,
-        aspects: [],
+        aspects: Array.isArray(data?.aspects) ? data.aspects : [],
     });
+    applySolarAspectFocus();
     resetSolarView();
 }
 
 function renderSolarPlanetsTable(data) {
-    const container = document.getElementById('solarDataSection');
-    let html = `<table class="forecast-table"><thead><tr><th>${t('common.planet')}</th><th>${t('common.position')}</th><th>${t('common.house')}</th><th>R</th></tr></thead><tbody>`;
-    data.planets.forEach(p => {
-        const retro = Boolean(p.retrograde);
-        const signSym = (Symbols?.signs?.[p.sign]) || p.sign;
-        html += `<tr>
-            <td>${formatPlanetCellHtml(p.name, retro)}</td>
-            <td>${signSym} ${p.degree_in_sign_formatted || p.degree_in_sign.toFixed(1) + '°'}</td>
-            <td>${p.house}</td>
-            <td>${retroIndicatorHtml(retro, 'retro-indicator--small')}</td>
-        </tr>`;
+    const renderer = getSolarDataRenderer();
+    if (!renderer) return;
+
+    renderer.render({
+        planets: Array.isArray(data?.planets) ? data.planets : [],
+        aspects: Array.isArray(data?.aspects) ? data.aspects : [],
+        houses: [],
+        aspect_configurations: [],
+        stelliums: [],
+        balances: null,
+        cosmogram_pattern: null,
     });
-    html += '</tbody></table>';
-    container.innerHTML = html;
+    syncSolarHoveredAspectToActiveSurface();
 }
 
 // ─── UI Helpers ─────────────────────────────────────────
