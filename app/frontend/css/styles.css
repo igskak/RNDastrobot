@@ -909,6 +909,37 @@ input[type="number"] {
     vertical-align: middle;
 }
 
+.retro-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.05em;
+    height: 1.05em;
+    margin-left: 4px;
+    padding: 0 0.28em;
+    border-radius: 999px;
+    background: #fee2e2;
+    color: #b91c1c;
+    font-size: 10px;
+    line-height: 1;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+.retro-indicator--small {
+    font-size: 9px;
+    min-width: 0.95em;
+    height: 0.95em;
+}
+
+.retro-indicator--micro {
+    font-size: 8px;
+    min-width: 0.9em;
+    height: 0.9em;
+    margin-left: 2px;
+    padding: 0 0.2em;
+}
+
 /* ============================================
    TEXT UTILITIES
    ============================================ */

@@ -1038,6 +1038,11 @@
 .biwheel-aspects-list th:hover {
     color: var(--accent, #6366f1);
 }
+.biwheel-aspects-list tr.bw-hover-row {
+    background: rgba(99, 102, 241, 0.1);
+    outline: 1px solid rgba(99, 102, 241, 0.55);
+    outline-offset: -1px;
+}
 .biwheel-aspects-list tr.bw-highlight-row {
     background: rgba(99, 102, 241, 0.18);
     outline: 2px solid var(--accent, #6366f1);
@@ -1048,6 +1053,11 @@
 }
 .bw-highlight-line {
     filter: drop-shadow(0 0 4px currentColor);
+}
+.bw-aspect-line.bw-hover-line {
+    opacity: 0.9;
+    stroke-width: 1.9;
+    filter: drop-shadow(0 0 2px currentColor);
 }
 .bw-planet-group {
     cursor: pointer;

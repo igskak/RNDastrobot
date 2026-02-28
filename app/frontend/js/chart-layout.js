@@ -23,6 +23,7 @@
 
     // ========== ZOOM / PAN STATE ==========
     let scale = 1;
+    const WHEEL_ZOOM_FACTOR = 1.06;
     let pointX = 0, pointY = 0;
     let panning = false;
     let startX = 0, startY = 0;
@@ -207,7 +208,7 @@
         if (chartCenter) {
             chartCenter.addEventListener('wheel', (e) => {
                 e.preventDefault();
-                if (e.deltaY < 0) { scale *= 1.1; } else { scale /= 1.1; }
+                if (e.deltaY < 0) { scale *= WHEEL_ZOOM_FACTOR; } else { scale /= WHEEL_ZOOM_FACTOR; }
                 scale = Math.max(0.5, Math.min(5, scale));
                 setTransform();
             }, { passive: false });

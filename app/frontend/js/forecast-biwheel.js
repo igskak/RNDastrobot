@@ -101,13 +101,25 @@
         transitBody: null,
         natalBody: null,
         aspectType: null,
+        aspectKey: null,
         planetRole: null,
+        planetName: null,
+    };
+    let hoverState = {
+        aspectKey: null,
+        source: null,
+    };
+    let aspectLookupByKey = new Map();
+    let planetClickFilter = {
+        role: null,
         planetName: null,
     };
     let hoverTooltip = null;
     let ingressesCollapsed = false;
     let aspectsCollapsed = false;
     let ingressesAvailable = false;
+    let natalRetrogradeMap = new Map();
+    let layerRetrogradeMaps = new Map();
 
     function el(tag, attrs, text) {
         const e = document.createElementNS(NS, tag);
@@ -118,6 +130,125 @@
 
     function clampPointScale(v) {
         return Math.min(1.7, Math.max(0.8, Number(v) || 1));
+    }
+
+    function normalizeAspectKeyPart(value) {
+        return String(value ?? '');
+    }
+
+    function buildAspectKey(method, transitBody, aspectType, natalBody) {
+        return [
+            normalizeAspectKeyPart(method || ''),
+            normalizeAspectKeyPart(transitBody || ''),
+            normalizeAspectKeyPart(aspectType || ''),
+            normalizeAspectKeyPart(natalBody || '')
+        ].join('|');
+    }
+
+    function getAspectKey(aspect) {
+        if (!aspect) return null;
+        return buildAspectKey(aspect.method, aspect.transitBody, aspect.aspectType, aspect.natalBody);
+    }
+
+    function escapeSelectorValue(value) {
+        if (window.CSS?.escape) return window.CSS.escape(String(value ?? ''));
+        return String(value ?? '').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    }
+
+    function getAspectName(name) {
+        const key = `astro.aspect.${name}`;
+        const translated = t(key);
+        return translated === key ? (Symbols?.aspectNamesRu?.[name] || name) : translated;
+    }
+
+    function buildNatalLongitudeMap(natalData) {
+        const natalMap = {};
+        (natalData?.planets || []).forEach((planet) => {
+            if (!planet?.name) return;
+            natalMap[planet.name] = planet.longitude;
+        });
+        return natalMap;
+    }
+
+    function buildMethodLongitudeMaps(layers) {
+        const maps = {};
+        (layers || []).forEach((layer) => {
+            if (!layer?.method) return;
+            const methodMap = {};
+            (layer.planets || []).forEach((planet) => {
+                if (!planet?.name) return;
+                methodMap[planet.name] = planet.longitude;
+            });
+            maps[layer.method] = methodMap;
+        });
+        return maps;
+    }
+
+    function buildRetrogradeMap(planets = []) {
+        const map = new Map();
+        (planets || []).forEach((planet) => {
+            if (!planet?.name) return;
+            map.set(planet.name, Boolean(planet.retrograde));
+        });
+        return map;
+    }
+
+    function getRetrogradeLabel() {
+        const key = 'page.natalFull.legend.motion.retrograde';
+        const translated = t(key);
+        return translated === key ? 'Retrograde' : translated;
+    }
+
+    function retroIndicatorHtml(isRetrograde, variantClass = 'retro-indicator--micro') {
+        if (!isRetrograde) return '';
+        const suffix = variantClass ? ` ${variantClass}` : '';
+        const label = escapeHtml(getRetrogradeLabel());
+        return `<span class="retro-indicator${suffix}" title="${label}" aria-label="${label}">R</span>`;
+    }
+
+    function tableMethodToLayerMethod(methodKey = '') {
+        if (methodKey === 'progressions') return 'progression';
+        if (methodKey === 'directions') return 'direction';
+        if (methodKey === 'solar_return') return 'solar_return';
+        return 'transit';
+    }
+
+    function isTransitBodyRetrograde(bodyName, methodKey = '') {
+        const layerMethod = tableMethodToLayerMethod(methodKey);
+        const map = layerRetrogradeMaps.get(layerMethod);
+        if (!map || !bodyName) return false;
+        return map.get(bodyName) === true;
+    }
+
+    function isNatalBodyRetrograde(bodyName) {
+        if (!bodyName) return false;
+        return natalRetrogradeMap.get(bodyName) === true;
+    }
+
+    function isAspectRenderable(aspect, natalMap, methodLongitudeMaps) {
+        if (!aspect) return false;
+        const method = aspect.method || 'transit';
+        const progMap = methodLongitudeMaps?.[method];
+        if (!progMap) return false;
+        const nLong = natalMap?.[aspect.natalBody];
+        const pLong = progMap?.[aspect.transitBody];
+        return nLong != null && pLong != null;
+    }
+
+    function filterRenderableAspects(aspects, natalMap, methodLongitudeMaps) {
+        return (aspects || []).filter((aspect) => isAspectRenderable(aspect, natalMap, methodLongitudeMaps));
+    }
+
+    function filterPlanetsByBodyVisibility(planets, role, availableBodies) {
+        return (planets || []).filter((planet) => {
+            const name = planet?.name;
+            if (!name) return false;
+            // Bodies without checkbox remain visible; checkbox controls only available aspect bodies.
+            if (!availableBodies?.has(name)) return true;
+            return role === 'natal'
+                ? enabledNatalBodies.has(name)
+                : enabledTransitBodies.has(name);
+        });
     }
 
     function readSavedScale(key, fallback) {
@@ -151,6 +282,13 @@
         while (a < 0) a += 360;
         while (a >= 360) a -= 360;
         return a;
+    }
+
+    function normalizeAngle(deg) {
+        let value = Number(deg) || 0;
+        while (value < 0) value += 360;
+        while (value >= 360) value -= 360;
+        return value;
     }
 
     function polar(r, deg) {
@@ -188,6 +326,7 @@
         lastProgData = progData;
         svg = document.getElementById('biwheelSvg');
         if (!svg) return;
+        clearHoveredAspectState({ hideTooltip: true, force: true });
         svg.innerHTML = '';
         // Reset zoom/pan on new render
         zoomLevel = 1; panX = 0; panY = 0;
@@ -195,6 +334,18 @@
         ascLong = natalData.angles?.ASC?.longitude || 0;
 
         const layers = buildPrognosticLayers(progData);
+        natalRetrogradeMap = buildRetrogradeMap(natalData?.planets || []);
+        layerRetrogradeMaps = new Map(
+            layers.map((layer) => [layer.method, buildRetrogradeMap(layer.planets || [])])
+        );
+        const aspects = layers.flatMap(layer => layer.aspects || []);
+        const natalMap = buildNatalLongitudeMap(natalData);
+        const methodLongitudeMaps = buildMethodLongitudeMaps(layers);
+        const renderableAspects = filterRenderableAspects(aspects, natalMap, methodLongitudeMaps);
+        syncBodyFilters(renderableAspects);
+        const filteredAspects = getFilteredAspects(renderableAspects);
+        const availableTransitBodies = new Set(renderableAspects.map((a) => a.transitBody).filter(Boolean));
+        const availableNatalBodies = new Set(renderableAspects.map((a) => a.natalBody).filter(Boolean));
         updateLayerLegendUI();
 
         drawBackground();
@@ -225,13 +376,15 @@
         drawAspectCircle();
 
         if (layerVisibility.natal) {
-            drawPlanets(natalData.planets, getLayerRadius('natal'), '#374151', NATAL_PLANET_SYMBOL_SIZE, true, 'natal', 'natal');
+            const visibleNatalPlanets = filterPlanetsByBodyVisibility(natalData.planets, 'natal', availableNatalBodies);
+            drawPlanets(visibleNatalPlanets, getLayerRadius('natal'), '#374151', NATAL_PLANET_SYMBOL_SIZE, true, 'natal', 'natal');
         }
 
         layers.forEach(layer => {
             if (!isLayerVisible(layer.method)) return;
+            const visibleLayerPlanets = filterPlanetsByBodyVisibility(layer.planets, 'transit', availableTransitBodies);
             drawPlanets(
-                layer.planets,
+                visibleLayerPlanets,
                 getLayerRadius(layer.method),
                 layer.color,
                 PROG_PLANET_SYMBOL_SIZE,
@@ -240,13 +393,12 @@
                 layer.method
             );
         });
-
-        const aspects = layers.flatMap(layer => layer.aspects || []);
-        syncBodyFilters(aspects);
-        const filteredAspects = getFilteredAspects(aspects);
-
-        const natalMap = {};
-        (natalData.planets || []).forEach(p => { natalMap[p.name] = p.longitude; });
+        aspectLookupByKey = new Map();
+        filteredAspects.forEach((aspect) => {
+            const key = getAspectKey(aspect);
+            if (!key || aspectLookupByKey.has(key)) return;
+            aspectLookupByKey.set(key, aspect);
+        });
         layers.forEach(layer => {
             if (!isLayerVisible(layer.method)) return;
             const layerAspects = filteredAspects.filter(a => a.method === layer.method);
@@ -269,22 +421,28 @@
 
     function applyHighlight(h) {
         if (!h || !svg) return;
-        setFocusAspect(h.transitBody, h.natalBody, h.aspectType, h.method || null);
         const container = document.getElementById('biwheelAspects');
-        if (container) {
-            container.querySelectorAll('tbody tr').forEach(tr => {
-                const trMethod = tr.dataset.method || '';
-                const methodMatches = !h.method || !trMethod || trMethod === h.method;
-                if (
-                    methodMatches &&
-                    tr.dataset.transit === h.transitBody &&
-                    tr.dataset.aspect === h.aspectType &&
-                    tr.dataset.natal === h.natalBody
-                ) {
-                    tr.scrollIntoView({ block: 'center', behavior: 'smooth' });
-                }
-            });
-        }
+        if (!container) return;
+
+        const rows = [...container.querySelectorAll('tbody tr')];
+        const targetRow = rows.find((tr) => {
+            const methodMatches = !h.method || !tr.dataset.method || tr.dataset.method === h.method;
+            return methodMatches &&
+                tr.dataset.transit === h.transitBody &&
+                tr.dataset.aspect === h.aspectType &&
+                tr.dataset.natal === h.natalBody;
+        });
+
+        if (!targetRow) return;
+
+        setFocusAspect(
+            targetRow.dataset.transit || null,
+            targetRow.dataset.natal || null,
+            targetRow.dataset.aspect || null,
+            targetRow.dataset.method || null,
+            targetRow.dataset.aspectKey || null
+        );
+        targetRow.scrollIntoView({ block: 'center', behavior: 'smooth' });
     }
 
     // ─── Background ─────────────────────────────────────
@@ -542,30 +700,66 @@
         if (!planets || !planets.length) return;
         const layerScale = layerType === 'natal' ? natalPointScale : transitPointScale;
         const wheelBand = getWheelBand(layerMethod);
-        const maxOffset = Math.max(0, (wheelBand.outer - wheelBand.inner) / 2 - 2);
-        let positions = planets.map(p => ({
+        const displayRadius = Math.max(wheelBand.inner + 1.2, Math.min(wheelBand.outer - 1.2, radius));
+        const calloutRadius = Math.min(wheelBand.outer - 0.8, wheelBand.inner + 0.8);
+        const desiredGapPx = Math.max(fontSize * layerScale * 0.9, 10);
+        const minGapDeg = Math.max(1.5, (desiredGapPx / (2 * Math.PI * Math.max(displayRadius, 1))) * 360);
+        const spreadDeg = Math.max(1.5, minGapDeg * 0.95);
+        const positions = planets.map(p => ({
             planet: p,
-            angle: longToAngle(p.longitude),
-            offset: 0,
+            angle: normalizeAngle(longToAngle(p.longitude)),
+            displayAngle: normalizeAngle(longToAngle(p.longitude)),
+            hasLeader: false,
+            clusterAngle: null,
         })).sort((a, b) => a.angle - b.angle);
 
-        const MIN_GAP = (layerType === 'natal' ? 12 : 10) * layerScale;
-        let clusterIndex = 0;
-        for (let i = 1; i < positions.length; i++) {
-            let diff = positions[i].angle - positions[i - 1].angle;
-            if (diff < 0) diff += 360;
-            if (diff < MIN_GAP) {
-                clusterIndex += 1;
-                const direction = clusterIndex % 2 === 0 ? -1 : 1;
-                positions[i].offset = direction * Math.min(maxOffset, 6 * layerScale);
-            } else {
-                clusterIndex = 0;
+        if (positions.length > 1) {
+            const clusters = [];
+            let currentCluster = [positions[0]];
+            for (let i = 1; i < positions.length; i++) {
+                const prev = positions[i - 1];
+                const curr = positions[i];
+                const diff = curr.angle - prev.angle;
+                if (diff < minGapDeg) {
+                    currentCluster.push(curr);
+                } else {
+                    clusters.push(currentCluster);
+                    currentCluster = [curr];
+                }
             }
+            clusters.push(currentCluster);
+
+            if (clusters.length > 1) {
+                const firstCluster = clusters[0];
+                const lastCluster = clusters[clusters.length - 1];
+                const wrapGap = (firstCluster[0].angle + 360) - lastCluster[lastCluster.length - 1].angle;
+                if (wrapGap < minGapDeg) {
+                    const merged = [...lastCluster, ...firstCluster];
+                    merged.forEach((item, idx) => {
+                        item.clusterAngle = idx < lastCluster.length ? item.angle : item.angle + 360;
+                    });
+                    clusters[0] = merged;
+                    clusters.pop();
+                }
+            }
+
+            clusters.forEach((cluster) => {
+                cluster.forEach(item => {
+                    if (item.clusterAngle == null) item.clusterAngle = item.angle;
+                });
+                if (cluster.length === 1) return;
+                const center = (cluster.length - 1) / 2;
+                cluster.forEach((item, idx) => {
+                    const offset = (idx - center) * spreadDeg;
+                    item.displayAngle = normalizeAngle(item.clusterAngle + offset);
+                    item.hasLeader = Math.abs(offset) > 0.01;
+                });
+            });
         }
 
-        positions.forEach(({ planet, angle, offset }) => {
-            const r = Math.max(wheelBand.inner + 1.2, Math.min(wheelBand.outer - 1.2, radius + offset));
-            const p = polar(r, angle);
+        positions.forEach(({ planet, angle, displayAngle, hasLeader }) => {
+            const p = polar(displayRadius, displayAngle);
+            const exactPoint = polar(calloutRadius, angle);
             const sym = Symbols?.planets?.[planet.name] || planet.name.slice(0, 2);
             const glyphScale = Symbols?.planetGlyphScale?.[planet.name] || 1;
             const glyphSize = fontSize * glyphScale * layerScale;
@@ -587,6 +781,27 @@
                 'aria-label': `${isNatal ? t('page.forecast.biwheel.legend.natal') : t('page.forecast.biwheel.prognostic')} ${label}`
             });
 
+            if (hasLeader) {
+                group.appendChild(el('line', {
+                    x1: p.x,
+                    y1: p.y,
+                    x2: exactPoint.x,
+                    y2: exactPoint.y,
+                    stroke: color,
+                    'stroke-width': '0.35',
+                    opacity: '0.3',
+                    style: 'pointer-events:none'
+                }));
+                group.appendChild(el('circle', {
+                    cx: exactPoint.x,
+                    cy: exactPoint.y,
+                    r: '1.6',
+                    fill: color,
+                    opacity: '0.8',
+                    style: 'pointer-events:none'
+                }));
+            }
+
             const glyph = el('text', {
                 x: p.x, y: p.y + glyphSize * 0.35,
                 'text-anchor':'middle', 'font-size': glyphSize.toFixed(2), fill: color,
@@ -607,7 +822,9 @@
             }
 
             group.addEventListener('click', () => {
-                togglePlanetFocus(isNatal ? 'natal' : 'transit', planet.name);
+                clearFocus();
+                togglePlanetAspectFilter(isNatal ? 'natal' : 'transit', planet.name);
+                rerenderLast();
             });
             group.addEventListener('mouseenter', onPlanetHover);
             group.addEventListener('mousemove', onPlanetHover);
@@ -664,6 +881,120 @@
     function hideHoverTooltip() {
         const tooltip = ensureHoverTooltip();
         if (tooltip) tooltip.style.display = 'none';
+    }
+
+    function getAspectTooltipHtml(aspect) {
+        const transitBody = aspect?.transitBody || '';
+        const natalBody = aspect?.natalBody || '';
+        const aspectType = aspect?.aspectType || '';
+        const transitSym = Symbols?.planets?.[transitBody] || '';
+        const natalSym = Symbols?.planets?.[natalBody] || '';
+        const aspectSym = Symbols?.aspects?.[aspectType] || '';
+        const transitName = getPlanetName(transitBody);
+        const natalName = getPlanetName(natalBody);
+        const aspectName = getAspectName(aspectType);
+        const orb = Number(aspect?.orb);
+        const orbLabel = Number.isFinite(orb) ? `${orb.toFixed(2)}°` : '—';
+        const methodLabel = getMethodLabelShort(aspect?.methodKey || getLayerConfig(aspect?.method || 'transit').tableMethod);
+
+        return `
+            <strong>${escapeHtml(methodLabel)}: <span class="astro-symbol">${transitSym}</span> ${escapeHtml(transitName)} <span class="astro-symbol">${aspectSym}</span> ${escapeHtml(aspectName)} <span class="astro-symbol">${natalSym}</span> ${escapeHtml(natalName)}</strong><br>
+            ${escapeHtml(t('common.orb'))}: ${escapeHtml(orbLabel)}
+        `;
+    }
+
+    function matchesFocusDataset(dataset = {}) {
+        if (!focusState.mode) return true;
+        if (focusState.mode === 'aspect') {
+            if (focusState.aspectKey) {
+                return dataset.aspectKey === focusState.aspectKey;
+            }
+            const methodMatches = !focusState.method || dataset.method === focusState.method;
+            return methodMatches &&
+                dataset.transit === focusState.transitBody &&
+                dataset.natal === focusState.natalBody &&
+                dataset.aspect === focusState.aspectType;
+        }
+        if (focusState.mode === 'planet') {
+            return focusState.planetRole === 'transit'
+                ? dataset.transit === focusState.planetName
+                : dataset.natal === focusState.planetName;
+        }
+        return true;
+    }
+
+    function isHoverAllowedForAspect(aspectKey) {
+        if (!aspectKey) return false;
+        if (!focusState.mode) return true;
+        const aspect = aspectLookupByKey.get(aspectKey);
+        if (!aspect) return false;
+        return matchesFocusDataset({
+            method: aspect.method || '',
+            transit: aspect.transitBody || '',
+            natal: aspect.natalBody || '',
+            aspect: aspect.aspectType || '',
+            aspectKey,
+        });
+    }
+
+    function toggleHoverClassesByAspectKey(aspectKey, active) {
+        if (!aspectKey) return;
+        const escaped = escapeSelectorValue(aspectKey);
+        if (svg) {
+            svg.querySelectorAll(`.bw-aspect-line[data-aspect-key="${escaped}"]`).forEach((line) => {
+                line.classList.toggle('bw-hover-line', active);
+            });
+        }
+        const table = document.getElementById('biwheelAspects');
+        if (table) {
+            table.querySelectorAll(`tbody tr[data-aspect-key="${escaped}"]`).forEach((tr) => {
+                tr.classList.toggle('bw-hover-row', active);
+            });
+        }
+    }
+
+    function refreshHoveredAspectVisual() {
+        if (!hoverState.aspectKey) return;
+        toggleHoverClassesByAspectKey(hoverState.aspectKey, isHoverAllowedForAspect(hoverState.aspectKey));
+    }
+
+    function setHoveredAspectState(aspectKey, options = {}) {
+        if (!aspectKey) {
+            clearHoveredAspectState({ force: true, hideTooltip: options.hideTooltip === true });
+            return;
+        }
+
+        if (hoverState.aspectKey && hoverState.aspectKey !== aspectKey) {
+            toggleHoverClassesByAspectKey(hoverState.aspectKey, false);
+        }
+
+        hoverState = {
+            aspectKey,
+            source: options.source || null,
+        };
+        refreshHoveredAspectVisual();
+
+        if (options.showTooltip) {
+            const aspect = aspectLookupByKey.get(aspectKey);
+            if (aspect && options.event) {
+                showHoverTooltip(getAspectTooltipHtml(aspect), options.event);
+            }
+        }
+    }
+
+    function clearHoveredAspectState(options = {}) {
+        if (!hoverState.aspectKey) {
+            if (options.hideTooltip) hideHoverTooltip();
+            return;
+        }
+        if (!options.force) {
+            if (options.source && hoverState.source && options.source !== hoverState.source) return;
+            if (options.aspectKey && options.aspectKey !== hoverState.aspectKey) return;
+        }
+
+        toggleHoverClassesByAspectKey(hoverState.aspectKey, false);
+        hoverState = { aspectKey: null, source: null };
+        if (options.hideTooltip) hideHoverTooltip();
     }
 
     function applyPanelCollapseStates() {
@@ -744,6 +1075,64 @@
             line.setAttribute('opacity', group.getAttribute('data-default-opacity') || '1');
         }
         hideHoverTooltip();
+    }
+
+    function onAspectLineHoverEnter(event) {
+        const line = event.currentTarget;
+        const aspectKey = line?.dataset?.aspectKey;
+        if (!aspectKey) return;
+        setHoveredAspectState(aspectKey, {
+            source: 'line',
+            showTooltip: true,
+            event,
+        });
+    }
+
+    function onAspectLineHoverMove(event) {
+        const line = event.currentTarget;
+        const aspectKey = line?.dataset?.aspectKey;
+        if (!aspectKey || hoverState.aspectKey !== aspectKey || hoverState.source !== 'line') return;
+        const tooltip = ensureHoverTooltip();
+        if (!tooltip || tooltip.style.display === 'none') return;
+        placeHoverTooltip(event, tooltip);
+    }
+
+    function onAspectLineHoverLeave(event) {
+        const line = event.currentTarget;
+        const aspectKey = line?.dataset?.aspectKey;
+        clearHoveredAspectState({
+            source: 'line',
+            aspectKey,
+            hideTooltip: true,
+        });
+    }
+
+    function onAspectLineClick(event) {
+        const line = event.currentTarget;
+        if (!line) return;
+        setFocusAspect(
+            line.dataset.transit || null,
+            line.dataset.natal || null,
+            line.dataset.aspect || null,
+            line.dataset.method || null,
+            line.dataset.aspectKey || null
+        );
+    }
+
+    function onAspectRowHoverEnter(event) {
+        const row = event.currentTarget;
+        const aspectKey = row?.dataset?.aspectKey;
+        if (!aspectKey) return;
+        setHoveredAspectState(aspectKey, { source: 'table' });
+    }
+
+    function onAspectRowHoverLeave(event) {
+        const row = event.currentTarget;
+        const aspectKey = row?.dataset?.aspectKey;
+        clearHoveredAspectState({
+            source: 'table',
+            aspectKey,
+        });
     }
 
     function extractProgPlanets(data, forcedMethod = null) {
@@ -876,6 +1265,7 @@
             const nLong = natalMap[a.natalBody];
             const pLong = progMap[a.transitBody];
             if (nLong == null || pLong == null) return;
+            const aspectKey = getAspectKey(a);
             const nAngle = longToAngle(nLong) * Math.PI / 180;
             const pAngle = longToAngle(pLong) * Math.PI / 180;
             const aspectColor = ASPECT_COLORS[a.aspectType] || '#9ca3af';
@@ -887,8 +1277,13 @@
                 'stroke-dasharray': a.isMajor ? 'none' : '4,4',
                 opacity: a.isMajor ? 0.5 : 0.22,
                 'data-transit': a.transitBody, 'data-natal': a.natalBody, 'data-aspect': a.aspectType, 'data-method': a.method || method,
+                'data-aspect-key': aspectKey || '',
                 class: `bw-aspect-line ${a.isMajor ? 'bw-aspect-major' : 'bw-aspect-minor'}`
             });
+            line.addEventListener('mouseenter', onAspectLineHoverEnter);
+            line.addEventListener('mousemove', onAspectLineHoverMove);
+            line.addEventListener('mouseleave', onAspectLineHoverLeave);
+            line.addEventListener('click', onAspectLineClick);
             svg.appendChild(line);
         });
     }
@@ -1016,14 +1411,19 @@
                 : t('common.method.direction');
             const methodClass = row.method_class || (methodKey === 'progressions' ? 'progression' : 'direction');
             let objectLabel = row.object || '';
+            let objectHtml = escapeHtml(objectLabel);
             if (row.object_key && !String(row.object_key).startsWith('Cusp')) {
                 const symbol = Symbols?.planets?.[row.object_key] || '';
                 const name = getPlanetName(row.object_key);
+                const retro = isTransitBodyRetrograde(row.object_key, methodKey);
                 objectLabel = `${symbol ? `${symbol} ` : ''}${name}`.trim();
+                const symbolHtml = symbol ? `<span class="astro-symbol">${escapeHtml(symbol)}</span> ` : '';
+                objectHtml = `${symbolHtml}${escapeHtml(name)}${retroIndicatorHtml(retro)}`;
             }
             return {
                 ...row,
                 object: objectLabel,
+                objectHtml,
                 methodLabel,
                 methodClass,
                 hoverDetails: Array.isArray(row.hover_details) ? row.hover_details : (Array.isArray(row.hoverDetails) ? row.hoverDetails : []),
@@ -1072,7 +1472,7 @@
                 ? `<span class="bw-ingress-transition-hover" data-hover-html="${encodeURIComponent(hoverHtml)}">${escapeHtml(row.transition || '')}</span>`
                 : escapeHtml(row.transition || '');
             html += `<tr>
-                <td class="bw-ingress-object">${escapeHtml(row.object || '')}</td>
+                <td class="bw-ingress-object">${row.objectHtml || escapeHtml(row.object || '')}</td>
                 <td><span class="method-badge ${row.methodClass || ''}">${escapeHtml(row.methodLabel || row.method || '')}</span></td>
                 <td class="bw-ingress-transition">${transitionHtml}</td>
             </tr>`;
@@ -1147,8 +1547,35 @@
             enabledNatalBodies = new Set([...enabledNatalBodies].filter(p => natalBodies.has(p)));
         }
 
+        if (
+            planetClickFilter.role === 'transit' &&
+            planetClickFilter.planetName &&
+            !transitBodies.has(planetClickFilter.planetName)
+        ) {
+            planetClickFilter = { role: null, planetName: null };
+        }
+        if (
+            planetClickFilter.role === 'natal' &&
+            planetClickFilter.planetName &&
+            !natalBodies.has(planetClickFilter.planetName)
+        ) {
+            planetClickFilter = { role: null, planetName: null };
+        }
+
         renderSettingsToggles(transitBodies, natalBodies);
         updateFilterButtonsUI();
+    }
+
+    function togglePlanetAspectFilter(role, planetName) {
+        const normalizedRole = role === 'natal' ? 'natal' : 'transit';
+        if (
+            planetClickFilter.role === normalizedRole &&
+            planetClickFilter.planetName === planetName
+        ) {
+            planetClickFilter = { role: null, planetName: null };
+            return;
+        }
+        planetClickFilter = { role: normalizedRole, planetName };
     }
 
     function getFilteredAspects(aspects) {
@@ -1159,6 +1586,8 @@
             if (aspectFilter === 'minor' && a.isMajor) return false;
             if (!enabledTransitBodies.has(a.transitBody)) return false;
             if (!enabledNatalBodies.has(a.natalBody)) return false;
+            if (planetClickFilter.role === 'transit' && a.transitBody !== planetClickFilter.planetName) return false;
+            if (planetClickFilter.role === 'natal' && a.natalBody !== planetClickFilter.planetName) return false;
             return true;
         });
     }
@@ -1256,6 +1685,7 @@
         enabledNatalBodies = new Set();
         transitFiltersInitialized = false;
         natalFiltersInitialized = false;
+        planetClickFilter = { role: null, planetName: null };
         updateLayerLegendUI();
         rerenderLast();
     }
@@ -1291,9 +1721,13 @@
             const tSym = Symbols?.planets?.[a.transitBody] || a.transitBody;
             const nSym = Symbols?.planets?.[a.natalBody] || a.natalBody;
             const aSym = Symbols?.aspects?.[a.aspectType] || a.aspectType;
-            const methodLabel = getMethodLabelShort(a.methodKey || getLayerConfig(a.method || 'transit').tableMethod);
-            const methodClass = getMethodBadgeClass(a.methodKey || getLayerConfig(a.method || 'transit').tableMethod);
-            html += `<tr title="${methodLabel}: ${a.transitBody} ${a.aspectType} ${a.natalBody}" data-method="${a.method || ''}" data-transit="${a.transitBody}" data-natal="${a.natalBody}" data-aspect="${a.aspectType}"><td><span class="method-badge ${methodClass}">${methodLabel}</span></td><td><span class="astro-symbol">${tSym}</span></td><td><span class="astro-symbol">${aSym}</span></td><td><span class="astro-symbol">${nSym}</span></td><td>${a.orb?.toFixed(2)}°</td></tr>`;
+            const methodKey = a.methodKey || getLayerConfig(a.method || 'transit').tableMethod;
+            const methodLabel = getMethodLabelShort(methodKey);
+            const methodClass = getMethodBadgeClass(methodKey);
+            const transitRetro = isTransitBodyRetrograde(a.transitBody, methodKey);
+            const natalRetro = isNatalBodyRetrograde(a.natalBody);
+            const aspectKey = getAspectKey(a);
+            html += `<tr title="${methodLabel}: ${a.transitBody} ${a.aspectType} ${a.natalBody}" data-method="${a.method || ''}" data-transit="${a.transitBody}" data-natal="${a.natalBody}" data-aspect="${a.aspectType}" data-aspect-key="${aspectKey || ''}"><td><span class="method-badge ${methodClass}">${methodLabel}</span></td><td><span class="astro-symbol">${tSym}</span>${retroIndicatorHtml(transitRetro)}</td><td><span class="astro-symbol">${aSym}</span></td><td><span class="astro-symbol">${nSym}</span>${retroIndicatorHtml(natalRetro)}</td><td>${a.orb?.toFixed(2)}°</td></tr>`;
         });
         html += '</tbody></table>';
         container.innerHTML = html;
@@ -1312,20 +1746,32 @@
             applyPanelCollapseStates();
         });
         container.querySelectorAll('tbody tr').forEach(tr => {
+            tr.addEventListener('mouseenter', onAspectRowHoverEnter);
+            tr.addEventListener('mouseleave', onAspectRowHoverLeave);
             tr.addEventListener('click', () => {
-                setFocusAspect(tr.dataset.transit, tr.dataset.natal, tr.dataset.aspect, tr.dataset.method || null);
+                setFocusAspect(
+                    tr.dataset.transit || null,
+                    tr.dataset.natal || null,
+                    tr.dataset.aspect || null,
+                    tr.dataset.method || null,
+                    tr.dataset.aspectKey || null
+                );
             });
         });
         applyFocusState();
     }
 
-    function setFocusAspect(transitBody, natalBody, aspectType, method = null) {
+    function setFocusAspect(transitBody, natalBody, aspectType, method = null, aspectKey = null) {
+        const resolvedAspectKey = aspectKey || (method
+            ? buildAspectKey(method, transitBody, aspectType, natalBody)
+            : null);
         focusState = {
             mode: 'aspect',
             method,
             transitBody,
             natalBody,
             aspectType,
+            aspectKey: resolvedAspectKey,
             planetRole: null,
             planetName: null,
         };
@@ -1343,6 +1789,7 @@
             transitBody: null,
             natalBody: null,
             aspectType: null,
+            aspectKey: null,
             planetRole: role,
             planetName,
         };
@@ -1356,6 +1803,7 @@
             transitBody: null,
             natalBody: null,
             aspectType: null,
+            aspectKey: null,
             planetRole: null,
             planetName: null,
         };
@@ -1383,20 +1831,13 @@
     }
 
     function matchesFocusLine(line) {
-        if (!focusState.mode) return true;
-        if (focusState.mode === 'aspect') {
-            const methodMatches = !focusState.method || line.dataset.method === focusState.method;
-            return methodMatches &&
-                line.dataset.transit === focusState.transitBody &&
-                line.dataset.natal === focusState.natalBody &&
-                line.dataset.aspect === focusState.aspectType;
-        }
-        if (focusState.mode === 'planet') {
-            return focusState.planetRole === 'transit'
-                ? line.dataset.transit === focusState.planetName
-                : line.dataset.natal === focusState.planetName;
-        }
-        return true;
+        return matchesFocusDataset({
+            method: line?.dataset?.method || '',
+            transit: line?.dataset?.transit || '',
+            natal: line?.dataset?.natal || '',
+            aspect: line?.dataset?.aspect || '',
+            aspectKey: line?.dataset?.aspectKey || '',
+        });
     }
 
     function applyFocusState() {
@@ -1437,25 +1878,25 @@
         const table = document.getElementById('biwheelAspects');
         if (table) {
             table.querySelectorAll('tbody tr').forEach(tr => {
-                const active = matchesFocusLine({
-                    dataset: {
-                        method: tr.dataset.method,
-                        transit: tr.dataset.transit,
-                        natal: tr.dataset.natal,
-                        aspect: tr.dataset.aspect,
-                    }
+                const active = matchesFocusDataset({
+                    method: tr.dataset.method || '',
+                    transit: tr.dataset.transit || '',
+                    natal: tr.dataset.natal || '',
+                    aspect: tr.dataset.aspect || '',
+                    aspectKey: tr.dataset.aspectKey || '',
                 });
                 tr.classList.toggle('bw-highlight-row', hasFocus && active);
                 tr.classList.toggle('bw-dimmed-row', hasFocus && !active);
             });
         }
+        refreshHoveredAspectVisual();
         const clearBtn = document.getElementById('bwClearFocusBtn');
         if (clearBtn) clearBtn.classList.toggle('active', hasFocus);
     }
 
     // ─── Zoom & Pan ────────────────────────────────────────
     let zoomLevel = 1;
-    const ZOOM_MIN = 0.5, ZOOM_MAX = 4, ZOOM_STEP = 0.15;
+    const ZOOM_MIN = 0.5, ZOOM_MAX = 4, ZOOM_STEP = 0.08;
     let panX = 0, panY = 0;
     let isPanning = false, panStartX = 0, panStartY = 0;
 
@@ -1652,14 +2093,6 @@
         });
         document.getElementById('bwResetFiltersModal')?.addEventListener('click', () => {
             resetAspectFilters();
-        });
-        document.getElementById('bwMajorOnlyModal')?.addEventListener('click', () => {
-            setAspectFilter('major');
-            rerenderLast();
-        });
-        document.getElementById('bwMinorOnlyModal')?.addEventListener('click', () => {
-            setAspectFilter('minor');
-            rerenderLast();
         });
     }
 

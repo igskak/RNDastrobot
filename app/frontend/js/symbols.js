@@ -14,7 +14,7 @@ const PLANET_SYMBOLS = {
     'Neptune': '♆',
     'Pluto': '♇',
     'Chiron': '⚷',
-    'Proserpina': '[·]',
+    'Proserpina': ']·[',
     'TrueNode': '☊',
     'TrueNorthNode': '☊',
     'TrueSouthNode': '☋',

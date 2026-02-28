@@ -43,6 +43,45 @@ class ChartDataRenderer {
         return translated === key ? (Symbols.aspectNamesRu[name] || name) : translated;
     }
 
+    escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    retrogradeTitle() {
+        const key = 'page.natalFull.legend.motion.retrograde';
+        const translated = this.t(key);
+        return translated === key ? 'Retrograde' : translated;
+    }
+
+    retroIndicatorHtml(isRetrograde, variantClass = '') {
+        if (!isRetrograde) return '';
+        const suffix = variantClass ? ` ${variantClass}` : '';
+        const title = this.escapeHtml(this.retrogradeTitle());
+        return `<span class="retro-indicator${suffix}" title="${title}" aria-label="${title}">R</span>`;
+    }
+
+    buildRetrogradeLookup(planets = []) {
+        const lookup = new Map();
+        planets.forEach((planet) => {
+            if (!planet?.name) return;
+            const normalizedName = this.normalizeAspectBodyName(planet.name);
+            lookup.set(normalizedName, Boolean(planet.retrograde));
+        });
+        return lookup;
+    }
+
+    isBodyRetrograde(name, lookup = null) {
+        if (!name) return false;
+        const normalizedName = this.normalizeAspectBodyName(String(name));
+        const source = lookup || this.buildRetrogradeLookup(this.chartData?.planets || []);
+        return source.get(normalizedName) === true;
+    }
+
     // Порядок тел для аспектной сетки и сортировки списка аспектов
     static ASPECT_SORT_ORDER = [
         'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
@@ -184,7 +223,7 @@ class ChartDataRenderer {
                 <tr id="row-${p.name}" data-planet="${p.name}">
                     <td class="symbol-cell">
                         ${planetIcon}
-                        ${p.retrograde ? '<span class="retro-badge-small">Rx</span>' : ''}
+                        ${this.retroIndicatorHtml(p.retrograde, 'retro-indicator--small')}
                     </td>
                     <td class="mono"><span class="astro-symbol">${Symbols.signs[p.sign]}</span> ${degDMS}</td>
                     <td class="mono">${p.house}</td>
@@ -355,6 +394,7 @@ class ChartDataRenderer {
         }
 
         const normalized = filtered.map(a => this.normalizeAspectForDisplay(a));
+        const retroLookup = this.buildRetrogradeLookup(this.chartData?.planets || []);
         const sorted = [...normalized].sort((a, b) => {
             let diff = 0;
             switch (this.aspectSortState.field) {
@@ -386,8 +426,8 @@ class ChartDataRenderer {
             const aspectKey = this.getAspectKey(a);
             return `
                 <tr data-aspect="${aspectKey || ''}" data-aspect-key="${aspectKey || ''}">
-                    <td class="symbol-cell"><span class="astro-symbol">${Symbols.planets[a.left_planet] || ''}</span></td>
-                    <td class="symbol-cell"><span class="astro-symbol">${Symbols.planets[a.right_planet] || ''}</span></td>
+                    <td class="symbol-cell"><span class="astro-symbol">${Symbols.planets[a.left_planet] || ''}</span>${this.retroIndicatorHtml(this.isBodyRetrograde(a.left_planet, retroLookup), 'retro-indicator--micro')}</td>
+                    <td class="symbol-cell"><span class="astro-symbol">${Symbols.planets[a.right_planet] || ''}</span>${this.retroIndicatorHtml(this.isBodyRetrograde(a.right_planet, retroLookup), 'retro-indicator--micro')}</td>
                     <td class="${typeClass}"><span class="astro-symbol">${Symbols.aspects[a.aspect_type] || ''}</span> ${this.aspectName(a.aspect_type)}</td>
                     <td class="mono">${a.orb.toFixed(2)}°</td>
                 </tr>
@@ -427,13 +467,13 @@ class ChartDataRenderer {
         // Заголовок
         html += '<tr><th></th>';
         filtered.forEach(p => {
-            html += `<th title="${this.planetName(p.name)}"><span class="astro-symbol">${Symbols.planets[p.name]}</span></th>`;
+            html += `<th title="${this.planetName(p.name)}"><span class="astro-symbol">${Symbols.planets[p.name]}</span>${this.retroIndicatorHtml(p.retrograde, 'retro-indicator--micro')}</th>`;
         });
         html += '</tr>';
 
         // Строки (треугольная матрица)
         filtered.forEach((rowPlanet, rowIdx) => {
-            html += `<tr><th title="${this.planetName(rowPlanet.name)}"><span class="astro-symbol">${Symbols.planets[rowPlanet.name]}</span></th>`;
+            html += `<tr><th title="${this.planetName(rowPlanet.name)}"><span class="astro-symbol">${Symbols.planets[rowPlanet.name]}</span>${this.retroIndicatorHtml(rowPlanet.retrograde, 'retro-indicator--micro')}</th>`;
 
             filtered.forEach((colPlanet, colIdx) => {
                 if (colIdx >= rowIdx) {

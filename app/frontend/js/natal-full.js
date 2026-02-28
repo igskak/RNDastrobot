@@ -137,6 +137,60 @@ function setAspectsSortHeaderLabel(headerEl, field, indicator) {
 let chartData = null;
 let aspectsSortState = { field: 'type', ascending: true };
 let currentMajorAspects = [];
+let retrogradeByBody = new Map();
+
+const RETRO_ALIASES = {
+    TrueNorthNode: 'TrueNode',
+    TrueSouthNode: 'SouthNode',
+    Fortune: 'PartOfFortune'
+};
+
+function normalizeBodyName(name) {
+    return RETRO_ALIASES[name] || name;
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function getRetrogradeLabel() {
+    const key = 'page.natalFull.legend.motion.retrograde';
+    const translated = t(key);
+    return translated === key ? 'Retrograde' : translated;
+}
+
+function retroIndicatorHtml(isRetrograde, variantClass = '') {
+    if (!isRetrograde) return '';
+    const suffix = variantClass ? ` ${variantClass}` : '';
+    const label = escapeHtml(getRetrogradeLabel());
+    return `<span class="retro-indicator${suffix}" title="${label}" aria-label="${label}">R</span>`;
+}
+
+function buildRetrogradeLookup(planets = []) {
+    const map = new Map();
+    planets.forEach((planet) => {
+        if (!planet?.name) return;
+        map.set(normalizeBodyName(planet.name), Boolean(planet.retrograde));
+    });
+    return map;
+}
+
+function isBodyRetrograde(name) {
+    if (!name) return false;
+    return retrogradeByBody.get(normalizeBodyName(name)) === true;
+}
+
+function formatPlanetNameWithRetro(name, options = {}) {
+    const { short = false, markerClass = 'retro-indicator--small' } = options;
+    const fullName = getPlanetName(name);
+    const label = short && fullName.length > 4 ? fullName.substring(0, 3) : fullName;
+    return `${escapeHtml(label)}${retroIndicatorHtml(isBodyRetrograde(name), markerClass)}`;
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     const storedData = sessionStorage.getItem('natalChart');
@@ -171,6 +225,7 @@ function setupLegendToggle() {
 }
 
 function renderFullChart(data) {
+    retrogradeByBody = buildRetrogradeLookup(data.planets || []);
     renderHeader(data);
     renderSummaryBar(data);
     renderPlanetsTable(data.planets, data.houses);
@@ -314,7 +369,7 @@ function createPlanetRow(planet) {
     const tdName = document.createElement('td');
     tdName.innerHTML = `<span class="planet-cell">
         <span class="planet-symbol">${getPlanetSymbol(planet.name)}</span>
-        <span class="planet-name">${getPlanetName(planet.name)}</span>
+        <span class="planet-name">${getPlanetName(planet.name)}</span>${retroIndicatorHtml(Boolean(planet.retrograde), 'retro-indicator--small')}
     </span>`;
     tr.appendChild(tdName);
 
@@ -473,12 +528,12 @@ function renderHousesTable(houses, planets) {
         tr.appendChild(tdSign);
 
         const tdRuler = document.createElement('td');
-        let rulerText = getPlanetName(house.ruler_planet);
+        let rulerText = formatPlanetNameWithRetro(house.ruler_planet);
         if (house.co_rulers?.length > 0) {
-            const coRulerNames = house.co_rulers.map((p) => getPlanetName(p)).join(', ');
+            const coRulerNames = house.co_rulers.map((p) => formatPlanetNameWithRetro(p)).join(', ');
             rulerText += ` (${coRulerNames})`;
         }
-        tdRuler.textContent = rulerText;
+        tdRuler.innerHTML = rulerText || EMPTY;
         tr.appendChild(tdRuler);
 
         const tdRulerHouse = document.createElement('td');
@@ -498,12 +553,12 @@ function renderHousesTable(houses, planets) {
         const tdPlanets = document.createElement('td');
         const housePlanets = house.planets_in_house || planetsByHouse[house.number] || [];
         if (housePlanets.length > 0) {
-            const shortNames = housePlanets.map((p) => {
-                const name = getPlanetName(p);
-                return name.length > 4 ? name.substring(0, 3) : name;
-            });
-            tdPlanets.textContent = shortNames.join(', ');
-            tdPlanets.title = housePlanets.map((p) => getPlanetName(p)).join(', ');
+            const shortNames = housePlanets.map((p) => formatPlanetNameWithRetro(p, {
+                short: true,
+                markerClass: 'retro-indicator--micro'
+            }));
+            tdPlanets.innerHTML = shortNames.join(', ');
+            tdPlanets.title = housePlanets.map((p) => `${getPlanetName(p)}${isBodyRetrograde(p) ? ' R' : ''}`).join(', ');
         } else {
             tdPlanets.textContent = EMPTY;
         }
@@ -594,7 +649,7 @@ function createAspectRow(aspect) {
     tr.appendChild(tdSymbol);
 
     const tdPlanets = document.createElement('td');
-    tdPlanets.textContent = `${getPlanetName(aspect.planet_1)} - ${getPlanetName(aspect.planet_2)}`;
+    tdPlanets.innerHTML = `${formatPlanetNameWithRetro(aspect.planet_1, { markerClass: 'retro-indicator--micro' })} - ${formatPlanetNameWithRetro(aspect.planet_2, { markerClass: 'retro-indicator--micro' })}`;
     tr.appendChild(tdPlanets);
 
     const tdOrb = document.createElement('td');
@@ -808,7 +863,7 @@ function renderSpecialPoints(specialPoints) {
         const tdName = document.createElement('td');
         tdName.innerHTML = `<span class="planet-cell">
             <span class="planet-symbol">${getPlanetSymbol(pointName)}</span>
-            <span class="planet-name">${getPlanetName(pointName)}</span>
+            <span class="planet-name">${getPlanetName(pointName)}</span>${retroIndicatorHtml(Boolean(point.retrograde) || isBodyRetrograde(pointName), 'retro-indicator--small')}
         </span>`;
         tr.appendChild(tdName);
 
