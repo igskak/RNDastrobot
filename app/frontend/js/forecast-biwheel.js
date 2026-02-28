@@ -41,8 +41,9 @@
     const WHEEL_ORDER = ['natal', 'transit', 'progression', 'direction'];
     const WHEEL_INSET = 2;
     const WHEEL_GAP = 0;
-    const WHEEL_BAND_WIDTH =
+    const DEFAULT_WHEEL_BAND_WIDTH =
         (SIGN_INNER_R - ASPECT_R - (WHEEL_INSET * 2) - (WHEEL_GAP * (WHEEL_ORDER.length - 1))) / WHEEL_ORDER.length;
+    const BIWHEEL_VIEW_MODE_STORAGE_KEY = 'bwViewMode';
     const PROGNOSTIC_GLYPH_COLOR = '#111111';
     const WHEEL_SEPARATOR_COLOR = '#94a3b8';
     const WHEEL_SEPARATOR_WIDTH = 0.9;
@@ -120,6 +121,10 @@
     let ingressesAvailable = false;
     let natalRetrogradeMap = new Map();
     let layerRetrogradeMaps = new Map();
+    let wheelBandsByMethod = new Map();
+    let wheelBandWidth = DEFAULT_WHEEL_BAND_WIDTH;
+    let biwheelViewMode = (localStorage.getItem(BIWHEEL_VIEW_MODE_STORAGE_KEY) === 'focus') ? 'focus' : 'compare';
+    let layoutAnimationTimer = null;
 
     function el(tag, attrs, text) {
         const e = document.createElementNS(NS, tag);
@@ -130,6 +135,103 @@
 
     function clampPointScale(v) {
         return Math.min(1.7, Math.max(0.8, Number(v) || 1));
+    }
+
+    function normalizeWheelMethod(methodOrLayer = 'transit') {
+        return methodOrLayer === 'solar_return' ? 'direction' : methodOrLayer;
+    }
+
+    function isKnownWheelMethod(methodOrLayer) {
+        return WHEEL_ORDER.includes(normalizeWheelMethod(methodOrLayer));
+    }
+
+    function collectWheelMethods(layers = [], options = {}) {
+        const methods = [];
+        const includeVisibleOnly = options.visibleOnly !== false;
+        const push = (method) => {
+            const normalized = normalizeWheelMethod(method);
+            if (!isKnownWheelMethod(normalized)) return;
+            if (!methods.includes(normalized)) methods.push(normalized);
+        };
+
+        if (!includeVisibleOnly || layerVisibility.natal) push('natal');
+        (layers || []).forEach((layer) => {
+            if (!layer?.method) return;
+            if (includeVisibleOnly && !isLayerVisible(layer.method)) return;
+            push(layer.method);
+        });
+        return methods;
+    }
+
+    function updateWheelLayout(layers = []) {
+        const visibleMethods = collectWheelMethods(layers, { visibleOnly: true });
+        const fallbackMethods = visibleMethods.length
+            ? visibleMethods
+            : collectWheelMethods(layers, { visibleOnly: false });
+        const methods = fallbackMethods.length ? fallbackMethods : ['natal'];
+        const totalThickness = SIGN_INNER_R - ASPECT_R - (WHEEL_INSET * 2);
+        const gapsTotal = WHEEL_GAP * Math.max(0, methods.length - 1);
+        const availableThickness = Math.max(totalThickness - gapsTotal, DEFAULT_WHEEL_BAND_WIDTH);
+        wheelBandWidth = availableThickness / methods.length;
+        wheelBandsByMethod = new Map();
+
+        methods.forEach((method, index) => {
+            const inner = ASPECT_R + WHEEL_INSET + index * (wheelBandWidth + WHEEL_GAP);
+            const outer = inner + wheelBandWidth;
+            wheelBandsByMethod.set(method, {
+                inner,
+                outer,
+                center: inner + (wheelBandWidth / 2),
+            });
+        });
+    }
+
+    function getVisibleWheelCount(layers = []) {
+        return collectWheelMethods(layers, { visibleOnly: true }).length;
+    }
+
+    function triggerLayoutAnimation() {
+        const container = document.getElementById('biwheelContainer');
+        if (!container) return;
+        container.classList.remove('bw-layout-animating');
+        // Restart CSS animation class.
+        void container.offsetWidth;
+        container.classList.add('bw-layout-animating');
+        if (layoutAnimationTimer) clearTimeout(layoutAnimationTimer);
+        layoutAnimationTimer = window.setTimeout(() => {
+            container.classList.remove('bw-layout-animating');
+            layoutAnimationTimer = null;
+        }, 320);
+    }
+
+    function updateViewModeUI() {
+        const container = document.getElementById('biwheelContainer');
+        if (container) container.setAttribute('data-bw-view-mode', biwheelViewMode);
+        document.querySelectorAll('.bw-view-btn[data-bw-view-mode]').forEach((node) => {
+            const active = node.dataset.bwViewMode === biwheelViewMode;
+            node.classList.toggle('active', active);
+            node.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+    }
+
+    function setBiwheelViewMode(mode, options = {}) {
+        const normalized = mode === 'focus' ? 'focus' : 'compare';
+        const changed = normalized !== biwheelViewMode;
+        biwheelViewMode = normalized;
+        if (options.persist !== false) {
+            localStorage.setItem(BIWHEEL_VIEW_MODE_STORAGE_KEY, biwheelViewMode);
+        }
+        updateViewModeUI();
+        applyPanelCollapseStates();
+        if (changed && options.animate !== false) triggerLayoutAnimation();
+    }
+
+    function applyBiwheelContainerState(layers = []) {
+        const container = document.getElementById('biwheelContainer');
+        if (!container) return;
+        const visibleWheels = getVisibleWheelCount(layers);
+        container.setAttribute('data-bw-visible-wheels', String(visibleWheels));
+        container.classList.toggle('bw-single-wheel', visibleWheels <= 1);
     }
 
     function normalizeAspectKeyPart(value) {
@@ -334,6 +436,8 @@
         ascLong = natalData.angles?.ASC?.longitude || 0;
 
         const layers = buildPrognosticLayers(progData);
+        updateWheelLayout(layers);
+        applyBiwheelContainerState(layers);
         natalRetrogradeMap = buildRetrogradeMap(natalData?.planets || []);
         layerRetrogradeMaps = new Map(
             layers.map((layer) => [layer.method, buildRetrogradeMap(layer.planets || [])])
@@ -574,18 +678,14 @@
     }
 
     function getWheelBand(methodOrLayer = 'transit') {
-        const normalized = methodOrLayer === 'solar_return'
-            ? 'direction'
-            : methodOrLayer;
+        const normalized = normalizeWheelMethod(methodOrLayer);
+        const band = wheelBandsByMethod.get(normalized);
+        if (band) return band;
         const idx = WHEEL_ORDER.indexOf(normalized);
         const safeIdx = idx === -1 ? 1 : idx;
-        const inner = ASPECT_R + WHEEL_INSET + safeIdx * (WHEEL_BAND_WIDTH + WHEEL_GAP);
-        const outer = inner + WHEEL_BAND_WIDTH;
-        return {
-            inner,
-            outer,
-            center: inner + (WHEEL_BAND_WIDTH / 2),
-        };
+        const inner = ASPECT_R + WHEEL_INSET + safeIdx * (DEFAULT_WHEEL_BAND_WIDTH + WHEEL_GAP);
+        const outer = inner + DEFAULT_WHEEL_BAND_WIDTH;
+        return { inner, outer, center: inner + (DEFAULT_WHEEL_BAND_WIDTH / 2) };
     }
 
     function drawMethodRing(method = 'transit') {
@@ -604,7 +704,7 @@
             r: band.center,
             fill: 'none',
             stroke: withAlpha(style.color, style.fillAlpha),
-            'stroke-width': WHEEL_BAND_WIDTH.toFixed(2),
+            'stroke-width': wheelBandWidth.toFixed(2),
             class: 'bw-method-ring',
             'data-layer': method,
         }));
@@ -1004,16 +1104,27 @@
         const aspectsList = document.getElementById('biwheelAspects');
         const openIngressesBtn = document.getElementById('bwOpenIngresses');
         const openAspectsBtn = document.getElementById('bwOpenAspects');
+        const main = document.querySelector('.biwheel-main');
 
-        const showIngressPanel = ingressesAvailable && !ingressesCollapsed;
-        if (leftbar) leftbar.style.display = showIngressPanel ? 'flex' : 'none';
+        const focusView = biwheelViewMode === 'focus';
+        const showIngressPanel = !focusView && ingressesAvailable && !ingressesCollapsed;
+        if (leftbar) leftbar.classList.toggle('bw-panel-hidden', !showIngressPanel);
         if (ingressesList) ingressesList.classList.toggle('bw-panel-collapsed', !showIngressPanel);
-        if (openIngressesBtn) openIngressesBtn.style.display = ingressesAvailable && ingressesCollapsed ? 'inline-flex' : 'none';
+        if (openIngressesBtn) {
+            openIngressesBtn.style.display = (!focusView && ingressesAvailable && ingressesCollapsed) ? 'inline-flex' : 'none';
+        }
 
-        const showAspectsPanel = !aspectsCollapsed;
-        if (sidebar) sidebar.style.display = showAspectsPanel ? 'flex' : 'none';
+        const showAspectsPanel = !focusView && !aspectsCollapsed;
+        if (sidebar) sidebar.classList.toggle('bw-panel-hidden', !showAspectsPanel);
         if (aspectsList) aspectsList.classList.toggle('bw-panel-collapsed', !showAspectsPanel);
-        if (openAspectsBtn) openAspectsBtn.style.display = aspectsCollapsed ? 'inline-flex' : 'none';
+        if (openAspectsBtn) {
+            openAspectsBtn.style.display = (!focusView && aspectsCollapsed) ? 'inline-flex' : 'none';
+        }
+        if (main) {
+            main.classList.toggle('bw-focus-layout', focusView);
+            main.classList.toggle('bw-ingresses-visible', showIngressPanel);
+            main.classList.toggle('bw-aspects-visible', showAspectsPanel);
+        }
     }
 
     function onPlanetHover(event) {
@@ -1306,6 +1417,7 @@
                 event.stopPropagation();
                 aspectsCollapsed = true;
                 applyPanelCollapseStates();
+                triggerLayoutAnimation();
             });
             applyPanelCollapseStates();
             return;
@@ -1484,6 +1596,7 @@
             event.stopPropagation();
             ingressesCollapsed = true;
             applyPanelCollapseStates();
+            triggerLayoutAnimation();
         });
         container.querySelectorAll('.bw-ingress-transition-hover').forEach((node) => {
             const getHoverHtml = () => {
@@ -1606,6 +1719,7 @@
         if (!Object.prototype.hasOwnProperty.call(layerVisibility, layer)) return;
         layerVisibility[layer] = !layerVisibility[layer];
         updateLayerLegendUI();
+        triggerLayoutAnimation();
         rerenderLast();
     }
 
@@ -1687,6 +1801,7 @@
         natalFiltersInitialized = false;
         planetClickFilter = { role: null, planetName: null };
         updateLayerLegendUI();
+        triggerLayoutAnimation();
         rerenderLast();
     }
 
@@ -1744,6 +1859,7 @@
             event.stopPropagation();
             aspectsCollapsed = true;
             applyPanelCollapseStates();
+            triggerLayoutAnimation();
         });
         container.querySelectorAll('tbody tr').forEach(tr => {
             tr.addEventListener('mouseenter', onAspectRowHoverEnter);
@@ -2005,6 +2121,7 @@
         transitPointScale = readSavedScale('bwTransitPointScale', 1.0);
         updateScaleControlsUI();
         updateLayerLegendUI();
+        setBiwheelViewMode(biwheelViewMode, { persist: false, animate: false });
 
         document.querySelectorAll('.bw-filter-btn[data-filter]').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -2033,6 +2150,7 @@
                 e.stopPropagation();
                 ingressesCollapsed = false;
                 applyPanelCollapseStates();
+                triggerLayoutAnimation();
             });
         }
         if (openAspectsBtn) {
@@ -2040,8 +2158,14 @@
                 e.stopPropagation();
                 aspectsCollapsed = false;
                 applyPanelCollapseStates();
+                triggerLayoutAnimation();
             });
         }
+        document.querySelectorAll('.bw-view-btn[data-bw-view-mode]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                setBiwheelViewMode(btn.dataset.bwViewMode, { persist: true, animate: true });
+            });
+        });
         applyPanelCollapseStates();
         document.getElementById('bwNatalScaleRange')?.addEventListener('input', e => {
             natalPointScale = clampPointScale((Number(e.target.value) || 100) / 100);
