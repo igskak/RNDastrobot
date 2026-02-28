@@ -498,6 +498,8 @@
         "threeMonths": "3 months"
       },
       "scale": {
+        "focusEnter": "Chart focus mode",
+        "focusExit": "Exit chart focus mode",
         "nextStep": "Next step",
         "play": "Play timeline",
         "prevStep": "Previous step",

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title data-i18n="page.forecast.title"></title>
-    <link rel="stylesheet" href="bundles/forecast.bundle.css?v=1">
+    <link rel="stylesheet" href="bundles/forecast.bundle.css?v=20260228-focus1">
     <link rel="stylesheet" href="css/locale-switcher.css?v=1">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,6 +23,7 @@
             🔮 <span data-i18n="page.forecast.header.title"></span>
             <div class="header-subtitle" id="headerSubtitle"></div>
         </div>
+        <button class="forecast-focus-toggle-btn" id="forecastFocusToggleBtn" style="display:none"></button>
         <button class="help-btn" id="btnHelp" data-i18n-title="page.forecast.help.openTitle">?</button>
     </header>
 
@@ -103,17 +104,6 @@
             <input type="date" id="singleDate">
             <button class="preset-btn today-btn" id="btnToday" data-i18n="common.today"></button>
         </div>
-        <div class="control-group" id="transitScaleGroup" style="display:none">
-            <button class="bw-time-nav-btn" id="btnScalePrev" data-i18n-title="page.forecast.scale.prevStep">←</button>
-            <button class="bw-time-nav-btn" id="btnScalePlay" data-i18n-title="page.forecast.scale.play">▶</button>
-            <button class="bw-time-nav-btn" id="btnScaleNext" data-i18n-title="page.forecast.scale.nextStep">→</button>
-            <label for="biwheelStepSelect" data-i18n="page.forecast.scale.step"></label>
-            <select id="biwheelStepSelect">
-                <option value="day" data-i18n="common.day"></option>
-                <option value="week" data-i18n="common.week"></option>
-                <option value="month" data-i18n="common.monthLabel"></option>
-            </select>
-        </div>
         <div class="control-group" id="solarYearGroup" style="display:none">
             <label data-i18n="common.year"></label>
             <input type="number" id="solarYear" min="1900" max="2100" style="width:80px">
@@ -181,6 +171,19 @@
             </div>
             <div class="biwheel-container" id="biwheelContainer" style="display:none">
                 <div class="biwheel-time-controls" id="biwheelTimeControls" style="display:none">
+                    <div class="bw-time-nav-inline">
+                        <button class="bw-time-nav-btn" id="btnScalePrev" data-i18n-title="page.forecast.scale.prevStep" data-i18n-aria-label="page.forecast.scale.prevStep">←</button>
+                        <button class="bw-time-nav-btn" id="btnScalePlay" data-i18n-title="page.forecast.scale.play" data-i18n-aria-label="page.forecast.scale.play">▶</button>
+                        <button class="bw-time-nav-btn" id="btnScaleNext" data-i18n-title="page.forecast.scale.nextStep" data-i18n-aria-label="page.forecast.scale.nextStep">→</button>
+                        <div class="bw-step-inline">
+                            <label for="biwheelStepSelect" data-i18n="page.forecast.scale.step"></label>
+                            <select id="biwheelStepSelect">
+                                <option value="day" data-i18n="common.day"></option>
+                                <option value="week" data-i18n="common.week"></option>
+                                <option value="month" data-i18n="common.monthLabel"></option>
+                            </select>
+                        </div>
+                    </div>
                     <input type="range" id="biwheelTimeSlider" min="0" max="0" value="0" step="1">
                     <span class="bw-time-current" id="biwheelScaleCurrent">—</span>
                     <span class="bw-time-range" id="biwheelScaleRange"></span>
@@ -416,7 +419,7 @@
         💬
     </button>
 
-    <script type="module" src="js/bundles/forecast.bundle.js?v=2"></script>
+    <script type="module" src="js/bundles/forecast.bundle.js?v=20260228-focus1"></script>
     <script src="js/locale-switcher.js?v=3"></script>
 </body>
 </html>

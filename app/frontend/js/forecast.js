@@ -58,6 +58,7 @@ const ForecastState = {
     userId: null,
     natalData: null,
     currentTab: 'biwheel',
+    isFocusMode: false,
     method: 'transits',
     // cached results
     transitEvents: null,
@@ -287,10 +288,13 @@ function initDefaults() {
     if (solarScaleValue) solarScaleValue.textContent = `${Math.round(ForecastState.solarPointScale * 100)}%`;
     const stepSelect = document.getElementById('biwheelStepSelect');
     if (stepSelect) stepSelect.value = ForecastState.transitScaleUnit;
+    ForecastState.isFocusMode = false;
     ForecastState.directionType = normalizeDirectionType(localStorage.getItem(DIRECTION_TYPE_STORAGE_KEY) || 'solar_arc');
     const directionTypeSelect = document.getElementById('bwDirectionTypeSelect');
     if (directionTypeSelect) directionTypeSelect.value = ForecastState.directionType;
     restoreSolarLocationFromStorage();
+    updateBiwheelFocusButton();
+    applyForecastFocusState();
 }
 
 function applyDatePreset(value, unit = 'months') {
@@ -768,6 +772,14 @@ function initControls() {
     document.getElementById('btnScaleNext')?.addEventListener('click', () => shiftTransitScale(1));
     document.getElementById('btnScalePlay')?.addEventListener('click', toggleTransitScalePlayback);
     document.getElementById('biwheelTimeSlider')?.addEventListener('input', onTransitScaleSliderInput);
+    document.getElementById('forecastFocusToggleBtn')?.addEventListener('click', () => {
+        setForecastFocusMode(!ForecastState.isFocusMode);
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && ForecastState.isFocusMode) {
+            setForecastFocusMode(false);
+        }
+    });
     const directionTypeSelect = document.getElementById('bwDirectionTypeSelect');
     if (directionTypeSelect) {
         directionTypeSelect.value = normalizeDirectionType(ForecastState.directionType || 'solar_arc');
@@ -789,6 +801,32 @@ function initControls() {
 
     toggleTableFilters(false);
     updateTableFiltersBadge();
+    updateControlsVisibility();
+}
+
+function updateBiwheelFocusButton() {
+    const btn = document.getElementById('forecastFocusToggleBtn');
+    if (!btn) return;
+    const labelKey = ForecastState.isFocusMode
+        ? 'page.forecast.scale.focusExit'
+        : 'page.forecast.scale.focusEnter';
+    const label = t(labelKey);
+    const show = ForecastState.currentTab === 'biwheel';
+    btn.style.display = show ? 'inline-flex' : 'none';
+    btn.title = label;
+    btn.setAttribute('aria-label', label);
+    btn.textContent = label;
+}
+
+function applyForecastFocusState() {
+    const isFocusBiwheel = ForecastState.currentTab === 'biwheel' && ForecastState.isFocusMode;
+    document.body.classList.toggle('forecast-focus-active', isFocusBiwheel);
+    updateBiwheelFocusButton();
+}
+
+function setForecastFocusMode(enabled) {
+    ForecastState.isFocusMode = !!enabled;
+    applyForecastFocusState();
     updateControlsVisibility();
 }
 
@@ -1245,8 +1283,8 @@ function updateControlsVisibility() {
     const solarOrientation = document.getElementById('solarOrientationGroup');
     const solarLocation = document.getElementById('solarLocationGroup');
     const biwheelTimeControls = document.getElementById('biwheelTimeControls');
-    const transitScaleGroup = document.getElementById('transitScaleGroup');
     const biwheelScaleTicks = document.getElementById('biwheelScaleTicks');
+    const isFocusBiwheel = tab === 'biwheel' && ForecastState.isFocusMode;
 
     dateRange.style.display = 'none';
     singleDate.style.display = 'none';
@@ -1258,7 +1296,7 @@ function updateControlsVisibility() {
         solarYear.style.display = '';
         solarOrientation.style.display = '';
         solarLocation.style.display = '';
-    } else if (tab === 'timeline' || tab === 'biwheel' || tab === 'table') {
+    } else if (!isFocusBiwheel && (tab === 'timeline' || tab === 'biwheel' || tab === 'table')) {
         dateRange.style.display = '';
     }
 
@@ -1266,16 +1304,15 @@ function updateControlsVisibility() {
         const showTimeControls = tab === 'biwheel';
         biwheelTimeControls.style.display = showTimeControls ? 'flex' : 'none';
         if (biwheelScaleTicks) biwheelScaleTicks.style.display = showTimeControls ? '' : 'none';
-        if (transitScaleGroup) transitScaleGroup.style.display = showTimeControls ? 'flex' : 'none';
         if (!showTimeControls) stopTransitScalePlayback();
         if (showTimeControls) {
             refreshTransitScale();
         }
-    } else if (transitScaleGroup) {
-        transitScaleGroup.style.display = 'none';
+    } else {
         if (biwheelScaleTicks) biwheelScaleTicks.style.display = 'none';
         stopTransitScalePlayback();
     }
+    applyForecastFocusState();
 }
 
 // ─── Calculate ──────────────────────────────────────────
@@ -1290,6 +1327,9 @@ async function onCalculate() {
             const forcedMethod = tab === 'timeline' ? 'transits' : null;
             await calculateAllForecastViews(forcedMethod);
             await renderCurrentTabFromCache();
+            if (tab === 'biwheel') {
+                setForecastFocusMode(true);
+            }
         }
     } catch (err) {
         console.error('Forecast error:', err);
