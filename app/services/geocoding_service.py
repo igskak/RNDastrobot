@@ -1,16 +1,19 @@
 """
 Сервис для геокодирования (определение координат по названию места)
 """
-from geopy.geocoders import Nominatim
-from geopy.exc import GeocoderTimedOut, GeocoderServiceError, GeocoderUnavailable
 from functools import lru_cache
-from typing import Tuple, Optional
-import time
+from typing import Tuple, Optional, Dict, Any, List
+from urllib.parse import urlencode
+from urllib.request import urlopen, Request
+from urllib.error import URLError, HTTPError
+import json
 import logging
+import socket
+import time
 
 logger = logging.getLogger(__name__)
 
-# Встроенный кэш популярных городов (избегаем запросов к Nominatim)
+# Встроенный кэш популярных городов (избегаем сетевых запросов)
 CITY_CACHE = {
     # Украина
     "киев": (50.4501, 30.5234, "Киев, Украина"),
@@ -48,36 +51,135 @@ CITY_CACHE = {
 }
 
 
+class GeocodingTimeoutError(Exception):
+    """Timeout при обращении к геокодеру."""
+
+
+class GeocodingServiceError(Exception):
+    """Внешний сервис геокодирования временно недоступен."""
+
+
 class GeocodingService:
-    """Сервис для геокодирования с использованием Nominatim (OpenStreetMap)"""
+    """Сервис геокодирования на Open-Meteo Geocoding API."""
 
-    def __init__(self, user_agent: str = "swisseph-natal-chart/1.0 (educational project)"):
-        """
-        Инициализация геокодера
+    BASE_URL = "https://geocoding-api.open-meteo.com/v1/search"
 
-        Args:
-            user_agent: User agent для запросов к Nominatim
-        """
-        self.geolocator = Nominatim(user_agent=user_agent, timeout=15)
-        self._last_request_time = 0
-        self._min_request_interval = 1.5  # Увеличиваем интервал для надёжности
+    def __init__(self):
+        self._last_request_time = 0.0
+        self._min_request_interval = 0.35
         self._max_retries = 3
-    
-    def _rate_limit(self):
-        """Ограничение частоты запросов (rate limiting)"""
+        self._timeout_seconds = 8.0
+
+    def _rate_limit(self) -> None:
         current_time = time.time()
         time_since_last_request = current_time - self._last_request_time
-        
+
         if time_since_last_request < self._min_request_interval:
             sleep_time = self._min_request_interval - time_since_last_request
             time.sleep(sleep_time)
-        
+
         self._last_request_time = time.time()
-    
+
+    @staticmethod
+    def _normalize(value: str) -> str:
+        return str(value or "").strip().lower()
+
+    @staticmethod
+    def _build_label(result: Dict[str, Any]) -> str:
+        parts = []
+        seen = set()
+        for key in ("name", "admin1", "country"):
+            value = str(result.get(key) or "").strip()
+            if not value:
+                continue
+            lowered = value.lower()
+            if lowered in seen:
+                continue
+            seen.add(lowered)
+            parts.append(value)
+        return ", ".join(parts) if parts else "Unknown location"
+
+    @staticmethod
+    def _is_city_like(result: Dict[str, Any]) -> bool:
+        code = str(result.get("feature_code") or "").upper()
+        if not code:
+            return True
+        return code.startswith("PPL") or code == "PPLC"
+
+    @staticmethod
+    def _parse_results(payload: Dict[str, Any]) -> List[Dict[str, Any]]:
+        results = payload.get("results")
+        if not isinstance(results, list):
+            return []
+
+        parsed: List[Dict[str, Any]] = []
+        for item in results:
+            if not isinstance(item, dict):
+                continue
+            try:
+                lat = float(item.get("latitude"))
+                lon = float(item.get("longitude"))
+            except (TypeError, ValueError):
+                continue
+            if not GeocodingService._is_city_like(item):
+                continue
+            parsed.append(
+                {
+                    "name": item.get("name") or "",
+                    "admin1": item.get("admin1") or "",
+                    "country": item.get("country") or "",
+                    "population": int(item.get("population") or 0),
+                    "latitude": lat,
+                    "longitude": lon,
+                }
+            )
+        return parsed
+
+    def _fetch_candidates(self, query: str, count: int = 12, language: str = "en") -> List[Dict[str, Any]]:
+        params = urlencode(
+            {
+                "name": query,
+                "count": max(1, int(count)),
+                "language": language,
+                "format": "json",
+            }
+        )
+        url = f"{self.BASE_URL}?{params}"
+        headers = {
+            "User-Agent": "swisseph-natal-chart/2.0",
+            "Accept": "application/json",
+        }
+
+        request = Request(url, headers=headers)
+        with urlopen(request, timeout=self._timeout_seconds) as response:
+            if response.status != 200:
+                raise GeocodingServiceError(f"Geocoding API error: HTTP {response.status}")
+            body = response.read().decode("utf-8")
+            payload = json.loads(body)
+            return self._parse_results(payload)
+
+    def _score_candidate(self, query: str, item: Dict[str, Any]) -> float:
+        normalized_query = self._normalize(query)
+        query_head = self._normalize(query.split(",", 1)[0])
+        item_name = self._normalize(item.get("name", ""))
+
+        score = 0.0
+        if item_name == normalized_query or item_name == query_head:
+            score += 120.0
+        elif item_name.startswith(query_head) and query_head:
+            score += 75.0
+        elif query_head and query_head in item_name:
+            score += 40.0
+
+        population = max(0, int(item.get("population") or 0))
+        score += min(60.0, population / 200000.0)
+
+        return score
+
     @lru_cache(maxsize=1000)
     def geocode(self, place: str) -> Tuple[float, float, str]:
         """
-        Получить координаты по названию места
+        Получить координаты по названию места.
 
         Args:
             place: Название места (например, "New York, NY, USA")
@@ -87,54 +189,71 @@ class GeocodingService:
 
         Raises:
             ValueError: Если место не найдено
-            GeocoderTimedOut: Если превышено время ожидания
-            GeocoderServiceError: Если сервис недоступен
+            GeocodingTimeoutError: Если превышено время ожидания
+            GeocodingServiceError: Если сервис недоступен
         """
-        # Сначала проверяем встроенный кэш
-        place_lower = place.lower().strip()
+        place_lower = self._normalize(place)
         if place_lower in CITY_CACHE:
             logger.info(f"Город найден в кэше: {place}")
             return CITY_CACHE[place_lower]
 
-        # Проверяем частичное совпадение (город в начале строки)
         for city_key, coords in CITY_CACHE.items():
             if place_lower.startswith(city_key):
                 logger.info(f"Город найден в кэше (частичное совпадение): {place} -> {city_key}")
                 return coords
 
-        last_error = None
+        last_error: Optional[Exception] = None
 
         for attempt in range(self._max_retries):
             self._rate_limit()
-
             try:
-                location = self.geolocator.geocode(place)
-
-                if not location:
+                candidates = self._fetch_candidates(place, count=15, language="en")
+                if not candidates:
                     raise ValueError(f"Место не найдено: {place}")
 
+                best = max(candidates, key=lambda item: self._score_candidate(place, item))
                 return (
-                    location.latitude,
-                    location.longitude,
-                    location.address
+                    float(best["latitude"]),
+                    float(best["longitude"]),
+                    self._build_label(best),
                 )
-
-            except GeocoderTimedOut as e:
+            except ValueError:
+                raise
+            except HTTPError as e:
                 last_error = e
-                logger.warning(f"Таймаут геокодирования (попытка {attempt + 1}/{self._max_retries}): {place}")
-                time.sleep(2 ** attempt)  # Exponential backoff
-                continue
-
-            except (GeocoderServiceError, GeocoderUnavailable) as e:
-                last_error = e
-                logger.warning(f"Ошибка сервиса геокодирования (попытка {attempt + 1}/{self._max_retries}): {e}")
+                logger.warning(
+                    f"HTTP ошибка геокодирования (попытка {attempt + 1}/{self._max_retries}): {e}"
+                )
                 time.sleep(2 ** attempt)
-                continue
+            except socket.timeout as e:
+                last_error = e
+                logger.warning(
+                    f"Таймаут геокодирования (попытка {attempt + 1}/{self._max_retries}): {place}"
+                )
+                time.sleep(2 ** attempt)
+            except URLError as e:
+                last_error = e
+                logger.warning(
+                    f"Ошибка сети геокодирования (попытка {attempt + 1}/{self._max_retries}): {e}"
+                )
+                time.sleep(2 ** attempt)
+            except json.JSONDecodeError as e:
+                last_error = e
+                logger.warning(
+                    f"Некорректный JSON от геокодера (попытка {attempt + 1}/{self._max_retries}): {e}"
+                )
+                time.sleep(2 ** attempt)
 
-        # Все попытки исчерпаны
+        if isinstance(last_error, socket.timeout):
+            raise GeocodingTimeoutError(
+                "Превышено время ожидания при обращении к сервису геокодирования"
+            )
+
         logger.error(f"Геокодирование не удалось после {self._max_retries} попыток: {place}")
-        raise GeocoderServiceError(f"Сервис геокодирования временно недоступен. Попробуйте позже или укажите координаты вручную.")
-    
+        raise GeocodingServiceError(
+            "Сервис геокодирования временно недоступен. Попробуйте позже или укажите координаты вручную."
+        )
+
     def get_coordinates(
         self,
         place: Optional[str] = None,
@@ -142,28 +261,24 @@ class GeocodingService:
         longitude: Optional[float] = None
     ) -> Tuple[float, float, Optional[str]]:
         """
-        Получить координаты из места или использовать предоставленные
-        
+        Получить координаты из места или использовать предоставленные.
+
         Args:
             place: Название места (опционально)
             latitude: Широта (опционально)
             longitude: Долгота (опционально)
-        
+
         Returns:
             Кортеж (latitude, longitude, place_name)
-        
+
         Raises:
             ValueError: Если не указаны ни место, ни координаты
         """
-        # Если координаты уже предоставлены, используем их
         if latitude is not None and longitude is not None:
             return latitude, longitude, place
-        
-        # Если указано место, геокодируем его
+
         if place:
             lat, lon, formatted_address = self.geocode(place)
             return lat, lon, formatted_address
-        
-        # Если ничего не указано
-        raise ValueError("Необходимо указать либо place, либо latitude и longitude")
 
+        raise ValueError("Необходимо указать либо place, либо latitude и longitude")

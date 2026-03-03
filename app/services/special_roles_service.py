@@ -59,16 +59,16 @@ class SpecialRolesService:
         aspect_king = self._find_aspect_king(user_id)
         handle = self._find_handle(user_id)
         
-        # Присваиваем роли
-        roles_map = {
-            almuten: 'almuten',
-            charioteer: 'charioteer',
-            doryphoros: 'doryphoros',
-            aspect_king: 'aspect_king',
-            handle: 'handle',
-        }
-        
-        for planet_name, role in roles_map.items():
+        # Присваиваем роли (без перезаписи, если у одной планеты несколько ролей)
+        roles_to_assign = [
+            (almuten, 'almuten'),
+            (charioteer, 'charioteer'),
+            (doryphoros, 'doryphoros'),
+            (aspect_king, 'aspect_king'),
+            (handle, 'handle'),
+        ]
+
+        for planet_name, role in roles_to_assign:
             if planet_name:
                 planet = next((p for p in planets if p.planet == planet_name), None)
                 if planet:

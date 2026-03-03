@@ -36,7 +36,7 @@ from app.database.connection import get_db
 from app.database.repositories.user_repository import UserRepository
 from app.database.models import User
 from app.utils.ephemeris import get_ephemeris_path
-from geopy.exc import GeocoderTimedOut, GeocoderServiceError
+from app.services.geocoding_service import GeocodingTimeoutError, GeocodingServiceError
 import os
 from loguru import logger
 
@@ -164,14 +164,14 @@ def calculate_natal_chart(
             detail=str(e)
         )
     
-    except GeocoderTimedOut as e:
+    except GeocodingTimeoutError as e:
         logger.error(f"Таймаут геокодирования: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_408_REQUEST_TIMEOUT,
             detail="Превышено время ожидания при определении координат места"
         )
     
-    except GeocoderServiceError as e:
+    except GeocodingServiceError as e:
         logger.error(f"Ошибка сервиса геокодирования: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

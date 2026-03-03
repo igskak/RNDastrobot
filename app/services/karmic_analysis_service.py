@@ -12,6 +12,10 @@ MAJOR_ASPECT_TYPES = {"Conjunction", "Sextile", "Square", "Trine", "Opposition"}
 HELPER_ASPECT_TYPES = {"Trine", "Sextile"}
 BLOCKER_ASPECT_TYPES = {"Square", "Opposition"}
 CHALLENGING_ASPECT_TYPES = {"Square", "Opposition"}
+ROLE_CANDIDATE_PLANETS = {
+    "Moon", "Mercury", "Venus", "Mars",
+    "Jupiter", "Saturn", "Uranus", "Neptune", "Pluto"
+}
 
 
 class KarmicAnalysisService:
@@ -94,6 +98,13 @@ class KarmicAnalysisService:
 
         charioteer_planet = self._find_special_role_planet(planets, "charioteer")
         doryphoros_planet = self._find_special_role_planet(planets, "doryphoros")
+
+        # Fallback for legacy charts where special_roles may be stale/empty:
+        # compute nearest planets by longitude around Sun.
+        if not charioteer_planet:
+            charioteer_planet = self._find_role_by_longitude(planets, role_name="charioteer")
+        if not doryphoros_planet:
+            doryphoros_planet = self._find_role_by_longitude(planets, role_name="doryphoros")
 
         harmonic_trines = self._collect_planet_aspects(aspects, planet_names, {"Trine"})
         challenging_aspects = self._collect_planet_aspects(
@@ -342,6 +353,43 @@ class KarmicAnalysisService:
             if role_name in roles:
                 matched.append(name)
         return sorted(matched)[0] if matched else None
+
+    def _find_role_by_longitude(self, planets: List[Dict[str, Any]], role_name: str) -> Optional[str]:
+        sun = next((planet for planet in planets if planet.get("name") == "Sun"), None)
+        if not sun:
+            return None
+
+        sun_lon = self._safe_float(sun.get("longitude"))
+        if sun_lon is None:
+            return None
+
+        candidates: List[Tuple[float, str]] = []
+        for planet in planets:
+            name = planet.get("name")
+            if not name or name not in ROLE_CANDIDATE_PLANETS:
+                continue
+
+            planet_lon = self._safe_float(planet.get("longitude"))
+            if planet_lon is None:
+                continue
+
+            if role_name == "doryphoros":
+                diff = (sun_lon - planet_lon) % 360.0
+            elif role_name == "charioteer":
+                diff = (planet_lon - sun_lon) % 360.0
+            else:
+                return None
+
+            # Exact conjunction (0°) does not qualify for either role.
+            if diff > 0:
+                candidates.append((diff, name))
+
+        if not candidates:
+            return None
+
+        # Deterministic tie-break by name.
+        candidates.sort(key=lambda item: (item[0], item[1]))
+        return candidates[0][1]
 
     def _get_point_dispositor(
         self,
