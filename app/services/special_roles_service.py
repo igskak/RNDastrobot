@@ -14,21 +14,18 @@ class SpecialRolesService:
     
     Роли:
     - Альмутен карты (almuten) - планета с максимальной силой
-    - Возничий (charioteer) - планета перед Солнцем (классические, орбис 5°)
-    - Дорифор (doryphoros) - планета после Солнца (Меркурий/Венера/Марс, орбис 15°)
+    - Возничий (charioteer) - ближайшая планета ПОСЛЕ Солнца по долготе
+    - Дорифор (doryphoros) - ближайшая планета ДО Солнца по долготе
     - Король аспектов (aspect_king) - планета с максимумом мажорных аспектов
     - Ручка ведра (handle) - якорная планета фигуры Bucket
     """
-    
-    # Классические планеты для Возничего
-    CLASSICAL_PLANETS = ['Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn']
-    
-    # Планеты для Дорифора
-    DORYPHOROS_PLANETS = ['Mercury', 'Venus', 'Mars']
-    
-    # Орбисы
-    CHARIOTEER_ORB = 5.0
-    DORYPHOROS_ORB = 15.0
+
+    # Стандартный набор из 10 планет (для ролей Солнце используется как опорное,
+    # поэтому в кандидаты включаем остальные 9).
+    ROLE_CANDIDATE_PLANETS = [
+        'Moon', 'Mercury', 'Venus', 'Mars',
+        'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'
+    ]
     
     def __init__(self, db_session: Session):
         """
@@ -100,10 +97,12 @@ class SpecialRolesService:
     
     def _find_charioteer(self, user_id: UUID) -> Optional[str]:
         """
-        Найти Возничего - классическую планету перед Солнцем (орбис 5°)
-        
-        Возничий - это планета, которая восходит ПЕРЕД Солнцем
-        (находится западнее Солнца, но в пределах орбиса)
+        Найти Возничего - ближайшую планету ПОСЛЕ Солнца по долготе.
+
+        Алгоритм:
+        - для кандидата считаем d+ = (planet_lon - sun_lon) % 360
+        - учитываем только d+ > 0 (точное соединение исключаем)
+        - выбираем минимальное d+
         
         Args:
             user_id: ID пользователя
@@ -121,26 +120,23 @@ class SpecialRolesService:
             return None
         
         sun_lon = float(sun.degree)
-        
-        # Получаем классические планеты
+
+        # Кандидаты: стандартные планеты (без Солнца).
         planets = self.db.query(NatalPlanet).filter(
             NatalPlanet.user_id == user_id,
-            NatalPlanet.planet.in_(self.CLASSICAL_PLANETS)
+            NatalPlanet.planet.in_(self.ROLE_CANDIDATE_PLANETS)
         ).all()
-        
-        # Ищем ближайшую планету ПЕРЕД Солнцем (западнее)
+
+        # Ищем ближайшую планету ПОСЛЕ Солнца
         candidates = []
         for planet in planets:
             planet_lon = float(planet.degree)
-            
-            # Вычисляем разницу (планета должна быть западнее Солнца)
-            diff = (sun_lon - planet_lon) % 360
-            
-            # Проверяем орбис (планета в пределах 5° перед Солнцем)
-            if 0 < diff <= self.CHARIOTEER_ORB:
+
+            diff = (planet_lon - sun_lon) % 360
+            if diff > 0:
                 candidates.append((planet.planet, diff))
         
-        # Возвращаем ближайшую
+        # Возвращаем ближайшую по долготе
         if candidates:
             candidates.sort(key=lambda x: x[1])
             return candidates[0][0]
@@ -149,10 +145,12 @@ class SpecialRolesService:
 
     def _find_doryphoros(self, user_id: UUID) -> Optional[str]:
         """
-        Найти Дорифора - Меркурий/Венеру/Марс после Солнца (орбис 15°)
+        Найти Дорифора - ближайшую планету ДО Солнца по долготе.
 
-        Дорифор - это планета, которая восходит ПОСЛЕ Солнца
-        (находится восточнее Солнца, но в пределах орбиса)
+        Алгоритм:
+        - для кандидата считаем d- = (sun_lon - planet_lon) % 360
+        - учитываем только d- > 0 (точное соединение исключаем)
+        - выбираем минимальное d-
 
         Args:
             user_id: ID пользователя
@@ -171,25 +169,22 @@ class SpecialRolesService:
 
         sun_lon = float(sun.degree)
 
-        # Получаем планеты для Дорифора
+        # Кандидаты: стандартные планеты (без Солнца).
         planets = self.db.query(NatalPlanet).filter(
             NatalPlanet.user_id == user_id,
-            NatalPlanet.planet.in_(self.DORYPHOROS_PLANETS)
+            NatalPlanet.planet.in_(self.ROLE_CANDIDATE_PLANETS)
         ).all()
 
-        # Ищем ближайшую планету ПОСЛЕ Солнца (восточнее)
+        # Ищем ближайшую планету ДО Солнца
         candidates = []
         for planet in planets:
             planet_lon = float(planet.degree)
 
-            # Вычисляем разницу (планета должна быть восточнее Солнца)
-            diff = (planet_lon - sun_lon) % 360
-
-            # Проверяем орбис (планета в пределах 15° после Солнца)
-            if 0 < diff <= self.DORYPHOROS_ORB:
+            diff = (sun_lon - planet_lon) % 360
+            if diff > 0:
                 candidates.append((planet.planet, diff))
 
-        # Возвращаем ближайшую
+        # Возвращаем ближайшую по долготе
         if candidates:
             candidates.sort(key=lambda x: x[1])
             return candidates[0][0]
@@ -254,4 +249,3 @@ class SpecialRolesService:
             return pattern.anchor_planet
 
         return None
-
