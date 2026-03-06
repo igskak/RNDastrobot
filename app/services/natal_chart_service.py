@@ -133,7 +133,8 @@ class NatalChartService:
         lat, lon, place_name = self.geocoding_service.get_coordinates(
             place=place,
             latitude=latitude,
-            longitude=longitude
+            longitude=longitude,
+            db_session=db_session,
         )
         
         # 2. Конвертируем время в UTC и получаем юлианский день

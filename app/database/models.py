@@ -939,3 +939,46 @@ class ForecastRun(Base):
         Index('idx_forecast_runs_method', 'method'),
         Index('idx_forecast_runs_context_hash', 'context_hash'),
     )
+
+
+# ============================================================================
+# GEO CITIES (локальная база населенных пунктов для геокодинга)
+# ============================================================================
+
+class GeoCity(Base):
+    """Локальный справочник городов (GeoNames-совместимый)."""
+    __tablename__ = 'geo_cities'
+
+    city_id = Column(Integer, primary_key=True, autoincrement=True)
+    geoname_id = Column(Integer, nullable=False, unique=True)
+
+    name = Column(String(200), nullable=False)
+    ascii_name = Column(String(200))
+    alternate_names = Column(Text)
+
+    country_code = Column(String(2), nullable=False)
+    country_name = Column(String(120), nullable=False)
+    admin1_code = Column(String(40))
+    admin1_name = Column(String(120))
+    admin2_code = Column(String(80))
+    admin2_name = Column(String(120))
+
+    latitude = Column(Numeric(9, 6), nullable=False)
+    longitude = Column(Numeric(9, 6), nullable=False)
+    population = Column(Integer, nullable=False, default=0)
+    timezone = Column(String(64))
+
+    feature_class = Column(String(1), nullable=False, default='P')
+    feature_code = Column(String(16), nullable=False, default='PPL')
+
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        CheckConstraint('latitude >= -90 AND latitude <= 90', name='valid_geo_city_latitude'),
+        CheckConstraint('longitude >= -180 AND longitude <= 180', name='valid_geo_city_longitude'),
+        Index('idx_geo_cities_name', 'name'),
+        Index('idx_geo_cities_ascii_name', 'ascii_name'),
+        Index('idx_geo_cities_country', 'country_code'),
+        Index('idx_geo_cities_population', 'population'),
+    )

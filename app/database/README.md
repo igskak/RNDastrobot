@@ -300,3 +300,30 @@ The database consists of 9 main categories:
 
 Total: **45+ tables** with full JSONB support for flexible data storage.
 
+---
+
+## Local Geocoding Cities (geo_cities)
+
+Для внутреннего автокомплита мест добавлена таблица `geo_cities`.
+
+1. Примените миграцию:
+```bash
+python3 app/apply_migration.py app/database/migrations/019_add_geo_cities.sql
+```
+
+2. Подготовьте файлы GeoNames:
+- `cities5000.txt` (или `cities15000.txt`)
+- `countryInfo.txt`
+- `admin1CodesASCII.txt`
+- `admin2Codes.txt`
+
+3. Импортируйте данные:
+```bash
+python3 app/database/import_geo_cities.py \
+  --cities-file /path/to/cities5000.txt \
+  --country-info-file /path/to/countryInfo.txt \
+  --admin1-file /path/to/admin1CodesASCII.txt \
+  --admin2-file /path/to/admin2Codes.txt
+```
+
+После этого API `GET /api/v1/places/autocomplete` будет использовать локальную базу как primary source.
