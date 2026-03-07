@@ -298,15 +298,13 @@ class GeocodingService:
         )
 
     def _are_near_same_city(self, left: Dict[str, Any], right: Dict[str, Any]) -> bool:
-        if self._normalize(left.get("short_name")) != self._normalize(right.get("short_name")):
-            return False
         left_lat = self._to_float(left.get("lat"))
         left_lon = self._to_float(left.get("lon"))
         right_lat = self._to_float(right.get("lat"))
         right_lon = self._to_float(right.get("lon"))
         if left_lat is None or left_lon is None or right_lat is None or right_lon is None:
             return False
-        return abs(left_lat - right_lat) <= 0.3 and abs(left_lon - right_lon) <= 0.3
+        return abs(left_lat - right_lat) <= 0.035 and abs(left_lon - right_lon) <= 0.035
 
     def _deduplicate_ranked(
         self,

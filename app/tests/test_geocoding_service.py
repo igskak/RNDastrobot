@@ -133,6 +133,23 @@ def test_autocomplete_deduplicates_nearby_same_short_name(monkeypatch):
     assert items[0]["short_name"] == "Харьков"
 
 
+def test_autocomplete_deduplicates_nearby_mixed_script_city_names(monkeypatch):
+    service = GeocodingService()
+
+    monkeypatch.setattr(service, "_city_cache_autocomplete", lambda query, limit, language: [])
+    monkeypatch.setattr(service, "_autocomplete_local_db", lambda query, limit, language, db_session: [
+        _city_item("Kharkiv", "Kharkiv, Kharkiv Oblast, Ukraine", 49.9935, 36.2304, "ext:1"),
+        _city_item("Харків / Харьков", "Харків / Харьков, Kharkiv Oblast, Ukraine", 49.9817, 36.2547, "ext:2"),
+        _city_item("Tsyrkuny", "Tsyrkuny, Kharkiv Oblast, Ukraine", 50.07, 36.37, "ext:3"),
+    ])
+
+    items = service.autocomplete("Харьков", limit=5, language="en", db_session=object())
+
+    assert len(items) == 2
+    assert any(item["short_name"] in {"Kharkiv", "Харків / Харьков"} for item in items)
+    assert any(item["short_name"] == "Tsyrkuny" for item in items)
+
+
 def test_city_cache_localizes_kyiv_for_ru_uk_en():
     service = GeocodingService()
 
