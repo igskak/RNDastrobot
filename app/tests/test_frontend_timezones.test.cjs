@@ -152,3 +152,17 @@ test('formatTimezoneLabel uses dedicated UTC label key', () => {
 
     delete global.window;
 });
+
+test('guessTimezone detects Lisbon, Porto and Rio de Janeiro variants', () => {
+    global.window = {};
+    const { guessTimezone } = loadModule();
+
+    assert.equal(guessTimezone('Lisbon, Portugal'), 'Europe/Lisbon');
+    assert.equal(guessTimezone('Lisboa, Portugal'), 'Europe/Lisbon');
+    assert.equal(guessTimezone('Порту, Португалия'), 'Europe/Lisbon');
+    assert.equal(guessTimezone('Porto Alegre, Brazil'), 'America/Sao_Paulo');
+    assert.equal(guessTimezone('Rio de Janeiro, Brazil'), 'America/Sao_Paulo');
+    assert.equal(guessTimezone('Рио де Жанейро, Бразилия'), 'America/Sao_Paulo');
+
+    delete global.window;
+});

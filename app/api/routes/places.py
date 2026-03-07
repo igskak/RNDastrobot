@@ -56,3 +56,20 @@ def autocomplete_places(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Ошибка сервиса геокодирования: {exc}",
         ) from exc
+
+
+@router.get(
+    "/timezone",
+    status_code=status.HTTP_200_OK,
+    summary="Определить timezone по source_id",
+    description="Возвращает IANA timezone для локального результата geo_cities",
+)
+def resolve_place_timezone(
+    source_id: str = Query(..., description="source_id из /places/autocomplete"),
+    db: Session = Depends(get_db),
+):
+    timezone = geocoding_service.resolve_timezone_by_source(source_id=source_id, db_session=db)
+    return {
+        "source_id": source_id,
+        "timezone": timezone,
+    }

@@ -84,3 +84,37 @@ test('AstroAPI.calculateNatalChart keeps backend compatibility for error payload
         }
     );
 });
+
+test('AstroAPI.resolvePlaceTimezone requests timezone by source_id with locale headers', async () => {
+    let captured = null;
+
+    global.fetch = async (url, init) => {
+        captured = { url, init };
+        return {
+            ok: true,
+            async json() {
+                return { source_id: 'geoname:706483', timezone: 'Europe/Kyiv' };
+            },
+        };
+    };
+
+    const api = loadApiModule({
+        location: { hostname: 'localhost' },
+        FrontendI18n: {
+            getLocale() {
+                return 'en';
+            },
+        },
+    });
+
+    const timezone = await api.resolvePlaceTimezone('geoname:706483');
+
+    assert.equal(timezone, 'Europe/Kyiv');
+    assert.equal(
+        captured.url,
+        'http://localhost:8000/api/v1/places/timezone?source_id=geoname%3A706483'
+    );
+    assert.equal(captured.init.method, 'GET');
+    assert.equal(captured.init.headers['Accept-Language'], 'en');
+    assert.equal(captured.init.headers['X-Locale'], 'en');
+});

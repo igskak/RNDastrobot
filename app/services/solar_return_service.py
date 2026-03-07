@@ -17,6 +17,7 @@ from app.database.models import User, NatalPlanet, SolarReturn
 from app.services.swisseph_engine import SwissEphemerisEngine
 from app.services.time_service import TimeService
 from app.services.aspect_service import AspectService
+from app.services.geocoding_service import GeocodingService
 from app.utils.constants import get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds
 
 
@@ -26,8 +27,20 @@ class SolarReturnService:
     def __init__(self, db_session: Session, ephe_path: str = None):
         self.db = db_session
         self.swisseph_engine = SwissEphemerisEngine(ephe_path)
+        self.geocoding_service = GeocodingService()
         if ephe_path:
             swe.set_ephe_path(ephe_path)
+
+    @staticmethod
+    def _normalize_timezone_candidate(value: Optional[str]) -> Optional[str]:
+        timezone = str(value or "").strip()
+        if not timezone:
+            return None
+        try:
+            pytz.timezone(timezone)
+        except Exception:
+            return None
+        return timezone
 
     def find_solar_return_moment(
         self,
@@ -80,6 +93,8 @@ class SolarReturnService:
         location_lat: Optional[float] = None,
         location_lon: Optional[float] = None,
         location_name: Optional[str] = None,
+        location_source_id: Optional[str] = None,
+        location_timezone: Optional[str] = None,
         house_system: str = 'P',
         save_to_db: bool = True
     ) -> Dict:
@@ -119,12 +134,20 @@ class SolarReturnService:
             location_lat = float(user.lat)
             location_lon = float(user.lon)
             location_name = location_name or user.birth_place
+
+        effective_timezone = self._normalize_timezone_candidate(location_timezone)
+        if effective_timezone is None and location_source_id:
+            effective_timezone = self._normalize_timezone_candidate(
+                self.geocoding_service.resolve_timezone_by_source(location_source_id, self.db)
+            )
+        if effective_timezone is None:
+            effective_timezone = self._normalize_timezone_candidate(user.timezone) or "UTC"
         
         # 4. Найти момент соляра
         jd_solar = self.find_solar_return_moment(natal_sun_lon, year)
         
         # 5. Конвертировать в datetime
-        solar_datetime = self.jd_to_datetime(jd_solar, user.timezone)
+        solar_datetime = self.jd_to_datetime(jd_solar, effective_timezone)
         
         # 6. Рассчитать планеты на момент соляра
         solar_planets = self.swisseph_engine.calculate_planets(jd_solar)
@@ -158,6 +181,7 @@ class SolarReturnService:
             solar_angles=solar_angles,
             natal_sun_lon=natal_sun_lon,
             solar_aspects=solar_aspects,
+            effective_timezone=effective_timezone,
         )
         
         # 10. Сохранить в БД если нужно
@@ -181,6 +205,7 @@ class SolarReturnService:
         solar_angles: Dict,
         natal_sun_lon: float,
         solar_aspects: List[Dict],
+        effective_timezone: str,
     ) -> Dict:
         """Сформировать ответ с данными соляра"""
         return {
@@ -196,7 +221,7 @@ class SolarReturnService:
                     'name': location_name,
                 },
                 'house_system': house_system,
-                'timezone': user.timezone,
+                'timezone': effective_timezone,
             },
             'birth_data': {
                 'user_id': str(user.user_id),

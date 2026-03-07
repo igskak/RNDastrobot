@@ -47,13 +47,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                     timezoneHint.style.color = '#22c55e';
                 }
             },
-            onSelect: (item) => {
+            onSelect: async (item) => {
                 if (Number.isFinite(item.lat) && Number.isFinite(item.lon)) {
                     setCoordinatesDMS(item.lat, item.lon);
                 }
-                const guessedTz = Timezones.guess(item.displayName || item.shortName);
-                if (guessedTz) {
-                    timezoneSelect.value = guessedTz;
+                let resolvedTz = null;
+                if (item.sourceId && window.AstroAPI?.resolvePlaceTimezone) {
+                    try {
+                        resolvedTz = await window.AstroAPI.resolvePlaceTimezone(item.sourceId);
+                    } catch (_error) {
+                        resolvedTz = null;
+                    }
+                }
+                if (!resolvedTz) {
+                    resolvedTz = Timezones.guess(item.displayName || item.shortName);
+                }
+                if (resolvedTz) {
+                    timezoneSelect.value = resolvedTz;
                     timezoneHint.textContent = t('page.index.form.timezone.autoDetected');
                     timezoneHint.style.color = '#22c55e';
                 }

@@ -1219,13 +1219,28 @@ function initSolarPlaceAutocomplete() {
                 // Force explicit place selection from suggestions for valid coords.
                 document.getElementById('solarLocationLat').value = '';
                 document.getElementById('solarLocationLon').value = '';
+                document.getElementById('solarLocationSourceId').value = '';
+                document.getElementById('solarLocationTimezone').value = '';
                 document.getElementById('solarCoordsDisplay').textContent = '';
                 persistSolarLocationToStorage();
             },
-            onSelect: (item) => {
+            onSelect: async (item) => {
                 document.getElementById('solarLocationLat').value = item.lat;
                 document.getElementById('solarLocationLon').value = item.lon;
+                document.getElementById('solarLocationSourceId').value = item.sourceId || '';
                 document.getElementById('solarCoordsDisplay').textContent = `(${item.lat.toFixed(2)}°, ${item.lon.toFixed(2)}°)`;
+                let resolvedTz = null;
+                if (item.sourceId && window.AstroAPI?.resolvePlaceTimezone) {
+                    try {
+                        resolvedTz = await window.AstroAPI.resolvePlaceTimezone(item.sourceId);
+                    } catch (_error) {
+                        resolvedTz = null;
+                    }
+                }
+                if (!resolvedTz) {
+                    resolvedTz = window.Timezones?.guess?.(item.displayName || item.shortName) || null;
+                }
+                document.getElementById('solarLocationTimezone').value = resolvedTz || '';
                 persistSolarLocationToStorage();
             }
         });
@@ -1234,21 +1249,26 @@ function initSolarPlaceAutocomplete() {
     input.addEventListener('focus', bind, { once: true });
 }
 
-function getSolarCacheKey(year, lat, lon, name) {
+function getSolarCacheKey(year, lat, lon, name, timezone) {
     const latKey = Number.isFinite(lat) ? lat.toFixed(5) : 'NaN';
     const lonKey = Number.isFinite(lon) ? lon.toFixed(5) : 'NaN';
     const nameKey = (name || '').trim().toLowerCase();
-    return `${year}|${latKey}|${lonKey}|${nameKey}`;
+    const timezoneKey = (timezone || '').trim();
+    return `${year}|${latKey}|${lonKey}|${nameKey}|${timezoneKey}`;
 }
 
 function persistSolarLocationToStorage() {
     const name = document.getElementById('solarLocationName')?.value?.trim() || '';
     const lat = parseFloat(document.getElementById('solarLocationLat')?.value);
     const lon = parseFloat(document.getElementById('solarLocationLon')?.value);
+    const sourceId = document.getElementById('solarLocationSourceId')?.value?.trim() || '';
+    const timezone = document.getElementById('solarLocationTimezone')?.value?.trim() || '';
     const payload = {
         name,
         lat: Number.isFinite(lat) ? lat : null,
         lon: Number.isFinite(lon) ? lon : null,
+        source_id: sourceId || null,
+        timezone: timezone || null,
     };
     localStorage.setItem(SOLAR_LOCATION_STORAGE_KEY, JSON.stringify(payload));
 }
@@ -1265,12 +1285,16 @@ function restoreSolarLocationFromStorage() {
     const nameInput = document.getElementById('solarLocationName');
     const latInput = document.getElementById('solarLocationLat');
     const lonInput = document.getElementById('solarLocationLon');
+    const sourceIdInput = document.getElementById('solarLocationSourceId');
+    const timezoneInput = document.getElementById('solarLocationTimezone');
     const coordsDisplay = document.getElementById('solarCoordsDisplay');
-    if (!nameInput || !latInput || !lonInput || !coordsDisplay) return;
+    if (!nameInput || !latInput || !lonInput || !sourceIdInput || !timezoneInput || !coordsDisplay) return;
 
     if (typeof parsed?.name === 'string') nameInput.value = parsed.name;
     if (Number.isFinite(parsed?.lat)) latInput.value = String(parsed.lat);
     if (Number.isFinite(parsed?.lon)) lonInput.value = String(parsed.lon);
+    if (typeof parsed?.source_id === 'string') sourceIdInput.value = parsed.source_id;
+    if (typeof parsed?.timezone === 'string') timezoneInput.value = parsed.timezone;
     if (Number.isFinite(parsed?.lat) && Number.isFinite(parsed?.lon)) {
         coordsDisplay.textContent = `(${parsed.lat.toFixed(2)}°, ${parsed.lon.toFixed(2)}°)`;
     } else {
@@ -1910,7 +1934,8 @@ async function renderCurrentTabFromCache() {
             const lat = parseFloat(document.getElementById('solarLocationLat')?.value);
             const lon = parseFloat(document.getElementById('solarLocationLon')?.value);
             const name = document.getElementById('solarLocationName')?.value?.trim() || '';
-            const key = getSolarCacheKey(year, lat, lon, name);
+            const timezone = document.getElementById('solarLocationTimezone')?.value?.trim() || '';
+            const key = getSolarCacheKey(year, lat, lon, name, timezone);
             const cached = ForecastState.solarCache[key];
             if (cached) {
                 ForecastState.solarData = cached;
@@ -2015,16 +2040,20 @@ async function calculateSolar() {
     const lat = parseFloat(document.getElementById('solarLocationLat').value);
     const lon = parseFloat(document.getElementById('solarLocationLon').value);
     const name = document.getElementById('solarLocationName').value?.trim();
+    const sourceId = document.getElementById('solarLocationSourceId').value?.trim();
+    const locationTimezone = document.getElementById('solarLocationTimezone').value?.trim();
     if (!isNaN(lat) && !isNaN(lon)) {
         payload.location_latitude = lat;
         payload.location_longitude = lon;
         if (name) payload.location_name = name;
+        if (sourceId) payload.location_source_id = sourceId;
+        if (locationTimezone) payload.location_timezone = locationTimezone;
         persistSolarLocationToStorage();
     } else {
         throw new Error(t('page.forecast.errors.selectLocationFromList'));
     }
 
-    const cacheKey = getSolarCacheKey(year, lat, lon, name || '');
+    const cacheKey = getSolarCacheKey(year, lat, lon, name || '', locationTimezone || '');
     const cached = ForecastState.solarCache[cacheKey];
     if (cached) {
         ForecastState.solarData = cached;

@@ -518,6 +518,8 @@ class SolarReturnRequest(BaseModel):
     location_latitude: Optional[float] = Field(None, ge=-90, le=90, description="Широта места соляра")
     location_longitude: Optional[float] = Field(None, ge=-180, le=180, description="Долгота места соляра")
     location_name: Optional[str] = Field(None, description="Название места соляра")
+    location_source_id: Optional[str] = Field(None, description="source_id из /places/autocomplete")
+    location_timezone: Optional[str] = Field(None, description="IANA timezone места соляра")
 
     # Параметры расчёта
     house_system: str = Field(default="P", description="Система домов")

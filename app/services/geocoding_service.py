@@ -691,6 +691,36 @@ class GeocodingService:
         self._geocode_cache.set(place_lower, resolved)
         return resolved
 
+    def resolve_timezone_by_source(
+        self,
+        source_id: Optional[str],
+        db_session: Optional[Session],
+    ) -> Optional[str]:
+        """Resolve IANA timezone for autocomplete source_id (geoname:*)."""
+        if db_session is None or not source_id:
+            return None
+
+        source = str(source_id).strip()
+        if not source.startswith("geoname:"):
+            return None
+
+        geoname_raw = source.split(":", 1)[1].strip()
+        if not geoname_raw.isdigit():
+            return None
+        geoname_id = int(geoname_raw)
+
+        sql = text(
+            """
+            SELECT timezone
+            FROM geo_cities
+            WHERE geoname_id = :geoname_id
+            LIMIT 1
+            """
+        )
+        row = db_session.execute(sql, {"geoname_id": geoname_id}).mappings().first()
+        timezone = str((row or {}).get("timezone") or "").strip()
+        return timezone or None
+
     def get_coordinates(
         self,
         place: Optional[str] = None,

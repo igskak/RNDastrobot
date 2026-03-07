@@ -172,3 +172,27 @@ def test_split_alternate_names_keeps_entries_after_40th_position():
     out = GeocodingService._split_alternate_names(raw)
 
     assert "Бухарест" in out
+
+
+def test_resolve_timezone_by_source_for_geoname():
+    service = GeocodingService()
+
+    class _Result:
+        def mappings(self):
+            return self
+
+        def first(self):
+            return {"timezone": "Europe/Kyiv"}
+
+    class _Session:
+        def execute(self, _sql, _params):
+            return _Result()
+
+    timezone = service.resolve_timezone_by_source("geoname:706483", _Session())
+    assert timezone == "Europe/Kyiv"
+
+
+def test_resolve_timezone_by_source_ignores_non_geoname():
+    service = GeocodingService()
+    timezone = service.resolve_timezone_by_source("cache:kyiv", db_session=object())
+    assert timezone is None

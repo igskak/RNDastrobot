@@ -67,6 +67,8 @@ def calculate_solar_return(
             location_lat=request.location_latitude,
             location_lon=request.location_longitude,
             location_name=request.location_name,
+            location_source_id=request.location_source_id,
+            location_timezone=request.location_timezone,
             house_system=request.house_system,
             save_to_db=request.save_to_db
         )

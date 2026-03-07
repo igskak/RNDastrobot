@@ -97,6 +97,22 @@
         });
     }
 
+    async function resolvePlaceTimezone(sourceId, options = {}) {
+        if (!sourceId) return null;
+        const params = new URLSearchParams({ source_id: String(sourceId) });
+        const response = await apiFetch(`${API_BASE_URL}/places/timezone?${params.toString()}`, {
+            method: 'GET',
+            headers: withLocaleHeaders(),
+            signal: options.signal,
+        });
+        if (!response.ok) {
+            return null;
+        }
+        const payload = await response.json();
+        const timezone = String(payload?.timezone || '').trim();
+        return timezone || null;
+    }
+
     /**
      * Форматирование даты для API
      * @param {number} day
@@ -211,6 +227,7 @@
         getCurrentAstrologer,
         requireAuth,
         logout,
+        resolvePlaceTimezone,
         formatDate,
         formatTime,
         saveChartToSession,

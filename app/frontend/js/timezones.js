@@ -145,26 +145,33 @@ function populateTimezones(selectElement) {
 }
 
 function guessTimezone(placeName) {
-    const place = placeName.toLowerCase();
+    const place = String(placeName || '').toLowerCase();
+    const normalized = place
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
 
-    if (place.includes('київ') || place.includes('киев') || place.includes('kyiv') || place.includes('kiev')) return 'Europe/Kyiv';
-    if (place.includes('україн') || place.includes('украин') || place.includes('ukrain')) return 'Europe/Kyiv';
+    if (place.includes('київ') || place.includes('киев') || normalized.includes('kyiv') || normalized.includes('kiev')) return 'Europe/Kyiv';
+    if (place.includes('україн') || place.includes('украин') || normalized.includes('ukrain')) return 'Europe/Kyiv';
     if (place.includes('одес') || place.includes('харків') || place.includes('харьков') || place.includes('львів') || place.includes('львов')) return 'Europe/Kyiv';
     if (place.includes('днепр') || place.includes('дніпро') || place.includes('запоріж') || place.includes('запорож')) return 'Europe/Kyiv';
 
-    if (place.includes('москв') || place.includes('moscow')) return 'Europe/Moscow';
-    if (place.includes('петербург') || place.includes('petersburg') || place.includes('питер')) return 'Europe/Moscow';
-    if (place.includes('россия') || place.includes('russia')) return 'Europe/Moscow';
+    if (place.includes('москв') || normalized.includes('moscow')) return 'Europe/Moscow';
+    if (place.includes('петербург') || normalized.includes('petersburg') || place.includes('питер')) return 'Europe/Moscow';
+    if (place.includes('россия') || normalized.includes('russia')) return 'Europe/Moscow';
 
-    if (place.includes('минск') || place.includes('беларус') || place.includes('belarus')) return 'Europe/Minsk';
+    if (place.includes('минск') || place.includes('беларус') || normalized.includes('belarus')) return 'Europe/Minsk';
 
-    if (place.includes('london') || place.includes('лондон')) return 'Europe/London';
-    if (place.includes('paris') || place.includes('париж')) return 'Europe/Paris';
-    if (place.includes('berlin') || place.includes('берлин')) return 'Europe/Berlin';
-    if (place.includes('варшав') || place.includes('warsaw') || place.includes('польш') || place.includes('poland')) return 'Europe/Warsaw';
+    if (normalized.includes('london') || place.includes('лондон')) return 'Europe/London';
+    if (normalized.includes('paris') || place.includes('париж')) return 'Europe/Paris';
+    if (normalized.includes('berlin') || place.includes('берлин')) return 'Europe/Berlin';
+    if (place.includes('варшав') || normalized.includes('warsaw') || place.includes('польш') || normalized.includes('poland')) return 'Europe/Warsaw';
+    if (normalized.includes('lisbon') || normalized.includes('lisboa') || place.includes('лиссаб')) return 'Europe/Lisbon';
+    if (normalized.includes('porto alegre') || place.includes('порту-алегр') || place.includes('порту алегр')) return 'America/Sao_Paulo';
+    if (normalized.includes('porto') || normalized.includes('oporto') || place.includes('порту')) return 'Europe/Lisbon';
 
-    if (place.includes('new york') || place.includes('нью-йорк') || place.includes('нью йорк')) return 'America/New_York';
-    if (place.includes('los angeles') || place.includes('лос-анджелес')) return 'America/Los_Angeles';
+    if (normalized.includes('new york') || place.includes('нью-йорк') || place.includes('нью йорк')) return 'America/New_York';
+    if (normalized.includes('los angeles') || place.includes('лос-анджелес')) return 'America/Los_Angeles';
+    if (normalized.includes('rio de janeiro') || place.includes('рио-де-жанейро') || place.includes('рио де жанейро')) return 'America/Sao_Paulo';
 
     return null;
 }
