@@ -1,6 +1,7 @@
 """Security helpers for authentication."""
 from __future__ import annotations
 
+import hashlib
 import os
 import secrets
 from datetime import datetime, timedelta, timezone
@@ -23,8 +24,64 @@ def session_ttl() -> timedelta:
     return timedelta(hours=max(1, hours))
 
 
+def password_reset_ttl() -> timedelta:
+    raw = os.getenv("PASSWORD_RESET_TTL_MINUTES", "30").strip()
+    try:
+        minutes = int(raw)
+    except ValueError:
+        minutes = 30
+    return timedelta(minutes=max(5, minutes))
+
+
+def password_reset_cooldown_seconds() -> int:
+    raw = os.getenv("PASSWORD_RESET_RESEND_COOLDOWN_SECONDS", "60").strip()
+    try:
+        seconds = int(raw)
+    except ValueError:
+        seconds = 60
+    return max(15, seconds)
+
+
+def email_verification_ttl() -> timedelta:
+    raw = os.getenv("EMAIL_VERIFICATION_TTL_HOURS", "24").strip()
+    try:
+        hours = int(raw)
+    except ValueError:
+        hours = 24
+    return timedelta(hours=max(1, hours))
+
+
+def email_verification_cooldown_seconds() -> int:
+    raw = os.getenv("EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS", "60").strip()
+    try:
+        seconds = int(raw)
+    except ValueError:
+        seconds = 60
+    return max(15, seconds)
+
+
 def generate_session_id() -> str:
     return secrets.token_urlsafe(48)
+
+
+def generate_password_reset_token() -> str:
+    return secrets.token_urlsafe(32)
+
+
+def generate_email_verification_token() -> str:
+    return secrets.token_urlsafe(32)
+
+
+def hash_one_time_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def hash_password_reset_token(token: str) -> str:
+    return hash_one_time_token(token)
+
+
+def hash_email_verification_token(token: str) -> str:
+    return hash_one_time_token(token)
 
 
 def cookie_secure() -> bool:

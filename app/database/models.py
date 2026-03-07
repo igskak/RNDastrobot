@@ -74,15 +74,21 @@ class Astrologer(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email = Column(String(255), nullable=False, unique=True)
+    first_name = Column(String(100))
+    last_name = Column(String(100))
+    preferred_locale = Column(String(8))
     password_hash = Column(Text)
     auth_provider = Column(String(16), nullable=False, default='local')
     google_sub = Column(String(255), unique=True)
+    email_verified_at = Column(DateTime)
     is_active = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     users = relationship("User", back_populates="astrologer")
     sessions = relationship("AuthSession", back_populates="astrologer", cascade="all, delete-orphan")
+    password_reset_tokens = relationship("PasswordResetToken", back_populates="astrologer", cascade="all, delete-orphan")
+    email_verification_tokens = relationship("EmailVerificationToken", back_populates="astrologer", cascade="all, delete-orphan")
 
     __table_args__ = (
         CheckConstraint("auth_provider IN ('local', 'google')", name='valid_auth_provider'),
@@ -128,6 +134,50 @@ class AuditEvent(Base):
         Index('idx_audit_events_actor_created_at', 'actor_id', 'created_at'),
         Index('idx_audit_events_action_created_at', 'action', 'created_at'),
         Index('idx_audit_events_ip_created_at', 'ip', 'created_at'),
+    )
+
+
+class PasswordResetToken(Base):
+    """One-time password reset token for astrologer accounts."""
+    __tablename__ = 'password_reset_tokens'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='CASCADE'), nullable=False)
+    token_hash = Column(String(64), nullable=False, unique=True)
+    expires_at = Column(DateTime, nullable=False)
+    used_at = Column(DateTime)
+    created_at = Column(DateTime, server_default=func.now())
+    ip = Column(String(64))
+    user_agent = Column(Text)
+
+    astrologer = relationship("Astrologer", back_populates="password_reset_tokens")
+
+    __table_args__ = (
+        Index('idx_password_reset_tokens_astrologer', 'astrologer_id'),
+        Index('idx_password_reset_tokens_expires', 'expires_at'),
+        Index('idx_password_reset_tokens_used', 'used_at'),
+    )
+
+
+class EmailVerificationToken(Base):
+    """One-time email verification token for astrologer accounts."""
+    __tablename__ = 'email_verification_tokens'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='CASCADE'), nullable=False)
+    token_hash = Column(String(64), nullable=False, unique=True)
+    expires_at = Column(DateTime, nullable=False)
+    used_at = Column(DateTime)
+    created_at = Column(DateTime, server_default=func.now())
+    ip = Column(String(64))
+    user_agent = Column(Text)
+
+    astrologer = relationship("Astrologer", back_populates="email_verification_tokens")
+
+    __table_args__ = (
+        Index('idx_email_verification_tokens_astrologer', 'astrologer_id'),
+        Index('idx_email_verification_tokens_expires', 'expires_at'),
+        Index('idx_email_verification_tokens_used', 'used_at'),
     )
 
 

@@ -3,94 +3,294 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Astrobot Login</title>
-    <link rel="stylesheet" href="bundles/login.bundle.css?v=1">
-    <style>
-        .login-wrap {
-            max-width: 420px;
-            margin: 60px auto;
-            background: var(--bg-secondary);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-md);
-            padding: 24px;
-        }
-
-        .login-wrap h1 {
-            margin-bottom: 16px;
-            font-size: 24px;
-        }
-
-        .field {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            margin-bottom: 14px;
-        }
-
-        .field input {
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 10px 12px;
-            font-size: 14px;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 10px 12px;
-            border-radius: var(--radius-sm);
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        .btn-local {
-            background: var(--accent);
-            color: #fff;
-        }
-
-        .btn-google {
-            margin-top: 10px;
-            border: 1px solid var(--border);
-            background: #fff;
-            color: #222;
-        }
-
-        .status {
-            min-height: 20px;
-            margin-top: 12px;
-            color: var(--text-secondary);
-            font-size: 13px;
-        }
-
-        .status.error {
-            color: var(--error);
-        }
-    </style>
+    <title data-i18n="page.login.meta.title"></title>
+    <link rel="stylesheet" href="bundles/login.bundle.css?v=4">
 </head>
-<body>
-    <div class="container">
-        <section class="login-wrap">
-            <h1>Astrobot</h1>
-            <form id="passwordLoginForm">
-                <div class="field">
-                    <label for="email">Email</label>
-                    <input id="email" type="email" required autocomplete="email">
-                </div>
-                <div class="field">
-                    <label for="password">Password</label>
-                    <input id="password" type="password" required autocomplete="current-password">
-                </div>
-                <button class="btn btn-local" type="submit">Sign in</button>
-            </form>
+<body class="login-page">
+    <main class="login-shell">
+        <section class="login-card" aria-labelledby="authTitle">
+            <header class="login-header">
+                <p class="login-brand" data-i18n="common.brandName"></p>
+                <h1 id="authTitle" class="login-title"></h1>
+                <p id="authSubtitle" class="login-subtitle"></p>
+            </header>
 
-            <button id="googleLoginBtn" class="btn btn-google" type="button" disabled>
-                Continue with Google
-            </button>
-            <p id="status" class="status" aria-live="polite"></p>
+            <div id="statusBanner" class="status-banner" role="alert" hidden></div>
+
+            <section class="auth-view" data-view="login">
+                <button id="googleLoginBtn" class="btn btn-google" type="button"></button>
+
+                <div class="login-divider" aria-hidden="true">
+                    <span data-i18n="page.login.divider"></span>
+                </div>
+
+                <form id="passwordLoginForm" novalidate>
+                    <div class="field">
+                        <label for="email" data-i18n="page.login.fields.email.label"></label>
+                        <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            required
+                            autocomplete="email"
+                            data-i18n-placeholder="page.login.fields.email.placeholder"
+                            aria-describedby="loginEmailError"
+                        >
+                        <p id="loginEmailError" class="field-error" role="alert" hidden></p>
+                    </div>
+
+                    <div class="field">
+                        <div class="field-label-row">
+                            <label for="password" data-i18n="page.login.fields.password.label"></label>
+                            <button id="showForgotBtn" class="link-btn" type="button" data-i18n="page.login.actions.forgotPassword"></button>
+                        </div>
+                        <div class="password-input-wrap">
+                            <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                required
+                                autocomplete="current-password"
+                                data-i18n-placeholder="page.login.fields.password.placeholder"
+                                aria-describedby="loginPasswordError loginCapsHint"
+                            >
+                            <button id="toggleLoginPasswordBtn" class="ghost-icon-btn" type="button"></button>
+                        </div>
+                        <p id="loginPasswordError" class="field-error" role="alert" hidden></p>
+                        <p id="loginCapsHint" class="field-hint" data-i18n="page.login.hints.capsLock" hidden></p>
+                    </div>
+
+                    <button id="passwordLoginSubmit" class="btn btn-primary" type="submit"></button>
+                </form>
+
+                <div class="switch-auth-cta">
+                    <span data-i18n="page.login.actions.noAccount"></span>
+                    <button id="showRegisterBtn" class="link-btn" type="button" data-i18n="page.login.actions.goToRegister"></button>
+                </div>
+            </section>
+
+            <section class="auth-view" data-view="register" hidden>
+                <form id="registerForm" novalidate>
+                    <div class="field-grid field-grid-2">
+                        <div class="field">
+                            <label for="registerFirstName" data-i18n="page.login.fields.firstName.label"></label>
+                            <input
+                                id="registerFirstName"
+                                name="registerFirstName"
+                                type="text"
+                                autocomplete="given-name"
+                                data-i18n-placeholder="page.login.fields.firstName.placeholder"
+                                aria-describedby="registerFirstNameError"
+                            >
+                            <p id="registerFirstNameError" class="field-error" role="alert" hidden></p>
+                        </div>
+                        <div class="field">
+                            <label for="registerLastName" data-i18n="page.login.fields.lastName.label"></label>
+                            <input
+                                id="registerLastName"
+                                name="registerLastName"
+                                type="text"
+                                autocomplete="family-name"
+                                data-i18n-placeholder="page.login.fields.lastName.placeholder"
+                                aria-describedby="registerLastNameError"
+                            >
+                            <p id="registerLastNameError" class="field-error" role="alert" hidden></p>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="registerEmail" data-i18n="page.login.fields.email.label"></label>
+                        <input
+                            id="registerEmail"
+                            name="registerEmail"
+                            type="email"
+                            required
+                            autocomplete="email"
+                            data-i18n-placeholder="page.login.fields.email.placeholder"
+                            aria-describedby="registerEmailError"
+                        >
+                        <p id="registerEmailError" class="field-error" role="alert" hidden></p>
+                    </div>
+
+                    <div class="field">
+                        <label for="registerPassword" data-i18n="page.login.fields.password.label"></label>
+                        <div class="password-input-wrap">
+                            <input
+                                id="registerPassword"
+                                name="registerPassword"
+                                type="password"
+                                required
+                                autocomplete="new-password"
+                                data-i18n-placeholder="page.login.fields.registerPassword.placeholder"
+                                aria-describedby="registerPasswordError registerCapsHint"
+                            >
+                            <button id="toggleRegisterPasswordBtn" class="ghost-icon-btn" type="button"></button>
+                        </div>
+                        <p id="registerPasswordError" class="field-error" role="alert" hidden></p>
+                        <p id="registerCapsHint" class="field-hint" data-i18n="page.login.hints.capsLock" hidden></p>
+                    </div>
+
+                    <div class="field">
+                        <label for="registerPasswordConfirm" data-i18n="page.login.fields.confirmPassword.label"></label>
+                        <div class="password-input-wrap">
+                            <input
+                                id="registerPasswordConfirm"
+                                name="registerPasswordConfirm"
+                                type="password"
+                                required
+                                autocomplete="new-password"
+                                data-i18n-placeholder="page.login.fields.confirmPassword.placeholder"
+                                aria-describedby="registerPasswordConfirmError"
+                            >
+                            <button id="toggleRegisterPasswordConfirmBtn" class="ghost-icon-btn" type="button"></button>
+                        </div>
+                        <p id="registerPasswordConfirmError" class="field-error" role="alert" hidden></p>
+                    </div>
+
+                    <button id="registerSubmit" class="btn btn-primary" type="submit"></button>
+                </form>
+
+                <button class="link-btn auth-back-link" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
+            </section>
+
+            <section class="auth-view" data-view="verify-check-email" hidden>
+                <p id="verifyCheckEmailBody" class="view-message"></p>
+                <div class="delivery-warning" role="note" aria-live="polite">
+                    <p class="delivery-warning-title" data-i18n="page.login.hints.emailDeliverySpamTitle"></p>
+                    <p class="delivery-warning-text" data-i18n="page.login.hints.emailDeliverySpam"></p>
+                </div>
+                <div class="stack-actions">
+                    <button id="resendVerificationBtn" class="btn btn-secondary" type="button"></button>
+                    <button class="link-btn auth-back-link" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
+                </div>
+            </section>
+
+            <section class="auth-view" data-view="verify-loading" hidden>
+                <p class="view-message" data-i18n="page.login.views.verifyLoading.body"></p>
+            </section>
+
+            <section class="auth-view" data-view="verify-success" hidden>
+                <p class="view-message" data-i18n="page.login.views.verifySuccess.body"></p>
+                <button class="btn btn-primary" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
+            </section>
+
+            <section class="auth-view" data-view="verify-invalid" hidden>
+                <p id="verifyInvalidBody" class="view-message"></p>
+                <form id="verifyResendForm" novalidate>
+                    <div class="field">
+                        <label for="verifyResendEmail" data-i18n="page.login.fields.email.label"></label>
+                        <input
+                            id="verifyResendEmail"
+                            name="verifyResendEmail"
+                            type="email"
+                            required
+                            autocomplete="email"
+                            data-i18n-placeholder="page.login.fields.email.placeholder"
+                            aria-describedby="verifyResendEmailError"
+                        >
+                        <p id="verifyResendEmailError" class="field-error" role="alert" hidden></p>
+                    </div>
+                    <button id="verifyResendSubmit" class="btn btn-secondary" type="submit"></button>
+                </form>
+                <div class="stack-actions compact">
+                    <button class="link-btn" id="openRegisterFromVerifyBtn" type="button" data-i18n="page.login.actions.goToRegister"></button>
+                    <button class="link-btn auth-back-link" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
+                </div>
+            </section>
+
+            <section class="auth-view" data-view="forgot" hidden>
+                <form id="forgotPasswordForm" novalidate>
+                    <div class="field">
+                        <label for="forgotEmail" data-i18n="page.login.fields.email.label"></label>
+                        <input
+                            id="forgotEmail"
+                            name="forgotEmail"
+                            type="email"
+                            required
+                            autocomplete="email"
+                            data-i18n-placeholder="page.login.fields.email.placeholder"
+                            aria-describedby="forgotEmailError"
+                        >
+                        <p id="forgotEmailError" class="field-error" role="alert" hidden></p>
+                    </div>
+
+                    <button id="forgotPasswordSubmit" class="btn btn-primary" type="submit"></button>
+                </form>
+
+                <button class="link-btn auth-back-link" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
+            </section>
+
+            <section class="auth-view" data-view="check-email" hidden>
+                <p id="checkEmailBody" class="view-message"></p>
+                <div class="delivery-warning" role="note" aria-live="polite">
+                    <p class="delivery-warning-title" data-i18n="page.login.hints.emailDeliverySpamTitle"></p>
+                    <p class="delivery-warning-text" data-i18n="page.login.hints.emailDeliverySpam"></p>
+                </div>
+                <div class="stack-actions">
+                    <button id="resendResetLinkBtn" class="btn btn-secondary" type="button"></button>
+                    <button class="link-btn auth-back-link" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
+                </div>
+            </section>
+
+            <section class="auth-view" data-view="reset" hidden>
+                <form id="resetPasswordForm" novalidate>
+                    <div class="field">
+                        <label for="resetPassword" data-i18n="page.login.fields.newPassword.label"></label>
+                        <div class="password-input-wrap">
+                            <input
+                                id="resetPassword"
+                                name="resetPassword"
+                                type="password"
+                                required
+                                autocomplete="new-password"
+                                data-i18n-placeholder="page.login.fields.newPassword.placeholder"
+                                aria-describedby="resetPasswordError resetCapsHint"
+                            >
+                            <button id="toggleResetPasswordBtn" class="ghost-icon-btn" type="button"></button>
+                        </div>
+                        <p id="resetPasswordError" class="field-error" role="alert" hidden></p>
+                        <p id="resetCapsHint" class="field-hint" data-i18n="page.login.hints.capsLock" hidden></p>
+                    </div>
+
+                    <div class="field">
+                        <label for="resetPasswordConfirm" data-i18n="page.login.fields.confirmPassword.label"></label>
+                        <div class="password-input-wrap">
+                            <input
+                                id="resetPasswordConfirm"
+                                name="resetPasswordConfirm"
+                                type="password"
+                                required
+                                autocomplete="new-password"
+                                data-i18n-placeholder="page.login.fields.confirmPassword.placeholder"
+                                aria-describedby="resetPasswordConfirmError"
+                            >
+                            <button id="toggleResetPasswordConfirmBtn" class="ghost-icon-btn" type="button"></button>
+                        </div>
+                        <p id="resetPasswordConfirmError" class="field-error" role="alert" hidden></p>
+                    </div>
+
+                    <button id="resetPasswordSubmit" class="btn btn-primary" type="submit"></button>
+                </form>
+
+                <button class="link-btn auth-back-link" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
+            </section>
+
+            <section class="auth-view" data-view="reset-success" hidden>
+                <p class="view-message" data-i18n="page.login.views.success.body"></p>
+                <button class="btn btn-primary" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
+            </section>
+
+            <section class="auth-view" data-view="reset-invalid" hidden>
+                <p id="resetInvalidBody" class="view-message"></p>
+                <div class="stack-actions">
+                    <button class="btn btn-secondary" type="button" data-action="open-forgot" data-i18n="page.login.actions.requestNewLink"></button>
+                    <button class="link-btn auth-back-link" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
+                </div>
+            </section>
         </section>
-    </div>
+    </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script type="module" src="js/bundles/login.bundle.js?v=1"></script>
+    <script type="module" src="js/bundles/login.bundle.js?v=4"></script>
 </body>
 </html>

@@ -16,9 +16,9 @@ os.environ.setdefault("SUPABASE_JWT_AUDIENCE", "authenticated")
 from app.api.main import app  # noqa: E402
 from app.api.routes import auth as auth_route  # noqa: E402
 from app.api.routes import natal as natal_route  # noqa: E402
-from app.auth.security import hash_password  # noqa: E402
+from app.auth.security import hash_password, utcnow  # noqa: E402
 from app.database.connection import get_db  # noqa: E402
-from app.database.models import Astrologer, AuditEvent, AuthSession, User  # noqa: E402
+from app.database.models import Astrologer, AuditEvent, AuthSession, EmailVerificationToken, PasswordResetToken, User  # noqa: E402
 
 
 engine = create_engine("sqlite:///./_auth_tenant_test.sqlite3", connect_args={"check_same_thread": False})
@@ -39,12 +39,21 @@ def _override_get_db():
 
 @pytest.fixture(autouse=True)
 def _db_setup():
-    for table in (AuditEvent.__table__, AuthSession.__table__, User.__table__, Astrologer.__table__):
+    for table in (
+        AuditEvent.__table__,
+        AuthSession.__table__,
+        EmailVerificationToken.__table__,
+        PasswordResetToken.__table__,
+        User.__table__,
+        Astrologer.__table__,
+    ):
         table.drop(bind=engine, checkfirst=True)
     Astrologer.__table__.create(bind=engine, checkfirst=True)
     User.__table__.create(bind=engine, checkfirst=True)
     AuthSession.__table__.create(bind=engine, checkfirst=True)
     AuditEvent.__table__.create(bind=engine, checkfirst=True)
+    EmailVerificationToken.__table__.create(bind=engine, checkfirst=True)
+    PasswordResetToken.__table__.create(bind=engine, checkfirst=True)
 
     app.dependency_overrides[get_db] = _override_get_db
     yield
@@ -57,6 +66,7 @@ def _create_astrologer(email: str, password: str) -> Astrologer:
         email=email,
         password_hash=hash_password(password),
         auth_provider="local",
+        email_verified_at=utcnow(),
         is_active=True,
     )
     db.add(astrologer)

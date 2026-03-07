@@ -1,0 +1,142 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const { createI18n } = require('../frontend/js/i18n.js');
+const AstroLogin = require('../frontend/js/login.js');
+
+function loadCatalogs() {
+    const baseDir = path.join(__dirname, '..', 'frontend', 'locales');
+    return {
+        en: JSON.parse(fs.readFileSync(path.join(baseDir, 'en.json'), 'utf8')),
+        ru: JSON.parse(fs.readFileSync(path.join(baseDir, 'ru.json'), 'utf8')),
+        uk: JSON.parse(fs.readFileSync(path.join(baseDir, 'uk.json'), 'utf8')),
+    };
+}
+
+function installLocale(locale) {
+    global.FrontendI18n = createI18n({
+        catalogs: loadCatalogs(),
+        queryString: `?locale=${locale}`,
+        fetchFn: null,
+    });
+    return global.FrontendI18n.ready;
+}
+
+test('createAuthUiModel exposes key auth states', () => {
+    const loginModel = AstroLogin.createAuthUiModel({ view: 'login', now: 0 });
+    const resetModel = AstroLogin.createAuthUiModel({ view: 'reset', token: 'reset-token-1234567890', now: 0 });
+    const checkEmailModel = AstroLogin.createAuthUiModel({
+        view: 'check-email',
+        lastEmail: 'astro@example.com',
+        resendCooldownUntil: 30_000,
+        now: 10_000,
+    });
+    const invalidModel = AstroLogin.createAuthUiModel({ view: 'reset', token: '', now: 0 });
+
+    assert.equal(loginModel.view, 'login');
+    assert.equal(resetModel.view, 'reset');
+    assert.equal(resetModel.resetToken, 'reset-token-1234567890');
+    assert.equal(checkEmailModel.view, 'check-email');
+    assert.equal(checkEmailModel.cooldownSeconds, 20);
+    assert.equal(checkEmailModel.resendEnabled, false);
+    assert.equal(invalidModel.view, 'reset-invalid');
+    assert.equal(invalidModel.invalidMessageKey, 'page.login.views.invalid.bodyInvalid');
+});
+
+test('createAuthUiModel exposes verification states', () => {
+    const verifyCheckModel = AstroLogin.createAuthUiModel({
+        view: 'verify-check-email',
+        lastVerificationEmail: 'astro@example.com',
+        verificationResendCooldownUntil: 20_000,
+        now: 5_000,
+    });
+    const verifyInvalidModel = AstroLogin.createAuthUiModel({
+        view: 'verify-loading',
+        verifyToken: '',
+        verifyInvalidReason: 'expired',
+        now: 0,
+    });
+
+    assert.equal(verifyCheckModel.view, 'verify-check-email');
+    assert.equal(verifyCheckModel.cooldownSeconds, 15);
+    assert.equal(verifyCheckModel.resendEnabled, false);
+    assert.equal(verifyInvalidModel.view, 'verify-invalid');
+    assert.equal(verifyInvalidModel.verifyInvalidMessageKey, 'page.login.views.verifyInvalid.bodyExpired');
+});
+
+test('mapAuthErrorToKey classifies login and reset failures', () => {
+    assert.equal(AstroLogin.mapAuthErrorToKey('login', 'Invalid credentials'), 'page.login.errors.invalidCredentials');
+    assert.equal(AstroLogin.mapAuthErrorToKey('login', 'Account temporarily locked'), 'page.login.errors.rateLimited');
+    assert.equal(AstroLogin.mapAuthErrorToKey('login', 'Email is not verified'), 'page.login.errors.emailNotVerified');
+    assert.equal(AstroLogin.mapAuthErrorToKey('reset', 'Reset link has expired'), 'expired');
+    assert.equal(AstroLogin.mapAuthErrorToKey('reset', 'Reset link has already been used'), 'used');
+    assert.equal(AstroLogin.mapAuthErrorToKey('reset', 'Reset link is invalid'), 'invalid');
+    assert.equal(AstroLogin.mapAuthErrorToKey('verify', 'Verification link has expired'), 'expired');
+    assert.equal(AstroLogin.mapAuthErrorToKey('verify', 'Verification link has already been used'), 'used');
+    assert.equal(AstroLogin.mapAuthErrorToKey('verify', 'Verification link is invalid'), 'invalid');
+});
+
+test('validateRegistrationPayload enforces registration fields and policy', () => {
+    const invalid = AstroLogin.validateRegistrationPayload({
+        email: 'bad-email',
+        password: 'weakpass',
+        confirmPassword: 'other',
+        firstName: 'A'.repeat(101),
+    });
+    assert.equal(invalid.valid, false);
+    assert.equal(invalid.errors.email, 'page.login.validation.emailInvalid');
+    assert.equal(invalid.errors.password, 'page.login.validation.passwordPolicy');
+    assert.equal(invalid.errors.confirmPassword, 'page.login.validation.passwordMismatch');
+    assert.equal(invalid.errors.firstName, 'page.login.validation.nameTooLong');
+
+    const valid = AstroLogin.validateRegistrationPayload({
+        email: 'astro@example.com',
+        password: 'Strong123',
+        confirmPassword: 'Strong123',
+        firstName: 'Ihor',
+        lastName: 'Skakovskyi',
+    });
+    assert.equal(valid.valid, true);
+    assert.deepEqual(valid.errors, {});
+});
+
+test('new auth copy is localized for en, ru, uk', async () => {
+    for (const locale of ['en', 'ru', 'uk']) {
+        await installLocale(locale);
+        const title = global.FrontendI18n.t('page.login.views.reset.title');
+        const success = global.FrontendI18n.t('page.login.views.success.body');
+        const resend = global.FrontendI18n.t('page.login.actions.resendLink');
+        const registerTitle = global.FrontendI18n.t('page.login.views.register.title');
+        const verifyTitle = global.FrontendI18n.t('page.login.views.verifySuccess.title');
+        const spamTitle = global.FrontendI18n.t('page.login.hints.emailDeliverySpamTitle');
+        const spamHint = global.FrontendI18n.t('page.login.hints.emailDeliverySpam');
+
+        assert.notEqual(title, 'page.login.views.reset.title');
+        assert.notEqual(success, 'page.login.views.success.body');
+        assert.notEqual(resend, 'page.login.actions.resendLink');
+        assert.notEqual(registerTitle, 'page.login.views.register.title');
+        assert.notEqual(verifyTitle, 'page.login.views.verifySuccess.title');
+        assert.notEqual(spamTitle, 'page.login.hints.emailDeliverySpamTitle');
+        assert.notEqual(spamHint, 'page.login.hints.emailDeliverySpam');
+    }
+
+    delete global.FrontendI18n;
+});
+
+test('cooldown and invalid copy follow active locale', async () => {
+    await installLocale('ru');
+    const ruCooldown = AstroLogin.createCooldownLabel(15);
+    const ruInvalid = global.FrontendI18n.t('page.login.views.invalid.bodyExpired');
+    assert.equal(ruCooldown, 'Повтор через 15 с');
+    assert.match(ruInvalid, /истек/i);
+
+    await global.FrontendI18n.setLocale('uk', { persist: false });
+    const ukCooldown = AstroLogin.createCooldownLabel(9);
+    const ukSuccess = global.FrontendI18n.t('page.login.views.success.title');
+    assert.equal(ukCooldown, 'Повтор через 9 с');
+    assert.match(ukSuccess, /Пароль оновлено/i);
+
+    delete global.FrontendI18n;
+});

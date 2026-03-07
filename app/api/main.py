@@ -5,11 +5,12 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 import os
 import sys
 import logging
 from typing import List
+from urllib.parse import urlencode
 from dotenv import load_dotenv
 
 # Загрузка переменных окружения (из app/.env)
@@ -151,6 +152,18 @@ async def login_page_alias():
 async def login_page():
     """Login page."""
     return await login_page_alias()
+
+
+@app.get("/auth/verify")
+async def auth_verify_page(token: str = "", locale: str = ""):
+    """Email verification link entrypoint."""
+    params = {"mode": "verify"}
+    if token:
+        params["token"] = token
+    if locale:
+        params["locale"] = locale
+    target = f"/login.html?{urlencode(params)}"
+    return RedirectResponse(url=target, status_code=307)
 
 
 @app.get("/index.html")

@@ -11,6 +11,7 @@ const DEFAULT_TARGET_FILES = [
     'app/frontend/clients.html',
     'app/frontend/interpretations.html',
     'app/frontend/natal-full.html',
+    'app/frontend/login.html',
     'app/frontend/js/form.js',
     'app/frontend/js/clients.js',
     'app/frontend/js/interpretations.js',
@@ -24,6 +25,7 @@ const DEFAULT_TARGET_FILES = [
     'app/frontend/js/chat.js',
     'app/frontend/js/chatkit-init.js',
     'app/frontend/js/natal-full.js',
+    'app/frontend/js/login.js',
     'app/frontend/js/api.js',
     'app/frontend/js/timezones.js',
 ];

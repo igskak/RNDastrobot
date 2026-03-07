@@ -352,7 +352,8 @@
       "actions": {
         "confirmDelete": "Confirm?",
         "delete": "Delete",
-        "open": "Open"
+        "open": "Open",
+        "logout": "Logout"
       },
       "counters": {
         "shown": "Shown: {shown}",
@@ -782,6 +783,165 @@
       "title": "Natal chart table view",
       "units": {
         "degPerDay": "{value}°/day"
+      }
+    },
+    "login": {
+      "meta": {
+        "title": "AstroBot login"
+      },
+      "heading": "Secure sign in",
+      "subheading": "Continue with Google or your email and password.",
+      "divider": "or continue with email",
+      "hints": {
+        "capsLock": "Caps Lock is on.",
+        "emailDeliverySpamTitle": "Important",
+        "emailDeliverySpam": "We're in the application launch stage, so emails can sometimes land in Spam. Please check your Spam folder."
+      },
+      "status": {
+        "signingIn": "Signing in...",
+        "googleRedirect": "Redirecting to Google...",
+        "completingGoogle": "Completing Google sign-in...",
+        "sendingResetLink": "Sending reset link...",
+        "savingPassword": "Updating password...",
+        "creatingAccount": "Creating account...",
+        "sendingVerification": "Sending verification link...",
+        "verifyingEmail": "Verifying email..."
+      },
+      "actions": {
+        "signIn": "Sign in",
+        "signingIn": "Signing in...",
+        "continueWithGoogle": "Continue with Google",
+        "forgotPassword": "Forgot password?",
+        "sendResetLink": "Send reset link",
+        "sendingResetLink": "Sending reset link...",
+        "resendLink": "Resend link",
+        "resendCountdown": "Resend in {seconds}s",
+        "backToSignIn": "Back to sign in",
+        "setNewPassword": "Set new password",
+        "savingPassword": "Saving password...",
+        "showPassword": "Show",
+        "hidePassword": "Hide",
+        "requestNewLink": "Request a new link",
+        "createAccount": "Create account",
+        "creatingAccount": "Creating account...",
+        "goToRegister": "Create account",
+        "noAccount": "Don't have an account?",
+        "resendVerification": "Resend verification link",
+        "sendingVerification": "Sending verification link..."
+      },
+      "fields": {
+        "email": {
+          "label": "Email",
+          "placeholder": "you@example.com"
+        },
+        "password": {
+          "label": "Password",
+          "placeholder": "Enter your password"
+        },
+        "newPassword": {
+          "label": "New password",
+          "placeholder": "Create a new password"
+        },
+        "confirmPassword": {
+          "label": "Confirm new password",
+          "placeholder": "Repeat your new password"
+        },
+        "firstName": {
+          "label": "First name (optional)",
+          "placeholder": "First name"
+        },
+        "lastName": {
+          "label": "Last name (optional)",
+          "placeholder": "Last name"
+        },
+        "registerPassword": {
+          "placeholder": "Create a password (letters and numbers)"
+        }
+      },
+      "views": {
+        "login": {
+          "title": "Secure sign in",
+          "subtitle": "Continue with Google or your email and password."
+        },
+        "forgot": {
+          "title": "Reset your password",
+          "subtitle": "Enter your email and we will send a one-time reset link."
+        },
+        "checkEmail": {
+          "title": "Check your email",
+          "subtitle": "Use the link from your inbox to continue.",
+          "body": "If the address exists in AstroBot, a reset link will arrive shortly.",
+          "bodyWithEmail": "If {email} exists in AstroBot, a reset link will arrive shortly."
+        },
+        "reset": {
+          "title": "Set a new password",
+          "subtitle": "Choose a password you have not used here before."
+        },
+        "success": {
+          "title": "Password updated",
+          "subtitle": "You can now sign in with your new password.",
+          "body": "Your password was changed successfully. Existing sessions were signed out."
+        },
+        "invalid": {
+          "title": "Reset link unavailable",
+          "subtitle": "This reset flow cannot continue with the current link.",
+          "bodyInvalid": "This reset link is invalid. Request a new one and try again.",
+          "bodyExpired": "This reset link has expired. Request a fresh link to continue.",
+          "bodyUsed": "This reset link was already used. Request a new link to continue."
+        },
+        "register": {
+          "title": "Create your account",
+          "subtitle": "Sign up with email and password to start using AstroBot."
+        },
+        "verifyCheckEmail": {
+          "title": "Check your email",
+          "subtitle": "Open your inbox and confirm your email to continue.",
+          "body": "We sent a verification link. Open it to activate your account.",
+          "bodyWithEmail": "We sent a verification link to {email}. Open it to activate your account."
+        },
+        "verifyLoading": {
+          "title": "Verifying email",
+          "subtitle": "Please wait while we confirm your email.",
+          "body": "Verification is in progress..."
+        },
+        "verifySuccess": {
+          "title": "Email verified",
+          "subtitle": "Your email has been confirmed. You can sign in now.",
+          "body": "Email verification completed successfully. Continue to sign in."
+        },
+        "verifyInvalid": {
+          "title": "Verification link unavailable",
+          "subtitle": "This verification flow cannot continue with the current link.",
+          "bodyInvalid": "This verification link is invalid. Request a new one and try again.",
+          "bodyExpired": "This verification link has expired. Request a new link to continue.",
+          "bodyUsed": "This verification link was already used. Request a new link to continue."
+        }
+      },
+      "validation": {
+        "emailRequired": "Enter your email.",
+        "emailInvalid": "Enter a valid email address.",
+        "passwordRequired": "Enter your password.",
+        "passwordMinLength": "Use at least 8 characters.",
+        "confirmPasswordRequired": "Confirm your new password.",
+        "passwordMismatch": "Passwords do not match.",
+        "passwordPolicy": "Use letters and numbers.",
+        "nameTooLong": "Use up to 100 characters."
+      },
+      "errors": {
+        "invalidCredentials": "Incorrect email or password.",
+        "accountInactive": "This account is inactive.",
+        "rateLimited": "Too many attempts. Wait a bit and try again.",
+        "loginFailed": "Unable to sign in right now.",
+        "googleFailed": "Google sign-in could not be completed.",
+        "googleUnavailable": "Google sign-in is not available right now.",
+        "forgotFailed": "Unable to send a reset link right now.",
+        "resetFailed": "Unable to update the password right now.",
+        "initFailed": "Failed to initialize the sign-in page.",
+        "generic": "Something went wrong. Try again.",
+        "emailNotVerified": "Please verify your email before signing in.",
+        "registerFailed": "Unable to create an account right now.",
+        "verifyFailed": "Unable to verify your email right now.",
+        "resendVerificationFailed": "Unable to resend verification right now."
       }
     }
   },

@@ -19,7 +19,7 @@ from app.auth.security import (
     utcnow,
 )
 from app.database.connection import get_db
-from app.database.models import Astrologer, AuthSession, AuditEvent, User
+from app.database.models import Astrologer, AuthSession, AuditEvent, EmailVerificationToken, PasswordResetToken, User
 
 
 RATE_LIMIT_WINDOW_SECONDS = 60
@@ -237,6 +237,77 @@ def revoke_session(db: Session, sid: str) -> None:
     if session:
         session.revoked_at = utcnow()
         db.flush()
+
+
+def revoke_astrologer_sessions(
+    db: Session,
+    astrologer_id: UUID,
+    *,
+    except_session_id: Optional[str] = None,
+) -> int:
+    if not astrologer_id:
+        return 0
+
+    query = db.query(AuthSession).filter(
+        AuthSession.astrologer_id == astrologer_id,
+        AuthSession.revoked_at.is_(None),
+    )
+    if except_session_id:
+        query = query.filter(AuthSession.session_id != except_session_id)
+
+    sessions = query.all()
+    if not sessions:
+        return 0
+
+    now = utcnow()
+    for session in sessions:
+        session.revoked_at = now
+    db.flush()
+    return len(sessions)
+
+
+def cleanup_password_reset_tokens(db: Session, *, astrologer_id: Optional[UUID] = None) -> int:
+    now = utcnow()
+    query = db.query(PasswordResetToken).filter(
+        or_(
+            PasswordResetToken.expires_at < now,
+            PasswordResetToken.used_at < now - timedelta(days=1),
+        )
+    )
+    if astrologer_id:
+        query = query.filter(PasswordResetToken.astrologer_id == astrologer_id)
+
+    tokens = query.all()
+    if not tokens:
+        return 0
+
+    deleted = len(tokens)
+    for token in tokens:
+        db.delete(token)
+    db.flush()
+    return deleted
+
+
+def cleanup_email_verification_tokens(db: Session, *, astrologer_id: Optional[UUID] = None) -> int:
+    now = utcnow()
+    query = db.query(EmailVerificationToken).filter(
+        or_(
+            EmailVerificationToken.expires_at < now,
+            EmailVerificationToken.used_at < now - timedelta(days=1),
+        )
+    )
+    if astrologer_id:
+        query = query.filter(EmailVerificationToken.astrologer_id == astrologer_id)
+
+    tokens = query.all()
+    if not tokens:
+        return 0
+
+    deleted = len(tokens)
+    for token in tokens:
+        db.delete(token)
+    db.flush()
+    return deleted
 
 
 def require_client_access(client_id_param: str = "user_id", action: str = "client.access"):
