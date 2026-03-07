@@ -4,10 +4,13 @@ from datetime import date as date_type
 from typing import Any, Dict, List, Literal, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from loguru import logger
 from pydantic import BaseModel, Field
 
+from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
+from app.database.connection import get_db
+from sqlalchemy.orm import Session
 from app.services.period_ingress_summary_service import PeriodIngressSummaryService
 
 router = APIRouter()
@@ -62,8 +65,14 @@ class PeriodIngressSummaryResponse(BaseModel):
     status_code=status.HTTP_200_OK,
     summary="Периодический summary ингрессий для biwheel",
 )
-def calculate_ingress_period_summary(request: PeriodIngressSummaryRequest):
+def calculate_ingress_period_summary(
+    request: PeriodIngressSummaryRequest,
+    http_request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+):
     try:
+        ensure_client_access(db, http_request, auth, request.user_id, action="client.ingresses.period_summary")
         service = PeriodIngressSummaryService()
         return service.calculate_period_summary(
             user_id=request.user_id,

@@ -16,6 +16,7 @@ const state = {
 let toastTimer = null;
 
 const refs = {};
+let currentAstrologer = null;
 
 function t(key, params) {
     return window.FrontendI18n?.t?.(key, params) || key;
@@ -39,16 +40,18 @@ function getNameCollator() {
     return new Intl.Collator(locale, { sensitivity: 'base', numeric: true });
 }
 
-function getAdminHeaders() {
-    const token = localStorage.getItem('adminApiToken');
-    const headers = token ? { 'X-Admin-Token': token } : {};
-    return withLocaleHeaders(headers);
+function apiFetch(url, init = {}) {
+    return fetch(url, {
+        credentials: 'include',
+        ...init,
+        headers: withLocaleHeaders(init.headers || {}),
+    });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     cacheElements();
     bindEvents();
-    loadClients();
+    bootstrapPage();
 });
 
 function cacheElements() {
@@ -62,6 +65,8 @@ function cacheElements() {
     refs.sortSelect = document.getElementById('sortSelect');
     refs.resultsMeta = document.getElementById('resultsMeta');
     refs.toast = document.getElementById('toast');
+    refs.logoutBtn = document.getElementById('logoutBtn');
+    refs.welcome = document.getElementById('welcomeLabel');
 }
 
 function bindEvents() {
@@ -98,6 +103,27 @@ function bindEvents() {
         }
         renderUsers();
     });
+
+    if (refs.logoutBtn) {
+        refs.logoutBtn.addEventListener('click', async () => {
+            try {
+                await window.AstroAPI?.logout?.();
+            } finally {
+                window.location.href = '/login.html';
+            }
+        });
+    }
+}
+
+async function bootstrapPage() {
+    currentAstrologer = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
+    if (!currentAstrologer) return;
+
+    if (refs.welcome) {
+        refs.welcome.textContent = currentAstrologer.email || '';
+    }
+
+    await loadClients();
 }
 
 async function loadClients() {
@@ -108,9 +134,11 @@ async function loadClients() {
     refs.tableWrap.classList.add('hidden');
 
     try {
-        const response = await fetch(`${API_BASE}/users`, {
-            headers: getAdminHeaders()
-        });
+        const response = await apiFetch(`${API_BASE}/users`, { method: 'GET' });
+        if (response.status === 401) {
+            window.location.href = '/login.html';
+            return;
+        }
         if (!response.ok) throw new Error(t('page.clients.errors.fetchList'));
 
         const users = await response.json();
@@ -251,9 +279,7 @@ function updateCounters() {
 
 async function openChart(userId) {
     try {
-        const response = await fetch(`${API_BASE}/natal/${userId}`, {
-            headers: withLocaleHeaders(),
-        });
+        const response = await apiFetch(`${API_BASE}/natal/${userId}`, { method: 'GET' });
         if (!response.ok) throw new Error(t('page.clients.errors.chartNotFound'));
 
         const chartData = await response.json();
@@ -287,9 +313,8 @@ async function handleDelete(userId, button) {
     button.textContent = '...';
 
     try {
-        const response = await fetch(`${API_BASE}/users/${userId}`, {
+        const response = await apiFetch(`${API_BASE}/users/${userId}`, {
             method: 'DELETE',
-            headers: getAdminHeaders()
         });
         if (!response.ok) {
             let message = t('page.clients.errors.deleteFailed');

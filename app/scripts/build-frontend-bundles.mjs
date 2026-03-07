@@ -17,6 +17,7 @@ const jsEntryPoints = {
   forecast: path.join(frontendRoot, 'entries', 'forecast.entry.js'),
   'natal-full': path.join(frontendRoot, 'entries', 'natal-full.entry.js'),
   interpretations: path.join(frontendRoot, 'entries', 'interpretations.entry.js'),
+  login: path.join(frontendRoot, 'entries', 'login.entry.js'),
 };
 
 const cssEntryPoints = {
@@ -26,6 +27,7 @@ const cssEntryPoints = {
   forecast: path.join(frontendRoot, 'entries-css', 'forecast.entry.css'),
   'natal-full': path.join(frontendRoot, 'entries-css', 'natal-full.entry.css'),
   interpretations: path.join(frontendRoot, 'entries-css', 'interpretations.entry.css'),
+  login: path.join(frontendRoot, 'entries-css', 'login.entry.css'),
 };
 
 await mkdir(jsOutdir, { recursive: true });

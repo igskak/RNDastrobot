@@ -1,7 +1,7 @@
 """
 API эндпоинты для работы с соларными картами (Solar Return)
 """
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Request
 from sqlalchemy.orm import Session
 from uuid import UUID
 
@@ -13,6 +13,7 @@ from app.models.schemas import (
     ErrorResponse,
 )
 from app.database.connection import get_db
+from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
 from app.services.solar_return_service import SolarReturnService
 from app.utils.ephemeris import get_ephemeris_path
 
@@ -35,7 +36,9 @@ EPHE_PATH = get_ephemeris_path()
 )
 def calculate_solar_return(
     request: SolarReturnRequest,
-    db: Session = Depends(get_db)
+    http_request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
 ) -> SolarReturnResponse:
     """
     Расчёт соларной карты
@@ -55,6 +58,7 @@ def calculate_solar_return(
     - Полные данные соларной карты: планеты, дома, углы
     """
     try:
+        ensure_client_access(db, http_request, auth, request.user_id, action="client.solar.calculate")
         solar_service = SolarReturnService(db_session=db, ephe_path=EPHE_PATH)
         
         result = solar_service.calculate_solar_return(
@@ -94,7 +98,9 @@ def calculate_solar_return(
 def get_solar_return(
     user_id: UUID,
     year: int,
-    db: Session = Depends(get_db)
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
 ) -> SolarReturnResponse:
     """
     Получить сохранённый соляр
@@ -104,6 +110,7 @@ def get_solar_return(
     - `year`: Год соляра
     """
     try:
+        ensure_client_access(db, request, auth, user_id, action="client.solar.get")
         solar_service = SolarReturnService(db_session=db, ephe_path=EPHE_PATH)
         result = solar_service.get_solar_return(user_id, year)
         
@@ -133,12 +140,15 @@ def get_solar_return(
 )
 def list_solar_returns(
     user_id: UUID,
-    db: Session = Depends(get_db)
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
 ) -> SolarReturnListResponse:
     """
     Получить список всех соляров пользователя
     """
     try:
+        ensure_client_access(db, request, auth, user_id, action="client.solar.list")
         solar_service = SolarReturnService(db_session=db, ephe_path=EPHE_PATH)
         solars = solar_service.list_solar_returns(user_id)
         

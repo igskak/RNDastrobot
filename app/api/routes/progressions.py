@@ -1,7 +1,7 @@
 """
 API эндпоинты для работы с прогрессиями (Secondary Progressions)
 """
-from fastapi import APIRouter, HTTPException, status, Depends, Query
+from fastapi import APIRouter, HTTPException, status, Depends, Query, Request
 from sqlalchemy.orm import Session
 from uuid import UUID
 from pydantic import BaseModel, Field, field_validator
@@ -10,6 +10,7 @@ from typing import List, Optional
 
 from app.services.progression_service import ProgressionService
 from app.database.connection import get_db
+from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
 from app.utils.ephemeris import get_ephemeris_path
 from loguru import logger
 
@@ -129,7 +130,9 @@ class ProgressionListResponse(BaseModel):
 )
 def calculate_progression(
     request: ProgressionRequest,
-    db: Session = Depends(get_db)
+    http_request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
 ):
     """
     Рассчитать вторичную прогрессию.
@@ -139,6 +142,7 @@ def calculate_progression(
     - **save_to_db**: Сохранить результат в БД (по умолчанию False)
     """
     try:
+        ensure_client_access(db, http_request, auth, request.user_id, action="client.progressions.calculate")
         progression_service = ProgressionService(db_session=db, ephe_path=EPHE_PATH)
         result = progression_service.calculate_progression(
             user_id=request.user_id,
@@ -169,10 +173,13 @@ def calculate_progression(
 )
 def list_progressions(
     user_id: UUID,
-    db: Session = Depends(get_db)
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
 ):
     """Получить список сохранённых прогрессий пользователя"""
     try:
+        ensure_client_access(db, request, auth, user_id, action="client.progressions.list")
         progression_service = ProgressionService(db_session=db, ephe_path=EPHE_PATH)
         progressions = progression_service.list_progressions(user_id)
         return {

@@ -19,6 +19,7 @@ class User(Base):
     __tablename__ = 'users'
     
     user_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='RESTRICT'), nullable=False)
     first_name = Column(String(100))
     last_name = Column(String(100))
     birth_date = Column(Date, nullable=False)
@@ -56,12 +57,77 @@ class User(Base):
     hemisphere_balance = relationship("UserHemisphereBalance", back_populates="user", uselist=False, cascade="all, delete-orphan")
     quadrant_balance = relationship("UserQuadrantBalance", back_populates="user", uselist=False, cascade="all, delete-orphan")
     house_group_balance = relationship("UserHouseGroupBalance", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    astrologer = relationship("Astrologer", back_populates="users")
 
     __table_args__ = (
         CheckConstraint('lat >= -90 AND lat <= 90', name='valid_latitude'),
         CheckConstraint('lon >= -180 AND lon <= 180', name='valid_longitude'),
         Index('idx_users_birth_date', 'birth_date'),
         Index('idx_users_location', 'lat', 'lon'),
+        Index('idx_users_astrologer_id', 'astrologer_id'),
+    )
+
+
+class Astrologer(Base):
+    """Модель астролога (tenant owner)."""
+    __tablename__ = 'astrologers'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email = Column(String(255), nullable=False, unique=True)
+    password_hash = Column(Text)
+    auth_provider = Column(String(16), nullable=False, default='local')
+    google_sub = Column(String(255), unique=True)
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    users = relationship("User", back_populates="astrologer")
+    sessions = relationship("AuthSession", back_populates="astrologer", cascade="all, delete-orphan")
+
+    __table_args__ = (
+        CheckConstraint("auth_provider IN ('local', 'google')", name='valid_auth_provider'),
+        Index('idx_astrologers_google_sub', 'google_sub'),
+    )
+
+
+class AuthSession(Base):
+    """Сессия аутентификации астролога (server-side store)."""
+    __tablename__ = 'auth_sessions'
+
+    session_id = Column(String(255), primary_key=True)
+    astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='CASCADE'), nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    revoked_at = Column(DateTime)
+    ip = Column(String(64))
+    user_agent = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+
+    astrologer = relationship("Astrologer", back_populates="sessions")
+
+    __table_args__ = (
+        Index('idx_auth_sessions_astrologer', 'astrologer_id'),
+        Index('idx_auth_sessions_expires', 'expires_at'),
+    )
+
+
+class AuditEvent(Base):
+    """Событие аудита безопасности/доступа."""
+    __tablename__ = 'audit_events'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    actor_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='SET NULL'))
+    action = Column(String(128), nullable=False)
+    resource_type = Column(String(64), nullable=False)
+    resource_id = Column(String(255))
+    result = Column(String(32), nullable=False)
+    ip = Column(String(64))
+    user_agent = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+
+    __table_args__ = (
+        Index('idx_audit_events_actor_created_at', 'actor_id', 'created_at'),
+        Index('idx_audit_events_action_created_at', 'action', 'created_at'),
+        Index('idx_audit_events_ip_created_at', 'ip', 'created_at'),
     )
 
 

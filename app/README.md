@@ -4,6 +4,13 @@ This directory contains natal chart calculation programs built on the Swiss Ephe
 
 ## 🆕 Latest Updates
 
+### Auth + Multi-tenant (2026-03-06)
+- Added astrologer authentication with server-side cookie sessions.
+- Added strict tenant isolation for all client (`user_id`) endpoints.
+- Added Google OAuth exchange endpoint via Supabase token validation (`/api/v1/auth/google`).
+- Added audit and auth session persistence (`audit_events`, `auth_sessions`).
+- Added frontend login page (`/login.html`) with email/password + Google button.
+
 ### Frontend: Полная натальная карта (2026-01-04)
 - ✅ Новая страница `/natal-full.html` — табличное отображение полной натальной карты
 - ✅ Секции: Планеты, Дома, Аспекты, Конфигурации, Стеллиумы, Специальные точки
@@ -125,8 +132,33 @@ make clean
 
 Requires the Swiss Ephemeris library to be built first. The Makefile handles this automatically.
 
+## Auth setup (dev)
+
+```bash
+# 1) Apply DB migration
+python app/apply_migration.py 021_add_multi_tenant_auth.sql
+
+# 2) Create first local astrologer (dev-only endpoint)
+# (requires ENABLE_DEV_BOOTSTRAP=true and localhost request)
+curl -X POST http://localhost:8000/api/v1/auth/bootstrap \
+  -H "Content-Type: application/json" \
+  -d '{"email":"astro@example.com","password":"password123"}'
+
+# 3) Run API
+bash app/start_api.sh
+
+# 4) Run backend tests (including auth + tenant)
+pytest -q app/tests/test_auth_tenant.py app/tests/test_api_i18n.py app/tests/test_natal_karmic_analysis_api.py app/tests/test_ingresses_api.py
+
+# 5) Rebuild frontend bundles
+npm --prefix app run build:frontend
+```
+
+Supabase redirect URL examples:
+- Dev: `http://localhost:8000/login.html?oauth=callback`
+- Prod: `https://YOUR_DOMAIN/login.html?oauth=callback`
+
 ## Source Files
 
 - `src/natal_chart.c` - Text output version
 - `src/natal_chart_json.c` - JSON output version
-

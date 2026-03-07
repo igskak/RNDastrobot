@@ -1,7 +1,7 @@
 """
 API эндпоинты для работы с транзитами
 """
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Request
 from sqlalchemy.orm import Session
 from uuid import UUID
 from pydantic import BaseModel, Field, field_validator
@@ -10,6 +10,7 @@ from typing import List, Optional
 
 from app.services.transit_service import TransitService
 from app.database.connection import get_db
+from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
 from app.utils.ephemeris import get_ephemeris_path
 from loguru import logger
 
@@ -145,7 +146,9 @@ class TransitPeriodResponse(BaseModel):
 )
 def calculate_transits(
     request: TransitRequest,
-    db: Session = Depends(get_db)
+    http_request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
 ):
     """
     Рассчитать транзиты к натальной карте.
@@ -156,6 +159,7 @@ def calculate_transits(
     - **timezone**: Часовой пояс
     """
     try:
+        ensure_client_access(db, http_request, auth, request.user_id, action="client.transits.calculate")
         transit_service = TransitService(db_session=db, ephe_path=EPHE_PATH)
         result = transit_service.calculate_transits(
             user_id=request.user_id,
@@ -187,7 +191,9 @@ def calculate_transits(
 )
 def find_transit_events(
     request: TransitPeriodRequest,
-    db: Session = Depends(get_db)
+    http_request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
 ):
     """
     Поиск транзитных событий на период.
@@ -198,6 +204,7 @@ def find_transit_events(
     - **t_leave**: момент выхода из орбиса
     """
     try:
+        ensure_client_access(db, http_request, auth, request.user_id, action="client.transits.period")
         transit_service = TransitService(db_session=db, ephe_path=EPHE_PATH)
         events = transit_service.find_transit_events(
             user_id=request.user_id,

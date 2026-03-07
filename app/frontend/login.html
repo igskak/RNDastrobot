@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astrobot Login</title>
+    <link rel="stylesheet" href="bundles/login.bundle.css?v=1">
+    <style>
+        .login-wrap {
+            max-width: 420px;
+            margin: 60px auto;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            padding: 24px;
+        }
+
+        .login-wrap h1 {
+            margin-bottom: 16px;
+            font-size: 24px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        .field input {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 10px 12px;
+            font-size: 14px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-local {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .btn-google {
+            margin-top: 10px;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: #222;
+        }
+
+        .status {
+            min-height: 20px;
+            margin-top: 12px;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .status.error {
+            color: var(--error);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <section class="login-wrap">
+            <h1>Astrobot</h1>
+            <form id="passwordLoginForm">
+                <div class="field">
+                    <label for="email">Email</label>
+                    <input id="email" type="email" required autocomplete="email">
+                </div>
+                <div class="field">
+                    <label for="password">Password</label>
+                    <input id="password" type="password" required autocomplete="current-password">
+                </div>
+                <button class="btn btn-local" type="submit">Sign in</button>
+            </form>
+
+            <button id="googleLoginBtn" class="btn btn-google" type="button" disabled>
+                Continue with Google
+            </button>
+            <p id="status" class="status" aria-live="polite"></p>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="js/bundles/login.bundle.js?v=1"></script>
+</body>
+</html>

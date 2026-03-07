@@ -95,15 +95,16 @@
 
         async function lookup(query) {
             const seq = ++inFlightSeq;
-            if (activeController) {
+            const supportsAbort = typeof AbortController === 'function';
+            if (supportsAbort && activeController) {
                 activeController.abort();
             }
-            activeController = new AbortController();
+            activeController = supportsAbort ? new AbortController() : null;
             try {
                 const items = await searchPlaces(query, {
                     limit,
                     language: getLanguage(),
-                    signal: activeController.signal,
+                    signal: activeController?.signal,
                 });
                 if (seq !== inFlightSeq) return;
                 render(items);

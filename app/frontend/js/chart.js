@@ -62,7 +62,10 @@ function readSavedPointScale() {
     return clampPointScale(parseFloat(localStorage.getItem('natalPointScale') || '1.0'));
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    const me = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
+    if (!me) return;
+
     // Получаем данные карты из сессии
     let chartData = AstroAPI.getChartFromSession();
     const formData = AstroAPI.getFormData();

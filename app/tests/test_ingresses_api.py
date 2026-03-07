@@ -7,7 +7,24 @@ from fastapi.testclient import TestClient
 os.environ.setdefault("DATABASE_URL", "sqlite+pysqlite:///./_ingresses_test.db")
 
 from app.api.main import app  # noqa: E402
+from app.api.routes import ingresses  # noqa: E402
+from app.auth.dependencies import AuthContext, require_auth  # noqa: E402
+from app.database.connection import get_db  # noqa: E402
 from app.services.period_ingress_summary_service import PeriodIngressSummaryService  # noqa: E402
+
+
+class _DummySession:
+    pass
+
+
+def _override_get_db():
+    yield _DummySession()
+
+
+def _override_auth():
+    astrologer = type("AstrologerStub", (), {"id": uuid4(), "email": "test@example.com"})()
+    session = type("SessionStub", (), {"session_id": "test"})()
+    return AuthContext(astrologer=astrologer, session=session)
 
 
 def test_ingresses_period_summary_route(monkeypatch):
@@ -46,6 +63,10 @@ def test_ingresses_period_summary_route(monkeypatch):
         return expected
 
     monkeypatch.setattr(PeriodIngressSummaryService, "calculate_period_summary", _fake)
+    monkeypatch.setattr(ingresses, "ensure_client_access", lambda *args, **kwargs: None)
+
+    app.dependency_overrides[get_db] = _override_get_db
+    app.dependency_overrides[require_auth] = _override_auth
 
     client = TestClient(app)
     user_id = str(uuid4())
@@ -67,3 +88,5 @@ def test_ingresses_period_summary_route(monkeypatch):
     assert payload["direction_type"] == expected["direction_type"]
     assert len(payload["rows"]) == 1
     assert payload["rows"][0]["object_key"] == "Sun"
+
+    app.dependency_overrides.clear()

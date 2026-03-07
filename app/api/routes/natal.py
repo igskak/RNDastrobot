@@ -1,7 +1,7 @@
 """
 API эндпоинты для работы с натальными картами
 """
-from fastapi import APIRouter, HTTPException, status, Depends, Query, Header
+from fastapi import APIRouter, HTTPException, status, Depends, Query, Request
 from sqlalchemy.orm import Session
 from uuid import UUID
 from typing import Optional
@@ -35,6 +35,7 @@ from app.services.natal_chart_service import NatalChartService
 from app.database.connection import get_db
 from app.database.repositories.user_repository import UserRepository
 from app.database.models import User
+from app.auth.dependencies import AuthContext, create_audit_event, ensure_client_access, require_auth
 from app.utils.ephemeris import get_ephemeris_path
 from app.services.geocoding_service import GeocodingTimeoutError, GeocodingServiceError
 import os
@@ -48,28 +49,6 @@ EPHE_PATH = get_ephemeris_path()
 if os.getenv('APP_ENV') != 'production':
     logger.info(f"Ephemeris path: {EPHE_PATH}")
 natal_service = NatalChartService(ephe_path=EPHE_PATH)
-
-
-def require_admin_access(x_admin_token: Optional[str] = Header(None, alias="X-Admin-Token")) -> None:
-    """
-    Ограничение админ-эндпоинтов:
-    - Если ADMIN_API_TOKEN задан, токен обязателен в любом окружении.
-    - В production без ADMIN_API_TOKEN доступ запрещён (fail-closed).
-    """
-    expected_token = os.getenv("ADMIN_API_TOKEN")
-    is_production = os.getenv("APP_ENV", "development").lower() == "production"
-
-    if expected_token:
-        if x_admin_token != expected_token:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Доступ запрещён")
-        return
-
-    if is_production:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Admin endpoints disabled: ADMIN_API_TOKEN is not configured",
-        )
-
 
 @router.post(
     "/natal/calculate",
@@ -86,7 +65,8 @@ def require_admin_access(x_admin_token: Optional[str] = Header(None, alias="X-Ad
 def calculate_natal_chart(
     birth_data: BirthDataInput,
     save_to_db: bool = Query(True, description="Сохранить результат в базу данных"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
 ) -> NatalChartResponse:
     """
     Расчёт натальной карты
@@ -111,6 +91,7 @@ def calculate_natal_chart(
             birth_date=birth_data.date,
             birth_time=birth_data.time,
             timezone=birth_data.timezone,
+            astrologer_id=auth.astrologer.id,
             place=birth_data.place,
             latitude=birth_data.latitude,
             longitude=birth_data.longitude,
@@ -200,7 +181,9 @@ def calculate_natal_chart(
 )
 def get_natal_chart(
     user_id: UUID,
-    db: Session = Depends(get_db)
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
 ) -> NatalChartResponse:
     """
     Получить сохранённую натальную карту
@@ -212,6 +195,7 @@ def get_natal_chart(
     - Полные данные натальной карты из базы данных
     """
     try:
+        ensure_client_access(db, request, auth, user_id, action="client.natal.open")
         # Получаем данные из БД
         chart_data = natal_service.get_natal_chart_from_db(user_id, db)
 
@@ -282,7 +266,9 @@ def get_natal_chart(
 )
 def get_general_overview(
     user_id: UUID,
-    db: Session = Depends(get_db)
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
 ) -> GeneralOverviewResponse:
     """
     Получить общий срез натальной карты
@@ -295,6 +281,7 @@ def get_general_overview(
     - Доминанты (стихия, крест, зона, полусфера, angularity)
     """
     try:
+        ensure_client_access(db, request, auth, user_id, action="client.natal.overview")
         from app.services.general_overview_service import GeneralOverviewService
 
         overview_service = GeneralOverviewService(db)
@@ -363,12 +350,27 @@ def test_natal():
     description="Возвращает список всех пользователей с основными данными",
 )
 def list_users(
+    request: Request,
     db: Session = Depends(get_db),
-    _: None = Depends(require_admin_access)
+    auth: AuthContext = Depends(require_auth),
 ):
     """Получить список всех пользователей"""
     try:
-        users = db.query(User).order_by(User.created_at.desc()).all()
+        users = (
+            db.query(User)
+            .filter(User.astrologer_id == auth.astrologer.id)
+            .order_by(User.created_at.desc())
+            .all()
+        )
+        create_audit_event(
+            db,
+            request,
+            actor_id=auth.astrologer.id,
+            action="client.list",
+            resource_type="users",
+            resource_id=None,
+            result="success",
+        )
         return [
             {
                 "user_id": str(u.user_id),
@@ -395,11 +397,13 @@ def list_users(
 )
 def delete_user(
     user_id: UUID,
+    request: Request,
     db: Session = Depends(get_db),
-    _: None = Depends(require_admin_access)
+    auth: AuthContext = Depends(require_auth),
 ):
     """Удалить пользователя по ID"""
     try:
+        ensure_client_access(db, request, auth, user_id, action="client.delete")
         user_repo = UserRepository(db)
         deleted = user_repo.delete_user(user_id)
         if not deleted:

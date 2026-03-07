@@ -28,7 +28,7 @@ if os.getenv('APP_ENV') == 'production':
     logger.remove()  # Удаляем default handler
     logger.add(sys.stderr, level="WARNING")  # Только WARNING и выше
 
-from app.api.routes import natal, interpretations, chat, transits, solar, progressions, directions, ingresses, places
+from app.api.routes import auth, natal, interpretations, chat, transits, solar, progressions, directions, ingresses, places
 from app.api.error_handlers import register_error_handlers
 from app.api.locale_dependency import locale_context_dependency
 
@@ -92,6 +92,7 @@ async def static_cache_headers(request: Request, call_next):
 
 # Подключение роутеров
 app.include_router(natal.router, prefix="/api/v1", tags=["Natal Charts"])
+app.include_router(auth.router, prefix="/api/v1", tags=["Auth"])
 app.include_router(interpretations.router, prefix="/api/v1", tags=["Interpretations"])
 app.include_router(chat.router, prefix="/api/v1", tags=["Chat"])
 app.include_router(transits.router, prefix="/api/v1", tags=["Transits"])
@@ -135,6 +136,21 @@ async def new_chart_page():
     if os.path.exists(index_path):
         return FileResponse(index_path)
     raise HTTPException(status_code=404, detail="Form page not found")
+
+
+@app.get("/login")
+async def login_page_alias():
+    """Alias for login page."""
+    login_path = os.path.join(FRONTEND_PATH, "login.html")
+    if os.path.exists(login_path):
+        return FileResponse(login_path)
+    raise HTTPException(status_code=404, detail="Login page not found")
+
+
+@app.get("/login.html")
+async def login_page():
+    """Login page."""
+    return await login_page_alias()
 
 
 @app.get("/index.html")

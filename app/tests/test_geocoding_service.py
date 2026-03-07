@@ -117,6 +117,22 @@ def test_autocomplete_deduplicates_and_is_stably_sorted(monkeypatch):
     assert len([item for item in first if item["display_name"] == "Kyiv, Ukraine"]) == 1
 
 
+def test_autocomplete_deduplicates_nearby_same_short_name(monkeypatch):
+    service = GeocodingService()
+
+    monkeypatch.setattr(service, "_city_cache_autocomplete", lambda query, limit, language: [
+        _city_item("Харьков", "Харьков, Украина", 49.9935, 36.2304, "cache:kharkiv"),
+    ])
+    monkeypatch.setattr(service, "_autocomplete_local_db", lambda query, limit, language, db_session: [
+        _city_item("Харьков", "Харьков, Kharkivs’ka Oblast’, Ukraine", 49.98177, 36.25475, "db:706483"),
+    ])
+
+    items = service.autocomplete("харь", limit=5, language="ru", db_session=object())
+
+    assert len(items) == 1
+    assert items[0]["short_name"] == "Харьков"
+
+
 def test_city_cache_localizes_kyiv_for_ru_uk_en():
     service = GeocodingService()
 
@@ -130,3 +146,12 @@ def test_city_cache_localizes_kyiv_for_ru_uk_en():
     assert uk[0]["display_name"] == "Київ, Україна"
     assert en[0]["short_name"] == "Kyiv"
     assert en[0]["display_name"] == "Kyiv, Ukraine"
+
+
+def test_split_alternate_names_keeps_entries_after_40th_position():
+    names = [f"name{i}" for i in range(45)] + ["Бухарест"] + [f"name{i}" for i in range(46, 60)]
+    raw = ",".join(names)
+
+    out = GeocodingService._split_alternate_names(raw)
+
+    assert "Бухарест" in out

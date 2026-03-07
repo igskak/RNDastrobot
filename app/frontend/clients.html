@@ -97,7 +97,8 @@
 
         .btn-open,
         .btn-delete,
-        .btn-new {
+        .btn-new,
+        .btn-logout {
             border: none;
             border-radius: var(--radius-sm);
             cursor: pointer;
@@ -145,16 +146,30 @@
             background: #16a34a;
         }
 
+        .btn-logout {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+
+        .btn-logout:hover {
+            background: var(--bg-tertiary);
+        }
+
         .btn-open:focus-visible,
         .btn-delete:focus-visible,
-        .btn-new:focus-visible {
+        .btn-new:focus-visible,
+        .btn-logout:focus-visible {
             outline: 3px solid var(--accent-light);
             outline-offset: 2px;
         }
 
         .btn-open:active,
         .btn-delete:active,
-        .btn-new:active {
+        .btn-new:active,
+        .btn-logout:active {
             transform: scale(0.98);
         }
 
@@ -268,8 +283,14 @@
         <main class="form-container">
             <section class="clients-card" data-i18n-aria-label="page.clients.listAriaLabel">
                 <div class="top-bar">
-                    <span id="clientCount" class="clients-meta" aria-live="polite"></span>
-                    <a href="/new" class="btn-new">➕ <span data-i18n="page.clients.newCard"></span></a>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <span id="clientCount" class="clients-meta" aria-live="polite"></span>
+                        <span id="welcomeLabel" class="clients-meta"></span>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <a href="/new" class="btn-new">➕ <span data-i18n="page.clients.newCard"></span></a>
+                        <button id="logoutBtn" class="btn-logout" type="button">Logout</button>
+                    </div>
                 </div>
 
                 <div class="controls">

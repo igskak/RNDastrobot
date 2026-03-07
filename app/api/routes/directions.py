@@ -1,7 +1,7 @@
 """
 API эндпоинты для работы с дирекциями (Directions)
 """
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Request
 from sqlalchemy.orm import Session
 from uuid import UUID
 from pydantic import BaseModel, Field
@@ -10,6 +10,7 @@ from typing import List, Optional, Literal
 
 from app.services.direction_service import DirectionService
 from app.database.connection import get_db
+from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
 from app.utils.ephemeris import get_ephemeris_path
 from loguru import logger
 
@@ -151,7 +152,9 @@ class DirectionListResponse(BaseModel):
 )
 def calculate_direction(
     request: DirectionRequest,
-    db: Session = Depends(get_db)
+    http_request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
 ):
     """
     Рассчитать дирекцию.
@@ -162,6 +165,7 @@ def calculate_direction(
     - **save_to_db**: Сохранить результат в БД (по умолчанию False)
     """
     try:
+        ensure_client_access(db, http_request, auth, request.user_id, action="client.directions.calculate")
         direction_service = DirectionService(db_session=db, ephe_path=EPHE_PATH)
         result = direction_service.calculate_direction(
             user_id=request.user_id,
@@ -193,10 +197,13 @@ def calculate_direction(
 )
 def list_directions(
     user_id: UUID,
-    db: Session = Depends(get_db)
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
 ):
     """Получить список сохранённых дирекций пользователя"""
     try:
+        ensure_client_access(db, request, auth, user_id, action="client.directions.list")
         direction_service = DirectionService(db_session=db, ephe_path=EPHE_PATH)
         directions = direction_service.list_directions(user_id)
         return {

@@ -1,7 +1,7 @@
 """
 API эндпоинты для интерпретаций натальных карт через OpenAI
 """
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from uuid import UUID
@@ -11,6 +11,7 @@ import time
 
 from app.database.connection import get_db
 from app.database.models import NatalInterpretation
+from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
 from app.i18n.context import get_current_locale
 from app.services.openai_service import get_openai_service, OpenAIService
 from app.services.natal_chart_service import NatalChartService
@@ -59,7 +60,9 @@ class GenerateInterpretationRequest(BaseModel):
 async def generate_interpretation(
     user_id: UUID,
     request: GenerateInterpretationRequest,
-    db: Session = Depends(get_db)
+    http_request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
 ) -> InterpretationResponse:
     """
     Генерировать интерпретацию натальной карты
@@ -72,6 +75,7 @@ async def generate_interpretation(
     locale = get_current_locale()
 
     try:
+        ensure_client_access(db, http_request, auth, user_id, action="client.interpretation.generate")
         # 1. Получаем данные карты из БД (оптимизированный метод)
         t1 = time.time()
         chart_data = natal_service.get_natal_chart_for_interpretation(user_id, db)
@@ -167,9 +171,12 @@ async def generate_interpretation(
 async def get_interpretation(
     user_id: UUID,
     interpretation_type: str,
-    db: Session = Depends(get_db)
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
 ) -> InterpretationResponse:
     """Получить сохранённую интерпретацию (без генерации)"""
+    ensure_client_access(db, request, auth, user_id, action="client.interpretation.get")
     locale = get_current_locale()
     cached = db.execute(
         select(NatalInterpretation).where(

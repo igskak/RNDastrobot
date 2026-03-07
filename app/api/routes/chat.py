@@ -1,7 +1,7 @@
 """
 API эндпоинты для чата с OpenAI агентом (ChatKit интеграция + прогностический чат)
 """
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Request
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List, Literal
 from uuid import UUID
@@ -13,6 +13,7 @@ from app.services.natal_chart_service import NatalChartService
 from app.services.prognostic_tools_service import PrognosticToolsService
 from app.services.forecast_run_service import ForecastRunService
 from app.database.connection import get_db
+from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
 from app.i18n.context import get_current_locale
 from app.utils.ephemeris import get_ephemeris_path
 
@@ -21,6 +22,17 @@ EPHE_PATH = get_ephemeris_path()
 natal_service = NatalChartService(ephe_path=EPHE_PATH)
 
 router = APIRouter()
+
+
+def _parse_user_uuid(raw_user_id: str) -> UUID:
+    user_id_clean = raw_user_id.replace("user_", "") if raw_user_id.startswith("user_") else raw_user_id
+    try:
+        return UUID(user_id_clean)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Некорректный формат user_id: {raw_user_id}"
+        ) from exc
 
 
 # ============================================================================
@@ -98,7 +110,9 @@ class SaveForecastRunResponse(BaseModel):
 )
 async def create_chat_session(
     request: CreateSessionRequest,
-    db: Session = Depends(get_db)
+    http_request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
 ) -> CreateSessionResponse:
     """
     Создать ChatKit сессию для чата с агентом.
@@ -121,14 +135,8 @@ async def create_chat_session(
         locale = get_current_locale()
 
         # Парсим user_id в UUID (убираем префикс "user_" если есть)
-        user_id_clean = request.user_id.replace("user_", "") if request.user_id.startswith("user_") else request.user_id
-        try:
-            user_uuid = UUID(user_id_clean)
-        except ValueError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Некорректный формат user_id: {request.user_id}"
-            )
+        user_uuid = _parse_user_uuid(request.user_id)
+        ensure_client_access(db, http_request, auth, user_uuid, action="client.chat.session")
 
         # Загружаем полную натальную карту из БД (если есть)
         chart_data = natal_service.get_natal_chart_from_db(user_uuid, db)
@@ -181,19 +189,15 @@ async def create_chat_session(
 )
 async def create_prognostic_session(
     request: CreateSessionRequest,
-    db: Session = Depends(get_db)
+    http_request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
 ) -> CreateSessionResponse:
     """Создать ChatKit сессию для прогностического чата (отдельный workflow)."""
     try:
         locale = get_current_locale()
-        user_id_clean = request.user_id.replace("user_", "") if request.user_id.startswith("user_") else request.user_id
-        try:
-            user_uuid = UUID(user_id_clean)
-        except ValueError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Некорректный формат user_id: {request.user_id}"
-            )
+        user_uuid = _parse_user_uuid(request.user_id)
+        ensure_client_access(db, http_request, auth, user_uuid, action="client.chat.prognostic_session")
 
         chart_data = natal_service.get_natal_chart_from_db(user_uuid, db)
 
@@ -234,7 +238,9 @@ async def create_prognostic_session(
 )
 async def prognostic_chat(
     request: PrognosticChatRequest,
-    db: Session = Depends(get_db)
+    http_request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
 ) -> PrognosticChatResponse:
     """
     Прогностический чат: AI сам выбирает нужные прогностические методы
@@ -254,14 +260,8 @@ async def prognostic_chat(
     try:
         locale = get_current_locale()
         # Парсим user_id
-        user_id_clean = request.user_id.replace("user_", "") if request.user_id.startswith("user_") else request.user_id
-        try:
-            user_uuid = UUID(user_id_clean)
-        except ValueError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Некорректный формат user_id: {request.user_id}"
-            )
+        user_uuid = _parse_user_uuid(request.user_id)
+        ensure_client_access(db, http_request, auth, user_uuid, action="client.chat.prognostic")
 
         # Загружаем краткое описание карты для контекста AI
         chart_data = natal_service.get_natal_chart_from_db(user_uuid, db)
@@ -308,21 +308,17 @@ async def prognostic_chat(
 )
 async def execute_prognostic_tool(
     request: PrognosticToolRequest,
-    db: Session = Depends(get_db)
+    http_request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
 ) -> Dict[str, Any]:
     """
     Endpoint-диспетчер для tool calls от ChatKit client-side.
     Вызывается фронтендом когда ChatKit получает function_call от AI.
     """
     try:
-        user_id_clean = request.user_id.replace("user_", "") if request.user_id.startswith("user_") else request.user_id
-        try:
-            user_uuid = UUID(user_id_clean)
-        except ValueError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Некорректный формат user_id: {request.user_id}"
-            )
+        user_uuid = _parse_user_uuid(request.user_id)
+        ensure_client_access(db, http_request, auth, user_uuid, action="client.chat.prognostic_tool")
 
         service = PrognosticToolsService(
             user_id=user_uuid,
@@ -355,18 +351,14 @@ async def execute_prognostic_tool(
 )
 async def save_forecast_run(
     request: SaveForecastRunRequest,
-    db: Session = Depends(get_db)
+    http_request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
 ) -> SaveForecastRunResponse:
     """Сохранить snapshot текущего расчета прогностики и сделать его активным."""
     try:
-        user_id_clean = request.user_id.replace("user_", "") if request.user_id.startswith("user_") else request.user_id
-        try:
-            user_uuid = UUID(user_id_clean)
-        except ValueError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Некорректный формат user_id: {request.user_id}"
-            )
+        user_uuid = _parse_user_uuid(request.user_id)
+        ensure_client_access(db, http_request, auth, user_uuid, action="client.chat.forecast_run")
 
         service = ForecastRunService(db)
         run = service.create_active_run(

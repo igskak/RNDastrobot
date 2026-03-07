@@ -34,10 +34,21 @@ function withLocaleHeaders(headers = {}) {
     return headers;
 }
 
+function apiFetch(url, init = {}) {
+    return fetch(url, {
+        credentials: 'include',
+        ...init,
+        headers: withLocaleHeaders(init.headers || {}),
+    });
+}
+
 /**
  * Инициализация страницы
  */
 async function init() {
+    const me = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
+    if (!me) return;
+
     // Получаем user_id из URL или localStorage
     const urlParams = new URLSearchParams(window.location.search);
     currentUserId = urlParams.get('user_id') || localStorage.getItem('currentUserId');
@@ -59,9 +70,7 @@ async function init() {
  */
 async function loadBirthDetails() {
     try {
-        const response = await fetch(`/api/v1/natal/${currentUserId}`, {
-            headers: withLocaleHeaders(),
-        });
+        const response = await apiFetch(`/api/v1/natal/${currentUserId}`, { method: 'GET' });
         if (response.ok) {
             const data = await response.json();
             if (data.birth_data) {
@@ -80,9 +89,9 @@ async function loadInterpretation(forceRegenerate = false) {
     showLoading();
     
     try {
-        const response = await fetch(`/api/v1/interpretations/${currentUserId}`, {
+        const response = await apiFetch(`/api/v1/interpretations/${currentUserId}`, {
             method: 'POST',
-            headers: withLocaleHeaders({ 'Content-Type': 'application/json' }),
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 interpretation_type: 'psychological_profile',
                 force_regenerate: forceRegenerate

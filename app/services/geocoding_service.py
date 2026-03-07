@@ -167,7 +167,7 @@ class GeocodingService:
         return out
 
     @staticmethod
-    def _split_alternate_names(value: Optional[str], max_items: int = 40) -> List[str]:
+    def _split_alternate_names(value: Optional[str], max_items: int = 80) -> List[str]:
         if not value:
             return []
         out: List[str] = []
@@ -296,6 +296,40 @@ class GeocodingService:
             self._normalize(item.get("short_name")),
             str(item.get("source_id") or ""),
         )
+
+    def _are_near_same_city(self, left: Dict[str, Any], right: Dict[str, Any]) -> bool:
+        if self._normalize(left.get("short_name")) != self._normalize(right.get("short_name")):
+            return False
+        left_lat = self._to_float(left.get("lat"))
+        left_lon = self._to_float(left.get("lon"))
+        right_lat = self._to_float(right.get("lat"))
+        right_lon = self._to_float(right.get("lon"))
+        if left_lat is None or left_lon is None or right_lat is None or right_lon is None:
+            return False
+        return abs(left_lat - right_lat) <= 0.3 and abs(left_lon - right_lon) <= 0.3
+
+    def _deduplicate_ranked(
+        self,
+        items: List[Dict[str, Any]],
+        query: str,
+        language: str,
+        limit: int,
+    ) -> List[Dict[str, Any]]:
+        ranked = sorted(items, key=lambda x: self._rank_key(query, x, language=language))
+        out: List[Dict[str, Any]] = []
+        seen_display = set()
+        for item in ranked:
+            display_key = self._normalize(item.get("display_name"))
+            if display_key and display_key in seen_display:
+                continue
+            if any(self._are_near_same_city(existing, item) for existing in out):
+                continue
+            if display_key:
+                seen_display.add(display_key)
+            out.append(item)
+            if len(out) >= limit:
+                break
+        return out
 
     @staticmethod
     def _clone_items(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -493,10 +527,7 @@ class GeocodingService:
                 if not existing or self._score(query, item, language=language) > self._score(query, existing, language=language):
                     by_label[key] = item
 
-            return sorted(
-                by_label.values(),
-                key=lambda x: self._rank_key(query, x, language=language),
-            )[:limit]
+            return self._deduplicate_ranked(list(by_label.values()), query, language, limit)
         except Exception as exc:
             logger.warning(f"Локальный геокодинг недоступен, fallback на внешний: {exc}")
             return []
@@ -560,10 +591,7 @@ class GeocodingService:
                 existing = merged.get(key)
                 if not existing or self._score(query_text, item, language=lang) > self._score(query_text, existing, language=lang):
                     merged[key] = item
-            return sorted(
-                merged.values(),
-                key=lambda x: self._rank_key(query_text, x, language=lang),
-            )[:safe_limit]
+            return self._deduplicate_ranked(list(merged.values()), query_text, lang, safe_limit)
 
         cache_key = f"{self._normalize(query_text)}|{safe_limit}|{lang}"
         cached = self._cache_get(cache_key)
@@ -615,10 +643,7 @@ class GeocodingService:
                     if self._score(query_text, item, language=lang) > self._score(query_text, existing, language=lang):
                         by_label[key] = item
 
-                ranked = sorted(
-                    by_label.values(),
-                    key=lambda x: self._rank_key(query_text, x, language=lang),
-                )[:safe_limit]
+                ranked = self._deduplicate_ranked(list(by_label.values()), query_text, lang, safe_limit)
 
                 self._cache_set(cache_key, ranked)
                 return ranked

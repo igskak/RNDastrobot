@@ -9,6 +9,9 @@ alembic==1.13.0
 
 # Environment and Configuration
 python-dotenv==1.0.0
+PyJWT[crypto]==2.10.1
+argon2-cffi==23.1.0
+bcrypt==4.2.1
 
 # Supabase Client (optional, for direct Supabase API access)
 supabase==2.3.0

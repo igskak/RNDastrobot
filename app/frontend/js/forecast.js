@@ -236,7 +236,10 @@ const SOLAR_ZOOM_MAX = 4;
 const SOLAR_ZOOM_STEP = 0.08;
 
 // ─── Init ───────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    const me = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
+    if (!me) return;
+
     const natalData = AstroAPI.getChartFromSession();
     if (!natalData) {
         window.location.href = 'index.html';

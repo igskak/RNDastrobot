@@ -17,6 +17,7 @@ class UserRepository:
     
     def create_user(
         self,
+        astrologer_id: UUID,
         birth_date: date,
         birth_time: time_type,
         timezone: str,
@@ -45,6 +46,7 @@ class UserRepository:
             User: Созданный пользователь
         """
         user = User(
+            astrologer_id=astrologer_id,
             first_name=first_name,
             last_name=last_name,
             birth_date=birth_date,
@@ -61,7 +63,7 @@ class UserRepository:
         
         return user
     
-    def get_user_by_id(self, user_id: UUID) -> Optional[User]:
+    def get_user_by_id(self, user_id: UUID, astrologer_id: Optional[UUID] = None) -> Optional[User]:
         """
         Получить пользователя по ID
         
@@ -71,9 +73,12 @@ class UserRepository:
         Returns:
             Optional[User]: Пользователь или None
         """
-        return self.session.query(User).filter(User.user_id == user_id).first()
+        query = self.session.query(User).filter(User.user_id == user_id)
+        if astrologer_id is not None:
+            query = query.filter(User.astrologer_id == astrologer_id)
+        return query.first()
     
-    def get_user_with_natal_chart(self, user_id: UUID) -> Optional[User]:
+    def get_user_with_natal_chart(self, user_id: UUID, astrologer_id: Optional[UUID] = None) -> Optional[User]:
         """
         Получить пользователя со всеми данными натальной карты.
         Eager loading всех связанных таблиц — один SQL-запрос вместо 14+.
@@ -87,32 +92,31 @@ class UserRepository:
         from sqlalchemy.orm import joinedload, selectinload
         from app.database.models import NatalConfiguration
 
-        return (
-            self.session.query(User)
-            .filter(User.user_id == user_id)
-            .options(
-                joinedload(User.planets),
-                joinedload(User.houses),
-                joinedload(User.angles),
-                joinedload(User.special_points),
-                selectinload(User.configurations).selectinload(NatalConfiguration.aspect_links),
-                joinedload(User.fate_cross),
-                # Аспекты, стеллиумы, распределение, паттерн
-                selectinload(User.natal_aspects),
-                selectinload(User.natal_stelliums),
-                joinedload(User.planet_distribution),
-                joinedload(User.cosmogram_pattern),
-                # 7 балансов
-                joinedload(User.element_balance),
-                joinedload(User.mode_balance),
-                joinedload(User.gender_balance),
-                joinedload(User.zones_balance),
-                joinedload(User.hemisphere_balance),
-                joinedload(User.quadrant_balance),
-                joinedload(User.house_group_balance),
-            )
-            .first()
-        )
+        query = self.session.query(User).filter(User.user_id == user_id)
+        if astrologer_id is not None:
+            query = query.filter(User.astrologer_id == astrologer_id)
+
+        return query.options(
+            joinedload(User.planets),
+            joinedload(User.houses),
+            joinedload(User.angles),
+            joinedload(User.special_points),
+            selectinload(User.configurations).selectinload(NatalConfiguration.aspect_links),
+            joinedload(User.fate_cross),
+            # Аспекты, стеллиумы, распределение, паттерн
+            selectinload(User.natal_aspects),
+            selectinload(User.natal_stelliums),
+            joinedload(User.planet_distribution),
+            joinedload(User.cosmogram_pattern),
+            # 7 балансов
+            joinedload(User.element_balance),
+            joinedload(User.mode_balance),
+            joinedload(User.gender_balance),
+            joinedload(User.zones_balance),
+            joinedload(User.hemisphere_balance),
+            joinedload(User.quadrant_balance),
+            joinedload(User.house_group_balance),
+        ).first()
     
     def update_user(self, user_id: UUID, **kwargs) -> Optional[User]:
         """

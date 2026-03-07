@@ -9,6 +9,7 @@ os.environ.setdefault("DATABASE_URL", "sqlite+pysqlite:///./_api_i18n_test.db")
 
 from app.api.main import app  # noqa: E402
 from app.api.routes import natal  # noqa: E402
+from app.auth.dependencies import AuthContext, require_auth  # noqa: E402
 from app.database.connection import get_db  # noqa: E402
 import app.api.locale_dependency as locale_dependency  # noqa: E402
 import app.i18n.errors as i18n_errors  # noqa: E402
@@ -22,14 +23,22 @@ def _override_get_db():
     yield _DummySession()
 
 
+def _override_auth():
+    astrologer = type("AstrologerStub", (), {"id": uuid4(), "email": "test@example.com"})()
+    session = type("SessionStub", (), {"session_id": "test"})()
+    return AuthContext(astrologer=astrologer, session=session)
+
+
 @pytest.fixture
 def client(monkeypatch):
     app.dependency_overrides[get_db] = _override_get_db
+    app.dependency_overrides[require_auth] = _override_auth
     monkeypatch.setattr(
         natal.natal_service,
         "get_natal_chart_from_db",
         lambda user_id, db: None,
     )
+    monkeypatch.setattr(natal, "ensure_client_access", lambda *args, **kwargs: None)
 
     with TestClient(app) as test_client:
         yield test_client

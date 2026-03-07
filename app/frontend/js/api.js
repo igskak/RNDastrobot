@@ -35,6 +35,14 @@
         return fallback;
     }
 
+    function apiFetch(url, init = {}) {
+        return fetch(url, {
+            credentials: 'include',
+            ...init,
+            headers: init.headers || {},
+        });
+    }
+
     /**
      * Расчёт натальной карты
      * @param {Object} birthData - Данные рождения
@@ -42,7 +50,7 @@
      * @returns {Promise<Object>} - Результат расчёта
      */
     async function calculateNatalChart(birthData, options = {}) {
-        const response = await fetch(`${API_BASE_URL}/natal/calculate`, {
+        const response = await apiFetch(`${API_BASE_URL}/natal/calculate`, {
             method: 'POST',
             headers: withLocaleHeaders({
                 'Content-Type': 'application/json',
@@ -57,6 +65,36 @@
         }
 
         return response.json();
+    }
+
+    async function getCurrentAstrologer() {
+        const response = await apiFetch(`${API_BASE_URL}/auth/me`, {
+            method: 'GET',
+            headers: withLocaleHeaders(),
+        });
+        if (!response.ok) {
+            return null;
+        }
+        return response.json();
+    }
+
+    async function requireAuth(options = {}) {
+        const redirectTo = options.redirectTo || '/login.html';
+        const me = await getCurrentAstrologer();
+        if (me) {
+            return me;
+        }
+        if (typeof window !== 'undefined' && redirectTo) {
+            window.location.href = redirectTo;
+        }
+        return null;
+    }
+
+    async function logout() {
+        await apiFetch(`${API_BASE_URL}/auth/logout`, {
+            method: 'POST',
+            headers: withLocaleHeaders(),
+        });
     }
 
     /**
@@ -170,6 +208,9 @@
     const api = {
         API_BASE_URL,
         calculateNatalChart,
+        getCurrentAstrologer,
+        requireAuth,
+        logout,
         formatDate,
         formatTime,
         saveChartToSession,

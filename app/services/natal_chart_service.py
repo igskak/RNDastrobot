@@ -103,6 +103,7 @@ class NatalChartService:
         birth_date: date,
         birth_time: time_type,
         timezone: str,
+        astrologer_id: Optional[UUID] = None,
         place: Optional[str] = None,
         latitude: Optional[float] = None,
         longitude: Optional[float] = None,
@@ -193,6 +194,8 @@ class NatalChartService:
         if save_to_db:
             if db_session is None:
                 raise ValueError("db_session обязательна при save_to_db=True")
+            if astrologer_id is None:
+                raise ValueError("astrologer_id обязателен при save_to_db=True")
 
             user_id = self._save_to_database(
                 db_session=db_session,
@@ -210,6 +213,7 @@ class NatalChartService:
                 configurations=configurations,
                 first_name=first_name,
                 last_name=last_name,
+                astrologer_id=astrologer_id,
             )
 
             # Читаємо повні дані з БД (включаючи похідні: аспекти, конфігурації, тощо)
@@ -648,6 +652,7 @@ class NatalChartService:
         configurations: Dict,
         first_name: Optional[str] = None,
         last_name: Optional[str] = None,
+        astrologer_id: Optional[UUID] = None,
     ) -> UUID:
         """
         Сохранить натальную карту в базу данных
@@ -678,6 +683,7 @@ class NatalChartService:
 
         # Создаём пользователя
         user = user_repo.create_user(
+            astrologer_id=astrologer_id,
             birth_date=birth_date,
             birth_time=birth_time,
             timezone=timezone,

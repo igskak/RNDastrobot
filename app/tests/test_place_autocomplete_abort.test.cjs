@@ -130,3 +130,68 @@ test('place-autocomplete aborts previous in-flight request and does not log Abor
         delete global.fetch;
     }
 });
+
+test('place-autocomplete works without AbortController support', async () => {
+    const previousAbortController = global.AbortController;
+    let fetchCalls = 0;
+
+    delete global.AbortController;
+    global.fetch = async () => {
+        fetchCalls += 1;
+        return {
+            ok: true,
+            async json() {
+                return { results: [] };
+            },
+        };
+    };
+
+    try {
+        const input = createInput();
+        const suggestions = createSuggestions();
+        const api = loadModule(
+            {
+                FrontendI18n: {
+                    normalizeLocale(value) {
+                        return value || 'en';
+                    },
+                    getLocale() {
+                        return 'en';
+                    },
+                },
+                AstroAPI: {
+                    API_BASE_URL: '/api/v1',
+                },
+            },
+            {
+                createElement() {
+                    return {
+                        className: '',
+                        textContent: '',
+                        addEventListener() {},
+                    };
+                },
+            }
+        );
+
+        api.attach({
+            input,
+            suggestions,
+            debounceMs: 1,
+            minChars: 2,
+        });
+
+        input.emit('input', 'kyiv');
+        await wait(5);
+        assert.equal(fetchCalls, 1);
+    } finally {
+        if (previousAbortController === undefined) {
+            delete global.AbortController;
+        } else {
+            global.AbortController = previousAbortController;
+        }
+        delete global.window;
+        delete global.document;
+        delete global.fetch;
+    }
+});

@@ -8,6 +8,7 @@ os.environ.setdefault("DATABASE_URL", "sqlite+pysqlite:///./_natal_karmic_api_te
 
 from app.api.main import app  # noqa: E402
 from app.api.routes import natal  # noqa: E402
+from app.auth.dependencies import AuthContext, require_auth  # noqa: E402
 from app.database.connection import get_db  # noqa: E402
 from app.services.karmic_analysis_service import KarmicAnalysisService  # noqa: E402
 
@@ -18,6 +19,12 @@ class _DummySession:
 
 def _override_get_db():
     yield _DummySession()
+
+
+def _override_auth():
+    astrologer = type("AstrologerStub", (), {"id": uuid4(), "email": "test@example.com"})()
+    session = type("SessionStub", (), {"session_id": "test"})()
+    return AuthContext(astrologer=astrologer, session=session)
 
 
 def _chart_payload(user_id=None):
@@ -72,12 +79,14 @@ def _chart_payload(user_id=None):
 @pytest.fixture
 def client():
     app.dependency_overrides[get_db] = _override_get_db
+    app.dependency_overrides[require_auth] = _override_auth
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
 
 
 def test_post_natal_calculate_includes_karmic_analysis(client, monkeypatch):
+    monkeypatch.setattr(natal, "ensure_client_access", lambda *args, **kwargs: None)
     monkeypatch.setattr(natal.natal_service, "calculate_natal_chart", lambda **_: _chart_payload(user_id=None))
 
     response = client.post(
@@ -108,6 +117,7 @@ def test_post_natal_calculate_includes_karmic_analysis(client, monkeypatch):
 
 def test_get_natal_by_user_id_includes_karmic_analysis(client, monkeypatch):
     user_id = str(uuid4())
+    monkeypatch.setattr(natal, "ensure_client_access", lambda *args, **kwargs: None)
     monkeypatch.setattr(
         natal.natal_service,
         "get_natal_chart_from_db",

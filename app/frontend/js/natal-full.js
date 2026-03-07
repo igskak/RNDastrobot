@@ -192,7 +192,10 @@ function formatPlanetNameWithRetro(name, options = {}) {
     return `${escapeHtml(label)}${retroIndicatorHtml(isBodyRetrograde(name), markerClass)}`;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    const me = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
+    if (!me) return;
+
     const storedData = sessionStorage.getItem('natalChart');
     if (!storedData) {
         window.location.href = '/';

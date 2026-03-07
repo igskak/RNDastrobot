@@ -6,7 +6,10 @@ function t(key, params) {
     return window.FrontendI18n?.t?.(key, params) || key;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    const me = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
+    if (!me) return;
+
     const form = document.getElementById('birthDataForm');
     const placeInput = document.getElementById('birthPlace');
     const timezoneSelect = document.getElementById('timezone');
