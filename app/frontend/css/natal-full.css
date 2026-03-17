@@ -561,33 +561,44 @@
 
 /* Balances (compact single line) */
 .balances-compact {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 16px;
     font-size: 12px;
+    width: 100%;
+    min-width: 0;
 }
 
 .balance-group {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 8px 12px;
     align-items: center;
+    min-width: 0;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
 }
 
 .balance-item {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 4px;
-    white-space: nowrap;
+    flex-wrap: wrap;
+    min-width: 0;
 }
 
 .balance-icon {
     font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
 }
 
 .balance-label {
     color: var(--text-secondary);
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .balance-value {
@@ -659,7 +670,15 @@
     }
 
     .balances-compact {
-        flex-direction: column;
+        grid-template-columns: 1fr;
         gap: 8px;
+    }
+
+    .balance-group {
+        align-items: flex-start;
+    }
+
+    .balance-icon {
+        flex-basis: 100%;
     }
 }

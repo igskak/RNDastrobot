@@ -109,6 +109,8 @@
 .panel-content {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-gutter: stable;
 }
 
 /* Symbol cells - compact width */
@@ -177,6 +179,15 @@
 
 .panel-tab-content { display: none; }
 .panel-tab-content.active { display: block; }
+
+#balances-list {
+    padding: 12px 14px 16px 12px;
+}
+
+#balancesContainer {
+    width: 100%;
+    max-width: 100%;
+}
 
 /* Compact tables */
 .data-table.compact th,

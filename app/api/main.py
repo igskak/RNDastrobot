@@ -88,7 +88,14 @@ async def static_cache_headers(request: Request, call_next):
     response = await call_next(request)
     path = request.url.path
     if path.startswith(("/css/", "/js/", "/bundles/", "/locales/", "/assets/", "/fonts/")):
-        response.headers.setdefault("Cache-Control", "public, max-age=31536000, immutable")
+        if os.getenv("APP_ENV", "development").lower() == "production":
+            response.headers.setdefault("Cache-Control", "public, max-age=31536000, immutable")
+        else:
+            # Disable aggressive asset caching in local development so Chrome
+            # doesn't keep serving stale bundles after rollbacks.
+            response.headers["Cache-Control"] = "no-store, max-age=0"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
     return response
 
 # Подключение роутеров
