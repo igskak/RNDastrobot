@@ -47,6 +47,13 @@
     const PROGNOSTIC_GLYPH_COLOR = '#111111';
     const WHEEL_SEPARATOR_COLOR = '#94a3b8';
     const WHEEL_SEPARATOR_WIDTH = 0.9;
+    const WHEEL_SEPARATOR_OPACITY = 0.55;
+    const PROGNOSTIC_RING_STYLES = {
+        transit: { ringAlpha: '28', cuspAlpha: 'AA', cuspOpacity: '0.72' },
+        progression: { ringAlpha: '24', cuspAlpha: 'A6', cuspOpacity: '0.68' },
+        direction: { ringAlpha: '26', cuspAlpha: 'AB', cuspOpacity: '0.7' },
+        solar_return: { ringAlpha: '22', cuspAlpha: 'A0', cuspOpacity: '0.66' },
+    };
 
     // Colors
     const ELEMENT_COLORS = {
@@ -188,6 +195,26 @@
 
     function getVisibleWheelCount(layers = []) {
         return collectWheelMethods(layers, { visibleOnly: true }).length;
+    }
+
+    function getVisibleWheelBandBounds() {
+        const methods = WHEEL_ORDER.filter((method) => layerVisibility[method] !== false);
+        if (!methods.length) return null;
+
+        let inner = Infinity;
+        let outer = -Infinity;
+        methods.forEach((method) => {
+            const band = getWheelBand(method);
+            inner = Math.min(inner, band.inner);
+            outer = Math.max(outer, band.outer);
+        });
+
+        if (!Number.isFinite(inner) || !Number.isFinite(outer)) return null;
+        return {
+            inner,
+            outer,
+            count: methods.length,
+        };
     }
 
     function triggerLayoutAnimation() {
@@ -556,9 +583,10 @@
 
     // ─── Sign ring ──────────────────────────────────────
     function drawSignRing() {
+        const degreeOuter = OUTER_R;
         const signOuter = OUTER_R - DEGREE_RING;
-        svg.appendChild(el('circle', { cx:C, cy:C, r:signOuter, fill:'none', stroke:'#d1d5db', 'stroke-width':0.5 }));
-        svg.appendChild(el('circle', { cx:C, cy:C, r:SIGN_INNER_R, fill:'white', stroke:'#d1d5db', 'stroke-width':0.5 }));
+        svg.appendChild(el('circle', { cx:C, cy:C, r:signOuter, fill:'none', stroke:'#d1d5db', 'stroke-width':1 }));
+        svg.appendChild(el('circle', { cx:C, cy:C, r:SIGN_INNER_R, fill:'white', stroke:'#d1d5db', 'stroke-width':1 }));
 
         const signNames = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
                            'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
@@ -574,14 +602,28 @@
             // Match natal wheel: subtle element tint per zodiac sector.
             drawArc(signOuter, SIGN_INNER_R, endAngleDeg, startAngleDeg, `${color}18`);
 
-            const lineAngle = longToAngle(startLong) * Math.PI / 180;
+            const lineAngle = endAngleDeg * Math.PI / 180;
             svg.appendChild(el('line', {
                 x1: C + SIGN_INNER_R * Math.cos(lineAngle),
                 y1: C + SIGN_INNER_R * Math.sin(lineAngle),
-                x2: C + signOuter * Math.cos(lineAngle),
-                y2: C + signOuter * Math.sin(lineAngle),
-                stroke:'#9ca3af', 'stroke-width':0.5
+                x2: C + degreeOuter * Math.cos(lineAngle),
+                y2: C + degreeOuter * Math.sin(lineAngle),
+                stroke:'#9ca3af', 'stroke-width':1.5
             }));
+
+            for (let deg = 0; deg < 30; deg += 5) {
+                const tickAngle = longToAngle(startLong + deg) * Math.PI / 180;
+                const tickInner = deg % 10 === 0 ? signOuter + 2 : signOuter + 5;
+                svg.appendChild(el('line', {
+                    x1: C + tickInner * Math.cos(tickAngle),
+                    y1: C + tickInner * Math.sin(tickAngle),
+                    x2: C + degreeOuter * Math.cos(tickAngle),
+                    y2: C + degreeOuter * Math.sin(tickAngle),
+                    stroke: '#9ca3af',
+                    'stroke-width': deg % 10 === 0 ? '1' : '0.5'
+                }));
+            }
+
             // Sign symbol
             const midLong = startLong + 15;
             const midAngle = longToAngle(midLong) * Math.PI / 180;
@@ -604,6 +646,11 @@
         const method = options.method || 'transit';
         const layerLabel = options.layerLabel || (isPrognostic ? t('page.forecast.biwheel.prognostic') : t('page.forecast.biwheel.legend.natal'));
         const progColor = getLayerConfig(method).color;
+        const prognosticStyle = PROGNOSTIC_RING_STYLES[method] || PROGNOSTIC_RING_STYLES.transit;
+        const visibleBandBounds = !isPrognostic ? getVisibleWheelBandBounds() : null;
+        const extendNatalCuspsToForecastWheels = !isPrognostic
+            && visibleBandBounds
+            && visibleBandBounds.count > 1;
 
         if (!isPrognostic) {
             // Keep only the inner/aspect field clean without covering prognostic rings.
@@ -615,17 +662,18 @@
             const isAngular = [1,4,7,10].includes(h.number);
             const innerR = isPrognostic
                 ? wheelBand.inner
-                : (isAngular ? ASPECT_R : HOUSE_INNER_R);
+                : (isAngular ? ASPECT_R : (extendNatalCuspsToForecastWheels ? visibleBandBounds.inner : HOUSE_INNER_R));
             const outerR = isPrognostic
                 ? wheelBand.outer
                 : SIGN_INNER_R;
             const strokeColor = isPrognostic
-                ? progColor
-                : (isAngular ? '#6366f1' : '#c7d2db');
+                ? withAlpha(progColor, prognosticStyle.cuspAlpha)
+                : (isAngular ? '#6366f1' : (extendNatalCuspsToForecastWheels ? '#94a3b8' : '#c7d2db'));
             const strokeWidth = isPrognostic
-                ? (isAngular ? 2.6 : 2.2)
-                : (isAngular ? 1.5 : 0.5);
+                ? (isAngular ? 2.3 : 1.9)
+                : (isAngular ? 1.5 : (extendNatalCuspsToForecastWheels ? 0.95 : 0.5));
             const strokeDash = isPrognostic ? '4,3' : null;
+            const defaultOpacity = isPrognostic ? prognosticStyle.cuspOpacity : '1';
             const cuspGroup = el('g', {
                 class: 'bw-house-cusp',
                 'data-house': String(h.number),
@@ -634,7 +682,7 @@
                 'data-longitude': String(h.longitude ?? 0),
                 'data-layer-label': layerLabel,
                 'data-default-stroke-width': String(strokeWidth),
-                'data-default-opacity': '1',
+                'data-default-opacity': defaultOpacity,
                 style: 'cursor:pointer;'
             });
             cuspGroup.appendChild(el('line', {
@@ -647,6 +695,7 @@
                 x1: C + innerR * Math.cos(angle), y1: C + innerR * Math.sin(angle),
                 x2: C + outerR * Math.cos(angle), y2: C + outerR * Math.sin(angle),
                 stroke: strokeColor, 'stroke-width': strokeWidth,
+                opacity: defaultOpacity,
                 class: 'bw-house-cusp-line'
             };
             if (strokeDash) visibleLineAttrs['stroke-dasharray'] = strokeDash;
@@ -657,10 +706,11 @@
                 let midLong = (h.longitude + nextH.longitude) / 2;
                 if (nextH.longitude < h.longitude) midLong = ((h.longitude + nextH.longitude + 360) / 2) % 360;
                 const midAngle = longToAngle(midLong) * Math.PI / 180;
-                const textR = HOUSE_INNER_R + HOUSE_RING / 2;
+                const natalBand = getWheelBand('natal');
+                const textR = natalBand.center;
                 cuspGroup.appendChild(el('text', {
                     x: C + textR * Math.cos(midAngle), y: C + textR * Math.sin(midAngle) + 3,
-                    'text-anchor':'middle', 'font-size':'9', fill: isAngular ? '#6366f1' : '#9ca3af',
+                    'text-anchor':'middle', 'font-size':'10', fill: isAngular ? '#6366f1' : '#6b7280',
                     'font-weight': isAngular ? '700' : '400', style:'pointer-events:none'
                 }, String(h.number)));
             }
@@ -692,10 +742,10 @@
         const band = getWheelBand(method);
         const styleByMethod = {
             natal: { color: '#374151', fillAlpha: '26' },
-            transit: { color: getLayerConfig('transit').color, fillAlpha: '5E' },
-            progression: { color: getLayerConfig('progression').color, fillAlpha: '52' },
-            direction: { color: getLayerConfig('direction').color, fillAlpha: '54' },
-            solar_return: { color: getLayerConfig('solar_return').color, fillAlpha: '50' },
+            transit: { color: getLayerConfig('transit').color, fillAlpha: PROGNOSTIC_RING_STYLES.transit.ringAlpha },
+            progression: { color: getLayerConfig('progression').color, fillAlpha: PROGNOSTIC_RING_STYLES.progression.ringAlpha },
+            direction: { color: getLayerConfig('direction').color, fillAlpha: PROGNOSTIC_RING_STYLES.direction.ringAlpha },
+            solar_return: { color: getLayerConfig('solar_return').color, fillAlpha: PROGNOSTIC_RING_STYLES.solar_return.ringAlpha },
         };
         const style = styleByMethod[method] || styleByMethod.transit;
         svg.appendChild(el('circle', {
@@ -734,7 +784,7 @@
                     fill: 'none',
                     stroke: WHEEL_SEPARATOR_COLOR,
                     'stroke-width': WHEEL_SEPARATOR_WIDTH,
-                    opacity: '0.75',
+                    opacity: String(WHEEL_SEPARATOR_OPACITY),
                 }));
             });
     }
