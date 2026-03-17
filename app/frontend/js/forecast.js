@@ -121,6 +121,379 @@ const SOLAR_LOCATION_STORAGE_KEY = 'forecastSolarLocation';
 const SOLAR_YEAR_STORAGE_KEY = 'forecastSolarYear';
 const DIRECTION_TYPE_STORAGE_KEY = 'forecastDirectionType';
 const INGRESS_SUMMARY_CACHE_VERSION = 'v5';
+const FORECAST_PERSIST_WATCH_IDS = new Set([
+    'startDate',
+    'endDate',
+    'singleDate',
+    'solarYear',
+    'filterMajor',
+    'biwheelStepSelect',
+    'bwDirectionTypeSelect',
+    'biwheelOrientationSelect',
+    'solarOrientationSelect',
+]);
+
+let forecastStatePersistTimer = null;
+
+function getForecastStorageApi() {
+    return window.ForecastStateStorage || null;
+}
+
+function getForecastPersistenceKey() {
+    const storageApi = getForecastStorageApi();
+    if (!storageApi || !ForecastState.natalData) return null;
+    return storageApi.buildStorageKey(ForecastState.natalData);
+}
+
+function captureForecastControlState() {
+    return {
+        startDate: document.getElementById('startDate')?.value || '',
+        endDate: document.getElementById('endDate')?.value || '',
+        singleDate: document.getElementById('singleDate')?.value || '',
+        solarYear: document.getElementById('solarYear')?.value || '',
+        filterMajor: document.getElementById('filterMajor')?.checked !== false,
+    };
+}
+
+function captureForecastCachedData() {
+    const cachedData = {};
+    const currentTab = ForecastState.currentTab;
+    const tableKey = ForecastState.tableDataKey || '';
+    const needsTransitPeriod = currentTab === 'timeline'
+        || (currentTab === 'table' && (
+            tableKey.startsWith('transits|')
+            || tableKey.startsWith('combined_table|')
+        ));
+    const needsCombinedData = currentTab === 'biwheel'
+        || (currentTab === 'table' && tableKey.startsWith('combined_table|'));
+    const needsIngressSummary = currentTab === 'biwheel'
+        || (currentTab === 'table' && tableKey.startsWith('combined_table|'));
+    const needsSolarData = currentTab === 'solar';
+
+    if (needsTransitPeriod && ForecastState.transitPeriodKey && ForecastState.transitEvents) {
+        cachedData.transitPeriodKey = ForecastState.transitPeriodKey;
+        cachedData.transitCalculatedRange = ForecastState.transitCalculatedRange || null;
+        cachedData.transitEvents = ForecastState.transitEvents;
+    }
+
+    if (needsCombinedData && ForecastState.combinedBiwheelData) {
+        const combinedTargetDate = ForecastState.combinedBiwheelData?._targetDate || ForecastState.transitMoment;
+        const combinedDirectionType = normalizeDirectionType(
+            ForecastState.combinedBiwheelData?._directionType || ForecastState.directionType || 'solar_arc'
+        );
+        if (combinedTargetDate) {
+            cachedData.combinedPointKey = getCombinedPointKey(combinedTargetDate, combinedDirectionType);
+            cachedData.combinedBiwheelData = ForecastState.combinedBiwheelData;
+        }
+    }
+
+    if (needsIngressSummary && ForecastState.ingressSummaryKey) {
+        cachedData.ingressSummaryKey = ForecastState.ingressSummaryKey;
+        cachedData.ingressSummaryData = ForecastState.ingressSummaryData || null;
+        cachedData.ingressSummaryError = ForecastState.ingressSummaryError || null;
+    }
+
+    if (currentTab === 'table' && ForecastState.tableDataKey) {
+        cachedData.tableDataKey = ForecastState.tableDataKey;
+    }
+
+    if (needsSolarData && ForecastState.solarData) {
+        const year = Number.parseInt(document.getElementById('solarYear')?.value, 10);
+        const lat = Number.parseFloat(document.getElementById('solarLocationLat')?.value);
+        const lon = Number.parseFloat(document.getElementById('solarLocationLon')?.value);
+        const name = document.getElementById('solarLocationName')?.value?.trim() || '';
+        const timezone = document.getElementById('solarLocationTimezone')?.value?.trim() || '';
+        cachedData.solarCalculatedYear = ForecastState.solarCalculatedYear;
+        cachedData.solarData = ForecastState.solarData;
+        if (Number.isFinite(year) && Number.isFinite(lat) && Number.isFinite(lon)) {
+            cachedData.solarCacheKey = getSolarCacheKey(year, lat, lon, name, timezone);
+        }
+    }
+
+    return Object.keys(cachedData).length ? cachedData : null;
+}
+
+function restoreForecastCachedData(cachedData) {
+    if (!cachedData || typeof cachedData !== 'object') return false;
+
+    let restoredAny = false;
+
+    if (cachedData.transitPeriodKey && cachedData.transitEvents) {
+        ForecastState.transitPeriodKey = cachedData.transitPeriodKey;
+        ForecastState.transitEvents = cachedData.transitEvents;
+        ForecastState.transitCalculatedRange = cachedData.transitCalculatedRange || null;
+        ForecastState.transitPeriodCache[cachedData.transitPeriodKey] = cachedData.transitEvents;
+        restoredAny = true;
+    }
+
+    if (cachedData.combinedPointKey && cachedData.combinedBiwheelData) {
+        const combinedData = cachedData.combinedBiwheelData;
+        ForecastState.combinedBiwheelCache[cachedData.combinedPointKey] = combinedData;
+        ForecastState.combinedBiwheelData = combinedData;
+        ForecastState.pointData = combinedData;
+        ForecastState.transitMoment = combinedData?._targetDate || ForecastState.transitMoment;
+        ForecastState.progressionData = combinedData?._layers?.progression || null;
+        ForecastState.progressionTargetDate = combinedData?._targetDate || ForecastState.progressionTargetDate;
+        ForecastState.directionData = combinedData?._layers?.direction || null;
+        ForecastState.directionTargetDate = combinedData?._targetDate || ForecastState.directionTargetDate;
+        ForecastState.directionType = normalizeDirectionType(
+            combinedData?._directionType || ForecastState.directionType || 'solar_arc'
+        );
+        if (ForecastState.transitMoment && combinedData?._layers?.transit) {
+            ForecastState.transitBiwheelCache[ForecastState.transitMoment] = combinedData._layers.transit;
+        }
+        restoredAny = true;
+    }
+
+    if (cachedData.ingressSummaryKey) {
+        ForecastState.ingressSummaryKey = cachedData.ingressSummaryKey;
+        ForecastState.ingressSummaryData = cachedData.ingressSummaryData || null;
+        ForecastState.ingressSummaryError = cachedData.ingressSummaryError || null;
+        if (cachedData.ingressSummaryData) {
+            ForecastState.ingressSummaryCache[cachedData.ingressSummaryKey] = cachedData.ingressSummaryData;
+        }
+        restoredAny = true;
+    }
+
+    if (cachedData.tableDataKey) {
+        ForecastState.tableDataKey = cachedData.tableDataKey;
+        restoredAny = true;
+    }
+
+    if (cachedData.solarData) {
+        ForecastState.solarData = cachedData.solarData;
+        ForecastState.solarCalculatedYear = cachedData.solarCalculatedYear || ForecastState.solarCalculatedYear;
+        if (cachedData.solarCacheKey) {
+            ForecastState.solarCache[cachedData.solarCacheKey] = cachedData.solarData;
+        }
+        restoredAny = true;
+    }
+
+    return restoredAny;
+}
+
+function applyForecastControlState(controls = {}) {
+    const setValue = (id, value) => {
+        if (!value) return;
+        const element = document.getElementById(id);
+        if (element) {
+            element.value = value;
+        }
+    };
+
+    setValue('startDate', controls.startDate);
+    setValue('endDate', controls.endDate);
+    setValue('singleDate', controls.singleDate);
+    setValue('solarYear', controls.solarYear);
+
+    const filterMajor = document.getElementById('filterMajor');
+    if (filterMajor && typeof controls.filterMajor === 'boolean') {
+        filterMajor.checked = controls.filterMajor;
+    }
+}
+
+function hasForecastCalculatedState() {
+    return Boolean(
+        ForecastState.transitMoment
+        || ForecastState.transitPeriodKey
+        || ForecastState.tableDataKey
+        || ForecastState.solarCalculatedYear
+        || ForecastState.activeRunId
+    );
+}
+
+function flushForecastStatePersist() {
+    const storageApi = getForecastStorageApi();
+    const storageKey = getForecastPersistenceKey();
+    if (!storageApi || !storageKey) return;
+
+    if (forecastStatePersistTimer) {
+        clearTimeout(forecastStatePersistTimer);
+        forecastStatePersistTimer = null;
+    }
+
+    const payload = storageApi.buildPersistedState({
+        natalData: ForecastState.natalData,
+        state: {
+            currentTab: ForecastState.currentTab,
+            isFocusMode: ForecastState.isFocusMode,
+            transitScaleUnit: ForecastState.transitScaleUnit,
+            transitScaleIndex: ForecastState.transitScaleIndex,
+            transitMoment: ForecastState.transitMoment,
+            pendingBiwheelDate: ForecastState.pendingBiwheelDate,
+            directionType: ForecastState.directionType,
+            biwheelOrientation: ForecastState.biwheelOrientation,
+            solarOrientation: ForecastState.solarOrientation,
+            solarPanelTab: ForecastState.solarPanelTab,
+            tableSortCol: ForecastState.tableSortCol,
+            tableSortAsc: ForecastState.tableSortAsc,
+            hasCalculatedState: hasForecastCalculatedState(),
+            activeRunId: ForecastState.activeRunId,
+            activeRunMethod: ForecastState.activeRunMethod,
+            cachedData: captureForecastCachedData(),
+        },
+        controls: captureForecastControlState(),
+    });
+
+    if (!payload) return;
+
+    try {
+        sessionStorage.setItem(storageKey, JSON.stringify(payload));
+    } catch (err) {
+        console.warn('Forecast state persist skipped:', err);
+    }
+}
+
+function scheduleForecastStatePersist(delay = 120) {
+    if (forecastStatePersistTimer) {
+        clearTimeout(forecastStatePersistTimer);
+    }
+    forecastStatePersistTimer = setTimeout(() => {
+        flushForecastStatePersist();
+    }, delay);
+}
+
+function restoreForecastStateSnapshot() {
+    const storageApi = getForecastStorageApi();
+    const storageKey = getForecastPersistenceKey();
+    if (!storageApi || !storageKey) return null;
+
+    let restored;
+    try {
+        restored = storageApi.parsePersistedState(sessionStorage.getItem(storageKey), ForecastState.natalData);
+    } catch (err) {
+        console.warn('Forecast state restore skipped:', err);
+        return null;
+    }
+
+    if (!restored) return null;
+
+    applyForecastControlState(restored.controls);
+    ForecastState.currentTab = restored.currentTab;
+    ForecastState.isFocusMode = restored.isFocusMode;
+    ForecastState.transitScaleUnit = restored.transitScaleUnit;
+    ForecastState.transitScaleIndex = restored.transitScaleIndex;
+    ForecastState.transitMoment = restored.transitMoment || null;
+    ForecastState.pendingBiwheelDate = restored.pendingBiwheelDate || restored.transitMoment || null;
+    ForecastState.directionType = normalizeDirectionType(restored.directionType || ForecastState.directionType || 'solar_arc');
+    ForecastState.biwheelOrientation = restored.biwheelOrientation;
+    ForecastState.solarOrientation = restored.solarOrientation;
+    ForecastState.solarPanelTab = restored.solarPanelTab;
+    ForecastState.tableSortCol = restored.tableSortCol;
+    ForecastState.tableSortAsc = restored.tableSortAsc;
+    ForecastState.activeRunId = restored.activeRunId || null;
+    ForecastState.activeRunMethod = restored.activeRunMethod || null;
+    restoreForecastCachedData(restored.cachedData);
+
+    const stepSelect = document.getElementById('biwheelStepSelect');
+    if (stepSelect) stepSelect.value = ForecastState.transitScaleUnit;
+    const directionTypeSelect = document.getElementById('bwDirectionTypeSelect');
+    if (directionTypeSelect) directionTypeSelect.value = ForecastState.directionType;
+    const biwheelOrientationSelect = document.getElementById('biwheelOrientationSelect');
+    if (biwheelOrientationSelect) biwheelOrientationSelect.value = ForecastState.biwheelOrientation;
+    const solarOrientationSelect = document.getElementById('solarOrientationSelect');
+    if (solarOrientationSelect) solarOrientationSelect.value = ForecastState.solarOrientation;
+
+    return restored;
+}
+
+function bindForecastStatePersistence() {
+    const persistOnControlChange = (event) => {
+        if (!(event.target instanceof HTMLElement)) return;
+        if (!FORECAST_PERSIST_WATCH_IDS.has(event.target.id)) return;
+        scheduleForecastStatePersist();
+    };
+
+    document.addEventListener('change', persistOnControlChange);
+    document.addEventListener('input', persistOnControlChange);
+    window.addEventListener('pagehide', flushForecastStatePersist);
+    window.addEventListener('beforeunload', flushForecastStatePersist);
+}
+
+function hasRenderableCachedForecastState() {
+    if (ForecastState.currentTab === 'solar') {
+        return Boolean(ForecastState.solarData);
+    }
+    if (ForecastState.currentTab === 'timeline') {
+        return Boolean(ForecastState.transitEvents);
+    }
+    if (ForecastState.currentTab === 'table') {
+        return Boolean(
+            ForecastState.tableDataKey
+            || ForecastState.transitEvents
+            || ForecastState.combinedBiwheelData
+        );
+    }
+    if (ForecastState.currentTab === 'biwheel') {
+        try {
+            const method = document.getElementById('methodSelect')?.value || ForecastState.method || 'transits';
+            const targetDate = resolveBiwheelTargetDate(method);
+            const directionType = resolveDirectionTypeForCombined(method);
+            return Boolean(ForecastState.combinedBiwheelCache[getCombinedPointKey(targetDate, directionType)]);
+        } catch {
+            return Boolean(ForecastState.combinedBiwheelData);
+        }
+    }
+    return false;
+}
+
+function activateForecastTab(tabId, { render = true } = {}) {
+    const nextTab = ['biwheel', 'timeline', 'table', 'solar'].includes(tabId) ? tabId : 'biwheel';
+    document.querySelectorAll('.forecast-tab').forEach((tab) => {
+        tab.classList.toggle('active', tab.dataset.tab === nextTab);
+    });
+    document.querySelectorAll('.forecast-pane').forEach((pane) => {
+        pane.classList.toggle('active', pane.id === `pane-${nextTab}`);
+    });
+
+    ForecastState.currentTab = nextTab;
+    updateControlsVisibility();
+    scheduleForecastStatePersist();
+
+    if (render) {
+        renderCurrentTabFromCache().catch((err) => {
+            console.error('Tab render error:', err);
+        });
+    }
+}
+
+async function hydrateForecastStateSnapshot(restored) {
+    if (!restored) return;
+
+    activateForecastTab(restored.currentTab, { render: false });
+    activateSolarPanelTab(ForecastState.solarPanelTab || 'solar-planets-list');
+    updateControlsVisibility();
+
+    if (!restored.hasCalculatedState) {
+        await renderCurrentTabFromCache();
+        return;
+    }
+
+    try {
+        if (hasRenderableCachedForecastState()) {
+            await renderCurrentTabFromCache();
+            return;
+        }
+
+        if (ForecastState.currentTab === 'solar') {
+            const year = parseInt(document.getElementById('solarYear')?.value, 10);
+            const lat = parseFloat(document.getElementById('solarLocationLat')?.value);
+            const lon = parseFloat(document.getElementById('solarLocationLon')?.value);
+            if (Number.isFinite(year) && Number.isFinite(lat) && Number.isFinite(lon)) {
+                await calculateSolar();
+            } else {
+                showState('solar', 'empty');
+            }
+            return;
+        }
+
+        await calculateAllForecastViews();
+        await renderCurrentTabFromCache();
+    } catch (err) {
+        console.warn('Forecast state restore failed:', err);
+        await renderCurrentTabFromCache();
+    }
+}
 
 function clampChartPointScale(v) {
     const n = Number(v);
@@ -255,6 +628,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     initDefaults();
     initTabs();
     initControls();
+    const restoredState = restoreForecastStateSnapshot();
+    bindForecastStatePersistence();
+    if (restoredState) {
+        await hydrateForecastStateSnapshot(restoredState);
+    } else {
+        scheduleForecastStatePersist();
+    }
 });
 
 function getForecastTimezone() {
@@ -320,6 +700,7 @@ function applyDatePreset(value, unit = 'months') {
             : months === value;
         b.classList.toggle('active', matches);
     });
+    scheduleForecastStatePersist();
 }
 
 function formatInputDate(date) {
@@ -385,16 +766,7 @@ function buildTransitScalePoints(startDateStr, endDateStr, stepUnit) {
 function initTabs() {
     document.querySelectorAll('.forecast-tab').forEach(tab => {
         tab.addEventListener('click', () => {
-            const id = tab.dataset.tab;
-            document.querySelectorAll('.forecast-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.forecast-pane').forEach(p => p.classList.remove('active'));
-            tab.classList.add('active');
-            document.getElementById(`pane-${id}`).classList.add('active');
-            ForecastState.currentTab = id;
-            updateControlsVisibility();
-            renderCurrentTabFromCache().catch(err => {
-                console.error('Tab render error:', err);
-            });
+            activateForecastTab(tab.dataset.tab);
         });
     });
 }
@@ -412,6 +784,7 @@ function activateSolarPanelTab(tabId) {
     });
     ForecastState.solarPanelTab = nextTab;
     syncSolarHoveredAspectToActiveSurface();
+    scheduleForecastStatePersist();
 }
 
 function initSolarPanelTabs() {
@@ -670,6 +1043,7 @@ function initControls() {
     const btnToday = document.getElementById('btnToday');
     if (btnToday) btnToday.addEventListener('click', () => {
         document.getElementById('singleDate').value = new Date().toISOString().split('T')[0];
+        scheduleForecastStatePersist();
     });
     // Table sorting
     document.querySelectorAll('.forecast-table th.sortable').forEach(th => {
@@ -682,6 +1056,7 @@ function initControls() {
                 ForecastState.tableSortAsc = true;
             }
             if (ForecastState.tableRows.length) renderTableRows();
+            scheduleForecastStatePersist();
         });
     });
     ['tableFilterKind', 'tableFilterStrength', 'tableFilterAspect', 'tableFilterMaxOrb', 'tableFilterSearch']
@@ -831,6 +1206,7 @@ function setForecastFocusMode(enabled) {
     ForecastState.isFocusMode = !!enabled;
     applyForecastFocusState();
     updateControlsVisibility();
+    scheduleForecastStatePersist();
 }
 
 function applySolarViewBox() {
@@ -1132,6 +1508,7 @@ function setTransitScaleIndex(index) {
     const nextIndex = Math.max(0, Math.min(index, points.length - 1));
     ForecastState.transitScaleIndex = nextIndex;
     updateTransitScaleControls();
+    scheduleForecastStatePersist();
     return points[nextIndex];
 }
 
@@ -1382,14 +1759,7 @@ window.ForecastNavigation = {
         // Store highlight info for biwheel to pick up after render
         ForecastState.highlightAspect = highlightAspect || null;
         // Switch to biwheel tab
-        document.querySelectorAll('.forecast-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.forecast-pane').forEach(p => p.classList.remove('active'));
-        const biwheelTab = document.querySelector('.forecast-tab[data-tab="biwheel"]');
-        if (biwheelTab) biwheelTab.classList.add('active');
-        const biwheelPane = document.getElementById('pane-biwheel');
-        if (biwheelPane) biwheelPane.classList.add('active');
-        ForecastState.currentTab = 'biwheel';
-        updateControlsVisibility();
+        activateForecastTab('biwheel', { render: false });
         // Auto-calculate
         onCalculate();
     }
@@ -1866,6 +2236,7 @@ async function calculateAllForecastViews(forcedMethod = null) {
                 },
             },
         });
+        scheduleForecastStatePersist();
         return;
     }
 
@@ -1893,6 +2264,7 @@ async function calculateAllForecastViews(forcedMethod = null) {
                 },
             },
         });
+        scheduleForecastStatePersist();
         return;
     }
 
@@ -1920,6 +2292,68 @@ async function calculateAllForecastViews(forcedMethod = null) {
             },
         },
     });
+    scheduleForecastStatePersist();
+}
+
+function rebuildTableFromCachedState(method) {
+    if (method === 'transits') {
+        const startDate = document.getElementById('startDate')?.value;
+        const endDate = document.getElementById('endDate')?.value;
+        const directionType = resolveDirectionTypeForCombined(method);
+        let selectedDate = ForecastState.transitMoment || startDate;
+        refreshTransitScale(ForecastState.pendingBiwheelDate || selectedDate || startDate);
+        selectedDate = getTransitScaleDateByIndex(ForecastState.transitScaleIndex) || selectedDate;
+
+        const transitKey = getTransitTableKey(startDate, endDate);
+        const combinedKey = getCombinedTableKey(selectedDate, directionType, startDate, endDate);
+        const combinedData = ForecastState.combinedBiwheelCache[getCombinedPointKey(selectedDate, directionType)]
+            || ForecastState.combinedBiwheelData;
+        const transitPeriodEvents = ForecastState.transitEvents?.events || [];
+
+        if (ForecastState.tableDataKey === transitKey && transitPeriodEvents.length) {
+            populateTable(transitPeriodEvents, 'transit');
+            ForecastState.tableDataKey = transitKey;
+            return true;
+        }
+
+        if (combinedData) {
+            populateTableFromCombinedData(combinedData, selectedDate, { transitPeriodEvents });
+            ForecastState.tableDataKey = combinedKey;
+            return true;
+        }
+
+        if (transitPeriodEvents.length) {
+            populateTable(transitPeriodEvents, 'transit');
+            ForecastState.tableDataKey = transitKey;
+            return true;
+        }
+
+        return false;
+    }
+
+    const targetDate = document.getElementById('singleDate')?.value;
+    if (!targetDate) return false;
+
+    if (method === 'progressions' && ForecastState.progressionData) {
+        populateTableFromPrognosticData(ForecastState.progressionData, method, targetDate);
+        ForecastState.tableDataKey = getPrognosticPointKey(method, targetDate);
+        return true;
+    }
+
+    if (method.startsWith('directions_') && ForecastState.directionData) {
+        populateTableFromPrognosticData(ForecastState.directionData, method, targetDate);
+        ForecastState.tableDataKey = getPrognosticPointKey(method, targetDate);
+        return true;
+    }
+
+    const directionType = resolveDirectionTypeForCombined(method);
+    const combinedData = ForecastState.combinedBiwheelCache[getCombinedPointKey(targetDate, directionType)]
+        || ForecastState.combinedBiwheelData;
+    if (!combinedData) return false;
+
+    populateTableFromCombinedData(combinedData, targetDate);
+    ForecastState.tableDataKey = getCombinedTableKey(targetDate, directionType);
+    return true;
 }
 
 async function renderCurrentTabFromCache() {
@@ -2008,15 +2442,17 @@ async function renderCurrentTabFromCache() {
         if (ForecastState.tableDataKey && expectedKeys.includes(ForecastState.tableDataKey)) {
             showState('table', 'content');
             if (ForecastState.tableRowsRaw.length) {
-            if (ForecastState.tableRows.length) renderTableRows();
-            else applyTableFiltersAndRender();
-        } else {
-            document.getElementById('tableBody').innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">${t('page.forecast.table.noData')}</td></tr>`;
-        }
+                if (ForecastState.tableRows.length) renderTableRows();
+                else applyTableFiltersAndRender();
+            } else if (!rebuildTableFromCachedState(method)) {
+                document.getElementById('tableBody').innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-secondary)">${t('page.forecast.table.noData')}</td></tr>`;
+            }
         } else if (ForecastState.tableRowsRaw.length && ForecastState.tableDataKey) {
             showState('table', 'content');
             if (ForecastState.tableRows.length) renderTableRows();
             else applyTableFiltersAndRender();
+        } else if (rebuildTableFromCachedState(method)) {
+            showState('table', 'content');
         } else {
             showState('table', 'empty');
         }
@@ -2075,6 +2511,7 @@ async function calculateSolar() {
         });
         showState('solar', 'content');
         renderSolar(cached);
+        scheduleForecastStatePersist();
         return;
     }
 
@@ -2099,6 +2536,7 @@ async function calculateSolar() {
     });
     showState('solar', 'content');
     renderSolar(data);
+    scheduleForecastStatePersist();
 }
 
 function renderSolar(data) {

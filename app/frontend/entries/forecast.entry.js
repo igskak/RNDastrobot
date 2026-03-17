@@ -10,5 +10,6 @@ import '../js/chart-data.js';
 import '../js/forecast-timeline-utils.js';
 import '../js/forecast-timeline.js';
 import '../js/forecast-biwheel.js';
+import '../js/forecast-state-storage.js';
 import '../js/forecast.js';
 import '../js/chatkit-init.js';
