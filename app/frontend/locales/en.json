@@ -398,7 +398,7 @@
     },
     "forecast": {
       "biwheel": {
-        "clearFocus": "Clear focus",
+        "clearFocus": "Clear selection",
         "collapseAspects": "Collapse aspects table",
         "collapseIngresses": "Collapse ingresses table",
         "empty": "No bi-wheel data",
@@ -416,11 +416,6 @@
         "openAspects": "Expand aspects table",
         "openIngresses": "Expand ingresses table",
         "prognostic": "Prognostic",
-        "view": {
-          "compare": "Compare",
-          "focus": "Focus",
-          "groupLabel": "Bi-wheel view mode"
-        },
         "settings": {
           "natal": "Natal layer",
           "natalPointSize": "Natal point size",

@@ -43,7 +43,6 @@
     const WHEEL_GAP = 0;
     const DEFAULT_WHEEL_BAND_WIDTH =
         (SIGN_INNER_R - ASPECT_R - (WHEEL_INSET * 2) - (WHEEL_GAP * (WHEEL_ORDER.length - 1))) / WHEEL_ORDER.length;
-    const BIWHEEL_VIEW_MODE_STORAGE_KEY = 'bwViewMode';
     const PROGNOSTIC_GLYPH_COLOR = '#111111';
     const WHEEL_SEPARATOR_COLOR = '#94a3b8';
     const WHEEL_SEPARATOR_WIDTH = 0.9;
@@ -130,7 +129,6 @@
     let layerRetrogradeMaps = new Map();
     let wheelBandsByMethod = new Map();
     let wheelBandWidth = DEFAULT_WHEEL_BAND_WIDTH;
-    let biwheelViewMode = (localStorage.getItem(BIWHEEL_VIEW_MODE_STORAGE_KEY) === 'focus') ? 'focus' : 'compare';
     let layoutAnimationTimer = null;
 
     function el(tag, attrs, text) {
@@ -229,28 +227,6 @@
             container.classList.remove('bw-layout-animating');
             layoutAnimationTimer = null;
         }, 320);
-    }
-
-    function updateViewModeUI() {
-        const container = document.getElementById('biwheelContainer');
-        if (container) container.setAttribute('data-bw-view-mode', biwheelViewMode);
-        document.querySelectorAll('.bw-view-btn[data-bw-view-mode]').forEach((node) => {
-            const active = node.dataset.bwViewMode === biwheelViewMode;
-            node.classList.toggle('active', active);
-            node.setAttribute('aria-pressed', active ? 'true' : 'false');
-        });
-    }
-
-    function setBiwheelViewMode(mode, options = {}) {
-        const normalized = mode === 'focus' ? 'focus' : 'compare';
-        const changed = normalized !== biwheelViewMode;
-        biwheelViewMode = normalized;
-        if (options.persist !== false) {
-            localStorage.setItem(BIWHEEL_VIEW_MODE_STORAGE_KEY, biwheelViewMode);
-        }
-        updateViewModeUI();
-        applyPanelCollapseStates();
-        if (changed && options.animate !== false) triggerLayoutAnimation();
     }
 
     function applyBiwheelContainerState(layers = []) {
@@ -1156,22 +1132,20 @@
         const openAspectsBtn = document.getElementById('bwOpenAspects');
         const main = document.querySelector('.biwheel-main');
 
-        const focusView = biwheelViewMode === 'focus';
-        const showIngressPanel = !focusView && ingressesAvailable && !ingressesCollapsed;
+        const showIngressPanel = ingressesAvailable && !ingressesCollapsed;
         if (leftbar) leftbar.classList.toggle('bw-panel-hidden', !showIngressPanel);
         if (ingressesList) ingressesList.classList.toggle('bw-panel-collapsed', !showIngressPanel);
         if (openIngressesBtn) {
-            openIngressesBtn.style.display = (!focusView && ingressesAvailable && ingressesCollapsed) ? 'inline-flex' : 'none';
+            openIngressesBtn.style.display = (ingressesAvailable && ingressesCollapsed) ? 'inline-flex' : 'none';
         }
 
-        const showAspectsPanel = !focusView && !aspectsCollapsed;
+        const showAspectsPanel = !aspectsCollapsed;
         if (sidebar) sidebar.classList.toggle('bw-panel-hidden', !showAspectsPanel);
         if (aspectsList) aspectsList.classList.toggle('bw-panel-collapsed', !showAspectsPanel);
         if (openAspectsBtn) {
-            openAspectsBtn.style.display = (!focusView && aspectsCollapsed) ? 'inline-flex' : 'none';
+            openAspectsBtn.style.display = aspectsCollapsed ? 'inline-flex' : 'none';
         }
         if (main) {
-            main.classList.toggle('bw-focus-layout', focusView);
             main.classList.toggle('bw-ingresses-visible', showIngressPanel);
             main.classList.toggle('bw-aspects-visible', showAspectsPanel);
         }
@@ -1455,13 +1429,44 @@
     let sortCol = 'transit_priority';
     let sortAsc = true;
 
+    function renderPanelHeader(title, options = {}) {
+        const collapseId = options.collapseId || '';
+        const collapseLabel = options.collapseLabel || '';
+        const controlsId = options.controlsId || '';
+        const icon = options.icon || '→';
+        return `<div class="bw-panel-header">
+            <div class="bw-panel-title">${escapeHtml(title)}</div>
+            <button
+                type="button"
+                class="bw-panel-collapse-btn"
+                id="${collapseId}"
+                aria-expanded="true"
+                aria-controls="${controlsId}"
+                aria-label="${escapeHtml(collapseLabel)}"
+                title="${escapeHtml(collapseLabel)}"
+            >
+                <span class="bw-panel-collapse-icon" aria-hidden="true">${icon}</span>
+            </button>
+        </div>`;
+    }
+
     function renderAspectsTable(aspects) {
         const container = document.getElementById('biwheelAspects');
         if (!container) return;
         if (!aspects.length) {
-            container.innerHTML = `<table><thead><tr>
-                <th class="bw-th-with-toggle">${t('page.chart.tabs.aspects')} <button type="button" class="bw-table-toggle" id="bwToggleAspectsInTable" aria-expanded="true" aria-label="${t('page.forecast.biwheel.collapseAspects')}" title="${t('page.forecast.biwheel.collapseAspects')}">▾</button></th>
-            </tr></thead><tbody><tr><td style="padding:12px;color:var(--text-secondary);font-size:1rem">${t('page.forecast.table.noAspects')}</td></tr></tbody></table>`;
+            container.innerHTML = `<div class="bw-panel-section">
+                ${renderPanelHeader(t('page.chart.tabs.aspects'), {
+                    collapseId: 'bwToggleAspectsInTable',
+                    collapseLabel: t('page.forecast.biwheel.collapseAspects'),
+                    controlsId: 'bwAspectsPanelBody',
+                    icon: '→'
+                })}
+                <div class="bw-panel-body" id="bwAspectsPanelBody">
+                    <table><thead><tr>
+                        <th>${t('page.chart.tabs.aspects')}</th>
+                    </tr></thead><tbody><tr><td style="padding:12px;color:var(--text-secondary);font-size:1rem">${t('page.forecast.table.noAspects')}</td></tr></tbody></table>
+                </div>
+            </div>`;
             lastAspects = [];
             container.querySelector('#bwToggleAspectsInTable')?.addEventListener('click', (event) => {
                 event.stopPropagation();
@@ -1555,6 +1560,63 @@
         return `<div class="bw-hover-wrap">${lines.map((line) => `<div class="bw-hover-item"><div class="bw-hover-head">${formatLegacyHoverLine(line)}</div></div>`).join('')}</div>`;
     }
 
+    function expandIngressSummaryRow(row) {
+        const methodKey = row.method || '';
+        const methodLabel = methodKey === 'progressions'
+            ? t('common.method.progression')
+            : t('common.method.direction');
+        const methodClass = row.method_class || (methodKey === 'progressions' ? 'progression' : 'direction');
+        let objectLabel = row.object || '';
+        let objectHtml = escapeHtml(objectLabel);
+        if (row.object_key && !String(row.object_key).startsWith('Cusp')) {
+            const symbol = Symbols?.planets?.[row.object_key] || '';
+            const name = getPlanetName(row.object_key);
+            const retro = isTransitBodyRetrograde(row.object_key, methodKey);
+            objectLabel = `${symbol ? `${symbol} ` : ''}${name}`.trim();
+            const symbolHtml = symbol ? `<span class="astro-symbol">${escapeHtml(symbol)}</span> ` : '';
+            objectHtml = `${symbolHtml}${escapeHtml(name)}${retroIndicatorHtml(retro)}`;
+        } else if (row.object_key?.startsWith('Cusp')) {
+            const houseNumber = String(row.object_key).replace('Cusp', '');
+            objectLabel = t('page.forecast.table.ingress.cuspLabel', { house: houseNumber });
+            objectHtml = escapeHtml(objectLabel);
+        }
+
+        const hoverDetails = Array.isArray(row.hover_details) ? row.hover_details : (Array.isArray(row.hoverDetails) ? row.hoverDetails : []);
+        const buildRow = (details, transition) => ({
+            ...row,
+            object: objectLabel,
+            objectHtml,
+            methodLabel,
+            methodClass,
+            transition,
+            hoverDetails: details,
+            hoverLines: details.map((item) => item?.text).filter(Boolean),
+        });
+
+        if (row.object_key && String(row.object_key).startsWith('Cusp')) {
+            const signDetails = hoverDetails.filter((item) => item?.ingress_type === 'sign');
+            if (!signDetails.length) return [];
+            const first = signDetails[0];
+            const last = signDetails[signDetails.length - 1];
+            return [buildRow(signDetails, `${formatIngressValue(first?.from, 'sign')} → ${formatIngressValue(last?.to, 'sign')}`)];
+        }
+
+        const signDetails = hoverDetails.filter((item) => item?.ingress_type === 'sign');
+        const houseDetails = hoverDetails.filter((item) => item?.ingress_type === 'house');
+        const rows = [];
+        if (signDetails.length) {
+            const first = signDetails[0];
+            const last = signDetails[signDetails.length - 1];
+            rows.push(buildRow(signDetails, `${formatIngressValue(first?.from, 'sign')} → ${formatIngressValue(last?.to, 'sign')}`));
+        }
+        if (houseDetails.length) {
+            const first = houseDetails[0];
+            const last = houseDetails[houseDetails.length - 1];
+            rows.push(buildRow(houseDetails, `${formatIngressValue(first?.from, 'house')} → ${formatIngressValue(last?.to, 'house')}`));
+        }
+        return rows;
+    }
+
     function getIngressRowsForRender() {
         const summaryRows = window.ForecastState?.ingressSummaryData?.rows;
         if (!Array.isArray(summaryRows) || !summaryRows.length) {
@@ -1566,34 +1628,7 @@
                 if (row.method === 'directions') return isLayerVisible('direction');
                 return true;
             })
-            .map((row) => {
-            const methodKey = row.method || '';
-            const methodLabel = methodKey === 'progressions'
-                ? t('common.method.progression')
-                : t('common.method.direction');
-            const methodClass = row.method_class || (methodKey === 'progressions' ? 'progression' : 'direction');
-            let objectLabel = row.object || '';
-            let objectHtml = escapeHtml(objectLabel);
-            if (row.object_key && !String(row.object_key).startsWith('Cusp')) {
-                const symbol = Symbols?.planets?.[row.object_key] || '';
-                const name = getPlanetName(row.object_key);
-                const retro = isTransitBodyRetrograde(row.object_key, methodKey);
-                objectLabel = `${symbol ? `${symbol} ` : ''}${name}`.trim();
-                const symbolHtml = symbol ? `<span class="astro-symbol">${escapeHtml(symbol)}</span> ` : '';
-                objectHtml = `${symbolHtml}${escapeHtml(name)}${retroIndicatorHtml(retro)}`;
-            }
-            return {
-                ...row,
-                object: objectLabel,
-                objectHtml,
-                methodLabel,
-                methodClass,
-                hoverDetails: Array.isArray(row.hover_details) ? row.hover_details : (Array.isArray(row.hoverDetails) ? row.hoverDetails : []),
-                hoverLines: Array.isArray(row.hover_lines) && row.hover_lines.length
-                    ? row.hover_lines
-                    : (Array.isArray(row.hover_details) ? row.hover_details.map((item) => item?.text).filter(Boolean) : (row.hoverLines || [])),
-            };
-        });
+            .flatMap((row) => expandIngressSummaryRow(row));
     }
 
     function renderIngressesTable(ingresses) {
@@ -1602,13 +1637,29 @@
         if (window.ForecastState?.ingressSummaryError) {
             ingressesAvailable = true;
             container.style.display = '';
-            container.innerHTML = `<table><thead><tr>
-                <th>${t('page.forecast.table.columns.object')}</th>
-                <th>${t('page.forecast.table.columns.method')}</th>
-                <th>${t('page.forecast.table.columns.transition')}</th>
-            </tr></thead><tbody><tr>
-                <td colspan="3" style="padding:10px;color:var(--text-secondary)">${escapeHtml(window.ForecastState.ingressSummaryError)}</td>
-            </tr></tbody></table>`;
+            container.innerHTML = `<div class="bw-panel-section">
+                ${renderPanelHeader(t('page.forecast.table.ingresses.title'), {
+                    collapseId: 'bwToggleIngressesInTable',
+                    collapseLabel: t('page.forecast.biwheel.collapseIngresses'),
+                    controlsId: 'bwIngressesPanelBody',
+                    icon: '←'
+                })}
+                <div class="bw-panel-body" id="bwIngressesPanelBody">
+                    <table><thead><tr>
+                        <th>${t('page.forecast.table.columns.object')}</th>
+                        <th>${t('page.forecast.table.columns.method')}</th>
+                        <th>${t('page.forecast.table.columns.transition')}</th>
+                    </tr></thead><tbody><tr>
+                        <td colspan="3" style="padding:10px;color:var(--text-secondary)">${escapeHtml(window.ForecastState.ingressSummaryError)}</td>
+                    </tr></tbody></table>
+                </div>
+            </div>`;
+            container.querySelector('#bwToggleIngressesInTable')?.addEventListener('click', (event) => {
+                event.stopPropagation();
+                ingressesCollapsed = true;
+                applyPanelCollapseStates();
+                triggerLayoutAnimation();
+            });
             applyPanelCollapseStates();
             return;
         }
@@ -1622,11 +1673,19 @@
         }
         ingressesAvailable = true;
 
-        let html = `<table><thead><tr>
-            <th>${t('page.forecast.table.columns.object')}</th>
-            <th class="bw-th-with-toggle"><span>${t('page.forecast.table.columns.method')}</span><button type="button" class="bw-table-toggle" id="bwToggleIngressesInTable" aria-expanded="true" aria-label="${t('page.forecast.biwheel.collapseIngresses')}" title="${t('page.forecast.biwheel.collapseIngresses')}">▾</button></th>
-            <th>${t('page.forecast.table.columns.transition')}</th>
-        </tr></thead><tbody>`;
+        let html = `<div class="bw-panel-section">
+            ${renderPanelHeader(t('page.forecast.table.ingresses.title'), {
+                collapseId: 'bwToggleIngressesInTable',
+                collapseLabel: t('page.forecast.biwheel.collapseIngresses'),
+                controlsId: 'bwIngressesPanelBody',
+                icon: '←'
+            })}
+            <div class="bw-panel-body" id="bwIngressesPanelBody">
+                <table><thead><tr>
+                    <th>${t('page.forecast.table.columns.object')}</th>
+                    <th>${t('page.forecast.table.columns.method')}</th>
+                    <th>${t('page.forecast.table.columns.transition')}</th>
+                </tr></thead><tbody>`;
 
         ingresses.forEach(row => {
             const hoverHtml = buildIngressHoverHtml(row);
@@ -1639,7 +1698,7 @@
                 <td class="bw-ingress-transition">${transitionHtml}</td>
             </tr>`;
         });
-        html += '</tbody></table>';
+        html += '</tbody></table></div></div>';
         container.innerHTML = html;
         container.style.display = '';
         container.querySelector('#bwToggleIngressesInTable')?.addEventListener('click', (event) => {
@@ -1875,13 +1934,21 @@
         });
 
         const arrow = col => col === sortCol ? (sortAsc ? ' ↑' : ' ↓') : '';
-        let html = `<table><thead><tr>
-            <th data-col="method" class="bw-th-with-toggle"><span>${t('page.forecast.table.columns.methodShort')}${arrow('method')}</span><button type="button" class="bw-table-toggle" id="bwToggleAspectsInTable" aria-expanded="true" aria-label="${t('page.forecast.biwheel.collapseAspects')}" title="${t('page.forecast.biwheel.collapseAspects')}">▾</button></th>
-            <th data-col="transit">${t('page.forecast.table.columns.transitShort')}${arrow('transit')}</th>
-            <th data-col="aspect">${arrow('aspect')}</th>
-            <th data-col="natal">${t('page.forecast.table.columns.natalShort')}${arrow('natal')}</th>
-            <th data-col="orb">${t('common.orb')}${arrow('orb')}</th>
-        </tr></thead><tbody>`;
+        let html = `<div class="bw-panel-section">
+            ${renderPanelHeader(t('page.chart.tabs.aspects'), {
+                collapseId: 'bwToggleAspectsInTable',
+                collapseLabel: t('page.forecast.biwheel.collapseAspects'),
+                controlsId: 'bwAspectsPanelBody',
+                icon: '→'
+            })}
+            <div class="bw-panel-body" id="bwAspectsPanelBody">
+                <table><thead><tr>
+                    <th data-col="method">${t('page.forecast.table.columns.methodShort')}${arrow('method')}</th>
+                    <th data-col="transit">${t('page.forecast.table.columns.transitShort')}${arrow('transit')}</th>
+                    <th data-col="aspect">${arrow('aspect')}</th>
+                    <th data-col="natal">${t('page.forecast.table.columns.natalShort')}${arrow('natal')}</th>
+                    <th data-col="orb">${t('common.orb')}${arrow('orb')}</th>
+                </tr></thead><tbody>`;
         sorted.forEach(a => {
             const tSym = Symbols?.planets?.[a.transitBody] || a.transitBody;
             const nSym = Symbols?.planets?.[a.natalBody] || a.natalBody;
@@ -1894,7 +1961,7 @@
             const aspectKey = getAspectKey(a);
             html += `<tr title="${methodLabel}: ${a.transitBody} ${a.aspectType} ${a.natalBody}" data-method="${a.method || ''}" data-transit="${a.transitBody}" data-natal="${a.natalBody}" data-aspect="${a.aspectType}" data-aspect-key="${aspectKey || ''}"><td><span class="method-badge ${methodClass}">${methodLabel}</span></td><td><span class="astro-symbol">${tSym}</span>${retroIndicatorHtml(transitRetro)}</td><td><span class="astro-symbol">${aSym}</span></td><td><span class="astro-symbol">${nSym}</span>${retroIndicatorHtml(natalRetro)}</td><td>${a.orb?.toFixed(2)}°</td></tr>`;
         });
-        html += '</tbody></table>';
+        html += '</tbody></table></div></div>';
         container.innerHTML = html;
 
         container.querySelectorAll('th[data-col]').forEach(th => {
@@ -2171,7 +2238,7 @@
         transitPointScale = readSavedScale('bwTransitPointScale', 1.0);
         updateScaleControlsUI();
         updateLayerLegendUI();
-        setBiwheelViewMode(biwheelViewMode, { persist: false, animate: false });
+        localStorage.removeItem('bwViewMode');
 
         document.querySelectorAll('.bw-filter-btn[data-filter]').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -2211,11 +2278,6 @@
                 triggerLayoutAnimation();
             });
         }
-        document.querySelectorAll('.bw-view-btn[data-bw-view-mode]').forEach((btn) => {
-            btn.addEventListener('click', () => {
-                setBiwheelViewMode(btn.dataset.bwViewMode, { persist: true, animate: true });
-            });
-        });
         applyPanelCollapseStates();
         document.getElementById('bwNatalScaleRange')?.addEventListener('input', e => {
             natalPointScale = clampPointScale((Number(e.target.value) || 100) / 100);

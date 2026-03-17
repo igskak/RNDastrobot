@@ -2367,11 +2367,229 @@ function formatSignLabel(sign) {
     return `${sym ? sym + ' ' : ''}${ru}`;
 }
 
+let tableIngressHoverTooltip = null;
+
+function formatDateShort6(value) {
+    const raw = String(value || '').trim();
+    if (!raw || raw === '—') return '—';
+    const direct = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (direct) return `${direct[3]}.${direct[2]}.${direct[1].slice(2)}`;
+    const dt = new Date(raw);
+    if (Number.isNaN(dt.getTime())) return raw;
+    const dd = String(dt.getDate()).padStart(2, '0');
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const yy = String(dt.getFullYear()).slice(-2);
+    return `${dd}.${mm}.${yy}`;
+}
+
+function formatIngressHoverValue(value, ingressType) {
+    if (value === null || value === undefined || value === '') return '—';
+    if (ingressType === 'house' && Number.isFinite(Number(value))) {
+        return `H${value}`;
+    }
+    if (ingressType === 'sign' && typeof value === 'string') {
+        const symbol = Symbols?.signs?.[value] || '';
+        const name = getSignName(value);
+        return `${symbol ? `${symbol} ` : ''}${name}`.trim();
+    }
+    return String(value);
+}
+
+function formatLegacyIngressHoverLine(line) {
+    const safe = escapeHtml(String(line || ''));
+    return safe.replace(/(\d{4}-\d{2}-\d{2})/g, (_, match) => formatDateShort6(match));
+}
+
+function buildIngressHoverHtml(row) {
+    const details = Array.isArray(row.hoverDetails) ? row.hoverDetails : [];
+    if (details.length) {
+        const blocks = details.map((detail) => {
+            const ingressType = detail?.ingress_type || 'none';
+            if (ingressType === 'none') {
+                const fromLabel = formatIngressHoverValue(detail?.from, ingressType);
+                const toLabel = formatIngressHoverValue(detail?.to, ingressType);
+                const periodStart = formatDateShort6(detail?.times?.before);
+                const periodEnd = formatDateShort6(detail?.times?.exact);
+                return `<div class="bw-hover-item">
+                    <div class="bw-hover-head">${escapeHtml(t('page.forecast.table.noEvents') || 'No intermediate transitions')}.</div>
+                    <div class="bw-hover-times">${escapeHtml(periodStart)} → ${escapeHtml(periodEnd)}</div>
+                    <div class="bw-hover-times">${escapeHtml(fromLabel)} → ${escapeHtml(toLabel)}</div>
+                </div>`;
+            }
+            const label = ingressType === 'house'
+                ? t('page.forecast.table.ingress.house')
+                : ingressType === 'sign'
+                    ? t('page.forecast.table.ingress.sign')
+                    : t('page.forecast.table.columns.transition');
+            const fromLabel = formatIngressHoverValue(detail?.from, ingressType);
+            const toLabel = formatIngressHoverValue(detail?.to, ingressType);
+            const before = formatDateShort6(detail?.times?.before);
+            const exact = formatDateShort6(detail?.times?.exact);
+            const after = formatDateShort6(detail?.times?.after);
+            return `<div class="bw-hover-item">
+                <div class="bw-hover-head">${escapeHtml(label)}: ${escapeHtml(fromLabel)} → ${escapeHtml(toLabel)}</div>
+                <div class="bw-hover-times">-1° ${escapeHtml(before)} · 0° ${escapeHtml(exact)} · +1° ${escapeHtml(after)}</div>
+            </div>`;
+        }).join('');
+        return `<div class="bw-hover-wrap">${blocks}</div>`;
+    }
+
+    const lines = Array.isArray(row.hoverLines) ? row.hoverLines.filter(Boolean) : [];
+    if (!lines.length) return '';
+    return `<div class="bw-hover-wrap">${lines.map((line) => `<div class="bw-hover-item"><div class="bw-hover-head">${formatLegacyIngressHoverLine(line)}</div></div>`).join('')}</div>`;
+}
+
+function ensureTableIngressTooltip() {
+    if (tableIngressHoverTooltip && tableIngressHoverTooltip.isConnected) return tableIngressHoverTooltip;
+    tableIngressHoverTooltip = document.body?.querySelector('.chart-tooltip.table-ingress-tooltip');
+    if (!tableIngressHoverTooltip) {
+        tableIngressHoverTooltip = document.createElement('div');
+        tableIngressHoverTooltip.className = 'chart-tooltip table-ingress-tooltip';
+        document.body?.appendChild(tableIngressHoverTooltip);
+    }
+    return tableIngressHoverTooltip;
+}
+
+function placeTableIngressTooltip(event, tooltip) {
+    if (!tooltip) return;
+    let x = event.clientX + 12;
+    let y = event.clientY + 6;
+    const maxX = window.innerWidth - tooltip.offsetWidth - 8;
+    const maxY = window.innerHeight - tooltip.offsetHeight - 8;
+    x = Math.max(8, Math.min(x, Math.max(8, maxX)));
+    y = Math.max(8, Math.min(y, Math.max(8, maxY)));
+    tooltip.style.left = `${x}px`;
+    tooltip.style.top = `${y}px`;
+}
+
+function showTableIngressTooltip(html, event) {
+    const tooltip = ensureTableIngressTooltip();
+    if (!tooltip) return;
+    tooltip.innerHTML = html;
+    tooltip.style.display = 'block';
+    placeTableIngressTooltip(event, tooltip);
+}
+
+function hideTableIngressTooltip() {
+    const tooltip = ensureTableIngressTooltip();
+    if (tooltip) tooltip.style.display = 'none';
+}
+
+function bindIngressHoverTooltips(container) {
+    if (!container) return;
+    container.querySelectorAll('.table-ingress-transition-hover').forEach((node) => {
+        const getHoverHtml = () => {
+            const raw = node.getAttribute('data-hover-html') || '';
+            if (!raw) return '';
+            try {
+                return decodeURIComponent(raw);
+            } catch {
+                return raw;
+            }
+        };
+        node.addEventListener('mouseenter', (event) => {
+            const html = getHoverHtml();
+            if (!html) return;
+            showTableIngressTooltip(html, event);
+        });
+        node.addEventListener('mousemove', (event) => {
+            const tooltip = ensureTableIngressTooltip();
+            if (!tooltip || tooltip.style.display === 'none') return;
+            placeTableIngressTooltip(event, tooltip);
+        });
+        node.addEventListener('mouseleave', hideTableIngressTooltip);
+    });
+}
+
+function normalizeIngressSummaryMethodKey(method) {
+    const raw = String(method || '');
+    if (raw.startsWith('directions')) return 'directions';
+    if (raw.startsWith('progressions')) return 'progressions';
+    return raw;
+}
+
+function getIngressSummaryRow(method, objectKey) {
+    const rows = ForecastState.ingressSummaryData?.rows;
+    if (!Array.isArray(rows) || !rows.length || !objectKey) return null;
+    const normalizedMethod = normalizeIngressSummaryMethodKey(method);
+    return rows.find((row) => (
+        normalizeIngressSummaryMethodKey(row?.method) === normalizedMethod
+        && String(row?.object_key || row?.object || '') === String(objectKey)
+    )) || null;
+}
+
+function buildIngressRowsFromSummary() {
+    const rows = ForecastState.ingressSummaryData?.rows;
+    if (!Array.isArray(rows) || !rows.length) return [];
+    return rows.flatMap((row) => {
+        const methodKey = row.method || '';
+        const methodClass = row.method_class || (methodKey === 'progressions' ? 'progression' : 'direction');
+        const hoverDetails = Array.isArray(row.hover_details) ? row.hover_details : [];
+        let object = row.object || '—';
+        let objectHtml = escapeHtml(object);
+        if (row.object_key && !String(row.object_key).startsWith('Cusp')) {
+            object = getPlanetName(row.object_key);
+            objectHtml = formatPlanetCellHtml(row.object_key);
+        } else if (row.object_key?.startsWith('Cusp')) {
+            const houseNumber = String(row.object_key).replace('Cusp', '');
+            object = t('page.forecast.table.ingress.cuspLabel', { house: houseNumber });
+            objectHtml = escapeHtml(object);
+        }
+        const makeRow = (details, ingressType, transition) => ({
+            date: details[0]?.times?.exact || '—',
+            method: getMethodLabel(methodKey),
+            methodClass,
+            object,
+            objectHtml,
+            ingressType,
+            transition,
+            hoverDetails: details,
+            hoverLines: details.map((item) => item?.text).filter(Boolean),
+        });
+
+        if (row.object_key && String(row.object_key).startsWith('Cusp')) {
+            const signDetails = hoverDetails.filter((item) => item?.ingress_type === 'sign');
+            if (!signDetails.length) return [];
+            const first = signDetails[0];
+            const last = signDetails[signDetails.length - 1];
+            return [makeRow(
+                signDetails,
+                t('page.forecast.table.ingress.cusp'),
+                `${formatSignLabel(first?.from)} → ${formatSignLabel(last?.to)}`
+            )];
+        }
+
+        const signDetails = hoverDetails.filter((item) => item?.ingress_type === 'sign');
+        const houseDetails = hoverDetails.filter((item) => item?.ingress_type === 'house');
+        const result = [];
+        if (signDetails.length) {
+            const first = signDetails[0];
+            const last = signDetails[signDetails.length - 1];
+            result.push(makeRow(
+                signDetails,
+                t('page.forecast.table.ingress.sign'),
+                `${formatSignLabel(first?.from)} → ${formatSignLabel(last?.to)}`
+            ));
+        }
+        if (houseDetails.length) {
+            const first = houseDetails[0];
+            const last = houseDetails[houseDetails.length - 1];
+            result.push(makeRow(
+                houseDetails,
+                t('page.forecast.table.ingress.house'),
+                `${t('page.forecast.table.houseLabel', { house: first?.from ?? t('common.notAvailable') })} → ${t('page.forecast.table.houseLabel', { house: last?.to ?? t('common.notAvailable') })}`
+            ));
+        }
+        return result;
+    });
+}
+
 function hideIngressSection() {
     const section = document.getElementById('ingressSection');
     const tbody = document.getElementById('ingressTableBody');
     if (section) section.style.display = 'none';
     if (tbody) tbody.innerHTML = '';
+    hideTableIngressTooltip();
 }
 
 function renderIngressSection(rows) {
@@ -2381,18 +2599,26 @@ function renderIngressSection(rows) {
     if (!rows || !rows.length) {
         section.style.display = 'none';
         tbody.innerHTML = '';
+        hideTableIngressTooltip();
         return;
     }
-    tbody.innerHTML = rows.map(r => `
+    tbody.innerHTML = rows.map(r => {
+        const hoverHtml = buildIngressHoverHtml(r);
+        const transitionHtml = hoverHtml
+            ? `<span class="table-ingress-transition-hover" data-hover-html="${encodeURIComponent(hoverHtml)}">${escapeHtml(r.transition || '')}</span>`
+            : escapeHtml(r.transition || '');
+        return `
         <tr>
-            <td>${r.date}</td>
-            <td><span class="method-badge ${r.methodClass}">${r.method}</span></td>
-            <td>${r.object}</td>
-            <td>${r.ingressType}</td>
-            <td>${r.transition}</td>
+            <td>${escapeHtml(r.date || '—')}</td>
+            <td><span class="method-badge ${escapeHtml(r.methodClass || '')}">${escapeHtml(r.method || '—')}</span></td>
+            <td>${r.objectHtml || escapeHtml(r.object || '—')}</td>
+            <td>${escapeHtml(r.ingressType || '—')}</td>
+            <td>${transitionHtml}</td>
         </tr>
-    `).join('');
+    `;
+    }).join('');
     section.style.display = '';
+    bindIngressHoverTooltips(tbody);
 }
 
 function populateTableFromPrognosticData(data, method, date) {
@@ -2440,6 +2666,8 @@ function populateTableFromPrognosticData(data, method, date) {
 
     planetIngresses.forEach(ing => {
         const body = ing.body || '—';
+        const objectKey = body;
+        const summaryRow = getIngressSummaryRow(method, objectKey);
         const ingressType = ing.ingress_type === 'house' ? t('page.forecast.table.ingress.house') : t('page.forecast.table.ingress.sign');
         const fromLabel = ing.ingress_type === 'house'
             ? t('page.forecast.table.houseLabel', { house: ing.from_house ?? t('common.notAvailable') })
@@ -2451,14 +2679,18 @@ function populateTableFromPrognosticData(data, method, date) {
             date: date,
             method: getMethodLabel(method),
             methodClass,
-            object: formatPlanetCellHtml(body, prognosticRetroMap.get(body) === true),
+            object: body,
+            objectHtml: formatPlanetCellHtml(body, prognosticRetroMap.get(body) === true),
             ingressType,
             transition: `${fromLabel} → ${toLabel}`,
+            hoverDetails: Array.isArray(summaryRow?.hover_details) ? summaryRow.hover_details : [],
+            hoverLines: Array.isArray(summaryRow?.hover_lines) ? summaryRow.hover_lines : [],
         });
     });
 
     cuspIngresses.forEach(ing => {
         const houseLabel = t('page.forecast.table.ingress.cuspLabel', { house: ing.house_number });
+        const summaryRow = getIngressSummaryRow(method, `Cusp${ing.house_number}`);
         const fromLabel = formatSignLabel(ing.from_sign);
         const toLabel = formatSignLabel(ing.to_sign);
         ingressRows.push({
@@ -2466,8 +2698,11 @@ function populateTableFromPrognosticData(data, method, date) {
             method: getMethodLabel(method),
             methodClass,
             object: houseLabel,
+            objectHtml: escapeHtml(houseLabel),
             ingressType: t('page.forecast.table.ingress.cusp'),
             transition: `${fromLabel} → ${toLabel}`,
+            hoverDetails: Array.isArray(summaryRow?.hover_details) ? summaryRow.hover_details : [],
+            hoverLines: Array.isArray(summaryRow?.hover_lines) ? summaryRow.hover_lines : [],
         });
     });
 
@@ -2485,7 +2720,8 @@ function populateTableFromPrognosticData(data, method, date) {
         applyTableFiltersAndRender();
     }
 
-    renderIngressSection(ingressRows);
+    const summaryIngressRows = buildIngressRowsFromSummary();
+    renderIngressSection(summaryIngressRows.length ? summaryIngressRows : ingressRows);
 }
 
 function populateTableFromCombinedData(combinedData, targetDate, { transitPeriodEvents = [] } = {}) {
@@ -2576,6 +2812,7 @@ function populateTableFromCombinedData(combinedData, targetDate, { transitPeriod
         const methodClass = method.startsWith('directions') ? 'direction' : 'progression';
         (data?.planet_ingresses || []).forEach(ing => {
             const body = ing.body || '—';
+            const summaryRow = getIngressSummaryRow(method, body);
             const ingressType = ing.ingress_type === 'house' ? t('page.forecast.table.ingress.house') : t('page.forecast.table.ingress.sign');
             const fromLabel = ing.ingress_type === 'house'
                 ? t('page.forecast.table.houseLabel', { house: ing.from_house ?? t('common.notAvailable') })
@@ -2588,19 +2825,27 @@ function populateTableFromCombinedData(combinedData, targetDate, { transitPeriod
                 date: date || targetDate || '—',
                 method: getMethodLabel(method),
                 methodClass,
-                object: formatPlanetCellHtml(body, transitRetrograde === true),
+                object: body,
+                objectHtml: formatPlanetCellHtml(body, transitRetrograde === true),
                 ingressType,
                 transition: `${fromLabel} → ${toLabel}`,
+                hoverDetails: Array.isArray(summaryRow?.hover_details) ? summaryRow.hover_details : [],
+                hoverLines: Array.isArray(summaryRow?.hover_lines) ? summaryRow.hover_lines : [],
             });
         });
         (data?.house_cusp_ingresses || []).forEach(ing => {
+            const houseLabel = t('page.forecast.table.ingress.cuspLabel', { house: ing.house_number });
+            const summaryRow = getIngressSummaryRow(method, `Cusp${ing.house_number}`);
             ingressRows.push({
                 date: date || targetDate || '—',
                 method: getMethodLabel(method),
                 methodClass,
-                object: t('page.forecast.table.ingress.cuspLabel', { house: ing.house_number }),
+                object: houseLabel,
+                objectHtml: escapeHtml(houseLabel),
                 ingressType: t('page.forecast.table.ingress.cusp'),
                 transition: `${formatSignLabel(ing.from_sign)} → ${formatSignLabel(ing.to_sign)}`,
+                hoverDetails: Array.isArray(summaryRow?.hover_details) ? summaryRow.hover_details : [],
+                hoverLines: Array.isArray(summaryRow?.hover_lines) ? summaryRow.hover_lines : [],
             });
         });
     };
@@ -2687,7 +2932,8 @@ function populateTableFromCombinedData(combinedData, targetDate, { transitPeriod
         applyTableFiltersAndRender();
     }
 
-    renderIngressSection(ingressRows);
+    const summaryIngressRows = buildIngressRowsFromSummary();
+    renderIngressSection(summaryIngressRows.length ? summaryIngressRows : ingressRows);
 }
 
 function renderTableRows() {

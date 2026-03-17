@@ -737,40 +737,66 @@
     transform: translateX(10px);
     border-left-color: transparent;
 }
-.biwheel-main.bw-focus-layout .biwheel-chart-area {
-    flex: 1 1 auto;
+.bw-panel-collapsed {
+    display: none !important;
 }
-.bw-table-toggle {
-    width: 22px;
-    height: 22px;
-    border: none;
-    background: transparent;
+.bw-panel-section {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+.bw-panel-header {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-primary);
+}
+.bw-panel-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 0.01em;
+}
+.bw-panel-body {
+    min-height: 0;
+}
+.bw-panel-collapse-btn {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
     color: var(--text-secondary);
-    border-radius: 4px;
+    border-radius: 8px;
     padding: 0;
-    font-size: 0.8rem;
+    font-size: 0.92rem;
     line-height: 1;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
 }
-.bw-table-toggle:hover {
+.bw-panel-collapse-btn:hover {
     color: var(--text-primary);
-    background: rgba(9, 30, 66, 0.08);
+    border-color: var(--accent);
+    background: rgba(99, 102, 241, 0.08);
 }
-.bw-table-toggle:focus {
+.bw-panel-collapse-btn:focus {
     outline: 2px solid var(--accent);
     outline-offset: 1px;
 }
-.bw-panel-collapsed {
-    display: none !important;
+.bw-panel-collapse-btn:active {
+    transform: translateY(1px);
 }
-.bw-th-with-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 6px;
+.bw-panel-collapse-icon {
+    display: inline-block;
 }
 .bw-edge-toggle {
     position: absolute;
@@ -983,32 +1009,6 @@
     background: var(--bg-secondary, #1a1a2e);
     flex-wrap: wrap;
 }
-.bw-view-switch {
-    display: inline-flex;
-    align-items: center;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 2px;
-    background: var(--bg-primary);
-}
-.bw-view-btn {
-    border: none;
-    background: transparent;
-    color: var(--text-secondary);
-    border-radius: 999px;
-    padding: 4px 9px;
-    font-size: 0.68rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: color 0.18s ease, background-color 0.18s ease;
-}
-.bw-view-btn:hover {
-    color: var(--text-primary);
-}
-.bw-view-btn.active {
-    background: rgba(99, 102, 241, 0.16);
-    color: var(--accent, #6366f1);
-}
 .bw-layer-legend {
     display: inline-flex;
     align-items: center;
@@ -1107,8 +1107,8 @@
     font-size: 0.74rem;
     background: var(--bg-primary);
     position: sticky;
-    top: 0;
-    z-index: 1;
+    top: 45px;
+    z-index: 2;
 }
 .biwheel-ingresses-list .bw-ingress-object,
 .biwheel-ingresses-list .bw-ingress-transition {
@@ -1132,9 +1132,10 @@
     font-size: 0.8rem;
     background: var(--bg-primary);
     position: sticky;
-    top: 0;
+    top: 45px;
     cursor: pointer;
     user-select: none;
+    z-index: 2;
 }
 .biwheel-aspects-list th:hover {
     color: var(--accent, #6366f1);
@@ -1183,6 +1184,7 @@
     flex: 1;
     overflow: auto;
     padding: 12px 16px;
+    position: relative;
 }
 .table-filters-toolbar {
     display: flex;
@@ -1284,6 +1286,39 @@
     font-weight: 600;
     color: var(--text-primary);
     margin: 0 0 8px 2px;
+}
+.chart-tooltip.table-ingress-tooltip {
+    position: fixed;
+    max-width: 360px;
+    white-space: normal;
+}
+.chart-tooltip.table-ingress-tooltip .bw-hover-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.chart-tooltip.table-ingress-tooltip .bw-hover-item {
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+}
+.chart-tooltip.table-ingress-tooltip .bw-hover-item:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+.chart-tooltip.table-ingress-tooltip .bw-hover-head {
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: var(--text-primary);
+}
+.chart-tooltip.table-ingress-tooltip .bw-hover-times {
+    margin-top: 2px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.72rem;
+    line-height: 1.3;
+    color: var(--text-secondary);
+}
+.table-ingress-transition-hover {
+    cursor: default;
 }
 
 /* Aspect type badges */
@@ -1542,9 +1577,6 @@
     .biwheel-sidebar { width: 100%; max-height: 280px; border-left: none; border-top: 1px solid var(--border, #333); }
     .biwheel-svg-wrapper { min-height: 300px; }
     .biwheel-aspect-bar { flex-wrap: wrap; }
-    .bw-view-switch {
-        order: -1;
-    }
     .bw-time-ticks { margin: 0 4px 0; height: 9px; }
     #biwheelTimeSlider { min-width: 100px; }
     .bw-planet-toggles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
