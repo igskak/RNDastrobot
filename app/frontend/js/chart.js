@@ -113,6 +113,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     chartDataRenderer.render(chartData);
     chartDataRenderer.setAspectTypeFilter('all');
 
+    initPlanetRowClick();
+
     document.addEventListener('chart:aspect-planet-filter', (event) => {
         const planetName = event?.detail?.planetName || null;
         if (chartDataRenderer) {
@@ -210,6 +212,70 @@ function updateInterpretationLinks(chartData) {
 }
 
 /**
+ * Click on planet table row → highlight planet on wheel + show tooltip near it
+ */
+function initPlanetRowClick() {
+    const planetsTable = document.getElementById('planetsTable');
+    if (!planetsTable) return;
+
+    let activePlanetName = null;
+
+    planetsTable.addEventListener('click', (e) => {
+        const row = e.target.closest('tr[data-planet]');
+        if (!row) return;
+
+        const planetName = row.dataset.planet;
+        const wheel = window.chartWheel;
+        if (!wheel) return;
+
+        // Deactivate previously active planet
+        if (activePlanetName) {
+            const prevGroup = wheel.svg.querySelector(`[data-planet="${activePlanetName}"]`);
+            if (prevGroup) wheel.onPlanetHover({ currentTarget: prevGroup }, false);
+            wheel.hideTooltip();
+            document.getElementById(`row-${activePlanetName}`)?.classList.remove('active-row');
+        }
+
+        // Toggle off if clicking same row
+        if (activePlanetName === planetName) {
+            activePlanetName = null;
+            return;
+        }
+
+        activePlanetName = planetName;
+        row.classList.add('active-row');
+
+        const group = wheel.svg.querySelector(`[data-planet="${planetName}"]`);
+        if (!group) return;
+
+        // Highlight planet + related aspects on the wheel
+        wheel.onPlanetHover({ currentTarget: group }, true);
+
+        // Show tooltip positioned near the planet symbol on the wheel
+        const groupRect = group.getBoundingClientRect();
+        const fakeEvent = {
+            currentTarget: group,
+            clientX: groupRect.left + groupRect.width / 2,
+            clientY: groupRect.top + groupRect.height / 2,
+        };
+        wheel.onPlanetClick(fakeEvent);
+    });
+
+    // Clicking the chart canvas deselects
+    document.getElementById('view-chart')?.addEventListener('click', (e) => {
+        if (!activePlanetName) return;
+        if (e.target.closest('.planet-group')) return; // let wheel handle its own clicks
+        const wheel = window.chartWheel;
+        if (!wheel) return;
+        const prevGroup = wheel.svg.querySelector(`[data-planet="${activePlanetName}"]`);
+        if (prevGroup) wheel.onPlanetHover({ currentTarget: prevGroup }, false);
+        wheel.hideTooltip();
+        document.getElementById(`row-${activePlanetName}`)?.classList.remove('active-row');
+        activePlanetName = null;
+    });
+}
+
+/**
  * Обновление заголовка с данными рождения
  */
 function updateHeader(chartData) {
@@ -223,9 +289,20 @@ function updateHeader(chartData) {
         : new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
     const timeStr = birthData.time.slice(0, 5);
     
-    document.getElementById('birthDate').textContent = `${dateStr}, ${timeStr}`;
-    document.getElementById('birthPlace').textContent = formData?.place || 
-        `${birthData.latitude.toFixed(2)}°, ${birthData.longitude.toFixed(2)}°`;
+    const firstName = formData?.firstName || '';
+    const lastName = formData?.lastName || '';
+    const clientName = [firstName, lastName].filter(Boolean).join(' ').trim();
+    const placeStr = formData?.place || `${birthData.latitude.toFixed(2)}°, ${birthData.longitude.toFixed(2)}°`;
+
+    const titleEl = document.getElementById('birthDate');
+    const subtitleEl = document.getElementById('birthPlace');
+    if (clientName) {
+        titleEl.textContent = clientName;
+        subtitleEl.textContent = `${dateStr}, ${timeStr} · ${placeStr}`;
+    } else {
+        titleEl.textContent = `${dateStr}, ${timeStr}`;
+        subtitleEl.textContent = placeStr;
+    }
 }
 
 /**

@@ -1177,7 +1177,7 @@ function initControls() {
         });
     }
 
-    toggleTableFilters(false);
+    toggleTableFilters(true);
     updateTableFiltersBadge();
     updateControlsVisibility();
 }

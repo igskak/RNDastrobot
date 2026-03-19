@@ -857,9 +857,9 @@
     cursor: pointer;
 }
 .bw-filter-btn.active {
-    border-color: var(--accent, #6366f1);
-    color: var(--accent, #6366f1);
-    background: rgba(99, 102, 241, 0.12);
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light);
 }
 .bw-settings-panel {
     position: fixed;
@@ -1641,4 +1641,94 @@
     animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-.forecast-empty .empty-icon { font-size: 2.5rem; opacity: 0.5; }
+.forecast-empty .empty-icon { opacity: 0.35; }
+.forecast-empty .empty-icon svg { width: 48px; height: 48px; }
+
+/* ---- Tab icons ---- */
+.forecast-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.tab-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+/* ---- Header icon ---- */
+.forecast-header .header-icon {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+    opacity: 0.75;
+    margin-right: 2px;
+}
+.forecast-header .header-title {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+/* ---- Settings modal section labels & divider ---- */
+.bw-settings-section-label {
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+.bw-settings-section-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 6px 0 2px;
+}
+
+/* ---- Edge toggle tooltips ---- */
+.bw-edge-toggle::after {
+    content: attr(title);
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    white-space: nowrap;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 500;
+    padding: 3px 7px;
+    border-radius: 5px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    z-index: 20;
+}
+.bw-edge-left::after {
+    left: calc(100% + 6px);
+}
+.bw-edge-right::after {
+    right: calc(100% + 6px);
+}
+.bw-edge-toggle:hover::after {
+    opacity: 1;
+}
+
+/* ---- Timeline click hint ---- */
+.timeline-click-hint {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    padding: 0 12px 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.timeline-click-hint::before {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid var(--gold);
+    border-radius: 2px;
+    background: var(--gold-pale);
+    flex-shrink: 0;
+}

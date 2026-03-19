@@ -566,29 +566,40 @@ input[type="number"] {
     margin-top: 12px;
 }
 
+.zoom-controls-float {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    padding: 3px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
 .zoom-btn {
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bg-tertiary);
-    border: 1.5px solid var(--border);
+    background: transparent;
+    border: none;
     border-radius: var(--radius-sm);
-    font-size: 16px;
+    font-size: 15px;
     color: var(--text-secondary);
     cursor: pointer;
     transition: all var(--transition);
 }
 
 .zoom-btn:hover {
-    background: var(--bg-secondary);
+    background: var(--accent-light);
     color: var(--accent);
-    border-color: var(--accent);
 }
 
 .zoom-btn:active {
-    transform: scale(0.94);
+    transform: scale(0.92);
 }
 
 /* Data panel */
@@ -965,10 +976,14 @@ input[type="number"] {
    ENHANCED INTERACTIVITY
    ============================================ */
 
-.data-table tr[data-planet]:hover,
-.data-table tr[data-aspect]:hover {
-    background: rgba(30, 58, 95, 0.06);
+.data-table tr[data-planet],
+.data-table tr[data-aspect] {
     cursor: pointer;
+}
+
+.data-table tr[data-planet]:hover td,
+.data-table tr[data-aspect]:hover td {
+    background: var(--bg-hover);
 }
 
 .data-table tr.active-row {
@@ -1051,19 +1066,20 @@ input[type="number"] {
 
 .aspect-lines-legend {
     position: absolute;
-    bottom: 8px;
+    bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
     align-items: center;
-    gap: 10px;
-    background: rgba(255, 255, 255, 0.94);
-    padding: 4px 12px;
-    border-radius: var(--radius-sm);
-    font-size: 10px;
+    gap: 6px;
+    background: var(--bg-secondary);
+    padding: 5px 12px;
+    border-radius: 100px;
+    font-size: 11px;
     color: var(--text-secondary);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    box-shadow: var(--shadow-md);
     border: 1px solid var(--border);
+    white-space: nowrap;
 }
 
 .aspect-lines-legend .legend-item {
@@ -1074,21 +1090,23 @@ input[type="number"] {
 
 .aspect-lines-legend .legend-item.clickable {
     cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 4px;
+    padding: 3px 8px;
+    border-radius: 100px;
     transition: all 0.2s ease;
-    opacity: 0.65;
+    opacity: 0.6;
+    font-weight: 500;
 }
 
 .aspect-lines-legend .legend-item.clickable:hover {
-    background: rgba(0, 0, 0, 0.04);
-    opacity: 0.9;
+    background: var(--bg-tertiary);
+    opacity: 0.85;
 }
 
 .aspect-lines-legend .legend-item.clickable.active {
     opacity: 1;
     font-weight: 600;
-    background: rgba(30, 58, 95, 0.08);
+    background: var(--accent-light);
+    color: var(--accent);
 }
 
 .aspect-lines-legend .line-sample {
@@ -1099,7 +1117,7 @@ input[type="number"] {
 }
 
 .aspect-lines-legend .line-sample.solid {
-    background: #374151;
+    background: var(--text-primary);
 }
 
 .aspect-lines-legend .line-sample.dashed {

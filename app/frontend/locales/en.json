@@ -420,6 +420,8 @@
           "natal": "Natal layer",
           "natalPointSize": "Natal point size",
           "orientation": "Orientation",
+          "sectionFilters": "Filters",
+          "sectionVisual": "Visual",
           "showAspectsWith": "Show aspects with",
           "transit": "Transit/progression layer",
           "transitPointSize": "Transit point size"
@@ -582,6 +584,7 @@
           "exactToday": "Exact today",
           "title": "Active now"
         },
+        "clickHint": "Click any event bar to jump to that date in Biwheel",
         "empty": "No timeline events",
         "eventCount": "{shown} shown / {total} total",
         "loading": "Loading timeline...",
