@@ -4,6 +4,21 @@
 (function () {
     'use strict';
 
+    function shouldRenderSwitcher() {
+        const body = document?.body;
+        if (!body) return true;
+
+        const hiddenOnPages = [
+            'chart-page',
+            'forecast-page',
+            'natal-full-page',
+            'interpretations-page',
+            'login-page',
+        ];
+
+        return !hiddenOnPages.some((className) => body.classList.contains(className));
+    }
+
     function resolveMountTarget() {
         const forecastHeader = document.querySelector('.forecast-header');
         if (forecastHeader) {
@@ -58,6 +73,9 @@
             return;
         }
         if (!window.FrontendI18n) {
+            return;
+        }
+        if (!shouldRenderSwitcher()) {
             return;
         }
 

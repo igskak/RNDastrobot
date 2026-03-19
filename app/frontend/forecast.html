@@ -245,24 +245,28 @@
                             </div>
                             <button class="bw-edge-toggle bw-edge-left" id="bwOpenIngresses" data-i18n-title="page.forecast.biwheel.openIngresses" data-i18n-aria-label="page.forecast.biwheel.openIngresses" data-i18n-tooltip="page.forecast.biwheel.openIngresses">▸</button>
                             <button class="bw-edge-toggle bw-edge-right" id="bwOpenAspects" data-i18n-title="page.forecast.biwheel.openAspects" data-i18n-aria-label="page.forecast.biwheel.openAspects" data-i18n-tooltip="page.forecast.biwheel.openAspects">◂</button>
-                        </div>
-                        <div class="biwheel-aspect-bar" id="bwAspectFilters">
-                            <div class="bw-layer-legend" id="bwLayerLegend">
-                                <span class="bw-legend-item bw-legend-toggle active" data-layer="natal" data-i18n-title="page.forecast.biwheel.legend.toggleNatal"><span class="bw-legend-mark bw-legend-natal"></span><span data-i18n="page.forecast.biwheel.legend.natal"></span></span>
-                                <span class="bw-legend-item bw-legend-toggle active" data-layer="transit" data-i18n-title="page.forecast.biwheel.legend.toggleTransit"><span class="bw-legend-mark bw-legend-transit"></span><span data-i18n="page.forecast.biwheel.legend.transits"></span></span>
-                                <span class="bw-legend-item bw-legend-toggle active" data-layer="progression" data-i18n-title="page.forecast.biwheel.legend.toggleProgression"><span class="bw-legend-mark bw-legend-progression"></span><span data-i18n="page.forecast.biwheel.legend.progressions"></span></span>
-                                <span class="bw-legend-item bw-legend-toggle active bw-legend-direction-item" data-layer="direction" data-i18n-title="page.forecast.biwheel.legend.toggleDirection"><span class="bw-legend-mark bw-legend-direction"></span><span data-i18n="page.forecast.biwheel.legend.directions"></span>
-                                    <select id="bwDirectionTypeSelect" class="bw-direction-type-select" data-i18n-title="page.forecast.biwheel.legend.directionType">
-                                        <option value="solar_arc" data-i18n="page.forecast.directionType.solarArc"></option>
-                                        <option value="symbolic" data-i18n="page.forecast.directionType.symbolic"></option>
-                                        <option value="equatorial" data-i18n="page.forecast.directionType.equatorial"></option>
-                                    </select>
-                                </span>
+                            <div class="biwheel-aspect-bar" id="bwAspectFilters">
+                                <div class="bw-aspect-row bw-aspect-row--legend">
+                                    <div class="bw-layer-legend" id="bwLayerLegend">
+                                        <span class="bw-legend-item bw-legend-toggle active" data-layer="natal" data-i18n-title="page.forecast.biwheel.legend.toggleNatal"><span class="bw-legend-mark bw-legend-natal"></span><span data-i18n="page.forecast.biwheel.legend.natal"></span></span>
+                                        <span class="bw-legend-item bw-legend-toggle active" data-layer="transit" data-i18n-title="page.forecast.biwheel.legend.toggleTransit"><span class="bw-legend-mark bw-legend-transit"></span><span data-i18n="page.forecast.biwheel.legend.transits"></span></span>
+                                        <span class="bw-legend-item bw-legend-toggle active" data-layer="progression" data-i18n-title="page.forecast.biwheel.legend.toggleProgression"><span class="bw-legend-mark bw-legend-progression"></span><span data-i18n="page.forecast.biwheel.legend.progressions"></span></span>
+                                        <span class="bw-legend-item bw-legend-toggle active bw-legend-direction-item" data-layer="direction" data-i18n-title="page.forecast.biwheel.legend.toggleDirection"><span class="bw-legend-mark bw-legend-direction"></span><span data-i18n="page.forecast.biwheel.legend.directions"></span>
+                                            <select id="bwDirectionTypeSelect" class="bw-direction-type-select" data-i18n-title="page.forecast.biwheel.legend.directionType">
+                                                <option value="solar_arc" data-i18n="page.forecast.directionType.solarArc"></option>
+                                                <option value="symbolic" data-i18n="page.forecast.directionType.symbolic"></option>
+                                                <option value="equatorial" data-i18n="page.forecast.directionType.equatorial"></option>
+                                            </select>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="bw-aspect-row bw-aspect-row--filters">
+                                    <button class="bw-filter-btn" data-filter="all" id="bwFilterAll" data-i18n="common.all"></button>
+                                    <button class="bw-filter-btn active" data-filter="major" id="bwFilterMajor" data-i18n="common.major"></button>
+                                    <button class="bw-filter-btn" data-filter="minor" id="bwFilterMinor" data-i18n="common.minor"></button>
+                                    <button class="bw-filter-btn" id="bwClearFocusBtn" data-i18n="page.forecast.biwheel.clearFocus"></button>
+                                </div>
                             </div>
-                            <button class="bw-filter-btn" data-filter="all" id="bwFilterAll" data-i18n="common.all"></button>
-                            <button class="bw-filter-btn active" data-filter="major" id="bwFilterMajor" data-i18n="common.major"></button>
-                            <button class="bw-filter-btn" data-filter="minor" id="bwFilterMinor" data-i18n="common.minor"></button>
-                            <button class="bw-filter-btn" id="bwClearFocusBtn" data-i18n="page.forecast.biwheel.clearFocus"></button>
                         </div>
                     </div>
                     <div class="biwheel-sidebar">

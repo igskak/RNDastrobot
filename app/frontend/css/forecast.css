@@ -849,17 +849,18 @@
 .bw-filter-btn,
 .bw-settings-action {
     border: 1px solid var(--border);
-    background: white;
+    background: rgba(255, 252, 247, 0.76);
     color: var(--text-secondary);
     border-radius: 8px;
     padding: 4px 8px;
     font-size: 0.72rem;
     cursor: pointer;
+    backdrop-filter: blur(6px);
 }
 .bw-filter-btn.active {
     border-color: var(--accent);
     color: var(--accent);
-    background: var(--accent-light);
+    background: rgba(255, 248, 235, 0.9);
 }
 .bw-settings-panel {
     position: fixed;
@@ -1002,18 +1003,38 @@
 }
 .biwheel-aspect-bar {
     display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    position: absolute;
+    left: 12px;
+    bottom: 12px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    max-width: min(580px, calc(100% - 96px));
+    z-index: 8;
+}
+.bw-aspect-row {
+    display: flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 10px;
-    border-top: 1px solid var(--border, #333);
-    background: var(--bg-secondary, #1a1a2e);
     flex-wrap: wrap;
+}
+.bw-aspect-row--legend {
+    max-width: 100%;
+}
+.bw-aspect-row--filters {
+    padding-top: 2px;
 }
 .bw-layer-legend {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    margin-right: 8px;
+    flex-wrap: wrap;
 }
 .bw-legend-item {
     display: inline-flex;
@@ -1021,6 +1042,11 @@
     gap: 4px;
     font-size: 0.7rem;
     color: var(--text-secondary);
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    background: rgba(255, 252, 247, 0.66);
+    backdrop-filter: blur(6px);
 }
 .bw-legend-toggle {
     cursor: pointer;
@@ -1045,7 +1071,7 @@
     padding: 1px 6px;
     font-size: 0.66rem;
     line-height: 1.2;
-    background: var(--bg-primary);
+    background: rgba(255, 255, 255, 0.78);
     color: var(--text-primary);
     cursor: pointer;
 }
@@ -1576,7 +1602,12 @@
     }
     .biwheel-sidebar { width: 100%; max-height: 280px; border-left: none; border-top: 1px solid var(--border, #333); }
     .biwheel-svg-wrapper { min-height: 300px; }
-    .biwheel-aspect-bar { flex-wrap: wrap; }
+    .biwheel-aspect-bar {
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        max-width: none;
+    }
     .bw-time-ticks { margin: 0 4px 0; height: 9px; }
     #biwheelTimeSlider { min-width: 100px; }
     .bw-planet-toggles { grid-template-columns: repeat(3, minmax(0, 1fr)); }

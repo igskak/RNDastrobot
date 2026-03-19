@@ -289,20 +289,39 @@ function updateHeader(chartData) {
         : new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
     const timeStr = birthData.time.slice(0, 5);
     
-    const firstName = formData?.firstName || '';
-    const lastName = formData?.lastName || '';
+    const firstName = birthData?.first_name || formData?.firstName || '';
+    const lastName = birthData?.last_name || formData?.lastName || '';
     const clientName = [firstName, lastName].filter(Boolean).join(' ').trim();
-    const placeStr = formData?.place || `${birthData.latitude.toFixed(2)}°, ${birthData.longitude.toFixed(2)}°`;
+    const placeStr = getBirthPlaceLabel(chartData, formData);
 
     const titleEl = document.getElementById('birthDate');
     const subtitleEl = document.getElementById('birthPlace');
+    titleEl?.removeAttribute('data-i18n');
     if (clientName) {
         titleEl.textContent = clientName;
-        subtitleEl.textContent = `${dateStr}, ${timeStr} · ${placeStr}`;
+        subtitleEl.textContent = placeStr
+            ? `${dateStr}, ${timeStr} · ${placeStr}`
+            : `${dateStr}, ${timeStr}`;
     } else {
         titleEl.textContent = `${dateStr}, ${timeStr}`;
         subtitleEl.textContent = placeStr;
     }
+}
+
+function getBirthPlaceLabel(chartData, formData) {
+    const candidates = [
+        chartData?.birth_data?.place,
+        formData?.place,
+    ];
+
+    for (const candidate of candidates) {
+        const value = String(candidate || '').trim();
+        if (value) {
+            return value;
+        }
+    }
+
+    return '';
 }
 
 /**

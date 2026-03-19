@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title data-i18n="page.chart.title"></title>
-    <link rel="stylesheet" href="bundles/chart.bundle.css?v=1">
+    <link rel="stylesheet" href="bundles/chart.bundle.css?v=2">
     <link rel="stylesheet" href="css/locale-switcher.css?v=1">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,7 +20,7 @@
     <header class="chart-header-compact">
         <a href="/" class="back-btn-compact" data-i18n-aria-label="common.back" data-i18n-title="common.back">←</a>
         <div class="birth-info-compact">
-            <h2 id="birthDate" data-i18n="page.chart.header.defaultTitle"></h2>
+            <h2 id="birthDate"></h2>
             <p id="birthPlace"></p>
         </div>
         <div class="header-nav-buttons">
@@ -80,22 +80,25 @@
             </div>
 
             <div class="aspect-lines-legend">
-                <span class="legend-item clickable active" data-filter="all" id="filterAll">
-                    <span class="line-sample solid"></span>
-                    <span data-i18n="common.all"></span>
-                </span>
-                <span class="legend-item clickable" data-filter="major" id="filterMajor">
-                    <span class="line-sample solid"></span>
-                    <span data-i18n="common.major"></span>
-                </span>
-                <span class="legend-item clickable" data-filter="minor" id="filterMinor">
-                    <span class="line-sample dashed"></span>
-                    <span data-i18n="common.minor"></span>
-                </span>
-                <span class="legend-sep">|</span>
-                <span class="legend-color" style="color:#ef4444">● <span data-i18n="page.chart.legend.tense"></span></span>
-                <span class="legend-color" style="color:#3b82f6">● <span data-i18n="page.chart.legend.harmonious"></span></span>
-                <span class="legend-color" style="color:#f59e0b">● <span data-i18n="page.chart.legend.neutral"></span></span>
+                <div class="aspect-legend-row aspect-legend-row--filters">
+                    <span class="legend-item clickable active" data-filter="all" id="filterAll">
+                        <span class="line-sample solid"></span>
+                        <span data-i18n="common.all"></span>
+                    </span>
+                    <span class="legend-item clickable" data-filter="major" id="filterMajor">
+                        <span class="line-sample solid"></span>
+                        <span data-i18n="common.major"></span>
+                    </span>
+                    <span class="legend-item clickable" data-filter="minor" id="filterMinor">
+                        <span class="line-sample dashed"></span>
+                        <span data-i18n="common.minor"></span>
+                    </span>
+                </div>
+                <div class="aspect-legend-row aspect-legend-row--colors">
+                    <span class="legend-color" style="color:#ef4444">● <span data-i18n="page.chart.legend.tense"></span></span>
+                    <span class="legend-color" style="color:#3b82f6">● <span data-i18n="page.chart.legend.harmonious"></span></span>
+                    <span class="legend-color" style="color:#f59e0b">● <span data-i18n="page.chart.legend.neutral"></span></span>
+                </div>
             </div>
 
             <div id="tooltip" class="chart-tooltip"></div>
