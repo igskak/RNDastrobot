@@ -81,21 +81,38 @@ function bindEvents() {
     });
 
     refs.tbody.addEventListener('click', async (event) => {
-        const actionBtn = event.target.closest('button[data-action]');
-        if (!actionBtn) return;
-
-        const { action, userId } = actionBtn.dataset;
-        if (!userId) return;
-
-        if (action === 'open') {
-            await openChart(userId);
+        // Toggle ⋯ menu
+        const toggleBtn = event.target.closest('button[data-action="toggle-menu"]');
+        if (toggleBtn) {
+            event.stopPropagation();
+            const dropdown = toggleBtn.nextElementSibling;
+            const isOpen = dropdown.classList.contains('open');
+            closeAllDropdowns();
+            if (!isOpen) {
+                dropdown.classList.add('open');
+                toggleBtn.classList.add('open');
+            }
             return;
         }
 
-        if (action === 'delete') {
-            await handleDelete(userId, actionBtn);
+        // Action inside dropdown
+        const actionBtn = event.target.closest('button[data-action]');
+        if (actionBtn) {
+            const { action, userId } = actionBtn.dataset;
+            if (!userId) return;
+            if (action === 'delete') { await handleDelete(userId, actionBtn); }
+            return;
+        }
+
+        // Row click → open chart
+        closeAllDropdowns();
+        const row = event.target.closest('tr[data-user-id]');
+        if (row) {
+            await openChart(row.dataset.userId);
         }
     });
+
+    document.addEventListener('click', closeAllDropdowns);
 
     document.addEventListener('frontend:locale-changed', () => {
         if (refs.loading && !refs.loading.classList.contains('hidden') && !state.users.length) {
@@ -183,11 +200,21 @@ function renderUsers() {
     updateCounters();
 }
 
+function closeAllDropdowns() {
+    document.querySelectorAll('.actions-dropdown.open').forEach((d) => d.classList.remove('open'));
+    document.querySelectorAll('.btn-actions.open').forEach((b) => b.classList.remove('open'));
+}
+
 function buildUserRow(user) {
     const tr = document.createElement('tr');
 
     const userId = String(user.user_id || '');
     const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || t('common.notAvailable');
+    const initials = [user.first_name, user.last_name]
+        .filter(Boolean)
+        .map((n) => n[0].toUpperCase())
+        .join('')
+        .slice(0, 2) || '?';
     const birthDate = user.birth_date ? formatDate(user.birth_date) : t('common.notAvailable');
     const place = user.birth_place || t('common.notAvailable');
     const created = user.created_at ? formatDateTime(user.created_at) : t('common.notAvailable');
@@ -199,14 +226,26 @@ function buildUserRow(user) {
     const openLabel = escapeHtml(t('page.clients.actions.open'));
     const deleteLabel = escapeHtml(t('page.clients.actions.delete'));
 
+    tr.dataset.userId = userId;
     tr.innerHTML = `
-        <td data-label="${labelName}"><strong>${escapeHtml(name)}</strong></td>
+        <td data-label="${labelName}">
+            <div class="client-name-cell">
+                <span class="client-avatar">${escapeHtml(initials)}</span>
+                <strong>${escapeHtml(name)}</strong>
+            </div>
+        </td>
         <td data-label="${labelBirthDate}">${escapeHtml(birthDate)}</td>
         <td data-label="${labelPlace}">${escapeHtml(place)}</td>
         <td data-label="${labelCreated}">${escapeHtml(created)}</td>
-        <td data-label="${labelActions}" class="clients-actions">
-            <button class="btn-open" data-action="open" data-user-id="${escapeHtml(userId)}">${openLabel}</button>
-            <button class="btn-delete" data-action="delete" data-user-id="${escapeHtml(userId)}">${deleteLabel}</button>
+        <td data-label="${labelActions}">
+            <div class="row-actions">
+                <button class="btn-actions" data-action="toggle-menu" data-user-id="${escapeHtml(userId)}" aria-label="${escapeHtml(t('page.clients.table.actions'))}">
+                    <svg width="14" height="4" viewBox="0 0 14 4" fill="none"><circle cx="2" cy="2" r="1.4" fill="currentColor"/><circle cx="7" cy="2" r="1.4" fill="currentColor"/><circle cx="12" cy="2" r="1.4" fill="currentColor"/></svg>
+                </button>
+                <div class="actions-dropdown">
+                    <button class="action-item danger" data-action="delete" data-user-id="${escapeHtml(userId)}">${deleteLabel}</button>
+                </div>
+            </div>
         </td>
     `;
 
@@ -271,10 +310,12 @@ function updateCounters() {
 
     if (state.searchTerm) {
         refs.resultsMeta.textContent = t('page.clients.counters.shownOf', { shown, total });
+        refs.resultsMeta.style.display = '';
         return;
     }
 
-    refs.resultsMeta.textContent = t('page.clients.counters.shown', { shown });
+    refs.resultsMeta.textContent = '';
+    refs.resultsMeta.style.display = 'none';
 }
 
 async function openChart(userId) {

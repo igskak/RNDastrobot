@@ -222,7 +222,7 @@
       "eastShort": "Сх",
       "westShort": "Зх"
     },
-    "brandName": "AstroBot",
+    "brandName": "Steliara",
     "monthLabel": "Місяць"
   },
   "i18n": {
@@ -350,9 +350,9 @@
     },
     "clients": {
       "title": "База клієнтів",
-      "subtitle": "Збережені клієнти та карти",
+      "subtitle": "Клієнти",
       "listAriaLabel": "Список клієнтів",
-      "newCard": "Нова карта",
+      "newCard": "Новий клієнт",
       "searchPlaceholder": "Пошук за ім'ям/місцем",
       "searchAriaLabel": "Пошук клієнтів",
       "sortAriaLabel": "Сортування клієнтів",
@@ -640,7 +640,7 @@
       },
       "subtitle": "Професійні астрологічні розрахунки карт на базі Swiss Ephemeris",
       "title": "Калькулятор натальної карти",
-      "logo": "AstroBot"
+      "logo": "Steliara"
     },
     "interpretations": {
       "actions": {
@@ -782,7 +782,7 @@
     },
     "login": {
       "meta": {
-        "title": "Вхід до AstroBot"
+        "title": "Вхід до Steliara"
       },
       "heading": "Безпечний вхід",
       "subheading": "Продовжуйте через Google або за email і паролем.",
@@ -865,8 +865,8 @@
         "checkEmail": {
           "title": "Перевірте пошту",
           "subtitle": "Відкрийте лист і перейдіть за посиланням, щоб продовжити.",
-          "body": "Якщо така адреса є в AstroBot, посилання для скидання скоро надійде.",
-          "bodyWithEmail": "Якщо адреса {email} є в AstroBot, посилання для скидання скоро надійде."
+          "body": "Якщо така адреса є в Steliara, посилання для скидання скоро надійде.",
+          "bodyWithEmail": "Якщо адреса {email} є в Steliara, посилання для скидання скоро надійде."
         },
         "reset": {
           "title": "Новий пароль",
@@ -886,7 +886,7 @@
         },
         "register": {
           "title": "Створіть акаунт",
-          "subtitle": "Зареєструйтеся за email і паролем, щоб почати роботу в AstroBot."
+          "subtitle": "Зареєструйтеся за email і паролем, щоб почати роботу в Steliara."
         },
         "verifyCheckEmail": {
           "title": "Перевірте пошту",

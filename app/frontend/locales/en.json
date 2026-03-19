@@ -222,7 +222,7 @@
       "eastShort": "E",
       "westShort": "W"
     },
-    "brandName": "AstroBot",
+    "brandName": "Steliara",
     "monthLabel": "Month"
   },
   "i18n": {
@@ -373,7 +373,7 @@
         "confirmDeleteHint": "Click delete again to confirm",
         "deleted": "Client deleted"
       },
-      "newCard": "New chart",
+      "newCard": "New client",
       "noResults": "No matches",
       "searchAriaLabel": "Search clients",
       "searchPlaceholder": "Search by name/place",
@@ -386,7 +386,7 @@
         "nameDesc": "Name Z-A"
       },
       "sortAriaLabel": "Sort clients",
-      "subtitle": "Saved clients and charts",
+      "subtitle": "Clients",
       "table": {
         "actions": "Actions",
         "birthDate": "Birth date",
@@ -640,7 +640,7 @@
       },
       "subtitle": "Professional astrology chart calculations powered by Swiss Ephemeris",
       "title": "Natal Chart Calculator",
-      "logo": "AstroBot"
+      "logo": "Steliara"
     },
     "interpretations": {
       "actions": {
@@ -782,7 +782,7 @@
     },
     "login": {
       "meta": {
-        "title": "AstroBot login"
+        "title": "Steliara login"
       },
       "heading": "Secure sign in",
       "subheading": "Continue with Google or your email and password.",
@@ -865,8 +865,8 @@
         "checkEmail": {
           "title": "Check your email",
           "subtitle": "Use the link from your inbox to continue.",
-          "body": "If the address exists in AstroBot, a reset link will arrive shortly.",
-          "bodyWithEmail": "If {email} exists in AstroBot, a reset link will arrive shortly."
+          "body": "If the address exists in Steliara, a reset link will arrive shortly.",
+          "bodyWithEmail": "If {email} exists in Steliara, a reset link will arrive shortly."
         },
         "reset": {
           "title": "Set a new password",
@@ -886,7 +886,7 @@
         },
         "register": {
           "title": "Create your account",
-          "subtitle": "Sign up with email and password to start using AstroBot."
+          "subtitle": "Sign up with email and password to start using Steliara."
         },
         "verifyCheckEmail": {
           "title": "Check your email",

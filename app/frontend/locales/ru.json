@@ -222,7 +222,7 @@
       "eastShort": "В",
       "westShort": "З"
     },
-    "brandName": "AstroBot",
+    "brandName": "Steliara",
     "monthLabel": "Месяц"
   },
   "i18n": {
@@ -350,9 +350,9 @@
     },
     "clients": {
       "title": "База клиентов",
-      "subtitle": "Сохраненные клиенты и карты",
+      "subtitle": "Клиенты",
       "listAriaLabel": "Список клиентов",
-      "newCard": "Новая карта",
+      "newCard": "Новый клиент",
       "searchPlaceholder": "Поиск по имени/месту",
       "searchAriaLabel": "Поиск клиентов",
       "sortAriaLabel": "Сортировка клиентов",
@@ -640,7 +640,7 @@
       },
       "subtitle": "Профессиональные астрологические расчеты карт на базе Swiss Ephemeris",
       "title": "Калькулятор натальной карты",
-      "logo": "AstroBot"
+      "logo": "Steliara"
     },
     "interpretations": {
       "actions": {
@@ -782,7 +782,7 @@
     },
     "login": {
       "meta": {
-        "title": "Вход в AstroBot"
+        "title": "Вход в Steliara"
       },
       "heading": "Безопасный вход",
       "subheading": "Продолжите через Google или по email и паролю.",
@@ -865,8 +865,8 @@
         "checkEmail": {
           "title": "Проверьте почту",
           "subtitle": "Откройте письмо и перейдите по ссылке, чтобы продолжить.",
-          "body": "Если такой адрес есть в AstroBot, ссылка для сброса скоро придет.",
-          "bodyWithEmail": "Если адрес {email} есть в AstroBot, ссылка для сброса скоро придет."
+          "body": "Если такой адрес есть в Steliara, ссылка для сброса скоро придет.",
+          "bodyWithEmail": "Если адрес {email} есть в Steliara, ссылка для сброса скоро придет."
         },
         "reset": {
           "title": "Новый пароль",
@@ -886,7 +886,7 @@
         },
         "register": {
           "title": "Создайте аккаунт",
-          "subtitle": "Зарегистрируйтесь по email и паролю, чтобы начать работу в AstroBot."
+          "subtitle": "Зарегистрируйтесь по email и паролю, чтобы начать работу в Steliara."
         },
         "verifyCheckEmail": {
           "title": "Проверьте почту",
