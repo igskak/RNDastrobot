@@ -737,14 +737,13 @@
     line-height: 1.3;
     color: var(--text-secondary);
 }
-/* Zoom controls */
+/* Floating controls */
 .bw-overlay-controls {
     position: absolute;
     top: 12px;
     right: 12px;
     display: flex;
     align-items: flex-start;
-    gap: 8px;
     z-index: 9;
 }
 .bw-focus-controls {
@@ -756,62 +755,78 @@
     z-index: 9;
 }
 .biwheel-zoom-controls {
-    position: static;
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
     display: flex;
     flex-direction: column;
     gap: 4px;
-    z-index: auto;
+    padding: 5px;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(224, 221, 215, 0.92);
+    border-radius: 18px;
+    box-shadow: 0 10px 24px rgba(26, 22, 20, 0.08);
+    z-index: 9;
 }
 .bw-zoom-btn {
     width: 32px;
     height: 32px;
-    border: 1px solid var(--border, #333);
-    border-radius: 6px;
-    background: var(--bg-secondary, #1a1a2e);
-    color: var(--text-primary, #eee);
-    font-size: 18px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 15px;
     line-height: 1;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.15s;
+    transition: all var(--transition);
 }
-.bw-zoom-btn:hover { background: var(--bg-hover, #2a2a4a); }
+.bw-zoom-btn:hover {
+    background: var(--gold-pale);
+    color: var(--accent);
+}
+.bw-zoom-btn:active {
+    transform: scale(0.92);
+}
 .bw-settings-btn {
-    font-size: 16px;
+    font-size: 14px;
 }
 .bw-mode-btn {
-    min-width: 68px;
-    height: 32px;
-    border: 1px solid var(--border, #333);
+    min-width: 72px;
+    height: 34px;
+    border: 1px solid rgba(224, 221, 215, 0.92);
     border-radius: 999px;
-    background: rgba(255, 252, 247, 0.86);
-    color: var(--text-primary, #eee);
+    background: rgba(255, 255, 255, 0.94);
+    color: var(--text-secondary);
     font-size: 0.74rem;
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: 0.01em;
     line-height: 1;
     padding: 0 12px;
     cursor: pointer;
-    backdrop-filter: blur(8px);
-    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+    box-shadow: 0 10px 24px rgba(26, 22, 20, 0.08);
+    backdrop-filter: blur(6px);
+    transition: all var(--transition);
 }
 .bw-mode-btn:hover {
-    border-color: var(--accent);
-    background: rgba(255, 248, 235, 0.96);
+    background: var(--gold-pale);
+    color: var(--accent);
+    border-color: rgba(184, 147, 90, 0.32);
 }
 .bw-mode-btn:active {
-    transform: translateY(1px);
+    transform: scale(0.97);
 }
 .bw-mode-btn[aria-pressed="true"] {
-    border-color: var(--accent);
+    border-color: rgba(184, 147, 90, 0.36);
     color: var(--accent);
-    background: rgba(255, 248, 235, 0.98);
+    background: rgba(245, 237, 223, 0.96);
+    box-shadow: inset 0 0 0 1px rgba(30, 58, 95, 0.08), 0 10px 24px rgba(26, 22, 20, 0.08);
 }
 .bw-mode-btn[data-peeking="true"] {
-    border-color: rgba(30, 58, 95, 0.55);
-    background: rgba(255, 248, 235, 0.9);
+    border-color: rgba(184, 147, 90, 0.3);
+    background: rgba(245, 237, 223, 0.9);
     color: var(--text-primary);
 }
 /* Sidebar with aspects */
