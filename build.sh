@@ -10,6 +10,12 @@ echo "📦 Installing Python dependencies..."
 pip install --upgrade pip
 pip install -r app/requirements.txt
 
+# Install frontend build dependencies and regenerate versioned bundles/HTML markers
+echo "🧰 Installing frontend dependencies..."
+npm --prefix app ci
+echo "🎨 Building frontend bundles..."
+npm --prefix app run build:frontend
+
 # Build Swiss Ephemeris library
 echo "🌟 Building Swiss Ephemeris library..."
 cd swisseph
