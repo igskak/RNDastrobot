@@ -440,6 +440,8 @@
         "collapseAspects": "Collapse aspects table",
         "collapseIngresses": "Collapse ingresses table",
         "empty": "No bi-wheel data",
+        "natalButton": "Natal",
+        "natalButtonHint": "Hold to peek, tap to pin natal wheel",
         "legend": {
           "directionType": "Direction type",
           "directions": "Directions",

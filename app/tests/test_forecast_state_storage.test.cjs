@@ -50,6 +50,7 @@ test('buildPersistedState normalizes invalid forecast values', () => {
             pendingBiwheelDate: '2026-03-18',
             directionType: 'wrong',
             biwheelOrientation: 'bad',
+            biwheelDisplayMode: 'natal-peek',
             solarOrientation: 'bad',
             solarPanelTab: 'bad',
             tableSortCol: 'bad',
@@ -77,6 +78,7 @@ test('buildPersistedState normalizes invalid forecast values', () => {
     assert.equal(snapshot.pendingBiwheelDate, '2026-03-18');
     assert.equal(snapshot.directionType, 'solar_arc');
     assert.equal(snapshot.biwheelOrientation, 'aries');
+    assert.equal(snapshot.biwheelDisplayMode, 'prognostic');
     assert.equal(snapshot.solarOrientation, 'aries');
     assert.equal(snapshot.solarPanelTab, 'solar-planets-list');
     assert.equal(snapshot.tableSortCol, 'date');
@@ -113,6 +115,7 @@ test('parsePersistedState restores only snapshots for the same chart', () => {
             transitScaleIndex: 3,
             transitMoment: '2026-03-18',
             directionType: 'equatorial',
+            biwheelDisplayMode: 'natal-pinned',
             hasCalculatedState: true,
             activeRunId: 'run-2',
             activeRunMethod: 'directions',
@@ -135,6 +138,7 @@ test('parsePersistedState restores only snapshots for the same chart', () => {
     assert.equal(restored.transitScaleUnit, 'day');
     assert.equal(restored.transitScaleIndex, 3);
     assert.equal(restored.directionType, 'equatorial');
+    assert.equal(restored.biwheelDisplayMode, 'natal-pinned');
     assert.equal(restored.activeRunId, 'run-2');
     assert.equal(restored.activeRunMethod, 'directions');
     assert.equal(restored.controls.endDate, '2026-03-31');

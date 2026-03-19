@@ -23,6 +23,12 @@
 
     const C = 300; // center
     const NS = 'http://www.w3.org/2000/svg';
+    const VIEWBOX_SIZE = 600;
+    const DEFAULT_VIEWPORT = Object.freeze({
+        zoom: 1,
+        panX: 0,
+        panY: 0,
+    });
 
     // Radii
     const OUTER_R = 285;
@@ -130,6 +136,7 @@
     let wheelBandsByMethod = new Map();
     let wheelBandWidth = DEFAULT_WHEEL_BAND_WIDTH;
     let layoutAnimationTimer = null;
+    const viewportSubscribers = new Set();
 
     function el(tag, attrs, text) {
         const e = document.createElementNS(NS, tag);
@@ -425,6 +432,48 @@
         return color;
     }
 
+    function sanitizeNormalizedViewport(viewport) {
+        const source = viewport && typeof viewport === 'object' ? viewport : DEFAULT_VIEWPORT;
+        const zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Number(source.zoom) || DEFAULT_VIEWPORT.zoom));
+        const panXValue = Number(source.panX);
+        const panYValue = Number(source.panY);
+        return {
+            zoom,
+            panX: Number.isFinite(panXValue) ? panXValue : DEFAULT_VIEWPORT.panX,
+            panY: Number.isFinite(panYValue) ? panYValue : DEFAULT_VIEWPORT.panY,
+        };
+    }
+
+    function getNormalizedViewport() {
+        return {
+            zoom: zoomLevel,
+            panX,
+            panY,
+        };
+    }
+
+    function notifyViewportSubscribers() {
+        const snapshot = getNormalizedViewport();
+        viewportSubscribers.forEach((listener) => {
+            try {
+                listener(snapshot);
+            } catch (error) {
+                console.error('ForecastBiwheel viewport subscriber error:', error);
+            }
+        });
+    }
+
+    function subscribeViewport(listener) {
+        if (typeof listener !== 'function') {
+            return () => {};
+        }
+        viewportSubscribers.add(listener);
+        listener(getNormalizedViewport());
+        return () => {
+            viewportSubscribers.delete(listener);
+        };
+    }
+
     // ─── Public render ──────────────────────────────────
     function render(natalData, progData) {
         lastNatalData = natalData;
@@ -433,9 +482,6 @@
         if (!svg) return;
         clearHoveredAspectState({ hideTooltip: true, force: true });
         svg.innerHTML = '';
-        // Reset zoom/pan on new render
-        zoomLevel = 1; panX = 0; panY = 0;
-        svg.setAttribute('viewBox', '0 0 600 600');
         ascLong = natalData.angles?.ASC?.longitude || 0;
 
         const layers = buildPrognosticLayers(progData);
@@ -524,6 +570,8 @@
         } else {
             applyFocusState();
         }
+
+        applyViewBox({ notify: false });
     }
 
     function applyHighlight(h) {
@@ -2133,24 +2181,36 @@
     let panX = 0, panY = 0;
     let isPanning = false, panStartX = 0, panStartY = 0;
 
-    function applyViewBox() {
+    function applyViewBox(options = {}) {
         if (!svg) return;
-        const size = 600;
+        const size = VIEWBOX_SIZE;
         const w = size / zoomLevel;
         const h = size / zoomLevel;
-        const cx = size / 2 + panX;
-        const cy = size / 2 + panY;
+        const cx = size / 2 + (panX * size);
+        const cy = size / 2 + (panY * size);
         svg.setAttribute('viewBox', `${cx - w/2} ${cy - h/2} ${w} ${h}`);
+        if (options.notify !== false) {
+            notifyViewportSubscribers();
+        }
+    }
+
+    function setNormalizedViewport(viewport, options = {}) {
+        const nextViewport = sanitizeNormalizedViewport(viewport);
+        zoomLevel = nextViewport.zoom;
+        panX = nextViewport.panX;
+        panY = nextViewport.panY;
+        applyViewBox(options);
+        return getNormalizedViewport();
     }
 
     function resetView() {
-        zoomLevel = 1; panX = 0; panY = 0;
-        applyViewBox();
+        setNormalizedViewport(DEFAULT_VIEWPORT);
     }
 
     function initZoomPan() {
         const wrapper = document.getElementById('biwheelSvgWrapper');
-        if (!wrapper) return;
+        if (!wrapper || wrapper.dataset.zoomInit === '1') return;
+        wrapper.dataset.zoomInit = '1';
 
         // Wheel zoom
         wrapper.addEventListener('wheel', e => {
@@ -2162,15 +2222,15 @@
 
         // Mouse drag pan
         wrapper.addEventListener('mousedown', e => {
-            if (e.button !== 0) return;
+            if (e.button !== 0 || e.target.closest('.bw-overlay-controls')) return;
             isPanning = true;
             panStartX = e.clientX; panStartY = e.clientY;
         });
         window.addEventListener('mousemove', e => {
             if (!isPanning) return;
-            const scale = 600 / (zoomLevel * (wrapper.clientWidth || 600));
-            panX -= (e.clientX - panStartX) * scale;
-            panY -= (e.clientY - panStartY) * scale;
+            const width = wrapper.clientWidth || VIEWBOX_SIZE;
+            panX -= (e.clientX - panStartX) / (zoomLevel * width);
+            panY -= (e.clientY - panStartY) / (zoomLevel * width);
             panStartX = e.clientX; panStartY = e.clientY;
             applyViewBox();
         });
@@ -2204,9 +2264,9 @@
                 }
                 lastTouchDist = dist;
             } else if (e.touches.length === 1 && isPanning) {
-                const scale = 600 / (zoomLevel * (wrapper.clientWidth || 600));
-                panX -= (e.touches[0].clientX - panStartX) * scale;
-                panY -= (e.touches[0].clientY - panStartY) * scale;
+                const width = wrapper.clientWidth || VIEWBOX_SIZE;
+                panX -= (e.touches[0].clientX - panStartX) / (zoomLevel * width);
+                panY -= (e.touches[0].clientY - panStartY) / (zoomLevel * width);
                 panStartX = e.touches[0].clientX;
                 panStartY = e.touches[0].clientY;
                 applyViewBox();
@@ -2357,6 +2417,10 @@
         hasLastRender,
         rerenderLast,
         setAspectFilter,
-        resetAspectFilters
+        resetAspectFilters,
+        getNormalizedViewport,
+        setNormalizedViewport,
+        resetViewport: resetView,
+        subscribeViewport,
     };
 })();

@@ -79,12 +79,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         chartData.birth_data?.house_system || formData?.houseSystem || 'P'
     );
 
-    // Объединяем special_points с planets для отображения
-    chartData = mergeSpecialPointsIntoPlanets(chartData);
-    if (!chartData.birth_data) {
-        chartData.birth_data = {};
-    }
-    chartData.birth_data.house_system = currentSettings.houseSystem;
+    chartData = window.NatalWheelData?.prepareNatalWheelData
+        ? window.NatalWheelData.prepareNatalWheelData(chartData, { houseSystem: currentSettings.houseSystem })
+        : chartData;
 
     // Сохраняем в глобальный кэш для интерактивности
     window.chartDataCache = chartData;
@@ -155,48 +152,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         syncHoveredAspectToActiveSurface();
     });
 });
-
-/**
- * Объединение special_points с planets для единого отображения
- */
-function mergeSpecialPointsIntoPlanets(chartData) {
-    if (!chartData.special_points) return chartData;
-
-    // Маппинг имён из API в имена для отображения
-    const nameMapping = {
-        'TrueNorthNode': 'TrueNode',
-        'TrueSouthNode': 'SouthNode',
-        'Fortune': 'PartOfFortune'
-    };
-
-    // Точки для добавления в planets
-    const pointsToAdd = ['TrueNorthNode', 'TrueSouthNode', 'BlackMoon', 'WhiteMoon', 'Fortune'];
-
-    pointsToAdd.forEach(key => {
-        const point = chartData.special_points[key];
-        if (point && point.longitude !== null) {
-            const displayName = nameMapping[key] || key;
-
-            // Проверяем, нет ли уже такой точки в planets
-            const exists = chartData.planets.some(p =>
-                p.name === displayName || p.name === key
-            );
-
-            if (!exists) {
-                chartData.planets.push({
-                    name: displayName,
-                    longitude: point.longitude,
-                    sign: point.sign,
-                    degree_in_sign: point.degree_in_sign,
-                    house: point.house,
-                    retrograde: false
-                });
-            }
-        }
-    });
-
-    return chartData;
-}
 
 /**
  * Обновление ссылок на интерпретации с user_id
@@ -537,12 +492,9 @@ async function applySettings() {
             let newChartData = await inFlightRecalcPromise;
 
             if (newChartData) {
-                // Объединяем special_points с planets
-                newChartData = mergeSpecialPointsIntoPlanets(newChartData);
-                if (!newChartData.birth_data) {
-                    newChartData.birth_data = {};
-                }
-                newChartData.birth_data.house_system = houseSystem;
+                newChartData = window.NatalWheelData?.prepareNatalWheelData
+                    ? window.NatalWheelData.prepareNatalWheelData(newChartData, { houseSystem })
+                    : newChartData;
                 window.chartDataCache = newChartData;
                 redrawChart(newChartData, hiddenPlanets, orientation);
             }

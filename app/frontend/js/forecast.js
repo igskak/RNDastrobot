@@ -57,6 +57,7 @@ function formatPlanetCellHtml(bodyName, isRetrograde = false) {
 const ForecastState = {
     userId: null,
     natalData: null,
+    natalWheelData: null,
     currentTab: 'biwheel',
     isFocusMode: false,
     method: 'transits',
@@ -84,6 +85,7 @@ const ForecastState = {
     tableSortCol: 'date',
     tableSortAsc: true,
     biwheelOrientation: 'aries',
+    biwheelDisplayMode: 'prognostic',
     transitScaleUnit: 'week',
     transitScalePoints: [],
     transitScaleIndex: 0,
@@ -114,6 +116,14 @@ const ForecastState = {
     timezone: 'UTC',
     activeRunId: null,
     activeRunMethod: null,
+    natalOverlayWheel: null,
+    natalOverlayViewportUnsubscribe: null,
+    biwheelCompareHighlightHover: null,
+    biwheelCompareHighlightPinned: null,
+    appliedBiwheelCompareTarget: null,
+    biwheelCompareInteractionsInit: false,
+    natalButtonPress: null,
+    spacePeekActive: false,
 };
 window.ForecastState = ForecastState;
 
@@ -121,6 +131,15 @@ const SOLAR_LOCATION_STORAGE_KEY = 'forecastSolarLocation';
 const SOLAR_YEAR_STORAGE_KEY = 'forecastSolarYear';
 const DIRECTION_TYPE_STORAGE_KEY = 'forecastDirectionType';
 const INGRESS_SUMMARY_CACHE_VERSION = 'v5';
+const BIWHEEL_NATAL_SCALE_STORAGE_KEY = 'bwNatalPointScale';
+const BIWHEEL_NATAL_BUTTON_TAP_MAX_MS = 220;
+const BIWHEEL_NATAL_VIEWBOX_SIZE = 500;
+const BIWHEEL_NATAL_ANGLE_HOUSE_MAP = {
+    ASC: '1',
+    DSC: '7',
+    MC: '10',
+    IC: '4',
+};
 const FORECAST_PERSIST_WATCH_IDS = new Set([
     'startDate',
     'endDate',
@@ -134,6 +153,31 @@ const FORECAST_PERSIST_WATCH_IDS = new Set([
 ]);
 
 let forecastStatePersistTimer = null;
+let natalButtonIgnoreClickUntil = 0;
+
+function getForecastDisplayModeApi() {
+    return window.ForecastDisplayMode || null;
+}
+
+function normalizeForecastBiwheelDisplayMode(value, options = {}) {
+    return getForecastDisplayModeApi()?.normalizeForecastDisplayMode
+        ? getForecastDisplayModeApi().normalizeForecastDisplayMode(value, options)
+        : (options.persisted === true
+            ? (value === 'natal-pinned' ? 'natal-pinned' : 'prognostic')
+            : (['prognostic', 'natal-peek', 'natal-pinned'].includes(value) ? value : 'prognostic'));
+}
+
+function reduceForecastBiwheelDisplayMode(currentMode, action) {
+    return getForecastDisplayModeApi()?.reduceForecastDisplayMode
+        ? getForecastDisplayModeApi().reduceForecastDisplayMode(currentMode, action)
+        : normalizeForecastBiwheelDisplayMode(currentMode);
+}
+
+function isEditableForecastTarget(target) {
+    return getForecastDisplayModeApi()?.isEditableControlTarget
+        ? getForecastDisplayModeApi().isEditableControlTarget(target)
+        : false;
+}
 
 function getForecastStorageApi() {
     return window.ForecastStateStorage || null;
@@ -323,6 +367,7 @@ function flushForecastStatePersist() {
             pendingBiwheelDate: ForecastState.pendingBiwheelDate,
             directionType: ForecastState.directionType,
             biwheelOrientation: ForecastState.biwheelOrientation,
+            biwheelDisplayMode: ForecastState.biwheelDisplayMode,
             solarOrientation: ForecastState.solarOrientation,
             solarPanelTab: ForecastState.solarPanelTab,
             tableSortCol: ForecastState.tableSortCol,
@@ -377,6 +422,7 @@ function restoreForecastStateSnapshot() {
     ForecastState.pendingBiwheelDate = restored.pendingBiwheelDate || restored.transitMoment || null;
     ForecastState.directionType = normalizeDirectionType(restored.directionType || ForecastState.directionType || 'solar_arc');
     ForecastState.biwheelOrientation = restored.biwheelOrientation;
+    ForecastState.biwheelDisplayMode = normalizeForecastBiwheelDisplayMode(restored.biwheelDisplayMode, { persisted: false });
     ForecastState.solarOrientation = restored.solarOrientation;
     ForecastState.solarPanelTab = restored.solarPanelTab;
     ForecastState.tableSortCol = restored.tableSortCol;
@@ -393,6 +439,8 @@ function restoreForecastStateSnapshot() {
     if (biwheelOrientationSelect) biwheelOrientationSelect.value = ForecastState.biwheelOrientation;
     const solarOrientationSelect = document.getElementById('solarOrientationSelect');
     if (solarOrientationSelect) solarOrientationSelect.value = ForecastState.solarOrientation;
+
+    applyBiwheelDisplayModeState();
 
     return restored;
 }
@@ -447,6 +495,13 @@ function activateForecastTab(tabId, { render = true } = {}) {
     });
 
     ForecastState.currentTab = nextTab;
+    if (nextTab !== 'biwheel' && ForecastState.biwheelDisplayMode === 'natal-peek') {
+        setBiwheelDisplayMode('prognostic', { persist: false, preserveCompare: false });
+        ForecastState.spacePeekActive = false;
+        clearNatalButtonPress();
+    } else {
+        applyBiwheelDisplayModeState();
+    }
     updateControlsVisibility();
     scheduleForecastStatePersist();
 
@@ -503,6 +558,507 @@ function clampChartPointScale(v) {
 
 function readChartPointScale() {
     return clampChartPointScale(parseFloat(localStorage.getItem('solarPointScale') || '1.2'));
+}
+
+function getPreparedNatalWheelData() {
+    if (ForecastState.natalWheelData) return ForecastState.natalWheelData;
+    if (!ForecastState.natalData) return null;
+
+    const houseSystem = ForecastState.natalData?.birth_data?.house_system || undefined;
+    ForecastState.natalWheelData = window.NatalWheelData?.prepareNatalWheelData
+        ? window.NatalWheelData.prepareNatalWheelData(ForecastState.natalData, { houseSystem })
+        : ForecastState.natalData;
+    return ForecastState.natalWheelData;
+}
+
+function readBiwheelNatalPointScale() {
+    return clampChartPointScale(parseFloat(localStorage.getItem(BIWHEEL_NATAL_SCALE_STORAGE_KEY) || '1.0'));
+}
+
+function getCurrentBiwheelViewport() {
+    return window.ForecastBiwheel?.getNormalizedViewport?.() || {
+        zoom: 1,
+        panX: 0,
+        panY: 0,
+    };
+}
+
+function applyNormalizedViewBoxToSvg(svg, viewport, baseSize) {
+    if (!svg) return;
+    const zoom = Math.min(4, Math.max(0.5, Number(viewport?.zoom) || 1));
+    const panX = Number.isFinite(Number(viewport?.panX)) ? Number(viewport.panX) : 0;
+    const panY = Number.isFinite(Number(viewport?.panY)) ? Number(viewport.panY) : 0;
+    const width = baseSize / zoom;
+    const height = baseSize / zoom;
+    const centerX = baseSize / 2 + (panX * baseSize);
+    const centerY = baseSize / 2 + (panY * baseSize);
+    svg.setAttribute('viewBox', `${centerX - width / 2} ${centerY - height / 2} ${width} ${height}`);
+}
+
+function applyNatalOverlayViewport(viewport = getCurrentBiwheelViewport()) {
+    const svg = document.getElementById('biwheelNatalSvg');
+    if (!svg) return;
+    applyNormalizedViewBoxToSvg(svg, viewport, BIWHEEL_NATAL_VIEWBOX_SIZE);
+}
+
+function ensureNatalOverlayWheel() {
+    const svg = document.getElementById('biwheelNatalSvg');
+    if (!svg || !window.ChartWheel) return null;
+
+    if (!ForecastState.natalOverlayWheel || ForecastState.natalOverlayWheel.svg !== svg) {
+        ForecastState.natalOverlayWheel = new window.ChartWheel(svg);
+    }
+    return ForecastState.natalOverlayWheel;
+}
+
+function escapeForecastSelectorValue(value) {
+    if (window.CSS?.escape) return window.CSS.escape(String(value ?? ''));
+    return String(value ?? '').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
+function normalizeNatalCompareBodyName(name) {
+    return window.NatalWheelData?.normalizeSpecialPointName
+        ? window.NatalWheelData.normalizeSpecialPointName(name)
+        : name;
+}
+
+function normalizeBiwheelCompareHighlight(highlight) {
+    if (!highlight || typeof highlight !== 'object') return null;
+    const rawNatalBody = String(highlight.natalBody || '').trim();
+    if (!rawNatalBody) return null;
+
+    const normalizedBody = normalizeNatalCompareBodyName(rawNatalBody);
+    const cuspMatch = normalizedBody.match(/^Cusp(\d{1,2})$/i);
+    const mappedHouse = cuspMatch?.[1] || BIWHEEL_NATAL_ANGLE_HOUSE_MAP[normalizedBody] || null;
+    const target = mappedHouse
+        ? { type: 'house', house: mappedHouse }
+        : { type: 'planet', name: normalizedBody };
+    const key = highlight.key || `${target.type}:${target.type === 'house' ? target.house : target.name}`;
+
+    return {
+        key,
+        natalBody: normalizedBody,
+        target,
+        sourceKind: highlight.sourceKind || 'unknown',
+    };
+}
+
+function getResolvedBiwheelCompareHighlight() {
+    return ForecastState.biwheelCompareHighlightPinned || ForecastState.biwheelCompareHighlightHover || null;
+}
+
+function setNatalHouseCompareState(group, active) {
+    if (!(group instanceof Element)) return;
+    const line = group.querySelector('.house-cusp-line');
+    const text = group.querySelector('text');
+    const houseNumber = Number.parseInt(group.getAttribute('data-house') || '', 10);
+    const isAngular = [1, 4, 7, 10].includes(houseNumber);
+
+    if (line) {
+        line.style.opacity = active ? '1' : '';
+        line.style.strokeWidth = active
+            ? (isAngular ? '3.2' : '2.2')
+            : '';
+    }
+    if (text instanceof SVGElement) {
+        text.style.fill = active ? 'var(--accent)' : '';
+        text.style.fontWeight = active ? '700' : '';
+    }
+}
+
+function releaseAppliedBiwheelCompareHighlight() {
+    const wheel = ForecastState.natalOverlayWheel;
+    const applied = ForecastState.appliedBiwheelCompareTarget;
+    if (!wheel || !applied) return;
+
+    if (applied.type === 'planet') {
+        const node = wheel.svg?.querySelector(`[data-planet="${escapeForecastSelectorValue(applied.name)}"]`);
+        if (node) {
+            wheel.onPlanetHover({ currentTarget: node }, false);
+        }
+    } else if (applied.type === 'house') {
+        const group = wheel.svg?.querySelector(`.house-cusp-group[data-house="${escapeForecastSelectorValue(applied.house)}"]`);
+        if (group) {
+            setNatalHouseCompareState(group, false);
+        }
+    }
+
+    wheel.hideTooltip?.();
+    ForecastState.appliedBiwheelCompareTarget = null;
+}
+
+function applyBiwheelCompareHighlight() {
+    releaseAppliedBiwheelCompareHighlight();
+
+    if (ForecastState.biwheelDisplayMode === 'prognostic') return;
+    const wheel = ForecastState.natalOverlayWheel;
+    const highlight = getResolvedBiwheelCompareHighlight();
+    if (!wheel || !highlight) return;
+
+    if (highlight.target.type === 'planet') {
+        const node = wheel.svg?.querySelector(`[data-planet="${escapeForecastSelectorValue(highlight.target.name)}"]`);
+        if (!node) return;
+        wheel.onPlanetHover({ currentTarget: node }, true);
+        wheel.hideTooltip?.();
+        ForecastState.appliedBiwheelCompareTarget = highlight.target;
+        return;
+    }
+
+    if (highlight.target.type === 'house') {
+        const group = wheel.svg?.querySelector(`.house-cusp-group[data-house="${escapeForecastSelectorValue(highlight.target.house)}"]`);
+        if (!group) return;
+        setNatalHouseCompareState(group, true);
+        wheel.hideTooltip?.();
+        ForecastState.appliedBiwheelCompareTarget = highlight.target;
+    }
+}
+
+function clearBiwheelCompareHighlights(options = {}) {
+    releaseAppliedBiwheelCompareHighlight();
+    ForecastState.biwheelCompareHighlightHover = null;
+    if (options.includePinned !== false) {
+        ForecastState.biwheelCompareHighlightPinned = null;
+    }
+}
+
+function setBiwheelCompareHoverHighlight(highlight) {
+    if (ForecastState.biwheelCompareHighlightPinned) return;
+    ForecastState.biwheelCompareHighlightHover = normalizeBiwheelCompareHighlight(highlight);
+    applyBiwheelCompareHighlight();
+}
+
+function toggleBiwheelComparePinnedHighlight(highlight) {
+    const normalized = normalizeBiwheelCompareHighlight(highlight);
+    if (!normalized) {
+        ForecastState.biwheelCompareHighlightPinned = null;
+        applyBiwheelCompareHighlight();
+        return;
+    }
+
+    ForecastState.biwheelCompareHighlightPinned =
+        ForecastState.biwheelCompareHighlightPinned?.key === normalized.key
+            ? null
+            : normalized;
+    if (!ForecastState.biwheelCompareHighlightPinned) {
+        ForecastState.biwheelCompareHighlightHover = null;
+    }
+    applyBiwheelCompareHighlight();
+}
+
+function resolveBiwheelCompareHighlightFromElement(element) {
+    if (!(element instanceof Element)) return null;
+
+    const aspectRow = element.closest('#biwheelAspects tr[data-aspect-key]');
+    if (aspectRow) {
+        return normalizeBiwheelCompareHighlight({
+            key: `aspect-row:${aspectRow.dataset.aspectKey || aspectRow.dataset.natal || ''}`,
+            natalBody: aspectRow.dataset.natal || '',
+            sourceKind: 'aspect-row',
+        });
+    }
+
+    const aspectLine = element.closest('.bw-aspect-line[data-aspect-key]');
+    if (aspectLine) {
+        return normalizeBiwheelCompareHighlight({
+            key: `aspect-line:${aspectLine.dataset.aspectKey || aspectLine.dataset.natal || ''}`,
+            natalBody: aspectLine.dataset.natal || '',
+            sourceKind: 'aspect-line',
+        });
+    }
+
+    const prognosticPlanet = element.closest('.bw-planet-group[data-planet-role="transit"]');
+    if (prognosticPlanet) {
+        return normalizeBiwheelCompareHighlight({
+            key: `planet:${prognosticPlanet.getAttribute('data-planet-name') || ''}`,
+            natalBody: prognosticPlanet.getAttribute('data-planet-name') || '',
+            sourceKind: 'planet',
+        });
+    }
+
+    return null;
+}
+
+function applyBiwheelDisplayModeState() {
+    const wrapper = document.getElementById('biwheelSvgWrapper');
+    const overlay = document.getElementById('biwheelNatalOverlay');
+    const button = document.getElementById('bwNatalToggleBtn');
+    const mode = normalizeForecastBiwheelDisplayMode(ForecastState.biwheelDisplayMode);
+
+    if (wrapper) {
+        wrapper.dataset.displayMode = mode;
+    }
+    if (overlay) {
+        overlay.setAttribute('aria-hidden', mode === 'prognostic' ? 'true' : 'false');
+    }
+    if (button) {
+        button.setAttribute('aria-pressed', mode === 'natal-pinned' ? 'true' : 'false');
+        button.dataset.peeking = mode === 'natal-peek' ? 'true' : 'false';
+    }
+}
+
+function setBiwheelDisplayMode(nextMode, options = {}) {
+    const normalizedMode = normalizeForecastBiwheelDisplayMode(nextMode);
+    const previousMode = ForecastState.biwheelDisplayMode;
+    ForecastState.biwheelDisplayMode = normalizedMode;
+
+    if (normalizedMode === 'prognostic') {
+        releaseAppliedBiwheelCompareHighlight();
+        if (options.preserveCompare !== true) {
+            clearBiwheelCompareHighlights({ includePinned: true });
+        }
+    }
+
+    applyBiwheelDisplayModeState();
+
+    if (normalizedMode !== 'prognostic') {
+        renderNatalOverlay();
+    }
+
+    const modeChanged = previousMode !== normalizedMode;
+    if (modeChanged && options.persist !== false && normalizedMode !== 'natal-peek') {
+        scheduleForecastStatePersist();
+    }
+}
+
+function renderNatalOverlay() {
+    const wheel = ensureNatalOverlayWheel();
+    const natalWheelData = getPreparedNatalWheelData();
+    if (!wheel || !natalWheelData) return null;
+
+    const natalPointScale = readBiwheelNatalPointScale();
+    wheel.setOrientationMode(ForecastState.biwheelOrientation, { redraw: false });
+    wheel.setPointScales({
+        planets: natalPointScale,
+        points: natalPointScale,
+    }, { redraw: false });
+    wheel.draw(natalWheelData);
+    applyNatalOverlayViewport();
+    applyBiwheelCompareHighlight();
+    return wheel;
+}
+
+function syncBiwheelViewportToNatalOverlay() {
+    if (ForecastState.natalOverlayViewportUnsubscribe || !window.ForecastBiwheel?.subscribeViewport) return;
+    ForecastState.natalOverlayViewportUnsubscribe = window.ForecastBiwheel.subscribeViewport((viewport) => {
+        applyNatalOverlayViewport(viewport);
+    });
+}
+
+function clearNatalButtonPress() {
+    const press = ForecastState.natalButtonPress;
+    if (press?.releaseTimer) {
+        clearTimeout(press.releaseTimer);
+    }
+    ForecastState.natalButtonPress = null;
+}
+
+function isDesktopNatalPeekShortcutContext(event) {
+    if (ForecastState.currentTab !== 'biwheel') return false;
+    if (event.defaultPrevented) return false;
+    if (event.altKey || event.ctrlKey || event.metaKey) return false;
+    if (isEditableForecastTarget(event.target)) return false;
+    if (window.matchMedia && !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return false;
+    return true;
+}
+
+function stopBiwheelControlPointerPropagation(event) {
+    event.stopPropagation();
+}
+
+function onNatalToggleButtonPointerDown(event) {
+    stopBiwheelControlPointerPropagation(event);
+    clearNatalButtonPress();
+
+    ForecastState.natalButtonPress = {
+        pointerId: event.pointerId,
+        startedAt: Date.now(),
+        shouldPeek: ForecastState.biwheelDisplayMode !== 'natal-pinned',
+        awaitingClick: false,
+        releaseTimer: null,
+    };
+
+    if (ForecastState.natalButtonPress.shouldPeek) {
+        setBiwheelDisplayMode(reduceForecastBiwheelDisplayMode(ForecastState.biwheelDisplayMode, 'peek-on'), {
+            persist: false,
+            preserveCompare: true,
+        });
+    }
+}
+
+function onNatalToggleButtonPointerUp(event) {
+    stopBiwheelControlPointerPropagation(event);
+    const press = ForecastState.natalButtonPress;
+    if (!press || press.pointerId !== event.pointerId) return;
+
+    const duration = Date.now() - press.startedAt;
+    if (!press.shouldPeek) {
+        return;
+    }
+
+    if (duration > BIWHEEL_NATAL_BUTTON_TAP_MAX_MS) {
+        natalButtonIgnoreClickUntil = Date.now() + 320;
+        clearNatalButtonPress();
+        setBiwheelDisplayMode(reduceForecastBiwheelDisplayMode(ForecastState.biwheelDisplayMode, 'peek-off'), {
+            persist: false,
+            preserveCompare: true,
+        });
+        return;
+    }
+
+    press.awaitingClick = true;
+    press.releaseTimer = window.setTimeout(() => {
+        if (ForecastState.natalButtonPress !== press) return;
+        clearNatalButtonPress();
+        setBiwheelDisplayMode('prognostic', { persist: false, preserveCompare: true });
+    }, BIWHEEL_NATAL_BUTTON_TAP_MAX_MS + 40);
+}
+
+function onNatalToggleButtonPointerCancel(event) {
+    stopBiwheelControlPointerPropagation(event);
+    const press = ForecastState.natalButtonPress;
+    if (!press || press.pointerId !== event.pointerId) return;
+    natalButtonIgnoreClickUntil = Date.now() + 320;
+    clearNatalButtonPress();
+    if (ForecastState.biwheelDisplayMode === 'natal-peek') {
+        setBiwheelDisplayMode('prognostic', { persist: false, preserveCompare: true });
+    }
+}
+
+function onNatalToggleButtonPointerLeave(event) {
+    stopBiwheelControlPointerPropagation(event);
+    const press = ForecastState.natalButtonPress;
+    if (!press) return;
+    natalButtonIgnoreClickUntil = Date.now() + 320;
+    clearNatalButtonPress();
+    if (ForecastState.biwheelDisplayMode === 'natal-peek') {
+        setBiwheelDisplayMode('prognostic', { persist: false, preserveCompare: true });
+    }
+}
+
+function onNatalToggleButtonClick(event) {
+    stopBiwheelControlPointerPropagation(event);
+    event.preventDefault();
+
+    if (Date.now() < natalButtonIgnoreClickUntil) {
+        return;
+    }
+
+    if (ForecastState.biwheelDisplayMode === 'natal-pinned') {
+        clearNatalButtonPress();
+        setBiwheelDisplayMode('prognostic');
+        return;
+    }
+
+    if (ForecastState.natalButtonPress?.awaitingClick) {
+        clearNatalButtonPress();
+        setBiwheelDisplayMode('natal-pinned');
+        return;
+    }
+
+    setBiwheelDisplayMode('natal-pinned');
+}
+
+function onForecastBiwheelKeyDown(event) {
+    if (ForecastState.currentTab !== 'biwheel') return;
+
+    if (event.key === 'Escape' && ForecastState.biwheelDisplayMode !== 'prognostic' && !isEditableForecastTarget(event.target)) {
+        clearNatalButtonPress();
+        ForecastState.spacePeekActive = false;
+        setBiwheelDisplayMode('prognostic');
+        return;
+    }
+
+    const isSpace = event.code === 'Space' || event.key === ' ';
+    if (!isSpace || !isDesktopNatalPeekShortcutContext(event)) return;
+    if (event.repeat || ForecastState.spacePeekActive || ForecastState.biwheelDisplayMode === 'natal-pinned') {
+        event.preventDefault();
+        return;
+    }
+
+    ForecastState.spacePeekActive = true;
+    event.preventDefault();
+    setBiwheelDisplayMode('natal-peek', { persist: false, preserveCompare: true });
+}
+
+function onForecastBiwheelKeyUp(event) {
+    const isSpace = event.code === 'Space' || event.key === ' ';
+    if (!isSpace || !ForecastState.spacePeekActive) return;
+
+    ForecastState.spacePeekActive = false;
+    event.preventDefault();
+    if (ForecastState.biwheelDisplayMode === 'natal-peek') {
+        setBiwheelDisplayMode('prognostic', { persist: false, preserveCompare: true });
+    }
+}
+
+function onForecastBiwheelWindowBlur() {
+    ForecastState.spacePeekActive = false;
+    clearNatalButtonPress();
+    if (ForecastState.biwheelDisplayMode === 'natal-peek') {
+        setBiwheelDisplayMode('prognostic', { persist: false, preserveCompare: true });
+    }
+}
+
+function shouldHandleBiwheelCompareInteractions() {
+    return ForecastState.currentTab === 'biwheel' && ForecastState.biwheelDisplayMode !== 'prognostic';
+}
+
+function onBiwheelCompareMouseOver(event) {
+    if (!shouldHandleBiwheelCompareInteractions()) return;
+    const highlight = resolveBiwheelCompareHighlightFromElement(event.target);
+    if (!highlight) return;
+    setBiwheelCompareHoverHighlight(highlight);
+}
+
+function onBiwheelCompareMouseOut(event) {
+    if (!shouldHandleBiwheelCompareInteractions()) return;
+    if (ForecastState.biwheelCompareHighlightPinned) return;
+    if (!(event.target instanceof Element)) return;
+
+    const source = event.target.closest('#biwheelAspects tr[data-aspect-key], .bw-aspect-line[data-aspect-key], .bw-planet-group[data-planet-role="transit"]');
+    if (!source) return;
+    if (event.relatedTarget instanceof Element && source.contains(event.relatedTarget)) return;
+    setBiwheelCompareHoverHighlight(null);
+}
+
+function onBiwheelCompareClick(event) {
+    if (!shouldHandleBiwheelCompareInteractions()) return;
+    const highlight = resolveBiwheelCompareHighlightFromElement(event.target);
+    if (!highlight) return;
+    toggleBiwheelComparePinnedHighlight(highlight);
+}
+
+function initBiwheelNatalInteractions() {
+    if (ForecastState.biwheelCompareInteractionsInit) return;
+    ForecastState.biwheelCompareInteractionsInit = true;
+
+    const natalButton = document.getElementById('bwNatalToggleBtn');
+    const wrapper = document.getElementById('biwheelSvgWrapper');
+    const aspectsList = document.getElementById('biwheelAspects');
+
+    if (natalButton) {
+        natalButton.addEventListener('pointerdown', onNatalToggleButtonPointerDown);
+        natalButton.addEventListener('pointerup', onNatalToggleButtonPointerUp);
+        natalButton.addEventListener('pointercancel', onNatalToggleButtonPointerCancel);
+        natalButton.addEventListener('pointerleave', onNatalToggleButtonPointerLeave);
+        natalButton.addEventListener('click', onNatalToggleButtonClick);
+        natalButton.addEventListener('mousedown', stopBiwheelControlPointerPropagation);
+        natalButton.addEventListener('touchstart', stopBiwheelControlPointerPropagation, { passive: true });
+    }
+
+    document.addEventListener('keydown', onForecastBiwheelKeyDown);
+    document.addEventListener('keyup', onForecastBiwheelKeyUp);
+    window.addEventListener('blur', onForecastBiwheelWindowBlur);
+
+    [wrapper, aspectsList].forEach((node) => {
+        if (!node) return;
+        node.addEventListener('mouseover', onBiwheelCompareMouseOver);
+        node.addEventListener('mouseout', onBiwheelCompareMouseOut);
+        node.addEventListener('click', onBiwheelCompareClick, true);
+    });
+
+    syncBiwheelViewportToNatalOverlay();
+    applyBiwheelDisplayModeState();
 }
 
 function buildForecastChatContext() {
@@ -619,6 +1175,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     ForecastState.natalData = natalData;
+    ForecastState.natalWheelData = window.NatalWheelData?.prepareNatalWheelData
+        ? window.NatalWheelData.prepareNatalWheelData(natalData, {
+            houseSystem: natalData.birth_data?.house_system || undefined,
+        })
+        : natalData;
     ForecastState.userId = natalData.user_id || localStorage.getItem('currentUserId');
     ForecastState.timezone = natalData.birth_data?.timezone
         || Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -672,12 +1233,14 @@ function initDefaults() {
     const stepSelect = document.getElementById('biwheelStepSelect');
     if (stepSelect) stepSelect.value = ForecastState.transitScaleUnit;
     ForecastState.isFocusMode = false;
+    ForecastState.biwheelDisplayMode = 'prognostic';
     ForecastState.directionType = normalizeDirectionType(localStorage.getItem(DIRECTION_TYPE_STORAGE_KEY) || 'solar_arc');
     const directionTypeSelect = document.getElementById('bwDirectionTypeSelect');
     if (directionTypeSelect) directionTypeSelect.value = ForecastState.directionType;
     restoreSolarLocationFromStorage();
     updateBiwheelFocusButton();
     applyForecastFocusState();
+    applyBiwheelDisplayModeState();
 }
 
 function applyDatePreset(value, unit = 'months') {
@@ -1078,6 +1641,7 @@ function initControls() {
     initSolarZoomPan();
     initSolarPanelTabs();
     initSolarAspectInteractions();
+    initBiwheelNatalInteractions();
 
     const orientationSelect = document.getElementById('biwheelOrientationSelect');
     if (orientationSelect) {
@@ -1087,6 +1651,7 @@ function initControls() {
             if (window.ForecastBiwheel?.setOrientationMode) {
                 window.ForecastBiwheel.setOrientationMode(ForecastState.biwheelOrientation);
             }
+            renderNatalOverlay();
             if (window.ForecastBiwheel && window.ForecastBiwheel.hasLastRender?.()) {
                 window.ForecastBiwheel.rerenderLast();
             }
@@ -1157,6 +1722,9 @@ function initControls() {
         if (event.key === 'Escape' && ForecastState.isFocusMode) {
             setForecastFocusMode(false);
         }
+    });
+    document.getElementById('bwNatalScaleRange')?.addEventListener('input', () => {
+        renderNatalOverlay();
     });
     const directionTypeSelect = document.getElementById('bwDirectionTypeSelect');
     if (directionTypeSelect) {
@@ -1998,7 +2566,8 @@ function renderBiwheelData(data) {
     if (window.ForecastBiwheel.setOrientationMode) {
         window.ForecastBiwheel.setOrientationMode(ForecastState.biwheelOrientation);
     }
-    window.ForecastBiwheel.render(ForecastState.natalData, data);
+    window.ForecastBiwheel.render(ForecastState.natalWheelData || ForecastState.natalData, data);
+    renderNatalOverlay();
 }
 
 async function ensureTransitPeriodData(startDate, endDate, { showLoading = false } = {}) {

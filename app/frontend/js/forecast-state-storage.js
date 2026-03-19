@@ -7,6 +7,7 @@
     const VALID_SCALE_UNITS = ['day', 'week', 'month'];
     const VALID_DIRECTION_TYPES = ['solar_arc', 'symbolic', 'equatorial'];
     const VALID_ORIENTATIONS = ['aries', 'asc'];
+    const VALID_BIWHEEL_DISPLAY_MODES = ['prognostic', 'natal-pinned'];
     const VALID_SOLAR_PANEL_TABS = ['solar-planets-list', 'solar-aspects-list', 'solar-grid-list'];
     const VALID_TABLE_SORT_COLS = ['date', 'method', 'transit', 'aspect', 'natal', 'orb', 'type'];
 
@@ -88,6 +89,7 @@
             pendingBiwheelDate: sanitizeDateValue(source.pendingBiwheelDate),
             directionType: pickEnum(source.directionType, VALID_DIRECTION_TYPES, 'solar_arc'),
             biwheelOrientation: pickEnum(source.biwheelOrientation, VALID_ORIENTATIONS, 'aries'),
+            biwheelDisplayMode: pickEnum(source.biwheelDisplayMode, VALID_BIWHEEL_DISPLAY_MODES, 'prognostic'),
             solarOrientation: pickEnum(source.solarOrientation, VALID_ORIENTATIONS, 'aries'),
             solarPanelTab: pickEnum(source.solarPanelTab, VALID_SOLAR_PANEL_TABS, 'solar-planets-list'),
             tableSortCol: pickEnum(source.tableSortCol, VALID_TABLE_SORT_COLS, 'date'),
