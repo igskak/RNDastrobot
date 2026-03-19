@@ -241,16 +241,48 @@ function renderFullChart(data) {
 
 function renderHeader(data) {
     const birthData = data.birth_data || {};
-    const place = birthData.place || t('page.natalFull.header.unknownPlace');
+    const formData = window.AstroAPI?.getFormData?.();
+    const firstName = birthData.first_name || formData?.firstName || '';
+    const lastName = birthData.last_name || formData?.lastName || '';
+    const clientName = [firstName, lastName].filter(Boolean).join(' ').trim();
+    const place = getBirthPlaceLabel(birthData, formData) || t('page.natalFull.header.unknownPlace');
     const chartTitle = document.getElementById('chartTitle');
     const birthDetails = document.getElementById('birthDetails');
 
     if (chartTitle) {
-        chartTitle.textContent = t('page.natalFull.header.title', { place });
+        chartTitle.removeAttribute('data-i18n');
+        chartTitle.textContent = clientName || t('page.natalFull.header.title', { place });
     }
     if (birthDetails) {
-        birthDetails.textContent = `${birthData.date || ''} ${birthData.time || ''} (${birthData.timezone || EMPTY})`.trim();
+        const details = [];
+        const dateTime = `${birthData.date || ''} ${birthData.time || ''}`.trim();
+        if (dateTime) {
+            details.push(dateTime);
+        }
+        if (birthData.timezone) {
+            details.push(`(${birthData.timezone})`);
+        }
+        if (place) {
+            details.push(place);
+        }
+        birthDetails.textContent = details.join(' · ') || EMPTY;
     }
+}
+
+function getBirthPlaceLabel(birthData, formData) {
+    const candidates = [
+        birthData?.place,
+        formData?.place,
+    ];
+
+    for (const candidate of candidates) {
+        const value = String(candidate || '').trim();
+        if (value) {
+            return value;
+        }
+    }
+
+    return '';
 }
 
 function renderSummaryBar(data) {

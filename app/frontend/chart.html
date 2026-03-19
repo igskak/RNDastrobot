@@ -6,9 +6,6 @@
     <title data-i18n="page.chart.title"></title>
     <link rel="stylesheet" href="bundles/chart.bundle.css?v=2">
     <link rel="stylesheet" href="css/locale-switcher.css?v=1">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <script>window.__APP_BUILD_ID__ = '2026-02-19-1';</script>
 </head>
 <body class="chart-page">
@@ -181,15 +178,32 @@
 
     <nav class="mobile-nav">
         <button class="mobile-tab" data-view="planets">
-            <span class="mobile-tab-icon">☰</span>
+            <span class="mobile-tab-icon" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7">
+                    <path d="M4 5.5h12"/>
+                    <path d="M4 10h12"/>
+                    <path d="M4 14.5h12"/>
+                </svg>
+            </span>
             <span data-i18n="page.chart.tabs.planets"></span>
         </button>
         <button class="mobile-tab active" data-view="chart">
-            <span class="mobile-tab-icon">◉</span>
+            <span class="mobile-tab-icon" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7">
+                    <circle cx="10" cy="10" r="6.5"/>
+                    <circle cx="10" cy="10" r="2.6"/>
+                </svg>
+            </span>
             <span data-i18n="page.chart.mobile.chart"></span>
         </button>
         <button class="mobile-tab" data-view="houses">
-            <span class="mobile-tab-icon">☖</span>
+            <span class="mobile-tab-icon" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7">
+                    <rect x="3.5" y="3.5" width="13" height="13" rx="1.8"/>
+                    <path d="M10 3.5v13"/>
+                    <path d="M3.5 10h13"/>
+                </svg>
+            </span>
             <span data-i18n="page.chart.tabs.houses"></span>
         </button>
     </nav>
