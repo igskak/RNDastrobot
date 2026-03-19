@@ -178,6 +178,13 @@ class ChartWheel {
         return 0;
     }
 
+    normalizeAngle(angle) {
+        let normalized = Number(angle) || 0;
+        while (normalized < 0) normalized += 360;
+        while (normalized >= 360) normalized -= 360;
+        return normalized;
+    }
+
     /**
      * Отрисовка полной карты
      */
@@ -536,16 +543,16 @@ class ChartWheel {
     }
 
     /**
-     * Улучшенная отрисовка планет с anti-collision (radial offsets)
+     * Улучшенная отрисовка планет с кластерным anti-collision и выносками
      */
     drawPlanetsEnhanced(planets) {
         const positions = this.calculatePlanetPositionsEnhanced(planets);
+        const calloutRadius = Math.max(this.aspectRadius + 8, this.planetRadius - 10);
 
-        positions.forEach(({ planet, displayAngle, radiusOffset }) => {
-            const angle = displayAngle * Math.PI / 180;
-            const r = this.planetRadius + radiusOffset;
-            const x = this.center + r * Math.cos(angle);
-            const y = this.center + r * Math.sin(angle);
+        positions.forEach(({ planet, angle, displayAngle, hasLeader }) => {
+            const displayAngleRad = displayAngle * Math.PI / 180;
+            const x = this.center + this.planetRadius * Math.cos(displayAngleRad);
+            const y = this.center + this.planetRadius * Math.sin(displayAngleRad);
             const element = Symbols.signElements[planet.sign];
             const color = this.elementColors[element] || '#374151';
             const glyphScale = Symbols.planetGlyphScale?.[planet.name] || 1;
@@ -559,18 +566,25 @@ class ChartWheel {
                 style: 'cursor: pointer;'
             });
 
-            // Выноска (линия от реальной позиции к отображаемой)
-            const realAngleCalc = this.longitudeToAngle(planet.longitude);
-            if (radiusOffset !== 0 || displayAngle !== realAngleCalc) {
-                const realAngle = realAngleCalc * Math.PI / 180;
-                const realX = this.center + this.planetRadius * Math.cos(realAngle);
-                const realY = this.center + this.planetRadius * Math.sin(realAngle);
+            if (hasLeader) {
+                const exactAngleRad = angle * Math.PI / 180;
+                const realX = this.center + calloutRadius * Math.cos(exactAngleRad);
+                const realY = this.center + calloutRadius * Math.sin(exactAngleRad);
                 group.appendChild(this.createSvgElement('line', {
                     x1: realX, y1: realY,
                     x2: x, y2: y,
-                    stroke: '#d1d5db',
+                    stroke: color,
                     'stroke-width': 0.5,
-                    'stroke-dasharray': '2,2'
+                    opacity: 0.35,
+                    style: 'pointer-events: none;'
+                }));
+                group.appendChild(this.createSvgElement('circle', {
+                    cx: realX,
+                    cy: realY,
+                    r: 1.8,
+                    fill: color,
+                    opacity: 0.85,
+                    style: 'pointer-events: none;'
                 }));
             }
 
@@ -608,40 +622,83 @@ class ChartWheel {
     }
 
     /**
-     * Anti-collision: радиальные и угловые смещения для тесных соединений
+     * Anti-collision: группируем близкие точки и равномерно разводим их по дуге
      */
     calculatePlanetPositionsEnhanced(planets) {
-        const minAngularGap = 9.6;  // Увеличен под глифы +20%
-        const radialStep = 12;     // Шаг радиального смещения
+        const positions = planets
+            .map(planet => {
+                const glyphScale = Symbols.planetGlyphScale?.[planet.name] || 1;
+                const scale = this.isPointBody(planet.name) ? this.pointScale : this.planetScale;
+                const angle = this.normalizeAngle(this.longitudeToAngle(planet.longitude));
+                return {
+                    planet,
+                    angle,
+                    displayAngle: angle,
+                    glyphSize: this.natalGlyphBaseSize * glyphScale * scale,
+                    hasLeader: false,
+                    clusterAngle: null
+                };
+            })
+            .sort((a, b) => a.angle - b.angle);
 
-        const sorted = planets
-            .map(p => ({
-                planet: p,
-                originalAngle: this.longitudeToAngle(p.longitude),
-                displayAngle: this.longitudeToAngle(p.longitude),
-                radiusOffset: 0
-            }))
-            .sort((a, b) => a.originalAngle - b.originalAngle);
+        if (positions.length <= 1) {
+            return positions;
+        }
 
-        // Проход: разводим по углу или радиусу
-        for (let i = 1; i < sorted.length; i++) {
-            const prev = sorted[i - 1];
-            const curr = sorted[i];
-            let diff = curr.displayAngle - prev.displayAngle;
-            if (diff < 0) diff += 360;
+        const maxGlyphSize = positions.reduce((max, item) => Math.max(max, item.glyphSize), 0);
+        const desiredGapPx = Math.max(maxGlyphSize * 0.9, 10);
+        const minGapDeg = Math.max(
+            1.5,
+            (desiredGapPx / (2 * Math.PI * Math.max(this.planetRadius, 1))) * 360
+        );
+        const spreadDeg = Math.max(1.5, minGapDeg * 0.95);
 
-            if (diff < minAngularGap) {
-                // Если очень близко (<2°) — смещаем радиально
-                if (diff < 2) {
-                    curr.radiusOffset = prev.radiusOffset === 0 ? radialStep : -radialStep;
-                } else {
-                    // Иначе разводим по углу
-                    curr.displayAngle = prev.displayAngle + minAngularGap;
-                }
+        const clusters = [];
+        let currentCluster = [positions[0]];
+
+        for (let i = 1; i < positions.length; i++) {
+            const prev = positions[i - 1];
+            const curr = positions[i];
+            if ((curr.angle - prev.angle) < minGapDeg) {
+                currentCluster.push(curr);
+            } else {
+                clusters.push(currentCluster);
+                currentCluster = [curr];
+            }
+        }
+        clusters.push(currentCluster);
+
+        if (clusters.length > 1) {
+            const firstCluster = clusters[0];
+            const lastCluster = clusters[clusters.length - 1];
+            const wrapGap = (firstCluster[0].angle + 360) - lastCluster[lastCluster.length - 1].angle;
+
+            if (wrapGap < minGapDeg) {
+                const mergedCluster = [...lastCluster, ...firstCluster];
+                mergedCluster.forEach((item, index) => {
+                    item.clusterAngle = index < lastCluster.length ? item.angle : item.angle + 360;
+                });
+                clusters[0] = mergedCluster;
+                clusters.pop();
             }
         }
 
-        return sorted;
+        clusters.forEach((cluster) => {
+            cluster.forEach((item) => {
+                if (item.clusterAngle == null) item.clusterAngle = item.angle;
+            });
+
+            if (cluster.length === 1) return;
+
+            const center = (cluster.length - 1) / 2;
+            cluster.forEach((item, index) => {
+                const offset = (index - center) * spreadDeg;
+                item.displayAngle = this.normalizeAngle(item.clusterAngle + offset);
+                item.hasLeader = Math.abs(offset) > 0.01;
+            });
+        });
+
+        return positions;
     }
 
     /**

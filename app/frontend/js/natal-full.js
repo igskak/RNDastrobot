@@ -446,18 +446,13 @@ function createPlanetRow(planet) {
     const total = planet.karmic_score;
 
     if (minus > 0 || plus > 0 || total) {
-        let karmaClass = '';
-        if (minus > plus) karmaClass = 'karma-negative';
-        else if (plus > minus) karmaClass = 'karma-positive';
-        else karmaClass = 'karma-neutral';
+        const karmaClass = plus > minus ? 'karma-positive' : 'karma-negative';
 
         if (minus > 0 || plus > 0) {
-            let calculatedTotal = 0;
-            if (minus > 3) calculatedTotal += minus;
-            if (plus > 3) calculatedTotal += plus;
-            tdKarma.innerHTML = `<span class="${karmaClass}">${calculatedTotal} (-${minus}|+${plus})</span>`;
+            tdKarma.innerHTML = `<span class="${karmaClass}">-${minus} | +${plus}</span>`;
         } else if (total) {
-            tdKarma.innerHTML = `<span class="${karmaClass}">${total}</span>`;
+            const totalClass = total > 0 ? 'karma-positive' : 'karma-negative';
+            tdKarma.innerHTML = `<span class="${totalClass}">${total}</span>`;
         }
     } else {
         tdKarma.textContent = EMPTY;
