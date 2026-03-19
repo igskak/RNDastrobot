@@ -348,8 +348,42 @@
         "sendFailed": "Failed to send message"
       }
     },
-    "clients": {
-      "actions": {
+  "clients": {
+    "hero": {
+      "eyebrow": "Astrologer workspace",
+      "kicker": "Client relationships, presented professionally",
+      "title": "Run your client practice in a calm, premium workspace.",
+      "subtitle": "Keep each chart, reading, and follow-up easy to find so your service feels polished from the first session onward.",
+      "badgesAriaLabel": "Workspace highlights",
+      "badges": {
+        "private": "Private client records",
+        "history": "Saved chart history",
+        "reports": "Premium reading delivery"
+      },
+      "aside": {
+        "label": "Studio standard",
+        "title": "Your client list should feel as curated as your readings.",
+        "subtitle": "This space is for continuity, trust, and fast access when a client returns for the next session.",
+        "point1": "See client records at a glance without losing warmth or clarity.",
+        "point2": "Open chart work quickly so follow-up sessions feel seamless.",
+        "point3": "Keep the experience organized enough to support higher-value services."
+      }
+    },
+    "profile": {
+      "label": "Signed in",
+      "signedInAs": "{email}"
+    },
+    "workspace": {
+      "kicker": "Client portfolio",
+      "title": "Clients and saved charts",
+      "subtitle": "Search, sort, and reopen past work with the level of order clients expect from a premium astrology practice."
+    },
+    "stats": {
+      "total": "Total clients",
+      "visible": "Visible now",
+      "latest": "Latest added"
+    },
+    "actions": {
         "confirmDelete": "Confirm?",
         "delete": "Delete",
         "open": "Open",
@@ -359,10 +393,11 @@
         "shown": "Shown: {shown}",
         "shownOf": "Shown: {shown} of {total}",
         "total": "Total: {total}"
-      },
-      "createFirstCard": "Create first chart",
-      "empty": "No clients yet",
-      "errors": {
+    },
+    "createFirstCard": "Create first chart",
+    "empty": "No clients yet",
+    "emptyHint": "Start with your first client chart and build a workspace that is easy to revisit for future readings.",
+    "errors": {
         "chartNotFound": "Chart data not found",
         "deleteFailed": "Failed to delete client",
         "fetchList": "Failed to load clients list",
@@ -372,12 +407,15 @@
       "messages": {
         "confirmDeleteHint": "Click delete again to confirm",
         "deleted": "Client deleted"
-      },
-      "newCard": "New client",
-      "noResults": "No matches",
-      "searchAriaLabel": "Search clients",
-      "searchPlaceholder": "Search by name/place",
-      "sort": {
+    },
+    "newCard": "New client",
+    "noResults": "No matches",
+    "noResultsHint": "Try a different name, place, or sorting option to find the client you need.",
+    "searchLabel": "Search clients",
+    "searchAriaLabel": "Search clients",
+    "searchPlaceholder": "Search by name/place",
+    "sortLabel": "Sort order",
+    "sort": {
         "birthAsc": "Birth date oldest first",
         "birthDesc": "Birth date newest first",
         "createdAsc": "Created oldest first",
@@ -787,6 +825,26 @@
       "meta": {
         "title": "Steliara login"
       },
+      "hero": {
+        "eyebrow": "Private astrologer workspace",
+        "title": "Professional astrology, presented with calm confidence.",
+        "subtitle": "Sign in to run your astrology practice, organize client work, and keep natal charts, interpretations, and your AI assistant in one premium light workspace.",
+        "badges": {
+          "private": "Private astrologer workspace",
+          "premium": "Premium light interface",
+          "multilingual": "Multilingual experience"
+        },
+        "badgesAriaLabel": "Product highlights",
+        "panel": {
+          "label": "Built for astrologer practice",
+          "point1": "Keep your client work organized in a workspace designed for professional use.",
+          "point2": "Store charts, interpretations, forecasts, and AI-supported workflow together so your process stays consistent.",
+          "point3": "Use secure sign-in and verification that feel professional from the first click.",
+          "point4": "Rely on the AI assistant to make chart analysis faster, clearer, and easier to work through."
+        },
+        "footnote": "Designed to feel like a private astrologer studio: warm, precise, and easy to trust.",
+        "cardKicker": "Secure account access"
+      },
       "heading": "Secure sign in",
       "subheading": "Continue with Google or your email and password.",
       "divider": "or continue with email",
@@ -889,7 +947,7 @@
         },
         "register": {
           "title": "Create your account",
-          "subtitle": "Sign up with email and password to start using Steliara."
+          "subtitle": "Sign up with email and password to start using Steliara as an astrologer."
         },
         "verifyCheckEmail": {
           "title": "Check your email",

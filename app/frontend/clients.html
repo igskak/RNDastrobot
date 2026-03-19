@@ -4,440 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.clients.title"></title>
-    <link rel="stylesheet" href="bundles/clients.bundle.css?v=1">
+    <link rel="stylesheet" href="bundles/clients.bundle.css?v=2">
     <link rel="stylesheet" href="css/locale-switcher.css?v=1">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <script>window.__APP_BUILD_ID__ = '2026-02-19-1';</script>
-    <style>
-        /* ── Page layout ── */
-        .clients-page .container {
-            max-width: 1160px;
-            padding: 20px 20px 32px;
-        }
-
-        /* ── App header ── */
-        .clients-page .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 40px;
-            margin-bottom: 24px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border);
-            text-align: left;
-        }
-
-        .clients-page .header-left {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .clients-page .logo {
-            font-family: var(--font-display, 'Cormorant Garamond', Georgia, serif);
-            font-size: 26px;
-            font-weight: 400;
-            letter-spacing: 0.04em;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            justify-content: flex-start;
-            margin-bottom: 0;
-        }
-
-        .logo-mark {
-            width: 26px;
-            height: 26px;
-            flex-shrink: 0;
-        }
-
-        .header-divider {
-            width: 1px;
-            height: 24px;
-            background: var(--border);
-        }
-
-        .header-page-title {
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-muted);
-            letter-spacing: 0.02em;
-        }
-
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        /* ── Card ── */
-        .clients-card {
-            background: var(--bg-secondary);
-            border-radius: var(--radius-lg);
-            padding: 20px;
-            box-shadow: var(--shadow-md);
-            border: 1px solid var(--border);
-        }
-
-        /* ── Top bar ── */
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 16px;
-        }
-
-        .top-bar-left {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .clients-meta {
-            color: var(--text-muted);
-            font-size: 12px;
-        }
-
-        .top-bar-right {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        /* ── Controls ── */
-        .controls {
-            display: grid;
-            grid-template-columns: 1fr 220px;
-            gap: 10px;
-            margin-bottom: 14px;
-        }
-
-        .controls .search-input {
-            width: 100%;
-        }
-
-        /* ── Search input ── */
-        .search-input-wrap {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            pointer-events: none;
-            color: var(--text-muted);
-        }
-
-        .search-input {
-            padding-left: 36px !important;
-        }
-
-        .results-meta {
-            margin-bottom: 10px;
-            color: var(--text-muted);
-            font-size: 12.5px;
-            min-height: 20px;
-        }
-
-        /* ── Table ── */
-        .table-wrap {
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            overflow: auto;
-        }
-
-        .clients-table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 760px;
-        }
-
-        .clients-table th,
-        .clients-table td {
-            padding: 11px 14px;
-            text-align: left;
-            vertical-align: middle;
-        }
-
-        .clients-table thead tr {
-            border-bottom: 1px solid var(--border);
-        }
-
-        .clients-table tbody tr {
-            border-bottom: 1px solid var(--border);
-        }
-
-        .clients-table tbody tr:last-child {
-            border-bottom: none;
-        }
-
-        .clients-table th {
-            color: var(--text-muted);
-            font-weight: 500;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            background: var(--bg-tertiary);
-        }
-
-        /* ── Avatar ── */
-        .client-name-cell {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .client-avatar {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: var(--accent-light, #EBF0F7);
-            color: var(--accent, #1E3A5F);
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 0.04em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .clients-table tbody tr {
-            transition: background var(--transition);
-            cursor: pointer;
-        }
-
-        .clients-table tbody tr:hover {
-            background: var(--gold-pale, #F5EDDF);
-        }
-
-        /* ── Actions dropdown ── */
-        .row-actions {
-            position: relative;
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        .btn-actions {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: 1.5px solid transparent;
-            background: transparent;
-            cursor: pointer;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity var(--transition), background var(--transition), border-color var(--transition);
-            font-family: var(--font-ui, 'DM Sans', sans-serif);
-        }
-
-        .clients-table tbody tr:hover .btn-actions,
-        .btn-actions.open {
-            opacity: 1;
-        }
-
-        .btn-actions:hover,
-        .btn-actions.open {
-            background: var(--bg-tertiary);
-            border-color: var(--border);
-        }
-
-        .actions-dropdown {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: calc(100% + 4px);
-            background: var(--bg-secondary, #fff);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md, 8px);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.10);
-            min-width: 140px;
-            z-index: 200;
-            overflow: hidden;
-        }
-
-        .actions-dropdown.open {
-            display: block;
-        }
-
-        .action-item {
-            display: block;
-            width: 100%;
-            padding: 9px 14px;
-            background: none;
-            border: none;
-            text-align: left;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 400;
-            font-family: var(--font-ui, 'DM Sans', sans-serif);
-            color: var(--text-secondary, #5C554E);
-            transition: background var(--transition);
-        }
-
-        .action-item:hover {
-            background: var(--bg-tertiary);
-        }
-
-        .action-item.danger {
-            color: var(--error, #B83232);
-        }
-
-        .action-item.danger.confirming {
-            background: var(--error, #B83232);
-            color: #fff;
-        }
-
-        /* ── Buttons ── */
-        .btn-new,
-        .btn-logout {
-            border: none;
-            border-radius: 100px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            font-family: var(--font-ui, 'DM Sans', sans-serif);
-            line-height: 1;
-            transition: transform var(--transition), background var(--transition),
-                        color var(--transition), border-color var(--transition),
-                        box-shadow var(--transition);
-        }
-
-        .btn-new {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            text-decoration: none;
-            background: var(--accent, #1E3A5F);
-            color: #fff;
-            padding: 8px 16px;
-            font-size: 13px;
-            border-radius: 100px;
-        }
-
-        .btn-new:hover {
-            background: var(--accent-hover, #2E4E7A);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 14px rgba(30, 58, 95, 0.28);
-        }
-
-        .btn-logout {
-            background: transparent;
-            border: 1.5px solid var(--border, #E0DDD7);
-            color: var(--text-secondary, #5C554E);
-            padding: 7px 14px;
-            font-size: 13px;
-        }
-
-        .btn-logout:hover {
-            background: var(--bg-tertiary, #F0EDE4);
-            border-color: rgba(26,22,20,0.2);
-        }
-
-        .btn-new:focus-visible,
-        .btn-logout:focus-visible {
-            outline: 3px solid var(--accent-light, #EBF0F7);
-            outline-offset: 2px;
-        }
-
-        .btn-new:active,
-        .btn-logout:active {
-            transform: scale(0.97);
-            box-shadow: none;
-        }
-
-        /* ── Empty / Loading states ── */
-        .empty-state,
-        .loading {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-muted);
-        }
-
-        .empty-state-icon {
-            display: block;
-            margin: 0 auto 16px;
-            color: var(--border);
-        }
-
-        .empty-state p {
-            margin-top: 10px;
-            font-size: 15px;
-            color: var(--text-secondary);
-        }
-
-        /* ── Responsive ── */
-        @media (max-width: 900px) {
-            .controls {
-                grid-template-columns: 1fr;
-            }
-
-            .clients-table {
-                min-width: 0;
-            }
-
-            .clients-table thead {
-                display: none;
-            }
-
-            .clients-table,
-            .clients-table tbody,
-            .clients-table tr,
-            .clients-table td {
-                display: block;
-                width: 100%;
-            }
-
-            .clients-table tr {
-                border-bottom: 1px solid var(--border);
-                padding: 10px 0;
-            }
-
-            .clients-table td {
-                border: 0;
-                padding: 6px 12px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                gap: 12px;
-                text-align: right;
-            }
-
-            .clients-table td::before {
-                content: attr(data-label);
-                color: var(--text-secondary);
-                font-size: 12px;
-                text-transform: uppercase;
-                letter-spacing: 0.04em;
-                text-align: left;
-            }
-
-            .clients-actions {
-                justify-content: flex-start;
-                width: 100%;
-            }
-        }
-
-        @media (max-width: 640px) {
-            .clients-page .header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
-            }
-        }
-    </style>
 </head>
 <body class="clients-page">
     <div class="page-loader" id="pageLoader">
@@ -445,9 +17,9 @@
         <div class="pl-text" data-i18n="common.loading"></div>
     </div>
 
-    <div class="container">
-        <header class="header">
-            <div class="header-left">
+    <div class="clients-shell">
+        <header class="clients-header">
+            <div class="clients-brand-block">
                 <h1 class="logo">
                     <svg class="logo-mark" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <circle cx="14" cy="14" r="12.5" stroke="#1E3A5F" stroke-width="1.25"/>
@@ -462,42 +34,102 @@
                     </svg>
                     <span data-i18n="common.brandName"></span>
                 </h1>
-                <div class="header-divider"></div>
-                <span class="header-page-title" data-i18n="page.clients.subtitle"></span>
+                <p class="clients-brand-subtitle" data-i18n="page.clients.hero.eyebrow"></p>
             </div>
-            <div class="header-actions">
-                <span id="welcomeLabel" class="clients-meta"></span>
+
+            <div class="clients-header-actions">
+                <div class="header-account-pill">
+                    <span class="header-account-label" data-i18n="page.clients.profile.label"></span>
+                    <span id="welcomeLabel" class="header-account-value"></span>
+                </div>
                 <button id="logoutBtn" class="btn-logout" type="button" data-i18n="page.clients.actions.logout"></button>
             </div>
         </header>
 
-        <main class="form-container">
-            <section class="clients-card" data-i18n-aria-label="page.clients.listAriaLabel">
-                <div class="top-bar">
-                    <div class="top-bar-left">
-                        <span id="clientCount" class="clients-meta" aria-live="polite"></span>
+        <section id="workspaceHero" class="workspace-hero">
+            <div class="workspace-hero-copy">
+                <p class="workspace-eyebrow" data-i18n="page.clients.hero.kicker"></p>
+                <h2 class="workspace-title" data-i18n="page.clients.hero.title"></h2>
+                <p class="workspace-subtitle" data-i18n="page.clients.hero.subtitle"></p>
+
+                <div class="workspace-badges" data-i18n-aria-label="page.clients.hero.badgesAriaLabel">
+                    <span class="workspace-badge" data-i18n="page.clients.hero.badges.private"></span>
+                    <span class="workspace-badge" data-i18n="page.clients.hero.badges.history"></span>
+                    <span class="workspace-badge" data-i18n="page.clients.hero.badges.reports"></span>
+                </div>
+            </div>
+
+            <aside class="workspace-aside">
+                <p class="workspace-aside-label" data-i18n="page.clients.hero.aside.label"></p>
+                <h3 class="workspace-aside-title" data-i18n="page.clients.hero.aside.title"></h3>
+                <p class="workspace-aside-copy" data-i18n="page.clients.hero.aside.subtitle"></p>
+
+                <div class="workspace-points">
+                    <div class="workspace-point">
+                        <span class="workspace-point-icon" aria-hidden="true"></span>
+                        <span data-i18n="page.clients.hero.aside.point1"></span>
                     </div>
-                    <div class="top-bar-right">
+                    <div class="workspace-point">
+                        <span class="workspace-point-icon" aria-hidden="true"></span>
+                        <span data-i18n="page.clients.hero.aside.point2"></span>
+                    </div>
+                    <div class="workspace-point">
+                        <span class="workspace-point-icon" aria-hidden="true"></span>
+                        <span data-i18n="page.clients.hero.aside.point3"></span>
+                    </div>
+                </div>
+            </aside>
+        </section>
+
+        <main class="workspace-main">
+            <section class="clients-card" data-i18n-aria-label="page.clients.listAriaLabel">
+                <div class="clients-card-top">
+                    <div class="clients-card-heading">
+                        <p class="section-kicker" data-i18n="page.clients.workspace.kicker"></p>
+                        <h2 class="section-title" data-i18n="page.clients.workspace.title"></h2>
+                        <p class="section-subtitle" data-i18n="page.clients.workspace.subtitle"></p>
+                        <p id="clientCount" class="clients-meta" aria-live="polite"></p>
+                    </div>
+
+                    <div class="clients-card-actions">
                         <a href="/new" class="btn-new">
-                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                             <span data-i18n="page.clients.newCard"></span>
                         </a>
                     </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span class="stat-label" data-i18n="page.clients.stats.total"></span>
+                            <strong id="statTotal" class="stat-value"></strong>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label" data-i18n="page.clients.stats.latest"></span>
+                            <strong id="statLatest" class="stat-value stat-value-small"></strong>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="controls">
-                    <div class="search-input-wrap">
-                        <svg class="search-icon" width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 10.5L13 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-                        <input id="searchInput" class="search-input" type="search" data-i18n-placeholder="page.clients.searchPlaceholder" data-i18n-aria-label="page.clients.searchAriaLabel">
+                <div class="toolbar-card">
+                    <div class="toolbar-field toolbar-field-search">
+                        <label class="toolbar-label" for="searchInput" data-i18n="page.clients.searchLabel"></label>
+                        <div class="search-input-wrap">
+                            <svg class="search-icon" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 10.5L13 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                            <input id="searchInput" class="search-input" type="search" data-i18n-placeholder="page.clients.searchPlaceholder" data-i18n-aria-label="page.clients.searchAriaLabel">
+                        </div>
                     </div>
-                    <select id="sortSelect" data-i18n-aria-label="page.clients.sortAriaLabel">
-                        <option value="created_desc" data-i18n="page.clients.sort.createdDesc"></option>
-                        <option value="created_asc" data-i18n="page.clients.sort.createdAsc"></option>
-                        <option value="name_asc" data-i18n="page.clients.sort.nameAsc"></option>
-                        <option value="name_desc" data-i18n="page.clients.sort.nameDesc"></option>
-                        <option value="birth_asc" data-i18n="page.clients.sort.birthAsc"></option>
-                        <option value="birth_desc" data-i18n="page.clients.sort.birthDesc"></option>
-                    </select>
+
+                    <div class="toolbar-field toolbar-field-sort">
+                        <label class="toolbar-label" for="sortSelect" data-i18n="page.clients.sortLabel"></label>
+                        <select id="sortSelect" data-i18n-aria-label="page.clients.sortAriaLabel">
+                            <option value="created_desc" data-i18n="page.clients.sort.createdDesc"></option>
+                            <option value="created_asc" data-i18n="page.clients.sort.createdAsc"></option>
+                            <option value="name_asc" data-i18n="page.clients.sort.nameAsc"></option>
+                            <option value="name_desc" data-i18n="page.clients.sort.nameDesc"></option>
+                            <option value="birth_asc" data-i18n="page.clients.sort.birthAsc"></option>
+                            <option value="birth_desc" data-i18n="page.clients.sort.birthDesc"></option>
+                        </select>
+                    </div>
                 </div>
 
                 <div id="resultsMeta" class="results-meta" aria-live="polite"></div>
@@ -505,17 +137,19 @@
                 <div id="loading" class="loading" data-i18n="common.loading"></div>
 
                 <div id="emptyState" class="empty-state hidden">
-                    <svg class="empty-state-icon" width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="10" width="32" height="30" rx="3" stroke="currentColor" stroke-width="1.5"/><line x1="8" y1="18" x2="40" y2="18" stroke="currentColor" stroke-width="1.5"/><line x1="16" y1="10" x2="16" y2="18" stroke="currentColor" stroke-width="1.5"/><line x1="32" y1="10" x2="32" y2="18" stroke="currentColor" stroke-width="1.5"/><line x1="16" y1="26" x2="32" y2="26" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="16" y1="32" x2="26" y2="32" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                    <p data-i18n="page.clients.empty"></p>
-                    <a href="/new" class="btn-new" style="margin-top: 18px; display: inline-flex;">
-                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                    <svg class="empty-state-icon" width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true"><rect x="10" y="12" width="36" height="32" rx="4" stroke="currentColor" stroke-width="1.5"/><line x1="10" y1="20" x2="46" y2="20" stroke="currentColor" stroke-width="1.5"/><line x1="18" y1="12" x2="18" y2="20" stroke="currentColor" stroke-width="1.5"/><line x1="38" y1="12" x2="38" y2="20" stroke="currentColor" stroke-width="1.5"/><line x1="18" y1="29" x2="38" y2="29" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="18" y1="36" x2="31" y2="36" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    <h3 class="state-title" data-i18n="page.clients.empty"></h3>
+                    <p class="state-copy" data-i18n="page.clients.emptyHint"></p>
+                    <a href="/new" class="btn-new state-cta">
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                         <span data-i18n="page.clients.createFirstCard"></span>
                     </a>
                 </div>
 
                 <div id="noResultsState" class="empty-state hidden">
-                    <svg class="empty-state-icon" width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="21" cy="21" r="13" stroke="currentColor" stroke-width="1.5"/><path d="M30.5 30.5L40 40" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                    <p data-i18n="page.clients.noResults"></p>
+                    <svg class="empty-state-icon" width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true"><circle cx="24" cy="24" r="15" stroke="currentColor" stroke-width="1.5"/><path d="M35 35L46 46" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    <h3 class="state-title" data-i18n="page.clients.noResults"></h3>
+                    <p class="state-copy" data-i18n="page.clients.noResultsHint"></p>
                 </div>
 
                 <div id="tableWrap" class="table-wrap hidden">
@@ -542,7 +176,7 @@
 
     <div id="toast" class="toast"></div>
 
-    <script type="module" src="js/bundles/clients.bundle.js?v=2"></script>
+    <script type="module" src="js/bundles/clients.bundle.js?v=3"></script>
     <script src="js/locale-switcher.js?v=3"></script>
 </body>
 </html>

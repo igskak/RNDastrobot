@@ -17,6 +17,7 @@ let toastTimer = null;
 
 const refs = {};
 let currentAstrologer = null;
+const HERO_SEEN_STORAGE_PREFIX = 'steliara.clients.hero-seen';
 
 function t(key, params) {
     return window.FrontendI18n?.t?.(key, params) || key;
@@ -55,6 +56,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function cacheElements() {
+    refs.body = document.body;
+    refs.workspaceHero = document.getElementById('workspaceHero');
     refs.loading = document.getElementById('loading');
     refs.emptyState = document.getElementById('emptyState');
     refs.noResultsState = document.getElementById('noResultsState');
@@ -67,6 +70,8 @@ function cacheElements() {
     refs.toast = document.getElementById('toast');
     refs.logoutBtn = document.getElementById('logoutBtn');
     refs.welcome = document.getElementById('welcomeLabel');
+    refs.statTotal = document.getElementById('statTotal');
+    refs.statLatest = document.getElementById('statLatest');
 }
 
 function bindEvents() {
@@ -118,6 +123,7 @@ function bindEvents() {
         if (refs.loading && !refs.loading.classList.contains('hidden') && !state.users.length) {
             refs.loading.textContent = t('common.loading');
         }
+        renderProfileSummary();
         renderUsers();
     });
 
@@ -136,11 +142,48 @@ async function bootstrapPage() {
     currentAstrologer = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
     if (!currentAstrologer) return;
 
-    if (refs.welcome) {
-        refs.welcome.textContent = currentAstrologer.email || '';
-    }
+    renderProfileSummary();
+    applyHeroPlacement();
 
     await loadClients();
+}
+
+function renderProfileSummary() {
+    if (!refs.welcome) return;
+    const email = currentAstrologer?.email || t('common.notAvailable');
+    refs.welcome.textContent = t('page.clients.profile.signedInAs', { email });
+}
+
+function applyHeroPlacement() {
+    if (!refs.body || !refs.workspaceHero) return;
+
+    const seen = getHeroSeenFlag();
+    refs.body.classList.toggle('clients-page--returning', seen);
+
+    if (!seen) {
+        setHeroSeenFlag();
+    }
+}
+
+function getHeroStorageKey() {
+    const identity = String(currentAstrologer?.email || 'default').trim().toLowerCase();
+    return `${HERO_SEEN_STORAGE_PREFIX}:${identity}`;
+}
+
+function getHeroSeenFlag() {
+    try {
+        return window.localStorage?.getItem(getHeroStorageKey()) === '1';
+    } catch (_) {
+        return false;
+    }
+}
+
+function setHeroSeenFlag() {
+    try {
+        window.localStorage?.setItem(getHeroStorageKey(), '1');
+    } catch (_) {
+        // Ignore storage errors; default to first-visit placement.
+    }
 }
 
 async function loadClients() {
@@ -164,8 +207,8 @@ async function loadClients() {
         refs.loading.classList.add('hidden');
 
         if (state.users.length === 0) {
+            updateCounters();
             refs.emptyState.classList.remove('hidden');
-            refs.countEl.textContent = '';
             refs.resultsMeta.textContent = '';
             return;
         }
@@ -308,6 +351,14 @@ function updateCounters() {
 
     refs.countEl.textContent = t('page.clients.counters.total', { total });
 
+    if (refs.statTotal) {
+        refs.statTotal.textContent = String(total);
+    }
+
+    if (refs.statLatest) {
+        refs.statLatest.textContent = getLatestCreatedLabel(state.users);
+    }
+
     if (state.searchTerm) {
         refs.resultsMeta.textContent = t('page.clients.counters.shownOf', { shown, total });
         refs.resultsMeta.style.display = '';
@@ -316,6 +367,29 @@ function updateCounters() {
 
     refs.resultsMeta.textContent = '';
     refs.resultsMeta.style.display = 'none';
+}
+
+function getLatestCreatedLabel(users) {
+    if (!Array.isArray(users) || users.length === 0) {
+        return t('common.notAvailable');
+    }
+
+    let latestUser = null;
+    let latestTs = 0;
+
+    for (const user of users) {
+        const ts = user?.created_at ? new Date(user.created_at).getTime() : 0;
+        if (ts > latestTs) {
+            latestTs = ts;
+            latestUser = user;
+        }
+    }
+
+    if (!latestUser || !latestUser.created_at) {
+        return t('common.notAvailable');
+    }
+
+    return formatDateTime(latestUser.created_at);
 }
 
 async function openChart(userId) {
