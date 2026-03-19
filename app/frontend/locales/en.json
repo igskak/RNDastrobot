@@ -158,6 +158,7 @@
     "all": "All",
     "back": "Back",
     "calculate": "Calculate",
+    "cancel": "Cancel",
     "close": "Close",
     "date": "Date",
     "day": "Day",
@@ -239,6 +240,11 @@
   },
   "page": {
     "chart": {
+      "actions": {
+        "editClient": "Edit client data",
+        "label": "Actions",
+        "openMenu": "Open chart actions"
+      },
       "aspects": {
         "settings": {
           "sortBy": "Sort",
@@ -269,6 +275,22 @@
       },
       "chat": {
         "title": "Ask about this chart"
+      },
+      "edit": {
+        "errors": {
+          "chartUnavailable": "The current chart is unavailable. Please reopen the client card.",
+          "saveFailed": "Failed to update client data"
+        },
+        "kicker": "Correction mode",
+        "placeCurrent": "Current coordinates will be kept unless you choose another place.",
+        "placeHint": "Choose the corrected birthplace. Selecting a suggestion keeps coordinates precise.",
+        "placeManual": "If this is a new place, choose it from the list to lock exact coordinates.",
+        "placeSelected": "Coordinates and timezone were refreshed from the selected place.",
+        "submit": "Save and recalculate",
+        "submitting": "Updating chart...",
+        "subtitle": "Fix the birth data and immediately continue working with the corrected chart.",
+        "success": "Client data updated",
+        "title": "Edit birth data"
       },
       "configurations": {
         "apex": "Apex: {planet}",
@@ -386,6 +408,7 @@
     "actions": {
         "confirmDelete": "Confirm?",
         "delete": "Delete",
+        "edit": "Edit data",
         "open": "Open",
         "logout": "Logout"
       },
@@ -406,7 +429,8 @@
       "listAriaLabel": "Client list",
       "messages": {
         "confirmDeleteHint": "Click delete again to confirm",
-        "deleted": "Client deleted"
+        "deleted": "Client deleted",
+        "updated": "Client data updated"
     },
     "newCard": "New client",
     "noResults": "No matches",
@@ -431,6 +455,22 @@
         "created": "Created",
         "name": "Name",
         "place": "Place"
+      },
+      "edit": {
+        "errors": {
+          "chartUnavailable": "Client chart is unavailable right now",
+          "loadFailed": "Failed to load client data",
+          "saveFailed": "Failed to save client data"
+        },
+        "kicker": "Quick correction",
+        "placeCurrent": "Using the client's current saved place.",
+        "placeHint": "Select a place from suggestions to refresh coordinates automatically.",
+        "placeManual": "Manual place entered. Coordinates stay unchanged until you pick a suggestion.",
+        "placeSelected": "Place selected from suggestions. Coordinates will be updated.",
+        "submit": "Save changes",
+        "submitting": "Saving...",
+        "subtitle": "Correct birth details without leaving the clients workspace.",
+        "title": "Edit client data"
       },
       "title": "Client database"
     },

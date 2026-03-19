@@ -50,6 +50,38 @@ if os.getenv('APP_ENV') != 'production':
     logger.info(f"Ephemeris path: {EPHE_PATH}")
 natal_service = NatalChartService(ephe_path=EPHE_PATH)
 
+
+def build_natal_chart_response(chart_data: dict) -> NatalChartResponse:
+    balances_data = None
+    if chart_data.get('balances'):
+        balances_dict = chart_data['balances']
+        balances_data = BalancesInfo(
+            element_balance=ElementBalanceInfo(**balances_dict['element_balance']) if balances_dict.get('element_balance') else None,
+            mode_balance=ModeBalanceInfo(**balances_dict['mode_balance']) if balances_dict.get('mode_balance') else None,
+            gender_balance=GenderBalanceInfo(**balances_dict['gender_balance']) if balances_dict.get('gender_balance') else None,
+            zones_balance=ZonesBalanceInfo(**balances_dict['zones_balance']) if balances_dict.get('zones_balance') else None,
+            hemisphere_balance=HemisphereBalanceInfo(**balances_dict['hemisphere_balance']) if balances_dict.get('hemisphere_balance') else None,
+            quadrant_balance=QuadrantBalanceInfo(**balances_dict['quadrant_balance']) if balances_dict.get('quadrant_balance') else None,
+            house_group_balance=HouseGroupBalanceInfo(**balances_dict['house_group_balance']) if balances_dict.get('house_group_balance') else None,
+        )
+
+    return NatalChartResponse(
+        user_id=UUID(chart_data['user_id']) if chart_data.get('user_id') else None,
+        birth_data=BirthDataOutput(**chart_data['birth_data']),
+        planets=[PlanetPosition(**p) for p in chart_data['planets']],
+        houses=[HousePosition(**h) for h in chart_data['houses']],
+        angles={k: AnglePosition(**v) for k, v in chart_data['angles'].items()},
+        special_points={k: SpecialPointPosition(**v) for k, v in chart_data['special_points'].items()},
+        configurations=chart_data.get('configurations'),
+        aspects=[AspectInfo(**a) for a in chart_data['aspects']] if chart_data.get('aspects') else None,
+        aspect_configurations=[ConfigurationInfo(**c) for c in chart_data['aspect_configurations']] if chart_data.get('aspect_configurations') else None,
+        stelliums=[StelliumInfo(**s) for s in chart_data['stelliums']] if chart_data.get('stelliums') else None,
+        cosmogram_pattern=CosmogramPatternInfo(**chart_data['cosmogram_pattern']) if chart_data.get('cosmogram_pattern') else None,
+        planet_distribution=PlanetDistributionInfo(**chart_data['planet_distribution']) if chart_data.get('planet_distribution') else None,
+        balances=balances_data,
+        karmic_analysis=KarmicAnalysisInfo(**chart_data['karmic_analysis']),
+    )
+
 @router.post(
     "/natal/calculate",
     response_model=NatalChartResponse,
@@ -102,41 +134,7 @@ def calculate_natal_chart(
             last_name=birth_data.last_name,
         )
         
-        # Преобразование балансов (пункт 3.5 спецификации)
-        balances_data = None
-        if chart_data.get('balances'):
-            balances_dict = chart_data['balances']
-            balances_data = BalancesInfo(
-                element_balance=ElementBalanceInfo(**balances_dict['element_balance']) if balances_dict.get('element_balance') else None,
-                mode_balance=ModeBalanceInfo(**balances_dict['mode_balance']) if balances_dict.get('mode_balance') else None,
-                gender_balance=GenderBalanceInfo(**balances_dict['gender_balance']) if balances_dict.get('gender_balance') else None,
-                zones_balance=ZonesBalanceInfo(**balances_dict['zones_balance']) if balances_dict.get('zones_balance') else None,
-                hemisphere_balance=HemisphereBalanceInfo(**balances_dict['hemisphere_balance']) if balances_dict.get('hemisphere_balance') else None,
-                quadrant_balance=QuadrantBalanceInfo(**balances_dict['quadrant_balance']) if balances_dict.get('quadrant_balance') else None,
-                house_group_balance=HouseGroupBalanceInfo(**balances_dict['house_group_balance']) if balances_dict.get('house_group_balance') else None,
-            )
-
-        # Преобразование в Pydantic модели
-        response = NatalChartResponse(
-            user_id=UUID(chart_data['user_id']) if chart_data.get('user_id') else None,
-            birth_data=BirthDataOutput(**chart_data['birth_data']),
-            planets=[PlanetPosition(**p) for p in chart_data['planets']],
-            houses=[HousePosition(**h) for h in chart_data['houses']],
-            angles={k: AnglePosition(**v) for k, v in chart_data['angles'].items()},
-            special_points={k: SpecialPointPosition(**v) for k, v in chart_data['special_points'].items()},
-            configurations=chart_data.get('configurations'),
-            # Похідні дані (пункт 3.3 специфікації)
-            aspects=[AspectInfo(**a) for a in chart_data['aspects']] if chart_data.get('aspects') else None,
-            aspect_configurations=[ConfigurationInfo(**c) for c in chart_data['aspect_configurations']] if chart_data.get('aspect_configurations') else None,
-            stelliums=[StelliumInfo(**s) for s in chart_data['stelliums']] if chart_data.get('stelliums') else None,
-            cosmogram_pattern=CosmogramPatternInfo(**chart_data['cosmogram_pattern']) if chart_data.get('cosmogram_pattern') else None,
-            planet_distribution=PlanetDistributionInfo(**chart_data['planet_distribution']) if chart_data.get('planet_distribution') else None,
-            # Інтегральні баланси (пункт 3.5 специфікації)
-            balances=balances_data,
-            karmic_analysis=KarmicAnalysisInfo(**chart_data['karmic_analysis']),
-        )
-
-        return response
+        return build_natal_chart_response(chart_data)
     
     except ValueError as e:
         logger.error(f"Ошибка валидации: {str(e)}")
@@ -205,41 +203,7 @@ def get_natal_chart(
                 detail=f"Натальная карта для пользователя {user_id} не найдена"
             )
 
-        # Преобразование балансов (пункт 3.5 спецификации)
-        balances_data = None
-        if chart_data.get('balances'):
-            balances_dict = chart_data['balances']
-            balances_data = BalancesInfo(
-                element_balance=ElementBalanceInfo(**balances_dict['element_balance']) if balances_dict.get('element_balance') else None,
-                mode_balance=ModeBalanceInfo(**balances_dict['mode_balance']) if balances_dict.get('mode_balance') else None,
-                gender_balance=GenderBalanceInfo(**balances_dict['gender_balance']) if balances_dict.get('gender_balance') else None,
-                zones_balance=ZonesBalanceInfo(**balances_dict['zones_balance']) if balances_dict.get('zones_balance') else None,
-                hemisphere_balance=HemisphereBalanceInfo(**balances_dict['hemisphere_balance']) if balances_dict.get('hemisphere_balance') else None,
-                quadrant_balance=QuadrantBalanceInfo(**balances_dict['quadrant_balance']) if balances_dict.get('quadrant_balance') else None,
-                house_group_balance=HouseGroupBalanceInfo(**balances_dict['house_group_balance']) if balances_dict.get('house_group_balance') else None,
-            )
-
-        # Преобразование в Pydantic модели
-        response = NatalChartResponse(
-            user_id=UUID(chart_data['user_id']),
-            birth_data=BirthDataOutput(**chart_data['birth_data']),
-            planets=[PlanetPosition(**p) for p in chart_data['planets']],
-            houses=[HousePosition(**h) for h in chart_data['houses']],
-            angles={k: AnglePosition(**v) for k, v in chart_data['angles'].items()},
-            special_points={k: SpecialPointPosition(**v) for k, v in chart_data['special_points'].items()},
-            configurations=chart_data.get('configurations'),
-            # Похідні дані (пункт 3.3 специфікації)
-            aspects=[AspectInfo(**a) for a in chart_data['aspects']] if chart_data.get('aspects') else None,
-            aspect_configurations=[ConfigurationInfo(**c) for c in chart_data['aspect_configurations']] if chart_data.get('aspect_configurations') else None,
-            stelliums=[StelliumInfo(**s) for s in chart_data['stelliums']] if chart_data.get('stelliums') else None,
-            cosmogram_pattern=CosmogramPatternInfo(**chart_data['cosmogram_pattern']) if chart_data.get('cosmogram_pattern') else None,
-            planet_distribution=PlanetDistributionInfo(**chart_data['planet_distribution']) if chart_data.get('planet_distribution') else None,
-            # Інтегральні баланси (пункт 3.5 специфікації)
-            balances=balances_data,
-            karmic_analysis=KarmicAnalysisInfo(**chart_data['karmic_analysis']),
-        )
-
-        return response
+        return build_natal_chart_response(chart_data)
 
     except HTTPException:
         raise
@@ -384,6 +348,64 @@ def list_users(
         ]
     except Exception as e:
         logger.exception(f"Ошибка при получении списка пользователей: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Внутренняя ошибка сервера: {str(e)}"
+        )
+
+@router.put(
+    "/users/{user_id}",
+    response_model=NatalChartResponse,
+    summary="Обновить данные клиента",
+    description="Обновляет birth-data клиента, пересчитывает натальную карту и возвращает свежий результат",
+)
+def update_user_birth_data(
+    user_id: UUID,
+    birth_data: BirthDataInput,
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+) -> NatalChartResponse:
+    """Обновить данные рождения клиента и пересчитать сохранённую карту."""
+    try:
+        ensure_client_access(db, request, auth, user_id, action="client.natal.update")
+        chart_data = natal_service.update_existing_chart(
+            user_id=user_id,
+            db_session=db,
+            birth_date=birth_data.date,
+            birth_time=birth_data.time,
+            timezone=birth_data.timezone,
+            astrologer_id=auth.astrologer.id,
+            place=birth_data.place,
+            latitude=birth_data.latitude,
+            longitude=birth_data.longitude,
+            house_system=birth_data.house_system,
+            first_name=birth_data.first_name,
+            last_name=birth_data.last_name,
+        )
+        return build_natal_chart_response(chart_data)
+    except ValueError as e:
+        logger.error(f"Ошибка валидации при обновлении клиента: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except GeocodingTimeoutError as e:
+        logger.error(f"Таймаут геокодирования при обновлении клиента: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_408_REQUEST_TIMEOUT,
+            detail="Превышено время ожидания при определении координат места"
+        )
+    except GeocodingServiceError as e:
+        logger.error(f"Ошибка сервиса геокодирования при обновлении клиента: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Сервис геокодирования временно недоступен"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Ошибка при обновлении клиента: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Внутренняя ошибка сервера: {str(e)}"

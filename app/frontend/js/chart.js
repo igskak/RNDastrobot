@@ -7,6 +7,14 @@ let chartDataRenderer = null;
 let inFlightRecalcPromise = null;
 let inFlightRecalcKey = null;
 let currentHoveredAspectKey = null;
+let chartToastTimer = null;
+const editClientState = {
+    autocompleteBound: false,
+    originalCoords: null,
+    selectedCoords: null,
+    originalPlace: '',
+    selectedPlaceLabel: '',
+};
 const HOUSE_SYSTEM_ALIASES = {
     'P': 'P',
     'K': 'K',
@@ -79,12 +87,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         chartData.birth_data?.house_system || formData?.houseSystem || 'P'
     );
 
-    chartData = window.NatalWheelData?.prepareNatalWheelData
-        ? window.NatalWheelData.prepareNatalWheelData(chartData, { houseSystem: currentSettings.houseSystem })
-        : chartData;
-
-    // Сохраняем в глобальный кэш для интерактивности
-    window.chartDataCache = chartData;
+    chartData = applyChartState(chartData, { houseSystem: currentSettings.houseSystem });
 
     // Обновляем заголовок
     updateHeader(chartData);
@@ -138,10 +141,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     initPanelTabs();
     initZoomControls();
     initPinchZoom();
+    initChartActions();
+    initEditClientDialog();
 
     document.addEventListener('frontend:locale-changed', () => {
         if (!window.chartDataCache) return;
         updateHeader(window.chartDataCache);
+        refreshEditDialogLocale();
         if (chartDataRenderer && typeof chartDataRenderer.render === 'function') {
             const hidden = currentSettings.hiddenPlanets || [];
             redrawChart(window.chartDataCache, hidden, currentSettings.orientation);
@@ -277,6 +283,45 @@ function getBirthPlaceLabel(chartData, formData) {
     }
 
     return '';
+}
+
+function getCurrentChartUserId() {
+    return (
+        window.chartDataRawCache?.user_id
+        || window.chartDataCache?.user_id
+        || localStorage.getItem('currentUserId')
+        || null
+    );
+}
+
+function applyChartState(rawChartData, options = {}) {
+    if (!rawChartData) return rawChartData;
+
+    const ensuredRawChartData = ensureChartUserId(rawChartData, options.userId || getCurrentChartUserId());
+    const houseSystem = normalizeHouseSystemCode(
+        options.houseSystem
+        || currentSettings.houseSystem
+        || AstroAPI.getFormData()?.houseSystem
+        || 'P'
+    );
+
+    window.chartDataRawCache = ensuredRawChartData;
+    window.chartDataCache = window.NatalWheelData?.prepareNatalWheelData
+        ? window.NatalWheelData.prepareNatalWheelData(ensuredRawChartData, { houseSystem })
+        : ensuredRawChartData;
+
+    AstroAPI.saveChartToSession(ensuredRawChartData);
+    AstroAPI.saveFormData(AstroAPI.chartToFormData(ensuredRawChartData, { houseSystem }));
+
+    return window.chartDataCache;
+}
+
+function ensureChartUserId(chartData, fallbackUserId) {
+    if (!chartData) return chartData;
+    const userId = chartData.user_id || fallbackUserId || null;
+    return userId
+        ? { ...chartData, user_id: userId }
+        : chartData;
 }
 
 /**
@@ -474,7 +519,7 @@ async function applySettings() {
 
     // Если система домов изменилась — нужен пересчёт на сервере
     const formData = AstroAPI.getFormData();
-    const currentChartHouseSystem = normalizeHouseSystemCode(window.chartDataCache?.birth_data?.house_system || 'P');
+    const currentChartHouseSystem = normalizeHouseSystemCode(formData?.houseSystem || 'P');
     if (formData && houseSystem !== currentChartHouseSystem) {
         // Пересчитываем карту с новой системой домов
         try {
@@ -487,15 +532,17 @@ async function applySettings() {
             const requestKey = JSON.stringify(requestData);
             if (!inFlightRecalcPromise || inFlightRecalcKey !== requestKey) {
                 inFlightRecalcKey = requestKey;
-                inFlightRecalcPromise = AstroAPI.calculateNatalChart(requestData);
+                inFlightRecalcPromise = AstroAPI.calculateNatalChart(requestData, { saveToDb: false });
             }
             let newChartData = await inFlightRecalcPromise;
 
             if (newChartData) {
-                newChartData = window.NatalWheelData?.prepareNatalWheelData
-                    ? window.NatalWheelData.prepareNatalWheelData(newChartData, { houseSystem })
-                    : newChartData;
-                window.chartDataCache = newChartData;
+                newChartData = applyChartState(
+                    ensureChartUserId(newChartData, getCurrentChartUserId()),
+                    { houseSystem }
+                );
+                updateHeader(newChartData);
+                updateInterpretationLinks(newChartData);
                 redrawChart(newChartData, hiddenPlanets, orientation);
             }
         } catch (err) {
@@ -673,4 +720,364 @@ function initPinchZoom() {
         const dy = touch1.clientY - touch2.clientY;
         return Math.sqrt(dx * dx + dy * dy);
     }
+}
+
+function initChartActions() {
+    const toggle = document.getElementById('chartActionsToggle');
+    const menu = document.getElementById('chartActionsMenu');
+    const editAction = document.getElementById('editClientAction');
+
+    if (!toggle || !menu || !editAction) return;
+
+    toggle.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const shouldOpen = menu.classList.contains('hidden');
+        setChartActionsMenuOpen(shouldOpen);
+    });
+
+    editAction.addEventListener('click', () => {
+        setChartActionsMenuOpen(false);
+        openEditClientDialog();
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!menu.contains(event.target) && !toggle.contains(event.target)) {
+            setChartActionsMenuOpen(false);
+        }
+    });
+}
+
+function setChartActionsMenuOpen(isOpen) {
+    const toggle = document.getElementById('chartActionsToggle');
+    const menu = document.getElementById('chartActionsMenu');
+    if (!toggle || !menu) return;
+
+    menu.classList.toggle('hidden', !isOpen);
+    toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+}
+
+function initEditClientDialog() {
+    const refs = getEditDialogRefs();
+    if (!refs.dialog || refs.dialog.dataset.bound === 'true') return;
+
+    refs.dialog.dataset.bound = 'true';
+    window.Timezones?.populate?.(refs.timezone);
+
+    refs.close.addEventListener('click', closeEditClientDialog);
+    refs.cancel.addEventListener('click', closeEditClientDialog);
+    refs.backdrop.addEventListener('click', closeEditClientDialog);
+    refs.form.addEventListener('submit', handleEditClientSubmit);
+    refs.placeInput.addEventListener('input', handleEditPlaceInput);
+    refs.placeInput.addEventListener('focus', bindEditPlaceAutocomplete, { once: true });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') return;
+
+        if (!refs.dialog.classList.contains('hidden')) {
+            closeEditClientDialog();
+            return;
+        }
+
+        setChartActionsMenuOpen(false);
+    });
+}
+
+function getEditDialogRefs() {
+    return {
+        dialog: document.getElementById('editClientDialog'),
+        backdrop: document.getElementById('editClientBackdrop'),
+        form: document.getElementById('editClientForm'),
+        close: document.getElementById('editClientClose'),
+        cancel: document.getElementById('editClientCancel'),
+        submit: document.getElementById('editClientSubmit'),
+        error: document.getElementById('editClientError'),
+        firstName: document.getElementById('editFirstName'),
+        lastName: document.getElementById('editLastName'),
+        day: document.getElementById('editBirthDay'),
+        month: document.getElementById('editBirthMonth'),
+        year: document.getElementById('editBirthYear'),
+        hour: document.getElementById('editBirthHour'),
+        minute: document.getElementById('editBirthMinute'),
+        placeInput: document.getElementById('editBirthPlace'),
+        placeSuggestions: document.getElementById('editBirthPlaceSuggestions'),
+        placeHint: document.getElementById('editPlaceHint'),
+        timezone: document.getElementById('editTimezone'),
+        timezoneHint: document.getElementById('editTimezoneHint'),
+    };
+}
+
+function openEditClientDialog() {
+    const refs = getEditDialogRefs();
+    const rawChartData = window.chartDataRawCache || AstroAPI.getChartFromSession();
+    if (!refs.dialog || !rawChartData?.user_id) {
+        showChartToast(t('page.chart.edit.errors.chartUnavailable'), 'error');
+        return;
+    }
+
+    const formData = AstroAPI.chartToFormData(rawChartData, { houseSystem: currentSettings.houseSystem });
+    const place = String(formData.place || '').trim();
+
+    refs.firstName.value = formData.firstName || '';
+    refs.lastName.value = formData.lastName || '';
+    refs.day.value = formData.day || '';
+    refs.month.value = formData.month || '';
+    refs.year.value = formData.year || '';
+    refs.hour.value = formData.hour || '';
+    refs.minute.value = formData.minute || '';
+    refs.placeInput.value = place;
+
+    window.Timezones?.populate?.(refs.timezone);
+    refs.timezone.value = formData.timezone || '';
+    refs.timezoneHint.textContent = '';
+    refs.timezoneHint.style.color = '';
+
+    editClientState.originalCoords = {
+        lat: Number(formData.latitude),
+        lon: Number(formData.longitude),
+    };
+    editClientState.selectedCoords = {
+        lat: Number(formData.latitude),
+        lon: Number(formData.longitude),
+    };
+    editClientState.originalPlace = normalizeLooseText(place);
+    editClientState.selectedPlaceLabel = normalizeLooseText(place);
+
+    refs.error.classList.add('hidden');
+    refs.error.textContent = '';
+    renderEditPlaceHint('current');
+    setEditClientSubmitting(false);
+
+    refs.backdrop.classList.remove('hidden');
+    refs.dialog.classList.remove('hidden');
+    refs.firstName.focus();
+    document.body.style.overflow = 'hidden';
+}
+
+function closeEditClientDialog() {
+    const refs = getEditDialogRefs();
+    if (!refs.dialog) return;
+
+    refs.backdrop.classList.add('hidden');
+    refs.dialog.classList.add('hidden');
+    refs.error.classList.add('hidden');
+    refs.error.textContent = '';
+    refs.timezoneHint.textContent = '';
+    refs.timezoneHint.style.color = '';
+    document.body.style.overflow = '';
+}
+
+function refreshEditDialogLocale() {
+    const refs = getEditDialogRefs();
+    if (!refs.dialog || refs.dialog.classList.contains('hidden')) return;
+
+    const timezoneValue = refs.timezone.value;
+    window.Timezones?.populate?.(refs.timezone);
+    if (timezoneValue) {
+        refs.timezone.value = timezoneValue;
+    }
+    renderEditPlaceHint(resolveEditPlaceHintMode());
+}
+
+function bindEditPlaceAutocomplete() {
+    const refs = getEditDialogRefs();
+    if (editClientState.autocompleteBound || !window.PlaceAutocomplete || !refs.placeInput || !refs.placeSuggestions) {
+        return;
+    }
+
+    editClientState.autocompleteBound = true;
+
+    window.PlaceAutocomplete.attach({
+        input: refs.placeInput,
+        suggestions: refs.placeSuggestions,
+        minChars: 2,
+        debounceMs: 350,
+        limit: 5,
+        getLabel: (item) => item.shortName || item.displayName,
+        onSelect: async (item) => {
+            editClientState.selectedCoords = { lat: item.lat, lon: item.lon };
+            editClientState.selectedPlaceLabel = normalizeLooseText(item.shortName || item.displayName);
+            renderEditPlaceHint('selected');
+
+            let resolvedTimezone = null;
+            if (item.sourceId && window.AstroAPI?.resolvePlaceTimezone) {
+                try {
+                    resolvedTimezone = await window.AstroAPI.resolvePlaceTimezone(item.sourceId);
+                } catch (_error) {
+                    resolvedTimezone = null;
+                }
+            }
+
+            if (!resolvedTimezone) {
+                resolvedTimezone = window.Timezones?.guess?.(item.displayName || item.shortName) || null;
+            }
+
+            if (resolvedTimezone) {
+                refs.timezone.value = resolvedTimezone;
+                refs.timezoneHint.textContent = t('page.index.form.timezone.autoDetected');
+                refs.timezoneHint.style.color = '#22c55e';
+            }
+        },
+    });
+}
+
+function handleEditPlaceInput(event) {
+    const nextValue = normalizeLooseText(event.target.value);
+    if (!nextValue) {
+        editClientState.selectedCoords = null;
+        renderEditPlaceHint('empty');
+        return;
+    }
+
+    if (nextValue === editClientState.selectedPlaceLabel) {
+        renderEditPlaceHint(resolveEditPlaceHintMode());
+        return;
+    }
+
+    if (nextValue === editClientState.originalPlace) {
+        editClientState.selectedCoords = editClientState.originalCoords;
+        editClientState.selectedPlaceLabel = editClientState.originalPlace;
+        renderEditPlaceHint('current');
+        return;
+    }
+
+    editClientState.selectedCoords = null;
+    renderEditPlaceHint('manual');
+}
+
+function resolveEditPlaceHintMode() {
+    if (editClientState.selectedCoords && editClientState.selectedPlaceLabel === editClientState.originalPlace) {
+        return 'current';
+    }
+    if (editClientState.selectedCoords) {
+        return 'selected';
+    }
+    if (getEditDialogRefs().placeInput?.value?.trim()) {
+        return 'manual';
+    }
+    return 'empty';
+}
+
+function renderEditPlaceHint(mode) {
+    const refs = getEditDialogRefs();
+    if (!refs.placeHint) return;
+
+    refs.placeHint.style.color = '';
+
+    if (mode === 'selected') {
+        refs.placeHint.textContent = t('page.chart.edit.placeSelected');
+        refs.placeHint.style.color = '#22c55e';
+        return;
+    }
+
+    if (mode === 'manual') {
+        refs.placeHint.textContent = t('page.chart.edit.placeManual');
+        refs.placeHint.style.color = '#b07d10';
+        return;
+    }
+
+    if (mode === 'empty') {
+        refs.placeHint.textContent = t('page.chart.edit.placeHint');
+        return;
+    }
+
+    refs.placeHint.textContent = t('page.chart.edit.placeCurrent');
+}
+
+async function handleEditClientSubmit(event) {
+    event.preventDefault();
+
+    const refs = getEditDialogRefs();
+    const rawChartData = window.chartDataRawCache || AstroAPI.getChartFromSession();
+    if (!refs.form.reportValidity()) return;
+    if (!rawChartData?.user_id) {
+        showChartToast(t('page.chart.edit.errors.chartUnavailable'), 'error');
+        return;
+    }
+
+    const place = refs.placeInput.value.trim();
+    const requestData = {
+        first_name: refs.firstName.value.trim(),
+        last_name: refs.lastName.value.trim(),
+        date: AstroAPI.formatDate(refs.day.value, refs.month.value, refs.year.value),
+        time: AstroAPI.formatTime(refs.hour.value, refs.minute.value),
+        timezone: refs.timezone.value,
+        place,
+        house_system: currentSettings.houseSystem,
+    };
+
+    const resolvedCoords = resolveEditCoords(place);
+    if (resolvedCoords) {
+        requestData.latitude = resolvedCoords.lat;
+        requestData.longitude = resolvedCoords.lon;
+    }
+
+    refs.error.classList.add('hidden');
+    refs.error.textContent = '';
+    setEditClientSubmitting(true);
+
+    try {
+        const updatedChartData = await AstroAPI.updateClientChart(rawChartData.user_id, requestData);
+        const preparedChartData = applyChartState(updatedChartData, { houseSystem: currentSettings.houseSystem });
+        currentHoveredAspectKey = null;
+        updateHeader(preparedChartData);
+        updateInterpretationLinks(preparedChartData);
+        redrawChart(preparedChartData, currentSettings.hiddenPlanets || [], currentSettings.orientation);
+        closeEditClientDialog();
+        showChartToast(t('page.chart.edit.success'), 'success');
+    } catch (error) {
+        refs.error.textContent = error.message || t('page.chart.edit.errors.saveFailed');
+        refs.error.classList.remove('hidden');
+    } finally {
+        setEditClientSubmitting(false);
+    }
+}
+
+function resolveEditCoords(place) {
+    const normalizedPlace = normalizeLooseText(place);
+    const coords = editClientState.selectedCoords;
+    const lat = Number(coords?.lat);
+    const lon = Number(coords?.lon);
+
+    if (!normalizedPlace || !Number.isFinite(lat) || !Number.isFinite(lon)) {
+        return null;
+    }
+
+    if (
+        normalizedPlace === editClientState.selectedPlaceLabel
+        || normalizedPlace === editClientState.originalPlace
+    ) {
+        return { lat, lon };
+    }
+
+    return null;
+}
+
+function normalizeLooseText(value) {
+    return String(value || '').trim().toLowerCase();
+}
+
+function setEditClientSubmitting(isSubmitting) {
+    const refs = getEditDialogRefs();
+    if (!refs.submit) return;
+
+    refs.submit.disabled = isSubmitting;
+    refs.submit.querySelector('.btn-text')?.classList.toggle('hidden', isSubmitting);
+    refs.submit.querySelector('.btn-loader')?.classList.toggle('hidden', !isSubmitting);
+}
+
+function showChartToast(message, type = 'info') {
+    const toast = document.getElementById('chartToast');
+    if (!toast || !message) return;
+
+    toast.textContent = message;
+    toast.className = `toast ${type}`;
+
+    requestAnimationFrame(() => {
+        toast.classList.add('visible');
+    });
+
+    clearTimeout(chartToastTimer);
+    chartToastTimer = setTimeout(() => {
+        toast.classList.remove('visible');
+    }, 2800);
 }

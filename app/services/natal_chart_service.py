@@ -677,11 +677,7 @@ class NatalChartService:
         Returns:
             UUID: ID созданного пользователя
         """
-        # Создаём repositories
         user_repo = UserRepository(db_session)
-        natal_repo = NatalChartRepository(db_session)
-
-        # Создаём пользователя
         user = user_repo.create_user(
             astrologer_id=astrologer_id,
             birth_date=birth_date,
@@ -695,33 +691,130 @@ class NatalChartService:
             last_name=last_name,
         )
 
-        # ОБОГАЩАЕМ ДАННЫЕ перед сохранением (пункт 3.2 спецификации)
-        # ВАЖНО: сначала дома, потом планеты (планетам нужны дома для включённых знаков)
-        # Примечание: характеристики шахты и гармонии будут добавлены после расчёта аспектов
+        return self._persist_chart_for_user(
+            db_session=db_session,
+            user=user,
+            planets=planets,
+            houses=houses,
+            angles=angles,
+            special_points=special_points,
+            configurations=configurations,
+        )
 
-        # Добавляем house_group, ruler_planet, significator, included_sign для домов
+    def update_existing_chart(
+        self,
+        user_id: UUID,
+        db_session: Session,
+        birth_date: date,
+        birth_time: time_type,
+        timezone: str,
+        astrologer_id: UUID,
+        place: Optional[str] = None,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+        house_system: str = 'P',
+        first_name: Optional[str] = None,
+        last_name: Optional[str] = None,
+    ) -> Dict:
+        """
+        Обновить данные рождения существующего клиента и пересчитать карту для того же user_id.
+        """
+        user_repo = UserRepository(db_session)
+        user = user_repo.get_user_by_id(user_id, astrologer_id=astrologer_id)
+        if not user:
+            raise ValueError("Пользователь не найден")
+
+        lat, lon, place_name = self.geocoding_service.get_coordinates(
+            place=place,
+            latitude=latitude,
+            longitude=longitude,
+            db_session=db_session,
+        )
+
+        utc_dt, jd = self.time_service.process_birth_time(
+            birth_date, birth_time, timezone
+        )
+
+        planets = self.swisseph_engine.calculate_planets(jd)
+        houses, angles = self.swisseph_engine.calculate_houses(jd, lat, lon, house_system)
+
+        for planet in planets:
+            planet['house'] = self.swisseph_engine.get_planet_house(
+                planet['longitude'], houses
+            )
+
+        special_points = self._calculate_special_points(jd, angles, planets, houses, lat, lon)
+        configurations = self._calculate_configurations(special_points, houses)
+
+        user.first_name = first_name
+        user.last_name = last_name
+        user.birth_date = birth_date
+        user.birth_time = birth_time
+        user.timezone = timezone
+        user.birth_place = place_name or place or f"{lat}, {lon}"
+        user.lat = lat
+        user.lon = lon
+        user.julian_day = jd
+        db_session.flush()
+
+        self._invalidate_dependent_chart_artifacts(user.user_id, db_session)
+        self._persist_chart_for_user(
+            db_session=db_session,
+            user=user,
+            planets=planets,
+            houses=houses,
+            angles=angles,
+            special_points=special_points,
+            configurations=configurations,
+        )
+
+        result = self.get_natal_chart_from_db(user.user_id, db_session)
+        if result is None:
+            result = {
+                'user_id': str(user.user_id),
+                'birth_data': {
+                    'first_name': first_name,
+                    'last_name': last_name,
+                    'date': birth_date.isoformat(),
+                    'time': birth_time.isoformat(),
+                    'timezone': timezone,
+                    'utc_time': utc_dt.isoformat(),
+                    'julian_day': jd,
+                    'latitude': lat,
+                    'longitude': lon,
+                    'place': place_name or place,
+                },
+                'planets': planets,
+                'houses': houses,
+                'angles': angles,
+                'special_points': special_points,
+                'configurations': configurations,
+            }
+
+        self._append_karmic_analysis(result)
+        return result
+
+    def _persist_chart_for_user(
+        self,
+        db_session: Session,
+        user,
+        planets: list,
+        houses: list,
+        angles: Dict,
+        special_points: Dict,
+        configurations: Dict,
+    ) -> UUID:
+        natal_repo = NatalChartRepository(db_session)
+
         houses = self._enrich_houses_with_properties(houses, db_session)
-
-        # Добавляем element, mode, dignity, speed_percent, critical_degrees,
-        # sun_relation, in_intercepted_sign, is_elevated, karmic_score для планет
-        # (аспекты ещё не вычислены, поэтому передаём пустой список)
         planets = self._enrich_planets_with_properties(
             planets, houses, [], db_session,
             angles=angles, special_points=special_points
         )
-
-        # Добавляем связи дом-планета:
-        # - ruled_houses для планет (какими домами управляет)
-        # - ruler_in_house для домов (где находится управитель)
-        # - planets_in_house для домов (какие планеты в доме)
         planets, houses = self._enrich_house_planet_relations(planets, houses)
 
-        # Разделяем Крест Судьбы и другие конфигурации
         fate_cross = configurations.get('FateCross') if configurations else None
-        # Пока других конфигураций нет, передаём пустой список
-        other_configs = []
 
-        # Сохраняем натальную карту
         natal_repo.save_full_natal_chart(
             user_id=user.user_id,
             planets=planets,
@@ -729,57 +822,67 @@ class NatalChartService:
             angles=angles,
             special_points=special_points,
             fate_cross=fate_cross,
-            configurations=other_configs,
+            configurations=[],
         )
 
-        # ЭТАП 2: Обчислення похідних (пункт 3.3 спецификації)
-        # Імпортуємо нові сервіси
         from app.services.aspect_service import AspectService
         from app.services.configuration_service import ConfigurationService
         from app.services.cosmogram_service import CosmogramService
+        from app.services.planet_strength_service import PlanetStrengthService
+        from app.services.special_roles_service import SpecialRolesService
+        from app.services.balance_service import BalanceService
+        from app.services.general_overview_service import GeneralOverviewService
 
-        # 1. Розрахунок аспектів
         aspect_service = AspectService(db_session)
         aspect_service.calculate_aspects(user.user_id)
-
-        # 1.1 Обновляем характеристики планет зависящие от аспектов (шахта, гармония)
         self._update_planet_aspect_characteristics(user.user_id, db_session)
 
-        # 2. Виявлення конфігурацій та стеллиумів
         config_service = ConfigurationService(db_session)
         config_service.detect_configurations(user.user_id)
         config_service.detect_stelliums(user.user_id)
 
-        # 3. Аналіз космограми
         cosmogram_service = CosmogramService(db_session)
         cosmogram_service.analyze_distribution(user.user_id)
         cosmogram_service.determine_jones_pattern(user.user_id)
 
-        # ЭТАП 3: Сила и статус планет (пункт 3.4 спецификації)
-        from app.services.planet_strength_service import PlanetStrengthService
-        from app.services.special_roles_service import SpecialRolesService
-
-        # 1. Розрахунок сили планет
         strength_service = PlanetStrengthService(db_session)
         strength_service.calculate_all_strengths(user.user_id)
 
-        # 2. Визначення спеціальних ролей
         roles_service = SpecialRolesService(db_session)
         roles_service.determine_all_roles(user.user_id)
 
-        # ЭТАП 4: Интегральные балансы (пункт 3.5 спецификації)
-        from app.services.balance_service import BalanceService
-
         balance_service = BalanceService(db_session)
         balance_service.calculate_all_balances(user.user_id)
-
-        # ЭТАП 5: Общий срез (пункт 3.6 спецификації)
-        from app.services.general_overview_service import GeneralOverviewService
 
         overview_service = GeneralOverviewService(db_session)
         overview_service.build_general_overview(user.user_id)
 
         return user.user_id
+
+    def _invalidate_dependent_chart_artifacts(self, user_id: UUID, db_session: Session) -> None:
+        """
+        Очистить прогнозные и AI-артефакты, которые становятся невалидны после смены birth-data.
+        """
+        from app.database.models import (
+            Direction,
+            ForecastRun,
+            Progression,
+            PrognosticInterpretation,
+            SolarReturn,
+            TransitEventsCache,
+        )
+
+        for model in (
+            SolarReturn,
+            Progression,
+            Direction,
+            TransitEventsCache,
+            PrognosticInterpretation,
+            ForecastRun,
+        ):
+            db_session.query(model).filter(model.user_id == user_id).delete(synchronize_session=False)
+
+        db_session.flush()
 
     def get_natal_chart_from_db(self, user_id: UUID, db_session: Session) -> Optional[Dict]:
         """

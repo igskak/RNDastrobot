@@ -43,6 +43,26 @@
         });
     }
 
+    async function readErrorMessage(response, fallbackKey, fallbackText) {
+        let payload = null;
+
+        try {
+            payload = await response.json();
+        } catch (_error) {
+            payload = null;
+        }
+
+        if (payload && typeof payload.message === 'string' && payload.message.trim()) {
+            return payload.message;
+        }
+
+        if (payload && typeof payload.detail === 'string' && payload.detail.trim()) {
+            return payload.detail;
+        }
+
+        return t(fallbackKey, null, fallbackText);
+    }
+
     /**
      * Расчёт натальной карты
      * @param {Object} birthData - Данные рождения
@@ -50,7 +70,16 @@
      * @returns {Promise<Object>} - Результат расчёта
      */
     async function calculateNatalChart(birthData, options = {}) {
-        const response = await apiFetch(`${API_BASE_URL}/natal/calculate`, {
+        const params = new URLSearchParams();
+        if (options.saveToDb === false) {
+            params.set('save_to_db', 'false');
+        }
+
+        const url = params.size
+            ? `${API_BASE_URL}/natal/calculate?${params.toString()}`
+            : `${API_BASE_URL}/natal/calculate`;
+
+        const response = await apiFetch(url, {
             method: 'POST',
             headers: withLocaleHeaders({
                 'Content-Type': 'application/json',
@@ -60,8 +89,36 @@
         });
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || error.detail || t('page.index.errors.calculateFailed', null, 'Failed to calculate chart'));
+            throw new Error(await readErrorMessage(
+                response,
+                'page.index.errors.calculateFailed',
+                'Failed to calculate chart'
+            ));
+        }
+
+        return response.json();
+    }
+
+    async function updateClientChart(userId, birthData, options = {}) {
+        if (!userId) {
+            throw new Error('userId is required');
+        }
+
+        const response = await apiFetch(`${API_BASE_URL}/users/${encodeURIComponent(String(userId))}`, {
+            method: 'PUT',
+            headers: withLocaleHeaders({
+                'Content-Type': 'application/json',
+            }),
+            body: JSON.stringify(birthData),
+            signal: options.signal,
+        });
+
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(
+                response,
+                'page.chart.edit.errors.saveFailed',
+                'Failed to update client data'
+            ));
         }
 
         return response.json();
@@ -176,6 +233,31 @@
         return data ? JSON.parse(data) : null;
     }
 
+    function chartToFormData(chartData, options = {}) {
+        const birthData = chartData?.birth_data || {};
+        const [yearRaw, monthRaw, dayRaw] = String(birthData.date || '').split('-');
+        const [hourRaw, minuteRaw] = String(birthData.time || '').split(':');
+        const latitude = Number(birthData.latitude);
+        const longitude = Number(birthData.longitude);
+        const existingFormData = getFormData();
+
+        return {
+            userId: chartData?.user_id || existingFormData?.userId || null,
+            firstName: birthData.first_name || '',
+            lastName: birthData.last_name || '',
+            day: Number.parseInt(dayRaw, 10) || '',
+            month: monthRaw || '',
+            year: Number.parseInt(yearRaw, 10) || '',
+            hour: Number.parseInt(hourRaw, 10) || '',
+            minute: Number.parseInt(minuteRaw, 10) || '',
+            place: birthData.place || '',
+            timezone: birthData.timezone || '',
+            houseSystem: options.houseSystem || existingFormData?.houseSystem || 'P',
+            latitude: Number.isFinite(latitude) ? latitude : null,
+            longitude: Number.isFinite(longitude) ? longitude : null,
+        };
+    }
+
     /**
      * Скрыть глобальный лоадер страницы
      */
@@ -224,6 +306,7 @@
     const api = {
         API_BASE_URL,
         calculateNatalChart,
+        updateClientChart,
         getCurrentAstrologer,
         requireAuth,
         logout,
@@ -234,6 +317,7 @@
         getChartFromSession,
         saveFormData,
         getFormData,
+        chartToFormData,
         withLocaleHeaders,
         showPageLoader,
         hidePageLoader,

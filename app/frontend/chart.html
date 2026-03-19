@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title data-i18n="page.chart.title"></title>
-    <link rel="stylesheet" href="bundles/chart.bundle.css?v=2">
+    <link rel="stylesheet" href="bundles/chart.bundle.css?v=20260319-1">
     <link rel="stylesheet" href="css/locale-switcher.css?v=1">
     <script>window.__APP_BUILD_ID__ = '2026-02-19-1';</script>
 </head>
@@ -23,6 +23,19 @@
         <div class="header-nav-buttons">
             <a href="natal-full.html" class="header-nav-btn"><svg class="nav-btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="1" y="1" width="12" height="12" rx="1"/><line x1="1" y1="5" x2="13" y2="5"/><line x1="1" y1="9" x2="13" y2="9"/></svg><span data-i18n="page.chart.nav.tables"></span></a>
             <a href="forecast.html" class="header-nav-btn"><svg class="nav-btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="7" cy="7" r="6"/><circle cx="7" cy="7" r="3"/><line x1="7" y1="1" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13"/><line x1="1" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13" y2="7"/></svg><span data-i18n="page.chart.nav.forecast"></span></a>
+            <div class="header-action-menu">
+                <button type="button" class="header-nav-btn header-nav-btn--icon" id="chartActionsToggle" aria-haspopup="true" aria-expanded="false" data-i18n-aria-label="page.chart.actions.openMenu">
+                    <svg class="nav-btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+                        <circle cx="7" cy="2.5" r="1"/>
+                        <circle cx="7" cy="7" r="1"/>
+                        <circle cx="7" cy="11.5" r="1"/>
+                    </svg>
+                    <span data-i18n="page.chart.actions.label"></span>
+                </button>
+                <div class="chart-actions-menu hidden" id="chartActionsMenu" role="menu">
+                    <button type="button" class="chart-action-item" id="editClientAction" role="menuitem" data-i18n="page.chart.actions.editClient"></button>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -220,7 +233,92 @@
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" style="width:22px;height:22px;display:block"><path d="M17 1.5H3a1 1 0 00-1 1v9.5a1 1 0 001 1h4.2l2.8 3.8 2.8-3.8H17a1 1 0 001-1V2.5a1 1 0 00-1-1z"/></svg>
     </button>
 
-    <script type="module" src="js/bundles/chart.bundle.js?v=2"></script>
+    <div class="chart-dialog-backdrop hidden" id="editClientBackdrop"></div>
+    <section class="chart-dialog hidden" id="editClientDialog" role="dialog" aria-modal="true" aria-labelledby="editClientTitle">
+        <form class="chart-dialog-card" id="editClientForm">
+            <div class="chart-dialog-header">
+                <div>
+                    <p class="chart-dialog-kicker" data-i18n="page.chart.edit.kicker"></p>
+                    <h3 id="editClientTitle" class="chart-dialog-title" data-i18n="page.chart.edit.title"></h3>
+                    <p class="chart-dialog-copy" data-i18n="page.chart.edit.subtitle"></p>
+                </div>
+                <button type="button" class="chart-dialog-close" id="editClientClose" data-i18n-aria-label="common.close">×</button>
+            </div>
+
+            <div class="chart-dialog-grid">
+                <div class="form-group">
+                    <label class="form-label" for="editFirstName" data-i18n="page.index.form.fullName.label"></label>
+                    <div class="name-inputs">
+                        <input type="text" id="editFirstName" data-i18n-placeholder="page.index.form.fullName.firstNamePlaceholder" required>
+                        <input type="text" id="editLastName" data-i18n-placeholder="page.index.form.fullName.lastNamePlaceholder" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" data-i18n="page.index.form.birthDate.label"></label>
+                    <div class="date-inputs">
+                        <input type="number" id="editBirthDay" min="1" max="31" data-i18n-placeholder="page.index.form.birthDate.dayPlaceholder" required>
+                        <select id="editBirthMonth" required>
+                            <option value="" data-i18n="page.index.form.birthDate.monthPlaceholder"></option>
+                            <option value="01" data-i18n="common.month.long.january"></option>
+                            <option value="02" data-i18n="common.month.long.february"></option>
+                            <option value="03" data-i18n="common.month.long.march"></option>
+                            <option value="04" data-i18n="common.month.long.april"></option>
+                            <option value="05" data-i18n="common.month.long.may"></option>
+                            <option value="06" data-i18n="common.month.long.june"></option>
+                            <option value="07" data-i18n="common.month.long.july"></option>
+                            <option value="08" data-i18n="common.month.long.august"></option>
+                            <option value="09" data-i18n="common.month.long.september"></option>
+                            <option value="10" data-i18n="common.month.long.october"></option>
+                            <option value="11" data-i18n="common.month.long.november"></option>
+                            <option value="12" data-i18n="common.month.long.december"></option>
+                        </select>
+                        <input type="number" id="editBirthYear" min="1800" max="2100" data-i18n-placeholder="page.index.form.birthDate.yearPlaceholder" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" data-i18n="page.index.form.birthTime.label"></label>
+                    <div class="time-inputs">
+                        <input type="number" id="editBirthHour" min="0" max="23" data-i18n-placeholder="page.index.form.birthTime.hoursPlaceholder" required>
+                        <span class="time-separator">:</span>
+                        <input type="number" id="editBirthMinute" min="0" max="59" data-i18n-placeholder="page.index.form.birthTime.minutesPlaceholder" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="editBirthPlace" data-i18n="page.index.form.birthPlace.label"></label>
+                    <div class="place-autocomplete-wrapper">
+                        <input type="text" id="editBirthPlace" class="place-input" data-i18n-placeholder="page.index.form.birthPlace.placeholder" autocomplete="off" required>
+                        <div id="editBirthPlaceSuggestions" class="place-suggestions"></div>
+                    </div>
+                    <span class="hint" id="editPlaceHint" data-i18n="page.chart.edit.placeHint"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="editTimezone" data-i18n="page.index.form.timezone.label"></label>
+                    <select id="editTimezone" required>
+                        <option value="" data-i18n="page.index.form.timezone.placeholder"></option>
+                    </select>
+                    <span class="hint" id="editTimezoneHint"></span>
+                </div>
+            </div>
+
+            <div id="editClientError" class="error-message hidden"></div>
+
+            <div class="chart-dialog-actions">
+                <button type="button" class="header-nav-btn" id="editClientCancel" data-i18n="common.cancel"></button>
+                <button type="submit" class="submit-btn chart-dialog-submit" id="editClientSubmit">
+                    <span class="btn-text" data-i18n="page.chart.edit.submit"></span>
+                    <span class="btn-loader hidden" data-i18n="page.chart.edit.submitting"></span>
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <div id="chartToast" class="toast"></div>
+
+    <script type="module" src="js/bundles/chart.bundle.js?v=20260319-1"></script>
     <script src="js/locale-switcher.js?v=3"></script>
 </body>
 </html>

@@ -14,6 +14,15 @@ const state = {
 };
 
 let toastTimer = null;
+const editClientState = {
+    autocompleteBound: false,
+    userId: null,
+    loadedChartData: null,
+    originalCoords: null,
+    selectedCoords: null,
+    originalPlace: '',
+    selectedPlaceLabel: '',
+};
 
 const refs = {};
 let currentAstrologer = null;
@@ -72,6 +81,25 @@ function cacheElements() {
     refs.welcome = document.getElementById('welcomeLabel');
     refs.statTotal = document.getElementById('statTotal');
     refs.statLatest = document.getElementById('statLatest');
+    refs.editBackdrop = document.getElementById('editClientBackdrop');
+    refs.editDialog = document.getElementById('editClientDialog');
+    refs.editForm = document.getElementById('editClientForm');
+    refs.editClose = document.getElementById('editClientClose');
+    refs.editCancel = document.getElementById('editClientCancel');
+    refs.editSubmit = document.getElementById('editClientSubmit');
+    refs.editError = document.getElementById('editClientError');
+    refs.editFirstName = document.getElementById('editFirstName');
+    refs.editLastName = document.getElementById('editLastName');
+    refs.editDay = document.getElementById('editBirthDay');
+    refs.editMonth = document.getElementById('editBirthMonth');
+    refs.editYear = document.getElementById('editBirthYear');
+    refs.editHour = document.getElementById('editBirthHour');
+    refs.editMinute = document.getElementById('editBirthMinute');
+    refs.editPlaceInput = document.getElementById('editBirthPlace');
+    refs.editPlaceSuggestions = document.getElementById('editBirthPlaceSuggestions');
+    refs.editPlaceHint = document.getElementById('editPlaceHint');
+    refs.editTimezone = document.getElementById('editTimezone');
+    refs.editTimezoneHint = document.getElementById('editTimezoneHint');
 }
 
 function bindEvents() {
@@ -96,6 +124,7 @@ function bindEvents() {
             if (!isOpen) {
                 dropdown.classList.add('open');
                 toggleBtn.classList.add('open');
+                toggleBtn.setAttribute('aria-expanded', 'true');
             }
             return;
         }
@@ -105,6 +134,11 @@ function bindEvents() {
         if (actionBtn) {
             const { action, userId } = actionBtn.dataset;
             if (!userId) return;
+            closeAllDropdowns();
+            if (action === 'edit') {
+                await openEditClientDialog(userId);
+                return;
+            }
             if (action === 'delete') { await handleDelete(userId, actionBtn); }
             return;
         }
@@ -125,6 +159,7 @@ function bindEvents() {
         }
         renderProfileSummary();
         renderUsers();
+        refreshEditDialogLocale();
     });
 
     if (refs.logoutBtn) {
@@ -136,6 +171,8 @@ function bindEvents() {
             }
         });
     }
+
+    initEditClientDialog();
 }
 
 async function bootstrapPage() {
@@ -245,7 +282,10 @@ function renderUsers() {
 
 function closeAllDropdowns() {
     document.querySelectorAll('.actions-dropdown.open').forEach((d) => d.classList.remove('open'));
-    document.querySelectorAll('.btn-actions.open').forEach((b) => b.classList.remove('open'));
+    document.querySelectorAll('.btn-actions.open, .btn-actions[aria-expanded="true"]').forEach((button) => {
+        button.classList.remove('open');
+        button.setAttribute('aria-expanded', 'false');
+    });
 }
 
 function buildUserRow(user) {
@@ -266,7 +306,7 @@ function buildUserRow(user) {
     const labelPlace = escapeHtml(t('page.clients.table.place'));
     const labelCreated = escapeHtml(t('page.clients.table.created'));
     const labelActions = escapeHtml(t('page.clients.table.actions'));
-    const openLabel = escapeHtml(t('page.clients.actions.open'));
+    const editLabel = escapeHtml(t('page.clients.actions.edit'));
     const deleteLabel = escapeHtml(t('page.clients.actions.delete'));
 
     tr.dataset.userId = userId;
@@ -282,11 +322,12 @@ function buildUserRow(user) {
         <td data-label="${labelCreated}">${escapeHtml(created)}</td>
         <td data-label="${labelActions}">
             <div class="row-actions">
-                <button class="btn-actions" data-action="toggle-menu" data-user-id="${escapeHtml(userId)}" aria-label="${escapeHtml(t('page.clients.table.actions'))}">
+                <button class="btn-actions" type="button" data-action="toggle-menu" data-user-id="${escapeHtml(userId)}" aria-label="${escapeHtml(t('page.clients.table.actions'))}" aria-haspopup="menu" aria-expanded="false">
                     <svg width="14" height="4" viewBox="0 0 14 4" fill="none"><circle cx="2" cy="2" r="1.4" fill="currentColor"/><circle cx="7" cy="2" r="1.4" fill="currentColor"/><circle cx="12" cy="2" r="1.4" fill="currentColor"/></svg>
                 </button>
                 <div class="actions-dropdown">
-                    <button class="action-item danger" data-action="delete" data-user-id="${escapeHtml(userId)}">${deleteLabel}</button>
+                    <button class="action-item" type="button" data-action="edit" data-user-id="${escapeHtml(userId)}">${editLabel}</button>
+                    <button class="action-item danger" type="button" data-action="delete" data-user-id="${escapeHtml(userId)}">${deleteLabel}</button>
                 </div>
             </div>
         </td>
@@ -399,12 +440,323 @@ async function openChart(userId) {
 
         const chartData = await response.json();
         AstroAPI.saveChartToSession(chartData);
+        AstroAPI.saveFormData(
+            AstroAPI.chartToFormData(chartData, {
+                houseSystem: AstroAPI.getFormData()?.houseSystem || 'P',
+            })
+        );
 
         window.showPageLoader?.();
         window.location.href = '/chart.html';
     } catch (error) {
         showToast(t('common.errorWithMessage', { message: error.message }), 'error');
     }
+}
+
+function initEditClientDialog() {
+    if (!refs.editDialog || refs.editDialog.dataset.bound === 'true') return;
+
+    refs.editDialog.dataset.bound = 'true';
+    window.Timezones?.populate?.(refs.editTimezone);
+
+    refs.editClose?.addEventListener('click', closeEditClientDialog);
+    refs.editCancel?.addEventListener('click', closeEditClientDialog);
+    refs.editBackdrop?.addEventListener('click', closeEditClientDialog);
+    refs.editForm?.addEventListener('submit', handleEditClientSubmit);
+    refs.editPlaceInput?.addEventListener('input', handleEditPlaceInput);
+    refs.editPlaceInput?.addEventListener('focus', bindEditPlaceAutocomplete, { once: true });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !refs.editDialog.classList.contains('hidden')) {
+            closeEditClientDialog();
+        }
+    });
+}
+
+async function openEditClientDialog(userId) {
+    if (!userId) return;
+
+    try {
+        const response = await apiFetch(`${API_BASE}/natal/${userId}`, { method: 'GET' });
+        if (!response.ok) throw new Error(t('page.clients.edit.errors.loadFailed'));
+
+        const chartData = await response.json();
+        const formData = AstroAPI.chartToFormData(chartData, {
+            houseSystem: chartData?.birth_data?.house_system || AstroAPI.getFormData()?.houseSystem || 'P',
+        });
+        const place = String(formData.place || '').trim();
+        const latitude = formData.latitude == null ? Number.NaN : Number(formData.latitude);
+        const longitude = formData.longitude == null ? Number.NaN : Number(formData.longitude);
+
+        editClientState.userId = String(chartData.user_id || userId);
+        editClientState.loadedChartData = chartData;
+        editClientState.originalCoords = {
+            lat: latitude,
+            lon: longitude,
+        };
+        editClientState.selectedCoords = {
+            lat: latitude,
+            lon: longitude,
+        };
+        editClientState.originalPlace = normalizeLooseText(place);
+        editClientState.selectedPlaceLabel = normalizeLooseText(place);
+
+        refs.editFirstName.value = formData.firstName || '';
+        refs.editLastName.value = formData.lastName || '';
+        refs.editDay.value = formData.day || '';
+        refs.editMonth.value = formData.month || '';
+        refs.editYear.value = formData.year || '';
+        refs.editHour.value = formData.hour || '';
+        refs.editMinute.value = formData.minute || '';
+        refs.editPlaceInput.value = place;
+
+        window.Timezones?.populate?.(refs.editTimezone);
+        refs.editTimezone.value = formData.timezone || '';
+        refs.editTimezoneHint.textContent = '';
+        refs.editTimezoneHint.style.color = '';
+        refs.editError.classList.add('hidden');
+        refs.editError.textContent = '';
+
+        renderEditPlaceHint('current');
+        setEditClientSubmitting(false);
+
+        refs.editBackdrop.classList.remove('hidden');
+        refs.editDialog.classList.remove('hidden');
+        refs.editFirstName.focus();
+        document.body.style.overflow = 'hidden';
+    } catch (error) {
+        showToast(t('common.errorWithMessage', { message: error.message }), 'error');
+    }
+}
+
+function closeEditClientDialog() {
+    if (!refs.editDialog) return;
+
+    refs.editBackdrop.classList.add('hidden');
+    refs.editDialog.classList.add('hidden');
+    refs.editError.classList.add('hidden');
+    refs.editError.textContent = '';
+    refs.editTimezoneHint.textContent = '';
+    refs.editTimezoneHint.style.color = '';
+    editClientState.userId = null;
+    editClientState.loadedChartData = null;
+    document.body.style.overflow = '';
+}
+
+function refreshEditDialogLocale() {
+    if (!refs.editDialog || refs.editDialog.classList.contains('hidden')) return;
+
+    const timezoneValue = refs.editTimezone.value;
+    window.Timezones?.populate?.(refs.editTimezone);
+    if (timezoneValue) {
+        refs.editTimezone.value = timezoneValue;
+    }
+    renderEditPlaceHint(resolveEditPlaceHintMode());
+}
+
+function bindEditPlaceAutocomplete() {
+    if (
+        editClientState.autocompleteBound
+        || !window.PlaceAutocomplete
+        || !refs.editPlaceInput
+        || !refs.editPlaceSuggestions
+    ) {
+        return;
+    }
+
+    editClientState.autocompleteBound = true;
+
+    window.PlaceAutocomplete.attach({
+        input: refs.editPlaceInput,
+        suggestions: refs.editPlaceSuggestions,
+        minChars: 2,
+        debounceMs: 350,
+        limit: 5,
+        getLabel: (item) => item.shortName || item.displayName,
+        onSelect: async (item) => {
+            editClientState.selectedCoords = { lat: item.lat, lon: item.lon };
+            editClientState.selectedPlaceLabel = normalizeLooseText(item.shortName || item.displayName);
+            renderEditPlaceHint('selected');
+
+            let resolvedTimezone = null;
+            if (item.sourceId && window.AstroAPI?.resolvePlaceTimezone) {
+                try {
+                    resolvedTimezone = await window.AstroAPI.resolvePlaceTimezone(item.sourceId);
+                } catch (_error) {
+                    resolvedTimezone = null;
+                }
+            }
+
+            if (!resolvedTimezone) {
+                resolvedTimezone = window.Timezones?.guess?.(item.displayName || item.shortName) || null;
+            }
+
+            if (resolvedTimezone) {
+                refs.editTimezone.value = resolvedTimezone;
+                refs.editTimezoneHint.textContent = t('page.index.form.timezone.autoDetected');
+                refs.editTimezoneHint.style.color = '#22c55e';
+            }
+        },
+    });
+}
+
+function handleEditPlaceInput(event) {
+    const nextValue = normalizeLooseText(event.target.value);
+    if (!nextValue) {
+        editClientState.selectedCoords = null;
+        renderEditPlaceHint('empty');
+        return;
+    }
+
+    if (nextValue === editClientState.selectedPlaceLabel) {
+        renderEditPlaceHint(resolveEditPlaceHintMode());
+        return;
+    }
+
+    if (nextValue === editClientState.originalPlace) {
+        editClientState.selectedCoords = editClientState.originalCoords;
+        editClientState.selectedPlaceLabel = editClientState.originalPlace;
+        renderEditPlaceHint('current');
+        return;
+    }
+
+    editClientState.selectedCoords = null;
+    renderEditPlaceHint('manual');
+}
+
+function resolveEditPlaceHintMode() {
+    if (
+        editClientState.selectedCoords
+        && editClientState.selectedPlaceLabel === editClientState.originalPlace
+    ) {
+        return 'current';
+    }
+    if (editClientState.selectedCoords) {
+        return 'selected';
+    }
+    if (refs.editPlaceInput?.value?.trim()) {
+        return 'manual';
+    }
+    return 'empty';
+}
+
+function renderEditPlaceHint(mode) {
+    if (!refs.editPlaceHint) return;
+
+    refs.editPlaceHint.style.color = '';
+
+    if (mode === 'selected') {
+        refs.editPlaceHint.textContent = t('page.clients.edit.placeSelected');
+        refs.editPlaceHint.style.color = '#22c55e';
+        return;
+    }
+
+    if (mode === 'manual') {
+        refs.editPlaceHint.textContent = t('page.clients.edit.placeManual');
+        refs.editPlaceHint.style.color = '#b07d10';
+        return;
+    }
+
+    if (mode === 'empty') {
+        refs.editPlaceHint.textContent = t('page.clients.edit.placeHint');
+        return;
+    }
+
+    refs.editPlaceHint.textContent = t('page.clients.edit.placeCurrent');
+}
+
+async function handleEditClientSubmit(event) {
+    event.preventDefault();
+
+    if (!refs.editForm.reportValidity()) return;
+    if (!editClientState.userId) {
+        refs.editError.textContent = t('page.clients.edit.errors.chartUnavailable');
+        refs.editError.classList.remove('hidden');
+        return;
+    }
+
+    const place = refs.editPlaceInput.value.trim();
+    const requestData = {
+        first_name: refs.editFirstName.value.trim(),
+        last_name: refs.editLastName.value.trim(),
+        date: AstroAPI.formatDate(refs.editDay.value, refs.editMonth.value, refs.editYear.value),
+        time: AstroAPI.formatTime(refs.editHour.value, refs.editMinute.value),
+        timezone: refs.editTimezone.value,
+        place,
+        house_system: editClientState.loadedChartData?.birth_data?.house_system
+            || AstroAPI.getFormData()?.houseSystem
+            || 'P',
+    };
+
+    const resolvedCoords = resolveEditCoords(place);
+    if (resolvedCoords) {
+        requestData.latitude = resolvedCoords.lat;
+        requestData.longitude = resolvedCoords.lon;
+    }
+
+    refs.editError.classList.add('hidden');
+    refs.editError.textContent = '';
+    setEditClientSubmitting(true);
+
+    try {
+        const updatedChartData = await AstroAPI.updateClientChart(editClientState.userId, requestData);
+        state.users = state.users.map((user) => (
+            String(user.user_id) === String(updatedChartData.user_id)
+                ? buildUpdatedUserRecord(user, updatedChartData)
+                : user
+        ));
+        renderUsers();
+        closeEditClientDialog();
+        showToast(t('page.clients.messages.updated'), 'success');
+    } catch (error) {
+        refs.editError.textContent = error.message || t('page.clients.edit.errors.saveFailed');
+        refs.editError.classList.remove('hidden');
+    } finally {
+        setEditClientSubmitting(false);
+    }
+}
+
+function buildUpdatedUserRecord(user, chartData) {
+    const birthData = chartData?.birth_data || {};
+    return {
+        ...user,
+        user_id: chartData?.user_id || user.user_id,
+        first_name: birthData.first_name || '',
+        last_name: birthData.last_name || '',
+        birth_date: birthData.date || user.birth_date,
+        birth_place: birthData.place || user.birth_place,
+    };
+}
+
+function resolveEditCoords(place) {
+    const normalizedPlace = normalizeLooseText(place);
+    const lat = Number(editClientState.selectedCoords?.lat);
+    const lon = Number(editClientState.selectedCoords?.lon);
+
+    if (!normalizedPlace || !Number.isFinite(lat) || !Number.isFinite(lon)) {
+        return null;
+    }
+
+    if (
+        normalizedPlace === editClientState.selectedPlaceLabel
+        || normalizedPlace === editClientState.originalPlace
+    ) {
+        return { lat, lon };
+    }
+
+    return null;
+}
+
+function normalizeLooseText(value) {
+    return String(value || '').trim().toLowerCase();
+}
+
+function setEditClientSubmitting(isSubmitting) {
+    if (!refs.editSubmit) return;
+
+    refs.editSubmit.disabled = isSubmitting;
+    refs.editSubmit.querySelector('.btn-text')?.classList.toggle('hidden', isSubmitting);
+    refs.editSubmit.querySelector('.btn-loader')?.classList.toggle('hidden', !isSubmitting);
 }
 
 async function handleDelete(userId, button) {

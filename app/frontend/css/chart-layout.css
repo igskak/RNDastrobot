@@ -46,6 +46,7 @@
     gap: 8px;
     margin-left: auto;
     flex-shrink: 0;
+    align-items: center;
 }
 
 .header-nav-btn {
@@ -70,6 +71,47 @@
     background: var(--gold-pale);
     color: var(--accent);
     border-color: rgba(184, 147, 90, 0.35);
+}
+
+.header-nav-btn--icon {
+    position: relative;
+}
+
+.header-action-menu {
+    position: relative;
+}
+
+.chart-actions-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 220px;
+    padding: 8px;
+    border: 1px solid rgba(184, 147, 90, 0.22);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 18px 34px rgba(26, 22, 20, 0.12);
+    z-index: 60;
+}
+
+.chart-action-item {
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+}
+
+.chart-action-item:hover {
+    background: var(--gold-pale);
+    color: var(--accent);
 }
 
 .nav-btn-icon {
@@ -100,6 +142,117 @@
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: min(42vw, 420px);
+}
+
+.chart-dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 24, 39, 0.36);
+    backdrop-filter: blur(6px);
+    z-index: 140;
+}
+
+.chart-dialog {
+    position: fixed;
+    inset: 0;
+    z-index: 150;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.chart-dialog.hidden,
+.chart-dialog-backdrop.hidden {
+    display: none;
+}
+
+.chart-dialog-card {
+    width: min(720px, 100%);
+    max-height: min(88vh, 860px);
+    overflow: auto;
+    padding: 26px 26px 22px;
+    border: 1px solid rgba(184, 147, 90, 0.24);
+    border-radius: 28px;
+    background:
+        radial-gradient(circle at top right, rgba(245, 237, 223, 0.9), transparent 32%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(249, 247, 242, 0.98));
+    box-shadow: 0 30px 60px rgba(26, 22, 20, 0.18);
+}
+
+.chart-dialog-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.chart-dialog-kicker {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 6px;
+}
+
+.chart-dialog-title {
+    font-family: var(--font-display);
+    font-size: 33px;
+    font-weight: 500;
+    line-height: 0.95;
+    margin-bottom: 10px;
+}
+
+.chart-dialog-copy {
+    max-width: 48ch;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text-secondary);
+}
+
+.chart-dialog-close {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.78);
+    color: var(--text-secondary);
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.chart-dialog-close:hover {
+    background: var(--gold-pale);
+    color: var(--accent);
+    border-color: rgba(184, 147, 90, 0.35);
+}
+
+.chart-dialog-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 16px;
+}
+
+.chart-dialog-grid .form-group:first-child {
+    grid-column: 1 / -1;
+}
+
+.chart-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.chart-dialog-submit {
+    width: auto;
+    min-width: 190px;
+    margin: 0;
 }
 
 /* Main 3-column layout */
@@ -486,6 +639,11 @@
         font-size: 11px;
     }
 
+    .chart-actions-menu {
+        right: -6px;
+        min-width: 190px;
+    }
+
     .birth-info-compact h2 {
         font-size: 16px;
     }
@@ -499,6 +657,28 @@
         height: 100vh;
         height: -webkit-fill-available;
         padding-bottom: 60px; /* Space for fixed nav */
+    }
+
+    .chart-dialog {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    .chart-dialog-card {
+        width: 100%;
+        max-height: min(92vh, 820px);
+        padding: 22px 18px 18px;
+        border-radius: 28px 28px 0 0;
+        border-bottom: none;
+    }
+
+    .chart-dialog-title {
+        font-size: 28px;
+    }
+
+    .chart-dialog-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
     }
 
     .chart-layout {

@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.clients.title"></title>
-    <link rel="stylesheet" href="bundles/clients.bundle.css?v=2">
+    <link rel="stylesheet" href="bundles/clients.bundle.css?v=20260319-2">
     <link rel="stylesheet" href="css/locale-switcher.css?v=1">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '2026-02-19-1';</script>
+    <script>window.__APP_BUILD_ID__ = '2026-03-19-2';</script>
 </head>
 <body class="clients-page">
     <div class="page-loader" id="pageLoader">
@@ -174,9 +174,92 @@
         </footer>
     </div>
 
+    <div id="editClientBackdrop" class="clients-dialog-backdrop hidden"></div>
+    <section id="editClientDialog" class="clients-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="editClientTitle">
+        <form id="editClientForm" class="clients-dialog-card">
+            <div class="clients-dialog-header">
+                <div>
+                    <p class="clients-dialog-kicker" data-i18n="page.clients.edit.kicker"></p>
+                    <h3 id="editClientTitle" class="clients-dialog-title" data-i18n="page.clients.edit.title"></h3>
+                    <p class="clients-dialog-copy" data-i18n="page.clients.edit.subtitle"></p>
+                </div>
+                <button id="editClientClose" class="clients-dialog-close" type="button" data-i18n-aria-label="common.close">×</button>
+            </div>
+
+            <div class="clients-dialog-grid">
+                <div class="form-group">
+                    <label class="form-label" for="editFirstName" data-i18n="page.index.form.fullName.label"></label>
+                    <div class="name-inputs">
+                        <input id="editFirstName" type="text" data-i18n-placeholder="page.index.form.fullName.firstNamePlaceholder" required>
+                        <input id="editLastName" type="text" data-i18n-placeholder="page.index.form.fullName.lastNamePlaceholder" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" data-i18n="page.index.form.birthDate.label"></label>
+                    <div class="date-inputs">
+                        <input id="editBirthDay" type="number" min="1" max="31" data-i18n-placeholder="page.index.form.birthDate.dayPlaceholder" required>
+                        <select id="editBirthMonth" required>
+                            <option value="" data-i18n="page.index.form.birthDate.monthPlaceholder"></option>
+                            <option value="01" data-i18n="common.month.long.january"></option>
+                            <option value="02" data-i18n="common.month.long.february"></option>
+                            <option value="03" data-i18n="common.month.long.march"></option>
+                            <option value="04" data-i18n="common.month.long.april"></option>
+                            <option value="05" data-i18n="common.month.long.may"></option>
+                            <option value="06" data-i18n="common.month.long.june"></option>
+                            <option value="07" data-i18n="common.month.long.july"></option>
+                            <option value="08" data-i18n="common.month.long.august"></option>
+                            <option value="09" data-i18n="common.month.long.september"></option>
+                            <option value="10" data-i18n="common.month.long.october"></option>
+                            <option value="11" data-i18n="common.month.long.november"></option>
+                            <option value="12" data-i18n="common.month.long.december"></option>
+                        </select>
+                        <input id="editBirthYear" type="number" min="1800" max="2100" data-i18n-placeholder="page.index.form.birthDate.yearPlaceholder" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" data-i18n="page.index.form.birthTime.label"></label>
+                    <div class="time-inputs">
+                        <input id="editBirthHour" type="number" min="0" max="23" data-i18n-placeholder="page.index.form.birthTime.hoursPlaceholder" required>
+                        <span class="time-separator">:</span>
+                        <input id="editBirthMinute" type="number" min="0" max="59" data-i18n-placeholder="page.index.form.birthTime.minutesPlaceholder" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="editBirthPlace" data-i18n="page.index.form.birthPlace.label"></label>
+                    <div class="place-autocomplete-wrapper">
+                        <input id="editBirthPlace" class="place-input" type="text" data-i18n-placeholder="page.index.form.birthPlace.placeholder" autocomplete="off" required>
+                        <div id="editBirthPlaceSuggestions" class="place-suggestions"></div>
+                    </div>
+                    <span id="editPlaceHint" class="hint" data-i18n="page.clients.edit.placeHint"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="editTimezone" data-i18n="page.index.form.timezone.label"></label>
+                    <select id="editTimezone" required>
+                        <option value="" data-i18n="page.index.form.timezone.placeholder"></option>
+                    </select>
+                    <span id="editTimezoneHint" class="hint"></span>
+                </div>
+            </div>
+
+            <div id="editClientError" class="error-message hidden"></div>
+
+            <div class="clients-dialog-actions">
+                <button id="editClientCancel" class="btn-logout clients-dialog-cancel" type="button" data-i18n="common.cancel"></button>
+                <button id="editClientSubmit" class="btn-new clients-dialog-submit" type="submit">
+                    <span class="btn-text" data-i18n="page.clients.edit.submit"></span>
+                    <span class="btn-loader hidden" data-i18n="page.clients.edit.submitting"></span>
+                </button>
+            </div>
+        </form>
+    </section>
+
     <div id="toast" class="toast"></div>
 
-    <script type="module" src="js/bundles/clients.bundle.js?v=3"></script>
+    <script type="module" src="js/bundles/clients.bundle.js?v=20260319-2"></script>
     <script src="js/locale-switcher.js?v=3"></script>
 </body>
 </html>

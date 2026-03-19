@@ -177,6 +177,75 @@ def test_tenant_isolation_list_open_forbidden(monkeypatch):
         assert foreign_chart.status_code == 403
 
 
+def test_tenant_isolation_update_client_birth_data(monkeypatch):
+    owner = _create_astrologer("editor@example.com", "password123")
+    other = _create_astrologer("foreign@example.com", "password123")
+    own_user = _create_user(owner.id)
+    foreign_user = _create_user(other.id)
+
+    def _fake_updated_chart(user_id, **_kwargs):
+        return {
+            "user_id": str(user_id),
+            "birth_data": {
+                "first_name": "Updated",
+                "last_name": "Client",
+                "date": "1991-02-03",
+                "time": "13:45:00",
+                "timezone": "Europe/Kyiv",
+                "utc_time": "1991-02-03T11:45:00+00:00",
+                "julian_day": 2448285.99,
+                "latitude": 50.45,
+                "longitude": 30.523,
+                "place": "Kyiv",
+            },
+            "planets": [],
+            "houses": [],
+            "angles": {},
+            "special_points": {},
+            "configurations": {},
+            "aspects": [],
+            "aspect_configurations": [],
+            "stelliums": [],
+            "cosmogram_pattern": None,
+            "planet_distribution": None,
+            "balances": None,
+            "karmic_analysis": {
+                "nodes": {"north_node": {}, "south_node": {}},
+                "saturn_analysis": {},
+                "lunar_points_analysis": {"black_moon": {}, "white_moon": {}},
+                "karmic_status": {},
+                "karmic_support": {"harmonic_trines": []},
+                "karmic_development": {},
+                "jones_pattern": {},
+            },
+        }
+
+    monkeypatch.setattr(natal_route.natal_service, "update_existing_chart", _fake_updated_chart)
+
+    payload = {
+        "first_name": "Updated",
+        "last_name": "Client",
+        "date": "1991-02-03",
+        "time": "13:45:00",
+        "timezone": "Europe/Kyiv",
+        "place": "Kyiv",
+        "latitude": 50.45,
+        "longitude": 30.523,
+        "house_system": "P",
+    }
+
+    with TestClient(app) as client:
+        login = client.post("/api/v1/auth/login", json={"email": "editor@example.com", "password": "password123"})
+        assert login.status_code == 200
+
+        own_update = client.put(f"/api/v1/users/{own_user.user_id}", json=payload)
+        assert own_update.status_code == 200
+        assert own_update.json()["birth_data"]["first_name"] == "Updated"
+
+        foreign_update = client.put(f"/api/v1/users/{foreign_user.user_id}", json=payload)
+        assert foreign_update.status_code == 403
+
+
 def test_google_login_valid_token(monkeypatch):
     monkeypatch.setattr(
         auth_route,

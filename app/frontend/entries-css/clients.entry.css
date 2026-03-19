@@ -577,6 +577,120 @@ select:focus {
     color: #fff;
 }
 
+.clients-dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 24, 39, 0.36);
+    backdrop-filter: blur(6px);
+    z-index: 140;
+}
+
+.clients-dialog {
+    position: fixed;
+    inset: 0;
+    z-index: 150;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.clients-dialog.hidden,
+.clients-dialog-backdrop.hidden {
+    display: none;
+}
+
+.clients-dialog-card {
+    width: min(720px, 100%);
+    max-height: min(88vh, 860px);
+    overflow: auto;
+    padding: 26px 26px 22px;
+    border: 1px solid rgba(184, 147, 90, 0.24);
+    border-radius: 28px;
+    background:
+        radial-gradient(circle at top right, rgba(245, 237, 223, 0.9), transparent 32%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(249, 247, 242, 0.98));
+    box-shadow: 0 30px 60px rgba(26, 22, 20, 0.18);
+}
+
+.clients-dialog-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.clients-dialog-kicker {
+    margin: 0 0 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold);
+}
+
+.clients-dialog-title {
+    margin: 0 0 10px;
+    font-family: var(--font-display);
+    font-size: 33px;
+    font-weight: 500;
+    line-height: 0.95;
+}
+
+.clients-dialog-copy {
+    max-width: 48ch;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text-secondary);
+}
+
+.clients-dialog-close {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.78);
+    color: var(--text-secondary);
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.clients-dialog-close:hover {
+    background: var(--gold-pale);
+    color: var(--accent);
+    border-color: rgba(184, 147, 90, 0.35);
+}
+
+.clients-dialog-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 16px;
+}
+
+.clients-dialog-grid .form-group:first-child {
+    grid-column: 1 / -1;
+}
+
+.clients-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.clients-dialog-cancel {
+    min-width: 140px;
+}
+
+.clients-dialog-submit {
+    min-width: 190px;
+}
+
 .loading,
 .empty-state {
     text-align: center;
@@ -683,6 +797,10 @@ select:focus {
         text-transform: uppercase;
         text-align: left;
     }
+
+    .btn-actions {
+        opacity: 1;
+    }
 }
 
 @media (max-width: 640px) {
@@ -716,6 +834,32 @@ select:focus {
     }
 
     .clients-card-actions .btn-new {
+        width: 100%;
+    }
+
+    .clients-dialog {
+        padding: 16px;
+    }
+
+    .clients-dialog-card {
+        padding: 22px 18px 18px;
+        border-radius: 24px;
+    }
+
+    .clients-dialog-title {
+        font-size: 29px;
+    }
+
+    .clients-dialog-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .clients-dialog-actions {
+        flex-direction: column-reverse;
+    }
+
+    .clients-dialog-cancel,
+    .clients-dialog-submit {
         width: 100%;
     }
 }

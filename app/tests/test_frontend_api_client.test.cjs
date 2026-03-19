@@ -44,6 +44,34 @@ test('AstroAPI.calculateNatalChart keeps request contract and sends locale heade
     assert.equal(captured.init.body, JSON.stringify(payload));
 });
 
+test('AstroAPI.calculateNatalChart can skip DB persistence for temporary recalculations', async () => {
+    let captured = null;
+
+    global.fetch = async (url, init) => {
+        captured = { url, init };
+        return {
+            ok: true,
+            async json() {
+                return { user_id: null };
+            },
+        };
+    };
+
+    const api = loadApiModule({
+        location: { hostname: 'example.com' },
+        FrontendI18n: {
+            getLocale() {
+                return 'en';
+            },
+        },
+    });
+
+    await api.calculateNatalChart({ date: '1990-01-01' }, { saveToDb: false });
+
+    assert.equal(captured.url, '/api/v1/natal/calculate?save_to_db=false');
+    assert.equal(captured.init.method, 'POST');
+});
+
 test('AstroAPI.calculateNatalChart keeps backend compatibility for error payloads', async () => {
     const api = loadApiModule({
         location: { hostname: 'example.com' },
@@ -117,4 +145,37 @@ test('AstroAPI.resolvePlaceTimezone requests timezone by source_id with locale h
     assert.equal(captured.init.method, 'GET');
     assert.equal(captured.init.headers['Accept-Language'], 'en');
     assert.equal(captured.init.headers['X-Locale'], 'en');
+});
+
+test('AstroAPI.updateClientChart sends PUT request with locale headers', async () => {
+    let captured = null;
+
+    global.fetch = async (url, init) => {
+        captured = { url, init };
+        return {
+            ok: true,
+            async json() {
+                return { user_id: 'u-42' };
+            },
+        };
+    };
+
+    const api = loadApiModule({
+        location: { hostname: 'localhost' },
+        FrontendI18n: {
+            getLocale() {
+                return 'ru';
+            },
+        },
+    });
+
+    const payload = { first_name: 'Olena', place: 'Kyiv' };
+    const result = await api.updateClientChart('u-42', payload);
+
+    assert.deepEqual(result, { user_id: 'u-42' });
+    assert.equal(captured.url, 'http://localhost:8000/api/v1/users/u-42');
+    assert.equal(captured.init.method, 'PUT');
+    assert.equal(captured.init.headers['Content-Type'], 'application/json');
+    assert.equal(captured.init.headers['Accept-Language'], 'ru');
+    assert.equal(captured.init.body, JSON.stringify(payload));
 });
