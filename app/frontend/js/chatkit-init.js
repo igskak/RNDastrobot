@@ -10,6 +10,7 @@
 
     const USERID_STORAGE_KEY = 'astrobot_user_id';
     const CHAT_OPEN_STORAGE_KEY = 'astrobot_chat_open';
+    const CHAT_SIZE_STORAGE_KEY = 'astrobot_chat_size';
     const API_BASE = '/api/v1';
     const CHATKIT_SCRIPT_URL = 'https://cdn.platform.openai.com/deployments/chatkit/chatkit.js';
 
@@ -147,7 +148,10 @@
                 return session.client_secret;
             }
 
-            await loadChatKitScript();
+            await Promise.all([
+                loadChatKitScript(),
+                window.FrontendI18n?.ready,
+            ]);
 
             await Promise.race([
                 customElements.whenDefined('openai-chatkit'),
@@ -303,7 +307,72 @@
             }
         });
 
+        initResizeHandle(wrapper);
         scheduleChatScriptWarmup();
+    }
+
+    function initResizeHandle(wrapper) {
+        const handle = document.getElementById('chatkitResizeHandle');
+        if (!handle) return;
+
+        const MIN_WIDTH = 320;
+        const MIN_HEIGHT = 400;
+
+        const saved = loadChatSize();
+        if (saved) {
+            wrapper.style.width = saved.width + 'px';
+            wrapper.style.height = saved.height + 'px';
+        }
+
+        let startX, startY, startWidth, startHeight;
+
+        function onPointerDown(e) {
+            e.preventDefault();
+            startX = e.clientX;
+            startY = e.clientY;
+            const rect = wrapper.getBoundingClientRect();
+            startWidth = rect.width;
+            startHeight = rect.height;
+            wrapper.classList.add('resizing');
+            document.addEventListener('pointermove', onPointerMove);
+            document.addEventListener('pointerup', onPointerUp);
+        }
+
+        function onPointerMove(e) {
+            const dx = startX - e.clientX;
+            const dy = startY - e.clientY;
+            const maxWidth = window.innerWidth - 48;
+            const maxHeight = window.innerHeight - 100;
+            const newWidth = Math.min(maxWidth, Math.max(MIN_WIDTH, startWidth + dx));
+            const newHeight = Math.min(maxHeight, Math.max(MIN_HEIGHT, startHeight + dy));
+            wrapper.style.width = newWidth + 'px';
+            wrapper.style.height = newHeight + 'px';
+        }
+
+        function onPointerUp() {
+            wrapper.classList.remove('resizing');
+            document.removeEventListener('pointermove', onPointerMove);
+            document.removeEventListener('pointerup', onPointerUp);
+            saveChatSize(wrapper.offsetWidth, wrapper.offsetHeight);
+        }
+
+        handle.addEventListener('pointerdown', onPointerDown);
+    }
+
+    function saveChatSize(width, height) {
+        try {
+            localStorage.setItem(CHAT_SIZE_STORAGE_KEY, JSON.stringify({ width, height }));
+        } catch {}
+    }
+
+    function loadChatSize() {
+        try {
+            const raw = localStorage.getItem(CHAT_SIZE_STORAGE_KEY);
+            if (!raw) return null;
+            const data = JSON.parse(raw);
+            if (data.width >= 320 && data.height >= 400) return data;
+        } catch {}
+        return null;
     }
 
     if (document.readyState === 'loading') {

@@ -28,6 +28,39 @@
     pointer-events: none;
 }
 
+/* Resize handle (top-left corner) */
+.chatkit-resize-handle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 18px;
+    height: 18px;
+    cursor: nwse-resize;
+    z-index: 10;
+}
+
+.chatkit-resize-handle::before {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 8px;
+    height: 8px;
+    border-top: 2px solid rgba(255, 255, 255, 0.45);
+    border-left: 2px solid rgba(255, 255, 255, 0.45);
+    border-radius: 2px 0 0 0;
+    transition: border-color 0.15s ease;
+}
+
+.chatkit-resize-handle:hover::before {
+    border-color: rgba(255, 255, 255, 0.8);
+}
+
+.chatkit-wrapper.resizing {
+    transition: none;
+    user-select: none;
+}
+
 /* Chat header */
 .chatkit-header {
     display: flex;
@@ -125,6 +158,10 @@
     .chatkit-toggle {
         bottom: 80px;
         right: 12px;
+    }
+
+    .chatkit-resize-handle {
+        display: none;
     }
 }
 
