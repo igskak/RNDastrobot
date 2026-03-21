@@ -154,6 +154,31 @@
       }
     }
   },
+  "customChat": {
+    "sendButton": "Send",
+    "composerPlaceholder": "Type your message...",
+    "thinking": "Thinking...",
+    "toolCalling": "Analyzing {tool}...",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "errorNetwork": "Network error. Check your connection.",
+    "newConversation": "New",
+    "toggleEngine": "Switch chat engine",
+    "micStart": "Start voice input",
+    "micStop": "Stop recording",
+    "micRecording": "Listening...",
+    "micTranscribing": "Transcribing...",
+    "micDenied": "Microphone access denied. Check browser permissions.",
+    "micError": "Could not access microphone.",
+    "history": "History",
+    "historyBack": "Back",
+    "historyEmpty": "No conversations yet",
+    "deleteConversation": "Delete conversation",
+    "untitledConversation": "New conversation",
+    "justNow": "just now",
+    "minutesAgo": "{n} min ago",
+    "hoursAgo": "{n}h ago",
+    "daysAgo": "{n}d ago"
+  },
   "common": {
     "all": "All",
     "back": "Back",

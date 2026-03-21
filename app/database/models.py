@@ -1098,3 +1098,41 @@ class GeoCity(Base):
         Index('idx_geo_cities_country', 'country_code'),
         Index('idx_geo_cities_population', 'population'),
     )
+
+
+class ChatConversation(Base):
+    """Разговор (тред) custom chat."""
+    __tablename__ = 'chat_conversations'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
+    mode = Column(String(20), nullable=False, default='natal')
+    title = Column(String(255))
+    last_response_id = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    messages = relationship("ChatMessage", back_populates="conversation", cascade="all, delete-orphan", order_by="ChatMessage.created_at")
+
+    __table_args__ = (
+        CheckConstraint("mode IN ('natal', 'prognostic')", name='chk_chat_conv_mode'),
+        Index('idx_chat_conversations_user_id', 'user_id', 'updated_at'),
+    )
+
+
+class ChatMessage(Base):
+    """Сообщение в разговоре custom chat."""
+    __tablename__ = 'chat_messages'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    conversation_id = Column(UUID(as_uuid=True), ForeignKey('chat_conversations.id', ondelete='CASCADE'), nullable=False)
+    role = Column(String(20), nullable=False)
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+
+    conversation = relationship("ChatConversation", back_populates="messages")
+
+    __table_args__ = (
+        CheckConstraint("role IN ('user', 'assistant')", name='chk_chat_msg_role'),
+        Index('idx_chat_messages_conversation_id', 'conversation_id', 'created_at'),
+    )

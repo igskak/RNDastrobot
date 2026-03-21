@@ -1,11 +1,15 @@
 """
 API эндпоинты для чата с OpenAI агентом (ChatKit интеграция + прогностический чат)
 """
-from fastapi import APIRouter, HTTPException, status, Depends, Request
+import json as _json
+
+from fastapi import APIRouter, HTTPException, status, Depends, Request, UploadFile, File, Form
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List, Literal
 from uuid import UUID
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
 from loguru import logger
 
 from app.services.openai_service import get_openai_service
@@ -13,6 +17,7 @@ from app.services.natal_chart_service import NatalChartService
 from app.services.prognostic_tools_service import PrognosticToolsService
 from app.services.forecast_run_service import ForecastRunService
 from app.database.connection import get_db
+from app.database.models import ChatConversation, ChatMessage
 from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
 from app.i18n.context import get_current_locale
 from app.utils.ephemeris import get_ephemeris_path
@@ -95,6 +100,16 @@ class SaveForecastRunResponse(BaseModel):
     method: str
     is_active: bool = True
     created_at: Optional[str] = None
+
+
+class ChatStreamRequest(BaseModel):
+    """Запрос для streaming чата (custom chat UI)."""
+    user_id: str
+    message: str
+    mode: Literal["natal", "prognostic"] = "natal"
+    previous_response_id: Optional[str] = None
+    frontend_context: Optional[Dict[str, Any]] = None
+    conversation_id: Optional[str] = None
 
 
 # ============================================================================
@@ -327,7 +342,6 @@ async def execute_prognostic_tool(
         )
         result_json = service.dispatch(request.tool_name, request.arguments)
 
-        import json as _json
         return _json.loads(result_json)
 
     except HTTPException:
@@ -390,3 +404,346 @@ async def save_forecast_run(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Ошибка сохранения forecast run: {str(e)}"
         )
+
+
+@router.post(
+    "/chat/stream",
+    status_code=status.HTTP_200_OK,
+    summary="Streaming чат (SSE)",
+    description="Streaming чат через Server-Sent Events для custom chat UI"
+)
+async def chat_stream(
+    request: ChatStreamRequest,
+    http_request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+):
+    """
+    SSE streaming endpoint для custom chat UI.
+
+    Поддерживает два режима:
+    - natal: чат с контекстом натальной карты (без tool calling)
+    - prognostic: чат с прогностическими инструментами (tool calling)
+
+    Возвращает SSE поток с событиями:
+    - data: {"type":"token","text":"..."} — токен ответа
+    - data: {"type":"tool_call","name":"..."} — вызов инструмента
+    - data: {"type":"tool_result","name":"..."} — результат инструмента
+    - data: {"type":"done","response_id":"..."} — завершение
+    - data: {"type":"error","message":"..."} — ошибка
+    """
+    user_uuid = _parse_user_uuid(request.user_id)
+    ensure_client_access(db, http_request, auth, user_uuid, action="client.chat.stream")
+
+    locale = get_current_locale()
+    openai_service = get_openai_service()
+
+    # Загружаем данные карты
+    chart_data = natal_service.get_natal_chart_from_db(user_uuid, db)
+    user_tz = chart_data.get('birth_data', {}).get('timezone') if chart_data else None
+
+    # ---- Conversation persistence ----
+    import uuid as _uuid
+    conv_id = None
+    if request.conversation_id:
+        try:
+            conv_id = _uuid.UUID(request.conversation_id)
+        except ValueError:
+            pass
+
+    # Find or create conversation
+    conversation = None
+    if conv_id:
+        conversation = db.query(ChatConversation).filter(
+            ChatConversation.id == conv_id,
+            ChatConversation.user_id == user_uuid,
+        ).first()
+
+    if not conversation:
+        conversation = ChatConversation(
+            user_id=user_uuid,
+            mode=request.mode,
+            title=request.message[:80],
+        )
+        db.add(conversation)
+        db.flush()
+
+    # Save user message
+    db.add(ChatMessage(conversation_id=conversation.id, role="user", content=request.message))
+    db.commit()
+
+    conv_id_str = str(conversation.id)
+    conv_uuid = conversation.id
+
+    async def sse_generator():
+        assistant_text = ""
+        response_id = None
+        try:
+            if request.mode == "prognostic":
+                chart_summary = None
+                if chart_data:
+                    planets = chart_data.get("planets", [])
+                    chart_summary = ", ".join(
+                        f"{p.get('name', '?')}: {p.get('sign', '?')}" for p in planets[:10]
+                    )
+
+                stream = openai_service.prognostic_chat_stream(
+                    user_id=user_uuid,
+                    message=request.message,
+                    db_session=db,
+                    locale=locale,
+                    previous_response_id=request.previous_response_id,
+                    chart_summary=chart_summary,
+                    frontend_context=request.frontend_context,
+                )
+            else:
+                stream = openai_service.natal_chat_stream(
+                    user_id=request.user_id,
+                    message=request.message,
+                    chart_data=chart_data,
+                    timezone=user_tz,
+                    locale=locale,
+                    previous_response_id=request.previous_response_id,
+                )
+
+            async for event in stream:
+                if event.get("type") == "token":
+                    assistant_text += event.get("text", "")
+                elif event.get("type") == "done":
+                    response_id = event.get("response_id")
+                    # Include conversation_id in the done event
+                    event["conversation_id"] = conv_id_str
+
+                yield f"data: {_json.dumps(event, ensure_ascii=False)}\n\n"
+
+        except Exception as e:
+            logger.exception(f"SSE stream error: {e}")
+            error_event = {"type": "error", "message": str(e)}
+            yield f"data: {_json.dumps(error_event, ensure_ascii=False)}\n\n"
+        finally:
+            # Persist assistant message with a fresh DB session
+            # (the original session from Depends(get_db) is already closed)
+            from app.database.connection import get_db_session
+            save_db = get_db_session()
+            try:
+                if assistant_text.strip():
+                    save_db.add(ChatMessage(conversation_id=conv_uuid, role="assistant", content=assistant_text))
+                if response_id:
+                    save_db.query(ChatConversation).filter(
+                        ChatConversation.id == conv_uuid
+                    ).update({
+                        "last_response_id": response_id,
+                        "updated_at": func.now(),
+                    })
+                else:
+                    save_db.query(ChatConversation).filter(
+                        ChatConversation.id == conv_uuid
+                    ).update({"updated_at": func.now()})
+                save_db.commit()
+            except Exception as e:
+                save_db.rollback()
+                logger.warning(f"Failed to persist chat message: {e}")
+            finally:
+                save_db.close()
+
+    return StreamingResponse(
+        sse_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@router.post(
+    "/chat/transcribe",
+    status_code=status.HTTP_200_OK,
+    summary="Speech-to-Text (Whisper)",
+    description="Транскрибирует аудио в текст через OpenAI Whisper API"
+)
+async def transcribe_audio(
+    audio: UploadFile = File(...),
+    language: Optional[str] = Form(None),
+    http_request: Request = None,
+    auth: AuthContext = Depends(require_auth),
+):
+    """
+    Транскрибирует аудио файл в текст через Whisper API.
+
+    Принимает аудио в форматах: webm, mp3, mp4, wav, ogg, flac.
+    Опционально можно указать язык (ISO-639-1: en, ru, uk) для повышения точности.
+
+    Возвращает: {"text": "транскрибированный текст"}
+    """
+    ALLOWED_TYPES = {
+        "audio/webm", "audio/ogg", "audio/mp3", "audio/mpeg",
+        "audio/mp4", "audio/wav", "audio/flac", "audio/x-m4a",
+        "video/webm",  # некоторые браузеры отдают video/webm для аудио
+    }
+    MAX_SIZE = 25 * 1024 * 1024  # 25MB — лимит Whisper API
+
+    base_type = (audio.content_type or "").split(";")[0].strip()
+    if base_type and base_type not in ALLOWED_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unsupported audio format: {audio.content_type}. Supported: webm, ogg, mp3, mp4, wav, flac"
+        )
+
+    try:
+        content = await audio.read()
+
+        if len(content) > MAX_SIZE:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail="Audio file too large. Maximum 25MB."
+            )
+
+        if len(content) < 100:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Audio file too small or empty."
+            )
+
+        # Создаём file-like object для Whisper API
+        import io
+        ext = "webm"
+        if audio.filename:
+            ext = audio.filename.rsplit(".", 1)[-1] if "." in audio.filename else "webm"
+        audio_file = io.BytesIO(content)
+        audio_file.name = f"audio.{ext}"
+
+        # Маппинг локали на язык Whisper
+        lang = language
+        if lang and len(lang) > 2:
+            lang = lang[:2]  # "ru-RU" → "ru"
+
+        openai_service = get_openai_service()
+        text = await openai_service.transcribe_audio(
+            audio_file=audio_file,
+            language=lang,
+        )
+
+        return {"text": text}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Transcription error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Transcription failed: {str(e)}"
+        )
+
+
+# ============================================================================
+# Chat conversation history
+# ============================================================================
+
+@router.get(
+    "/chat/conversations",
+    status_code=status.HTTP_200_OK,
+    summary="Список разговоров клиента",
+)
+async def list_conversations(
+    user_id: str,
+    mode: Optional[str] = None,
+    http_request: Request = None,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+):
+    user_uuid = _parse_user_uuid(user_id)
+    ensure_client_access(db, http_request, auth, user_uuid, action="client.chat.conversations")
+
+    q = db.query(ChatConversation).filter(ChatConversation.user_id == user_uuid)
+    if mode:
+        q = q.filter(ChatConversation.mode == mode)
+    conversations = q.order_by(ChatConversation.updated_at.desc()).limit(50).all()
+
+    return [
+        {
+            "id": str(c.id),
+            "mode": c.mode,
+            "title": c.title,
+            "last_response_id": c.last_response_id,
+            "created_at": c.created_at.isoformat() if c.created_at else None,
+            "updated_at": c.updated_at.isoformat() if c.updated_at else None,
+        }
+        for c in conversations
+    ]
+
+
+@router.get(
+    "/chat/conversations/{conversation_id}/messages",
+    status_code=status.HTTP_200_OK,
+    summary="Сообщения разговора",
+)
+async def get_conversation_messages(
+    conversation_id: str,
+    http_request: Request = None,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+):
+    import uuid as _uuid
+    try:
+        conv_uuid = _uuid.UUID(conversation_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid conversation_id")
+
+    conversation = db.query(ChatConversation).filter(ChatConversation.id == conv_uuid).first()
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    ensure_client_access(db, http_request, auth, conversation.user_id, action="client.chat.messages")
+
+    messages = (
+        db.query(ChatMessage)
+        .filter(ChatMessage.conversation_id == conv_uuid)
+        .order_by(ChatMessage.created_at.asc())
+        .all()
+    )
+
+    return {
+        "conversation": {
+            "id": str(conversation.id),
+            "mode": conversation.mode,
+            "title": conversation.title,
+            "last_response_id": conversation.last_response_id,
+        },
+        "messages": [
+            {
+                "role": m.role,
+                "content": m.content,
+                "created_at": m.created_at.isoformat() if m.created_at else None,
+            }
+            for m in messages
+        ],
+    }
+
+
+@router.delete(
+    "/chat/conversations/{conversation_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Удалить разговор",
+)
+async def delete_conversation(
+    conversation_id: str,
+    http_request: Request = None,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+):
+    import uuid as _uuid
+    try:
+        conv_uuid = _uuid.UUID(conversation_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid conversation_id")
+
+    conversation = db.query(ChatConversation).filter(ChatConversation.id == conv_uuid).first()
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    ensure_client_access(db, http_request, auth, conversation.user_id, action="client.chat.delete")
+
+    db.delete(conversation)
+    db.commit()
+    return {"ok": True}

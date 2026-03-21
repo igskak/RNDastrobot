@@ -266,6 +266,83 @@
         }
     }
 
+    // ---- Engine toggle (ChatKit vs Custom Chat) ----
+
+    const CHAT_ENGINE_KEY = 'chat_engine';
+    let customChatInitialized = false;
+
+    function getChatEngine() {
+        return localStorage.getItem(CHAT_ENGINE_KEY) || 'custom';
+    }
+
+    function setChatEngine(engine) {
+        localStorage.setItem(CHAT_ENGINE_KEY, engine);
+    }
+
+    function applyEngine(engine) {
+        const chatkitContainer = document.getElementById('chatkit-container');
+        const customContainer = document.getElementById('custom-chat-container');
+        const engineSwitch = document.getElementById('chatEngineSwitch');
+        const newConvBtn = document.getElementById('ccNewConversation');
+        const historyBtn = document.getElementById('ccHistoryBtn');
+
+        if (!chatkitContainer || !customContainer) return;
+
+        const isCustom = engine === 'custom';
+
+        chatkitContainer.style.display = isCustom ? 'none' : '';
+        customContainer.style.display = isCustom ? '' : 'none';
+
+        if (engineSwitch) engineSwitch.checked = isCustom;
+        if (newConvBtn) newConvBtn.style.display = isCustom ? '' : 'none';
+        if (historyBtn) historyBtn.style.display = isCustom ? '' : 'none';
+
+        if (isCustom) {
+            initCustomChat(customContainer);
+        }
+    }
+
+    async function initCustomChat(container) {
+        if (customChatInitialized) return;
+        if (window.FrontendI18n?.ready) {
+            await window.FrontendI18n.ready;
+        }
+        if (window.CustomChat?.init) {
+            window.CustomChat.init(container);
+            customChatInitialized = true;
+        }
+    }
+
+    function initEngineToggle() {
+        const engineSwitch = document.getElementById('chatEngineSwitch');
+        const newConvBtn = document.getElementById('ccNewConversation');
+        const historyBtn = document.getElementById('ccHistoryBtn');
+
+        if (engineSwitch) {
+            engineSwitch.addEventListener('change', () => {
+                const engine = engineSwitch.checked ? 'custom' : 'chatkit';
+                setChatEngine(engine);
+                applyEngine(engine);
+            });
+        }
+
+        if (newConvBtn) {
+            newConvBtn.addEventListener('click', () => {
+                if (window.CustomChat?.resetConversation) {
+                    window.CustomChat.resetConversation();
+                }
+            });
+        }
+
+        if (historyBtn) {
+            historyBtn.addEventListener('click', () => {
+                if (window.CustomChat?.showHistory) {
+                    window.CustomChat.showHistory();
+                }
+            });
+        }
+    }
+
     function initToggleButtons() {
         const wrapper = document.getElementById('chatkitWrapper');
         const minimizeBtn = document.getElementById('chatkitMinimize');
@@ -279,12 +356,19 @@
         wrapper.classList.toggle('minimized', !shouldOpen);
         toggleBtn.classList.toggle('hidden', shouldOpen);
 
+        const engine = getChatEngine();
+
         if (shouldOpen) {
-            initChatKit().catch(() => {
-                wrapper.classList.add('minimized');
-                toggleBtn.classList.remove('hidden');
-                setChatOpen(false);
-            });
+            if (engine === 'custom') {
+                applyEngine('custom');
+            } else {
+                initChatKit().catch(() => {
+                    wrapper.classList.add('minimized');
+                    toggleBtn.classList.remove('hidden');
+                    setChatOpen(false);
+                });
+            }
+            applyEngine(engine);
         }
 
         minimizeBtn.addEventListener('click', () => {
@@ -298,15 +382,21 @@
             toggleBtn.classList.add('hidden');
             setChatOpen(true);
 
-            try {
-                await initChatKit();
-            } catch {
-                wrapper.classList.add('minimized');
-                toggleBtn.classList.remove('hidden');
-                setChatOpen(false);
+            const currentEngine = getChatEngine();
+            applyEngine(currentEngine);
+
+            if (currentEngine === 'chatkit') {
+                try {
+                    await initChatKit();
+                } catch {
+                    wrapper.classList.add('minimized');
+                    toggleBtn.classList.remove('hidden');
+                    setChatOpen(false);
+                }
             }
         });
 
+        initEngineToggle();
         initResizeHandle(wrapper);
         scheduleChatScriptWarmup();
     }

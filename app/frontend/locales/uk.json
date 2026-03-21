@@ -154,6 +154,31 @@
       }
     }
   },
+  "customChat": {
+    "sendButton": "Надіслати",
+    "composerPlaceholder": "Введіть повідомлення...",
+    "thinking": "Думаю...",
+    "toolCalling": "Аналізую {tool}...",
+    "errorGeneric": "Щось пішло не так. Спробуйте ще раз.",
+    "errorNetwork": "Помилка мережі. Перевірте підключення.",
+    "newConversation": "Новий",
+    "toggleEngine": "Перемкнути рушій чату",
+    "micStart": "Голосовий ввід",
+    "micStop": "Зупинити запис",
+    "micRecording": "Слухаю...",
+    "micTranscribing": "Транскрибую...",
+    "micDenied": "Доступ до мікрофона заборонено. Перевірте налаштування браузера.",
+    "micError": "Не вдалося отримати доступ до мікрофона.",
+    "history": "Історія",
+    "historyBack": "Назад",
+    "historyEmpty": "Поки немає розмов",
+    "deleteConversation": "Видалити розмову",
+    "untitledConversation": "Нова розмова",
+    "justNow": "щойно",
+    "minutesAgo": "{n} хв тому",
+    "hoursAgo": "{n}г тому",
+    "daysAgo": "{n}д тому"
+  },
   "common": {
     "all": "Усі",
     "back": "Назад",

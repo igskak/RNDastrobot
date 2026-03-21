@@ -7,7 +7,7 @@
 import os
 import json
 import hashlib
-from typing import Dict, Any, Optional, List
+from typing import AsyncGenerator, Dict, Any, Optional, List
 from uuid import UUID
 from openai import OpenAI
 from sqlalchemy.orm import Session
@@ -424,6 +424,280 @@ class OpenAIService:
         except Exception as e:
             logger.error(f"Prognostic chat error: {e}")
             raise
+
+    # ------------------------------------------------------------------
+    # Speech-to-Text (Whisper API)
+    # ------------------------------------------------------------------
+
+    async def transcribe_audio(
+        self,
+        audio_file,
+        language: Optional[str] = None,
+    ) -> str:
+        """
+        Transcribe audio using OpenAI Whisper API.
+
+        Args:
+            audio_file: File-like object with audio data
+            language: Optional ISO-639-1 language hint (e.g. 'en', 'ru', 'uk')
+
+        Returns:
+            Transcribed text string
+        """
+        try:
+            kwargs: Dict[str, Any] = {
+                "model": "whisper-1",
+                "file": audio_file,
+            }
+            if language:
+                kwargs["language"] = language
+
+            transcription = self.client.audio.transcriptions.create(**kwargs)
+            text = transcription.text or ""
+            logger.info(f"Whisper transcription: {len(text)} chars, lang={language}")
+            return text
+
+        except Exception as e:
+            logger.error(f"Whisper transcription error: {e}")
+            raise
+
+    # ------------------------------------------------------------------
+    # Streaming Chat (SSE) — custom chat UI
+    # ------------------------------------------------------------------
+
+    def _build_natal_system_prompt(
+        self,
+        chart_data: Optional[Dict[str, Any]],
+        timezone: Optional[str],
+        locale: str,
+    ) -> str:
+        """Build system prompt for natal chat with all chart context."""
+        parts = [
+            "Ты — профессиональный астролог-консультант. "
+            "Ты анализируешь натальную карту пользователя и отвечаешь на вопросы "
+            "о его характере, психологическом профиле, потенциале и жизненных темах.",
+            "",
+            "Правила:",
+            "1. Отвечай на языке пользователя согласно его локали, развёрнуто и понятно",
+            "2. Не упоминай технические детали (орбы, градусы) — интерпретируй смысл",
+            "3. Используй психологический подход к интерпретации",
+            f"4. Предпочтительная локаль пользователя: {locale}",
+        ]
+
+        if timezone:
+            parts.append(f"5. Таймзона пользователя: {timezone}")
+
+        if chart_data:
+            planets = chart_data.get("planets", [])
+            summary = ", ".join(
+                f"{p.get('name', '?')}: {p.get('sign', '?')}" for p in planets[:10]
+            )
+            if summary:
+                parts.append(f"\nКраткая карта: {summary}")
+
+            parts.append(f"\nПолные данные натальной карты:\n{json.dumps(chart_data, ensure_ascii=False)}")
+
+            try:
+                psych_data = self.prepare_psychological_profile_data(chart_data)
+                parts.append(
+                    f"\nДанные для психопрофиля (7 классических планет):\n"
+                    f"{json.dumps(psych_data, ensure_ascii=False)}"
+                )
+
+                planet_sign_psych = self.build_planet_sign_psych(psych_data, locale=locale)
+                if planet_sign_psych:
+                    parts.append(
+                        f"\nПсихологические функции планет и качества знаков:\n"
+                        f"{json.dumps(planet_sign_psych, ensure_ascii=False)}"
+                    )
+            except Exception as e:
+                logger.warning(f"Ошибка подготовки psych данных для streaming: {e}")
+
+        return "\n".join(parts)
+
+    def _build_prognostic_system_prompt(
+        self,
+        chart_summary: Optional[str],
+        locale: str,
+    ) -> str:
+        """Build system prompt for prognostic chat (reuses existing logic)."""
+        system_instructions = (
+            "Ты — профессиональный астролог-консультант. "
+            "У тебя есть инструменты для получения прогностических данных пользователя. "
+            "Используй их чтобы ответить на вопрос. "
+            "Правила:\n"
+            "1. Перед интерпретацией контекстного вопроса про 'эту прогностику' сначала вызови get_active_forecast_context\n"
+            "2. Для вопросов о текущем моменте → get_current_transits\n"
+            "3. Для прогноза на период (неделя/месяц) → get_transit_events\n"
+            "4. Для внутренних изменений → get_progressions\n"
+            "5. Для ключевых жизненных событий → get_directions\n"
+            "6. Для годового прогноза → get_solar_return\n"
+            "7. Для комплексного прогноза комбинируй несколько методов\n"
+            "8. Отвечай на языке пользователя согласно его локали (en/uk/ru), развёрнуто и понятно\n"
+            "9. Не упоминай технические детали (орбы, градусы) — интерпретируй смысл\n"
+        )
+        if chart_summary:
+            system_instructions += f"\nДанные натальной карты:\n{chart_summary}\n"
+        system_instructions += f"\n10. Предпочтительная локаль пользователя: {locale}\n"
+        return system_instructions
+
+    async def natal_chat_stream(
+        self,
+        user_id: str,
+        message: str,
+        chart_data: Optional[Dict[str, Any]] = None,
+        timezone: Optional[str] = None,
+        locale: Optional[str] = None,
+        previous_response_id: Optional[str] = None,
+    ) -> AsyncGenerator[Dict[str, Any], None]:
+        """
+        Streaming natal chat via Responses API (no tool calling).
+
+        Yields SSE-compatible dicts:
+            {"type": "token", "text": "..."}
+            {"type": "done", "response_id": "..."}
+            {"type": "error", "message": "..."}
+        """
+        resolved_locale = self._resolve_locale(locale)
+        system_prompt = self._build_natal_system_prompt(chart_data, timezone, resolved_locale)
+
+        input_messages: List[Dict[str, Any]] = [
+            {"role": "developer", "content": system_prompt},
+            {"role": "user", "content": message},
+        ]
+
+        create_kwargs: Dict[str, Any] = {
+            "model": self.model,
+            "input": input_messages,
+            "stream": True,
+        }
+        if previous_response_id:
+            create_kwargs["previous_response_id"] = previous_response_id
+
+        try:
+            stream = self.client.responses.create(**create_kwargs)
+
+            response_id = None
+            for event in stream:
+                if event.type == "response.output_text.delta":
+                    yield {"type": "token", "text": event.delta}
+                elif event.type == "response.completed":
+                    response_id = event.response.id
+                    break
+
+            yield {"type": "done", "response_id": response_id or ""}
+
+        except Exception as e:
+            logger.error(f"Natal chat stream error: {e}")
+            yield {"type": "error", "message": str(e)}
+
+    async def prognostic_chat_stream(
+        self,
+        user_id: UUID,
+        message: str,
+        db_session: Session,
+        locale: Optional[str] = None,
+        previous_response_id: Optional[str] = None,
+        chart_summary: Optional[str] = None,
+        frontend_context: Optional[Dict[str, Any]] = None,
+    ) -> AsyncGenerator[Dict[str, Any], None]:
+        """
+        Streaming prognostic chat with tool calling via Responses API.
+
+        Yields SSE-compatible dicts:
+            {"type": "token", "text": "..."}
+            {"type": "tool_call", "name": "..."}
+            {"type": "tool_result", "name": "..."}
+            {"type": "done", "response_id": "..."}
+            {"type": "error", "message": "..."}
+        """
+        from app.services.prognostic_tools_service import PROGNOSTIC_TOOLS, PrognosticToolsService
+
+        tool_service = PrognosticToolsService(
+            user_id=user_id,
+            db_session=db_session,
+            frontend_context=frontend_context,
+        )
+        resolved_locale = self._resolve_locale(locale)
+        system_prompt = self._build_prognostic_system_prompt(chart_summary, resolved_locale)
+
+        input_messages: List[Dict[str, Any]] = [
+            {"role": "developer", "content": system_prompt},
+            {"role": "user", "content": message},
+        ]
+
+        create_kwargs: Dict[str, Any] = {
+            "model": self.model,
+            "input": input_messages,
+            "tools": PROGNOSTIC_TOOLS,
+            "stream": True,
+        }
+        if previous_response_id:
+            create_kwargs["previous_response_id"] = previous_response_id
+
+        max_iterations = 5
+
+        try:
+            stream = self.client.responses.create(**create_kwargs)
+
+            for _ in range(max_iterations):
+                response_id = None
+                function_calls = []
+                current_fc = {}
+
+                for event in stream:
+                    if event.type == "response.output_text.delta":
+                        yield {"type": "token", "text": event.delta}
+
+                    elif event.type == "response.output_item.done":
+                        item = event.item
+                        if getattr(item, 'type', None) == 'function_call':
+                            current_fc = {
+                                "name": item.name,
+                                "call_id": item.call_id,
+                                "arguments": item.arguments,
+                            }
+                            function_calls.append(current_fc)
+                            yield {"type": "tool_call", "name": item.name}
+
+                    elif event.type == "response.completed":
+                        response_id = event.response.id
+                        break
+
+                if not function_calls:
+                    yield {"type": "done", "response_id": response_id or ""}
+                    return
+
+                # Execute tool calls and feed results back
+                tool_results = []
+                for fc in function_calls:
+                    tool_name = fc["name"]
+                    arguments = json.loads(fc["arguments"])
+                    logger.info(f"Prognostic stream tool call: {tool_name}({arguments})")
+                    result_json = tool_service.dispatch(tool_name, arguments)
+                    yield {"type": "tool_result", "name": tool_name}
+
+                    tool_results.append({
+                        "type": "function_call_output",
+                        "call_id": fc["call_id"],
+                        "output": result_json,
+                    })
+
+                # Continue with tool results
+                stream = self.client.responses.create(
+                    model=self.model,
+                    previous_response_id=response_id,
+                    input=tool_results,
+                    tools=PROGNOSTIC_TOOLS,
+                    stream=True,
+                )
+
+            # If we exhaust iterations, still send done
+            yield {"type": "done", "response_id": response_id or ""}
+
+        except Exception as e:
+            logger.error(f"Prognostic chat stream error: {e}")
+            yield {"type": "error", "message": str(e)}
 
     async def create_chatkit_session(
         self,

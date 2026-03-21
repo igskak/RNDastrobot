@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title data-i18n="page.chart.title"></title>
-    <link rel="stylesheet" href="bundles/chart.bundle.css?v=20260319-192919">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260319-192919">
-    <script>window.__APP_BUILD_ID__ = '20260319-192919';</script>
+    <link rel="stylesheet" href="bundles/chart.bundle.css?v=20260321-004500">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260321-004500">
+    <script>window.__APP_BUILD_ID__ = '20260321-004500';</script>
 </head>
 <body class="chart-page">
     <div class="page-loader" id="pageLoader">
@@ -225,9 +225,16 @@
         <div class="chatkit-resize-handle" id="chatkitResizeHandle"></div>
         <div class="chatkit-header">
             <span class="chatkit-title" data-i18n="page.chart.chat.title"></span>
+            <label class="chat-engine-toggle" id="chatEngineToggle" data-i18n-title="customChat.toggleEngine">
+                <input type="checkbox" id="chatEngineSwitch">
+                <span class="toggle-slider"></span>
+            </label>
+            <button class="cc-header-btn cc-history-btn" id="ccHistoryBtn" data-i18n-title="customChat.history" style="display:none"><svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 6v4l3 2"/><circle cx="10" cy="10" r="7"/><path d="M1 10a9 9 0 1 1 1.4 4.8"/><path d="M1 18v-4h4"/></svg></button>
+            <button class="cc-header-btn cc-new-btn" id="ccNewConversation" data-i18n-title="customChat.newConversation" style="display:none">+</button>
             <button class="chatkit-minimize" id="chatkitMinimize" data-i18n-title="common.minimize">−</button>
         </div>
         <div class="chatkit-body" id="chatkit-container"></div>
+        <div class="chatkit-body" id="custom-chat-container" data-mode="natal" style="display:none"></div>
     </div>
 
     <button class="chatkit-toggle" id="chatkitToggle" data-i18n-title="common.openChat">
@@ -319,7 +326,7 @@
 
     <div id="chartToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/chart.bundle.js?v=20260319-192919"></script>
-    <script src="js/locale-switcher.js?v=20260319-192919"></script>
+    <script type="module" src="js/bundles/chart.bundle.js?v=20260321-004500"></script>
+    <script src="js/locale-switcher.js?v=20260321-004500"></script>
 </body>
 </html>

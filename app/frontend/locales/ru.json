@@ -154,6 +154,31 @@
       }
     }
   },
+  "customChat": {
+    "sendButton": "Отправить",
+    "composerPlaceholder": "Введите сообщение...",
+    "thinking": "Думаю...",
+    "toolCalling": "Анализирую {tool}...",
+    "errorGeneric": "Что-то пошло не так. Попробуйте ещё раз.",
+    "errorNetwork": "Ошибка сети. Проверьте подключение.",
+    "newConversation": "Новый",
+    "toggleEngine": "Переключить движок чата",
+    "micStart": "Голосовой ввод",
+    "micStop": "Остановить запись",
+    "micRecording": "Слушаю...",
+    "micTranscribing": "Транскрибирую...",
+    "micDenied": "Доступ к микрофону запрещён. Проверьте настройки браузера.",
+    "micError": "Не удалось получить доступ к микрофону.",
+    "history": "История",
+    "historyBack": "Назад",
+    "historyEmpty": "Пока нет разговоров",
+    "deleteConversation": "Удалить разговор",
+    "untitledConversation": "Новый разговор",
+    "justNow": "только что",
+    "minutesAgo": "{n} мин назад",
+    "hoursAgo": "{n}ч назад",
+    "daysAgo": "{n}д назад"
+  },
   "common": {
     "all": "Все",
     "back": "Назад",

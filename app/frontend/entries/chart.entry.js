@@ -11,4 +11,5 @@ import '../js/chart-wheel.js';
 import '../js/chart-data.js';
 import '../js/chart.js';
 import '../js/chart-layout.js';
+import '../js/custom-chat.js';
 import '../js/chatkit-init.js';

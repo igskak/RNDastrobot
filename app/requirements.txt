@@ -19,6 +19,7 @@ supabase==2.3.0
 # Web Framework (choose one based on your preference)
 # FastAPI (recommended for modern async API)
 fastapi==0.115.6
+python-multipart>=0.0.9
 uvicorn[standard]==0.34.0
 pydantic==2.10.6
 
