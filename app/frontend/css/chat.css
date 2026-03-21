@@ -175,21 +175,29 @@ openai-chatkit {
 
 @media (max-width: 768px) {
     .chatkit-wrapper {
-        right: 12px;
-        left: 12px;
-        bottom: 82px;
+        right: calc(env(safe-area-inset-right, 0px) + 10px);
+        left: calc(env(safe-area-inset-left, 0px) + 10px);
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 88px);
         width: auto;
-        height: min(72vh, 720px);
-        max-height: calc(100vh - 136px);
-        border-radius: 24px;
+        height: min(58dvh, 560px);
+        max-height: calc(100dvh - 156px);
+        border-radius: 22px;
     }
 
     .chatkit-toggle {
-        right: 12px;
-        bottom: 82px;
+        right: calc(env(safe-area-inset-right, 0px) + 10px);
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 88px);
         width: 54px;
         height: 54px;
         border-radius: 18px;
+    }
+
+    .chatkit-header {
+        padding: 12px 12px 8px;
+    }
+
+    .chatkit-title {
+        font-size: 14px;
     }
 
     .chatkit-resize-handle {
@@ -199,23 +207,21 @@ openai-chatkit {
 
 @media (max-width: 520px) {
     .chatkit-wrapper {
-        right: 10px;
-        left: 10px;
-        bottom: 78px;
-        height: calc(100vh - 138px);
-        max-height: none;
+        right: calc(env(safe-area-inset-right, 0px) + 8px);
+        left: calc(env(safe-area-inset-left, 0px) + 8px);
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 84px);
+        height: min(54dvh, 500px);
+        max-height: calc(100dvh - 144px);
+        min-height: 360px;
+        border-radius: 20px;
     }
 
     .chatkit-header {
-        padding: 14px 14px 10px;
-    }
-
-    .chatkit-title {
-        font-size: 14px;
+        padding: 10px 10px 8px;
     }
 
     .chatkit-toggle {
-        right: 10px;
-        bottom: 78px;
+        right: calc(env(safe-area-inset-right, 0px) + 8px);
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 84px);
     }
 }
