@@ -155,6 +155,7 @@
     }
   },
   "customChat": {
+    "assistantLabel": "Steliara AI",
     "sendButton": "Отправить",
     "composerPlaceholder": "Введите сообщение...",
     "thinking": "Думаю...",
@@ -174,6 +175,34 @@
     "historyEmpty": "Пока нет разговоров",
     "deleteConversation": "Удалить разговор",
     "untitledConversation": "Новый разговор",
+    "modeNatal": "Натальная карта",
+    "modePrognostic": "Прогноз",
+    "subtitleNatal": "Спрашивайте о планетах, напряжениях карты и общей логике натала.",
+    "subtitlePrognostic": "Обсуждайте транзиты, прогрессии и ближайшие астрологические периоды.",
+    "statusReady": "Готов",
+    "statusListening": "Слушаю",
+    "statusTranscribing": "Расшифровываю",
+    "statusThinking": "Анализирую",
+    "composerHint": "Enter отправляет, Shift+Enter переносит строку",
+    "voiceHint": "Быстрые уточнения удобно надиктовывать голосом",
+    "startEyebrow": "Астрологический copilot",
+    "startActionsVoice": "Сказать вопрос",
+    "startActionsHistory": "Открыть историю",
+    "promptGroup": "С чего можно начать",
+    "natalPrompts": {
+      "overview": {
+        "label": "Общий обзор карты",
+        "prompt": "Дайте общий обзор моей натальной карты: главные акценты, характер и ключевые темы."
+      },
+      "strengths": {
+        "label": "Мои сильные стороны",
+        "prompt": "Какие сильные стороны и таланты особенно заметны в моей натальной карте?"
+      },
+      "tensions": {
+        "label": "Главные напряжения",
+        "prompt": "Какие главные внутренние напряжения и зоны роста видны в моей натальной карте?"
+      }
+    },
     "justNow": "только что",
     "minutesAgo": "{n} мин назад",
     "hoursAgo": "{n}ч назад",

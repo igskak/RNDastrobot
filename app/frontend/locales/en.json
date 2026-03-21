@@ -155,6 +155,7 @@
     }
   },
   "customChat": {
+    "assistantLabel": "Steliara AI",
     "sendButton": "Send",
     "composerPlaceholder": "Type your message...",
     "thinking": "Thinking...",
@@ -174,6 +175,34 @@
     "historyEmpty": "No conversations yet",
     "deleteConversation": "Delete conversation",
     "untitledConversation": "New conversation",
+    "modeNatal": "Natal chart",
+    "modePrognostic": "Forecast",
+    "subtitleNatal": "Ask about placements, tensions, and the overall logic of the chart.",
+    "subtitlePrognostic": "Discuss transits, progressions, and the periods that are coming up next.",
+    "statusReady": "Ready",
+    "statusListening": "Listening",
+    "statusTranscribing": "Transcribing",
+    "statusThinking": "Thinking",
+    "composerHint": "Press Enter to send, Shift+Enter for a new line",
+    "voiceHint": "Voice works great for quick follow-up questions",
+    "startEyebrow": "Astrology copilot",
+    "startActionsVoice": "Speak a question",
+    "startActionsHistory": "Open history",
+    "promptGroup": "A few good starting points",
+    "natalPrompts": {
+      "overview": {
+        "label": "Chart overview",
+        "prompt": "Give me an overall reading of my natal chart: main themes, personality, and standout patterns."
+      },
+      "strengths": {
+        "label": "My strengths",
+        "prompt": "What strengths and talents stand out the most in my natal chart?"
+      },
+      "tensions": {
+        "label": "Key tensions",
+        "prompt": "What core tensions or growth edges are most visible in my natal chart?"
+      }
+    },
     "justNow": "just now",
     "minutesAgo": "{n} min ago",
     "hoursAgo": "{n}h ago",

@@ -155,6 +155,7 @@
     }
   },
   "customChat": {
+    "assistantLabel": "Steliara AI",
     "sendButton": "Надіслати",
     "composerPlaceholder": "Введіть повідомлення...",
     "thinking": "Думаю...",
@@ -174,6 +175,34 @@
     "historyEmpty": "Поки немає розмов",
     "deleteConversation": "Видалити розмову",
     "untitledConversation": "Нова розмова",
+    "modeNatal": "Натальна карта",
+    "modePrognostic": "Прогноз",
+    "subtitleNatal": "Запитуйте про планети, напруги карти та загальну логіку наталу.",
+    "subtitlePrognostic": "Обговорюйте транзити, прогресії та найближчі астрологічні періоди.",
+    "statusReady": "Готово",
+    "statusListening": "Слухаю",
+    "statusTranscribing": "Розшифровую",
+    "statusThinking": "Аналізую",
+    "composerHint": "Enter надсилає, Shift+Enter переносить рядок",
+    "voiceHint": "Голос зручний для швидких уточнень",
+    "startEyebrow": "Астрологічний copilot",
+    "startActionsVoice": "Сказати запитання",
+    "startActionsHistory": "Відкрити історію",
+    "promptGroup": "З чого можна почати",
+    "natalPrompts": {
+      "overview": {
+        "label": "Огляд карти",
+        "prompt": "Дайте загальний огляд моєї натальної карти: головні теми, характер і ключові патерни."
+      },
+      "strengths": {
+        "label": "Мої сильні сторони",
+        "prompt": "Які сильні сторони та таланти найбільше виділяються в моїй натальній карті?"
+      },
+      "tensions": {
+        "label": "Головні напруги",
+        "prompt": "Які головні внутрішні напруги або зони росту найбільше видно в моїй натальній карті?"
+      }
+    },
     "justNow": "щойно",
     "minutesAgo": "{n} хв тому",
     "hoursAgo": "{n}г тому",
