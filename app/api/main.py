@@ -29,7 +29,7 @@ if os.getenv('APP_ENV') == 'production':
     logger.remove()  # Удаляем default handler
     logger.add(sys.stderr, level="WARNING")  # Только WARNING и выше
 
-from app.api.routes import auth, natal, interpretations, chat, transits, solar, progressions, directions, ingresses, places
+from app.api.routes import auth, natal, interpretations, chat, transits, solar, progressions, directions, ingresses, places, consultations
 from app.api.error_handlers import register_error_handlers
 from app.api.locale_dependency import locale_context_dependency
 
@@ -109,6 +109,7 @@ app.include_router(progressions.router, prefix="/api/v1", tags=["Progressions"])
 app.include_router(directions.router, prefix="/api/v1", tags=["Directions"])
 app.include_router(ingresses.router, prefix="/api/v1", tags=["Ingresses"])
 app.include_router(places.router, prefix="/api/v1", tags=["Places"])
+app.include_router(consultations.router, prefix="/api/v1", tags=["Consultations"])
 
 # Статические файлы (CSS, JS)
 if os.path.exists(FRONTEND_PATH):

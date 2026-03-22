@@ -873,3 +873,272 @@ select:focus {
     margin-top: 26px;
     margin-bottom: 0;
 }
+
+/* ─── CRM: Form divider ──────────────────────────────────────────────── */
+
+.form-group-divider {
+    grid-column: 1 / -1;
+    border-top: 1px solid rgba(184, 147, 90, 0.18);
+    padding-top: 14px;
+    margin-top: 6px;
+}
+
+.form-divider-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(92, 85, 78, 0.7);
+}
+
+.form-group-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.form-group-checkbox {
+    grid-column: 1 / -1;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #B8935A;
+}
+
+textarea {
+    width: 100%;
+    font-family: inherit;
+    font-size: 14px;
+    padding: 10px 14px;
+    border: 1.2px solid rgba(30, 58, 95, 0.12);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--text-primary);
+    resize: vertical;
+    min-height: 60px;
+}
+
+textarea:focus {
+    outline: none;
+    border-color: #B8935A;
+    box-shadow: 0 0 0 3px rgba(184, 147, 90, 0.1);
+}
+
+/* ─── CRM: Expandable detail panel ───────────────────────────────────── */
+
+.client-detail-row td {
+    padding: 0 !important;
+    background: rgba(184, 147, 90, 0.04);
+    border-top: none !important;
+}
+
+.client-detail-panel {
+    padding: 18px 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.detail-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.detail-contacts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.detail-contact-item {
+    font-size: 13px;
+    color: rgba(30, 58, 95, 0.8);
+    padding: 3px 10px;
+    background: rgba(30, 58, 95, 0.06);
+    border-radius: 8px;
+}
+
+.detail-contacts-empty {
+    font-size: 13px;
+    color: rgba(92, 85, 78, 0.5);
+    font-style: italic;
+}
+
+.detail-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.detail-tag {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: rgba(184, 147, 90, 0.14);
+    color: #8B6914;
+}
+
+.detail-notes {
+    font-size: 13px;
+    color: rgba(92, 85, 78, 0.7);
+    line-height: 1.5;
+    margin: 0;
+    width: 100%;
+}
+
+.detail-sessions {
+    border-top: 1px solid rgba(184, 147, 90, 0.12);
+    padding-top: 10px;
+}
+
+.detail-sessions-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(92, 85, 78, 0.6);
+    margin: 0 0 8px;
+}
+
+.detail-no-sessions {
+    font-size: 13px;
+    color: rgba(92, 85, 78, 0.45);
+    font-style: italic;
+    margin: 0;
+}
+
+.detail-sessions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.detail-session-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.detail-session-row:hover {
+    background: rgba(184, 147, 90, 0.06);
+}
+
+.session-date {
+    min-width: 130px;
+    color: var(--text-primary);
+}
+
+.session-type-badge {
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(30, 58, 95, 0.08);
+    color: #1E3A5F;
+}
+
+.session-status {
+    font-size: 12px;
+    color: rgba(92, 85, 78, 0.6);
+}
+
+.session-paid {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+
+.badge-paid {
+    background: rgba(34, 197, 94, 0.12);
+    color: #15803d;
+}
+
+.badge-unpaid {
+    background: rgba(239, 68, 68, 0.1);
+    color: #b91c1c;
+}
+
+.session-delete-btn {
+    margin-left: auto;
+    background: none;
+    border: none;
+    font-size: 16px;
+    color: rgba(92, 85, 78, 0.35);
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.session-delete-btn:hover {
+    color: #b91c1c;
+}
+
+.detail-actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 6px;
+}
+
+.btn-sm {
+    padding: 7px 16px !important;
+    font-size: 12px !important;
+    min-height: auto !important;
+}
+
+.btn-secondary {
+    background: rgba(30, 58, 95, 0.06) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid rgba(30, 58, 95, 0.1) !important;
+}
+
+.btn-secondary:hover {
+    background: rgba(30, 58, 95, 0.1) !important;
+}
+
+/* ─── CRM: Highlighted row when expanded ─────────────────────────────── */
+
+tr[data-user-id] {
+    cursor: pointer;
+}
+
+tr[data-user-id]:has(+ .client-detail-row) {
+    background: rgba(184, 147, 90, 0.06);
+}
+
+@media (max-width: 600px) {
+    .form-group-row {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-session-row {
+        flex-wrap: wrap;
+    }
+
+    .session-date {
+        min-width: auto;
+    }
+
+    .detail-actions {
+        flex-wrap: wrap;
+    }
+}

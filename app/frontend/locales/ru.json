@@ -526,7 +526,69 @@
         "submitting": "Сохраняем...",
         "subtitle": "Исправьте данные рождения, не покидая список клиентов.",
         "title": "Редактирование данных клиента"
-      }
+      },
+      "crm": {
+        "contactHeader": "Контактные данные",
+        "email": "Email",
+        "emailPlaceholder": "client@example.com",
+        "phone": "Телефон",
+        "phonePlaceholder": "+7 123 456 7890",
+        "messenger": "Мессенджер",
+        "messengerPlaceholder": "Telegram, WhatsApp и т.д.",
+        "notes": "Заметки",
+        "notesPlaceholder": "Личные заметки об этом клиенте...",
+        "tags": "Теги",
+        "tagsPlaceholder": "vip, постоянный, новый (через запятую)",
+        "noContact": "Нет контактных данных"
+      },
+      "detail": {
+        "openChart": "Открыть карту",
+        "logSession": "Записать сессию",
+        "consultations": "Консультации",
+        "noConsultations": "Сессий ещё не записано",
+        "paidBadge": "Оплачено",
+        "unpaidBadge": "Не оплачено"
+      },
+      "consultation": {
+        "kicker": "Журнал сессий",
+        "title": "Записать консультацию",
+        "subtitle": "Зафиксируйте проведённую или запланированную сессию с клиентом.",
+        "type": "Тип сессии",
+        "types": {
+          "natal": "Натальное чтение",
+          "transit": "Анализ транзитов",
+          "solar_return": "Соляр",
+          "progression": "Прогрессии",
+          "direction": "Дирекции",
+          "synastry": "Синастрия",
+          "horary": "Хорар",
+          "other": "Другое"
+        },
+        "scheduledAt": "Дата и время",
+        "status": "Статус",
+        "statuses": {
+          "planned": "Запланировано",
+          "completed": "Завершено",
+          "cancelled": "Отменено",
+          "no_show": "Не явился"
+        },
+        "isPaid": "Оплачено",
+        "duration": "Длительность (мин)",
+        "durationPlaceholder": "60",
+        "notes": "Заметки о сессии",
+        "notesPlaceholder": "Что обсуждалось...",
+        "submit": "Сохранить сессию",
+        "submitting": "Сохраняем...",
+        "errors": {
+          "saveFailed": "Не удалось сохранить консультацию"
+        },
+        "messages": {
+          "created": "Сессия записана",
+          "deleted": "Сессия удалена"
+        }
+      },
+      "statsUpcoming": "Запланировано",
+      "statsUnpaid": "Не оплачено"
     },
     "forecast": {
       "biwheel": {

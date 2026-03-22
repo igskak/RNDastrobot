@@ -526,7 +526,69 @@
         "submitting": "Зберігаємо...",
         "subtitle": "Виправте дані народження, не залишаючи список клієнтів.",
         "title": "Редагування даних клієнта"
-      }
+      },
+      "crm": {
+        "contactHeader": "Контактні дані",
+        "email": "Email",
+        "emailPlaceholder": "client@example.com",
+        "phone": "Телефон",
+        "phonePlaceholder": "+380 12 345 6789",
+        "messenger": "Месенджер",
+        "messengerPlaceholder": "Telegram, WhatsApp тощо",
+        "notes": "Нотатки",
+        "notesPlaceholder": "Приватні нотатки про клієнта...",
+        "tags": "Теги",
+        "tagsPlaceholder": "vip, постійний, новий (через кому)",
+        "noContact": "Контактів немає"
+      },
+      "detail": {
+        "openChart": "Відкрити карту",
+        "logSession": "Записати сесію",
+        "consultations": "Консультації",
+        "noConsultations": "Сесій ще не записано",
+        "paidBadge": "Сплачено",
+        "unpaidBadge": "Не сплачено"
+      },
+      "consultation": {
+        "kicker": "Журнал сесій",
+        "title": "Записати консультацію",
+        "subtitle": "Зафіксуйте проведену або заплановану сесію з клієнтом.",
+        "type": "Тип сесії",
+        "types": {
+          "natal": "Натальне читання",
+          "transit": "Аналіз транзитів",
+          "solar_return": "Соляр",
+          "progression": "Прогресії",
+          "direction": "Дирекції",
+          "synastry": "Синастрія",
+          "horary": "Хорар",
+          "other": "Інше"
+        },
+        "scheduledAt": "Дата і час",
+        "status": "Статус",
+        "statuses": {
+          "planned": "Заплановано",
+          "completed": "Завершено",
+          "cancelled": "Скасовано",
+          "no_show": "Не з'явився"
+        },
+        "isPaid": "Сплачено",
+        "duration": "Тривалість (хв)",
+        "durationPlaceholder": "60",
+        "notes": "Нотатки сесії",
+        "notesPlaceholder": "Що обговорювалося...",
+        "submit": "Зберегти сесію",
+        "submitting": "Зберігаємо...",
+        "errors": {
+          "saveFailed": "Не вдалося зберегти консультацію"
+        },
+        "messages": {
+          "created": "Сесію записано",
+          "deleted": "Сесію видалено"
+        }
+      },
+      "statsUpcoming": "Заплановано",
+      "statsUnpaid": "Не сплачено"
     },
     "forecast": {
       "biwheel": {

@@ -526,7 +526,69 @@
         "subtitle": "Correct birth details without leaving the clients workspace.",
         "title": "Edit client data"
       },
-      "title": "Client database"
+      "title": "Client database",
+      "crm": {
+        "contactHeader": "Contact details",
+        "email": "Email",
+        "emailPlaceholder": "client@example.com",
+        "phone": "Phone",
+        "phonePlaceholder": "+1 234 567 890",
+        "messenger": "Messenger",
+        "messengerPlaceholder": "Telegram, WhatsApp, etc.",
+        "notes": "Notes",
+        "notesPlaceholder": "Private notes about the client...",
+        "tags": "Tags",
+        "tagsPlaceholder": "vip, regular, new (comma-separated)",
+        "noContact": "No contact info"
+      },
+      "detail": {
+        "openChart": "Open chart",
+        "logSession": "Log session",
+        "consultations": "Consultations",
+        "noConsultations": "No sessions logged yet",
+        "paidBadge": "Paid",
+        "unpaidBadge": "Unpaid"
+      },
+      "consultation": {
+        "kicker": "Session log",
+        "title": "Log consultation",
+        "subtitle": "Record a completed or upcoming session with this client.",
+        "type": "Session type",
+        "types": {
+          "natal": "Natal reading",
+          "transit": "Transit analysis",
+          "solar_return": "Solar return",
+          "progression": "Progressions",
+          "direction": "Directions",
+          "synastry": "Synastry",
+          "horary": "Horary",
+          "other": "Other"
+        },
+        "scheduledAt": "Date & time",
+        "status": "Status",
+        "statuses": {
+          "planned": "Planned",
+          "completed": "Completed",
+          "cancelled": "Cancelled",
+          "no_show": "No show"
+        },
+        "isPaid": "Paid",
+        "duration": "Duration (min)",
+        "durationPlaceholder": "60",
+        "notes": "Session notes",
+        "notesPlaceholder": "What was discussed...",
+        "submit": "Save session",
+        "submitting": "Saving...",
+        "errors": {
+          "saveFailed": "Failed to save consultation"
+        },
+        "messages": {
+          "created": "Session logged",
+          "deleted": "Session deleted"
+        }
+      },
+      "statsUpcoming": "Upcoming",
+      "statsUnpaid": "Unpaid"
     },
     "forecast": {
       "biwheel": {

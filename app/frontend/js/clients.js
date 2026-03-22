@@ -10,7 +10,9 @@ const state = {
     users: [],
     filteredUsers: [],
     searchTerm: '',
-    sortBy: 'created_desc'
+    sortBy: 'created_desc',
+    expandedUserId: null,
+    consultationsCache: {},
 };
 
 let toastTimer = null;
@@ -80,7 +82,28 @@ function cacheElements() {
     refs.logoutBtn = document.getElementById('logoutBtn');
     refs.welcome = document.getElementById('welcomeLabel');
     refs.statTotal = document.getElementById('statTotal');
-    refs.statLatest = document.getElementById('statLatest');
+    refs.statUpcoming = document.getElementById('statUpcoming');
+    refs.statUnpaid = document.getElementById('statUnpaid');
+    // CRM contact fields in edit modal
+    refs.editEmail = document.getElementById('editEmail');
+    refs.editPhone = document.getElementById('editPhone');
+    refs.editMessenger = document.getElementById('editMessenger');
+    refs.editTags = document.getElementById('editTags');
+    refs.editNotes = document.getElementById('editNotes');
+    // Log session dialog
+    refs.logSessionBackdrop = document.getElementById('logSessionBackdrop');
+    refs.logSessionDialog = document.getElementById('logSessionDialog');
+    refs.logSessionForm = document.getElementById('logSessionForm');
+    refs.logSessionClose = document.getElementById('logSessionClose');
+    refs.logSessionCancel = document.getElementById('logSessionCancel');
+    refs.logSessionSubmit = document.getElementById('logSessionSubmit');
+    refs.logSessionError = document.getElementById('logSessionError');
+    refs.logSessionType = document.getElementById('logSessionType');
+    refs.logSessionDate = document.getElementById('logSessionDate');
+    refs.logSessionStatus = document.getElementById('logSessionStatus');
+    refs.logSessionDuration = document.getElementById('logSessionDuration');
+    refs.logSessionPaid = document.getElementById('logSessionPaid');
+    refs.logSessionNotes = document.getElementById('logSessionNotes');
     refs.editBackdrop = document.getElementById('editClientBackdrop');
     refs.editDialog = document.getElementById('editClientDialog');
     refs.editForm = document.getElementById('editClientForm');
@@ -129,7 +152,7 @@ function bindEvents() {
             return;
         }
 
-        // Action inside dropdown
+        // Action inside dropdown or detail panel
         const actionBtn = event.target.closest('button[data-action]');
         if (actionBtn) {
             const { action, userId } = actionBtn.dataset;
@@ -139,15 +162,24 @@ function bindEvents() {
                 await openEditClientDialog(userId);
                 return;
             }
-            if (action === 'delete') { await handleDelete(userId, actionBtn); }
+            if (action === 'delete') { await handleDelete(userId, actionBtn); return; }
+            if (action === 'open-chart') { await openChart(userId); return; }
+            if (action === 'log-session') { openLogSessionDialog(userId); return; }
+            if (action === 'delete-consultation') {
+                await deleteConsultation(actionBtn.dataset.consultationId, userId);
+                return;
+            }
             return;
         }
 
-        // Row click → open chart
+        // Skip clicks inside detail panel
+        if (event.target.closest('.client-detail-panel')) return;
+
+        // Row click → toggle expandable detail
         closeAllDropdowns();
-        const row = event.target.closest('tr[data-user-id]');
+        const row = event.target.closest('tr[data-user-id]:not(.client-detail-row)');
         if (row) {
-            await openChart(row.dataset.userId);
+            await toggleDetailPanel(row.dataset.userId);
         }
     });
 
@@ -173,6 +205,7 @@ function bindEvents() {
     }
 
     initEditClientDialog();
+    initLogSessionDialog();
 }
 
 async function bootstrapPage() {
@@ -396,8 +429,14 @@ function updateCounters() {
         refs.statTotal.textContent = String(total);
     }
 
-    if (refs.statLatest) {
-        refs.statLatest.textContent = getLatestCreatedLabel(state.users);
+    if (refs.statUpcoming) {
+        const upcoming = state.users.reduce((sum, u) => sum + (u.upcoming_count || 0), 0);
+        refs.statUpcoming.textContent = String(upcoming);
+    }
+
+    if (refs.statUnpaid) {
+        const unpaid = state.users.reduce((sum, u) => sum + (u.unpaid_count || 0), 0);
+        refs.statUnpaid.textContent = String(unpaid);
     }
 
     if (state.searchTerm) {
@@ -408,29 +447,6 @@ function updateCounters() {
 
     refs.resultsMeta.textContent = '';
     refs.resultsMeta.style.display = 'none';
-}
-
-function getLatestCreatedLabel(users) {
-    if (!Array.isArray(users) || users.length === 0) {
-        return t('common.notAvailable');
-    }
-
-    let latestUser = null;
-    let latestTs = 0;
-
-    for (const user of users) {
-        const ts = user?.created_at ? new Date(user.created_at).getTime() : 0;
-        if (ts > latestTs) {
-            latestTs = ts;
-            latestUser = user;
-        }
-    }
-
-    if (!latestUser || !latestUser.created_at) {
-        return t('common.notAvailable');
-    }
-
-    return formatDateTime(latestUser.created_at);
 }
 
 async function openChart(userId) {
@@ -509,6 +525,14 @@ async function openEditClientDialog(userId) {
         refs.editHour.value = formData.hour || '';
         refs.editMinute.value = formData.minute || '';
         refs.editPlaceInput.value = place;
+
+        // CRM contact fields — pull from state.users (not from chart API)
+        const userRecord = state.users.find((u) => String(u.user_id) === String(userId));
+        if (refs.editEmail) refs.editEmail.value = userRecord?.email || '';
+        if (refs.editPhone) refs.editPhone.value = userRecord?.phone || '';
+        if (refs.editMessenger) refs.editMessenger.value = userRecord?.messenger || '';
+        if (refs.editTags) refs.editTags.value = Array.isArray(userRecord?.tags) ? userRecord.tags.join(', ') : '';
+        if (refs.editNotes) refs.editNotes.value = userRecord?.notes || '';
 
         window.Timezones?.populate?.(refs.editTimezone);
         refs.editTimezone.value = formData.timezone || '';
@@ -676,6 +700,8 @@ async function handleEditClientSubmit(event) {
     }
 
     const place = refs.editPlaceInput.value.trim();
+    const tagsRaw = (refs.editTags?.value || '').trim();
+    const tags = tagsRaw ? tagsRaw.split(',').map((t) => t.trim()).filter(Boolean) : [];
     const requestData = {
         first_name: refs.editFirstName.value.trim(),
         last_name: refs.editLastName.value.trim(),
@@ -686,6 +712,11 @@ async function handleEditClientSubmit(event) {
         house_system: editClientState.loadedChartData?.birth_data?.house_system
             || AstroAPI.getFormData()?.houseSystem
             || 'P',
+        email: refs.editEmail?.value?.trim() || '',
+        phone: refs.editPhone?.value?.trim() || '',
+        messenger: refs.editMessenger?.value?.trim() || '',
+        tags,
+        notes: refs.editNotes?.value?.trim() || '',
     };
 
     const resolvedCoords = resolveEditCoords(place);
@@ -702,7 +733,7 @@ async function handleEditClientSubmit(event) {
         const updatedChartData = await AstroAPI.updateClientChart(editClientState.userId, requestData);
         state.users = state.users.map((user) => (
             String(user.user_id) === String(updatedChartData.user_id)
-                ? buildUpdatedUserRecord(user, updatedChartData)
+                ? buildUpdatedUserRecord(user, updatedChartData, requestData)
                 : user
         ));
         renderUsers();
@@ -716,7 +747,7 @@ async function handleEditClientSubmit(event) {
     }
 }
 
-function buildUpdatedUserRecord(user, chartData) {
+function buildUpdatedUserRecord(user, chartData, requestData) {
     const birthData = chartData?.birth_data || {};
     return {
         ...user,
@@ -725,6 +756,11 @@ function buildUpdatedUserRecord(user, chartData) {
         last_name: birthData.last_name || '',
         birth_date: birthData.date || user.birth_date,
         birth_place: birthData.place || user.birth_place,
+        email: requestData?.email ?? user.email,
+        phone: requestData?.phone ?? user.phone,
+        messenger: requestData?.messenger ?? user.messenger,
+        tags: requestData?.tags ?? user.tags,
+        notes: requestData?.notes ?? user.notes,
     };
 }
 
@@ -857,4 +893,243 @@ function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = String(str);
     return div.innerHTML;
+}
+
+/* ─── Expandable detail panel ─────────────────────────────────────────── */
+
+async function toggleDetailPanel(userId) {
+    // Collapse current
+    const existing = refs.tbody.querySelector('.client-detail-row');
+    if (existing) {
+        const wasId = existing.dataset.userId;
+        existing.remove();
+        state.expandedUserId = null;
+        if (wasId === userId) return; // toggle off
+    }
+
+    const user = state.users.find((u) => String(u.user_id) === userId);
+    if (!user) return;
+
+    state.expandedUserId = userId;
+
+    // Fetch consultations for this client
+    let consultations = state.consultationsCache[userId];
+    if (!consultations) {
+        try {
+            const res = await apiFetch(`${API_BASE}/consultations?user_id=${userId}`);
+            consultations = res.ok ? await res.json() : [];
+        } catch (_) {
+            consultations = [];
+        }
+        state.consultationsCache[userId] = consultations;
+    }
+
+    const detailRow = document.createElement('tr');
+    detailRow.classList.add('client-detail-row');
+    detailRow.dataset.userId = userId;
+
+    const td = document.createElement('td');
+    td.colSpan = 5;
+    td.innerHTML = buildDetailPanelHTML(user, consultations);
+    detailRow.appendChild(td);
+
+    // Insert after the user's row
+    const userRow = refs.tbody.querySelector(`tr[data-user-id="${userId}"]:not(.client-detail-row)`);
+    if (userRow && userRow.nextSibling) {
+        refs.tbody.insertBefore(detailRow, userRow.nextSibling);
+    } else {
+        refs.tbody.appendChild(detailRow);
+    }
+}
+
+function buildDetailPanelHTML(user, consultations) {
+    const contactParts = [];
+    if (user.email) contactParts.push(`<span class="detail-contact-item">${escapeHtml(user.email)}</span>`);
+    if (user.phone) contactParts.push(`<span class="detail-contact-item">${escapeHtml(user.phone)}</span>`);
+    if (user.messenger) contactParts.push(`<span class="detail-contact-item">${escapeHtml(user.messenger)}</span>`);
+    const contactHTML = contactParts.length > 0
+        ? `<div class="detail-contacts">${contactParts.join('')}</div>`
+        : `<div class="detail-contacts detail-contacts-empty">${escapeHtml(t('page.clients.crm.noContact'))}</div>`;
+
+    const tagsHTML = Array.isArray(user.tags) && user.tags.length > 0
+        ? `<div class="detail-tags">${user.tags.map((tag) => `<span class="detail-tag">${escapeHtml(tag)}</span>`).join('')}</div>`
+        : '';
+
+    const notesHTML = user.notes
+        ? `<p class="detail-notes">${escapeHtml(user.notes).substring(0, 200)}${user.notes.length > 200 ? '...' : ''}</p>`
+        : '';
+
+    let consultationsHTML;
+    if (consultations.length === 0) {
+        consultationsHTML = `<p class="detail-no-sessions">${escapeHtml(t('page.clients.detail.noConsultations'))}</p>`;
+    } else {
+        const rows = consultations.map((c) => {
+            const dateStr = c.scheduled_at ? formatDateTime(c.scheduled_at) : '';
+            const typeLabel = t(`page.clients.consultation.types.${c.consultation_type}`) || c.consultation_type;
+            const paidClass = c.is_paid ? 'badge-paid' : 'badge-unpaid';
+            const paidLabel = c.is_paid ? t('page.clients.detail.paidBadge') : t('page.clients.detail.unpaidBadge');
+            const statusLabel = t(`page.clients.consultation.statuses.${c.status}`) || c.status;
+            return `
+                <div class="detail-session-row">
+                    <span class="session-date">${escapeHtml(dateStr)}</span>
+                    <span class="session-type-badge">${escapeHtml(typeLabel)}</span>
+                    <span class="session-status">${escapeHtml(statusLabel)}</span>
+                    <span class="session-paid ${paidClass}">${escapeHtml(paidLabel)}</span>
+                    <button class="session-delete-btn" type="button" data-action="delete-consultation" data-consultation-id="${escapeHtml(c.id)}" data-user-id="${escapeHtml(user.user_id)}" title="Delete">&times;</button>
+                </div>`;
+        }).join('');
+        consultationsHTML = `<div class="detail-sessions-list">${rows}</div>`;
+    }
+
+    const userId = escapeHtml(String(user.user_id));
+
+    return `
+        <div class="client-detail-panel">
+            <div class="detail-top">
+                ${contactHTML}
+                ${tagsHTML}
+                ${notesHTML}
+            </div>
+            <div class="detail-sessions">
+                <h4 class="detail-sessions-title">${escapeHtml(t('page.clients.detail.consultations'))}</h4>
+                ${consultationsHTML}
+            </div>
+            <div class="detail-actions">
+                <button class="btn-new btn-sm" type="button" data-action="open-chart" data-user-id="${userId}">${escapeHtml(t('page.clients.detail.openChart'))}</button>
+                <button class="btn-new btn-sm btn-secondary" type="button" data-action="log-session" data-user-id="${userId}">${escapeHtml(t('page.clients.detail.logSession'))}</button>
+                <button class="btn-new btn-sm btn-secondary" type="button" data-action="edit" data-user-id="${userId}">${escapeHtml(t('page.clients.actions.edit'))}</button>
+            </div>
+        </div>`;
+}
+
+/* ─── Log Session Dialog ──────────────────────────────────────────────── */
+
+const logSessionState = { userId: null };
+
+function initLogSessionDialog() {
+    if (!refs.logSessionDialog) return;
+
+    refs.logSessionClose?.addEventListener('click', closeLogSessionDialog);
+    refs.logSessionCancel?.addEventListener('click', closeLogSessionDialog);
+    refs.logSessionBackdrop?.addEventListener('click', closeLogSessionDialog);
+    refs.logSessionForm?.addEventListener('submit', handleLogSessionSubmit);
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && refs.logSessionDialog && !refs.logSessionDialog.classList.contains('hidden')) {
+            closeLogSessionDialog();
+        }
+    });
+}
+
+function openLogSessionDialog(userId) {
+    logSessionState.userId = userId;
+
+    // Reset form
+    if (refs.logSessionForm) refs.logSessionForm.reset();
+    if (refs.logSessionStatus) refs.logSessionStatus.value = 'completed';
+    if (refs.logSessionDate) {
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        refs.logSessionDate.value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    }
+    if (refs.logSessionError) {
+        refs.logSessionError.classList.add('hidden');
+        refs.logSessionError.textContent = '';
+    }
+    setLogSessionSubmitting(false);
+
+    refs.logSessionBackdrop?.classList.remove('hidden');
+    refs.logSessionDialog?.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeLogSessionDialog() {
+    refs.logSessionBackdrop?.classList.add('hidden');
+    refs.logSessionDialog?.classList.add('hidden');
+    logSessionState.userId = null;
+    document.body.style.overflow = '';
+}
+
+function setLogSessionSubmitting(isSubmitting) {
+    if (!refs.logSessionSubmit) return;
+    refs.logSessionSubmit.disabled = isSubmitting;
+    refs.logSessionSubmit.querySelector('.btn-text')?.classList.toggle('hidden', isSubmitting);
+    refs.logSessionSubmit.querySelector('.btn-loader')?.classList.toggle('hidden', !isSubmitting);
+}
+
+async function handleLogSessionSubmit(event) {
+    event.preventDefault();
+    if (!logSessionState.userId) return;
+
+    const payload = {
+        user_id: logSessionState.userId,
+        consultation_type: refs.logSessionType?.value || 'natal',
+        status: refs.logSessionStatus?.value || 'completed',
+        is_paid: refs.logSessionPaid?.checked || false,
+    };
+
+    if (refs.logSessionDate?.value) {
+        payload.scheduled_at = new Date(refs.logSessionDate.value).toISOString();
+    }
+    const dur = parseInt(refs.logSessionDuration?.value, 10);
+    if (dur > 0) payload.duration_minutes = dur;
+    const notes = refs.logSessionNotes?.value?.trim();
+    if (notes) payload.notes = notes;
+
+    setLogSessionSubmitting(true);
+    if (refs.logSessionError) {
+        refs.logSessionError.classList.add('hidden');
+        refs.logSessionError.textContent = '';
+    }
+
+    try {
+        const res = await apiFetch(`${API_BASE}/consultations`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error(t('page.clients.consultation.errors.saveFailed'));
+
+        // Invalidate cache and refresh detail panel
+        delete state.consultationsCache[logSessionState.userId];
+        const userId = logSessionState.userId;
+        closeLogSessionDialog();
+        showToast(t('page.clients.consultation.messages.created'), 'success');
+
+        // Refresh user list to update consultation counts
+        await loadClients();
+
+        // Re-expand detail if it was open
+        if (state.expandedUserId === userId || userId) {
+            state.expandedUserId = null;
+            await toggleDetailPanel(userId);
+        }
+    } catch (error) {
+        if (refs.logSessionError) {
+            refs.logSessionError.textContent = error.message;
+            refs.logSessionError.classList.remove('hidden');
+        }
+    } finally {
+        setLogSessionSubmitting(false);
+    }
+}
+
+async function deleteConsultation(consultationId, userId) {
+    if (!consultationId) return;
+    try {
+        const res = await apiFetch(`${API_BASE}/consultations/${consultationId}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed to delete consultation');
+
+        delete state.consultationsCache[userId];
+        showToast(t('page.clients.consultation.messages.deleted'), 'success');
+
+        // Refresh and re-expand
+        await loadClients();
+        if (userId) {
+            state.expandedUserId = null;
+            await toggleDetailPanel(userId);
+        }
+    } catch (error) {
+        showToast(t('common.errorWithMessage', { message: error.message }), 'error');
+    }
 }

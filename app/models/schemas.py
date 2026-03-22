@@ -65,6 +65,13 @@ class BirthDataInput(BaseModel):
     
     # Система домов
     house_system: str = Field(default="P", description="Система домов (P=Placidus, K=Koch, W=Whole Sign и т.д.)")
+
+    # CRM contact fields (optional, used by PUT /users/{id})
+    email: Optional[str] = Field(None, description="Email клиента")
+    phone: Optional[str] = Field(None, description="Телефон клиента")
+    messenger: Optional[str] = Field(None, description="Мессенджер (Telegram, WhatsApp и т.д.)")
+    tags: Optional[List[str]] = Field(None, description="Теги клиента")
+    notes: Optional[str] = Field(None, description="Заметки астролога о клиенте")
     
     @field_validator('house_system')
     @classmethod

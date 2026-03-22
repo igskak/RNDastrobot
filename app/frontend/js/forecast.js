@@ -2743,11 +2743,13 @@ async function calculateAllForecastViews(forcedMethod = null) {
     const method = forcedMethod || document.getElementById('methodSelect').value;
     const startDate = document.getElementById('startDate')?.value;
     const endDate = document.getElementById('endDate')?.value;
-    const needTransitPeriod = method === 'transits' && ForecastState.currentTab !== 'biwheel';
+    const needTransitPeriod = method === 'transits';
     if (needTransitPeriod) {
         await ensureTransitPeriodData(startDate, endDate, { showLoading: true });
-        showState('timeline', 'content');
-        renderTimeline();
+        if (ForecastState.currentTab === 'timeline') {
+            showState('timeline', 'content');
+            renderTimeline();
+        }
     }
 
     const targetDate = resolveBiwheelTargetDate(method);

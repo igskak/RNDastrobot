@@ -34,10 +34,11 @@ from app.models.schemas import (
 from app.services.natal_chart_service import NatalChartService
 from app.database.connection import get_db
 from app.database.repositories.user_repository import UserRepository
-from app.database.models import User
+from app.database.models import User, Consultation
 from app.auth.dependencies import AuthContext, create_audit_event, ensure_client_access, require_auth
 from app.utils.ephemeris import get_ephemeris_path
 from app.services.geocoding_service import GeocodingTimeoutError, GeocodingServiceError
+from sqlalchemy import func as sa_func, case, and_
 import os
 from loguru import logger
 
@@ -318,14 +319,54 @@ def list_users(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
-    """Получить список всех пользователей"""
+    """Получить список всех пользователей с CRM-данными"""
     try:
-        users = (
-            db.query(User)
+        # Subquery: consultation stats per user
+        consult_stats = (
+            db.query(
+                Consultation.user_id,
+                sa_func.count(Consultation.id).label("consultation_count"),
+                sa_func.max(Consultation.scheduled_at).label("last_consultation_at"),
+                sa_func.sum(
+                    case((and_(Consultation.is_paid == False, Consultation.status == 'completed'), 1), else_=0)  # noqa: E712
+                ).label("unpaid_count"),
+                sa_func.sum(
+                    case((Consultation.status == 'planned', 1), else_=0)
+                ).label("upcoming_count"),
+            )
+            .filter(Consultation.astrologer_id == auth.astrologer.id)
+            .group_by(Consultation.user_id)
+            .subquery()
+        )
+
+        # Last consultation type (correlated scalar — only fetched if there are consultations)
+        last_consult = (
+            db.query(Consultation.consultation_type)
+            .filter(
+                Consultation.user_id == User.user_id,
+                Consultation.astrologer_id == auth.astrologer.id,
+            )
+            .order_by(Consultation.scheduled_at.desc().nullslast())
+            .limit(1)
+            .correlate(User)
+            .scalar_subquery()
+        )
+
+        rows = (
+            db.query(
+                User,
+                consult_stats.c.consultation_count,
+                consult_stats.c.last_consultation_at,
+                consult_stats.c.unpaid_count,
+                consult_stats.c.upcoming_count,
+                last_consult.label("last_consultation_type"),
+            )
+            .outerjoin(consult_stats, User.user_id == consult_stats.c.user_id)
             .filter(User.astrologer_id == auth.astrologer.id)
             .order_by(User.created_at.desc())
             .all()
         )
+
         create_audit_event(
             db,
             request,
@@ -335,17 +376,30 @@ def list_users(
             resource_id=None,
             result="success",
         )
-        return [
-            {
+
+        result = []
+        for u, cons_count, last_at, unpaid, upcoming, last_type in rows:
+            result.append({
                 "user_id": str(u.user_id),
                 "first_name": u.first_name,
                 "last_name": u.last_name,
                 "birth_date": u.birth_date.isoformat() if u.birth_date else None,
                 "birth_place": u.birth_place,
                 "created_at": u.created_at.isoformat() if u.created_at else None,
-            }
-            for u in users
-        ]
+                # CRM contact fields
+                "email": u.email,
+                "phone": u.phone,
+                "messenger": u.messenger,
+                "tags": u.tags or [],
+                "notes": u.notes,
+                # Consultation summary
+                "consultation_count": cons_count or 0,
+                "last_consultation_at": last_at.isoformat() if last_at else None,
+                "last_consultation_type": last_type,
+                "unpaid_count": unpaid or 0,
+                "upcoming_count": upcoming or 0,
+            })
+        return result
     except Exception as e:
         logger.exception(f"Ошибка при получении списка пользователей: {str(e)}")
         raise HTTPException(
@@ -383,6 +437,20 @@ def update_user_birth_data(
             first_name=birth_data.first_name,
             last_name=birth_data.last_name,
         )
+        # Save CRM contact fields if provided
+        user = db.query(User).filter(User.user_id == user_id).first()
+        if user:
+            if birth_data.email is not None:
+                user.email = birth_data.email or None
+            if birth_data.phone is not None:
+                user.phone = birth_data.phone or None
+            if birth_data.messenger is not None:
+                user.messenger = birth_data.messenger or None
+            if birth_data.tags is not None:
+                user.tags = birth_data.tags
+            if birth_data.notes is not None:
+                user.notes = birth_data.notes or None
+            db.flush()
         return build_natal_chart_response(chart_data)
     except ValueError as e:
         logger.error(f"Ошибка валидации при обновлении клиента: {str(e)}")

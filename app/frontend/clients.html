@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.clients.title"></title>
-    <link rel="stylesheet" href="bundles/clients.bundle.css?v=20260321-094632">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260321-094632">
+    <link rel="stylesheet" href="bundles/clients.bundle.css?v=20260322-125507">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260322-125507">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '20260321-094632';</script>
+    <script>window.__APP_BUILD_ID__ = '20260322-125507';</script>
 </head>
 <body class="clients-page">
     <div class="page-loader" id="pageLoader">
@@ -104,8 +104,12 @@
                             <strong id="statTotal" class="stat-value"></strong>
                         </div>
                         <div class="stat-card">
-                            <span class="stat-label" data-i18n="page.clients.stats.latest"></span>
-                            <strong id="statLatest" class="stat-value stat-value-small"></strong>
+                            <span class="stat-label" data-i18n="page.clients.statsUpcoming"></span>
+                            <strong id="statUpcoming" class="stat-value"></strong>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label" data-i18n="page.clients.statsUnpaid"></span>
+                            <strong id="statUnpaid" class="stat-value"></strong>
                         </div>
                     </div>
                 </div>
@@ -243,6 +247,36 @@
                     </select>
                     <span id="editTimezoneHint" class="hint"></span>
                 </div>
+
+                <div class="form-group-divider">
+                    <span class="form-divider-label" data-i18n="page.clients.crm.contactHeader"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="editEmail" data-i18n="page.clients.crm.email"></label>
+                    <input id="editEmail" type="email" data-i18n-placeholder="page.clients.crm.emailPlaceholder">
+                </div>
+
+                <div class="form-group form-group-row">
+                    <div class="form-group">
+                        <label class="form-label" for="editPhone" data-i18n="page.clients.crm.phone"></label>
+                        <input id="editPhone" type="tel" data-i18n-placeholder="page.clients.crm.phonePlaceholder">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editMessenger" data-i18n="page.clients.crm.messenger"></label>
+                        <input id="editMessenger" type="text" data-i18n-placeholder="page.clients.crm.messengerPlaceholder">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="editTags" data-i18n="page.clients.crm.tags"></label>
+                    <input id="editTags" type="text" data-i18n-placeholder="page.clients.crm.tagsPlaceholder">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="editNotes" data-i18n="page.clients.crm.notes"></label>
+                    <textarea id="editNotes" rows="3" data-i18n-placeholder="page.clients.crm.notesPlaceholder"></textarea>
+                </div>
             </div>
 
             <div id="editClientError" class="error-message hidden"></div>
@@ -257,9 +291,82 @@
         </form>
     </section>
 
+    <div id="logSessionBackdrop" class="clients-dialog-backdrop hidden"></div>
+    <section id="logSessionDialog" class="clients-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="logSessionTitle">
+        <form id="logSessionForm" class="clients-dialog-card">
+            <div class="clients-dialog-header">
+                <div>
+                    <p class="clients-dialog-kicker" data-i18n="page.clients.consultation.kicker"></p>
+                    <h3 id="logSessionTitle" class="clients-dialog-title" data-i18n="page.clients.consultation.title"></h3>
+                    <p class="clients-dialog-copy" data-i18n="page.clients.consultation.subtitle"></p>
+                </div>
+                <button id="logSessionClose" class="clients-dialog-close" type="button" data-i18n-aria-label="common.close">&times;</button>
+            </div>
+
+            <div class="clients-dialog-grid">
+                <div class="form-group">
+                    <label class="form-label" for="logSessionType" data-i18n="page.clients.consultation.type"></label>
+                    <select id="logSessionType" required>
+                        <option value="natal" data-i18n="page.clients.consultation.types.natal"></option>
+                        <option value="transit" data-i18n="page.clients.consultation.types.transit"></option>
+                        <option value="solar_return" data-i18n="page.clients.consultation.types.solar_return"></option>
+                        <option value="progression" data-i18n="page.clients.consultation.types.progression"></option>
+                        <option value="direction" data-i18n="page.clients.consultation.types.direction"></option>
+                        <option value="synastry" data-i18n="page.clients.consultation.types.synastry"></option>
+                        <option value="horary" data-i18n="page.clients.consultation.types.horary"></option>
+                        <option value="other" data-i18n="page.clients.consultation.types.other"></option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="logSessionDate" data-i18n="page.clients.consultation.scheduledAt"></label>
+                    <input id="logSessionDate" type="datetime-local">
+                </div>
+
+                <div class="form-group form-group-row">
+                    <div class="form-group">
+                        <label class="form-label" for="logSessionStatus" data-i18n="page.clients.consultation.status"></label>
+                        <select id="logSessionStatus" required>
+                            <option value="completed" data-i18n="page.clients.consultation.statuses.completed"></option>
+                            <option value="planned" data-i18n="page.clients.consultation.statuses.planned"></option>
+                            <option value="cancelled" data-i18n="page.clients.consultation.statuses.cancelled"></option>
+                            <option value="no_show" data-i18n="page.clients.consultation.statuses.no_show"></option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="logSessionDuration" data-i18n="page.clients.consultation.duration"></label>
+                        <input id="logSessionDuration" type="number" min="0" max="600" data-i18n-placeholder="page.clients.consultation.durationPlaceholder">
+                    </div>
+                </div>
+
+                <div class="form-group form-group-checkbox">
+                    <label class="checkbox-label">
+                        <input id="logSessionPaid" type="checkbox">
+                        <span data-i18n="page.clients.consultation.isPaid"></span>
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="logSessionNotes" data-i18n="page.clients.consultation.notes"></label>
+                    <textarea id="logSessionNotes" rows="3" data-i18n-placeholder="page.clients.consultation.notesPlaceholder"></textarea>
+                </div>
+            </div>
+
+            <div id="logSessionError" class="error-message hidden"></div>
+
+            <div class="clients-dialog-actions">
+                <button id="logSessionCancel" class="btn-logout clients-dialog-cancel" type="button" data-i18n="common.cancel"></button>
+                <button id="logSessionSubmit" class="btn-new clients-dialog-submit" type="submit">
+                    <span class="btn-text" data-i18n="page.clients.consultation.submit"></span>
+                    <span class="btn-loader hidden" data-i18n="page.clients.consultation.submitting"></span>
+                </button>
+            </div>
+        </form>
+    </section>
+
     <div id="toast" class="toast"></div>
 
-    <script type="module" src="js/bundles/clients.bundle.js?v=20260321-094632"></script>
-    <script src="js/locale-switcher.js?v=20260321-094632"></script>
+    <script type="module" src="js/bundles/clients.bundle.js?v=20260322-125507"></script>
+    <script src="js/locale-switcher.js?v=20260322-125507"></script>
 </body>
 </html>

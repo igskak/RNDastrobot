@@ -29,9 +29,15 @@ class User(Base):
     lat = Column(Numeric(10, 7), nullable=False)
     lon = Column(Numeric(10, 7), nullable=False)
     julian_day = Column(Numeric(15, 6))
+    # CRM contact fields
+    email = Column(String(255))
+    phone = Column(String(50))
+    messenger = Column(String(255))
+    tags = Column(JSONB, server_default='[]')
+    notes = Column(Text)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-    
+
     # Relationships
     planets = relationship("NatalPlanet", back_populates="user", cascade="all, delete-orphan")
     houses = relationship("NatalHouse", back_populates="user", cascade="all, delete-orphan")
@@ -45,6 +51,7 @@ class User(Base):
     transit_events_cache = relationship("TransitEventsCache", back_populates="user", cascade="all, delete-orphan")
     prognostic_interpretations = relationship("PrognosticInterpretation", back_populates="user", cascade="all, delete-orphan")
     forecast_runs = relationship("ForecastRun", back_populates="user", cascade="all, delete-orphan")
+    consultations = relationship("Consultation", back_populates="user", cascade="all, delete-orphan")
     # Relationships для eager loading (оптимизация запросов)
     natal_aspects = relationship("NatalAspect", back_populates="user", cascade="all, delete-orphan")
     natal_stelliums = relationship("NatalStellium", back_populates="user", cascade="all, delete-orphan")
@@ -1135,4 +1142,42 @@ class ChatMessage(Base):
     __table_args__ = (
         CheckConstraint("role IN ('user', 'assistant')", name='chk_chat_msg_role'),
         Index('idx_chat_messages_conversation_id', 'conversation_id', 'created_at'),
+    )
+
+
+class Consultation(Base):
+    """Запись о консультации (CRM)."""
+    __tablename__ = 'consultations'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
+    astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='CASCADE'), nullable=False)
+    consultation_type = Column(String(30), nullable=False, default='natal')
+    scheduled_at = Column(DateTime(timezone=True))
+    completed_at = Column(DateTime(timezone=True))
+    status = Column(String(20), nullable=False, default='planned')
+    is_paid = Column(Boolean, nullable=False, default=False)
+    duration_minutes = Column(Integer)
+    notes = Column(Text)
+    conversation_id = Column(UUID(as_uuid=True), ForeignKey('chat_conversations.id', ondelete='SET NULL'))
+    forecast_run_id = Column(UUID(as_uuid=True), ForeignKey('forecast_runs.run_id', ondelete='SET NULL'))
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    user = relationship("User", back_populates="consultations")
+    astrologer = relationship("Astrologer")
+
+    __table_args__ = (
+        CheckConstraint(
+            "consultation_type IN ('natal','transit','solar_return','progression','direction','synastry','horary','other')",
+            name='chk_consultation_type',
+        ),
+        CheckConstraint(
+            "status IN ('planned','completed','cancelled','no_show')",
+            name='chk_consultation_status',
+        ),
+        Index('idx_consultations_user_id', 'user_id'),
+        Index('idx_consultations_astrologer_id', 'astrologer_id'),
+        Index('idx_consultations_scheduled', 'astrologer_id', 'scheduled_at'),
+        Index('idx_consultations_status', 'astrologer_id', 'status'),
     )
