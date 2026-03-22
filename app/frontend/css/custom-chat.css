@@ -468,6 +468,41 @@
     to { transform: rotate(360deg); }
 }
 
+/* ── Progress indicators for multi-agent pipeline ── */
+
+.cc-progress-container {
+    align-self: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 0 8px 48px;
+    animation: ccFadeIn 0.3s ease;
+}
+
+.cc-progress-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-muted, #9B9289);
+    transition: opacity 0.3s ease;
+}
+
+.cc-progress-done {
+    opacity: 0.5;
+}
+
+.cc-progress-check {
+    color: var(--accent, #1E3A5F);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+@keyframes ccFadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 .cc-error-message {
     align-self: center;
     max-width: min(100%, 320px);

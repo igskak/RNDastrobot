@@ -34,6 +34,11 @@ function t(key, params) {
     return window.FrontendI18n?.t?.(key, params) || key;
 }
 
+async function waitForI18nReady() {
+    if (!window.FrontendI18n?.ready) return;
+    await Promise.resolve(window.FrontendI18n.ready).catch(() => {});
+}
+
 function withLocaleHeaders(headers = {}) {
     if (window.AstroAPI?.withLocaleHeaders) {
         return window.AstroAPI.withLocaleHeaders(headers);
@@ -60,7 +65,8 @@ function apiFetch(url, init = {}) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    await waitForI18nReady();
     cacheElements();
     bindEvents();
     bootstrapPage();
@@ -1208,7 +1214,7 @@ async function deleteConsultation(consultationId, userId) {
     if (!consultationId) return;
     try {
         const res = await apiFetch(`${API_BASE}/consultations/${consultationId}`, { method: 'DELETE' });
-        if (!res.ok) throw new Error('Failed to delete consultation');
+        if (!res.ok) throw new Error(t('page.clients.consultation.errors.deleteFailed'));
 
         delete state.consultationsCache[userId];
         showToast(t('page.clients.consultation.messages.deleted'), 'success');

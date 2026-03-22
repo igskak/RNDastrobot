@@ -6,12 +6,28 @@
 """
 import os
 import json
+import time
+import asyncio
 import hashlib
 from typing import AsyncGenerator, Dict, Any, Optional, List
 from uuid import UUID
 from openai import OpenAI
 from sqlalchemy.orm import Session
 from loguru import logger
+
+# Langfuse integration — drop-in wrapper for OpenAI AsyncClient
+# If LANGFUSE_PUBLIC_KEY is set, uses instrumented client; otherwise plain AsyncOpenAI
+_langfuse_available = bool(os.getenv('LANGFUSE_PUBLIC_KEY'))
+if _langfuse_available:
+    try:
+        from langfuse.openai import AsyncOpenAI
+        logger.info("Langfuse observability enabled for AsyncOpenAI")
+    except ImportError:
+        from openai import AsyncOpenAI
+        logger.warning("langfuse package not installed, using plain AsyncOpenAI")
+        _langfuse_available = False
+else:
+    from openai import AsyncOpenAI
 
 from app.i18n.context import get_current_locale
 from app.i18n.locale import DEFAULT_LOCALE, normalize_locale
@@ -37,6 +53,7 @@ class OpenAIService:
             raise ValueError("OPENAI_API_KEY не найден в переменных окружения")
 
         self.client = OpenAI(api_key=self.api_key)
+        self.async_client = AsyncOpenAI(api_key=self.api_key)
         logger.info(f"OpenAI сервис инициализирован (модель: {self.model}, workflow: {self.workflow_id}, prognostic: {self.prognostic_workflow_id})")
 
     @staticmethod
@@ -541,6 +558,110 @@ class OpenAIService:
         system_instructions += f"\n10. Предпочтительная локаль пользователя: {locale}\n"
         return system_instructions
 
+    # ─────────────────────────────────────────────────────────
+    # Multi-agent natal chat pipeline
+    # ─────────────────────────────────────────────────────────
+
+    async def _run_sub_agent(
+        self,
+        agent_name: str,
+        system_prompt: str,
+        user_content: str,
+        model: Optional[str] = None,
+        vector_store_id: Optional[str] = None,
+    ) -> str:
+        """
+        Run a single sub-agent (non-streaming).
+        Optionally uses file_search tool with a vector store.
+        Returns the output text or raises on error.
+        """
+        from app.services.natal_agent_prompts import SUB_AGENT_MODEL
+        used_model = model or SUB_AGENT_MODEL
+        t0 = time.monotonic()
+
+        create_kwargs: Dict[str, Any] = {
+            "model": used_model,
+            "input": [
+                {"role": "developer", "content": system_prompt},
+                {"role": "user", "content": user_content},
+            ],
+            "stream": False,
+            "max_output_tokens": 15000,
+            "reasoning": {"effort": "medium"},
+        }
+
+        # Attach file_search tool if vector store is provided
+        if vector_store_id:
+            create_kwargs["tools"] = [
+                {
+                    "type": "file_search",
+                    "vector_store_ids": [vector_store_id],
+                }
+            ]
+
+        try:
+            response = await self.async_client.responses.create(**create_kwargs)
+            result = response.output_text or ""
+            elapsed = time.monotonic() - t0
+            logger.info(
+                f"Sub-agent '{agent_name}' done: {elapsed:.1f}s, "
+                f"{len(result)} chars, model={used_model}"
+            )
+            return result
+        except Exception as e:
+            elapsed = time.monotonic() - t0
+            logger.error(f"Sub-agent '{agent_name}' failed after {elapsed:.1f}s: {e}")
+            raise
+
+    async def _run_parallel_sub_agents(
+        self,
+        chart_data_json: str,
+        locale: str,
+    ) -> Dict[str, str]:
+        """
+        Run 3 sub-agents (Psychological, Events, Karmic) in parallel.
+        Returns dict with keys: psychology_result, events_result, karmic_result.
+        """
+        from app.services.natal_agent_prompts import (
+            PSYCHOLOGICAL_AGENT_PROMPT,
+            EVENTS_AGENT_PROMPT,
+            KARMIC_AGENT_PROMPT,
+            VECTOR_STORES,
+        )
+
+        t0 = time.monotonic()
+        logger.info("Natal pipeline: starting 3 sub-agents in parallel")
+
+        psychology_result, events_result, karmic_result = await asyncio.gather(
+            self._run_sub_agent(
+                agent_name="PsychologicalAgent",
+                system_prompt=PSYCHOLOGICAL_AGENT_PROMPT,
+                user_content=chart_data_json,
+                vector_store_id=VECTOR_STORES.get("psychology"),
+            ),
+            self._run_sub_agent(
+                agent_name="EventsAgent",
+                system_prompt=EVENTS_AGENT_PROMPT,
+                user_content=chart_data_json,
+                vector_store_id=VECTOR_STORES.get("events"),
+            ),
+            self._run_sub_agent(
+                agent_name="KarmicAgent",
+                system_prompt=KARMIC_AGENT_PROMPT,
+                user_content=chart_data_json,
+                vector_store_id=VECTOR_STORES.get("karmic"),
+            ),
+        )
+
+        elapsed = time.monotonic() - t0
+        logger.info(f"Natal pipeline: all sub-agents done in {elapsed:.1f}s (parallel)")
+
+        return {
+            "psychology_result": psychology_result,
+            "events_result": events_result,
+            "karmic_result": karmic_result,
+        }
+
     async def natal_chat_stream(
         self,
         user_id: str,
@@ -548,44 +669,118 @@ class OpenAIService:
         chart_data: Optional[Dict[str, Any]] = None,
         timezone: Optional[str] = None,
         locale: Optional[str] = None,
-        previous_response_id: Optional[str] = None,
+        workflow_state: Optional[Dict[str, Any]] = None,
+        conversation_messages: Optional[List[Dict]] = None,
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """
-        Streaming natal chat via Responses API (no tool calling).
+        Multi-agent natal chat pipeline with streaming.
+
+        First message: runs 3 sub-agents in parallel, then streams Synthesizer.
+        Follow-up messages: streams Synthesizer directly with cached state.
 
         Yields SSE-compatible dicts:
+            {"type": "progress", "agent": "...", "status": "running|done"}
             {"type": "token", "text": "..."}
-            {"type": "done", "response_id": "..."}
+            {"type": "done", "response_id": "...", "workflow_state": {...}}
             {"type": "error", "message": "..."}
         """
+        from app.services.natal_agent_prompts import SYNTHESIZER_AGENT_PROMPT, SYNTHESIZER_MODEL
+
         resolved_locale = self._resolve_locale(locale)
-        system_prompt = self._build_natal_system_prompt(chart_data, timezone, resolved_locale)
-
-        input_messages: List[Dict[str, Any]] = [
-            {"role": "developer", "content": system_prompt},
-            {"role": "user", "content": message},
-        ]
-
-        create_kwargs: Dict[str, Any] = {
-            "model": self.model,
-            "input": input_messages,
-            "stream": True,
-        }
-        if previous_response_id:
-            create_kwargs["previous_response_id"] = previous_response_id
+        state = dict(workflow_state or {})
+        t0 = time.monotonic()
 
         try:
-            stream = self.client.responses.create(**create_kwargs)
+            # ── Phase 1: Run sub-agents if first message ──
+            is_first_run = not state.get("synthesizer_result")
+
+            if is_first_run:
+                logger.info(f"Natal pipeline: FIRST RUN for user={user_id}")
+
+                # Signal progress to frontend
+                for agent in ("psychology", "events", "karmic"):
+                    yield {"type": "progress", "agent": agent, "status": "running"}
+
+                # Run 3 sub-agents in parallel
+                chart_data_json = json.dumps(chart_data, ensure_ascii=False) if chart_data else "{}"
+                results = await self._run_parallel_sub_agents(chart_data_json, resolved_locale)
+
+                # Update state with sub-agent results
+                state["psychology_result"] = results["psychology_result"]
+                state["events_result"] = results["events_result"]
+                state["karmic_result"] = results["karmic_result"]
+
+                # Signal completion
+                for agent in ("psychology", "events", "karmic"):
+                    yield {"type": "progress", "agent": agent, "status": "done"}
+            else:
+                logger.info(f"Natal pipeline: FOLLOW-UP for user={user_id}")
+
+            # ── Phase 2: Stream Synthesizer ──
+            yield {"type": "progress", "agent": "synthesizer", "status": "running"}
+
+            # Build synthesizer system prompt with sub-agent results
+            synthesizer_system = SYNTHESIZER_AGENT_PROMPT.format(
+                psychology_result=state.get("psychology_result", "НЕ ДОСТУПЕН"),
+                events_result=state.get("events_result", "НЕ ДОСТУПЕН"),
+                karmic_result=state.get("karmic_result", "НЕ ДОСТУПЕН"),
+                previous_synthesizer_result=state.get("synthesizer_result") or "null (первый прогон)",
+            )
+
+            # Build input messages with conversation history
+            input_messages: List[Dict[str, Any]] = [
+                {"role": "developer", "content": synthesizer_system},
+            ]
+
+            # Add conversation history for follow-up messages
+            if conversation_messages and not is_first_run:
+                for msg in conversation_messages:
+                    input_messages.append({
+                        "role": msg["role"],
+                        "content": msg["content"],
+                    })
+
+            # Add current user message
+            input_messages.append({"role": "user", "content": message})
+
+            # Stream synthesizer response
+            t_synth = time.monotonic()
+            stream = await self.async_client.responses.create(
+                model=SYNTHESIZER_MODEL,
+                input=input_messages,
+                stream=True,
+            )
 
             response_id = None
-            for event in stream:
+            synthesizer_text = ""
+
+            async for event in stream:
                 if event.type == "response.output_text.delta":
+                    synthesizer_text += event.delta
                     yield {"type": "token", "text": event.delta}
                 elif event.type == "response.completed":
                     response_id = event.response.id
                     break
 
-            yield {"type": "done", "response_id": response_id or ""}
+            elapsed_synth = time.monotonic() - t_synth
+            logger.info(
+                f"Synthesizer done: {elapsed_synth:.1f}s, "
+                f"{len(synthesizer_text)} chars, model={SYNTHESIZER_MODEL}"
+            )
+
+            # Update state with synthesizer result
+            state["synthesizer_result"] = synthesizer_text
+
+            yield {"type": "progress", "agent": "synthesizer", "status": "done"}
+
+            elapsed_total = time.monotonic() - t0
+            logger.info(f"Natal pipeline complete: {elapsed_total:.1f}s total, first_run={is_first_run}")
+
+            yield {
+                "type": "done",
+                "response_id": response_id or "",
+                "workflow_state": state,
+            }
 
         except Exception as e:
             logger.error(f"Natal chat stream error: {e}")

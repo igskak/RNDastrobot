@@ -27,6 +27,11 @@ function t(key, params) {
     return window.FrontendI18n?.t?.(key, params) || key;
 }
 
+async function waitForI18nReady() {
+    if (!window.FrontendI18n?.ready) return;
+    await Promise.resolve(window.FrontendI18n.ready).catch(() => {});
+}
+
 function withLocaleHeaders(headers = {}) {
     if (window.AstroAPI?.withLocaleHeaders) {
         return window.AstroAPI.withLocaleHeaders(headers);
@@ -46,6 +51,8 @@ function apiFetch(url, init = {}) {
  * Инициализация страницы
  */
 async function init() {
+    await waitForI18nReady();
+
     const me = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
     if (!me) return;
 

@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.clients.title"></title>
-    <link rel="stylesheet" href="bundles/clients.bundle.css?v=20260322-133738">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260322-133738">
+    <link rel="stylesheet" href="bundles/clients.bundle.css?v=20260322-215140">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260322-215140">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '20260322-133738';</script>
+    <script>window.__APP_BUILD_ID__ = '20260322-215140';</script>
 </head>
 <body class="clients-page">
     <div class="page-loader" id="pageLoader">
@@ -318,7 +318,11 @@
                     <h3 id="logSessionTitle" class="clients-dialog-title" data-i18n="page.clients.consultation.title"></h3>
                     <p class="clients-dialog-copy" data-i18n="page.clients.consultation.subtitle"></p>
                 </div>
-                <button id="logSessionClose" class="clients-dialog-close" type="button" data-i18n-aria-label="common.close">&times;</button>
+                <button id="logSessionClose" class="clients-dialog-close" type="button" data-i18n-aria-label="common.close">
+                    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                        <path d="M4 4l8 8M12 4 4 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                    </svg>
+                </button>
             </div>
 
             <div class="clients-dialog-grid">
@@ -384,7 +388,7 @@
 
     <div id="toast" class="toast"></div>
 
-    <script type="module" src="js/bundles/clients.bundle.js?v=20260322-133738"></script>
-    <script src="js/locale-switcher.js?v=20260322-133738"></script>
+    <script type="module" src="js/bundles/clients.bundle.js?v=20260322-215140"></script>
+    <script src="js/locale-switcher.js?v=20260322-215140"></script>
 </body>
 </html>

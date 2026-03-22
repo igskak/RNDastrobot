@@ -333,7 +333,8 @@
       "edit": {
         "errors": {
           "chartUnavailable": "The current chart is unavailable. Please reopen the client card.",
-          "saveFailed": "Failed to update client data"
+          "saveFailed": "Failed to update client data",
+          "userIdMissing": "User id is missing. Open the client chart again."
         },
         "kicker": "Correction mode",
         "placeCurrent": "Current coordinates will be kept unless you choose another place.",
@@ -580,6 +581,7 @@
         "submit": "Save session",
         "submitting": "Saving...",
         "errors": {
+          "deleteFailed": "Failed to delete consultation",
           "saveFailed": "Failed to save consultation"
         },
         "messages": {

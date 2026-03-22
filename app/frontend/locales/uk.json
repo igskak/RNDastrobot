@@ -155,7 +155,7 @@
     }
   },
   "customChat": {
-    "assistantLabel": "Steliara AI",
+    "assistantLabel": "Асистент Steliara AI",
     "sendButton": "Надіслати",
     "composerPlaceholder": "Введіть повідомлення...",
     "thinking": "Думаю...",
@@ -333,7 +333,8 @@
       "edit": {
         "errors": {
           "chartUnavailable": "Поточна карта недоступна. Відкрийте клієнта ще раз.",
-          "saveFailed": "Не вдалося оновити дані клієнта"
+          "saveFailed": "Не вдалося оновити дані клієнта",
+          "userIdMissing": "Відсутній id користувача. Відкрийте карту клієнта знову."
         },
         "kicker": "Режим виправлення",
         "placeCurrent": "Поточні координати збережуться, якщо ви не виберете інше місце.",
@@ -529,8 +530,8 @@
       },
       "crm": {
         "contactHeader": "Контактні дані",
-        "email": "Email",
-        "emailPlaceholder": "client@example.com",
+        "email": "Ел. пошта",
+        "emailPlaceholder": "client@pryklad.ua",
         "phone": "Телефон",
         "phonePlaceholder": "+380 12 345 6789",
         "messenger": "Месенджер",
@@ -580,6 +581,7 @@
         "submit": "Зберегти сесію",
         "submitting": "Зберігаємо...",
         "errors": {
+          "deleteFailed": "Не вдалося видалити консультацію",
           "saveFailed": "Не вдалося зберегти консультацію"
         },
         "messages": {

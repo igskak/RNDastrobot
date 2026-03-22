@@ -1116,6 +1116,7 @@ class ChatConversation(Base):
     mode = Column(String(20), nullable=False, default='natal')
     title = Column(String(255))
     last_response_id = Column(Text)
+    workflow_state = Column(JSONB, server_default='{}')
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 

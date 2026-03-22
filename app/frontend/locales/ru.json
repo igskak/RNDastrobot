@@ -155,7 +155,7 @@
     }
   },
   "customChat": {
-    "assistantLabel": "Steliara AI",
+    "assistantLabel": "Ассистент Steliara AI",
     "sendButton": "Отправить",
     "composerPlaceholder": "Введите сообщение...",
     "thinking": "Думаю...",
@@ -333,7 +333,8 @@
       "edit": {
         "errors": {
           "chartUnavailable": "Текущая карта недоступна. Откройте клиента заново.",
-          "saveFailed": "Не удалось обновить данные клиента"
+          "saveFailed": "Не удалось обновить данные клиента",
+          "userIdMissing": "Отсутствует id пользователя. Откройте карту клиента заново."
         },
         "kicker": "Режим исправления",
         "placeCurrent": "Текущие координаты сохранятся, если вы не выберете другое место.",
@@ -529,8 +530,8 @@
       },
       "crm": {
         "contactHeader": "Контактные данные",
-        "email": "Email",
-        "emailPlaceholder": "client@example.com",
+        "email": "Эл. почта",
+        "emailPlaceholder": "client@primer.ru",
         "phone": "Телефон",
         "phonePlaceholder": "+7 123 456 7890",
         "messenger": "Мессенджер",
@@ -580,6 +581,7 @@
         "submit": "Сохранить сессию",
         "submitting": "Сохраняем...",
         "errors": {
+          "deleteFailed": "Не удалось удалить консультацию",
           "saveFailed": "Не удалось сохранить консультацию"
         },
         "messages": {

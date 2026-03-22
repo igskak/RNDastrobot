@@ -42,6 +42,11 @@ function t(key, params) {
     return window.FrontendI18n?.t?.(key, params) || key;
 }
 
+async function waitForI18nReady() {
+    if (!window.FrontendI18n?.ready) return;
+    await Promise.resolve(window.FrontendI18n.ready).catch(() => {});
+}
+
 function normalizeHouseSystemCode(value) {
     const raw = String(value || 'P').trim().toUpperCase().replace(/[\s-]+/g, '_');
     return HOUSE_SYSTEM_ALIASES[raw] || 'P';
@@ -71,6 +76,8 @@ function readSavedPointScale() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    await waitForI18nReady();
+
     const me = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
     if (!me) return;
 

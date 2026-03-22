@@ -101,7 +101,7 @@
 
     async function updateClientChart(userId, birthData, options = {}) {
         if (!userId) {
-            throw new Error('userId is required');
+            throw new Error(translate('page.chart.edit.errors.userIdMissing'));
         }
 
         const response = await apiFetch(`${API_BASE_URL}/users/${encodeURIComponent(String(userId))}`, {

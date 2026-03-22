@@ -24,6 +24,7 @@
             'customChat.assistantLabel': 'Steliara AI',
             'customChat.sendButton': 'Send',
             'customChat.thinking': 'Thinking...',
+            'customChat.thinkingFirstRun': 'Preparing your personal analysis — this takes 2–3 minutes, follow-up replies will be much faster',
             'customChat.toolCalling': 'Analyzing {tool}...',
             'customChat.errorGeneric': 'Something went wrong. Please try again.',
             'customChat.errorNetwork': 'Network error. Check your connection.',
@@ -78,6 +79,7 @@
             'customChat.assistantLabel': 'Steliara AI',
             'customChat.sendButton': 'Отправить',
             'customChat.thinking': 'Думаю...',
+            'customChat.thinkingFirstRun': 'Готовлю ваш персональный анализ — это займёт 2–3 минуты, следующие ответы будут значительно быстрее',
             'customChat.toolCalling': 'Анализирую {tool}...',
             'customChat.errorGeneric': 'Что-то пошло не так. Попробуйте ещё раз.',
             'customChat.errorNetwork': 'Ошибка сети. Проверьте подключение.',
@@ -132,6 +134,7 @@
             'customChat.assistantLabel': 'Steliara AI',
             'customChat.sendButton': 'Надіслати',
             'customChat.thinking': 'Думаю...',
+            'customChat.thinkingFirstRun': 'Готую ваш персональний аналіз — це займе 2–3 хвилини, наступні відповіді будуть значно швидшими',
             'customChat.toolCalling': 'Аналізую {tool}...',
             'customChat.errorGeneric': 'Щось пішло не так. Спробуйте ще раз.',
             'customChat.errorNetwork': 'Помилка мережі. Перевірте підключення.',
@@ -669,6 +672,12 @@
     function showTypingIndicator() {
         removeTypingIndicator();
 
+        // Show extended message for first natal run (no conversation yet)
+        const isFirstNatalRun = mode === 'natal' && !conversationId;
+        const thinkingText = isFirstNatalRun
+            ? tx('customChat.thinkingFirstRun')
+            : tx('customChat.thinking');
+
         const indicator = document.createElement('div');
         indicator.className = 'cc-typing-indicator';
         indicator.id = 'ccTypingIndicator';
@@ -676,7 +685,7 @@
             <div class="cc-message-avatar">AI</div>
             <div class="cc-typing-bubble">
                 <span class="cc-typing-dots"><span></span><span></span><span></span></span>
-                <span>${tx('customChat.thinking')}</span>
+                <span>${thinkingText}</span>
             </div>
         `;
         messagesEl.appendChild(indicator);
@@ -706,6 +715,60 @@
     function removeToolIndicator() {
         const indicator = document.getElementById('ccToolIndicator');
         if (indicator) indicator.remove();
+    }
+
+    // ── Progress indicators for multi-agent pipeline ──
+
+    const AGENT_LABELS = {
+        psychology: { ru: 'Анализ психологического профиля', en: 'Analyzing psychological profile' },
+        events: { ru: 'Анализ жизненных событий', en: 'Analyzing life events' },
+        karmic: { ru: 'Кармический анализ', en: 'Analyzing karmic patterns' },
+        synthesizer: { ru: 'Формирование ответа', en: 'Synthesizing response' },
+    };
+
+    function showProgressIndicator(agent, agentStatus) {
+        const containerId = 'ccProgressContainer';
+        let container = document.getElementById(containerId);
+
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'cc-progress-container';
+            container.id = containerId;
+            messagesEl.appendChild(container);
+        }
+
+        const itemId = `ccProgress_${agent}`;
+        let item = document.getElementById(itemId);
+
+        if (agentStatus === 'running' && !item) {
+            item = document.createElement('div');
+            item.className = 'cc-progress-item';
+            item.id = itemId;
+            const lang = (locale || 'en').startsWith('ru') ? 'ru' : 'en';
+            const label = (AGENT_LABELS[agent] || {})[lang] || agent;
+            item.innerHTML = `
+                <span class="cc-tool-spinner"></span>
+                <span>${escapeHtml(label)}...</span>
+            `;
+            container.appendChild(item);
+            scrollToBottom();
+        }
+
+        if (agentStatus === 'done' && item) {
+            item.classList.add('cc-progress-done');
+            const spinner = item.querySelector('.cc-tool-spinner');
+            if (spinner) spinner.outerHTML = '<span class="cc-progress-check">✓</span>';
+        }
+
+        // Remove container when synthesizer starts (sub-agents done)
+        if (agent === 'synthesizer' && agentStatus === 'running' && container) {
+            container.remove();
+        }
+    }
+
+    function removeProgressIndicators() {
+        const container = document.getElementById('ccProgressContainer');
+        if (container) container.remove();
     }
 
     function showError(message) {
@@ -921,7 +984,17 @@
     }
 
     function handleStreamEvent(event) {
+        if (event.type === 'progress') {
+            removeTypingIndicator();
+            showProgressIndicator(event.agent, event.status);
+            return;
+        }
+
         if (event.type === 'token') {
+            removeTypingIndicator();
+            removeProgressIndicators();
+            // Lazy-create streaming message on first token
+            if (!currentStreamEl) createStreamingMessage();
             updateStreamingMessage(event.text);
             return;
         }
@@ -1008,8 +1081,8 @@
                 return;
             }
 
-            removeTypingIndicator();
-            createStreamingMessage();
+            // Don't remove typing indicator or create streaming message yet.
+            // Typing dots stay visible until the first SSE event (progress or token).
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();

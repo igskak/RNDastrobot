@@ -475,9 +475,20 @@ async def chat_stream(
     conv_id_str = str(conversation.id)
     conv_uuid = conversation.id
 
+    # Pre-load conversation data while DB session is still active
+    # (lazy loading won't work inside the async generator after session closes)
+    cached_workflow_state = dict(conversation.workflow_state or {})
+    cached_conv_messages = [
+        {"role": m.role, "content": m.content}
+        for m in conversation.messages
+    ] if conversation.messages else []
+
     async def sse_generator():
         assistant_text = ""
         response_id = None
+        new_workflow_state = None
+        # Send an SSE comment to force the first flush immediately
+        yield ": keepalive\n\n"
         try:
             if request.mode == "prognostic":
                 chart_summary = None
@@ -503,7 +514,8 @@ async def chat_stream(
                     chart_data=chart_data,
                     timezone=user_tz,
                     locale=locale,
-                    previous_response_id=request.previous_response_id,
+                    workflow_state=cached_workflow_state,
+                    conversation_messages=cached_conv_messages,
                 )
 
             async for event in stream:
@@ -511,6 +523,7 @@ async def chat_stream(
                     assistant_text += event.get("text", "")
                 elif event.get("type") == "done":
                     response_id = event.get("response_id")
+                    new_workflow_state = event.pop("workflow_state", None)
                     # Include conversation_id in the done event
                     event["conversation_id"] = conv_id_str
 
@@ -528,17 +541,14 @@ async def chat_stream(
             try:
                 if assistant_text.strip():
                     save_db.add(ChatMessage(conversation_id=conv_uuid, role="assistant", content=assistant_text))
+                update_fields = {"updated_at": func.now()}
                 if response_id:
-                    save_db.query(ChatConversation).filter(
-                        ChatConversation.id == conv_uuid
-                    ).update({
-                        "last_response_id": response_id,
-                        "updated_at": func.now(),
-                    })
-                else:
-                    save_db.query(ChatConversation).filter(
-                        ChatConversation.id == conv_uuid
-                    ).update({"updated_at": func.now()})
+                    update_fields["last_response_id"] = response_id
+                if new_workflow_state:
+                    update_fields["workflow_state"] = new_workflow_state
+                save_db.query(ChatConversation).filter(
+                    ChatConversation.id == conv_uuid
+                ).update(update_fields)
                 save_db.commit()
             except Exception as e:
                 save_db.rollback()

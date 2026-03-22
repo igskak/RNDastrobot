@@ -68,6 +68,11 @@
         return global.FrontendI18n?.t ? global.FrontendI18n.t(key, params) : key;
     }
 
+    async function waitForI18nReady() {
+        if (!global.FrontendI18n?.ready) return;
+        await Promise.resolve(global.FrontendI18n.ready).catch(() => {});
+    }
+
     function getCurrentLocale() {
         return global.FrontendI18n?.getLocale?.() || 'en';
     }
@@ -1120,6 +1125,7 @@
 
         async function init() {
             if (!documentRef || !fetchFn) return;
+            await waitForI18nReady();
             cacheRefs();
             bindEvents();
 

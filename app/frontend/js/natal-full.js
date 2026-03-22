@@ -63,6 +63,11 @@ function t(key, params) {
     return window.FrontendI18n?.t?.(key, params) || key;
 }
 
+async function waitForI18nReady() {
+    if (!window.FrontendI18n?.ready) return;
+    await Promise.resolve(window.FrontendI18n.ready).catch(() => {});
+}
+
 function getTranslatedAstroName(type, name, fallbackMap) {
     if (!name) return EMPTY;
     const key = `astro.${type}.${name}`;
@@ -193,6 +198,8 @@ function formatPlanetNameWithRetro(name, options = {}) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    await waitForI18nReady();
+
     const me = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
     if (!me) return;
 
