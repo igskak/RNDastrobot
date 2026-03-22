@@ -218,9 +218,16 @@ function bindEvents() {
 
     if (refs.alertsPanel) {
         refs.alertsPanel.addEventListener('click', async (event) => {
-            const btn = event.target.closest('button[data-action="open-chart"]');
-            if (btn?.dataset.userId) {
-                await openChart(btn.dataset.userId);
+            const btn = event.target.closest('button[data-action]');
+            if (!btn?.dataset.userId) return;
+            const { action, userId } = btn.dataset;
+
+            if (action === 'open-solar') {
+                await openForecastForUser(userId, { tab: 'solar', solarYear: btn.dataset.solarYear });
+            } else if (action === 'open-transit') {
+                await openForecastForUser(userId, { tab: 'biwheel', date: btn.dataset.transitDate });
+            } else if (action === 'open-chart') {
+                await openChart(userId);
             }
         });
     }
@@ -238,6 +245,7 @@ async function bootstrapPage() {
 
     await loadClients();
     loadAlerts();
+    initMiniCal();
 }
 
 function renderProfileSummary() {
@@ -486,6 +494,31 @@ async function openChart(userId) {
 
         window.showPageLoader?.();
         window.location.href = '/chart.html';
+    } catch (error) {
+        showToast(t('common.errorWithMessage', { message: error.message }), 'error');
+    }
+}
+
+async function openForecastForUser(userId, { tab = 'biwheel', date, solarYear } = {}) {
+    try {
+        const response = await apiFetch(`${API_BASE}/natal/${userId}`, { method: 'GET' });
+        if (!response.ok) throw new Error(t('page.clients.errors.chartNotFound'));
+
+        const chartData = await response.json();
+        AstroAPI.saveChartToSession(chartData);
+        AstroAPI.saveFormData(
+            AstroAPI.chartToFormData(chartData, {
+                houseSystem: AstroAPI.getFormData()?.houseSystem || 'P',
+            })
+        );
+
+        const params = new URLSearchParams();
+        params.set('tab', tab);
+        if (date) params.set('date', date);
+        if (solarYear) params.set('solarYear', solarYear);
+
+        window.showPageLoader?.();
+        window.location.href = `/forecast.html?${params.toString()}`;
     } catch (error) {
         showToast(t('common.errorWithMessage', { message: error.message }), 'error');
     }
@@ -1187,12 +1220,14 @@ function buildSolarAlertRow(alert) {
 
     const dateStr = alert.solar_date ? formatDate(alert.solar_date) : '';
 
+    const solarYear = alert.solar_date ? alert.solar_date.split('-')[0] : '';
+
     return `
         <div class="alert-row">
             <span class="alert-name">${escapeHtml(alert.name)}</span>
             <span class="alert-date">${escapeHtml(dateStr)}</span>
             <span class="alert-timing ${days <= 3 && days >= 0 ? 'alert-timing-soon' : ''}">${escapeHtml(timing)}</span>
-            <button class="alert-action" type="button" data-action="open-chart" data-user-id="${escapeHtml(alert.user_id)}">${escapeHtml(t('page.clients.alerts.openChart'))}</button>
+            <button class="alert-action" type="button" data-action="open-solar" data-user-id="${escapeHtml(alert.user_id)}" data-solar-year="${escapeHtml(solarYear)}">${escapeHtml(t('page.clients.alerts.openChart'))}</button>
         </div>`;
 }
 
@@ -1206,7 +1241,7 @@ function buildTransitAlertRow(alert) {
             <span class="alert-name">${escapeHtml(alert.name)}</span>
             <span class="alert-transit-desc ${alert.harmonic_type === 'tense' ? 'alert-tense' : ''}">${escapeHtml(desc)}</span>
             <span class="alert-date">${escapeHtml(dateStr)}</span>
-            <button class="alert-action" type="button" data-action="open-chart" data-user-id="${escapeHtml(alert.user_id)}">${escapeHtml(t('page.clients.alerts.openChart'))}</button>
+            <button class="alert-action" type="button" data-action="open-transit" data-user-id="${escapeHtml(alert.user_id)}" data-transit-date="${escapeHtml(alert.exact_date)}">${escapeHtml(t('page.clients.alerts.openChart'))}</button>
         </div>`;
 }
 
@@ -1228,4 +1263,132 @@ async function deleteConsultation(consultationId, userId) {
     } catch (error) {
         showToast(t('common.errorWithMessage', { message: error.message }), 'error');
     }
+}
+
+// ── Mini Calendar Widget ─────────────────────────────────────────────────────
+
+const STATUS_COLORS_MINI = {
+    planned:   '#1E3A5F',
+    completed: '#2B7A4B',
+    cancelled: '#9B9289',
+    no_show:   '#B83232',
+};
+
+const MONTH_NAMES = [
+    'January','February','March','April','May','June',
+    'July','August','September','October','November','December',
+];
+
+function initMiniCal() {
+    const grid    = document.getElementById('miniCalGrid');
+    const title   = document.getElementById('miniCalTitle');
+    const btnPrev = document.getElementById('miniCalPrev');
+    const btnNext = document.getElementById('miniCalNext');
+    if (!grid || !title) return;
+
+    const today = new Date();
+    let year  = today.getFullYear();
+    let month = today.getMonth(); // 0-indexed
+
+    async function renderMonth() {
+        title.textContent = `${MONTH_NAMES[month]} ${year}`;
+        grid.innerHTML = '';
+
+        // Fetch events for this month
+        const start = new Date(year, month, 1);
+        const end   = new Date(year, month + 1, 0, 23, 59, 59);
+        let eventsByDay = {};
+        try {
+            const params = new URLSearchParams({
+                start: start.toISOString(),
+                end:   end.toISOString(),
+            });
+            const res = await apiFetch(`${API_BASE}/consultations/calendar?${params}`);
+            if (res.ok) {
+                const events = await res.json();
+                for (const ev of events) {
+                    const d = new Date(ev.start);
+                    const key = d.getDate();
+                    if (!eventsByDay[key]) eventsByDay[key] = [];
+                    eventsByDay[key].push(ev.extendedProps?.status || 'planned');
+                }
+            }
+        } catch (_) { /* silently skip */ }
+
+        // First weekday of month: Mon=0 … Sun=6
+        const firstDow = (new Date(year, month, 1).getDay() + 6) % 7;
+        // Days in month
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        // Days in prev month (for leading filler)
+        const daysInPrev  = new Date(year, month, 0).getDate();
+
+        const totalCells = Math.ceil((firstDow + daysInMonth) / 7) * 7;
+        const todayKey = (today.getFullYear() === year && today.getMonth() === month)
+            ? today.getDate() : -1;
+
+        for (let i = 0; i < totalCells; i++) {
+            const cell = document.createElement('a');
+            cell.className = 'mini-cal-day';
+
+            let dayNum, isCurrentMonth;
+            if (i < firstDow) {
+                dayNum = daysInPrev - firstDow + i + 1;
+                isCurrentMonth = false;
+            } else if (i >= firstDow + daysInMonth) {
+                dayNum = i - firstDow - daysInMonth + 1;
+                isCurrentMonth = false;
+            } else {
+                dayNum = i - firstDow + 1;
+                isCurrentMonth = true;
+            }
+
+            if (!isCurrentMonth) cell.classList.add('mini-cal-day--other-month');
+            if (isCurrentMonth && dayNum === todayKey) cell.classList.add('mini-cal-day--today');
+
+            const numEl = document.createElement('span');
+            numEl.className = 'mini-cal-day-num';
+            numEl.textContent = dayNum;
+            cell.appendChild(numEl);
+
+            if (isCurrentMonth && eventsByDay[dayNum]) {
+                cell.classList.add('mini-cal-day--has-events');
+                const dots = document.createElement('div');
+                dots.className = 'mini-cal-dots';
+                // Show up to 3 dots, deduplicated by status
+                const statuses = [...new Set(eventsByDay[dayNum])].slice(0, 3);
+                for (const s of statuses) {
+                    const dot = document.createElement('span');
+                    dot.className = 'mini-cal-dot';
+                    dot.style.background = STATUS_COLORS_MINI[s] || STATUS_COLORS_MINI.planned;
+                    dots.appendChild(dot);
+                }
+                cell.appendChild(dots);
+
+                // Navigate to full calendar day view on click
+                const iso = `${year}-${String(month + 1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+                cell.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.location.href = `/calendar?date=${iso}&view=timeGridDay`;
+                });
+            } else {
+                cell.removeAttribute('href');
+            }
+
+            grid.appendChild(cell);
+        }
+    }
+
+    btnPrev?.addEventListener('click', () => {
+        month--;
+        if (month < 0) { month = 11; year--; }
+        renderMonth();
+    });
+
+    btnNext?.addEventListener('click', () => {
+        month++;
+        if (month > 11) { month = 0; year++; }
+        renderMonth();
+    });
+
+    renderMonth();
 }

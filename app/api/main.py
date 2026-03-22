@@ -217,6 +217,16 @@ async def forecast_page():
     raise HTTPException(status_code=404, detail="Forecast page not found")
 
 
+@app.get("/calendar")
+@app.get("/calendar.html")
+async def calendar_page():
+    """Страница календаря консультаций"""
+    calendar_path = os.path.join(FRONTEND_PATH, "calendar.html")
+    if os.path.exists(calendar_path):
+        return FileResponse(calendar_path)
+    raise HTTPException(status_code=404, detail="Calendar page not found")
+
+
 @app.get("/health")
 async def health_check():
     """Проверка здоровья сервиса"""

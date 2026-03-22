@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.clients.title"></title>
-    <link rel="stylesheet" href="bundles/clients.bundle.css?v=20260322-215140">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260322-215140">
+    <link rel="stylesheet" href="bundles/clients.bundle.css?v=20260322-223913">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260322-223913">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '20260322-215140';</script>
+    <script>window.__APP_BUILD_ID__ = '20260322-223913';</script>
 </head>
 <body class="clients-page">
     <div class="page-loader" id="pageLoader">
@@ -42,6 +42,10 @@
                     <span class="header-account-label" data-i18n="page.clients.profile.label"></span>
                     <span id="welcomeLabel" class="header-account-value"></span>
                 </div>
+                <a href="/calendar" class="btn-logout">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><rect x="1" y="2" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M1 6h12M4.5 1v2M9.5 1v2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                    Calendar
+                </a>
                 <button id="logoutBtn" class="btn-logout" type="button" data-i18n="page.clients.actions.logout"></button>
             </div>
         </header>
@@ -86,9 +90,10 @@
                 <div class="clients-card-top">
                     <div class="clients-card-heading">
                         <p class="section-kicker" data-i18n="page.clients.workspace.kicker"></p>
-                        <h2 class="section-title" data-i18n="page.clients.workspace.title"></h2>
-                        <p class="section-subtitle" data-i18n="page.clients.workspace.subtitle"></p>
-                        <p id="clientCount" class="clients-meta" aria-live="polite"></p>
+                        <div class="section-title-row">
+                            <h2 class="section-title" data-i18n="page.clients.workspace.title"></h2>
+                            <p id="clientCount" class="clients-meta" aria-live="polite"></p>
+                        </div>
                     </div>
 
                     <div class="clients-card-actions">
@@ -172,6 +177,21 @@
                 </div>
             </section>
             <aside class="workspace-sidebar">
+                <div id="miniCal" class="mini-cal">
+                    <div class="mini-cal-header">
+                        <button class="mini-cal-nav" id="miniCalPrev" aria-label="Previous month">‹</button>
+                        <a id="miniCalTitle" class="mini-cal-title" href="/calendar"></a>
+                        <button class="mini-cal-nav" id="miniCalNext" aria-label="Next month">›</button>
+                    </div>
+                    <div class="mini-cal-dow-row">
+                        <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+                    </div>
+                    <div id="miniCalGrid" class="mini-cal-grid"></div>
+                    <a href="/calendar" class="mini-cal-link">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="0.5" y="1.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M0.5 5h11M3.5 0.5v2M8.5 0.5v2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                        Open full calendar
+                    </a>
+                </div>
                 <section id="alertsPanel" class="alerts-panel hidden">
                     <div id="alertsSolar" class="alerts-section hidden">
                         <h3 class="alerts-section-title">
@@ -388,7 +408,7 @@
 
     <div id="toast" class="toast"></div>
 
-    <script type="module" src="js/bundles/clients.bundle.js?v=20260322-215140"></script>
-    <script src="js/locale-switcher.js?v=20260322-215140"></script>
+    <script type="module" src="js/bundles/clients.bundle.js?v=20260322-223913"></script>
+    <script src="js/locale-switcher.js?v=20260322-223913"></script>
 </body>
 </html>

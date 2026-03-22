@@ -300,23 +300,36 @@ select:focus-visible,
 
 .clients-card-top {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(260px, 440px);
-    align-items: flex-start;
-    gap: 22px;
-    margin-bottom: 20px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+        "heading actions"
+        "stats stats";
+    align-items: start;
+    gap: 18px 22px;
+    margin-bottom: 18px;
 }
 
 .clients-card-heading {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    max-width: 52ch;
+    grid-area: heading;
+    gap: 10px;
+    min-width: 0;
+    max-width: 56ch;
+}
+
+.section-title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
 }
 
 .clients-card-actions {
+    grid-area: actions;
     display: flex;
     justify-content: flex-end;
-    align-items: flex-start;
+    align-items: center;
 }
 
 .section-title {
@@ -330,17 +343,31 @@ select:focus-visible,
     line-height: 1.55;
 }
 
+.clients-meta {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    min-height: 34px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(249, 247, 242, 0.96);
+    border: 1px solid rgba(30, 58, 95, 0.08);
+    white-space: nowrap;
+}
+
 .stats-grid {
+    grid-area: stats;
     display: grid;
-    grid-template-columns: repeat(2, minmax(140px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
-    min-width: 300px;
+    min-width: 0;
 }
 
 .stat-card {
     display: grid;
-    gap: 10px;
-    padding: 18px 16px;
+    gap: 8px;
+    min-width: 0;
+    padding: 16px 16px 14px;
     border-radius: 22px;
     background: linear-gradient(180deg, rgba(249, 247, 242, 0.96), rgba(255, 255, 255, 0.82));
     border: 1px solid rgba(30, 58, 95, 0.08);
@@ -726,12 +753,16 @@ select:focus {
     }
 
     .clients-card-top {
+        grid-template-areas:
+            "heading"
+            "actions"
+            "stats";
         gap: 18px;
     }
 
     .stats-grid {
         min-width: 0;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .clients-card-actions {
@@ -827,6 +858,10 @@ select:focus {
     .workspace-aside-title,
     .section-title {
         font-size: clamp(26px, 8vw, 34px);
+    }
+
+    .section-title-row {
+        align-items: flex-start;
     }
 
     .stats-grid {
@@ -1025,6 +1060,162 @@ select:focus {
     .alert-action {
         margin-left: 0;
     }
+}
+
+/* ─── Mini Calendar Widget ───────────────────────────────────────────── */
+
+.mini-cal {
+    padding: 14px 16px 12px;
+    background: linear-gradient(145deg, rgba(255,255,255,0.88), rgba(249,247,242,0.82));
+    border: 1px solid rgba(30, 58, 95, 0.09);
+    border-radius: 20px;
+    box-shadow: var(--shadow-sm);
+}
+
+.mini-cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.mini-cal-title {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    text-decoration: none;
+    letter-spacing: 0.01em;
+}
+
+.mini-cal-title:hover {
+    color: var(--accent);
+}
+
+.mini-cal-nav {
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(30, 58, 95, 0.1);
+    border-radius: 50%;
+    background: rgba(255,255,255,0.7);
+    color: var(--text-secondary);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+}
+
+.mini-cal-nav:hover {
+    background: var(--accent-light);
+    color: var(--accent);
+    border-color: rgba(30, 58, 95, 0.18);
+}
+
+.mini-cal-dow-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-bottom: 4px;
+}
+
+.mini-cal-dow-row span {
+    text-align: center;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 2px 0;
+}
+
+.mini-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px 0;
+}
+
+.mini-cal-day {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 3px 2px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: default;
+    min-height: 30px;
+    transition: background var(--transition);
+    text-decoration: none;
+}
+
+.mini-cal-day--other-month {
+    color: var(--text-muted);
+    opacity: 0.45;
+}
+
+.mini-cal-day--today .mini-cal-day-num {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mini-cal-day--has-events {
+    cursor: pointer;
+}
+
+.mini-cal-day--has-events:hover {
+    background: rgba(30, 58, 95, 0.05);
+}
+
+.mini-cal-day-num {
+    font-size: 12px;
+    line-height: 22px;
+    width: 22px;
+    text-align: center;
+}
+
+.mini-cal-dots {
+    display: flex;
+    gap: 2px;
+    margin-top: 2px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 24px;
+}
+
+.mini-cal-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.mini-cal-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(30, 58, 95, 0.07);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent);
+    text-decoration: none;
+    opacity: 0.8;
+    transition: opacity var(--transition);
+}
+
+.mini-cal-link:hover {
+    opacity: 1;
 }
 
 /* ─── CRM: Form divider ──────────────────────────────────────────────── */

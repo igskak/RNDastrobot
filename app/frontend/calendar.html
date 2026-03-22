@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="page.calendar.meta.title"></title>
+    <link rel="stylesheet" href="bundles/calendar.bundle.css?v=20260322-223913">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260322-223913">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <!-- FullCalendar (includes daygrid, timegrid, interaction) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css">
+    <script>window.__APP_BUILD_ID__ = '20260322-223913';</script>
+</head>
+<body class="calendar-page">
+    <div class="page-loader" id="pageLoader">
+        <div class="pl-spinner"></div>
+        <div class="pl-text" data-i18n="common.loading"></div>
+    </div>
+
+    <div class="calendar-shell">
+        <header class="clients-header">
+            <div class="clients-brand-block">
+                <a href="/" class="logo">
+                    <svg class="logo-mark" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="14" cy="14" r="12.5" stroke="#1E3A5F" stroke-width="1.25"/>
+                        <circle cx="14" cy="14" r="7.5" stroke="#B8935A" stroke-width="0.8" stroke-dasharray="2.5 3"/>
+                        <circle cx="14" cy="14" r="2.2" fill="#1E3A5F"/>
+                        <circle cx="14" cy="2.2" r="1.3" fill="#B8935A"/>
+                        <circle cx="24.1" cy="8" r="1.3" fill="#B8935A" opacity="0.65"/>
+                        <circle cx="24.1" cy="20" r="1.3" fill="#B8935A" opacity="0.45"/>
+                        <circle cx="14" cy="25.8" r="1.3" fill="#B8935A" opacity="0.8"/>
+                        <circle cx="3.9" cy="20" r="1.3" fill="#B8935A" opacity="0.55"/>
+                        <circle cx="3.9" cy="8" r="1.3" fill="#B8935A" opacity="0.7"/>
+                    </svg>
+                    <span data-i18n="common.brandName"></span>
+                </a>
+                <p class="clients-brand-subtitle" data-i18n="page.clients.hero.eyebrow"></p>
+            </div>
+
+            <div class="clients-header-actions">
+                <div class="header-account-pill">
+                    <span class="header-account-label" data-i18n="page.clients.profile.label"></span>
+                    <span id="welcomeLabel" class="header-account-value"></span>
+                </div>
+                <a href="/" class="btn-logout">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                        <path d="M5 2H2.5A1.5 1.5 0 0 0 1 3.5v7A1.5 1.5 0 0 0 2.5 12H5M9 10l3-3-3-3M12 7H5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span data-i18n="page.calendar.nav.clients"></span>
+                </a>
+                <button id="logoutBtn" class="btn-logout" type="button" data-i18n="page.clients.actions.logout"></button>
+            </div>
+        </header>
+
+        <main>
+            <div class="calendar-card">
+                <div class="calendar-card-heading">
+                    <p class="calendar-kicker" data-i18n="page.calendar.header.kicker"></p>
+                    <h2 class="calendar-title" data-i18n="page.calendar.header.title"></h2>
+                    <p class="calendar-subtitle" data-i18n="page.calendar.header.subtitle"></p>
+                </div>
+
+                <div id="calendar"></div>
+
+                <div class="calendar-legend">
+                    <span class="legend-item">
+                        <span class="legend-dot" style="background:#1E3A5F"></span>
+                        <span data-i18n="page.calendar.legend.planned"></span>
+                    </span>
+                    <span class="legend-item">
+                        <span class="legend-dot" style="background:#2B7A4B"></span>
+                        <span data-i18n="page.calendar.legend.completed"></span>
+                    </span>
+                    <span class="legend-item">
+                        <span class="legend-dot" style="background:#B83232"></span>
+                        <span data-i18n="page.calendar.legend.noShow"></span>
+                    </span>
+                    <span class="legend-item">
+                        <span class="legend-dot" style="background:#9B9289"></span>
+                        <span data-i18n="page.calendar.legend.cancelled"></span>
+                    </span>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p data-i18n="common.footer"></p>
+        </footer>
+    </div>
+
+    <!-- Log Session Dialog -->
+    <div id="logSessionBackdrop" class="clients-dialog-backdrop hidden"></div>
+    <section id="logSessionDialog" class="clients-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="logSessionTitle">
+        <form id="logSessionForm" class="clients-dialog-card">
+            <div class="clients-dialog-header">
+                <div>
+                    <p class="clients-dialog-kicker" data-i18n="page.clients.consultation.kicker"></p>
+                    <h3 id="logSessionTitle" class="clients-dialog-title" data-i18n="page.clients.consultation.title"></h3>
+                    <p class="clients-dialog-copy" data-i18n="page.clients.consultation.subtitle"></p>
+                </div>
+                <button id="logSessionClose" class="clients-dialog-close" type="button" data-i18n-aria-label="common.close">
+                    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                        <path d="M4 4l8 8M12 4 4 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="clients-dialog-grid">
+                <div class="form-group full-width">
+                    <label class="form-label" for="logSessionClient" data-i18n="page.calendar.dialog.client"></label>
+                    <select id="logSessionClient" required>
+                        <option value="" data-i18n="page.calendar.dialog.loadingClients"></option>
+                    </select>
+                </div>
+
+                <div class="form-group full-width">
+                    <label class="form-label" for="logSessionType" data-i18n="page.clients.consultation.type"></label>
+                    <select id="logSessionType" required>
+                        <option value="natal"        data-i18n="page.clients.consultation.types.natal"></option>
+                        <option value="transit"      data-i18n="page.clients.consultation.types.transit"></option>
+                        <option value="solar_return" data-i18n="page.clients.consultation.types.solar_return"></option>
+                        <option value="progression"  data-i18n="page.clients.consultation.types.progression"></option>
+                        <option value="direction"    data-i18n="page.clients.consultation.types.direction"></option>
+                        <option value="synastry"     data-i18n="page.clients.consultation.types.synastry"></option>
+                        <option value="horary"       data-i18n="page.clients.consultation.types.horary"></option>
+                        <option value="other"        data-i18n="page.clients.consultation.types.other"></option>
+                    </select>
+                </div>
+
+                <div class="form-group full-width">
+                    <label class="form-label" for="logSessionDate" data-i18n="page.clients.consultation.scheduledAt"></label>
+                    <input id="logSessionDate" type="datetime-local">
+                </div>
+
+                <div class="form-group form-group-row full-width">
+                    <div class="form-group">
+                        <label class="form-label" for="logSessionStatus" data-i18n="page.clients.consultation.status"></label>
+                        <select id="logSessionStatus" required>
+                            <option value="planned"   data-i18n="page.clients.consultation.statuses.planned"></option>
+                            <option value="completed" data-i18n="page.clients.consultation.statuses.completed"></option>
+                            <option value="cancelled" data-i18n="page.clients.consultation.statuses.cancelled"></option>
+                            <option value="no_show"   data-i18n="page.clients.consultation.statuses.no_show"></option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="logSessionDuration" data-i18n="page.clients.consultation.duration"></label>
+                        <input id="logSessionDuration" type="number" min="0" max="600" data-i18n-placeholder="page.clients.consultation.durationPlaceholder">
+                    </div>
+                </div>
+
+                <div class="form-group form-group-checkbox full-width">
+                    <label class="checkbox-label">
+                        <input id="logSessionPaid" type="checkbox">
+                        <span data-i18n="page.clients.consultation.isPaid"></span>
+                    </label>
+                </div>
+
+                <div class="form-group full-width">
+                    <label class="form-label" for="logSessionNotes" data-i18n="page.clients.consultation.notes"></label>
+                    <textarea id="logSessionNotes" rows="3" data-i18n-placeholder="page.clients.consultation.notesPlaceholder"></textarea>
+                </div>
+            </div>
+
+            <div id="logSessionError" class="error-message hidden"></div>
+
+            <div class="clients-dialog-actions">
+                <button id="logSessionCancel" class="btn-logout clients-dialog-cancel" type="button" data-i18n="common.cancel"></button>
+                <button id="logSessionSubmit" class="btn-new clients-dialog-submit" type="submit">
+                    <span class="btn-text" data-i18n="page.clients.consultation.submit"></span>
+                    <span class="btn-loader hidden" data-i18n="page.clients.consultation.submitting"></span>
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <div id="toast" class="toast"></div>
+
+    <!-- FullCalendar from CDN (includes daygrid, timegrid, interaction plugins) -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    <script type="module" src="js/bundles/calendar.bundle.js?v=20260322-223913"></script>
+    <script src="js/locale-switcher.js?v=20260322-223913"></script>
+</body>
+</html>

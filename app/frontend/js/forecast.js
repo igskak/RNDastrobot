@@ -1196,14 +1196,76 @@ document.addEventListener('DOMContentLoaded', async () => {
     initDefaults();
     initTabs();
     initControls();
-    const restoredState = restoreForecastStateSnapshot();
-    bindForecastStatePersistence();
-    if (restoredState) {
-        await hydrateForecastStateSnapshot(restoredState);
+    // Deep-link: if URL has tab/date params, skip state restoration to avoid
+    // the restored state overriding the requested date.
+    const hasDeepLink = new URLSearchParams(window.location.search).has('tab');
+
+    if (!hasDeepLink) {
+        const restoredState = restoreForecastStateSnapshot();
+        bindForecastStatePersistence();
+        if (restoredState) {
+            await hydrateForecastStateSnapshot(restoredState);
+        } else {
+            scheduleForecastStatePersist();
+        }
     } else {
-        scheduleForecastStatePersist();
+        bindForecastStatePersistence();
+        await handleForecastDeepLink();
     }
 });
+
+async function handleForecastDeepLink() {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    const transitDate = params.get('date');
+    const solarYear = params.get('solarYear');
+
+    if (!tab) return;
+
+    // Clean up URL without reloading
+    window.history.replaceState({}, '', window.location.pathname);
+
+    if (tab === 'biwheel' && transitDate) {
+        activateForecastTab('biwheel', { render: false });
+        const singleDateEl = document.getElementById('singleDate');
+        if (singleDateEl) singleDateEl.value = transitDate;
+        try {
+            await calculateTransitBiwheelAt(transitDate, { showLoading: true });
+        } catch (err) {
+            console.error('Deep-link transit load failed:', err);
+        }
+        return;
+    }
+
+    if (tab === 'solar' && solarYear) {
+        activateForecastTab('solar', { render: false });
+        const solarYearEl = document.getElementById('solarYear');
+        if (solarYearEl) solarYearEl.value = solarYear;
+
+        // Pre-fill birth location as default solar location if not already set
+        const latEl = document.getElementById('solarLocationLat');
+        const lonEl = document.getElementById('solarLocationLon');
+        const nameEl = document.getElementById('solarLocationName');
+        const tzEl = document.getElementById('solarLocationTimezone');
+        if (latEl && !latEl.value && ForecastState.natalData?.birth_data) {
+            const bd = ForecastState.natalData.birth_data;
+            latEl.value = bd.latitude ?? '';
+            if (lonEl) lonEl.value = bd.longitude ?? '';
+            if (nameEl) nameEl.value = bd.place ?? '';
+            if (tzEl) tzEl.value = bd.timezone ?? '';
+        }
+
+        try {
+            await calculateSolar();
+        } catch (err) {
+            console.error('Deep-link solar load failed:', err);
+        }
+        return;
+    }
+
+    // Fallback: just switch tab
+    activateForecastTab(tab);
+}
 
 function getForecastTimezone() {
     return ForecastState.timezone || 'UTC';

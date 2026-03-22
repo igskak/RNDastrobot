@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from uuid import UUID
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from app.database.connection import get_db
 from app.database.models import User, Consultation
@@ -81,6 +81,64 @@ def list_consultations(
         ]
     except Exception as e:
         logger.exception(f"Error listing consultations: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get(
+    "/calendar",
+    summary="Консультации для календарного вида",
+    description="Возвращает консультации в формате FullCalendar для указанного диапазона дат",
+)
+def calendar_consultations(
+    request: Request,
+    start: Optional[datetime] = Query(None, description="Начало диапазона (ISO 8601)"),
+    end: Optional[datetime] = Query(None, description="Конец диапазона (ISO 8601)"),
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+):
+    _TYPE_LABELS = {
+        "natal": "Natal", "transit": "Transit", "solar_return": "Solar Return",
+        "progression": "Progression", "direction": "Direction",
+        "synastry": "Synastry", "horary": "Horary", "other": "Other",
+    }
+    try:
+        q = (
+            db.query(Consultation, User)
+            .join(User, Consultation.user_id == User.user_id)
+            .filter(Consultation.astrologer_id == auth.astrologer.id)
+            .filter(Consultation.scheduled_at.isnot(None))
+        )
+        if start:
+            q = q.filter(Consultation.scheduled_at >= start)
+        if end:
+            q = q.filter(Consultation.scheduled_at <= end)
+
+        events = []
+        for c, u in q.all():
+            client_name = f"{u.first_name or ''} {u.last_name or ''}".strip() or "Client"
+            type_label = _TYPE_LABELS.get(c.consultation_type, c.consultation_type)
+            duration = c.duration_minutes or 60
+            end_dt = c.scheduled_at + timedelta(minutes=duration)
+
+            events.append({
+                "id": str(c.id),
+                "title": f"{client_name} — {type_label}",
+                "start": c.scheduled_at.isoformat(),
+                "end": end_dt.isoformat(),
+                "extendedProps": {
+                    "userId": str(c.user_id),
+                    "clientName": client_name,
+                    "consultationType": c.consultation_type,
+                    "status": c.status,
+                    "isPaid": c.is_paid,
+                    "durationMinutes": c.duration_minutes,
+                    "notes": c.notes,
+                },
+            })
+
+        return events
+    except Exception as e:
+        logger.exception(f"Error fetching calendar consultations: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

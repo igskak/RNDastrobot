@@ -1,0 +1,494 @@
+@import '../css/styles.css';
+
+/* ── Page shell ─────────────────────────────────────────── */
+.calendar-page {
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 10% 10%, rgba(184, 147, 90, 0.14), transparent 20%),
+        radial-gradient(circle at 90% 14%, rgba(30, 58, 95, 0.1), transparent 22%),
+        linear-gradient(180deg, #fbf8f2 0%, #f6f1e7 100%);
+}
+
+.calendar-shell {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 24px 20px 48px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+.clients-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.clients-brand-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.logo {
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    color: var(--text-primary);
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+}
+
+.logo-mark {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
+.clients-brand-subtitle,
+.header-account-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.clients-brand-subtitle {
+    margin: 0;
+    color: rgba(92, 85, 78, 0.85);
+}
+
+.clients-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-account-pill {
+    display: grid;
+    gap: 4px;
+    min-width: 220px;
+    padding: 12px 16px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.76);
+    border: 1px solid rgba(30, 58, 95, 0.08);
+    box-shadow: 0 10px 30px rgba(26, 22, 20, 0.05);
+}
+
+.header-account-label {
+    color: rgba(92, 85, 78, 0.78);
+}
+
+.header-account-value {
+    color: var(--text-primary);
+    font-weight: 600;
+    word-break: break-word;
+}
+
+.btn-logout,
+.btn-new {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 46px;
+    padding: 11px 18px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: var(--font-ui);
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform var(--transition), box-shadow var(--transition),
+        background var(--transition), border-color var(--transition), color var(--transition);
+}
+
+.btn-new {
+    border: 0;
+    background: linear-gradient(135deg, #1e3a5f, #2e5a8d);
+    color: #fff;
+    box-shadow: 0 14px 28px rgba(30, 58, 95, 0.2);
+}
+
+.btn-new:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 18px 32px rgba(30, 58, 95, 0.24);
+}
+
+.btn-logout {
+    border: 1px solid rgba(30, 58, 95, 0.12);
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--text-secondary);
+}
+
+.btn-logout:hover {
+    background: rgba(240, 237, 228, 0.92);
+    border-color: rgba(30, 58, 95, 0.16);
+}
+
+.btn-new:focus-visible,
+.btn-logout:focus-visible {
+    outline: 3px solid rgba(30, 58, 95, 0.14);
+    outline-offset: 2px;
+}
+
+/* ── Calendar card ──────────────────────────────────────── */
+.calendar-card {
+    padding: 28px;
+    border-radius: 24px;
+    background:
+        radial-gradient(circle at top right, rgba(245, 237, 223, 0.7), transparent 38%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(249, 247, 242, 0.96));
+    border: 1px solid rgba(30, 58, 95, 0.08);
+    box-shadow: 0 12px 40px rgba(26, 22, 20, 0.07);
+}
+
+.calendar-card-heading {
+    margin-bottom: 22px;
+}
+
+.calendar-kicker {
+    margin: 0 0 6px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(30, 58, 95, 0.74);
+}
+
+.calendar-title {
+    margin: 0 0 4px;
+    font-family: var(--font-display);
+    font-size: clamp(26px, 2vw, 34px);
+    font-weight: 500;
+    line-height: 1;
+}
+
+.calendar-subtitle {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+/* ── FullCalendar theme overrides ───────────────────────── */
+.fc {
+    font-family: var(--font-ui);
+    --fc-border-color: var(--border);
+    --fc-today-bg-color: rgba(30, 58, 95, 0.045);
+    --fc-page-bg-color: transparent;
+    --fc-neutral-bg-color: rgba(249, 247, 242, 0.6);
+    --fc-list-event-hover-bg-color: rgba(240, 237, 228, 0.7);
+    --fc-event-border-color: transparent;
+}
+
+.fc .fc-button {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(30, 58, 95, 0.12);
+    color: var(--text-secondary);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 999px;
+    box-shadow: none;
+    transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.fc .fc-button:hover {
+    background: rgba(240, 237, 228, 0.92);
+    border-color: rgba(30, 58, 95, 0.2);
+    color: var(--text-primary);
+}
+
+.fc .fc-button:focus {
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.14);
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+    background: linear-gradient(135deg, #1e3a5f, #2e5a8d);
+    border-color: #1e3a5f;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(30, 58, 95, 0.22);
+}
+
+.fc .fc-button-group .fc-button {
+    border-radius: 0;
+}
+
+.fc .fc-button-group .fc-button:first-child {
+    border-radius: 999px 0 0 999px;
+}
+
+.fc .fc-button-group .fc-button:last-child {
+    border-radius: 0 999px 999px 0;
+}
+
+.fc .fc-toolbar-title {
+    font-family: var(--font-display);
+    font-size: clamp(20px, 2vw, 26px);
+    font-weight: 400;
+    color: var(--text-primary);
+}
+
+.fc .fc-col-header-cell-cushion {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-decoration: none;
+}
+
+.fc .fc-daygrid-day-number {
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-decoration: none;
+}
+
+.fc .fc-day-today .fc-daygrid-day-number {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fc .fc-event {
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    padding: 2px 5px;
+}
+
+.fc .fc-event:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.fc .fc-timegrid-event .fc-event-main {
+    padding: 3px 6px;
+}
+
+.fc .fc-timegrid-slot-label {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.fc .fc-daygrid-dot-event:hover,
+.fc .fc-daygrid-dot-event.fc-event-mirror {
+    background: rgba(240, 237, 228, 0.8);
+}
+
+/* ── Legend ─────────────────────────────────────────────── */
+.calendar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* ── Log Session Dialog ─────────────────────────────────── */
+.clients-dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 24, 39, 0.36);
+    backdrop-filter: blur(6px);
+    z-index: 140;
+}
+
+.clients-dialog {
+    position: fixed;
+    inset: 0;
+    z-index: 150;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.clients-dialog.hidden,
+.clients-dialog-backdrop.hidden {
+    display: none;
+}
+
+.clients-dialog-card {
+    width: min(680px, 100%);
+    max-height: min(88vh, 820px);
+    overflow: auto;
+    padding: 26px 26px 22px;
+    border: 1px solid rgba(184, 147, 90, 0.24);
+    border-radius: 28px;
+    background:
+        radial-gradient(circle at top right, rgba(245, 237, 223, 0.9), transparent 32%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(249, 247, 242, 0.98));
+    box-shadow: 0 30px 60px rgba(26, 22, 20, 0.18);
+}
+
+.clients-dialog-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.clients-dialog-kicker {
+    margin: 0 0 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold);
+}
+
+.clients-dialog-title {
+    margin: 0 0 10px;
+    font-family: var(--font-display);
+    font-size: 33px;
+    font-weight: 500;
+    line-height: 0.95;
+}
+
+.clients-dialog-copy {
+    max-width: 48ch;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text-secondary);
+}
+
+.clients-dialog-close {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.78);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.clients-dialog-close:hover {
+    background: var(--gold-pale);
+    color: var(--accent);
+    border-color: rgba(184, 147, 90, 0.35);
+}
+
+.clients-dialog-close svg {
+    width: 14px;
+    height: 14px;
+}
+
+.clients-dialog-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 16px;
+}
+
+.clients-dialog-grid .form-group:first-child,
+.clients-dialog-grid .form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.clients-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.clients-dialog-cancel {
+    min-width: 140px;
+}
+
+.clients-dialog-submit {
+    min-width: 190px;
+}
+
+.form-group-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+/* ── Footer ─────────────────────────────────────────────── */
+.footer {
+    margin-top: 32px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* ── Responsive ─────────────────────────────────────────── */
+@media (max-width: 900px) {
+    .calendar-shell {
+        padding: 18px 14px 30px;
+    }
+
+    .clients-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .clients-header-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .calendar-card {
+        padding: 18px 14px;
+    }
+
+    .clients-dialog-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-group-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .fc .fc-toolbar {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .header-account-pill {
+        min-width: 0;
+    }
+}

@@ -425,6 +425,44 @@
         "sendFailed": "Failed to send message"
       }
     },
+    "calendar": {
+      "clientUnnamed": "Unnamed",
+      "dialog": {
+        "client": "Client",
+        "loadingClients": "Loading clients...",
+        "selectClient": "Select client"
+      },
+      "errors": {
+        "loadEvents": "Failed to load events",
+        "selectClient": "Please select a client."
+      },
+      "header": {
+        "kicker": "Schedule",
+        "subtitle": "View and manage your consultation schedule. Click a date to add a new session.",
+        "title": "Consultation Calendar"
+      },
+      "legend": {
+        "cancelled": "Cancelled",
+        "completed": "Completed",
+        "noShow": "No-show",
+        "planned": "Planned"
+      },
+      "messages": {
+        "consultationSaved": "Consultation saved"
+      },
+      "meta": {
+        "title": "Calendar - Steliara"
+      },
+      "nav": {
+        "clients": "Clients"
+      },
+      "view": {
+        "day": "Day",
+        "month": "Month",
+        "today": "Today",
+        "week": "Week"
+      }
+    },
   "clients": {
     "hero": {
       "eyebrow": "Astrologer workspace",
