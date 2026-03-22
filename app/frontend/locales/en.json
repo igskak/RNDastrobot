@@ -490,8 +490,13 @@
     },
     "workspace": {
       "kicker": "Client portfolio",
-      "title": "Clients and saved charts",
+      "title": "Clients",
       "subtitle": "Search, sort, and reopen past work with the level of order clients expect from a premium astrology practice."
+    },
+    "calendar": {
+      "nextMonth": "Next month",
+      "openFull": "Open full calendar",
+      "previousMonth": "Previous month"
     },
     "stats": {
       "total": "Total clients",

@@ -313,16 +313,9 @@ select:focus-visible,
     display: flex;
     flex-direction: column;
     grid-area: heading;
-    gap: 10px;
+    gap: 6px;
     min-width: 0;
     max-width: 56ch;
-}
-
-.section-title-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px 14px;
 }
 
 .clients-card-actions {
@@ -336,23 +329,10 @@ select:focus-visible,
     font-size: clamp(30px, 3vw, 42px);
 }
 
-.clients-meta,
 .results-meta {
     color: rgba(92, 85, 78, 0.92);
     font-size: 13px;
     line-height: 1.55;
-}
-
-.clients-meta {
-    margin: 0;
-    display: inline-flex;
-    align-items: center;
-    min-height: 34px;
-    padding: 6px 12px;
-    border-radius: 999px;
-    background: rgba(249, 247, 242, 0.96);
-    border: 1px solid rgba(30, 58, 95, 0.08);
-    white-space: nowrap;
 }
 
 .stats-grid {
@@ -858,10 +838,6 @@ select:focus {
     .workspace-aside-title,
     .section-title {
         font-size: clamp(26px, 8vw, 34px);
-    }
-
-    .section-title-row {
-        align-items: flex-start;
     }
 
     .stats-grid {

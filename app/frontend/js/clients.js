@@ -453,7 +453,9 @@ function updateCounters() {
     const total = state.users.length;
     const shown = state.filteredUsers.length;
 
-    refs.countEl.textContent = t('page.clients.counters.total', { total });
+    if (refs.countEl) {
+        refs.countEl.textContent = t('page.clients.counters.total', { total });
+    }
 
     if (refs.statTotal) {
         refs.statTotal.textContent = String(total);
@@ -895,7 +897,9 @@ async function handleDelete(userId, button) {
             refs.tableWrap.classList.add('hidden');
             refs.noResultsState.classList.add('hidden');
             refs.emptyState.classList.remove('hidden');
-            refs.countEl.textContent = '';
+            if (refs.countEl) {
+                refs.countEl.textContent = '';
+            }
             refs.resultsMeta.textContent = '';
         } else {
             renderUsers();
@@ -1234,7 +1238,9 @@ function buildSolarAlertRow(alert) {
 function buildTransitAlertRow(alert) {
     const glyph = ASPECT_GLYPHS[alert.aspect] || '';
     const dateStr = alert.exact_date ? formatDate(alert.exact_date) : '';
-    const desc = `${alert.transit_body} ${glyph} ${alert.natal_body}`;
+    const transitBody = localizeAstroBody(alert.transit_body);
+    const natalBody = localizeAstroBody(alert.natal_body);
+    const desc = `${transitBody} ${glyph} ${natalBody}`;
 
     return `
         <div class="alert-row">
@@ -1274,13 +1280,48 @@ const STATUS_COLORS_MINI = {
     no_show:   '#B83232',
 };
 
-const MONTH_NAMES = [
-    'January','February','March','April','May','June',
-    'July','August','September','October','November','December',
-];
+function getIntlLocale() {
+    return window.LocaleFormatters?.toIntlLocale?.(window.FrontendI18n?.getLocale?.() || 'en') || 'en-US';
+}
+
+function formatMiniCalendarMonthTitle(year, month) {
+    const locale = getIntlLocale();
+    const date = new Date(year, month, 1);
+    const monthLabel = new Intl.DateTimeFormat(locale, { month: 'long' }).format(date);
+    return `${monthLabel.charAt(0).toUpperCase()}${monthLabel.slice(1)} ${year}`;
+}
+
+function getMiniCalendarWeekdayLabels() {
+    const locale = getIntlLocale();
+    const monday = new Date(Date.UTC(2026, 0, 5)); // Monday
+    return Array.from({ length: 7 }, (_, index) => {
+        const day = new Date(monday);
+        day.setUTCDate(monday.getUTCDate() + index);
+        return new Intl.DateTimeFormat(locale, { weekday: 'short' })
+            .format(day)
+            .replace(/\.$/, '');
+    });
+}
+
+function renderMiniCalendarWeekdays(container) {
+    if (!container) return;
+    container.innerHTML = '';
+    getMiniCalendarWeekdayLabels().forEach((label) => {
+        const item = document.createElement('span');
+        item.textContent = label;
+        container.appendChild(item);
+    });
+}
+
+function localizeAstroBody(name) {
+    if (!name) return '';
+    const translated = t(`astro.planet.${name}`);
+    return translated && translated !== `astro.planet.${name}` ? translated : name;
+}
 
 function initMiniCal() {
     const grid    = document.getElementById('miniCalGrid');
+    const dowRow  = document.getElementById('miniCalDowRow');
     const title   = document.getElementById('miniCalTitle');
     const btnPrev = document.getElementById('miniCalPrev');
     const btnNext = document.getElementById('miniCalNext');
@@ -1291,7 +1332,8 @@ function initMiniCal() {
     let month = today.getMonth(); // 0-indexed
 
     async function renderMonth() {
-        title.textContent = `${MONTH_NAMES[month]} ${year}`;
+        title.textContent = formatMiniCalendarMonthTitle(year, month);
+        renderMiniCalendarWeekdays(dowRow);
         grid.innerHTML = '';
 
         // Fetch events for this month
@@ -1388,6 +1430,11 @@ function initMiniCal() {
         month++;
         if (month > 11) { month = 0; year++; }
         renderMonth();
+    });
+
+    document.addEventListener('frontend:locale-changed', () => {
+        renderMonth();
+        loadAlerts();
     });
 
     renderMonth();
