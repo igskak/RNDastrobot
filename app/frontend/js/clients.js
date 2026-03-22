@@ -84,6 +84,12 @@ function cacheElements() {
     refs.statTotal = document.getElementById('statTotal');
     refs.statUpcoming = document.getElementById('statUpcoming');
     refs.statUnpaid = document.getElementById('statUnpaid');
+    // Alerts panel
+    refs.alertsPanel = document.getElementById('alertsPanel');
+    refs.alertsSolar = document.getElementById('alertsSolar');
+    refs.alertsSolarList = document.getElementById('alertsSolarList');
+    refs.alertsTransits = document.getElementById('alertsTransits');
+    refs.alertsTransitsList = document.getElementById('alertsTransitsList');
     // CRM contact fields in edit modal
     refs.editEmail = document.getElementById('editEmail');
     refs.editPhone = document.getElementById('editPhone');
@@ -204,6 +210,15 @@ function bindEvents() {
         });
     }
 
+    if (refs.alertsPanel) {
+        refs.alertsPanel.addEventListener('click', async (event) => {
+            const btn = event.target.closest('button[data-action="open-chart"]');
+            if (btn?.dataset.userId) {
+                await openChart(btn.dataset.userId);
+            }
+        });
+    }
+
     initEditClientDialog();
     initLogSessionDialog();
 }
@@ -216,6 +231,7 @@ async function bootstrapPage() {
     applyHeroPlacement();
 
     await loadClients();
+    loadAlerts();
 }
 
 function renderProfileSummary() {
@@ -1112,6 +1128,80 @@ async function handleLogSessionSubmit(event) {
     } finally {
         setLogSessionSubmitting(false);
     }
+}
+
+/* ─── Smart Alerts ─────────────────────────────────────────────────── */
+
+const ASPECT_GLYPHS = {
+    Conjunction: '\u260C',
+    Opposition: '\u260D',
+    Square: '\u25A1',
+    Trine: '\u25B3',
+    Sextile: '\u2731',
+};
+
+async function loadAlerts() {
+    if (!refs.alertsPanel) return;
+    try {
+        const res = await apiFetch(`${API_BASE}/alerts/dashboard`);
+        if (!res.ok) return;
+        const data = await res.json();
+
+        const hasSolar = Array.isArray(data.solar_returns) && data.solar_returns.length > 0;
+        const hasTransits = Array.isArray(data.transits) && data.transits.length > 0;
+
+        if (!hasSolar && !hasTransits) {
+            refs.alertsPanel.classList.add('hidden');
+            return;
+        }
+
+        if (hasSolar && refs.alertsSolarList) {
+            refs.alertsSolarList.innerHTML = data.solar_returns.map(buildSolarAlertRow).join('');
+            refs.alertsSolar.classList.remove('hidden');
+        }
+
+        if (hasTransits && refs.alertsTransitsList) {
+            refs.alertsTransitsList.innerHTML = data.transits.map(buildTransitAlertRow).join('');
+            refs.alertsTransits.classList.remove('hidden');
+        }
+
+        refs.alertsPanel.classList.remove('hidden');
+    } catch (e) {
+        console.error('Failed to load alerts', e);
+    }
+}
+
+function buildSolarAlertRow(alert) {
+    const days = alert.days_until;
+    let timing;
+    if (days === 0) timing = t('page.clients.alerts.today');
+    else if (days === 1) timing = t('page.clients.alerts.tomorrow');
+    else if (days > 0) timing = t('page.clients.alerts.daysUntil', { days });
+    else timing = t('page.clients.alerts.passed', { days: Math.abs(days) });
+
+    const dateStr = alert.solar_date ? formatDate(alert.solar_date) : '';
+
+    return `
+        <div class="alert-row">
+            <span class="alert-name">${escapeHtml(alert.name)}</span>
+            <span class="alert-date">${escapeHtml(dateStr)}</span>
+            <span class="alert-timing ${days <= 3 && days >= 0 ? 'alert-timing-soon' : ''}">${escapeHtml(timing)}</span>
+            <button class="alert-action" type="button" data-action="open-chart" data-user-id="${escapeHtml(alert.user_id)}">${escapeHtml(t('page.clients.alerts.openChart'))}</button>
+        </div>`;
+}
+
+function buildTransitAlertRow(alert) {
+    const glyph = ASPECT_GLYPHS[alert.aspect] || '';
+    const dateStr = alert.exact_date ? formatDate(alert.exact_date) : '';
+    const desc = `${alert.transit_body} ${glyph} ${alert.natal_body}`;
+
+    return `
+        <div class="alert-row">
+            <span class="alert-name">${escapeHtml(alert.name)}</span>
+            <span class="alert-transit-desc ${alert.harmonic_type === 'tense' ? 'alert-tense' : ''}">${escapeHtml(desc)}</span>
+            <span class="alert-date">${escapeHtml(dateStr)}</span>
+            <button class="alert-action" type="button" data-action="open-chart" data-user-id="${escapeHtml(alert.user_id)}">${escapeHtml(t('page.clients.alerts.openChart'))}</button>
+        </div>`;
 }
 
 async function deleteConsultation(consultationId, userId) {

@@ -588,7 +588,17 @@
         }
       },
       "statsUpcoming": "Запланировано",
-      "statsUnpaid": "Не оплачено"
+      "statsUnpaid": "Не оплачено",
+      "alerts": {
+        "solarReturnsTitle": "Соляры в этом месяце",
+        "transitsTitle": "Основные транзиты (30 дней)",
+        "daysUntil": "через {days} дн.",
+        "today": "Сегодня",
+        "passed": "{days} дн. назад",
+        "tomorrow": "Завтра",
+        "openChart": "Открыть",
+        "noAlerts": "Нет событий в этом месяце"
+      }
     },
     "forecast": {
       "biwheel": {

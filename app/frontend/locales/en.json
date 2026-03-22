@@ -588,7 +588,17 @@
         }
       },
       "statsUpcoming": "Upcoming",
-      "statsUnpaid": "Unpaid"
+      "statsUnpaid": "Unpaid",
+      "alerts": {
+        "solarReturnsTitle": "Solar returns this month",
+        "transitsTitle": "Major transits (30 days)",
+        "daysUntil": "in {days} days",
+        "today": "Today",
+        "passed": "{days} days ago",
+        "tomorrow": "Tomorrow",
+        "openChart": "Open",
+        "noAlerts": "No notable events this month"
+      }
     },
     "forecast": {
       "biwheel": {

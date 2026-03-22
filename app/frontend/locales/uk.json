@@ -588,7 +588,17 @@
         }
       },
       "statsUpcoming": "Заплановано",
-      "statsUnpaid": "Не сплачено"
+      "statsUnpaid": "Не сплачено",
+      "alerts": {
+        "solarReturnsTitle": "Соляри цього місяця",
+        "transitsTitle": "Основні транзити (30 днів)",
+        "daysUntil": "через {days} дн.",
+        "today": "Сьогодні",
+        "passed": "{days} дн. тому",
+        "tomorrow": "Завтра",
+        "openChart": "Відкрити",
+        "noAlerts": "Немає подій цього місяця"
+      }
     },
     "forecast": {
       "biwheel": {

@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.clients.title"></title>
-    <link rel="stylesheet" href="bundles/clients.bundle.css?v=20260322-125507">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260322-125507">
+    <link rel="stylesheet" href="bundles/clients.bundle.css?v=20260322-133738">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260322-133738">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '20260322-125507';</script>
+    <script>window.__APP_BUILD_ID__ = '20260322-133738';</script>
 </head>
 <body class="clients-page">
     <div class="page-loader" id="pageLoader">
@@ -81,7 +81,7 @@
             </aside>
         </section>
 
-        <main class="workspace-main">
+        <main class="workspace-main workspace-grid">
             <section class="clients-card" data-i18n-aria-label="page.clients.listAriaLabel">
                 <div class="clients-card-top">
                     <div class="clients-card-heading">
@@ -171,6 +171,24 @@
                     </table>
                 </div>
             </section>
+            <aside class="workspace-sidebar">
+                <section id="alertsPanel" class="alerts-panel hidden">
+                    <div id="alertsSolar" class="alerts-section hidden">
+                        <h3 class="alerts-section-title">
+                            <span class="alerts-glyph">&#x2609;</span>
+                            <span data-i18n="page.clients.alerts.solarReturnsTitle"></span>
+                        </h3>
+                        <div id="alertsSolarList" class="alerts-list"></div>
+                    </div>
+                    <div id="alertsTransits" class="alerts-section hidden">
+                        <h3 class="alerts-section-title">
+                            <span class="alerts-glyph">&#x2644;</span>
+                            <span data-i18n="page.clients.alerts.transitsTitle"></span>
+                        </h3>
+                        <div id="alertsTransitsList" class="alerts-list"></div>
+                    </div>
+                </section>
+            </aside>
         </main>
 
         <footer class="footer">
@@ -366,7 +384,7 @@
 
     <div id="toast" class="toast"></div>
 
-    <script type="module" src="js/bundles/clients.bundle.js?v=20260322-125507"></script>
-    <script src="js/locale-switcher.js?v=20260322-125507"></script>
+    <script type="module" src="js/bundles/clients.bundle.js?v=20260322-133738"></script>
+    <script src="js/locale-switcher.js?v=20260322-133738"></script>
 </body>
 </html>

@@ -874,6 +874,159 @@ select:focus {
     margin-bottom: 0;
 }
 
+/* ─── Two-column grid: clients + sidebar ──────────────────────────────── */
+
+.workspace-grid {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 20px;
+    align-items: start;
+}
+
+.workspace-sidebar {
+    position: sticky;
+    top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+@media (max-width: 900px) {
+    .workspace-grid {
+        grid-template-columns: 1fr;
+    }
+    .workspace-sidebar {
+        position: static;
+    }
+}
+
+/* ─── Smart Alerts Panel ──────────────────────────────────────────────── */
+
+.alerts-panel {
+    padding: 16px 18px;
+    background: linear-gradient(135deg, rgba(184, 147, 90, 0.06), rgba(30, 58, 95, 0.04));
+    border: 1px solid rgba(184, 147, 90, 0.15);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.alerts-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(92, 85, 78, 0.65);
+    margin: 0 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.alerts-glyph {
+    font-size: 16px;
+    color: #B8935A;
+}
+
+.alerts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.alert-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    font-size: 13px;
+    transition: background 0.15s;
+}
+
+.alert-row:hover {
+    background: rgba(184, 147, 90, 0.08);
+}
+
+.alert-name {
+    font-weight: 500;
+    color: var(--text-primary);
+    width: 100%;
+}
+
+.alert-date {
+    font-size: 12px;
+    color: rgba(92, 85, 78, 0.6);
+}
+
+.alert-timing {
+    font-size: 12px;
+    color: rgba(92, 85, 78, 0.5);
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: rgba(30, 58, 95, 0.05);
+}
+
+.alert-timing-soon {
+    background: rgba(184, 147, 90, 0.15);
+    color: #8B6914;
+    font-weight: 600;
+}
+
+.alert-transit-desc {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1E3A5F;
+    padding: 2px 10px;
+    border-radius: 6px;
+    background: rgba(30, 58, 95, 0.06);
+}
+
+.alert-tense {
+    background: rgba(220, 80, 60, 0.08);
+    color: #9b2c2c;
+}
+
+.alert-action {
+    background: none;
+    border: 1px solid rgba(184, 147, 90, 0.25);
+    border-radius: 8px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #B8935A;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.alert-action:hover {
+    background: rgba(184, 147, 90, 0.1);
+    border-color: #B8935A;
+}
+
+@media (max-width: 600px) {
+    .alerts-panel {
+        padding: 14px 16px;
+        margin-bottom: 14px;
+    }
+
+    .alert-row {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .alert-name {
+        min-width: auto;
+        width: 100%;
+    }
+
+    .alert-action {
+        margin-left: 0;
+    }
+}
+
 /* ─── CRM: Form divider ──────────────────────────────────────────────── */
 
 .form-group-divider {
