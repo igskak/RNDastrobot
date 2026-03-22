@@ -62,7 +62,7 @@ services:
       - key: OPENAI_API_KEY
         sync: false
       - key: OPENAI_MODEL
-        value: gpt-4.1
+        value: gpt-5.4-mini
       - key: OPENAI_PROMPT_ID
         sync: false
       - key: OPENAI_PROMPT_VERSION

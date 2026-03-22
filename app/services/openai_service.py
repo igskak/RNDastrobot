@@ -27,7 +27,7 @@ class OpenAIService:
     def __init__(self):
         """Инициализация клиента OpenAI"""
         self.api_key = os.getenv('OPENAI_API_KEY')
-        self.model = os.getenv('OPENAI_MODEL', 'gpt-4.1')
+        self.model = os.getenv('OPENAI_MODEL', 'gpt-5.4-mini')
         self.prompt_id = os.getenv('OPENAI_PROMPT_ID')
         self.prompt_version = os.getenv('OPENAI_PROMPT_VERSION', '1.0')
         self.workflow_id = os.getenv('OPENAI_WORKFLOW_ID', 'wf_696ac18a25408190a38d8f44318c8c5a0b7269c5cba0bf81')
