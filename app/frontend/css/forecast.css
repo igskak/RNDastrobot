@@ -1191,7 +1191,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 12px;
+    padding: 8px;
 }
 .bw-settings-panel.hidden {
     display: none;
@@ -1201,142 +1201,112 @@
     width: min(520px, calc(100vw - 16px));
     max-height: calc(100vh - 16px);
     overflow-y: auto;
-    padding: 18px;
-    border: 1px solid rgba(212, 201, 181, 0.65);
-    border-radius: 24px;
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(250, 246, 239, 0.97));
-    box-shadow:
-        0 24px 56px rgba(20, 18, 16, 0.18),
-        0 6px 14px rgba(20, 18, 16, 0.08);
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: white;
+    box-shadow: var(--shadow-lg);
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    backdrop-filter: blur(18px);
+    gap: 6px;
 }
 .solar-settings-dialog {
-    width: min(420px, calc(100vw - 16px));
-    max-height: min(360px, calc(100vh - 16px));
+    width: min(360px, calc(100vw - 16px));
+    max-height: min(320px, calc(100vh - 16px));
 }
 .bw-settings-close {
     position: absolute;
-    top: 14px;
-    right: 14px;
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-    border: 1px solid rgba(212, 201, 181, 0.72);
-    background: rgba(255, 255, 255, 0.94);
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: white;
     color: var(--text-secondary);
     cursor: pointer;
-    box-shadow: 0 8px 20px rgba(26, 22, 20, 0.08);
 }
 .bw-settings-close:hover {
     color: var(--text-primary);
 }
 .bw-settings-select {
-    min-height: 44px;
-    border: 1px solid rgba(212, 201, 181, 0.72);
-    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid var(--border);
+    background: white;
     color: var(--text-primary);
-    border-radius: 12px;
-    padding: 10px 12px;
-    font-size: 0.88rem;
-    box-shadow: inset 0 1px 2px rgba(105, 84, 52, 0.04);
+    border-radius: 8px;
+    padding: 5px 7px;
+    font-size: 0.74rem;
 }
 .bw-settings-title {
-    font-size: 0.8rem;
+    font-size: 0.74rem;
     font-weight: 600;
     line-height: 1.2;
     color: var(--text-secondary);
-    margin-top: 2px;
 }
 .bw-settings-row {
     display: flex;
-    gap: 8px;
+    gap: 4px;
     flex-wrap: wrap;
 }
 .bw-settings-subtitle {
-    font-size: 0.74rem;
-    font-weight: 600;
+    font-size: 0.7rem;
     color: var(--text-secondary);
     margin-top: 0;
-    margin-bottom: 6px;
 }
 .bw-size-control {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px;
-    border: 1px solid rgba(212, 201, 181, 0.55);
-    border-radius: 16px;
-    background: rgba(255, 252, 246, 0.84);
+    gap: 8px;
 }
 .bw-size-control input[type="range"] {
     flex: 1;
 }
 .bw-size-control span {
-    min-width: 56px;
-    padding: 7px 10px;
-    font-size: 0.76rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    text-align: center;
-    border: 1px solid rgba(212, 201, 181, 0.65);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.94);
+    min-width: 46px;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    text-align: right;
 }
 .bw-planet-groups {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    gap: 8px;
 }
 .bw-planet-group-block {
     min-width: 0;
-    padding: 12px;
-    border: 1px solid rgba(212, 201, 181, 0.55);
-    border-radius: 16px;
-    background: rgba(255, 252, 246, 0.84);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
 }
 .bw-planet-group-block .bw-settings-subtitle {
-    margin-bottom: 8px;
+    margin-bottom: 2px;
 }
 .bw-planet-group-block .bw-planet-toggles {
     grid-template-columns: 1fr;
-    gap: 6px;
+    gap: 2px;
     max-height: 42vh;
     overflow-y: auto;
-    padding-right: 3px;
+    padding-right: 2px;
 }
 .bw-planet-toggles {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
+    gap: 3px;
 }
 .bw-toggle {
     display: grid;
-    grid-template-columns: 16px minmax(0, 1fr);
+    grid-template-columns: 14px minmax(0, 1fr);
     align-items: start;
-    column-gap: 8px;
-    min-height: 40px;
-    padding: 9px 10px;
-    border: 1px solid rgba(212, 201, 181, 0.6);
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.92);
-    font-size: 0.76rem;
-    line-height: 1.2;
+    column-gap: 6px;
+    font-size: 0.7rem;
+    line-height: 1.15;
     color: var(--text-primary);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
 }
 .bw-toggle input {
     margin: 0;
-    margin-top: 2px;
+    margin-top: 1px;
 }
 .bw-toggle-label {
     display: grid;
-    grid-template-columns: 14px minmax(0, 1fr);
-    column-gap: 7px;
+    grid-template-columns: 12px minmax(0, 1fr);
+    column-gap: 5px;
     min-width: 0;
 }
 .bw-toggle .astro-symbol {
@@ -1349,11 +1319,8 @@
     overflow-wrap: anywhere;
 }
 .bw-settings-action {
-    min-height: 38px;
-    padding: 8px 12px;
-    border-radius: 12px;
-    font-size: 0.76rem;
-    font-weight: 600;
+    padding: 3px 7px;
+    font-size: 0.7rem;
 }
 .biwheel-aspect-bar {
     display: flex;
@@ -2157,43 +2124,122 @@
     }
     .bw-time-ticks { margin: 0 4px 0; height: 9px; }
     #biwheelTimeSlider { min-width: 100px; }
-    .bw-planet-toggles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .bw-settings-dialog {
         width: 100%;
         max-height: min(80vh, 720px);
         padding: 20px 14px calc(18px + env(safe-area-inset-bottom, 0px));
+        border: 1px solid rgba(212, 201, 181, 0.65);
         border-radius: 22px 22px 0 0;
         border-bottom-left-radius: 0;
         border-bottom-right-radius: 0;
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(250, 246, 239, 0.97));
+        box-shadow:
+            0 24px 56px rgba(20, 18, 16, 0.18),
+            0 6px 14px rgba(20, 18, 16, 0.08);
+        gap: 10px;
+        backdrop-filter: blur(18px);
     }
     .bw-settings-close {
         top: 12px;
         right: 12px;
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        border: 1px solid rgba(212, 201, 181, 0.72);
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 8px 20px rgba(26, 22, 20, 0.08);
     }
     .bw-settings-title {
         font-size: 0.82rem;
         padding-right: 36px;
+        margin-top: 2px;
     }
     .bw-settings-select {
+        min-height: 44px;
+        border: 1px solid rgba(212, 201, 181, 0.72);
+        background: rgba(255, 255, 255, 0.94);
+        border-radius: 12px;
+        padding: 10px 12px;
         font-size: 0.92rem;
+        box-shadow: inset 0 1px 2px rgba(105, 84, 52, 0.04);
+    }
+    .bw-settings-row {
+        gap: 8px;
+    }
+    .bw-settings-subtitle {
+        font-size: 0.74rem;
+        font-weight: 600;
+        margin-bottom: 6px;
     }
     .bw-size-control {
+        gap: 12px;
         padding: 11px 10px;
+        border: 1px solid rgba(212, 201, 181, 0.55);
+        border-radius: 16px;
+        background: rgba(255, 252, 246, 0.84);
     }
     .bw-size-control span {
         min-width: 52px;
+        padding: 7px 10px;
+        font-size: 0.76rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-align: center;
+        border: 1px solid rgba(212, 201, 181, 0.65);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.94);
     }
     .bw-planet-groups { grid-template-columns: 1fr; gap: 8px; }
     .bw-planet-group-block {
         padding: 11px 10px;
+        border: 1px solid rgba(212, 201, 181, 0.55);
+        border-radius: 16px;
+        background: rgba(255, 252, 246, 0.84);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
+    }
+    .bw-planet-group-block .bw-settings-subtitle {
+        margin-bottom: 8px;
     }
     .bw-planet-group-block .bw-planet-toggles {
         max-height: 30vh;
+        gap: 6px;
+        padding-right: 3px;
     }
     .bw-planet-toggles { grid-template-columns: 1fr; }
     .bw-toggle {
+        grid-template-columns: 16px minmax(0, 1fr);
+        column-gap: 8px;
         min-height: 42px;
         padding: 10px;
+        border: 1px solid rgba(212, 201, 181, 0.6);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.92);
+        font-size: 0.76rem;
+        line-height: 1.2;
+    }
+    .bw-toggle input {
+        margin-top: 2px;
+    }
+    .bw-toggle-label {
+        grid-template-columns: 14px minmax(0, 1fr);
+        column-gap: 7px;
+    }
+    .bw-settings-action {
+        min-height: 38px;
+        padding: 8px 12px;
+        border-radius: 12px;
+        font-size: 0.76rem;
+        font-weight: 600;
+    }
+    .bw-settings-section-label {
+        font-size: 0.68rem;
+        letter-spacing: 0.09em;
+        margin-bottom: -2px;
+    }
+    .bw-settings-section-divider {
+        background: rgba(205, 193, 171, 0.72);
+        margin: 2px 0 0;
     }
     .help-overlay {
         align-items: flex-end;
@@ -2298,18 +2344,17 @@
 
 /* ---- Settings modal section labels & divider ---- */
 .bw-settings-section-label {
-    font-size: 0.68rem;
+    font-size: 0.66rem;
     font-weight: 700;
-    letter-spacing: 0.09em;
+    letter-spacing: 0.07em;
     text-transform: uppercase;
     color: var(--text-muted);
     margin-top: 2px;
-    margin-bottom: -2px;
 }
 .bw-settings-section-divider {
     height: 1px;
-    background: rgba(205, 193, 171, 0.72);
-    margin: 2px 0 0;
+    background: var(--border);
+    margin: 6px 0 2px;
 }
 
 /* ---- Edge toggle tooltips ---- */
