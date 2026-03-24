@@ -655,6 +655,10 @@
         "collapseAspects": "Collapse aspects table",
         "collapseIngresses": "Collapse ingresses table",
         "empty": "No bi-wheel data",
+        "mobileFilters": {
+          "close": "Hide legend",
+          "open": "Legend"
+        },
         "natalButton": "Natal",
         "natalButtonHint": "Hold to peek, tap to pin natal wheel",
         "legend": {

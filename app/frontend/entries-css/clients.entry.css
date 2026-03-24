@@ -90,7 +90,8 @@
 .header-account-value {
     color: var(--text-primary);
     font-weight: 600;
-    word-break: break-word;
+    word-break: normal;
+    overflow-wrap: anywhere;
 }
 
 .btn-logout,
@@ -776,13 +777,32 @@ select:focus {
     .clients-header {
         flex-direction: column;
         align-items: flex-start;
+        gap: 16px;
     }
 
     .clients-header-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        align-items: stretch;
         width: 100%;
-        justify-content: space-between;
-        flex-wrap: wrap;
         gap: 10px;
+    }
+
+    .header-account-pill {
+        grid-column: 1 / -1;
+        width: 100%;
+        min-width: 0;
+        padding: 10px 14px;
+    }
+
+    .clients-header-actions .locale-switcher--inline {
+        margin-left: 0;
+        justify-self: start;
+    }
+
+    .clients-header-actions .btn-logout {
+        min-height: 42px;
+        padding: 10px 14px;
     }
 
     .toolbar-card {
@@ -1040,7 +1060,7 @@ select:focus {
 
     .header-account-pill {
         min-width: 0;
-        flex: 1;
+        flex: initial;
     }
 
     .workspace-hero,

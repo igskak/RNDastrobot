@@ -55,7 +55,10 @@
 }
 
 .clients-header-actions .locale-switcher--inline {
-    padding: 3px 5px;
+    display: inline-flex;
+    align-items: center;
+    min-height: 42px;
+    padding: 0 12px;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.76);
 }
@@ -65,7 +68,11 @@
 }
 
 .clients-header-actions .locale-switcher-select {
-    min-width: 112px;
+    min-width: 108px;
+    border: 0;
+    background: transparent;
+    padding: 0 18px 0 0;
+    box-shadow: none;
 }
 
 @media (max-width: 768px) {

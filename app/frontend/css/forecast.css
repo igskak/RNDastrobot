@@ -918,6 +918,7 @@
     right: 12px;
     display: flex;
     align-items: flex-start;
+    gap: 8px;
     z-index: 9;
 }
 .bw-focus-controls {
@@ -1010,6 +1011,9 @@
     border-color: rgba(184, 147, 90, 0.3);
     background: rgba(245, 237, 223, 0.9);
     color: var(--text-primary);
+}
+.bw-aspect-toggle-btn {
+    display: none;
 }
 /* Sidebar with aspects */
 .biwheel-sidebar {
@@ -1187,7 +1191,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 8px;
+    padding: 12px;
 }
 .bw-settings-panel.hidden {
     display: none;
@@ -1197,112 +1201,142 @@
     width: min(520px, calc(100vw - 16px));
     max-height: calc(100vh - 16px);
     overflow-y: auto;
-    padding: 10px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    background: white;
-    box-shadow: var(--shadow-lg);
+    padding: 18px;
+    border: 1px solid rgba(212, 201, 181, 0.65);
+    border-radius: 24px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(250, 246, 239, 0.97));
+    box-shadow:
+        0 24px 56px rgba(20, 18, 16, 0.18),
+        0 6px 14px rgba(20, 18, 16, 0.08);
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 10px;
+    backdrop-filter: blur(18px);
 }
 .solar-settings-dialog {
-    width: min(360px, calc(100vw - 16px));
-    max-height: min(320px, calc(100vh - 16px));
+    width: min(420px, calc(100vw - 16px));
+    max-height: min(360px, calc(100vh - 16px));
 }
 .bw-settings-close {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    background: white;
+    top: 14px;
+    right: 14px;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid rgba(212, 201, 181, 0.72);
+    background: rgba(255, 255, 255, 0.94);
     color: var(--text-secondary);
     cursor: pointer;
+    box-shadow: 0 8px 20px rgba(26, 22, 20, 0.08);
 }
 .bw-settings-close:hover {
     color: var(--text-primary);
 }
 .bw-settings-select {
-    border: 1px solid var(--border);
-    background: white;
+    min-height: 44px;
+    border: 1px solid rgba(212, 201, 181, 0.72);
+    background: rgba(255, 255, 255, 0.94);
     color: var(--text-primary);
-    border-radius: 8px;
-    padding: 5px 7px;
-    font-size: 0.74rem;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 0.88rem;
+    box-shadow: inset 0 1px 2px rgba(105, 84, 52, 0.04);
 }
 .bw-settings-title {
-    font-size: 0.74rem;
+    font-size: 0.8rem;
     font-weight: 600;
     line-height: 1.2;
     color: var(--text-secondary);
+    margin-top: 2px;
 }
 .bw-settings-row {
     display: flex;
-    gap: 4px;
+    gap: 8px;
     flex-wrap: wrap;
 }
 .bw-settings-subtitle {
-    font-size: 0.7rem;
+    font-size: 0.74rem;
+    font-weight: 600;
     color: var(--text-secondary);
     margin-top: 0;
+    margin-bottom: 6px;
 }
 .bw-size-control {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid rgba(212, 201, 181, 0.55);
+    border-radius: 16px;
+    background: rgba(255, 252, 246, 0.84);
 }
 .bw-size-control input[type="range"] {
     flex: 1;
 }
 .bw-size-control span {
-    min-width: 46px;
-    font-size: 0.72rem;
-    color: var(--text-secondary);
-    text-align: right;
+    min-width: 56px;
+    padding: 7px 10px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: center;
+    border: 1px solid rgba(212, 201, 181, 0.65);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.94);
 }
 .bw-planet-groups {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
+    gap: 12px;
 }
 .bw-planet-group-block {
     min-width: 0;
+    padding: 12px;
+    border: 1px solid rgba(212, 201, 181, 0.55);
+    border-radius: 16px;
+    background: rgba(255, 252, 246, 0.84);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
 }
 .bw-planet-group-block .bw-settings-subtitle {
-    margin-bottom: 2px;
+    margin-bottom: 8px;
 }
 .bw-planet-group-block .bw-planet-toggles {
     grid-template-columns: 1fr;
-    gap: 2px;
+    gap: 6px;
     max-height: 42vh;
     overflow-y: auto;
-    padding-right: 2px;
+    padding-right: 3px;
 }
 .bw-planet-toggles {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 3px;
+    gap: 8px;
 }
 .bw-toggle {
     display: grid;
-    grid-template-columns: 14px minmax(0, 1fr);
+    grid-template-columns: 16px minmax(0, 1fr);
     align-items: start;
-    column-gap: 6px;
-    font-size: 0.7rem;
-    line-height: 1.15;
+    column-gap: 8px;
+    min-height: 40px;
+    padding: 9px 10px;
+    border: 1px solid rgba(212, 201, 181, 0.6);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.92);
+    font-size: 0.76rem;
+    line-height: 1.2;
     color: var(--text-primary);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
 }
 .bw-toggle input {
     margin: 0;
-    margin-top: 1px;
+    margin-top: 2px;
 }
 .bw-toggle-label {
     display: grid;
-    grid-template-columns: 12px minmax(0, 1fr);
-    column-gap: 5px;
+    grid-template-columns: 14px minmax(0, 1fr);
+    column-gap: 7px;
     min-width: 0;
 }
 .bw-toggle .astro-symbol {
@@ -1315,8 +1349,11 @@
     overflow-wrap: anywhere;
 }
 .bw-settings-action {
-    padding: 3px 7px;
-    font-size: 0.7rem;
+    min-height: 38px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 0.76rem;
+    font-weight: 600;
 }
 .biwheel-aspect-bar {
     display: flex;
@@ -2021,6 +2058,9 @@
         bottom: calc(118px + env(safe-area-inset-bottom, 0px));
         z-index: 10;
     }
+    .bw-aspect-toggle-btn {
+        display: inline-flex;
+    }
     .control-separator { display: none; }
     .biwheel-main { flex-direction: column; }
     .biwheel-chart-area { min-height: 300px; }
@@ -2044,35 +2084,37 @@
     .biwheel-aspect-bar {
         left: 10px;
         right: 10px;
-        bottom: calc(68px + env(safe-area-inset-bottom, 0px));
-        width: fit-content;
+        bottom: calc(162px + env(safe-area-inset-bottom, 0px));
+        width: auto;
         max-width: calc(100% - 20px);
-        margin: 0 auto;
-        padding: 5px;
+        margin: 0;
+        padding: 10px;
         border: 1px solid rgba(224, 221, 215, 0.92);
-        border-radius: 999px;
+        border-radius: 20px;
         background: rgba(255, 255, 255, 0.9);
         box-shadow: 0 12px 28px rgba(26, 22, 20, 0.08);
         backdrop-filter: blur(10px);
-        gap: 5px;
-        overflow-x: auto;
-        overflow-y: hidden;
-        scrollbar-width: none;
-        -webkit-overflow-scrolling: touch;
+        gap: 8px;
+        overflow: hidden auto;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(10px);
+        transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+    .biwheel-aspect-bar.is-open {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
     }
     .biwheel-aspect-bar::-webkit-scrollbar {
         display: none;
     }
     .bw-layer-legend,
     .bw-aspect-row {
-        width: max-content;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        scrollbar-width: none;
-    }
-    .bw-layer-legend::-webkit-scrollbar,
-    .bw-aspect-row::-webkit-scrollbar {
-        display: none;
+        width: 100%;
+        flex-wrap: wrap;
+        overflow: visible;
+        scrollbar-width: auto;
     }
     .bw-legend-item,
     .bw-filter-btn {
@@ -2118,14 +2160,41 @@
     .bw-planet-toggles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .bw-settings-dialog {
         width: 100%;
-        max-height: min(76vh, 680px);
-        padding: 14px 12px 16px;
+        max-height: min(80vh, 720px);
+        padding: 20px 14px calc(18px + env(safe-area-inset-bottom, 0px));
         border-radius: 22px 22px 0 0;
         border-bottom-left-radius: 0;
         border-bottom-right-radius: 0;
     }
-    .bw-planet-groups { grid-template-columns: 1fr; gap: 6px; }
-    .bw-planet-group-block .bw-planet-toggles { max-height: 30vh; }
+    .bw-settings-close {
+        top: 12px;
+        right: 12px;
+    }
+    .bw-settings-title {
+        font-size: 0.82rem;
+        padding-right: 36px;
+    }
+    .bw-settings-select {
+        font-size: 0.92rem;
+    }
+    .bw-size-control {
+        padding: 11px 10px;
+    }
+    .bw-size-control span {
+        min-width: 52px;
+    }
+    .bw-planet-groups { grid-template-columns: 1fr; gap: 8px; }
+    .bw-planet-group-block {
+        padding: 11px 10px;
+    }
+    .bw-planet-group-block .bw-planet-toggles {
+        max-height: 30vh;
+    }
+    .bw-planet-toggles { grid-template-columns: 1fr; }
+    .bw-toggle {
+        min-height: 42px;
+        padding: 10px;
+    }
     .help-overlay {
         align-items: flex-end;
         padding: 10px 10px 0;
@@ -2229,17 +2298,18 @@
 
 /* ---- Settings modal section labels & divider ---- */
 .bw-settings-section-label {
-    font-size: 0.66rem;
+    font-size: 0.68rem;
     font-weight: 700;
-    letter-spacing: 0.07em;
+    letter-spacing: 0.09em;
     text-transform: uppercase;
     color: var(--text-muted);
     margin-top: 2px;
+    margin-bottom: -2px;
 }
 .bw-settings-section-divider {
     height: 1px;
-    background: var(--border);
-    margin: 6px 0 2px;
+    background: rgba(205, 193, 171, 0.72);
+    margin: 2px 0 0;
 }
 
 /* ---- Edge toggle tooltips ---- */

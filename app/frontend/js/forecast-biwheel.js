@@ -2328,6 +2328,46 @@
         updateLayerLegendUI();
         localStorage.removeItem('bwViewMode');
 
+        const mobileAspectBarMedia = window.matchMedia('(max-width: 768px)');
+        const aspectBar = document.getElementById('bwAspectFilters');
+        const aspectToggleBtn = document.getElementById('bwAspectFiltersToggleBtn');
+
+        const isMobileAspectBarMode = () => mobileAspectBarMedia.matches;
+
+        function syncMobileAspectBarButton() {
+            if (!aspectToggleBtn || !aspectBar) return;
+            const expanded = isMobileAspectBarMode() && aspectBar.classList.contains('is-open');
+            const label = t(expanded ? 'page.forecast.biwheel.mobileFilters.close' : 'page.forecast.biwheel.mobileFilters.open');
+            aspectToggleBtn.textContent = label;
+            aspectToggleBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+            aspectToggleBtn.setAttribute('aria-label', label);
+            aspectToggleBtn.setAttribute('title', label);
+        }
+
+        function setMobileAspectBarOpen(shouldOpen) {
+            if (!aspectBar) return;
+            if (!isMobileAspectBarMode()) {
+                aspectBar.classList.add('is-open');
+                syncMobileAspectBarButton();
+                return;
+            }
+            aspectBar.classList.toggle('is-open', shouldOpen);
+            aspectToggleBtn?.classList.toggle('active', shouldOpen);
+            syncMobileAspectBarButton();
+        }
+
+        function syncMobileAspectBarMode() {
+            if (!aspectBar) return;
+            if (isMobileAspectBarMode()) {
+                aspectBar.classList.remove('is-open');
+                aspectToggleBtn?.classList.remove('active');
+            } else {
+                aspectBar.classList.add('is-open');
+                aspectToggleBtn?.classList.remove('active');
+            }
+            syncMobileAspectBarButton();
+        }
+
         document.querySelectorAll('.bw-filter-btn[data-filter]').forEach(btn => {
             btn.addEventListener('click', () => {
                 setAspectFilter(btn.dataset.filter);
@@ -2347,6 +2387,39 @@
             ['click', 'mousedown', 'pointerdown'].forEach(evt => {
                 directionTypeSelect.addEventListener(evt, e => e.stopPropagation());
             });
+            directionTypeSelect.addEventListener('change', () => {
+                if (isMobileAspectBarMode()) {
+                    setMobileAspectBarOpen(false);
+                }
+            });
+        }
+        if (aspectToggleBtn && aspectBar) {
+            aspectToggleBtn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                setMobileAspectBarOpen(!aspectBar.classList.contains('is-open'));
+            });
+
+            aspectBar.addEventListener('click', (event) => {
+                if (!isMobileAspectBarMode()) return;
+                const actionable = event.target.closest('.bw-legend-toggle, .bw-filter-btn');
+                if (!actionable) return;
+                requestAnimationFrame(() => setMobileAspectBarOpen(false));
+            });
+
+            document.addEventListener('click', (event) => {
+                if (!isMobileAspectBarMode() || !aspectBar.classList.contains('is-open')) return;
+                if (aspectBar.contains(event.target) || aspectToggleBtn.contains(event.target)) return;
+                setMobileAspectBarOpen(false);
+            });
+
+            if (typeof mobileAspectBarMedia.addEventListener === 'function') {
+                mobileAspectBarMedia.addEventListener('change', syncMobileAspectBarMode);
+            } else if (typeof mobileAspectBarMedia.addListener === 'function') {
+                mobileAspectBarMedia.addListener(syncMobileAspectBarMode);
+            }
+
+            document.addEventListener('frontend:locale-changed', syncMobileAspectBarButton);
+            syncMobileAspectBarMode();
         }
         const openIngressesBtn = document.getElementById('bwOpenIngresses');
         const openAspectsBtn = document.getElementById('bwOpenAspects');
