@@ -64,6 +64,7 @@ const ForecastState = {
     natalData: null,
     natalWheelData: null,
     currentTab: 'biwheel',
+    controlsExpanded: true,
     isFocusMode: false,
     method: 'transits',
     // cached results
@@ -129,6 +130,7 @@ const ForecastState = {
     biwheelCompareInteractionsInit: false,
     natalButtonPress: null,
     spacePeekActive: false,
+    summaryControlsInit: false,
 };
 window.ForecastState = ForecastState;
 
@@ -1196,6 +1198,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     initDefaults();
     initTabs();
     initControls();
+    document.addEventListener('frontend:locale-changed', () => {
+        updateHeaderInfo(ForecastState.natalData || natalData);
+        updateBiwheelFocusButton();
+        updateTransitPlaybackButton();
+        renderForecastSummary();
+    });
     // Deep-link: if URL has tab/date params, skip state restoration to avoid
     // the restored state overriding the requested date.
     const hasDeepLink = new URLSearchParams(window.location.search).has('tab');
@@ -1271,6 +1279,132 @@ function getForecastTimezone() {
     return ForecastState.timezone || 'UTC';
 }
 
+function isForecastMobileViewport() {
+    return window.matchMedia?.('(max-width: 768px)')?.matches ?? window.innerWidth <= 768;
+}
+
+function formatForecastSummaryDate(dateStr) {
+    if (!dateStr) return t('page.forecast.summary.window.notSet');
+    const parsed = new Date(`${dateStr}T00:00:00`);
+    if (Number.isNaN(parsed.getTime())) return dateStr;
+    const locale = window.FrontendI18n?.getLocale?.() || 'en';
+    return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(parsed);
+}
+
+function getForecastSummaryWindowText() {
+    if (ForecastState.currentTab === 'solar') {
+        const year = document.getElementById('solarYear')?.value || '';
+        const location = document.getElementById('solarLocationName')?.value?.trim() || '';
+        if (!year && !location) return t('page.forecast.summary.window.notSet');
+        return [year, location].filter(Boolean).join(' · ');
+    }
+
+    if (ForecastState.currentTab === 'biwheel') {
+        const selectedDate = ForecastState.transitMoment
+            || document.getElementById('singleDate')?.value
+            || document.getElementById('startDate')?.value;
+        return selectedDate ? formatForecastSummaryDate(selectedDate) : t('page.forecast.summary.window.notSet');
+    }
+
+    const startDate = document.getElementById('startDate')?.value || '';
+    const endDate = document.getElementById('endDate')?.value || '';
+    if (!startDate && !endDate) return t('page.forecast.summary.window.notSet');
+    if (!startDate || !endDate) return formatForecastSummaryDate(startDate || endDate);
+    return `${formatForecastSummaryDate(startDate)} - ${formatForecastSummaryDate(endDate)}`;
+}
+
+function getForecastSummaryStatusKey() {
+    if (ForecastState.currentTab === 'biwheel' && ForecastState.isFocusMode) {
+        return 'focus';
+    }
+    if (ForecastState.currentTab === 'solar') {
+        return ForecastState.solarData ? 'ready' : 'needsCalculation';
+    }
+    if (ForecastState.currentTab === 'timeline') {
+        return ForecastState.transitEvents ? 'ready' : 'needsCalculation';
+    }
+    if (ForecastState.currentTab === 'table') {
+        return ForecastState.tableRowsRaw.length ? 'ready' : 'needsCalculation';
+    }
+    return hasRenderableCachedForecastState() ? 'ready' : 'needsCalculation';
+}
+
+function getForecastSummaryText() {
+    if (ForecastState.currentTab === 'solar') {
+        const year = document.getElementById('solarYear')?.value || '—';
+        return ForecastState.solarData
+            ? t('page.forecast.summary.solarReady', { year })
+            : t('page.forecast.summary.solarPending');
+    }
+
+    if (ForecastState.currentTab === 'timeline' && ForecastState.transitEvents?.events?.length) {
+        return t('page.forecast.summary.timelineReady', {
+            count: ForecastState.transitEvents.events.length,
+        });
+    }
+
+    if (ForecastState.currentTab === 'biwheel' && hasRenderableCachedForecastState()) {
+        return t('page.forecast.summary.biwheelReady', {
+            date: formatForecastSummaryDate(
+                ForecastState.transitMoment
+                || document.getElementById('singleDate')?.value
+                || document.getElementById('startDate')?.value
+                || ''
+            ),
+        });
+    }
+
+    if (ForecastState.currentTab === 'table' && ForecastState.tableRowsRaw.length) {
+        return t('page.forecast.summary.tableReady');
+    }
+
+    return t('page.forecast.summary.rangePending');
+}
+
+function applyForecastControlsExpandedState() {
+    const controls = document.getElementById('forecastControls');
+    if (controls) {
+        controls.classList.toggle('is-collapsed', ForecastState.controlsExpanded === false);
+    }
+    updateForecastControlsToggle();
+}
+
+function setForecastControlsExpanded(expanded) {
+    ForecastState.controlsExpanded = !!expanded;
+    applyForecastControlsExpandedState();
+}
+
+function updateForecastControlsToggle() {
+    const button = document.getElementById('forecastToggleControls');
+    if (!button) return;
+    const label = ForecastState.controlsExpanded
+        ? t('page.forecast.summary.actions.hideSetup')
+        : t('page.forecast.summary.actions.editSetup');
+    button.textContent = label;
+    button.setAttribute('aria-label', label);
+    button.setAttribute('aria-expanded', ForecastState.controlsExpanded ? 'true' : 'false');
+}
+
+function renderForecastSummary() {
+    const title = document.getElementById('forecastSummaryTitle');
+    const text = document.getElementById('forecastSummaryText');
+    const mode = document.getElementById('forecastSummaryMode');
+    const windowValue = document.getElementById('forecastSummaryWindow');
+    const status = document.getElementById('forecastSummaryStatus');
+
+    if (title) title.textContent = t(`page.forecast.tabs.${ForecastState.currentTab}`);
+    if (text) text.textContent = getForecastSummaryText();
+    if (mode) mode.textContent = t(`page.forecast.tabs.${ForecastState.currentTab}`);
+    if (windowValue) windowValue.textContent = getForecastSummaryWindowText();
+    if (status) status.textContent = t(`page.forecast.summary.status.${getForecastSummaryStatusKey()}`);
+
+    document.querySelectorAll('[data-forecast-quick-tab]').forEach((button) => {
+        button.classList.toggle('active', button.dataset.forecastQuickTab === ForecastState.currentTab);
+    });
+
+    updateForecastControlsToggle();
+}
+
 function updateHeaderInfo(data) {
     const el = document.getElementById('headerSubtitle');
     if (el && data.birth_data) {
@@ -1302,6 +1436,7 @@ function initDefaults() {
     const stepSelect = document.getElementById('biwheelStepSelect');
     if (stepSelect) stepSelect.value = ForecastState.transitScaleUnit;
     ForecastState.isFocusMode = false;
+    ForecastState.controlsExpanded = !isForecastMobileViewport();
     ForecastState.biwheelDisplayMode = 'prognostic';
     ForecastState.directionType = normalizeDirectionType(localStorage.getItem(DIRECTION_TYPE_STORAGE_KEY) || 'solar_arc');
     const directionTypeSelect = document.getElementById('bwDirectionTypeSelect');
@@ -1310,6 +1445,7 @@ function initDefaults() {
     updateBiwheelFocusButton();
     applyForecastFocusState();
     applyBiwheelDisplayModeState();
+    applyForecastControlsExpandedState();
 }
 
 function applyDatePreset(value, unit = 'months') {
@@ -1628,11 +1764,29 @@ function initControls() {
         ForecastState.method = 'transits';
     }
     document.getElementById('btnCalculate').addEventListener('click', onCalculate);
+    document.getElementById('forecastSummaryCalculate')?.addEventListener('click', onCalculate);
+    document.getElementById('forecastToggleControls')?.addEventListener('click', () => {
+        setForecastControlsExpanded(!ForecastState.controlsExpanded);
+    });
+    document.querySelectorAll('[data-forecast-quick-tab]').forEach((button) => {
+        button.addEventListener('click', () => {
+            activateForecastTab(button.dataset.forecastQuickTab);
+        });
+    });
     // Timeline filter re-render
     ['filterMajor'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('change', () => {
             if (ForecastState.transitEvents) renderTimeline();
+        });
+    });
+    ['startDate', 'endDate', 'singleDate', 'solarYear', 'solarLocationName'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        ['input', 'change'].forEach((eventName) => {
+            el.addEventListener(eventName, () => {
+                renderForecastSummary();
+            });
         });
     });
     // Date presets
@@ -1817,6 +1971,7 @@ function initControls() {
     toggleTableFilters(true);
     updateTableFiltersBadge();
     updateControlsVisibility();
+    renderForecastSummary();
 }
 
 function updateBiwheelFocusButton() {
@@ -1837,6 +1992,7 @@ function applyForecastFocusState() {
     const isFocusBiwheel = ForecastState.currentTab === 'biwheel' && ForecastState.isFocusMode;
     document.body.classList.toggle('forecast-focus-active', isFocusBiwheel);
     updateBiwheelFocusButton();
+    renderForecastSummary();
 }
 
 function setForecastFocusMode(enabled) {
@@ -2337,13 +2493,21 @@ function updateControlsVisibility() {
         if (biwheelScaleTicks) biwheelScaleTicks.style.display = 'none';
         stopTransitScalePlayback();
     }
+
+    if (!hasRenderableCachedForecastState()) {
+        setForecastControlsExpanded(true);
+    } else {
+        applyForecastControlsExpandedState();
+    }
     applyForecastFocusState();
 }
 
 // ─── Calculate ──────────────────────────────────────────
 async function onCalculate() {
     const btn = document.getElementById('btnCalculate');
+    const summaryBtn = document.getElementById('forecastSummaryCalculate');
     btn.disabled = true;
+    if (summaryBtn) summaryBtn.disabled = true;
     try {
         const tab = ForecastState.currentTab;
         if (tab === 'solar') {
@@ -2356,11 +2520,16 @@ async function onCalculate() {
                 setForecastFocusMode(true);
             }
         }
+        if (isForecastMobileViewport()) {
+            setForecastControlsExpanded(false);
+        }
     } catch (err) {
         console.error('Forecast error:', err);
         alert(t('common.errorWithMessage', { message: err.message }));
     } finally {
         btn.disabled = false;
+        if (summaryBtn) summaryBtn.disabled = false;
+        renderForecastSummary();
     }
 }
 
@@ -3238,6 +3407,8 @@ function showState(pane, state) {
         const te = document.getElementById('tableEmpty');
         if (te) te.style.display = state === 'empty' ? '' : 'none';
     }
+
+    renderForecastSummary();
 }
 
 // ─── Aspect classification helpers ──────────────────────

@@ -755,6 +755,32 @@
         "sixMonths": "6 months",
         "threeMonths": "3 months"
       },
+      "summary": {
+        "actions": {
+          "editSetup": "Edit setup",
+          "hideSetup": "Hide setup"
+        },
+        "biwheelReady": "Bi-wheel is ready for {date}. Use it when you need the chart view for a specific moment.",
+        "chips": {
+          "mode": "View",
+          "status": "Status",
+          "window": "Window"
+        },
+        "eyebrow": "Mobile forecast workflow",
+        "rangePending": "Choose the period you want to review, then calculate the forecast.",
+        "solarPending": "Choose the year and return location, then calculate the solar return.",
+        "solarReady": "Solar return for {year} is ready for review.",
+        "status": {
+          "focus": "Chart focus",
+          "needsCalculation": "Needs calculation",
+          "ready": "Ready"
+        },
+        "tableReady": "The event table is ready for sorting and filtering.",
+        "timelineReady": "{count} forecast events are ready for review in this range.",
+        "window": {
+          "notSet": "Not set"
+        }
+      },
       "scale": {
         "focusEnter": "Chart focus mode",
         "focusExit": "Exit chart focus mode",

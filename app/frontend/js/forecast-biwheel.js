@@ -128,8 +128,8 @@
         planetName: null,
     };
     let hoverTooltip = null;
-    let ingressesCollapsed = false;
-    let aspectsCollapsed = false;
+    let ingressesCollapsed = window.matchMedia?.('(max-width: 768px)')?.matches ?? false;
+    let aspectsCollapsed = window.matchMedia?.('(max-width: 768px)')?.matches ?? false;
     let ingressesAvailable = false;
     let natalRetrogradeMap = new Map();
     let layerRetrogradeMaps = new Map();

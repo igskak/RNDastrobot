@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecast.title"></title>
-    <link rel="stylesheet" href="bundles/forecast.bundle.css?v=20260324-211722">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260324-211722">
+    <link rel="stylesheet" href="bundles/forecast.bundle.css?v=20260324-212921">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260324-212921">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '20260324-211722';</script>
+    <script>window.__APP_BUILD_ID__ = '20260324-212921';</script>
 </head>
 <body class="forecast-page">
     <div class="page-loader" id="pageLoader">
@@ -83,6 +83,40 @@
             </div>
         </div>
     </div>
+
+    <section class="forecast-summary" id="forecastSummary">
+        <div class="forecast-summary-main">
+            <div class="forecast-summary-copy">
+                <div class="forecast-summary-eyebrow" data-i18n="page.forecast.summary.eyebrow"></div>
+                <div class="forecast-summary-title" id="forecastSummaryTitle"></div>
+                <p class="forecast-summary-text" id="forecastSummaryText"></p>
+            </div>
+            <div class="forecast-summary-actions">
+                <button type="button" class="forecast-summary-btn forecast-summary-btn-secondary" id="forecastToggleControls"></button>
+                <button type="button" class="forecast-summary-btn forecast-summary-btn-primary" id="forecastSummaryCalculate" data-i18n="common.calculate"></button>
+            </div>
+        </div>
+        <div class="forecast-summary-chips">
+            <div class="forecast-summary-chip">
+                <span class="forecast-summary-chip-label" data-i18n="page.forecast.summary.chips.mode"></span>
+                <span class="forecast-summary-chip-value" id="forecastSummaryMode"></span>
+            </div>
+            <div class="forecast-summary-chip">
+                <span class="forecast-summary-chip-label" data-i18n="page.forecast.summary.chips.window"></span>
+                <span class="forecast-summary-chip-value" id="forecastSummaryWindow"></span>
+            </div>
+            <div class="forecast-summary-chip">
+                <span class="forecast-summary-chip-label" data-i18n="page.forecast.summary.chips.status"></span>
+                <span class="forecast-summary-chip-value" id="forecastSummaryStatus"></span>
+            </div>
+        </div>
+        <div class="forecast-summary-nav" id="forecastSummaryNav">
+            <button type="button" class="forecast-summary-view-btn active" data-forecast-quick-tab="timeline" data-i18n="page.forecast.tabs.timeline"></button>
+            <button type="button" class="forecast-summary-view-btn" data-forecast-quick-tab="biwheel" data-i18n="page.forecast.tabs.biwheel"></button>
+            <button type="button" class="forecast-summary-view-btn" data-forecast-quick-tab="table" data-i18n="page.forecast.tabs.table"></button>
+            <button type="button" class="forecast-summary-view-btn" data-forecast-quick-tab="solar" data-i18n="page.forecast.tabs.solar"></button>
+        </div>
+    </section>
 
     <div class="forecast-controls" id="forecastControls">
         <input type="hidden" id="methodSelect" value="transits">
@@ -454,7 +488,7 @@
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" style="width:22px;height:22px;display:block"><path d="M17 1.5H3a1 1 0 00-1 1v9.5a1 1 0 001 1h4.2l2.8 3.8 2.8-3.8H17a1 1 0 001-1V2.5a1 1 0 00-1-1z"/></svg>
     </button>
 
-    <script type="module" src="js/bundles/forecast.bundle.js?v=20260324-211722"></script>
-    <script src="js/locale-switcher.js?v=20260324-211722"></script>
+    <script type="module" src="js/bundles/forecast.bundle.js?v=20260324-212921"></script>
+    <script src="js/locale-switcher.js?v=20260324-212921"></script>
 </body>
 </html>
