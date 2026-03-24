@@ -98,8 +98,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Обновляем заголовок
     updateHeader(chartData);
-    renderMobileSummary(chartData);
-
     // Обновляем ссылки на интерпретации
     updateInterpretationLinks(chartData);
 
@@ -147,15 +145,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     initTabs();
     initSettings(chartData);
     initPanelTabs();
-    initZoomControls();
-    initPinchZoom();
+    initAspectLegendFilters();
     initChartActions();
     initEditClientDialog();
 
     document.addEventListener('frontend:locale-changed', () => {
         if (!window.chartDataCache) return;
         updateHeader(window.chartDataCache);
-        renderMobileSummary(window.chartDataCache);
         refreshEditDialogLocale();
         if (chartDataRenderer && typeof chartDataRenderer.render === 'function') {
             const hidden = currentSettings.hiddenPlanets || [];
@@ -298,45 +294,6 @@ function getTranslatedSignName(signName) {
     const key = `astro.sign.${signName}`;
     const translated = t(key);
     return translated === key ? (window.Symbols?.signNamesRu?.[signName] || signName || '') : translated;
-}
-
-function formatDegreeInSign(body) {
-    if (!body) return t('common.notAvailable');
-    if (body.degree_in_sign_formatted) return body.degree_in_sign_formatted;
-
-    const degree = Number(body.degree_in_sign);
-    if (!Number.isFinite(degree)) return t('common.notAvailable');
-
-    const whole = Math.floor(degree);
-    const minutesFloat = (degree - whole) * 60;
-    const minutes = Math.floor(minutesFloat);
-    return `${whole}°${String(minutes).padStart(2, '0')}'`;
-}
-
-function formatSummaryBody(body) {
-    if (!body?.sign) return t('common.notAvailable');
-
-    const signSymbol = window.Symbols?.signs?.[body.sign] || '';
-    const signName = getTranslatedSignName(body.sign);
-    const degree = formatDegreeInSign(body);
-
-    return [signSymbol, signName, degree].filter(Boolean).join(' ');
-}
-
-function renderMobileSummary(chartData) {
-    const fields = {
-        mobileSummaryAsc: chartData?.angles?.ASC,
-        mobileSummarySun: chartData?.planets?.find((planet) => planet.name === 'Sun'),
-        mobileSummaryMoon: chartData?.planets?.find((planet) => planet.name === 'Moon'),
-        mobileSummaryMc: chartData?.angles?.MC,
-    };
-
-    Object.entries(fields).forEach(([id, body]) => {
-        const element = document.getElementById(id);
-        if (element) {
-            element.textContent = formatSummaryBody(body);
-        }
-    });
 }
 
 function getCurrentChartUserId() {
@@ -596,7 +553,6 @@ async function applySettings() {
                     { houseSystem }
                 );
                 updateHeader(newChartData);
-                renderMobileSummary(newChartData);
                 updateInterpretationLinks(newChartData);
                 redrawChart(newChartData, hiddenPlanets, orientation);
             }
@@ -683,49 +639,16 @@ function redrawChart(chartData, hiddenPlanets, orientation = currentSettings.ori
     syncHoveredAspectToActiveSurface();
 }
 
-/**
- * Инициализация кнопок зума
- */
-function initZoomControls() {
-    const wrapper = document.getElementById('chartWheelWrapper');
-    const svg = document.getElementById('chartWheel');
-    let scale = 1;
-    let translateX = 0;
-    let translateY = 0;
-
-    const updateTransform = () => {
-        svg.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-    };
-
-    document.getElementById('zoomIn')?.addEventListener('click', () => {
-        scale = Math.min(scale * 1.2, 4);
-        updateTransform();
-    });
-
-    document.getElementById('zoomOut')?.addEventListener('click', () => {
-        scale = Math.max(scale / 1.2, 0.5);
-        updateTransform();
-    });
-
-    document.getElementById('zoomReset')?.addEventListener('click', () => {
-        scale = 1;
-        translateX = 0;
-        translateY = 0;
-        updateTransform();
-    });
-
-    // Фильтры аспектов
-    document.querySelectorAll('.legend-item.clickable').forEach(item => {
+function initAspectLegendFilters() {
+    document.querySelectorAll('.legend-item.clickable').forEach((item) => {
         item.addEventListener('click', () => {
             const filter = item.dataset.filter;
 
-            // Обновляем активное состояние
-            document.querySelectorAll('.legend-item.clickable').forEach(i => {
-                i.classList.remove('active');
+            document.querySelectorAll('.legend-item.clickable').forEach((legendItem) => {
+                legendItem.classList.remove('active');
             });
             item.classList.add('active');
 
-            // Применяем фильтр
             if (window.chartWheel) {
                 window.chartWheel.setAspectFilter(filter);
             }
@@ -734,47 +657,6 @@ function initZoomControls() {
             }
         });
     });
-
-    // Сохраняем для pinch-zoom
-    wrapper._zoomState = { scale, translateX, translateY, updateTransform };
-}
-
-/**
- * Поддержка pinch-zoom на мобильных устройствах
- */
-function initPinchZoom() {
-    const wrapper = document.getElementById('chartWheelWrapper');
-    const svg = document.getElementById('chartWheel');
-    if (!wrapper || !svg) return;
-
-    let initialDistance = 0;
-    let initialScale = 1;
-
-    wrapper.addEventListener('touchstart', (e) => {
-        if (e.touches.length === 2) {
-            initialDistance = getDistance(e.touches[0], e.touches[1]);
-            initialScale = wrapper._zoomState?.scale || 1;
-        }
-    }, { passive: true });
-
-    wrapper.addEventListener('touchmove', (e) => {
-        if (e.touches.length === 2) {
-            const currentDistance = getDistance(e.touches[0], e.touches[1]);
-            const scaleChange = currentDistance / initialDistance;
-            const newScale = Math.min(Math.max(initialScale * scaleChange, 0.5), 4);
-
-            if (wrapper._zoomState) {
-                wrapper._zoomState.scale = newScale;
-                wrapper._zoomState.updateTransform();
-            }
-        }
-    }, { passive: true });
-
-    function getDistance(touch1, touch2) {
-        const dx = touch1.clientX - touch2.clientX;
-        const dy = touch1.clientY - touch2.clientY;
-        return Math.sqrt(dx * dx + dy * dy);
-    }
 }
 
 function initChartActions() {
@@ -1075,7 +957,6 @@ async function handleEditClientSubmit(event) {
         const preparedChartData = applyChartState(updatedChartData, { houseSystem: currentSettings.houseSystem });
         currentHoveredAspectKey = null;
         updateHeader(preparedChartData);
-        renderMobileSummary(preparedChartData);
         updateInterpretationLinks(preparedChartData);
         redrawChart(preparedChartData, currentSettings.hiddenPlanets || [], currentSettings.orientation);
         closeEditClientDialog();

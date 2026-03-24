@@ -2180,6 +2180,19 @@
     const ZOOM_MIN = 0.5, ZOOM_MAX = 4, ZOOM_STEP = 0.08;
     let panX = 0, panY = 0;
     let isPanning = false, panStartX = 0, panStartY = 0;
+    let pinchDistance = 0;
+    let pinchStartZoom = 1;
+
+    function getTouchDistance(touchA, touchB) {
+        const dx = touchA.clientX - touchB.clientX;
+        const dy = touchA.clientY - touchB.clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function isBlockedZoomTarget(target) {
+        return target instanceof Element
+            && Boolean(target.closest('.bw-overlay-controls, .bw-focus-controls, .biwheel-zoom-controls, .biwheel-aspect-bar, .bw-settings-panel, .bw-edge-toggle'));
+    }
 
     function applyViewBox(options = {}) {
         if (!svg) return;
@@ -2236,17 +2249,33 @@
         });
         window.addEventListener('mouseup', () => { isPanning = false; });
 
-        // Single-finger pan only; keep native browser pinch zoom available on mobile.
         wrapper.addEventListener('touchstart', e => {
+            if (isBlockedZoomTarget(e.target)) return;
+            if (e.touches.length === 2) {
+                pinchDistance = getTouchDistance(e.touches[0], e.touches[1]);
+                pinchStartZoom = zoomLevel;
+                isPanning = false;
+                e.preventDefault();
+                return;
+            }
             if (e.touches.length !== 1) {
                 isPanning = false;
+                pinchDistance = 0;
                 return;
             }
             isPanning = true;
             panStartX = e.touches[0].clientX;
             panStartY = e.touches[0].clientY;
-        }, { passive: true });
+        }, { passive: false });
         wrapper.addEventListener('touchmove', e => {
+            if (e.touches.length === 2 && pinchDistance > 0) {
+                e.preventDefault();
+                const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
+                const nextZoom = pinchStartZoom * (currentDistance / pinchDistance);
+                zoomLevel = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, nextZoom));
+                applyViewBox();
+                return;
+            }
             if (e.touches.length !== 1 || !isPanning) return;
             e.preventDefault();
             const width = wrapper.clientWidth || VIEWBOX_SIZE;
@@ -2256,7 +2285,22 @@
             panStartY = e.touches[0].clientY;
             applyViewBox();
         }, { passive: false });
-        wrapper.addEventListener('touchend', () => { isPanning = false; });
+        wrapper.addEventListener('touchend', e => {
+            if (e.touches.length < 2) {
+                pinchDistance = 0;
+            }
+            if (e.touches.length === 1) {
+                isPanning = true;
+                panStartX = e.touches[0].clientX;
+                panStartY = e.touches[0].clientY;
+                return;
+            }
+            isPanning = false;
+        });
+        wrapper.addEventListener('touchcancel', () => {
+            isPanning = false;
+            pinchDistance = 0;
+        });
 
         // Buttons
         document.getElementById('bwZoomIn')?.addEventListener('click', () => {

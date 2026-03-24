@@ -27,6 +27,23 @@
     let pointX = 0, pointY = 0;
     let panning = false;
     let startX = 0, startY = 0;
+    let pinchDistance = 0;
+    let pinchStartScale = 1;
+
+    function clampScale(nextScale) {
+        return Math.max(0.5, Math.min(5, nextScale));
+    }
+
+    function getTouchDistance(touchA, touchB) {
+        const dx = touchA.clientX - touchB.clientX;
+        const dy = touchA.clientY - touchB.clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function isChartGestureBlocked(target) {
+        return target instanceof Element
+            && Boolean(target.closest('.zoom-controls-float, .aspect-lines-legend, .settings-panel'));
+    }
 
     function setTransform() {
         const wrapper = document.getElementById('chartWheelWrapper');
@@ -204,6 +221,7 @@
     // ========== INIT ==========
     document.addEventListener('DOMContentLoaded', function() {
         const chartCenter = document.getElementById('view-chart');
+        const chartSurface = document.getElementById('chartWheelWrapper');
         const tooltip = document.getElementById('tooltip');
 
         // --- Zoom buttons ---
@@ -216,34 +234,34 @@
         if (zoomResetBtn) zoomResetBtn.addEventListener('click', resetZoom);
 
         // --- Mouse wheel zoom ---
-        if (chartCenter) {
-            chartCenter.addEventListener('wheel', (e) => {
+        if (chartSurface && chartCenter) {
+            chartSurface.addEventListener('wheel', (e) => {
                 e.preventDefault();
                 if (e.deltaY < 0) { scale *= WHEEL_ZOOM_FACTOR; } else { scale /= WHEEL_ZOOM_FACTOR; }
-                scale = Math.max(0.5, Math.min(5, scale));
+                scale = clampScale(scale);
                 setTransform();
             }, { passive: false });
 
             // --- Mouse drag pan ---
-            chartCenter.addEventListener('mousedown', (e) => {
-                if (e.target.closest('.zoom-controls-float')) return;
+            chartSurface.addEventListener('mousedown', (e) => {
+                if (isChartGestureBlocked(e.target)) return;
                 panning = true;
                 startX = e.clientX - pointX;
                 startY = e.clientY - pointY;
-                chartCenter.style.cursor = 'grabbing';
+                chartSurface.style.cursor = 'grabbing';
             });
 
-            chartCenter.addEventListener('mouseup', () => {
+            chartSurface.addEventListener('mouseup', () => {
                 panning = false;
-                chartCenter.style.cursor = 'grab';
+                chartSurface.style.cursor = 'grab';
             });
 
-            chartCenter.addEventListener('mouseleave', () => {
+            chartSurface.addEventListener('mouseleave', () => {
                 panning = false;
-                chartCenter.style.cursor = 'grab';
+                chartSurface.style.cursor = 'grab';
             });
 
-            chartCenter.addEventListener('mousemove', (e) => {
+            chartSurface.addEventListener('mousemove', (e) => {
                 if (!panning) return;
                 e.preventDefault();
                 pointX = e.clientX - startX;
@@ -252,15 +270,30 @@
             });
 
             // --- Touch gestures ---
-            chartCenter.addEventListener('touchstart', (e) => {
+            chartSurface.addEventListener('touchstart', (e) => {
+                if (isChartGestureBlocked(e.target)) return;
+                if (e.touches.length === 2) {
+                    pinchDistance = getTouchDistance(e.touches[0], e.touches[1]);
+                    pinchStartScale = scale;
+                    panning = false;
+                    e.preventDefault();
+                    return;
+                }
                 if (e.touches.length === 1) {
                     panning = true;
                     startX = e.touches[0].clientX - pointX;
                     startY = e.touches[0].clientY - pointY;
                 }
-            }, { passive: true });
+            }, { passive: false });
 
-            chartCenter.addEventListener('touchmove', (e) => {
+            chartSurface.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 2 && pinchDistance > 0) {
+                    e.preventDefault();
+                    const nextDistance = getTouchDistance(e.touches[0], e.touches[1]);
+                    scale = clampScale((nextDistance / pinchDistance) * pinchStartScale);
+                    setTransform();
+                    return;
+                }
                 if (panning && e.touches.length === 1) {
                     e.preventDefault();
                     pointX = e.touches[0].clientX - startX;
@@ -269,10 +302,26 @@
                 }
             }, { passive: false });
 
-            chartCenter.addEventListener('touchend', () => { panning = false; });
+            chartSurface.addEventListener('touchend', (e) => {
+                if (e.touches.length < 2) {
+                    pinchDistance = 0;
+                }
+                if (e.touches.length === 1) {
+                    panning = true;
+                    startX = e.touches[0].clientX - pointX;
+                    startY = e.touches[0].clientY - pointY;
+                    return;
+                }
+                panning = false;
+            });
+
+            chartSurface.addEventListener('touchcancel', () => {
+                panning = false;
+                pinchDistance = 0;
+            });
 
             // --- Tooltip follows mouse ---
-            chartCenter.addEventListener('mousemove', (e) => {
+            chartSurface.addEventListener('mousemove', (e) => {
                 if (activeHighlight && tooltip && tooltip.style.display === 'block' && !panning) {
                     moveTooltip(e, chartCenter, tooltip);
                 }

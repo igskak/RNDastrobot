@@ -1166,6 +1166,8 @@ let solarPanY = 0;
 let solarIsPanning = false;
 let solarPanStartX = 0;
 let solarPanStartY = 0;
+let solarPinchDistance = 0;
+let solarPinchStartZoom = 1;
 const SOLAR_VIEWBOX_SIZE = 500;
 const SOLAR_ZOOM_MIN = 0.5;
 const SOLAR_ZOOM_MAX = 4;
@@ -2029,6 +2031,15 @@ function initSolarZoomPan() {
     if (!wrapper || wrapper.dataset.zoomInit === '1') return;
     wrapper.dataset.zoomInit = '1';
 
+    const getSolarTouchDistance = (touchA, touchB) => {
+        const dx = touchA.clientX - touchB.clientX;
+        const dy = touchA.clientY - touchB.clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+    };
+
+    const isBlockedSolarZoomTarget = (target) => target instanceof Element
+        && Boolean(target.closest('.biwheel-zoom-controls, .bw-settings-panel'));
+
     wrapper.addEventListener('wheel', (e) => {
         e.preventDefault();
         const delta = e.deltaY > 0 ? -SOLAR_ZOOM_STEP : SOLAR_ZOOM_STEP;
@@ -2054,15 +2065,32 @@ function initSolarZoomPan() {
     window.addEventListener('mouseup', () => { solarIsPanning = false; });
 
     wrapper.addEventListener('touchstart', (e) => {
+        if (isBlockedSolarZoomTarget(e.target)) return;
+        if (e.touches.length === 2) {
+            solarPinchDistance = getSolarTouchDistance(e.touches[0], e.touches[1]);
+            solarPinchStartZoom = solarZoomLevel;
+            solarIsPanning = false;
+            e.preventDefault();
+            return;
+        }
         if (e.touches.length !== 1) {
             solarIsPanning = false;
+            solarPinchDistance = 0;
             return;
         }
         solarIsPanning = true;
         solarPanStartX = e.touches[0].clientX;
         solarPanStartY = e.touches[0].clientY;
-    }, { passive: true });
+    }, { passive: false });
     wrapper.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2 && solarPinchDistance > 0) {
+            e.preventDefault();
+            const currentDistance = getSolarTouchDistance(e.touches[0], e.touches[1]);
+            const nextZoom = solarPinchStartZoom * (currentDistance / solarPinchDistance);
+            solarZoomLevel = Math.min(SOLAR_ZOOM_MAX, Math.max(SOLAR_ZOOM_MIN, nextZoom));
+            applySolarViewBox();
+            return;
+        }
         if (e.touches.length !== 1 || !solarIsPanning) return;
         e.preventDefault();
         const scale = SOLAR_VIEWBOX_SIZE / (solarZoomLevel * (wrapper.clientWidth || SOLAR_VIEWBOX_SIZE));
@@ -2072,8 +2100,21 @@ function initSolarZoomPan() {
         solarPanStartY = e.touches[0].clientY;
         applySolarViewBox();
     }, { passive: false });
-    wrapper.addEventListener('touchend', () => {
+    wrapper.addEventListener('touchend', (e) => {
+        if (e.touches.length < 2) {
+            solarPinchDistance = 0;
+        }
+        if (e.touches.length === 1) {
+            solarIsPanning = true;
+            solarPanStartX = e.touches[0].clientX;
+            solarPanStartY = e.touches[0].clientY;
+            return;
+        }
         solarIsPanning = false;
+    });
+    wrapper.addEventListener('touchcancel', () => {
+        solarIsPanning = false;
+        solarPinchDistance = 0;
     });
 
     document.getElementById('solarZoomIn')?.addEventListener('click', () => {
