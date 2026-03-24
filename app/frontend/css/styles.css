@@ -1648,8 +1648,9 @@ input[type="number"] {
 
     .side-panel {
         width: 100%;
-        max-height: 40vh;
-        overflow-y: auto;
+        max-height: none;
+        min-height: 0;
+        overflow: hidden;
     }
 
     .aspect-grid th,

@@ -269,6 +269,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    min-height: 0;
     flex-shrink: 0;
 }
 
@@ -278,9 +279,11 @@
 /* Scrollable panel content */
 .panel-content {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Symbol cells - compact width */
@@ -361,7 +364,10 @@
 }
 
 .panel-tab-content { display: none; }
-.panel-tab-content.active { display: block; }
+.panel-tab-content.active {
+    display: block;
+    min-height: 100%;
+}
 
 #balances-list {
     padding: 12px 14px 16px 12px;
@@ -729,7 +735,7 @@
         display: none;
         z-index: 10;
         background: var(--bg-primary);
-        overflow-y: auto;
+        overflow: hidden;
     }
 
     .side-panel.active-view { display: flex; }

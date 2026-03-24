@@ -1509,10 +1509,12 @@
    ============================================ */
 .forecast-table-container {
     flex: 1;
+    min-height: 0;
     overflow: auto;
     padding: 12px 16px;
     position: relative;
     background: var(--bg-secondary);
+    -webkit-overflow-scrolling: touch;
 }
 .table-filters-toolbar {
     display: flex;
@@ -1732,6 +1734,8 @@
     width: min(420px, 36vw);
     min-width: 320px;
     max-width: 460px;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
     padding: 0;
     min-height: 0;
@@ -1776,16 +1780,20 @@
     background: var(--accent);
 }
 .solar-panel-content {
+    flex: 1;
+    min-height: 0;
     height: 100%;
     max-height: 100%;
     overflow: auto;
     padding: 8px 10px;
+    -webkit-overflow-scrolling: touch;
 }
 .solar-panel-pane {
     display: none;
 }
 .solar-panel-pane.active {
     display: block;
+    min-height: 100%;
 }
 .solar-data-section .data-table {
     width: 100%;
@@ -2079,7 +2087,9 @@
         flex: 0 0 auto;
         min-height: 330px;
     }
-    .solar-panel-content { max-height: 44vh; }
+    .solar-panel-content {
+        max-height: none;
+    }
     .solar-wheel-wrapper { max-width: 100%; }
     #solarLocationFields {
         margin-left: 0;
