@@ -786,24 +786,50 @@
     }
 
     .zoom-controls-float {
-        position: static;
-        order: 2;
-        align-self: flex-end;
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        bottom: auto;
+        order: unset;
+        align-self: auto;
         flex-direction: row;
-        gap: 6px;
+        gap: 4px;
         padding: 4px;
         border-radius: 999px;
         box-shadow: 0 8px 18px rgba(26, 22, 20, 0.06);
     }
 
+    .chart-page .zoom-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 13px;
+    }
+
     .chart-page .aspect-lines-legend {
-        position: static;
-        order: 3;
-        max-width: none;
-        margin: 0;
-        padding: 8px 10px;
-        border-radius: 14px;
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+        order: unset;
+        width: fit-content;
+        max-width: calc(100% - 24px);
+        margin: 0 auto;
+        padding: 5px;
+        border-radius: 999px;
         box-shadow: 0 8px 18px rgba(26, 22, 20, 0.06);
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .chart-page .aspect-lines-legend::-webkit-scrollbar {
+        display: none;
+    }
+
+    .chart-page .aspect-lines-legend .aspect-legend-row {
+        gap: 5px;
+        flex-wrap: nowrap;
     }
 
     .chart-page .aspect-lines-legend .aspect-legend-row--colors {
@@ -811,9 +837,15 @@
     }
 
     .chart-page .aspect-lines-legend .legend-item.clickable {
-        min-height: 32px;
-        padding: 0 10px;
-        font-size: 11.5px;
+        min-height: 30px;
+        padding: 0 9px;
+        font-size: 11px;
+        gap: 5px;
+        flex: 0 0 auto;
+    }
+
+    .chart-page .aspect-lines-legend .line-sample {
+        width: 14px;
     }
 
     .chart-page .settings-panel {

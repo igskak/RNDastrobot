@@ -781,6 +781,8 @@ select:focus {
     .clients-header-actions {
         width: 100%;
         justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
     }
 
     .toolbar-card {
@@ -814,18 +816,17 @@ select:focus {
         grid-template-columns: minmax(0, 1fr) auto;
         grid-template-areas:
             "name actions"
-            "birth birth"
-            "place place"
+            "birth place"
             "created created";
-        gap: 12px 14px;
-        margin-bottom: 12px;
-        padding: 18px;
-        border: 1px solid rgba(30, 58, 95, 0.09);
-        border-radius: 24px;
+        gap: 10px 10px;
+        margin-bottom: 10px;
+        padding: 14px;
+        border: 1px solid rgba(30, 58, 95, 0.08);
+        border-radius: 20px;
         background:
             linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(249, 247, 242, 0.94)),
             rgba(255, 255, 255, 0.92);
-        box-shadow: 0 18px 42px rgba(18, 28, 45, 0.07);
+        box-shadow: 0 12px 28px rgba(18, 28, 45, 0.06);
     }
 
     .clients-table tbody tr:last-child {
@@ -869,41 +870,41 @@ select:focus {
 
     .client-name-cell {
         align-items: flex-start;
-        gap: 14px;
+        gap: 10px;
     }
 
     .client-avatar {
-        width: 46px;
-        height: 46px;
-        font-size: 13px;
+        width: 40px;
+        height: 40px;
+        font-size: 12px;
     }
 
     .client-name-stack {
         display: grid;
-        gap: 10px;
+        gap: 8px;
         min-width: 0;
         width: 100%;
     }
 
     .client-name-text {
-        font-size: 17px;
-        line-height: 1.2;
+        font-size: 16px;
+        line-height: 1.15;
         color: #142338;
     }
 
     .client-summary-chips {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 6px;
     }
 
     .client-summary-chip {
         display: inline-flex;
         align-items: center;
-        min-height: 28px;
-        padding: 5px 10px;
+        min-height: 24px;
+        padding: 4px 8px;
         border-radius: 999px;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 600;
         line-height: 1;
         white-space: nowrap;
@@ -920,23 +921,24 @@ select:focus {
     }
 
     .client-card-quick-actions {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
     }
 
     .client-quick-btn {
-        min-height: 42px;
-        padding: 10px 14px;
-        border-radius: 15px;
+        min-height: 36px;
+        padding: 8px 12px;
+        border-radius: 12px;
         border: 1px solid rgba(30, 58, 95, 0.1);
         background: rgba(247, 243, 235, 0.82);
         color: #17304f;
         font: inherit;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 600;
         cursor: pointer;
         transition: background var(--transition), border-color var(--transition), transform var(--transition);
+        flex: 0 0 auto;
     }
 
     .client-quick-btn:hover {
@@ -957,25 +959,26 @@ select:focus {
 
     .client-fact {
         display: grid;
-        gap: 5px;
-        padding: 12px 14px;
-        border-radius: 18px;
+        gap: 4px;
+        padding: 10px 12px;
+        border-radius: 15px;
         background: rgba(248, 245, 239, 0.9);
         border: 1px solid rgba(30, 58, 95, 0.07);
+        min-width: 0;
     }
 
     .client-fact-label {
         display: block;
         color: rgba(92, 85, 78, 0.72);
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 700;
-        letter-spacing: 0.12em;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
     }
 
     .client-fact-value {
-        font-size: 14px;
-        line-height: 1.45;
+        font-size: 13px;
+        line-height: 1.35;
         color: #1d2f4b;
         word-break: break-word;
     }
@@ -1042,7 +1045,7 @@ select:focus {
 
     .workspace-hero,
     .clients-card {
-        padding: 24px 20px;
+        padding: 22px 18px;
         border-radius: 26px;
     }
 
@@ -1062,6 +1065,14 @@ select:focus {
 
     .clients-card-actions .btn-new {
         width: 100%;
+    }
+
+    .clients-table tbody tr {
+        grid-template-areas:
+            "name actions"
+            "birth birth"
+            "place place"
+            "created created";
     }
 
     .clients-dialog {

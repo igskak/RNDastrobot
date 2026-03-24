@@ -106,6 +106,10 @@
     box-shadow: var(--shadow-sm);
     backdrop-filter: blur(8px);
     flex-shrink: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
 }
 .forecast-focus-toggle-btn:hover {
     border-color: rgba(30, 58, 95, 0.28);
@@ -952,6 +956,10 @@
     align-items: center;
     justify-content: center;
     transition: all var(--transition);
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
 }
 .bw-zoom-btn:hover {
     background: var(--gold-pale);
@@ -979,6 +987,10 @@
     box-shadow: 0 10px 24px rgba(26, 22, 20, 0.08);
     backdrop-filter: blur(6px);
     transition: all var(--transition);
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
 }
 .bw-mode-btn:hover {
     background: var(--gold-pale);
@@ -1045,6 +1057,8 @@
     display: flex;
     flex-direction: column;
     min-height: 100%;
+    width: 100%;
+    min-width: 0;
 }
 .bw-panel-header {
     position: sticky;
@@ -1066,6 +1080,8 @@
 }
 .bw-panel-body {
     min-height: 0;
+    width: 100%;
+    min-width: 0;
 }
 .bw-panel-collapse-btn {
     width: 28px;
@@ -1407,17 +1423,22 @@
 .biwheel-aspects-list {
     flex: 1;
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: auto;
     min-height: 0;
+    min-width: 0;
+    -webkit-overflow-scrolling: touch;
 }
 .biwheel-ingresses-list {
     flex: 1;
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: auto;
     min-height: 0;
+    min-width: 0;
+    -webkit-overflow-scrolling: touch;
 }
 .biwheel-ingresses-list table {
     width: max-content;
+    min-width: 100%;
     font-size: 0.78rem;
     border-collapse: collapse;
     white-space: nowrap;
@@ -1443,7 +1464,8 @@
     line-height: 1.2;
 }
 .biwheel-aspects-list table {
-    width: 100%;
+    width: max-content;
+    min-width: 100%;
     font-size: 1.1rem;
     border-collapse: collapse;
     white-space: nowrap;
@@ -1988,37 +2010,62 @@
     .forecast-tab.active {
         background: rgba(245, 237, 223, 0.96);
     }
-    .bw-focus-controls,
-    .bw-overlay-controls {
+    .bw-focus-controls {
         top: 10px;
+        left: 10px;
+    }
+    .bw-overlay-controls {
+        top: auto;
+        right: auto;
+        left: 10px;
+        bottom: calc(118px + env(safe-area-inset-bottom, 0px));
+        z-index: 10;
     }
     .control-separator { display: none; }
     .biwheel-main { flex-direction: column; }
     .biwheel-chart-area { min-height: 300px; }
     .biwheel-leftbar {
         width: 100%;
+        min-width: 0;
+        max-width: none;
         max-height: 220px;
         border-right: none;
         border-top: 1px solid var(--border, #333);
     }
-    .biwheel-sidebar { width: 100%; max-height: 280px; border-left: none; border-top: 1px solid var(--border, #333); }
+    .biwheel-sidebar {
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+        max-height: 280px;
+        border-left: none;
+        border-top: 1px solid var(--border, #333);
+    }
     .biwheel-svg-wrapper { min-height: 300px; }
     .biwheel-aspect-bar {
         left: 10px;
         right: 10px;
-        bottom: 56px;
-        max-width: none;
-        padding: 8px;
+        bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+        width: fit-content;
+        max-width: calc(100% - 20px);
+        margin: 0 auto;
+        padding: 5px;
         border: 1px solid rgba(224, 221, 215, 0.92);
-        border-radius: 18px;
+        border-radius: 999px;
         background: rgba(255, 255, 255, 0.9);
         box-shadow: 0 12px 28px rgba(26, 22, 20, 0.08);
         backdrop-filter: blur(10px);
-        gap: 8px;
+        gap: 5px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+    .biwheel-aspect-bar::-webkit-scrollbar {
+        display: none;
     }
     .bw-layer-legend,
     .bw-aspect-row {
-        width: 100%;
+        width: max-content;
         flex-wrap: nowrap;
         overflow-x: auto;
         scrollbar-width: none;
@@ -2032,13 +2079,29 @@
         white-space: nowrap;
         flex: 0 0 auto;
     }
+    .bw-legend-item {
+        padding: 3px 7px;
+        font-size: 0.68rem;
+        gap: 4px;
+    }
+    .bw-filter-btn {
+        padding: 3px 7px;
+        font-size: 0.68rem;
+    }
+    .bw-mode-btn {
+        min-width: 66px;
+        height: 32px;
+        padding: 0 10px;
+        font-size: 0.72rem;
+    }
     .biwheel-zoom-controls {
-        left: 50%;
-        right: auto;
-        bottom: 10px;
-        transform: translateX(-50%);
+        top: 10px;
+        right: 10px;
+        left: auto;
+        bottom: auto;
+        transform: none;
         flex-direction: row;
-        gap: 2px;
+        gap: 4px;
         padding: 4px;
         border-radius: 999px;
     }

@@ -20,6 +20,15 @@
     }
 
     function resolveMountTarget() {
+        const clientsHeaderActions = document.querySelector('.clients-header-actions');
+        if (clientsHeaderActions) {
+            return {
+                parent: clientsHeaderActions,
+                beforeNode: clientsHeaderActions.querySelector('.btn-logout'),
+                inline: true
+            };
+        }
+
         const forecastHeader = document.querySelector('.forecast-header');
         if (forecastHeader) {
             return {
