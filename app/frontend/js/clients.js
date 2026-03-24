@@ -176,6 +176,7 @@ function bindEvents() {
             }
             if (action === 'delete') { await handleDelete(userId, actionBtn); return; }
             if (action === 'open-chart') { await openChart(userId); return; }
+            if (action === 'open-forecast') { await openForecastForUser(userId); return; }
             if (action === 'log-session') { openLogSessionDialog(userId); return; }
             if (action === 'delete-consultation') {
                 await deleteConsultation(actionBtn.dataset.consultationId, userId);
@@ -371,19 +372,66 @@ function buildUserRow(user) {
     const labelActions = escapeHtml(t('page.clients.table.actions'));
     const editLabel = escapeHtml(t('page.clients.actions.edit'));
     const deleteLabel = escapeHtml(t('page.clients.actions.delete'));
+    const openChartLabel = escapeHtml(t('page.clients.detail.openChart'));
+    const forecastLabel = escapeHtml(t('page.chart.nav.forecast'));
+    const upcomingCount = Number(user.upcoming_count || 0);
+    const unpaidCount = Number(user.unpaid_count || 0);
+    const summaryChips = [];
+
+    if (upcomingCount > 0) {
+        summaryChips.push(`
+            <span class="client-summary-chip client-summary-chip-upcoming">
+                ${escapeHtml(t('page.clients.statsUpcoming'))}: ${escapeHtml(String(upcomingCount))}
+            </span>
+        `);
+    }
+
+    if (unpaidCount > 0) {
+        summaryChips.push(`
+            <span class="client-summary-chip client-summary-chip-unpaid">
+                ${escapeHtml(t('page.clients.statsUnpaid'))}: ${escapeHtml(String(unpaidCount))}
+            </span>
+        `);
+    }
 
     tr.dataset.userId = userId;
     tr.innerHTML = `
-        <td data-label="${labelName}">
+        <td class="client-cell client-cell-name" data-label="${labelName}">
             <div class="client-name-cell">
                 <span class="client-avatar">${escapeHtml(initials)}</span>
-                <strong>${escapeHtml(name)}</strong>
+                <div class="client-name-stack">
+                    <strong class="client-name-text">${escapeHtml(name)}</strong>
+                    ${summaryChips.length > 0 ? `<div class="client-summary-chips">${summaryChips.join('')}</div>` : ''}
+                    <div class="client-card-quick-actions">
+                        <button class="client-quick-btn client-quick-btn-primary" type="button" data-action="open-chart" data-user-id="${escapeHtml(userId)}">
+                            ${openChartLabel}
+                        </button>
+                        <button class="client-quick-btn" type="button" data-action="open-forecast" data-user-id="${escapeHtml(userId)}">
+                            ${forecastLabel}
+                        </button>
+                    </div>
+                </div>
             </div>
         </td>
-        <td data-label="${labelBirthDate}">${escapeHtml(birthDate)}</td>
-        <td data-label="${labelPlace}">${escapeHtml(place)}</td>
-        <td data-label="${labelCreated}">${escapeHtml(created)}</td>
-        <td data-label="${labelActions}">
+        <td class="client-cell client-cell-birth" data-label="${labelBirthDate}">
+            <div class="client-fact">
+                <span class="client-fact-label">${labelBirthDate}</span>
+                <span class="client-fact-value">${escapeHtml(birthDate)}</span>
+            </div>
+        </td>
+        <td class="client-cell client-cell-place" data-label="${labelPlace}">
+            <div class="client-fact">
+                <span class="client-fact-label">${labelPlace}</span>
+                <span class="client-fact-value">${escapeHtml(place)}</span>
+            </div>
+        </td>
+        <td class="client-cell client-cell-created" data-label="${labelCreated}">
+            <div class="client-fact">
+                <span class="client-fact-label">${labelCreated}</span>
+                <span class="client-fact-value">${escapeHtml(created)}</span>
+            </div>
+        </td>
+        <td class="client-cell client-cell-actions" data-label="${labelActions}">
             <div class="row-actions">
                 <button class="btn-actions" type="button" data-action="toggle-menu" data-user-id="${escapeHtml(userId)}" aria-label="${escapeHtml(t('page.clients.table.actions'))}" aria-haspopup="menu" aria-expanded="false">
                     <svg width="14" height="4" viewBox="0 0 14 4" fill="none"><circle cx="2" cy="2" r="1.4" fill="currentColor"/><circle cx="7" cy="2" r="1.4" fill="currentColor"/><circle cx="12" cy="2" r="1.4" fill="currentColor"/></svg>
@@ -1055,6 +1103,7 @@ function buildDetailPanelHTML(user, consultations) {
             </div>
             <div class="detail-actions">
                 <button class="btn-new btn-sm" type="button" data-action="open-chart" data-user-id="${userId}">${escapeHtml(t('page.clients.detail.openChart'))}</button>
+                <button class="btn-new btn-sm btn-secondary" type="button" data-action="open-forecast" data-user-id="${userId}">${escapeHtml(t('page.chart.nav.forecast'))}</button>
                 <button class="btn-new btn-sm btn-secondary" type="button" data-action="log-session" data-user-id="${userId}">${escapeHtml(t('page.clients.detail.logSession'))}</button>
                 <button class="btn-new btn-sm btn-secondary" type="button" data-action="edit" data-user-id="${userId}">${escapeHtml(t('page.clients.actions.edit'))}</button>
             </div>
