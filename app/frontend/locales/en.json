@@ -374,7 +374,11 @@
       },
       "loading": "Loading chart data...",
       "mobile": {
-        "chart": "Chart"
+        "chart": "Chart",
+        "quick": {
+          "aspects": "See aspects",
+          "houses": "See houses"
+        }
       },
       "nav": {
         "forecast": "Forecast",

@@ -55,6 +55,17 @@
         document.querySelectorAll('.mobile-tab').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.view === viewName);
         });
+
+        if (document.body) {
+            document.body.dataset.chartMobileView = viewName;
+        }
+
+        if (viewName !== 'chart') {
+            const settingsPanel = document.getElementById('settingsPanel');
+            if (settingsPanel) {
+                settingsPanel.classList.add('hidden');
+            }
+        }
     }
 
     // ========== PANEL TAB SWITCHING ==========
@@ -271,6 +282,30 @@
         // --- Mobile navigation ---
         document.querySelectorAll('.mobile-tab').forEach(btn => {
             btn.addEventListener('click', () => switchMobileView(btn.dataset.view));
+        });
+
+        document.querySelectorAll('[data-mobile-view-target]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const viewName = btn.dataset.mobileViewTarget;
+                const panelTab = btn.dataset.mobilePanelTab;
+                if (!viewName) return;
+
+                switchMobileView(viewName);
+
+                if (viewName === 'planets') {
+                    const panel = document.getElementById('view-planets');
+                    if (panel && panelTab) {
+                        switchPanelTab(panel, panelTab);
+                    }
+                }
+
+                if (viewName === 'houses') {
+                    const panel = document.getElementById('view-houses');
+                    if (panel && panelTab) {
+                        switchPanelTab(panel, panelTab);
+                    }
+                }
+            });
         });
 
         // --- Panel tabs ---

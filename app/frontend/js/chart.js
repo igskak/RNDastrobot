@@ -98,6 +98,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Обновляем заголовок
     updateHeader(chartData);
+    renderMobileSummary(chartData);
 
     // Обновляем ссылки на интерпретации
     updateInterpretationLinks(chartData);
@@ -154,6 +155,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('frontend:locale-changed', () => {
         if (!window.chartDataCache) return;
         updateHeader(window.chartDataCache);
+        renderMobileSummary(window.chartDataCache);
         refreshEditDialogLocale();
         if (chartDataRenderer && typeof chartDataRenderer.render === 'function') {
             const hidden = currentSettings.hiddenPlanets || [];
@@ -290,6 +292,51 @@ function getBirthPlaceLabel(chartData, formData) {
     }
 
     return '';
+}
+
+function getTranslatedSignName(signName) {
+    const key = `astro.sign.${signName}`;
+    const translated = t(key);
+    return translated === key ? (window.Symbols?.signNamesRu?.[signName] || signName || '') : translated;
+}
+
+function formatDegreeInSign(body) {
+    if (!body) return t('common.notAvailable');
+    if (body.degree_in_sign_formatted) return body.degree_in_sign_formatted;
+
+    const degree = Number(body.degree_in_sign);
+    if (!Number.isFinite(degree)) return t('common.notAvailable');
+
+    const whole = Math.floor(degree);
+    const minutesFloat = (degree - whole) * 60;
+    const minutes = Math.floor(minutesFloat);
+    return `${whole}°${String(minutes).padStart(2, '0')}'`;
+}
+
+function formatSummaryBody(body) {
+    if (!body?.sign) return t('common.notAvailable');
+
+    const signSymbol = window.Symbols?.signs?.[body.sign] || '';
+    const signName = getTranslatedSignName(body.sign);
+    const degree = formatDegreeInSign(body);
+
+    return [signSymbol, signName, degree].filter(Boolean).join(' ');
+}
+
+function renderMobileSummary(chartData) {
+    const fields = {
+        mobileSummaryAsc: chartData?.angles?.ASC,
+        mobileSummarySun: chartData?.planets?.find((planet) => planet.name === 'Sun'),
+        mobileSummaryMoon: chartData?.planets?.find((planet) => planet.name === 'Moon'),
+        mobileSummaryMc: chartData?.angles?.MC,
+    };
+
+    Object.entries(fields).forEach(([id, body]) => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = formatSummaryBody(body);
+        }
+    });
 }
 
 function getCurrentChartUserId() {
@@ -549,6 +596,7 @@ async function applySettings() {
                     { houseSystem }
                 );
                 updateHeader(newChartData);
+                renderMobileSummary(newChartData);
                 updateInterpretationLinks(newChartData);
                 redrawChart(newChartData, hiddenPlanets, orientation);
             }
@@ -1027,6 +1075,7 @@ async function handleEditClientSubmit(event) {
         const preparedChartData = applyChartState(updatedChartData, { houseSystem: currentSettings.houseSystem });
         currentHoveredAspectKey = null;
         updateHeader(preparedChartData);
+        renderMobileSummary(preparedChartData);
         updateInterpretationLinks(preparedChartData);
         redrawChart(preparedChartData, currentSettings.hiddenPlanets || [], currentSettings.orientation);
         closeEditClientDialog();

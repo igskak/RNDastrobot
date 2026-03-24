@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.chart.title"></title>
-    <link rel="stylesheet" href="bundles/chart.bundle.css?v=20260324-205559">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260324-205559">
-    <script>window.__APP_BUILD_ID__ = '20260324-205559';</script>
+    <link rel="stylesheet" href="bundles/chart.bundle.css?v=20260324-211008">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260324-211008">
+    <script>window.__APP_BUILD_ID__ = '20260324-211008';</script>
 </head>
 <body class="chart-page">
     <div class="page-loader" id="pageLoader">
@@ -79,6 +79,46 @@
         </aside>
 
         <main class="chart-center" id="view-chart">
+            <section class="chart-mobile-summary" id="chartMobileSummary" aria-live="polite">
+                <div class="chart-mobile-summary-grid">
+                    <div class="chart-mobile-summary-item">
+                        <span class="chart-mobile-summary-label">ASC</span>
+                        <span class="chart-mobile-summary-value" id="mobileSummaryAsc"></span>
+                    </div>
+                    <div class="chart-mobile-summary-item">
+                        <span class="chart-mobile-summary-label summary-label-glyph">☉</span>
+                        <span class="chart-mobile-summary-value" id="mobileSummarySun"></span>
+                    </div>
+                    <div class="chart-mobile-summary-item">
+                        <span class="chart-mobile-summary-label summary-label-glyph">☽</span>
+                        <span class="chart-mobile-summary-value" id="mobileSummaryMoon"></span>
+                    </div>
+                    <div class="chart-mobile-summary-item">
+                        <span class="chart-mobile-summary-label">MC</span>
+                        <span class="chart-mobile-summary-value" id="mobileSummaryMc"></span>
+                    </div>
+                </div>
+                <div class="chart-mobile-summary-actions">
+                    <button type="button" class="chart-mobile-summary-btn" data-mobile-view-target="planets" data-mobile-panel-tab="aspects-list" data-i18n="page.chart.mobile.quick.aspects"></button>
+                    <button type="button" class="chart-mobile-summary-btn" data-mobile-view-target="houses" data-mobile-panel-tab="houses-list" data-i18n="page.chart.mobile.quick.houses"></button>
+                    <a href="forecast.html" class="chart-mobile-summary-btn chart-mobile-summary-btn--accent" data-i18n="page.chart.nav.forecast"></a>
+                </div>
+                <div class="chart-mobile-summary-legend">
+                    <span class="chart-mobile-summary-legend-item">
+                        <span class="chart-mobile-summary-dot chart-mobile-summary-dot--tense"></span>
+                        <span data-i18n="page.chart.legend.tense"></span>
+                    </span>
+                    <span class="chart-mobile-summary-legend-item">
+                        <span class="chart-mobile-summary-dot chart-mobile-summary-dot--harmonious"></span>
+                        <span data-i18n="page.chart.legend.harmonious"></span>
+                    </span>
+                    <span class="chart-mobile-summary-legend-item">
+                        <span class="chart-mobile-summary-dot chart-mobile-summary-dot--neutral"></span>
+                        <span data-i18n="page.chart.legend.neutral"></span>
+                    </span>
+                </div>
+            </section>
+
             <div class="chart-wheel-wrapper" id="chartWheelWrapper">
                 <svg id="chartWheel" viewBox="0 0 500 500"></svg>
             </div>
@@ -326,7 +366,7 @@
 
     <div id="chartToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/chart.bundle.js?v=20260324-205559"></script>
-    <script src="js/locale-switcher.js?v=20260324-205559"></script>
+    <script type="module" src="js/bundles/chart.bundle.js?v=20260324-211008"></script>
+    <script src="js/locale-switcher.js?v=20260324-211008"></script>
 </body>
 </html>
