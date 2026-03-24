@@ -23,6 +23,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     const timezoneHint = document.getElementById('timezoneHint');
     const submitBtn = document.getElementById('submitBtn');
     const errorMessage = document.getElementById('errorMessage');
+    const summaryBirthItem = document.getElementById('summaryBirthItem');
+    const summaryPlaceItem = document.getElementById('summaryPlaceItem');
+    const summaryTimezoneItem = document.getElementById('summaryTimezoneItem');
+
+    function hasValue(element) {
+        return Boolean(element && String(element.value ?? '').trim());
+    }
+
+    function updateFormProgress() {
+        const birthComplete = [
+            document.getElementById('firstName'),
+            document.getElementById('lastName'),
+            document.getElementById('birthDay'),
+            document.getElementById('birthMonth'),
+            document.getElementById('birthYear'),
+            document.getElementById('birthHour'),
+            document.getElementById('birthMinute'),
+        ].every(hasValue);
+        const placeComplete = hasValue(placeInput);
+        const timezoneComplete = hasValue(timezoneSelect);
+
+        summaryBirthItem?.classList.toggle('is-complete', birthComplete);
+        summaryPlaceItem?.classList.toggle('is-complete', placeComplete);
+        summaryTimezoneItem?.classList.toggle('is-complete', timezoneComplete);
+    }
 
     // Заполняем список часовых поясов
     Timezones.populate(timezoneSelect);
@@ -32,6 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (selectedTimezone) {
             timezoneSelect.value = selectedTimezone;
         }
+        updateFormProgress();
     });
 
     const placeSuggestions = document.getElementById('birthPlaceSuggestions');
@@ -53,6 +79,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     timezoneHint.textContent = t('page.index.form.timezone.autoDetected');
                     timezoneHint.style.color = '#22c55e';
                 }
+                updateFormProgress();
             },
             onSelect: async (item) => {
                 if (Number.isFinite(item.lat) && Number.isFinite(item.lon)) {
@@ -74,10 +101,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     timezoneHint.textContent = t('page.index.form.timezone.autoDetected');
                     timezoneHint.style.color = '#22c55e';
                 }
+                updateFormProgress();
             }
         });
     }
     placeInput?.addEventListener('focus', bindPlaceAutocomplete, { once: true });
+    form?.addEventListener('input', updateFormProgress);
+    form?.addEventListener('change', updateFormProgress);
 
     // Обработка отправки формы
     form.addEventListener('submit', async (e) => {
@@ -176,6 +206,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             setCoordinatesDMS(savedFormData.latitude, savedFormData.longitude);
         }
     }
+
+    updateFormProgress();
 });
 
 /**

@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.login.meta.title"></title>
-    <link rel="stylesheet" href="bundles/login.bundle.css?v=20260322-225159">
-    <script>window.__APP_BUILD_ID__ = '20260322-225159';</script>
+    <link rel="stylesheet" href="bundles/login.bundle.css?v=20260324-204756">
+    <script>window.__APP_BUILD_ID__ = '20260324-204756';</script>
 </head>
 <body class="login-page">
     <main class="login-shell">
@@ -56,15 +56,20 @@
                 <p id="authSubtitle" class="login-subtitle"></p>
             </header>
 
+            <section class="login-mobile-trust" aria-labelledby="loginMobileTrustTitle">
+                <p class="login-mobile-trust-kicker" data-i18n="page.login.hero.eyebrow"></p>
+                <h2 id="loginMobileTrustTitle" class="login-mobile-trust-title" data-i18n="page.login.mobileTrust.title"></h2>
+                <p class="login-mobile-trust-copy" data-i18n="page.login.mobileTrust.copy"></p>
+                <div class="login-mobile-trust-badges" data-i18n-aria-label="page.login.hero.badgesAriaLabel">
+                    <span class="login-mobile-trust-badge" data-i18n="page.login.hero.badges.private"></span>
+                    <span class="login-mobile-trust-badge" data-i18n="page.login.hero.badges.premium"></span>
+                    <span class="login-mobile-trust-badge" data-i18n="page.login.hero.badges.multilingual"></span>
+                </div>
+            </section>
+
             <div id="statusBanner" class="status-banner" role="alert" hidden></div>
 
-            <section class="auth-view" data-view="login">
-                <button id="googleLoginBtn" class="btn btn-google" type="button"></button>
-
-                <div class="login-divider" aria-hidden="true">
-                    <span data-i18n="page.login.divider"></span>
-                </div>
-
+            <section class="auth-view auth-view--form" data-view="login">
                 <form id="passwordLoginForm" novalidate>
                     <div class="field">
                         <label for="email" data-i18n="page.login.fields.email.label"></label>
@@ -104,13 +109,20 @@
                     <button id="passwordLoginSubmit" class="btn btn-primary" type="submit"></button>
                 </form>
 
+                <div class="login-secondary-auth">
+                    <div class="login-divider" aria-hidden="true">
+                        <span data-i18n="page.login.divider"></span>
+                    </div>
+                    <button id="googleLoginBtn" class="btn btn-google" type="button"></button>
+                </div>
+
                 <div class="switch-auth-cta">
                     <span data-i18n="page.login.actions.noAccount"></span>
                     <button id="showRegisterBtn" class="link-btn" type="button" data-i18n="page.login.actions.goToRegister"></button>
                 </div>
             </section>
 
-            <section class="auth-view" data-view="register" hidden>
+            <section class="auth-view auth-view--form" data-view="register" hidden>
                 <form id="registerForm" novalidate>
                     <div class="field-grid field-grid-2">
                         <div class="field">
@@ -194,7 +206,7 @@
                 <button class="link-btn auth-back-link" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
             </section>
 
-            <section class="auth-view" data-view="verify-check-email" hidden>
+            <section class="auth-view auth-view--status" data-view="verify-check-email" hidden>
                 <p id="verifyCheckEmailBody" class="view-message"></p>
                 <div class="delivery-warning" role="note" aria-live="polite">
                     <p class="delivery-warning-title" data-i18n="page.login.hints.emailDeliverySpamTitle"></p>
@@ -206,16 +218,16 @@
                 </div>
             </section>
 
-            <section class="auth-view" data-view="verify-loading" hidden>
+            <section class="auth-view auth-view--status" data-view="verify-loading" hidden>
                 <p class="view-message" data-i18n="page.login.views.verifyLoading.body"></p>
             </section>
 
-            <section class="auth-view" data-view="verify-success" hidden>
+            <section class="auth-view auth-view--status" data-view="verify-success" hidden>
                 <p class="view-message" data-i18n="page.login.views.verifySuccess.body"></p>
                 <button class="btn btn-primary" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
             </section>
 
-            <section class="auth-view" data-view="verify-invalid" hidden>
+            <section class="auth-view auth-view--warning" data-view="verify-invalid" hidden>
                 <p id="verifyInvalidBody" class="view-message"></p>
                 <form id="verifyResendForm" novalidate>
                     <div class="field">
@@ -239,7 +251,7 @@
                 </div>
             </section>
 
-            <section class="auth-view" data-view="forgot" hidden>
+            <section class="auth-view auth-view--form" data-view="forgot" hidden>
                 <form id="forgotPasswordForm" novalidate>
                     <div class="field">
                         <label for="forgotEmail" data-i18n="page.login.fields.email.label"></label>
@@ -261,7 +273,7 @@
                 <button class="link-btn auth-back-link" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
             </section>
 
-            <section class="auth-view" data-view="check-email" hidden>
+            <section class="auth-view auth-view--status" data-view="check-email" hidden>
                 <p id="checkEmailBody" class="view-message"></p>
                 <div class="delivery-warning" role="note" aria-live="polite">
                     <p class="delivery-warning-title" data-i18n="page.login.hints.emailDeliverySpamTitle"></p>
@@ -273,7 +285,7 @@
                 </div>
             </section>
 
-            <section class="auth-view" data-view="reset" hidden>
+            <section class="auth-view auth-view--form" data-view="reset" hidden>
                 <form id="resetPasswordForm" novalidate>
                     <div class="field">
                         <label for="resetPassword" data-i18n="page.login.fields.newPassword.label"></label>
@@ -316,12 +328,12 @@
                 <button class="link-btn auth-back-link" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
             </section>
 
-            <section class="auth-view" data-view="reset-success" hidden>
+            <section class="auth-view auth-view--status" data-view="reset-success" hidden>
                 <p class="view-message" data-i18n="page.login.views.success.body"></p>
                 <button class="btn btn-primary" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
             </section>
 
-            <section class="auth-view" data-view="reset-invalid" hidden>
+            <section class="auth-view auth-view--warning" data-view="reset-invalid" hidden>
                 <p id="resetInvalidBody" class="view-message"></p>
                 <div class="stack-actions">
                     <button class="btn btn-secondary" type="button" data-action="open-forgot" data-i18n="page.login.actions.requestNewLink"></button>
@@ -332,6 +344,6 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script type="module" src="js/bundles/login.bundle.js?v=20260322-225159"></script>
+    <script type="module" src="js/bundles/login.bundle.js?v=20260324-204756"></script>
 </body>
 </html>

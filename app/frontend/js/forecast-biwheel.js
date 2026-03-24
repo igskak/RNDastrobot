@@ -2236,43 +2236,27 @@
         });
         window.addEventListener('mouseup', () => { isPanning = false; });
 
-        // Touch pinch zoom + pan
-        let lastTouchDist = 0, lastTouchMid = null;
+        // Single-finger pan only; keep native browser pinch zoom available on mobile.
         wrapper.addEventListener('touchstart', e => {
-            if (e.touches.length === 2) {
-                const dx = e.touches[0].clientX - e.touches[1].clientX;
-                const dy = e.touches[0].clientY - e.touches[1].clientY;
-                lastTouchDist = Math.hypot(dx, dy);
-                lastTouchMid = { x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
-                                 y: (e.touches[0].clientY + e.touches[1].clientY) / 2 };
-            } else if (e.touches.length === 1) {
-                isPanning = true;
-                panStartX = e.touches[0].clientX;
-                panStartY = e.touches[0].clientY;
+            if (e.touches.length !== 1) {
+                isPanning = false;
+                return;
             }
+            isPanning = true;
+            panStartX = e.touches[0].clientX;
+            panStartY = e.touches[0].clientY;
         }, { passive: true });
         wrapper.addEventListener('touchmove', e => {
-            if (e.touches.length === 2) {
-                e.preventDefault();
-                const dx = e.touches[0].clientX - e.touches[1].clientX;
-                const dy = e.touches[0].clientY - e.touches[1].clientY;
-                const dist = Math.hypot(dx, dy);
-                if (lastTouchDist > 0) {
-                    const ratio = dist / lastTouchDist;
-                    zoomLevel = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoomLevel * ratio));
-                    applyViewBox();
-                }
-                lastTouchDist = dist;
-            } else if (e.touches.length === 1 && isPanning) {
-                const width = wrapper.clientWidth || VIEWBOX_SIZE;
-                panX -= (e.touches[0].clientX - panStartX) / (zoomLevel * width);
-                panY -= (e.touches[0].clientY - panStartY) / (zoomLevel * width);
-                panStartX = e.touches[0].clientX;
-                panStartY = e.touches[0].clientY;
-                applyViewBox();
-            }
+            if (e.touches.length !== 1 || !isPanning) return;
+            e.preventDefault();
+            const width = wrapper.clientWidth || VIEWBOX_SIZE;
+            panX -= (e.touches[0].clientX - panStartX) / (zoomLevel * width);
+            panY -= (e.touches[0].clientY - panStartY) / (zoomLevel * width);
+            panStartX = e.touches[0].clientX;
+            panStartY = e.touches[0].clientY;
+            applyViewBox();
         }, { passive: false });
-        wrapper.addEventListener('touchend', () => { isPanning = false; lastTouchDist = 0; });
+        wrapper.addEventListener('touchend', () => { isPanning = false; });
 
         // Buttons
         document.getElementById('bwZoomIn')?.addEventListener('click', () => {

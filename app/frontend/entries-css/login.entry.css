@@ -278,6 +278,10 @@
     margin-bottom: 24px;
 }
 
+.login-mobile-trust {
+    display: none;
+}
+
 .login-brand {
     margin: 0 0 8px;
     font-size: 12px;
@@ -540,6 +544,10 @@
     background: rgba(30, 58, 95, 0.12);
 }
 
+.login-secondary-auth {
+    margin-top: 18px;
+}
+
 .stack-actions {
     display: grid;
     gap: 12px;
@@ -662,15 +670,162 @@
     }
 
     .login-card {
-        min-height: calc(100vh - 20px);
-        border-radius: 24px;
+        min-height: 0;
+        padding: 20px 16px 18px;
+        border-radius: 22px;
+        box-shadow:
+            0 18px 44px rgba(18, 28, 45, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.76);
     }
 
     .login-card-frame {
-        inset: 12px;
+        display: none;
+    }
+
+    .login-card-orbit,
+    .login-card-glow {
+        display: none;
+    }
+
+    .login-header {
+        margin-bottom: 18px;
+    }
+
+    .login-kicker {
+        display: none;
     }
 
     .login-title {
         font-size: clamp(32px, 8vw, 42px);
+    }
+
+    .login-subtitle {
+        margin-top: 8px;
+        max-width: none;
+    }
+
+    .login-mobile-trust {
+        display: grid;
+        gap: 10px;
+        margin: 0 0 18px;
+        padding: 16px;
+        border-radius: 20px;
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(245, 237, 223, 0.76)),
+            rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(30, 58, 95, 0.08);
+        box-shadow: 0 14px 30px rgba(26, 22, 20, 0.05);
+    }
+
+    .login-mobile-trust-kicker {
+        margin: 0;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(30, 58, 95, 0.72);
+    }
+
+    .login-mobile-trust-title {
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: 28px;
+        font-weight: 500;
+        line-height: 0.96;
+        letter-spacing: -0.03em;
+        color: #142338;
+    }
+
+    .login-mobile-trust-copy {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.55;
+        color: rgba(92, 85, 78, 0.94);
+    }
+
+    .login-mobile-trust-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .login-mobile-trust-badge {
+        display: inline-flex;
+        align-items: center;
+        min-height: 34px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(30, 58, 95, 0.08);
+        color: rgba(20, 35, 56, 0.84);
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .login-secondary-auth {
+        margin-top: 16px;
+    }
+
+    .login-divider {
+        margin: 14px 0 12px;
+    }
+
+    .switch-auth-cta {
+        margin-top: 16px;
+        padding-top: 14px;
+        border-top: 1px solid rgba(30, 58, 95, 0.1);
+    }
+
+    .auth-back-link {
+        margin-top: 14px;
+    }
+
+    .login-page[data-auth-kind="pending"] .login-header,
+    .login-page[data-auth-kind="success"] .login-header,
+    .login-page[data-auth-kind="warning"] .login-header {
+        text-align: center;
+    }
+
+    .login-page[data-auth-kind="pending"] .login-subtitle,
+    .login-page[data-auth-kind="success"] .login-subtitle,
+    .login-page[data-auth-kind="warning"] .login-subtitle {
+        max-width: none;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .login-page[data-auth-kind="pending"] .view-message,
+    .login-page[data-auth-kind="success"] .view-message,
+    .login-page[data-auth-kind="warning"] .view-message {
+        padding: 16px 18px;
+        border-radius: 18px;
+        text-align: center;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .login-page[data-auth-kind="pending"] .view-message {
+        background: rgba(30, 58, 95, 0.06);
+        border: 1px solid rgba(30, 58, 95, 0.12);
+        color: #21476d;
+    }
+
+    .login-page[data-auth-kind="success"] .view-message {
+        background: rgba(43, 122, 75, 0.08);
+        border: 1px solid rgba(43, 122, 75, 0.16);
+        color: #1f6a40;
+    }
+
+    .login-page[data-auth-kind="warning"] .view-message {
+        background: rgba(245, 237, 223, 0.94);
+        border: 1px solid rgba(176, 125, 16, 0.2);
+        color: rgba(92, 85, 78, 0.96);
+    }
+
+    .login-page[data-auth-kind="pending"] .auth-view,
+    .login-page[data-auth-kind="success"] .auth-view,
+    .login-page[data-auth-kind="warning"] .auth-view {
+        display: grid;
+        gap: 16px;
     }
 }

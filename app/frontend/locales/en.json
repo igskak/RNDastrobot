@@ -855,6 +855,10 @@
         "calculateFailed": "Failed to calculate chart"
       },
       "form": {
+        "advanced": {
+          "copy": "Coordinates and house system stay available when you need manual precision.",
+          "toggle": "Advanced settings"
+        },
         "birthDate": {
           "dayPlaceholder": "DD",
           "label": "Birth date",
@@ -874,6 +878,7 @@
           "hint": "Filled automatically from selected place",
           "label": "Coordinates"
         },
+        "ctaNote": "Your chart opens immediately after calculation.",
         "fullName": {
           "firstNamePlaceholder": "First name",
           "label": "Full name",
@@ -882,9 +887,29 @@
         "houseSystem": {
           "label": "House system"
         },
+        "sections": {
+          "birth": {
+            "copy": "Enter the core timing first so the chart can be calculated cleanly on mobile.",
+            "title": "Birth details"
+          },
+          "identity": {
+            "copy": "Start with the name you want attached to this chart.",
+            "title": "Identity"
+          },
+          "location": {
+            "copy": "Choose the birthplace from the list and let the timezone fill in automatically.",
+            "title": "Location"
+          }
+        },
         "submit": {
           "idle": "Calculate natal chart",
           "loading": "Calculating..."
+        },
+        "summary": {
+          "birth": "Birth date and time are ready",
+          "place": "Birthplace is selected",
+          "timezone": "Timezone is confirmed",
+          "title": "Ready to calculate"
         },
         "timezone": {
           "autoDetected": "Auto-detected timezone",
@@ -1057,6 +1082,10 @@
         },
         "footnote": "Designed to feel like a private astrologer studio: warm, precise, and easy to trust.",
         "cardKicker": "Secure account access"
+      },
+      "mobileTrust": {
+        "copy": "Your charts, client work, forecasts, and assistant stay in one secure space built for mobile use too.",
+        "title": "A calmer sign-in on the go."
       },
       "heading": "Secure sign in",
       "subheading": "Continue with Google or your email and password.",

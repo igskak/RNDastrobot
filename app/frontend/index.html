@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.index.title"></title>
-    <link rel="stylesheet" href="bundles/index.bundle.css?v=20260322-225159">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260322-225159">
+    <link rel="stylesheet" href="bundles/index.bundle.css?v=20260324-204756">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260324-204756">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '20260322-225159';</script>
+    <script>window.__APP_BUILD_ID__ = '20260324-204756';</script>
 </head>
 <body>
     <div class="page-loader" id="pageLoader">
@@ -38,100 +38,153 @@
 
         <main class="form-container">
             <form id="birthDataForm" class="birth-form">
-                <div class="form-group">
-                    <label class="form-label" data-i18n="page.index.form.fullName.label"></label>
-                    <div class="name-inputs">
-                        <input type="text" id="firstName" data-i18n-placeholder="page.index.form.fullName.firstNamePlaceholder" required>
-                        <input type="text" id="lastName" data-i18n-placeholder="page.index.form.fullName.lastNamePlaceholder" required>
+                <section class="form-section" aria-labelledby="identitySectionTitle">
+                    <div class="form-section-heading">
+                        <h2 id="identitySectionTitle" class="form-section-title" data-i18n="page.index.form.sections.identity.title"></h2>
+                        <p class="form-section-copy" data-i18n="page.index.form.sections.identity.copy"></p>
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <label class="form-label" data-i18n="page.index.form.birthDate.label"></label>
-                    <div class="date-inputs">
-                        <input type="number" id="birthDay" min="1" max="31" data-i18n-placeholder="page.index.form.birthDate.dayPlaceholder" required>
-                        <select id="birthMonth" required>
-                            <option value="" data-i18n="page.index.form.birthDate.monthPlaceholder"></option>
-                            <option value="01" data-i18n="common.month.long.january"></option>
-                            <option value="02" data-i18n="common.month.long.february"></option>
-                            <option value="03" data-i18n="common.month.long.march"></option>
-                            <option value="04" data-i18n="common.month.long.april"></option>
-                            <option value="05" data-i18n="common.month.long.may"></option>
-                            <option value="06" data-i18n="common.month.long.june"></option>
-                            <option value="07" data-i18n="common.month.long.july"></option>
-                            <option value="08" data-i18n="common.month.long.august"></option>
-                            <option value="09" data-i18n="common.month.long.september"></option>
-                            <option value="10" data-i18n="common.month.long.october"></option>
-                            <option value="11" data-i18n="common.month.long.november"></option>
-                            <option value="12" data-i18n="common.month.long.december"></option>
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="page.index.form.fullName.label"></label>
+                        <div class="name-inputs">
+                            <input type="text" id="firstName" data-i18n-placeholder="page.index.form.fullName.firstNamePlaceholder" required>
+                            <input type="text" id="lastName" data-i18n-placeholder="page.index.form.fullName.lastNamePlaceholder" required>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="form-section" aria-labelledby="birthSectionTitle">
+                    <div class="form-section-heading">
+                        <h2 id="birthSectionTitle" class="form-section-title" data-i18n="page.index.form.sections.birth.title"></h2>
+                        <p class="form-section-copy" data-i18n="page.index.form.sections.birth.copy"></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="page.index.form.birthDate.label"></label>
+                        <div class="date-inputs">
+                            <input type="number" id="birthDay" min="1" max="31" data-i18n-placeholder="page.index.form.birthDate.dayPlaceholder" required>
+                            <select id="birthMonth" required>
+                                <option value="" data-i18n="page.index.form.birthDate.monthPlaceholder"></option>
+                                <option value="01" data-i18n="common.month.long.january"></option>
+                                <option value="02" data-i18n="common.month.long.february"></option>
+                                <option value="03" data-i18n="common.month.long.march"></option>
+                                <option value="04" data-i18n="common.month.long.april"></option>
+                                <option value="05" data-i18n="common.month.long.may"></option>
+                                <option value="06" data-i18n="common.month.long.june"></option>
+                                <option value="07" data-i18n="common.month.long.july"></option>
+                                <option value="08" data-i18n="common.month.long.august"></option>
+                                <option value="09" data-i18n="common.month.long.september"></option>
+                                <option value="10" data-i18n="common.month.long.october"></option>
+                                <option value="11" data-i18n="common.month.long.november"></option>
+                                <option value="12" data-i18n="common.month.long.december"></option>
+                            </select>
+                            <input type="number" id="birthYear" min="1900" max="2100" data-i18n-placeholder="page.index.form.birthDate.yearPlaceholder" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="page.index.form.birthTime.label"></label>
+                        <div class="time-inputs">
+                            <input type="number" id="birthHour" min="0" max="23" data-i18n-placeholder="page.index.form.birthTime.hoursPlaceholder" required>
+                            <span class="time-separator">:</span>
+                            <input type="number" id="birthMinute" min="0" max="59" data-i18n-placeholder="page.index.form.birthTime.minutesPlaceholder" required>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="form-section" aria-labelledby="locationSectionTitle">
+                    <div class="form-section-heading">
+                        <h2 id="locationSectionTitle" class="form-section-title" data-i18n="page.index.form.sections.location.title"></h2>
+                        <p class="form-section-copy" data-i18n="page.index.form.sections.location.copy"></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="page.index.form.birthPlace.label"></label>
+                        <div class="place-autocomplete-wrapper">
+                            <input type="text" id="birthPlace" class="place-input" data-i18n-placeholder="page.index.form.birthPlace.placeholder" required autocomplete="off">
+                            <div id="birthPlaceSuggestions" class="place-suggestions"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="page.index.form.timezone.label"></label>
+                        <select id="timezone" required>
+                            <option value="" data-i18n="page.index.form.timezone.placeholder"></option>
                         </select>
-                        <input type="number" id="birthYear" min="1900" max="2100" data-i18n-placeholder="page.index.form.birthDate.yearPlaceholder" required>
+                        <span id="timezoneHint" class="hint"></span>
                     </div>
-                </div>
+                </section>
 
-                <div class="form-group">
-                    <label class="form-label" data-i18n="page.index.form.birthTime.label"></label>
-                    <div class="time-inputs">
-                        <input type="number" id="birthHour" min="0" max="23" data-i18n-placeholder="page.index.form.birthTime.hoursPlaceholder" required>
-                        <span class="time-separator">:</span>
-                        <input type="number" id="birthMinute" min="0" max="59" data-i18n-placeholder="page.index.form.birthTime.minutesPlaceholder" required>
-                    </div>
-                </div>
+                <details class="advanced-fields" id="advancedFields">
+                    <summary class="advanced-fields-summary">
+                        <span class="advanced-fields-summary-copy">
+                            <span class="advanced-fields-title" data-i18n="page.index.form.advanced.toggle"></span>
+                            <span class="advanced-fields-copy" data-i18n="page.index.form.advanced.copy"></span>
+                        </span>
+                        <span class="advanced-fields-chevron" aria-hidden="true">+</span>
+                    </summary>
 
-                <div class="form-group">
-                    <label class="form-label" data-i18n="page.index.form.birthPlace.label"></label>
-                    <div class="place-autocomplete-wrapper">
-                        <input type="text" id="birthPlace" class="place-input" data-i18n-placeholder="page.index.form.birthPlace.placeholder" required autocomplete="off">
-                        <div id="birthPlaceSuggestions" class="place-suggestions"></div>
-                    </div>
-
-                    <div id="coordsContainer" class="coords-display">
-                        <div class="coords-row">
-                            <label class="coords-label" data-i18n="page.index.form.coordinates.label"></label>
-                            <div class="coords-inputs">
-                                <div class="coord-input-group">
-                                    <input type="text" id="latDeg" class="coord-num" placeholder="48" maxlength="3">°
-                                    <input type="text" id="latMin" class="coord-num" placeholder="52" maxlength="2">'
-                                    <input type="text" id="latSec" class="coord-num coord-sec" placeholder="00.00" maxlength="5">"
-                                    <select id="latDir" class="coord-dir">
-                                        <option value="N" data-i18n="common.direction.northShort"></option>
-                                        <option value="S" data-i18n="common.direction.southShort"></option>
-                                    </select>
-                                </div>
-                                <div class="coord-input-group">
-                                    <input type="text" id="lonDeg" class="coord-num" placeholder="2" maxlength="3">°
-                                    <input type="text" id="lonMin" class="coord-num" placeholder="20" maxlength="2">'
-                                    <input type="text" id="lonSec" class="coord-num coord-sec" placeholder="00.00" maxlength="5">"
-                                    <select id="lonDir" class="coord-dir">
-                                        <option value="E" data-i18n="common.direction.eastShort"></option>
-                                        <option value="W" data-i18n="common.direction.westShort"></option>
-                                    </select>
+                    <div class="advanced-fields-content">
+                        <div id="coordsContainer" class="coords-display">
+                            <div class="coords-row">
+                                <label class="coords-label" data-i18n="page.index.form.coordinates.label"></label>
+                                <div class="coords-inputs">
+                                    <div class="coord-input-group">
+                                        <input type="text" id="latDeg" class="coord-num" placeholder="48" maxlength="3">°
+                                        <input type="text" id="latMin" class="coord-num" placeholder="52" maxlength="2">'
+                                        <input type="text" id="latSec" class="coord-num coord-sec" placeholder="00.00" maxlength="5">"
+                                        <select id="latDir" class="coord-dir">
+                                            <option value="N" data-i18n="common.direction.northShort"></option>
+                                            <option value="S" data-i18n="common.direction.southShort"></option>
+                                        </select>
+                                    </div>
+                                    <div class="coord-input-group">
+                                        <input type="text" id="lonDeg" class="coord-num" placeholder="2" maxlength="3">°
+                                        <input type="text" id="lonMin" class="coord-num" placeholder="20" maxlength="2">'
+                                        <input type="text" id="lonSec" class="coord-num coord-sec" placeholder="00.00" maxlength="5">"
+                                        <select id="lonDir" class="coord-dir">
+                                            <option value="E" data-i18n="common.direction.eastShort"></option>
+                                            <option value="W" data-i18n="common.direction.westShort"></option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
+                            <span class="hint" id="coordsHint" data-i18n="page.index.form.coordinates.hint"></span>
                         </div>
-                        <span class="hint" id="coordsHint" data-i18n="page.index.form.coordinates.hint"></span>
+
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="page.index.form.houseSystem.label"></label>
+                            <select id="houseSystem">
+                                <option value="P" selected data-i18n="astro.houseSystem.placidus"></option>
+                                <option value="K" data-i18n="astro.houseSystem.koch"></option>
+                                <option value="W" data-i18n="astro.houseSystem.wholeSign"></option>
+                                <option value="E" data-i18n="astro.houseSystem.equal"></option>
+                                <option value="R" data-i18n="astro.houseSystem.regiomontanus"></option>
+                                <option value="C" data-i18n="astro.houseSystem.campanus"></option>
+                            </select>
+                        </div>
                     </div>
-                </div>
+                </details>
 
-                <div class="form-group">
-                    <label class="form-label" data-i18n="page.index.form.timezone.label"></label>
-                    <select id="timezone" required>
-                        <option value="" data-i18n="page.index.form.timezone.placeholder"></option>
-                    </select>
-                    <span id="timezoneHint" class="hint"></span>
-                </div>
+                <section class="form-summary-card" aria-labelledby="formSummaryTitle">
+                    <h2 id="formSummaryTitle" class="form-summary-title" data-i18n="page.index.form.summary.title"></h2>
+                    <div class="form-summary-list">
+                        <div id="summaryBirthItem" class="form-summary-item">
+                            <span class="form-summary-dot" aria-hidden="true"></span>
+                            <span data-i18n="page.index.form.summary.birth"></span>
+                        </div>
+                        <div id="summaryPlaceItem" class="form-summary-item">
+                            <span class="form-summary-dot" aria-hidden="true"></span>
+                            <span data-i18n="page.index.form.summary.place"></span>
+                        </div>
+                        <div id="summaryTimezoneItem" class="form-summary-item">
+                            <span class="form-summary-dot" aria-hidden="true"></span>
+                            <span data-i18n="page.index.form.summary.timezone"></span>
+                        </div>
+                    </div>
+                </section>
 
-                <div class="form-group">
-                    <label class="form-label" data-i18n="page.index.form.houseSystem.label"></label>
-                    <select id="houseSystem">
-                        <option value="P" selected data-i18n="astro.houseSystem.placidus"></option>
-                        <option value="K" data-i18n="astro.houseSystem.koch"></option>
-                        <option value="W" data-i18n="astro.houseSystem.wholeSign"></option>
-                        <option value="E" data-i18n="astro.houseSystem.equal"></option>
-                        <option value="R" data-i18n="astro.houseSystem.regiomontanus"></option>
-                        <option value="C" data-i18n="astro.houseSystem.campanus"></option>
-                    </select>
-                </div>
+                <p class="submit-note" data-i18n="page.index.form.ctaNote"></p>
 
                 <button type="submit" class="submit-btn" id="submitBtn">
                     <span class="btn-text"><span data-i18n="page.index.form.submit.idle"></span></span>
@@ -147,7 +200,7 @@
         </footer>
     </div>
 
-    <script type="module" src="js/bundles/index.bundle.js?v=20260322-225159"></script>
-    <script src="js/locale-switcher.js?v=20260322-225159"></script>
+    <script type="module" src="js/bundles/index.bundle.js?v=20260324-204756"></script>
+    <script src="js/locale-switcher.js?v=20260324-204756"></script>
 </body>
 </html>

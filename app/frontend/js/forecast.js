@@ -1897,43 +1897,27 @@ function initSolarZoomPan() {
     });
     window.addEventListener('mouseup', () => { solarIsPanning = false; });
 
-    let lastTouchDist = 0;
     wrapper.addEventListener('touchstart', (e) => {
-        if (e.touches.length === 2) {
-            const dx = e.touches[0].clientX - e.touches[1].clientX;
-            const dy = e.touches[0].clientY - e.touches[1].clientY;
-            lastTouchDist = Math.hypot(dx, dy);
-        } else if (e.touches.length === 1) {
-            solarIsPanning = true;
-            solarPanStartX = e.touches[0].clientX;
-            solarPanStartY = e.touches[0].clientY;
+        if (e.touches.length !== 1) {
+            solarIsPanning = false;
+            return;
         }
+        solarIsPanning = true;
+        solarPanStartX = e.touches[0].clientX;
+        solarPanStartY = e.touches[0].clientY;
     }, { passive: true });
     wrapper.addEventListener('touchmove', (e) => {
-        if (e.touches.length === 2) {
-            e.preventDefault();
-            const dx = e.touches[0].clientX - e.touches[1].clientX;
-            const dy = e.touches[0].clientY - e.touches[1].clientY;
-            const dist = Math.hypot(dx, dy);
-            if (lastTouchDist > 0) {
-                const ratio = dist / lastTouchDist;
-                solarZoomLevel = Math.min(SOLAR_ZOOM_MAX, Math.max(SOLAR_ZOOM_MIN, solarZoomLevel * ratio));
-                applySolarViewBox();
-            }
-            lastTouchDist = dist;
-        } else if (e.touches.length === 1 && solarIsPanning) {
-            e.preventDefault();
-            const scale = SOLAR_VIEWBOX_SIZE / (solarZoomLevel * (wrapper.clientWidth || SOLAR_VIEWBOX_SIZE));
-            solarPanX -= (e.touches[0].clientX - solarPanStartX) * scale;
-            solarPanY -= (e.touches[0].clientY - solarPanStartY) * scale;
-            solarPanStartX = e.touches[0].clientX;
-            solarPanStartY = e.touches[0].clientY;
-            applySolarViewBox();
-        }
+        if (e.touches.length !== 1 || !solarIsPanning) return;
+        e.preventDefault();
+        const scale = SOLAR_VIEWBOX_SIZE / (solarZoomLevel * (wrapper.clientWidth || SOLAR_VIEWBOX_SIZE));
+        solarPanX -= (e.touches[0].clientX - solarPanStartX) * scale;
+        solarPanY -= (e.touches[0].clientY - solarPanStartY) * scale;
+        solarPanStartX = e.touches[0].clientX;
+        solarPanStartY = e.touches[0].clientY;
+        applySolarViewBox();
     }, { passive: false });
     wrapper.addEventListener('touchend', () => {
         solarIsPanning = false;
-        lastTouchDist = 0;
     });
 
     document.getElementById('solarZoomIn')?.addEventListener('click', () => {

@@ -672,6 +672,20 @@
         border-bottom: none;
     }
 
+    .chart-dialog-header {
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .chart-dialog-close {
+        align-self: flex-end;
+    }
+
+    .chart-dialog-copy {
+        max-width: none;
+    }
+
     .chart-dialog-title {
         font-size: 28px;
     }
@@ -679,6 +693,18 @@
     .chart-dialog-grid {
         grid-template-columns: 1fr;
         gap: 0;
+    }
+
+    .chart-dialog-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .chart-dialog-actions .header-nav-btn,
+    .chart-dialog-submit {
+        width: 100%;
+        min-width: 0;
+        justify-content: center;
     }
 
     .chart-layout {

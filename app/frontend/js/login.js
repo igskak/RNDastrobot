@@ -418,6 +418,19 @@
             });
         }
 
+        function getViewKind(view) {
+            if (view === 'check-email' || view === 'verify-check-email' || view === 'verify-loading') {
+                return 'pending';
+            }
+            if (view === 'verify-success' || view === 'reset-success') {
+                return 'success';
+            }
+            if (view === 'verify-invalid' || view === 'reset-invalid') {
+                return 'warning';
+            }
+            return 'form';
+        }
+
         function focusCurrentView() {
             const activeView = refs.views[state.view];
             if (!activeView || typeof activeView.querySelector !== 'function') return;
@@ -436,6 +449,11 @@
                 node.hidden = !isActive;
                 node.setAttribute('aria-hidden', isActive ? 'false' : 'true');
             });
+
+            if (documentRef.body) {
+                documentRef.body.dataset.authView = model.view;
+                documentRef.body.dataset.authKind = getViewKind(model.view);
+            }
 
             if (refs.authTitle) refs.authTitle.textContent = t(model.titleKey);
             if (refs.authSubtitle) refs.authSubtitle.textContent = t(model.subtitleKey);

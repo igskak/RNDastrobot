@@ -669,12 +669,13 @@
     justify-content: center;
     background: var(--bg-primary, #0d0d1a);
     isolation: isolate;
+    touch-action: pinch-zoom pan-x pan-y;
 }
 .biwheel-svg-wrapper:active { cursor: grabbing; }
 .biwheel-svg-wrapper svg {
     width: 100%;
     height: 100%;
-    touch-action: none;
+    touch-action: pinch-zoom pan-x pan-y;
 }
 #biwheelSvg {
     position: relative;
@@ -1556,7 +1557,7 @@
 .solar-wheel-wrapper svg {
     width: 100%;
     height: 100%;
-    touch-action: none;
+    touch-action: pinch-zoom pan-x pan-y;
 }
 .solar-data-section {
     width: min(420px, 36vw);
