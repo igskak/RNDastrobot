@@ -238,12 +238,16 @@ function renderFullChart(data) {
     retrogradeByBody = buildRetrogradeLookup(data.planets || []);
     renderHeader(data);
     renderSummaryBar(data);
+    renderReportIntro(data);
     renderPlanetsTable(data.planets, data.houses);
     renderHousesTable(data.houses, data.planets);
     renderAspectsTable(data.aspects || []);
     renderConfigurations(data.aspect_configurations || [], data.stelliums || []);
     renderBalances(data.balances);
     renderSpecialPoints(data.special_points || {});
+    updateSectionCounts(data);
+    setupReportSections();
+    setupReportShortcuts();
 }
 
 function renderHeader(data) {
@@ -297,28 +301,41 @@ function renderSummaryBar(data) {
     const planets = data.planets;
     const pattern = data.cosmogram_pattern;
     const balances = data.balances;
+    const summaryAsc = document.getElementById('summaryAsc');
+    const summaryMc = document.getElementById('summaryMc');
+    const summarySun = document.getElementById('summarySun');
+    const summaryMoon = document.getElementById('summaryMoon');
+    const summaryPattern = document.getElementById('summaryPattern');
+    const summaryDominants = document.getElementById('summaryDominants');
+
+    if (summaryAsc) summaryAsc.textContent = EMPTY;
+    if (summaryMc) summaryMc.textContent = EMPTY;
+    if (summarySun) summarySun.textContent = EMPTY;
+    if (summaryMoon) summaryMoon.textContent = EMPTY;
+    if (summaryPattern) summaryPattern.textContent = EMPTY;
+    if (summaryDominants) summaryDominants.textContent = EMPTY;
 
     if (angles?.ASC) {
         const asc = angles.ASC;
-        document.getElementById('summaryAsc').textContent =
+        summaryAsc.textContent =
             `${getSignSymbol(asc.sign)} ${getSignName(asc.sign)} ${formatDegree(asc)}`;
     }
 
     if (angles?.MC) {
         const mc = angles.MC;
-        document.getElementById('summaryMc').textContent =
+        summaryMc.textContent =
             `${getSignSymbol(mc.sign)} ${getSignName(mc.sign)} ${formatDegree(mc)}`;
     }
 
     const sun = planets?.find((p) => p.name === 'Sun');
     if (sun) {
-        document.getElementById('summarySun').textContent =
+        summarySun.textContent =
             `${getSignName(sun.sign)} ${formatDegree(sun)}`;
     }
 
     const moon = planets?.find((p) => p.name === 'Moon');
     if (moon) {
-        document.getElementById('summaryMoon').textContent =
+        summaryMoon.textContent =
             `${getSignName(moon.sign)} ${formatDegree(moon)}`;
     }
 
@@ -327,7 +344,7 @@ function renderSummaryBar(data) {
         if (pattern.handle_planet) {
             patternText += ` (${getPlanetName(pattern.handle_planet)})`;
         }
-        document.getElementById('summaryPattern').textContent = patternText;
+        summaryPattern.textContent = patternText;
     }
 
     if (balances) {
@@ -344,8 +361,131 @@ function renderSummaryBar(data) {
             const maxGender = getMaxBalance(balances.gender_balance);
             if (maxGender) dominants.push(`${maxGender.label} ${maxGender.pct}%`);
         }
-        document.getElementById('summaryDominants').textContent = dominants.join(' | ');
+        summaryDominants.textContent = dominants.join(' | ') || EMPTY;
     }
+}
+
+function renderReportIntro(data) {
+    const angles = data.angles || {};
+    const planets = data.planets || [];
+    const pattern = data.cosmogram_pattern;
+    const balances = data.balances;
+
+    const sun = planets.find((planet) => planet.name === 'Sun');
+    const moon = planets.find((planet) => planet.name === 'Moon');
+    const axisParts = [];
+
+    if (angles.ASC) {
+        axisParts.push(`ASC ${getSignSymbol(angles.ASC.sign)} ${getSignName(angles.ASC.sign)}`);
+    }
+    if (angles.MC) {
+        axisParts.push(`MC ${getSignSymbol(angles.MC.sign)} ${getSignName(angles.MC.sign)}`);
+    }
+
+    const luminaries = [sun, moon]
+        .filter(Boolean)
+        .map((planet) => `${getPlanetSymbol(planet.name)} ${getSignName(planet.sign)}`);
+
+    let patternText = EMPTY;
+    if (pattern) {
+        patternText = getPatternName(pattern.pattern_type) || EMPTY;
+        if (pattern.handle_planet) {
+            patternText += ` (${getPlanetName(pattern.handle_planet)})`;
+        }
+    }
+
+    const dominantParts = [];
+    if (balances?.element_balance) {
+        const maxEl = getMaxBalance(balances.element_balance);
+        if (maxEl) dominantParts.push(`${maxEl.label} ${maxEl.pct}%`);
+    }
+    if (balances?.mode_balance) {
+        const maxMode = getMaxBalance(balances.mode_balance);
+        if (maxMode) dominantParts.push(`${maxMode.label} ${maxMode.pct}%`);
+    }
+
+    setTextContent('reportAxisValue', axisParts.join(' • ') || EMPTY);
+    setTextContent('reportLuminariesValue', luminaries.join(' • ') || EMPTY);
+    setTextContent('reportPatternValue', patternText);
+    setTextContent('reportDominantsValue', dominantParts.join(' • ') || EMPTY);
+}
+
+function setTextContent(id, value) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.textContent = value || EMPTY;
+    }
+}
+
+function updateSectionCounts(data) {
+    const majorAspects = (data.aspects || []).filter((aspect) => aspect.is_major);
+    const configurationsCount = (data.aspect_configurations || []).length + (data.stelliums || []).length;
+    const balanceGroupsCount = ['element_balance', 'mode_balance', 'gender_balance']
+        .filter((key) => data.balances?.[key])
+        .length;
+    const specialPoints = data.special_points || {};
+    const visibleSpecialPoints = ['TrueNode', 'SouthNode', 'BlackMoon', 'WhiteMoon', 'PartOfFortune', 'Vertex']
+        .filter((key) => specialPoints[key] && specialPoints[key].longitude !== null)
+        .length;
+
+    setTextContent('planetsCount', String((data.planets || []).filter((planet) => PLANET_ORDER.includes(planet.name)).length));
+    setTextContent('housesCount', String((data.houses || []).length));
+    setTextContent('aspectsCount', String(majorAspects.length));
+    setTextContent('configurationsCount', String(configurationsCount));
+    setTextContent('balancesCount', String(balanceGroupsCount));
+    setTextContent('specialPointsCount', String(visibleSpecialPoints));
+}
+
+function setupReportSections() {
+    if (document.body.dataset.natalReportSectionsReady === 'true') return;
+
+    document.body.dataset.natalReportSectionsReady = 'true';
+
+    if (window.innerWidth > 768) {
+        document.querySelectorAll('.report-section').forEach((section) => {
+            section.open = true;
+        });
+        return;
+    }
+
+    const defaultState = {
+        balancesSection: true,
+        configurationsSection: true,
+        aspectsSection: true,
+        planetsSection: false,
+        housesSection: false,
+        specialPointsSection: false,
+    };
+
+    Object.entries(defaultState).forEach(([id, isOpen]) => {
+        const section = document.getElementById(id);
+        if (section) {
+            section.open = isOpen;
+        }
+    });
+}
+
+function setupReportShortcuts() {
+    if (document.body.dataset.natalReportShortcutsReady === 'true') return;
+
+    document.body.dataset.natalReportShortcutsReady = 'true';
+
+    document.querySelectorAll('.report-shortcut[href^="#"]').forEach((link) => {
+        link.addEventListener('click', (event) => {
+            const hash = link.getAttribute('href');
+            if (!hash) return;
+
+            const target = document.querySelector(hash);
+            if (!target) return;
+
+            if (target.tagName === 'DETAILS') {
+                target.open = true;
+            }
+
+            event.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
 }
 
 function getMaxBalance(balanceObj) {

@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.natalFull.title"></title>
-    <link rel="stylesheet" href="bundles/natal-full.bundle.css?v=20260324-211008">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260324-211008">
+    <link rel="stylesheet" href="bundles/natal-full.bundle.css?v=20260324-211722">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260324-211722">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '20260324-211008';</script>
+    <script>window.__APP_BUILD_ID__ = '20260324-211722';</script>
 </head>
 <body class="natal-full-page">
     <div class="page-loader" id="pageLoader">
@@ -79,6 +79,39 @@
         </div>
     </div>
 
+    <section class="report-intro" id="reportIntro">
+        <div class="report-intro-copy">
+            <p class="report-kicker" data-i18n="page.natalFull.report.kicker"></p>
+            <h2 class="report-title" data-i18n="page.natalFull.report.title"></h2>
+            <p class="report-subtitle" data-i18n="page.natalFull.report.subtitle"></p>
+        </div>
+        <div class="report-glance-grid">
+            <article class="report-glance-card">
+                <span class="report-glance-label" data-i18n="page.natalFull.report.cards.axis"></span>
+                <strong class="report-glance-value" id="reportAxisValue"></strong>
+            </article>
+            <article class="report-glance-card">
+                <span class="report-glance-label" data-i18n="page.natalFull.report.cards.luminaries"></span>
+                <strong class="report-glance-value" id="reportLuminariesValue"></strong>
+            </article>
+            <article class="report-glance-card">
+                <span class="report-glance-label" data-i18n="page.natalFull.summary.figure"></span>
+                <strong class="report-glance-value" id="reportPatternValue"></strong>
+            </article>
+            <article class="report-glance-card">
+                <span class="report-glance-label" data-i18n="page.natalFull.report.cards.dominants"></span>
+                <strong class="report-glance-value" id="reportDominantsValue"></strong>
+            </article>
+        </div>
+        <div class="report-shortcuts">
+            <a href="#balancesSection" class="report-shortcut" data-i18n="page.natalFull.sections.balances"></a>
+            <a href="#configurationsSection" class="report-shortcut" data-i18n="page.natalFull.sections.configurations"></a>
+            <a href="#aspectsSection" class="report-shortcut" data-i18n="page.natalFull.sections.aspects"></a>
+            <a href="#planetsSection" class="report-shortcut" data-i18n="page.natalFull.sections.planets"></a>
+            <a href="#housesSection" class="report-shortcut" data-i18n="page.natalFull.sections.houses"></a>
+        </div>
+    </section>
+
     <div class="legend-panel hidden" id="legendPanel">
         <div class="legend-content">
             <div class="legend-group">
@@ -128,51 +161,49 @@
     </div>
 
     <main class="natal-content">
-        <section class="section" id="planetsSection">
-            <h2 class="section-title"><span data-i18n="page.natalFull.sections.planets"></span></h2>
-            <div class="table-wrapper">
-                <table class="data-table planets-table compact-table">
-                    <thead>
-                        <tr>
-                            <th data-i18n="page.natalFull.table.planets.planet"></th>
-                            <th data-i18n="page.natalFull.table.planets.position"></th>
-                            <th data-i18n="page.natalFull.table.planets.house"></th>
-                            <th data-i18n="page.natalFull.table.planets.dignity"></th>
-                            <th data-i18n="page.natalFull.table.planets.aspects"></th>
-                            <th data-i18n="page.natalFull.table.planets.motion"></th>
-                            <th data-i18n="page.natalFull.table.planets.speed"></th>
-                            <th data-i18n="page.natalFull.table.planets.karma"></th>
-                            <th data-i18n="page.natalFull.table.planets.features"></th>
-                            <th data-i18n="page.natalFull.table.planets.ruler"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="planetsTableBody"></tbody>
-                </table>
-            </div>
-        </section>
-
-        <div class="two-columns">
-            <section class="section" id="housesSection">
-                <h2 class="section-title"><span data-i18n="page.natalFull.sections.houses"></span></h2>
-                <div class="table-wrapper">
-                    <table class="data-table houses-table compact-table">
-                        <thead>
-                            <tr>
-                                <th data-i18n="page.natalFull.table.houses.house"></th>
-                                <th data-i18n="page.natalFull.table.houses.sign"></th>
-                                <th data-i18n="page.natalFull.table.houses.ruler"></th>
-                                <th data-i18n="page.natalFull.table.houses.rulerIn"></th>
-                                <th data-i18n="page.natalFull.table.houses.included"></th>
-                                <th data-i18n="page.natalFull.table.houses.planets"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="housesTableBody"></tbody>
-                    </table>
+        <div class="report-priority-grid">
+            <details class="section report-section balances-section" id="balancesSection" open>
+                <summary class="section-summary">
+                    <span class="section-summary-copy">
+                        <span class="section-title"><span data-i18n="page.natalFull.sections.balances"></span></span>
+                    </span>
+                    <span class="section-summary-meta">
+                        <span class="section-count" id="balancesCount"></span>
+                        <span class="section-summary-chevron" aria-hidden="true">+</span>
+                    </span>
+                </summary>
+                <div class="section-body">
+                    <div class="balances-compact" id="balancesContainer"></div>
                 </div>
-            </section>
+            </details>
 
-            <section class="section" id="aspectsSection">
-                <h2 class="section-title"><span data-i18n="page.natalFull.sections.aspects"></span></h2>
+            <details class="section report-section" id="configurationsSection" open>
+                <summary class="section-summary">
+                    <span class="section-summary-copy">
+                        <span class="section-title"><span data-i18n="page.natalFull.sections.configurations"></span></span>
+                    </span>
+                    <span class="section-summary-meta">
+                        <span class="section-count" id="configurationsCount"></span>
+                        <span class="section-summary-chevron" aria-hidden="true">+</span>
+                    </span>
+                </summary>
+                <div class="section-body">
+                    <div class="configs-row" id="configurationsContainer"></div>
+                </div>
+            </details>
+        </div>
+
+        <details class="section report-section" id="aspectsSection" open>
+            <summary class="section-summary">
+                <span class="section-summary-copy">
+                    <span class="section-title"><span data-i18n="page.natalFull.sections.aspects"></span></span>
+                </span>
+                <span class="section-summary-meta">
+                    <span class="section-count" id="aspectsCount"></span>
+                    <span class="section-summary-chevron" aria-hidden="true">+</span>
+                </span>
+            </summary>
+            <div class="section-body">
                 <div class="table-wrapper">
                     <table class="data-table aspects-table compact-table">
                         <thead>
@@ -193,37 +224,101 @@
                         </table>
                     </div>
                 </details>
-            </section>
+            </div>
+        </details>
+
+        <div class="report-data-grid">
+            <details class="section report-section" id="planetsSection">
+                <summary class="section-summary">
+                    <span class="section-summary-copy">
+                        <span class="section-title"><span data-i18n="page.natalFull.sections.planets"></span></span>
+                    </span>
+                    <span class="section-summary-meta">
+                        <span class="section-count" id="planetsCount"></span>
+                        <span class="section-summary-chevron" aria-hidden="true">+</span>
+                    </span>
+                </summary>
+                <div class="section-body">
+                    <div class="table-wrapper">
+                        <table class="data-table planets-table compact-table">
+                            <thead>
+                                <tr>
+                                    <th data-i18n="page.natalFull.table.planets.planet"></th>
+                                    <th data-i18n="page.natalFull.table.planets.position"></th>
+                                    <th data-i18n="page.natalFull.table.planets.house"></th>
+                                    <th data-i18n="page.natalFull.table.planets.dignity"></th>
+                                    <th data-i18n="page.natalFull.table.planets.aspects"></th>
+                                    <th data-i18n="page.natalFull.table.planets.motion"></th>
+                                    <th data-i18n="page.natalFull.table.planets.speed"></th>
+                                    <th data-i18n="page.natalFull.table.planets.karma"></th>
+                                    <th data-i18n="page.natalFull.table.planets.features"></th>
+                                    <th data-i18n="page.natalFull.table.planets.ruler"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="planetsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </details>
+
+            <details class="section report-section" id="housesSection">
+                <summary class="section-summary">
+                    <span class="section-summary-copy">
+                        <span class="section-title"><span data-i18n="page.natalFull.sections.houses"></span></span>
+                    </span>
+                    <span class="section-summary-meta">
+                        <span class="section-count" id="housesCount"></span>
+                        <span class="section-summary-chevron" aria-hidden="true">+</span>
+                    </span>
+                </summary>
+                <div class="section-body">
+                    <div class="table-wrapper">
+                        <table class="data-table houses-table compact-table">
+                            <thead>
+                                <tr>
+                                    <th data-i18n="page.natalFull.table.houses.house"></th>
+                                    <th data-i18n="page.natalFull.table.houses.sign"></th>
+                                    <th data-i18n="page.natalFull.table.houses.ruler"></th>
+                                    <th data-i18n="page.natalFull.table.houses.rulerIn"></th>
+                                    <th data-i18n="page.natalFull.table.houses.included"></th>
+                                    <th data-i18n="page.natalFull.table.houses.planets"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="housesTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </details>
         </div>
 
-        <section class="section" id="configurationsSection">
-            <h2 class="section-title"><span data-i18n="page.natalFull.sections.configurations"></span></h2>
-            <div class="configs-row" id="configurationsContainer"></div>
-        </section>
-
-        <section class="section balances-section" id="balancesSection">
-            <h2 class="section-title"><span data-i18n="page.natalFull.sections.balances"></span></h2>
-            <div class="balances-compact" id="balancesContainer"></div>
-        </section>
-
-        <details class="section collapsible-section">
-            <summary class="section-title clickable"><span data-i18n="page.natalFull.sections.specialPoints"></span></summary>
-            <div class="table-wrapper">
-                <table class="data-table special-points-table compact-table">
-                    <thead>
-                        <tr>
-                            <th data-i18n="page.natalFull.table.specialPoints.point"></th>
-                            <th data-i18n="page.natalFull.table.specialPoints.position"></th>
-                            <th data-i18n="page.natalFull.table.specialPoints.house"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="specialPointsTableBody"></tbody>
-                </table>
+        <details class="section report-section collapsible-section" id="specialPointsSection">
+            <summary class="section-summary">
+                <span class="section-summary-copy">
+                    <span class="section-title"><span data-i18n="page.natalFull.sections.specialPoints"></span></span>
+                </span>
+                <span class="section-summary-meta">
+                    <span class="section-count" id="specialPointsCount"></span>
+                    <span class="section-summary-chevron" aria-hidden="true">+</span>
+                </span>
+            </summary>
+            <div class="section-body">
+                <div class="table-wrapper">
+                    <table class="data-table special-points-table compact-table">
+                        <thead>
+                            <tr>
+                                <th data-i18n="page.natalFull.table.specialPoints.point"></th>
+                                <th data-i18n="page.natalFull.table.specialPoints.position"></th>
+                                <th data-i18n="page.natalFull.table.specialPoints.house"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="specialPointsTableBody"></tbody>
+                    </table>
+                </div>
             </div>
         </details>
     </main>
 
-    <script type="module" src="js/bundles/natal-full.bundle.js?v=20260324-211008"></script>
-    <script src="js/locale-switcher.js?v=20260324-211008"></script>
+    <script type="module" src="js/bundles/natal-full.bundle.js?v=20260324-211722"></script>
+    <script src="js/locale-switcher.js?v=20260324-211722"></script>
 </body>
 </html>

@@ -1014,6 +1014,16 @@
         "legend": "Legend",
         "wheel": "Wheel"
       },
+      "report": {
+        "cards": {
+          "axis": "Axis",
+          "dominants": "Dominants",
+          "luminaries": "Sun and Moon"
+        },
+        "kicker": "Mobile report",
+        "subtitle": "Start with the strongest structural themes, then open the deeper tables only when you need the raw detail.",
+        "title": "Read the chart as a report, not a spreadsheet."
+      },
       "sections": {
         "aspects": "Aspects",
         "balances": "Balances",
