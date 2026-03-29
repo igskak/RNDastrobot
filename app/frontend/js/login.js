@@ -731,13 +731,15 @@
                 if (!response.ok) {
                     throw new Error(await readErrorMessage(response));
                 }
-                const payload = await response.json().catch(() => ({}));
-                state.lastVerificationEmail = values.email;
-                state.verificationResendCooldownUntil = Date.now() + Number(payload.cooldown_seconds || 60) * 1000;
+                await response.json().catch(() => ({}));
+                state.lastVerificationEmail = '';
+                state.verificationResendCooldownUntil = 0;
+                refs.email.value = values.email;
+                refs.password.value = '';
                 refs.registerPassword.value = '';
                 refs.registerPasswordConfirm.value = '';
-                clearStatus();
-                setView('verify-check-email');
+                setView('login');
+                setStatus('page.login.status.accountReady', 'success');
             } catch (error) {
                 setStatus(mapAuthErrorToKey('register', error.message), 'error');
             } finally {

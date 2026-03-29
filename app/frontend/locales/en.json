@@ -1040,6 +1040,7 @@
         "sendingResetLink": "Sending reset link...",
         "savingPassword": "Updating password...",
         "creatingAccount": "Creating account...",
+        "accountReady": "Account is ready. Sign in to continue.",
         "sendingVerification": "Sending verification link...",
         "verifyingEmail": "Verifying email..."
       },

@@ -204,6 +204,7 @@
 
 /* Summary-first forecast intro */
 .forecast-summary {
+    display: none;
     padding: 14px 16px 12px;
     background:
         radial-gradient(circle at top left, rgba(212, 180, 120, 0.16), transparent 48%),
@@ -1918,6 +1919,7 @@
         font-size: 0.7rem;
     }
     .forecast-summary {
+        display: flex;
         padding: 12px 10px 10px;
         gap: 10px;
     }

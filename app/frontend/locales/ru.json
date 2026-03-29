@@ -1040,6 +1040,7 @@
         "sendingResetLink": "Отправляем ссылку для сброса...",
         "savingPassword": "Обновляем пароль...",
         "creatingAccount": "Создаем аккаунт...",
+        "accountReady": "Аккаунт готов. Войдите, чтобы продолжить.",
         "sendingVerification": "Отправляем ссылку подтверждения...",
         "verifyingEmail": "Подтверждаем email..."
       },

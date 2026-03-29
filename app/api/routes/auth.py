@@ -242,7 +242,7 @@ def _forgot_password_message() -> str:
 
 
 def _register_message() -> str:
-    return "If the email can be registered, a verification link will be sent shortly."
+    return "If the email can be registered, the account will be ready shortly."
 
 
 def _resend_verification_message() -> str:
@@ -478,23 +478,6 @@ def register(
             resource_id=email,
             result="failure",
         )
-        if astrologer.auth_provider == "local" and astrologer.is_active and not _is_email_verified(astrologer):
-            delivered, cooldown, attempted_send = _issue_verification_email_if_allowed(
-                db, request, astrologer, locale=payload.locale
-            )
-            create_audit_event(
-                db,
-                request,
-                actor_id=astrologer.id,
-                action="auth.verification.sent",
-                resource_type="astrologer",
-                resource_id=email,
-                result=_verification_delivery_result(
-                    delivered=delivered,
-                    cooldown=cooldown,
-                    attempted_send=attempted_send,
-                ),
-            )
         return _neutral_register_response()
 
     astrologer = Astrologer(
@@ -505,7 +488,7 @@ def register(
         password_hash=hash_password(payload.password),
         auth_provider="local",
         is_active=True,
-        email_verified_at=None,
+        email_verified_at=utcnow(),
     )
     db.add(astrologer)
     try:
@@ -523,29 +506,9 @@ def register(
                 resource_id=email,
                 result="failure",
             )
-            if existing.auth_provider == "local" and existing.is_active and not _is_email_verified(existing):
-                delivered, cooldown, attempted_send = _issue_verification_email_if_allowed(
-                    db, request, existing, locale=payload.locale
-                )
-                create_audit_event(
-                    db,
-                    request,
-                    actor_id=existing.id,
-                    action="auth.verification.sent",
-                    resource_type="astrologer",
-                    resource_id=email,
-                    result=_verification_delivery_result(
-                        delivered=delivered,
-                        cooldown=cooldown,
-                        attempted_send=attempted_send,
-                    ),
-                )
             return _neutral_register_response()
         raise
 
-    delivered, cooldown, attempted_send = _issue_verification_email_if_allowed(
-        db, request, astrologer, locale=payload.locale
-    )
     create_audit_event(
         db,
         request,
@@ -554,19 +517,6 @@ def register(
         resource_type="astrologer",
         resource_id=email,
         result="success",
-    )
-    create_audit_event(
-        db,
-        request,
-        actor_id=astrologer.id,
-        action="auth.verification.sent",
-        resource_type="astrologer",
-        resource_id=email,
-        result=_verification_delivery_result(
-            delivered=delivered,
-            cooldown=cooldown,
-            attempted_send=attempted_send,
-        ),
     )
     return _neutral_register_response()
 
@@ -760,27 +710,8 @@ def login(
         db.commit()
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is inactive")
 
-    if astrologer.auth_provider == "local" and not _is_email_verified(astrologer):
-        create_audit_event(
-            db,
-            request,
-            actor_id=astrologer.id,
-            action="auth.login",
-            resource_type="astrologer",
-            resource_id=email,
-            result="blocked_unverified",
-        )
-        create_audit_event(
-            db,
-            request,
-            actor_id=astrologer.id,
-            action="auth.login.blocked",
-            resource_type="astrologer",
-            resource_id=email,
-            result="email_not_verified",
-        )
-        db.commit()
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Email is not verified")
+    if astrologer.auth_provider == "local" and astrologer.email_verified_at is None:
+        _mark_email_verified(astrologer)
 
     issue_session(response, db, request, astrologer)
     create_audit_event(

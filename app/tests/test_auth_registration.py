@@ -1,10 +1,9 @@
 import os
 from datetime import timedelta
-from urllib.parse import parse_qs, urlparse
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import JSON, create_engine
 from sqlalchemy.orm import sessionmaker
 
 os.environ.setdefault("DATABASE_URL", "sqlite+pysqlite:///./_auth_registration_test.db")
@@ -29,6 +28,10 @@ engine = create_engine("sqlite:///./_auth_registration_test.sqlite3", connect_ar
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
+def _prepare_sqlite_user_table():
+    User.__table__.c.tags.type = JSON()
+
+
 def _override_get_db():
     db = TestingSessionLocal()
     try:
@@ -43,6 +46,7 @@ def _override_get_db():
 
 @pytest.fixture(autouse=True)
 def _db_setup(monkeypatch):
+    _prepare_sqlite_user_table()
     for table in (
         AuditEvent.__table__,
         AuthSession.__table__,
@@ -82,14 +86,11 @@ def _create_verification_token(astrologer_id, raw_token: str, *, expires_delta: 
     return token
 
 
-def test_register_success_creates_unverified_local_account_and_token(monkeypatch):
-    delivered = {}
+def test_register_success_creates_verified_local_account_without_token(monkeypatch):
+    sent = {"count": 0}
 
-    def _fake_send(*, recipient: str, verify_link: str, ttl_hours: int, locale: str):
-        delivered["recipient"] = recipient
-        delivered["verify_link"] = verify_link
-        delivered["ttl_hours"] = ttl_hours
-        delivered["locale"] = locale
+    def _fake_send(**_kwargs):
+        sent["count"] += 1
         return True
 
     monkeypatch.setattr(auth_route, "send_email_verification_email", _fake_send)
@@ -108,28 +109,23 @@ def test_register_success_creates_unverified_local_account_and_token(monkeypatch
 
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
-    assert "verification link" in response.json()["message"].lower()
-    assert delivered["recipient"] == "new@example.com"
-    assert "auth/verify?token=" in delivered["verify_link"]
-    assert delivered["ttl_hours"] >= 1
-    assert delivered["locale"] == "uk"
+    assert "ready shortly" in response.json()["message"].lower()
+    assert sent["count"] == 0
 
     db = TestingSessionLocal()
     try:
         astrologer = db.query(Astrologer).filter(Astrologer.email == "new@example.com").first()
         assert astrologer is not None
         assert astrologer.auth_provider == "local"
-        assert astrologer.email_verified_at is None
+        assert astrologer.email_verified_at is not None
         assert astrologer.password_hash != "StrongPass123"
 
         token = db.query(EmailVerificationToken).filter(EmailVerificationToken.astrologer_id == astrologer.id).first()
-        assert token is not None
-        assert token.token_hash != ""
-        assert len(token.token_hash) == 64
+        assert token is None
 
         audit_actions = {row.action for row in db.query(AuditEvent).all()}
         assert "auth.register" in audit_actions
-        assert "auth.verification.sent" in audit_actions
+        assert "auth.verification.sent" not in audit_actions
     finally:
         db.close()
 
@@ -171,15 +167,7 @@ def test_register_duplicate_email_returns_neutral_response(monkeypatch):
         db.close()
 
 
-def test_login_blocked_until_email_verified(monkeypatch):
-    delivered = {}
-
-    def _fake_send(*, recipient: str, verify_link: str, ttl_hours: int, locale: str):
-        delivered["verify_link"] = verify_link
-        return True
-
-    monkeypatch.setattr(auth_route, "send_email_verification_email", _fake_send)
-
+def test_login_succeeds_immediately_after_registration():
     with TestClient(app) as client:
         register = client.post(
             "/api/v1/auth/register",
@@ -187,23 +175,42 @@ def test_login_blocked_until_email_verified(monkeypatch):
         )
         assert register.status_code == 200
 
-        blocked = client.post(
-            "/api/v1/auth/login",
-            json={"email": "blocked@example.com", "password": "StrongPass123"},
-        )
-        assert blocked.status_code == 403
-        assert blocked.json()["detail"] == "Email is not verified"
-
-        token = parse_qs(urlparse(delivered["verify_link"]).query)["token"][0]
-        verify = client.post("/api/v1/auth/verify-email", json={"token": token})
-        assert verify.status_code == 200
-
         login = client.post(
             "/api/v1/auth/login",
             json={"email": "blocked@example.com", "password": "StrongPass123"},
         )
         assert login.status_code == 200
         assert login.json()["email"] == "blocked@example.com"
+
+
+def test_login_marks_legacy_local_account_verified_on_success():
+    astrologer = Astrologer(
+        email="legacy@example.com",
+        password_hash=auth_route.hash_password("StrongPass123"),
+        auth_provider="local",
+        is_active=True,
+        email_verified_at=None,
+    )
+    db = TestingSessionLocal()
+    db.add(astrologer)
+    db.commit()
+    db.close()
+
+    with TestClient(app) as client:
+        login = client.post(
+            "/api/v1/auth/login",
+            json={"email": "legacy@example.com", "password": "StrongPass123"},
+        )
+
+    assert login.status_code == 200
+
+    db = TestingSessionLocal()
+    try:
+        refreshed = db.query(Astrologer).filter(Astrologer.email == "legacy@example.com").first()
+        assert refreshed is not None
+        assert refreshed.email_verified_at is not None
+    finally:
+        db.close()
 
 
 @pytest.mark.parametrize(
@@ -283,8 +290,14 @@ def test_resend_verification_obeys_cooldown_and_rate_limit(monkeypatch):
     assert blocked.json()["detail"] == "Too many authentication attempts"
 
 
-def test_register_email_delivery_failure_audit_is_failure(monkeypatch):
-    monkeypatch.setattr(auth_route, "send_email_verification_email", lambda **_: False)
+def test_register_does_not_emit_verification_audit_event(monkeypatch):
+    sent = {"count": 0}
+
+    def _fake_send(**_kwargs):
+        sent["count"] += 1
+        return False
+
+    monkeypatch.setattr(auth_route, "send_email_verification_email", _fake_send)
 
     with TestClient(app) as client:
         response = client.post(
@@ -294,6 +307,7 @@ def test_register_email_delivery_failure_audit_is_failure(monkeypatch):
 
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
+    assert sent["count"] == 0
 
     db = TestingSessionLocal()
     try:
@@ -306,7 +320,6 @@ def test_register_email_delivery_failure_audit_is_failure(monkeypatch):
             .order_by(AuditEvent.created_at.desc())
             .first()
         )
-        assert sent_event is not None
-        assert sent_event.result == "failure"
+        assert sent_event is None
     finally:
         db.close()

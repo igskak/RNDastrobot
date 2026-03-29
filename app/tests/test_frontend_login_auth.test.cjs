@@ -110,6 +110,7 @@ test('new auth copy is localized for en, ru, uk', async () => {
         const resend = global.FrontendI18n.t('page.login.actions.resendLink');
         const registerTitle = global.FrontendI18n.t('page.login.views.register.title');
         const verifyTitle = global.FrontendI18n.t('page.login.views.verifySuccess.title');
+        const accountReady = global.FrontendI18n.t('page.login.status.accountReady');
         const spamTitle = global.FrontendI18n.t('page.login.hints.emailDeliverySpamTitle');
         const spamHint = global.FrontendI18n.t('page.login.hints.emailDeliverySpam');
 
@@ -118,6 +119,7 @@ test('new auth copy is localized for en, ru, uk', async () => {
         assert.notEqual(resend, 'page.login.actions.resendLink');
         assert.notEqual(registerTitle, 'page.login.views.register.title');
         assert.notEqual(verifyTitle, 'page.login.views.verifySuccess.title');
+        assert.notEqual(accountReady, 'page.login.status.accountReady');
         assert.notEqual(spamTitle, 'page.login.hints.emailDeliverySpamTitle');
         assert.notEqual(spamHint, 'page.login.hints.emailDeliverySpam');
     }

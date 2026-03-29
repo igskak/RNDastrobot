@@ -1,9 +1,8 @@
 import os
-from urllib.parse import parse_qs, urlparse
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import JSON, create_engine
 from sqlalchemy.orm import sessionmaker
 
 os.environ.setdefault("DATABASE_URL", "sqlite+pysqlite:///./_auth_registration_e2e_test.db")
@@ -17,6 +16,7 @@ from app.database.models import (  # noqa: E402
     Astrologer,
     AuditEvent,
     AuthSession,
+    Consultation,
     EmailVerificationToken,
     PasswordResetToken,
     User,
@@ -25,6 +25,10 @@ from app.database.models import (  # noqa: E402
 
 engine = create_engine("sqlite:///./_auth_registration_e2e_test.sqlite3", connect_args={"check_same_thread": False})
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+def _prepare_sqlite_user_table():
+    User.__table__.c.tags.type = JSON()
 
 
 def _override_get_db():
@@ -41,7 +45,9 @@ def _override_get_db():
 
 @pytest.fixture(autouse=True)
 def _db_setup(monkeypatch):
+    _prepare_sqlite_user_table()
     for table in (
+        Consultation.__table__,
         AuditEvent.__table__,
         AuthSession.__table__,
         EmailVerificationToken.__table__,
@@ -53,6 +59,7 @@ def _db_setup(monkeypatch):
 
     Astrologer.__table__.create(bind=engine, checkfirst=True)
     User.__table__.create(bind=engine, checkfirst=True)
+    Consultation.__table__.create(bind=engine, checkfirst=True)
     AuthSession.__table__.create(bind=engine, checkfirst=True)
     AuditEvent.__table__.create(bind=engine, checkfirst=True)
     EmailVerificationToken.__table__.create(bind=engine, checkfirst=True)
@@ -65,14 +72,8 @@ def _db_setup(monkeypatch):
     app.dependency_overrides.clear()
 
 
-def test_e2e_register_verify_login_and_open_clients_page(monkeypatch):
-    delivered = {}
-
-    def _fake_send(*, recipient: str, verify_link: str, ttl_hours: int, locale: str):
-        delivered["verify_link"] = verify_link
-        return True
-
-    monkeypatch.setattr(auth_route, "send_email_verification_email", _fake_send)
+def test_e2e_register_login_and_open_clients_page(monkeypatch):
+    monkeypatch.setattr(auth_route, "send_email_verification_email", lambda **_: True)
 
     with TestClient(app) as client:
         register = client.post(
@@ -80,10 +81,6 @@ def test_e2e_register_verify_login_and_open_clients_page(monkeypatch):
             json={"email": "e2e@example.com", "password": "StrongPass123"},
         )
         assert register.status_code == 200
-
-        token = parse_qs(urlparse(delivered["verify_link"]).query)["token"][0]
-        verify = client.post("/api/v1/auth/verify-email", json={"token": token})
-        assert verify.status_code == 200
 
         login = client.post(
             "/api/v1/auth/login",
@@ -100,19 +97,22 @@ def test_e2e_register_verify_login_and_open_clients_page(monkeypatch):
         assert "text/html" in clients_page.headers.get("content-type", "")
 
 
-def test_e2e_register_then_login_before_verify_is_blocked(monkeypatch):
-    monkeypatch.setattr(auth_route, "send_email_verification_email", lambda **_: True)
+def test_e2e_legacy_local_account_can_login_without_verify():
+    astrologer = Astrologer(
+        email="blocked-e2e@example.com",
+        password_hash=auth_route.hash_password("StrongPass123"),
+        auth_provider="local",
+        is_active=True,
+        email_verified_at=None,
+    )
+    db = TestingSessionLocal()
+    db.add(astrologer)
+    db.commit()
+    db.close()
 
     with TestClient(app) as client:
-        register = client.post(
-            "/api/v1/auth/register",
-            json={"email": "blocked-e2e@example.com", "password": "StrongPass123"},
-        )
-        assert register.status_code == 200
-
         login = client.post(
             "/api/v1/auth/login",
             json={"email": "blocked-e2e@example.com", "password": "StrongPass123"},
         )
-        assert login.status_code == 403
-        assert login.json()["detail"] == "Email is not verified"
+        assert login.status_code == 200
