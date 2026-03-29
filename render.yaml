@@ -57,22 +57,3 @@ services:
       # Python
       - key: PYTHON_VERSION
         value: "3.11"
-
-      # OpenAI Configuration
-      - key: OPENAI_API_KEY
-        sync: false
-      - key: OPENAI_MODEL
-        value: gpt-5.4-mini
-      - key: OPENAI_PROMPT_ID
-        sync: false
-      - key: OPENAI_PROMPT_VERSION
-        value: "1.0"
-
-      # Langfuse Observability
-      - key: LANGFUSE_PUBLIC_KEY
-        sync: false
-      - key: LANGFUSE_SECRET_KEY
-        sync: false
-      - key: LANGFUSE_HOST
-        value: https://cloud.langfuse.com
-

@@ -28,20 +28,13 @@ test('reduceForecastDisplayMode handles peek and pin transitions', () => {
     assert.equal(reduceForecastDisplayMode('natal-peek', 'escape'), 'prognostic');
 });
 
-test('isEditableControlTarget detects editable controls and chatkit containers', () => {
+test('isEditableControlTarget detects editable controls only', () => {
     const inputTarget = {
         nodeType: 1,
         tagName: 'INPUT',
         isContentEditable: false,
         getAttribute: () => null,
         closest: () => null,
-    };
-    const chatkitTarget = {
-        nodeType: 1,
-        tagName: 'DIV',
-        isContentEditable: false,
-        getAttribute: () => null,
-        closest: (selector) => selector.includes('#chatkit-container') ? { id: 'chatkit-container' } : null,
     };
     const plainTarget = {
         nodeType: 1,
@@ -52,6 +45,5 @@ test('isEditableControlTarget detects editable controls and chatkit containers',
     };
 
     assert.equal(isEditableControlTarget(inputTarget), true);
-    assert.equal(isEditableControlTarget(chatkitTarget), true);
     assert.equal(isEditableControlTarget(plainTarget), false);
 });

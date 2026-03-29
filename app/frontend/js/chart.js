@@ -98,9 +98,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Обновляем заголовок
     updateHeader(chartData);
-    // Обновляем ссылки на интерпретации
-    updateInterpretationLinks(chartData);
-
     // Инициализируем круговую карту
     const svgElement = document.getElementById('chartWheel');
     chartWheel = new ChartWheel(svgElement);
@@ -167,16 +164,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 /**
  * Обновление ссылок на интерпретации с user_id
  */
-function updateInterpretationLinks(chartData) {
-    const userId = chartData.user_id || localStorage.getItem('currentUserId');
-    if (!userId) return;
-
-    const links = document.querySelectorAll('a[href="interpretations.html"]');
-    links.forEach(link => {
-        link.href = `interpretations.html?user_id=${userId}`;
-    });
-}
-
 /**
  * Click on planet table row → highlight planet on wheel + show tooltip near it
  */
@@ -553,7 +540,6 @@ async function applySettings() {
                     { houseSystem }
                 );
                 updateHeader(newChartData);
-                updateInterpretationLinks(newChartData);
                 redrawChart(newChartData, hiddenPlanets, orientation);
             }
         } catch (err) {
@@ -957,7 +943,6 @@ async function handleEditClientSubmit(event) {
         const preparedChartData = applyChartState(updatedChartData, { houseSystem: currentSettings.houseSystem });
         currentHoveredAspectKey = null;
         updateHeader(preparedChartData);
-        updateInterpretationLinks(preparedChartData);
         redrawChart(preparedChartData, currentSettings.hiddenPlanets || [], currentSettings.orientation);
         closeEditClientDialog();
         showChartToast(t('page.chart.edit.success'), 'success');

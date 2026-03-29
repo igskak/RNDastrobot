@@ -11,10 +11,6 @@
         '[role="textbox"]',
         '[role="searchbox"]',
         '[role="combobox"]',
-        '#chatkitWrapper',
-        '#chatkit-container',
-        'openai-chatkit',
-        '[data-chatkit-input]',
         '[data-chat-input]',
     ].join(', ');
 

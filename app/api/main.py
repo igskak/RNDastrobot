@@ -29,7 +29,7 @@ if os.getenv('APP_ENV') == 'production':
     logger.remove()  # Удаляем default handler
     logger.add(sys.stderr, level="WARNING")  # Только WARNING и выше
 
-from app.api.routes import auth, natal, interpretations, chat, transits, solar, progressions, directions, ingresses, places, consultations, alerts
+from app.api.routes import auth, natal, transits, solar, progressions, directions, ingresses, places, consultations, alerts
 from app.api.error_handlers import register_error_handlers
 from app.api.locale_dependency import locale_context_dependency
 
@@ -101,8 +101,6 @@ async def static_cache_headers(request: Request, call_next):
 # Подключение роутеров
 app.include_router(natal.router, prefix="/api/v1", tags=["Natal Charts"])
 app.include_router(auth.router, prefix="/api/v1", tags=["Auth"])
-app.include_router(interpretations.router, prefix="/api/v1", tags=["Interpretations"])
-app.include_router(chat.router, prefix="/api/v1", tags=["Chat"])
 app.include_router(transits.router, prefix="/api/v1", tags=["Transits"])
 app.include_router(solar.router, prefix="/api/v1", tags=["Solar Return"])
 app.include_router(progressions.router, prefix="/api/v1", tags=["Progressions"])
@@ -197,15 +195,6 @@ async def natal_full_page():
     if os.path.exists(natal_full_path):
         return FileResponse(natal_full_path)
     raise HTTPException(status_code=404, detail="Natal full page not found")
-
-
-@app.get("/interpretations.html")
-async def interpretations_page():
-    """Страница интерпретаций (психологический профиль)"""
-    interpretations_path = os.path.join(FRONTEND_PATH, "interpretations.html")
-    if os.path.exists(interpretations_path):
-        return FileResponse(interpretations_path)
-    raise HTTPException(status_code=404, detail="Interpretations page not found")
 
 
 @app.get("/forecast.html")

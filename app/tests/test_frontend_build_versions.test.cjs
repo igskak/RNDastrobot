@@ -10,8 +10,8 @@ const htmlPages = [
     'chart.html',
     'forecast.html',
     'natal-full.html',
-    'interpretations.html',
     'login.html',
+    'calendar.html',
 ];
 
 test('frontend html pages keep local asset versions aligned with __APP_BUILD_ID__', () => {

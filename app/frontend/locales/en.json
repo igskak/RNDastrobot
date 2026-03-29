@@ -126,88 +126,6 @@
       "Virgo": "Virgo"
     }
   },
-  "chatkit": {
-    "errors": {
-      "loadFailed": "Failed to initialize chat",
-      "sessionCreate": "Failed to create chat session"
-    },
-    "natal": {
-      "composerPlaceholder": "Type your question about this chart...",
-      "greeting": "Ask me anything about this natal chart."
-    },
-    "prognostic": {
-      "composerPlaceholder": "Ask about current trends and timing...",
-      "greeting": "I can help explain active transits, directions and progressions.",
-      "prompts": {
-        "monthly": {
-          "label": "Month overview",
-          "prompt": "Give a practical forecast for this month."
-        },
-        "solar": {
-          "label": "Solar return focus",
-          "prompt": "Explain key themes from the solar return chart."
-        },
-        "transitsToday": {
-          "label": "Today's transits",
-          "prompt": "Summarize the most important transits active today."
-        }
-      }
-    }
-  },
-  "customChat": {
-    "assistantLabel": "Steliara AI",
-    "sendButton": "Send",
-    "composerPlaceholder": "Type your message...",
-    "thinking": "Thinking...",
-    "toolCalling": "Analyzing {tool}...",
-    "errorGeneric": "Something went wrong. Please try again.",
-    "errorNetwork": "Network error. Check your connection.",
-    "newConversation": "New",
-    "toggleEngine": "Switch chat engine",
-    "micStart": "Start voice input",
-    "micStop": "Stop recording",
-    "micRecording": "Listening...",
-    "micTranscribing": "Transcribing...",
-    "micDenied": "Microphone access denied. Check browser permissions.",
-    "micError": "Could not access microphone.",
-    "history": "History",
-    "historyBack": "Back",
-    "historyEmpty": "No conversations yet",
-    "deleteConversation": "Delete conversation",
-    "untitledConversation": "New conversation",
-    "modeNatal": "Natal chart",
-    "modePrognostic": "Forecast",
-    "subtitleNatal": "Ask about placements, tensions, and the overall logic of the chart.",
-    "subtitlePrognostic": "Discuss transits, progressions, and the periods that are coming up next.",
-    "statusReady": "Ready",
-    "statusListening": "Listening",
-    "statusTranscribing": "Transcribing",
-    "statusThinking": "Thinking",
-    "composerHint": "Press Enter to send, Shift+Enter for a new line",
-    "voiceHint": "Voice works great for quick follow-up questions",
-    "startEyebrow": "Astrology copilot",
-    "startActionsVoice": "Speak a question",
-    "startActionsHistory": "Open history",
-    "promptGroup": "A few good starting points",
-    "natalPrompts": {
-      "overview": {
-        "label": "Chart overview",
-        "prompt": "Give me an overall reading of my natal chart: main themes, personality, and standout patterns."
-      },
-      "strengths": {
-        "label": "My strengths",
-        "prompt": "What strengths and talents stand out the most in my natal chart?"
-      },
-      "tensions": {
-        "label": "Key tensions",
-        "prompt": "What core tensions or growth edges are most visible in my natal chart?"
-      }
-    },
-    "justNow": "just now",
-    "minutesAgo": "{n} min ago",
-    "hoursAgo": "{n}h ago",
-    "daysAgo": "{n}d ago"
-  },
   "common": {
     "all": "All",
     "back": "Back",
@@ -647,6 +565,9 @@
         "tomorrow": "Tomorrow",
         "openChart": "Open",
         "noAlerts": "No notable events this month"
+      },
+      "actions": {
+        "calendar": "Calendar"
       }
     },
     "forecast": {
@@ -955,33 +876,6 @@
       "title": "Natal Chart Calculator",
       "logo": "Steliara"
     },
-    "interpretations": {
-      "actions": {
-        "regenerate": "Regenerate"
-      },
-      "backToNew": "New chart",
-      "empty": "No interpretation content",
-      "errors": {
-        "loadFailed": "Failed to load interpretation",
-        "userIdMissing": "User id is missing. Create chart first."
-      },
-      "header": "Psychological profile",
-      "loading": {
-        "hint": "This can take up to 15-20 seconds",
-        "text": "Generating interpretation..."
-      },
-      "meta": {
-        "cached": "Cached",
-        "model": "Model: {value}",
-        "time": "Time: {value} ms",
-        "tokens": "Tokens: {value}"
-      },
-      "nav": {
-        "chart": "Chart",
-        "tables": "Tables"
-      },
-      "title": "Interpretations"
-    },
     "natalFull": {
       "balances": {
         "elements": "Elements:",
@@ -1110,7 +1004,7 @@
       "hero": {
         "eyebrow": "Private astrologer workspace",
         "title": "Professional astrology, presented with calm confidence.",
-        "subtitle": "Sign in to run your astrology practice, organize client work, and keep natal charts, interpretations, and your AI assistant in one premium light workspace.",
+        "subtitle": "Sign in to run your astrology practice, organize client work, and keep natal charts and forecasts in one premium light workspace.",
         "badges": {
           "private": "Private astrologer workspace",
           "premium": "Premium light interface",
@@ -1120,9 +1014,9 @@
         "panel": {
           "label": "Built for astrologer practice",
           "point1": "Keep your client work organized in a workspace designed for professional use.",
-          "point2": "Store charts, interpretations, forecasts, and AI-supported workflow together so your process stays consistent.",
+          "point2": "Store charts, forecasts, and client workflow together so your process stays consistent.",
           "point3": "Use secure sign-in and verification that feel professional from the first click.",
-          "point4": "Rely on the AI assistant to make chart analysis faster, clearer, and easier to work through."
+          "point4": "Rely on a calm, structured workspace to make chart analysis clearer and easier to work through."
         },
         "footnote": "Designed to feel like a private astrologer studio: warm, precise, and easy to trust.",
         "cardKicker": "Secure account access"

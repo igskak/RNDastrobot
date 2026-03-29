@@ -1,5 +1,5 @@
 import { build } from 'esbuild';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -15,7 +15,6 @@ const htmlPages = [
   'chart.html',
   'forecast.html',
   'natal-full.html',
-  'interpretations.html',
   'login.html',
   'calendar.html',
 ];
@@ -26,7 +25,6 @@ const jsEntryPoints = {
   chart: path.join(frontendRoot, 'entries', 'chart.entry.js'),
   forecast: path.join(frontendRoot, 'entries', 'forecast.entry.js'),
   'natal-full': path.join(frontendRoot, 'entries', 'natal-full.entry.js'),
-  interpretations: path.join(frontendRoot, 'entries', 'interpretations.entry.js'),
   login: path.join(frontendRoot, 'entries', 'login.entry.js'),
   calendar: path.join(frontendRoot, 'entries', 'calendar.entry.js'),
 };
@@ -37,7 +35,6 @@ const cssEntryPoints = {
   chart: path.join(frontendRoot, 'entries-css', 'chart.entry.css'),
   forecast: path.join(frontendRoot, 'entries-css', 'forecast.entry.css'),
   'natal-full': path.join(frontendRoot, 'entries-css', 'natal-full.entry.css'),
-  interpretations: path.join(frontendRoot, 'entries-css', 'interpretations.entry.css'),
   login: path.join(frontendRoot, 'entries-css', 'login.entry.css'),
   calendar: path.join(frontendRoot, 'entries-css', 'calendar.entry.css'),
 };
@@ -83,6 +80,8 @@ async function syncHtmlBuildMarkers(buildId) {
 
 const buildId = process.env.FRONTEND_BUILD_ID || createBuildId();
 
+await rm(jsOutdir, { recursive: true, force: true });
+await rm(cssOutdir, { recursive: true, force: true });
 await mkdir(jsOutdir, { recursive: true });
 await mkdir(cssOutdir, { recursive: true });
 

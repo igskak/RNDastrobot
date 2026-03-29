@@ -1147,18 +1147,6 @@ function buildForecastChatContext() {
 
 window.getForecastChatContext = buildForecastChatContext;
 
-async function saveActiveForecastRun(payload) {
-    try {
-        const result = await apiPost('/chat/forecast-run', payload);
-        ForecastState.activeRunId = result.run_id || null;
-        ForecastState.activeRunMethod = result.method || null;
-        return result;
-    } catch (err) {
-        console.warn('Forecast run save failed:', err);
-        return null;
-    }
-}
-
 // ─── Solar Zoom/Pan ─────────────────────────────────────
 let solarZoomLevel = 1;
 let solarPanX = 0;
@@ -3044,88 +3032,15 @@ async function calculateAllForecastViews(forcedMethod = null) {
     showState('table', 'content');
 
     if (method === 'transits') {
-        await saveActiveForecastRun({
-            user_id: ForecastState.userId,
-            method: 'transits',
-            period_start: startDate,
-            period_end: endDate,
-            target_date: targetDate,
-            timezone: getForecastTimezone(),
-            context_data: {
-                transits: {
-                    period_start: startDate,
-                    period_end: endDate,
-                    selected_date: targetDate,
-                    total_events: needTransitPeriod ? (ForecastState.transitEvents?.events?.length || 0) : 0,
-                    events: needTransitPeriod ? (ForecastState.transitEvents?.events || []) : [],
-                },
-                progressions: {
-                    target_date: targetDate,
-                    data: combinedData?._layers?.progression || null,
-                },
-                directions: {
-                    target_date: targetDate,
-                    direction_type: directionType,
-                    data: combinedData?._layers?.direction || null,
-                },
-            },
-        });
         scheduleForecastStatePersist();
         return;
     }
 
     if (method === 'progressions') {
-        await saveActiveForecastRun({
-            user_id: ForecastState.userId,
-            method: 'progressions',
-            target_date: targetDate,
-            timezone: getForecastTimezone(),
-            context_data: {
-                progressions: {
-                    target_date: targetDate,
-                    data: combinedData?._layers?.progression || null,
-                },
-                directions: {
-                    target_date: targetDate,
-                    direction_type: directionType,
-                    data: combinedData?._layers?.direction || null,
-                },
-                transits: {
-                    period_start: targetDate,
-                    period_end: targetDate,
-                    selected_date: targetDate,
-                    events: combinedData?._layers?.transit?.aspects || [],
-                },
-            },
-        });
         scheduleForecastStatePersist();
         return;
     }
 
-    await saveActiveForecastRun({
-        user_id: ForecastState.userId,
-        method: 'directions',
-        target_date: targetDate,
-        direction_type: directionType,
-        timezone: getForecastTimezone(),
-        context_data: {
-            directions: {
-                target_date: targetDate,
-                direction_type: directionType,
-                data: combinedData?._layers?.direction || null,
-            },
-            progressions: {
-                target_date: targetDate,
-                data: combinedData?._layers?.progression || null,
-            },
-            transits: {
-                period_start: targetDate,
-                period_end: targetDate,
-                selected_date: targetDate,
-                events: combinedData?._layers?.transit?.aspects || [],
-            },
-        },
-    });
     scheduleForecastStatePersist();
 }
 
@@ -3328,21 +3243,6 @@ async function calculateSolar() {
     if (cached) {
         ForecastState.solarData = cached;
         ForecastState.solarCalculatedYear = year;
-        await saveActiveForecastRun({
-            user_id: ForecastState.userId,
-            method: 'solar_return',
-            year: year,
-            timezone: getForecastTimezone(),
-            location_name: name || null,
-            location_lat: isNaN(lat) ? null : lat,
-            location_lon: isNaN(lon) ? null : lon,
-            context_data: {
-                solar_return: {
-                    year: year,
-                    data: cached,
-                },
-            },
-        });
         showState('solar', 'content');
         renderSolar(cached);
         scheduleForecastStatePersist();
@@ -3353,21 +3253,6 @@ async function calculateSolar() {
     ForecastState.solarCache[cacheKey] = data;
     ForecastState.solarData = data;
     ForecastState.solarCalculatedYear = year;
-    await saveActiveForecastRun({
-        user_id: ForecastState.userId,
-        method: 'solar_return',
-        year: year,
-        timezone: getForecastTimezone(),
-        location_name: name || null,
-        location_lat: isNaN(lat) ? null : lat,
-        location_lon: isNaN(lon) ? null : lon,
-        context_data: {
-            solar_return: {
-                year: year,
-                data: data,
-            },
-        },
-    });
     showState('solar', 'content');
     renderSolar(data);
     scheduleForecastStatePersist();

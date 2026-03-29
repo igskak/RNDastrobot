@@ -53,9 +53,3 @@ mypy==1.8.0
 
 # Swiss Ephemeris Python Bindings
 pyswisseph==2.10.3.2
-
-# OpenAI API
-openai>=1.60.0
-
-# LLM Observability
-langfuse>=4.0.0

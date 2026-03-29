@@ -213,8 +213,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     renderFullChart(chartData);
     setupLegendToggle();
-    updateInterpretationLinks(chartData);
-
     document.addEventListener('frontend:locale-changed', () => {
         if (!chartData) return;
         renderFullChart(chartData);
@@ -1059,14 +1057,4 @@ function renderSpecialPoints(specialPoints) {
     if (!hasPoints) {
         tbody.innerHTML = noDataRow(3, 'page.natalFull.empty.noSpecialPoints');
     }
-}
-
-function updateInterpretationLinks(data) {
-    const userId = data.user_id || localStorage.getItem('currentUserId');
-    if (!userId) return;
-
-    const links = document.querySelectorAll('a[href="interpretations.html"]');
-    links.forEach((link) => {
-        link.href = `interpretations.html?user_id=${userId}`;
-    });
 }

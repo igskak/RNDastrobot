@@ -49,8 +49,6 @@ class User(Base):
     progressions = relationship("Progression", back_populates="user", cascade="all, delete-orphan")
     directions = relationship("Direction", back_populates="user", cascade="all, delete-orphan")
     transit_events_cache = relationship("TransitEventsCache", back_populates="user", cascade="all, delete-orphan")
-    prognostic_interpretations = relationship("PrognosticInterpretation", back_populates="user", cascade="all, delete-orphan")
-    forecast_runs = relationship("ForecastRun", back_populates="user", cascade="all, delete-orphan")
     consultations = relationship("Consultation", back_populates="user", cascade="all, delete-orphan")
     # Relationships для eager loading (оптимизация запросов)
     natal_aspects = relationship("NatalAspect", back_populates="user", cascade="all, delete-orphan")
@@ -920,151 +918,6 @@ class TransitEventsCache(Base):
 
 
 # ============================================================================
-# INTERPRETATIONS CACHE (OpenAI интерпретации)
-# ============================================================================
-
-class NatalInterpretation(Base):
-    """Модель кэша интерпретаций от OpenAI"""
-    __tablename__ = 'natal_interpretations'
-
-    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), primary_key=True)
-    interpretation_type = Column(String(50), primary_key=True)  # 'psychological_profile', 'career', etc.
-    locale = Column(String(5), primary_key=True, nullable=False, default='en', server_default='en')
-    content = Column(JSONB, nullable=False)  # Структурированный ответ от OpenAI
-    chart_hash = Column(String(64), nullable=False)  # SHA256 хэш для инвалидации
-    openai_model = Column(String(50))  # 'gpt-4.1'
-    openai_prompt_id = Column(String(100))  # ID промпта в OpenAI Playground
-    prompt_version = Column(String(20))  # '1.0', '1.1'
-    tokens_used = Column(Integer)
-    cost_usd = Column(Numeric(10, 4))
-    generation_time_ms = Column(Integer)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-
-    # Relationship
-    user = relationship("User")
-
-    __table_args__ = (
-        CheckConstraint("locale IN ('en', 'uk', 'ru')", name='ck_natal_interpretations_locale'),
-        Index('idx_interpretations_hash', 'chart_hash'),
-        Index('idx_interpretations_type', 'interpretation_type'),
-        Index('idx_interpretations_locale', 'locale'),
-        Index('idx_interpretations_created', 'created_at'),
-    )
-
-
-# ============================================================================
-# PROGNOSTIC INTERPRETATIONS CACHE (AI-интерпретации прогностики)
-# ============================================================================
-
-class PrognosticInterpretation(Base):
-    """
-    Кэш AI-интерпретаций прогностических данных.
-
-    Каждый вызов OpenAI стоит денег и занимает секунды.
-    Кэшируем по: user + method + period/date + content_hash.
-    """
-    __tablename__ = 'prognostic_interpretations'
-
-    interpretation_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
-    locale = Column(String(5), nullable=False, default='en', server_default='en')
-
-    # Тип прогностики
-    method = Column(String(30), nullable=False)  # transits, progressions, directions, solar_return
-
-    # Период / дата запроса
-    period_start = Column(Date)       # начало периода (для транзитов)
-    period_end = Column(Date)         # конец периода (для транзитов)
-    target_date = Column(Date)        # конкретная дата (для прогрессий/дирекций)
-    year = Column(Integer)            # год (для соляра)
-
-    # Сырые астро-данные, отправленные в AI
-    raw_data = Column(JSONB)
-
-    # AI-интерпретация
-    interpretation = Column(JSONB, nullable=False)
-    content_hash = Column(String(64), nullable=False)  # SHA256 для инвалидации
-
-    # Метаданные AI
-    openai_model = Column(String(50))
-    tokens_used = Column(Integer)
-    generation_time_ms = Column(Integer)
-
-    # Метаданные
-    created_at = Column(DateTime, server_default=func.now())
-
-    # Relationship
-    user = relationship("User", back_populates="prognostic_interpretations")
-
-    __table_args__ = (
-        CheckConstraint("locale IN ('en', 'uk', 'ru')", name='ck_prognostic_interpretations_locale'),
-        CheckConstraint(
-            "method IN ('transits', 'progressions', 'directions', 'solar_return')",
-            name='valid_prognostic_method'
-        ),
-        Index('idx_pi_user_method', 'user_id', 'method'),
-        Index('idx_pi_user_method_locale', 'user_id', 'method', 'locale'),
-        Index('idx_pi_content_hash', 'content_hash'),
-        Index('idx_pi_locale', 'locale'),
-        Index('idx_pi_created', 'created_at'),
-    )
-
-
-# ============================================================================
-# FORECAST RUNS (active прогнозный контекст для ChatKit/Agent Builder)
-# ============================================================================
-
-class ForecastRun(Base):
-    """
-    Снимок рассчитанной прогностики (контекст активного вопроса в чате).
-
-    Хранит конкретный метод + период/дату/место + JSON-данные расчёта.
-    """
-    __tablename__ = 'forecast_runs'
-
-    run_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
-
-    method = Column(String(30), nullable=False)  # transits, progressions, directions, solar_return
-    direction_type = Column(String(20))
-
-    period_start = Column(Date)
-    period_end = Column(Date)
-    target_date = Column(Date)
-    year = Column(Integer)
-
-    timezone = Column(String(50))
-    location_name = Column(String(200))
-    location_lat = Column(Numeric(9, 6))
-    location_lon = Column(Numeric(9, 6))
-
-    context_data = Column(JSONB, nullable=False, default=dict)
-    context_hash = Column(String(64))
-
-    is_active = Column(Boolean, nullable=False, default=True)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-
-    user = relationship("User", back_populates="forecast_runs")
-
-    __table_args__ = (
-        CheckConstraint(
-            "method IN ('transits', 'progressions', 'directions', 'solar_return')",
-            name='valid_forecast_run_method'
-        ),
-        CheckConstraint(
-            "direction_type IS NULL OR direction_type IN ('solar_arc', 'symbolic', 'equatorial')",
-            name='valid_forecast_run_direction_type'
-        ),
-        Index('idx_forecast_runs_user_active', 'user_id', 'is_active'),
-        Index('idx_forecast_runs_user_created', 'user_id', 'created_at'),
-        Index('idx_forecast_runs_method', 'method'),
-        Index('idx_forecast_runs_context_hash', 'context_hash'),
-    )
-
-
-# ============================================================================
 # GEO CITIES (локальная база населенных пунктов для геокодинга)
 # ============================================================================
 
@@ -1107,45 +960,6 @@ class GeoCity(Base):
     )
 
 
-class ChatConversation(Base):
-    """Разговор (тред) custom chat."""
-    __tablename__ = 'chat_conversations'
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
-    mode = Column(String(20), nullable=False, default='natal')
-    title = Column(String(255))
-    last_response_id = Column(Text)
-    workflow_state = Column(JSONB, server_default='{}')
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-
-    messages = relationship("ChatMessage", back_populates="conversation", cascade="all, delete-orphan", order_by="ChatMessage.created_at")
-
-    __table_args__ = (
-        CheckConstraint("mode IN ('natal', 'prognostic')", name='chk_chat_conv_mode'),
-        Index('idx_chat_conversations_user_id', 'user_id', 'updated_at'),
-    )
-
-
-class ChatMessage(Base):
-    """Сообщение в разговоре custom chat."""
-    __tablename__ = 'chat_messages'
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    conversation_id = Column(UUID(as_uuid=True), ForeignKey('chat_conversations.id', ondelete='CASCADE'), nullable=False)
-    role = Column(String(20), nullable=False)
-    content = Column(Text, nullable=False)
-    created_at = Column(DateTime, server_default=func.now())
-
-    conversation = relationship("ChatConversation", back_populates="messages")
-
-    __table_args__ = (
-        CheckConstraint("role IN ('user', 'assistant')", name='chk_chat_msg_role'),
-        Index('idx_chat_messages_conversation_id', 'conversation_id', 'created_at'),
-    )
-
-
 class Consultation(Base):
     """Запись о консультации (CRM)."""
     __tablename__ = 'consultations'
@@ -1160,8 +974,6 @@ class Consultation(Base):
     is_paid = Column(Boolean, nullable=False, default=False)
     duration_minutes = Column(Integer)
     notes = Column(Text)
-    conversation_id = Column(UUID(as_uuid=True), ForeignKey('chat_conversations.id', ondelete='SET NULL'))
-    forecast_run_id = Column(UUID(as_uuid=True), ForeignKey('forecast_runs.run_id', ondelete='SET NULL'))
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 

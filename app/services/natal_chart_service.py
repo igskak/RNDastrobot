@@ -865,9 +865,7 @@ class NatalChartService:
         """
         from app.database.models import (
             Direction,
-            ForecastRun,
             Progression,
-            PrognosticInterpretation,
             SolarReturn,
             TransitEventsCache,
         )
@@ -877,8 +875,6 @@ class NatalChartService:
             Progression,
             Direction,
             TransitEventsCache,
-            PrognosticInterpretation,
-            ForecastRun,
         ):
             db_session.query(model).filter(model.user_id == user_id).delete(synchronize_session=False)
 
