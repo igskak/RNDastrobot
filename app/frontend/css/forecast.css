@@ -210,7 +210,6 @@
         radial-gradient(circle at top left, rgba(212, 180, 120, 0.16), transparent 48%),
         linear-gradient(180deg, rgba(255, 251, 245, 0.98), rgba(255, 255, 255, 0.92));
     border-bottom: 1px solid var(--border);
-    display: flex;
     flex-direction: column;
     gap: 12px;
     flex-shrink: 0;
