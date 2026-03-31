@@ -1441,6 +1441,22 @@ input[type="number"] {
     accent-color: var(--accent);
 }
 
+.planet-toggle--icon-only {
+    justify-content: center;
+    min-width: 42px;
+    min-height: 34px;
+    padding: 4px 6px;
+}
+
+.planet-toggle-symbol {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    line-height: 1;
+    color: var(--text-primary);
+}
+
 .planet-toggle.disabled {
     opacity: 0.5;
     background: var(--bg-tertiary);

@@ -8,6 +8,15 @@ let inFlightRecalcPromise = null;
 let inFlightRecalcKey = null;
 let currentHoveredAspectKey = null;
 let chartToastTimer = null;
+const CHART_TOGGLEABLE_POINTS = [
+    'Chiron',
+    'TrueNode',
+    'SouthNode',
+    'BlackMoon',
+    'WhiteMoon',
+    'Proserpina',
+    'PartOfFortune',
+];
 const editClientState = {
     autocompleteBound: false,
     originalCoords: null,
@@ -50,6 +59,14 @@ async function waitForI18nReady() {
 function normalizeHouseSystemCode(value) {
     const raw = String(value || 'P').trim().toUpperCase().replace(/[\s-]+/g, '_');
     return HOUSE_SYSTEM_ALIASES[raw] || 'P';
+}
+
+function escapeAttribute(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
 }
 
 let currentSettings = {
@@ -150,6 +167,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!window.chartDataCache) return;
         updateHeader(window.chartDataCache);
         refreshEditDialogLocale();
+        renderChartPointToggles();
         if (chartDataRenderer && typeof chartDataRenderer.render === 'function') {
             const hidden = currentSettings.hiddenPlanets || [];
             redrawChart(window.chartDataCache, hidden, currentSettings.orientation);
@@ -172,29 +190,45 @@ function initPlanetRowClick() {
     if (!planetsTable) return;
 
     let activePlanetName = null;
+    const dispatchAspectPlanetFilter = (planetName) => {
+        document.dispatchEvent(new CustomEvent('chart:aspect-planet-filter', {
+            detail: { planetName: planetName || null }
+        }));
+    };
+
+    const clearActivePlanetSelection = () => {
+        if (!activePlanetName) return;
+
+        const wheel = window.chartWheel;
+        if (wheel) {
+            const prevGroup = wheel.svg.querySelector(`[data-planet="${activePlanetName}"]`);
+            if (prevGroup) {
+                wheel.onPlanetHover({ currentTarget: prevGroup }, false);
+            }
+            wheel.hideTooltip();
+        }
+
+        document.getElementById(`row-${activePlanetName}`)?.classList.remove('active-row');
+        activePlanetName = null;
+        dispatchAspectPlanetFilter(null);
+    };
 
     planetsTable.addEventListener('click', (e) => {
         const row = e.target.closest('tr[data-planet]');
         if (!row) return;
+        e.stopPropagation();
 
         const planetName = row.dataset.planet;
         const wheel = window.chartWheel;
         if (!wheel) return;
 
-        // Deactivate previously active planet
-        if (activePlanetName) {
-            const prevGroup = wheel.svg.querySelector(`[data-planet="${activePlanetName}"]`);
-            if (prevGroup) wheel.onPlanetHover({ currentTarget: prevGroup }, false);
-            wheel.hideTooltip();
-            document.getElementById(`row-${activePlanetName}`)?.classList.remove('active-row');
-        }
-
         // Toggle off if clicking same row
         if (activePlanetName === planetName) {
-            activePlanetName = null;
+            clearActivePlanetSelection();
             return;
         }
 
+        clearActivePlanetSelection();
         activePlanetName = planetName;
         row.classList.add('active-row');
 
@@ -212,19 +246,20 @@ function initPlanetRowClick() {
             clientY: groupRect.top + groupRect.height / 2,
         };
         wheel.onPlanetClick(fakeEvent);
+        dispatchAspectPlanetFilter(planetName);
     });
 
     // Clicking the chart canvas deselects
     document.getElementById('view-chart')?.addEventListener('click', (e) => {
         if (!activePlanetName) return;
         if (e.target.closest('.planet-group')) return; // let wheel handle its own clicks
-        const wheel = window.chartWheel;
-        if (!wheel) return;
-        const prevGroup = wheel.svg.querySelector(`[data-planet="${activePlanetName}"]`);
-        if (prevGroup) wheel.onPlanetHover({ currentTarget: prevGroup }, false);
-        wheel.hideTooltip();
-        document.getElementById(`row-${activePlanetName}`)?.classList.remove('active-row');
-        activePlanetName = null;
+        clearActivePlanetSelection();
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!activePlanetName) return;
+        if (e.target.closest('tr[data-planet]') || e.target.closest('.planet-group')) return;
+        clearActivePlanetSelection();
     });
 }
 
@@ -409,27 +444,7 @@ function initSettings(chartData) {
     const pointScaleRange = document.getElementById('pointScaleRange');
     const pointScaleValue = document.getElementById('pointScaleValue');
 
-    // Список планет для переключения
-    const toggleablePlanets = [
-        'Chiron',
-        'TrueNode',
-        'SouthNode',
-        'BlackMoon',
-        'WhiteMoon',
-        'Proserpina',
-        'PartOfFortune',
-    ];
-
-    // Генерируем чекбоксы
-    if (planetToggles) {
-        planetToggles.innerHTML = toggleablePlanets.map((planetId) => `
-            <label class="planet-toggle">
-                <input type="checkbox" data-planet="${planetId}" checked>
-                <span><span class="astro-symbol">${Symbols.planets[planetId] || ''}</span> <span data-i18n="astro.planet.${planetId}"></span></span>
-            </label>
-        `).join('');
-        window.FrontendI18nUi?.applyI18n?.(document);
-    }
+    renderChartPointToggles();
 
     // Переключение панели
     if (settingsToggle && settingsPanel) {
@@ -461,9 +476,7 @@ function initSettings(chartData) {
         houseSystemSelect.value = normalizeHouseSystemCode(currentSettings.houseSystem);
         houseSystemSelect.addEventListener('change', () => applySettings());
     }
-    document.querySelectorAll('#planetToggles input').forEach(cb => {
-        cb.addEventListener('change', () => applySettings());
-    });
+    bindChartPointToggleHandlers();
     if (planetScaleRange) {
         planetScaleRange.value = String(Math.round(currentSettings.planetScale * 100));
         if (planetScaleValue) planetScaleValue.textContent = `${Math.round(currentSettings.planetScale * 100)}%`;
@@ -482,6 +495,32 @@ function initSettings(chartData) {
     }
 
     // Применение настроек
+}
+
+function renderChartPointToggles() {
+    const planetToggles = document.getElementById('planetToggles');
+    if (!planetToggles) return;
+
+    const hiddenPlanets = currentSettings.hiddenPlanets || [];
+    planetToggles.innerHTML = CHART_TOGGLEABLE_POINTS.map((planetId) => {
+        const label = t(`astro.planet.${planetId}`);
+        const checked = hiddenPlanets.includes(planetId) ? '' : 'checked';
+        const symbol = Symbols?.planets?.[planetId] || '';
+        const escapedLabel = escapeAttribute(label);
+        return `
+            <label class="planet-toggle planet-toggle--icon-only" title="${escapedLabel}">
+                <input type="checkbox" data-planet="${planetId}" ${checked} aria-label="${escapedLabel}">
+                <span class="planet-toggle-symbol" aria-hidden="true"><span class="astro-symbol">${symbol}</span></span>
+            </label>
+        `;
+    }).join('');
+    bindChartPointToggleHandlers();
+}
+
+function bindChartPointToggleHandlers() {
+    document.querySelectorAll('#planetToggles input').forEach((cb) => {
+        cb.onchange = () => applySettings();
+    });
 }
 
 /**

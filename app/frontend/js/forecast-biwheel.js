@@ -1617,12 +1617,10 @@
         let objectLabel = row.object || '';
         let objectHtml = escapeHtml(objectLabel);
         if (row.object_key && !String(row.object_key).startsWith('Cusp')) {
-            const symbol = Symbols?.planets?.[row.object_key] || '';
             const name = getPlanetName(row.object_key);
             const retro = isTransitBodyRetrograde(row.object_key, methodKey);
-            objectLabel = `${symbol ? `${symbol} ` : ''}${name}`.trim();
-            const symbolHtml = symbol ? `<span class="astro-symbol">${escapeHtml(symbol)}</span> ` : '';
-            objectHtml = `${symbolHtml}${escapeHtml(name)}${retroIndicatorHtml(retro)}`;
+            objectLabel = name;
+            objectHtml = formatCompactBodyGlyph(row.object_key, retro);
         } else if (row.object_key?.startsWith('Cusp')) {
             const houseNumber = String(row.object_key).replace('Cusp', '');
             objectLabel = t('page.forecast.table.ingress.cuspLabel', { house: houseNumber });
@@ -1799,6 +1797,13 @@
         return getPlanetName(name);
     }
 
+    function formatCompactBodyGlyph(name, isRetrograde = false) {
+        if (!name) return '';
+        const symbol = Symbols?.planets?.[name] || '';
+        const label = escapeHtml(getPlanetName(name));
+        return `<span class="bw-compact-body" title="${label}" aria-label="${label}" role="img"><span class="astro-symbol">${escapeHtml(symbol)}</span>${retroIndicatorHtml(isRetrograde)}</span>`;
+    }
+
     function syncBodyFilters(aspects) {
         const transitBodies = new Set(aspects.map(a => a.transitBody).filter(Boolean));
         const natalBodies = new Set(aspects.map(a => a.natalBody).filter(Boolean));
@@ -1895,14 +1900,16 @@
             const checked = enabledTransitBodies.has(name) ? 'checked' : '';
             const symbol = Symbols?.planets?.[name] || '';
             const label = getSettingsBodyLabel(name);
-            return `<label class="bw-toggle"><input type="checkbox" data-group="transit" data-body="${name}" ${checked}><span class="bw-toggle-label"><span class="astro-symbol">${symbol}</span><span class="bw-toggle-name">${label}</span></span></label>`;
+            const escapedLabel = escapeHtml(label);
+            return `<label class="bw-toggle bw-toggle--icon-only" title="${escapedLabel}"><input type="checkbox" data-group="transit" data-body="${name}" ${checked} aria-label="${escapedLabel}"><span class="bw-toggle-label" aria-hidden="true"><span class="astro-symbol">${escapeHtml(symbol)}</span></span></label>`;
         }).join('');
 
         const natalHTML = sortedBodies(natalBodies).map(name => {
             const checked = enabledNatalBodies.has(name) ? 'checked' : '';
             const symbol = Symbols?.planets?.[name] || '';
             const label = getSettingsBodyLabel(name);
-            return `<label class="bw-toggle"><input type="checkbox" data-group="natal" data-body="${name}" ${checked}><span class="bw-toggle-label"><span class="astro-symbol">${symbol}</span><span class="bw-toggle-name">${label}</span></span></label>`;
+            const escapedLabel = escapeHtml(label);
+            return `<label class="bw-toggle bw-toggle--icon-only" title="${escapedLabel}"><input type="checkbox" data-group="natal" data-body="${name}" ${checked} aria-label="${escapedLabel}"><span class="bw-toggle-label" aria-hidden="true"><span class="astro-symbol">${escapeHtml(symbol)}</span></span></label>`;
         }).join('');
 
         transitContainers.forEach(container => {

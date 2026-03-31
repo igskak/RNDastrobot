@@ -53,9 +53,9 @@ function retroIndicatorHtml(isRetrograde, variantClass = 'retro-indicator--micro
 function formatPlanetCellHtml(bodyName, isRetrograde = false) {
     if (!bodyName || bodyName === '—') return '—';
     const symbol = Symbols?.planets?.[bodyName] || '';
-    const symbolHtml = symbol ? `<span class="astro-symbol">${escapeHtml(symbol)}</span> ` : '';
-    const nameHtml = escapeHtml(getPlanetName(bodyName));
-    return `${symbolHtml}${nameHtml}${retroIndicatorHtml(isRetrograde)}`;
+    const label = escapeHtml(getPlanetName(bodyName));
+    const symbolHtml = symbol ? `<span class="astro-symbol">${escapeHtml(symbol)}</span>` : '';
+    return `<span class="forecast-body-chip" title="${label}" aria-label="${label}" role="img">${symbolHtml}${retroIndicatorHtml(isRetrograde)}</span>`;
 }
 
 // ─── State ──────────────────────────────────────────────
@@ -1193,6 +1193,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateBiwheelFocusButton();
         updateTransitPlaybackButton();
         renderForecastSummary();
+        if (ForecastState.currentTab === 'table' && ForecastState.tableRowsRaw.length) {
+            applyTableFiltersAndRender();
+        }
+        if (window.ForecastBiwheel?.hasLastRender?.()) {
+            window.ForecastBiwheel.rerenderLast();
+        }
     });
     // Deep-link: if URL has tab/date params, skip state restoration to avoid
     // the restored state overriding the requested date.

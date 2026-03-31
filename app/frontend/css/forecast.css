@@ -1303,11 +1303,17 @@
     margin: 0;
     margin-top: 1px;
 }
+.bw-toggle--icon-only {
+    grid-template-columns: 14px 24px;
+    align-items: center;
+    justify-content: start;
+}
 .bw-toggle-label {
-    display: grid;
-    grid-template-columns: 12px minmax(0, 1fr);
-    column-gap: 5px;
-    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    min-height: 18px;
 }
 .bw-toggle .astro-symbol {
     min-width: 12px;
@@ -1317,6 +1323,16 @@
 .bw-toggle-name {
     min-width: 0;
     overflow-wrap: anywhere;
+}
+.forecast-body-chip,
+.bw-compact-body {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-width: 1.4em;
+    line-height: 1;
+    white-space: nowrap;
 }
 .bw-settings-action {
     padding: 3px 7px;
