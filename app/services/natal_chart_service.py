@@ -182,6 +182,7 @@ class NatalChartService:
                 'latitude': lat,
                 'longitude': lon,
                 'place': place_name or place,
+                'house_system': house_system,
             },
             'planets': planets,
             'houses': houses,
@@ -214,6 +215,7 @@ class NatalChartService:
                 first_name=first_name,
                 last_name=last_name,
                 astrologer_id=astrologer_id,
+                house_system=house_system,
             )
 
             # Читаємо повні дані з БД (включаючи похідні: аспекти, конфігурації, тощо)
@@ -653,6 +655,7 @@ class NatalChartService:
         first_name: Optional[str] = None,
         last_name: Optional[str] = None,
         astrologer_id: Optional[UUID] = None,
+        house_system: str = 'P',
     ) -> UUID:
         """
         Сохранить натальную карту в базу данных
@@ -687,6 +690,7 @@ class NatalChartService:
             lat=lat,
             lon=lon,
             julian_day=julian_day,
+            house_system=house_system,
             first_name=first_name,
             last_name=last_name,
         )
@@ -755,6 +759,7 @@ class NatalChartService:
         user.lat = lat
         user.lon = lon
         user.julian_day = jd
+        user.house_system = house_system
         db_session.flush()
 
         self._invalidate_dependent_chart_artifacts(user.user_id, db_session)
@@ -783,6 +788,7 @@ class NatalChartService:
                     'latitude': lat,
                     'longitude': lon,
                     'place': place_name or place,
+                    'house_system': house_system,
                 },
                 'planets': planets,
                 'houses': houses,
@@ -859,6 +865,35 @@ class NatalChartService:
 
         return user.user_id
 
+    def update_house_system_for_user(
+        self,
+        user_id: UUID,
+        *,
+        house_system: str,
+        astrologer_id: UUID,
+        db_session: Session,
+    ) -> Dict:
+        """Recalculate an existing natal chart with a new persisted house system."""
+        user_repo = UserRepository(db_session)
+        user = user_repo.get_user_by_id(user_id, astrologer_id=astrologer_id)
+        if not user:
+            raise ValueError("Пользователь не найден")
+
+        return self.update_existing_chart(
+            user_id=user_id,
+            db_session=db_session,
+            birth_date=user.birth_date,
+            birth_time=user.birth_time,
+            timezone=user.timezone,
+            astrologer_id=astrologer_id,
+            place=user.birth_place,
+            latitude=float(user.lat),
+            longitude=float(user.lon),
+            house_system=house_system,
+            first_name=user.first_name,
+            last_name=user.last_name,
+        )
+
     def _invalidate_dependent_chart_artifacts(self, user_id: UUID, db_session: Session) -> None:
         """
         Очистить прогнозные и AI-артефакты, которые становятся невалидны после смены birth-data.
@@ -919,6 +954,7 @@ class NatalChartService:
                 'latitude': float(user.lat),
                 'longitude': float(user.lon),
                 'place': user.birth_place,
+                'house_system': user.house_system or 'P',
             },
             'planets': [
                 {

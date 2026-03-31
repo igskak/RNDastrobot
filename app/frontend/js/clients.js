@@ -536,11 +536,7 @@ async function openChart(userId) {
 
         const chartData = await response.json();
         AstroAPI.saveChartToSession(chartData);
-        AstroAPI.saveFormData(
-            AstroAPI.chartToFormData(chartData, {
-                houseSystem: AstroAPI.getFormData()?.houseSystem || 'P',
-            })
-        );
+        AstroAPI.saveFormData(AstroAPI.chartToFormData(chartData));
 
         window.showPageLoader?.();
         window.location.href = '/chart.html';
@@ -556,11 +552,7 @@ async function openForecastForUser(userId, { tab = 'biwheel', date, solarYear } 
 
         const chartData = await response.json();
         AstroAPI.saveChartToSession(chartData);
-        AstroAPI.saveFormData(
-            AstroAPI.chartToFormData(chartData, {
-                houseSystem: AstroAPI.getFormData()?.houseSystem || 'P',
-            })
-        );
+        AstroAPI.saveFormData(AstroAPI.chartToFormData(chartData));
 
         const params = new URLSearchParams();
         params.set('tab', tab);
@@ -602,9 +594,7 @@ async function openEditClientDialog(userId) {
         if (!response.ok) throw new Error(t('page.clients.edit.errors.loadFailed'));
 
         const chartData = await response.json();
-        const formData = AstroAPI.chartToFormData(chartData, {
-            houseSystem: chartData?.birth_data?.house_system || AstroAPI.getFormData()?.houseSystem || 'P',
-        });
+        const formData = AstroAPI.chartToFormData(chartData);
         const place = String(formData.place || '').trim();
         const latitude = formData.latitude == null ? Number.NaN : Number(formData.latitude);
         const longitude = formData.longitude == null ? Number.NaN : Number(formData.longitude);

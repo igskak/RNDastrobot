@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecast.title"></title>
-    <link rel="stylesheet" href="bundles/forecast.bundle.css?v=20260331-220441">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260331-220441">
+    <link rel="stylesheet" href="bundles/forecast.bundle.css?v=20260331-235000">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260331-235000">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '20260331-220441';</script>
+    <script>window.__APP_BUILD_ID__ = '20260331-235000';</script>
 </head>
 <body class="forecast-page">
     <div class="page-loader" id="pageLoader">
@@ -245,6 +245,10 @@
                                         <option value="aries" selected data-i18n="page.forecast.solar.orientationAries"></option>
                                         <option value="asc" data-i18n="page.forecast.solar.orientationAsc"></option>
                                     </select>
+                                    <div class="bw-settings-row">
+                                        <button class="bw-settings-action" id="bwSaveDefaultsBtn">Save as account defaults</button>
+                                        <button class="bw-settings-action" id="bwResetDefaultsBtn">Reset to defaults</button>
+                                    </div>
                                     <div class="bw-settings-title" data-i18n="page.forecast.biwheel.settings.natalPointSize"></div>
                                     <div class="bw-size-control">
                                         <input type="range" id="bwNatalScaleRange" min="80" max="170" step="5" value="100">
@@ -257,19 +261,18 @@
                                     </div>
                                     <div class="bw-settings-section-divider"></div>
                                     <div class="bw-settings-section-label" data-i18n="page.forecast.biwheel.settings.sectionFilters"></div>
-                                    <div class="bw-settings-title" data-i18n="page.forecast.biwheel.settings.showAspectsWith"></div>
+                                    <div class="bw-settings-title">Bodies Matrix</div>
+                                    <div class="forecast-settings-matrix" id="bwMatrixEditor"></div>
+                                    <div class="bw-settings-title">Aspect Types</div>
+                                    <div class="forecast-settings-grid" id="bwAspectTypeToggles"></div>
+                                    <div class="bw-settings-title">Aspect Scope</div>
+                                    <select id="bwAspectScopeSelect" class="bw-settings-select">
+                                        <option value="all">All</option>
+                                        <option value="major">Major</option>
+                                        <option value="minor">Minor</option>
+                                    </select>
                                     <div class="bw-settings-row">
                                         <button class="bw-settings-action" id="bwResetFiltersModal" data-i18n="common.reset"></button>
-                                    </div>
-                                    <div class="bw-planet-groups">
-                                        <div class="bw-planet-group-block">
-                                            <div class="bw-settings-subtitle" data-i18n="page.forecast.biwheel.settings.transit"></div>
-                                            <div class="bw-planet-toggles" id="bwTransitTogglesModal"></div>
-                                        </div>
-                                        <div class="bw-planet-group-block">
-                                            <div class="bw-settings-subtitle" data-i18n="page.forecast.biwheel.settings.natal"></div>
-                                            <div class="bw-planet-toggles" id="bwNatalTogglesModal"></div>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -452,10 +455,43 @@
                             <div class="bw-settings-panel hidden" id="solarSettingsPanel">
                                 <div class="bw-settings-dialog solar-settings-dialog">
                                     <button class="bw-settings-close" id="solarSettingsClose" data-i18n-title="common.close">✕</button>
+                                    <div class="bw-settings-title" data-i18n="page.forecast.solar.orientation"></div>
+                                    <select id="solarOrientationSelectModal" class="bw-settings-select">
+                                        <option value="aries" selected data-i18n="page.forecast.solar.orientationAries"></option>
+                                        <option value="asc" data-i18n="page.forecast.solar.orientationAsc"></option>
+                                    </select>
+                                    <div class="bw-settings-title">Aspect Scope</div>
+                                    <select id="solarAspectScopeSelect" class="bw-settings-select">
+                                        <option value="all">All</option>
+                                        <option value="major">Major</option>
+                                        <option value="minor">Minor</option>
+                                    </select>
                                     <div class="bw-settings-title" data-i18n="page.forecast.solar.settings.pointSize"></div>
                                     <div class="bw-size-control">
                                         <input type="range" id="solarPointScaleRange" min="80" max="170" step="5" value="100">
                                         <span id="solarPointScaleValue">100%</span>
+                                    </div>
+                                    <div class="bw-settings-title">Bodies Matrix</div>
+                                    <div class="forecast-settings-matrix" id="solarMatrixEditor"></div>
+                                    <div class="bw-settings-title">Aspect Types</div>
+                                    <div class="forecast-settings-grid" id="solarAspectTypeToggles"></div>
+                                    <div class="forecast-settings-stack">
+                                        <label class="forecast-settings-check">
+                                            <input type="checkbox" id="solarShowApplyingSeparatingToggle">
+                                            <span>Show applying / separating</span>
+                                        </label>
+                                        <label class="forecast-settings-check">
+                                            <input type="checkbox" id="solarShowSpeedToggle">
+                                            <span>Show speed</span>
+                                        </label>
+                                        <label class="forecast-settings-check">
+                                            <input type="checkbox" id="solarShowStationaryToggle">
+                                            <span>Show stationary</span>
+                                        </label>
+                                    </div>
+                                    <div class="bw-settings-row">
+                                        <button class="bw-settings-action" id="solarSaveDefaultsBtn">Save as account defaults</button>
+                                        <button class="bw-settings-action" id="solarResetDefaultsBtn">Reset to defaults</button>
                                     </div>
                                 </div>
                             </div>
@@ -473,8 +509,9 @@
     </div>
 
     <div class="timeline-tooltip" id="timelineTooltip"></div>
+    <div id="forecastToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/forecast.bundle.js?v=20260331-220441"></script>
-    <script src="js/locale-switcher.js?v=20260331-220441"></script>
+    <script type="module" src="js/bundles/forecast.bundle.js?v=20260331-235000"></script>
+    <script src="js/locale-switcher.js?v=20260331-235000"></script>
 </body>
 </html>

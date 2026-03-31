@@ -186,6 +186,7 @@ class BirthDataOutput(BaseModel):
     latitude: float
     longitude: float
     place: Optional[str] = None
+    house_system: str = "P"
 
 
 class AspectInfo(BaseModel):
@@ -512,6 +513,61 @@ class ErrorResponse(BaseModel):
     error: Optional[str] = None
 
 
+class AccountPreferencesPatchRequest(BaseModel):
+    """Partial update for astrologer-level preferences."""
+    chart_defaults: Optional[Dict[str, Any]] = None
+    methodology: Optional[Dict[str, Any]] = None
+    visual: Optional[Dict[str, Any]] = None
+    chart_creation_defaults: Optional[Dict[str, Any]] = None
+
+
+class AccountPreferencesResponse(BaseModel):
+    """Full account-level preferences payload."""
+    version: int
+    chart_defaults: Dict[str, Any]
+    methodology: Dict[str, Any]
+    visual: Dict[str, Any]
+    chart_creation_defaults: Dict[str, Any]
+    default_house_system: str
+
+
+class ChartViewOverrideUpsertRequest(BaseModel):
+    """Upsert sparse per-chart overrides."""
+    chart_kind: str
+    chart_id: UUID
+    view_type: str
+    overrides: Dict[str, Any] = Field(default_factory=dict)
+
+
+class ResolvedPreferencesResponse(BaseModel):
+    """Resolved account defaults + chart-specific overrides for a view."""
+    chart_kind: str
+    chart_id: UUID
+    view_type: str
+    account_defaults: Dict[str, Any]
+    overrides: Dict[str, Any]
+    resolved: Dict[str, Any]
+    chart_meta: Dict[str, Any]
+
+
+class HouseSystemUpdateRequest(BaseModel):
+    """Persisted house-system update for an existing natal chart."""
+    house_system: str = Field(..., description="Система домов")
+
+    @field_validator('house_system')
+    @classmethod
+    def validate_house_system(cls, v: str) -> str:
+        code = normalize_house_system_code(v)
+        if code not in VALID_HOUSE_SYSTEMS:
+            raise ValueError(f'Недопустимая система домов: {v}. Допустимые: {", ".join(VALID_HOUSE_SYSTEMS)}')
+        return code
+
+
+class ResetViewToDefaultsRequest(BaseModel):
+    """Reset one view to account defaults."""
+    view_type: str = Field(..., description="Тип экрана: natal или biwheel")
+
+
 # ============================================================================
 # SOLAR RETURN (Соляр)
 # ============================================================================
@@ -570,6 +626,7 @@ class SolarBirthData(BaseModel):
 
 class SolarReturnResponse(BaseModel):
     """Полный ответ с соларной картой"""
+    solar_id: Optional[UUID] = None
     solar_info: SolarInfo
     birth_data: SolarBirthData
     planets: List[PlanetPosition]
@@ -580,6 +637,7 @@ class SolarReturnResponse(BaseModel):
 
 class SolarReturnListItem(BaseModel):
     """Элемент списка соляров"""
+    solar_id: Optional[str] = None
     year: int
     solar_datetime: Optional[str] = None
     location_name: Optional[str] = None

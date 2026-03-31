@@ -99,6 +99,24 @@
         return response.json();
     }
 
+    async function getNatalChart(userId, options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/natal/${encodeURIComponent(String(userId))}`, {
+            method: 'GET',
+            headers: withLocaleHeaders(),
+            signal: options.signal,
+        });
+
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(
+                response,
+                'common.error',
+                'Failed to load natal chart'
+            ));
+        }
+
+        return response.json();
+    }
+
     async function updateClientChart(userId, birthData, options = {}) {
         if (!userId) {
             throw new Error(translate('page.chart.edit.errors.userIdMissing'));
@@ -168,6 +186,118 @@
         const payload = await response.json();
         const timezone = String(payload?.timezone || '').trim();
         return timezone || null;
+    }
+
+    function toQueryString(params = {}) {
+        const search = new URLSearchParams();
+        Object.entries(params).forEach(([key, value]) => {
+            if (value === null || value === undefined || value === '') return;
+            search.set(key, String(value));
+        });
+        const serialized = search.toString();
+        return serialized ? `?${serialized}` : '';
+    }
+
+    async function getAccountPreferences(options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/preferences/account`, {
+            method: 'GET',
+            headers: withLocaleHeaders(),
+            signal: options.signal,
+        });
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(response, 'common.error', 'Failed to load account preferences'));
+        }
+        return response.json();
+    }
+
+    async function patchAccountPreferences(payload, options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/preferences/account`, {
+            method: 'PATCH',
+            headers: withLocaleHeaders({
+                'Content-Type': 'application/json',
+            }),
+            body: JSON.stringify(payload || {}),
+            signal: options.signal,
+        });
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(response, 'common.error', 'Failed to update account preferences'));
+        }
+        return response.json();
+    }
+
+    async function getResolvedPreferences(params, options = {}) {
+        const response = await apiFetch(
+            `${API_BASE_URL}/preferences/resolved${toQueryString(params)}`,
+            {
+                method: 'GET',
+                headers: withLocaleHeaders(),
+                signal: options.signal,
+            }
+        );
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(response, 'common.error', 'Failed to resolve preferences'));
+        }
+        return response.json();
+    }
+
+    async function saveChartViewOverride(payload, options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/preferences/chart-view`, {
+            method: 'PUT',
+            headers: withLocaleHeaders({
+                'Content-Type': 'application/json',
+            }),
+            body: JSON.stringify(payload || {}),
+            signal: options.signal,
+        });
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(response, 'common.error', 'Failed to save chart view override'));
+        }
+        return response.json();
+    }
+
+    async function deleteChartViewOverride(params, options = {}) {
+        const response = await apiFetch(
+            `${API_BASE_URL}/preferences/chart-view${toQueryString(params)}`,
+            {
+                method: 'DELETE',
+                headers: withLocaleHeaders(),
+                signal: options.signal,
+            }
+        );
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(response, 'common.error', 'Failed to delete chart view override'));
+        }
+        return response.json();
+    }
+
+    async function updateUserHouseSystem(userId, houseSystem, options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/users/${encodeURIComponent(String(userId))}/house-system`, {
+            method: 'PATCH',
+            headers: withLocaleHeaders({
+                'Content-Type': 'application/json',
+            }),
+            body: JSON.stringify({ house_system: houseSystem }),
+            signal: options.signal,
+        });
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(response, 'common.error', 'Failed to update house system'));
+        }
+        return response.json();
+    }
+
+    async function resetUserViewToDefaults(userId, viewType, options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/users/${encodeURIComponent(String(userId))}/reset-view-to-defaults`, {
+            method: 'POST',
+            headers: withLocaleHeaders({
+                'Content-Type': 'application/json',
+            }),
+            body: JSON.stringify({ view_type: viewType }),
+            signal: options.signal,
+        });
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(response, 'common.error', 'Failed to reset view to defaults'));
+        }
+        return response.json();
     }
 
     /**
@@ -252,7 +382,7 @@
             minute: Number.parseInt(minuteRaw, 10) || '',
             place: birthData.place || '',
             timezone: birthData.timezone || '',
-            houseSystem: options.houseSystem || existingFormData?.houseSystem || 'P',
+            houseSystem: options.houseSystem || birthData.house_system || existingFormData?.houseSystem || 'P',
             latitude: Number.isFinite(latitude) ? latitude : null,
             longitude: Number.isFinite(longitude) ? longitude : null,
         };
@@ -306,11 +436,19 @@
     const api = {
         API_BASE_URL,
         calculateNatalChart,
+        getNatalChart,
         updateClientChart,
         getCurrentAstrologer,
         requireAuth,
         logout,
         resolvePlaceTimezone,
+        getAccountPreferences,
+        patchAccountPreferences,
+        getResolvedPreferences,
+        saveChartViewOverride,
+        deleteChartViewOverride,
+        updateUserHouseSystem,
+        resetUserViewToDefaults,
         formatDate,
         formatTime,
         saveChartToSession,

@@ -29,7 +29,7 @@ if os.getenv('APP_ENV') == 'production':
     logger.remove()  # Удаляем default handler
     logger.add(sys.stderr, level="WARNING")  # Только WARNING и выше
 
-from app.api.routes import auth, natal, transits, solar, progressions, directions, ingresses, places, consultations, alerts
+from app.api.routes import auth, natal, transits, solar, progressions, directions, ingresses, places, consultations, alerts, preferences
 from app.api.error_handlers import register_error_handlers
 from app.api.locale_dependency import locale_context_dependency
 
@@ -109,6 +109,7 @@ app.include_router(ingresses.router, prefix="/api/v1", tags=["Ingresses"])
 app.include_router(places.router, prefix="/api/v1", tags=["Places"])
 app.include_router(consultations.router, prefix="/api/v1", tags=["Consultations"])
 app.include_router(alerts.router, prefix="/api/v1", tags=["Alerts"])
+app.include_router(preferences.router, prefix="/api/v1", tags=["Preferences"])
 
 # Статические файлы (CSS, JS)
 if os.path.exists(FRONTEND_PATH):
@@ -177,6 +178,16 @@ async def auth_verify_page(token: str = "", locale: str = ""):
 async def index_page():
     """Форма ввода (альтернативный путь)"""
     return await new_chart_page()
+
+
+@app.get("/account-settings")
+@app.get("/account-settings.html")
+async def account_settings_page():
+    """Страница настроек аккаунта"""
+    account_settings_path = os.path.join(FRONTEND_PATH, "account-settings.html")
+    if os.path.exists(account_settings_path):
+        return FileResponse(account_settings_path)
+    raise HTTPException(status_code=404, detail="Account settings page not found")
 
 
 @app.get("/chart.html")

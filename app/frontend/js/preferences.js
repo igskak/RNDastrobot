@@ -1,0 +1,167 @@
+(function (root) {
+    'use strict';
+
+    const MATRIX_BODIES = [
+        'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
+        'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto',
+        'Chiron', 'Proserpina',
+        'TrueNode', 'SouthNode',
+        'BlackMoon', 'WhiteMoon', 'PartOfFortune',
+        'ASC', 'DSC', 'MC', 'IC', 'Vertex', 'AntiVertex',
+    ];
+
+    function deepClone(value) {
+        if (value === null || value === undefined) return value;
+        return JSON.parse(JSON.stringify(value));
+    }
+
+    function isPlainObject(value) {
+        return value && typeof value === 'object' && !Array.isArray(value);
+    }
+
+    function deepMerge(base, overlay) {
+        const result = deepClone(base) || {};
+        Object.entries(overlay || {}).forEach(([key, value]) => {
+            if (isPlainObject(value) && isPlainObject(result[key])) {
+                result[key] = deepMerge(result[key], value);
+                return;
+            }
+            result[key] = deepClone(value);
+        });
+        return result;
+    }
+
+    function deepEqual(left, right) {
+        return JSON.stringify(left ?? null) === JSON.stringify(right ?? null);
+    }
+
+    function buildSparseDiff(base, value) {
+        if (deepEqual(base, value)) return undefined;
+
+        if (Array.isArray(value) || Array.isArray(base)) {
+            return deepClone(value);
+        }
+
+        if (!isPlainObject(value) || !isPlainObject(base)) {
+            return deepClone(value);
+        }
+
+        const diff = {};
+        Object.keys(value).forEach((key) => {
+            const next = buildSparseDiff(base[key], value[key]);
+            if (next !== undefined) {
+                diff[key] = next;
+            }
+        });
+        return Object.keys(diff).length ? diff : undefined;
+    }
+
+    function ensureMatrixRows(rows = {}) {
+        const ensured = {};
+        MATRIX_BODIES.forEach((body) => {
+            ensured[body] = {
+                display: rows?.[body]?.display !== false,
+                aspecting: rows?.[body]?.aspecting !== false,
+            };
+        });
+        Object.keys(rows || {}).forEach((body) => {
+            if (!ensured[body]) {
+                ensured[body] = {
+                    display: rows?.[body]?.display !== false,
+                    aspecting: rows?.[body]?.aspecting !== false,
+                };
+            }
+        });
+        return ensured;
+    }
+
+    function getHiddenBodiesFromMatrix(rows = {}) {
+        return Object.entries(ensureMatrixRows(rows))
+            .filter(([, cfg]) => cfg?.display === false)
+            .map(([body]) => body);
+    }
+
+    function buildMatrixRowsFromHiddenBodies(hiddenBodies = [], existingRows = {}) {
+        const hidden = new Set(hiddenBodies || []);
+        const rows = ensureMatrixRows(existingRows);
+        Object.keys(rows).forEach((body) => {
+            const visible = !hidden.has(body);
+            rows[body] = {
+                display: visible,
+                aspecting: visible,
+            };
+        });
+        return rows;
+    }
+
+    function normalizeViewSettings(viewSettings = {}) {
+        return {
+            matrix: {
+                rows: ensureMatrixRows(viewSettings?.matrix?.rows),
+            },
+            aspects: {
+                scope: viewSettings?.aspects?.scope || 'all',
+                enabled_types: Array.isArray(viewSettings?.aspects?.enabled_types)
+                    ? [...viewSettings.aspects.enabled_types]
+                    : ['Conjunction', 'Opposition', 'Trine', 'Square', 'Sextile'],
+                show_applying_separating: viewSettings?.aspects?.show_applying_separating === true,
+            },
+            table_options: {
+                show_speed: viewSettings?.table_options?.show_speed !== false,
+                show_stationary: viewSettings?.table_options?.show_stationary !== false,
+            },
+            view_options: {
+                orientation: viewSettings?.view_options?.orientation === 'asc' ? 'asc' : 'aries',
+            },
+        };
+    }
+
+    function buildLegacyNatalPatch({ formData, chartData, currentSettings } = {}) {
+        const patch = {};
+        const formHouseSystem = String(formData?.houseSystem || chartData?.birth_data?.house_system || '').trim();
+        if (formHouseSystem) {
+            patch.house_system = formHouseSystem;
+        }
+        if (currentSettings?.orientation && currentSettings.orientation !== 'aries') {
+            patch.view_options = { orientation: currentSettings.orientation };
+        }
+        if (Array.isArray(currentSettings?.hiddenPlanets) && currentSettings.hiddenPlanets.length) {
+            patch.matrix = {
+                rows: buildMatrixRowsFromHiddenBodies(
+                    currentSettings.hiddenPlanets,
+                    currentSettings.matrixRows || {}
+                ),
+            };
+        }
+        return patch;
+    }
+
+    function buildLegacyForecastPatch({ biwheelOrientation, solarOrientation } = {}) {
+        const patch = {};
+        if (biwheelOrientation && biwheelOrientation !== 'aries') {
+            patch.biwheel = { view_options: { orientation: biwheelOrientation } };
+        }
+        if (solarOrientation && solarOrientation !== 'aries') {
+            patch.solar = { view_options: { orientation: solarOrientation } };
+        }
+        return patch;
+    }
+
+    const api = {
+        MATRIX_BODIES,
+        deepMerge,
+        deepEqual,
+        buildSparseDiff,
+        ensureMatrixRows,
+        normalizeViewSettings,
+        getHiddenBodiesFromMatrix,
+        buildMatrixRowsFromHiddenBodies,
+        buildLegacyNatalPatch,
+        buildLegacyForecastPatch,
+    };
+
+    root.AstroPreferences = api;
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = api;
+    }
+})(typeof window !== 'undefined' ? window : globalThis);

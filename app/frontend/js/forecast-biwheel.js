@@ -94,6 +94,8 @@
     let svg, ascLong = 0;
     let orientationMode = 'aries';
     let aspectFilter = 'major';
+    let persistentMatrixRows = null;
+    let enabledAspectTypes = new Set(['Conjunction', 'Opposition', 'Trine', 'Square', 'Sextile']);
     let layerVisibility = {
         natal: true,
         transit: true,
@@ -137,6 +139,23 @@
     let wheelBandWidth = DEFAULT_WHEEL_BAND_WIDTH;
     let layoutAnimationTimer = null;
     const viewportSubscribers = new Set();
+
+    function normalizeMatrixRows(rows) {
+        return window.AstroPreferences?.ensureMatrixRows
+            ? window.AstroPreferences.ensureMatrixRows(rows || {})
+            : (rows || {});
+    }
+
+    function getBodyMatrixConfig(name) {
+        const rows = persistentMatrixRows || {};
+        return rows?.[name] || { display: true, aspecting: true };
+    }
+
+    function getAllowedAspectTypes() {
+        return enabledAspectTypes.size
+            ? enabledAspectTypes
+            : new Set(['Conjunction', 'Opposition', 'Trine', 'Square', 'Sextile']);
+    }
 
     function el(tag, attrs, text) {
         const e = document.createElementNS(NS, tag);
@@ -355,6 +374,8 @@
         return (planets || []).filter((planet) => {
             const name = planet?.name;
             if (!name) return false;
+            const config = getBodyMatrixConfig(name);
+            if (config.display === false) return false;
             // Bodies without checkbox remain visible; checkbox controls only available aspect bodies.
             if (!availableBodies?.has(name)) return true;
             return role === 'natal'
@@ -1808,6 +1829,16 @@
         const transitBodies = new Set(aspects.map(a => a.transitBody).filter(Boolean));
         const natalBodies = new Set(aspects.map(a => a.natalBody).filter(Boolean));
 
+        if (persistentMatrixRows) {
+            enabledTransitBodies = new Set([...transitBodies].filter((body) => getBodyMatrixConfig(body).display !== false));
+            enabledNatalBodies = new Set([...natalBodies].filter((body) => getBodyMatrixConfig(body).display !== false));
+            transitFiltersInitialized = true;
+            natalFiltersInitialized = true;
+            renderSettingsToggles(transitBodies, natalBodies);
+            updateFilterButtonsUI();
+            return;
+        }
+
         if (!transitFiltersInitialized) {
             enabledTransitBodies = new Set(transitBodies);
             transitFiltersInitialized = true;
@@ -1859,6 +1890,11 @@
             if (a.method && !isLayerVisible(a.method)) return false;
             if (aspectFilter === 'major' && !a.isMajor) return false;
             if (aspectFilter === 'minor' && a.isMajor) return false;
+            if (!getAllowedAspectTypes().has(a.aspectType)) return false;
+            if (getBodyMatrixConfig(a.transitBody).display === false) return false;
+            if (getBodyMatrixConfig(a.natalBody).display === false) return false;
+            if (getBodyMatrixConfig(a.transitBody).aspecting === false) return false;
+            if (getBodyMatrixConfig(a.natalBody).aspecting === false) return false;
             if (!enabledTransitBodies.has(a.transitBody)) return false;
             if (!enabledNatalBodies.has(a.natalBody)) return false;
             if (planetClickFilter.role === 'transit' && a.transitBody !== planetClickFilter.planetName) return false;
@@ -1948,6 +1984,25 @@
     function setAspectFilter(filter) {
         aspectFilter = ['all', 'major', 'minor'].includes(filter) ? filter : 'all';
         updateFilterButtonsUI();
+    }
+
+    function setMatrixRows(rows) {
+        persistentMatrixRows = rows ? normalizeMatrixRows(rows) : null;
+        transitFiltersInitialized = false;
+        natalFiltersInitialized = false;
+        if (hasLastRender()) {
+            rerenderLast();
+        }
+    }
+
+    function setEnabledAspectTypes(types) {
+        const nextTypes = Array.isArray(types) && types.length
+            ? types
+            : ['Conjunction', 'Opposition', 'Trine', 'Square', 'Sextile'];
+        enabledAspectTypes = new Set(nextTypes);
+        if (hasLastRender()) {
+            rerenderLast();
+        }
     }
 
     function resetAspectFilters() {
@@ -2525,6 +2580,8 @@
         hasLastRender,
         rerenderLast,
         setAspectFilter,
+        setMatrixRows,
+        setEnabledAspectTypes,
         resetAspectFilters,
         getNormalizedViewport,
         setNormalizedViewport,

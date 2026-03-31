@@ -29,9 +29,12 @@ from app.models.schemas import (
     HemisphereBalanceInfo,
     QuadrantBalanceInfo,
     HouseGroupBalanceInfo,
-    GeneralOverviewResponse
+    GeneralOverviewResponse,
+    HouseSystemUpdateRequest,
+    ResetViewToDefaultsRequest,
 )
 from app.services.natal_chart_service import NatalChartService
+from app.services.preferences_service import PreferencesService
 from app.database.connection import get_db
 from app.database.repositories.user_repository import UserRepository
 from app.database.models import User, Consultation
@@ -478,6 +481,90 @@ def update_user_birth_data(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Внутренняя ошибка сервера: {str(e)}"
         )
+
+
+@router.patch(
+    "/users/{user_id}/house-system",
+    response_model=NatalChartResponse,
+    summary="Обновить persisted house system клиента",
+    description="Сохраняет house system на уровне карты, пересчитывает натальную карту и возвращает свежий результат",
+)
+def update_user_house_system(
+    user_id: UUID,
+    payload: HouseSystemUpdateRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+) -> NatalChartResponse:
+    try:
+        ensure_client_access(db, request, auth, user_id, action="client.natal.house_system.update")
+        chart_data = natal_service.update_house_system_for_user(
+            user_id,
+            house_system=payload.house_system,
+            astrologer_id=auth.astrologer.id,
+            db_session=db,
+        )
+        return build_natal_chart_response(chart_data)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Ошибка при обновлении house system клиента: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Внутренняя ошибка сервера: {str(e)}"
+        )
+
+
+@router.post(
+    "/users/{user_id}/reset-view-to-defaults",
+    summary="Сбросить настройки экрана клиента к account defaults",
+    description="Удаляет overrides указанного экрана. Для natal также возвращает house system к account default и пересчитывает карту.",
+)
+def reset_user_view_to_defaults(
+    user_id: UUID,
+    payload: ResetViewToDefaultsRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+):
+    ensure_client_access(db, request, auth, user_id, action="client.natal.reset_view_defaults")
+
+    if payload.view_type not in ('natal', 'biwheel'):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="view_type must be natal or biwheel")
+
+    preferences_service = PreferencesService(db)
+    preferences_service.delete_chart_view_override(
+        chart_kind='natal',
+        chart_id=user_id,
+        view_type=payload.view_type,
+    )
+
+    chart_response = None
+    if payload.view_type == 'natal':
+        account_preferences = preferences_service.get_account_preferences(auth.astrologer)
+        house_system = account_preferences.get('chart_creation_defaults', {}).get('house_system') or auth.astrologer.default_house_system
+        chart_response = natal_service.update_house_system_for_user(
+            user_id,
+            house_system=house_system,
+            astrologer_id=auth.astrologer.id,
+            db_session=db,
+        )
+
+    resolved_preferences = preferences_service.resolve_preferences(
+        auth.astrologer,
+        chart_kind='natal',
+        chart_id=user_id,
+        view_type=payload.view_type,
+    )
+
+    return {
+        'status': 'ok',
+        'view_type': payload.view_type,
+        'chart_data': chart_response,
+        'resolved_preferences': resolved_preferences,
+    }
 
 
 @router.delete(

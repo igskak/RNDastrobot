@@ -25,6 +25,9 @@ class ChartDataRenderer {
         this.aspectSortState = { field: 'planet', ascending: true };
         this.aspectSortHeaders = [];
         this.hoveredAspectKey = null;
+        this.showSpeed = true;
+        this.showStationary = true;
+        this.showApplyingSeparating = false;
         this.initAspectSortHeaders();
     }
 
@@ -178,6 +181,23 @@ class ChartDataRenderer {
         this.reRenderAspects();
     }
 
+    setDisplayPreferences(options = {}) {
+        if (Object.prototype.hasOwnProperty.call(options, 'showSpeed')) {
+            this.showSpeed = options.showSpeed !== false;
+        }
+        if (Object.prototype.hasOwnProperty.call(options, 'showStationary')) {
+            this.showStationary = options.showStationary !== false;
+        }
+        if (Object.prototype.hasOwnProperty.call(options, 'showApplyingSeparating')) {
+            this.showApplyingSeparating = options.showApplyingSeparating === true;
+        }
+
+        if (this.chartData) {
+            this.renderPlanets(this.chartData.planets);
+            this.renderAspects(this.chartData.aspects);
+        }
+    }
+
     reRenderAspects() {
         if (this.chartData) {
             this.renderAspects(this.chartData.aspects);
@@ -226,17 +246,59 @@ class ChartDataRenderer {
         this.planetsTable.innerHTML = sorted.map(p => {
             const degDMS = this.formatDMS(p.degree_in_sign);
             const planetIcon = this.createPlanetIconSVG(p);
+            const metaParts = [];
+            const speedChip = this.renderPlanetSpeedChip(p);
+            const stationaryChip = this.renderStationaryChip(p);
+            if (this.showSpeed && speedChip) metaParts.push(speedChip);
+            if (this.showStationary && stationaryChip) metaParts.push(stationaryChip);
+            const metaHtml = metaParts.length
+                ? `<div class="planet-position-meta">${metaParts.join('')}</div>`
+                : '';
             return `
                 <tr id="row-${p.name}" data-planet="${p.name}">
                     <td class="symbol-cell">
                         ${planetIcon}
                         ${this.retroIndicatorHtml(p.retrograde, 'retro-indicator--small')}
                     </td>
-                    <td class="mono"><span class="astro-symbol">${Symbols.signs[p.sign]}</span> ${degDMS}</td>
+                    <td class="mono">
+                        <div class="planet-position-main"><span class="astro-symbol">${Symbols.signs[p.sign]}</span> ${degDMS}</div>
+                        ${metaHtml}
+                    </td>
                     <td class="mono">${p.house}</td>
                 </tr>
             `;
         }).join('');
+    }
+
+    renderPlanetSpeedChip(planet) {
+        if (!planet) return '';
+        if (planet.speed_percent !== undefined && planet.speed_percent !== null) {
+            const speedPct = Number(planet.speed_percent);
+            if (!Number.isFinite(speedPct)) return '';
+            let speedClass = '';
+            if (speedPct < 80) speedClass = ' planet-meta-chip--speed-slow';
+            else if (speedPct > 120) speedClass = ' planet-meta-chip--speed-fast';
+            return `<span class="planet-meta-chip${speedClass}">${Math.round(speedPct)}%</span>`;
+        }
+
+        if (planet.speed !== undefined && planet.speed !== null) {
+            const speed = Number(planet.speed);
+            if (!Number.isFinite(speed)) return '';
+            return `<span class="planet-meta-chip">${Math.abs(speed).toFixed(2)}°/d</span>`;
+        }
+
+        return '';
+    }
+
+    renderStationaryChip(planet) {
+        if (!planet?.is_stationary) return '';
+        const stationaryType = String(planet.stationary_type || '').toLowerCase();
+        const label = stationaryType.includes('direct')
+            ? 'SD'
+            : stationaryType.includes('retro')
+                ? 'SR'
+                : 'S';
+        return `<span class="planet-meta-chip planet-meta-chip--stationary">${label}</span>`;
     }
 
     renderHouses(houses) {
@@ -377,6 +439,22 @@ class ChartDataRenderer {
         return a.right_rank - b.right_rank;
     }
 
+    getApplyingSeparatingBadge(aspect) {
+        if (!this.showApplyingSeparating || !aspect) return '';
+
+        let label = '';
+        if (typeof aspect.applying === 'boolean') {
+            label = aspect.applying ? 'Applying' : 'Separating';
+        } else if (typeof aspect.applying_separating === 'string' && aspect.applying_separating.trim()) {
+            label = aspect.applying_separating.trim();
+        } else if (typeof aspect.phase === 'string' && aspect.phase.trim()) {
+            label = aspect.phase.trim();
+        }
+
+        if (!label) return '';
+        return `<div class="aspect-row-meta">${this.escapeHtml(label)}</div>`;
+    }
+
     renderAspects(aspects) {
         if (!this.aspectsTable) return;
         if (!aspects || aspects.length === 0) {
@@ -431,11 +509,12 @@ class ChartDataRenderer {
                             : a.harmonic_type === 'tense' ? 'aspect-tense'
                             : 'aspect-neutral';
             const aspectKey = this.getAspectKey(a);
+            const applyingBadge = this.getApplyingSeparatingBadge(a);
             return `
                 <tr data-aspect="${aspectKey || ''}" data-aspect-key="${aspectKey || ''}">
                     <td class="symbol-cell"><span class="astro-symbol">${Symbols.planets[a.left_planet] || ''}</span>${this.retroIndicatorHtml(this.isBodyRetrograde(a.left_planet, retroLookup), 'retro-indicator--micro')}</td>
                     <td class="symbol-cell"><span class="astro-symbol">${Symbols.planets[a.right_planet] || ''}</span>${this.retroIndicatorHtml(this.isBodyRetrograde(a.right_planet, retroLookup), 'retro-indicator--micro')}</td>
-                    <td class="${typeClass}"><span class="astro-symbol">${Symbols.aspects[a.aspect_type] || ''}</span> ${this.aspectName(a.aspect_type)}</td>
+                    <td class="${typeClass}"><span class="astro-symbol">${Symbols.aspects[a.aspect_type] || ''}</span> ${this.aspectName(a.aspect_type)}${applyingBadge}</td>
                     <td class="mono">${a.orb.toFixed(2)}°</td>
                 </tr>
             `;

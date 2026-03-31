@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.chart.title"></title>
-    <link rel="stylesheet" href="bundles/chart.bundle.css?v=20260331-220441">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260331-220441">
-    <script>window.__APP_BUILD_ID__ = '20260331-220441';</script>
+    <link rel="stylesheet" href="bundles/chart.bundle.css?v=20260331-235000">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260331-235000">
+    <script>window.__APP_BUILD_ID__ = '20260331-235000';</script>
 </head>
 <body class="chart-page">
     <div class="page-loader" id="pageLoader">
@@ -34,6 +34,8 @@
                 </button>
                 <div class="chart-actions-menu hidden" id="chartActionsMenu" role="menu">
                     <button type="button" class="chart-action-item" id="editClientAction" role="menuitem" data-i18n="page.chart.actions.editClient"></button>
+                    <button type="button" class="chart-action-item" id="saveNatalDefaultsAction" role="menuitem">Save as account defaults</button>
+                    <button type="button" class="chart-action-item" id="resetDefaultsAction" role="menuitem">Reset to defaults</button>
                 </div>
             </div>
         </div>
@@ -154,7 +156,34 @@
 
                 <div class="settings-section">
                     <label class="settings-label" data-i18n="page.chart.settings.planetsAndPoints"></label>
-                    <div class="planet-toggles" id="planetToggles"></div>
+                    <div class="natal-matrix-editor" id="natalMatrixEditor"></div>
+                </div>
+
+                <div class="settings-section">
+                    <label class="settings-label">Aspect Types</label>
+                    <div class="settings-check-grid settings-check-grid--compact" id="aspectTypeToggles"></div>
+                </div>
+
+                <div class="settings-section">
+                    <label class="settings-label">Aspect Options</label>
+                    <label class="settings-check-option">
+                        <input type="checkbox" id="showApplyingSeparatingToggle">
+                        <span>Show applying / separating</span>
+                    </label>
+                </div>
+
+                <div class="settings-section">
+                    <label class="settings-label">Table Options</label>
+                    <div class="settings-check-stack">
+                        <label class="settings-check-option">
+                            <input type="checkbox" id="showSpeedToggle">
+                            <span>Show speed</span>
+                        </label>
+                        <label class="settings-check-option">
+                            <input type="checkbox" id="showStationaryToggle">
+                            <span>Show stationary</span>
+                        </label>
+                    </div>
                 </div>
             </div>
         </main>
@@ -306,7 +335,7 @@
 
     <div id="chartToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/chart.bundle.js?v=20260331-220441"></script>
-    <script src="js/locale-switcher.js?v=20260331-220441"></script>
+    <script type="module" src="js/bundles/chart.bundle.js?v=20260331-235000"></script>
+    <script src="js/locale-switcher.js?v=20260331-235000"></script>
 </body>
 </html>

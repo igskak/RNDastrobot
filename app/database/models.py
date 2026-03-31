@@ -29,6 +29,7 @@ class User(Base):
     lat = Column(Numeric(10, 7), nullable=False)
     lon = Column(Numeric(10, 7), nullable=False)
     julian_day = Column(Numeric(15, 6))
+    house_system = Column(String(1), nullable=False, default='P', server_default='P')
     # CRM contact fields
     email = Column(String(255))
     phone = Column(String(50))
@@ -82,6 +83,7 @@ class Astrologer(Base):
     first_name = Column(String(100))
     last_name = Column(String(100))
     preferred_locale = Column(String(8))
+    default_house_system = Column(String(1), nullable=False, default='P', server_default='P')
     password_hash = Column(Text)
     auth_provider = Column(String(16), nullable=False, default='local')
     google_sub = Column(String(255), unique=True)
@@ -94,6 +96,7 @@ class Astrologer(Base):
     sessions = relationship("AuthSession", back_populates="astrologer", cascade="all, delete-orphan")
     password_reset_tokens = relationship("PasswordResetToken", back_populates="astrologer", cascade="all, delete-orphan")
     email_verification_tokens = relationship("EmailVerificationToken", back_populates="astrologer", cascade="all, delete-orphan")
+    preferences = relationship("AstrologerPreference", back_populates="astrologer", uselist=False, cascade="all, delete-orphan")
 
     __table_args__ = (
         CheckConstraint("auth_provider IN ('local', 'google')", name='valid_auth_provider'),
@@ -183,6 +186,43 @@ class EmailVerificationToken(Base):
         Index('idx_email_verification_tokens_astrologer', 'astrologer_id'),
         Index('idx_email_verification_tokens_expires', 'expires_at'),
         Index('idx_email_verification_tokens_used', 'used_at'),
+    )
+
+
+class AstrologerPreference(Base):
+    """Persisted account-level defaults for astrologer-owned chart views."""
+    __tablename__ = 'astrologer_preferences'
+
+    astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='CASCADE'), primary_key=True)
+    version = Column(Integer, nullable=False, default=1, server_default='1')
+    chart_defaults = Column(JSONB, nullable=False, default=dict, server_default='{}')
+    methodology = Column(JSONB, nullable=False, default=dict, server_default='{}')
+    visual = Column(JSONB, nullable=False, default=dict, server_default='{}')
+    chart_creation_defaults = Column(JSONB, nullable=False, default=dict, server_default='{}')
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    astrologer = relationship("Astrologer", back_populates="preferences")
+
+
+class ChartViewOverride(Base):
+    """Sparse per-chart overrides layered on top of account defaults."""
+    __tablename__ = 'chart_view_overrides'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    chart_kind = Column(String(16), nullable=False)
+    chart_id = Column(UUID(as_uuid=True), nullable=False)
+    view_type = Column(String(16), nullable=False)
+    overrides = Column(JSONB, nullable=False, default=dict, server_default='{}')
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        CheckConstraint("chart_kind IN ('natal', 'solar')", name='valid_chart_view_override_kind'),
+        CheckConstraint("view_type IN ('natal', 'biwheel', 'solar')", name='valid_chart_view_override_view'),
+        Index('idx_chart_view_overrides_chart', 'chart_kind', 'chart_id'),
+        Index('idx_chart_view_overrides_updated_at', 'updated_at'),
+        Index('uq_chart_view_overrides_chart_view', 'chart_kind', 'chart_id', 'view_type', unique=True),
     )
 
 

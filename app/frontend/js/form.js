@@ -6,6 +6,21 @@ function t(key, params) {
     return window.FrontendI18n?.t?.(key, params) || key;
 }
 
+function normalizeHouseSystemCode(value) {
+    const raw = String(value || 'P').trim().toUpperCase().replace(/[\s-]+/g, '_');
+    if (['P', 'K', 'O', 'R', 'C', 'E', 'W', 'X', 'H', 'T', 'B', 'M'].includes(raw)) {
+        return raw;
+    }
+    if (raw === 'PLACIDUS') return 'P';
+    if (raw === 'KOCH') return 'K';
+    if (raw === 'PORPHYRY') return 'O';
+    if (raw === 'REGIOMONTANUS') return 'R';
+    if (raw === 'CAMPANUS') return 'C';
+    if (raw === 'EQUAL') return 'E';
+    if (raw === 'WHOLE_SIGN' || raw === 'WHOLESIGN') return 'W';
+    return 'P';
+}
+
 async function waitForI18nReady() {
     if (!window.FrontendI18n?.ready) return;
     await Promise.resolve(window.FrontendI18n.ready).catch(() => {});
@@ -26,6 +41,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     const summaryBirthItem = document.getElementById('summaryBirthItem');
     const summaryPlaceItem = document.getElementById('summaryPlaceItem');
     const summaryTimezoneItem = document.getElementById('summaryTimezoneItem');
+    const houseSystemSelect = document.getElementById('houseSystem');
+    let accountDefaultHouseSystem = 'P';
+
+    if (window.AstroAPI?.getAccountPreferences) {
+        try {
+            const preferences = await window.AstroAPI.getAccountPreferences();
+            accountDefaultHouseSystem = normalizeHouseSystemCode(
+                preferences?.chart_creation_defaults?.house_system
+                || preferences?.default_house_system
+                || 'P'
+            );
+        } catch (error) {
+            console.warn('Failed to load account preferences for form defaults:', error);
+        }
+    }
 
     function hasValue(element) {
         return Boolean(element && String(element.value ?? '').trim());
@@ -200,11 +230,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('birthMinute').value = savedFormData.minute || '';
         placeInput.value = savedFormData.place || '';
         timezoneSelect.value = savedFormData.timezone || '';
-        document.getElementById('houseSystem').value = savedFormData.houseSystem || 'P';
+        houseSystemSelect.value = normalizeHouseSystemCode(savedFormData.houseSystem || accountDefaultHouseSystem);
 
         if (savedFormData.latitude && savedFormData.longitude) {
             setCoordinatesDMS(savedFormData.latitude, savedFormData.longitude);
         }
+    } else if (houseSystemSelect) {
+        houseSystemSelect.value = accountDefaultHouseSystem;
     }
 
     updateFormProgress();

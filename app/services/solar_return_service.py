@@ -186,7 +186,7 @@ class SolarReturnService:
         
         # 10. Сохранить в БД если нужно
         if save_to_db:
-            self._save_solar_return(user_id, year, result)
+            result['solar_id'] = str(self._save_solar_return(user_id, year, result))
 
         return result
 
@@ -259,7 +259,7 @@ class SolarReturnService:
         aspect_service = AspectService(self.db)
         return aspect_service.calculate_aspects_for_objects(objects)
 
-    def _save_solar_return(self, user_id: UUID, year: int, result: Dict) -> None:
+    def _save_solar_return(self, user_id: UUID, year: int, result: Dict) -> UUID:
         """Сохранить соляр в БД"""
         import json
 
@@ -282,6 +282,7 @@ class SolarReturnService:
             existing.location_name = solar_info['location']['name']
             existing.house_system = solar_info['house_system']
             existing.chart_data = json.dumps(result)
+            solar_id = existing.solar_id
         else:
             # Создаём новый
             solar_return = SolarReturn(
@@ -298,9 +299,12 @@ class SolarReturnService:
                 chart_data=json.dumps(result)
             )
             self.db.add(solar_return)
+            self.db.flush()
+            solar_id = solar_return.solar_id
 
         self.db.commit()
         logger.info(f"Solar return saved: user={user_id}, year={year}")
+        return solar_id
 
     def get_solar_return(self, user_id: UUID, year: int) -> Optional[Dict]:
         """Получить сохранённый соляр из БД"""
@@ -312,7 +316,9 @@ class SolarReturnService:
         ).first()
 
         if solar and solar.chart_data:
-            return json.loads(solar.chart_data)
+            payload = json.loads(solar.chart_data)
+            payload['solar_id'] = str(solar.solar_id)
+            return payload
         return None
 
     def list_solar_returns(self, user_id: UUID) -> List[Dict]:
@@ -323,6 +329,7 @@ class SolarReturnService:
 
         return [
             {
+                'solar_id': str(s.solar_id),
                 'year': s.year,
                 'solar_datetime': s.solar_datetime.isoformat() if s.solar_datetime else None,
                 'location_name': s.location_name,

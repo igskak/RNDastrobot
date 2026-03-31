@@ -25,6 +25,7 @@ class UserRepository:
         lat: float,
         lon: float,
         julian_day: float,
+        house_system: str = 'P',
         first_name: Optional[str] = None,
         last_name: Optional[str] = None,
     ) -> User:
@@ -55,7 +56,8 @@ class UserRepository:
             birth_place=birth_place,
             lat=lat,
             lon=lon,
-            julian_day=julian_day
+            julian_day=julian_day,
+            house_system=house_system,
         )
         
         self.session.add(user)

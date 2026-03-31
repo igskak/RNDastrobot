@@ -11,6 +11,7 @@ const jsOutdir = path.join(frontendRoot, 'js', 'bundles');
 const cssOutdir = path.join(frontendRoot, 'bundles');
 const htmlPages = [
   'index.html',
+  'account-settings.html',
   'clients.html',
   'chart.html',
   'forecast.html',
@@ -21,6 +22,7 @@ const htmlPages = [
 
 const jsEntryPoints = {
   index: path.join(frontendRoot, 'entries', 'index.entry.js'),
+  'account-settings': path.join(frontendRoot, 'entries', 'account-settings.entry.js'),
   clients: path.join(frontendRoot, 'entries', 'clients.entry.js'),
   chart: path.join(frontendRoot, 'entries', 'chart.entry.js'),
   forecast: path.join(frontendRoot, 'entries', 'forecast.entry.js'),
@@ -31,6 +33,7 @@ const jsEntryPoints = {
 
 const cssEntryPoints = {
   index: path.join(frontendRoot, 'entries-css', 'index.entry.css'),
+  'account-settings': path.join(frontendRoot, 'entries-css', 'account-settings.entry.css'),
   clients: path.join(frontendRoot, 'entries-css', 'clients.entry.css'),
   chart: path.join(frontendRoot, 'entries-css', 'chart.entry.css'),
   forecast: path.join(frontendRoot, 'entries-css', 'forecast.entry.css'),

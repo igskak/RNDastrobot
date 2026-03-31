@@ -140,6 +140,36 @@ body {
     color: var(--text-muted);
 }
 
+.index-header-links {
+    margin-top: 12px;
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.index-header-link {
+    min-height: 34px;
+    padding: 0 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid rgba(30, 58, 95, 0.12);
+    background: rgba(255, 255, 255, 0.82);
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.index-header-link:hover {
+    border-color: rgba(184, 147, 90, 0.42);
+    background: rgba(255, 255, 255, 0.94);
+    transform: translateY(-1px);
+}
+
 /* ============ FORM CONTAINER ============ */
 .form-container {
     flex: 1;
