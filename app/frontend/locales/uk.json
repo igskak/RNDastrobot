@@ -567,7 +567,11 @@
         "noAlerts": "Немає подій цього місяця"
       },
       "actions": {
-        "calendar": "Календар"
+        "calendar": "Календар",
+        "confirmDelete": "Підтвердити видалення",
+        "delete": "Видалити",
+        "edit": "Редагувати",
+        "logout": "Вийти"
       }
     },
     "forecast": {
@@ -888,8 +892,10 @@
         "stellium": "Стелліум: {location}"
       },
       "empty": {
+        "noAspects": "Немає аспектів",
         "noBalances": "Немає даних балансів",
-        "noConfigurations": "Немає конфігурацій"
+        "noConfigurations": "Немає конфігурацій",
+        "noSpecialPoints": "Немає спеціальних точок"
       },
       "header": {
         "defaultTitle": "Натальна карта",
@@ -963,7 +969,9 @@
       "table": {
         "aspects": {
           "aspect": "Аспект",
+          "orb": "Орбіс",
           "orbSort": "Орбіс ⇅",
+          "type": "Тип",
           "typeSort": "Тип ⇅"
         },
         "houses": {

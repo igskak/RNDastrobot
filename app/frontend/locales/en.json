@@ -567,7 +567,11 @@
         "noAlerts": "No notable events this month"
       },
       "actions": {
-        "calendar": "Calendar"
+        "calendar": "Calendar",
+        "confirmDelete": "Confirm delete",
+        "delete": "Delete",
+        "edit": "Edit",
+        "logout": "Log out"
       }
     },
     "forecast": {
@@ -888,8 +892,10 @@
         "stellium": "Stellium: {location}"
       },
       "empty": {
+        "noAspects": "No aspects",
         "noBalances": "No balance data",
-        "noConfigurations": "No configurations"
+        "noConfigurations": "No configurations",
+        "noSpecialPoints": "No special points"
       },
       "header": {
         "defaultTitle": "Natal chart",
@@ -963,7 +969,9 @@
       "table": {
         "aspects": {
           "aspect": "Aspect",
+          "orb": "Orb",
           "orbSort": "Orb ⇅",
+          "type": "Type",
           "typeSort": "Type ⇅"
         },
         "houses": {

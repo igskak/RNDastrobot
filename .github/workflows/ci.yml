@@ -52,6 +52,9 @@ jobs:
       - name: I18N missing-key checker (fail-fast)
         run: node app/scripts/check-i18n-missing-keys.cjs
 
+      - name: I18N used-key checker (fail-fast)
+        run: node app/scripts/check-i18n-used-keys.cjs
+
       - name: I18N hardcoded-string checker (fail-fast)
         run: node app/scripts/check-i18n-hardcoded-strings.cjs
 
@@ -62,6 +65,7 @@ jobs:
         run: |
           node --test \
             app/tests/test_i18n_missing_keys_checker.test.cjs \
+            app/tests/test_i18n_used_keys_checker.test.cjs \
             app/tests/test_i18n_hardcoded_strings_checker.test.cjs \
             app/tests/test_i18n_untranslated_values_checker.test.cjs \
             app/tests/test_i18n_ci_wiring.test.cjs

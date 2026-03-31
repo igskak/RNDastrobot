@@ -274,6 +274,11 @@
         const fetchFn = options.fetchFn || (global.fetch ? global.fetch.bind(global) : null);
         const supabaseFactory = options.supabaseFactory || global.supabase?.createClient;
         const getCurrentAstrologer = options.getCurrentAstrologer || global.AstroAPI?.getCurrentAstrologer?.bind(global.AstroAPI);
+        const wait = typeof options.wait === 'function'
+            ? options.wait
+            : (ms) => new Promise((resolve) => {
+                global.setTimeout(resolve, ms);
+            });
         const redirect = typeof options.redirect === 'function'
             ? options.redirect
             : (href) => {
@@ -651,6 +656,31 @@
             return payload || null;
         }
 
+        async function waitForSupabaseAccessToken() {
+            if (!state.supabaseClient?.auth?.getSession) {
+                throw new Error('gse');
+            }
+
+            let lastError = null;
+            for (let attempt = 0; attempt < 8; attempt += 1) {
+                const sessionResult = await state.supabaseClient.auth.getSession();
+                if (sessionResult?.error) {
+                    lastError = sessionResult.error;
+                } else {
+                    const accessToken = sessionResult?.data?.session?.access_token;
+                    if (accessToken) {
+                        return accessToken;
+                    }
+                }
+
+                if (attempt < 7) {
+                    await wait(200);
+                }
+            }
+
+            throw lastError || new Error('gse');
+        }
+
         async function loginWithPassword(event) {
             event.preventDefault();
             clearAllFieldErrors();
@@ -942,18 +972,11 @@
             setLoading('google');
             setStatus('page.login.status.completingGoogle', 'info');
             try {
-                const sessionResult = await state.supabaseClient.auth.getSession();
-                if (sessionResult?.error) {
-                    throw sessionResult.error;
-                }
-                const session = sessionResult?.data?.session;
-                if (!session?.access_token) {
-                    throw new Error('gse');
-                }
+                const accessToken = await waitForSupabaseAccessToken();
                 const response = await apiFetch(`${API_BASE}/auth/google`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ access_token: session.access_token }),
+                    body: JSON.stringify({ access_token: accessToken }),
                 }, fetchFn);
                 if (!response.ok) {
                     throw new Error(await readErrorMessage(response));
@@ -1004,7 +1027,7 @@
         }
 
         async function maybeRedirectAuthenticatedUser(route) {
-            if (!getCurrentAstrologer || route.oauthCallback || route.mode === 'reset' || route.mode === 'verify' || route.mode === 'register') {
+            if (!getCurrentAstrologer || route.oauthCallback || route.mode === 'reset' || route.mode === 'verify') {
                 return false;
             }
             const me = await getCurrentAstrologer();

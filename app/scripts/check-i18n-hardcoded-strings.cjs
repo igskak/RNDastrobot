@@ -23,6 +23,7 @@ const DEFAULT_TARGET_FILES = [
     'app/frontend/js/forecast-biwheel.js',
     'app/frontend/js/natal-full.js',
     'app/frontend/js/login.js',
+    'app/frontend/js/calendar.js',
     'app/frontend/js/api.js',
     'app/frontend/js/timezones.js',
 ];

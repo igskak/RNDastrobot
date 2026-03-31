@@ -142,3 +142,151 @@ test('cooldown and invalid copy follow active locale', async () => {
 
     delete global.FrontendI18n;
 });
+
+test('authenticated users are redirected away from register mode', async () => {
+    await installLocale('en');
+
+    let redirectedTo = null;
+    const app = AstroLogin.createAuthApp({
+        document: {
+            title: 'Login',
+            body: { dataset: {} },
+            getElementById() { return null; },
+            querySelector() { return null; },
+            querySelectorAll() { return []; },
+            addEventListener() {},
+        },
+        history: {
+            replaceState() {},
+        },
+        location: {
+            search: '?mode=register',
+        },
+        fetchFn: async () => ({
+            ok: false,
+            json: async () => ({}),
+        }),
+        getCurrentAstrologer: async () => ({ email: 'astro@example.com' }),
+        redirect: (href) => {
+            redirectedTo = href;
+        },
+    });
+
+    await app.init();
+
+    assert.equal(redirectedTo, '/');
+
+    delete global.FrontendI18n;
+});
+
+test('reset mode does not redirect authenticated users before token flow', async () => {
+    await installLocale('en');
+
+    let redirectedTo = null;
+    const app = AstroLogin.createAuthApp({
+        document: {
+            title: 'Login',
+            body: { dataset: {} },
+            getElementById() { return null; },
+            querySelector() { return null; },
+            querySelectorAll() { return []; },
+            addEventListener() {},
+        },
+        history: {
+            replaceState() {},
+        },
+        location: {
+            search: '?mode=reset&token=test-token',
+        },
+        fetchFn: async () => ({
+            ok: false,
+            json: async () => ({}),
+        }),
+        getCurrentAstrologer: async () => ({ email: 'astro@example.com' }),
+        redirect: (href) => {
+            redirectedTo = href;
+        },
+    });
+
+    await app.init();
+
+    assert.equal(redirectedTo, null);
+
+    delete global.FrontendI18n;
+});
+
+test('google oauth callback retries session lookup before failing', async () => {
+    await installLocale('en');
+
+    let redirectedTo = null;
+    let signOutCalled = 0;
+    let sessionReads = 0;
+    let googlePayload = null;
+    const waits = [];
+
+    const app = AstroLogin.createAuthApp({
+        document: {
+            title: 'Login',
+            body: { dataset: {} },
+            getElementById() { return null; },
+            querySelector() { return null; },
+            querySelectorAll() { return []; },
+            addEventListener() {},
+        },
+        history: {
+            replaceState() {},
+        },
+        location: {
+            search: '?oauth=callback',
+        },
+        fetchFn: async (url, init = {}) => {
+            if (String(url).endsWith('/auth/frontend-config')) {
+                return {
+                    ok: true,
+                    json: async () => ({
+                        supabase_url: 'https://example.supabase.co',
+                        supabase_anon_key: 'anon-key',
+                    }),
+                };
+            }
+            if (String(url).endsWith('/auth/google')) {
+                googlePayload = JSON.parse(init.body);
+                return {
+                    ok: true,
+                    json: async () => ({ email: 'astro@example.com' }),
+                };
+            }
+            throw new Error(`Unexpected fetch: ${url}`);
+        },
+        supabaseFactory: () => ({
+            auth: {
+                getSession: async () => {
+                    sessionReads += 1;
+                    if (sessionReads === 1) {
+                        return { data: { session: null }, error: null };
+                    }
+                    return { data: { session: { access_token: 'google-access-token' } }, error: null };
+                },
+                signOut: async () => {
+                    signOutCalled += 1;
+                },
+            },
+        }),
+        wait: async (ms) => {
+            waits.push(ms);
+        },
+        redirect: (href) => {
+            redirectedTo = href;
+        },
+    });
+
+    await app.init();
+
+    assert.equal(sessionReads, 2);
+    assert.deepEqual(waits, [200]);
+    assert.deepEqual(googlePayload, { access_token: 'google-access-token' });
+    assert.equal(signOutCalled, 1);
+    assert.equal(redirectedTo, '/');
+
+    delete global.FrontendI18n;
+});

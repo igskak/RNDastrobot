@@ -567,7 +567,11 @@
         "noAlerts": "Нет событий в этом месяце"
       },
       "actions": {
-        "calendar": "Календарь"
+        "calendar": "Календарь",
+        "confirmDelete": "Подтвердить удаление",
+        "delete": "Удалить",
+        "edit": "Редактировать",
+        "logout": "Выйти"
       }
     },
     "forecast": {
@@ -888,8 +892,10 @@
         "stellium": "Стеллиум: {location}"
       },
       "empty": {
+        "noAspects": "Нет аспектов",
         "noBalances": "Нет данных о балансах",
-        "noConfigurations": "Нет конфигураций"
+        "noConfigurations": "Нет конфигураций",
+        "noSpecialPoints": "Нет специальных точек"
       },
       "header": {
         "defaultTitle": "Натальная карта",
@@ -963,7 +969,9 @@
       "table": {
         "aspects": {
           "aspect": "Аспект",
+          "orb": "Орбис",
           "orbSort": "Орбис ⇅",
+          "type": "Тип",
           "typeSort": "Тип ⇅"
         },
         "houses": {
