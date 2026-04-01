@@ -137,8 +137,8 @@
             return `
                 <tr>
                     <th scope="row">
-                        <span class="account-settings-aspect-meta account-settings-aspect-meta--icon-only" title="${label}" aria-label="${label}" role="img">
-                            <span class="account-settings-check-glyph" aria-hidden="true"><span class="astro-symbol">${symbol}</span></span>
+                        <span class="account-settings-aspect-meta account-settings-aspect-meta--icon-only">
+                            <span class="account-settings-check-glyph" title="${label}" aria-label="${label}" role="img" tabindex="0"><span class="astro-symbol" aria-hidden="true">${symbol}</span></span>
                         </span>
                     </th>
                     ${cells}
@@ -190,8 +190,8 @@
             return `
                 <tr>
                     <th scope="row">
-                        <span class="account-settings-body account-settings-body--icon-only" title="${label}" aria-label="${label}" role="img">
-                            <span class="account-settings-body-badge" aria-hidden="true"><span class="astro-symbol">${symbol}</span></span>
+                        <span class="account-settings-body account-settings-body--icon-only">
+                            <span class="account-settings-body-badge" title="${label}" aria-label="${label}" role="img" tabindex="0"><span class="astro-symbol" aria-hidden="true">${symbol}</span></span>
                         </span>
                     </th>
                     ${cells}

@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.accountSettings.title"></title>
-    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=20260401-120025">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260401-120025">
+    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=20260401-134719">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260401-134719">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '20260401-120025';</script>
+    <script>window.__APP_BUILD_ID__ = '20260401-134719';</script>
 </head>
 <body class="account-settings-page">
     <div class="page-loader" id="pageLoader">
@@ -36,28 +36,36 @@
         </header>
 
         <main class="account-settings-content">
-            <section class="account-settings-toolbar">
-                <div class="account-settings-toolbar-main">
-                    <label class="account-settings-label" for="accountHouseSystemSelect" data-i18n="page.accountSettings.creation.houseSystem"></label>
-                    <div class="account-settings-toolbar-row">
-                        <select id="accountHouseSystemSelect" class="account-settings-select account-settings-select--compact">
-                            <option value="P" data-i18n="astro.houseSystem.placidus"></option>
-                            <option value="K" data-i18n="astro.houseSystem.koch"></option>
-                            <option value="W" data-i18n="astro.houseSystem.wholeSign"></option>
-                            <option value="E" data-i18n="astro.houseSystem.equal"></option>
-                            <option value="R" data-i18n="astro.houseSystem.regiomontanus"></option>
-                            <option value="C" data-i18n="astro.houseSystem.campanus"></option>
-                        </select>
-                        <p class="account-settings-toolbar-copy" data-i18n="page.accountSettings.creation.copy"></p>
-                    </div>
-                </div>
-                <aside class="account-settings-toolbar-note">
-                    <p class="account-settings-note-kicker" data-i18n="page.accountSettings.workflow.kicker"></p>
-                    <p class="account-settings-note-copy" data-i18n="page.accountSettings.workflow.copy"></p>
-                </aside>
-            </section>
+            <div class="account-settings-layout">
+                <aside class="account-settings-sidebar">
+                    <section class="account-settings-toolbar account-settings-toolbar--sidebar">
+                        <div class="account-settings-toolbar-main">
+                            <p class="account-settings-note-kicker" data-i18n="page.accountSettings.creation.kicker"></p>
+                            <label class="account-settings-label" for="accountHouseSystemSelect" data-i18n="page.accountSettings.creation.houseSystem"></label>
+                            <select id="accountHouseSystemSelect" class="account-settings-select account-settings-select--compact">
+                                <option value="P" data-i18n="astro.houseSystem.placidus"></option>
+                                <option value="K" data-i18n="astro.houseSystem.koch"></option>
+                                <option value="W" data-i18n="astro.houseSystem.wholeSign"></option>
+                                <option value="E" data-i18n="astro.houseSystem.equal"></option>
+                                <option value="R" data-i18n="astro.houseSystem.regiomontanus"></option>
+                                <option value="C" data-i18n="astro.houseSystem.campanus"></option>
+                            </select>
+                            <p class="account-settings-toolbar-copy" data-i18n="page.accountSettings.creation.copy"></p>
+                        </div>
+                        <aside class="account-settings-toolbar-note">
+                            <p class="account-settings-note-kicker" data-i18n="page.accountSettings.workflow.kicker"></p>
+                            <p class="account-settings-note-copy" data-i18n="page.accountSettings.workflow.copy"></p>
+                        </aside>
+                    </section>
 
-            <section class="account-settings-card">
+                    <section class="account-settings-note account-settings-note--sidebar">
+                        <p class="account-settings-note-kicker" data-i18n="page.accountSettings.limits.kicker"></p>
+                        <p class="account-settings-note-copy" data-i18n="page.accountSettings.limits.copy"></p>
+                    </section>
+                </aside>
+
+                <div class="account-settings-sheet">
+                    <section class="account-settings-card">
                 <div class="account-settings-card-head account-settings-card-head--compact">
                     <div>
                         <p class="account-settings-section-kicker" data-i18n="page.accountSettings.tables.defaults.kicker"></p>
@@ -182,9 +190,9 @@
                         </tbody>
                     </table>
                 </div>
-            </section>
+                    </section>
 
-            <section class="account-settings-card">
+                    <section class="account-settings-card">
                 <div class="account-settings-card-head account-settings-card-head--compact">
                     <div>
                         <p class="account-settings-section-kicker" data-i18n="page.accountSettings.tables.aspects.kicker"></p>
@@ -205,9 +213,9 @@
                         <tbody id="accountAspectTypesMatrixBody"></tbody>
                     </table>
                 </div>
-            </section>
+                    </section>
 
-            <details class="account-settings-card account-settings-card--details" open>
+                    <details class="account-settings-card account-settings-card--details">
                 <summary class="account-settings-card-summary">
                     <span>
                         <p class="account-settings-section-kicker" data-i18n="page.accountSettings.tables.bodies.kicker"></p>
@@ -237,18 +245,15 @@
                         <tbody id="accountBodiesMatrixBody"></tbody>
                     </table>
                 </div>
-            </details>
-
-            <section class="account-settings-note account-settings-note--footer">
-                <p class="account-settings-note-kicker" data-i18n="page.accountSettings.limits.kicker"></p>
-                <p class="account-settings-note-copy" data-i18n="page.accountSettings.limits.copy"></p>
-            </section>
+                    </details>
+                </div>
+            </div>
         </main>
     </div>
 
     <div id="accountSettingsToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/account-settings.bundle.js?v=20260401-120025"></script>
-    <script src="js/locale-switcher.js?v=20260401-120025"></script>
+    <script type="module" src="js/bundles/account-settings.bundle.js?v=20260401-134719"></script>
+    <script src="js/locale-switcher.js?v=20260401-134719"></script>
 </body>
 </html>
