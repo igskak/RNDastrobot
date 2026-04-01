@@ -14,6 +14,18 @@
         'Quintile',
         'Biquintile',
     ];
+    const ASPECT_SYMBOL_FALLBACKS = {
+        Sesquiquadrate: '⚼',
+        Vigintile: 'V',
+        Semi_Nonagon: 'SN',
+        Decile: 'D',
+        Nonagon: 'N',
+        Binonagon: 'BN',
+        Sentagon: 'SG',
+        Tridecile: 'TD',
+        Septile: '7',
+        Novile: '9',
+    };
     const ORB_PROFILE_IDS = window.AstroPreferences?.ORB_PROFILE_IDS || ['natal', 'prognostic'];
     const ACTIVE_RECALC_JOB_KEY = 'activePreferenceRecalcJobId';
 
@@ -55,6 +67,21 @@
 
     function getBodyLabel(body) {
         return translateOrFallback(`astro.planet.${body}`, body);
+    }
+
+    function getBodySymbol(body) {
+        return window.Symbols?.planets?.[body] || String(body || '').slice(0, 2) || '•';
+    }
+
+    function getAspectLabel(aspectType) {
+        return translateOrFallback(`astro.aspect.${aspectType}`, aspectType);
+    }
+
+    function getAspectSymbol(aspectType) {
+        return window.Symbols?.aspects?.[aspectType]
+            || ASPECT_SYMBOL_FALLBACKS[aspectType]
+            || String(aspectType || '').slice(0, 2)
+            || '•';
     }
 
     function deepEqual(left, right) {
@@ -246,8 +273,8 @@
 
         tbody.innerHTML = getMetadataAspectTypes().map((aspectMeta) => {
             const aspectType = aspectMeta.aspect_type;
-            const symbol = escapeHtml(window.Symbols?.aspects?.[aspectType] || '');
-            const label = escapeHtml(t(`astro.aspect.${aspectType}`));
+            const symbol = escapeHtml(getAspectSymbol(aspectType));
+            const label = escapeHtml(getAspectLabel(aspectType));
             const cells = VIEW_IDS.map((viewId) => {
                 const enabledTypes = chartDefaults?.[viewId]?.aspects?.enabled_types || [];
                 const enabled = new Set(Array.isArray(enabledTypes) && enabledTypes.length ? enabledTypes : DEFAULT_ASPECT_TYPES);
@@ -362,8 +389,8 @@
 
         tbody.innerHTML = aspectTypes.map((aspectMeta) => {
             const aspectType = aspectMeta.aspect_type;
-            const symbol = escapeHtml(window.Symbols?.aspects?.[aspectType] || '');
-            const aspectLabel = escapeHtml(translateOrFallback(`astro.aspect.${aspectType}`, aspectType));
+            const symbol = escapeHtml(getAspectSymbol(aspectType));
+            const aspectLabel = escapeHtml(getAspectLabel(aspectType));
             return `
                 <tr>
                     <th scope="row">
@@ -415,15 +442,49 @@
 
         planetsBody.innerHTML = planetRows.map((body) => `
             <tr>
-                <th scope="row">${escapeHtml(getBodyLabel(body))}</th>
-                <td><input class="account-settings-number-input" type="number" min="0" max="5" step="0.1" value="${Number(planetWeights?.[body] ?? 1).toFixed(1)}" data-balance-planet="${body}"></td>
+                <th scope="row" class="account-settings-icon-cell">
+                    <span class="account-settings-body account-settings-body--icon-only">
+                        <span class="account-settings-body-badge account-settings-orb-glyph" title="${escapeHtml(getBodyLabel(body))}" aria-label="${escapeHtml(getBodyLabel(body))}" role="img" tabindex="0">
+                            <span class="astro-symbol" aria-hidden="true">${escapeHtml(getBodySymbol(body))}</span>
+                        </span>
+                    </span>
+                </th>
+                <td>
+                    <input
+                        class="account-settings-number-input account-settings-compact-input"
+                        type="number"
+                        min="0"
+                        max="5"
+                        step="0.1"
+                        value="${Number(planetWeights?.[body] ?? 1).toFixed(1)}"
+                        data-balance-planet="${body}"
+                        aria-label="${escapeHtml(getBodyLabel(body))}"
+                    >
+                </td>
             </tr>
         `).join('');
 
         specialBody.innerHTML = specialRows.map((body) => `
             <tr>
-                <th scope="row">${escapeHtml(getBodyLabel(body))}</th>
-                <td><input class="account-settings-number-input" type="number" min="0" max="5" step="0.1" value="${Number(specialWeights?.[body] ?? 0).toFixed(1)}" data-balance-special-point="${body}"></td>
+                <th scope="row" class="account-settings-icon-cell">
+                    <span class="account-settings-body account-settings-body--icon-only">
+                        <span class="account-settings-body-badge account-settings-orb-glyph" title="${escapeHtml(getBodyLabel(body))}" aria-label="${escapeHtml(getBodyLabel(body))}" role="img" tabindex="0">
+                            <span class="astro-symbol" aria-hidden="true">${escapeHtml(getBodySymbol(body))}</span>
+                        </span>
+                    </span>
+                </th>
+                <td>
+                    <input
+                        class="account-settings-number-input account-settings-compact-input"
+                        type="number"
+                        min="0"
+                        max="5"
+                        step="0.1"
+                        value="${Number(specialWeights?.[body] ?? 0).toFixed(1)}"
+                        data-balance-special-point="${body}"
+                        aria-label="${escapeHtml(getBodyLabel(body))}"
+                    >
+                </td>
             </tr>
         `).join('');
     }
@@ -438,8 +499,14 @@
             const color = aspectColors?.[aspectType] || '#9ca3af';
             return `
                 <tr>
-                    <th scope="row">${escapeHtml(translateOrFallback(`astro.aspect.${aspectType}`, aspectType))}</th>
-                    <td><input type="color" class="account-settings-color-input" value="${escapeHtml(color)}" data-aspect-color="${aspectType}"></td>
+                    <th scope="row" class="account-settings-icon-cell">
+                        <span class="account-settings-aspect-meta account-settings-aspect-meta--icon-only">
+                            <span class="account-settings-check-glyph account-settings-orb-glyph" title="${escapeHtml(getAspectLabel(aspectType))}" aria-label="${escapeHtml(getAspectLabel(aspectType))}" role="img" tabindex="0">
+                                <span class="astro-symbol" aria-hidden="true">${escapeHtml(getAspectSymbol(aspectType))}</span>
+                            </span>
+                        </span>
+                    </th>
+                    <td><input type="color" class="account-settings-color-input account-settings-swatch-input" value="${escapeHtml(color)}" data-aspect-color="${aspectType}" aria-label="${escapeHtml(getAspectLabel(aspectType))}"></td>
                 </tr>
             `;
         }).join('');
@@ -457,14 +524,38 @@
         elementBody.innerHTML = Object.keys(elementPalette).map((element) => `
             <tr>
                 <th scope="row">${escapeHtml(element)}</th>
-                <td><input type="color" class="account-settings-color-input" value="${escapeHtml(elementPalette[element])}" data-element-color="${element}"></td>
+                <td><input type="color" class="account-settings-color-input account-settings-swatch-input" value="${escapeHtml(elementPalette[element])}" data-element-color="${element}" aria-label="${escapeHtml(element)}"></td>
             </tr>
         `).join('');
 
         overridesBody.innerHTML = getMetadataBodies().map((body) => `
             <tr>
-                <th scope="row">${escapeHtml(getBodyLabel(body))}</th>
-                <td><input type="text" class="account-settings-hex-input" value="${escapeHtml(bodyOverrides?.[body] || '')}" placeholder="#hex or empty" data-body-color-override="${body}"></td>
+                <th scope="row" class="account-settings-icon-cell">
+                    <span class="account-settings-body account-settings-body--icon-only">
+                        <span class="account-settings-body-badge account-settings-orb-glyph" title="${escapeHtml(getBodyLabel(body))}" aria-label="${escapeHtml(getBodyLabel(body))}" role="img" tabindex="0">
+                            <span class="astro-symbol" aria-hidden="true">${escapeHtml(getBodySymbol(body))}</span>
+                        </span>
+                    </span>
+                </th>
+                <td>
+                    <div class="account-settings-color-stack">
+                        <input
+                            type="color"
+                            class="account-settings-color-input account-settings-swatch-input"
+                            value="${escapeHtml(bodyOverrides?.[body] || '#c7b49a')}"
+                            data-body-color-override="${body}"
+                            data-body-color-active="${bodyOverrides?.[body] ? 'true' : 'false'}"
+                            aria-label="${escapeHtml(getBodyLabel(body))}"
+                        >
+                        <button
+                            type="button"
+                            class="account-settings-reset-chip${bodyOverrides?.[body] ? '' : ' is-muted'}"
+                            data-clear-body-color-override="${body}"
+                            title="${escapeHtml(t('common.reset'))}"
+                            aria-label="${escapeHtml(`${t('common.reset')}: ${getBodyLabel(body)}`)}"
+                        >↺</button>
+                    </div>
+                </td>
             </tr>
         `).join('');
     }
@@ -605,7 +696,7 @@
         document.querySelectorAll('[data-body-color-override]').forEach((input) => {
             const body = input.dataset.bodyColorOverride;
             const value = String(input.value || '').trim();
-            if (body && value) {
+            if (body && value && input.dataset.bodyColorActive !== 'false') {
                 bodyOverrides[body] = value;
             }
         });
@@ -780,6 +871,7 @@
         const restoreBtn = document.getElementById('restoreStandardDefaultsBtn');
         const applyNatalOrbsBtn = document.getElementById('accountApplyNatalOrbsBtn');
         const orbMatrixBody = document.getElementById('accountOrbsMatrixBody');
+        const bodyOverrideColorsBody = document.getElementById('accountBodyOverrideColorsBody');
 
         saveBtn?.addEventListener('click', () => {
             savePreferences();
@@ -819,6 +911,24 @@
             }
             nextMatrix[input.dataset.orbAspectType][input.dataset.orbBody] = Number.parseFloat(input.value) || 0;
             methodology.orbs.profiles[activeOrbProfile] = { matrix: nextMatrix };
+        });
+        bodyOverrideColorsBody?.addEventListener('input', (event) => {
+            const input = event.target;
+            if (!(input instanceof HTMLInputElement)) return;
+            if (!input.dataset.bodyColorOverride) return;
+            input.dataset.bodyColorActive = 'true';
+            const resetButton = bodyOverrideColorsBody.querySelector(`[data-clear-body-color-override="${input.dataset.bodyColorOverride}"]`);
+            resetButton?.classList.remove('is-muted');
+        });
+        bodyOverrideColorsBody?.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-clear-body-color-override]');
+            if (!(button instanceof HTMLElement)) return;
+            const body = button.dataset.clearBodyColorOverride;
+            if (!body) return;
+            const input = bodyOverrideColorsBody.querySelector(`[data-body-color-override="${body}"]`);
+            if (!(input instanceof HTMLInputElement)) return;
+            input.dataset.bodyColorActive = 'false';
+            button.classList.add('is-muted');
         });
 
         try {

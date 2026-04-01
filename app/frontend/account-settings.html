@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.accountSettings.title"></title>
-    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=20260401-152652">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260401-152652">
+    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=20260401-160011">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260401-160011">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '20260401-152652';</script>
+    <script>window.__APP_BUILD_ID__ = '20260401-160011';</script>
 </head>
 <body class="account-settings-page">
     <div class="page-loader" id="pageLoader">
@@ -56,11 +56,6 @@
                             <p class="account-settings-note-kicker" data-i18n="page.accountSettings.workflow.kicker"></p>
                             <p class="account-settings-note-copy" data-i18n="page.accountSettings.workflow.copy"></p>
                         </aside>
-                    </section>
-
-                    <section class="account-settings-note account-settings-note--sidebar">
-                        <p class="account-settings-note-kicker" data-i18n="page.accountSettings.limits.kicker"></p>
-                        <p class="account-settings-note-copy" data-i18n="page.accountSettings.limits.copy"></p>
                     </section>
                 </aside>
 
@@ -316,94 +311,101 @@
                         </div>
                     </section>
 
-                    <section class="account-settings-card">
-                        <div class="account-settings-card-head account-settings-card-head--compact">
-                            <div>
-                                <p class="account-settings-section-kicker">Methodology</p>
-                                <h2 class="account-settings-section-title">Balances</h2>
-                                <p class="account-settings-section-copy">Weights used for natal balance calculations. Saving these starts a recalculation job for saved natal and solar charts.</p>
+                    <div class="account-settings-utility-grid">
+                        <section class="account-settings-card">
+                            <div class="account-settings-card-head account-settings-card-head--compact">
+                                <div>
+                                    <p class="account-settings-section-kicker">Methodology</p>
+                                    <h2 class="account-settings-section-title">Balances</h2>
+                                    <p class="account-settings-section-copy">Weights used for natal balance calculations. Saving these starts a recalculation job for saved natal and solar charts.</p>
+                                </div>
                             </div>
-                        </div>
-                        <div class="account-settings-grid account-settings-grid--two">
-                            <div class="account-settings-table-wrap account-settings-table-wrap--tight">
-                                <table class="account-settings-table account-settings-table--compact">
-                                    <thead>
-                                        <tr>
-                                            <th>Planet</th>
-                                            <th>Weight</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="accountBalancePlanetWeightsBody"></tbody>
-                                </table>
+                            <div class="account-settings-grid account-settings-grid--two account-settings-grid--compact-panels">
+                                <div class="account-settings-table-panel">
+                                    <p class="account-settings-mini-title">Planet weights</p>
+                                    <div class="account-settings-table-wrap account-settings-table-wrap--compact-panel">
+                                        <table class="account-settings-table account-settings-table--compact">
+                                            <thead>
+                                                <tr>
+                                                    <th>Planet</th>
+                                                    <th>Weight</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="accountBalancePlanetWeightsBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="account-settings-table-panel">
+                                    <p class="account-settings-mini-title">Special points</p>
+                                    <div class="account-settings-table-wrap account-settings-table-wrap--compact-panel">
+                                        <table class="account-settings-table account-settings-table--compact">
+                                            <thead>
+                                                <tr>
+                                                    <th>Point</th>
+                                                    <th>Weight</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="accountBalanceSpecialWeightsBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="account-settings-table-wrap account-settings-table-wrap--tight">
-                                <table class="account-settings-table account-settings-table--compact">
-                                    <thead>
-                                        <tr>
-                                            <th>Special point</th>
-                                            <th>Weight</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="accountBalanceSpecialWeightsBody"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </section>
+                        </section>
 
-                    <section class="account-settings-card">
-                        <div class="account-settings-card-head account-settings-card-head--compact">
-                            <div>
-                                <p class="account-settings-section-kicker">Visual</p>
-                                <h2 class="account-settings-section-title">Aspect Colors</h2>
-                                <p class="account-settings-section-copy">Account-only palette for aspect lines, markers and timeline rows.</p>
+                        <section class="account-settings-card">
+                            <div class="account-settings-card-head account-settings-card-head--compact">
+                                <div>
+                                    <p class="account-settings-section-kicker">Visual</p>
+                                    <h2 class="account-settings-section-title">Visual palette</h2>
+                                    <p class="account-settings-section-copy">Fine-tune aspect colors, element palette, and body-specific overrides in one compact workspace.</p>
+                                </div>
                             </div>
-                        </div>
-                        <div class="account-settings-table-wrap account-settings-table-wrap--tight">
-                            <table class="account-settings-table account-settings-table--compact">
-                                <thead>
-                                    <tr>
-                                        <th>Aspect</th>
-                                        <th>Color</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="accountAspectColorsBody"></tbody>
-                            </table>
-                        </div>
-                    </section>
-
-                    <section class="account-settings-card">
-                        <div class="account-settings-card-head account-settings-card-head--compact">
-                            <div>
-                                <p class="account-settings-section-kicker">Visual</p>
-                                <h2 class="account-settings-section-title">Planet Colors</h2>
-                                <p class="account-settings-section-copy">Element palette plus optional body-specific overrides. Body override wins over element color.</p>
+                            <div class="account-settings-grid account-settings-grid--three account-settings-grid--compact-panels">
+                                <div class="account-settings-table-panel">
+                                    <p class="account-settings-mini-title">Aspect colors</p>
+                                    <div class="account-settings-table-wrap account-settings-table-wrap--compact-panel">
+                                        <table class="account-settings-table account-settings-table--compact">
+                                            <thead>
+                                                <tr>
+                                                    <th>Aspect</th>
+                                                    <th>Color</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="accountAspectColorsBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="account-settings-table-panel">
+                                    <p class="account-settings-mini-title">Element palette</p>
+                                    <div class="account-settings-table-wrap account-settings-table-wrap--compact-panel">
+                                        <table class="account-settings-table account-settings-table--compact">
+                                            <thead>
+                                                <tr>
+                                                    <th>Element</th>
+                                                    <th>Color</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="accountElementPaletteBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="account-settings-table-panel">
+                                    <p class="account-settings-mini-title">Body overrides</p>
+                                    <div class="account-settings-table-wrap account-settings-table-wrap--compact-panel">
+                                        <table class="account-settings-table account-settings-table--compact">
+                                            <thead>
+                                                <tr>
+                                                    <th>Body</th>
+                                                    <th>Override</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="accountBodyOverrideColorsBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="account-settings-grid account-settings-grid--two">
-                            <div class="account-settings-table-wrap account-settings-table-wrap--tight">
-                                <table class="account-settings-table account-settings-table--compact">
-                                    <thead>
-                                        <tr>
-                                            <th>Element</th>
-                                            <th>Color</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="accountElementPaletteBody"></tbody>
-                                </table>
-                            </div>
-                            <div class="account-settings-table-wrap account-settings-table-wrap--tight">
-                                <table class="account-settings-table account-settings-table--compact">
-                                    <thead>
-                                        <tr>
-                                            <th>Body</th>
-                                            <th>Override</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="accountBodyOverrideColorsBody"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </section>
+                        </section>
+                    </div>
                 </div>
             </div>
         </main>
@@ -411,7 +413,7 @@
 
     <div id="accountSettingsToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/account-settings.bundle.js?v=20260401-152652"></script>
-    <script src="js/locale-switcher.js?v=20260401-152652"></script>
+    <script type="module" src="js/bundles/account-settings.bundle.js?v=20260401-160011"></script>
+    <script src="js/locale-switcher.js?v=20260401-160011"></script>
 </body>
 </html>

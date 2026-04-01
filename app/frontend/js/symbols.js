@@ -102,7 +102,17 @@ const ASPECT_SYMBOLS = {
     'Semisextile': '⚺',
     'Quintile': 'Q',
     'Biquintile': 'bQ',
-    'Semisquare': '∠'
+    'Semisquare': '∠',
+    'Sesquiquadrate': '⚼',
+    'Vigintile': 'V',
+    'Semi_Nonagon': 'SN',
+    'Decile': 'D',
+    'Nonagon': 'N',
+    'Binonagon': 'BN',
+    'Sentagon': 'SG',
+    'Tridecile': 'TD',
+    'Septile': '7',
+    'Novile': '9'
 };
 
 const ASPECT_NAMES_RU = {
@@ -115,7 +125,17 @@ const ASPECT_NAMES_RU = {
     'Semisextile': 'Полусекстиль',
     'Quintile': 'Квинтиль',
     'Biquintile': 'Биквинтиль',
-    'Semisquare': 'Полуквадрат'
+    'Semisquare': 'Полуквадрат',
+    'Sesquiquadrate': 'Полутораквадрат',
+    'Vigintile': 'Вигинтиль',
+    'Semi_Nonagon': 'Полунонагон',
+    'Decile': 'Дециль',
+    'Nonagon': 'Нонагон',
+    'Binonagon': 'Бинонагон',
+    'Sentagon': 'Сентагон',
+    'Tridecile': 'Тридециль',
+    'Septile': 'Септиль',
+    'Novile': 'Новиль'
 };
 
 const ELEMENT_COLORS = {
