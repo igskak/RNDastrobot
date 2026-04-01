@@ -825,12 +825,12 @@ function renderNatalMatrixEditor() {
                     const symbol = Symbols?.planets?.[body] || '';
                     const displayChecked = rows?.[body]?.display !== false ? 'checked' : '';
                     const aspectingChecked = rows?.[body]?.aspecting !== false ? 'checked' : '';
+                    const escapedLabel = escapeAttribute(label);
                     return `
                         <tr>
                             <td>
-                                <span class="natal-matrix-body">
+                                <span class="natal-matrix-body natal-matrix-body--icon-only" title="${escapedLabel}" aria-label="${escapedLabel}" role="img">
                                     <span class="astro-symbol">${symbol}</span>
-                                    <span>${escapeAttribute(label)}</span>
                                 </span>
                             </td>
                             <td>
@@ -865,10 +865,11 @@ function renderNatalAspectTypeToggles() {
         const label = t(`astro.aspect.${aspectType}`);
         const symbol = Symbols?.aspects?.[aspectType] || '';
         const checked = enabledTypes.has(aspectType) ? 'checked' : '';
+        const escapedLabel = escapeAttribute(label);
         return `
-            <label class="settings-check-option settings-check-option--pill">
-                <input type="checkbox" data-aspect-type="${aspectType}" ${checked}>
-                <span><span class="astro-symbol">${symbol}</span> ${escapeAttribute(label)}</span>
+            <label class="settings-check-option settings-check-option--pill settings-check-option--icon-only" title="${escapedLabel}">
+                <input type="checkbox" data-aspect-type="${aspectType}" ${checked} aria-label="${escapedLabel}">
+                <span class="settings-check-option-glyph" aria-hidden="true"><span class="astro-symbol">${symbol}</span></span>
             </label>
         `;
     }).join('');

@@ -596,6 +596,11 @@
     gap: 8px;
 }
 
+.chart-page .natal-matrix-body--icon-only {
+    justify-content: center;
+    min-width: 28px;
+}
+
 .chart-page .natal-matrix-check {
     display: inline-flex;
     align-items: center;
@@ -624,6 +629,18 @@
     color: var(--text-primary);
 }
 
+.chart-page .settings-check-option-glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: rgba(30, 58, 95, 0.08);
+    line-height: 1;
+}
+
 .chart-page .settings-check-option--pill {
     min-height: 40px;
     padding: 8px 10px;
@@ -634,6 +651,13 @@
 
 .chart-page .settings-check-option input {
     margin: 0;
+}
+
+.chart-page .settings-check-option--icon-only {
+    justify-content: center;
+    gap: 0;
+    min-width: 52px;
+    padding-inline: 8px;
 }
 
 .chart-page .planet-position-main {

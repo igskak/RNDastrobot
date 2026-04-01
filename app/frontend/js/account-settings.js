@@ -14,7 +14,6 @@
         'Quintile',
         'Biquintile',
     ];
-
     let accountPreferences = null;
     let toastTimer = null;
 
@@ -86,8 +85,6 @@
             return {
                 orientation: document.getElementById('natalOrientationSelect'),
                 aspectScope: document.getElementById('natalAspectScopeSelect'),
-                aspectTypes: document.getElementById('natalAspectTypes'),
-                matrix: document.getElementById('natalMatrixEditor'),
                 showApplyingSeparating: document.getElementById('natalShowApplyingSeparating'),
                 showSpeed: document.getElementById('natalShowSpeed'),
                 showStationary: document.getElementById('natalShowStationary'),
@@ -97,8 +94,6 @@
             return {
                 orientation: document.getElementById('biwheelOrientationSelectAccount'),
                 aspectScope: document.getElementById('biwheelAspectScopeSelectAccount'),
-                aspectTypes: document.getElementById('biwheelAspectTypes'),
-                matrix: document.getElementById('biwheelMatrixEditor'),
                 showApplyingSeparating: null,
                 showSpeed: null,
                 showStationary: null,
@@ -107,83 +102,102 @@
         return {
             orientation: document.getElementById('solarOrientationSelectAccount'),
             aspectScope: document.getElementById('solarAspectScopeSelectAccount'),
-            aspectTypes: document.getElementById('solarAspectTypes'),
-            matrix: document.getElementById('solarMatrixEditorAccount'),
             showApplyingSeparating: document.getElementById('solarShowApplyingSeparatingAccount'),
             showSpeed: document.getElementById('solarShowSpeedAccount'),
             showStationary: document.getElementById('solarShowStationaryAccount'),
         };
     }
 
-    function renderAspectTypes(container, enabledTypes = []) {
-        if (!container) return;
-        const enabled = new Set(Array.isArray(enabledTypes) && enabledTypes.length ? enabledTypes : ASPECT_TYPES);
-        container.innerHTML = ASPECT_TYPES.map((aspectType) => {
+    function renderAspectTypesMatrix(chartDefaults = {}) {
+        const tbody = document.getElementById('accountAspectTypesMatrixBody');
+        if (!tbody) return;
+
+        tbody.innerHTML = ASPECT_TYPES.map((aspectType) => {
             const symbol = escapeHtml(window.Symbols?.aspects?.[aspectType] || '');
             const label = escapeHtml(t(`astro.aspect.${aspectType}`));
-            const checked = enabled.has(aspectType) ? 'checked' : '';
+            const cells = VIEW_IDS.map((viewId) => {
+                const enabledTypes = chartDefaults?.[viewId]?.aspects?.enabled_types || [];
+                const enabled = new Set(Array.isArray(enabledTypes) && enabledTypes.length ? enabledTypes : ASPECT_TYPES);
+                const checked = enabled.has(aspectType) ? 'checked' : '';
+                return `
+                    <td>
+                        <label class="account-settings-aspect-cell">
+                            <input
+                                type="checkbox"
+                                data-view-id="${viewId}"
+                                data-aspect-type="${aspectType}"
+                                ${checked}
+                                aria-label="${escapeHtml(`${translateOrFallback(`page.accountSettings.tables.columns.${viewId}`, viewId)}: ${label}`)}"
+                            >
+                        </label>
+                    </td>
+                `;
+            }).join('');
+
             return `
-                <label class="account-settings-check account-settings-check--aspect" title="${label}">
-                    <input type="checkbox" data-aspect-type="${aspectType}" ${checked} aria-label="${label}">
-                    <span class="account-settings-check-glyph" aria-hidden="true"><span class="astro-symbol">${symbol}</span></span>
-                    <span class="account-settings-check-text">${label}</span>
-                </label>
+                <tr>
+                    <th scope="row">
+                        <span class="account-settings-aspect-meta account-settings-aspect-meta--icon-only" title="${label}" aria-label="${label}" role="img">
+                            <span class="account-settings-check-glyph" aria-hidden="true"><span class="astro-symbol">${symbol}</span></span>
+                        </span>
+                    </th>
+                    ${cells}
+                </tr>
             `;
         }).join('');
     }
 
-    function renderMatrix(container, rows = {}) {
-        if (!container) return;
-        const ensuredRows = ensureMatrixRows(rows);
-        container.innerHTML = `
-            <table class="account-settings-matrix-table">
-                <thead>
-                    <tr>
-                        <th>${escapeHtml(t('page.accountSettings.matrix.columns.body'))}</th>
-                        <th>${escapeHtml(t('page.accountSettings.matrix.columns.display'))}</th>
-                        <th>${escapeHtml(t('page.accountSettings.matrix.columns.aspecting'))}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${getMatrixBodies().map((body) => {
-                        const label = escapeHtml(getBodyLabel(body));
-                        const symbol = escapeHtml(window.Symbols?.planets?.[body] || '');
-                        const displayChecked = ensuredRows?.[body]?.display !== false ? 'checked' : '';
-                        const aspectingChecked = ensuredRows?.[body]?.aspecting !== false ? 'checked' : '';
-                    return `
-                        <tr>
-                            <td>
-                                <span class="account-settings-body">
-                                    <span class="account-settings-body-badge" title="${label}" aria-hidden="true">
-                                        <span class="astro-symbol">${symbol}</span>
-                                    </span>
-                                    <span class="account-settings-body-name">${label}</span>
-                                </span>
-                            </td>
-                            <td>
-                                <input
-                                    type="checkbox"
-                                    data-matrix-body="${body}"
-                                    data-matrix-field="display"
-                                    ${displayChecked}
-                                    aria-label="${escapeHtml(`${label}: ${t('page.accountSettings.matrix.columns.display')}`)}"
-                                >
-                            </td>
-                            <td>
-                                <input
-                                    type="checkbox"
-                                    data-matrix-body="${body}"
-                                    data-matrix-field="aspecting"
-                                    ${aspectingChecked}
-                                    aria-label="${escapeHtml(`${label}: ${t('page.accountSettings.matrix.columns.aspecting')}`)}"
-                                >
-                            </td>
-                        </tr>
-                    `;
-                    }).join('')}
-                </tbody>
-            </table>
-        `;
+    function renderBodiesMatrix(chartDefaults = {}) {
+        const tbody = document.getElementById('accountBodiesMatrixBody');
+        if (!tbody) return;
+
+        tbody.innerHTML = getMatrixBodies().map((body) => {
+            const label = escapeHtml(getBodyLabel(body));
+            const symbol = escapeHtml(window.Symbols?.planets?.[body] || '');
+
+            const cells = VIEW_IDS.map((viewId) => {
+                const rows = ensureMatrixRows(chartDefaults?.[viewId]?.matrix?.rows || {});
+                const displayChecked = rows?.[body]?.display !== false ? 'checked' : '';
+                const aspectingChecked = rows?.[body]?.aspecting !== false ? 'checked' : '';
+                return `
+                    <td>
+                        <label class="account-settings-matrix-toggle">
+                            <input
+                                type="checkbox"
+                                data-view-id="${viewId}"
+                                data-matrix-body="${body}"
+                                data-matrix-field="display"
+                                ${displayChecked}
+                                aria-label="${escapeHtml(`${translateOrFallback(`page.accountSettings.tables.columns.${viewId}`, viewId)}: ${label} ${t('page.accountSettings.matrix.columns.display')}`)}"
+                            >
+                        </label>
+                    </td>
+                    <td>
+                        <label class="account-settings-matrix-toggle">
+                            <input
+                                type="checkbox"
+                                data-view-id="${viewId}"
+                                data-matrix-body="${body}"
+                                data-matrix-field="aspecting"
+                                ${aspectingChecked}
+                                aria-label="${escapeHtml(`${translateOrFallback(`page.accountSettings.tables.columns.${viewId}`, viewId)}: ${label} ${t('page.accountSettings.matrix.columns.aspecting')}`)}"
+                            >
+                        </label>
+                    </td>
+                `;
+            }).join('');
+
+            return `
+                <tr>
+                    <th scope="row">
+                        <span class="account-settings-body account-settings-body--icon-only" title="${label}" aria-label="${label}" role="img">
+                            <span class="account-settings-body-badge" aria-hidden="true"><span class="astro-symbol">${symbol}</span></span>
+                        </span>
+                    </th>
+                    ${cells}
+                </tr>
+            `;
+        }).join('');
     }
 
     function populateForm(preferences) {
@@ -215,14 +229,15 @@
             if (dom.showApplyingSeparating) dom.showApplyingSeparating.checked = view.aspects?.show_applying_separating === true;
             if (dom.showSpeed) dom.showSpeed.checked = view.table_options?.show_speed !== false;
             if (dom.showStationary) dom.showStationary.checked = view.table_options?.show_stationary !== false;
-            renderAspectTypes(dom.aspectTypes, view.aspects?.enabled_types || []);
-            renderMatrix(dom.matrix, view.matrix?.rows || {});
         });
+
+        renderAspectTypesMatrix(normalized.chart_defaults);
+        renderBodiesMatrix(normalized.chart_defaults);
     }
 
-    function readCheckedAspectTypes(container) {
+    function readCheckedAspectTypes(viewId) {
         const selected = [];
-        container?.querySelectorAll('input[data-aspect-type]').forEach((input) => {
+        document.querySelectorAll(`#accountAspectTypesMatrixBody input[data-view-id="${viewId}"][data-aspect-type]`).forEach((input) => {
             if (input.checked && input.dataset.aspectType) {
                 selected.push(input.dataset.aspectType);
             }
@@ -230,9 +245,9 @@
         return selected.length ? selected : [...ASPECT_TYPES];
     }
 
-    function readMatrixRows(container) {
+    function readMatrixRows(viewId) {
         const rows = ensureMatrixRows({});
-        container?.querySelectorAll('input[data-matrix-body][data-matrix-field]').forEach((input) => {
+        document.querySelectorAll(`#accountBodiesMatrixBody input[data-view-id="${viewId}"][data-matrix-body][data-matrix-field]`).forEach((input) => {
             const body = input.dataset.matrixBody;
             const field = input.dataset.matrixField;
             if (!body || !field) return;
@@ -248,11 +263,11 @@
         const dom = getViewDom(viewId);
         return {
             matrix: {
-                rows: readMatrixRows(dom.matrix),
+                rows: readMatrixRows(viewId),
             },
             aspects: {
                 scope: dom.aspectScope?.value || (viewId === 'biwheel' ? 'major' : 'all'),
-                enabled_types: readCheckedAspectTypes(dom.aspectTypes),
+                enabled_types: readCheckedAspectTypes(viewId),
                 show_applying_separating: dom.showApplyingSeparating?.checked === true,
             },
             table_options: {

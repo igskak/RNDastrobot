@@ -261,6 +261,31 @@
       },
       "subtitle": "Set the defaults once, then let individual chart overrides change only what is necessary.",
       "subtitleWithEmail": "Signed in as {email}. Set the defaults once, then let individual chart overrides change only what is necessary.",
+      "tables": {
+        "aspects": {
+          "copy": "Each row is one aspect type. Turn it on only in the views where it should be enabled by default.",
+          "kicker": "Aspect matrix",
+          "title": "Aspect types across all views"
+        },
+        "bodies": {
+          "copy": "Use one wide matrix instead of three separate editors when you need to fine-tune body visibility and aspect participation.",
+          "kicker": "Bodies matrix",
+          "title": "Bodies for all screens"
+        },
+        "columns": {
+          "aspect": "Aspect",
+          "biwheel": "Biwheel",
+          "natal": "Natal",
+          "setting": "Setting",
+          "solar": "Solar"
+        },
+        "defaults": {
+          "copy": "The most-used defaults stay in one aligned matrix so you can compare all screens without scrolling through separate cards.",
+          "kicker": "Unified defaults",
+          "title": "One matrix for natal, biwheel, and solar"
+        },
+        "notAvailable": "—"
+      },
       "title": "Account settings",
       "toasts": {
         "loadFailed": "Failed to load account settings",
