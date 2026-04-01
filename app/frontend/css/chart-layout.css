@@ -114,6 +114,13 @@
     color: var(--accent);
 }
 
+.chart-action-item:focus-visible {
+    outline: none;
+    background: rgba(245, 237, 223, 0.96);
+    color: var(--accent);
+    box-shadow: inset 0 0 0 1px rgba(184, 147, 90, 0.28);
+}
+
 .nav-btn-icon {
     width: 13px;
     height: 13px;
@@ -264,7 +271,7 @@
 
 /* Side panels */
 .side-panel {
-    width: 280px;
+    width: 320px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(249, 247, 242, 0.94));
     display: flex;
     flex-direction: column;
@@ -468,6 +475,14 @@
     white-space: nowrap;
 }
 
+.chart-tooltip--floating {
+    position: fixed;
+    z-index: 180;
+    min-width: 168px;
+    max-width: 280px;
+    white-space: normal;
+}
+
 .chart-page .aspect-lines-legend {
     bottom: 18px;
     left: 18px;
@@ -540,6 +555,10 @@
 .chart-page .settings-select,
 .chart-page .planet-toggle {
     background: rgba(249, 247, 242, 0.78);
+}
+
+.chart-page .settings-select {
+    margin-bottom: 10px;
 }
 
 .chart-page .settings-size-control span {
@@ -702,6 +721,178 @@
     margin-top: 2px;
     font-size: 10px;
     color: var(--text-secondary);
+}
+
+.chart-page .house-ruler-cell {
+    white-space: nowrap;
+}
+
+.chart-page .house-ruler-house {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.chart-page .config-card {
+    transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+}
+
+.chart-page .config-card--compact {
+    padding: 10px 10px 8px;
+}
+
+.chart-page .config-card--hovered {
+    border-color: rgba(184, 147, 90, 0.38);
+    box-shadow: 0 12px 24px rgba(26, 22, 20, 0.08);
+    transform: translateY(-1px);
+}
+
+.chart-page .config-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.chart-page .config-strength-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 22px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: rgba(30, 58, 95, 0.08);
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+}
+
+.chart-page .config-planets--compact {
+    gap: 5px;
+    margin-top: 4px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.chart-page .planet-tag--icon-only {
+    min-width: 26px;
+    min-height: 26px;
+    padding: 0 6px;
+    justify-content: center;
+    font-size: 15px;
+}
+
+.chart-page .config-apex-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: 2px;
+}
+
+.chart-page .config-apex-label {
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--accent);
+    opacity: 0.82;
+}
+
+.chart-page .planet-tag--config-point {
+    cursor: help;
+    transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition), background var(--transition);
+}
+
+.chart-page .planet-tag--config-point:hover {
+    transform: translateY(-1px);
+    border-color: rgba(184, 147, 90, 0.34);
+    background: rgba(245, 237, 223, 0.96);
+    box-shadow: 0 8px 18px rgba(26, 22, 20, 0.08);
+}
+
+.chart-page .config-aspect-lines {
+    display: grid;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.chart-page .config-aspect-line {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.chart-page .config-aspect-glyph {
+    color: var(--config-aspect-color, var(--accent));
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.chart-page .config-aspect-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.chart-page .config-aspect-orb {
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+}
+
+.chart-page .config-point-tooltip {
+    padding: 10px 12px;
+}
+
+.chart-page .config-point-tooltip-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+}
+
+.chart-page .config-point-tooltip .config-aspect-lines {
+    margin-top: 8px;
+}
+
+.chart-page .config-point-tooltip .config-aspect-line {
+    gap: 5px;
+}
+
+.chart-page .config-highlight-line {
+    opacity: 1 !important;
+    stroke-width: 2.8 !important;
+}
+
+.chart-page .config-highlight-planet .planet-circle {
+    stroke: rgba(184, 147, 90, 0.62);
+    stroke-width: 2.6;
+    fill: rgba(245, 237, 223, 0.28);
+}
+
+.chart-page .config-highlight-planet .planet-leader-line {
+    opacity: 0.9 !important;
+    stroke-width: 1.4 !important;
+}
+
+.chart-page .config-highlight-planet .planet-anchor-point {
+    stroke: rgba(184, 147, 90, 0.7);
+    stroke-width: 2;
+}
+
+.chart-page .config-highlight-planet .planet-symbol-text {
+    font-weight: 900;
 }
 
 /* Mobile bottom nav */
@@ -1119,6 +1310,22 @@
 #aspects-list .data-table th.sortable {
     cursor: pointer;
     user-select: none;
+    white-space: nowrap;
+}
+
+#aspects-list .symbol-cell {
+    width: 24px;
+    padding-inline: 6px;
+}
+
+#aspects-list .data-table td:nth-child(3),
+#aspects-list .data-table th:nth-child(3) {
+    min-width: 110px;
+}
+
+#aspects-list .data-table td:nth-child(4),
+#aspects-list .data-table th:nth-child(4) {
+    width: 68px;
     white-space: nowrap;
 }
 

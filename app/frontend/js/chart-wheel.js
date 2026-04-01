@@ -16,9 +16,11 @@ class ChartWheel {
         this.degreeRingWidth = 10;       // Внешнее кольцо с градусами
         this.signRingWidth = 26;         // Кольцо символов знаков
         this.houseRingWidth = 40;        // Кольцо домов
-        this.planetRadius = 158;         // Радиус планет (на линии домов)
-        this.aspectRadius = 145;         // Радиус аспектных линий (почти до кольца домов)
+        this.planetRadius = 174;         // Радиус планет/точек в центре кольца домов
+        this.aspectRadius = 138;         // Радиус аспектных линий
         this.natalGlyphBaseSize = 18;    // Натальные точки +20% к базовому размеру
+        this.houseNumberStyle = 'arabic';
+        this.houseLabelsOutside = false;
 
         this.visualPreferences = window.AstroPreferences?.getAccountVisualPreferences?.() || null;
         this.aspectColors = this.visualPreferences?.aspect_colors || {
@@ -428,17 +430,19 @@ class ChartWheel {
                 midLong = ((house.longitude + nextHouse.longitude + 360) / 2) % 360;
             }
             const midAngle = this.longitudeToAngle(midLong) * Math.PI / 180;
-            const textR = houseInnerR + this.houseRingWidth / 2;
+            const textR = this.houseLabelsOutside
+                ? this.outerRadius + 8
+                : signInnerR - 10;
 
             cuspGroup.appendChild(this.createSvgElement('text', {
                 x: this.center + textR * Math.cos(midAngle),
-                y: this.center + textR * Math.sin(midAngle) + 4,
+                y: this.center + textR * Math.sin(midAngle) + 3,
                 'text-anchor': 'middle',
-                'font-size': '10',
+                'font-size': this.houseLabelsOutside ? '9.5' : '10',
                 'font-weight': isAngular ? '700' : '400',
                 fill: isAngular ? '#6366f1' : '#9ca3af',
                 style: 'pointer-events: none;'
-            }, house.number.toString()));
+            }, this.formatHouseLabel(house.number)));
 
             this.layers.houses.appendChild(cuspGroup);
         });
@@ -546,18 +550,8 @@ class ChartWheel {
                 const glyph = aspectGlyphs[aspect.aspect_type];
 
                 if (glyph) {
-                    // Фон для иконки
-                    this.layers.aspects.appendChild(this.createSvgElement('circle', {
-                        cx: midX, cy: midY, r: 6,
-                        fill: 'white',
-                        stroke: color,
-                        'stroke-width': 0.5,
-                        opacity: 0.9
-                    }));
-
-                    // Иконка
                     this.layers.aspects.appendChild(this.createSvgElement('text', {
-                        x: midX, y: midY + 3,
+                        x: midX, y: midY + 2.5,
                         'text-anchor': 'middle',
                         'font-size': '8',
                         fill: color,
@@ -573,13 +567,24 @@ class ChartWheel {
      * Улучшенная отрисовка планет с кластерным anti-collision и выносками
      */
     drawPlanetsEnhanced(planets) {
-        const positions = this.calculatePlanetPositionsEnhanced(planets);
-        const calloutRadius = Math.max(this.aspectRadius + 8, this.planetRadius - 10);
+        const signOuterR = this.outerRadius - this.degreeRingWidth;
+        const signInnerR = signOuterR - this.signRingWidth;
+        const houseInnerR = signInnerR - this.houseRingWidth;
+        const houseCenterRadius = houseInnerR + this.houseRingWidth / 2;
+        const anchorRadius = houseInnerR - 4;
+        this.planetRadius = houseCenterRadius;
+        const positions = this.calculatePlanetPositionsEnhanced(planets, {
+            baseRadius: houseCenterRadius,
+        });
 
-        positions.forEach(({ planet, angle, displayAngle, hasLeader }) => {
+        positions.forEach(({ planet, angle, displayAngle, displayRadius }) => {
             const displayAngleRad = displayAngle * Math.PI / 180;
-            const x = this.center + this.planetRadius * Math.cos(displayAngleRad);
-            const y = this.center + this.planetRadius * Math.sin(displayAngleRad);
+            const exactAngleRad = angle * Math.PI / 180;
+            const radius = Number.isFinite(displayRadius) ? displayRadius : this.planetRadius;
+            const x = this.center + radius * Math.cos(displayAngleRad);
+            const y = this.center + radius * Math.sin(displayAngleRad);
+            const anchorX = this.center + anchorRadius * Math.cos(exactAngleRad);
+            const anchorY = this.center + anchorRadius * Math.sin(exactAngleRad);
             const element = Symbols.signElements[planet.sign];
             const color = this.getPlanetColor(planet);
             const glyphScale = Symbols.planetGlyphScale?.[planet.name] || 1;
@@ -593,27 +598,25 @@ class ChartWheel {
                 style: 'cursor: pointer;'
             });
 
-            if (hasLeader) {
-                const exactAngleRad = angle * Math.PI / 180;
-                const realX = this.center + calloutRadius * Math.cos(exactAngleRad);
-                const realY = this.center + calloutRadius * Math.sin(exactAngleRad);
-                group.appendChild(this.createSvgElement('line', {
-                    x1: realX, y1: realY,
-                    x2: x, y2: y,
-                    stroke: color,
-                    'stroke-width': 0.5,
-                    opacity: 0.35,
-                    style: 'pointer-events: none;'
-                }));
-                group.appendChild(this.createSvgElement('circle', {
-                    cx: realX,
-                    cy: realY,
-                    r: 1.8,
-                    fill: color,
-                    opacity: 0.85,
-                    style: 'pointer-events: none;'
-                }));
-            }
+            group.appendChild(this.createSvgElement('line', {
+                x1: anchorX, y1: anchorY,
+                x2: x, y2: y,
+                stroke: color,
+                'stroke-width': 0.7,
+                opacity: 0.42,
+                class: 'planet-leader-line',
+                style: 'pointer-events: none;'
+            }));
+
+            group.appendChild(this.createSvgElement('circle', {
+                cx: anchorX,
+                cy: anchorY,
+                r: 2.2,
+                fill: color,
+                opacity: 0.9,
+                class: 'planet-anchor-point',
+                style: 'pointer-events: none;'
+            }));
 
             // Фоновый круг (прозрачный, для интерактивности)
             group.appendChild(this.createSvgElement('circle', {
@@ -651,7 +654,8 @@ class ChartWheel {
     /**
      * Anti-collision: группируем близкие точки и равномерно разводим их по дуге
      */
-    calculatePlanetPositionsEnhanced(planets) {
+    calculatePlanetPositionsEnhanced(planets, options = {}) {
+        const baseRadius = Number.isFinite(options.baseRadius) ? options.baseRadius : this.planetRadius;
         const positions = planets
             .map(planet => {
                 const glyphScale = Symbols.planetGlyphScale?.[planet.name] || 1;
@@ -661,6 +665,7 @@ class ChartWheel {
                     planet,
                     angle,
                     displayAngle: angle,
+                    displayRadius: baseRadius,
                     glyphSize: this.natalGlyphBaseSize * glyphScale * scale,
                     hasLeader: false,
                     clusterAngle: null
@@ -673,10 +678,10 @@ class ChartWheel {
         }
 
         const maxGlyphSize = positions.reduce((max, item) => Math.max(max, item.glyphSize), 0);
-        const desiredGapPx = Math.max(maxGlyphSize * 0.9, 10);
+        const desiredGapPx = Math.max(maxGlyphSize * 1.28, 14);
         const minGapDeg = Math.max(
             1.5,
-            (desiredGapPx / (2 * Math.PI * Math.max(this.planetRadius, 1))) * 360
+            (desiredGapPx / (2 * Math.PI * Math.max(baseRadius, 1))) * 360
         );
         const spreadDeg = Math.max(1.5, minGapDeg * 0.95);
 
@@ -713,15 +718,17 @@ class ChartWheel {
         clusters.forEach((cluster) => {
             cluster.forEach((item) => {
                 if (item.clusterAngle == null) item.clusterAngle = item.angle;
+                item.displayRadius = baseRadius;
             });
 
             if (cluster.length === 1) return;
 
             const center = (cluster.length - 1) / 2;
             cluster.forEach((item, index) => {
-                const offset = (index - center) * spreadDeg;
-                item.displayAngle = this.normalizeAngle(item.clusterAngle + offset);
-                item.hasLeader = Math.abs(offset) > 0.01;
+                const offsetAngle = (index - center) * spreadDeg;
+                item.displayAngle = this.normalizeAngle(item.clusterAngle + offsetAngle);
+                item.displayRadius = baseRadius;
+                item.hasLeader = Math.abs(offsetAngle) > 0.01;
             });
         });
 
@@ -762,7 +769,7 @@ class ChartWheel {
     }
 
     drawAngleMarkerEnhanced(angle, radius, label, color) {
-        const outerR = this.outerRadius + 8;
+        const outerR = this.outerRadius + 4;
 
         // Линия выносная за пределы круга
         this.layers.angles.appendChild(this.createSvgElement('line', {
@@ -775,12 +782,17 @@ class ChartWheel {
         }));
 
         // Подпись за кругом
-        const labelR = outerR + 10;
+        const labelR = outerR + 4;
+        const cos = Math.cos(angle);
+        const anchor = Math.abs(cos) < 0.2
+            ? 'middle'
+            : (cos > 0 ? 'start' : 'end');
+        const dx = anchor === 'middle' ? 0 : (anchor === 'start' ? 3 : -3);
         this.layers.labels.appendChild(this.createSvgElement('text', {
-            x: this.center + labelR * Math.cos(angle),
-            y: this.center + labelR * Math.sin(angle) + 4,
-            'text-anchor': 'middle',
-            'font-size': '10',
+            x: this.center + labelR * Math.cos(angle) + dx,
+            y: this.center + labelR * Math.sin(angle) + 3,
+            'text-anchor': anchor,
+            'font-size': '9',
             'font-weight': '700',
             fill: color
         }, label));
@@ -876,6 +888,15 @@ class ChartWheel {
         }
     }
 
+    setHouseLabelOptions(options = {}, settings = {}) {
+        const { redraw = true } = settings;
+        this.houseNumberStyle = options.style === 'roman' ? 'roman' : 'arabic';
+        this.houseLabelsOutside = options.outside === true;
+        if (redraw && this.chartData) {
+            this.draw(this.chartData);
+        }
+    }
+
     isPointBody(name) {
         return [
             'TrueNode',
@@ -887,6 +908,14 @@ class ChartWheel {
             'PartOfFortune',
             'Fortune'
         ].includes(name);
+    }
+
+    formatHouseLabel(number) {
+        if (this.houseNumberStyle !== 'roman') {
+            return String(number);
+        }
+        const romanLabels = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+        return romanLabels[(Number(number) || 1) - 1] || String(number);
     }
 
     /**
@@ -928,6 +957,18 @@ class ChartWheel {
         const symbolText = e.currentTarget.querySelector('.planet-symbol-text');
         if (symbolText) {
             symbolText.setAttribute('font-weight', isEnter ? '900' : '600');
+        }
+
+        const leaderLine = e.currentTarget.querySelector('.planet-leader-line');
+        if (leaderLine) {
+            leaderLine.style.opacity = isEnter ? '0.88' : '';
+            leaderLine.style.strokeWidth = isEnter ? '1.4' : '';
+        }
+
+        const anchorPoint = e.currentTarget.querySelector('.planet-anchor-point');
+        if (anchorPoint) {
+            anchorPoint.style.stroke = isEnter ? 'rgba(184, 147, 90, 0.7)' : '';
+            anchorPoint.style.strokeWidth = isEnter ? '2' : '';
         }
 
         // Подсветка строки в таблице

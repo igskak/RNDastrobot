@@ -28,6 +28,29 @@
         Air: '#eab308',
         Water: '#3b82f6',
     };
+    const MAJOR_ASPECT_TYPES = [
+        'Conjunction',
+        'Opposition',
+        'Trine',
+        'Square',
+        'Sextile',
+    ];
+    const DEFAULT_ENABLED_ASPECT_TYPES = [
+        ...MAJOR_ASPECT_TYPES,
+        'Vigintile',
+        'Semi_Nonagon',
+        'Semisextile',
+        'Decile',
+        'Nonagon',
+        'Semisquare',
+        'Quintile',
+        'Binonagon',
+        'Sentagon',
+        'Tridecile',
+        'Sesquiquadrate',
+        'Biquintile',
+        'Quincunx',
+    ];
     const ORB_PROFILE_IDS = ['natal', 'prognostic'];
     const DEFAULT_ORB_PAIR_STRATEGY = 'larger';
     const BODY_NAME_ALIASES = {
@@ -131,6 +154,54 @@
         return BODY_NAME_ALIASES[String(name || '')] || name;
     }
 
+    function getKnownAspectTypes(availableAspectTypes = []) {
+        const known = new Set(DEFAULT_ENABLED_ASPECT_TYPES);
+        (availableAspectTypes || []).forEach((aspectType) => {
+            if (aspectType) known.add(aspectType);
+        });
+        return [...known];
+    }
+
+    function normalizeEnabledAspectTypes(enabledAspectTypes, fallbackAspectTypes = DEFAULT_ENABLED_ASPECT_TYPES) {
+        const fallback = getKnownAspectTypes(fallbackAspectTypes);
+        if (!Array.isArray(enabledAspectTypes) || !enabledAspectTypes.length) {
+            return [...fallback];
+        }
+
+        const normalized = [];
+        enabledAspectTypes.forEach((aspectType) => {
+            if (!aspectType || normalized.includes(aspectType)) return;
+            normalized.push(aspectType);
+        });
+        return normalized.length ? normalized : [...fallback];
+    }
+
+    function resolveEnabledAspectTypesForScope({
+        enabledAspectTypes,
+        aspectScope = 'all',
+        availableAspectTypes = [],
+    } = {}) {
+        const knownAspectTypes = getKnownAspectTypes(availableAspectTypes);
+        const normalized = normalizeEnabledAspectTypes(enabledAspectTypes, knownAspectTypes);
+
+        if (aspectScope === 'all') {
+            return new Set(normalized);
+        }
+
+        const scopedAspectTypes = knownAspectTypes.filter((aspectType) => (
+            aspectScope === 'major'
+                ? MAJOR_ASPECT_TYPES.includes(aspectType)
+                : !MAJOR_ASPECT_TYPES.includes(aspectType)
+        ));
+        const intersection = normalized.filter((aspectType) => scopedAspectTypes.includes(aspectType));
+
+        if (intersection.length) {
+            return new Set(intersection);
+        }
+
+        return new Set(scopedAspectTypes);
+    }
+
     function filterChartDataByViewPreferences(chartData = {}, options = {}) {
         const rows = ensureMatrixRows(options?.matrixRows || {});
         const visibleBodies = new Set();
@@ -141,9 +212,14 @@
             if (config?.aspecting !== false) aspectingBodies.add(body);
         });
 
-        const enabledAspectTypes = Array.isArray(options?.enabledAspectTypes) && options.enabledAspectTypes.length
-            ? new Set(options.enabledAspectTypes)
-            : null;
+        const availableAspectTypes = (chartData?.aspects || [])
+            .map((aspect) => aspect?.aspect_type)
+            .filter(Boolean);
+        const enabledAspectTypes = resolveEnabledAspectTypesForScope({
+            enabledAspectTypes: options?.enabledAspectTypes,
+            aspectScope: options?.aspectScope || 'all',
+            availableAspectTypes,
+        });
 
         const bodyIsVisible = (bodyName) => {
             const normalized = normalizeMatrixBodyName(bodyName);
@@ -155,7 +231,7 @@
             return !rows[normalized] || aspectingBodies.has(normalized);
         };
 
-        const aspectIsEnabled = (aspectType) => !enabledAspectTypes || enabledAspectTypes.has(aspectType);
+        const aspectIsEnabled = (aspectType) => enabledAspectTypes.has(aspectType);
 
         const filteredAspects = (chartData?.aspects || []).filter((aspect) => (
             bodyIsVisible(aspect?.planet_1)
@@ -210,7 +286,7 @@
                 scope: viewSettings?.aspects?.scope || 'all',
                 enabled_types: Array.isArray(viewSettings?.aspects?.enabled_types)
                     ? [...viewSettings.aspects.enabled_types]
-                    : ['Conjunction', 'Opposition', 'Trine', 'Square', 'Sextile'],
+                    : [...DEFAULT_ENABLED_ASPECT_TYPES],
                 show_applying_separating: viewSettings?.aspects?.show_applying_separating === true,
             },
             table_options: {
@@ -338,6 +414,8 @@
 
     const api = {
         MATRIX_BODIES,
+        MAJOR_ASPECT_TYPES,
+        DEFAULT_ENABLED_ASPECT_TYPES,
         DEFAULT_ASPECT_COLORS,
         DEFAULT_ELEMENT_PALETTE,
         ORB_PROFILE_IDS,
@@ -347,9 +425,11 @@
         buildSparseDiff,
         ensureMatrixRows,
         normalizeMatrixBodyName,
+        normalizeEnabledAspectTypes,
         normalizeOrbPairStrategy,
         normalizeViewSettings,
         normalizeMethodologySettings,
+        resolveEnabledAspectTypesForScope,
         resolveVisualPreferences,
         setAccountVisualPreferences,
         getAccountVisualPreferences,

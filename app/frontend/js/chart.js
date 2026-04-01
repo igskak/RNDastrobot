@@ -9,6 +9,8 @@ let inFlightRecalcKey = null;
 let currentHoveredAspectKey = null;
 let chartToastTimer = null;
 let currentResolvedPreferences = null;
+let activeConfigurationCard = null;
+let configPointTooltipEl = null;
 const CHART_TOGGLEABLE_POINTS = [
     'Chiron',
     'TrueNode',
@@ -47,18 +49,35 @@ const HOUSE_SYSTEM_ALIASES = {
     'WHOLE_SIGN': 'W',
     'WHOLESIGN': 'W'
 };
-const NATAL_ASPECT_TYPES = [
+const NATAL_ASPECT_TYPES = window.AstroPreferences?.DEFAULT_ENABLED_ASPECT_TYPES || [
     'Conjunction',
     'Opposition',
     'Trine',
     'Square',
     'Sextile',
-    'Quincunx',
-    'Semisquare',
+    'Vigintile',
+    'Semi_Nonagon',
     'Semisextile',
+    'Decile',
+    'Nonagon',
+    'Semisquare',
     'Quintile',
+    'Binonagon',
+    'Sentagon',
+    'Tridecile',
+    'Sesquiquadrate',
     'Biquintile',
+    'Quincunx',
 ];
+const ASPECT_PHASE_STORAGE_KEY = 'natalAspectPhaseFilter';
+const HOUSE_NUMBER_STYLE_STORAGE_KEY = 'natalHouseNumberStyle';
+const HOUSE_LABELS_OUTSIDE_STORAGE_KEY = 'natalHouseLabelsOutside';
+const ASPECT_NAME_ALIASES = {
+    TrueNorthNode: 'TrueNode',
+    TrueSouthNode: 'SouthNode',
+    Fortune: 'PartOfFortune',
+};
+
 function t(key, params) {
     return window.FrontendI18n?.t?.(key, params) || key;
 }
@@ -81,6 +100,22 @@ function escapeAttribute(value) {
         .replace(/>/g, '&gt;');
 }
 
+function normalizeAspectPhaseFilter(value) {
+    return value === 'applying' || value === 'separating' ? value : 'all';
+}
+
+function readSavedAspectPhaseFilter() {
+    return normalizeAspectPhaseFilter(localStorage.getItem(ASPECT_PHASE_STORAGE_KEY));
+}
+
+function readSavedHouseNumberStyle() {
+    return localStorage.getItem(HOUSE_NUMBER_STYLE_STORAGE_KEY) === 'roman' ? 'roman' : 'arabic';
+}
+
+function readSavedHouseLabelsOutside() {
+    return localStorage.getItem(HOUSE_LABELS_OUTSIDE_STORAGE_KEY) === 'true';
+}
+
 let currentSettings = {
     houseSystem: 'P',
     hiddenPlanets: [],
@@ -89,10 +124,13 @@ let currentSettings = {
     matrixRows: window.AstroPreferences?.ensureMatrixRows?.({}) || {},
     enabledAspectTypes: [...NATAL_ASPECT_TYPES],
     showApplyingSeparating: false,
+    aspectPhaseFilter: readSavedAspectPhaseFilter(),
     showSpeed: true,
     showStationary: true,
     planetScale: readSavedPlanetScale(),
-    pointScale: readSavedPointScale()
+    pointScale: readSavedPointScale(),
+    houseNumberStyle: readSavedHouseNumberStyle(),
+    houseLabelsOutside: readSavedHouseLabelsOutside(),
 };
 
 function clampPointScale(v) {
@@ -107,7 +145,66 @@ function readSavedPlanetScale() {
 }
 
 function readSavedPointScale() {
-    return clampPointScale(parseFloat(localStorage.getItem('natalPointScale') || '1.0'));
+    const raw = localStorage.getItem('natalPointScale')
+        || localStorage.getItem('natalPlanetScale')
+        || '1.2';
+    return clampPointScale(parseFloat(raw));
+}
+
+function normalizeAspectBodyName(name) {
+    return ASPECT_NAME_ALIASES[name] || name;
+}
+
+function buildAspectPairKey(left, right) {
+    const normalizedLeft = normalizeAspectBodyName(left);
+    const normalizedRight = normalizeAspectBodyName(right);
+    return normalizedLeft <= normalizedRight
+        ? `${normalizedLeft}-${normalizedRight}`
+        : `${normalizedRight}-${normalizedLeft}`;
+}
+
+function getAspectPhaseState(aspect) {
+    if (!aspect) return 'all';
+    if (typeof aspect.applying === 'boolean') {
+        return aspect.applying ? 'applying' : 'separating';
+    }
+    const rawPhase = String(aspect.applying_separating || aspect.phase || '').trim().toLowerCase();
+    if (!rawPhase) return 'all';
+    if (rawPhase.includes('applic')) return 'applying';
+    if (rawPhase.includes('сход')) return 'applying';
+    if (rawPhase.includes('separ')) return 'separating';
+    if (rawPhase.includes('расход')) return 'separating';
+    return 'all';
+}
+
+function aspectMatchesPhaseFilter(aspect, filter = currentSettings.aspectPhaseFilter) {
+    const normalizedFilter = normalizeAspectPhaseFilter(filter);
+    if (normalizedFilter === 'all') return true;
+    return getAspectPhaseState(aspect) === normalizedFilter;
+}
+
+function filterChartDataByAspectPhase(chartData) {
+    const aspectPhaseFilter = normalizeAspectPhaseFilter(currentSettings.aspectPhaseFilter);
+    if (!chartData || aspectPhaseFilter === 'all') return chartData;
+
+    const filteredAspects = (chartData.aspects || []).filter((aspect) => aspectMatchesPhaseFilter(aspect, aspectPhaseFilter));
+    const filteredConfigurations = (chartData.aspect_configurations || [])
+        .map((configuration) => {
+            if (!Array.isArray(configuration?.aspects)) return configuration;
+            const visibleAspects = configuration.aspects.filter((aspect) => aspectMatchesPhaseFilter(aspect, aspectPhaseFilter));
+            if (!visibleAspects.length) return null;
+            return {
+                ...configuration,
+                aspects: visibleAspects,
+            };
+        })
+        .filter(Boolean);
+
+    return {
+        ...chartData,
+        aspects: filteredAspects,
+        aspect_configurations: filteredConfigurations,
+    };
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -140,6 +237,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     chartWheel.setPointScales({
         planets: currentSettings.planetScale,
         points: currentSettings.pointScale
+    }, { redraw: false });
+    chartWheel.setHouseLabelOptions({
+        style: currentSettings.houseNumberStyle,
+        outside: currentSettings.houseLabelsOutside,
     }, { redraw: false });
     chartWheel.draw(chartData);
 
@@ -184,6 +285,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initPanelTabs();
     initAspectLegendFilters();
     initChartActions();
+    bindConfigurationHoverInteractions();
     initEditClientDialog();
     await hydrateNatalPreferences(chartData, formData);
 
@@ -450,9 +552,17 @@ function syncNatalSettingsControls() {
     const houseSystemSelect = document.getElementById('houseSystemSelect');
     if (houseSystemSelect) houseSystemSelect.value = normalizeHouseSystemCode(currentSettings.houseSystem);
 
+    const aspectScopeSelect = document.getElementById('aspectScopeSelect');
+    if (aspectScopeSelect) aspectScopeSelect.value = currentSettings.aspectScope;
+
     const showApplyingSeparatingToggle = document.getElementById('showApplyingSeparatingToggle');
     if (showApplyingSeparatingToggle) {
         showApplyingSeparatingToggle.checked = currentSettings.showApplyingSeparating === true;
+    }
+
+    const aspectPhaseFilterSelect = document.getElementById('aspectPhaseFilterSelect');
+    if (aspectPhaseFilterSelect) {
+        aspectPhaseFilterSelect.value = normalizeAspectPhaseFilter(currentSettings.aspectPhaseFilter);
     }
 
     const showSpeedToggle = document.getElementById('showSpeedToggle');
@@ -465,11 +575,25 @@ function syncNatalSettingsControls() {
         showStationaryToggle.checked = currentSettings.showStationary !== false;
     }
 
+    const houseNumberStyleSelect = document.getElementById('houseNumberStyleSelect');
+    if (houseNumberStyleSelect) {
+        houseNumberStyleSelect.value = currentSettings.houseNumberStyle === 'roman' ? 'roman' : 'arabic';
+    }
+
+    const houseLabelsOutsideToggle = document.getElementById('houseLabelsOutsideToggle');
+    if (houseLabelsOutsideToggle) {
+        houseLabelsOutsideToggle.checked = currentSettings.houseLabelsOutside === true;
+    }
+
     renderNatalSettingsEditors();
     setNatalAspectLegendActive(currentSettings.aspectScope);
 }
 
 function setNatalAspectLegendActive(filter) {
+    const aspectScopeSelect = document.getElementById('aspectScopeSelect');
+    if (aspectScopeSelect) {
+        aspectScopeSelect.value = filter;
+    }
     document.querySelectorAll('.legend-item.clickable').forEach((legendItem) => {
         legendItem.classList.toggle('active', legendItem.dataset.filter === filter);
     });
@@ -751,6 +875,7 @@ function initSettings(chartData) {
     const settingsToggle = document.getElementById('settingsToggle');
     const settingsPanel = document.getElementById('settingsPanel');
     const orientationSelect = document.getElementById('orientationSelect');
+    const aspectScopeSelect = document.getElementById('aspectScopeSelect');
     const planetScaleRange = document.getElementById('planetScaleRange');
     const planetScaleValue = document.getElementById('planetScaleValue');
     const pointScaleRange = document.getElementById('pointScaleRange');
@@ -783,6 +908,10 @@ function initSettings(chartData) {
         orientationSelect.value = currentSettings.orientation;
         orientationSelect.addEventListener('change', () => applySettings());
     }
+    if (aspectScopeSelect) {
+        aspectScopeSelect.value = currentSettings.aspectScope;
+        aspectScopeSelect.addEventListener('change', () => applySettings());
+    }
     const houseSystemSelect = document.getElementById('houseSystemSelect');
     if (houseSystemSelect) {
         houseSystemSelect.value = normalizeHouseSystemCode(currentSettings.houseSystem);
@@ -804,8 +933,6 @@ function initSettings(chartData) {
             applySettings();
         });
     }
-
-    // Применение настроек
 }
 
 function renderNatalMatrixEditor() {
@@ -890,6 +1017,10 @@ function bindNatalSettingsHandlers() {
     if (showApplyingSeparatingToggle) {
         showApplyingSeparatingToggle.onchange = () => applySettings();
     }
+    const aspectPhaseFilterSelect = document.getElementById('aspectPhaseFilterSelect');
+    if (aspectPhaseFilterSelect) {
+        aspectPhaseFilterSelect.onchange = () => applySettings();
+    }
     const showSpeedToggle = document.getElementById('showSpeedToggle');
     if (showSpeedToggle) {
         showSpeedToggle.onchange = () => applySettings();
@@ -897,6 +1028,14 @@ function bindNatalSettingsHandlers() {
     const showStationaryToggle = document.getElementById('showStationaryToggle');
     if (showStationaryToggle) {
         showStationaryToggle.onchange = () => applySettings();
+    }
+    const houseNumberStyleSelect = document.getElementById('houseNumberStyleSelect');
+    if (houseNumberStyleSelect) {
+        houseNumberStyleSelect.onchange = () => applySettings();
+    }
+    const houseLabelsOutsideToggle = document.getElementById('houseLabelsOutsideToggle');
+    if (houseLabelsOutsideToggle) {
+        houseLabelsOutsideToggle.onchange = () => applySettings();
     }
 }
 
@@ -935,6 +1074,7 @@ async function applySettings() {
     applySettingsTimer = setTimeout(async () => {
         const houseSystem = normalizeHouseSystemCode(document.getElementById('houseSystemSelect').value);
         const orientation = document.getElementById('orientationSelect')?.value || 'aries';
+        const aspectScope = document.getElementById('aspectScopeSelect')?.value || 'all';
         const planetScalePct = Number(document.getElementById('planetScaleRange')?.value || 120);
         const pointScalePct = Number(document.getElementById('pointScaleRange')?.value || 100);
         const planetScale = clampPointScale(planetScalePct / 100);
@@ -945,20 +1085,35 @@ async function applySettings() {
             .map(([body]) => body);
         const enabledAspectTypes = readNatalEnabledAspectTypesFromControls();
         const showApplyingSeparating = document.getElementById('showApplyingSeparatingToggle')?.checked === true;
+        const aspectPhaseFilter = normalizeAspectPhaseFilter(document.getElementById('aspectPhaseFilterSelect')?.value || 'all');
         const showSpeed = document.getElementById('showSpeedToggle')?.checked !== false;
         const showStationary = document.getElementById('showStationaryToggle')?.checked !== false;
+        const houseNumberStyle = document.getElementById('houseNumberStyleSelect')?.value === 'roman' ? 'roman' : 'arabic';
+        const houseLabelsOutside = document.getElementById('houseLabelsOutsideToggle')?.checked === true;
 
         currentSettings.orientation = orientation === 'asc' ? 'asc' : 'aries';
+        currentSettings.aspectScope = ['all', 'major', 'minor'].includes(aspectScope) ? aspectScope : 'all';
         currentSettings.planetScale = planetScale;
         currentSettings.pointScale = pointScale;
         currentSettings.matrixRows = matrixRows;
         currentSettings.hiddenPlanets = hiddenPlanets;
         currentSettings.enabledAspectTypes = enabledAspectTypes;
         currentSettings.showApplyingSeparating = showApplyingSeparating;
+        currentSettings.aspectPhaseFilter = aspectPhaseFilter;
         currentSettings.showSpeed = showSpeed;
         currentSettings.showStationary = showStationary;
+        currentSettings.houseNumberStyle = houseNumberStyle;
+        currentSettings.houseLabelsOutside = houseLabelsOutside;
         localStorage.setItem('natalPlanetScale', String(planetScale));
         localStorage.setItem('natalPointScale', String(pointScale));
+        localStorage.setItem(ASPECT_PHASE_STORAGE_KEY, aspectPhaseFilter);
+        localStorage.setItem(HOUSE_NUMBER_STYLE_STORAGE_KEY, houseNumberStyle);
+        localStorage.setItem(HOUSE_LABELS_OUTSIDE_STORAGE_KEY, houseLabelsOutside ? 'true' : 'false');
+        chartWheel?.setHouseLabelOptions?.({
+            style: houseNumberStyle,
+            outside: houseLabelsOutside,
+        }, { redraw: false });
+        await applyNatalAspectScope(currentSettings.aspectScope, { persist: false });
         chartDataRenderer?.setDisplayPreferences?.({
             showSpeed,
             showStationary,
@@ -1074,14 +1229,16 @@ function buildChartRequestFromFormData(formData, houseSystem) {
  * Перерисовка карты с учётом скрытых планет
  */
 function redrawChart(chartData, hiddenPlanets, orientation = currentSettings.orientation) {
-    const filteredData = window.AstroPreferences?.filterChartDataByViewPreferences
+    const filteredByView = window.AstroPreferences?.filterChartDataByViewPreferences
         ? window.AstroPreferences.filterChartDataByViewPreferences(chartData, {
             matrixRows: getCurrentNatalMatrixRows(),
+            aspectScope: currentSettings.aspectScope || 'all',
             enabledAspectTypes: Array.isArray(currentSettings.enabledAspectTypes) && currentSettings.enabledAspectTypes.length
                 ? currentSettings.enabledAspectTypes
                 : NATAL_ASPECT_TYPES,
         })
         : chartData;
+    const filteredData = filterChartDataByAspectPhase(filteredByView);
 
     // Перерисовываем
     if (chartWheel) {
@@ -1090,12 +1247,17 @@ function redrawChart(chartData, hiddenPlanets, orientation = currentSettings.ori
             planets: currentSettings.planetScale,
             points: currentSettings.pointScale
         }, { redraw: false });
+        chartWheel.setHouseLabelOptions({
+            style: currentSettings.houseNumberStyle,
+            outside: currentSettings.houseLabelsOutside,
+        }, { redraw: false });
     }
     chartDataRenderer?.setDisplayPreferences?.({
         showSpeed: currentSettings.showSpeed,
         showStationary: currentSettings.showStationary,
         showApplyingSeparating: currentSettings.showApplyingSeparating,
     });
+    clearConfigurationHighlight();
     chartWheel.draw(filteredData);
     chartDataRenderer.render(filteredData);
     syncHoveredAspectToActiveSurface();
@@ -1134,9 +1296,9 @@ function initChartActions() {
         setChartActionsMenuOpen(false);
         try {
             await saveNatalSettingsAsAccountDefaults();
-            showChartToast('Account defaults updated', 'success');
+            showChartToast(t('page.chart.toasts.defaultsSaved'), 'success');
         } catch (error) {
-            showChartToast(error.message || 'Failed to update account defaults', 'error');
+            showChartToast(error.message || t('page.chart.toasts.defaultsSaveFailed'), 'error');
         }
     });
 
@@ -1159,9 +1321,9 @@ function initChartActions() {
             } else {
                 redrawChart(window.chartDataCache, currentSettings.hiddenPlanets || [], currentSettings.orientation);
             }
-            showChartToast('Defaults restored', 'success');
+            showChartToast(t('page.chart.toasts.defaultsRestored'), 'success');
         } catch (error) {
-            showChartToast(error.message || 'Failed to reset defaults', 'error');
+            showChartToast(error.message || t('page.chart.toasts.defaultsResetFailed'), 'error');
         }
     });
 
@@ -1169,6 +1331,147 @@ function initChartActions() {
         if (!menu.contains(event.target) && !toggle.contains(event.target)) {
             setChartActionsMenuOpen(false);
         }
+    });
+}
+
+function clearConfigurationHighlight() {
+    if (activeConfigurationCard) {
+        activeConfigurationCard.classList.remove('config-card--hovered');
+        activeConfigurationCard = null;
+    }
+
+    hideConfigPointTooltip();
+
+    document.querySelectorAll('.config-highlight-line').forEach((line) => {
+        line.classList.remove('config-highlight-line');
+    });
+    document.querySelectorAll('.config-highlight-planet').forEach((group) => {
+        group.classList.remove('config-highlight-planet');
+    });
+}
+
+function highlightConfigurationCard(card) {
+    if (!card || !chartWheel?.svg) return;
+    if (activeConfigurationCard === card) return;
+
+    clearConfigurationHighlight();
+    activeConfigurationCard = card;
+    activeConfigurationCard.classList.add('config-card--hovered');
+
+    const aspectKeys = String(card.dataset.configAspectKeys || '')
+        .split('|')
+        .map((value) => value.trim())
+        .filter(Boolean);
+    const planetNames = String(card.dataset.configPlanets || '')
+        .split('|')
+        .map((value) => value.trim())
+        .filter(Boolean);
+
+    aspectKeys.forEach((aspectKey) => {
+        const line = chartWheel.svg.querySelector(`.aspect-line[data-aspect-key="${escapeAttribute(aspectKey)}"]`);
+        if (line) {
+            line.classList.add('config-highlight-line');
+        }
+    });
+
+    planetNames.forEach((planetName) => {
+        const group = chartWheel.svg.querySelector(`.planet-group[data-planet="${escapeAttribute(planetName)}"]`);
+        if (group) {
+            group.classList.add('config-highlight-planet');
+        }
+    });
+}
+
+function ensureConfigPointTooltip() {
+    if (configPointTooltipEl?.isConnected) {
+        return configPointTooltipEl;
+    }
+
+    const host = document.querySelector('.chart-page') || document.body;
+    configPointTooltipEl = document.createElement('div');
+    configPointTooltipEl.className = 'chart-tooltip chart-tooltip--floating config-point-tooltip';
+    host.appendChild(configPointTooltipEl);
+    return configPointTooltipEl;
+}
+
+function showConfigPointTooltip(html, event) {
+    if (!html || !event) return;
+    const tooltip = ensureConfigPointTooltip();
+    tooltip.innerHTML = html;
+    tooltip.style.display = 'block';
+    moveConfigPointTooltip(event);
+}
+
+function moveConfigPointTooltip(event) {
+    if (!event) return;
+    const tooltip = ensureConfigPointTooltip();
+    if (!tooltip || tooltip.style.display === 'none') return;
+
+    const margin = 14;
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+    const tooltipWidth = tooltip.offsetWidth || 0;
+    const tooltipHeight = tooltip.offsetHeight || 0;
+
+    let left = event.clientX + margin;
+    let top = event.clientY + 10;
+
+    if (left + tooltipWidth > viewportWidth - 8) {
+        left = Math.max(8, event.clientX - tooltipWidth - margin);
+    }
+    if (top + tooltipHeight > viewportHeight - 8) {
+        top = Math.max(8, viewportHeight - tooltipHeight - 8);
+    }
+
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
+}
+
+function hideConfigPointTooltip() {
+    if (configPointTooltipEl) {
+        configPointTooltipEl.style.display = 'none';
+    }
+}
+
+function bindConfigurationHoverInteractions() {
+    const container = document.getElementById('configurationsContainer');
+    if (!container || container.dataset.configHoverReady === 'true') return;
+    container.dataset.configHoverReady = 'true';
+
+    container.addEventListener('mouseover', (event) => {
+        const card = event.target.closest('.config-card[data-config-planets]');
+        if (!card || !container.contains(card)) return;
+        highlightConfigurationCard(card);
+
+        const point = event.target.closest('.planet-tag--config-point[data-config-point-tooltip]');
+        if (point && container.contains(point)) {
+            showConfigPointTooltip(point.dataset.configPointTooltip, event);
+        }
+    });
+
+    container.addEventListener('mousemove', (event) => {
+        const point = event.target.closest('.planet-tag--config-point[data-config-point-tooltip]');
+        if (!point || !container.contains(point)) return;
+        moveConfigPointTooltip(event);
+    });
+
+    container.addEventListener('mouseout', (event) => {
+        const card = event.target.closest('.config-card[data-config-planets]');
+        if (!card || !container.contains(card)) return;
+
+        const point = event.target.closest('.planet-tag--config-point[data-config-point-tooltip]');
+        if (point && !point.contains(event.relatedTarget)) {
+            hideConfigPointTooltip();
+        }
+
+        if (card.contains(event.relatedTarget)) return;
+        if (activeConfigurationCard === card) {
+            clearConfigurationHighlight();
+        }
+    });
+
+    container.addEventListener('mouseleave', () => {
+        clearConfigurationHighlight();
     });
 }
 

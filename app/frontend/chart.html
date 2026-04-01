@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.chart.title"></title>
-    <link rel="stylesheet" href="bundles/chart.bundle.css?v=20260401-182519">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260401-182519">
-    <script>window.__APP_BUILD_ID__ = '20260401-182519';</script>
+    <link rel="stylesheet" href="bundles/chart.bundle.css?v=20260401-210701">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260401-210701">
+    <script>window.__APP_BUILD_ID__ = '20260401-210701';</script>
 </head>
 <body class="chart-page">
     <div class="page-loader" id="pageLoader">
@@ -34,8 +34,8 @@
                 </button>
                 <div class="chart-actions-menu hidden" id="chartActionsMenu" role="menu">
                     <button type="button" class="chart-action-item" id="editClientAction" role="menuitem" data-i18n="page.chart.actions.editClient"></button>
-                    <button type="button" class="chart-action-item" id="saveNatalDefaultsAction" role="menuitem">Save as account defaults</button>
-                    <button type="button" class="chart-action-item" id="resetDefaultsAction" role="menuitem">Reset to defaults</button>
+                    <button type="button" class="chart-action-item" id="saveNatalDefaultsAction" role="menuitem" data-i18n="page.chart.actions.saveDefaults"></button>
+                    <button type="button" class="chart-action-item" id="resetDefaultsAction" role="menuitem" data-i18n="page.chart.actions.resetDefaults"></button>
                 </div>
             </div>
         </div>
@@ -92,20 +92,6 @@
             </div>
 
             <div class="aspect-lines-legend">
-                <div class="aspect-legend-row aspect-legend-row--filters">
-                    <span class="legend-item clickable active" data-filter="all" id="filterAll">
-                        <span class="line-sample solid"></span>
-                        <span data-i18n="common.all"></span>
-                    </span>
-                    <span class="legend-item clickable" data-filter="major" id="filterMajor">
-                        <span class="line-sample solid"></span>
-                        <span data-i18n="common.major"></span>
-                    </span>
-                    <span class="legend-item clickable" data-filter="minor" id="filterMinor">
-                        <span class="line-sample dashed"></span>
-                        <span data-i18n="common.minor"></span>
-                    </span>
-                </div>
                 <div class="aspect-legend-row aspect-legend-row--colors">
                     <span class="legend-color" style="color:#ef4444">● <span data-i18n="page.chart.legend.tense"></span></span>
                     <span class="legend-color" style="color:#3b82f6">● <span data-i18n="page.chart.legend.harmonious"></span></span>
@@ -155,33 +141,59 @@
                 </div>
 
                 <div class="settings-section">
+                    <label class="settings-label" data-i18n="page.chart.settings.aspectScope.label"></label>
+                    <select id="aspectScopeSelect" class="settings-select">
+                        <option value="all" data-i18n="common.all"></option>
+                        <option value="major" data-i18n="common.major"></option>
+                        <option value="minor" data-i18n="common.minor"></option>
+                    </select>
+                </div>
+
+                <div class="settings-section">
                     <label class="settings-label" data-i18n="page.chart.settings.planetsAndPoints"></label>
                     <div class="natal-matrix-editor" id="natalMatrixEditor"></div>
                 </div>
 
                 <div class="settings-section">
-                    <label class="settings-label">Aspect Types</label>
+                    <label class="settings-label" data-i18n="page.accountSettings.fields.aspectTypes"></label>
                     <div class="settings-check-grid settings-check-grid--compact" id="aspectTypeToggles"></div>
                 </div>
 
                 <div class="settings-section">
-                    <label class="settings-label">Aspect Options</label>
+                    <label class="settings-label" data-i18n="page.chart.settings.aspectOptions"></label>
+                    <select id="aspectPhaseFilterSelect" class="settings-select">
+                        <option value="all" data-i18n="page.chart.settings.aspectPhase.all"></option>
+                        <option value="applying" data-i18n="page.chart.settings.aspectPhase.applying"></option>
+                        <option value="separating" data-i18n="page.chart.settings.aspectPhase.separating"></option>
+                    </select>
                     <label class="settings-check-option">
                         <input type="checkbox" id="showApplyingSeparatingToggle">
-                        <span>Show applying / separating</span>
+                        <span data-i18n="page.accountSettings.options.showApplyingSeparating"></span>
                     </label>
                 </div>
 
                 <div class="settings-section">
-                    <label class="settings-label">Table Options</label>
+                    <label class="settings-label" data-i18n="page.chart.settings.houseLabels.label"></label>
+                    <select id="houseNumberStyleSelect" class="settings-select">
+                        <option value="arabic" data-i18n="page.chart.settings.houseLabels.arabic"></option>
+                        <option value="roman" data-i18n="page.chart.settings.houseLabels.roman"></option>
+                    </select>
+                    <label class="settings-check-option">
+                        <input type="checkbox" id="houseLabelsOutsideToggle">
+                        <span data-i18n="page.chart.settings.houseLabels.outside"></span>
+                    </label>
+                </div>
+
+                <div class="settings-section">
+                    <label class="settings-label" data-i18n="page.chart.settings.tableOptions"></label>
                     <div class="settings-check-stack">
                         <label class="settings-check-option">
                             <input type="checkbox" id="showSpeedToggle">
-                            <span>Show speed</span>
+                            <span data-i18n="page.accountSettings.options.showSpeed"></span>
                         </label>
                         <label class="settings-check-option">
                             <input type="checkbox" id="showStationaryToggle">
-                            <span>Show stationary</span>
+                            <span data-i18n="page.accountSettings.options.showStationary"></span>
                         </label>
                     </div>
                 </div>
@@ -201,6 +213,7 @@
                             <tr>
                                 <th data-i18n="page.chart.table.houses.cusp"></th>
                                 <th data-i18n="page.chart.table.houses.sign"></th>
+                                <th data-i18n="page.chart.table.houses.ruler"></th>
                             </tr>
                         </thead>
                         <tbody id="housesTable"></tbody>
@@ -335,7 +348,7 @@
 
     <div id="chartToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/chart.bundle.js?v=20260401-182519"></script>
-    <script src="js/locale-switcher.js?v=20260401-182519"></script>
+    <script type="module" src="js/bundles/chart.bundle.js?v=20260401-210701"></script>
+    <script src="js/locale-switcher.js?v=20260401-210701"></script>
 </body>
 </html>

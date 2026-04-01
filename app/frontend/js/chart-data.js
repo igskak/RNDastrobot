@@ -54,6 +54,23 @@ class ChartDataRenderer {
         return translated === key ? (Symbols.aspectNamesRu[name] || name) : translated;
     }
 
+    getAspectSymbol(name) {
+        return Symbols.aspects?.[name]
+            || {
+                Sesquiquadrate: '⚼',
+                Vigintile: 'V',
+                Semi_Nonagon: 'SN',
+                Decile: 'D',
+                Nonagon: 'N',
+                Binonagon: 'BN',
+                Sentagon: 'SG',
+                Tridecile: 'TD',
+                Septile: '7',
+                Novile: '9',
+            }[name]
+            || '•';
+    }
+
     escapeHtml(value) {
         return String(value ?? '')
             .replace(/&/g, '&amp;')
@@ -67,6 +84,28 @@ class ChartDataRenderer {
         const key = 'page.natalFull.legend.motion.retrograde';
         const translated = this.t(key);
         return translated === key ? 'Retrograde' : translated;
+    }
+
+    getApplyingSeparatingLabel(aspect) {
+        if (!aspect) return '';
+
+        if (typeof aspect.applying === 'boolean') {
+            return aspect.applying
+                ? this.t('page.chart.settings.aspectPhase.applying')
+                : this.t('page.chart.settings.aspectPhase.separating');
+        }
+
+        const rawLabel = String(aspect.applying_separating || aspect.phase || '').trim();
+        if (!rawLabel) return '';
+
+        const normalized = rawLabel.toLowerCase();
+        if (normalized.includes('applic') || normalized.includes('сход')) {
+            return this.t('page.chart.settings.aspectPhase.applying');
+        }
+        if (normalized.includes('separ') || normalized.includes('расход')) {
+            return this.t('page.chart.settings.aspectPhase.separating');
+        }
+        return rawLabel;
     }
 
     retroIndicatorHtml(isRetrograde, variantClass = '') {
@@ -314,14 +353,26 @@ class ChartDataRenderer {
     renderHouses(houses) {
         if (!houses || !this.housesTable) return;
 
-        // Профессиональный формат: Куспид | Знак ГГ°ММ'СС"
+        const retroLookup = this.buildRetrogradeLookup(this.chartData?.planets || []);
+
         this.housesTable.innerHTML = houses.map(h => {
             const isAngular = [1, 4, 7, 10].includes(h.number);
             const degDMS = this.formatDMS(h.degree_in_sign);
+            const rulerPlanet = h.ruler_planet || '';
+            const rulerSymbol = Symbols.planets[rulerPlanet] || '';
+            const rulerName = rulerPlanet ? this.planetName(rulerPlanet) : this.t('common.notAvailable');
+            const rulerHouse = h.ruler_in_house ? ` ${h.ruler_in_house}` : '';
+            const rulerTitle = h.ruler_in_house
+                ? `${rulerName} • ${this.t('common.house')} ${h.ruler_in_house}`
+                : rulerName;
             return `
                 <tr id="row-house-${h.number}" class="${isAngular ? 'house-angular' : ''}">
                     <td class="mono">${h.number}${isAngular ? ' ★' : ''}</td>
                     <td class="mono"><span class="astro-symbol">${Symbols.signs[h.sign]}</span> ${degDMS}</td>
+                    <td class="mono house-ruler-cell" title="${this.escapeHtml(rulerTitle)}">
+                        <span class="astro-symbol">${rulerSymbol}</span>${this.retroIndicatorHtml(this.isBodyRetrograde(rulerPlanet, retroLookup), 'retro-indicator--micro')}
+                        <span class="house-ruler-house">${this.escapeHtml(rulerHouse)}</span>
+                    </td>
                 </tr>
             `;
         }).join('');
@@ -453,16 +504,7 @@ class ChartDataRenderer {
 
     getApplyingSeparatingBadge(aspect) {
         if (!this.showApplyingSeparating || !aspect) return '';
-
-        let label = '';
-        if (typeof aspect.applying === 'boolean') {
-            label = aspect.applying ? 'Applying' : 'Separating';
-        } else if (typeof aspect.applying_separating === 'string' && aspect.applying_separating.trim()) {
-            label = aspect.applying_separating.trim();
-        } else if (typeof aspect.phase === 'string' && aspect.phase.trim()) {
-            label = aspect.phase.trim();
-        }
-
+        const label = this.getApplyingSeparatingLabel(aspect);
         if (!label) return '';
         return `<div class="aspect-row-meta">${this.escapeHtml(label)}</div>`;
     }
@@ -682,19 +724,44 @@ class ChartDataRenderer {
 
             html += `<h3 style="margin-bottom: 12px; font-size: 15px;">${this.t('page.chart.configurations.title')}</h3>`;
             html += sortedConfigs.map(c => `
-                <div class="config-card">
-                    <h4>
-                        ${Symbols.configIcons[c.type] || '◆'}
-                        ${this.formatConfigType(c.type)}
-                    </h4>
-                    ${c.apex_planet ? `<p>${this.t('page.chart.configurations.apex', { planet: this.planetName(c.apex_planet) })}</p>` : ''}
-                    <p>${this.t('page.chart.configurations.strength', { value: c.strength_score.toFixed(1) })}</p>
-                    <div class="config-planets">
-                        ${c.planets_involved.map(p => `
-                            <span class="planet-tag">
-                                ${Symbols.planets[p] || ''} ${this.planetName(p)}
+                <div
+                    class="config-card config-card--compact"
+                    data-config-planets="${this.escapeHtml((c.planets_involved || []).join('|'))}"
+                    data-config-aspect-keys="${this.escapeHtml((c.aspects || []).map((aspect) => this.getAspectKey(aspect)).filter(Boolean).join('|'))}"
+                >
+                    <div class="config-card-head">
+                        <h4>
+                            ${Symbols.configIcons[c.type] || '◆'}
+                            ${this.formatConfigType(c.type)}
+                        </h4>
+                        <span class="config-strength-badge">${this.t('page.chart.configurations.strengthShort', { value: Math.round(c.strength_score || 0) })}</span>
+                    </div>
+                    <div class="config-planets config-planets--compact">
+                        ${c.apex_planet ? `
+                            <span
+                                class="config-apex-chip"
+                                title="${this.escapeHtml(this.t('page.chart.configurations.apex', { planet: this.planetName(c.apex_planet) }))}"
+                                aria-label="${this.escapeHtml(this.t('page.chart.configurations.apex', { planet: this.planetName(c.apex_planet) }))}"
+                            >
+                                <span class="config-apex-label" aria-hidden="true">▲</span>
+                                <span class="planet-tag planet-tag--icon-only planet-tag--config-point">
+                                    ${Symbols.planets[c.apex_planet] || ''}
+                                </span>
                             </span>
-                        `).join('')}
+                        ` : ''}
+                        ${c.planets_involved.map((planetName) => {
+                            const pointTooltip = this.buildConfigurationPointTooltip(planetName, c.aspects || []);
+                            const pointName = this.escapeHtml(this.planetName(planetName));
+                            const tooltipAttrs = pointTooltip
+                                ? ` data-config-point-tooltip="${this.escapeHtml(pointTooltip)}" data-config-point-name="${pointName}"`
+                                : '';
+                            const titleAttr = pointTooltip ? '' : ` title="${pointName}"`;
+                            return `
+                            <span class="planet-tag planet-tag--icon-only planet-tag--config-point"${titleAttr} aria-label="${pointName}"${tooltipAttrs}>
+                                ${Symbols.planets[planetName] || ''}
+                            </span>
+                        `;
+                        }).join('')}
                     </div>
                 </div>
             `).join('');
@@ -708,17 +775,23 @@ class ChartDataRenderer {
 
             html += `<h3 style="margin: 20px 0 12px; font-size: 15px;">${this.t('page.chart.configurations.stelliums')}</h3>`;
             html += sortedStelliums.map(s => `
-                <div class="config-card">
-                    <h4>
-                        ⭐ ${s.type === 'house'
-                            ? this.t('page.chart.configurations.houseLabel', { house: s.house_number })
-                            : this.signName(s.sign)}
-                    </h4>
-                    <p>${this.t('page.chart.configurations.planetCount', { count: s.count })}</p>
-                    <div class="config-planets">
-                        ${s.planets.map(p => `
-                            <span class="planet-tag">
-                                ${Symbols.planets[p] || ''} ${this.planetName(p)}
+                <div
+                    class="config-card config-card--compact"
+                    data-config-planets="${this.escapeHtml((s.planets || []).join('|'))}"
+                    data-config-aspect-keys=""
+                >
+                    <div class="config-card-head">
+                        <h4>
+                            ⭐ ${s.type === 'house'
+                                ? this.t('page.chart.configurations.houseLabel', { house: s.house_number })
+                                : this.signName(s.sign)}
+                        </h4>
+                        <span class="config-strength-badge">${this.t('page.chart.configurations.countShort', { count: s.count })}</span>
+                    </div>
+                    <div class="config-planets config-planets--compact">
+                        ${s.planets.map((planetName) => `
+                            <span class="planet-tag planet-tag--icon-only" title="${this.escapeHtml(this.planetName(planetName))}" aria-label="${this.escapeHtml(this.planetName(planetName))}">
+                                ${Symbols.planets[planetName] || ''}
                             </span>
                         `).join('')}
                     </div>
@@ -731,6 +804,41 @@ class ChartDataRenderer {
         }
         
         this.configsContainer.innerHTML = html;
+    }
+
+    buildConfigurationPointTooltip(planetName, aspects) {
+        if (!planetName || !Array.isArray(aspects) || !aspects.length) return '';
+
+        const normalizedPlanet = this.normalizeAspectBodyName(planetName);
+        const relatedAspects = aspects.filter((aspect) => {
+            const leftPlanet = this.normalizeAspectBodyName(aspect?.planet_1);
+            const rightPlanet = this.normalizeAspectBodyName(aspect?.planet_2);
+            return leftPlanet === normalizedPlanet || rightPlanet === normalizedPlanet;
+        });
+
+        if (!relatedAspects.length) return '';
+
+        return `
+            <div class="config-point-tooltip-title">${this.escapeHtml(this.planetName(planetName))}</div>
+            <div class="config-aspect-lines">
+                ${relatedAspects.map((aspect) => {
+                    const aspectTitle = `${this.planetName(aspect.planet_1)} ${this.aspectName(aspect.aspect_type)} ${this.planetName(aspect.planet_2)}`;
+                    const aspectColor = window.AstroPreferences?.getAspectColor
+                        ? window.AstroPreferences.getAspectColor(aspect.aspect_type, this.visualPreferences)
+                        : '#6b7280';
+                    return `
+                    <div class="config-aspect-line" title="${this.escapeHtml(aspectTitle)}">
+                        <span class="planet-tag planet-tag--icon-only" aria-hidden="true">${Symbols.planets[aspect.planet_1] || ''}</span>
+                        <span class="config-aspect-badge" style="--config-aspect-color:${this.escapeHtml(aspectColor)}" aria-label="${this.escapeHtml(this.aspectName(aspect.aspect_type))}">
+                            <span class="astro-symbol config-aspect-glyph">${this.getAspectSymbol(aspect.aspect_type)}</span>
+                        </span>
+                        <span class="planet-tag planet-tag--icon-only" aria-hidden="true">${Symbols.planets[aspect.planet_2] || ''}</span>
+                        <span class="config-aspect-orb">${Number(aspect.orb).toFixed(1)}°</span>
+                    </div>
+                `;
+                }).join('')}
+            </div>
+        `.trim();
     }
 
     formatConfigType(type) {

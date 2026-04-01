@@ -59,6 +59,26 @@
         direction: { ringAlpha: '26', cuspAlpha: 'AB', cuspOpacity: '0.7' },
         solar_return: { ringAlpha: '22', cuspAlpha: 'A0', cuspOpacity: '0.66' },
     };
+    const DEFAULT_ENABLED_ASPECT_TYPES = window.AstroPreferences?.DEFAULT_ENABLED_ASPECT_TYPES || [
+        'Conjunction',
+        'Opposition',
+        'Trine',
+        'Square',
+        'Sextile',
+        'Vigintile',
+        'Semi_Nonagon',
+        'Semisextile',
+        'Decile',
+        'Nonagon',
+        'Semisquare',
+        'Quintile',
+        'Binonagon',
+        'Sentagon',
+        'Tridecile',
+        'Sesquiquadrate',
+        'Biquintile',
+        'Quincunx',
+    ];
 
     // Colors
     const ELEMENT_COLORS = {
@@ -96,7 +116,7 @@
     let orientationMode = 'aries';
     let aspectFilter = 'major';
     let persistentMatrixRows = null;
-    let enabledAspectTypes = new Set(['Conjunction', 'Opposition', 'Trine', 'Square', 'Sextile']);
+    let enabledAspectTypes = new Set(DEFAULT_ENABLED_ASPECT_TYPES);
     let layerVisibility = {
         natal: true,
         transit: true,
@@ -176,10 +196,18 @@
         return rows?.[name] || { display: true, aspecting: true };
     }
 
-    function getAllowedAspectTypes() {
+    function getAllowedAspectTypes(availableAspectTypes = []) {
+        if (window.AstroPreferences?.resolveEnabledAspectTypesForScope) {
+            return window.AstroPreferences.resolveEnabledAspectTypesForScope({
+                enabledAspectTypes: [...enabledAspectTypes],
+                aspectScope: aspectFilter,
+                availableAspectTypes,
+            });
+        }
+
         return enabledAspectTypes.size
             ? enabledAspectTypes
-            : new Set(['Conjunction', 'Opposition', 'Trine', 'Square', 'Sextile']);
+            : new Set(DEFAULT_ENABLED_ASPECT_TYPES);
     }
 
     function el(tag, attrs, text) {
@@ -1910,12 +1938,15 @@
     }
 
     function getFilteredAspects(aspects) {
+        const allowedAspectTypes = getAllowedAspectTypes(
+            (aspects || []).map((aspect) => aspect?.aspectType).filter(Boolean)
+        );
         return aspects.filter(a => {
             if (!layerVisibility.natal) return false;
             if (a.method && !isLayerVisible(a.method)) return false;
             if (aspectFilter === 'major' && !a.isMajor) return false;
             if (aspectFilter === 'minor' && a.isMajor) return false;
-            if (!getAllowedAspectTypes().has(a.aspectType)) return false;
+            if (!allowedAspectTypes.has(a.aspectType)) return false;
             if (getBodyMatrixConfig(a.transitBody).display === false) return false;
             if (getBodyMatrixConfig(a.natalBody).display === false) return false;
             if (getBodyMatrixConfig(a.transitBody).aspecting === false) return false;
@@ -2023,7 +2054,7 @@
     function setEnabledAspectTypes(types) {
         const nextTypes = Array.isArray(types) && types.length
             ? types
-            : ['Conjunction', 'Opposition', 'Trine', 'Square', 'Sextile'];
+            : DEFAULT_ENABLED_ASPECT_TYPES;
         enabledAspectTypes = new Set(nextTypes);
         if (hasLastRender()) {
             rerenderLast();
@@ -2041,6 +2072,7 @@
         };
         enabledTransitBodies = new Set();
         enabledNatalBodies = new Set();
+        enabledAspectTypes = new Set(DEFAULT_ENABLED_ASPECT_TYPES);
         transitFiltersInitialized = false;
         natalFiltersInitialized = false;
         planetClickFilter = { role: null, planetName: null };

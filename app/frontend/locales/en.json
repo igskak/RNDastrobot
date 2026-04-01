@@ -25,6 +25,7 @@
       "Grand_Trine": "Grand trine",
       "Kite": "Kite",
       "Mystic_Rectangle": "Mystic rectangle",
+      "Open_Envelope": "Open Envelope",
       "Sail": "Sail",
       "Skewed_Sail": "Skewed sail",
       "Star_of_David": "Star of David",
@@ -100,7 +101,7 @@
       "Mercury": "Mercury",
       "Moon": "Moon",
       "Neptune": "Neptune",
-      "PartOfFortune": "Part of Fortune",
+      "PartOfFortune": "Pars",
       "Pluto": "Pluto",
       "Proserpina": "Proserpina",
       "Saturn": "Saturn",
@@ -349,7 +350,9 @@
       "actions": {
         "editClient": "Edit client data",
         "label": "Actions",
-        "openMenu": "Open chart actions"
+        "openMenu": "Open chart actions",
+        "resetDefaults": "Reset local settings",
+        "saveDefaults": "Save as local settings"
       },
       "aspects": {
         "settings": {
@@ -416,10 +419,12 @@
       },
       "configurations": {
         "apex": "Apex: {planet}",
+        "countShort": "Pl: {count}",
         "houseLabel": "House {house}",
         "planetCount": "Planets: {count}",
         "stelliums": "Stelliums",
         "strength": "Strength: {value}",
+        "strengthShort": "Str: {value}",
         "title": "Aspect configurations"
       },
       "empty": {
@@ -452,8 +457,23 @@
         "tables": "Tables"
       },
       "settings": {
+        "aspectOptions": "Aspect options",
+        "aspectPhase": {
+          "all": "All aspects",
+          "applying": "Applying only",
+          "separating": "Separating only"
+        },
+        "aspectScope": {
+          "label": "Aspect scope"
+        },
         "houseSystem": {
           "label": "House system"
+        },
+        "houseLabels": {
+          "arabic": "Arabic house numbers",
+          "label": "House numbering",
+          "outside": "Show cusps outside the wheel",
+          "roman": "Roman house numbers"
         },
         "orientation": {
           "aries": "Aries 0°",
@@ -462,16 +482,18 @@
         },
         "planetSize": "Planet size",
         "planetsAndPoints": "Planets and points",
-        "pointSize": "Point size"
+        "pointSize": "Point size",
+        "tableOptions": "Table options"
       },
       "table": {
         "aspects": {
-          "aspect": "Aspect",
+          "aspect": "Planets",
           "orb": "Orb",
-          "type": "Type"
+          "type": "Aspects"
         },
         "houses": {
           "cusp": "House cusp",
+          "ruler": "Ruler",
           "sign": "Sign"
         },
         "planets": {
@@ -487,6 +509,12 @@
         "grid": "Aspect grid",
         "houses": "Houses",
         "planets": "Planets"
+      },
+      "toasts": {
+        "defaultsResetFailed": "Failed to reset local settings",
+        "defaultsRestored": "Local settings reset",
+        "defaultsSaveFailed": "Failed to save local settings",
+        "defaultsSaved": "Local settings saved"
       },
       "title": "Natal Chart"
     },
@@ -1156,7 +1184,7 @@
           "dignity": "Dignity",
           "features": "Features",
           "house": "House",
-          "karma": "Karma",
+          "karma": "Status",
           "motion": "Motion",
           "planet": "Planet",
           "position": "Position",

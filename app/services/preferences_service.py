@@ -15,7 +15,26 @@ from app.services.preferences_runtime import PreferencesRuntimeResolver, normali
 PREFERENCE_VERSION = 1
 VIEW_TYPES = ('natal', 'biwheel', 'solar')
 CHART_KINDS = ('natal', 'solar')
-DEFAULT_ENABLED_ASPECT_TYPES = ['Conjunction', 'Opposition', 'Trine', 'Square', 'Sextile']
+DEFAULT_ENABLED_ASPECT_TYPES = [
+    'Conjunction',
+    'Opposition',
+    'Trine',
+    'Square',
+    'Sextile',
+    'Vigintile',
+    'Semi_Nonagon',
+    'Semisextile',
+    'Decile',
+    'Nonagon',
+    'Semisquare',
+    'Quintile',
+    'Binonagon',
+    'Sentagon',
+    'Tridecile',
+    'Sesquiquadrate',
+    'Biquintile',
+    'Quincunx',
+]
 DEFAULT_MATRIX_BODIES = [
     'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
     'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto',

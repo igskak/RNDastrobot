@@ -58,17 +58,25 @@ function formatPlanetCellHtml(bodyName, isRetrograde = false) {
     return `<span class="forecast-body-chip" title="${label}" aria-label="${label}" role="img">${symbolHtml}${retroIndicatorHtml(isRetrograde)}</span>`;
 }
 
-const FORECAST_ASPECT_TYPES = [
+const FORECAST_ASPECT_TYPES = window.AstroPreferences?.DEFAULT_ENABLED_ASPECT_TYPES || [
     'Conjunction',
     'Opposition',
     'Trine',
     'Square',
     'Sextile',
-    'Quincunx',
-    'Semisquare',
+    'Vigintile',
+    'Semi_Nonagon',
     'Semisextile',
+    'Decile',
+    'Nonagon',
+    'Semisquare',
     'Quintile',
+    'Binonagon',
+    'Sentagon',
+    'Tridecile',
+    'Sesquiquadrate',
     'Biquintile',
+    'Quincunx',
 ];
 const FORECAST_MATRIX_NAME_ALIASES = {
     TrueNorthNode: 'TrueNode',
@@ -245,6 +253,22 @@ function getForecastMatrixBodies() {
     return window.AstroPreferences?.MATRIX_BODIES || [];
 }
 
+function resolveForecastEnabledAspectTypes(availableAspectTypes = [], enabledAspectTypes = [], aspectScope = 'all') {
+    const helpers = getForecastPreferenceHelpers();
+    if (helpers.resolveEnabledAspectTypesForScope) {
+        return helpers.resolveEnabledAspectTypesForScope({
+            enabledAspectTypes,
+            aspectScope,
+            availableAspectTypes,
+        });
+    }
+
+    const fallbackTypes = Array.isArray(enabledAspectTypes) && enabledAspectTypes.length
+        ? enabledAspectTypes
+        : FORECAST_ASPECT_TYPES;
+    return new Set(fallbackTypes);
+}
+
 function getForecastViewState(viewType) {
     if (viewType === 'biwheel') {
         return {
@@ -341,7 +365,7 @@ function renderForecastMatrixEditor(containerId, rows) {
     `;
 }
 
-function renderForecastAspectTypeToggles(containerId, enabledAspectTypes = []) {
+function renderForecastAspectTypeToggles(containerId, enabledAspectTypes = [], aspectScope = 'all') {
     const container = document.getElementById(containerId);
     if (!container) return;
     const enabled = new Set(Array.isArray(enabledAspectTypes) && enabledAspectTypes.length
@@ -390,9 +414,9 @@ function syncForecastOrientationControls() {
     }
 
     renderForecastMatrixEditor('bwMatrixEditor', ForecastState.biwheelMatrixRows);
-    renderForecastAspectTypeToggles('bwAspectTypeToggles', ForecastState.biwheelEnabledAspectTypes);
+    renderForecastAspectTypeToggles('bwAspectTypeToggles', ForecastState.biwheelEnabledAspectTypes, ForecastState.biwheelAspectScope);
     renderForecastMatrixEditor('solarMatrixEditor', ForecastState.solarMatrixRows);
-    renderForecastAspectTypeToggles('solarAspectTypeToggles', ForecastState.solarEnabledAspectTypes);
+    renderForecastAspectTypeToggles('solarAspectTypeToggles', ForecastState.solarEnabledAspectTypes, ForecastState.solarAspectScope);
 }
 
 function readForecastMatrixRowsFromContainer(containerId, fallbackRows = {}) {
@@ -476,12 +500,15 @@ function getFilteredSolarViewData(data) {
         if (config?.display !== false) visibleBodies.add(body);
         if (config?.aspecting !== false) aspectingBodies.add(body);
     });
-    const enabledAspectTypes = new Set(
-        Array.isArray(ForecastState.solarEnabledAspectTypes) && ForecastState.solarEnabledAspectTypes.length
-            ? ForecastState.solarEnabledAspectTypes
-            : FORECAST_ASPECT_TYPES
-    );
     const scope = ForecastState.solarAspectScope || 'all';
+    const availableAspectTypes = (Array.isArray(data?.aspects) ? data.aspects : [])
+        .map((aspect) => aspect?.aspect_type)
+        .filter(Boolean);
+    const enabledAspectTypes = resolveForecastEnabledAspectTypes(
+        availableAspectTypes,
+        ForecastState.solarEnabledAspectTypes,
+        scope,
+    );
 
     return {
         planets: (Array.isArray(data?.planets) ? data.planets : []).filter((planet) => {

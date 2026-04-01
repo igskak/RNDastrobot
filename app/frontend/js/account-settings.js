@@ -2,17 +2,25 @@
     'use strict';
 
     const VIEW_IDS = ['natal', 'biwheel', 'solar'];
-    const DEFAULT_ASPECT_TYPES = [
+    const DEFAULT_ASPECT_TYPES = window.AstroPreferences?.DEFAULT_ENABLED_ASPECT_TYPES || [
         'Conjunction',
         'Opposition',
         'Trine',
         'Square',
         'Sextile',
-        'Quincunx',
-        'Semisquare',
+        'Vigintile',
+        'Semi_Nonagon',
         'Semisextile',
+        'Decile',
+        'Nonagon',
+        'Semisquare',
         'Quintile',
+        'Binonagon',
+        'Sentagon',
+        'Tridecile',
+        'Sesquiquadrate',
         'Biquintile',
+        'Quincunx',
     ];
     const ASPECT_SYMBOL_FALLBACKS = {
         Sesquiquadrate: '⚼',
