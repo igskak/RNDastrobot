@@ -232,10 +232,18 @@ class ChartDataRenderer {
             this.showApplyingSeparating = options.showApplyingSeparating === true;
         }
 
+        this.updatePlanetsTableColumns();
+
         if (this.chartData) {
             this.renderPlanets(this.chartData.planets);
             this.renderAspects(this.chartData.aspects);
         }
+    }
+
+    updatePlanetsTableColumns() {
+        const table = this.planetsTable?.closest('table');
+        if (!table) return;
+        table.classList.toggle('planets-table--speed-hidden', !this.showSpeed);
     }
 
     setVisualPreferences(visualPreferences = {}) {
@@ -284,6 +292,7 @@ class ChartDataRenderer {
 
     renderPlanets(planets) {
         if (!planets || !this.planetsTable) return;
+        this.updatePlanetsTableColumns();
 
         const sorted = [...planets].sort((a, b) => {
             const iA = ChartDataRenderer.PLANET_ORDER.indexOf(a.name);
@@ -298,7 +307,6 @@ class ChartDataRenderer {
             const metaParts = [];
             const speedChip = this.renderPlanetSpeedChip(p);
             const stationaryChip = this.renderStationaryChip(p);
-            if (this.showSpeed && speedChip) metaParts.push(speedChip);
             if (this.showStationary && stationaryChip) metaParts.push(stationaryChip);
             const metaHtml = metaParts.length
                 ? `<div class="planet-position-meta">${metaParts.join('')}</div>`
@@ -313,6 +321,7 @@ class ChartDataRenderer {
                         <div class="planet-position-main"><span class="astro-symbol">${Symbols.signs[p.sign]}</span> ${degDMS}</div>
                         ${metaHtml}
                     </td>
+                    <td class="planet-speed-cell mono">${this.showSpeed ? speedChip : ''}</td>
                     <td class="mono">${p.house}</td>
                 </tr>
             `;

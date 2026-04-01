@@ -373,6 +373,7 @@ class ChartWheel {
         const signOuterR = this.outerRadius - this.degreeRingWidth;
         const signInnerR = signOuterR - this.signRingWidth;
         const houseInnerR = signInnerR - this.houseRingWidth;
+        const lineOuterR = this.houseLabelsOutside ? this.outerRadius + 14 : signInnerR;
 
         // Круг домов (внутренняя граница)
         this.layers.houses.appendChild(this.createSvgElement('circle', {
@@ -404,8 +405,8 @@ class ChartWheel {
             cuspGroup.appendChild(this.createSvgElement('line', {
                 x1: this.center + lineInnerR * Math.cos(angle),
                 y1: this.center + lineInnerR * Math.sin(angle),
-                x2: this.center + signInnerR * Math.cos(angle),
-                y2: this.center + signInnerR * Math.sin(angle),
+                x2: this.center + lineOuterR * Math.cos(angle),
+                y2: this.center + lineOuterR * Math.sin(angle),
                 stroke: 'transparent',
                 'stroke-width': 10,
                 class: 'house-cusp-hit'
@@ -414,8 +415,8 @@ class ChartWheel {
             cuspGroup.appendChild(this.createSvgElement('line', {
                 x1: this.center + lineInnerR * Math.cos(angle),
                 y1: this.center + lineInnerR * Math.sin(angle),
-                x2: this.center + signInnerR * Math.cos(angle),
-                y2: this.center + signInnerR * Math.sin(angle),
+                x2: this.center + lineOuterR * Math.cos(angle),
+                y2: this.center + lineOuterR * Math.sin(angle),
                 stroke: isAngular ? '#6366f1' : '#c7d2db',
                 'stroke-width': isAngular ? 2.5 : 1,
                 class: 'house-cusp-line'
@@ -431,7 +432,7 @@ class ChartWheel {
             }
             const midAngle = this.longitudeToAngle(midLong) * Math.PI / 180;
             const textR = this.houseLabelsOutside
-                ? this.outerRadius + 8
+                ? lineOuterR + 6
                 : signInnerR - 10;
 
             cuspGroup.appendChild(this.createSvgElement('text', {
@@ -769,20 +770,20 @@ class ChartWheel {
     }
 
     drawAngleMarkerEnhanced(angle, radius, label, color) {
-        const outerR = this.outerRadius + 4;
+        const lineOuterR = this.houseLabelsOutside ? this.outerRadius + 14 : this.outerRadius - 0.5;
+        const labelR = this.outerRadius + (this.houseLabelsOutside ? 20 : 8);
 
         // Линия выносная за пределы круга
         this.layers.angles.appendChild(this.createSvgElement('line', {
             x1: this.center + this.aspectRadius * Math.cos(angle),
             y1: this.center + this.aspectRadius * Math.sin(angle),
-            x2: this.center + outerR * Math.cos(angle),
-            y2: this.center + outerR * Math.sin(angle),
+            x2: this.center + lineOuterR * Math.cos(angle),
+            y2: this.center + lineOuterR * Math.sin(angle),
             stroke: color,
             'stroke-width': label === 'ASC' || label === 'MC' ? 2.5 : 1.5
         }));
 
         // Подпись за кругом
-        const labelR = outerR + 4;
         const cos = Math.cos(angle);
         const anchor = Math.abs(cos) < 0.2
             ? 'middle'

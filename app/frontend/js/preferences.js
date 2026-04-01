@@ -176,23 +176,58 @@
         return normalized.length ? normalized : [...fallback];
     }
 
+    function getAspectFamilyTypes(aspectScope = 'all', availableAspectTypes = []) {
+        const knownAspectTypes = getKnownAspectTypes(availableAspectTypes);
+        if (aspectScope === 'all') {
+            return knownAspectTypes;
+        }
+        return knownAspectTypes.filter((aspectType) => (
+            aspectScope === 'major'
+                ? MAJOR_ASPECT_TYPES.includes(aspectType)
+                : !MAJOR_ASPECT_TYPES.includes(aspectType)
+        ));
+    }
+
+    function isExactAspectFamilySelection(enabledAspectTypes = [], aspectScope = 'all', availableAspectTypes = []) {
+        const familyAspectTypes = getAspectFamilyTypes(aspectScope, availableAspectTypes);
+        const normalized = normalizeEnabledAspectTypes(enabledAspectTypes, familyAspectTypes);
+        return (
+            normalized.length === familyAspectTypes.length
+            && normalized.every((aspectType) => familyAspectTypes.includes(aspectType))
+        );
+    }
+
+    function healEnabledAspectTypesForScope(enabledAspectTypes = [], aspectScope = 'all', availableAspectTypes = []) {
+        const knownAspectTypes = getKnownAspectTypes(availableAspectTypes);
+        const normalized = normalizeEnabledAspectTypes(enabledAspectTypes, knownAspectTypes);
+
+        if (aspectScope !== 'all') {
+            return normalized;
+        }
+
+        if (
+            isExactAspectFamilySelection(normalized, 'major', knownAspectTypes)
+            || isExactAspectFamilySelection(normalized, 'minor', knownAspectTypes)
+        ) {
+            return [...knownAspectTypes];
+        }
+
+        return normalized;
+    }
+
     function resolveEnabledAspectTypesForScope({
         enabledAspectTypes,
         aspectScope = 'all',
         availableAspectTypes = [],
     } = {}) {
         const knownAspectTypes = getKnownAspectTypes(availableAspectTypes);
-        const normalized = normalizeEnabledAspectTypes(enabledAspectTypes, knownAspectTypes);
+        const normalized = healEnabledAspectTypesForScope(enabledAspectTypes, aspectScope, knownAspectTypes);
 
         if (aspectScope === 'all') {
             return new Set(normalized);
         }
 
-        const scopedAspectTypes = knownAspectTypes.filter((aspectType) => (
-            aspectScope === 'major'
-                ? MAJOR_ASPECT_TYPES.includes(aspectType)
-                : !MAJOR_ASPECT_TYPES.includes(aspectType)
-        ));
+        const scopedAspectTypes = getAspectFamilyTypes(aspectScope, knownAspectTypes);
         const intersection = normalized.filter((aspectType) => scopedAspectTypes.includes(aspectType));
 
         if (intersection.length) {
@@ -426,6 +461,9 @@
         ensureMatrixRows,
         normalizeMatrixBodyName,
         normalizeEnabledAspectTypes,
+        getAspectFamilyTypes,
+        isExactAspectFamilySelection,
+        healEnabledAspectTypesForScope,
         normalizeOrbPairStrategy,
         normalizeViewSettings,
         normalizeMethodologySettings,

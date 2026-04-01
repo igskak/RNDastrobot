@@ -13,6 +13,7 @@ from app.services.special_points_service import SpecialPointsService
 from app.services.karmic_analysis_service import KarmicAnalysisService
 from app.services.dignity_service import DignityService
 from app.services.planet_characteristics_service import PlanetCharacteristicsService
+from app.services.aspect_service import AspectService
 from app.utils.constants import get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds
 from app.database.repositories import UserRepository, NatalChartRepository
 from app.database.models import NatalAspect, NatalConfigurationAspect
@@ -1124,17 +1125,60 @@ class NatalChartService:
         # ДОДАЄМО НОВІ ДАНІ (пункт 3.3 спецификації)
         # Все данные уже eager-loaded через get_user_with_natal_chart()
 
-        # 1. Аспекти (eager-loaded через user.natal_aspects)
-        result['aspects'] = [
-            self._enrich_aspect_for_display({
+        phase_objects = [
+            {
+                'name': planet['name'],
+                'longitude': planet['longitude'],
+                'speed': planet.get('speed') or 0.0,
+                'type': 'planet',
+            }
+            for planet in result['planets']
+        ]
+        phase_objects.extend(
+            {
+                'name': point['name'],
+                'longitude': point['longitude'],
+                'speed': 0.0,
+                'type': 'special_point',
+            }
+            for point in result['special_points'].values()
+        )
+        phase_objects.extend(
+            {
+                'name': angle['name'],
+                'longitude': angle['longitude'],
+                'speed': 0.0,
+                'type': 'angle',
+            }
+            for angle in result['angles'].values()
+            if angle.get('longitude') is not None
+        )
+
+        aspect_phase_service = AspectService(db_session)
+        raw_aspects = [
+            {
+                'aspect_id': a.aspect_id,
                 'planet_1': a.planet_1,
                 'planet_2': a.planet_2,
                 'aspect_type': a.aspect_type,
                 'orb': float(a.orb),
                 'is_major': a.is_major,
-                'harmonic_type': a.harmonic_type
-            })
+                'harmonic_type': a.harmonic_type,
+                'is_partile': a.is_partile or False,
+            }
             for a in user.natal_aspects
+        ]
+        annotated_aspects = aspect_phase_service.annotate_aspects_with_phase(raw_aspects, phase_objects)
+        annotated_aspects_by_id = {aspect['aspect_id']: aspect for aspect in annotated_aspects}
+
+        # 1. Аспекти (eager-loaded через user.natal_aspects)
+        result['aspects'] = [
+            self._enrich_aspect_for_display({
+                key: value
+                for key, value in aspect.items()
+                if key != 'aspect_id'
+            })
+            for aspect in annotated_aspects
         ]
 
         # 2. Аспектні конфігурації з деталями аспектів
@@ -1164,6 +1208,7 @@ class NatalChartService:
                         'planet_2': aspect.planet_2,
                         'aspect_type': aspect.aspect_type,
                         'orb': float(aspect.orb),
+                        'applying': annotated_aspects_by_id.get(aspect.aspect_id, {}).get('applying'),
                         'orb_planet_1': details['orb_planet_1'],
                         'orb_planet_2': details['orb_planet_2'],
                         'min_orb': details['min_orb'],

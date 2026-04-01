@@ -256,7 +256,7 @@
       "options": {
         "orientationAries": "Овен 0°",
       "orientationAsc": "Асцендент",
-      "showApplyingSeparating": "Показывать аппликацию / сепарацию",
+      "showApplyingSeparating": "Показывать сходящиеся / расходящиеся",
       "showSpeed": "Показывать скорость",
       "showStationary": "Показывать стационарность"
     },
@@ -459,9 +459,9 @@
       "settings": {
         "aspectOptions": "Параметры аспектов",
         "aspectPhase": {
-          "all": "Все аспекты",
-          "applying": "Только сходящиеся",
-          "separating": "Только расходящиеся"
+          "all": "Все",
+          "applying": "Сходящиеся",
+          "separating": "Расходящиеся"
         },
         "aspectScope": {
           "label": "Набор аспектов"
@@ -499,6 +499,7 @@
         "planets": {
           "house": "Дом",
           "position": "Положение",
+          "speed": "Скорость",
           "symbol": "Символ"
         }
       },

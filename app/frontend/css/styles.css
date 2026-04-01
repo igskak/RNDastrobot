@@ -960,6 +960,58 @@ input[type="number"] {
     padding: 0 0.2em;
 }
 
+.planet-position-main {
+    white-space: nowrap;
+}
+
+.planet-position-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.planet-meta-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 18px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: rgba(230, 224, 212, 0.8);
+    color: var(--text-secondary);
+    font-size: 10px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.planet-meta-chip--stationary {
+    background: rgba(212, 192, 132, 0.22);
+    color: var(--accent);
+}
+
+.planet-meta-chip--speed-slow {
+    background: rgba(59, 130, 246, 0.14);
+    color: #2563eb;
+}
+
+.planet-meta-chip--speed-fast {
+    background: rgba(239, 68, 68, 0.14);
+    color: #dc2626;
+}
+
+.planet-speed-col,
+.planet-speed-cell {
+    width: 72px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.planets-table--speed-hidden .planet-speed-col,
+.planets-table--speed-hidden .planet-speed-cell {
+    display: none;
+}
+
 /* Angular houses */
 .house-angular td {
     font-weight: 600;

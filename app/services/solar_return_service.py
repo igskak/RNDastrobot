@@ -259,6 +259,35 @@ class SolarReturnService:
         aspect_service = AspectService(self.db)
         return aspect_service.calculate_aspects_for_objects(objects, user_id=user_id)
 
+    def _annotate_payload_aspects_with_phase(self, payload: Dict) -> Dict:
+        """Дообогатить сохранённый payload соляра фазой аспектов, если её ещё нет."""
+        if not payload or not payload.get('aspects'):
+            return payload
+
+        objects = [
+            {
+                'name': planet.get('name'),
+                'longitude': planet.get('longitude'),
+                'speed': planet.get('speed') or 0.0,
+                'type': 'planet',
+            }
+            for planet in payload.get('planets', [])
+            if planet.get('name') and planet.get('longitude') is not None
+        ]
+        objects.extend(
+            {
+                'name': angle.get('name') or angle_name,
+                'longitude': angle.get('longitude'),
+                'speed': 0.0,
+                'type': 'angle',
+            }
+            for angle_name, angle in (payload.get('angles') or {}).items()
+            if angle.get('longitude') is not None
+        )
+
+        payload['aspects'] = AspectService(self.db).annotate_aspects_with_phase(payload['aspects'], objects)
+        return payload
+
     def _save_solar_return(self, user_id: UUID, year: int, result: Dict) -> UUID:
         """Сохранить соляр в БД"""
         import json
@@ -318,7 +347,7 @@ class SolarReturnService:
         if solar and solar.chart_data:
             payload = json.loads(solar.chart_data)
             payload['solar_id'] = str(solar.solar_id)
-            return payload
+            return self._annotate_payload_aspects_with_phase(payload)
         return None
 
     def list_solar_returns(self, user_id: UUID) -> List[Dict]:

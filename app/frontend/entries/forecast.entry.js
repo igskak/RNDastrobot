@@ -9,6 +9,7 @@ import '../js/place-autocomplete.js';
 import '../js/natal-wheel-data.js';
 import '../js/chart-wheel.js';
 import '../js/chart-data.js';
+import '../js/aspect-phase.js';
 import '../js/forecast-display-mode.js';
 import '../js/forecast-timeline-utils.js';
 import '../js/forecast-timeline.js';

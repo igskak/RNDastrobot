@@ -127,6 +127,25 @@ class TestAspectService:
         assert ('Sun', 'Moon', 'Trine') in pairs or ('Moon', 'Sun', 'Trine') in pairs
         assert ('Sun', 'Mars', 'Square') in pairs or ('Mars', 'Sun', 'Square') in pairs
 
+    def test_calculate_aspects_for_objects_marks_applying_and_separating(self, db_session: Session):
+        """Тест серверного определения сходящегося и расходящегося аспекта."""
+        aspect_service = AspectService(db_session)
+        objects = [
+            {'name': 'Sun', 'longitude': 0.0, 'speed': 1.0, 'type': 'planet'},
+            {'name': 'Moon', 'longitude': 80.0, 'speed': 13.0, 'type': 'planet'},
+            {'name': 'Mars', 'longitude': 100.0, 'speed': 2.0, 'type': 'planet'},
+        ]
+
+        aspects = aspect_service.calculate_aspects_for_objects(objects)
+        aspects_by_pair = {
+            frozenset((aspect['planet_1'], aspect['planet_2'])): aspect
+            for aspect in aspects
+            if aspect['aspect_type'] == 'Square'
+        }
+
+        assert aspects_by_pair[frozenset(('Sun', 'Moon'))]['applying'] is True
+        assert aspects_by_pair[frozenset(('Sun', 'Mars'))]['applying'] is False
+
 
 class TestConfigurationService:
     """Тести для ConfigurationService"""

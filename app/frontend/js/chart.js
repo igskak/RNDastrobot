@@ -101,7 +101,9 @@ function escapeAttribute(value) {
 }
 
 function normalizeAspectPhaseFilter(value) {
-    return value === 'applying' || value === 'separating' ? value : 'all';
+    return window.AstroAspectPhase?.normalizeAspectPhaseFilter
+        ? window.AstroAspectPhase.normalizeAspectPhaseFilter(value)
+        : (value === 'applying' || value === 'separating' ? value : 'all');
 }
 
 function readSavedAspectPhaseFilter() {
@@ -164,47 +166,21 @@ function buildAspectPairKey(left, right) {
 }
 
 function getAspectPhaseState(aspect) {
-    if (!aspect) return 'all';
-    if (typeof aspect.applying === 'boolean') {
-        return aspect.applying ? 'applying' : 'separating';
-    }
-    const rawPhase = String(aspect.applying_separating || aspect.phase || '').trim().toLowerCase();
-    if (!rawPhase) return 'all';
-    if (rawPhase.includes('applic')) return 'applying';
-    if (rawPhase.includes('сход')) return 'applying';
-    if (rawPhase.includes('separ')) return 'separating';
-    if (rawPhase.includes('расход')) return 'separating';
-    return 'all';
+    return window.AstroAspectPhase?.getAspectPhaseState
+        ? window.AstroAspectPhase.getAspectPhaseState(aspect)
+        : 'all';
 }
 
 function aspectMatchesPhaseFilter(aspect, filter = currentSettings.aspectPhaseFilter) {
-    const normalizedFilter = normalizeAspectPhaseFilter(filter);
-    if (normalizedFilter === 'all') return true;
-    return getAspectPhaseState(aspect) === normalizedFilter;
+    return window.AstroAspectPhase?.aspectMatchesPhaseFilter
+        ? window.AstroAspectPhase.aspectMatchesPhaseFilter(aspect, filter)
+        : true;
 }
 
 function filterChartDataByAspectPhase(chartData) {
-    const aspectPhaseFilter = normalizeAspectPhaseFilter(currentSettings.aspectPhaseFilter);
-    if (!chartData || aspectPhaseFilter === 'all') return chartData;
-
-    const filteredAspects = (chartData.aspects || []).filter((aspect) => aspectMatchesPhaseFilter(aspect, aspectPhaseFilter));
-    const filteredConfigurations = (chartData.aspect_configurations || [])
-        .map((configuration) => {
-            if (!Array.isArray(configuration?.aspects)) return configuration;
-            const visibleAspects = configuration.aspects.filter((aspect) => aspectMatchesPhaseFilter(aspect, aspectPhaseFilter));
-            if (!visibleAspects.length) return null;
-            return {
-                ...configuration,
-                aspects: visibleAspects,
-            };
-        })
-        .filter(Boolean);
-
-    return {
-        ...chartData,
-        aspects: filteredAspects,
-        aspect_configurations: filteredConfigurations,
-    };
+    return window.AstroAspectPhase?.filterChartDataByAspectPhase
+        ? window.AstroAspectPhase.filterChartDataByAspectPhase(chartData, currentSettings.aspectPhaseFilter)
+        : chartData;
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -465,9 +441,12 @@ function applyChartState(rawChartData, options = {}) {
     );
 
     window.chartDataRawCache = ensuredRawChartData;
-    window.chartDataCache = window.NatalWheelData?.prepareNatalWheelData
+    const preparedChartData = window.NatalWheelData?.prepareNatalWheelData
         ? window.NatalWheelData.prepareNatalWheelData(ensuredRawChartData, { houseSystem })
         : ensuredRawChartData;
+    window.chartDataCache = window.AstroAspectPhase?.enrichChartDataWithAspectPhases
+        ? window.AstroAspectPhase.enrichChartDataWithAspectPhases(preparedChartData)
+        : preparedChartData;
 
     AstroAPI.saveChartToSession(ensuredRawChartData);
     AstroAPI.saveFormData(AstroAPI.chartToFormData(ensuredRawChartData, { houseSystem }));
@@ -611,9 +590,15 @@ function applyResolvedNatalPreferences(payload, { redraw = true } = {}) {
     currentSettings.houseSystem = normalizeHouseSystemCode(payload.chart_meta?.house_system || currentSettings.houseSystem);
     currentSettings.orientation = resolved.view_options?.orientation === 'asc' ? 'asc' : 'aries';
     currentSettings.aspectScope = resolved.aspects?.scope || 'all';
-    currentSettings.enabledAspectTypes = Array.isArray(resolved.aspects?.enabled_types) && resolved.aspects.enabled_types.length
-        ? [...resolved.aspects.enabled_types]
-        : [...NATAL_ASPECT_TYPES];
+    currentSettings.enabledAspectTypes = window.AstroPreferences?.healEnabledAspectTypesForScope
+        ? window.AstroPreferences.healEnabledAspectTypesForScope(
+            resolved.aspects?.enabled_types,
+            currentSettings.aspectScope,
+            NATAL_ASPECT_TYPES,
+        )
+        : (Array.isArray(resolved.aspects?.enabled_types) && resolved.aspects.enabled_types.length
+            ? [...resolved.aspects.enabled_types]
+            : [...NATAL_ASPECT_TYPES]);
     currentSettings.showApplyingSeparating = resolved.aspects?.show_applying_separating === true;
     currentSettings.matrixRows = helpers.ensureMatrixRows
         ? helpers.ensureMatrixRows(resolved.matrix?.rows || {})
@@ -1097,7 +1082,13 @@ async function applySettings() {
         currentSettings.pointScale = pointScale;
         currentSettings.matrixRows = matrixRows;
         currentSettings.hiddenPlanets = hiddenPlanets;
-        currentSettings.enabledAspectTypes = enabledAspectTypes;
+        currentSettings.enabledAspectTypes = window.AstroPreferences?.healEnabledAspectTypesForScope
+            ? window.AstroPreferences.healEnabledAspectTypesForScope(
+                enabledAspectTypes,
+                currentSettings.aspectScope,
+                NATAL_ASPECT_TYPES,
+            )
+            : enabledAspectTypes;
         currentSettings.showApplyingSeparating = showApplyingSeparating;
         currentSettings.aspectPhaseFilter = aspectPhaseFilter;
         currentSettings.showSpeed = showSpeed;

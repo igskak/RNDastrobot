@@ -18,9 +18,35 @@ class AspectService:
     def __init__(self, db_session: Session):
         self.db = db_session
         self._aspect_types_cache: Optional[List[RefAspectType]] = None
+        self._aspect_angles_cache: Optional[Dict[str, float]] = None
         self._planet_orbs_cache: Optional[Dict[Tuple[str, str], float]] = None
         self._base_orbs_cache: Optional[Dict[str, float]] = None
         self.preferences_runtime = PreferencesRuntimeResolver(db_session)
+
+    @staticmethod
+    def _normalize_angle(value: float) -> float:
+        normalized = float(value) % 360.0
+        return normalized + 360.0 if normalized < 0 else normalized
+
+    @classmethod
+    def _angular_distance(cls, longitude_a: float, longitude_b: float) -> float:
+        diff = abs(cls._normalize_angle(longitude_a) - cls._normalize_angle(longitude_b))
+        return 360.0 - diff if diff > 180.0 else diff
+
+    @classmethod
+    def _build_phase_objects_lookup(cls, objects: List[Dict]) -> Dict[str, Dict[str, float]]:
+        lookup: Dict[str, Dict[str, float]] = {}
+        for obj in objects or []:
+            name = str(obj.get('name') or '').strip()
+            longitude = obj.get('longitude')
+            if not name or longitude is None:
+                continue
+            speed = obj.get('speed')
+            lookup[name] = {
+                'longitude': cls._normalize_angle(float(longitude)),
+                'speed': float(speed) if speed is not None else 0.0,
+            }
+        return lookup
     
     def calculate_aspects(self, user_id: UUID) -> List[Dict]:
         """
@@ -57,7 +83,7 @@ class AspectService:
 
         Args:
             objects: Список об'єктів у форматі
-                {'name': str, 'longitude': float, 'type': str}
+                {'name': str, 'longitude': float, 'type': str, 'speed': float?}
             filter_trivial: Прибрати математично тривіальні опозиції
 
         Returns:
@@ -100,7 +126,8 @@ class AspectService:
             objects.append({
                 'name': planet.planet,
                 'longitude': float(planet.degree),
-                'type': 'planet'
+                'type': 'planet',
+                'speed': float(planet.speed) if planet.speed is not None else 0.0,
             })
         
         # Спеціальні точки
@@ -112,7 +139,8 @@ class AspectService:
             objects.append({
                 'name': point.point,
                 'longitude': float(point.degree),
-                'type': 'special_point'
+                'type': 'special_point',
+                'speed': 0.0,
             })
         
         # Кути (ASC, MC, IC, DSC)
@@ -122,10 +150,10 @@ class AspectService:
         
         if angles:
             objects.extend([
-                {'name': 'ASC', 'longitude': float(angles.asc_degree), 'type': 'angle'},
-                {'name': 'MC', 'longitude': float(angles.mc_degree), 'type': 'angle'},
-                {'name': 'IC', 'longitude': float(angles.ic_degree), 'type': 'angle'},
-                {'name': 'DSC', 'longitude': float(angles.dsc_degree), 'type': 'angle'},
+                {'name': 'ASC', 'longitude': float(angles.asc_degree), 'type': 'angle', 'speed': 0.0},
+                {'name': 'MC', 'longitude': float(angles.mc_degree), 'type': 'angle', 'speed': 0.0},
+                {'name': 'IC', 'longitude': float(angles.ic_degree), 'type': 'angle', 'speed': 0.0},
+                {'name': 'DSC', 'longitude': float(angles.dsc_degree), 'type': 'angle', 'speed': 0.0},
             ])
         
         return objects
@@ -135,6 +163,15 @@ class AspectService:
         if self._aspect_types_cache is None:
             self._aspect_types_cache = self.db.query(RefAspectType).all()
         return self._aspect_types_cache
+
+    def _get_aspect_angles(self) -> Dict[str, float]:
+        """Получить точные углы аспектов из справочника."""
+        if self._aspect_angles_cache is None:
+            self._aspect_angles_cache = {
+                aspect.aspect_type: float(aspect.exact_angle)
+                for aspect in self._get_aspect_types()
+            }
+        return self._aspect_angles_cache
 
     def _get_planet_orbs(self) -> Dict[Tuple[str, str], float]:
         """
@@ -207,6 +244,68 @@ class AspectService:
 
         # ГЛАВНОЕ ПРАВИЛО: берем больший орбис
         return max(orb_a, orb_b)
+
+    def infer_aspect_phase(
+        self,
+        aspect_data: Dict,
+        objects_lookup: Dict[str, Dict[str, float]],
+    ) -> Optional[bool]:
+        """
+        Определить фазу аспекта: True = applying, False = separating.
+
+        Возвращает None, если фазу нельзя надёжно вычислить.
+        """
+        if not aspect_data or not objects_lookup:
+            return None
+
+        exact_angle = self._get_aspect_angles().get(aspect_data.get('aspect_type'))
+        if exact_angle is None:
+            return None
+
+        body_a = objects_lookup.get(aspect_data.get('planet_1'))
+        body_b = objects_lookup.get(aspect_data.get('planet_2'))
+        if not body_a or not body_b:
+            return None
+
+        current_distance = self._angular_distance(body_a['longitude'], body_b['longitude'])
+        current_deviation = abs(current_distance - exact_angle)
+
+        # Маленький шаг вперёд по времени позволяет стабильно понять,
+        # сходятся ли тела к точному аспекту или уже расходятся.
+        step_days = 1.0 / 24.0
+        future_distance = self._angular_distance(
+            body_a['longitude'] + (body_a['speed'] * step_days),
+            body_b['longitude'] + (body_b['speed'] * step_days),
+        )
+        future_deviation = abs(future_distance - exact_angle)
+
+        if abs(future_deviation - current_deviation) < 1e-9:
+            return None
+        return future_deviation < current_deviation
+
+    def annotate_aspects_with_phase(self, aspects: List[Dict], objects: List[Dict]) -> List[Dict]:
+        """Обогатить аспекты вычисленным applying/separating."""
+        if not aspects:
+            return aspects
+
+        objects_lookup = self._build_phase_objects_lookup(objects)
+        if not objects_lookup:
+            return aspects
+
+        annotated_aspects: List[Dict] = []
+        for aspect in aspects:
+            if isinstance(aspect.get('applying'), bool):
+                annotated_aspects.append(aspect)
+                continue
+            applying = self.infer_aspect_phase(aspect, objects_lookup)
+            if applying is None:
+                annotated_aspects.append(aspect)
+                continue
+            annotated_aspects.append({
+                **aspect,
+                'applying': applying,
+            })
+        return annotated_aspects
     
     def _calculate_aspect_between(
         self,
@@ -267,13 +366,22 @@ class AspectService:
 
             # 5. Проверка: если отклонение <= допустимого орбиса
             if deviation <= max_orb:
+                applying = self.infer_aspect_phase(
+                    {
+                        'planet_1': obj1['name'],
+                        'planet_2': obj2['name'],
+                        'aspect_type': aspect_type.aspect_type,
+                    },
+                    self._build_phase_objects_lookup([obj1, obj2]),
+                )
                 return {
                     'planet_1': obj1['name'],
                     'planet_2': obj2['name'],
                     'aspect_type': aspect_type.aspect_type,
                     'orb': deviation,  # Фактический орбис (отклонение от точного аспекта)
                     'is_major': aspect_type.class_ == 'major',
-                    'harmonic_type': aspect_type.character
+                    'harmonic_type': aspect_type.character,
+                    'applying': applying,
                 }
 
         return None

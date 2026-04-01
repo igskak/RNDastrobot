@@ -200,6 +200,7 @@ class AspectInfo(BaseModel):
     aspect_type: str
     orb: float
     is_major: bool
+    applying: Optional[bool] = Field(default=None, description="True = сходящийся, False = расходящийся")
     harmonic_type: Optional[str] = None
     is_partile: Optional[bool] = Field(default=False, description="Партильный (точный) аспект")
 
@@ -210,6 +211,7 @@ class AspectInConfiguration(BaseModel):
     planet_2: str
     aspect_type: str
     orb: float
+    applying: Optional[bool] = Field(default=None, description="True = сходящийся, False = расходящийся")
     orb_planet_1: float
     orb_planet_2: float
     min_orb: float

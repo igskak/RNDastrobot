@@ -255,6 +255,17 @@ function getForecastMatrixBodies() {
 
 function resolveForecastEnabledAspectTypes(availableAspectTypes = [], enabledAspectTypes = [], aspectScope = 'all') {
     const helpers = getForecastPreferenceHelpers();
+    if (helpers.healEnabledAspectTypesForScope) {
+        const healed = helpers.healEnabledAspectTypesForScope(enabledAspectTypes, aspectScope, availableAspectTypes);
+        if (helpers.resolveEnabledAspectTypesForScope) {
+            return helpers.resolveEnabledAspectTypesForScope({
+                enabledAspectTypes: healed,
+                aspectScope,
+                availableAspectTypes,
+            });
+        }
+        return new Set(healed);
+    }
     if (helpers.resolveEnabledAspectTypesForScope) {
         return helpers.resolveEnabledAspectTypesForScope({
             enabledAspectTypes,
@@ -445,8 +456,15 @@ function readForecastAspectTypesFromContainer(containerId, fallbackTypes = FOREC
 
 async function applyBiwheelSettingsFromControls({ persist = true } = {}) {
     ForecastState.biwheelMatrixRows = readForecastMatrixRowsFromContainer('bwMatrixEditor', ForecastState.biwheelMatrixRows);
-    ForecastState.biwheelEnabledAspectTypes = readForecastAspectTypesFromContainer('bwAspectTypeToggles', ForecastState.biwheelEnabledAspectTypes);
     ForecastState.biwheelAspectScope = document.getElementById('bwAspectScopeSelect')?.value || ForecastState.biwheelAspectScope || 'major';
+    const nextBiwheelAspectTypes = readForecastAspectTypesFromContainer('bwAspectTypeToggles', ForecastState.biwheelEnabledAspectTypes);
+    ForecastState.biwheelEnabledAspectTypes = window.AstroPreferences?.healEnabledAspectTypesForScope
+        ? window.AstroPreferences.healEnabledAspectTypesForScope(
+            nextBiwheelAspectTypes,
+            ForecastState.biwheelAspectScope,
+            FORECAST_ASPECT_TYPES,
+        )
+        : nextBiwheelAspectTypes;
 
     window.ForecastBiwheel?.setMatrixRows?.(ForecastState.biwheelMatrixRows);
     window.ForecastBiwheel?.setEnabledAspectTypes?.(ForecastState.biwheelEnabledAspectTypes);
@@ -473,7 +491,14 @@ async function applySolarSettingsFromControls({ persist = true } = {}) {
     }
     ForecastState.solarAspectScope = document.getElementById('solarAspectScopeSelect')?.value || ForecastState.solarAspectScope || 'all';
     ForecastState.solarMatrixRows = readForecastMatrixRowsFromContainer('solarMatrixEditor', ForecastState.solarMatrixRows);
-    ForecastState.solarEnabledAspectTypes = readForecastAspectTypesFromContainer('solarAspectTypeToggles', ForecastState.solarEnabledAspectTypes);
+    const nextSolarAspectTypes = readForecastAspectTypesFromContainer('solarAspectTypeToggles', ForecastState.solarEnabledAspectTypes);
+    ForecastState.solarEnabledAspectTypes = window.AstroPreferences?.healEnabledAspectTypesForScope
+        ? window.AstroPreferences.healEnabledAspectTypesForScope(
+            nextSolarAspectTypes,
+            ForecastState.solarAspectScope,
+            FORECAST_ASPECT_TYPES,
+        )
+        : nextSolarAspectTypes;
     ForecastState.solarShowApplyingSeparating = document.getElementById('solarShowApplyingSeparatingToggle')?.checked === true;
     ForecastState.solarShowSpeed = document.getElementById('solarShowSpeedToggle')?.checked !== false;
     ForecastState.solarShowStationary = document.getElementById('solarShowStationaryToggle')?.checked !== false;
@@ -493,6 +518,9 @@ async function applySolarSettingsFromControls({ persist = true } = {}) {
 }
 
 function getFilteredSolarViewData(data) {
+    const enrichedData = window.AstroAspectPhase?.enrichChartDataWithAspectPhases
+        ? window.AstroAspectPhase.enrichChartDataWithAspectPhases(data)
+        : data;
     const rows = ensureForecastMatrixRows(ForecastState.solarMatrixRows);
     const visibleBodies = new Set();
     const aspectingBodies = new Set();
@@ -501,7 +529,7 @@ function getFilteredSolarViewData(data) {
         if (config?.aspecting !== false) aspectingBodies.add(body);
     });
     const scope = ForecastState.solarAspectScope || 'all';
-    const availableAspectTypes = (Array.isArray(data?.aspects) ? data.aspects : [])
+    const availableAspectTypes = (Array.isArray(enrichedData?.aspects) ? enrichedData.aspects : [])
         .map((aspect) => aspect?.aspect_type)
         .filter(Boolean);
     const enabledAspectTypes = resolveForecastEnabledAspectTypes(
@@ -511,13 +539,13 @@ function getFilteredSolarViewData(data) {
     );
 
     return {
-        planets: (Array.isArray(data?.planets) ? data.planets : []).filter((planet) => {
+        planets: (Array.isArray(enrichedData?.planets) ? enrichedData.planets : []).filter((planet) => {
             const name = normalizeForecastBodyName(planet.name);
             return !rows[name] || visibleBodies.has(name);
         }),
-        houses: Array.isArray(data?.houses) ? data.houses : [],
-        angles: data?.angles || {},
-        aspects: (Array.isArray(data?.aspects) ? data.aspects : []).filter((aspect) => {
+        houses: Array.isArray(enrichedData?.houses) ? enrichedData.houses : [],
+        angles: enrichedData?.angles || {},
+        aspects: (Array.isArray(enrichedData?.aspects) ? enrichedData.aspects : []).filter((aspect) => {
             const left = normalizeForecastBodyName(aspect.planet_1);
             const right = normalizeForecastBodyName(aspect.planet_2);
             if ((!rows[left] || visibleBodies.has(left)) === false) return false;
@@ -607,9 +635,15 @@ function applyForecastResolvedPreferences(viewType, payload) {
         ForecastState.biwheelOrientation = orientation;
         ForecastState.biwheelAspectScope = resolved?.aspects?.scope || 'major';
         ForecastState.biwheelMatrixRows = ensureForecastMatrixRows(resolved?.matrix?.rows || {});
-        ForecastState.biwheelEnabledAspectTypes = Array.isArray(resolved?.aspects?.enabled_types) && resolved.aspects.enabled_types.length
-            ? [...resolved.aspects.enabled_types]
-            : [...FORECAST_ASPECT_TYPES];
+        ForecastState.biwheelEnabledAspectTypes = window.AstroPreferences?.healEnabledAspectTypesForScope
+            ? window.AstroPreferences.healEnabledAspectTypesForScope(
+                resolved?.aspects?.enabled_types,
+                ForecastState.biwheelAspectScope,
+                FORECAST_ASPECT_TYPES,
+            )
+            : (Array.isArray(resolved?.aspects?.enabled_types) && resolved.aspects.enabled_types.length
+                ? [...resolved.aspects.enabled_types]
+                : [...FORECAST_ASPECT_TYPES]);
         if (window.ForecastBiwheel?.setOrientationMode) {
             window.ForecastBiwheel.setOrientationMode(ForecastState.biwheelOrientation);
         }
@@ -630,9 +664,15 @@ function applyForecastResolvedPreferences(viewType, payload) {
         ForecastState.solarOrientation = orientation;
         ForecastState.solarAspectScope = resolved?.aspects?.scope || 'all';
         ForecastState.solarMatrixRows = ensureForecastMatrixRows(resolved?.matrix?.rows || {});
-        ForecastState.solarEnabledAspectTypes = Array.isArray(resolved?.aspects?.enabled_types) && resolved.aspects.enabled_types.length
-            ? [...resolved.aspects.enabled_types]
-            : [...FORECAST_ASPECT_TYPES];
+        ForecastState.solarEnabledAspectTypes = window.AstroPreferences?.healEnabledAspectTypesForScope
+            ? window.AstroPreferences.healEnabledAspectTypesForScope(
+                resolved?.aspects?.enabled_types,
+                ForecastState.solarAspectScope,
+                FORECAST_ASPECT_TYPES,
+            )
+            : (Array.isArray(resolved?.aspects?.enabled_types) && resolved.aspects.enabled_types.length
+                ? [...resolved.aspects.enabled_types]
+                : [...FORECAST_ASPECT_TYPES]);
         ForecastState.solarShowApplyingSeparating = resolved?.aspects?.show_applying_separating === true;
         ForecastState.solarShowSpeed = resolved?.table_options?.show_speed !== false;
         ForecastState.solarShowStationary = resolved?.table_options?.show_stationary !== false;

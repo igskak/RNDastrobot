@@ -256,7 +256,7 @@
       "options": {
         "orientationAries": "Aries 0°",
       "orientationAsc": "Ascendant",
-      "showApplyingSeparating": "Show applying / separating",
+      "showApplyingSeparating": "Show applying / separating aspects",
       "showSpeed": "Show speed",
       "showStationary": "Show stationary"
     },
@@ -459,9 +459,9 @@
       "settings": {
         "aspectOptions": "Aspect options",
         "aspectPhase": {
-          "all": "All aspects",
-          "applying": "Applying only",
-          "separating": "Separating only"
+          "all": "All",
+          "applying": "Applying",
+          "separating": "Separating"
         },
         "aspectScope": {
           "label": "Aspect scope"
@@ -499,6 +499,7 @@
         "planets": {
           "house": "House",
           "position": "Position",
+          "speed": "Speed",
           "symbol": "Symbol"
         }
       },

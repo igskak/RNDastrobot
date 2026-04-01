@@ -256,7 +256,7 @@
       "options": {
         "orientationAries": "Овен 0°",
       "orientationAsc": "Асцендент",
-      "showApplyingSeparating": "Показувати аплікацію / сепарацію",
+      "showApplyingSeparating": "Показувати аспекти, що сходяться / розходяться",
       "showSpeed": "Показувати швидкість",
       "showStationary": "Показувати стаціонарність"
     },
@@ -459,9 +459,9 @@
       "settings": {
         "aspectOptions": "Параметри аспектів",
         "aspectPhase": {
-          "all": "Усі аспекти",
-          "applying": "Лише такі, що сходяться",
-          "separating": "Лише такі, що розходяться"
+          "all": "Усі",
+          "applying": "Сходяться",
+          "separating": "Розходяться"
         },
         "aspectScope": {
           "label": "Набір аспектів"
@@ -499,6 +499,7 @@
         "planets": {
           "house": "Дім",
           "position": "Положення",
+          "speed": "Швидкість",
           "symbol": "Символ"
         }
       },
