@@ -97,6 +97,7 @@ class Astrologer(Base):
     password_reset_tokens = relationship("PasswordResetToken", back_populates="astrologer", cascade="all, delete-orphan")
     email_verification_tokens = relationship("EmailVerificationToken", back_populates="astrologer", cascade="all, delete-orphan")
     preferences = relationship("AstrologerPreference", back_populates="astrologer", uselist=False, cascade="all, delete-orphan")
+    preference_recalc_jobs = relationship("PreferenceRecalcJob", back_populates="astrologer", cascade="all, delete-orphan")
 
     __table_args__ = (
         CheckConstraint("auth_provider IN ('local', 'google')", name='valid_auth_provider'),
@@ -223,6 +224,39 @@ class ChartViewOverride(Base):
         Index('idx_chart_view_overrides_chart', 'chart_kind', 'chart_id'),
         Index('idx_chart_view_overrides_updated_at', 'updated_at'),
         Index('uq_chart_view_overrides_chart_view', 'chart_kind', 'chart_id', 'view_type', unique=True),
+    )
+
+
+class PreferenceRecalcJob(Base):
+    """DB-backed job for methodology preference recalculation/backfill."""
+    __tablename__ = 'preference_recalc_jobs'
+
+    job_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='CASCADE'), nullable=False)
+    job_type = Column(String(64), nullable=False, default='methodology_recalc', server_default='methodology_recalc')
+    status = Column(String(32), nullable=False, default='pending', server_default='pending')
+    progress_total = Column(Integer, nullable=False, default=0, server_default='0')
+    progress_done = Column(Integer, nullable=False, default=0, server_default='0')
+    failed_count = Column(Integer, nullable=False, default=0, server_default='0')
+    payload = Column(JSONB, nullable=False, default=dict, server_default='{}')
+    error = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+    started_at = Column(DateTime)
+    finished_at = Column(DateTime)
+
+    astrologer = relationship("Astrologer", back_populates="preference_recalc_jobs")
+
+    __table_args__ = (
+        CheckConstraint(
+            "job_type IN ('methodology_recalc')",
+            name='valid_preference_recalc_job_type'
+        ),
+        CheckConstraint(
+            "status IN ('pending', 'running', 'completed', 'failed')",
+            name='valid_preference_recalc_job_status'
+        ),
+        Index('idx_preference_recalc_jobs_astrologer_created', 'astrologer_id', 'created_at'),
+        Index('idx_preference_recalc_jobs_status_created', 'status', 'created_at'),
     )
 
 
@@ -940,6 +974,7 @@ class TransitEventsCache(Base):
     transit_bodies = Column(JSONB)   # null = все тела
     natal_bodies = Column(JSONB)     # null = все объекты
     aspect_filter = Column(JSONB)    # null = все аспекты
+    methodology_hash = Column(String(64), nullable=False, default='', server_default='')
 
     # Результат
     events_data = Column(JSONB, nullable=False)  # Полный список событий
@@ -953,6 +988,7 @@ class TransitEventsCache(Base):
 
     __table_args__ = (
         Index('idx_tec_user_period', 'user_id', 'start_date', 'end_date'),
+        Index('idx_tec_user_period_methodology', 'user_id', 'start_date', 'end_date', 'methodology_hash'),
         Index('idx_tec_created', 'created_at'),
     )
 

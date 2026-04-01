@@ -23,6 +23,7 @@ from app.database.models import (
 from app.services.swisseph_engine import SwissEphemerisEngine
 from app.services.time_service import TimeService
 from app.services.special_points_service import SpecialPointsService
+from app.services.preferences_runtime import PreferencesRuntimeResolver
 from app.utils.constants import (
     get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds,
     PROGNOSTIC_EXCLUDED_NATAL_TARGETS, PROGNOSTIC_EXACT_ORB, PROGNOSTIC_DEFAULT_ORB,
@@ -37,6 +38,7 @@ class TransitService:
     def __init__(self, db_session: Session, ephe_path: str = None):
         self.db = db_session
         self.swisseph_engine = SwissEphemerisEngine(ephe_path)
+        self.preferences_runtime = PreferencesRuntimeResolver(db_session)
         self._aspect_types_cache: Optional[List[RefAspectType]] = None
         self._planet_orbs_cache: Optional[Dict[Tuple[str, str], float]] = None
         self._transit_positions_cache: Dict[float, Dict[str, float]] = {}
@@ -81,7 +83,7 @@ class TransitService:
             )
 
         # 5. Рассчитать транзит→натал аспекты
-        aspects = self._calculate_transit_aspects(transit_planets, natal_data)
+        aspects = self._calculate_transit_aspects(user_id, transit_planets, natal_data)
 
         return {
             'transit_info': {
@@ -181,10 +183,17 @@ class TransitService:
             self._base_orbs_cache = {a.aspect_type: float(a.base_orb) for a in aspects}
         return self._base_orbs_cache
 
-    def _calculate_allowed_orb(self, body_a: str, body_b: str, aspect_type: str) -> float:
-        """
-        Фиксированный орбис 1° для всех тел в транзитах.
-        """
+    def _calculate_allowed_orb(self, user_id: UUID, body_a: str, body_b: str, aspect_type: str) -> float:
+        """Разрешённый орбис для транзитной пары через account methodology."""
+        astrologer_id = self.preferences_runtime.get_astrologer_id_for_user(user_id)
+        if astrologer_id:
+            return self.preferences_runtime.resolve_orb_for_astrologer(
+                astrologer_id,
+                body_a,
+                body_b,
+                aspect_type,
+                orb_profile='prognostic',
+            )
         return PROGNOSTIC_DEFAULT_ORB
 
     def _calculate_transit_special_bodies(self, jd: float) -> List[Dict]:
@@ -213,6 +222,7 @@ class TransitService:
 
     def _calculate_transit_aspects(
         self,
+        user_id: UUID,
         transit_planets: List[Dict],
         natal_data: Dict
     ) -> List[Dict]:
@@ -232,7 +242,7 @@ class TransitService:
 
         for transit_obj in transit_objects:
             for natal_obj in natal_objects:
-                aspect = self._check_aspect(transit_obj, natal_obj, aspect_types)
+                aspect = self._check_aspect(user_id, transit_obj, natal_obj, aspect_types)
                 if aspect:
                     aspects.append(aspect)
 
@@ -240,6 +250,7 @@ class TransitService:
 
     def _check_aspect(
         self,
+        user_id: UUID,
         transit_obj: Dict,
         natal_obj: Dict,
         aspect_types: List[RefAspectType]
@@ -252,7 +263,10 @@ class TransitService:
         for aspect_type in aspect_types:
             exact_angle = float(aspect_type.exact_angle)
             max_orb = self._calculate_allowed_orb(
-                transit_obj['name'], natal_obj['name'], aspect_type.aspect_type
+                user_id,
+                transit_obj['name'],
+                natal_obj['name'],
+                aspect_type.aspect_type,
             )
             deviation = abs(diff - exact_angle)
 
@@ -380,7 +394,10 @@ class TransitService:
 
                         exact_angle = float(aspect_type.exact_angle)
                         max_orb = self._calculate_allowed_orb(
-                            transit_obj['name'], natal_obj['name'], aspect_type.aspect_type
+                            user_id,
+                            transit_obj['name'],
+                            natal_obj['name'],
+                            aspect_type.aspect_type,
                         )
                         deviation = abs(diff - exact_angle)
 
@@ -763,6 +780,7 @@ class TransitService:
             TransitEventsCache.timezone == timezone,
             TransitEventsCache.step_hours == step_hours,
         )
+        methodology_hash = self.preferences_runtime.get_methodology_hash_for_user(user_id)
 
         # Фильтры: null в БД = все тела, сортированный JSON для сравнения
         tb_json = sorted(transit_bodies) if transit_bodies else None
@@ -775,7 +793,12 @@ class TransitService:
             stored_nb = sorted(entry.natal_bodies) if entry.natal_bodies else None
             stored_af = sorted(entry.aspect_filter) if entry.aspect_filter else None
 
-            if stored_tb == tb_json and stored_nb == nb_json and stored_af == af_json:
+            if (
+                stored_tb == tb_json
+                and stored_nb == nb_json
+                and stored_af == af_json
+                and (entry.methodology_hash or '') == methodology_hash
+            ):
                 logger.info(
                     f"Transit events cache HIT: user={user_id}, "
                     f"period={start_date}..{end_date}, events={entry.events_count}"
@@ -806,6 +829,7 @@ class TransitService:
             transit_bodies=sorted(transit_bodies) if transit_bodies else None,
             natal_bodies=sorted(natal_bodies) if natal_bodies else None,
             aspect_filter=sorted(aspect_types) if aspect_types else None,
+            methodology_hash=self.preferences_runtime.get_methodology_hash_for_user(user_id),
             events_data=events,
             events_count=len(events),
         )

@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.database.models import Astrologer, AstrologerPreference, ChartViewOverride, SolarReturn, User
 from app.models.schemas import normalize_house_system_code
+from app.services.preferences_runtime import PreferencesRuntimeResolver, normalize_methodology_settings
 
 
 PREFERENCE_VERSION = 1
@@ -114,6 +115,7 @@ class PreferencesService:
 
     def __init__(self, db: Session):
         self.db = db
+        self.runtime = PreferencesRuntimeResolver(db)
 
     def get_or_create_account_record(self, astrologer: Astrologer) -> AstrologerPreference:
         record = (
@@ -125,6 +127,8 @@ class PreferencesService:
             return record
 
         defaults = build_default_preferences(astrologer.default_house_system)
+        defaults['methodology'] = self.runtime.build_default_methodology()
+        defaults['visual'] = self.runtime.build_default_visual()
         record = AstrologerPreference(
             astrologer_id=astrologer.id,
             version=PREFERENCE_VERSION,
@@ -138,15 +142,26 @@ class PreferencesService:
         return record
 
     def get_account_preferences(self, astrologer: Astrologer) -> Dict[str, Any]:
-        defaults = build_default_preferences(astrologer.default_house_system)
         record = self.get_or_create_account_record(astrologer)
-        payload = deep_merge_dicts(defaults, {
+        default_house_system = normalize_house_system_code(astrologer.default_house_system)
+        defaults = build_default_preferences(default_house_system)
+        runtime_payload = self.runtime.get_account_payload(
+            astrologer.id,
+            default_house_system=default_house_system,
+        )
+        payload = {
             'version': record.version,
-            'chart_defaults': record.chart_defaults or {},
-            'methodology': record.methodology or {},
-            'visual': record.visual or {},
-            'chart_creation_defaults': record.chart_creation_defaults or {},
-        })
+            'chart_defaults': deep_merge_dicts(defaults['chart_defaults'], record.chart_defaults or {}),
+            'methodology': runtime_payload.get('methodology', {}) or {},
+            'visual': runtime_payload.get('visual', {}) or {},
+            'chart_creation_defaults': {
+                **(runtime_payload.get('chart_creation_defaults', {}) or {}),
+                'house_system': normalize_house_system_code(
+                    (runtime_payload.get('chart_creation_defaults', {}) or {}).get('house_system')
+                    or default_house_system
+                ),
+            },
+        }
         payload['chart_creation_defaults']['house_system'] = normalize_house_system_code(
             payload['chart_creation_defaults'].get('house_system') or astrologer.default_house_system
         )
@@ -164,14 +179,21 @@ class PreferencesService:
         astrologer.default_house_system = house_system
         record.version = PREFERENCE_VERSION
         record.chart_defaults = merged.get('chart_defaults', {})
-        record.methodology = merged.get('methodology', {})
+        record.methodology = normalize_methodology_settings(
+            merged.get('methodology', {}) or {},
+            default_methodology=self.runtime.build_default_methodology(),
+        )
         record.visual = merged.get('visual', {})
         record.chart_creation_defaults = {
             **(merged.get('chart_creation_defaults', {}) or {}),
             'house_system': house_system,
         }
+        self.runtime.invalidate(astrologer.id)
         self.db.flush()
         return self.get_account_preferences(astrologer)
+
+    def get_preferences_metadata(self) -> Dict[str, Any]:
+        return self.runtime.get_metadata()
 
     def get_chart_view_override(
         self,

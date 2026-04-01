@@ -68,6 +68,7 @@
         Conjunction: '#6366f1', Opposition: '#ef4444', Trine: '#22c55e',
         Square: '#f97316', Sextile: '#06b6d4', Quincunx: '#a855f7',
     };
+    let visualPreferences = window.AstroPreferences?.getAccountVisualPreferences?.() || null;
     const PROGNOSTIC_LAYERS = {
         transit: {
             color: '#0ea5e9',
@@ -144,6 +145,30 @@
         return window.AstroPreferences?.ensureMatrixRows
             ? window.AstroPreferences.ensureMatrixRows(rows || {})
             : (rows || {});
+    }
+
+    function setVisualPreferences(nextVisualPreferences) {
+        visualPreferences = window.AstroPreferences?.resolveVisualPreferences
+            ? window.AstroPreferences.resolveVisualPreferences(nextVisualPreferences || {})
+            : (nextVisualPreferences || null);
+    }
+
+    function getAspectColor(aspectType) {
+        return window.AstroPreferences?.getAspectColor
+            ? window.AstroPreferences.getAspectColor(aspectType, visualPreferences)
+            : (ASPECT_COLORS[aspectType] || '#9ca3af');
+    }
+
+    function getElementColor(element) {
+        return window.AstroPreferences?.getElementColor
+            ? window.AstroPreferences.getElementColor(element, visualPreferences)
+            : (ELEMENT_COLORS[element] || '#6b7280');
+    }
+
+    function getBodyColor(bodyName, element, defaultColor = '#374151') {
+        return window.AstroPreferences?.getPlanetColor
+            ? window.AstroPreferences.getPlanetColor(bodyName, element, visualPreferences)
+            : (element ? (ELEMENT_COLORS[element] || defaultColor) : defaultColor);
     }
 
     function getBodyMatrixConfig(name) {
@@ -642,7 +667,7 @@
             const endAngleDeg = longToAngle(endLong);
             const sign = signNames[i];
             const elemKey = Symbols?.signElements?.[sign];
-            const color = ELEMENT_COLORS[elemKey] || '#6b7280';
+            const color = getElementColor(elemKey);
 
             // Match natal wheel: subtle element tint per zodiac sector.
             drawArc(signOuter, SIGN_INNER_R, endAngleDeg, startAngleDeg, `${color}18`);
@@ -961,7 +986,7 @@
             const element = Symbols?.signElements?.[planet.sign];
             const isNatal = layerType === 'natal';
             const color = isNatal
-                ? (colorByElement ? (ELEMENT_COLORS[element] || defaultColor) : defaultColor)
+                ? (colorByElement ? getBodyColor(planet.name, element, defaultColor) : defaultColor)
                 : PROGNOSTIC_GLYPH_COLOR;
             const label = getPlanetName(planet.name);
             const group = el('g', {
@@ -1472,7 +1497,7 @@
             const aspectKey = getAspectKey(a);
             const nAngle = longToAngle(nLong) * Math.PI / 180;
             const pAngle = longToAngle(pLong) * Math.PI / 180;
-            const aspectColor = ASPECT_COLORS[a.aspectType] || '#9ca3af';
+            const aspectColor = getAspectColor(a.aspectType);
             const color = aspectColor === '#9ca3af' ? layerCfg.color : aspectColor;
             const line = el('line', {
                 x1: C + ASPECT_R * Math.cos(nAngle), y1: C + ASPECT_R * Math.sin(nAngle),
@@ -2577,6 +2602,7 @@
     window.ForecastBiwheel = {
         render,
         setOrientationMode,
+        setVisualPreferences,
         hasLastRender,
         rerenderLast,
         setAspectFilter,

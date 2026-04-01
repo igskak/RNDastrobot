@@ -23,6 +23,7 @@ from app.database.models import (
     RefAspectType, RefPlanetOrb, Direction
 )
 from app.services.swisseph_engine import SwissEphemerisEngine
+from app.services.preferences_runtime import PreferencesRuntimeResolver
 from app.utils.constants import (
     get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds,
     PROGNOSTIC_EXCLUDED_NATAL_TARGETS, PROGNOSTIC_EXACT_ORB, PROGNOSTIC_DEFAULT_ORB,
@@ -46,6 +47,7 @@ class DirectionService:
         self.swisseph_engine = SwissEphemerisEngine(ephe_path)
         if ephe_path:
             swe.set_ephe_path(ephe_path)
+        self.preferences_runtime = PreferencesRuntimeResolver(db_session)
         self._aspect_types_cache: Optional[List[RefAspectType]] = None
         self._planet_orbs_cache: Optional[Dict[Tuple[str, str], float]] = None
 
@@ -116,6 +118,7 @@ class DirectionService:
 
         # 7. Рассчитать аспекты направленное→натал
         aspects = self._calculate_direction_aspects(
+            user_id=user_id,
             directed_objects=directed_objects,
             natal_data=natal_data
         )
@@ -367,14 +370,21 @@ class DirectionService:
             self._base_orbs_cache = {a.aspect_type: float(a.base_orb) for a in aspects}
         return self._base_orbs_cache
 
-    def _calculate_allowed_orb(self, body_a: str, body_b: str, aspect_type: str) -> float:
-        """
-        Фиксированный орбис 1° для всех тел в дирекциях.
-        """
+    def _calculate_allowed_orb(self, user_id: UUID, body_a: str, body_b: str, aspect_type: str) -> float:
+        astrologer_id = self.preferences_runtime.get_astrologer_id_for_user(user_id)
+        if astrologer_id:
+            return self.preferences_runtime.resolve_orb_for_astrologer(
+                astrologer_id,
+                body_a,
+                body_b,
+                aspect_type,
+                orb_profile='prognostic',
+            )
         return PROGNOSTIC_DEFAULT_ORB
 
     def _calculate_direction_aspects(
         self,
+        user_id: UUID,
         directed_objects: List[Dict],
         natal_data: Dict
     ) -> List[Dict]:
@@ -389,7 +399,7 @@ class DirectionService:
                 if dir_obj['name'] == natal_obj['name']:
                     continue
 
-                aspect = self._check_aspect(dir_obj, natal_obj, aspect_types)
+                aspect = self._check_aspect(user_id, dir_obj, natal_obj, aspect_types)
                 if aspect:
                     aspects.append(aspect)
 
@@ -497,6 +507,7 @@ class DirectionService:
 
     def _check_aspect(
         self,
+        user_id: UUID,
         dir_obj: Dict,
         natal_obj: Dict,
         aspect_types: List[RefAspectType]
@@ -509,7 +520,10 @@ class DirectionService:
         for aspect_type in aspect_types:
             exact_angle = float(aspect_type.exact_angle)
             max_orb = self._calculate_allowed_orb(
-                dir_obj['name'], natal_obj['name'], aspect_type.aspect_type
+                user_id,
+                dir_obj['name'],
+                natal_obj['name'],
+                aspect_type.aspect_type,
             )
             deviation = abs(diff - exact_angle)
 

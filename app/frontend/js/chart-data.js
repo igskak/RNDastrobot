@@ -28,6 +28,7 @@ class ChartDataRenderer {
         this.showSpeed = true;
         this.showStationary = true;
         this.showApplyingSeparating = false;
+        this.visualPreferences = window.AstroPreferences?.getAccountVisualPreferences?.() || null;
         this.initAspectSortHeaders();
     }
 
@@ -198,6 +199,15 @@ class ChartDataRenderer {
         }
     }
 
+    setVisualPreferences(visualPreferences = {}) {
+        this.visualPreferences = window.AstroPreferences?.resolveVisualPreferences
+            ? window.AstroPreferences.resolveVisualPreferences(visualPreferences || {})
+            : (visualPreferences || null);
+        if (this.chartData) {
+            this.render(this.chartData);
+        }
+    }
+
     reRenderAspects() {
         if (this.chartData) {
             this.renderAspects(this.chartData.aspects);
@@ -335,7 +345,9 @@ class ChartDataRenderer {
      */
     createPlanetIconSVG(planet) {
         const element = Symbols.signElements[planet.sign];
-        const color = Symbols.elementColors[element] || '#374151';
+        const color = window.AstroPreferences?.getPlanetColor
+            ? window.AstroPreferences.getPlanetColor(planet.name, element, this.visualPreferences)
+            : (Symbols.elementColors[element] || '#374151');
         const symbol = Symbols.planets[planet.name] || planet.name.charAt(0);
         const glyphScale = Symbols.planetGlyphScale?.[planet.name] || 1;
         const glyphSize = 22 * glyphScale;
@@ -514,7 +526,7 @@ class ChartDataRenderer {
                 <tr data-aspect="${aspectKey || ''}" data-aspect-key="${aspectKey || ''}">
                     <td class="symbol-cell"><span class="astro-symbol">${Symbols.planets[a.left_planet] || ''}</span>${this.retroIndicatorHtml(this.isBodyRetrograde(a.left_planet, retroLookup), 'retro-indicator--micro')}</td>
                     <td class="symbol-cell"><span class="astro-symbol">${Symbols.planets[a.right_planet] || ''}</span>${this.retroIndicatorHtml(this.isBodyRetrograde(a.right_planet, retroLookup), 'retro-indicator--micro')}</td>
-                    <td class="${typeClass}"><span class="astro-symbol">${Symbols.aspects[a.aspect_type] || ''}</span> ${this.aspectName(a.aspect_type)}${applyingBadge}</td>
+                    <td class="${typeClass}"><span class="astro-symbol" style="color:${window.AstroPreferences?.getAspectColor ? window.AstroPreferences.getAspectColor(a.aspect_type, this.visualPreferences) : '#9ca3af'}">${Symbols.aspects[a.aspect_type] || ''}</span> ${this.aspectName(a.aspect_type)}${applyingBadge}</td>
                     <td class="mono">${a.orb.toFixed(2)}°</td>
                 </tr>
             `;
@@ -572,7 +584,7 @@ class ChartDataRenderer {
                         const cls = aspect.harmonic_type === 'harmonious' ? 'grid-harmonious'
                                   : aspect.harmonic_type === 'tense' ? 'grid-tense'
                                   : 'grid-neutral';
-                        html += `<td class="${cls}" data-aspect-key="${aspectKey}" title="${this.aspectName(aspect.aspect_type)} ${aspect.orb.toFixed(1)}°"><span class="astro-symbol">${glyph}</span></td>`;
+                        html += `<td class="${cls}" data-aspect-key="${aspectKey}" title="${this.aspectName(aspect.aspect_type)} ${aspect.orb.toFixed(1)}°"><span class="astro-symbol" style="color:${window.AstroPreferences?.getAspectColor ? window.AstroPreferences.getAspectColor(aspect.aspect_type, this.visualPreferences) : '#9ca3af'}">${glyph}</span></td>`;
                     } else {
                         html += '<td>–</td>';
                     }

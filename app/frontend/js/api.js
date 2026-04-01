@@ -225,6 +225,45 @@
         return response.json();
     }
 
+    async function getPreferencesMetadata(options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/preferences/metadata`, {
+            method: 'GET',
+            headers: withLocaleHeaders(),
+            signal: options.signal,
+        });
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(response, 'common.error', 'Failed to load preferences metadata'));
+        }
+        return response.json();
+    }
+
+    async function createPreferenceRecalcJob(payload, options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/preferences/recalc-jobs`, {
+            method: 'POST',
+            headers: withLocaleHeaders({
+                'Content-Type': 'application/json',
+            }),
+            body: JSON.stringify(payload || {}),
+            signal: options.signal,
+        });
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(response, 'common.error', 'Failed to create preference recalculation job'));
+        }
+        return response.json();
+    }
+
+    async function getPreferenceRecalcJob(jobId, options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/preferences/recalc-jobs/${encodeURIComponent(String(jobId))}`, {
+            method: 'GET',
+            headers: withLocaleHeaders(),
+            signal: options.signal,
+        });
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(response, 'common.error', 'Failed to load preference recalculation job'));
+        }
+        return response.json();
+    }
+
     async function getResolvedPreferences(params, options = {}) {
         const response = await apiFetch(
             `${API_BASE_URL}/preferences/resolved${toQueryString(params)}`,
@@ -444,6 +483,9 @@
         resolvePlaceTimezone,
         getAccountPreferences,
         patchAccountPreferences,
+        getPreferencesMetadata,
+        createPreferenceRecalcJob,
+        getPreferenceRecalcJob,
         getResolvedPreferences,
         saveChartViewOverride,
         deleteChartViewOverride,

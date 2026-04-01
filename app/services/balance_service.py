@@ -35,35 +35,11 @@ from app.database.models import (
     UserHouseGroupBalance,
 )
 from app.services.dignity_service import DignityService
-
-
-# Веса планет для расчёта балансов
-# Солнце и Луна - по 2 балла
-# Меркурий, Венера, Марс - по 1.5 балла
-# Юпитер, Сатурн, Уран, Нептун, Плутон, Прозерпина - по 1 баллу
-# Хирон - 0.8 балла
-PLANET_WEIGHTS = {
-    'Sun': 2.0,
-    'Moon': 2.0,
-    'Mercury': 1.5,
-    'Venus': 1.5,
-    'Mars': 1.5,
-    'Jupiter': 1.0,
-    'Saturn': 1.0,
-    'Uranus': 1.0,
-    'Neptune': 1.0,
-    'Pluto': 1.0,
-    'Chiron': 0.8,
-    'Proserpina': 1.0,
-}
-
-# Веса специальных точек для расчёта балансов
-# Лунные узлы и Лилит - по 0.5 балла
-SPECIAL_POINT_WEIGHTS = {
-    'TrueNorthNode': 0.5,
-    'TrueSouthNode': 0.5,
-    'BlackMoon': 0.5,  # Лилит
-}
+from app.services.preferences_runtime import (
+    DEFAULT_BALANCE_PLANET_WEIGHTS,
+    DEFAULT_BALANCE_SPECIAL_POINT_WEIGHTS,
+    PreferencesRuntimeResolver,
+)
 
 
 class BalanceService:
@@ -83,6 +59,9 @@ class BalanceService:
         """
         self.db_session = db_session
         self.dignity_service = DignityService(db_session)
+        self.preferences_runtime = PreferencesRuntimeResolver(db_session)
+        self._planet_weights = dict(DEFAULT_BALANCE_PLANET_WEIGHTS)
+        self._special_point_weights = dict(DEFAULT_BALANCE_SPECIAL_POINT_WEIGHTS)
     
     def calculate_all_balances(self, user_id: UUID) -> None:
         """
@@ -103,6 +82,16 @@ class BalanceService:
         special_points = self.db_session.query(NatalSpecialPoint).filter(
             NatalSpecialPoint.user_id == user_id
         ).all()
+
+        astrologer_id = self.preferences_runtime.get_astrologer_id_for_user(user_id)
+
+        if astrologer_id:
+            self._planet_weights, self._special_point_weights = self.preferences_runtime.get_balance_weights_for_astrologer(
+                astrologer_id
+            )
+        else:
+            self._planet_weights = dict(DEFAULT_BALANCE_PLANET_WEIGHTS)
+            self._special_point_weights = dict(DEFAULT_BALANCE_SPECIAL_POINT_WEIGHTS)
 
         # Рассчитываем балансы по планетам и специальным точкам
         self._calculate_element_balance(user_id, planets, special_points)
@@ -132,7 +121,7 @@ class BalanceService:
             - Jupiter, Saturn, Uranus, Neptune, Pluto, Proserpina: 1.0
             - Chiron: 0.8
         """
-        return PLANET_WEIGHTS.get(planet_name, 1.0)
+        return self._planet_weights.get(planet_name, 1.0)
 
     def _get_special_point_weight(self, point_name: str) -> float:
         """
@@ -146,7 +135,7 @@ class BalanceService:
             - TrueNorthNode, TrueSouthNode, BlackMoon: 0.5
             - Остальные: 0.0 (не учитываются в балансах)
         """
-        return SPECIAL_POINT_WEIGHTS.get(point_name, 0.0)
+        return self._special_point_weights.get(point_name, 0.0)
     
     def _calculate_element_balance(self, user_id: UUID, planets: list, special_points: list) -> None:
         """
@@ -557,4 +546,3 @@ class BalanceService:
                 cadent_count=balances['Cadent']
             )
             self.db_session.add(balance)
-

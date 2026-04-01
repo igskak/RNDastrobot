@@ -20,25 +20,25 @@ class ChartWheel {
         this.aspectRadius = 145;         // Радиус аспектных линий (почти до кольца домов)
         this.natalGlyphBaseSize = 18;    // Натальные точки +20% к базовому размеру
 
-        // Цвета аспектов по типу
-        this.aspectColors = {
-            'Conjunction': '#f59e0b',     // Оранжевый — соединение
-            'Opposition': '#ef4444',       // Красный — оппозиция
-            'Square': '#ef4444',           // Красный — квадрат
-            'Trine': '#3b82f6',            // Синий — трин
-            'Sextile': '#22c55e',          // Зелёный — секстиль
-            'Quincunx': '#8b5cf6',         // Фиолетовый — квиконс
-            'Semisextile': '#14b8a6',      // Бирюзовый — полусекстиль
-            'Quintile': '#ec4899',         // Розовый — квинтиль
+        this.visualPreferences = window.AstroPreferences?.getAccountVisualPreferences?.() || null;
+        this.aspectColors = this.visualPreferences?.aspect_colors || {
+            'Conjunction': '#f59e0b',
+            'Opposition': '#ef4444',
+            'Square': '#ef4444',
+            'Trine': '#3b82f6',
+            'Sextile': '#22c55e',
+            'Quincunx': '#8b5cf6',
+            'Semisextile': '#14b8a6',
+            'Quintile': '#ec4899',
             'Biquintile': '#ec4899',
-            'Semisquare': '#f97316'        // Оранжево-красный — полуквадрат
+            'Semisquare': '#f97316'
         };
 
         // Мажорные vs минорные аспекты
         this.majorAspects = ['Conjunction', 'Opposition', 'Trine', 'Square', 'Sextile'];
 
         // Цвета стихий
-        this.elementColors = {
+        this.elementColors = this.visualPreferences?.planet_colors?.element_palette || {
             'Fire': '#ef4444',
             'Earth': '#22c55e',
             'Air': '#eab308',
@@ -128,6 +128,31 @@ class ChartWheel {
         if (harmonicType === 'harmonious') return this.t('page.chart.legend.harmonious');
         if (harmonicType === 'tense') return this.t('page.chart.legend.tense');
         return this.t('page.chart.legend.neutral');
+    }
+
+    setVisualPreferences(visualPreferences, { redraw = true } = {}) {
+        this.visualPreferences = window.AstroPreferences?.resolveVisualPreferences
+            ? window.AstroPreferences.resolveVisualPreferences(visualPreferences || {})
+            : (visualPreferences || {});
+        this.aspectColors = this.visualPreferences?.aspect_colors || this.aspectColors;
+        this.elementColors = this.visualPreferences?.planet_colors?.element_palette || this.elementColors;
+        if (redraw && this.chartData) {
+            this.draw(this.chartData);
+        }
+    }
+
+    getAspectColor(aspectType) {
+        return window.AstroPreferences?.getAspectColor
+            ? window.AstroPreferences.getAspectColor(aspectType, this.visualPreferences)
+            : (this.aspectColors?.[aspectType] || '#9ca3af');
+    }
+
+    getPlanetColor(planet) {
+        const bodyName = typeof planet === 'string' ? planet : planet?.name;
+        const element = typeof planet === 'string' ? null : planet?.element || Symbols.signElements?.[planet?.sign];
+        return window.AstroPreferences?.getPlanetColor
+            ? window.AstroPreferences.getPlanetColor(bodyName, element, this.visualPreferences)
+            : (this.elementColors?.[element] || '#374151');
     }
 
     getAspectTooltipHtml(aspectData) {
@@ -291,7 +316,9 @@ class ChartWheel {
 
             const sign = this.getSignByIndex(i);
             const element = Symbols.signElements[sign];
-            const color = this.elementColors[element] || '#6b7280';
+            const color = window.AstroPreferences?.getElementColor
+                ? window.AstroPreferences.getElementColor(element, this.visualPreferences)
+                : (this.elementColors[element] || '#6b7280');
 
             // Сектор с цветом стихии
             this.drawArc(signOuterR, signInnerR, signEndAngle, signStartAngle, color + '18', this.layers.signs);
@@ -487,7 +514,7 @@ class ChartWheel {
             const y2 = this.center + this.aspectRadius * Math.sin(angle2);
 
             // Цвет по типу аспекта
-            const color = this.aspectColors[aspect.aspect_type] || '#9ca3af';
+            const color = this.getAspectColor(aspect.aspect_type);
 
             // Толщина: более тонкие линии (0° → 1.5px, 10° → 0.3px)
             const maxOrb = 12;
@@ -554,7 +581,7 @@ class ChartWheel {
             const x = this.center + this.planetRadius * Math.cos(displayAngleRad);
             const y = this.center + this.planetRadius * Math.sin(displayAngleRad);
             const element = Symbols.signElements[planet.sign];
-            const color = this.elementColors[element] || '#374151';
+            const color = this.getPlanetColor(planet);
             const glyphScale = Symbols.planetGlyphScale?.[planet.name] || 1;
             const scale = this.isPointBody(planet.name) ? this.pointScale : this.planetScale;
             const glyphSize = this.natalGlyphBaseSize * glyphScale * scale;

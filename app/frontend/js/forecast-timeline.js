@@ -33,6 +33,7 @@
         'Sesquiquadrate': '#ec4899',
     };
     const DEFAULT_COLOR = '#9ca3af';
+    let visualPreferences = window.AstroPreferences?.getAccountVisualPreferences?.() || null;
 
     // ─── State ──────────────────────────────────────────
     let canvas, ctx, wrapper;
@@ -45,6 +46,18 @@
     let totalContentH = 0;
     let boundScroll = false;
     let boundCanvasEvents = false;
+
+    function setVisualPreferences(nextVisualPreferences) {
+        visualPreferences = window.AstroPreferences?.resolveVisualPreferences
+            ? window.AstroPreferences.resolveVisualPreferences(nextVisualPreferences || {})
+            : (nextVisualPreferences || null);
+    }
+
+    function getAspectColor(aspectType) {
+        return window.AstroPreferences?.getAspectColor
+            ? window.AstroPreferences.getAspectColor(aspectType, visualPreferences)
+            : (ASPECT_COLORS[aspectType] || DEFAULT_COLOR);
+    }
 
     // ─── Public render ──────────────────────────────────
     function render(evts, startDate, endDate) {
@@ -91,7 +104,7 @@
                 const aSym = Symbols?.aspects?.[ev.aspect_type] || '';
                 grouped.set(key, {
                     label: `${pSym} ${aSym} ${nSym}`,
-                    color: ASPECT_COLORS[ev.aspect_type] || DEFAULT_COLOR,
+                    color: getAspectColor(ev.aspect_type),
                     spans: [],
                     events: [],
                 });
@@ -444,7 +457,7 @@
         if (!container) return;
         const usedAspects = [...new Set(events.map(e => e.aspect_type))];
         container.innerHTML = usedAspects.map(a => {
-            const color = ASPECT_COLORS[a] || DEFAULT_COLOR;
+            const color = getAspectColor(a);
             const sym = Symbols?.aspects?.[a] || '';
             return `<div class="timeline-legend-item">
                 <span class="timeline-legend-color" style="background:${color}"></span>
@@ -454,5 +467,5 @@
     }
 
     // ─── Export ──────────────────────────────────────────
-    window.ForecastTimeline = { render };
+    window.ForecastTimeline = { render, setVisualPreferences };
 })();

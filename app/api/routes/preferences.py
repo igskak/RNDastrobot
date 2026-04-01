@@ -12,8 +12,12 @@ from app.models.schemas import (
     AccountPreferencesPatchRequest,
     AccountPreferencesResponse,
     ChartViewOverrideUpsertRequest,
+    PreferenceRecalcJobCreateRequest,
+    PreferenceRecalcJobResponse,
+    PreferencesMetadataResponse,
     ResolvedPreferencesResponse,
 )
+from app.services.preference_recalc_service import PreferenceRecalcService
 from app.services.preferences_service import PreferencesService
 
 
@@ -69,6 +73,90 @@ def patch_account_preferences(
         result="success",
     )
     return AccountPreferencesResponse(**updated)
+
+
+@router.get(
+    "/metadata",
+    response_model=PreferencesMetadataResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get metadata for methodology and visual preference editors",
+)
+def get_preferences_metadata(
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+) -> PreferencesMetadataResponse:
+    service = PreferencesService(db)
+    payload = service.get_preferences_metadata()
+    create_audit_event(
+        db,
+        request,
+        actor_id=auth.astrologer.id,
+        action="preferences.metadata.get",
+        resource_type="preferences",
+        resource_id=str(auth.astrologer.id),
+        result="success",
+    )
+    return PreferencesMetadataResponse(**payload)
+
+
+@router.post(
+    "/recalc-jobs",
+    response_model=PreferenceRecalcJobResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a DB-backed preference recalculation job",
+)
+def create_preference_recalc_job(
+    payload: PreferenceRecalcJobCreateRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+) -> PreferenceRecalcJobResponse:
+    service = PreferenceRecalcService(db)
+    job = service.create_job(
+        astrologer_id=auth.astrologer.id,
+        job_type=payload.job_type,
+        payload=payload.payload,
+    )
+    db.flush()
+    create_audit_event(
+        db,
+        request,
+        actor_id=auth.astrologer.id,
+        action="preferences.recalc_jobs.create",
+        resource_type="preferences",
+        resource_id=str(job.job_id),
+        result="success",
+    )
+    return PreferenceRecalcJobResponse(**service.serialize_job(job))
+
+
+@router.get(
+    "/recalc-jobs/{job_id}",
+    response_model=PreferenceRecalcJobResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get a DB-backed preference recalculation job",
+)
+def get_preference_recalc_job(
+    job_id: UUID,
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+) -> PreferenceRecalcJobResponse:
+    service = PreferenceRecalcService(db)
+    job = service.get_job(job_id=job_id, astrologer_id=auth.astrologer.id)
+    if job is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Recalculation job not found')
+    create_audit_event(
+        db,
+        request,
+        actor_id=auth.astrologer.id,
+        action="preferences.recalc_jobs.get",
+        resource_type="preferences",
+        resource_id=str(job.job_id),
+        result="success",
+    )
+    return PreferenceRecalcJobResponse(**service.serialize_job(job))
 
 
 @router.get(

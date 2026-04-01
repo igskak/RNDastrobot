@@ -2,7 +2,7 @@
     'use strict';
 
     const VIEW_IDS = ['natal', 'biwheel', 'solar'];
-    const ASPECT_TYPES = [
+    const DEFAULT_ASPECT_TYPES = [
         'Conjunction',
         'Opposition',
         'Trine',
@@ -14,8 +14,14 @@
         'Quintile',
         'Biquintile',
     ];
+    const ORB_PROFILE_IDS = window.AstroPreferences?.ORB_PROFILE_IDS || ['natal', 'prognostic'];
+    const ACTIVE_RECALC_JOB_KEY = 'activePreferenceRecalcJobId';
+
     let accountPreferences = null;
+    let preferencesMetadata = null;
     let toastTimer = null;
+    let pollTimer = null;
+    let activeOrbProfile = 'natal';
 
     function hidePageLoader() {
         if (window.AstroAPI?.hidePageLoader) {
@@ -51,10 +57,28 @@
         return translateOrFallback(`astro.planet.${body}`, body);
     }
 
+    function deepEqual(left, right) {
+        return window.AstroPreferences?.deepEqual
+            ? window.AstroPreferences.deepEqual(left, right)
+            : JSON.stringify(left ?? null) === JSON.stringify(right ?? null);
+    }
+
     function normalizeViewSettings(viewSettings = {}) {
         return window.AstroPreferences?.normalizeViewSettings
             ? window.AstroPreferences.normalizeViewSettings(viewSettings)
             : viewSettings;
+    }
+
+    function normalizeMethodologySettings(methodology = {}) {
+        return window.AstroPreferences?.normalizeMethodologySettings
+            ? window.AstroPreferences.normalizeMethodologySettings(methodology)
+            : methodology;
+    }
+
+    function resolveVisualPreferences(visual = {}) {
+        return window.AstroPreferences?.resolveVisualPreferences
+            ? window.AstroPreferences.resolveVisualPreferences(visual)
+            : (visual || {});
     }
 
     function ensureMatrixRows(rows = {}) {
@@ -67,6 +91,48 @@
         return window.AstroPreferences?.MATRIX_BODIES || [];
     }
 
+    function getMetadataAspectTypes() {
+        return preferencesMetadata?.aspect_types || DEFAULT_ASPECT_TYPES.map((aspectType) => ({ aspect_type: aspectType }));
+    }
+
+    function getMetadataBodies() {
+        return (preferencesMetadata?.bodies || []).map((item) => item?.name).filter(Boolean);
+    }
+
+    function buildDefaultOrbMatrix() {
+        return Object.fromEntries(
+            getMetadataAspectTypes().map((aspect) => [
+                aspect.aspect_type,
+                Object.fromEntries(
+                    getMetadataBodies().map((body) => [body, Number(aspect.base_orb || 5)])
+                ),
+            ])
+        );
+    }
+
+    function getDefaultMethodology() {
+        const orbs = {
+            version: 2,
+            profiles: Object.fromEntries(
+                ORB_PROFILE_IDS.map((profileId) => [
+                    profileId,
+                    {
+                        matrix: buildDefaultOrbMatrix(),
+                    },
+                ])
+            ),
+        };
+
+        return normalizeMethodologySettings({
+            orbs,
+            balances: preferencesMetadata?.default_balance_targets || {},
+        });
+    }
+
+    function getDefaultVisual() {
+        return resolveVisualPreferences(preferencesMetadata?.default_visual_palettes || {});
+    }
+
     function getDefaultAccountPreferences() {
         return {
             chart_defaults: {
@@ -77,6 +143,8 @@
             chart_creation_defaults: {
                 house_system: 'P',
             },
+            methodology: getDefaultMethodology(),
+            visual: getDefaultVisual(),
         };
     }
 
@@ -108,16 +176,81 @@
         };
     }
 
+    function ensureMethodologyState() {
+        if (!accountPreferences) {
+            accountPreferences = {
+                methodology: getDefaultMethodology(),
+            };
+        }
+        accountPreferences.methodology = normalizeMethodologySettings(
+            accountPreferences.methodology || getDefaultMethodology()
+        );
+        return accountPreferences.methodology;
+    }
+
+    function getOrbProfileMatrix(profileId) {
+        const methodology = ensureMethodologyState();
+        return methodology?.orbs?.profiles?.[profileId]?.matrix || buildDefaultOrbMatrix();
+    }
+
+    function updateOrbProfileUi() {
+        const hint = document.getElementById('accountOrbProfileHint');
+        const panel = document.getElementById('accountOrbMatrixPanel');
+        const applyBtn = document.getElementById('accountApplyNatalOrbsBtn');
+
+        document.querySelectorAll('[data-orb-profile-tab]').forEach((button) => {
+            const isActive = button.dataset.orbProfileTab === activeOrbProfile;
+            button.classList.toggle('is-active', isActive);
+            button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            if (panel && isActive && button.id) {
+                panel.setAttribute('aria-labelledby', button.id);
+            }
+        });
+
+        if (hint) {
+            hint.textContent = t(`page.accountSettings.orbs.hints.${activeOrbProfile}`);
+        }
+        if (applyBtn) {
+            applyBtn.classList.toggle('hidden', activeOrbProfile !== 'prognostic');
+        }
+    }
+
+    function syncOrbMatrixFromDom() {
+        const methodology = ensureMethodologyState();
+        const matrix = buildDefaultOrbMatrix();
+        document.querySelectorAll('#accountOrbsMatrixBody input[data-orb-aspect-type][data-orb-body]').forEach((input) => {
+            const aspectType = input.dataset.orbAspectType;
+            const body = input.dataset.orbBody;
+            if (!aspectType || !body) return;
+            if (!matrix[aspectType]) matrix[aspectType] = {};
+            matrix[aspectType][body] = Number.parseFloat(input.value) || 0;
+        });
+        methodology.orbs.profiles[activeOrbProfile] = { matrix };
+    }
+
+    function setActiveOrbProfile(profileId, { rerender = true } = {}) {
+        if (!ORB_PROFILE_IDS.includes(profileId)) return;
+        if (accountPreferences) {
+            syncOrbMatrixFromDom();
+        }
+        activeOrbProfile = profileId;
+        updateOrbProfileUi();
+        if (rerender && accountPreferences) {
+            renderOrbsMatrix(accountPreferences.methodology);
+        }
+    }
+
     function renderAspectTypesMatrix(chartDefaults = {}) {
         const tbody = document.getElementById('accountAspectTypesMatrixBody');
         if (!tbody) return;
 
-        tbody.innerHTML = ASPECT_TYPES.map((aspectType) => {
+        tbody.innerHTML = getMetadataAspectTypes().map((aspectMeta) => {
+            const aspectType = aspectMeta.aspect_type;
             const symbol = escapeHtml(window.Symbols?.aspects?.[aspectType] || '');
             const label = escapeHtml(t(`astro.aspect.${aspectType}`));
             const cells = VIEW_IDS.map((viewId) => {
                 const enabledTypes = chartDefaults?.[viewId]?.aspects?.enabled_types || [];
-                const enabled = new Set(Array.isArray(enabledTypes) && enabledTypes.length ? enabledTypes : ASPECT_TYPES);
+                const enabled = new Set(Array.isArray(enabledTypes) && enabledTypes.length ? enabledTypes : DEFAULT_ASPECT_TYPES);
                 const checked = enabled.has(aspectType) ? 'checked' : '';
                 return `
                     <td>
@@ -200,6 +333,142 @@
         }).join('');
     }
 
+    function renderOrbsMatrix(methodology = {}) {
+        const headerRow = document.getElementById('accountOrbsHeaderRow');
+        const tbody = document.getElementById('accountOrbsMatrixBody');
+        if (!headerRow || !tbody) return;
+
+        const bodies = getMetadataBodies();
+        const aspectTypes = getMetadataAspectTypes();
+        const normalizedMethodology = normalizeMethodologySettings(methodology || getDefaultMethodology());
+        const matrix = normalizedMethodology?.orbs?.profiles?.[activeOrbProfile]?.matrix || buildDefaultOrbMatrix();
+
+        headerRow.innerHTML = `
+            <th class="account-settings-orb-corner"></th>
+            ${bodies.map((body) => {
+                const label = escapeHtml(getBodyLabel(body));
+                const symbol = escapeHtml(window.Symbols?.planets?.[body] || body);
+                return `
+                    <th>
+                        <span class="account-settings-body account-settings-body--icon-only">
+                            <span class="account-settings-body-badge account-settings-orb-glyph" title="${label}" aria-label="${label}" role="img" tabindex="0">
+                                <span class="astro-symbol" aria-hidden="true">${symbol}</span>
+                            </span>
+                        </span>
+                    </th>
+                `;
+            }).join('')}
+        `;
+
+        tbody.innerHTML = aspectTypes.map((aspectMeta) => {
+            const aspectType = aspectMeta.aspect_type;
+            const symbol = escapeHtml(window.Symbols?.aspects?.[aspectType] || '');
+            const aspectLabel = escapeHtml(translateOrFallback(`astro.aspect.${aspectType}`, aspectType));
+            return `
+                <tr>
+                    <th scope="row">
+                        <span class="account-settings-aspect-meta account-settings-aspect-meta--icon-only">
+                            <span class="account-settings-check-glyph account-settings-orb-glyph" title="${aspectLabel}" aria-label="${aspectLabel}" role="img" tabindex="0">
+                                <span class="astro-symbol" aria-hidden="true">${symbol}</span>
+                            </span>
+                        </span>
+                    </th>
+                    ${bodies.map((body) => {
+                        const value = matrix?.[aspectType]?.[body];
+                        const bodyLabel = escapeHtml(getBodyLabel(body));
+                        return `
+                            <td>
+                                <input
+                                    class="account-settings-number-input account-settings-orb-input"
+                                    type="number"
+                                    min="0"
+                                    max="20"
+                                    step="0.1"
+                                    value="${Number.isFinite(Number(value)) ? Number(value) : Number(aspectMeta.base_orb || 5)}"
+                                    aria-label="${escapeHtml(`${aspectLabel} · ${bodyLabel}`)}"
+                                    data-orb-aspect-type="${aspectType}"
+                                    data-orb-body="${body}"
+                                    data-orb-profile="${activeOrbProfile}"
+                                >
+                            </td>
+                        `;
+                    }).join('')}
+                </tr>
+            `;
+        }).join('');
+
+        updateOrbProfileUi();
+    }
+
+    function renderBalanceWeights(methodology = {}) {
+        const planetsBody = document.getElementById('accountBalancePlanetWeightsBody');
+        const specialBody = document.getElementById('accountBalanceSpecialWeightsBody');
+        if (!planetsBody || !specialBody) return;
+
+        const balances = methodology?.balances || {};
+        const planetWeights = balances?.planet_weights || {};
+        const specialWeights = balances?.special_point_weights || {};
+        const bodyNames = getMetadataBodies();
+
+        const planetRows = bodyNames.filter((body) => !['TrueNode', 'SouthNode', 'BlackMoon', 'WhiteMoon', 'PartOfFortune', 'ASC', 'DSC', 'MC', 'IC', 'Vertex', 'AntiVertex'].includes(body));
+        const specialRows = ['TrueNorthNode', 'TrueSouthNode', 'BlackMoon'];
+
+        planetsBody.innerHTML = planetRows.map((body) => `
+            <tr>
+                <th scope="row">${escapeHtml(getBodyLabel(body))}</th>
+                <td><input class="account-settings-number-input" type="number" min="0" max="5" step="0.1" value="${Number(planetWeights?.[body] ?? 1).toFixed(1)}" data-balance-planet="${body}"></td>
+            </tr>
+        `).join('');
+
+        specialBody.innerHTML = specialRows.map((body) => `
+            <tr>
+                <th scope="row">${escapeHtml(getBodyLabel(body))}</th>
+                <td><input class="account-settings-number-input" type="number" min="0" max="5" step="0.1" value="${Number(specialWeights?.[body] ?? 0).toFixed(1)}" data-balance-special-point="${body}"></td>
+            </tr>
+        `).join('');
+    }
+
+    function renderAspectColors(visual = {}) {
+        const tbody = document.getElementById('accountAspectColorsBody');
+        if (!tbody) return;
+        const aspectColors = visual?.aspect_colors || {};
+
+        tbody.innerHTML = getMetadataAspectTypes().map((aspectMeta) => {
+            const aspectType = aspectMeta.aspect_type;
+            const color = aspectColors?.[aspectType] || '#9ca3af';
+            return `
+                <tr>
+                    <th scope="row">${escapeHtml(translateOrFallback(`astro.aspect.${aspectType}`, aspectType))}</th>
+                    <td><input type="color" class="account-settings-color-input" value="${escapeHtml(color)}" data-aspect-color="${aspectType}"></td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderPlanetColors(visual = {}) {
+        const elementBody = document.getElementById('accountElementPaletteBody');
+        const overridesBody = document.getElementById('accountBodyOverrideColorsBody');
+        if (!elementBody || !overridesBody) return;
+
+        const resolvedVisual = resolveVisualPreferences(visual);
+        const elementPalette = resolvedVisual?.planet_colors?.element_palette || {};
+        const bodyOverrides = resolvedVisual?.planet_colors?.body_overrides || {};
+
+        elementBody.innerHTML = Object.keys(elementPalette).map((element) => `
+            <tr>
+                <th scope="row">${escapeHtml(element)}</th>
+                <td><input type="color" class="account-settings-color-input" value="${escapeHtml(elementPalette[element])}" data-element-color="${element}"></td>
+            </tr>
+        `).join('');
+
+        overridesBody.innerHTML = getMetadataBodies().map((body) => `
+            <tr>
+                <th scope="row">${escapeHtml(getBodyLabel(body))}</th>
+                <td><input type="text" class="account-settings-hex-input" value="${escapeHtml(bodyOverrides?.[body] || '')}" placeholder="#hex or empty" data-body-color-override="${body}"></td>
+            </tr>
+        `).join('');
+    }
+
     function populateForm(preferences) {
         const normalized = {
             ...getDefaultAccountPreferences(),
@@ -212,9 +481,13 @@
             chart_creation_defaults: {
                 house_system: preferences?.chart_creation_defaults?.house_system || 'P',
             },
+            methodology: normalizeMethodologySettings(preferences?.methodology || getDefaultMethodology()),
+            visual: resolveVisualPreferences(preferences?.visual || getDefaultVisual()),
         };
 
         accountPreferences = normalized;
+        window.AstroPreferences?.setAccountVisualPreferences?.(normalized.visual);
+        if (!ORB_PROFILE_IDS.includes(activeOrbProfile)) activeOrbProfile = 'natal';
 
         const houseSystemSelect = document.getElementById('accountHouseSystemSelect');
         if (houseSystemSelect) {
@@ -233,6 +506,10 @@
 
         renderAspectTypesMatrix(normalized.chart_defaults);
         renderBodiesMatrix(normalized.chart_defaults);
+        renderOrbsMatrix(normalized.methodology);
+        renderBalanceWeights(normalized.methodology);
+        renderAspectColors(normalized.visual);
+        renderPlanetColors(normalized.visual);
     }
 
     function readCheckedAspectTypes(viewId) {
@@ -242,7 +519,7 @@
                 selected.push(input.dataset.aspectType);
             }
         });
-        return selected.length ? selected : [...ASPECT_TYPES];
+        return selected.length ? selected : getMetadataAspectTypes().map((item) => item.aspect_type);
     }
 
     function readMatrixRows(viewId) {
@@ -280,6 +557,68 @@
         };
     }
 
+    function collectMethodology() {
+        syncOrbMatrixFromDom();
+        const orbProfiles = normalizeMethodologySettings(accountPreferences?.methodology || getDefaultMethodology())?.orbs?.profiles || {};
+
+        const planetWeights = {};
+        document.querySelectorAll('[data-balance-planet]').forEach((input) => {
+            if (!input.dataset.balancePlanet) return;
+            planetWeights[input.dataset.balancePlanet] = Number.parseFloat(input.value) || 0;
+        });
+
+        const specialPointWeights = {};
+        document.querySelectorAll('[data-balance-special-point]').forEach((input) => {
+            if (!input.dataset.balanceSpecialPoint) return;
+            specialPointWeights[input.dataset.balanceSpecialPoint] = Number.parseFloat(input.value) || 0;
+        });
+
+        return normalizeMethodologySettings({
+            orbs: {
+                version: 2,
+                profiles: orbProfiles,
+            },
+            balances: {
+                version: 1,
+                planet_weights: planetWeights,
+                special_point_weights: specialPointWeights,
+            },
+        });
+    }
+
+    function collectVisual() {
+        const aspectColors = {};
+        document.querySelectorAll('[data-aspect-color]').forEach((input) => {
+            if (input.dataset.aspectColor && input.value) {
+                aspectColors[input.dataset.aspectColor] = input.value;
+            }
+        });
+
+        const elementPalette = {};
+        document.querySelectorAll('[data-element-color]').forEach((input) => {
+            if (input.dataset.elementColor && input.value) {
+                elementPalette[input.dataset.elementColor] = input.value;
+            }
+        });
+
+        const bodyOverrides = {};
+        document.querySelectorAll('[data-body-color-override]').forEach((input) => {
+            const body = input.dataset.bodyColorOverride;
+            const value = String(input.value || '').trim();
+            if (body && value) {
+                bodyOverrides[body] = value;
+            }
+        });
+
+        return resolveVisualPreferences({
+            aspect_colors: aspectColors,
+            planet_colors: {
+                element_palette: elementPalette,
+                body_overrides: bodyOverrides,
+            },
+        });
+    }
+
     function collectPayload() {
         return {
             chart_creation_defaults: {
@@ -290,6 +629,8 @@
                 biwheel: collectViewSettings('biwheel'),
                 solar: collectViewSettings('solar'),
             },
+            methodology: collectMethodology(),
+            visual: collectVisual(),
         };
     }
 
@@ -305,6 +646,65 @@
         }, 2800);
     }
 
+    function renderJobStatus(job, { final = false } = {}) {
+        const container = document.getElementById('methodologyJobStatus');
+        if (!container) return;
+        if (!job) {
+            container.classList.add('hidden');
+            container.textContent = '';
+            return;
+        }
+
+        const total = Number(job.progress_total || 0);
+        const done = Number(job.progress_done || 0);
+        const percent = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0;
+        const statusLabel = String(job.status || 'pending').toUpperCase();
+        const summary = `${statusLabel} · ${done}/${total || '0'} · ${percent}%`;
+        const failures = Number(job.failed_count || 0);
+        const suffix = failures ? ` · failures: ${failures}` : '';
+        container.textContent = final ? `${summary}${suffix}` : `${summary}${suffix}`;
+        container.classList.remove('hidden');
+        container.dataset.status = String(job.status || 'pending');
+    }
+
+    function stopPollingJob() {
+        if (pollTimer) {
+            clearTimeout(pollTimer);
+            pollTimer = null;
+        }
+    }
+
+    async function pollRecalcJob(jobId) {
+        stopPollingJob();
+        if (!jobId || !window.AstroAPI?.getPreferenceRecalcJob) return;
+        sessionStorage.setItem(ACTIVE_RECALC_JOB_KEY, String(jobId));
+
+        const loop = async () => {
+            try {
+                const job = await window.AstroAPI.getPreferenceRecalcJob(jobId);
+                renderJobStatus(job, { final: job.status === 'completed' || job.status === 'failed' });
+                if (job.status === 'completed') {
+                    sessionStorage.removeItem(ACTIVE_RECALC_JOB_KEY);
+                    showToast(`Methodology recalculation finished${job.failed_count ? ` with ${job.failed_count} failures` : ''}.`, job.failed_count ? 'info' : 'success');
+                    stopPollingJob();
+                    return;
+                }
+                if (job.status === 'failed') {
+                    sessionStorage.removeItem(ACTIVE_RECALC_JOB_KEY);
+                    showToast(job.error || 'Methodology recalculation failed.', 'error');
+                    stopPollingJob();
+                    return;
+                }
+                pollTimer = setTimeout(loop, 2500);
+            } catch (error) {
+                pollTimer = setTimeout(loop, 4000);
+                console.warn('Failed to poll preference recalculation job:', error);
+            }
+        };
+
+        await loop();
+    }
+
     async function loadPreferences() {
         const me = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
         if (!me) return;
@@ -316,8 +716,22 @@
                 : t('page.accountSettings.subtitle');
         }
 
-        const preferences = await window.AstroAPI.getAccountPreferences();
+        const [metadata, preferences] = await Promise.all([
+            window.AstroAPI.getPreferencesMetadata?.(),
+            window.AstroAPI.getAccountPreferences(),
+        ]);
+        preferencesMetadata = metadata || null;
         populateForm(preferences);
+
+        const activeJobId = sessionStorage.getItem(ACTIVE_RECALC_JOB_KEY);
+        if (activeJobId) {
+            pollRecalcJob(activeJobId).catch((error) => {
+                console.warn('Failed to resume recalculation job polling:', error);
+            });
+        } else {
+            renderJobStatus(null);
+        }
+
         hidePageLoader();
     }
 
@@ -326,8 +740,26 @@
         if (saveBtn) saveBtn.disabled = true;
         try {
             const payload = collectPayload();
+            const methodologyChanged = !deepEqual(
+                normalizeMethodologySettings(accountPreferences?.methodology || {}),
+                payload.methodology
+            );
             const updated = await window.AstroAPI.patchAccountPreferences(payload);
             populateForm(updated);
+
+            if (methodologyChanged && window.AstroAPI?.createPreferenceRecalcJob) {
+                const job = await window.AstroAPI.createPreferenceRecalcJob({
+                    job_type: 'methodology_recalc',
+                    payload: { source: 'account-settings' },
+                });
+                renderJobStatus(job);
+                pollRecalcJob(job.job_id).catch((error) => {
+                    console.warn('Failed to poll methodology recalculation job:', error);
+                });
+                showToast('Preferences saved. Methodology recalculation started.', 'success');
+                return;
+            }
+
             showToast(t('page.accountSettings.toasts.saved'), 'success');
         } catch (error) {
             showToast(error.message || t('page.accountSettings.toasts.saveFailed'), 'error');
@@ -338,6 +770,7 @@
 
     function restoreStandardDefaults() {
         populateForm(getDefaultAccountPreferences());
+        renderJobStatus(null);
         showToast(t('page.accountSettings.toasts.restored'), 'info');
     }
 
@@ -345,6 +778,8 @@
         const saveBtn = document.getElementById('saveAccountSettingsBtn');
         const reloadBtn = document.getElementById('reloadAccountSettingsBtn');
         const restoreBtn = document.getElementById('restoreStandardDefaultsBtn');
+        const applyNatalOrbsBtn = document.getElementById('accountApplyNatalOrbsBtn');
+        const orbMatrixBody = document.getElementById('accountOrbsMatrixBody');
 
         saveBtn?.addEventListener('click', () => {
             savePreferences();
@@ -356,6 +791,34 @@
         });
         restoreBtn?.addEventListener('click', () => {
             restoreStandardDefaults();
+        });
+        document.querySelectorAll('[data-orb-profile-tab]').forEach((button) => {
+            button.addEventListener('click', () => {
+                setActiveOrbProfile(button.dataset.orbProfileTab || 'natal');
+            });
+        });
+        applyNatalOrbsBtn?.addEventListener('click', () => {
+            syncOrbMatrixFromDom();
+            const methodology = ensureMethodologyState();
+            methodology.orbs.profiles.prognostic = {
+                matrix: JSON.parse(JSON.stringify(getOrbProfileMatrix('natal'))),
+            };
+            activeOrbProfile = 'prognostic';
+            renderOrbsMatrix(methodology);
+            showToast(t('page.accountSettings.toasts.orbsCopied'), 'info');
+        });
+        orbMatrixBody?.addEventListener('input', (event) => {
+            const input = event.target;
+            if (!(input instanceof HTMLInputElement)) return;
+            if (!input.dataset.orbAspectType || !input.dataset.orbBody) return;
+            const methodology = ensureMethodologyState();
+            const profile = methodology.orbs.profiles[activeOrbProfile] || { matrix: buildDefaultOrbMatrix() };
+            const nextMatrix = profile.matrix || buildDefaultOrbMatrix();
+            if (!nextMatrix[input.dataset.orbAspectType]) {
+                nextMatrix[input.dataset.orbAspectType] = {};
+            }
+            nextMatrix[input.dataset.orbAspectType][input.dataset.orbBody] = Number.parseFloat(input.value) || 0;
+            methodology.orbs.profiles[activeOrbProfile] = { matrix: nextMatrix };
         });
 
         try {

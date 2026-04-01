@@ -531,6 +531,14 @@ class AccountPreferencesResponse(BaseModel):
     default_house_system: str
 
 
+class PreferencesMetadataResponse(BaseModel):
+    """Metadata required to render methodology + visual editors."""
+    aspect_types: List[Dict[str, Any]]
+    bodies: List[Dict[str, Any]]
+    default_balance_targets: Dict[str, Any]
+    default_visual_palettes: Dict[str, Any]
+
+
 class ChartViewOverrideUpsertRequest(BaseModel):
     """Upsert sparse per-chart overrides."""
     chart_kind: str
@@ -548,6 +556,28 @@ class ResolvedPreferencesResponse(BaseModel):
     overrides: Dict[str, Any]
     resolved: Dict[str, Any]
     chart_meta: Dict[str, Any]
+
+
+class PreferenceRecalcJobCreateRequest(BaseModel):
+    """Create a methodology recalculation job."""
+    job_type: str = Field(default='methodology_recalc')
+    payload: Dict[str, Any] = Field(default_factory=dict)
+
+
+class PreferenceRecalcJobResponse(BaseModel):
+    """Serialized preference recalculation job."""
+    job_id: UUID
+    astrologer_id: UUID
+    job_type: str
+    status: str
+    progress_total: int
+    progress_done: int
+    failed_count: int
+    payload: Dict[str, Any]
+    error: Optional[str] = None
+    created_at: Optional[str] = None
+    started_at: Optional[str] = None
+    finished_at: Optional[str] = None
 
 
 class HouseSystemUpdateRequest(BaseModel):

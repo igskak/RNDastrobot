@@ -126,6 +126,23 @@ body.account-settings-page {
     border-color: rgba(30, 58, 95, 0.18);
 }
 
+.account-settings-secondary-action,
+.account-settings-profile-tab {
+    min-height: 34px;
+    padding: 0 12px;
+    border: 1px solid rgba(30, 58, 95, 0.12);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.84);
+    color: var(--text-primary);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.account-settings-secondary-action.hidden {
+    display: none;
+}
+
 .account-settings-content {
     display: grid;
     gap: 12px;
@@ -134,22 +151,24 @@ body.account-settings-page {
 
 .account-settings-layout {
     display: grid;
-    grid-template-columns: minmax(260px, 300px) minmax(0, 820px);
-    gap: 14px;
+    grid-template-columns: 1fr;
+    gap: 12px;
     align-items: start;
-    justify-content: center;
+    max-width: 1120px;
+    margin: 0 auto;
 }
 
 .account-settings-sidebar {
-    position: sticky;
-    top: 14px;
     display: grid;
     gap: 12px;
+    grid-template-columns: minmax(320px, 420px) minmax(240px, 1fr);
+    align-items: stretch;
 }
 
 .account-settings-sheet {
     display: grid;
     gap: 12px;
+    width: 100%;
 }
 
 .account-settings-card,
@@ -168,6 +187,7 @@ body.account-settings-page {
 .account-settings-toolbar--sidebar {
     display: grid;
     gap: 12px;
+    height: 100%;
 }
 
 .account-settings-toolbar-main,
@@ -189,6 +209,11 @@ body.account-settings-page {
     padding: 14px;
 }
 
+.account-settings-sheet > .account-settings-card,
+.account-settings-sheet > .account-settings-card--details {
+    width: 100%;
+}
+
 .account-settings-card--details {
     padding: 0;
     overflow: hidden;
@@ -200,11 +225,42 @@ body.account-settings-page {
 
 .account-settings-card-head > div,
 .account-settings-card-summary > span:first-child {
-    max-width: 680px;
+    max-width: 760px;
 }
 
 .account-settings-card-head--compact {
     margin-bottom: 8px;
+}
+
+.account-settings-orb-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.account-settings-profile-tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 999px;
+    background: rgba(246, 241, 232, 0.92);
+    border: 1px solid rgba(30, 58, 95, 0.08);
+}
+
+.account-settings-profile-tab {
+    min-width: 104px;
+    padding-inline: 14px;
+    border-color: transparent;
+    background: transparent;
+    color: var(--text-secondary);
+}
+
+.account-settings-profile-tab.is-active {
+    background: #1e3a5f;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(30, 58, 95, 0.22);
 }
 
 .account-settings-card-summary {
@@ -236,6 +292,11 @@ body.account-settings-page {
     margin: 6px 0 0;
     font-size: 12px;
     line-height: 1.45;
+}
+
+.account-settings-section-copy--subtle {
+    margin: 0 0 10px;
+    color: var(--text-muted);
 }
 
 .account-settings-label {
@@ -290,20 +351,32 @@ body.account-settings-page {
 }
 
 .account-settings-table--settings {
-    width: min(100%, 800px);
-    min-width: 700px;
+    width: min(100%, 860px);
+    min-width: 760px;
     table-layout: fixed;
 }
 
 .account-settings-table--aspect-types {
-    width: min(100%, 700px);
-    min-width: 560px;
+    width: min(100%, 760px);
+    min-width: 620px;
     table-layout: fixed;
 }
 
 .account-settings-table--bodies {
-    width: min(100%, 900px);
-    min-width: 820px;
+    width: min(100%, 980px);
+    min-width: 860px;
+    table-layout: fixed;
+}
+
+.account-settings-table--methodology {
+    width: max-content;
+    min-width: 0;
+    table-layout: fixed;
+}
+
+.account-settings-table--compact {
+    width: min(100%, 420px);
+    min-width: 320px;
     table-layout: fixed;
 }
 
@@ -349,6 +422,31 @@ body.account-settings-page {
 
 .account-settings-table--bodies tbody th[scope="row"] {
     width: 138px;
+}
+
+.account-settings-table--compact tbody th[scope="row"] {
+    width: 160px;
+}
+
+.account-settings-table--methodology thead th:first-child,
+.account-settings-table--methodology tbody th[scope="row"] {
+    width: 56px;
+    min-width: 56px;
+    padding-left: 6px;
+    padding-right: 6px;
+    text-align: center;
+}
+
+.account-settings-table--methodology thead th:not(:first-child),
+.account-settings-table--methodology tbody td {
+    width: 56px;
+    min-width: 56px;
+    padding: 6px;
+    text-align: center;
+}
+
+.account-settings-table--methodology tbody th[scope="row"] {
+    background: rgba(255, 252, 247, 0.72);
 }
 
 .account-settings-row-title {
@@ -445,6 +543,13 @@ body.account-settings-page {
     cursor: help;
 }
 
+.account-settings-orb-glyph {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    padding: 0;
+}
+
 .account-settings-check-glyph:focus-visible,
 .account-settings-body-badge:focus-visible {
     outline: 2px solid rgba(30, 58, 95, 0.32);
@@ -488,9 +593,99 @@ body.account-settings-page {
     border-bottom: none;
 }
 
+.account-settings-grid {
+    display: grid;
+    gap: 16px;
+}
+
+.account-settings-grid--two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.account-settings-number-input,
+.account-settings-hex-input,
+.account-settings-color-input {
+    width: 100%;
+    min-height: 38px;
+    border: 1px solid rgba(141, 111, 84, 0.2);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    font: inherit;
+}
+
+.account-settings-number-input,
+.account-settings-hex-input {
+    padding: 8px 10px;
+}
+
+.account-settings-orb-input {
+    width: 44px;
+    min-width: 44px;
+    height: 34px;
+    min-height: 34px;
+    padding: 0 4px;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.account-settings-orb-input::-webkit-outer-spin-button,
+.account-settings-orb-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.account-settings-orb-corner {
+    background: rgba(255, 252, 247, 0.72);
+}
+
+.account-settings-orb-matrix-wrap {
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-gutter: stable both-edges;
+}
+
+.account-settings-color-input {
+    padding: 4px;
+}
+
+.account-settings-status {
+    margin: 0 18px 14px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(251, 246, 238, 0.94);
+    color: #5a4737;
+    font-size: 13px;
+    letter-spacing: 0.01em;
+}
+
+.account-settings-status.hidden {
+    display: none;
+}
+
+.account-settings-status[data-status="running"] {
+    background: rgba(237, 242, 255, 0.9);
+    color: #2f4d92;
+}
+
+.account-settings-status[data-status="completed"] {
+    background: rgba(235, 250, 241, 0.95);
+    color: #1f6a44;
+}
+
+.account-settings-status[data-status="failed"] {
+    background: rgba(254, 242, 242, 0.95);
+    color: #9b2c2c;
+}
+
 @media (max-width: 1100px) {
     .account-settings-header,
-    .account-settings-layout {
+    .account-settings-sidebar {
         grid-template-columns: 1fr;
     }
 
@@ -498,8 +693,13 @@ body.account-settings-page {
         justify-content: flex-start;
     }
 
-    .account-settings-sidebar {
-        position: static;
+    .account-settings-grid--two {
+        grid-template-columns: 1fr;
+    }
+
+    .account-settings-card-head--compact {
+        display: grid;
+        gap: 10px;
     }
 }
 
@@ -542,6 +742,16 @@ body.account-settings-page {
     }
 
     .account-settings-btn {
+        width: 100%;
+    }
+
+    .account-settings-profile-tabs {
+        width: 100%;
+    }
+
+    .account-settings-profile-tab,
+    .account-settings-secondary-action {
+        flex: 1 1 0;
         width: 100%;
     }
 }

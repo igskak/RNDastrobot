@@ -586,6 +586,9 @@ function applyForecastResolvedPreferences(viewType, payload) {
         if (window.ForecastBiwheel?.setOrientationMode) {
             window.ForecastBiwheel.setOrientationMode(ForecastState.biwheelOrientation);
         }
+        if (ForecastState.accountPreferences?.visual) {
+            window.ForecastBiwheel?.setVisualPreferences?.(ForecastState.accountPreferences.visual);
+        }
         window.ForecastBiwheel?.setMatrixRows?.(ForecastState.biwheelMatrixRows);
         window.ForecastBiwheel?.setEnabledAspectTypes?.(ForecastState.biwheelEnabledAspectTypes);
         window.ForecastBiwheel?.setAspectFilter?.(ForecastState.biwheelAspectScope);
@@ -606,6 +609,10 @@ function applyForecastResolvedPreferences(viewType, payload) {
         ForecastState.solarShowApplyingSeparating = resolved?.aspects?.show_applying_separating === true;
         ForecastState.solarShowSpeed = resolved?.table_options?.show_speed !== false;
         ForecastState.solarShowStationary = resolved?.table_options?.show_stationary !== false;
+        if (ForecastState.accountPreferences?.visual) {
+            ForecastState.solarWheel?.setVisualPreferences?.(ForecastState.accountPreferences.visual, { redraw: false });
+            getSolarDataRenderer()?.setVisualPreferences?.(ForecastState.accountPreferences.visual);
+        }
         if (ForecastState.solarData) {
             renderSolar(ForecastState.solarData);
         }
@@ -619,6 +626,11 @@ async function hydrateForecastPreferences() {
 
     try {
         ForecastState.accountPreferences = await window.AstroAPI.getAccountPreferences();
+        if (window.AstroPreferences?.setAccountVisualPreferences) {
+            window.AstroPreferences.setAccountVisualPreferences(ForecastState.accountPreferences?.visual || {});
+        }
+        window.ForecastBiwheel?.setVisualPreferences?.(ForecastState.accountPreferences?.visual || {});
+        window.ForecastTimeline?.setVisualPreferences?.(ForecastState.accountPreferences?.visual || {});
         ForecastState.biwheelResolvedPreferences = await window.AstroAPI.getResolvedPreferences({
             chart_kind: 'natal',
             chart_id: userId,

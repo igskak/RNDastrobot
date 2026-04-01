@@ -164,7 +164,7 @@ class SolarReturnService:
             )
 
         # 8.1 Рассчитать аспекты внутри солярной карты
-        solar_aspects = self._calculate_solar_aspects(solar_planets)
+        solar_aspects = self._calculate_solar_aspects(solar_planets, user_id=user_id)
         
         # 9. Формируем результат
         result = self._build_solar_response(
@@ -235,7 +235,7 @@ class SolarReturnService:
             'aspects': solar_aspects,
         }
 
-    def _calculate_solar_aspects(self, solar_planets: List[Dict]) -> List[Dict]:
+    def _calculate_solar_aspects(self, solar_planets: List[Dict], *, user_id: UUID) -> List[Dict]:
         """
         Рассчитать аспекты между объектами солярной карты (планеты/точки).
 
@@ -257,7 +257,7 @@ class SolarReturnService:
             return []
 
         aspect_service = AspectService(self.db)
-        return aspect_service.calculate_aspects_for_objects(objects)
+        return aspect_service.calculate_aspects_for_objects(objects, user_id=user_id)
 
     def _save_solar_return(self, user_id: UUID, year: int, result: Dict) -> UUID:
         """Сохранить соляр в БД"""

@@ -20,6 +20,7 @@ from app.database.models import (
 from app.services.swisseph_engine import SwissEphemerisEngine
 from app.services.time_service import TimeService
 from app.services.special_points_service import SpecialPointsService
+from app.services.preferences_runtime import PreferencesRuntimeResolver
 from app.utils.constants import (
     get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds,
     PROGNOSTIC_EXCLUDED_NATAL_TARGETS, PROGNOSTIC_EXACT_ORB,
@@ -40,6 +41,7 @@ class ProgressionService:
         self.swisseph_engine = SwissEphemerisEngine(ephe_path)
         if ephe_path:
             swe.set_ephe_path(ephe_path)
+        self.preferences_runtime = PreferencesRuntimeResolver(db_session)
         self._aspect_types_cache: Optional[List[RefAspectType]] = None
         self._planet_orbs_cache: Optional[Dict[Tuple[str, str], float]] = None
 
@@ -127,7 +129,7 @@ class ProgressionService:
             planet['house'] = planet['progressed_house']
         
         # 6. Рассчитать аспекты прогрессия→натал
-        aspects = self._calculate_progression_aspects(progressed_planets, natal_data)
+        aspects = self._calculate_progression_aspects(user_id, progressed_planets, natal_data)
         
         # 7. Рассчитать ингрессии планет (знак/дом)
         planet_ingresses = self._calculate_planet_ingresses(
@@ -251,12 +253,16 @@ class ProgressionService:
             self._base_orbs_cache = {a.aspect_type: float(a.base_orb) for a in aspects}
         return self._base_orbs_cache
 
-    def _calculate_allowed_orb(self, body_a: str, body_b: str, aspect_type: str) -> float:
-        """
-        Фиксированный орбис для прогрессий:
-        - 3° если прогрессивная Луна (body_a = 'Moon')
-        - 1° для всех остальных
-        """
+    def _calculate_allowed_orb(self, user_id: UUID, body_a: str, body_b: str, aspect_type: str) -> float:
+        astrologer_id = self.preferences_runtime.get_astrologer_id_for_user(user_id)
+        if astrologer_id:
+            return self.preferences_runtime.resolve_orb_for_astrologer(
+                astrologer_id,
+                body_a,
+                body_b,
+                aspect_type,
+                orb_profile='prognostic',
+            )
         if body_a == 'Moon':
             return PROGNOSTIC_MOON_ORB
         return PROGNOSTIC_DEFAULT_ORB
@@ -287,6 +293,7 @@ class ProgressionService:
 
     def _calculate_progression_aspects(
         self,
+        user_id: UUID,
         progressed_planets: List[Dict],
         natal_data: Dict
     ) -> List[Dict]:
@@ -297,7 +304,7 @@ class ProgressionService:
 
         for prog_planet in progressed_planets:
             for natal_obj in natal_objects:
-                aspect = self._check_aspect(prog_planet, natal_obj, aspect_types)
+                aspect = self._check_aspect(user_id, prog_planet, natal_obj, aspect_types)
                 if aspect:
                     aspects.append(aspect)
 
@@ -370,6 +377,7 @@ class ProgressionService:
 
     def _check_aspect(
         self,
+        user_id: UUID,
         prog_obj: Dict,
         natal_obj: Dict,
         aspect_types: List[RefAspectType]
@@ -382,7 +390,10 @@ class ProgressionService:
         for aspect_type in aspect_types:
             exact_angle = float(aspect_type.exact_angle)
             max_orb = self._calculate_allowed_orb(
-                prog_obj['name'], natal_obj['name'], aspect_type.aspect_type
+                user_id,
+                prog_obj['name'],
+                natal_obj['name'],
+                aspect_type.aspect_type,
             )
             deviation = abs(diff - exact_angle)
 

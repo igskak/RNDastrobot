@@ -9,6 +9,33 @@
         'BlackMoon', 'WhiteMoon', 'PartOfFortune',
         'ASC', 'DSC', 'MC', 'IC', 'Vertex', 'AntiVertex',
     ];
+    const DEFAULT_ASPECT_COLORS = {
+        Conjunction: '#f59e0b',
+        Opposition: '#ef4444',
+        Square: '#ef4444',
+        Trine: '#3b82f6',
+        Sextile: '#22c55e',
+        Quincunx: '#8b5cf6',
+        Semisextile: '#14b8a6',
+        Quintile: '#ec4899',
+        Biquintile: '#ec4899',
+        Semisquare: '#f97316',
+        Sesquiquadrate: '#f97316',
+    };
+    const DEFAULT_ELEMENT_PALETTE = {
+        Fire: '#ef4444',
+        Earth: '#22c55e',
+        Air: '#eab308',
+        Water: '#3b82f6',
+    };
+    const ORB_PROFILE_IDS = ['natal', 'prognostic'];
+    let accountVisualPreferences = {
+        aspect_colors: { ...DEFAULT_ASPECT_COLORS },
+        planet_colors: {
+            element_palette: { ...DEFAULT_ELEMENT_PALETTE },
+            body_overrides: {},
+        },
+    };
 
     function deepClone(value) {
         if (value === null || value === undefined) return value;
@@ -116,6 +143,75 @@
         };
     }
 
+    function normalizeMethodologySettings(methodology = {}) {
+        const legacyMatrix = deepClone(methodology?.orbs?.matrix || {});
+        const profiles = methodology?.orbs?.profiles || {};
+        const normalizedProfiles = {};
+
+        ORB_PROFILE_IDS.forEach((profileId) => {
+            const profileMatrix = deepClone(profiles?.[profileId]?.matrix || {});
+            normalizedProfiles[profileId] = {
+                matrix: Object.keys(profileMatrix).length ? profileMatrix : deepClone(legacyMatrix),
+            };
+        });
+
+        return {
+            orbs: {
+                version: 2,
+                profiles: normalizedProfiles,
+            },
+            balances: {
+                version: Number(methodology?.balances?.version || 1),
+                planet_weights: deepClone(methodology?.balances?.planet_weights || {}),
+                special_point_weights: deepClone(methodology?.balances?.special_point_weights || {}),
+            },
+        };
+    }
+
+    function resolveVisualPreferences(visual = {}) {
+        return {
+            aspect_colors: {
+                ...DEFAULT_ASPECT_COLORS,
+                ...(visual?.aspect_colors || {}),
+            },
+            planet_colors: {
+                element_palette: {
+                    ...DEFAULT_ELEMENT_PALETTE,
+                    ...(visual?.planet_colors?.element_palette || {}),
+                },
+                body_overrides: {
+                    ...(visual?.planet_colors?.body_overrides || {}),
+                },
+            },
+        };
+    }
+
+    function setAccountVisualPreferences(visual = {}) {
+        accountVisualPreferences = resolveVisualPreferences(visual);
+        return accountVisualPreferences;
+    }
+
+    function getAccountVisualPreferences() {
+        return deepClone(accountVisualPreferences);
+    }
+
+    function getAspectColor(aspectType, visual = null) {
+        const resolved = visual ? resolveVisualPreferences(visual) : accountVisualPreferences;
+        return resolved?.aspect_colors?.[aspectType] || DEFAULT_ASPECT_COLORS[aspectType] || '#9ca3af';
+    }
+
+    function getElementColor(element, visual = null) {
+        const resolved = visual ? resolveVisualPreferences(visual) : accountVisualPreferences;
+        return resolved?.planet_colors?.element_palette?.[element] || DEFAULT_ELEMENT_PALETTE[element] || '#6b7280';
+    }
+
+    function getPlanetColor(bodyName, element = null, visual = null) {
+        const resolved = visual ? resolveVisualPreferences(visual) : accountVisualPreferences;
+        const bodyOverride = resolved?.planet_colors?.body_overrides?.[bodyName];
+        if (bodyOverride) return bodyOverride;
+        return getElementColor(element, resolved);
+    }
+
     function buildLegacyNatalPatch({ formData, chartData, currentSettings } = {}) {
         const patch = {};
         const formHouseSystem = String(formData?.houseSystem || chartData?.birth_data?.house_system || '').trim();
@@ -149,11 +245,21 @@
 
     const api = {
         MATRIX_BODIES,
+        DEFAULT_ASPECT_COLORS,
+        DEFAULT_ELEMENT_PALETTE,
+        ORB_PROFILE_IDS,
         deepMerge,
         deepEqual,
         buildSparseDiff,
         ensureMatrixRows,
         normalizeViewSettings,
+        normalizeMethodologySettings,
+        resolveVisualPreferences,
+        setAccountVisualPreferences,
+        getAccountVisualPreferences,
+        getAspectColor,
+        getElementColor,
+        getPlanetColor,
         getHiddenBodiesFromMatrix,
         buildMatrixRowsFromHiddenBodies,
         buildLegacyNatalPatch,

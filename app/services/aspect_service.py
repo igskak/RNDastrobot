@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.database.models import (
     NatalPlanet, NatalSpecialPoint, Angle, NatalAspect, RefAspectType, RefPlanetOrb
 )
+from app.services.preferences_runtime import PreferencesRuntimeResolver
 
 
 class AspectService:
@@ -19,6 +20,7 @@ class AspectService:
         self._aspect_types_cache: Optional[List[RefAspectType]] = None
         self._planet_orbs_cache: Optional[Dict[Tuple[str, str], float]] = None
         self._base_orbs_cache: Optional[Dict[str, float]] = None
+        self.preferences_runtime = PreferencesRuntimeResolver(db_session)
     
     def calculate_aspects(self, user_id: UUID) -> List[Dict]:
         """
@@ -35,7 +37,7 @@ class AspectService:
 
         # Історично метод повертає нефільтрований список, а тривіальні аспекти
         # прибираються лише при збереженні в БД.
-        aspects = self.calculate_aspects_for_objects(objects, filter_trivial=False)
+        aspects = self.calculate_aspects_for_objects(objects, filter_trivial=False, user_id=user_id)
         
         # Зберегти в БД
         self._save_aspects(user_id, aspects)
@@ -45,7 +47,10 @@ class AspectService:
     def calculate_aspects_for_objects(
         self,
         objects: List[Dict],
-        filter_trivial: bool = True
+        filter_trivial: bool = True,
+        *,
+        user_id: Optional[UUID] = None,
+        astrologer_id: Optional[UUID] = None,
     ) -> List[Dict]:
         """
         Розрахувати аспекти для довільного набору об'єктів без збереження в БД.
@@ -63,7 +68,13 @@ class AspectService:
 
         for i, obj1 in enumerate(objects):
             for obj2 in objects[i + 1:]:
-                aspect = self._calculate_aspect_between(obj1, obj2, aspect_types)
+                aspect = self._calculate_aspect_between(
+                    obj1,
+                    obj2,
+                    aspect_types,
+                    user_id=user_id,
+                    astrologer_id=astrologer_id,
+                )
                 if aspect:
                     aspects.append(aspect)
 
@@ -153,7 +164,9 @@ class AspectService:
         self,
         body_a: str,
         body_b: str,
-        aspect_type: str
+        aspect_type: str,
+        *,
+        astrologer_id: Optional[UUID] = None,
     ) -> float:
         """
         Расчет допустимого орбиса для пары тел согласно правилу:
@@ -167,6 +180,15 @@ class AspectService:
         Returns:
             float: Максимальный орбис из двух тел
         """
+        if astrologer_id:
+            return self.preferences_runtime.resolve_orb_for_astrologer(
+                astrologer_id,
+                body_a,
+                body_b,
+                aspect_type,
+                orb_profile='natal',
+            )
+
         planet_orbs = self._get_planet_orbs()
         base_orbs = self._get_base_orbs()
 
@@ -190,7 +212,10 @@ class AspectService:
         self,
         obj1: Dict,
         obj2: Dict,
-        aspect_types: List[RefAspectType]
+        aspect_types: List[RefAspectType],
+        *,
+        user_id: Optional[UUID] = None,
+        astrologer_id: Optional[UUID] = None,
     ) -> Optional[Dict]:
         """
         Розрахунок аспекту між двома об'єктами з використанням індивідуальних орбісів
@@ -210,6 +235,10 @@ class AspectService:
         Returns:
             Optional[Dict]: Дані аспекту або None
         """
+        resolved_astrologer_id = astrologer_id
+        if resolved_astrologer_id is None and user_id is not None:
+            resolved_astrologer_id = self.preferences_runtime.get_astrologer_id_for_user(user_id)
+
         # ИЗМЕНЕНО: Разрешаем аспекты между фиктивными точками для конфигураций
         # (например, BlackMoon - TrueNorthNode для Повозки)
         # Старое правило: if obj1['type'] == 'special_point' and obj2['type'] == 'special_point': return None
@@ -229,7 +258,8 @@ class AspectService:
             max_orb = self._calculate_allowed_orb(
                 obj1['name'],
                 obj2['name'],
-                aspect_type.aspect_type
+                aspect_type.aspect_type,
+                astrologer_id=resolved_astrologer_id,
             )
 
             # 4. Рассчитать отклонение от точного аспекта

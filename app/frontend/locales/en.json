@@ -254,12 +254,32 @@
       },
       "options": {
         "orientationAries": "Aries 0°",
-        "orientationAsc": "Ascendant",
-        "showApplyingSeparating": "Show applying / separating",
-        "showSpeed": "Show speed",
-        "showStationary": "Show stationary"
+      "orientationAsc": "Ascendant",
+      "showApplyingSeparating": "Show applying / separating",
+      "showSpeed": "Show speed",
+      "showStationary": "Show stationary"
+    },
+    "orbs": {
+      "actions": {
+        "applyNatal": "Apply natal orbs"
       },
-      "subtitle": "Set the defaults once, then let individual chart overrides change only what is necessary.",
+      "copy": "Keep separate natal and prognostic orb presets in one compact matrix. Prognostic applies to transits, progressions, directions, and solar.",
+      "hints": {
+        "natal": "Natal orbs are used for natal aspect calculations.",
+        "prognostic": "Prognostic orbs are used for transits, progressions, directions, and solar calculations."
+      },
+      "kicker": "Methodology",
+      "matrix": {
+        "cornerTitle": "Orb matrix by aspect and body"
+      },
+      "tabs": {
+        "ariaLabel": "Orb profiles",
+        "natal": "Natal",
+        "prognostic": "Prognostic"
+      },
+      "title": "Orb profiles"
+    },
+    "subtitle": "Set the defaults once, then let individual chart overrides change only what is necessary.",
       "subtitleWithEmail": "Signed in as {email}. Set the defaults once, then let individual chart overrides change only what is necessary.",
       "tables": {
         "aspects": {
@@ -288,8 +308,9 @@
       },
       "title": "Account settings",
       "toasts": {
-        "loadFailed": "Failed to load account settings",
-        "reloadFailed": "Failed to reload settings",
+      "loadFailed": "Failed to load account settings",
+      "orbsCopied": "Natal orbs copied into the prognostic profile",
+      "reloadFailed": "Failed to reload settings",
         "restored": "Standard defaults loaded into the form",
         "saveFailed": "Failed to save account defaults",
         "saved": "Account defaults saved"

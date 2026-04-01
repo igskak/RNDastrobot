@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.accountSettings.title"></title>
-    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=20260401-134719">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260401-134719">
+    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=20260401-152652">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260401-152652">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '20260401-134719';</script>
+    <script>window.__APP_BUILD_ID__ = '20260401-152652';</script>
 </head>
 <body class="account-settings-page">
     <div class="page-loader" id="pageLoader">
@@ -246,6 +246,164 @@
                     </table>
                 </div>
                     </details>
+
+                    <section class="account-settings-card">
+                        <div class="account-settings-card-head account-settings-card-head--compact">
+                            <div>
+                                <p class="account-settings-section-kicker" data-i18n="page.accountSettings.orbs.kicker"></p>
+                                <h2 class="account-settings-section-title" data-i18n="page.accountSettings.orbs.title"></h2>
+                                <p class="account-settings-section-copy" data-i18n="page.accountSettings.orbs.copy"></p>
+                            </div>
+                            <div class="account-settings-orb-toolbar">
+                                <div
+                                    class="account-settings-profile-tabs"
+                                    role="tablist"
+                                    data-i18n-aria-label="page.accountSettings.orbs.tabs.ariaLabel"
+                                >
+                                    <button
+                                        type="button"
+                                        class="account-settings-profile-tab is-active"
+                                        id="accountOrbTabNatal"
+                                        role="tab"
+                                        aria-selected="true"
+                                        aria-controls="accountOrbMatrixPanel"
+                                        data-orb-profile-tab="natal"
+                                        data-i18n="page.accountSettings.orbs.tabs.natal"
+                                    ></button>
+                                    <button
+                                        type="button"
+                                        class="account-settings-profile-tab"
+                                        id="accountOrbTabPrognostic"
+                                        role="tab"
+                                        aria-selected="false"
+                                        aria-controls="accountOrbMatrixPanel"
+                                        data-orb-profile-tab="prognostic"
+                                        data-i18n="page.accountSettings.orbs.tabs.prognostic"
+                                    ></button>
+                                </div>
+                                <button
+                                    type="button"
+                                    class="account-settings-secondary-action hidden"
+                                    id="accountApplyNatalOrbsBtn"
+                                    data-i18n="page.accountSettings.orbs.actions.applyNatal"
+                                ></button>
+                            </div>
+                        </div>
+                        <div class="account-settings-status hidden" id="methodologyJobStatus"></div>
+                        <p
+                            class="account-settings-section-copy account-settings-section-copy--subtle"
+                            id="accountOrbProfileHint"
+                            data-i18n="page.accountSettings.orbs.hints.natal"
+                        ></p>
+                        <div
+                            class="account-settings-table-wrap account-settings-table-wrap--tight account-settings-orb-matrix-wrap"
+                            id="accountOrbMatrixPanel"
+                            role="tabpanel"
+                            aria-labelledby="accountOrbTabNatal"
+                        >
+                            <table class="account-settings-table account-settings-table--methodology">
+                                <thead>
+                                    <tr id="accountOrbsHeaderRow">
+                                        <th
+                                            class="account-settings-orb-corner"
+                                            data-i18n-title="page.accountSettings.orbs.matrix.cornerTitle"
+                                            data-i18n-aria-label="page.accountSettings.orbs.matrix.cornerTitle"
+                                        ></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="accountOrbsMatrixBody"></tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section class="account-settings-card">
+                        <div class="account-settings-card-head account-settings-card-head--compact">
+                            <div>
+                                <p class="account-settings-section-kicker">Methodology</p>
+                                <h2 class="account-settings-section-title">Balances</h2>
+                                <p class="account-settings-section-copy">Weights used for natal balance calculations. Saving these starts a recalculation job for saved natal and solar charts.</p>
+                            </div>
+                        </div>
+                        <div class="account-settings-grid account-settings-grid--two">
+                            <div class="account-settings-table-wrap account-settings-table-wrap--tight">
+                                <table class="account-settings-table account-settings-table--compact">
+                                    <thead>
+                                        <tr>
+                                            <th>Planet</th>
+                                            <th>Weight</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="accountBalancePlanetWeightsBody"></tbody>
+                                </table>
+                            </div>
+                            <div class="account-settings-table-wrap account-settings-table-wrap--tight">
+                                <table class="account-settings-table account-settings-table--compact">
+                                    <thead>
+                                        <tr>
+                                            <th>Special point</th>
+                                            <th>Weight</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="accountBalanceSpecialWeightsBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="account-settings-card">
+                        <div class="account-settings-card-head account-settings-card-head--compact">
+                            <div>
+                                <p class="account-settings-section-kicker">Visual</p>
+                                <h2 class="account-settings-section-title">Aspect Colors</h2>
+                                <p class="account-settings-section-copy">Account-only palette for aspect lines, markers and timeline rows.</p>
+                            </div>
+                        </div>
+                        <div class="account-settings-table-wrap account-settings-table-wrap--tight">
+                            <table class="account-settings-table account-settings-table--compact">
+                                <thead>
+                                    <tr>
+                                        <th>Aspect</th>
+                                        <th>Color</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="accountAspectColorsBody"></tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section class="account-settings-card">
+                        <div class="account-settings-card-head account-settings-card-head--compact">
+                            <div>
+                                <p class="account-settings-section-kicker">Visual</p>
+                                <h2 class="account-settings-section-title">Planet Colors</h2>
+                                <p class="account-settings-section-copy">Element palette plus optional body-specific overrides. Body override wins over element color.</p>
+                            </div>
+                        </div>
+                        <div class="account-settings-grid account-settings-grid--two">
+                            <div class="account-settings-table-wrap account-settings-table-wrap--tight">
+                                <table class="account-settings-table account-settings-table--compact">
+                                    <thead>
+                                        <tr>
+                                            <th>Element</th>
+                                            <th>Color</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="accountElementPaletteBody"></tbody>
+                                </table>
+                            </div>
+                            <div class="account-settings-table-wrap account-settings-table-wrap--tight">
+                                <table class="account-settings-table account-settings-table--compact">
+                                    <thead>
+                                        <tr>
+                                            <th>Body</th>
+                                            <th>Override</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="accountBodyOverrideColorsBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </div>
         </main>
@@ -253,7 +411,7 @@
 
     <div id="accountSettingsToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/account-settings.bundle.js?v=20260401-134719"></script>
-    <script src="js/locale-switcher.js?v=20260401-134719"></script>
+    <script type="module" src="js/bundles/account-settings.bundle.js?v=20260401-152652"></script>
+    <script src="js/locale-switcher.js?v=20260401-152652"></script>
 </body>
 </html>

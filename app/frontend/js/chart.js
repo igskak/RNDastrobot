@@ -517,6 +517,12 @@ function applyResolvedNatalPreferences(payload, { redraw = true } = {}) {
         showStationary: currentSettings.showStationary,
         showApplyingSeparating: currentSettings.showApplyingSeparating,
     });
+    const accountVisual = window.accountPreferencesCache?.visual || null;
+    if (accountVisual && window.AstroPreferences?.setAccountVisualPreferences) {
+        window.AstroPreferences.setAccountVisualPreferences(accountVisual);
+        chartWheel?.setVisualPreferences?.(accountVisual, { redraw: false });
+        chartDataRenderer?.setVisualPreferences?.(accountVisual);
+    }
 
     if (redraw && window.chartDataCache) {
         redrawChart(window.chartDataCache, currentSettings.hiddenPlanets || [], currentSettings.orientation);
@@ -585,6 +591,14 @@ async function hydrateNatalPreferences(chartData, formData) {
     }
 
     try {
+        if (window.AstroAPI?.getAccountPreferences) {
+            window.accountPreferencesCache = await window.AstroAPI.getAccountPreferences();
+            if (window.AstroPreferences?.setAccountVisualPreferences) {
+                window.AstroPreferences.setAccountVisualPreferences(window.accountPreferencesCache?.visual || {});
+            }
+            chartWheel?.setVisualPreferences?.(window.accountPreferencesCache?.visual || {}, { redraw: false });
+            chartDataRenderer?.setVisualPreferences?.(window.accountPreferencesCache?.visual || {});
+        }
         currentResolvedPreferences = await window.AstroAPI.getResolvedPreferences({
             chart_kind: 'natal',
             chart_id: userId,
