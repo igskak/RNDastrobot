@@ -65,6 +65,7 @@ Non-gating for now (track as TODO):
 - No hardcoded user-facing strings in frontend/backend responses; use i18n catalogs and existing checkers.
 - For every new async UI flow, define and implement states: loading, empty, error.
 - Ensure keyboard focus is visible and interactive elements are semantic (`button`, `label`, `aria-*` when needed).
+- Default UI convention for astrology objects: render the icon without inline text label; reveal the object name on hover/tooltip instead of placing text next to the icon unless the screen explicitly requires a textual list/table view.
 
 ## Delivery Workflow
 - Split feature work into small PRs: contract -> data -> logic -> UI -> tests.

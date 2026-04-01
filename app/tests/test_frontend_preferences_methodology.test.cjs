@@ -16,6 +16,7 @@ test('normalizeMethodologySettings expands legacy orb matrix into natal and prog
     });
 
     assert.equal(legacy.orbs.version, 2);
+    assert.equal(legacy.orbs.pair_strategy, 'larger');
     assert.deepEqual(legacy.orbs.profiles.natal.matrix, legacy.orbs.profiles.prognostic.matrix);
     assert.equal(legacy.orbs.profiles.natal.matrix.Conjunction.Sun, 8);
 });
@@ -24,6 +25,7 @@ test('normalizeMethodologySettings preserves distinct natal and prognostic profi
     const normalized = preferences.normalizeMethodologySettings({
         orbs: {
             version: 2,
+            pair_strategy: 'average',
             profiles: {
                 natal: {
                     matrix: {
@@ -40,6 +42,7 @@ test('normalizeMethodologySettings preserves distinct natal and prognostic profi
     });
 
     assert.equal(normalized.orbs.version, 2);
+    assert.equal(normalized.orbs.pair_strategy, 'average');
     assert.equal(normalized.orbs.profiles.natal.matrix.Conjunction.Sun, 7.5);
     assert.equal(normalized.orbs.profiles.prognostic.matrix.Conjunction.Sun, 5.5);
 });

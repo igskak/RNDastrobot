@@ -796,6 +796,44 @@
 }
 
 /* Balances (compact single line) */
+.balance-tabs {
+    display: inline-flex;
+    gap: 6px;
+    padding: 4px;
+    margin-bottom: 14px;
+    background: rgba(240, 237, 228, 0.72);
+    border: 1px solid rgba(30, 58, 95, 0.08);
+    border-radius: 999px;
+}
+
+.balance-tab-btn {
+    min-height: 34px;
+    padding: 0 14px;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition), box-shadow var(--transition);
+}
+
+.balance-tab-btn.active {
+    background: var(--bg-secondary);
+    color: var(--accent);
+    box-shadow: var(--shadow-sm);
+}
+
+.balance-tab-panel {
+    display: none;
+}
+
+.balance-tab-panel.active {
+    display: block;
+}
+
 .balances-compact {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -988,6 +1026,16 @@
     .balances-compact {
         grid-template-columns: 1fr;
         gap: 8px;
+    }
+
+    .balance-tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+    }
+
+    .balance-tab-btn {
+        width: 100%;
     }
 
     .balance-group {

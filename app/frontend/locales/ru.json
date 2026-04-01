@@ -272,6 +272,13 @@
       "matrix": {
         "cornerTitle": "Матрица орбов по аспектам и телам"
       },
+      "pairStrategy": {
+        "average": "Средний",
+        "hint": "Если у двух тел разные орбисы, выберите, какой орбис использовать в аспектах: больший, меньший или средний.",
+        "label": "Какой орбис брать в аспектах",
+        "larger": "Больший",
+        "smaller": "Меньший"
+      },
       "tabs": {
         "ariaLabel": "Профили орбов",
         "natal": "Натал",
@@ -357,20 +364,35 @@
       },
       "balances": {
         "angular": "Угловые",
+        "brahma": "Брахма",
         "cadent": "Падающие",
         "cosmogramTitle": "Фигура космограммы",
-        "east": "Восток",
+        "east": "Восточная",
         "elementsTitle": "Стихии",
         "emptyArc": "Пустая дуга: {value}°",
         "handle": "Ручка: {planet}",
-        "hemispheresTitle": "Полушария",
+        "hemispheresTitle": "Полусфера",
         "houseGroupsTitle": "Группы домов",
+        "lower": "Нижняя",
         "leading": "Ведущая: {planet}",
-        "modesTitle": "Модальности",
-        "north": "Север",
-        "south": "Юг",
+        "modesTitle": "Кресты",
+        "polarityTitle": "Полярность",
+        "quadrant1": "I",
+        "quadrant2": "II",
+        "quadrant3": "III",
+        "quadrant4": "IV",
+        "quadrantsTitle": "Квадранты",
         "succedent": "Последующие",
-        "west": "Запад"
+        "tabs": {
+          "house": "По дому",
+          "sign": "По знаку",
+          "title": "Тип баланса"
+        },
+        "upper": "Верхняя",
+        "vishnu": "Вишну",
+        "west": "Западная",
+        "zonesTitle": "Зоны",
+        "shiva": "Шива"
       },
       "chat": {
         "title": "Вопрос по этой карте"
@@ -1010,8 +1032,28 @@
     "natalFull": {
       "balances": {
         "elements": "Стихии:",
-        "modes": "Модальности:",
-        "polarity": "Полярность:"
+        "modes": "Кресты:",
+        "polarity": "Полярность:",
+        "zones": "Зоны:",
+        "quadrants": "Квадранты:",
+        "hemisphere": "Полусфера:",
+        "houseGroups": "Группы домов:",
+        "sign": "По знаку",
+        "house": "По дому",
+        "brahma": "Брахма",
+        "vishnu": "Вишну",
+        "shiva": "Шива",
+        "lower": "Нижняя",
+        "upper": "Верхняя",
+        "east": "Восточная",
+        "west": "Западная",
+        "quadrant1": "I",
+        "quadrant2": "II",
+        "quadrant3": "III",
+        "quadrant4": "IV",
+        "angular": "Угловые",
+        "succedent": "Последующие",
+        "cadent": "Падающие"
       },
       "config": {
         "apex": "Вершина: {planet}",

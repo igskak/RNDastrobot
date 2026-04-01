@@ -272,6 +272,13 @@
       "matrix": {
         "cornerTitle": "Матриця орбісів за аспектами й тілами"
       },
+      "pairStrategy": {
+        "average": "Середній",
+        "hint": "Якщо два тіла мають різні орбіси, виберіть, який орбіс використовувати в аспектах: більший, менший чи середній.",
+        "label": "Який орбіс брати в аспектах",
+        "larger": "Більший",
+        "smaller": "Менший"
+      },
       "tabs": {
         "ariaLabel": "Профілі орбісів",
         "natal": "Натал",
@@ -357,20 +364,35 @@
       },
       "balances": {
         "angular": "Кутові",
+        "brahma": "Брахма",
         "cadent": "Падаючі",
         "cosmogramTitle": "Фігура космограми",
-        "east": "Схід",
+        "east": "Східна",
         "elementsTitle": "Стихії",
         "emptyArc": "Порожня дуга: {value}°",
         "handle": "Ручка: {planet}",
-        "hemispheresTitle": "Півкулі",
+        "hemispheresTitle": "Півсфера",
         "houseGroupsTitle": "Групи домів",
+        "lower": "Нижня",
         "leading": "Ведуча: {planet}",
-        "modesTitle": "Модальності",
-        "north": "Північ",
-        "south": "Південь",
+        "modesTitle": "Хрести",
+        "polarityTitle": "Полярність",
+        "quadrant1": "I",
+        "quadrant2": "II",
+        "quadrant3": "III",
+        "quadrant4": "IV",
+        "quadrantsTitle": "Квадранти",
         "succedent": "Наступні",
-        "west": "Захід"
+        "tabs": {
+          "house": "За домом",
+          "sign": "За знаком",
+          "title": "Тип балансу"
+        },
+        "upper": "Верхня",
+        "vishnu": "Вішну",
+        "west": "Західна",
+        "zonesTitle": "Зони",
+        "shiva": "Шива"
       },
       "chat": {
         "title": "Питання по цій карті"
@@ -1010,8 +1032,28 @@
     "natalFull": {
       "balances": {
         "elements": "Стихії:",
-        "modes": "Модальності:",
-        "polarity": "Полярність:"
+        "modes": "Хрести:",
+        "polarity": "Полярність:",
+        "zones": "Зони:",
+        "quadrants": "Квадранти:",
+        "hemisphere": "Півсфера:",
+        "houseGroups": "Групи домів:",
+        "sign": "За знаком",
+        "house": "За домом",
+        "brahma": "Брахма",
+        "vishnu": "Вішну",
+        "shiva": "Шива",
+        "lower": "Нижня",
+        "upper": "Верхня",
+        "east": "Східна",
+        "west": "Західна",
+        "quadrant1": "I",
+        "quadrant2": "II",
+        "quadrant3": "III",
+        "quadrant4": "IV",
+        "angular": "Кутові",
+        "succedent": "Наступні",
+        "cadent": "Падаючі"
       },
       "config": {
         "apex": "Вершина: {planet}",

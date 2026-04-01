@@ -243,6 +243,12 @@ body.account-settings-page {
     gap: 8px;
 }
 
+.account-settings-orb-strategy {
+    min-width: 190px;
+    display: grid;
+    gap: 6px;
+}
+
 .account-settings-profile-tabs {
     display: inline-flex;
     align-items: center;

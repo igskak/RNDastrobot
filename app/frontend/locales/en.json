@@ -272,6 +272,13 @@
       "matrix": {
         "cornerTitle": "Orb matrix by aspect and body"
       },
+      "pairStrategy": {
+        "average": "Average",
+        "hint": "When two bodies have different orb values, choose whether aspects use the larger, smaller, or average orb.",
+        "label": "Orb used in aspects",
+        "larger": "Larger",
+        "smaller": "Smaller"
+      },
       "tabs": {
         "ariaLabel": "Orb profiles",
         "natal": "Natal",
@@ -357,20 +364,35 @@
       },
       "balances": {
         "angular": "Angular",
+        "brahma": "Brahma",
         "cadent": "Cadent",
         "cosmogramTitle": "Cosmogram pattern",
-        "east": "East",
+        "east": "Eastern",
         "elementsTitle": "Elements",
         "emptyArc": "Empty arc: {value}°",
         "handle": "Handle: {planet}",
-        "hemispheresTitle": "Hemispheres",
+        "hemispheresTitle": "Hemisphere",
         "houseGroupsTitle": "House groups",
+        "lower": "Lower",
         "leading": "Leading: {planet}",
-        "modesTitle": "Modes",
-        "north": "North",
-        "south": "South",
+        "modesTitle": "Crosses",
+        "polarityTitle": "Polarity",
+        "quadrant1": "I",
+        "quadrant2": "II",
+        "quadrant3": "III",
+        "quadrant4": "IV",
+        "quadrantsTitle": "Quadrants",
         "succedent": "Succedent",
-        "west": "West"
+        "tabs": {
+          "house": "By house",
+          "sign": "By sign",
+          "title": "Balance type"
+        },
+        "upper": "Upper",
+        "vishnu": "Vishnu",
+        "west": "Western",
+        "zonesTitle": "Zones",
+        "shiva": "Shiva"
       },
       "chat": {
         "title": "Ask about this chart"
@@ -1010,8 +1032,28 @@
     "natalFull": {
       "balances": {
         "elements": "Elements:",
-        "modes": "Modes:",
-        "polarity": "Polarity:"
+        "modes": "Crosses:",
+        "polarity": "Polarity:",
+        "zones": "Zones:",
+        "quadrants": "Quadrants:",
+        "hemisphere": "Hemisphere:",
+        "houseGroups": "House groups:",
+        "sign": "By sign",
+        "house": "By house",
+        "brahma": "Brahma",
+        "vishnu": "Vishnu",
+        "shiva": "Shiva",
+        "lower": "Lower",
+        "upper": "Upper",
+        "east": "Eastern",
+        "west": "Western",
+        "quadrant1": "I",
+        "quadrant2": "II",
+        "quadrant3": "III",
+        "quadrant4": "IV",
+        "angular": "Angular",
+        "succedent": "Succedent",
+        "cadent": "Cadent"
       },
       "config": {
         "apex": "Apex: {planet}",

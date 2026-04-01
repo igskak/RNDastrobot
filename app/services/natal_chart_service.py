@@ -1215,59 +1215,16 @@ class NatalChartService:
             pattern_data['special_roles'] = []
             result['cosmogram_pattern'] = pattern_data
 
-        # 6. Інтегральні баланси (все eager-loaded через relationships)
-        balances = {}
+        # 6. Інтегральні баланси у двох режимах: за знаками та за домами
+        from app.services.balance_service import BalanceService
 
-        eb = user.element_balance
-        if eb:
-            balances['element_balance'] = {
-                'fire': float(eb.fire), 'earth': float(eb.earth),
-                'air': float(eb.air), 'water': float(eb.water)
-            }
-
-        mb = user.mode_balance
-        if mb:
-            balances['mode_balance'] = {
-                'cardinal': float(mb.cardinal), 'fixed': float(mb.fixed),
-                'mutable': float(mb.mutable)
-            }
-
-        gb = user.gender_balance
-        if gb:
-            balances['gender_balance'] = {
-                'masculine': float(gb.masculine), 'feminine': float(gb.feminine)
-            }
-
-        zb = user.zones_balance
-        if zb:
-            balances['zones_balance'] = {
-                'brahma': float(zb.brahma), 'vishnu': float(zb.vishnu),
-                'shiva': float(zb.shiva)
-            }
-
-        hb = user.hemisphere_balance
-        if hb:
-            balances['hemisphere_balance'] = {
-                'northern': float(hb.northern), 'southern': float(hb.southern),
-                'eastern': float(hb.eastern), 'western': float(hb.western)
-            }
-
-        qb = user.quadrant_balance
-        if qb:
-            balances['quadrant_balance'] = {
-                'q1': float(qb.quadrant_1), 'q2': float(qb.quadrant_2),
-                'q3': float(qb.quadrant_3), 'q4': float(qb.quadrant_4)
-            }
-
-        hgb = user.house_group_balance
-        if hgb:
-            balances['house_group_balance'] = {
-                'angular': float(hgb.angular_count),
-                'succedent': float(hgb.succedent_count),
-                'cadent': float(hgb.cadent_count)
-            }
-
-        result['balances'] = balances if balances else None
+        balance_service = BalanceService(db_session)
+        result['balances'] = balance_service.build_dual_balances(
+            user.planets,
+            user.special_points,
+            user_id=user.user_id,
+            astrologer_id=user.astrologer_id,
+        )
         self._append_karmic_analysis(result)
         return result
 

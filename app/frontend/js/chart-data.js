@@ -764,9 +764,75 @@ class ChartDataRenderer {
             return;
         }
 
-        // Стихии
-        if (balances.element_balance) {
-            const eb = balances.element_balance;
+        const views = [
+            { key: 'by_sign', label: this.t('page.chart.balances.tabs.sign'), data: balances.by_sign },
+            { key: 'by_house', label: this.t('page.chart.balances.tabs.house'), data: balances.by_house }
+        ].filter((view) => this.hasBalanceData(view.data));
+
+        if (!views.length) {
+            this.balancesContainer.innerHTML = html || `<p style="color: #6e6e73; text-align: center; padding: 40px;">${this.t('page.chart.empty.noBalances')}</p>`;
+            return;
+        }
+
+        if (views.length === 1) {
+            html += this.renderBalanceSet(views[0].data);
+            this.balancesContainer.innerHTML = html;
+            return;
+        }
+
+        html += `
+            <div class="balance-subtabs" role="tablist" aria-label="${this.t('page.chart.balances.tabs.title')}">
+                ${views.map((view, index) => `
+                    <button
+                        type="button"
+                        class="balance-subtab-btn${index === 0 ? ' active' : ''}"
+                        data-balance-tab="${view.key}"
+                        aria-selected="${index === 0 ? 'true' : 'false'}"
+                    >
+                        ${view.label}
+                    </button>
+                `).join('')}
+            </div>
+            ${views.map((view, index) => `
+                <div class="balance-subtab-panel${index === 0 ? ' active' : ''}" data-balance-panel="${view.key}">
+                    ${this.renderBalanceSet(view.data)}
+                </div>
+            `).join('')}
+        `;
+
+        this.balancesContainer.innerHTML = html;
+        this.initBalanceTabs();
+    }
+
+    hasBalanceData(balanceSet) {
+        return Boolean(balanceSet && Object.values(balanceSet).some((section) => section && Object.keys(section).length));
+    }
+
+    initBalanceTabs() {
+        const buttons = this.balancesContainer.querySelectorAll('[data-balance-tab]');
+        const panels = this.balancesContainer.querySelectorAll('[data-balance-panel]');
+        if (!buttons.length || !panels.length) return;
+
+        buttons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const key = button.dataset.balanceTab;
+                buttons.forEach((item) => {
+                    const isActive = item.dataset.balanceTab === key;
+                    item.classList.toggle('active', isActive);
+                    item.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                });
+                panels.forEach((panel) => {
+                    panel.classList.toggle('active', panel.dataset.balancePanel === key);
+                });
+            });
+        });
+    }
+
+    renderBalanceSet(balanceSet) {
+        let html = '';
+
+        if (balanceSet.element_balance) {
+            const eb = balanceSet.element_balance;
             const total = eb.fire + eb.earth + eb.air + eb.water;
             html += this.renderBalanceSection(this.t('page.chart.balances.elementsTitle'), [
                 { label: this.t('astro.element.Fire'), value: eb.fire, total, colorClass: 'bar-fire' },
@@ -776,9 +842,8 @@ class ChartDataRenderer {
             ]);
         }
 
-        // Кресты
-        if (balances.mode_balance) {
-            const mb = balances.mode_balance;
+        if (balanceSet.mode_balance) {
+            const mb = balanceSet.mode_balance;
             const total = mb.cardinal + mb.fixed + mb.mutable;
             html += this.renderBalanceSection(this.t('page.chart.balances.modesTitle'), [
                 { label: this.t('astro.mode.short.Cardinal'), value: mb.cardinal, total, color: '#ef4444' },
@@ -787,22 +852,50 @@ class ChartDataRenderer {
             ]);
         }
 
-        // Полусферы
-        if (balances.hemisphere_balance) {
-            const hb = balances.hemisphere_balance;
-            const nsTotal = hb.northern + hb.southern;
-            const ewTotal = hb.eastern + hb.western;
-            html += this.renderBalanceSection(this.t('page.chart.balances.hemispheresTitle'), [
-                { label: this.t('page.chart.balances.north'), value: hb.northern, total: nsTotal, color: '#3b82f6' },
-                { label: this.t('page.chart.balances.south'), value: hb.southern, total: nsTotal, color: '#f97316' },
-                { label: this.t('page.chart.balances.east'), value: hb.eastern, total: ewTotal, color: '#8b5cf6' },
-                { label: this.t('page.chart.balances.west'), value: hb.western, total: ewTotal, color: '#ec4899' }
+        if (balanceSet.gender_balance) {
+            const gb = balanceSet.gender_balance;
+            const total = gb.masculine + gb.feminine;
+            html += this.renderBalanceSection(this.t('page.chart.balances.polarityTitle'), [
+                { label: this.t('astro.polarity.Masculine'), value: gb.masculine, total, color: '#2563eb' },
+                { label: this.t('astro.polarity.Feminine'), value: gb.feminine, total, color: '#db2777' }
             ]);
         }
 
-        // Группы домов
-        if (balances.house_group_balance) {
-            const hgb = balances.house_group_balance;
+        if (balanceSet.zones_balance) {
+            const zb = balanceSet.zones_balance;
+            const total = zb.brahma + zb.vishnu + zb.shiva;
+            html += this.renderBalanceSection(this.t('page.chart.balances.zonesTitle'), [
+                { label: this.t('page.chart.balances.brahma'), value: zb.brahma, total, color: '#f97316' },
+                { label: this.t('page.chart.balances.vishnu'), value: zb.vishnu, total, color: '#16a34a' },
+                { label: this.t('page.chart.balances.shiva'), value: zb.shiva, total, color: '#7c3aed' }
+            ]);
+        }
+
+        if (balanceSet.quadrant_balance) {
+            const qb = balanceSet.quadrant_balance;
+            const total = qb.q1 + qb.q2 + qb.q3 + qb.q4;
+            html += this.renderBalanceSection(this.t('page.chart.balances.quadrantsTitle'), [
+                { label: this.t('page.chart.balances.quadrant1'), value: qb.q1, total, color: '#0f766e' },
+                { label: this.t('page.chart.balances.quadrant2'), value: qb.q2, total, color: '#0891b2' },
+                { label: this.t('page.chart.balances.quadrant3'), value: qb.q3, total, color: '#9333ea' },
+                { label: this.t('page.chart.balances.quadrant4'), value: qb.q4, total, color: '#ea580c' }
+            ]);
+        }
+
+        if (balanceSet.hemisphere_balance) {
+            const hb = balanceSet.hemisphere_balance;
+            const verticalTotal = hb.lower + hb.upper;
+            const horizontalTotal = hb.eastern + hb.western;
+            html += this.renderBalanceSection(this.t('page.chart.balances.hemispheresTitle'), [
+                { label: this.t('page.chart.balances.lower'), value: hb.lower, total: verticalTotal, color: '#3b82f6' },
+                { label: this.t('page.chart.balances.upper'), value: hb.upper, total: verticalTotal, color: '#f97316' },
+                { label: this.t('page.chart.balances.east'), value: hb.eastern, total: horizontalTotal, color: '#8b5cf6' },
+                { label: this.t('page.chart.balances.west'), value: hb.western, total: horizontalTotal, color: '#ec4899' }
+            ]);
+        }
+
+        if (balanceSet.house_group_balance) {
+            const hgb = balanceSet.house_group_balance;
             const total = hgb.angular + hgb.succedent + hgb.cadent;
             html += this.renderBalanceSection(this.t('page.chart.balances.houseGroupsTitle'), [
                 { label: this.t('page.chart.balances.angular'), value: hgb.angular, total, color: '#6366f1' },
@@ -811,7 +904,7 @@ class ChartDataRenderer {
             ]);
         }
 
-        this.balancesContainer.innerHTML = html;
+        return html;
     }
 
     renderBalanceSection(title, items) {

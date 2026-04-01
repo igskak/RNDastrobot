@@ -77,6 +77,20 @@ DEFAULT_ASPECT_COLOR_BY_CHARACTER: Dict[str, str] = {
     'neutral': '#9ca3af',
 }
 ORB_PROFILE_IDS = ('natal', 'prognostic')
+DEFAULT_ORB_PAIR_STRATEGY = 'larger'
+ORB_PAIR_STRATEGY_ALIASES: Dict[str, str] = {
+    'larger': 'larger',
+    'greater': 'larger',
+    'max': 'larger',
+    'maximum': 'larger',
+    'smaller': 'smaller',
+    'lesser': 'smaller',
+    'min': 'smaller',
+    'minimum': 'smaller',
+    'average': 'average',
+    'avg': 'average',
+    'mean': 'average',
+}
 
 BODY_REVERSE_LOOKUP: Dict[str, str] = {}
 for canonical_body in CANONICAL_BODIES:
@@ -166,6 +180,7 @@ def build_default_orb_settings(
 
     return {
         'version': 2,
+        'pair_strategy': DEFAULT_ORB_PAIR_STRATEGY,
         'profiles': {
             profile_id: {
                 'matrix': deepcopy(matrix),
@@ -175,12 +190,36 @@ def build_default_orb_settings(
     }
 
 
+def normalize_orb_pair_strategy(value: Optional[str]) -> str:
+    normalized = str(value or '').strip().lower()
+    return ORB_PAIR_STRATEGY_ALIASES.get(normalized, DEFAULT_ORB_PAIR_STRATEGY)
+
+
+def resolve_orb_pair_value(values: Iterable[float], pair_strategy: Optional[str]) -> Optional[float]:
+    resolved_values = [float(value) for value in values if value is not None]
+    if not resolved_values:
+        return None
+    if len(resolved_values) == 1:
+        return resolved_values[0]
+
+    strategy = normalize_orb_pair_strategy(pair_strategy)
+    if strategy == 'smaller':
+        return min(resolved_values)
+    if strategy == 'average':
+        return sum(resolved_values) / len(resolved_values)
+    return max(resolved_values)
+
+
 def normalize_orb_settings(
     orbs: Optional[Dict[str, Any]] = None,
     *,
     default_orbs: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     default_profiles = ((default_orbs or {}).get('profiles') or {}) if isinstance(default_orbs, dict) else {}
+    pair_strategy = normalize_orb_pair_strategy(
+        (orbs or {}).get('pair_strategy')
+        or ((default_orbs or {}).get('pair_strategy') if isinstance(default_orbs, dict) else None)
+    )
     legacy_matrix = deepcopy((orbs or {}).get('matrix') or {})
     source_profiles = (orbs or {}).get('profiles') or {}
     normalized_profiles: Dict[str, Dict[str, Dict[str, float]]] = {}
@@ -196,6 +235,7 @@ def normalize_orb_settings(
 
     return {
         'version': 2,
+        'pair_strategy': pair_strategy,
         'profiles': normalized_profiles,
     }
 
@@ -378,6 +418,7 @@ class PreferencesRuntimeResolver:
             payload.get('methodology', {}).get('orbs', {}) or {},
             default_orbs=self.build_default_methodology()['orbs'],
         )
+        pair_strategy = normalized_orbs.get('pair_strategy')
         matrix = normalized_orbs.get('profiles', {}).get(orb_profile, {}).get('matrix', {}) or {}
         aspect_matrix = matrix.get(aspect_type, {}) or {}
 
@@ -393,8 +434,9 @@ class PreferencesRuntimeResolver:
             if value is not None:
                 resolved_values.append(float(value))
 
-        if resolved_values:
-            return max(resolved_values)
+        resolved_orb = resolve_orb_pair_value(resolved_values, pair_strategy)
+        if resolved_orb is not None:
+            return resolved_orb
 
         default_matrix = self.build_default_methodology()['orbs']['profiles'][orb_profile]['matrix']
         fallback_values = []
@@ -404,7 +446,8 @@ class PreferencesRuntimeResolver:
             if fallback is not None:
                 fallback_values.append(float(fallback))
 
-        if fallback_values:
-            return max(fallback_values)
+        fallback_orb = resolve_orb_pair_value(fallback_values, pair_strategy)
+        if fallback_orb is not None:
+            return fallback_orb
 
         return 5.0

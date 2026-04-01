@@ -59,12 +59,6 @@ const NATAL_ASPECT_TYPES = [
     'Quintile',
     'Biquintile',
 ];
-const MATRIX_NAME_ALIASES = {
-    TrueNorthNode: 'TrueNode',
-    TrueSouthNode: 'SouthNode',
-    Fortune: 'PartOfFortune',
-};
-
 function t(key, params) {
     return window.FrontendI18n?.t?.(key, params) || key;
 }
@@ -85,10 +79,6 @@ function escapeAttribute(value) {
         .replace(/"/g, '&quot;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
-}
-
-function normalizeMatrixBodyName(value) {
-    return MATRIX_NAME_ALIASES[String(value || '')] || value;
 }
 
 let currentSettings = {
@@ -1084,35 +1074,14 @@ function buildChartRequestFromFormData(formData, houseSystem) {
  * Перерисовка карты с учётом скрытых планет
  */
 function redrawChart(chartData, hiddenPlanets, orientation = currentSettings.orientation) {
-    const rows = getCurrentNatalMatrixRows();
-    const visibleBodies = new Set();
-    const aspectingBodies = new Set();
-    Object.entries(rows).forEach(([body, config]) => {
-        if (config?.display !== false) visibleBodies.add(body);
-        if (config?.aspecting !== false) aspectingBodies.add(body);
-    });
-    const enabledAspectTypes = new Set(
-        Array.isArray(currentSettings.enabledAspectTypes) && currentSettings.enabledAspectTypes.length
-            ? currentSettings.enabledAspectTypes
-            : NATAL_ASPECT_TYPES
-    );
-
-    const filteredData = {
-        ...chartData,
-        planets: (chartData.planets || []).filter((planet) => {
-            const name = normalizeMatrixBodyName(planet.name);
-            return !rows[name] || visibleBodies.has(name);
-        }),
-        aspects: (chartData.aspects || []).filter((aspect) => {
-            const left = normalizeMatrixBodyName(aspect.planet_1);
-            const right = normalizeMatrixBodyName(aspect.planet_2);
-            const isVisible = (!rows[left] || visibleBodies.has(left)) && (!rows[right] || visibleBodies.has(right));
-            if (!isVisible) return false;
-            const isAspecting = (!rows[left] || aspectingBodies.has(left)) && (!rows[right] || aspectingBodies.has(right));
-            if (!isAspecting) return false;
-            return enabledAspectTypes.has(aspect.aspect_type);
-        }),
-    };
+    const filteredData = window.AstroPreferences?.filterChartDataByViewPreferences
+        ? window.AstroPreferences.filterChartDataByViewPreferences(chartData, {
+            matrixRows: getCurrentNatalMatrixRows(),
+            enabledAspectTypes: Array.isArray(currentSettings.enabledAspectTypes) && currentSettings.enabledAspectTypes.length
+                ? currentSettings.enabledAspectTypes
+                : NATAL_ASPECT_TYPES,
+        })
+        : chartData;
 
     // Перерисовываем
     if (chartWheel) {

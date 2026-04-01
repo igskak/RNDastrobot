@@ -52,7 +52,21 @@ const BALANCE_KEYS = {
     Masculine: 'astro.polarity.Masculine',
     masculine: 'astro.polarity.Masculine',
     Feminine: 'astro.polarity.Feminine',
-    feminine: 'astro.polarity.Feminine'
+    feminine: 'astro.polarity.Feminine',
+    brahma: 'page.natalFull.balances.brahma',
+    vishnu: 'page.natalFull.balances.vishnu',
+    shiva: 'page.natalFull.balances.shiva',
+    lower: 'page.natalFull.balances.lower',
+    upper: 'page.natalFull.balances.upper',
+    eastern: 'page.natalFull.balances.east',
+    western: 'page.natalFull.balances.west',
+    q1: 'page.natalFull.balances.quadrant1',
+    q2: 'page.natalFull.balances.quadrant2',
+    q3: 'page.natalFull.balances.quadrant3',
+    q4: 'page.natalFull.balances.quadrant4',
+    angular: 'page.natalFull.balances.angular',
+    succedent: 'page.natalFull.balances.succedent',
+    cadent: 'page.natalFull.balances.cadent'
 };
 
 const EMPTY = '—';
@@ -964,40 +978,98 @@ function renderBalances(balances) {
         return;
     }
 
+    const views = [
+        { key: 'by_sign', label: t('page.natalFull.balances.sign'), data: balances.by_sign },
+        { key: 'by_house', label: t('page.natalFull.balances.house'), data: balances.by_house }
+    ].filter((view) => hasBalanceData(view.data));
+
+    if (!views.length) {
+        container.innerHTML = `<p style="color: var(--text-secondary);">${t('page.natalFull.empty.noBalances')}</p>`;
+        return;
+    }
+
+    if (views.length === 1) {
+        container.appendChild(createBalanceView(views[0].data));
+        return;
+    }
+
+    const tabs = document.createElement('div');
+    tabs.className = 'balance-tabs';
+
+    const panelsWrap = document.createElement('div');
+
+    views.forEach((view, index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `balance-tab-btn${index === 0 ? ' active' : ''}`;
+        button.dataset.balanceTab = view.key;
+        button.textContent = view.label;
+        button.setAttribute('aria-selected', index === 0 ? 'true' : 'false');
+        tabs.appendChild(button);
+
+        const panel = document.createElement('div');
+        panel.className = `balance-tab-panel${index === 0 ? ' active' : ''}`;
+        panel.dataset.balancePanel = view.key;
+        panel.appendChild(createBalanceView(view.data));
+        panelsWrap.appendChild(panel);
+    });
+
+    container.appendChild(tabs);
+    container.appendChild(panelsWrap);
+    bindBalanceTabs(container);
+}
+
+function hasBalanceData(balanceSet) {
+    return Boolean(balanceSet && Object.values(balanceSet).some((section) => section && Object.keys(section).length));
+}
+
+function createBalanceView(balanceSet) {
     const row = document.createElement('div');
     row.className = 'balances-compact';
 
-    if (balances.element_balance) {
-        row.appendChild(createBalanceGroup(
-            t('page.natalFull.balances.elements'),
-            balances.element_balance
-        ));
-    }
+    const sections = [
+        ['page.natalFull.balances.elements', balanceSet.element_balance],
+        ['page.natalFull.balances.modes', balanceSet.mode_balance],
+        ['page.natalFull.balances.polarity', balanceSet.gender_balance],
+        ['page.natalFull.balances.zones', balanceSet.zones_balance],
+        ['page.natalFull.balances.quadrants', balanceSet.quadrant_balance],
+        ['page.natalFull.balances.hemisphere', balanceSet.hemisphere_balance],
+        ['page.natalFull.balances.houseGroups', balanceSet.house_group_balance]
+    ];
 
-    if (balances.mode_balance) {
-        row.appendChild(createBalanceGroup(
-            t('page.natalFull.balances.modes'),
-            balances.mode_balance
-        ));
-    }
+    sections.forEach(([titleKey, section]) => {
+        if (!section) return;
+        row.appendChild(createBalanceGroup(t(titleKey), section));
+    });
 
-    if (balances.gender_balance) {
-        row.appendChild(createBalanceGroup(
-            t('page.natalFull.balances.polarity'),
-            balances.gender_balance
-        ));
-    }
-
-    container.appendChild(row);
+    return row;
 }
 
-function createBalanceGroup(icon, data) {
+function bindBalanceTabs(container) {
+    const buttons = container.querySelectorAll('[data-balance-tab]');
+    const panels = container.querySelectorAll('[data-balance-panel]');
+    buttons.forEach((button) => {
+        button.addEventListener('click', () => {
+            const key = button.dataset.balanceTab;
+            buttons.forEach((item) => {
+                const isActive = item.dataset.balanceTab === key;
+                item.classList.toggle('active', isActive);
+                item.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            });
+            panels.forEach((panel) => {
+                panel.classList.toggle('active', panel.dataset.balancePanel === key);
+            });
+        });
+    });
+}
+
+function createBalanceGroup(title, data) {
     const group = document.createElement('div');
     group.className = 'balance-group';
 
     const iconSpan = document.createElement('span');
     iconSpan.className = 'balance-icon';
-    iconSpan.textContent = icon;
+    iconSpan.textContent = title;
     group.appendChild(iconSpan);
 
     let total = 0;

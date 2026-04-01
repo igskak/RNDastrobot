@@ -972,6 +972,44 @@ input[type="number"] {
 .aspect-neutral    { color: var(--text-secondary); }
 
 /* Balance bars */
+.balance-subtabs {
+    display: inline-flex;
+    gap: 6px;
+    padding: 4px;
+    margin-bottom: 16px;
+    background: rgba(240, 237, 228, 0.72);
+    border: 1px solid rgba(30, 58, 95, 0.08);
+    border-radius: 999px;
+}
+
+.balance-subtab-btn {
+    min-height: 34px;
+    padding: 0 14px;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition), box-shadow var(--transition);
+}
+
+.balance-subtab-btn.active {
+    background: var(--bg-secondary);
+    color: var(--accent);
+    box-shadow: var(--shadow-sm);
+}
+
+.balance-subtab-panel {
+    display: none;
+}
+
+.balance-subtab-panel.active {
+    display: block;
+}
+
 .balance-section {
     margin-bottom: 24px;
 }
@@ -1842,6 +1880,16 @@ input[type="number"] {
 
     #balances-list {
         padding-right: 18px;
+    }
+
+    .balance-subtabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+    }
+
+    .balance-subtab-btn {
+        width: 100%;
     }
 
     .balance-row {

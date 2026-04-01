@@ -22,6 +22,7 @@ from app.models.schemas import (
     PlanetDistributionInfo,
     KarmicAnalysisInfo,
     BalancesInfo,
+    BalanceSetInfo,
     ElementBalanceInfo,
     ModeBalanceInfo,
     GenderBalanceInfo,
@@ -59,14 +60,22 @@ def build_natal_chart_response(chart_data: dict) -> NatalChartResponse:
     balances_data = None
     if chart_data.get('balances'):
         balances_dict = chart_data['balances']
+        def build_balance_set(balance_set: Optional[dict]) -> Optional[BalanceSetInfo]:
+            if not balance_set:
+                return None
+            return BalanceSetInfo(
+                element_balance=ElementBalanceInfo(**balance_set['element_balance']) if balance_set.get('element_balance') else None,
+                mode_balance=ModeBalanceInfo(**balance_set['mode_balance']) if balance_set.get('mode_balance') else None,
+                gender_balance=GenderBalanceInfo(**balance_set['gender_balance']) if balance_set.get('gender_balance') else None,
+                zones_balance=ZonesBalanceInfo(**balance_set['zones_balance']) if balance_set.get('zones_balance') else None,
+                hemisphere_balance=HemisphereBalanceInfo(**balance_set['hemisphere_balance']) if balance_set.get('hemisphere_balance') else None,
+                quadrant_balance=QuadrantBalanceInfo(**balance_set['quadrant_balance']) if balance_set.get('quadrant_balance') else None,
+                house_group_balance=HouseGroupBalanceInfo(**balance_set['house_group_balance']) if balance_set.get('house_group_balance') else None,
+            )
+
         balances_data = BalancesInfo(
-            element_balance=ElementBalanceInfo(**balances_dict['element_balance']) if balances_dict.get('element_balance') else None,
-            mode_balance=ModeBalanceInfo(**balances_dict['mode_balance']) if balances_dict.get('mode_balance') else None,
-            gender_balance=GenderBalanceInfo(**balances_dict['gender_balance']) if balances_dict.get('gender_balance') else None,
-            zones_balance=ZonesBalanceInfo(**balances_dict['zones_balance']) if balances_dict.get('zones_balance') else None,
-            hemisphere_balance=HemisphereBalanceInfo(**balances_dict['hemisphere_balance']) if balances_dict.get('hemisphere_balance') else None,
-            quadrant_balance=QuadrantBalanceInfo(**balances_dict['quadrant_balance']) if balances_dict.get('quadrant_balance') else None,
-            house_group_balance=HouseGroupBalanceInfo(**balances_dict['house_group_balance']) if balances_dict.get('house_group_balance') else None,
+            by_sign=build_balance_set(balances_dict.get('by_sign')),
+            by_house=build_balance_set(balances_dict.get('by_house')),
         )
 
     return NatalChartResponse(

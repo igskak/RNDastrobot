@@ -29,6 +29,12 @@
         Water: '#3b82f6',
     };
     const ORB_PROFILE_IDS = ['natal', 'prognostic'];
+    const DEFAULT_ORB_PAIR_STRATEGY = 'larger';
+    const BODY_NAME_ALIASES = {
+        TrueNorthNode: 'TrueNode',
+        TrueSouthNode: 'SouthNode',
+        Fortune: 'PartOfFortune',
+    };
     let accountVisualPreferences = {
         aspect_colors: { ...DEFAULT_ASPECT_COLORS },
         planet_colors: {
@@ -121,6 +127,80 @@
         return rows;
     }
 
+    function normalizeMatrixBodyName(name) {
+        return BODY_NAME_ALIASES[String(name || '')] || name;
+    }
+
+    function filterChartDataByViewPreferences(chartData = {}, options = {}) {
+        const rows = ensureMatrixRows(options?.matrixRows || {});
+        const visibleBodies = new Set();
+        const aspectingBodies = new Set();
+
+        Object.entries(rows).forEach(([body, config]) => {
+            if (config?.display !== false) visibleBodies.add(body);
+            if (config?.aspecting !== false) aspectingBodies.add(body);
+        });
+
+        const enabledAspectTypes = Array.isArray(options?.enabledAspectTypes) && options.enabledAspectTypes.length
+            ? new Set(options.enabledAspectTypes)
+            : null;
+
+        const bodyIsVisible = (bodyName) => {
+            const normalized = normalizeMatrixBodyName(bodyName);
+            return !rows[normalized] || visibleBodies.has(normalized);
+        };
+
+        const bodyIsAspecting = (bodyName) => {
+            const normalized = normalizeMatrixBodyName(bodyName);
+            return !rows[normalized] || aspectingBodies.has(normalized);
+        };
+
+        const aspectIsEnabled = (aspectType) => !enabledAspectTypes || enabledAspectTypes.has(aspectType);
+
+        const filteredAspects = (chartData?.aspects || []).filter((aspect) => (
+            bodyIsVisible(aspect?.planet_1)
+            && bodyIsVisible(aspect?.planet_2)
+            && bodyIsAspecting(aspect?.planet_1)
+            && bodyIsAspecting(aspect?.planet_2)
+            && aspectIsEnabled(aspect?.aspect_type)
+        ));
+
+        const filteredConfigurations = (chartData?.aspect_configurations || []).filter((configuration) => {
+            const planetsInvolved = Array.isArray(configuration?.planets_involved)
+                ? configuration.planets_involved
+                : [];
+            if (planetsInvolved.some((body) => !bodyIsVisible(body) || !bodyIsAspecting(body))) {
+                return false;
+            }
+
+            const aspects = Array.isArray(configuration?.aspects) ? configuration.aspects : [];
+            if (!aspects.length) {
+                return true;
+            }
+
+            return aspects.every((aspect) => (
+                bodyIsVisible(aspect?.planet_1)
+                && bodyIsVisible(aspect?.planet_2)
+                && bodyIsAspecting(aspect?.planet_1)
+                && bodyIsAspecting(aspect?.planet_2)
+                && aspectIsEnabled(aspect?.aspect_type)
+            ));
+        });
+
+        const filteredStelliums = (chartData?.stelliums || []).filter((stellium) => {
+            const planets = Array.isArray(stellium?.planets) ? stellium.planets : [];
+            return planets.every((body) => bodyIsVisible(body) && bodyIsAspecting(body));
+        });
+
+        return {
+            ...chartData,
+            planets: (chartData?.planets || []).filter((planet) => bodyIsVisible(planet?.name)),
+            aspects: filteredAspects,
+            aspect_configurations: filteredConfigurations,
+            stelliums: filteredStelliums,
+        };
+    }
+
     function normalizeViewSettings(viewSettings = {}) {
         return {
             matrix: {
@@ -143,10 +223,22 @@
         };
     }
 
+    function normalizeOrbPairStrategy(value) {
+        const normalized = String(value || '').trim().toLowerCase();
+        if (normalized === 'smaller' || normalized === 'min' || normalized === 'minimum') {
+            return 'smaller';
+        }
+        if (normalized === 'average' || normalized === 'avg' || normalized === 'mean') {
+            return 'average';
+        }
+        return DEFAULT_ORB_PAIR_STRATEGY;
+    }
+
     function normalizeMethodologySettings(methodology = {}) {
         const legacyMatrix = deepClone(methodology?.orbs?.matrix || {});
         const profiles = methodology?.orbs?.profiles || {};
         const normalizedProfiles = {};
+        const pairStrategy = normalizeOrbPairStrategy(methodology?.orbs?.pair_strategy);
 
         ORB_PROFILE_IDS.forEach((profileId) => {
             const profileMatrix = deepClone(profiles?.[profileId]?.matrix || {});
@@ -158,6 +250,7 @@
         return {
             orbs: {
                 version: 2,
+                pair_strategy: pairStrategy,
                 profiles: normalizedProfiles,
             },
             balances: {
@@ -248,10 +341,13 @@
         DEFAULT_ASPECT_COLORS,
         DEFAULT_ELEMENT_PALETTE,
         ORB_PROFILE_IDS,
+        DEFAULT_ORB_PAIR_STRATEGY,
         deepMerge,
         deepEqual,
         buildSparseDiff,
         ensureMatrixRows,
+        normalizeMatrixBodyName,
+        normalizeOrbPairStrategy,
         normalizeViewSettings,
         normalizeMethodologySettings,
         resolveVisualPreferences,
@@ -262,6 +358,7 @@
         getPlanetColor,
         getHiddenBodiesFromMatrix,
         buildMatrixRowsFromHiddenBodies,
+        filterChartDataByViewPreferences,
         buildLegacyNatalPatch,
         buildLegacyForecastPatch,
     };

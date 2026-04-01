@@ -27,6 +27,7 @@
         Novile: '9',
     };
     const ORB_PROFILE_IDS = window.AstroPreferences?.ORB_PROFILE_IDS || ['natal', 'prognostic'];
+    const DEFAULT_ORB_PAIR_STRATEGY = window.AstroPreferences?.DEFAULT_ORB_PAIR_STRATEGY || 'larger';
     const ACTIVE_RECALC_JOB_KEY = 'activePreferenceRecalcJobId';
 
     let accountPreferences = null;
@@ -140,6 +141,7 @@
     function getDefaultMethodology() {
         const orbs = {
             version: 2,
+            pair_strategy: DEFAULT_ORB_PAIR_STRATEGY,
             profiles: Object.fromEntries(
                 ORB_PROFILE_IDS.map((profileId) => [
                     profileId,
@@ -218,6 +220,15 @@
     function getOrbProfileMatrix(profileId) {
         const methodology = ensureMethodologyState();
         return methodology?.orbs?.profiles?.[profileId]?.matrix || buildDefaultOrbMatrix();
+    }
+
+    function getOrbPairStrategy() {
+        const select = document.getElementById('accountOrbPairStrategySelect');
+        if (select) {
+            return window.AstroPreferences?.normalizeOrbPairStrategy?.(select.value) || DEFAULT_ORB_PAIR_STRATEGY;
+        }
+        return normalizeMethodologySettings(accountPreferences?.methodology || getDefaultMethodology())?.orbs?.pair_strategy
+            || DEFAULT_ORB_PAIR_STRATEGY;
     }
 
     function updateOrbProfileUi() {
@@ -585,6 +596,11 @@
             houseSystemSelect.value = normalized.chart_creation_defaults.house_system || 'P';
         }
 
+        const orbPairStrategySelect = document.getElementById('accountOrbPairStrategySelect');
+        if (orbPairStrategySelect) {
+            orbPairStrategySelect.value = normalized.methodology?.orbs?.pair_strategy || DEFAULT_ORB_PAIR_STRATEGY;
+        }
+
         VIEW_IDS.forEach((viewId) => {
             const view = normalized.chart_defaults[viewId];
             const dom = getViewDom(viewId);
@@ -650,7 +666,8 @@
 
     function collectMethodology() {
         syncOrbMatrixFromDom();
-        const orbProfiles = normalizeMethodologySettings(accountPreferences?.methodology || getDefaultMethodology())?.orbs?.profiles || {};
+        const normalizedOrbs = normalizeMethodologySettings(accountPreferences?.methodology || getDefaultMethodology())?.orbs || {};
+        const orbProfiles = normalizedOrbs?.profiles || {};
 
         const planetWeights = {};
         document.querySelectorAll('[data-balance-planet]').forEach((input) => {
@@ -667,6 +684,7 @@
         return normalizeMethodologySettings({
             orbs: {
                 version: 2,
+                pair_strategy: getOrbPairStrategy(),
                 profiles: orbProfiles,
             },
             balances: {

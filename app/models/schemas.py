@@ -396,9 +396,9 @@ class ZonesBalanceInfo(BaseModel):
 
 
 class HemisphereBalanceInfo(BaseModel):
-    """Баланс полусфер"""
-    northern: float
-    southern: float
+    """Баланс полусферы"""
+    lower: float
+    upper: float
     eastern: float
     western: float
 
@@ -418,8 +418,8 @@ class HouseGroupBalanceInfo(BaseModel):
     cadent: float
 
 
-class BalancesInfo(BaseModel):
-    """Все интегральные балансы (пункт 3.5 спецификации)"""
+class BalanceSetInfo(BaseModel):
+    """Набор интегральных балансов для одного способа расчёта"""
     element_balance: Optional[ElementBalanceInfo] = None
     mode_balance: Optional[ModeBalanceInfo] = None
     gender_balance: Optional[GenderBalanceInfo] = None
@@ -427,6 +427,12 @@ class BalancesInfo(BaseModel):
     hemisphere_balance: Optional[HemisphereBalanceInfo] = None
     quadrant_balance: Optional[QuadrantBalanceInfo] = None
     house_group_balance: Optional[HouseGroupBalanceInfo] = None
+
+
+class BalancesInfo(BaseModel):
+    """Все интегральные балансы по двум базам расчёта"""
+    by_sign: Optional[BalanceSetInfo] = None
+    by_house: Optional[BalanceSetInfo] = None
 
 
 class NatalChartResponse(BaseModel):
