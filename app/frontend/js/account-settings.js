@@ -43,6 +43,15 @@
             .replace(/'/g, '&#39;');
     }
 
+    function translateOrFallback(key, fallback = '') {
+        const translated = t(key);
+        return translated && translated !== key ? translated : fallback;
+    }
+
+    function getBodyLabel(body) {
+        return translateOrFallback(`astro.planet.${body}`, body);
+    }
+
     function normalizeViewSettings(viewSettings = {}) {
         return window.AstroPreferences?.normalizeViewSettings
             ? window.AstroPreferences.normalizeViewSettings(viewSettings)
@@ -114,9 +123,10 @@
             const label = escapeHtml(t(`astro.aspect.${aspectType}`));
             const checked = enabled.has(aspectType) ? 'checked' : '';
             return `
-                <label class="account-settings-check">
-                    <input type="checkbox" data-aspect-type="${aspectType}" ${checked}>
-                    <span><span class="astro-symbol">${symbol}</span> ${label}</span>
+                <label class="account-settings-check account-settings-check--aspect" title="${label}">
+                    <input type="checkbox" data-aspect-type="${aspectType}" ${checked} aria-label="${label}">
+                    <span class="account-settings-check-glyph" aria-hidden="true"><span class="astro-symbol">${symbol}</span></span>
+                    <span class="account-settings-check-text">${label}</span>
                 </label>
             `;
         }).join('');
@@ -129,29 +139,47 @@
             <table class="account-settings-matrix-table">
                 <thead>
                     <tr>
-                        <th>Body</th>
-                        <th>Display</th>
-                        <th>Aspecting</th>
+                        <th>${escapeHtml(t('page.accountSettings.matrix.columns.body'))}</th>
+                        <th>${escapeHtml(t('page.accountSettings.matrix.columns.display'))}</th>
+                        <th>${escapeHtml(t('page.accountSettings.matrix.columns.aspecting'))}</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${getMatrixBodies().map((body) => {
-                        const label = escapeHtml(t(`astro.planet.${body}`));
+                        const label = escapeHtml(getBodyLabel(body));
                         const symbol = escapeHtml(window.Symbols?.planets?.[body] || '');
                         const displayChecked = ensuredRows?.[body]?.display !== false ? 'checked' : '';
                         const aspectingChecked = ensuredRows?.[body]?.aspecting !== false ? 'checked' : '';
-                        return `
-                            <tr>
-                                <td>
-                                    <span class="account-settings-body">
+                    return `
+                        <tr>
+                            <td>
+                                <span class="account-settings-body">
+                                    <span class="account-settings-body-badge" title="${label}" aria-hidden="true">
                                         <span class="astro-symbol">${symbol}</span>
-                                        <span>${label}</span>
                                     </span>
-                                </td>
-                                <td><input type="checkbox" data-matrix-body="${body}" data-matrix-field="display" ${displayChecked}></td>
-                                <td><input type="checkbox" data-matrix-body="${body}" data-matrix-field="aspecting" ${aspectingChecked}></td>
-                            </tr>
-                        `;
+                                    <span class="account-settings-body-name">${label}</span>
+                                </span>
+                            </td>
+                            <td>
+                                <input
+                                    type="checkbox"
+                                    data-matrix-body="${body}"
+                                    data-matrix-field="display"
+                                    ${displayChecked}
+                                    aria-label="${escapeHtml(`${label}: ${t('page.accountSettings.matrix.columns.display')}`)}"
+                                >
+                            </td>
+                            <td>
+                                <input
+                                    type="checkbox"
+                                    data-matrix-body="${body}"
+                                    data-matrix-field="aspecting"
+                                    ${aspectingChecked}
+                                    aria-label="${escapeHtml(`${label}: ${t('page.accountSettings.matrix.columns.aspecting')}`)}"
+                                >
+                            </td>
+                        </tr>
+                    `;
                     }).join('')}
                 </tbody>
             </table>
@@ -268,8 +296,9 @@
 
         const subtitle = document.getElementById('accountSettingsSubtitle');
         if (subtitle) {
-            const email = me.email ? `Signed in as ${me.email}. ` : '';
-            subtitle.textContent = `${email}These defaults are applied first and inherited by charts until a view override changes them.`;
+            subtitle.textContent = me.email
+                ? t('page.accountSettings.subtitleWithEmail', { email: me.email })
+                : t('page.accountSettings.subtitle');
         }
 
         const preferences = await window.AstroAPI.getAccountPreferences();
@@ -284,9 +313,9 @@
             const payload = collectPayload();
             const updated = await window.AstroAPI.patchAccountPreferences(payload);
             populateForm(updated);
-            showToast('Account defaults saved', 'success');
+            showToast(t('page.accountSettings.toasts.saved'), 'success');
         } catch (error) {
-            showToast(error.message || 'Failed to save account defaults', 'error');
+            showToast(error.message || t('page.accountSettings.toasts.saveFailed'), 'error');
         } finally {
             if (saveBtn) saveBtn.disabled = false;
         }
@@ -294,7 +323,7 @@
 
     function restoreStandardDefaults() {
         populateForm(getDefaultAccountPreferences());
-        showToast('Standard defaults loaded into the form', 'info');
+        showToast(t('page.accountSettings.toasts.restored'), 'info');
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -307,7 +336,7 @@
         });
         reloadBtn?.addEventListener('click', () => {
             loadPreferences().catch((error) => {
-                showToast(error.message || 'Failed to reload settings', 'error');
+                showToast(error.message || t('page.accountSettings.toasts.reloadFailed'), 'error');
             });
         });
         restoreBtn?.addEventListener('click', () => {
@@ -317,8 +346,13 @@
         try {
             await window.FrontendI18n?.ready?.catch?.(() => {});
             await loadPreferences();
+            document.addEventListener('frontend:locale-changed', () => {
+                if (accountPreferences) {
+                    populateForm(accountPreferences);
+                }
+            });
         } catch (error) {
-            showToast(error.message || 'Failed to load account settings', 'error');
+            showToast(error.message || t('page.accountSettings.toasts.loadFailed'), 'error');
             hidePageLoader();
         }
     });

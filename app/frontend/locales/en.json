@@ -88,9 +88,14 @@
       "Splay": "Splay"
     },
     "planet": {
+      "AntiVertex": "Anti-Vertex",
+      "ASC": "Ascendant",
       "BlackMoon": "Black Moon",
       "Chiron": "Chiron",
+      "DSC": "Descendant",
+      "IC": "Imum Coeli",
       "Jupiter": "Jupiter",
+      "MC": "Midheaven",
       "Mars": "Mars",
       "Mercury": "Mercury",
       "Moon": "Moon",
@@ -211,6 +216,82 @@
     }
   },
   "page": {
+    "accountSettings": {
+      "actions": {
+        "reload": "Reload",
+        "restore": "Use standard defaults",
+        "save": "Save account defaults"
+      },
+      "badge": "Saved once, inherited everywhere",
+      "creation": {
+        "copy": "Choose the base house system that new charts should start with before any per-view overrides apply.",
+        "houseSystem": "Default house system",
+        "kicker": "Chart creation",
+        "title": "Defaults for every new chart"
+      },
+      "fields": {
+        "aspectScope": "Aspect scope",
+        "aspectTypes": "Aspect types",
+        "aspectTypesHint": "Pick the exact aspect set each view should start with.",
+        "extras": "Extra options",
+        "matrixCopy": "Open only when you need to tune which bodies stay visible and aspecting by default.",
+        "matrixTitle": "Bodies matrix",
+        "orientation": "Orientation"
+      },
+      "heading": "Preferences",
+      "kicker": "Account",
+      "limits": {
+        "copy": "`Orbs`, `balances`, aspect colors and planet colors stay out of this page for now and will come in a later pass.",
+        "kicker": "Not in this pass"
+      },
+      "loading": "Loading settings",
+      "matrix": {
+        "columns": {
+          "aspecting": "Aspecting",
+          "body": "Body",
+          "display": "Display"
+        }
+      },
+      "options": {
+        "orientationAries": "Aries 0°",
+        "orientationAsc": "Ascendant",
+        "showApplyingSeparating": "Show applying / separating",
+        "showSpeed": "Show speed",
+        "showStationary": "Show stationary"
+      },
+      "subtitle": "Set the defaults once, then let individual chart overrides change only what is necessary.",
+      "subtitleWithEmail": "Signed in as {email}. Set the defaults once, then let individual chart overrides change only what is necessary.",
+      "title": "Account settings",
+      "toasts": {
+        "loadFailed": "Failed to load account settings",
+        "reloadFailed": "Failed to reload settings",
+        "restored": "Standard defaults loaded into the form",
+        "saveFailed": "Failed to save account defaults",
+        "saved": "Account defaults saved"
+      },
+      "views": {
+        "biwheel": {
+          "copy": "Controls how forecast bi-wheels and comparison views begin before local tweaks are applied.",
+          "kicker": "Biwheel",
+          "title": "Inherited biwheel defaults"
+        },
+        "natal": {
+          "copy": "Sets the default wheel orientation, aspect filters, and table behavior for natal work.",
+          "kicker": "Natal",
+          "title": "Inherited natal defaults"
+        },
+        "solar": {
+          "copy": "Keeps solar return screens consistent before a specific yearly chart needs its own override.",
+          "kicker": "Solar",
+          "title": "Inherited solar defaults"
+        }
+      },
+      "workflow": {
+        "copy": "New charts inherit these settings first. View-level changes stay local, so you can keep the account baseline clean and predictable.",
+        "kicker": "Workflow",
+        "title": "Compact and safe to manage"
+      }
+    },
     "chart": {
       "actions": {
         "editClient": "Edit client data",

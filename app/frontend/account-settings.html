@@ -3,201 +3,261 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Settings</title>
-    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=20260331-235000">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260331-235000">
+    <title data-i18n="page.accountSettings.title"></title>
+    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=20260401-000858">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260401-000858">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '20260331-235000';</script>
+    <script>window.__APP_BUILD_ID__ = '20260401-000858';</script>
 </head>
 <body class="account-settings-page">
     <div class="page-loader" id="pageLoader">
         <div class="pl-spinner"></div>
-        <div class="pl-text">Loading settings</div>
+        <div class="pl-text" data-i18n="page.accountSettings.loading"></div>
     </div>
 
     <div class="account-settings-shell">
         <header class="account-settings-header">
-            <a href="/" class="account-settings-back">←</a>
+            <a href="/" class="account-settings-back" data-i18n-title="common.back" data-i18n-aria-label="common.back">←</a>
             <div class="account-settings-intro">
-                <p class="account-settings-kicker">Account</p>
-                <h1 class="account-settings-title">Preferences</h1>
-                <p class="account-settings-copy" id="accountSettingsSubtitle">Default settings for new charts and inherited views.</p>
+                <p class="account-settings-kicker" data-i18n="page.accountSettings.kicker"></p>
+                <div class="account-settings-title-row">
+                    <h1 class="account-settings-title" data-i18n="page.accountSettings.heading"></h1>
+                    <span class="account-settings-badge" data-i18n="page.accountSettings.badge"></span>
+                </div>
+                <p class="account-settings-copy" id="accountSettingsSubtitle" data-i18n="page.accountSettings.subtitle"></p>
             </div>
             <div class="account-settings-actions">
-                <button type="button" class="account-settings-btn account-settings-btn--ghost" id="reloadAccountSettingsBtn">Reload</button>
-                <button type="button" class="account-settings-btn" id="restoreStandardDefaultsBtn">Use standard defaults</button>
-                <button type="button" class="account-settings-btn account-settings-btn--primary" id="saveAccountSettingsBtn">Save account defaults</button>
+                <button type="button" class="account-settings-btn account-settings-btn--ghost" id="reloadAccountSettingsBtn" data-i18n="page.accountSettings.actions.reload"></button>
+                <button type="button" class="account-settings-btn" id="restoreStandardDefaultsBtn" data-i18n="page.accountSettings.actions.restore"></button>
+                <button type="button" class="account-settings-btn account-settings-btn--primary" id="saveAccountSettingsBtn" data-i18n="page.accountSettings.actions.save"></button>
             </div>
         </header>
 
         <main class="account-settings-content">
-            <section class="account-settings-card">
-                <div class="account-settings-card-head">
-                    <div>
-                        <p class="account-settings-section-kicker">Chart creation</p>
-                        <h2 class="account-settings-section-title">Defaults for new charts</h2>
+            <section class="account-settings-top-grid">
+                <section class="account-settings-card account-settings-card--hero">
+                    <div class="account-settings-card-head">
+                        <div>
+                            <p class="account-settings-section-kicker" data-i18n="page.accountSettings.creation.kicker"></p>
+                            <h2 class="account-settings-section-title" data-i18n="page.accountSettings.creation.title"></h2>
+                            <p class="account-settings-section-copy" data-i18n="page.accountSettings.creation.copy"></p>
+                        </div>
                     </div>
-                </div>
-                <div class="account-settings-field">
-                    <label class="account-settings-label" for="accountHouseSystemSelect">Default house system</label>
-                    <select id="accountHouseSystemSelect" class="account-settings-select">
-                        <option value="P">Placidus</option>
-                        <option value="K">Koch</option>
-                        <option value="W">Whole Sign</option>
-                        <option value="E">Equal</option>
-                        <option value="R">Regiomontanus</option>
-                        <option value="C">Campanus</option>
-                    </select>
-                </div>
+                    <div class="account-settings-inline-field">
+                        <div class="account-settings-field">
+                            <label class="account-settings-label" for="accountHouseSystemSelect" data-i18n="page.accountSettings.creation.houseSystem"></label>
+                            <select id="accountHouseSystemSelect" class="account-settings-select">
+                                <option value="P" data-i18n="astro.houseSystem.placidus"></option>
+                                <option value="K" data-i18n="astro.houseSystem.koch"></option>
+                                <option value="W" data-i18n="astro.houseSystem.wholeSign"></option>
+                                <option value="E" data-i18n="astro.houseSystem.equal"></option>
+                                <option value="R" data-i18n="astro.houseSystem.regiomontanus"></option>
+                                <option value="C" data-i18n="astro.houseSystem.campanus"></option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <aside class="account-settings-note">
+                    <p class="account-settings-note-kicker" data-i18n="page.accountSettings.workflow.kicker"></p>
+                    <h2 class="account-settings-note-title" data-i18n="page.accountSettings.workflow.title"></h2>
+                    <p class="account-settings-note-copy" data-i18n="page.accountSettings.workflow.copy"></p>
+                </aside>
             </section>
 
             <section class="account-settings-card" data-view="natal">
                 <div class="account-settings-card-head">
                     <div>
-                        <p class="account-settings-section-kicker">Natal</p>
-                        <h2 class="account-settings-section-title">Inherited natal defaults</h2>
+                        <p class="account-settings-section-kicker" data-i18n="page.accountSettings.views.natal.kicker"></p>
+                        <h2 class="account-settings-section-title" data-i18n="page.accountSettings.views.natal.title"></h2>
+                        <p class="account-settings-section-copy" data-i18n="page.accountSettings.views.natal.copy"></p>
                     </div>
                 </div>
+
                 <div class="account-settings-grid">
                     <div class="account-settings-field">
-                        <label class="account-settings-label" for="natalOrientationSelect">Orientation</label>
+                        <label class="account-settings-label" for="natalOrientationSelect" data-i18n="page.accountSettings.fields.orientation"></label>
                         <select id="natalOrientationSelect" class="account-settings-select">
-                            <option value="aries">Aries</option>
-                            <option value="asc">Ascendant</option>
+                            <option value="aries" data-i18n="page.accountSettings.options.orientationAries"></option>
+                            <option value="asc" data-i18n="page.accountSettings.options.orientationAsc"></option>
                         </select>
                     </div>
                     <div class="account-settings-field">
-                        <label class="account-settings-label" for="natalAspectScopeSelect">Aspect scope</label>
+                        <label class="account-settings-label" for="natalAspectScopeSelect" data-i18n="page.accountSettings.fields.aspectScope"></label>
                         <select id="natalAspectScopeSelect" class="account-settings-select">
-                            <option value="all">All</option>
-                            <option value="major">Major</option>
-                            <option value="minor">Minor</option>
+                            <option value="all" data-i18n="common.all"></option>
+                            <option value="major" data-i18n="common.major"></option>
+                            <option value="minor" data-i18n="common.minor"></option>
                         </select>
                     </div>
                 </div>
+
                 <div class="account-settings-field">
-                    <label class="account-settings-label">Aspect types</label>
+                    <div class="account-settings-field-head">
+                        <label class="account-settings-label" data-i18n="page.accountSettings.fields.aspectTypes"></label>
+                        <span class="account-settings-field-hint" data-i18n="page.accountSettings.fields.aspectTypesHint"></span>
+                    </div>
                     <div class="account-settings-check-grid" id="natalAspectTypes"></div>
                 </div>
+
                 <div class="account-settings-field">
-                    <label class="account-settings-label">Extra options</label>
+                    <div class="account-settings-field-head">
+                        <label class="account-settings-label" data-i18n="page.accountSettings.fields.extras"></label>
+                    </div>
                     <div class="account-settings-check-stack">
                         <label class="account-settings-check">
                             <input type="checkbox" id="natalShowApplyingSeparating">
-                            <span>Show applying / separating</span>
+                            <span class="account-settings-check-text" data-i18n="page.accountSettings.options.showApplyingSeparating"></span>
                         </label>
                         <label class="account-settings-check">
                             <input type="checkbox" id="natalShowSpeed">
-                            <span>Show speed</span>
+                            <span class="account-settings-check-text" data-i18n="page.accountSettings.options.showSpeed"></span>
                         </label>
                         <label class="account-settings-check">
                             <input type="checkbox" id="natalShowStationary">
-                            <span>Show stationary</span>
+                            <span class="account-settings-check-text" data-i18n="page.accountSettings.options.showStationary"></span>
                         </label>
                     </div>
                 </div>
-                <div class="account-settings-field">
-                    <label class="account-settings-label">Bodies matrix</label>
+
+                <details class="account-settings-disclosure">
+                    <summary class="account-settings-disclosure-summary">
+                        <span>
+                            <span class="account-settings-disclosure-title" data-i18n="page.accountSettings.fields.matrixTitle"></span>
+                            <span class="account-settings-disclosure-copy" data-i18n="page.accountSettings.fields.matrixCopy"></span>
+                        </span>
+                        <span class="account-settings-disclosure-indicator" aria-hidden="true"></span>
+                    </summary>
                     <div class="account-settings-matrix" id="natalMatrixEditor"></div>
-                </div>
+                </details>
             </section>
 
             <section class="account-settings-card" data-view="biwheel">
                 <div class="account-settings-card-head">
                     <div>
-                        <p class="account-settings-section-kicker">Biwheel</p>
-                        <h2 class="account-settings-section-title">Inherited biwheel defaults</h2>
+                        <p class="account-settings-section-kicker" data-i18n="page.accountSettings.views.biwheel.kicker"></p>
+                        <h2 class="account-settings-section-title" data-i18n="page.accountSettings.views.biwheel.title"></h2>
+                        <p class="account-settings-section-copy" data-i18n="page.accountSettings.views.biwheel.copy"></p>
                     </div>
                 </div>
+
                 <div class="account-settings-grid">
                     <div class="account-settings-field">
-                        <label class="account-settings-label" for="biwheelOrientationSelectAccount">Orientation</label>
+                        <label class="account-settings-label" for="biwheelOrientationSelectAccount" data-i18n="page.accountSettings.fields.orientation"></label>
                         <select id="biwheelOrientationSelectAccount" class="account-settings-select">
-                            <option value="aries">Aries</option>
-                            <option value="asc">Ascendant</option>
+                            <option value="aries" data-i18n="page.accountSettings.options.orientationAries"></option>
+                            <option value="asc" data-i18n="page.accountSettings.options.orientationAsc"></option>
                         </select>
                     </div>
                     <div class="account-settings-field">
-                        <label class="account-settings-label" for="biwheelAspectScopeSelectAccount">Aspect scope</label>
+                        <label class="account-settings-label" for="biwheelAspectScopeSelectAccount" data-i18n="page.accountSettings.fields.aspectScope"></label>
                         <select id="biwheelAspectScopeSelectAccount" class="account-settings-select">
-                            <option value="all">All</option>
-                            <option value="major">Major</option>
-                            <option value="minor">Minor</option>
+                            <option value="all" data-i18n="common.all"></option>
+                            <option value="major" data-i18n="common.major"></option>
+                            <option value="minor" data-i18n="common.minor"></option>
                         </select>
                     </div>
                 </div>
+
                 <div class="account-settings-field">
-                    <label class="account-settings-label">Aspect types</label>
+                    <div class="account-settings-field-head">
+                        <label class="account-settings-label" data-i18n="page.accountSettings.fields.aspectTypes"></label>
+                        <span class="account-settings-field-hint" data-i18n="page.accountSettings.fields.aspectTypesHint"></span>
+                    </div>
                     <div class="account-settings-check-grid" id="biwheelAspectTypes"></div>
                 </div>
-                <div class="account-settings-field">
-                    <label class="account-settings-label">Bodies matrix</label>
+
+                <details class="account-settings-disclosure">
+                    <summary class="account-settings-disclosure-summary">
+                        <span>
+                            <span class="account-settings-disclosure-title" data-i18n="page.accountSettings.fields.matrixTitle"></span>
+                            <span class="account-settings-disclosure-copy" data-i18n="page.accountSettings.fields.matrixCopy"></span>
+                        </span>
+                        <span class="account-settings-disclosure-indicator" aria-hidden="true"></span>
+                    </summary>
                     <div class="account-settings-matrix" id="biwheelMatrixEditor"></div>
-                </div>
+                </details>
             </section>
 
             <section class="account-settings-card" data-view="solar">
                 <div class="account-settings-card-head">
                     <div>
-                        <p class="account-settings-section-kicker">Solar</p>
-                        <h2 class="account-settings-section-title">Inherited solar defaults</h2>
+                        <p class="account-settings-section-kicker" data-i18n="page.accountSettings.views.solar.kicker"></p>
+                        <h2 class="account-settings-section-title" data-i18n="page.accountSettings.views.solar.title"></h2>
+                        <p class="account-settings-section-copy" data-i18n="page.accountSettings.views.solar.copy"></p>
                     </div>
                 </div>
+
                 <div class="account-settings-grid">
                     <div class="account-settings-field">
-                        <label class="account-settings-label" for="solarOrientationSelectAccount">Orientation</label>
+                        <label class="account-settings-label" for="solarOrientationSelectAccount" data-i18n="page.accountSettings.fields.orientation"></label>
                         <select id="solarOrientationSelectAccount" class="account-settings-select">
-                            <option value="aries">Aries</option>
-                            <option value="asc">Ascendant</option>
+                            <option value="aries" data-i18n="page.accountSettings.options.orientationAries"></option>
+                            <option value="asc" data-i18n="page.accountSettings.options.orientationAsc"></option>
                         </select>
                     </div>
                     <div class="account-settings-field">
-                        <label class="account-settings-label" for="solarAspectScopeSelectAccount">Aspect scope</label>
+                        <label class="account-settings-label" for="solarAspectScopeSelectAccount" data-i18n="page.accountSettings.fields.aspectScope"></label>
                         <select id="solarAspectScopeSelectAccount" class="account-settings-select">
-                            <option value="all">All</option>
-                            <option value="major">Major</option>
-                            <option value="minor">Minor</option>
+                            <option value="all" data-i18n="common.all"></option>
+                            <option value="major" data-i18n="common.major"></option>
+                            <option value="minor" data-i18n="common.minor"></option>
                         </select>
                     </div>
                 </div>
+
                 <div class="account-settings-field">
-                    <label class="account-settings-label">Aspect types</label>
+                    <div class="account-settings-field-head">
+                        <label class="account-settings-label" data-i18n="page.accountSettings.fields.aspectTypes"></label>
+                        <span class="account-settings-field-hint" data-i18n="page.accountSettings.fields.aspectTypesHint"></span>
+                    </div>
                     <div class="account-settings-check-grid" id="solarAspectTypes"></div>
                 </div>
+
                 <div class="account-settings-field">
-                    <label class="account-settings-label">Extra options</label>
+                    <div class="account-settings-field-head">
+                        <label class="account-settings-label" data-i18n="page.accountSettings.fields.extras"></label>
+                    </div>
                     <div class="account-settings-check-stack">
                         <label class="account-settings-check">
                             <input type="checkbox" id="solarShowApplyingSeparatingAccount">
-                            <span>Show applying / separating</span>
+                            <span class="account-settings-check-text" data-i18n="page.accountSettings.options.showApplyingSeparating"></span>
                         </label>
                         <label class="account-settings-check">
                             <input type="checkbox" id="solarShowSpeedAccount">
-                            <span>Show speed</span>
+                            <span class="account-settings-check-text" data-i18n="page.accountSettings.options.showSpeed"></span>
                         </label>
                         <label class="account-settings-check">
                             <input type="checkbox" id="solarShowStationaryAccount">
-                            <span>Show stationary</span>
+                            <span class="account-settings-check-text" data-i18n="page.accountSettings.options.showStationary"></span>
                         </label>
                     </div>
                 </div>
-                <div class="account-settings-field">
-                    <label class="account-settings-label">Bodies matrix</label>
+
+                <details class="account-settings-disclosure">
+                    <summary class="account-settings-disclosure-summary">
+                        <span>
+                            <span class="account-settings-disclosure-title" data-i18n="page.accountSettings.fields.matrixTitle"></span>
+                            <span class="account-settings-disclosure-copy" data-i18n="page.accountSettings.fields.matrixCopy"></span>
+                        </span>
+                        <span class="account-settings-disclosure-indicator" aria-hidden="true"></span>
+                    </summary>
                     <div class="account-settings-matrix" id="solarMatrixEditorAccount"></div>
-                </div>
+                </details>
             </section>
 
-            <section class="account-settings-note">
-                <p>`Orbs`, `balances`, aspect colors and planet colors stay out of this page for now and will come in a later pass.</p>
+            <section class="account-settings-note account-settings-note--footer">
+                <p class="account-settings-note-kicker" data-i18n="page.accountSettings.limits.kicker"></p>
+                <p class="account-settings-note-copy" data-i18n="page.accountSettings.limits.copy"></p>
             </section>
         </main>
     </div>
 
     <div id="accountSettingsToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/account-settings.bundle.js?v=20260331-235000"></script>
-    <script src="js/locale-switcher.js?v=20260331-235000"></script>
+    <script type="module" src="js/bundles/account-settings.bundle.js?v=20260401-000858"></script>
+    <script src="js/locale-switcher.js?v=20260401-000858"></script>
 </body>
 </html>

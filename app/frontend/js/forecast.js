@@ -327,9 +327,8 @@ function renderForecastMatrixEditor(containerId, rows) {
                     return `
                         <tr>
                             <td>
-                                <span class="forecast-settings-body">
-                                    <span class="astro-symbol">${symbol}</span>
-                                    <span>${label}</span>
+                                <span class="forecast-settings-body forecast-settings-body--icon-only" title="${label}" aria-label="${label}" role="img">
+                                    <span class="astro-symbol" aria-hidden="true">${symbol}</span>
                                 </span>
                             </td>
                             <td><input type="checkbox" data-view-matrix-body="${body}" data-view-matrix-field="display" ${displayChecked}></td>
@@ -353,9 +352,9 @@ function renderForecastAspectTypeToggles(containerId, enabledAspectTypes = []) {
         const label = escapeHtml(t(`astro.aspect.${aspectType}`));
         const checked = enabled.has(aspectType) ? 'checked' : '';
         return `
-            <label class="forecast-settings-check forecast-settings-check--pill">
-                <input type="checkbox" data-view-aspect-type="${aspectType}" ${checked}>
-                <span><span class="astro-symbol">${symbol}</span> ${label}</span>
+            <label class="forecast-settings-check forecast-settings-check--pill forecast-settings-check--icon-only" title="${label}">
+                <input type="checkbox" data-view-aspect-type="${aspectType}" ${checked} aria-label="${label}">
+                <span class="forecast-settings-check-glyph" aria-hidden="true"><span class="astro-symbol">${symbol}</span></span>
             </label>
         `;
     }).join('');
@@ -1747,6 +1746,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateBiwheelFocusButton();
         updateTransitPlaybackButton();
         renderForecastSummary();
+        syncForecastOrientationControls();
         if (ForecastState.currentTab === 'table' && ForecastState.tableRowsRaw.length) {
             applyTableFiltersAndRender();
         }
