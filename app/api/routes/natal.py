@@ -142,7 +142,7 @@ def calculate_natal_chart(
             longitude=birth_data.longitude,
             house_system=birth_data.house_system,
             save_to_db=save_to_db,
-            db_session=db if save_to_db else None,
+            db_session=db,
             first_name=birth_data.first_name,
             last_name=birth_data.last_name,
         )

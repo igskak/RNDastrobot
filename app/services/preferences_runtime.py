@@ -4,6 +4,7 @@ from __future__ import annotations
 from copy import deepcopy
 import hashlib
 import json
+import math
 from typing import Any, Dict, Iterable, List, Literal, Optional, Tuple
 from uuid import UUID
 
@@ -76,6 +77,7 @@ DEFAULT_ASPECT_COLOR_BY_CHARACTER: Dict[str, str] = {
     'tense': '#ef4444',
     'neutral': '#9ca3af',
 }
+DEFAULT_STATIONARY_THRESHOLD_PERCENT = 5.0
 ORB_PROFILE_IDS = ('natal', 'prognostic')
 DEFAULT_ORB_PAIR_STRATEGY = 'larger'
 ORB_PAIR_STRATEGY_ALIASES: Dict[str, str] = {
@@ -140,6 +142,22 @@ def build_default_balance_settings() -> Dict[str, Any]:
     }
 
 
+def normalize_stationary_threshold_percent(value: Any, *, default: float = DEFAULT_STATIONARY_THRESHOLD_PERCENT) -> float:
+    try:
+        normalized = float(value)
+    except (TypeError, ValueError):
+        return float(default)
+    if not math.isfinite(normalized):
+        return float(default)
+    return max(0.0, min(100.0, normalized))
+
+
+def build_default_stationary_settings() -> Dict[str, Any]:
+    return {
+        'threshold_percent': DEFAULT_STATIONARY_THRESHOLD_PERCENT,
+    }
+
+
 def build_default_visual_settings(aspect_types: Iterable[RefAspectType]) -> Dict[str, Any]:
     aspect_colors: Dict[str, str] = {}
     for aspect_type in aspect_types:
@@ -149,6 +167,7 @@ def build_default_visual_settings(aspect_types: Iterable[RefAspectType]) -> Dict
         aspect_colors[aspect_type.aspect_type] = fallback_color
 
     return {
+        'aspect_harmony_colors': deepcopy(DEFAULT_ASPECT_COLOR_BY_CHARACTER),
         'aspect_colors': aspect_colors,
         'planet_colors': {
             'element_palette': deepcopy(DEFAULT_ELEMENT_PALETTE),
@@ -248,7 +267,9 @@ def normalize_methodology_settings(
     default_methodology = deepcopy(default_methodology or {})
     default_orbs = deepcopy(default_methodology.get('orbs') or {})
     default_balances = deepcopy(default_methodology.get('balances') or {})
+    default_stationary = deepcopy(default_methodology.get('stationary') or {})
     balances = deep_merge_dicts(default_balances, (methodology or {}).get('balances') or {})
+    stationary = deep_merge_dicts(default_stationary, (methodology or {}).get('stationary') or {})
 
     return {
         'orbs': normalize_orb_settings((methodology or {}).get('orbs') or {}, default_orbs=default_orbs),
@@ -256,6 +277,12 @@ def normalize_methodology_settings(
             'version': int(balances.get('version') or 1),
             'planet_weights': deepcopy(balances.get('planet_weights') or {}),
             'special_point_weights': deepcopy(balances.get('special_point_weights') or {}),
+        },
+        'stationary': {
+            'threshold_percent': normalize_stationary_threshold_percent(
+                stationary.get('threshold_percent'),
+                default=default_stationary.get('threshold_percent', DEFAULT_STATIONARY_THRESHOLD_PERCENT),
+            ),
         },
     }
 
@@ -285,6 +312,7 @@ class PreferencesRuntimeResolver:
         return {
             'orbs': build_default_orb_settings(self._get_aspect_types(), self._get_planet_orbs()),
             'balances': build_default_balance_settings(),
+            'stationary': build_default_stationary_settings(),
         }
 
     def build_default_visual(self) -> Dict[str, Any]:
@@ -402,6 +430,22 @@ class PreferencesRuntimeResolver:
                 for key, value in (balances.get('special_point_weights') or {}).items()
             },
         )
+
+    def get_stationary_threshold_for_astrologer(
+        self,
+        astrologer_id: UUID,
+        *,
+        default_house_system: str = 'P',
+    ) -> float:
+        payload = self.get_account_payload(astrologer_id, default_house_system=default_house_system)
+        stationary = payload.get('methodology', {}).get('stationary', {}) or {}
+        return normalize_stationary_threshold_percent(stationary.get('threshold_percent'))
+
+    def get_stationary_threshold_for_user(self, user_id: UUID, *, default_house_system: str = 'P') -> float:
+        astrologer_id = self.get_astrologer_id_for_user(user_id)
+        if not astrologer_id:
+            return DEFAULT_STATIONARY_THRESHOLD_PERCENT
+        return self.get_stationary_threshold_for_astrologer(astrologer_id, default_house_system=default_house_system)
 
     def resolve_orb_for_astrologer(
         self,

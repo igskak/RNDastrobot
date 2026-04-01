@@ -53,9 +53,9 @@
             : (nextVisualPreferences || null);
     }
 
-    function getAspectColor(aspectType) {
+    function getAspectColor(aspectType, harmonicType = null) {
         return window.AstroPreferences?.getAspectColor
-            ? window.AstroPreferences.getAspectColor(aspectType, visualPreferences)
+            ? window.AstroPreferences.getAspectColor(aspectType, visualPreferences, harmonicType)
             : (ASPECT_COLORS[aspectType] || DEFAULT_COLOR);
     }
 
@@ -104,7 +104,7 @@
                 const aSym = Symbols?.aspects?.[ev.aspect_type] || '';
                 grouped.set(key, {
                     label: `${pSym} ${aSym} ${nSym}`,
-                    color: getAspectColor(ev.aspect_type),
+                    color: getAspectColor(ev.aspect_type, ev.harmonic_type),
                     spans: [],
                     events: [],
                 });

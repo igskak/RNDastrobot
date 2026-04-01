@@ -287,7 +287,16 @@
       },
       "title": "Orb profiles"
     },
-    "subtitle": "Set the defaults once, then let individual chart overrides change only what is necessary.",
+      "subtitle": "Set the defaults once, then let individual chart overrides change only what is necessary.",
+      "stationary": {
+        "copy": "Define when a planet should be marked as stationary by comparing its current speed to the average speed for that body.",
+        "kicker": "Methodology",
+        "threshold": {
+          "hint": "Percent of the average speed. `5` means a planet is stationary when it moves at 5% of its usual speed or slower.",
+          "label": "Stationary threshold (%)"
+        },
+        "title": "Stationary logic"
+      },
       "subtitleWithEmail": "Signed in as {email}. Set the defaults once, then let individual chart overrides change only what is necessary.",
       "tables": {
         "aspects": {
@@ -315,7 +324,29 @@
         "notAvailable": "—"
       },
       "title": "Account settings",
+      "visual": {
+        "actions": {
+          "applyMatching": "Apply to matching aspects"
+        },
+        "columns": {
+          "apply": "Apply",
+          "color": "Color",
+          "element": "Element",
+          "override": "Override",
+          "type": "Type"
+        },
+        "copy": "Adjust colors by aspect family, then fine-tune individual aspects, elements, and body-specific overrides in one workspace.",
+        "kicker": "Visual",
+        "panels": {
+          "aspectColors": "Aspect colors",
+          "aspectHarmony": "Aspect families",
+          "bodyOverrides": "Body overrides",
+          "elementPalette": "Element palette"
+        },
+        "title": "Visual palette"
+      },
       "toasts": {
+      "aspectHarmonyApplied": "{type} color applied to matching aspects",
       "loadFailed": "Failed to load account settings",
       "orbsCopied": "Natal orbs copied into the prognostic profile",
       "reloadFailed": "Failed to reload settings",

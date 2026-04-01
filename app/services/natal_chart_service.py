@@ -13,6 +13,7 @@ from app.services.special_points_service import SpecialPointsService
 from app.services.karmic_analysis_service import KarmicAnalysisService
 from app.services.dignity_service import DignityService
 from app.services.planet_characteristics_service import PlanetCharacteristicsService
+from app.services.preferences_runtime import PreferencesRuntimeResolver
 from app.services.aspect_service import AspectService
 from app.utils.constants import get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds
 from app.database.repositories import UserRepository, NatalChartRepository
@@ -163,7 +164,14 @@ class NatalChartService:
         configurations = self._calculate_configurations(special_points, houses)
 
         # 8. Обогащаем данные характеристиками (без БД — без аспектов)
-        planets = self._enrich_planets_basic(planets, houses, angles, special_points)
+        planets = self._enrich_planets_basic(
+            planets,
+            houses,
+            angles,
+            special_points,
+            astrologer_id=astrologer_id,
+            db_session=db_session,
+        )
         houses = self._enrich_houses_basic(houses)
 
         # 8.1. Добавляем связи дом-планета
@@ -335,17 +343,53 @@ class NatalChartService:
 
         return configurations
 
+    def _resolve_stationary_threshold_percent(
+        self,
+        *,
+        astrologer_id: Optional[UUID] = None,
+        db_session: Optional[Session] = None,
+    ) -> float:
+        if astrologer_id is None or db_session is None:
+            return PlanetCharacteristicsService.STATIONARY_THRESHOLD_PERCENT
+        return PreferencesRuntimeResolver(db_session).get_stationary_threshold_for_astrologer(astrologer_id)
+
+    def _build_stationary_payload(
+        self,
+        *,
+        planet_name: str,
+        speed: Optional[float],
+        retrograde: bool,
+        stationary_threshold_percent: float,
+    ) -> Dict[str, Optional[object]]:
+        is_stationary, stationary_type = PlanetCharacteristicsService.calculate_stationary_status(
+            planet_name,
+            float(speed or 0.0),
+            bool(retrograde),
+            threshold_percent=stationary_threshold_percent,
+        )
+        return {
+            'is_stationary': is_stationary,
+            'stationary_type': stationary_type,
+        }
+
     def _enrich_planets_basic(
         self,
         planets: list,
         houses: list,
         angles: dict = None,
-        special_points: dict = None
+        special_points: dict = None,
+        astrologer_id: Optional[UUID] = None,
+        db_session: Optional[Session] = None,
     ) -> list:
         """
         Базовое обогащение планет (без БД и аспектов).
         Используется при расчёте без сохранения в БД.
         """
+        stationary_threshold_percent = self._resolve_stationary_threshold_percent(
+            astrologer_id=astrologer_id,
+            db_session=db_session,
+        )
+
         # Добавляем dignity, element, mode
         for planet in planets:
             sign = planet['sign']
@@ -361,7 +405,9 @@ class NatalChartService:
         # Уровни 1-6: Характеристики (без аспектов — шахта и гармония будут None)
         planets = PlanetCharacteristicsService.enrich_planets(
             planets, houses, aspects=[],
-            angles=angles, special_points=special_points
+            angles=angles,
+            special_points=special_points,
+            stationary_threshold_percent=stationary_threshold_percent,
         )
         return planets
 
@@ -411,6 +457,7 @@ class NatalChartService:
         houses: list,
         aspects: list,
         db_session: Session,
+        astrologer_id: Optional[UUID] = None,
         angles: dict = None,
         special_points: dict = None
     ) -> list:
@@ -442,6 +489,10 @@ class NatalChartService:
             Обогащённый список планет
         """
         dignity_service = DignityService(db_session)
+        stationary_threshold_percent = self._resolve_stationary_threshold_percent(
+            astrologer_id=astrologer_id,
+            db_session=db_session,
+        )
 
         for planet in planets:
             sign = planet['sign']
@@ -460,7 +511,9 @@ class NatalChartService:
         # Уровни 1-6: Характеристики планет
         planets = PlanetCharacteristicsService.enrich_planets(
             planets, houses, aspects,
-            angles=angles, special_points=special_points
+            angles=angles,
+            special_points=special_points,
+            stationary_threshold_percent=stationary_threshold_percent,
         )
 
         return planets
@@ -816,6 +869,7 @@ class NatalChartService:
         houses = self._enrich_houses_with_properties(houses, db_session)
         planets = self._enrich_planets_with_properties(
             planets, houses, [], db_session,
+            astrologer_id=user.astrologer_id,
             angles=angles, special_points=special_points
         )
         planets, houses = self._enrich_house_planet_relations(planets, houses)
@@ -933,6 +987,11 @@ class NatalChartService:
         if not user:
             return None
 
+        stationary_threshold_percent = self._resolve_stationary_threshold_percent(
+            astrologer_id=user.astrologer_id,
+            db_session=db_session,
+        )
+
         # Вычисляем UTC время
         from datetime import datetime
         import pytz
@@ -940,6 +999,10 @@ class NatalChartService:
         local_tz = pytz.timezone(user.timezone)
         local_dt = local_tz.localize(datetime.combine(user.birth_date, user.birth_time))
         utc_dt = local_dt.astimezone(pytz.UTC)
+        stationary_threshold_percent = self._resolve_stationary_threshold_percent(
+            astrologer_id=user.astrologer_id,
+            db_session=db_session,
+        )
 
         # Преобразуем ORM модели в словари
         result = {
@@ -982,8 +1045,12 @@ class NatalChartService:
                     'is_elevated': p.is_elevated or False,
                     'is_peregrine': p.is_peregrine or False,
                     'aspect_harmony': p.aspect_harmony,
-                    'is_stationary': p.is_stationary or False,
-                    'stationary_type': p.stationary_type,
+                    **self._build_stationary_payload(
+                        planet_name=p.planet,
+                        speed=float(p.speed) if p.speed is not None else None,
+                        retrograde=bool(p.retrograde),
+                        stationary_threshold_percent=stationary_threshold_percent,
+                    ),
                     'karmic_score': float(p.karmic_score) if p.karmic_score else None,
                     'karmic_minus_score': p.karmic_minus_score or 0,
                     'karmic_plus_score': p.karmic_plus_score or 0,
@@ -1319,7 +1386,12 @@ class NatalChartService:
                     'sun_relation': p.sun_relation,
                     'aspect_harmony': p.aspect_harmony,
                     'is_peregrine': p.is_peregrine or False,
-                    'is_stationary': p.is_stationary or False,
+                    **self._build_stationary_payload(
+                        planet_name=p.planet,
+                        speed=float(p.speed) if p.speed is not None else None,
+                        retrograde=bool(p.retrograde),
+                        stationary_threshold_percent=stationary_threshold_percent,
+                    ),
                 }
                 for p in user.planets
             ],

@@ -88,6 +88,26 @@ function normalizeForecastBodyName(value) {
     return FORECAST_MATRIX_NAME_ALIASES[String(value || '')] || value;
 }
 
+function syncForecastModalState() {
+    if (!document.body) return;
+    const hasOpenModal = Boolean(document.querySelector('.bw-settings-panel:not(.hidden)'));
+    document.body.classList.toggle('forecast-modal-open', hasOpenModal);
+}
+
+function mountSettingsPanel(panel) {
+    if (!panel || panel.parentElement === document.body) return;
+    document.body.appendChild(panel);
+}
+
+function toggleSettingsPanel(panel, isOpen) {
+    if (!panel) return;
+    if (isOpen) {
+        mountSettingsPanel(panel);
+    }
+    panel.classList.toggle('hidden', !isOpen);
+    syncForecastModalState();
+}
+
 // ─── State ──────────────────────────────────────────────
 const ForecastState = {
     userId: null,
@@ -2588,16 +2608,24 @@ function initControls() {
     const solarSettingsBtn = document.getElementById('solarSettingsBtn');
     const solarSettingsPanel = document.getElementById('solarSettingsPanel');
     if (solarSettingsBtn && solarSettingsPanel) {
+        mountSettingsPanel(solarSettingsPanel);
+        const closeSolarSettingsPanel = () => toggleSettingsPanel(solarSettingsPanel, false);
+
         solarSettingsBtn.addEventListener('click', () => {
-            solarSettingsPanel.classList.remove('hidden');
+            toggleSettingsPanel(solarSettingsPanel, true);
         });
         solarSettingsPanel.addEventListener('click', e => {
             if (e.target === solarSettingsPanel) {
-                solarSettingsPanel.classList.add('hidden');
+                closeSolarSettingsPanel();
             }
         });
         document.getElementById('solarSettingsClose')?.addEventListener('click', () => {
-            solarSettingsPanel.classList.add('hidden');
+            closeSolarSettingsPanel();
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && !solarSettingsPanel.classList.contains('hidden')) {
+                closeSolarSettingsPanel();
+            }
         });
     }
     document.getElementById('bwResetDefaultsBtn')?.addEventListener('click', async () => {
@@ -2783,6 +2811,7 @@ function initSolarZoomPan() {
         && Boolean(target.closest('.biwheel-zoom-controls, .bw-settings-panel'));
 
     wrapper.addEventListener('wheel', (e) => {
+        if (isBlockedSolarZoomTarget(e.target)) return;
         e.preventDefault();
         const delta = e.deltaY > 0 ? -SOLAR_ZOOM_STEP : SOLAR_ZOOM_STEP;
         solarZoomLevel = Math.min(SOLAR_ZOOM_MAX, Math.max(SOLAR_ZOOM_MIN, solarZoomLevel + delta));
@@ -2790,7 +2819,7 @@ function initSolarZoomPan() {
     }, { passive: false });
 
     wrapper.addEventListener('mousedown', (e) => {
-        if (e.button !== 0 || e.target.closest('.bw-zoom-btn')) return;
+        if (e.button !== 0 || isBlockedSolarZoomTarget(e.target)) return;
         solarIsPanning = true;
         solarPanStartX = e.clientX;
         solarPanStartY = e.clientY;

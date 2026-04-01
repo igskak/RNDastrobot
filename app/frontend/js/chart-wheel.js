@@ -143,9 +143,9 @@ class ChartWheel {
         }
     }
 
-    getAspectColor(aspectType) {
+    getAspectColor(aspectType, harmonicType = null) {
         return window.AstroPreferences?.getAspectColor
-            ? window.AstroPreferences.getAspectColor(aspectType, this.visualPreferences)
+            ? window.AstroPreferences.getAspectColor(aspectType, this.visualPreferences, harmonicType)
             : (this.aspectColors?.[aspectType] || '#9ca3af');
     }
 
@@ -519,7 +519,7 @@ class ChartWheel {
             const y2 = this.center + this.aspectRadius * Math.sin(angle2);
 
             // Цвет по типу аспекта
-            const color = this.getAspectColor(aspect.aspect_type);
+            const color = this.getAspectColor(aspect.aspect_type, aspect.harmonic_type);
 
             // Толщина: более тонкие линии (0° → 1.5px, 10° → 0.3px)
             const maxOrb = 12;

@@ -452,20 +452,22 @@ class PlanetCharacteristicsService:
     # УРОВЕНЬ 5: Стационарность
     # =========================================================================
 
-    # Порог стационарности: скорость < 10% от средней
-    STATIONARY_THRESHOLD_PERCENT = 10.0
+    # Дефолтный порог стационарности: скорость <= 5% от средней.
+    # Может быть переопределён через account methodology preferences.
+    STATIONARY_THRESHOLD_PERCENT = 5.0
 
     @classmethod
     def calculate_stationary_status(
         cls,
         planet_name: str,
         speed: float,
-        is_retrograde: bool
+        is_retrograde: bool,
+        threshold_percent: Optional[float] = None,
     ) -> tuple:
         """
         Определить стационарный статус планеты.
 
-        Стационарная планета — планета с очень малой скоростью (< 10% от средней),
+        Стационарная планета — планета с очень малой скоростью,
         что происходит при смене направления движения.
 
         Args:
@@ -481,12 +483,15 @@ class PlanetCharacteristicsService:
         if planet_name in ('Sun', 'Moon'):
             return (False, None)
 
+        stationary_threshold = float(
+            cls.STATIONARY_THRESHOLD_PERCENT if threshold_percent is None else threshold_percent
+        )
         speed_percent = cls.calculate_speed_percent(planet_name, speed)
 
         if speed_percent is None:
             return (False, None)
 
-        if speed_percent <= cls.STATIONARY_THRESHOLD_PERCENT:
+        if speed_percent <= stationary_threshold:
             # Определяем тип стационарности по направлению движения
             # Если ретро — то планета "выходит" из ретро (pre_direct)
             # Если директ — то планета "входит" в ретро (pre_retrograde)
@@ -636,7 +641,7 @@ class PlanetCharacteristicsService:
             minus_score += 2
 
         # В ретро-движении
-        if planet.get('is_retrograde'):
+        if planet.get('is_retrograde') or planet.get('retrograde'):
             minus_score += 2
 
         # В сожжении
@@ -840,7 +845,8 @@ class PlanetCharacteristicsService:
         aspects: List[Dict[str, Any]] = None,
         sun_is_strong: bool = False,
         angles: Dict[str, Any] = None,
-        special_points: Dict[str, Any] = None
+        special_points: Dict[str, Any] = None,
+        stationary_threshold_percent: Optional[float] = None,
     ) -> List[Dict[str, Any]]:
         """
         Обогатить список планет характеристиками Уровней 1-6.
@@ -852,6 +858,7 @@ class PlanetCharacteristicsService:
             sun_is_strong: Солнце в сильном положении (для расширения орбиса лучей)
             angles: Углы карты (для кармического статуса)
             special_points: Специальные точки (для кармического статуса)
+            stationary_threshold_percent: Порог стационарности в % от средней скорости
 
         Returns:
             Обогащённый список планет
@@ -917,8 +924,17 @@ class PlanetCharacteristicsService:
             planet['aspect_harmony'] = cls.calculate_aspect_harmony(name, aspects or [])
 
             # УРОВЕНЬ 5: Стационарность
-            is_retrograde = planet.get('is_retrograde', False)
-            is_stationary, stationary_type = cls.calculate_stationary_status(name, speed, is_retrograde)
+            is_retrograde = bool(
+                planet.get('is_retrograde')
+                if planet.get('is_retrograde') is not None
+                else planet.get('retrograde', False)
+            )
+            is_stationary, stationary_type = cls.calculate_stationary_status(
+                name,
+                speed,
+                is_retrograde,
+                threshold_percent=stationary_threshold_percent,
+            )
             planet['is_stationary'] = is_stationary
             planet['stationary_type'] = stationary_type
 
@@ -969,4 +985,3 @@ class PlanetCharacteristicsService:
                 house['included_sign'] = None
 
         return houses
-

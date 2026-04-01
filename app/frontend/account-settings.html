@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.accountSettings.title"></title>
-    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=20260401-222148">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260401-222148">
+    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=20260401-230042">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260401-230042">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '20260401-222148';</script>
+    <script>window.__APP_BUILD_ID__ = '20260401-230042';</script>
 </head>
 <body class="account-settings-page">
     <div class="page-loader" id="pageLoader">
@@ -330,6 +330,37 @@
                         </div>
                     </section>
 
+                    <section class="account-settings-card">
+                        <div class="account-settings-card-head account-settings-card-head--compact">
+                            <div>
+                                <p class="account-settings-section-kicker" data-i18n="page.accountSettings.stationary.kicker"></p>
+                                <h2 class="account-settings-section-title" data-i18n="page.accountSettings.stationary.title"></h2>
+                                <p class="account-settings-section-copy" data-i18n="page.accountSettings.stationary.copy"></p>
+                            </div>
+                        </div>
+                        <div class="account-settings-grid account-settings-grid--two">
+                            <div>
+                                <label
+                                    class="account-settings-label"
+                                    for="accountStationaryThresholdPercent"
+                                    data-i18n="page.accountSettings.stationary.threshold.label"
+                                ></label>
+                                <input
+                                    id="accountStationaryThresholdPercent"
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    step="0.5"
+                                    inputmode="decimal"
+                                >
+                                <p
+                                    class="account-settings-section-copy account-settings-section-copy--subtle"
+                                    data-i18n="page.accountSettings.stationary.threshold.hint"
+                                ></p>
+                            </div>
+                        </div>
+                    </section>
+
                     <div class="account-settings-utility-grid">
                         <section class="account-settings-card">
                             <div class="account-settings-card-head account-settings-card-head--compact">
@@ -374,20 +405,35 @@
                         <section class="account-settings-card">
                             <div class="account-settings-card-head account-settings-card-head--compact">
                                 <div>
-                                    <p class="account-settings-section-kicker">Visual</p>
-                                    <h2 class="account-settings-section-title">Visual palette</h2>
-                                    <p class="account-settings-section-copy">Fine-tune aspect colors, element palette, and body-specific overrides in one compact workspace.</p>
+                                    <p class="account-settings-section-kicker" data-i18n="page.accountSettings.visual.kicker"></p>
+                                    <h2 class="account-settings-section-title" data-i18n="page.accountSettings.visual.title"></h2>
+                                    <p class="account-settings-section-copy" data-i18n="page.accountSettings.visual.copy"></p>
                                 </div>
                             </div>
-                            <div class="account-settings-grid account-settings-grid--three account-settings-grid--compact-panels">
+                            <div class="account-settings-grid account-settings-grid--two account-settings-grid--compact-panels">
                                 <div class="account-settings-table-panel">
-                                    <p class="account-settings-mini-title">Aspect colors</p>
+                                    <p class="account-settings-mini-title" data-i18n="page.accountSettings.visual.panels.aspectHarmony"></p>
                                     <div class="account-settings-table-wrap account-settings-table-wrap--compact-panel">
                                         <table class="account-settings-table account-settings-table--compact">
                                             <thead>
                                                 <tr>
-                                                    <th>Aspect</th>
-                                                    <th>Color</th>
+                                                    <th data-i18n="page.accountSettings.visual.columns.type"></th>
+                                                    <th data-i18n="page.accountSettings.visual.columns.color"></th>
+                                                    <th data-i18n="page.accountSettings.visual.columns.apply"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="accountAspectHarmonyColorsBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="account-settings-table-panel">
+                                    <p class="account-settings-mini-title" data-i18n="page.accountSettings.visual.panels.aspectColors"></p>
+                                    <div class="account-settings-table-wrap account-settings-table-wrap--compact-panel">
+                                        <table class="account-settings-table account-settings-table--compact">
+                                            <thead>
+                                                <tr>
+                                                    <th data-i18n="page.accountSettings.tables.columns.aspect"></th>
+                                                    <th data-i18n="page.accountSettings.visual.columns.color"></th>
                                                 </tr>
                                             </thead>
                                             <tbody id="accountAspectColorsBody"></tbody>
@@ -395,13 +441,13 @@
                                     </div>
                                 </div>
                                 <div class="account-settings-table-panel">
-                                    <p class="account-settings-mini-title">Element palette</p>
+                                    <p class="account-settings-mini-title" data-i18n="page.accountSettings.visual.panels.elementPalette"></p>
                                     <div class="account-settings-table-wrap account-settings-table-wrap--compact-panel">
                                         <table class="account-settings-table account-settings-table--compact">
                                             <thead>
                                                 <tr>
-                                                    <th>Element</th>
-                                                    <th>Color</th>
+                                                    <th data-i18n="page.accountSettings.visual.columns.element"></th>
+                                                    <th data-i18n="page.accountSettings.visual.columns.color"></th>
                                                 </tr>
                                             </thead>
                                             <tbody id="accountElementPaletteBody"></tbody>
@@ -409,13 +455,13 @@
                                     </div>
                                 </div>
                                 <div class="account-settings-table-panel">
-                                    <p class="account-settings-mini-title">Body overrides</p>
+                                    <p class="account-settings-mini-title" data-i18n="page.accountSettings.visual.panels.bodyOverrides"></p>
                                     <div class="account-settings-table-wrap account-settings-table-wrap--compact-panel">
                                         <table class="account-settings-table account-settings-table--compact">
                                             <thead>
                                                 <tr>
-                                                    <th>Body</th>
-                                                    <th>Override</th>
+                                                    <th data-i18n="page.accountSettings.matrix.columns.body"></th>
+                                                    <th data-i18n="page.accountSettings.visual.columns.override"></th>
                                                 </tr>
                                             </thead>
                                             <tbody id="accountBodyOverrideColorsBody"></tbody>
@@ -432,7 +478,7 @@
 
     <div id="accountSettingsToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/account-settings.bundle.js?v=20260401-222148"></script>
-    <script src="js/locale-switcher.js?v=20260401-222148"></script>
+    <script type="module" src="js/bundles/account-settings.bundle.js?v=20260401-230042"></script>
+    <script src="js/locale-switcher.js?v=20260401-230042"></script>
 </body>
 </html>

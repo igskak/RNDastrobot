@@ -45,4 +45,31 @@ test('normalizeMethodologySettings preserves distinct natal and prognostic profi
     assert.equal(normalized.orbs.pair_strategy, 'average');
     assert.equal(normalized.orbs.profiles.natal.matrix.Conjunction.Sun, 7.5);
     assert.equal(normalized.orbs.profiles.prognostic.matrix.Conjunction.Sun, 5.5);
+    assert.equal(normalized.stationary.threshold_percent, 5);
+});
+
+test('normalizeMethodologySettings keeps custom stationary threshold', () => {
+    const normalized = preferences.normalizeMethodologySettings({
+        stationary: {
+            threshold_percent: 7.5,
+        },
+    });
+
+    assert.equal(normalized.stationary.threshold_percent, 7.5);
+});
+
+test('resolveVisualPreferences keeps harmony colors and getAspectColor falls back to harmony type', () => {
+    const visual = preferences.resolveVisualPreferences({
+        aspect_harmony_colors: {
+            tense: '#123456',
+        },
+        aspect_colors: {
+            CustomAspect: '#abcdef',
+        },
+    });
+
+    assert.equal(visual.aspect_harmony_colors.tense, '#123456');
+    assert.equal(preferences.getAspectHarmonyType('Square'), 'tense');
+    assert.equal(preferences.getAspectColor('UnknownAspect', visual, 'tense'), '#123456');
+    assert.equal(preferences.getAspectColor('CustomAspect', visual, 'neutral'), '#abcdef');
 });

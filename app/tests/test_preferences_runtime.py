@@ -1,4 +1,9 @@
-from app.services.preferences_runtime import normalize_orb_settings, resolve_orb_pair_value
+from app.services.preferences_runtime import (
+    build_default_visual_settings,
+    normalize_methodology_settings,
+    normalize_orb_settings,
+    resolve_orb_pair_value,
+)
 
 
 def test_normalize_orb_settings_expands_legacy_matrix_into_both_profiles():
@@ -57,3 +62,33 @@ def test_resolve_orb_pair_value_supports_all_strategies():
     assert resolve_orb_pair_value([8.0, 6.0], "smaller") == 6.0
     assert resolve_orb_pair_value([8.0, 6.0], "average") == 7.0
     assert resolve_orb_pair_value([8.0], "average") == 8.0
+
+
+def test_build_default_visual_settings_includes_harmony_palette():
+    aspect_types = [
+        type("AspectType", (), {"aspect_type": "Conjunction", "character": "neutral"})(),
+        type("AspectType", (), {"aspect_type": "Custom", "character": "tense"})(),
+    ]
+
+    visual = build_default_visual_settings(aspect_types)
+
+    assert visual["aspect_harmony_colors"]["harmonious"] == "#3b82f6"
+    assert visual["aspect_harmony_colors"]["tense"] == "#ef4444"
+    assert visual["aspect_colors"]["Conjunction"] == "#f59e0b"
+    assert visual["aspect_colors"]["Custom"] == "#ef4444"
+
+
+def test_normalize_methodology_settings_defaults_stationary_threshold_to_five_percent():
+    normalized = normalize_methodology_settings({})
+
+    assert normalized["stationary"]["threshold_percent"] == 5.0
+
+
+def test_normalize_methodology_settings_preserves_custom_stationary_threshold():
+    normalized = normalize_methodology_settings({
+        "stationary": {
+            "threshold_percent": 7.5,
+        },
+    })
+
+    assert normalized["stationary"]["threshold_percent"] == 7.5

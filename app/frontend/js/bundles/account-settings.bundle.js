@@ -1,12 +1,12 @@
-import{a as _e}from"./chunks/chunk-TUH7FQMJ.js";import"./chunks/chunk-2MGLT2CN.js";import{b as v,d as Se,e as we,f as Ae,g as Be}from"./chunks/chunk-IGMIONLW.js";var $e=v(Se()),Ee=v(we()),ve=v(Ae());var xe=v(Be()),Te=v(_e());(function(){"use strict";let C=["natal","biwheel","solar"],H=window.AstroPreferences?.DEFAULT_ENABLED_ASPECT_TYPES||["Conjunction","Opposition","Trine","Square","Sextile","Vigintile","Semi_Nonagon","Semisextile","Decile","Nonagon","Semisquare","Quintile","Binonagon","Sentagon","Tridecile","Sesquiquadrate","Biquintile","Quincunx"],ee={Sesquiquadrate:"⚼",Vigintile:"V",Semi_Nonagon:"SN",Decile:"D",Nonagon:"N",Binonagon:"BN",Sentagon:"SG",Tridecile:"TD",Septile:"7",Novile:"9"},N=window.AstroPreferences?.ORB_PROFILE_IDS||["natal","prognostic"],P=window.AstroPreferences?.DEFAULT_ORB_PAIR_STRATEGY||"larger",x="activePreferenceRecalcJobId",u=null,A=null,J=null,B=null,g="natal";function z(){if(window.AstroAPI?.hidePageLoader){window.AstroAPI.hidePageLoader();return}let e=document.getElementById("pageLoader");e&&(e.classList.add("fade-out"),setTimeout(()=>e.remove(),300))}function p(e,t){return window.FrontendI18n?.t?.(e,t)||e}function r(e){return String(e??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")}function _(e,t=""){let o=p(e);return o&&o!==e?o:t}function m(e){return _(`astro.planet.${e}`,e)}function k(e){return window.Symbols?.planets?.[e]||String(e||"").slice(0,2)||"•"}function $(e){return _(`astro.aspect.${e}`,e)}function F(e){return window.Symbols?.aspects?.[e]||ee[e]||String(e||"").slice(0,2)||"•"}function te(e,t){return window.AstroPreferences?.deepEqual?window.AstroPreferences.deepEqual(e,t):JSON.stringify(e??null)===JSON.stringify(t??null)}function S(e={}){return window.AstroPreferences?.normalizeViewSettings?window.AstroPreferences.normalizeViewSettings(e):e}function f(e={}){return window.AstroPreferences?.normalizeMethodologySettings?window.AstroPreferences.normalizeMethodologySettings(e):e}function T(e={}){return window.AstroPreferences?.resolveVisualPreferences?window.AstroPreferences.resolveVisualPreferences(e):e||{}}function W(e={}){return window.AstroPreferences?.ensureMatrixRows?window.AstroPreferences.ensureMatrixRows(e||{}):e||{}}function oe(){return window.AstroPreferences?.MATRIX_BODIES||[]}function E(){return A?.aspect_types||H.map(e=>({aspect_type:e}))}function M(){return(A?.bodies||[]).map(e=>e?.name).filter(Boolean)}function w(){return Object.fromEntries(E().map(e=>[e.aspect_type,Object.fromEntries(M().map(t=>[t,Number(e.base_orb||5)]))]))}function h(){let e={version:2,pair_strategy:P,profiles:Object.fromEntries(N.map(t=>[t,{matrix:w()}]))};return f({orbs:e,balances:A?.default_balance_targets||{}})}function U(){return T(A?.default_visual_palettes||{})}function Y(){return{chart_defaults:{natal:S({}),biwheel:S({aspects:{scope:"major"}}),solar:S({})},chart_creation_defaults:{house_system:"P"},methodology:h(),visual:U()}}function G(e){return e==="natal"?{orientation:document.getElementById("natalOrientationSelect"),aspectScope:document.getElementById("natalAspectScopeSelect"),showApplyingSeparating:document.getElementById("natalShowApplyingSeparating"),showSpeed:document.getElementById("natalShowSpeed"),showStationary:document.getElementById("natalShowStationary")}:e==="biwheel"?{orientation:document.getElementById("biwheelOrientationSelectAccount"),aspectScope:document.getElementById("biwheelAspectScopeSelectAccount"),showApplyingSeparating:null,showSpeed:null,showStationary:null}:{orientation:document.getElementById("solarOrientationSelectAccount"),aspectScope:document.getElementById("solarAspectScopeSelectAccount"),showApplyingSeparating:document.getElementById("solarShowApplyingSeparatingAccount"),showSpeed:document.getElementById("solarShowSpeedAccount"),showStationary:document.getElementById("solarShowStationaryAccount")}}function O(){return u||(u={methodology:h()}),u.methodology=f(u.methodology||h()),u.methodology}function ae(e){return O()?.orbs?.profiles?.[e]?.matrix||w()}function ne(){let e=document.getElementById("accountOrbPairStrategySelect");return e?window.AstroPreferences?.normalizeOrbPairStrategy?.(e.value)||P:f(u?.methodology||h())?.orbs?.pair_strategy||P}function K(){let e=document.getElementById("accountOrbProfileHint"),t=document.getElementById("accountOrbMatrixPanel"),o=document.getElementById("accountApplyNatalOrbsBtn");document.querySelectorAll("[data-orb-profile-tab]").forEach(a=>{let s=a.dataset.orbProfileTab===g;a.classList.toggle("is-active",s),a.setAttribute("aria-selected",s?"true":"false"),t&&s&&a.id&&t.setAttribute("aria-labelledby",a.id)}),e&&(e.textContent=p(`page.accountSettings.orbs.hints.${g}`)),o&&o.classList.toggle("hidden",g!=="prognostic")}function R(){let e=O(),t=w();document.querySelectorAll("#accountOrbsMatrixBody input[data-orb-aspect-type][data-orb-body]").forEach(o=>{let a=o.dataset.orbAspectType,s=o.dataset.orbBody;!a||!s||(t[a]||(t[a]={}),t[a][s]=Number.parseFloat(o.value)||0)}),e.orbs.profiles[g]={matrix:t}}function se(e,{rerender:t=!0}={}){N.includes(e)&&(u&&R(),g=e,K(),t&&u&&q(u.methodology))}function ce(e={}){let t=document.getElementById("accountAspectTypesMatrixBody");t&&(t.innerHTML=E().map(o=>{let a=o.aspect_type,s=r(F(a)),i=r($(a)),n=C.map(c=>{let d=e?.[c]?.aspects?.enabled_types||[],y=new Set(Array.isArray(d)&&d.length?d:H).has(a)?"checked":"";return`
+import{a as Pt}from"./chunks/chunk-HR5WRAQJ.js";import"./chunks/chunk-2MGLT2CN.js";import{b as x,d as $t,e as _t,f as vt,g as Et}from"./chunks/chunk-IGMIONLW.js";var xt=x($t()),Tt=x(_t()),Mt=x(vt());var Lt=x(Et()),Ct=x(Pt());(function(){"use strict";let k=["natal","biwheel","solar"],J=window.AstroPreferences?.DEFAULT_ENABLED_ASPECT_TYPES||["Conjunction","Opposition","Trine","Square","Sextile","Vigintile","Semi_Nonagon","Semisextile","Decile","Nonagon","Semisquare","Quintile","Binonagon","Sentagon","Tridecile","Sesquiquadrate","Biquintile","Quincunx"],et={Sesquiquadrate:"⚼",Vigintile:"V",Semi_Nonagon:"SN",Decile:"D",Nonagon:"N",Binonagon:"BN",Sentagon:"SG",Tridecile:"TD",Septile:"7",Novile:"9"},H=window.AstroPreferences?.ORB_PROFILE_IDS||["natal","prognostic"],T=window.AstroPreferences?.DEFAULT_ORB_PAIR_STRATEGY||"larger",M="activePreferenceRecalcJobId",p=null,v=null,z=null,E=null,g="natal";function W(){if(window.AstroAPI?.hidePageLoader){window.AstroAPI.hidePageLoader();return}let t=document.getElementById("pageLoader");t&&(t.classList.add("fade-out"),setTimeout(()=>t.remove(),300))}function u(t,e){return window.FrontendI18n?.t?.(t,e)||t}function r(t){return String(t??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")}function w(t,e=""){let o=u(t);return o&&o!==t?o:e}function m(t){return w(`astro.planet.${t}`,t)}function F(t){return window.Symbols?.planets?.[t]||String(t||"").slice(0,2)||"•"}function P(t){return w(`astro.aspect.${t}`,t)}function q(t){return window.Symbols?.aspects?.[t]||et[t]||String(t||"").slice(0,2)||"•"}function I(t){return w({harmonious:"page.chart.legend.harmonious",tense:"page.chart.legend.tense",neutral:"page.chart.legend.neutral"}[t],t)}function ot(t,e){return window.AstroPreferences?.deepEqual?window.AstroPreferences.deepEqual(t,e):JSON.stringify(t??null)===JSON.stringify(e??null)}function A(t={}){return window.AstroPreferences?.normalizeViewSettings?window.AstroPreferences.normalizeViewSettings(t):t}function h(t={}){return window.AstroPreferences?.normalizeMethodologySettings?window.AstroPreferences.normalizeMethodologySettings(t):t}function B(t={}){return window.AstroPreferences?.resolveVisualPreferences?window.AstroPreferences.resolveVisualPreferences(t):t||{}}function U(t={}){return window.AstroPreferences?.ensureMatrixRows?window.AstroPreferences.ensureMatrixRows(t||{}):t||{}}function at(){return window.AstroPreferences?.MATRIX_BODIES||[]}function $(){return v?.aspect_types||J.map(t=>({aspect_type:t}))}function nt(t){return $().find(e=>e?.aspect_type===t)||null}function st(t){return nt(t)?.character||window.AstroPreferences?.getAspectHarmonyType?.(t)||"neutral"}function L(){return(v?.bodies||[]).map(t=>t?.name).filter(Boolean)}function _(){return Object.fromEntries($().map(t=>[t.aspect_type,Object.fromEntries(L().map(e=>[e,Number(t.base_orb||5)]))]))}function S(){let t={version:2,pair_strategy:T,profiles:Object.fromEntries(H.map(e=>[e,{matrix:_()}]))};return h({orbs:t,balances:v?.default_balance_targets||{}})}function Y(){return B(v?.default_visual_palettes||{})}function G(){return{chart_defaults:{natal:A({}),biwheel:A({aspects:{scope:"major"}}),solar:A({})},chart_creation_defaults:{house_system:"P"},methodology:S(),visual:Y()}}function K(t){return t==="natal"?{orientation:document.getElementById("natalOrientationSelect"),aspectScope:document.getElementById("natalAspectScopeSelect"),showApplyingSeparating:document.getElementById("natalShowApplyingSeparating"),showSpeed:document.getElementById("natalShowSpeed"),showStationary:document.getElementById("natalShowStationary")}:t==="biwheel"?{orientation:document.getElementById("biwheelOrientationSelectAccount"),aspectScope:document.getElementById("biwheelAspectScopeSelectAccount"),showApplyingSeparating:null,showSpeed:null,showStationary:null}:{orientation:document.getElementById("solarOrientationSelectAccount"),aspectScope:document.getElementById("solarAspectScopeSelectAccount"),showApplyingSeparating:document.getElementById("solarShowApplyingSeparatingAccount"),showSpeed:document.getElementById("solarShowSpeedAccount"),showStationary:document.getElementById("solarShowStationaryAccount")}}function C(){return p||(p={methodology:S()}),p.methodology=h(p.methodology||S()),p.methodology}function ct(t){return C()?.orbs?.profiles?.[t]?.matrix||_()}function rt(){let t=document.getElementById("accountOrbPairStrategySelect");return t?window.AstroPreferences?.normalizeOrbPairStrategy?.(t.value)||T:h(p?.methodology||S())?.orbs?.pair_strategy||T}function Q(){let t=document.getElementById("accountOrbProfileHint"),e=document.getElementById("accountOrbMatrixPanel"),o=document.getElementById("accountApplyNatalOrbsBtn");document.querySelectorAll("[data-orb-profile-tab]").forEach(n=>{let a=n.dataset.orbProfileTab===g;n.classList.toggle("is-active",a),n.setAttribute("aria-selected",a?"true":"false"),e&&a&&n.id&&e.setAttribute("aria-labelledby",n.id)}),t&&(t.textContent=u(`page.accountSettings.orbs.hints.${g}`)),o&&o.classList.toggle("hidden",g!=="prognostic")}function R(){let t=C(),e=_();document.querySelectorAll("#accountOrbsMatrixBody input[data-orb-aspect-type][data-orb-body]").forEach(o=>{let n=o.dataset.orbAspectType,a=o.dataset.orbBody;!n||!a||(e[n]||(e[n]={}),e[n][a]=Number.parseFloat(o.value)||0)}),t.orbs.profiles[g]={matrix:e}}function lt(t,{rerender:e=!0}={}){H.includes(t)&&(p&&R(),g=t,Q(),e&&p&&D(p.methodology))}function it(t={}){let e=document.getElementById("accountAspectTypesMatrixBody");e&&(e.innerHTML=$().map(o=>{let n=o.aspect_type,a=r(q(n)),i=r(P(n)),c=k.map(s=>{let l=t?.[s]?.aspects?.enabled_types||[],y=new Set(Array.isArray(l)&&l.length?l:J).has(n)?"checked":"";return`
                     <td>
                         <label class="account-settings-aspect-cell">
                             <input
                                 type="checkbox"
-                                data-view-id="${c}"
-                                data-aspect-type="${a}"
+                                data-view-id="${s}"
+                                data-aspect-type="${n}"
                                 ${y}
-                                aria-label="${r(`${_(`page.accountSettings.tables.columns.${c}`,c)}: ${i}`)}"
+                                aria-label="${r(`${w(`page.accountSettings.tables.columns.${s}`,s)}: ${i}`)}"
                             >
                         </label>
                     </td>
@@ -14,21 +14,21 @@ import{a as _e}from"./chunks/chunk-TUH7FQMJ.js";import"./chunks/chunk-2MGLT2CN.j
                 <tr>
                     <th scope="row">
                         <span class="account-settings-aspect-meta account-settings-aspect-meta--icon-only">
-                            <span class="account-settings-check-glyph" title="${i}" aria-label="${i}" role="img" tabindex="0"><span class="astro-symbol" aria-hidden="true">${s}</span></span>
+                            <span class="account-settings-check-glyph" title="${i}" aria-label="${i}" role="img" tabindex="0"><span class="astro-symbol" aria-hidden="true">${a}</span></span>
                         </span>
                     </th>
-                    ${n}
+                    ${c}
                 </tr>
-            `}).join(""))}function re(e={}){let t=document.getElementById("accountBodiesMatrixBody");t&&(t.innerHTML=oe().map(o=>{let a=r(m(o)),s=r(window.Symbols?.planets?.[o]||""),i=C.map(n=>{let c=W(e?.[n]?.matrix?.rows||{}),d=c?.[o]?.display!==!1?"checked":"",l=c?.[o]?.aspecting!==!1?"checked":"";return`
+            `}).join(""))}function dt(t={}){let e=document.getElementById("accountBodiesMatrixBody");e&&(e.innerHTML=at().map(o=>{let n=r(m(o)),a=r(window.Symbols?.planets?.[o]||""),i=k.map(c=>{let s=U(t?.[c]?.matrix?.rows||{}),l=s?.[o]?.display!==!1?"checked":"",d=s?.[o]?.aspecting!==!1?"checked":"";return`
                     <td>
                         <label class="account-settings-matrix-toggle">
                             <input
                                 type="checkbox"
-                                data-view-id="${n}"
+                                data-view-id="${c}"
                                 data-matrix-body="${o}"
                                 data-matrix-field="display"
-                                ${d}
-                                aria-label="${r(`${_(`page.accountSettings.tables.columns.${n}`,n)}: ${a} ${p("page.accountSettings.matrix.columns.display")}`)}"
+                                ${l}
+                                aria-label="${r(`${w(`page.accountSettings.tables.columns.${c}`,c)}: ${n} ${u("page.accountSettings.matrix.columns.display")}`)}"
                             >
                         </label>
                     </td>
@@ -36,11 +36,11 @@ import{a as _e}from"./chunks/chunk-TUH7FQMJ.js";import"./chunks/chunk-2MGLT2CN.j
                         <label class="account-settings-matrix-toggle">
                             <input
                                 type="checkbox"
-                                data-view-id="${n}"
+                                data-view-id="${c}"
                                 data-matrix-body="${o}"
                                 data-matrix-field="aspecting"
-                                ${l}
-                                aria-label="${r(`${_(`page.accountSettings.tables.columns.${n}`,n)}: ${a} ${p("page.accountSettings.matrix.columns.aspecting")}`)}"
+                                ${d}
+                                aria-label="${r(`${w(`page.accountSettings.tables.columns.${c}`,c)}: ${n} ${u("page.accountSettings.matrix.columns.aspecting")}`)}"
                             >
                         </label>
                     </td>
@@ -48,32 +48,32 @@ import{a as _e}from"./chunks/chunk-TUH7FQMJ.js";import"./chunks/chunk-2MGLT2CN.j
                 <tr>
                     <th scope="row">
                         <span class="account-settings-body account-settings-body--icon-only">
-                            <span class="account-settings-body-badge" title="${a}" aria-label="${a}" role="img" tabindex="0"><span class="astro-symbol" aria-hidden="true">${s}</span></span>
+                            <span class="account-settings-body-badge" title="${n}" aria-label="${n}" role="img" tabindex="0"><span class="astro-symbol" aria-hidden="true">${a}</span></span>
                         </span>
                     </th>
                     ${i}
                 </tr>
-            `}).join(""))}function q(e={}){let t=document.getElementById("accountOrbsHeaderRow"),o=document.getElementById("accountOrbsMatrixBody");if(!t||!o)return;let a=M(),s=E(),n=f(e||h())?.orbs?.profiles?.[g]?.matrix||w();t.innerHTML=`
+            `}).join(""))}function D(t={}){let e=document.getElementById("accountOrbsHeaderRow"),o=document.getElementById("accountOrbsMatrixBody");if(!e||!o)return;let n=L(),a=$(),c=h(t||S())?.orbs?.profiles?.[g]?.matrix||_();e.innerHTML=`
             <th class="account-settings-orb-corner"></th>
-            ${a.map(c=>{let d=r(m(c)),l=r(window.Symbols?.planets?.[c]||c);return`
+            ${n.map(s=>{let l=r(m(s)),d=r(window.Symbols?.planets?.[s]||s);return`
                     <th>
                         <span class="account-settings-body account-settings-body--icon-only">
-                            <span class="account-settings-body-badge account-settings-orb-glyph" title="${d}" aria-label="${d}" role="img" tabindex="0">
-                                <span class="astro-symbol" aria-hidden="true">${l}</span>
+                            <span class="account-settings-body-badge account-settings-orb-glyph" title="${l}" aria-label="${l}" role="img" tabindex="0">
+                                <span class="astro-symbol" aria-hidden="true">${d}</span>
                             </span>
                         </span>
                     </th>
                 `}).join("")}
-        `,o.innerHTML=s.map(c=>{let d=c.aspect_type,l=r(F(d)),y=r($(d));return`
+        `,o.innerHTML=a.map(s=>{let l=s.aspect_type,d=r(q(l)),y=r(P(l));return`
                 <tr>
                     <th scope="row">
                         <span class="account-settings-aspect-meta account-settings-aspect-meta--icon-only">
                             <span class="account-settings-check-glyph account-settings-orb-glyph" title="${y}" aria-label="${y}" role="img" tabindex="0">
-                                <span class="astro-symbol" aria-hidden="true">${l}</span>
+                                <span class="astro-symbol" aria-hidden="true">${d}</span>
                             </span>
                         </span>
                     </th>
-                    ${a.map(V=>{let Z=n?.[d]?.[V],he=r(m(V));return`
+                    ${n.map(f=>{let tt=c?.[l]?.[f],Bt=r(m(f));return`
                             <td>
                                 <input
                                     class="account-settings-number-input account-settings-orb-input"
@@ -81,21 +81,21 @@ import{a as _e}from"./chunks/chunk-TUH7FQMJ.js";import"./chunks/chunk-2MGLT2CN.j
                                     min="0"
                                     max="20"
                                     step="0.1"
-                                    value="${Number.isFinite(Number(Z))?Number(Z):Number(c.base_orb||5)}"
-                                    aria-label="${r(`${y} · ${he}`)}"
-                                    data-orb-aspect-type="${d}"
-                                    data-orb-body="${V}"
+                                    value="${Number.isFinite(Number(tt))?Number(tt):Number(s.base_orb||5)}"
+                                    aria-label="${r(`${y} · ${Bt}`)}"
+                                    data-orb-aspect-type="${l}"
+                                    data-orb-body="${f}"
                                     data-orb-profile="${g}"
                                 >
                             </td>
                         `}).join("")}
                 </tr>
-            `}).join(""),K()}function ie(e={}){let t=document.getElementById("accountBalancePlanetWeightsBody"),o=document.getElementById("accountBalanceSpecialWeightsBody");if(!t||!o)return;let a=e?.balances||{},s=a?.planet_weights||{},i=a?.special_point_weights||{},c=M().filter(l=>!["TrueNode","SouthNode","BlackMoon","WhiteMoon","PartOfFortune","ASC","DSC","MC","IC","Vertex","AntiVertex"].includes(l)),d=["TrueNorthNode","TrueSouthNode","BlackMoon"];t.innerHTML=c.map(l=>`
+            `}).join(""),Q()}function ut(t={}){let e=document.getElementById("accountBalancePlanetWeightsBody"),o=document.getElementById("accountBalanceSpecialWeightsBody");if(!e||!o)return;let n=t?.balances||{},a=n?.planet_weights||{},i=n?.special_point_weights||{},s=L().filter(d=>!["TrueNode","SouthNode","BlackMoon","WhiteMoon","PartOfFortune","ASC","DSC","MC","IC","Vertex","AntiVertex"].includes(d)),l=["TrueNorthNode","TrueSouthNode","BlackMoon"];e.innerHTML=s.map(d=>`
             <tr>
                 <th scope="row" class="account-settings-icon-cell">
                     <span class="account-settings-body account-settings-body--icon-only">
-                        <span class="account-settings-body-badge account-settings-orb-glyph" title="${r(m(l))}" aria-label="${r(m(l))}" role="img" tabindex="0">
-                            <span class="astro-symbol" aria-hidden="true">${r(k(l))}</span>
+                        <span class="account-settings-body-badge account-settings-orb-glyph" title="${r(m(d))}" aria-label="${r(m(d))}" role="img" tabindex="0">
+                            <span class="astro-symbol" aria-hidden="true">${r(F(d))}</span>
                         </span>
                     </span>
                 </th>
@@ -106,18 +106,18 @@ import{a as _e}from"./chunks/chunk-TUH7FQMJ.js";import"./chunks/chunk-2MGLT2CN.j
                         min="0"
                         max="5"
                         step="0.1"
-                        value="${Number(s?.[l]??1).toFixed(1)}"
-                        data-balance-planet="${l}"
-                        aria-label="${r(m(l))}"
+                        value="${Number(a?.[d]??1).toFixed(1)}"
+                        data-balance-planet="${d}"
+                        aria-label="${r(m(d))}"
                     >
                 </td>
             </tr>
-        `).join(""),o.innerHTML=d.map(l=>`
+        `).join(""),o.innerHTML=l.map(d=>`
             <tr>
                 <th scope="row" class="account-settings-icon-cell">
                     <span class="account-settings-body account-settings-body--icon-only">
-                        <span class="account-settings-body-badge account-settings-orb-glyph" title="${r(m(l))}" aria-label="${r(m(l))}" role="img" tabindex="0">
-                            <span class="astro-symbol" aria-hidden="true">${r(k(l))}</span>
+                        <span class="account-settings-body-badge account-settings-orb-glyph" title="${r(m(d))}" aria-label="${r(m(d))}" role="img" tabindex="0">
+                            <span class="astro-symbol" aria-hidden="true">${r(F(d))}</span>
                         </span>
                     </span>
                 </th>
@@ -128,34 +128,65 @@ import{a as _e}from"./chunks/chunk-TUH7FQMJ.js";import"./chunks/chunk-2MGLT2CN.j
                         min="0"
                         max="5"
                         step="0.1"
-                        value="${Number(i?.[l]??0).toFixed(1)}"
-                        data-balance-special-point="${l}"
-                        aria-label="${r(m(l))}"
+                        value="${Number(i?.[d]??0).toFixed(1)}"
+                        data-balance-special-point="${d}"
+                        aria-label="${r(m(d))}"
                     >
                 </td>
             </tr>
-        `).join("")}function le(e={}){let t=document.getElementById("accountAspectColorsBody");if(!t)return;let o=e?.aspect_colors||{};t.innerHTML=E().map(a=>{let s=a.aspect_type,i=o?.[s]||"#9ca3af";return`
+        `).join("")}function pt(t={}){let e=document.getElementById("accountAspectColorsBody");if(!e)return;let o=B(t);e.innerHTML=$().map(n=>{let a=n.aspect_type,i=n.character||st(a),c=window.AstroPreferences?.getAspectColor?window.AstroPreferences.getAspectColor(a,o,i):"#9ca3af";return`
                 <tr>
                     <th scope="row" class="account-settings-icon-cell">
                         <span class="account-settings-aspect-meta account-settings-aspect-meta--icon-only">
-                            <span class="account-settings-check-glyph account-settings-orb-glyph" title="${r($(s))}" aria-label="${r($(s))}" role="img" tabindex="0">
-                                <span class="astro-symbol" aria-hidden="true">${r(F(s))}</span>
+                            <span class="account-settings-check-glyph account-settings-orb-glyph" title="${r(P(a))}" aria-label="${r(P(a))}" role="img" tabindex="0">
+                                <span class="astro-symbol" aria-hidden="true">${r(q(a))}</span>
                             </span>
                         </span>
                     </th>
-                    <td><input type="color" class="account-settings-color-input account-settings-swatch-input" value="${r(i)}" data-aspect-color="${s}" aria-label="${r($(s))}"></td>
+                    <td>
+                        <input
+                            type="color"
+                            class="account-settings-color-input account-settings-swatch-input"
+                            value="${r(c)}"
+                            data-aspect-color="${a}"
+                            data-aspect-character="${r(i)}"
+                            aria-label="${r(P(a))}"
+                        >
+                    </td>
                 </tr>
-            `}).join("")}function de(e={}){let t=document.getElementById("accountElementPaletteBody"),o=document.getElementById("accountBodyOverrideColorsBody");if(!t||!o)return;let a=T(e),s=a?.planet_colors?.element_palette||{},i=a?.planet_colors?.body_overrides||{};t.innerHTML=Object.keys(s).map(n=>`
+            `}).join("")}function mt(t={}){let e=document.getElementById("accountAspectHarmonyColorsBody");if(!e)return;let n=B(t)?.aspect_harmony_colors||{},a=["harmonious","tense","neutral"];e.innerHTML=a.map(i=>`
             <tr>
-                <th scope="row">${r(n)}</th>
-                <td><input type="color" class="account-settings-color-input account-settings-swatch-input" value="${r(s[n])}" data-element-color="${n}" aria-label="${r(n)}"></td>
+                <th scope="row">${r(I(i))}</th>
+                <td>
+                    <input
+                        type="color"
+                        class="account-settings-color-input account-settings-swatch-input"
+                        value="${r(n[i]||"#9ca3af")}"
+                        data-aspect-harmony-color="${i}"
+                        aria-label="${r(I(i))}"
+                    >
+                </td>
+                <td>
+                    <button
+                        type="button"
+                        class="account-settings-reset-chip"
+                        data-apply-aspect-harmony-color="${i}"
+                        title="${r(u("page.accountSettings.visual.actions.applyMatching"))}"
+                        aria-label="${r(`${u("page.accountSettings.visual.actions.applyMatching")}: ${I(i)}`)}"
+                    >⇢</button>
+                </td>
             </tr>
-        `).join(""),o.innerHTML=M().map(n=>`
+        `).join("")}function gt(t={}){let e=document.getElementById("accountElementPaletteBody"),o=document.getElementById("accountBodyOverrideColorsBody");if(!e||!o)return;let n=B(t),a=n?.planet_colors?.element_palette||{},i=n?.planet_colors?.body_overrides||{};e.innerHTML=Object.keys(a).map(c=>`
+            <tr>
+                <th scope="row">${r(c)}</th>
+                <td><input type="color" class="account-settings-color-input account-settings-swatch-input" value="${r(a[c])}" data-element-color="${c}" aria-label="${r(c)}"></td>
+            </tr>
+        `).join(""),o.innerHTML=L().map(c=>`
             <tr>
                 <th scope="row" class="account-settings-icon-cell">
                     <span class="account-settings-body account-settings-body--icon-only">
-                        <span class="account-settings-body-badge account-settings-orb-glyph" title="${r(m(n))}" aria-label="${r(m(n))}" role="img" tabindex="0">
-                            <span class="astro-symbol" aria-hidden="true">${r(k(n))}</span>
+                        <span class="account-settings-body-badge account-settings-orb-glyph" title="${r(m(c))}" aria-label="${r(m(c))}" role="img" tabindex="0">
+                            <span class="astro-symbol" aria-hidden="true">${r(F(c))}</span>
                         </span>
                     </span>
                 </th>
@@ -164,19 +195,19 @@ import{a as _e}from"./chunks/chunk-TUH7FQMJ.js";import"./chunks/chunk-2MGLT2CN.j
                         <input
                             type="color"
                             class="account-settings-color-input account-settings-swatch-input"
-                            value="${r(i?.[n]||"#c7b49a")}"
-                            data-body-color-override="${n}"
-                            data-body-color-active="${i?.[n]?"true":"false"}"
-                            aria-label="${r(m(n))}"
+                            value="${r(i?.[c]||"#c7b49a")}"
+                            data-body-color-override="${c}"
+                            data-body-color-active="${i?.[c]?"true":"false"}"
+                            aria-label="${r(m(c))}"
                         >
                         <button
                             type="button"
-                            class="account-settings-reset-chip${i?.[n]?"":" is-muted"}"
-                            data-clear-body-color-override="${n}"
-                            title="${r(p("common.reset"))}"
-                            aria-label="${r(`${p("common.reset")}: ${m(n)}`)}"
+                            class="account-settings-reset-chip${i?.[c]?"":" is-muted"}"
+                            data-clear-body-color-override="${c}"
+                            title="${r(u("common.reset"))}"
+                            aria-label="${r(`${u("common.reset")}: ${m(c)}`)}"
                         >↺</button>
                     </div>
                 </td>
             </tr>
-        `).join("")}function I(e){let t={...Y(),...e||{},chart_defaults:{natal:S(e?.chart_defaults?.natal||{}),biwheel:S(e?.chart_defaults?.biwheel||{}),solar:S(e?.chart_defaults?.solar||{})},chart_creation_defaults:{house_system:e?.chart_creation_defaults?.house_system||"P"},methodology:f(e?.methodology||h()),visual:T(e?.visual||U())};u=t,window.AstroPreferences?.setAccountVisualPreferences?.(t.visual),N.includes(g)||(g="natal");let o=document.getElementById("accountHouseSystemSelect");o&&(o.value=t.chart_creation_defaults.house_system||"P");let a=document.getElementById("accountOrbPairStrategySelect");a&&(a.value=t.methodology?.orbs?.pair_strategy||P),C.forEach(s=>{let i=t.chart_defaults[s],n=G(s);n.orientation&&(n.orientation.value=i.view_options?.orientation==="asc"?"asc":"aries"),n.aspectScope&&(n.aspectScope.value=i.aspects?.scope||(s==="biwheel"?"major":"all")),n.showApplyingSeparating&&(n.showApplyingSeparating.checked=i.aspects?.show_applying_separating===!0),n.showSpeed&&(n.showSpeed.checked=i.table_options?.show_speed!==!1),n.showStationary&&(n.showStationary.checked=i.table_options?.show_stationary!==!1)}),ce(t.chart_defaults),re(t.chart_defaults),q(t.methodology),ie(t.methodology),le(t.visual),de(t.visual)}function ue(e){let t=[];return document.querySelectorAll(`#accountAspectTypesMatrixBody input[data-view-id="${e}"][data-aspect-type]`).forEach(o=>{o.checked&&o.dataset.aspectType&&t.push(o.dataset.aspectType)}),t.length?t:E().map(o=>o.aspect_type)}function pe(e){let t=W({});return document.querySelectorAll(`#accountBodiesMatrixBody input[data-view-id="${e}"][data-matrix-body][data-matrix-field]`).forEach(o=>{let a=o.dataset.matrixBody,s=o.dataset.matrixField;!a||!s||(t[a]={...t[a]||{display:!0,aspecting:!0},[s]:o.checked})}),t}function D(e){let t=G(e);return{matrix:{rows:pe(e)},aspects:{scope:t.aspectScope?.value||(e==="biwheel"?"major":"all"),enabled_types:ue(e),show_applying_separating:t.showApplyingSeparating?.checked===!0},table_options:{show_speed:t.showSpeed?t.showSpeed.checked!==!1:!0,show_stationary:t.showStationary?t.showStationary.checked!==!1:!0},view_options:{orientation:t.orientation?.value==="asc"?"asc":"aries"}}}function me(){R();let t=(f(u?.methodology||h())?.orbs||{})?.profiles||{},o={};document.querySelectorAll("[data-balance-planet]").forEach(s=>{s.dataset.balancePlanet&&(o[s.dataset.balancePlanet]=Number.parseFloat(s.value)||0)});let a={};return document.querySelectorAll("[data-balance-special-point]").forEach(s=>{s.dataset.balanceSpecialPoint&&(a[s.dataset.balanceSpecialPoint]=Number.parseFloat(s.value)||0)}),f({orbs:{version:2,pair_strategy:ne(),profiles:t},balances:{version:1,planet_weights:o,special_point_weights:a}})}function ge(){let e={};document.querySelectorAll("[data-aspect-color]").forEach(a=>{a.dataset.aspectColor&&a.value&&(e[a.dataset.aspectColor]=a.value)});let t={};document.querySelectorAll("[data-element-color]").forEach(a=>{a.dataset.elementColor&&a.value&&(t[a.dataset.elementColor]=a.value)});let o={};return document.querySelectorAll("[data-body-color-override]").forEach(a=>{let s=a.dataset.bodyColorOverride,i=String(a.value||"").trim();s&&i&&a.dataset.bodyColorActive!=="false"&&(o[s]=i)}),T({aspect_colors:e,planet_colors:{element_palette:t,body_overrides:o}})}function ye(){return{chart_creation_defaults:{house_system:document.getElementById("accountHouseSystemSelect")?.value||"P"},chart_defaults:{natal:D("natal"),biwheel:D("biwheel"),solar:D("solar")},methodology:me(),visual:ge()}}function b(e,t="info"){let o=document.getElementById("accountSettingsToast");!o||!e||(o.textContent=e,o.className=`toast ${t}`,requestAnimationFrame(()=>o.classList.add("visible")),clearTimeout(J),J=setTimeout(()=>{o.classList.remove("visible")},2800))}function L(e,{final:t=!1}={}){let o=document.getElementById("methodologyJobStatus");if(!o)return;if(!e){o.classList.add("hidden"),o.textContent="";return}let a=Number(e.progress_total||0),s=Number(e.progress_done||0),i=a>0?Math.min(100,Math.round(s/a*100)):0,c=`${String(e.status||"pending").toUpperCase()} · ${s}/${a||"0"} · ${i}%`,d=Number(e.failed_count||0),l=d?` · failures: ${d}`:"";o.textContent=t?`${c}${l}`:`${c}${l}`,o.classList.remove("hidden"),o.dataset.status=String(e.status||"pending")}function j(){B&&(clearTimeout(B),B=null)}async function Q(e){if(j(),!e||!window.AstroAPI?.getPreferenceRecalcJob)return;sessionStorage.setItem(x,String(e));let t=async()=>{try{let o=await window.AstroAPI.getPreferenceRecalcJob(e);if(L(o,{final:o.status==="completed"||o.status==="failed"}),o.status==="completed"){sessionStorage.removeItem(x),b(`Methodology recalculation finished${o.failed_count?` with ${o.failed_count} failures`:""}.`,o.failed_count?"info":"success"),j();return}if(o.status==="failed"){sessionStorage.removeItem(x),b(o.error||"Methodology recalculation failed.","error"),j();return}B=setTimeout(t,2500)}catch(o){B=setTimeout(t,4e3),console.warn("Failed to poll preference recalculation job:",o)}};await t()}async function X(){let e=await window.AstroAPI?.requireAuth?.({redirectTo:"/login.html"});if(!e)return;let t=document.getElementById("accountSettingsSubtitle");t&&(t.textContent=e.email?p("page.accountSettings.subtitleWithEmail",{email:e.email}):p("page.accountSettings.subtitle"));let[o,a]=await Promise.all([window.AstroAPI.getPreferencesMetadata?.(),window.AstroAPI.getAccountPreferences()]);A=o||null,I(a);let s=sessionStorage.getItem(x);s?Q(s).catch(i=>{console.warn("Failed to resume recalculation job polling:",i)}):L(null),z()}async function be(){let e=document.getElementById("saveAccountSettingsBtn");e&&(e.disabled=!0);try{let t=ye(),o=!te(f(u?.methodology||{}),t.methodology),a=await window.AstroAPI.patchAccountPreferences(t);if(I(a),o&&window.AstroAPI?.createPreferenceRecalcJob){let s=await window.AstroAPI.createPreferenceRecalcJob({job_type:"methodology_recalc",payload:{source:"account-settings"}});L(s),Q(s.job_id).catch(i=>{console.warn("Failed to poll methodology recalculation job:",i)}),b("Preferences saved. Methodology recalculation started.","success");return}b(p("page.accountSettings.toasts.saved"),"success")}catch(t){b(t.message||p("page.accountSettings.toasts.saveFailed"),"error")}finally{e&&(e.disabled=!1)}}function fe(){I(Y()),L(null),b(p("page.accountSettings.toasts.restored"),"info")}document.addEventListener("DOMContentLoaded",async()=>{let e=document.getElementById("saveAccountSettingsBtn"),t=document.getElementById("reloadAccountSettingsBtn"),o=document.getElementById("restoreStandardDefaultsBtn"),a=document.getElementById("accountApplyNatalOrbsBtn"),s=document.getElementById("accountOrbsMatrixBody"),i=document.getElementById("accountBodyOverrideColorsBody");e?.addEventListener("click",()=>{be()}),t?.addEventListener("click",()=>{X().catch(n=>{b(n.message||p("page.accountSettings.toasts.reloadFailed"),"error")})}),o?.addEventListener("click",()=>{fe()}),document.querySelectorAll("[data-orb-profile-tab]").forEach(n=>{n.addEventListener("click",()=>{se(n.dataset.orbProfileTab||"natal")})}),a?.addEventListener("click",()=>{R();let n=O();n.orbs.profiles.prognostic={matrix:JSON.parse(JSON.stringify(ae("natal")))},g="prognostic",q(n),b(p("page.accountSettings.toasts.orbsCopied"),"info")}),s?.addEventListener("input",n=>{let c=n.target;if(!(c instanceof HTMLInputElement)||!c.dataset.orbAspectType||!c.dataset.orbBody)return;let d=O(),y=(d.orbs.profiles[g]||{matrix:w()}).matrix||w();y[c.dataset.orbAspectType]||(y[c.dataset.orbAspectType]={}),y[c.dataset.orbAspectType][c.dataset.orbBody]=Number.parseFloat(c.value)||0,d.orbs.profiles[g]={matrix:y}}),i?.addEventListener("input",n=>{let c=n.target;if(!(c instanceof HTMLInputElement)||!c.dataset.bodyColorOverride)return;c.dataset.bodyColorActive="true",i.querySelector(`[data-clear-body-color-override="${c.dataset.bodyColorOverride}"]`)?.classList.remove("is-muted")}),i?.addEventListener("click",n=>{let c=n.target.closest("[data-clear-body-color-override]");if(!(c instanceof HTMLElement))return;let d=c.dataset.clearBodyColorOverride;if(!d)return;let l=i.querySelector(`[data-body-color-override="${d}"]`);l instanceof HTMLInputElement&&(l.dataset.bodyColorActive="false",c.classList.add("is-muted"))});try{await window.FrontendI18n?.ready?.catch?.(()=>{}),await X(),document.addEventListener("frontend:locale-changed",()=>{u&&I(u)})}catch(n){b(n.message||p("page.accountSettings.toasts.loadFailed"),"error"),z()}})})();
+        `).join("")}function O(t){let e={...G(),...t||{},chart_defaults:{natal:A(t?.chart_defaults?.natal||{}),biwheel:A(t?.chart_defaults?.biwheel||{}),solar:A(t?.chart_defaults?.solar||{})},chart_creation_defaults:{house_system:t?.chart_creation_defaults?.house_system||"P"},methodology:h(t?.methodology||S()),visual:B(t?.visual||Y())};p=e,window.AstroPreferences?.setAccountVisualPreferences?.(e.visual),H.includes(g)||(g="natal");let o=document.getElementById("accountHouseSystemSelect");o&&(o.value=e.chart_creation_defaults.house_system||"P");let n=document.getElementById("accountOrbPairStrategySelect");n&&(n.value=e.methodology?.orbs?.pair_strategy||T);let a=document.getElementById("accountStationaryThresholdPercent");a&&(a.value=String(e.methodology?.stationary?.threshold_percent??5)),k.forEach(i=>{let c=e.chart_defaults[i],s=K(i);s.orientation&&(s.orientation.value=c.view_options?.orientation==="asc"?"asc":"aries"),s.aspectScope&&(s.aspectScope.value=c.aspects?.scope||(i==="biwheel"?"major":"all")),s.showApplyingSeparating&&(s.showApplyingSeparating.checked=c.aspects?.show_applying_separating===!0),s.showSpeed&&(s.showSpeed.checked=c.table_options?.show_speed!==!1),s.showStationary&&(s.showStationary.checked=c.table_options?.show_stationary!==!1)}),it(e.chart_defaults),dt(e.chart_defaults),D(e.methodology),ut(e.methodology),mt(e.visual),pt(e.visual),gt(e.visual)}function yt(t){let e=[];return document.querySelectorAll(`#accountAspectTypesMatrixBody input[data-view-id="${t}"][data-aspect-type]`).forEach(o=>{o.checked&&o.dataset.aspectType&&e.push(o.dataset.aspectType)}),e.length?e:$().map(o=>o.aspect_type)}function ft(t){let e=U({});return document.querySelectorAll(`#accountBodiesMatrixBody input[data-view-id="${t}"][data-matrix-body][data-matrix-field]`).forEach(o=>{let n=o.dataset.matrixBody,a=o.dataset.matrixField;!n||!a||(e[n]={...e[n]||{display:!0,aspecting:!0},[a]:o.checked})}),e}function V(t){let e=K(t);return{matrix:{rows:ft(t)},aspects:{scope:e.aspectScope?.value||(t==="biwheel"?"major":"all"),enabled_types:yt(t),show_applying_separating:e.showApplyingSeparating?.checked===!0},table_options:{show_speed:e.showSpeed?e.showSpeed.checked!==!1:!0,show_stationary:e.showStationary?e.showStationary.checked!==!1:!0},view_options:{orientation:e.orientation?.value==="asc"?"asc":"aries"}}}function bt(){R();let e=(h(p?.methodology||S())?.orbs||{})?.profiles||{},o={};document.querySelectorAll("[data-balance-planet]").forEach(a=>{a.dataset.balancePlanet&&(o[a.dataset.balancePlanet]=Number.parseFloat(a.value)||0)});let n={};return document.querySelectorAll("[data-balance-special-point]").forEach(a=>{a.dataset.balanceSpecialPoint&&(n[a.dataset.balanceSpecialPoint]=Number.parseFloat(a.value)||0)}),h({orbs:{version:2,pair_strategy:rt(),profiles:e},balances:{version:1,planet_weights:o,special_point_weights:n},stationary:{threshold_percent:Number.parseFloat(document.getElementById("accountStationaryThresholdPercent")?.value||"5")}})}function ht(){let t={};document.querySelectorAll("[data-aspect-harmony-color]").forEach(a=>{a.dataset.aspectHarmonyColor&&a.value&&(t[a.dataset.aspectHarmonyColor]=a.value)});let e={};document.querySelectorAll("[data-aspect-color]").forEach(a=>{a.dataset.aspectColor&&a.value&&(e[a.dataset.aspectColor]=a.value)});let o={};document.querySelectorAll("[data-element-color]").forEach(a=>{a.dataset.elementColor&&a.value&&(o[a.dataset.elementColor]=a.value)});let n={};return document.querySelectorAll("[data-body-color-override]").forEach(a=>{let i=a.dataset.bodyColorOverride,c=String(a.value||"").trim();i&&c&&a.dataset.bodyColorActive!=="false"&&(n[i]=c)}),B({aspect_harmony_colors:t,aspect_colors:e,planet_colors:{element_palette:o,body_overrides:n}})}function St(){return{chart_creation_defaults:{house_system:document.getElementById("accountHouseSystemSelect")?.value||"P"},chart_defaults:{natal:V("natal"),biwheel:V("biwheel"),solar:V("solar")},methodology:bt(),visual:ht()}}function b(t,e="info"){let o=document.getElementById("accountSettingsToast");!o||!t||(o.textContent=t,o.className=`toast ${e}`,requestAnimationFrame(()=>o.classList.add("visible")),clearTimeout(z),z=setTimeout(()=>{o.classList.remove("visible")},2800))}function N(t,{final:e=!1}={}){let o=document.getElementById("methodologyJobStatus");if(!o)return;if(!t){o.classList.add("hidden"),o.textContent="";return}let n=Number(t.progress_total||0),a=Number(t.progress_done||0),i=n>0?Math.min(100,Math.round(a/n*100)):0,s=`${String(t.status||"pending").toUpperCase()} · ${a}/${n||"0"} · ${i}%`,l=Number(t.failed_count||0),d=l?` · failures: ${l}`:"";o.textContent=e?`${s}${d}`:`${s}${d}`,o.classList.remove("hidden"),o.dataset.status=String(t.status||"pending")}function j(){E&&(clearTimeout(E),E=null)}async function X(t){if(j(),!t||!window.AstroAPI?.getPreferenceRecalcJob)return;sessionStorage.setItem(M,String(t));let e=async()=>{try{let o=await window.AstroAPI.getPreferenceRecalcJob(t);if(N(o,{final:o.status==="completed"||o.status==="failed"}),o.status==="completed"){sessionStorage.removeItem(M),b(`Methodology recalculation finished${o.failed_count?` with ${o.failed_count} failures`:""}.`,o.failed_count?"info":"success"),j();return}if(o.status==="failed"){sessionStorage.removeItem(M),b(o.error||"Methodology recalculation failed.","error"),j();return}E=setTimeout(e,2500)}catch(o){E=setTimeout(e,4e3),console.warn("Failed to poll preference recalculation job:",o)}};await e()}async function Z(){let t=await window.AstroAPI?.requireAuth?.({redirectTo:"/login.html"});if(!t)return;let e=document.getElementById("accountSettingsSubtitle");e&&(e.textContent=t.email?u("page.accountSettings.subtitleWithEmail",{email:t.email}):u("page.accountSettings.subtitle"));let[o,n]=await Promise.all([window.AstroAPI.getPreferencesMetadata?.(),window.AstroAPI.getAccountPreferences()]);v=o||null,O(n);let a=sessionStorage.getItem(M);a?X(a).catch(i=>{console.warn("Failed to resume recalculation job polling:",i)}):N(null),W()}async function wt(){let t=document.getElementById("saveAccountSettingsBtn");t&&(t.disabled=!0);try{let e=St(),o=!ot(h(p?.methodology||{}),e.methodology),n=await window.AstroAPI.patchAccountPreferences(e);if(O(n),o&&window.AstroAPI?.createPreferenceRecalcJob){let a=await window.AstroAPI.createPreferenceRecalcJob({job_type:"methodology_recalc",payload:{source:"account-settings"}});N(a),X(a.job_id).catch(i=>{console.warn("Failed to poll methodology recalculation job:",i)}),b("Preferences saved. Methodology recalculation started.","success");return}b(u("page.accountSettings.toasts.saved"),"success")}catch(e){b(e.message||u("page.accountSettings.toasts.saveFailed"),"error")}finally{t&&(t.disabled=!1)}}function At(){O(G()),N(null),b(u("page.accountSettings.toasts.restored"),"info")}document.addEventListener("DOMContentLoaded",async()=>{let t=document.getElementById("saveAccountSettingsBtn"),e=document.getElementById("reloadAccountSettingsBtn"),o=document.getElementById("restoreStandardDefaultsBtn"),n=document.getElementById("accountApplyNatalOrbsBtn"),a=document.getElementById("accountOrbsMatrixBody"),i=document.getElementById("accountAspectHarmonyColorsBody"),c=document.getElementById("accountBodyOverrideColorsBody");t?.addEventListener("click",()=>{wt()}),e?.addEventListener("click",()=>{Z().catch(s=>{b(s.message||u("page.accountSettings.toasts.reloadFailed"),"error")})}),o?.addEventListener("click",()=>{At()}),document.querySelectorAll("[data-orb-profile-tab]").forEach(s=>{s.addEventListener("click",()=>{lt(s.dataset.orbProfileTab||"natal")})}),n?.addEventListener("click",()=>{R();let s=C();s.orbs.profiles.prognostic={matrix:JSON.parse(JSON.stringify(ct("natal")))},g="prognostic",D(s),b(u("page.accountSettings.toasts.orbsCopied"),"info")}),a?.addEventListener("input",s=>{let l=s.target;if(!(l instanceof HTMLInputElement)||!l.dataset.orbAspectType||!l.dataset.orbBody)return;let d=C(),f=(d.orbs.profiles[g]||{matrix:_()}).matrix||_();f[l.dataset.orbAspectType]||(f[l.dataset.orbAspectType]={}),f[l.dataset.orbAspectType][l.dataset.orbBody]=Number.parseFloat(l.value)||0,d.orbs.profiles[g]={matrix:f}}),i?.addEventListener("click",s=>{let l=s.target.closest("[data-apply-aspect-harmony-color]");if(!(l instanceof HTMLElement))return;let d=l.dataset.applyAspectHarmonyColor;if(!d)return;let y=i.querySelector(`[data-aspect-harmony-color="${d}"]`);y instanceof HTMLInputElement&&(document.querySelectorAll("[data-aspect-color]").forEach(f=>{f instanceof HTMLInputElement&&f.dataset.aspectCharacter===d&&(f.value=y.value)}),b(u("page.accountSettings.toasts.aspectHarmonyApplied",{type:I(d)}),"info"))}),c?.addEventListener("input",s=>{let l=s.target;if(!(l instanceof HTMLInputElement)||!l.dataset.bodyColorOverride)return;l.dataset.bodyColorActive="true",c.querySelector(`[data-clear-body-color-override="${l.dataset.bodyColorOverride}"]`)?.classList.remove("is-muted")}),c?.addEventListener("click",s=>{let l=s.target.closest("[data-clear-body-color-override]");if(!(l instanceof HTMLElement))return;let d=l.dataset.clearBodyColorOverride;if(!d)return;let y=c.querySelector(`[data-body-color-override="${d}"]`);y instanceof HTMLInputElement&&(y.dataset.bodyColorActive="false",l.classList.add("is-muted"))});try{await window.FrontendI18n?.ready?.catch?.(()=>{}),await Z(),document.addEventListener("frontend:locale-changed",()=>{p&&O(p)})}catch(s){b(s.message||u("page.accountSettings.toasts.loadFailed"),"error"),W()}})})();

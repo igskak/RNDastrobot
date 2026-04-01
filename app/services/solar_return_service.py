@@ -18,6 +18,8 @@ from app.services.swisseph_engine import SwissEphemerisEngine
 from app.services.time_service import TimeService
 from app.services.aspect_service import AspectService
 from app.services.geocoding_service import GeocodingService
+from app.services.planet_characteristics_service import PlanetCharacteristicsService
+from app.services.preferences_runtime import PreferencesRuntimeResolver
 from app.utils.constants import get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds
 
 
@@ -28,6 +30,7 @@ class SolarReturnService:
         self.db = db_session
         self.swisseph_engine = SwissEphemerisEngine(ephe_path)
         self.geocoding_service = GeocodingService()
+        self.preferences_runtime = PreferencesRuntimeResolver(db_session)
         if ephe_path:
             swe.set_ephe_path(ephe_path)
 
@@ -85,6 +88,23 @@ class SolarReturnService:
         local_dt = utc_dt.astimezone(tz)
         
         return local_dt
+
+    def _enrich_motion_flags(self, planets: List[Dict], *, user_id: UUID) -> List[Dict]:
+        stationary_threshold_percent = self.preferences_runtime.get_stationary_threshold_for_user(user_id)
+        for planet in planets:
+            name = planet.get('name', '')
+            speed = float(planet.get('speed') or 0.0)
+            retrograde = bool(planet.get('retrograde') or planet.get('is_retrograde'))
+            planet['speed_percent'] = PlanetCharacteristicsService.calculate_speed_percent(name, speed)
+            is_stationary, stationary_type = PlanetCharacteristicsService.calculate_stationary_status(
+                name,
+                speed,
+                retrograde,
+                threshold_percent=stationary_threshold_percent,
+            )
+            planet['is_stationary'] = is_stationary
+            planet['stationary_type'] = stationary_type
+        return planets
 
     def calculate_solar_return(
         self,
@@ -165,6 +185,7 @@ class SolarReturnService:
 
         # 8.1 Рассчитать аспекты внутри солярной карты
         solar_aspects = self._calculate_solar_aspects(solar_planets, user_id=user_id)
+        solar_planets = self._enrich_motion_flags(solar_planets, user_id=user_id)
         
         # 9. Формируем результат
         result = self._build_solar_response(
@@ -347,6 +368,7 @@ class SolarReturnService:
         if solar and solar.chart_data:
             payload = json.loads(solar.chart_data)
             payload['solar_id'] = str(solar.solar_id)
+            payload['planets'] = self._enrich_motion_flags(payload.get('planets', []), user_id=user_id)
             return self._annotate_payload_aspects_with_phase(payload)
         return None
 

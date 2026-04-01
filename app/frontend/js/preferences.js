@@ -22,6 +22,33 @@
         Semisquare: '#f97316',
         Sesquiquadrate: '#f97316',
     };
+    const DEFAULT_ASPECT_HARMONY_COLORS = {
+        harmonious: '#3b82f6',
+        tense: '#ef4444',
+        neutral: '#9ca3af',
+    };
+    const ASPECT_HARMONY_BY_TYPE = {
+        Conjunction: 'neutral',
+        Opposition: 'tense',
+        Square: 'tense',
+        Trine: 'harmonious',
+        Sextile: 'harmonious',
+        Vigintile: 'neutral',
+        Semi_Nonagon: 'neutral',
+        Semisextile: 'harmonious',
+        SemiSextile: 'harmonious',
+        Decile: 'neutral',
+        Nonagon: 'neutral',
+        Semisquare: 'tense',
+        SemiSquare: 'tense',
+        Quintile: 'neutral',
+        Binonagon: 'neutral',
+        Sentagon: 'neutral',
+        Tridecile: 'neutral',
+        Sesquiquadrate: 'tense',
+        Biquintile: 'neutral',
+        Quincunx: 'harmonious',
+    };
     const DEFAULT_ELEMENT_PALETTE = {
         Fire: '#ef4444',
         Earth: '#22c55e',
@@ -53,12 +80,14 @@
     ];
     const ORB_PROFILE_IDS = ['natal', 'prognostic'];
     const DEFAULT_ORB_PAIR_STRATEGY = 'larger';
+    const DEFAULT_STATIONARY_THRESHOLD_PERCENT = 5;
     const BODY_NAME_ALIASES = {
         TrueNorthNode: 'TrueNode',
         TrueSouthNode: 'SouthNode',
         Fortune: 'PartOfFortune',
     };
     let accountVisualPreferences = {
+        aspect_harmony_colors: { ...DEFAULT_ASPECT_HARMONY_COLORS },
         aspect_colors: { ...DEFAULT_ASPECT_COLORS },
         planet_colors: {
             element_palette: { ...DEFAULT_ELEMENT_PALETTE },
@@ -345,6 +374,14 @@
         return DEFAULT_ORB_PAIR_STRATEGY;
     }
 
+    function normalizeStationaryThresholdPercent(value) {
+        const normalized = Number.parseFloat(value);
+        if (!Number.isFinite(normalized)) {
+            return DEFAULT_STATIONARY_THRESHOLD_PERCENT;
+        }
+        return Math.min(100, Math.max(0, normalized));
+    }
+
     function normalizeMethodologySettings(methodology = {}) {
         const legacyMatrix = deepClone(methodology?.orbs?.matrix || {});
         const profiles = methodology?.orbs?.profiles || {};
@@ -369,11 +406,22 @@
                 planet_weights: deepClone(methodology?.balances?.planet_weights || {}),
                 special_point_weights: deepClone(methodology?.balances?.special_point_weights || {}),
             },
+            stationary: {
+                threshold_percent: normalizeStationaryThresholdPercent(methodology?.stationary?.threshold_percent),
+            },
         };
+    }
+
+    function getAspectHarmonyType(aspectType) {
+        return ASPECT_HARMONY_BY_TYPE[String(aspectType || '').trim()] || 'neutral';
     }
 
     function resolveVisualPreferences(visual = {}) {
         return {
+            aspect_harmony_colors: {
+                ...DEFAULT_ASPECT_HARMONY_COLORS,
+                ...(visual?.aspect_harmony_colors || {}),
+            },
             aspect_colors: {
                 ...DEFAULT_ASPECT_COLORS,
                 ...(visual?.aspect_colors || {}),
@@ -399,9 +447,17 @@
         return deepClone(accountVisualPreferences);
     }
 
-    function getAspectColor(aspectType, visual = null) {
+    function getAspectColor(aspectType, visual = null, harmonicType = null) {
         const resolved = visual ? resolveVisualPreferences(visual) : accountVisualPreferences;
-        return resolved?.aspect_colors?.[aspectType] || DEFAULT_ASPECT_COLORS[aspectType] || '#9ca3af';
+        const resolvedAspectType = String(aspectType || '').trim();
+        const resolvedHarmonyType = harmonicType || getAspectHarmonyType(resolvedAspectType);
+        return (
+            resolved?.aspect_colors?.[resolvedAspectType]
+            || resolved?.aspect_harmony_colors?.[resolvedHarmonyType]
+            || DEFAULT_ASPECT_COLORS[resolvedAspectType]
+            || DEFAULT_ASPECT_HARMONY_COLORS[resolvedHarmonyType]
+            || '#9ca3af'
+        );
     }
 
     function getElementColor(element, visual = null) {
@@ -452,6 +508,7 @@
         MAJOR_ASPECT_TYPES,
         DEFAULT_ENABLED_ASPECT_TYPES,
         DEFAULT_ASPECT_COLORS,
+        DEFAULT_ASPECT_HARMONY_COLORS,
         DEFAULT_ELEMENT_PALETTE,
         ORB_PROFILE_IDS,
         DEFAULT_ORB_PAIR_STRATEGY,
@@ -469,6 +526,7 @@
         normalizeMethodologySettings,
         resolveEnabledAspectTypesForScope,
         resolveVisualPreferences,
+        getAspectHarmonyType,
         setAccountVisualPreferences,
         getAccountVisualPreferences,
         getAspectColor,

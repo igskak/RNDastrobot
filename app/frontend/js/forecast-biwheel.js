@@ -21,6 +21,26 @@
         return translated === key ? (Symbols?.signNamesRu?.[name] || name) : translated;
     }
 
+    function syncForecastModalState() {
+        if (!document.body) return;
+        const hasOpenModal = Boolean(document.querySelector('.bw-settings-panel:not(.hidden)'));
+        document.body.classList.toggle('forecast-modal-open', hasOpenModal);
+    }
+
+    function mountSettingsPanel(panel) {
+        if (!panel || panel.parentElement === document.body) return;
+        document.body.appendChild(panel);
+    }
+
+    function toggleSettingsPanel(panel, isOpen) {
+        if (!panel) return;
+        if (isOpen) {
+            mountSettingsPanel(panel);
+        }
+        panel.classList.toggle('hidden', !isOpen);
+        syncForecastModalState();
+    }
+
     const C = 300; // center
     const NS = 'http://www.w3.org/2000/svg';
     const VIEWBOX_SIZE = 600;
@@ -173,9 +193,9 @@
             : (nextVisualPreferences || null);
     }
 
-    function getAspectColor(aspectType) {
+    function getAspectColor(aspectType, harmonicType = null) {
         return window.AstroPreferences?.getAspectColor
-            ? window.AstroPreferences.getAspectColor(aspectType, visualPreferences)
+            ? window.AstroPreferences.getAspectColor(aspectType, visualPreferences, harmonicType)
             : (ASPECT_COLORS[aspectType] || '#9ca3af');
     }
 
@@ -1435,6 +1455,7 @@
             return data.aspects.map(a => ({
                 transitBody: a.transit_planet, natalBody: a.natal_object,
                 aspectType: a.aspect_type, orb: a.orb, isMajor: a.is_major,
+                harmonicType: a.harmonic_type || null,
                 method: meta.method,
                 methodKey: effectiveMethodKey,
             }));
@@ -1444,6 +1465,7 @@
                 transitBody: a.progressed_planet || a.directed_object,
                 natalBody: a.natal_object, aspectType: a.aspect_type,
                 orb: a.orb, isMajor: a.is_major,
+                harmonicType: a.harmonic_type || null,
                 method: meta.method,
                 methodKey: effectiveMethodKey,
             }));
@@ -1525,7 +1547,7 @@
             const aspectKey = getAspectKey(a);
             const nAngle = longToAngle(nLong) * Math.PI / 180;
             const pAngle = longToAngle(pLong) * Math.PI / 180;
-            const aspectColor = getAspectColor(a.aspectType);
+            const aspectColor = getAspectColor(a.aspectType, a.harmonicType);
             const color = aspectColor === '#9ca3af' ? layerCfg.color : aspectColor;
             const line = el('line', {
                 x1: C + ASPECT_R * Math.cos(nAngle), y1: C + ASPECT_R * Math.sin(nAngle),
@@ -2346,6 +2368,7 @@
 
         // Wheel zoom
         wrapper.addEventListener('wheel', e => {
+            if (isBlockedZoomTarget(e.target)) return;
             e.preventDefault();
             const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
             zoomLevel = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoomLevel + delta));
@@ -2354,7 +2377,7 @@
 
         // Mouse drag pan
         wrapper.addEventListener('mousedown', e => {
-            if (e.button !== 0 || e.target.closest('.bw-overlay-controls')) return;
+            if (e.button !== 0 || isBlockedZoomTarget(e.target)) return;
             isPanning = true;
             panStartX = e.clientX; panStartY = e.clientY;
         });
@@ -2583,16 +2606,24 @@
         const settingsBtn = document.getElementById('bwSettingsBtn');
         const settingsPanel = document.getElementById('bwSettingsPanel');
         if (settingsBtn && settingsPanel) {
+            mountSettingsPanel(settingsPanel);
+            const closeSettingsPanel = () => toggleSettingsPanel(settingsPanel, false);
+
             settingsBtn.addEventListener('click', () => {
-                settingsPanel.classList.remove('hidden');
+                toggleSettingsPanel(settingsPanel, true);
             });
             settingsPanel.addEventListener('click', e => {
                 if (e.target === settingsPanel) {
-                    settingsPanel.classList.add('hidden');
+                    closeSettingsPanel();
                 }
             });
             document.getElementById('bwSettingsClose')?.addEventListener('click', () => {
-                settingsPanel.classList.add('hidden');
+                closeSettingsPanel();
+            });
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape' && !settingsPanel.classList.contains('hidden')) {
+                    closeSettingsPanel();
+                }
             });
         }
 
