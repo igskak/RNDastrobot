@@ -96,6 +96,7 @@ function cacheElements() {
     refs.alertsSolarList = document.getElementById('alertsSolarList');
     refs.alertsTransits = document.getElementById('alertsTransits');
     refs.alertsTransitsList = document.getElementById('alertsTransitsList');
+    refs.alertsEmptyState = document.getElementById('alertsEmptyState');
     // CRM contact fields in edit modal
     refs.editEmail = document.getElementById('editEmail');
     refs.editPhone = document.getElementById('editPhone');
@@ -213,22 +214,6 @@ function bindEvents() {
                 await window.AstroAPI?.logout?.();
             } finally {
                 window.location.href = '/login.html';
-            }
-        });
-    }
-
-    if (refs.alertsPanel) {
-        refs.alertsPanel.addEventListener('click', async (event) => {
-            const btn = event.target.closest('button[data-action]');
-            if (!btn?.dataset.userId) return;
-            const { action, userId } = btn.dataset;
-
-            if (action === 'open-solar') {
-                await openForecastForUser(userId, { tab: 'solar', solarYear: btn.dataset.solarYear });
-            } else if (action === 'open-transit') {
-                await openForecastForUser(userId, { tab: 'biwheel', date: btn.dataset.transitDate });
-            } else if (action === 'open-chart') {
-                await openChart(userId);
             }
         });
     }
@@ -1224,32 +1209,46 @@ const ASPECT_GLYPHS = {
 
 async function loadAlerts() {
     if (!refs.alertsPanel) return;
+
+    refs.alertsSolar?.classList.add('hidden');
+    refs.alertsTransits?.classList.add('hidden');
+    if (refs.alertsSolarList) refs.alertsSolarList.innerHTML = '';
+    if (refs.alertsTransitsList) refs.alertsTransitsList.innerHTML = '';
+    refs.alertsEmptyState?.classList.add('hidden');
+
     try {
         const res = await apiFetch(`${API_BASE}/alerts/dashboard`);
-        if (!res.ok) return;
+        if (!res.ok) {
+            refs.alertsPanel.classList.remove('hidden');
+            refs.alertsEmptyState?.classList.remove('hidden');
+            return;
+        }
         const data = await res.json();
 
         const hasSolar = Array.isArray(data.solar_returns) && data.solar_returns.length > 0;
         const hasTransits = Array.isArray(data.transits) && data.transits.length > 0;
 
         if (!hasSolar && !hasTransits) {
-            refs.alertsPanel.classList.add('hidden');
+            refs.alertsPanel.classList.remove('hidden');
+            refs.alertsEmptyState?.classList.remove('hidden');
             return;
         }
 
         if (hasSolar && refs.alertsSolarList) {
             refs.alertsSolarList.innerHTML = data.solar_returns.map(buildSolarAlertRow).join('');
-            refs.alertsSolar.classList.remove('hidden');
+            refs.alertsSolar?.classList.remove('hidden');
         }
 
         if (hasTransits && refs.alertsTransitsList) {
             refs.alertsTransitsList.innerHTML = data.transits.map(buildTransitAlertRow).join('');
-            refs.alertsTransits.classList.remove('hidden');
+            refs.alertsTransits?.classList.remove('hidden');
         }
 
         refs.alertsPanel.classList.remove('hidden');
     } catch (e) {
         console.error('Failed to load alerts', e);
+        refs.alertsPanel.classList.remove('hidden');
+        refs.alertsEmptyState?.classList.remove('hidden');
     }
 }
 
@@ -1263,14 +1262,11 @@ function buildSolarAlertRow(alert) {
 
     const dateStr = alert.solar_date ? formatDate(alert.solar_date) : '';
 
-    const solarYear = alert.solar_date ? alert.solar_date.split('-')[0] : '';
-
     return `
         <div class="alert-row">
             <span class="alert-name">${escapeHtml(alert.name)}</span>
             <span class="alert-date">${escapeHtml(dateStr)}</span>
             <span class="alert-timing ${days <= 3 && days >= 0 ? 'alert-timing-soon' : ''}">${escapeHtml(timing)}</span>
-            <button class="alert-action" type="button" data-action="open-solar" data-user-id="${escapeHtml(alert.user_id)}" data-solar-year="${escapeHtml(solarYear)}">${escapeHtml(t('page.clients.alerts.openChart'))}</button>
         </div>`;
 }
 
@@ -1286,7 +1282,6 @@ function buildTransitAlertRow(alert) {
             <span class="alert-name">${escapeHtml(alert.name)}</span>
             <span class="alert-transit-desc ${alert.harmonic_type === 'tense' ? 'alert-tense' : ''}">${escapeHtml(desc)}</span>
             <span class="alert-date">${escapeHtml(dateStr)}</span>
-            <button class="alert-action" type="button" data-action="open-transit" data-user-id="${escapeHtml(alert.user_id)}" data-transit-date="${escapeHtml(alert.exact_date)}">${escapeHtml(t('page.clients.alerts.openChart'))}</button>
         </div>`;
 }
 

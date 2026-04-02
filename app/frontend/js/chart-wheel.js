@@ -551,14 +551,36 @@ class ChartWheel {
                 const glyph = aspectGlyphs[aspect.aspect_type];
 
                 if (glyph) {
-                    this.layers.aspects.appendChild(this.createSvgElement('text', {
+                    const symbolGroup = this.createSvgElement('g', {
+                        class: 'aspect-symbol-group',
+                        style: 'pointer-events: none;'
+                    });
+                    const symbolText = this.createSvgElement('text', {
                         x: midX, y: midY + 2.5,
                         'text-anchor': 'middle',
                         'font-size': '8',
                         fill: color,
                         class: 'aspect-symbol-text',
                         style: 'pointer-events: none;'
-                    }, glyph));
+                    }, glyph);
+                    symbolGroup.appendChild(symbolText);
+                    this.layers.aspects.appendChild(symbolGroup);
+
+                    try {
+                        const bbox = symbolText.getBBox();
+                        const backdropRadius = Math.max(bbox.width, bbox.height) / 2 + 1.5;
+                        const backdrop = this.createSvgElement('circle', {
+                            cx: bbox.x + bbox.width / 2,
+                            cy: bbox.y + bbox.height / 2,
+                            r: backdropRadius,
+                            fill: '#fafafa',
+                            opacity: '0.96',
+                            class: 'aspect-symbol-backdrop'
+                        });
+                        symbolGroup.insertBefore(backdrop, symbolText);
+                    } catch (error) {
+                        // Ignore bbox issues and keep the text visible even without backdrop.
+                    }
                 }
             }
         });

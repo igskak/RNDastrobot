@@ -1207,6 +1207,17 @@ select:focus {
     gap: 4px;
 }
 
+.alerts-empty {
+    margin: 0;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px dashed rgba(184, 147, 90, 0.28);
+    font-size: 13px;
+    line-height: 1.5;
+    color: rgba(92, 85, 78, 0.82);
+}
+
 .alert-row {
     display: flex;
     flex-wrap: wrap;
