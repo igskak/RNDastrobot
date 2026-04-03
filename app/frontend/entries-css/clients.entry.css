@@ -1731,6 +1731,21 @@ textarea:focus {
     background: rgba(30, 58, 95, 0.1) !important;
 }
 
+.btn-call {
+    background: rgba(30, 58, 95, 0.08) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid rgba(30, 58, 95, 0.18) !important;
+}
+
+.btn-call:hover:not(:disabled) {
+    background: rgba(30, 58, 95, 0.15) !important;
+}
+
+.btn-call:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 /* ─── CRM: Highlighted row when expanded ─────────────────────────────── */
 
 tr[data-user-id] {

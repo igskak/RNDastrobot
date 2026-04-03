@@ -180,6 +180,7 @@ function bindEvents() {
             if (action === 'open-chart') { await openChart(userId); return; }
             if (action === 'open-forecast') { await openForecastForUser(userId); return; }
             if (action === 'log-session') { openLogSessionDialog(userId); return; }
+            if (action === 'start-call') { await startCallSession(userId); return; }
             if (action === 'delete-consultation') {
                 await deleteConsultation(actionBtn.dataset.consultationId, userId);
                 return;
@@ -1082,8 +1083,41 @@ function buildDetailPanelHTML(user, consultations) {
                 <button class="btn-new btn-sm btn-secondary" type="button" data-action="open-forecast" data-user-id="${userId}">${escapeHtml(t('page.chart.nav.forecast'))}</button>
                 <button class="btn-new btn-sm btn-secondary" type="button" data-action="log-session" data-user-id="${userId}">${escapeHtml(t('page.clients.detail.logSession'))}</button>
                 <button class="btn-new btn-sm btn-secondary" type="button" data-action="edit" data-user-id="${userId}">${escapeHtml(t('page.clients.actions.edit'))}</button>
+                <button class="btn-new btn-sm btn-call" type="button" data-action="start-call" data-user-id="${userId}">
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><rect x="1" y="3" width="8" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M9 5.5l3-2v6l-3-2V5.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+                    Start call
+                </button>
             </div>
         </div>`;
+}
+
+/* ─── Start Call ──────────────────────────────────────────────────────── */
+
+async function startCallSession(userId) {
+    const btn = refs.tbody.querySelector(`button[data-action="start-call"][data-user-id="${userId}"]`);
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Starting…';
+    }
+    try {
+        const res = await apiFetch(`${API_BASE}/call-sessions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId }),
+        });
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.detail || 'Failed to create call session');
+        }
+        const session = await res.json();
+        window.location.href = `/consultation-call.html?session_id=${session.id}&user_id=${userId}`;
+    } catch (err) {
+        showToast(err.message || 'Could not start call', 'error');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><rect x="1" y="3" width="8" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M9 5.5l3-2v6l-3-2V5.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg> Start call';
+        }
+    }
 }
 
 /* ─── Log Session Dialog ──────────────────────────────────────────────── */
