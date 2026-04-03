@@ -1760,7 +1760,8 @@
     }
 
     function getIngressRowsForRender() {
-        const summaryRows = window.ForecastState?.ingressSummaryData?.rows;
+        const forecastState = window.ForecastState || {};
+        const summaryRows = forecastState.ingressSummaryData?.rows;
         if (Array.isArray(summaryRows) && summaryRows.length) {
             return summaryRows
                 .filter((row) => {
@@ -1771,9 +1772,14 @@
                 .flatMap((row) => expandIngressSummaryRow(row));
         }
 
-        // Keep the left panel usable even when the period-summary endpoint is empty
-        // or temporarily unavailable: progression/direction payloads already contain
-        // point-in-time ingress data we can render as a lightweight fallback.
+        // Once a period summary was requested, an empty result should stay empty:
+        // showing natal->target-date ingress snapshots here is misleading because
+        // they are cumulative point-in-time changes, not period changes.
+        if (forecastState.ingressSummaryKey || forecastState.ingressSummaryError) {
+            return [];
+        }
+
+        // Legacy fallback for states where period summary has not been requested yet.
         return buildPrognosticLayers(lastProgData)
             .filter((layer) => isLayerVisible(layer.method))
             .flatMap((layer) => Array.isArray(layer.ingresses) ? layer.ingresses : []);
@@ -1799,6 +1805,39 @@
                         <th>${t('page.forecast.table.columns.transition')}</th>
                     </tr></thead><tbody><tr>
                         <td colspan="3" style="padding:10px;color:var(--text-secondary)">${escapeHtml(window.ForecastState.ingressSummaryError)}</td>
+                    </tr></tbody></table>
+                </div>
+            </div>`;
+            container.querySelector('#bwToggleIngressesInTable')?.addEventListener('click', (event) => {
+                event.stopPropagation();
+                ingressesCollapsed = true;
+                applyPanelCollapseStates();
+                triggerLayoutAnimation();
+            });
+            applyPanelCollapseStates();
+            return;
+        }
+        if (
+            !ingresses?.length
+            && window.ForecastState?.ingressSummaryKey
+            && !window.ForecastState?.ingressSummaryError
+        ) {
+            ingressesAvailable = true;
+            container.style.display = '';
+            container.innerHTML = `<div class="bw-panel-section">
+                ${renderPanelHeader(t('page.forecast.table.ingresses.title'), {
+                    collapseId: 'bwToggleIngressesInTable',
+                    collapseLabel: t('page.forecast.biwheel.collapseIngresses'),
+                    controlsId: 'bwIngressesPanelBody',
+                    icon: '←'
+                })}
+                <div class="bw-panel-body" id="bwIngressesPanelBody">
+                    <table><thead><tr>
+                        <th>${t('page.forecast.table.columns.object')}</th>
+                        <th>${t('page.forecast.table.columns.method')}</th>
+                        <th>${t('page.forecast.table.columns.transition')}</th>
+                    </tr></thead><tbody><tr>
+                        <td colspan="3" style="padding:10px;color:var(--text-secondary)">${escapeHtml(t('page.forecast.table.noData'))}</td>
                     </tr></tbody></table>
                 </div>
             </div>`;
