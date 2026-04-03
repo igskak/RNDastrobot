@@ -4,6 +4,7 @@ Requires env vars: LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET
 """
 import os
 import time
+from datetime import timedelta
 from typing import Optional
 
 from livekit.api import (
@@ -61,7 +62,7 @@ class LiveKitService:
             .with_identity(f"astrologer-{astrologer_id}")
             .with_name(display_name)
             .with_grants(grants)
-            .with_ttl(timedelta_seconds=_TOKEN_TTL_SECONDS)
+            .with_ttl(timedelta(seconds=_TOKEN_TTL_SECONDS))
             .to_jwt()
         )
         return token
@@ -85,7 +86,7 @@ class LiveKitService:
             .with_identity(f"client-{user_id}")
             .with_name(display_name)
             .with_grants(grants)
-            .with_ttl(timedelta_seconds=_TOKEN_TTL_SECONDS)
+            .with_ttl(timedelta(seconds=_TOKEN_TTL_SECONDS))
             .to_jwt()
         )
         return token
