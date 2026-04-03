@@ -6,21 +6,15 @@ actionable alerts: upcoming solar returns and hard transits to luminaries.
 """
 from typing import Dict, List, Optional
 from uuid import UUID
-from datetime import date, datetime, timedelta
-from decimal import Decimal
+from datetime import date
 
 import swisseph as swe
 from sqlalchemy.orm import Session, selectinload
 from loguru import logger
 
 from app.database.models import User, NatalPlanet
-from app.services.transit_service import TransitService
 
-# Hard aspects only
-_ALERT_ASPECT_TYPES = frozenset({'Conjunction', 'Opposition', 'Square'})
-# Outer planets only
-_ALERT_TRANSIT_BODIES = ['Saturn', 'Uranus', 'Neptune', 'Pluto']
-# Luminaries + angles
+# Luminaries — natal targets for dashboard alerts
 _ALERT_NATAL_TARGETS = ['Sun', 'Moon']
 
 
@@ -31,7 +25,6 @@ class AlertsService:
         self.db = db_session
         if ephe_path:
             swe.set_ephe_path(ephe_path)
-        self._transit_service = TransitService(db_session, ephe_path)
 
     def get_dashboard_alerts(
         self,
@@ -105,46 +98,69 @@ class AlertsService:
 
     # ── Major transits ───────────────────────────────────────────────
 
+    # SWE planet IDs for the 4 outer transit bodies
+    _BODY_SWE_ID = {'Saturn': 6, 'Uranus': 7, 'Neptune': 8, 'Pluto': 9}
+
+    # Hard aspects: (exact_angle, name, harmonic_type)
+    _HARD_ASPECTS = [
+        (0.0,   'Conjunction', 'neutral'),
+        (180.0, 'Opposition',  'tense'),
+        (90.0,  'Square',      'tense'),
+    ]
+
+    _ALERT_ORB = 5.0  # generous orb for dashboard-level alerts
+
     def _find_major_transits(
         self, users: List[User], now: date
     ) -> List[Dict]:
+        """
+        Fast major-transit detection: compute 4 outer-planet positions ONCE,
+        then do simple float comparisons against each client's natal Sun/Moon.
+        """
         alerts = []
-        end_date = now + timedelta(days=30)
+        jd_now = swe.julday(now.year, now.month, now.day, 12.0)
+
+        # Compute transit positions ONCE for all 4 bodies
+        transit_positions: Dict[str, float] = {}
+        for body_name, swe_id in self._BODY_SWE_ID.items():
+            try:
+                planet_data, _ret = swe.calc_ut(jd_now, swe_id, swe.FLG_SWIEPH)
+                transit_positions[body_name] = planet_data[0]
+            except Exception as e:
+                logger.warning(f"Failed to compute transit position for {body_name}: {e}")
+
+        if not transit_positions:
+            return alerts
 
         for user in users:
             try:
-                events = self._transit_service.find_transit_events(
-                    user_id=user.user_id,
-                    start_date=now,
-                    end_date=end_date,
-                    timezone=user.timezone or 'UTC',
-                    step_hours=6,
-                    transit_bodies=_ALERT_TRANSIT_BODIES,
-                    natal_bodies=_ALERT_NATAL_TARGETS,
-                    aspect_types=None,  # filter below — service doesn't accept aspect type filter directly
-                    use_cache=True,
-                    save_to_db=True,
-                )
+                if not user.planets:
+                    continue
 
                 name = " ".join(filter(None, [user.first_name, user.last_name])) or "—"
 
-                for event in events:
-                    aspect = event.get('aspect_type', '')
-                    if aspect not in _ALERT_ASPECT_TYPES:
+                for natal_p in user.planets:
+                    if natal_p.planet not in _ALERT_NATAL_TARGETS or natal_p.degree is None:
                         continue
+                    natal_lon = float(natal_p.degree)
 
-                    exact_raw = event.get('t_exact', '')
-                    exact_date = exact_raw[:10] if exact_raw else ''
+                    for t_name, t_lon in transit_positions.items():
+                        diff = abs(t_lon - natal_lon)
+                        if diff > 180:
+                            diff = 360 - diff
 
-                    alerts.append({
-                        "user_id": str(user.user_id),
-                        "name": name,
-                        "transit_body": event.get('transit_body', ''),
-                        "natal_body": event.get('natal_body', ''),
-                        "aspect": aspect,
-                        "exact_date": exact_date,
-                        "harmonic_type": event.get('harmonic_type', ''),
-                    })
+                        for exact_angle, aspect_name, harmonic_type in self._HARD_ASPECTS:
+                            deviation = abs(diff - exact_angle)
+                            if deviation <= self._ALERT_ORB:
+                                alerts.append({
+                                    "user_id": str(user.user_id),
+                                    "name": name,
+                                    "transit_body": t_name,
+                                    "natal_body": natal_p.planet,
+                                    "aspect": aspect_name,
+                                    "exact_date": now.isoformat(),
+                                    "harmonic_type": harmonic_type,
+                                })
 
             except Exception as e:
                 logger.warning(f"Transit alert failed for user {user.user_id}: {e}")

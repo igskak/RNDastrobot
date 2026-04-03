@@ -218,7 +218,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         style: currentSettings.houseNumberStyle,
         outside: currentSettings.houseLabelsOutside,
     }, { redraw: false });
-    chartWheel.draw(chartData);
+
+    // Применяем фильтры ДО первого draw, чтобы избежать мигания аспектов
+    const prefiltered = window.AstroPreferences?.filterChartDataByViewPreferences
+        ? window.AstroPreferences.filterChartDataByViewPreferences(chartData, {
+            matrixRows: getCurrentNatalMatrixRows(),
+            aspectScope: currentSettings.aspectScope || 'all',
+            enabledAspectTypes: Array.isArray(currentSettings.enabledAspectTypes) && currentSettings.enabledAspectTypes.length
+                ? currentSettings.enabledAspectTypes
+                : NATAL_ASPECT_TYPES,
+        })
+        : chartData;
+    const initialFiltered = filterChartDataByAspectPhase(prefiltered);
+    chartWheel.draw(initialFiltered);
 
     // Сохраняем в глобальную область для фильтров
     window.chartWheel = chartWheel;
@@ -230,7 +242,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         showStationary: currentSettings.showStationary,
         showApplyingSeparating: currentSettings.showApplyingSeparating,
     });
-    chartDataRenderer.render(chartData);
+    chartDataRenderer.render(initialFiltered);
     chartDataRenderer.setAspectTypeFilter(currentSettings.aspectScope);
 
     initPlanetRowClick();

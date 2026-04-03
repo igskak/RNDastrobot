@@ -351,17 +351,16 @@ def list_users(
             .subquery()
         )
 
-        # Last consultation type (correlated scalar — only fetched if there are consultations)
-        last_consult = (
-            db.query(Consultation.consultation_type)
-            .filter(
-                Consultation.user_id == User.user_id,
-                Consultation.astrologer_id == auth.astrologer.id,
+        # Last consultation type via DISTINCT ON (single pass, no correlated subquery)
+        last_consult_sub = (
+            db.query(
+                Consultation.user_id.label("lc_user_id"),
+                Consultation.consultation_type.label("last_consultation_type"),
             )
-            .order_by(Consultation.scheduled_at.desc().nullslast())
-            .limit(1)
-            .correlate(User)
-            .scalar_subquery()
+            .filter(Consultation.astrologer_id == auth.astrologer.id)
+            .distinct(Consultation.user_id)
+            .order_by(Consultation.user_id, Consultation.scheduled_at.desc().nullslast())
+            .subquery()
         )
 
         rows = (
@@ -371,9 +370,10 @@ def list_users(
                 consult_stats.c.last_consultation_at,
                 consult_stats.c.unpaid_count,
                 consult_stats.c.upcoming_count,
-                last_consult.label("last_consultation_type"),
+                last_consult_sub.c.last_consultation_type,
             )
             .outerjoin(consult_stats, User.user_id == consult_stats.c.user_id)
+            .outerjoin(last_consult_sub, User.user_id == last_consult_sub.c.lc_user_id)
             .filter(User.astrologer_id == auth.astrologer.id)
             .order_by(User.created_at.desc())
             .all()

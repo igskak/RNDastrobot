@@ -97,6 +97,7 @@ function cacheElements() {
     refs.alertsTransits = document.getElementById('alertsTransits');
     refs.alertsTransitsList = document.getElementById('alertsTransitsList');
     refs.alertsEmptyState = document.getElementById('alertsEmptyState');
+    refs.alertsSkeleton = document.getElementById('alertsSkeleton');
     // CRM contact fields in edit modal
     refs.editEmail = document.getElementById('editEmail');
     refs.editPhone = document.getElementById('editPhone');
@@ -1216,10 +1217,14 @@ async function loadAlerts() {
     if (refs.alertsTransitsList) refs.alertsTransitsList.innerHTML = '';
     refs.alertsEmptyState?.classList.add('hidden');
 
+    // Show skeleton while loading
+    refs.alertsSkeleton?.classList.remove('hidden');
+    refs.alertsPanel.classList.remove('hidden');
+
     try {
         const res = await apiFetch(`${API_BASE}/alerts/dashboard`);
+        refs.alertsSkeleton?.classList.add('hidden');
         if (!res.ok) {
-            refs.alertsPanel.classList.remove('hidden');
             refs.alertsEmptyState?.classList.remove('hidden');
             return;
         }
@@ -1247,7 +1252,7 @@ async function loadAlerts() {
         refs.alertsPanel.classList.remove('hidden');
     } catch (e) {
         console.error('Failed to load alerts', e);
-        refs.alertsPanel.classList.remove('hidden');
+        refs.alertsSkeleton?.classList.add('hidden');
         refs.alertsEmptyState?.classList.remove('hidden');
     }
 }

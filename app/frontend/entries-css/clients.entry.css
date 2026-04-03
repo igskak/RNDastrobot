@@ -1218,6 +1218,29 @@ select:focus {
     color: rgba(92, 85, 78, 0.82);
 }
 
+.alerts-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+}
+
+.skeleton-line {
+    height: 14px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, rgba(184,147,90,0.10) 25%, rgba(184,147,90,0.18) 50%, rgba(184,147,90,0.10) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton-line--wide { width: 85%; }
+.skeleton-line--medium { width: 60%; }
+
+@keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
 .alert-row {
     display: flex;
     flex-wrap: wrap;
