@@ -681,6 +681,43 @@
             throw lastError || new Error('gse');
         }
 
+        async function waitForBackendSession() {
+            if (!getCurrentAstrologer) {
+                return null;
+            }
+
+            let lastError = null;
+            for (let attempt = 0; attempt < 8; attempt += 1) {
+                try {
+                    const me = await getCurrentAstrologer();
+                    if (me) {
+                        return me;
+                    }
+                } catch (error) {
+                    lastError = error;
+                }
+
+                if (attempt < 7) {
+                    await wait(200);
+                }
+            }
+
+            throw lastError || new Error('backend_session_missing');
+        }
+
+        async function clearSupabaseOAuthSession() {
+            if (!state.supabaseClient?.auth?.signOut) {
+                return;
+            }
+
+            try {
+                await state.supabaseClient.auth.signOut({ scope: 'local' });
+            } catch (_error) {
+                // Older clients may ignore scope options. Leaving the Supabase
+                // session intact is safer than forcing a global sign-out here.
+            }
+        }
+
         async function loginWithPassword(event) {
             event.preventDefault();
             clearAllFieldErrors();
@@ -981,7 +1018,8 @@
                 if (!response.ok) {
                     throw new Error(await readErrorMessage(response));
                 }
-                await state.supabaseClient.auth.signOut();
+                await waitForBackendSession();
+                await clearSupabaseOAuthSession();
                 if (historyRef?.replaceState) {
                     historyRef.replaceState({}, documentRef?.title || '', '/login.html');
                 }

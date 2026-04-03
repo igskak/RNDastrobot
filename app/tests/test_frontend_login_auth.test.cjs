@@ -219,8 +219,9 @@ test('google oauth callback retries session lookup before failing', async () => 
     await installLocale('en');
 
     let redirectedTo = null;
-    let signOutCalled = 0;
+    const signOutCalls = [];
     let sessionReads = 0;
+    let authChecks = 0;
     let googlePayload = null;
     const waits = [];
 
@@ -267,11 +268,18 @@ test('google oauth callback retries session lookup before failing', async () => 
                     }
                     return { data: { session: { access_token: 'google-access-token' } }, error: null };
                 },
-                signOut: async () => {
-                    signOutCalled += 1;
+                signOut: async (options) => {
+                    signOutCalls.push(options);
                 },
             },
         }),
+        getCurrentAstrologer: async () => {
+            authChecks += 1;
+            if (authChecks === 1) {
+                return null;
+            }
+            return { email: 'astro@example.com' };
+        },
         wait: async (ms) => {
             waits.push(ms);
         },
@@ -283,9 +291,10 @@ test('google oauth callback retries session lookup before failing', async () => 
     await app.init();
 
     assert.equal(sessionReads, 2);
-    assert.deepEqual(waits, [200]);
+    assert.equal(authChecks, 2);
+    assert.deepEqual(waits, [200, 200]);
     assert.deepEqual(googlePayload, { access_token: 'google-access-token' });
-    assert.equal(signOutCalled, 1);
+    assert.deepEqual(signOutCalls, [{ scope: 'local' }]);
     assert.equal(redirectedTo, '/');
 
     delete global.FrontendI18n;
