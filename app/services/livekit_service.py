@@ -6,13 +6,15 @@ import os
 import time
 from typing import Optional
 
-from livekit.api import AccessToken, VideoGrants, LiveKitAPI
-from livekit.api.egress_service import (
+from livekit.api import (
+    AccessToken,
+    VideoGrants,
+    LiveKitAPI,
     RoomCompositeEgressRequest,
     EncodedFileOutput,
     EncodedFileType,
-    DirectFileOutput,
     S3Upload,
+    StopEgressRequest,
 )
 from loguru import logger
 
@@ -147,7 +149,7 @@ class LiveKitService:
                 api_key=_API_KEY,
                 api_secret=_API_SECRET,
             ) as lk:
-                await lk.egress.stop_egress(egress_id)
+                await lk.egress.stop_egress(StopEgressRequest(egress_id=egress_id))
                 logger.info(f"Stopped egress {egress_id}")
         except Exception as e:
             logger.error(f"Failed to stop egress {egress_id}: {e}")

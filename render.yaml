@@ -5,7 +5,7 @@ services:
     runtime: python
     plan: free
     region: frankfurt
-    branch: master
+    branch: main
     buildCommand: "./build.sh"
     startCommand: "./start.sh"
     envVars:
