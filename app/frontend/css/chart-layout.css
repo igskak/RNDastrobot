@@ -891,8 +891,8 @@
     stroke-width: 2;
 }
 
-.chart-page .config-highlight-planet .planet-symbol-text {
-    font-weight: 900;
+.chart-page .config-highlight-planet .planet-symbol-text,
+.chart-page .config-highlight-planet .planet-symbol-svg {
 }
 
 /* Mobile bottom nav */

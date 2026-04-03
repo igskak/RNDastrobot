@@ -131,6 +131,7 @@
             tableMethod: 'solar_return',
         },
     };
+    const ANGLE_BODY_NAMES = new Set(['ASC', 'MC', 'IC', 'DSC', 'Vertex', 'AntiVertex']);
 
     let svg, ascLong = 0;
     let orientationMode = 'aries';
@@ -1029,8 +1030,11 @@
             const p = polar(displayRadius, displayAngle);
             const exactPoint = polar(calloutRadius, angle);
             const sym = Symbols?.planets?.[planet.name] || planet.name.slice(0, 2);
-            const glyphScale = Symbols?.planetGlyphScale?.[planet.name] || 1;
+            const useVectorIcon = window.AstroGlyphs?.hasPlanetIcon?.(planet.name) === true;
+            const glyphScale = useVectorIcon ? 1 : (Symbols?.planetGlyphScale?.[planet.name] || 1);
             const glyphSize = fontSize * glyphScale * layerScale;
+            const iconBoxScale = useVectorIcon ? (window.AstroGlyphs?.getPlanetIconScale?.(planet.name) || 1.18) : 1;
+            const iconSize = useVectorIcon ? fontSize * layerScale * iconBoxScale : glyphSize;
             const element = Symbols?.signElements?.[planet.sign];
             const isNatal = layerType === 'natal';
             const color = isNatal
@@ -1048,6 +1052,14 @@
                 'data-retrograde': planet.retrograde ? 'true' : 'false',
                 'aria-label': `${isNatal ? t('page.forecast.biwheel.legend.natal') : t('page.forecast.biwheel.prognostic')} ${label}`
             });
+
+            group.appendChild(el('circle', {
+                cx: p.x,
+                cy: p.y,
+                r: String(Math.max(9 * layerScale, iconSize * 0.58).toFixed(2)),
+                fill: 'transparent',
+                class: 'bw-planet-hit'
+            }));
 
             if (hasLeader) {
                 group.appendChild(el('line', {
@@ -1070,19 +1082,32 @@
                 }));
             }
 
-            const glyph = el('text', {
-                x: p.x, y: p.y + glyphSize * 0.35,
-                'text-anchor':'middle', 'font-size': glyphSize.toFixed(2), fill: color,
-                'font-weight': isNatal ? '700' : '600',
-                opacity: '1',
-                class: `bw-planet-glyph ${isNatal ? 'bw-planet-natal' : 'bw-planet-prog'}`,
-            }, sym);
-            group.appendChild(glyph);
+            if (useVectorIcon) {
+                group.appendChild(window.AstroGlyphs.createPlanetSymbolSvg(planet.name, {
+                    size: iconSize,
+                    x: p.x - iconSize / 2,
+                    y: p.y - iconSize / 2,
+                    color,
+                    title: label,
+                    pointerEvents: 'none',
+                    className: `bw-planet-glyph ${isNatal ? 'bw-planet-natal' : 'bw-planet-prog'}`,
+                    symbol: sym,
+                }));
+            } else {
+                const glyph = el('text', {
+                    x: p.x, y: p.y + glyphSize * 0.35,
+                    'text-anchor':'middle', 'font-size': glyphSize.toFixed(2), fill: color,
+                    'font-weight': isNatal ? '700' : '600',
+                    opacity: '1',
+                    class: `bw-planet-glyph ${isNatal ? 'bw-planet-natal' : 'bw-planet-prog'}`,
+                }, sym);
+                group.appendChild(glyph);
+            }
 
             if (planet.retrograde) {
                 const rxScale = Math.min(1.1, layerScale);
                 group.appendChild(el('text', {
-                    x: p.x + glyphSize * 0.36, y: p.y + glyphSize * 0.42,
+                    x: p.x + iconSize * 0.36, y: p.y + iconSize * 0.42,
                     'font-size': String((RETRO_SYMBOL_SIZE * rxScale).toFixed(2)), fill:'#dc2626',
                     'font-weight':'700',
                     class: 'bw-retro-mark'
@@ -1424,9 +1449,9 @@
         if (data.transit_planets) return data.transit_planets.map(enrich);
         if (data.progressed_planets) return data.progressed_planets.map(enrich);
         if (data.directed_planets) {
-            const planets = data.directed_planets.map(enrich);
-            if (data.directed_angles) data.directed_angles.forEach(a => planets.push(enrich(a)));
-            return planets;
+            return data.directed_planets
+                .filter((planet) => !ANGLE_BODY_NAMES.has(planet?.name))
+                .map(enrich);
         }
         return [];
     }

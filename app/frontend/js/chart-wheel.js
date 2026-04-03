@@ -608,11 +608,13 @@ class ChartWheel {
             const y = this.center + radius * Math.sin(displayAngleRad);
             const anchorX = this.center + anchorRadius * Math.cos(exactAngleRad);
             const anchorY = this.center + anchorRadius * Math.sin(exactAngleRad);
-            const element = Symbols.signElements[planet.sign];
             const color = this.getPlanetColor(planet);
-            const glyphScale = Symbols.planetGlyphScale?.[planet.name] || 1;
             const scale = this.isPointBody(planet.name) ? this.pointScale : this.planetScale;
+            const useVectorIcon = window.AstroGlyphs?.hasPlanetIcon?.(planet.name) === true;
+            const glyphScale = useVectorIcon ? 1 : (Symbols.planetGlyphScale?.[planet.name] || 1);
             const glyphSize = this.natalGlyphBaseSize * glyphScale * scale;
+            const iconBoxScale = useVectorIcon ? (window.AstroGlyphs?.getPlanetIconScale?.(planet.name) || 1.18) : 1;
+            const iconSize = useVectorIcon ? this.natalGlyphBaseSize * scale * iconBoxScale : glyphSize;
 
             // Группа для интерактивности
             const group = this.createSvgElement('g', {
@@ -648,21 +650,31 @@ class ChartWheel {
                 class: 'planet-circle'
             }));
 
-            // Символ планеты (увеличен размер)
-            group.appendChild(this.createSvgElement('text', {
-                x: x, y: y + glyphSize * 0.33,
-                'text-anchor': 'middle',
-                'font-size': glyphSize.toFixed(2),
-                'font-weight': '600',
-                fill: color,
-                class: 'planet-symbol-text',
-                style: 'pointer-events: none;'
-            }, Symbols.planets[planet.name] || planet.name.charAt(0)));
+            if (useVectorIcon) {
+                group.appendChild(window.AstroGlyphs.createPlanetSymbolSvg(planet.name, {
+                    size: iconSize,
+                    x: x - iconSize / 2,
+                    y: y - iconSize / 2,
+                    color,
+                    title: this.getPlanetName(planet.name),
+                    pointerEvents: 'none',
+                }));
+            } else {
+                group.appendChild(this.createSvgElement('text', {
+                    x: x, y: y + glyphSize * 0.33,
+                    'text-anchor': 'middle',
+                    'font-size': glyphSize.toFixed(2),
+                    'font-weight': '600',
+                    fill: color,
+                    class: 'planet-symbol-text',
+                    style: 'pointer-events: none;'
+                }, Symbols.planets[planet.name] || planet.name.charAt(0)));
+            }
 
             // Ретроградность — «R» (компактно, справа снизу от символа)
             if (planet.retrograde) {
                 group.appendChild(this.createSvgElement('text', {
-                    x: x + glyphSize * 0.36, y: y + glyphSize * 0.42,
+                    x: x + iconSize * 0.36, y: y + iconSize * 0.42,
                     'font-size': (8 * Math.min(1.25, scale)).toFixed(2),
                     'font-weight': '700',
                     fill: '#dc2626',
@@ -681,15 +693,18 @@ class ChartWheel {
         const baseRadius = Number.isFinite(options.baseRadius) ? options.baseRadius : this.planetRadius;
         const positions = planets
             .map(planet => {
-                const glyphScale = Symbols.planetGlyphScale?.[planet.name] || 1;
                 const scale = this.isPointBody(planet.name) ? this.pointScale : this.planetScale;
+                const useVectorIcon = window.AstroGlyphs?.hasPlanetIcon?.(planet.name) === true;
+                const glyphScale = useVectorIcon ? 1 : (Symbols.planetGlyphScale?.[planet.name] || 1);
                 const angle = this.normalizeAngle(this.longitudeToAngle(planet.longitude));
                 return {
                     planet,
                     angle,
                     displayAngle: angle,
                     displayRadius: baseRadius,
-                    glyphSize: this.natalGlyphBaseSize * glyphScale * scale,
+                    glyphSize: useVectorIcon
+                        ? this.natalGlyphBaseSize * scale * (window.AstroGlyphs?.getPlanetIconScale?.(planet.name) || 1.18)
+                        : this.natalGlyphBaseSize * glyphScale * scale,
                     hasLeader: false,
                     clusterAngle: null
                 };
@@ -946,16 +961,13 @@ class ChartWheel {
      */
     bindEvents() {
         // Hover на планетах — подсветка аспектов
-        const useLocalPlanetTooltip = !this.svg.closest('#view-chart');
         this.svg.querySelectorAll('.planet-group').forEach(group => {
             group.addEventListener('mouseenter', (e) => this.onPlanetHover(e, true));
             group.addEventListener('mouseleave', (e) => this.onPlanetHover(e, false));
             group.addEventListener('click', (e) => this.onPlanetClick(e));
-            if (useLocalPlanetTooltip) {
-                group.addEventListener('mouseenter', (e) => this.onPlanetTooltipHover(e, true));
-                group.addEventListener('mousemove', (e) => this.onPlanetTooltipHover(e, true));
-                group.addEventListener('mouseleave', (e) => this.onPlanetTooltipHover(e, false));
-            }
+            group.addEventListener('mouseenter', (e) => this.onPlanetTooltipHover(e, true));
+            group.addEventListener('mousemove', (e) => this.onPlanetTooltipHover(e, true));
+            group.addEventListener('mouseleave', (e) => this.onPlanetTooltipHover(e, false));
         });
 
         // Hover на аспектах
@@ -976,11 +988,7 @@ class ChartWheel {
     onPlanetHover(e, isEnter) {
         const planetName = e.currentTarget.dataset.planet;
 
-        // Подсветка символа планеты - делаем жирным
-        const symbolText = e.currentTarget.querySelector('.planet-symbol-text');
-        if (symbolText) {
-            symbolText.setAttribute('font-weight', isEnter ? '900' : '600');
-        }
+        window.AstroGlyphs?.setPlanetSymbolActive?.(e.currentTarget, isEnter);
 
         const leaderLine = e.currentTarget.querySelector('.planet-leader-line');
         if (leaderLine) {

@@ -6,6 +6,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
 
 @font-face {
+    font-family: 'Astronomicon Local';
+    src: url('../fonts/Astronomicon.ttf') format('truetype');
+    font-display: swap;
+}
+
+@font-face {
     font-family: 'Noto Sans Symbols Local';
     src: url('../fonts/NotoSansSymbols.ttf') format('truetype');
     font-display: swap;
@@ -65,7 +71,7 @@
     /* Fonts */
     --font-ui:      'DM Sans', system-ui, -apple-system, sans-serif;
     --font-display: 'Cormorant Garamond', Georgia, serif;
-    --font-symbol:  'Noto Sans Symbols Local', 'Noto Sans Symbols 2 Local', 'Segoe UI Symbol', 'Apple Symbols', sans-serif;
+    --font-symbol:  'Astronomicon Local', 'Noto Sans Symbols Local', 'Noto Sans Symbols 2 Local', 'Segoe UI Symbol', 'Apple Symbols', sans-serif;
     --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
 }
 
@@ -96,6 +102,12 @@ body {
     font-family: var(--font-symbol);
     font-variant-ligatures: none;
     text-rendering: geometricPrecision;
+}
+
+.planet-symbol-svg {
+    overflow: visible;
+    transform-origin: center center;
+    transition: transform 0.15s ease, filter 0.15s ease;
 }
 
 /* ============ LAYOUT ============ */
@@ -1274,8 +1286,9 @@ input[type="number"] {
     border-left: 3px solid var(--accent);
 }
 
-.planet-group:hover .planet-symbol-text {
-    font-weight: 900;
+.planet-group:hover .planet-symbol-text,
+.planet-group:hover .planet-symbol-svg,
+.planet-symbol-svg.is-active {
     filter: drop-shadow(0 0 4px rgba(30, 58, 95, 0.4));
 }
 

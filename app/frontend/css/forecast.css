@@ -1650,6 +1650,10 @@ body.forecast-modal-open {
     font-family: var(--font-symbol);
 }
 
+.bw-planet-group .planet-symbol-svg {
+    overflow: visible;
+}
+
 /* ============================================
    Forecast Table Styles
    ============================================ */
@@ -1971,8 +1975,8 @@ body.forecast-modal-open {
 #solarWheel .planet-group.solar-planet-focus .planet-circle {
     stroke-width: 3 !important;
 }
-#solarWheel .planet-group.solar-planet-focus .planet-symbol-text {
-    font-weight: 900;
+#solarWheel .planet-group.solar-planet-focus .planet-symbol-text,
+#solarWheel .planet-group.solar-planet-focus .planet-symbol-svg {
     filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.45));
 }
 .solar-info-bar {

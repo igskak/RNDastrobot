@@ -408,6 +408,22 @@ class ChartDataRenderer {
         const color = window.AstroPreferences?.getPlanetColor
             ? window.AstroPreferences.getPlanetColor(planet.name, element, this.visualPreferences)
             : (Symbols.elementColors[element] || '#374151');
+        const useVectorIcon = window.AstroGlyphs?.hasPlanetIcon?.(planet.name);
+
+        if (useVectorIcon) {
+            const svgMarkup = window.AstroGlyphs.createPlanetSymbolMarkup(planet.name, {
+                size: 28,
+                color,
+                title: this.planetName(planet.name),
+            });
+
+            return `
+                <span class="planet-icon-svg">
+                    ${svgMarkup}
+                </span>
+            `;
+        }
+
         const symbol = Symbols.planets[planet.name] || planet.name.charAt(0);
         const glyphScale = Symbols.planetGlyphScale?.[planet.name] || 1;
         const glyphSize = 22 * glyphScale;

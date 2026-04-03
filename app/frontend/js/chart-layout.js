@@ -103,9 +103,7 @@
         const chartCenter = document.getElementById('view-chart');
 
         // Reset all highlights
-        document.querySelectorAll('.planet-group .planet-symbol-text').forEach(t => {
-            t.setAttribute('font-weight', '600');
-        });
+        window.AstroGlyphs?.resetPlanetSymbolActive?.(document);
         document.querySelectorAll('.data-table tr').forEach(r => r.classList.remove('active-row'));
         if (tooltip) tooltip.style.display = 'none';
 
@@ -122,10 +120,7 @@
             // Highlight symbol on chart - make it bold
             const group = document.querySelector(`.planet-group[data-planet="${planetName}"]`);
             if (group) {
-                const symbolText = group.querySelector('.planet-symbol-text');
-                if (symbolText) {
-                    symbolText.setAttribute('font-weight', '900');
-                }
+                window.AstroGlyphs?.setPlanetSymbolActive?.(group, true);
             }
 
             // Show tooltip
@@ -190,18 +185,12 @@
             [p1, p2].forEach(pName => {
                 const group = document.querySelector(`.planet-group[data-planet="${pName}"]`);
                 if (group) {
-                    const symbolText = group.querySelector('.planet-symbol-text');
-                    if (symbolText) {
-                        symbolText.setAttribute('font-weight', '900');
-                    }
+                    window.AstroGlyphs?.setPlanetSymbolActive?.(group, true);
                 }
             });
         } else {
             activeAspectHighlight = null;
-            // Сбрасываем font-weight планет
-            document.querySelectorAll('.planet-group .planet-symbol-text').forEach(t => {
-                t.setAttribute('font-weight', '600');
-            });
+            window.AstroGlyphs?.resetPlanetSymbolActive?.(document);
         }
     }
 
