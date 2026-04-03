@@ -154,12 +154,22 @@
         return (preferencesMetadata?.bodies || []).map((item) => item?.name).filter(Boolean);
     }
 
-    function buildDefaultOrbMatrix() {
+    function buildDefaultOrbMatrix(profileId = 'natal') {
+        const aspectTypes = getMetadataAspectTypes();
+        const bodies = getMetadataBodies();
+        if (window.AstroPreferences?.buildDefaultOrbProfileMatrix) {
+            return window.AstroPreferences.buildDefaultOrbProfileMatrix(aspectTypes, bodies, profileId);
+        }
         return Object.fromEntries(
-            getMetadataAspectTypes().map((aspect) => [
+            aspectTypes.map((aspect) => [
                 aspect.aspect_type,
                 Object.fromEntries(
-                    getMetadataBodies().map((body) => [body, Number(aspect.base_orb || 5)])
+                    bodies.map((body) => [
+                        body,
+                        profileId === 'prognostic'
+                            ? (body === 'Moon' ? 3 : 1)
+                            : Number(aspect.base_orb || 5),
+                    ])
                 ),
             ])
         );
@@ -173,7 +183,7 @@
                 ORB_PROFILE_IDS.map((profileId) => [
                     profileId,
                     {
-                        matrix: buildDefaultOrbMatrix(),
+                        matrix: buildDefaultOrbMatrix(profileId),
                     },
                 ])
             ),
@@ -246,7 +256,7 @@
 
     function getOrbProfileMatrix(profileId) {
         const methodology = ensureMethodologyState();
-        return methodology?.orbs?.profiles?.[profileId]?.matrix || buildDefaultOrbMatrix();
+        return methodology?.orbs?.profiles?.[profileId]?.matrix || buildDefaultOrbMatrix(profileId);
     }
 
     function getOrbPairStrategy() {
@@ -282,7 +292,7 @@
 
     function syncOrbMatrixFromDom() {
         const methodology = ensureMethodologyState();
-        const matrix = buildDefaultOrbMatrix();
+        const matrix = buildDefaultOrbMatrix(activeOrbProfile);
         document.querySelectorAll('#accountOrbsMatrixBody input[data-orb-aspect-type][data-orb-body]').forEach((input) => {
             const aspectType = input.dataset.orbAspectType;
             const body = input.dataset.orbBody;
@@ -406,7 +416,7 @@
         const bodies = getMetadataBodies();
         const aspectTypes = getMetadataAspectTypes();
         const normalizedMethodology = normalizeMethodologySettings(methodology || getDefaultMethodology());
-        const matrix = normalizedMethodology?.orbs?.profiles?.[activeOrbProfile]?.matrix || buildDefaultOrbMatrix();
+        const matrix = normalizedMethodology?.orbs?.profiles?.[activeOrbProfile]?.matrix || buildDefaultOrbMatrix(activeOrbProfile);
 
         headerRow.innerHTML = `
             <th class="account-settings-orb-corner"></th>
@@ -1013,8 +1023,8 @@
             if (!(input instanceof HTMLInputElement)) return;
             if (!input.dataset.orbAspectType || !input.dataset.orbBody) return;
             const methodology = ensureMethodologyState();
-            const profile = methodology.orbs.profiles[activeOrbProfile] || { matrix: buildDefaultOrbMatrix() };
-            const nextMatrix = profile.matrix || buildDefaultOrbMatrix();
+            const profile = methodology.orbs.profiles[activeOrbProfile] || { matrix: buildDefaultOrbMatrix(activeOrbProfile) };
+            const nextMatrix = profile.matrix || buildDefaultOrbMatrix(activeOrbProfile);
             if (!nextMatrix[input.dataset.orbAspectType]) {
                 nextMatrix[input.dataset.orbAspectType] = {};
             }

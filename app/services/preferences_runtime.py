@@ -11,6 +11,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 
 from app.database.models import AstrologerPreference, RefAspectType, RefPlanetOrb, User
+from app.utils.constants import PROGNOSTIC_DEFAULT_ORB, PROGNOSTIC_MOON_ORB
 
 
 CANONICAL_BODIES = [
@@ -184,27 +185,34 @@ def build_default_orb_settings(
         (orb.planet, orb.aspect_type): float(orb.orb)
         for orb in planet_orbs
     }
-    matrix: Dict[str, Dict[str, float]] = {}
+    natal_matrix: Dict[str, Dict[str, float]] = {}
+    prognostic_matrix: Dict[str, Dict[str, float]] = {}
     for aspect_type in aspect_types:
         aspect_name = aspect_type.aspect_type
         base_orb = float(aspect_type.base_orb)
-        matrix[aspect_name] = {}
+        natal_matrix[aspect_name] = {}
+        prognostic_matrix[aspect_name] = {}
         for body in CANONICAL_BODIES:
             value = None
             for candidate in get_body_alias_candidates(body):
                 if (candidate, aspect_name) in orb_lookup:
                     value = orb_lookup[(candidate, aspect_name)]
                     break
-            matrix[aspect_name][body] = float(value if value is not None else base_orb)
+            natal_matrix[aspect_name][body] = float(value if value is not None else base_orb)
+            prognostic_matrix[aspect_name][body] = (
+                float(PROGNOSTIC_MOON_ORB) if body == 'Moon' else float(PROGNOSTIC_DEFAULT_ORB)
+            )
 
     return {
         'version': 2,
         'pair_strategy': DEFAULT_ORB_PAIR_STRATEGY,
         'profiles': {
-            profile_id: {
-                'matrix': deepcopy(matrix),
-            }
-            for profile_id in ORB_PROFILE_IDS
+            'natal': {
+                'matrix': deepcopy(natal_matrix),
+            },
+            'prognostic': {
+                'matrix': deepcopy(prognostic_matrix),
+            },
         },
     }
 

@@ -1,4 +1,5 @@
 from app.services.preferences_runtime import (
+    build_default_orb_settings,
     build_default_visual_settings,
     normalize_methodology_settings,
     normalize_orb_settings,
@@ -76,6 +77,25 @@ def test_build_default_visual_settings_includes_harmony_palette():
     assert visual["aspect_harmony_colors"]["tense"] == "#ef4444"
     assert visual["aspect_colors"]["Conjunction"] == "#f59e0b"
     assert visual["aspect_colors"]["Custom"] == "#ef4444"
+
+
+def test_build_default_orb_settings_uses_fixed_prognostic_defaults():
+    aspect_types = [
+        type("AspectType", (), {"aspect_type": "Conjunction", "base_orb": 8.0})(),
+        type("AspectType", (), {"aspect_type": "Square", "base_orb": 6.0})(),
+    ]
+    planet_orbs = [
+        type("PlanetOrb", (), {"planet": "Sun", "aspect_type": "Conjunction", "orb": 12.0})(),
+        type("PlanetOrb", (), {"planet": "Moon", "aspect_type": "Conjunction", "orb": 10.0})(),
+    ]
+
+    defaults = build_default_orb_settings(aspect_types, planet_orbs)
+
+    assert defaults["profiles"]["natal"]["matrix"]["Conjunction"]["Sun"] == 12.0
+    assert defaults["profiles"]["prognostic"]["matrix"]["Conjunction"]["Sun"] == 1.0
+    assert defaults["profiles"]["prognostic"]["matrix"]["Conjunction"]["Moon"] == 3.0
+    assert defaults["profiles"]["prognostic"]["matrix"]["Square"]["Moon"] == 3.0
+    assert defaults["profiles"]["prognostic"]["matrix"]["Square"]["Mars"] == 1.0
 
 
 def test_normalize_methodology_settings_defaults_stationary_threshold_to_five_percent():

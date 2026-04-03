@@ -80,6 +80,8 @@
     ];
     const ORB_PROFILE_IDS = ['natal', 'prognostic'];
     const DEFAULT_ORB_PAIR_STRATEGY = 'larger';
+    const DEFAULT_PROGNOSTIC_ORB = 1;
+    const DEFAULT_PROGNOSTIC_MOON_ORB = 3;
     const DEFAULT_STATIONARY_THRESHOLD_PERCENT = 5;
     const BODY_NAME_ALIASES = {
         TrueNorthNode: 'TrueNode',
@@ -382,6 +384,22 @@
         return Math.min(100, Math.max(0, normalized));
     }
 
+    function buildDefaultOrbProfileMatrix(aspectTypes = [], bodies = MATRIX_BODIES, profileId = 'natal') {
+        return Object.fromEntries(
+            (aspectTypes || []).map((aspect) => [
+                aspect.aspect_type,
+                Object.fromEntries(
+                    (bodies || []).map((body) => [
+                        body,
+                        profileId === 'prognostic'
+                            ? (body === 'Moon' ? DEFAULT_PROGNOSTIC_MOON_ORB : DEFAULT_PROGNOSTIC_ORB)
+                            : Number(aspect.base_orb || 5),
+                    ])
+                ),
+            ])
+        );
+    }
+
     function normalizeMethodologySettings(methodology = {}) {
         const legacyMatrix = deepClone(methodology?.orbs?.matrix || {});
         const profiles = methodology?.orbs?.profiles || {};
@@ -512,9 +530,12 @@
         DEFAULT_ELEMENT_PALETTE,
         ORB_PROFILE_IDS,
         DEFAULT_ORB_PAIR_STRATEGY,
+        DEFAULT_PROGNOSTIC_ORB,
+        DEFAULT_PROGNOSTIC_MOON_ORB,
         deepMerge,
         deepEqual,
         buildSparseDiff,
+        buildDefaultOrbProfileMatrix,
         ensureMatrixRows,
         normalizeMatrixBodyName,
         normalizeEnabledAspectTypes,

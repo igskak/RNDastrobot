@@ -58,6 +58,23 @@ test('normalizeMethodologySettings keeps custom stationary threshold', () => {
     assert.equal(normalized.stationary.threshold_percent, 7.5);
 });
 
+test('buildDefaultOrbProfileMatrix uses fixed prognostic defaults', () => {
+    const aspectTypes = [
+        { aspect_type: 'Conjunction', base_orb: 8 },
+        { aspect_type: 'Square', base_orb: 6 },
+    ];
+    const bodies = ['Sun', 'Moon', 'Mars'];
+
+    const natalMatrix = preferences.buildDefaultOrbProfileMatrix(aspectTypes, bodies, 'natal');
+    const prognosticMatrix = preferences.buildDefaultOrbProfileMatrix(aspectTypes, bodies, 'prognostic');
+
+    assert.equal(natalMatrix.Conjunction.Sun, 8);
+    assert.equal(natalMatrix.Square.Moon, 6);
+    assert.equal(prognosticMatrix.Conjunction.Sun, 1);
+    assert.equal(prognosticMatrix.Conjunction.Moon, 3);
+    assert.equal(prognosticMatrix.Square.Mars, 1);
+});
+
 test('resolveVisualPreferences keeps harmony colors and getAspectColor falls back to harmony type', () => {
     const visual = preferences.resolveVisualPreferences({
         aspect_harmony_colors: {
