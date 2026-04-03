@@ -20,6 +20,7 @@ from app.auth.dependencies import AuthContext, create_audit_event, require_auth
 from app.database.connection import get_db
 from app.database.models import Astrologer, CallSession, Consultation, User
 from app.services.livekit_service import livekit_service
+from app.services.storage_service import storage_service
 
 router = APIRouter(prefix="/call-sessions")
 
@@ -368,6 +369,26 @@ async def end_call(
         "call_status": cs.call_status,
         "duration_seconds": cs.duration_seconds,
     }
+
+
+@router.get("/{session_id}/audio-url", summary="Get a signed URL for the recorded audio (1 hr TTL)")
+def get_audio_url(
+    session_id: UUID,
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+):
+    cs = _ensure_session_access(db, auth, session_id)
+    if not cs.audio_storage_path:
+        raise HTTPException(status_code=404, detail="No recording available yet")
+    if not storage_service.is_configured():
+        raise HTTPException(status_code=503, detail="Storage service not configured")
+    try:
+        url = storage_service.get_signed_url(cs.audio_storage_path, expires_in=3600)
+        return {"url": url, "expires_in": 3600}
+    except Exception as e:
+        logger.error(f"Could not generate audio URL for session {session_id}: {e}")
+        raise HTTPException(status_code=500, detail="Could not generate audio URL")
 
 
 # ---------------------------------------------------------------------------

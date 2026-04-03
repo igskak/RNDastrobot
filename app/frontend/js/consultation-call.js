@@ -282,7 +282,7 @@
         const msg = JSON.stringify({ type: 'consent_request' });
         state.room.localParticipant.publishData(
             new TextEncoder().encode(msg),
-            LivekitClient.DataPacket_Kind.RELIABLE,
+            { reliable: true },
         );
     }
 

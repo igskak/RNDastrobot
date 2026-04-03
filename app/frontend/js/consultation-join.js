@@ -288,7 +288,7 @@
             const msg = JSON.stringify({ type: 'consent_declined' });
             state.room.localParticipant.publishData(
                 new TextEncoder().encode(msg),
-                LivekitClient.DataPacket_Kind.RELIABLE,
+                { reliable: true },
             );
         }
     }
@@ -303,7 +303,7 @@
             const msg = JSON.stringify({ type: 'consent_given' });
             state.room.localParticipant.publishData(
                 new TextEncoder().encode(msg),
-                LivekitClient.DataPacket_Kind.RELIABLE,
+                { reliable: true },
             );
         }
     }

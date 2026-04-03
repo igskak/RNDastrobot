@@ -16,6 +16,7 @@ from livekit.api import (
     EncodedFileType,
     S3Upload,
     StopEgressRequest,
+    DeleteRoomRequest,
 )
 from loguru import logger
 
@@ -166,7 +167,7 @@ class LiveKitService:
                 api_key=_API_KEY,
                 api_secret=_API_SECRET,
             ) as lk:
-                await lk.room.delete_room(room_name)
+                await lk.room.delete_room(DeleteRoomRequest(room=room_name))
                 logger.info(f"Deleted LiveKit room {room_name}")
         except Exception as e:
             # Room may already be gone — log and continue
