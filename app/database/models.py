@@ -64,6 +64,7 @@ class User(Base):
     quadrant_balance = relationship("UserQuadrantBalance", back_populates="user", uselist=False, cascade="all, delete-orphan")
     house_group_balance = relationship("UserHouseGroupBalance", back_populates="user", uselist=False, cascade="all, delete-orphan")
     astrologer = relationship("Astrologer", back_populates="users")
+    call_sessions = relationship("CallSession", back_populates="user", cascade="all, delete-orphan")
 
     __table_args__ = (
         CheckConstraint('lat >= -90 AND lat <= 90', name='valid_latitude'),
@@ -93,6 +94,7 @@ class Astrologer(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     users = relationship("User", back_populates="astrologer")
+    call_sessions = relationship("CallSession", back_populates="astrologer", cascade="all, delete-orphan")
     sessions = relationship("AuthSession", back_populates="astrologer", cascade="all, delete-orphan")
     password_reset_tokens = relationship("PasswordResetToken", back_populates="astrologer", cascade="all, delete-orphan")
     email_verification_tokens = relationship("EmailVerificationToken", back_populates="astrologer", cascade="all, delete-orphan")
@@ -1069,4 +1071,71 @@ class Consultation(Base):
         Index('idx_consultations_astrologer_id', 'astrologer_id'),
         Index('idx_consultations_scheduled', 'astrologer_id', 'scheduled_at'),
         Index('idx_consultations_status', 'astrologer_id', 'status'),
+    )
+
+
+class CallSession(Base):
+    """Видео-звонок с клиентом (LiveKit). Опционально привязан к Consultation."""
+    __tablename__ = 'call_sessions'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='CASCADE'), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
+    # Optionally linked to a scheduled CRM consultation
+    consultation_id = Column(UUID(as_uuid=True), ForeignKey('consultations.id', ondelete='SET NULL'), nullable=True)
+
+    # LiveKit room
+    livekit_room_name = Column(String(255), nullable=False, unique=True)
+    livekit_egress_id = Column(String(255))
+
+    # Lifecycle: created → active → ended → processing → completed / failed
+    call_status = Column(String(20), nullable=False, default='created')
+    started_at = Column(DateTime)
+    ended_at = Column(DateTime)
+    duration_seconds = Column(Integer)
+
+    # Consent — both must be set before recording can start
+    astrologer_consent_at = Column(DateTime)
+    client_consent_at = Column(DateTime)
+    recording_started_at = Column(DateTime)
+
+    # Client join token (unauthenticated — stored as SHA-256 hash)
+    client_join_token_hash = Column(String(128), unique=True)
+    client_join_token_expires_at = Column(DateTime)
+
+    # Audio recording (stored in Supabase Storage)
+    audio_storage_path = Column(Text)
+    audio_duration_seconds = Column(Integer)
+
+    # Transcription (AssemblyAI)
+    assemblyai_transcript_id = Column(String(255))
+    transcript_text = Column(Text)
+    transcript_segments = Column(JSONB)    # [{speaker, start_ms, end_ms, text}, ...]
+
+    # AI summary (OpenAI)
+    summary_text = Column(Text)
+    key_points = Column(JSONB)             # [{topic, detail}, ...]
+    client_facing_summary = Column(Text)
+    ai_model_used = Column(String(50))
+
+    # Error tracking
+    processing_error = Column(Text)
+
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    user = relationship("User", back_populates="call_sessions")
+    astrologer = relationship("Astrologer", back_populates="call_sessions")
+    consultation = relationship("Consultation")
+
+    __table_args__ = (
+        CheckConstraint(
+            "call_status IN ('created','active','ended','processing','completed','failed')",
+            name='chk_call_session_status',
+        ),
+        Index('idx_call_sessions_astrologer', 'astrologer_id'),
+        Index('idx_call_sessions_user', 'user_id'),
+        Index('idx_call_sessions_astrologer_user', 'astrologer_id', 'user_id', 'created_at'),
+        Index('idx_call_sessions_status', 'call_status'),
+        Index('idx_call_sessions_token', 'client_join_token_hash'),
     )

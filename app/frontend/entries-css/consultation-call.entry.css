@@ -1,0 +1,486 @@
+@import '../css/styles.css';
+
+/* ============================================================
+   Call page — shared layout for both astrologer & client UIs
+   ============================================================ */
+
+.call-page,
+.join-page {
+    min-height: 100vh;
+    background: #0d1117;
+    color: #e8e4dc;
+    font-family: var(--font-ui, 'DM Sans', sans-serif);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Page loader */
+.page-loader {
+    position: fixed;
+    inset: 0;
+    background: #0d1117;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 100;
+}
+
+.pl-spinner {
+    width: 36px;
+    height: 36px;
+    border: 2.5px solid rgba(184, 147, 90, 0.2);
+    border-top-color: #B8935A;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.pl-text {
+    font-size: 14px;
+    color: rgba(232, 228, 220, 0.5);
+    letter-spacing: 0.04em;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Error overlay */
+.call-error-overlay,
+.join-error-screen {
+    position: fixed;
+    inset: 0;
+    background: #0d1117;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 90;
+}
+
+.call-error-box,
+.join-error-box {
+    max-width: 400px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.call-error-title,
+.join-error-title {
+    font-family: var(--font-display, 'Cormorant Garamond', serif);
+    font-size: 26px;
+    font-weight: 400;
+    color: #e8e4dc;
+    margin: 0;
+}
+
+.call-error-body,
+.join-error-msg {
+    font-size: 15px;
+    color: rgba(232, 228, 220, 0.6);
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* ============================================================
+   Call shell — full-screen video call layout
+   ============================================================ */
+
+.call-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: #0d1117;
+}
+
+/* Header */
+.call-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: rgba(13, 17, 23, 0.85);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+.call-header-left,
+.call-header-center,
+.call-header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.call-header-left { flex: 1; }
+.call-header-center { flex: 0 0 auto; }
+.call-header-right { flex: 1; justify-content: flex-end; }
+
+.call-back-link {
+    color: rgba(232, 228, 220, 0.5);
+    display: flex;
+    align-items: center;
+    transition: color 0.15s;
+    flex-shrink: 0;
+}
+.call-back-link:hover { color: #e8e4dc; }
+
+.call-client-name,
+.call-astrologer-name-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: #e8e4dc;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.call-status-badge {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: rgba(232, 228, 220, 0.45);
+}
+
+.call-rec-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #e05252;
+    letter-spacing: 0.08em;
+}
+
+.call-rec-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #e05252;
+    animation: rec-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes rec-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
+}
+
+.call-timer {
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    color: rgba(232, 228, 220, 0.45);
+    letter-spacing: 0.04em;
+}
+
+/* ============================================================
+   Video grid
+   ============================================================ */
+
+.call-video-grid {
+    flex: 1;
+    position: relative;
+    background: #0d1117;
+    overflow: hidden;
+}
+
+.call-video-tile {
+    position: absolute;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #1a1f28;
+}
+
+.call-video-tile video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Remote — fills the grid */
+.call-video-remote {
+    inset: 0;
+    border-radius: 0;
+}
+
+/* Local — small PiP in corner */
+.call-video-local {
+    bottom: 16px;
+    right: 16px;
+    width: 180px;
+    height: 120px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.08);
+    z-index: 5;
+}
+
+/* Screen share — overlays remote */
+.call-video-screen {
+    inset: 0;
+    border-radius: 0;
+    z-index: 3;
+}
+
+.call-tile-label {
+    position: absolute;
+    bottom: 8px;
+    left: 10px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+    background: rgba(0,0,0,0.4);
+    padding: 2px 8px;
+    border-radius: 12px;
+    backdrop-filter: blur(4px);
+}
+
+.call-tile-audio-off {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(224, 82, 82, 0.85);
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+}
+
+/* ============================================================
+   Controls bar
+   ============================================================ */
+
+.call-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px 16px;
+    background: rgba(13, 17, 23, 0.9);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+    gap: 8px;
+}
+
+.call-controls-left,
+.call-controls-center,
+.call-controls-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.call-controls-left  { flex: 1; }
+.call-controls-center { flex: 0 0 auto; }
+.call-controls-right { flex: 1; justify-content: flex-end; }
+
+.call-ctrl-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.07);
+    border: none;
+    border-radius: 10px;
+    color: #e8e4dc;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    min-width: 52px;
+}
+
+.call-ctrl-btn:hover { background: rgba(255,255,255,0.13); }
+
+.call-ctrl-btn--off {
+    background: rgba(255,255,255,0.04);
+    color: rgba(232, 228, 220, 0.4);
+}
+
+.call-ctrl-btn--active {
+    background: rgba(30, 58, 95, 0.5);
+    color: #7fafd4;
+}
+
+.call-ctrl-btn--record {
+    background: rgba(184, 147, 90, 0.15);
+    color: #B8935A;
+}
+.call-ctrl-btn--record:hover { background: rgba(184, 147, 90, 0.25); }
+
+.call-ctrl-btn--record-stop {
+    background: rgba(224, 82, 82, 0.15);
+    color: #e05252;
+}
+.call-ctrl-btn--record-stop:hover { background: rgba(224, 82, 82, 0.25); }
+
+.call-ctrl-btn--end {
+    background: rgba(224, 82, 82, 0.18);
+    color: #e05252;
+}
+.call-ctrl-btn--end:hover { background: rgba(224, 82, 82, 0.3); }
+
+/* ============================================================
+   Consent modal
+   ============================================================ */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 50;
+    backdrop-filter: blur(4px);
+}
+
+.modal-box {
+    background: #1a1f28;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 420px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modal-title {
+    font-family: var(--font-display, 'Cormorant Garamond', serif);
+    font-size: 22px;
+    font-weight: 400;
+    color: #e8e4dc;
+    margin: 0;
+}
+
+.modal-body {
+    font-size: 14px;
+    line-height: 1.65;
+    color: rgba(232, 228, 220, 0.7);
+    margin: 0;
+}
+
+.modal-body--note {
+    font-size: 13px;
+    color: #B8935A;
+    font-style: italic;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+
+/* ============================================================
+   Post-call panel
+   ============================================================ */
+
+.call-ended-panel,
+.call-ended-screen {
+    position: fixed;
+    inset: 0;
+    background: #0d1117;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 80;
+}
+
+.call-ended-box {
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.call-ended-title {
+    font-family: var(--font-display, 'Cormorant Garamond', serif);
+    font-size: 28px;
+    font-weight: 400;
+    color: #e8e4dc;
+    margin: 0;
+}
+
+.call-ended-duration {
+    font-size: 14px;
+    color: rgba(232, 228, 220, 0.45);
+    font-variant-numeric: tabular-nums;
+    margin: 0;
+}
+
+.call-ended-note {
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgba(232, 228, 220, 0.6);
+    margin: 0;
+}
+
+.call-ended-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+/* ============================================================
+   Buttons
+   ============================================================ */
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 22px;
+    background: var(--accent, #1E3A5F);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s;
+}
+.btn-primary:hover { background: var(--accent-hover, #2E4E7A); }
+.btn-primary:disabled { opacity: 0.5; cursor: default; }
+
+.btn-primary--large {
+    padding: 13px 28px;
+    font-size: 15px;
+    width: 100%;
+    border-radius: 10px;
+}
+
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    background: rgba(255,255,255,0.08);
+    color: rgba(232,228,220,0.8);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s;
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.13); }

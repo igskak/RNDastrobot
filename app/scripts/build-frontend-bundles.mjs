@@ -18,6 +18,8 @@ const htmlPages = [
   'natal-full.html',
   'login.html',
   'calendar.html',
+  'consultation-call.html',
+  'consultation-join.html',
 ];
 
 const jsEntryPoints = {
@@ -29,6 +31,8 @@ const jsEntryPoints = {
   'natal-full': path.join(frontendRoot, 'entries', 'natal-full.entry.js'),
   login: path.join(frontendRoot, 'entries', 'login.entry.js'),
   calendar: path.join(frontendRoot, 'entries', 'calendar.entry.js'),
+  'consultation-call': path.join(frontendRoot, 'entries', 'consultation-call.entry.js'),
+  'consultation-join': path.join(frontendRoot, 'entries', 'consultation-join.entry.js'),
 };
 
 const cssEntryPoints = {
@@ -40,6 +44,8 @@ const cssEntryPoints = {
   'natal-full': path.join(frontendRoot, 'entries-css', 'natal-full.entry.css'),
   login: path.join(frontendRoot, 'entries-css', 'login.entry.css'),
   calendar: path.join(frontendRoot, 'entries-css', 'calendar.entry.css'),
+  'consultation-call': path.join(frontendRoot, 'entries-css', 'consultation-call.entry.css'),
+  'consultation-join': path.join(frontendRoot, 'entries-css', 'consultation-join.entry.css'),
 };
 
 function createBuildId(date = new Date()) {

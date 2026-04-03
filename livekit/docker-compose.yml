@@ -1,0 +1,56 @@
+version: "3.9"
+
+# LiveKit SFU + Egress + Caddy reverse proxy
+# Deploy on a VPS (Hetzner CX22 / DigitalOcean $6 droplet)
+#
+# Setup steps:
+#   1. Copy this file and livekit.yaml to the VPS
+#   2. Set your domain in the Caddy block below (replace livekit.yourdomain.com)
+#   3. Open ports: 80, 443, 7881 (TCP), 50000-60000 (UDP) in the VPS firewall
+#   4. Run: docker compose up -d
+
+services:
+
+  livekit:
+    image: livekit/livekit-server:latest
+    command: --config /etc/livekit/livekit.yaml
+    restart: unless-stopped
+    network_mode: host          # Required for WebRTC UDP port range
+    volumes:
+      - ./livekit.yaml:/etc/livekit/livekit.yaml:ro
+    depends_on:
+      - redis
+
+  livekit-egress:
+    image: livekit/egress:latest
+    restart: unless-stopped
+    environment:
+      EGRESS_CONFIG_FILE: /etc/egress/egress.yaml
+    volumes:
+      - ./egress.yaml:/etc/egress/egress.yaml:ro
+    cap_add:
+      - SYS_ADMIN          # Required for Chrome sandbox inside egress
+    network_mode: host
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --save "" --appendonly no
+    ports:
+      - "127.0.0.1:6379:6379"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    network_mode: host
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,28 @@
+# LiveKit server configuration
+# Reference: https://docs.livekit.io/oss/deployment/config
+
+port: 7880
+rtc:
+  tcp_port: 7881
+  port_range_start: 50000
+  port_range_end:   60000
+  use_external_ip:  true    # Tells LiveKit to advertise the public IP
+
+redis:
+  address: 127.0.0.1:6379
+
+keys:
+  # Replace with your actual API key and secret
+  # Generate with: openssl rand -hex 16
+  APIyourkey: your_api_secret_here
+
+logging:
+  level: info
+  pion_level: error
+
+# Webhook to notify your app about room/egress events
+# Replace with your Render app URL
+webhook:
+  api_key: APIyourkey
+  urls:
+    - https://your-app.onrender.com/api/v1/call-sessions/webhooks/livekit

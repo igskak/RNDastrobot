@@ -1,0 +1,16 @@
+# LiveKit Egress configuration
+# Reference: https://docs.livekit.io/oss/egress/overview
+
+api_key:    APIyourkey          # Must match livekit.yaml
+api_secret: your_api_secret_here
+ws_url:     ws://localhost:7880  # Internal connection to LiveKit server
+
+logging:
+  level: info
+
+health_port: 8087
+prometheus_port: 9093
+
+# Egress uses a headless Chrome instance for compositing.
+# For audio-only egress it is much lighter than full video compositing.
+insecure: false

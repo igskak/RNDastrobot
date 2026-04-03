@@ -29,7 +29,7 @@ if os.getenv('APP_ENV') == 'production':
     logger.remove()  # Удаляем default handler
     logger.add(sys.stderr, level="WARNING")  # Только WARNING и выше
 
-from app.api.routes import auth, natal, transits, solar, progressions, directions, ingresses, places, consultations, alerts, preferences
+from app.api.routes import auth, natal, transits, solar, progressions, directions, ingresses, places, consultations, alerts, preferences, call_sessions
 from app.api.error_handlers import register_error_handlers
 from app.api.locale_dependency import locale_context_dependency
 
@@ -100,6 +100,8 @@ async def static_cache_headers(request: Request, call_next):
         "/forecast.html",
         "/calendar",
         "/calendar.html",
+        "/consultation-call.html",
+        "/consultation-join.html",
     }
 
     if path in frontend_document_paths:
@@ -130,6 +132,7 @@ app.include_router(directions.router, prefix="/api/v1", tags=["Directions"])
 app.include_router(ingresses.router, prefix="/api/v1", tags=["Ingresses"])
 app.include_router(places.router, prefix="/api/v1", tags=["Places"])
 app.include_router(consultations.router, prefix="/api/v1", tags=["Consultations"])
+app.include_router(call_sessions.router, prefix="/api/v1", tags=["Call Sessions"])
 app.include_router(alerts.router, prefix="/api/v1", tags=["Alerts"])
 app.include_router(preferences.router, prefix="/api/v1", tags=["Preferences"])
 
@@ -247,6 +250,24 @@ async def calendar_page():
     if os.path.exists(calendar_path):
         return FileResponse(calendar_path)
     raise HTTPException(status_code=404, detail="Calendar page not found")
+
+
+@app.get("/consultation-call.html")
+async def consultation_call_page():
+    """Astrologer video call page."""
+    page_path = os.path.join(FRONTEND_PATH, "consultation-call.html")
+    if os.path.exists(page_path):
+        return FileResponse(page_path)
+    raise HTTPException(status_code=404, detail="Page not found")
+
+
+@app.get("/call/{token}")
+async def consultation_join_page(token: str):
+    """Client join page — served for any /call/{token} path."""
+    page_path = os.path.join(FRONTEND_PATH, "consultation-join.html")
+    if os.path.exists(page_path):
+        return FileResponse(page_path)
+    raise HTTPException(status_code=404, detail="Page not found")
 
 
 @app.get("/health")

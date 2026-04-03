@@ -53,3 +53,6 @@ mypy==1.8.0
 
 # Swiss Ephemeris Python Bindings
 pyswisseph==2.10.3.2
+
+# Video consultation calls (LiveKit)
+livekit-api>=0.7.0

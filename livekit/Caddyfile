@@ -1,0 +1,7 @@
+# Caddy reverse proxy for LiveKit
+# Replace livekit.yourdomain.com with your actual domain.
+# Caddy automatically provisions a TLS cert via Let's Encrypt.
+
+livekit.yourdomain.com {
+    reverse_proxy localhost:7880
+}
