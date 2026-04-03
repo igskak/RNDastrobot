@@ -643,6 +643,9 @@
             return valid ? { password } : null;
         }
 
+        const SUPABASE_SESSION_POLL_ATTEMPTS = 20;
+        const SUPABASE_SESSION_POLL_DELAY_MS = 300;
+
         async function readErrorMessage(response) {
             const payload = await response.json().catch(() => ({}));
             return extractErrorDetail(payload);
@@ -656,13 +659,13 @@
             return payload || null;
         }
 
-        async function waitForSupabaseAccessToken() {
+        async function waitForSupabaseAccessToken(initialError = null) {
             if (!state.supabaseClient?.auth?.getSession) {
                 throw new Error('gse');
             }
 
-            let lastError = null;
-            for (let attempt = 0; attempt < 8; attempt += 1) {
+            let lastError = initialError;
+            for (let attempt = 0; attempt < SUPABASE_SESSION_POLL_ATTEMPTS; attempt += 1) {
                 const sessionResult = await state.supabaseClient.auth.getSession();
                 if (sessionResult?.error) {
                     lastError = sessionResult.error;
@@ -673,8 +676,8 @@
                     }
                 }
 
-                if (attempt < 7) {
-                    await wait(200);
+                if (attempt < SUPABASE_SESSION_POLL_ATTEMPTS - 1) {
+                    await wait(SUPABASE_SESSION_POLL_DELAY_MS);
                 }
             }
 
@@ -687,7 +690,7 @@
             }
 
             let lastError = null;
-            for (let attempt = 0; attempt < 8; attempt += 1) {
+            for (let attempt = 0; attempt < SUPABASE_SESSION_POLL_ATTEMPTS; attempt += 1) {
                 try {
                     const me = await getCurrentAstrologer();
                     if (me) {
@@ -697,12 +700,44 @@
                     lastError = error;
                 }
 
-                if (attempt < 7) {
-                    await wait(200);
+                if (attempt < SUPABASE_SESSION_POLL_ATTEMPTS - 1) {
+                    await wait(SUPABASE_SESSION_POLL_DELAY_MS);
                 }
             }
 
             throw lastError || new Error('backend_session_missing');
+        }
+
+        async function resolveSupabaseAccessTokenFromCallback() {
+            if (!state.supabaseClient?.auth?.getSession) {
+                throw new Error('gse');
+            }
+
+            const initialSession = await state.supabaseClient.auth.getSession();
+            if (initialSession?.data?.session?.access_token) {
+                return initialSession.data.session.access_token;
+            }
+
+            const code = new URLSearchParams(locationRef?.search || '').get('code');
+            let exchangeError = initialSession?.error || null;
+
+            if (code && typeof state.supabaseClient.auth.exchangeCodeForSession === 'function') {
+                try {
+                    const exchangeResult = await state.supabaseClient.auth.exchangeCodeForSession(code);
+                    if (exchangeResult?.error) {
+                        exchangeError = exchangeResult.error;
+                    } else {
+                        const accessToken = exchangeResult?.data?.session?.access_token;
+                        if (accessToken) {
+                            return accessToken;
+                        }
+                    }
+                } catch (error) {
+                    exchangeError = error;
+                }
+            }
+
+            return waitForSupabaseAccessToken(exchangeError);
         }
 
         async function clearSupabaseOAuthSession() {
@@ -1009,7 +1044,7 @@
             setLoading('google');
             setStatus('page.login.status.completingGoogle', 'info');
             try {
-                const accessToken = await waitForSupabaseAccessToken();
+                const accessToken = await resolveSupabaseAccessTokenFromCallback();
                 const response = await apiFetch(`${API_BASE}/auth/google`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1246,7 +1281,14 @@
             if (state.supabaseConfig && state.supabaseConfig.supabase_url && state.supabaseConfig.supabase_anon_key && supabaseFactory) {
                 state.supabaseClient = supabaseFactory(
                     state.supabaseConfig.supabase_url,
-                    state.supabaseConfig.supabase_anon_key
+                    state.supabaseConfig.supabase_anon_key,
+                    {
+                        auth: {
+                            detectSessionInUrl: true,
+                            persistSession: true,
+                            autoRefreshToken: true,
+                        },
+                    }
                 );
                 state.googleEnabled = true;
             }
