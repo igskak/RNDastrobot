@@ -361,8 +361,8 @@
     }
 
     function attachLocalVideo() {
-        const cam = state.room?.localParticipant?.getTrack(LivekitClient.Track.Source.Camera);
-        if (cam?.videoTrack) cam.videoTrack.attach(refs.localVideo);
+        const pub = state.room?.localParticipant?.getTrackPublication(LivekitClient.Track.Source.Camera);
+        if (pub?.videoTrack) pub.videoTrack.attach(refs.localVideo);
     }
 
     // -------------------------------------------------------------------------
