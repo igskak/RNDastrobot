@@ -136,17 +136,11 @@
             const cs = await res.json();
 
             // Set client name in header
-            // We'll get it from the user detail
-            if (state.userId) {
-                const uRes = await apiFetch(`${API_BASE}/users/${state.userId}`);
-                if (uRes.ok) {
-                    const u = await uRes.json();
-                    const name = [u.first_name, u.last_name].filter(Boolean).join(' ') || 'Client';
-                    refs.callClientName.textContent = name;
-                    if (refs.callEndedClientLink) {
-                        refs.callEndedClientLink.href = `/chart.html?user_id=${state.userId}`;
-                    }
-                }
+            if (cs.client_name) {
+                refs.callClientName.textContent = cs.client_name;
+            }
+            if (refs.callEndedClientLink && state.userId) {
+                refs.callEndedClientLink.href = `/chart.html?user_id=${state.userId}`;
             }
 
             // Reflect existing consent states
@@ -415,9 +409,9 @@
     }
 
     function attachLocalVideo() {
-        const cam = state.room?.localParticipant?.getTrack(LivekitClient.Track.Source.Camera);
-        if (cam?.videoTrack) {
-            cam.videoTrack.attach(refs.localVideo);
+        const pub = state.room?.localParticipant?.getTrackPublication(LivekitClient.Track.Source.Camera);
+        if (pub?.videoTrack) {
+            pub.videoTrack.attach(refs.localVideo);
         }
     }
 

@@ -51,8 +51,12 @@ def _ensure_session_access(db: Session, auth: AuthContext, session_id: UUID) -> 
     return cs
 
 
-def _serialize(cs: CallSession, join_url: Optional[str] = None) -> dict:
+def _serialize(cs: CallSession, join_url: Optional[str] = None, user=None) -> dict:
+    client_name = None
+    if user:
+        client_name = f"{user.first_name or ''} {user.last_name or ''}".strip() or None
     d = {
+        "client_name": client_name,
         "id": str(cs.id),
         "user_id": str(cs.user_id),
         "astrologer_id": str(cs.astrologer_id),
@@ -174,7 +178,8 @@ def get_call_session(
     auth: AuthContext = Depends(require_auth),
 ):
     cs = _ensure_session_access(db, auth, session_id)
-    return _serialize(cs)
+    user = db.query(User).filter(User.user_id == cs.user_id).first()
+    return _serialize(cs, user=user)
 
 
 @router.post("/{session_id}/token", summary="Get astrologer LiveKit token")
