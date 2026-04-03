@@ -33,7 +33,7 @@ from app.utils.constants import (
 
 class TransitService:
     """Сервис для расчёта транзитов к натальной карте"""
-    _BOUNDARY_SEARCH_DAYS = 120
+    _BOUNDARY_SEARCH_DAYS = 45
 
     def __init__(self, db_session: Session, ephe_path: str = None):
         self.db = db_session
@@ -62,8 +62,6 @@ class TransitService:
         Returns:
             Dict с транзитными данными и аспектами к наталу
         """
-        self._transit_positions_cache.clear()
-
         # 1. Загрузить натальные данные
         natal_data = self._load_natal_data(user_id)
         if natal_data is None:
@@ -322,8 +320,6 @@ class TransitService:
         Returns:
             Список событий с t_enter, t_exact, t_leave
         """
-        self._transit_positions_cache.clear()
-
         # 0. Применить фокусные дефолты (медленные → личностные/социальные)
         if transit_bodies is None:
             transit_bodies = list(TRANSIT_FOCUSED_BODIES)
@@ -365,40 +361,48 @@ class TransitService:
         step_jd = step_hours / 24.0
         events = []
 
+        # 5.1. Pre-compute orb lookup table (один раз вместо N*M*K вызовов в цикле)
+        orb_lookup: Dict[Tuple[str, str, str], float] = {}
+        exact_angle_lookup: Dict[str, float] = {}
+        for asp in all_aspect_types:
+            exact_angle_lookup[asp.aspect_type] = float(asp.exact_angle)
+            for t_name in transit_bodies:
+                for n_obj in natal_objects:
+                    key = (t_name, n_obj['name'], asp.aspect_type)
+                    orb_lookup[key] = self._calculate_allowed_orb(
+                        user_id, t_name, n_obj['name'], asp.aspect_type
+                    )
+
         # Словарь для отслеживания активных аспектов
         # Ключ: (transit_body, natal_body, aspect_type)
         active_aspects: Dict[Tuple[str, str, str], Dict] = {}
 
+        # Множество имён транзитных тел для быстрого фильтра
+        transit_bodies_set = set(transit_bodies) if transit_bodies else None
+
         jd = jd_start
         while jd <= jd_end:
-            # Рассчитать транзитные позиции (планеты + узлы + Лилит)
-            transit_planets = self.swisseph_engine.calculate_planets(jd)
-            transit_planets.extend(self._calculate_transit_special_bodies(jd))
-
-            # Фильтр транзитных тел
-            if transit_bodies:
-                transit_planets = [p for p in transit_planets if p['name'] in transit_bodies]
+            # Рассчитать транзитные позиции через кэширующий метод
+            positions = self._get_transit_positions(jd)
 
             # Проверить все пары транзит→натал
             current_aspects = set()
 
-            for transit_obj in transit_planets:
+            for t_name in transit_bodies:
+                t_lon = positions.get(t_name)
+                if t_lon is None:
+                    continue
                 for natal_obj in natal_objects:
                     for aspect_type in all_aspect_types:
-                        aspect_key = (transit_obj['name'], natal_obj['name'], aspect_type.aspect_type)
+                        aspect_key = (t_name, natal_obj['name'], aspect_type.aspect_type)
 
                         # Проверить аспект
-                        diff = abs(transit_obj['longitude'] - natal_obj['longitude'])
+                        diff = abs(t_lon - natal_obj['longitude'])
                         if diff > 180:
                             diff = 360 - diff
 
-                        exact_angle = float(aspect_type.exact_angle)
-                        max_orb = self._calculate_allowed_orb(
-                            user_id,
-                            transit_obj['name'],
-                            natal_obj['name'],
-                            aspect_type.aspect_type,
-                        )
+                        exact_angle = exact_angle_lookup[aspect_type.aspect_type]
+                        max_orb = orb_lookup[aspect_key]
                         deviation = abs(diff - exact_angle)
 
                         if deviation <= max_orb:
@@ -407,7 +411,7 @@ class TransitService:
                             if aspect_key not in active_aspects:
                                 # Новый аспект — запомнить t_enter
                                 active_aspects[aspect_key] = {
-                                    'transit_body': transit_obj['name'],
+                                    'transit_body': t_name,
                                     'natal_body': natal_obj['name'],
                                     'natal_type': natal_obj['type'],
                                     'aspect_type': aspect_type.aspect_type,
@@ -585,7 +589,7 @@ class TransitService:
         """Уточнить границу аспекта бинарным поиском."""
         left = left_jd
         right = right_jd
-        for _ in range(24):
+        for _ in range(16):
             mid = (left + right) / 2.0
             mid_active = self._is_aspect_active_at_jd(
                 mid, transit_body, natal_longitude, exact_angle, max_orb
@@ -648,7 +652,7 @@ class TransitService:
         if right <= left:
             return best_jd, best_dev
 
-        for _ in range(28):
+        for _ in range(20):
             m1 = left + (right - left) / 3.0
             m2 = right - (right - left) / 3.0
             d1 = self._aspect_deviation_at_jd(m1, transit_body, natal_longitude, exact_angle)
@@ -716,6 +720,9 @@ class TransitService:
         cached = self._transit_positions_cache.get(cache_key)
         if cached is not None:
             return cached
+
+        if len(self._transit_positions_cache) > 10000:
+            self._transit_positions_cache.clear()
 
         transit_planets = self.swisseph_engine.calculate_planets(jd)
         transit_planets.extend(self._calculate_transit_special_bodies(jd))

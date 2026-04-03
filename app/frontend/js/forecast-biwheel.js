@@ -1761,22 +1761,28 @@
 
     function getIngressRowsForRender() {
         const summaryRows = window.ForecastState?.ingressSummaryData?.rows;
-        if (!Array.isArray(summaryRows) || !summaryRows.length) {
-            return [];
+        if (Array.isArray(summaryRows) && summaryRows.length) {
+            return summaryRows
+                .filter((row) => {
+                    if (row.method === 'progressions') return isLayerVisible('progression');
+                    if (row.method === 'directions') return isLayerVisible('direction');
+                    return true;
+                })
+                .flatMap((row) => expandIngressSummaryRow(row));
         }
-        return summaryRows
-            .filter((row) => {
-                if (row.method === 'progressions') return isLayerVisible('progression');
-                if (row.method === 'directions') return isLayerVisible('direction');
-                return true;
-            })
-            .flatMap((row) => expandIngressSummaryRow(row));
+
+        // Keep the left panel usable even when the period-summary endpoint is empty
+        // or temporarily unavailable: progression/direction payloads already contain
+        // point-in-time ingress data we can render as a lightweight fallback.
+        return buildPrognosticLayers(lastProgData)
+            .filter((layer) => isLayerVisible(layer.method))
+            .flatMap((layer) => Array.isArray(layer.ingresses) ? layer.ingresses : []);
     }
 
     function renderIngressesTable(ingresses) {
         const container = document.getElementById('biwheelIngresses');
         if (!container) return;
-        if (window.ForecastState?.ingressSummaryError) {
+        if (!ingresses?.length && window.ForecastState?.ingressSummaryError) {
             ingressesAvailable = true;
             container.style.display = '';
             container.innerHTML = `<div class="bw-panel-section">
