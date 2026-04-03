@@ -87,6 +87,28 @@ if cors_origins:
 async def static_cache_headers(request: Request, call_next):
     response = await call_next(request)
     path = request.url.path
+    frontend_document_paths = {
+        "/",
+        "/new",
+        "/login",
+        "/login.html",
+        "/index.html",
+        "/account-settings",
+        "/account-settings.html",
+        "/chart.html",
+        "/natal-full.html",
+        "/forecast.html",
+        "/calendar",
+        "/calendar.html",
+    }
+
+    if path in frontend_document_paths:
+        # HTML documents should always revalidate so deploys pick up the latest
+        # versioned asset markers immediately after rollout.
+        response.headers["Cache-Control"] = "no-store, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+
     if path.startswith(("/css/", "/js/", "/bundles/", "/locales/", "/assets/", "/fonts/")):
         if os.getenv("APP_ENV", "development").lower() == "production":
             response.headers.setdefault("Cache-Control", "public, max-age=31536000, immutable")
