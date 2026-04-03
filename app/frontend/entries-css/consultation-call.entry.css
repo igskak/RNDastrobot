@@ -87,6 +87,24 @@
     margin: 0;
 }
 
+.call-copy-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(184, 147, 90, 0.1);
+    border: 1px solid rgba(184, 147, 90, 0.25);
+    border-radius: 6px;
+    color: #B8935A;
+    font-size: 12px;
+    font-family: var(--font-ui, 'DM Sans', sans-serif);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.call-copy-link-btn:hover {
+    background: rgba(184, 147, 90, 0.18);
+}
+
 /* ============================================================
    Call shell — full-screen video call layout
    ============================================================ */

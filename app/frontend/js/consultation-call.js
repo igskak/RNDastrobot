@@ -15,6 +15,7 @@
     const state = {
         sessionId: null,
         userId: null,
+        joinUrl: null,
         room: null,
         micEnabled: true,
         camEnabled: true,
@@ -57,6 +58,8 @@
         btnRecord:        $('btnRecord'),
         btnStopRecord:    $('btnStopRecord'),
         btnEndCall:       $('btnEndCall'),
+        btnCopyLink:      $('btnCopyLink'),
+        btnCopyLinkLabel: $('btnCopyLinkLabel'),
         consentModal:     $('consentModal'),
         consentWaitNote:  $('consentWaitNote'),
         btnConsentCancel: $('btnConsentCancel'),
@@ -74,6 +77,7 @@
         const params = new URLSearchParams(window.location.search);
         state.sessionId = params.get('session_id');
         state.userId    = params.get('user_id');
+        state.joinUrl   = params.get('join_url');
 
         if (!state.sessionId) {
             showError('No call session specified. Please start the call from the client\'s profile.');
@@ -165,6 +169,12 @@
         refs.btnEndCall.addEventListener('click', endCall);
         refs.btnConsentCancel.addEventListener('click', closeConsentModal);
         refs.btnConsentAgree.addEventListener('click', submitAstrologerConsent);
+
+        // Copy invite link button
+        if (state.joinUrl && refs.btnCopyLink) {
+            show(refs.btnCopyLink);
+            refs.btnCopyLink.addEventListener('click', copyInviteLink);
+        }
     }
 
     async function toggleMic() {
@@ -406,6 +416,24 @@
                 }
             }
         } catch (_) { /* ignore non-JSON data */ }
+    }
+
+    async function copyInviteLink() {
+        try {
+            await navigator.clipboard.writeText(state.joinUrl);
+            refs.btnCopyLinkLabel.textContent = 'Copied!';
+            setTimeout(() => { refs.btnCopyLinkLabel.textContent = 'Copy invite link'; }, 2000);
+        } catch (_) {
+            // Fallback: select a temp input
+            const inp = document.createElement('input');
+            inp.value = state.joinUrl;
+            document.body.appendChild(inp);
+            inp.select();
+            document.execCommand('copy');
+            document.body.removeChild(inp);
+            refs.btnCopyLinkLabel.textContent = 'Copied!';
+            setTimeout(() => { refs.btnCopyLinkLabel.textContent = 'Copy invite link'; }, 2000);
+        }
     }
 
     function attachLocalVideo() {

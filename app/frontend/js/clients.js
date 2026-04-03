@@ -1110,7 +1110,8 @@ async function startCallSession(userId) {
             throw new Error(data.detail || 'Failed to create call session');
         }
         const session = await res.json();
-        window.location.href = `/consultation-call.html?session_id=${session.id}&user_id=${userId}`;
+        const joinParam = session.join_url ? `&join_url=${encodeURIComponent(session.join_url)}` : '';
+        window.location.href = `/consultation-call.html?session_id=${session.id}&user_id=${userId}${joinParam}`;
     } catch (err) {
         showToast(err.message || 'Could not start call', 'error');
         if (btn) {
