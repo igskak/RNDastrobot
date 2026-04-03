@@ -1,5 +1,8 @@
 @import '../css/styles.css';
 
+/* Ensure [hidden] always wins over display rules in this page */
+[hidden] { display: none !important; }
+
 /* ============================================================
    Call page — shared layout for both astrologer & client UIs
    ============================================================ */

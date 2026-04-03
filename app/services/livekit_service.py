@@ -178,7 +178,7 @@ class LiveKitService:
         Raises ValueError if the signature is invalid.
         """
         from livekit.api import WebhookReceiver
-        receiver = WebhookReceiver(api_key=_API_KEY, api_secret=_API_SECRET)
+        receiver = WebhookReceiver(_API_KEY, _API_SECRET)
         try:
             event = receiver.receive(body, auth_header)
             return event
