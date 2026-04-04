@@ -21,6 +21,7 @@ from app.database.connection import get_db
 from app.database.models import Astrologer, CallSession, Consultation, User
 from app.services.livekit_service import livekit_service
 from app.services.storage_service import storage_service
+from app.services.processing_pipeline import run_post_call_pipeline
 
 router = APIRouter(prefix="/call-sessions")
 
@@ -479,6 +480,7 @@ def client_consent(raw_token: str, db: Session = Depends(get_db)):
 @router.post("/webhooks/livekit", summary="LiveKit webhook receiver", include_in_schema=False)
 async def livekit_webhook(
     request: Request,
+    background_tasks: BackgroundTasks,
     authorization: Optional[str] = Header(None),
     db: Session = Depends(get_db),
 ):
@@ -492,7 +494,7 @@ async def livekit_webhook(
     event_type = getattr(event, "event", None)
     logger.info(f"LiveKit webhook event: {event_type}")
 
-    # Egress ended — the audio file is now in Supabase Storage
+    # Egress ended — audio file is now in Supabase Storage → trigger processing pipeline
     if event_type == "egress_ended":
         egress = getattr(event, "egress_info", None)
         if egress:
@@ -500,13 +502,13 @@ async def livekit_webhook(
                 CallSession.livekit_egress_id == egress.egress_id
             ).first()
             if cs:
-                # Store the output file path from the egress result
                 file_results = getattr(egress, "file_results", [])
                 if file_results:
                     cs.audio_storage_path = file_results[0].filename
                     cs.audio_duration_seconds = int(getattr(egress, "duration", 0) / 1_000_000_000)
                 db.commit()
-                logger.info(f"Egress completed for call session {cs.id}")
+                logger.info(f"Egress completed for call session {cs.id} — queuing pipeline")
+                background_tasks.add_task(run_post_call_pipeline, cs.id)
 
     return {"ok": True}
 

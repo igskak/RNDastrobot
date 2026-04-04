@@ -56,3 +56,7 @@ pyswisseph==2.10.3.2
 
 # Video consultation calls (LiveKit)
 livekit-api>=0.7.0
+
+# AI post-call processing
+openai>=1.30.0
+assemblyai>=0.31.0
