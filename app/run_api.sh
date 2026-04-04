@@ -30,8 +30,8 @@ fi
 echo -e "${YELLOW}🔧 Активація віртуального середовища...${NC}"
 source "$VENV_PATH/bin/activate"
 
-# Перевірити, чи встановлені залежності
-if ! python -c "import fastapi" 2>/dev/null; then
+# Перевірити, чи встановлені ключові залежності (включно з AI/transcription)
+if ! python -c "import fastapi, jwt, bcrypt, openai, assemblyai; import livekit.api; from argon2 import PasswordHasher" 2>/dev/null; then
     echo -e "${YELLOW}📦 Встановлення залежностей...${NC}"
     pip install -r "$PROJECT_ROOT/app/requirements.txt"
 fi
@@ -49,4 +49,3 @@ echo ""
 
 cd "$PROJECT_ROOT"
 uvicorn app.api.main:app --reload --host 0.0.0.0 --port 8000
-

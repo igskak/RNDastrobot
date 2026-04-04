@@ -4,8 +4,12 @@ AssemblyAI transcription service — speaker-diarized transcription for consulta
 import os
 from typing import Optional
 
-import assemblyai as aai
 from loguru import logger
+
+try:
+    import assemblyai as aai
+except ModuleNotFoundError:  # pragma: no cover - depends on optional extra
+    aai = None
 
 _API_KEY = os.getenv("ASSEMBLYAI_API_KEY", "")
 
@@ -13,7 +17,7 @@ _API_KEY = os.getenv("ASSEMBLYAI_API_KEY", "")
 class TranscriptionService:
 
     def is_configured(self) -> bool:
-        return bool(_API_KEY)
+        return bool(_API_KEY) and aai is not None
 
     def transcribe(self, audio_url: str) -> dict:
         """
@@ -21,6 +25,9 @@ class TranscriptionService:
         Returns { text, segments: [{speaker, text, start_ms, end_ms}] }
         This call blocks until AssemblyAI finishes (polls internally).
         """
+        if aai is None:
+            raise RuntimeError("assemblyai package is not installed")
+
         if not self.is_configured():
             raise RuntimeError("ASSEMBLYAI_API_KEY not configured")
 
