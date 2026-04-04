@@ -14,7 +14,7 @@ argon2-cffi==23.1.0
 bcrypt==4.2.1
 
 # Supabase Client (optional, for direct Supabase API access)
-supabase==2.3.0
+supabase==2.28.3
 
 # Web Framework (choose one based on your preference)
 # FastAPI (recommended for modern async API)
