@@ -3,212 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="page.clients.title"></title>
-    <link rel="stylesheet" href="bundles/clients.bundle.css?v=20260404-092032">
+    <title data-i18n="page.clientProfile.title"></title>
+    <link rel="stylesheet" href="bundles/client-profile.bundle.css?v=20260404-092032">
     <link rel="stylesheet" href="css/locale-switcher.css?v=20260404-092032">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <script>window.__APP_BUILD_ID__ = '20260404-092032';</script>
 </head>
-<body class="clients-page">
+<body class="profile-page">
     <div class="page-loader" id="pageLoader">
         <div class="pl-spinner"></div>
         <div class="pl-text" data-i18n="common.loading"></div>
     </div>
 
-    <div class="clients-shell">
-        <header class="clients-header">
-            <div class="clients-brand-block">
-                <h1 class="logo">
-                    <svg class="logo-mark" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="14" cy="14" r="12.5" stroke="#1E3A5F" stroke-width="1.25"/>
-                        <circle cx="14" cy="14" r="7.5" stroke="#B8935A" stroke-width="0.8" stroke-dasharray="2.5 3"/>
-                        <circle cx="14" cy="14" r="2.2" fill="#1E3A5F"/>
-                        <circle cx="14" cy="2.2" r="1.3" fill="#B8935A"/>
-                        <circle cx="24.1" cy="8" r="1.3" fill="#B8935A" opacity="0.65"/>
-                        <circle cx="24.1" cy="20" r="1.3" fill="#B8935A" opacity="0.45"/>
-                        <circle cx="14" cy="25.8" r="1.3" fill="#B8935A" opacity="0.8"/>
-                        <circle cx="3.9" cy="20" r="1.3" fill="#B8935A" opacity="0.55"/>
-                        <circle cx="3.9" cy="8" r="1.3" fill="#B8935A" opacity="0.7"/>
-                    </svg>
-                    <span data-i18n="common.brandName"></span>
-                </h1>
-                <p class="clients-brand-subtitle" data-i18n="page.clients.hero.eyebrow"></p>
+    <div class="profile-shell">
+
+        <!-- ── Header ── -->
+        <header class="profile-header">
+            <a href="/" class="profile-back" data-i18n-aria-label="page.clientProfile.backToClients">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span data-i18n="page.clientProfile.backToClients"></span>
+            </a>
+
+            <div class="profile-header-identity">
+                <div class="profile-avatar" id="profileAvatar"></div>
+                <div class="profile-header-info">
+                    <h1 class="profile-name" id="profileName"></h1>
+                    <p class="profile-birth" id="profileBirth"></p>
+                </div>
             </div>
 
-            <div class="clients-header-actions">
-                <div class="header-account-pill">
-                    <span class="header-account-label" data-i18n="page.clients.profile.label"></span>
-                    <span id="welcomeLabel" class="header-account-value"></span>
-                </div>
-                <a href="/account-settings.html" class="btn-logout">Account settings</a>
-                <a href="/calendar" class="btn-logout" data-i18n="page.clients.actions.calendar">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><rect x="1" y="2" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M1 6h12M4.5 1v2M9.5 1v2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-                </a>
-                <button id="logoutBtn" class="btn-logout" type="button" data-i18n="page.clients.actions.logout"></button>
+            <div class="profile-header-tags" id="profileTags"></div>
+
+            <div class="profile-header-actions">
+                <button class="btn-new btn-sm" type="button" id="openChartBtn" data-i18n="page.clients.detail.openChart"></button>
+                <button class="btn-logout btn-sm" type="button" id="openForecastBtn" data-i18n="page.chart.nav.forecast"></button>
+                <button class="btn-call btn-sm" type="button" id="startCallBtn">
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><rect x="1" y="3" width="8" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M9 5.5l3-2v6l-3-2V5.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+                    <span data-i18n="page.clientProfile.startCall"></span>
+                </button>
+                <button class="btn-logout btn-sm" type="button" id="editClientBtn" data-i18n="page.clients.actions.edit"></button>
             </div>
         </header>
 
-        <section id="workspaceHero" class="workspace-hero">
-            <div class="workspace-hero-copy">
-                <p class="workspace-eyebrow" data-i18n="page.clients.hero.kicker"></p>
-                <h2 class="workspace-title" data-i18n="page.clients.hero.title"></h2>
-                <p class="workspace-subtitle" data-i18n="page.clients.hero.subtitle"></p>
+        <!-- ── Error state ── -->
+        <div id="profileError" class="profile-error hidden">
+            <p id="profileErrorMsg"></p>
+            <a href="/" class="btn-logout" data-i18n="page.clientProfile.backToClients"></a>
+        </div>
 
-                <div class="workspace-badges" data-i18n-aria-label="page.clients.hero.badgesAriaLabel">
-                    <span class="workspace-badge" data-i18n="page.clients.hero.badges.private"></span>
-                    <span class="workspace-badge" data-i18n="page.clients.hero.badges.history"></span>
-                    <span class="workspace-badge" data-i18n="page.clients.hero.badges.reports"></span>
-                </div>
+        <!-- ── Main content ── -->
+        <main id="profileMain" class="profile-main hidden">
+
+            <!-- Row 1: Contact + Stats -->
+            <div class="profile-row profile-row-2col">
+
+                <!-- Contact & Notes -->
+                <section class="profile-card">
+                    <h2 class="profile-card-title" data-i18n="page.clientProfile.sections.contact"></h2>
+                    <div class="profile-contact-list" id="profileContactList"></div>
+                    <div class="profile-notes-wrap" id="profileNotesWrap">
+                        <h3 class="profile-notes-label" data-i18n="page.clientProfile.sections.notes"></h3>
+                        <p class="profile-notes-text" id="profileNotes"></p>
+                    </div>
+                </section>
+
+                <!-- Statistics -->
+                <section class="profile-card">
+                    <h2 class="profile-card-title" data-i18n="page.clientProfile.sections.statistics"></h2>
+                    <div class="profile-stats-grid" id="profileStatsGrid"></div>
+                </section>
+
             </div>
 
-            <aside class="workspace-aside">
-                <p class="workspace-aside-label" data-i18n="page.clients.hero.aside.label"></p>
-                <h3 class="workspace-aside-title" data-i18n="page.clients.hero.aside.title"></h3>
-                <p class="workspace-aside-copy" data-i18n="page.clients.hero.aside.subtitle"></p>
+            <!-- Row 2: Key Insights -->
+            <section class="profile-card profile-card-insights" id="profileInsightsCard">
+                <h2 class="profile-card-title">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" style="opacity:.5"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M7 4v3.5l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                    <span data-i18n="page.clientProfile.sections.keyInsights"></span>
+                </h2>
+                <ul class="profile-insights-list" id="profileInsightsList"></ul>
+                <p class="profile-insights-empty hidden" id="profileInsightsEmpty" data-i18n="page.clientProfile.insights.empty"></p>
+            </section>
 
-                <div class="workspace-points">
-                    <div class="workspace-point">
-                        <span class="workspace-point-icon" aria-hidden="true"></span>
-                        <span data-i18n="page.clients.hero.aside.point1"></span>
-                    </div>
-                    <div class="workspace-point">
-                        <span class="workspace-point-icon" aria-hidden="true"></span>
-                        <span data-i18n="page.clients.hero.aside.point2"></span>
-                    </div>
-                    <div class="workspace-point">
-                        <span class="workspace-point-icon" aria-hidden="true"></span>
-                        <span data-i18n="page.clients.hero.aside.point3"></span>
-                    </div>
-                </div>
-            </aside>
-        </section>
-
-        <main class="workspace-main workspace-grid">
-            <section class="clients-card" data-i18n-aria-label="page.clients.listAriaLabel">
-                <div class="clients-card-top">
-                    <div class="clients-card-heading">
-                        <h2 class="section-title" data-i18n="page.clients.workspace.title"></h2>
-                    </div>
-
-                    <div class="clients-card-actions">
-                        <a href="/new" class="btn-new">
-                            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                            <span data-i18n="page.clients.newCard"></span>
-                        </a>
-                    </div>
-
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <span class="stat-label" data-i18n="page.clients.stats.total"></span>
-                            <strong id="statTotal" class="stat-value"></strong>
-                        </div>
-                        <div class="stat-card">
-                            <span class="stat-label" data-i18n="page.clients.statsUpcoming"></span>
-                            <strong id="statUpcoming" class="stat-value"></strong>
-                        </div>
-                        <div class="stat-card">
-                            <span class="stat-label" data-i18n="page.clients.statsUnpaid"></span>
-                            <strong id="statUnpaid" class="stat-value"></strong>
-                        </div>
-                    </div>
+            <!-- Row 3: Consultation History -->
+            <section class="profile-card">
+                <div class="profile-card-header">
+                    <h2 class="profile-card-title" data-i18n="page.clientProfile.sections.consultations"></h2>
+                    <button class="btn-new btn-sm" type="button" id="logSessionBtn" data-i18n="page.clients.detail.logSession"></button>
                 </div>
 
-                <div class="toolbar-card">
-                    <div class="toolbar-field toolbar-field-search">
-                        <label class="toolbar-label" for="searchInput" data-i18n="page.clients.searchLabel"></label>
-                        <div class="search-input-wrap">
-                            <svg class="search-icon" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 10.5L13 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-                            <input id="searchInput" class="search-input" type="search" data-i18n-placeholder="page.clients.searchPlaceholder" data-i18n-aria-label="page.clients.searchAriaLabel">
-                        </div>
-                    </div>
-
-                    <div class="toolbar-field toolbar-field-sort">
-                        <label class="toolbar-label" for="sortSelect" data-i18n="page.clients.sortLabel"></label>
-                        <select id="sortSelect" data-i18n-aria-label="page.clients.sortAriaLabel">
-                            <option value="created_desc" data-i18n="page.clients.sort.createdDesc"></option>
-                            <option value="created_asc" data-i18n="page.clients.sort.createdAsc"></option>
-                            <option value="name_asc" data-i18n="page.clients.sort.nameAsc"></option>
-                            <option value="name_desc" data-i18n="page.clients.sort.nameDesc"></option>
-                            <option value="birth_asc" data-i18n="page.clients.sort.birthAsc"></option>
-                            <option value="birth_desc" data-i18n="page.clients.sort.birthDesc"></option>
-                        </select>
-                    </div>
+                <div class="profile-filter-tabs" id="consultationFilterTabs">
+                    <button class="profile-filter-tab active" data-filter="all" data-i18n="page.clientProfile.filter.all"></button>
+                    <button class="profile-filter-tab" data-filter="planned" data-i18n="page.clients.consultation.statuses.planned"></button>
+                    <button class="profile-filter-tab" data-filter="completed" data-i18n="page.clients.consultation.statuses.completed"></button>
+                    <button class="profile-filter-tab" data-filter="cancelled" data-i18n="page.clients.consultation.statuses.cancelled"></button>
                 </div>
 
-                <div id="resultsMeta" class="results-meta" aria-live="polite"></div>
-
-                <div id="loading" class="loading" data-i18n="common.loading"></div>
-
-                <div id="emptyState" class="empty-state hidden">
-                    <svg class="empty-state-icon" width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true"><rect x="10" y="12" width="36" height="32" rx="4" stroke="currentColor" stroke-width="1.5"/><line x1="10" y1="20" x2="46" y2="20" stroke="currentColor" stroke-width="1.5"/><line x1="18" y1="12" x2="18" y2="20" stroke="currentColor" stroke-width="1.5"/><line x1="38" y1="12" x2="38" y2="20" stroke="currentColor" stroke-width="1.5"/><line x1="18" y1="29" x2="38" y2="29" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="18" y1="36" x2="31" y2="36" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                    <h3 class="state-title" data-i18n="page.clients.empty"></h3>
-                    <p class="state-copy" data-i18n="page.clients.emptyHint"></p>
-                    <a href="/new" class="btn-new state-cta">
-                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                        <span data-i18n="page.clients.createFirstCard"></span>
-                    </a>
-                </div>
-
-                <div id="noResultsState" class="empty-state hidden">
-                    <svg class="empty-state-icon" width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true"><circle cx="24" cy="24" r="15" stroke="currentColor" stroke-width="1.5"/><path d="M35 35L46 46" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                    <h3 class="state-title" data-i18n="page.clients.noResults"></h3>
-                    <p class="state-copy" data-i18n="page.clients.noResultsHint"></p>
-                </div>
-
-                <div id="tableWrap" class="table-wrap hidden">
-                    <table id="clientsTable" class="clients-table">
-                        <thead>
-                            <tr>
-                                <th data-i18n="page.clients.table.name"></th>
-                                <th data-i18n="page.clients.table.birthDate"></th>
-                                <th data-i18n="page.clients.table.place"></th>
-                                <th data-i18n="page.clients.table.created"></th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="clientsBody"></tbody>
-                    </table>
+                <div id="consultationsWrap">
+                    <p class="profile-empty" id="consultationsEmpty" data-i18n="page.clients.detail.noConsultations"></p>
+                    <div class="profile-consultations-list" id="consultationsList"></div>
                 </div>
             </section>
-            <aside class="workspace-sidebar">
-                <div id="miniCal" class="mini-cal">
-                    <div class="mini-cal-header">
-                        <button class="mini-cal-nav" id="miniCalPrev" data-i18n-aria-label="page.clients.calendar.previousMonth">‹</button>
-                        <a id="miniCalTitle" class="mini-cal-title" href="/calendar"></a>
-                        <button class="mini-cal-nav" id="miniCalNext" data-i18n-aria-label="page.clients.calendar.nextMonth">›</button>
-                    </div>
-                    <div id="miniCalDowRow" class="mini-cal-dow-row"></div>
-                    <div id="miniCalGrid" class="mini-cal-grid"></div>
-                    <a href="/calendar" class="mini-cal-link">
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="0.5" y="1.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M0.5 5h11M3.5 0.5v2M8.5 0.5v2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-                        <span data-i18n="page.clients.calendar.openFull"></span>
-                    </a>
+
+            <!-- Row 4: Call Recordings -->
+            <section class="profile-card">
+                <div class="profile-card-header">
+                    <h2 class="profile-card-title">
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true" style="opacity:.55;margin-right:4px;vertical-align:-1px"><rect x="1" y="3" width="8" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M9 5.5l3-2v6l-3-2V5.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+                        <span data-i18n="page.clientProfile.sections.recordings"></span>
+                    </h2>
                 </div>
-                <section id="alertsPanel" class="alerts-panel hidden">
-                    <div id="alertsSkeleton" class="alerts-skeleton">
-                        <div class="skeleton-line skeleton-line--wide"></div>
-                        <div class="skeleton-line skeleton-line--medium"></div>
-                        <div class="skeleton-line skeleton-line--wide"></div>
-                    </div>
-                    <div id="alertsSolar" class="alerts-section hidden">
-                        <h3 class="alerts-section-title">
-                            <span class="alerts-glyph">&#x2609;</span>
-                            <span data-i18n="page.clients.alerts.solarReturnsTitle"></span>
-                        </h3>
-                        <div id="alertsSolarList" class="alerts-list"></div>
-                    </div>
-                    <div id="alertsTransits" class="alerts-section hidden">
-                        <h3 class="alerts-section-title">
-                            <span class="alerts-glyph">&#x2644;</span>
-                            <span data-i18n="page.clients.alerts.transitsTitle"></span>
-                        </h3>
-                        <div id="alertsTransitsList" class="alerts-list"></div>
-                    </div>
-                    <p id="alertsEmptyState" class="alerts-empty hidden" data-i18n="page.clients.alerts.noAlerts"></p>
-                </section>
-            </aside>
+                <p class="profile-empty hidden" id="recordingsEmpty" data-i18n="page.clientProfile.recordings.empty"></p>
+                <div class="profile-recordings-list" id="recordingsList"></div>
+            </section>
+
         </main>
 
         <footer class="footer">
@@ -216,6 +128,7 @@
         </footer>
     </div>
 
+    <!-- ── Edit Client Dialog (duplicated from clients.html) ── -->
     <div id="editClientBackdrop" class="clients-dialog-backdrop hidden"></div>
     <section id="editClientDialog" class="clients-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="editClientTitle">
         <form id="editClientForm" class="clients-dialog-card">
@@ -329,6 +242,7 @@
         </form>
     </section>
 
+    <!-- ── Log Session Dialog (duplicated from clients.html) ── -->
     <div id="logSessionBackdrop" class="clients-dialog-backdrop hidden"></div>
     <section id="logSessionDialog" class="clients-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="logSessionTitle">
         <form id="logSessionForm" class="clients-dialog-card">
@@ -408,7 +322,7 @@
 
     <div id="toast" class="toast"></div>
 
-    <script type="module" src="js/bundles/clients.bundle.js?v=20260404-092032"></script>
+    <script type="module" src="js/bundles/client-profile.bundle.js?v=20260404-092032"></script>
     <script src="js/locale-switcher.js?v=20260404-092032"></script>
 </body>
 </html>

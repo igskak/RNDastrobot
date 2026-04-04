@@ -722,7 +722,9 @@
         "consultations": "Консультации",
         "noConsultations": "Сессий ещё не записано",
         "paidBadge": "Оплачено",
-        "unpaidBadge": "Не оплачено"
+        "unpaidBadge": "Не оплачено",
+        "lastSession": "Последняя:",
+        "nextSession": "Следующая:"
       },
       "consultation": {
         "kicker": "Журнал сессий",
@@ -781,6 +783,45 @@
         "delete": "Удалить",
         "edit": "Редактировать",
         "logout": "Выйти"
+      }
+    },
+    "clientProfile": {
+      "title": "Профиль клиента",
+      "backToClients": "Назад к клиентам",
+      "viewProfile": "Открыть профиль",
+      "startCall": "Начать звонок",
+      "sections": {
+        "contact": "Контакты и заметки",
+        "notes": "Заметки",
+        "statistics": "Статистика",
+        "keyInsights": "Ключевые инсайты",
+        "consultations": "История консультаций",
+        "recordings": "Записи звонков"
+      },
+      "stats": {
+        "totalSessions": "Всего сессий",
+        "completed": "Завершено",
+        "planned": "Запланировано",
+        "totalCalls": "Записи звонков",
+        "totalDuration": "Общее время",
+        "minutes": "мин",
+        "paid": "Оплачено",
+        "clientSince": "Клиент с",
+        "lastSession": "Последняя сессия"
+      },
+      "insights": {
+        "empty": "Инсайтов пока нет — они извлекаются из записей звонков после обработки ИИ."
+      },
+      "filter": {
+        "all": "Все"
+      },
+      "recordings": {
+        "empty": "Записей звонков пока нет."
+      },
+      "errors": {
+        "noId": "ID клиента не указан в URL",
+        "notFound": "Клиент не найден",
+        "loadFailed": "Не удалось загрузить профиль клиента"
       }
     },
     "forecast": {

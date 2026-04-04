@@ -722,7 +722,9 @@
         "consultations": "Консультації",
         "noConsultations": "Сесій ще не записано",
         "paidBadge": "Сплачено",
-        "unpaidBadge": "Не сплачено"
+        "unpaidBadge": "Не сплачено",
+        "lastSession": "Остання:",
+        "nextSession": "Наступна:"
       },
       "consultation": {
         "kicker": "Журнал сесій",
@@ -781,6 +783,45 @@
         "delete": "Видалити",
         "edit": "Редагувати",
         "logout": "Вийти"
+      }
+    },
+    "clientProfile": {
+      "title": "Профіль клієнта",
+      "backToClients": "Назад до клієнтів",
+      "viewProfile": "Відкрити профіль",
+      "startCall": "Почати дзвінок",
+      "sections": {
+        "contact": "Контакти та нотатки",
+        "notes": "Нотатки",
+        "statistics": "Статистика",
+        "keyInsights": "Ключові інсайти",
+        "consultations": "Історія консультацій",
+        "recordings": "Записи дзвінків"
+      },
+      "stats": {
+        "totalSessions": "Всього сесій",
+        "completed": "Завершено",
+        "planned": "Заплановано",
+        "totalCalls": "Записи дзвінків",
+        "totalDuration": "Загальний час",
+        "minutes": "хв",
+        "paid": "Сплачено",
+        "clientSince": "Клієнт з",
+        "lastSession": "Остання сесія"
+      },
+      "insights": {
+        "empty": "Інсайтів ще немає — вони витягуються з записів дзвінків після обробки ШІ."
+      },
+      "filter": {
+        "all": "Всі"
+      },
+      "recordings": {
+        "empty": "Записів дзвінків ще немає."
+      },
+      "errors": {
+        "noId": "ID клієнта не вказано в URL",
+        "notFound": "Клієнта не знайдено",
+        "loadFailed": "Не вдалося завантажити профіль клієнта"
       }
     },
     "forecast": {

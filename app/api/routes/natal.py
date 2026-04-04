@@ -38,7 +38,7 @@ from app.services.natal_chart_service import NatalChartService
 from app.services.preferences_service import PreferencesService
 from app.database.connection import get_db
 from app.database.repositories.user_repository import UserRepository
-from app.database.models import User, Consultation
+from app.database.models import User, Consultation, CallSession
 from app.auth.dependencies import AuthContext, create_audit_event, ensure_client_access, require_auth
 from app.utils.ephemeris import get_ephemeris_path
 from app.services.geocoding_service import GeocodingTimeoutError, GeocodingServiceError
@@ -574,6 +574,151 @@ def reset_user_view_to_defaults(
         'chart_data': chart_response,
         'resolved_preferences': resolved_preferences,
     }
+
+
+@router.get(
+    "/users/{user_id}/profile",
+    summary="Профиль клиента — агрегированные данные",
+    description="Возвращает всю информацию о клиенте для страницы профиля: данные, статистика, консультации, звонки, ключевые инсайты",
+)
+def get_user_profile(
+    user_id: UUID,
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+):
+    """Агрегированный профиль клиента для страницы /client/{user_id}."""
+    try:
+        ensure_client_access(db, request, auth, user_id, action="client.profile.view")
+
+        user = db.query(User).filter(
+            User.user_id == user_id,
+            User.astrologer_id == auth.astrologer.id,
+        ).first()
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client not found")
+
+        consultations = (
+            db.query(Consultation)
+            .filter(
+                Consultation.user_id == user_id,
+                Consultation.astrologer_id == auth.astrologer.id,
+            )
+            .order_by(Consultation.scheduled_at.desc().nullslast())
+            .all()
+        )
+
+        call_sessions = (
+            db.query(CallSession)
+            .filter(
+                CallSession.user_id == user_id,
+                CallSession.astrologer_id == auth.astrologer.id,
+            )
+            .order_by(CallSession.started_at.desc().nullslast())
+            .all()
+        )
+
+        # Stats
+        total = len(consultations)
+        completed = sum(1 for c in consultations if c.status == 'completed')
+        planned = sum(1 for c in consultations if c.status == 'planned')
+        cancelled = sum(1 for c in consultations if c.status == 'cancelled')
+        no_show = sum(1 for c in consultations if c.status == 'no_show')
+        paid = sum(1 for c in consultations if c.is_paid)
+        total_duration = sum(c.duration_minutes or 0 for c in consultations)
+        completed_calls = sum(1 for cs in call_sessions if cs.call_status == 'completed')
+
+        last_consultation = consultations[0] if consultations else None
+
+        # Aggregate key_points from all completed call sessions
+        aggregated_key_points = []
+        for cs in call_sessions:
+            if cs.call_status == 'completed' and cs.key_points:
+                kp = cs.key_points
+                if isinstance(kp, list):
+                    for item in kp:
+                        if isinstance(item, str):
+                            aggregated_key_points.append(item)
+                        elif isinstance(item, dict):
+                            # {topic, detail} structure
+                            detail = item.get('detail') or item.get('topic') or ''
+                            if detail:
+                                aggregated_key_points.append(detail)
+
+        return {
+            "user": {
+                "user_id": str(user.user_id),
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "birth_date": user.birth_date.isoformat() if user.birth_date else None,
+                "birth_time": user.birth_time.isoformat() if user.birth_time else None,
+                "birth_place": user.birth_place,
+                "timezone": user.timezone,
+                "email": user.email,
+                "phone": user.phone,
+                "messenger": user.messenger,
+                "tags": user.tags or [],
+                "notes": user.notes,
+                "created_at": user.created_at.isoformat() if user.created_at else None,
+            },
+            "stats": {
+                "consultation_count": total,
+                "completed_count": completed,
+                "planned_count": planned,
+                "cancelled_count": cancelled,
+                "no_show_count": no_show,
+                "paid_count": paid,
+                "unpaid_count": total - paid,
+                "total_duration_minutes": total_duration,
+                "call_session_count": len(call_sessions),
+                "completed_recordings_count": completed_calls,
+                "last_consultation_at": last_consultation.scheduled_at.isoformat() if last_consultation and last_consultation.scheduled_at else None,
+                "last_consultation_type": last_consultation.consultation_type if last_consultation else None,
+                "client_since": user.created_at.isoformat() if user.created_at else None,
+            },
+            "consultations": [
+                {
+                    "id": str(c.id),
+                    "consultation_type": c.consultation_type,
+                    "scheduled_at": c.scheduled_at.isoformat() if c.scheduled_at else None,
+                    "completed_at": c.completed_at.isoformat() if c.completed_at else None,
+                    "status": c.status,
+                    "is_paid": c.is_paid,
+                    "duration_minutes": c.duration_minutes,
+                    "notes": c.notes,
+                    "created_at": c.created_at.isoformat() if c.created_at else None,
+                }
+                for c in consultations
+            ],
+            "call_sessions": [
+                {
+                    "id": str(cs.id),
+                    "call_status": cs.call_status,
+                    "started_at": cs.started_at.isoformat() if cs.started_at else None,
+                    "ended_at": cs.ended_at.isoformat() if cs.ended_at else None,
+                    "duration_seconds": cs.duration_seconds,
+                    "has_recording": bool(cs.audio_storage_path),
+                    "has_transcript": bool(cs.transcript_text),
+                    "has_summary": bool(cs.summary_text),
+                    "summary_text": cs.summary_text,
+                    "key_points": cs.key_points,
+                    "transcript_text": cs.transcript_text,
+                    "transcript_segments": cs.transcript_segments,
+                    "processing_error": cs.processing_error,
+                    "created_at": cs.created_at.isoformat() if cs.created_at else None,
+                }
+                for cs in call_sessions
+            ],
+            "aggregated_key_points": aggregated_key_points,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Ошибка при получении профиля клиента: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Внутренняя ошибка сервера: {str(e)}"
+        )
 
 
 @router.delete(

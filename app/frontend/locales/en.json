@@ -722,7 +722,9 @@
         "consultations": "Consultations",
         "noConsultations": "No sessions logged yet",
         "paidBadge": "Paid",
-        "unpaidBadge": "Unpaid"
+        "unpaidBadge": "Unpaid",
+        "lastSession": "Last session:",
+        "nextSession": "Next:"
       },
       "consultation": {
         "kicker": "Session log",
@@ -781,6 +783,45 @@
         "delete": "Delete",
         "edit": "Edit",
         "logout": "Log out"
+      }
+    },
+    "clientProfile": {
+      "title": "Client Profile",
+      "backToClients": "Back to clients",
+      "viewProfile": "View profile",
+      "startCall": "Start call",
+      "sections": {
+        "contact": "Contact & notes",
+        "notes": "Notes",
+        "statistics": "Statistics",
+        "keyInsights": "Key insights",
+        "consultations": "Consultation history",
+        "recordings": "Call recordings"
+      },
+      "stats": {
+        "totalSessions": "Total sessions",
+        "completed": "Completed",
+        "planned": "Planned",
+        "totalCalls": "Call recordings",
+        "totalDuration": "Total time",
+        "minutes": "min",
+        "paid": "Paid",
+        "clientSince": "Client since",
+        "lastSession": "Last session"
+      },
+      "insights": {
+        "empty": "No insights yet — insights are extracted from call recordings after AI processing."
+      },
+      "filter": {
+        "all": "All"
+      },
+      "recordings": {
+        "empty": "No call recordings yet."
+      },
+      "errors": {
+        "noId": "No client ID in URL",
+        "notFound": "Client not found",
+        "loadFailed": "Failed to load client profile"
       }
     },
     "forecast": {

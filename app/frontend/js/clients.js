@@ -439,6 +439,7 @@ function buildUserRow(user) {
                     <svg width="14" height="4" viewBox="0 0 14 4" fill="none"><circle cx="2" cy="2" r="1.4" fill="currentColor"/><circle cx="7" cy="2" r="1.4" fill="currentColor"/><circle cx="12" cy="2" r="1.4" fill="currentColor"/></svg>
                 </button>
                 <div class="actions-dropdown">
+                    <a class="action-item" href="/client/${escapeHtml(userId)}">${escapeHtml(t('page.clientProfile.viewProfile'))}</a>
                     <button class="action-item" type="button" data-action="edit" data-user-id="${escapeHtml(userId)}">${editLabel}</button>
                     <button class="action-item danger" type="button" data-action="delete" data-user-id="${escapeHtml(userId)}">${deleteLabel}</button>
                 </div>
@@ -1047,67 +1048,64 @@ async function toggleDetailPanel(userId) {
 }
 
 function buildDetailPanelHTML(user, consultations, callSessions = []) {
-    const contactParts = [];
-    if (user.email) contactParts.push(`<span class="detail-contact-item">${escapeHtml(user.email)}</span>`);
-    if (user.phone) contactParts.push(`<span class="detail-contact-item">${escapeHtml(user.phone)}</span>`);
-    if (user.messenger) contactParts.push(`<span class="detail-contact-item">${escapeHtml(user.messenger)}</span>`);
-    const contactHTML = contactParts.length > 0
-        ? `<div class="detail-contacts">${contactParts.join('')}</div>`
-        : `<div class="detail-contacts detail-contacts-empty">${escapeHtml(t('page.clients.crm.noContact'))}</div>`;
+    const userId = escapeHtml(String(user.user_id));
 
+    // Contact summary — email only in quick view
+    const contactHTML = user.email
+        ? `<span class="detail-contact-item">${escapeHtml(user.email)}</span>`
+        : `<span class="detail-contacts-empty">${escapeHtml(t('page.clients.crm.noContact'))}</span>`;
+
+    // Tags
     const tagsHTML = Array.isArray(user.tags) && user.tags.length > 0
         ? `<div class="detail-tags">${user.tags.map((tag) => `<span class="detail-tag">${escapeHtml(tag)}</span>`).join('')}</div>`
         : '';
 
-    const notesHTML = user.notes
-        ? `<p class="detail-notes">${escapeHtml(user.notes).substring(0, 200)}${user.notes.length > 200 ? '...' : ''}</p>`
-        : '';
-
-    let consultationsHTML;
-    if (consultations.length === 0) {
-        consultationsHTML = `<p class="detail-no-sessions">${escapeHtml(t('page.clients.detail.noConsultations'))}</p>`;
-    } else {
-        const rows = consultations.map((c) => {
-            const dateStr = c.scheduled_at ? formatDateTime(c.scheduled_at) : '';
-            const typeLabel = t(`page.clients.consultation.types.${c.consultation_type}`) || c.consultation_type;
-            const paidClass = c.is_paid ? 'badge-paid' : 'badge-unpaid';
-            const paidLabel = c.is_paid ? t('page.clients.detail.paidBadge') : t('page.clients.detail.unpaidBadge');
-            const statusLabel = t(`page.clients.consultation.statuses.${c.status}`) || c.status;
-            return `
-                <div class="detail-session-row">
-                    <span class="session-date">${escapeHtml(dateStr)}</span>
-                    <span class="session-type-badge">${escapeHtml(typeLabel)}</span>
-                    <span class="session-status">${escapeHtml(statusLabel)}</span>
-                    <span class="session-paid ${paidClass}">${escapeHtml(paidLabel)}</span>
-                    <button class="session-delete-btn" type="button" data-action="delete-consultation" data-consultation-id="${escapeHtml(c.id)}" data-user-id="${escapeHtml(user.user_id)}" title="Delete">&times;</button>
-                </div>`;
-        }).join('');
-        consultationsHTML = `<div class="detail-sessions-list">${rows}</div>`;
+    // Last consultation summary (one line)
+    let lastSessionHTML = '';
+    if (consultations.length > 0) {
+        const last = consultations[0];
+        const typeLabel = t(`page.clients.consultation.types.${last.consultation_type}`) || last.consultation_type;
+        const statusLabel = t(`page.clients.consultation.statuses.${last.status}`) || last.status;
+        const dateStr = last.scheduled_at ? formatDateTime(last.scheduled_at) : '';
+        lastSessionHTML = `
+            <div class="detail-last-session">
+                <span class="detail-last-session-label">${escapeHtml(t('page.clients.detail.lastSession'))}</span>
+                <span class="session-type-badge">${escapeHtml(typeLabel)}</span>
+                <span class="session-date">${escapeHtml(dateStr)}</span>
+                <span class="session-status">${escapeHtml(statusLabel)}</span>
+            </div>`;
     }
 
-    const userId = escapeHtml(String(user.user_id));
-    const callSessionsHTML = buildCallSessionsHTML(callSessions);
+    // Next planned consultation
+    const nextPlanned = consultations.find((c) => c.status === 'planned');
+    let nextSessionHTML = '';
+    if (nextPlanned) {
+        const typeLabel = t(`page.clients.consultation.types.${nextPlanned.consultation_type}`) || nextPlanned.consultation_type;
+        const dateStr = nextPlanned.scheduled_at ? formatDateTime(nextPlanned.scheduled_at) : '';
+        nextSessionHTML = `
+            <div class="detail-last-session">
+                <span class="detail-last-session-label">${escapeHtml(t('page.clients.detail.nextSession'))}</span>
+                <span class="session-type-badge">${escapeHtml(typeLabel)}</span>
+                <span class="session-date">${escapeHtml(dateStr)}</span>
+            </div>`;
+    }
 
     return `
         <div class="client-detail-panel">
             <div class="detail-top">
-                ${contactHTML}
+                <div class="detail-contacts">${contactHTML}</div>
                 ${tagsHTML}
-                ${notesHTML}
             </div>
-            <div class="detail-sessions">
-                <h4 class="detail-sessions-title">${escapeHtml(t('page.clients.detail.consultations'))}</h4>
-                ${consultationsHTML}
-            </div>
-            ${callSessionsHTML}
+            ${lastSessionHTML || nextSessionHTML ? `<div class="detail-session-summary">${lastSessionHTML}${nextSessionHTML}</div>` : ''}
             <div class="detail-actions">
-                <button class="btn-new btn-sm" type="button" data-action="open-chart" data-user-id="${userId}">${escapeHtml(t('page.clients.detail.openChart'))}</button>
+                <a class="btn-new btn-sm" href="/client/${userId}">${escapeHtml(t('page.clientProfile.viewProfile'))}</a>
+                <button class="btn-new btn-sm btn-secondary" type="button" data-action="open-chart" data-user-id="${userId}">${escapeHtml(t('page.clients.detail.openChart'))}</button>
                 <button class="btn-new btn-sm btn-secondary" type="button" data-action="open-forecast" data-user-id="${userId}">${escapeHtml(t('page.chart.nav.forecast'))}</button>
                 <button class="btn-new btn-sm btn-secondary" type="button" data-action="log-session" data-user-id="${userId}">${escapeHtml(t('page.clients.detail.logSession'))}</button>
                 <button class="btn-new btn-sm btn-secondary" type="button" data-action="edit" data-user-id="${userId}">${escapeHtml(t('page.clients.actions.edit'))}</button>
                 <button class="btn-new btn-sm btn-call" type="button" data-action="start-call" data-user-id="${userId}">
                     <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><rect x="1" y="3" width="8" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M9 5.5l3-2v6l-3-2V5.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
-                    Start call
+                    ${escapeHtml(t('page.clientProfile.startCall'))}
                 </button>
             </div>
         </div>`;

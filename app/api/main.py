@@ -114,7 +114,7 @@ async def static_cache_headers(request: Request, call_next):
         "/consultation-join.html",
     }
 
-    if path in frontend_document_paths:
+    if path in frontend_document_paths or path.startswith("/client/"):
         # HTML documents should always revalidate so deploys pick up the latest
         # versioned asset markers immediately after rollout.
         response.headers["Cache-Control"] = "no-store, max-age=0"
@@ -275,6 +275,15 @@ async def consultation_call_page():
 async def consultation_join_page(token: str):
     """Client join page — served for any /call/{token} path."""
     page_path = os.path.join(FRONTEND_PATH, "consultation-join.html")
+    if os.path.exists(page_path):
+        return FileResponse(page_path)
+    raise HTTPException(status_code=404, detail="Page not found")
+
+
+@app.get("/client/{user_id}")
+async def client_profile_page(user_id: str):
+    """Client profile page — served for any /client/{user_id} path."""
+    page_path = os.path.join(FRONTEND_PATH, "client-profile.html")
     if os.path.exists(page_path):
         return FileResponse(page_path)
     raise HTTPException(status_code=404, detail="Page not found")
