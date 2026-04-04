@@ -1,6 +1,8 @@
 """
 FastAPI приложение для Astrobot
 """
+from contextlib import asynccontextmanager
+
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -32,6 +34,13 @@ if os.getenv('APP_ENV') == 'production':
 from app.api.routes import auth, natal, transits, solar, progressions, directions, ingresses, places, consultations, alerts, preferences, call_sessions
 from app.api.error_handlers import register_error_handlers
 from app.api.locale_dependency import locale_context_dependency
+from app.services.processing_pipeline import recover_stuck_sessions
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    recover_stuck_sessions()   # re-queue any sessions stuck mid-processing
+    yield
 
 # Путь к frontend
 FRONTEND_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")
@@ -44,6 +53,7 @@ app = FastAPI(
     docs_url="/api/docs",
     redoc_url="/api/redoc",
     dependencies=[Depends(locale_context_dependency)],
+    lifespan=lifespan,
 )
 
 register_error_handlers(app)

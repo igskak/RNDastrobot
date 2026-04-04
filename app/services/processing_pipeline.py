@@ -114,10 +114,47 @@ def _process(db: Session, session_id: UUID) -> None:
 
 def _mark_failed(db: Session, session_id: UUID, error: str) -> None:
     try:
+        db.rollback()   # clear any failed transaction state
         cs = db.query(CallSession).filter(CallSession.id == session_id).first()
         if cs:
-            cs.call_status    = "failed"
+            cs.call_status      = "failed"
             cs.processing_error = error[:500]
             db.commit()
     except Exception as e:
         logger.error(f"Could not mark session {session_id} as failed: {e}")
+
+
+def recover_stuck_sessions() -> None:
+    """
+    Re-queue sessions that were left in 'processing' state (e.g. after a
+    server restart).  Called once at app startup in a background thread.
+    """
+    import threading
+    from datetime import datetime, timezone, timedelta
+
+    def _do_recover() -> None:
+        db_gen = get_db()
+        db: Session = next(db_gen)
+        try:
+            cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(minutes=10)
+            stuck = (
+                db.query(CallSession)
+                .filter(
+                    CallSession.call_status == "processing",
+                    CallSession.updated_at < cutoff,
+                )
+                .all()
+            )
+            if stuck:
+                logger.warning(f"Recovering {len(stuck)} stuck processing session(s)")
+                for cs in stuck:
+                    run_post_call_pipeline(cs.id)
+        except Exception as e:
+            logger.error(f"Stuck-session recovery error: {e}")
+        finally:
+            try:
+                next(db_gen)
+            except StopIteration:
+                pass
+
+    threading.Thread(target=_do_recover, daemon=True).start()

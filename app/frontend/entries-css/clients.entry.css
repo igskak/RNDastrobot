@@ -1968,6 +1968,12 @@ textarea:focus {
     flex: 1;
 }
 
+.cs-retry-btn {
+    margin-top: 4px;
+    font-size: 12px !important;
+    padding: 5px 12px !important;
+}
+
 .cs-transcript-plain {
     font-size: 13px;
     line-height: 1.65;

@@ -392,6 +392,39 @@ def get_audio_url(
         raise HTTPException(status_code=500, detail="Could not generate audio URL")
 
 
+@router.post("/{session_id}/reprocess", summary="Re-trigger post-call pipeline (for failed/stuck sessions)")
+async def reprocess_call(
+    session_id: UUID,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+):
+    cs = _ensure_session_access(db, auth, session_id)
+
+    if not cs.audio_storage_path:
+        raise HTTPException(status_code=400, detail="No audio recording available to process")
+
+    if cs.call_status == "processing":
+        raise HTTPException(status_code=400, detail="Session is already being processed")
+
+    cs.call_status      = "processing"
+    cs.processing_error = None
+    db.commit()
+
+    background_tasks.add_task(run_post_call_pipeline, cs.id)
+
+    create_audit_event(
+        db, request,
+        actor_id=auth.astrologer.id,
+        action="call_session.reprocess",
+        resource_type="call_session",
+        resource_id=str(cs.id),
+        result="success",
+    )
+    return {"message": "Reprocessing started", "call_status": "processing"}
+
+
 # ---------------------------------------------------------------------------
 # Client join (unauthenticated — token-based)
 # ---------------------------------------------------------------------------
@@ -493,6 +526,23 @@ async def livekit_webhook(
 
     event_type = getattr(event, "event", None)
     logger.info(f"LiveKit webhook event: {event_type}")
+
+    # Room finished — auto-end any session still active (handles unexpected disconnects)
+    if event_type == "room_finished":
+        room = getattr(event, "room", None)
+        if room:
+            cs = db.query(CallSession).filter(
+                CallSession.livekit_room_name == room.name,
+                CallSession.call_status.in_(["created", "active"]),
+            ).first()
+            if cs:
+                now = _utcnow()
+                cs.call_status = "ended"
+                cs.ended_at    = now
+                if cs.started_at:
+                    cs.duration_seconds = int((now - cs.started_at).total_seconds())
+                db.commit()
+                logger.info(f"Room finished — auto-ended session {cs.id}")
 
     # Egress ended — audio file is now in Supabase Storage → trigger processing pipeline
     if event_type == "egress_ended":

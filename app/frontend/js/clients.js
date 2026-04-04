@@ -189,6 +189,13 @@ function bindEvents() {
             return;
         }
 
+        // Retry processing button
+        const retryBtn = event.target.closest('.cs-retry-btn[data-session-id]');
+        if (retryBtn) {
+            await retryProcessing(retryBtn.dataset.sessionId, retryBtn);
+            return;
+        }
+
         // Call recording row click
         const csRow = event.target.closest('.cs-row--expandable[data-session-id]');
         if (csRow) {
@@ -1177,21 +1184,86 @@ async function openCallRecording(sessionId, rowEl) {
     panel.innerHTML = `<div class="cs-panel-loading"><span class="cs-spinner"></span> Loading…</div>`;
 
     try {
-        // Fetch session details + audio URL in parallel
-        const [csRes, audioRes] = await Promise.all([
-            apiFetch(`${API_BASE}/call-sessions/${sessionId}`),
-            apiFetch(`${API_BASE}/call-sessions/${sessionId}/audio-url`),
-        ]);
-        const cs    = csRes.ok    ? await csRes.json()    : null;
-        const audio = audioRes.ok ? await audioRes.json() : null;
+        const csRes = await apiFetch(`${API_BASE}/call-sessions/${sessionId}`);
+        const cs    = csRes.ok ? await csRes.json() : null;
 
-        panel.innerHTML = buildRecordingPanelHTML(cs, audio?.url || null);
+        // Still processing — show spinner and start polling
+        if (cs?.call_status === 'processing') {
+            panel.innerHTML = `<div class="cs-panel-loading"><span class="cs-spinner"></span> Transcription in progress… this may take a few minutes.</div>`;
+            pollProcessingSession(sessionId, panel, rowEl);
+            return;
+        }
+
+        const audioRes = cs?.audio_storage_path
+            ? await apiFetch(`${API_BASE}/call-sessions/${sessionId}/audio-url`)
+            : null;
+        const audio = audioRes?.ok ? await audioRes.json() : null;
+
+        panel.innerHTML = buildRecordingPanelHTML(cs, audio?.url || null, sessionId);
     } catch (err) {
         panel.innerHTML = `<p class="cs-panel-error">Could not load recording: ${escapeHtml(err.message)}</p>`;
     }
 }
 
-function buildRecordingPanelHTML(cs, audioUrl) {
+function pollProcessingSession(sessionId, panel, rowEl) {
+    let attempts = 0;
+    const MAX_ATTEMPTS = 36; // 6 min max
+    const INTERVAL_MS  = 10_000;
+
+    const timer = setInterval(async () => {
+        attempts++;
+        if (attempts > MAX_ATTEMPTS) {
+            clearInterval(timer);
+            panel.innerHTML = `<div class="cs-panel-error">Processing timed out. <button class="btn-new btn-sm cs-retry-btn" data-action="retry-processing" data-session-id="${escapeHtml(sessionId)}">Retry</button></div>`;
+            return;
+        }
+        try {
+            const res = await apiFetch(`${API_BASE}/call-sessions/${sessionId}`);
+            if (!res.ok) return;
+            const cs = await res.json();
+
+            if (cs.call_status === 'processing') return; // still going
+
+            clearInterval(timer);
+
+            // Update the status badge in the row
+            const badge = rowEl.querySelector('.cs-status');
+            if (badge) {
+                const STATUS_LABELS = {
+                    completed: { label: 'Completed', cls: 'cs-status--completed' },
+                    failed:    { label: 'Failed',    cls: 'cs-status--failed'    },
+                };
+                const s = STATUS_LABELS[cs.call_status];
+                if (s) {
+                    badge.className = `cs-status ${s.cls}`;
+                    badge.textContent = s.label;
+                }
+            }
+
+            // Load audio URL and render
+            const audioRes = cs.audio_storage_path
+                ? await apiFetch(`${API_BASE}/call-sessions/${sessionId}/audio-url`)
+                : null;
+            const audio = audioRes?.ok ? await audioRes.json() : null;
+            panel.dataset.loaded = '1';
+            panel.innerHTML = buildRecordingPanelHTML(cs, audio?.url || null, sessionId);
+        } catch (_) { /* ignore transient network errors */ }
+    }, INTERVAL_MS);
+}
+
+function buildRecordingPanelHTML(cs, audioUrl, sessionId) {
+    // Failed state — show error + retry button
+    if (cs?.call_status === 'failed') {
+        const errMsg = cs.processing_error
+            ? `<p class="cs-panel-error">${escapeHtml(cs.processing_error)}</p>`
+            : '';
+        return `<div class="cs-panel-inner">
+            <p class="cs-panel-error">Processing failed.</p>
+            ${errMsg}
+            <button class="btn-new btn-sm cs-retry-btn" data-action="retry-processing" data-session-id="${escapeHtml(sessionId)}">Retry processing</button>
+        </div>`;
+    }
+
     let html = '';
 
     // Audio player
@@ -1249,6 +1321,31 @@ function buildRecordingPanelHTML(cs, audioUrl) {
 
     if (!html) html = `<p class="cs-panel-empty">No recording data available yet.</p>`;
     return `<div class="cs-panel-inner">${html}</div>`;
+}
+
+async function retryProcessing(sessionId, btn) {
+    const orig = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Starting…';
+    try {
+        const res = await apiFetch(`${API_BASE}/call-sessions/${sessionId}/reprocess`, { method: 'POST' });
+        if (!res.ok) {
+            const d = await res.json().catch(() => ({}));
+            throw new Error(d.detail || 'Failed to start reprocessing');
+        }
+        // Reset the panel to polling state
+        const panel = document.getElementById(`cs-panel-${sessionId}`);
+        const row   = document.querySelector(`.cs-row--expandable[data-session-id="${sessionId}"]`);
+        if (panel && row) {
+            delete panel.dataset.loaded;
+            panel.innerHTML = `<div class="cs-panel-loading"><span class="cs-spinner"></span> Transcription in progress… this may take a few minutes.</div>`;
+            pollProcessingSession(sessionId, panel, row);
+        }
+    } catch (err) {
+        showToast(err.message || 'Could not retry', 'error');
+        btn.disabled    = false;
+        btn.textContent = orig;
+    }
 }
 
 /* ─── Start Call ──────────────────────────────────────────────────────── */
