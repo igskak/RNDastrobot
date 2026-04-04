@@ -12,6 +12,7 @@ except ModuleNotFoundError:  # pragma: no cover - depends on optional extra
     aai = None
 
 _API_KEY = os.getenv("ASSEMBLYAI_API_KEY", "")
+_SPEECH_MODELS = ("universal-3-pro", "universal-2")
 
 
 class TranscriptionService:
@@ -36,6 +37,7 @@ class TranscriptionService:
         config = aai.TranscriptionConfig(
             speaker_labels=True,
             language_detection=True,
+            speech_models=list(_SPEECH_MODELS),
         )
         transcriber = aai.Transcriber()
         logger.info(f"Submitting audio for transcription: {audio_url[:60]}…")
