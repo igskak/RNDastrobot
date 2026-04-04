@@ -11,6 +11,7 @@ from livekit.api import (
     AccessToken,
     VideoGrants,
     LiveKitAPI,
+    TokenVerifier,
     RoomCompositeEgressRequest,
     EncodedFileOutput,
     EncodedFileType,
@@ -40,6 +41,15 @@ class LiveKitService:
 
     def is_configured(self) -> bool:
         return bool(_LIVEKIT_URL and _API_KEY and _API_SECRET)
+
+    def build_storage_path(
+        self,
+        call_session_id: str,
+        astrologer_id: str,
+        user_id: str,
+    ) -> str:
+        """Deterministic storage path for call audio recording."""
+        return f"{astrologer_id}/{user_id}/{call_session_id}.ogg"
 
     def generate_room_name(self, call_session_id: str) -> str:
         return f"call-{call_session_id}"
@@ -108,7 +118,11 @@ class LiveKitService:
             logger.warning("LiveKit not configured — skipping egress start")
             return None
 
-        storage_path = f"{astrologer_id}/{user_id}/{call_session_id}.ogg"
+        storage_path = self.build_storage_path(
+            call_session_id=call_session_id,
+            astrologer_id=astrologer_id,
+            user_id=user_id,
+        )
 
         try:
             async with LiveKitAPI(
@@ -179,9 +193,10 @@ class LiveKitService:
         Raises ValueError if the signature is invalid.
         """
         from livekit.api import WebhookReceiver
-        receiver = WebhookReceiver(_API_KEY, _API_SECRET)
+        verifier = TokenVerifier(api_key=_API_KEY, api_secret=_API_SECRET)
+        receiver = WebhookReceiver(verifier)
         try:
-            event = receiver.receive(body, auth_header)
+            event = receiver.receive(body.decode("utf-8"), auth_header)
             return event
         except Exception as e:
             raise ValueError(f"Invalid LiveKit webhook: {e}") from e

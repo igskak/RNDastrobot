@@ -282,6 +282,11 @@ async def start_recording(
         raise HTTPException(status_code=503, detail="Video call service not configured")
 
     astrologer = auth.astrologer
+    expected_storage_path = livekit_service.build_storage_path(
+        call_session_id=str(cs.id),
+        astrologer_id=str(astrologer.id),
+        user_id=str(cs.user_id),
+    )
     egress_id = await livekit_service.start_audio_egress(
         room_name=cs.livekit_room_name,
         call_session_id=str(cs.id),
@@ -290,6 +295,8 @@ async def start_recording(
     )
 
     cs.livekit_egress_id = egress_id
+    # Keep expected path even before webhook arrives, so manual reprocess remains possible.
+    cs.audio_storage_path = cs.audio_storage_path or expected_storage_path
     cs.recording_started_at = _utcnow()
     db.commit()
 

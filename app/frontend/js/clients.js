@@ -1023,7 +1023,7 @@ async function toggleDetailPanel(userId) {
             .then(d => { consultations = d; state.consultationsCache[userId] = d; })
     );
     if (!callSessions) fetches.push(
-        apiFetch(`${API_BASE}/call-sessions?user_id=${userId}`)
+        apiFetch(`${API_BASE}/call-sessions?user_id=${userId}&include_non_terminal=true`)
             .then(r => r.ok ? r.json() : []).catch(() => [])
             .then(d => { callSessions = d; state.callSessionsCache[userId] = d; })
     );
@@ -1049,6 +1049,7 @@ async function toggleDetailPanel(userId) {
 
 function buildDetailPanelHTML(user, consultations, callSessions = []) {
     const userId = escapeHtml(String(user.user_id));
+    const callSessionsHTML = buildCallSessionsHTML(callSessions);
 
     // Contact summary — email only in quick view
     const contactHTML = user.email
@@ -1108,6 +1109,7 @@ function buildDetailPanelHTML(user, consultations, callSessions = []) {
                     ${escapeHtml(t('page.clientProfile.startCall'))}
                 </button>
             </div>
+            ${callSessionsHTML}
         </div>`;
 }
 
@@ -1133,7 +1135,7 @@ function buildCallSessionsHTML(callSessions) {
         const dur = cs.duration_seconds
             ? `${Math.floor(cs.duration_seconds / 60)}m ${cs.duration_seconds % 60}s`
             : '';
-        const isExpandable = cs.call_status === 'completed';
+        const isExpandable = ['ended', 'processing', 'completed', 'failed'].includes(cs.call_status);
         const expandIcon = isExpandable
             ? `<svg class="cs-expand-icon" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`
             : '';
@@ -1315,6 +1317,14 @@ function buildRecordingPanelHTML(cs, audioUrl, sessionId) {
                 <summary class="cs-transcript-toggle">Full transcript</summary>
                 <p class="cs-transcript-plain">${escapeHtml(cs.transcript_text)}</p>
             </details>`;
+    }
+
+    // Ended but not yet processed — allow manual kick-off
+    if (cs?.call_status === 'ended' && cs?.audio_storage_path) {
+        html += `
+            <div class="cs-reprocess-wrap">
+                <button class="btn-new btn-sm cs-retry-btn" data-action="retry-processing" data-session-id="${escapeHtml(sessionId)}">Start processing</button>
+            </div>`;
     }
 
     if (!html) html = `<p class="cs-panel-empty">No recording data available yet.</p>`;
