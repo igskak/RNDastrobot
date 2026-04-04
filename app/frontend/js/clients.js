@@ -13,6 +13,7 @@ const state = {
     sortBy: 'created_desc',
     expandedUserId: null,
     consultationsCache: {},
+    callSessionsCache: {},
 };
 
 let toastTimer = null;
@@ -185,6 +186,13 @@ function bindEvents() {
                 await deleteConsultation(actionBtn.dataset.consultationId, userId);
                 return;
             }
+            return;
+        }
+
+        // Call recording row click
+        const csRow = event.target.closest('.cs-row--expandable[data-session-id]');
+        if (csRow) {
+            await openCallRecording(csRow.dataset.sessionId, csRow);
             return;
         }
 
@@ -996,17 +1004,22 @@ async function toggleDetailPanel(userId) {
 
     state.expandedUserId = userId;
 
-    // Fetch consultations for this client
+    // Fetch consultations and call sessions in parallel
     let consultations = state.consultationsCache[userId];
-    if (!consultations) {
-        try {
-            const res = await apiFetch(`${API_BASE}/consultations?user_id=${userId}`);
-            consultations = res.ok ? await res.json() : [];
-        } catch (_) {
-            consultations = [];
-        }
-        state.consultationsCache[userId] = consultations;
-    }
+    let callSessions  = state.callSessionsCache[userId];
+
+    const fetches = [];
+    if (!consultations) fetches.push(
+        apiFetch(`${API_BASE}/consultations?user_id=${userId}`)
+            .then(r => r.ok ? r.json() : []).catch(() => [])
+            .then(d => { consultations = d; state.consultationsCache[userId] = d; })
+    );
+    if (!callSessions) fetches.push(
+        apiFetch(`${API_BASE}/call-sessions?user_id=${userId}`)
+            .then(r => r.ok ? r.json() : []).catch(() => [])
+            .then(d => { callSessions = d; state.callSessionsCache[userId] = d; })
+    );
+    if (fetches.length) await Promise.all(fetches);
 
     const detailRow = document.createElement('tr');
     detailRow.classList.add('client-detail-row');
@@ -1014,7 +1027,7 @@ async function toggleDetailPanel(userId) {
 
     const td = document.createElement('td');
     td.colSpan = 5;
-    td.innerHTML = buildDetailPanelHTML(user, consultations);
+    td.innerHTML = buildDetailPanelHTML(user, consultations, callSessions || []);
     detailRow.appendChild(td);
 
     // Insert after the user's row
@@ -1026,7 +1039,7 @@ async function toggleDetailPanel(userId) {
     }
 }
 
-function buildDetailPanelHTML(user, consultations) {
+function buildDetailPanelHTML(user, consultations, callSessions = []) {
     const contactParts = [];
     if (user.email) contactParts.push(`<span class="detail-contact-item">${escapeHtml(user.email)}</span>`);
     if (user.phone) contactParts.push(`<span class="detail-contact-item">${escapeHtml(user.phone)}</span>`);
@@ -1066,6 +1079,7 @@ function buildDetailPanelHTML(user, consultations) {
     }
 
     const userId = escapeHtml(String(user.user_id));
+    const callSessionsHTML = buildCallSessionsHTML(callSessions);
 
     return `
         <div class="client-detail-panel">
@@ -1078,6 +1092,7 @@ function buildDetailPanelHTML(user, consultations) {
                 <h4 class="detail-sessions-title">${escapeHtml(t('page.clients.detail.consultations'))}</h4>
                 ${consultationsHTML}
             </div>
+            ${callSessionsHTML}
             <div class="detail-actions">
                 <button class="btn-new btn-sm" type="button" data-action="open-chart" data-user-id="${userId}">${escapeHtml(t('page.clients.detail.openChart'))}</button>
                 <button class="btn-new btn-sm btn-secondary" type="button" data-action="open-forecast" data-user-id="${userId}">${escapeHtml(t('page.chart.nav.forecast'))}</button>
@@ -1089,6 +1104,151 @@ function buildDetailPanelHTML(user, consultations) {
                 </button>
             </div>
         </div>`;
+}
+
+/* ─── Call Sessions History ───────────────────────────────────────────── */
+
+function buildCallSessionsHTML(callSessions) {
+    if (!callSessions || callSessions.length === 0) return '';
+
+    const STATUS_LABELS = {
+        created:    { label: 'Scheduled',   cls: 'cs-status--created'    },
+        active:     { label: 'In progress', cls: 'cs-status--active'     },
+        ended:      { label: 'Ended',       cls: 'cs-status--ended'      },
+        processing: { label: 'Processing…', cls: 'cs-status--processing' },
+        completed:  { label: 'Completed',   cls: 'cs-status--completed'  },
+        failed:     { label: 'Failed',      cls: 'cs-status--failed'     },
+    };
+
+    const rows = callSessions.map(cs => {
+        const status  = STATUS_LABELS[cs.call_status] || { label: cs.call_status, cls: '' };
+        const dateStr = cs.started_at
+            ? new Date(cs.started_at + 'Z').toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
+            : (cs.created_at ? new Date(cs.created_at + 'Z').toLocaleDateString() : '—');
+        const dur = cs.duration_seconds
+            ? `${Math.floor(cs.duration_seconds / 60)}m ${cs.duration_seconds % 60}s`
+            : '';
+        const isExpandable = cs.call_status === 'completed';
+        const expandIcon = isExpandable
+            ? `<svg class="cs-expand-icon" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+            : '';
+        const spinner = cs.call_status === 'processing'
+            ? `<span class="cs-spinner"></span>`
+            : '';
+
+        return `
+            <div class="cs-row${isExpandable ? ' cs-row--expandable' : ''}"
+                 data-action="${isExpandable ? 'view-recording' : ''}"
+                 data-session-id="${escapeHtml(cs.id)}">
+                <span class="cs-date">${escapeHtml(dateStr)}</span>
+                ${dur ? `<span class="cs-duration">${escapeHtml(dur)}</span>` : '<span class="cs-duration"></span>'}
+                <span class="cs-status ${status.cls}">${spinner}${escapeHtml(status.label)}</span>
+                ${expandIcon}
+            </div>
+            <div class="cs-recording-panel" id="cs-panel-${escapeHtml(cs.id)}" hidden></div>`;
+    }).join('');
+
+    return `
+        <div class="detail-call-sessions">
+            <h4 class="detail-sessions-title">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="opacity:.55;margin-right:4px;vertical-align:-1px"><rect x="1" y="3" width="8" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M9 5.5l3-2v6l-3-2V5.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+                Call recordings
+            </h4>
+            <div class="detail-sessions-list">${rows}</div>
+        </div>`;
+}
+
+async function openCallRecording(sessionId, rowEl) {
+    const panel = document.getElementById(`cs-panel-${sessionId}`);
+    if (!panel) return;
+
+    // Toggle
+    if (!panel.hidden) {
+        panel.hidden = true;
+        rowEl.classList.remove('cs-row--open');
+        return;
+    }
+    rowEl.classList.add('cs-row--open');
+    panel.hidden = false;
+
+    // Already loaded
+    if (panel.dataset.loaded) return;
+    panel.dataset.loaded = '1';
+    panel.innerHTML = `<div class="cs-panel-loading"><span class="cs-spinner"></span> Loading…</div>`;
+
+    try {
+        // Fetch session details + audio URL in parallel
+        const [csRes, audioRes] = await Promise.all([
+            apiFetch(`${API_BASE}/call-sessions/${sessionId}`),
+            apiFetch(`${API_BASE}/call-sessions/${sessionId}/audio-url`),
+        ]);
+        const cs    = csRes.ok    ? await csRes.json()    : null;
+        const audio = audioRes.ok ? await audioRes.json() : null;
+
+        panel.innerHTML = buildRecordingPanelHTML(cs, audio?.url || null);
+    } catch (err) {
+        panel.innerHTML = `<p class="cs-panel-error">Could not load recording: ${escapeHtml(err.message)}</p>`;
+    }
+}
+
+function buildRecordingPanelHTML(cs, audioUrl) {
+    let html = '';
+
+    // Audio player
+    if (audioUrl) {
+        html += `
+            <div class="cs-audio-wrap">
+                <audio class="cs-audio-player" controls preload="none" src="${escapeHtml(audioUrl)}">
+                    Your browser doesn't support audio playback.
+                </audio>
+            </div>`;
+    }
+
+    // Summary
+    if (cs?.summary_text) {
+        html += `
+            <div class="cs-summary">
+                <h5 class="cs-section-title">Summary</h5>
+                <p class="cs-summary-text">${escapeHtml(cs.summary_text)}</p>
+            </div>`;
+    }
+
+    // Key points
+    if (cs?.key_points?.length) {
+        const items = cs.key_points.map(p => `<li>${escapeHtml(p)}</li>`).join('');
+        html += `
+            <div class="cs-key-points">
+                <h5 class="cs-section-title">Key points</h5>
+                <ul class="cs-key-points-list">${items}</ul>
+            </div>`;
+    }
+
+    // Transcript
+    if (cs?.transcript_segments?.length) {
+        const segs = cs.transcript_segments.map(seg => {
+            const speakerLabel = seg.speaker === 'A' ? 'Astrologer' : 'Client';
+            const cls = seg.speaker === 'A' ? 'cs-seg--astrologer' : 'cs-seg--client';
+            return `
+                <div class="cs-segment ${cls}">
+                    <span class="cs-seg-speaker">${escapeHtml(speakerLabel)}</span>
+                    <span class="cs-seg-text">${escapeHtml(seg.text)}</span>
+                </div>`;
+        }).join('');
+        html += `
+            <details class="cs-transcript-details">
+                <summary class="cs-transcript-toggle">Full transcript</summary>
+                <div class="cs-transcript">${segs}</div>
+            </details>`;
+    } else if (cs?.transcript_text) {
+        html += `
+            <details class="cs-transcript-details">
+                <summary class="cs-transcript-toggle">Full transcript</summary>
+                <p class="cs-transcript-plain">${escapeHtml(cs.transcript_text)}</p>
+            </details>`;
+    }
+
+    if (!html) html = `<p class="cs-panel-empty">No recording data available yet.</p>`;
+    return `<div class="cs-panel-inner">${html}</div>`;
 }
 
 /* ─── Start Call ──────────────────────────────────────────────────────── */

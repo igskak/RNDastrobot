@@ -1746,6 +1746,236 @@ textarea:focus {
     cursor: not-allowed;
 }
 
+/* ─── Call Sessions History ───────────────────────────────────────────── */
+
+.detail-call-sessions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Individual call session row */
+.cs-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.cs-row--expandable {
+    cursor: pointer;
+}
+
+.cs-row--expandable:hover {
+    background: rgba(184, 147, 90, 0.06);
+}
+
+.cs-row--open {
+    background: rgba(184, 147, 90, 0.08);
+}
+
+.cs-row--open .cs-expand-icon {
+    transform: rotate(180deg);
+}
+
+.cs-expand-icon {
+    margin-left: auto;
+    opacity: 0.4;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+
+.cs-date {
+    min-width: 130px;
+    color: var(--text-primary);
+}
+
+.cs-duration {
+    min-width: 60px;
+    color: rgba(92, 85, 78, 0.55);
+    font-size: 12px;
+}
+
+/* Status badges */
+.cs-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+
+.cs-status--created    { background: rgba(92,85,78,.07);  color: rgba(92,85,78,.7); }
+.cs-status--active     { background: rgba(30,58,95,.1);   color: #1E3A5F; }
+.cs-status--ended      { background: rgba(92,85,78,.07);  color: rgba(92,85,78,.7); }
+.cs-status--processing { background: rgba(184,147,90,.12); color: #8a6c30; }
+.cs-status--completed  { background: rgba(34,139,84,.1);  color: #1a6b40; }
+.cs-status--failed     { background: rgba(185,28,28,.08); color: #9b1c1c; }
+
+/* Spinner */
+.cs-spinner {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border: 1.5px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    opacity: 0.7;
+}
+
+/* Recording panel (expanded) */
+.cs-recording-panel {
+    margin: 0 8px 6px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(184, 147, 90, 0.14);
+    background: rgba(249, 247, 242, 0.6);
+}
+
+.cs-panel-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 14px 16px;
+}
+
+.cs-panel-loading,
+.cs-panel-error,
+.cs-panel-empty {
+    padding: 14px 16px;
+    font-size: 13px;
+    color: rgba(92, 85, 78, 0.55);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cs-panel-error { color: #9b1c1c; }
+
+/* Audio player */
+.cs-audio-wrap {
+    display: flex;
+}
+
+.cs-audio-player {
+    width: 100%;
+    height: 36px;
+    border-radius: 8px;
+    accent-color: #B8935A;
+}
+
+/* Section titles inside panel */
+.cs-section-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(92, 85, 78, 0.5);
+    margin: 0 0 6px;
+}
+
+/* Summary */
+.cs-summary-text {
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--text-primary);
+    margin: 0;
+    white-space: pre-line;
+}
+
+/* Key points */
+.cs-key-points-list {
+    margin: 0;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cs-key-points-list li {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--text-primary);
+}
+
+/* Transcript */
+.cs-transcript-details summary {
+    list-style: none;
+}
+.cs-transcript-details summary::-webkit-details-marker { display: none; }
+
+.cs-transcript-toggle {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(92, 85, 78, 0.5);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    user-select: none;
+}
+
+.cs-transcript-toggle::before {
+    content: '▶';
+    font-size: 8px;
+    transition: transform 0.15s;
+}
+
+.cs-transcript-details[open] .cs-transcript-toggle::before {
+    transform: rotate(90deg);
+}
+
+.cs-transcript {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.cs-segment {
+    display: flex;
+    gap: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.cs-seg-speaker {
+    flex-shrink: 0;
+    width: 80px;
+    font-weight: 600;
+    font-size: 11px;
+    padding-top: 2px;
+    text-align: right;
+}
+
+.cs-seg--astrologer .cs-seg-speaker { color: #1E3A5F; }
+.cs-seg--client     .cs-seg-speaker { color: #8a6c30; }
+
+.cs-seg-text {
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.cs-transcript-plain {
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--text-primary);
+    margin: 10px 0 0;
+    white-space: pre-line;
+}
+
 /* ─── CRM: Highlighted row when expanded ─────────────────────────────── */
 
 tr[data-user-id] {
