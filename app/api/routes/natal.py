@@ -39,6 +39,7 @@ from app.services.preferences_service import PreferencesService
 from app.database.connection import get_db
 from app.database.repositories.user_repository import UserRepository
 from app.database.models import User, Consultation, CallSession
+from app.api.routes.call_session_utils import TERMINAL_CALL_SESSION_STATUSES
 from app.auth.dependencies import AuthContext, create_audit_event, ensure_client_access, require_auth
 from app.utils.ephemeris import get_ephemeris_path
 from app.services.geocoding_service import GeocodingTimeoutError, GeocodingServiceError
@@ -613,6 +614,7 @@ def get_user_profile(
             .filter(
                 CallSession.user_id == user_id,
                 CallSession.astrologer_id == auth.astrologer.id,
+                CallSession.call_status.in_(TERMINAL_CALL_SESSION_STATUSES),
             )
             .order_by(CallSession.started_at.desc().nullslast())
             .all()

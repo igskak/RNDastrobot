@@ -212,7 +212,7 @@
         const documentRef = options.document || (typeof document !== 'undefined' ? document : null);
         const navigatorRef = options.navigator || (typeof navigator !== 'undefined' ? navigator : null);
         const fetchFn = options.fetchFn || (documentRef && typeof fetch === 'function' ? fetch.bind(root) : null);
-        const catalogBasePath = options.catalogBasePath || 'locales';
+        const catalogBasePath = options.catalogBasePath || '/locales';
         const buildId = (
             typeof root?.__APP_BUILD_ID__ === 'string' && root.__APP_BUILD_ID__.trim()
                 ? root.__APP_BUILD_ID__.trim()

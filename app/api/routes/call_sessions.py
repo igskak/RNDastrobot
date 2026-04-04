@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query, Request, status
 from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 from app.auth.dependencies import AuthContext, create_audit_event, require_auth
 from app.database.connection import get_db
 from app.database.models import Astrologer, CallSession, Consultation, User
+from app.api.routes.call_session_utils import TERMINAL_CALL_SESSION_STATUSES
 from app.services.livekit_service import livekit_service
 from app.services.storage_service import storage_service
 from app.services.processing_pipeline import run_post_call_pipeline
@@ -162,12 +163,18 @@ def create_call_session(
 def list_call_sessions(
     request: Request,
     user_id: Optional[UUID] = None,
+    include_non_terminal: bool = Query(
+        False,
+        description="Include active, created, and processing sessions in the response",
+    ),
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
     q = db.query(CallSession).filter(CallSession.astrologer_id == auth.astrologer.id)
     if user_id:
         q = q.filter(CallSession.user_id == user_id)
+    if not include_non_terminal:
+        q = q.filter(CallSession.call_status.in_(TERMINAL_CALL_SESSION_STATUSES))
     sessions = q.order_by(CallSession.created_at.desc()).all()
     return [_serialize(cs) for cs in sessions]
 

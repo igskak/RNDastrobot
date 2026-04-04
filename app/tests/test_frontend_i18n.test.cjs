@@ -204,6 +204,28 @@ test('FrontendI18n.ready resolves after initial preload and emits init source on
     }
 });
 
+test('createI18n uses absolute /locales path by default for remote catalogs', async () => {
+    const requestedUrls = [];
+
+    const i18n = createI18n({
+        catalogs: { en: {}, uk: {}, ru: {} },
+        queryString: '?locale=uk',
+        fetchFn: async (url) => {
+            requestedUrls.push(url);
+            return {
+                ok: true,
+                async json() {
+                    return { app: { language: 'Test' } };
+                },
+            };
+        },
+    });
+
+    await i18n.ready;
+
+    assert.ok(requestedUrls.some((url) => url.startsWith('/locales/uk.json')));
+});
+
 test('t() falls back to en for missing key in active locale and interpolates params', async () => {
     const warnings = [];
     const i18n = createI18n({
