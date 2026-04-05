@@ -571,8 +571,11 @@ async def livekit_webhook(
                     cs.audio_storage_path = file_results[0].filename
                     cs.audio_duration_seconds = int(getattr(egress, "duration", 0) / 1_000_000_000)
                 db.commit()
-                logger.info(f"Egress completed for call session {cs.id} — queuing pipeline")
-                background_tasks.add_task(run_post_call_pipeline, cs.id)
+                if cs.call_status in ("processing", "completed", "failed"):
+                    logger.info(f"Duplicate egress_ended webhook — session {cs.id} already {cs.call_status}, skipping pipeline")
+                else:
+                    logger.info(f"Egress completed for call session {cs.id} — queuing pipeline")
+                    background_tasks.add_task(run_post_call_pipeline, cs.id)
 
     return {"ok": True}
 
