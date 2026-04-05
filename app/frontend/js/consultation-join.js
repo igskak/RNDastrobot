@@ -122,7 +122,10 @@
     // -------------------------------------------------------------------------
     async function startLobbyPreview() {
         try {
-            state.localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            state.localStream = await navigator.mediaDevices.getUserMedia({
+                video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
+                audio: true,
+            });
             refs.joinPreviewVideo.srcObject = state.localStream;
             refs.joinNoCamera.hidden = true;
         } catch (_) {
@@ -166,7 +169,14 @@
         hide(refs.joinLobby);
         show(refs.callShell);
 
-        const room = new LivekitClient.Room({ adaptiveStream: true, dynacast: true });
+        const room = new LivekitClient.Room({
+            adaptiveStream: true,
+            dynacast: true,
+            videoCaptureDefaults: {
+                resolution: LivekitClient.VideoPresets.h720,
+                facingMode: 'user',
+            },
+        });
         state.room = room;
 
         room.on(LivekitClient.RoomEvent.TrackSubscribed,       onTrackSubscribed);

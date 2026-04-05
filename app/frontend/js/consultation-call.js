@@ -113,6 +113,10 @@
         const room = new LivekitClient.Room({
             adaptiveStream: true,
             dynacast: true,
+            videoCaptureDefaults: {
+                resolution: LivekitClient.VideoPresets.h720,
+                facingMode: 'user',
+            },
         });
         state.room = room;
 
