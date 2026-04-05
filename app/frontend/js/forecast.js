@@ -3028,10 +3028,18 @@ function scheduleCombinedPeriodPrewarm(directionType) {
     const points = ForecastState.transitScalePoints || [];
     if (!points.length) return;
 
+    // Ограничиваем prewarm до ±3 точек от текущей позиции
+    const centerIdx = ForecastState.transitScaleIndex || 0;
+    const nearby = [];
+    for (let delta = 1; delta <= 3; delta++) {
+        if (centerIdx + delta < points.length) nearby.push(points[centerIdx + delta]);
+        if (centerIdx - delta >= 0) nearby.push(points[centerIdx - delta]);
+    }
+
     const normalizedDirectionType = normalizeDirectionType(directionType);
     const seq = ++ForecastState.combinedPeriodPrewarmSeq;
     (async () => {
-        for (const dateStr of points) {
+        for (const dateStr of nearby) {
             if (seq !== ForecastState.combinedPeriodPrewarmSeq) return;
             const key = getCombinedPointKey(dateStr, normalizedDirectionType);
             if (ForecastState.combinedBiwheelCache[key]) continue;

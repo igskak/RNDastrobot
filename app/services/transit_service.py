@@ -238,34 +238,39 @@ class TransitService:
             for p in transit_planets
         ]
 
+        # Pre-compute orb lookup table (один раз вместо N*M*K вызовов)
+        orb_lookup: Dict[Tuple[str, str, str], float] = {}
+        for t_obj in transit_objects:
+            for n_obj in natal_objects:
+                for asp in aspect_types:
+                    key = (t_obj['name'], n_obj['name'], asp.aspect_type)
+                    orb_lookup[key] = self._calculate_allowed_orb(
+                        user_id, t_obj['name'], n_obj['name'], asp.aspect_type
+                    )
+
         for transit_obj in transit_objects:
             for natal_obj in natal_objects:
-                aspect = self._check_aspect(user_id, transit_obj, natal_obj, aspect_types)
+                aspect = self._check_aspect_fast(transit_obj, natal_obj, aspect_types, orb_lookup)
                 if aspect:
                     aspects.append(aspect)
 
         return aspects
 
-    def _check_aspect(
+    def _check_aspect_fast(
         self,
-        user_id: UUID,
         transit_obj: Dict,
         natal_obj: Dict,
-        aspect_types: List[RefAspectType]
+        aspect_types: List[RefAspectType],
+        orb_lookup: Dict[Tuple[str, str, str], float],
     ) -> Optional[Dict]:
-        """Проверить наличие аспекта между транзитным и натальным объектом"""
+        """Проверить наличие аспекта с предвычисленными орбисами."""
         diff = abs(transit_obj['longitude'] - natal_obj['longitude'])
         if diff > 180:
             diff = 360 - diff
 
         for aspect_type in aspect_types:
             exact_angle = float(aspect_type.exact_angle)
-            max_orb = self._calculate_allowed_orb(
-                user_id,
-                transit_obj['name'],
-                natal_obj['name'],
-                aspect_type.aspect_type,
-            )
+            max_orb = orb_lookup[(transit_obj['name'], natal_obj['name'], aspect_type.aspect_type)]
             deviation = abs(diff - exact_angle)
 
             if deviation <= max_orb:
