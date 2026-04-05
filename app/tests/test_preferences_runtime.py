@@ -1,4 +1,5 @@
 from app.services.preferences_runtime import (
+    apply_fixed_prognostic_defaults,
     build_default_orb_settings,
     build_default_visual_settings,
     normalize_methodology_settings,
@@ -96,6 +97,42 @@ def test_build_default_orb_settings_uses_fixed_prognostic_defaults():
     assert defaults["profiles"]["prognostic"]["matrix"]["Conjunction"]["Moon"] == 3.0
     assert defaults["profiles"]["prognostic"]["matrix"]["Square"]["Moon"] == 3.0
     assert defaults["profiles"]["prognostic"]["matrix"]["Square"]["Mars"] == 1.0
+
+
+def test_apply_fixed_prognostic_defaults_overwrites_existing_prognostic_profile_only():
+    default_methodology = {
+        "orbs": {
+            "version": 2,
+            "pair_strategy": "larger",
+            "profiles": {
+                "natal": {"matrix": {"Conjunction": {"Sun": 8.0, "Moon": 7.0}}},
+                "prognostic": {"matrix": {"Conjunction": {"Sun": 1.0, "Moon": 3.0}}},
+            },
+        },
+        "balances": {"version": 1, "planet_weights": {}, "special_point_weights": {}},
+        "stationary": {"threshold_percent": 5.0},
+    }
+
+    updated = apply_fixed_prognostic_defaults(
+        {
+            "orbs": {
+                "version": 2,
+                "pair_strategy": "average",
+                "profiles": {
+                    "natal": {"matrix": {"Conjunction": {"Sun": 9.5, "Moon": 6.5}}},
+                    "prognostic": {"matrix": {"Conjunction": {"Sun": 4.0, "Moon": 4.0}}},
+                },
+            },
+            "stationary": {"threshold_percent": 7.5},
+        },
+        default_methodology=default_methodology,
+    )
+
+    assert updated["orbs"]["pair_strategy"] == "average"
+    assert updated["orbs"]["profiles"]["natal"]["matrix"]["Conjunction"]["Sun"] == 9.5
+    assert updated["orbs"]["profiles"]["prognostic"]["matrix"]["Conjunction"]["Sun"] == 1.0
+    assert updated["orbs"]["profiles"]["prognostic"]["matrix"]["Conjunction"]["Moon"] == 3.0
+    assert updated["stationary"]["threshold_percent"] == 7.5
 
 
 def test_normalize_methodology_settings_defaults_stationary_threshold_to_five_percent():

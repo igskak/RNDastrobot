@@ -295,6 +295,37 @@ def normalize_methodology_settings(
     }
 
 
+def apply_fixed_prognostic_defaults(
+    methodology: Optional[Dict[str, Any]] = None,
+    *,
+    default_methodology: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    default_methodology = deepcopy(default_methodology or {})
+    normalized = normalize_methodology_settings(
+        methodology or {},
+        default_methodology=default_methodology,
+    )
+    default_prognostic = deepcopy(
+        (
+            (default_methodology.get('orbs') or {})
+            .get('profiles', {})
+            .get('prognostic', {})
+        )
+        or {'matrix': {}}
+    )
+
+    normalized_orbs = deepcopy(normalized.get('orbs') or {})
+    normalized_profiles = deepcopy(normalized_orbs.get('profiles') or {})
+    normalized_profiles['prognostic'] = default_prognostic
+    normalized_orbs['profiles'] = normalized_profiles
+    normalized['orbs'] = normalized_orbs
+
+    return normalize_methodology_settings(
+        normalized,
+        default_methodology=default_methodology,
+    )
+
+
 class PreferencesRuntimeResolver:
     """Resolve methodology + visual defaults and runtime lookups for an astrologer."""
 
