@@ -106,27 +106,36 @@
 }
 
 .synastry-center {
-    cursor: default;
+    cursor: grab;
 }
 
 .synastry-center:active {
-    cursor: default;
+    cursor: grabbing;
 }
 
 .synastry-center .chart-wheel-wrapper {
     width: 100%;
     height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .synastry-wheel-wrapper {
     position: relative;
     width: 100%;
     height: 100%;
+    min-height: 0;
+    transform-origin: center center;
+    transition: none;
+    touch-action: none;
 }
 
 .synastry-wheel-wrapper svg {
-    width: min(100%, 760px);
-    height: auto;
+    width: auto;
+    max-width: min(100%, 780px);
+    height: min(100%, calc(100vh - 132px));
+    max-height: min(100%, calc(100vh - 132px));
 }
 
 .synastry-wheel-overlay {
@@ -195,6 +204,11 @@
     justify-content: center;
     border-radius: 18px;
     box-shadow: 0 10px 24px rgba(26, 22, 20, 0.08);
+}
+
+.synastry-zoom-controls {
+    right: 16px;
+    bottom: 16px;
 }
 
 .synastry-wheel-caption {
@@ -430,6 +444,11 @@
         min-height: 420px;
         padding: 12px 12px 72px;
     }
+
+    .synastry-wheel-wrapper svg {
+        height: min(100%, calc(100vh - 186px));
+        max-height: min(100%, calc(100vh - 186px));
+    }
 }
 
 @media (max-width: 760px) {
@@ -484,6 +503,17 @@
         right: 12px;
         left: 12px;
         top: 64px;
+    }
+
+    .synastry-zoom-controls {
+        right: 12px;
+        bottom: 58px;
+    }
+
+    .synastry-wheel-wrapper svg {
+        max-width: 100%;
+        height: min(100%, calc(100vh - 220px));
+        max-height: min(100%, calc(100vh - 220px));
     }
 }
 

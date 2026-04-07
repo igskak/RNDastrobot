@@ -43,6 +43,14 @@ const synastryState = {
     accountVisualPreferences: null,
     resolvedPreferences: null,
     applySettingsTimer: null,
+    zoomScale: 1,
+    panX: 0,
+    panY: 0,
+    panning: false,
+    startX: 0,
+    startY: 0,
+    pinchDistance: 0,
+    pinchStartScale: 1,
     settings: {
         orientation: 'aries',
         aspectScope: 'all',
@@ -124,6 +132,7 @@ function cacheSynastryElements() {
     synastryRefs.partnerPanelMeta = document.getElementById('partnerPanelMeta');
     synastryRefs.modeButtons = [...document.querySelectorAll('.synastry-mode-btn')];
     synastryRefs.wheelCaption = document.getElementById('synastryWheelCaption');
+    synastryRefs.wheelWrapper = document.getElementById('synastryWheelWrapper');
     synastryRefs.overlay = document.getElementById('synastryOverlay');
     synastryRefs.primaryInterAspects = document.getElementById('primaryInterAspectsTable');
     synastryRefs.partnerInterAspects = document.getElementById('partnerInterAspectsTable');
@@ -144,6 +153,9 @@ function cacheSynastryElements() {
     synastryRefs.houseLabelsOutsideToggle = document.getElementById('houseLabelsOutsideToggle');
     synastryRefs.matrixEditor = document.getElementById('natalMatrixEditor');
     synastryRefs.aspectTypeToggles = document.getElementById('aspectTypeToggles');
+    synastryRefs.zoomIn = document.getElementById('zoomIn');
+    synastryRefs.zoomOut = document.getElementById('zoomOut');
+    synastryRefs.zoomReset = document.getElementById('zoomReset');
 }
 
 function bindSynastryEvents() {
@@ -195,6 +207,7 @@ function bindSynastryEvents() {
     });
 
     bindStaticSettingsHandlers();
+    bindSynastryWheelInteractions();
 
     document.addEventListener('frontend:locale-changed', () => {
         if (synastryState.payload) {
@@ -224,6 +237,140 @@ function bindStaticSettingsHandlers() {
             synastryRefs.pointScaleValue.textContent = `${synastryRefs.pointScaleRange.value}%`;
         }
         scheduleApplySynastrySettings();
+    });
+}
+
+function clampZoomScale(nextScale) {
+    return Math.max(0.5, Math.min(5, Number(nextScale) || 1));
+}
+
+function setSynastryWheelTransform() {
+    if (!synastryRefs.wheelWrapper) return;
+    synastryRefs.wheelWrapper.style.transform =
+        `translate(${synastryState.panX}px, ${synastryState.panY}px) scale(${synastryState.zoomScale})`;
+}
+
+function zoomSynastryIn() {
+    synastryState.zoomScale = clampZoomScale(synastryState.zoomScale * 1.2);
+    setSynastryWheelTransform();
+}
+
+function zoomSynastryOut() {
+    synastryState.zoomScale = clampZoomScale(synastryState.zoomScale / 1.2);
+    setSynastryWheelTransform();
+}
+
+function resetSynastryZoom() {
+    synastryState.zoomScale = 1;
+    synastryState.panX = 0;
+    synastryState.panY = 0;
+    setSynastryWheelTransform();
+}
+
+function getSynastryTouchDistance(touchA, touchB) {
+    const dx = touchA.clientX - touchB.clientX;
+    const dy = touchA.clientY - touchB.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+function isSynastryGestureBlocked(target) {
+    return target instanceof Element
+        && Boolean(target.closest('.zoom-controls-float, .synastry-controls-float, .settings-panel, .synastry-wheel-caption'));
+}
+
+function bindSynastryWheelInteractions() {
+    const wheelWrapper = synastryRefs.wheelWrapper;
+    if (!wheelWrapper) return;
+    wheelWrapper.style.cursor = 'grab';
+    setSynastryWheelTransform();
+
+    synastryRefs.zoomIn?.addEventListener('click', zoomSynastryIn);
+    synastryRefs.zoomOut?.addEventListener('click', zoomSynastryOut);
+    synastryRefs.zoomReset?.addEventListener('click', resetSynastryZoom);
+
+    wheelWrapper.addEventListener('wheel', (event) => {
+        if (isSynastryGestureBlocked(event.target)) return;
+        event.preventDefault();
+        const wheelFactor = 1.06;
+        synastryState.zoomScale = event.deltaY < 0
+            ? clampZoomScale(synastryState.zoomScale * wheelFactor)
+            : clampZoomScale(synastryState.zoomScale / wheelFactor);
+        setSynastryWheelTransform();
+    }, { passive: false });
+
+    wheelWrapper.addEventListener('mousedown', (event) => {
+        if (isSynastryGestureBlocked(event.target)) return;
+        synastryState.panning = true;
+        synastryState.startX = event.clientX - synastryState.panX;
+        synastryState.startY = event.clientY - synastryState.panY;
+        wheelWrapper.style.cursor = 'grabbing';
+    });
+
+    wheelWrapper.addEventListener('mousemove', (event) => {
+        if (!synastryState.panning) return;
+        event.preventDefault();
+        synastryState.panX = event.clientX - synastryState.startX;
+        synastryState.panY = event.clientY - synastryState.startY;
+        setSynastryWheelTransform();
+    });
+
+    ['mouseup', 'mouseleave'].forEach((eventName) => {
+        wheelWrapper.addEventListener(eventName, () => {
+            synastryState.panning = false;
+            wheelWrapper.style.cursor = 'grab';
+        });
+    });
+
+    wheelWrapper.addEventListener('touchstart', (event) => {
+        if (isSynastryGestureBlocked(event.target)) return;
+        if (event.touches.length === 2) {
+            synastryState.pinchDistance = getSynastryTouchDistance(event.touches[0], event.touches[1]);
+            synastryState.pinchStartScale = synastryState.zoomScale;
+            synastryState.panning = false;
+            event.preventDefault();
+            return;
+        }
+        if (event.touches.length === 1) {
+            synastryState.panning = true;
+            synastryState.startX = event.touches[0].clientX - synastryState.panX;
+            synastryState.startY = event.touches[0].clientY - synastryState.panY;
+        }
+    }, { passive: false });
+
+    wheelWrapper.addEventListener('touchmove', (event) => {
+        if (event.touches.length === 2 && synastryState.pinchDistance > 0) {
+            event.preventDefault();
+            const nextDistance = getSynastryTouchDistance(event.touches[0], event.touches[1]);
+            synastryState.zoomScale = clampZoomScale(
+                (nextDistance / synastryState.pinchDistance) * synastryState.pinchStartScale
+            );
+            setSynastryWheelTransform();
+            return;
+        }
+        if (synastryState.panning && event.touches.length === 1) {
+            event.preventDefault();
+            synastryState.panX = event.touches[0].clientX - synastryState.startX;
+            synastryState.panY = event.touches[0].clientY - synastryState.startY;
+            setSynastryWheelTransform();
+        }
+    }, { passive: false });
+
+    wheelWrapper.addEventListener('touchend', (event) => {
+        if (event.touches.length < 2) {
+            synastryState.pinchDistance = 0;
+        }
+        if (event.touches.length === 1) {
+            synastryState.panning = true;
+            synastryState.startX = event.touches[0].clientX - synastryState.panX;
+            synastryState.startY = event.touches[0].clientY - synastryState.panY;
+            return;
+        }
+        synastryState.panning = false;
+    });
+
+    wheelWrapper.addEventListener('touchcancel', () => {
+        synastryState.panning = false;
+        synastryState.pinchDistance = 0;
     });
 }
 
