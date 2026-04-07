@@ -12,6 +12,7 @@
             'chart-page',
             'forecast-page',
             'natal-full-page',
+            'synastry-page',
             'interpretations-page',
             'login-page',
         ];

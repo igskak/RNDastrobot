@@ -794,6 +794,7 @@
         "contact": "Contact & notes",
         "notes": "Notes",
         "statistics": "Statistics",
+        "relatedPeople": "Their people",
         "keyInsights": "Key insights",
         "consultations": "Consultation history",
         "recordings": "Call recordings"
@@ -818,10 +819,76 @@
       "recordings": {
         "empty": "No call recordings yet."
       },
+      "related": {
+        "add": "Add person",
+        "linkExisting": "Link existing",
+        "linkKicker": "Saved clients",
+        "linkTitle": "Link an existing client",
+        "linkSubtitle": "Pick a client from your database to use them as a recurring synastry person.",
+        "searchLabel": "Search client",
+        "searchPlaceholder": "First name, last name, or birthplace",
+        "linkSubmit": "Link client",
+        "linked": "Client linked",
+        "linkFailed": "Failed to link client",
+        "loadCandidatesFailed": "Failed to load clients list",
+        "noCandidates": "No available clients to link.",
+        "selectCandidate": "Select a client to link",
+        "empty": "No saved people for synastry yet.",
+        "createTitle": "New person for synastry",
+        "createSubmit": "Create",
+        "created": "Person added",
+        "deleted": "Link removed",
+        "confirmDelete": "Remove this person from the list?",
+        "relationLabel": "Relationship",
+        "relationPlaceholder": "For example: partner, spouse, child"
+      },
       "errors": {
         "noId": "No client ID in URL",
         "notFound": "Client not found",
         "loadFailed": "Failed to load client profile"
+      }
+    },
+    "synastry": {
+      "title": "Synastry",
+      "loading": "Building synastry",
+      "headerTitle": "{client} × {partner}",
+      "openClientProfile": "Client profile",
+      "openPartnerProfile": "Partner profile",
+      "phase": "Phase",
+      "tabs": {
+        "interAspects": "Inter-aspects",
+        "houseOverlays": "Overlays"
+      },
+      "modes": {
+        "client": "Client",
+        "compare": "Compare",
+        "partner": "Partner"
+      },
+      "sections": {
+        "interAspects": "Inter-chart aspects",
+        "houseOverlays": "House overlays"
+      },
+      "metrics": {
+        "interAspects": "Inter-chart aspects",
+        "clientOverlay": "Client bodies in partner houses",
+        "partnerOverlay": "Partner bodies in client houses"
+      },
+      "overlays": {
+        "clientInPartner": "Client in partner houses",
+        "partnerInClient": "Partner in client houses"
+      },
+      "people": {
+        "client": "Client",
+        "partner": "Partner"
+      },
+      "compare": {
+        "clientOnly": "Showing the client natal chart.",
+        "partnerOnly": "Showing the partner natal chart.",
+        "overlayHint": "The partner chart is overlaid on top of the client chart for quick visual comparison."
+      },
+      "errors": {
+        "missingParams": "Two clients are required for synastry.",
+        "loadFailed": "Failed to load synastry."
       }
     },
     "forecast": {

@@ -75,6 +75,31 @@ class User(Base):
     )
 
 
+class ClientRelationship(Base):
+    """Directed link between one client and another client for repeat synastry work."""
+    __tablename__ = 'client_relationships'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='CASCADE'), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
+    related_user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
+    relation_label = Column(String(100))
+    notes = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    astrologer = relationship("Astrologer")
+    user = relationship("User", foreign_keys=[user_id])
+    related_user = relationship("User", foreign_keys=[related_user_id])
+
+    __table_args__ = (
+        CheckConstraint('user_id <> related_user_id', name='client_relationship_not_self'),
+        Index('idx_client_relationships_astrologer_user', 'astrologer_id', 'user_id'),
+        Index('idx_client_relationships_astrologer_related', 'astrologer_id', 'related_user_id'),
+        Index('uq_client_relationships_owner_pair', 'astrologer_id', 'user_id', 'related_user_id', unique=True),
+    )
+
+
 class Astrologer(Base):
     """Модель астролога (tenant owner)."""
     __tablename__ = 'astrologers'

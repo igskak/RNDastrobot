@@ -794,6 +794,7 @@
         "contact": "Контакти та нотатки",
         "notes": "Нотатки",
         "statistics": "Статистика",
+        "relatedPeople": "Його люди",
         "keyInsights": "Ключові інсайти",
         "consultations": "Історія консультацій",
         "recordings": "Записи дзвінків"
@@ -818,10 +819,76 @@
       "recordings": {
         "empty": "Записів дзвінків ще немає."
       },
+      "related": {
+        "add": "Додати людину",
+        "linkExisting": "Прив’язати наявного",
+        "linkKicker": "Збережені клієнти",
+        "linkTitle": "Прив’язати наявного клієнта",
+        "linkSubtitle": "Оберіть клієнта з бази, щоб використовувати його як постійну людину для синастрії.",
+        "searchLabel": "Пошук клієнта",
+        "searchPlaceholder": "Ім’я, прізвище або місце народження",
+        "linkSubmit": "Прив’язати",
+        "linked": "Клієнта прив’язано",
+        "linkFailed": "Не вдалося прив’язати клієнта",
+        "loadCandidatesFailed": "Не вдалося завантажити список клієнтів",
+        "noCandidates": "Немає доступних клієнтів для прив’язки.",
+        "selectCandidate": "Оберіть клієнта для прив’язки",
+        "empty": "Поки немає збережених людей для синастрії.",
+        "createTitle": "Нова людина для синастрії",
+        "createSubmit": "Створити",
+        "created": "Людину додано",
+        "deleted": "Зв’язок видалено",
+        "confirmDelete": "Видалити зв’язок із цією людиною?",
+        "relationLabel": "Ким доводиться",
+        "relationPlaceholder": "Наприклад: партнер, чоловік, дитина"
+      },
       "errors": {
         "noId": "ID клієнта не вказано в URL",
         "notFound": "Клієнта не знайдено",
         "loadFailed": "Не вдалося завантажити профіль клієнта"
+      }
+    },
+    "synastry": {
+      "title": "Синастрія",
+      "loading": "Збираємо синастрію",
+      "headerTitle": "{client} × {partner}",
+      "openClientProfile": "Профіль клієнта",
+      "openPartnerProfile": "Профіль партнера",
+      "phase": "Фаза",
+      "tabs": {
+        "interAspects": "Міжаспекти",
+        "houseOverlays": "Оверлеї"
+      },
+      "modes": {
+        "client": "Клієнт",
+        "compare": "Порівняння",
+        "partner": "Партнер"
+      },
+      "sections": {
+        "interAspects": "Міжкартні аспекти",
+        "houseOverlays": "Накладення по домах"
+      },
+      "metrics": {
+        "interAspects": "Міжкартних аспектів",
+        "clientOverlay": "Точок клієнта в домах партнера",
+        "partnerOverlay": "Точок партнера в домах клієнта"
+      },
+      "overlays": {
+        "clientInPartner": "Клієнт у домах партнера",
+        "partnerInClient": "Партнер у домах клієнта"
+      },
+      "people": {
+        "client": "Клієнт",
+        "partner": "Партнер"
+      },
+      "compare": {
+        "clientOnly": "Показано натальну карту клієнта.",
+        "partnerOnly": "Показано натальну карту партнера.",
+        "overlayHint": "Поверх клієнта показано карту партнера для швидкого візуального порівняння."
+      },
+      "errors": {
+        "missingParams": "Для синастрії потрібні два клієнти.",
+        "loadFailed": "Не вдалося завантажити синастрію."
       }
     },
     "forecast": {

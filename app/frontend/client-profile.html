@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.clientProfile.title"></title>
-    <link rel="stylesheet" href="/bundles/client-profile.bundle.css?v=20260405-110943">
-    <link rel="stylesheet" href="/css/locale-switcher.css?v=20260405-110943">
+    <link rel="stylesheet" href="/bundles/client-profile.bundle.css?v=20260407-221831">
+    <link rel="stylesheet" href="/css/locale-switcher.css?v=20260407-221831">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '20260405-110943';</script>
+    <script>window.__APP_BUILD_ID__ = '20260407-221831';</script>
 </head>
 <body class="profile-page">
     <div class="page-loader" id="pageLoader">
@@ -79,7 +79,20 @@
 
             </div>
 
-            <!-- Row 2: Key Insights -->
+            <!-- Row 2: Related People -->
+            <section class="profile-card">
+                <div class="profile-card-header">
+                    <h2 class="profile-card-title" data-i18n="page.clientProfile.sections.relatedPeople"></h2>
+                    <div class="profile-related-header-actions">
+                        <button class="btn-logout btn-sm" type="button" id="linkExistingPersonBtn" data-i18n="page.clientProfile.related.linkExisting"></button>
+                        <button class="btn-new btn-sm" type="button" id="addRelatedPersonBtn" data-i18n="page.clientProfile.related.add"></button>
+                    </div>
+                </div>
+                <p class="profile-empty hidden" id="relatedPeopleEmpty" data-i18n="page.clientProfile.related.empty"></p>
+                <div class="profile-related-list" id="relatedPeopleList"></div>
+            </section>
+
+            <!-- Row 3: Key Insights -->
             <section class="profile-card profile-card-insights" id="profileInsightsCard">
                 <h2 class="profile-card-title">
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" style="opacity:.5"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M7 4v3.5l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
@@ -89,7 +102,7 @@
                 <p class="profile-insights-empty hidden" id="profileInsightsEmpty" data-i18n="page.clientProfile.insights.empty"></p>
             </section>
 
-            <!-- Row 3: Consultation History -->
+            <!-- Row 4: Consultation History -->
             <section class="profile-card">
                 <div class="profile-card-header">
                     <h2 class="profile-card-title" data-i18n="page.clientProfile.sections.consultations"></h2>
@@ -109,7 +122,7 @@
                 </div>
             </section>
 
-            <!-- Row 4: Call Recordings -->
+            <!-- Row 5: Call Recordings -->
             <section class="profile-card">
                 <div class="profile-card-header">
                     <h2 class="profile-card-title">
@@ -228,6 +241,11 @@
                     <label class="form-label" for="editNotes" data-i18n="page.clients.crm.notes"></label>
                     <textarea id="editNotes" rows="3" data-i18n-placeholder="page.clients.crm.notesPlaceholder"></textarea>
                 </div>
+
+                <div class="form-group hidden" id="editRelationGroup">
+                    <label class="form-label" for="editRelationLabel" data-i18n="page.clientProfile.related.relationLabel"></label>
+                    <input id="editRelationLabel" type="text" data-i18n-placeholder="page.clientProfile.related.relationPlaceholder">
+                </div>
             </div>
 
             <div id="editClientError" class="error-message hidden"></div>
@@ -322,7 +340,43 @@
 
     <div id="toast" class="toast"></div>
 
-    <script type="module" src="/js/bundles/client-profile.bundle.js?v=20260405-110943"></script>
-    <script src="/js/locale-switcher.js?v=20260405-110943"></script>
+    <div id="relatedPickerBackdrop" class="clients-dialog-backdrop hidden"></div>
+    <section id="relatedPickerDialog" class="clients-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="relatedPickerTitle">
+        <div class="clients-dialog-card related-picker-card">
+            <div class="clients-dialog-header">
+                <div>
+                    <p class="clients-dialog-kicker" data-i18n="page.clientProfile.related.linkKicker"></p>
+                    <h3 id="relatedPickerTitle" class="clients-dialog-title" data-i18n="page.clientProfile.related.linkTitle"></h3>
+                    <p class="clients-dialog-copy" data-i18n="page.clientProfile.related.linkSubtitle"></p>
+                </div>
+                <button id="relatedPickerClose" class="clients-dialog-close" type="button" data-i18n-aria-label="common.close">×</button>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="relatedPickerSearch" data-i18n="page.clientProfile.related.searchLabel"></label>
+                <input id="relatedPickerSearch" type="search" data-i18n-placeholder="page.clientProfile.related.searchPlaceholder">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="relatedPickerRelationLabel" data-i18n="page.clientProfile.related.relationLabel"></label>
+                <input id="relatedPickerRelationLabel" type="text" data-i18n-placeholder="page.clientProfile.related.relationPlaceholder">
+            </div>
+
+            <div id="relatedPickerError" class="error-message hidden"></div>
+            <div class="related-picker-list" id="relatedPickerList"></div>
+            <p id="relatedPickerEmpty" class="profile-empty hidden" data-i18n="page.clientProfile.related.noCandidates"></p>
+
+            <div class="clients-dialog-actions">
+                <button id="relatedPickerCancel" class="btn-logout clients-dialog-cancel" type="button" data-i18n="common.cancel"></button>
+                <button id="relatedPickerSubmit" class="btn-new clients-dialog-submit" type="button">
+                    <span class="btn-text" data-i18n="page.clientProfile.related.linkSubmit"></span>
+                    <span class="btn-loader hidden" data-i18n="common.loading"></span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <script type="module" src="/js/bundles/client-profile.bundle.js?v=20260407-221831"></script>
+    <script src="/js/locale-switcher.js?v=20260407-221831"></script>
 </body>
 </html>

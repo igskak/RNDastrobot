@@ -794,6 +794,7 @@
         "contact": "Контакты и заметки",
         "notes": "Заметки",
         "statistics": "Статистика",
+        "relatedPeople": "Его люди",
         "keyInsights": "Ключевые инсайты",
         "consultations": "История консультаций",
         "recordings": "Записи звонков"
@@ -818,10 +819,76 @@
       "recordings": {
         "empty": "Записей звонков пока нет."
       },
+      "related": {
+        "add": "Добавить человека",
+        "linkExisting": "Привязать существующего",
+        "linkKicker": "Сохранённые клиенты",
+        "linkTitle": "Привязать существующего клиента",
+        "linkSubtitle": "Выберите клиента из базы, чтобы использовать его как постоянного человека для синастрии.",
+        "searchLabel": "Поиск клиента",
+        "searchPlaceholder": "Имя, фамилия или место рождения",
+        "linkSubmit": "Привязать",
+        "linked": "Клиент привязан",
+        "linkFailed": "Не удалось привязать клиента",
+        "loadCandidatesFailed": "Не удалось загрузить список клиентов",
+        "noCandidates": "Нет доступных клиентов для привязки.",
+        "selectCandidate": "Выберите клиента для привязки",
+        "empty": "Пока нет сохранённых людей для синастрии.",
+        "createTitle": "Новый человек для синастрии",
+        "createSubmit": "Создать",
+        "created": "Человек добавлен",
+        "deleted": "Связь удалена",
+        "confirmDelete": "Удалить связь с этим человеком?",
+        "relationLabel": "Кем приходится",
+        "relationPlaceholder": "Например: партнер, муж, ребёнок"
+      },
       "errors": {
         "noId": "ID клиента не указан в URL",
         "notFound": "Клиент не найден",
         "loadFailed": "Не удалось загрузить профиль клиента"
+      }
+    },
+    "synastry": {
+      "title": "Синастрия",
+      "loading": "Собираем синастрию",
+      "headerTitle": "{client} × {partner}",
+      "openClientProfile": "Профиль клиента",
+      "openPartnerProfile": "Профиль партнёра",
+      "phase": "Фаза",
+      "tabs": {
+        "interAspects": "Межаспекты",
+        "houseOverlays": "Оверлеи"
+      },
+      "modes": {
+        "client": "Клиент",
+        "compare": "Сравнение",
+        "partner": "Партнёр"
+      },
+      "sections": {
+        "interAspects": "Межкартные аспекты",
+        "houseOverlays": "Наложение по домам"
+      },
+      "metrics": {
+        "interAspects": "Межкартных аспектов",
+        "clientOverlay": "Точек клиента в домах партнёра",
+        "partnerOverlay": "Точек партнёра в домах клиента"
+      },
+      "overlays": {
+        "clientInPartner": "Клиент в домах партнёра",
+        "partnerInClient": "Партнёр в домах клиента"
+      },
+      "people": {
+        "client": "Клиент",
+        "partner": "Партнёр"
+      },
+      "compare": {
+        "clientOnly": "Показана натальная карта клиента.",
+        "partnerOnly": "Показана натальная карта партнёра.",
+        "overlayHint": "Поверх клиента показана карта партнёра для быстрого визуального сравнения."
+      },
+      "errors": {
+        "missingParams": "Не переданы два клиента для синастрии.",
+        "loadFailed": "Не удалось загрузить синастрию."
       }
     },
     "forecast": {

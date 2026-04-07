@@ -31,7 +31,7 @@ if os.getenv('APP_ENV') == 'production':
     logger.remove()  # Удаляем default handler
     logger.add(sys.stderr, level="WARNING")  # Только WARNING и выше
 
-from app.api.routes import auth, natal, transits, solar, progressions, directions, ingresses, places, consultations, alerts, preferences, call_sessions
+from app.api.routes import auth, natal, transits, solar, progressions, directions, ingresses, places, consultations, alerts, preferences, call_sessions, synastry
 from app.api.error_handlers import register_error_handlers
 from app.api.locale_dependency import locale_context_dependency
 from app.services.processing_pipeline import recover_stuck_sessions
@@ -106,6 +106,8 @@ async def static_cache_headers(request: Request, call_next):
         "/account-settings",
         "/account-settings.html",
         "/chart.html",
+        "/synastry",
+        "/synastry.html",
         "/natal-full.html",
         "/forecast.html",
         "/calendar",
@@ -145,6 +147,7 @@ app.include_router(consultations.router, prefix="/api/v1", tags=["Consultations"
 app.include_router(call_sessions.router, prefix="/api/v1", tags=["Call Sessions"])
 app.include_router(alerts.router, prefix="/api/v1", tags=["Alerts"])
 app.include_router(preferences.router, prefix="/api/v1", tags=["Preferences"])
+app.include_router(synastry.router, prefix="/api/v1", tags=["Synastry"])
 
 # Статические файлы (CSS, JS)
 if os.path.exists(FRONTEND_PATH):
@@ -232,6 +235,16 @@ async def chart_page():
     if os.path.exists(chart_path):
         return FileResponse(chart_path)
     raise HTTPException(status_code=404, detail="Chart page not found")
+
+
+@app.get("/synastry")
+@app.get("/synastry.html")
+async def synastry_page():
+    """Страница синастрии."""
+    synastry_path = os.path.join(FRONTEND_PATH, "synastry.html")
+    if os.path.exists(synastry_path):
+        return FileResponse(synastry_path)
+    raise HTTPException(status_code=404, detail="Synastry page not found")
 
 
 @app.get("/natal-full.html")

@@ -10,6 +10,8 @@ const API_BASE = window.location.hostname === 'localhost'
 const userId = window.location.pathname.split('/')[2] || '';
 
 let profileData = null;   // full server response
+let relatedPeople = [];
+let relatedPickerUsers = [];
 let consultationFilter = 'all';
 let toastTimer = null;
 
@@ -17,6 +19,7 @@ const refs = {};
 
 const editClientState = {
     autocompleteBound: false,
+    mode: 'edit-client',
     userId: null,
     loadedChartData: null,
     originalCoords: null,
@@ -26,6 +29,11 @@ const editClientState = {
 };
 
 const logSessionState = { userId: null };
+const relatedPickerState = {
+    users: [],
+    filteredUsers: [],
+    selectedUserId: null,
+};
 
 /* ─── i18n helper ──────────────────────────────────────────────────────── */
 
@@ -113,6 +121,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     initEditClientDialog();
     initLogSessionDialog();
+    initRelatedPickerDialog();
     bindPageEvents();
     await loadProfile();
 });
@@ -142,6 +151,10 @@ function cacheElements() {
     refs.profileInsightsCard = document.getElementById('profileInsightsCard');
     refs.profileInsightsList = document.getElementById('profileInsightsList');
     refs.profileInsightsEmpty = document.getElementById('profileInsightsEmpty');
+    refs.relatedPeopleList   = document.getElementById('relatedPeopleList');
+    refs.relatedPeopleEmpty  = document.getElementById('relatedPeopleEmpty');
+    refs.addRelatedPersonBtn = document.getElementById('addRelatedPersonBtn');
+    refs.linkExistingPersonBtn = document.getElementById('linkExistingPersonBtn');
     refs.consultationsList   = document.getElementById('consultationsList');
     refs.consultationsEmpty  = document.getElementById('consultationsEmpty');
     refs.filterTabs          = document.getElementById('consultationFilterTabs');
@@ -153,6 +166,7 @@ function cacheElements() {
     refs.editBackdrop   = document.getElementById('editClientBackdrop');
     refs.editDialog     = document.getElementById('editClientDialog');
     refs.editForm       = document.getElementById('editClientForm');
+    refs.editTitle      = document.getElementById('editClientTitle');
     refs.editClose      = document.getElementById('editClientClose');
     refs.editCancel     = document.getElementById('editClientCancel');
     refs.editSubmit     = document.getElementById('editClientSubmit');
@@ -174,6 +188,19 @@ function cacheElements() {
     refs.editMessenger  = document.getElementById('editMessenger');
     refs.editTags       = document.getElementById('editTags');
     refs.editNotes      = document.getElementById('editNotes');
+    refs.editRelationGroup = document.getElementById('editRelationGroup');
+    refs.editRelationLabel = document.getElementById('editRelationLabel');
+
+    refs.relatedPickerBackdrop = document.getElementById('relatedPickerBackdrop');
+    refs.relatedPickerDialog = document.getElementById('relatedPickerDialog');
+    refs.relatedPickerClose = document.getElementById('relatedPickerClose');
+    refs.relatedPickerCancel = document.getElementById('relatedPickerCancel');
+    refs.relatedPickerSearch = document.getElementById('relatedPickerSearch');
+    refs.relatedPickerRelationLabel = document.getElementById('relatedPickerRelationLabel');
+    refs.relatedPickerError = document.getElementById('relatedPickerError');
+    refs.relatedPickerList = document.getElementById('relatedPickerList');
+    refs.relatedPickerEmpty = document.getElementById('relatedPickerEmpty');
+    refs.relatedPickerSubmit = document.getElementById('relatedPickerSubmit');
 
     // Log session dialog
     refs.logSessionBackdrop = document.getElementById('logSessionBackdrop');
@@ -197,6 +224,8 @@ function bindPageEvents() {
     refs.startCallBtn?.addEventListener('click', startCallSession);
     refs.editClientBtn?.addEventListener('click', () => openEditClientDialog(userId));
     refs.logSessionBtn?.addEventListener('click', () => openLogSessionDialog(userId));
+    refs.addRelatedPersonBtn?.addEventListener('click', openCreateRelatedPersonDialog);
+    refs.linkExistingPersonBtn?.addEventListener('click', openRelatedPickerDialog);
 
     refs.filterTabs?.addEventListener('click', (e) => {
         const tab = e.target.closest('.profile-filter-tab[data-filter]');
@@ -216,8 +245,28 @@ function bindPageEvents() {
         if (row) { await openCallRecording(row.dataset.sessionId, row); }
     });
 
+    refs.relatedPeopleList?.addEventListener('click', async (e) => {
+        const synastryBtn = e.target.closest('[data-action="open-synastry"]');
+        if (synastryBtn) {
+            openSynastry(synastryBtn.dataset.relatedUserId);
+            return;
+        }
+
+        const profileBtn = e.target.closest('[data-action="open-related-profile"]');
+        if (profileBtn) {
+            window.location.href = `/client/${encodeURIComponent(profileBtn.dataset.relatedUserId)}`;
+            return;
+        }
+
+        const deleteBtn = e.target.closest('[data-action="delete-related-person"]');
+        if (deleteBtn) {
+            await deleteRelatedPerson(deleteBtn.dataset.relatedUserId);
+        }
+    });
+
     document.addEventListener('frontend:locale-changed', () => {
         if (profileData) renderAll(profileData);
+        renderRelatedPickerList();
     });
 }
 
@@ -225,12 +274,17 @@ function bindPageEvents() {
 
 async function loadProfile() {
     try {
-        const res = await apiFetch(`${API_BASE}/users/${userId}/profile`);
-        if (res.status === 401) { window.location.href = '/login.html'; return; }
-        if (res.status === 404) { showError(t('page.clientProfile.errors.notFound')); return; }
-        if (!res.ok) throw new Error(t('page.clientProfile.errors.loadFailed'));
+        const [profileRes, relatedPeoplePayload] = await Promise.all([
+            apiFetch(`${API_BASE}/users/${userId}/profile`),
+            window.AstroAPI.getRelatedPeople(userId).catch(() => []),
+        ]);
 
-        profileData = await res.json();
+        if (profileRes.status === 401) { window.location.href = '/login.html'; return; }
+        if (profileRes.status === 404) { showError(t('page.clientProfile.errors.notFound')); return; }
+        if (!profileRes.ok) throw new Error(t('page.clientProfile.errors.loadFailed'));
+
+        profileData = await profileRes.json();
+        relatedPeople = Array.isArray(relatedPeoplePayload) ? relatedPeoplePayload : [];
         renderAll(profileData);
 
         refs.profileMain.classList.remove('hidden');
@@ -250,6 +304,7 @@ function renderAll(data) {
     renderHeader(data.user);
     renderContact(data.user);
     renderStats(data.stats);
+    renderRelatedPeople(relatedPeople);
     renderInsights(data.aggregated_key_points);
     renderConsultations();
     renderRecordings(data.call_sessions);
@@ -358,6 +413,172 @@ function renderInsights(points) {
     refs.profileInsightsList.innerHTML = points
         .map((p) => `<li class="profile-insight-item">${escapeHtml(p)}</li>`)
         .join('');
+}
+
+function renderRelatedPeople(items) {
+    if (!refs.relatedPeopleList || !refs.relatedPeopleEmpty) return;
+
+    if (!items || items.length === 0) {
+        refs.relatedPeopleList.innerHTML = '';
+        refs.relatedPeopleEmpty.classList.remove('hidden');
+        return;
+    }
+
+    refs.relatedPeopleEmpty.classList.add('hidden');
+    refs.relatedPeopleList.innerHTML = items.map((person) => {
+        const name = [person.first_name, person.last_name].filter(Boolean).join(' ') || t('common.notAvailable');
+        const details = [];
+        if (person.birth_date) details.push(formatDate(person.birth_date));
+        if (person.birth_time) details.push(String(person.birth_time).slice(0, 5));
+        if (person.birth_place) details.push(person.birth_place);
+
+        return `
+            <article class="profile-related-card">
+                <div class="profile-related-main">
+                    <div class="profile-related-name-row">
+                        <h3 class="profile-related-name">${escapeHtml(name)}</h3>
+                        ${person.relation_label ? `<span class="profile-related-badge">${escapeHtml(person.relation_label)}</span>` : ''}
+                    </div>
+                    <p class="profile-related-meta">${escapeHtml(details.join(' · ') || t('common.notAvailable'))}</p>
+                    ${person.relation_notes ? `<p class="profile-related-notes">${escapeHtml(person.relation_notes)}</p>` : ''}
+                </div>
+                <div class="profile-related-actions">
+                    <button class="btn-new btn-sm" type="button" data-action="open-synastry" data-related-user-id="${escapeHtml(person.user_id)}">${escapeHtml(t('page.clients.consultation.types.synastry'))}</button>
+                    <button class="btn-logout btn-sm" type="button" data-action="open-related-profile" data-related-user-id="${escapeHtml(person.user_id)}">${escapeHtml(t('page.clientProfile.viewProfile'))}</button>
+                    <button class="btn-logout btn-sm" type="button" data-action="delete-related-person" data-related-user-id="${escapeHtml(person.user_id)}">${escapeHtml(t('page.clients.actions.delete'))}</button>
+                </div>
+            </article>
+        `;
+    }).join('');
+}
+
+function initRelatedPickerDialog() {
+    if (!refs.relatedPickerDialog) return;
+
+    refs.relatedPickerClose?.addEventListener('click', closeRelatedPickerDialog);
+    refs.relatedPickerCancel?.addEventListener('click', closeRelatedPickerDialog);
+    refs.relatedPickerBackdrop?.addEventListener('click', closeRelatedPickerDialog);
+    refs.relatedPickerSearch?.addEventListener('input', () => {
+        filterRelatedPickerUsers(refs.relatedPickerSearch.value || '');
+    });
+    refs.relatedPickerList?.addEventListener('click', (event) => {
+        const option = event.target.closest('.related-picker-option[data-user-id]');
+        if (!option) return;
+        relatedPickerState.selectedUserId = option.dataset.userId;
+        renderRelatedPickerList();
+    });
+    refs.relatedPickerSubmit?.addEventListener('click', handleLinkExistingPersonSubmit);
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && refs.relatedPickerDialog && !refs.relatedPickerDialog.classList.contains('hidden')) {
+            closeRelatedPickerDialog();
+        }
+    });
+}
+
+async function openRelatedPickerDialog() {
+    try {
+        setRelatedPickerSubmitting(false);
+        refs.relatedPickerError?.classList.add('hidden');
+        if (refs.relatedPickerError) refs.relatedPickerError.textContent = '';
+        if (refs.relatedPickerSearch) refs.relatedPickerSearch.value = '';
+        if (refs.relatedPickerRelationLabel) refs.relatedPickerRelationLabel.value = '';
+        relatedPickerState.selectedUserId = null;
+
+        const response = await apiFetch(`${API_BASE}/users`, { method: 'GET' });
+        if (!response.ok) throw new Error(t('page.clientProfile.related.loadCandidatesFailed'));
+
+        const users = await response.json();
+        relatedPickerUsers = Array.isArray(users) ? users : [];
+        relatedPickerState.users = buildRelatedPickerCandidates(relatedPickerUsers);
+        filterRelatedPickerUsers('');
+
+        refs.relatedPickerBackdrop?.classList.remove('hidden');
+        refs.relatedPickerDialog?.classList.remove('hidden');
+        refs.relatedPickerSearch?.focus();
+        document.body.style.overflow = 'hidden';
+    } catch (err) {
+        showToast(t('common.errorWithMessage', { message: err.message }), 'error');
+    }
+}
+
+function closeRelatedPickerDialog() {
+    refs.relatedPickerBackdrop?.classList.add('hidden');
+    refs.relatedPickerDialog?.classList.add('hidden');
+    refs.relatedPickerError?.classList.add('hidden');
+    if (refs.relatedPickerError) refs.relatedPickerError.textContent = '';
+    relatedPickerState.selectedUserId = null;
+    document.body.style.overflow = '';
+}
+
+function buildRelatedPickerCandidates(users) {
+    const existingIds = new Set((relatedPeople || []).map((person) => String(person.user_id)));
+    return users
+        .filter((user) => {
+            const candidateId = String(user.user_id || '');
+            return candidateId && candidateId !== String(userId) && !existingIds.has(candidateId);
+        })
+        .sort((a, b) => {
+            const aName = [a.first_name, a.last_name].filter(Boolean).join(' ').trim();
+            const bName = [b.first_name, b.last_name].filter(Boolean).join(' ').trim();
+            return aName.localeCompare(bName, window.FrontendI18n?.getLocale?.() || 'en', {
+                sensitivity: 'base',
+                numeric: true,
+            });
+        });
+}
+
+function filterRelatedPickerUsers(searchTerm) {
+    const needle = String(searchTerm || '').trim().toLowerCase();
+    relatedPickerState.filteredUsers = !needle
+        ? [...relatedPickerState.users]
+        : relatedPickerState.users.filter((user) => {
+            const haystack = [
+                user.first_name,
+                user.last_name,
+                user.birth_place,
+                user.birth_date,
+            ].filter(Boolean).join(' ').toLowerCase();
+            return haystack.includes(needle);
+        });
+
+    if (!relatedPickerState.filteredUsers.some((user) => String(user.user_id) === String(relatedPickerState.selectedUserId))) {
+        relatedPickerState.selectedUserId = relatedPickerState.filteredUsers[0]?.user_id
+            ? String(relatedPickerState.filteredUsers[0].user_id)
+            : null;
+    }
+    renderRelatedPickerList();
+}
+
+function renderRelatedPickerList() {
+    if (!refs.relatedPickerList || !refs.relatedPickerEmpty) return;
+
+    if (!relatedPickerState.filteredUsers || relatedPickerState.filteredUsers.length === 0) {
+        refs.relatedPickerList.innerHTML = '';
+        refs.relatedPickerEmpty.classList.remove('hidden');
+        return;
+    }
+
+    refs.relatedPickerEmpty.classList.add('hidden');
+    refs.relatedPickerList.innerHTML = relatedPickerState.filteredUsers.map((user) => {
+        const candidateId = String(user.user_id || '');
+        const selected = candidateId === String(relatedPickerState.selectedUserId);
+        const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || t('common.notAvailable');
+        const meta = [];
+        if (user.birth_date) meta.push(formatDate(user.birth_date));
+        if (user.birth_place) meta.push(user.birth_place);
+        return `
+            <button
+                type="button"
+                class="related-picker-option${selected ? ' selected' : ''}"
+                data-user-id="${escapeHtml(candidateId)}"
+                aria-pressed="${selected ? 'true' : 'false'}"
+            >
+                <span class="related-picker-name">${escapeHtml(name)}</span>
+                <span class="related-picker-meta">${escapeHtml(meta.join(' · ') || t('common.notAvailable'))}</span>
+            </button>
+        `;
+    }).join('');
 }
 
 /* ─── Consultation History ───────────────────────────────────────────────── */
@@ -633,6 +854,12 @@ async function openForecast() {
     }
 }
 
+function openSynastry(relatedUserId) {
+    if (!relatedUserId) return;
+    window.showPageLoader?.();
+    window.location.href = `/synastry.html?client=${encodeURIComponent(userId)}&partner=${encodeURIComponent(relatedUserId)}`;
+}
+
 async function startCallSession() {
     refs.startCallBtn.disabled = true;
     const origHtml = refs.startCallBtn.innerHTML;
@@ -689,9 +916,28 @@ function initEditClientDialog() {
     });
 }
 
+function setEditDialogMode(mode) {
+    editClientState.mode = mode === 'create-related' ? 'create-related' : 'edit-client';
+    refs.editRelationGroup?.classList.toggle('hidden', editClientState.mode !== 'create-related');
+
+    if (refs.editTitle) {
+        refs.editTitle.textContent = editClientState.mode === 'create-related'
+            ? t('page.clientProfile.related.createTitle')
+            : t('page.clients.edit.title');
+    }
+
+    const submitText = refs.editSubmit?.querySelector('.btn-text');
+    if (submitText) {
+        submitText.textContent = editClientState.mode === 'create-related'
+            ? t('page.clientProfile.related.createSubmit')
+            : t('page.clients.edit.submit');
+    }
+}
+
 async function openEditClientDialog(uid) {
     if (!uid) return;
     try {
+        setEditDialogMode('edit-client');
         const res = await apiFetch(`${API_BASE}/natal/${uid}`);
         if (!res.ok) throw new Error(t('page.clients.edit.errors.loadFailed'));
 
@@ -723,6 +969,7 @@ async function openEditClientDialog(uid) {
         if (refs.editMessenger) refs.editMessenger.value = user?.messenger || '';
         if (refs.editTags)     refs.editTags.value     = Array.isArray(user?.tags) ? user.tags.join(', ') : '';
         if (refs.editNotes)    refs.editNotes.value    = user?.notes    || '';
+        if (refs.editRelationLabel) refs.editRelationLabel.value = '';
 
         window.Timezones?.populate?.(refs.editTimezone);
         refs.editTimezone.value = formData.timezone || '';
@@ -742,6 +989,31 @@ async function openEditClientDialog(uid) {
     }
 }
 
+function openCreateRelatedPersonDialog() {
+    setEditDialogMode('create-related');
+    editClientState.userId = null;
+    editClientState.loadedChartData = null;
+    editClientState.originalCoords = null;
+    editClientState.selectedCoords = null;
+    editClientState.originalPlace = '';
+    editClientState.selectedPlaceLabel = '';
+
+    refs.editForm?.reset();
+    window.Timezones?.populate?.(refs.editTimezone);
+    refs.editTimezone.value = '';
+    refs.editTimezoneHint.textContent = '';
+    refs.editTimezoneHint.style.color = '';
+    refs.editError.classList.add('hidden');
+    refs.editError.textContent = '';
+    renderEditPlaceHint('empty');
+    setEditClientSubmitting(false);
+
+    refs.editBackdrop.classList.remove('hidden');
+    refs.editDialog.classList.remove('hidden');
+    refs.editFirstName.focus();
+    document.body.style.overflow = 'hidden';
+}
+
 function closeEditClientDialog() {
     refs.editBackdrop?.classList.add('hidden');
     refs.editDialog?.classList.add('hidden');
@@ -750,6 +1022,7 @@ function closeEditClientDialog() {
     if (refs.editTimezoneHint) { refs.editTimezoneHint.textContent = ''; refs.editTimezoneHint.style.color = ''; }
     editClientState.userId = null;
     editClientState.loadedChartData = null;
+    editClientState.mode = 'edit-client';
     document.body.style.overflow = '';
 }
 
@@ -817,7 +1090,7 @@ function renderEditPlaceHint(mode) {
 async function handleEditClientSubmit(e) {
     e.preventDefault();
     if (!refs.editForm.reportValidity()) return;
-    if (!editClientState.userId) {
+    if (editClientState.mode !== 'create-related' && !editClientState.userId) {
         refs.editError.textContent = t('page.clients.edit.errors.chartUnavailable');
         refs.editError.classList.remove('hidden');
         return;
@@ -858,9 +1131,22 @@ async function handleEditClientSubmit(e) {
     setEditClientSubmitting(true);
 
     try {
-        await window.AstroAPI.updateClientChart(editClientState.userId, requestData);
+        const submitMode = editClientState.mode;
+        if (editClientState.mode === 'create-related') {
+            await window.AstroAPI.createRelatedPerson(userId, {
+                ...requestData,
+                relation_label: refs.editRelationLabel?.value?.trim() || '',
+            });
+        } else {
+            await window.AstroAPI.updateClientChart(editClientState.userId, requestData);
+        }
         closeEditClientDialog();
-        showToast(t('page.clients.messages.updated'), 'success');
+        showToast(
+            submitMode === 'create-related'
+                ? t('page.clientProfile.related.created')
+                : t('page.clients.messages.updated'),
+            'success'
+        );
         await loadProfile();
     } catch (err) {
         refs.editError.textContent = err.message || t('page.clients.edit.errors.saveFailed');
@@ -875,6 +1161,57 @@ function setEditClientSubmitting(v) {
     refs.editSubmit.disabled = v;
     refs.editSubmit.querySelector('.btn-text')?.classList.toggle('hidden', v);
     refs.editSubmit.querySelector('.btn-loader')?.classList.toggle('hidden', !v);
+}
+
+async function handleLinkExistingPersonSubmit() {
+    if (!relatedPickerState.selectedUserId) {
+        if (refs.relatedPickerError) {
+            refs.relatedPickerError.textContent = t('page.clientProfile.related.selectCandidate');
+            refs.relatedPickerError.classList.remove('hidden');
+        }
+        return;
+    }
+
+    refs.relatedPickerError?.classList.add('hidden');
+    if (refs.relatedPickerError) refs.relatedPickerError.textContent = '';
+    setRelatedPickerSubmitting(true);
+
+    try {
+        await window.AstroAPI.linkRelatedPerson(userId, {
+            related_user_id: relatedPickerState.selectedUserId,
+            relation_label: refs.relatedPickerRelationLabel?.value?.trim() || '',
+        });
+        closeRelatedPickerDialog();
+        showToast(t('page.clientProfile.related.linked'), 'success');
+        await loadProfile();
+    } catch (err) {
+        if (refs.relatedPickerError) {
+            refs.relatedPickerError.textContent = err.message || t('page.clientProfile.related.linkFailed');
+            refs.relatedPickerError.classList.remove('hidden');
+        }
+    } finally {
+        setRelatedPickerSubmitting(false);
+    }
+}
+
+function setRelatedPickerSubmitting(isSubmitting) {
+    if (!refs.relatedPickerSubmit) return;
+    refs.relatedPickerSubmit.disabled = isSubmitting;
+    refs.relatedPickerSubmit.querySelector('.btn-text')?.classList.toggle('hidden', isSubmitting);
+    refs.relatedPickerSubmit.querySelector('.btn-loader')?.classList.toggle('hidden', !isSubmitting);
+}
+
+async function deleteRelatedPerson(relatedUserId) {
+    if (!relatedUserId) return;
+    if (!window.confirm(t('page.clientProfile.related.confirmDelete'))) return;
+
+    try {
+        await window.AstroAPI.deleteRelatedPerson(userId, relatedUserId);
+        showToast(t('page.clientProfile.related.deleted'), 'success');
+        await loadProfile();
+    } catch (err) {
+        showToast(t('common.errorWithMessage', { message: err.message }), 'error');
+    }
 }
 
 function normalizeLooseText(value) {

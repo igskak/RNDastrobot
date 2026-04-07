@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="page.synastry.title"></title>
+    <link rel="stylesheet" href="/bundles/synastry.bundle.css?v=20260407-221831">
+    <script>window.__APP_BUILD_ID__ = '20260407-221831';</script>
+</head>
+<body class="synastry-page">
+    <div class="page-loader synastry-loader" id="pageLoader">
+        <div class="synastry-loader-card">
+            <div class="pl-spinner"></div>
+            <div class="pl-text" data-i18n="page.synastry.loading"></div>
+        </div>
+    </div>
+
+    <header class="chart-header-compact synastry-header">
+        <a href="/" class="back-btn-compact" id="synastryBackBtn" data-i18n-aria-label="common.back" data-i18n-title="common.back">←</a>
+        <div class="birth-info-compact">
+            <h2 id="synastryTitle"></h2>
+            <p id="synastrySubtitle"></p>
+        </div>
+        <div class="header-nav-buttons">
+            <button type="button" class="header-nav-btn" id="openPrimaryProfileBtn" data-i18n="page.synastry.openClientProfile"></button>
+            <button type="button" class="header-nav-btn" id="openPartnerProfileBtn" data-i18n="page.synastry.openPartnerProfile"></button>
+        </div>
+    </header>
+
+    <div class="profile-error hidden" id="synastryError">
+        <p id="synastryErrorMsg"></p>
+        <a href="/" class="btn-logout" data-i18n="page.clientProfile.backToClients"></a>
+    </div>
+
+    <main class="synastry-layout hidden" id="synastryLayout">
+        <aside class="side-panel left-panel synastry-side-panel" id="primaryPanel">
+            <div class="synastry-side-head">
+                <h3 id="primaryPanelTitle"></h3>
+                <p id="primaryPanelMeta"></p>
+            </div>
+            <div class="panel-tabs synastry-tabs">
+                <button class="panel-tab active" data-panel-target="primaryPlanetsView" data-i18n="page.chart.tabs.planets"></button>
+                <button class="panel-tab" data-panel-target="primaryHousesView" data-i18n="page.chart.tabs.houses"></button>
+                <button class="panel-tab" data-panel-target="primaryAspectsView" data-i18n="page.chart.tabs.aspects"></button>
+                <button class="panel-tab" data-panel-target="primaryGridView" data-i18n="page.chart.tabs.grid"></button>
+                <button class="panel-tab" data-panel-target="primaryConfigsView" data-i18n="page.chart.tabs.configurations"></button>
+                <button class="panel-tab" data-panel-target="primaryBalancesView" data-i18n="page.chart.tabs.balances"></button>
+                <button class="panel-tab" data-panel-target="primaryInterAspectsView" data-i18n="page.synastry.tabs.interAspects"></button>
+                <button class="panel-tab" data-panel-target="primaryOverlayView" data-i18n="page.synastry.tabs.houseOverlays"></button>
+            </div>
+            <div class="panel-content synastry-panel-content">
+                <div id="primaryPlanetsView" class="panel-tab-content active">
+                    <table class="data-table compact">
+                        <thead>
+                            <tr>
+                                <th data-i18n="page.chart.table.planets.symbol"></th>
+                                <th data-i18n="page.chart.table.planets.position"></th>
+                                <th class="planet-speed-col" data-i18n="page.chart.table.planets.speed"></th>
+                                <th data-i18n="page.chart.table.planets.house"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="primaryPlanetsTable"></tbody>
+                    </table>
+                </div>
+                <div id="primaryHousesView" class="panel-tab-content">
+                    <table class="data-table compact">
+                        <thead>
+                            <tr>
+                                <th data-i18n="page.chart.table.houses.cusp"></th>
+                                <th data-i18n="page.chart.table.houses.sign"></th>
+                                <th data-i18n="page.chart.table.houses.ruler"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="primaryHousesTable"></tbody>
+                    </table>
+                </div>
+                <div id="primaryAspectsView" class="panel-tab-content">
+                    <table class="data-table compact">
+                        <thead>
+                            <tr>
+                                <th colspan="2" class="sortable" data-sort="planet" data-i18n="page.chart.table.aspects.aspect"></th>
+                                <th class="sortable" data-sort="type" data-i18n="page.chart.table.aspects.type"></th>
+                                <th class="sortable" data-sort="orb" data-i18n="page.chart.table.aspects.orb"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="primaryAspectsTable"></tbody>
+                    </table>
+                </div>
+                <div id="primaryGridView" class="panel-tab-content">
+                    <div id="primaryAspectGridContainer"></div>
+                </div>
+                <div id="primaryConfigsView" class="panel-tab-content">
+                    <div id="primaryConfigurationsContainer"></div>
+                    <div id="primaryDignitiesContainer"></div>
+                </div>
+                <div id="primaryBalancesView" class="panel-tab-content synastry-balances-view">
+                    <div id="primaryBalancesContainer"></div>
+                </div>
+                <div id="primaryInterAspectsView" class="panel-tab-content synastry-panel-section">
+                    <h4 class="subsection-title" data-i18n="page.synastry.sections.interAspects"></h4>
+                    <div class="synastry-table-wrap">
+                        <table class="data-table compact synastry-table">
+                            <thead>
+                                <tr>
+                                    <th data-i18n="page.chart.table.aspects.aspect"></th>
+                                    <th data-i18n="page.chart.table.aspects.type"></th>
+                                    <th data-i18n="page.chart.table.aspects.orb"></th>
+                                    <th data-i18n="page.synastry.phase"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="primaryInterAspectsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="primaryOverlayView" class="panel-tab-content synastry-panel-section">
+                    <h4 class="subsection-title" data-i18n="page.synastry.overlays.clientInPartner"></h4>
+                    <div class="synastry-overlay-list" id="primaryOverlayList"></div>
+                </div>
+            </div>
+        </aside>
+
+        <section class="chart-center synastry-center">
+            <div class="chart-wheel-wrapper synastry-wheel-wrapper" id="synastryWheelWrapper">
+                <svg id="synastryBaseWheel" viewBox="0 0 500 500"></svg>
+                <div class="synastry-wheel-overlay" id="synastryOverlay">
+                    <svg id="synastryOverlayWheel" viewBox="0 0 500 500"></svg>
+                </div>
+            </div>
+            <div class="synastry-mode-float">
+                <div class="synastry-mode-switch">
+                    <button type="button" class="synastry-mode-btn" id="modePrimaryBtn" data-mode="primary" data-i18n="page.synastry.modes.client"></button>
+                    <button type="button" class="synastry-mode-btn active" id="modeCompareBtn" data-mode="compare" data-i18n="page.synastry.modes.compare"></button>
+                    <button type="button" class="synastry-mode-btn" id="modePartnerBtn" data-mode="partner" data-i18n="page.synastry.modes.partner"></button>
+                </div>
+            </div>
+            <p class="synastry-wheel-caption" id="synastryWheelCaption"></p>
+        </section>
+
+        <aside class="side-panel right-panel synastry-side-panel" id="partnerPanel">
+            <div class="synastry-side-head">
+                <h3 id="partnerPanelTitle"></h3>
+                <p id="partnerPanelMeta"></p>
+            </div>
+            <div class="panel-tabs synastry-tabs">
+                <button class="panel-tab active" data-panel-target="partnerPlanetsView" data-i18n="page.chart.tabs.planets"></button>
+                <button class="panel-tab" data-panel-target="partnerHousesView" data-i18n="page.chart.tabs.houses"></button>
+                <button class="panel-tab" data-panel-target="partnerAspectsView" data-i18n="page.chart.tabs.aspects"></button>
+                <button class="panel-tab" data-panel-target="partnerGridView" data-i18n="page.chart.tabs.grid"></button>
+                <button class="panel-tab" data-panel-target="partnerConfigsView" data-i18n="page.chart.tabs.configurations"></button>
+                <button class="panel-tab" data-panel-target="partnerBalancesView" data-i18n="page.chart.tabs.balances"></button>
+                <button class="panel-tab" data-panel-target="partnerInterAspectsView" data-i18n="page.synastry.tabs.interAspects"></button>
+                <button class="panel-tab" data-panel-target="partnerOverlayView" data-i18n="page.synastry.tabs.houseOverlays"></button>
+            </div>
+            <div class="panel-content synastry-panel-content">
+                <div id="partnerPlanetsView" class="panel-tab-content active">
+                    <table class="data-table compact">
+                        <thead>
+                            <tr>
+                                <th data-i18n="page.chart.table.planets.symbol"></th>
+                                <th data-i18n="page.chart.table.planets.position"></th>
+                                <th class="planet-speed-col" data-i18n="page.chart.table.planets.speed"></th>
+                                <th data-i18n="page.chart.table.planets.house"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="partnerPlanetsTable"></tbody>
+                    </table>
+                </div>
+                <div id="partnerHousesView" class="panel-tab-content">
+                    <table class="data-table compact">
+                        <thead>
+                            <tr>
+                                <th data-i18n="page.chart.table.houses.cusp"></th>
+                                <th data-i18n="page.chart.table.houses.sign"></th>
+                                <th data-i18n="page.chart.table.houses.ruler"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="partnerHousesTable"></tbody>
+                    </table>
+                </div>
+                <div id="partnerAspectsView" class="panel-tab-content">
+                    <table class="data-table compact">
+                        <thead>
+                            <tr>
+                                <th colspan="2" class="sortable" data-sort="planet" data-i18n="page.chart.table.aspects.aspect"></th>
+                                <th class="sortable" data-sort="type" data-i18n="page.chart.table.aspects.type"></th>
+                                <th class="sortable" data-sort="orb" data-i18n="page.chart.table.aspects.orb"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="partnerAspectsTable"></tbody>
+                    </table>
+                </div>
+                <div id="partnerGridView" class="panel-tab-content">
+                    <div id="partnerAspectGridContainer"></div>
+                </div>
+                <div id="partnerConfigsView" class="panel-tab-content">
+                    <div id="partnerConfigurationsContainer"></div>
+                    <div id="partnerDignitiesContainer"></div>
+                </div>
+                <div id="partnerBalancesView" class="panel-tab-content synastry-balances-view">
+                    <div id="partnerBalancesContainer"></div>
+                </div>
+                <div id="partnerInterAspectsView" class="panel-tab-content synastry-panel-section">
+                    <h4 class="subsection-title" data-i18n="page.synastry.sections.interAspects"></h4>
+                    <div class="synastry-table-wrap">
+                        <table class="data-table compact synastry-table">
+                            <thead>
+                                <tr>
+                                    <th data-i18n="page.chart.table.aspects.aspect"></th>
+                                    <th data-i18n="page.chart.table.aspects.type"></th>
+                                    <th data-i18n="page.chart.table.aspects.orb"></th>
+                                    <th data-i18n="page.synastry.phase"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="partnerInterAspectsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="partnerOverlayView" class="panel-tab-content synastry-panel-section">
+                    <h4 class="subsection-title" data-i18n="page.synastry.overlays.partnerInClient"></h4>
+                    <div class="synastry-overlay-list" id="partnerOverlayList"></div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <script type="module" src="/js/bundles/synastry.bundle.js?v=20260407-221831"></script>
+</body>
+</html>

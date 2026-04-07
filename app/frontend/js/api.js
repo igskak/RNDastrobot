@@ -339,6 +339,76 @@
         return response.json();
     }
 
+    async function getRelatedPeople(userId, options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/users/${encodeURIComponent(String(userId))}/related-people`, {
+            method: 'GET',
+            headers: withLocaleHeaders(),
+            signal: options.signal,
+        });
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(response, 'common.error', 'Failed to load related people'));
+        }
+        return response.json();
+    }
+
+    async function createRelatedPerson(userId, payload, options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/users/${encodeURIComponent(String(userId))}/related-people/create`, {
+            method: 'POST',
+            headers: withLocaleHeaders({
+                'Content-Type': 'application/json',
+            }),
+            body: JSON.stringify(payload || {}),
+            signal: options.signal,
+        });
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(response, 'common.error', 'Failed to create related person'));
+        }
+        return response.json();
+    }
+
+    async function linkRelatedPerson(userId, payload, options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/users/${encodeURIComponent(String(userId))}/related-people`, {
+            method: 'POST',
+            headers: withLocaleHeaders({
+                'Content-Type': 'application/json',
+            }),
+            body: JSON.stringify(payload || {}),
+            signal: options.signal,
+        });
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(response, 'common.error', 'Failed to link related person'));
+        }
+        return response.json();
+    }
+
+    async function deleteRelatedPerson(userId, relatedUserId, options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/users/${encodeURIComponent(String(userId))}/related-people/${encodeURIComponent(String(relatedUserId))}`, {
+            method: 'DELETE',
+            headers: withLocaleHeaders(),
+            signal: options.signal,
+        });
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(response, 'common.error', 'Failed to delete related person'));
+        }
+        return response.json();
+    }
+
+    async function getSynastry(userId, partnerId, options = {}) {
+        const params = new URLSearchParams({
+            user_id: String(userId),
+            partner_id: String(partnerId),
+        });
+        const response = await apiFetch(`${API_BASE_URL}/synastry?${params.toString()}`, {
+            method: 'GET',
+            headers: withLocaleHeaders(),
+            signal: options.signal,
+        });
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(response, 'common.error', 'Failed to load synastry'));
+        }
+        return response.json();
+    }
+
     /**
      * Форматирование даты для API
      * @param {number} day
@@ -491,6 +561,11 @@
         deleteChartViewOverride,
         updateUserHouseSystem,
         resetUserViewToDefaults,
+        getRelatedPeople,
+        createRelatedPerson,
+        linkRelatedPerson,
+        deleteRelatedPerson,
+        getSynastry,
         formatDate,
         formatTime,
         saveChartToSession,

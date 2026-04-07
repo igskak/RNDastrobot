@@ -336,6 +336,9 @@ class PreferencesRuntimeResolver:
         self._record_cache: Dict[UUID, Optional[AstrologerPreference]] = {}
         self._payload_cache: Dict[UUID, Dict[str, Any]] = {}
         self._user_astrologer_cache: Dict[UUID, Optional[UUID]] = {}
+        self._default_methodology_cache: Optional[Dict[str, Any]] = None
+        self._default_visual_cache: Optional[Dict[str, Any]] = None
+        self._normalized_orb_settings_cache: Dict[Tuple[UUID, str], Dict[str, Any]] = {}
 
     def _get_aspect_types(self) -> List[RefAspectType]:
         if self._aspect_types_cache is None:
@@ -347,15 +350,25 @@ class PreferencesRuntimeResolver:
             self._planet_orbs_cache = self.db.query(RefPlanetOrb).all()
         return self._planet_orbs_cache
 
+    def _get_default_methodology_cached(self) -> Dict[str, Any]:
+        if self._default_methodology_cache is None:
+            self._default_methodology_cache = {
+                'orbs': build_default_orb_settings(self._get_aspect_types(), self._get_planet_orbs()),
+                'balances': build_default_balance_settings(),
+                'stationary': build_default_stationary_settings(),
+            }
+        return self._default_methodology_cache
+
     def build_default_methodology(self) -> Dict[str, Any]:
-        return {
-            'orbs': build_default_orb_settings(self._get_aspect_types(), self._get_planet_orbs()),
-            'balances': build_default_balance_settings(),
-            'stationary': build_default_stationary_settings(),
-        }
+        return deepcopy(self._get_default_methodology_cached())
+
+    def _get_default_visual_cached(self) -> Dict[str, Any]:
+        if self._default_visual_cache is None:
+            self._default_visual_cache = build_default_visual_settings(self._get_aspect_types())
+        return self._default_visual_cache
 
     def build_default_visual(self) -> Dict[str, Any]:
-        return build_default_visual_settings(self._get_aspect_types())
+        return deepcopy(self._get_default_visual_cached())
 
     def get_metadata(self) -> Dict[str, Any]:
         aspect_types = self._get_aspect_types()
@@ -393,20 +406,20 @@ class PreferencesRuntimeResolver:
             )
         return self._record_cache[astrologer_id]
 
-    def get_account_payload(
+    def _get_cached_account_payload(
         self,
         astrologer_id: UUID,
         *,
         default_house_system: str = 'P',
     ) -> Dict[str, Any]:
         if astrologer_id in self._payload_cache:
-            return deepcopy(self._payload_cache[astrologer_id])
+            return self._payload_cache[astrologer_id]
 
         defaults = {
             'version': 1,
             'chart_defaults': {},
-            'methodology': self.build_default_methodology(),
-            'visual': self.build_default_visual(),
+            'methodology': deepcopy(self._get_default_methodology_cached()),
+            'visual': deepcopy(self._get_default_visual_cached()),
             'chart_creation_defaults': {
                 'house_system': default_house_system,
             },
@@ -425,11 +438,27 @@ class PreferencesRuntimeResolver:
             default_methodology=defaults['methodology'],
         )
         self._payload_cache[astrologer_id] = deepcopy(payload)
-        return payload
+        return self._payload_cache[astrologer_id]
+
+    def get_account_payload(
+        self,
+        astrologer_id: UUID,
+        *,
+        default_house_system: str = 'P',
+    ) -> Dict[str, Any]:
+        return deepcopy(
+            self._get_cached_account_payload(
+                astrologer_id,
+                default_house_system=default_house_system,
+            )
+        )
 
     def invalidate(self, astrologer_id: UUID) -> None:
         self._record_cache.pop(astrologer_id, None)
         self._payload_cache.pop(astrologer_id, None)
+        for cache_key in list(self._normalized_orb_settings_cache.keys()):
+            if cache_key[0] == astrologer_id:
+                self._normalized_orb_settings_cache.pop(cache_key, None)
 
     def get_astrologer_id_for_user(self, user_id: UUID) -> Optional[UUID]:
         if user_id not in self._user_astrologer_cache:
@@ -442,7 +471,7 @@ class PreferencesRuntimeResolver:
         return self._user_astrologer_cache[user_id]
 
     def get_methodology_hash_for_astrologer(self, astrologer_id: UUID, *, default_house_system: str = 'P') -> str:
-        payload = self.get_account_payload(astrologer_id, default_house_system=default_house_system)
+        payload = self._get_cached_account_payload(astrologer_id, default_house_system=default_house_system)
         return stable_hash(payload.get('methodology') or {})
 
     def get_methodology_hash_for_user(self, user_id: UUID, *, default_house_system: str = 'P') -> str:
@@ -457,7 +486,7 @@ class PreferencesRuntimeResolver:
         *,
         default_house_system: str = 'P',
     ) -> Tuple[Dict[str, float], Dict[str, float]]:
-        payload = self.get_account_payload(astrologer_id, default_house_system=default_house_system)
+        payload = self._get_cached_account_payload(astrologer_id, default_house_system=default_house_system)
         balances = payload.get('methodology', {}).get('balances', {}) or {}
         return (
             {
@@ -476,9 +505,27 @@ class PreferencesRuntimeResolver:
         *,
         default_house_system: str = 'P',
     ) -> float:
-        payload = self.get_account_payload(astrologer_id, default_house_system=default_house_system)
+        payload = self._get_cached_account_payload(astrologer_id, default_house_system=default_house_system)
         stationary = payload.get('methodology', {}).get('stationary', {}) or {}
         return normalize_stationary_threshold_percent(stationary.get('threshold_percent'))
+
+    def _get_normalized_orb_settings_for_astrologer(
+        self,
+        astrologer_id: UUID,
+        *,
+        default_house_system: str = 'P',
+    ) -> Dict[str, Any]:
+        cache_key = (astrologer_id, default_house_system)
+        if cache_key not in self._normalized_orb_settings_cache:
+            payload = self._get_cached_account_payload(
+                astrologer_id,
+                default_house_system=default_house_system,
+            )
+            self._normalized_orb_settings_cache[cache_key] = normalize_orb_settings(
+                payload.get('methodology', {}).get('orbs', {}) or {},
+                default_orbs=self._get_default_methodology_cached()['orbs'],
+            )
+        return self._normalized_orb_settings_cache[cache_key]
 
     def get_stationary_threshold_for_user(self, user_id: UUID, *, default_house_system: str = 'P') -> float:
         astrologer_id = self.get_astrologer_id_for_user(user_id)
@@ -496,10 +543,9 @@ class PreferencesRuntimeResolver:
         orb_profile: Literal['natal', 'prognostic'] = 'natal',
         default_house_system: str = 'P',
     ) -> float:
-        payload = self.get_account_payload(astrologer_id, default_house_system=default_house_system)
-        normalized_orbs = normalize_orb_settings(
-            payload.get('methodology', {}).get('orbs', {}) or {},
-            default_orbs=self.build_default_methodology()['orbs'],
+        normalized_orbs = self._get_normalized_orb_settings_for_astrologer(
+            astrologer_id,
+            default_house_system=default_house_system,
         )
         pair_strategy = normalized_orbs.get('pair_strategy')
         matrix = normalized_orbs.get('profiles', {}).get(orb_profile, {}).get('matrix', {}) or {}
@@ -521,7 +567,7 @@ class PreferencesRuntimeResolver:
         if resolved_orb is not None:
             return resolved_orb
 
-        default_matrix = self.build_default_methodology()['orbs']['profiles'][orb_profile]['matrix']
+        default_matrix = self._get_default_methodology_cached()['orbs']['profiles'][orb_profile]['matrix']
         fallback_values = []
         for body in (body_a, body_b):
             canonical = normalize_body_name(body) or str(body)

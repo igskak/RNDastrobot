@@ -458,6 +458,100 @@ class NatalChartResponse(BaseModel):
     karmic_analysis: KarmicAnalysisInfo
 
 
+class RelatedPersonLinkRequest(BaseModel):
+    """Link an existing client to the current client for synastry."""
+    related_user_id: UUID
+    relation_label: Optional[str] = Field(None, max_length=100)
+    relation_notes: Optional[str] = None
+
+    @field_validator('relation_label', 'relation_notes', mode='before')
+    @classmethod
+    def normalize_optional_text(cls, value):
+        if isinstance(value, str):
+            normalized = value.strip()
+            return normalized or None
+        return value
+
+
+class RelatedPersonCreateRequest(BirthDataInput):
+    """Create a full natal chart for a new related person and link them."""
+    relation_label: Optional[str] = Field(None, max_length=100)
+    relation_notes: Optional[str] = None
+
+    @field_validator('relation_label', 'relation_notes', mode='before')
+    @classmethod
+    def normalize_optional_relation_text(cls, value):
+        if isinstance(value, str):
+            normalized = value.strip()
+            return normalized or None
+        return value
+
+
+class RelatedPersonResponse(BaseModel):
+    """Serialized related-person link for client profile UI."""
+    user_id: UUID
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    birth_date: Optional[str] = None
+    birth_time: Optional[str] = None
+    birth_place: Optional[str] = None
+    timezone: Optional[str] = None
+    relation_label: Optional[str] = None
+    relation_notes: Optional[str] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
+class SynastryAspectInfo(BaseModel):
+    """Cross-chart aspect between the primary client and related person."""
+    planet_1: str
+    planet_2: str
+    left_planet: Optional[str] = None
+    right_planet: Optional[str] = None
+    left_rank: Optional[int] = None
+    right_rank: Optional[int] = None
+    aspect_type: str
+    orb: float
+    is_major: bool
+    applying: Optional[bool] = None
+    harmonic_type: Optional[str] = None
+    is_partile: Optional[bool] = False
+    chart_1: str
+    chart_2: str
+    object_1_type: Optional[str] = None
+    object_2_type: Optional[str] = None
+    object_1_sign: Optional[str] = None
+    object_2_sign: Optional[str] = None
+    object_1_house: Optional[int] = None
+    object_2_house: Optional[int] = None
+
+
+class HouseOverlayItem(BaseModel):
+    """Placement of one body from chart A into houses of chart B."""
+    body_name: str
+    body_type: str
+    sign: Optional[str] = None
+    degree_in_sign: Optional[float] = None
+    degree_in_sign_formatted: Optional[str] = None
+    natal_house: Optional[int] = None
+    overlay_house: int
+
+
+class HouseOverlaySet(BaseModel):
+    """Both house-overlay directions for synastry."""
+    primary_in_partner_houses: List[HouseOverlayItem] = Field(default_factory=list)
+    partner_in_primary_houses: List[HouseOverlayItem] = Field(default_factory=list)
+
+
+class SynastryResponse(BaseModel):
+    """Full synastry workspace payload."""
+    primary_chart: NatalChartResponse
+    partner_chart: NatalChartResponse
+    inter_aspects: List[SynastryAspectInfo] = Field(default_factory=list)
+    house_overlays: HouseOverlaySet
+    resolved_preferences: Dict[str, Any] = Field(default_factory=dict)
+
+
 # ============================================================================
 # General Overview (Этап 5 - Общий срез)
 # ============================================================================

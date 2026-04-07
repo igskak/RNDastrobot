@@ -1,4 +1,7 @@
+import app.services.preferences_runtime as preferences_runtime_module
 from app.services.preferences_runtime import (
+    CANONICAL_BODIES,
+    PreferencesRuntimeResolver,
     apply_fixed_prognostic_defaults,
     build_default_orb_settings,
     build_default_visual_settings,
@@ -149,3 +152,112 @@ def test_normalize_methodology_settings_preserves_custom_stationary_threshold():
     })
 
     assert normalized["stationary"]["threshold_percent"] == 7.5
+
+
+def test_resolve_orb_for_astrologer_reuses_cached_normalized_orbs(monkeypatch):
+    aspect_types = [
+        "Conjunction",
+        "Opposition",
+    ]
+    default_methodology = {
+        "orbs": {
+            "version": 2,
+            "pair_strategy": "larger",
+            "profiles": {
+                "natal": {
+                    "matrix": {
+                        aspect_type: {body: 5.0 for body in CANONICAL_BODIES}
+                        for aspect_type in aspect_types
+                    },
+                },
+                "prognostic": {
+                    "matrix": {
+                        aspect_type: {body: (3.0 if body == "Moon" else 1.0) for body in CANONICAL_BODIES}
+                        for aspect_type in aspect_types
+                    },
+                },
+            },
+        },
+        "balances": {"version": 1, "planet_weights": {}, "special_point_weights": {}},
+        "stationary": {"threshold_percent": 5.0},
+    }
+    payload = {"methodology": default_methodology}
+    astrologer_id = "astrologer-1"
+
+    class DummyResolver(PreferencesRuntimeResolver):
+        def __init__(self):
+            super().__init__(db=None)
+            self._default_methodology_cache = default_methodology
+
+        def _get_cached_account_payload(self, astrologer_id, *, default_house_system="P"):
+            return payload
+
+    resolver = DummyResolver()
+    original_normalize = preferences_runtime_module.normalize_orb_settings
+    calls = {"count": 0}
+
+    def counting_normalize(*args, **kwargs):
+        calls["count"] += 1
+        return original_normalize(*args, **kwargs)
+
+    monkeypatch.setattr(preferences_runtime_module, "normalize_orb_settings", counting_normalize)
+
+    first = resolver.resolve_orb_for_astrologer(
+        astrologer_id,
+        "Sun",
+        "Moon",
+        "Conjunction",
+        orb_profile="prognostic",
+    )
+    second = resolver.resolve_orb_for_astrologer(
+        astrologer_id,
+        "Mars",
+        "Moon",
+        "Opposition",
+        orb_profile="prognostic",
+    )
+
+    assert first == 3.0
+    assert second == 3.0
+    assert calls["count"] == 1
+
+
+def test_invalidate_clears_cached_normalized_orbs(monkeypatch):
+    default_methodology = {
+        "orbs": {
+            "version": 2,
+            "pair_strategy": "larger",
+            "profiles": {
+                "natal": {"matrix": {"Conjunction": {"Sun": 5.0}}},
+                "prognostic": {"matrix": {"Conjunction": {"Sun": 1.0}}},
+            },
+        },
+        "balances": {"version": 1, "planet_weights": {}, "special_point_weights": {}},
+        "stationary": {"threshold_percent": 5.0},
+    }
+    payload = {"methodology": default_methodology}
+    astrologer_id = "astrologer-2"
+
+    class DummyResolver(PreferencesRuntimeResolver):
+        def __init__(self):
+            super().__init__(db=None)
+            self._default_methodology_cache = default_methodology
+
+        def _get_cached_account_payload(self, astrologer_id, *, default_house_system="P"):
+            return payload
+
+    resolver = DummyResolver()
+    original_normalize = preferences_runtime_module.normalize_orb_settings
+    calls = {"count": 0}
+
+    def counting_normalize(*args, **kwargs):
+        calls["count"] += 1
+        return original_normalize(*args, **kwargs)
+
+    monkeypatch.setattr(preferences_runtime_module, "normalize_orb_settings", counting_normalize)
+
+    resolver.resolve_orb_for_astrologer(astrologer_id, "Sun", "Sun", "Conjunction", orb_profile="prognostic")
+    resolver.invalidate(astrologer_id)
+    resolver.resolve_orb_for_astrologer(astrologer_id, "Sun", "Sun", "Conjunction", orb_profile="prognostic")
+
+    assert calls["count"] == 2
