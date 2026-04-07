@@ -144,11 +144,14 @@
     opacity: 0.48;
 }
 
-.synastry-mode-float {
+.synastry-controls-float {
     position: absolute;
     top: 16px;
     right: 16px;
     z-index: 50;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
 }
 
 .synastry-mode-switch {
@@ -182,6 +185,16 @@
 .synastry-mode-btn.active {
     background: linear-gradient(135deg, #1e3a5f, #2e5a8d);
     color: #fff;
+}
+
+.synastry-settings-toggle {
+    width: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 18px;
+    box-shadow: 0 10px 24px rgba(26, 22, 20, 0.08);
 }
 
 .synastry-wheel-caption {
@@ -255,6 +268,125 @@
     font-size: 12px;
 }
 
+.synastry-page .settings-panel {
+    top: 70px;
+    right: 16px;
+}
+
+.synastry-page .natal-matrix-editor {
+    max-height: 280px;
+    overflow: auto;
+    border: 1px solid rgba(212, 201, 181, 0.5);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.82);
+}
+
+.synastry-page .natal-matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.synastry-page .natal-matrix-table th,
+.synastry-page .natal-matrix-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(221, 212, 194, 0.56);
+    text-align: left;
+}
+
+.synastry-page .natal-matrix-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: rgba(248, 244, 236, 0.96);
+    color: var(--text-muted);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.synastry-page .natal-matrix-table td:nth-child(2),
+.synastry-page .natal-matrix-table td:nth-child(3),
+.synastry-page .natal-matrix-table th:nth-child(2),
+.synastry-page .natal-matrix-table th:nth-child(3) {
+    width: 76px;
+    text-align: center;
+}
+
+.synastry-page .natal-matrix-table tr:last-child td {
+    border-bottom: none;
+}
+
+.synastry-page .natal-matrix-body {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.synastry-page .natal-matrix-body--icon-only {
+    justify-content: center;
+    min-width: 28px;
+}
+
+.synastry-page .natal-matrix-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.synastry-page .settings-check-grid {
+    display: grid;
+    gap: 8px;
+}
+
+.synastry-page .settings-check-grid--compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.synastry-page .settings-check-stack {
+    display: grid;
+    gap: 8px;
+}
+
+.synastry-page .settings-check-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--text-primary);
+}
+
+.synastry-page .settings-check-option-glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: rgba(30, 58, 95, 0.08);
+    line-height: 1;
+}
+
+.synastry-page .settings-check-option--pill {
+    min-height: 40px;
+    padding: 8px 10px;
+    border: 1px solid rgba(212, 201, 181, 0.6);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.82);
+}
+
+.synastry-page .settings-check-option input {
+    margin: 0;
+}
+
+.synastry-page .settings-check-option--icon-only {
+    justify-content: center;
+    gap: 0;
+    min-width: 52px;
+    padding-inline: 8px;
+}
+
 @media (max-width: 1260px) {
     .synastry-side-panel {
         width: 320px;
@@ -309,21 +441,29 @@
         font-size: 24px;
     }
 
-    .synastry-mode-float {
+    .synastry-controls-float {
         top: 12px;
         right: 12px;
         left: 12px;
+        align-items: stretch;
     }
 
     .synastry-mode-switch {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        width: 100%;
+        flex: 1;
+        width: auto;
     }
 
     .synastry-mode-btn {
         padding: 9px 10px;
         font-size: 12px;
+    }
+
+    .synastry-settings-toggle {
+        min-width: 42px;
+        width: 42px;
+        min-height: 42px;
     }
 
     .synastry-wheel-caption {
@@ -338,6 +478,12 @@
     .synastry-overlay-item {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .synastry-page .settings-panel {
+        right: 12px;
+        left: 12px;
+        top: 64px;
     }
 }
 

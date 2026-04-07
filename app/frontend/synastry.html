@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.synastry.title"></title>
-    <link rel="stylesheet" href="/bundles/synastry.bundle.css?v=20260407-221831">
-    <script>window.__APP_BUILD_ID__ = '20260407-221831';</script>
+    <link rel="stylesheet" href="/bundles/synastry.bundle.css?v=20260407-223404">
+    <script>window.__APP_BUILD_ID__ = '20260407-223404';</script>
 </head>
 <body class="synastry-page">
     <div class="page-loader synastry-loader" id="pageLoader">
@@ -126,14 +126,101 @@
                     <svg id="synastryOverlayWheel" viewBox="0 0 500 500"></svg>
                 </div>
             </div>
-            <div class="synastry-mode-float">
+            <div class="synastry-controls-float">
                 <div class="synastry-mode-switch">
                     <button type="button" class="synastry-mode-btn" id="modePrimaryBtn" data-mode="primary" data-i18n="page.synastry.modes.client"></button>
                     <button type="button" class="synastry-mode-btn active" id="modeCompareBtn" data-mode="compare" data-i18n="page.synastry.modes.compare"></button>
                     <button type="button" class="synastry-mode-btn" id="modePartnerBtn" data-mode="partner" data-i18n="page.synastry.modes.partner"></button>
                 </div>
+                <button type="button" class="header-nav-btn header-nav-btn--icon synastry-settings-toggle" id="settingsToggle" data-i18n-aria-label="common.settings" data-i18n-title="common.settings">
+                    <svg class="nav-btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+                        <path d="M7 1.75l.92 1.86 2.05.3-1.48 1.44.35 2.03L7 6.4l-1.84.98.35-2.03L4.03 3.9l2.05-.3L7 1.75Z"/>
+                        <circle cx="7" cy="7" r="1.6"/>
+                    </svg>
+                </button>
             </div>
             <p class="synastry-wheel-caption" id="synastryWheelCaption"></p>
+
+            <div id="settingsPanel" class="settings-panel hidden">
+                <h4 data-i18n="common.displaySettings"></h4>
+
+                <div class="settings-section">
+                    <label class="settings-label" data-i18n="page.chart.settings.orientation.label"></label>
+                    <select id="orientationSelect" class="settings-select">
+                        <option value="aries" selected data-i18n="page.chart.settings.orientation.aries"></option>
+                        <option value="asc" data-i18n="page.chart.settings.orientation.asc"></option>
+                    </select>
+                </div>
+
+                <div class="settings-section">
+                    <label class="settings-label" data-i18n="page.chart.settings.planetSize"></label>
+                    <div class="settings-size-control">
+                        <input type="range" id="planetScaleRange" min="80" max="170" step="5" value="120">
+                        <span id="planetScaleValue">120%</span>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <label class="settings-label" data-i18n="page.chart.settings.pointSize"></label>
+                    <div class="settings-size-control">
+                        <input type="range" id="pointScaleRange" min="80" max="170" step="5" value="100">
+                        <span id="pointScaleValue">100%</span>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <label class="settings-label" data-i18n="page.chart.settings.aspectScope.label"></label>
+                    <select id="aspectScopeSelect" class="settings-select">
+                        <option value="all" data-i18n="common.all"></option>
+                        <option value="major" data-i18n="common.major"></option>
+                        <option value="minor" data-i18n="common.minor"></option>
+                    </select>
+                </div>
+
+                <div class="settings-section">
+                    <label class="settings-label" data-i18n="page.chart.settings.planetsAndPoints"></label>
+                    <div class="natal-matrix-editor" id="natalMatrixEditor"></div>
+                </div>
+
+                <div class="settings-section">
+                    <label class="settings-label" data-i18n="page.accountSettings.fields.aspectTypes"></label>
+                    <div class="settings-check-grid settings-check-grid--compact" id="aspectTypeToggles"></div>
+                </div>
+
+                <div class="settings-section">
+                    <label class="settings-label" data-i18n="page.chart.settings.aspectOptions"></label>
+                    <label class="settings-check-option">
+                        <input type="checkbox" id="showApplyingSeparatingToggle">
+                        <span data-i18n="page.accountSettings.options.showApplyingSeparating"></span>
+                    </label>
+                </div>
+
+                <div class="settings-section">
+                    <label class="settings-label" data-i18n="page.chart.settings.houseLabels.label"></label>
+                    <select id="houseNumberStyleSelect" class="settings-select">
+                        <option value="arabic" data-i18n="page.chart.settings.houseLabels.arabic"></option>
+                        <option value="roman" data-i18n="page.chart.settings.houseLabels.roman"></option>
+                    </select>
+                    <label class="settings-check-option">
+                        <input type="checkbox" id="houseLabelsOutsideToggle">
+                        <span data-i18n="page.chart.settings.houseLabels.outside"></span>
+                    </label>
+                </div>
+
+                <div class="settings-section">
+                    <label class="settings-label" data-i18n="page.chart.settings.tableOptions"></label>
+                    <div class="settings-check-stack">
+                        <label class="settings-check-option">
+                            <input type="checkbox" id="showSpeedToggle">
+                            <span data-i18n="page.accountSettings.options.showSpeed"></span>
+                        </label>
+                        <label class="settings-check-option">
+                            <input type="checkbox" id="showStationaryToggle">
+                            <span data-i18n="page.accountSettings.options.showStationary"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <aside class="side-panel right-panel synastry-side-panel" id="partnerPanel">
@@ -223,6 +310,6 @@
         </aside>
     </main>
 
-    <script type="module" src="/js/bundles/synastry.bundle.js?v=20260407-221831"></script>
+    <script type="module" src="/js/bundles/synastry.bundle.js?v=20260407-223404"></script>
 </body>
 </html>
