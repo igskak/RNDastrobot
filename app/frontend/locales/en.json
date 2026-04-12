@@ -291,6 +291,11 @@
         "natal": "Natal",
         "prognostic": "Prognostic"
       },
+      "viewMode": {
+        "ariaLabel": "Orb table view",
+        "compact": "Compact",
+        "default": "Default"
+      },
       "title": "Orb profiles"
     },
       "subtitle": "Set the defaults once, then let individual chart overrides change only what is necessary.",

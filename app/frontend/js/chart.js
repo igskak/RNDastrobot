@@ -987,7 +987,7 @@ function renderNatalAspectTypeToggles() {
 
     toggles.innerHTML = NATAL_ASPECT_TYPES.map((aspectType) => {
         const label = t(`astro.aspect.${aspectType}`);
-        const symbol = Symbols?.aspects?.[aspectType] || '';
+        const symbol = Symbols?.getAspectDisplay?.(aspectType) || Symbols?.aspects?.[aspectType] || '';
         const checked = enabledTypes.has(aspectType) ? 'checked' : '';
         const escapedLabel = escapeAttribute(label);
         return `

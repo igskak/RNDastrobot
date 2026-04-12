@@ -671,7 +671,7 @@ function renderSynastryAspectTypeToggles() {
 
     synastryRefs.aspectTypeToggles.innerHTML = SYNASTRY_ASPECT_TYPES.map((aspectType) => {
         const label = synT(`astro.aspect.${aspectType}`);
-        const symbol = Symbols?.aspects?.[aspectType] || '';
+        const symbol = Symbols?.getAspectDisplay?.(aspectType) || Symbols?.aspects?.[aspectType] || '';
         const checked = enabledTypes.has(aspectType) ? 'checked' : '';
         const escapedLabel = escapeSynAttribute(label);
         return `
@@ -911,12 +911,12 @@ function renderPerspectiveInterAspects(container, perspective) {
             <tr>
                 <td>
                     <div class="synastry-aspect-bodies synastry-aspect-bodies--stacked">
-                        <span><span class="astro-symbol">${Symbols.planets[firstPlanet] || ''}</span> ${escapeSynHtml(getBodyLabel(firstPlanet))}</span>
+                        <span>${getBodySymbolMarkup(firstPlanet, { size: 16, title: getBodyLabel(firstPlanet) })} ${escapeSynHtml(getBodyLabel(firstPlanet))}</span>
                         <span class="synastry-aspect-divider">→</span>
-                        <span><span class="astro-symbol">${Symbols.planets[secondPlanet] || ''}</span> ${escapeSynHtml(getBodyLabel(secondPlanet))}</span>
+                        <span>${getBodySymbolMarkup(secondPlanet, { size: 16, title: getBodyLabel(secondPlanet) })} ${escapeSynHtml(getBodyLabel(secondPlanet))}</span>
                     </div>
                 </td>
-                <td><span class="astro-symbol">${Symbols.aspects[aspect.aspect_type] || ''}</span> ${escapeSynHtml(getAspectLabel(aspect.aspect_type))}</td>
+                <td><span class="astro-symbol">${Symbols?.getAspectDisplay?.(aspect.aspect_type) || Symbols.aspects[aspect.aspect_type] || ''}</span> ${escapeSynHtml(getAspectLabel(aspect.aspect_type))}</td>
                 <td class="mono">${Number(aspect.orb || 0).toFixed(2)}°</td>
                 <td>${escapeSynHtml(phase)}</td>
             </tr>
@@ -934,7 +934,7 @@ function renderHouseOverlayList(container, items) {
     container.innerHTML = items.map((item) => `
         <div class="synastry-overlay-item">
             <div class="synastry-overlay-body">
-                <span class="astro-symbol">${Symbols.planets[item.body_name] || ''}</span>
+                ${getBodySymbolMarkup(item.body_name, { size: 16, title: getBodyLabel(item.body_name) })}
                 <span>${escapeSynHtml(getBodyLabel(item.body_name))}</span>
             </div>
             <div class="synastry-overlay-meta">
@@ -968,7 +968,12 @@ function formatSynDate(isoDate) {
 function getBodyLabel(bodyName) {
     const key = `astro.planet.${bodyName}`;
     const translated = synT(key);
-    return translated === key ? bodyName : translated;
+    return translated === key ? (Symbols.getPlanetNameRu?.(bodyName) || bodyName) : translated;
+}
+
+function getBodySymbolMarkup(bodyName, options = {}) {
+    return Symbols.getPlanetSymbolMarkup?.(bodyName, options)
+        || `<span class="astro-symbol">${escapeSynHtml(Symbols.getPlanetSymbol?.(bodyName) || '')}</span>`;
 }
 
 function getAspectLabel(aspectType) {

@@ -165,7 +165,7 @@ class ChartWheel {
         const leftName = this.getPlanetName(leftPlanet);
         const rightName = this.getPlanetName(rightPlanet);
         const aspectType = aspectData?.aspect_type || '';
-        const aspectSymbol = Symbols.aspects[aspectType] || '';
+        const aspectSymbol = Symbols.getAspectDisplay?.(aspectType) || Symbols.aspects[aspectType] || '';
         const aspectName = this.t(`astro.aspect.${aspectType}`);
         const aspectLabel = aspectName === `astro.aspect.${aspectType}` ? (Symbols.aspectNamesRu[aspectType] || aspectType) : aspectName;
         const orb = Number(aspectData?.orb);

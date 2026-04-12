@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.accountSettings.title"></title>
-    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=20260412-191057">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260412-191057">
+    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=20260412-193851">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260412-193851">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '20260412-191057';</script>
+    <script>window.__APP_BUILD_ID__ = '20260412-193851';</script>
 </head>
 <body class="account-settings-page">
     <div class="page-loader" id="pageLoader">
@@ -18,8 +18,13 @@
     </div>
 
     <div class="account-settings-shell">
-        <header class="account-settings-header">
+        <div class="account-settings-topbar">
             <a href="/" class="account-settings-back" data-i18n-title="common.back" data-i18n-aria-label="common.back">←</a>
+            <div class="account-settings-topbar-actions">
+                <button type="button" class="account-settings-btn account-settings-btn--primary" id="saveAccountSettingsBtn" data-i18n="page.accountSettings.actions.save"></button>
+            </div>
+        </div>
+        <header class="account-settings-header">
             <div class="account-settings-intro">
                 <p class="account-settings-kicker" data-i18n="page.accountSettings.kicker"></p>
                 <div class="account-settings-title-row">
@@ -30,7 +35,6 @@
             </div>
             <div class="account-settings-actions">
                 <button type="button" class="account-settings-btn" id="restoreStandardDefaultsBtn" data-i18n="page.accountSettings.actions.restore"></button>
-                <button type="button" class="account-settings-btn account-settings-btn--primary" id="saveAccountSettingsBtn" data-i18n="page.accountSettings.actions.save"></button>
             </div>
         </header>
 
@@ -290,6 +294,30 @@
                                         data-i18n="page.accountSettings.orbs.tabs.prognostic"
                                     ></button>
                                 </div>
+                                <div
+                                    class="account-settings-profile-tabs"
+                                    role="tablist"
+                                    data-i18n-aria-label="page.accountSettings.orbs.viewMode.ariaLabel"
+                                >
+                                    <button
+                                        type="button"
+                                        class="account-settings-profile-tab is-active"
+                                        id="accountOrbViewModeDefault"
+                                        role="tab"
+                                        aria-selected="true"
+                                        data-orb-view-mode="default"
+                                        data-i18n="page.accountSettings.orbs.viewMode.default"
+                                    ></button>
+                                    <button
+                                        type="button"
+                                        class="account-settings-profile-tab"
+                                        id="accountOrbViewModeCompact"
+                                        role="tab"
+                                        aria-selected="false"
+                                        data-orb-view-mode="compact"
+                                        data-i18n="page.accountSettings.orbs.viewMode.compact"
+                                    ></button>
+                                </div>
                                 <button
                                     type="button"
                                     class="account-settings-secondary-action hidden"
@@ -314,7 +342,7 @@
                             role="tabpanel"
                             aria-labelledby="accountOrbTabNatal"
                         >
-                            <table class="account-settings-table account-settings-table--methodology">
+                            <table class="account-settings-table account-settings-table--methodology" id="accountOrbsTable">
                                 <thead>
                                     <tr id="accountOrbsHeaderRow">
                                         <th
@@ -507,7 +535,7 @@
 
     <div id="accountSettingsToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/account-settings.bundle.js?v=20260412-191057"></script>
-    <script src="js/locale-switcher.js?v=20260412-191057"></script>
+    <script type="module" src="js/bundles/account-settings.bundle.js?v=20260412-193851"></script>
+    <script src="js/locale-switcher.js?v=20260412-193851"></script>
 </body>
 </html>

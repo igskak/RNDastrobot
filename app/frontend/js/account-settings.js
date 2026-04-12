@@ -22,27 +22,17 @@
         'Biquintile',
         'Quincunx',
     ];
-    const ASPECT_SYMBOL_FALLBACKS = {
-        Sesquiquadrate: '⚼',
-        Vigintile: 'V',
-        Semi_Nonagon: 'SN',
-        Decile: 'D',
-        Nonagon: 'N',
-        Binonagon: 'BN',
-        Sentagon: 'SG',
-        Tridecile: 'TD',
-        Septile: '7',
-        Novile: '9',
-    };
     const ORB_PROFILE_IDS = window.AstroPreferences?.ORB_PROFILE_IDS || ['natal', 'prognostic'];
     const DEFAULT_ORB_PAIR_STRATEGY = window.AstroPreferences?.DEFAULT_ORB_PAIR_STRATEGY || 'larger';
     const ACTIVE_RECALC_JOB_KEY = 'activePreferenceRecalcJobId';
+    const ORB_VIEW_MODE_STORAGE_KEY = 'accountOrbViewMode';
 
     let accountPreferences = null;
     let preferencesMetadata = null;
     let toastTimer = null;
     let pollTimer = null;
     let activeOrbProfile = 'natal';
+    let activeOrbViewMode = 'default';
     let lastFocusedElementBeforeResetConfirm = null;
 
     function hidePageLoader() {
@@ -76,11 +66,16 @@
     }
 
     function getBodyLabel(body) {
-        return translateOrFallback(`astro.planet.${body}`, body);
+        return translateOrFallback(`astro.planet.${body}`, window.Symbols?.getPlanetNameRu?.(body) || body);
     }
 
     function getBodySymbol(body) {
-        return window.Symbols?.planets?.[body] || String(body || '').slice(0, 2) || '•';
+        return window.Symbols?.getPlanetSymbol?.(body) || String(body || '').slice(0, 2) || '•';
+    }
+
+    function getBodySymbolMarkup(body, options = {}) {
+        return window.Symbols?.getPlanetSymbolMarkup?.(body, options)
+            || `<span class="astro-symbol" aria-hidden="true">${escapeHtml(getBodySymbol(body))}</span>`;
     }
 
     function getAspectLabel(aspectType) {
@@ -88,9 +83,9 @@
     }
 
     function getAspectSymbol(aspectType) {
-        return window.Symbols?.aspects?.[aspectType]
-            || ASPECT_SYMBOL_FALLBACKS[aspectType]
-            || String(aspectType || '').slice(0, 2)
+        return window.Symbols?.getAspectDisplay?.(aspectType)
+            || window.Symbols?.aspects?.[aspectType]
+            || String(aspectType || '').slice(0, 3)
             || '•';
     }
 
@@ -291,6 +286,20 @@
         }
     }
 
+    function updateOrbViewModeUi() {
+        const panel = document.getElementById('accountOrbMatrixPanel');
+        const table = document.getElementById('accountOrbsTable');
+
+        document.querySelectorAll('[data-orb-view-mode]').forEach((button) => {
+            const isActive = button.dataset.orbViewMode === activeOrbViewMode;
+            button.classList.toggle('is-active', isActive);
+            button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+
+        panel?.classList.toggle('is-compact', activeOrbViewMode === 'compact');
+        table?.classList.toggle('is-compact', activeOrbViewMode === 'compact');
+    }
+
     function syncOrbMatrixFromDom() {
         const methodology = ensureMethodologyState();
         const matrix = buildDefaultOrbMatrix(activeOrbProfile);
@@ -314,6 +323,13 @@
         if (rerender && accountPreferences) {
             renderOrbsMatrix(accountPreferences.methodology);
         }
+    }
+
+    function setActiveOrbViewMode(viewMode) {
+        if (!['default', 'compact'].includes(viewMode)) return;
+        activeOrbViewMode = viewMode;
+        localStorage.setItem(ORB_VIEW_MODE_STORAGE_KEY, viewMode);
+        updateOrbViewModeUi();
     }
 
     function renderAspectTypesMatrix(chartDefaults = {}) {
@@ -362,7 +378,7 @@
 
         tbody.innerHTML = getMatrixBodies().map((body) => {
             const label = escapeHtml(getBodyLabel(body));
-            const symbol = escapeHtml(window.Symbols?.planets?.[body] || '');
+            const symbolMarkup = getBodySymbolMarkup(body, { size: 18, title: getBodyLabel(body) });
 
             const cells = VIEW_IDS.map((viewId) => {
                 const rows = ensureMatrixRows(chartDefaults?.[viewId]?.matrix?.rows || {});
@@ -400,7 +416,7 @@
                 <tr>
                     <th scope="row">
                         <span class="account-settings-body account-settings-body--icon-only">
-                            <span class="account-settings-body-badge" title="${label}" aria-label="${label}" role="img" tabindex="0"><span class="astro-symbol" aria-hidden="true">${symbol}</span></span>
+                            <span class="account-settings-body-badge" title="${label}" aria-label="${label}" role="img" tabindex="0">${symbolMarkup}</span>
                         </span>
                     </th>
                     ${cells}
@@ -423,12 +439,12 @@
             <th class="account-settings-orb-corner"></th>
             ${bodies.map((body) => {
                 const label = escapeHtml(getBodyLabel(body));
-                const symbol = escapeHtml(window.Symbols?.planets?.[body] || body);
+                const symbolMarkup = getBodySymbolMarkup(body, { size: 18, title: getBodyLabel(body) });
                 return `
                     <th>
                         <span class="account-settings-body account-settings-body--icon-only">
                             <span class="account-settings-body-badge account-settings-orb-glyph" title="${label}" aria-label="${label}" role="img" tabindex="0">
-                                <span class="astro-symbol" aria-hidden="true">${symbol}</span>
+                                ${symbolMarkup}
                             </span>
                         </span>
                     </th>
@@ -474,6 +490,7 @@
         }).join('');
 
         updateOrbProfileUi();
+        updateOrbViewModeUi();
     }
 
     function renderBalanceWeights(methodology = {}) {
@@ -492,12 +509,12 @@
         planetsBody.innerHTML = planetRows.map((body) => `
             <tr>
                 <th scope="row" class="account-settings-icon-cell">
-                    <span class="account-settings-body account-settings-body--icon-only">
-                        <span class="account-settings-body-badge account-settings-orb-glyph" title="${escapeHtml(getBodyLabel(body))}" aria-label="${escapeHtml(getBodyLabel(body))}" role="img" tabindex="0">
-                            <span class="astro-symbol" aria-hidden="true">${escapeHtml(getBodySymbol(body))}</span>
+                        <span class="account-settings-body account-settings-body--icon-only">
+                            <span class="account-settings-body-badge account-settings-orb-glyph" title="${escapeHtml(getBodyLabel(body))}" aria-label="${escapeHtml(getBodyLabel(body))}" role="img" tabindex="0">
+                                ${getBodySymbolMarkup(body, { size: 18, title: getBodyLabel(body) })}
+                            </span>
                         </span>
-                    </span>
-                </th>
+                    </th>
                 <td>
                     <input
                         class="account-settings-number-input account-settings-compact-input"
@@ -516,12 +533,12 @@
         specialBody.innerHTML = specialRows.map((body) => `
             <tr>
                 <th scope="row" class="account-settings-icon-cell">
-                    <span class="account-settings-body account-settings-body--icon-only">
-                        <span class="account-settings-body-badge account-settings-orb-glyph" title="${escapeHtml(getBodyLabel(body))}" aria-label="${escapeHtml(getBodyLabel(body))}" role="img" tabindex="0">
-                            <span class="astro-symbol" aria-hidden="true">${escapeHtml(getBodySymbol(body))}</span>
+                        <span class="account-settings-body account-settings-body--icon-only">
+                            <span class="account-settings-body-badge account-settings-orb-glyph" title="${escapeHtml(getBodyLabel(body))}" aria-label="${escapeHtml(getBodyLabel(body))}" role="img" tabindex="0">
+                                ${getBodySymbolMarkup(body, { size: 18, title: getBodyLabel(body) })}
+                            </span>
                         </span>
-                    </span>
-                </th>
+                    </th>
                 <td>
                     <input
                         class="account-settings-number-input account-settings-compact-input"
@@ -1024,6 +1041,8 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+        activeOrbViewMode = localStorage.getItem(ORB_VIEW_MODE_STORAGE_KEY) === 'compact' ? 'compact' : 'default';
+
         const saveBtn = document.getElementById('saveAccountSettingsBtn');
         const restoreBtn = document.getElementById('restoreStandardDefaultsBtn');
         const applyNatalOrbsBtn = document.getElementById('accountApplyNatalOrbsBtn');
@@ -1058,6 +1077,11 @@
         document.querySelectorAll('[data-orb-profile-tab]').forEach((button) => {
             button.addEventListener('click', () => {
                 setActiveOrbProfile(button.dataset.orbProfileTab || 'natal');
+            });
+        });
+        document.querySelectorAll('[data-orb-view-mode]').forEach((button) => {
+            button.addEventListener('click', () => {
+                setActiveOrbViewMode(button.dataset.orbViewMode || 'default');
             });
         });
         applyNatalOrbsBtn?.addEventListener('click', () => {

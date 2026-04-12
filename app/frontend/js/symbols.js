@@ -2,6 +2,12 @@
  * Астрологические символы и иконки
  */
 
+const BODY_NAME_ALIASES = {
+    'TrueNorthNode': 'TrueNode',
+    'TrueSouthNode': 'SouthNode',
+    'Fortune': 'PartOfFortune'
+};
+
 const PLANET_SYMBOLS = {
     'Sun': '☉',
     'Moon': '☽',
@@ -92,28 +98,57 @@ const PLANET_NAMES_RU = {
     'DSC': 'Десцендент'
 };
 
-const ASPECT_SYMBOLS = {
+const MAJOR_ASPECT_SYMBOLS = {
     'Conjunction': '☌',
     'Opposition': '☍',
     'Trine': '△',
     'Square': '□',
-    'Sextile': '⚹',
-    'Quincunx': '⚻',
-    'Semisextile': '⚺',
-    'Quintile': 'Q',
-    'Biquintile': 'bQ',
-    'Semisquare': '∠',
-    'Sesquiquadrate': '⚼',
-    'Vigintile': 'V',
-    'Semi_Nonagon': 'SN',
-    'Decile': 'D',
-    'Nonagon': 'N',
-    'Binonagon': 'BN',
-    'Sentagon': 'SG',
-    'Tridecile': 'TD',
-    'Septile': '7',
-    'Novile': '9'
+    'Sextile': '⚹'
 };
+
+const ASPECT_ANGLES = {
+    'Conjunction': 0,
+    'Vigintile': 18,
+    'Semi_Nonagon': 20,
+    'Semisextile': 30,
+    'Decile': 36,
+    'Nonagon': 40,
+    'Novile': 40,
+    'Semisquare': 45,
+    'Septile': 51,
+    'Sextile': 60,
+    'Quintile': 72,
+    'Binonagon': 80,
+    'Square': 90,
+    'Sentagon': 100,
+    'Tridecile': 108,
+    'Trine': 120,
+    'Sesquiquadrate': 135,
+    'Biquintile': 144,
+    'Quincunx': 150,
+    'Opposition': 180
+};
+
+function isMajorAspect(aspectType) {
+    return Object.prototype.hasOwnProperty.call(MAJOR_ASPECT_SYMBOLS, aspectType);
+}
+
+function getAspectDisplay(aspectType) {
+    if (MAJOR_ASPECT_SYMBOLS[aspectType]) {
+        return MAJOR_ASPECT_SYMBOLS[aspectType];
+    }
+    if (Number.isFinite(ASPECT_ANGLES[aspectType])) {
+        return String(ASPECT_ANGLES[aspectType]);
+    }
+    return String(aspectType || '').slice(0, 3) || '•';
+}
+
+const ASPECT_SYMBOLS = Object.freeze(
+    Object.keys(ASPECT_ANGLES).reduce((acc, aspectType) => {
+        acc[aspectType] = getAspectDisplay(aspectType);
+        return acc;
+    }, {})
+);
 
 const ASPECT_NAMES_RU = {
     'Conjunction': 'Соединение',
@@ -169,13 +204,67 @@ const PLANET_GLYPH_SCALE = {
     'Uranus': 1.08
 };
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function normalizeBodyName(name) {
+    const rawName = String(name || '').trim();
+    return BODY_NAME_ALIASES[rawName] || rawName;
+}
+
+function getPlanetSymbol(name) {
+    const rawName = String(name || '').trim();
+    return PLANET_SYMBOLS[rawName] || PLANET_SYMBOLS[normalizeBodyName(rawName)] || '';
+}
+
+function getPlanetNameRu(name) {
+    const rawName = String(name || '').trim();
+    return PLANET_NAMES_RU[rawName] || PLANET_NAMES_RU[normalizeBodyName(rawName)] || rawName;
+}
+
+function getPlanetSymbolMarkup(name, options = {}) {
+    const rawName = String(name || '').trim();
+    const normalizedName = normalizeBodyName(rawName);
+    const symbol = getPlanetSymbol(rawName) || rawName.slice(0, 2) || '•';
+    const title = options.title || getPlanetNameRu(rawName);
+    const size = Number.isFinite(Number(options.size)) ? Number(options.size) : 18;
+    const wrapperClass = ['planet-icon-svg', options.wrapperClass].filter(Boolean).join(' ');
+
+    if (window.AstroGlyphs?.hasPlanetIcon?.(normalizedName)) {
+        const svgMarkup = window.AstroGlyphs.createPlanetSymbolMarkup(normalizedName, {
+            size,
+            color: options.color,
+            title,
+            className: options.className,
+        });
+        return `<span class="${escapeHtml(wrapperClass)}">${svgMarkup}</span>`;
+    }
+
+    const textClass = ['astro-symbol', options.textClass].filter(Boolean).join(' ');
+    return `<span class="${escapeHtml(wrapperClass)}"><span class="${escapeHtml(textClass)}" aria-hidden="true">${escapeHtml(symbol)}</span></span>`;
+}
+
 window.Symbols = {
+    bodyNameAliases: BODY_NAME_ALIASES,
+    normalizeBodyName,
+    getPlanetSymbol,
+    getPlanetNameRu,
+    getPlanetSymbolMarkup,
     planets: PLANET_SYMBOLS,
     signs: SIGN_SYMBOLS,
     signNamesRu: SIGN_NAMES_RU,
     planetNamesRu: PLANET_NAMES_RU,
     aspects: ASPECT_SYMBOLS,
+    aspectAngles: ASPECT_ANGLES,
     aspectNamesRu: ASPECT_NAMES_RU,
+    getAspectDisplay,
+    isMajorAspect,
     elementColors: ELEMENT_COLORS,
     signElements: SIGN_ELEMENTS,
     configIcons: CONFIG_ICONS,

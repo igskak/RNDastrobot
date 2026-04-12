@@ -19,7 +19,7 @@ async function waitForI18nReady() {
 function getPlanetName(name) {
     const key = `astro.planet.${name}`;
     const translated = t(key);
-    return translated === key ? (Symbols?.planetNamesRu?.[name] || name) : translated;
+    return translated === key ? (Symbols?.getPlanetNameRu?.(name) || Symbols?.planetNamesRu?.[name] || name) : translated;
 }
 
 function getSignName(name) {
@@ -52,9 +52,8 @@ function retroIndicatorHtml(isRetrograde, variantClass = 'retro-indicator--micro
 
 function formatPlanetCellHtml(bodyName, isRetrograde = false) {
     if (!bodyName || bodyName === '—') return '—';
-    const symbol = Symbols?.planets?.[bodyName] || '';
     const label = escapeHtml(getPlanetName(bodyName));
-    const symbolHtml = symbol ? `<span class="astro-symbol">${escapeHtml(symbol)}</span>` : '';
+    const symbolHtml = Symbols?.getPlanetSymbolMarkup?.(bodyName, { size: 17, title: getPlanetName(bodyName) }) || '';
     return `<span class="forecast-body-chip" title="${label}" aria-label="${label}" role="img">${symbolHtml}${retroIndicatorHtml(isRetrograde)}</span>`;
 }
 
@@ -376,14 +375,15 @@ function renderForecastMatrixEditor(containerId, rows) {
             <tbody>
                 ${bodies.map((body) => {
                     const label = escapeHtml(getPlanetName(body));
-                    const symbol = escapeHtml(Symbols?.planets?.[body] || '');
+                    const symbolMarkup = Symbols?.getPlanetSymbolMarkup?.(body, { size: 18, title: getPlanetName(body) })
+                        || `<span class="astro-symbol" aria-hidden="true">${escapeHtml(Symbols?.getPlanetSymbol?.(body) || '')}</span>`;
                     const displayChecked = ensuredRows?.[body]?.display !== false ? 'checked' : '';
                     const aspectingChecked = ensuredRows?.[body]?.aspecting !== false ? 'checked' : '';
                     return `
                         <tr>
                             <td>
                                 <span class="forecast-settings-body forecast-settings-body--icon-only" title="${label}" aria-label="${label}" role="img">
-                                    <span class="astro-symbol" aria-hidden="true">${symbol}</span>
+                                    ${symbolMarkup}
                                 </span>
                             </td>
                             <td><input type="checkbox" data-view-matrix-body="${body}" data-view-matrix-field="display" ${displayChecked}></td>
@@ -3455,8 +3455,8 @@ function renderActiveEventsSummary(events) {
         return;
     }
     const chips = active.map(ev => {
-        const pSym = Symbols?.planets?.[ev.transit_body] || ev.transit_body;
-        const nSym = Symbols?.planets?.[ev.natal_body] || ev.natal_body;
+        const pSym = Symbols?.getPlanetSymbol?.(ev.transit_body) || ev.transit_body;
+        const nSym = Symbols?.getPlanetSymbol?.(ev.natal_body) || ev.natal_body;
         const aSym = Symbols?.aspects?.[ev.aspect_type] || ev.aspect_type;
         const harmony = getAspectHarmony(ev.aspect_type);
         const exact = new Date(ev.t_exact);

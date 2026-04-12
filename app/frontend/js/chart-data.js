@@ -39,7 +39,7 @@ class ChartDataRenderer {
     planetName(name) {
         const key = `astro.planet.${name}`;
         const translated = this.t(key);
-        return translated === key ? (Symbols.planetNamesRu[name] || name) : translated;
+        return translated === key ? (Symbols.getPlanetNameRu?.(name) || Symbols.planetNamesRu[name] || name) : translated;
     }
 
     signName(name) {
@@ -54,20 +54,21 @@ class ChartDataRenderer {
         return translated === key ? (Symbols.aspectNamesRu[name] || name) : translated;
     }
 
+    getPlanetSymbol(name) {
+        return Symbols.getPlanetSymbol?.(name)
+            || Symbols.planets?.[this.normalizeAspectBodyName(name)]
+            || Symbols.planets?.[name]
+            || '';
+    }
+
+    getPlanetSymbolMarkup(name, options = {}) {
+        return Symbols.getPlanetSymbolMarkup?.(name, options)
+            || `<span class="astro-symbol" aria-hidden="true">${this.escapeHtml(this.getPlanetSymbol(name))}</span>`;
+    }
+
     getAspectSymbol(name) {
-        return Symbols.aspects?.[name]
-            || {
-                Sesquiquadrate: '⚼',
-                Vigintile: 'V',
-                Semi_Nonagon: 'SN',
-                Decile: 'D',
-                Nonagon: 'N',
-                Binonagon: 'BN',
-                Sentagon: 'SG',
-                Tridecile: 'TD',
-                Septile: '7',
-                Novile: '9',
-            }[name]
+        return Symbols.getAspectDisplay?.(name)
+            || Symbols.aspects?.[name]
             || '•';
     }
 
@@ -283,13 +284,6 @@ class ChartDataRenderer {
         'PartOfFortune'
     ];
 
-    // Символы аспектов для сетки
-    static ASPECT_GLYPHS = {
-        'Conjunction': '☌', 'Opposition': '☍', 'Trine': '△',
-        'Square': '□', 'Sextile': '⚹', 'Quincunx': '⚻',
-        'Semisextile': '⚺', 'Quintile': 'Q', 'Biquintile': 'bQ'
-    };
-
     renderPlanets(planets) {
         if (!planets || !this.planetsTable) return;
         this.updatePlanetsTableColumns();
@@ -368,7 +362,6 @@ class ChartDataRenderer {
             const isAngular = [1, 4, 7, 10].includes(h.number);
             const degDMS = this.formatDMS(h.degree_in_sign);
             const rulerPlanet = h.ruler_planet || '';
-            const rulerSymbol = Symbols.planets[rulerPlanet] || '';
             const rulerName = rulerPlanet ? this.planetName(rulerPlanet) : this.t('common.notAvailable');
             const rulerHouse = h.ruler_in_house ? ` ${h.ruler_in_house}` : '';
             const rulerTitle = h.ruler_in_house
@@ -400,14 +393,14 @@ class ChartDataRenderer {
                     </td>
                     <td class="mono house-ruler-cell" title="${this.escapeHtml(rulerTitle)}">
                         <div class="house-ruler-main">
-                            <span class="astro-symbol">${rulerSymbol}</span>${this.retroIndicatorHtml(this.isBodyRetrograde(rulerPlanet, retroLookup), 'retro-indicator--micro')}
+                            ${this.getPlanetSymbolMarkup(rulerPlanet, { size: 16, title: rulerName })}${this.retroIndicatorHtml(this.isBodyRetrograde(rulerPlanet, retroLookup), 'retro-indicator--micro')}
                             <span class="house-ruler-house">${this.escapeHtml(rulerHouse)}</span>
                         </div>
                         ${coRulers.length ? `
                             <div class="house-ruler-co" title="${this.escapeHtml(coRulerTitle)}">
                                 ${coRulers.map((planet) => `
                                     <span class="house-ruler-co-item" aria-label="${this.escapeHtml(this.planetName(planet))}">
-                                        <span class="astro-symbol">${Symbols.planets[planet] || ''}</span>${this.retroIndicatorHtml(this.isBodyRetrograde(planet, retroLookup), 'retro-indicator--micro')}
+                                        ${this.getPlanetSymbolMarkup(planet, { size: 15, title: this.planetName(planet) })}${this.retroIndicatorHtml(this.isBodyRetrograde(planet, retroLookup), 'retro-indicator--micro')}
                                     </span>
                                 `).join('')}
                             </div>
@@ -455,7 +448,7 @@ class ChartDataRenderer {
             `;
         }
 
-        const symbol = Symbols.planets[planet.name] || planet.name.charAt(0);
+        const symbol = this.getPlanetSymbol(planet.name) || planet.name.charAt(0);
         const glyphScale = Symbols.planetGlyphScale?.[planet.name] || 1;
         const glyphSize = 22 * glyphScale;
         const glyphY = 14 + glyphSize * 0.36;
@@ -622,9 +615,9 @@ class ChartDataRenderer {
             const applyingBadge = this.getApplyingSeparatingBadge(a);
             return `
                 <tr data-aspect="${aspectKey || ''}" data-aspect-key="${aspectKey || ''}">
-                    <td class="symbol-cell"><span class="astro-symbol">${Symbols.planets[a.left_planet] || ''}</span>${this.retroIndicatorHtml(this.isBodyRetrograde(a.left_planet, retroLookup), 'retro-indicator--micro')}</td>
-                    <td class="symbol-cell"><span class="astro-symbol">${Symbols.planets[a.right_planet] || ''}</span>${this.retroIndicatorHtml(this.isBodyRetrograde(a.right_planet, retroLookup), 'retro-indicator--micro')}</td>
-                    <td class="${typeClass}"><span class="astro-symbol" style="color:${window.AstroPreferences?.getAspectColor ? window.AstroPreferences.getAspectColor(a.aspect_type, this.visualPreferences, a.harmonic_type) : '#9ca3af'}">${Symbols.aspects[a.aspect_type] || ''}</span> ${this.aspectName(a.aspect_type)}${applyingBadge}</td>
+                    <td class="symbol-cell">${this.getPlanetSymbolMarkup(a.left_planet, { size: 15, title: this.planetName(a.left_planet) })}${this.retroIndicatorHtml(this.isBodyRetrograde(a.left_planet, retroLookup), 'retro-indicator--micro')}</td>
+                    <td class="symbol-cell">${this.getPlanetSymbolMarkup(a.right_planet, { size: 15, title: this.planetName(a.right_planet) })}${this.retroIndicatorHtml(this.isBodyRetrograde(a.right_planet, retroLookup), 'retro-indicator--micro')}</td>
+                    <td class="${typeClass}"><span class="astro-symbol" style="color:${window.AstroPreferences?.getAspectColor ? window.AstroPreferences.getAspectColor(a.aspect_type, this.visualPreferences, a.harmonic_type) : '#9ca3af'}">${this.getAspectSymbol(a.aspect_type)}</span> ${this.aspectName(a.aspect_type)}${applyingBadge}</td>
                     <td class="mono">${a.orb.toFixed(2)}°</td>
                 </tr>
             `;
@@ -663,13 +656,13 @@ class ChartDataRenderer {
         // Заголовок
         html += '<tr><th></th>';
         filtered.forEach(p => {
-            html += `<th title="${this.planetName(p.name)}"><span class="astro-symbol">${Symbols.planets[p.name]}</span>${this.retroIndicatorHtml(p.retrograde, 'retro-indicator--micro')}</th>`;
+            html += `<th title="${this.planetName(p.name)}">${this.getPlanetSymbolMarkup(p.name, { size: 15, title: this.planetName(p.name) })}${this.retroIndicatorHtml(p.retrograde, 'retro-indicator--micro')}</th>`;
         });
         html += '</tr>';
 
         // Строки (треугольная матрица)
         filtered.forEach((rowPlanet, rowIdx) => {
-            html += `<tr><th title="${this.planetName(rowPlanet.name)}"><span class="astro-symbol">${Symbols.planets[rowPlanet.name]}</span>${this.retroIndicatorHtml(rowPlanet.retrograde, 'retro-indicator--micro')}</th>`;
+            html += `<tr><th title="${this.planetName(rowPlanet.name)}">${this.getPlanetSymbolMarkup(rowPlanet.name, { size: 15, title: this.planetName(rowPlanet.name) })}${this.retroIndicatorHtml(rowPlanet.retrograde, 'retro-indicator--micro')}</th>`;
 
             filtered.forEach((colPlanet, colIdx) => {
                 if (colIdx >= rowIdx) {
@@ -678,7 +671,7 @@ class ChartDataRenderer {
                     const aspectKey = this.buildAspectKey(rowPlanet.name, colPlanet.name);
                     const aspect = aspectMap[aspectKey];
                     if (aspect) {
-                        const glyph = ChartDataRenderer.ASPECT_GLYPHS[aspect.aspect_type] || '•';
+                        const glyph = this.getAspectSymbol(aspect.aspect_type);
                         const cls = aspect.harmonic_type === 'harmonious' ? 'grid-harmonious'
                                   : aspect.harmonic_type === 'tense' ? 'grid-tense'
                                   : 'grid-neutral';
@@ -755,7 +748,7 @@ class ChartDataRenderer {
             const d = dignityLabels[p.dignity] || dignityLabels.neutral;
             html += `
                 <div class="dignity-item ${d.class}">
-                    <span class="dignity-planet">${Symbols.planets[p.name]} ${this.planetName(p.name)}</span>
+                    <span class="dignity-planet">${this.getPlanetSymbolMarkup(p.name, { size: 16, title: this.planetName(p.name) })} ${this.planetName(p.name)}</span>
                     <span class="dignity-label">${d.icon} ${d.label}</span>
                 </div>
             `;
@@ -801,7 +794,7 @@ class ChartDataRenderer {
                             >
                                 <span class="config-apex-label" aria-hidden="true">▲</span>
                                 <span class="planet-tag planet-tag--icon-only planet-tag--config-point">
-                                    ${Symbols.planets[c.apex_planet] || ''}
+                                    ${this.getPlanetSymbolMarkup(c.apex_planet, { size: 16, title: this.planetName(c.apex_planet) })}
                                 </span>
                             </span>
                         ` : ''}
@@ -814,7 +807,7 @@ class ChartDataRenderer {
                             const titleAttr = pointTooltip ? '' : ` title="${pointName}"`;
                             return `
                             <span class="planet-tag planet-tag--icon-only planet-tag--config-point"${titleAttr} aria-label="${pointName}"${tooltipAttrs}>
-                                ${Symbols.planets[planetName] || ''}
+                                ${this.getPlanetSymbolMarkup(planetName, { size: 16, title: this.planetName(planetName) })}
                             </span>
                         `;
                         }).join('')}
@@ -847,7 +840,7 @@ class ChartDataRenderer {
                     <div class="config-planets config-planets--compact">
                         ${s.planets.map((planetName) => `
                             <span class="planet-tag planet-tag--icon-only" title="${this.escapeHtml(this.planetName(planetName))}" aria-label="${this.escapeHtml(this.planetName(planetName))}">
-                                ${Symbols.planets[planetName] || ''}
+                                ${this.getPlanetSymbolMarkup(planetName, { size: 16, title: this.planetName(planetName) })}
                             </span>
                         `).join('')}
                     </div>
@@ -884,11 +877,11 @@ class ChartDataRenderer {
                         : '#6b7280';
                     return `
                     <div class="config-aspect-line" title="${this.escapeHtml(aspectTitle)}">
-                        <span class="planet-tag planet-tag--icon-only" aria-hidden="true">${Symbols.planets[aspect.planet_1] || ''}</span>
+                        <span class="planet-tag planet-tag--icon-only" aria-hidden="true">${this.getPlanetSymbolMarkup(aspect.planet_1, { size: 14, title: this.planetName(aspect.planet_1) })}</span>
                         <span class="config-aspect-badge" style="--config-aspect-color:${this.escapeHtml(aspectColor)}" aria-label="${this.escapeHtml(this.aspectName(aspect.aspect_type))}">
                             <span class="astro-symbol config-aspect-glyph">${this.getAspectSymbol(aspect.aspect_type)}</span>
                         </span>
-                        <span class="planet-tag planet-tag--icon-only" aria-hidden="true">${Symbols.planets[aspect.planet_2] || ''}</span>
+                        <span class="planet-tag planet-tag--icon-only" aria-hidden="true">${this.getPlanetSymbolMarkup(aspect.planet_2, { size: 14, title: this.planetName(aspect.planet_2) })}</span>
                         <span class="config-aspect-orb">${Number(aspect.orb).toFixed(1)}°</span>
                     </div>
                 `;

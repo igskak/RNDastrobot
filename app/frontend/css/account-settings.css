@@ -17,14 +17,30 @@ body.account-settings-modal-open {
     padding: 14px 0 36px;
 }
 
-.account-settings-header {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    gap: 14px;
-    align-items: center;
+.account-settings-topbar {
     position: sticky;
     top: 8px;
     z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 12px;
+}
+
+.account-settings-topbar-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.account-settings-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: flex-start;
     padding: 14px 16px;
     margin-bottom: 12px;
     border: 1px solid rgba(30, 58, 95, 0.1);
@@ -50,6 +66,8 @@ body.account-settings-modal-open {
     align-items: center;
     justify-content: center;
     font-size: 20px;
+    box-shadow: 0 10px 24px rgba(30, 58, 95, 0.08);
+    backdrop-filter: blur(10px);
 }
 
 .account-settings-intro {
@@ -122,6 +140,8 @@ body.account-settings-modal-open {
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
+    box-shadow: 0 10px 24px rgba(30, 58, 95, 0.08);
+    backdrop-filter: blur(10px);
 }
 
 .account-settings-btn--ghost {
@@ -743,6 +763,67 @@ body.account-settings-modal-open {
     scrollbar-gutter: stable both-edges;
 }
 
+.account-settings-orb-matrix-wrap.is-compact {
+    padding: 6px;
+    border-radius: 16px;
+}
+
+.account-settings-table--methodology.is-compact {
+    border-collapse: separate;
+    border-spacing: 4px;
+}
+
+.account-settings-table--methodology.is-compact thead th,
+.account-settings-table--methodology.is-compact tbody th[scope="row"],
+.account-settings-table--methodology.is-compact tbody td {
+    width: 44px;
+    min-width: 44px;
+    padding: 0;
+    border-bottom: none;
+    background: rgba(255, 255, 255, 0.86);
+    box-shadow: inset 0 0 0 1px rgba(30, 58, 95, 0.08);
+}
+
+.account-settings-table--methodology.is-compact thead th:first-child,
+.account-settings-table--methodology.is-compact tbody th[scope="row"] {
+    position: static;
+    left: auto;
+    z-index: auto;
+    box-shadow: inset 0 0 0 1px rgba(30, 58, 95, 0.08);
+}
+
+.account-settings-table--methodology.is-compact thead th {
+    top: auto;
+    background: rgba(247, 242, 233, 0.92);
+}
+
+.account-settings-table--methodology.is-compact .account-settings-orb-corner {
+    background: rgba(247, 242, 233, 0.92);
+}
+
+.account-settings-table--methodology.is-compact .account-settings-orb-glyph {
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+}
+
+.account-settings-table--methodology.is-compact .account-settings-orb-input {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 3px;
+    border: none;
+    border-radius: 12px;
+    background: transparent;
+    font-size: 10px;
+    box-shadow: none;
+}
+
+.account-settings-table--methodology.is-compact .account-settings-orb-input:focus {
+    box-shadow: inset 0 0 0 2px rgba(30, 58, 95, 0.24);
+}
+
 .account-settings-color-input {
     padding: 4px;
 }
@@ -902,6 +983,10 @@ body.account-settings-modal-open {
 }
 
 @media (max-width: 1100px) {
+    .account-settings-header {
+        grid-template-columns: 1fr;
+    }
+
     .account-settings-header,
     .account-settings-sidebar {
         grid-template-columns: 1fr;
@@ -928,11 +1013,17 @@ body.account-settings-modal-open {
         padding-top: 10px;
     }
 
+    .account-settings-topbar,
     .account-settings-header,
     .account-settings-toolbar,
     .account-settings-card,
     .account-settings-note {
         border-radius: 18px;
+    }
+
+    .account-settings-topbar {
+        top: 6px;
+        gap: 10px;
     }
 
     .account-settings-header {
@@ -958,6 +1049,11 @@ body.account-settings-modal-open {
     .account-settings-actions {
         display: grid;
         grid-template-columns: 1fr;
+    }
+
+    .account-settings-topbar .account-settings-btn,
+    .account-settings-topbar .account-settings-back {
+        width: auto;
     }
 
     .account-settings-btn {

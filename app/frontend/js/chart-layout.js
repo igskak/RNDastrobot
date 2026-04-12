@@ -12,7 +12,7 @@
     function getPlanetName(name) {
         const key = `astro.planet.${name}`;
         const translated = t(key);
-        return translated === key ? (Symbols.planetNamesRu[name] || name) : translated;
+        return translated === key ? (Symbols.getPlanetNameRu?.(name) || Symbols.planetNamesRu[name] || name) : translated;
     }
 
     function getSignName(name) {
@@ -130,10 +130,11 @@
                     const signRu = getSignName(planet.sign);
                     const signSymbol = Symbols.signs[planet.sign] || '';
                     const nameRu = getPlanetName(planet.name);
-                    const symbol = Symbols.planets[planet.name] || '';
+                    const symbolMarkup = Symbols.getPlanetSymbolMarkup?.(planet.name, { size: 18, title: nameRu })
+                        || `<span class="astro-symbol">${Symbols.getPlanetSymbol?.(planet.name) || ''}</span>`;
 
                     tooltip.innerHTML = `
-                        <strong><span class="astro-symbol">${symbol}</span> ${nameRu}</strong><br>
+                        <strong>${symbolMarkup} ${nameRu}</strong><br>
                         <span class="astro-symbol">${signSymbol}</span> ${signRu} ${planet.degree_in_sign_formatted || planet.degree_in_sign.toFixed(2) + '°'}<br>
                         ${t('common.house')}: ${planet.house}
                     `;

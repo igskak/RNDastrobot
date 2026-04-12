@@ -91,7 +91,12 @@ function getTranslatedAstroName(type, name, fallbackMap) {
 }
 
 function getPlanetSymbol(name) {
-    return S().planets?.[name] || '';
+    return S().getPlanetSymbol?.(name) || S().planets?.[name] || '';
+}
+
+function getPlanetSymbolMarkup(name, options = {}) {
+    return S().getPlanetSymbolMarkup?.(name, options)
+        || `<span class="planet-symbol">${escapeHtml(getPlanetSymbol(name))}</span>`;
 }
 
 function getSignSymbol(name) {
@@ -99,7 +104,10 @@ function getSignSymbol(name) {
 }
 
 function getPlanetName(name) {
-    return getTranslatedAstroName('planet', name, S().planetNamesRu);
+    return getTranslatedAstroName('planet', name, {
+        ...(S().planetNamesRu || {}),
+        [name]: S().getPlanetNameRu?.(name) || (S().planetNamesRu?.[name] || name)
+    });
 }
 
 function getSignName(name) {
@@ -107,7 +115,7 @@ function getSignName(name) {
 }
 
 function getAspectSymbol(name) {
-    return S().aspects?.[name] || '?';
+    return S().getAspectDisplay?.(name) || S().aspects?.[name] || '?';
 }
 
 function getAspectName(name) {
@@ -562,7 +570,7 @@ function createPlanetRow(planet) {
 
     const tdName = document.createElement('td');
     tdName.innerHTML = `<span class="planet-cell">
-        <span class="planet-symbol">${getPlanetSymbol(planet.name)}</span>
+        ${getPlanetSymbolMarkup(planet.name, { size: 18, title: getPlanetName(planet.name) })}
         <span class="planet-name">${getPlanetName(planet.name)}</span>${retroIndicatorHtml(Boolean(planet.retrograde), 'retro-indicator--small')}
     </span>`;
     tr.appendChild(tdName);
@@ -1109,7 +1117,7 @@ function renderSpecialPoints(specialPoints) {
 
         const tdName = document.createElement('td');
         tdName.innerHTML = `<span class="planet-cell">
-            <span class="planet-symbol">${getPlanetSymbol(pointName)}</span>
+            ${getPlanetSymbolMarkup(pointName, { size: 18, title: getPlanetName(pointName) })}
             <span class="planet-name">${getPlanetName(pointName)}</span>${retroIndicatorHtml(Boolean(point.retrograde) || isBodyRetrograde(pointName), 'retro-indicator--small')}
         </span>`;
         tr.appendChild(tdName);
