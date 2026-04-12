@@ -66,6 +66,15 @@
             };
         }
 
+        const accountSettingsActions = document.querySelector('.account-settings-actions');
+        if (accountSettingsActions) {
+            return {
+                parent: accountSettingsActions,
+                beforeNode: accountSettingsActions.querySelector('#restoreStandardDefaultsBtn'),
+                inline: true
+            };
+        }
+
         return {
             parent: document.body,
             beforeNode: null,

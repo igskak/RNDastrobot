@@ -43,6 +43,7 @@
     let toastTimer = null;
     let pollTimer = null;
     let activeOrbProfile = 'natal';
+    let lastFocusedElementBeforeResetConfirm = null;
 
     function hidePageLoader() {
         if (window.AstroAPI?.hidePageLoader) {
@@ -855,6 +856,15 @@
         }, 2800);
     }
 
+    function scrollToAccountSettingsTop() {
+        const header = document.querySelector('.account-settings-header');
+        if (header instanceof HTMLElement) {
+            header.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return;
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     function renderJobStatus(job, { final = false } = {}) {
         const container = document.getElementById('methodologyJobStatus');
         if (!container) return;
@@ -966,10 +976,12 @@
                     console.warn('Failed to poll methodology recalculation job:', error);
                 });
                 showToast('Preferences saved. Methodology recalculation started.', 'success');
+                requestAnimationFrame(scrollToAccountSettingsTop);
                 return;
             }
 
             showToast(t('page.accountSettings.toasts.saved'), 'success');
+            requestAnimationFrame(scrollToAccountSettingsTop);
         } catch (error) {
             showToast(error.message || t('page.accountSettings.toasts.saveFailed'), 'error');
         } finally {
@@ -983,24 +995,64 @@
         showToast(t('page.accountSettings.toasts.restored'), 'info');
     }
 
+    function closeResetConfirmDialog({ restoreFocus = true } = {}) {
+        const dialog = document.getElementById('accountSettingsResetConfirmDialog');
+        const backdrop = document.getElementById('accountSettingsResetConfirmBackdrop');
+        if (dialog) dialog.classList.add('hidden');
+        if (backdrop) backdrop.classList.add('hidden');
+        document.body.classList.remove('account-settings-modal-open');
+        if (restoreFocus && lastFocusedElementBeforeResetConfirm instanceof HTMLElement) {
+            lastFocusedElementBeforeResetConfirm.focus();
+        }
+        lastFocusedElementBeforeResetConfirm = null;
+    }
+
+    function openResetConfirmDialog() {
+        const dialog = document.getElementById('accountSettingsResetConfirmDialog');
+        const backdrop = document.getElementById('accountSettingsResetConfirmBackdrop');
+        const confirmBtn = document.getElementById('accountSettingsResetConfirmSubmit');
+        if (!dialog || !backdrop) return;
+        lastFocusedElementBeforeResetConfirm = document.activeElement instanceof HTMLElement
+            ? document.activeElement
+            : null;
+        backdrop.classList.remove('hidden');
+        dialog.classList.remove('hidden');
+        document.body.classList.add('account-settings-modal-open');
+        requestAnimationFrame(() => {
+            confirmBtn?.focus();
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', async () => {
         const saveBtn = document.getElementById('saveAccountSettingsBtn');
-        const reloadBtn = document.getElementById('reloadAccountSettingsBtn');
         const restoreBtn = document.getElementById('restoreStandardDefaultsBtn');
         const applyNatalOrbsBtn = document.getElementById('accountApplyNatalOrbsBtn');
         const orbMatrixBody = document.getElementById('accountOrbsMatrixBody');
         const aspectHarmonyColorsBody = document.getElementById('accountAspectHarmonyColorsBody');
         const bodyOverrideColorsBody = document.getElementById('accountBodyOverrideColorsBody');
+        const resetConfirmDialog = document.getElementById('accountSettingsResetConfirmDialog');
+        const resetConfirmBackdrop = document.getElementById('accountSettingsResetConfirmBackdrop');
+        const resetConfirmCloseBtn = document.getElementById('accountSettingsResetConfirmClose');
+        const resetConfirmCancelBtn = document.getElementById('accountSettingsResetConfirmCancel');
+        const resetConfirmSubmitBtn = document.getElementById('accountSettingsResetConfirmSubmit');
 
         saveBtn?.addEventListener('click', () => {
             savePreferences();
         });
-        reloadBtn?.addEventListener('click', () => {
-            loadPreferences().catch((error) => {
-                showToast(error.message || t('page.accountSettings.toasts.reloadFailed'), 'error');
-            });
-        });
         restoreBtn?.addEventListener('click', () => {
+            openResetConfirmDialog();
+        });
+        resetConfirmBackdrop?.addEventListener('click', () => {
+            closeResetConfirmDialog();
+        });
+        resetConfirmCloseBtn?.addEventListener('click', () => {
+            closeResetConfirmDialog();
+        });
+        resetConfirmCancelBtn?.addEventListener('click', () => {
+            closeResetConfirmDialog();
+        });
+        resetConfirmSubmitBtn?.addEventListener('click', () => {
+            closeResetConfirmDialog({ restoreFocus: false });
             restoreStandardDefaults();
         });
         document.querySelectorAll('[data-orb-profile-tab]').forEach((button) => {
@@ -1076,6 +1128,11 @@
                 if (accountPreferences) {
                     populateForm(accountPreferences);
                 }
+            });
+            document.addEventListener('keydown', (event) => {
+                if (event.key !== 'Escape') return;
+                if (!resetConfirmDialog || resetConfirmDialog.classList.contains('hidden')) return;
+                closeResetConfirmDialog();
             });
         } catch (error) {
             showToast(error.message || t('page.accountSettings.toasts.loadFailed'), 'error');

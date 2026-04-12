@@ -220,10 +220,16 @@
     "accountSettings": {
       "actions": {
         "reload": "Reload",
-        "restore": "Use standard defaults",
+        "restore": "Reset settings to defaults",
         "save": "Save general settings"
       },
       "badge": "Saved once, inherited everywhere",
+      "confirmReset": {
+        "confirm": "Reset to defaults",
+        "copy": "All user general settings will be reset to the standard defaults with no way to restore the previous state.",
+        "kicker": "Confirmation",
+        "title": "Reset settings to defaults?"
+      },
       "creation": {
         "copy": "Choose the base house system that new charts should start with before any per-view overrides apply.",
         "houseSystem": "Default house system",
