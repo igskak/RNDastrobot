@@ -109,6 +109,11 @@
     transition: background var(--transition), color var(--transition);
 }
 
+.chart-action-item--link {
+    display: block;
+    text-decoration: none;
+}
+
 .chart-action-item:hover {
     background: var(--gold-pale);
     color: var(--accent);
@@ -483,51 +488,6 @@
     white-space: normal;
 }
 
-.chart-page .aspect-lines-legend {
-    bottom: 18px;
-    left: 18px;
-    gap: 8px;
-    padding: 10px 12px;
-    background: rgba(255, 255, 255, 0.92);
-    border: 1px solid rgba(224, 221, 215, 0.96);
-    border-radius: 16px;
-    box-shadow: 0 10px 24px rgba(26, 22, 20, 0.08);
-    font-size: 11.5px;
-    max-width: min(390px, calc(100% - 120px));
-}
-
-.chart-page .aspect-lines-legend .aspect-legend-row {
-    gap: 8px;
-}
-
-.chart-page .aspect-lines-legend .legend-item.clickable {
-    min-height: 28px;
-    padding: 0 11px;
-    border-radius: 999px;
-    opacity: 1;
-    font-weight: 500;
-    border: 1px solid rgba(224, 221, 215, 0.96);
-    background: rgba(240, 237, 228, 0.8);
-    backdrop-filter: none;
-}
-
-.chart-page .aspect-lines-legend .legend-item.clickable:hover {
-    background: rgba(245, 237, 223, 0.96);
-    border-color: rgba(184, 147, 90, 0.32);
-}
-
-.chart-page .aspect-lines-legend .legend-item.clickable.active {
-    background: rgba(245, 237, 223, 0.96);
-    color: var(--accent);
-    border-color: rgba(184, 147, 90, 0.34);
-    box-shadow: inset 0 0 0 1px rgba(30, 58, 95, 0.06);
-}
-
-.chart-page .aspect-lines-legend .legend-color {
-    font-size: 10.5px;
-    letter-spacing: 0.02em;
-}
-
 .chart-page .settings-panel {
     top: 56px;
     right: 14px;
@@ -723,8 +683,46 @@
     color: var(--text-secondary);
 }
 
+.chart-page .house-sign-cell,
 .chart-page .house-ruler-cell {
+    white-space: normal;
+}
+
+.chart-page .house-sign-main,
+.chart-page .house-ruler-main {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
     white-space: nowrap;
+}
+
+.chart-page .house-sign-meta,
+.chart-page .house-ruler-co {
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 14px;
+    color: var(--text-secondary);
+}
+
+.chart-page .house-sign-badge {
+    display: inline-flex;
+    align-items: center;
+    height: 14px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: rgba(184, 147, 90, 0.12);
+    color: var(--text-secondary);
+    font-size: 9px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.chart-page .house-ruler-co-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
 }
 
 .chart-page .house-ruler-house {
@@ -1152,50 +1150,6 @@
         width: 30px;
         height: 30px;
         font-size: 13px;
-    }
-
-    .chart-page .aspect-lines-legend {
-        position: absolute;
-        left: 12px;
-        right: auto;
-        bottom: calc(74px + env(safe-area-inset-bottom, 0px));
-        order: unset;
-        width: fit-content;
-        max-width: min(290px, calc(100% - 84px));
-        margin: 0;
-        padding: 4px;
-        border-radius: 999px;
-        box-shadow: 0 8px 18px rgba(26, 22, 20, 0.06);
-        overflow-x: auto;
-        overflow-y: hidden;
-        scrollbar-width: none;
-        -webkit-overflow-scrolling: touch;
-        z-index: 55;
-    }
-
-    .chart-page .aspect-lines-legend::-webkit-scrollbar {
-        display: none;
-    }
-
-    .chart-page .aspect-lines-legend .aspect-legend-row {
-        gap: 4px;
-        flex-wrap: nowrap;
-    }
-
-    .chart-page .aspect-lines-legend .aspect-legend-row--colors {
-        display: none;
-    }
-
-    .chart-page .aspect-lines-legend .legend-item.clickable {
-        min-height: 28px;
-        padding: 0 8px;
-        font-size: 10.5px;
-        gap: 4px;
-        flex: 0 0 auto;
-    }
-
-    .chart-page .aspect-lines-legend .line-sample {
-        width: 12px;
     }
 
     .chart-page .settings-panel {

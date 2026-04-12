@@ -374,13 +374,44 @@ class ChartDataRenderer {
             const rulerTitle = h.ruler_in_house
                 ? `${rulerName} • ${this.t('common.house')} ${h.ruler_in_house}`
                 : rulerName;
+            const includedSign = h.included_sign || '';
+            const includedSignSymbol = includedSign ? (Symbols.signs[includedSign] || '') : '';
+            const includedSignName = includedSign ? this.signName(includedSign) : '';
+            const includedSignTitle = includedSign
+                ? `${this.t('page.natalFull.table.houses.included')}: ${includedSignName}`
+                : '';
+            const coRulers = Array.isArray(h.co_rulers)
+                ? h.co_rulers.filter((planet, index, items) => planet && planet !== rulerPlanet && items.indexOf(planet) === index)
+                : [];
+            const coRulerTitle = coRulers.length
+                ? `${this.t('page.natalFull.table.houses.ruler')}: ${coRulers.map((planet) => this.planetName(planet)).join(', ')}`
+                : '';
             return `
                 <tr id="row-house-${h.number}" class="${isAngular ? 'house-angular' : ''}">
-                    <td class="mono">${h.number}${isAngular ? ' ★' : ''}</td>
-                    <td class="mono"><span class="astro-symbol">${Symbols.signs[h.sign]}</span> ${degDMS}</td>
+                    <td class="mono">${h.number}</td>
+                    <td class="mono house-sign-cell">
+                        <div class="house-sign-main"><span class="astro-symbol">${Symbols.signs[h.sign]}</span> ${degDMS}</div>
+                        ${includedSign ? `
+                            <div class="house-sign-meta" title="${this.escapeHtml(includedSignTitle)}">
+                                <span class="house-sign-badge">${this.escapeHtml(this.t('astro.feature.short.intercepted'))}</span>
+                                <span class="astro-symbol">${includedSignSymbol}</span>
+                            </div>
+                        ` : ''}
+                    </td>
                     <td class="mono house-ruler-cell" title="${this.escapeHtml(rulerTitle)}">
-                        <span class="astro-symbol">${rulerSymbol}</span>${this.retroIndicatorHtml(this.isBodyRetrograde(rulerPlanet, retroLookup), 'retro-indicator--micro')}
-                        <span class="house-ruler-house">${this.escapeHtml(rulerHouse)}</span>
+                        <div class="house-ruler-main">
+                            <span class="astro-symbol">${rulerSymbol}</span>${this.retroIndicatorHtml(this.isBodyRetrograde(rulerPlanet, retroLookup), 'retro-indicator--micro')}
+                            <span class="house-ruler-house">${this.escapeHtml(rulerHouse)}</span>
+                        </div>
+                        ${coRulers.length ? `
+                            <div class="house-ruler-co" title="${this.escapeHtml(coRulerTitle)}">
+                                ${coRulers.map((planet) => `
+                                    <span class="house-ruler-co-item" aria-label="${this.escapeHtml(this.planetName(planet))}">
+                                        <span class="astro-symbol">${Symbols.planets[planet] || ''}</span>${this.retroIndicatorHtml(this.isBodyRetrograde(planet, retroLookup), 'retro-indicator--micro')}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        ` : ''}
                     </td>
                 </tr>
             `;

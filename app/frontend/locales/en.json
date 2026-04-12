@@ -221,7 +221,7 @@
       "actions": {
         "reload": "Reload",
         "restore": "Use standard defaults",
-        "save": "Save account defaults"
+        "save": "Save general settings"
       },
       "badge": "Saved once, inherited everywhere",
       "creation": {
@@ -239,13 +239,13 @@
         "matrixTitle": "Bodies matrix",
         "orientation": "Orientation"
       },
-      "heading": "Preferences",
-      "kicker": "Account",
+      "heading": "General settings",
+      "kicker": "General",
       "limits": {
         "copy": "`Orbs`, `balances`, aspect colors and planet colors stay out of this page for now and will come in a later pass.",
         "kicker": "Not in this pass"
       },
-      "loading": "Loading settings",
+      "loading": "Loading general settings",
       "matrix": {
         "columns": {
           "aspecting": "Aspecting",
@@ -323,7 +323,7 @@
         },
         "notAvailable": "—"
       },
-      "title": "Account settings",
+      "title": "General settings",
       "visual": {
         "actions": {
           "applyMatching": "Apply to matching aspects"
@@ -347,12 +347,12 @@
       },
       "toasts": {
       "aspectHarmonyApplied": "{type} color applied to matching aspects",
-      "loadFailed": "Failed to load account settings",
+      "loadFailed": "Failed to load general settings",
       "orbsCopied": "Natal orbs copied into the prognostic profile",
       "reloadFailed": "Failed to reload settings",
         "restored": "Standard defaults loaded into the form",
-        "saveFailed": "Failed to save account defaults",
-        "saved": "Account defaults saved"
+        "saveFailed": "Failed to save general settings",
+        "saved": "General settings saved"
       },
       "views": {
         "biwheel": {
@@ -511,6 +511,7 @@
           "asc": "Ascendant (ASC)",
           "label": "Wheel orientation"
         },
+        "iconSize": "Icon size",
         "planetSize": "Planet size",
         "planetsAndPoints": "Planets and points",
         "pointSize": "Point size",

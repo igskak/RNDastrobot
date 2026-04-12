@@ -42,7 +42,7 @@
 
     function isChartGestureBlocked(target) {
         return target instanceof Element
-            && Boolean(target.closest('.zoom-controls-float, .aspect-lines-legend, .settings-panel'));
+            && Boolean(target.closest('.zoom-controls-float, .settings-panel'));
     }
 
     function setTransform() {
@@ -411,8 +411,7 @@
                 !e.target.closest('tr[data-planet]') &&
                 !e.target.closest('tr[data-aspect]') &&
                 !e.target.closest('.aspect-line') &&
-                !e.target.closest('#aspects-list') &&
-                !e.target.closest('.aspect-lines-legend')) {
+                !e.target.closest('#aspects-list')) {
                 highlightPlanet(null, false);
                 highlightAspect(null, false);
                 setAspectPlanetFilter(null);

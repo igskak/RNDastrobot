@@ -34,6 +34,7 @@
                 </button>
                 <div class="chart-actions-menu hidden" id="chartActionsMenu" role="menu">
                     <button type="button" class="chart-action-item" id="editClientAction" role="menuitem" data-i18n="page.chart.actions.editClient"></button>
+                    <a href="account-settings.html" class="chart-action-item chart-action-item--link" role="menuitem" data-i18n="page.accountSettings.title"></a>
                     <button type="button" class="chart-action-item" id="saveNatalDefaultsAction" role="menuitem" data-i18n="page.chart.actions.saveDefaults"></button>
                     <button type="button" class="chart-action-item" id="resetDefaultsAction" role="menuitem" data-i18n="page.chart.actions.resetDefaults"></button>
                 </div>
@@ -92,14 +93,6 @@
                 <button class="zoom-btn" id="settingsToggle" data-i18n-title="common.settings">⚙</button>
             </div>
 
-            <div class="aspect-lines-legend">
-                <div class="aspect-legend-row aspect-legend-row--colors">
-                    <span class="legend-color" style="color:#ef4444">● <span data-i18n="page.chart.legend.tense"></span></span>
-                    <span class="legend-color" style="color:#3b82f6">● <span data-i18n="page.chart.legend.harmonious"></span></span>
-                    <span class="legend-color" style="color:#f59e0b">● <span data-i18n="page.chart.legend.neutral"></span></span>
-                </div>
-            </div>
-
             <div id="tooltip" class="chart-tooltip"></div>
 
             <div id="settingsPanel" class="settings-panel hidden">
@@ -126,18 +119,10 @@
                 </div>
 
                 <div class="settings-section">
-                    <label class="settings-label" data-i18n="page.chart.settings.planetSize"></label>
+                    <label class="settings-label" data-i18n="page.chart.settings.iconSize"></label>
                     <div class="settings-size-control">
-                        <input type="range" id="planetScaleRange" min="80" max="170" step="5" value="120">
-                        <span id="planetScaleValue">120%</span>
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <label class="settings-label" data-i18n="page.chart.settings.pointSize"></label>
-                    <div class="settings-size-control">
-                        <input type="range" id="pointScaleRange" min="80" max="170" step="5" value="100">
-                        <span id="pointScaleValue">100%</span>
+                        <input type="range" id="iconScaleRange" min="80" max="170" step="5" value="120">
+                        <span id="iconScaleValue">120%</span>
                     </div>
                 </div>
 
@@ -162,15 +147,16 @@
 
                 <div class="settings-section">
                     <label class="settings-label" data-i18n="page.chart.settings.aspectOptions"></label>
-                    <select id="aspectPhaseFilterSelect" class="settings-select">
-                        <option value="all" data-i18n="page.chart.settings.aspectPhase.all"></option>
-                        <option value="applying" data-i18n="page.chart.settings.aspectPhase.applying"></option>
-                        <option value="separating" data-i18n="page.chart.settings.aspectPhase.separating"></option>
-                    </select>
-                    <label class="settings-check-option">
-                        <input type="checkbox" id="showApplyingSeparatingToggle">
-                        <span data-i18n="page.accountSettings.options.showApplyingSeparating"></span>
-                    </label>
+                    <div class="settings-check-stack">
+                        <label class="settings-check-option">
+                            <input type="checkbox" id="aspectPhaseApplyingToggle">
+                            <span data-i18n="page.chart.settings.aspectPhase.applying"></span>
+                        </label>
+                        <label class="settings-check-option">
+                            <input type="checkbox" id="aspectPhaseSeparatingToggle">
+                            <span data-i18n="page.chart.settings.aspectPhase.separating"></span>
+                        </label>
+                    </div>
                 </div>
 
                 <div class="settings-section">

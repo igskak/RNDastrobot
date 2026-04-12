@@ -31,6 +31,7 @@
         Semi_Nonagon: 20,
         Sentagon: 100,
     };
+    const ASPECT_PHASE_VALUES = ['applying', 'separating'];
 
     function normalizeBodyName(name) {
         return BODY_NAME_ALIASES[String(name || '').trim()] || String(name || '').trim();
@@ -97,7 +98,17 @@
     }
 
     function normalizeAspectPhaseFilter(value) {
-        return value === 'applying' || value === 'separating' ? value : 'all';
+        if (Array.isArray(value)) {
+            const normalized = value
+                .map((entry) => String(entry || '').trim().toLowerCase())
+                .filter((entry) => ASPECT_PHASE_VALUES.includes(entry));
+            return [...new Set(normalized)];
+        }
+
+        const raw = String(value || '').trim().toLowerCase();
+        if (!raw || raw === 'all') return [...ASPECT_PHASE_VALUES];
+        if (raw.includes(',')) return normalizeAspectPhaseFilter(raw.split(','));
+        return ASPECT_PHASE_VALUES.includes(raw) ? [raw] : [...ASPECT_PHASE_VALUES];
     }
 
     function aspectHasPhaseMetadata(aspect) {
@@ -198,9 +209,10 @@
 
     function aspectMatchesPhaseFilter(aspect, filter = 'all') {
         const normalizedFilter = normalizeAspectPhaseFilter(filter);
-        if (normalizedFilter === 'all') return true;
+        if (normalizedFilter.length === ASPECT_PHASE_VALUES.length) return true;
+        if (normalizedFilter.length === 0) return false;
         if (!aspectHasPhaseMetadata(aspect)) return true;
-        return getAspectPhaseState(aspect) === normalizedFilter;
+        return normalizedFilter.includes(getAspectPhaseState(aspect));
     }
 
     function filterChartDataByAspectPhase(chartData, filter = 'all') {
@@ -208,7 +220,7 @@
         if (!chartData) return chartData;
 
         const enrichedChartData = enrichChartDataWithAspectPhases(chartData);
-        if (normalizedFilter === 'all') return enrichedChartData;
+        if (normalizedFilter.length === ASPECT_PHASE_VALUES.length) return enrichedChartData;
 
         const filteredAspects = (enrichedChartData.aspects || []).filter((aspect) => (
             aspectMatchesPhaseFilter(aspect, normalizedFilter)

@@ -37,6 +37,8 @@ Non-gating for now (track as TODO):
 - Global `flake8` and global `mypy` (baseline not clean yet).
 
 ## Dependency Rules
+- Prefer extending/reusing existing modules, helpers, and UI patterns before adding new implementations.
+- Optimize for quality without over-engineering; choose the simplest design that keeps the codebase consistent and maintainable.
 - Python dependencies: update only `app/requirements.txt`, pin versions.
 - Node dependencies: update only `app/package.json` + `app/package-lock.json`.
 - Do not add parallel libraries for the same concern without removing old usage.

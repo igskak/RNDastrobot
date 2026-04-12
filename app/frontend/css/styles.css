@@ -1087,7 +1087,7 @@ input[type="number"] {
 
 .balance-row {
     display: grid;
-    grid-template-columns: minmax(72px, auto) minmax(0, 1fr) auto;
+    grid-template-columns: 108px minmax(0, 1fr) 3ch;
     grid-template-areas: "label bar value";
     align-items: center;
     column-gap: 10px;
@@ -1349,121 +1349,6 @@ input[type="number"] {
     margin-bottom: 8px;
     text-transform: uppercase;
     letter-spacing: 0.07em;
-}
-
-/* ============================================
-   ASPECT LINES LEGEND
-   ============================================ */
-
-.aspect-lines-legend {
-    position: absolute;
-    bottom: 16px;
-    left: 16px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-    background: transparent;
-    padding: 0;
-    border-radius: 0;
-    font-size: 11px;
-    color: var(--text-secondary);
-    box-shadow: none;
-    border: none;
-    max-width: min(380px, calc(100% - 108px));
-    z-index: 30;
-}
-
-.aspect-lines-legend .aspect-legend-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-}
-
-.aspect-lines-legend .aspect-legend-row--filters {
-    display: flex;
-    align-items: stretch;
-    gap: 6px;
-    flex-wrap: nowrap;
-}
-
-.aspect-lines-legend .legend-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-    line-height: 1;
-}
-
-.aspect-lines-legend .legend-item.clickable {
-    cursor: pointer;
-    min-height: 30px;
-    padding: 0 10px;
-    border-radius: 100px;
-    transition: all 0.2s ease;
-    opacity: 0.6;
-    font-weight: 500;
-    border: 1px solid rgba(148, 163, 184, 0.32);
-    background: rgba(255, 252, 247, 0.68);
-    backdrop-filter: blur(6px);
-    justify-content: flex-start;
-}
-
-.aspect-lines-legend .legend-item.clickable:hover {
-    background: rgba(255, 252, 247, 0.84);
-    opacity: 0.85;
-}
-
-.aspect-lines-legend .legend-item.clickable.active {
-    opacity: 1;
-    font-weight: 600;
-    background: rgba(255, 248, 235, 0.92);
-    color: var(--accent);
-    border-color: rgba(180, 124, 36, 0.25);
-}
-
-.aspect-lines-legend .line-sample {
-    display: block;
-    flex: 0 0 16px;
-    width: 16px;
-    height: 2px;
-    background: #6B7280;
-}
-
-.aspect-lines-legend .line-sample.solid {
-    background: var(--text-primary);
-}
-
-.aspect-lines-legend .line-sample.dashed {
-    background: repeating-linear-gradient(
-        90deg,
-        #6B7280 0px, #6B7280 3px,
-        transparent 3px, transparent 5px
-    );
-}
-
-.aspect-lines-legend .legend-color {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 9px;
-    padding: 2px 0;
-    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
-}
-
-@media (max-width: 1024px) {
-    .aspect-lines-legend {
-        left: 12px;
-        right: 12px;
-        bottom: 82px;
-        max-width: none;
-    }
-
-    .aspect-lines-legend .aspect-legend-row--filters {
-        display: flex;
-        flex-wrap: wrap;
-    }
 }
 
 /* ============================================

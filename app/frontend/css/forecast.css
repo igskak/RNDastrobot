@@ -91,6 +91,18 @@
     border-color: rgba(30, 58, 95, 0.24);
     background: var(--gold-pale);
 }
+
+.forecast-settings-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.forecast-settings-link svg {
+    width: 14px;
+    height: 14px;
+}
 .forecast-focus-toggle-btn {
     border: 1px solid rgba(30, 58, 95, 0.16);
     background: rgba(255, 252, 247, 0.88);

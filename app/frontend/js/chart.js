@@ -101,9 +101,25 @@ function escapeAttribute(value) {
 }
 
 function normalizeAspectPhaseFilter(value) {
-    return window.AstroAspectPhase?.normalizeAspectPhaseFilter
-        ? window.AstroAspectPhase.normalizeAspectPhaseFilter(value)
-        : (value === 'applying' || value === 'separating' ? value : 'all');
+    if (window.AstroAspectPhase?.normalizeAspectPhaseFilter) {
+        return window.AstroAspectPhase.normalizeAspectPhaseFilter(value);
+    }
+    if (Array.isArray(value)) {
+        const normalized = value
+            .map((entry) => String(entry || '').trim().toLowerCase())
+            .filter((entry) => entry === 'applying' || entry === 'separating');
+        return [...new Set(normalized)];
+    }
+    const raw = String(value || '').trim().toLowerCase();
+    if (!raw || raw === 'all') return ['applying', 'separating'];
+    if (raw.includes(',')) return normalizeAspectPhaseFilter(raw.split(','));
+    return raw === 'applying' || raw === 'separating' ? [raw] : ['applying', 'separating'];
+}
+
+function serializeAspectPhaseFilter(value) {
+    const normalized = normalizeAspectPhaseFilter(value);
+    if (normalized.length === 2) return 'all';
+    return normalized.join(',');
 }
 
 function readSavedAspectPhaseFilter() {
@@ -125,7 +141,7 @@ let currentSettings = {
     aspectScope: 'all',
     matrixRows: window.AstroPreferences?.ensureMatrixRows?.({}) || {},
     enabledAspectTypes: [...NATAL_ASPECT_TYPES],
-    showApplyingSeparating: false,
+    showApplyingSeparating: true,
     aspectPhaseFilter: readSavedAspectPhaseFilter(),
     showSpeed: true,
     showStationary: true,
@@ -141,16 +157,19 @@ function clampPointScale(v) {
     return Math.min(1.7, Math.max(0.8, n));
 }
 
-function readSavedPlanetScale() {
-    const raw = localStorage.getItem('natalPlanetScale') || localStorage.getItem('natalPointScale') || '1.2';
+function readSavedUnifiedScale() {
+    const raw = localStorage.getItem('natalPlanetScale')
+        || localStorage.getItem('natalPointScale')
+        || '1.2';
     return clampPointScale(parseFloat(raw));
 }
 
+function readSavedPlanetScale() {
+    return readSavedUnifiedScale();
+}
+
 function readSavedPointScale() {
-    const raw = localStorage.getItem('natalPointScale')
-        || localStorage.getItem('natalPlanetScale')
-        || '1.2';
-    return clampPointScale(parseFloat(raw));
+    return readSavedUnifiedScale();
 }
 
 function normalizeAspectBodyName(name) {
@@ -271,7 +290,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     initTabs();
     initSettings(chartData);
     initPanelTabs();
-    initAspectLegendFilters();
     initChartActions();
     bindConfigurationHoverInteractions();
     initEditClientDialog();
@@ -546,14 +564,14 @@ function syncNatalSettingsControls() {
     const aspectScopeSelect = document.getElementById('aspectScopeSelect');
     if (aspectScopeSelect) aspectScopeSelect.value = currentSettings.aspectScope;
 
-    const showApplyingSeparatingToggle = document.getElementById('showApplyingSeparatingToggle');
-    if (showApplyingSeparatingToggle) {
-        showApplyingSeparatingToggle.checked = currentSettings.showApplyingSeparating === true;
+    const phaseFilter = normalizeAspectPhaseFilter(currentSettings.aspectPhaseFilter);
+    const aspectPhaseApplyingToggle = document.getElementById('aspectPhaseApplyingToggle');
+    if (aspectPhaseApplyingToggle) {
+        aspectPhaseApplyingToggle.checked = phaseFilter.includes('applying');
     }
-
-    const aspectPhaseFilterSelect = document.getElementById('aspectPhaseFilterSelect');
-    if (aspectPhaseFilterSelect) {
-        aspectPhaseFilterSelect.value = normalizeAspectPhaseFilter(currentSettings.aspectPhaseFilter);
+    const aspectPhaseSeparatingToggle = document.getElementById('aspectPhaseSeparatingToggle');
+    if (aspectPhaseSeparatingToggle) {
+        aspectPhaseSeparatingToggle.checked = phaseFilter.includes('separating');
     }
 
     const showSpeedToggle = document.getElementById('showSpeedToggle');
@@ -577,17 +595,6 @@ function syncNatalSettingsControls() {
     }
 
     renderNatalSettingsEditors();
-    setNatalAspectLegendActive(currentSettings.aspectScope);
-}
-
-function setNatalAspectLegendActive(filter) {
-    const aspectScopeSelect = document.getElementById('aspectScopeSelect');
-    if (aspectScopeSelect) {
-        aspectScopeSelect.value = filter;
-    }
-    document.querySelectorAll('.legend-item.clickable').forEach((legendItem) => {
-        legendItem.classList.toggle('active', legendItem.dataset.filter === filter);
-    });
 }
 
 function applyResolvedNatalPreferences(payload, { redraw = true } = {}) {
@@ -611,7 +618,7 @@ function applyResolvedNatalPreferences(payload, { redraw = true } = {}) {
         : (Array.isArray(resolved.aspects?.enabled_types) && resolved.aspects.enabled_types.length
             ? [...resolved.aspects.enabled_types]
             : [...NATAL_ASPECT_TYPES]);
-    currentSettings.showApplyingSeparating = resolved.aspects?.show_applying_separating === true;
+    currentSettings.showApplyingSeparating = true;
     currentSettings.matrixRows = helpers.ensureMatrixRows
         ? helpers.ensureMatrixRows(resolved.matrix?.rows || {})
         : (resolved.matrix?.rows || {});
@@ -744,7 +751,6 @@ async function hydrateNatalPreferences(chartData, formData) {
 async function applyNatalAspectScope(filter, { persist = true } = {}) {
     const nextFilter = ['all', 'major', 'minor'].includes(filter) ? filter : 'all';
     currentSettings.aspectScope = nextFilter;
-    setNatalAspectLegendActive(nextFilter);
 
     if (window.chartWheel) {
         window.chartWheel.setAspectFilter(nextFilter);
@@ -873,10 +879,8 @@ function initSettings(chartData) {
     const settingsPanel = document.getElementById('settingsPanel');
     const orientationSelect = document.getElementById('orientationSelect');
     const aspectScopeSelect = document.getElementById('aspectScopeSelect');
-    const planetScaleRange = document.getElementById('planetScaleRange');
-    const planetScaleValue = document.getElementById('planetScaleValue');
-    const pointScaleRange = document.getElementById('pointScaleRange');
-    const pointScaleValue = document.getElementById('pointScaleValue');
+    const iconScaleRange = document.getElementById('iconScaleRange');
+    const iconScaleValue = document.getElementById('iconScaleValue');
 
     renderNatalSettingsEditors();
 
@@ -914,19 +918,11 @@ function initSettings(chartData) {
         houseSystemSelect.value = normalizeHouseSystemCode(currentSettings.houseSystem);
         houseSystemSelect.addEventListener('change', () => applySettings());
     }
-    if (planetScaleRange) {
-        planetScaleRange.value = String(Math.round(currentSettings.planetScale * 100));
-        if (planetScaleValue) planetScaleValue.textContent = `${Math.round(currentSettings.planetScale * 100)}%`;
-        planetScaleRange.addEventListener('input', () => {
-            if (planetScaleValue) planetScaleValue.textContent = `${planetScaleRange.value}%`;
-            applySettings();
-        });
-    }
-    if (pointScaleRange) {
-        pointScaleRange.value = String(Math.round(currentSettings.pointScale * 100));
-        if (pointScaleValue) pointScaleValue.textContent = `${Math.round(currentSettings.pointScale * 100)}%`;
-        pointScaleRange.addEventListener('input', () => {
-            if (pointScaleValue) pointScaleValue.textContent = `${pointScaleRange.value}%`;
+    if (iconScaleRange) {
+        iconScaleRange.value = String(Math.round(currentSettings.planetScale * 100));
+        if (iconScaleValue) iconScaleValue.textContent = `${Math.round(currentSettings.planetScale * 100)}%`;
+        iconScaleRange.addEventListener('input', () => {
+            if (iconScaleValue) iconScaleValue.textContent = `${iconScaleRange.value}%`;
             applySettings();
         });
     }
@@ -1010,13 +1006,13 @@ function bindNatalSettingsHandlers() {
     document.querySelectorAll('#aspectTypeToggles input').forEach((cb) => {
         cb.onchange = () => applySettings();
     });
-    const showApplyingSeparatingToggle = document.getElementById('showApplyingSeparatingToggle');
-    if (showApplyingSeparatingToggle) {
-        showApplyingSeparatingToggle.onchange = () => applySettings();
+    const aspectPhaseApplyingToggle = document.getElementById('aspectPhaseApplyingToggle');
+    if (aspectPhaseApplyingToggle) {
+        aspectPhaseApplyingToggle.onchange = () => applySettings();
     }
-    const aspectPhaseFilterSelect = document.getElementById('aspectPhaseFilterSelect');
-    if (aspectPhaseFilterSelect) {
-        aspectPhaseFilterSelect.onchange = () => applySettings();
+    const aspectPhaseSeparatingToggle = document.getElementById('aspectPhaseSeparatingToggle');
+    if (aspectPhaseSeparatingToggle) {
+        aspectPhaseSeparatingToggle.onchange = () => applySettings();
     }
     const showSpeedToggle = document.getElementById('showSpeedToggle');
     if (showSpeedToggle) {
@@ -1072,17 +1068,18 @@ async function applySettings() {
         const houseSystem = normalizeHouseSystemCode(document.getElementById('houseSystemSelect').value);
         const orientation = document.getElementById('orientationSelect')?.value || 'aries';
         const aspectScope = document.getElementById('aspectScopeSelect')?.value || 'all';
-        const planetScalePct = Number(document.getElementById('planetScaleRange')?.value || 120);
-        const pointScalePct = Number(document.getElementById('pointScaleRange')?.value || 100);
-        const planetScale = clampPointScale(planetScalePct / 100);
-        const pointScale = clampPointScale(pointScalePct / 100);
+        const iconScalePct = Number(document.getElementById('iconScaleRange')?.value || 120);
+        const iconScale = clampPointScale(iconScalePct / 100);
         const matrixRows = readNatalMatrixRowsFromControls();
         const hiddenPlanets = Object.entries(matrixRows)
             .filter(([, config]) => config?.display === false)
             .map(([body]) => body);
         const enabledAspectTypes = readNatalEnabledAspectTypesFromControls();
-        const showApplyingSeparating = document.getElementById('showApplyingSeparatingToggle')?.checked === true;
-        const aspectPhaseFilter = normalizeAspectPhaseFilter(document.getElementById('aspectPhaseFilterSelect')?.value || 'all');
+        const showApplyingSeparating = true;
+        const aspectPhaseFilter = normalizeAspectPhaseFilter([
+            document.getElementById('aspectPhaseApplyingToggle')?.checked === true ? 'applying' : null,
+            document.getElementById('aspectPhaseSeparatingToggle')?.checked === true ? 'separating' : null,
+        ]);
         const showSpeed = document.getElementById('showSpeedToggle')?.checked !== false;
         const showStationary = document.getElementById('showStationaryToggle')?.checked !== false;
         const houseNumberStyle = document.getElementById('houseNumberStyleSelect')?.value === 'roman' ? 'roman' : 'arabic';
@@ -1090,8 +1087,8 @@ async function applySettings() {
 
         currentSettings.orientation = orientation === 'asc' ? 'asc' : 'aries';
         currentSettings.aspectScope = ['all', 'major', 'minor'].includes(aspectScope) ? aspectScope : 'all';
-        currentSettings.planetScale = planetScale;
-        currentSettings.pointScale = pointScale;
+        currentSettings.planetScale = iconScale;
+        currentSettings.pointScale = iconScale;
         currentSettings.matrixRows = matrixRows;
         currentSettings.hiddenPlanets = hiddenPlanets;
         currentSettings.enabledAspectTypes = window.AstroPreferences?.healEnabledAspectTypesForScope
@@ -1107,9 +1104,9 @@ async function applySettings() {
         currentSettings.showStationary = showStationary;
         currentSettings.houseNumberStyle = houseNumberStyle;
         currentSettings.houseLabelsOutside = houseLabelsOutside;
-        localStorage.setItem('natalPlanetScale', String(planetScale));
-        localStorage.setItem('natalPointScale', String(pointScale));
-        localStorage.setItem(ASPECT_PHASE_STORAGE_KEY, aspectPhaseFilter);
+        localStorage.setItem('natalPlanetScale', String(iconScale));
+        localStorage.setItem('natalPointScale', String(iconScale));
+        localStorage.setItem(ASPECT_PHASE_STORAGE_KEY, serializeAspectPhaseFilter(aspectPhaseFilter));
         localStorage.setItem(HOUSE_NUMBER_STYLE_STORAGE_KEY, houseNumberStyle);
         localStorage.setItem(HOUSE_LABELS_OUTSIDE_STORAGE_KEY, houseLabelsOutside ? 'true' : 'false');
         chartWheel?.setHouseLabelOptions?.({
@@ -1264,15 +1261,6 @@ function redrawChart(chartData, hiddenPlanets, orientation = currentSettings.ori
     chartWheel.draw(filteredData);
     chartDataRenderer.render(filteredData);
     syncHoveredAspectToActiveSurface();
-}
-
-function initAspectLegendFilters() {
-    document.querySelectorAll('.legend-item.clickable').forEach((item) => {
-        item.addEventListener('click', async () => {
-            const filter = item.dataset.filter;
-            await applyNatalAspectScope(filter, { persist: true });
-        });
-    });
 }
 
 function initChartActions() {

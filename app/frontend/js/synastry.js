@@ -81,14 +81,19 @@ function clampPointScale(value) {
     return Math.min(1.7, Math.max(0.8, numeric));
 }
 
-function readSavedPlanetScale() {
-    const raw = localStorage.getItem(PLANET_SCALE_STORAGE_KEY) || localStorage.getItem(POINT_SCALE_STORAGE_KEY) || '1.2';
+function readSavedUnifiedScale() {
+    const raw = localStorage.getItem(PLANET_SCALE_STORAGE_KEY)
+        || localStorage.getItem(POINT_SCALE_STORAGE_KEY)
+        || '1.2';
     return clampPointScale(parseFloat(raw));
 }
 
+function readSavedPlanetScale() {
+    return readSavedUnifiedScale();
+}
+
 function readSavedPointScale() {
-    const raw = localStorage.getItem(POINT_SCALE_STORAGE_KEY) || localStorage.getItem(PLANET_SCALE_STORAGE_KEY) || '1.0';
-    return clampPointScale(parseFloat(raw));
+    return readSavedUnifiedScale();
 }
 
 function readSavedHouseNumberStyle() {
@@ -142,10 +147,8 @@ function cacheSynastryElements() {
     synastryRefs.settingsPanel = document.getElementById('settingsPanel');
     synastryRefs.orientationSelect = document.getElementById('orientationSelect');
     synastryRefs.aspectScopeSelect = document.getElementById('aspectScopeSelect');
-    synastryRefs.planetScaleRange = document.getElementById('planetScaleRange');
-    synastryRefs.planetScaleValue = document.getElementById('planetScaleValue');
-    synastryRefs.pointScaleRange = document.getElementById('pointScaleRange');
-    synastryRefs.pointScaleValue = document.getElementById('pointScaleValue');
+    synastryRefs.iconScaleRange = document.getElementById('iconScaleRange');
+    synastryRefs.iconScaleValue = document.getElementById('iconScaleValue');
     synastryRefs.showApplyingSeparatingToggle = document.getElementById('showApplyingSeparatingToggle');
     synastryRefs.showSpeedToggle = document.getElementById('showSpeedToggle');
     synastryRefs.showStationaryToggle = document.getElementById('showStationaryToggle');
@@ -225,16 +228,9 @@ function bindStaticSettingsHandlers() {
     synastryRefs.houseNumberStyleSelect?.addEventListener('change', scheduleApplySynastrySettings);
     synastryRefs.houseLabelsOutsideToggle?.addEventListener('change', scheduleApplySynastrySettings);
 
-    synastryRefs.planetScaleRange?.addEventListener('input', () => {
-        if (synastryRefs.planetScaleValue) {
-            synastryRefs.planetScaleValue.textContent = `${synastryRefs.planetScaleRange.value}%`;
-        }
-        scheduleApplySynastrySettings();
-    });
-
-    synastryRefs.pointScaleRange?.addEventListener('input', () => {
-        if (synastryRefs.pointScaleValue) {
-            synastryRefs.pointScaleValue.textContent = `${synastryRefs.pointScaleRange.value}%`;
+    synastryRefs.iconScaleRange?.addEventListener('input', () => {
+        if (synastryRefs.iconScaleValue) {
+            synastryRefs.iconScaleValue.textContent = `${synastryRefs.iconScaleRange.value}%`;
         }
         scheduleApplySynastrySettings();
     });
@@ -587,17 +583,11 @@ function syncSynastrySettingsControls() {
     if (synastryRefs.aspectScopeSelect) {
         synastryRefs.aspectScopeSelect.value = synastryState.settings.aspectScope || 'all';
     }
-    if (synastryRefs.planetScaleRange) {
-        synastryRefs.planetScaleRange.value = String(Math.round(synastryState.settings.planetScale * 100));
+    if (synastryRefs.iconScaleRange) {
+        synastryRefs.iconScaleRange.value = String(Math.round(synastryState.settings.planetScale * 100));
     }
-    if (synastryRefs.planetScaleValue) {
-        synastryRefs.planetScaleValue.textContent = `${Math.round(synastryState.settings.planetScale * 100)}%`;
-    }
-    if (synastryRefs.pointScaleRange) {
-        synastryRefs.pointScaleRange.value = String(Math.round(synastryState.settings.pointScale * 100));
-    }
-    if (synastryRefs.pointScaleValue) {
-        synastryRefs.pointScaleValue.textContent = `${Math.round(synastryState.settings.pointScale * 100)}%`;
+    if (synastryRefs.iconScaleValue) {
+        synastryRefs.iconScaleValue.textContent = `${Math.round(synastryState.settings.planetScale * 100)}%`;
     }
     if (synastryRefs.showApplyingSeparatingToggle) {
         synastryRefs.showApplyingSeparatingToggle.checked = synastryState.settings.showApplyingSeparating === true;
@@ -711,8 +701,9 @@ function scheduleApplySynastrySettings() {
         synastryState.settings.aspectScope = ['all', 'major', 'minor'].includes(synastryRefs.aspectScopeSelect?.value)
             ? synastryRefs.aspectScopeSelect.value
             : 'all';
-        synastryState.settings.planetScale = clampPointScale(Number(synastryRefs.planetScaleRange?.value || 120) / 100);
-        synastryState.settings.pointScale = clampPointScale(Number(synastryRefs.pointScaleRange?.value || 100) / 100);
+        const iconScale = clampPointScale(Number(synastryRefs.iconScaleRange?.value || 120) / 100);
+        synastryState.settings.planetScale = iconScale;
+        synastryState.settings.pointScale = iconScale;
         synastryState.settings.matrixRows = readSynastryMatrixRowsFromControls();
         synastryState.settings.enabledAspectTypes = window.AstroPreferences?.healEnabledAspectTypesForScope
             ? window.AstroPreferences.healEnabledAspectTypesForScope(
@@ -727,8 +718,8 @@ function scheduleApplySynastrySettings() {
         synastryState.settings.houseNumberStyle = synastryRefs.houseNumberStyleSelect?.value === 'roman' ? 'roman' : 'arabic';
         synastryState.settings.houseLabelsOutside = synastryRefs.houseLabelsOutsideToggle?.checked === true;
 
-        localStorage.setItem(PLANET_SCALE_STORAGE_KEY, String(synastryState.settings.planetScale));
-        localStorage.setItem(POINT_SCALE_STORAGE_KEY, String(synastryState.settings.pointScale));
+        localStorage.setItem(PLANET_SCALE_STORAGE_KEY, String(iconScale));
+        localStorage.setItem(POINT_SCALE_STORAGE_KEY, String(iconScale));
         localStorage.setItem(HOUSE_NUMBER_STYLE_STORAGE_KEY, synastryState.settings.houseNumberStyle);
         localStorage.setItem(HOUSE_LABELS_OUTSIDE_STORAGE_KEY, synastryState.settings.houseLabelsOutside ? 'true' : 'false');
 

@@ -65,6 +65,31 @@ test('aspect phase filter keeps only matching typed aspects and configurations',
     );
 });
 
+test('aspect phase filter accepts multi-select arrays', () => {
+    const filtered = aspectPhase.filterChartDataByAspectPhase({
+        aspects: [
+            { planet_1: 'Sun', planet_2: 'Moon', aspect_type: 'Square', applying: true },
+            { planet_1: 'Sun', planet_2: 'Mars', aspect_type: 'Trine', applying: false },
+        ],
+    }, ['applying']);
+
+    assert.deepEqual(
+        filtered.aspects.map((aspect) => [aspect.planet_1, aspect.planet_2]),
+        [['Sun', 'Moon']],
+    );
+});
+
+test('aspect phase filter returns no aspects when no phases are selected', () => {
+    const filtered = aspectPhase.filterChartDataByAspectPhase({
+        aspects: [
+            { planet_1: 'Sun', planet_2: 'Moon', aspect_type: 'Square', applying: true },
+            { planet_1: 'Sun', planet_2: 'Mars', aspect_type: 'Trine', applying: false },
+        ],
+    }, []);
+
+    assert.equal(filtered.aspects.length, 0);
+});
+
 test('aspect phase inference derives applying and separating from body speeds', () => {
     const chartData = {
         planets: [
