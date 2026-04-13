@@ -6,6 +6,7 @@ import '../js/timezones.js';
 import '../js/api.js';
 import '../js/preferences.js';
 import '../js/place-autocomplete.js';
+import '../js/related-people-ui.js';
 import '../js/symbols.js';
 import '../js/planet-svg-icons.js';
 import '../js/natal-wheel-data.js';

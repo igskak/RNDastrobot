@@ -1,4 +1,5 @@
 @import '../css/styles.css';
+@import '../css/related-people-ui.css';
 
 /* ── Page shell ─────────────────────────────────────────────────────────── */
 
@@ -261,55 +262,6 @@
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
-}
-
-.related-picker-card {
-    width: min(720px, 100%);
-}
-
-.related-picker-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    max-height: 340px;
-    overflow: auto;
-    margin: 8px 0 4px;
-}
-
-.related-picker-option {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    width: 100%;
-    padding: 12px 14px;
-    border: 1px solid rgba(30, 58, 95, 0.12);
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.78);
-    text-align: left;
-    cursor: pointer;
-    transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
-}
-
-.related-picker-option:hover {
-    border-color: rgba(184, 147, 90, 0.34);
-    background: rgba(250, 247, 241, 0.92);
-}
-
-.related-picker-option.selected {
-    border-color: rgba(30, 58, 95, 0.28);
-    background: rgba(244, 239, 230, 0.96);
-    box-shadow: inset 0 0 0 1px rgba(30, 58, 95, 0.14);
-}
-
-.related-picker-name {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.related-picker-meta {
-    font-size: 13px;
-    color: var(--text-secondary);
 }
 
 /* ── Main layout ─────────────────────────────────────────────────────────── */

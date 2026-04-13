@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.chart.title"></title>
-    <link rel="stylesheet" href="bundles/chart.bundle.css?v=20260412-193851">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260412-193851">
-    <script>window.__APP_BUILD_ID__ = '20260412-193851';</script>
+    <link rel="stylesheet" href="bundles/chart.bundle.css?v=20260413-145212">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260413-145212">
+    <script>window.__APP_BUILD_ID__ = '20260413-145212';</script>
 </head>
 <body class="chart-page">
     <div class="page-loader" id="pageLoader">
@@ -34,6 +34,7 @@
                 </button>
                 <div class="chart-actions-menu hidden" id="chartActionsMenu" role="menu">
                     <button type="button" class="chart-action-item" id="editClientAction" role="menuitem" data-i18n="page.chart.actions.editClient"></button>
+                    <button type="button" class="chart-action-item hidden" id="openSynastryAction" role="menuitem" data-i18n="page.chart.actions.openSynastry"></button>
                     <a href="account-settings.html" class="chart-action-item chart-action-item--link" role="menuitem" data-i18n="page.accountSettings.title"></a>
                     <button type="button" class="chart-action-item" id="saveNatalDefaultsAction" role="menuitem" data-i18n="page.chart.actions.saveDefaults"></button>
                     <button type="button" class="chart-action-item" id="resetDefaultsAction" role="menuitem" data-i18n="page.chart.actions.resetDefaults"></button>
@@ -250,14 +251,76 @@
         </button>
     </nav>
 
+    <div class="chart-dialog-backdrop hidden" id="synastryLauncherBackdrop"></div>
+    <section class="chart-dialog hidden" id="synastryLauncherDialog" role="dialog" aria-modal="true" aria-labelledby="synastryLauncherTitle">
+        <div class="chart-dialog-card chart-dialog-card--compact">
+            <div class="chart-dialog-header">
+                <div>
+                    <p class="chart-dialog-kicker" data-i18n="page.chart.synastry.kicker"></p>
+                    <h3 id="synastryLauncherTitle" class="chart-dialog-title chart-dialog-title--compact" data-i18n="page.chart.synastry.title"></h3>
+                    <p class="chart-dialog-copy" data-i18n="page.chart.synastry.subtitle"></p>
+                </div>
+                <button type="button" class="chart-dialog-close" id="synastryLauncherClose" data-i18n-aria-label="common.close">×</button>
+            </div>
+
+            <div id="synastryLauncherError" class="error-message hidden"></div>
+            <div class="related-person-list" id="synastryLauncherList"></div>
+            <p id="synastryLauncherEmpty" class="chart-dialog-empty hidden" data-i18n="page.chart.synastry.empty"></p>
+
+            <div class="chart-dialog-actions chart-dialog-actions--split">
+                <button type="button" class="header-nav-btn" id="synastryLauncherCancel" data-i18n="common.cancel"></button>
+                <div class="chart-dialog-inline-actions">
+                    <button type="button" class="header-nav-btn" id="synastryLauncherLinkExisting" data-i18n="page.clientProfile.related.linkExisting"></button>
+                    <button type="button" class="submit-btn chart-dialog-submit" id="synastryLauncherCreateRelated" data-i18n="page.clientProfile.related.add"></button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="chart-dialog-backdrop hidden" id="chartRelatedPickerBackdrop"></div>
+    <section class="chart-dialog hidden" id="chartRelatedPickerDialog" role="dialog" aria-modal="true" aria-labelledby="chartRelatedPickerTitle">
+        <div class="chart-dialog-card chart-dialog-card--compact related-picker-card">
+            <div class="chart-dialog-header">
+                <div>
+                    <p class="chart-dialog-kicker" data-i18n="page.clientProfile.related.linkKicker"></p>
+                    <h3 id="chartRelatedPickerTitle" class="chart-dialog-title chart-dialog-title--compact" data-i18n="page.clientProfile.related.linkTitle"></h3>
+                    <p class="chart-dialog-copy" data-i18n="page.clientProfile.related.linkSubtitle"></p>
+                </div>
+                <button type="button" class="chart-dialog-close" id="chartRelatedPickerClose" data-i18n-aria-label="common.close">×</button>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="chartRelatedPickerSearch" data-i18n="page.clientProfile.related.searchLabel"></label>
+                <input id="chartRelatedPickerSearch" type="search" data-i18n-placeholder="page.clientProfile.related.searchPlaceholder">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="chartRelatedPickerRelationLabel" data-i18n="page.clientProfile.related.relationLabel"></label>
+                <input id="chartRelatedPickerRelationLabel" type="text" data-i18n-placeholder="page.clientProfile.related.relationPlaceholder">
+            </div>
+
+            <div id="chartRelatedPickerError" class="error-message hidden"></div>
+            <div class="related-picker-list" id="chartRelatedPickerList"></div>
+            <p id="chartRelatedPickerEmpty" class="chart-dialog-empty hidden" data-i18n="page.clientProfile.related.noCandidates"></p>
+
+            <div class="chart-dialog-actions">
+                <button type="button" class="header-nav-btn" id="chartRelatedPickerCancel" data-i18n="common.cancel"></button>
+                <button type="button" class="submit-btn chart-dialog-submit" id="chartRelatedPickerSubmit">
+                    <span class="btn-text" data-i18n="page.clientProfile.related.linkSubmit"></span>
+                    <span class="btn-loader hidden" data-i18n="common.loading"></span>
+                </button>
+            </div>
+        </div>
+    </section>
+
     <div class="chart-dialog-backdrop hidden" id="editClientBackdrop"></div>
     <section class="chart-dialog hidden" id="editClientDialog" role="dialog" aria-modal="true" aria-labelledby="editClientTitle">
         <form class="chart-dialog-card" id="editClientForm">
             <div class="chart-dialog-header">
                 <div>
-                    <p class="chart-dialog-kicker" data-i18n="page.chart.edit.kicker"></p>
+                    <p class="chart-dialog-kicker" id="editClientKicker" data-i18n="page.chart.edit.kicker"></p>
                     <h3 id="editClientTitle" class="chart-dialog-title" data-i18n="page.chart.edit.title"></h3>
-                    <p class="chart-dialog-copy" data-i18n="page.chart.edit.subtitle"></p>
+                    <p class="chart-dialog-copy" id="editClientCopy" data-i18n="page.chart.edit.subtitle"></p>
                 </div>
                 <button type="button" class="chart-dialog-close" id="editClientClose" data-i18n-aria-label="common.close">×</button>
             </div>
@@ -319,6 +382,11 @@
                     </select>
                     <span class="hint" id="editTimezoneHint"></span>
                 </div>
+
+                <div class="form-group hidden" id="editRelationGroup">
+                    <label class="form-label" for="editRelationLabel" data-i18n="page.clientProfile.related.relationLabel"></label>
+                    <input type="text" id="editRelationLabel" data-i18n-placeholder="page.clientProfile.related.relationPlaceholder">
+                </div>
             </div>
 
             <div id="editClientError" class="error-message hidden"></div>
@@ -335,7 +403,7 @@
 
     <div id="chartToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/chart.bundle.js?v=20260412-193851"></script>
-    <script src="js/locale-switcher.js?v=20260412-193851"></script>
+    <script type="module" src="js/bundles/chart.bundle.js?v=20260413-145212"></script>
+    <script src="js/locale-switcher.js?v=20260413-145212"></script>
 </body>
 </html>

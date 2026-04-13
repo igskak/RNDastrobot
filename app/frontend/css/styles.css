@@ -953,6 +953,7 @@ input[type="number"] {
     background: #FEE2E2;
     color: #991B1B;
     font-size: 10px;
+    font-family: var(--font-ui);
     line-height: 1;
     font-weight: 700;
     vertical-align: middle;
@@ -970,6 +971,80 @@ input[type="number"] {
     height: 0.9em;
     margin-left: 2px;
     padding: 0 0.2em;
+}
+
+.planet-symbol-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.planet-status-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-family: var(--font-ui);
+}
+
+.planet-status-group .retro-indicator {
+    margin-left: 0;
+}
+
+.planet-status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.05em;
+    height: 1.05em;
+    padding: 0 0.28em;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-family: var(--font-ui);
+    font-size: 10px;
+    line-height: 1;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+.planet-status-badge--small {
+    font-size: 9px;
+    min-width: 0.95em;
+    height: 0.95em;
+}
+
+.planet-status-badge--stationary {
+    background: rgba(212, 192, 132, 0.22);
+    color: var(--accent);
+    border-color: rgba(184, 147, 90, 0.18);
+}
+
+.planet-status-badge--dignity {
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.planet-status-badge--domicile {
+    background: rgba(43, 122, 75, 0.1);
+    color: #1f5d39;
+    border-color: rgba(43, 122, 75, 0.16);
+}
+
+.planet-status-badge--exaltation {
+    background: rgba(30, 58, 95, 0.1);
+    color: var(--accent);
+    border-color: rgba(30, 58, 95, 0.16);
+}
+
+.planet-status-badge--detriment {
+    background: rgba(184, 50, 50, 0.08);
+    color: #8f2f2f;
+    border-color: rgba(184, 50, 50, 0.14);
+}
+
+.planet-status-badge--fall {
+    background: rgba(184, 147, 90, 0.14);
+    color: #866231;
+    border-color: rgba(184, 147, 90, 0.2);
 }
 
 .planet-position-main {

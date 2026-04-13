@@ -5,4 +5,5 @@ import '../js/locale-switcher.js';
 import '../js/api.js';
 import '../js/timezones.js';
 import '../js/place-autocomplete.js';
+import '../js/related-people-ui.js';
 import '../js/client-profile.js';

@@ -87,6 +87,24 @@ class ChartDataRenderer {
         return translated === key ? 'Retrograde' : translated;
     }
 
+    stationaryTitle() {
+        const key = 'page.natalFull.legend.motion.stationary';
+        const translated = this.t(key);
+        return translated === key ? 'Stationary' : translated;
+    }
+
+    dignityTitle(dignity) {
+        if (!dignity || dignity === 'neutral') return '';
+        const key = `astro.dignity.${dignity}`;
+        const translated = this.t(key);
+        return translated === key ? dignity : translated;
+    }
+
+    dignityShortLabel(dignity) {
+        const fullLabel = String(this.dignityTitle(dignity) || '').trim();
+        return fullLabel ? Array.from(fullLabel)[0].toUpperCase() : '';
+    }
+
     getApplyingSeparatingLabel(aspect) {
         if (!aspect) return '';
 
@@ -114,6 +132,30 @@ class ChartDataRenderer {
         const suffix = variantClass ? ` ${variantClass}` : '';
         const title = this.escapeHtml(this.retrogradeTitle());
         return `<span class="retro-indicator${suffix}" title="${title}" aria-label="${title}">R</span>`;
+    }
+
+    stationaryIndicatorHtml(planet, variantClass = '') {
+        if (!planet?.is_stationary) return '';
+        const suffix = variantClass ? ` ${variantClass}` : '';
+        const title = this.escapeHtml(this.stationaryTitle());
+        return `<span class="planet-status-badge planet-status-badge--stationary${suffix}" title="${title}" aria-label="${title}">S</span>`;
+    }
+
+    dignityIndicatorHtml(planet, variantClass = '') {
+        const dignity = String(planet?.dignity || '').trim();
+        if (!dignity || dignity === 'neutral') return '';
+
+        const label = this.dignityTitle(dignity);
+        const shortLabel = this.dignityShortLabel(dignity);
+        if (!label || !shortLabel) return '';
+
+        const suffix = variantClass ? ` ${variantClass}` : '';
+        const title = this.escapeHtml(label);
+        return `
+            <span class="planet-status-badge planet-status-badge--dignity planet-status-badge--${this.escapeHtml(dignity)}${suffix}" title="${title}" aria-label="${title}">
+                ${this.escapeHtml(shortLabel)}
+            </span>
+        `;
     }
 
     buildRetrogradeLookup(planets = []) {
@@ -298,22 +340,22 @@ class ChartDataRenderer {
         this.planetsTable.innerHTML = sorted.map(p => {
             const degDMS = this.formatDMS(p.degree_in_sign);
             const planetIcon = this.createPlanetIconSVG(p);
-            const metaParts = [];
             const speedChip = this.renderPlanetSpeedChip(p);
-            const stationaryChip = this.renderStationaryChip(p);
-            if (this.showStationary && stationaryChip) metaParts.push(stationaryChip);
-            const metaHtml = metaParts.length
-                ? `<div class="planet-position-meta">${metaParts.join('')}</div>`
-                : '';
+            const statusBadges = [
+                this.retroIndicatorHtml(p.retrograde, 'retro-indicator--small'),
+                this.showStationary ? this.stationaryIndicatorHtml(p, 'planet-status-badge--small') : '',
+                this.dignityIndicatorHtml(p, 'planet-status-badge--small')
+            ].filter(Boolean).join('');
             return `
                 <tr id="row-${p.name}" data-planet="${p.name}">
                     <td class="symbol-cell">
-                        ${planetIcon}
-                        ${this.retroIndicatorHtml(p.retrograde, 'retro-indicator--small')}
+                        <div class="planet-symbol-cell">
+                            ${planetIcon}
+                            ${statusBadges ? `<span class="planet-status-group">${statusBadges}</span>` : ''}
+                        </div>
                     </td>
                     <td class="mono">
                         <div class="planet-position-main"><span class="astro-symbol">${Symbols.signs[p.sign]}</span> ${degDMS}</div>
-                        ${metaHtml}
                     </td>
                     <td class="planet-speed-cell mono">${this.showSpeed ? speedChip : ''}</td>
                     <td class="mono">${p.house}</td>
@@ -340,17 +382,6 @@ class ChartDataRenderer {
         }
 
         return '';
-    }
-
-    renderStationaryChip(planet) {
-        if (!planet?.is_stationary) return '';
-        const stationaryType = String(planet.stationary_type || '').toLowerCase();
-        const label = stationaryType.includes('direct')
-            ? 'SD'
-            : stationaryType.includes('retro')
-                ? 'SR'
-                : 'S';
-        return `<span class="planet-meta-chip planet-meta-chip--stationary">${label}</span>`;
     }
 
     renderHouses(houses) {

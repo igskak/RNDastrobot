@@ -11,6 +11,8 @@ let chartToastTimer = null;
 let currentResolvedPreferences = null;
 let activeConfigurationCard = null;
 let configPointTooltipEl = null;
+let chartRelatedPeoplePicker = null;
+let synastryLauncherPeople = [];
 const CHART_TOGGLEABLE_POINTS = [
     'Chiron',
     'TrueNode',
@@ -22,10 +24,13 @@ const CHART_TOGGLEABLE_POINTS = [
 ];
 const editClientState = {
     autocompleteBound: false,
+    mode: 'edit-client',
     originalCoords: null,
     selectedCoords: null,
     originalPlace: '',
     selectedPlaceLabel: '',
+    returnToLauncherOnCancel: false,
+    skipLauncherRestore: false,
 };
 const HOUSE_SYSTEM_ALIASES = {
     'P': 'P',
@@ -98,6 +103,19 @@ function escapeAttribute(value) {
         .replace(/"/g, '&quot;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
+}
+
+function getPlanetNameLabel(name) {
+    const key = `astro.planet.${name}`;
+    const translated = t(key);
+    return translated === key
+        ? (window.Symbols?.getPlanetNameRu?.(name) || window.Symbols?.planetNamesRu?.[name] || name)
+        : translated;
+}
+
+function getPlanetSymbolMarkup(name, options = {}) {
+    return window.Symbols?.getPlanetSymbolMarkup?.(name, options)
+        || `<span class="astro-symbol">${escapeAttribute(window.Symbols?.getPlanetSymbol?.(name) || '')}</span>`;
 }
 
 function normalizeAspectPhaseFilter(value) {
@@ -293,12 +311,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     initChartActions();
     bindConfigurationHoverInteractions();
     initEditClientDialog();
+    initSynastryDialogs();
     await hydrateNatalPreferences(chartData, formData);
 
     document.addEventListener('frontend:locale-changed', () => {
         if (!window.chartDataCache) return;
         updateHeader(window.chartDataCache);
         refreshEditDialogLocale();
+        refreshSynastryLauncherLocale();
+        chartRelatedPeoplePicker?.refreshLocale?.();
         renderNatalSettingsEditors();
         if (chartDataRenderer && typeof chartDataRenderer.render === 'function') {
             const hidden = currentSettings.hiddenPlanets || [];
@@ -945,8 +966,8 @@ function renderNatalMatrixEditor() {
             </thead>
             <tbody>
                 ${bodies.map((body) => {
-                    const label = t(`astro.planet.${body}`);
-                    const symbol = Symbols?.planets?.[body] || '';
+                    const label = getPlanetNameLabel(body);
+                    const symbolMarkup = getPlanetSymbolMarkup(body, { size: 18, title: label });
                     const displayChecked = rows?.[body]?.display !== false ? 'checked' : '';
                     const aspectingChecked = rows?.[body]?.aspecting !== false ? 'checked' : '';
                     const escapedLabel = escapeAttribute(label);
@@ -954,7 +975,7 @@ function renderNatalMatrixEditor() {
                         <tr>
                             <td>
                                 <span class="natal-matrix-body natal-matrix-body--icon-only" title="${escapedLabel}" aria-label="${escapedLabel}" role="img">
-                                    <span class="astro-symbol">${symbol}</span>
+                                    ${symbolMarkup}
                                 </span>
                             </td>
                             <td>
@@ -1267,10 +1288,14 @@ function initChartActions() {
     const toggle = document.getElementById('chartActionsToggle');
     const menu = document.getElementById('chartActionsMenu');
     const editAction = document.getElementById('editClientAction');
+    const openSynastryAction = document.getElementById('openSynastryAction');
     const saveDefaultsAction = document.getElementById('saveNatalDefaultsAction');
     const resetAction = document.getElementById('resetDefaultsAction');
 
     if (!toggle || !menu || !editAction) return;
+
+    const hasPersistedUser = Boolean(getCurrentChartUserId());
+    openSynastryAction?.classList.toggle('hidden', !hasPersistedUser);
 
     toggle.addEventListener('click', (event) => {
         event.stopPropagation();
@@ -1281,6 +1306,11 @@ function initChartActions() {
     editAction.addEventListener('click', () => {
         setChartActionsMenuOpen(false);
         openEditClientDialog();
+    });
+
+    openSynastryAction?.addEventListener('click', () => {
+        setChartActionsMenuOpen(false);
+        openSynastryLauncherDialog();
     });
 
     saveDefaultsAction?.addEventListener('click', async () => {
@@ -1475,6 +1505,169 @@ function setChartActionsMenuOpen(isOpen) {
     toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 }
 
+function syncChartModalBodyLock() {
+    const openModalIds = [
+        'editClientDialog',
+        'synastryLauncherDialog',
+        'chartRelatedPickerDialog',
+    ];
+    const hasVisibleModal = openModalIds.some((id) => {
+        const element = document.getElementById(id);
+        return element && !element.classList.contains('hidden');
+    });
+    document.body.style.overflow = hasVisibleModal ? 'hidden' : '';
+}
+
+function getSynastryLauncherRefs() {
+    return {
+        backdrop: document.getElementById('synastryLauncherBackdrop'),
+        dialog: document.getElementById('synastryLauncherDialog'),
+        close: document.getElementById('synastryLauncherClose'),
+        cancel: document.getElementById('synastryLauncherCancel'),
+        error: document.getElementById('synastryLauncherError'),
+        list: document.getElementById('synastryLauncherList'),
+        empty: document.getElementById('synastryLauncherEmpty'),
+        linkExisting: document.getElementById('synastryLauncherLinkExisting'),
+        createNew: document.getElementById('synastryLauncherCreateRelated'),
+    };
+}
+
+function renderSynastryLauncherList() {
+    const refs = getSynastryLauncherRefs();
+    if (!refs.list || !refs.empty) return;
+
+    if (!synastryLauncherPeople.length) {
+        refs.list.innerHTML = '';
+        refs.empty.classList.remove('hidden');
+        return;
+    }
+
+    refs.empty.classList.add('hidden');
+    refs.list.innerHTML = synastryLauncherPeople.map((person) => {
+        const relatedUserId = String(person.user_id || '');
+        const name = window.RelatedPeopleUI?.formatRelatedPersonName?.(person) || t('common.notAvailable');
+        const meta = window.RelatedPeopleUI?.formatRelatedPersonMeta?.(person) || t('common.notAvailable');
+        return `
+            <button
+                type="button"
+                class="related-person-option"
+                data-related-user-id="${escapeAttribute(relatedUserId)}"
+            >
+                <span class="related-person-name-row">
+                    <span class="related-person-name">${escapeAttribute(name)}</span>
+                    ${person.relation_label ? `<span class="related-person-badge">${escapeAttribute(person.relation_label)}</span>` : ''}
+                </span>
+                <span class="related-person-meta">${escapeAttribute(meta)}</span>
+            </button>
+        `;
+    }).join('');
+}
+
+function closeSynastryLauncherDialog() {
+    const refs = getSynastryLauncherRefs();
+    refs.backdrop?.classList.add('hidden');
+    refs.dialog?.classList.add('hidden');
+    refs.error?.classList.add('hidden');
+    if (refs.error) refs.error.textContent = '';
+    syncChartModalBodyLock();
+}
+
+async function openSynastryLauncherDialog() {
+    const refs = getSynastryLauncherRefs();
+    const userId = getCurrentChartUserId();
+    if (!refs.dialog || !userId) return;
+
+    refs.error?.classList.add('hidden');
+    if (refs.error) refs.error.textContent = '';
+
+    try {
+        const payload = await window.AstroAPI.getRelatedPeople(userId);
+        synastryLauncherPeople = Array.isArray(payload) ? payload : [];
+        renderSynastryLauncherList();
+        refs.backdrop?.classList.remove('hidden');
+        refs.dialog?.classList.remove('hidden');
+        syncChartModalBodyLock();
+        refs.list?.querySelector('[data-related-user-id]')?.focus();
+    } catch (error) {
+        synastryLauncherPeople = [];
+        renderSynastryLauncherList();
+        if (refs.error) {
+            refs.error.textContent = error.message || t('page.chart.synastry.loadFailed');
+            refs.error.classList.remove('hidden');
+        }
+        refs.backdrop?.classList.remove('hidden');
+        refs.dialog?.classList.remove('hidden');
+        syncChartModalBodyLock();
+        refs.linkExisting?.focus();
+    }
+}
+
+function refreshSynastryLauncherLocale() {
+    const refs = getSynastryLauncherRefs();
+    if (!refs.dialog || refs.dialog.classList.contains('hidden')) return;
+    renderSynastryLauncherList();
+}
+
+function initSynastryDialogs() {
+    const refs = getSynastryLauncherRefs();
+    if (refs.dialog && refs.dialog.dataset.bound !== 'true') {
+        refs.dialog.dataset.bound = 'true';
+        refs.close?.addEventListener('click', closeSynastryLauncherDialog);
+        refs.cancel?.addEventListener('click', closeSynastryLauncherDialog);
+        refs.backdrop?.addEventListener('click', closeSynastryLauncherDialog);
+        refs.list?.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-related-user-id]');
+            if (!button) return;
+            const clientUserId = getCurrentChartUserId();
+            closeSynastryLauncherDialog();
+            window.RelatedPeopleUI?.openSynastry?.(clientUserId, button.dataset.relatedUserId);
+        });
+        refs.linkExisting?.addEventListener('click', () => {
+            closeSynastryLauncherDialog();
+            chartRelatedPeoplePicker?.open?.();
+        });
+        refs.createNew?.addEventListener('click', () => {
+            closeSynastryLauncherDialog();
+            openCreateRelatedPersonDialog({ returnToLauncherOnCancel: true });
+        });
+    }
+
+    if (!chartRelatedPeoplePicker && window.RelatedPeopleUI?.createRelatedPeoplePicker) {
+        chartRelatedPeoplePicker = window.RelatedPeopleUI.createRelatedPeoplePicker({
+            refs: {
+                backdrop: document.getElementById('chartRelatedPickerBackdrop'),
+                dialog: document.getElementById('chartRelatedPickerDialog'),
+                close: document.getElementById('chartRelatedPickerClose'),
+                cancel: document.getElementById('chartRelatedPickerCancel'),
+                search: document.getElementById('chartRelatedPickerSearch'),
+                relationLabel: document.getElementById('chartRelatedPickerRelationLabel'),
+                error: document.getElementById('chartRelatedPickerError'),
+                list: document.getElementById('chartRelatedPickerList'),
+                empty: document.getElementById('chartRelatedPickerEmpty'),
+                submit: document.getElementById('chartRelatedPickerSubmit'),
+            },
+            getCurrentUserId: () => getCurrentChartUserId(),
+            getExistingRelatedPeople: () => synastryLauncherPeople,
+            onLinked: async (person) => {
+                window.RelatedPeopleUI?.openSynastry?.(getCurrentChartUserId(), person?.user_id);
+            },
+            onOpenError: (error) => {
+                showChartToast(error.message || t('page.chart.synastry.loadFailed'), 'error');
+                openSynastryLauncherDialog();
+            },
+            onClose: (reason) => {
+                if (reason !== 'linked') {
+                    openSynastryLauncherDialog();
+                }
+            },
+            onVisibilityChange: () => {
+                syncChartModalBodyLock();
+            },
+        });
+        chartRelatedPeoplePicker.init();
+    }
+}
+
 function initEditClientDialog() {
     const refs = getEditDialogRefs();
     if (!refs.dialog || refs.dialog.dataset.bound === 'true') return;
@@ -1506,6 +1699,9 @@ function getEditDialogRefs() {
         dialog: document.getElementById('editClientDialog'),
         backdrop: document.getElementById('editClientBackdrop'),
         form: document.getElementById('editClientForm'),
+        kicker: document.getElementById('editClientKicker'),
+        title: document.getElementById('editClientTitle'),
+        copy: document.getElementById('editClientCopy'),
         close: document.getElementById('editClientClose'),
         cancel: document.getElementById('editClientCancel'),
         submit: document.getElementById('editClientSubmit'),
@@ -1522,7 +1718,44 @@ function getEditDialogRefs() {
         placeHint: document.getElementById('editPlaceHint'),
         timezone: document.getElementById('editTimezone'),
         timezoneHint: document.getElementById('editTimezoneHint'),
+        relationGroup: document.getElementById('editRelationGroup'),
+        relationLabel: document.getElementById('editRelationLabel'),
     };
+}
+
+function setEditDialogMode(mode) {
+    const refs = getEditDialogRefs();
+    editClientState.mode = mode === 'create-related' ? 'create-related' : 'edit-client';
+    refs.relationGroup?.classList.toggle('hidden', editClientState.mode !== 'create-related');
+
+    if (refs.kicker) {
+        refs.kicker.textContent = editClientState.mode === 'create-related'
+            ? t('page.chart.synastry.createKicker')
+            : t('page.chart.edit.kicker');
+    }
+    if (refs.title) {
+        refs.title.textContent = editClientState.mode === 'create-related'
+            ? t('page.clientProfile.related.createTitle')
+            : t('page.chart.edit.title');
+    }
+    if (refs.copy) {
+        refs.copy.textContent = editClientState.mode === 'create-related'
+            ? t('page.chart.synastry.createSubtitle')
+            : t('page.chart.edit.subtitle');
+    }
+
+    const submitText = refs.submit?.querySelector('.btn-text');
+    if (submitText) {
+        submitText.textContent = editClientState.mode === 'create-related'
+            ? t('page.clientProfile.related.createSubmit')
+            : t('page.chart.edit.submit');
+    }
+    const submitLoader = refs.submit?.querySelector('.btn-loader');
+    if (submitLoader) {
+        submitLoader.textContent = editClientState.mode === 'create-related'
+            ? t('page.chart.synastry.createSubmitting')
+            : t('page.chart.edit.submitting');
+    }
 }
 
 function openEditClientDialog() {
@@ -1532,6 +1765,10 @@ function openEditClientDialog() {
         showChartToast(t('page.chart.edit.errors.chartUnavailable'), 'error');
         return;
     }
+
+    setEditDialogMode('edit-client');
+    editClientState.returnToLauncherOnCancel = false;
+    editClientState.skipLauncherRestore = false;
 
     const formData = AstroAPI.chartToFormData(rawChartData, { houseSystem: currentSettings.houseSystem });
     const place = String(formData.place || '').trim();
@@ -1544,6 +1781,7 @@ function openEditClientDialog() {
     refs.hour.value = formData.hour || '';
     refs.minute.value = formData.minute || '';
     refs.placeInput.value = place;
+    if (refs.relationLabel) refs.relationLabel.value = '';
 
     window.Timezones?.populate?.(refs.timezone);
     refs.timezone.value = formData.timezone || '';
@@ -1569,12 +1807,48 @@ function openEditClientDialog() {
     refs.backdrop.classList.remove('hidden');
     refs.dialog.classList.remove('hidden');
     refs.firstName.focus();
-    document.body.style.overflow = 'hidden';
+    syncChartModalBodyLock();
+}
+
+function openCreateRelatedPersonDialog(options = {}) {
+    const refs = getEditDialogRefs();
+    if (!refs.dialog || !getCurrentChartUserId()) {
+        showChartToast(t('page.chart.edit.errors.chartUnavailable'), 'error');
+        return;
+    }
+
+    setEditDialogMode('create-related');
+    editClientState.returnToLauncherOnCancel = options.returnToLauncherOnCancel === true;
+    editClientState.skipLauncherRestore = false;
+    editClientState.originalCoords = null;
+    editClientState.selectedCoords = null;
+    editClientState.originalPlace = '';
+    editClientState.selectedPlaceLabel = '';
+
+    refs.form?.reset();
+    if (refs.relationLabel) refs.relationLabel.value = '';
+    window.Timezones?.populate?.(refs.timezone);
+    refs.timezone.value = '';
+    refs.timezoneHint.textContent = '';
+    refs.timezoneHint.style.color = '';
+    refs.error.classList.add('hidden');
+    refs.error.textContent = '';
+    renderEditPlaceHint('empty');
+    setEditClientSubmitting(false);
+
+    refs.backdrop.classList.remove('hidden');
+    refs.dialog.classList.remove('hidden');
+    refs.firstName.focus();
+    syncChartModalBodyLock();
 }
 
 function closeEditClientDialog() {
     const refs = getEditDialogRefs();
     if (!refs.dialog) return;
+
+    const shouldRestoreLauncher = editClientState.mode === 'create-related'
+        && editClientState.returnToLauncherOnCancel === true
+        && editClientState.skipLauncherRestore !== true;
 
     refs.backdrop.classList.add('hidden');
     refs.dialog.classList.add('hidden');
@@ -1582,13 +1856,22 @@ function closeEditClientDialog() {
     refs.error.textContent = '';
     refs.timezoneHint.textContent = '';
     refs.timezoneHint.style.color = '';
-    document.body.style.overflow = '';
+    if (refs.relationLabel) refs.relationLabel.value = '';
+    editClientState.returnToLauncherOnCancel = false;
+    editClientState.skipLauncherRestore = false;
+    editClientState.mode = 'edit-client';
+    syncChartModalBodyLock();
+
+    if (shouldRestoreLauncher) {
+        openSynastryLauncherDialog();
+    }
 }
 
 function refreshEditDialogLocale() {
     const refs = getEditDialogRefs();
     if (!refs.dialog || refs.dialog.classList.contains('hidden')) return;
 
+    setEditDialogMode(editClientState.mode);
     const timezoneValue = refs.timezone.value;
     window.Timezones?.populate?.(refs.timezone);
     if (timezoneValue) {
@@ -1708,7 +1991,7 @@ async function handleEditClientSubmit(event) {
     const refs = getEditDialogRefs();
     const rawChartData = window.chartDataRawCache || AstroAPI.getChartFromSession();
     if (!refs.form.reportValidity()) return;
-    if (!rawChartData?.user_id) {
+    if (editClientState.mode !== 'create-related' && !rawChartData?.user_id) {
         showChartToast(t('page.chart.edit.errors.chartUnavailable'), 'error');
         return;
     }
@@ -1735,13 +2018,23 @@ async function handleEditClientSubmit(event) {
     setEditClientSubmitting(true);
 
     try {
-        const updatedChartData = await AstroAPI.updateClientChart(rawChartData.user_id, requestData);
-        const preparedChartData = applyChartState(updatedChartData, { houseSystem: currentSettings.houseSystem });
-        currentHoveredAspectKey = null;
-        updateHeader(preparedChartData);
-        redrawChart(preparedChartData, currentSettings.hiddenPlanets || [], currentSettings.orientation);
-        closeEditClientDialog();
-        showChartToast(t('page.chart.edit.success'), 'success');
+        if (editClientState.mode === 'create-related') {
+            const createdPerson = await AstroAPI.createRelatedPerson(getCurrentChartUserId(), {
+                ...requestData,
+                relation_label: refs.relationLabel?.value?.trim() || '',
+            });
+            editClientState.skipLauncherRestore = true;
+            closeEditClientDialog();
+            window.RelatedPeopleUI?.openSynastry?.(getCurrentChartUserId(), createdPerson?.user_id);
+        } else {
+            const updatedChartData = await AstroAPI.updateClientChart(rawChartData.user_id, requestData);
+            const preparedChartData = applyChartState(updatedChartData, { houseSystem: currentSettings.houseSystem });
+            currentHoveredAspectKey = null;
+            updateHeader(preparedChartData);
+            redrawChart(preparedChartData, currentSettings.hiddenPlanets || [], currentSettings.orientation);
+            closeEditClientDialog();
+            showChartToast(t('page.chart.edit.success'), 'success');
+        }
     } catch (error) {
         refs.error.textContent = error.message || t('page.chart.edit.errors.saveFailed');
         refs.error.classList.remove('hidden');

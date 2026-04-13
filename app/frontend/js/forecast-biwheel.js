@@ -12,7 +12,21 @@
     function getPlanetName(name) {
         const key = `astro.planet.${name}`;
         const translated = t(key);
-        return translated === key ? (Symbols?.planetNamesRu?.[name] || name) : translated;
+        return translated === key
+            ? (Symbols?.getPlanetNameRu?.(name) || Symbols?.planetNamesRu?.[name] || name)
+            : translated;
+    }
+
+    function getPlanetSymbol(name) {
+        return Symbols?.getPlanetSymbol?.(name)
+            || Symbols?.planets?.[Symbols?.normalizeBodyName?.(name) || name]
+            || Symbols?.planets?.[name]
+            || '';
+    }
+
+    function getPlanetSymbolMarkup(name, options = {}) {
+        return Symbols?.getPlanetSymbolMarkup?.(name, options)
+            || `<span class="astro-symbol">${escapeHtml(getPlanetSymbol(name))}</span>`;
     }
 
     function getSignName(name) {
@@ -1029,7 +1043,7 @@
         positions.forEach(({ planet, angle, displayAngle, hasLeader }) => {
             const p = polar(displayRadius, displayAngle);
             const exactPoint = polar(calloutRadius, angle);
-            const sym = Symbols?.planets?.[planet.name] || planet.name.slice(0, 2);
+            const sym = getPlanetSymbol(planet.name) || planet.name.slice(0, 2);
             const useVectorIcon = window.AstroGlyphs?.hasPlanetIcon?.(planet.name) === true;
             const glyphScale = useVectorIcon ? 1 : (Symbols?.planetGlyphScale?.[planet.name] || 1);
             const glyphSize = fontSize * glyphScale * layerScale;
@@ -1180,18 +1194,18 @@
         const transitBody = aspect?.transitBody || '';
         const natalBody = aspect?.natalBody || '';
         const aspectType = aspect?.aspectType || '';
-        const transitSym = Symbols?.planets?.[transitBody] || '';
-        const natalSym = Symbols?.planets?.[natalBody] || '';
         const aspectSym = Symbols?.aspects?.[aspectType] || '';
         const transitName = getPlanetName(transitBody);
         const natalName = getPlanetName(natalBody);
+        const transitMarkup = getPlanetSymbolMarkup(transitBody, { size: 16, title: transitName });
+        const natalMarkup = getPlanetSymbolMarkup(natalBody, { size: 16, title: natalName });
         const aspectName = getAspectName(aspectType);
         const orb = Number(aspect?.orb);
         const orbLabel = Number.isFinite(orb) ? `${orb.toFixed(2)}°` : '—';
         const methodLabel = getMethodLabelShort(aspect?.methodKey || getLayerConfig(aspect?.method || 'transit').tableMethod);
 
         return `
-            <strong>${escapeHtml(methodLabel)}: <span class="astro-symbol">${transitSym}</span> ${escapeHtml(transitName)} <span class="astro-symbol">${aspectSym}</span> ${escapeHtml(aspectName)} <span class="astro-symbol">${natalSym}</span> ${escapeHtml(natalName)}</strong><br>
+            <strong>${escapeHtml(methodLabel)}: ${transitMarkup} ${escapeHtml(transitName)} <span class="astro-symbol">${aspectSym}</span> ${escapeHtml(aspectName)} ${natalMarkup} ${escapeHtml(natalName)}</strong><br>
             ${escapeHtml(t('common.orb'))}: ${escapeHtml(orbLabel)}
         `;
     }
@@ -1329,13 +1343,13 @@
         const house = group.getAttribute('data-house') || '—';
         const retro = group.getAttribute('data-retrograde') === 'true';
         const degree = Number(group.getAttribute('data-degree-in-sign') || 0);
-        const symbol = Symbols?.planets?.[name] || '';
         const nameRu = getPlanetName(name);
+        const symbolMarkup = getPlanetSymbolMarkup(name, { size: 18, title: nameRu });
         const signSymbol = Symbols?.signs?.[sign] || '';
         const signRu = getSignName(sign);
 
         showHoverTooltip(`
-            <strong>${role}: <span class="astro-symbol">${symbol}</span> ${nameRu}</strong><br>
+            <strong>${role}: ${symbolMarkup} ${nameRu}</strong><br>
             <span class="astro-symbol">${signSymbol}</span> ${signRu} ${formatDMS(degree)}<br>
             ${t('common.house')}: ${house}${retro ? ' <span style="color:#dc2626">R</span>' : ''}
         `, event);
@@ -1528,7 +1542,7 @@
 
         (data.planet_ingresses || []).forEach(ing => {
             const body = ing.body || '—';
-            const bodySym = Symbols?.planets?.[body] || '';
+            const bodySym = getPlanetSymbol(body);
             const isHouseIngress = ing.ingress_type === 'house';
             const fromPart = isHouseIngress
                 ? t('page.forecast.table.houseLabel', { house: ing.from_house ?? t('common.notAvailable') })
@@ -1965,9 +1979,14 @@
 
     function formatCompactBodyGlyph(name, isRetrograde = false) {
         if (!name) return '';
-        const symbol = Symbols?.planets?.[name] || '';
         const label = escapeHtml(getPlanetName(name));
-        return `<span class="bw-compact-body" title="${label}" aria-label="${label}" role="img"><span class="astro-symbol">${escapeHtml(symbol)}</span>${retroIndicatorHtml(isRetrograde)}</span>`;
+        const symbolMarkup = getPlanetSymbolMarkup(name, {
+            size: 17,
+            title: getPlanetName(name),
+            wrapperClass: 'bw-compact-body-symbol',
+            textClass: 'bw-compact-body-symbol-text',
+        });
+        return `<span class="bw-compact-body" title="${label}" aria-label="${label}" role="img">${symbolMarkup}${retroIndicatorHtml(isRetrograde)}</span>`;
     }
 
     function syncBodyFilters(aspects) {
@@ -2082,18 +2101,28 @@
 
         const transitHTML = sortedBodies(transitBodies).map(name => {
             const checked = enabledTransitBodies.has(name) ? 'checked' : '';
-            const symbol = Symbols?.planets?.[name] || '';
             const label = getSettingsBodyLabel(name);
             const escapedLabel = escapeHtml(label);
-            return `<label class="bw-toggle bw-toggle--icon-only" title="${escapedLabel}"><input type="checkbox" data-group="transit" data-body="${name}" ${checked} aria-label="${escapedLabel}"><span class="bw-toggle-label" aria-hidden="true"><span class="astro-symbol">${escapeHtml(symbol)}</span></span></label>`;
+            const symbolMarkup = getPlanetSymbolMarkup(name, {
+                size: 18,
+                title: label,
+                wrapperClass: 'bw-toggle-symbol',
+                textClass: 'bw-toggle-symbol-text',
+            });
+            return `<label class="bw-toggle bw-toggle--icon-only" title="${escapedLabel}"><input type="checkbox" data-group="transit" data-body="${name}" ${checked} aria-label="${escapedLabel}"><span class="bw-toggle-label" aria-hidden="true">${symbolMarkup}</span></label>`;
         }).join('');
 
         const natalHTML = sortedBodies(natalBodies).map(name => {
             const checked = enabledNatalBodies.has(name) ? 'checked' : '';
-            const symbol = Symbols?.planets?.[name] || '';
             const label = getSettingsBodyLabel(name);
             const escapedLabel = escapeHtml(label);
-            return `<label class="bw-toggle bw-toggle--icon-only" title="${escapedLabel}"><input type="checkbox" data-group="natal" data-body="${name}" ${checked} aria-label="${escapedLabel}"><span class="bw-toggle-label" aria-hidden="true"><span class="astro-symbol">${escapeHtml(symbol)}</span></span></label>`;
+            const symbolMarkup = getPlanetSymbolMarkup(name, {
+                size: 18,
+                title: label,
+                wrapperClass: 'bw-toggle-symbol',
+                textClass: 'bw-toggle-symbol-text',
+            });
+            return `<label class="bw-toggle bw-toggle--icon-only" title="${escapedLabel}"><input type="checkbox" data-group="natal" data-body="${name}" ${checked} aria-label="${escapedLabel}"><span class="bw-toggle-label" aria-hidden="true">${symbolMarkup}</span></label>`;
         }).join('');
 
         transitContainers.forEach(container => {
@@ -2209,8 +2238,6 @@
                     <th data-col="orb">${t('common.orb')}${arrow('orb')}</th>
                 </tr></thead><tbody>`;
         sorted.forEach(a => {
-            const tSym = Symbols?.planets?.[a.transitBody] || a.transitBody;
-            const nSym = Symbols?.planets?.[a.natalBody] || a.natalBody;
             const aSym = Symbols?.aspects?.[a.aspectType] || a.aspectType;
             const methodKey = a.methodKey || getLayerConfig(a.method || 'transit').tableMethod;
             const methodLabel = getMethodLabelShort(methodKey);
@@ -2218,7 +2245,9 @@
             const transitRetro = isTransitBodyRetrograde(a.transitBody, methodKey);
             const natalRetro = isNatalBodyRetrograde(a.natalBody);
             const aspectKey = getAspectKey(a);
-            html += `<tr title="${methodLabel}: ${a.transitBody} ${a.aspectType} ${a.natalBody}" data-method="${a.method || ''}" data-transit="${a.transitBody}" data-natal="${a.natalBody}" data-aspect="${a.aspectType}" data-aspect-key="${aspectKey || ''}"><td><span class="method-badge ${methodClass}">${methodLabel}</span></td><td><span class="astro-symbol">${tSym}</span>${retroIndicatorHtml(transitRetro)}</td><td><span class="astro-symbol">${aSym}</span></td><td><span class="astro-symbol">${nSym}</span>${retroIndicatorHtml(natalRetro)}</td><td>${a.orb?.toFixed(2)}°</td></tr>`;
+            const transitMarkup = getPlanetSymbolMarkup(a.transitBody, { size: 16, title: getPlanetName(a.transitBody) });
+            const natalMarkup = getPlanetSymbolMarkup(a.natalBody, { size: 16, title: getPlanetName(a.natalBody) });
+            html += `<tr title="${methodLabel}: ${a.transitBody} ${a.aspectType} ${a.natalBody}" data-method="${a.method || ''}" data-transit="${a.transitBody}" data-natal="${a.natalBody}" data-aspect="${a.aspectType}" data-aspect-key="${aspectKey || ''}"><td><span class="method-badge ${methodClass}">${methodLabel}</span></td><td>${transitMarkup}${retroIndicatorHtml(transitRetro)}</td><td><span class="astro-symbol">${aSym}</span></td><td>${natalMarkup}${retroIndicatorHtml(natalRetro)}</td><td>${a.orb?.toFixed(2)}°</td></tr>`;
         });
         html += '</tbody></table></div></div>';
         container.innerHTML = html;

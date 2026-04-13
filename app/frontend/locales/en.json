@@ -393,6 +393,7 @@
         "editClient": "Edit client data",
         "label": "Actions",
         "openMenu": "Open chart actions",
+        "openSynastry": "Synastry",
         "resetDefaults": "Reset local settings",
         "saveDefaults": "Save as local settings"
       },
@@ -458,6 +459,16 @@
         "subtitle": "Fix the birth data and immediately continue working with the corrected chart.",
         "success": "Client data updated",
         "title": "Edit birth data"
+      },
+      "synastry": {
+        "createKicker": "New person",
+        "createSubmitting": "Creating and calculating chart...",
+        "createSubtitle": "Add the second person directly from the natal chart, then open synastry immediately.",
+        "empty": "There are no linked people yet. You can create a new person or link an existing client.",
+        "kicker": "Who do you want to compare with",
+        "loadFailed": "Failed to load linked people",
+        "subtitle": "Choose someone from the list or add a new person without leaving the natal chart.",
+        "title": "Synastry"
       },
       "configurations": {
         "apex": "Apex: {planet}",

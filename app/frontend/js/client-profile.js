@@ -11,9 +11,9 @@ const userId = window.location.pathname.split('/')[2] || '';
 
 let profileData = null;   // full server response
 let relatedPeople = [];
-let relatedPickerUsers = [];
 let consultationFilter = 'all';
 let toastTimer = null;
+let relatedPeoplePicker = null;
 
 const refs = {};
 
@@ -29,12 +29,6 @@ const editClientState = {
 };
 
 const logSessionState = { userId: null };
-const relatedPickerState = {
-    users: [],
-    filteredUsers: [],
-    selectedUserId: null,
-};
-
 /* ─── i18n helper ──────────────────────────────────────────────────────── */
 
 function t(key, params) {
@@ -121,7 +115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     initEditClientDialog();
     initLogSessionDialog();
-    initRelatedPickerDialog();
+    initRelatedPeoplePicker();
     bindPageEvents();
     await loadProfile();
 });
@@ -266,7 +260,7 @@ function bindPageEvents() {
 
     document.addEventListener('frontend:locale-changed', () => {
         if (profileData) renderAll(profileData);
-        renderRelatedPickerList();
+        relatedPeoplePicker?.refreshLocale?.();
     });
 }
 
@@ -452,133 +446,40 @@ function renderRelatedPeople(items) {
     }).join('');
 }
 
-function initRelatedPickerDialog() {
-    if (!refs.relatedPickerDialog) return;
+function initRelatedPeoplePicker() {
+    if (!refs.relatedPickerDialog || !window.RelatedPeopleUI?.createRelatedPeoplePicker) return;
 
-    refs.relatedPickerClose?.addEventListener('click', closeRelatedPickerDialog);
-    refs.relatedPickerCancel?.addEventListener('click', closeRelatedPickerDialog);
-    refs.relatedPickerBackdrop?.addEventListener('click', closeRelatedPickerDialog);
-    refs.relatedPickerSearch?.addEventListener('input', () => {
-        filterRelatedPickerUsers(refs.relatedPickerSearch.value || '');
+    relatedPeoplePicker = window.RelatedPeopleUI.createRelatedPeoplePicker({
+        refs: {
+            backdrop: refs.relatedPickerBackdrop,
+            dialog: refs.relatedPickerDialog,
+            close: refs.relatedPickerClose,
+            cancel: refs.relatedPickerCancel,
+            search: refs.relatedPickerSearch,
+            relationLabel: refs.relatedPickerRelationLabel,
+            error: refs.relatedPickerError,
+            list: refs.relatedPickerList,
+            empty: refs.relatedPickerEmpty,
+            submit: refs.relatedPickerSubmit,
+        },
+        getCurrentUserId: () => userId,
+        getExistingRelatedPeople: () => relatedPeople,
+        onLinked: async () => {
+            showToast(t('page.clientProfile.related.linked'), 'success');
+            await loadProfile();
+        },
+        onOpenError: (error) => {
+            showToast(t('common.errorWithMessage', { message: error.message }), 'error');
+        },
+        onVisibilityChange: (isOpen) => {
+            document.body.style.overflow = isOpen ? 'hidden' : '';
+        },
     });
-    refs.relatedPickerList?.addEventListener('click', (event) => {
-        const option = event.target.closest('.related-picker-option[data-user-id]');
-        if (!option) return;
-        relatedPickerState.selectedUserId = option.dataset.userId;
-        renderRelatedPickerList();
-    });
-    refs.relatedPickerSubmit?.addEventListener('click', handleLinkExistingPersonSubmit);
-
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && refs.relatedPickerDialog && !refs.relatedPickerDialog.classList.contains('hidden')) {
-            closeRelatedPickerDialog();
-        }
-    });
+    relatedPeoplePicker.init();
 }
 
-async function openRelatedPickerDialog() {
-    try {
-        setRelatedPickerSubmitting(false);
-        refs.relatedPickerError?.classList.add('hidden');
-        if (refs.relatedPickerError) refs.relatedPickerError.textContent = '';
-        if (refs.relatedPickerSearch) refs.relatedPickerSearch.value = '';
-        if (refs.relatedPickerRelationLabel) refs.relatedPickerRelationLabel.value = '';
-        relatedPickerState.selectedUserId = null;
-
-        const response = await apiFetch(`${API_BASE}/users`, { method: 'GET' });
-        if (!response.ok) throw new Error(t('page.clientProfile.related.loadCandidatesFailed'));
-
-        const users = await response.json();
-        relatedPickerUsers = Array.isArray(users) ? users : [];
-        relatedPickerState.users = buildRelatedPickerCandidates(relatedPickerUsers);
-        filterRelatedPickerUsers('');
-
-        refs.relatedPickerBackdrop?.classList.remove('hidden');
-        refs.relatedPickerDialog?.classList.remove('hidden');
-        refs.relatedPickerSearch?.focus();
-        document.body.style.overflow = 'hidden';
-    } catch (err) {
-        showToast(t('common.errorWithMessage', { message: err.message }), 'error');
-    }
-}
-
-function closeRelatedPickerDialog() {
-    refs.relatedPickerBackdrop?.classList.add('hidden');
-    refs.relatedPickerDialog?.classList.add('hidden');
-    refs.relatedPickerError?.classList.add('hidden');
-    if (refs.relatedPickerError) refs.relatedPickerError.textContent = '';
-    relatedPickerState.selectedUserId = null;
-    document.body.style.overflow = '';
-}
-
-function buildRelatedPickerCandidates(users) {
-    const existingIds = new Set((relatedPeople || []).map((person) => String(person.user_id)));
-    return users
-        .filter((user) => {
-            const candidateId = String(user.user_id || '');
-            return candidateId && candidateId !== String(userId) && !existingIds.has(candidateId);
-        })
-        .sort((a, b) => {
-            const aName = [a.first_name, a.last_name].filter(Boolean).join(' ').trim();
-            const bName = [b.first_name, b.last_name].filter(Boolean).join(' ').trim();
-            return aName.localeCompare(bName, window.FrontendI18n?.getLocale?.() || 'en', {
-                sensitivity: 'base',
-                numeric: true,
-            });
-        });
-}
-
-function filterRelatedPickerUsers(searchTerm) {
-    const needle = String(searchTerm || '').trim().toLowerCase();
-    relatedPickerState.filteredUsers = !needle
-        ? [...relatedPickerState.users]
-        : relatedPickerState.users.filter((user) => {
-            const haystack = [
-                user.first_name,
-                user.last_name,
-                user.birth_place,
-                user.birth_date,
-            ].filter(Boolean).join(' ').toLowerCase();
-            return haystack.includes(needle);
-        });
-
-    if (!relatedPickerState.filteredUsers.some((user) => String(user.user_id) === String(relatedPickerState.selectedUserId))) {
-        relatedPickerState.selectedUserId = relatedPickerState.filteredUsers[0]?.user_id
-            ? String(relatedPickerState.filteredUsers[0].user_id)
-            : null;
-    }
-    renderRelatedPickerList();
-}
-
-function renderRelatedPickerList() {
-    if (!refs.relatedPickerList || !refs.relatedPickerEmpty) return;
-
-    if (!relatedPickerState.filteredUsers || relatedPickerState.filteredUsers.length === 0) {
-        refs.relatedPickerList.innerHTML = '';
-        refs.relatedPickerEmpty.classList.remove('hidden');
-        return;
-    }
-
-    refs.relatedPickerEmpty.classList.add('hidden');
-    refs.relatedPickerList.innerHTML = relatedPickerState.filteredUsers.map((user) => {
-        const candidateId = String(user.user_id || '');
-        const selected = candidateId === String(relatedPickerState.selectedUserId);
-        const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || t('common.notAvailable');
-        const meta = [];
-        if (user.birth_date) meta.push(formatDate(user.birth_date));
-        if (user.birth_place) meta.push(user.birth_place);
-        return `
-            <button
-                type="button"
-                class="related-picker-option${selected ? ' selected' : ''}"
-                data-user-id="${escapeHtml(candidateId)}"
-                aria-pressed="${selected ? 'true' : 'false'}"
-            >
-                <span class="related-picker-name">${escapeHtml(name)}</span>
-                <span class="related-picker-meta">${escapeHtml(meta.join(' · ') || t('common.notAvailable'))}</span>
-            </button>
-        `;
-    }).join('');
+function openRelatedPickerDialog() {
+    relatedPeoplePicker?.open?.();
 }
 
 /* ─── Consultation History ───────────────────────────────────────────────── */
@@ -1161,44 +1062,6 @@ function setEditClientSubmitting(v) {
     refs.editSubmit.disabled = v;
     refs.editSubmit.querySelector('.btn-text')?.classList.toggle('hidden', v);
     refs.editSubmit.querySelector('.btn-loader')?.classList.toggle('hidden', !v);
-}
-
-async function handleLinkExistingPersonSubmit() {
-    if (!relatedPickerState.selectedUserId) {
-        if (refs.relatedPickerError) {
-            refs.relatedPickerError.textContent = t('page.clientProfile.related.selectCandidate');
-            refs.relatedPickerError.classList.remove('hidden');
-        }
-        return;
-    }
-
-    refs.relatedPickerError?.classList.add('hidden');
-    if (refs.relatedPickerError) refs.relatedPickerError.textContent = '';
-    setRelatedPickerSubmitting(true);
-
-    try {
-        await window.AstroAPI.linkRelatedPerson(userId, {
-            related_user_id: relatedPickerState.selectedUserId,
-            relation_label: refs.relatedPickerRelationLabel?.value?.trim() || '',
-        });
-        closeRelatedPickerDialog();
-        showToast(t('page.clientProfile.related.linked'), 'success');
-        await loadProfile();
-    } catch (err) {
-        if (refs.relatedPickerError) {
-            refs.relatedPickerError.textContent = err.message || t('page.clientProfile.related.linkFailed');
-            refs.relatedPickerError.classList.remove('hidden');
-        }
-    } finally {
-        setRelatedPickerSubmitting(false);
-    }
-}
-
-function setRelatedPickerSubmitting(isSubmitting) {
-    if (!refs.relatedPickerSubmit) return;
-    refs.relatedPickerSubmit.disabled = isSubmitting;
-    refs.relatedPickerSubmit.querySelector('.btn-text')?.classList.toggle('hidden', isSubmitting);
-    refs.relatedPickerSubmit.querySelector('.btn-loader')?.classList.toggle('hidden', !isSubmitting);
 }
 
 async function deleteRelatedPerson(relatedUserId) {
