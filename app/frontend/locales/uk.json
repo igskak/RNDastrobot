@@ -537,6 +537,9 @@
         "planetSize": "Розмір планет",
         "planetsAndPoints": "Планети та точки",
         "pointSize": "Розмір точок",
+        "showPlanetDegree": "Показувати градус планети на колесі",
+        "showPlanetStationary": "Показувати стаціонарність на колесі",
+        "wheelOptions": "Параметри колеса",
         "tableOptions": "Параметри таблиць"
       },
       "table": {

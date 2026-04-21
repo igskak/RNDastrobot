@@ -852,6 +852,8 @@ body.forecast-modal-open {
     flex: 1;
     position: relative;
     overflow: hidden;
+    box-sizing: border-box;
+    padding-block: 18px;
     cursor: grab;
     display: flex;
     align-items: center;

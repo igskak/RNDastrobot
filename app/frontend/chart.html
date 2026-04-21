@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.chart.title"></title>
-    <link rel="stylesheet" href="bundles/chart.bundle.css?v=20260413-145212">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260413-145212">
-    <script>window.__APP_BUILD_ID__ = '20260413-145212';</script>
+    <link rel="stylesheet" href="bundles/chart.bundle.css?v=20260421-085111">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260421-085111">
+    <script>window.__APP_BUILD_ID__ = '20260421-085111';</script>
 </head>
 <body class="chart-page">
     <div class="page-loader" id="pageLoader">
@@ -170,6 +170,20 @@
                         <input type="checkbox" id="houseLabelsOutsideToggle">
                         <span data-i18n="page.chart.settings.houseLabels.outside"></span>
                     </label>
+                </div>
+
+                <div class="settings-section">
+                    <label class="settings-label" data-i18n="page.chart.settings.wheelOptions"></label>
+                    <div class="settings-check-stack">
+                        <label class="settings-check-option">
+                            <input type="checkbox" id="showWheelStationaryToggle">
+                            <span data-i18n="page.chart.settings.showPlanetStationary"></span>
+                        </label>
+                        <label class="settings-check-option">
+                            <input type="checkbox" id="showWheelDegreeToggle">
+                            <span data-i18n="page.chart.settings.showPlanetDegree"></span>
+                        </label>
+                    </div>
                 </div>
 
                 <div class="settings-section">
@@ -403,7 +417,7 @@
 
     <div id="chartToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/chart.bundle.js?v=20260413-145212"></script>
-    <script src="js/locale-switcher.js?v=20260413-145212"></script>
+    <script type="module" src="js/bundles/chart.bundle.js?v=20260421-085111"></script>
+    <script src="js/locale-switcher.js?v=20260421-085111"></script>
 </body>
 </html>

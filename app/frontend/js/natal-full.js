@@ -629,9 +629,7 @@ function createPlanetRow(planet) {
             : EMPTY;
     } else if (speedPct !== undefined && speedPct !== null) {
         let speedClass = '';
-        if (speedPct < 80) speedClass = 'speed-slow';
-        else if (speedPct > 120) speedClass = 'speed-very-fast';
-        else if (speedPct > 100) speedClass = 'speed-fast';
+        if (speedPct < 10) speedClass = 'speed-slow';
         tdSpeed.innerHTML = `<span class="${speedClass}">${Math.round(speedPct)}%</span>`;
     } else {
         tdSpeed.textContent = EMPTY;

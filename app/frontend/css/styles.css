@@ -744,6 +744,8 @@ input[type="number"] {
     max-width: 600px;
     aspect-ratio: 1;
     overflow: hidden;
+    box-sizing: border-box;
+    padding-block: 16px;
     cursor: grab;
     border-radius: var(--radius-sm);
 }

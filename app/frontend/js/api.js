@@ -96,7 +96,7 @@
             ));
         }
 
-        return response.json();
+        return normalizeChartMotion(await response.json());
     }
 
     async function getNatalChart(userId, options = {}) {
@@ -114,7 +114,7 @@
             ));
         }
 
-        return response.json();
+        return normalizeChartMotion(await response.json());
     }
 
     async function updateClientChart(userId, birthData, options = {}) {
@@ -433,16 +433,78 @@
         return `${h}:${m}:00`;
     }
 
+    const SPEED_MEANS = {
+        Sun: 0.9856,
+        Moon: 13.1764,
+        Mercury: 1.607,
+        Venus: 1.174,
+        Mars: 0.524,
+        Jupiter: 0.0831,
+        Saturn: 0.0335,
+        Uranus: 0.0117,
+        Neptune: 0.006,
+        Pluto: 0.004,
+        Chiron: 0.0192,
+        Proserpina: 0.001265,
+    };
+    const DEFAULT_STATIONARY_THRESHOLD_PERCENT = 10;
+
+    function normalizePlanetMotion(planet) {
+        if (!planet || typeof planet !== 'object') return planet;
+
+        const speed = Number(planet.speed);
+        const meanSpeed = SPEED_MEANS[String(planet.name || '')];
+        const retrograde = typeof planet.retrograde === 'boolean'
+            ? planet.retrograde
+            : speed < 0;
+
+        let speedPercent = planet.speed_percent;
+        if (Number.isFinite(speed) && Number.isFinite(meanSpeed) && meanSpeed > 0) {
+            speedPercent = Math.min(Math.abs(speed) / meanSpeed * 100, 100);
+            speedPercent = Math.round(speedPercent * 100) / 100;
+        }
+
+        const threshold = Number.isFinite(Number(planet.stationary_threshold_percent))
+            ? Number(planet.stationary_threshold_percent)
+            : DEFAULT_STATIONARY_THRESHOLD_PERCENT;
+        const hasSpeedPercent = Number.isFinite(Number(speedPercent));
+        const isStationary = hasSpeedPercent
+            ? Number(speedPercent) <= threshold
+            : Boolean(planet.is_stationary);
+
+        return {
+            ...planet,
+            retrograde,
+            speed_percent: hasSpeedPercent ? Number(speedPercent) : null,
+            is_stationary: isStationary,
+            stationary_type: isStationary
+                ? (retrograde ? 'pre_direct' : 'pre_retrograde')
+                : null,
+        };
+    }
+
+    function normalizeChartMotion(chartData) {
+        if (!chartData || typeof chartData !== 'object' || !Array.isArray(chartData.planets)) {
+            return chartData;
+        }
+
+        return {
+            ...chartData,
+            planets: chartData.planets.map(normalizePlanetMotion),
+        };
+    }
+
     /**
      * Сохранение данных карты в sessionStorage
      * @param {Object} chartData
      */
     function saveChartToSession(chartData) {
-        sessionStorage.setItem('natalChart', JSON.stringify(chartData));
+        const normalizedChartData = normalizeChartMotion(chartData);
+        sessionStorage.setItem('natalChart', JSON.stringify(normalizedChartData));
 
         // Сохраняем user_id отдельно для быстрого доступа
-        if (chartData.user_id) {
-            localStorage.setItem('currentUserId', chartData.user_id);
+        if (normalizedChartData?.user_id) {
+            localStorage.setItem('currentUserId', normalizedChartData.user_id);
         }
     }
 
@@ -452,7 +514,7 @@
      */
     function getChartFromSession() {
         const data = sessionStorage.getItem('natalChart');
-        return data ? JSON.parse(data) : null;
+        return data ? normalizeChartMotion(JSON.parse(data)) : null;
     }
 
     /**

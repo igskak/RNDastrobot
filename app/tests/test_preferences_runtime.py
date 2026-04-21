@@ -113,7 +113,7 @@ def test_apply_fixed_prognostic_defaults_overwrites_existing_prognostic_profile_
             },
         },
         "balances": {"version": 1, "planet_weights": {}, "special_point_weights": {}},
-        "stationary": {"threshold_percent": 5.0},
+        "stationary": {"threshold_percent": 10.0},
     }
 
     updated = apply_fixed_prognostic_defaults(
@@ -138,10 +138,10 @@ def test_apply_fixed_prognostic_defaults_overwrites_existing_prognostic_profile_
     assert updated["stationary"]["threshold_percent"] == 7.5
 
 
-def test_normalize_methodology_settings_defaults_stationary_threshold_to_five_percent():
+def test_normalize_methodology_settings_defaults_stationary_threshold_to_ten_percent():
     normalized = normalize_methodology_settings({})
 
-    assert normalized["stationary"]["threshold_percent"] == 5.0
+    assert normalized["stationary"]["threshold_percent"] == 10.0
 
 
 def test_normalize_methodology_settings_preserves_custom_stationary_threshold():
@@ -179,7 +179,7 @@ def test_resolve_orb_for_astrologer_reuses_cached_normalized_orbs(monkeypatch):
             },
         },
         "balances": {"version": 1, "planet_weights": {}, "special_point_weights": {}},
-        "stationary": {"threshold_percent": 5.0},
+        "stationary": {"threshold_percent": 10.0},
     }
     payload = {"methodology": default_methodology}
     astrologer_id = "astrologer-1"
@@ -233,7 +233,7 @@ def test_invalidate_clears_cached_normalized_orbs(monkeypatch):
             },
         },
         "balances": {"version": 1, "planet_weights": {}, "special_point_weights": {}},
-        "stationary": {"threshold_percent": 5.0},
+        "stationary": {"threshold_percent": 10.0},
     }
     payload = {"methodology": default_methodology}
     astrologer_id = "astrologer-2"

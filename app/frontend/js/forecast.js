@@ -1484,10 +1484,16 @@ function renderNatalOverlay() {
     if (!wheel || !natalWheelData) return null;
 
     const natalPointScale = readBiwheelNatalPointScale();
+    const houseNumberStyle = localStorage.getItem('natalHouseNumberStyle') === 'roman' ? 'roman' : 'arabic';
+    const houseLabelsOutside = localStorage.getItem('natalHouseLabelsOutside') === 'true';
     wheel.setOrientationMode(ForecastState.biwheelOrientation, { redraw: false });
     wheel.setPointScales({
         planets: natalPointScale,
         points: natalPointScale,
+    }, { redraw: false });
+    wheel.setHouseLabelOptions({
+        style: houseNumberStyle,
+        outside: houseLabelsOutside,
     }, { redraw: false });
     wheel.draw(natalWheelData);
     applyNatalOverlayViewport();
@@ -3605,9 +3611,15 @@ async function fetchTransitBiwheelData(dateStr) {
 
 function renderBiwheelData(data) {
     if (!window.ForecastBiwheel || !data) return;
+    const houseNumberStyle = localStorage.getItem('natalHouseNumberStyle') === 'roman' ? 'roman' : 'arabic';
+    const houseLabelsOutside = localStorage.getItem('natalHouseLabelsOutside') === 'true';
     if (window.ForecastBiwheel.setOrientationMode) {
         window.ForecastBiwheel.setOrientationMode(ForecastState.biwheelOrientation);
     }
+    window.ForecastBiwheel.setHouseLabelOptions?.({
+        style: houseNumberStyle,
+        outside: houseLabelsOutside,
+    });
     window.ForecastBiwheel.setMatrixRows?.(ForecastState.biwheelMatrixRows);
     window.ForecastBiwheel.setEnabledAspectTypes?.(ForecastState.biwheelEnabledAspectTypes);
     window.ForecastBiwheel.setAspectFilter?.(ForecastState.biwheelAspectScope);

@@ -133,20 +133,22 @@ class PlanetCharacteristicsService:
     @classmethod
     def calculate_speed_percent(cls, planet_name: str, actual_speed: float) -> Optional[float]:
         """
-        Рассчитать скорость планеты в процентах от средней.
+        Рассчитать скорость планеты в процентах по шкале ZET.
         
         Args:
             planet_name: Название планеты
             actual_speed: Фактическая скорость (градусы/день)
             
         Returns:
-            Скорость в процентах (100% = средняя) или None если планета не в справочнике
+            Скорость в процентах в диапазоне 0-100, где 100 = максимальная
+            директная/ретроградная рабочая скорость для планеты, или None если
+            планета не в справочнике
         """
         cls._load_references()
         mean_speed = cls.MEAN_SPEEDS.get(planet_name)
         if mean_speed is None or mean_speed == 0:
             return None
-        return round(abs(actual_speed) / mean_speed * 100, 2)
+        return round(min(abs(actual_speed) / mean_speed * 100, 100.0), 2)
     
     @classmethod
     def calculate_critical_degrees(cls, planet_name: str, sign: str, degree_in_sign: float) -> List[str]:
@@ -452,9 +454,9 @@ class PlanetCharacteristicsService:
     # УРОВЕНЬ 5: Стационарность
     # =========================================================================
 
-    # Дефолтный порог стационарности: скорость <= 5% от средней.
+    # Дефолтный порог стационарности: скорость < 10% от средней.
     # Может быть переопределён через account methodology preferences.
-    STATIONARY_THRESHOLD_PERCENT = 5.0
+    STATIONARY_THRESHOLD_PERCENT = 10.0
 
     @classmethod
     def calculate_stationary_status(
@@ -711,9 +713,9 @@ class PlanetCharacteristicsService:
         if dignity in ('domicile', 'exaltation'):
             plus_score += 2
 
-        # Быстрая в движении (> 100% от средней)
+        # Быстрая в движении (максимум шкалы ZET)
         speed_percent = planet.get('speed_percent')
-        if speed_percent is not None and speed_percent > 100:
+        if speed_percent is not None and speed_percent >= 100:
             plus_score += 2
 
         # В сердце Солнца (Казими), кроме Луны

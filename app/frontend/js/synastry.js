@@ -31,6 +31,10 @@ const PLANET_SCALE_STORAGE_KEY = 'natalPlanetScale';
 const POINT_SCALE_STORAGE_KEY = 'natalPointScale';
 const HOUSE_NUMBER_STYLE_STORAGE_KEY = 'natalHouseNumberStyle';
 const HOUSE_LABELS_OUTSIDE_STORAGE_KEY = 'natalHouseLabelsOutside';
+const SYNASTRY_HOUSE_COLORS = Object.freeze({
+    primary: '#111111',
+    partner: '#1e3a5f',
+});
 
 const synastryRefs = {};
 const synastryState = {
@@ -532,6 +536,25 @@ function ensureWheels() {
     }
 }
 
+function applySynastryHouseThemes(mode) {
+    const primaryTheme = {
+        outsideColor: SYNASTRY_HOUSE_COLORS.primary,
+        outsideLineColor: SYNASTRY_HOUSE_COLORS.primary,
+        outsideRadialOffset: 8,
+        outsideTangentOffset: -14,
+    };
+    const partnerTheme = {
+        outsideColor: SYNASTRY_HOUSE_COLORS.partner,
+        outsideLineColor: SYNASTRY_HOUSE_COLORS.partner,
+        outsideRadialOffset: 8,
+        outsideTangentOffset: 14,
+    };
+    const baseTheme = mode === 'partner' ? partnerTheme : primaryTheme;
+
+    synastryState.baseWheel?.setHouseVisualOptions?.(baseTheme, { redraw: false });
+    synastryState.overlayWheel?.setHouseVisualOptions?.(partnerTheme, { redraw: false });
+}
+
 function renderWheelMode(primaryChartOverride, partnerChartOverride) {
     if (!synastryState.payload) return;
     ensureWheels();
@@ -556,6 +579,7 @@ function renderWheelMode(primaryChartOverride, partnerChartOverride) {
             outside: synastryState.settings.houseLabelsOutside,
         }, { redraw: false });
     });
+    applySynastryHouseThemes(mode);
 
     if (mode === 'partner') {
         synastryState.baseWheel.draw(partnerChart);

@@ -16,11 +16,24 @@ class ChartWheel {
         this.degreeRingWidth = 10;       // Внешнее кольцо с градусами
         this.signRingWidth = 26;         // Кольцо символов знаков
         this.houseRingWidth = 40;        // Кольцо домов
-        this.planetRadius = 174;         // Радиус планет/точек в центре кольца домов
-        this.aspectRadius = 138;         // Радиус аспектных линий
+        this.planetRadius = this.getHouseCenterRadius();
+        this.aspectRadius = this.getHouseInnerRadius();
         this.natalGlyphBaseSize = 18;    // Натальные точки +20% к базовому размеру
         this.houseNumberStyle = 'arabic';
         this.houseLabelsOutside = false;
+        this.houseVisualOptions = {
+            insideAngularColor: '#6366f1',
+            insideMutedColor: '#9ca3af',
+            insideAngularLineColor: '#6366f1',
+            insideMutedLineColor: '#c7d2db',
+            outsideColor: '#111111',
+            outsideLineColor: '#111111',
+            outsideExtension: 14,
+            outsideRadialOffset: 8,
+            outsideTangentOffset: 12,
+        };
+        this.showPlanetStationary = false;
+        this.showPlanetDegree = false;
 
         this.visualPreferences = window.AstroPreferences?.getAccountVisualPreferences?.() || null;
         this.aspectColors = this.visualPreferences?.aspect_colors || {
@@ -77,6 +90,12 @@ class ChartWheel {
             acc[name] = idx;
             return acc;
         }, {});
+
+        this.planetLeaderColor = '#9ca3af';
+        this.conjunctionDisplay = {
+            collapseThreshold: 9,
+            minLineLength: 14,
+        };
     }
 
     readPointScale() {
@@ -212,6 +231,99 @@ class ChartWheel {
         return normalized;
     }
 
+    getSignOuterRadius() {
+        return this.outerRadius - this.degreeRingWidth;
+    }
+
+    getSignInnerRadius() {
+        return this.getSignOuterRadius() - this.signRingWidth;
+    }
+
+    getHouseInnerRadius() {
+        return this.getSignInnerRadius() - this.houseRingWidth;
+    }
+
+    getHouseCenterRadius() {
+        return this.getHouseInnerRadius() + this.houseRingWidth / 2;
+    }
+
+    getAspectBoundaryRadius() {
+        return this.getHouseInnerRadius();
+    }
+
+    getHouseLabelColor(isAngular) {
+        if (this.houseLabelsOutside) {
+            return this.houseVisualOptions.outsideColor || '#111111';
+        }
+        return isAngular
+            ? this.houseVisualOptions.insideAngularColor
+            : this.houseVisualOptions.insideMutedColor;
+    }
+
+    getHouseLineColor(isAngular) {
+        if (this.houseLabelsOutside) {
+            return this.houseVisualOptions.outsideLineColor || '#111111';
+        }
+        return isAngular
+            ? this.houseVisualOptions.insideAngularLineColor
+            : this.houseVisualOptions.insideMutedLineColor;
+    }
+
+    getOutsideHouseLabelGeometry(angle) {
+        const radialOffset = Number(this.houseVisualOptions.outsideRadialOffset) || 0;
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        const tangentX = -sin;
+        const tangentY = cos;
+        const tangentOffset = Number(this.houseVisualOptions.outsideTangentOffset) || 0;
+        const verticalBias = Math.max(0, 0.55 - Math.abs(cos)) * 18;
+        const radius = this.outerRadius + radialOffset;
+        const anchor = Math.abs(cos) < 0.18 ? 'middle' : (cos > 0 ? 'start' : 'end');
+
+        return {
+            x: this.center + radius * cos + (tangentOffset + verticalBias) * tangentX,
+            y: this.center + radius * sin + (tangentOffset + verticalBias) * tangentY,
+            anchor,
+        };
+    }
+
+    resolveAspectLineGeometry({ x1, y1, x2, y2, angle1, angle2, aspectType }) {
+        const midX = (x1 + x2) / 2;
+        const midY = (y1 + y2) / 2;
+        const rawLength = Math.hypot(x2 - x1, y2 - y1);
+
+        if (aspectType !== 'Conjunction' || rawLength >= this.conjunctionDisplay.collapseThreshold) {
+            return {
+                x1,
+                y1,
+                x2,
+                y2,
+                midX,
+                midY,
+                rawLength,
+                collapsed: false,
+            };
+        }
+
+        const avgCos = Math.cos(angle1) + Math.cos(angle2);
+        const avgSin = Math.sin(angle1) + Math.sin(angle2);
+        const avgNorm = Math.hypot(avgCos, avgSin) || 1;
+        const tangentX = -avgSin / avgNorm;
+        const tangentY = avgCos / avgNorm;
+        const halfLength = this.conjunctionDisplay.minLineLength / 2;
+
+        return {
+            x1: midX - tangentX * halfLength,
+            y1: midY - tangentY * halfLength,
+            x2: midX + tangentX * halfLength,
+            y2: midY + tangentY * halfLength,
+            midX,
+            midY,
+            rawLength,
+            collapsed: true,
+        };
+    }
+
     /**
      * Отрисовка полной карты
      */
@@ -221,6 +333,8 @@ class ChartWheel {
         this.svg.innerHTML = '';
         this.chartData = chartData;
         this.aspectLookupByKey = {};
+        this.aspectRadius = this.getAspectBoundaryRadius();
+        this.planetRadius = this.getHouseCenterRadius();
 
         // Создаём группы для слоёв (порядок важен для z-index)
         this.createLayers();
@@ -370,10 +484,12 @@ class ChartWheel {
     }
 
     drawHouses(houses) {
-        const signOuterR = this.outerRadius - this.degreeRingWidth;
-        const signInnerR = signOuterR - this.signRingWidth;
-        const houseInnerR = signInnerR - this.houseRingWidth;
-        const lineOuterR = this.houseLabelsOutside ? this.outerRadius + 14 : signInnerR;
+        const signInnerR = this.getSignInnerRadius();
+        const houseInnerR = this.getHouseInnerRadius();
+        const outsideExtension = Number(this.houseVisualOptions.outsideExtension) || 14;
+        const lineOuterR = signInnerR;
+        const outsideSegmentStartR = this.outerRadius + 1;
+        const outsideSegmentEndR = this.outerRadius + outsideExtension;
 
         // Круг домов (внутренняя граница)
         this.layers.houses.appendChild(this.createSvgElement('circle', {
@@ -398,8 +514,7 @@ class ChartWheel {
                 style: 'cursor: pointer;'
             });
 
-            // Угловые дома — линия выходит к центру
-            const lineInnerR = isAngular ? this.aspectRadius : houseInnerR;
+            const lineInnerR = houseInnerR;
 
             // Увеличенная прозрачная зона захвата для hover
             cuspGroup.appendChild(this.createSvgElement('line', {
@@ -417,10 +532,32 @@ class ChartWheel {
                 y1: this.center + lineInnerR * Math.sin(angle),
                 x2: this.center + lineOuterR * Math.cos(angle),
                 y2: this.center + lineOuterR * Math.sin(angle),
-                stroke: isAngular ? '#6366f1' : '#c7d2db',
+                stroke: this.getHouseLineColor(isAngular),
                 'stroke-width': isAngular ? 2.5 : 1,
                 class: 'house-cusp-line'
             }));
+
+            if (this.houseLabelsOutside) {
+                cuspGroup.appendChild(this.createSvgElement('line', {
+                    x1: this.center + outsideSegmentStartR * Math.cos(angle),
+                    y1: this.center + outsideSegmentStartR * Math.sin(angle),
+                    x2: this.center + outsideSegmentEndR * Math.cos(angle),
+                    y2: this.center + outsideSegmentEndR * Math.sin(angle),
+                    stroke: 'transparent',
+                    'stroke-width': 10,
+                    class: 'house-cusp-hit'
+                }));
+
+                cuspGroup.appendChild(this.createSvgElement('line', {
+                    x1: this.center + outsideSegmentStartR * Math.cos(angle),
+                    y1: this.center + outsideSegmentStartR * Math.sin(angle),
+                    x2: this.center + outsideSegmentEndR * Math.cos(angle),
+                    y2: this.center + outsideSegmentEndR * Math.sin(angle),
+                    stroke: this.getHouseLineColor(isAngular),
+                    'stroke-width': isAngular ? 2.1 : 1.2,
+                    class: 'house-cusp-line'
+                }));
+            }
 
             // Номер дома в секторе (дома идут против часовой: 1→2→3→...→12)
             // Дом N занимает сектор от куспида N до куспида N+1 (против часовой)
@@ -431,35 +568,41 @@ class ChartWheel {
                 midLong = ((house.longitude + nextHouse.longitude + 360) / 2) % 360;
             }
             const midAngle = this.longitudeToAngle(midLong) * Math.PI / 180;
-            const textR = this.houseLabelsOutside
-                ? lineOuterR + 6
-                : signInnerR - 10;
-
-            cuspGroup.appendChild(this.createSvgElement('text', {
-                x: this.center + textR * Math.cos(midAngle),
-                y: this.center + textR * Math.sin(midAngle) + 3,
-                'text-anchor': 'middle',
-                'font-size': this.houseLabelsOutside ? '9.5' : '10',
-                'font-weight': isAngular ? '700' : '400',
-                fill: isAngular ? '#6366f1' : '#9ca3af',
-                style: 'pointer-events: none;'
-            }, this.formatHouseLabel(house.number)));
+            if (this.houseLabelsOutside) {
+                const outsideLabel = this.getOutsideHouseLabelGeometry(angle);
+                cuspGroup.appendChild(this.createSvgElement('text', {
+                    x: outsideLabel.x,
+                    y: outsideLabel.y,
+                    'text-anchor': outsideLabel.anchor,
+                    'dominant-baseline': 'middle',
+                    'font-size': '9.5',
+                    'font-weight': isAngular ? '600' : '500',
+                    fill: this.getHouseLabelColor(isAngular),
+                    stroke: '#fafafa',
+                    'stroke-width': '2.4',
+                    'stroke-linejoin': 'round',
+                    'paint-order': 'stroke',
+                    style: 'pointer-events: none;'
+                }, this.formatHouseLabel(house.number)));
+            } else {
+                const textR = signInnerR - 10;
+                cuspGroup.appendChild(this.createSvgElement('text', {
+                    x: this.center + textR * Math.cos(midAngle),
+                    y: this.center + textR * Math.sin(midAngle) + 3,
+                    'text-anchor': 'middle',
+                    'font-size': '10',
+                    'font-weight': isAngular ? '700' : '400',
+                    fill: this.getHouseLabelColor(isAngular),
+                    style: 'pointer-events: none;'
+                }, this.formatHouseLabel(house.number)));
+            }
 
             this.layers.houses.appendChild(cuspGroup);
         });
     }
 
     drawAspectCircle() {
-        // Внутренний пунктирный круг для аспектов
-        this.layers.aspects.appendChild(this.createSvgElement('circle', {
-            cx: this.center,
-            cy: this.center,
-            r: this.aspectRadius,
-            fill: 'none',
-            stroke: '#e5e7eb',
-            'stroke-width': 1,
-            'stroke-dasharray': '3,3'
-        }));
+        // Внутренний контур уже отрисован как граница кольца домов.
     }
 
     /**
@@ -470,6 +613,8 @@ class ChartWheel {
      * - Иконки аспектов на середине линии
      */
     drawAspectsEnhanced(aspects, planets) {
+        const aspectRadius = this.getAspectBoundaryRadius();
+        this.aspectRadius = aspectRadius;
         const planetMap = {};
         planets.forEach((p) => {
             const normalizedName = this.normalizeAspectBodyName(p.name);
@@ -513,10 +658,19 @@ class ChartWheel {
             const angle1 = this.longitudeToAngle(long1) * Math.PI / 180;
             const angle2 = this.longitudeToAngle(long2) * Math.PI / 180;
 
-            const x1 = this.center + this.aspectRadius * Math.cos(angle1);
-            const y1 = this.center + this.aspectRadius * Math.sin(angle1);
-            const x2 = this.center + this.aspectRadius * Math.cos(angle2);
-            const y2 = this.center + this.aspectRadius * Math.sin(angle2);
+            const x1 = this.center + aspectRadius * Math.cos(angle1);
+            const y1 = this.center + aspectRadius * Math.sin(angle1);
+            const x2 = this.center + aspectRadius * Math.cos(angle2);
+            const y2 = this.center + aspectRadius * Math.sin(angle2);
+            const geometry = this.resolveAspectLineGeometry({
+                x1,
+                y1,
+                x2,
+                y2,
+                angle1,
+                angle2,
+                aspectType: aspect.aspect_type,
+            });
 
             // Цвет по типу аспекта
             const color = this.getAspectColor(aspect.aspect_type, aspect.harmonic_type);
@@ -528,10 +682,14 @@ class ChartWheel {
             const dashArray = isMajor ? 'none' : '3,2';
 
             const line = this.createSvgElement('line', {
-                x1, y1, x2, y2,
+                x1: geometry.x1,
+                y1: geometry.y1,
+                x2: geometry.x2,
+                y2: geometry.y2,
                 stroke: color,
                 'stroke-width': thickness,
                 'stroke-dasharray': dashArray,
+                'stroke-linecap': aspect.aspect_type === 'Conjunction' ? 'round' : 'butt',
                 opacity: isMajor ? 0.7 : 0.45,
                 class: 'aspect-line',
                 'data-aspect': aspectKey,
@@ -539,15 +697,20 @@ class ChartWheel {
                 'data-planet-1': planet1,
                 'data-planet-2': planet2,
                 'data-type': aspect.aspect_type,
-                'data-major': isMajor ? 'true' : 'false'
+                'data-major': isMajor ? 'true' : 'false',
+                'data-conjunction-collapsed': geometry.collapsed ? 'true' : 'false'
             });
 
             this.layers.aspects.appendChild(line);
 
-            // Иконка аспекта на середине линии (только для мажорных с орбисом < 5°)
-            if (isMajor && aspect.orb < 5) {
-                const midX = (x1 + x2) / 2;
-                const midY = (y1 + y2) / 2;
+            const shouldDrawAspectGlyph = isMajor
+                && aspect.orb < 5
+                && (aspect.aspect_type !== 'Conjunction' || geometry.collapsed);
+
+            // Иконка аспекта на середине линии
+            if (shouldDrawAspectGlyph) {
+                const midX = geometry.midX;
+                const midY = geometry.midY;
                 const glyph = aspectGlyphs[aspect.aspect_type];
 
                 if (glyph) {
@@ -590,17 +753,14 @@ class ChartWheel {
      * Улучшенная отрисовка планет с кластерным anti-collision и выносками
      */
     drawPlanetsEnhanced(planets) {
-        const signOuterR = this.outerRadius - this.degreeRingWidth;
-        const signInnerR = signOuterR - this.signRingWidth;
-        const houseInnerR = signInnerR - this.houseRingWidth;
-        const houseCenterRadius = houseInnerR + this.houseRingWidth / 2;
-        const anchorRadius = houseInnerR - 4;
+        const houseCenterRadius = this.getHouseCenterRadius();
+        const anchorRadius = this.getAspectBoundaryRadius();
         this.planetRadius = houseCenterRadius;
         const positions = this.calculatePlanetPositionsEnhanced(planets, {
             baseRadius: houseCenterRadius,
         });
 
-        positions.forEach(({ planet, angle, displayAngle, displayRadius }) => {
+        positions.forEach(({ planet, angle, displayAngle, displayRadius, hasLeader }) => {
             const displayAngleRad = displayAngle * Math.PI / 180;
             const exactAngleRad = angle * Math.PI / 180;
             const radius = Number.isFinite(displayRadius) ? displayRadius : this.planetRadius;
@@ -623,22 +783,25 @@ class ChartWheel {
                 style: 'cursor: pointer;'
             });
 
-            group.appendChild(this.createSvgElement('line', {
-                x1: anchorX, y1: anchorY,
-                x2: x, y2: y,
-                stroke: color,
-                'stroke-width': 0.7,
-                opacity: 0.42,
-                class: 'planet-leader-line',
-                style: 'pointer-events: none;'
-            }));
+            if (hasLeader) {
+                group.appendChild(this.createSvgElement('line', {
+                    x1: anchorX, y1: anchorY,
+                    x2: x, y2: y,
+                    stroke: this.planetLeaderColor,
+                    'stroke-width': 0.5,
+                    opacity: 0.34,
+                    class: 'planet-leader-line',
+                    style: 'pointer-events: none;'
+                }));
+
+            }
 
             group.appendChild(this.createSvgElement('circle', {
                 cx: anchorX,
                 cy: anchorY,
-                r: 2.2,
-                fill: color,
-                opacity: 0.9,
+                r: 1.8,
+                fill: this.planetLeaderColor,
+                opacity: hasLeader ? 0.8 : 0.48,
                 class: 'planet-anchor-point',
                 style: 'pointer-events: none;'
             }));
@@ -671,15 +834,45 @@ class ChartWheel {
                 }, Symbols.planets[planet.name] || planet.name.charAt(0)));
             }
 
-            // Ретроградность — «R» (компактно, справа снизу от символа)
+            const annotationScale = Math.min(1.25, scale);
+            const motionFontSize = (8 * annotationScale).toFixed(2);
+            const motionX = x + iconSize * 0.17;
+            const motionY = y + iconSize * 0.22;
+
+            if (this.showPlanetStationary && planet.is_stationary) {
+                group.appendChild(this.createSvgElement('text', {
+                    x: motionX,
+                    y: motionY - iconSize * 0.17,
+                    'font-size': motionFontSize,
+                    'font-weight': '700',
+                    fill: '#1e3a5f',
+                    style: 'pointer-events: none;'
+                }, 'S'));
+            }
+
             if (planet.retrograde) {
                 group.appendChild(this.createSvgElement('text', {
-                    x: x + iconSize * 0.36, y: y + iconSize * 0.42,
-                    'font-size': (8 * Math.min(1.25, scale)).toFixed(2),
+                    x: motionX,
+                    y: motionY,
+                    'font-size': motionFontSize,
                     'font-weight': '700',
                     fill: '#dc2626',
                     style: 'pointer-events: none;'
                 }, 'R'));
+            }
+
+            if (this.showPlanetDegree) {
+                const degreeLabel = `${Math.floor(Number(planet.degree_in_sign) || 0)}°`;
+                group.appendChild(this.createSvgElement('text', {
+                    x: x - iconSize * 0.24,
+                    y: y - iconSize * 0.08,
+                    'text-anchor': 'end',
+                    'font-size': (4.9 * annotationScale).toFixed(2),
+                    'font-family': 'monospace',
+                    'font-weight': '600',
+                    fill: '#5c554e',
+                    style: 'pointer-events: none;'
+                }, degreeLabel));
             }
 
             this.layers.planets.appendChild(group);
@@ -691,6 +884,7 @@ class ChartWheel {
      */
     calculatePlanetPositionsEnhanced(planets, options = {}) {
         const baseRadius = Number.isFinite(options.baseRadius) ? options.baseRadius : this.planetRadius;
+        const secondTrackRadius = baseRadius + 8;
         const positions = planets
             .map(planet => {
                 const scale = this.isPointBody(planet.name) ? this.pointScale : this.planetScale;
@@ -715,13 +909,26 @@ class ChartWheel {
             return positions;
         }
 
-        const maxGlyphSize = positions.reduce((max, item) => Math.max(max, item.glyphSize), 0);
-        const desiredGapPx = Math.max(maxGlyphSize * 1.28, 14);
-        const minGapDeg = Math.max(
-            1.5,
-            (desiredGapPx / (2 * Math.PI * Math.max(baseRadius, 1))) * 360
-        );
-        const spreadDeg = Math.max(1.5, minGapDeg * 0.95);
+        const getPairGapDeg = (leftItem, rightItem, radius = baseRadius) => {
+            const pairGapPx = ((leftItem.glyphSize + rightItem.glyphSize) / 2) + 2;
+            return Math.max(1.1, (pairGapPx / (2 * Math.PI * Math.max(radius, 1))) * 360);
+        };
+
+        const compactTrack = (items, radius) => {
+            if (!items.length) return [];
+            const rawAngles = items.map((item) => item.clusterAngle);
+            const displayAngles = [...rawAngles];
+
+            for (let index = 1; index < items.length; index++) {
+                const minGapDeg = getPairGapDeg(items[index - 1], items[index], radius);
+                displayAngles[index] = Math.max(rawAngles[index], displayAngles[index - 1] + minGapDeg);
+            }
+
+            const rawCenter = (rawAngles[0] + rawAngles[rawAngles.length - 1]) / 2;
+            const displayCenter = (displayAngles[0] + displayAngles[displayAngles.length - 1]) / 2;
+            const shift = rawCenter - displayCenter;
+            return displayAngles.map((angle) => angle + shift);
+        };
 
         const clusters = [];
         let currentCluster = [positions[0]];
@@ -729,7 +936,8 @@ class ChartWheel {
         for (let i = 1; i < positions.length; i++) {
             const prev = positions[i - 1];
             const curr = positions[i];
-            if ((curr.angle - prev.angle) < minGapDeg) {
+            const pairGapDeg = getPairGapDeg(prev, curr);
+            if ((curr.angle - prev.angle) < pairGapDeg) {
                 currentCluster.push(curr);
             } else {
                 clusters.push(currentCluster);
@@ -742,8 +950,9 @@ class ChartWheel {
             const firstCluster = clusters[0];
             const lastCluster = clusters[clusters.length - 1];
             const wrapGap = (firstCluster[0].angle + 360) - lastCluster[lastCluster.length - 1].angle;
+            const wrapMinGap = getPairGapDeg(lastCluster[lastCluster.length - 1], firstCluster[0]);
 
-            if (wrapGap < minGapDeg) {
+            if (wrapGap < wrapMinGap) {
                 const mergedCluster = [...lastCluster, ...firstCluster];
                 mergedCluster.forEach((item, index) => {
                     item.clusterAngle = index < lastCluster.length ? item.angle : item.angle + 360;
@@ -757,16 +966,44 @@ class ChartWheel {
             cluster.forEach((item) => {
                 if (item.clusterAngle == null) item.clusterAngle = item.angle;
                 item.displayRadius = baseRadius;
+                item.displayAngle = this.normalizeAngle(item.clusterAngle);
+                item.hasLeader = false;
             });
 
             if (cluster.length === 1) return;
 
-            const center = (cluster.length - 1) / 2;
-            cluster.forEach((item, index) => {
-                const offsetAngle = (index - center) * spreadDeg;
-                item.displayAngle = this.normalizeAngle(item.clusterAngle + offsetAngle);
-                item.displayRadius = baseRadius;
-                item.hasLeader = Math.abs(offsetAngle) > 0.01;
+            const rawAngles = cluster.map((item) => item.clusterAngle);
+            const primaryTrackAngles = compactTrack(cluster, baseRadius);
+            const maxOffsetDeg = 3.25;
+            const needsSecondTrack = primaryTrackAngles.some((angle, index) => Math.abs(angle - rawAngles[index]) > maxOffsetDeg);
+
+            if (!needsSecondTrack) {
+                const leaderThreshold = Math.max(0.35, getPairGapDeg(cluster[0], cluster[Math.min(cluster.length - 1, 1)], baseRadius) * 0.18);
+                cluster.forEach((item, index) => {
+                    item.displayAngle = this.normalizeAngle(primaryTrackAngles[index]);
+                    item.displayRadius = baseRadius;
+                    item.hasLeader = Math.abs(primaryTrackAngles[index] - rawAngles[index]) > leaderThreshold;
+                });
+                return;
+            }
+
+            const primaryTrackItems = cluster.filter((_, index) => index % 2 === 0);
+            const secondaryTrackItems = cluster.filter((_, index) => index % 2 === 1);
+            const primaryCompactAngles = compactTrack(primaryTrackItems, baseRadius);
+            const secondaryCompactAngles = compactTrack(secondaryTrackItems, secondTrackRadius);
+
+            let primaryIndex = 0;
+            let secondaryIndex = 0;
+            cluster.forEach((item) => {
+                const isSecondaryTrack = cluster.indexOf(item) % 2 === 1;
+                const rawAngle = item.clusterAngle;
+                const displayRawAngle = isSecondaryTrack
+                    ? secondaryCompactAngles[secondaryIndex++]
+                    : primaryCompactAngles[primaryIndex++];
+                const displayRadius = isSecondaryTrack ? secondTrackRadius : baseRadius;
+                item.displayAngle = this.normalizeAngle(displayRawAngle);
+                item.displayRadius = displayRadius;
+                item.hasLeader = Math.abs(displayRawAngle - rawAngle) > 0.35 || Math.abs(displayRadius - baseRadius) > 0.5;
             });
         });
 
@@ -930,6 +1167,32 @@ class ChartWheel {
         const { redraw = true } = settings;
         this.houseNumberStyle = options.style === 'roman' ? 'roman' : 'arabic';
         this.houseLabelsOutside = options.outside === true;
+        if (redraw && this.chartData) {
+            this.draw(this.chartData);
+        }
+    }
+
+    setHouseVisualOptions(options = {}, settings = {}) {
+        const { redraw = true } = settings;
+        this.houseVisualOptions = {
+            ...this.houseVisualOptions,
+            ...Object.fromEntries(
+                Object.entries(options || {}).filter(([, value]) => value !== undefined && value !== null)
+            ),
+        };
+        if (redraw && this.chartData) {
+            this.draw(this.chartData);
+        }
+    }
+
+    setPlanetAnnotationOptions(options = {}, settings = {}) {
+        const { redraw = true } = settings;
+        if (Object.prototype.hasOwnProperty.call(options, 'showStationary')) {
+            this.showPlanetStationary = options.showStationary === true;
+        }
+        if (Object.prototype.hasOwnProperty.call(options, 'showDegree')) {
+            this.showPlanetDegree = options.showDegree === true;
+        }
         if (redraw && this.chartData) {
             this.draw(this.chartData);
         }

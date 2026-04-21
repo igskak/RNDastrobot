@@ -120,7 +120,7 @@ class PlanetPosition(BaseModel):
     strength_score: Optional[float] = Field(None, description="Сила планеты (от -20 до +50)")
     special_roles: Optional[List[str]] = Field(default=[], description="Специальные роли планеты (almuten, charioteer, doryphoros, aspect_king, handle)")
     # Новые поля характеристик (миграция 005)
-    speed_percent: Optional[float] = Field(None, description="Скорость в % от средней (100% = норма)")
+    speed_percent: Optional[float] = Field(None, description="Скорость по шкале 0-100, где 100 = максимум")
     critical_degrees: Optional[List[str]] = Field(default=[], description="Критические градусы: jubilee, middle, anareta, royal, destructive")
     sun_relation: Optional[str] = Field(None, description="Отношение к Солнцу: cazimi, combust, under_rays")
     in_intercepted_sign: Optional[bool] = Field(default=False, description="Планета во включённом знаке")

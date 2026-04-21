@@ -341,9 +341,11 @@ class ChartDataRenderer {
             const degDMS = this.formatDMS(p.degree_in_sign);
             const planetIcon = this.createPlanetIconSVG(p);
             const speedChip = this.renderPlanetSpeedChip(p);
-            const statusBadges = [
-                this.retroIndicatorHtml(p.retrograde, 'retro-indicator--small'),
+            const motionBadges = [
                 this.showStationary ? this.stationaryIndicatorHtml(p, 'planet-status-badge--small') : '',
+                this.retroIndicatorHtml(p.retrograde, 'retro-indicator--small')
+            ].filter(Boolean).join('');
+            const specialPositionBadges = [
                 this.dignityIndicatorHtml(p, 'planet-status-badge--small')
             ].filter(Boolean).join('');
             return `
@@ -351,11 +353,14 @@ class ChartDataRenderer {
                     <td class="symbol-cell">
                         <div class="planet-symbol-cell">
                             ${planetIcon}
-                            ${statusBadges ? `<span class="planet-status-group">${statusBadges}</span>` : ''}
+                            ${motionBadges ? `<span class="planet-motion-stack">${motionBadges}</span>` : ''}
+                            <span class="planet-special-status-column" aria-hidden="true">${specialPositionBadges}</span>
                         </div>
                     </td>
                     <td class="mono">
-                        <div class="planet-position-main"><span class="astro-symbol">${Symbols.signs[p.sign]}</span> ${degDMS}</div>
+                        <div class="planet-position-layout">
+                            <div class="planet-position-main"><span class="astro-symbol">${Symbols.signs[p.sign]}</span> ${degDMS}</div>
+                        </div>
                     </td>
                     <td class="planet-speed-cell mono">${this.showSpeed ? speedChip : ''}</td>
                     <td class="mono">${p.house}</td>
@@ -370,8 +375,7 @@ class ChartDataRenderer {
             const speedPct = Number(planet.speed_percent);
             if (!Number.isFinite(speedPct)) return '';
             let speedClass = '';
-            if (speedPct < 80) speedClass = ' planet-meta-chip--speed-slow';
-            else if (speedPct > 120) speedClass = ' planet-meta-chip--speed-fast';
+            if (speedPct < 10) speedClass = ' planet-meta-chip--speed-slow';
             return `<span class="planet-meta-chip${speedClass}">${Math.round(speedPct)}%</span>`;
         }
 

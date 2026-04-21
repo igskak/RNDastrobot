@@ -537,6 +537,9 @@
         "planetSize": "Planet size",
         "planetsAndPoints": "Planets and points",
         "pointSize": "Point size",
+        "showPlanetDegree": "Show planet degree on wheel",
+        "showPlanetStationary": "Show stationary on wheel",
+        "wheelOptions": "Wheel options",
         "tableOptions": "Table options"
       },
       "table": {

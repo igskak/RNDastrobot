@@ -672,6 +672,54 @@
     white-space: nowrap;
 }
 
+.chart-page .planet-symbol-cell {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0;
+    width: 100%;
+}
+
+.chart-page .planet-motion-stack {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin-left: -6px;
+    line-height: 1;
+}
+
+.chart-page .planet-motion-stack .retro-indicator,
+.chart-page .planet-motion-stack .planet-status-badge {
+    margin-left: 0;
+}
+
+.chart-page .planet-position-layout {
+    display: inline-flex;
+    align-items: center;
+}
+
+.chart-page .planet-special-status-column {
+    width: 0.95em;
+    min-width: 0.95em;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    line-height: 1;
+    margin-left: auto;
+}
+
+.chart-page .planet-special-status-column:empty {
+    visibility: hidden;
+}
+
+.chart-page .planet-special-status-column .planet-status-badge {
+    margin: 0;
+}
+
 .chart-page .planet-position-meta {
     display: flex;
     flex-wrap: wrap;

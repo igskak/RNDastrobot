@@ -82,7 +82,7 @@
     const DEFAULT_ORB_PAIR_STRATEGY = 'larger';
     const DEFAULT_PROGNOSTIC_ORB = 1;
     const DEFAULT_PROGNOSTIC_MOON_ORB = 3;
-    const DEFAULT_STATIONARY_THRESHOLD_PERCENT = 5;
+    const DEFAULT_STATIONARY_THRESHOLD_PERCENT = 10;
     const BODY_NAME_ALIASES = {
         TrueNorthNode: 'TrueNode',
         TrueSouthNode: 'SouthNode',

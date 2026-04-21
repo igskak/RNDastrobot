@@ -78,7 +78,7 @@ DEFAULT_ASPECT_COLOR_BY_CHARACTER: Dict[str, str] = {
     'tense': '#ef4444',
     'neutral': '#9ca3af',
 }
-DEFAULT_STATIONARY_THRESHOLD_PERCENT = 5.0
+DEFAULT_STATIONARY_THRESHOLD_PERCENT = 10.0
 ORB_PROFILE_IDS = ('natal', 'prognostic')
 DEFAULT_ORB_PAIR_STRATEGY = 'larger'
 ORB_PAIR_STRATEGY_ALIASES: Dict[str, str] = {

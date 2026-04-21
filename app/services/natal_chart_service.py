@@ -372,6 +372,28 @@ class NatalChartService:
             'stationary_type': stationary_type,
         }
 
+    def _build_motion_payload(
+        self,
+        *,
+        planet_name: str,
+        speed: Optional[float],
+        retrograde: bool,
+        stationary_threshold_percent: float,
+    ) -> Dict[str, Optional[object]]:
+        resolved_speed = float(speed or 0.0)
+        return {
+            'speed_percent': PlanetCharacteristicsService.calculate_speed_percent(
+                planet_name,
+                resolved_speed,
+            ),
+            **self._build_stationary_payload(
+                planet_name=planet_name,
+                speed=resolved_speed,
+                retrograde=retrograde,
+                stationary_threshold_percent=stationary_threshold_percent,
+            ),
+        }
+
     def _enrich_planets_basic(
         self,
         planets: list,
@@ -1038,14 +1060,13 @@ class NatalChartService:
                     'strength_score': float(p.strength_score) if p.strength_score else None,
                     'special_roles': p.special_roles or [],
                     # Миграция 005: расширенные характеристики
-                    'speed_percent': float(p.speed_percent) if p.speed_percent else None,
                     'critical_degrees': p.critical_degrees or [],
                     'sun_relation': p.sun_relation,
                     'in_intercepted_sign': p.in_intercepted_sign or False,
                     'is_elevated': p.is_elevated or False,
                     'is_peregrine': p.is_peregrine or False,
                     'aspect_harmony': p.aspect_harmony,
-                    **self._build_stationary_payload(
+                    **self._build_motion_payload(
                         planet_name=p.planet,
                         speed=float(p.speed) if p.speed is not None else None,
                         retrograde=bool(p.retrograde),

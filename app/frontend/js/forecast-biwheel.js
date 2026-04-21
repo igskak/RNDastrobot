@@ -35,6 +35,17 @@
         return translated === key ? (Symbols?.signNamesRu?.[name] || name) : translated;
     }
 
+    const HOUSE_NUMBER_STYLE_STORAGE_KEY = 'natalHouseNumberStyle';
+    const HOUSE_LABELS_OUTSIDE_STORAGE_KEY = 'natalHouseLabelsOutside';
+
+    function readSavedHouseNumberStyle() {
+        return localStorage.getItem(HOUSE_NUMBER_STYLE_STORAGE_KEY) === 'roman' ? 'roman' : 'arabic';
+    }
+
+    function readSavedHouseLabelsOutside() {
+        return localStorage.getItem(HOUSE_LABELS_OUTSIDE_STORAGE_KEY) === 'true';
+    }
+
     function syncForecastModalState() {
         if (!document.body) return;
         const hasOpenModal = Boolean(document.querySelector('.bw-settings-panel:not(.hidden)'));
@@ -84,6 +95,7 @@
     const DEFAULT_WHEEL_BAND_WIDTH =
         (SIGN_INNER_R - ASPECT_R - (WHEEL_INSET * 2) - (WHEEL_GAP * (WHEEL_ORDER.length - 1))) / WHEEL_ORDER.length;
     const PROGNOSTIC_GLYPH_COLOR = '#111111';
+    const PLANET_LEADER_COLOR = '#9ca3af';
     const WHEEL_SEPARATOR_COLOR = '#94a3b8';
     const WHEEL_SEPARATOR_WIDTH = 0.9;
     const WHEEL_SEPARATOR_OPACITY = 0.55;
@@ -122,28 +134,37 @@
         Conjunction: '#6366f1', Opposition: '#ef4444', Trine: '#22c55e',
         Square: '#f97316', Sextile: '#06b6d4', Quincunx: '#a855f7',
     };
+    const CONJUNCTION_COLLAPSE_THRESHOLD = 9;
+    const CONJUNCTION_MIN_LINE_LENGTH = 14;
     let visualPreferences = window.AstroPreferences?.getAccountVisualPreferences?.() || null;
     const PROGNOSTIC_LAYERS = {
         transit: {
-            color: '#0ea5e9',
+            color: '#1e3a5f',
             label: 'transit',
             tableMethod: 'transits',
         },
         progression: {
-            color: '#c026d3',
+            color: '#7c3aed',
             label: 'progression',
             tableMethod: 'progressions',
         },
         direction: {
-            color: '#f97316',
+            color: '#0f766e',
             label: 'direction',
             tableMethod: 'directions',
         },
         solar_return: {
-            color: '#14b8a6',
+            color: '#b45309',
             label: 'solar_return',
             tableMethod: 'solar_return',
         },
+    };
+    const HOUSE_LAYER_THEMES = {
+        natal: { color: '#111111', radialOffset: 2, tangentOffset: -18 },
+        transit: { color: '#1e3a5f', radialOffset: 2, tangentOffset: 18 },
+        progression: { color: '#7c3aed', radialOffset: 2, tangentOffset: -30 },
+        direction: { color: '#0f766e', radialOffset: 2, tangentOffset: 30 },
+        solar_return: { color: '#b45309', radialOffset: 2, tangentOffset: 30 },
     };
     const ANGLE_BODY_NAMES = new Set(['ASC', 'MC', 'IC', 'DSC', 'Vertex', 'AntiVertex']);
 
@@ -166,6 +187,8 @@
     let lastProgData = null;
     let natalPointScale = 1.0;
     let transitPointScale = 1.0;
+    let houseNumberStyle = readSavedHouseNumberStyle();
+    let houseLabelsOutside = readSavedHouseLabelsOutside();
     let focusState = {
         mode: null,
         method: null,
@@ -256,6 +279,18 @@
         return Math.min(1.7, Math.max(0.8, Number(v) || 1));
     }
 
+    function formatHouseLabel(number) {
+        if (houseNumberStyle !== 'roman') {
+            return String(number);
+        }
+        const romanLabels = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+        return romanLabels[(Number(number) || 1) - 1] || String(number);
+    }
+
+    function getHouseLayerTheme(method = 'natal') {
+        return HOUSE_LAYER_THEMES[method] || HOUSE_LAYER_THEMES.natal;
+    }
+
     function normalizeWheelMethod(methodOrLayer = 'transit') {
         return methodOrLayer === 'solar_return' ? 'direction' : methodOrLayer;
     }
@@ -326,6 +361,48 @@
             inner,
             outer,
             count: methods.length,
+        };
+    }
+
+    function getAspectBoundaryRadius() {
+        const visibleBandBounds = getVisibleWheelBandBounds();
+        return visibleBandBounds?.inner || ASPECT_R;
+    }
+
+    function resolveAspectLineGeometry({ x1, y1, x2, y2, angle1, angle2, aspectType }) {
+        const midX = (x1 + x2) / 2;
+        const midY = (y1 + y2) / 2;
+        const rawLength = Math.hypot(x2 - x1, y2 - y1);
+
+        if (aspectType !== 'Conjunction' || rawLength >= CONJUNCTION_COLLAPSE_THRESHOLD) {
+            return {
+                x1,
+                y1,
+                x2,
+                y2,
+                midX,
+                midY,
+                rawLength,
+                collapsed: false,
+            };
+        }
+
+        const avgCos = Math.cos(angle1) + Math.cos(angle2);
+        const avgSin = Math.sin(angle1) + Math.sin(angle2);
+        const avgNorm = Math.hypot(avgCos, avgSin) || 1;
+        const tangentX = -avgSin / avgNorm;
+        const tangentY = avgCos / avgNorm;
+        const halfLength = CONJUNCTION_MIN_LINE_LENGTH / 2;
+
+        return {
+            x1: midX - tangentX * halfLength,
+            y1: midY - tangentY * halfLength,
+            x2: midX + tangentX * halfLength,
+            y2: midY + tangentY * halfLength,
+            midX,
+            midY,
+            rawLength,
+            collapsed: true,
         };
     }
 
@@ -515,6 +592,24 @@
     function polar(r, deg) {
         const rad = deg * Math.PI / 180;
         return { x: C + r * Math.cos(rad), y: C + r * Math.sin(rad) };
+    }
+
+    function getOutsideHouseLabelGeometry(angle, method = 'natal') {
+        const theme = getHouseLayerTheme(method);
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        const tangentX = -sin;
+        const tangentY = cos;
+        const radius = OUTER_R + (Number(theme.radialOffset) || 0);
+        const tangentOffset = Number(theme.tangentOffset) || 0;
+        const verticalBias = Math.max(0, 0.55 - Math.abs(cos)) * 18;
+        const anchor = Math.abs(cos) < 0.18 ? 'middle' : (cos > 0 ? 'start' : 'end');
+
+        return {
+            x: C + radius * cos + (tangentOffset + verticalBias) * tangentX,
+            y: C + radius * sin + (tangentOffset + verticalBias) * tangentY,
+            anchor,
+        };
     }
 
     function drawArc(outerR, innerR, startAngle, endAngle, fill) {
@@ -778,16 +873,31 @@
         const isPrognostic = layer === 'prognostic';
         const method = options.method || 'transit';
         const layerLabel = options.layerLabel || (isPrognostic ? t('page.forecast.biwheel.prognostic') : t('page.forecast.biwheel.legend.natal'));
+        const themeMethod = isPrognostic ? method : 'natal';
+        const houseTheme = getHouseLayerTheme(themeMethod);
+        const showOutsideLabels = houseLabelsOutside === true;
         const progColor = getLayerConfig(method).color;
         const prognosticStyle = PROGNOSTIC_RING_STYLES[method] || PROGNOSTIC_RING_STYLES.transit;
         const visibleBandBounds = !isPrognostic ? getVisibleWheelBandBounds() : null;
         const extendNatalCuspsToForecastWheels = !isPrognostic
+            && !showOutsideLabels
             && visibleBandBounds
             && visibleBandBounds.count > 1;
+        const natalInnerContourRadius = extendNatalCuspsToForecastWheels
+            ? getAspectBoundaryRadius()
+            : HOUSE_INNER_R;
+        const natalBand = getWheelBand('natal');
 
         if (!isPrognostic) {
             // Keep only the inner/aspect field clean without covering prognostic rings.
-            svg.appendChild(el('circle', { cx:C, cy:C, r:ASPECT_R, fill:'#fafafa', stroke:'#d1d5db', 'stroke-width':0.5 }));
+            svg.appendChild(el('circle', {
+                cx: C,
+                cy: C,
+                r: getAspectBoundaryRadius(),
+                fill: '#fafafa',
+                stroke: '#d1d5db',
+                'stroke-width': 0.5
+            }));
         }
         const wheelBand = isPrognostic ? getWheelBand(method) : null;
         houses.forEach((h, i) => {
@@ -795,18 +905,22 @@
             const isAngular = [1,4,7,10].includes(h.number);
             const innerR = isPrognostic
                 ? wheelBand.inner
-                : (isAngular ? ASPECT_R : (extendNatalCuspsToForecastWheels ? visibleBandBounds.inner : HOUSE_INNER_R));
+                : (showOutsideLabels ? natalBand.inner : natalInnerContourRadius);
             const outerR = isPrognostic
                 ? wheelBand.outer
-                : SIGN_INNER_R;
-            const strokeColor = isPrognostic
+                : (showOutsideLabels ? natalBand.outer : SIGN_INNER_R);
+            const strokeColor = showOutsideLabels
+                ? houseTheme.color
+                : isPrognostic
                 ? withAlpha(progColor, prognosticStyle.cuspAlpha)
                 : (isAngular ? '#6366f1' : (extendNatalCuspsToForecastWheels ? '#94a3b8' : '#c7d2db'));
             const strokeWidth = isPrognostic
                 ? (isAngular ? 2.3 : 1.9)
                 : (isAngular ? 1.5 : (extendNatalCuspsToForecastWheels ? 0.95 : 0.5));
             const strokeDash = isPrognostic ? '4,3' : null;
-            const defaultOpacity = isPrognostic ? prognosticStyle.cuspOpacity : '1';
+            const defaultOpacity = showOutsideLabels
+                ? '0.9'
+                : (isPrognostic ? prognosticStyle.cuspOpacity : '1');
             const cuspGroup = el('g', {
                 class: 'bw-house-cusp',
                 'data-house': String(h.number),
@@ -833,19 +947,42 @@
             };
             if (strokeDash) visibleLineAttrs['stroke-dasharray'] = strokeDash;
             cuspGroup.appendChild(el('line', visibleLineAttrs));
-            if (!isPrognostic) {
+            if (showOutsideLabels) {
+                cuspGroup.appendChild(el('line', {
+                    x1: C + (OUTER_R - 3) * Math.cos(angle), y1: C + (OUTER_R - 3) * Math.sin(angle),
+                    x2: C + (OUTER_R + 4) * Math.cos(angle), y2: C + (OUTER_R + 4) * Math.sin(angle),
+                    stroke: houseTheme.color,
+                    'stroke-width': isAngular ? 1.8 : 1.2,
+                    opacity: '0.95',
+                    style: 'pointer-events:none'
+                }));
+                const outsideLabel = getOutsideHouseLabelGeometry(angle, themeMethod);
+                cuspGroup.appendChild(el('text', {
+                    x: outsideLabel.x,
+                    y: outsideLabel.y,
+                    'text-anchor': outsideLabel.anchor,
+                    'dominant-baseline': 'middle',
+                    'font-size': '9.5',
+                    'font-weight': isAngular ? '600' : '500',
+                    fill: houseTheme.color,
+                    stroke: '#fafafa',
+                    'stroke-width': '2.4',
+                    'stroke-linejoin': 'round',
+                    'paint-order': 'stroke',
+                    style: 'pointer-events:none'
+                }, formatHouseLabel(h.number)));
+            } else if (!isPrognostic) {
                 // House number
                 const nextH = houses[(i + 1) % 12];
                 let midLong = (h.longitude + nextH.longitude) / 2;
                 if (nextH.longitude < h.longitude) midLong = ((h.longitude + nextH.longitude + 360) / 2) % 360;
                 const midAngle = longToAngle(midLong) * Math.PI / 180;
-                const natalBand = getWheelBand('natal');
                 const textR = natalBand.center;
                 cuspGroup.appendChild(el('text', {
                     x: C + textR * Math.cos(midAngle), y: C + textR * Math.sin(midAngle) + 3,
                     'text-anchor':'middle', 'font-size':'10', fill: isAngular ? '#6366f1' : '#6b7280',
                     'font-weight': isAngular ? '700' : '400', style:'pointer-events:none'
-                }, String(h.number)));
+                }, formatHouseLabel(h.number)));
             }
             cuspGroup.addEventListener('mouseenter', onHouseHover);
             cuspGroup.addEventListener('mousemove', onHouseHover);
@@ -857,7 +994,14 @@
 
 
     function drawAspectCircle() {
-        svg.appendChild(el('circle', { cx:C, cy:C, r:ASPECT_R, fill:'none', stroke:'#e5e7eb', 'stroke-width':0.5 }));
+        svg.appendChild(el('circle', {
+            cx: C,
+            cy: C,
+            r: getAspectBoundaryRadius(),
+            fill: 'none',
+            stroke: '#e5e7eb',
+            'stroke-width': 0.5
+        }));
     }
 
     function getWheelBand(methodOrLayer = 'transit') {
@@ -984,7 +1128,7 @@
         const layerScale = layerType === 'natal' ? natalPointScale : transitPointScale;
         const wheelBand = getWheelBand(layerMethod);
         const displayRadius = Math.max(wheelBand.inner + 1.2, Math.min(wheelBand.outer - 1.2, radius));
-        const calloutRadius = Math.min(wheelBand.outer - 0.8, wheelBand.inner + 0.8);
+        const calloutRadius = wheelBand.inner;
         const desiredGapPx = Math.max(fontSize * layerScale * 0.9, 10);
         const minGapDeg = Math.max(1.5, (desiredGapPx / (2 * Math.PI * Math.max(displayRadius, 1))) * 360);
         const spreadDeg = Math.max(1.5, minGapDeg * 0.95);
@@ -1081,20 +1225,21 @@
                     y1: p.y,
                     x2: exactPoint.x,
                     y2: exactPoint.y,
-                    stroke: color,
+                    stroke: PLANET_LEADER_COLOR,
                     'stroke-width': '0.35',
                     opacity: '0.3',
                     style: 'pointer-events:none'
                 }));
-                group.appendChild(el('circle', {
-                    cx: exactPoint.x,
-                    cy: exactPoint.y,
-                    r: '1.6',
-                    fill: color,
-                    opacity: '0.8',
-                    style: 'pointer-events:none'
-                }));
             }
+
+            group.appendChild(el('circle', {
+                cx: exactPoint.x,
+                cy: exactPoint.y,
+                r: '1.6',
+                fill: PLANET_LEADER_COLOR,
+                opacity: hasLeader ? '0.8' : '0.48',
+                style: 'pointer-events:none'
+            }));
 
             if (useVectorIcon) {
                 group.appendChild(window.AstroGlyphs.createPlanetSymbolSvg(planet.name, {
@@ -1576,6 +1721,7 @@
 
     function drawCrossAspects(aspects, natalMap, progPlanets, method = 'transit') {
         const layerCfg = getLayerConfig(method);
+        const aspectBoundaryRadius = getAspectBoundaryRadius();
         const progMap = {};
         (progPlanets || []).forEach(p => progMap[p.name] = p.longitude);
 
@@ -1588,14 +1734,25 @@
             const pAngle = longToAngle(pLong) * Math.PI / 180;
             const aspectColor = getAspectColor(a.aspectType, a.harmonicType);
             const color = aspectColor === '#9ca3af' ? layerCfg.color : aspectColor;
+            const geometry = resolveAspectLineGeometry({
+                x1: C + aspectBoundaryRadius * Math.cos(nAngle),
+                y1: C + aspectBoundaryRadius * Math.sin(nAngle),
+                x2: C + aspectBoundaryRadius * Math.cos(pAngle),
+                y2: C + aspectBoundaryRadius * Math.sin(pAngle),
+                angle1: nAngle,
+                angle2: pAngle,
+                aspectType: a.aspectType,
+            });
             const line = el('line', {
-                x1: C + ASPECT_R * Math.cos(nAngle), y1: C + ASPECT_R * Math.sin(nAngle),
-                x2: C + ASPECT_R * Math.cos(pAngle), y2: C + ASPECT_R * Math.sin(pAngle),
+                x1: geometry.x1, y1: geometry.y1,
+                x2: geometry.x2, y2: geometry.y2,
                 stroke: color, 'stroke-width': a.isMajor ? 1.3 : 0.7,
                 'stroke-dasharray': a.isMajor ? 'none' : '4,4',
+                'stroke-linecap': a.aspectType === 'Conjunction' ? 'round' : 'butt',
                 opacity: a.isMajor ? 0.5 : 0.22,
                 'data-transit': a.transitBody, 'data-natal': a.natalBody, 'data-aspect': a.aspectType, 'data-method': a.method || method,
                 'data-aspect-key': aspectKey || '',
+                'data-conjunction-collapsed': geometry.collapsed ? 'true' : 'false',
                 class: `bw-aspect-line ${a.isMajor ? 'bw-aspect-major' : 'bw-aspect-minor'}`
             });
             line.addEventListener('mouseenter', onAspectLineHoverEnter);
@@ -2752,6 +2909,11 @@
         orientationMode = mode === 'asc' ? 'asc' : 'aries';
     }
 
+    function setHouseLabelOptions(options = {}) {
+        houseNumberStyle = options.style === 'roman' ? 'roman' : 'arabic';
+        houseLabelsOutside = options.outside === true;
+    }
+
     function hasLastRender() {
         return Boolean(lastNatalData && lastProgData);
     }
@@ -2764,6 +2926,7 @@
     window.ForecastBiwheel = {
         render,
         setOrientationMode,
+        setHouseLabelOptions,
         setVisualPreferences,
         hasLastRender,
         rerenderLast,

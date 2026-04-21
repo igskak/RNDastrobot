@@ -45,7 +45,7 @@ test('normalizeMethodologySettings preserves distinct natal and prognostic profi
     assert.equal(normalized.orbs.pair_strategy, 'average');
     assert.equal(normalized.orbs.profiles.natal.matrix.Conjunction.Sun, 7.5);
     assert.equal(normalized.orbs.profiles.prognostic.matrix.Conjunction.Sun, 5.5);
-    assert.equal(normalized.stationary.threshold_percent, 5);
+    assert.equal(normalized.stationary.threshold_percent, 10);
 });
 
 test('normalizeMethodologySettings keeps custom stationary threshold', () => {

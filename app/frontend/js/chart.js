@@ -163,6 +163,8 @@ let currentSettings = {
     aspectPhaseFilter: readSavedAspectPhaseFilter(),
     showSpeed: true,
     showStationary: true,
+    showWheelStationary: false,
+    showWheelDegree: false,
     planetScale: readSavedPlanetScale(),
     pointScale: readSavedPointScale(),
     houseNumberStyle: readSavedHouseNumberStyle(),
@@ -250,6 +252,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     chartWheel.setPointScales({
         planets: currentSettings.planetScale,
         points: currentSettings.pointScale
+    }, { redraw: false });
+    chartWheel.setPlanetAnnotationOptions({
+        showStationary: currentSettings.showWheelStationary,
+        showDegree: currentSettings.showWheelDegree,
     }, { redraw: false });
     chartWheel.setHouseLabelOptions({
         style: currentSettings.houseNumberStyle,
@@ -532,7 +538,11 @@ function getNatalResolvedViewSettings() {
                 show_speed: currentSettings.showSpeed !== false,
                 show_stationary: currentSettings.showStationary !== false,
             },
-            view_options: { orientation: currentSettings.orientation || 'aries' },
+            view_options: {
+                orientation: currentSettings.orientation || 'aries',
+                show_planet_stationary: currentSettings.showWheelStationary === true,
+                show_planet_degree: currentSettings.showWheelDegree === true,
+            },
         };
     return {
         ...base,
@@ -558,6 +568,8 @@ function getNatalResolvedViewSettings() {
         view_options: {
             ...(base.view_options || {}),
             orientation: currentSettings.orientation === 'asc' ? 'asc' : 'aries',
+            show_planet_stationary: currentSettings.showWheelStationary === true,
+            show_planet_degree: currentSettings.showWheelDegree === true,
         },
     };
 }
@@ -605,6 +617,16 @@ function syncNatalSettingsControls() {
         showStationaryToggle.checked = currentSettings.showStationary !== false;
     }
 
+    const showWheelStationaryToggle = document.getElementById('showWheelStationaryToggle');
+    if (showWheelStationaryToggle) {
+        showWheelStationaryToggle.checked = currentSettings.showWheelStationary === true;
+    }
+
+    const showWheelDegreeToggle = document.getElementById('showWheelDegreeToggle');
+    if (showWheelDegreeToggle) {
+        showWheelDegreeToggle.checked = currentSettings.showWheelDegree === true;
+    }
+
     const houseNumberStyleSelect = document.getElementById('houseNumberStyleSelect');
     if (houseNumberStyleSelect) {
         houseNumberStyleSelect.value = currentSettings.houseNumberStyle === 'roman' ? 'roman' : 'arabic';
@@ -648,9 +670,15 @@ function applyResolvedNatalPreferences(payload, { redraw = true } = {}) {
         : [];
     currentSettings.showSpeed = resolved.table_options?.show_speed !== false;
     currentSettings.showStationary = resolved.table_options?.show_stationary !== false;
+    currentSettings.showWheelStationary = resolved.view_options?.show_planet_stationary === true;
+    currentSettings.showWheelDegree = resolved.view_options?.show_planet_degree === true;
 
     syncNatalSettingsControls();
     applyChartState(window.chartDataRawCache || window.chartDataCache, { houseSystem: currentSettings.houseSystem });
+    chartWheel?.setPlanetAnnotationOptions?.({
+        showStationary: currentSettings.showWheelStationary,
+        showDegree: currentSettings.showWheelDegree,
+    }, { redraw: false });
     chartDataRenderer?.setDisplayPreferences?.({
         showSpeed: currentSettings.showSpeed,
         showStationary: currentSettings.showStationary,
@@ -1043,6 +1071,14 @@ function bindNatalSettingsHandlers() {
     if (showStationaryToggle) {
         showStationaryToggle.onchange = () => applySettings();
     }
+    const showWheelStationaryToggle = document.getElementById('showWheelStationaryToggle');
+    if (showWheelStationaryToggle) {
+        showWheelStationaryToggle.onchange = () => applySettings();
+    }
+    const showWheelDegreeToggle = document.getElementById('showWheelDegreeToggle');
+    if (showWheelDegreeToggle) {
+        showWheelDegreeToggle.onchange = () => applySettings();
+    }
     const houseNumberStyleSelect = document.getElementById('houseNumberStyleSelect');
     if (houseNumberStyleSelect) {
         houseNumberStyleSelect.onchange = () => applySettings();
@@ -1103,6 +1139,8 @@ async function applySettings() {
         ]);
         const showSpeed = document.getElementById('showSpeedToggle')?.checked !== false;
         const showStationary = document.getElementById('showStationaryToggle')?.checked !== false;
+        const showWheelStationary = document.getElementById('showWheelStationaryToggle')?.checked === true;
+        const showWheelDegree = document.getElementById('showWheelDegreeToggle')?.checked === true;
         const houseNumberStyle = document.getElementById('houseNumberStyleSelect')?.value === 'roman' ? 'roman' : 'arabic';
         const houseLabelsOutside = document.getElementById('houseLabelsOutsideToggle')?.checked === true;
 
@@ -1123,6 +1161,8 @@ async function applySettings() {
         currentSettings.aspectPhaseFilter = aspectPhaseFilter;
         currentSettings.showSpeed = showSpeed;
         currentSettings.showStationary = showStationary;
+        currentSettings.showWheelStationary = showWheelStationary;
+        currentSettings.showWheelDegree = showWheelDegree;
         currentSettings.houseNumberStyle = houseNumberStyle;
         currentSettings.houseLabelsOutside = houseLabelsOutside;
         localStorage.setItem('natalPlanetScale', String(iconScale));
@@ -1133,6 +1173,10 @@ async function applySettings() {
         chartWheel?.setHouseLabelOptions?.({
             style: houseNumberStyle,
             outside: houseLabelsOutside,
+        }, { redraw: false });
+        chartWheel?.setPlanetAnnotationOptions?.({
+            showStationary: showWheelStationary,
+            showDegree: showWheelDegree,
         }, { redraw: false });
         await applyNatalAspectScope(currentSettings.aspectScope, { persist: false });
         chartDataRenderer?.setDisplayPreferences?.({
@@ -1267,6 +1311,10 @@ function redrawChart(chartData, hiddenPlanets, orientation = currentSettings.ori
         chartWheel.setPointScales({
             planets: currentSettings.planetScale,
             points: currentSettings.pointScale
+        }, { redraw: false });
+        chartWheel.setPlanetAnnotationOptions({
+            showStationary: currentSettings.showWheelStationary,
+            showDegree: currentSettings.showWheelDegree,
         }, { redraw: false });
         chartWheel.setHouseLabelOptions({
             style: currentSettings.houseNumberStyle,
