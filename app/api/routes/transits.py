@@ -28,6 +28,9 @@ class TransitRequest(BaseModel):
     date: date_type = Field(..., description="Дата транзита (YYYY-MM-DD)")
     time: time_type = Field(..., description="Время транзита (HH:MM:SS)")
     timezone: str = Field(..., description="Часовой пояс (например, 'Europe/Kiev')")
+    location: Optional[str] = Field(None, description="Место транзита")
+    latitude: Optional[float] = Field(None, ge=-90, le=90, description="Широта места транзита")
+    longitude: Optional[float] = Field(None, ge=-180, le=180, description="Долгота места транзита")
 
     @field_validator('timezone')
     @classmethod
@@ -53,6 +56,7 @@ class TransitPlanetInfo(BaseModel):
     is_stationary: bool = Field(default=False, description="Стационарная планета")
     stationary_type: Optional[str] = Field(None, description="Тип стационарности")
     natal_house: int = Field(..., description="В каком натальном доме находится транзитная планета")
+    house: Optional[int] = Field(None, description="В каком доме транзитной карты находится планета")
 
 
 class TransitAspectInfo(BaseModel):
@@ -74,12 +78,25 @@ class TransitInfoBlock(BaseModel):
     timezone: str
     utc_time: str
     julian_day: float
+    location: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+
+
+class TransitHouseInfo(BaseModel):
+    """Информация о доме транзитной карты"""
+    number: int
+    longitude: float
+    sign: Optional[str] = None
+    degree_in_sign: Optional[float] = None
+    degree_in_sign_formatted: Optional[str] = None
 
 
 class TransitResponse(BaseModel):
     """Ответ с данными транзитов"""
     transit_info: TransitInfoBlock
     transit_planets: List[TransitPlanetInfo]
+    transit_houses: List[TransitHouseInfo] = Field(default_factory=list)
     aspects: List[TransitAspectInfo]
 
 
@@ -168,7 +185,10 @@ def calculate_transits(
             user_id=request.user_id,
             transit_date=request.date,
             transit_time=request.time,
-            timezone=request.timezone
+            timezone=request.timezone,
+            location=request.location,
+            latitude=request.latitude,
+            longitude=request.longitude,
         )
         return result
 

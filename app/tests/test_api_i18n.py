@@ -9,6 +9,7 @@ os.environ.setdefault("DATABASE_URL", "sqlite+pysqlite:///./_api_i18n_test.db")
 
 from app.api.main import app  # noqa: E402
 from app.api.routes import natal  # noqa: E402
+from app.api.routes import transits  # noqa: E402
 from app.auth.dependencies import AuthContext, require_auth  # noqa: E402
 from app.database.connection import get_db  # noqa: E402
 import app.api.locale_dependency as locale_dependency  # noqa: E402
@@ -119,6 +120,28 @@ def test_error_contract_shape_for_validation_errors(client, monkeypatch):
     assert payload["message"] == "Ошибка валидации."
     assert isinstance(payload["detail"], list)
     assert payload["error"] == "VALIDATION_ERROR"
+
+
+def test_validation_errors_with_valueerror_ctx_are_json_serializable(client, monkeypatch):
+    monkeypatch.setattr(locale_dependency, "resolve_user_preference_locale", lambda _user_id: None)
+    monkeypatch.setattr(transits, "ensure_client_access", lambda *args, **kwargs: None)
+
+    response = client.post(
+        "/api/v1/transits/calculate?locale=ru",
+        json={
+            "user_id": str(uuid4()),
+            "date": "2026-07-12",
+            "time": "23:08:53",
+            "timezone": "",
+        },
+    )
+
+    assert response.status_code == 422
+    payload = response.json()
+    assert payload["error_code"] == "VALIDATION_ERROR"
+    assert payload["message"] == "Ошибка валидации."
+    assert isinstance(payload["detail"], list)
+    assert payload["detail"][0]["ctx"]["error"] == "Неизвестная временная зона: "
 
 
 def test_legacy_endpoint_response_not_regressed(client, monkeypatch):

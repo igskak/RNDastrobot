@@ -84,7 +84,7 @@
         pendingRequestToken: 0,
         targetDatetime: '',
         timezone: 'UTC',
-        location: { name: '', latitude: null, longitude: null },
+        location: { name: '', latitude: null, longitude: null, sourceId: null },
         activeLayers: ['transit'],
         selectedRightLayer: 'transit',
         stepMode: 'hour',
@@ -161,13 +161,15 @@
             })
             : natalData;
         state.userId = natalData.user_id || localStorage.getItem('currentUserId');
-        state.timezone = natalData.birth_data?.timezone
-            || Intl.DateTimeFormat().resolvedOptions().timeZone
-            || 'UTC';
+        state.timezone = normalizeTimezoneValue(
+            natalData.birth_data?.timezone,
+            natalData.birth_data?.place,
+        ) || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
         state.location = {
             name: natalData.birth_data?.place || '',
             latitude: numberOrNull(natalData.birth_data?.latitude),
             longitude: numberOrNull(natalData.birth_data?.longitude),
+            sourceId: null,
         };
         state.pageSettings.houseSystem = normalizeHouseSystemCode(natalData.birth_data?.house_system || 'P');
         setSelectedDateTime(getLocalNowIso(state.timezone));
@@ -175,8 +177,10 @@
         await hydratePreferences();
         hydrateState();
         applyDeepLinkParams();
+        populateTimezoneOptions();
         initRenderers();
         bindEvents();
+        bindLocationAutocomplete();
         initAspectInteractions();
         syncControlsFromState();
         renderStaticNatal();
@@ -193,7 +197,7 @@
             'forecastNewWheel', 'forecastNewWheelShell', 'targetDateInput', 'targetTimeInput',
             'forecastNewTimeStepper',
             'stepModeSelect', 'stepBackward', 'stepForward', 'timezoneInput', 'locationInput',
-            'latitudeInput', 'longitudeInput', 'targetDatetimeLabel', 'rightLayerTabs',
+            'latitudeInput', 'longitudeInput', 'locationSuggestions', 'targetDatetimeLabel', 'rightLayerTabs',
             'forecastNewMatrixEditor', 'forecastNewSettingsMatrixEditor',
             'forecastNewZoomIn', 'forecastNewZoomOut',
             'forecastNewZoomReset', 'forecastNewSettingsToggle', 'forecastNewSettingsPanel',
@@ -303,15 +307,15 @@
 
         ['timezoneInput', 'locationInput', 'latitudeInput', 'longitudeInput'].forEach((id) => {
             refs[id]?.addEventListener('change', async () => {
-                state.timezone = refs.timezoneInput.value.trim() || state.timezone;
-                state.location = {
-                    name: refs.locationInput.value.trim(),
-                    latitude: numberOrNull(refs.latitudeInput.value),
-                    longitude: numberOrNull(refs.longitudeInput.value),
-                };
+                applyLocationInputsToState();
                 schedulePersist();
                 await loadActiveLayers();
             });
+        });
+        refs.locationInput?.addEventListener('input', handleLocationInput);
+        document.addEventListener('frontend:locale-changed', () => {
+            populateTimezoneOptions();
+            syncControlsFromState();
         });
 
         document.querySelectorAll('.forecast-new-side-panel').forEach((panel) => {
@@ -466,7 +470,7 @@
         if (refs.targetDateInput) refs.targetDateInput.value = date;
         if (refs.targetTimeInput) refs.targetTimeInput.value = time;
         renderTimeStepper();
-        if (refs.timezoneInput) refs.timezoneInput.value = state.timezone;
+        if (refs.timezoneInput) refs.timezoneInput.value = normalizeTimezoneValue(state.timezone, state.location?.name) || '';
         if (refs.locationInput) refs.locationInput.value = state.location.name || '';
         if (refs.latitudeInput) refs.latitudeInput.value = state.location.latitude ?? '';
         if (refs.longitudeInput) refs.longitudeInput.value = state.location.longitude ?? '';
@@ -491,6 +495,111 @@
         renderMatrixEditor();
         renderAspectTypeToggles();
         applyViewport();
+    }
+
+    function populateTimezoneOptions() {
+        const selectedTimezone = normalizeTimezoneValue(refs.timezoneInput?.value || state.timezone, state.location?.name);
+        window.Timezones?.populate?.(refs.timezoneInput);
+        if (refs.timezoneInput && selectedTimezone) {
+            refs.timezoneInput.value = selectedTimezone;
+        }
+        if (selectedTimezone) {
+            state.timezone = selectedTimezone;
+        }
+    }
+
+    function bindLocationAutocomplete() {
+        if (!window.PlaceAutocomplete || !refs.locationInput || !refs.locationSuggestions) return;
+        window.PlaceAutocomplete.attach({
+            input: refs.locationInput,
+            suggestions: refs.locationSuggestions,
+            minChars: 2,
+            debounceMs: 350,
+            limit: 5,
+            getLabel: (item) => item.shortName || item.displayName,
+            onInput: (place) => {
+                state.location = {
+                    ...state.location,
+                    name: refs.locationInput.value.trim(),
+                    latitude: null,
+                    longitude: null,
+                    sourceId: null,
+                };
+                if (refs.latitudeInput) refs.latitudeInput.value = '';
+                if (refs.longitudeInput) refs.longitudeInput.value = '';
+                const guessedTimezone = window.Timezones?.guess?.(place);
+                if (guessedTimezone && refs.timezoneInput) {
+                    refs.timezoneInput.value = guessedTimezone;
+                    state.timezone = guessedTimezone;
+                }
+                updatePrognosticTimeMeta();
+                schedulePersist();
+            },
+            onSelect: async (item) => {
+                if (refs.locationInput) refs.locationInput.value = item.shortName || item.displayName;
+                if (refs.latitudeInput) refs.latitudeInput.value = String(item.lat);
+                if (refs.longitudeInput) refs.longitudeInput.value = String(item.lon);
+
+                let resolvedTimezone = null;
+                if (item.sourceId && window.AstroAPI?.resolvePlaceTimezone) {
+                    try {
+                        resolvedTimezone = await window.AstroAPI.resolvePlaceTimezone(item.sourceId);
+                    } catch (_error) {
+                        resolvedTimezone = null;
+                    }
+                }
+                if (!resolvedTimezone) {
+                    resolvedTimezone = window.Timezones?.guess?.(item.displayName || item.shortName) || null;
+                }
+                if (resolvedTimezone && refs.timezoneInput) {
+                    refs.timezoneInput.value = resolvedTimezone;
+                }
+
+                state.location = {
+                    name: item.shortName || item.displayName,
+                    latitude: item.lat,
+                    longitude: item.lon,
+                    sourceId: item.sourceId || null,
+                };
+                if (resolvedTimezone) {
+                    state.timezone = resolvedTimezone;
+                }
+                updatePrognosticTimeMeta();
+                syncControlsFromState();
+                schedulePersist();
+                await loadActiveLayers();
+            },
+        });
+    }
+
+    function handleLocationInput() {
+        const nextValue = refs.locationInput?.value?.trim() || '';
+        const normalizedSelected = normalizeLooseText(state.location?.name);
+        const normalizedNext = normalizeLooseText(nextValue);
+        if (!normalizedNext || normalizedNext !== normalizedSelected) {
+            state.location = {
+                ...state.location,
+                name: nextValue,
+                latitude: null,
+                longitude: null,
+                sourceId: null,
+            };
+            if (refs.latitudeInput) refs.latitudeInput.value = '';
+            if (refs.longitudeInput) refs.longitudeInput.value = '';
+            updatePrognosticTimeMeta();
+        }
+    }
+
+    function applyLocationInputsToState() {
+        state.timezone = normalizeTimezoneValue(refs.timezoneInput?.value?.trim(), refs.locationInput?.value?.trim())
+            || normalizeTimezoneValue(state.timezone, refs.locationInput?.value?.trim())
+            || 'UTC';
+        state.location = {
+            name: refs.locationInput?.value?.trim() || '',
+            latitude: numberOrNull(refs.latitudeInput?.value),
+            longitude: numberOrNull(refs.longitudeInput?.value),
+            sourceId: state.location?.sourceId || null,
+        };
     }
 
     function updateHeaderInfo() {
@@ -941,6 +1050,9 @@
                     date,
                     time,
                     timezone: state.timezone,
+                    location: state.location?.name || null,
+                    latitude: state.location?.latitude,
+                    longitude: state.location?.longitude,
                 });
             }
             if (method === 'progression') {
@@ -1466,7 +1578,7 @@
         const restored = storage.parsePersistedState(localStorage.getItem(key), state.natalData);
         if (!restored) return;
         setSelectedDateTime(restored.targetDatetime || state.selectedDateTime);
-        state.timezone = restored.timezone || state.timezone;
+        state.timezone = normalizeTimezoneValue(restored.timezone, restored.location?.name) || state.timezone;
         state.location = restored.location || state.location;
         state.activeLayers = restored.activeLayers || state.activeLayers;
         state.enabledLayers = state.activeLayers;
@@ -1727,10 +1839,26 @@
         return [/^\d{4}-\d{2}-\d{2}$/.test(date) ? date : todayIsoDate(), normalizeTime(time)];
     }
 
+    function normalizeLooseText(value) {
+        return String(value || '').trim().toLowerCase();
+    }
+
     function setSelectedDateTime(value) {
         const [date, time] = splitTargetDatetime(value);
         state.selectedDateTime = `${date}T${time}`;
         state.targetDatetime = state.selectedDateTime;
+    }
+
+    function normalizeTimezoneValue(value, placeName = '') {
+        const raw = String(value || '').trim();
+        if (!raw) return '';
+        const normalized = window.Timezones?.list?.find((timezone) => timezone.value === raw)?.value;
+        if (normalized) return normalized;
+        const guessedByValue = window.Timezones?.guess?.(raw);
+        if (guessedByValue) return guessedByValue;
+        const guessedByPlace = window.Timezones?.guess?.(placeName);
+        if (guessedByPlace) return guessedByPlace;
+        return '';
     }
 
     function buildLayerCacheKey(method, date) {

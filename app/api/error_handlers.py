@@ -26,6 +26,17 @@ def _extract_detail_payload(detail: Any) -> tuple[Optional[str], Optional[str], 
     return None, None, detail
 
 
+def _sanitize_for_json(value: Any) -> Any:
+    """Convert non-JSON-serializable validation artifacts into plain data."""
+    if isinstance(value, dict):
+        return {key: _sanitize_for_json(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_sanitize_for_json(item) for item in value]
+    if isinstance(value, BaseException):
+        return str(value)
+    return value
+
+
 def register_error_handlers(app: FastAPI) -> None:
     """Attach global exception handlers for localized API errors."""
 
@@ -35,7 +46,7 @@ def register_error_handlers(app: FastAPI) -> None:
         payload = build_error_payload(
             error_code="VALIDATION_ERROR",
             locale=locale,
-            detail=exc.errors(),
+            detail=_sanitize_for_json(exc.errors()),
         )
         return JSONResponse(status_code=422, content=payload)
 

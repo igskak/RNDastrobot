@@ -49,7 +49,10 @@ class TransitService:
         user_id: UUID,
         transit_date: date,
         transit_time: time,
-        timezone: str
+        timezone: str,
+        location: Optional[str] = None,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
     ) -> Dict:
         """
         Расчёт транзитов для пользователя
@@ -76,11 +79,26 @@ class TransitService:
         transit_planets.extend(self._calculate_transit_special_bodies(jd_transit))
         self._enrich_motion_flags(transit_planets, user_id=user_id)
 
-        # 4. Определить натальные дома для транзитных планет
+        transit_houses = []
+        if latitude is not None and longitude is not None:
+            user = self.db.query(User).filter(User.user_id == user_id).first()
+            house_system = user.house_system if user and user.house_system else 'P'
+            transit_houses, _ = self.swisseph_engine.calculate_houses(
+                jd=jd_transit,
+                lat=float(latitude),
+                lon=float(longitude),
+                hsys=house_system,
+            )
+
+        # 4. Определить натальные и транзитные дома для транзитных планет
         for planet in transit_planets:
             planet['natal_house'] = self.swisseph_engine.get_planet_house(
                 planet['longitude'], natal_data['houses']
             )
+            if transit_houses:
+                planet['house'] = self.swisseph_engine.get_planet_house(
+                    planet['longitude'], transit_houses
+                )
 
         # 5. Рассчитать транзит→натал аспекты
         aspects = self._calculate_transit_aspects(user_id, transit_planets, natal_data)
@@ -92,8 +110,12 @@ class TransitService:
                 'timezone': timezone,
                 'utc_time': utc_dt.isoformat(),
                 'julian_day': jd_transit,
+                'location': location,
+                'latitude': latitude,
+                'longitude': longitude,
             },
             'transit_planets': transit_planets,
+            'transit_houses': transit_houses,
             'aspects': aspects,
         }
 
