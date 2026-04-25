@@ -778,7 +778,8 @@
             const endOuter = this.polar(outerR, endAngle);
             const startInner = this.polar(innerR, endAngle);
             const endInner = this.polar(innerR, startAngle);
-            const largeArc = Math.abs(endAngle - startAngle) > 180 ? 1 : 0;
+            const sweep = (endAngle - startAngle + 360) % 360;
+            const largeArc = sweep > 180 ? 1 : 0;
             const path = [
                 `M ${startOuter.x} ${startOuter.y}`,
                 `A ${outerR} ${outerR} 0 ${largeArc} 1 ${endOuter.x} ${endOuter.y}`,

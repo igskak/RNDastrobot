@@ -46,6 +46,10 @@
         WHOLESIGN: 'W',
     };
     const DEFAULT_ASPECT_PHASE_FILTER = ['applying', 'separating'];
+    const DEFAULT_ASPECTING_BODIES = new Set([
+        'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
+        'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto',
+    ]);
 
     const refs = {};
     const state = {
@@ -60,7 +64,7 @@
         stepMode: 'hour',
         leftTab: 'Planets',
         rightTab: 'Planets',
-        matrixRows: window.AstroPreferences?.ensureMatrixRows?.({}) || {},
+        matrixRows: buildDefaultForecastNewMatrixRows(),
         pageSettings: {
             houseSystem: 'P',
             orientation: 'aries',
@@ -270,10 +274,24 @@
         [refs.forecastNewMatrixEditor, refs.forecastNewSettingsMatrixEditor].forEach((editor) => {
             editor?.addEventListener('change', (event) => {
                 const container = event.currentTarget;
-                state.matrixRows = readMatrixRows(container);
+                state.matrixRows = normalizeForecastNewMatrixRows(readMatrixRows(container));
                 renderMatrixEditor();
+                renderInlineMatrixControls();
                 scheduleApplySettings();
             });
+        });
+        refs.forecastNewNatalPanel?.addEventListener('click', (event) => {
+            if (event.target instanceof Element && event.target.closest('.forecast-new-matrix-inline')) {
+                event.stopPropagation();
+            }
+        });
+        refs.forecastNewNatalPanel?.addEventListener('change', async (event) => {
+            const input = event.target;
+            if (!(input instanceof HTMLInputElement) || !input.matches('input[data-matrix-body][data-matrix-field]')) return;
+            updateMatrixRowFromControl(input);
+            renderMatrixEditor();
+            renderInlineMatrixControls();
+            await applySettings();
         });
 
         refs.forecastNewSettingsToggle?.addEventListener('click', (event) => {
@@ -422,6 +440,10 @@
             showApplyingSeparating: state.pageSettings.showApplyingSeparating === true,
         });
         state.natalRenderer?.render(filterChartDataForRenderer(state.natalWheelData));
+        state.natalRenderer?.renderPlanets(state.natalWheelData?.planets || []);
+        state.natalRenderer?.renderHouses(state.natalWheelData?.houses || []);
+        renderInlineMatrixControls();
+        applyInlineMatrixRowState();
         renderMatrixEditor();
         activateSavedTabs();
     }
@@ -454,13 +476,86 @@
     }
 
     function readMatrixRows(container = refs.forecastNewMatrixEditor || refs.forecastNewSettingsMatrixEditor) {
-        const rows = ensureMatrixRows(state.matrixRows);
+        const rows = normalizeForecastNewMatrixRows(state.matrixRows);
         container?.querySelectorAll('input[data-matrix-body][data-matrix-field]').forEach((input) => {
             const body = input.dataset.matrixBody;
             const field = input.dataset.matrixField;
             rows[body] = { ...(rows[body] || { display: true, aspecting: true }), [field]: input.checked };
         });
-        return rows;
+        return normalizeForecastNewMatrixRows(rows);
+    }
+
+    function updateMatrixRowFromControl(input) {
+        const body = matrixBodyKey(input.dataset.matrixBody);
+        const field = input.dataset.matrixField;
+        if (!body || !['display', 'aspecting'].includes(field)) return;
+        const rows = normalizeForecastNewMatrixRows(state.matrixRows);
+        rows[body] = { ...(rows[body] || { display: true, aspecting: true }), [field]: input.checked };
+        state.matrixRows = normalizeForecastNewMatrixRows(rows);
+    }
+
+    function renderInlineMatrixControls() {
+        const rows = normalizeForecastNewMatrixRows(state.matrixRows);
+        refs.forecastNewLayout?.querySelectorAll('.forecast-new-matrix-inline-cell').forEach((cell) => cell.remove());
+
+        document.querySelectorAll('#natalPlanetsTable tr[data-planet]').forEach((row) => {
+            const body = matrixBodyKey(row.dataset.planet);
+            row.insertAdjacentHTML('beforeend', matrixControlCells(body, rows));
+        });
+
+        document.querySelectorAll('#natalHousesTable tr[id^="row-house-"]').forEach((row) => {
+            const houseNumber = Number(String(row.id).replace('row-house-', ''));
+            const body = matrixBodyForHouse(houseNumber);
+            row.insertAdjacentHTML('beforeend', matrixControlCells(body, rows));
+        });
+    }
+
+    function applyInlineMatrixRowState() {
+        const rows = normalizeForecastNewMatrixRows(state.matrixRows);
+
+        document.querySelectorAll('#natalPlanetsTable tr[data-planet]').forEach((row) => {
+            const body = matrixBodyKey(row.dataset.planet);
+            const config = rows?.[body] || { display: true, aspecting: true };
+            row.classList.toggle('forecast-new-matrix-row-display-off', config.display === false);
+            row.classList.toggle('forecast-new-matrix-row-aspecting-off', config.aspecting === false);
+        });
+
+        document.querySelectorAll('#natalHousesTable tr[id^="row-house-"]').forEach((row) => {
+            const houseNumber = Number(String(row.id).replace('row-house-', ''));
+            const body = matrixBodyForHouse(houseNumber);
+            const config = body ? (rows?.[body] || { display: true, aspecting: true }) : null;
+            row.classList.toggle('forecast-new-matrix-row-display-off', Boolean(config) && config.display === false);
+            row.classList.toggle('forecast-new-matrix-row-aspecting-off', Boolean(config) && config.aspecting === false);
+        });
+    }
+
+    function matrixControlCells(bodyName, rows) {
+        const body = matrixBodyKey(bodyName);
+        if (!body) {
+            return '<td class="forecast-new-matrix-inline-cell forecast-new-matrix-inline-empty"></td><td class="forecast-new-matrix-inline-cell forecast-new-matrix-inline-empty"></td>';
+        }
+        return ['display', 'aspecting'].map((field) => {
+            const checked = rows?.[body]?.[field] !== false ? 'checked' : '';
+            const shortLabel = field === 'display' ? 'Показ' : 'Аспектация';
+            const label = `${shortLabel}: ${planetName(body)}`;
+            return `
+                <td class="forecast-new-matrix-inline-cell">
+                    <label class="forecast-new-matrix-inline" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}">
+                        <input type="checkbox" data-matrix-body="${escapeHtml(body)}" data-matrix-field="${field}" ${checked}>
+                    </label>
+                </td>
+            `;
+        }).join('');
+    }
+
+    function matrixBodyForHouse(houseNumber) {
+        return ({ 1: 'ASC', 4: 'IC', 7: 'DSC', 10: 'MC' })[houseNumber] || '';
+    }
+
+    function matrixBodyKey(name) {
+        return window.AstroPreferences?.normalizeMatrixBodyName
+            ? window.AstroPreferences.normalizeMatrixBodyName(name)
+            : String(name || '');
     }
 
     function renderAspectTypeToggles() {
@@ -897,6 +992,7 @@
 
         planetsPane.addEventListener('click', (event) => {
             if (!(event.target instanceof Element)) return;
+            if (event.target.closest('.forecast-new-matrix-inline')) return;
             const row = event.target.closest('tr[data-planet]');
             if (!row) return;
             event.stopPropagation();
@@ -1020,7 +1116,7 @@
     function filterChartDataForRenderer(chartData = {}) {
         let filtered = window.AstroPreferences?.filterChartDataByViewPreferences
             ? window.AstroPreferences.filterChartDataByViewPreferences(chartData, {
-                matrixRows: ensureMatrixRows(state.matrixRows),
+                matrixRows: normalizeForecastNewMatrixRows(state.matrixRows),
                 aspectScope: state.pageSettings.aspectScope || 'all',
                 enabledAspectTypes: Array.isArray(state.pageSettings.enabledAspectTypes) && state.pageSettings.enabledAspectTypes.length
                     ? state.pageSettings.enabledAspectTypes
@@ -1106,7 +1202,7 @@
         state.stepMode = restored.stepMode || state.stepMode;
         state.leftTab = restored.leftTab || state.leftTab;
         state.rightTab = restored.rightTab || state.rightTab;
-        state.matrixRows = ensureMatrixRows(restored.matrixRows);
+        state.matrixRows = normalizeForecastNewMatrixRows(restored.matrixRows);
         state.viewport = restored.viewport || state.viewport;
         state.pageSettings = {
             ...state.pageSettings,
@@ -1138,7 +1234,7 @@
             });
             state.resolvedPreferences = payload;
             const resolved = payload?.resolved || {};
-            state.matrixRows = ensureMatrixRows(resolved?.matrix?.rows || state.matrixRows);
+            state.matrixRows = normalizeForecastNewMatrixRows(resolved?.matrix?.rows || state.matrixRows);
             state.pageSettings = {
                 ...state.pageSettings,
                 houseSystem: normalizeHouseSystemCode(payload?.chart_meta?.house_system || state.pageSettings.houseSystem),
@@ -1285,6 +1381,44 @@
 
     function ensureMatrixRows(rows) {
         return window.AstroPreferences?.ensureMatrixRows ? window.AstroPreferences.ensureMatrixRows(rows || {}) : (rows || {});
+    }
+
+    function buildDefaultForecastNewMatrixRows() {
+        const rows = ensureMatrixRows({});
+        Object.keys(rows).forEach((body) => {
+            rows[body] = {
+                ...rows[body],
+                display: true,
+                aspecting: DEFAULT_ASPECTING_BODIES.has(body),
+            };
+        });
+        return rows;
+    }
+
+    function isLegacyAllEnabledMatrix(rows) {
+        const ensured = ensureMatrixRows(rows);
+        const bodies = Object.keys(ensured);
+        return bodies.length > 0 && bodies.every((body) => ensured[body].display !== false && ensured[body].aspecting !== false);
+    }
+
+    function normalizeForecastNewMatrixRows(rows, options = {}) {
+        const source = rows && typeof rows === 'object' ? rows : {};
+        const fallback = buildDefaultForecastNewMatrixRows();
+        const normalized = ensureMatrixRows(source);
+        const resetLegacyAllEnabled = options.resetLegacyAllEnabled !== false;
+
+        Object.keys(normalized).forEach((body) => {
+            const hasExplicitBodyConfig = Object.prototype.hasOwnProperty.call(source, body);
+            if (!hasExplicitBodyConfig) {
+                normalized[body] = { ...fallback[body] };
+            }
+        });
+
+        if (resetLegacyAllEnabled && isLegacyAllEnabledMatrix(source)) {
+            return fallback;
+        }
+
+        return normalized;
     }
 
     function layerLabel(method) {

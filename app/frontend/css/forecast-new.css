@@ -127,6 +127,7 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    background: linear-gradient(180deg, #fbf9f4 0%, #f5f1e8 100%);
 }
 
 .forecast-new-wheel-shell {
@@ -203,6 +204,7 @@
     position: absolute;
     top: 16px;
     right: 16px;
+    bottom: auto;
     z-index: 45;
     display: flex;
     flex-direction: column;
@@ -336,6 +338,72 @@
     width: 16px;
     height: 16px;
     accent-color: var(--accent);
+}
+
+.forecast-new-matrix-col,
+.forecast-new-matrix-inline-cell {
+    width: 26px;
+    min-width: 26px;
+    max-width: 26px;
+    padding-inline: 3px !important;
+    text-align: center !important;
+}
+
+.forecast-new-matrix-col {
+    font-size: 9px !important;
+    letter-spacing: 0.02em !important;
+}
+
+.forecast-new-matrix-inline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+}
+
+.forecast-new-matrix-inline input {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+.forecast-new-matrix-inline-empty {
+    color: transparent;
+}
+
+#forecastNewNatalPanel .data-table.compact {
+    table-layout: auto;
+}
+
+#forecastNewNatalPanel .data-table.compact th:first-child,
+#forecastNewNatalPanel .data-table.compact td.symbol-cell {
+    width: 44px;
+    min-width: 44px;
+}
+
+#forecastNewNatalPanel .data-table.compact .planet-speed-col,
+#forecastNewNatalPanel .data-table.compact .planet-speed-cell {
+    width: 54px;
+    min-width: 54px;
+}
+
+#forecastNewNatalPanel table:has(#natalPlanetsTable) th:nth-child(4),
+#natalPlanetsTable td:nth-child(4) {
+    width: 38px;
+    min-width: 38px;
+    white-space: nowrap;
+}
+
+.forecast-new-matrix-row-display-off td:not(.forecast-new-matrix-inline-cell) {
+    opacity: 0.48;
+}
+
+.forecast-new-matrix-row-aspecting-off {
+    background: linear-gradient(90deg, rgba(184, 147, 90, 0.08), transparent 70%);
 }
 
 .forecast-new-houses-title {
