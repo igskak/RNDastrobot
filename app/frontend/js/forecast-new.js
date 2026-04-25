@@ -440,8 +440,6 @@
             showApplyingSeparating: state.pageSettings.showApplyingSeparating === true,
         });
         state.natalRenderer?.render(filterChartDataForRenderer(state.natalWheelData));
-        state.natalRenderer?.renderPlanets(state.natalWheelData?.planets || []);
-        state.natalRenderer?.renderHouses(state.natalWheelData?.houses || []);
         renderInlineMatrixControls();
         applyInlineMatrixRowState();
         renderMatrixEditor();
@@ -506,8 +504,8 @@
 
     async function applyMatrixRows() {
         renderStaticNatal();
-        renderRightPanel();
         renderWheel();
+        renderRightPanel();
         try {
             await persistForecastNewViewOverrides();
         } catch (error) {
@@ -1128,10 +1126,23 @@
         if (!viewModel) return viewModel;
         return {
             ...viewModel,
-            activePrognosticLayers: (viewModel.activePrognosticLayers || []).map((layer) => ({
-                ...layer,
-                aspects: filterAspectsByPhase(layer.aspects || []),
-            })),
+            activePrognosticLayers: (viewModel.activePrognosticLayers || []).map((layer) => {
+                const filteredLayer = filterChartDataForRenderer({
+                    planets: layer.bodies || [],
+                    houses: layer.houses || [],
+                    aspects: layer.aspects || [],
+                    aspect_configurations: [],
+                    stelliums: [],
+                    balances: null,
+                    cosmogram_pattern: null,
+                });
+                return {
+                    ...layer,
+                    bodies: filteredLayer.planets || [],
+                    houses: filteredLayer.houses || [],
+                    aspects: filteredLayer.aspects || [],
+                };
+            }),
         };
     }
 
