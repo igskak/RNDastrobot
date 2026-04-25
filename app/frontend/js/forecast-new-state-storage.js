@@ -5,6 +5,7 @@
     const STORAGE_VERSION = 1;
     const VALID_LAYERS = ['transit', 'progression', 'direction'];
     const VALID_STEP_MODES = ['second', 'minute', 'hour', 'day', 'week', 'month', 'year'];
+    const VALID_CUSTOM_STEP_UNITS = ['second', 'minute', 'hour', 'day', 'week', 'month', 'year'];
     const VALID_TABS = ['Planets', 'Aspects', 'Grid', 'Configs', 'Balances'];
 
     function normalizeToken(value) {
@@ -64,6 +65,15 @@
         };
     }
 
+    function sanitizeCustomStep(value) {
+        const source = value && typeof value === 'object' ? value : {};
+        const amount = Math.trunc(Number(source.amount));
+        return {
+            amount: Number.isFinite(amount) ? Math.min(9999, Math.max(1, amount)) : 1,
+            unit: pickEnum(source.unit, VALID_CUSTOM_STEP_UNITS, 'day'),
+        };
+    }
+
     function sanitizePayload(payload, natalData) {
         const source = payload && typeof payload === 'object' ? payload : {};
         const chartSignature = buildChartSignature(natalData);
@@ -84,6 +94,7 @@
             activeLayers: sanitizeLayerList(source.activeLayers),
             selectedRightLayer: pickEnum(source.selectedRightLayer, VALID_LAYERS, 'transit'),
             stepMode: pickEnum(source.stepMode, VALID_STEP_MODES, 'hour'),
+            customStep: sanitizeCustomStep(source.customStep),
             leftTab: pickEnum(source.leftTab, VALID_TABS, 'Planets'),
             rightTab: pickEnum(source.rightTab, VALID_TABS, 'Planets'),
             matrixRows: source.matrixRows && typeof source.matrixRows === 'object' ? source.matrixRows : {},

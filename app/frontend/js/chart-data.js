@@ -382,6 +382,9 @@ class ChartDataRenderer {
         if (planet.speed !== undefined && planet.speed !== null) {
             const speed = Number(planet.speed);
             if (!Number.isFinite(speed)) return '';
+            if (speed === 0) {
+                return '<span class="planet-meta-chip planet-meta-chip--speed-slow">0%</span>';
+            }
             const value = this.formatSpeedValue(speed);
             const label = this.t('page.natalFull.units.degPerDay', { value });
             return `<span class="planet-meta-chip">${this.escapeHtml(label)}</span>`;

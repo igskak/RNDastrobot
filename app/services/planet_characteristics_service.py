@@ -145,7 +145,12 @@ class PlanetCharacteristicsService:
             планета не в справочнике
         """
         cls._load_references()
-        mean_speed = cls.MEAN_SPEEDS.get(planet_name)
+        speed_name_aliases = {
+            'TrueSouthNode': 'TrueNorthNode',
+            'SouthNode': 'TrueNorthNode',
+            'MeanNode': 'TrueNorthNode',
+        }
+        mean_speed = cls.MEAN_SPEEDS.get(speed_name_aliases.get(planet_name, planet_name))
         if mean_speed is None or mean_speed == 0:
             return None
         return round(min(abs(actual_speed) / mean_speed * 100, 100.0), 2)

@@ -94,11 +94,120 @@
 .forecast-new-time-stepper {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 6px;
     padding: 6px 12px;
     border-bottom: 1px solid rgba(184, 147, 90, 0.14);
     background: rgba(255, 255, 255, 0.66);
+}
+
+.forecast-new-time-stepper-display {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-width: 0;
+}
+
+.forecast-new-custom-step {
+    position: relative;
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+}
+
+.forecast-new-custom-step-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 30px;
+    max-width: 96px;
+    padding: 0 8px;
+    border: 1px solid rgba(30, 58, 95, 0.14);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.82);
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.forecast-new-custom-step-toggle:hover,
+.forecast-new-custom-step-toggle:focus-visible,
+.forecast-new-custom-step.is-open .forecast-new-custom-step-toggle {
+    border-color: rgba(30, 58, 95, 0.28);
+    background: #ffffff;
+    color: var(--accent);
+    outline: none;
+}
+
+.forecast-new-custom-step-toggle-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.forecast-new-custom-step-popover {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 24;
+    display: grid;
+    grid-template-columns: 72px 96px;
+    gap: 8px;
+    width: 196px;
+    padding: 10px;
+    border: 1px solid rgba(30, 58, 95, 0.16);
+    border-radius: 10px;
+    background: #fffdf8;
+    box-shadow: 0 14px 28px rgba(30, 58, 95, 0.16);
+}
+
+.forecast-new-custom-step-field {
+    display: grid;
+    gap: 4px;
+    color: var(--text-secondary);
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.forecast-new-custom-step-field input,
+.forecast-new-custom-step-field select {
+    width: 100%;
+    min-height: 32px;
+    padding: 0 8px;
+    border: 1px solid rgba(30, 58, 95, 0.16);
+    border-radius: 7px;
+    background: #ffffff;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.forecast-new-custom-step-actions {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.forecast-new-custom-step-actions button {
+    min-height: 32px;
+    border: 1px solid rgba(30, 58, 95, 0.14);
+    border-radius: 8px;
+    background: #1e3a5f;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.forecast-new-custom-step-actions button:hover,
+.forecast-new-custom-step-actions button:focus-visible {
+    background: #274a77;
+    outline: none;
 }
 
 .forecast-new-time-stepper-group {
@@ -554,10 +663,54 @@
     table-layout: auto;
 }
 
+#forecastNewNatalPanel .forecast-new-planets-table,
+#forecastNewNatalPanel .forecast-new-houses-table {
+    table-layout: fixed;
+}
+
+#forecastNewNatalPanel .forecast-new-symbol-column {
+    width: 76px;
+}
+
+#forecastNewNatalPanel .forecast-new-position-column {
+    width: 116px;
+}
+
+#forecastNewNatalPanel .forecast-new-speed-column {
+    width: 52px;
+}
+
+#forecastNewNatalPanel .forecast-new-house-column {
+    width: 38px;
+}
+
+#forecastNewNatalPanel .forecast-new-matrix-column {
+    width: 28px;
+}
+
+#forecastNewNatalPanel .forecast-new-house-cusp-column {
+    width: 74px;
+}
+
+#forecastNewNatalPanel .forecast-new-house-sign-column {
+    width: 184px;
+}
+
+#forecastNewNatalPanel .forecast-new-house-ruler-column {
+    width: 78px;
+}
+
 #forecastNewNatalPanel .data-table.compact th:first-child,
 #forecastNewNatalPanel .data-table.compact td.symbol-cell {
     width: 44px;
     min-width: 44px;
+}
+
+#forecastNewNatalPanel .forecast-new-planets-table th:first-child,
+#forecastNewNatalPanel .forecast-new-planets-table td.symbol-cell,
+#forecastNewNatalPanel .forecast-new-houses-table th:first-child {
+    width: auto;
+    min-width: 0;
 }
 
 #forecastNewNatalPanel .data-table.compact .planet-speed-col,
@@ -585,6 +738,7 @@
 
 .forecast-new-houses-title {
     margin-top: 16px;
+    padding-left: 8px;
 }
 
 .forecast-new-moment-card {

@@ -61,6 +61,15 @@
         { key: 'tenSecond', label: '10с', title: 'Десятки секунд', unit: 'second', amount: 10 },
         { key: 'second', label: 'Сек', title: 'Секунды', unit: 'second', amount: 1 },
     ];
+    const CUSTOM_STEP_UNITS = [
+        { value: 'second', label: 'секунд' },
+        { value: 'minute', label: 'минут' },
+        { value: 'hour', label: 'часов' },
+        { value: 'day', label: 'дней' },
+        { value: 'week', label: 'недель' },
+        { value: 'month', label: 'месяцев' },
+        { value: 'year', label: 'лет' },
+    ];
 
     const refs = {};
     const state = {
@@ -79,6 +88,8 @@
         activeLayers: ['transit'],
         selectedRightLayer: 'transit',
         stepMode: 'hour',
+        customStep: { amount: 1, unit: 'day' },
+        isCustomStepOpen: false,
         leftTab: 'Planets',
         rightTab: 'Planets',
         matrixRows: buildDefaultForecastNewMatrixRows(),
@@ -254,11 +265,35 @@
         refs.targetDateInput?.addEventListener('change', onTargetDatetimeChange);
         refs.targetTimeInput?.addEventListener('change', onTargetDatetimeChange);
         refs.forecastNewTimeStepper?.addEventListener('click', (event) => {
+            const customToggle = event.target.closest('[data-custom-step-toggle]');
+            if (customToggle) {
+                event.stopPropagation();
+                toggleCustomStepPopover();
+                return;
+            }
+            const customDirectionButton = event.target.closest('[data-custom-step-direction]');
+            if (customDirectionButton) {
+                event.stopPropagation();
+                stepSelectedDateTimeByCustom(Number(customDirectionButton.dataset.customStepDirection));
+                return;
+            }
+            if (event.target.closest('.forecast-new-custom-step')) {
+                event.stopPropagation();
+                return;
+            }
             const button = event.target.closest('[data-time-step-segment][data-time-step-direction]');
             if (!button) return;
             const segment = TIME_STEPPER_SEGMENTS.find((item) => item.key === button.dataset.timeStepSegment);
             if (!segment) return;
             stepSelectedDateTimeSegment(segment, Number(button.dataset.timeStepDirection));
+        });
+        refs.forecastNewTimeStepper?.addEventListener('input', (event) => {
+            if (!(event.target instanceof Element) || !event.target.closest('[data-custom-step-input]')) return;
+            updateCustomStepFromControls();
+        });
+        refs.forecastNewTimeStepper?.addEventListener('change', (event) => {
+            if (!(event.target instanceof Element) || !event.target.closest('[data-custom-step-input]')) return;
+            updateCustomStepFromControls();
         });
         refs.prognosticMomentToggle?.addEventListener('click', (event) => {
             event.stopPropagation();
@@ -331,6 +366,7 @@
         document.addEventListener('click', () => {
             refs.forecastNewSettingsPanel?.classList.add('hidden');
             setMomentEditorOpen(false);
+            setCustomStepPopoverOpen(false);
         });
         [
             refs.orientationSelect,
@@ -490,6 +526,11 @@
     function renderTimeStepper() {
         if (!refs.forecastNewTimeStepper) return;
         const values = getTimeStepperSegmentValues(state.selectedDateTime);
+        const customStep = normalizeCustomStep(state.customStep);
+        const customStepLabel = formatCustomStepLabel(customStep);
+        const customStepUnitOptions = CUSTOM_STEP_UNITS.map((unit) => `
+            <option value="${unit.value}" ${unit.value === customStep.unit ? 'selected' : ''}>${escapeHtml(unit.label)}</option>
+        `).join('');
         const segmentMarkup = (segmentKey) => {
             const segment = TIME_STEPPER_SEGMENTS.find((item) => item.key === segmentKey);
             const value = values[segmentKey] ?? '';
@@ -504,22 +545,69 @@
         };
 
         refs.forecastNewTimeStepper.innerHTML = `
-            <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--date" aria-label="Дата">
-                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--year">${segmentMarkup('decade')}${segmentMarkup('year')}</span>
-                <span class="forecast-new-time-stepper-separator" aria-hidden="true">.</span>
-                ${segmentMarkup('month')}
-                <span class="forecast-new-time-stepper-separator" aria-hidden="true">.</span>
-                ${segmentMarkup('day')}
+            <span class="forecast-new-custom-step ${state.isCustomStepOpen ? 'is-open' : ''}">
+                <button type="button" class="forecast-new-custom-step-toggle" data-custom-step-toggle aria-expanded="${state.isCustomStepOpen ? 'true' : 'false'}" aria-controls="forecastNewCustomStepPopover" title="Пользовательский шаг">
+                    <span aria-hidden="true">+/-</span>
+                    <span class="forecast-new-custom-step-toggle-label">${escapeHtml(customStepLabel)}</span>
+                </button>
+                <span class="forecast-new-custom-step-popover ${state.isCustomStepOpen ? '' : 'hidden'}" id="forecastNewCustomStepPopover">
+                    <label class="forecast-new-custom-step-field">
+                        <span>Шаг</span>
+                        <input type="number" min="1" max="9999" step="1" value="${customStep.amount}" data-custom-step-input="amount">
+                    </label>
+                    <label class="forecast-new-custom-step-field">
+                        <span>Ед.</span>
+                        <select data-custom-step-input="unit">${customStepUnitOptions}</select>
+                    </label>
+                    <span class="forecast-new-custom-step-actions" aria-label="Переход по пользовательскому шагу">
+                        <button type="button" data-custom-step-direction="-1" aria-label="Назад на пользовательский шаг">&larr;</button>
+                        <button type="button" data-custom-step-direction="1" aria-label="Вперед на пользовательский шаг">&rarr;</button>
+                    </span>
+                </span>
             </span>
-            <span class="forecast-new-time-stepper-separator forecast-new-time-stepper-separator--major" aria-hidden="true">,</span>
-            <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--time" aria-label="Время">
-                ${segmentMarkup('hour')}
-                <span class="forecast-new-time-stepper-separator" aria-hidden="true">:</span>
-                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--minute">${segmentMarkup('tenMinute')}${segmentMarkup('minute')}</span>
-                <span class="forecast-new-time-stepper-separator" aria-hidden="true">:</span>
-                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--second">${segmentMarkup('tenSecond')}${segmentMarkup('second')}</span>
+            <span class="forecast-new-time-stepper-display">
+                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--date" aria-label="Дата">
+                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--year">${segmentMarkup('decade')}${segmentMarkup('year')}</span>
+                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">.</span>
+                    ${segmentMarkup('month')}
+                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">.</span>
+                    ${segmentMarkup('day')}
+                </span>
+                <span class="forecast-new-time-stepper-separator forecast-new-time-stepper-separator--major" aria-hidden="true">,</span>
+                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--time" aria-label="Время">
+                    ${segmentMarkup('hour')}
+                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">:</span>
+                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--minute">${segmentMarkup('tenMinute')}${segmentMarkup('minute')}</span>
+                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">:</span>
+                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--second">${segmentMarkup('tenSecond')}${segmentMarkup('second')}</span>
+                </span>
             </span>
         `;
+    }
+
+    function toggleCustomStepPopover() {
+        setCustomStepPopoverOpen(!state.isCustomStepOpen);
+    }
+
+    function setCustomStepPopoverOpen(isOpen) {
+        state.isCustomStepOpen = isOpen === true;
+        const popover = refs.forecastNewTimeStepper?.querySelector('#forecastNewCustomStepPopover');
+        const toggle = refs.forecastNewTimeStepper?.querySelector('[data-custom-step-toggle]');
+        popover?.classList.toggle('hidden', !state.isCustomStepOpen);
+        refs.forecastNewTimeStepper?.querySelector('.forecast-new-custom-step')?.classList.toggle('is-open', state.isCustomStepOpen);
+        toggle?.setAttribute('aria-expanded', state.isCustomStepOpen ? 'true' : 'false');
+    }
+
+    function updateCustomStepFromControls() {
+        const amountInput = refs.forecastNewTimeStepper?.querySelector('[data-custom-step-input="amount"]');
+        const unitSelect = refs.forecastNewTimeStepper?.querySelector('[data-custom-step-input="unit"]');
+        state.customStep = normalizeCustomStep({
+            amount: amountInput?.value,
+            unit: unitSelect?.value,
+        });
+        const label = refs.forecastNewTimeStepper?.querySelector('.forecast-new-custom-step-toggle-label');
+        if (label) label.textContent = formatCustomStepLabel(state.customStep);
+        schedulePersist();
     }
 
     function renderStaticNatal() {
@@ -788,6 +876,21 @@
         const dir = direction >= 0 ? 1 : -1;
         setSelectedDateTime(addDateTimeUnit(state.selectedDateTime, segment.unit, segment.amount * dir));
         syncControlsFromState();
+        updatePrognosticTimeMeta();
+        setLightweightLoading(true);
+        schedulePersist();
+        void loadActiveLayers({ lightweight: true });
+    }
+
+    function stepSelectedDateTimeByCustom(direction) {
+        updateCustomStepFromControls();
+        const step = normalizeCustomStep(state.customStep);
+        const dir = direction >= 0 ? 1 : -1;
+        const unit = step.unit === 'week' ? 'day' : step.unit;
+        const amount = step.unit === 'week' ? step.amount * 7 : step.amount;
+        setSelectedDateTime(addDateTimeUnit(state.selectedDateTime, unit, amount * dir));
+        syncControlsFromState();
+        setCustomStepPopoverOpen(true);
         updatePrognosticTimeMeta();
         setLightweightLoading(true);
         schedulePersist();
@@ -1370,6 +1473,7 @@
         state.selectedRightLayer = restored.selectedRightLayer || state.selectedRightLayer;
         state.activeRightMethodTab = state.selectedRightLayer;
         state.stepMode = restored.stepMode || state.stepMode;
+        state.customStep = normalizeCustomStep(restored.customStep || state.customStep);
         state.leftTab = restored.leftTab || state.leftTab;
         state.rightTab = restored.rightTab || state.rightTab;
         state.matrixRows = normalizeForecastNewMatrixRows(restored.matrixRows);
@@ -1518,6 +1622,7 @@
                 activeLayers: state.activeLayers,
                 selectedRightLayer: state.selectedRightLayer,
                 stepMode: state.stepMode,
+                customStep: state.customStep,
                 leftTab: state.leftTab,
                 rightTab: state.rightTab,
                 matrixRows: state.matrixRows,
@@ -1695,6 +1800,22 @@
         const dir = direction >= 0 ? 1 : -1;
         if (mode === 'week') return addDateTimeUnit(value, 'day', dir * 7);
         return addDateTimeUnit(value, mode, dir);
+    }
+
+    function normalizeCustomStep(value) {
+        const source = value && typeof value === 'object' ? value : {};
+        const amount = Math.trunc(Number(source.amount));
+        const unit = CUSTOM_STEP_UNITS.some((item) => item.value === source.unit) ? source.unit : 'day';
+        return {
+            amount: Number.isFinite(amount) ? Math.min(9999, Math.max(1, amount)) : 1,
+            unit,
+        };
+    }
+
+    function formatCustomStepLabel(value) {
+        const step = normalizeCustomStep(value);
+        const unit = CUSTOM_STEP_UNITS.find((item) => item.value === step.unit);
+        return `${step.amount} ${unit?.label || 'дней'}`;
     }
 
     function addDateTimeUnit(value, unit, amount) {
