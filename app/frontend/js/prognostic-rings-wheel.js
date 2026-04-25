@@ -419,17 +419,18 @@
             const aspectRadius = this.getAspectBoundaryRadius(natalRing);
             this.aspectRadius = aspectRadius;
             const natalMap = new Map((natalRing.bodies || [])
-                .filter((body) => body?.name && this.isBodyAspecting(body.name))
+                .filter((body) => body?.name && this.isBodyAvailableForAspects(body.name))
                 .map((body) => [this.normalizeBodyName(body.name), body]));
             rings.filter((ring) => ring.method !== 'natal').forEach((ring) => {
                 const bodyMap = new Map((ring.bodies || [])
-                    .filter((body) => body?.name && this.isBodyAspecting(body.name))
+                    .filter((body) => body?.name && this.isBodyAvailableForAspects(body.name))
                     .map((body) => [this.normalizeBodyName(body.name), body]));
                 const aspects = (ring.aspects || []).filter((aspect) => this.isAspectEnabled(aspect));
                 const sorted = [...aspects].sort((a, b) => Number(b.orb) - Number(a.orb));
                 sorted.forEach((aspect) => {
                     const movingName = this.normalizeBodyName(aspect.planet_1 || aspect.left_planet);
                     const natalName = this.normalizeBodyName(aspect.planet_2 || aspect.natal_object || aspect.right_planet);
+                    if (!this.isBodyAvailableForAspects(movingName) || !this.isBodyAvailableForAspects(natalName)) return;
                     const moving = bodyMap.get(movingName);
                     const natal = natalMap.get(natalName);
                     if (!moving || !natal) return;
@@ -657,6 +658,11 @@
         isBodyAspecting(name) {
             const row = this.getMatrixRow(name);
             return row.aspecting !== false;
+        }
+
+        isBodyAvailableForAspects(name) {
+            const row = this.getMatrixRow(name);
+            return row.display !== false && row.aspecting !== false;
         }
 
         getMatrixRow(name) {
