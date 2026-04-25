@@ -86,17 +86,178 @@
 }
 
 #forecastNewProgPanel {
+    position: relative;
     width: 350px;
     min-width: 330px;
 }
 
+.forecast-new-time-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-bottom: 1px solid rgba(184, 147, 90, 0.14);
+    background: rgba(255, 255, 255, 0.66);
+}
+
+.forecast-new-time-stepper-group {
+    display: inline-flex;
+    align-items: center;
+}
+
+.forecast-new-time-stepper-segment {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    height: 28px;
+    padding: 0 1px;
+    border-radius: 6px;
+    vertical-align: middle;
+}
+
+.forecast-new-time-stepper-segment:hover,
+.forecast-new-time-stepper-segment:focus-within {
+    background: rgba(30, 58, 95, 0.06);
+}
+
+.forecast-new-time-stepper-btn {
+    position: absolute;
+    left: 50%;
+    width: 12px;
+    height: 10px;
+    min-height: 10px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: rgba(30, 58, 95, 0.42);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.14s ease, color 0.14s ease;
+    transform: translateX(-50%);
+    z-index: 1;
+}
+
+.forecast-new-time-stepper-btn::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    border-top: 1.5px solid currentColor;
+    border-left: 1.5px solid currentColor;
+}
+
+.forecast-new-time-stepper-btn--up {
+    top: -3px;
+}
+
+.forecast-new-time-stepper-btn--up::before {
+    transform: translate(-50%, -22%) rotate(45deg);
+}
+
+.forecast-new-time-stepper-btn--down {
+    bottom: -3px;
+}
+
+.forecast-new-time-stepper-btn--down::before {
+    transform: translate(-50%, -72%) rotate(225deg);
+}
+
+.forecast-new-time-stepper-segment:hover .forecast-new-time-stepper-btn,
+.forecast-new-time-stepper-segment:focus-within .forecast-new-time-stepper-btn {
+    opacity: 1;
+}
+
+.forecast-new-time-stepper-btn:hover,
+.forecast-new-time-stepper-btn:focus-visible {
+    color: var(--accent);
+    outline: none;
+}
+
+.forecast-new-time-stepper-value {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+}
+
+.forecast-new-time-stepper-separator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(92, 85, 78, 0.72);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    margin: 0 1px;
+}
+
+.forecast-new-time-stepper-separator--major {
+    margin: 0 6px 0 2px;
+}
+
+.forecast-new-time-stepper-group--year .forecast-new-time-stepper-segment,
+.forecast-new-time-stepper-group--minute .forecast-new-time-stepper-segment,
+.forecast-new-time-stepper-group--second .forecast-new-time-stepper-segment {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.forecast-new-time-stepper-segment--decade,
+.forecast-new-time-stepper-segment--hour {
+    min-width: 28px;
+}
+
+.forecast-new-time-stepper-segment--year,
+.forecast-new-time-stepper-segment--tenMinute,
+.forecast-new-time-stepper-segment--minute,
+.forecast-new-time-stepper-segment--tenSecond,
+.forecast-new-time-stepper-segment--second {
+    min-width: 10px;
+}
+
+.forecast-new-time-stepper-segment--month,
+.forecast-new-time-stepper-segment--day {
+    min-width: 20px;
+}
+
 .forecast-new-side-head {
-    padding: 16px 16px 10px;
+    padding: 10px 12px;
     border-bottom: 1px solid rgba(184, 147, 90, 0.14);
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(249, 247, 242, 0.36));
 }
 
-.forecast-new-side-head h3 {
+.forecast-new-moment-toggle {
+    display: block;
+    width: 100%;
+    min-height: 64px;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.forecast-new-moment-toggle:hover,
+.forecast-new-moment-toggle[aria-expanded="true"] {
+    border-color: rgba(30, 58, 95, 0.1);
+    background: rgba(255, 255, 255, 0.66);
+}
+
+.forecast-new-moment-toggle-title {
+    display: block;
     margin: 0;
     font-family: var(--font-display);
     font-size: 28px;
@@ -104,11 +265,15 @@
     font-weight: 500;
 }
 
-.forecast-new-side-head p {
+.forecast-new-moment-toggle-meta {
+    display: block;
     margin: 6px 0 0;
     color: var(--text-secondary);
     font-size: 12.5px;
     line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .forecast-new-tabs {
@@ -423,11 +588,18 @@
 }
 
 .forecast-new-moment-card {
-    margin: 12px;
+    position: absolute;
+    top: 82px;
+    left: 10px;
+    right: 10px;
+    z-index: 70;
+    margin: 0;
     padding: 12px;
     border: 1px solid rgba(30, 58, 95, 0.1);
     border-radius: 14px;
-    background: rgba(255, 255, 255, 0.74);
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 18px 42px rgba(26, 22, 20, 0.16);
+    backdrop-filter: blur(14px);
 }
 
 .forecast-new-moment-card label {
@@ -444,6 +616,19 @@
     margin-top: 3px;
     font-family: var(--font-mono);
     font-size: 13px;
+}
+
+.forecast-new-native-datetime {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 7px;
+    margin-top: 8px;
+}
+
+.forecast-new-native-datetime input {
+    min-width: 0;
+    padding: 8px 10px;
+    font-size: 12px;
 }
 
 .forecast-new-location-grid {
@@ -482,6 +667,11 @@
     border-color: rgba(30, 58, 95, 0.28);
     background: var(--accent);
     color: #fff;
+}
+
+.forecast-new-loading {
+    opacity: 0.62;
+    transition: opacity var(--transition);
 }
 
 .settings-check-grid {
@@ -604,9 +794,14 @@
     }
 
     .forecast-new-side-panel {
+        position: static;
+        display: flex;
+        inset: auto;
+        z-index: auto;
         width: 100%;
         min-width: 0;
         max-height: none;
+        background: var(--bg-primary);
     }
 
     #forecastNewNatalPanel,
@@ -628,6 +823,12 @@
     .forecast-new-datebar {
         width: calc(100% - 24px);
         border-radius: 20px;
+    }
+
+    .forecast-new-time-stepper {
+        overflow-x: auto;
+        justify-content: flex-start;
+        gap: 4px;
     }
 
     .forecast-new-stepper {

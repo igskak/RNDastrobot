@@ -50,12 +50,29 @@
         'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
         'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto',
     ]);
+    const TIME_STEPPER_SEGMENTS = [
+        { key: 'decade', label: '10л', title: 'Десятки лет', unit: 'year', amount: 10 },
+        { key: 'year', label: 'Год', title: 'Годы', unit: 'year', amount: 1 },
+        { key: 'month', label: 'Мес', title: 'Месяц', unit: 'month', amount: 1 },
+        { key: 'day', label: 'День', title: 'День', unit: 'day', amount: 1 },
+        { key: 'hour', label: 'Час', title: 'Часы', unit: 'hour', amount: 1 },
+        { key: 'tenMinute', label: '10м', title: 'Десятки минут', unit: 'minute', amount: 10 },
+        { key: 'minute', label: 'Мин', title: 'Минуты', unit: 'minute', amount: 1 },
+        { key: 'tenSecond', label: '10с', title: 'Десятки секунд', unit: 'second', amount: 10 },
+        { key: 'second', label: 'Сек', title: 'Секунды', unit: 'second', amount: 1 },
+    ];
 
     const refs = {};
     const state = {
         natalData: null,
         natalWheelData: null,
         userId: null,
+        selectedDateTime: '',
+        lastCalculatedTransitDateTime: '',
+        lastCalculatedPrognosticDate: '',
+        enabledLayers: ['transit'],
+        activeRightMethodTab: 'transit',
+        pendingRequestToken: 0,
         targetDatetime: '',
         timezone: 'UTC',
         location: { name: '', latitude: null, longitude: null },
@@ -142,7 +159,7 @@
             longitude: numberOrNull(natalData.birth_data?.longitude),
         };
         state.pageSettings.houseSystem = normalizeHouseSystemCode(natalData.birth_data?.house_system || 'P');
-        state.targetDatetime = getLocalNowIso(state.timezone);
+        setSelectedDateTime(getLocalNowIso(state.timezone));
 
         await hydratePreferences();
         hydrateState();
@@ -161,7 +178,9 @@
             'forecastNewBackBtn', 'forecastNewTitle', 'forecastNewSubtitle', 'openNatalBtn',
             'forecastNewNatalPanel', 'forecastNewProgPanel',
             'natalPanelMeta', 'prognosticPanelTitle', 'prognosticPanelMeta',
+            'prognosticMomentToggle', 'forecastNewMomentCard',
             'forecastNewWheel', 'forecastNewWheelShell', 'targetDateInput', 'targetTimeInput',
+            'forecastNewTimeStepper',
             'stepModeSelect', 'stepBackward', 'stepForward', 'timezoneInput', 'locationInput',
             'latitudeInput', 'longitudeInput', 'targetDatetimeLabel', 'rightLayerTabs',
             'forecastNewMatrixEditor', 'forecastNewSettingsMatrixEditor',
@@ -225,6 +244,8 @@
                 if (layer && !state.activeLayers.includes(state.selectedRightLayer)) {
                     state.selectedRightLayer = state.activeLayers[0];
                 }
+                state.enabledLayers = state.activeLayers;
+                state.activeRightMethodTab = state.selectedRightLayer;
                 schedulePersist();
                 await loadActiveLayers();
             });
@@ -232,12 +253,18 @@
 
         refs.targetDateInput?.addEventListener('change', onTargetDatetimeChange);
         refs.targetTimeInput?.addEventListener('change', onTargetDatetimeChange);
-        refs.stepModeSelect?.addEventListener('change', () => {
-            state.stepMode = refs.stepModeSelect.value;
-            schedulePersist();
+        refs.forecastNewTimeStepper?.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-time-step-segment][data-time-step-direction]');
+            if (!button) return;
+            const segment = TIME_STEPPER_SEGMENTS.find((item) => item.key === button.dataset.timeStepSegment);
+            if (!segment) return;
+            stepSelectedDateTimeSegment(segment, Number(button.dataset.timeStepDirection));
         });
-        refs.stepBackward?.addEventListener('click', () => stepTargetDatetime(-1));
-        refs.stepForward?.addEventListener('click', () => stepTargetDatetime(1));
+        refs.prognosticMomentToggle?.addEventListener('click', (event) => {
+            event.stopPropagation();
+            toggleMomentEditor();
+        });
+        refs.forecastNewMomentCard?.addEventListener('click', (event) => event.stopPropagation());
 
         ['timezoneInput', 'locationInput', 'latitudeInput', 'longitudeInput'].forEach((id) => {
             refs[id]?.addEventListener('change', async () => {
@@ -268,6 +295,7 @@
             const button = event.target.closest('[data-right-layer]');
             if (!button) return;
             state.selectedRightLayer = button.dataset.rightLayer;
+            state.activeRightMethodTab = state.selectedRightLayer;
             renderRightPanel();
             schedulePersist();
         });
@@ -300,7 +328,10 @@
             refs.forecastNewSettingsPanel?.classList.toggle('hidden');
         });
         refs.forecastNewSettingsPanel?.addEventListener('click', (event) => event.stopPropagation());
-        document.addEventListener('click', () => refs.forecastNewSettingsPanel?.classList.add('hidden'));
+        document.addEventListener('click', () => {
+            refs.forecastNewSettingsPanel?.classList.add('hidden');
+            setMomentEditorOpen(false);
+        });
         [
             refs.orientationSelect,
             refs.houseSystemSelect,
@@ -395,10 +426,10 @@
     }
 
     function syncControlsFromState() {
-        const [date, time] = splitTargetDatetime(state.targetDatetime);
+        const [date, time] = splitTargetDatetime(state.selectedDateTime);
         if (refs.targetDateInput) refs.targetDateInput.value = date;
         if (refs.targetTimeInput) refs.targetTimeInput.value = time;
-        if (refs.stepModeSelect) refs.stepModeSelect.value = state.stepMode;
+        renderTimeStepper();
         if (refs.timezoneInput) refs.timezoneInput.value = state.timezone;
         if (refs.locationInput) refs.locationInput.value = state.location.name || '';
         if (refs.latitudeInput) refs.latitudeInput.value = state.location.latitude ?? '';
@@ -420,6 +451,7 @@
             input.checked = state.activeLayers.includes(input.dataset.layerToggle);
         });
         updateHeaderInfo();
+        updatePrognosticTimeMeta();
         renderMatrixEditor();
         renderAspectTypeToggles();
         applyViewport();
@@ -431,6 +463,63 @@
         refs.forecastNewTitle.textContent = `${name} · Прогностика New`;
         refs.forecastNewSubtitle.textContent = [birth.date, birth.time, birth.place].filter(Boolean).join(' · ');
         refs.natalPanelMeta.textContent = [birth.date, birth.time, birth.place].filter(Boolean).join(' · ');
+    }
+
+    function updatePrognosticTimeMeta() {
+        if (refs.targetDatetimeLabel) refs.targetDatetimeLabel.textContent = state.selectedDateTime.replace('T', ' ');
+        if (refs.prognosticPanelMeta) refs.prognosticPanelMeta.textContent = buildPrognosticMomentSummary();
+    }
+
+    function buildPrognosticMomentSummary() {
+        const locationName = state.location?.name || '';
+        return [state.selectedDateTime.replace('T', ' · '), locationName, state.timezone]
+            .filter(Boolean)
+            .join(' · ');
+    }
+
+    function toggleMomentEditor() {
+        const isOpen = refs.forecastNewMomentCard?.classList.contains('hidden') !== false;
+        setMomentEditorOpen(isOpen);
+    }
+
+    function setMomentEditorOpen(isOpen) {
+        refs.forecastNewMomentCard?.classList.toggle('hidden', !isOpen);
+        refs.prognosticMomentToggle?.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+
+    function renderTimeStepper() {
+        if (!refs.forecastNewTimeStepper) return;
+        const values = getTimeStepperSegmentValues(state.selectedDateTime);
+        const segmentMarkup = (segmentKey) => {
+            const segment = TIME_STEPPER_SEGMENTS.find((item) => item.key === segmentKey);
+            const value = values[segmentKey] ?? '';
+            if (!segment) return '';
+            return `
+                <span class="forecast-new-time-stepper-segment forecast-new-time-stepper-segment--${segment.key}" title="${escapeHtml(segment.title)}">
+                    <button type="button" class="forecast-new-time-stepper-btn forecast-new-time-stepper-btn--up" data-time-step-segment="${segment.key}" data-time-step-direction="1" aria-label="${escapeHtml(segment.title)} +1"></button>
+                    <span class="forecast-new-time-stepper-value">${escapeHtml(value)}</span>
+                    <button type="button" class="forecast-new-time-stepper-btn forecast-new-time-stepper-btn--down" data-time-step-segment="${segment.key}" data-time-step-direction="-1" aria-label="${escapeHtml(segment.title)} -1"></button>
+                </span>
+            `;
+        };
+
+        refs.forecastNewTimeStepper.innerHTML = `
+            <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--date" aria-label="Дата">
+                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--year">${segmentMarkup('decade')}${segmentMarkup('year')}</span>
+                <span class="forecast-new-time-stepper-separator" aria-hidden="true">.</span>
+                ${segmentMarkup('month')}
+                <span class="forecast-new-time-stepper-separator" aria-hidden="true">.</span>
+                ${segmentMarkup('day')}
+            </span>
+            <span class="forecast-new-time-stepper-separator forecast-new-time-stepper-separator--major" aria-hidden="true">,</span>
+            <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--time" aria-label="Время">
+                ${segmentMarkup('hour')}
+                <span class="forecast-new-time-stepper-separator" aria-hidden="true">:</span>
+                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--minute">${segmentMarkup('tenMinute')}${segmentMarkup('minute')}</span>
+                <span class="forecast-new-time-stepper-separator" aria-hidden="true">:</span>
+                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--second">${segmentMarkup('tenSecond')}${segmentMarkup('second')}</span>
+            </span>
+        `;
     }
 
     function renderStaticNatal() {
@@ -523,12 +612,6 @@
             const body = matrixBodyKey(row.dataset.planet);
             row.insertAdjacentHTML('beforeend', matrixControlCells(body, rows));
         });
-
-        document.querySelectorAll('#natalHousesTable tr[id^="row-house-"]').forEach((row) => {
-            const houseNumber = Number(String(row.id).replace('row-house-', ''));
-            const body = matrixBodyForHouse(houseNumber);
-            row.insertAdjacentHTML('beforeend', matrixControlCells(body, rows));
-        });
     }
 
     function applyInlineMatrixRowState() {
@@ -541,13 +624,6 @@
             row.classList.toggle('forecast-new-matrix-row-aspecting-off', config.aspecting === false);
         });
 
-        document.querySelectorAll('#natalHousesTable tr[id^="row-house-"]').forEach((row) => {
-            const houseNumber = Number(String(row.id).replace('row-house-', ''));
-            const body = matrixBodyForHouse(houseNumber);
-            const config = body ? (rows?.[body] || { display: true, aspecting: true }) : null;
-            row.classList.toggle('forecast-new-matrix-row-display-off', Boolean(config) && config.display === false);
-            row.classList.toggle('forecast-new-matrix-row-aspecting-off', Boolean(config) && config.aspecting === false);
-        });
     }
 
     function matrixControlCells(bodyName, rows) {
@@ -567,10 +643,6 @@
                 </td>
             `;
         }).join('');
-    }
-
-    function matrixBodyForHouse(houseNumber) {
-        return ({ 1: 'ASC', 4: 'IC', 7: 'DSC', 10: 'MC' })[houseNumber] || '';
     }
 
     function matrixBodyKey(name) {
@@ -697,23 +769,36 @@
     }
 
     async function onTargetDatetimeChange() {
-        const date = refs.targetDateInput?.value || splitTargetDatetime(state.targetDatetime)[0];
+        const date = refs.targetDateInput?.value || splitTargetDatetime(state.selectedDateTime)[0];
         const time = refs.targetTimeInput?.value || '12:00:00';
-        state.targetDatetime = `${date}T${normalizeTime(time)}`;
+        setSelectedDateTime(`${date}T${normalizeTime(time)}`);
+        syncControlsFromState();
         schedulePersist();
-        await loadActiveLayers();
+        await loadActiveLayers({ lightweight: true });
     }
 
     async function stepTargetDatetime(direction) {
-        state.targetDatetime = addStep(state.targetDatetime, state.stepMode, direction);
+        setSelectedDateTime(addStep(state.selectedDateTime, state.stepMode, direction));
         syncControlsFromState();
         schedulePersist();
-        await loadActiveLayers();
+        await loadActiveLayers({ lightweight: true });
+    }
+
+    function stepSelectedDateTimeSegment(segment, direction) {
+        const dir = direction >= 0 ? 1 : -1;
+        setSelectedDateTime(addDateTimeUnit(state.selectedDateTime, segment.unit, segment.amount * dir));
+        syncControlsFromState();
+        updatePrognosticTimeMeta();
+        setLightweightLoading(true);
+        schedulePersist();
+        void loadActiveLayers({ lightweight: true });
     }
 
     async function loadActiveLayers(options = {}) {
         const seq = ++state.requestSeq;
+        state.pendingRequestToken = seq;
         if (options.showLoader) showLoader();
+        if (options.lightweight) setLightweightLoading(true);
         try {
             const layers = {};
             await Promise.all(state.activeLayers.map(async (method) => {
@@ -721,24 +806,28 @@
             }));
             if (seq !== state.requestSeq) return;
             state.layers = layers;
+            state.lastCalculatedTransitDateTime = state.activeLayers.includes('transit') ? state.selectedDateTime : state.lastCalculatedTransitDateTime;
+            state.lastCalculatedPrognosticDate = splitTargetDatetime(state.selectedDateTime)[0];
             renderWheel();
             renderRightLayerTabs();
             renderRightPanel();
             showLayout();
             schedulePersist();
         } catch (error) {
+            if (seq !== state.requestSeq) return;
             console.error('Forecast New load failed:', error);
             showError(error.message || 'Ошибка загрузки прогностики');
         } finally {
-            hideLoader();
+            if (seq === state.requestSeq) {
+                hideLoader();
+                setLightweightLoading(false);
+            }
         }
     }
 
     async function fetchLayer(method) {
-        const [date, time] = splitTargetDatetime(state.targetDatetime);
-        const key = method === 'transit'
-            ? `${method}|${state.targetDatetime}|${state.timezone}`
-            : `${method}|${date}`;
+        const [date, time] = splitTargetDatetime(state.selectedDateTime);
+        const key = buildLayerCacheKey(method, date);
         if (state.cache[key]) return state.cache[key];
         if (state.inFlight[key]) return state.inFlight[key];
 
@@ -835,8 +924,8 @@
         const method = state.selectedRightLayer;
         const layer = state.viewModel?.activePrognosticLayers?.find((item) => item.method === method);
         refs.prognosticPanelTitle.textContent = layerLabel(method);
-        refs.prognosticPanelMeta.textContent = buildLayerMeta(method, layer?.raw);
-        refs.targetDatetimeLabel.textContent = state.targetDatetime.replace('T', ' ');
+        refs.prognosticPanelMeta.textContent = buildPrognosticMomentSummary();
+        refs.targetDatetimeLabel.textContent = state.selectedDateTime.replace('T', ' ');
 
         if (!layer) {
             state.prognosticRenderer?.render({ planets: [], houses: [], aspects: [], aspect_configurations: [], stelliums: [], balances: null, cosmogram_pattern: null });
@@ -1260,11 +1349,13 @@
         if (!storage || !key) return;
         const restored = storage.parsePersistedState(localStorage.getItem(key), state.natalData);
         if (!restored) return;
-        state.targetDatetime = restored.targetDatetime || state.targetDatetime;
+        setSelectedDateTime(restored.targetDatetime || state.selectedDateTime);
         state.timezone = restored.timezone || state.timezone;
         state.location = restored.location || state.location;
         state.activeLayers = restored.activeLayers || state.activeLayers;
+        state.enabledLayers = state.activeLayers;
         state.selectedRightLayer = restored.selectedRightLayer || state.selectedRightLayer;
+        state.activeRightMethodTab = state.selectedRightLayer;
         state.stepMode = restored.stepMode || state.stepMode;
         state.leftTab = restored.leftTab || state.leftTab;
         state.rightTab = restored.rightTab || state.rightTab;
@@ -1384,7 +1475,7 @@
         const date = params.get('date');
         const time = params.get('time');
         if (/^\d{4}-\d{2}-\d{2}$/.test(date || '')) {
-            state.targetDatetime = `${date}T${normalizeTime(time || splitTargetDatetime(state.targetDatetime)[1])}`;
+            setSelectedDateTime(`${date}T${normalizeTime(time || splitTargetDatetime(state.selectedDateTime)[1])}`);
         }
         const layer = params.get('layer');
         if (LAYER_ORDER.includes(layer)) {
@@ -1408,7 +1499,7 @@
         const payload = storage.buildPersistedState({
             natalData: state.natalData,
             state: {
-                targetDatetime: state.targetDatetime,
+                targetDatetime: state.selectedDateTime,
                 timezone: state.timezone,
                 location: state.location,
                 activeLayers: state.activeLayers,
@@ -1443,6 +1534,11 @@
         refs.forecastNewErrorMsg.textContent = message;
         refs.forecastNewError?.classList.remove('hidden');
         refs.forecastNewLayout?.classList.add('hidden');
+    }
+
+    function setLightweightLoading(isLoading) {
+        refs.forecastNewWheelShell?.classList.toggle('forecast-new-loading', isLoading);
+        refs.forecastNewProgPanel?.classList.toggle('forecast-new-loading', isLoading);
     }
 
     function ensureMatrixRows(rows) {
@@ -1513,6 +1609,54 @@
         return [/^\d{4}-\d{2}-\d{2}$/.test(date) ? date : todayIsoDate(), normalizeTime(time)];
     }
 
+    function setSelectedDateTime(value) {
+        const [date, time] = splitTargetDatetime(value);
+        state.selectedDateTime = `${date}T${time}`;
+        state.targetDatetime = state.selectedDateTime;
+    }
+
+    function buildLayerCacheKey(method, date) {
+        if (method === 'transit') {
+            return [
+                method,
+                state.selectedDateTime,
+                state.timezone,
+                state.location?.name || '',
+                state.location?.latitude ?? '',
+                state.location?.longitude ?? '',
+            ].join('|');
+        }
+        if (method === 'direction') {
+            return [method, date, 'solar_arc'].join('|');
+        }
+        return [method, date].join('|');
+    }
+
+    function getTimeStepperSegmentValues(value) {
+        const date = parseLocalDateTime(value);
+        const fullYear = date.getFullYear();
+        const minute = date.getMinutes();
+        const second = date.getSeconds();
+        return {
+            decade: String(Math.trunc(fullYear / 10)),
+            year: String(Math.abs(fullYear % 10)),
+            month: String(date.getMonth() + 1).padStart(2, '0'),
+            day: String(date.getDate()).padStart(2, '0'),
+            hour: String(date.getHours()).padStart(2, '0'),
+            tenMinute: String(Math.trunc(minute / 10)),
+            minute: String(minute % 10),
+            tenSecond: String(Math.trunc(second / 10)),
+            second: String(second % 10),
+        };
+    }
+
+    function parseLocalDateTime(value) {
+        const [date, time] = splitTargetDatetime(value);
+        const next = new Date(`${date}T${time}`);
+        if (!Number.isNaN(next.getTime())) return next;
+        return new Date();
+    }
+
     function normalizeTime(value) {
         const raw = String(value || '12:00:00');
         if (/^\d{2}:\d{2}:\d{2}$/.test(raw)) return raw;
@@ -1535,16 +1679,19 @@
     }
 
     function addStep(value, mode, direction) {
-        const [date, time] = splitTargetDatetime(value);
-        const next = new Date(`${date}T${time}`);
         const dir = direction >= 0 ? 1 : -1;
-        if (mode === 'second') next.setSeconds(next.getSeconds() + dir);
-        else if (mode === 'minute') next.setMinutes(next.getMinutes() + dir);
-        else if (mode === 'hour') next.setHours(next.getHours() + dir);
-        else if (mode === 'day') next.setDate(next.getDate() + dir);
-        else if (mode === 'week') next.setDate(next.getDate() + dir * 7);
-        else if (mode === 'month') next.setMonth(next.getMonth() + dir);
-        else if (mode === 'year') next.setFullYear(next.getFullYear() + dir);
+        if (mode === 'week') return addDateTimeUnit(value, 'day', dir * 7);
+        return addDateTimeUnit(value, mode, dir);
+    }
+
+    function addDateTimeUnit(value, unit, amount) {
+        const next = parseLocalDateTime(value);
+        if (unit === 'second') next.setSeconds(next.getSeconds() + amount);
+        else if (unit === 'minute') next.setMinutes(next.getMinutes() + amount);
+        else if (unit === 'hour') next.setHours(next.getHours() + amount);
+        else if (unit === 'day') next.setDate(next.getDate() + amount);
+        else if (unit === 'month') next.setMonth(next.getMonth() + amount);
+        else if (unit === 'year') next.setFullYear(next.getFullYear() + amount);
         return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}T${String(next.getHours()).padStart(2, '0')}:${String(next.getMinutes()).padStart(2, '0')}:${String(next.getSeconds()).padStart(2, '0')}`;
     }
 
