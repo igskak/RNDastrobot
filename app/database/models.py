@@ -247,7 +247,7 @@ class ChartViewOverride(Base):
 
     __table_args__ = (
         CheckConstraint("chart_kind IN ('natal', 'solar')", name='valid_chart_view_override_kind'),
-        CheckConstraint("view_type IN ('natal', 'biwheel', 'solar')", name='valid_chart_view_override_view'),
+        CheckConstraint("view_type IN ('natal', 'biwheel', 'forecast_new', 'solar')", name='valid_chart_view_override_view'),
         Index('idx_chart_view_overrides_chart', 'chart_kind', 'chart_id'),
         Index('idx_chart_view_overrides_updated_at', 'updated_at'),
         Index('uq_chart_view_overrides_chart_view', 'chart_kind', 'chart_id', 'view_type', unique=True),

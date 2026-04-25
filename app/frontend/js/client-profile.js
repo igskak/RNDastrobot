@@ -749,7 +749,7 @@ async function openForecast() {
         window.AstroAPI.saveChartToSession(chartData);
         window.AstroAPI.saveFormData(window.AstroAPI.chartToFormData(chartData));
         window.showPageLoader?.();
-        window.location.href = '/forecast.html';
+        window.location.href = '/forecast-new.html';
     } catch (err) {
         showToast(t('common.errorWithMessage', { message: err.message }), 'error');
     }

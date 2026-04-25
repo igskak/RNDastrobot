@@ -13,7 +13,7 @@ from app.services.preferences_runtime import PreferencesRuntimeResolver, normali
 
 
 PREFERENCE_VERSION = 1
-VIEW_TYPES = ('natal', 'biwheel', 'solar')
+VIEW_TYPES = ('natal', 'biwheel', 'forecast_new', 'solar')
 CHART_KINDS = ('natal', 'solar')
 DEFAULT_ENABLED_ASPECT_TYPES = [
     'Conjunction',
@@ -78,6 +78,21 @@ def build_default_preferences(default_house_system: str = 'P') -> Dict[str, Any]
                 'matrix': _build_default_matrix(),
                 'aspects': {
                     'scope': biwheel_scope,
+                    'enabled_types': list(DEFAULT_ENABLED_ASPECT_TYPES),
+                    'show_applying_separating': False,
+                },
+                'table_options': {
+                    'show_speed': True,
+                    'show_stationary': True,
+                },
+                'view_options': {
+                    'orientation': 'aries',
+                },
+            },
+            'forecast_new': {
+                'matrix': _build_default_matrix(),
+                'aspects': {
+                    'scope': 'all',
                     'enabled_types': list(DEFAULT_ENABLED_ASPECT_TYPES),
                     'show_applying_separating': False,
                 },

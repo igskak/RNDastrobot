@@ -697,7 +697,7 @@ class HouseSystemUpdateRequest(BaseModel):
 
 class ResetViewToDefaultsRequest(BaseModel):
     """Reset one view to account defaults."""
-    view_type: str = Field(..., description="Тип экрана: natal или biwheel")
+    view_type: str = Field(..., description="Тип экрана: natal, biwheel или forecast_new")
 
 
 # ============================================================================

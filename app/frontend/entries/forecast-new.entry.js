@@ -1,0 +1,14 @@
+import '../js/i18n.js';
+import '../js/i18n-ui.js';
+import '../js/locale-formatters.js';
+import '../js/locale-switcher.js';
+import '../js/api.js';
+import '../js/preferences.js';
+import '../js/symbols.js';
+import '../js/planet-svg-icons.js';
+import '../js/natal-wheel-data.js';
+import '../js/chart-data.js';
+import '../js/prognostic-layer-normalizer.js';
+import '../js/prognostic-rings-wheel.js';
+import '../js/forecast-new-state-storage.js';
+import '../js/forecast-new.js';

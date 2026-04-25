@@ -563,7 +563,7 @@ async function openForecastForUser(userId, { tab = 'biwheel', date, solarYear } 
         if (solarYear) params.set('solarYear', solarYear);
 
         window.showPageLoader?.();
-        window.location.href = `/forecast.html?${params.toString()}`;
+        window.location.href = `/forecast-new.html?${params.toString()}`;
     } catch (error) {
         showToast(t('common.errorWithMessage', { message: error.message }), 'error');
     }

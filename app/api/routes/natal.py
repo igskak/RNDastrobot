@@ -541,8 +541,8 @@ def reset_user_view_to_defaults(
 ):
     ensure_client_access(db, request, auth, user_id, action="client.natal.reset_view_defaults")
 
-    if payload.view_type not in ('natal', 'biwheel'):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="view_type must be natal or biwheel")
+    if payload.view_type not in ('natal', 'biwheel', 'forecast_new'):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="view_type must be natal, biwheel or forecast_new")
 
     preferences_service = PreferencesService(db)
     preferences_service.delete_chart_view_override(

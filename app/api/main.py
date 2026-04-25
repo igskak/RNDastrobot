@@ -265,6 +265,16 @@ async def forecast_page():
     raise HTTPException(status_code=404, detail="Forecast page not found")
 
 
+@app.get("/forecast-new")
+@app.get("/forecast-new.html")
+async def forecast_new_page():
+    """Новая страница прогностики с концентрическими кольцами."""
+    forecast_new_path = os.path.join(FRONTEND_PATH, "forecast-new.html")
+    if os.path.exists(forecast_new_path):
+        return FileResponse(forecast_new_path)
+    raise HTTPException(status_code=404, detail="Forecast New page not found")
+
+
 @app.get("/calendar")
 @app.get("/calendar.html")
 async def calendar_page():
