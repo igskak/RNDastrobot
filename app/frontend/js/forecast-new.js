@@ -159,6 +159,7 @@
         [
             'pageLoader', 'forecastNewLayout', 'forecastNewError', 'forecastNewErrorMsg',
             'forecastNewBackBtn', 'forecastNewTitle', 'forecastNewSubtitle', 'openNatalBtn',
+            'forecastNewNatalPanel', 'forecastNewProgPanel',
             'natalPanelMeta', 'prognosticPanelTitle', 'prognosticPanelMeta',
             'forecastNewWheel', 'forecastNewWheelShell', 'targetDateInput', 'targetTimeInput',
             'stepModeSelect', 'stepBackward', 'stepForward', 'timezoneInput', 'locationInput',
@@ -1126,36 +1127,68 @@
         if (!viewModel) return viewModel;
         return {
             ...viewModel,
+            natalLayer: viewModel.natalLayer ? filterLayerForSettings(viewModel.natalLayer) : viewModel.natalLayer,
             activePrognosticLayers: (viewModel.activePrognosticLayers || []).map((layer) => {
-                const filteredLayer = filterChartDataForRenderer({
-                    planets: layer.bodies || [],
-                    houses: layer.houses || [],
-                    aspects: layer.aspects || [],
-                    aspect_configurations: [],
-                    stelliums: [],
-                    balances: null,
-                    cosmogram_pattern: null,
-                });
-                return {
-                    ...layer,
-                    bodies: filteredLayer.planets || [],
-                    houses: filteredLayer.houses || [],
-                    aspects: filteredLayer.aspects || [],
-                };
+                return filterLayerForSettings(layer);
             }),
         };
     }
 
+    function filterLayerForSettings(layer) {
+        const filteredLayer = filterChartDataForRenderer({
+            planets: layer.bodies || [],
+            houses: layer.houses || [],
+            aspects: normalizeForecastAspects(layer.aspects || []),
+            aspect_configurations: layer.aspect_configurations || [],
+            stelliums: layer.stelliums || [],
+            balances: layer.balances || null,
+            cosmogram_pattern: layer.cosmogram_pattern || null,
+        });
+        return {
+            ...layer,
+            bodies: filteredLayer.planets || [],
+            houses: filteredLayer.houses || [],
+            aspects: filteredLayer.aspects || [],
+            aspect_configurations: filteredLayer.aspect_configurations || [],
+            stelliums: filteredLayer.stelliums || [],
+        };
+    }
+
+    function normalizeForecastAspects(aspects = []) {
+        return (aspects || []).map((aspect) => {
+            const planet1 = aspect?.planet_1
+                ?? aspect?.left_planet
+                ?? aspect?.transit_planet
+                ?? aspect?.progressed_planet
+                ?? aspect?.directed_object;
+            const planet2 = aspect?.planet_2
+                ?? aspect?.right_planet
+                ?? aspect?.natal_object;
+            return {
+                ...aspect,
+                planet_1: matrixBodyKey(planet1),
+                planet_2: matrixBodyKey(planet2),
+                left_planet: matrixBodyKey(aspect?.left_planet ?? planet1),
+                right_planet: matrixBodyKey(aspect?.right_planet ?? planet2),
+            };
+        });
+    }
+
     function filterChartDataForRenderer(chartData = {}) {
-        let filtered = window.AstroPreferences?.filterChartDataByViewPreferences
-            ? window.AstroPreferences.filterChartDataByViewPreferences(chartData, {
+        let filtered = {
+            ...chartData,
+            aspects: normalizeForecastAspects(chartData.aspects || []),
+        };
+
+        filtered = window.AstroPreferences?.filterChartDataByViewPreferences
+            ? window.AstroPreferences.filterChartDataByViewPreferences(filtered, {
                 matrixRows: normalizeForecastNewMatrixRows(state.matrixRows),
                 aspectScope: state.pageSettings.aspectScope || 'all',
                 enabledAspectTypes: Array.isArray(state.pageSettings.enabledAspectTypes) && state.pageSettings.enabledAspectTypes.length
                     ? state.pageSettings.enabledAspectTypes
                     : DEFAULT_ASPECT_TYPES,
             })
-            : chartData;
+            : filtered;
 
         if (window.AstroAspectPhase?.enrichChartDataWithAspectPhases) {
             filtered = window.AstroAspectPhase.enrichChartDataWithAspectPhases(filtered);

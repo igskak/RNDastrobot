@@ -80,6 +80,16 @@
     min-width: 300px;
 }
 
+#forecastNewNatalPanel {
+    width: 392px;
+    min-width: 392px;
+}
+
+#forecastNewProgPanel {
+    width: 350px;
+    min-width: 330px;
+}
+
 .forecast-new-side-head {
     padding: 16px 16px 10px;
     border-bottom: 1px solid rgba(184, 147, 90, 0.14);
@@ -387,8 +397,10 @@
 
 #forecastNewNatalPanel .data-table.compact .planet-speed-col,
 #forecastNewNatalPanel .data-table.compact .planet-speed-cell {
-    width: 54px;
-    min-width: 54px;
+    width: 46px;
+    min-width: 46px;
+    padding-left: 4px;
+    padding-right: 4px;
 }
 
 #forecastNewNatalPanel table:has(#natalPlanetsTable) th:nth-child(4),
@@ -566,7 +578,7 @@
     .forecast-new-layout {
         overflow: auto;
         display: grid;
-        grid-template-columns: 320px minmax(520px, 1fr) 320px;
+        grid-template-columns: 392px minmax(520px, 1fr) 330px;
     }
 
     .forecast-new-page {
@@ -595,6 +607,12 @@
         width: 100%;
         min-width: 0;
         max-height: none;
+    }
+
+    #forecastNewNatalPanel,
+    #forecastNewProgPanel {
+        width: 100%;
+        min-width: 0;
     }
 
     .forecast-new-center {

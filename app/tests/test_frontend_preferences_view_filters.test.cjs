@@ -84,3 +84,43 @@ test('filterChartDataByViewPreferences hides configurations that rely on disable
     );
     assert.equal(filtered.aspect_configurations.length, 0);
 });
+
+test('filterChartDataByViewPreferences applies matrix rows to prognostic aspect fields', () => {
+    const chartData = {
+        planets: [
+            { name: 'Sun' },
+            { name: 'Mars' },
+            { name: 'Chiron' },
+        ],
+        aspects: [
+            {
+                transit_planet: 'Mars',
+                natal_object: 'Sun',
+                left_planet: 'Mars',
+                right_planet: 'Sun',
+                aspect_type: 'Square',
+            },
+            {
+                transit_planet: 'Chiron',
+                natal_object: 'Sun',
+                left_planet: 'Chiron',
+                right_planet: 'Sun',
+                aspect_type: 'Trine',
+            },
+        ],
+        aspect_configurations: [],
+        stelliums: [],
+    };
+
+    const filtered = preferences.filterChartDataByViewPreferences(chartData, {
+        matrixRows: {
+            Chiron: { display: true, aspecting: false },
+        },
+        enabledAspectTypes: ['Square', 'Trine'],
+    });
+
+    assert.deepEqual(
+        filtered.aspects.map((aspect) => [aspect.transit_planet, aspect.natal_object, aspect.aspect_type]),
+        [['Mars', 'Sun', 'Square']],
+    );
+});

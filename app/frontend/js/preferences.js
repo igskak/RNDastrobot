@@ -298,12 +298,21 @@
         };
 
         const aspectIsEnabled = (aspectType) => enabledAspectTypes.has(aspectType);
+        const getAspectBodies = (aspect) => ([
+            aspect?.planet_1 ?? aspect?.left_planet ?? aspect?.transit_planet ?? aspect?.progressed_planet ?? aspect?.directed_object,
+            aspect?.planet_2 ?? aspect?.right_planet ?? aspect?.natal_object,
+        ]);
+
+        const aspectPassesBodyFilters = (aspect) => {
+            const [bodyA, bodyB] = getAspectBodies(aspect);
+            return bodyIsVisible(bodyA)
+                && bodyIsVisible(bodyB)
+                && bodyIsAspecting(bodyA)
+                && bodyIsAspecting(bodyB);
+        };
 
         const filteredAspects = (chartData?.aspects || []).filter((aspect) => (
-            bodyIsVisible(aspect?.planet_1)
-            && bodyIsVisible(aspect?.planet_2)
-            && bodyIsAspecting(aspect?.planet_1)
-            && bodyIsAspecting(aspect?.planet_2)
+            aspectPassesBodyFilters(aspect)
             && aspectIsEnabled(aspect?.aspect_type)
         ));
 
@@ -321,10 +330,7 @@
             }
 
             return aspects.every((aspect) => (
-                bodyIsVisible(aspect?.planet_1)
-                && bodyIsVisible(aspect?.planet_2)
-                && bodyIsAspecting(aspect?.planet_1)
-                && bodyIsAspecting(aspect?.planet_2)
+                aspectPassesBodyFilters(aspect)
                 && aspectIsEnabled(aspect?.aspect_type)
             ));
         });
