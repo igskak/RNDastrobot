@@ -382,10 +382,21 @@ class ChartDataRenderer {
         if (planet.speed !== undefined && planet.speed !== null) {
             const speed = Number(planet.speed);
             if (!Number.isFinite(speed)) return '';
-            return `<span class="planet-meta-chip">${Math.abs(speed).toFixed(2)}°/d</span>`;
+            const value = this.formatSpeedValue(speed);
+            const label = this.t('page.natalFull.units.degPerDay', { value });
+            return `<span class="planet-meta-chip">${this.escapeHtml(label)}</span>`;
         }
 
         return '';
+    }
+
+    formatSpeedValue(speed) {
+        const absolute = Math.abs(Number(speed));
+        if (!Number.isFinite(absolute) || absolute === 0) return '0.00';
+        if (absolute >= 1) return absolute.toFixed(2);
+        if (absolute >= 0.1) return absolute.toFixed(3);
+        if (absolute >= 0.01) return absolute.toFixed(4);
+        return absolute.toFixed(5);
     }
 
     renderHouses(houses) {

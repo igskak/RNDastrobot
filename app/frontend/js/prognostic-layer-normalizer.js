@@ -32,7 +32,8 @@
             right_planet: aspect.natal_object,
             method: 'transit',
         }));
-        return buildLayer({ method: 'transit', bodies, houses: [], aspects, raw: data, ringIndex });
+        const houses = cloneArray(data?.transit_houses || data?.houses);
+        return buildLayer({ method: 'transit', bodies, houses, aspects, raw: data, ringIndex });
     }
 
     function normalizeProgression(data, ringIndex = 2) {

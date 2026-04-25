@@ -929,6 +929,7 @@
 
         if (!layer) {
             state.prognosticRenderer?.render({ planets: [], houses: [], aspects: [], aspect_configurations: [], stelliums: [], balances: null, cosmogram_pattern: null });
+            syncPrognosticHousesVisibility([]);
             return;
         }
         state.prognosticRenderer?.setAspectTypeFilter?.('all');
@@ -946,8 +947,20 @@
             balances: null,
             cosmogram_pattern: null,
         }));
+        syncPrognosticHousesVisibility(layer.houses || []);
         syncHoveredAspectToActiveSurface();
         activateSavedTabs();
+    }
+
+    function syncPrognosticHousesVisibility(houses = []) {
+        const tableBody = document.getElementById('progHousesTable');
+        const table = tableBody?.closest('table');
+        const title = table?.previousElementSibling?.classList.contains('forecast-new-houses-title')
+            ? table.previousElementSibling
+            : null;
+        const hasHouses = Array.isArray(houses) && houses.length > 0;
+        if (table) table.hidden = !hasHouses;
+        if (title) title.hidden = !hasHouses;
     }
 
     function initAspectInteractions() {

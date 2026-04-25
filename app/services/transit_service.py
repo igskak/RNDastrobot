@@ -23,6 +23,7 @@ from app.database.models import (
 from app.services.swisseph_engine import SwissEphemerisEngine
 from app.services.time_service import TimeService
 from app.services.special_points_service import SpecialPointsService
+from app.services.planet_characteristics_service import PlanetCharacteristicsService
 from app.services.preferences_runtime import PreferencesRuntimeResolver
 from app.utils.constants import (
     get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds,
@@ -73,6 +74,7 @@ class TransitService:
         # 3. Рассчитать транзитные планеты + узлы и Лилит
         transit_planets = self.swisseph_engine.calculate_planets(jd_transit)
         transit_planets.extend(self._calculate_transit_special_bodies(jd_transit))
+        self._enrich_motion_flags(transit_planets, user_id=user_id)
 
         # 4. Определить натальные дома для транзитных планет
         for planet in transit_planets:
@@ -94,6 +96,23 @@ class TransitService:
             'transit_planets': transit_planets,
             'aspects': aspects,
         }
+
+    def _enrich_motion_flags(self, planets: List[Dict], *, user_id: UUID) -> List[Dict]:
+        stationary_threshold_percent = self.preferences_runtime.get_stationary_threshold_for_user(user_id)
+        for planet in planets:
+            name = planet.get('name', '')
+            speed = float(planet.get('speed') or 0.0)
+            retrograde = bool(planet.get('retrograde') or planet.get('is_retrograde'))
+            planet['speed_percent'] = PlanetCharacteristicsService.calculate_speed_percent(name, speed)
+            is_stationary, stationary_type = PlanetCharacteristicsService.calculate_stationary_status(
+                name,
+                speed,
+                retrograde,
+                threshold_percent=stationary_threshold_percent,
+            )
+            planet['is_stationary'] = is_stationary
+            planet['stationary_type'] = stationary_type
+        return planets
 
     def _load_natal_data(self, user_id: UUID, apply_exclusions: bool = True) -> Optional[Dict]:
         """Загрузить натальные данные из БД. apply_exclusions=False — не применять PROGNOSTIC_EXCLUDED."""
