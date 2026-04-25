@@ -6,10 +6,13 @@
     const SIZE = 600;
     const OUTER_R = 285;
     const DEGREE_RING = 10;
-    const SIGN_RING = 24;
+    const SIGN_RING = 26;
     const FIRST_RING_INNER_R = 124;
     const RING_GAP = 0;
     const ZODIAC_INNER_R = OUTER_R - DEGREE_RING - SIGN_RING;
+    const WHEEL_BG = '#fafafa';
+    const WHEEL_BORDER = '#d1d5db';
+    const WHEEL_TICK = '#9ca3af';
     const HOUSE_LABELS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
     const ASPECT_SYMBOLS = {
         Conjunction: '☌',
@@ -164,8 +167,8 @@
                 cx: C,
                 cy: C,
                 r: OUTER_R,
-                fill: '#fffdf8',
-                stroke: '#d8d1c5',
+                fill: WHEEL_BG,
+                stroke: WHEEL_BORDER,
                 'stroke-width': 1,
             }));
         }
@@ -174,10 +177,10 @@
             const signOuter = OUTER_R - DEGREE_RING;
             const signInner = ZODIAC_INNER_R;
             this.layers.zodiac.appendChild(this.el('circle', {
-                cx: C, cy: C, r: signOuter, fill: 'none', stroke: '#d8d1c5', 'stroke-width': 1,
+                cx: C, cy: C, r: signOuter, fill: 'none', stroke: WHEEL_BORDER, 'stroke-width': 1,
             }));
             this.layers.zodiac.appendChild(this.el('circle', {
-                cx: C, cy: C, r: signInner, fill: 'none', stroke: '#d8d1c5', 'stroke-width': 1,
+                cx: C, cy: C, r: signInner, fill: 'white', stroke: WHEEL_BORDER, 'stroke-width': 1,
             }));
 
             for (let i = 0; i < 12; i += 1) {
@@ -190,35 +193,41 @@
                 const end = this.longToAngle((i + 1) * 30);
                 this.drawArc(signOuter, signInner, end, start, `${color}18`, this.layers.zodiac);
 
-                const boundary = this.polar(OUTER_R, start);
-                const inner = this.polar(FIRST_RING_INNER_R, start);
+                const boundary = this.polar(OUTER_R, end);
+                const inner = this.polar(signInner, end);
                 this.layers.zodiac.appendChild(this.el('line', {
                     x1: boundary.x, y1: boundary.y, x2: inner.x, y2: inner.y,
-                    stroke: '#d8d1c5', 'stroke-width': i % 3 === 0 ? 1 : 0.55, opacity: i % 3 === 0 ? 0.8 : 0.45,
+                    stroke: WHEEL_TICK,
+                    'stroke-width': 1.5,
                 }));
 
                 const mid = this.longToAngle(i * 30 + 15);
                 const pos = this.polar((signOuter + signInner) / 2, mid);
                 this.layers.zodiac.appendChild(this.el('text', {
                     x: pos.x,
-                    y: pos.y + 6,
+                    y: pos.y + 5,
                     'text-anchor': 'middle',
-                    'font-size': 18,
+                    'font-size': 13,
+                    'font-weight': '500',
                     fill: color,
                     class: 'sign-symbol-text',
                 }, Symbols?.signs?.[sign] || sign[0]));
             }
 
-            for (let d = 0; d < 360; d += 5) {
-                const angle = this.longToAngle(d);
-                const p1 = this.polar(OUTER_R, angle);
-                const p2 = this.polar(OUTER_R - (d % 30 === 0 ? 9 : d % 10 === 0 ? 7 : 4), angle);
-                this.layers.zodiac.appendChild(this.el('line', {
-                    x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y,
-                    stroke: '#9b9289',
-                    'stroke-width': d % 30 === 0 ? 0.9 : 0.45,
-                    opacity: d % 30 === 0 ? 0.75 : 0.38,
-                }));
+            for (let signIndex = 0; signIndex < 12; signIndex += 1) {
+                const signStartLong = signIndex * 30;
+                for (let deg = 0; deg < 30; deg += 5) {
+                    const angle = this.longToAngle(signStartLong + deg);
+                    const tickOuter = OUTER_R;
+                    const tickInner = deg % 10 === 0 ? signOuter + 2 : signOuter + 5;
+                    const p1 = this.polar(tickInner, angle);
+                    const p2 = this.polar(tickOuter, angle);
+                    this.layers.zodiac.appendChild(this.el('line', {
+                        x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y,
+                        stroke: WHEEL_TICK,
+                        'stroke-width': deg % 10 === 0 ? 1 : 0.5,
+                    }));
+                }
             }
         }
 
@@ -235,7 +244,7 @@
                         cy: C,
                         r: ring.inner,
                         fill: 'none',
-                        stroke: '#d8d1c5',
+                        stroke: WHEEL_BORDER,
                         'stroke-width': 1,
                         opacity: 0.9,
                     }));
@@ -247,8 +256,8 @@
                     cy: C,
                     r: ring.outer,
                     fill: 'none',
-                    stroke: isNatalOuterBoundary ? '#303030' : ring.color,
-                    'stroke-width': isNatalOuterBoundary ? 2.2 : 1.15,
+                    stroke: isNatalOuterBoundary ? WHEEL_BORDER : ring.color,
+                    'stroke-width': isNatalOuterBoundary ? 1 : 1.15,
                     opacity: isNatalOuterBoundary ? 0.96 : 0.82,
                 }));
             });
@@ -259,9 +268,8 @@
                 cy: C,
                 r: ZODIAC_INNER_R,
                 fill: 'none',
-                stroke: '#d8d1c5',
-                'stroke-width': 0.9,
-                opacity: 0.85,
+                stroke: WHEEL_BORDER,
+                'stroke-width': 1,
             }));
         }
 
@@ -294,9 +302,9 @@
                 }));
                 group.appendChild(this.el('line', {
                     x1: pInner.x, y1: pInner.y, x2: pOuter.x, y2: pOuter.y,
-                    stroke: ring.color,
-                    'stroke-width': [1, 4, 7, 10].includes(Number(house.number)) ? 1.25 : 0.7,
-                    opacity: [1, 4, 7, 10].includes(Number(house.number)) ? 0.82 : 0.48,
+                    stroke: ring.method === 'natal' ? this.getHouseLineColor(isAngular) : ring.color,
+                    'stroke-width': ring.method === 'natal' ? (isAngular ? 2.5 : 1) : (isAngular ? 1.25 : 0.7),
+                    opacity: ring.method === 'natal' ? 1 : (isAngular ? 0.82 : 0.48),
                     class: 'house-cusp-line',
                 }));
 
@@ -344,9 +352,9 @@
                         x: labelPos.x,
                         y: labelPos.y + 3,
                         'text-anchor': 'middle',
-                        'font-size': ring.method === 'natal' ? 9 : 8,
-                        'font-weight': '700',
-                        fill: ring.color,
+                        'font-size': ring.method === 'natal' ? 10 : 8,
+                        'font-weight': ring.method === 'natal' ? (isAngular ? '700' : '400') : '700',
+                        fill: ring.method === 'natal' ? this.getHouseLabelColor(isAngular) : ring.color,
                         opacity: ring.method === 'natal' ? 0.9 : 0.78,
                     }, this.formatHouseLabel(house.number)));
                 }
@@ -552,7 +560,7 @@
                                 cx: bbox.x + bbox.width / 2,
                                 cy: bbox.y + bbox.height / 2,
                                 r: backdropRadius,
-                                fill: '#fafafa',
+                                fill: WHEEL_BG,
                                 opacity: 0.96,
                                 class: 'aspect-symbol-backdrop',
                             });

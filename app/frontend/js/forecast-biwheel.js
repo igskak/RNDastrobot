@@ -78,8 +78,8 @@
     // Radii
     const OUTER_R = 285;
     const DEGREE_RING = 10;
-    const SIGN_RING = 22;
-    const HOUSE_RING = 30;
+    const SIGN_RING = 26;
+    const HOUSE_RING = 40;
     const SIGN_SYMBOL_SIZE = 13;
     const NATAL_PLANET_SYMBOL_SIZE = 14;
     const PROG_PLANET_SYMBOL_SIZE = 14;
