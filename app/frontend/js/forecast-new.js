@@ -275,9 +275,8 @@
             editor?.addEventListener('change', (event) => {
                 const container = event.currentTarget;
                 state.matrixRows = normalizeForecastNewMatrixRows(readMatrixRows(container));
-                renderMatrixEditor();
-                renderInlineMatrixControls();
-                scheduleApplySettings();
+                syncMatrixCheckboxes();
+                void applyMatrixRows();
             });
         });
         refs.forecastNewNatalPanel?.addEventListener('click', (event) => {
@@ -286,12 +285,13 @@
             }
         });
         refs.forecastNewNatalPanel?.addEventListener('change', async (event) => {
-            const input = event.target;
-            if (!(input instanceof HTMLInputElement) || !input.matches('input[data-matrix-body][data-matrix-field]')) return;
+            const input = event.target instanceof Element
+                ? event.target.closest('input[data-matrix-body][data-matrix-field]')
+                : null;
+            if (!(input instanceof HTMLInputElement)) return;
             updateMatrixRowFromControl(input);
-            renderMatrixEditor();
-            renderInlineMatrixControls();
-            await applySettings();
+            syncMatrixCheckboxes();
+            await applyMatrixRows();
         });
 
         refs.forecastNewSettingsToggle?.addEventListener('click', (event) => {
@@ -450,7 +450,7 @@
 
     function renderMatrixEditor() {
         const bodies = window.AstroPreferences?.MATRIX_BODIES || [];
-        const rows = ensureMatrixRows(state.matrixRows);
+        const rows = normalizeForecastNewMatrixRows(state.matrixRows);
         const markup = `
             <table class="natal-matrix-table forecast-new-matrix-table">
                 <thead><tr><th>Body</th><th>Display</th><th>Aspecting</th></tr></thead>
@@ -492,6 +492,28 @@
         const rows = normalizeForecastNewMatrixRows(state.matrixRows);
         rows[body] = { ...(rows[body] || { display: true, aspecting: true }), [field]: input.checked };
         state.matrixRows = normalizeForecastNewMatrixRows(rows);
+    }
+
+    function syncMatrixCheckboxes() {
+        const rows = normalizeForecastNewMatrixRows(state.matrixRows);
+        document.querySelectorAll('input[data-matrix-body][data-matrix-field]').forEach((input) => {
+            const body = matrixBodyKey(input.dataset.matrixBody);
+            const field = input.dataset.matrixField;
+            if (!body || !['display', 'aspecting'].includes(field)) return;
+            input.checked = rows?.[body]?.[field] !== false;
+        });
+    }
+
+    async function applyMatrixRows() {
+        renderStaticNatal();
+        renderRightPanel();
+        renderWheel();
+        try {
+            await persistForecastNewViewOverrides();
+        } catch (error) {
+            console.warn('Failed to persist Forecast New matrix rows:', error);
+        }
+        schedulePersist();
     }
 
     function renderInlineMatrixControls() {
