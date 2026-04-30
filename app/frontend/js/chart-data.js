@@ -28,6 +28,7 @@ class ChartDataRenderer {
         this.showSpeed = true;
         this.showStationary = true;
         this.showApplyingSeparating = false;
+        this.houseNumberStyle = Symbols?.readSavedHouseNumberStyle?.() || 'arabic';
         this.visualPreferences = window.AstroPreferences?.getAccountVisualPreferences?.() || null;
         this.initAspectSortHeaders();
     }
@@ -283,6 +284,15 @@ class ChartDataRenderer {
         }
     }
 
+    setHouseNumberStyle(style) {
+        const nextStyle = Symbols?.normalizeHouseNumberStyle?.(style) || 'arabic';
+        if (nextStyle === this.houseNumberStyle) return;
+        this.houseNumberStyle = nextStyle;
+        if (this.chartData) {
+            this.render(this.chartData);
+        }
+    }
+
     updatePlanetsTableColumns() {
         const table = this.planetsTable?.closest('table');
         if (!table) return;
@@ -363,7 +373,7 @@ class ChartDataRenderer {
                         </div>
                     </td>
                     <td class="planet-speed-cell mono">${this.showSpeed ? speedChip : ''}</td>
-                    <td class="mono">${p.house}</td>
+                    <td class="mono">${this.escapeHtml(this.formatHouseNumber(p.house))}</td>
                 </tr>
             `;
         }).join('');
@@ -412,9 +422,10 @@ class ChartDataRenderer {
             const degDMS = this.formatDMS(h.degree_in_sign);
             const rulerPlanet = h.ruler_planet || '';
             const rulerName = rulerPlanet ? this.planetName(rulerPlanet) : this.t('common.notAvailable');
-            const rulerHouse = h.ruler_in_house ? ` ${h.ruler_in_house}` : '';
+            const rulerHouseLabel = this.formatHouseNumber(h.ruler_in_house);
+            const rulerHouse = rulerHouseLabel ? ` ${rulerHouseLabel}` : '';
             const rulerTitle = h.ruler_in_house
-                ? `${rulerName} • ${this.t('common.house')} ${h.ruler_in_house}`
+                ? `${rulerName} • ${this.t('common.house')} ${rulerHouseLabel}`
                 : rulerName;
             const includedSign = h.included_sign || '';
             const includedSignSymbol = includedSign ? (Symbols.signs[includedSign] || '') : '';
@@ -430,7 +441,7 @@ class ChartDataRenderer {
                 : '';
             return `
                 <tr id="row-house-${h.number}" class="${isAngular ? 'house-angular' : ''}">
-                    <td class="mono">${h.number}</td>
+                    <td class="mono">${this.escapeHtml(this.formatHouseNumber(h.number))}</td>
                     <td class="mono house-sign-cell">
                         <div class="house-sign-main"><span class="astro-symbol">${Symbols.signs[h.sign]}</span> ${degDMS}</div>
                         ${includedSign ? `
@@ -519,6 +530,11 @@ class ChartDataRenderer {
 
     normalizeAspectBodyName(name) {
         return ChartDataRenderer.ASPECT_NAME_ALIASES[name] || name;
+    }
+
+    formatHouseNumber(number) {
+        if (number === null || number === undefined || number === '') return '';
+        return Symbols?.formatHouseLabel?.(number, { style: this.houseNumberStyle }) || String(number);
     }
 
     getAspectRank(name) {
@@ -881,7 +897,7 @@ class ChartDataRenderer {
                     <div class="config-card-head">
                         <h4>
                             ⭐ ${s.type === 'house'
-                                ? this.t('page.chart.configurations.houseLabel', { house: s.house_number })
+                                ? this.t('page.chart.configurations.houseLabel', { house: this.formatHouseNumber(s.house_number) })
                                 : this.signName(s.sign)}
                         </h4>
                         <span class="config-strength-badge">${this.t('page.chart.configurations.countShort', { count: s.count })}</span>

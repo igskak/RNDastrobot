@@ -142,6 +142,16 @@ function getFeatureLabel(code) {
     return translated === key ? code : translated;
 }
 
+function formatHouseNumber(number) {
+    if (number === null || number === undefined || number === '') return '';
+    return S().formatHouseLabel?.(number) || String(number);
+}
+
+function formatHouseList(houses, separator = ', ') {
+    if (!Array.isArray(houses) || !houses.length) return '';
+    return S().formatHouseList?.(houses, { separator }) || houses.map((house) => formatHouseNumber(house)).join(separator);
+}
+
 function getBalanceLabel(key) {
     const translationKey = BALANCE_KEYS[key];
     if (!translationKey) return key;
@@ -655,7 +665,7 @@ function createPlanetRow(planet) {
 
     const tdHouse = document.createElement('td');
     tdHouse.className = [1, 4, 7, 10].includes(planet.house) ? 'angular-house' : '';
-    tdHouse.textContent = planet.house || EMPTY;
+    tdHouse.textContent = formatHouseNumber(planet.house) || EMPTY;
     tr.appendChild(tdHouse);
 
     const tdDignity = document.createElement('td');
@@ -759,7 +769,7 @@ function createPlanetRow(planet) {
     const tdRuled = document.createElement('td');
     tdRuled.className = 'ruled-houses';
     tdRuled.textContent = planet.ruled_houses?.length > 0
-        ? planet.ruled_houses.join(',')
+        ? formatHouseList(planet.ruled_houses, ',')
         : EMPTY;
     tr.appendChild(tdRuled);
 
@@ -787,7 +797,7 @@ function renderHousesTable(houses, planets) {
 
         const tdNum = document.createElement('td');
         tdNum.className = [1, 4, 7, 10].includes(house.number) ? 'angular-house' : '';
-        tdNum.textContent = house.number;
+        tdNum.textContent = formatHouseNumber(house.number) || EMPTY;
         tr.appendChild(tdNum);
 
         const tdSign = document.createElement('td');
@@ -806,7 +816,7 @@ function renderHousesTable(houses, planets) {
 
         const tdRulerHouse = document.createElement('td');
         const rulerHouse = house.ruler_in_house || planetToHouse[house.ruler_planet];
-        tdRulerHouse.textContent = rulerHouse || EMPTY;
+        tdRulerHouse.textContent = formatHouseNumber(rulerHouse) || EMPTY;
         tr.appendChild(tdRulerHouse);
 
         const tdIncluded = document.createElement('td');
@@ -1017,7 +1027,7 @@ function createStelliumCard(stellium) {
     type.className = 'config-type';
     const location = stellium.type === 'sign'
         ? `${getSignSymbol(stellium.sign)} ${getSignName(stellium.sign)}`
-        : t('page.natalFull.config.house', { house: stellium.house_number });
+        : t('page.natalFull.config.house', { house: formatHouseNumber(stellium.house_number) });
     type.textContent = t('page.natalFull.config.stellium', { location });
 
     const count = document.createElement('div');
@@ -1199,7 +1209,7 @@ function renderSpecialPoints(specialPoints) {
         tr.appendChild(tdPos);
 
         const tdHouse = document.createElement('td');
-        tdHouse.textContent = point.house || EMPTY;
+        tdHouse.textContent = formatHouseNumber(point.house) || EMPTY;
         tr.appendChild(tdHouse);
 
         tbody.appendChild(tr);

@@ -136,7 +136,7 @@
                     tooltip.innerHTML = `
                         <strong>${symbolMarkup} ${nameRu}</strong><br>
                         <span class="astro-symbol">${signSymbol}</span> ${signRu} ${planet.degree_in_sign_formatted || planet.degree_in_sign.toFixed(2) + '°'}<br>
-                        ${t('common.house')}: ${planet.house}
+                        ${t('common.house')}: ${Symbols?.formatHouseLabel?.(planet.house) || planet.house}
                     `;
                     tooltip.style.display = 'block';
                     moveTooltip(event, chartCenter, tooltip);

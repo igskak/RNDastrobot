@@ -1280,6 +1280,7 @@ async function applySettings() {
             showStationary,
             showApplyingSeparating,
         });
+        chartDataRenderer?.setHouseNumberStyle?.(houseNumberStyle);
 
         try {
             const userId = getCurrentChartUserId();

@@ -204,6 +204,9 @@ const PLANET_GLYPH_SCALE = {
     'Uranus': 1.08
 };
 
+const HOUSE_NUMBER_STYLE_STORAGE_KEY = 'natalHouseNumberStyle';
+const ROMAN_HOUSE_LABELS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+
 function escapeHtml(value) {
     return String(value ?? '')
         .replace(/&/g, '&amp;')
@@ -250,12 +253,51 @@ function getPlanetSymbolMarkup(name, options = {}) {
     return `<span class="${escapeHtml(wrapperClass)}"><span class="${escapeHtml(textClass)}" aria-hidden="true">${escapeHtml(symbol)}</span></span>`;
 }
 
+function normalizeHouseNumberStyle(style) {
+    return String(style || '').trim().toLowerCase() === 'roman' ? 'roman' : 'arabic';
+}
+
+function readSavedHouseNumberStyle() {
+    try {
+        return normalizeHouseNumberStyle(window.localStorage?.getItem(HOUSE_NUMBER_STYLE_STORAGE_KEY));
+    } catch {
+        return 'arabic';
+    }
+}
+
+function formatHouseLabel(number, options = {}) {
+    if (number === null || number === undefined || number === '') return '';
+
+    const style = normalizeHouseNumberStyle(options.style || readSavedHouseNumberStyle());
+    const rawValue = String(number);
+    if (style !== 'roman') return rawValue;
+
+    const numericValue = Number(number);
+    if (!Number.isInteger(numericValue) || numericValue < 1 || numericValue > 12) {
+        return rawValue;
+    }
+    return ROMAN_HOUSE_LABELS[numericValue - 1] || rawValue;
+}
+
+function formatHouseList(values, options = {}) {
+    if (!Array.isArray(values) || !values.length) return '';
+    const separator = Object.prototype.hasOwnProperty.call(options, 'separator') ? options.separator : ', ';
+    return values
+        .map((value) => formatHouseLabel(value, options))
+        .filter(Boolean)
+        .join(separator);
+}
+
 window.Symbols = {
     bodyNameAliases: BODY_NAME_ALIASES,
     normalizeBodyName,
     getPlanetSymbol,
     getPlanetNameRu,
     getPlanetSymbolMarkup,
+    normalizeHouseNumberStyle,
+    readSavedHouseNumberStyle,
+    formatHouseLabel,
+    formatHouseList,
     planets: PLANET_SYMBOLS,
     signs: SIGN_SYMBOLS,
     signNamesRu: SIGN_NAMES_RU,

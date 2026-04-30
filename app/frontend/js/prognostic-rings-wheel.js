@@ -1167,7 +1167,7 @@
             const symbol = Symbols?.planets?.[this.normalizeAspectBodyName(body.name)] || Symbols?.planets?.[body.name] || '';
             const signSymbol = Symbols?.signs?.[body.sign] || '';
             const signName = this.signName(body.sign);
-            const house = body.house ?? this.t('common.notAvailable');
+            const house = body.house != null ? this.formatHouseLabel(body.house) : this.t('common.notAvailable');
             const methodLabel = this.methodLabel(method);
             return `
                 <strong>${this.escapeHtml(methodLabel)} · <span class="astro-symbol">${this.escapeHtml(symbol)}</span> ${this.escapeHtml(this.bodyName(body.name))}</strong><br>
@@ -1234,9 +1234,10 @@
         }
 
         houseLabel(number) {
-            return this.t('page.chart.houseCusp', { house: number }) !== 'page.chart.houseCusp'
-                ? this.t('page.chart.houseCusp', { house: number })
-                : `Дом ${number}`;
+            const formattedHouse = this.formatHouseLabel(number);
+            return this.t('page.chart.houseCusp', { house: formattedHouse }) !== 'page.chart.houseCusp'
+                ? this.t('page.chart.houseCusp', { house: formattedHouse })
+                : `Дом ${formattedHouse}`;
         }
 
         formatDMS(deg) {

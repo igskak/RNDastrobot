@@ -46,6 +46,11 @@
         return localStorage.getItem(HOUSE_LABELS_OUTSIDE_STORAGE_KEY) === 'true';
     }
 
+    function formatHouseText(house) {
+        if (house === null || house === undefined || house === '') return '';
+        return Symbols?.formatHouseLabel?.(house, { style: houseNumberStyle }) || String(house);
+    }
+
     function syncForecastModalState() {
         if (!document.body) return;
         const hasOpenModal = Boolean(document.querySelector('.bw-settings-panel:not(.hidden)'));
@@ -1522,7 +1527,7 @@
         }
 
         showHoverTooltip(`
-            <strong>${layerLabel}: ${t('page.forecast.table.ingress.cuspLabel', { house: houseNumber }).toLowerCase()}</strong><br>
+            <strong>${layerLabel}: ${t('page.forecast.table.ingress.cuspLabel', { house: formatHouseText(houseNumber) }).toLowerCase()}</strong><br>
             <span class="astro-symbol">${signSymbol}</span> ${signRu} ${formatDMS(degree)}<br>
             ${t('common.longitude')}: ${formatDMS(longitude)}
         `, event);
@@ -1690,10 +1695,10 @@
             const bodySym = getPlanetSymbol(body);
             const isHouseIngress = ing.ingress_type === 'house';
             const fromPart = isHouseIngress
-                ? t('page.forecast.table.houseLabel', { house: ing.from_house ?? t('common.notAvailable') })
+                ? t('page.forecast.table.houseLabel', { house: formatHouseText(ing.from_house ?? t('common.notAvailable')) })
                 : fmtSign(ing.from_sign);
             const toPart = isHouseIngress
-                ? t('page.forecast.table.houseLabel', { house: ing.to_house ?? t('common.notAvailable') })
+                ? t('page.forecast.table.houseLabel', { house: formatHouseText(ing.to_house ?? t('common.notAvailable')) })
                 : fmtSign(ing.to_sign);
             list.push({
                 date: targetDate,
@@ -1708,7 +1713,7 @@
         (data.house_cusp_ingresses || []).forEach(ing => {
             list.push({
                 date: targetDate,
-                object: t('page.forecast.table.ingress.cuspLabel', { house: ing.house_number }),
+                object: t('page.forecast.table.ingress.cuspLabel', { house: formatHouseText(ing.house_number) }),
                 transition: `${fmtSign(ing.from_sign)} → ${fmtSign(ing.to_sign)}`,
                 method: method,
                 methodLabel: getMethodLabelShort(method),
@@ -1915,7 +1920,7 @@
             objectHtml = formatCompactBodyGlyph(row.object_key, retro);
         } else if (row.object_key?.startsWith('Cusp')) {
             const houseNumber = String(row.object_key).replace('Cusp', '');
-            objectLabel = t('page.forecast.table.ingress.cuspLabel', { house: houseNumber });
+            objectLabel = t('page.forecast.table.ingress.cuspLabel', { house: formatHouseText(houseNumber) });
             objectHtml = escapeHtml(objectLabel);
         }
 

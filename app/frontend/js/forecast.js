@@ -43,6 +43,12 @@ function getRetrogradeLabel() {
     return translated === key ? 'Retrograde' : translated;
 }
 
+function getStationaryLabel() {
+    const key = 'page.natalFull.legend.motion.stationary';
+    const translated = t(key);
+    return translated === key ? 'Stationary' : translated;
+}
+
 function retroIndicatorHtml(isRetrograde, variantClass = 'retro-indicator--micro') {
     if (!isRetrograde) return '';
     const suffix = variantClass ? ` ${variantClass}` : '';
@@ -50,11 +56,63 @@ function retroIndicatorHtml(isRetrograde, variantClass = 'retro-indicator--micro
     return `<span class="retro-indicator${suffix}" title="${label}" aria-label="${label}">R</span>`;
 }
 
-function formatPlanetCellHtml(bodyName, isRetrograde = false) {
+function stationaryIndicatorHtml(isStationary, variantClass = 'planet-status-badge--small') {
+    if (!isStationary) return '';
+    const suffix = variantClass ? ` ${variantClass}` : '';
+    const label = escapeHtml(getStationaryLabel());
+    return `<span class="planet-status-badge planet-status-badge--stationary${suffix}" title="${label}" aria-label="${label}">S</span>`;
+}
+
+function normalizeMotionOptions(options = {}) {
+    if (typeof options === 'boolean') {
+        return { isRetrograde: options };
+    }
+    return {
+        isRetrograde: options?.isRetrograde === true || options?.retrograde === true,
+        isStationary: options?.isStationary === true,
+    };
+}
+
+function formatPlanetCellHtml(bodyName, options = {}) {
     if (!bodyName || bodyName === '—') return '—';
+    const { isRetrograde, isStationary } = normalizeMotionOptions(options);
     const label = escapeHtml(getPlanetName(bodyName));
     const symbolHtml = Symbols?.getPlanetSymbolMarkup?.(bodyName, { size: 17, title: getPlanetName(bodyName) }) || '';
-    return `<span class="forecast-body-chip" title="${label}" aria-label="${label}" role="img">${symbolHtml}${retroIndicatorHtml(isRetrograde)}</span>`;
+    return `<span class="forecast-body-chip" title="${label}" aria-label="${label}" role="img">${symbolHtml}${retroIndicatorHtml(isRetrograde)}${stationaryIndicatorHtml(isStationary)}</span>`;
+}
+
+function buildPlanetMotionLookup(planets = []) {
+    const map = new Map();
+    (planets || []).forEach((planet) => {
+        if (!planet?.name) return;
+        map.set(normalizeForecastBodyName(planet.name), {
+            retrograde: Boolean(planet.retrograde),
+            isStationary: Boolean(planet.is_stationary),
+            stationaryType: planet.stationary_type || null,
+        });
+    });
+    return map;
+}
+
+function resolvePlanetMotion(lookup, bodyName) {
+    if (!lookup || !bodyName) {
+        return {
+            retrograde: null,
+            isStationary: null,
+            stationaryType: null,
+        };
+    }
+    const data = lookup.get(normalizeForecastBodyName(bodyName));
+    return data || {
+        retrograde: null,
+        isStationary: null,
+        stationaryType: null,
+    };
+}
+
+function formatHouseLabel(house) {
+    if (house === null || house === undefined || house === '') return '';
+    return Symbols?.formatHouseLabel?.(house) || String(house);
 }
 
 const FORECAST_ASPECT_TYPES = window.AstroPreferences?.DEFAULT_ENABLED_ASPECT_TYPES || [
@@ -4266,9 +4324,7 @@ function populateTable(events, method) {
         ForecastState.tableRows = [];
         return;
     }
-    const natalRetroMap = new Map((ForecastState.natalData?.planets || [])
-        .filter((p) => p?.name)
-        .map((p) => [p.name, Boolean(p.retrograde)]));
+    const natalMotionMap = buildPlanetMotionLookup(ForecastState.natalData?.planets || []);
     ForecastState.tableRowsRaw = events.map(ev => ({
         date: ev.t_exact ? ev.t_exact.split('T')[0] : '—',
         method: getMethodLabel(method),
@@ -4282,7 +4338,9 @@ function populateTable(events, method) {
         rowKind: 'aspect',
         type: ev.is_major ? t('common.majorShort') : t('common.minorShort'),
         transitRetrograde: typeof ev.transit_retrograde === 'boolean' ? ev.transit_retrograde : null,
-        natalRetrograde: natalRetroMap.has(ev.natal_body) ? natalRetroMap.get(ev.natal_body) : null,
+        transitIsStationary: null,
+        natalRetrograde: resolvePlanetMotion(natalMotionMap, ev.natal_body).retrograde,
+        natalIsStationary: resolvePlanetMotion(natalMotionMap, ev.natal_body).isStationary,
     }));
     refreshTableAspectFilterOptions(ForecastState.tableRowsRaw);
     resetTableFilters();
@@ -4299,13 +4357,22 @@ function populateTableFromAspects(aspects, method, date) {
         ForecastState.tableRows = [];
         return;
     }
-    const natalRetroMap = new Map((ForecastState.natalData?.planets || [])
-        .filter((p) => p?.name)
-        .map((p) => [p.name, Boolean(p.retrograde)]));
+    const prognosticMotionMap = buildPlanetMotionLookup(
+        method.startsWith('directions')
+            ? [
+                ...(ForecastState.directionData?.directed_planets || []),
+                ...(ForecastState.directionData?.directed_angles || []),
+                ...(ForecastState.directionData?.directed_special_points || []),
+            ]
+            : (ForecastState.progressionData?.progressed_planets || [])
+    );
+    const natalMotionMap = buildPlanetMotionLookup(ForecastState.natalData?.planets || []);
     const methodClass = method.startsWith('directions') ? 'direction' : 'progression';
     ForecastState.tableRowsRaw = aspects.map(a => {
         const body = a.progressed_planet || a.directed_object || '—';
         const idx = PLANET_PRIORITY.indexOf(body);
+        const prognosticMotion = resolvePlanetMotion(prognosticMotionMap, body);
+        const natalMotion = resolvePlanetMotion(natalMotionMap, a.natal_object);
         return {
             date: date,
             method: getMethodLabel(method),
@@ -4321,8 +4388,10 @@ function populateTableFromAspects(aspects, method, date) {
             _priority: idx < 0 ? 999 : idx,
             transitRetrograde: typeof a.transit_retrograde === 'boolean'
                 ? a.transit_retrograde
-                : (typeof a.retrograde === 'boolean' ? a.retrograde : null),
-            natalRetrograde: natalRetroMap.has(a.natal_object) ? natalRetroMap.get(a.natal_object) : null,
+                : (typeof a.retrograde === 'boolean' ? a.retrograde : prognosticMotion.retrograde),
+            transitIsStationary: prognosticMotion.isStationary,
+            natalRetrograde: natalMotion.retrograde,
+            natalIsStationary: natalMotion.isStationary,
         };
     });
     // Sort: slow planets first, then by orb
@@ -4493,6 +4562,15 @@ function getIngressSummaryRow(method, objectKey) {
 function buildIngressRowsFromSummary() {
     const rows = ForecastState.ingressSummaryData?.rows;
     if (!Array.isArray(rows) || !rows.length) return [];
+    const motionMapByMethod = {
+        transits: buildPlanetMotionLookup(ForecastState.transitMoment?.transit_planets || []),
+        progressions: buildPlanetMotionLookup(ForecastState.progressionData?.progressed_planets || []),
+        directions: buildPlanetMotionLookup([
+            ...(ForecastState.directionData?.directed_planets || []),
+            ...(ForecastState.directionData?.directed_angles || []),
+            ...(ForecastState.directionData?.directed_special_points || []),
+        ]),
+    };
     return rows.flatMap((row) => {
         const methodKey = row.method || '';
         const methodClass = row.method_class || (methodKey === 'progressions' ? 'progression' : 'direction');
@@ -4501,10 +4579,14 @@ function buildIngressRowsFromSummary() {
         let objectHtml = escapeHtml(object);
         if (row.object_key && !String(row.object_key).startsWith('Cusp')) {
             object = getPlanetName(row.object_key);
-            objectHtml = formatPlanetCellHtml(row.object_key);
+            const normalizedMethod = normalizeIngressSummaryMethodKey(methodKey);
+            objectHtml = formatPlanetCellHtml(
+                row.object_key,
+                resolvePlanetMotion(motionMapByMethod[normalizedMethod], row.object_key)
+            );
         } else if (row.object_key?.startsWith('Cusp')) {
             const houseNumber = String(row.object_key).replace('Cusp', '');
-            object = t('page.forecast.table.ingress.cuspLabel', { house: houseNumber });
+            object = t('page.forecast.table.ingress.cuspLabel', { house: formatHouseLabel(houseNumber) });
             objectHtml = escapeHtml(object);
         }
         const makeRow = (details, ingressType, transition) => ({
@@ -4549,7 +4631,7 @@ function buildIngressRowsFromSummary() {
             result.push(makeRow(
                 houseDetails,
                 t('page.forecast.table.ingress.house'),
-                `${t('page.forecast.table.houseLabel', { house: first?.from ?? t('common.notAvailable') })} → ${t('page.forecast.table.houseLabel', { house: last?.to ?? t('common.notAvailable') })}`
+                `${t('page.forecast.table.houseLabel', { house: formatHouseLabel(first?.from ?? t('common.notAvailable')) })} → ${t('page.forecast.table.houseLabel', { house: formatHouseLabel(last?.to ?? t('common.notAvailable')) })}`
             ));
         }
         return result;
@@ -4608,16 +4690,14 @@ function populateTableFromPrognosticData(data, method, date) {
                 ...(Array.isArray(data?.directed_special_points) ? data.directed_special_points : []),
             ]
             : [];
-    const prognosticRetroMap = new Map(prognosticPlanets
-        .filter((p) => p?.name)
-        .map((p) => [p.name, Boolean(p.retrograde)]));
-    const natalRetroMap = new Map((ForecastState.natalData?.planets || [])
-        .filter((p) => p?.name)
-        .map((p) => [p.name, Boolean(p.retrograde)]));
+    const prognosticMotionMap = buildPlanetMotionLookup(prognosticPlanets);
+    const natalMotionMap = buildPlanetMotionLookup(ForecastState.natalData?.planets || []);
 
     const aspectRows = aspects.map(a => {
         const body = a.progressed_planet || a.directed_object || '—';
         const idx = PLANET_PRIORITY.indexOf(body);
+        const prognosticMotion = resolvePlanetMotion(prognosticMotionMap, body);
+        const natalMotion = resolvePlanetMotion(natalMotionMap, a.natal_object);
         return {
             date: date,
             method: getMethodLabel(method),
@@ -4631,8 +4711,10 @@ function populateTableFromPrognosticData(data, method, date) {
             rowKind: 'aspect',
             type: a.is_major ? t('common.majorShort') : t('common.minorShort'),
             _priority: idx < 0 ? 999 : idx,
-            transitRetrograde: prognosticRetroMap.has(body) ? prognosticRetroMap.get(body) : null,
-            natalRetrograde: natalRetroMap.has(a.natal_object) ? natalRetroMap.get(a.natal_object) : null,
+            transitRetrograde: prognosticMotion.retrograde,
+            transitIsStationary: prognosticMotion.isStationary,
+            natalRetrograde: natalMotion.retrograde,
+            natalIsStationary: natalMotion.isStationary,
         };
     });
 
@@ -4642,17 +4724,17 @@ function populateTableFromPrognosticData(data, method, date) {
         const summaryRow = getIngressSummaryRow(method, objectKey);
         const ingressType = ing.ingress_type === 'house' ? t('page.forecast.table.ingress.house') : t('page.forecast.table.ingress.sign');
         const fromLabel = ing.ingress_type === 'house'
-            ? t('page.forecast.table.houseLabel', { house: ing.from_house ?? t('common.notAvailable') })
+            ? t('page.forecast.table.houseLabel', { house: formatHouseLabel(ing.from_house ?? t('common.notAvailable')) })
             : formatSignLabel(ing.from_sign);
         const toLabel = ing.ingress_type === 'house'
-            ? t('page.forecast.table.houseLabel', { house: ing.to_house ?? t('common.notAvailable') })
+            ? t('page.forecast.table.houseLabel', { house: formatHouseLabel(ing.to_house ?? t('common.notAvailable')) })
             : formatSignLabel(ing.to_sign);
         ingressRows.push({
             date: date,
             method: getMethodLabel(method),
             methodClass,
             object: body,
-            objectHtml: formatPlanetCellHtml(body, prognosticRetroMap.get(body) === true),
+            objectHtml: formatPlanetCellHtml(body, resolvePlanetMotion(prognosticMotionMap, body)),
             ingressType,
             transition: `${fromLabel} → ${toLabel}`,
             hoverDetails: Array.isArray(summaryRow?.hover_details) ? summaryRow.hover_details : [],
@@ -4661,7 +4743,7 @@ function populateTableFromPrognosticData(data, method, date) {
     });
 
     cuspIngresses.forEach(ing => {
-        const houseLabel = t('page.forecast.table.ingress.cuspLabel', { house: ing.house_number });
+        const houseLabel = t('page.forecast.table.ingress.cuspLabel', { house: formatHouseLabel(ing.house_number) });
         const summaryRow = getIngressSummaryRow(method, `Cusp${ing.house_number}`);
         const fromLabel = formatSignLabel(ing.from_sign);
         const toLabel = formatSignLabel(ing.to_sign);
@@ -4717,35 +4799,26 @@ function populateTableFromCombinedData(combinedData, targetDate, { transitPeriod
         return [];
     };
 
-    const buildRetroMap = (planets = []) => {
-        const map = new Map();
-        (planets || []).forEach((planet) => {
-            if (!planet?.name) return;
-            map.set(planet.name, Boolean(planet.retrograde));
-        });
-        return map;
-    };
-
-    const natalRetroMap = buildRetroMap(ForecastState.natalData?.planets || []);
+    const natalMotionMap = buildPlanetMotionLookup(ForecastState.natalData?.planets || []);
     const methodRetroMaps = {
-        transits: buildRetroMap(collectLayerPlanets(transitLayer)),
-        progressions: buildRetroMap(collectLayerPlanets(progressionLayer)),
-        directions_solar_arc: buildRetroMap(collectLayerPlanets(directionLayer)),
-        directions_symbolic: buildRetroMap(collectLayerPlanets(directionLayer)),
-        directions_equatorial: buildRetroMap(collectLayerPlanets(directionLayer)),
+        transits: buildPlanetMotionLookup(collectLayerPlanets(transitLayer)),
+        progressions: buildPlanetMotionLookup(collectLayerPlanets(progressionLayer)),
+        directions_solar_arc: buildPlanetMotionLookup(collectLayerPlanets(directionLayer)),
+        directions_symbolic: buildPlanetMotionLookup(collectLayerPlanets(directionLayer)),
+        directions_equatorial: buildPlanetMotionLookup(collectLayerPlanets(directionLayer)),
     };
 
-    const resolveTransitRetrograde = (methodName, bodyName, fallback = null) => {
-        if (typeof fallback === 'boolean') return fallback;
+    const resolveTransitMotion = (methodName, bodyName, fallback = {}) => {
         const map = methodRetroMaps[methodName];
-        if (!map || !bodyName) return null;
-        return map.has(bodyName) ? map.get(bodyName) : null;
+        const lookedUp = resolvePlanetMotion(map, bodyName);
+        return {
+            retrograde: typeof fallback?.retrograde === 'boolean' ? fallback.retrograde : lookedUp.retrograde,
+            isStationary: typeof fallback?.isStationary === 'boolean' ? fallback.isStationary : lookedUp.isStationary,
+            stationaryType: fallback?.stationaryType || lookedUp.stationaryType || null,
+        };
     };
 
-    const resolveNatalRetrograde = (bodyName) => {
-        if (!bodyName) return null;
-        return natalRetroMap.has(bodyName) ? natalRetroMap.get(bodyName) : null;
-    };
+    const resolveNatalMotion = (bodyName) => resolvePlanetMotion(natalMotionMap, bodyName);
 
     const rows = [];
     const ingressRows = [];
@@ -4759,9 +4832,14 @@ function populateTableFromCombinedData(combinedData, targetDate, { transitPeriod
         orb,
         isMajor,
         transitRetrograde = null,
-        natalRetrograde = null,
+        transitIsStationary = null,
     }) => {
         const idx = PLANET_PRIORITY.indexOf(transit);
+        const transitMotion = resolveTransitMotion(method, transit, {
+            retrograde: transitRetrograde,
+            isStationary: transitIsStationary,
+        });
+        const natalMotion = resolveNatalMotion(natal);
         rows.push({
             date: date || targetDate || '—',
             method: getMethodLabel(method),
@@ -4775,8 +4853,10 @@ function populateTableFromCombinedData(combinedData, targetDate, { transitPeriod
             rowKind: 'aspect',
             type: isMajor ? t('common.majorShort') : t('common.minorShort'),
             _priority: idx < 0 ? 999 : idx,
-            transitRetrograde,
-            natalRetrograde,
+            transitRetrograde: transitMotion.retrograde,
+            transitIsStationary: transitMotion.isStationary,
+            natalRetrograde: natalMotion.retrograde,
+            natalIsStationary: natalMotion.isStationary,
         });
     };
 
@@ -4787,18 +4867,18 @@ function populateTableFromCombinedData(combinedData, targetDate, { transitPeriod
             const summaryRow = getIngressSummaryRow(method, body);
             const ingressType = ing.ingress_type === 'house' ? t('page.forecast.table.ingress.house') : t('page.forecast.table.ingress.sign');
             const fromLabel = ing.ingress_type === 'house'
-                ? t('page.forecast.table.houseLabel', { house: ing.from_house ?? t('common.notAvailable') })
+                ? t('page.forecast.table.houseLabel', { house: formatHouseLabel(ing.from_house ?? t('common.notAvailable')) })
                 : formatSignLabel(ing.from_sign);
             const toLabel = ing.ingress_type === 'house'
-                ? t('page.forecast.table.houseLabel', { house: ing.to_house ?? t('common.notAvailable') })
+                ? t('page.forecast.table.houseLabel', { house: formatHouseLabel(ing.to_house ?? t('common.notAvailable')) })
                 : formatSignLabel(ing.to_sign);
-            const transitRetrograde = resolveTransitRetrograde(method, body);
+            const transitMotion = resolveTransitMotion(method, body);
             ingressRows.push({
                 date: date || targetDate || '—',
                 method: getMethodLabel(method),
                 methodClass,
                 object: body,
-                objectHtml: formatPlanetCellHtml(body, transitRetrograde === true),
+                objectHtml: formatPlanetCellHtml(body, transitMotion),
                 ingressType,
                 transition: `${fromLabel} → ${toLabel}`,
                 hoverDetails: Array.isArray(summaryRow?.hover_details) ? summaryRow.hover_details : [],
@@ -4806,7 +4886,7 @@ function populateTableFromCombinedData(combinedData, targetDate, { transitPeriod
             });
         });
         (data?.house_cusp_ingresses || []).forEach(ing => {
-            const houseLabel = t('page.forecast.table.ingress.cuspLabel', { house: ing.house_number });
+            const houseLabel = t('page.forecast.table.ingress.cuspLabel', { house: formatHouseLabel(ing.house_number) });
             const summaryRow = getIngressSummaryRow(method, `Cusp${ing.house_number}`);
             ingressRows.push({
                 date: date || targetDate || '—',
@@ -4833,8 +4913,12 @@ function populateTableFromCombinedData(combinedData, targetDate, { transitPeriod
                 natal: ev.natal_body,
                 orb: ev.min_orb,
                 isMajor: ev.is_major,
-                transitRetrograde: resolveTransitRetrograde('transits', ev.transit_body, ev.transit_retrograde),
-                natalRetrograde: resolveNatalRetrograde(ev.natal_body),
+                transitRetrograde: resolveTransitMotion('transits', ev.transit_body, {
+                    retrograde: ev.transit_retrograde,
+                }).retrograde,
+                transitIsStationary: resolveTransitMotion('transits', ev.transit_body).isStationary,
+                natalRetrograde: resolveNatalMotion(ev.natal_body).retrograde,
+                natalIsStationary: resolveNatalMotion(ev.natal_body).isStationary,
             });
         });
     } else {
@@ -4848,8 +4932,10 @@ function populateTableFromCombinedData(combinedData, targetDate, { transitPeriod
                 natal: a.natal_object,
                 orb: a.orb,
                 isMajor: a.is_major,
-                transitRetrograde: resolveTransitRetrograde('transits', a.transit_planet),
-                natalRetrograde: resolveNatalRetrograde(a.natal_object),
+                transitRetrograde: resolveTransitMotion('transits', a.transit_planet).retrograde,
+                transitIsStationary: resolveTransitMotion('transits', a.transit_planet).isStationary,
+                natalRetrograde: resolveNatalMotion(a.natal_object).retrograde,
+                natalIsStationary: resolveNatalMotion(a.natal_object).isStationary,
             });
         });
     }
@@ -4864,8 +4950,10 @@ function populateTableFromCombinedData(combinedData, targetDate, { transitPeriod
             natal: a.natal_object,
             orb: a.orb,
             isMajor: a.is_major,
-            transitRetrograde: resolveTransitRetrograde('progressions', a.progressed_planet),
-            natalRetrograde: resolveNatalRetrograde(a.natal_object),
+            transitRetrograde: resolveTransitMotion('progressions', a.progressed_planet).retrograde,
+            transitIsStationary: resolveTransitMotion('progressions', a.progressed_planet).isStationary,
+            natalRetrograde: resolveNatalMotion(a.natal_object).retrograde,
+            natalIsStationary: resolveNatalMotion(a.natal_object).isStationary,
         });
     });
     pushIngressRows(progressionLayer, 'progressions', targetDate);
@@ -4881,8 +4969,10 @@ function populateTableFromCombinedData(combinedData, targetDate, { transitPeriod
             natal: a.natal_object,
             orb: a.orb,
             isMajor: a.is_major,
-            transitRetrograde: resolveTransitRetrograde(directionMethodKey, a.directed_object),
-            natalRetrograde: resolveNatalRetrograde(a.natal_object),
+            transitRetrograde: resolveTransitMotion(directionMethodKey, a.directed_object).retrograde,
+            transitIsStationary: resolveTransitMotion(directionMethodKey, a.directed_object).isStationary,
+            natalRetrograde: resolveNatalMotion(a.natal_object).retrograde,
+            natalIsStationary: resolveNatalMotion(a.natal_object).isStationary,
         });
     });
     pushIngressRows(directionLayer, directionMethodKey, targetDate);
@@ -4932,8 +5022,14 @@ function renderTableRows() {
     tbody.innerHTML = rows.map(r => {
         const aSym = Symbols?.aspects?.[r.aspect] || r.aspect;
         const harmony = getAspectHarmony(r.aspect);
-        const transitCell = r.transitDisplay || formatPlanetCellHtml(r.transit, r.transitRetrograde === true);
-        const natalCell = r.natalDisplay || formatPlanetCellHtml(r.natal, r.natalRetrograde === true);
+        const transitCell = r.transitDisplay || formatPlanetCellHtml(r.transit, {
+            isRetrograde: r.transitRetrograde === true,
+            isStationary: r.transitIsStationary === true,
+        });
+        const natalCell = r.natalDisplay || formatPlanetCellHtml(r.natal, {
+            isRetrograde: r.natalRetrograde === true,
+            isStationary: r.natalIsStationary === true,
+        });
         const aspectCell = r.aspectDisplay || `${aSym} ${r.aspect}`;
         return `<tr>
             <td>${r.date}</td>

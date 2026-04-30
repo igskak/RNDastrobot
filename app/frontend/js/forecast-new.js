@@ -783,6 +783,7 @@
 
     function renderStaticNatal() {
         state.natalRenderer?.setAspectTypeFilter?.('all');
+        state.natalRenderer?.setHouseNumberStyle?.(state.pageSettings.houseNumberStyle);
         state.natalRenderer?.setDisplayPreferences?.({
             showSpeed: state.pageSettings.showSpeed !== false,
             showStationary: state.pageSettings.showStationary !== false,
@@ -1205,11 +1206,13 @@
         refs.targetDatetimeLabel.textContent = state.selectedDateTime.replace('T', ' ');
 
         if (!layer) {
+            state.prognosticRenderer?.setHouseNumberStyle?.(state.pageSettings.houseNumberStyle);
             state.prognosticRenderer?.render({ planets: [], houses: [], aspects: [], aspect_configurations: [], stelliums: [], balances: null, cosmogram_pattern: null });
             syncPrognosticHousesVisibility([]);
             return;
         }
         state.prognosticRenderer?.setAspectTypeFilter?.('all');
+        state.prognosticRenderer?.setHouseNumberStyle?.(state.pageSettings.houseNumberStyle);
         state.prognosticRenderer?.setDisplayPreferences?.({
             showSpeed: state.pageSettings.showSpeed !== false,
             showStationary: state.pageSettings.showStationary !== false,

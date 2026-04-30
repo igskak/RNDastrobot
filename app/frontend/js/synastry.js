@@ -536,6 +536,7 @@ function renderSynastryHeader(primaryChart, partnerChart) {
 
 function renderSynastrySide(side, chartData) {
     const renderer = ensureSideRenderer(side);
+    renderer.setHouseNumberStyle?.(synastryState.settings.houseNumberStyle);
     renderer.setDisplayPreferences({
         showSpeed: synastryState.settings.showSpeed,
         showStationary: synastryState.settings.showStationary,

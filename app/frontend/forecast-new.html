@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Прогностика New</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=20260430-211101">
-    <script>window.__APP_BUILD_ID__ = '20260430-211101';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=20260430-214156">
+    <script>window.__APP_BUILD_ID__ = '20260430-214156';</script>
 </head>
 <body class="forecast-new-page">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -245,12 +245,23 @@
             </div>
             <div class="panel-content forecast-new-panel-content">
                 <div id="progPlanetsView" class="panel-tab-content active">
-                    <table class="data-table compact">
+                    <table class="data-table compact forecast-new-planets-table">
+                        <colgroup>
+                            <col class="forecast-new-symbol-column">
+                            <col class="forecast-new-position-column">
+                            <col class="forecast-new-speed-column">
+                            <col class="forecast-new-house-column">
+                        </colgroup>
                         <thead><tr><th>Симв.</th><th>Позиция</th><th class="planet-speed-col">Скор.</th><th>Дом</th></tr></thead>
                         <tbody id="progPlanetsTable"></tbody>
                     </table>
                     <div class="subsection-title forecast-new-houses-title">Дома</div>
-                    <table class="data-table compact">
+                    <table class="data-table compact forecast-new-houses-table">
+                        <colgroup>
+                            <col class="forecast-new-house-cusp-column">
+                            <col class="forecast-new-house-sign-column">
+                            <col class="forecast-new-house-ruler-column">
+                        </colgroup>
                         <thead><tr><th>Куспид</th><th>Знак</th><th>Упр.</th></tr></thead>
                         <tbody id="progHousesTable"></tbody>
                     </table>
@@ -268,6 +279,6 @@
         </aside>
     </main>
 
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=20260430-211101"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=20260430-214156"></script>
 </body>
 </html>

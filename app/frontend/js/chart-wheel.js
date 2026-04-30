@@ -1301,7 +1301,7 @@ class ChartWheel {
         const signRu = this.getSignName(planet.sign);
         const signSymbol = Symbols.signs[planet.sign] || '';
         const degFormatted = this.formatDMS(planet.degree_in_sign ?? 0);
-        const house = planet.house ?? this.t('common.notAvailable');
+        const house = planet.house != null ? this.formatHouseLabel(planet.house) : this.t('common.notAvailable');
         this.showTooltip(`
             <strong><span class="astro-symbol">${symbol}</span> ${nameRu}</strong><br>
             <span class="astro-symbol">${signSymbol}</span> ${signRu} ${degFormatted}<br>
@@ -1373,7 +1373,7 @@ class ChartWheel {
         const signRu = this.getSignName(planet.sign);
         const signSymbol = Symbols.signs[planet.sign] || '';
         const degFormatted = this.formatDMS(planet.degree_in_sign ?? 0);
-        const house = planet.house ?? this.t('common.notAvailable');
+        const house = planet.house != null ? this.formatHouseLabel(planet.house) : this.t('common.notAvailable');
 
         this.showTooltip(`
             <strong><span class="astro-symbol">${symbol}</span> ${nameRu}</strong><br>
@@ -1415,7 +1415,7 @@ class ChartWheel {
         const lonFormatted = this.formatDMS(longitude);
 
         this.showTooltip(`
-            <strong>${this.t('page.chart.houseCusp', { house: houseNumber })}</strong><br>
+            <strong>${this.t('page.chart.houseCusp', { house: this.formatHouseLabel(houseNumber) })}</strong><br>
             <span class="astro-symbol">${signSymbol}</span> ${signRu} ${degFormatted}<br>
             ${this.t('common.longitude')}: ${lonFormatted}
         `, e);
