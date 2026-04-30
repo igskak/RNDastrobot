@@ -38,7 +38,7 @@ class ProgressedPlanetInfo(BaseModel):
     degree_in_sign_formatted: str
     retrograde: bool
     speed: float
-    speed_percent: Optional[float] = Field(None, description="Скорость по шкале 0-100")
+    speed_percent: Optional[float] = Field(None, description="Скорость в % от средней (может быть > 100)")
     is_stationary: bool = Field(default=False, description="Стационарная планета")
     stationary_type: Optional[str] = Field(None, description="Тип стационарности")
     natal_house: int = Field(..., description="В каком натальном доме находится прогрессивная планета")

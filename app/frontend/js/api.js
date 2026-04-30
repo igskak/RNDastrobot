@@ -461,7 +461,7 @@
 
         let speedPercent = planet.speed_percent;
         if (Number.isFinite(speed) && Number.isFinite(meanSpeed) && meanSpeed > 0) {
-            speedPercent = Math.min(Math.abs(speed) / meanSpeed * 100, 100);
+            speedPercent = Math.abs(speed) / meanSpeed * 100;
             speedPercent = Math.round(speedPercent * 100) / 100;
         }
 

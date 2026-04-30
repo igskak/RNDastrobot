@@ -11,6 +11,7 @@
         const hiddenOnPages = [
             'chart-page',
             'forecast-page',
+            'forecast-new-page',
             'natal-full-page',
             'synastry-page',
             'interpretations-page',

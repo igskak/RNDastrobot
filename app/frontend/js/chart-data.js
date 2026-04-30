@@ -386,6 +386,7 @@ class ChartDataRenderer {
             if (!Number.isFinite(speedPct)) return '';
             let speedClass = '';
             if (speedPct < 10) speedClass = ' planet-meta-chip--speed-slow';
+            else if (speedPct > 120) speedClass = ' planet-meta-chip--speed-fast';
             return `<span class="planet-meta-chip${speedClass}">${Math.round(speedPct)}%</span>`;
         }
 

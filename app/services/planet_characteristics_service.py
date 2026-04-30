@@ -133,16 +133,16 @@ class PlanetCharacteristicsService:
     @classmethod
     def calculate_speed_percent(cls, planet_name: str, actual_speed: float) -> Optional[float]:
         """
-        Рассчитать скорость планеты в процентах по шкале ZET.
+        Рассчитать скорость планеты в процентах от средней.
         
         Args:
             planet_name: Название планеты
             actual_speed: Фактическая скорость (градусы/день)
             
         Returns:
-            Скорость в процентах в диапазоне 0-100, где 100 = максимальная
-            директная/ретроградная рабочая скорость для планеты, или None если
-            планета не в справочнике
+            Скорость в процентах, где 100 = средняя скорость планеты.
+            Значение может быть больше 100, если планета движется быстрее
+            своей средней скорости, или None если планета не в справочнике
         """
         cls._load_references()
         speed_name_aliases = {
@@ -153,7 +153,7 @@ class PlanetCharacteristicsService:
         mean_speed = cls.MEAN_SPEEDS.get(speed_name_aliases.get(planet_name, planet_name))
         if mean_speed is None or mean_speed == 0:
             return None
-        return round(min(abs(actual_speed) / mean_speed * 100, 100.0), 2)
+        return round(abs(actual_speed) / mean_speed * 100, 2)
     
     @classmethod
     def calculate_critical_degrees(cls, planet_name: str, sign: str, degree_in_sign: float) -> List[str]:
