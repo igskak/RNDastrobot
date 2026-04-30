@@ -73,11 +73,26 @@
 
     function openSynastry(clientUserId, partnerUserId) {
         if (!clientUserId || !partnerUserId) return;
-        const params = new URLSearchParams({
-            client: String(clientUserId),
-            partner: String(partnerUserId),
+        const sourcePath = root.location.pathname || '/';
+        const sourceView = sourcePath.startsWith('/client/')
+            ? 'client-profile'
+            : sourcePath.endsWith('/chart.html')
+                ? 'chart'
+                : sourcePath.endsWith('/forecast-new.html')
+                    ? 'forecast-new'
+                    : sourcePath.endsWith('/natal-full.html')
+                        ? 'natal-full'
+                        : 'clients';
+
+        root.AstroAPI?.saveNavigationState?.({
+            sourceView,
+            sourceUrl: `${sourcePath}${root.location.search || ''}`,
+            clientUserId: String(clientUserId),
+            partnerUserId: String(partnerUserId),
         });
-        root.location.href = `/synastry.html?${params.toString()}`;
+
+        root.location.href = root.AstroAPI?.buildSynastryUrl?.(clientUserId, partnerUserId)
+            || `/synastry.html?client=${encodeURIComponent(String(clientUserId))}&partner=${encodeURIComponent(String(partnerUserId))}`;
     }
 
     function createRelatedPeoplePicker(options = {}) {

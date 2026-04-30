@@ -142,6 +142,54 @@
         await Promise.resolve(window.FrontendI18n.ready).catch(() => {});
     }
 
+    function getForecastNavigationState() {
+        return window.AstroAPI?.getNavigationState?.() || {};
+    }
+
+    function getForecastBackUrl() {
+        const navState = getForecastNavigationState();
+        return navState.sourceUrl || '/chart.html';
+    }
+
+    function getForecastSynastryUrl() {
+        const navState = getForecastNavigationState();
+        if (state.userId && navState.partnerUserId && String(navState.clientUserId || '') === String(state.userId)) {
+            return window.AstroAPI?.buildSynastryUrl?.(state.userId, navState.partnerUserId) || null;
+        }
+        return null;
+    }
+
+    function navigateFromForecast(targetUrl) {
+        const navState = getForecastNavigationState();
+        window.AstroAPI?.saveNavigationState?.({
+            sourceView: 'forecast-new',
+            sourceUrl: `/forecast-new.html${window.location.search || ''}`,
+            clientUserId: state.userId ? String(state.userId) : navState.clientUserId,
+            partnerUserId: String(navState.clientUserId || '') === String(state.userId || '')
+                ? (navState.partnerUserId ? String(navState.partnerUserId) : null)
+                : null,
+        });
+        window.showPageLoader?.();
+        window.location.href = targetUrl;
+    }
+
+    function configureForecastNavigation() {
+        const navState = getForecastNavigationState();
+        if (refs.forecastNewBackBtn) {
+            refs.forecastNewBackBtn.href = getForecastBackUrl();
+        }
+        if (refs.openSynastryBtn) {
+            refs.openSynastryBtn.disabled = !state.userId;
+        }
+        window.AstroAPI?.patchNavigationState?.({
+            currentView: 'forecast-new',
+            clientUserId: state.userId ? String(state.userId) : navState.clientUserId,
+            partnerUserId: String(navState.clientUserId || '') === String(state.userId || '')
+                ? (navState.partnerUserId ? String(navState.partnerUserId) : null)
+                : null,
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', async () => {
         await waitForI18nReady();
         cacheElements();
@@ -179,6 +227,7 @@
         applyDeepLinkParams();
         populateTimezoneOptions();
         initRenderers();
+        configureForecastNavigation();
         bindEvents();
         bindLocationAutocomplete();
         initAspectInteractions();
@@ -190,7 +239,7 @@
     function cacheElements() {
         [
             'pageLoader', 'forecastNewLayout', 'forecastNewError', 'forecastNewErrorMsg',
-            'forecastNewBackBtn', 'forecastNewTitle', 'forecastNewSubtitle', 'openNatalBtn',
+            'forecastNewBackBtn', 'forecastNewTitle', 'forecastNewSubtitle', 'openNatalBtn', 'openNatalTablesBtn', 'openSynastryBtn',
             'forecastNewNatalPanel', 'forecastNewProgPanel',
             'natalPanelMeta', 'prognosticPanelTitle', 'prognosticPanelMeta',
             'prognosticMomentToggle', 'forecastNewMomentCard',
@@ -241,7 +290,20 @@
         refs.openNatalBtn?.addEventListener('click', () => {
             window.AstroAPI?.saveChartToSession?.(state.natalData);
             window.AstroAPI?.saveFormData?.(window.AstroAPI.chartToFormData(state.natalData));
-            window.location.href = '/natal-full.html';
+            navigateFromForecast('/chart.html');
+        });
+
+        refs.openNatalTablesBtn?.addEventListener('click', () => {
+            window.AstroAPI?.saveChartToSession?.(state.natalData);
+            window.AstroAPI?.saveFormData?.(window.AstroAPI.chartToFormData(state.natalData));
+            navigateFromForecast('/natal-full.html');
+        });
+
+        refs.openSynastryBtn?.addEventListener('click', () => {
+            if (!state.userId) return;
+            window.AstroAPI?.saveChartToSession?.(state.natalData);
+            window.AstroAPI?.saveFormData?.(window.AstroAPI.chartToFormData(state.natalData));
+            navigateFromForecast(getForecastSynastryUrl() || '/chart.html?open=synastry');
         });
 
         refs.layerToggles.forEach((input) => {

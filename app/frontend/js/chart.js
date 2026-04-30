@@ -216,6 +216,91 @@ function aspectMatchesPhaseFilter(aspect, filter = currentSettings.aspectPhaseFi
         : true;
 }
 
+function getChartNavigationState() {
+    return window.AstroAPI?.getNavigationState?.() || {};
+}
+
+function getChartBackUrl() {
+    const state = getChartNavigationState();
+    if (typeof state.sourceUrl === 'string' && state.sourceUrl.trim()) {
+        return state.sourceUrl;
+    }
+    return '/';
+}
+
+function getChartSynastryUrl() {
+    const userId = getCurrentChartUserId();
+    const state = getChartNavigationState();
+    if (userId && state.partnerUserId && String(state.clientUserId || '') === String(userId)) {
+        return window.AstroAPI?.buildSynastryUrl?.(userId, state.partnerUserId) || null;
+    }
+    return null;
+}
+
+function navigateFromChart(target) {
+    const userId = getCurrentChartUserId();
+    const state = getChartNavigationState();
+    const patch = {
+        sourceView: 'chart',
+        sourceUrl: '/chart.html',
+        clientUserId: userId ? String(userId) : state.clientUserId,
+    };
+
+    if (String(state.clientUserId || '') !== String(userId || '')) {
+        patch.partnerUserId = null;
+    } else if (state.partnerUserId) {
+        patch.partnerUserId = String(state.partnerUserId);
+    }
+
+    window.AstroAPI?.saveNavigationState?.(patch);
+    window.showPageLoader?.();
+    window.location.href = target;
+}
+
+function configureChartHeaderNavigation() {
+    const backBtn = document.querySelector('.back-btn-compact');
+    const tablesBtn = document.querySelector('.header-nav-buttons a[href="natal-full.html"]');
+    const forecastBtn = document.querySelector('.header-nav-buttons a[href="forecast-new.html"]');
+    const synastryBtn = document.getElementById('openSynastryNavBtn');
+    const userId = getCurrentChartUserId();
+
+    if (backBtn) {
+        backBtn.href = getChartBackUrl();
+    }
+
+    if (synastryBtn) {
+        synastryBtn.disabled = !userId;
+    }
+
+    tablesBtn?.addEventListener('click', (event) => {
+        event.preventDefault();
+        navigateFromChart('/natal-full.html');
+    });
+
+    forecastBtn?.addEventListener('click', (event) => {
+        event.preventDefault();
+        navigateFromChart('/forecast-new.html');
+    });
+
+    synastryBtn?.addEventListener('click', () => {
+        const synastryUrl = getChartSynastryUrl();
+        if (synastryUrl) {
+            navigateFromChart(synastryUrl);
+            return;
+        }
+        openSynastryLauncherDialog();
+    });
+}
+
+function handleChartOpenQueryAction() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('open') !== 'synastry') return;
+    params.delete('open');
+    const nextQuery = params.toString();
+    window.history.replaceState({}, '', `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ''}`);
+    openSynastryLauncherDialog();
+}
+
 function filterChartDataByAspectPhase(chartData) {
     return window.AstroAspectPhase?.filterChartDataByAspectPhase
         ? window.AstroAspectPhase.filterChartDataByAspectPhase(chartData, currentSettings.aspectPhaseFilter)
@@ -240,6 +325,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     currentSettings.houseSystem = normalizeHouseSystemCode(
         chartData.birth_data?.house_system || formData?.houseSystem || 'P'
     );
+
+    const initialNavState = getChartNavigationState();
+    window.AstroAPI?.patchNavigationState?.({
+        currentView: 'chart',
+        clientUserId: getCurrentChartUserId() ? String(getCurrentChartUserId()) : initialNavState.clientUserId,
+        partnerUserId: String(initialNavState.clientUserId || '') === String(getCurrentChartUserId() || '')
+            ? initialNavState.partnerUserId
+            : null,
+    });
+    configureChartHeaderNavigation();
 
     chartData = applyChartState(chartData, { houseSystem: currentSettings.houseSystem });
 
@@ -318,6 +413,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     bindConfigurationHoverInteractions();
     initEditClientDialog();
     initSynastryDialogs();
+    handleChartOpenQueryAction();
     await hydrateNatalPreferences(chartData, formData);
 
     document.addEventListener('frontend:locale-changed', () => {

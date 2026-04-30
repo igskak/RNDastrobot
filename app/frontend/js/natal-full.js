@@ -232,6 +232,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     chartData = JSON.parse(storedData);
+    configureNatalFullNavigation();
 
     renderFullChart(chartData);
     setupLegendToggle();
@@ -251,6 +252,78 @@ function setupLegendToggle() {
 
     btn.addEventListener('click', () => {
         panel.classList.toggle('hidden');
+    });
+}
+
+function getNatalFullNavigationState() {
+    return window.AstroAPI?.getNavigationState?.() || {};
+}
+
+function getNatalFullUserId() {
+    return chartData?.user_id || window.AstroAPI?.getFormData?.()?.userId || null;
+}
+
+function configureNatalFullNavigation() {
+    const navState = getNatalFullNavigationState();
+    const currentUserId = getNatalFullUserId();
+    const backBtn = document.getElementById('natalFullBackBtn');
+    const wheelBtn = document.querySelector('.header-actions a[href="chart.html"]');
+    const forecastBtn = document.querySelector('.header-actions a[href="forecast-new.html"]');
+    const synastryBtn = document.getElementById('openNatalFullSynastryBtn');
+    const hasMatchingPartner = String(navState.clientUserId || '') === String(currentUserId || '') && navState.partnerUserId;
+
+    if (backBtn) {
+        backBtn.href = navState.sourceUrl || '/';
+    }
+
+    if (synastryBtn) {
+        synastryBtn.setAttribute('aria-disabled', currentUserId ? 'false' : 'true');
+    }
+
+    window.AstroAPI?.patchNavigationState?.({
+        currentView: 'natal-full',
+        clientUserId: currentUserId ? String(currentUserId) : navState.clientUserId,
+        partnerUserId: hasMatchingPartner ? String(navState.partnerUserId) : null,
+    });
+
+    wheelBtn?.addEventListener('click', (event) => {
+        event.preventDefault();
+        window.AstroAPI?.saveNavigationState?.({
+            sourceView: 'natal-full',
+            sourceUrl: '/natal-full.html',
+            clientUserId: currentUserId ? String(currentUserId) : navState.clientUserId,
+            partnerUserId: hasMatchingPartner ? String(navState.partnerUserId) : null,
+        });
+        window.showPageLoader?.();
+        window.location.href = '/chart.html';
+    });
+
+    forecastBtn?.addEventListener('click', (event) => {
+        event.preventDefault();
+        window.AstroAPI?.saveNavigationState?.({
+            sourceView: 'natal-full',
+            sourceUrl: '/natal-full.html',
+            clientUserId: currentUserId ? String(currentUserId) : navState.clientUserId,
+            partnerUserId: hasMatchingPartner ? String(navState.partnerUserId) : null,
+        });
+        window.showPageLoader?.();
+        window.location.href = '/forecast-new.html';
+    });
+
+    synastryBtn?.addEventListener('click', (event) => {
+        event.preventDefault();
+        if (!currentUserId) return;
+        const targetUrl = hasMatchingPartner
+            ? window.AstroAPI?.buildSynastryUrl?.(currentUserId, navState.partnerUserId)
+            : '/chart.html?open=synastry';
+        window.AstroAPI?.saveNavigationState?.({
+            sourceView: 'natal-full',
+            sourceUrl: '/natal-full.html',
+            clientUserId: currentUserId ? String(currentUserId) : navState.clientUserId,
+            partnerUserId: hasMatchingPartner ? String(navState.partnerUserId) : null,
+        });
+        window.showPageLoader?.();
+        window.location.href = targetUrl;
     });
 }
 

@@ -10,6 +10,7 @@
     const API_BASE_URL = hasWindow && window.location.hostname === 'localhost'
         ? 'http://localhost:8000/api/v1'
         : '/api/v1';
+    const NAVIGATION_STATE_KEY = 'astroNavigationState';
 
     function getCurrentLocale() {
         return root?.FrontendI18n?.getLocale?.() || 'en';
@@ -534,6 +535,57 @@
         return data ? JSON.parse(data) : null;
     }
 
+    function getNavigationState() {
+        if (!hasWindow || !window.sessionStorage) return {};
+        const raw = window.sessionStorage.getItem(NAVIGATION_STATE_KEY);
+        if (!raw) return {};
+        try {
+            const parsed = JSON.parse(raw);
+            return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch (_error) {
+            return {};
+        }
+    }
+
+    function saveNavigationState(state) {
+        if (!hasWindow || !window.sessionStorage) return {};
+        const normalized = state && typeof state === 'object' ? state : {};
+        window.sessionStorage.setItem(NAVIGATION_STATE_KEY, JSON.stringify(normalized));
+        return normalized;
+    }
+
+    function patchNavigationState(patch) {
+        const current = getNavigationState();
+        const next = { ...current };
+
+        Object.entries(patch || {}).forEach(([key, value]) => {
+            if (value === undefined) {
+                delete next[key];
+                return;
+            }
+            next[key] = value;
+        });
+
+        return saveNavigationState(next);
+    }
+
+    function clearNavigationState() {
+        if (!hasWindow || !window.sessionStorage) return;
+        window.sessionStorage.removeItem(NAVIGATION_STATE_KEY);
+    }
+
+    function buildClientProfileUrl(userId) {
+        return `/client/${encodeURIComponent(String(userId || ''))}`;
+    }
+
+    function buildSynastryUrl(clientUserId, partnerUserId) {
+        const params = new URLSearchParams({
+            client: String(clientUserId || ''),
+            partner: String(partnerUserId || ''),
+        });
+        return `/synastry.html?${params.toString()}`;
+    }
+
     function chartToFormData(chartData, options = {}) {
         const birthData = chartData?.birth_data || {};
         const [yearRaw, monthRaw, dayRaw] = String(birthData.date || '').split('-');
@@ -634,6 +686,12 @@
         getChartFromSession,
         saveFormData,
         getFormData,
+        getNavigationState,
+        saveNavigationState,
+        patchNavigationState,
+        clearNavigationState,
+        buildClientProfileUrl,
+        buildSynastryUrl,
         chartToFormData,
         withLocaleHeaders,
         showPageLoader,

@@ -8,6 +8,8 @@ class ChartWheel {
         this.svg = svgElement;
         this.center = 250;
         this.outerRadius = 230;
+        this.svgPadding = 30;
+        this.updateSvgViewport();
         const initialScale = this.readPointScale();
         this.planetScale = initialScale;
         this.pointScale = initialScale;
@@ -96,6 +98,14 @@ class ChartWheel {
             collapseThreshold: 9,
             minLineLength: 14,
         };
+    }
+
+    updateSvgViewport() {
+        if (!this.svg) return;
+        const padding = Number.isFinite(this.svgPadding) ? this.svgPadding : 0;
+        const size = this.center * 2;
+        this.svg.setAttribute('viewBox', `${-padding} ${-padding} ${size + padding * 2} ${size + padding * 2}`);
+        this.svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
     }
 
     readPointScale() {

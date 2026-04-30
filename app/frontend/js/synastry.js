@@ -121,6 +121,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const astrologer = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
     if (!astrologer) return;
 
+    configureSynastryNavigation();
     bindSynastryEvents();
     await loadSynastry();
 });
@@ -133,6 +134,8 @@ function cacheSynastryElements() {
     synastryRefs.backBtn = document.getElementById('synastryBackBtn');
     synastryRefs.title = document.getElementById('synastryTitle');
     synastryRefs.subtitle = document.getElementById('synastrySubtitle');
+    synastryRefs.openPrimaryNatalBtn = document.getElementById('openPrimaryNatalBtn');
+    synastryRefs.openPrimaryForecastBtn = document.getElementById('openPrimaryForecastBtn');
     synastryRefs.openPrimaryProfileBtn = document.getElementById('openPrimaryProfileBtn');
     synastryRefs.openPartnerProfileBtn = document.getElementById('openPartnerProfileBtn');
     synastryRefs.primaryPanelTitle = document.getElementById('primaryPanelTitle');
@@ -165,6 +168,42 @@ function cacheSynastryElements() {
     synastryRefs.zoomReset = document.getElementById('zoomReset');
 }
 
+function getSynastryNavigationState() {
+    return window.AstroAPI?.getNavigationState?.() || {};
+}
+
+function configureSynastryNavigation() {
+    const navState = getSynastryNavigationState();
+    window.AstroAPI?.patchNavigationState?.({
+        currentView: 'synastry',
+        clientUserId: primaryUserId ? String(primaryUserId) : navState.clientUserId,
+        partnerUserId: partnerUserId ? String(partnerUserId) : navState.partnerUserId,
+    });
+    if (synastryRefs.backBtn) {
+        synastryRefs.backBtn.href = navState.sourceUrl || window.AstroAPI?.buildClientProfileUrl?.(primaryUserId) || `/client/${encodeURIComponent(primaryUserId)}`;
+    }
+}
+
+function navigateFromSynastry(targetUrl) {
+    window.AstroAPI?.saveNavigationState?.({
+        sourceView: 'synastry',
+        sourceUrl: window.location.pathname + (window.location.search || ''),
+        clientUserId: String(primaryUserId || ''),
+        partnerUserId: String(partnerUserId || ''),
+    });
+    window.showPageLoader?.();
+    window.location.href = targetUrl;
+}
+
+async function preparePrimaryChartForNavigation() {
+    const chartData = synastryState.payload?.primary_chart
+        || await window.AstroAPI?.getNatalChart?.(primaryUserId).catch(() => null);
+    if (!chartData) return false;
+    window.AstroAPI?.saveChartToSession?.(chartData);
+    window.AstroAPI?.saveFormData?.(window.AstroAPI.chartToFormData(chartData));
+    return true;
+}
+
 function bindSynastryEvents() {
     synastryRefs.modeButtons.forEach((button) => {
         button.addEventListener('click', () => {
@@ -195,6 +234,18 @@ function bindSynastryEvents() {
 
     synastryRefs.openPrimaryProfileBtn?.addEventListener('click', () => {
         window.location.href = `/client/${encodeURIComponent(primaryUserId)}`;
+    });
+
+    synastryRefs.openPrimaryNatalBtn?.addEventListener('click', async () => {
+        const prepared = await preparePrimaryChartForNavigation();
+        if (!prepared) return;
+        navigateFromSynastry('/chart.html');
+    });
+
+    synastryRefs.openPrimaryForecastBtn?.addEventListener('click', async () => {
+        const prepared = await preparePrimaryChartForNavigation();
+        if (!prepared) return;
+        navigateFromSynastry('/forecast-new.html');
     });
 
     synastryRefs.openPartnerProfileBtn?.addEventListener('click', () => {
@@ -481,7 +532,6 @@ function renderSynastryHeader(primaryChart, partnerChart) {
     synastryRefs.partnerPanelTitle.textContent = partnerName;
     synastryRefs.primaryPanelMeta.textContent = formatBirthSummary(primaryChart);
     synastryRefs.partnerPanelMeta.textContent = formatBirthSummary(partnerChart);
-    synastryRefs.backBtn.href = `/client/${encodeURIComponent(primaryUserId)}`;
 }
 
 function renderSynastrySide(side, chartData) {

@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.natalFull.title"></title>
-    <link rel="stylesheet" href="bundles/natal-full.bundle.css?v=20260425-212442">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260425-212442">
+    <link rel="stylesheet" href="bundles/natal-full.bundle.css?v=20260430-211101">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260430-211101">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '20260425-212442';</script>
+    <script>window.__APP_BUILD_ID__ = '20260430-211101';</script>
 </head>
 <body class="natal-full-page">
     <div class="page-loader" id="pageLoader">
@@ -19,7 +19,7 @@
 
     <header class="natal-header">
         <div class="header-content">
-            <a href="/" class="back-btn" data-i18n="common.back"></a>
+            <a href="/" class="back-btn" id="natalFullBackBtn" data-i18n="common.back"></a>
             <div class="birth-info">
                 <h1 id="chartTitle" data-i18n="page.natalFull.header.defaultTitle"></h1>
                 <p id="birthDetails" class="birth-details"></p>
@@ -57,6 +57,14 @@
                         <line x1="11.5" y1="7" x2="13" y2="7"></line>
                     </svg>
                     <span data-i18n="page.chart.nav.forecast"></span>
+                </a>
+                <a href="chart.html?open=synastry" class="view-chart-btn" id="openNatalFullSynastryBtn">
+                    <svg class="header-btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                        <circle cx="4.5" cy="7" r="2.5"></circle>
+                        <circle cx="9.5" cy="7" r="2.5"></circle>
+                        <path d="M6.8 7h.4"></path>
+                    </svg>
+                    <span data-i18n="page.chart.nav.synastry"></span>
                 </a>
                 <button class="legend-toggle-btn" id="legendToggle">
                     <svg class="header-btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
@@ -340,7 +348,7 @@
         </details>
     </main>
 
-    <script type="module" src="js/bundles/natal-full.bundle.js?v=20260425-212442"></script>
-    <script src="js/locale-switcher.js?v=20260425-212442"></script>
+    <script type="module" src="js/bundles/natal-full.bundle.js?v=20260430-211101"></script>
+    <script src="js/locale-switcher.js?v=20260430-211101"></script>
 </body>
 </html>

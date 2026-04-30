@@ -540,6 +540,12 @@ async function openChart(userId) {
         const chartData = await response.json();
         AstroAPI.saveChartToSession(chartData);
         AstroAPI.saveFormData(AstroAPI.chartToFormData(chartData));
+        AstroAPI.saveNavigationState?.({
+            sourceView: 'clients',
+            sourceUrl: '/',
+            clientUserId: String(userId),
+            partnerUserId: null,
+        });
 
         window.showPageLoader?.();
         window.location.href = '/chart.html';
@@ -556,6 +562,12 @@ async function openForecastForUser(userId, { tab = 'biwheel', date, solarYear } 
         const chartData = await response.json();
         AstroAPI.saveChartToSession(chartData);
         AstroAPI.saveFormData(AstroAPI.chartToFormData(chartData));
+        AstroAPI.saveNavigationState?.({
+            sourceView: 'clients',
+            sourceUrl: '/',
+            clientUserId: String(userId),
+            partnerUserId: null,
+        });
 
         const params = new URLSearchParams();
         params.set('tab', tab);

@@ -734,6 +734,12 @@ async function openChart() {
         const chartData = await res.json();
         window.AstroAPI.saveChartToSession(chartData);
         window.AstroAPI.saveFormData(window.AstroAPI.chartToFormData(chartData));
+        window.AstroAPI.saveNavigationState?.({
+            sourceView: 'client-profile',
+            sourceUrl: window.AstroAPI.buildClientProfileUrl?.(userId) || `/client/${encodeURIComponent(userId)}`,
+            clientUserId: String(userId),
+            partnerUserId: null,
+        });
         window.showPageLoader?.();
         window.location.href = '/chart.html';
     } catch (err) {
@@ -748,6 +754,12 @@ async function openForecast() {
         const chartData = await res.json();
         window.AstroAPI.saveChartToSession(chartData);
         window.AstroAPI.saveFormData(window.AstroAPI.chartToFormData(chartData));
+        window.AstroAPI.saveNavigationState?.({
+            sourceView: 'client-profile',
+            sourceUrl: window.AstroAPI.buildClientProfileUrl?.(userId) || `/client/${encodeURIComponent(userId)}`,
+            clientUserId: String(userId),
+            partnerUserId: null,
+        });
         window.showPageLoader?.();
         window.location.href = '/forecast-new.html';
     } catch (err) {
@@ -757,8 +769,15 @@ async function openForecast() {
 
 function openSynastry(relatedUserId) {
     if (!relatedUserId) return;
+    window.AstroAPI.saveNavigationState?.({
+        sourceView: 'client-profile',
+        sourceUrl: window.AstroAPI.buildClientProfileUrl?.(userId) || `/client/${encodeURIComponent(userId)}`,
+        clientUserId: String(userId),
+        partnerUserId: String(relatedUserId),
+    });
     window.showPageLoader?.();
-    window.location.href = `/synastry.html?client=${encodeURIComponent(userId)}&partner=${encodeURIComponent(relatedUserId)}`;
+    window.location.href = window.AstroAPI.buildSynastryUrl?.(userId, relatedUserId)
+        || `/synastry.html?client=${encodeURIComponent(userId)}&partner=${encodeURIComponent(relatedUserId)}`;
 }
 
 async function startCallSession() {
