@@ -694,30 +694,18 @@
 }
 
 #forecastNewNatalPanel .forecast-new-position-column {
-    width: 116px;
+    width: 164px;
 }
 
 #forecastNewProgPanel .forecast-new-position-column {
-    width: 116px;
-}
-
-#forecastNewNatalPanel .forecast-new-speed-column {
-    width: 52px;
-}
-
-#forecastNewProgPanel .forecast-new-speed-column {
-    width: 52px;
-}
-
-#forecastNewNatalPanel .forecast-new-house-column {
-    width: 38px;
-}
-
-#forecastNewProgPanel .forecast-new-house-column {
-    width: 38px;
+    width: 136px;
 }
 
 #forecastNewNatalPanel .forecast-new-matrix-column {
+    width: 28px;
+}
+
+#forecastNewProgPanel .forecast-new-matrix-column {
     width: 28px;
 }
 
@@ -769,36 +757,6 @@
 #forecastNewProgPanel .forecast-new-houses-table th:first-child {
     width: auto;
     min-width: 0;
-}
-
-#forecastNewNatalPanel .data-table.compact .planet-speed-col,
-#forecastNewNatalPanel .data-table.compact .planet-speed-cell {
-    width: 46px;
-    min-width: 46px;
-    padding-left: 4px;
-    padding-right: 4px;
-}
-
-#forecastNewProgPanel .data-table.compact .planet-speed-col,
-#forecastNewProgPanel .data-table.compact .planet-speed-cell {
-    width: 46px;
-    min-width: 46px;
-    padding-left: 4px;
-    padding-right: 4px;
-}
-
-#forecastNewNatalPanel table:has(#natalPlanetsTable) th:nth-child(4),
-#natalPlanetsTable td:nth-child(4) {
-    width: 38px;
-    min-width: 38px;
-    white-space: nowrap;
-}
-
-#forecastNewProgPanel table:has(#progPlanetsTable) th:nth-child(4),
-#progPlanetsTable td:nth-child(4) {
-    width: 38px;
-    min-width: 38px;
-    white-space: nowrap;
 }
 
 .forecast-new-page .planet-motion-stack {

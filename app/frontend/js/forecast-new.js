@@ -273,6 +273,8 @@
             balancesContainerId: 'natalBalancesContainer',
             dignitiesContainerId: 'natalDignitiesContainer',
             aspectSortHeadersSelector: '#natalAspectsView th.sortable[data-sort]',
+            showSpeedColumn: false,
+            showHouseColumn: false,
         });
         state.prognosticRenderer = new ChartDataRenderer({
             planetsTableId: 'progPlanetsTable',
@@ -283,6 +285,8 @@
             balancesContainerId: 'progBalancesContainer',
             dignitiesContainerId: 'progDignitiesContainer',
             aspectSortHeadersSelector: '#progAspectsView th.sortable[data-sort]',
+            showSpeedColumn: false,
+            showHouseColumn: false,
         });
     }
 
@@ -872,12 +876,24 @@
             const body = matrixBodyKey(row.dataset.planet);
             row.insertAdjacentHTML('beforeend', matrixControlCells(body, rows));
         });
+
+        document.querySelectorAll('#progPlanetsTable tr[data-planet]').forEach((row) => {
+            const body = matrixBodyKey(row.dataset.planet);
+            row.insertAdjacentHTML('beforeend', matrixControlCells(body, rows));
+        });
     }
 
     function applyInlineMatrixRowState() {
         const rows = normalizeForecastNewMatrixRows(state.matrixRows);
 
         document.querySelectorAll('#natalPlanetsTable tr[data-planet]').forEach((row) => {
+            const body = matrixBodyKey(row.dataset.planet);
+            const config = rows?.[body] || { display: true, aspecting: true };
+            row.classList.toggle('forecast-new-matrix-row-display-off', config.display === false);
+            row.classList.toggle('forecast-new-matrix-row-aspecting-off', config.aspecting === false);
+        });
+
+        document.querySelectorAll('#progPlanetsTable tr[data-planet]').forEach((row) => {
             const body = matrixBodyKey(row.dataset.planet);
             const config = rows?.[body] || { display: true, aspecting: true };
             row.classList.toggle('forecast-new-matrix-row-display-off', config.display === false);
@@ -1227,6 +1243,8 @@
             balances: null,
             cosmogram_pattern: null,
         }));
+        renderInlineMatrixControls();
+        applyInlineMatrixRowState();
         syncPrognosticHousesVisibility(layer.houses || []);
         syncHoveredAspectToActiveSurface();
         activateSavedTabs();

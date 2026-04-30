@@ -28,6 +28,8 @@ class ChartDataRenderer {
         this.showSpeed = true;
         this.showStationary = true;
         this.showApplyingSeparating = false;
+        this.showSpeedColumn = options.showSpeedColumn !== false;
+        this.showHouseColumn = options.showHouseColumn !== false;
         this.houseNumberStyle = Symbols?.readSavedHouseNumberStyle?.() || 'arabic';
         this.visualPreferences = window.AstroPreferences?.getAccountVisualPreferences?.() || null;
         this.initAspectSortHeaders();
@@ -297,6 +299,8 @@ class ChartDataRenderer {
         const table = this.planetsTable?.closest('table');
         if (!table) return;
         table.classList.toggle('planets-table--speed-hidden', !this.showSpeed);
+        table.classList.toggle('planets-table--speed-column-hidden', !this.showSpeedColumn);
+        table.classList.toggle('planets-table--house-column-hidden', !this.showHouseColumn);
     }
 
     setVisualPreferences(visualPreferences = {}) {
@@ -372,8 +376,8 @@ class ChartDataRenderer {
                             <div class="planet-position-main"><span class="astro-symbol">${Symbols.signs[p.sign]}</span> ${degDMS}</div>
                         </div>
                     </td>
-                    <td class="planet-speed-cell mono">${this.showSpeed ? speedChip : ''}</td>
-                    <td class="mono">${this.escapeHtml(this.formatHouseNumber(p.house))}</td>
+                    ${this.showSpeedColumn ? `<td class="planet-speed-cell mono">${this.showSpeed ? speedChip : ''}</td>` : ''}
+                    ${this.showHouseColumn ? `<td class="mono">${this.escapeHtml(this.formatHouseNumber(p.house))}</td>` : ''}
                 </tr>
             `;
         }).join('');

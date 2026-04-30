@@ -376,21 +376,6 @@
                     'data-planet': body.name,
                     'data-method': ring.method,
                 });
-                if (item.hasLeader) {
-                    group.appendChild(this.el('line', {
-                        x1: anchor.x, y1: anchor.y, x2: pos.x, y2: pos.y,
-                        stroke: this.planetLeaderColor, 'stroke-width': 0.5, opacity: 0.34,
-                        class: 'planet-leader-line',
-                    }));
-                }
-                group.appendChild(this.el('circle', {
-                    cx: anchor.x,
-                    cy: anchor.y,
-                    r: 1.8,
-                    fill: this.planetLeaderColor,
-                    opacity: item.hasLeader ? 0.8 : 0.48,
-                    class: 'planet-anchor-point',
-                }));
                 const color = ring.method === 'natal'
                     ? this.getBodyColor(body, '#374151')
                     : ring.color;
@@ -400,6 +385,23 @@
                 const glyphSize = this.natalGlyphBaseSize * glyphScale * scale;
                 const iconBoxScale = hasSvg ? (window.AstroGlyphs?.getPlanetIconScale?.(body.name) || 1.18) : 1;
                 const iconSize = hasSvg ? this.natalGlyphBaseSize * scale * iconBoxScale : glyphSize;
+                const leaderTargetRadius = Math.max(10 * scale, iconSize * 0.58);
+                const leaderEnd = this.getLeaderLineEndPoint(anchor, pos, leaderTargetRadius, 2.2);
+                group.appendChild(this.el('line', {
+                    x1: anchor.x, y1: anchor.y, x2: leaderEnd.x, y2: leaderEnd.y,
+                    stroke: this.planetLeaderColor, 'stroke-width': 0.5, opacity: item.hasLeader ? 0.34 : 0.24,
+                    class: 'planet-leader-line',
+                }));
+                group.appendChild(this.el('circle', {
+                    cx: anchor.x,
+                    cy: anchor.y,
+                    r: 1.8,
+                    fill: WHEEL_BG,
+                    stroke: this.planetLeaderColor,
+                    'stroke-width': 1,
+                    opacity: item.hasLeader ? 0.8 : 0.48,
+                    class: 'planet-anchor-point',
+                }));
                 group.appendChild(this.el('circle', {
                     cx: pos.x,
                     cy: pos.y,
@@ -1262,6 +1264,19 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
+        }
+
+        getLeaderLineEndPoint(anchorPoint, iconPoint, iconRadius, gap = 2) {
+            const dx = iconPoint.x - anchorPoint.x;
+            const dy = iconPoint.y - anchorPoint.y;
+            const distance = Math.hypot(dx, dy);
+            if (!distance) return { x: iconPoint.x, y: iconPoint.y };
+            const trim = Math.min(distance, Math.max(0, Number(iconRadius) || 0) + Math.max(0, Number(gap) || 0));
+            const ratio = (distance - trim) / distance;
+            return {
+                x: anchorPoint.x + dx * ratio,
+                y: anchorPoint.y + dy * ratio,
+            };
         }
 
         el(tag, attrs = {}, text = null) {

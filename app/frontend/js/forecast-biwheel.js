@@ -599,6 +599,19 @@
         return { x: C + r * Math.cos(rad), y: C + r * Math.sin(rad) };
     }
 
+    function getLeaderLineEndPoint(anchorPoint, iconPoint, iconRadius, gap = 2) {
+        const dx = iconPoint.x - anchorPoint.x;
+        const dy = iconPoint.y - anchorPoint.y;
+        const distance = Math.hypot(dx, dy);
+        if (!distance) return { x: iconPoint.x, y: iconPoint.y };
+        const trim = Math.min(distance, Math.max(0, Number(iconRadius) || 0) + Math.max(0, Number(gap) || 0));
+        const ratio = (distance - trim) / distance;
+        return {
+            x: anchorPoint.x + dx * ratio,
+            y: anchorPoint.y + dy * ratio,
+        };
+    }
+
     function getOutsideHouseLabelGeometry(angle, method = 'natal') {
         const theme = getHouseLayerTheme(method);
         const cos = Math.cos(angle);
@@ -1198,6 +1211,8 @@
             const glyphSize = fontSize * glyphScale * layerScale;
             const iconBoxScale = useVectorIcon ? (window.AstroGlyphs?.getPlanetIconScale?.(planet.name) || 1.18) : 1;
             const iconSize = useVectorIcon ? fontSize * layerScale * iconBoxScale : glyphSize;
+            const leaderTargetRadius = Math.max(9 * layerScale, iconSize * 0.58);
+            const leaderEnd = getLeaderLineEndPoint(exactPoint, p, leaderTargetRadius, 2.2);
             const element = Symbols?.signElements?.[planet.sign];
             const isNatal = layerType === 'natal';
             const color = isNatal
@@ -1224,24 +1239,24 @@
                 class: 'bw-planet-hit'
             }));
 
-            if (hasLeader) {
-                group.appendChild(el('line', {
-                    x1: p.x,
-                    y1: p.y,
-                    x2: exactPoint.x,
-                    y2: exactPoint.y,
-                    stroke: PLANET_LEADER_COLOR,
-                    'stroke-width': '0.35',
-                    opacity: '0.3',
-                    style: 'pointer-events:none'
-                }));
-            }
+            group.appendChild(el('line', {
+                x1: exactPoint.x,
+                y1: exactPoint.y,
+                x2: leaderEnd.x,
+                y2: leaderEnd.y,
+                stroke: PLANET_LEADER_COLOR,
+                'stroke-width': '0.35',
+                opacity: hasLeader ? '0.3' : '0.22',
+                style: 'pointer-events:none'
+            }));
 
             group.appendChild(el('circle', {
                 cx: exactPoint.x,
                 cy: exactPoint.y,
                 r: '1.6',
-                fill: PLANET_LEADER_COLOR,
+                fill: '#fafafa',
+                stroke: PLANET_LEADER_COLOR,
+                'stroke-width': '1',
                 opacity: hasLeader ? '0.8' : '0.48',
                 style: 'pointer-events:none'
             }));

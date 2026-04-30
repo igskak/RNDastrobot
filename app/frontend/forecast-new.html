@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Прогностика New</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=20260430-231213">
-    <script>window.__APP_BUILD_ID__ = '20260430-231213';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=20260430-232214">
+    <script>window.__APP_BUILD_ID__ = '20260430-232214';</script>
 </head>
 <body class="forecast-new-page">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -66,12 +66,10 @@
                         <colgroup>
                             <col class="forecast-new-symbol-column">
                             <col class="forecast-new-position-column">
-                            <col class="forecast-new-speed-column">
-                            <col class="forecast-new-house-column">
                             <col class="forecast-new-matrix-column">
                             <col class="forecast-new-matrix-column">
                         </colgroup>
-                        <thead><tr><th>Симв.</th><th>Позиция</th><th class="planet-speed-col">Скор.</th><th>Дом</th><th class="forecast-new-matrix-col" title="Показ">П</th><th class="forecast-new-matrix-col" title="Аспектация">А</th></tr></thead>
+                        <thead><tr><th>Симв.</th><th>Позиция</th><th class="forecast-new-matrix-col" title="Показ">П</th><th class="forecast-new-matrix-col" title="Аспектация">А</th></tr></thead>
                         <tbody id="natalPlanetsTable"></tbody>
                     </table>
                     <div class="subsection-title forecast-new-houses-title">Дома</div>
@@ -197,10 +195,6 @@
                     <label class="settings-label">Таблицы</label>
                     <div class="settings-check-stack">
                         <label class="settings-check-option">
-                            <input type="checkbox" id="showSpeedToggle">
-                            <span>Показывать скорость</span>
-                        </label>
-                        <label class="settings-check-option">
                             <input type="checkbox" id="showStationaryToggle">
                             <span>Показывать стационарность</span>
                         </label>
@@ -250,10 +244,10 @@
                         <colgroup>
                             <col class="forecast-new-symbol-column">
                             <col class="forecast-new-position-column">
-                            <col class="forecast-new-speed-column">
-                            <col class="forecast-new-house-column">
+                            <col class="forecast-new-matrix-column">
+                            <col class="forecast-new-matrix-column">
                         </colgroup>
-                        <thead><tr><th>Симв.</th><th>Позиция</th><th class="planet-speed-col">Скор.</th><th>Дом</th></tr></thead>
+                        <thead><tr><th>Симв.</th><th>Позиция</th><th class="forecast-new-matrix-col" title="Показ">П</th><th class="forecast-new-matrix-col" title="Аспектация">А</th></tr></thead>
                         <tbody id="progPlanetsTable"></tbody>
                     </table>
                     <div class="subsection-title forecast-new-houses-title">Дома</div>
@@ -280,6 +274,6 @@
         </aside>
     </main>
 
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=20260430-231213"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=20260430-232214"></script>
 </body>
 </html>

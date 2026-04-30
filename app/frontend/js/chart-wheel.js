@@ -785,6 +785,13 @@ class ChartWheel {
             const glyphSize = this.natalGlyphBaseSize * glyphScale * scale;
             const iconBoxScale = useVectorIcon ? (window.AstroGlyphs?.getPlanetIconScale?.(planet.name) || 1.18) : 1;
             const iconSize = useVectorIcon ? this.natalGlyphBaseSize * scale * iconBoxScale : glyphSize;
+            const leaderTargetRadius = Math.max(9 * scale, iconSize * 0.58);
+            const leaderEnd = this.getLeaderLineEndPoint(
+                { x: anchorX, y: anchorY },
+                { x, y },
+                leaderTargetRadius,
+                2.2
+            );
 
             // Группа для интерактивности
             const group = this.createSvgElement('g', {
@@ -793,24 +800,23 @@ class ChartWheel {
                 style: 'cursor: pointer;'
             });
 
-            if (hasLeader) {
-                group.appendChild(this.createSvgElement('line', {
-                    x1: anchorX, y1: anchorY,
-                    x2: x, y2: y,
-                    stroke: this.planetLeaderColor,
-                    'stroke-width': 0.5,
-                    opacity: 0.34,
-                    class: 'planet-leader-line',
-                    style: 'pointer-events: none;'
-                }));
-
-            }
+            group.appendChild(this.createSvgElement('line', {
+                x1: anchorX, y1: anchorY,
+                x2: leaderEnd.x, y2: leaderEnd.y,
+                stroke: this.planetLeaderColor,
+                'stroke-width': 0.5,
+                opacity: hasLeader ? 0.34 : 0.24,
+                class: 'planet-leader-line',
+                style: 'pointer-events: none;'
+            }));
 
             group.appendChild(this.createSvgElement('circle', {
                 cx: anchorX,
                 cy: anchorY,
                 r: 1.8,
-                fill: this.planetLeaderColor,
+                fill: '#fafafa',
+                stroke: this.planetLeaderColor,
+                'stroke-width': 1,
                 opacity: hasLeader ? 0.8 : 0.48,
                 class: 'planet-anchor-point',
                 style: 'pointer-events: none;'
@@ -1106,6 +1112,21 @@ class ChartWheel {
         return {
             x: this.center + r * Math.cos(angle),
             y: this.center + r * Math.sin(angle)  // Зеркальное отображение по горизонтальной оси
+        };
+    }
+
+    getLeaderLineEndPoint(anchorPoint, iconPoint, iconRadius, gap = 2) {
+        const dx = iconPoint.x - anchorPoint.x;
+        const dy = iconPoint.y - anchorPoint.y;
+        const distance = Math.hypot(dx, dy);
+        if (!distance) {
+            return { x: iconPoint.x, y: iconPoint.y };
+        }
+        const trim = Math.min(distance, Math.max(0, Number(iconRadius) || 0) + Math.max(0, Number(gap) || 0));
+        const ratio = (distance - trim) / distance;
+        return {
+            x: anchorPoint.x + dx * ratio,
+            y: anchorPoint.y + dy * ratio
         };
     }
 
