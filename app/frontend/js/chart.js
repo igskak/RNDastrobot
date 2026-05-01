@@ -77,6 +77,8 @@ const NATAL_ASPECT_TYPES = window.AstroPreferences?.DEFAULT_ENABLED_ASPECT_TYPES
 const ASPECT_PHASE_STORAGE_KEY = 'natalAspectPhaseFilter';
 const HOUSE_NUMBER_STYLE_STORAGE_KEY = 'natalHouseNumberStyle';
 const HOUSE_LABELS_OUTSIDE_STORAGE_KEY = 'natalHouseLabelsOutside';
+const ANGLE_ASC_DSC_BOLD_STORAGE_KEY = 'natalAngleAscDscBold';
+const ANGLE_MC_IC_BOLD_STORAGE_KEY = 'natalAngleMcIcBold';
 const ASPECT_NAME_ALIASES = {
     TrueNorthNode: 'TrueNode',
     TrueSouthNode: 'SouthNode',
@@ -152,6 +154,10 @@ function readSavedHouseLabelsOutside() {
     return localStorage.getItem(HOUSE_LABELS_OUTSIDE_STORAGE_KEY) === 'true';
 }
 
+function readSavedAngleBold(storageKey) {
+    return localStorage.getItem(storageKey) !== 'false';
+}
+
 let currentSettings = {
     houseSystem: 'P',
     hiddenPlanets: [],
@@ -169,6 +175,8 @@ let currentSettings = {
     pointScale: readSavedPointScale(),
     houseNumberStyle: readSavedHouseNumberStyle(),
     houseLabelsOutside: readSavedHouseLabelsOutside(),
+    angleAscDscBold: readSavedAngleBold(ANGLE_ASC_DSC_BOLD_STORAGE_KEY),
+    angleMcIcBold: readSavedAngleBold(ANGLE_MC_IC_BOLD_STORAGE_KEY),
 };
 
 function clampPointScale(v) {
@@ -355,6 +363,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     chartWheel.setHouseLabelOptions({
         style: currentSettings.houseNumberStyle,
         outside: currentSettings.houseLabelsOutside,
+    }, { redraw: false });
+    chartWheel.setAngleMarkerOptions?.({
+        ascDscBold: currentSettings.angleAscDscBold,
+        mcIcBold: currentSettings.angleMcIcBold,
     }, { redraw: false });
 
     // Применяем фильтры ДО первого draw, чтобы избежать мигания аспектов
@@ -638,6 +650,8 @@ function getNatalResolvedViewSettings() {
                 orientation: currentSettings.orientation || 'aries',
                 show_planet_stationary: currentSettings.showWheelStationary === true,
                 show_planet_degree: currentSettings.showWheelDegree === true,
+                bold_asc_dsc: currentSettings.angleAscDscBold !== false,
+                bold_mc_ic: currentSettings.angleMcIcBold !== false,
             },
         };
     return {
@@ -666,6 +680,8 @@ function getNatalResolvedViewSettings() {
             orientation: currentSettings.orientation === 'asc' ? 'asc' : 'aries',
             show_planet_stationary: currentSettings.showWheelStationary === true,
             show_planet_degree: currentSettings.showWheelDegree === true,
+            bold_asc_dsc: currentSettings.angleAscDscBold !== false,
+            bold_mc_ic: currentSettings.angleMcIcBold !== false,
         },
     };
 }
@@ -733,6 +749,16 @@ function syncNatalSettingsControls() {
         houseLabelsOutsideToggle.checked = currentSettings.houseLabelsOutside === true;
     }
 
+    const angleAscDscBoldToggle = document.getElementById('angleAscDscBoldToggle');
+    if (angleAscDscBoldToggle) {
+        angleAscDscBoldToggle.checked = currentSettings.angleAscDscBold !== false;
+    }
+
+    const angleMcIcBoldToggle = document.getElementById('angleMcIcBoldToggle');
+    if (angleMcIcBoldToggle) {
+        angleMcIcBoldToggle.checked = currentSettings.angleMcIcBold !== false;
+    }
+
     renderNatalSettingsEditors();
 }
 
@@ -768,12 +794,18 @@ function applyResolvedNatalPreferences(payload, { redraw = true } = {}) {
     currentSettings.showStationary = resolved.table_options?.show_stationary !== false;
     currentSettings.showWheelStationary = resolved.view_options?.show_planet_stationary === true;
     currentSettings.showWheelDegree = resolved.view_options?.show_planet_degree === true;
+    currentSettings.angleAscDscBold = resolved.view_options?.bold_asc_dsc !== false;
+    currentSettings.angleMcIcBold = resolved.view_options?.bold_mc_ic !== false;
 
     syncNatalSettingsControls();
     applyChartState(window.chartDataRawCache || window.chartDataCache, { houseSystem: currentSettings.houseSystem });
     chartWheel?.setPlanetAnnotationOptions?.({
         showStationary: currentSettings.showWheelStationary,
         showDegree: currentSettings.showWheelDegree,
+    }, { redraw: false });
+    chartWheel?.setAngleMarkerOptions?.({
+        ascDscBold: currentSettings.angleAscDscBold,
+        mcIcBold: currentSettings.angleMcIcBold,
     }, { redraw: false });
     chartDataRenderer?.setDisplayPreferences?.({
         showSpeed: currentSettings.showSpeed,
@@ -1183,6 +1215,14 @@ function bindNatalSettingsHandlers() {
     if (houseLabelsOutsideToggle) {
         houseLabelsOutsideToggle.onchange = () => applySettings();
     }
+    const angleAscDscBoldToggle = document.getElementById('angleAscDscBoldToggle');
+    if (angleAscDscBoldToggle) {
+        angleAscDscBoldToggle.onchange = () => applySettings();
+    }
+    const angleMcIcBoldToggle = document.getElementById('angleMcIcBoldToggle');
+    if (angleMcIcBoldToggle) {
+        angleMcIcBoldToggle.onchange = () => applySettings();
+    }
 }
 
 function readNatalMatrixRowsFromControls() {
@@ -1239,6 +1279,8 @@ async function applySettings() {
         const showWheelDegree = document.getElementById('showWheelDegreeToggle')?.checked === true;
         const houseNumberStyle = document.getElementById('houseNumberStyleSelect')?.value === 'roman' ? 'roman' : 'arabic';
         const houseLabelsOutside = document.getElementById('houseLabelsOutsideToggle')?.checked === true;
+        const angleAscDscBold = document.getElementById('angleAscDscBoldToggle')?.checked !== false;
+        const angleMcIcBold = document.getElementById('angleMcIcBoldToggle')?.checked !== false;
 
         currentSettings.orientation = orientation === 'asc' ? 'asc' : 'aries';
         currentSettings.aspectScope = ['all', 'major', 'minor'].includes(aspectScope) ? aspectScope : 'all';
@@ -1261,14 +1303,22 @@ async function applySettings() {
         currentSettings.showWheelDegree = showWheelDegree;
         currentSettings.houseNumberStyle = houseNumberStyle;
         currentSettings.houseLabelsOutside = houseLabelsOutside;
+        currentSettings.angleAscDscBold = angleAscDscBold;
+        currentSettings.angleMcIcBold = angleMcIcBold;
         localStorage.setItem('natalPlanetScale', String(iconScale));
         localStorage.setItem('natalPointScale', String(iconScale));
         localStorage.setItem(ASPECT_PHASE_STORAGE_KEY, serializeAspectPhaseFilter(aspectPhaseFilter));
         localStorage.setItem(HOUSE_NUMBER_STYLE_STORAGE_KEY, houseNumberStyle);
         localStorage.setItem(HOUSE_LABELS_OUTSIDE_STORAGE_KEY, houseLabelsOutside ? 'true' : 'false');
+        localStorage.setItem(ANGLE_ASC_DSC_BOLD_STORAGE_KEY, angleAscDscBold ? 'true' : 'false');
+        localStorage.setItem(ANGLE_MC_IC_BOLD_STORAGE_KEY, angleMcIcBold ? 'true' : 'false');
         chartWheel?.setHouseLabelOptions?.({
             style: houseNumberStyle,
             outside: houseLabelsOutside,
+        }, { redraw: false });
+        chartWheel?.setAngleMarkerOptions?.({
+            ascDscBold: angleAscDscBold,
+            mcIcBold: angleMcIcBold,
         }, { redraw: false });
         chartWheel?.setPlanetAnnotationOptions?.({
             showStationary: showWheelStationary,
@@ -1416,6 +1466,10 @@ function redrawChart(chartData, hiddenPlanets, orientation = currentSettings.ori
         chartWheel.setHouseLabelOptions({
             style: currentSettings.houseNumberStyle,
             outside: currentSettings.houseLabelsOutside,
+        }, { redraw: false });
+        chartWheel.setAngleMarkerOptions?.({
+            ascDscBold: currentSettings.angleAscDscBold,
+            mcIcBold: currentSettings.angleMcIcBold,
         }, { redraw: false });
     }
     chartDataRenderer?.setDisplayPreferences?.({

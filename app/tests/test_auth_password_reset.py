@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import JSON, create_engine
 from sqlalchemy.orm import sessionmaker
 
 os.environ.setdefault("DATABASE_URL", "sqlite+pysqlite:///./_auth_password_reset_test.db")
@@ -14,11 +14,17 @@ from app.api.main import app  # noqa: E402
 from app.auth import dependencies as auth_dependencies  # noqa: E402
 from app.auth.security import hash_password, hash_password_reset_token, utcnow  # noqa: E402
 from app.database.connection import get_db  # noqa: E402
-from app.database.models import Astrologer, AuditEvent, AuthSession, EmailVerificationToken, PasswordResetToken, User  # noqa: E402
+from app.database.models import Astrologer, AuditEvent, AuthSession, CallSession, Consultation, EmailVerificationToken, PasswordResetToken, User  # noqa: E402
 
 
 engine = create_engine("sqlite:///./_auth_password_reset_test.sqlite3", connect_args={"check_same_thread": False})
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+def _prepare_sqlite_json_columns():
+    User.__table__.c.tags.type = JSON()
+    CallSession.__table__.c.transcript_segments.type = JSON()
+    CallSession.__table__.c.key_points.type = JSON()
 
 
 def _override_get_db():
@@ -35,7 +41,10 @@ def _override_get_db():
 
 @pytest.fixture(autouse=True)
 def _db_setup(monkeypatch):
+    _prepare_sqlite_json_columns()
     for table in (
+        CallSession.__table__,
+        Consultation.__table__,
         AuditEvent.__table__,
         AuthSession.__table__,
         EmailVerificationToken.__table__,
@@ -46,6 +55,8 @@ def _db_setup(monkeypatch):
         table.drop(bind=engine, checkfirst=True)
     Astrologer.__table__.create(bind=engine, checkfirst=True)
     User.__table__.create(bind=engine, checkfirst=True)
+    Consultation.__table__.create(bind=engine, checkfirst=True)
+    CallSession.__table__.create(bind=engine, checkfirst=True)
     AuthSession.__table__.create(bind=engine, checkfirst=True)
     AuditEvent.__table__.create(bind=engine, checkfirst=True)
     EmailVerificationToken.__table__.create(bind=engine, checkfirst=True)

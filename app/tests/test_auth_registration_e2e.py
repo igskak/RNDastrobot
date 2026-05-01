@@ -16,6 +16,7 @@ from app.database.models import (  # noqa: E402
     Astrologer,
     AuditEvent,
     AuthSession,
+    CallSession,
     Consultation,
     EmailVerificationToken,
     PasswordResetToken,
@@ -29,6 +30,8 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 def _prepare_sqlite_user_table():
     User.__table__.c.tags.type = JSON()
+    CallSession.__table__.c.transcript_segments.type = JSON()
+    CallSession.__table__.c.key_points.type = JSON()
 
 
 def _override_get_db():
@@ -47,6 +50,7 @@ def _override_get_db():
 def _db_setup(monkeypatch):
     _prepare_sqlite_user_table()
     for table in (
+        CallSession.__table__,
         Consultation.__table__,
         AuditEvent.__table__,
         AuthSession.__table__,
@@ -60,6 +64,7 @@ def _db_setup(monkeypatch):
     Astrologer.__table__.create(bind=engine, checkfirst=True)
     User.__table__.create(bind=engine, checkfirst=True)
     Consultation.__table__.create(bind=engine, checkfirst=True)
+    CallSession.__table__.create(bind=engine, checkfirst=True)
     AuthSession.__table__.create(bind=engine, checkfirst=True)
     AuditEvent.__table__.create(bind=engine, checkfirst=True)
     EmailVerificationToken.__table__.create(bind=engine, checkfirst=True)

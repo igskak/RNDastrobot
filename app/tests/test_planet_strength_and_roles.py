@@ -7,7 +7,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 
 from app.database.connection import get_db_session
-from app.database.models import NatalPlanet, User
+from app.database.models import Astrologer, NatalPlanet, User
 from app.services.natal_chart_service import NatalChartService
 
 
@@ -20,7 +20,23 @@ def db_session():
 
 
 @pytest.fixture
-def test_user_id(db_session: Session):
+def test_astrologer_id(db_session: Session):
+    astrologer = Astrologer(
+        email='planet-strength-tests@example.com',
+        password_hash='test',
+        auth_provider='local',
+        is_active=True,
+    )
+    db_session.add(astrologer)
+    db_session.commit()
+    db_session.refresh(astrologer)
+    yield astrologer.id
+    db_session.delete(astrologer)
+    db_session.commit()
+
+
+@pytest.fixture
+def test_user_id(db_session: Session, test_astrologer_id):
     """Создать тестовую натальную карту"""
     # Указываем абсолютный путь к эфемеридам
     import os
@@ -35,6 +51,7 @@ def test_user_id(db_session: Session):
         latitude=50.4501,
         longitude=30.5234,
         house_system='P',
+        astrologer_id=test_astrologer_id,
         save_to_db=True,
         db_session=db_session
     )
@@ -131,4 +148,3 @@ def test_special_roles_format(db_session: Session, test_user_id: UUID):
             assert isinstance(planet.special_roles, list), f"special_roles должен быть списком для {planet.planet}"
             for role in planet.special_roles:
                 assert role in valid_roles, f"Неизвестная роль {role} у планеты {planet.planet}"
-

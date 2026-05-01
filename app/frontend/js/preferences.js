@@ -367,6 +367,8 @@
             },
             view_options: {
                 orientation: viewSettings?.view_options?.orientation === 'asc' ? 'asc' : 'aries',
+                bold_asc_dsc: viewSettings?.view_options?.bold_asc_dsc !== false,
+                bold_mc_ic: viewSettings?.view_options?.bold_mc_ic !== false,
             },
         };
     }

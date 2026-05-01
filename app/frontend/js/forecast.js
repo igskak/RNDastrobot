@@ -6,6 +6,12 @@
 const API_BASE = window.location.hostname === 'localhost'
     ? 'http://localhost:8000/api/v1'
     : '/api/v1';
+const ANGLE_ASC_DSC_BOLD_STORAGE_KEY = 'natalAngleAscDscBold';
+const ANGLE_MC_IC_BOLD_STORAGE_KEY = 'natalAngleMcIcBold';
+
+function readSavedAngleBold(storageKey) {
+    return localStorage.getItem(storageKey) !== 'false';
+}
 
 function t(key, params) {
     return window.FrontendI18n?.t?.(key, params) || key;
@@ -191,6 +197,8 @@ const ForecastState = {
     solarShowApplyingSeparating: false,
     solarShowSpeed: true,
     solarShowStationary: true,
+    solarAngleAscDscBold: readSavedAngleBold(ANGLE_ASC_DSC_BOLD_STORAGE_KEY),
+    solarAngleMcIcBold: readSavedAngleBold(ANGLE_MC_IC_BOLD_STORAGE_KEY),
     solarPointScale: 1.0,
     solarWheel: null,
     solarDataRenderer: null,
@@ -207,6 +215,8 @@ const ForecastState = {
     biwheelAspectScope: 'major',
     biwheelMatrixRows: window.AstroPreferences?.ensureMatrixRows?.({}) || {},
     biwheelEnabledAspectTypes: [...FORECAST_ASPECT_TYPES],
+    biwheelAngleAscDscBold: readSavedAngleBold(ANGLE_ASC_DSC_BOLD_STORAGE_KEY),
+    biwheelAngleMcIcBold: readSavedAngleBold(ANGLE_MC_IC_BOLD_STORAGE_KEY),
     biwheelDisplayMode: 'prognostic',
     accountPreferences: null,
     biwheelResolvedPreferences: null,
@@ -367,6 +377,8 @@ function getForecastViewState(viewType) {
             showApplyingSeparating: false,
             showSpeed: true,
             showStationary: true,
+            angleAscDscBold: ForecastState.biwheelAngleAscDscBold,
+            angleMcIcBold: ForecastState.biwheelAngleMcIcBold,
         };
     }
 
@@ -378,6 +390,8 @@ function getForecastViewState(viewType) {
         showApplyingSeparating: ForecastState.solarShowApplyingSeparating,
         showSpeed: ForecastState.solarShowSpeed,
         showStationary: ForecastState.solarShowStationary,
+        angleAscDscBold: ForecastState.solarAngleAscDscBold,
+        angleMcIcBold: ForecastState.solarAngleMcIcBold,
     };
 }
 
@@ -412,6 +426,8 @@ function buildResolvedForecastViewForPersistence(viewType) {
         view_options: {
             ...(normalized.view_options || {}),
             orientation: state.orientation === 'asc' ? 'asc' : 'aries',
+            bold_asc_dsc: state.angleAscDscBold !== false,
+            bold_mc_ic: state.angleMcIcBold !== false,
         },
     };
 }
@@ -501,6 +517,22 @@ function syncForecastOrientationControls() {
     if (solarShowStationaryToggle) {
         solarShowStationaryToggle.checked = ForecastState.solarShowStationary !== false;
     }
+    const bwAngleAscDscBoldToggle = document.getElementById('bwAngleAscDscBoldToggle');
+    if (bwAngleAscDscBoldToggle) {
+        bwAngleAscDscBoldToggle.checked = ForecastState.biwheelAngleAscDscBold !== false;
+    }
+    const bwAngleMcIcBoldToggle = document.getElementById('bwAngleMcIcBoldToggle');
+    if (bwAngleMcIcBoldToggle) {
+        bwAngleMcIcBoldToggle.checked = ForecastState.biwheelAngleMcIcBold !== false;
+    }
+    const solarAngleAscDscBoldToggle = document.getElementById('solarAngleAscDscBoldToggle');
+    if (solarAngleAscDscBoldToggle) {
+        solarAngleAscDscBoldToggle.checked = ForecastState.solarAngleAscDscBold !== false;
+    }
+    const solarAngleMcIcBoldToggle = document.getElementById('solarAngleMcIcBoldToggle');
+    if (solarAngleMcIcBoldToggle) {
+        solarAngleMcIcBoldToggle.checked = ForecastState.solarAngleMcIcBold !== false;
+    }
 
     renderForecastMatrixEditor('bwMatrixEditor', ForecastState.biwheelMatrixRows);
     renderForecastAspectTypeToggles('bwAspectTypeToggles', ForecastState.biwheelEnabledAspectTypes, ForecastState.biwheelAspectScope);
@@ -543,10 +575,19 @@ async function applyBiwheelSettingsFromControls({ persist = true } = {}) {
             FORECAST_ASPECT_TYPES,
         )
         : nextBiwheelAspectTypes;
+    ForecastState.biwheelAngleAscDscBold = document.getElementById('bwAngleAscDscBoldToggle')?.checked !== false;
+    ForecastState.biwheelAngleMcIcBold = document.getElementById('bwAngleMcIcBoldToggle')?.checked !== false;
+    localStorage.setItem(ANGLE_ASC_DSC_BOLD_STORAGE_KEY, ForecastState.biwheelAngleAscDscBold ? 'true' : 'false');
+    localStorage.setItem(ANGLE_MC_IC_BOLD_STORAGE_KEY, ForecastState.biwheelAngleMcIcBold ? 'true' : 'false');
 
     window.ForecastBiwheel?.setMatrixRows?.(ForecastState.biwheelMatrixRows);
     window.ForecastBiwheel?.setEnabledAspectTypes?.(ForecastState.biwheelEnabledAspectTypes);
     window.ForecastBiwheel?.setAspectFilter?.(ForecastState.biwheelAspectScope);
+    window.ForecastBiwheel?.setAngleMarkerOptions?.({
+        ascDscBold: ForecastState.biwheelAngleAscDscBold,
+        mcIcBold: ForecastState.biwheelAngleMcIcBold,
+    });
+    renderNatalOverlay();
     if (window.ForecastBiwheel?.hasLastRender?.()) {
         window.ForecastBiwheel.rerenderLast();
     }
@@ -580,6 +621,10 @@ async function applySolarSettingsFromControls({ persist = true } = {}) {
     ForecastState.solarShowApplyingSeparating = document.getElementById('solarShowApplyingSeparatingToggle')?.checked === true;
     ForecastState.solarShowSpeed = document.getElementById('solarShowSpeedToggle')?.checked !== false;
     ForecastState.solarShowStationary = document.getElementById('solarShowStationaryToggle')?.checked !== false;
+    ForecastState.solarAngleAscDscBold = document.getElementById('solarAngleAscDscBoldToggle')?.checked !== false;
+    ForecastState.solarAngleMcIcBold = document.getElementById('solarAngleMcIcBoldToggle')?.checked !== false;
+    localStorage.setItem(ANGLE_ASC_DSC_BOLD_STORAGE_KEY, ForecastState.solarAngleAscDscBold ? 'true' : 'false');
+    localStorage.setItem(ANGLE_MC_IC_BOLD_STORAGE_KEY, ForecastState.solarAngleMcIcBold ? 'true' : 'false');
 
     syncForecastOrientationControls();
     if (ForecastState.solarData) {
@@ -713,6 +758,8 @@ function applyForecastResolvedPreferences(viewType, payload) {
         ForecastState.biwheelOrientation = orientation;
         ForecastState.biwheelAspectScope = resolved?.aspects?.scope || 'major';
         ForecastState.biwheelMatrixRows = ensureForecastMatrixRows(resolved?.matrix?.rows || {});
+        ForecastState.biwheelAngleAscDscBold = resolved?.view_options?.bold_asc_dsc !== false;
+        ForecastState.biwheelAngleMcIcBold = resolved?.view_options?.bold_mc_ic !== false;
         ForecastState.biwheelEnabledAspectTypes = window.AstroPreferences?.healEnabledAspectTypesForScope
             ? window.AstroPreferences.healEnabledAspectTypesForScope(
                 resolved?.aspects?.enabled_types,
@@ -731,6 +778,10 @@ function applyForecastResolvedPreferences(viewType, payload) {
         window.ForecastBiwheel?.setMatrixRows?.(ForecastState.biwheelMatrixRows);
         window.ForecastBiwheel?.setEnabledAspectTypes?.(ForecastState.biwheelEnabledAspectTypes);
         window.ForecastBiwheel?.setAspectFilter?.(ForecastState.biwheelAspectScope);
+        window.ForecastBiwheel?.setAngleMarkerOptions?.({
+            ascDscBold: ForecastState.biwheelAngleAscDscBold,
+            mcIcBold: ForecastState.biwheelAngleMcIcBold,
+        });
         renderNatalOverlay();
         if (window.ForecastBiwheel?.hasLastRender?.()) {
             window.ForecastBiwheel.rerenderLast();
@@ -754,6 +805,8 @@ function applyForecastResolvedPreferences(viewType, payload) {
         ForecastState.solarShowApplyingSeparating = resolved?.aspects?.show_applying_separating === true;
         ForecastState.solarShowSpeed = resolved?.table_options?.show_speed !== false;
         ForecastState.solarShowStationary = resolved?.table_options?.show_stationary !== false;
+        ForecastState.solarAngleAscDscBold = resolved?.view_options?.bold_asc_dsc !== false;
+        ForecastState.solarAngleMcIcBold = resolved?.view_options?.bold_mc_ic !== false;
         if (ForecastState.accountPreferences?.visual) {
             ForecastState.solarWheel?.setVisualPreferences?.(ForecastState.accountPreferences.visual, { redraw: false });
             getSolarDataRenderer()?.setVisualPreferences?.(ForecastState.accountPreferences.visual);
@@ -1552,6 +1605,10 @@ function renderNatalOverlay() {
     wheel.setHouseLabelOptions({
         style: houseNumberStyle,
         outside: houseLabelsOutside,
+    }, { redraw: false });
+    wheel.setAngleMarkerOptions?.({
+        ascDscBold: ForecastState.biwheelAngleAscDscBold,
+        mcIcBold: ForecastState.biwheelAngleMcIcBold,
     }, { redraw: false });
     wheel.draw(natalWheelData);
     applyNatalOverlayViewport();
@@ -2640,10 +2697,22 @@ function initControls() {
     document.getElementById('bwAspectTypeToggles')?.addEventListener('change', () => {
         applyBiwheelSettingsFromControls({ persist: true });
     });
+    document.getElementById('bwAngleAscDscBoldToggle')?.addEventListener('change', () => {
+        applyBiwheelSettingsFromControls({ persist: true });
+    });
+    document.getElementById('bwAngleMcIcBoldToggle')?.addEventListener('change', () => {
+        applyBiwheelSettingsFromControls({ persist: true });
+    });
     document.getElementById('solarMatrixEditor')?.addEventListener('change', () => {
         applySolarSettingsFromControls({ persist: true });
     });
     document.getElementById('solarAspectTypeToggles')?.addEventListener('change', () => {
+        applySolarSettingsFromControls({ persist: true });
+    });
+    document.getElementById('solarAngleAscDscBoldToggle')?.addEventListener('change', () => {
+        applySolarSettingsFromControls({ persist: true });
+    });
+    document.getElementById('solarAngleMcIcBoldToggle')?.addEventListener('change', () => {
         applySolarSettingsFromControls({ persist: true });
     });
     document.getElementById('solarShowApplyingSeparatingToggle')?.addEventListener('change', () => {
@@ -3678,6 +3747,10 @@ function renderBiwheelData(data) {
         style: houseNumberStyle,
         outside: houseLabelsOutside,
     });
+    window.ForecastBiwheel.setAngleMarkerOptions?.({
+        ascDscBold: ForecastState.biwheelAngleAscDscBold,
+        mcIcBold: ForecastState.biwheelAngleMcIcBold,
+    });
     window.ForecastBiwheel.setMatrixRows?.(ForecastState.biwheelMatrixRows);
     window.ForecastBiwheel.setEnabledAspectTypes?.(ForecastState.biwheelEnabledAspectTypes);
     window.ForecastBiwheel.setAspectFilter?.(ForecastState.biwheelAspectScope);
@@ -4153,6 +4226,10 @@ function renderSolarChart(data) {
         ForecastState.solarWheel.setPointScale(ForecastState.solarPointScale, { redraw: false });
     }
     ForecastState.solarWheel.setOrientationMode(ForecastState.solarOrientation, { redraw: false });
+    ForecastState.solarWheel.setAngleMarkerOptions?.({
+        ascDscBold: ForecastState.solarAngleAscDscBold,
+        mcIcBold: ForecastState.solarAngleMcIcBold,
+    }, { redraw: false });
     ForecastState.solarWheel.draw(filteredData);
     applySolarAspectFocus();
     resetSolarView();

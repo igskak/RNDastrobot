@@ -413,19 +413,21 @@
                 void applyMatrixRows();
             });
         });
-        refs.forecastNewNatalPanel?.addEventListener('click', (event) => {
-            if (event.target instanceof Element && event.target.closest('.forecast-new-matrix-inline')) {
-                event.stopPropagation();
-            }
-        });
-        refs.forecastNewNatalPanel?.addEventListener('change', async (event) => {
-            const input = event.target instanceof Element
-                ? event.target.closest('input[data-matrix-body][data-matrix-field]')
-                : null;
-            if (!(input instanceof HTMLInputElement)) return;
-            updateMatrixRowFromControl(input);
-            syncMatrixCheckboxes();
-            await applyMatrixRows();
+        [refs.forecastNewNatalPanel, refs.forecastNewProgPanel].forEach((panel) => {
+            panel?.addEventListener('click', (event) => {
+                if (event.target instanceof Element && event.target.closest('.forecast-new-matrix-inline')) {
+                    event.stopPropagation();
+                }
+            });
+            panel?.addEventListener('change', async (event) => {
+                const input = event.target instanceof Element
+                    ? event.target.closest('input[data-matrix-body][data-matrix-field]')
+                    : null;
+                if (!(input instanceof HTMLInputElement)) return;
+                updateMatrixRowFromControl(input);
+                syncMatrixCheckboxes();
+                await applyMatrixRows();
+            });
         });
 
         refs.forecastNewSettingsToggle?.addEventListener('click', (event) => {

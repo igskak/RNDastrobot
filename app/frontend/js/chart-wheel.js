@@ -34,6 +34,11 @@ class ChartWheel {
             outsideRadialOffset: 8,
             outsideTangentOffset: 12,
         };
+        this.angleMarkerOptions = {
+            color: '#6366f1',
+            ascDscBold: true,
+            mcIcBold: true,
+        };
         this.showPlanetStationary = false;
         this.showPlanetDegree = false;
 
@@ -1037,31 +1042,35 @@ class ChartWheel {
         // ASC — горизонтальная линия слева, выходит за круг
         if (angles.ASC) {
             const ascAngle = this.longitudeToAngle(angles.ASC.longitude) * Math.PI / 180;
-            this.drawAngleMarkerEnhanced(ascAngle, signInnerR, 'ASC', '#6366f1');
+            this.drawAngleMarkerEnhanced(ascAngle, signInnerR, 'ASC', this.angleMarkerOptions.color);
         }
 
         // MC — вертикальная линия сверху
         if (angles.MC) {
             const mcAngle = this.longitudeToAngle(angles.MC.longitude) * Math.PI / 180;
-            this.drawAngleMarkerEnhanced(mcAngle, signInnerR, 'MC', '#6366f1');
+            this.drawAngleMarkerEnhanced(mcAngle, signInnerR, 'MC', this.angleMarkerOptions.color);
         }
 
         // DSC — напротив ASC
         if (angles.DSC) {
             const dscAngle = this.longitudeToAngle(angles.DSC.longitude) * Math.PI / 180;
-            this.drawAngleMarkerEnhanced(dscAngle, signInnerR, 'DSC', '#9ca3af');
+            this.drawAngleMarkerEnhanced(dscAngle, signInnerR, 'DSC', this.angleMarkerOptions.color);
         }
 
         // IC — напротив MC
         if (angles.IC) {
             const icAngle = this.longitudeToAngle(angles.IC.longitude) * Math.PI / 180;
-            this.drawAngleMarkerEnhanced(icAngle, signInnerR, 'IC', '#9ca3af');
+            this.drawAngleMarkerEnhanced(icAngle, signInnerR, 'IC', this.angleMarkerOptions.color);
         }
     }
 
     drawAngleMarkerEnhanced(angle, radius, label, color) {
         const lineOuterR = this.houseLabelsOutside ? this.outerRadius + 14 : this.outerRadius - 0.5;
         const labelR = this.outerRadius + (this.houseLabelsOutside ? 20 : 8);
+        const isAscDsc = label === 'ASC' || label === 'DSC';
+        const isMcIc = label === 'MC' || label === 'IC';
+        const isBold = (isAscDsc && this.angleMarkerOptions.ascDscBold !== false)
+            || (isMcIc && this.angleMarkerOptions.mcIcBold !== false);
 
         // Линия выносная за пределы круга
         this.layers.angles.appendChild(this.createSvgElement('line', {
@@ -1070,7 +1079,7 @@ class ChartWheel {
             x2: this.center + lineOuterR * Math.cos(angle),
             y2: this.center + lineOuterR * Math.sin(angle),
             stroke: color,
-            'stroke-width': label === 'ASC' || label === 'MC' ? 2.5 : 1.5
+            'stroke-width': isBold ? 2.5 : 1.5
         }));
 
         // Подпись за кругом
@@ -1084,7 +1093,7 @@ class ChartWheel {
             y: this.center + labelR * Math.sin(angle) + 3,
             'text-anchor': anchor,
             'font-size': '9',
-            'font-weight': '700',
+            'font-weight': isBold ? '700' : '500',
             fill: color
         }, label));
     }
@@ -1207,6 +1216,19 @@ class ChartWheel {
         const { redraw = true } = settings;
         this.houseVisualOptions = {
             ...this.houseVisualOptions,
+            ...Object.fromEntries(
+                Object.entries(options || {}).filter(([, value]) => value !== undefined && value !== null)
+            ),
+        };
+        if (redraw && this.chartData) {
+            this.draw(this.chartData);
+        }
+    }
+
+    setAngleMarkerOptions(options = {}, settings = {}) {
+        const { redraw = true } = settings;
+        this.angleMarkerOptions = {
+            ...this.angleMarkerOptions,
             ...Object.fromEntries(
                 Object.entries(options || {}).filter(([, value]) => value !== undefined && value !== null)
             ),

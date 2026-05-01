@@ -37,6 +37,8 @@
 
     const HOUSE_NUMBER_STYLE_STORAGE_KEY = 'natalHouseNumberStyle';
     const HOUSE_LABELS_OUTSIDE_STORAGE_KEY = 'natalHouseLabelsOutside';
+    const ANGLE_ASC_DSC_BOLD_STORAGE_KEY = 'natalAngleAscDscBold';
+    const ANGLE_MC_IC_BOLD_STORAGE_KEY = 'natalAngleMcIcBold';
 
     function readSavedHouseNumberStyle() {
         return localStorage.getItem(HOUSE_NUMBER_STYLE_STORAGE_KEY) === 'roman' ? 'roman' : 'arabic';
@@ -44,6 +46,10 @@
 
     function readSavedHouseLabelsOutside() {
         return localStorage.getItem(HOUSE_LABELS_OUTSIDE_STORAGE_KEY) === 'true';
+    }
+
+    function readSavedAngleBold(storageKey) {
+        return localStorage.getItem(storageKey) !== 'false';
     }
 
     function formatHouseText(house) {
@@ -194,6 +200,8 @@
     let transitPointScale = 1.0;
     let houseNumberStyle = readSavedHouseNumberStyle();
     let houseLabelsOutside = readSavedHouseLabelsOutside();
+    let angleAscDscBold = readSavedAngleBold(ANGLE_ASC_DSC_BOLD_STORAGE_KEY);
+    let angleMcIcBold = readSavedAngleBold(ANGLE_MC_IC_BOLD_STORAGE_KEY);
     let focusState = {
         mode: null,
         method: null,
@@ -921,6 +929,9 @@
         houses.forEach((h, i) => {
             const angle = longToAngle(h.longitude) * Math.PI / 180;
             const isAngular = [1,4,7,10].includes(h.number);
+            const isAscDsc = h.number === 1 || h.number === 7;
+            const isMcIc = h.number === 10 || h.number === 4;
+            const isBoldAngle = (isAscDsc && angleAscDscBold !== false) || (isMcIc && angleMcIcBold !== false);
             const innerR = isPrognostic
                 ? wheelBand.inner
                 : (showOutsideLabels ? natalBand.inner : natalInnerContourRadius);
@@ -933,8 +944,8 @@
                 ? withAlpha(progColor, prognosticStyle.cuspAlpha)
                 : (isAngular ? '#6366f1' : (extendNatalCuspsToForecastWheels ? '#94a3b8' : '#c7d2db'));
             const strokeWidth = isPrognostic
-                ? (isAngular ? 2.3 : 1.9)
-                : (isAngular ? 1.5 : (extendNatalCuspsToForecastWheels ? 0.95 : 0.5));
+                ? (isAngular ? (isBoldAngle ? 2.3 : 1.5) : 1.9)
+                : (isAngular ? (isBoldAngle ? 1.5 : 0.95) : (extendNatalCuspsToForecastWheels ? 0.95 : 0.5));
             const strokeDash = isPrognostic ? '4,3' : null;
             const defaultOpacity = showOutsideLabels
                 ? '0.9'
@@ -970,7 +981,7 @@
                     x1: C + (OUTER_R - 3) * Math.cos(angle), y1: C + (OUTER_R - 3) * Math.sin(angle),
                     x2: C + (OUTER_R + 4) * Math.cos(angle), y2: C + (OUTER_R + 4) * Math.sin(angle),
                     stroke: houseTheme.color,
-                    'stroke-width': isAngular ? 1.8 : 1.2,
+                    'stroke-width': isAngular ? (isBoldAngle ? 1.8 : 1.2) : 1.2,
                     opacity: '0.95',
                     style: 'pointer-events:none'
                 }));
@@ -981,7 +992,7 @@
                     'text-anchor': outsideLabel.anchor,
                     'dominant-baseline': 'middle',
                     'font-size': '9.5',
-                    'font-weight': isAngular ? '600' : '500',
+                    'font-weight': isAngular ? (isBoldAngle ? '600' : '500') : '500',
                     fill: houseTheme.color,
                     stroke: '#fafafa',
                     'stroke-width': '2.4',
@@ -999,7 +1010,7 @@
                 cuspGroup.appendChild(el('text', {
                     x: C + textR * Math.cos(midAngle), y: C + textR * Math.sin(midAngle) + 3,
                     'text-anchor':'middle', 'font-size':'10', fill: isAngular ? '#6366f1' : '#6b7280',
-                    'font-weight': isAngular ? '700' : '400', style:'pointer-events:none'
+                    'font-weight': isAngular ? (isBoldAngle ? '700' : '500') : '400', style:'pointer-events:none'
                 }, formatHouseLabel(h.number)));
             }
             cuspGroup.addEventListener('mouseenter', onHouseHover);
@@ -2934,6 +2945,15 @@
         houseLabelsOutside = options.outside === true;
     }
 
+    function setAngleMarkerOptions(options = {}) {
+        if (Object.prototype.hasOwnProperty.call(options, 'ascDscBold')) {
+            angleAscDscBold = options.ascDscBold !== false;
+        }
+        if (Object.prototype.hasOwnProperty.call(options, 'mcIcBold')) {
+            angleMcIcBold = options.mcIcBold !== false;
+        }
+    }
+
     function hasLastRender() {
         return Boolean(lastNatalData && lastProgData);
     }
@@ -2947,6 +2967,7 @@
         render,
         setOrientationMode,
         setHouseLabelOptions,
+        setAngleMarkerOptions,
         setVisualPreferences,
         hasLastRender,
         rerenderLast,

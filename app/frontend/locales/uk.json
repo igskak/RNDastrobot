@@ -539,6 +539,8 @@
         "planetSize": "Розмір планет",
         "planetsAndPoints": "Планети та точки",
         "pointSize": "Розмір точок",
+        "boldAscDsc": "Зробити ASC і DSC жирними",
+        "boldMcIc": "Зробити MC і IC жирними",
         "showPlanetDegree": "Показувати градус планети на колесі",
         "showPlanetStationary": "Показувати стаціонарність на колесі",
         "wheelOptions": "Параметри колеса",

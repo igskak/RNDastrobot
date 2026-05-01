@@ -12,21 +12,68 @@ from app.services.aspect_service import AspectService
 from app.services.configuration_service import ConfigurationService
 from app.services.cosmogram_service import CosmogramService
 from app.database.models import (
-    NatalAspect, NatalConfiguration, NatalStellium,
-    NatalPlanetDistribution, CosmogramPattern
+    Astrologer, NatalAspect, NatalConfiguration, NatalStellium,
+    NatalPlanetDistribution, CosmogramPattern, RefAspectType
 )
+
+
+TEST_ASPECT_TYPES = [
+    ('Conjunction', 0, 5.0, 'major', 'neutral', None, 'Union'),
+    ('Sextile', 60, 5.0, 'major', 'harmonious', 'red', 'Opportunity'),
+    ('Square', 90, 5.0, 'major', 'tense', 'black', 'Challenge'),
+    ('Trine', 120, 5.0, 'major', 'harmonious', 'red', 'Flow'),
+    ('Opposition', 180, 5.0, 'major', 'tense', 'black', 'Polarity'),
+    ('Semisextile', 30, 2.0, 'minor', 'harmonious', 'red', 'Minor connection'),
+    ('Semisquare', 45, 2.0, 'minor', 'tense', 'black', 'Minor friction'),
+    ('Quincunx', 150, 2.0, 'minor', 'harmonious', 'red', 'Adjustment'),
+]
+
+
+def ensure_test_aspect_types(db_session: Session):
+    RefAspectType.__table__.create(bind=db_session.get_bind(), checkfirst=True)
+    for aspect_type, exact_angle, base_orb, class_, character, color, description in TEST_ASPECT_TYPES:
+        existing = db_session.get(RefAspectType, aspect_type)
+        if existing:
+            continue
+        db_session.add(RefAspectType(
+            aspect_type=aspect_type,
+            exact_angle=exact_angle,
+            base_orb=base_orb,
+            class_=class_,
+            character=character,
+            color=color,
+            description=description,
+        ))
+    db_session.commit()
 
 
 @pytest.fixture
 def db_session():
     """Фікстура для БД сесії"""
     session = get_db_session()
+    ensure_test_aspect_types(session)
     yield session
     session.close()
 
 
 @pytest.fixture
-def test_user_id(db_session: Session):
+def test_astrologer_id(db_session: Session):
+    astrologer = Astrologer(
+        email='aspect-tests@example.com',
+        password_hash='test',
+        auth_provider='local',
+        is_active=True,
+    )
+    db_session.add(astrologer)
+    db_session.commit()
+    db_session.refresh(astrologer)
+    yield astrologer.id
+    db_session.delete(astrologer)
+    db_session.commit()
+
+
+@pytest.fixture
+def test_user_id(db_session: Session, test_astrologer_id):
     """Створити тестову натальну карту"""
     # Указываем абсолютный путь к эфемеридам
     import os
@@ -52,6 +99,7 @@ def test_user_id(db_session: Session):
         latitude=birth_data['latitude'],
         longitude=birth_data['longitude'],
         house_system=birth_data['house_system'],
+        astrologer_id=test_astrologer_id,
         save_to_db=True,
         db_session=db_session
     )

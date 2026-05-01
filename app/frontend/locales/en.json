@@ -539,6 +539,8 @@
         "planetSize": "Planet size",
         "planetsAndPoints": "Planets and points",
         "pointSize": "Point size",
+        "boldAscDsc": "Make ASC and DSC bold",
+        "boldMcIc": "Make MC and IC bold",
         "showPlanetDegree": "Show planet degree on wheel",
         "showPlanetStationary": "Show stationary on wheel",
         "wheelOptions": "Wheel options",
