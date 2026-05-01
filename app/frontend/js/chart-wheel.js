@@ -100,6 +100,8 @@ class ChartWheel {
 
         this.planetLeaderColor = '#9ca3af';
         this.conjunctionDisplay = {
+            dotOrbThreshold: 2,
+            dotRadius: 3.6,
             collapseThreshold: 9,
             minLineLength: 14,
         };
@@ -302,10 +304,14 @@ class ChartWheel {
         };
     }
 
-    resolveAspectLineGeometry({ x1, y1, x2, y2, angle1, angle2, aspectType }) {
+    resolveAspectLineGeometry({ x1, y1, x2, y2, angle1, angle2, aspectType, orb }) {
         const midX = (x1 + x2) / 2;
         const midY = (y1 + y2) / 2;
         const rawLength = Math.hypot(x2 - x1, y2 - y1);
+        const numericOrb = Number(orb);
+        const shouldDrawDot = aspectType === 'Conjunction'
+            && Number.isFinite(numericOrb)
+            && numericOrb <= this.conjunctionDisplay.dotOrbThreshold;
 
         if (aspectType !== 'Conjunction' || rawLength >= this.conjunctionDisplay.collapseThreshold) {
             return {
@@ -316,7 +322,8 @@ class ChartWheel {
                 midX,
                 midY,
                 rawLength,
-                collapsed: false,
+                drawDot: shouldDrawDot,
+                collapsed: shouldDrawDot,
             };
         }
 
@@ -335,6 +342,7 @@ class ChartWheel {
             midX,
             midY,
             rawLength,
+            drawDot: shouldDrawDot,
             collapsed: true,
         };
     }
@@ -685,6 +693,7 @@ class ChartWheel {
                 angle1,
                 angle2,
                 aspectType: aspect.aspect_type,
+                orb: aspect.orb,
             });
 
             // Цвет по типу аспекта
@@ -696,17 +705,7 @@ class ChartWheel {
 
             const dashArray = isMajor ? 'none' : '3,2';
 
-            const line = this.createSvgElement('line', {
-                x1: geometry.x1,
-                y1: geometry.y1,
-                x2: geometry.x2,
-                y2: geometry.y2,
-                stroke: color,
-                'stroke-width': thickness,
-                'stroke-dasharray': dashArray,
-                'stroke-linecap': aspect.aspect_type === 'Conjunction' ? 'round' : 'butt',
-                opacity: isMajor ? 0.7 : 0.45,
-                class: 'aspect-line',
+            const aspectAttrs = {
                 'data-aspect': aspectKey,
                 'data-aspect-key': aspectKey,
                 'data-planet-1': planet1,
@@ -714,12 +713,39 @@ class ChartWheel {
                 'data-type': aspect.aspect_type,
                 'data-major': isMajor ? 'true' : 'false',
                 'data-conjunction-collapsed': geometry.collapsed ? 'true' : 'false'
-            });
+            };
+
+            const line = geometry.drawDot
+                ? this.createSvgElement('circle', {
+                    cx: geometry.midX,
+                    cy: geometry.midY,
+                    r: this.conjunctionDisplay.dotRadius,
+                    fill: color,
+                    stroke: color,
+                    'stroke-width': 1.2,
+                    opacity: isMajor ? 0.82 : 0.55,
+                    class: 'aspect-line aspect-dot',
+                    ...aspectAttrs,
+                })
+                : this.createSvgElement('line', {
+                    x1: geometry.x1,
+                    y1: geometry.y1,
+                    x2: geometry.x2,
+                    y2: geometry.y2,
+                    stroke: color,
+                    'stroke-width': thickness,
+                    'stroke-dasharray': dashArray,
+                    'stroke-linecap': aspect.aspect_type === 'Conjunction' ? 'round' : 'butt',
+                    opacity: isMajor ? 0.7 : 0.45,
+                    class: 'aspect-line',
+                    ...aspectAttrs,
+                });
 
             this.layers.aspects.appendChild(line);
 
             const shouldDrawAspectGlyph = isMajor
                 && aspect.orb < 5
+                && !geometry.drawDot
                 && (aspect.aspect_type !== 'Conjunction' || geometry.collapsed);
 
             // Иконка аспекта на середине линии
@@ -857,19 +883,8 @@ class ChartWheel {
 
             const annotationScale = Math.min(1.25, scale);
             const motionFontSize = (8 * annotationScale).toFixed(2);
-            const motionX = x + iconSize * 0.17;
-            const motionY = y + iconSize * 0.22;
-
-            if (this.showPlanetStationary && planet.is_stationary) {
-                group.appendChild(this.createSvgElement('text', {
-                    x: motionX,
-                    y: motionY - iconSize * 0.17,
-                    'font-size': motionFontSize,
-                    'font-weight': '700',
-                    fill: '#1e3a5f',
-                    style: 'pointer-events: none;'
-                }, 'S'));
-            }
+            const motionX = x + iconSize * 0.28;
+            const motionY = y + iconSize * 0.42;
 
             if (planet.retrograde) {
                 group.appendChild(this.createSvgElement('text', {
@@ -882,12 +897,23 @@ class ChartWheel {
                 }, 'R'));
             }
 
+            if (this.showPlanetStationary && planet.is_stationary) {
+                group.appendChild(this.createSvgElement('text', {
+                    x: motionX + (planet.retrograde ? iconSize * 0.25 : 0),
+                    y: motionY,
+                    'font-size': motionFontSize,
+                    'font-weight': '700',
+                    fill: '#1e3a5f',
+                    style: 'pointer-events: none;'
+                }, 'S'));
+            }
+
             if (this.showPlanetDegree) {
                 const degreeLabel = `${Math.floor(Number(planet.degree_in_sign) || 0)}°`;
                 group.appendChild(this.createSvgElement('text', {
-                    x: x - iconSize * 0.24,
-                    y: y - iconSize * 0.08,
-                    'text-anchor': 'end',
+                    x: x + iconSize * 0.26,
+                    y: y - iconSize * 0.31,
+                    'text-anchor': 'start',
                     'font-size': (4.9 * annotationScale).toFixed(2),
                     'font-family': 'monospace',
                     'font-weight': '600',

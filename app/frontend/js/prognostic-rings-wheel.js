@@ -68,6 +68,8 @@
             };
             this.aspectLookupByKey = {};
             this.conjunctionDisplay = {
+                dotOrbThreshold: 2,
+                dotRadius: 3.6,
                 collapseThreshold: 9,
                 minLineLength: 14,
             };
@@ -431,17 +433,8 @@
                 }
                 const annotationScale = Math.min(1.25, scale);
                 const motionFontSize = (8 * annotationScale).toFixed(2);
-                const motionX = pos.x + iconSize * 0.17;
-                const motionY = pos.y + iconSize * 0.22;
-                if (this.showPlanetStationary && body.is_stationary) {
-                    group.appendChild(this.el('text', {
-                        x: motionX,
-                        y: motionY - iconSize * 0.17,
-                        'font-size': motionFontSize,
-                        'font-weight': '700',
-                        fill: '#1e3a5f',
-                    }, 'S'));
-                }
+                const motionX = pos.x + iconSize * 0.28;
+                const motionY = pos.y + iconSize * 0.42;
                 if (body.retrograde) {
                     group.appendChild(this.el('text', {
                         x: motionX,
@@ -451,12 +444,21 @@
                         fill: '#dc2626',
                     }, 'R'));
                 }
+                if (this.showPlanetStationary && body.is_stationary) {
+                    group.appendChild(this.el('text', {
+                        x: motionX + (body.retrograde ? iconSize * 0.25 : 0),
+                        y: motionY,
+                        'font-size': motionFontSize,
+                        'font-weight': '700',
+                        fill: '#1e3a5f',
+                    }, 'S'));
+                }
                 if (this.showPlanetDegree) {
                     const degreeLabel = `${Math.floor(Number(body.degree_in_sign) || 0)}°`;
                     group.appendChild(this.el('text', {
-                        x: pos.x - iconSize * 0.24,
-                        y: pos.y - iconSize * 0.08,
-                        'text-anchor': 'end',
+                        x: pos.x + iconSize * 0.26,
+                        y: pos.y - iconSize * 0.31,
+                        'text-anchor': 'start',
                         'font-size': (4.9 * annotationScale).toFixed(2),
                         'font-family': 'monospace',
                         'font-weight': '600',
@@ -504,6 +506,7 @@
                         angle1,
                         angle2,
                         aspectType: aspect.aspect_type,
+                        orb: aspect.orb,
                     });
                     const aspectKey = this.buildAspectKey(movingName, natalName);
                     this.aspectLookupByKey[aspectKey] = {
@@ -516,14 +519,7 @@
                     const isMajor = MAJOR_ASPECTS.has(aspect.aspect_type);
                     const color = this.getAspectColor(aspect.aspect_type, aspect.harmonic_type);
                     const thickness = Math.max(0.3, 1.5 - ((Number(aspect.orb) || 0) / 12) * 1.2);
-                    this.layers.aspects.appendChild(this.el('line', {
-                        x1: geometry.x1, y1: geometry.y1, x2: geometry.x2, y2: geometry.y2,
-                        stroke: color,
-                        'stroke-width': thickness,
-                        'stroke-dasharray': isMajor ? 'none' : '3,2',
-                        'stroke-linecap': aspect.aspect_type === 'Conjunction' ? 'round' : 'butt',
-                        opacity: isMajor ? 0.7 : 0.45,
-                        class: 'aspect-line',
+                    const aspectAttrs = {
                         'data-aspect': aspectKey,
                         'data-aspect-key': aspectKey,
                         'data-planet-1': movingName,
@@ -531,7 +527,31 @@
                         'data-type': aspect.aspect_type,
                         'data-major': isMajor ? 'true' : 'false',
                         'data-conjunction-collapsed': geometry.collapsed ? 'true' : 'false',
-                    }));
+                    };
+
+                    const aspectElement = geometry.drawDot
+                        ? this.el('circle', {
+                            cx: geometry.midX,
+                            cy: geometry.midY,
+                            r: this.conjunctionDisplay.dotRadius,
+                            fill: color,
+                            stroke: color,
+                            'stroke-width': 1.2,
+                            opacity: isMajor ? 0.82 : 0.55,
+                            class: 'aspect-line aspect-dot',
+                            ...aspectAttrs,
+                        })
+                        : this.el('line', {
+                            x1: geometry.x1, y1: geometry.y1, x2: geometry.x2, y2: geometry.y2,
+                            stroke: color,
+                            'stroke-width': thickness,
+                            'stroke-dasharray': isMajor ? 'none' : '3,2',
+                            'stroke-linecap': aspect.aspect_type === 'Conjunction' ? 'round' : 'butt',
+                            opacity: isMajor ? 0.7 : 0.45,
+                            class: 'aspect-line',
+                            ...aspectAttrs,
+                        });
+                    this.layers.aspects.appendChild(aspectElement);
 
                     const shouldDrawAspectGlyph = isMajor
                         && aspect.aspect_type !== 'Conjunction'
@@ -766,10 +786,14 @@
             return natalRing?.inner || FIRST_RING_INNER_R;
         }
 
-        resolveAspectLineGeometry({ x1, y1, x2, y2, angle1, angle2, aspectType }) {
+        resolveAspectLineGeometry({ x1, y1, x2, y2, angle1, angle2, aspectType, orb }) {
             const midX = (x1 + x2) / 2;
             const midY = (y1 + y2) / 2;
             const rawLength = Math.hypot(x2 - x1, y2 - y1);
+            const numericOrb = Number(orb);
+            const shouldDrawDot = aspectType === 'Conjunction'
+                && Number.isFinite(numericOrb)
+                && numericOrb <= this.conjunctionDisplay.dotOrbThreshold;
 
             if (aspectType !== 'Conjunction' || rawLength >= this.conjunctionDisplay.collapseThreshold) {
                 return {
@@ -780,7 +804,8 @@
                     midX,
                     midY,
                     rawLength,
-                    collapsed: false,
+                    drawDot: shouldDrawDot,
+                    collapsed: shouldDrawDot,
                 };
             }
 
@@ -799,6 +824,7 @@
                 midX,
                 midY,
                 rawLength,
+                drawDot: shouldDrawDot,
                 collapsed: true,
             };
         }
