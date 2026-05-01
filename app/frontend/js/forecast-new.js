@@ -51,10 +51,14 @@
         'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto',
     ]);
     const TIME_STEPPER_SEGMENTS = [
-        { key: 'decade', label: '10л', title: 'Десятки лет', unit: 'year', amount: 10 },
-        { key: 'year', label: 'Год', title: 'Годы', unit: 'year', amount: 1 },
-        { key: 'month', label: 'Мес', title: 'Месяц', unit: 'month', amount: 1 },
-        { key: 'day', label: 'День', title: 'День', unit: 'day', amount: 1 },
+        { key: 'yearThousands', label: '1000л', title: 'Тысячи лет', unit: 'year', amount: 1000 },
+        { key: 'yearHundreds', label: '100л', title: 'Сотни лет', unit: 'year', amount: 100 },
+        { key: 'yearTens', label: '10л', title: 'Десятки лет', unit: 'year', amount: 10 },
+        { key: 'yearOnes', label: 'Год', title: 'Годы', unit: 'year', amount: 1 },
+        { key: 'monthTens', label: '10мес', title: 'Десятки месяцев', unit: 'month', amount: 10 },
+        { key: 'monthOnes', label: 'Мес', title: 'Месяцы', unit: 'month', amount: 1 },
+        { key: 'dayTens', label: '10д', title: 'Десятки дней', unit: 'day', amount: 10 },
+        { key: 'dayOnes', label: 'День', title: 'Дни', unit: 'day', amount: 1 },
         { key: 'hour', label: 'Час', title: 'Часы', unit: 'hour', amount: 1 },
         { key: 'tenMinute', label: '10м', title: 'Десятки минут', unit: 'minute', amount: 10 },
         { key: 'minute', label: 'Мин', title: 'Минуты', unit: 'minute', amount: 1 },
@@ -356,6 +360,29 @@
             const segment = TIME_STEPPER_SEGMENTS.find((item) => item.key === button.dataset.timeStepSegment);
             if (!segment) return;
             stepSelectedDateTimeSegment(segment, Number(button.dataset.timeStepDirection));
+        });
+        refs.forecastNewTimeStepper?.addEventListener('keydown', (event) => {
+            if (!(event.target instanceof Element)) return;
+            if (event.target.closest('.forecast-new-custom-step')) return;
+            const segmentEl = event.target.closest('[data-time-step-key]');
+            if (!segmentEl) return;
+
+            const directionByKey = {
+                ArrowUp: 1,
+                ArrowDown: -1,
+                PageUp: 1,
+                PageDown: -1,
+            };
+            const direction = directionByKey[event.key];
+            if (!direction) return;
+
+            const segment = TIME_STEPPER_SEGMENTS.find((item) => item.key === segmentEl.dataset.timeStepKey);
+            if (!segment) return;
+            event.preventDefault();
+            stepSelectedDateTimeSegment(segment, direction);
+            requestAnimationFrame(() => {
+                refs.forecastNewTimeStepper?.querySelector(`[data-time-step-key="${segment.key}"]`)?.focus();
+            });
         });
         refs.forecastNewTimeStepper?.addEventListener('input', (event) => {
             if (!(event.target instanceof Element) || !event.target.closest('[data-custom-step-input]')) return;
@@ -713,7 +740,7 @@
             const value = values[segmentKey] ?? '';
             if (!segment) return '';
             return `
-                <span class="forecast-new-time-stepper-segment forecast-new-time-stepper-segment--${segment.key}" title="${escapeHtml(segment.title)}">
+                <span class="forecast-new-time-stepper-segment forecast-new-time-stepper-segment--${segment.key}" data-time-step-key="${segment.key}" tabindex="0" role="spinbutton" aria-label="${escapeHtml(segment.title)}" aria-valuetext="${escapeHtml(value)}" title="${escapeHtml(segment.title)}">
                     <button type="button" class="forecast-new-time-stepper-btn forecast-new-time-stepper-btn--up" data-time-step-segment="${segment.key}" data-time-step-direction="1" aria-label="${escapeHtml(segment.title)} +1"></button>
                     <span class="forecast-new-time-stepper-value">${escapeHtml(value)}</span>
                     <button type="button" class="forecast-new-time-stepper-btn forecast-new-time-stepper-btn--down" data-time-step-segment="${segment.key}" data-time-step-direction="-1" aria-label="${escapeHtml(segment.title)} -1"></button>
@@ -744,11 +771,11 @@
             </span>
             <span class="forecast-new-time-stepper-display">
                 <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--date" aria-label="Дата">
-                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--year">${segmentMarkup('decade')}${segmentMarkup('year')}</span>
+                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--year">${segmentMarkup('yearThousands')}${segmentMarkup('yearHundreds')}${segmentMarkup('yearTens')}${segmentMarkup('yearOnes')}</span>
                     <span class="forecast-new-time-stepper-separator" aria-hidden="true">.</span>
-                    ${segmentMarkup('month')}
+                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--month">${segmentMarkup('monthTens')}${segmentMarkup('monthOnes')}</span>
                     <span class="forecast-new-time-stepper-separator" aria-hidden="true">.</span>
-                    ${segmentMarkup('day')}
+                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--day">${segmentMarkup('dayTens')}${segmentMarkup('dayOnes')}</span>
                 </span>
                 <span class="forecast-new-time-stepper-separator forecast-new-time-stepper-separator--major" aria-hidden="true">,</span>
                 <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--time" aria-label="Время">
@@ -1966,13 +1993,20 @@
     function getTimeStepperSegmentValues(value) {
         const date = parseLocalDateTime(value);
         const fullYear = date.getFullYear();
+        const year = String(Math.abs(fullYear)).padStart(4, '0').slice(-4);
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
         const minute = date.getMinutes();
         const second = date.getSeconds();
         return {
-            decade: String(Math.trunc(fullYear / 10)),
-            year: String(Math.abs(fullYear % 10)),
-            month: String(date.getMonth() + 1).padStart(2, '0'),
-            day: String(date.getDate()).padStart(2, '0'),
+            yearThousands: year[0],
+            yearHundreds: year[1],
+            yearTens: year[2],
+            yearOnes: year[3],
+            monthTens: month[0],
+            monthOnes: month[1],
+            dayTens: day[0],
+            dayOnes: day[1],
             hour: String(date.getHours()).padStart(2, '0'),
             tenMinute: String(Math.trunc(minute / 10)),
             minute: String(minute % 10),

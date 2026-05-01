@@ -228,8 +228,14 @@
 }
 
 .forecast-new-time-stepper-segment:hover,
-.forecast-new-time-stepper-segment:focus-within {
+.forecast-new-time-stepper-segment:focus-within,
+.forecast-new-time-stepper-segment:focus-visible {
     background: rgba(30, 58, 95, 0.06);
+}
+
+.forecast-new-time-stepper-segment:focus-visible {
+    outline: 2px solid rgba(30, 58, 95, 0.42);
+    outline-offset: 2px;
 }
 
 .forecast-new-time-stepper-btn {
@@ -277,7 +283,8 @@
 }
 
 .forecast-new-time-stepper-segment:hover .forecast-new-time-stepper-btn,
-.forecast-new-time-stepper-segment:focus-within .forecast-new-time-stepper-btn {
+.forecast-new-time-stepper-segment:focus-within .forecast-new-time-stepper-btn,
+.forecast-new-time-stepper-segment:focus-visible .forecast-new-time-stepper-btn {
     opacity: 1;
 }
 
@@ -314,29 +321,30 @@
     margin: 0 6px 0 2px;
 }
 
-.forecast-new-time-stepper-group--year .forecast-new-time-stepper-segment,
+.forecast-new-time-stepper-group--date .forecast-new-time-stepper-segment,
 .forecast-new-time-stepper-group--minute .forecast-new-time-stepper-segment,
 .forecast-new-time-stepper-group--second .forecast-new-time-stepper-segment {
     padding-left: 0;
     padding-right: 0;
 }
 
-.forecast-new-time-stepper-segment--decade,
 .forecast-new-time-stepper-segment--hour {
     min-width: 28px;
 }
 
-.forecast-new-time-stepper-segment--year,
+.forecast-new-time-stepper-segment--yearThousands,
+.forecast-new-time-stepper-segment--yearHundreds,
+.forecast-new-time-stepper-segment--yearTens,
+.forecast-new-time-stepper-segment--yearOnes,
+.forecast-new-time-stepper-segment--monthTens,
+.forecast-new-time-stepper-segment--monthOnes,
+.forecast-new-time-stepper-segment--dayTens,
+.forecast-new-time-stepper-segment--dayOnes,
 .forecast-new-time-stepper-segment--tenMinute,
 .forecast-new-time-stepper-segment--minute,
 .forecast-new-time-stepper-segment--tenSecond,
 .forecast-new-time-stepper-segment--second {
     min-width: 10px;
-}
-
-.forecast-new-time-stepper-segment--month,
-.forecast-new-time-stepper-segment--day {
-    min-width: 20px;
 }
 
 .forecast-new-side-head {
