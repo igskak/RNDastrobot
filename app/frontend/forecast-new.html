@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Прогностика New</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=20260501-121207">
-    <script>window.__APP_BUILD_ID__ = '20260501-121207';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=20260501-140512">
+    <script>window.__APP_BUILD_ID__ = '20260501-140512';</script>
 </head>
 <body class="forecast-new-page">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -50,8 +50,30 @@
     <main class="forecast-new-layout hidden" id="forecastNewLayout">
         <aside class="side-panel left-panel forecast-new-side-panel" id="forecastNewNatalPanel">
             <div class="forecast-new-side-head">
-                <h3>Натал</h3>
-                <p id="natalPanelMeta"></p>
+                <button type="button" class="forecast-new-moment-toggle" id="natalMomentToggle" aria-expanded="false" aria-controls="forecastNewNatalCard">
+                    <span class="forecast-new-moment-toggle-title">Натал</span>
+                    <span class="forecast-new-moment-toggle-meta" id="natalPanelMeta"></span>
+                </button>
+            </div>
+            <div class="forecast-new-time-stepper" id="forecastNewNatalTimeStepper" aria-label="Управление датой рождения"></div>
+            <div class="forecast-new-moment-card hidden" id="forecastNewNatalCard">
+                <label>Дата рождения / время</label>
+                <strong id="natalDatetimeLabel"></strong>
+                <div class="forecast-new-native-datetime">
+                    <input type="date" id="natalDateInput">
+                    <input type="time" id="natalTimeInput" step="1">
+                </div>
+                <div class="forecast-new-location-grid">
+                    <select id="natalTimezoneInput">
+                        <option value="">Timezone</option>
+                    </select>
+                    <div class="place-autocomplete-wrapper forecast-new-location-autocomplete">
+                        <input type="text" id="natalLocationInput" placeholder="Место рождения" autocomplete="off">
+                        <div id="natalLocationSuggestions" class="place-suggestions"></div>
+                    </div>
+                    <input type="number" id="natalLatitudeInput" step="0.0001" placeholder="Lat">
+                    <input type="number" id="natalLongitudeInput" step="0.0001" placeholder="Lon">
+                </div>
             </div>
             <div class="panel-tabs forecast-new-tabs">
                 <button class="panel-tab active" data-panel-target="natalPlanetsView">Планеты и дома</button>
@@ -274,6 +296,6 @@
         </aside>
     </main>
 
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=20260501-121207"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=20260501-140512"></script>
 </body>
 </html>

@@ -81,6 +81,7 @@
 }
 
 #forecastNewNatalPanel {
+    position: relative;
     width: 392px;
     min-width: 392px;
 }
@@ -679,92 +680,37 @@
     color: transparent;
 }
 
-#forecastNewNatalPanel .data-table.compact {
+/* ── Таблицы планет и домов: обе панели, auto-layout по контенту ── */
+.forecast-new-side-panel .forecast-new-planets-table,
+.forecast-new-side-panel .forecast-new-houses-table {
     table-layout: auto;
+    width: 100%;
 }
 
-#forecastNewNatalPanel .forecast-new-planets-table,
-#forecastNewNatalPanel .forecast-new-houses-table {
-    table-layout: fixed;
+/* Символьная колонка — компактная подсказка для auto-layout */
+.forecast-new-side-panel .forecast-new-symbol-column { width: 40px; }
+
+/* Матричные колонки П/А */
+.forecast-new-side-panel .forecast-new-matrix-column { width: 28px; }
+
+/* Дома: фиксированные узкие колонки, позиция берёт остаток */
+.forecast-new-side-panel .forecast-new-house-cusp-column  { width: 66px; }
+.forecast-new-side-panel .forecast-new-house-sign-column  { width: auto; }
+.forecast-new-side-panel .forecast-new-house-ruler-column { width: 60px; }
+
+/* Ячейки — nowrap чтобы текст не переносился */
+.forecast-new-side-panel .forecast-new-planets-table td.symbol-cell,
+.forecast-new-side-panel .forecast-new-planets-table th:first-child {
+    white-space: nowrap;
 }
 
-#forecastNewProgPanel .forecast-new-planets-table,
-#forecastNewProgPanel .forecast-new-houses-table {
-    table-layout: fixed;
+.forecast-new-side-panel .forecast-new-planets-table td.mono {
+    white-space: nowrap;
 }
 
-#forecastNewNatalPanel .forecast-new-symbol-column {
-    width: 76px;
-}
-
-#forecastNewProgPanel .forecast-new-symbol-column {
-    width: 76px;
-}
-
-#forecastNewNatalPanel .forecast-new-position-column {
-    width: 164px;
-}
-
-#forecastNewProgPanel .forecast-new-position-column {
-    width: 136px;
-}
-
-#forecastNewNatalPanel .forecast-new-matrix-column {
-    width: 28px;
-}
-
-#forecastNewProgPanel .forecast-new-matrix-column {
-    width: 28px;
-}
-
-#forecastNewNatalPanel .forecast-new-house-cusp-column {
-    width: 74px;
-}
-
-#forecastNewProgPanel .forecast-new-house-cusp-column {
-    width: 74px;
-}
-
-#forecastNewNatalPanel .forecast-new-house-sign-column {
-    width: 184px;
-}
-
-#forecastNewProgPanel .forecast-new-house-sign-column {
-    width: 184px;
-}
-
-#forecastNewNatalPanel .forecast-new-house-ruler-column {
-    width: 78px;
-}
-
-#forecastNewProgPanel .forecast-new-house-ruler-column {
-    width: 78px;
-}
-
-#forecastNewNatalPanel .data-table.compact th:first-child,
-#forecastNewNatalPanel .data-table.compact td.symbol-cell {
-    width: 44px;
-    min-width: 44px;
-}
-
-#forecastNewProgPanel .data-table.compact th:first-child,
-#forecastNewProgPanel .data-table.compact td.symbol-cell {
-    width: 44px;
-    min-width: 44px;
-}
-
-#forecastNewNatalPanel .forecast-new-planets-table th:first-child,
-#forecastNewNatalPanel .forecast-new-planets-table td.symbol-cell,
-#forecastNewNatalPanel .forecast-new-houses-table th:first-child {
-    width: auto;
-    min-width: 0;
-}
-
-#forecastNewProgPanel .forecast-new-planets-table th:first-child,
-#forecastNewProgPanel .forecast-new-planets-table td.symbol-cell,
-#forecastNewProgPanel .forecast-new-houses-table th:first-child {
-    width: auto;
-    min-width: 0;
+.forecast-new-side-panel .forecast-new-houses-table td,
+.forecast-new-side-panel .forecast-new-houses-table th {
+    white-space: nowrap;
 }
 
 .forecast-new-page .planet-motion-stack {

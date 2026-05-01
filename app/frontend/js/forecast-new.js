@@ -94,6 +94,11 @@
         stepMode: 'hour',
         customStep: { amount: 1, unit: 'day' },
         isCustomStepOpen: false,
+        natalSelectedDateTime: '',
+        natalTimezone: 'UTC',
+        natalLocation: { name: '', latitude: null, longitude: null, sourceId: null },
+        natalCustomStep: { amount: 1, unit: 'day' },
+        natalIsCustomStepOpen: false,
         leftTab: 'Planets',
         rightTab: 'Planets',
         matrixRows: buildDefaultForecastNewMatrixRows(),
@@ -226,14 +231,30 @@
         state.pageSettings.houseSystem = normalizeHouseSystemCode(natalData.birth_data?.house_system || 'P');
         setSelectedDateTime(getLocalNowIso(state.timezone));
 
+        const birthDate = natalData.birth_data?.date || '';
+        const birthTime = normalizeTime(natalData.birth_data?.time || '12:00:00');
+        if (birthDate) state.natalSelectedDateTime = `${birthDate}T${birthTime}`;
+        state.natalTimezone = normalizeTimezoneValue(
+            natalData.birth_data?.timezone,
+            natalData.birth_data?.place,
+        ) || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+        state.natalLocation = {
+            name: natalData.birth_data?.place || '',
+            latitude: numberOrNull(natalData.birth_data?.latitude),
+            longitude: numberOrNull(natalData.birth_data?.longitude),
+            sourceId: null,
+        };
+
         await hydratePreferences();
         hydrateState();
         applyDeepLinkParams();
         populateTimezoneOptions();
+        populateNatalTimezoneOptions();
         initRenderers();
         configureForecastNavigation();
         bindEvents();
         bindLocationAutocomplete();
+        bindNatalLocationAutocomplete();
         initAspectInteractions();
         syncControlsFromState();
         renderStaticNatal();
@@ -251,6 +272,10 @@
             'forecastNewTimeStepper',
             'stepModeSelect', 'stepBackward', 'stepForward', 'timezoneInput', 'locationInput',
             'latitudeInput', 'longitudeInput', 'locationSuggestions', 'targetDatetimeLabel', 'rightLayerTabs',
+            'forecastNewNatalTimeStepper', 'natalMomentToggle', 'forecastNewNatalCard',
+            'natalDatetimeLabel', 'natalDateInput', 'natalTimeInput',
+            'natalTimezoneInput', 'natalLocationInput', 'natalLocationSuggestions',
+            'natalLatitudeInput', 'natalLongitudeInput',
             'forecastNewMatrixEditor', 'forecastNewSettingsMatrixEditor',
             'forecastNewZoomIn', 'forecastNewZoomOut',
             'forecastNewZoomReset', 'forecastNewSettingsToggle', 'forecastNewSettingsPanel',
@@ -398,6 +423,71 @@
         });
         refs.forecastNewMomentCard?.addEventListener('click', (event) => event.stopPropagation());
 
+        refs.natalMomentToggle?.addEventListener('click', (event) => {
+            event.stopPropagation();
+            toggleNatalMomentEditor();
+        });
+        refs.forecastNewNatalCard?.addEventListener('click', (event) => event.stopPropagation());
+
+        refs.natalDateInput?.addEventListener('change', onNatalDatetimeChange);
+        refs.natalTimeInput?.addEventListener('change', onNatalDatetimeChange);
+
+        refs.forecastNewNatalTimeStepper?.addEventListener('click', (event) => {
+            const customToggle = event.target.closest('[data-custom-step-toggle]');
+            if (customToggle) {
+                event.stopPropagation();
+                toggleNatalCustomStepPopover();
+                return;
+            }
+            const customDirectionButton = event.target.closest('[data-custom-step-direction]');
+            if (customDirectionButton) {
+                event.stopPropagation();
+                stepNatalDateTimeByCustom(Number(customDirectionButton.dataset.customStepDirection));
+                return;
+            }
+            if (event.target.closest('.forecast-new-custom-step')) {
+                event.stopPropagation();
+                return;
+            }
+            const button = event.target.closest('[data-time-step-segment][data-time-step-direction]');
+            if (!button) return;
+            const segment = TIME_STEPPER_SEGMENTS.find((item) => item.key === button.dataset.timeStepSegment);
+            if (!segment) return;
+            stepNatalDateTimeSegment(segment, Number(button.dataset.timeStepDirection));
+        });
+        refs.forecastNewNatalTimeStepper?.addEventListener('keydown', (event) => {
+            if (!(event.target instanceof Element)) return;
+            if (event.target.closest('.forecast-new-custom-step')) return;
+            const segmentEl = event.target.closest('[data-time-step-key]');
+            if (!segmentEl) return;
+            const directionByKey = { ArrowUp: 1, ArrowDown: -1, PageUp: 1, PageDown: -1 };
+            const direction = directionByKey[event.key];
+            if (!direction) return;
+            const segment = TIME_STEPPER_SEGMENTS.find((item) => item.key === segmentEl.dataset.timeStepKey);
+            if (!segment) return;
+            event.preventDefault();
+            stepNatalDateTimeSegment(segment, direction);
+            requestAnimationFrame(() => {
+                refs.forecastNewNatalTimeStepper?.querySelector(`[data-time-step-key="${segment.key}"]`)?.focus();
+            });
+        });
+        refs.forecastNewNatalTimeStepper?.addEventListener('input', (event) => {
+            if (!(event.target instanceof Element) || !event.target.closest('[data-custom-step-input]')) return;
+            updateNatalCustomStepFromControls();
+        });
+        refs.forecastNewNatalTimeStepper?.addEventListener('change', (event) => {
+            if (!(event.target instanceof Element) || !event.target.closest('[data-custom-step-input]')) return;
+            updateNatalCustomStepFromControls();
+        });
+
+        ['natalTimezoneInput', 'natalLocationInput', 'natalLatitudeInput', 'natalLongitudeInput'].forEach((id) => {
+            refs[id]?.addEventListener('change', async () => {
+                applyNatalLocationInputsToState();
+                await loadNatal();
+            });
+        });
+        refs.natalLocationInput?.addEventListener('input', handleNatalLocationInput);
+
         ['timezoneInput', 'locationInput', 'latitudeInput', 'longitudeInput'].forEach((id) => {
             refs[id]?.addEventListener('change', async () => {
                 applyLocationInputsToState();
@@ -408,6 +498,7 @@
         refs.locationInput?.addEventListener('input', handleLocationInput);
         document.addEventListener('frontend:locale-changed', () => {
             populateTimezoneOptions();
+            populateNatalTimezoneOptions();
             syncControlsFromState();
         });
 
@@ -466,6 +557,8 @@
             refs.forecastNewSettingsPanel?.classList.add('hidden');
             setMomentEditorOpen(false);
             setCustomStepPopoverOpen(false);
+            setNatalMomentEditorOpen(false);
+            setNatalCustomStepPopoverOpen(false);
         });
         [
             refs.orientationSelect,
@@ -565,6 +658,8 @@
         if (refs.targetDateInput) refs.targetDateInput.value = date;
         if (refs.targetTimeInput) refs.targetTimeInput.value = time;
         renderTimeStepper();
+        renderNatalTimeStepper();
+        updateNatalMomentControls();
         if (refs.timezoneInput) refs.timezoneInput.value = normalizeTimezoneValue(state.timezone, state.location?.name) || '';
         if (refs.locationInput) refs.locationInput.value = state.location.name || '';
         if (refs.latitudeInput) refs.latitudeInput.value = state.location.latitude ?? '';
@@ -702,7 +797,17 @@
         const name = [birth.first_name, birth.last_name].filter(Boolean).join(' ').trim() || 'Клиент';
         refs.forecastNewTitle.textContent = `${name} · Прогностика New`;
         refs.forecastNewSubtitle.textContent = [birth.date, birth.time, birth.place].filter(Boolean).join(' · ');
-        refs.natalPanelMeta.textContent = [birth.date, birth.time, birth.place].filter(Boolean).join(' · ');
+        updateNatalMomentMeta();
+    }
+
+    function updateNatalMomentMeta() {
+        const [date, time] = splitTargetDatetime(state.natalSelectedDateTime);
+        const summary = [
+            `${date} · ${time}`,
+            state.natalLocation?.name || '',
+        ].filter(Boolean).join(' · ');
+        if (refs.natalPanelMeta) refs.natalPanelMeta.textContent = summary;
+        if (refs.natalDatetimeLabel) refs.natalDatetimeLabel.textContent = state.natalSelectedDateTime.replace('T', ' ');
     }
 
     function updatePrognosticTimeMeta() {
@@ -787,6 +892,298 @@
                 </span>
             </span>
         `;
+    }
+
+    function renderNatalTimeStepper() {
+        if (!refs.forecastNewNatalTimeStepper) return;
+        const values = getTimeStepperSegmentValues(state.natalSelectedDateTime);
+        const customStep = normalizeCustomStep(state.natalCustomStep);
+        const customStepLabel = formatCustomStepLabel(customStep);
+        const customStepUnitOptions = CUSTOM_STEP_UNITS.map((unit) => `
+            <option value="${unit.value}" ${unit.value === customStep.unit ? 'selected' : ''}>${escapeHtml(unit.label)}</option>
+        `).join('');
+        const segmentMarkup = (segmentKey) => {
+            const segment = TIME_STEPPER_SEGMENTS.find((item) => item.key === segmentKey);
+            const value = values[segmentKey] ?? '';
+            if (!segment) return '';
+            return `
+                <span class="forecast-new-time-stepper-segment forecast-new-time-stepper-segment--${segment.key}" data-time-step-key="${segment.key}" tabindex="0" role="spinbutton" aria-label="${escapeHtml(segment.title)}" aria-valuetext="${escapeHtml(value)}" title="${escapeHtml(segment.title)}">
+                    <button type="button" class="forecast-new-time-stepper-btn forecast-new-time-stepper-btn--up" data-time-step-segment="${segment.key}" data-time-step-direction="1" aria-label="${escapeHtml(segment.title)} +1"></button>
+                    <span class="forecast-new-time-stepper-value">${escapeHtml(value)}</span>
+                    <button type="button" class="forecast-new-time-stepper-btn forecast-new-time-stepper-btn--down" data-time-step-segment="${segment.key}" data-time-step-direction="-1" aria-label="${escapeHtml(segment.title)} -1"></button>
+                </span>
+            `;
+        };
+
+        refs.forecastNewNatalTimeStepper.innerHTML = `
+            <span class="forecast-new-custom-step ${state.natalIsCustomStepOpen ? 'is-open' : ''}">
+                <button type="button" class="forecast-new-custom-step-toggle" data-custom-step-toggle aria-expanded="${state.natalIsCustomStepOpen ? 'true' : 'false'}" aria-controls="forecastNewNatalCustomStepPopover" title="Пользовательский шаг">
+                    <span aria-hidden="true">+/-</span>
+                    <span class="forecast-new-custom-step-toggle-label">${escapeHtml(customStepLabel)}</span>
+                </button>
+                <span class="forecast-new-custom-step-popover ${state.natalIsCustomStepOpen ? '' : 'hidden'}" id="forecastNewNatalCustomStepPopover">
+                    <label class="forecast-new-custom-step-field">
+                        <span>Шаг</span>
+                        <input type="number" min="1" max="9999" step="1" value="${customStep.amount}" data-custom-step-input="amount">
+                    </label>
+                    <label class="forecast-new-custom-step-field">
+                        <span>Ед.</span>
+                        <select data-custom-step-input="unit">${customStepUnitOptions}</select>
+                    </label>
+                    <span class="forecast-new-custom-step-actions" aria-label="Переход по пользовательскому шагу">
+                        <button type="button" data-custom-step-direction="-1" aria-label="Назад на пользовательский шаг">&larr;</button>
+                        <button type="button" data-custom-step-direction="1" aria-label="Вперед на пользовательский шаг">&rarr;</button>
+                    </span>
+                </span>
+            </span>
+            <span class="forecast-new-time-stepper-display">
+                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--date" aria-label="Дата рождения">
+                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--year">${segmentMarkup('yearThousands')}${segmentMarkup('yearHundreds')}${segmentMarkup('yearTens')}${segmentMarkup('yearOnes')}</span>
+                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">.</span>
+                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--month">${segmentMarkup('monthTens')}${segmentMarkup('monthOnes')}</span>
+                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">.</span>
+                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--day">${segmentMarkup('dayTens')}${segmentMarkup('dayOnes')}</span>
+                </span>
+                <span class="forecast-new-time-stepper-separator forecast-new-time-stepper-separator--major" aria-hidden="true">,</span>
+                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--time" aria-label="Время рождения">
+                    ${segmentMarkup('hour')}
+                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">:</span>
+                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--minute">${segmentMarkup('tenMinute')}${segmentMarkup('minute')}</span>
+                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">:</span>
+                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--second">${segmentMarkup('tenSecond')}${segmentMarkup('second')}</span>
+                </span>
+            </span>
+        `;
+    }
+
+    function toggleNatalCustomStepPopover() {
+        setNatalCustomStepPopoverOpen(!state.natalIsCustomStepOpen);
+    }
+
+    function setNatalCustomStepPopoverOpen(isOpen) {
+        state.natalIsCustomStepOpen = isOpen === true;
+        const popover = refs.forecastNewNatalTimeStepper?.querySelector('#forecastNewNatalCustomStepPopover');
+        const toggle = refs.forecastNewNatalTimeStepper?.querySelector('[data-custom-step-toggle]');
+        popover?.classList.toggle('hidden', !state.natalIsCustomStepOpen);
+        refs.forecastNewNatalTimeStepper?.querySelector('.forecast-new-custom-step')?.classList.toggle('is-open', state.natalIsCustomStepOpen);
+        toggle?.setAttribute('aria-expanded', state.natalIsCustomStepOpen ? 'true' : 'false');
+    }
+
+    function updateNatalCustomStepFromControls() {
+        const amountInput = refs.forecastNewNatalTimeStepper?.querySelector('[data-custom-step-input="amount"]');
+        const unitSelect = refs.forecastNewNatalTimeStepper?.querySelector('[data-custom-step-input="unit"]');
+        state.natalCustomStep = normalizeCustomStep({
+            amount: amountInput?.value,
+            unit: unitSelect?.value,
+        });
+        const label = refs.forecastNewNatalTimeStepper?.querySelector('.forecast-new-custom-step-toggle-label');
+        if (label) label.textContent = formatCustomStepLabel(state.natalCustomStep);
+    }
+
+    function stepNatalDateTimeSegment(segment, direction) {
+        const dir = direction >= 0 ? 1 : -1;
+        state.natalSelectedDateTime = addDateTimeUnit(state.natalSelectedDateTime, segment.unit, segment.amount * dir);
+        renderNatalTimeStepper();
+        updateNatalMomentMeta();
+        setNatalLightweightLoading(true);
+        void loadNatal({ lightweight: true });
+    }
+
+    function stepNatalDateTimeByCustom(direction) {
+        updateNatalCustomStepFromControls();
+        const step = normalizeCustomStep(state.natalCustomStep);
+        const dir = direction >= 0 ? 1 : -1;
+        const unit = step.unit === 'week' ? 'day' : step.unit;
+        const amount = step.unit === 'week' ? step.amount * 7 : step.amount;
+        state.natalSelectedDateTime = addDateTimeUnit(state.natalSelectedDateTime, unit, amount * dir);
+        renderNatalTimeStepper();
+        setNatalCustomStepPopoverOpen(true);
+        updateNatalMomentMeta();
+        setNatalLightweightLoading(true);
+        void loadNatal({ lightweight: true });
+    }
+
+    function toggleNatalMomentEditor() {
+        const isOpen = refs.forecastNewNatalCard?.classList.contains('hidden') !== false;
+        setNatalMomentEditorOpen(isOpen);
+    }
+
+    function setNatalMomentEditorOpen(isOpen) {
+        refs.forecastNewNatalCard?.classList.toggle('hidden', !isOpen);
+        refs.natalMomentToggle?.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+
+    function updateNatalMomentControls() {
+        const [date, time] = splitTargetDatetime(state.natalSelectedDateTime);
+        if (refs.natalDateInput) refs.natalDateInput.value = date;
+        if (refs.natalTimeInput) refs.natalTimeInput.value = time;
+        if (refs.natalTimezoneInput) refs.natalTimezoneInput.value = normalizeTimezoneValue(state.natalTimezone, state.natalLocation?.name) || '';
+        if (refs.natalLocationInput) refs.natalLocationInput.value = state.natalLocation.name || '';
+        if (refs.natalLatitudeInput) refs.natalLatitudeInput.value = state.natalLocation.latitude ?? '';
+        if (refs.natalLongitudeInput) refs.natalLongitudeInput.value = state.natalLocation.longitude ?? '';
+        updateNatalMomentMeta();
+    }
+
+    function populateNatalTimezoneOptions() {
+        const selectedTimezone = normalizeTimezoneValue(refs.natalTimezoneInput?.value || state.natalTimezone, state.natalLocation?.name);
+        window.Timezones?.populate?.(refs.natalTimezoneInput);
+        if (refs.natalTimezoneInput && selectedTimezone) {
+            refs.natalTimezoneInput.value = selectedTimezone;
+        }
+        if (selectedTimezone) {
+            state.natalTimezone = selectedTimezone;
+        }
+    }
+
+    function bindNatalLocationAutocomplete() {
+        if (!window.PlaceAutocomplete || !refs.natalLocationInput || !refs.natalLocationSuggestions) return;
+        window.PlaceAutocomplete.attach({
+            input: refs.natalLocationInput,
+            suggestions: refs.natalLocationSuggestions,
+            minChars: 2,
+            debounceMs: 350,
+            limit: 5,
+            getLabel: (item) => item.shortName || item.displayName,
+            onInput: (place) => {
+                state.natalLocation = {
+                    ...state.natalLocation,
+                    name: refs.natalLocationInput.value.trim(),
+                    latitude: null,
+                    longitude: null,
+                    sourceId: null,
+                };
+                if (refs.natalLatitudeInput) refs.natalLatitudeInput.value = '';
+                if (refs.natalLongitudeInput) refs.natalLongitudeInput.value = '';
+                const guessedTimezone = window.Timezones?.guess?.(place);
+                if (guessedTimezone && refs.natalTimezoneInput) {
+                    refs.natalTimezoneInput.value = guessedTimezone;
+                    state.natalTimezone = guessedTimezone;
+                }
+                updateNatalMomentMeta();
+            },
+            onSelect: async (item) => {
+                if (refs.natalLocationInput) refs.natalLocationInput.value = item.shortName || item.displayName;
+                if (refs.natalLatitudeInput) refs.natalLatitudeInput.value = String(item.lat);
+                if (refs.natalLongitudeInput) refs.natalLongitudeInput.value = String(item.lon);
+
+                let resolvedTimezone = null;
+                if (item.sourceId && window.AstroAPI?.resolvePlaceTimezone) {
+                    try {
+                        resolvedTimezone = await window.AstroAPI.resolvePlaceTimezone(item.sourceId);
+                    } catch (_error) {
+                        resolvedTimezone = null;
+                    }
+                }
+                if (!resolvedTimezone) {
+                    resolvedTimezone = window.Timezones?.guess?.(item.displayName || item.shortName) || null;
+                }
+                if (resolvedTimezone && refs.natalTimezoneInput) {
+                    refs.natalTimezoneInput.value = resolvedTimezone;
+                }
+
+                state.natalLocation = {
+                    name: item.shortName || item.displayName,
+                    latitude: item.lat,
+                    longitude: item.lon,
+                    sourceId: item.sourceId || null,
+                };
+                if (resolvedTimezone) {
+                    state.natalTimezone = resolvedTimezone;
+                }
+                updateNatalMomentMeta();
+                renderNatalTimeStepper();
+                await loadNatal();
+            },
+        });
+    }
+
+    function handleNatalLocationInput() {
+        const nextValue = refs.natalLocationInput?.value?.trim() || '';
+        const normalizedSelected = normalizeLooseText(state.natalLocation?.name);
+        const normalizedNext = normalizeLooseText(nextValue);
+        if (!normalizedNext || normalizedNext !== normalizedSelected) {
+            state.natalLocation = {
+                ...state.natalLocation,
+                name: nextValue,
+                latitude: null,
+                longitude: null,
+                sourceId: null,
+            };
+            if (refs.natalLatitudeInput) refs.natalLatitudeInput.value = '';
+            if (refs.natalLongitudeInput) refs.natalLongitudeInput.value = '';
+            updateNatalMomentMeta();
+        }
+    }
+
+    function applyNatalLocationInputsToState() {
+        state.natalTimezone = normalizeTimezoneValue(refs.natalTimezoneInput?.value?.trim(), refs.natalLocationInput?.value?.trim())
+            || normalizeTimezoneValue(state.natalTimezone, refs.natalLocationInput?.value?.trim())
+            || 'UTC';
+        state.natalLocation = {
+            name: refs.natalLocationInput?.value?.trim() || '',
+            latitude: numberOrNull(refs.natalLatitudeInput?.value),
+            longitude: numberOrNull(refs.natalLongitudeInput?.value),
+            sourceId: state.natalLocation?.sourceId || null,
+        };
+    }
+
+    async function onNatalDatetimeChange() {
+        const date = refs.natalDateInput?.value || splitTargetDatetime(state.natalSelectedDateTime)[0];
+        const time = refs.natalTimeInput?.value || '12:00:00';
+        state.natalSelectedDateTime = `${date}T${normalizeTime(time)}`;
+        renderNatalTimeStepper();
+        updateNatalMomentMeta();
+        await loadNatal({ lightweight: true });
+    }
+
+    async function loadNatal(options = {}) {
+        if (!window.AstroAPI?.calculateNatalChart) return;
+        const seq = ++state.requestSeq;
+        if (options.lightweight) setNatalLightweightLoading(true);
+        try {
+            const birth = state.natalData?.birth_data || {};
+            const [date, time] = splitTargetDatetime(state.natalSelectedDateTime);
+            const newNatalData = await window.AstroAPI.calculateNatalChart({
+                first_name: birth.first_name || '',
+                last_name: birth.last_name || '',
+                date,
+                time,
+                timezone: state.natalTimezone,
+                place: state.natalLocation.name || '',
+                latitude: state.natalLocation.latitude ?? undefined,
+                longitude: state.natalLocation.longitude ?? undefined,
+                house_system: state.pageSettings.houseSystem,
+            }, { saveToDb: false });
+
+            if (!newNatalData || seq !== state.requestSeq) return;
+
+            state.natalData = {
+                ...newNatalData,
+                user_id: state.userId,
+                birth_data: {
+                    ...newNatalData.birth_data,
+                    first_name: birth.first_name,
+                    last_name: birth.last_name,
+                },
+            };
+            state.natalWheelData = window.NatalWheelData?.prepareNatalWheelData
+                ? window.NatalWheelData.prepareNatalWheelData(state.natalData, { houseSystem: state.pageSettings.houseSystem })
+                : state.natalData;
+
+            state.cache = {};
+            setNatalLightweightLoading(false);
+            renderStaticNatal();
+            await loadActiveLayers({ lightweight: true });
+        } catch (error) {
+            setNatalLightweightLoading(false);
+            if (seq !== state.requestSeq) return;
+            console.error('Natal recalculation failed:', error);
+        }
+    }
+
+    function setNatalLightweightLoading(isLoading) {
+        refs.forecastNewNatalPanel?.classList.toggle('forecast-new-loading', isLoading);
+        refs.forecastNewWheelShell?.classList.toggle('forecast-new-loading', isLoading);
     }
 
     function toggleCustomStepPopover() {
