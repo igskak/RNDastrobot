@@ -340,9 +340,32 @@
             return planets.every((body) => bodyIsVisible(body) && bodyIsAspecting(body));
         });
 
+        const filteredHouses = (chartData?.houses || []).map((house) => {
+            const rulerPlanet = bodyIsVisible(house?.ruler_planet) ? house?.ruler_planet : null;
+            return {
+                ...house,
+                ruler_planet: rulerPlanet,
+                ruler_in_house: rulerPlanet ? house?.ruler_in_house : null,
+                co_rulers: Array.isArray(house?.co_rulers)
+                    ? house.co_rulers.filter((body) => bodyIsVisible(body))
+                    : house?.co_rulers,
+                planets_in_house: Array.isArray(house?.planets_in_house)
+                    ? house.planets_in_house.filter((body) => bodyIsVisible(body))
+                    : house?.planets_in_house,
+            };
+        });
+
+        const filteredSpecialPoints = chartData?.special_points && typeof chartData.special_points === 'object'
+            ? Object.fromEntries(Object.entries(chartData.special_points).filter(([name, point]) => (
+                bodyIsVisible(name || point?.name)
+            )))
+            : chartData?.special_points;
+
         return {
             ...chartData,
             planets: (chartData?.planets || []).filter((planet) => bodyIsVisible(planet?.name)),
+            houses: filteredHouses,
+            special_points: filteredSpecialPoints,
             aspects: filteredAspects,
             aspect_configurations: filteredConfigurations,
             stelliums: filteredStelliums,

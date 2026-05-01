@@ -822,7 +822,7 @@
             showStationary: state.pageSettings.showStationary !== false,
             showApplyingSeparating: state.pageSettings.showApplyingSeparating === true,
         });
-        state.natalRenderer?.render(filterChartDataForRenderer(state.natalWheelData));
+        state.natalRenderer?.render(filterChartDataForSidePanel(state.natalWheelData));
         renderInlineMatrixControls();
         applyInlineMatrixRowState();
         renderMatrixEditor();
@@ -918,14 +918,16 @@
         document.querySelectorAll('#natalPlanetsTable tr[data-planet]').forEach((row) => {
             const body = matrixBodyKey(row.dataset.planet);
             const config = rows?.[body] || { display: true, aspecting: true };
-            row.classList.toggle('forecast-new-matrix-row-display-off', config.display === false);
+            row.hidden = false;
+            row.classList.toggle('forecast-new-matrix-row-display-off', false);
             row.classList.toggle('forecast-new-matrix-row-aspecting-off', config.aspecting === false);
         });
 
         document.querySelectorAll('#progPlanetsTable tr[data-planet]').forEach((row) => {
             const body = matrixBodyKey(row.dataset.planet);
             const config = rows?.[body] || { display: true, aspecting: true };
-            row.classList.toggle('forecast-new-matrix-row-display-off', config.display === false);
+            row.hidden = false;
+            row.classList.toggle('forecast-new-matrix-row-display-off', false);
             row.classList.toggle('forecast-new-matrix-row-aspecting-off', config.aspecting === false);
         });
 
@@ -1263,7 +1265,7 @@
             showStationary: state.pageSettings.showStationary !== false,
             showApplyingSeparating: state.pageSettings.showApplyingSeparating === true,
         });
-        state.prognosticRenderer?.render(filterChartDataForRenderer({
+        state.prognosticRenderer?.render(filterChartDataForSidePanel({
             planets: layer.bodies || [],
             houses: layer.houses || [],
             aspects: layer.aspects || [],
@@ -1603,6 +1605,17 @@
         });
     }
 
+    function matrixRowsForSidePanel() {
+        const rows = normalizeForecastNewMatrixRows(state.matrixRows);
+        return Object.fromEntries(Object.entries(rows).map(([body, config]) => [
+            body,
+            {
+                ...config,
+                display: true,
+            },
+        ]));
+    }
+
     function filterChartDataForRenderer(chartData = {}) {
         let filtered = {
             ...chartData,
@@ -1612,6 +1625,31 @@
         filtered = window.AstroPreferences?.filterChartDataByViewPreferences
             ? window.AstroPreferences.filterChartDataByViewPreferences(filtered, {
                 matrixRows: normalizeForecastNewMatrixRows(state.matrixRows),
+                aspectScope: state.pageSettings.aspectScope || 'all',
+                enabledAspectTypes: Array.isArray(state.pageSettings.enabledAspectTypes) && state.pageSettings.enabledAspectTypes.length
+                    ? state.pageSettings.enabledAspectTypes
+                    : DEFAULT_ASPECT_TYPES,
+            })
+            : filtered;
+
+        if (window.AstroAspectPhase?.enrichChartDataWithAspectPhases) {
+            filtered = window.AstroAspectPhase.enrichChartDataWithAspectPhases(filtered);
+        }
+        if (window.AstroAspectPhase?.filterChartDataByAspectPhase) {
+            filtered = window.AstroAspectPhase.filterChartDataByAspectPhase(filtered, getAspectPhaseFilter());
+        }
+        return filtered;
+    }
+
+    function filterChartDataForSidePanel(chartData = {}) {
+        let filtered = {
+            ...chartData,
+            aspects: normalizeForecastAspects(chartData.aspects || []),
+        };
+
+        filtered = window.AstroPreferences?.filterChartDataByViewPreferences
+            ? window.AstroPreferences.filterChartDataByViewPreferences(filtered, {
+                matrixRows: matrixRowsForSidePanel(),
                 aspectScope: state.pageSettings.aspectScope || 'all',
                 enabledAspectTypes: Array.isArray(state.pageSettings.enabledAspectTypes) && state.pageSettings.enabledAspectTypes.length
                     ? state.pageSettings.enabledAspectTypes

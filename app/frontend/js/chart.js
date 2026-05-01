@@ -392,7 +392,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         showStationary: currentSettings.showStationary,
         showApplyingSeparating: currentSettings.showApplyingSeparating,
     });
-    chartDataRenderer.render(initialFiltered);
+    chartDataRenderer.render(filterChartDataForNatalTables(chartData));
     chartDataRenderer.setAspectTypeFilter(currentSettings.aspectScope);
 
     initPlanetRowClick();
@@ -691,6 +691,29 @@ function getCurrentNatalMatrixRows() {
     return helpers.ensureMatrixRows
         ? helpers.ensureMatrixRows(currentSettings.matrixRows || {})
         : (currentSettings.matrixRows || {});
+}
+
+function getNatalMatrixRowsForTables() {
+    return Object.fromEntries(Object.entries(getCurrentNatalMatrixRows()).map(([body, config]) => [
+        body,
+        {
+            ...config,
+            display: true,
+        },
+    ]));
+}
+
+function filterChartDataForNatalTables(chartData) {
+    const filteredByView = window.AstroPreferences?.filterChartDataByViewPreferences
+        ? window.AstroPreferences.filterChartDataByViewPreferences(chartData, {
+            matrixRows: getNatalMatrixRowsForTables(),
+            aspectScope: currentSettings.aspectScope || 'all',
+            enabledAspectTypes: Array.isArray(currentSettings.enabledAspectTypes) && currentSettings.enabledAspectTypes.length
+                ? currentSettings.enabledAspectTypes
+                : NATAL_ASPECT_TYPES,
+        })
+        : chartData;
+    return filterChartDataByAspectPhase(filteredByView);
 }
 
 function renderNatalSettingsEditors() {
@@ -1479,7 +1502,7 @@ function redrawChart(chartData, hiddenPlanets, orientation = currentSettings.ori
     });
     clearConfigurationHighlight();
     chartWheel.draw(filteredData);
-    chartDataRenderer.render(filteredData);
+    chartDataRenderer.render(filterChartDataForNatalTables(chartData));
     syncHoveredAspectToActiveSurface();
 }
 

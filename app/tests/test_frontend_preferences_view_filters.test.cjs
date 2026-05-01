@@ -124,3 +124,43 @@ test('filterChartDataByViewPreferences applies matrix rows to prognostic aspect 
         [['Mars', 'Sun', 'Square']],
     );
 });
+
+test('filterChartDataByViewPreferences removes hidden bodies from table house fields and special points', () => {
+    const chartData = {
+        planets: [
+            { name: 'Sun' },
+            { name: 'Mars' },
+            { name: 'TrueNode' },
+        ],
+        houses: [
+            {
+                number: 1,
+                ruler_planet: 'Mars',
+                ruler_in_house: 5,
+                co_rulers: ['Sun', 'TrueNode'],
+                planets_in_house: ['Mars', 'Sun', 'TrueNode'],
+            },
+        ],
+        special_points: {
+            TrueNorthNode: { longitude: 10 },
+            Fortune: { longitude: 20 },
+        },
+        aspects: [],
+        aspect_configurations: [],
+        stelliums: [],
+    };
+
+    const filtered = preferences.filterChartDataByViewPreferences(chartData, {
+        matrixRows: {
+            Mars: { display: false, aspecting: true },
+            TrueNode: { display: false, aspecting: true },
+        },
+    });
+
+    assert.deepEqual(filtered.planets.map((planet) => planet.name), ['Sun']);
+    assert.equal(filtered.houses[0].ruler_planet, null);
+    assert.equal(filtered.houses[0].ruler_in_house, null);
+    assert.deepEqual(filtered.houses[0].co_rulers, ['Sun']);
+    assert.deepEqual(filtered.houses[0].planets_in_house, ['Sun']);
+    assert.deepEqual(Object.keys(filtered.special_points), ['Fortune']);
+});
