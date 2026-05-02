@@ -282,16 +282,25 @@ async function loadProfile() {
         renderAll(profileData);
 
         refs.profileMain.classList.remove('hidden');
-        refs.pageLoader?.classList.add('hidden');
+        hidePageLoader();
     } catch (err) {
         showError(err.message);
     }
 }
 
 function showError(msg) {
-    refs.pageLoader?.classList.add('hidden');
+    hidePageLoader();
     refs.profileErrorMsg.textContent = msg;
     refs.profileError.classList.remove('hidden');
+}
+
+function hidePageLoader() {
+    if (window.AstroAPI?.hidePageLoader) {
+        window.AstroAPI.hidePageLoader();
+        return;
+    }
+
+    refs.pageLoader?.classList.add('hidden');
 }
 
 function renderAll(data) {

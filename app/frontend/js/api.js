@@ -618,7 +618,7 @@
         const loader = document.getElementById('pageLoader');
         if (!loader) return;
         loader.classList.add('fade-out');
-        setTimeout(() => loader.remove(), 300);
+        setTimeout(() => loader.remove(), 460);
     }
 
     /**

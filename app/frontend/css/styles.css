@@ -67,6 +67,8 @@
 
     /* Transition */
     --transition: 0.2s ease;
+    --transition-soft: 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+    --motion-soft: cubic-bezier(0.22, 1, 0.36, 1);
 
     /* Fonts */
     --font-ui:      'DM Sans', system-ui, -apple-system, sans-serif;
@@ -89,6 +91,101 @@ body {
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+
+body::selection {
+    background: rgba(184, 147, 90, 0.24);
+}
+
+/* ============ SOFT PAGE ARRIVAL ============ */
+.container,
+.login-shell,
+.clients-shell,
+.calendar-shell,
+.profile-shell,
+.account-settings-shell,
+.chart-header-compact,
+.chart-layout,
+.forecast-header,
+.forecast-toolbar,
+.forecast-summary,
+.natal-header,
+.natal-content,
+.forecast-new-header,
+.forecast-new-layout:not(.hidden),
+.synastry-header,
+.synastry-layout:not(.hidden),
+.call-shell:not([hidden]),
+.join-lobby:not([hidden]) {
+    animation: page-arrive 0.56s var(--motion-soft) both;
+}
+
+.birth-form,
+.form-section,
+.form-summary-card,
+.advanced-fields,
+.data-panel,
+.clients-table tbody tr,
+.data-table tbody tr,
+.chart-wheel-container,
+.workspace-main,
+.workspace-panel,
+.workspace-card,
+.clients-table-wrap,
+.profile-main:not(.hidden),
+.profile-card,
+.account-settings-card,
+.natal-section,
+.forecast-summary-card,
+.forecast-table-container,
+.solar-container,
+.biwheel-container,
+.timeline-container,
+.forecast-new-panel,
+.forecast-new-wheel-shell,
+.synastry-panel,
+.call-panel,
+.join-lobby-box,
+.story-panel,
+.auth-card {
+    animation: element-arrive 0.48s var(--motion-soft) both;
+}
+
+.clients-table tbody tr,
+.data-table tbody tr,
+.profile-card,
+.account-settings-section,
+.natal-section,
+.forecast-summary-card,
+.forecast-new-panel,
+.synastry-panel {
+    animation-delay: 0.04s;
+}
+
+@keyframes page-arrive {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+        filter: blur(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+}
+
+@keyframes element-arrive {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.992);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 /* ============ ASTRO SYMBOLS ============ */
@@ -428,37 +525,68 @@ input[type="number"] {
     position: fixed;
     inset: 0;
     z-index: 9999;
-    background: var(--bg-primary);
+    background:
+        radial-gradient(circle at 50% 38%, rgba(184, 147, 90, 0.18), transparent 26%),
+        radial-gradient(circle at 50% 62%, rgba(30, 58, 95, 0.08), transparent 32%),
+        var(--bg-primary);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 1rem;
-    transition: opacity 0.3s;
+    opacity: 1;
+    visibility: visible;
+    transition:
+        opacity 0.46s var(--motion-soft),
+        visibility 0.46s step-end,
+        filter 0.46s var(--motion-soft);
 }
 
 .page-loader.fade-out {
     opacity: 0;
+    visibility: hidden;
+    filter: blur(10px);
     pointer-events: none;
 }
 
 .page-loader .pl-spinner {
-    width: 36px;
-    height: 36px;
-    border: 2.5px solid rgba(184, 147, 90, 0.2);
-    border-top-color: var(--gold);
+    width: 38px;
+    height: 38px;
+    border: 1px solid rgba(184, 147, 90, 0.22);
+    border-top-color: rgba(30, 58, 95, 0.72);
+    border-right-color: rgba(184, 147, 90, 0.62);
     border-radius: 50%;
-    animation: pl-spin 0.8s linear infinite;
+    box-shadow:
+        0 0 0 8px rgba(184, 147, 90, 0.06),
+        0 16px 36px rgba(26, 22, 20, 0.08);
+    animation: pl-spin 1.05s cubic-bezier(0.65, 0, 0.35, 1) infinite;
 }
 
 .page-loader .pl-text {
     color: var(--text-muted);
     font-size: 0.9rem;
     letter-spacing: 0.02em;
+    animation: loader-text-breathe 1.8s ease-in-out infinite;
 }
 
 @keyframes pl-spin {
     to { transform: rotate(360deg); }
+}
+
+@keyframes loader-text-breathe {
+    0%, 100% { opacity: 0.56; transform: translateY(0); }
+    50% { opacity: 0.9; transform: translateY(-1px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.001ms !important;
+    }
 }
 
 /* ============ HINTS ============ */

@@ -288,8 +288,12 @@ async function bootstrapPage() {
 
     initCalendar();
 
-    const loader = document.getElementById('pageLoader');
-    if (loader) loader.classList.add('hidden');
+    if (window.AstroAPI?.hidePageLoader) {
+        window.AstroAPI.hidePageLoader();
+    } else {
+        const loader = document.getElementById('pageLoader');
+        if (loader) loader.classList.add('hidden');
+    }
 }
 
 document.addEventListener('DOMContentLoaded', async () => {

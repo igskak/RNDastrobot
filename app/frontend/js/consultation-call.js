@@ -476,7 +476,17 @@
     }
 
     function show(el) { if (el) el.hidden = false; }
-    function hide(el) { if (el) el.hidden = true; }
+    function hide(el) {
+        if (!el) return;
+
+        if (el.classList.contains('page-loader')) {
+            el.classList.add('fade-out');
+            setTimeout(() => { el.hidden = true; }, 460);
+            return;
+        }
+
+        el.hidden = true;
+    }
 
     function showError(msg) {
         hide(refs.pageLoader);

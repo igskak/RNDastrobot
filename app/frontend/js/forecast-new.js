@@ -2351,7 +2351,7 @@
     function hideLoader() {
         if (!refs.pageLoader) return;
         refs.pageLoader.classList.add('fade-out');
-        setTimeout(() => refs.pageLoader?.remove(), 300);
+        setTimeout(() => refs.pageLoader?.remove(), 460);
     }
 
     function showLayout() {
