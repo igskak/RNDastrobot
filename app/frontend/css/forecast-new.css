@@ -32,14 +32,14 @@
 .forecast-new-layer-toggle {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
+    gap: 6px;
     min-height: 34px;
-    padding: 0 12px;
+    padding: 0 10px;
     border: 1px solid rgba(30, 58, 95, 0.14);
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.74);
     color: var(--text-secondary);
-    font-size: 12.5px;
+    font-size: 12px;
     font-weight: 700;
     cursor: pointer;
     transition: transform var(--transition), border-color var(--transition), background var(--transition);
@@ -69,27 +69,34 @@
 }
 
 .forecast-new-layout {
-    display: flex;
+    --forecast-new-side-panel-width: clamp(252px, 18vw, 324px);
+
+    display: grid;
+    grid-template-columns:
+        var(--forecast-new-side-panel-width)
+        minmax(0, 1fr)
+        var(--forecast-new-side-panel-width);
     flex: 1;
     min-height: 0;
     overflow: hidden;
 }
 
 .forecast-new-side-panel {
-    width: 350px;
-    min-width: 300px;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
 }
 
 #forecastNewNatalPanel {
     position: relative;
-    width: 392px;
-    min-width: 392px;
 }
 
 #forecastNewProgPanel {
     position: relative;
-    width: 350px;
-    min-width: 330px;
+}
+
+.forecast-new-center {
+    min-width: 0;
 }
 
 .forecast-new-time-stepper {
@@ -408,7 +415,8 @@
 
 .forecast-new-tabs {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr)) 36px;
+    align-items: stretch;
     gap: 4px;
     overflow: visible;
     padding: 6px;
@@ -420,6 +428,63 @@
     white-space: normal;
     line-height: 1.15;
     text-align: center;
+}
+
+.forecast-new-tabs-overflow {
+    position: relative;
+}
+
+.forecast-new-tabs-overflow-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    padding: 9px 0;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.forecast-new-tabs-overflow-toggle[aria-expanded="true"] {
+    background: var(--accent);
+    color: #fff;
+}
+
+.forecast-new-tabs-overflow-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 12;
+    display: none;
+    min-width: 164px;
+    padding: 4px;
+    border: 1px solid rgba(30, 58, 95, 0.14);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 12px 24px rgba(30, 58, 95, 0.14);
+}
+
+.forecast-new-tabs-overflow:hover .forecast-new-tabs-overflow-menu,
+.forecast-new-tabs-overflow:focus-within .forecast-new-tabs-overflow-menu,
+.forecast-new-tabs-overflow.is-open .forecast-new-tabs-overflow-menu {
+    display: grid;
+    gap: 4px;
+}
+
+.forecast-new-tabs-overflow:hover .forecast-new-tabs-overflow-toggle,
+.forecast-new-tabs-overflow:focus-within .forecast-new-tabs-overflow-toggle,
+.forecast-new-tabs-overflow.is-open .forecast-new-tabs-overflow-toggle {
+    background: rgba(30, 58, 95, 0.08);
+    color: var(--accent);
+}
+
+.forecast-new-tabs-overflow.is-active .forecast-new-tabs-overflow-toggle {
+    background: var(--accent);
+    color: #fff;
+}
+
+.forecast-new-tabs-overflow-item {
+    width: 100%;
 }
 
 .forecast-new-panel-content {
@@ -680,23 +745,27 @@
     color: transparent;
 }
 
-/* ── Таблицы планет и домов: обе панели, auto-layout по контенту ── */
-.forecast-new-side-panel .forecast-new-planets-table,
-.forecast-new-side-panel .forecast-new-houses-table {
-    table-layout: auto;
+/* ── Планетные таблицы: колонки растягиваются пропорционально ширине панели ── */
+.forecast-new-side-panel .forecast-new-planets-table {
     width: 100%;
+    table-layout: fixed;
 }
 
-/* Символьная колонка — компактная подсказка для auto-layout */
-.forecast-new-side-panel .forecast-new-symbol-column { width: 40px; }
+/* ── Таблицы домов живут по той же пропорциональной логике, что и планеты ── */
+.forecast-new-side-panel .forecast-new-houses-table {
+    width: 100%;
+    table-layout: fixed;
+}
 
-/* Матричные колонки П/А */
-.forecast-new-side-panel .forecast-new-matrix-column { width: 28px; }
+.forecast-new-side-panel .forecast-new-symbol-column { width: 28%; }
+.forecast-new-side-panel .forecast-new-position-column { width: 50%; }
+.forecast-new-side-panel .forecast-new-planets-table col:nth-child(3) { width: 11%; }
+.forecast-new-side-panel .forecast-new-planets-table col:nth-child(4) { width: 11%; }
 
-/* Дома: фиксированные узкие колонки, позиция берёт остаток */
-.forecast-new-side-panel .forecast-new-house-cusp-column  { width: 66px; }
-.forecast-new-side-panel .forecast-new-house-sign-column  { width: auto; }
-.forecast-new-side-panel .forecast-new-house-ruler-column { width: 60px; }
+/* У houses знак забирает остаток */
+.forecast-new-side-panel .forecast-new-house-cusp-column  { width: 31%; }
+.forecast-new-side-panel .forecast-new-house-sign-column  { width: 39%; }
+.forecast-new-side-panel .forecast-new-house-ruler-column { width: 30%; }
 
 /* Ячейки — nowrap чтобы текст не переносился */
 .forecast-new-side-panel .forecast-new-planets-table td.symbol-cell,
@@ -708,9 +777,34 @@
     white-space: nowrap;
 }
 
+.forecast-new-side-panel .forecast-new-planets-table td:nth-child(2),
+.forecast-new-side-panel .forecast-new-planets-table th:nth-child(2) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.forecast-new-side-panel .forecast-new-planets-table td:nth-child(4),
+.forecast-new-side-panel .forecast-new-planets-table th:nth-child(4) {
+    text-align: center !important;
+}
+
+.forecast-new-side-panel .forecast-new-houses-table td:nth-child(2),
+.forecast-new-side-panel .forecast-new-houses-table th:nth-child(2) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .forecast-new-side-panel .forecast-new-houses-table td,
 .forecast-new-side-panel .forecast-new-houses-table th {
     white-space: nowrap;
+}
+
+.forecast-new-page .planet-symbol-cell {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0;
+    width: 100%;
 }
 
 .forecast-new-page .planet-motion-stack {
@@ -760,11 +854,6 @@
 
 .forecast-new-matrix-row-aspecting-off {
     background: linear-gradient(90deg, rgba(184, 147, 90, 0.08), transparent 70%);
-}
-
-.forecast-new-houses-title {
-    margin-top: 16px;
-    padding-left: 8px;
 }
 
 .forecast-new-moment-card {
@@ -826,20 +915,27 @@
 
 .forecast-new-right-layer-tabs {
     display: flex;
-    gap: 6px;
-    padding: 0 12px 10px;
+    gap: 3px;
+    padding: 6px 6px 2px;
+    background: rgba(240, 237, 228, 0.52);
 }
 
 .forecast-new-right-layer-tab {
     flex: 1;
-    min-height: 32px;
+    min-height: 28px;
+    min-width: 0;
+    padding: 0 6px;
     border: 1px solid rgba(30, 58, 95, 0.12);
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.72);
     color: var(--text-secondary);
     font: inherit;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     cursor: pointer;
 }
 
@@ -946,9 +1042,9 @@
 
 @media (max-width: 1180px) {
     .forecast-new-layout {
-        overflow: auto;
-        display: grid;
-        grid-template-columns: 392px minmax(520px, 1fr) 330px;
+        --forecast-new-side-panel-width: clamp(223px, 22.5vw, 266px);
+
+        overflow: hidden;
     }
 
     .forecast-new-page {

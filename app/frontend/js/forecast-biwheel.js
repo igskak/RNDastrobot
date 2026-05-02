@@ -942,7 +942,7 @@
                 ? houseTheme.color
                 : isPrognostic
                 ? withAlpha(progColor, prognosticStyle.cuspAlpha)
-                : (isAngular ? '#6366f1' : (extendNatalCuspsToForecastWheels ? '#94a3b8' : '#c7d2db'));
+                : (isAngular ? '#111111' : (extendNatalCuspsToForecastWheels ? '#94a3b8' : '#c7d2db'));
             const strokeWidth = isPrognostic
                 ? (isAngular ? (isBoldAngle ? 2.3 : 1.5) : 1.9)
                 : (isAngular ? (isBoldAngle ? 1.5 : 0.95) : (extendNatalCuspsToForecastWheels ? 0.95 : 0.5));
@@ -1009,7 +1009,7 @@
                 const textR = natalBand.center;
                 cuspGroup.appendChild(el('text', {
                     x: C + textR * Math.cos(midAngle), y: C + textR * Math.sin(midAngle) + 3,
-                    'text-anchor':'middle', 'font-size':'10', fill: isAngular ? '#6366f1' : '#6b7280',
+                    'text-anchor':'middle', 'font-size':'10', fill: isAngular ? '#111111' : '#6b7280',
                     'font-weight': isAngular ? (isBoldAngle ? '700' : '500') : '400', style:'pointer-events:none'
                 }, formatHouseLabel(h.number)));
             }

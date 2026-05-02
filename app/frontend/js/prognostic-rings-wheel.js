@@ -13,6 +13,7 @@
     const WHEEL_BG = '#fafafa';
     const WHEEL_BORDER = '#d1d5db';
     const WHEEL_TICK = '#9ca3af';
+    const ANGLE_MARKER_COLOR = '#111111';
     const HOUSE_LABELS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
     const ASPECT_SYMBOLS = {
         Conjunction: '☌',
@@ -41,6 +42,13 @@
         Semisquare: '#f97316',
         Sesquiquadrate: '#f97316',
     };
+    const HOUSE_LAYER_THEMES = {
+        natal: { color: '#111111', radialOffset: 4, tangentOffset: 8 },
+        transit: { color: '#1e3a5f', radialOffset: 10, tangentOffset: 8 },
+        progression: { color: '#7c3aed', radialOffset: 16, tangentOffset: 8 },
+        direction: { color: '#0f766e', radialOffset: 22, tangentOffset: 8 },
+        solar_return: { color: '#b45309', radialOffset: 22, tangentOffset: 8 },
+    };
 
     class PrognosticRingsWheel {
         constructor(svgElement) {
@@ -54,6 +62,8 @@
             this.pointScale = 1;
             this.houseNumberStyle = 'arabic';
             this.houseLabelsOutside = false;
+            this.angleAscDscBold = true;
+            this.angleMcIcBold = true;
             this.outsideHouseLabelMethod = 'natal';
             this.showPlanetStationary = false;
             this.showPlanetDegree = false;
@@ -112,6 +122,12 @@
             }
             if (Object.prototype.hasOwnProperty.call(options, 'showPlanetDegree')) {
                 this.showPlanetDegree = options.showPlanetDegree === true;
+            }
+            if (Object.prototype.hasOwnProperty.call(options, 'angleAscDscBold')) {
+                this.angleAscDscBold = options.angleAscDscBold !== false;
+            }
+            if (Object.prototype.hasOwnProperty.call(options, 'angleMcIcBold')) {
+                this.angleMcIcBold = options.angleMcIcBold !== false;
             }
             if (options.visualPreferences) this.visualPreferences = options.visualPreferences;
         }
@@ -277,7 +293,7 @@
 
         drawHouses(ring) {
             const houses = Array.isArray(ring.houses) && ring.houses.length ? ring.houses : [];
-            const useOutsideLabels = this.houseLabelsOutside && ring.method === this.outsideHouseLabelMethod;
+            const useOutsideLabels = this.houseLabelsOutside === true;
             const outsideExtension = Number(this.houseVisualOptions.outsideExtension) || 14;
             const outsideSegmentStartR = OUTER_R + 1;
             const outsideSegmentEndR = OUTER_R + outsideExtension;
@@ -287,7 +303,21 @@
                 const angle = this.longToAngle(longitude);
                 const pOuter = this.polar(ring.outer, angle);
                 const pInner = this.polar(ring.inner, angle);
-                const isAngular = [1, 4, 7, 10].includes(Number(house.number));
+                const houseNumber = Number(house.number);
+                const isAngular = [1, 4, 7, 10].includes(houseNumber);
+                const isAscDsc = houseNumber === 1 || houseNumber === 7;
+                const isMcIc = houseNumber === 10 || houseNumber === 4;
+                const isBoldAngle = (isAscDsc && this.angleAscDscBold !== false)
+                    || (isMcIc && this.angleMcIcBold !== false);
+                const innerStroke = isAngular
+                    ? ANGLE_MARKER_COLOR
+                    : (ring.method === 'natal' ? this.getHouseLineColor(false) : ring.color);
+                const innerStrokeWidth = ring.method === 'natal'
+                    ? (isAngular ? (isBoldAngle ? 2.5 : 1.5) : 1)
+                    : (isAngular ? (isBoldAngle ? 1.25 : 0.85) : 0.7);
+                const innerOpacity = ring.method === 'natal'
+                    ? 1
+                    : (isAngular ? 0.82 : 0.48);
                 const group = this.el('g', {
                     class: 'house-cusp-group',
                     'data-house': String(house.number || ''),
@@ -304,9 +334,9 @@
                 }));
                 group.appendChild(this.el('line', {
                     x1: pInner.x, y1: pInner.y, x2: pOuter.x, y2: pOuter.y,
-                    stroke: ring.method === 'natal' ? this.getHouseLineColor(isAngular) : ring.color,
-                    'stroke-width': ring.method === 'natal' ? (isAngular ? 2.5 : 1) : (isAngular ? 1.25 : 0.7),
-                    opacity: ring.method === 'natal' ? 1 : (isAngular ? 0.82 : 0.48),
+                    stroke: innerStroke,
+                    'stroke-width': innerStrokeWidth,
+                    opacity: innerOpacity,
                     class: 'house-cusp-line',
                 }));
 
@@ -321,8 +351,9 @@
                     }));
                     group.appendChild(this.el('line', {
                         x1: outsideStart.x, y1: outsideStart.y, x2: outsideEnd.x, y2: outsideEnd.y,
-                        stroke: this.getHouseLineColor(isAngular),
-                        'stroke-width': isAngular ? 2.1 : 1.2,
+                        stroke: innerStroke,
+                        'stroke-width': innerStrokeWidth,
+                        opacity: innerOpacity,
                         class: 'house-cusp-line',
                     }));
                 }
@@ -333,15 +364,15 @@
                     ? this.midLongitude(longitude, nextLong)
                     : longitude + 15;
                 if (useOutsideLabels) {
-                    const outsideLabel = this.getOutsideHouseLabelGeometry(angle);
+                    const outsideLabel = this.getOutsideHouseLabelGeometry(angle, ring.method);
                     this.layers.labels.appendChild(this.el('text', {
                         x: outsideLabel.x,
                         y: outsideLabel.y,
                         'text-anchor': outsideLabel.anchor,
                         'dominant-baseline': 'middle',
                         'font-size': ring.method === 'natal' ? 9.5 : 8.5,
-                        'font-weight': isAngular ? '600' : '500',
-                        fill: this.getHouseLabelColor(isAngular),
+                        'font-weight': isAngular ? (isBoldAngle ? '600' : '500') : '500',
+                        fill: isAngular ? ANGLE_MARKER_COLOR : (ring.method === 'natal' ? this.getHouseLabelColor(false) : ring.color),
                         stroke: '#fafafa',
                         'stroke-width': '2.4',
                         'stroke-linejoin': 'round',
@@ -355,8 +386,8 @@
                         y: labelPos.y + 3,
                         'text-anchor': 'middle',
                         'font-size': ring.method === 'natal' ? 10 : 8,
-                        'font-weight': ring.method === 'natal' ? (isAngular ? '700' : '400') : '700',
-                        fill: ring.method === 'natal' ? this.getHouseLabelColor(isAngular) : ring.color,
+                        'font-weight': ring.method === 'natal' ? (isAngular ? (isBoldAngle ? '700' : '500') : '400') : (isAngular ? (isBoldAngle ? '700' : '500') : '700'),
+                        fill: isAngular ? ANGLE_MARKER_COLOR : (ring.method === 'natal' ? this.getHouseLabelColor(false) : ring.color),
                         opacity: ring.method === 'natal' ? 0.9 : 0.78,
                     }, this.formatHouseLabel(house.number)));
                 }
@@ -433,8 +464,8 @@
                 }
                 const annotationScale = Math.min(1.25, scale);
                 const motionFontSize = (8 * annotationScale).toFixed(2);
-                const motionX = pos.x + iconSize * 0.28;
-                const motionY = pos.y + iconSize * 0.42;
+                const motionX = pos.x + iconSize * 0.28 - 2;
+                const motionY = pos.y + iconSize * 0.42 - 2;
                 if (body.retrograde) {
                     group.appendChild(this.el('text', {
                         x: motionX,
@@ -929,16 +960,22 @@
             return isAngular ? '#111111' : '#7c746c';
         }
 
-        getOutsideHouseLabelGeometry(angleDeg) {
+        getHouseLayerTheme(method = 'natal') {
+            return HOUSE_LAYER_THEMES[method] || HOUSE_LAYER_THEMES.natal;
+        }
+
+        getOutsideHouseLabelGeometry(angleDeg, method = 'natal') {
             const angle = angleDeg * Math.PI / 180;
-            const radialOffset = Number(this.houseVisualOptions.outsideRadialOffset) || 0;
-            const tangentOffset = Number(this.houseVisualOptions.outsideTangentOffset) || 0;
+            const theme = this.getHouseLayerTheme(method);
+            const outsideExtension = Number(this.houseVisualOptions.outsideExtension) || 14;
+            const radialOffset = Number(theme.radialOffset ?? this.houseVisualOptions.outsideRadialOffset) || 0;
+            const tangentOffset = Number(theme.tangentOffset ?? this.houseVisualOptions.outsideTangentOffset) || 0;
             const cos = Math.cos(angle);
             const sin = Math.sin(angle);
             const tangentX = -sin;
             const tangentY = cos;
-            const verticalBias = Math.max(0, 0.55 - Math.abs(cos)) * 18;
-            const radius = OUTER_R + radialOffset;
+            const verticalBias = Math.max(0, 0.35 - Math.abs(cos)) * 8;
+            const radius = OUTER_R + outsideExtension + radialOffset;
             const anchor = Math.abs(cos) < 0.18 ? 'middle' : (cos > 0 ? 'start' : 'end');
 
             return {
@@ -1065,15 +1102,15 @@
 
         onHouseCuspHover(event, isEnter) {
             const group = event.currentTarget;
-            const line = group.querySelector('.house-cusp-line');
+            const lines = [...group.querySelectorAll('.house-cusp-line')];
             const houseNumber = Number(group.dataset.house || 0);
             const method = group.dataset.method || '';
 
             if (!isEnter) {
-                if (line) {
+                lines.forEach((line) => {
                     line.style.strokeWidth = '';
                     line.style.opacity = '';
-                }
+                });
                 document.querySelectorAll(`tr[id="row-house-${this.escapeAttribute(String(houseNumber))}"]`).forEach((row) => {
                     row.classList.remove('active-row');
                 });
@@ -1081,10 +1118,10 @@
                 return;
             }
 
-            if (line) {
+            lines.forEach((line) => {
                 line.style.strokeWidth = [1, 4, 7, 10].includes(houseNumber) ? '3.2' : '2.2';
                 line.style.opacity = '1';
-            }
+            });
 
             document.querySelectorAll(`tr[id="row-house-${this.escapeAttribute(String(houseNumber))}"]`).forEach((row) => {
                 row.classList.add('active-row');

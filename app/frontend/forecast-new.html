@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Прогностика New</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=20260501-140512">
-    <script>window.__APP_BUILD_ID__ = '20260501-140512';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=20260502-215130">
+    <script>window.__APP_BUILD_ID__ = '20260502-215130';</script>
 </head>
 <body class="forecast-new-page">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -76,11 +76,24 @@
                 </div>
             </div>
             <div class="panel-tabs forecast-new-tabs">
-                <button class="panel-tab active" data-panel-target="natalPlanetsView">Планеты и дома</button>
+                <button class="panel-tab active" data-panel-target="natalPlanetsView">Планеты</button>
+                <button class="panel-tab" data-panel-target="natalHousesView">Дома</button>
                 <button class="panel-tab" data-panel-target="natalAspectsView">Аспекты</button>
-                <button class="panel-tab" data-panel-target="natalGridView">Сетка</button>
-                <button class="panel-tab" data-panel-target="natalConfigsView">Конфигурации</button>
-                <button class="panel-tab" data-panel-target="natalBalancesView">Балансы</button>
+                <div class="forecast-new-tabs-overflow" data-tabs-overflow>
+                    <button
+                        type="button"
+                        class="panel-tab forecast-new-tabs-overflow-toggle"
+                        data-tabs-overflow-toggle
+                        aria-label="Дополнительные вкладки"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                    >▸</button>
+                    <div class="forecast-new-tabs-overflow-menu" data-tabs-overflow-menu>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="natalGridView">Сетка</button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="natalConfigsView">Конфигурации</button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="natalBalancesView">Балансы</button>
+                    </div>
+                </div>
             </div>
             <div class="panel-content forecast-new-panel-content">
                 <div id="natalPlanetsView" class="panel-tab-content active">
@@ -94,7 +107,8 @@
                         <thead><tr><th>Симв.</th><th>Позиция</th><th class="forecast-new-matrix-col" title="Показ">П</th><th class="forecast-new-matrix-col" title="Аспектация">А</th></tr></thead>
                         <tbody id="natalPlanetsTable"></tbody>
                     </table>
-                    <div class="subsection-title forecast-new-houses-title">Дома</div>
+                </div>
+                <div id="natalHousesView" class="panel-tab-content">
                     <table class="data-table compact forecast-new-houses-table">
                         <colgroup>
                             <col class="forecast-new-house-cusp-column">
@@ -211,6 +225,14 @@
                             <input type="checkbox" id="showWheelDegreeToggle">
                             <span>Показывать градус</span>
                         </label>
+                        <label class="settings-check-option">
+                            <input type="checkbox" id="angleAscDscBoldToggle" checked>
+                            <span data-i18n="page.chart.settings.boldAscDsc"></span>
+                        </label>
+                        <label class="settings-check-option">
+                            <input type="checkbox" id="angleMcIcBoldToggle" checked>
+                            <span data-i18n="page.chart.settings.boldMcIc"></span>
+                        </label>
                     </div>
                 </div>
                 <div class="settings-section">
@@ -254,11 +276,24 @@
             </div>
             <div class="forecast-new-right-layer-tabs" id="rightLayerTabs"></div>
             <div class="panel-tabs forecast-new-tabs">
-                <button class="panel-tab active" data-panel-target="progPlanetsView">Планеты и дома</button>
+                <button class="panel-tab active" data-panel-target="progPlanetsView">Планеты</button>
+                <button class="panel-tab" data-panel-target="progHousesView">Дома</button>
                 <button class="panel-tab" data-panel-target="progAspectsView">Аспекты</button>
-                <button class="panel-tab" data-panel-target="progGridView">Сетка</button>
-                <button class="panel-tab" data-panel-target="progConfigsView">Конфигурации</button>
-                <button class="panel-tab" data-panel-target="progBalancesView">Балансы</button>
+                <div class="forecast-new-tabs-overflow" data-tabs-overflow>
+                    <button
+                        type="button"
+                        class="panel-tab forecast-new-tabs-overflow-toggle"
+                        data-tabs-overflow-toggle
+                        aria-label="Дополнительные вкладки"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                    >▸</button>
+                    <div class="forecast-new-tabs-overflow-menu" data-tabs-overflow-menu>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="progGridView">Сетка</button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="progConfigsView">Конфигурации</button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="progBalancesView">Балансы</button>
+                    </div>
+                </div>
             </div>
             <div class="panel-content forecast-new-panel-content">
                 <div id="progPlanetsView" class="panel-tab-content active">
@@ -272,7 +307,8 @@
                         <thead><tr><th>Симв.</th><th>Позиция</th><th class="forecast-new-matrix-col" title="Показ">П</th><th class="forecast-new-matrix-col" title="Аспектация">А</th></tr></thead>
                         <tbody id="progPlanetsTable"></tbody>
                     </table>
-                    <div class="subsection-title forecast-new-houses-title">Дома</div>
+                </div>
+                <div id="progHousesView" class="panel-tab-content">
                     <table class="data-table compact forecast-new-houses-table">
                         <colgroup>
                             <col class="forecast-new-house-cusp-column">
@@ -296,6 +332,6 @@
         </aside>
     </main>
 
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=20260501-140512"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=20260502-215130"></script>
 </body>
 </html>

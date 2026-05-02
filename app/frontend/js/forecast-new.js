@@ -13,11 +13,13 @@
     ];
     const PANEL_TARGET_TO_TAB = {
         natalPlanetsView: 'Planets',
+        natalHousesView: 'Houses',
         natalAspectsView: 'Aspects',
         natalGridView: 'Grid',
         natalConfigsView: 'Configs',
         natalBalancesView: 'Balances',
         progPlanetsView: 'Planets',
+        progHousesView: 'Houses',
         progAspectsView: 'Aspects',
         progGridView: 'Grid',
         progConfigsView: 'Configs',
@@ -115,6 +117,8 @@
             showStationary: true,
             showWheelStationary: false,
             showWheelDegree: false,
+            angleAscDscBold: true,
+            angleMcIcBold: true,
             houseNumberStyle: 'arabic',
             houseLabelsOutside: false,
         },
@@ -284,11 +288,13 @@
             'aspectPhaseApplyingToggle', 'aspectPhaseSeparatingToggle',
             'houseNumberStyleSelect', 'houseLabelsOutsideToggle',
             'showWheelStationaryToggle', 'showWheelDegreeToggle',
+            'angleAscDscBoldToggle', 'angleMcIcBoldToggle',
             'showSpeedToggle', 'showStationaryToggle',
         ].forEach((id) => {
             refs[id] = document.getElementById(id);
         });
         refs.layerToggles = [...document.querySelectorAll('[data-layer-toggle]')];
+        refs.tabsOverflow = [...document.querySelectorAll('[data-tabs-overflow]')];
     }
 
     function initRenderers() {
@@ -514,6 +520,17 @@
             });
         });
 
+        refs.tabsOverflow.forEach((overflow) => {
+            const toggle = overflow.querySelector('[data-tabs-overflow-toggle]');
+            toggle?.addEventListener('click', (event) => {
+                event.stopPropagation();
+                const shouldOpen = !overflow.classList.contains('is-open');
+                closeTabsOverflowMenus();
+                overflow.classList.toggle('is-open', shouldOpen);
+                syncTabsOverflowToggleState();
+            });
+        });
+
         refs.rightLayerTabs?.addEventListener('click', (event) => {
             const button = event.target.closest('[data-right-layer]');
             if (!button) return;
@@ -559,6 +576,7 @@
             setCustomStepPopoverOpen(false);
             setNatalMomentEditorOpen(false);
             setNatalCustomStepPopoverOpen(false);
+            closeTabsOverflowMenus();
         });
         [
             refs.orientationSelect,
@@ -571,6 +589,8 @@
             refs.houseLabelsOutsideToggle,
             refs.showWheelStationaryToggle,
             refs.showWheelDegreeToggle,
+            refs.angleAscDscBoldToggle,
+            refs.angleMcIcBoldToggle,
             refs.showSpeedToggle,
             refs.showStationaryToggle,
         ].forEach((control) => {
@@ -675,6 +695,8 @@
         if (refs.houseLabelsOutsideToggle) refs.houseLabelsOutsideToggle.checked = state.pageSettings.houseLabelsOutside === true;
         if (refs.showWheelStationaryToggle) refs.showWheelStationaryToggle.checked = state.pageSettings.showWheelStationary === true;
         if (refs.showWheelDegreeToggle) refs.showWheelDegreeToggle.checked = state.pageSettings.showWheelDegree === true;
+        if (refs.angleAscDscBoldToggle) refs.angleAscDscBoldToggle.checked = state.pageSettings.angleAscDscBold !== false;
+        if (refs.angleMcIcBoldToggle) refs.angleMcIcBoldToggle.checked = state.pageSettings.angleMcIcBold !== false;
         if (refs.showSpeedToggle) refs.showSpeedToggle.checked = state.pageSettings.showSpeed !== false;
         if (refs.showStationaryToggle) refs.showStationaryToggle.checked = state.pageSettings.showStationary !== false;
         refs.layerToggles.forEach((input) => {
@@ -1424,6 +1446,8 @@
             showStationary: refs.showStationaryToggle?.checked !== false,
             showWheelStationary: refs.showWheelStationaryToggle?.checked === true,
             showWheelDegree: refs.showWheelDegreeToggle?.checked === true,
+            angleAscDscBold: refs.angleAscDscBoldToggle?.checked !== false,
+            angleMcIcBold: refs.angleMcIcBoldToggle?.checked !== false,
             houseNumberStyle: refs.houseNumberStyleSelect?.value === 'roman' ? 'roman' : 'arabic',
             houseLabelsOutside: refs.houseLabelsOutsideToggle?.checked === true,
         };
@@ -1625,6 +1649,8 @@
             houseLabelsOutside: state.pageSettings.houseLabelsOutside,
             showPlanetStationary: state.pageSettings.showWheelStationary,
             showPlanetDegree: state.pageSettings.showWheelDegree,
+            angleAscDscBold: state.pageSettings.angleAscDscBold,
+            angleMcIcBold: state.pageSettings.angleMcIcBold,
         });
         state.wheel.render(viewModel);
         applyHoveredAspectFocus();
@@ -2096,11 +2122,18 @@
         if (!panel || !targetId) return;
         panel.querySelectorAll('.panel-tab').forEach((node) => node.classList.toggle('active', node.dataset.panelTarget === targetId));
         panel.querySelectorAll('.panel-tab-content').forEach((node) => node.classList.toggle('active', node.id === targetId));
+        panel.querySelectorAll('[data-tabs-overflow]').forEach((overflow) => {
+            const hasActiveOverflowTab = !!overflow.querySelector(`.panel-tab[data-panel-target="${targetId}"]`);
+            overflow.classList.toggle('is-active', hasActiveOverflowTab);
+            overflow.classList.remove('is-open');
+        });
+        syncTabsOverflowToggleState();
     }
 
     function tabToNatalTarget(tab) {
         return {
             Planets: 'natalPlanetsView',
+            Houses: 'natalHousesView',
             Aspects: 'natalAspectsView',
             Grid: 'natalGridView',
             Configs: 'natalConfigsView',
@@ -2111,11 +2144,24 @@
     function tabToProgTarget(tab) {
         return {
             Planets: 'progPlanetsView',
+            Houses: 'progHousesView',
             Aspects: 'progAspectsView',
             Grid: 'progGridView',
             Configs: 'progConfigsView',
             Balances: 'progBalancesView',
         }[tab] || 'progPlanetsView';
+    }
+
+    function closeTabsOverflowMenus() {
+        refs.tabsOverflow?.forEach((overflow) => overflow.classList.remove('is-open'));
+        syncTabsOverflowToggleState();
+    }
+
+    function syncTabsOverflowToggleState() {
+        refs.tabsOverflow?.forEach((overflow) => {
+            const toggle = overflow.querySelector('[data-tabs-overflow-toggle]');
+            if (toggle) toggle.setAttribute('aria-expanded', overflow.classList.contains('is-open') ? 'true' : 'false');
+        });
     }
 
     function hydrateState() {
@@ -2154,6 +2200,8 @@
             showStationary: restored.pageSettings?.showStationary !== false,
             showWheelStationary: restored.pageSettings?.showWheelStationary === true,
             showWheelDegree: restored.pageSettings?.showWheelDegree === true,
+            angleAscDscBold: restored.pageSettings?.angleAscDscBold !== false,
+            angleMcIcBold: restored.pageSettings?.angleMcIcBold !== false,
         };
     }
 
@@ -2181,6 +2229,8 @@
                 showApplyingSeparating: resolved?.aspects?.show_applying_separating !== false,
                 showSpeed: resolved?.table_options?.show_speed !== false,
                 showStationary: resolved?.table_options?.show_stationary !== false,
+                angleAscDscBold: resolved?.view_options?.bold_asc_dsc !== false,
+                angleMcIcBold: resolved?.view_options?.bold_mc_ic !== false,
             };
         } catch (error) {
             console.warn('Forecast New preferences fallback to local defaults:', error);
@@ -2205,6 +2255,8 @@
             },
             view_options: {
                 orientation: state.pageSettings.orientation === 'asc' ? 'asc' : 'aries',
+                bold_asc_dsc: state.pageSettings.angleAscDscBold !== false,
+                bold_mc_ic: state.pageSettings.angleMcIcBold !== false,
             },
         };
     }

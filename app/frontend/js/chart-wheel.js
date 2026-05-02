@@ -24,9 +24,9 @@ class ChartWheel {
         this.houseNumberStyle = 'arabic';
         this.houseLabelsOutside = false;
         this.houseVisualOptions = {
-            insideAngularColor: '#6366f1',
+            insideAngularColor: '#111111',
             insideMutedColor: '#9ca3af',
-            insideAngularLineColor: '#6366f1',
+            insideAngularLineColor: '#111111',
             insideMutedLineColor: '#c7d2db',
             outsideColor: '#111111',
             outsideLineColor: '#111111',
@@ -35,7 +35,7 @@ class ChartWheel {
             outsideTangentOffset: 12,
         };
         this.angleMarkerOptions = {
-            color: '#6366f1',
+            color: '#111111',
             ascDscBold: true,
             mcIcBold: true,
         };
@@ -538,6 +538,10 @@ class ChartWheel {
             });
 
             const lineInnerR = houseInnerR;
+            const isAscDsc = house.number === 1 || house.number === 7;
+            const isMcIc = house.number === 10 || house.number === 4;
+            const isBoldAngle = (isAscDsc && this.angleMarkerOptions.ascDscBold !== false)
+                || (isMcIc && this.angleMarkerOptions.mcIcBold !== false);
 
             // Увеличенная прозрачная зона захвата для hover
             cuspGroup.appendChild(this.createSvgElement('line', {
@@ -556,7 +560,7 @@ class ChartWheel {
                 x2: this.center + lineOuterR * Math.cos(angle),
                 y2: this.center + lineOuterR * Math.sin(angle),
                 stroke: this.getHouseLineColor(isAngular),
-                'stroke-width': isAngular ? 2.5 : 1,
+                'stroke-width': isAngular ? (isBoldAngle ? 2.5 : 1.5) : 1,
                 class: 'house-cusp-line'
             }));
 
@@ -577,7 +581,7 @@ class ChartWheel {
                     x2: this.center + outsideSegmentEndR * Math.cos(angle),
                     y2: this.center + outsideSegmentEndR * Math.sin(angle),
                     stroke: this.getHouseLineColor(isAngular),
-                    'stroke-width': isAngular ? 2.1 : 1.2,
+                    'stroke-width': isAngular ? (isBoldAngle ? 2.1 : 1.4) : 1.2,
                     class: 'house-cusp-line'
                 }));
             }
@@ -599,7 +603,7 @@ class ChartWheel {
                     'text-anchor': outsideLabel.anchor,
                     'dominant-baseline': 'middle',
                     'font-size': '9.5',
-                    'font-weight': isAngular ? '600' : '500',
+                    'font-weight': isAngular ? (isBoldAngle ? '600' : '500') : '500',
                     fill: this.getHouseLabelColor(isAngular),
                     stroke: '#fafafa',
                     'stroke-width': '2.4',
@@ -614,7 +618,7 @@ class ChartWheel {
                     y: this.center + textR * Math.sin(midAngle) + 3,
                     'text-anchor': 'middle',
                     'font-size': '10',
-                    'font-weight': isAngular ? '700' : '400',
+                    'font-weight': isAngular ? (isBoldAngle ? '700' : '500') : '400',
                     fill: this.getHouseLabelColor(isAngular),
                     style: 'pointer-events: none;'
                 }, this.formatHouseLabel(house.number)));
@@ -883,8 +887,8 @@ class ChartWheel {
 
             const annotationScale = Math.min(1.25, scale);
             const motionFontSize = (8 * annotationScale).toFixed(2);
-            const motionX = x + iconSize * 0.28;
-            const motionY = y + iconSize * 0.42;
+            const motionX = x + iconSize * 0.28 - 2;
+            const motionY = y + iconSize * 0.42 - 2;
 
             if (planet.retrograde) {
                 group.appendChild(this.createSvgElement('text', {
