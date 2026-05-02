@@ -125,6 +125,8 @@
         viewport: { zoom: 1, panX: 0, panY: 0 },
         cache: {},
         inFlight: {},
+        inFlightByKey: {},
+        inFlightByMethod: {},
         wheel: null,
         natalRenderer: null,
         prognosticRenderer: null,
@@ -134,6 +136,9 @@
         activePlanetSelection: null,
         applySettingsTimer: null,
         persistTimer: null,
+        rightPanelRenderFrame: null,
+        adjacentPrefetchTimer: null,
+        lastStepperAction: null,
         requestSeq: 0,
     };
 
@@ -1193,6 +1198,7 @@
                 : state.natalData;
 
             state.cache = {};
+            abortAllInFlightLayerRequests();
             setNatalLightweightLoading(false);
             renderStaticNatal();
             await loadActiveLayers({ lightweight: true });
@@ -1500,6 +1506,7 @@
         const date = refs.targetDateInput?.value || splitTargetDatetime(state.selectedDateTime)[0];
         const time = refs.targetTimeInput?.value || '12:00:00';
         setSelectedDateTime(`${date}T${normalizeTime(time)}`);
+        state.lastStepperAction = null;
         syncControlsFromState();
         schedulePersist();
         await loadActiveLayers({ lightweight: true });
@@ -1515,6 +1522,7 @@
     function stepSelectedDateTimeSegment(segment, direction) {
         const dir = direction >= 0 ? 1 : -1;
         setSelectedDateTime(addDateTimeUnit(state.selectedDateTime, segment.unit, segment.amount * dir));
+        state.lastStepperAction = { type: 'segment', segment, direction: dir };
         syncControlsFromState();
         updatePrognosticTimeMeta();
         setLightweightLoading(true);
@@ -1529,6 +1537,7 @@
         const unit = step.unit === 'week' ? 'day' : step.unit;
         const amount = step.unit === 'week' ? step.amount * 7 : step.amount;
         setSelectedDateTime(addDateTimeUnit(state.selectedDateTime, unit, amount * dir));
+        state.lastStepperAction = { type: 'custom', step, direction: dir };
         syncControlsFromState();
         setCustomStepPopoverOpen(true);
         updatePrognosticTimeMeta();
@@ -1540,24 +1549,43 @@
     async function loadActiveLayers(options = {}) {
         const seq = ++state.requestSeq;
         state.pendingRequestToken = seq;
+        const activeMethods = [...state.activeLayers];
+        const nextLayers = {};
+        let hasRenderedPartial = false;
         if (options.showLoader) showLoader();
         if (options.lightweight) setLightweightLoading(true);
+        state.layers = {};
+        renderRightLayerTabs();
         try {
-            const layers = {};
-            await Promise.all(state.activeLayers.map(async (method) => {
-                layers[method] = await fetchLayer(method);
+            const results = await Promise.allSettled(activeMethods.map(async (method) => {
+                const data = await fetchLayer(method, { seq });
+                if (seq !== state.requestSeq) return null;
+                nextLayers[method] = data;
+                state.layers = { ...nextLayers };
+                renderWheel();
+                scheduleRightPanelRender();
+                showLayout();
+                hasRenderedPartial = true;
+                return data;
             }));
             if (seq !== state.requestSeq) return;
-            state.layers = layers;
-            state.lastCalculatedTransitDateTime = state.activeLayers.includes('transit') ? state.selectedDateTime : state.lastCalculatedTransitDateTime;
+            const failures = results
+                .filter((result) => result.status === 'rejected' && !isAbortError(result.reason));
+            if (failures.length) {
+                throw failures[0].reason;
+            }
+            state.layers = nextLayers;
+            state.lastCalculatedTransitDateTime = activeMethods.includes('transit') ? state.selectedDateTime : state.lastCalculatedTransitDateTime;
             state.lastCalculatedPrognosticDate = splitTargetDatetime(state.selectedDateTime)[0];
-            renderWheel();
+            if (!hasRenderedPartial) renderWheel();
             renderRightLayerTabs();
-            renderRightPanel();
+            scheduleRightPanelRender();
             showLayout();
             schedulePersist();
+            scheduleAdjacentLayerPrefetch();
         } catch (error) {
             if (seq !== state.requestSeq) return;
+            if (isAbortError(error)) return;
             console.error('Forecast New load failed:', error);
             showError(error.message || 'Ошибка загрузки прогностики');
         } finally {
@@ -1568,11 +1596,23 @@
         }
     }
 
-    async function fetchLayer(method) {
-        const [date, time] = splitTargetDatetime(state.selectedDateTime);
-        const key = buildLayerCacheKey(method, date);
+    async function fetchLayer(method, options = {}) {
+        const targetDateTime = options.targetDateTime || state.selectedDateTime;
+        const targetTimezone = options.timezone || state.timezone;
+        const targetLocation = options.location || state.location || {};
+        const [date, time] = splitTargetDatetime(targetDateTime);
+        const key = buildLayerCacheKey(method, date, {
+            selectedDateTime: targetDateTime,
+            timezone: targetTimezone,
+            location: targetLocation,
+        });
         if (state.cache[key]) return state.cache[key];
         if (state.inFlight[key]) return state.inFlight[key];
+        if (!options.prefetch) {
+            abortInFlightLayerMethod(method, key);
+        }
+
+        const controller = new AbortController();
 
         const request = (async () => {
             if (method === 'transit') {
@@ -1580,40 +1620,110 @@
                     user_id: state.userId,
                     date,
                     time,
-                    timezone: state.timezone,
-                    location: state.location?.name || null,
-                    latitude: state.location?.latitude,
-                    longitude: state.location?.longitude,
-                });
+                    timezone: targetTimezone,
+                    location: targetLocation?.name || null,
+                    latitude: targetLocation?.latitude,
+                    longitude: targetLocation?.longitude,
+                }, { signal: controller.signal });
             }
             if (method === 'progression') {
                 return apiPost('/progressions/calculate', {
                     user_id: state.userId,
                     target_date: date,
-                });
+                }, { signal: controller.signal });
             }
             return apiPost('/directions/calculate', {
                 user_id: state.userId,
                 target_date: date,
                 direction_type: 'solar_arc',
-            });
+            }, { signal: controller.signal });
         })().then((data) => {
             state.cache[key] = data;
             return data;
         }).finally(() => {
             delete state.inFlight[key];
+            delete state.inFlightByKey[key];
+            if (state.inFlightByMethod[method]?.key === key) {
+                delete state.inFlightByMethod[method];
+            }
         });
 
         state.inFlight[key] = request;
+        state.inFlightByKey[key] = controller;
+        if (!options.prefetch) {
+            state.inFlightByMethod[method] = { key, controller };
+        }
         return request;
     }
 
-    async function apiPost(endpoint, body) {
+    function abortInFlightLayerMethod(method, nextKey) {
+        const inFlight = state.inFlightByMethod[method];
+        if (!inFlight || inFlight.key === nextKey) return;
+        inFlight.controller?.abort?.();
+        delete state.inFlight[inFlight.key];
+        delete state.inFlightByKey[inFlight.key];
+        delete state.inFlightByMethod[method];
+    }
+
+    function abortAllInFlightLayerRequests() {
+        Object.values(state.inFlightByKey || {}).forEach((controller) => {
+            controller?.abort?.();
+        });
+        state.inFlight = {};
+        state.inFlightByKey = {};
+        state.inFlightByMethod = {};
+    }
+
+    function isAbortError(error) {
+        return error?.name === 'AbortError';
+    }
+
+    function scheduleAdjacentLayerPrefetch() {
+        clearTimeout(state.adjacentPrefetchTimer);
+        if (!state.lastStepperAction || !state.activeLayers?.length) return;
+        state.adjacentPrefetchTimer = setTimeout(() => {
+            void prefetchAdjacentLayers();
+        }, 80);
+    }
+
+    async function prefetchAdjacentLayers() {
+        const nextDateTime = getAdjacentPrefetchDateTime();
+        if (!nextDateTime) return;
+        const activeMethods = [...state.activeLayers];
+        await Promise.allSettled(activeMethods.map((method) => fetchLayer(method, {
+            targetDateTime: nextDateTime,
+            timezone: state.timezone,
+            location: state.location,
+            prefetch: true,
+        })));
+    }
+
+    function getAdjacentPrefetchDateTime() {
+        const action = state.lastStepperAction;
+        if (!action) return '';
+        if (action.type === 'segment' && action.segment) {
+            return addDateTimeUnit(
+                state.selectedDateTime,
+                action.segment.unit,
+                action.segment.amount * action.direction,
+            );
+        }
+        if (action.type === 'custom' && action.step) {
+            const step = normalizeCustomStep(action.step);
+            const unit = step.unit === 'week' ? 'day' : step.unit;
+            const amount = step.unit === 'week' ? step.amount * 7 : step.amount;
+            return addDateTimeUnit(state.selectedDateTime, unit, amount * action.direction);
+        }
+        return '';
+    }
+
+    async function apiPost(endpoint, body, options = {}) {
         const withLocaleHeaders = window.AstroAPI?.withLocaleHeaders || ((headers) => headers);
         const response = await fetch(`${API_BASE}${endpoint}`, {
             method: 'POST',
             headers: withLocaleHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify(body),
+            signal: options.signal,
         });
         if (!response.ok) {
             let detail = `HTTP ${response.status}`;
@@ -1666,6 +1776,16 @@
                 ${layerLabel(method)}
             </button>
         `).join('');
+    }
+
+    function scheduleRightPanelRender() {
+        if (state.rightPanelRenderFrame) {
+            cancelAnimationFrame(state.rightPanelRenderFrame);
+        }
+        state.rightPanelRenderFrame = requestAnimationFrame(() => {
+            state.rightPanelRenderFrame = null;
+            renderRightPanel();
+        });
     }
 
     function renderRightPanel() {
@@ -2460,15 +2580,18 @@
         return '';
     }
 
-    function buildLayerCacheKey(method, date) {
+    function buildLayerCacheKey(method, date, context = {}) {
+        const selectedDateTime = context.selectedDateTime || state.selectedDateTime;
+        const timezone = context.timezone || state.timezone;
+        const location = context.location || state.location || {};
         if (method === 'transit') {
             return [
                 method,
-                state.selectedDateTime,
-                state.timezone,
-                state.location?.name || '',
-                state.location?.latitude ?? '',
-                state.location?.longitude ?? '',
+                selectedDateTime,
+                timezone,
+                location?.name || '',
+                location?.latitude ?? '',
+                location?.longitude ?? '',
             ].join('|');
         }
         if (method === 'direction') {
