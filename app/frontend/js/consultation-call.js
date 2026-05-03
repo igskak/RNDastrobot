@@ -80,7 +80,7 @@
         state.joinUrl   = params.get('join_url');
 
         if (!state.sessionId) {
-            showError('No call session specified. Please start the call from the client\'s profile.');
+            showError('No call session specified. Please start the call from the profile page.');
             return;
         }
 
@@ -133,7 +133,7 @@
         await room.localParticipant.enableCameraAndMicrophone();
         attachLocalVideo();
 
-        setStatus('Connected');
+        setStatus('In call');
         bindControls();
     }
 
@@ -394,17 +394,17 @@
     }
 
     function onParticipantConnected(participant) {
-        const name = participant.name || participant.identity || 'Client';
+        const name = participant.name || participant.identity || 'Guest';
         refs.remoteName.textContent = name;
-        setStatus('Connected');
+        setStatus('In call');
     }
 
     function onParticipantDisconnected() {
-        setStatus('Client disconnected');
+        setStatus('The other side left');
     }
 
     function onRoomDisconnected() {
-        setStatus('Disconnected');
+        setStatus('Call ended');
     }
 
     function onDataReceived(data) {

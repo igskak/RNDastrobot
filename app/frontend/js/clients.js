@@ -1310,7 +1310,7 @@ function buildRecordingPanelHTML(cs, audioUrl, sessionId) {
     // Transcript
     if (cs?.transcript_segments?.length) {
         const segs = cs.transcript_segments.map(seg => {
-            const speakerLabel = seg.speaker === 'A' ? 'Astrologer' : 'Client';
+            const speakerLabel = seg.speaker === 'A' ? 'Astrologer' : 'Guest';
             const cls = seg.speaker === 'A' ? 'cs-seg--astrologer' : 'cs-seg--client';
             return `
                 <div class="cs-segment ${cls}">

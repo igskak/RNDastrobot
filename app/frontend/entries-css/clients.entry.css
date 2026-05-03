@@ -199,12 +199,12 @@ select:focus-visible,
 
 .workspace-title {
     margin: 0;
-    max-width: 10ch;
+    max-width: 14ch;
     font-family: var(--font-display);
-    font-size: clamp(40px, 5vw, 66px);
+    font-size: clamp(30px, 3.8vw, 48px);
     font-weight: 500;
-    line-height: 0.94;
-    letter-spacing: -0.03em;
+    line-height: 1.02;
+    letter-spacing: -0.02em;
 }
 
 .workspace-subtitle,

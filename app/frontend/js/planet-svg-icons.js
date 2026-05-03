@@ -72,6 +72,12 @@
     };
     const ICON_BOX_SCALE = {
         Proserpina: 1.06,
+        ASC: 1.06,
+        DSC: 1.06,
+        MC: 1.02,
+        IC: 1.02,
+        Vertex: 1.02,
+        AntiVertex: 1.12,
     };
 
     function createSvgElement(tag, attrs = {}) {
@@ -130,6 +136,24 @@
 
     function addFilledPath(parent, d, attrs = {}) {
         return addFillShape(parent, 'path', { d, ...attrs });
+    }
+
+    function addTextShape(parent, textContent, attrs = {}) {
+        const text = createSvgElement('text', {
+            fill: 'currentColor',
+            stroke: 'none',
+            'text-anchor': attrs['text-anchor'] ?? 'middle',
+            class: ['planet-symbol-text', attrs.class].filter(Boolean).join(' '),
+            style: attrs.style,
+            x: attrs.x,
+            y: attrs.y,
+            'font-size': attrs['font-size'],
+            'font-weight': attrs['font-weight'],
+            'letter-spacing': attrs['letter-spacing'],
+        });
+        text.textContent = textContent;
+        parent.appendChild(text);
+        return text;
     }
 
     function addCross(parent, cx, cy, verticalTop, verticalBottom, horizontalWidth, attrs = {}) {
@@ -275,6 +299,66 @@
         addLine(root, 66, 34, 34, 66);
     }
 
+    function appendAbbreviation(root, label, options = {}) {
+        addTextShape(root, label, {
+            x: 50,
+            y: options.y ?? 61,
+            'font-size': options.fontSize ?? 34,
+            'font-weight': options.fontWeight ?? 700,
+            'letter-spacing': options.letterSpacing ?? '-1.2px',
+            class: options.className,
+            style: `font-family:'DM Sans', system-ui, sans-serif;pointer-events:none`,
+        });
+    }
+
+    function appendAsc(root) {
+        appendAbbreviation(root, 'ASC', {
+            fontSize: 31,
+            y: 61,
+            letterSpacing: '-1px',
+        });
+    }
+
+    function appendDsc(root) {
+        appendAbbreviation(root, 'DSC', {
+            fontSize: 31,
+            y: 61,
+            letterSpacing: '-1px',
+        });
+    }
+
+    function appendMc(root) {
+        appendAbbreviation(root, 'MC', {
+            fontSize: 38,
+            y: 61,
+            letterSpacing: '-1.5px',
+        });
+    }
+
+    function appendIc(root) {
+        appendAbbreviation(root, 'IC', {
+            fontSize: 38,
+            y: 61,
+            letterSpacing: '-1.5px',
+        });
+    }
+
+    function appendVertex(root) {
+        appendAbbreviation(root, 'Vx', {
+            fontSize: 38,
+            y: 61,
+            letterSpacing: '-1.2px',
+        });
+    }
+
+    function appendAntiVertex(root) {
+        appendAbbreviation(root, 'AVx', {
+            fontSize: 28,
+            y: 60,
+            letterSpacing: '-0.8px',
+        });
+    }
+
     const PLANET_ICON_BUILDERS = {
         Sun: appendSun,
         Moon: appendMoon,
@@ -297,6 +381,12 @@
         WhiteMoon: appendWhiteMoon,
         Fortune: appendFortune,
         PartOfFortune: appendFortune,
+        ASC: appendAsc,
+        DSC: appendDsc,
+        MC: appendMc,
+        IC: appendIc,
+        Vertex: appendVertex,
+        AntiVertex: appendAntiVertex,
     };
 
     function hasPlanetIcon(name) {

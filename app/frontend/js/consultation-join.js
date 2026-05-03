@@ -158,7 +158,7 @@
     // -------------------------------------------------------------------------
     async function joinCall() {
         refs.btnJoinCall.disabled = true;
-        refs.btnJoinCall.textContent = 'Connecting…';
+        refs.btnJoinCall.textContent = 'Joining…';
 
         // Stop lobby preview — LiveKit will manage tracks
         if (state.localStream) {
@@ -198,7 +198,7 @@
 
         state.callStartTime = Date.now();
         state.callTimerHandle = setInterval(updateCallTimer, 1000);
-        setStatus('Connected');
+        setStatus('In call');
 
         // Show recording indicator if already recording
         if (state.recordingActive) {
@@ -342,12 +342,12 @@
     }
 
     function onParticipantConnected(participant) {
-        setStatus('Connected');
-        refs.remoteName.textContent = participant.name || state.astrologerName || 'Astrologer';
+        setStatus('In call');
+        refs.remoteName.textContent = participant.name || state.astrologerName || 'Guide';
     }
 
     function onParticipantDisconnected() {
-        setStatus('Astrologer disconnected');
+        setStatus('The other side left');
     }
 
     function onRoomDisconnected() {

@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Join Consultation — Steliara</title>
-    <link rel="stylesheet" href="/bundles/consultation-join.bundle.css?v=20260502-220319">
+    <link rel="stylesheet" href="/bundles/consultation-join.bundle.css?v=20260503-102017">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <!-- LiveKit Client SDK -->
     <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
-    <script>window.__APP_BUILD_ID__ = '20260502-220319';</script>
+    <script>window.__APP_BUILD_ID__ = '20260503-102017';</script>
 </head>
 <body class="join-page">
 
@@ -45,8 +45,8 @@
                 <span class="join-brand-name">Steliara</span>
             </div>
 
-            <h1 class="join-lobby-title">Consultation with <span id="lobbyAstrologerName">your astrologer</span></h1>
-            <p class="join-lobby-subtitle">Check your camera and microphone before joining.</p>
+            <h1 class="join-lobby-title">Session with <span id="lobbyAstrologerName">your astrologer</span></h1>
+            <p class="join-lobby-subtitle">Check your camera and microphone before joining the call.</p>
 
             <!-- Local camera preview -->
             <div class="join-preview-wrap">
@@ -69,7 +69,7 @@
                 </button>
             </div>
 
-            <button class="btn-primary btn-primary--large" id="btnJoinCall">Join consultation</button>
+            <button class="btn-primary btn-primary--large" id="btnJoinCall">Join call</button>
         </div>
     </div>
 
@@ -78,10 +78,10 @@
 
         <header class="call-header">
             <div class="call-header-left">
-                <span class="call-client-name" id="callAstrologerName">Astrologer</span>
+                <span class="call-client-name" id="callAstrologerName">Guide</span>
             </div>
             <div class="call-header-center">
-                <span class="call-status-badge" id="callStatusBadge">Connected</span>
+                <span class="call-status-badge" id="callStatusBadge">In call</span>
                 <span class="call-rec-indicator" id="callRecIndicator" hidden>
                     <span class="call-rec-dot"></span> REC
                 </span>
@@ -95,7 +95,7 @@
             <!-- Remote (astrologer) — primary -->
             <div class="call-video-tile call-video-remote" id="callVideoRemote">
                 <video id="remoteVideo" autoplay playsinline></video>
-                <div class="call-tile-label" id="remoteName">Astrologer</div>
+                <div class="call-tile-label" id="remoteName">Guide</div>
             </div>
 
             <!-- Local (client) — secondary -->
@@ -140,8 +140,8 @@
         <div class="modal-box">
             <h3 class="modal-title">Recording consent</h3>
             <p class="modal-body">
-                Your astrologer would like to record this session. <strong>Only audio will be recorded — no video.</strong>
-                The recording will be used to generate a consultation summary for your records.
+                The astrologer would like to record this session. <strong>Only audio will be recorded — no video.</strong>
+                The recording will be used to prepare a summary for your records.
             </p>
             <div class="modal-actions">
                 <button class="btn-secondary" id="btnConsentDecline">Decline</button>
@@ -154,11 +154,11 @@
     <div class="call-ended-screen" id="callEndedScreen" hidden>
         <div class="call-ended-box">
             <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" stroke="#1E3A5F" stroke-width="1.5"/><path d="M14 25l8 8 13-16" stroke="#1E3A5F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <h2 class="call-ended-title">Consultation complete</h2>
-            <p class="call-ended-note">Thank you. Your astrologer will share a summary with you soon.</p>
+            <h2 class="call-ended-title">Session complete</h2>
+            <p class="call-ended-note">Thank you. A summary will be prepared for you soon.</p>
         </div>
     </div>
 
-    <script type="module" src="/js/bundles/consultation-join.bundle.js?v=20260502-220319"></script>
+    <script type="module" src="/js/bundles/consultation-join.bundle.js?v=20260503-102017"></script>
 </body>
 </html>

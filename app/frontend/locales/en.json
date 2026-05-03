@@ -627,22 +627,22 @@
   "clients": {
     "hero": {
       "eyebrow": "Astrologer workspace",
-      "kicker": "Client relationships, presented professionally",
-      "title": "Run your client practice in a calm, premium workspace.",
-      "subtitle": "Keep each chart, reading, and follow-up easy to find so your service feels polished from the first session onward.",
+      "kicker": "A calmer way to organize your practice",
+      "title": "Run your practice in a clear, calm workspace.",
+      "subtitle": "Keep charts, notes, and next steps easy to return to whenever someone comes back for another session.",
       "badgesAriaLabel": "Workspace highlights",
       "badges": {
-        "private": "Private client records",
+        "private": "Private profiles and notes",
         "history": "Saved chart history",
-        "reports": "Premium reading delivery"
+        "reports": "Materials kept in one place"
       },
       "aside": {
-        "label": "Studio standard",
-        "title": "Your client list should feel as curated as your readings.",
-        "subtitle": "This space is for continuity, trust, and fast access when a client returns for the next session.",
-        "point1": "See client records at a glance without losing warmth or clarity.",
-        "point2": "Open chart work quickly so follow-up sessions feel seamless.",
-        "point3": "Keep the experience organized enough to support higher-value services."
+        "label": "Practice rhythm",
+        "title": "Your practice should feel as composed as your readings.",
+        "subtitle": "This space supports continuity, trust, and quick access whenever someone returns.",
+        "point1": "See profiles and notes at a glance without losing warmth or clarity.",
+        "point2": "Open charts and context quickly so follow-up sessions stay seamless.",
+        "point3": "Keep the work organized in a way that feels steady and easy to maintain."
       }
     },
     "profile": {
@@ -650,9 +650,9 @@
       "signedInAs": "{email}"
     },
     "workspace": {
-      "kicker": "Client portfolio",
-      "title": "Clients",
-      "subtitle": "Search, sort, and reopen past work with the level of order clients expect from a premium astrology practice."
+      "kicker": "Practice space",
+      "title": "Practice",
+      "subtitle": "Search, sort, and reopen past work so each person's history stays close at hand."
     },
     "calendar": {
       "nextMonth": "Next month",
@@ -660,7 +660,7 @@
       "previousMonth": "Previous month"
     },
     "stats": {
-      "total": "Total clients",
+      "total": "Total profiles",
       "visible": "Visible now",
       "latest": "Latest added"
     },
@@ -677,25 +677,25 @@
         "total": "Total: {total}"
     },
     "createFirstCard": "Create first chart",
-    "empty": "No clients yet",
-    "emptyHint": "Start with your first client chart and build a workspace that is easy to revisit for future readings.",
+    "empty": "No profiles yet",
+    "emptyHint": "Start with your first chart and build a practice space that is easy to revisit for future readings.",
     "errors": {
         "chartNotFound": "Chart data not found",
-        "deleteFailed": "Failed to delete client",
-        "fetchList": "Failed to load clients list",
+        "deleteFailed": "Failed to delete profile",
+        "fetchList": "Failed to load profiles list",
         "loadingWithMessage": "Loading error: {message}"
       },
-      "listAriaLabel": "Client list",
+      "listAriaLabel": "Profile list",
       "messages": {
         "confirmDeleteHint": "Click delete again to confirm",
-        "deleted": "Client deleted",
-        "updated": "Client data updated"
+        "deleted": "Profile deleted",
+        "updated": "Profile updated"
     },
-    "newCard": "New client",
-    "noResults": "No matches",
-    "noResultsHint": "Try a different name, place, or sorting option to find the client you need.",
-    "searchLabel": "Search clients",
-    "searchAriaLabel": "Search clients",
+    "newCard": "Add profile",
+    "noResults": "Nothing found yet",
+    "noResultsHint": "Try a different name, place, or sort order to find the profile you need.",
+    "searchLabel": "Find a profile",
+    "searchAriaLabel": "Search profiles",
     "searchPlaceholder": "Search by name/place",
     "sortLabel": "Sort order",
     "sort": {
@@ -706,8 +706,8 @@
         "nameAsc": "Name A-Z",
         "nameDesc": "Name Z-A"
       },
-      "sortAriaLabel": "Sort clients",
-      "subtitle": "Clients",
+      "sortAriaLabel": "Sort profiles",
+      "subtitle": "Profiles",
       "table": {
         "actions": "Actions",
         "birthDate": "Birth date",
@@ -717,21 +717,21 @@
       },
       "edit": {
         "errors": {
-          "chartUnavailable": "Client chart is unavailable right now",
-          "loadFailed": "Failed to load client data",
-          "saveFailed": "Failed to save client data"
+          "chartUnavailable": "This profile chart is unavailable right now",
+          "loadFailed": "Failed to load profile data",
+          "saveFailed": "Failed to save profile data"
         },
         "kicker": "Quick correction",
-        "placeCurrent": "Using the client's current saved place.",
+        "placeCurrent": "Using the current saved place from this profile.",
         "placeHint": "Select a place from suggestions to refresh coordinates automatically.",
         "placeManual": "Manual place entered. Coordinates stay unchanged until you pick a suggestion.",
         "placeSelected": "Place selected from suggestions. Coordinates will be updated.",
         "submit": "Save changes",
         "submitting": "Saving...",
-        "subtitle": "Correct birth details without leaving the clients workspace.",
-        "title": "Edit client data"
+        "subtitle": "Correct birth details without leaving the practice workspace.",
+        "title": "Edit profile"
       },
-      "title": "Client database",
+      "title": "Profile database",
       "crm": {
         "contactHeader": "Contact details",
         "email": "Email",
@@ -741,25 +741,25 @@
         "messenger": "Messenger",
         "messengerPlaceholder": "Telegram, WhatsApp, etc.",
         "notes": "Notes",
-        "notesPlaceholder": "Private notes about the client...",
+        "notesPlaceholder": "Private notes about this profile...",
         "tags": "Tags",
         "tagsPlaceholder": "vip, regular, new (comma-separated)",
         "noContact": "No contact info"
       },
       "detail": {
         "openChart": "Open chart",
-        "logSession": "Log session",
-        "consultations": "Consultations",
-        "noConsultations": "No sessions logged yet",
+        "logSession": "Add session note",
+        "consultations": "Session history",
+        "noConsultations": "No session notes yet",
         "paidBadge": "Paid",
         "unpaidBadge": "Unpaid",
         "lastSession": "Last session:",
         "nextSession": "Next:"
       },
       "consultation": {
-        "kicker": "Session log",
-        "title": "Log consultation",
-        "subtitle": "Record a completed or upcoming session with this client.",
+        "kicker": "Session history",
+        "title": "Add session note",
+        "subtitle": "Record a completed or upcoming session so the working history stays easy to follow.",
         "type": "Session type",
         "types": {
           "natal": "Natal reading",
@@ -782,17 +782,17 @@
         "isPaid": "Paid",
         "duration": "Duration (min)",
         "durationPlaceholder": "60",
-        "notes": "Session notes",
+        "notes": "Session note",
         "notesPlaceholder": "What was discussed...",
-        "submit": "Save session",
+        "submit": "Save note",
         "submitting": "Saving...",
         "errors": {
           "deleteFailed": "Failed to delete consultation",
           "saveFailed": "Failed to save consultation"
         },
         "messages": {
-          "created": "Session logged",
-          "deleted": "Session deleted"
+          "created": "Session note added",
+          "deleted": "Session note removed"
         }
       },
       "statsUpcoming": "Upcoming",
@@ -816,8 +816,8 @@
       }
     },
     "clientProfile": {
-      "title": "Client Profile",
-      "backToClients": "Back to clients",
+      "title": "Profile",
+      "backToClients": "Back to practice",
       "viewProfile": "View profile",
       "startCall": "Start call",
       "sections": {
@@ -826,7 +826,7 @@
         "statistics": "Statistics",
         "relatedPeople": "Their people",
         "keyInsights": "Key insights",
-        "consultations": "Consultation history",
+        "consultations": "Session history",
         "recordings": "Call recordings"
       },
       "stats": {
@@ -837,7 +837,7 @@
         "totalDuration": "Total time",
         "minutes": "min",
         "paid": "Paid",
-        "clientSince": "Client since",
+        "clientSince": "In practice since",
         "lastSession": "Last session"
       },
       "insights": {
@@ -852,17 +852,17 @@
       "related": {
         "add": "Add person",
         "linkExisting": "Link existing",
-        "linkKicker": "Saved clients",
-        "linkTitle": "Link an existing client",
-        "linkSubtitle": "Pick a client from your database to use them as a recurring synastry person.",
-        "searchLabel": "Search client",
+        "linkKicker": "Saved people",
+        "linkTitle": "Link an existing profile",
+        "linkSubtitle": "Pick a profile from your database to use as a recurring synastry person.",
+        "searchLabel": "Search profile",
         "searchPlaceholder": "First name, last name, or birthplace",
-        "linkSubmit": "Link client",
-        "linked": "Client linked",
-        "linkFailed": "Failed to link client",
-        "loadCandidatesFailed": "Failed to load clients list",
-        "noCandidates": "No available clients to link.",
-        "selectCandidate": "Select a client to link",
+        "linkSubmit": "Link profile",
+        "linked": "Profile linked",
+        "linkFailed": "Failed to link profile",
+        "loadCandidatesFailed": "Failed to load profiles list",
+        "noCandidates": "No available profiles to link.",
+        "selectCandidate": "Select a profile to link",
         "empty": "No saved people for synastry yet.",
         "createTitle": "New person for synastry",
         "createSubmit": "Create",
@@ -873,16 +873,16 @@
         "relationPlaceholder": "For example: partner, spouse, child"
       },
       "errors": {
-        "noId": "No client ID in URL",
-        "notFound": "Client not found",
-        "loadFailed": "Failed to load client profile"
+        "noId": "No profile ID in URL",
+        "notFound": "Profile not found",
+        "loadFailed": "Failed to load profile"
       }
     },
     "synastry": {
       "title": "Synastry",
       "loading": "Building synastry",
       "headerTitle": "{client} × {partner}",
-      "openClientProfile": "Client profile",
+      "openClientProfile": "Primary profile",
       "openPartnerProfile": "Partner profile",
       "phase": "Phase",
       "tabs": {
@@ -890,7 +890,7 @@
         "houseOverlays": "Overlays"
       },
       "modes": {
-        "client": "Client",
+        "client": "Primary",
         "compare": "Compare",
         "partner": "Partner"
       },
@@ -900,24 +900,24 @@
       },
       "metrics": {
         "interAspects": "Inter-chart aspects",
-        "clientOverlay": "Client bodies in partner houses",
-        "partnerOverlay": "Partner bodies in client houses"
+        "clientOverlay": "Primary profile bodies in partner houses",
+        "partnerOverlay": "Partner bodies in primary profile houses"
       },
       "overlays": {
-        "clientInPartner": "Client in partner houses",
-        "partnerInClient": "Partner in client houses"
+        "clientInPartner": "Primary profile in partner houses",
+        "partnerInClient": "Partner in primary profile houses"
       },
       "people": {
-        "client": "Client",
+        "client": "Primary profile",
         "partner": "Partner"
       },
       "compare": {
-        "clientOnly": "Showing the client natal chart.",
+        "clientOnly": "Showing the primary natal chart.",
         "partnerOnly": "Showing the partner natal chart.",
-        "overlayHint": "The partner chart is overlaid on top of the client chart for quick visual comparison."
+        "overlayHint": "The partner chart is overlaid on top of the primary chart for quick visual comparison."
       },
       "errors": {
-        "missingParams": "Two clients are required for synastry.",
+        "missingParams": "Two profiles are required for synastry.",
         "loadFailed": "Failed to load synastry."
       }
     },
@@ -1379,25 +1379,25 @@
       "hero": {
         "eyebrow": "Private astrologer workspace",
         "title": "Professional astrology, presented with calm confidence.",
-        "subtitle": "Sign in to run your astrology practice, organize client work, and keep natal charts and forecasts in one premium light workspace.",
+        "subtitle": "Sign in to keep profiles, natal charts, and forecasts together in one clear workspace for your astrology practice.",
         "badges": {
           "private": "Private astrologer workspace",
-          "premium": "Premium light interface",
+          "premium": "Calm light interface",
           "multilingual": "Multilingual experience"
         },
         "badgesAriaLabel": "Product highlights",
         "panel": {
           "label": "Built for astrologer practice",
-          "point1": "Keep your client work organized in a workspace designed for professional use.",
-          "point2": "Store charts, forecasts, and client workflow together so your process stays consistent.",
-          "point3": "Use secure sign-in and verification that feel professional from the first click.",
+          "point1": "Keep profiles, charts, and notes organized in one workspace.",
+          "point2": "Store charts, forecasts, and working history together so your process stays consistent.",
+          "point3": "Use secure sign-in and verification so the workspace feels clear and dependable from the start.",
           "point4": "Rely on a calm, structured workspace to make chart analysis clearer and easier to work through."
         },
         "footnote": "Designed to feel like a private astrologer studio: warm, precise, and easy to trust.",
         "cardKicker": "Secure account access"
       },
       "mobileTrust": {
-        "copy": "Your charts, client work, forecasts, and assistant stay in one secure space built for mobile use too.",
+        "copy": "Your charts, profiles, forecasts, and assistant stay in one secure space that works well on mobile too.",
         "title": "A calmer sign-in on the go."
       },
       "heading": "Secure sign in",
