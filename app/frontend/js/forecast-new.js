@@ -695,8 +695,8 @@
         const [date, time] = splitTargetDatetime(state.selectedDateTime);
         if (refs.targetDateInput) refs.targetDateInput.value = date;
         if (refs.targetTimeInput) refs.targetTimeInput.value = time;
-        renderTimeStepper();
-        renderNatalTimeStepper();
+        renderOrUpdateTimeStepper();
+        renderOrUpdateNatalTimeStepper();
         updateNatalMomentControls();
         if (refs.timezoneInput) refs.timezoneInput.value = normalizeTimezoneValue(state.timezone, state.location?.name) || '';
         if (refs.locationInput) refs.locationInput.value = state.location.name || '';
@@ -934,6 +934,14 @@
         `;
     }
 
+    function renderOrUpdateTimeStepper() {
+        if (!refs.forecastNewTimeStepper?.querySelector('[data-time-step-key]')) {
+            renderTimeStepper();
+            return;
+        }
+        updateTimeStepperValues(refs.forecastNewTimeStepper, state.selectedDateTime);
+    }
+
     function renderNatalTimeStepper() {
         if (!refs.forecastNewNatalTimeStepper) return;
         const values = getTimeStepperSegmentValues(state.natalSelectedDateTime);
@@ -996,6 +1004,26 @@
         `;
     }
 
+    function renderOrUpdateNatalTimeStepper() {
+        if (!refs.forecastNewNatalTimeStepper?.querySelector('[data-time-step-key]')) {
+            renderNatalTimeStepper();
+            return;
+        }
+        updateTimeStepperValues(refs.forecastNewNatalTimeStepper, state.natalSelectedDateTime);
+    }
+
+    function updateTimeStepperValues(root, datetimeValue) {
+        if (!root) return;
+        const values = getTimeStepperSegmentValues(datetimeValue);
+        root.querySelectorAll('[data-time-step-key]').forEach((segmentEl) => {
+            const key = segmentEl.dataset.timeStepKey;
+            const value = values[key] ?? '';
+            const valueEl = segmentEl.querySelector('.forecast-new-time-stepper-value');
+            if (valueEl) valueEl.textContent = value;
+            segmentEl.setAttribute('aria-valuetext', value);
+        });
+    }
+
     function toggleNatalCustomStepPopover() {
         setNatalCustomStepPopoverOpen(!state.natalIsCustomStepOpen);
     }
@@ -1023,7 +1051,7 @@
     function stepNatalDateTimeSegment(segment, direction) {
         const dir = direction >= 0 ? 1 : -1;
         state.natalSelectedDateTime = addDateTimeUnit(state.natalSelectedDateTime, segment.unit, segment.amount * dir);
-        renderNatalTimeStepper();
+        renderOrUpdateNatalTimeStepper();
         updateNatalMomentMeta();
         setNatalLightweightLoading(true);
         void loadNatal({ lightweight: true });
@@ -1036,7 +1064,7 @@
         const unit = step.unit === 'week' ? 'day' : step.unit;
         const amount = step.unit === 'week' ? step.amount * 7 : step.amount;
         state.natalSelectedDateTime = addDateTimeUnit(state.natalSelectedDateTime, unit, amount * dir);
-        renderNatalTimeStepper();
+        renderOrUpdateNatalTimeStepper();
         setNatalCustomStepPopoverOpen(true);
         updateNatalMomentMeta();
         setNatalLightweightLoading(true);
@@ -1335,6 +1363,83 @@
         schedulePersist();
     }
 
+    async function applyMatrixRowsFast({ body, field, checked } = {}) {
+        if (
+            (field === 'display' && checked === true && !wheelHasBody(body))
+            || (field === 'aspecting' && checked === true && !wheelHasAspectForBody(body))
+        ) {
+            await applyMatrixRows();
+            return;
+        }
+
+        refreshViewModel();
+        state.wheel?.applyMatrixRows?.(state.matrixRows);
+        renderMatrixSensitivePanelData();
+        applyInlineMatrixRowState();
+        syncHoveredAspectToActiveSurface();
+
+        try {
+            await persistForecastNewViewOverrides();
+        } catch (error) {
+            console.warn('Failed to persist Forecast New matrix rows:', error);
+        }
+        schedulePersist();
+    }
+
+    function wheelHasBody(body) {
+        if (!body || !state.wheel?.svg) return true;
+        const escaped = escapeAttribute(body);
+        return Boolean(state.wheel.svg.querySelector(`.prognostic-body[data-planet="${escaped}"]`));
+    }
+
+    function wheelHasAspectForBody(body) {
+        if (!body || !state.wheel?.svg) return true;
+        const escaped = escapeAttribute(body);
+        return Boolean(state.wheel.svg.querySelector(`.aspect-line[data-planet-1="${escaped}"], .aspect-line[data-planet-2="${escaped}"]`));
+    }
+
+    function refreshViewModel() {
+        if (!state.natalWheelData) return;
+        const rawViewModel = window.PrognosticLayerNormalizer.buildViewModel(
+            state.natalWheelData,
+            state.layers || {},
+            { activeMethods: state.activeLayers },
+        );
+        state.viewModel = filterViewModelForSettings(rawViewModel);
+    }
+
+    function updateRendererMatrixSensitiveData(renderer, chartData) {
+        if (!renderer || !chartData) return;
+        renderer.chartData = chartData;
+        renderer.renderAspects?.(chartData.aspects || []);
+        renderer.renderAspectGrid?.(chartData.aspects || [], chartData.planets || []);
+        renderer.renderConfigurations?.(
+            chartData.aspect_configurations || [],
+            chartData.stelliums || []
+        );
+    }
+
+    function renderMatrixSensitivePanelData() {
+        updateRendererMatrixSensitiveData(
+            state.natalRenderer,
+            filterChartDataForSidePanel(state.natalWheelData)
+        );
+
+        const method = state.selectedRightLayer;
+        const layer = state.viewModel?.activePrognosticLayers?.find((item) => item.method === method);
+        if (layer) {
+            updateRendererMatrixSensitiveData(state.prognosticRenderer, filterChartDataForSidePanel({
+                planets: layer.bodies || [],
+                houses: layer.houses || [],
+                aspects: layer.aspects || [],
+                aspect_configurations: [],
+                stelliums: [],
+                balances: null,
+                cosmogram_pattern: null,
+            }));
+        }
+    }
+
     function renderInlineMatrixControls() {
         const rows = normalizeForecastNewMatrixRows(state.matrixRows);
         refs.forecastNewLayout?.querySelectorAll('.forecast-new-matrix-inline-cell').forEach((cell) => cell.remove());
@@ -1430,7 +1535,7 @@
             state.matrixRows = normalizeForecastNewMatrixRows(rows);
             syncMatrixCheckboxes();
             renderBodyActionMenu(body, menu.dataset.method || '', menu);
-            await applyMatrixRows();
+            await applyMatrixRowsFast({ body, field, checked: !current });
         });
 
         return menu;
@@ -1661,20 +1766,26 @@
         const activeMethods = [...state.activeLayers];
         const nextLayers = {};
         let hasRenderedPartial = false;
+        const hasCompletePreviousLayers = activeMethods.length > 0
+            && activeMethods.every((method) => state.layers?.[method]);
         if (options.showLoader) showLoader();
         if (options.lightweight) setLightweightLoading(true);
-        state.layers = {};
+        state.layers = Object.fromEntries(activeMethods
+            .filter((method) => state.layers?.[method])
+            .map((method) => [method, state.layers[method]]));
         renderRightLayerTabs();
         try {
             const results = await Promise.allSettled(activeMethods.map(async (method) => {
                 const data = await fetchLayer(method, { seq });
                 if (seq !== state.requestSeq) return null;
                 nextLayers[method] = data;
-                state.layers = { ...nextLayers };
-                renderWheel();
-                scheduleRightPanelRender();
-                showLayout();
-                hasRenderedPartial = true;
+                if (!hasCompletePreviousLayers) {
+                    state.layers = { ...nextLayers };
+                    renderWheel();
+                    scheduleRightPanelRender();
+                    showLayout();
+                    hasRenderedPartial = true;
+                }
                 return data;
             }));
             if (seq !== state.requestSeq) return;
@@ -1686,7 +1797,7 @@
             state.layers = nextLayers;
             state.lastCalculatedTransitDateTime = activeMethods.includes('transit') ? state.selectedDateTime : state.lastCalculatedTransitDateTime;
             state.lastCalculatedPrognosticDate = splitTargetDatetime(state.selectedDateTime)[0];
-            if (!hasRenderedPartial) renderWheel();
+            if (!hasRenderedPartial || hasCompletePreviousLayers) renderWheel();
             renderRightLayerTabs();
             scheduleRightPanelRender();
             showLayout();

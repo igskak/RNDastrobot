@@ -107,6 +107,50 @@ class ChartWheel {
         };
     }
 
+    applyMatrixRows(matrixRows = {}) {
+        this.matrixRows = matrixRows || {};
+        this.applyMatrixVisibilityToDom();
+    }
+
+    getMatrixRow(name) {
+        const normalized = this.normalizeAspectBodyName(name);
+        return this.matrixRows?.[normalized] || { display: true, aspecting: true };
+    }
+
+    isBodyDisplayedByMatrix(name) {
+        return this.getMatrixRow(name).display !== false;
+    }
+
+    isBodyAspectingByMatrix(name) {
+        return this.getMatrixRow(name).aspecting !== false;
+    }
+
+    isAspectElementVisibleByMatrix(element) {
+        const first = element?.dataset?.planet1;
+        const second = element?.dataset?.planet2;
+        if (!first || !second) return true;
+        return this.isBodyDisplayedByMatrix(first)
+            && this.isBodyDisplayedByMatrix(second)
+            && this.isBodyAspectingByMatrix(first)
+            && this.isBodyAspectingByMatrix(second);
+    }
+
+    applyMatrixVisibilityToDom() {
+        if (!this.svg) return;
+
+        this.svg.querySelectorAll('.planet-group[data-planet]').forEach((group) => {
+            const visible = this.isBodyDisplayedByMatrix(group.dataset.planet);
+            group.classList.toggle('matrix-hidden', !visible);
+            group.setAttribute('aria-hidden', visible ? 'false' : 'true');
+        });
+
+        this.svg.querySelectorAll('.aspect-line[data-planet-1][data-planet-2], .aspect-symbol-group[data-planet-1][data-planet-2]').forEach((node) => {
+            const visible = this.isAspectElementVisibleByMatrix(node);
+            node.classList.toggle('matrix-hidden', !visible);
+            node.setAttribute('aria-hidden', visible ? 'false' : 'true');
+        });
+    }
+
     updateSvgViewport() {
         if (!this.svg) return;
         const padding = Number.isFinite(this.svgPadding) ? this.svgPadding : 0;
@@ -387,6 +431,7 @@ class ChartWheel {
 
         // Привязка событий
         this.bindEvents();
+        this.applyMatrixVisibilityToDom();
     }
 
     createLayers() {
@@ -761,7 +806,8 @@ class ChartWheel {
                 if (glyph) {
                     const symbolGroup = this.createSvgElement('g', {
                         class: 'aspect-symbol-group',
-                        style: 'pointer-events: none;'
+                        style: 'pointer-events: none;',
+                        ...aspectAttrs,
                     });
                     const symbolText = this.createSvgElement('text', {
                         x: midX, y: midY + 2.5,
@@ -886,7 +932,7 @@ class ChartWheel {
             }
 
             const annotationScale = Math.min(1.25, scale);
-            const motionFontSize = (8 * annotationScale).toFixed(2);
+            const motionFontSize = (6.12 * annotationScale).toFixed(2);
             const motionX = x + iconSize * 0.28 - 2;
             const motionY = y + iconSize * 0.42 - 2;
 

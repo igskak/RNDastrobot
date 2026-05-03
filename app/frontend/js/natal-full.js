@@ -248,12 +248,40 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupLegendToggle();
     document.addEventListener('frontend:locale-changed', () => {
         if (!chartData) return;
+        const viewState = captureNatalFullViewState();
         renderFullChart(chartData);
+        restoreNatalFullViewState(viewState);
         if (window.FrontendI18nUi?.applyI18n) {
             window.FrontendI18nUi.applyI18n(document);
         }
     });
 });
+
+function captureNatalFullViewState() {
+    return {
+        scrollY: window.scrollY,
+        openSections: Object.fromEntries([...document.querySelectorAll('details.report-section[id], details.section[id]')]
+            .map((section) => [section.id, section.open])),
+        activeBalanceTab: document.querySelector('[data-balance-tab].active')?.dataset?.balanceTab || null,
+        legendOpen: !document.getElementById('legendPanel')?.classList.contains('hidden'),
+    };
+}
+
+function restoreNatalFullViewState(viewState = {}) {
+    Object.entries(viewState.openSections || {}).forEach(([id, isOpen]) => {
+        const section = document.getElementById(id);
+        if (section instanceof HTMLDetailsElement) section.open = isOpen === true;
+    });
+
+    if (viewState.activeBalanceTab) {
+        const button = document.querySelector(`[data-balance-tab="${viewState.activeBalanceTab}"]`);
+        button?.click();
+    }
+
+    const legendPanel = document.getElementById('legendPanel');
+    if (legendPanel && viewState.legendOpen) legendPanel.classList.remove('hidden');
+    requestAnimationFrame(() => window.scrollTo({ top: viewState.scrollY || 0 }));
+}
 
 function setupLegendToggle() {
     const btn = document.getElementById('legendToggle');

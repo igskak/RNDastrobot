@@ -1062,6 +1062,14 @@
     stroke-width: 2;
 }
 
+.forecast-new-page .prognostic-body.matrix-hidden,
+.forecast-new-page .aspect-line.matrix-hidden,
+.forecast-new-page .aspect-symbol-group.matrix-hidden {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden;
+}
+
 .chart-tooltip {
     display: none;
     position: absolute;

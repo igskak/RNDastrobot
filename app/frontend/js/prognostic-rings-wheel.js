@@ -132,6 +132,37 @@
             if (options.visualPreferences) this.visualPreferences = options.visualPreferences;
         }
 
+        applyMatrixRows(matrixRows = {}) {
+            this.matrixRows = matrixRows || {};
+            this.applyMatrixVisibilityToDom();
+        }
+
+        isAspectElementVisibleByMatrix(element) {
+            const first = element?.dataset?.planet1;
+            const second = element?.dataset?.planet2;
+            if (!first || !second) return true;
+            return this.isBodyDisplayed(first)
+                && this.isBodyDisplayed(second)
+                && this.isBodyAspecting(first)
+                && this.isBodyAspecting(second);
+        }
+
+        applyMatrixVisibilityToDom() {
+            if (!this.svg) return;
+
+            this.svg.querySelectorAll('.prognostic-body[data-planet]').forEach((group) => {
+                const visible = this.isBodyDisplayed(group.dataset.planet);
+                group.classList.toggle('matrix-hidden', !visible);
+                group.setAttribute('aria-hidden', visible ? 'false' : 'true');
+            });
+
+            this.svg.querySelectorAll('.aspect-line[data-planet-1][data-planet-2], .aspect-symbol-group[data-planet-1][data-planet-2]').forEach((node) => {
+                const visible = this.isAspectElementVisibleByMatrix(node);
+                node.classList.toggle('matrix-hidden', !visible);
+                node.setAttribute('aria-hidden', visible ? 'false' : 'true');
+            });
+        }
+
         render(viewModel) {
             this.viewModel = viewModel;
             this.aspectLookupByKey = {};
@@ -156,6 +187,7 @@
             this.drawAspects(rings);
             rings.forEach((ring) => this.drawBodies(ring));
             this.bindEvents();
+            this.applyMatrixVisibilityToDom();
         }
 
         buildRings(viewModel) {
@@ -463,7 +495,7 @@
                     }, Symbols?.getPlanetSymbol?.(body.name) || body.name?.[0] || '?'));
                 }
                 const annotationScale = Math.min(1.25, scale);
-                const motionFontSize = (8 * annotationScale).toFixed(2);
+                const motionFontSize = (6.12 * annotationScale).toFixed(2);
                 const motionX = pos.x + iconSize * 0.28 - 2;
                 const motionY = pos.y + iconSize * 0.42 - 2;
                 if (body.retrograde) {
@@ -593,6 +625,7 @@
                         const symbolGroup = this.el('g', {
                             class: 'aspect-symbol-group',
                             style: 'pointer-events: none;',
+                            ...aspectAttrs,
                         });
                         const symbolText = this.el('text', {
                             x: geometry.midX,

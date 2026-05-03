@@ -368,6 +368,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ascDscBold: currentSettings.angleAscDscBold,
         mcIcBold: currentSettings.angleMcIcBold,
     }, { redraw: false });
+    chartWheel.applyMatrixRows?.(getCurrentNatalMatrixRows());
 
     // Применяем фильтры ДО первого draw, чтобы избежать мигания аспектов
     const prefiltered = window.AstroPreferences?.filterChartDataByViewPreferences
@@ -820,8 +821,43 @@ function setNatalMatrixField(body, field, checked) {
         .filter(([, config]) => config?.display === false)
         .map(([bodyName]) => bodyName);
     syncNatalMatrixCheckboxes();
-    redrawChart(window.chartDataCache, currentSettings.hiddenPlanets || [], currentSettings.orientation);
+    if (shouldRedrawForMatrixFieldEnable(body, field, checked)) {
+        redrawChart(window.chartDataCache, currentSettings.hiddenPlanets || [], currentSettings.orientation);
+    } else {
+        applyNatalMatrixRowsFast();
+    }
     void persistNatalViewOverrides();
+}
+
+function shouldRedrawForMatrixFieldEnable(body, field, checked) {
+    if (checked !== true || !chartWheel?.svg) return false;
+    const escaped = escapeAttribute(body);
+    if (field === 'display') {
+        return !chartWheel.svg.querySelector(`.planet-group[data-planet="${escaped}"]`);
+    }
+    if (field === 'aspecting') {
+        return !chartWheel.svg.querySelector(`.aspect-line[data-planet-1="${escaped}"], .aspect-line[data-planet-2="${escaped}"]`);
+    }
+    return false;
+}
+
+function applyNatalMatrixRowsFast() {
+    const source = window.chartDataCache;
+    if (!source) return;
+
+    chartWheel?.applyMatrixRows?.(getCurrentNatalMatrixRows());
+
+    const filteredTables = filterChartDataForNatalTables(source);
+    if (chartDataRenderer) {
+        chartDataRenderer.chartData = filteredTables;
+        chartDataRenderer.renderAspects(filteredTables.aspects || []);
+        chartDataRenderer.renderAspectGrid(filteredTables.aspects || [], filteredTables.planets || []);
+        chartDataRenderer.renderConfigurations?.(
+            filteredTables.aspect_configurations || [],
+            filteredTables.stelliums || []
+        );
+    }
+    syncHoveredAspectToActiveSurface();
 }
 
 function getNatalMatrixRowsForTables() {
@@ -1626,6 +1662,7 @@ function redrawChart(chartData, hiddenPlanets, orientation = currentSettings.ori
             ascDscBold: currentSettings.angleAscDscBold,
             mcIcBold: currentSettings.angleMcIcBold,
         }, { redraw: false });
+        chartWheel.applyMatrixRows?.(getCurrentNatalMatrixRows());
     }
     chartDataRenderer?.setDisplayPreferences?.({
         showSpeed: currentSettings.showSpeed,

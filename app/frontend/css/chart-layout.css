@@ -410,6 +410,14 @@
     min-height: 100%;
 }
 
+.chart-page .planet-group.matrix-hidden,
+.chart-page .aspect-line.matrix-hidden,
+.chart-page .aspect-symbol-group.matrix-hidden {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden;
+}
+
 #balances-list {
     padding: 12px 14px 16px 12px;
 }

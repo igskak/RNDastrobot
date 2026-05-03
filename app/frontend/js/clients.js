@@ -1059,6 +1059,18 @@ async function toggleDetailPanel(userId) {
     }
 }
 
+async function refreshClientDetailPanel(userId) {
+    if (!userId) return;
+    delete state.consultationsCache[userId];
+
+    const existing = refs.tbody.querySelector(`.client-detail-row[data-user-id="${userId}"]`);
+    if (!existing && state.expandedUserId !== userId) return;
+
+    existing?.remove();
+    state.expandedUserId = null;
+    await toggleDetailPanel(userId);
+}
+
 function buildDetailPanelHTML(user, consultations, callSessions = []) {
     const userId = escapeHtml(String(user.user_id));
     const callSessionsHTML = buildCallSessionsHTML(callSessions);
@@ -1492,14 +1504,7 @@ async function handleLogSessionSubmit(event) {
         closeLogSessionDialog();
         showToast(t('page.clients.consultation.messages.created'), 'success');
 
-        // Refresh user list to update consultation counts
-        await loadClients();
-
-        // Re-expand detail if it was open
-        if (state.expandedUserId === userId || userId) {
-            state.expandedUserId = null;
-            await toggleDetailPanel(userId);
-        }
+        await refreshClientDetailPanel(userId);
     } catch (error) {
         if (refs.logSessionError) {
             refs.logSessionError.textContent = error.message;
@@ -1611,12 +1616,7 @@ async function deleteConsultation(consultationId, userId) {
         delete state.consultationsCache[userId];
         showToast(t('page.clients.consultation.messages.deleted'), 'success');
 
-        // Refresh and re-expand
-        await loadClients();
-        if (userId) {
-            state.expandedUserId = null;
-            await toggleDetailPanel(userId);
-        }
+        await refreshClientDetailPanel(userId);
     } catch (error) {
         showToast(t('common.errorWithMessage', { message: error.message }), 'error');
     }

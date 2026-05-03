@@ -114,7 +114,13 @@
             const row = document.getElementById(`row-${planetName}`);
             if (row) {
                 row.classList.add('active-row');
-                row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                const panel = row.closest('.panel-content, .side-panel');
+                const panelRect = panel?.getBoundingClientRect?.();
+                const rowRect = row.getBoundingClientRect();
+                const outsidePanel = panelRect && (rowRect.top < panelRect.top || rowRect.bottom > panelRect.bottom);
+                if (outsidePanel) {
+                    row.scrollIntoView({ block: 'nearest' });
+                }
             }
 
             // Highlight symbol on chart - make it bold

@@ -629,6 +629,7 @@ function renderWheelMode(primaryChartOverride, partnerChartOverride) {
             style: synastryState.settings.houseNumberStyle,
             outside: synastryState.settings.houseLabelsOutside,
         }, { redraw: false });
+        wheel?.applyMatrixRows?.(getCurrentSynastryMatrixRows());
     });
     applySynastryHouseThemes(mode);
 
@@ -767,11 +768,102 @@ function bindDynamicSettingsHandlers() {
     });
 }
 
+function snapshotSynastrySettings() {
+    return {
+        orientation: synastryState.settings.orientation,
+        aspectScope: synastryState.settings.aspectScope,
+        matrixRows: cloneSynastryMatrixRows(getCurrentSynastryMatrixRows()),
+        enabledAspectTypes: [...(synastryState.settings.enabledAspectTypes || [])],
+        showApplyingSeparating: synastryState.settings.showApplyingSeparating === true,
+        showSpeed: synastryState.settings.showSpeed !== false,
+        showStationary: synastryState.settings.showStationary !== false,
+        planetScale: synastryState.settings.planetScale,
+        pointScale: synastryState.settings.pointScale,
+        houseNumberStyle: synastryState.settings.houseNumberStyle,
+        houseLabelsOutside: synastryState.settings.houseLabelsOutside === true,
+    };
+}
+
+function cloneSynastryMatrixRows(rows = {}) {
+    return Object.fromEntries(Object.entries(rows || {}).map(([body, row]) => ([
+        body,
+        {
+            display: row?.display !== false,
+            aspecting: row?.aspecting !== false,
+        },
+    ])));
+}
+
+function matrixRowsChanged(previousRows = {}, nextRows = {}) {
+    const bodies = new Set([...Object.keys(previousRows || {}), ...Object.keys(nextRows || {})]);
+    return [...bodies].some((body) => (
+        (previousRows?.[body]?.display !== false) !== (nextRows?.[body]?.display !== false)
+        || (previousRows?.[body]?.aspecting !== false) !== (nextRows?.[body]?.aspecting !== false)
+    ));
+}
+
+function matrixChangeEnablesBodyOrAspects(previousRows = {}, nextRows = {}) {
+    const bodies = new Set([...Object.keys(previousRows || {}), ...Object.keys(nextRows || {})]);
+    return [...bodies].some((body) => (
+        previousRows?.[body]?.display === false && nextRows?.[body]?.display !== false
+    ) || (
+        previousRows?.[body]?.aspecting === false && nextRows?.[body]?.aspecting !== false
+    ));
+}
+
+function aspectTypesChanged(previousTypes = [], nextTypes = []) {
+    const previous = new Set(previousTypes || []);
+    const next = new Set(nextTypes || []);
+    if (previous.size !== next.size) return true;
+    return [...previous].some((type) => !next.has(type));
+}
+
+function canApplySynastrySettingsFast(previousSettings, nextSettings) {
+    const geometryChanged = previousSettings.orientation !== nextSettings.orientation
+        || previousSettings.planetScale !== nextSettings.planetScale
+        || previousSettings.pointScale !== nextSettings.pointScale
+        || previousSettings.houseNumberStyle !== nextSettings.houseNumberStyle
+        || previousSettings.houseLabelsOutside !== nextSettings.houseLabelsOutside;
+    if (geometryChanged) return false;
+
+    const aspectOptionsChanged = previousSettings.aspectScope !== nextSettings.aspectScope
+        || aspectTypesChanged(previousSettings.enabledAspectTypes, nextSettings.enabledAspectTypes)
+        || previousSettings.showApplyingSeparating !== nextSettings.showApplyingSeparating;
+    if (aspectOptionsChanged) return false;
+
+    if (!matrixRowsChanged(previousSettings.matrixRows, nextSettings.matrixRows)) {
+        return true;
+    }
+
+    return !matrixChangeEnablesBodyOrAspects(previousSettings.matrixRows, nextSettings.matrixRows);
+}
+
+function renderSynastryTablesAndApplyMatrixFast() {
+    const primaryChart = getFilteredSynastryChartData(synastryState.payload?.primary_chart || {});
+    const partnerChart = getFilteredSynastryChartData(synastryState.payload?.partner_chart || {});
+
+    renderSynastrySide('primary', primaryChart);
+    renderSynastrySide('partner', partnerChart);
+    renderPerspectiveInterAspects(synastryRefs.primaryInterAspects, 'primary');
+    renderPerspectiveInterAspects(synastryRefs.partnerInterAspects, 'partner');
+    renderHouseOverlayList(
+        synastryRefs.primaryOverlayList,
+        getFilteredHouseOverlayItems(synastryState.payload?.house_overlays?.primary_in_partner_houses || []),
+    );
+    renderHouseOverlayList(
+        synastryRefs.partnerOverlayList,
+        getFilteredHouseOverlayItems(synastryState.payload?.house_overlays?.partner_in_primary_houses || []),
+    );
+    synastryState.baseWheel?.applyMatrixRows?.(getCurrentSynastryMatrixRows());
+    synastryState.overlayWheel?.applyMatrixRows?.(getCurrentSynastryMatrixRows());
+}
+
 function scheduleApplySynastrySettings() {
     if (synastryState.applySettingsTimer) {
         clearTimeout(synastryState.applySettingsTimer);
     }
     synastryState.applySettingsTimer = setTimeout(async () => {
+        const previousSettings = snapshotSynastrySettings();
         synastryState.settings.orientation = synastryRefs.orientationSelect?.value === 'asc' ? 'asc' : 'aries';
         synastryState.settings.aspectScope = ['all', 'major', 'minor'].includes(synastryRefs.aspectScopeSelect?.value)
             ? synastryRefs.aspectScopeSelect.value
@@ -798,7 +890,11 @@ function scheduleApplySynastrySettings() {
         localStorage.setItem(HOUSE_NUMBER_STYLE_STORAGE_KEY, synastryState.settings.houseNumberStyle);
         localStorage.setItem(HOUSE_LABELS_OUTSIDE_STORAGE_KEY, synastryState.settings.houseLabelsOutside ? 'true' : 'false');
 
-        renderSynastryWorkspace();
+        if (canApplySynastrySettingsFast(previousSettings, snapshotSynastrySettings())) {
+            renderSynastryTablesAndApplyMatrixFast();
+        } else {
+            renderSynastryWorkspace();
+        }
 
         try {
             await persistSynastryViewOverrides();
