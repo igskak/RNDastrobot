@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.index.title"></title>
-    <link rel="stylesheet" href="bundles/index.bundle.css?v=20260503-102017">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260503-102017">
+    <link rel="stylesheet" href="bundles/index.bundle.css?v=20260503-133117">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260503-133117">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '20260503-102017';</script>
+    <script>window.__APP_BUILD_ID__ = '20260503-133117';</script>
 </head>
-<body>
+<body class="index-page">
     <div class="page-loader" id="pageLoader">
         <div class="pl-spinner"></div>
         <div class="pl-text" data-i18n="common.loading"></div>
@@ -36,7 +36,7 @@
             <p class="subtitle" data-i18n="page.index.subtitle"></p>
             <div class="index-header-links">
                 <a href="account-settings.html" class="index-header-link" data-i18n="page.accountSettings.title"></a>
-                <a href="clients.html" class="index-header-link">Clients</a>
+                <a href="clients.html" class="index-header-link" data-i18n="page.index.nav.clients"></a>
             </div>
         </header>
 
@@ -45,7 +45,6 @@
                 <section class="form-section" aria-labelledby="identitySectionTitle">
                     <div class="form-section-heading">
                         <h2 id="identitySectionTitle" class="form-section-title" data-i18n="page.index.form.sections.identity.title"></h2>
-                        <p class="form-section-copy" data-i18n="page.index.form.sections.identity.copy"></p>
                     </div>
 
                     <div class="form-group">
@@ -60,7 +59,6 @@
                 <section class="form-section" aria-labelledby="birthSectionTitle">
                     <div class="form-section-heading">
                         <h2 id="birthSectionTitle" class="form-section-title" data-i18n="page.index.form.sections.birth.title"></h2>
-                        <p class="form-section-copy" data-i18n="page.index.form.sections.birth.copy"></p>
                     </div>
 
                     <div class="form-group">
@@ -99,7 +97,6 @@
                 <section class="form-section" aria-labelledby="locationSectionTitle">
                     <div class="form-section-heading">
                         <h2 id="locationSectionTitle" class="form-section-title" data-i18n="page.index.form.sections.location.title"></h2>
-                        <p class="form-section-copy" data-i18n="page.index.form.sections.location.copy"></p>
                     </div>
 
                     <div class="form-group">
@@ -123,7 +120,6 @@
                     <summary class="advanced-fields-summary">
                         <span class="advanced-fields-summary-copy">
                             <span class="advanced-fields-title" data-i18n="page.index.form.advanced.toggle"></span>
-                            <span class="advanced-fields-copy" data-i18n="page.index.form.advanced.copy"></span>
                         </span>
                         <span class="advanced-fields-chevron" aria-hidden="true">+</span>
                     </summary>
@@ -170,26 +166,6 @@
                     </div>
                 </details>
 
-                <section class="form-summary-card" aria-labelledby="formSummaryTitle">
-                    <h2 id="formSummaryTitle" class="form-summary-title" data-i18n="page.index.form.summary.title"></h2>
-                    <div class="form-summary-list">
-                        <div id="summaryBirthItem" class="form-summary-item">
-                            <span class="form-summary-dot" aria-hidden="true"></span>
-                            <span data-i18n="page.index.form.summary.birth"></span>
-                        </div>
-                        <div id="summaryPlaceItem" class="form-summary-item">
-                            <span class="form-summary-dot" aria-hidden="true"></span>
-                            <span data-i18n="page.index.form.summary.place"></span>
-                        </div>
-                        <div id="summaryTimezoneItem" class="form-summary-item">
-                            <span class="form-summary-dot" aria-hidden="true"></span>
-                            <span data-i18n="page.index.form.summary.timezone"></span>
-                        </div>
-                    </div>
-                </section>
-
-                <p class="submit-note" data-i18n="page.index.form.ctaNote"></p>
-
                 <button type="submit" class="submit-btn" id="submitBtn">
                     <span class="btn-text"><span data-i18n="page.index.form.submit.idle"></span></span>
                     <span class="btn-loader hidden" data-i18n="page.index.form.submit.loading"></span>
@@ -204,7 +180,7 @@
         </footer>
     </div>
 
-    <script type="module" src="js/bundles/index.bundle.js?v=20260503-102017"></script>
-    <script src="js/locale-switcher.js?v=20260503-102017"></script>
+    <script type="module" src="js/bundles/index.bundle.js?v=20260503-133117"></script>
+    <script src="js/locale-switcher.js?v=20260503-133117"></script>
 </body>
 </html>

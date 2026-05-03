@@ -1223,6 +1223,9 @@
           "placeholder": "Select timezone"
         }
       },
+      "nav": {
+        "clients": "Clients"
+      },
       "subtitle": "Professional astrology chart calculations powered by Swiss Ephemeris",
       "title": "Natal Chart Calculator",
       "logo": "Steliara"
