@@ -9,6 +9,7 @@
         if (!body) return true;
 
         const hiddenOnPages = [
+            'index-page',
             'chart-page',
             'forecast-page',
             'forecast-new-page',

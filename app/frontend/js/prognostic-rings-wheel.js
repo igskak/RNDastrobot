@@ -1000,6 +1000,7 @@
                 group.addEventListener('mouseenter', (event) => this.onPlanetHover(event, true));
                 group.addEventListener('mouseleave', (event) => this.onPlanetHover(event, false));
                 group.addEventListener('click', (event) => this.onPlanetClick(event));
+                group.addEventListener('contextmenu', (event) => this.onPlanetContextMenu(event));
                 group.addEventListener('mouseenter', (event) => this.onPlanetTooltipHover(event, true));
                 group.addEventListener('mousemove', (event) => this.onPlanetTooltipHover(event, true));
                 group.addEventListener('mouseleave', (event) => this.onPlanetTooltipHover(event, false));
@@ -1054,6 +1055,21 @@
             const body = this.findBody(planetName, method);
             if (!body) return;
             this.showTooltip(this.getPlanetTooltipHtml(body, method), event);
+        }
+
+        onPlanetContextMenu(event) {
+            const planetName = event.currentTarget.dataset.planet;
+            const method = event.currentTarget.dataset.method;
+            if (!planetName) return;
+            event.preventDefault();
+            this.hideTooltip();
+            this.dispatchAspectHover('chart:body-contextmenu', {
+                source: 'wheel',
+                body: planetName,
+                method,
+                clientX: event.clientX,
+                clientY: event.clientY,
+            });
         }
 
         onPlanetTooltipHover(event, isEnter) {

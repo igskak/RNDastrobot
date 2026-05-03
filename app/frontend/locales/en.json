@@ -1195,7 +1195,7 @@
         },
         "sections": {
           "birth": {
-            "copy": "Enter the core timing first so the chart can be calculated cleanly on mobile.",
+            "copy": "Enter the core timing first so the chart can be calculated cleanly.",
             "title": "Birth details"
           },
           "identity": {
@@ -1222,9 +1222,6 @@
           "label": "Timezone",
           "placeholder": "Select timezone"
         }
-      },
-      "nav": {
-        "clients": "Clients"
       },
       "subtitle": "Professional astrology chart calculations powered by Swiss Ephemeris",
       "title": "Natal Chart Calculator",
@@ -1400,8 +1397,8 @@
         "cardKicker": "Secure account access"
       },
       "mobileTrust": {
-        "copy": "Your charts, profiles, forecasts, and assistant stay in one secure space that works well on mobile too.",
-        "title": "A calmer sign-in on the go."
+        "copy": "Your charts, profiles, forecasts, and assistant stay in one secure workspace.",
+        "title": "A calmer sign-in."
       },
       "heading": "Secure sign in",
       "subheading": "Continue with Google or your email and password.",

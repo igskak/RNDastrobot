@@ -140,6 +140,10 @@
         adjacentPrefetchTimer: null,
         lastStepperAction: null,
         requestSeq: 0,
+        bodyActionMenu: {
+            body: null,
+            method: null,
+        },
     };
 
     function t(key, params) {
@@ -576,6 +580,7 @@
         });
         refs.forecastNewSettingsPanel?.addEventListener('click', (event) => event.stopPropagation());
         document.addEventListener('click', () => {
+            closeBodyActionMenu();
             refs.forecastNewSettingsPanel?.classList.add('hidden');
             setMomentEditorOpen(false);
             setCustomStepPopoverOpen(false);
@@ -611,6 +616,14 @@
         refs.forecastNewZoomIn?.addEventListener('click', () => setViewport({ zoom: state.viewport.zoom * 1.18 }));
         refs.forecastNewZoomOut?.addEventListener('click', () => setViewport({ zoom: state.viewport.zoom / 1.18 }));
         refs.forecastNewZoomReset?.addEventListener('click', () => setViewport({ zoom: 1, panX: 0, panY: 0 }));
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') closeBodyActionMenu();
+        });
+        document.addEventListener('chart:body-contextmenu', (event) => {
+            const detail = event?.detail || {};
+            if (detail.source !== 'wheel' || !detail.body) return;
+            openBodyActionMenu(detail);
+        });
         bindWheelPanZoom();
 
         document.addEventListener('frontend:locale-changed', () => {
@@ -1381,6 +1394,102 @@
         return window.AstroPreferences?.normalizeMatrixBodyName
             ? window.AstroPreferences.normalizeMatrixBodyName(name)
             : String(name || '');
+    }
+
+    function ensureBodyActionMenu() {
+        const host = refs.forecastNewWheelShell || refs.forecastNewLayout || document.body;
+        let menu = host.querySelector('.forecast-new-body-action-menu');
+        if (menu) return menu;
+
+        if (host instanceof HTMLElement && getComputedStyle(host).position === 'static') {
+            host.style.position = 'relative';
+        }
+
+        menu = document.createElement('div');
+        menu.className = 'forecast-new-body-action-menu hidden';
+        menu.setAttribute('role', 'menu');
+        host.appendChild(menu);
+
+        menu.addEventListener('click', (event) => event.stopPropagation());
+        menu.addEventListener('contextmenu', (event) => event.preventDefault());
+        menu.addEventListener('click', async (event) => {
+            const button = event.target instanceof Element
+                ? event.target.closest('button[data-action-field]')
+                : null;
+            if (!(button instanceof HTMLButtonElement)) return;
+            const body = matrixBodyKey(menu.dataset.body);
+            const field = button.dataset.actionField;
+            if (!body || !['display', 'aspecting'].includes(field)) return;
+
+            const rows = normalizeForecastNewMatrixRows(state.matrixRows);
+            const current = rows?.[body]?.[field] !== false;
+            rows[body] = {
+                ...(rows[body] || { display: true, aspecting: true }),
+                [field]: !current,
+            };
+            state.matrixRows = normalizeForecastNewMatrixRows(rows);
+            syncMatrixCheckboxes();
+            renderBodyActionMenu(body, menu.dataset.method || '', menu);
+            await applyMatrixRows();
+        });
+
+        return menu;
+    }
+
+    function openBodyActionMenu(detail = {}) {
+        const body = matrixBodyKey(detail.body);
+        if (!body) return;
+        const menu = ensureBodyActionMenu();
+        state.bodyActionMenu = { body, method: detail.method || '' };
+        renderBodyActionMenu(body, detail.method || '', menu);
+        positionBodyActionMenu(menu, detail.clientX, detail.clientY);
+        menu.classList.remove('hidden');
+    }
+
+    function renderBodyActionMenu(body, method, menu = ensureBodyActionMenu()) {
+        const rows = normalizeForecastNewMatrixRows(state.matrixRows);
+        const config = rows?.[body] || { display: true, aspecting: true };
+        const label = escapeHtml(planetName(body));
+        menu.dataset.body = body;
+        menu.dataset.method = method || '';
+        menu.innerHTML = `
+            <div class="forecast-new-body-action-menu-title">${label}</div>
+            <div class="forecast-new-body-action-menu-controls">
+                ${bodyActionToggleMarkup('display', 'п', 'Показ', config.display !== false)}
+                ${bodyActionToggleMarkup('aspecting', 'а', 'Аспектация', config.aspecting !== false)}
+            </div>
+        `;
+    }
+
+    function bodyActionToggleMarkup(field, glyph, label, checked) {
+        const escapedLabel = escapeHtml(label);
+        return `
+            <button type="button" class="settings-check-option settings-check-option--pill settings-check-option--icon-only forecast-new-body-action-toggle" data-action-field="${field}" aria-label="${escapedLabel}" aria-pressed="${checked ? 'true' : 'false'}" title="${escapedLabel}">
+                <span class="settings-check-option-glyph" aria-hidden="true">${glyph}</span>
+            </button>
+        `;
+    }
+
+    function positionBodyActionMenu(menu, clientX, clientY) {
+        const host = menu.parentElement || document.body;
+        const rect = host.getBoundingClientRect();
+        let x = Number(clientX) - rect.left + 8;
+        let y = Number(clientY) - rect.top + 8;
+        menu.style.left = `${x}px`;
+        menu.style.top = `${y}px`;
+        const maxX = rect.width - menu.offsetWidth - 8;
+        const maxY = rect.height - menu.offsetHeight - 8;
+        x = Math.max(8, Math.min(x, Math.max(8, maxX)));
+        y = Math.max(8, Math.min(y, Math.max(8, maxY)));
+        menu.style.left = `${x}px`;
+        menu.style.top = `${y}px`;
+    }
+
+    function closeBodyActionMenu() {
+        const menu = refs.forecastNewWheelShell?.querySelector('.forecast-new-body-action-menu')
+            || refs.forecastNewLayout?.querySelector('.forecast-new-body-action-menu');
+        menu?.classList.add('hidden');
+        state.bodyActionMenu = { body: null, method: null };
     }
 
     function renderAspectTypeToggles() {

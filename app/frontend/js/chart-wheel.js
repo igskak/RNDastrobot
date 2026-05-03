@@ -1311,6 +1311,7 @@ class ChartWheel {
             group.addEventListener('mouseenter', (e) => this.onPlanetHover(e, true));
             group.addEventListener('mouseleave', (e) => this.onPlanetHover(e, false));
             group.addEventListener('click', (e) => this.onPlanetClick(e));
+            group.addEventListener('contextmenu', (e) => this.onPlanetContextMenu(e));
             group.addEventListener('mouseenter', (e) => this.onPlanetTooltipHover(e, true));
             group.addEventListener('mousemove', (e) => this.onPlanetTooltipHover(e, true));
             group.addEventListener('mouseleave', (e) => this.onPlanetTooltipHover(e, false));
@@ -1380,6 +1381,22 @@ class ChartWheel {
             <span class="astro-symbol">${signSymbol}</span> ${signRu} ${degFormatted}<br>
             ${this.t('common.house')}: ${house}${planet.retrograde ? ' <span style=\"color:#dc2626\">R</span>' : ''}
         `, e);
+    }
+
+    onPlanetContextMenu(e) {
+        const planetName = e.currentTarget.dataset.planet;
+        if (!planetName) return;
+        e.preventDefault();
+        this.hideTooltip();
+        document.dispatchEvent(new CustomEvent('chart:body-contextmenu', {
+            detail: {
+                source: 'wheel',
+                body: planetName,
+                method: 'natal',
+                clientX: e.clientX,
+                clientY: e.clientY,
+            }
+        }));
     }
 
     onAspectHover(e, isEnter) {

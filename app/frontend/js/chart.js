@@ -384,6 +384,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Сохраняем в глобальную область для фильтров
     window.chartWheel = chartWheel;
+    initBodyActionMenuInteractions();
 
     // Инициализируем таблицы данных
     chartDataRenderer = new ChartDataRenderer();
@@ -691,6 +692,136 @@ function getCurrentNatalMatrixRows() {
     return helpers.ensureMatrixRows
         ? helpers.ensureMatrixRows(currentSettings.matrixRows || {})
         : (currentSettings.matrixRows || {});
+}
+
+function getNatalMatrixBodyKey(name) {
+    return window.AstroPreferences?.normalizeMatrixBodyName
+        ? window.AstroPreferences.normalizeMatrixBodyName(name)
+        : String(name || '');
+}
+
+function syncNatalMatrixCheckboxes() {
+    const rows = getCurrentNatalMatrixRows();
+    document.querySelectorAll('#natalMatrixEditor input[data-matrix-body][data-matrix-field]').forEach((input) => {
+        const body = getNatalMatrixBodyKey(input.dataset.matrixBody);
+        const field = input.dataset.matrixField;
+        if (!body || !['display', 'aspecting'].includes(field)) return;
+        input.checked = rows?.[body]?.[field] !== false;
+    });
+}
+
+function ensureNatalBodyActionMenu() {
+    const svg = document.getElementById('chartWheel');
+    const host = svg?.closest('.chart-wheel-container, .chart-main, .chart-content') || svg?.parentElement || document.body;
+    let menu = host.querySelector('.body-action-menu');
+    if (menu) return menu;
+
+    if (host instanceof HTMLElement && getComputedStyle(host).position === 'static') {
+        host.style.position = 'relative';
+    }
+
+    menu = document.createElement('div');
+    menu.className = 'body-action-menu hidden';
+    menu.setAttribute('role', 'menu');
+    host.appendChild(menu);
+
+    menu.addEventListener('click', (event) => event.stopPropagation());
+    menu.addEventListener('contextmenu', (event) => event.preventDefault());
+    menu.addEventListener('click', (event) => {
+        const button = event.target instanceof Element
+            ? event.target.closest('button[data-action-field]')
+            : null;
+        if (!(button instanceof HTMLButtonElement)) return;
+        const body = getNatalMatrixBodyKey(menu.dataset.body);
+        const field = button.dataset.actionField;
+        if (!body || !['display', 'aspecting'].includes(field)) return;
+        const current = getCurrentNatalMatrixRows()?.[body]?.[field] !== false;
+        setNatalMatrixField(body, field, !current);
+        renderNatalBodyActionMenu(body, menu);
+    });
+
+    return menu;
+}
+
+function initBodyActionMenuInteractions() {
+    if (bodyActionMenuBound) return;
+    bodyActionMenuBound = true;
+
+    document.addEventListener('chart:body-contextmenu', (event) => {
+        const detail = event?.detail || {};
+        if (detail.source !== 'wheel' || !detail.body || detail.method !== 'natal') return;
+        openNatalBodyActionMenu(detail);
+    });
+    document.addEventListener('click', closeNatalBodyActionMenu);
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeNatalBodyActionMenu();
+    });
+}
+
+function openNatalBodyActionMenu(detail = {}) {
+    const body = getNatalMatrixBodyKey(detail.body);
+    if (!body) return;
+    const menu = ensureNatalBodyActionMenu();
+    renderNatalBodyActionMenu(body, menu);
+    positionNatalBodyActionMenu(menu, detail.clientX, detail.clientY);
+    menu.classList.remove('hidden');
+}
+
+function renderNatalBodyActionMenu(body, menu = ensureNatalBodyActionMenu()) {
+    const rows = getCurrentNatalMatrixRows();
+    const config = rows?.[body] || { display: true, aspecting: true };
+    const label = escapeAttribute(getPlanetNameLabel(body));
+    menu.dataset.body = body;
+    menu.innerHTML = `
+        <div class="body-action-menu-title">${label}</div>
+        <div class="body-action-menu-controls">
+            ${natalBodyActionToggleMarkup('display', 'п', 'Показ', config.display !== false)}
+            ${natalBodyActionToggleMarkup('aspecting', 'а', 'Аспектация', config.aspecting !== false)}
+        </div>
+    `;
+}
+
+function natalBodyActionToggleMarkup(field, glyph, label, checked) {
+    const escapedLabel = escapeAttribute(label);
+    return `
+        <button type="button" class="settings-check-option settings-check-option--pill settings-check-option--icon-only body-action-toggle" data-action-field="${field}" aria-label="${escapedLabel}" aria-pressed="${checked ? 'true' : 'false'}" title="${escapedLabel}">
+            <span class="settings-check-option-glyph" aria-hidden="true">${glyph}</span>
+        </button>
+    `;
+}
+
+function positionNatalBodyActionMenu(menu, clientX, clientY) {
+    const host = menu.parentElement || document.body;
+    const rect = host.getBoundingClientRect();
+    let x = Number(clientX) - rect.left + 8;
+    let y = Number(clientY) - rect.top + 8;
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
+    const maxX = rect.width - menu.offsetWidth - 8;
+    const maxY = rect.height - menu.offsetHeight - 8;
+    x = Math.max(8, Math.min(x, Math.max(8, maxX)));
+    y = Math.max(8, Math.min(y, Math.max(8, maxY)));
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
+}
+
+function closeNatalBodyActionMenu() {
+    document.querySelector('.body-action-menu')?.classList.add('hidden');
+}
+
+function setNatalMatrixField(body, field, checked) {
+    const rows = getCurrentNatalMatrixRows();
+    rows[body] = {
+        ...(rows[body] || { display: true, aspecting: true }),
+        [field]: checked,
+    };
+    currentSettings.matrixRows = rows;
+    currentSettings.hiddenPlanets = Object.entries(rows)
+        .filter(([, config]) => config?.display === false)
+        .map(([bodyName]) => bodyName);
+    syncNatalMatrixCheckboxes();
+    redrawChart(window.chartDataCache, currentSettings.hiddenPlanets || [], currentSettings.orientation);
+    void persistNatalViewOverrides();
 }
 
 function getNatalMatrixRowsForTables() {
@@ -1276,6 +1407,7 @@ function readNatalEnabledAspectTypesFromControls() {
  * Применение настроек и перерисовка карты
  */
 let applySettingsTimer = null;
+let bodyActionMenuBound = false;
 async function applySettings() {
     if (applySettingsTimer) {
         clearTimeout(applySettingsTimer);

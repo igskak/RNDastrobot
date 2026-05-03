@@ -980,8 +980,50 @@
     color: var(--accent);
 }
 
+.settings-check-option--pill[aria-pressed="true"] {
+    border-color: rgba(30, 58, 95, 0.34);
+    background: var(--accent-light);
+    color: var(--accent);
+}
+
 .settings-check-option-glyph {
     font-size: 15px;
+}
+
+.forecast-new-body-action-menu {
+    position: absolute;
+    z-index: 35;
+    min-width: 92px;
+    padding: 8px;
+    border: 1px solid rgba(30, 58, 95, 0.14);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 14px 36px rgba(30, 58, 95, 0.16);
+    backdrop-filter: blur(12px);
+}
+
+.forecast-new-body-action-menu-title {
+    margin: 0 0 6px;
+    color: var(--text-secondary);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+}
+
+.forecast-new-body-action-menu-controls {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+}
+
+.forecast-new-body-action-toggle {
+    min-width: 30px;
+    min-height: 30px;
+    padding: 0;
+    font-weight: 800;
+    color: var(--text-muted);
 }
 
 .prognostic-body {
