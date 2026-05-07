@@ -197,6 +197,7 @@ const ForecastState = {
     solarShowApplyingSeparating: false,
     solarShowSpeed: true,
     solarShowStationary: true,
+    solarShowAspectText: false,
     solarAngleAscDscBold: readSavedAngleBold(ANGLE_ASC_DSC_BOLD_STORAGE_KEY),
     solarAngleMcIcBold: readSavedAngleBold(ANGLE_MC_IC_BOLD_STORAGE_KEY),
     solarPointScale: 1.0,
@@ -215,6 +216,7 @@ const ForecastState = {
     biwheelAspectScope: 'major',
     biwheelMatrixRows: window.AstroPreferences?.ensureMatrixRows?.({}) || {},
     biwheelEnabledAspectTypes: [...FORECAST_ASPECT_TYPES],
+    biwheelShowAspectText: false,
     biwheelAngleAscDscBold: readSavedAngleBold(ANGLE_ASC_DSC_BOLD_STORAGE_KEY),
     biwheelAngleMcIcBold: readSavedAngleBold(ANGLE_MC_IC_BOLD_STORAGE_KEY),
     biwheelDisplayMode: 'prognostic',
@@ -377,6 +379,7 @@ function getForecastViewState(viewType) {
             showApplyingSeparating: false,
             showSpeed: true,
             showStationary: true,
+            showAspectText: ForecastState.biwheelShowAspectText,
             angleAscDscBold: ForecastState.biwheelAngleAscDscBold,
             angleMcIcBold: ForecastState.biwheelAngleMcIcBold,
         };
@@ -390,6 +393,7 @@ function getForecastViewState(viewType) {
         showApplyingSeparating: ForecastState.solarShowApplyingSeparating,
         showSpeed: ForecastState.solarShowSpeed,
         showStationary: ForecastState.solarShowStationary,
+        showAspectText: ForecastState.solarShowAspectText,
         angleAscDscBold: ForecastState.solarAngleAscDscBold,
         angleMcIcBold: ForecastState.solarAngleMcIcBold,
     };
@@ -422,6 +426,7 @@ function buildResolvedForecastViewForPersistence(viewType) {
             ...(normalized.table_options || {}),
             show_speed: state.showSpeed !== false,
             show_stationary: state.showStationary !== false,
+            show_aspect_text: state.showAspectText === true,
         },
         view_options: {
             ...(normalized.view_options || {}),
@@ -769,6 +774,7 @@ function applyForecastResolvedPreferences(viewType, payload) {
             : (Array.isArray(resolved?.aspects?.enabled_types) && resolved.aspects.enabled_types.length
                 ? [...resolved.aspects.enabled_types]
                 : [...FORECAST_ASPECT_TYPES]);
+        ForecastState.biwheelShowAspectText = resolved?.table_options?.show_aspect_text === true;
         if (window.ForecastBiwheel?.setOrientationMode) {
             window.ForecastBiwheel.setOrientationMode(ForecastState.biwheelOrientation);
         }
@@ -805,6 +811,7 @@ function applyForecastResolvedPreferences(viewType, payload) {
         ForecastState.solarShowApplyingSeparating = resolved?.aspects?.show_applying_separating === true;
         ForecastState.solarShowSpeed = resolved?.table_options?.show_speed !== false;
         ForecastState.solarShowStationary = resolved?.table_options?.show_stationary !== false;
+        ForecastState.solarShowAspectText = resolved?.table_options?.show_aspect_text === true;
         ForecastState.solarAngleAscDscBold = resolved?.view_options?.bold_asc_dsc !== false;
         ForecastState.solarAngleMcIcBold = resolved?.view_options?.bold_mc_ic !== false;
         if (ForecastState.accountPreferences?.visual) {
@@ -4244,6 +4251,7 @@ function renderSolarPlanetsTable(data) {
         showSpeed: ForecastState.solarShowSpeed,
         showStationary: ForecastState.solarShowStationary,
         showApplyingSeparating: ForecastState.solarShowApplyingSeparating,
+        showAspectText: ForecastState.solarShowAspectText,
     });
 
     renderer.render({

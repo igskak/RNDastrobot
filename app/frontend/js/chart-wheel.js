@@ -41,6 +41,7 @@ class ChartWheel {
         };
         this.showPlanetStationary = false;
         this.showPlanetDegree = false;
+        this.showAspectText = false;
 
         this.visualPreferences = window.AstroPreferences?.getAccountVisualPreferences?.() || null;
         this.aspectColors = this.visualPreferences?.aspect_colors || {
@@ -105,6 +106,7 @@ class ChartWheel {
             collapseThreshold: 9,
             minLineLength: 14,
         };
+        this.suppressPlanetClickUntil = 0;
     }
 
     applyMatrixRows(matrixRows = {}) {
@@ -212,6 +214,24 @@ class ChartWheel {
         return this.t('page.chart.legend.neutral');
     }
 
+    getAspectPhaseLabel(aspectData) {
+        if (!aspectData) return '';
+        if (typeof aspectData.applying === 'boolean') {
+            return aspectData.applying
+                ? this.t('page.chart.settings.aspectPhase.applying')
+                : this.t('page.chart.settings.aspectPhase.separating');
+        }
+        const rawPhase = String(aspectData.applying_separating || aspectData.phase || '').trim().toLowerCase();
+        if (!rawPhase) return '';
+        if (rawPhase.includes('applic') || rawPhase.includes('сход')) {
+            return this.t('page.chart.settings.aspectPhase.applying');
+        }
+        if (rawPhase.includes('separ') || rawPhase.includes('расход')) {
+            return this.t('page.chart.settings.aspectPhase.separating');
+        }
+        return '';
+    }
+
     setVisualPreferences(visualPreferences, { redraw = true } = {}) {
         this.visualPreferences = window.AstroPreferences?.resolveVisualPreferences
             ? window.AstroPreferences.resolveVisualPreferences(visualPreferences || {})
@@ -251,11 +271,16 @@ class ChartWheel {
         const orb = Number(aspectData?.orb);
         const orbLabel = Number.isFinite(orb) ? `${orb.toFixed(2)}°` : this.t('common.notAvailable');
         const harmonicLabel = this.getAspectHarmonicLabel(aspectData?.harmonic_type);
+        const phaseLabel = this.getAspectPhaseLabel(aspectData);
+        const harmonyLine = (aspectData?.harmonic_type === 'neutral' && phaseLabel)
+            ? `${harmonicLabel} · ${phaseLabel}`
+            : harmonicLabel;
+        const aspectText = this.showAspectText ? ` ${aspectLabel}` : '';
 
         return `
-            <strong><span class="astro-symbol">${leftSymbol}</span> ${leftName} ${aspectSymbol} ${aspectLabel} <span class="astro-symbol">${rightSymbol}</span> ${rightName}</strong><br>
+            <strong><span class="astro-symbol">${leftSymbol}</span> ${leftName} ${aspectSymbol}${aspectText} <span class="astro-symbol">${rightSymbol}</span> ${rightName}</strong><br>
             ${this.t('common.orb')}: ${orbLabel}<br>
-            ${harmonicLabel}
+            ${harmonyLine}
         `;
     }
 
@@ -605,7 +630,7 @@ class ChartWheel {
                 x2: this.center + lineOuterR * Math.cos(angle),
                 y2: this.center + lineOuterR * Math.sin(angle),
                 stroke: this.getHouseLineColor(isAngular),
-                'stroke-width': isAngular ? (isBoldAngle ? 2.5 : 1.5) : 1,
+                'stroke-width': isAngular ? (isBoldAngle ? 1.5 : 1) : 1,
                 class: 'house-cusp-line'
             }));
 
@@ -626,7 +651,7 @@ class ChartWheel {
                     x2: this.center + outsideSegmentEndR * Math.cos(angle),
                     y2: this.center + outsideSegmentEndR * Math.sin(angle),
                     stroke: this.getHouseLineColor(isAngular),
-                    'stroke-width': isAngular ? (isBoldAngle ? 2.1 : 1.4) : 1.2,
+                    'stroke-width': isAngular ? (isBoldAngle ? 1.4 : 1.2) : 1.2,
                     class: 'house-cusp-line'
                 }));
             }
@@ -1155,7 +1180,7 @@ class ChartWheel {
             x2: this.center + lineOuterR * Math.cos(angle),
             y2: this.center + lineOuterR * Math.sin(angle),
             stroke: color,
-            'stroke-width': isBold ? 2.5 : 1.5
+            'stroke-width': isBold ? 1.5 : 1
         }));
 
         // Подпись за кругом
@@ -1322,6 +1347,9 @@ class ChartWheel {
         if (Object.prototype.hasOwnProperty.call(options, 'showDegree')) {
             this.showPlanetDegree = options.showDegree === true;
         }
+        if (Object.prototype.hasOwnProperty.call(options, 'showAspectText')) {
+            this.showAspectText = options.showAspectText === true;
+        }
         if (redraw && this.chartData) {
             this.draw(this.chartData);
         }
@@ -1412,6 +1440,7 @@ class ChartWheel {
     }
 
     onPlanetClick(e) {
+        if (Date.now() < this.suppressPlanetClickUntil) return;
         const planetName = e.currentTarget.dataset.planet;
         const planet = this.chartData.planets.find(p => p.name === planetName);
         if (!planet) return;
@@ -1433,6 +1462,7 @@ class ChartWheel {
         const planetName = e.currentTarget.dataset.planet;
         if (!planetName) return;
         e.preventDefault();
+        this.suppressPlanetClickUntil = Date.now() + 250;
         this.hideTooltip();
         document.dispatchEvent(new CustomEvent('chart:body-contextmenu', {
             detail: {

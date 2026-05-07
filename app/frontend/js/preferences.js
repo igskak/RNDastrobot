@@ -387,6 +387,7 @@
             table_options: {
                 show_speed: viewSettings?.table_options?.show_speed !== false,
                 show_stationary: viewSettings?.table_options?.show_stationary !== false,
+                show_aspect_text: viewSettings?.table_options?.show_aspect_text === true,
             },
             view_options: {
                 orientation: viewSettings?.view_options?.orientation === 'asc' ? 'asc' : 'aries',
@@ -521,6 +522,10 @@
         return getElementColor(element, resolved);
     }
 
+    function shouldShowAspectText(viewSettings = {}) {
+        return normalizeViewSettings(viewSettings)?.table_options?.show_aspect_text === true;
+    }
+
     function buildLegacyNatalPatch({ formData, chartData, currentSettings } = {}) {
         const patch = {};
         const formHouseSystem = String(formData?.houseSystem || chartData?.birth_data?.house_system || '').trim();
@@ -584,6 +589,7 @@
         getAspectColor,
         getElementColor,
         getPlanetColor,
+        shouldShowAspectText,
         getHiddenBodiesFromMatrix,
         buildMatrixRowsFromHiddenBodies,
         filterChartDataByViewPreferences,

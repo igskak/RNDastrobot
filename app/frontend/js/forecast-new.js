@@ -115,6 +115,7 @@
             aspectPhaseFilter: [...DEFAULT_ASPECT_PHASE_FILTER],
             showSpeed: true,
             showStationary: true,
+            showAspectText: false,
             showWheelStationary: false,
             showWheelDegree: false,
             angleAscDscBold: true,
@@ -1287,6 +1288,7 @@
             showSpeed: state.pageSettings.showSpeed !== false,
             showStationary: state.pageSettings.showStationary !== false,
             showApplyingSeparating: state.pageSettings.showApplyingSeparating === true,
+            showAspectText: state.pageSettings.showAspectText === true,
         });
         state.natalRenderer?.render(filterChartDataForSidePanel(state.natalWheelData));
         renderInlineMatrixControls();
@@ -1361,41 +1363,6 @@
             console.warn('Failed to persist Forecast New matrix rows:', error);
         }
         schedulePersist();
-    }
-
-    async function applyMatrixRowsFast({ body, field, checked } = {}) {
-        if (
-            (field === 'display' && checked === true && !wheelHasBody(body))
-            || (field === 'aspecting' && checked === true && !wheelHasAspectForBody(body))
-        ) {
-            await applyMatrixRows();
-            return;
-        }
-
-        refreshViewModel();
-        state.wheel?.applyMatrixRows?.(state.matrixRows);
-        renderMatrixSensitivePanelData();
-        applyInlineMatrixRowState();
-        syncHoveredAspectToActiveSurface();
-
-        try {
-            await persistForecastNewViewOverrides();
-        } catch (error) {
-            console.warn('Failed to persist Forecast New matrix rows:', error);
-        }
-        schedulePersist();
-    }
-
-    function wheelHasBody(body) {
-        if (!body || !state.wheel?.svg) return true;
-        const escaped = escapeAttribute(body);
-        return Boolean(state.wheel.svg.querySelector(`.prognostic-body[data-planet="${escaped}"]`));
-    }
-
-    function wheelHasAspectForBody(body) {
-        if (!body || !state.wheel?.svg) return true;
-        const escaped = escapeAttribute(body);
-        return Boolean(state.wheel.svg.querySelector(`.aspect-line[data-planet-1="${escaped}"], .aspect-line[data-planet-2="${escaped}"]`));
     }
 
     function refreshViewModel() {
@@ -1535,7 +1502,7 @@
             state.matrixRows = normalizeForecastNewMatrixRows(rows);
             syncMatrixCheckboxes();
             renderBodyActionMenu(body, menu.dataset.method || '', menu);
-            await applyMatrixRowsFast({ body, field, checked: !current });
+            await applyMatrixRows();
         });
 
         return menu;
@@ -1664,6 +1631,7 @@
             aspectPhaseFilter: nextAspectPhaseFilter,
             showSpeed: refs.showSpeedToggle?.checked !== false,
             showStationary: refs.showStationaryToggle?.checked !== false,
+            showAspectText: state.pageSettings.showAspectText === true,
             showWheelStationary: refs.showWheelStationaryToggle?.checked === true,
             showWheelDegree: refs.showWheelDegreeToggle?.checked === true,
             angleAscDscBold: refs.angleAscDscBoldToggle?.checked !== false,
@@ -1979,6 +1947,7 @@
             houseLabelsOutside: state.pageSettings.houseLabelsOutside,
             showPlanetStationary: state.pageSettings.showWheelStationary,
             showPlanetDegree: state.pageSettings.showWheelDegree,
+            showAspectText: state.pageSettings.showAspectText === true,
             angleAscDscBold: state.pageSettings.angleAscDscBold,
             angleMcIcBold: state.pageSettings.angleMcIcBold,
         });
@@ -2027,6 +1996,7 @@
             showSpeed: state.pageSettings.showSpeed !== false,
             showStationary: state.pageSettings.showStationary !== false,
             showApplyingSeparating: state.pageSettings.showApplyingSeparating === true,
+            showAspectText: state.pageSettings.showAspectText === true,
         });
         state.prognosticRenderer?.render(filterChartDataForSidePanel({
             planets: layer.bodies || [],
@@ -2538,6 +2508,7 @@
             showApplyingSeparating: restored.pageSettings?.showApplyingSeparating !== false,
             showSpeed: restored.pageSettings?.showSpeed !== false,
             showStationary: restored.pageSettings?.showStationary !== false,
+            showAspectText: restored.pageSettings?.showAspectText === true,
             showWheelStationary: restored.pageSettings?.showWheelStationary === true,
             showWheelDegree: restored.pageSettings?.showWheelDegree === true,
             angleAscDscBold: restored.pageSettings?.angleAscDscBold !== false,
@@ -2569,6 +2540,7 @@
                 showApplyingSeparating: resolved?.aspects?.show_applying_separating !== false,
                 showSpeed: resolved?.table_options?.show_speed !== false,
                 showStationary: resolved?.table_options?.show_stationary !== false,
+                showAspectText: resolved?.table_options?.show_aspect_text === true,
                 angleAscDscBold: resolved?.view_options?.bold_asc_dsc !== false,
                 angleMcIcBold: resolved?.view_options?.bold_mc_ic !== false,
             };
@@ -2592,6 +2564,7 @@
             table_options: {
                 show_speed: state.pageSettings.showSpeed !== false,
                 show_stationary: state.pageSettings.showStationary !== false,
+                show_aspect_text: state.pageSettings.showAspectText === true,
             },
             view_options: {
                 orientation: state.pageSettings.orientation === 'asc' ? 'asc' : 'aries',

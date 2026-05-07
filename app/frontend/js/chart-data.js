@@ -28,6 +28,7 @@ class ChartDataRenderer {
         this.showSpeed = true;
         this.showStationary = true;
         this.showApplyingSeparating = false;
+        this.showAspectText = false;
         this.showSpeedColumn = options.showSpeedColumn !== false;
         this.showHouseColumn = options.showHouseColumn !== false;
         this.houseNumberStyle = Symbols?.readSavedHouseNumberStyle?.() || 'arabic';
@@ -276,6 +277,9 @@ class ChartDataRenderer {
         }
         if (Object.prototype.hasOwnProperty.call(options, 'showApplyingSeparating')) {
             this.showApplyingSeparating = options.showApplyingSeparating === true;
+        }
+        if (Object.prototype.hasOwnProperty.call(options, 'showAspectText')) {
+            this.showAspectText = options.showAspectText === true;
         }
 
         this.updatePlanetsTableColumns();
@@ -628,6 +632,15 @@ class ChartDataRenderer {
         return `<div class="aspect-row-meta">${this.escapeHtml(label)}</div>`;
     }
 
+    renderAspectTypeCell(aspect) {
+        const color = window.AstroPreferences?.getAspectColor
+            ? window.AstroPreferences.getAspectColor(aspect.aspect_type, this.visualPreferences, aspect.harmonic_type)
+            : '#9ca3af';
+        const icon = `<span class="astro-symbol" style="color:${color}">${this.getAspectSymbol(aspect.aspect_type)}</span>`;
+        const label = this.showAspectText ? ` ${this.aspectName(aspect.aspect_type)}` : '';
+        return `${icon}${label}`;
+    }
+
     renderAspects(aspects) {
         if (!this.aspectsTable) return;
         if (!aspects || aspects.length === 0) {
@@ -687,7 +700,7 @@ class ChartDataRenderer {
                 <tr data-aspect="${aspectKey || ''}" data-aspect-key="${aspectKey || ''}">
                     <td class="symbol-cell">${this.getPlanetSymbolMarkup(a.left_planet, { size: 15, title: this.planetName(a.left_planet) })}${this.retroIndicatorHtml(this.isBodyRetrograde(a.left_planet, retroLookup), 'retro-indicator--micro')}</td>
                     <td class="symbol-cell">${this.getPlanetSymbolMarkup(a.right_planet, { size: 15, title: this.planetName(a.right_planet) })}${this.retroIndicatorHtml(this.isBodyRetrograde(a.right_planet, retroLookup), 'retro-indicator--micro')}</td>
-                    <td class="${typeClass}"><span class="astro-symbol" style="color:${window.AstroPreferences?.getAspectColor ? window.AstroPreferences.getAspectColor(a.aspect_type, this.visualPreferences, a.harmonic_type) : '#9ca3af'}">${this.getAspectSymbol(a.aspect_type)}</span> ${this.aspectName(a.aspect_type)}${applyingBadge}</td>
+                    <td class="${typeClass}">${this.renderAspectTypeCell(a)}${applyingBadge}</td>
                     <td class="mono">${a.orb.toFixed(2)}°</td>
                 </tr>
             `;

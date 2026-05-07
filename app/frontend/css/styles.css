@@ -1618,10 +1618,24 @@ input[type="number"] {
     color: var(--text-muted);
 }
 
+.settings-check-option--pill[aria-pressed="true"] {
+    border-color: rgba(30, 58, 95, 0.34);
+    background: var(--accent-light);
+    color: var(--accent);
+}
+
 .body-action-toggle[aria-pressed="true"] {
     border-color: rgba(30, 58, 95, 0.34);
     background: var(--accent-light);
     color: var(--accent);
+}
+
+.chart-layout .planet-group.matrix-hidden,
+.chart-layout .aspect-line.matrix-hidden,
+.chart-layout .aspect-symbol-group.matrix-hidden {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden;
 }
 
 /* ============================================
@@ -1651,7 +1665,12 @@ input[type="number"] {
     box-shadow: var(--shadow-lg);
     z-index: 1000;
     pointer-events: none;
-    max-width: 200px;
+    box-sizing: border-box;
+    width: max-content;
+    min-width: max-content;
+    max-width: min(420px, calc(100vw - 24px));
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .chart-tooltip strong {

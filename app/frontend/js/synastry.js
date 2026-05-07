@@ -63,6 +63,7 @@ const synastryState = {
         showApplyingSeparating: false,
         showSpeed: true,
         showStationary: true,
+        showAspectText: false,
         planetScale: readSavedPlanetScale(),
         pointScale: readSavedPointScale(),
         houseNumberStyle: readSavedHouseNumberStyle(),
@@ -489,6 +490,7 @@ function initializeSynastrySettings() {
     synastryState.settings.showApplyingSeparating = resolved?.aspects?.show_applying_separating === true;
     synastryState.settings.showSpeed = resolved?.table_options?.show_speed !== false;
     synastryState.settings.showStationary = resolved?.table_options?.show_stationary !== false;
+    synastryState.settings.showAspectText = resolved?.table_options?.show_aspect_text === true;
     synastryState.settings.planetScale = readSavedPlanetScale();
     synastryState.settings.pointScale = readSavedPointScale();
     synastryState.settings.houseNumberStyle = readSavedHouseNumberStyle();
@@ -541,6 +543,7 @@ function renderSynastrySide(side, chartData) {
         showSpeed: synastryState.settings.showSpeed,
         showStationary: synastryState.settings.showStationary,
         showApplyingSeparating: synastryState.settings.showApplyingSeparating,
+        showAspectText: synastryState.settings.showAspectText,
     });
     renderer.render(chartData);
     renderer.setAspectTypeFilter(synastryState.settings.aspectScope);
@@ -628,6 +631,9 @@ function renderWheelMode(primaryChartOverride, partnerChartOverride) {
         wheel?.setHouseLabelOptions({
             style: synastryState.settings.houseNumberStyle,
             outside: synastryState.settings.houseLabelsOutside,
+        }, { redraw: false });
+        wheel?.setPlanetAnnotationOptions?.({
+            showAspectText: synastryState.settings.showAspectText,
         }, { redraw: false });
         wheel?.applyMatrixRows?.(getCurrentSynastryMatrixRows());
     });
@@ -777,6 +783,7 @@ function snapshotSynastrySettings() {
         showApplyingSeparating: synastryState.settings.showApplyingSeparating === true,
         showSpeed: synastryState.settings.showSpeed !== false,
         showStationary: synastryState.settings.showStationary !== false,
+        showAspectText: synastryState.settings.showAspectText === true,
         planetScale: synastryState.settings.planetScale,
         pointScale: synastryState.settings.pointScale,
         houseNumberStyle: synastryState.settings.houseNumberStyle,
@@ -959,6 +966,7 @@ function getCurrentSynastryViewSettings() {
         table_options: {
             show_speed: synastryState.settings.showSpeed !== false,
             show_stationary: synastryState.settings.showStationary !== false,
+            show_aspect_text: synastryState.settings.showAspectText === true,
         },
         view_options: {
             orientation: synastryState.settings.orientation === 'asc' ? 'asc' : 'aries',
@@ -1077,6 +1085,9 @@ function renderPerspectiveInterAspects(container, perspective) {
         const phase = typeof aspect.applying === 'boolean'
             ? (aspect.applying ? synT('page.chart.settings.aspectPhase.applying') : synT('page.chart.settings.aspectPhase.separating'))
             : '—';
+        const aspectLabel = synastryState.settings.showAspectText
+            ? ` ${escapeSynHtml(getAspectLabel(aspect.aspect_type))}`
+            : '';
 
         return `
             <tr>
@@ -1087,7 +1098,7 @@ function renderPerspectiveInterAspects(container, perspective) {
                         <span>${getBodySymbolMarkup(secondPlanet, { size: 16, title: getBodyLabel(secondPlanet) })} ${escapeSynHtml(getBodyLabel(secondPlanet))}</span>
                     </div>
                 </td>
-                <td><span class="astro-symbol">${Symbols?.getAspectDisplay?.(aspect.aspect_type) || Symbols.aspects[aspect.aspect_type] || ''}</span> ${escapeSynHtml(getAspectLabel(aspect.aspect_type))}</td>
+                <td><span class="astro-symbol">${Symbols?.getAspectDisplay?.(aspect.aspect_type) || Symbols.aspects[aspect.aspect_type] || ''}</span>${aspectLabel}</td>
                 <td class="mono">${Number(aspect.orb || 0).toFixed(2)}°</td>
                 <td>${escapeSynHtml(phase)}</td>
             </tr>

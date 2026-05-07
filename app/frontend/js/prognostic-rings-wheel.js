@@ -67,6 +67,7 @@
             this.outsideHouseLabelMethod = 'natal';
             this.showPlanetStationary = false;
             this.showPlanetDegree = false;
+            this.showAspectText = false;
             this.natalGlyphBaseSize = 18;
             this.planetLeaderColor = '#9ca3af';
             this.houseVisualOptions = {
@@ -83,6 +84,7 @@
                 collapseThreshold: 9,
                 minLineLength: 14,
             };
+            this.suppressPlanetClickUntil = 0;
             this.aspectNameAliases = {
                 TrueNorthNode: 'TrueNode',
                 TrueSouthNode: 'SouthNode',
@@ -122,6 +124,9 @@
             }
             if (Object.prototype.hasOwnProperty.call(options, 'showPlanetDegree')) {
                 this.showPlanetDegree = options.showPlanetDegree === true;
+            }
+            if (Object.prototype.hasOwnProperty.call(options, 'showAspectText')) {
+                this.showAspectText = options.showAspectText === true;
             }
             if (Object.prototype.hasOwnProperty.call(options, 'angleAscDscBold')) {
                 this.angleAscDscBold = options.angleAscDscBold !== false;
@@ -345,8 +350,8 @@
                     ? ANGLE_MARKER_COLOR
                     : (ring.method === 'natal' ? this.getHouseLineColor(false) : ring.color);
                 const innerStrokeWidth = ring.method === 'natal'
-                    ? (isAngular ? (isBoldAngle ? 2.5 : 1.5) : 1)
-                    : (isAngular ? (isBoldAngle ? 1.25 : 0.85) : 0.7);
+                    ? (isAngular ? (isBoldAngle ? 1.5 : 1) : 1)
+                    : (isAngular ? (isBoldAngle ? 0.85 : 0.7) : 0.7);
                 const innerOpacity = ring.method === 'natal'
                     ? 1
                     : (isAngular ? 0.82 : 0.48);
@@ -1083,6 +1088,7 @@
         }
 
         onPlanetClick(event) {
+            if (Date.now() < this.suppressPlanetClickUntil) return;
             const planetName = event.currentTarget.dataset.planet;
             const method = event.currentTarget.dataset.method;
             const body = this.findBody(planetName, method);
@@ -1095,6 +1101,7 @@
             const method = event.currentTarget.dataset.method;
             if (!planetName) return;
             event.preventDefault();
+            this.suppressPlanetClickUntil = Date.now() + 250;
             this.hideTooltip();
             this.dispatchAspectHover('chart:body-contextmenu', {
                 source: 'wheel',
@@ -1303,9 +1310,16 @@
             const orb = Number(aspectData?.orb);
             const orbLabel = Number.isFinite(orb) ? `${orb.toFixed(2)}°` : this.t('common.notAvailable');
             const methodLabel = this.methodLabel(aspectData?.method);
+            const harmonicLabel = this.getAspectHarmonicLabel(aspectData?.harmonic_type);
+            const phaseLabel = this.getAspectPhaseLabel(aspectData);
+            const harmonyLine = (aspectData?.harmonic_type === 'neutral' && phaseLabel)
+                ? `${this.escapeHtml(harmonicLabel)} · ${this.escapeHtml(phaseLabel)}`
+                : this.escapeHtml(harmonicLabel);
+            const aspectText = this.showAspectText ? ` ${this.escapeHtml(aspectName)}` : '';
             return `
-                <strong>${this.escapeHtml(methodLabel)} · <span class="astro-symbol">${this.escapeHtml(leftSymbol)}</span> ${this.escapeHtml(leftName)} ${this.escapeHtml(aspectSymbol)} ${this.escapeHtml(aspectName)} <span class="astro-symbol">${this.escapeHtml(rightSymbol)}</span> ${this.escapeHtml(rightName)}</strong><br>
-                ${this.escapeHtml(this.t('common.orb'))}: ${this.escapeHtml(orbLabel)}
+                <strong>${this.escapeHtml(methodLabel)} · <span class="astro-symbol">${this.escapeHtml(leftSymbol)}</span> ${this.escapeHtml(leftName)} ${this.escapeHtml(aspectSymbol)}${aspectText} <span class="astro-symbol">${this.escapeHtml(rightSymbol)}</span> ${this.escapeHtml(rightName)}</strong><br>
+                ${this.escapeHtml(this.t('common.orb'))}: ${this.escapeHtml(orbLabel)}<br>
+                ${harmonyLine}
             `;
         }
 
@@ -1336,6 +1350,30 @@
             const key = `astro.aspect.${name}`;
             const translated = this.t(key);
             return translated && translated !== key ? translated : (Symbols?.aspectNamesRu?.[name] || name || '');
+        }
+
+        getAspectHarmonicLabel(harmonicType) {
+            if (harmonicType === 'harmonious') return this.t('page.chart.legend.harmonious');
+            if (harmonicType === 'tense') return this.t('page.chart.legend.tense');
+            return this.t('page.chart.legend.neutral');
+        }
+
+        getAspectPhaseLabel(aspectData) {
+            if (!aspectData) return '';
+            if (typeof aspectData.applying === 'boolean') {
+                return aspectData.applying
+                    ? this.t('page.chart.settings.aspectPhase.applying')
+                    : this.t('page.chart.settings.aspectPhase.separating');
+            }
+            const rawPhase = String(aspectData.applying_separating || aspectData.phase || '').trim().toLowerCase();
+            if (!rawPhase) return '';
+            if (rawPhase.includes('applic') || rawPhase.includes('сход')) {
+                return this.t('page.chart.settings.aspectPhase.applying');
+            }
+            if (rawPhase.includes('separ') || rawPhase.includes('расход')) {
+                return this.t('page.chart.settings.aspectPhase.separating');
+            }
+            return '';
         }
 
         methodLabel(method) {

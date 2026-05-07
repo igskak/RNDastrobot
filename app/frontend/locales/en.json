@@ -264,7 +264,8 @@
       "orientationAsc": "Ascendant",
       "showApplyingSeparating": "Show applying / separating aspects",
       "showSpeed": "Show speed",
-      "showStationary": "Show stationary"
+      "showStationary": "Show stationary",
+      "showAspectText": "Show aspect name as text"
     },
     "orbs": {
       "actions": {

@@ -1082,7 +1082,12 @@
     box-shadow: var(--shadow-lg);
     z-index: 1000;
     pointer-events: none;
-    max-width: 200px;
+    box-sizing: border-box;
+    width: max-content;
+    min-width: max-content;
+    max-width: min(420px, calc(100vw - 24px));
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .chart-tooltip strong {

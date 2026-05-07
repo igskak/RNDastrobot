@@ -218,6 +218,7 @@
                 showApplyingSeparating: document.getElementById('natalShowApplyingSeparating'),
                 showSpeed: document.getElementById('natalShowSpeed'),
                 showStationary: document.getElementById('natalShowStationary'),
+                showAspectText: document.getElementById('natalShowAspectText'),
             };
         }
         if (viewId === 'biwheel') {
@@ -227,6 +228,7 @@
                 showApplyingSeparating: null,
                 showSpeed: null,
                 showStationary: null,
+                showAspectText: document.getElementById('biwheelShowAspectTextAccount'),
             };
         }
         return {
@@ -235,6 +237,7 @@
             showApplyingSeparating: document.getElementById('solarShowApplyingSeparatingAccount'),
             showSpeed: document.getElementById('solarShowSpeedAccount'),
             showStationary: document.getElementById('solarShowStationaryAccount'),
+            showAspectText: document.getElementById('solarShowAspectTextAccount'),
         };
     }
 
@@ -713,6 +716,7 @@
             if (dom.showApplyingSeparating) dom.showApplyingSeparating.checked = view.aspects?.show_applying_separating === true;
             if (dom.showSpeed) dom.showSpeed.checked = view.table_options?.show_speed !== false;
             if (dom.showStationary) dom.showStationary.checked = view.table_options?.show_stationary !== false;
+            if (dom.showAspectText) dom.showAspectText.checked = view.table_options?.show_aspect_text === true;
         });
 
         renderAspectTypesMatrix(normalized.chart_defaults);
@@ -762,6 +766,7 @@
             table_options: {
                 show_speed: dom.showSpeed ? dom.showSpeed.checked !== false : true,
                 show_stationary: dom.showStationary ? dom.showStationary.checked !== false : true,
+                show_aspect_text: dom.showAspectText?.checked === true,
             },
             view_options: {
                 orientation: dom.orientation?.value === 'asc' ? 'asc' : 'aries',

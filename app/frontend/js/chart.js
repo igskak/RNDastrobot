@@ -169,6 +169,7 @@ let currentSettings = {
     aspectPhaseFilter: readSavedAspectPhaseFilter(),
     showSpeed: true,
     showStationary: true,
+    showAspectText: false,
     showWheelStationary: false,
     showWheelDegree: false,
     planetScale: readSavedPlanetScale(),
@@ -359,6 +360,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     chartWheel.setPlanetAnnotationOptions({
         showStationary: currentSettings.showWheelStationary,
         showDegree: currentSettings.showWheelDegree,
+        showAspectText: currentSettings.showAspectText,
     }, { redraw: false });
     chartWheel.setHouseLabelOptions({
         style: currentSettings.houseNumberStyle,
@@ -393,6 +395,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         showSpeed: currentSettings.showSpeed,
         showStationary: currentSettings.showStationary,
         showApplyingSeparating: currentSettings.showApplyingSeparating,
+        showAspectText: currentSettings.showAspectText,
     });
     chartDataRenderer.render(filterChartDataForNatalTables(chartData));
     chartDataRenderer.setAspectTypeFilter(currentSettings.aspectScope);
@@ -647,6 +650,7 @@ function getNatalResolvedViewSettings() {
             table_options: {
                 show_speed: currentSettings.showSpeed !== false,
                 show_stationary: currentSettings.showStationary !== false,
+                show_aspect_text: currentSettings.showAspectText === true,
             },
             view_options: {
                 orientation: currentSettings.orientation || 'aries',
@@ -676,6 +680,7 @@ function getNatalResolvedViewSettings() {
             ...(base.table_options || {}),
             show_speed: currentSettings.showSpeed !== false,
             show_stationary: currentSettings.showStationary !== false,
+            show_aspect_text: currentSettings.showAspectText === true,
         },
         view_options: {
             ...(base.view_options || {}),
@@ -714,7 +719,7 @@ function syncNatalMatrixCheckboxes() {
 function ensureNatalBodyActionMenu() {
     const svg = document.getElementById('chartWheel');
     const host = svg?.closest('.chart-wheel-container, .chart-main, .chart-content') || svg?.parentElement || document.body;
-    let menu = host.querySelector('.body-action-menu');
+    let menu = host.querySelector('.forecast-new-body-action-menu');
     if (menu) return menu;
 
     if (host instanceof HTMLElement && getComputedStyle(host).position === 'static') {
@@ -722,7 +727,7 @@ function ensureNatalBodyActionMenu() {
     }
 
     menu = document.createElement('div');
-    menu.className = 'body-action-menu hidden';
+    menu.className = 'forecast-new-body-action-menu hidden';
     menu.setAttribute('role', 'menu');
     host.appendChild(menu);
 
@@ -774,8 +779,8 @@ function renderNatalBodyActionMenu(body, menu = ensureNatalBodyActionMenu()) {
     const label = escapeAttribute(getPlanetNameLabel(body));
     menu.dataset.body = body;
     menu.innerHTML = `
-        <div class="body-action-menu-title">${label}</div>
-        <div class="body-action-menu-controls">
+        <div class="forecast-new-body-action-menu-title">${label}</div>
+        <div class="forecast-new-body-action-menu-controls">
             ${natalBodyActionToggleMarkup('display', 'п', 'Показ', config.display !== false)}
             ${natalBodyActionToggleMarkup('aspecting', 'а', 'Аспектация', config.aspecting !== false)}
         </div>
@@ -785,7 +790,7 @@ function renderNatalBodyActionMenu(body, menu = ensureNatalBodyActionMenu()) {
 function natalBodyActionToggleMarkup(field, glyph, label, checked) {
     const escapedLabel = escapeAttribute(label);
     return `
-        <button type="button" class="settings-check-option settings-check-option--pill settings-check-option--icon-only body-action-toggle" data-action-field="${field}" aria-label="${escapedLabel}" aria-pressed="${checked ? 'true' : 'false'}" title="${escapedLabel}">
+        <button type="button" class="settings-check-option settings-check-option--pill settings-check-option--icon-only forecast-new-body-action-toggle" data-action-field="${field}" aria-label="${escapedLabel}" aria-pressed="${checked ? 'true' : 'false'}" title="${escapedLabel}">
             <span class="settings-check-option-glyph" aria-hidden="true">${glyph}</span>
         </button>
     `;
@@ -807,7 +812,7 @@ function positionNatalBodyActionMenu(menu, clientX, clientY) {
 }
 
 function closeNatalBodyActionMenu() {
-    document.querySelector('.body-action-menu')?.classList.add('hidden');
+    document.querySelector('.forecast-new-body-action-menu')?.classList.add('hidden');
 }
 
 function setNatalMatrixField(body, field, checked) {
@@ -821,43 +826,8 @@ function setNatalMatrixField(body, field, checked) {
         .filter(([, config]) => config?.display === false)
         .map(([bodyName]) => bodyName);
     syncNatalMatrixCheckboxes();
-    if (shouldRedrawForMatrixFieldEnable(body, field, checked)) {
-        redrawChart(window.chartDataCache, currentSettings.hiddenPlanets || [], currentSettings.orientation);
-    } else {
-        applyNatalMatrixRowsFast();
-    }
+    redrawChart(window.chartDataCache, currentSettings.hiddenPlanets || [], currentSettings.orientation);
     void persistNatalViewOverrides();
-}
-
-function shouldRedrawForMatrixFieldEnable(body, field, checked) {
-    if (checked !== true || !chartWheel?.svg) return false;
-    const escaped = escapeAttribute(body);
-    if (field === 'display') {
-        return !chartWheel.svg.querySelector(`.planet-group[data-planet="${escaped}"]`);
-    }
-    if (field === 'aspecting') {
-        return !chartWheel.svg.querySelector(`.aspect-line[data-planet-1="${escaped}"], .aspect-line[data-planet-2="${escaped}"]`);
-    }
-    return false;
-}
-
-function applyNatalMatrixRowsFast() {
-    const source = window.chartDataCache;
-    if (!source) return;
-
-    chartWheel?.applyMatrixRows?.(getCurrentNatalMatrixRows());
-
-    const filteredTables = filterChartDataForNatalTables(source);
-    if (chartDataRenderer) {
-        chartDataRenderer.chartData = filteredTables;
-        chartDataRenderer.renderAspects(filteredTables.aspects || []);
-        chartDataRenderer.renderAspectGrid(filteredTables.aspects || [], filteredTables.planets || []);
-        chartDataRenderer.renderConfigurations?.(
-            filteredTables.aspect_configurations || [],
-            filteredTables.stelliums || []
-        );
-    }
-    syncHoveredAspectToActiveSurface();
 }
 
 function getNatalMatrixRowsForTables() {
@@ -982,6 +952,7 @@ function applyResolvedNatalPreferences(payload, { redraw = true } = {}) {
         : [];
     currentSettings.showSpeed = resolved.table_options?.show_speed !== false;
     currentSettings.showStationary = resolved.table_options?.show_stationary !== false;
+    currentSettings.showAspectText = resolved.table_options?.show_aspect_text === true;
     currentSettings.showWheelStationary = resolved.view_options?.show_planet_stationary === true;
     currentSettings.showWheelDegree = resolved.view_options?.show_planet_degree === true;
     currentSettings.angleAscDscBold = resolved.view_options?.bold_asc_dsc !== false;
@@ -992,6 +963,7 @@ function applyResolvedNatalPreferences(payload, { redraw = true } = {}) {
     chartWheel?.setPlanetAnnotationOptions?.({
         showStationary: currentSettings.showWheelStationary,
         showDegree: currentSettings.showWheelDegree,
+        showAspectText: currentSettings.showAspectText,
     }, { redraw: false });
     chartWheel?.setAngleMarkerOptions?.({
         ascDscBold: currentSettings.angleAscDscBold,
@@ -1001,6 +973,7 @@ function applyResolvedNatalPreferences(payload, { redraw = true } = {}) {
         showSpeed: currentSettings.showSpeed,
         showStationary: currentSettings.showStationary,
         showApplyingSeparating: currentSettings.showApplyingSeparating,
+        showAspectText: currentSettings.showAspectText,
     });
     const accountVisual = window.accountPreferencesCache?.visual || null;
     if (accountVisual && window.AstroPreferences?.setAccountVisualPreferences) {
@@ -1514,12 +1487,14 @@ async function applySettings() {
         chartWheel?.setPlanetAnnotationOptions?.({
             showStationary: showWheelStationary,
             showDegree: showWheelDegree,
+            showAspectText: currentSettings.showAspectText,
         }, { redraw: false });
         await applyNatalAspectScope(currentSettings.aspectScope, { persist: false });
         chartDataRenderer?.setDisplayPreferences?.({
             showSpeed,
             showStationary,
             showApplyingSeparating,
+            showAspectText: currentSettings.showAspectText,
         });
         chartDataRenderer?.setHouseNumberStyle?.(houseNumberStyle);
 
@@ -1653,6 +1628,7 @@ function redrawChart(chartData, hiddenPlanets, orientation = currentSettings.ori
         chartWheel.setPlanetAnnotationOptions({
             showStationary: currentSettings.showWheelStationary,
             showDegree: currentSettings.showWheelDegree,
+            showAspectText: currentSettings.showAspectText,
         }, { redraw: false });
         chartWheel.setHouseLabelOptions({
             style: currentSettings.houseNumberStyle,
@@ -1668,6 +1644,7 @@ function redrawChart(chartData, hiddenPlanets, orientation = currentSettings.ori
         showSpeed: currentSettings.showSpeed,
         showStationary: currentSettings.showStationary,
         showApplyingSeparating: currentSettings.showApplyingSeparating,
+        showAspectText: currentSettings.showAspectText,
     });
     clearConfigurationHighlight();
     chartWheel.draw(filteredData);

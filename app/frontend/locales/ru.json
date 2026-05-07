@@ -264,7 +264,8 @@
       "orientationAsc": "Асцендент",
       "showApplyingSeparating": "Показывать сходящиеся / расходящиеся",
       "showSpeed": "Показывать скорость",
-      "showStationary": "Показывать стационарность"
+      "showStationary": "Показывать стационарность",
+      "showAspectText": "Показывать название аспекта текстом"
     },
     "orbs": {
       "actions": {

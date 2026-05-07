@@ -514,7 +514,12 @@
     pointer-events: none;
     display: none;
     z-index: 100;
-    white-space: nowrap;
+    box-sizing: border-box;
+    width: max-content;
+    min-width: max-content;
+    max-width: min(420px, calc(100vw - 24px));
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .chart-tooltip--floating {

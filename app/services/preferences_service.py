@@ -69,6 +69,7 @@ def build_default_preferences(default_house_system: str = 'P') -> Dict[str, Any]
                 'table_options': {
                     'show_speed': True,
                     'show_stationary': True,
+                    'show_aspect_text': False,
                 },
                 'view_options': {
                     'orientation': 'aries',
@@ -84,6 +85,7 @@ def build_default_preferences(default_house_system: str = 'P') -> Dict[str, Any]
                 'table_options': {
                     'show_speed': True,
                     'show_stationary': True,
+                    'show_aspect_text': False,
                 },
                 'view_options': {
                     'orientation': 'aries',
@@ -99,6 +101,7 @@ def build_default_preferences(default_house_system: str = 'P') -> Dict[str, Any]
                 'table_options': {
                     'show_speed': True,
                     'show_stationary': True,
+                    'show_aspect_text': False,
                 },
                 'view_options': {
                     'orientation': 'aries',
@@ -114,6 +117,7 @@ def build_default_preferences(default_house_system: str = 'P') -> Dict[str, Any]
                 'table_options': {
                     'show_speed': True,
                     'show_stationary': True,
+                    'show_aspect_text': False,
                 },
                 'view_options': {
                     'orientation': 'aries',
