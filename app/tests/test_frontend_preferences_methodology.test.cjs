@@ -75,18 +75,16 @@ test('buildDefaultOrbProfileMatrix uses fixed prognostic defaults', () => {
     assert.equal(prognosticMatrix.Square.Mars, 1);
 });
 
-test('resolveVisualPreferences keeps harmony colors and getAspectColor falls back to harmony type', () => {
+test('resolveVisualPreferences keeps explicit aspect colors and getAspectColor ignores harmony groups', () => {
     const visual = preferences.resolveVisualPreferences({
-        aspect_harmony_colors: {
-            tense: '#123456',
-        },
         aspect_colors: {
+            Square: '#123456',
             CustomAspect: '#abcdef',
         },
     });
 
-    assert.equal(visual.aspect_harmony_colors.tense, '#123456');
     assert.equal(preferences.getAspectHarmonyType('Square'), 'tense');
-    assert.equal(preferences.getAspectColor('UnknownAspect', visual, 'tense'), '#123456');
+    assert.equal(preferences.getAspectColor('Square', visual, 'tense'), '#123456');
+    assert.equal(preferences.getAspectColor('UnknownAspect', visual, 'tense'), '#9ca3af');
     assert.equal(preferences.getAspectColor('CustomAspect', visual, 'neutral'), '#abcdef');
 });

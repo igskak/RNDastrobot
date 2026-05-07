@@ -89,15 +89,6 @@
             || '•';
     }
 
-    function getAspectHarmonyLabel(harmonyType) {
-        const lookup = {
-            harmonious: 'page.chart.legend.harmonious',
-            tense: 'page.chart.legend.tense',
-            neutral: 'page.chart.legend.neutral',
-        };
-        return translateOrFallback(lookup[harmonyType], harmonyType);
-    }
-
     function deepEqual(left, right) {
         return window.AstroPreferences?.deepEqual
             ? window.AstroPreferences.deepEqual(left, right)
@@ -138,12 +129,6 @@
 
     function getAspectMeta(aspectType) {
         return getMetadataAspectTypes().find((item) => item?.aspect_type === aspectType) || null;
-    }
-
-    function getAspectCharacter(aspectType) {
-        return getAspectMeta(aspectType)?.character
-            || window.AstroPreferences?.getAspectHarmonyType?.(aspectType)
-            || 'neutral';
     }
 
     function getMetadataBodies() {
@@ -565,9 +550,8 @@
 
         tbody.innerHTML = getMetadataAspectTypes().map((aspectMeta) => {
             const aspectType = aspectMeta.aspect_type;
-            const aspectCharacter = aspectMeta.character || getAspectCharacter(aspectType);
             const color = window.AstroPreferences?.getAspectColor
-                ? window.AstroPreferences.getAspectColor(aspectType, resolvedVisual, aspectCharacter)
+                ? window.AstroPreferences.getAspectColor(aspectType, resolvedVisual)
                 : '#9ca3af';
             return `
                 <tr>
@@ -584,46 +568,12 @@
                             class="account-settings-color-input account-settings-swatch-input"
                             value="${escapeHtml(color)}"
                             data-aspect-color="${aspectType}"
-                            data-aspect-character="${escapeHtml(aspectCharacter)}"
                             aria-label="${escapeHtml(getAspectLabel(aspectType))}"
                         >
                     </td>
                 </tr>
             `;
         }).join('');
-    }
-
-    function renderAspectHarmonyColors(visual = {}) {
-        const tbody = document.getElementById('accountAspectHarmonyColorsBody');
-        if (!tbody) return;
-
-        const resolvedVisual = resolveVisualPreferences(visual);
-        const harmonyColors = resolvedVisual?.aspect_harmony_colors || {};
-        const harmonyTypes = ['harmonious', 'tense', 'neutral'];
-
-        tbody.innerHTML = harmonyTypes.map((harmonyType) => `
-            <tr>
-                <th scope="row">${escapeHtml(getAspectHarmonyLabel(harmonyType))}</th>
-                <td>
-                    <input
-                        type="color"
-                        class="account-settings-color-input account-settings-swatch-input"
-                        value="${escapeHtml(harmonyColors[harmonyType] || '#9ca3af')}"
-                        data-aspect-harmony-color="${harmonyType}"
-                        aria-label="${escapeHtml(getAspectHarmonyLabel(harmonyType))}"
-                    >
-                </td>
-                <td>
-                    <button
-                        type="button"
-                        class="account-settings-reset-chip"
-                        data-apply-aspect-harmony-color="${harmonyType}"
-                        title="${escapeHtml(t('page.accountSettings.visual.actions.applyMatching'))}"
-                        aria-label="${escapeHtml(`${t('page.accountSettings.visual.actions.applyMatching')}: ${getAspectHarmonyLabel(harmonyType)}`)}"
-                    >⇢</button>
-                </td>
-            </tr>
-        `).join('');
     }
 
     function renderPlanetColors(visual = {}) {
@@ -723,7 +673,6 @@
         renderBodiesMatrix(normalized.chart_defaults);
         renderOrbsMatrix(normalized.methodology);
         renderBalanceWeights(normalized.methodology);
-        renderAspectHarmonyColors(normalized.visual);
         renderAspectColors(normalized.visual);
         renderPlanetColors(normalized.visual);
     }
@@ -811,13 +760,6 @@
     }
 
     function collectVisual() {
-        const aspectHarmonyColors = {};
-        document.querySelectorAll('[data-aspect-harmony-color]').forEach((input) => {
-            if (input.dataset.aspectHarmonyColor && input.value) {
-                aspectHarmonyColors[input.dataset.aspectHarmonyColor] = input.value;
-            }
-        });
-
         const aspectColors = {};
         document.querySelectorAll('[data-aspect-color]').forEach((input) => {
             if (input.dataset.aspectColor && input.value) {
@@ -842,7 +784,6 @@
         });
 
         return resolveVisualPreferences({
-            aspect_harmony_colors: aspectHarmonyColors,
             aspect_colors: aspectColors,
             planet_colors: {
                 element_palette: elementPalette,
@@ -1052,7 +993,6 @@
         const restoreBtn = document.getElementById('restoreStandardDefaultsBtn');
         const applyNatalOrbsBtn = document.getElementById('accountApplyNatalOrbsBtn');
         const orbMatrixBody = document.getElementById('accountOrbsMatrixBody');
-        const aspectHarmonyColorsBody = document.getElementById('accountAspectHarmonyColorsBody');
         const bodyOverrideColorsBody = document.getElementById('accountBodyOverrideColorsBody');
         const resetConfirmDialog = document.getElementById('accountSettingsResetConfirmDialog');
         const resetConfirmBackdrop = document.getElementById('accountSettingsResetConfirmBackdrop');
@@ -1111,25 +1051,6 @@
             }
             nextMatrix[input.dataset.orbAspectType][input.dataset.orbBody] = Number.parseFloat(input.value) || 0;
             methodology.orbs.profiles[activeOrbProfile] = { matrix: nextMatrix };
-        });
-        aspectHarmonyColorsBody?.addEventListener('click', (event) => {
-            const button = event.target.closest('[data-apply-aspect-harmony-color]');
-            if (!(button instanceof HTMLElement)) return;
-            const harmonyType = button.dataset.applyAspectHarmonyColor;
-            if (!harmonyType) return;
-            const sourceInput = aspectHarmonyColorsBody.querySelector(`[data-aspect-harmony-color="${harmonyType}"]`);
-            if (!(sourceInput instanceof HTMLInputElement)) return;
-
-            document.querySelectorAll('[data-aspect-color]').forEach((input) => {
-                if (!(input instanceof HTMLInputElement)) return;
-                if (input.dataset.aspectCharacter !== harmonyType) return;
-                input.value = sourceInput.value;
-            });
-
-            showToast(
-                t('page.accountSettings.toasts.aspectHarmonyApplied', { type: getAspectHarmonyLabel(harmonyType) }),
-                'info'
-            );
         });
         bodyOverrideColorsBody?.addEventListener('input', (event) => {
             const input = event.target;

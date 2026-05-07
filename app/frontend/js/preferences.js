@@ -22,11 +22,6 @@
         Semisquare: '#f97316',
         Sesquiquadrate: '#f97316',
     };
-    const DEFAULT_ASPECT_HARMONY_COLORS = {
-        harmonious: '#3b82f6',
-        tense: '#ef4444',
-        neutral: '#9ca3af',
-    };
     const ASPECT_HARMONY_BY_TYPE = {
         Conjunction: 'neutral',
         Opposition: 'tense',
@@ -89,7 +84,6 @@
         Fortune: 'PartOfFortune',
     };
     let accountVisualPreferences = {
-        aspect_harmony_colors: { ...DEFAULT_ASPECT_HARMONY_COLORS },
         aspect_colors: { ...DEFAULT_ASPECT_COLORS },
         planet_colors: {
             element_palette: { ...DEFAULT_ELEMENT_PALETTE },
@@ -470,10 +464,6 @@
 
     function resolveVisualPreferences(visual = {}) {
         return {
-            aspect_harmony_colors: {
-                ...DEFAULT_ASPECT_HARMONY_COLORS,
-                ...(visual?.aspect_harmony_colors || {}),
-            },
             aspect_colors: {
                 ...DEFAULT_ASPECT_COLORS,
                 ...(visual?.aspect_colors || {}),
@@ -502,12 +492,9 @@
     function getAspectColor(aspectType, visual = null, harmonicType = null) {
         const resolved = visual ? resolveVisualPreferences(visual) : accountVisualPreferences;
         const resolvedAspectType = String(aspectType || '').trim();
-        const resolvedHarmonyType = harmonicType || getAspectHarmonyType(resolvedAspectType);
         return (
             resolved?.aspect_colors?.[resolvedAspectType]
-            || resolved?.aspect_harmony_colors?.[resolvedHarmonyType]
             || DEFAULT_ASPECT_COLORS[resolvedAspectType]
-            || DEFAULT_ASPECT_HARMONY_COLORS[resolvedHarmonyType]
             || '#9ca3af'
         );
     }
@@ -564,7 +551,6 @@
         MAJOR_ASPECT_TYPES,
         DEFAULT_ENABLED_ASPECT_TYPES,
         DEFAULT_ASPECT_COLORS,
-        DEFAULT_ASPECT_HARMONY_COLORS,
         DEFAULT_ELEMENT_PALETTE,
         ORB_PROFILE_IDS,
         DEFAULT_ORB_PAIR_STRATEGY,

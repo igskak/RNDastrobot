@@ -73,11 +73,6 @@ DEFAULT_ASPECT_COLOR_BY_TYPE: Dict[str, str] = {
     'Sesquiquadrate': '#f97316',
 }
 
-DEFAULT_ASPECT_COLOR_BY_CHARACTER: Dict[str, str] = {
-    'harmonious': '#3b82f6',
-    'tense': '#ef4444',
-    'neutral': '#9ca3af',
-}
 DEFAULT_STATIONARY_THRESHOLD_PERCENT = 10.0
 ORB_PROFILE_IDS = ('natal', 'prognostic')
 DEFAULT_ORB_PAIR_STRATEGY = 'larger'
@@ -164,11 +159,10 @@ def build_default_visual_settings(aspect_types: Iterable[RefAspectType]) -> Dict
     for aspect_type in aspect_types:
         fallback_color = DEFAULT_ASPECT_COLOR_BY_TYPE.get(aspect_type.aspect_type)
         if fallback_color is None:
-            fallback_color = DEFAULT_ASPECT_COLOR_BY_CHARACTER.get(aspect_type.character or '', '#9ca3af')
+            fallback_color = '#9ca3af'
         aspect_colors[aspect_type.aspect_type] = fallback_color
 
     return {
-        'aspect_harmony_colors': deepcopy(DEFAULT_ASPECT_COLOR_BY_CHARACTER),
         'aspect_colors': aspect_colors,
         'planet_colors': {
             'element_palette': deepcopy(DEFAULT_ELEMENT_PALETTE),

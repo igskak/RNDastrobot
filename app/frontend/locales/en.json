@@ -337,28 +337,22 @@
       },
       "title": "General settings",
       "visual": {
-        "actions": {
-          "applyMatching": "Apply to matching aspects"
-        },
         "columns": {
-          "apply": "Apply",
           "color": "Color",
           "element": "Element",
           "override": "Override",
           "type": "Type"
         },
-        "copy": "Adjust colors by aspect family, then fine-tune individual aspects, elements, and body-specific overrides in one workspace.",
+        "copy": "Set one consistent palette for individual aspects, elements, and body overrides. These colors are reused the same way in natal and prognostic views.",
         "kicker": "Visual",
         "panels": {
           "aspectColors": "Aspect colors",
-          "aspectHarmony": "Aspect families",
           "bodyOverrides": "Body overrides",
           "elementPalette": "Element palette"
         },
         "title": "Visual palette"
       },
       "toasts": {
-      "aspectHarmonyApplied": "{type} color applied to matching aspects",
       "loadFailed": "Failed to load general settings",
       "orbsCopied": "Natal orbs copied into the prognostic profile",
       "reloadFailed": "Failed to reload settings",

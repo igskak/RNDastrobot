@@ -69,7 +69,7 @@ def test_resolve_orb_pair_value_supports_all_strategies():
     assert resolve_orb_pair_value([8.0], "average") == 8.0
 
 
-def test_build_default_visual_settings_includes_harmony_palette():
+def test_build_default_visual_settings_uses_per_aspect_palette():
     aspect_types = [
         type("AspectType", (), {"aspect_type": "Conjunction", "character": "neutral"})(),
         type("AspectType", (), {"aspect_type": "Custom", "character": "tense"})(),
@@ -77,10 +77,8 @@ def test_build_default_visual_settings_includes_harmony_palette():
 
     visual = build_default_visual_settings(aspect_types)
 
-    assert visual["aspect_harmony_colors"]["harmonious"] == "#3b82f6"
-    assert visual["aspect_harmony_colors"]["tense"] == "#ef4444"
     assert visual["aspect_colors"]["Conjunction"] == "#f59e0b"
-    assert visual["aspect_colors"]["Custom"] == "#ef4444"
+    assert visual["aspect_colors"]["Custom"] == "#9ca3af"
 
 
 def test_build_default_orb_settings_uses_fixed_prognostic_defaults():

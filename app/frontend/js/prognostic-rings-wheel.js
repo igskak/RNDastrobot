@@ -446,9 +446,7 @@
                     'data-planet': body.name,
                     'data-method': ring.method,
                 });
-                const color = ring.method === 'natal'
-                    ? this.getBodyColor(body, '#374151')
-                    : ring.color;
+                const color = this.getBodyColor(body, '#374151');
                 const hasSvg = window.AstroGlyphs?.hasPlanetIcon?.(body.name) === true;
                 const scale = this.isPointBody(body.name) ? this.pointScale : this.planetScale;
                 const glyphScale = hasSvg ? 1 : (Symbols?.planetGlyphScale?.[body.name] || 1);
