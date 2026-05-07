@@ -1582,8 +1582,9 @@ input[type="number"] {
     transition: opacity 0.15s, stroke-width 0.15s;
 }
 
-.body-action-menu {
-    position: absolute;
+.body-action-menu,
+.forecast-new-body-action-menu {
+    position: fixed;
     z-index: 35;
     min-width: 92px;
     padding: 8px;
@@ -1594,7 +1595,8 @@ input[type="number"] {
     backdrop-filter: blur(12px);
 }
 
-.body-action-menu-title {
+.body-action-menu-title,
+.forecast-new-body-action-menu-title {
     margin: 0 0 6px;
     color: var(--text-secondary);
     font-size: 10px;
@@ -1603,14 +1605,16 @@ input[type="number"] {
     text-align: center;
 }
 
-.body-action-menu-controls {
+.body-action-menu-controls,
+.forecast-new-body-action-menu-controls {
     display: flex;
     gap: 6px;
     align-items: center;
     justify-content: center;
 }
 
-.body-action-toggle {
+.body-action-toggle,
+.forecast-new-body-action-toggle {
     min-width: 30px;
     min-height: 30px;
     padding: 0;

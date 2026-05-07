@@ -717,19 +717,14 @@ function syncNatalMatrixCheckboxes() {
 }
 
 function ensureNatalBodyActionMenu() {
-    const svg = document.getElementById('chartWheel');
-    const host = svg?.closest('.chart-wheel-container, .chart-main, .chart-content') || svg?.parentElement || document.body;
-    let menu = host.querySelector('.forecast-new-body-action-menu');
+    let menu = document.body.querySelector('.forecast-new-body-action-menu[data-menu-scope="natal"]');
     if (menu) return menu;
-
-    if (host instanceof HTMLElement && getComputedStyle(host).position === 'static') {
-        host.style.position = 'relative';
-    }
 
     menu = document.createElement('div');
     menu.className = 'forecast-new-body-action-menu hidden';
+    menu.dataset.menuScope = 'natal';
     menu.setAttribute('role', 'menu');
-    host.appendChild(menu);
+    document.body.appendChild(menu);
 
     menu.addEventListener('click', (event) => event.stopPropagation());
     menu.addEventListener('contextmenu', (event) => event.preventDefault());
@@ -797,14 +792,12 @@ function natalBodyActionToggleMarkup(field, glyph, label, checked) {
 }
 
 function positionNatalBodyActionMenu(menu, clientX, clientY) {
-    const host = menu.parentElement || document.body;
-    const rect = host.getBoundingClientRect();
-    let x = Number(clientX) - rect.left + 8;
-    let y = Number(clientY) - rect.top + 8;
+    let x = Number(clientX) + 8;
+    let y = Number(clientY) + 8;
     menu.style.left = `${x}px`;
     menu.style.top = `${y}px`;
-    const maxX = rect.width - menu.offsetWidth - 8;
-    const maxY = rect.height - menu.offsetHeight - 8;
+    const maxX = window.innerWidth - menu.offsetWidth - 8;
+    const maxY = window.innerHeight - menu.offsetHeight - 8;
     x = Math.max(8, Math.min(x, Math.max(8, maxX)));
     y = Math.max(8, Math.min(y, Math.max(8, maxY)));
     menu.style.left = `${x}px`;
@@ -812,22 +805,74 @@ function positionNatalBodyActionMenu(menu, clientX, clientY) {
 }
 
 function closeNatalBodyActionMenu() {
-    document.querySelector('.forecast-new-body-action-menu')?.classList.add('hidden');
+    document.querySelector('.forecast-new-body-action-menu[data-menu-scope="natal"]')?.classList.add('hidden');
 }
 
 function setNatalMatrixField(body, field, checked) {
+    const helpers = getNatalPreferenceHelpers();
     const rows = getCurrentNatalMatrixRows();
     rows[body] = {
         ...(rows[body] || { display: true, aspecting: true }),
         [field]: checked,
     };
-    currentSettings.matrixRows = rows;
+    currentSettings.matrixRows = helpers.ensureMatrixRows
+        ? helpers.ensureMatrixRows(rows)
+        : rows;
     currentSettings.hiddenPlanets = Object.entries(rows)
         .filter(([, config]) => config?.display === false)
         .map(([bodyName]) => bodyName);
     syncNatalMatrixCheckboxes();
-    redrawChart(window.chartDataCache, currentSettings.hiddenPlanets || [], currentSettings.orientation);
+    if (field === 'display') {
+        applyNatalDisplayMatrixFast(body, checked);
+    } else if (field === 'aspecting') {
+        applyNatalAspectingMatrixFast(body, checked);
+    } else {
+        redrawChart(window.chartDataCache, currentSettings.hiddenPlanets || [], currentSettings.orientation);
+    }
     void persistNatalViewOverrides();
+}
+
+function applyNatalDisplayMatrixFast(body, checked) {
+    if (checked === true && shouldRedrawForMatrixFieldEnable(body, 'display')) {
+        redrawChart(window.chartDataCache, currentSettings.hiddenPlanets || [], currentSettings.orientation);
+        return;
+    }
+    chartWheel?.applyMatrixRows?.(getCurrentNatalMatrixRows());
+}
+
+function applyNatalAspectingMatrixFast(body, checked) {
+    if (checked === true && shouldRedrawForMatrixFieldEnable(body, 'aspecting')) {
+        redrawChart(window.chartDataCache, currentSettings.hiddenPlanets || [], currentSettings.orientation);
+        return;
+    }
+    chartWheel?.applyMatrixRows?.(getCurrentNatalMatrixRows());
+    renderNatalAspectPanelDataFast();
+}
+
+function shouldRedrawForMatrixFieldEnable(body, field) {
+    if (!body || !chartWheel?.svg) return false;
+    const escaped = escapeAttribute(body);
+    if (field === 'display') {
+        return !chartWheel.svg.querySelector(`.planet-group[data-planet="${escaped}"]`);
+    }
+    if (field === 'aspecting') {
+        return !chartWheel.svg.querySelector(`.aspect-line[data-planet-1="${escaped}"], .aspect-line[data-planet-2="${escaped}"]`);
+    }
+    return false;
+}
+
+function renderNatalAspectPanelDataFast() {
+    const source = window.chartDataCache;
+    if (!source || !chartDataRenderer) return;
+    const filteredTables = filterChartDataForNatalTables(source);
+    chartDataRenderer.chartData = filteredTables;
+    chartDataRenderer.renderAspects?.(filteredTables.aspects || []);
+    chartDataRenderer.renderAspectGrid?.(filteredTables.aspects || [], filteredTables.planets || []);
+    chartDataRenderer.renderConfigurations?.(
+        filteredTables.aspect_configurations || [],
+        filteredTables.stelliums || []
+    );
+    syncHoveredAspectToActiveSurface();
 }
 
 function getNatalMatrixRowsForTables() {
@@ -1341,7 +1386,13 @@ function renderNatalAspectTypeToggles() {
 
 function bindNatalSettingsHandlers() {
     document.querySelectorAll('#natalMatrixEditor input').forEach((cb) => {
-        cb.onchange = () => applySettings();
+        cb.onchange = (event) => {
+            const input = event.currentTarget;
+            const body = input?.dataset?.matrixBody;
+            const field = input?.dataset?.matrixField;
+            if (!body || !['display', 'aspecting'].includes(field)) return;
+            setNatalMatrixField(body, field, input.checked);
+        };
     });
     document.querySelectorAll('#aspectTypeToggles input').forEach((cb) => {
         cb.onchange = () => applySettings();
@@ -1389,6 +1440,7 @@ function bindNatalSettingsHandlers() {
 }
 
 function readNatalMatrixRowsFromControls() {
+    const helpers = getNatalPreferenceHelpers();
     const rows = getCurrentNatalMatrixRows();
     document.querySelectorAll('#natalMatrixEditor input[data-matrix-body][data-matrix-field]').forEach((input) => {
         const body = input.dataset.matrixBody;
@@ -1399,7 +1451,9 @@ function readNatalMatrixRowsFromControls() {
             [field]: input.checked,
         };
     });
-    return rows;
+    return helpers.ensureMatrixRows
+        ? helpers.ensureMatrixRows(rows)
+        : rows;
 }
 
 function readNatalEnabledAspectTypesFromControls() {

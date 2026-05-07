@@ -551,11 +551,18 @@
         });
 
         [refs.forecastNewMatrixEditor, refs.forecastNewSettingsMatrixEditor].forEach((editor) => {
-            editor?.addEventListener('change', (event) => {
-                const container = event.currentTarget;
-                state.matrixRows = normalizeForecastNewMatrixRows(readMatrixRows(container));
+            editor?.addEventListener('change', async (event) => {
+                const input = event.target instanceof Element
+                    ? event.target.closest('input[data-matrix-body][data-matrix-field]')
+                    : null;
+                if (!(input instanceof HTMLInputElement)) return;
+                updateMatrixRowFromControl(input);
                 syncMatrixCheckboxes();
-                void applyMatrixRows();
+                await applyMatrixRowsFast({
+                    body: matrixBodyKey(input.dataset.matrixBody),
+                    field: input.dataset.matrixField,
+                    checked: input.checked,
+                });
             });
         });
         [refs.forecastNewNatalPanel, refs.forecastNewProgPanel].forEach((panel) => {
@@ -571,7 +578,11 @@
                 if (!(input instanceof HTMLInputElement)) return;
                 updateMatrixRowFromControl(input);
                 syncMatrixCheckboxes();
-                await applyMatrixRows();
+                await applyMatrixRowsFast({
+                    body: matrixBodyKey(input.dataset.matrixBody),
+                    field: input.dataset.matrixField,
+                    checked: input.checked,
+                });
             });
         });
 
@@ -1365,6 +1376,50 @@
         schedulePersist();
     }
 
+    async function applyMatrixRowsFast({ body, field, checked } = {}) {
+        const normalizedBody = matrixBodyKey(body);
+        if (!normalizedBody || !['display', 'aspecting'].includes(field)) {
+            await applyMatrixRows();
+            return;
+        }
+
+        refreshViewModel();
+
+        const needsWheelRedraw = (field === 'display' && checked === true && !wheelHasBody(normalizedBody))
+            || (field === 'aspecting' && checked === true && !wheelHasAspectForBody(normalizedBody));
+
+        if (needsWheelRedraw) {
+            renderWheel();
+        } else {
+            state.wheel?.applyMatrixRows?.(state.matrixRows);
+        }
+
+        if (field === 'aspecting') {
+            renderMatrixSensitivePanelData();
+            syncHoveredAspectToActiveSurface();
+        }
+        applyInlineMatrixRowState();
+
+        try {
+            await persistForecastNewViewOverrides();
+        } catch (error) {
+            console.warn('Failed to persist Forecast New matrix rows:', error);
+        }
+        schedulePersist();
+    }
+
+    function wheelHasBody(body) {
+        if (!body || !state.wheel?.svg) return true;
+        const escaped = escapeAttribute(body);
+        return Boolean(state.wheel.svg.querySelector(`.prognostic-body[data-planet="${escaped}"]`));
+    }
+
+    function wheelHasAspectForBody(body) {
+        if (!body || !state.wheel?.svg) return true;
+        const escaped = escapeAttribute(body);
+        return Boolean(state.wheel.svg.querySelector(`.aspect-line[data-planet-1="${escaped}"], .aspect-line[data-planet-2="${escaped}"]`));
+    }
+
     function refreshViewModel() {
         if (!state.natalWheelData) return;
         const rawViewModel = window.PrognosticLayerNormalizer.buildViewModel(
@@ -1469,18 +1524,14 @@
     }
 
     function ensureBodyActionMenu() {
-        const host = refs.forecastNewWheelShell || refs.forecastNewLayout || document.body;
-        let menu = host.querySelector('.forecast-new-body-action-menu');
+        let menu = document.body.querySelector('.forecast-new-body-action-menu[data-menu-scope="forecast-new"]');
         if (menu) return menu;
-
-        if (host instanceof HTMLElement && getComputedStyle(host).position === 'static') {
-            host.style.position = 'relative';
-        }
 
         menu = document.createElement('div');
         menu.className = 'forecast-new-body-action-menu hidden';
+        menu.dataset.menuScope = 'forecast-new';
         menu.setAttribute('role', 'menu');
-        host.appendChild(menu);
+        document.body.appendChild(menu);
 
         menu.addEventListener('click', (event) => event.stopPropagation());
         menu.addEventListener('contextmenu', (event) => event.preventDefault());
@@ -1502,7 +1553,7 @@
             state.matrixRows = normalizeForecastNewMatrixRows(rows);
             syncMatrixCheckboxes();
             renderBodyActionMenu(body, menu.dataset.method || '', menu);
-            await applyMatrixRows();
+            await applyMatrixRowsFast({ body, field, checked: !current });
         });
 
         return menu;
@@ -1543,14 +1594,12 @@
     }
 
     function positionBodyActionMenu(menu, clientX, clientY) {
-        const host = menu.parentElement || document.body;
-        const rect = host.getBoundingClientRect();
-        let x = Number(clientX) - rect.left + 8;
-        let y = Number(clientY) - rect.top + 8;
+        let x = Number(clientX) + 8;
+        let y = Number(clientY) + 8;
         menu.style.left = `${x}px`;
         menu.style.top = `${y}px`;
-        const maxX = rect.width - menu.offsetWidth - 8;
-        const maxY = rect.height - menu.offsetHeight - 8;
+        const maxX = window.innerWidth - menu.offsetWidth - 8;
+        const maxY = window.innerHeight - menu.offsetHeight - 8;
         x = Math.max(8, Math.min(x, Math.max(8, maxX)));
         y = Math.max(8, Math.min(y, Math.max(8, maxY)));
         menu.style.left = `${x}px`;
@@ -1558,8 +1607,7 @@
     }
 
     function closeBodyActionMenu() {
-        const menu = refs.forecastNewWheelShell?.querySelector('.forecast-new-body-action-menu')
-            || refs.forecastNewLayout?.querySelector('.forecast-new-body-action-menu');
+        const menu = document.body.querySelector('.forecast-new-body-action-menu[data-menu-scope="forecast-new"]');
         menu?.classList.add('hidden');
         state.bodyActionMenu = { body: null, method: null };
     }

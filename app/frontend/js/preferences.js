@@ -146,16 +146,18 @@
     function ensureMatrixRows(rows = {}) {
         const ensured = {};
         MATRIX_BODIES.forEach((body) => {
+            const display = rows?.[body]?.display !== false;
             ensured[body] = {
-                display: rows?.[body]?.display !== false,
-                aspecting: rows?.[body]?.aspecting !== false,
+                display,
+                aspecting: display && rows?.[body]?.aspecting !== false,
             };
         });
         Object.keys(rows || {}).forEach((body) => {
             if (!ensured[body]) {
+                const display = rows?.[body]?.display !== false;
                 ensured[body] = {
-                    display: rows?.[body]?.display !== false,
-                    aspecting: rows?.[body]?.aspecting !== false,
+                    display,
+                    aspecting: display && rows?.[body]?.aspecting !== false,
                 };
             }
         });

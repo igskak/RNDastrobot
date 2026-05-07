@@ -991,7 +991,7 @@
 }
 
 .forecast-new-body-action-menu {
-    position: absolute;
+    position: fixed;
     z-index: 35;
     min-width: 92px;
     padding: 8px;
