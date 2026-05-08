@@ -724,11 +724,10 @@
 }
 
 .house-ruler-line {
-    display: inline-grid;
-    grid-template-columns: 18px max-content auto;
-    align-items: start;
-    column-gap: 4px;
-    min-height: 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 20px;
     line-height: 1;
     white-space: nowrap;
 }
@@ -736,10 +735,11 @@
 .house-ruler-symbol-wrap {
     position: relative;
     display: inline-flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    min-width: 20px;
+    height: 20px;
 }
 
 .house-ruler-symbol-wrap .planet-symbol-svg {
@@ -749,15 +749,15 @@
 .house-ruler-planet-name {
     display: inline-flex;
     align-items: center;
-    min-height: 18px;
+    min-height: 20px;
     color: var(--text-primary);
-    line-height: 18px;
+    line-height: 20px;
 }
 
 .house-ruler-retro {
     position: absolute;
-    left: 10px;
-    top: 10px;
+    right: -2px;
+    bottom: -2px;
     margin-left: 0;
     z-index: 1;
 }
@@ -765,12 +765,19 @@
 .house-ruler-house-inline {
     display: inline-flex;
     align-items: center;
-    min-height: 18px;
-    font-family: var(--font-mono);
-    font-size: 11px;
+    justify-content: center;
+    min-width: 3.4em;
+    min-height: 20px;
+    padding: 0 0.5em;
+    border-radius: 999px;
+    border: 1px solid rgba(30, 58, 95, 0.14);
+    background: rgba(30, 58, 95, 0.1);
+    font-family: var(--font-ui);
+    font-size: 10px;
+    font-weight: 600;
     color: var(--text-secondary);
-    font-variant-numeric: tabular-nums;
-    line-height: 18px;
+    letter-spacing: 0.04em;
+    line-height: 1;
     transform: none;
 }
 

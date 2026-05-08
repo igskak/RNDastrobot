@@ -830,19 +830,19 @@
     color: var(--text-secondary);
 }
 
-.chart-page .house-sign-cell,
-.chart-page .house-ruler-cell {
+.house-sign-cell,
+.house-ruler-cell {
     white-space: normal;
 }
 
-.chart-page .house-sign-main {
+.house-sign-main {
     display: inline-flex;
     align-items: center;
     gap: 2px;
     white-space: nowrap;
 }
 
-.chart-page .house-sign-meta {
+.house-sign-meta {
     margin-top: 5px;
     display: flex;
     align-items: center;
@@ -851,7 +851,7 @@
     color: var(--text-secondary);
 }
 
-.chart-page .house-sign-badge {
+.house-sign-badge {
     display: inline-flex;
     align-items: center;
     height: 14px;
@@ -864,54 +864,63 @@
     text-transform: uppercase;
 }
 
-.chart-page .house-ruler-group {
+.house-ruler-group {
     display: grid;
     gap: 2px;
 }
 
-.chart-page .house-ruler-group--included {
+.house-ruler-group--included {
     margin-top: 5px;
 }
 
-.chart-page .house-ruler-row {
+.house-ruler-row {
     display: inline-grid;
-    grid-template-columns: 18px auto;
-    align-items: start;
-    column-gap: 4px;
-    min-height: 18px;
+    grid-template-columns: 22px minmax(20px, max-content);
+    align-items: center;
+    column-gap: 8px;
+    min-height: 22px;
     line-height: 1;
     white-space: nowrap;
 }
 
-.chart-page .house-ruler-symbol-wrap {
+.house-ruler-symbol-wrap {
     position: relative;
     display: inline-flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
-    width: 18px;
-    height: 18px;
+    width: 22px;
+    min-width: 22px;
+    height: 22px;
 }
 
-.chart-page .house-ruler-symbol-wrap .planet-symbol-svg {
+.house-ruler-symbol-wrap .planet-symbol-svg {
     display: block;
 }
 
-.chart-page .house-ruler-retro {
+.house-ruler-retro {
     position: absolute;
-    left: 10px;
-    top: 10px;
+    right: -2px;
+    bottom: -2px;
     margin-left: 0;
     z-index: 1;
 }
 
-.chart-page .house-ruler-house {
+.house-ruler-house {
     display: inline-flex;
     align-items: center;
-    min-height: 18px;
-    font-size: 11px;
-    color: var(--text-secondary);
-    line-height: 18px;
-    transform: none;
+    justify-content: center;
+    min-width: 20px;
+    min-height: 20px;
+    padding: 0;
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--text-primary);
+    line-height: 1;
+    font-variant-numeric: normal;
+    font-variant-ligatures: none;
+    transform: translateY(-2px);
 }
 
 .chart-page .config-card {

@@ -265,7 +265,7 @@ class ChartDataRenderer {
                     return `
                         <div class="house-ruler-row" title="${this.escapeHtml(titleParts.join(' • '))}">
                             <span class="house-ruler-symbol-wrap">
-                                ${this.getPlanetSymbolMarkup(entry.planet, { size: 16, title: planetName })}
+                                ${this.getPlanetSymbolMarkup(entry.planet, { size: 18, title: planetName })}
                                 ${this.retroIndicatorHtml(this.isBodyRetrograde(entry.planet, retroLookup), 'retro-indicator--micro house-ruler-retro')}
                             </span>
                             <span class="house-ruler-house">${this.escapeHtml(houseLabel || '—')}</span>

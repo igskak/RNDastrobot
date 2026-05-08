@@ -7,7 +7,7 @@ import{a as he,c as N}from"./chunk-E24Q6PJF.js";var ue=he((de,k)=>{(function(){"
                 ${e.entries.map(r=>{let n=this.planetName(r.planet),i=r.house!=null&&r.house!==""?this.formatHouseNumber(r.house):"",l=[n];return i&&l.push(`${this.t("common.house")} ${i}`),`
                         <div class="house-ruler-row" title="${this.escapeHtml(l.join(" • "))}">
                             <span class="house-ruler-symbol-wrap">
-                                ${this.getPlanetSymbolMarkup(r.planet,{size:16,title:n})}
+                                ${this.getPlanetSymbolMarkup(r.planet,{size:18,title:n})}
                                 ${this.retroIndicatorHtml(this.isBodyRetrograde(r.planet,t),"retro-indicator--micro house-ruler-retro")}
                             </span>
                             <span class="house-ruler-house">${this.escapeHtml(i||"—")}</span>
