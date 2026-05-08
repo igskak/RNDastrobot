@@ -2,7 +2,7 @@
 Главный сервис для расчёта натальной карты
 """
 from datetime import date, time as time_type
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 from uuid import UUID
 from sqlalchemy.orm import Session
 

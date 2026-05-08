@@ -83,6 +83,52 @@
             || `<span class="astro-symbol" aria-hidden="true">${escapeHtml(getBodySymbol(body))}</span>`;
     }
 
+    function getBodyDefaultDisplayElement(body) {
+        const normalizedBody = window.AstroPreferences?.normalizeMatrixBodyName
+            ? window.AstroPreferences.normalizeMatrixBodyName(body)
+            : body;
+        const defaultSigns = preferencesMetadata?.default_dignities?.signs || {};
+        const signElements = window.Symbols?.signElements || {};
+        const metadataSigns = getMetadataSigns()
+            .map((signMeta) => signMeta?.name)
+            .filter(Boolean);
+        const candidateSigns = metadataSigns.length
+            ? metadataSigns
+            : Object.keys(defaultSigns);
+
+        for (const sign of candidateSigns) {
+            if (defaultSigns?.[sign]?.ruler === normalizedBody) {
+                return signElements[sign] || null;
+            }
+        }
+
+        for (const sign of candidateSigns) {
+            if (defaultSigns?.[sign]?.co_ruler === normalizedBody) {
+                return signElements[sign] || null;
+            }
+        }
+
+        for (const sign of candidateSigns) {
+            if (defaultSigns?.[sign]?.exaltation === normalizedBody) {
+                return signElements[sign] || null;
+            }
+        }
+
+        return null;
+    }
+
+    function getBodyDefaultDisplayColor(body, visual = {}) {
+        const resolvedVisual = resolveVisualPreferences(visual);
+        const fallbackElement = getBodyDefaultDisplayElement(body);
+        if (window.AstroPreferences?.getPlanetColor) {
+            return window.AstroPreferences.getPlanetColor(body, fallbackElement, resolvedVisual);
+        }
+        if (window.AstroPreferences?.getElementColor) {
+            return window.AstroPreferences.getElementColor(fallbackElement, resolvedVisual);
+        }
+        return '#6b7280';
+    }
+
     function getAspectLabel(aspectType) {
         return translateOrFallback(`astro.aspect.${aspectType}`, aspectType);
     }
@@ -810,36 +856,43 @@
             </tr>
         `).join('');
 
-        overridesBody.innerHTML = getMetadataBodies().map((body) => `
-            <tr>
-                <th scope="row" class="account-settings-icon-cell">
-                    <span class="account-settings-body account-settings-body--icon-only">
-                        <span class="account-settings-body-badge account-settings-orb-glyph" title="${escapeHtml(getBodyLabel(body))}" aria-label="${escapeHtml(getBodyLabel(body))}" role="img" tabindex="0">
-                            <span class="astro-symbol" aria-hidden="true">${escapeHtml(getBodySymbol(body))}</span>
+        overridesBody.innerHTML = getMetadataBodies().map((body) => {
+            const defaultDisplayColor = getBodyDefaultDisplayColor(body, resolvedVisual);
+            const isOverrideActive = Boolean(bodyOverrides?.[body]);
+            const displayedColor = bodyOverrides?.[body] || defaultDisplayColor;
+
+            return `
+                <tr>
+                    <th scope="row" class="account-settings-icon-cell">
+                        <span class="account-settings-body account-settings-body--icon-only">
+                            <span class="account-settings-body-badge account-settings-orb-glyph" title="${escapeHtml(getBodyLabel(body))}" aria-label="${escapeHtml(getBodyLabel(body))}" role="img" tabindex="0">
+                                <span class="astro-symbol" aria-hidden="true">${escapeHtml(getBodySymbol(body))}</span>
+                            </span>
                         </span>
-                    </span>
-                </th>
-                <td>
-                    <div class="account-settings-color-stack">
-                        <input
-                            type="color"
-                            class="account-settings-color-input account-settings-swatch-input"
-                            value="${escapeHtml(bodyOverrides?.[body] || '#c7b49a')}"
-                            data-body-color-override="${body}"
-                            data-body-color-active="${bodyOverrides?.[body] ? 'true' : 'false'}"
-                            aria-label="${escapeHtml(getBodyLabel(body))}"
-                        >
-                        <button
-                            type="button"
-                            class="account-settings-reset-chip${bodyOverrides?.[body] ? '' : ' is-muted'}"
-                            data-clear-body-color-override="${body}"
-                            title="${escapeHtml(t('common.reset'))}"
-                            aria-label="${escapeHtml(`${t('common.reset')}: ${getBodyLabel(body)}`)}"
-                        >↺</button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
+                    </th>
+                    <td>
+                        <div class="account-settings-color-stack">
+                            <input
+                                type="color"
+                                class="account-settings-color-input account-settings-swatch-input"
+                                value="${escapeHtml(displayedColor)}"
+                                data-body-color-override="${body}"
+                                data-body-color-active="${isOverrideActive ? 'true' : 'false'}"
+                                data-body-color-default="${escapeHtml(defaultDisplayColor)}"
+                                aria-label="${escapeHtml(getBodyLabel(body))}"
+                            >
+                            <button
+                                type="button"
+                                class="account-settings-reset-chip${isOverrideActive ? '' : ' is-muted'}"
+                                data-clear-body-color-override="${body}"
+                                title="${escapeHtml(t('common.reset'))}"
+                                aria-label="${escapeHtml(`${t('common.reset')}: ${getBodyLabel(body)}`)}"
+                            >↺</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
     }
 
     function populateForm(preferences) {
@@ -1308,6 +1361,7 @@
             const input = bodyOverrideColorsBody.querySelector(`[data-body-color-override="${body}"]`);
             if (!(input instanceof HTMLInputElement)) return;
             input.dataset.bodyColorActive = 'false';
+            input.value = input.dataset.bodyColorDefault || '#6b7280';
             button.classList.add('is-muted');
         });
 

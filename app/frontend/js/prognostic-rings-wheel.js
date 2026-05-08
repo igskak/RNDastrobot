@@ -77,6 +77,11 @@
                 outsideRadialOffset: 20,
                 outsideTangentOffset: 12,
             };
+            this.cuspVisibility = {
+                transit: true,
+                progression: true,
+                direction: true,
+            };
             this.aspectLookupByKey = {};
             this.conjunctionDisplay = {
                 dotOrbThreshold: 2,
@@ -115,6 +120,15 @@
             }
             if (Object.prototype.hasOwnProperty.call(options, 'houseLabelsOutside')) {
                 this.houseLabelsOutside = options.houseLabelsOutside === true;
+            }
+            if (Object.prototype.hasOwnProperty.call(options, 'showTransitCusps')) {
+                this.cuspVisibility.transit = options.showTransitCusps !== false;
+            }
+            if (Object.prototype.hasOwnProperty.call(options, 'showProgressionCusps')) {
+                this.cuspVisibility.progression = options.showProgressionCusps !== false;
+            }
+            if (Object.prototype.hasOwnProperty.call(options, 'showDirectionCusps')) {
+                this.cuspVisibility.direction = options.showDirectionCusps !== false;
             }
             if (Object.prototype.hasOwnProperty.call(options, 'outsideHouseLabelMethod')) {
                 this.outsideHouseLabelMethod = String(options.outsideHouseLabelMethod || 'natal');
@@ -186,6 +200,7 @@
             this.drawBackground();
             this.drawZodiac();
             const rings = this.buildRings(viewModel);
+            this.rings = rings;
             rings.forEach((ring) => this.drawRingScaffold(ring));
             rings.forEach((ring) => this.drawHouses(ring));
             this.drawRingBoundaries(rings);
@@ -329,16 +344,23 @@
         }
 
         drawHouses(ring) {
+            const ringShowCusps = ring.method === 'natal'
+                ? true
+                : (ring.showCusps ?? this.cuspVisibility[ring.method] ?? true);
+            if (ring.method !== 'natal' && ringShowCusps === false) return;
             const houses = Array.isArray(ring.houses) && ring.houses.length ? ring.houses : [];
             const useOutsideLabels = this.houseLabelsOutside === true;
             const outsideExtension = Number(this.houseVisualOptions.outsideExtension) || 14;
             const outsideSegmentStartR = OUTER_R + 1;
             const outsideSegmentEndR = OUTER_R + outsideExtension;
+            const cuspOuterRadius = ring.method === 'natal'
+                ? this.getNatalCuspOuterRadius()
+                : ring.outer;
             houses.forEach((house, index) => {
                 const longitude = Number(house.longitude);
                 if (!Number.isFinite(longitude)) return;
                 const angle = this.longToAngle(longitude);
-                const pOuter = this.polar(ring.outer, angle);
+                const pOuter = this.polar(cuspOuterRadius, angle);
                 const pInner = this.polar(ring.inner, angle);
                 const houseNumber = Number(house.number);
                 const isAngular = [1, 4, 7, 10].includes(houseNumber);
@@ -430,6 +452,19 @@
                 }
                 this.layers.houses.appendChild(group);
             });
+        }
+
+        getNatalCuspOuterRadius() {
+            const rings = Array.isArray(this.rings) ? this.rings : [];
+            const hiddenOuterRadii = rings
+                .filter((ring) => ring?.method !== 'natal' && (ring?.showCusps ?? this.cuspVisibility[ring.method] ?? true) === false)
+                .map((ring) => Number(ring.outer))
+                .filter((radius) => Number.isFinite(radius));
+            if (!hiddenOuterRadii.length) {
+                const natalRing = rings.find((ring) => ring?.method === 'natal');
+                return Number.isFinite(natalRing?.outer) ? natalRing.outer : FIRST_RING_INNER_R;
+            }
+            return Math.max(...hiddenOuterRadii);
         }
 
         drawBodies(ring) {

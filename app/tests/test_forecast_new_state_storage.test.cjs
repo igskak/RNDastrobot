@@ -44,3 +44,22 @@ test('forecast new storage normalizes invalid custom time steps', () => {
 
     assert.deepEqual(snapshot.customStep, { amount: 1, unit: 'day' });
 });
+
+test('forecast new storage preserves prognostic cusp visibility toggles', () => {
+    const natalData = makeNatalChart();
+    const snapshot = buildPersistedState({
+        natalData,
+        state: {
+            pageSettings: {
+                showTransitCusps: false,
+                showProgressionCusps: true,
+                showDirectionCusps: false,
+            },
+        },
+    });
+
+    const restored = parsePersistedState(JSON.stringify(snapshot), natalData);
+    assert.equal(restored.pageSettings.showTransitCusps, false);
+    assert.equal(restored.pageSettings.showProgressionCusps, true);
+    assert.equal(restored.pageSettings.showDirectionCusps, false);
+});

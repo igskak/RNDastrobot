@@ -122,6 +122,9 @@
             angleMcIcBold: true,
             houseNumberStyle: 'arabic',
             houseLabelsOutside: false,
+            showTransitCusps: true,
+            showProgressionCusps: true,
+            showDirectionCusps: true,
         },
         viewport: { zoom: 1, panX: 0, panY: 0 },
         cache: {},
@@ -297,6 +300,7 @@
             'aspectScopeSelect', 'aspectTypeToggles',
             'aspectPhaseApplyingToggle', 'aspectPhaseSeparatingToggle',
             'houseNumberStyleSelect', 'houseLabelsOutsideToggle',
+            'showTransitCuspsToggle', 'showProgressionCuspsToggle', 'showDirectionCuspsToggle',
             'showWheelStationaryToggle', 'showWheelDegreeToggle',
             'angleAscDscBoldToggle', 'angleMcIcBoldToggle',
             'showSpeedToggle', 'showStationaryToggle',
@@ -609,6 +613,9 @@
             refs.aspectPhaseSeparatingToggle,
             refs.houseNumberStyleSelect,
             refs.houseLabelsOutsideToggle,
+            refs.showTransitCuspsToggle,
+            refs.showProgressionCuspsToggle,
+            refs.showDirectionCuspsToggle,
             refs.showWheelStationaryToggle,
             refs.showWheelDegreeToggle,
             refs.angleAscDscBoldToggle,
@@ -723,6 +730,9 @@
         if (refs.aspectPhaseSeparatingToggle) refs.aspectPhaseSeparatingToggle.checked = getAspectPhaseFilter().includes('separating');
         if (refs.houseNumberStyleSelect) refs.houseNumberStyleSelect.value = state.pageSettings.houseNumberStyle === 'roman' ? 'roman' : 'arabic';
         if (refs.houseLabelsOutsideToggle) refs.houseLabelsOutsideToggle.checked = state.pageSettings.houseLabelsOutside === true;
+        if (refs.showTransitCuspsToggle) refs.showTransitCuspsToggle.checked = state.pageSettings.showTransitCusps !== false;
+        if (refs.showProgressionCuspsToggle) refs.showProgressionCuspsToggle.checked = state.pageSettings.showProgressionCusps !== false;
+        if (refs.showDirectionCuspsToggle) refs.showDirectionCuspsToggle.checked = state.pageSettings.showDirectionCusps !== false;
         if (refs.showWheelStationaryToggle) refs.showWheelStationaryToggle.checked = state.pageSettings.showWheelStationary === true;
         if (refs.showWheelDegreeToggle) refs.showWheelDegreeToggle.checked = state.pageSettings.showWheelDegree === true;
         if (refs.angleAscDscBoldToggle) refs.angleAscDscBoldToggle.checked = state.pageSettings.angleAscDscBold !== false;
@@ -1686,6 +1696,9 @@
             angleMcIcBold: refs.angleMcIcBoldToggle?.checked !== false,
             houseNumberStyle: refs.houseNumberStyleSelect?.value === 'roman' ? 'roman' : 'arabic',
             houseLabelsOutside: refs.houseLabelsOutsideToggle?.checked === true,
+            showTransitCusps: refs.showTransitCuspsToggle?.checked !== false,
+            showProgressionCusps: refs.showProgressionCuspsToggle?.checked !== false,
+            showDirectionCusps: refs.showDirectionCuspsToggle?.checked !== false,
         };
 
         if (refs.iconScaleValue) {
@@ -1993,6 +2006,9 @@
             enabledAspectTypes: state.pageSettings.enabledAspectTypes,
             houseNumberStyle: state.pageSettings.houseNumberStyle,
             houseLabelsOutside: state.pageSettings.houseLabelsOutside,
+            showTransitCusps: state.pageSettings.showTransitCusps,
+            showProgressionCusps: state.pageSettings.showProgressionCusps,
+            showDirectionCusps: state.pageSettings.showDirectionCusps,
             showPlanetStationary: state.pageSettings.showWheelStationary,
             showPlanetDegree: state.pageSettings.showWheelDegree,
             showAspectText: state.pageSettings.showAspectText === true,
@@ -2363,7 +2379,15 @@
             aspects: filteredLayer.aspects || [],
             aspect_configurations: filteredLayer.aspect_configurations || [],
             stelliums: filteredLayer.stelliums || [],
+            showCusps: getLayerCuspVisibility(layer.method),
         };
+    }
+
+    function getLayerCuspVisibility(method) {
+        if (method === 'transit') return state.pageSettings.showTransitCusps !== false;
+        if (method === 'progression') return state.pageSettings.showProgressionCusps !== false;
+        if (method === 'direction') return state.pageSettings.showDirectionCusps !== false;
+        return true;
     }
 
     function normalizeForecastAspects(aspects = []) {
@@ -2553,6 +2577,9 @@
             aspectPhaseFilter: normalizeAspectPhaseFilter(restored.pageSettings?.aspectPhaseFilter || state.pageSettings.aspectPhaseFilter),
             houseNumberStyle: restored.pageSettings?.houseNumberStyle === 'roman' ? 'roman' : state.pageSettings.houseNumberStyle,
             houseLabelsOutside: restored.pageSettings?.houseLabelsOutside === true,
+            showTransitCusps: restored.pageSettings?.showTransitCusps !== false,
+            showProgressionCusps: restored.pageSettings?.showProgressionCusps !== false,
+            showDirectionCusps: restored.pageSettings?.showDirectionCusps !== false,
             showApplyingSeparating: restored.pageSettings?.showApplyingSeparating !== false,
             showSpeed: restored.pageSettings?.showSpeed !== false,
             showStationary: restored.pageSettings?.showStationary !== false,
@@ -2591,6 +2618,9 @@
                 showAspectText: resolved?.table_options?.show_aspect_text === true,
                 angleAscDscBold: resolved?.view_options?.bold_asc_dsc !== false,
                 angleMcIcBold: resolved?.view_options?.bold_mc_ic !== false,
+                showTransitCusps: resolved?.view_options?.show_transit_cusps !== false,
+                showProgressionCusps: resolved?.view_options?.show_progression_cusps !== false,
+                showDirectionCusps: resolved?.view_options?.show_direction_cusps !== false,
             };
         } catch (error) {
             console.warn('Forecast New preferences fallback to local defaults:', error);
@@ -2618,6 +2648,9 @@
                 orientation: state.pageSettings.orientation === 'asc' ? 'asc' : 'aries',
                 bold_asc_dsc: state.pageSettings.angleAscDscBold !== false,
                 bold_mc_ic: state.pageSettings.angleMcIcBold !== false,
+                show_transit_cusps: state.pageSettings.showTransitCusps !== false,
+                show_progression_cusps: state.pageSettings.showProgressionCusps !== false,
+                show_direction_cusps: state.pageSettings.showDirectionCusps !== false,
             },
         };
     }
