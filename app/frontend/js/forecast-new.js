@@ -422,6 +422,23 @@
         });
         refs.forecastNewTimeStepper?.addEventListener('keydown', (event) => {
             if (!(event.target instanceof Element)) return;
+            if (event.target.closest('#forecastNewCustomStepPopover')) {
+                if (event.key === 'ArrowLeft') {
+                    event.preventDefault();
+                    stepSelectedDateTimeByCustom(-1);
+                    return;
+                }
+                if (event.key === 'ArrowRight') {
+                    event.preventDefault();
+                    stepSelectedDateTimeByCustom(1);
+                    return;
+                }
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    setCustomStepPopoverOpen(false);
+                    return;
+                }
+            }
             if (event.target.closest('.forecast-new-custom-step')) return;
             const segmentEl = event.target.closest('[data-time-step-key]');
             if (!segmentEl) return;
@@ -497,6 +514,23 @@
         });
         refs.forecastNewNatalTimeStepper?.addEventListener('keydown', (event) => {
             if (!(event.target instanceof Element)) return;
+            if (event.target.closest('#forecastNewNatalCustomStepPopover')) {
+                if (event.key === 'ArrowLeft') {
+                    event.preventDefault();
+                    stepNatalDateTimeByCustom(-1);
+                    return;
+                }
+                if (event.key === 'ArrowRight') {
+                    event.preventDefault();
+                    stepNatalDateTimeByCustom(1);
+                    return;
+                }
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    setNatalCustomStepPopoverOpen(false);
+                    return;
+                }
+            }
             if (event.target.closest('.forecast-new-custom-step')) return;
             const segmentEl = event.target.closest('[data-time-step-key]');
             if (!segmentEl) return;
@@ -963,18 +997,18 @@
                     <span aria-hidden="true">⇄</span>
                 </button>
                 <span class="forecast-new-custom-step-popover ${state.isCustomStepOpen ? '' : 'hidden'}" id="forecastNewCustomStepPopover">
-                    <label class="forecast-new-custom-step-field">
-                        <span>Шаг</span>
-                        <input type="number" min="1" max="9999" step="1" value="${customStep.amount}" data-custom-step-input="amount">
-                    </label>
-                    <label class="forecast-new-custom-step-field">
-                        <span>Ед.</span>
-                        <select data-custom-step-input="unit">${customStepUnitOptions}</select>
-                    </label>
                     <span class="forecast-new-custom-step-actions" aria-label="Переход по пользовательскому шагу">
                         <button type="button" data-custom-step-direction="-1" aria-label="Назад на пользовательский шаг">&larr;</button>
                         <button type="button" data-custom-step-direction="1" aria-label="Вперед на пользовательский шаг">&rarr;</button>
                     </span>
+                    <label class="forecast-new-custom-step-field forecast-new-custom-step-field--amount">
+                        <span>Шаг</span>
+                        <input type="number" min="1" max="9999" step="1" value="${customStep.amount}" data-custom-step-input="amount">
+                    </label>
+                    <label class="forecast-new-custom-step-field forecast-new-custom-step-field--unit">
+                        <span>Ед.</span>
+                        <select data-custom-step-input="unit">${customStepUnitOptions}</select>
+                    </label>
                 </span>
             </span>
             <span class="forecast-new-time-stepper-display">
@@ -1048,18 +1082,18 @@
                     <span aria-hidden="true">⇄</span>
                 </button>
                 <span class="forecast-new-custom-step-popover ${state.natalIsCustomStepOpen ? '' : 'hidden'}" id="forecastNewNatalCustomStepPopover">
-                    <label class="forecast-new-custom-step-field">
-                        <span>Шаг</span>
-                        <input type="number" min="1" max="9999" step="1" value="${customStep.amount}" data-custom-step-input="amount">
-                    </label>
-                    <label class="forecast-new-custom-step-field">
-                        <span>Ед.</span>
-                        <select data-custom-step-input="unit">${customStepUnitOptions}</select>
-                    </label>
                     <span class="forecast-new-custom-step-actions" aria-label="Переход по пользовательскому шагу">
                         <button type="button" data-custom-step-direction="-1" aria-label="Назад на пользовательский шаг">&larr;</button>
                         <button type="button" data-custom-step-direction="1" aria-label="Вперед на пользовательский шаг">&rarr;</button>
                     </span>
+                    <label class="forecast-new-custom-step-field forecast-new-custom-step-field--amount">
+                        <span>Шаг</span>
+                        <input type="number" min="1" max="9999" step="1" value="${customStep.amount}" data-custom-step-input="amount">
+                    </label>
+                    <label class="forecast-new-custom-step-field forecast-new-custom-step-field--unit">
+                        <span>Ед.</span>
+                        <select data-custom-step-input="unit">${customStepUnitOptions}</select>
+                    </label>
                 </span>
             </span>
             <span class="forecast-new-time-stepper-display">
@@ -1113,6 +1147,9 @@
         popover?.classList.toggle('hidden', !state.natalIsCustomStepOpen);
         refs.forecastNewNatalTimeStepper?.querySelector('.forecast-new-custom-step')?.classList.toggle('is-open', state.natalIsCustomStepOpen);
         toggle?.setAttribute('aria-expanded', state.natalIsCustomStepOpen ? 'true' : 'false');
+        if (state.natalIsCustomStepOpen) {
+            positionCustomStepPopover(toggle, popover);
+        }
     }
 
     function updateNatalCustomStepFromControls() {
@@ -1366,6 +1403,32 @@
         popover?.classList.toggle('hidden', !state.isCustomStepOpen);
         refs.forecastNewTimeStepper?.querySelector('.forecast-new-custom-step')?.classList.toggle('is-open', state.isCustomStepOpen);
         toggle?.setAttribute('aria-expanded', state.isCustomStepOpen ? 'true' : 'false');
+        if (state.isCustomStepOpen) {
+            positionCustomStepPopover(toggle, popover);
+        }
+    }
+
+    function positionCustomStepPopover(toggle, popover) {
+        if (!(toggle instanceof HTMLElement) || !(popover instanceof HTMLElement)) return;
+
+        const gap = 8;
+        const toggleRect = toggle.getBoundingClientRect();
+        const popoverWidth = popover.offsetWidth || 196;
+        const popoverHeight = popover.offsetHeight || 118;
+
+        let left = toggleRect.left;
+        let top = toggleRect.bottom + gap;
+
+        const maxLeft = window.innerWidth - popoverWidth - 8;
+        left = Math.max(8, Math.min(left, maxLeft));
+
+        if (top + popoverHeight > window.innerHeight - 8) {
+            const aboveTop = toggleRect.top - popoverHeight - gap;
+            top = aboveTop >= 8 ? aboveTop : Math.max(8, window.innerHeight - popoverHeight - 8);
+        }
+
+        popover.style.left = `${left}px`;
+        popover.style.top = `${top}px`;
     }
 
     function updateCustomStepFromControls() {
