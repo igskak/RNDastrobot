@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Прогностика New</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=20260508-083604">
-    <script>window.__APP_BUILD_ID__ = '20260508-083604';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=20260508-152020">
+    <script>window.__APP_BUILD_ID__ = '20260508-152020';</script>
 </head>
 <body class="forecast-new-page">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -89,7 +89,7 @@
                         aria-expanded="false"
                     >▸</button>
                     <div class="forecast-new-tabs-overflow-menu" data-tabs-overflow-menu>
-                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="natalGridView">Сетка</button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="natalGridView">Таблица аспектов</button>
                         <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="natalConfigsView">Конфигурации</button>
                         <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="natalBalancesView">Балансы</button>
                     </div>
@@ -120,8 +120,8 @@
                     </table>
                 </div>
                 <div id="natalAspectsView" class="panel-tab-content">
-                    <table class="data-table compact">
-                        <thead><tr><th colspan="2" class="sortable" data-sort="planet">Аспект</th><th class="sortable" data-sort="type">Тип</th><th class="sortable" data-sort="orb">Орб</th></tr></thead>
+                    <table class="data-table compact aspect-list-table">
+                        <thead><tr><th class="sortable" data-sort="planet">Аспект</th><th class="sortable" data-sort="type">Фаза</th><th class="sortable" data-sort="orb">Орб</th></tr></thead>
                         <tbody id="natalAspectsTable"></tbody>
                     </table>
                 </div>
@@ -306,7 +306,7 @@
                         aria-expanded="false"
                     >▸</button>
                     <div class="forecast-new-tabs-overflow-menu" data-tabs-overflow-menu>
-                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="progGridView">Сетка</button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="progGridView">Таблица аспектов</button>
                         <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="progConfigsView">Конфигурации</button>
                         <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="progBalancesView">Балансы</button>
                     </div>
@@ -337,8 +337,8 @@
                     </table>
                 </div>
                 <div id="progAspectsView" class="panel-tab-content">
-                    <table class="data-table compact">
-                        <thead><tr><th colspan="2" class="sortable" data-sort="planet">Аспект</th><th class="sortable" data-sort="type">Тип</th><th class="sortable" data-sort="orb">Орб</th></tr></thead>
+                    <table class="data-table compact aspect-list-table">
+                        <thead><tr><th class="sortable" data-sort="planet">Аспект</th><th class="sortable" data-sort="type">Фаза</th><th class="sortable" data-sort="orb">Орб</th></tr></thead>
                         <tbody id="progAspectsTable"></tbody>
                     </table>
                 </div>
@@ -349,6 +349,6 @@
         </aside>
     </main>
 
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=20260508-083604"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=20260508-152020"></script>
 </body>
 </html>

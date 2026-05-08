@@ -99,7 +99,7 @@ class ChartWheel {
             return acc;
         }, {});
 
-        this.planetLeaderColor = '#9ca3af';
+        this.planetLeaderColor = '#6b7280';
         this.conjunctionDisplay = {
             dotOrbThreshold: 2,
             dotRadius: 3.6,
@@ -910,8 +910,8 @@ class ChartWheel {
                 x1: anchorX, y1: anchorY,
                 x2: leaderEnd.x, y2: leaderEnd.y,
                 stroke: this.planetLeaderColor,
-                'stroke-width': 0.5,
-                opacity: hasLeader ? 0.34 : 0.24,
+                'stroke-width': 0.32,
+                opacity: hasLeader ? 0.52 : 0.4,
                 class: 'planet-leader-line',
                 style: 'pointer-events: none;'
             }));
@@ -919,11 +919,22 @@ class ChartWheel {
             group.appendChild(this.createSvgElement('circle', {
                 cx: anchorX,
                 cy: anchorY,
-                r: 1.8,
+                r: 1.64,
                 fill: '#fafafa',
+                stroke: 'none',
+                opacity: 1,
+                class: 'planet-anchor-point-mask',
+                style: 'pointer-events: none;'
+            }));
+
+            group.appendChild(this.createSvgElement('circle', {
+                cx: anchorX,
+                cy: anchorY,
+                r: 1.8,
+                fill: 'none',
                 stroke: this.planetLeaderColor,
-                'stroke-width': 1,
-                opacity: hasLeader ? 0.8 : 0.48,
+                'stroke-width': 0.32,
+                opacity: 1,
                 class: 'planet-anchor-point',
                 style: 'pointer-events: none;'
             }));
@@ -967,7 +978,7 @@ class ChartWheel {
                     y: motionY,
                     'font-size': motionFontSize,
                     'font-weight': '700',
-                    fill: '#dc2626',
+                    fill: color,
                     style: 'pointer-events: none;'
                 }, 'R'));
             }
@@ -978,7 +989,7 @@ class ChartWheel {
                     y: motionY,
                     'font-size': motionFontSize,
                     'font-weight': '700',
-                    fill: '#1e3a5f',
+                    fill: color,
                     style: 'pointer-events: none;'
                 }, 'S'));
             }
@@ -992,7 +1003,7 @@ class ChartWheel {
                     'font-size': (4.9 * annotationScale).toFixed(2),
                     'font-family': 'monospace',
                     'font-weight': '600',
-                    fill: '#5c554e',
+                    fill: color,
                     style: 'pointer-events: none;'
                 }, degreeLabel));
             }
@@ -1413,8 +1424,8 @@ class ChartWheel {
 
         const leaderLine = e.currentTarget.querySelector('.planet-leader-line');
         if (leaderLine) {
-            leaderLine.style.opacity = isEnter ? '0.88' : '';
-            leaderLine.style.strokeWidth = isEnter ? '1.4' : '';
+            leaderLine.style.opacity = isEnter ? '0.92' : '';
+            leaderLine.style.strokeWidth = isEnter ? '0.9' : '';
         }
 
         const anchorPoint = e.currentTarget.querySelector('.planet-anchor-point');

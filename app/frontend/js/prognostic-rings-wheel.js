@@ -69,7 +69,7 @@
             this.showPlanetDegree = false;
             this.showAspectText = false;
             this.natalGlyphBaseSize = 18;
-            this.planetLeaderColor = '#9ca3af';
+            this.planetLeaderColor = '#6b7280';
             this.houseVisualOptions = {
                 outsideColor: '#111111',
                 outsideLineColor: '#111111',
@@ -492,17 +492,26 @@
                 const leaderEnd = this.getLeaderLineEndPoint(anchor, pos, leaderTargetRadius, 2.2);
                 group.appendChild(this.el('line', {
                     x1: anchor.x, y1: anchor.y, x2: leaderEnd.x, y2: leaderEnd.y,
-                    stroke: this.planetLeaderColor, 'stroke-width': 0.5, opacity: item.hasLeader ? 0.34 : 0.24,
+                    stroke: this.planetLeaderColor, 'stroke-width': 0.32, opacity: item.hasLeader ? 0.52 : 0.4,
                     class: 'planet-leader-line',
                 }));
                 group.appendChild(this.el('circle', {
                     cx: anchor.x,
                     cy: anchor.y,
-                    r: 1.8,
+                    r: 1.64,
                     fill: WHEEL_BG,
+                    stroke: 'none',
+                    opacity: 1,
+                    class: 'planet-anchor-point-mask',
+                }));
+                group.appendChild(this.el('circle', {
+                    cx: anchor.x,
+                    cy: anchor.y,
+                    r: 1.8,
+                    fill: 'none',
                     stroke: this.planetLeaderColor,
-                    'stroke-width': 1,
-                    opacity: item.hasLeader ? 0.8 : 0.48,
+                    'stroke-width': 0.32,
+                    opacity: 1,
                     class: 'planet-anchor-point',
                 }));
                 group.appendChild(this.el('circle', {
@@ -542,7 +551,7 @@
                         y: motionY,
                         'font-size': motionFontSize,
                         'font-weight': '700',
-                        fill: '#dc2626',
+                        fill: color,
                     }, 'R'));
                 }
                 if (this.showPlanetStationary && body.is_stationary) {
@@ -551,7 +560,7 @@
                         y: motionY,
                         'font-size': motionFontSize,
                         'font-weight': '700',
-                        fill: '#1e3a5f',
+                        fill: color,
                     }, 'S'));
                 }
                 if (this.showPlanetDegree) {
@@ -563,7 +572,7 @@
                         'font-size': (4.9 * annotationScale).toFixed(2),
                         'font-family': 'monospace',
                         'font-weight': '600',
-                        fill: '#5c554e',
+                        fill: color,
                     }, degreeLabel));
                 }
                 this.layers.bodies.appendChild(group);
@@ -655,8 +664,9 @@
                     this.layers.aspects.appendChild(aspectElement);
 
                     const shouldDrawAspectGlyph = isMajor
-                        && aspect.aspect_type !== 'Conjunction'
-                        && Number(aspect.orb) < 5;
+                        && Number(aspect.orb) < 5
+                        && !geometry.drawDot
+                        && (aspect.aspect_type !== 'Conjunction' || geometry.collapsed);
                     if (shouldDrawAspectGlyph) {
                         const glyph = ASPECT_SYMBOLS[aspect.aspect_type];
                         if (!glyph) return;
@@ -674,23 +684,26 @@
                             class: 'aspect-symbol-text',
                             style: 'pointer-events: none;',
                         }, glyph);
+                        const backdrop = this.el('circle', {
+                            cx: geometry.midX,
+                            cy: geometry.midY,
+                            r: 6.5,
+                            fill: WHEEL_BG,
+                            opacity: 0.96,
+                            class: 'aspect-symbol-backdrop',
+                        });
+                        symbolGroup.appendChild(backdrop);
                         symbolGroup.appendChild(symbolText);
                         this.layers.aspects.appendChild(symbolGroup);
 
                         try {
                             const bbox = symbolText.getBBox();
                             const backdropRadius = Math.max(bbox.width, bbox.height) / 2 + 1.5;
-                            const backdrop = this.el('circle', {
-                                cx: bbox.x + bbox.width / 2,
-                                cy: bbox.y + bbox.height / 2,
-                                r: backdropRadius,
-                                fill: WHEEL_BG,
-                                opacity: 0.96,
-                                class: 'aspect-symbol-backdrop',
-                            });
-                            symbolGroup.insertBefore(backdrop, symbolText);
+                            backdrop.setAttribute('cx', String(bbox.x + bbox.width / 2));
+                            backdrop.setAttribute('cy', String(bbox.y + bbox.height / 2));
+                            backdrop.setAttribute('r', String(backdropRadius));
                         } catch (error) {
-                            // Keep symbol visible even if bbox isn't available yet.
+                            // Keep the fallback backdrop when bbox isn't available yet.
                         }
                     }
                 });
@@ -1098,8 +1111,8 @@
 
             const leaderLine = event.currentTarget.querySelector('.planet-leader-line');
             if (leaderLine) {
-                leaderLine.style.opacity = isEnter ? '0.88' : '';
-                leaderLine.style.strokeWidth = isEnter ? '1.4' : '';
+                leaderLine.style.opacity = isEnter ? '0.92' : '';
+                leaderLine.style.strokeWidth = isEnter ? '0.9' : '';
             }
 
             const anchorPoint = event.currentTarget.querySelector('.planet-anchor-point');

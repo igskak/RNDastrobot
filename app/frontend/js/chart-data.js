@@ -131,6 +131,22 @@ class ChartDataRenderer {
         return rawLabel;
     }
 
+    getApplyingSeparatingShortLabel(aspect) {
+        if (!aspect) return '';
+
+        if (typeof aspect.applying === 'boolean') {
+            return aspect.applying ? 'сход.' : 'расх.';
+        }
+
+        const rawLabel = String(aspect.applying_separating || aspect.phase || '').trim();
+        if (!rawLabel) return '';
+
+        const normalized = rawLabel.toLowerCase();
+        if (normalized.includes('applic') || normalized.includes('сход')) return 'сход.';
+        if (normalized.includes('separ') || normalized.includes('расход')) return 'расх.';
+        return rawLabel;
+    }
+
     retroIndicatorHtml(isRetrograde, variantClass = '') {
         if (!isRetrograde) return '';
         const suffix = variantClass ? ` ${variantClass}` : '';
@@ -686,13 +702,6 @@ class ChartDataRenderer {
         return a.right_rank - b.right_rank;
     }
 
-    getApplyingSeparatingBadge(aspect) {
-        if (!this.showApplyingSeparating || !aspect) return '';
-        const label = this.getApplyingSeparatingLabel(aspect);
-        if (!label) return '';
-        return `<div class="aspect-row-meta">${this.escapeHtml(label)}</div>`;
-    }
-
     renderAspectTypeCell(aspect) {
         const color = window.AstroPreferences?.getAspectColor
             ? window.AstroPreferences.getAspectColor(aspect.aspect_type, this.visualPreferences, aspect.harmonic_type)
@@ -700,6 +709,27 @@ class ChartDataRenderer {
         const icon = `<span class="astro-symbol" style="color:${color}">${this.getAspectSymbol(aspect.aspect_type)}</span>`;
         const label = this.showAspectText ? ` ${this.aspectName(aspect.aspect_type)}` : '';
         return `${icon}${label}`;
+    }
+
+    renderAspectTypeIcon(aspect) {
+        const color = window.AstroPreferences?.getAspectColor
+            ? window.AstroPreferences.getAspectColor(aspect.aspect_type, this.visualPreferences, aspect.harmonic_type)
+            : '#9ca3af';
+        return `<span class="astro-symbol" style="color:${color}">${this.getAspectSymbol(aspect.aspect_type)}</span>`;
+    }
+
+    renderAspectPairCell(aspect) {
+        if (!aspect) return '';
+        const leftTitle = this.escapeHtml(this.planetName(aspect.left_planet));
+        const rightTitle = this.escapeHtml(this.planetName(aspect.right_planet));
+        const aspectTitle = this.escapeHtml(this.aspectName(aspect.aspect_type));
+        return `
+            <span class="aspect-chip" aria-label="${leftTitle} ${aspectTitle} ${rightTitle}">
+                <span class="aspect-chip__body" title="${leftTitle}">${this.getPlanetSymbolMarkup(aspect.left_planet, { size: 15, title: this.planetName(aspect.left_planet) })}</span>
+                <span class="aspect-chip__type" title="${aspectTitle}">${this.renderAspectTypeIcon(aspect)}</span>
+                <span class="aspect-chip__body" title="${rightTitle}">${this.getPlanetSymbolMarkup(aspect.right_planet, { size: 15, title: this.planetName(aspect.right_planet) })}</span>
+            </span>
+        `;
     }
 
     renderAspects(aspects) {
@@ -726,7 +756,6 @@ class ChartDataRenderer {
         }
 
         const normalized = filtered.map(a => this.normalizeAspectForDisplay(a));
-        const retroLookup = this.buildRetrogradeLookup(this.chartData?.planets || []);
         const sorted = [...normalized].sort((a, b) => {
             let diff = 0;
             switch (this.aspectSortState.field) {
@@ -746,22 +775,17 @@ class ChartDataRenderer {
         });
 
         if (sorted.length === 0) {
-            this.aspectsTable.innerHTML = '<tr><td colspan="4" class="text-muted">—</td></tr>';
+            this.aspectsTable.innerHTML = '<tr><td colspan="3" class="text-muted">—</td></tr>';
             return;
         }
 
-        // Профессиональный формат с орбисом
         this.aspectsTable.innerHTML = sorted.map(a => {
-            const typeClass = a.harmonic_type === 'harmonious' ? 'aspect-harmonious'
-                            : a.harmonic_type === 'tense' ? 'aspect-tense'
-                            : 'aspect-neutral';
             const aspectKey = this.getAspectKey(a);
-            const applyingBadge = this.getApplyingSeparatingBadge(a);
+            const phaseLabel = this.showApplyingSeparating ? this.getApplyingSeparatingShortLabel(a) : '';
             return `
                 <tr data-aspect="${aspectKey || ''}" data-aspect-key="${aspectKey || ''}">
-                    <td class="symbol-cell">${this.getPlanetSymbolMarkup(a.left_planet, { size: 15, title: this.planetName(a.left_planet) })}${this.retroIndicatorHtml(this.isBodyRetrograde(a.left_planet, retroLookup), 'retro-indicator--micro')}</td>
-                    <td class="symbol-cell">${this.getPlanetSymbolMarkup(a.right_planet, { size: 15, title: this.planetName(a.right_planet) })}${this.retroIndicatorHtml(this.isBodyRetrograde(a.right_planet, retroLookup), 'retro-indicator--micro')}</td>
-                    <td class="${typeClass}">${this.renderAspectTypeCell(a)}${applyingBadge}</td>
+                    <td>${this.renderAspectPairCell(a)}</td>
+                    <td class="aspect-phase-cell">${phaseLabel ? this.escapeHtml(phaseLabel) : '—'}</td>
                     <td class="mono">${a.orb.toFixed(2)}°</td>
                 </tr>
             `;

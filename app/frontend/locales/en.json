@@ -557,9 +557,9 @@
       },
       "table": {
         "aspects": {
-          "aspect": "Planets",
+          "aspect": "Aspect",
           "orb": "Orb",
-          "type": "Aspects"
+          "type": "Phase"
         },
         "houses": {
           "cusp": "House cusp",

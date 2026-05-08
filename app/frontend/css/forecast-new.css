@@ -69,7 +69,7 @@
 }
 
 .forecast-new-layout {
-    --forecast-new-side-panel-width: clamp(252px, 18vw, 324px);
+    --forecast-new-side-panel-width: clamp(252px, 20.7vw, 324px);
 
     display: grid;
     grid-template-columns:
@@ -104,16 +104,26 @@
     align-items: center;
     justify-content: flex-start;
     gap: 6px;
-    padding: 6px 12px;
+    padding: 8px 12px 10px;
     border-bottom: 1px solid rgba(184, 147, 90, 0.14);
     background: rgba(255, 255, 255, 0.66);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.forecast-new-time-stepper::-webkit-scrollbar {
+    display: none;
 }
 
 .forecast-new-time-stepper-display {
     display: inline-flex;
     align-items: center;
     justify-content: flex-start;
+    flex: 1 1 auto;
     min-width: 0;
+    width: max-content;
 }
 
 .forecast-new-custom-step {
@@ -304,7 +314,7 @@
 
 .forecast-new-time-stepper-value {
     font-family: var(--font-mono);
-    font-size: 14px;
+    font-size: clamp(12px, 0.95vw, 14px);
     font-weight: 700;
     line-height: 1;
     text-align: center;
@@ -319,7 +329,7 @@
     justify-content: center;
     color: rgba(92, 85, 78, 0.72);
     font-family: var(--font-mono);
-    font-size: 14px;
+    font-size: clamp(12px, 0.95vw, 14px);
     font-weight: 600;
     line-height: 1;
     margin: 0 1px;
@@ -357,7 +367,7 @@
 
 .forecast-new-side-head {
     min-height: 64px;
-    padding: 10px 12px;
+    padding: 12px 14px;
     border-bottom: 1px solid rgba(184, 147, 90, 0.14);
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(249, 247, 242, 0.36));
 }
@@ -380,9 +390,10 @@
     font-size: 12.5px;
     font-weight: 600;
     line-height: 1.35;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
 }
 
 .forecast-new-moment-toggle {
@@ -489,6 +500,23 @@
 
 .forecast-new-panel-content {
     min-height: 0;
+}
+
+#natalBalancesView,
+#progBalancesView,
+#natalConfigsView,
+#progConfigsView {
+    padding: 14px 14px 18px;
+}
+
+#natalBalancesContainer,
+#progBalancesContainer,
+#natalConfigurationsContainer,
+#progConfigurationsContainer,
+#natalDignitiesContainer,
+#progDignitiesContainer {
+    width: 100%;
+    max-width: 100%;
 }
 
 .forecast-new-center {
@@ -916,7 +944,7 @@
 .forecast-new-right-layer-tabs {
     display: flex;
     gap: 3px;
-    padding: 6px 6px 2px;
+    padding: 6px 14px 2px;
     background: rgba(240, 237, 228, 0.52);
 }
 
@@ -943,6 +971,30 @@
     border-color: rgba(30, 58, 95, 0.28);
     background: var(--accent);
     color: #fff;
+}
+
+.forecast-new-side-panel .balance-subtabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    margin-bottom: 18px;
+}
+
+.forecast-new-side-panel .balance-subtab-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+}
+
+.forecast-new-side-panel .balance-section:last-child {
+    margin-bottom: 0;
+}
+
+.forecast-new-side-panel .balance-row {
+    grid-template-columns: minmax(92px, 116px) minmax(0, 1fr) minmax(3ch, auto);
+    column-gap: 12px;
 }
 
 .forecast-new-loading {
@@ -1054,12 +1106,12 @@
 
 .forecast-new-planet-focus .planet-leader-line {
     opacity: 0.9 !important;
-    stroke-width: 1.4 !important;
+    stroke-width: 0.9 !important;
 }
 
 .forecast-new-planet-focus .planet-anchor-point {
     stroke: rgba(184, 147, 90, 0.7);
-    stroke-width: 2;
+    stroke-width: 1.4;
 }
 
 .forecast-new-page .prognostic-body.matrix-hidden,
@@ -1097,13 +1149,41 @@
 
 @media (max-width: 1180px) {
     .forecast-new-layout {
-        --forecast-new-side-panel-width: clamp(223px, 22.5vw, 266px);
+        --forecast-new-side-panel-width: clamp(236px, 24.3vw, 288px);
 
         overflow: hidden;
     }
 
     .forecast-new-page {
         overflow: auto;
+    }
+
+    .forecast-new-time-stepper {
+        gap: 4px;
+        padding-inline: 10px;
+    }
+
+    .forecast-new-time-stepper-separator--major {
+        margin: 0 4px 0 1px;
+    }
+
+    .forecast-new-time-stepper-segment--hour {
+        min-width: 24px;
+    }
+
+    .forecast-new-time-stepper-segment--yearThousands,
+    .forecast-new-time-stepper-segment--yearHundreds,
+    .forecast-new-time-stepper-segment--yearTens,
+    .forecast-new-time-stepper-segment--yearOnes,
+    .forecast-new-time-stepper-segment--monthTens,
+    .forecast-new-time-stepper-segment--monthOnes,
+    .forecast-new-time-stepper-segment--dayTens,
+    .forecast-new-time-stepper-segment--dayOnes,
+    .forecast-new-time-stepper-segment--tenMinute,
+    .forecast-new-time-stepper-segment--minute,
+    .forecast-new-time-stepper-segment--tenSecond,
+    .forecast-new-time-stepper-segment--second {
+        min-width: 9px;
     }
 }
 
@@ -1162,6 +1242,13 @@
         gap: 4px;
     }
 
+    #natalBalancesView,
+    #progBalancesView,
+    #natalConfigsView,
+    #progConfigsView {
+        padding-inline: 12px;
+    }
+
     .forecast-new-stepper {
         flex: 1;
         display: grid;
@@ -1171,5 +1258,25 @@
     .forecast-new-stepper select {
         grid-column: 1 / -1;
         width: 100%;
+    }
+}
+
+@media (max-width: 640px) {
+    .forecast-new-side-head {
+        padding: 12px;
+    }
+
+    .forecast-new-side-panel .balance-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            "label label"
+            "bar value";
+        row-gap: 6px;
+        column-gap: 10px;
+    }
+
+    .forecast-new-side-panel .balance-label,
+    .forecast-new-side-panel .balance-value {
+        font-size: 12px;
     }
 }

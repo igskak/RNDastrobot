@@ -441,8 +441,64 @@
     letter-spacing: 0.08em;
     position: sticky;
     top: 0;
-    background: rgba(240, 237, 228, 0.92);
+    background: rgb(240, 237, 228);
     z-index: 5;
+}
+
+.data-table.compact .aspect-phase-cell {
+    width: 62px;
+    text-align: center;
+    white-space: nowrap;
+    color: var(--text-secondary);
+    font-size: 11.5px;
+}
+
+.data-table.compact.aspect-list-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.data-table.compact.aspect-list-table th:nth-child(1),
+.data-table.compact.aspect-list-table td:nth-child(1) {
+    width: 56%;
+    padding-left: 14px;
+    padding-right: 10px;
+    text-align: left;
+}
+
+.data-table.compact.aspect-list-table th:nth-child(2),
+.data-table.compact.aspect-list-table td:nth-child(2) {
+    width: 18%;
+    text-align: center;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.data-table.compact.aspect-list-table th:nth-child(3),
+.data-table.compact.aspect-list-table td:nth-child(3) {
+    width: 26%;
+    text-align: right;
+    padding-left: 10px;
+    padding-right: 14px;
+}
+
+.data-table.compact .aspect-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.data-table.compact .aspect-chip__body,
+.data-table.compact .aspect-chip__type {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.data-table.compact .aspect-chip__type .astro-symbol {
+    font-size: 15px;
+    line-height: 1;
 }
 
 /* Center chart area */
