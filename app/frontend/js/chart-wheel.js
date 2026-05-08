@@ -63,8 +63,8 @@ class ChartWheel {
         // Цвета стихий
         this.elementColors = this.visualPreferences?.planet_colors?.element_palette || {
             'Fire': '#ef4444',
-            'Earth': '#22c55e',
-            'Air': '#eab308',
+            'Earth': '#84cc16',
+            'Air': '#f59e0b',
             'Water': '#3b82f6'
         };
 

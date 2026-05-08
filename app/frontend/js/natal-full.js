@@ -1158,7 +1158,7 @@ function createBalanceView(balanceSet) {
 
     sections.forEach(([titleKey, section]) => {
         if (!section) return;
-        row.appendChild(createBalanceGroup(t(titleKey), section));
+        row.appendChild(createBalanceGroup(t(titleKey), titleKey, section));
     });
 
     return row;
@@ -1182,7 +1182,7 @@ function bindBalanceTabs(container) {
     });
 }
 
-function createBalanceGroup(title, data) {
+function createBalanceGroup(title, titleKey, data) {
     const group = document.createElement('div');
     group.className = 'balance-group';
 
@@ -1191,12 +1191,30 @@ function createBalanceGroup(title, data) {
     iconSpan.textContent = title;
     group.appendChild(iconSpan);
 
+    const isElementGroup = titleKey === 'page.natalFull.balances.elements';
+    const neutralBalanceColor = '#6b7280';
+    const elementColor = (key) => {
+        const normalized = String(key || '').trim().toLowerCase();
+        const mapping = {
+            fire: 'Fire',
+            earth: 'Earth',
+            air: 'Air',
+            water: 'Water'
+        };
+        const element = mapping[normalized];
+        if (!element) return neutralBalanceColor;
+        return window.AstroPreferences?.getElementColor
+            ? window.AstroPreferences.getElementColor(element, window.AstroPreferences?.getAccountVisualPreferences?.() || null)
+            : ({ Fire: '#ef4444', Earth: '#84cc16', Air: '#f59e0b', Water: '#3b82f6' }[element] || neutralBalanceColor);
+    };
+
     let total = 0;
     for (const val of Object.values(data)) total += val;
 
     for (const [key, val] of Object.entries(data)) {
         const item = document.createElement('span');
         item.className = 'balance-item';
+        item.style.color = isElementGroup ? elementColor(key) : neutralBalanceColor;
         const pct = total > 0 ? Math.round((val / total) * 100) : 0;
         item.innerHTML = `<span class="balance-label">${getBalanceLabel(key)}</span><span class="balance-value">${pct}%</span>`;
         group.appendChild(item);

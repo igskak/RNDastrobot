@@ -1070,15 +1070,19 @@ class ChartDataRenderer {
 
     renderBalanceSet(balanceSet) {
         let html = '';
+        const neutralBalanceColor = '#9ca3af';
+        const elementColor = (element) => window.AstroPreferences?.getElementColor
+            ? window.AstroPreferences.getElementColor(element, this.visualPreferences)
+            : ({ Fire: '#ef4444', Earth: '#84cc16', Air: '#f59e0b', Water: '#3b82f6' }[element] || neutralBalanceColor);
 
         if (balanceSet.element_balance) {
             const eb = balanceSet.element_balance;
             const total = eb.fire + eb.earth + eb.air + eb.water;
             html += this.renderBalanceSection(this.t('page.chart.balances.elementsTitle'), [
-                { label: this.t('astro.element.Fire'), value: eb.fire, total, colorClass: 'bar-fire' },
-                { label: this.t('astro.element.Earth'), value: eb.earth, total, colorClass: 'bar-earth' },
-                { label: this.t('astro.element.Air'), value: eb.air, total, colorClass: 'bar-air' },
-                { label: this.t('astro.element.Water'), value: eb.water, total, colorClass: 'bar-water' }
+                { label: this.t('astro.element.Fire'), value: eb.fire, total, color: elementColor('Fire') },
+                { label: this.t('astro.element.Earth'), value: eb.earth, total, color: elementColor('Earth') },
+                { label: this.t('astro.element.Air'), value: eb.air, total, color: elementColor('Air') },
+                { label: this.t('astro.element.Water'), value: eb.water, total, color: elementColor('Water') }
             ]);
         }
 
@@ -1086,9 +1090,9 @@ class ChartDataRenderer {
             const mb = balanceSet.mode_balance;
             const total = mb.cardinal + mb.fixed + mb.mutable;
             html += this.renderBalanceSection(this.t('page.chart.balances.modesTitle'), [
-                { label: this.t('astro.mode.short.Cardinal'), value: mb.cardinal, total, color: '#ef4444' },
-                { label: this.t('astro.mode.short.Fixed'), value: mb.fixed, total, color: '#f59e0b' },
-                { label: this.t('astro.mode.short.Mutable'), value: mb.mutable, total, color: '#22c55e' }
+                { label: this.t('astro.mode.short.Cardinal'), value: mb.cardinal, total, color: neutralBalanceColor },
+                { label: this.t('astro.mode.short.Fixed'), value: mb.fixed, total, color: neutralBalanceColor },
+                { label: this.t('astro.mode.short.Mutable'), value: mb.mutable, total, color: neutralBalanceColor }
             ]);
         }
 
@@ -1096,8 +1100,8 @@ class ChartDataRenderer {
             const gb = balanceSet.gender_balance;
             const total = gb.masculine + gb.feminine;
             html += this.renderBalanceSection(this.t('page.chart.balances.polarityTitle'), [
-                { label: this.t('astro.polarity.Masculine'), value: gb.masculine, total, color: '#2563eb' },
-                { label: this.t('astro.polarity.Feminine'), value: gb.feminine, total, color: '#db2777' }
+                { label: this.t('astro.polarity.Masculine'), value: gb.masculine, total, color: neutralBalanceColor },
+                { label: this.t('astro.polarity.Feminine'), value: gb.feminine, total, color: neutralBalanceColor }
             ]);
         }
 
@@ -1105,9 +1109,9 @@ class ChartDataRenderer {
             const zb = balanceSet.zones_balance;
             const total = zb.brahma + zb.vishnu + zb.shiva;
             html += this.renderBalanceSection(this.t('page.chart.balances.zonesTitle'), [
-                { label: this.t('page.chart.balances.brahma'), value: zb.brahma, total, color: '#f97316' },
-                { label: this.t('page.chart.balances.vishnu'), value: zb.vishnu, total, color: '#16a34a' },
-                { label: this.t('page.chart.balances.shiva'), value: zb.shiva, total, color: '#7c3aed' }
+                { label: this.t('page.chart.balances.brahma'), value: zb.brahma, total, color: neutralBalanceColor },
+                { label: this.t('page.chart.balances.vishnu'), value: zb.vishnu, total, color: neutralBalanceColor },
+                { label: this.t('page.chart.balances.shiva'), value: zb.shiva, total, color: neutralBalanceColor }
             ]);
         }
 
@@ -1115,10 +1119,10 @@ class ChartDataRenderer {
             const qb = balanceSet.quadrant_balance;
             const total = qb.q1 + qb.q2 + qb.q3 + qb.q4;
             html += this.renderBalanceSection(this.t('page.chart.balances.quadrantsTitle'), [
-                { label: this.t('page.chart.balances.quadrant1'), value: qb.q1, total, color: '#0f766e' },
-                { label: this.t('page.chart.balances.quadrant2'), value: qb.q2, total, color: '#0891b2' },
-                { label: this.t('page.chart.balances.quadrant3'), value: qb.q3, total, color: '#9333ea' },
-                { label: this.t('page.chart.balances.quadrant4'), value: qb.q4, total, color: '#ea580c' }
+                { label: this.t('page.chart.balances.quadrant1'), value: qb.q1, total, color: neutralBalanceColor },
+                { label: this.t('page.chart.balances.quadrant2'), value: qb.q2, total, color: neutralBalanceColor },
+                { label: this.t('page.chart.balances.quadrant3'), value: qb.q3, total, color: neutralBalanceColor },
+                { label: this.t('page.chart.balances.quadrant4'), value: qb.q4, total, color: neutralBalanceColor }
             ]);
         }
 
@@ -1127,10 +1131,10 @@ class ChartDataRenderer {
             const verticalTotal = hb.lower + hb.upper;
             const horizontalTotal = hb.eastern + hb.western;
             html += this.renderBalanceSection(this.t('page.chart.balances.hemispheresTitle'), [
-                { label: this.t('page.chart.balances.lower'), value: hb.lower, total: verticalTotal, color: '#3b82f6' },
-                { label: this.t('page.chart.balances.upper'), value: hb.upper, total: verticalTotal, color: '#f97316' },
-                { label: this.t('page.chart.balances.east'), value: hb.eastern, total: horizontalTotal, color: '#8b5cf6' },
-                { label: this.t('page.chart.balances.west'), value: hb.western, total: horizontalTotal, color: '#ec4899' }
+                { label: this.t('page.chart.balances.lower'), value: hb.lower, total: verticalTotal, color: neutralBalanceColor },
+                { label: this.t('page.chart.balances.upper'), value: hb.upper, total: verticalTotal, color: neutralBalanceColor },
+                { label: this.t('page.chart.balances.east'), value: hb.eastern, total: horizontalTotal, color: neutralBalanceColor },
+                { label: this.t('page.chart.balances.west'), value: hb.western, total: horizontalTotal, color: neutralBalanceColor }
             ]);
         }
 
@@ -1138,9 +1142,9 @@ class ChartDataRenderer {
             const hgb = balanceSet.house_group_balance;
             const total = hgb.angular + hgb.succedent + hgb.cadent;
             html += this.renderBalanceSection(this.t('page.chart.balances.houseGroupsTitle'), [
-                { label: this.t('page.chart.balances.angular'), value: hgb.angular, total, color: '#6366f1' },
-                { label: this.t('page.chart.balances.succedent'), value: hgb.succedent, total, color: '#14b8a6' },
-                { label: this.t('page.chart.balances.cadent'), value: hgb.cadent, total, color: '#a855f7' }
+                { label: this.t('page.chart.balances.angular'), value: hgb.angular, total, color: neutralBalanceColor },
+                { label: this.t('page.chart.balances.succedent'), value: hgb.succedent, total, color: neutralBalanceColor },
+                { label: this.t('page.chart.balances.cadent'), value: hgb.cadent, total, color: neutralBalanceColor }
             ]);
         }
 
@@ -1153,15 +1157,15 @@ class ChartDataRenderer {
                 <div class="balance-title">${title}</div>
                 ${items.map(item => {
                     const pct = item.total > 0 ? (item.value / item.total * 100) : 0;
-                    const cls = item.colorClass ? `balance-bar ${item.colorClass}` : 'balance-bar';
                     const bgStyle = item.color ? `background: ${item.color};` : '';
+                    const textStyle = item.color ? `color: ${item.color};` : '';
                     return `
                         <div class="balance-row">
-                            <span class="balance-label">${item.label}</span>
+                            <span class="balance-label" style="${textStyle}">${item.label}</span>
                             <div class="balance-bar-container">
-                                <div class="${cls}" style="${bgStyle} width: ${pct}%"></div>
+                                <div class="balance-bar" style="${bgStyle} width: ${pct}%"></div>
                             </div>
-                            <span class="balance-value">${item.value}</span>
+                            <span class="balance-value" style="${textStyle}">${item.value}</span>
                         </div>
                     `;
                 }).join('')}

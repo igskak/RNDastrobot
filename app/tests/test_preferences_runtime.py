@@ -79,6 +79,10 @@ def test_build_default_visual_settings_uses_per_aspect_palette():
 
     assert visual["aspect_colors"]["Conjunction"] == "#f59e0b"
     assert visual["aspect_colors"]["Custom"] == "#9ca3af"
+    assert visual["planet_colors"]["element_palette"]["Fire"] == "#ef4444"
+    assert visual["planet_colors"]["element_palette"]["Earth"] == "#84cc16"
+    assert visual["planet_colors"]["element_palette"]["Air"] == "#f59e0b"
+    assert visual["planet_colors"]["element_palette"]["Water"] == "#3b82f6"
 
 
 def test_build_default_orb_settings_uses_fixed_prognostic_defaults():

@@ -52,8 +52,8 @@ DEFAULT_BALANCE_SPECIAL_POINT_WEIGHTS: Dict[str, float] = {
 
 DEFAULT_ELEMENT_PALETTE: Dict[str, str] = {
     'Fire': '#ef4444',
-    'Earth': '#22c55e',
-    'Air': '#eab308',
+    'Earth': '#84cc16',
+    'Air': '#f59e0b',
     'Water': '#3b82f6',
 }
 

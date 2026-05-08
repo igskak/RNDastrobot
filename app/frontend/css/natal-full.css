@@ -863,6 +863,11 @@
     min-width: 0;
 }
 
+.balance-item .balance-label,
+.balance-item .balance-value {
+    color: inherit;
+}
+
 .balance-icon {
     font-size: 15px;
     font-weight: 600;

@@ -88,3 +88,12 @@ test('resolveVisualPreferences keeps explicit aspect colors and getAspectColor i
     assert.equal(preferences.getAspectColor('UnknownAspect', visual, 'tense'), '#9ca3af');
     assert.equal(preferences.getAspectColor('CustomAspect', visual, 'neutral'), '#abcdef');
 });
+
+test('resolveVisualPreferences uses chart-default element palette', () => {
+    const visual = preferences.resolveVisualPreferences({});
+
+    assert.equal(visual.planet_colors.element_palette.Fire, '#ef4444');
+    assert.equal(visual.planet_colors.element_palette.Earth, '#84cc16');
+    assert.equal(visual.planet_colors.element_palette.Air, '#f59e0b');
+    assert.equal(visual.planet_colors.element_palette.Water, '#3b82f6');
+});
