@@ -1,9 +1,15 @@
-"""
-Сервис для работы с достоинствами планет и свойствами знаков
-"""
-from typing import Dict, List, Optional
+"""Сервис для работы с достоинствами планет и свойствами знаков."""
+from copy import deepcopy
+from typing import Any, Dict, List, Optional
+
 from sqlalchemy.orm import Session
+
 from app.database.models import RefSignProperties
+from app.services.preferences_runtime import (
+    CANONICAL_SIGNS,
+    OPPOSITE_SIGN_BY_SIGN,
+    PreferencesRuntimeResolver,
+)
 
 
 class DignityService:
@@ -17,7 +23,12 @@ class DignityService:
     - Управителей домов
     """
     
-    def __init__(self, db_session: Session):
+    def __init__(
+        self,
+        db_session: Session,
+        astrologer_id=None,
+        default_house_system: str = 'P',
+    ):
         """
         Инициализация сервиса
         
@@ -25,15 +36,16 @@ class DignityService:
             db_session: SQLAlchemy сессия для работы с БД
         """
         self.db_session = db_session
+        self.astrologer_id = astrologer_id
+        self.default_house_system = default_house_system
         self._sign_properties_cache: Optional[Dict[str, Dict]] = None
     
     def _load_sign_properties(self) -> None:
         """Загрузить свойства знаков из БД в кэш или использовать fallback"""
         if self.db_session:
             signs = self.db_session.query(RefSignProperties).all()
-            self._sign_properties_cache = {}
-            for sign in signs:
-                self._sign_properties_cache[sign.sign] = {
+            self._sign_properties_cache = {
+                sign.sign: {
                     'element': sign.element,
                     'mode': sign.mode,
                     'gender': sign.gender,
@@ -45,9 +57,39 @@ class DignityService:
                     'detriment': sign.detriment,
                     'fall': sign.fall,
                 }
+                for sign in signs
+            }
         else:
-            # Fallback: используем встроенные данные
             self._sign_properties_cache = self._get_fallback_sign_properties()
+
+        if self.astrologer_id and self.db_session:
+            resolver = PreferencesRuntimeResolver(self.db_session)
+            dignity_settings = resolver.get_dignity_settings_for_astrologer(
+                self.astrologer_id,
+                default_house_system=self.default_house_system,
+            )
+            signs_payload = dignity_settings.get('signs') or {}
+            for sign_name in CANONICAL_SIGNS:
+                sign_props = deepcopy(self._sign_properties_cache.get(sign_name) or {})
+                overrides = signs_payload.get(sign_name) or {}
+                sign_props['ruler'] = overrides.get('ruler')
+                sign_props['co_ruler'] = overrides.get('co_ruler')
+                sign_props['exaltation'] = overrides.get('exaltation')
+                self._sign_properties_cache[sign_name] = sign_props
+
+        self._recompute_derived_dignities()
+
+    def _recompute_derived_dignities(self) -> None:
+        """Recompute detriment/fall from the full sign map so overrides stay consistent."""
+        if not self._sign_properties_cache:
+            return
+
+        for sign_name in CANONICAL_SIGNS:
+            sign_props = self._sign_properties_cache.setdefault(sign_name, {})
+            opposite_sign = OPPOSITE_SIGN_BY_SIGN.get(sign_name)
+            opposite_props = self._sign_properties_cache.get(opposite_sign or '', {})
+            sign_props['detriment'] = opposite_props.get('ruler')
+            sign_props['fall'] = opposite_props.get('exaltation')
     
     def get_sign_properties(self, sign: str) -> Dict:
         """
@@ -98,8 +140,7 @@ class DignityService:
         if not sign_props:
             return 'neutral'
         
-        # Проверяем обитель (ruler)
-        if sign_props.get('ruler') == planet:
+        if sign_props.get('ruler') == planet or sign_props.get('co_ruler') == planet:
             return 'domicile'
         
         # Проверяем экзальтацию
@@ -107,11 +148,12 @@ class DignityService:
             return 'exaltation'
         
         # Проверяем изгнание
-        if sign_props.get('detriment') == planet:
+        opposite_sign_props = self.get_sign_properties(OPPOSITE_SIGN_BY_SIGN.get(sign, ''))
+        if opposite_sign_props.get('ruler') == planet or opposite_sign_props.get('co_ruler') == planet:
             return 'detriment'
         
         # Проверяем падение
-        if sign_props.get('fall') == planet:
+        if opposite_sign_props.get('exaltation') == planet:
             return 'fall'
         
         return 'neutral'
@@ -221,4 +263,3 @@ class DignityService:
             'Aquarius': {'element': 'Air', 'mode': 'Fixed', 'gender': 'Masculine', 'zone': 'Shiva', 'life_quadrant': 'Maturity', 'ruler': 'Uranus', 'co_ruler': 'Saturn', 'exaltation': None, 'detriment': 'Sun', 'fall': None},
             'Pisces': {'element': 'Water', 'mode': 'Mutable', 'gender': 'Feminine', 'zone': 'Shiva', 'life_quadrant': 'Maturity', 'ruler': 'Neptune', 'co_ruler': 'Jupiter', 'exaltation': 'Venus', 'detriment': 'Mercury', 'fall': 'Mercury'},
         }
-

@@ -637,8 +637,10 @@ class PreferencesMetadataResponse(BaseModel):
     """Metadata required to render methodology + visual editors."""
     aspect_types: List[Dict[str, Any]]
     bodies: List[Dict[str, Any]]
+    signs: List[Dict[str, Any]]
     default_balance_targets: Dict[str, Any]
     default_visual_palettes: Dict[str, Any]
+    default_dignities: Dict[str, Any]
 
 
 class ChartViewOverrideUpsertRequest(BaseModel):

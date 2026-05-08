@@ -267,10 +267,10 @@
       "showStationary": "Show stationary",
       "showAspectText": "Show aspect name as text"
     },
-    "orbs": {
-      "actions": {
-        "applyNatal": "Apply natal orbs"
-      },
+      "orbs": {
+        "actions": {
+          "applyNatal": "Apply natal orbs"
+        },
       "copy": "Keep separate natal and prognostic orb presets in one compact matrix. Prognostic applies to transits, progressions, directions, and solar.",
       "hints": {
         "natal": "Natal orbs are used for natal aspect calculations.",
@@ -296,9 +296,23 @@
         "ariaLabel": "Orb table view",
         "compact": "Compact",
         "default": "Default"
+        },
+        "title": "Orb profiles"
       },
-      "title": "Orb profiles"
-    },
+      "dignities": {
+        "columns": {
+          "planet": "Planet"
+        },
+        "copy": "Edit only domicile and exaltation. Detriment and fall are derived automatically from the same scheme and become part of the astrologer-wide methodology.",
+        "hint": "Click a sign in `Domicile` to assign the primary ruler; click another body for the same sign to assign the co-ruler. Click an active value again to clear it.",
+        "kicker": "Methodology",
+        "states": {
+          "empty": "Not assigned",
+          "primary": "Primary ruler",
+          "secondary": "Co-ruler"
+        },
+        "title": "Rulership scheme"
+      },
       "subtitle": "Set the defaults once, then let individual chart overrides change only what is necessary.",
       "stationary": {
         "copy": "Define when a planet should be marked as stationary by comparing its current speed to the average speed for that body.",

@@ -779,17 +779,15 @@
     white-space: normal;
 }
 
-.chart-page .house-sign-main,
-.chart-page .house-ruler-main {
+.chart-page .house-sign-main {
     display: inline-flex;
     align-items: center;
     gap: 2px;
     white-space: nowrap;
 }
 
-.chart-page .house-sign-meta,
-.chart-page .house-ruler-co {
-    margin-top: 2px;
+.chart-page .house-sign-meta {
+    margin-top: 5px;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -810,15 +808,54 @@
     text-transform: uppercase;
 }
 
-.chart-page .house-ruler-co-item {
+.chart-page .house-ruler-group {
+    display: grid;
+    gap: 2px;
+}
+
+.chart-page .house-ruler-group--included {
+    margin-top: 5px;
+}
+
+.chart-page .house-ruler-row {
+    display: inline-grid;
+    grid-template-columns: 18px auto;
+    align-items: start;
+    column-gap: 4px;
+    min-height: 18px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.chart-page .house-ruler-symbol-wrap {
+    position: relative;
     display: inline-flex;
-    align-items: center;
-    gap: 1px;
+    align-items: flex-start;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+}
+
+.chart-page .house-ruler-symbol-wrap .planet-symbol-svg {
+    display: block;
+}
+
+.chart-page .house-ruler-retro {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    margin-left: 0;
+    z-index: 1;
 }
 
 .chart-page .house-ruler-house {
+    display: inline-flex;
+    align-items: center;
+    min-height: 18px;
     font-size: 11px;
     color: var(--text-secondary);
+    line-height: 18px;
+    transform: none;
 }
 
 .chart-page .config-card {

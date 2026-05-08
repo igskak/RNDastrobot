@@ -172,7 +172,11 @@ class NatalChartService:
             astrologer_id=astrologer_id,
             db_session=db_session,
         )
-        houses = self._enrich_houses_basic(houses)
+        houses = self._enrich_houses_basic(
+            houses,
+            astrologer_id=astrologer_id,
+            db_session=db_session,
+        )
 
         # 8.1. Добавляем связи дом-планета
         planets, houses = self._enrich_house_planet_relations(planets, houses)
@@ -236,12 +240,29 @@ class NatalChartService:
                 # Якщо не вдалося прочитати, додаємо user_id до базового результату
                 result['user_id'] = str(user_id)
 
-        self._append_karmic_analysis(result)
+        self._append_karmic_analysis(
+            result,
+            astrologer_id=astrologer_id,
+            db_session=db_session,
+        )
         return result
 
-    def _append_karmic_analysis(self, chart_data: Dict) -> None:
+    def _append_karmic_analysis(
+        self,
+        chart_data: Dict,
+        *,
+        astrologer_id: Optional[UUID] = None,
+        db_session: Optional[Session] = None,
+    ) -> None:
         """Append backend-ready karmic analysis block to chart_data."""
-        chart_data['karmic_analysis'] = self.karmic_analysis_service.build(chart_data)
+        dignity_service = DignityService(
+            db_session=db_session,
+            astrologer_id=astrologer_id,
+        ) if db_session is not None or astrologer_id is not None else None
+        chart_data['karmic_analysis'] = self.karmic_analysis_service.build(
+            chart_data,
+            dignity_service=dignity_service,
+        )
     
     def _calculate_special_points(
         self,
@@ -394,6 +415,69 @@ class NatalChartService:
             ),
         }
 
+    @staticmethod
+    def _build_planet_house_lookup(planets: list) -> Dict[str, int]:
+        lookup: Dict[str, int] = {}
+        for planet in planets:
+            planet_name = planet.get('name')
+            house_number = planet.get('house') or planet.get('house_number')
+            if planet_name and house_number:
+                lookup[str(planet_name)] = int(house_number)
+        return lookup
+
+    def _attach_house_ruler_groups(
+        self,
+        houses: list,
+        planets: list,
+        dignity_service: DignityService,
+    ) -> list:
+        planet_to_house = self._build_planet_house_lookup(planets)
+
+        def build_entries(sign_name: Optional[str], primary_house: Optional[int] = None) -> List[Dict[str, Optional[object]]]:
+            if not sign_name:
+                return []
+
+            entries: List[Dict[str, Optional[object]]] = []
+            primary_planet = dignity_service.get_house_ruler(sign_name)
+            secondary_planet = dignity_service.get_sign_co_ruler(sign_name)
+
+            if primary_planet:
+                entries.append({
+                    'planet': primary_planet,
+                    'role': 'primary',
+                    'house': primary_house if primary_house is not None else planet_to_house.get(primary_planet),
+                })
+            if secondary_planet and secondary_planet != primary_planet:
+                entries.append({
+                    'planet': secondary_planet,
+                    'role': 'secondary',
+                    'house': planet_to_house.get(secondary_planet),
+                })
+            return entries
+
+        for house in houses:
+            groups: list = []
+            main_entries = build_entries(house.get('sign'), house.get('ruler_in_house'))
+            if main_entries:
+                groups.append({
+                    'scope': 'cusp',
+                    'sign': house.get('sign'),
+                    'entries': main_entries,
+                })
+
+            included_sign = house.get('included_sign')
+            included_entries = build_entries(included_sign)
+            if included_entries:
+                groups.append({
+                    'scope': 'included',
+                    'sign': included_sign,
+                    'entries': included_entries,
+                })
+
+            house['ruler_groups'] = groups
+
+        return houses
+
     def _enrich_planets_basic(
         self,
         planets: list,
@@ -411,18 +495,19 @@ class NatalChartService:
             astrologer_id=astrologer_id,
             db_session=db_session,
         )
+        dignity_service = DignityService(
+            db_session=db_session,
+            astrologer_id=astrologer_id,
+        )
 
-        # Добавляем dignity, element, mode
         for planet in planets:
             sign = planet['sign']
             planet_name = planet['name']
+            sign_props = dignity_service.get_sign_properties(sign)
 
-            # Element и Mode
-            planet['element'] = PlanetCharacteristicsService.get_sign_element(sign)
-            planet['mode'] = PlanetCharacteristicsService.get_sign_mode(sign)
-
-            # Dignity
-            planet['dignity'] = PlanetCharacteristicsService.get_dignity(planet_name, sign)
+            planet['element'] = sign_props.get('element', '')
+            planet['mode'] = sign_props.get('mode', '')
+            planet['dignity'] = dignity_service.calculate_dignity(planet_name, sign)
 
         # Уровни 1-6: Характеристики (без аспектов — шахта и гармония будут None)
         planets = PlanetCharacteristicsService.enrich_planets(
@@ -433,7 +518,13 @@ class NatalChartService:
         )
         return planets
 
-    def _enrich_houses_basic(self, houses: list) -> list:
+    def _enrich_houses_basic(
+        self,
+        houses: list,
+        *,
+        astrologer_id: Optional[UUID] = None,
+        db_session: Optional[Session] = None,
+    ) -> list:
         """
         Базовое обогащение домов (без БД).
         Используется при расчёте без сохранения в БД.
@@ -445,10 +536,10 @@ class NatalChartService:
         - included_sign (включённый знак)
         - co_rulers (соуправители)
         """
-        from app.services.dignity_service import DignityService
-
-        # Создаём DignityService без БД-сессии (использует fallback данные)
-        dignity_service = DignityService(db_session=None)
+        dignity_service = DignityService(
+            db_session=db_session,
+            astrologer_id=astrologer_id,
+        )
 
         for house in houses:
             house_number = house['number']
@@ -510,7 +601,7 @@ class NatalChartService:
         Returns:
             Обогащённый список планет
         """
-        dignity_service = DignityService(db_session)
+        dignity_service = DignityService(db_session, astrologer_id=astrologer_id)
         stationary_threshold_percent = self._resolve_stationary_threshold_percent(
             astrologer_id=astrologer_id,
             db_session=db_session,
@@ -543,7 +634,8 @@ class NatalChartService:
     def _enrich_houses_with_properties(
         self,
         houses: list,
-        db_session: Session
+        db_session: Session,
+        astrologer_id: Optional[UUID] = None,
     ) -> list:
         """
         Обогатить дома группами и управителями
@@ -561,7 +653,7 @@ class NatalChartService:
         Returns:
             Обогащённый список домов
         """
-        dignity_service = DignityService(db_session)
+        dignity_service = DignityService(db_session, astrologer_id=astrologer_id)
 
         for house in houses:
             house_number = house['number']
@@ -873,7 +965,11 @@ class NatalChartService:
                 'configurations': configurations,
             }
 
-        self._append_karmic_analysis(result)
+        self._append_karmic_analysis(
+            result,
+            astrologer_id=astrologer_id,
+            db_session=db_session,
+        )
         return result
 
     def _persist_chart_for_user(
@@ -888,13 +984,22 @@ class NatalChartService:
     ) -> UUID:
         natal_repo = NatalChartRepository(db_session)
 
-        houses = self._enrich_houses_with_properties(houses, db_session)
+        houses = self._enrich_houses_with_properties(
+            houses,
+            db_session,
+            astrologer_id=user.astrologer_id,
+        )
         planets = self._enrich_planets_with_properties(
             planets, houses, [], db_session,
             astrologer_id=user.astrologer_id,
             angles=angles, special_points=special_points
         )
         planets, houses = self._enrich_house_planet_relations(planets, houses)
+        houses = self._attach_house_ruler_groups(
+            houses,
+            planets,
+            DignityService(db_session=db_session, astrologer_id=astrologer_id),
+        )
 
         fate_cross = configurations.get('FateCross') if configurations else None
 
@@ -1108,6 +1213,12 @@ class NatalChartService:
             'planet_distribution': None,
             'cosmogram_pattern': None,
         }
+
+        result['houses'] = self._attach_house_ruler_groups(
+            result['houses'],
+            result['planets'],
+            DignityService(db_session=db_session, astrologer_id=user.astrologer_id),
+        )
 
         # Добавляем углы
         if user.angles:
@@ -1358,7 +1469,11 @@ class NatalChartService:
             user_id=user.user_id,
             astrologer_id=user.astrologer_id,
         )
-        self._append_karmic_analysis(result)
+        self._append_karmic_analysis(
+            result,
+            astrologer_id=user.astrologer_id,
+            db_session=db_session,
+        )
         return result
 
     def get_natal_chart_for_interpretation(self, user_id: UUID, db_session: Session) -> Optional[Dict]:

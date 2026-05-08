@@ -179,6 +179,87 @@ class ChartDataRenderer {
         return source.get(normalizedName) === true;
     }
 
+    buildPlanetHouseLookup(planets = []) {
+        const lookup = new Map();
+        planets.forEach((planet) => {
+            if (!planet?.name || planet.house == null || planet.house === '') return;
+            lookup.set(this.normalizeAspectBodyName(planet.name), planet.house);
+        });
+        return lookup;
+    }
+
+    buildHouseRulerGroups(house, planetHouseLookup = new Map(), visibleBodies = null) {
+        if (Array.isArray(house?.ruler_groups) && house.ruler_groups.length) {
+            return house.ruler_groups
+                .map((group) => ({
+                    included: group?.scope === 'included',
+                    entries: (group?.entries || [])
+                        .filter((entry) => {
+                            const normalizedName = this.normalizeAspectBodyName(entry?.planet);
+                            return normalizedName && (!(visibleBodies instanceof Set) || visibleBodies.has(normalizedName));
+                        })
+                        .map((entry) => ({
+                            planet: entry.planet,
+                            house: entry.house ?? planetHouseLookup.get(this.normalizeAspectBodyName(entry.planet)) ?? null,
+                        })),
+                }))
+                .filter((group) => group.entries.length);
+        }
+
+        const entries = [];
+        const primaryPlanet = house?.ruler_planet;
+        const fallbackPlanets = [primaryPlanet, ...(Array.isArray(house?.co_rulers) ? house.co_rulers : [])];
+        const seen = new Set();
+
+        fallbackPlanets.forEach((planetName, index) => {
+            if (!planetName) return;
+            const normalizedName = this.normalizeAspectBodyName(planetName);
+            if (visibleBodies instanceof Set && !visibleBodies.has(normalizedName)) return;
+            if (seen.has(normalizedName)) return;
+            seen.add(normalizedName);
+            entries.push({
+                planet: planetName,
+                house: index === 0 && house?.ruler_in_house != null && house?.ruler_in_house !== ''
+                    ? house.ruler_in_house
+                    : planetHouseLookup.get(normalizedName) ?? null,
+            });
+        });
+
+        return entries.length ? [{ entries, included: false }] : [];
+    }
+
+    renderHouseRulerGroup(group, retroLookup = null) {
+        if (!group?.entries?.length) return '';
+
+        const groupClass = group.included
+            ? 'house-ruler-group house-ruler-group--included'
+            : 'house-ruler-group';
+
+        return `
+            <div class="${groupClass}">
+                ${group.entries.map((entry) => {
+                    const planetName = this.planetName(entry.planet);
+                    const houseLabel = entry.house != null && entry.house !== ''
+                        ? this.formatHouseNumber(entry.house)
+                        : '';
+                    const titleParts = [planetName];
+                    if (houseLabel) {
+                        titleParts.push(`${this.t('common.house')} ${houseLabel}`);
+                    }
+                    return `
+                        <div class="house-ruler-row" title="${this.escapeHtml(titleParts.join(' • '))}">
+                            <span class="house-ruler-symbol-wrap">
+                                ${this.getPlanetSymbolMarkup(entry.planet, { size: 16, title: planetName })}
+                                ${this.retroIndicatorHtml(this.isBodyRetrograde(entry.planet, retroLookup), 'retro-indicator--micro house-ruler-retro')}
+                            </span>
+                            <span class="house-ruler-house">${this.escapeHtml(houseLabel || '—')}</span>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    }
+
     // Порядок тел для аспектной сетки и сортировки списка аспектов
     static ASPECT_SORT_ORDER = [
         'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
@@ -425,29 +506,19 @@ class ChartDataRenderer {
         if (!houses || !this.housesTable) return;
 
         const retroLookup = this.buildRetrogradeLookup(this.chartData?.planets || []);
+        const planetHouseLookup = this.buildPlanetHouseLookup(this.chartData?.planets || []);
+        const visibleBodies = new Set(planetHouseLookup.keys());
 
         this.housesTable.innerHTML = houses.map(h => {
             const isAngular = [1, 4, 7, 10].includes(h.number);
             const degDMS = this.formatDMS(h.degree_in_sign);
-            const rulerPlanet = h.ruler_planet || '';
-            const rulerName = rulerPlanet ? this.planetName(rulerPlanet) : this.t('common.notAvailable');
-            const rulerHouseLabel = this.formatHouseNumber(h.ruler_in_house);
-            const rulerHouse = rulerHouseLabel ? ` ${rulerHouseLabel}` : '';
-            const rulerTitle = h.ruler_in_house
-                ? `${rulerName} • ${this.t('common.house')} ${rulerHouseLabel}`
-                : rulerName;
             const includedSign = h.included_sign || '';
             const includedSignSymbol = includedSign ? (Symbols.signs[includedSign] || '') : '';
             const includedSignName = includedSign ? this.signName(includedSign) : '';
             const includedSignTitle = includedSign
                 ? `${this.t('page.natalFull.table.houses.included')}: ${includedSignName}`
                 : '';
-            const coRulers = Array.isArray(h.co_rulers)
-                ? h.co_rulers.filter((planet, index, items) => planet && planet !== rulerPlanet && items.indexOf(planet) === index)
-                : [];
-            const coRulerTitle = coRulers.length
-                ? `${this.t('page.natalFull.table.houses.ruler')}: ${coRulers.map((planet) => this.planetName(planet)).join(', ')}`
-                : '';
+            const rulerGroups = this.buildHouseRulerGroups(h, planetHouseLookup, visibleBodies);
             return `
                 <tr id="row-house-${h.number}" class="${isAngular ? 'house-angular' : ''}">
                     <td class="mono">${this.escapeHtml(this.formatHouseNumber(h.number))}</td>
@@ -460,20 +531,10 @@ class ChartDataRenderer {
                             </div>
                         ` : ''}
                     </td>
-                    <td class="mono house-ruler-cell" title="${this.escapeHtml(rulerTitle)}">
-                        <div class="house-ruler-main">
-                            ${this.getPlanetSymbolMarkup(rulerPlanet, { size: 16, title: rulerName })}${this.retroIndicatorHtml(this.isBodyRetrograde(rulerPlanet, retroLookup), 'retro-indicator--micro')}
-                            <span class="house-ruler-house">${this.escapeHtml(rulerHouse)}</span>
-                        </div>
-                        ${coRulers.length ? `
-                            <div class="house-ruler-co" title="${this.escapeHtml(coRulerTitle)}">
-                                ${coRulers.map((planet) => `
-                                    <span class="house-ruler-co-item" aria-label="${this.escapeHtml(this.planetName(planet))}">
-                                        ${this.getPlanetSymbolMarkup(planet, { size: 15, title: this.planetName(planet) })}${this.retroIndicatorHtml(this.isBodyRetrograde(planet, retroLookup), 'retro-indicator--micro')}
-                                    </span>
-                                `).join('')}
-                            </div>
-                        ` : ''}
+                    <td class="mono house-ruler-cell">
+                        ${rulerGroups.length
+                            ? rulerGroups.map((group) => this.renderHouseRulerGroup(group, retroLookup)).join('')
+                            : '—'}
                     </td>
                 </tr>
             `;

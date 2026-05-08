@@ -51,7 +51,10 @@ class GeneralOverviewService:
             GeneralOverviewSummary: Сформированный общий срез
         """
         # 1. ASC-блок
-        asc_data = self._build_asc_block(user_id)
+        user = self.db.query(User).filter(User.user_id == user_id).first()
+        dignity_service = DignityService(self.db, astrologer_id=user.astrologer_id) if user else self.dignity_service
+
+        asc_data = self._build_asc_block(user_id, dignity_service)
         
         # 2. Светила
         luminaries_data = self._build_luminaries_block(user_id)
@@ -109,7 +112,7 @@ class GeneralOverviewService:
         
         return summary
     
-    def _build_asc_block(self, user_id: UUID) -> Dict[str, Any]:
+    def _build_asc_block(self, user_id: UUID, dignity_service: DignityService) -> Dict[str, Any]:
         """Сформировать ASC-блок"""
         angles = self.db.query(Angle).filter(Angle.user_id == user_id).first()
         
@@ -120,7 +123,7 @@ class GeneralOverviewService:
         asc_degree = float(angles.asc_degree)
         
         # Получаем свойства знака ASC
-        sign_props = self.dignity_service.get_sign_properties(asc_sign)
+        sign_props = dignity_service.get_sign_properties(asc_sign)
         
         # Находим планеты в соединении с ASC
         asc_conjunctions = self._find_asc_conjunctions(user_id, asc_degree)
@@ -422,4 +425,3 @@ class GeneralOverviewService:
         return self.db.query(GeneralOverviewSummary).filter(
             GeneralOverviewSummary.user_id == user_id
         ).first()
-

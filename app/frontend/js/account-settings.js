@@ -26,6 +26,11 @@
     const DEFAULT_ORB_PAIR_STRATEGY = window.AstroPreferences?.DEFAULT_ORB_PAIR_STRATEGY || 'larger';
     const ACTIVE_RECALC_JOB_KEY = 'activePreferenceRecalcJobId';
     const ORB_VIEW_MODE_STORAGE_KEY = 'accountOrbViewMode';
+    const DIGNITY_BODY_EXCLUSIONS = new Set([
+        'TrueNode', 'SouthNode',
+        'BlackMoon', 'WhiteMoon', 'PartOfFortune',
+        'ASC', 'DSC', 'MC', 'IC', 'Vertex', 'AntiVertex',
+    ]);
 
     let accountPreferences = null;
     let preferencesMetadata = null;
@@ -107,6 +112,12 @@
             : methodology;
     }
 
+    function normalizeDignitySettings(dignities = {}, defaultDignities = {}) {
+        return window.AstroPreferences?.normalizeDignitySettings
+            ? window.AstroPreferences.normalizeDignitySettings(dignities, defaultDignities)
+            : dignities;
+    }
+
     function resolveVisualPreferences(visual = {}) {
         return window.AstroPreferences?.resolveVisualPreferences
             ? window.AstroPreferences.resolveVisualPreferences(visual)
@@ -133,6 +144,14 @@
 
     function getMetadataBodies() {
         return (preferencesMetadata?.bodies || []).map((item) => item?.name).filter(Boolean);
+    }
+
+    function getMetadataSigns() {
+        return preferencesMetadata?.signs || [];
+    }
+
+    function getDignityBodies() {
+        return getMetadataBodies().filter((body) => !DIGNITY_BODY_EXCLUSIONS.has(body));
     }
 
     function buildDefaultOrbMatrix(profileId = 'natal') {
@@ -173,6 +192,7 @@
         return normalizeMethodologySettings({
             orbs,
             balances: preferencesMetadata?.default_balance_targets || {},
+            dignities: preferencesMetadata?.default_dignities || { version: 1, signs: {} },
         });
     }
 
@@ -250,6 +270,101 @@
         }
         return normalizeMethodologySettings(accountPreferences?.methodology || getDefaultMethodology())?.orbs?.pair_strategy
             || DEFAULT_ORB_PAIR_STRATEGY;
+    }
+
+    function getSignLabel(sign) {
+        return translateOrFallback(`astro.sign.${sign}`, window.Symbols?.signNamesRu?.[sign] || sign);
+    }
+
+    function getSignSymbol(sign) {
+        return window.Symbols?.signs?.[sign] || String(sign || '').slice(0, 2) || '•';
+    }
+
+    function getSignSymbolMarkup(sign) {
+        const label = escapeHtml(getSignLabel(sign));
+        const symbol = escapeHtml(getSignSymbol(sign));
+        return `<span class="astro-symbol" aria-hidden="true" title="${label}">${symbol}</span>`;
+    }
+
+    function getOppositeSign(sign) {
+        return getMetadataSigns().find((item) => item?.name === sign)?.opposite || null;
+    }
+
+    function ensureDignitiesState() {
+        const methodology = ensureMethodologyState();
+        methodology.dignities = normalizeDignitySettings(
+            methodology.dignities || {},
+            preferencesMetadata?.default_dignities || {}
+        );
+        return methodology.dignities;
+    }
+
+    function buildDignityPlanetMatrix(dignities = {}) {
+        const bodies = getDignityBodies();
+        const matrix = Object.fromEntries(
+            bodies.map((body) => [
+                body,
+                {
+                    domicile_primary: [],
+                    domicile_secondary: [],
+                    detriment_primary: [],
+                    detriment_secondary: [],
+                    exaltation: [],
+                    fall: [],
+                },
+            ])
+        );
+
+        getMetadataSigns().forEach((signMeta) => {
+            const sign = signMeta?.name;
+            const opposite = signMeta?.opposite;
+            const entry = dignities?.signs?.[sign] || {};
+            if (entry.ruler && matrix[entry.ruler]) {
+                matrix[entry.ruler].domicile_primary.push(sign);
+                if (opposite) matrix[entry.ruler].detriment_primary.push(opposite);
+            }
+            if (entry.co_ruler && matrix[entry.co_ruler]) {
+                matrix[entry.co_ruler].domicile_secondary.push(sign);
+                if (opposite) matrix[entry.co_ruler].detriment_secondary.push(opposite);
+            }
+            if (entry.exaltation && matrix[entry.exaltation]) {
+                matrix[entry.exaltation].exaltation.push(sign);
+                if (opposite) matrix[entry.exaltation].fall.push(opposite);
+            }
+        });
+
+        return matrix;
+    }
+
+    function renderDignityGlyphs(signs = [], { mode = 'derived', secondarySigns = [] } = {}) {
+        const secondary = new Set(secondarySigns || []);
+        return getMetadataSigns().map((signMeta) => {
+            const sign = signMeta?.name;
+            const active = signs.includes(sign) || secondary.has(sign);
+            const isSecondary = secondary.has(sign);
+            const className = [
+                'account-settings-dignity-glyph',
+                active ? 'is-active' : '',
+                isSecondary ? 'is-secondary' : '',
+                mode === 'derived' ? 'is-derived' : '',
+            ].filter(Boolean).join(' ');
+            const label = escapeHtml(getSignLabel(sign));
+            const stateKey = active
+                ? (isSecondary ? 'page.accountSettings.dignities.states.secondary' : 'page.accountSettings.dignities.states.primary')
+                : 'page.accountSettings.dignities.states.empty';
+            const title = escapeHtml(`${label} · ${t(stateKey)}`);
+            return `
+                <button
+                    type="button"
+                    class="${className}"
+                    data-dignity-mode="${mode}"
+                    data-dignity-sign="${sign}"
+                    title="${title}"
+                    aria-label="${title}"
+                    ${mode === 'derived' ? 'disabled' : ''}
+                >${getSignSymbolMarkup(sign)}</button>
+            `;
+        }).join('');
     }
 
     function updateOrbProfileUi() {
@@ -481,6 +596,109 @@
         updateOrbViewModeUi();
     }
 
+    function renderDignitiesMatrix(methodology = {}) {
+        const tbody = document.getElementById('accountDignitiesMatrixBody');
+        if (!tbody) return;
+
+        const dignities = normalizeDignitySettings(
+            methodology?.dignities || {},
+            preferencesMetadata?.default_dignities || {}
+        );
+        const matrix = buildDignityPlanetMatrix(dignities);
+
+        tbody.innerHTML = getDignityBodies().map((body) => {
+            const bodyLabel = escapeHtml(getBodyLabel(body));
+            const bodyState = matrix[body] || {
+                domicile_primary: [],
+                domicile_secondary: [],
+                detriment_primary: [],
+                detriment_secondary: [],
+                exaltation: [],
+                fall: [],
+            };
+
+            return `
+                <tr>
+                    <th scope="row" class="account-settings-icon-cell">
+                        <span class="account-settings-body account-settings-body--icon-only">
+                            <span class="account-settings-body-badge account-settings-orb-glyph" title="${bodyLabel}" aria-label="${bodyLabel}" role="img" tabindex="0">
+                                ${getBodySymbolMarkup(body, { size: 18, title: getBodyLabel(body) })}
+                            </span>
+                        </span>
+                    </th>
+                    <td>
+                        <div class="account-settings-dignity-stack" data-dignity-cell="domicile" data-dignity-planet="${body}">
+                            ${renderDignityGlyphs(bodyState.domicile_primary, {
+                                mode: 'domicile',
+                                secondarySigns: bodyState.domicile_secondary,
+                            })}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="account-settings-dignity-stack account-settings-dignity-stack--derived">
+                            ${renderDignityGlyphs(bodyState.detriment_primary, {
+                                mode: 'derived',
+                                secondarySigns: bodyState.detriment_secondary,
+                            })}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="account-settings-dignity-stack" data-dignity-cell="exaltation" data-dignity-planet="${body}">
+                            ${renderDignityGlyphs(bodyState.exaltation, { mode: 'exaltation' })}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="account-settings-dignity-stack account-settings-dignity-stack--derived">
+                            ${renderDignityGlyphs(bodyState.fall, { mode: 'derived' })}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function setDomicileAssignment(sign, planet) {
+        const dignities = ensureDignitiesState();
+        const current = {
+            ...(dignities.signs?.[sign] || {}),
+        };
+
+        if (current.ruler === planet) {
+            if (current.co_ruler) {
+                current.ruler = current.co_ruler;
+                current.co_ruler = null;
+            } else {
+                current.ruler = null;
+            }
+        } else if (current.co_ruler === planet) {
+            current.co_ruler = null;
+        } else if (!current.ruler) {
+            current.ruler = planet;
+        } else {
+            current.co_ruler = planet;
+        }
+
+        dignities.signs[sign] = current;
+        ensureMethodologyState().dignities = normalizeDignitySettings(
+            dignities,
+            preferencesMetadata?.default_dignities || {}
+        );
+    }
+
+    function setExaltationAssignment(sign, planet) {
+        const dignities = ensureDignitiesState();
+        const current = {
+            ...(dignities.signs?.[sign] || {}),
+        };
+
+        current.exaltation = current.exaltation === planet ? null : planet;
+        dignities.signs[sign] = current;
+        ensureMethodologyState().dignities = normalizeDignitySettings(
+            dignities,
+            preferencesMetadata?.default_dignities || {}
+        );
+    }
+
     function renderBalanceWeights(methodology = {}) {
         const planetsBody = document.getElementById('accountBalancePlanetWeightsBody');
         const specialBody = document.getElementById('accountBalanceSpecialWeightsBody');
@@ -672,6 +890,7 @@
         renderAspectTypesMatrix(normalized.chart_defaults);
         renderBodiesMatrix(normalized.chart_defaults);
         renderOrbsMatrix(normalized.methodology);
+        renderDignitiesMatrix(normalized.methodology);
         renderBalanceWeights(normalized.methodology);
         renderAspectColors(normalized.visual);
         renderPlanetColors(normalized.visual);
@@ -756,6 +975,10 @@
                     document.getElementById('accountStationaryThresholdPercent')?.value || '5'
                 ),
             },
+            dignities: normalizeDignitySettings(
+                accountPreferences?.methodology?.dignities || ensureDignitiesState(),
+                preferencesMetadata?.default_dignities || {}
+            ),
         });
     }
 
@@ -993,6 +1216,7 @@
         const restoreBtn = document.getElementById('restoreStandardDefaultsBtn');
         const applyNatalOrbsBtn = document.getElementById('accountApplyNatalOrbsBtn');
         const orbMatrixBody = document.getElementById('accountOrbsMatrixBody');
+        const dignityMatrixBody = document.getElementById('accountDignitiesMatrixBody');
         const bodyOverrideColorsBody = document.getElementById('accountBodyOverrideColorsBody');
         const resetConfirmDialog = document.getElementById('accountSettingsResetConfirmDialog');
         const resetConfirmBackdrop = document.getElementById('accountSettingsResetConfirmBackdrop');
@@ -1051,6 +1275,22 @@
             }
             nextMatrix[input.dataset.orbAspectType][input.dataset.orbBody] = Number.parseFloat(input.value) || 0;
             methodology.orbs.profiles[activeOrbProfile] = { matrix: nextMatrix };
+        });
+        dignityMatrixBody?.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-dignity-mode][data-dignity-sign]');
+            if (!(button instanceof HTMLButtonElement)) return;
+            const mode = button.dataset.dignityMode;
+            const sign = button.dataset.dignitySign;
+            const planet = button.closest('[data-dignity-planet]')?.dataset?.dignityPlanet;
+            if (!mode || !sign || !planet || mode === 'derived') return;
+
+            if (mode === 'domicile') {
+                setDomicileAssignment(sign, planet);
+            } else if (mode === 'exaltation') {
+                setExaltationAssignment(sign, planet);
+            }
+
+            renderDignitiesMatrix(accountPreferences?.methodology || ensureMethodologyState());
         });
         bodyOverrideColorsBody?.addEventListener('input', (event) => {
             const input = event.target;

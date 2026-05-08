@@ -10,7 +10,7 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from app.database.models import AstrologerPreference, RefAspectType, RefPlanetOrb, User
+from app.database.models import AstrologerPreference, RefAspectType, RefPlanetOrb, RefSignProperties, User
 from app.utils.constants import PROGNOSTIC_DEFAULT_ORB, PROGNOSTIC_MOON_ORB
 
 
@@ -21,6 +21,33 @@ CANONICAL_BODIES = [
     'TrueNode', 'SouthNode',
     'BlackMoon', 'WhiteMoon', 'PartOfFortune',
     'ASC', 'DSC', 'MC', 'IC', 'Vertex', 'AntiVertex',
+]
+
+CANONICAL_SIGNS = [
+    'Aries', 'Taurus', 'Gemini', 'Cancer',
+    'Leo', 'Virgo', 'Libra', 'Scorpio',
+    'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces',
+]
+
+OPPOSITE_SIGN_BY_SIGN: Dict[str, str] = {
+    'Aries': 'Libra',
+    'Taurus': 'Scorpio',
+    'Gemini': 'Sagittarius',
+    'Cancer': 'Capricorn',
+    'Leo': 'Aquarius',
+    'Virgo': 'Pisces',
+    'Libra': 'Aries',
+    'Scorpio': 'Taurus',
+    'Sagittarius': 'Gemini',
+    'Capricorn': 'Cancer',
+    'Aquarius': 'Leo',
+    'Pisces': 'Virgo',
+}
+
+DIGNITY_BODY_IDS = [
+    'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
+    'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto',
+    'Chiron', 'Proserpina',
 ]
 
 BODY_ALIAS_CANDIDATES: Dict[str, List[str]] = {
@@ -135,6 +162,28 @@ def build_default_balance_settings() -> Dict[str, Any]:
         'version': 1,
         'planet_weights': deepcopy(DEFAULT_BALANCE_PLANET_WEIGHTS),
         'special_point_weights': deepcopy(DEFAULT_BALANCE_SPECIAL_POINT_WEIGHTS),
+    }
+
+
+def build_default_dignity_settings(sign_properties: Iterable[RefSignProperties]) -> Dict[str, Any]:
+    signs: Dict[str, Dict[str, Optional[str]]] = {}
+    for sign in sign_properties:
+        signs[str(sign.sign)] = {
+            'ruler': str(sign.ruler) if sign.ruler else None,
+            'co_ruler': str(sign.co_ruler) if sign.co_ruler else None,
+            'exaltation': str(sign.exaltation) if sign.exaltation else None,
+        }
+
+    for sign_name in CANONICAL_SIGNS:
+        signs.setdefault(sign_name, {
+            'ruler': None,
+            'co_ruler': None,
+            'exaltation': None,
+        })
+
+    return {
+        'version': 1,
+        'signs': signs,
     }
 
 
@@ -261,6 +310,39 @@ def normalize_orb_settings(
     }
 
 
+def normalize_dignity_settings(
+    dignities: Optional[Dict[str, Any]] = None,
+    *,
+    default_dignities: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    default_signs = ((default_dignities or {}).get('signs') or {}) if isinstance(default_dignities, dict) else {}
+    source_signs = (dignities or {}).get('signs') or {}
+    normalized_signs: Dict[str, Dict[str, Optional[str]]] = {}
+
+    for sign_name in CANONICAL_SIGNS:
+        default_entry = deepcopy(default_signs.get(sign_name) or {})
+        source_entry = deepcopy(source_signs.get(sign_name) or {})
+        merged_entry = deep_merge_dicts(default_entry, source_entry)
+
+        ruler = normalize_body_name(merged_entry.get('ruler'))
+        co_ruler = normalize_body_name(merged_entry.get('co_ruler'))
+        exaltation = normalize_body_name(merged_entry.get('exaltation'))
+
+        if ruler == co_ruler:
+            co_ruler = None
+
+        normalized_signs[sign_name] = {
+            'ruler': ruler,
+            'co_ruler': co_ruler,
+            'exaltation': exaltation,
+        }
+
+    return {
+        'version': 1,
+        'signs': normalized_signs,
+    }
+
+
 def normalize_methodology_settings(
     methodology: Optional[Dict[str, Any]] = None,
     *,
@@ -270,6 +352,7 @@ def normalize_methodology_settings(
     default_orbs = deepcopy(default_methodology.get('orbs') or {})
     default_balances = deepcopy(default_methodology.get('balances') or {})
     default_stationary = deepcopy(default_methodology.get('stationary') or {})
+    default_dignities = deepcopy(default_methodology.get('dignities') or {})
     balances = deep_merge_dicts(default_balances, (methodology or {}).get('balances') or {})
     stationary = deep_merge_dicts(default_stationary, (methodology or {}).get('stationary') or {})
 
@@ -286,6 +369,10 @@ def normalize_methodology_settings(
                 default=default_stationary.get('threshold_percent', DEFAULT_STATIONARY_THRESHOLD_PERCENT),
             ),
         },
+        'dignities': normalize_dignity_settings(
+            (methodology or {}).get('dignities') or {},
+            default_dignities=default_dignities,
+        ),
     }
 
 
@@ -350,6 +437,9 @@ class PreferencesRuntimeResolver:
                 'orbs': build_default_orb_settings(self._get_aspect_types(), self._get_planet_orbs()),
                 'balances': build_default_balance_settings(),
                 'stationary': build_default_stationary_settings(),
+                'dignities': build_default_dignity_settings(
+                    self.db.query(RefSignProperties).order_by(RefSignProperties.sign.asc()).all()
+                ),
             }
         return self._default_methodology_cache
 
@@ -387,8 +477,16 @@ class PreferencesRuntimeResolver:
                 }
                 for body in CANONICAL_BODIES
             ],
+            'signs': [
+                {
+                    'name': sign_name,
+                    'opposite': OPPOSITE_SIGN_BY_SIGN[sign_name],
+                }
+                for sign_name in CANONICAL_SIGNS
+            ],
             'default_balance_targets': deepcopy(methodology['balances']),
             'default_visual_palettes': deepcopy(visual),
+            'default_dignities': deepcopy(methodology['dignities']),
         }
 
     def _get_record(self, astrologer_id: UUID) -> Optional[AstrologerPreference]:
@@ -467,6 +565,20 @@ class PreferencesRuntimeResolver:
     def get_methodology_hash_for_astrologer(self, astrologer_id: UUID, *, default_house_system: str = 'P') -> str:
         payload = self._get_cached_account_payload(astrologer_id, default_house_system=default_house_system)
         return stable_hash(payload.get('methodology') or {})
+
+    def get_dignity_settings_for_astrologer(
+        self,
+        astrologer_id: UUID,
+        *,
+        default_house_system: str = 'P',
+    ) -> Dict[str, Any]:
+        payload = self._get_cached_account_payload(astrologer_id, default_house_system=default_house_system)
+        return deepcopy(
+            normalize_dignity_settings(
+                payload.get('methodology', {}).get('dignities') or {},
+                default_dignities=self._get_default_methodology_cached().get('dignities') or {},
+            )
+        )
 
     def get_methodology_hash_for_user(self, user_id: UUID, *, default_house_system: str = 'P') -> str:
         astrologer_id = self.get_astrologer_id_for_user(user_id)

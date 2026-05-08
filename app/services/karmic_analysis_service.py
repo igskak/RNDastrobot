@@ -25,7 +25,13 @@ class KarmicAnalysisService:
         # Uses fallback sign properties without DB session.
         self._dignity_service = DignityService(db_session=None)
 
-    def build(self, chart_data: Dict[str, Any]) -> Dict[str, Any]:
+    def build(
+        self,
+        chart_data: Dict[str, Any],
+        dignity_service: Optional[DignityService] = None,
+    ) -> Dict[str, Any]:
+        if dignity_service is not None:
+            self._dignity_service = dignity_service
         planets = chart_data.get("planets") or []
         aspects = chart_data.get("aspects") or []
         special_points = chart_data.get("special_points") or {}

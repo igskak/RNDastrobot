@@ -138,6 +138,17 @@ test('filterChartDataByViewPreferences removes hidden bodies from table house fi
                 ruler_planet: 'Mars',
                 ruler_in_house: 5,
                 co_rulers: ['Sun', 'TrueNode'],
+                ruler_groups: [
+                    {
+                        scope: 'cusp',
+                        sign: 'Aries',
+                        entries: [
+                            { planet: 'Mars', role: 'primary', house: 5 },
+                            { planet: 'Sun', role: 'secondary', house: 9 },
+                            { planet: 'TrueNode', role: 'secondary', house: 11 },
+                        ],
+                    },
+                ],
                 planets_in_house: ['Mars', 'Sun', 'TrueNode'],
             },
         ],
@@ -161,6 +172,15 @@ test('filterChartDataByViewPreferences removes hidden bodies from table house fi
     assert.equal(filtered.houses[0].ruler_planet, null);
     assert.equal(filtered.houses[0].ruler_in_house, null);
     assert.deepEqual(filtered.houses[0].co_rulers, ['Sun']);
+    assert.deepEqual(filtered.houses[0].ruler_groups, [
+        {
+            scope: 'cusp',
+            sign: 'Aries',
+            entries: [
+                { planet: 'Sun', role: 'secondary', house: 9 },
+            ],
+        },
+    ]);
     assert.deepEqual(filtered.houses[0].planets_in_house, ['Sun']);
     assert.deepEqual(Object.keys(filtered.special_points), ['Fortune']);
 });

@@ -3,6 +3,7 @@ from app.services.preferences_runtime import (
     CANONICAL_BODIES,
     PreferencesRuntimeResolver,
     apply_fixed_prognostic_defaults,
+    normalize_dignity_settings,
     build_default_orb_settings,
     build_default_visual_settings,
     normalize_methodology_settings,
@@ -154,6 +155,30 @@ def test_normalize_methodology_settings_preserves_custom_stationary_threshold():
     })
 
     assert normalized["stationary"]["threshold_percent"] == 7.5
+
+
+def test_normalize_dignity_settings_merges_defaults_and_drops_duplicate_co_ruler():
+    normalized = normalize_dignity_settings(
+        {
+            "signs": {
+                "Aries": {"ruler": "Mars", "co_ruler": "Mars"},
+                "Libra": {"ruler": "Venus", "exaltation": "Saturn"},
+            },
+        },
+        default_dignities={
+            "version": 1,
+            "signs": {
+                "Aries": {"ruler": "Mars", "co_ruler": None, "exaltation": "Sun"},
+                "Libra": {"ruler": "Venus", "co_ruler": "Chiron", "exaltation": "Saturn"},
+            },
+        },
+    )
+
+    assert normalized["version"] == 1
+    assert normalized["signs"]["Aries"]["ruler"] == "Mars"
+    assert normalized["signs"]["Aries"]["co_ruler"] is None
+    assert normalized["signs"]["Aries"]["exaltation"] == "Sun"
+    assert normalized["signs"]["Libra"]["co_ruler"] == "Chiron"
 
 
 def test_resolve_orb_for_astrologer_reuses_cached_normalized_orbs(monkeypatch):

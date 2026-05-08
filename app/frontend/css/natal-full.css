@@ -710,6 +710,70 @@
     font-style: italic;
 }
 
+.house-ruler-stack-cell {
+    white-space: normal;
+}
+
+.house-ruler-group {
+    display: grid;
+    gap: 3px;
+}
+
+.house-ruler-group--included {
+    margin-top: 6px;
+}
+
+.house-ruler-line {
+    display: inline-grid;
+    grid-template-columns: 18px max-content auto;
+    align-items: start;
+    column-gap: 4px;
+    min-height: 18px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.house-ruler-symbol-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: flex-start;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+}
+
+.house-ruler-symbol-wrap .planet-symbol-svg {
+    display: block;
+}
+
+.house-ruler-planet-name {
+    display: inline-flex;
+    align-items: center;
+    min-height: 18px;
+    color: var(--text-primary);
+    line-height: 18px;
+}
+
+.house-ruler-retro {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    margin-left: 0;
+    z-index: 1;
+}
+
+.house-ruler-house-inline {
+    display: inline-flex;
+    align-items: center;
+    min-height: 18px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+    line-height: 18px;
+    transform: none;
+}
+
 /* Aspect table rows */
 .aspect-row-harmonious td:first-child {
     border-left: 3px solid var(--success);

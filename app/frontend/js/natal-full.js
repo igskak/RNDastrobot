@@ -229,6 +229,84 @@ function formatPlanetNameWithRetro(name, options = {}) {
     return `${escapeHtml(label)}${retroIndicatorHtml(isBodyRetrograde(name), markerClass)}`;
 }
 
+function buildPlanetHouseLookup(planets = []) {
+    const lookup = {};
+    (planets || []).forEach((planet) => {
+        if (!planet?.name || !planet.house) return;
+        lookup[normalizeBodyName(planet.name)] = planet.house;
+    });
+    return lookup;
+}
+
+function buildHouseRulerGroups(house, planetToHouse = {}) {
+    if (Array.isArray(house?.ruler_groups) && house.ruler_groups.length) {
+        return house.ruler_groups
+            .map((group) => ({
+                included: group?.scope === 'included',
+                entries: (group?.entries || []).map((entry) => ({
+                    planet: entry.planet,
+                    house: entry.house ?? planetToHouse[normalizeBodyName(entry.planet)] ?? null,
+                })),
+            }))
+            .filter((group) => group.entries.length);
+    }
+
+    const entries = [];
+    const fallbackPlanets = [house?.ruler_planet, ...(Array.isArray(house?.co_rulers) ? house.co_rulers : [])];
+    const seen = new Set();
+
+    fallbackPlanets.forEach((planetName, index) => {
+        if (!planetName) return;
+        const normalizedName = normalizeBodyName(planetName);
+        if (seen.has(normalizedName)) return;
+        seen.add(normalizedName);
+        entries.push({
+            planet: planetName,
+            house: index === 0 && house?.ruler_in_house != null && house?.ruler_in_house !== ''
+                ? house.ruler_in_house
+                : planetToHouse[normalizedName] ?? null,
+        });
+    });
+
+    return entries.length ? [{ entries, included: false }] : [];
+}
+
+function renderHouseRulerGroups(house, planetToHouse = {}) {
+    const groups = buildHouseRulerGroups(house, planetToHouse);
+    if (!groups.length) return EMPTY;
+
+    return groups.map((group) => {
+        const groupClass = group.included
+            ? 'house-ruler-group house-ruler-group--included'
+            : 'house-ruler-group';
+
+        return `
+            <div class="${groupClass}">
+                ${group.entries.map((entry) => {
+                    const planetName = getPlanetName(entry.planet);
+                    const houseLabel = entry.house != null && entry.house !== ''
+                        ? formatHouseNumber(entry.house)
+                        : '';
+                    const titleParts = [planetName];
+                    if (houseLabel) {
+                        titleParts.push(`${t('common.house')} ${houseLabel}`);
+                    }
+                    return `
+                        <div class="house-ruler-line" title="${escapeHtml(titleParts.join(' • '))}">
+                            <span class="house-ruler-symbol-wrap">
+                                ${getPlanetSymbolMarkup(entry.planet, { size: 16, title: planetName })}
+                                ${retroIndicatorHtml(isBodyRetrograde(entry.planet), 'retro-indicator--micro house-ruler-retro')}
+                            </span>
+                            <span class="house-ruler-planet-name">${escapeHtml(planetName)}</span>
+                            <span class="house-ruler-house-inline">${escapeHtml(houseLabel || EMPTY)}</span>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    }).join('');
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     await waitForI18nReady();
 
@@ -817,10 +895,7 @@ function renderHousesTable(houses, planets) {
         planetsByHouse[p.house].push(p.name);
     });
 
-    const planetToHouse = {};
-    (planets || []).forEach((p) => {
-        if (p.house) planetToHouse[p.name] = p.house;
-    });
+    const planetToHouse = buildPlanetHouseLookup(planets);
 
     (houses || []).forEach((house) => {
         const tr = document.createElement('tr');
@@ -836,16 +911,12 @@ function renderHousesTable(houses, planets) {
         tr.appendChild(tdSign);
 
         const tdRuler = document.createElement('td');
-        let rulerText = formatPlanetNameWithRetro(house.ruler_planet);
-        if (house.co_rulers?.length > 0) {
-            const coRulerNames = house.co_rulers.map((p) => formatPlanetNameWithRetro(p)).join(', ');
-            rulerText += ` (${coRulerNames})`;
-        }
-        tdRuler.innerHTML = rulerText || EMPTY;
+        tdRuler.className = 'house-ruler-stack-cell';
+        tdRuler.innerHTML = renderHouseRulerGroups(house, planetToHouse);
         tr.appendChild(tdRuler);
 
         const tdRulerHouse = document.createElement('td');
-        const rulerHouse = house.ruler_in_house || planetToHouse[house.ruler_planet];
+        const rulerHouse = house.ruler_in_house || planetToHouse[normalizeBodyName(house.ruler_planet)];
         tdRulerHouse.textContent = formatHouseNumber(rulerHouse) || EMPTY;
         tr.appendChild(tdRulerHouse);
 

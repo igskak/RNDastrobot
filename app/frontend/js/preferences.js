@@ -78,6 +78,11 @@
     const DEFAULT_PROGNOSTIC_ORB = 1;
     const DEFAULT_PROGNOSTIC_MOON_ORB = 3;
     const DEFAULT_STATIONARY_THRESHOLD_PERCENT = 10;
+    const DIGNITY_SIGNS = [
+        'Aries', 'Taurus', 'Gemini', 'Cancer',
+        'Leo', 'Virgo', 'Libra', 'Scorpio',
+        'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces',
+    ];
     const BODY_NAME_ALIASES = {
         TrueNorthNode: 'TrueNode',
         TrueSouthNode: 'SouthNode',
@@ -345,6 +350,16 @@
                 co_rulers: Array.isArray(house?.co_rulers)
                     ? house.co_rulers.filter((body) => bodyIsVisible(body))
                     : house?.co_rulers,
+                ruler_groups: Array.isArray(house?.ruler_groups)
+                    ? house.ruler_groups
+                        .map((group) => ({
+                            ...group,
+                            entries: Array.isArray(group?.entries)
+                                ? group.entries.filter((entry) => bodyIsVisible(entry?.planet))
+                                : [],
+                        }))
+                        .filter((group) => group.entries.length)
+                    : house?.ruler_groups,
                 planets_in_house: Array.isArray(house?.planets_in_house)
                     ? house.planets_in_house.filter((body) => bodyIsVisible(body))
                     : house?.planets_in_house,
@@ -404,6 +419,34 @@
         return DEFAULT_ORB_PAIR_STRATEGY;
     }
 
+    function normalizeDignitySettings(dignities = {}, defaultDignities = {}) {
+        const defaultSigns = defaultDignities?.signs || {};
+        const sourceSigns = dignities?.signs || {};
+        const signs = {};
+
+        DIGNITY_SIGNS.forEach((sign) => {
+            const merged = deepMerge(defaultSigns?.[sign] || {}, sourceSigns?.[sign] || {});
+            const ruler = normalizeMatrixBodyName(merged?.ruler || null) || null;
+            let coRuler = normalizeMatrixBodyName(merged?.co_ruler || null) || null;
+            const exaltation = normalizeMatrixBodyName(merged?.exaltation || null) || null;
+
+            if (ruler && coRuler && ruler === coRuler) {
+                coRuler = null;
+            }
+
+            signs[sign] = {
+                ruler,
+                co_ruler: coRuler,
+                exaltation,
+            };
+        });
+
+        return {
+            version: 1,
+            signs,
+        };
+    }
+
     function normalizeStationaryThresholdPercent(value) {
         const normalized = Number.parseFloat(value);
         if (!Number.isFinite(normalized)) {
@@ -455,6 +498,10 @@
             stationary: {
                 threshold_percent: normalizeStationaryThresholdPercent(methodology?.stationary?.threshold_percent),
             },
+            dignities: normalizeDignitySettings(
+                methodology?.dignities || {},
+                methodology?.default_dignities || {}
+            ),
         };
     }
 
@@ -553,6 +600,7 @@
         DEFAULT_ASPECT_COLORS,
         DEFAULT_ELEMENT_PALETTE,
         ORB_PROFILE_IDS,
+        DIGNITY_SIGNS,
         DEFAULT_ORB_PAIR_STRATEGY,
         DEFAULT_PROGNOSTIC_ORB,
         DEFAULT_PROGNOSTIC_MOON_ORB,
@@ -567,6 +615,7 @@
         isExactAspectFamilySelection,
         healEnabledAspectTypesForScope,
         normalizeOrbPairStrategy,
+        normalizeDignitySettings,
         normalizeViewSettings,
         normalizeMethodologySettings,
         resolveEnabledAspectTypesForScope,

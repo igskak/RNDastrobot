@@ -58,6 +58,29 @@ test('normalizeMethodologySettings keeps custom stationary threshold', () => {
     assert.equal(normalized.stationary.threshold_percent, 7.5);
 });
 
+test('normalizeDignitySettings merges defaults and removes duplicate co-ruler', () => {
+    const normalized = preferences.normalizeDignitySettings(
+        {
+            signs: {
+                Aries: { ruler: 'Mars', co_ruler: 'Mars' },
+                Libra: { ruler: 'Venus' },
+            },
+        },
+        {
+            version: 1,
+            signs: {
+                Aries: { ruler: 'Mars', co_ruler: null, exaltation: 'Sun' },
+                Libra: { ruler: 'Venus', co_ruler: 'Chiron', exaltation: 'Saturn' },
+            },
+        },
+    );
+
+    assert.equal(normalized.signs.Aries.ruler, 'Mars');
+    assert.equal(normalized.signs.Aries.co_ruler, null);
+    assert.equal(normalized.signs.Aries.exaltation, 'Sun');
+    assert.equal(normalized.signs.Libra.co_ruler, 'Chiron');
+});
+
 test('buildDefaultOrbProfileMatrix uses fixed prognostic defaults', () => {
     const aspectTypes = [
         { aspect_type: 'Conjunction', base_orb: 8 },

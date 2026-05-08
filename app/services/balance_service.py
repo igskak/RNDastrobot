@@ -86,6 +86,8 @@ class BalanceService:
         if resolved_astrologer_id is None and user_id is not None:
             resolved_astrologer_id = self.preferences_runtime.get_astrologer_id_for_user(user_id)
 
+        self.dignity_service = DignityService(self.db_session, astrologer_id=resolved_astrologer_id)
+
         if resolved_astrologer_id:
             self._planet_weights, self._special_point_weights = self.preferences_runtime.get_balance_weights_for_astrologer(
                 resolved_astrologer_id
