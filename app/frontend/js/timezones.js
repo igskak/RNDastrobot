@@ -120,6 +120,42 @@ function formatTimezoneLabel(timezone) {
     return `${city} (${timezone.offset})`;
 }
 
+function normalizeOffsetPrefix(offset, prefix = 'UTC') {
+    const normalizedPrefix = String(prefix || 'UTC').toUpperCase();
+    const rawOffset = String(offset || '').trim();
+    if (!rawOffset) return '';
+    if (/^(UTC|GMT)$/i.test(rawOffset)) return normalizedPrefix;
+    if (/^(UTC|GMT)[+-]/i.test(rawOffset)) {
+        return rawOffset.replace(/^(UTC|GMT)/i, normalizedPrefix);
+    }
+    return `${normalizedPrefix}${rawOffset}`;
+}
+
+function formatTimezoneOffsetLabel(value, options = {}) {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+
+    const prefix = options.prefix
+        || globalThis.window?.AstroPreferences?.getTimezoneLabelFormat?.()
+        || 'UTC';
+    const matchedTimezone = TIMEZONES.find((timezone) => timezone.value === raw);
+    if (matchedTimezone?.offset) {
+        return normalizeOffsetPrefix(matchedTimezone.offset, prefix);
+    }
+
+    if (/^(UTC|GMT)([+-].+)?$/i.test(raw)) {
+        return normalizeOffsetPrefix(raw, prefix);
+    }
+
+    const guessedTimezone = guessTimezone(raw);
+    const guessedMatch = TIMEZONES.find((timezone) => timezone.value === guessedTimezone);
+    if (guessedMatch?.offset) {
+        return normalizeOffsetPrefix(guessedMatch.offset, prefix);
+    }
+
+    return raw;
+}
+
 function clearTimezoneOptions(selectElement) {
     Array.from(selectElement.options)
         .filter((option) => option.value !== '')
@@ -181,6 +217,7 @@ window.Timezones = {
     populate: populateTimezones,
     guess: guessTimezone,
     formatLabel: formatTimezoneLabel,
+    formatOffsetLabel: formatTimezoneOffsetLabel,
 };
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -189,5 +226,6 @@ if (typeof module !== 'undefined' && module.exports) {
         populateTimezones,
         guessTimezone,
         formatTimezoneLabel,
+        formatTimezoneOffsetLabel,
     };
 }

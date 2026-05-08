@@ -510,6 +510,9 @@
     }
 
     function resolveVisualPreferences(visual = {}) {
+        const timezoneLabelFormat = String(visual?.timezone_label_format || 'UTC').trim().toUpperCase() === 'GMT'
+            ? 'GMT'
+            : 'UTC';
         return {
             aspect_colors: {
                 ...DEFAULT_ASPECT_COLORS,
@@ -524,6 +527,7 @@
                     ...(visual?.planet_colors?.body_overrides || {}),
                 },
             },
+            timezone_label_format: timezoneLabelFormat,
         };
     }
 
@@ -556,6 +560,11 @@
         const bodyOverride = resolved?.planet_colors?.body_overrides?.[bodyName];
         if (bodyOverride) return bodyOverride;
         return getElementColor(element, resolved);
+    }
+
+    function getTimezoneLabelFormat(visual = null) {
+        const resolved = visual ? resolveVisualPreferences(visual) : accountVisualPreferences;
+        return resolved?.timezone_label_format === 'GMT' ? 'GMT' : 'UTC';
     }
 
     function shouldShowAspectText(viewSettings = {}) {
@@ -626,6 +635,7 @@
         getAspectColor,
         getElementColor,
         getPlanetColor,
+        getTimezoneLabelFormat,
         shouldShowAspectText,
         getHiddenBodiesFromMatrix,
         buildMatrixRowsFromHiddenBodies,

@@ -261,6 +261,10 @@
         };
     }
 
+    function getTimezoneLabelFormatSelect() {
+        return document.getElementById('accountTimezoneLabelFormatSelect');
+    }
+
     function getViewDom(viewId) {
         if (viewId === 'natal') {
             return {
@@ -919,6 +923,10 @@
         if (houseSystemSelect) {
             houseSystemSelect.value = normalized.chart_creation_defaults.house_system || 'P';
         }
+        const timezoneLabelFormatSelect = getTimezoneLabelFormatSelect();
+        if (timezoneLabelFormatSelect) {
+            timezoneLabelFormatSelect.value = normalized.visual?.timezone_label_format === 'GMT' ? 'GMT' : 'UTC';
+        }
 
         const orbPairStrategySelect = document.getElementById('accountOrbPairStrategySelect');
         if (orbPairStrategySelect) {
@@ -1065,6 +1073,7 @@
                 element_palette: elementPalette,
                 body_overrides: bodyOverrides,
             },
+            timezone_label_format: getTimezoneLabelFormatSelect()?.value || 'UTC',
         });
     }
 

@@ -119,4 +119,12 @@ test('resolveVisualPreferences uses chart-default element palette', () => {
     assert.equal(visual.planet_colors.element_palette.Earth, '#84cc16');
     assert.equal(visual.planet_colors.element_palette.Air, '#f59e0b');
     assert.equal(visual.planet_colors.element_palette.Water, '#3b82f6');
+    assert.equal(visual.timezone_label_format, 'UTC');
+});
+
+test('resolveVisualPreferences normalizes timezone label format', () => {
+    assert.equal(preferences.resolveVisualPreferences({ timezone_label_format: 'gmt' }).timezone_label_format, 'GMT');
+    assert.equal(preferences.resolveVisualPreferences({ timezone_label_format: 'utc' }).timezone_label_format, 'UTC');
+    assert.equal(preferences.resolveVisualPreferences({ timezone_label_format: 'weird' }).timezone_label_format, 'UTC');
+    assert.equal(preferences.getTimezoneLabelFormat({ timezone_label_format: 'gmt' }), 'GMT');
 });

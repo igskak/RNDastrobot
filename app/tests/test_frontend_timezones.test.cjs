@@ -74,6 +74,35 @@ test('formatTimezoneLabel uses locale catalog labels', () => {
     delete global.window;
 });
 
+test('formatTimezoneOffsetLabel returns UTC offset without city name', () => {
+    global.window = {};
+
+    const { formatTimezoneOffsetLabel } = loadModule();
+
+    assert.equal(formatTimezoneOffsetLabel('Europe/Kyiv'), 'UTC+2/+3');
+    assert.equal(formatTimezoneOffsetLabel('Europe/Kiev'), 'UTC+2/+3');
+    assert.equal(formatTimezoneOffsetLabel('GMT+2:00'), 'UTC+2:00');
+    assert.equal(formatTimezoneOffsetLabel('UTC'), 'UTC');
+
+    delete global.window;
+});
+
+test('formatTimezoneOffsetLabel uses account preference prefix when not passed explicitly', () => {
+    global.window = {
+        AstroPreferences: {
+            getTimezoneLabelFormat() {
+                return 'GMT';
+            },
+        },
+    };
+
+    const { formatTimezoneOffsetLabel } = loadModule();
+
+    assert.equal(formatTimezoneOffsetLabel('Europe/Kyiv'), 'GMT+2/+3');
+
+    delete global.window;
+});
+
 test('populateTimezones re-renders translated options and preserves selected value', () => {
     global.document = {
         createElement() {

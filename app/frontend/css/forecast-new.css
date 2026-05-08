@@ -126,6 +126,36 @@
     width: max-content;
 }
 
+.forecast-new-stepper-action {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    min-width: 26px;
+    min-height: 30px;
+    padding: 0;
+    border: 1px solid rgba(30, 58, 95, 0.14);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.72);
+    color: rgba(30, 58, 95, 0.72);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: border-color var(--transition), background var(--transition), color var(--transition), transform var(--transition);
+}
+
+.forecast-new-stepper-action:hover,
+.forecast-new-stepper-action:focus-visible {
+    border-color: rgba(30, 58, 95, 0.28);
+    background: #ffffff;
+    color: var(--accent);
+    transform: translateY(-1px);
+    outline: none;
+}
+
 .forecast-new-custom-step {
     position: relative;
     display: inline-flex;
@@ -136,18 +166,21 @@
 .forecast-new-custom-step-toggle {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    justify-content: center;
+    width: 26px;
+    min-width: 26px;
     min-height: 30px;
-    max-width: 96px;
-    padding: 0 8px;
+    padding: 0;
     border: 1px solid rgba(30, 58, 95, 0.14);
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.82);
-    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.72);
+    color: rgba(30, 58, 95, 0.72);
     font: inherit;
-    font-size: 11px;
-    font-weight: 800;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
     cursor: pointer;
+    transition: border-color var(--transition), background var(--transition), color var(--transition), transform var(--transition);
 }
 
 .forecast-new-custom-step-toggle:hover,
@@ -156,13 +189,8 @@
     border-color: rgba(30, 58, 95, 0.28);
     background: #ffffff;
     color: var(--accent);
+    transform: translateY(-1px);
     outline: none;
-}
-
-.forecast-new-custom-step-toggle-label {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .forecast-new-custom-step-popover {

@@ -97,6 +97,7 @@
         customStep: { amount: 1, unit: 'day' },
         isCustomStepOpen: false,
         natalSelectedDateTime: '',
+        natalInitialDateTime: '',
         natalTimezone: 'UTC',
         natalLocation: { name: '', latitude: null, longitude: null, sourceId: null },
         natalCustomStep: { amount: 1, unit: 'day' },
@@ -166,6 +167,10 @@
     async function waitForI18nReady() {
         if (!window.FrontendI18n?.ready) return;
         await Promise.resolve(window.FrontendI18n.ready).catch(() => {});
+    }
+
+    function formatHeaderTimezone(value) {
+        return window.Timezones?.formatOffsetLabel?.(value) || String(value || '').trim();
     }
 
     function getForecastNavigationState() {
@@ -250,7 +255,10 @@
 
         const birthDate = natalData.birth_data?.date || '';
         const birthTime = normalizeTime(natalData.birth_data?.time || '12:00:00');
-        if (birthDate) state.natalSelectedDateTime = `${birthDate}T${birthTime}`;
+        if (birthDate) {
+            state.natalInitialDateTime = `${birthDate}T${birthTime}`;
+            state.natalSelectedDateTime = state.natalInitialDateTime;
+        }
         state.natalTimezone = normalizeTimezoneValue(
             natalData.birth_data?.timezone,
             natalData.birth_data?.place,
@@ -384,6 +392,12 @@
         refs.targetDateInput?.addEventListener('change', onTargetDatetimeChange);
         refs.targetTimeInput?.addEventListener('change', onTargetDatetimeChange);
         refs.forecastNewTimeStepper?.addEventListener('click', (event) => {
+            const resetButton = event.target.closest('[data-reset-moment="prognostic"]');
+            if (resetButton) {
+                event.stopPropagation();
+                resetPrognosticDateTime();
+                return;
+            }
             const customToggle = event.target.closest('[data-custom-step-toggle]');
             if (customToggle) {
                 event.stopPropagation();
@@ -453,6 +467,12 @@
         refs.natalTimeInput?.addEventListener('change', onNatalDatetimeChange);
 
         refs.forecastNewNatalTimeStepper?.addEventListener('click', (event) => {
+            const resetButton = event.target.closest('[data-reset-moment="natal"]');
+            if (resetButton) {
+                event.stopPropagation();
+                resetNatalDateTime();
+                return;
+            }
             const customToggle = event.target.closest('[data-custom-step-toggle]');
             if (customToggle) {
                 event.stopPropagation();
@@ -858,7 +878,12 @@
         const birth = state.natalData?.birth_data || {};
         const name = [birth.first_name, birth.last_name].filter(Boolean).join(' ').trim() || 'Клиент';
         refs.forecastNewTitle.textContent = `${name} · Прогностика New`;
-        refs.forecastNewSubtitle.textContent = [birth.date, birth.time, birth.place].filter(Boolean).join(' · ');
+        refs.forecastNewSubtitle.textContent = [
+            birth.date,
+            birth.time,
+            formatHeaderTimezone(birth.timezone),
+            birth.place,
+        ].filter(Boolean).join(' · ');
         updateNatalMomentMeta();
     }
 
@@ -866,6 +891,7 @@
         const [date, time] = splitTargetDatetime(state.natalSelectedDateTime);
         const summary = [
             `${date} · ${time}`,
+            formatHeaderTimezone(state.natalTimezone),
             state.natalLocation?.name || '',
         ].filter(Boolean).join(' · ');
         if (refs.natalPanelMeta) refs.natalPanelMeta.textContent = summary;
@@ -879,7 +905,7 @@
 
     function buildPrognosticMomentSummary() {
         const locationName = state.location?.name || '';
-        return [state.selectedDateTime.replace('T', ' · '), locationName, state.timezone]
+        return [state.selectedDateTime.replace('T', ' · '), formatHeaderTimezone(state.timezone), locationName]
             .filter(Boolean)
             .join(' · ');
     }
@@ -899,6 +925,7 @@
         const values = getTimeStepperSegmentValues(state.selectedDateTime);
         const customStep = normalizeCustomStep(state.customStep);
         const customStepLabel = formatCustomStepLabel(customStep);
+        const customStepTooltip = `Кастомный шаг: ${customStepLabel}`;
         const customStepUnitOptions = CUSTOM_STEP_UNITS.map((unit) => `
             <option value="${unit.value}" ${unit.value === customStep.unit ? 'selected' : ''}>${escapeHtml(unit.label)}</option>
         `).join('');
@@ -916,10 +943,24 @@
         };
 
         refs.forecastNewTimeStepper.innerHTML = `
+            <button
+                type="button"
+                class="forecast-new-stepper-action"
+                data-reset-moment="prognostic"
+                title="Вернуть текущие дату и время"
+                aria-label="Вернуть текущие дату и время"
+            >↺</button>
             <span class="forecast-new-custom-step ${state.isCustomStepOpen ? 'is-open' : ''}">
-                <button type="button" class="forecast-new-custom-step-toggle" data-custom-step-toggle aria-expanded="${state.isCustomStepOpen ? 'true' : 'false'}" aria-controls="forecastNewCustomStepPopover" title="Пользовательский шаг">
-                    <span aria-hidden="true">+/-</span>
-                    <span class="forecast-new-custom-step-toggle-label">${escapeHtml(customStepLabel)}</span>
+                <button
+                    type="button"
+                    class="forecast-new-custom-step-toggle"
+                    data-custom-step-toggle
+                    aria-expanded="${state.isCustomStepOpen ? 'true' : 'false'}"
+                    aria-controls="forecastNewCustomStepPopover"
+                    title="${escapeHtml(customStepTooltip)}"
+                    aria-label="${escapeHtml(customStepTooltip)}"
+                >
+                    <span aria-hidden="true">⇄</span>
                 </button>
                 <span class="forecast-new-custom-step-popover ${state.isCustomStepOpen ? '' : 'hidden'}" id="forecastNewCustomStepPopover">
                     <label class="forecast-new-custom-step-field">
@@ -969,6 +1010,7 @@
         const values = getTimeStepperSegmentValues(state.natalSelectedDateTime);
         const customStep = normalizeCustomStep(state.natalCustomStep);
         const customStepLabel = formatCustomStepLabel(customStep);
+        const customStepTooltip = `Кастомный шаг: ${customStepLabel}`;
         const customStepUnitOptions = CUSTOM_STEP_UNITS.map((unit) => `
             <option value="${unit.value}" ${unit.value === customStep.unit ? 'selected' : ''}>${escapeHtml(unit.label)}</option>
         `).join('');
@@ -986,10 +1028,24 @@
         };
 
         refs.forecastNewNatalTimeStepper.innerHTML = `
+            <button
+                type="button"
+                class="forecast-new-stepper-action"
+                data-reset-moment="natal"
+                title="Вернуть дату и время рождения"
+                aria-label="Вернуть дату и время рождения"
+            >↺</button>
             <span class="forecast-new-custom-step ${state.natalIsCustomStepOpen ? 'is-open' : ''}">
-                <button type="button" class="forecast-new-custom-step-toggle" data-custom-step-toggle aria-expanded="${state.natalIsCustomStepOpen ? 'true' : 'false'}" aria-controls="forecastNewNatalCustomStepPopover" title="Пользовательский шаг">
-                    <span aria-hidden="true">+/-</span>
-                    <span class="forecast-new-custom-step-toggle-label">${escapeHtml(customStepLabel)}</span>
+                <button
+                    type="button"
+                    class="forecast-new-custom-step-toggle"
+                    data-custom-step-toggle
+                    aria-expanded="${state.natalIsCustomStepOpen ? 'true' : 'false'}"
+                    aria-controls="forecastNewNatalCustomStepPopover"
+                    title="${escapeHtml(customStepTooltip)}"
+                    aria-label="${escapeHtml(customStepTooltip)}"
+                >
+                    <span aria-hidden="true">⇄</span>
                 </button>
                 <span class="forecast-new-custom-step-popover ${state.natalIsCustomStepOpen ? '' : 'hidden'}" id="forecastNewNatalCustomStepPopover">
                     <label class="forecast-new-custom-step-field">
@@ -1066,8 +1122,12 @@
             amount: amountInput?.value,
             unit: unitSelect?.value,
         });
-        const label = refs.forecastNewNatalTimeStepper?.querySelector('.forecast-new-custom-step-toggle-label');
-        if (label) label.textContent = formatCustomStepLabel(state.natalCustomStep);
+        const toggle = refs.forecastNewNatalTimeStepper?.querySelector('[data-custom-step-toggle]');
+        if (toggle) {
+            const tooltip = `Кастомный шаг: ${formatCustomStepLabel(state.natalCustomStep)}`;
+            toggle.setAttribute('title', tooltip);
+            toggle.setAttribute('aria-label', tooltip);
+        }
     }
 
     function stepNatalDateTimeSegment(segment, direction) {
@@ -1091,6 +1151,24 @@
         updateNatalMomentMeta();
         setNatalLightweightLoading(true);
         void loadNatal({ lightweight: true });
+    }
+
+    function resetNatalDateTime() {
+        if (!state.natalInitialDateTime) return;
+        state.natalSelectedDateTime = state.natalInitialDateTime;
+        renderOrUpdateNatalTimeStepper();
+        updateNatalMomentControls();
+        setNatalLightweightLoading(true);
+        void loadNatal({ lightweight: true });
+    }
+
+    function resetPrognosticDateTime() {
+        setSelectedDateTime(getLocalNowIso(state.timezone));
+        state.lastStepperAction = null;
+        syncControlsFromState();
+        schedulePersist();
+        setLightweightLoading(true);
+        void loadActiveLayers({ lightweight: true });
     }
 
     function toggleNatalMomentEditor() {
@@ -1297,8 +1375,12 @@
             amount: amountInput?.value,
             unit: unitSelect?.value,
         });
-        const label = refs.forecastNewTimeStepper?.querySelector('.forecast-new-custom-step-toggle-label');
-        if (label) label.textContent = formatCustomStepLabel(state.customStep);
+        const toggle = refs.forecastNewTimeStepper?.querySelector('[data-custom-step-toggle]');
+        if (toggle) {
+            const tooltip = `Кастомный шаг: ${formatCustomStepLabel(state.customStep)}`;
+            toggle.setAttribute('title', tooltip);
+            toggle.setAttribute('aria-label', tooltip);
+        }
         schedulePersist();
     }
 
@@ -2485,7 +2567,7 @@
     function buildLayerMeta(method, raw) {
         if (method === 'transit') {
             const info = raw?.transit_info || {};
-            return [info.date, info.time, info.timezone].filter(Boolean).join(' · ');
+            return [info.date, info.time, formatHeaderTimezone(info.timezone)].filter(Boolean).join(' · ');
         }
         if (method === 'progression') {
             const info = raw?.progression_info || {};
@@ -2592,6 +2674,14 @@
     }
 
     async function hydratePreferences() {
+        if (window.AstroAPI?.getAccountPreferences) {
+            try {
+                window.accountPreferencesCache = await window.AstroAPI.getAccountPreferences();
+                window.AstroPreferences?.setAccountVisualPreferences?.(window.accountPreferencesCache?.visual || {});
+            } catch (error) {
+                console.warn('Forecast New account preferences fallback to defaults:', error);
+            }
+        }
         if (!window.AstroAPI?.getResolvedPreferences || !state.userId) return;
         try {
             const payload = await window.AstroAPI.getResolvedPreferences({
@@ -2918,8 +3008,24 @@
         return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     }
 
-    function getLocalNowIso() {
+    function getLocalNowIso(timezone) {
         const now = new Date();
+        const resolvedTimezone = normalizeTimezoneValue(timezone) || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+            timeZone: resolvedTimezone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+        });
+        const parts = formatter.formatToParts(now);
+        const byType = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+        if (byType.year && byType.month && byType.day && byType.hour && byType.minute && byType.second) {
+            return `${byType.year}-${byType.month}-${byType.day}T${byType.hour}:${byType.minute}:${byType.second}`;
+        }
         const date = todayIsoDate();
         const time = [now.getHours(), now.getMinutes(), now.getSeconds()]
             .map((part) => String(part).padStart(2, '0'))

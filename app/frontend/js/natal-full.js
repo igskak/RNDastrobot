@@ -82,6 +82,10 @@ async function waitForI18nReady() {
     await Promise.resolve(window.FrontendI18n.ready).catch(() => {});
 }
 
+function formatHeaderTimezone(value) {
+    return window.Timezones?.formatOffsetLabel?.(value) || String(value || '').trim();
+}
+
 function getTranslatedAstroName(type, name, fallbackMap) {
     if (!name) return EMPTY;
     const key = `astro.${type}.${name}`;
@@ -313,6 +317,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const me = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
     if (!me) return;
 
+    if (window.AstroAPI?.getAccountPreferences) {
+        try {
+            window.accountPreferencesCache = await window.AstroAPI.getAccountPreferences();
+            window.AstroPreferences?.setAccountVisualPreferences?.(window.accountPreferencesCache?.visual || {});
+        } catch (error) {
+            console.warn('Natal Full account preferences fallback to defaults:', error);
+        }
+    }
+
     const storedData = sessionStorage.getItem('natalChart');
     if (!storedData) {
         window.location.href = '/';
@@ -480,7 +493,7 @@ function renderHeader(data) {
             details.push(dateTime);
         }
         if (birthData.timezone) {
-            details.push(`(${birthData.timezone})`);
+            details.push(`(${formatHeaderTimezone(birthData.timezone)})`);
         }
         if (place) {
             details.push(place);

@@ -85,6 +85,7 @@ DEFAULT_ELEMENT_PALETTE: Dict[str, str] = {
 }
 
 DEFAULT_BODY_COLOR_OVERRIDES: Dict[str, str] = {}
+DEFAULT_TIMEZONE_LABEL_FORMAT = 'UTC'
 
 DEFAULT_ASPECT_COLOR_BY_TYPE: Dict[str, str] = {
     'Conjunction': '#f59e0b',
@@ -217,6 +218,7 @@ def build_default_visual_settings(aspect_types: Iterable[RefAspectType]) -> Dict
             'element_palette': deepcopy(DEFAULT_ELEMENT_PALETTE),
             'body_overrides': deepcopy(DEFAULT_BODY_COLOR_OVERRIDES),
         },
+        'timezone_label_format': DEFAULT_TIMEZONE_LABEL_FORMAT,
     }
 
 

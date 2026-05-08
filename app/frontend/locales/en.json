@@ -234,6 +234,12 @@
         "copy": "Choose the base house system that new charts should start with before any per-view overrides apply.",
         "houseSystem": "Default house system",
         "kicker": "Chart creation",
+        "timezoneLabelFormat": "Timezone label format",
+        "timezoneLabelFormatCopy": "Affects UI labels only: `UTC+3` or `GMT+3`. Calculations and real timezone IDs do not change.",
+        "timezoneLabelFormatOptions": {
+          "gmt": "GMT",
+          "utc": "UTC"
+        },
         "title": "Defaults for every new chart"
       },
       "fields": {
