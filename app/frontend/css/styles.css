@@ -1622,13 +1622,75 @@ input[type="number"] {
     color: var(--text-muted);
 }
 
+.forecast-new-body-action-menu .settings-check-option {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    min-width: 30px;
+    min-height: 30px;
+    padding: 0;
+    border: 1px solid rgba(212, 201, 181, 0.6);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.82);
+}
+
+.forecast-new-body-action-menu .settings-check-option-glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    height: auto;
+    padding: 0;
+    background: transparent;
+    font-size: 15px;
+    line-height: 1;
+}
+
+.forecast-new-body-action-menu .settings-check-option--icon-only {
+    min-width: 30px;
+    padding-inline: 0;
+}
+
+.forecast-new-body-action-menu[data-menu-scope="natal"] .settings-check-option--pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    min-height: 32px;
+    border: 1px solid rgba(30, 58, 95, 0.12);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.78);
+    cursor: pointer;
+}
+
+.forecast-new-body-action-menu[data-menu-scope="natal"] .forecast-new-body-action-toggle {
+    min-width: 30px;
+    min-height: 30px;
+    padding: 0;
+    font-weight: 800;
+    color: var(--text-muted);
+}
+
+.forecast-new-body-action-menu[data-menu-scope="natal"] .settings-check-option-glyph {
+    font-size: 15px;
+}
+
+.forecast-new-body-action-menu[data-menu-scope="natal"] .settings-check-option--pill[aria-pressed="true"] {
+    border-color: rgba(30, 58, 95, 0.34);
+    background: var(--accent-light);
+    color: var(--accent);
+}
+
 .settings-check-option--pill[aria-pressed="true"] {
     border-color: rgba(30, 58, 95, 0.34);
     background: var(--accent-light);
     color: var(--accent);
 }
 
-.body-action-toggle[aria-pressed="true"] {
+.body-action-toggle[aria-pressed="true"],
+.forecast-new-body-action-toggle[aria-pressed="true"],
+.forecast-new-body-action-menu .settings-check-option[aria-pressed="true"] {
     border-color: rgba(30, 58, 95, 0.34);
     background: var(--accent-light);
     color: var(--accent);

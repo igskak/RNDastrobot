@@ -822,57 +822,8 @@ function setNatalMatrixField(body, field, checked) {
         .filter(([, config]) => config?.display === false)
         .map(([bodyName]) => bodyName);
     syncNatalMatrixCheckboxes();
-    if (field === 'display') {
-        applyNatalDisplayMatrixFast(body, checked);
-    } else if (field === 'aspecting') {
-        applyNatalAspectingMatrixFast(body, checked);
-    } else {
-        redrawChart(window.chartDataCache, currentSettings.hiddenPlanets || [], currentSettings.orientation);
-    }
+    redrawChart(window.chartDataCache, currentSettings.hiddenPlanets || [], currentSettings.orientation);
     void persistNatalViewOverrides();
-}
-
-function applyNatalDisplayMatrixFast(body, checked) {
-    if (checked === true && shouldRedrawForMatrixFieldEnable(body, 'display')) {
-        redrawChart(window.chartDataCache, currentSettings.hiddenPlanets || [], currentSettings.orientation);
-        return;
-    }
-    chartWheel?.applyMatrixRows?.(getCurrentNatalMatrixRows());
-}
-
-function applyNatalAspectingMatrixFast(body, checked) {
-    if (checked === true && shouldRedrawForMatrixFieldEnable(body, 'aspecting')) {
-        redrawChart(window.chartDataCache, currentSettings.hiddenPlanets || [], currentSettings.orientation);
-        return;
-    }
-    chartWheel?.applyMatrixRows?.(getCurrentNatalMatrixRows());
-    renderNatalAspectPanelDataFast();
-}
-
-function shouldRedrawForMatrixFieldEnable(body, field) {
-    if (!body || !chartWheel?.svg) return false;
-    const escaped = escapeAttribute(body);
-    if (field === 'display') {
-        return !chartWheel.svg.querySelector(`.planet-group[data-planet="${escaped}"]`);
-    }
-    if (field === 'aspecting') {
-        return !chartWheel.svg.querySelector(`.aspect-line[data-planet-1="${escaped}"], .aspect-line[data-planet-2="${escaped}"]`);
-    }
-    return false;
-}
-
-function renderNatalAspectPanelDataFast() {
-    const source = window.chartDataCache;
-    if (!source || !chartDataRenderer) return;
-    const filteredTables = filterChartDataForNatalTables(source);
-    chartDataRenderer.chartData = filteredTables;
-    chartDataRenderer.renderAspects?.(filteredTables.aspects || []);
-    chartDataRenderer.renderAspectGrid?.(filteredTables.aspects || [], filteredTables.planets || []);
-    chartDataRenderer.renderConfigurations?.(
-        filteredTables.aspect_configurations || [],
-        filteredTables.stelliums || []
-    );
-    syncHoveredAspectToActiveSurface();
 }
 
 function getNatalMatrixRowsForTables() {

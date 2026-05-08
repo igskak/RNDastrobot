@@ -482,6 +482,52 @@
     padding-right: 14px;
 }
 
+#planets-list .data-table.compact {
+    width: 100%;
+    table-layout: fixed;
+}
+
+#planets-list .data-table.compact th:nth-child(1),
+#planets-list .data-table.compact td:nth-child(1) {
+    width: 54px;
+    padding-inline: 10px 6px;
+}
+
+#planets-list .data-table.compact th:nth-child(2),
+#planets-list .data-table.compact td:nth-child(2) {
+    width: auto;
+    min-width: 0;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+#planets-list .data-table.compact th:nth-child(3),
+#planets-list .data-table.compact td:nth-child(3) {
+    width: 74px;
+    padding-left: 6px;
+    padding-right: 8px;
+    text-align: right;
+}
+
+#planets-list .data-table.compact th:nth-child(4),
+#planets-list .data-table.compact td:nth-child(4) {
+    width: 38px;
+    padding-left: 6px;
+    padding-right: 10px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+#planets-list .data-table.compact th {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+}
+
+#planets-list .data-table.compact.planets-table--speed-column-hidden th:nth-child(2),
+#planets-list .data-table.compact.planets-table--speed-column-hidden td:nth-child(2) {
+    padding-right: 10px;
+}
+
 .data-table.compact .aspect-chip {
     display: inline-flex;
     align-items: center;
@@ -739,6 +785,9 @@
 
 .chart-page .planet-position-main {
     white-space: nowrap;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: clip;
 }
 
 .chart-page .planet-symbol-cell {
@@ -800,13 +849,22 @@
 .chart-page .planet-meta-chip {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     min-height: 18px;
+    max-width: 100%;
     padding: 0 6px;
     border-radius: 999px;
     background: rgba(230, 224, 212, 0.8);
     color: var(--text-secondary);
     font-size: 10px;
     line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chart-page .planet-speed-cell {
+    overflow: hidden;
 }
 
 .chart-page .planet-meta-chip--stationary {

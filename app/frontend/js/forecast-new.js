@@ -616,11 +616,7 @@
                 if (!(input instanceof HTMLInputElement)) return;
                 updateMatrixRowFromControl(input);
                 syncMatrixCheckboxes();
-                await applyMatrixRowsFast({
-                    body: matrixBodyKey(input.dataset.matrixBody),
-                    field: input.dataset.matrixField,
-                    checked: input.checked,
-                });
+                await applyMatrixRows();
             });
         });
         [refs.forecastNewNatalPanel, refs.forecastNewProgPanel].forEach((panel) => {
@@ -636,11 +632,7 @@
                 if (!(input instanceof HTMLInputElement)) return;
                 updateMatrixRowFromControl(input);
                 syncMatrixCheckboxes();
-                await applyMatrixRowsFast({
-                    body: matrixBodyKey(input.dataset.matrixBody),
-                    field: input.dataset.matrixField,
-                    checked: input.checked,
-                });
+                await applyMatrixRows();
             });
         });
 
@@ -1531,50 +1523,6 @@
         schedulePersist();
     }
 
-    async function applyMatrixRowsFast({ body, field, checked } = {}) {
-        const normalizedBody = matrixBodyKey(body);
-        if (!normalizedBody || !['display', 'aspecting'].includes(field)) {
-            await applyMatrixRows();
-            return;
-        }
-
-        refreshViewModel();
-
-        const needsWheelRedraw = (field === 'display' && checked === true && !wheelHasBody(normalizedBody))
-            || (field === 'aspecting' && checked === true && !wheelHasAspectForBody(normalizedBody));
-
-        if (needsWheelRedraw) {
-            renderWheel();
-        } else {
-            state.wheel?.applyMatrixRows?.(state.matrixRows);
-        }
-
-        if (field === 'aspecting') {
-            renderMatrixSensitivePanelData();
-            syncHoveredAspectToActiveSurface();
-        }
-        applyInlineMatrixRowState();
-
-        try {
-            await persistForecastNewViewOverrides();
-        } catch (error) {
-            console.warn('Failed to persist Forecast New matrix rows:', error);
-        }
-        schedulePersist();
-    }
-
-    function wheelHasBody(body) {
-        if (!body || !state.wheel?.svg) return true;
-        const escaped = escapeAttribute(body);
-        return Boolean(state.wheel.svg.querySelector(`.prognostic-body[data-planet="${escaped}"]`));
-    }
-
-    function wheelHasAspectForBody(body) {
-        if (!body || !state.wheel?.svg) return true;
-        const escaped = escapeAttribute(body);
-        return Boolean(state.wheel.svg.querySelector(`.aspect-line[data-planet-1="${escaped}"], .aspect-line[data-planet-2="${escaped}"]`));
-    }
-
     function refreshViewModel() {
         if (!state.natalWheelData) return;
         const rawViewModel = window.PrognosticLayerNormalizer.buildViewModel(
@@ -1708,7 +1656,7 @@
             state.matrixRows = normalizeForecastNewMatrixRows(rows);
             syncMatrixCheckboxes();
             renderBodyActionMenu(body, menu.dataset.method || '', menu);
-            await applyMatrixRowsFast({ body, field, checked: !current });
+            await applyMatrixRows();
         });
 
         return menu;
