@@ -1326,6 +1326,22 @@
         return `${d}°${String(m).padStart(2, '0')}'${String(s).padStart(2, '0')}"`;
     }
 
+    function formatAstroCoordinate(item) {
+        if (window.LocaleFormatters?.formatAstroCoordinate) {
+            return window.LocaleFormatters.formatAstroCoordinate(item, {
+                signSymbol: Symbols?.signs?.[item?.sign],
+            });
+        }
+
+        const degree = Number(item?.degree_in_sign);
+        if (!Number.isFinite(degree)) return '—';
+        const d = Math.floor(degree);
+        const m = Math.floor((degree - d) * 60);
+        return [`${d}°`, Symbols?.signs?.[item?.sign] || item?.sign || '', `${String(m).padStart(2, '0')}'`]
+            .filter(Boolean)
+            .join(' ');
+    }
+
     function ensureHoverTooltip() {
         if (hoverTooltip && hoverTooltip.isConnected) return hoverTooltip;
         const wrapper = document.getElementById('biwheelSvgWrapper');
@@ -1521,12 +1537,11 @@
         const degree = Number(group.getAttribute('data-degree-in-sign') || 0);
         const nameRu = getPlanetName(name);
         const symbolMarkup = getPlanetSymbolMarkup(name, { size: 18, title: nameRu });
-        const signSymbol = Symbols?.signs?.[sign] || '';
-        const signRu = getSignName(sign);
+        const position = formatAstroCoordinate({ sign, degree_in_sign: degree });
 
         showHoverTooltip(`
             <strong>${role}: ${symbolMarkup} ${nameRu}</strong><br>
-            <span class="astro-symbol">${signSymbol}</span> ${signRu} ${formatDMS(degree)}<br>
+            ${escapeHtml(position)}<br>
             ${t('common.house')}: ${house}${retro ? ' <span style="color:#dc2626">R</span>' : ''}
         `, event);
     }
@@ -1541,11 +1556,10 @@
         const houseNumber = Number(group.getAttribute('data-house') || 0);
         const layerLabel = group.getAttribute('data-layer-label') || t('page.forecast.biwheel.legend.natal');
         const sign = group.getAttribute('data-sign') || '';
-        const signRu = getSignName(sign);
-        const signSymbol = Symbols?.signs?.[sign] || '';
         const degree = Number(group.getAttribute('data-degree-in-sign') || 0);
         const longitude = Number(group.getAttribute('data-longitude') || 0);
         const defaultWidth = Number(group.getAttribute('data-default-stroke-width') || 1);
+        const position = formatAstroCoordinate({ sign, degree_in_sign: degree });
 
         if (line) {
             line.setAttribute('stroke-width', String((defaultWidth + 0.9).toFixed(2)));
@@ -1554,7 +1568,7 @@
 
         showHoverTooltip(`
             <strong>${layerLabel}: ${t('page.forecast.table.ingress.cuspLabel', { house: formatHouseText(houseNumber) }).toLowerCase()}</strong><br>
-            <span class="astro-symbol">${signSymbol}</span> ${signRu} ${formatDMS(degree)}<br>
+            ${escapeHtml(position)}<br>
             ${t('common.longitude')}: ${formatDMS(longitude)}
         `, event);
     }

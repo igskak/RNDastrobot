@@ -136,6 +136,13 @@ class NatalChartRepository:
         
         # Добавляем новые
         for point_name, point_data in points_data.items():
+            if (
+                point_data.get('longitude') is None
+                or point_data.get('sign') is None
+                or point_data.get('house') is None
+            ):
+                continue
+
             point = NatalSpecialPoint(
                 user_id=user_id,
                 point=point_name,
@@ -236,4 +243,3 @@ class NatalChartRepository:
             self.save_configurations(user_id, configurations)
 
         self.session.flush()
-

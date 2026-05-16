@@ -1458,13 +1458,11 @@ class ChartWheel {
 
         const nameRu = this.getPlanetName(planetName);
         const symbol = Symbols.planets[planetName] || '';
-        const signRu = this.getSignName(planet.sign);
-        const signSymbol = Symbols.signs[planet.sign] || '';
-        const degFormatted = this.formatDMS(planet.degree_in_sign ?? 0);
+        const degFormatted = this.formatAstroCoordinate(planet);
         const house = planet.house != null ? this.formatHouseLabel(planet.house) : this.t('common.notAvailable');
         this.showTooltip(`
             <strong><span class="astro-symbol">${symbol}</span> ${nameRu}</strong><br>
-            <span class="astro-symbol">${signSymbol}</span> ${signRu} ${degFormatted}<br>
+            ${this.escapeHtml(degFormatted)}<br>
             ${this.t('common.house')}: ${house}${planet.retrograde ? ' <span style=\"color:#dc2626\">R</span>' : ''}
         `, e);
     }
@@ -1547,14 +1545,12 @@ class ChartWheel {
 
         const nameRu = this.getPlanetName(planetName);
         const symbol = Symbols.planets[planetName] || '';
-        const signRu = this.getSignName(planet.sign);
-        const signSymbol = Symbols.signs[planet.sign] || '';
-        const degFormatted = this.formatDMS(planet.degree_in_sign ?? 0);
+        const degFormatted = this.formatAstroCoordinate(planet);
         const house = planet.house != null ? this.formatHouseLabel(planet.house) : this.t('common.notAvailable');
 
         this.showTooltip(`
             <strong><span class="astro-symbol">${symbol}</span> ${nameRu}</strong><br>
-            <span class="astro-symbol">${signSymbol}</span> ${signRu} ${degFormatted}<br>
+            ${this.escapeHtml(degFormatted)}<br>
             ${this.t('common.house')}: ${house}${planet.retrograde ? ' <span style=\"color:#dc2626\">R</span>' : ''}
         `, e);
     }
@@ -1584,16 +1580,14 @@ class ChartWheel {
         if (row) row.classList.add('active-row');
 
         const sign = group.dataset.sign || '';
-        const signRu = this.getSignName(sign);
-        const signSymbol = Symbols.signs[sign] || '';
         const degreeInSign = Number(group.dataset.degreeInSign || 0);
         const longitude = Number(group.dataset.longitude || 0);
-        const degFormatted = this.formatDMS(degreeInSign);
+        const degFormatted = this.formatAstroCoordinate({ sign, degree_in_sign: degreeInSign });
         const lonFormatted = this.formatDMS(longitude);
 
         this.showTooltip(`
             <strong>${this.t('page.chart.houseCusp', { house: this.formatHouseLabel(houseNumber) })}</strong><br>
-            <span class="astro-symbol">${signSymbol}</span> ${signRu} ${degFormatted}<br>
+            ${this.escapeHtml(degFormatted)}<br>
             ${this.t('common.longitude')}: ${lonFormatted}
         `, e);
     }
@@ -1657,6 +1651,32 @@ class ChartWheel {
         const m = Math.floor(mFull);
         const s = Math.round((mFull - m) * 60);
         return `${d}°${m.toString().padStart(2,'0')}'${s.toString().padStart(2,'0')}"`;
+    }
+
+    formatAstroCoordinate(item) {
+        if (window.LocaleFormatters?.formatAstroCoordinate) {
+            return window.LocaleFormatters.formatAstroCoordinate(item, {
+                signSymbol: Symbols?.signs?.[item?.sign],
+            });
+        }
+
+        const degree = Number(item?.degree_in_sign);
+        if (!Number.isFinite(degree)) return '';
+        const d = Math.floor(degree);
+        const m = Math.floor((degree - d) * 60);
+        return [`${d}°`, Symbols?.signs?.[item?.sign] || item?.sign || '', `${String(m).padStart(2, '0')}'`]
+            .filter(Boolean)
+            .join(' ');
+    }
+
+    escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;',
+        }[char]));
     }
 }
 

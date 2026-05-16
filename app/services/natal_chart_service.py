@@ -314,25 +314,18 @@ class NatalChartService:
             ('Vertex', vertex_lon),
             ('AntiVertex', anti_vertex_lon),
         ]:
-            if lon is not None:
-                degree_in_sign = get_degree_in_sign(lon)
-                special_points[name] = {
-                    'name': name,
-                    'longitude': lon,
-                    'sign': get_zodiac_sign(lon),
-                    'degree_in_sign': degree_in_sign,
-                    'degree_in_sign_formatted': format_degree_minutes_seconds(degree_in_sign),
-                    'house': self.swisseph_engine.get_planet_house(lon, houses),
-                }
-            else:
-                special_points[name] = {
-                    'name': name,
-                    'longitude': None,
-                    'sign': None,
-                    'degree_in_sign': None,
-                    'degree_in_sign_formatted': None,
-                    'house': None,
-                }
+            if lon is None:
+                continue
+
+            degree_in_sign = get_degree_in_sign(lon)
+            special_points[name] = {
+                'name': name,
+                'longitude': lon,
+                'sign': get_zodiac_sign(lon),
+                'degree_in_sign': degree_in_sign,
+                'degree_in_sign_formatted': format_degree_minutes_seconds(degree_in_sign),
+                'house': self.swisseph_engine.get_planet_house(lon, houses),
+            }
 
         return special_points
 
@@ -1486,6 +1479,49 @@ class NatalChartService:
             db_session=db_session,
         )
         return result
+
+    def refresh_methodology_dependent_artifacts(self, user_id: UUID, db_session: Session) -> bool:
+        """
+        Refresh saved artifacts that depend on account methodology preferences.
+
+        Existing natal charts persist aspects/configurations/derived scores in DB.
+        When orbs, dignity rules, balance weights, or stationary thresholds change,
+        opening an old chart must update those artifacts from already saved
+        positions instead of requiring a full ephemeris recalculation.
+        """
+        user_repo = UserRepository(db_session)
+        user = user_repo.get_user_with_natal_chart(user_id)
+        if not user or not user.planets:
+            return False
+
+        from app.services.aspect_service import AspectService
+        from app.services.configuration_service import ConfigurationService
+        from app.services.planet_strength_service import PlanetStrengthService
+        from app.services.special_roles_service import SpecialRolesService
+        from app.services.balance_service import BalanceService
+        from app.services.general_overview_service import GeneralOverviewService
+
+        aspect_service = AspectService(db_session)
+        aspect_service.calculate_aspects(user.user_id)
+        self._update_planet_aspect_characteristics(user.user_id, db_session)
+
+        config_service = ConfigurationService(db_session)
+        config_service.detect_configurations(user.user_id)
+        config_service.detect_stelliums(user.user_id)
+
+        strength_service = PlanetStrengthService(db_session)
+        strength_service.calculate_all_strengths(user.user_id)
+
+        roles_service = SpecialRolesService(db_session)
+        roles_service.determine_all_roles(user.user_id)
+
+        balance_service = BalanceService(db_session)
+        balance_service.calculate_all_balances(user.user_id)
+
+        overview_service = GeneralOverviewService(db_session)
+        overview_service.build_general_overview(user.user_id)
+
+        return True
 
     def get_natal_chart_for_interpretation(self, user_id: UUID, db_session: Session) -> Optional[Dict]:
         """

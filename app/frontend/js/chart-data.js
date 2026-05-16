@@ -1,6 +1,6 @@
 /**
- * Отображение табличных данных карты (профессиональный формат)
- * Стандарт: ГГ°ММ'СС" для координат
+ * Отображение табличных данных карты.
+ * Стандарт UI-координат: градусы - знак - минуты.
  */
 
 class ChartDataRenderer {
@@ -451,9 +451,9 @@ class ChartDataRenderer {
             return (iA === -1 ? 999 : iA) - (iB === -1 ? 999 : iB);
         });
 
-        // Компактный формат: Симв. (SVG) | Знак ГГ°ММ'СС" | Дом
+        // Компактный формат: символ планеты | координата ГГ° знак ММ' | дом
         this.planetsTable.innerHTML = sorted.map(p => {
-            const degDMS = this.formatDMS(p.degree_in_sign);
+            const position = this.formatAstroCoordinate(p);
             const planetIcon = this.createPlanetIconSVG(p);
             const speedChip = this.renderPlanetSpeedChip(p);
             const motionBadges = [
@@ -474,7 +474,7 @@ class ChartDataRenderer {
                     </td>
                     <td class="mono">
                         <div class="planet-position-layout">
-                            <div class="planet-position-main"><span class="astro-symbol">${Symbols.signs[p.sign]}</span> ${degDMS}</div>
+                            <div class="planet-position-main">${this.escapeHtml(position)}</div>
                         </div>
                     </td>
                     ${this.showSpeedColumn ? `<td class="planet-speed-cell mono">${this.showSpeed ? speedChip : ''}</td>` : ''}
@@ -527,7 +527,7 @@ class ChartDataRenderer {
 
         this.housesTable.innerHTML = houses.map(h => {
             const isAngular = [1, 4, 7, 10].includes(h.number);
-            const degDMS = this.formatDMS(h.degree_in_sign);
+            const position = this.formatAstroCoordinate(h);
             const includedSign = h.included_sign || '';
             const includedSignSymbol = includedSign ? (Symbols.signs[includedSign] || '') : '';
             const includedSignName = includedSign ? this.signName(includedSign) : '';
@@ -539,7 +539,7 @@ class ChartDataRenderer {
                 <tr id="row-house-${h.number}" class="${isAngular ? 'house-angular' : ''}">
                     <td class="mono">${this.escapeHtml(this.formatHouseNumber(h.number))}</td>
                     <td class="mono house-sign-cell">
-                        <div class="house-sign-main"><span class="astro-symbol">${Symbols.signs[h.sign]}</span> ${degDMS}</div>
+                        <div class="house-sign-main">${this.escapeHtml(position)}</div>
                         ${includedSign ? `
                             <div class="house-sign-meta" title="${this.escapeHtml(includedSignTitle)}">
                                 <span class="house-sign-badge">${this.escapeHtml(this.t('astro.feature.short.intercepted'))}</span>
@@ -558,16 +558,22 @@ class ChartDataRenderer {
     }
 
     /**
-     * Профессиональный формат: ГГ°ММ'СС"
+     * UI-формат: градусы - знак - минуты.
      */
-    formatDMS(deg) {
-        let d = Math.floor(deg);
-        let remainder = (deg - d) * 60;
-        let m = Math.floor(remainder);
-        let s = Math.round((remainder - m) * 60);
-        if (s === 60) { s = 0; m += 1; }
-        if (m === 60) { m = 0; d += 1; }
-        return `${d}°${m.toString().padStart(2, '0')}'${s.toString().padStart(2, '0')}"`;
+    formatAstroCoordinate(item) {
+        if (window.LocaleFormatters?.formatAstroCoordinate) {
+            return window.LocaleFormatters.formatAstroCoordinate(item, {
+                signSymbol: Symbols?.signs?.[item?.sign],
+            });
+        }
+
+        const degree = Number(item?.degree_in_sign);
+        if (!Number.isFinite(degree)) return '';
+        const d = Math.floor(degree);
+        const m = Math.floor((degree - d) * 60);
+        return [`${d}°`, Symbols?.signs?.[item?.sign] || item?.sign || '', `${String(m).padStart(2, '0')}'`]
+            .filter(Boolean)
+            .join(' ');
     }
 
     /**

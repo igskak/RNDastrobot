@@ -3,18 +3,21 @@
 """
 import pytest
 from datetime import date, time
-from uuid import UUID
+from decimal import Decimal
+from uuid import UUID, uuid4
 from sqlalchemy.orm import Session
 
 from app.database.connection import get_db_session
 from app.services.natal_chart_service import NatalChartService
 from app.services.aspect_service import AspectService
+from app.services.aspect_scoring_service import AspectScoringService
 from app.services.configuration_service import ConfigurationService
 from app.services.cosmogram_service import CosmogramService
 from app.database.models import (
-    Astrologer, NatalAspect, NatalConfiguration, NatalStellium,
+    Astrologer, AstrologerPreference, NatalAspect, NatalConfiguration, NatalStellium,
     NatalPlanetDistribution, CosmogramPattern, RefAspectType
 )
+from app.database.models import User
 
 
 TEST_ASPECT_TYPES = [
@@ -228,6 +231,63 @@ class TestConfigurationService:
             assert 'planets' in stellium
             assert 'count' in stellium
             assert stellium['count'] >= 3, "Stellium should have at least 3 planets"
+
+    def test_aspect_scoring_uses_account_orbs(self, db_session: Session, test_astrologer_id: UUID):
+        """Configuration aspect scores must use account-level orb overrides."""
+        db_session.add(AstrologerPreference(
+            astrologer_id=test_astrologer_id,
+            methodology={
+                'orbs': {
+                    'profiles': {
+                        'natal': {
+                            'matrix': {
+                                'Conjunction': {
+                                    'Mars': 30,
+                                    'Uranus': 30,
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+        ))
+        user = User(
+            astrologer_id=test_astrologer_id,
+            first_name='Orb',
+            last_name='Override',
+            birth_date=date(1990, 1, 1),
+            birth_time=time(12, 0),
+            timezone='Europe/Kiev',
+            birth_place='Kyiv',
+            lat=50.45,
+            lon=30.52,
+            house_system='P',
+        )
+        db_session.add(user)
+        db_session.commit()
+
+        aspect = NatalAspect(
+            aspect_id=uuid4(),
+            user_id=user.user_id,
+            planet_1='Mars',
+            planet_2='Uranus',
+            aspect_type='Conjunction',
+            orb=Decimal('20'),
+            is_major=True,
+            harmonic_type='neutral',
+        )
+
+        score, details = AspectScoringService(db_session).calculate_aspect_score(aspect)
+
+        assert score == 2
+        assert details['orb_planet_1'] == 30
+        assert details['orb_planet_2'] == 30
+
+        db_session.delete(user)
+        db_session.query(AstrologerPreference).filter(
+            AstrologerPreference.astrologer_id == test_astrologer_id
+        ).delete()
+        db_session.commit()
 
 
 class TestCosmogramService:

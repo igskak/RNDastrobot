@@ -936,12 +936,17 @@ body.account-settings-modal-open {
 
 .account-settings-status {
     margin: 0 18px 14px;
-    padding: 10px 12px;
-    border-radius: 12px;
+    padding: 12px 14px;
+    border: 1px solid rgba(30, 58, 95, 0.08);
+    border-radius: 16px;
     background: rgba(251, 246, 238, 0.94);
     color: #5a4737;
     font-size: 13px;
     letter-spacing: 0.01em;
+}
+
+.account-settings-shell > .account-settings-status {
+    margin: 0 0 12px;
 }
 
 .account-settings-status.hidden {
@@ -961,6 +966,38 @@ body.account-settings-modal-open {
 .account-settings-status[data-status="failed"] {
     background: rgba(254, 242, 242, 0.95);
     color: #9b2c2c;
+}
+
+.account-settings-status-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-weight: 700;
+}
+
+.account-settings-status-meta {
+    margin-top: 4px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.account-settings-status-progress {
+    width: 100%;
+    height: 8px;
+    margin-top: 10px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(30, 58, 95, 0.12);
+}
+
+.account-settings-status-progress-bar {
+    height: 100%;
+    width: var(--progress, 0%);
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--accent), var(--gold));
+    transition: width 0.28s ease;
 }
 
 .account-settings-confirm-backdrop {

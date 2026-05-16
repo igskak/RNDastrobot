@@ -58,6 +58,9 @@ natal_service = NatalChartService(ephe_path=EPHE_PATH)
 
 
 def build_natal_chart_response(chart_data: dict) -> NatalChartResponse:
+    def has_position_data(item: dict, required_fields: tuple[str, ...]) -> bool:
+        return all(item.get(field) is not None for field in required_fields)
+
     balances_data = None
     if chart_data.get('balances'):
         balances_dict = chart_data['balances']
@@ -84,8 +87,16 @@ def build_natal_chart_response(chart_data: dict) -> NatalChartResponse:
         birth_data=BirthDataOutput(**chart_data['birth_data']),
         planets=[PlanetPosition(**p) for p in chart_data['planets']],
         houses=[HousePosition(**h) for h in chart_data['houses']],
-        angles={k: AnglePosition(**v) for k, v in chart_data['angles'].items()},
-        special_points={k: SpecialPointPosition(**v) for k, v in chart_data['special_points'].items()},
+        angles={
+            k: AnglePosition(**v)
+            for k, v in chart_data['angles'].items()
+            if has_position_data(v, ('longitude', 'sign', 'degree_in_sign'))
+        },
+        special_points={
+            k: SpecialPointPosition(**v)
+            for k, v in chart_data['special_points'].items()
+            if has_position_data(v, ('longitude', 'sign', 'degree_in_sign', 'house'))
+        },
         configurations=chart_data.get('configurations'),
         aspects=[AspectInfo(**a) for a in chart_data['aspects']] if chart_data.get('aspects') else None,
         aspect_configurations=[ConfigurationInfo(**c) for c in chart_data['aspect_configurations']] if chart_data.get('aspect_configurations') else None,

@@ -137,3 +137,61 @@ def test_house_position_api_model_preserves_ruler_groups():
         "sign": "Scorpio",
         "entries": [{"planet": "Mars", "role": "secondary", "house": 12}],
     }]
+
+
+def test_refresh_methodology_dependent_artifacts_recalculates_saved_aspects(monkeypatch):
+    calls = []
+
+    class DummyUserRepo:
+        def __init__(self, db_session):
+            self.db_session = db_session
+
+        def get_user_with_natal_chart(self, user_id):
+            return SimpleNamespace(user_id=user_id, planets=[SimpleNamespace(planet="Sun")])
+
+    class DummyAspectService:
+        def __init__(self, db_session):
+            self.db_session = db_session
+
+        def calculate_aspects(self, user_id):
+            calls.append(("aspects", user_id))
+
+    class DummyDependency:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def detect_configurations(self, user_id):
+            calls.append(("configurations", user_id))
+
+        def detect_stelliums(self, user_id):
+            calls.append(("stelliums", user_id))
+
+        def calculate_all_strengths(self, user_id):
+            calls.append(("strengths", user_id))
+
+        def determine_all_roles(self, user_id):
+            calls.append(("roles", user_id))
+
+        def calculate_all_balances(self, user_id):
+            calls.append(("balances", user_id))
+
+        def build_general_overview(self, user_id):
+            calls.append(("overview", user_id))
+
+    monkeypatch.setattr(natal_chart_service_module, "UserRepository", DummyUserRepo)
+    monkeypatch.setattr(aspect_service_module, "AspectService", DummyAspectService)
+    monkeypatch.setattr(configuration_service_module, "ConfigurationService", DummyDependency)
+    monkeypatch.setattr(planet_strength_service_module, "PlanetStrengthService", DummyDependency)
+    monkeypatch.setattr(special_roles_service_module, "SpecialRolesService", DummyDependency)
+    monkeypatch.setattr(balance_service_module, "BalanceService", DummyDependency)
+    monkeypatch.setattr(general_overview_service_module, "GeneralOverviewService", DummyDependency)
+
+    service = natal_chart_service_module.NatalChartService()
+    service._update_planet_aspect_characteristics = lambda user_id, db_session: calls.append(("planet_characteristics", user_id))
+
+    refreshed = service.refresh_methodology_dependent_artifacts("user-1", object())
+
+    assert refreshed is True
+    assert calls[0] == ("aspects", "user-1")
+    assert ("configurations", "user-1") in calls
+    assert ("overview", "user-1") in calls

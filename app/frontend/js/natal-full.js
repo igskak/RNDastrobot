@@ -567,25 +567,25 @@ function renderSummaryBar(data) {
     if (angles?.ASC) {
         const asc = angles.ASC;
         summaryAsc.textContent =
-            `${getSignSymbol(asc.sign)} ${getSignName(asc.sign)} ${formatDegree(asc)}`;
+            formatAstroCoordinate(asc);
     }
 
     if (angles?.MC) {
         const mc = angles.MC;
         summaryMc.textContent =
-            `${getSignSymbol(mc.sign)} ${getSignName(mc.sign)} ${formatDegree(mc)}`;
+            formatAstroCoordinate(mc);
     }
 
     const sun = planets?.find((p) => p.name === 'Sun');
     if (sun) {
         summarySun.textContent =
-            `${getSignName(sun.sign)} ${formatDegree(sun)}`;
+            formatAstroCoordinate(sun);
     }
 
     const moon = planets?.find((p) => p.name === 'Moon');
     if (moon) {
         summaryMoon.textContent =
-            `${getSignName(moon.sign)} ${formatDegree(moon)}`;
+            formatAstroCoordinate(moon);
     }
 
     if (pattern) {
@@ -754,18 +754,20 @@ function getMaxBalance(balanceObj) {
     return max;
 }
 
-function formatDegreeFull(deg) {
-    if (deg === null || deg === undefined) return EMPTY;
-    const d = Math.floor(deg);
-    const minFloat = (deg - d) * 60;
-    const m = Math.floor(minFloat);
-    const s = Math.round((minFloat - m) * 60);
-    return `${d}°${String(m).padStart(2, '0')}'${String(s).padStart(2, '0')}"`;
-}
+function formatAstroCoordinate(item) {
+    const formatted = window.LocaleFormatters?.formatAstroCoordinate?.(item, {
+        signSymbol: getSignSymbol(item?.sign),
+        emptyValue: EMPTY,
+    });
+    if (formatted) return formatted;
 
-function formatDegree(item) {
-    if (item.degree_in_sign_formatted) return item.degree_in_sign_formatted;
-    return formatDegreeFull(item.degree_in_sign);
+    const degree = Number(item?.degree_in_sign);
+    if (!Number.isFinite(degree)) return EMPTY;
+    const d = Math.floor(degree);
+    const m = Math.floor((degree - d) * 60);
+    return [`${d}°`, getSignSymbol(item?.sign), `${String(m).padStart(2, '0')}'`]
+        .filter(Boolean)
+        .join(' ');
 }
 
 function renderPlanetsTable(planets, houses) {
@@ -806,7 +808,7 @@ function createPlanetRow(planet) {
 
     const tdPos = document.createElement('td');
     tdPos.className = 'position-cell';
-    tdPos.innerHTML = `<span class="sign-symbol">${getSignSymbol(planet.sign)}</span>${getSignName(planet.sign)} ${formatDegree(planet)}`;
+    tdPos.textContent = formatAstroCoordinate(planet);
     tr.appendChild(tdPos);
 
     const tdHouse = document.createElement('td');
@@ -947,7 +949,7 @@ function renderHousesTable(houses, planets) {
 
         const tdSign = document.createElement('td');
         tdSign.className = 'position-cell';
-        tdSign.innerHTML = `${getSignSymbol(house.sign)} ${getSignName(house.sign)} ${formatDegree(house)}`;
+        tdSign.textContent = formatAstroCoordinate(house);
         tr.appendChild(tdSign);
 
         const tdRuler = document.createElement('td');
@@ -1364,7 +1366,7 @@ function renderSpecialPoints(specialPoints) {
 
         const tdPos = document.createElement('td');
         tdPos.className = 'position-cell';
-        tdPos.innerHTML = `${getSignSymbol(point.sign)} ${getSignName(point.sign)} ${formatDegree(point)}`;
+        tdPos.textContent = formatAstroCoordinate(point);
         tr.appendChild(tdPos);
 
         const tdHouse = document.createElement('td');

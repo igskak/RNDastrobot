@@ -33,6 +33,7 @@
     ]);
 
     let accountPreferences = null;
+    let persistedMethodologyBaseline = null;
     let preferencesMetadata = null;
     let toastTimer = null;
     let pollTimer = null;
@@ -144,6 +145,11 @@
         return window.AstroPreferences?.deepEqual
             ? window.AstroPreferences.deepEqual(left, right)
             : JSON.stringify(left ?? null) === JSON.stringify(right ?? null);
+    }
+
+    function deepClone(value) {
+        if (value === null || value === undefined) return value;
+        return JSON.parse(JSON.stringify(value));
     }
 
     function normalizeViewSettings(viewSettings = {}) {
@@ -899,7 +905,7 @@
         }).join('');
     }
 
-    function populateForm(preferences) {
+    function populateForm(preferences, { updateBaseline = false } = {}) {
         const normalized = {
             ...getDefaultAccountPreferences(),
             ...(preferences || {}),
@@ -916,6 +922,9 @@
         };
 
         accountPreferences = normalized;
+        if (updateBaseline) {
+            persistedMethodologyBaseline = deepClone(normalized.methodology);
+        }
         window.AstroPreferences?.setAccountVisualPreferences?.(normalized.visual);
         if (!ORB_PROFILE_IDS.includes(activeOrbProfile)) activeOrbProfile = 'natal';
 
@@ -1113,25 +1122,67 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    async function refreshCurrentChartSnapshot() {
+        const userId = localStorage.getItem('currentUserId');
+        if (!userId || !window.AstroAPI?.getNatalChart) return;
+
+        try {
+            const chart = await window.AstroAPI.getNatalChart(userId);
+            window.AstroAPI?.saveChartToSession?.(chart);
+        } catch (error) {
+            console.warn('Failed to refresh current chart after methodology recalculation:', error);
+        }
+    }
+
     function renderJobStatus(job, { final = false } = {}) {
         const container = document.getElementById('methodologyJobStatus');
         if (!container) return;
         if (!job) {
             container.classList.add('hidden');
-            container.textContent = '';
+            container.replaceChildren();
             return;
         }
 
         const total = Number(job.progress_total || 0);
         const done = Number(job.progress_done || 0);
         const percent = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0;
-        const statusLabel = String(job.status || 'pending').toUpperCase();
-        const summary = `${statusLabel} · ${done}/${total || '0'} · ${percent}%`;
+        const status = String(job.status || 'pending');
         const failures = Number(job.failed_count || 0);
-        const suffix = failures ? ` · failures: ${failures}` : '';
-        container.textContent = final ? `${summary}${suffix}` : `${summary}${suffix}`;
+        const titleByStatus = {
+            pending: 'Карты ожидают пересчета',
+            running: 'Карты пересчитываются с учетом новых настроек',
+            completed: failures ? 'Пересчет завершен с ошибками' : 'Пересчет карт завершен',
+            failed: 'Пересчет карт не выполнен',
+        };
+        const statusLabelByStatus = {
+            pending: 'ОЖИДАНИЕ',
+            running: 'В ПРОЦЕССЕ',
+            completed: failures ? 'С ОШИБКАМИ' : 'ГОТОВО',
+            failed: 'ОШИБКА',
+        };
+        const metaParts = [
+            total > 0 ? `${done}/${total} карт` : 'Подготовка списка карт',
+            `${percent}%`,
+        ];
+        if (failures) {
+            metaParts.push(`ошибок: ${failures}`);
+        }
+        if (!final && status !== 'completed' && status !== 'failed') {
+            metaParts.push('можно остаться на странице и дождаться завершения');
+        }
+
+        container.innerHTML = `
+            <div class="account-settings-status-title">
+                <span>${escapeHtml(titleByStatus[status] || 'Пересчет карт')}</span>
+                <span>${escapeHtml(statusLabelByStatus[status] || String(status).toUpperCase())}</span>
+            </div>
+            <div class="account-settings-status-meta">${escapeHtml(metaParts.join(' · '))}</div>
+            <div class="account-settings-status-progress" aria-hidden="true">
+                <div class="account-settings-status-progress-bar" style="--progress: ${percent}%"></div>
+            </div>
+        `;
         container.classList.remove('hidden');
-        container.dataset.status = String(job.status || 'pending');
+        container.dataset.status = status;
     }
 
     function stopPollingJob() {
@@ -1152,13 +1203,19 @@
                 renderJobStatus(job, { final: job.status === 'completed' || job.status === 'failed' });
                 if (job.status === 'completed') {
                     sessionStorage.removeItem(ACTIVE_RECALC_JOB_KEY);
-                    showToast(`Methodology recalculation finished${job.failed_count ? ` with ${job.failed_count} failures` : ''}.`, job.failed_count ? 'info' : 'success');
+                    showToast(
+                        job.failed_count
+                            ? `Пересчет завершен с ошибками: ${job.failed_count}.`
+                            : 'Пересчет карт завершен.',
+                        job.failed_count ? 'info' : 'success',
+                    );
+                    await refreshCurrentChartSnapshot();
                     stopPollingJob();
                     return;
                 }
                 if (job.status === 'failed') {
                     sessionStorage.removeItem(ACTIVE_RECALC_JOB_KEY);
-                    showToast(job.error || 'Methodology recalculation failed.', 'error');
+                    showToast(job.error || 'Пересчет карт не выполнен.', 'error');
                     stopPollingJob();
                     return;
                 }
@@ -1188,7 +1245,7 @@
             window.AstroAPI.getAccountPreferences(),
         ]);
         preferencesMetadata = metadata || null;
-        populateForm(preferences);
+        populateForm(preferences, { updateBaseline: true });
 
         const activeJobId = sessionStorage.getItem(ACTIVE_RECALC_JOB_KEY);
         if (activeJobId) {
@@ -1209,11 +1266,11 @@
             const payload = collectPayload();
             const priorityUserId = localStorage.getItem('currentUserId') || null;
             const methodologyChanged = !deepEqual(
-                normalizeMethodologySettings(accountPreferences?.methodology || {}),
+                normalizeMethodologySettings(persistedMethodologyBaseline || {}),
                 payload.methodology
             );
             const updated = await window.AstroAPI.patchAccountPreferences(payload);
-            populateForm(updated);
+            populateForm(updated, { updateBaseline: true });
 
             if (methodologyChanged && window.AstroAPI?.createPreferenceRecalcJob) {
                 const job = await window.AstroAPI.createPreferenceRecalcJob({
@@ -1227,7 +1284,7 @@
                 pollRecalcJob(job.job_id).catch((error) => {
                     console.warn('Failed to poll methodology recalculation job:', error);
                 });
-                showToast('Preferences saved. Methodology recalculation started.', 'success');
+                showToast('Настройки сохранены. Карты пересчитываются с учетом новых настроек.', 'success');
                 requestAnimationFrame(scrollToAccountSettingsTop);
                 return;
             }

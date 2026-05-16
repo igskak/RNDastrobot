@@ -5,7 +5,8 @@ from typing import List, Dict, Tuple, Optional
 from decimal import Decimal
 from sqlalchemy.orm import Session
 
-from app.database.models import NatalAspect, RefPlanetOrb, RefAspectType
+from app.database.models import NatalAspect, RefPlanetOrb, RefAspectType, User
+from app.services.preferences_runtime import PreferencesRuntimeResolver
 
 
 class AspectScoringService:
@@ -14,6 +15,8 @@ class AspectScoringService:
     def __init__(self, db_session: Session):
         self.db = db_session
         self._planet_orbs_cache: Optional[Dict[Tuple[str, str], float]] = None
+        self.preferences_runtime = PreferencesRuntimeResolver(db_session)
+        self._user_astrologer_cache: Dict = {}
 
     def _get_planet_orbs(self) -> Dict[Tuple[str, str], float]:
         """
@@ -30,7 +33,16 @@ class AspectScoringService:
             }
         return self._planet_orbs_cache
 
-    def _get_orb_for_body(self, body: str, aspect_type: str) -> float:
+    def _get_astrologer_id_for_user(self, user_id):
+        if user_id not in self._user_astrologer_cache:
+            self._user_astrologer_cache[user_id] = (
+                self.db.query(User.astrologer_id)
+                .filter(User.user_id == user_id)
+                .scalar()
+            )
+        return self._user_astrologer_cache[user_id]
+
+    def _get_orb_for_body(self, body: str, aspect_type: str, *, user_id=None) -> float:
         """
         Получить орбис для конкретного тела и типа аспекта
 
@@ -41,6 +53,16 @@ class AspectScoringService:
         Returns:
             float: Орбис для данного тела
         """
+        if user_id:
+            astrologer_id = self._get_astrologer_id_for_user(user_id)
+            if astrologer_id:
+                return self.preferences_runtime.resolve_body_orb_for_astrologer(
+                    astrologer_id,
+                    body,
+                    aspect_type,
+                    orb_profile='natal',
+                )
+
         planet_orbs = self._get_planet_orbs()
         orb = planet_orbs.get((body, aspect_type))
 
@@ -69,8 +91,8 @@ class AspectScoringService:
             Tuple[int, Dict]: (балл, детали расчета)
         """
         # Получить орбисы обеих планет
-        orb_a = self._get_orb_for_body(aspect.planet_1, aspect.aspect_type)
-        orb_b = self._get_orb_for_body(aspect.planet_2, aspect.aspect_type)
+        orb_a = self._get_orb_for_body(aspect.planet_1, aspect.aspect_type, user_id=aspect.user_id)
+        orb_b = self._get_orb_for_body(aspect.planet_2, aspect.aspect_type, user_id=aspect.user_id)
 
         min_orb = min(orb_a, orb_b)
         max_orb = max(orb_a, orb_b)
@@ -85,8 +107,9 @@ class AspectScoringService:
         elif actual_orb <= max_orb:
             score = 1
         else:
-            # Не должно происходить, так как аспект уже найден
-            score = 0
+            # Если аспект уже сохранен, он должен оставаться валидным для связей
+            # конфигураций даже при неполных/устаревших настройках орбисов.
+            score = 1
 
         details = {
             'aspect_id': aspect.aspect_id,
@@ -127,4 +150,3 @@ class AspectScoringService:
             aspect_details.append(details)
 
         return float(total_score), aspect_details
-

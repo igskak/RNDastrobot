@@ -688,3 +688,33 @@ class PreferencesRuntimeResolver:
             return fallback_orb
 
         return 5.0
+
+    def resolve_body_orb_for_astrologer(
+        self,
+        astrologer_id: UUID,
+        body: str,
+        aspect_type: str,
+        *,
+        orb_profile: Literal['natal', 'prognostic'] = 'natal',
+        default_house_system: str = 'P',
+    ) -> float:
+        normalized_orbs = self._get_normalized_orb_settings_for_astrologer(
+            astrologer_id,
+            default_house_system=default_house_system,
+        )
+        matrix = normalized_orbs.get('profiles', {}).get(orb_profile, {}).get('matrix', {}) or {}
+        aspect_matrix = matrix.get(aspect_type, {}) or {}
+
+        canonical = normalize_body_name(body) or str(body)
+        for candidate in [canonical, *get_body_alias_candidates(body)]:
+            value = aspect_matrix.get(candidate)
+            if value is not None:
+                return float(value)
+
+        default_matrix = self._get_default_methodology_cached()['orbs']['profiles'][orb_profile]['matrix']
+        for candidate in [canonical, *get_body_alias_candidates(body)]:
+            fallback = default_matrix.get(aspect_type, {}).get(candidate)
+            if fallback is not None:
+                return float(fallback)
+
+        return 5.0

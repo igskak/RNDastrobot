@@ -21,6 +21,32 @@
         return translated === key ? (Symbols.signNamesRu[name] || name) : translated;
     }
 
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;',
+        }[char]));
+    }
+
+    function formatAstroCoordinate(item) {
+        if (window.LocaleFormatters?.formatAstroCoordinate) {
+            return window.LocaleFormatters.formatAstroCoordinate(item, {
+                signSymbol: Symbols?.signs?.[item?.sign],
+            });
+        }
+
+        const degree = Number(item?.degree_in_sign);
+        if (!Number.isFinite(degree)) return '';
+        const d = Math.floor(degree);
+        const m = Math.floor((degree - d) * 60);
+        return [`${d}°`, Symbols?.signs?.[item?.sign] || item?.sign || '', `${String(m).padStart(2, '0')}'`]
+            .filter(Boolean)
+            .join(' ');
+    }
+
     // ========== ZOOM / PAN STATE ==========
     let scale = 1;
     const WHEEL_ZOOM_FACTOR = 1.06;
@@ -133,15 +159,14 @@
             if (tooltip && event && window.chartDataCache) {
                 const planet = window.chartDataCache.planets?.find(p => p.name === planetName);
                 if (planet) {
-                    const signRu = getSignName(planet.sign);
-                    const signSymbol = Symbols.signs[planet.sign] || '';
                     const nameRu = getPlanetName(planet.name);
+                    const position = formatAstroCoordinate(planet);
                     const symbolMarkup = Symbols.getPlanetSymbolMarkup?.(planet.name, { size: 18, title: nameRu })
                         || `<span class="astro-symbol">${Symbols.getPlanetSymbol?.(planet.name) || ''}</span>`;
 
                     tooltip.innerHTML = `
                         <strong>${symbolMarkup} ${nameRu}</strong><br>
-                        <span class="astro-symbol">${signSymbol}</span> ${signRu} ${planet.degree_in_sign_formatted || planet.degree_in_sign.toFixed(2) + '°'}<br>
+                        ${escapeHtml(position)}<br>
                         ${t('common.house')}: ${Symbols?.formatHouseLabel?.(planet.house) || planet.house}
                     `;
                     tooltip.style.display = 'block';

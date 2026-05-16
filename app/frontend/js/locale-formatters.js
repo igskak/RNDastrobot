@@ -12,6 +12,7 @@
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = {
             createLocaleFormatters: api.createLocaleFormatters,
+            formatAstroCoordinate: api.formatAstroCoordinate,
         };
     }
 })(function (root) {
@@ -74,11 +75,34 @@
             return getFormatter('collator', Intl.Collator, intlOptions);
         }
 
+        function formatAstroCoordinate(input = {}, options = {}) {
+            const payload = typeof input === 'object' && input !== null
+                ? input
+                : { degree_in_sign: input };
+            const degree = Number(payload.degree_in_sign ?? payload.degreeInSign ?? payload.degree);
+            if (!Number.isFinite(degree)) return options.emptyValue ?? '';
+
+            const degrees = Math.floor(degree);
+            const minuteFloat = (degree - degrees) * 60;
+            const minutes = Math.max(0, Math.min(59, Math.floor(minuteFloat)));
+            const sign = payload.sign || options.sign || '';
+            const signSymbol = options.signSymbol
+                || root?.Symbols?.signs?.[sign]
+                || sign;
+
+            return [
+                `${degrees}°`,
+                signSymbol,
+                `${String(minutes).padStart(2, '0')}'`,
+            ].filter(Boolean).join(' ');
+        }
+
         return {
             createLocaleFormatters,
             formatDate,
             formatDateTime,
             formatNumber,
+            formatAstroCoordinate,
             getCollator,
             toIntlLocale,
         };

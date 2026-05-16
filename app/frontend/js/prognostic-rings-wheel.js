@@ -1238,15 +1238,14 @@
             });
 
             const sign = group.dataset.sign || '';
-            const signName = this.signName(sign);
-            const signSymbol = Symbols?.signs?.[sign] || '';
             const degreeInSign = Number(group.dataset.degreeInSign || 0);
             const longitude = Number(group.dataset.longitude || 0);
             const methodLabel = this.methodLabel(method);
+            const position = this.formatAstroCoordinate({ sign, degree_in_sign: degreeInSign });
 
             this.showTooltip(`
                 <strong>${this.escapeHtml(methodLabel)} · ${this.escapeHtml(this.houseLabel(houseNumber))}</strong><br>
-                <span class="astro-symbol">${this.escapeHtml(signSymbol)}</span> ${this.escapeHtml(signName)} ${this.formatDMS(degreeInSign)}<br>
+                ${this.escapeHtml(position)}<br>
                 ${this.escapeHtml(this.t('common.longitude'))}: ${this.formatDMS(longitude)}
             `, event);
         }
@@ -1340,13 +1339,12 @@
 
         getPlanetTooltipHtml(body, method) {
             const symbol = Symbols?.planets?.[this.normalizeAspectBodyName(body.name)] || Symbols?.planets?.[body.name] || '';
-            const signSymbol = Symbols?.signs?.[body.sign] || '';
-            const signName = this.signName(body.sign);
             const house = body.house != null ? this.formatHouseLabel(body.house) : this.t('common.notAvailable');
             const methodLabel = this.methodLabel(method);
+            const position = this.formatAstroCoordinate(body);
             return `
                 <strong>${this.escapeHtml(methodLabel)} · <span class="astro-symbol">${this.escapeHtml(symbol)}</span> ${this.escapeHtml(this.bodyName(body.name))}</strong><br>
-                <span class="astro-symbol">${this.escapeHtml(signSymbol)}</span> ${this.escapeHtml(signName)} ${this.formatDMS(Number(body.degree_in_sign) || 0)}<br>
+                ${this.escapeHtml(position)}<br>
                 ${this.escapeHtml(this.t('common.house'))}: ${this.escapeHtml(String(house))}${body.retrograde ? ' <span style="color:#dc2626">R</span>' : ''}
             `;
         }
@@ -1455,6 +1453,22 @@
             if (s === 60) { s = 0; m += 1; }
             if (m === 60) { m = 0; d += 1; }
             return `${d}°${String(m).padStart(2, '0')}'${String(s).padStart(2, '0')}"`;
+        }
+
+        formatAstroCoordinate(item) {
+            if (window.LocaleFormatters?.formatAstroCoordinate) {
+                return window.LocaleFormatters.formatAstroCoordinate(item, {
+                    signSymbol: Symbols?.signs?.[item?.sign],
+                });
+            }
+
+            const degree = Number(item?.degree_in_sign);
+            if (!Number.isFinite(degree)) return '';
+            const d = Math.floor(degree);
+            const m = Math.floor((degree - d) * 60);
+            return [`${d}°`, Symbols?.signs?.[item?.sign] || item?.sign || '', `${String(m).padStart(2, '0')}'`]
+                .filter(Boolean)
+                .join(' ');
         }
 
         escapeAttribute(value) {
