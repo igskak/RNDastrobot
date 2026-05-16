@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import AuthContext, create_audit_event, require_auth
@@ -17,7 +17,7 @@ from app.models.schemas import (
     PreferencesMetadataResponse,
     ResolvedPreferencesResponse,
 )
-from app.services.preference_recalc_service import PreferenceRecalcService
+from app.services.preference_recalc_service import PreferenceRecalcService, run_preference_recalc_job
 from app.services.preferences_service import PreferencesService
 
 
@@ -109,6 +109,7 @@ def get_preferences_metadata(
 def create_preference_recalc_job(
     payload: PreferenceRecalcJobCreateRequest,
     request: Request,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ) -> PreferenceRecalcJobResponse:
@@ -128,6 +129,7 @@ def create_preference_recalc_job(
         resource_id=str(job.job_id),
         result="success",
     )
+    background_tasks.add_task(run_preference_recalc_job, job.job_id)
     return PreferenceRecalcJobResponse(**service.serialize_job(job))
 
 

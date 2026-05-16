@@ -8,12 +8,41 @@ from uuid import UUID
 from loguru import logger
 from sqlalchemy.orm import Session
 
+from app.database.connection import get_db_session
 from app.database.models import PreferenceRecalcJob, SolarReturn, User
 from app.services.natal_chart_service import NatalChartService
 from app.services.solar_return_service import SolarReturnService
 
 
 DEFAULT_JOB_TYPE = 'methodology_recalc'
+
+
+def run_preference_recalc_job(job_id: UUID) -> None:
+    """Background-task entry point that processes one queued recalculation job."""
+    db = get_db_session()
+    try:
+        PreferenceRecalcService(db).process_job(job_id)
+    except Exception:
+        logger.exception("Preference recalc background task crashed for job {}", job_id)
+    finally:
+        db.close()
+
+
+def prioritize_records_by_user_id(records, priority_user_id, *, user_id_attr: str = "user_id"):
+    """Move records for one user to the front while preserving relative order."""
+    if not priority_user_id:
+        return list(records)
+
+    priority_user_id = str(priority_user_id)
+    prioritized = []
+    remaining = []
+    for record in records:
+        record_user_id = getattr(record, user_id_attr, None)
+        if record_user_id is not None and str(record_user_id) == priority_user_id:
+            prioritized.append(record)
+        else:
+            remaining.append(record)
+    return prioritized + remaining
 
 
 class PreferenceRecalcService:
@@ -83,12 +112,15 @@ class PreferenceRecalcService:
         if job.job_type != DEFAULT_JOB_TYPE:
             raise ValueError(f'Unsupported job_type: {job.job_type}')
 
+        priority_user_id = (job.payload or {}).get('priority_user_id')
+
         users = (
             self.db.query(User)
             .filter(User.astrologer_id == job.astrologer_id)
             .order_by(User.created_at.asc())
             .all()
         )
+        users = prioritize_records_by_user_id(users, priority_user_id)
         solars = (
             self.db.query(SolarReturn)
             .join(User, User.user_id == SolarReturn.user_id)
@@ -96,6 +128,7 @@ class PreferenceRecalcService:
             .order_by(SolarReturn.year.asc(), SolarReturn.created_at.asc())
             .all()
         )
+        solars = prioritize_records_by_user_id(solars, priority_user_id)
 
         job.status = 'running'
         job.started_at = datetime.utcnow()

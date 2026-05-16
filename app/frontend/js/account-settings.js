@@ -1207,6 +1207,7 @@
         if (saveBtn) saveBtn.disabled = true;
         try {
             const payload = collectPayload();
+            const priorityUserId = localStorage.getItem('currentUserId') || null;
             const methodologyChanged = !deepEqual(
                 normalizeMethodologySettings(accountPreferences?.methodology || {}),
                 payload.methodology
@@ -1217,7 +1218,10 @@
             if (methodologyChanged && window.AstroAPI?.createPreferenceRecalcJob) {
                 const job = await window.AstroAPI.createPreferenceRecalcJob({
                     job_type: 'methodology_recalc',
-                    payload: { source: 'account-settings' },
+                    payload: {
+                        source: 'account-settings',
+                        ...(priorityUserId ? { priority_user_id: priorityUserId } : {}),
+                    },
                 });
                 renderJobStatus(job);
                 pollRecalcJob(job.job_id).catch((error) => {

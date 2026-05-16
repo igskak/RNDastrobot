@@ -998,7 +998,7 @@ class NatalChartService:
         houses = self._attach_house_ruler_groups(
             houses,
             planets,
-            DignityService(db_session=db_session, astrologer_id=astrologer_id),
+            DignityService(db_session=db_session, astrologer_id=user.astrologer_id),
         )
 
         fate_cross = configurations.get('FateCross') if configurations else None

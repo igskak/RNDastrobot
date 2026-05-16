@@ -19,6 +19,8 @@
     border-bottom: 1px solid var(--border);
     box-shadow: 0 1px 0 rgba(26, 22, 20, 0.03);
     flex-shrink: 0;
+    position: relative;
+    z-index: 20;
 }
 
 .back-btn-compact {
@@ -47,6 +49,8 @@
     margin-left: auto;
     flex-shrink: 0;
     align-items: center;
+    position: relative;
+    z-index: 1;
 }
 
 .header-nav-btn {
@@ -79,6 +83,8 @@
 
 .header-action-menu {
     position: relative;
+    flex-shrink: 0;
+    z-index: 2;
 }
 
 .chart-actions-menu {
@@ -133,6 +139,7 @@
 }
 
 .birth-info-compact {
+    flex: 1 1 auto;
     min-width: 0;
 }
 
