@@ -82,6 +82,25 @@ async function waitForI18nReady() {
     await Promise.resolve(window.FrontendI18n.ready).catch(() => {});
 }
 
+async function loadFreshNatalFullChartData(fallbackChartData) {
+    const userId = fallbackChartData?.user_id || localStorage.getItem('currentUserId');
+    if (!userId || !window.AstroAPI?.getNatalChart) {
+        return fallbackChartData;
+    }
+
+    try {
+        const freshChartData = await window.AstroAPI.getNatalChart(userId);
+        const ensuredChartData = freshChartData?.user_id
+            ? freshChartData
+            : { ...freshChartData, user_id: userId };
+        window.AstroAPI?.saveChartToSession?.(ensuredChartData);
+        return ensuredChartData;
+    } catch (error) {
+        console.warn('Natal Full fresh chart fallback to session:', error);
+        return fallbackChartData;
+    }
+}
+
 function formatHeaderTimezone(value) {
     return window.Timezones?.formatOffsetLabel?.(value) || String(value || '').trim();
 }
@@ -332,7 +351,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    chartData = JSON.parse(storedData);
+    try {
+        chartData = JSON.parse(storedData);
+    } catch (error) {
+        console.warn('Natal Full invalid session chart data:', error);
+        window.location.href = '/';
+        return;
+    }
+
+    chartData = await loadFreshNatalFullChartData(chartData);
     configureNatalFullNavigation();
 
     renderFullChart(chartData);

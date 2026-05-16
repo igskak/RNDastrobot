@@ -3,6 +3,7 @@
 
     const STORAGE_PREFIX = 'forecastNewViewState';
     const STORAGE_VERSION = 1;
+    const MATRIX_SCHEMA_VERSION = 2;
     const VALID_LAYERS = ['transit', 'progression', 'direction'];
     const VALID_STEP_MODES = ['second', 'minute', 'hour', 'day', 'week', 'month', 'year'];
     const VALID_CUSTOM_STEP_UNITS = ['second', 'minute', 'hour', 'day', 'week', 'month', 'year'];
@@ -97,6 +98,8 @@
             customStep: sanitizeCustomStep(source.customStep),
             leftTab: pickEnum(source.leftTab, VALID_TABS, 'Planets'),
             rightTab: pickEnum(source.rightTab, VALID_TABS, 'Planets'),
+            matrixSchemaVersion: Number(source.matrixSchemaVersion) === MATRIX_SCHEMA_VERSION ? MATRIX_SCHEMA_VERSION : 1,
+            natalMatrixRows: source.natalMatrixRows && typeof source.natalMatrixRows === 'object' ? source.natalMatrixRows : {},
             matrixRows: source.matrixRows && typeof source.matrixRows === 'object' ? source.matrixRows : {},
             viewport: sanitizeViewport(source.viewport),
             pageSettings: source.pageSettings && typeof source.pageSettings === 'object' ? source.pageSettings : {},
@@ -107,6 +110,7 @@
         const payload = sanitizePayload(input?.state, input?.natalData);
         if (!payload) return null;
         payload.savedAt = new Date().toISOString();
+        payload.matrixSchemaVersion = MATRIX_SCHEMA_VERSION;
         return payload;
     }
 
@@ -127,6 +131,7 @@
     const api = {
         STORAGE_PREFIX,
         STORAGE_VERSION,
+        MATRIX_SCHEMA_VERSION,
         buildChartSignature,
         buildStorageKey,
         buildPersistedState,

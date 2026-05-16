@@ -125,6 +125,66 @@ test('filterChartDataByViewPreferences applies matrix rows to prognostic aspect 
     );
 });
 
+test('filterChartDataByViewPreferences applies separate endpoint rows to prognostic aspects', () => {
+    const chartData = {
+        planets: [
+            { name: 'Sun' },
+            { name: 'Moon' },
+            { name: 'Mars' },
+        ],
+        aspects: [
+            {
+                transit_planet: 'Sun',
+                natal_object: 'Moon',
+                left_planet: 'Sun',
+                right_planet: 'Moon',
+                aspect_type: 'Square',
+            },
+            {
+                transit_planet: 'Mars',
+                natal_object: 'Sun',
+                left_planet: 'Mars',
+                right_planet: 'Sun',
+                aspect_type: 'Trine',
+            },
+        ],
+        aspect_configurations: [],
+        stelliums: [],
+    };
+
+    const transitSunDisabled = preferences.filterChartDataByViewPreferences(chartData, {
+        matrixRows: {},
+        aspectMatrixRows: {
+            first: {
+                Sun: { display: false, aspecting: false },
+            },
+            second: {},
+        },
+        enabledAspectTypes: ['Square', 'Trine'],
+    });
+
+    assert.deepEqual(
+        transitSunDisabled.aspects.map((aspect) => [aspect.transit_planet, aspect.natal_object, aspect.aspect_type]),
+        [['Mars', 'Sun', 'Trine']],
+    );
+
+    const natalSunDisabled = preferences.filterChartDataByViewPreferences(chartData, {
+        matrixRows: {},
+        aspectMatrixRows: {
+            first: {},
+            second: {
+                Sun: { display: false, aspecting: false },
+            },
+        },
+        enabledAspectTypes: ['Square', 'Trine'],
+    });
+
+    assert.deepEqual(
+        natalSunDisabled.aspects.map((aspect) => [aspect.transit_planet, aspect.natal_object, aspect.aspect_type]),
+        [['Sun', 'Moon', 'Square']],
+    );
+});
+
 test('filterChartDataByViewPreferences removes hidden bodies from table house fields and special points', () => {
     const chartData = {
         planets: [

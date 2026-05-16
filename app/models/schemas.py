@@ -149,6 +149,7 @@ class HousePosition(BaseModel):
     # Новые поля характеристик (миграция 005)
     included_sign: Optional[str] = Field(None, description="Включённый знак (знак без куспидов внутри дома)")
     co_rulers: Optional[List[str]] = Field(default=[], description="Соуправители дома")
+    ruler_groups: Optional[List[Dict[str, Any]]] = Field(default=[], description="Группы управителей дома по куспиду и включённому знаку")
     significator: Optional[str] = Field(None, description="Естественный сигнификатор дома")
     # Миграция 007: Связи дом-планета
     ruler_in_house: Optional[int] = Field(None, description="В каком доме находится управитель")

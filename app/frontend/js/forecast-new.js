@@ -104,6 +104,7 @@
         natalIsCustomStepOpen: false,
         leftTab: 'Planets',
         rightTab: 'Planets',
+        natalMatrixRows: buildDefaultForecastNewMatrixRows(),
         matrixRows: buildDefaultForecastNewMatrixRows(),
         pageSettings: {
             houseSystem: 'P',
@@ -148,6 +149,7 @@
         bodyActionMenu: {
             body: null,
             method: null,
+            scope: 'prognostic',
         },
     };
 
@@ -1448,7 +1450,7 @@
             showApplyingSeparating: state.pageSettings.showApplyingSeparating === true,
             showAspectText: state.pageSettings.showAspectText === true,
         });
-        state.natalRenderer?.render(filterChartDataForSidePanel(state.natalWheelData));
+        state.natalRenderer?.render(filterChartDataForSidePanel(state.natalWheelData, { scope: 'natal' }));
         renderInlineMatrixControls();
         applyInlineMatrixRowState();
         renderMatrixEditor();
@@ -1457,7 +1459,7 @@
 
     function renderMatrixEditor() {
         const bodies = window.AstroPreferences?.MATRIX_BODIES || [];
-        const rows = normalizeForecastNewMatrixRows(state.matrixRows);
+        const rows = getMatrixRowsForScope('prognostic');
         const markup = `
             <table class="natal-matrix-table forecast-new-matrix-table">
                 <thead><tr><th>Body</th><th>Display</th><th>Aspecting</th></tr></thead>
@@ -1469,8 +1471,8 @@
                         return `
                             <tr>
                                 <td><span class="natal-matrix-body natal-matrix-body--icon-only" title="${label}" aria-label="${label}">${symbol}</span></td>
-                                <td><input type="checkbox" data-matrix-body="${body}" data-matrix-field="display" ${rows?.[body]?.display !== false ? 'checked' : ''}></td>
-                                <td><input type="checkbox" data-matrix-body="${body}" data-matrix-field="aspecting" ${rows?.[body]?.aspecting !== false ? 'checked' : ''}></td>
+                                <td><input type="checkbox" data-matrix-scope="prognostic" data-matrix-body="${body}" data-matrix-field="display" ${rows?.[body]?.display !== false ? 'checked' : ''}></td>
+                                <td><input type="checkbox" data-matrix-scope="prognostic" data-matrix-body="${body}" data-matrix-field="aspecting" ${rows?.[body]?.aspecting !== false ? 'checked' : ''}></td>
                             </tr>
                         `;
                     }).join('')}
@@ -1483,7 +1485,8 @@
     }
 
     function readMatrixRows(container = refs.forecastNewMatrixEditor || refs.forecastNewSettingsMatrixEditor) {
-        const rows = normalizeForecastNewMatrixRows(state.matrixRows);
+        const scope = container?.dataset?.matrixScope || 'prognostic';
+        const rows = getMatrixRowsForScope(scope);
         container?.querySelectorAll('input[data-matrix-body][data-matrix-field]').forEach((input) => {
             const body = input.dataset.matrixBody;
             const field = input.dataset.matrixField;
@@ -1496,17 +1499,19 @@
         const body = matrixBodyKey(input.dataset.matrixBody);
         const field = input.dataset.matrixField;
         if (!body || !['display', 'aspecting'].includes(field)) return;
-        const rows = normalizeForecastNewMatrixRows(state.matrixRows);
+        const scope = input.dataset.matrixScope || 'prognostic';
+        const rows = getMatrixRowsForScope(scope);
         rows[body] = { ...(rows[body] || { display: true, aspecting: true }), [field]: input.checked };
-        state.matrixRows = normalizeForecastNewMatrixRows(rows);
+        setMatrixRowsForScope(scope, rows);
     }
 
     function syncMatrixCheckboxes() {
-        const rows = normalizeForecastNewMatrixRows(state.matrixRows);
         document.querySelectorAll('input[data-matrix-body][data-matrix-field]').forEach((input) => {
             const body = matrixBodyKey(input.dataset.matrixBody);
             const field = input.dataset.matrixField;
             if (!body || !['display', 'aspecting'].includes(field)) return;
+            const scope = input.dataset.matrixScope || 'prognostic';
+            const rows = getMatrixRowsForScope(scope);
             input.checked = rows?.[body]?.[field] !== false;
         });
     }
@@ -1547,7 +1552,7 @@
     function renderMatrixSensitivePanelData() {
         updateRendererMatrixSensitiveData(
             state.natalRenderer,
-            filterChartDataForSidePanel(state.natalWheelData)
+            filterChartDataForSidePanel(state.natalWheelData, { scope: 'natal' })
         );
 
         const method = state.selectedRightLayer;
@@ -1561,31 +1566,33 @@
                 stelliums: [],
                 balances: null,
                 cosmogram_pattern: null,
-            }));
+            }, { scope: 'prognostic' }));
         }
     }
 
     function renderInlineMatrixControls() {
-        const rows = normalizeForecastNewMatrixRows(state.matrixRows);
+        const natalRows = getMatrixRowsForScope('natal');
+        const prognosticRows = getMatrixRowsForScope('prognostic');
         refs.forecastNewLayout?.querySelectorAll('.forecast-new-matrix-inline-cell').forEach((cell) => cell.remove());
 
         document.querySelectorAll('#natalPlanetsTable tr[data-planet]').forEach((row) => {
             const body = matrixBodyKey(row.dataset.planet);
-            row.insertAdjacentHTML('beforeend', matrixControlCells(body, rows));
+            row.insertAdjacentHTML('beforeend', matrixControlCells(body, natalRows, 'natal'));
         });
 
         document.querySelectorAll('#progPlanetsTable tr[data-planet]').forEach((row) => {
             const body = matrixBodyKey(row.dataset.planet);
-            row.insertAdjacentHTML('beforeend', matrixControlCells(body, rows));
+            row.insertAdjacentHTML('beforeend', matrixControlCells(body, prognosticRows, 'prognostic'));
         });
     }
 
     function applyInlineMatrixRowState() {
-        const rows = normalizeForecastNewMatrixRows(state.matrixRows);
+        const natalRows = getMatrixRowsForScope('natal');
+        const prognosticRows = getMatrixRowsForScope('prognostic');
 
         document.querySelectorAll('#natalPlanetsTable tr[data-planet]').forEach((row) => {
             const body = matrixBodyKey(row.dataset.planet);
-            const config = rows?.[body] || { display: true, aspecting: true };
+            const config = natalRows?.[body] || { display: true, aspecting: true };
             row.hidden = false;
             row.classList.toggle('forecast-new-matrix-row-display-off', false);
             row.classList.toggle('forecast-new-matrix-row-aspecting-off', config.aspecting === false);
@@ -1593,7 +1600,7 @@
 
         document.querySelectorAll('#progPlanetsTable tr[data-planet]').forEach((row) => {
             const body = matrixBodyKey(row.dataset.planet);
-            const config = rows?.[body] || { display: true, aspecting: true };
+            const config = prognosticRows?.[body] || { display: true, aspecting: true };
             row.hidden = false;
             row.classList.toggle('forecast-new-matrix-row-display-off', false);
             row.classList.toggle('forecast-new-matrix-row-aspecting-off', config.aspecting === false);
@@ -1601,7 +1608,7 @@
 
     }
 
-    function matrixControlCells(bodyName, rows) {
+    function matrixControlCells(bodyName, rows, scope = 'prognostic') {
         const body = matrixBodyKey(bodyName);
         if (!body) {
             return '<td class="forecast-new-matrix-inline-cell forecast-new-matrix-inline-empty"></td><td class="forecast-new-matrix-inline-cell forecast-new-matrix-inline-empty"></td>';
@@ -1613,7 +1620,7 @@
             return `
                 <td class="forecast-new-matrix-inline-cell">
                     <label class="forecast-new-matrix-inline" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}">
-                        <input type="checkbox" data-matrix-body="${escapeHtml(body)}" data-matrix-field="${field}" ${checked}>
+                        <input type="checkbox" data-matrix-scope="${escapeHtml(scope)}" data-matrix-body="${escapeHtml(body)}" data-matrix-field="${field}" ${checked}>
                     </label>
                 </td>
             `;
@@ -1646,16 +1653,17 @@
             const body = matrixBodyKey(menu.dataset.body);
             const field = button.dataset.actionField;
             if (!body || !['display', 'aspecting'].includes(field)) return;
+            const scope = menu.dataset.bodyScope || 'prognostic';
 
-            const rows = normalizeForecastNewMatrixRows(state.matrixRows);
+            const rows = getMatrixRowsForScope(scope);
             const current = rows?.[body]?.[field] !== false;
             rows[body] = {
                 ...(rows[body] || { display: true, aspecting: true }),
                 [field]: !current,
             };
-            state.matrixRows = normalizeForecastNewMatrixRows(rows);
+            setMatrixRowsForScope(scope, rows);
             syncMatrixCheckboxes();
-            renderBodyActionMenu(body, menu.dataset.method || '', menu);
+            renderBodyActionMenu(body, menu.dataset.method || '', menu, scope);
             await applyMatrixRows();
         });
 
@@ -1666,18 +1674,20 @@
         const body = matrixBodyKey(detail.body);
         if (!body) return;
         const menu = ensureBodyActionMenu();
-        state.bodyActionMenu = { body, method: detail.method || '' };
-        renderBodyActionMenu(body, detail.method || '', menu);
+        const scope = detail.method === 'natal' ? 'natal' : 'prognostic';
+        state.bodyActionMenu = { body, method: detail.method || '', scope };
+        renderBodyActionMenu(body, detail.method || '', menu, scope);
         positionBodyActionMenu(menu, detail.clientX, detail.clientY);
         menu.classList.remove('hidden');
     }
 
-    function renderBodyActionMenu(body, method, menu = ensureBodyActionMenu()) {
-        const rows = normalizeForecastNewMatrixRows(state.matrixRows);
+    function renderBodyActionMenu(body, method, menu = ensureBodyActionMenu(), scope = 'prognostic') {
+        const rows = getMatrixRowsForScope(scope);
         const config = rows?.[body] || { display: true, aspecting: true };
         const label = escapeHtml(planetName(body));
         menu.dataset.body = body;
         menu.dataset.method = method || '';
+        menu.dataset.bodyScope = scope;
         menu.innerHTML = `
             <div class="forecast-new-body-action-menu-title">${label}</div>
             <div class="forecast-new-body-action-menu-controls">
@@ -1712,7 +1722,7 @@
     function closeBodyActionMenu() {
         const menu = document.body.querySelector('.forecast-new-body-action-menu[data-menu-scope="forecast-new"]');
         menu?.classList.add('hidden');
-        state.bodyActionMenu = { body: null, method: null };
+        state.bodyActionMenu = { body: null, method: null, scope: 'prognostic' };
     }
 
     function renderAspectTypeToggles() {
@@ -2092,6 +2102,8 @@
         state.wheel.setOptions({
             houseSystem: state.pageSettings.houseSystem,
             orientation: state.pageSettings.orientation,
+            natalMatrixRows: state.natalMatrixRows,
+            prognosticMatrixRows: state.matrixRows,
             matrixRows: state.matrixRows,
             planetScale: state.pageSettings.planetScale,
             pointScale: state.pageSettings.pointScale,
@@ -2163,7 +2175,7 @@
             stelliums: [],
             balances: null,
             cosmogram_pattern: null,
-        }));
+        }, { scope: 'prognostic' }));
         renderInlineMatrixControls();
         applyInlineMatrixRowState();
         syncPrognosticHousesVisibility(layer.houses || []);
@@ -2444,18 +2456,31 @@
         });
     }
 
+    function getMatrixRowsForScope(scope = 'prognostic') {
+        return normalizeForecastNewMatrixRows(scope === 'natal' ? state.natalMatrixRows : state.matrixRows);
+    }
+
+    function setMatrixRowsForScope(scope = 'prognostic', rows = {}) {
+        const normalized = normalizeForecastNewMatrixRows(rows);
+        if (scope === 'natal') {
+            state.natalMatrixRows = normalized;
+            return;
+        }
+        state.matrixRows = normalized;
+    }
+
     function filterViewModelForSettings(viewModel) {
         if (!viewModel) return viewModel;
         return {
             ...viewModel,
-            natalLayer: viewModel.natalLayer ? filterLayerForSettings(viewModel.natalLayer) : viewModel.natalLayer,
+            natalLayer: viewModel.natalLayer ? filterLayerForSettings(viewModel.natalLayer, { scope: 'natal' }) : viewModel.natalLayer,
             activePrognosticLayers: (viewModel.activePrognosticLayers || []).map((layer) => {
-                return filterLayerForSettings(layer);
+                return filterLayerForSettings(layer, { scope: 'prognostic' });
             }),
         };
     }
 
-    function filterLayerForSettings(layer) {
+    function filterLayerForSettings(layer, options = {}) {
         const filteredLayer = filterChartDataForRenderer({
             planets: layer.bodies || [],
             houses: layer.houses || [],
@@ -2464,10 +2489,10 @@
             stelliums: layer.stelliums || [],
             balances: layer.balances || null,
             cosmogram_pattern: layer.cosmogram_pattern || null,
-        });
+        }, options);
         return {
             ...layer,
-            bodies: filteredLayer.planets || [],
+            bodies: layer.bodies || [],
             houses: filteredLayer.houses || [],
             aspects: filteredLayer.aspects || [],
             aspect_configurations: filteredLayer.aspect_configurations || [],
@@ -2503,8 +2528,8 @@
         });
     }
 
-    function matrixRowsForSidePanel() {
-        const rows = normalizeForecastNewMatrixRows(state.matrixRows);
+    function matrixRowsForSidePanel(scope = 'prognostic') {
+        const rows = getMatrixRowsForScope(scope);
         return Object.fromEntries(Object.entries(rows).map(([body, config]) => [
             body,
             {
@@ -2514,7 +2539,24 @@
         ]));
     }
 
-    function filterChartDataForRenderer(chartData = {}) {
+    function aspectMatrixRowsForRenderer(scope = 'prognostic') {
+        if (scope !== 'prognostic') return null;
+        return {
+            first: getMatrixRowsForScope('prognostic'),
+            second: getMatrixRowsForScope('natal'),
+        };
+    }
+
+    function aspectMatrixRowsForSidePanel(scope = 'prognostic') {
+        if (scope !== 'prognostic') return null;
+        return {
+            first: matrixRowsForSidePanel('prognostic'),
+            second: matrixRowsForSidePanel('natal'),
+        };
+    }
+
+    function filterChartDataForRenderer(chartData = {}, options = {}) {
+        const scope = options.scope || 'prognostic';
         let filtered = {
             ...chartData,
             aspects: normalizeForecastAspects(chartData.aspects || []),
@@ -2522,7 +2564,8 @@
 
         filtered = window.AstroPreferences?.filterChartDataByViewPreferences
             ? window.AstroPreferences.filterChartDataByViewPreferences(filtered, {
-                matrixRows: normalizeForecastNewMatrixRows(state.matrixRows),
+                matrixRows: getMatrixRowsForScope(scope),
+                aspectMatrixRows: aspectMatrixRowsForRenderer(scope),
                 aspectScope: state.pageSettings.aspectScope || 'all',
                 enabledAspectTypes: Array.isArray(state.pageSettings.enabledAspectTypes) && state.pageSettings.enabledAspectTypes.length
                     ? state.pageSettings.enabledAspectTypes
@@ -2539,7 +2582,8 @@
         return filtered;
     }
 
-    function filterChartDataForSidePanel(chartData = {}) {
+    function filterChartDataForSidePanel(chartData = {}, options = {}) {
+        const scope = options.scope || 'prognostic';
         let filtered = {
             ...chartData,
             aspects: normalizeForecastAspects(chartData.aspects || []),
@@ -2547,7 +2591,8 @@
 
         filtered = window.AstroPreferences?.filterChartDataByViewPreferences
             ? window.AstroPreferences.filterChartDataByViewPreferences(filtered, {
-                matrixRows: matrixRowsForSidePanel(),
+                matrixRows: matrixRowsForSidePanel(scope),
+                aspectMatrixRows: aspectMatrixRowsForSidePanel(scope),
                 aspectScope: state.pageSettings.aspectScope || 'all',
                 enabledAspectTypes: Array.isArray(state.pageSettings.enabledAspectTypes) && state.pageSettings.enabledAspectTypes.length
                     ? state.pageSettings.enabledAspectTypes
@@ -2656,6 +2701,10 @@
         state.customStep = normalizeCustomStep(restored.customStep || state.customStep);
         state.leftTab = restored.leftTab || state.leftTab;
         state.rightTab = restored.rightTab || state.rightTab;
+        const hasSplitMatrixState = Number(restored.matrixSchemaVersion) >= 2;
+        state.natalMatrixRows = normalizeForecastNewMatrixRows(
+            hasSplitMatrixState ? (restored.natalMatrixRows || state.natalMatrixRows) : state.natalMatrixRows
+        );
         state.matrixRows = normalizeForecastNewMatrixRows(restored.matrixRows);
         state.viewport = restored.viewport || state.viewport;
         state.pageSettings = {
@@ -2702,7 +2751,14 @@
             });
             state.resolvedPreferences = payload;
             const resolved = payload?.resolved || {};
-            state.matrixRows = normalizeForecastNewMatrixRows(resolved?.matrix?.rows || state.matrixRows);
+            const matrixSettings = resolved?.matrix || {};
+            const hasSplitMatrixPreferences = Number(matrixSettings.schema_version) >= 2;
+            state.natalMatrixRows = normalizeForecastNewMatrixRows(
+                hasSplitMatrixPreferences ? (matrixSettings.natal_rows || state.natalMatrixRows) : state.natalMatrixRows
+            );
+            state.matrixRows = normalizeForecastNewMatrixRows(
+                matrixSettings.prognostic_rows || matrixSettings.rows || state.matrixRows
+            );
             state.pageSettings = {
                 ...state.pageSettings,
                 houseSystem: normalizeHouseSystemCode(payload?.chart_meta?.house_system || state.pageSettings.houseSystem),
@@ -2731,7 +2787,10 @@
     function getResolvedForecastNewViewSettings() {
         return {
             matrix: {
+                schema_version: 2,
                 rows: ensureMatrixRows(state.matrixRows),
+                prognostic_rows: ensureMatrixRows(state.matrixRows),
+                natal_rows: ensureMatrixRows(state.natalMatrixRows),
             },
             aspects: {
                 scope: state.pageSettings.aspectScope || 'all',
@@ -2831,6 +2890,8 @@
                 customStep: state.customStep,
                 leftTab: state.leftTab,
                 rightTab: state.rightTab,
+                matrixSchemaVersion: window.ForecastNewStateStorage?.MATRIX_SCHEMA_VERSION || 2,
+                natalMatrixRows: state.natalMatrixRows,
                 matrixRows: state.matrixRows,
                 viewport: state.viewport,
                 pageSettings: state.pageSettings,

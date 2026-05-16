@@ -128,3 +128,26 @@ test('resolveVisualPreferences normalizes timezone label format', () => {
     assert.equal(preferences.resolveVisualPreferences({ timezone_label_format: 'weird' }).timezone_label_format, 'UTC');
     assert.equal(preferences.getTimezoneLabelFormat({ timezone_label_format: 'gmt' }), 'GMT');
 });
+
+test('normalizeViewSettings preserves split forecast matrix rows', () => {
+    const normalized = preferences.normalizeViewSettings({
+        matrix: {
+            schema_version: 2,
+            rows: {
+                Sun: { display: false, aspecting: false },
+            },
+            prognostic_rows: {
+                Moon: { display: false, aspecting: false },
+            },
+            natal_rows: {
+                Mars: { display: false, aspecting: false },
+            },
+        },
+    });
+
+    assert.equal(normalized.matrix.schema_version, 2);
+    assert.equal(normalized.matrix.rows.Sun.display, false);
+    assert.equal(normalized.matrix.prognostic_rows.Moon.display, false);
+    assert.equal(normalized.matrix.natal_rows.Mars.display, false);
+    assert.equal(normalized.matrix.natal_rows.Sun.display, true);
+});

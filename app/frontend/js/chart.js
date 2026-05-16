@@ -316,6 +316,21 @@ function filterChartDataByAspectPhase(chartData) {
         : chartData;
 }
 
+async function loadFreshNatalChartData(fallbackChartData) {
+    const userId = fallbackChartData?.user_id || localStorage.getItem('currentUserId');
+    if (!userId || !window.AstroAPI?.getNatalChart) {
+        return fallbackChartData;
+    }
+
+    try {
+        const freshChartData = await window.AstroAPI.getNatalChart(userId);
+        return ensureChartUserId(freshChartData, userId);
+    } catch (error) {
+        console.warn('Failed to load fresh natal chart, using session snapshot:', error);
+        return fallbackChartData;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     await waitForI18nReady();
 
@@ -330,6 +345,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = 'index.html';
         return;
     }
+
+    chartData = await loadFreshNatalChartData(chartData);
 
     currentSettings.houseSystem = normalizeHouseSystemCode(
         chartData.birth_data?.house_system || formData?.houseSystem || 'P'

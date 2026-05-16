@@ -54,6 +54,8 @@
         constructor(svgElement) {
             this.svg = svgElement;
             this.orientation = 'aries';
+            this.natalMatrixRows = {};
+            this.prognosticMatrixRows = {};
             this.matrixRows = {};
             this.aspectScope = 'all';
             this.enabledAspectTypes = [];
@@ -110,6 +112,8 @@
 
         setOptions(options = {}) {
             if (options.orientation) this.orientation = options.orientation === 'asc' ? 'asc' : 'aries';
+            if (options.natalMatrixRows) this.natalMatrixRows = options.natalMatrixRows;
+            if (options.prognosticMatrixRows) this.prognosticMatrixRows = options.prognosticMatrixRows;
             if (options.matrixRows) this.matrixRows = options.matrixRows;
             if (typeof options.planetScale !== 'undefined') this.planetScale = this.clampPointScale(options.planetScale);
             if (typeof options.pointScale !== 'undefined') this.pointScale = this.clampPointScale(options.pointScale);
@@ -153,6 +157,7 @@
 
         applyMatrixRows(matrixRows = {}) {
             this.matrixRows = matrixRows || {};
+            this.prognosticMatrixRows = this.matrixRows;
             this.applyMatrixVisibilityToDom();
         }
 
@@ -160,17 +165,17 @@
             const first = element?.dataset?.planet1;
             const second = element?.dataset?.planet2;
             if (!first || !second) return true;
-            return this.isBodyDisplayed(first)
-                && this.isBodyDisplayed(second)
-                && this.isBodyAspecting(first)
-                && this.isBodyAspecting(second);
+            return this.isBodyDisplayed(first, 'prognostic')
+                && this.isBodyDisplayed(second, 'natal')
+                && this.isBodyAspecting(first, 'prognostic')
+                && this.isBodyAspecting(second, 'natal');
         }
 
         applyMatrixVisibilityToDom() {
             if (!this.svg) return;
 
             this.svg.querySelectorAll('.prognostic-body[data-planet]').forEach((group) => {
-                const visible = this.isBodyDisplayed(group.dataset.planet);
+                const visible = this.isBodyDisplayed(group.dataset.planet, group.dataset.method);
                 group.classList.toggle('matrix-hidden', !visible);
                 group.setAttribute('aria-hidden', visible ? 'false' : 'true');
             });
@@ -468,7 +473,7 @@
         }
 
         drawBodies(ring) {
-            const bodies = (ring.bodies || []).filter((body) => this.isBodyDisplayed(body?.name));
+            const bodies = (ring.bodies || []).filter((body) => this.isBodyDisplayed(body?.name, ring.method));
             const placed = this.resolveBodyLayout(bodies, ring.center, Math.min(ring.center + 8, ring.outer - 7));
             placed.forEach((item) => {
                 const body = item.body;
@@ -589,18 +594,18 @@
             const aspectRadius = this.getAspectBoundaryRadius(natalRing);
             this.aspectRadius = aspectRadius;
             const natalMap = new Map((natalRing.bodies || [])
-                .filter((body) => body?.name && this.isBodyAvailableForAspects(body.name))
+                .filter((body) => body?.name && this.isBodyAvailableForAspects(body.name, 'natal'))
                 .map((body) => [this.normalizeBodyName(body.name), body]));
             rings.filter((ring) => ring.method !== 'natal').forEach((ring) => {
                 const bodyMap = new Map((ring.bodies || [])
-                    .filter((body) => body?.name && this.isBodyAvailableForAspects(body.name))
+                    .filter((body) => body?.name && this.isBodyAvailableForAspects(body.name, ring.method))
                     .map((body) => [this.normalizeBodyName(body.name), body]));
                 const aspects = (ring.aspects || []).filter((aspect) => this.isAspectEnabled(aspect));
                 const sorted = [...aspects].sort((a, b) => Number(b.orb) - Number(a.orb));
                 sorted.forEach((aspect) => {
                     const movingName = this.normalizeBodyName(aspect.planet_1 || aspect.left_planet);
                     const natalName = this.normalizeBodyName(aspect.planet_2 || aspect.natal_object || aspect.right_planet);
-                    if (!this.isBodyAvailableForAspects(movingName) || !this.isBodyAvailableForAspects(natalName)) return;
+                    if (!this.isBodyAvailableForAspects(movingName, ring.method) || !this.isBodyAvailableForAspects(natalName, 'natal')) return;
                     const moving = bodyMap.get(movingName);
                     const natal = natalMap.get(natalName);
                     if (!moving || !natal) return;
@@ -843,26 +848,29 @@
             return true;
         }
 
-        isBodyDisplayed(name) {
-            const row = this.getMatrixRow(name);
+        isBodyDisplayed(name, method = 'prognostic') {
+            const row = this.getMatrixRow(name, method);
             return row.display !== false;
         }
 
-        isBodyAspecting(name) {
-            const row = this.getMatrixRow(name);
+        isBodyAspecting(name, method = 'prognostic') {
+            const row = this.getMatrixRow(name, method);
             return row.aspecting !== false;
         }
 
-        isBodyAvailableForAspects(name) {
-            const row = this.getMatrixRow(name);
+        isBodyAvailableForAspects(name, method = 'prognostic') {
+            const row = this.getMatrixRow(name, method);
             return row.display !== false && row.aspecting !== false;
         }
 
-        getMatrixRow(name) {
+        getMatrixRow(name, method = 'prognostic') {
             const normalized = window.AstroPreferences?.normalizeMatrixBodyName
                 ? window.AstroPreferences.normalizeMatrixBodyName(name)
                 : this.normalizeBodyName(name);
-            return this.matrixRows?.[normalized] || { display: true, aspecting: true };
+            const scopedRows = method === 'natal'
+                ? (this.natalMatrixRows || {})
+                : (this.prognosticMatrixRows || this.matrixRows || {});
+            return scopedRows?.[normalized] || { display: true, aspecting: true };
         }
 
         normalizeBodyName(name) {

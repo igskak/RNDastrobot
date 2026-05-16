@@ -270,14 +270,35 @@
     }
 
     function filterChartDataByViewPreferences(chartData = {}, options = {}) {
-        const rows = ensureMatrixRows(options?.matrixRows || {});
-        const visibleBodies = new Set();
-        const aspectingBodies = new Set();
+        const buildBodyFilterContext = (matrixRows = {}) => {
+            const rows = ensureMatrixRows(matrixRows || {});
+            const visibleBodies = new Set();
+            const aspectingBodies = new Set();
 
-        Object.entries(rows).forEach(([body, config]) => {
-            if (config?.display !== false) visibleBodies.add(body);
-            if (config?.aspecting !== false) aspectingBodies.add(body);
-        });
+            Object.entries(rows).forEach(([body, config]) => {
+                if (config?.display !== false) visibleBodies.add(body);
+                if (config?.aspecting !== false) aspectingBodies.add(body);
+            });
+
+            return {
+                bodyIsVisible(bodyName) {
+                    const normalized = normalizeMatrixBodyName(bodyName);
+                    return !rows[normalized] || visibleBodies.has(normalized);
+                },
+                bodyIsAspecting(bodyName) {
+                    const normalized = normalizeMatrixBodyName(bodyName);
+                    return !rows[normalized] || aspectingBodies.has(normalized);
+                },
+            };
+        };
+
+        const defaultBodyFilters = buildBodyFilterContext(options?.matrixRows || {});
+        const firstAspectBodyFilters = options?.aspectMatrixRows?.first
+            ? buildBodyFilterContext(options.aspectMatrixRows.first)
+            : defaultBodyFilters;
+        const secondAspectBodyFilters = options?.aspectMatrixRows?.second
+            ? buildBodyFilterContext(options.aspectMatrixRows.second)
+            : defaultBodyFilters;
 
         const availableAspectTypes = (chartData?.aspects || [])
             .map((aspect) => aspect?.aspect_type)
@@ -288,15 +309,8 @@
             availableAspectTypes,
         });
 
-        const bodyIsVisible = (bodyName) => {
-            const normalized = normalizeMatrixBodyName(bodyName);
-            return !rows[normalized] || visibleBodies.has(normalized);
-        };
-
-        const bodyIsAspecting = (bodyName) => {
-            const normalized = normalizeMatrixBodyName(bodyName);
-            return !rows[normalized] || aspectingBodies.has(normalized);
-        };
+        const bodyIsVisible = (bodyName) => defaultBodyFilters.bodyIsVisible(bodyName);
+        const bodyIsAspecting = (bodyName) => defaultBodyFilters.bodyIsAspecting(bodyName);
 
         const aspectIsEnabled = (aspectType) => enabledAspectTypes.has(aspectType);
         const getAspectBodies = (aspect) => ([
@@ -306,10 +320,10 @@
 
         const aspectPassesBodyFilters = (aspect) => {
             const [bodyA, bodyB] = getAspectBodies(aspect);
-            return bodyIsVisible(bodyA)
-                && bodyIsVisible(bodyB)
-                && bodyIsAspecting(bodyA)
-                && bodyIsAspecting(bodyB);
+            return firstAspectBodyFilters.bodyIsVisible(bodyA)
+                && secondAspectBodyFilters.bodyIsVisible(bodyB)
+                && firstAspectBodyFilters.bodyIsAspecting(bodyA)
+                && secondAspectBodyFilters.bodyIsAspecting(bodyB);
         };
 
         const filteredAspects = (chartData?.aspects || []).filter((aspect) => (
@@ -386,7 +400,10 @@
     function normalizeViewSettings(viewSettings = {}) {
         return {
             matrix: {
+                schema_version: Number(viewSettings?.matrix?.schema_version) || 1,
                 rows: ensureMatrixRows(viewSettings?.matrix?.rows),
+                prognostic_rows: ensureMatrixRows(viewSettings?.matrix?.prognostic_rows || viewSettings?.matrix?.rows),
+                natal_rows: ensureMatrixRows(viewSettings?.matrix?.natal_rows),
             },
             aspects: {
                 scope: viewSettings?.aspects?.scope || 'all',

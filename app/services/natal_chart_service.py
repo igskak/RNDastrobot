@@ -474,6 +474,17 @@ class NatalChartService:
                     'entries': included_entries,
                 })
 
+            primary_entry = next((entry for entry in main_entries if entry.get('role') == 'primary'), None)
+            primary_planet = primary_entry.get('planet') if primary_entry else None
+            house['ruler_planet'] = primary_planet
+            house['ruler_in_house'] = primary_entry.get('house') if primary_entry else None
+
+            legacy_co_rulers: List[str] = []
+            for entry in [*main_entries, *included_entries]:
+                planet = entry.get('planet')
+                if planet and planet != primary_planet and planet not in legacy_co_rulers:
+                    legacy_co_rulers.append(planet)
+            house['co_rulers'] = legacy_co_rulers
             house['ruler_groups'] = groups
 
         return houses
