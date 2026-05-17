@@ -346,8 +346,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    chartData = await loadFreshNatalChartData(chartData);
-
     currentSettings.houseSystem = normalizeHouseSystemCode(
         chartData.birth_data?.house_system || formData?.houseSystem || 'P'
     );
@@ -449,7 +447,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     initEditClientDialog();
     initSynastryDialogs();
     handleChartOpenQueryAction();
-    await hydrateNatalPreferences(chartData, formData);
+    window.AstroAPI?.hidePageLoader?.();
+
+    const initialChartData = chartData;
+    const freshChartPromise = loadFreshNatalChartData(initialChartData);
+    const preferencesPromise = hydrateNatalPreferences(initialChartData, formData);
+
+    void Promise.allSettled([freshChartPromise, preferencesPromise]).then(([freshResult]) => {
+        if (freshResult.status !== 'fulfilled' || !freshResult.value || freshResult.value === initialChartData) return;
+        const freshChartData = applyChartState(freshResult.value, { houseSystem: currentSettings.houseSystem });
+        updateHeader(freshChartData);
+        redrawChart(freshChartData, currentSettings.hiddenPlanets || [], currentSettings.orientation);
+    });
 
     document.addEventListener('frontend:locale-changed', () => {
         if (!window.chartDataCache) return;
@@ -1062,20 +1071,35 @@ async function hydrateNatalPreferences(chartData, formData) {
     }
 
     try {
-        if (window.AstroAPI?.getAccountPreferences) {
-            window.accountPreferencesCache = await window.AstroAPI.getAccountPreferences();
+        const accountPreferencesPromise = window.AstroAPI?.getAccountPreferences
+            ? window.AstroAPI.getAccountPreferences()
+            : Promise.resolve(null);
+        const resolvedPreferencesPromise = window.AstroAPI.getResolvedPreferences({
+            chart_kind: 'natal',
+            chart_id: userId,
+            view_type: 'natal',
+        });
+        const [accountResult, resolvedResult] = await Promise.allSettled([
+            accountPreferencesPromise,
+            resolvedPreferencesPromise,
+        ]);
+
+        if (accountResult.status === 'fulfilled' && accountResult.value) {
+            window.accountPreferencesCache = accountResult.value;
             if (window.AstroPreferences?.setAccountVisualPreferences) {
                 window.AstroPreferences.setAccountVisualPreferences(window.accountPreferencesCache?.visual || {});
             }
             chartWheel?.setVisualPreferences?.(window.accountPreferencesCache?.visual || {}, { redraw: false });
             chartDataRenderer?.setVisualPreferences?.(window.accountPreferencesCache?.visual || {});
             updateHeader(chartData);
+        } else if (accountResult.status === 'rejected') {
+            console.warn('Failed to hydrate natal account preferences:', accountResult.reason);
         }
-        currentResolvedPreferences = await window.AstroAPI.getResolvedPreferences({
-            chart_kind: 'natal',
-            chart_id: userId,
-            view_type: 'natal',
-        });
+
+        if (resolvedResult.status !== 'fulfilled') {
+            throw resolvedResult.reason;
+        }
+        currentResolvedPreferences = resolvedResult.value;
 
         const migratedChartData = await migrateNatalHouseSystemIfNeeded(formData);
         if (migratedChartData) {

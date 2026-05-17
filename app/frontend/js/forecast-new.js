@@ -5,6 +5,8 @@
         ? 'http://localhost:8000/api/v1'
         : '/api/v1';
     const LAYER_ORDER = ['transit', 'progression', 'direction'];
+    const LAYER_CACHE_PREFIX = 'forecastNewLayerCache:';
+    const LAYER_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
     const DEFAULT_ASPECT_TYPES = window.AstroPreferences?.DEFAULT_ENABLED_ASPECT_TYPES || [
         'Conjunction', 'Opposition', 'Trine', 'Square', 'Sextile',
         'Vigintile', 'Semi_Nonagon', 'Semisextile', 'Decile', 'Nonagon',
@@ -143,6 +145,7 @@
         pinnedAspectKey: null,
         activePlanetSelection: null,
         applySettingsTimer: null,
+        viewOverridesPersistTimer: null,
         persistTimer: null,
         rightPanelRenderFrame: null,
         adjacentPrefetchTimer: null,
@@ -274,7 +277,6 @@
             sourceId: null,
         };
 
-        await hydratePreferences();
         hydrateState();
         applyDeepLinkParams();
         populateTimezoneOptions();
@@ -287,7 +289,21 @@
         initAspectInteractions();
         syncControlsFromState();
         renderStaticNatal();
-        await loadActiveLayers({ showLoader: true });
+        refreshViewModel();
+        renderWheel();
+        renderRightLayerTabs();
+        showLayout();
+        hideLoader();
+
+        void hydratePreferences().then(() => {
+            syncControlsFromState();
+            renderStaticNatal();
+            refreshViewModel();
+            renderWheel();
+            renderRightLayerTabs();
+            scheduleRightPanelRender();
+        });
+        void loadActiveLayers({ lightweight: true });
     });
 
     function cacheElements() {
@@ -1527,15 +1543,15 @@
     }
 
     async function applyMatrixRows() {
-        renderWheel();
+        refreshViewModel();
+        state.wheel?.applyMatrixRows?.(state.matrixRows, {
+            natalMatrixRows: state.natalMatrixRows,
+            prognosticMatrixRows: state.matrixRows,
+        });
         renderMatrixSensitivePanelData();
         applyInlineMatrixRowState();
         syncHoveredAspectToActiveSurface();
-        try {
-            await persistForecastNewViewOverrides();
-        } catch (error) {
-            console.warn('Failed to persist Forecast New matrix rows:', error);
-        }
+        schedulePersistViewOverrides();
         schedulePersist();
     }
 
@@ -1772,7 +1788,68 @@
         }, 120);
     }
 
+    function hasArraySettingChanged(previousValue, nextValue) {
+        const previous = Array.isArray(previousValue) ? previousValue : [];
+        const next = Array.isArray(nextValue) ? nextValue : [];
+        if (previous.length !== next.length) return true;
+        return previous.some((value, index) => value !== next[index]);
+    }
+
+    function hasSettingChanged(previousSettings, nextSettings, key) {
+        if (Array.isArray(previousSettings?.[key]) || Array.isArray(nextSettings?.[key])) {
+            return hasArraySettingChanged(previousSettings?.[key], nextSettings?.[key]);
+        }
+        return previousSettings?.[key] !== nextSettings?.[key];
+    }
+
+    function haveAnySettingsChanged(previousSettings, nextSettings, keys) {
+        return keys.some((key) => hasSettingChanged(previousSettings, nextSettings, key));
+    }
+
+    function applyRendererDisplayPreferences() {
+        const preferences = {
+            showSpeed: state.pageSettings.showSpeed !== false,
+            showStationary: state.pageSettings.showStationary !== false,
+            showApplyingSeparating: state.pageSettings.showApplyingSeparating === true,
+            showAspectText: state.pageSettings.showAspectText === true,
+        };
+        state.natalRenderer?.setDisplayPreferences?.(preferences);
+        state.prognosticRenderer?.setDisplayPreferences?.(preferences);
+    }
+
+    function applyPanelSettingsChanges(previousSettings, nextSettings) {
+        const houseNumberStyleChanged = hasSettingChanged(previousSettings, nextSettings, 'houseNumberStyle');
+        if (houseNumberStyleChanged) {
+            renderStaticNatal();
+            renderRightPanel();
+            return;
+        }
+
+        const displayPreferenceChanged = haveAnySettingsChanged(previousSettings, nextSettings, [
+            'showSpeed',
+            'showStationary',
+            'showApplyingSeparating',
+            'showAspectText',
+        ]);
+        const aspectFilterChanged = haveAnySettingsChanged(previousSettings, nextSettings, [
+            'aspectScope',
+            'enabledAspectTypes',
+            'aspectPhaseFilter',
+        ]);
+
+        if (displayPreferenceChanged) {
+            applyRendererDisplayPreferences();
+        }
+        if (aspectFilterChanged) {
+            renderMatrixSensitivePanelData();
+        }
+        if (displayPreferenceChanged || aspectFilterChanged) {
+            syncHoveredAspectToActiveSurface();
+        }
+    }
+
     async function applySettings() {
+        const previousSettings = { ...state.pageSettings };
         const nextHouseSystem = normalizeHouseSystemCode(refs.houseSystemSelect?.value || state.pageSettings.houseSystem);
         const nextOrientation = refs.orientationSelect?.value === 'asc' ? 'asc' : 'aries';
         const iconScale = clampPointScale(Number(refs.iconScaleRange?.value || Math.round((state.pageSettings.planetScale || 1.2) * 100)) / 100);
@@ -1819,19 +1896,31 @@
             refs.iconScaleValue.textContent = `${Math.round(iconScale * 100)}%`;
         }
 
-        try {
-            await persistForecastNewViewOverrides();
-        } catch (error) {
-            console.warn('Failed to persist Forecast New settings:', error);
-        }
-
         if (state.pageSettings.houseSystem !== normalizeHouseSystemCode(state.natalData?.birth_data?.house_system || 'P')) {
             await updateHouseSystem(nextHouseSystem);
         } else {
-            renderStaticNatal();
-            renderRightPanel();
-            renderWheel();
+            const wheelSettingsChanged = haveAnySettingsChanged(previousSettings, state.pageSettings, [
+                'orientation',
+                'planetScale',
+                'pointScale',
+                'aspectScope',
+                'enabledAspectTypes',
+                'aspectPhaseFilter',
+                'houseLabelsOutside',
+                'showTransitCusps',
+                'showProgressionCusps',
+                'showDirectionCusps',
+                'showWheelStationary',
+                'showWheelDegree',
+                'angleAscDscBold',
+                'angleMcIcBold',
+            ]);
+            if (wheelSettingsChanged) {
+                renderWheel();
+            }
+            applyPanelSettingsChanges(previousSettings, state.pageSettings);
         }
+        schedulePersistViewOverrides();
         schedulePersist();
     }
 
@@ -1970,6 +2059,11 @@
             location: targetLocation,
         });
         if (state.cache[key]) return state.cache[key];
+        const cachedLayer = readPersistedLayerCache(key);
+        if (cachedLayer) {
+            state.cache[key] = cachedLayer;
+            return cachedLayer;
+        }
         if (state.inFlight[key]) return state.inFlight[key];
         if (!options.prefetch) {
             abortInFlightLayerMethod(method, key);
@@ -2002,6 +2096,7 @@
             }, { signal: controller.signal });
         })().then((data) => {
             state.cache[key] = data;
+            writePersistedLayerCache(key, data);
             return data;
         }).finally(() => {
             delete state.inFlight[key];
@@ -2099,6 +2194,36 @@
             throw new Error(detail);
         }
         return response.json();
+    }
+
+    function persistedLayerCacheStorageKey(key) {
+        return `${LAYER_CACHE_PREFIX}${state.userId || 'anonymous'}:${key}`;
+    }
+
+    function readPersistedLayerCache(key) {
+        try {
+            const raw = localStorage.getItem(persistedLayerCacheStorageKey(key));
+            if (!raw) return null;
+            const payload = JSON.parse(raw);
+            if (!payload || Date.now() - Number(payload.savedAt || 0) > LAYER_CACHE_TTL_MS) {
+                localStorage.removeItem(persistedLayerCacheStorageKey(key));
+                return null;
+            }
+            return payload.data || null;
+        } catch {
+            return null;
+        }
+    }
+
+    function writePersistedLayerCache(key, data) {
+        try {
+            localStorage.setItem(persistedLayerCacheStorageKey(key), JSON.stringify({
+                savedAt: Date.now(),
+                data,
+            }));
+        } catch {
+            // Storage may be full or unavailable; in-memory cache still applies.
+        }
     }
 
     function renderWheel() {
@@ -2756,21 +2881,32 @@
     }
 
     async function hydratePreferences() {
-        if (window.AstroAPI?.getAccountPreferences) {
-            try {
-                window.accountPreferencesCache = await window.AstroAPI.getAccountPreferences();
-                window.AstroPreferences?.setAccountVisualPreferences?.(window.accountPreferencesCache?.visual || {});
-            } catch (error) {
-                console.warn('Forecast New account preferences fallback to defaults:', error);
-            }
-        }
         if (!window.AstroAPI?.getResolvedPreferences || !state.userId) return;
         try {
-            const payload = await window.AstroAPI.getResolvedPreferences({
+            const accountPreferencesPromise = window.AstroAPI?.getAccountPreferences
+                ? window.AstroAPI.getAccountPreferences()
+                : Promise.resolve(null);
+            const resolvedPreferencesPromise = window.AstroAPI.getResolvedPreferences({
                 chart_kind: 'natal',
                 chart_id: state.userId,
                 view_type: 'forecast_new',
             });
+            const [accountResult, resolvedResult] = await Promise.allSettled([
+                accountPreferencesPromise,
+                resolvedPreferencesPromise,
+            ]);
+
+            if (accountResult.status === 'fulfilled' && accountResult.value) {
+                window.accountPreferencesCache = accountResult.value;
+                window.AstroPreferences?.setAccountVisualPreferences?.(window.accountPreferencesCache?.visual || {});
+            } else if (accountResult.status === 'rejected') {
+                console.warn('Forecast New account preferences fallback to defaults:', accountResult.reason);
+            }
+
+            if (resolvedResult.status !== 'fulfilled') {
+                throw resolvedResult.reason;
+            }
+            const payload = resolvedResult.value;
             state.resolvedPreferences = payload;
             const resolved = payload?.resolved || {};
             const matrixSettings = resolved?.matrix || {};
@@ -2872,6 +3008,18 @@
             overrides: diff,
             resolved,
         };
+    }
+
+    function schedulePersistViewOverrides(delay = 650) {
+        clearTimeout(state.viewOverridesPersistTimer);
+        state.viewOverridesPersistTimer = setTimeout(async () => {
+            state.viewOverridesPersistTimer = null;
+            try {
+                await persistForecastNewViewOverrides();
+            } catch (error) {
+                console.warn('Failed to persist Forecast New settings:', error);
+            }
+        }, delay);
     }
 
     function applyDeepLinkParams() {

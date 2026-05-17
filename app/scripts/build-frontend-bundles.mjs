@@ -1,4 +1,5 @@
 import { build } from 'esbuild';
+import { createHash } from 'node:crypto';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -57,35 +58,61 @@ const cssEntryPoints = {
   'consultation-join': path.join(frontendRoot, 'entries-css', 'consultation-join.entry.css'),
 };
 
-function createBuildId(date = new Date()) {
-  const year = String(date.getUTCFullYear());
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  const hours = String(date.getUTCHours()).padStart(2, '0');
-  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-  const seconds = String(date.getUTCSeconds()).padStart(2, '0');
-  return `${year}${month}${day}-${hours}${minutes}${seconds}`;
+function pageEntryName(page) {
+  return page.replace(/\.html$/, '');
 }
 
-function rewriteHtmlBuildMarkers(source, buildId) {
+async function hashExistingFiles(files) {
+  const hash = createHash('sha256');
+  for (const file of files) {
+    try {
+      hash.update(await readFile(file));
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error;
+    }
+  }
+  return hash.digest('hex').slice(0, 12);
+}
+
+async function buildVersionForPage(page, source) {
+  const entryName = pageEntryName(page);
+  const files = [
+    path.join(jsOutdir, `${entryName}.bundle.js`),
+    path.join(cssOutdir, `${entryName}.bundle.css`),
+  ];
+  if (source.includes('css/locale-switcher.css')) {
+    files.push(path.join(frontendRoot, 'css', 'locale-switcher.css'));
+  }
+  if (source.includes('js/locale-switcher.js')) {
+    files.push(path.join(frontendRoot, 'js', 'locale-switcher.js'));
+  }
+  return hashExistingFiles(files);
+}
+
+function rewriteHtmlBuildMarkers(source, buildId, page) {
+  const entryName = pageEntryName(page);
+  const escapedEntryName = entryName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const assetPattern = new RegExp(
+    `((?:/)?(?:bundles/${escapedEntryName}\\.bundle\\.css|js/bundles/${escapedEntryName}\\.bundle\\.js|css/locale-switcher\\.css|js/locale-switcher\\.js))\\?v=[^"' ]+`,
+    'g',
+  );
+
   return source
     .replace(
       /window\.__APP_BUILD_ID__ = '[^']+';/g,
       `window.__APP_BUILD_ID__ = '${buildId}';`,
     )
-    .replace(
-      /((?:bundles\/[^"'?]+\.bundle\.css|js\/bundles\/[^"'?]+\.bundle\.js|css\/locale-switcher\.css|js\/locale-switcher\.js))\?v=[^"' ]+/g,
-      `$1?v=${buildId}`,
-    );
+    .replace(assetPattern, `$1?v=${buildId}`);
 }
 
-async function syncHtmlBuildMarkers(buildId) {
+async function syncHtmlBuildMarkers() {
   const updatedPages = [];
 
   for (const page of htmlPages) {
     const htmlPath = path.join(frontendRoot, page);
     const current = await readFile(htmlPath, 'utf8');
-    const next = rewriteHtmlBuildMarkers(current, buildId);
+    const pageBuildId = process.env.FRONTEND_BUILD_ID || await buildVersionForPage(page, current);
+    const next = rewriteHtmlBuildMarkers(current, pageBuildId, page);
 
     if (next !== current) {
       await writeFile(htmlPath, next, 'utf8');
@@ -95,8 +122,6 @@ async function syncHtmlBuildMarkers(buildId) {
 
   return updatedPages;
 }
-
-const buildId = process.env.FRONTEND_BUILD_ID || createBuildId();
 
 await rm(jsOutdir, { recursive: true, force: true });
 await rm(cssOutdir, { recursive: true, force: true });
@@ -135,8 +160,8 @@ await build({
 console.log(`Built frontend JS bundles into ${jsOutdir}`);
 console.log(`Built frontend CSS bundles into ${cssOutdir}`);
 
-const updatedPages = await syncHtmlBuildMarkers(buildId);
-console.log(`Frontend build id: ${buildId}`);
+const updatedPages = await syncHtmlBuildMarkers();
+console.log(`Frontend build id: ${process.env.FRONTEND_BUILD_ID || 'content-hash'}`);
 if (updatedPages.length) {
   console.log(`Updated HTML asset markers: ${updatedPages.join(', ')}`);
 } else {

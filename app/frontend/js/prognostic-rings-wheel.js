@@ -156,9 +156,12 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             if (options.visualPreferences) this.visualPreferences = options.visualPreferences;
         }
 
-        applyMatrixRows(matrixRows = {}) {
+        applyMatrixRows(matrixRows = {}, options = {}) {
             this.matrixRows = matrixRows || {};
-            this.prognosticMatrixRows = this.matrixRows;
+            this.prognosticMatrixRows = options.prognosticMatrixRows || this.matrixRows;
+            if (options.natalMatrixRows) {
+                this.natalMatrixRows = options.natalMatrixRows;
+            }
             this.applyMatrixVisibilityToDom();
         }
 

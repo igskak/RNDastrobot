@@ -621,6 +621,9 @@
     if (hasDocument) {
         // Автоматически скрываем лоадер когда страница готова
         document.addEventListener('DOMContentLoaded', () => {
+            if (document.body?.classList?.contains('chart-page') || document.body?.classList?.contains('forecast-new-page')) {
+                return;
+            }
             // Небольшая задержка чтобы дать JS-рендерингу отработать
             requestAnimationFrame(() => hidePageLoader());
         });
