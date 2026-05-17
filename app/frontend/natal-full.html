@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.natalFull.title"></title>
-    <link rel="stylesheet" href="bundles/natal-full.bundle.css?v=20260517-163054">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260517-163054">
+    <link rel="stylesheet" href="bundles/natal-full.bundle.css?v=20260517-174314">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260517-174314">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '20260517-163054';</script>
+    <script>window.__APP_BUILD_ID__ = '20260517-174314';</script>
 </head>
 <body class="natal-full-page">
     <div class="page-loader" id="pageLoader">
@@ -138,6 +138,7 @@
         </div>
         <div class="report-shortcuts">
             <a href="#balancesSection" class="report-shortcut" data-i18n="page.natalFull.sections.balances"></a>
+            <a href="#rulersSection" class="report-shortcut" data-i18n="page.natalFull.sections.rulers"></a>
             <a href="#configurationsSection" class="report-shortcut" data-i18n="page.natalFull.sections.configurations"></a>
             <a href="#aspectsSection" class="report-shortcut" data-i18n="page.natalFull.sections.aspects"></a>
             <a href="#planetsSection" class="report-shortcut" data-i18n="page.natalFull.sections.planets"></a>
@@ -207,6 +208,21 @@
                 </summary>
                 <div class="section-body">
                     <div class="balances-compact" id="balancesContainer"></div>
+                </div>
+            </details>
+
+            <details class="section report-section" id="rulersSection" open>
+                <summary class="section-summary">
+                    <span class="section-summary-copy">
+                        <span class="section-title"><span data-i18n="page.natalFull.sections.rulers"></span></span>
+                    </span>
+                    <span class="section-summary-meta">
+                        <span class="section-count" id="rulersCount"></span>
+                        <span class="section-summary-chevron" aria-hidden="true">+</span>
+                    </span>
+                </summary>
+                <div class="section-body">
+                    <div id="natalFullRulersContainer"></div>
                 </div>
             </details>
 
@@ -351,7 +367,7 @@
         </details>
     </main>
 
-    <script type="module" src="js/bundles/natal-full.bundle.js?v=20260517-163054"></script>
-    <script src="js/locale-switcher.js?v=20260517-163054"></script>
+    <script type="module" src="js/bundles/natal-full.bundle.js?v=20260517-174314"></script>
+    <script src="js/locale-switcher.js?v=20260517-174314"></script>
 </body>
 </html>

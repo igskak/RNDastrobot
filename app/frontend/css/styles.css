@@ -1548,6 +1548,393 @@ input[type="number"] {
 .dignity-fall       { background: rgba(184,147, 90, 0.12); border-left: 3px solid #B8935A; }
 
 /* ============================================
+   JONES + DISPOSITOR CHAINS
+   ============================================ */
+
+.dispositor-panel {
+    display: grid;
+    gap: 14px;
+}
+
+.dispositor-jones-card,
+.dispositor-section {
+    border: 1px solid rgba(30, 58, 95, 0.10);
+    border-radius: 16px;
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(247, 241, 231, 0.78));
+    padding: 14px;
+    box-shadow: 0 10px 24px rgba(26, 22, 20, 0.05);
+}
+
+.dispositor-card-kicker {
+    display: block;
+    margin-bottom: 5px;
+    color: rgba(30, 58, 95, 0.68);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.dispositor-jones-card h4,
+.dispositor-section h4 {
+    margin: 0;
+    color: var(--text-primary);
+    font-family: var(--font-display, serif);
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.05;
+}
+
+.dispositor-jones-card p {
+    margin: 8px 0 0;
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.dispositor-section-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.dispositor-mode-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    margin: -2px 0 12px;
+    border-bottom: 1px solid rgba(30, 58, 95, 0.10);
+}
+
+.dispositor-mode-tab {
+    position: relative;
+    appearance: none;
+    border: 0;
+    border-radius: 10px 10px 0 0;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 9px 6px 11px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.15;
+    transition: color var(--transition), background var(--transition);
+}
+
+.dispositor-mode-tab::after {
+    content: '';
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: -1px;
+    height: 3px;
+    border-radius: 999px 999px 0 0;
+    background: transparent;
+}
+
+.dispositor-mode-tab:hover,
+.dispositor-mode-tab.active {
+    color: var(--accent);
+    background: rgba(30, 58, 95, 0.05);
+}
+
+.dispositor-mode-tab.active::after {
+    background: #4a90e2;
+}
+
+.dispositor-main-rulers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.dispositor-main-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid rgba(184, 147, 90, 0.24);
+    border-radius: 999px;
+    background: rgba(184, 147, 90, 0.10);
+    color: var(--text-primary);
+    padding: 6px 7px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.dispositor-main-chip b {
+    display: inline-grid;
+    place-items: center;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: rgba(30, 58, 95, 0.12);
+    color: var(--accent);
+    font-size: 11px;
+}
+
+.dispositor-open-modal-btn {
+    width: 100%;
+    margin-top: 14px;
+    border: 1px solid rgba(30, 58, 95, 0.18);
+    border-radius: 12px;
+    background: rgba(30, 58, 95, 0.08);
+    color: var(--accent);
+    cursor: pointer;
+    padding: 10px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    transition: background var(--transition), transform var(--transition), border-color var(--transition);
+}
+
+.dispositor-open-modal-btn:hover {
+    background: rgba(30, 58, 95, 0.12);
+    border-color: rgba(30, 58, 95, 0.28);
+    transform: translateY(-1px);
+}
+
+.dispositor-modal-open {
+    overflow: hidden;
+}
+
+.dispositor-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(18, 20, 24, 0.42);
+    backdrop-filter: blur(8px);
+    padding: 24px;
+}
+
+.dispositor-modal {
+    width: min(960px, 100%);
+    max-height: min(86vh, 820px);
+    overflow: auto;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 24px;
+    background:
+        radial-gradient(circle at 18% 12%, rgba(184, 147, 90, 0.12), transparent 26%),
+        linear-gradient(180deg, #fbf8f2 0%, #f2ede3 100%);
+    box-shadow: 0 28px 90px rgba(18, 20, 24, 0.32);
+    padding: 24px;
+}
+
+.dispositor-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(30, 58, 95, 0.12);
+}
+
+.dispositor-modal-head h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-family: var(--font-display, serif);
+    font-size: clamp(26px, 4vw, 38px);
+    font-weight: 600;
+    line-height: 1;
+}
+
+.dispositor-modal-close {
+    display: inline-grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid rgba(30, 58, 95, 0.14);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.62);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 28px;
+    line-height: 1;
+}
+
+.dispositor-modal-summary {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+
+.dispositor-diagram {
+    display: grid;
+    gap: 18px;
+}
+
+.dispositor-diagram-group {
+    border: 1px solid rgba(30, 58, 95, 0.10);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.58);
+    padding: 14px;
+}
+
+.dispositor-diagram-group-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.dispositor-diagram-group-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--accent);
+    font-size: 20px;
+}
+
+.dispositor-cycle-mark {
+    color: rgba(30, 58, 95, 0.42);
+    font-size: 13px;
+}
+
+.dispositor-diagram-count {
+    display: inline-grid;
+    place-items: center;
+    min-width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    background: rgba(30, 58, 95, 0.10);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.dispositor-chain-list {
+    display: grid;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.dispositor-graph {
+    position: relative;
+    width: var(--graph-width);
+    min-width: 100%;
+    height: var(--graph-height);
+    overflow: visible;
+}
+
+.dispositor-graph-lines {
+    position: absolute;
+    inset: 0;
+    width: var(--graph-width);
+    height: var(--graph-height);
+    overflow: visible;
+    pointer-events: none;
+}
+
+.dispositor-graph-lines path {
+    fill: none;
+    stroke: rgba(30, 58, 95, 0.44);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.dispositor-graph-lines marker path {
+    fill: rgba(30, 58, 95, 0.48);
+    stroke: none;
+}
+
+.dispositor-chain-row {
+    width: max-content;
+    min-width: 100%;
+}
+
+.dispositor-chain-path {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    min-height: 42px;
+}
+
+.dispositor-chain-node {
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    border: 1px solid rgba(30, 58, 95, 0.16);
+    border-radius: 10px;
+    background: rgba(248, 247, 243, 0.92);
+    color: var(--text-primary);
+    box-shadow: 0 6px 16px rgba(26, 22, 20, 0.06);
+    font-size: 18px;
+    z-index: 2;
+}
+
+.dispositor-modal .dispositor-chain-node {
+    width: 44px;
+    height: 44px;
+    flex-basis: 44px;
+}
+
+.dispositor-node-retro {
+    position: absolute;
+    right: 6px;
+    bottom: 4px;
+    color: #d94b4b;
+    font-family: var(--font-ui);
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.dispositor-chain-node--main {
+    border-color: rgba(74, 144, 226, 0.82);
+    box-shadow: 0 0 0 1px rgba(74, 144, 226, 0.28), 0 8px 18px rgba(30, 58, 95, 0.08);
+}
+
+.dispositor-chain-node--external {
+    border-style: dashed;
+}
+
+.dispositor-chain-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    color: rgba(30, 58, 95, 0.48);
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.dispositor-empty {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+@media (max-width: 680px) {
+    .dispositor-modal-overlay {
+        align-items: stretch;
+        padding: 10px;
+    }
+
+    .dispositor-modal {
+        max-height: calc(100vh - 20px);
+        border-radius: 18px;
+        padding: 16px;
+    }
+
+    .dispositor-mode-tabs {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* ============================================
    ENHANCED INTERACTIVITY
    ============================================ */
 

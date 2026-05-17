@@ -415,6 +415,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         showAspectText: currentSettings.showAspectText,
     });
     chartDataRenderer.render(filterChartDataForNatalTables(chartData));
+    renderNatalRulersTab(chartData);
     chartDataRenderer.setAspectTypeFilter(currentSettings.aspectScope);
 
     initPlanetRowClick();
@@ -1671,7 +1672,14 @@ function redrawChart(chartData, hiddenPlanets, orientation = currentSettings.ori
     clearConfigurationHighlight();
     chartWheel.draw(filteredData);
     chartDataRenderer.render(filterChartDataForNatalTables(chartData));
+    renderNatalRulersTab(chartData);
     syncHoveredAspectToActiveSurface();
+}
+
+function renderNatalRulersTab(data) {
+    window.DispositorChains?.render?.('rulersContainer', data, {
+        selectId: 'natalRulersModeSelect',
+    });
 }
 
 function initChartActions() {

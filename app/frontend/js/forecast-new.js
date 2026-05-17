@@ -18,12 +18,14 @@
         natalGridView: 'Grid',
         natalConfigsView: 'Configs',
         natalBalancesView: 'Balances',
+        natalRulersView: 'Rulers',
         progPlanetsView: 'Planets',
         progHousesView: 'Houses',
         progAspectsView: 'Aspects',
         progGridView: 'Grid',
         progConfigsView: 'Configs',
         progBalancesView: 'Balances',
+        progRulersView: 'Rulers',
     };
     const HOUSE_SYSTEM_CODES = {
         P: 'P',
@@ -1451,10 +1453,20 @@
             showAspectText: state.pageSettings.showAspectText === true,
         });
         state.natalRenderer?.render(filterChartDataForSidePanel(state.natalWheelData, { scope: 'natal' }));
+        renderForecastNewRulersTab('natalRulersContainer', state.natalWheelData, 'forecastNewNatalRulersMode');
         renderInlineMatrixControls();
         applyInlineMatrixRowState();
         renderMatrixEditor();
         activateSavedTabs();
+    }
+
+    function renderForecastNewRulersTab(containerId, chartData, selectId) {
+        window.DispositorChains?.render?.(containerId, chartData || {
+            planets: [],
+            houses: [],
+            balances: null,
+            cosmogram_pattern: null,
+        }, { selectId });
     }
 
     function renderMatrixEditor() {
@@ -2156,6 +2168,7 @@
         if (!layer) {
             state.prognosticRenderer?.setHouseNumberStyle?.(state.pageSettings.houseNumberStyle);
             state.prognosticRenderer?.render({ planets: [], houses: [], aspects: [], aspect_configurations: [], stelliums: [], balances: null, cosmogram_pattern: null });
+            renderForecastNewRulersTab('progRulersContainer', null, 'forecastNewProgRulersMode');
             syncPrognosticHousesVisibility([]);
             return;
         }
@@ -2173,9 +2186,15 @@
             aspects: layer.aspects || [],
             aspect_configurations: [],
             stelliums: [],
-            balances: null,
-            cosmogram_pattern: null,
+            balances: layer.balances || null,
+            cosmogram_pattern: layer.cosmogram_pattern || null,
         }, { scope: 'prognostic' }));
+        renderForecastNewRulersTab('progRulersContainer', {
+            planets: layer.bodies || [],
+            houses: layer.houses || [],
+            balances: layer.balances || null,
+            cosmogram_pattern: layer.cosmogram_pattern || null,
+        }, 'forecastNewProgRulersMode');
         renderInlineMatrixControls();
         applyInlineMatrixRowState();
         syncPrognosticHousesVisibility(layer.houses || []);
@@ -2497,6 +2516,8 @@
             aspects: filteredLayer.aspects || [],
             aspect_configurations: filteredLayer.aspect_configurations || [],
             stelliums: filteredLayer.stelliums || [],
+            balances: filteredLayer.balances || layer.balances || null,
+            cosmogram_pattern: filteredLayer.cosmogram_pattern || layer.cosmogram_pattern || null,
             showCusps: getLayerCuspVisibility(layer.method),
         };
     }
@@ -2658,6 +2679,7 @@
             Grid: 'natalGridView',
             Configs: 'natalConfigsView',
             Balances: 'natalBalancesView',
+            Rulers: 'natalRulersView',
         }[tab] || 'natalPlanetsView';
     }
 
@@ -2669,6 +2691,7 @@
             Grid: 'progGridView',
             Configs: 'progConfigsView',
             Balances: 'progBalancesView',
+            Rulers: 'progRulersView',
         }[tab] || 'progPlanetsView';
     }
 

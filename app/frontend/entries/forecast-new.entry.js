@@ -10,6 +10,7 @@ import '../js/symbols.js';
 import '../js/planet-svg-icons.js';
 import '../js/natal-wheel-data.js';
 import '../js/chart-data.js';
+import '../js/dispositor-chains.js';
 import '../js/prognostic-layer-normalizer.js';
 import '../js/prognostic-rings-wheel.js';
 import '../js/forecast-new-state-storage.js';

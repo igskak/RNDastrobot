@@ -12,6 +12,7 @@ import '../js/planet-svg-icons.js';
 import '../js/natal-wheel-data.js';
 import '../js/chart-wheel.js';
 import '../js/chart-data.js';
+import '../js/dispositor-chains.js';
 import '../js/aspect-phase.js';
 import '../js/chart.js';
 import '../js/chart-layout.js';

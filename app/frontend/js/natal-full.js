@@ -493,6 +493,7 @@ function renderFullChart(data) {
     renderAspectsTable(data.aspects || []);
     renderConfigurations(data.aspect_configurations || [], data.stelliums || []);
     renderBalances(data.balances);
+    renderNatalFullRulers(data);
     renderSpecialPoints(data.special_points || {});
     updateSectionCounts(data);
     setupReportSections();
@@ -685,6 +686,7 @@ function updateSectionCounts(data) {
     setTextContent('aspectsCount', String(majorAspects.length));
     setTextContent('configurationsCount', String(configurationsCount));
     setTextContent('balancesCount', String(balanceGroupsCount));
+    setTextContent('rulersCount', String((data.planets || []).filter((planet) => PLANET_ORDER.includes(planet.name)).length));
     setTextContent('specialPointsCount', String(visibleSpecialPoints));
 }
 
@@ -702,6 +704,7 @@ function setupReportSections() {
 
     const defaultState = {
         balancesSection: true,
+        rulersSection: true,
         configurationsSection: true,
         aspectsSection: true,
         planetsSection: false,
@@ -714,6 +717,12 @@ function setupReportSections() {
         if (section) {
             section.open = isOpen;
         }
+    });
+}
+
+function renderNatalFullRulers(data) {
+    window.DispositorChains?.render?.('natalFullRulersContainer', data, {
+        selectId: 'natalFullRulersModeSelect',
     });
 }
 
@@ -1224,7 +1233,7 @@ function renderBalances(balances) {
     }
 
     if (views.length === 1) {
-        container.appendChild(createBalanceView(views[0].data));
+        container.appendChild(createBalanceView(views[0].key, views[0].data));
         return;
     }
 
@@ -1245,7 +1254,7 @@ function renderBalances(balances) {
         const panel = document.createElement('div');
         panel.className = `balance-tab-panel${index === 0 ? ' active' : ''}`;
         panel.dataset.balancePanel = view.key;
-        panel.appendChild(createBalanceView(view.data));
+        panel.appendChild(createBalanceView(view.key, view.data));
         panelsWrap.appendChild(panel);
     });
 
@@ -1258,19 +1267,23 @@ function hasBalanceData(balanceSet) {
     return Boolean(balanceSet && Object.values(balanceSet).some((section) => section && Object.keys(section).length));
 }
 
-function createBalanceView(balanceSet) {
+function createBalanceView(viewKey, balanceSet) {
     const row = document.createElement('div');
     row.className = 'balances-compact';
 
     const sections = [
         ['page.natalFull.balances.elements', balanceSet.element_balance],
-        ['page.natalFull.balances.modes', balanceSet.mode_balance],
         ['page.natalFull.balances.polarity', balanceSet.gender_balance],
         ['page.natalFull.balances.zones', balanceSet.zones_balance],
         ['page.natalFull.balances.quadrants', balanceSet.quadrant_balance],
         ['page.natalFull.balances.hemisphere', balanceSet.hemisphere_balance],
-        ['page.natalFull.balances.houseGroups', balanceSet.house_group_balance]
     ];
+
+    if (viewKey === 'by_sign') {
+        sections.splice(1, 0, ['page.natalFull.balances.modes', balanceSet.mode_balance]);
+    } else if (viewKey === 'by_house') {
+        sections.splice(1, 0, ['page.natalFull.balances.houseGroups', balanceSet.house_group_balance]);
+    }
 
     sections.forEach(([titleKey, section]) => {
         if (!section) return;

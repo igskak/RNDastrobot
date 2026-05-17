@@ -1075,21 +1075,6 @@ class ChartDataRenderer {
 
         let html = '';
 
-        // Космограмма
-        if (cosmogramPattern) {
-            html += `
-                <div class="balance-section">
-                    <div class="balance-title">${this.t('page.chart.balances.cosmogramTitle')}</div>
-                    <div class="config-card">
-                        <h4>${this.formatPatternType(cosmogramPattern.pattern_type)}</h4>
-                        <p>${this.t('page.chart.balances.emptyArc', { value: cosmogramPattern.empty_arc_degree.toFixed(0) })}</p>
-                        ${cosmogramPattern.handle_planet ? `<p>${this.t('page.chart.balances.handle', { planet: this.planetName(cosmogramPattern.handle_planet) })}</p>` : ''}
-                        ${cosmogramPattern.leading_planet ? `<p>${this.t('page.chart.balances.leading', { planet: this.planetName(cosmogramPattern.leading_planet) })}</p>` : ''}
-                    </div>
-                </div>
-            `;
-        }
-
         if (!balances) {
             this.balancesContainer.innerHTML = html || `<p style="color: #6e6e73; text-align: center; padding: 40px;">${this.t('page.chart.empty.noBalances')}</p>`;
             return;
@@ -1106,7 +1091,7 @@ class ChartDataRenderer {
         }
 
         if (views.length === 1) {
-            html += this.renderBalanceSet(views[0].data);
+            html += this.renderBalanceSet(views[0].key, views[0].data);
             this.balancesContainer.innerHTML = html;
             return;
         }
@@ -1126,7 +1111,7 @@ class ChartDataRenderer {
             </div>
             ${views.map((view, index) => `
                 <div class="balance-subtab-panel${index === 0 ? ' active' : ''}" data-balance-panel="${view.key}">
-                    ${this.renderBalanceSet(view.data)}
+                    ${this.renderBalanceSet(view.key, view.data)}
                 </div>
             `).join('')}
         `;
@@ -1159,7 +1144,7 @@ class ChartDataRenderer {
         });
     }
 
-    renderBalanceSet(balanceSet) {
+    renderBalanceSet(viewKey, balanceSet) {
         let html = '';
         const neutralBalanceColor = '#9ca3af';
         const elementColor = (element) => window.AstroPreferences?.getElementColor
@@ -1177,7 +1162,7 @@ class ChartDataRenderer {
             ]);
         }
 
-        if (balanceSet.mode_balance) {
+        if (viewKey === 'by_sign' && balanceSet.mode_balance) {
             const mb = balanceSet.mode_balance;
             const total = mb.cardinal + mb.fixed + mb.mutable;
             html += this.renderBalanceSection(this.t('page.chart.balances.modesTitle'), [
@@ -1229,7 +1214,7 @@ class ChartDataRenderer {
             ]);
         }
 
-        if (balanceSet.house_group_balance) {
+        if (viewKey === 'by_house' && balanceSet.house_group_balance) {
             const hgb = balanceSet.house_group_balance;
             const total = hgb.angular + hgb.succedent + hgb.cadent;
             html += this.renderBalanceSection(this.t('page.chart.balances.houseGroupsTitle'), [

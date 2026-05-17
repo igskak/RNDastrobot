@@ -7,7 +7,7 @@
     const VALID_LAYERS = ['transit', 'progression', 'direction'];
     const VALID_STEP_MODES = ['second', 'minute', 'hour', 'day', 'week', 'month', 'year'];
     const VALID_CUSTOM_STEP_UNITS = ['second', 'minute', 'hour', 'day', 'week', 'month', 'year'];
-    const VALID_TABS = ['Planets', 'Aspects', 'Grid', 'Configs', 'Balances'];
+    const VALID_TABS = ['Planets', 'Aspects', 'Grid', 'Configs', 'Balances', 'Rulers'];
 
     function normalizeToken(value) {
         if (value === null || value === undefined) return '';

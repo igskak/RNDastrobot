@@ -470,6 +470,22 @@
         "zonesTitle": "Zones",
         "shiva": "Shiva"
       },
+      "rulers": {
+        "chainsKicker": "Chains",
+        "chainsTitle": "Rulership chains",
+        "empty": {
+          "noChains": "No data to build chains.",
+          "noJones": "Jones pattern is not calculated.",
+          "noMainRulers": "Main rulers are not defined."
+        },
+        "jonesKicker": "Jones pattern",
+        "mainKicker": "Chain result",
+        "mainTitle": "Main rulers",
+        "modalClose": "Close diagram",
+        "modalTitle": "Dispositor chains",
+        "modeLabel": "Scheme",
+        "openSchema": "Open chain diagram"
+      },
       "chat": {
         "title": "Ask about this chart"
       },
@@ -600,7 +616,8 @@
         "configurations": "Configurations",
         "grid": "Aspect grid",
         "houses": "Houses",
-        "planets": "Planets"
+        "planets": "Planets",
+        "rulers": "Pattern / rulers"
       },
       "toasts": {
         "defaultsResetFailed": "Failed to reset local settings",
@@ -1358,6 +1375,7 @@
         "houses": "Houses",
         "minorAspects": "Minor aspects",
         "planets": "Planets",
+        "rulers": "Pattern / rulers",
         "specialPoints": "Special points"
       },
       "summary": {
