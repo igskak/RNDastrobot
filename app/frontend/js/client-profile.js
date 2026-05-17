@@ -64,6 +64,9 @@ function escapeHtml(str) {
 }
 
 function formatDate(isoDate) {
+    if (window.LocaleFormatters?.formatDate) {
+        return window.LocaleFormatters.formatDate(isoDate);
+    }
     if (!isoDate) return '';
     const parts = isoDate.split('T')[0].split('-');
     if (parts.length !== 3) return isoDate;
@@ -112,6 +115,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const astrologer = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
     if (!astrologer) return;
+
+    if (window.AstroAPI?.getAccountPreferences) {
+        try {
+            window.accountPreferencesCache = await window.AstroAPI.getAccountPreferences();
+            window.AstroPreferences?.setAccountVisualPreferences?.(window.accountPreferencesCache?.visual || {});
+        } catch (error) {
+            console.warn('Client profile account preferences fallback to defaults:', error);
+        }
+    }
 
     initEditClientDialog();
     initLogSessionDialog();
@@ -554,8 +566,8 @@ function renderRecordings(sessions) {
     refs.recordingsList.innerHTML = sessions.map((cs) => {
         const st = CS_STATUS_LABELS[cs.call_status] || { label: cs.call_status, cls: '' };
         const dateStr = cs.started_at
-            ? new Date(cs.started_at + 'Z').toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
-            : (cs.created_at ? new Date(cs.created_at + 'Z').toLocaleDateString() : '—');
+            ? formatDateTime(`${cs.started_at}Z`)
+            : (cs.created_at ? formatDate(`${cs.created_at}Z`) : '—');
         const dur = cs.duration_seconds ? formatDuration(cs.duration_seconds) : '';
         const isExpandable = cs.call_status === 'completed';
         const expandIcon = isExpandable

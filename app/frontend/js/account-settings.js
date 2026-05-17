@@ -271,6 +271,14 @@
         return document.getElementById('accountTimezoneLabelFormatSelect');
     }
 
+    function getDateFormatSelect() {
+        return document.getElementById('accountDateFormatSelect');
+    }
+
+    function getDegreeFormatSelect() {
+        return document.getElementById('accountDegreeFormatSelect');
+    }
+
     function getViewDom(viewId) {
         if (viewId === 'natal') {
             return {
@@ -936,6 +944,20 @@
         if (timezoneLabelFormatSelect) {
             timezoneLabelFormatSelect.value = normalized.visual?.timezone_label_format === 'GMT' ? 'GMT' : 'UTC';
         }
+        const dateFormatSelect = getDateFormatSelect();
+        if (dateFormatSelect) {
+            const resolvedDateFormat = ['DD_MM_YYYY', 'MM_DD_YYYY', 'YYYY_MM_DD', 'LOCALE'].includes(normalized.visual?.date_format)
+                ? normalized.visual.date_format
+                : 'DD_MM_YYYY';
+            dateFormatSelect.value = resolvedDateFormat;
+        }
+        const degreeFormatSelect = getDegreeFormatSelect();
+        if (degreeFormatSelect) {
+            const resolvedDegreeFormat = ['DEGREES_ONLY', 'DEGREES_MINUTES', 'DEGREES_MINUTES_SECONDS'].includes(normalized.visual?.degree_format)
+                ? normalized.visual.degree_format
+                : 'DEGREES_ONLY';
+            degreeFormatSelect.value = resolvedDegreeFormat;
+        }
 
         const orbPairStrategySelect = document.getElementById('accountOrbPairStrategySelect');
         if (orbPairStrategySelect) {
@@ -1083,6 +1105,8 @@
                 body_overrides: bodyOverrides,
             },
             timezone_label_format: getTimezoneLabelFormatSelect()?.value || 'UTC',
+            date_format: getDateFormatSelect()?.value || 'DD_MM_YYYY',
+            degree_format: getDegreeFormatSelect()?.value || 'DEGREES_ONLY',
         });
     }
 

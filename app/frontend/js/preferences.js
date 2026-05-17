@@ -530,6 +530,14 @@
         const timezoneLabelFormat = String(visual?.timezone_label_format || 'UTC').trim().toUpperCase() === 'GMT'
             ? 'GMT'
             : 'UTC';
+        const normalizedDateFormat = String(visual?.date_format || 'DD_MM_YYYY').trim().toUpperCase();
+        const dateFormat = ['DD_MM_YYYY', 'MM_DD_YYYY', 'YYYY_MM_DD', 'LOCALE'].includes(normalizedDateFormat)
+            ? normalizedDateFormat
+            : 'DD_MM_YYYY';
+        const normalizedDegreeFormat = String(visual?.degree_format || 'DEGREES_ONLY').trim().toUpperCase();
+        const degreeFormat = ['DEGREES_ONLY', 'DEGREES_MINUTES', 'DEGREES_MINUTES_SECONDS'].includes(normalizedDegreeFormat)
+            ? normalizedDegreeFormat
+            : 'DEGREES_ONLY';
         return {
             aspect_colors: {
                 ...DEFAULT_ASPECT_COLORS,
@@ -545,6 +553,8 @@
                 },
             },
             timezone_label_format: timezoneLabelFormat,
+            date_format: dateFormat,
+            degree_format: degreeFormat,
         };
     }
 
@@ -582,6 +592,20 @@
     function getTimezoneLabelFormat(visual = null) {
         const resolved = visual ? resolveVisualPreferences(visual) : accountVisualPreferences;
         return resolved?.timezone_label_format === 'GMT' ? 'GMT' : 'UTC';
+    }
+
+    function getDateFormat(visual = null) {
+        const resolved = visual ? resolveVisualPreferences(visual) : accountVisualPreferences;
+        return ['DD_MM_YYYY', 'MM_DD_YYYY', 'YYYY_MM_DD', 'LOCALE'].includes(resolved?.date_format)
+            ? resolved.date_format
+            : 'DD_MM_YYYY';
+    }
+
+    function getDegreeFormat(visual = null) {
+        const resolved = visual ? resolveVisualPreferences(visual) : accountVisualPreferences;
+        return ['DEGREES_ONLY', 'DEGREES_MINUTES', 'DEGREES_MINUTES_SECONDS'].includes(resolved?.degree_format)
+            ? resolved.degree_format
+            : 'DEGREES_ONLY';
     }
 
     function shouldShowAspectText(viewSettings = {}) {
@@ -653,6 +677,8 @@
         getElementColor,
         getPlanetColor,
         getTimezoneLabelFormat,
+        getDateFormat,
+        getDegreeFormat,
         shouldShowAspectText,
         getHiddenBodiesFromMatrix,
         buildMatrixRowsFromHiddenBodies,

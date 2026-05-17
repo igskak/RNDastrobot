@@ -243,6 +243,15 @@ async function bootstrapPage() {
     currentAstrologer = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
     if (!currentAstrologer) return;
 
+    if (window.AstroAPI?.getAccountPreferences) {
+        try {
+            window.accountPreferencesCache = await window.AstroAPI.getAccountPreferences();
+            window.AstroPreferences?.setAccountVisualPreferences?.(window.accountPreferencesCache?.visual || {});
+        } catch (error) {
+            console.warn('Clients account preferences fallback to defaults:', error);
+        }
+    }
+
     renderProfileSummary();
     applyHeroPlacement();
 
@@ -983,8 +992,11 @@ function showToast(message, type = 'info') {
 }
 
 function formatDate(isoDate) {
-    const parts = isoDate.split('-');
-    if (parts.length !== 3) return isoDate;
+    if (window.LocaleFormatters?.formatDate) {
+        return window.LocaleFormatters.formatDate(isoDate);
+    }
+    const parts = String(isoDate || '').split('-');
+    if (parts.length !== 3) return String(isoDate || '');
     return `${parts[2]}.${parts[1]}.${parts[0]}`;
 }
 
@@ -1154,8 +1166,8 @@ function buildCallSessionsHTML(callSessions) {
     const rows = callSessions.map(cs => {
         const status  = STATUS_LABELS[cs.call_status] || { label: cs.call_status, cls: '' };
         const dateStr = cs.started_at
-            ? new Date(cs.started_at + 'Z').toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
-            : (cs.created_at ? new Date(cs.created_at + 'Z').toLocaleDateString() : '—');
+            ? formatDateTime(`${cs.started_at}Z`)
+            : (cs.created_at ? formatDate(`${cs.created_at}Z`) : '—');
         const dur = cs.duration_seconds
             ? `${Math.floor(cs.duration_seconds / 60)}m ${cs.duration_seconds % 60}s`
             : '';

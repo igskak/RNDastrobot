@@ -560,10 +560,9 @@ function updateHeader(chartData) {
     const formData = AstroAPI.getFormData();
     
     const date = new Date(birthData.date);
-    const locale = window.FrontendI18n?.getLocale?.() || 'en';
     const dateStr = Number.isNaN(date.getTime())
         ? birthData.date
-        : new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
+        : (window.LocaleFormatters?.formatDate ? window.LocaleFormatters.formatDate(date) : birthData.date);
     const timeStr = birthData.time.slice(0, 5);
     
     const firstName = birthData?.first_name || formData?.firstName || '';
@@ -1069,6 +1068,7 @@ async function hydrateNatalPreferences(chartData, formData) {
             }
             chartWheel?.setVisualPreferences?.(window.accountPreferencesCache?.visual || {}, { redraw: false });
             chartDataRenderer?.setVisualPreferences?.(window.accountPreferencesCache?.visual || {});
+            updateHeader(chartData);
         }
         currentResolvedPreferences = await window.AstroAPI.getResolvedPreferences({
             chart_kind: 'natal',

@@ -423,6 +423,9 @@
     function formatDateTime(isoStr) {
         if (!isoStr) return '—';
         const d = new Date(isoStr);
+        if (window.LocaleFormatters?.formatDateTime) {
+            return window.LocaleFormatters.formatDateTime(d, { hour12: false });
+        }
         return new Intl.DateTimeFormat(getLocale(), {
             day: 'numeric',
             month: 'short',

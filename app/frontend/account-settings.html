@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.accountSettings.title"></title>
-    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=20260516-140824">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=20260516-140824">
+    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=20260517-163054">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=20260517-163054">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '20260516-140824';</script>
+    <script>window.__APP_BUILD_ID__ = '20260517-163054';</script>
 </head>
 <body class="account-settings-page">
     <div class="page-loader" id="pageLoader">
@@ -60,6 +60,21 @@
                                 <option value="GMT" data-i18n="page.accountSettings.creation.timezoneLabelFormatOptions.gmt"></option>
                             </select>
                             <p class="account-settings-toolbar-copy" data-i18n="page.accountSettings.creation.timezoneLabelFormatCopy"></p>
+                            <label class="account-settings-label" for="accountDateFormatSelect" data-i18n="page.accountSettings.creation.dateFormat"></label>
+                            <select id="accountDateFormatSelect" class="account-settings-select account-settings-select--compact">
+                                <option value="DD_MM_YYYY" data-i18n="page.accountSettings.creation.dateFormatOptions.ddmmyyyy"></option>
+                                <option value="MM_DD_YYYY" data-i18n="page.accountSettings.creation.dateFormatOptions.mmddyyyy"></option>
+                                <option value="YYYY_MM_DD" data-i18n="page.accountSettings.creation.dateFormatOptions.yyyymmdd"></option>
+                                <option value="LOCALE" data-i18n="page.accountSettings.creation.dateFormatOptions.locale"></option>
+                            </select>
+                            <p class="account-settings-toolbar-copy" data-i18n="page.accountSettings.creation.dateFormatCopy"></p>
+                            <label class="account-settings-label" for="accountDegreeFormatSelect" data-i18n="page.accountSettings.creation.degreeFormat"></label>
+                            <select id="accountDegreeFormatSelect" class="account-settings-select account-settings-select--compact">
+                                <option value="DEGREES_ONLY" data-i18n="page.accountSettings.creation.degreeFormatOptions.degreesOnly"></option>
+                                <option value="DEGREES_MINUTES" data-i18n="page.accountSettings.creation.degreeFormatOptions.degreesMinutes"></option>
+                                <option value="DEGREES_MINUTES_SECONDS" data-i18n="page.accountSettings.creation.degreeFormatOptions.degreesMinutesSeconds"></option>
+                            </select>
+                            <p class="account-settings-toolbar-copy" data-i18n="page.accountSettings.creation.degreeFormatCopy"></p>
                             <p class="account-settings-toolbar-copy" data-i18n="page.accountSettings.creation.copy"></p>
                         </div>
                         <aside class="account-settings-toolbar-note">
@@ -574,7 +589,7 @@
 
     <div id="accountSettingsToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/account-settings.bundle.js?v=20260516-140824"></script>
-    <script src="js/locale-switcher.js?v=20260516-140824"></script>
+    <script type="module" src="js/bundles/account-settings.bundle.js?v=20260517-163054"></script>
+    <script src="js/locale-switcher.js?v=20260517-163054"></script>
 </body>
 </html>

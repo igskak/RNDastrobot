@@ -515,7 +515,10 @@ function renderHeader(data) {
     }
     if (birthDetails) {
         const details = [];
-        const dateTime = `${birthData.date || ''} ${birthData.time || ''}`.trim();
+        const datePart = birthData.date
+            ? (window.LocaleFormatters?.formatDate?.(birthData.date) || birthData.date)
+            : '';
+        const dateTime = `${datePart} ${birthData.time || ''}`.trim();
         if (dateTime) {
             details.push(dateTime);
         }

@@ -27,6 +27,9 @@
     }
 
     function formatDate(isoDate) {
+        if (root.LocaleFormatters?.formatDate) {
+            return root.LocaleFormatters.formatDate(isoDate);
+        }
         if (!isoDate) return '';
         const parts = String(isoDate).split('T')[0].split('-');
         if (parts.length !== 3) return String(isoDate);

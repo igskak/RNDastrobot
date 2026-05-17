@@ -2064,8 +2064,10 @@ function formatForecastSummaryDate(dateStr) {
     if (!dateStr) return t('page.forecast.summary.window.notSet');
     const parsed = new Date(`${dateStr}T00:00:00`);
     if (Number.isNaN(parsed.getTime())) return dateStr;
-    const locale = window.FrontendI18n?.getLocale?.() || 'en';
-    return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(parsed);
+    if (window.LocaleFormatters?.formatDate) {
+        return window.LocaleFormatters.formatDate(parsed);
+    }
+    return dateStr;
 }
 
 function getForecastSummaryWindowText() {
@@ -2187,10 +2189,9 @@ function updateHeaderInfo(data) {
     if (el && data.birth_data) {
         const bd = data.birth_data;
         const d = new Date(bd.date);
-        const locale = window.FrontendI18n?.getLocale?.() || 'en';
         const dateText = Number.isNaN(d.getTime())
             ? bd.date
-            : new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(d);
+            : (window.LocaleFormatters?.formatDate ? window.LocaleFormatters.formatDate(d) : bd.date);
         el.textContent = `${dateText}, ${bd.time?.slice(0,5) || ''}`;
     }
 }

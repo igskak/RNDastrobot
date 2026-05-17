@@ -232,6 +232,21 @@
       },
       "creation": {
         "copy": "Choose the base house system that new charts should start with before any per-view overrides apply.",
+        "dateFormat": "Date format",
+        "dateFormatCopy": "Applies to dates across the UI.",
+        "dateFormatOptions": {
+          "ddmmyyyy": "DD.MM.YYYY",
+          "mmddyyyy": "MM/DD/YYYY",
+          "yyyymmdd": "YYYY-MM-DD",
+          "locale": "Use UI locale"
+        },
+        "degreeFormat": "Degree format",
+        "degreeFormatCopy": "Applies to planet and house positions across the UI.",
+        "degreeFormatOptions": {
+          "degreesMinutes": "Degrees and minutes",
+          "degreesMinutesSeconds": "Degrees, minutes, and seconds",
+          "degreesOnly": "Degrees only"
+        },
         "houseSystem": "Default house system",
         "kicker": "Chart creation",
         "timezoneLabelFormat": "Timezone label format",
