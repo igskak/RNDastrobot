@@ -434,52 +434,33 @@
         return `${h}:${m}:00`;
     }
 
-    const SPEED_MEANS = {
-        Sun: 0.9856,
-        Moon: 13.1764,
-        Mercury: 1.607,
-        Venus: 1.174,
-        Mars: 0.524,
-        Jupiter: 0.0831,
-        Saturn: 0.0335,
-        Uranus: 0.0117,
-        Neptune: 0.006,
-        Pluto: 0.004,
-        Chiron: 0.0192,
-        Proserpina: 0.001265,
-    };
     const DEFAULT_STATIONARY_THRESHOLD_PERCENT = 10;
 
     function normalizePlanetMotion(planet) {
         if (!planet || typeof planet !== 'object') return planet;
 
         const speed = Number(planet.speed);
-        const meanSpeed = SPEED_MEANS[String(planet.name || '')];
         const retrograde = typeof planet.retrograde === 'boolean'
             ? planet.retrograde
             : speed < 0;
 
-        let speedPercent = planet.speed_percent;
-        if (Number.isFinite(speed) && Number.isFinite(meanSpeed) && meanSpeed > 0) {
-            speedPercent = Math.abs(speed) / meanSpeed * 100;
-            speedPercent = Math.round(speedPercent * 100) / 100;
-        }
+        const speedPercent = Number(planet.speed_percent);
 
         const threshold = Number.isFinite(Number(planet.stationary_threshold_percent))
             ? Number(planet.stationary_threshold_percent)
             : DEFAULT_STATIONARY_THRESHOLD_PERCENT;
-        const hasSpeedPercent = Number.isFinite(Number(speedPercent));
+        const hasSpeedPercent = Number.isFinite(speedPercent);
         const isStationary = hasSpeedPercent
-            ? Number(speedPercent) <= threshold
+            ? speedPercent <= threshold
             : Boolean(planet.is_stationary);
 
         return {
             ...planet,
             retrograde,
-            speed_percent: hasSpeedPercent ? Number(speedPercent) : null,
+            speed_percent: hasSpeedPercent ? speedPercent : null,
             is_stationary: isStationary,
             stationary_type: isStationary
-                ? (retrograde ? 'pre_direct' : 'pre_retrograde')
+                ? (planet.stationary_type || (retrograde ? 'pre_direct' : 'pre_retrograde'))
                 : null,
         };
     }
@@ -651,6 +632,12 @@
             const href = link.getAttribute('href');
             // Только локальные переходы на .html страницы
             if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('javascript') || link.target === '_blank') return;
+            if (href.includes('account-settings.html')) {
+                patchNavigationState({
+                    sourceView: 'account-settings-return',
+                    sourceUrl: `${window.location.pathname}${window.location.search || ''}`,
+                });
+            }
             showPageLoader();
         });
     }

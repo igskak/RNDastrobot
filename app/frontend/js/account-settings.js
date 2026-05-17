@@ -57,6 +57,13 @@
         return window.FrontendI18n?.t?.(key, params) || key;
     }
 
+    function configureAccountSettingsBackLink() {
+        const backLink = document.querySelector('.account-settings-back');
+        if (!backLink) return;
+        const navigationState = window.AstroAPI?.getNavigationState?.() || {};
+        backLink.href = navigationState.sourceUrl || '/';
+    }
+
     function escapeHtml(value) {
         return String(value ?? '')
             .replace(/&/g, '&amp;')
@@ -1358,6 +1365,7 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
         activeOrbViewMode = localStorage.getItem(ORB_VIEW_MODE_STORAGE_KEY) === 'compact' ? 'compact' : 'default';
+        configureAccountSettingsBackLink();
 
         const saveBtn = document.getElementById('saveAccountSettingsBtn');
         const restoreBtn = document.getElementById('restoreStandardDefaultsBtn');

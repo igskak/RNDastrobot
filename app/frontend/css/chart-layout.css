@@ -307,16 +307,18 @@
 .chart-layout {
     display: flex;
     flex: 1;
+    min-width: 0;
     overflow: hidden;
 }
 
 /* Side panels */
 .side-panel {
-    width: 320px;
+    width: clamp(248px, 22vw, 320px);
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(249, 247, 242, 0.94));
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    min-width: 0;
     min-height: 0;
     flex-shrink: 0;
 }
@@ -326,8 +328,11 @@
 
 /* Scrollable panel content */
 .panel-content {
+    display: flex;
+    flex-direction: column;
     flex: 1;
     min-height: 0;
+    min-width: 0;
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-gutter: stable;
@@ -370,28 +375,45 @@
 /* Panel tabs */
 .panel-tabs {
     display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
     gap: 4px;
     padding: 6px;
     background: rgba(240, 237, 228, 0.78);
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
+    overflow-x: auto;
+    overflow-y: visible;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.panel-tabs::-webkit-scrollbar {
+    display: none;
 }
 
 .panel-tab {
-    flex: 1;
-    padding: 8px 8px;
+    flex: 1 1 96px;
+    min-width: 0;
+    min-height: 36px;
+    padding: 8px 10px;
     background: none;
     border: none;
     border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     font-family: var(--font-ui);
     font-size: 12.5px;
     font-weight: 500;
     letter-spacing: 0.015em;
+    line-height: 1.2;
+    text-align: center;
     color: var(--text-muted);
     cursor: pointer;
     transition: all var(--transition);
     position: relative;
-    white-space: nowrap;
+    white-space: normal;
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -411,10 +433,15 @@
     display: none;
 }
 
-.panel-tab-content { display: none; }
+.panel-tab-content {
+    display: none;
+    min-width: 0;
+}
+
 .panel-tab-content.active {
     display: block;
-    min-height: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
 .chart-page .planet-group.matrix-hidden,

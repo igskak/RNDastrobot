@@ -179,3 +179,57 @@ test('AstroAPI.updateClientChart sends PUT request with locale headers', async (
     assert.equal(captured.init.headers['Accept-Language'], 'ru');
     assert.equal(captured.init.body, JSON.stringify(payload));
 });
+
+test('AstroAPI preserves backend speed_percent when normalizing chart motion', () => {
+    const storage = new Map();
+    const sessionStorage = {
+        getItem(key) {
+            return storage.has(key) ? storage.get(key) : null;
+        },
+        setItem(key, value) {
+            storage.set(key, String(value));
+        },
+        removeItem(key) {
+            storage.delete(key);
+        },
+    };
+    const localStorage = {
+        getItem() {
+            return null;
+        },
+        setItem() {},
+        removeItem() {},
+    };
+    global.sessionStorage = sessionStorage;
+    global.localStorage = localStorage;
+
+    const api = loadApiModule({
+        location: { hostname: 'example.com' },
+        sessionStorage,
+        localStorage,
+        FrontendI18n: {
+            getLocale() {
+                return 'en';
+            },
+        },
+    });
+
+    api.saveChartToSession({
+        user_id: 'u-99',
+        planets: [
+            {
+                name: 'Mercury',
+                speed: 0.72,
+                speed_percent: 52,
+                retrograde: false,
+                is_stationary: false,
+                stationary_type: null,
+            },
+        ],
+    });
+
+    const chart = api.getChartFromSession();
+    assert.equal(chart.planets[0].speed_percent, 52);
+    assert.equal(chart.planets[0].is_stationary, false);
+    assert.equal(chart.planets[0].stationary_type, null);
+});

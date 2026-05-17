@@ -332,7 +332,6 @@
             aspectGridContainerId: 'natalAspectGridContainer',
             configsContainerId: 'natalConfigurationsContainer',
             balancesContainerId: 'natalBalancesContainer',
-            dignitiesContainerId: 'natalDignitiesContainer',
             aspectSortHeadersSelector: '#natalAspectsView th.sortable[data-sort]',
             showSpeedColumn: false,
             showHouseColumn: false,
@@ -344,7 +343,6 @@
             aspectGridContainerId: 'progAspectGridContainer',
             configsContainerId: 'progConfigurationsContainer',
             balancesContainerId: 'progBalancesContainer',
-            dignitiesContainerId: 'progDignitiesContainer',
             aspectSortHeadersSelector: '#progAspectsView th.sortable[data-sort]',
             showSpeedColumn: false,
             showHouseColumn: false,
@@ -1529,9 +1527,10 @@
     }
 
     async function applyMatrixRows() {
-        renderStaticNatal();
         renderWheel();
-        renderRightPanel();
+        renderMatrixSensitivePanelData();
+        applyInlineMatrixRowState();
+        syncHoveredAspectToActiveSurface();
         try {
             await persistForecastNewViewOverrides();
         } catch (error) {

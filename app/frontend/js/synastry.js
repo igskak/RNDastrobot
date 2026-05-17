@@ -565,7 +565,6 @@ function ensureSideRenderer(side) {
         aspectGridContainerId: `${side}AspectGridContainer`,
         configsContainerId: `${side}ConfigurationsContainer`,
         balancesContainerId: `${side}BalancesContainer`,
-        dignitiesContainerId: `${side}DignitiesContainer`,
         aspectSortHeadersSelector: `#${side}AspectsView th.sortable[data-sort]`,
     });
 

@@ -69,7 +69,7 @@
 }
 
 .forecast-new-layout {
-    --forecast-new-side-panel-width: clamp(252px, 20.7vw, 324px);
+    --forecast-new-side-panel-width: clamp(224px, 21vw, 324px);
 
     display: grid;
     grid-template-columns:
@@ -82,9 +82,13 @@
 }
 
 .forecast-new-side-panel {
+    display: flex;
+    flex-direction: column;
     width: 100%;
     min-width: 0;
+    min-height: 0;
     max-width: none;
+    overflow: hidden;
 }
 
 #forecastNewNatalPanel {
@@ -485,10 +489,13 @@
 
 .forecast-new-tabs .panel-tab {
     min-width: 0;
-    padding: 9px 8px;
+    min-height: 38px;
+    padding: 8px 6px;
+    font-size: 12px;
     white-space: normal;
     line-height: 1.15;
     text-align: center;
+    overflow-wrap: anywhere;
 }
 
 .forecast-new-tabs-overflow {
@@ -549,7 +556,13 @@
 }
 
 .forecast-new-panel-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
     min-height: 0;
+    min-width: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 #natalBalancesView,
@@ -1199,7 +1212,7 @@
 
 @media (max-width: 1180px) {
     .forecast-new-layout {
-        --forecast-new-side-panel-width: clamp(236px, 24.3vw, 288px);
+        --forecast-new-side-panel-width: clamp(208px, 23vw, 280px);
 
         overflow: hidden;
     }

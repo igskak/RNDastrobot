@@ -280,6 +280,8 @@ body.account-settings-modal-open {
 .account-settings-profile-tabs {
     display: inline-flex;
     align-items: center;
+    flex-wrap: wrap;
+    max-width: 100%;
     gap: 4px;
     padding: 4px;
     border-radius: 999px;
@@ -288,11 +290,15 @@ body.account-settings-modal-open {
 }
 
 .account-settings-profile-tab {
-    min-width: 104px;
+    flex: 1 1 140px;
+    min-width: 0;
     padding-inline: 14px;
     border-color: transparent;
     background: transparent;
     color: var(--text-secondary);
+    white-space: normal;
+    line-height: 1.2;
+    text-align: center;
 }
 
 .account-settings-profile-tab.is-active {

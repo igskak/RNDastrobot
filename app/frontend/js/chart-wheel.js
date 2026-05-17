@@ -1,3 +1,5 @@
+import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './wheel-planet-annotations.js';
+
 /**
  * Отрисовка профессиональной круговой натальной карты (SVG)
  * Best Practices: ZET, Solar Fire, Astro-Seek standards
@@ -608,11 +610,6 @@ class ChartWheel {
             });
 
             const lineInnerR = houseInnerR;
-            const isAscDsc = house.number === 1 || house.number === 7;
-            const isMcIc = house.number === 10 || house.number === 4;
-            const isBoldAngle = (isAscDsc && this.angleMarkerOptions.ascDscBold !== false)
-                || (isMcIc && this.angleMarkerOptions.mcIcBold !== false);
-
             // Увеличенная прозрачная зона захвата для hover
             cuspGroup.appendChild(this.createSvgElement('line', {
                 x1: this.center + lineInnerR * Math.cos(angle),
@@ -629,8 +626,8 @@ class ChartWheel {
                 y1: this.center + lineInnerR * Math.sin(angle),
                 x2: this.center + lineOuterR * Math.cos(angle),
                 y2: this.center + lineOuterR * Math.sin(angle),
-                stroke: this.getHouseLineColor(isAngular),
-                'stroke-width': isAngular ? (isBoldAngle ? 1.5 : 1) : 1,
+                stroke: this.getHouseLineColor(false),
+                'stroke-width': 1,
                 class: 'house-cusp-line'
             }));
 
@@ -650,8 +647,8 @@ class ChartWheel {
                     y1: this.center + outsideSegmentStartR * Math.sin(angle),
                     x2: this.center + outsideSegmentEndR * Math.cos(angle),
                     y2: this.center + outsideSegmentEndR * Math.sin(angle),
-                    stroke: this.getHouseLineColor(isAngular),
-                    'stroke-width': isAngular ? (isBoldAngle ? 1.4 : 1.2) : 1.2,
+                    stroke: this.getHouseLineColor(false),
+                    'stroke-width': 1.2,
                     class: 'house-cusp-line'
                 }));
             }
@@ -673,8 +670,8 @@ class ChartWheel {
                     'text-anchor': outsideLabel.anchor,
                     'dominant-baseline': 'middle',
                     'font-size': '9.5',
-                    'font-weight': isAngular ? (isBoldAngle ? '600' : '500') : '500',
-                    fill: this.getHouseLabelColor(isAngular),
+                    'font-weight': '500',
+                    fill: this.getHouseLabelColor(false),
                     stroke: '#fafafa',
                     'stroke-width': '2.4',
                     'stroke-linejoin': 'round',
@@ -688,8 +685,8 @@ class ChartWheel {
                     y: this.center + textR * Math.sin(midAngle) + 3,
                     'text-anchor': 'middle',
                     'font-size': '10',
-                    'font-weight': isAngular ? (isBoldAngle ? '700' : '500') : '400',
-                    fill: this.getHouseLabelColor(isAngular),
+                    'font-weight': '400',
+                    fill: this.getHouseLabelColor(false),
                     style: 'pointer-events: none;'
                 }, this.formatHouseLabel(house.number)));
             }
@@ -891,14 +888,6 @@ class ChartWheel {
             const glyphSize = this.natalGlyphBaseSize * glyphScale * scale;
             const iconBoxScale = useVectorIcon ? (window.AstroGlyphs?.getPlanetIconScale?.(planet.name) || 1.18) : 1;
             const iconSize = useVectorIcon ? this.natalGlyphBaseSize * scale * iconBoxScale : glyphSize;
-            const leaderTargetRadius = Math.max(9 * scale, iconSize * 0.58);
-            const leaderEnd = this.getLeaderLineEndPoint(
-                { x: anchorX, y: anchorY },
-                { x, y },
-                leaderTargetRadius,
-                2.2
-            );
-
             // Группа для интерактивности
             const group = this.createSvgElement('g', {
                 class: 'planet-group',
@@ -906,38 +895,15 @@ class ChartWheel {
                 style: 'cursor: pointer;'
             });
 
-            group.appendChild(this.createSvgElement('line', {
-                x1: anchorX, y1: anchorY,
-                x2: leaderEnd.x, y2: leaderEnd.y,
-                stroke: this.planetLeaderColor,
-                'stroke-width': 0.32,
-                opacity: hasLeader ? 0.52 : 0.4,
-                class: 'planet-leader-line',
-                style: 'pointer-events: none;'
-            }));
-
-            group.appendChild(this.createSvgElement('circle', {
-                cx: anchorX,
-                cy: anchorY,
-                r: 1.64,
-                fill: '#fafafa',
-                stroke: 'none',
-                opacity: 1,
-                class: 'planet-anchor-point-mask',
-                style: 'pointer-events: none;'
-            }));
-
-            group.appendChild(this.createSvgElement('circle', {
-                cx: anchorX,
-                cy: anchorY,
-                r: 1.8,
-                fill: 'none',
-                stroke: this.planetLeaderColor,
-                'stroke-width': 0.32,
-                opacity: 1,
-                class: 'planet-anchor-point',
-                style: 'pointer-events: none;'
-            }));
+            appendPlanetLeaderAnnotation(group, {
+                createSvgElement: this.createSvgElement.bind(this),
+                anchorPoint: { x: anchorX, y: anchorY },
+                iconPoint: { x, y },
+                iconBoxSize: iconSize,
+                scale,
+                leaderColor: this.planetLeaderColor,
+                leaderOpacity: hasLeader ? 0.52 : 0.4,
+            });
 
             // Фоновый круг (прозрачный, для интерактивности)
             group.appendChild(this.createSvgElement('circle', {
@@ -1144,7 +1110,9 @@ class ChartWheel {
     }
 
     /**
-     * Улучшенные маркеры углов ASC/MC с выносными линиями
+     * Маркеры углов ASC/MC/DSC/IC.
+     * Не дублируем куспиды через колесо знаков: при внутренних подписях оставляем только текст,
+     * а при внешних используем короткий внешний вынос, как у обычных подписей домов.
      */
     drawAnglesEnhanced(angles) {
         if (!angles) return;
@@ -1154,45 +1122,44 @@ class ChartWheel {
         // ASC — горизонтальная линия слева, выходит за круг
         if (angles.ASC) {
             const ascAngle = this.longitudeToAngle(angles.ASC.longitude) * Math.PI / 180;
-            this.drawAngleMarkerEnhanced(ascAngle, signInnerR, 'ASC', this.angleMarkerOptions.color);
+            this.drawAngleMarkerEnhanced(ascAngle, 'ASC');
         }
 
         // MC — вертикальная линия сверху
         if (angles.MC) {
             const mcAngle = this.longitudeToAngle(angles.MC.longitude) * Math.PI / 180;
-            this.drawAngleMarkerEnhanced(mcAngle, signInnerR, 'MC', this.angleMarkerOptions.color);
+            this.drawAngleMarkerEnhanced(mcAngle, 'MC');
         }
 
         // DSC — напротив ASC
         if (angles.DSC) {
             const dscAngle = this.longitudeToAngle(angles.DSC.longitude) * Math.PI / 180;
-            this.drawAngleMarkerEnhanced(dscAngle, signInnerR, 'DSC', this.angleMarkerOptions.color);
+            this.drawAngleMarkerEnhanced(dscAngle, 'DSC');
         }
 
         // IC — напротив MC
         if (angles.IC) {
             const icAngle = this.longitudeToAngle(angles.IC.longitude) * Math.PI / 180;
-            this.drawAngleMarkerEnhanced(icAngle, signInnerR, 'IC', this.angleMarkerOptions.color);
+            this.drawAngleMarkerEnhanced(icAngle, 'IC');
         }
     }
 
-    drawAngleMarkerEnhanced(angle, radius, label, color) {
-        const lineOuterR = this.houseLabelsOutside ? this.outerRadius + 14 : this.outerRadius - 0.5;
+    drawAngleMarkerEnhanced(angle, label) {
+        const outsideExtension = Number(this.houseVisualOptions.outsideExtension) || 14;
+        const lineInnerR = this.outerRadius + 1;
+        const lineOuterR = this.outerRadius + outsideExtension;
         const labelR = this.outerRadius + (this.houseLabelsOutside ? 20 : 8);
-        const isAscDsc = label === 'ASC' || label === 'DSC';
-        const isMcIc = label === 'MC' || label === 'IC';
-        const isBold = (isAscDsc && this.angleMarkerOptions.ascDscBold !== false)
-            || (isMcIc && this.angleMarkerOptions.mcIcBold !== false);
 
-        // Линия выносная за пределы круга
-        this.layers.angles.appendChild(this.createSvgElement('line', {
-            x1: this.center + this.aspectRadius * Math.cos(angle),
-            y1: this.center + this.aspectRadius * Math.sin(angle),
-            x2: this.center + lineOuterR * Math.cos(angle),
-            y2: this.center + lineOuterR * Math.sin(angle),
-            stroke: color,
-            'stroke-width': isBold ? 1.5 : 1
-        }));
+        if (this.houseLabelsOutside) {
+            this.layers.angles.appendChild(this.createSvgElement('line', {
+                x1: this.center + lineInnerR * Math.cos(angle),
+                y1: this.center + lineInnerR * Math.sin(angle),
+                x2: this.center + lineOuterR * Math.cos(angle),
+                y2: this.center + lineOuterR * Math.sin(angle),
+                stroke: this.getHouseLineColor(false),
+                'stroke-width': 1.2
+            }));
+        }
 
         // Подпись за кругом
         const cos = Math.cos(angle);
@@ -1205,8 +1172,8 @@ class ChartWheel {
             y: this.center + labelR * Math.sin(angle) + 3,
             'text-anchor': anchor,
             'font-size': '9',
-            'font-weight': isBold ? '700' : '500',
-            fill: color
+            'font-weight': '500',
+            fill: this.houseLabelsOutside ? this.getHouseLabelColor(false) : this.angleMarkerOptions.color
         }, label));
     }
 
@@ -1237,18 +1204,7 @@ class ChartWheel {
     }
 
     getLeaderLineEndPoint(anchorPoint, iconPoint, iconRadius, gap = 2) {
-        const dx = iconPoint.x - anchorPoint.x;
-        const dy = iconPoint.y - anchorPoint.y;
-        const distance = Math.hypot(dx, dy);
-        if (!distance) {
-            return { x: iconPoint.x, y: iconPoint.y };
-        }
-        const trim = Math.min(distance, Math.max(0, Number(iconRadius) || 0) + Math.max(0, Number(gap) || 0));
-        const ratio = (distance - trim) / distance;
-        return {
-            x: anchorPoint.x + dx * ratio,
-            y: anchorPoint.y + dy * ratio
-        };
+        return getPlanetLeaderLineEndPoint(anchorPoint, iconPoint, iconRadius, gap);
     }
 
     getSignByIndex(index) {

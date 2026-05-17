@@ -1,3 +1,5 @@
+import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './wheel-planet-annotations.js';
+
 (function() {
     'use strict';
 
@@ -13,7 +15,6 @@
     const WHEEL_BG = '#fafafa';
     const WHEEL_BORDER = '#d1d5db';
     const WHEEL_TICK = '#9ca3af';
-    const ANGLE_MARKER_COLOR = '#111111';
     const HOUSE_LABELS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
     const ASPECT_SYMBOLS = {
         Conjunction: '☌',
@@ -368,20 +369,11 @@
                 const pOuter = this.polar(cuspOuterRadius, angle);
                 const pInner = this.polar(ring.inner, angle);
                 const houseNumber = Number(house.number);
-                const isAngular = [1, 4, 7, 10].includes(houseNumber);
-                const isAscDsc = houseNumber === 1 || houseNumber === 7;
-                const isMcIc = houseNumber === 10 || houseNumber === 4;
-                const isBoldAngle = (isAscDsc && this.angleAscDscBold !== false)
-                    || (isMcIc && this.angleMcIcBold !== false);
-                const innerStroke = isAngular
-                    ? ANGLE_MARKER_COLOR
-                    : (ring.method === 'natal' ? this.getHouseLineColor(false) : ring.color);
-                const innerStrokeWidth = ring.method === 'natal'
-                    ? (isAngular ? (isBoldAngle ? 1.5 : 1) : 1)
-                    : (isAngular ? (isBoldAngle ? 0.85 : 0.7) : 0.7);
+                const innerStroke = ring.method === 'natal' ? this.getHouseLineColor(false) : ring.color;
+                const innerStrokeWidth = ring.method === 'natal' ? 1 : 0.7;
                 const innerOpacity = ring.method === 'natal'
                     ? 1
-                    : (isAngular ? 0.82 : 0.48);
+                    : 0.48;
                 const group = this.el('g', {
                     class: 'house-cusp-group',
                     'data-house': String(house.number || ''),
@@ -435,13 +427,13 @@
                         'text-anchor': outsideLabel.anchor,
                         'dominant-baseline': 'middle',
                         'font-size': ring.method === 'natal' ? 9.5 : 8.5,
-                        'font-weight': isAngular ? (isBoldAngle ? '600' : '500') : '500',
-                        fill: isAngular ? ANGLE_MARKER_COLOR : (ring.method === 'natal' ? this.getHouseLabelColor(false) : ring.color),
+                        'font-weight': '500',
+                        fill: ring.method === 'natal' ? this.getHouseLabelColor(false) : ring.color,
                         stroke: '#fafafa',
                         'stroke-width': '2.4',
                         'stroke-linejoin': 'round',
                         'paint-order': 'stroke',
-                    }, this.formatHouseLabel(house.number)));
+                    }, this.getDisplayedHouseLabel(house.number)));
                 } else {
                     const labelRadius = ring.inner + 9;
                     const labelPos = this.polar(labelRadius, this.longToAngle(midLong));
@@ -450,10 +442,10 @@
                         y: labelPos.y + 3,
                         'text-anchor': 'middle',
                         'font-size': ring.method === 'natal' ? 10 : 8,
-                        'font-weight': ring.method === 'natal' ? (isAngular ? (isBoldAngle ? '700' : '500') : '400') : (isAngular ? (isBoldAngle ? '700' : '500') : '700'),
-                        fill: isAngular ? ANGLE_MARKER_COLOR : (ring.method === 'natal' ? this.getHouseLabelColor(false) : ring.color),
+                        'font-weight': ring.method === 'natal' ? '400' : '700',
+                        fill: ring.method === 'natal' ? this.getHouseLabelColor(false) : ring.color,
                         opacity: ring.method === 'natal' ? 0.9 : 0.78,
-                    }, this.formatHouseLabel(house.number)));
+                    }, this.getDisplayedHouseLabel(house.number)));
                 }
                 this.layers.houses.appendChild(group);
             });
@@ -493,32 +485,16 @@
                 const glyphSize = this.natalGlyphBaseSize * glyphScale * scale;
                 const iconBoxScale = hasSvg ? (window.AstroGlyphs?.getPlanetIconScale?.(body.name) || 1.18) : 1;
                 const iconSize = hasSvg ? this.natalGlyphBaseSize * scale * iconBoxScale : glyphSize;
-                const leaderTargetRadius = Math.max(10 * scale, iconSize * 0.58);
-                const leaderEnd = this.getLeaderLineEndPoint(anchor, pos, leaderTargetRadius, 2.2);
-                group.appendChild(this.el('line', {
-                    x1: anchor.x, y1: anchor.y, x2: leaderEnd.x, y2: leaderEnd.y,
-                    stroke: this.planetLeaderColor, 'stroke-width': 0.32, opacity: item.hasLeader ? 0.52 : 0.4,
-                    class: 'planet-leader-line',
-                }));
-                group.appendChild(this.el('circle', {
-                    cx: anchor.x,
-                    cy: anchor.y,
-                    r: 1.64,
-                    fill: WHEEL_BG,
-                    stroke: 'none',
-                    opacity: 1,
-                    class: 'planet-anchor-point-mask',
-                }));
-                group.appendChild(this.el('circle', {
-                    cx: anchor.x,
-                    cy: anchor.y,
-                    r: 1.8,
-                    fill: 'none',
-                    stroke: this.planetLeaderColor,
-                    'stroke-width': 0.32,
-                    opacity: 1,
-                    class: 'planet-anchor-point',
-                }));
+                appendPlanetLeaderAnnotation(group, {
+                    createSvgElement: this.el.bind(this),
+                    anchorPoint: anchor,
+                    iconPoint: pos,
+                    iconBoxSize: iconSize,
+                    scale,
+                    leaderColor: this.planetLeaderColor,
+                    leaderOpacity: item.hasLeader ? 0.52 : 0.4,
+                    anchorMaskFill: WHEEL_BG,
+                });
                 group.appendChild(this.el('circle', {
                     cx: pos.x,
                     cy: pos.y,
@@ -689,26 +665,23 @@
                             class: 'aspect-symbol-text',
                             style: 'pointer-events: none;',
                         }, glyph);
-                        const backdrop = this.el('circle', {
-                            cx: geometry.midX,
-                            cy: geometry.midY,
-                            r: 6.5,
-                            fill: WHEEL_BG,
-                            opacity: 0.96,
-                            class: 'aspect-symbol-backdrop',
-                        });
-                        symbolGroup.appendChild(backdrop);
                         symbolGroup.appendChild(symbolText);
                         this.layers.aspects.appendChild(symbolGroup);
 
                         try {
                             const bbox = symbolText.getBBox();
                             const backdropRadius = Math.max(bbox.width, bbox.height) / 2 + 1.5;
-                            backdrop.setAttribute('cx', String(bbox.x + bbox.width / 2));
-                            backdrop.setAttribute('cy', String(bbox.y + bbox.height / 2));
-                            backdrop.setAttribute('r', String(backdropRadius));
+                            const backdrop = this.el('circle', {
+                                cx: bbox.x + bbox.width / 2,
+                                cy: bbox.y + bbox.height / 2,
+                                r: backdropRadius,
+                                fill: WHEEL_BG,
+                                opacity: 0.96,
+                                class: 'aspect-symbol-backdrop',
+                            });
+                            symbolGroup.insertBefore(backdrop, symbolText);
                         } catch (error) {
-                            // Keep the fallback backdrop when bbox isn't available yet.
+                            // Ignore bbox issues and keep the text visible even without backdrop.
                         }
                     }
                 });
@@ -1036,6 +1009,17 @@
                 return HOUSE_LABELS[numeric - 1] || String(numeric);
             }
             return String(numeric);
+        }
+
+        getDisplayedHouseLabel(number) {
+            const numeric = Number(number) || 0;
+            const angleLabels = {
+                1: 'ASC',
+                4: 'IC',
+                7: 'DSC',
+                10: 'MC',
+            };
+            return angleLabels[numeric] || this.formatHouseLabel(numeric);
         }
 
         getHouseLabelColor(isAngular) {
@@ -1485,16 +1469,7 @@
         }
 
         getLeaderLineEndPoint(anchorPoint, iconPoint, iconRadius, gap = 2) {
-            const dx = iconPoint.x - anchorPoint.x;
-            const dy = iconPoint.y - anchorPoint.y;
-            const distance = Math.hypot(dx, dy);
-            if (!distance) return { x: iconPoint.x, y: iconPoint.y };
-            const trim = Math.min(distance, Math.max(0, Number(iconRadius) || 0) + Math.max(0, Number(gap) || 0));
-            const ratio = (distance - trim) / distance;
-            return {
-                x: anchorPoint.x + dx * ratio,
-                y: anchorPoint.y + dy * ratio,
-            };
+            return getPlanetLeaderLineEndPoint(anchorPoint, iconPoint, iconRadius, gap);
         }
 
         el(tag, attrs = {}, text = null) {
