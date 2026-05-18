@@ -21,10 +21,13 @@ def test_html_entrypoints_smoke() -> None:
         root_response = client.get("/")
         index_response = client.get("/index.html")
         chart_response = client.get("/chart.html")
+        solar_response = client.get("/solar.html")
 
     assert root_response.status_code == 200
     assert index_response.status_code == 200
     assert chart_response.status_code == 200
+    assert solar_response.status_code == 200
     assert "text/html" in root_response.headers.get("content-type", "")
     assert "text/html" in index_response.headers.get("content-type", "")
     assert "text/html" in chart_response.headers.get("content-type", "")
+    assert "text/html" in solar_response.headers.get("content-type", "")

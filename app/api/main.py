@@ -109,6 +109,8 @@ async def static_cache_headers(request: Request, call_next):
         "/synastry",
         "/synastry.html",
         "/natal-full.html",
+        "/solar",
+        "/solar.html",
         "/forecast.html",
         "/calendar",
         "/calendar.html",
@@ -263,6 +265,16 @@ async def forecast_page():
     if os.path.exists(forecast_path):
         return FileResponse(forecast_path)
     raise HTTPException(status_code=404, detail="Forecast page not found")
+
+
+@app.get("/solar")
+@app.get("/solar.html")
+async def solar_page():
+    """Страница соляра."""
+    solar_path = os.path.join(FRONTEND_PATH, "solar.html")
+    if os.path.exists(solar_path):
+        return FileResponse(solar_path)
+    raise HTTPException(status_code=404, detail="Solar page not found")
 
 
 @app.get("/forecast-new")
