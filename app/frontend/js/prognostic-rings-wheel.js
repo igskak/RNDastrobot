@@ -74,8 +74,8 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             this.natalGlyphBaseSize = 18;
             this.planetLeaderColor = '#6b7280';
             this.houseVisualOptions = {
-                outsideColor: '#111111',
-                outsideLineColor: '#111111',
+                outsideColor: null,
+                outsideLineColor: null,
                 outsideExtension: 14,
                 outsideRadialOffset: 20,
                 outsideTangentOffset: 12,
@@ -1026,16 +1026,10 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
         }
 
         getHouseLabelColor(isAngular) {
-            if (this.houseLabelsOutside) {
-                return this.houseVisualOptions.outsideColor || '#111111';
-            }
             return isAngular ? '#111111' : '#5c554e';
         }
 
         getHouseLineColor(isAngular) {
-            if (this.houseLabelsOutside) {
-                return this.houseVisualOptions.outsideLineColor || '#111111';
-            }
             return isAngular ? '#111111' : '#7c746c';
         }
 

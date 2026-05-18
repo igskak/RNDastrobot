@@ -30,8 +30,8 @@ class ChartWheel {
             insideMutedColor: '#9ca3af',
             insideAngularLineColor: '#111111',
             insideMutedLineColor: '#c7d2db',
-            outsideColor: '#111111',
-            outsideLineColor: '#111111',
+            outsideColor: null,
+            outsideLineColor: null,
             outsideExtension: 14,
             outsideRadialOffset: 8,
             outsideTangentOffset: 12,
@@ -340,18 +340,12 @@ class ChartWheel {
     }
 
     getHouseLabelColor(isAngular) {
-        if (this.houseLabelsOutside) {
-            return this.houseVisualOptions.outsideColor || '#111111';
-        }
         return isAngular
             ? this.houseVisualOptions.insideAngularColor
             : this.houseVisualOptions.insideMutedColor;
     }
 
     getHouseLineColor(isAngular) {
-        if (this.houseLabelsOutside) {
-            return this.houseVisualOptions.outsideLineColor || '#111111';
-        }
         return isAngular
             ? this.houseVisualOptions.insideAngularLineColor
             : this.houseVisualOptions.insideMutedLineColor;
