@@ -185,6 +185,39 @@ test('filterChartDataByViewPreferences applies separate endpoint rows to prognos
     );
 });
 
+test('filterChartDataByViewPreferences treats hidden aspect endpoint as non-aspecting', () => {
+    const chartData = {
+        planets: [
+            { name: 'Sun' },
+            { name: 'Mars' },
+        ],
+        aspects: [
+            {
+                transit_planet: 'Mars',
+                natal_object: 'Sun',
+                left_planet: 'Mars',
+                right_planet: 'Sun',
+                aspect_type: 'Square',
+            },
+        ],
+        aspect_configurations: [],
+        stelliums: [],
+    };
+
+    const filtered = preferences.filterChartDataByViewPreferences(chartData, {
+        matrixRows: {},
+        aspectMatrixRows: {
+            first: {
+                Mars: { display: false, aspecting: true },
+            },
+            second: {},
+        },
+        enabledAspectTypes: ['Square'],
+    });
+
+    assert.deepEqual(filtered.aspects, []);
+});
+
 test('filterChartDataByViewPreferences removes hidden bodies from table house fields and special points', () => {
     const chartData = {
         planets: [

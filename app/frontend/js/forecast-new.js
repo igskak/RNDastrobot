@@ -1544,10 +1544,7 @@
 
     async function applyMatrixRows() {
         refreshViewModel();
-        state.wheel?.applyMatrixRows?.(state.matrixRows, {
-            natalMatrixRows: state.natalMatrixRows,
-            prognosticMatrixRows: state.matrixRows,
-        });
+        renderWheel();
         renderMatrixSensitivePanelData();
         applyInlineMatrixRowState();
         syncHoveredAspectToActiveSurface();

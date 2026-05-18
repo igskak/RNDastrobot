@@ -25,9 +25,10 @@ Mandatory (Definition of Done):
 - `make test` (on macOS command is a no-op with explicit skip message; on Linux runs `setest`)
 - `npm --prefix app run build:frontend`
 - `node app/scripts/check-i18n-missing-keys.cjs`
+- `node app/scripts/check-i18n-used-keys.cjs`
 - `node app/scripts/check-i18n-hardcoded-strings.cjs`
 - `node app/scripts/check-i18n-untranslated-values.cjs`
-- `node --test app/tests/test_i18n_missing_keys_checker.test.cjs app/tests/test_i18n_hardcoded_strings_checker.test.cjs app/tests/test_i18n_untranslated_values_checker.test.cjs app/tests/test_i18n_ci_wiring.test.cjs`
+- `node --test app/tests/test_i18n_missing_keys_checker.test.cjs app/tests/test_i18n_used_keys_checker.test.cjs app/tests/test_i18n_hardcoded_strings_checker.test.cjs app/tests/test_i18n_untranslated_values_checker.test.cjs app/tests/test_i18n_ci_wiring.test.cjs`
 - `node --test app/tests/test_frontend_i18n.test.cjs app/tests/test_frontend_i18n_ui.test.cjs app/tests/test_frontend_api_client.test.cjs app/tests/test_frontend_timezones.test.cjs app/tests/test_forecast_timeline_utils.test.cjs`
 - `flake8 app/utils/ephemeris.py app/i18n/context.py app/i18n/errors.py --count`
 - `mypy --follow-imports=skip app/utils/ephemeris.py app/i18n/context.py app/i18n/errors.py`
@@ -50,6 +51,7 @@ Non-gating for now (track as TODO):
 - `app/database/*`: persistence, schema, migrations, repositories.
 - `app/models/*`: request/response/domain schemas.
 - `app/frontend/*`: UI only; backend logic must not be duplicated here.
+- Generated artifacts must not be edited manually: change frontend sources under `app/frontend/js`, `app/frontend/entries`, `app/frontend/entries-css`, `app/frontend/css` and then rebuild bundles; treat `app/frontend/js/bundles/**`, `app/frontend/bundles/**`, and compiled `swisseph/bin/**` as build outputs.
 - Avoid circular imports between `api`, `services`, and `database`.
 
 ## Database and Migrations
@@ -65,6 +67,7 @@ Non-gating for now (track as TODO):
 
 ## UX, i18n, a11y
 - No hardcoded user-facing strings in frontend/backend responses; use i18n catalogs and existing checkers.
+- When changing UI copy or locale catalogs, keep the keyspace lean: remove dead keys or justify them, and run the used-key checker together with the other i18n gates.
 - For every new async UI flow, define and implement states: loading, empty, error.
 - Ensure keyboard focus is visible and interactive elements are semantic (`button`, `label`, `aria-*` when needed).
 - Default UI convention for astrology objects: render the icon without inline text label; reveal the object name on hover/tooltip instead of placing text next to the icon unless the screen explicitly requires a textual list/table view.
