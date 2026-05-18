@@ -554,6 +554,7 @@
       "nav": {
         "forecast": "Прогноз",
         "home": "На головну",
+        "solar": "Соляр",
         "synastry": "Синастрія",
         "tables": "Таблиці"
       },
@@ -872,6 +873,7 @@
         "notes": "Нотатки",
         "statistics": "Статистика",
         "relatedPeople": "Його люди",
+        "solarReturns": "Збережені соляри",
         "keyInsights": "Ключові інсайти",
         "consultations": "Історія зустрічей",
         "recordings": "Записи дзвінків"
@@ -895,6 +897,16 @@
       },
       "recordings": {
         "empty": "Записів дзвінків ще немає."
+      },
+      "solar": {
+        "defaultName": "Соляр {year}",
+        "empty": "Збережених солярів ще немає. Розрахуйте соляр один раз, і він з'явиться тут.",
+        "namePrompt": "Назва соляра",
+        "open": "Відкрити",
+        "openFailed": "Не вдалося відкрити соляр",
+        "rename": "Перейменувати",
+        "renameFailed": "Не вдалося перейменувати соляр",
+        "renamed": "Назву соляра збережено"
       },
       "related": {
         "add": "Додати людину",
@@ -1121,6 +1133,8 @@
         },
         "loading": "Завантаження соляру...",
         "locationPlaceholder": "Місто для соляру",
+        "nameLabel": "Назва",
+        "namePlaceholder": "Назва соляру",
         "orientation": "Орієнтація",
         "orientationAries": "Овен 0°",
         "orientationAsc": "Асцендент",

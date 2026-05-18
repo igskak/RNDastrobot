@@ -711,6 +711,7 @@ class SolarReturnRequest(BaseModel):
     """Запрос на расчёт соляра"""
     user_id: UUID = Field(..., description="UUID пользователя с сохранённой натальной картой")
     year: int = Field(..., ge=1900, le=2100, description="Год соляра")
+    name: Optional[str] = Field(None, max_length=160, description="Название сохранённого соляра")
 
     # Место соляра (опционально, по умолчанию = место рождения)
     location_latitude: Optional[float] = Field(None, ge=-90, le=90, description="Широта места соляра")
@@ -762,6 +763,7 @@ class SolarBirthData(BaseModel):
 class SolarReturnResponse(BaseModel):
     """Полный ответ с соларной картой"""
     solar_id: Optional[UUID] = None
+    name: Optional[str] = None
     solar_info: SolarInfo
     birth_data: SolarBirthData
     planets: List[PlanetPosition]
@@ -773,6 +775,7 @@ class SolarReturnResponse(BaseModel):
 class SolarReturnListItem(BaseModel):
     """Элемент списка соляров"""
     solar_id: Optional[str] = None
+    name: Optional[str] = None
     year: int
     solar_datetime: Optional[str] = None
     location_name: Optional[str] = None
@@ -782,3 +785,16 @@ class SolarReturnListResponse(BaseModel):
     """Список соляров пользователя"""
     user_id: UUID
     solar_returns: List[SolarReturnListItem]
+
+
+class SolarReturnUpdateRequest(BaseModel):
+    """Обновление метаданных сохранённого соляра"""
+    name: Optional[str] = Field(None, max_length=160, description="Название сохранённого соляра")
+
+    @field_validator('name')
+    @classmethod
+    def normalize_name(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        normalized = v.strip()
+        return normalized or None

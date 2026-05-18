@@ -321,6 +321,62 @@
     margin-bottom: 0;
 }
 
+/* ── Saved Solar Returns ────────────────────────────────────────────────── */
+
+.profile-solar-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.profile-solar-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 16px;
+    border: 1px solid rgba(30, 58, 95, 0.08);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.58);
+}
+
+.profile-solar-main {
+    min-width: 0;
+}
+
+.profile-solar-name {
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.profile-solar-meta {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.profile-solar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+    .profile-solar-card {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .profile-solar-actions {
+        justify-content: flex-start;
+    }
+}
+
 /* ── Contact ─────────────────────────────────────────────────────────────── */
 
 .profile-contact-list {

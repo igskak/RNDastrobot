@@ -116,7 +116,8 @@ class SolarReturnService:
         location_source_id: Optional[str] = None,
         location_timezone: Optional[str] = None,
         house_system: str = 'P',
-        save_to_db: bool = True
+        save_to_db: bool = True,
+        name: Optional[str] = None,
     ) -> Dict:
         """
         Рассчитать соларную карту для пользователя
@@ -207,7 +208,8 @@ class SolarReturnService:
         
         # 10. Сохранить в БД если нужно
         if save_to_db:
-            result['solar_id'] = str(self._save_solar_return(user_id, year, result))
+            result['solar_id'] = str(self._save_solar_return(user_id, year, result, name=name))
+            result['name'] = self._normalize_solar_name(name)
 
         return result
 
@@ -309,7 +311,12 @@ class SolarReturnService:
         payload['aspects'] = AspectService(self.db).annotate_aspects_with_phase(payload['aspects'], objects)
         return payload
 
-    def _save_solar_return(self, user_id: UUID, year: int, result: Dict) -> UUID:
+    @staticmethod
+    def _normalize_solar_name(name: Optional[str]) -> Optional[str]:
+        normalized = str(name or '').strip()
+        return normalized[:160] or None
+
+    def _save_solar_return(self, user_id: UUID, year: int, result: Dict, *, name: Optional[str] = None) -> UUID:
         """Сохранить соляр в БД"""
         import json
 
@@ -320,6 +327,7 @@ class SolarReturnService:
         ).first()
 
         solar_info = result['solar_info']
+        solar_name = self._normalize_solar_name(name)
 
         if existing:
             # Обновляем существующий
@@ -331,6 +339,8 @@ class SolarReturnService:
             existing.location_lon = Decimal(str(solar_info['location']['longitude']))
             existing.location_name = solar_info['location']['name']
             existing.house_system = solar_info['house_system']
+            if solar_name is not None:
+                existing.name = solar_name
             existing.chart_data = json.dumps(result)
             solar_id = existing.solar_id
         else:
@@ -346,6 +356,7 @@ class SolarReturnService:
                 location_lon=Decimal(str(solar_info['location']['longitude'])),
                 location_name=solar_info['location']['name'],
                 house_system=solar_info['house_system'],
+                name=solar_name,
                 chart_data=json.dumps(result)
             )
             self.db.add(solar_return)
@@ -366,11 +377,33 @@ class SolarReturnService:
         ).first()
 
         if solar and solar.chart_data:
-            payload = json.loads(solar.chart_data)
+            payload = json.loads(solar.chart_data) if isinstance(solar.chart_data, str) else dict(solar.chart_data)
             payload['solar_id'] = str(solar.solar_id)
+            payload['name'] = solar.name
             payload['planets'] = self._enrich_motion_flags(payload.get('planets', []), user_id=user_id)
             return self._annotate_payload_aspects_with_phase(payload)
         return None
+
+    def get_solar_return_by_id(self, solar_id: UUID) -> Optional[SolarReturn]:
+        """Получить запись соляра по ID."""
+        return self.db.query(SolarReturn).filter(SolarReturn.solar_id == solar_id).first()
+
+    def rename_solar_return(self, solar_id: UUID, name: Optional[str]) -> Optional[Dict]:
+        """Переименовать сохранённый соляр и вернуть обновлённый элемент списка."""
+        solar = self.get_solar_return_by_id(solar_id)
+        if not solar:
+            return None
+
+        solar.name = self._normalize_solar_name(name)
+        self.db.commit()
+        self.db.refresh(solar)
+        return {
+            'solar_id': str(solar.solar_id),
+            'name': solar.name,
+            'year': solar.year,
+            'solar_datetime': solar.solar_datetime.isoformat() if solar.solar_datetime else None,
+            'location_name': solar.location_name,
+        }
 
     def list_solar_returns(self, user_id: UUID) -> List[Dict]:
         """Получить список всех соляров пользователя"""
@@ -381,6 +414,7 @@ class SolarReturnService:
         return [
             {
                 'solar_id': str(s.solar_id),
+                'name': s.name,
                 'year': s.year,
                 'solar_datetime': s.solar_datetime.isoformat() if s.solar_datetime else None,
                 'location_name': s.location_name,

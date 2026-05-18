@@ -873,6 +873,7 @@ class SolarReturn(Base):
     solar_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
     year = Column(Integer, nullable=False)  # Год соляра
+    name = Column(String(160))  # Пользовательское название соляра
 
     # Момент соляра
     solar_datetime = Column(DateTime(timezone=True), nullable=False)  # Точный момент возврата Солнца

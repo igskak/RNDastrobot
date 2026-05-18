@@ -10,6 +10,7 @@ from app.models.schemas import (
     SolarReturnResponse,
     SolarReturnListResponse,
     SolarReturnListItem,
+    SolarReturnUpdateRequest,
     ErrorResponse,
 )
 from app.database.connection import get_db
@@ -70,7 +71,8 @@ def calculate_solar_return(
             location_source_id=request.location_source_id,
             location_timezone=request.location_timezone,
             house_system=request.house_system,
-            save_to_db=request.save_to_db
+            save_to_db=request.save_to_db,
+            name=request.name,
         )
         
         return result
@@ -163,4 +165,39 @@ def list_solar_returns(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Ошибка получения списка соляров: {str(e)}"
+        )
+
+
+@router.patch(
+    "/{solar_id}",
+    response_model=SolarReturnListItem,
+    status_code=status.HTTP_200_OK,
+    summary="Переименовать сохранённый соляр",
+    description="Обновляет пользовательское название сохранённого соляра",
+)
+def update_solar_return(
+    solar_id: UUID,
+    payload: SolarReturnUpdateRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+) -> SolarReturnListItem:
+    try:
+        solar_service = SolarReturnService(db_session=db, ephe_path=EPHE_PATH)
+        solar = solar_service.get_solar_return_by_id(solar_id)
+        if not solar:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Соляр не найден")
+
+        ensure_client_access(db, request, auth, solar.user_id, action="client.solar.update")
+        updated = solar_service.rename_solar_return(solar_id, payload.name)
+        if not updated:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Соляр не найден")
+        return SolarReturnListItem(**updated)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка обновления соляра: {str(e)}"
         )

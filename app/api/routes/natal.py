@@ -38,7 +38,7 @@ from app.services.natal_chart_service import NatalChartService
 from app.services.preferences_service import PreferencesService
 from app.database.connection import get_db
 from app.database.repositories.user_repository import UserRepository
-from app.database.models import User, Consultation, CallSession
+from app.database.models import User, Consultation, CallSession, SolarReturn
 from app.api.routes.call_session_utils import TERMINAL_CALL_SESSION_STATUSES
 from app.auth.dependencies import AuthContext, create_audit_event, ensure_client_access, require_auth
 from app.utils.ephemeris import get_ephemeris_path
@@ -631,6 +631,13 @@ def get_user_profile(
             .all()
         )
 
+        solar_returns = (
+            db.query(SolarReturn)
+            .filter(SolarReturn.user_id == user_id)
+            .order_by(SolarReturn.year.desc(), SolarReturn.created_at.desc().nullslast())
+            .all()
+        )
+
         # Stats
         total = len(consultations)
         completed = sum(1 for c in consultations if c.status == 'completed')
@@ -721,6 +728,17 @@ def get_user_profile(
                     "created_at": cs.created_at.isoformat() if cs.created_at else None,
                 }
                 for cs in call_sessions
+            ],
+            "solar_returns": [
+                {
+                    "solar_id": str(s.solar_id),
+                    "name": s.name,
+                    "year": s.year,
+                    "solar_datetime": s.solar_datetime.isoformat() if s.solar_datetime else None,
+                    "location_name": s.location_name,
+                    "created_at": s.created_at.isoformat() if s.created_at else None,
+                }
+                for s in solar_returns
             ],
             "aggregated_key_points": aggregated_key_points,
         }

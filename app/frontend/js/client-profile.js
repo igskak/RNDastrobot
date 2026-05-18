@@ -161,6 +161,8 @@ function cacheElements() {
     refs.relatedPeopleEmpty  = document.getElementById('relatedPeopleEmpty');
     refs.addRelatedPersonBtn = document.getElementById('addRelatedPersonBtn');
     refs.linkExistingPersonBtn = document.getElementById('linkExistingPersonBtn');
+    refs.solarReturnsList    = document.getElementById('solarReturnsList');
+    refs.solarReturnsEmpty   = document.getElementById('solarReturnsEmpty');
     refs.consultationsList   = document.getElementById('consultationsList');
     refs.consultationsEmpty  = document.getElementById('consultationsEmpty');
     refs.filterTabs          = document.getElementById('consultationFilterTabs');
@@ -270,6 +272,19 @@ function bindPageEvents() {
         }
     });
 
+    refs.solarReturnsList?.addEventListener('click', async (e) => {
+        const openBtn = e.target.closest('[data-action="open-solar-return"]');
+        if (openBtn) {
+            await openSavedSolarReturn(openBtn.dataset.solarYear);
+            return;
+        }
+
+        const renameBtn = e.target.closest('[data-action="rename-solar-return"]');
+        if (renameBtn) {
+            await renameSavedSolarReturn(renameBtn.dataset.solarId);
+        }
+    });
+
     document.addEventListener('frontend:locale-changed', () => {
         if (profileData) renderAll(profileData);
         relatedPeoplePicker?.refreshLocale?.();
@@ -320,6 +335,7 @@ function renderAll(data) {
     renderContact(data.user);
     renderStats(data.stats);
     renderRelatedPeople(relatedPeople);
+    renderSolarReturns(data.solar_returns || []);
     renderInsights(data.aggregated_key_points);
     renderConsultations();
     renderRecordings(data.call_sessions);
@@ -465,6 +481,130 @@ function renderRelatedPeople(items) {
             </article>
         `;
     }).join('');
+}
+
+function getSolarReturnTitle(solar) {
+    return solar?.name || t('page.clientProfile.solar.defaultName', { year: solar?.year || '' });
+}
+
+function renderSolarReturns(items) {
+    if (!refs.solarReturnsList || !refs.solarReturnsEmpty) return;
+
+    if (!items || items.length === 0) {
+        refs.solarReturnsList.innerHTML = '';
+        refs.solarReturnsEmpty.classList.remove('hidden');
+        return;
+    }
+
+    refs.solarReturnsEmpty.classList.add('hidden');
+    refs.solarReturnsList.innerHTML = items.map((solar) => {
+        const dateStr = solar.solar_datetime ? formatDateTime(solar.solar_datetime) : '';
+        const meta = [
+            solar.year,
+            solar.location_name,
+            dateStr,
+        ].filter(Boolean).join(' · ');
+
+        return `
+            <article class="profile-solar-card">
+                <div class="profile-solar-main">
+                    <h3 class="profile-solar-name">${escapeHtml(getSolarReturnTitle(solar))}</h3>
+                    <p class="profile-solar-meta">${escapeHtml(meta || t('common.notAvailable'))}</p>
+                </div>
+                <div class="profile-solar-actions">
+                    <button class="btn-new btn-sm" type="button" data-action="open-solar-return" data-solar-year="${escapeHtml(solar.year)}">${escapeHtml(t('page.clientProfile.solar.open'))}</button>
+                    <button class="btn-logout btn-sm" type="button" data-action="rename-solar-return" data-solar-id="${escapeHtml(solar.solar_id)}">${escapeHtml(t('page.clientProfile.solar.rename'))}</button>
+                </div>
+            </article>`;
+    }).join('');
+}
+
+async function renameSavedSolarReturn(solarId) {
+    if (!solarId || !profileData) return;
+    const solar = (profileData.solar_returns || []).find((item) => String(item.solar_id) === String(solarId));
+    const currentName = solar?.name || '';
+    const nextName = window.prompt(t('page.clientProfile.solar.namePrompt'), currentName);
+    if (nextName === null) return;
+
+    try {
+        const res = await apiFetch(`${API_BASE}/solar/${encodeURIComponent(solarId)}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: nextName }),
+        });
+        if (!res.ok) {
+            const detail = await res.json().catch(() => ({}));
+            throw new Error(detail.detail || t('page.clientProfile.solar.renameFailed'));
+        }
+        showToast(t('page.clientProfile.solar.renamed'), 'success');
+        await loadProfile();
+    } catch (err) {
+        showToast(t('common.errorWithMessage', { message: err.message }), 'error');
+    }
+}
+
+async function openSavedSolarReturn(year) {
+    if (!year) return;
+    try {
+        const [natalRes, solarRes] = await Promise.all([
+            apiFetch(`${API_BASE}/natal/${userId}`),
+            apiFetch(`${API_BASE}/solar/${userId}/${encodeURIComponent(year)}`),
+        ]);
+        if (!natalRes.ok) throw new Error(t('page.clients.errors.chartNotFound'));
+        if (!solarRes.ok) throw new Error(t('page.clientProfile.solar.openFailed'));
+
+        const natalData = await natalRes.json();
+        const solarData = await solarRes.json();
+        window.AstroAPI.saveChartToSession(natalData);
+        window.AstroAPI.saveFormData(window.AstroAPI.chartToFormData(natalData));
+        window.AstroAPI.saveNavigationState?.({
+            sourceView: 'client-profile',
+            sourceUrl: window.AstroAPI.buildClientProfileUrl?.(userId) || `/client/${encodeURIComponent(userId)}`,
+            clientUserId: String(userId),
+            partnerUserId: null,
+        });
+
+        const storage = window.ForecastStateStorage;
+        const storageKey = storage?.buildStorageKey?.(natalData);
+        const solarInfo = solarData.solar_info || {};
+        const location = solarInfo.location || {};
+        if (storage && storageKey) {
+            const payload = storage.buildPersistedState({
+                natalData,
+                state: {
+                    currentTab: 'solar',
+                    hasCalculatedState: true,
+                    solarPanelTab: 'solar-planets-list',
+                    solarCalculatedYear: solarInfo.year || Number.parseInt(year, 10),
+                    cachedData: {
+                        solarData,
+                        solarCalculatedYear: solarInfo.year || Number.parseInt(year, 10),
+                    },
+                },
+                controls: {
+                    solarYear: String(solarInfo.year || year),
+                },
+            });
+            if (payload) {
+                sessionStorage.setItem(storageKey, JSON.stringify(payload));
+            }
+        }
+
+        if (Number.isFinite(Number(location.latitude)) && Number.isFinite(Number(location.longitude))) {
+            localStorage.setItem('forecastSolarLocation', JSON.stringify({
+                name: location.name || '',
+                lat: Number(location.latitude),
+                lon: Number(location.longitude),
+                sourceId: '',
+                timezone: solarInfo.timezone || '',
+            }));
+        }
+
+        window.showPageLoader?.();
+        window.location.href = '/solar.html';
+    } catch (err) {
+        showToast(t('common.errorWithMessage', { message: err.message }), 'error');
+    }
 }
 
 function initRelatedPeoplePicker() {

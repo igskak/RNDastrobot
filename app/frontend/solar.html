@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="page.forecast.title"></title>
-    <link rel="stylesheet" href="bundles/forecast.bundle.css?v=b677ee4a0737">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=b677ee4a0737">
+    <title data-i18n="page.forecast.tabs.solar"></title>
+    <link rel="stylesheet" href="bundles/solar.bundle.css?v=e96e8fa31339">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=e96e8fa31339">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = 'b677ee4a0737';</script>
+    <script>window.__APP_BUILD_ID__ = 'e96e8fa31339';</script>
 </head>
-<body class="forecast-page">
+<body class="forecast-page solar-page">
     <div class="page-loader" id="pageLoader">
         <div class="pl-spinner"></div>
         <div class="pl-text" data-i18n="common.loading"></div>
@@ -21,7 +21,7 @@
         <a href="chart.html" class="back-btn-compact" data-i18n-aria-label="common.back" data-i18n-title="common.back">←</a>
         <div class="header-title">
             <svg class="header-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1.5L9.6 6.2H14.5L10.6 9.1L12.1 13.8L8 11L3.9 13.8L5.4 9.1L1.5 6.2H6.4Z"/></svg>
-            <span class="header-title-text" data-i18n="page.forecast.header.title"></span>
+            <span class="header-title-text" data-i18n="page.forecast.tabs.solar"></span>
             <div class="header-subtitle" id="headerSubtitle"></div>
         </div>
         <a href="/" class="help-btn" data-i18n="page.chart.nav.home"></a>
@@ -547,7 +547,7 @@
     <div class="timeline-tooltip" id="timelineTooltip"></div>
     <div id="forecastToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/forecast.bundle.js?v=b677ee4a0737"></script>
-    <script src="js/locale-switcher.js?v=b677ee4a0737"></script>
+        <script type="module" src="js/bundles/solar.bundle.js?v=e96e8fa31339"></script>
+    <script src="js/locale-switcher.js?v=e96e8fa31339"></script>
 </body>
 </html>

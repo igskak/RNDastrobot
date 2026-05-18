@@ -284,6 +284,7 @@ const FORECAST_PERSIST_WATCH_IDS = new Set([
     'endDate',
     'singleDate',
     'solarYear',
+    'solarName',
     'filterMajor',
     'biwheelStepSelect',
     'bwDirectionTypeSelect',
@@ -1983,7 +1984,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     // Deep-link: if URL has tab/date params, skip state restoration to avoid
     // the restored state overriding the requested date.
-    const hasDeepLink = new URLSearchParams(window.location.search).has('tab');
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasDeepLink = urlParams.has('tab');
+    const isSolarPage = document.body?.classList?.contains('solar-page');
+
+    if (isSolarPage && !hasDeepLink) {
+        const restoredState = restoreForecastStateSnapshot();
+        bindForecastStatePersistence();
+        if (restoredState?.currentTab === 'solar' && restoredState?.cachedData?.solarData) {
+            await hydrateForecastStateSnapshot(restoredState);
+            renderForecastSummary();
+            return;
+        }
+        activateForecastTab('solar', { render: false });
+        fillSolarLocationFromNatalBirthData();
+        try {
+            await calculateSolar();
+        } catch (err) {
+            console.error('Solar page initial load failed:', err);
+            showState('solar', 'empty');
+        }
+        renderForecastSummary();
+        return;
+    }
 
     if (!hasDeepLink) {
         const restoredState = restoreForecastStateSnapshot();
@@ -2027,18 +2050,7 @@ async function handleForecastDeepLink() {
         const solarYearEl = document.getElementById('solarYear');
         if (solarYearEl) solarYearEl.value = solarYear;
 
-        // Pre-fill birth location as default solar location if not already set
-        const latEl = document.getElementById('solarLocationLat');
-        const lonEl = document.getElementById('solarLocationLon');
-        const nameEl = document.getElementById('solarLocationName');
-        const tzEl = document.getElementById('solarLocationTimezone');
-        if (latEl && !latEl.value && ForecastState.natalData?.birth_data) {
-            const bd = ForecastState.natalData.birth_data;
-            latEl.value = bd.latitude ?? '';
-            if (lonEl) lonEl.value = bd.longitude ?? '';
-            if (nameEl) nameEl.value = bd.place ?? '';
-            if (tzEl) tzEl.value = bd.timezone ?? '';
-        }
+        fillSolarLocationFromNatalBirthData();
 
         try {
             await calculateSolar();
@@ -3417,11 +3429,39 @@ function restoreSolarLocationFromStorage() {
     }
 }
 
+function fillSolarLocationFromNatalBirthData({ overwrite = false } = {}) {
+    const birthData = ForecastState.natalData?.birth_data;
+    if (!birthData) return;
+
+    const latEl = document.getElementById('solarLocationLat');
+    const lonEl = document.getElementById('solarLocationLon');
+    const nameEl = document.getElementById('solarLocationName');
+    const tzEl = document.getElementById('solarLocationTimezone');
+    const coordsEl = document.getElementById('solarCoordsDisplay');
+    if (!latEl || !lonEl || !nameEl || !tzEl) return;
+
+    if (!overwrite && (latEl.value || lonEl.value || nameEl.value)) return;
+
+    latEl.value = birthData.latitude ?? '';
+    lonEl.value = birthData.longitude ?? '';
+    nameEl.value = birthData.place ?? '';
+    tzEl.value = birthData.timezone ?? '';
+
+    const lat = Number.parseFloat(latEl.value);
+    const lon = Number.parseFloat(lonEl.value);
+    if (coordsEl) {
+        coordsEl.textContent = Number.isFinite(lat) && Number.isFinite(lon)
+            ? `(${lat.toFixed(2)}°, ${lon.toFixed(2)}°)`
+            : '';
+    }
+}
+
 function updateControlsVisibility() {
     const tab = ForecastState.currentTab;
     const dateRange = document.getElementById('dateRangeGroup');
     const singleDate = document.getElementById('singleDateGroup');
     const solarYear = document.getElementById('solarYearGroup');
+    const solarName = document.getElementById('solarNameGroup');
     const solarOrientation = document.getElementById('solarOrientationGroup');
     const solarLocation = document.getElementById('solarLocationGroup');
     const biwheelTimeControls = document.getElementById('biwheelTimeControls');
@@ -3431,11 +3471,13 @@ function updateControlsVisibility() {
     dateRange.style.display = 'none';
     singleDate.style.display = 'none';
     solarYear.style.display = 'none';
+    solarName.style.display = 'none';
     solarOrientation.style.display = 'none';
     solarLocation.style.display = 'none';
 
     if (tab === 'solar') {
         solarYear.style.display = '';
+        solarName.style.display = '';
         solarOrientation.style.display = '';
         solarLocation.style.display = '';
     } else if (!isFocusBiwheel && (tab === 'timeline' || tab === 'biwheel' || tab === 'table')) {
@@ -4168,6 +4210,8 @@ async function calculateSolar() {
         year: year,
         save_to_db: true,
     };
+    const solarName = document.getElementById('solarName')?.value?.trim();
+    if (solarName) payload.name = solarName;
 
     const lat = parseFloat(document.getElementById('solarLocationLat').value);
     const lon = parseFloat(document.getElementById('solarLocationLon').value);
