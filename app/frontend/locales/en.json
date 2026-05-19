@@ -479,11 +479,11 @@
           "noMainRulers": "Main rulers are not defined."
         },
         "jonesKicker": "Jones pattern",
-        "mainKicker": "Chain result",
+        "mainKicker": "Houses and links",
         "mainTitle": "Main rulers",
         "modalClose": "Close diagram",
-        "modalTitle": "Dispositor chains",
-        "modeLabel": "Scheme",
+        "modalTitle": "Dispositor scheme",
+        "modeLabel": "Mode",
         "openSchema": "Open chain diagram"
       },
       "chat": {

@@ -479,11 +479,11 @@
           "noMainRulers": "Главные управители не определены."
         },
         "jonesKicker": "Фигура Джонса",
-        "mainKicker": "Итог цепочек",
+        "mainKicker": "Дома и связи",
         "mainTitle": "Главные управители",
         "modalClose": "Закрыть схему",
-        "modalTitle": "Цепочка диспозиторов",
-        "modeLabel": "Схема",
+        "modalTitle": "Схема диспозиторов",
+        "modeLabel": "Режим",
         "openSchema": "Открыть схему цепочек"
       },
       "chat": {

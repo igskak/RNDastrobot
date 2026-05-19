@@ -1675,6 +1675,88 @@ input[type="number"] {
     font-size: 11px;
 }
 
+.dispositor-compact-diagram {
+    display: grid;
+    gap: 10px;
+}
+
+.dispositor-compact-group {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 2px 0 6px;
+    scrollbar-width: thin;
+}
+
+.dispositor-compact-graph {
+    position: relative;
+    width: max(100%, var(--graph-width));
+    min-width: var(--graph-width);
+    height: var(--graph-height);
+}
+
+.dispositor-compact-lines {
+    position: absolute;
+    inset: 0;
+    width: var(--graph-width);
+    height: var(--graph-height);
+    overflow: visible;
+    pointer-events: none;
+}
+
+.dispositor-compact-lines path {
+    fill: none;
+    stroke: rgba(26, 22, 20, 0.78);
+    stroke-width: 1.35;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.dispositor-compact-lines marker path {
+    fill: rgba(26, 22, 20, 0.82);
+    stroke: none;
+}
+
+.dispositor-compact-mutual {
+    stroke-width: 1.25;
+}
+
+.dispositor-compact-node {
+    position: absolute;
+    z-index: 2;
+    display: grid;
+    grid-template-rows: 25px 15px;
+    align-items: start;
+    justify-items: center;
+    width: 34px;
+    min-height: 42px;
+    color: var(--text-primary);
+}
+
+.dispositor-compact-symbol {
+    display: inline-grid;
+    place-items: center;
+    width: 30px;
+    height: 25px;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.dispositor-compact-node--main .dispositor-compact-symbol {
+    color: var(--accent);
+}
+
+.dispositor-house-label {
+    display: block;
+    max-width: 54px;
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.05;
+    text-align: center;
+    white-space: nowrap;
+}
+
 .dispositor-open-modal-btn {
     width: 100%;
     margin-top: 14px;

@@ -466,9 +466,14 @@ select:focus {
 }
 
 .clients-table tbody tr {
+    position: relative;
     border-bottom: 1px solid rgba(30, 58, 95, 0.08);
     transition: background var(--transition), transform var(--transition);
     cursor: pointer;
+}
+
+.clients-table tbody tr.dropdown-open {
+    z-index: 30;
 }
 
 .clients-table tbody tr:last-child {
@@ -886,6 +891,8 @@ select:focus {
 
     .client-cell-actions {
         grid-area: actions;
+        position: relative;
+        z-index: 1;
     }
 
     .client-name-cell {

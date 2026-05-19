@@ -11,6 +11,7 @@
         'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto',
         'Chiron', 'Proserpina',
     ];
+    const COMPACT_SCHEME_BODY_ORDER = BODY_ORDER.slice(0, 10);
     const OPPOSITE_SIGN = Object.fromEntries(SIGN_ORDER.map((sign, index) => [
         sign,
         SIGN_ORDER[(index + 6) % 12],
@@ -248,6 +249,372 @@
         `;
     }
 
+    function sortPlanets(items) {
+        return [...new Set(items)].sort((a, b) => {
+            const ar = BODY_ORDER.indexOf(a);
+            const br = BODY_ORDER.indexOf(b);
+            return (ar === -1 ? 999 : ar) - (br === -1 ? 999 : br);
+        });
+    }
+
+    function canonicalFinalKey(planets) {
+        return sortPlanets(planets).join('+');
+    }
+
+    function getHouseNumber(house) {
+        const value = house?.number ?? house?.house_number;
+        const numeric = Number(value);
+        return Number.isInteger(numeric) ? numeric : value;
+    }
+
+    function formatHouseList(houses) {
+        const values = [...new Set(houses)]
+            .map((value) => Number(value))
+            .filter((value) => Number.isInteger(value))
+            .sort((a, b) => a - b);
+        if (!values.length) return '';
+        return window.Symbols?.formatHouseList?.(values, { style: 'roman', separator: ',' })
+            || values.map((value) => {
+                const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+                return roman[value - 1] || String(value);
+            }).join(',');
+    }
+
+    function getHouseRuler(house, mode, dignities) {
+        if (mode === 'domicile' && house?.ruler_planet) {
+            return normalizeBodyName(house.ruler_planet);
+        }
+        return normalizeBodyName(getRulerForSign(house?.sign, mode, dignities));
+    }
+
+    function buildHouseDispositorScheme(chartData, mode) {
+        const dignities = getMergedDignities();
+        const planets = getRenderablePlanets(chartData);
+        const planetByName = new Map(planets.map((planet) => [planet.name, planet]));
+        const houses = Array.isArray(chartData?.houses) ? chartData.houses : [];
+        const housesByRuler = new Map();
+        const startPlanets = [];
+
+        houses.forEach((house) => {
+            const ruler = getHouseRuler(house, mode, dignities);
+            const houseNumber = getHouseNumber(house);
+            if (!ruler || !houseNumber) return;
+            if (!housesByRuler.has(ruler)) housesByRuler.set(ruler, []);
+            housesByRuler.get(ruler).push(houseNumber);
+            startPlanets.push(ruler);
+        });
+
+        planets.forEach((planet) => {
+            if (COMPACT_SCHEME_BODY_ORDER.includes(planet.name)) {
+                startPlanets.push(planet.name);
+            }
+        });
+
+        const chains = sortPlanets(startPlanets).map((startPlanet) => {
+            const steps = [];
+            const seen = new Map();
+            let current = planetByName.get(startPlanet) || { name: startPlanet, sign: null, retrograde: false };
+            let finalKey = null;
+            let cycle = [];
+
+            while (current?.name && !seen.has(current.name)) {
+                seen.set(current.name, steps.length);
+                const ruler = current.sign ? getRulerForSign(current.sign, mode, dignities) : null;
+                steps.push({
+                    planet: current.name,
+                    sign: current.sign,
+                    ruler,
+                    retrograde: Boolean(current.retrograde),
+                });
+
+                if (!ruler) {
+                    finalKey = current.name;
+                    break;
+                }
+                if (!planetByName.has(ruler)) {
+                    finalKey = ruler;
+                    break;
+                }
+                if (ruler === current.name) {
+                    finalKey = ruler;
+                    break;
+                }
+                current = planetByName.get(ruler);
+            }
+
+            if (!finalKey && current?.name && seen.has(current.name)) {
+                const cycleStart = seen.get(current.name);
+                cycle = steps.slice(cycleStart).map((step) => step.planet);
+                finalKey = canonicalFinalKey(cycle);
+            }
+
+            return { start: startPlanet, steps, finalKey, cycle };
+        });
+
+        return { chains, housesByRuler };
+    }
+
+    function renderCompactNode(node, housesByRuler, extraClass = '') {
+        const houseLabel = formatHouseList(housesByRuler.get(node.planet) || []);
+        const label = [
+            getPlanetName(node.planet),
+            node.sign ? signLabel(node.sign) : '',
+            houseLabel ? `${t('common.house')} ${houseLabel}` : '',
+        ].filter(Boolean).join(' · ');
+        return `
+            <span
+                class="dispositor-compact-node ${extraClass}"
+                style="left:${node.x}px; top:${node.y}px;"
+                title="${escapeHtml(label)}"
+                aria-label="${escapeHtml(label)}"
+            >
+                <span class="dispositor-compact-symbol">${planetSymbol(node.planet, 24)}</span>
+                ${node.retrograde ? '<span class="dispositor-node-retro">r</span>' : ''}
+                ${houseLabel ? `<span class="dispositor-house-label">${escapeHtml(houseLabel)}</span>` : ''}
+            </span>
+        `;
+    }
+
+    function renderCompactDiagram(chains, housesByRuler) {
+        const uniqueChains = [];
+        const seen = new Set();
+
+        chains.forEach((chain) => {
+            const signature = chain.steps.map((step) => step.planet).join('>');
+            if (seen.has(signature)) return;
+            seen.add(signature);
+            uniqueChains.push(chain);
+        });
+
+        if (!uniqueChains.length) {
+            return `<p class="dispositor-empty">${escapeHtml(t('page.chart.rulers.empty.noChains'))}</p>`;
+        }
+
+        const groups = new Map();
+        uniqueChains.forEach((chain) => {
+            const key = chain.finalKey || 'none';
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key).push(chain);
+        });
+
+        const sortedGroups = [...groups.entries()].sort((a, b) => {
+            const aSize = new Set(a[1].flatMap((chain) => chain.steps.map((step) => step.planet))).size;
+            const bSize = new Set(b[1].flatMap((chain) => chain.steps.map((step) => step.planet))).size;
+            return aSize - bSize || String(a[0]).localeCompare(String(b[0]));
+        });
+
+        return `
+            <div class="dispositor-compact-diagram">
+                ${sortedGroups.map(([key, groupChains], index) => {
+                    const layout = buildCompactLayout(key, groupChains);
+                    return `
+                        <section class="dispositor-compact-group" aria-label="${escapeHtml(t('page.chart.rulers.modalTitle'))} ${index + 1}">
+                            <div class="dispositor-compact-graph" style="--graph-width:${layout.width}px; --graph-height:${layout.height}px;">
+                                <svg class="dispositor-compact-lines" viewBox="0 0 ${layout.width} ${layout.height}" aria-hidden="true">
+                                    <defs>
+                                        <marker id="dispositorCompactArrow${index}" markerWidth="5" markerHeight="5" refX="4.5" refY="2.5" orient="auto-start-reverse" markerUnits="strokeWidth">
+                                            <path d="M0,0 L5,2.5 L0,5 Z"></path>
+                                        </marker>
+                                    </defs>
+                                    ${layout.edges.map((edge) => `
+                                        <path d="${escapeHtml(edge.path)}" marker-end="url(#dispositorCompactArrow${index})"></path>
+                                    `).join('')}
+                                    ${layout.mutualEdges.map((edge) => `
+                                        <path class="dispositor-compact-mutual" d="${escapeHtml(edge.path)}" marker-start="url(#dispositorCompactArrow${index})" marker-end="url(#dispositorCompactArrow${index})"></path>
+                                    `).join('')}
+                                </svg>
+                                ${layout.nodes.map((node) => renderCompactNode(node, housesByRuler, node.isRoot ? 'dispositor-compact-node--main' : '')).join('')}
+                            </div>
+                        </section>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    }
+
+    function buildCompactLayout(finalKey, groupChains) {
+        const nodeWidth = 34;
+        const nodeHeight = 44;
+        const xGap = 44;
+        const yGap = 54;
+        const cycleGap = 46;
+        const pad = 8;
+        const rootPlanets = finalKey && finalKey !== 'none' ? finalKey.split('+').filter(Boolean) : [];
+        const nodes = new Map();
+        const edges = [];
+        const edgeKeys = new Set();
+
+        const ensureNode = (planet, source = {}) => {
+            if (!planet) return null;
+            const existing = nodes.get(planet) || { planet, sign: null, retrograde: false };
+            nodes.set(planet, {
+                ...existing,
+                sign: existing.sign || source.sign || null,
+                retrograde: existing.retrograde || Boolean(source.retrograde),
+            });
+            return nodes.get(planet);
+        };
+
+        const addEdge = (childStep, parentStep) => {
+            const child = childStep?.planet;
+            const parent = parentStep?.planet;
+            if (!child || !parent || child === parent) return;
+            ensureNode(child, childStep);
+            ensureNode(parent, parentStep);
+            const key = `${child}->${parent}`;
+            if (edgeKeys.has(key)) return;
+            edgeKeys.add(key);
+            edges.push({ child, parent });
+        };
+
+        groupChains.forEach((chain) => {
+            chain.steps.forEach((step) => ensureNode(step.planet, step));
+            for (let index = 0; index < chain.steps.length; index += 1) {
+                const step = chain.steps[index];
+                const nextStep = chain.steps[index + 1];
+                if (nextStep) {
+                    addEdge(step, nextStep);
+                } else if (step?.ruler && !chain.steps.some((candidate) => candidate.planet === step.ruler)) {
+                    addEdge(step, { planet: step.ruler });
+                }
+            }
+        });
+
+        const roots = rootPlanets.length ? sortPlanets(rootPlanets) : sortPlanets([...nodes.keys()].filter((planet) => (
+            !edges.some((edge) => edge.child === planet)
+        )));
+        if (!roots.length && nodes.size) roots.push([...nodes.keys()][0]);
+        const rootSet = new Set(roots);
+        const childrenByParent = new Map();
+        const mutualEdges = [];
+        const normalEdges = [];
+
+        edges.forEach((edge) => {
+            if (rootSet.has(edge.child) && rootSet.has(edge.parent)) {
+                const key = sortPlanets([edge.child, edge.parent]).join('<->');
+                if (!mutualEdges.some((item) => item.key === key)) {
+                    mutualEdges.push({ ...edge, key });
+                }
+                return;
+            }
+            normalEdges.push(edge);
+            if (!childrenByParent.has(edge.parent)) childrenByParent.set(edge.parent, []);
+            childrenByParent.get(edge.parent).push(edge.child);
+        });
+        childrenByParent.forEach((children, parent) => {
+            childrenByParent.set(parent, sortPlanets(children));
+        });
+
+        const positions = new Map();
+        const layoutTree = (root, side, rootX) => {
+            let nextY = pad;
+            const place = (planet, depth = 0, visiting = new Set()) => {
+                if (positions.has(planet)) return positions.get(planet);
+                if (visiting.has(planet)) {
+                    const fallback = { x: rootX + side * depth * xGap, y: nextY };
+                    nextY += yGap;
+                    positions.set(planet, fallback);
+                    return fallback;
+                }
+                visiting.add(planet);
+                const children = (childrenByParent.get(planet) || []).filter((child) => !rootSet.has(child));
+                let y;
+                if (!children.length) {
+                    y = nextY;
+                    nextY += yGap;
+                } else {
+                    const childPositions = children.map((child) => place(child, depth + 1, new Set(visiting)));
+                    y = (Math.min(...childPositions.map((item) => item.y)) + Math.max(...childPositions.map((item) => item.y))) / 2;
+                }
+                visiting.delete(planet);
+                const position = { x: rootX + side * depth * xGap, y };
+                positions.set(planet, position);
+                return position;
+            };
+
+            const rootPosition = place(root, 0);
+            return { rootPosition, height: nextY };
+        };
+
+        if (roots.length === 2) {
+            const leftRoot = roots[0];
+            const rightRoot = roots[1];
+            const left = layoutTree(leftRoot, -1, 0);
+            const right = layoutTree(rightRoot, 1, cycleGap);
+            const targetY = Math.max(left.rootPosition.y, right.rootPosition.y);
+            const shiftBranch = (root, delta) => {
+                const stack = [root];
+                const visited = new Set();
+                while (stack.length) {
+                    const planet = stack.pop();
+                    if (!planet || visited.has(planet)) continue;
+                    visited.add(planet);
+                    const position = positions.get(planet);
+                    if (position) position.y += delta;
+                    (childrenByParent.get(planet) || []).forEach((child) => {
+                        if (!rootSet.has(child)) stack.push(child);
+                    });
+                }
+            };
+            shiftBranch(leftRoot, targetY - left.rootPosition.y);
+            shiftBranch(rightRoot, targetY - right.rootPosition.y);
+        } else {
+            roots.forEach((root, index) => {
+                const result = layoutTree(root, -1, index * (yGap * 2));
+                const offset = index === 0 ? 0 : index * (yGap * 2) - result.rootPosition.y;
+                if (!offset) return;
+                positions.forEach((position, planet) => {
+                    if (planet === root || (childrenByParent.get(root) || []).includes(planet)) position.y += offset;
+                });
+            });
+        }
+
+        nodes.forEach((_node, planet) => {
+            if (!positions.has(planet)) {
+                positions.set(planet, { x: 0, y: pad + positions.size * yGap });
+            }
+        });
+
+        const minX = Math.min(...[...positions.values()].map((position) => position.x));
+        const minY = Math.min(...[...positions.values()].map((position) => position.y));
+        positions.forEach((position) => {
+            position.x = position.x - minX + pad;
+            position.y = position.y - minY + pad;
+        });
+
+        const positionedNodes = [...nodes.values()].map((node) => ({
+            ...node,
+            isRoot: rootSet.has(node.planet),
+            ...(positions.get(node.planet) || { x: pad, y: pad }),
+        }));
+        const nodeByPlanet = new Map(positionedNodes.map((node) => [node.planet, node]));
+        const makePath = (edge) => {
+            const child = nodeByPlanet.get(edge.child);
+            const parent = nodeByPlanet.get(edge.parent);
+            if (!child || !parent) return null;
+            const arrowGap = 5;
+            const childIsLeft = child.x < parent.x;
+            const startX = childIsLeft ? child.x + nodeWidth + arrowGap : child.x - arrowGap;
+            const endX = childIsLeft ? parent.x - arrowGap : parent.x + nodeWidth + arrowGap;
+            const startY = child.y + 18;
+            const endY = parent.y + 18;
+            const midX = startX + (endX - startX) / 2;
+            return { ...edge, path: `M${startX},${startY} H${midX} V${endY} H${endX}` };
+        };
+        const connectorEdges = normalEdges.map(makePath).filter(Boolean);
+        const connectorMutualEdges = mutualEdges.map(makePath).filter(Boolean);
+        const width = Math.max(220, Math.ceil(Math.max(...positionedNodes.map((node) => node.x + nodeWidth)) + pad));
+        const height = Math.max(70, Math.ceil(Math.max(...positionedNodes.map((node) => node.y + nodeHeight)) + pad));
+
+        return {
+            width,
+            height,
+            nodes: positionedNodes,
+            edges: connectorEdges,
+            mutualEdges: connectorMutualEdges,
+        };
+    }
+
     function renderDiagram(chains) {
         const uniqueChains = [];
         const seen = new Set();
@@ -365,11 +732,6 @@
         }
         if (!rootSet.size && nodes.size) rootSet.add([...nodes.keys()][0]);
 
-        const sortPlanets = (items) => [...new Set(items)].sort((a, b) => {
-            const ar = BODY_ORDER.indexOf(a);
-            const br = BODY_ORDER.indexOf(b);
-            return (ar === -1 ? 999 : ar) - (br === -1 ? 999 : br);
-        });
         childrenByParent.forEach((children, parent) => {
             childrenByParent.set(parent, sortPlanets(children));
         });
@@ -529,9 +891,8 @@
             : containerOrId;
         if (!container) return;
 
-        const existingMode = container.querySelector('.dispositor-mode-tab.active')?.dataset?.dispositorMode;
-        const mode = existingMode || options.mode || 'domicile';
-        const { chains, mainRulers } = buildChains(chartData, mode);
+        const mode = options.mode || 'domicile';
+        const { chains, housesByRuler } = buildHouseDispositorScheme(chartData, mode);
 
         container.innerHTML = `
             <div class="dispositor-panel">
@@ -540,26 +901,13 @@
                     <div class="dispositor-section-head">
                         <div>
                             <span class="dispositor-card-kicker">${escapeHtml(t('page.chart.rulers.mainKicker'))}</span>
-                            <h4>${escapeHtml(t('page.chart.rulers.mainTitle'))}</h4>
+                            <h4>${escapeHtml(t('page.chart.rulers.modalTitle'))}</h4>
                         </div>
                     </div>
-                    ${renderModeTabs(mode)}
-                    ${renderMainRulers(mainRulers)}
-                    <button type="button" class="dispositor-open-modal-btn" data-dispositor-open-modal>
-                        ${escapeHtml(t('page.chart.rulers.openSchema'))}
-                    </button>
+                    ${renderCompactDiagram(chains, housesByRuler)}
                 </div>
             </div>
         `;
-
-        container.querySelectorAll('.dispositor-mode-tab[data-dispositor-mode]').forEach((button) => {
-            button.addEventListener('click', () => {
-                render(container, chartData, { ...options, mode: button.dataset.dispositorMode || mode });
-            });
-        });
-        container.querySelector('[data-dispositor-open-modal]')?.addEventListener('click', () => {
-            openModal(chartData, options, container.querySelector('.dispositor-mode-tab.active')?.dataset?.dispositorMode || mode);
-        });
     }
 
     window.DispositorChains = {

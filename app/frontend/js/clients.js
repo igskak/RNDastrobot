@@ -160,6 +160,7 @@ function bindEvents() {
             const isOpen = dropdown.classList.contains('open');
             closeAllDropdowns();
             if (!isOpen) {
+                toggleBtn.closest('tr[data-user-id]')?.classList.add('dropdown-open');
                 dropdown.classList.add('open');
                 toggleBtn.classList.add('open');
                 toggleBtn.setAttribute('aria-expanded', 'true');
@@ -357,6 +358,7 @@ function renderUsers() {
 
 function closeAllDropdowns() {
     document.querySelectorAll('.actions-dropdown.open').forEach((d) => d.classList.remove('open'));
+    document.querySelectorAll('.clients-table tbody tr.dropdown-open').forEach((row) => row.classList.remove('dropdown-open'));
     document.querySelectorAll('.btn-actions.open, .btn-actions[aria-expanded="true"]').forEach((button) => {
         button.classList.remove('open');
         button.setAttribute('aria-expanded', 'false');
