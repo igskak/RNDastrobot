@@ -210,6 +210,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             this.drawZodiac();
             const rings = this.buildRings(viewModel);
             this.rings = rings;
+            this.bodyColorByName = this.buildBodyColorMap(rings);
             rings.forEach((ring) => this.drawRingScaffold(ring));
             rings.forEach((ring) => this.drawHouses(ring));
             this.drawRingBoundaries(rings);
@@ -935,10 +936,34 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
         }
 
         getBodyColor(body, fallback) {
+            const normalizedName = this.normalizeBodyName(body?.name);
+            if (this.bodyColorByName?.has(normalizedName)) {
+                return this.bodyColorByName.get(normalizedName);
+            }
             const element = body?.element || Symbols?.signElements?.[body?.sign];
             return window.AstroPreferences?.getPlanetColor
                 ? window.AstroPreferences.getPlanetColor(body?.name, element, this.visualPreferences)
                 : fallback;
+        }
+
+        buildBodyColorMap(rings = []) {
+            const colorByName = new Map();
+            const orderedRings = [
+                ...rings.filter((ring) => ring?.method === 'natal'),
+                ...rings.filter((ring) => ring?.method !== 'natal'),
+            ];
+            orderedRings.forEach((ring) => {
+                (ring?.bodies || []).forEach((body) => {
+                    const normalizedName = this.normalizeBodyName(body?.name);
+                    if (!normalizedName || colorByName.has(normalizedName)) return;
+                    const element = body?.element || Symbols?.signElements?.[body?.sign];
+                    const color = window.AstroPreferences?.getPlanetColor
+                        ? window.AstroPreferences.getPlanetColor(body?.name, element, this.visualPreferences)
+                        : '#374151';
+                    colorByName.set(normalizedName, color);
+                });
+            });
+            return colorByName;
         }
 
         longToAngle(longitude) {

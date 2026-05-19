@@ -2252,6 +2252,7 @@
             showAspectText: state.pageSettings.showAspectText === true,
             angleAscDscBold: state.pageSettings.angleAscDscBold,
             angleMcIcBold: state.pageSettings.angleMcIcBold,
+            visualPreferences: window.AstroPreferences?.getAccountVisualPreferences?.() || window.accountPreferencesCache?.visual || null,
         });
         state.wheel.render(viewModel);
         applyHoveredAspectFocus();

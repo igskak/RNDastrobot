@@ -122,6 +122,20 @@ test('resolveVisualPreferences uses chart-default element palette', () => {
     assert.equal(visual.timezone_label_format, 'UTC');
 });
 
+test('getPlanetColor resolves body override aliases', () => {
+    const visual = preferences.resolveVisualPreferences({
+        planet_colors: {
+            body_overrides: {
+                TrueNode: '#123456',
+                PartOfFortune: '#abcdef',
+            },
+        },
+    });
+
+    assert.equal(preferences.getPlanetColor('TrueNorthNode', 'Fire', visual), '#123456');
+    assert.equal(preferences.getPlanetColor('Fortune', 'Water', visual), '#abcdef');
+});
+
 test('resolveVisualPreferences normalizes timezone label format', () => {
     assert.equal(preferences.resolveVisualPreferences({ timezone_label_format: 'gmt' }).timezone_label_format, 'GMT');
     assert.equal(preferences.resolveVisualPreferences({ timezone_label_format: 'utc' }).timezone_label_format, 'UTC');

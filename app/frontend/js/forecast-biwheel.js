@@ -105,7 +105,6 @@
     const WHEEL_GAP = 0;
     const DEFAULT_WHEEL_BAND_WIDTH =
         (SIGN_INNER_R - ASPECT_R - (WHEEL_INSET * 2) - (WHEEL_GAP * (WHEEL_ORDER.length - 1))) / WHEEL_ORDER.length;
-    const PROGNOSTIC_GLYPH_COLOR = '#111111';
     const PLANET_LEADER_COLOR = '#9ca3af';
     const WHEEL_SEPARATOR_COLOR = '#94a3b8';
     const WHEEL_SEPARATOR_WIDTH = 0.9;
@@ -227,6 +226,7 @@
     let ingressesAvailable = false;
     let natalRetrogradeMap = new Map();
     let layerRetrogradeMaps = new Map();
+    let bodyColorByName = new Map();
     let wheelBandsByMethod = new Map();
     let wheelBandWidth = DEFAULT_WHEEL_BAND_WIDTH;
     let layoutAnimationTimer = null;
@@ -257,9 +257,35 @@
     }
 
     function getBodyColor(bodyName, element, defaultColor = '#374151') {
+        const normalizedBodyName = normalizeBodyNameForColor(bodyName);
+        if (bodyColorByName.has(normalizedBodyName)) {
+            return bodyColorByName.get(normalizedBodyName);
+        }
         return window.AstroPreferences?.getPlanetColor
             ? window.AstroPreferences.getPlanetColor(bodyName, element, visualPreferences)
             : (element ? (ELEMENT_COLORS[element] || defaultColor) : defaultColor);
+    }
+
+    function normalizeBodyNameForColor(bodyName) {
+        return window.AstroPreferences?.normalizeMatrixBodyName
+            ? window.AstroPreferences.normalizeMatrixBodyName(bodyName)
+            : (Symbols?.normalizeBodyName?.(bodyName) || bodyName);
+    }
+
+    function buildBodyColorMap(natalPlanets = [], layers = []) {
+        const colorMap = new Map();
+        const addBody = (body) => {
+            const normalizedBodyName = normalizeBodyNameForColor(body?.name);
+            if (!normalizedBodyName || colorMap.has(normalizedBodyName)) return;
+            const element = body?.element || Symbols?.signElements?.[body?.sign];
+            const color = window.AstroPreferences?.getPlanetColor
+                ? window.AstroPreferences.getPlanetColor(body?.name, element, visualPreferences)
+                : (element ? (ELEMENT_COLORS[element] || '#374151') : '#374151');
+            colorMap.set(normalizedBodyName, color);
+        };
+        (natalPlanets || []).forEach(addBody);
+        (layers || []).forEach((layer) => (layer?.planets || []).forEach(addBody));
+        return colorMap;
     }
 
     function getBodyMatrixConfig(name) {
@@ -715,6 +741,7 @@
         ascLong = natalData.angles?.ASC?.longitude || 0;
 
         const layers = buildPrognosticLayers(progData);
+        bodyColorByName = buildBodyColorMap(natalData?.planets || [], layers);
         updateWheelLayout(layers);
         applyBiwheelContainerState(layers);
         natalRetrogradeMap = buildRetrogradeMap(natalData?.planets || []);
@@ -1226,9 +1253,9 @@
             const leaderEnd = getLeaderLineEndPoint(exactPoint, p, leaderTargetRadius, 2.2);
             const element = Symbols?.signElements?.[planet.sign];
             const isNatal = layerType === 'natal';
-            const color = isNatal
-                ? (colorByElement ? getBodyColor(planet.name, element, defaultColor) : defaultColor)
-                : PROGNOSTIC_GLYPH_COLOR;
+            const color = colorByElement || !isNatal
+                ? getBodyColor(planet.name, element, defaultColor)
+                : defaultColor;
             const label = getPlanetName(planet.name);
             const group = el('g', {
                 class: `bw-planet-group ${isNatal ? 'bw-natal-planet' : 'bw-prog-planet'}`,

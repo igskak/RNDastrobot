@@ -584,7 +584,9 @@
 
     function getPlanetColor(bodyName, element = null, visual = null) {
         const resolved = visual ? resolveVisualPreferences(visual) : accountVisualPreferences;
-        const bodyOverride = resolved?.planet_colors?.body_overrides?.[bodyName];
+        const normalizedBodyName = normalizeMatrixBodyName(bodyName);
+        const bodyOverrides = resolved?.planet_colors?.body_overrides || {};
+        const bodyOverride = bodyOverrides?.[normalizedBodyName] || bodyOverrides?.[bodyName];
         if (bodyOverride) return bodyOverride;
         return getElementColor(element, resolved);
     }
