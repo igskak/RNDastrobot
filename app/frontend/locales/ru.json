@@ -484,6 +484,18 @@
         "modalClose": "Закрыть схему",
         "modalTitle": "Схема диспозиторов",
         "modeLabel": "Режим",
+        "chainModes": {
+          "detriment": "Изгнание",
+          "domicile": "Диспозиция",
+          "exaltation": "Экзальтация",
+          "fall": "Падение"
+        },
+        "options": {
+          "arrowDirection": "Направление стрелок",
+          "chainType": "Тип цепочки",
+          "classicalRulers": "Классические управители",
+          "houseRulers": "Управители домов"
+        },
         "openSchema": "Открыть схему цепочек"
       },
       "chat": {

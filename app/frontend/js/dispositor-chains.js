@@ -12,6 +12,27 @@
         'Chiron', 'Proserpina',
     ];
     const COMPACT_SCHEME_BODY_ORDER = BODY_ORDER.slice(0, 10);
+    const DISPLAY_OPTIONS_STORAGE_KEY = 'dispositorChainDisplayOptions';
+    const DEFAULT_DISPLAY_OPTIONS = {
+        mode: 'domicile',
+        showArrowDirection: true,
+        showHouseRulers: true,
+        classicalRulers: false,
+    };
+    const CLASSICAL_RULERS = {
+        Aries: 'Mars',
+        Taurus: 'Venus',
+        Gemini: 'Mercury',
+        Cancer: 'Moon',
+        Leo: 'Sun',
+        Virgo: 'Mercury',
+        Libra: 'Venus',
+        Scorpio: 'Mars',
+        Sagittarius: 'Jupiter',
+        Capricorn: 'Saturn',
+        Aquarius: 'Saturn',
+        Pisces: 'Jupiter',
+    };
     const OPPOSITE_SIGN = Object.fromEntries(SIGN_ORDER.map((sign, index) => [
         sign,
         SIGN_ORDER[(index + 6) % 12],
@@ -105,6 +126,17 @@
         if (mode === 'detriment') return opposite.ruler || null;
         if (mode === 'fall') return opposite.exaltation || null;
         return entry.ruler || null;
+    }
+
+    function getDisplayRulerForSign(sign, mode, dignities, displayOptions = DEFAULT_DISPLAY_OPTIONS) {
+        if (!sign) return null;
+        if (displayOptions.classicalRulers && mode === 'domicile') {
+            return CLASSICAL_RULERS[sign] || getRulerForSign(sign, mode, dignities);
+        }
+        if (displayOptions.classicalRulers && mode === 'detriment') {
+            return CLASSICAL_RULERS[OPPOSITE_SIGN[sign]] || getRulerForSign(sign, mode, dignities);
+        }
+        return getRulerForSign(sign, mode, dignities);
     }
 
     function getRenderablePlanets(chartData) {
@@ -280,14 +312,14 @@
             }).join(',');
     }
 
-    function getHouseRuler(house, mode, dignities) {
-        if (mode === 'domicile' && house?.ruler_planet) {
+    function getHouseRuler(house, mode, dignities, displayOptions = DEFAULT_DISPLAY_OPTIONS) {
+        if (mode === 'domicile' && house?.ruler_planet && !displayOptions.classicalRulers) {
             return normalizeBodyName(house.ruler_planet);
         }
-        return normalizeBodyName(getRulerForSign(house?.sign, mode, dignities));
+        return normalizeBodyName(getDisplayRulerForSign(house?.sign, mode, dignities, displayOptions));
     }
 
-    function buildHouseDispositorScheme(chartData, mode) {
+    function buildHouseDispositorScheme(chartData, mode, displayOptions = DEFAULT_DISPLAY_OPTIONS) {
         const dignities = getMergedDignities();
         const planets = getRenderablePlanets(chartData);
         const planetByName = new Map(planets.map((planet) => [planet.name, planet]));
@@ -296,7 +328,7 @@
         const startPlanets = [];
 
         houses.forEach((house) => {
-            const ruler = getHouseRuler(house, mode, dignities);
+            const ruler = getHouseRuler(house, mode, dignities, displayOptions);
             const houseNumber = getHouseNumber(house);
             if (!ruler || !houseNumber) return;
             if (!housesByRuler.has(ruler)) housesByRuler.set(ruler, []);
@@ -319,7 +351,9 @@
 
             while (current?.name && !seen.has(current.name)) {
                 seen.set(current.name, steps.length);
-                const ruler = current.sign ? getRulerForSign(current.sign, mode, dignities) : null;
+                const ruler = current.sign
+                    ? getDisplayRulerForSign(current.sign, mode, dignities, displayOptions)
+                    : null;
                 steps.push({
                     planet: current.name,
                     sign: current.sign,
@@ -354,8 +388,8 @@
         return { chains, housesByRuler };
     }
 
-    function renderCompactNode(node, housesByRuler, extraClass = '') {
-        const houseLabel = formatHouseList(housesByRuler.get(node.planet) || []);
+    function renderCompactNode(node, housesByRuler, displayOptions, extraClass = '') {
+        const houseLabel = displayOptions.showHouseRulers ? formatHouseList(housesByRuler.get(node.planet) || []) : '';
         const label = [
             getPlanetName(node.planet),
             node.sign ? signLabel(node.sign) : '',
@@ -375,7 +409,7 @@
         `;
     }
 
-    function renderCompactDiagram(chains, housesByRuler) {
+    function renderCompactDiagram(chains, housesByRuler, displayOptions) {
         const uniqueChains = [];
         const seen = new Set();
 
@@ -407,6 +441,11 @@
             <div class="dispositor-compact-diagram">
                 ${sortedGroups.map(([key, groupChains], index) => {
                     const layout = buildCompactLayout(key, groupChains);
+                    const markerRef = `url(#dispositorCompactArrow${index})`;
+                    const markerEnd = displayOptions.showArrowDirection ? ` marker-end="${markerRef}"` : '';
+                    const mutualMarkers = displayOptions.showArrowDirection
+                        ? ` marker-start="${markerRef}" marker-end="${markerRef}"`
+                        : '';
                     return `
                         <section class="dispositor-compact-group" aria-label="${escapeHtml(t('page.chart.rulers.modalTitle'))} ${index + 1}">
                             <div class="dispositor-compact-graph" style="--graph-width:${layout.width}px; --graph-height:${layout.height}px;">
@@ -417,13 +456,13 @@
                                         </marker>
                                     </defs>
                                     ${layout.edges.map((edge) => `
-                                        <path d="${escapeHtml(edge.path)}" marker-end="url(#dispositorCompactArrow${index})"></path>
+                                        <path d="${escapeHtml(edge.path)}"${markerEnd}></path>
                                     `).join('')}
                                     ${layout.mutualEdges.map((edge) => `
-                                        <path class="dispositor-compact-mutual" d="${escapeHtml(edge.path)}" marker-start="url(#dispositorCompactArrow${index})" marker-end="url(#dispositorCompactArrow${index})"></path>
+                                        <path class="dispositor-compact-mutual" d="${escapeHtml(edge.path)}"${mutualMarkers}></path>
                                     `).join('')}
                                 </svg>
-                                ${layout.nodes.map((node) => renderCompactNode(node, housesByRuler, node.isRoot ? 'dispositor-compact-node--main' : '')).join('')}
+                                ${layout.nodes.map((node) => renderCompactNode(node, housesByRuler, displayOptions, node.isRoot ? 'dispositor-compact-node--main' : '')).join('')}
                             </div>
                         </section>
                     `;
@@ -827,7 +866,7 @@
     }
 
     function renderModeTabs(mode) {
-        const modes = ['domicile', 'exaltation', 'fall', 'detriment'];
+        const modes = ['domicile', 'exaltation', 'detriment', 'fall'];
         return `
             <div class="dispositor-mode-tabs" role="tablist" aria-label="${escapeHtml(t('page.chart.rulers.modeLabel'))}">
                 ${modes.map((item) => `
@@ -839,6 +878,88 @@
                         aria-selected="${item === mode ? 'true' : 'false'}"
                     >${escapeHtml(t(`astro.dignity.${item}`))}</button>
                 `).join('')}
+            </div>
+        `;
+    }
+
+    function normalizeDisplayMode(value) {
+        return ['domicile', 'exaltation', 'detriment', 'fall'].includes(value) ? value : DEFAULT_DISPLAY_OPTIONS.mode;
+    }
+
+    function readDisplayOptions(overrides = {}) {
+        let stored = {};
+        try {
+            stored = JSON.parse(window.localStorage?.getItem(DISPLAY_OPTIONS_STORAGE_KEY) || '{}') || {};
+        } catch {
+            stored = {};
+        }
+        return {
+            ...DEFAULT_DISPLAY_OPTIONS,
+            mode: normalizeDisplayMode(overrides.mode || stored.mode || DEFAULT_DISPLAY_OPTIONS.mode),
+            showArrowDirection: (overrides.showArrowDirection ?? stored.showArrowDirection ?? DEFAULT_DISPLAY_OPTIONS.showArrowDirection) !== false,
+            showHouseRulers: (overrides.showHouseRulers ?? stored.showHouseRulers ?? DEFAULT_DISPLAY_OPTIONS.showHouseRulers) !== false,
+            classicalRulers: (overrides.classicalRulers ?? stored.classicalRulers ?? DEFAULT_DISPLAY_OPTIONS.classicalRulers) === true,
+        };
+    }
+
+    function saveDisplayOptions(displayOptions) {
+        try {
+            window.localStorage?.setItem(DISPLAY_OPTIONS_STORAGE_KEY, JSON.stringify(displayOptions));
+        } catch {
+            // Local storage is optional; the active render still uses the selected options.
+        }
+    }
+
+    function getCompactModeLabel(mode) {
+        const key = `page.chart.rulers.chainModes.${mode}`;
+        const label = t(key);
+        if (label !== key) return label;
+        return mode === 'domicile' ? t('page.chart.rulers.chainModes.domicile') : t(`astro.dignity.${mode}`);
+    }
+
+    function renderDisplayOptionsControl(displayOptions) {
+        const modes = ['domicile', 'exaltation', 'detriment', 'fall'];
+        return `
+            <div class="dispositor-options">
+                <button
+                    type="button"
+                    class="dispositor-options-toggle"
+                    data-dispositor-options-toggle
+                    aria-haspopup="menu"
+                    aria-expanded="false"
+                >
+                    <span>${escapeHtml(getCompactModeLabel(displayOptions.mode))}</span>
+                    <span class="dispositor-options-chevron" aria-hidden="true">⌄</span>
+                </button>
+                <div class="dispositor-options-menu hidden" data-dispositor-options-menu role="menu">
+                    <div class="dispositor-options-group" role="radiogroup" aria-label="${escapeHtml(t('page.chart.rulers.options.chainType'))}">
+                        ${modes.map((mode) => `
+                            <label class="dispositor-option-row">
+                                <input
+                                    type="radio"
+                                    name="dispositor-chain-mode"
+                                    value="${escapeHtml(mode)}"
+                                    data-dispositor-option="mode"
+                                    ${mode === displayOptions.mode ? 'checked' : ''}
+                                >
+                                <span>${escapeHtml(getCompactModeLabel(mode))}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                    <div class="dispositor-options-divider"></div>
+                    <label class="dispositor-option-row">
+                        <input type="checkbox" data-dispositor-option="showArrowDirection" ${displayOptions.showArrowDirection ? 'checked' : ''}>
+                        <span>${escapeHtml(t('page.chart.rulers.options.arrowDirection'))}</span>
+                    </label>
+                    <label class="dispositor-option-row">
+                        <input type="checkbox" data-dispositor-option="showHouseRulers" ${displayOptions.showHouseRulers ? 'checked' : ''}>
+                        <span>${escapeHtml(t('page.chart.rulers.options.houseRulers'))}</span>
+                    </label>
+                    <label class="dispositor-option-row">
+                        <input type="checkbox" data-dispositor-option="classicalRulers" ${displayOptions.classicalRulers ? 'checked' : ''}>
+                        <span>${escapeHtml(t('page.chart.rulers.options.classicalRulers'))}</span>
+                    </label>
+                </div>
             </div>
         `;
     }
@@ -891,8 +1012,8 @@
             : containerOrId;
         if (!container) return;
 
-        const mode = options.mode || 'domicile';
-        const { chains, housesByRuler } = buildHouseDispositorScheme(chartData, mode);
+        const displayOptions = readDisplayOptions(options);
+        const { chains, housesByRuler } = buildHouseDispositorScheme(chartData, displayOptions.mode, displayOptions);
 
         container.innerHTML = `
             <div class="dispositor-panel">
@@ -903,11 +1024,34 @@
                             <span class="dispositor-card-kicker">${escapeHtml(t('page.chart.rulers.mainKicker'))}</span>
                             <h4>${escapeHtml(t('page.chart.rulers.modalTitle'))}</h4>
                         </div>
+                        ${renderDisplayOptionsControl(displayOptions)}
                     </div>
-                    ${renderCompactDiagram(chains, housesByRuler)}
+                    ${renderCompactDiagram(chains, housesByRuler, displayOptions)}
                 </div>
             </div>
         `;
+
+        const toggle = container.querySelector('[data-dispositor-options-toggle]');
+        const menu = container.querySelector('[data-dispositor-options-menu]');
+        toggle?.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const isOpen = menu && !menu.classList.contains('hidden');
+            menu?.classList.toggle('hidden', isOpen);
+            toggle.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+        });
+        menu?.addEventListener('click', (event) => event.stopPropagation());
+        menu?.querySelectorAll('[data-dispositor-option]').forEach((input) => {
+            input.addEventListener('change', () => {
+                const nextOptions = { ...displayOptions };
+                if (input.dataset.dispositorOption === 'mode') {
+                    nextOptions.mode = normalizeDisplayMode(input.value);
+                } else {
+                    nextOptions[input.dataset.dispositorOption] = input.checked;
+                }
+                saveDisplayOptions(nextOptions);
+                render(container, chartData, nextOptions);
+            });
+        });
     }
 
     window.DispositorChains = {
@@ -917,6 +1061,20 @@
     };
 
     document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') closeModal();
+        if (event.key === 'Escape') {
+            closeModal();
+            document.querySelectorAll('.dispositor-options-menu').forEach((menu) => menu.classList.add('hidden'));
+            document.querySelectorAll('[data-dispositor-options-toggle][aria-expanded="true"]').forEach((toggle) => {
+                toggle.setAttribute('aria-expanded', 'false');
+            });
+        }
+    });
+
+    document.addEventListener('click', (event) => {
+        if (event.target instanceof Element && event.target.closest('.dispositor-options')) return;
+        document.querySelectorAll('.dispositor-options-menu').forEach((menu) => menu.classList.add('hidden'));
+        document.querySelectorAll('[data-dispositor-options-toggle][aria-expanded="true"]').forEach((toggle) => {
+            toggle.setAttribute('aria-expanded', 'false');
+        });
     });
 })();

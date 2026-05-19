@@ -1601,6 +1601,107 @@ input[type="number"] {
     margin-bottom: 12px;
 }
 
+.dispositor-options {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.dispositor-options-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-height: 30px;
+    max-width: 132px;
+    border: 1px solid rgba(30, 58, 95, 0.16);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.82);
+    color: var(--accent);
+    cursor: pointer;
+    padding: 6px 8px;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.1;
+    transition: background var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+
+.dispositor-options-toggle:hover,
+.dispositor-options-toggle[aria-expanded="true"] {
+    background: #fff;
+    border-color: rgba(30, 58, 95, 0.28);
+    box-shadow: 0 6px 16px rgba(26, 22, 20, 0.06);
+}
+
+.dispositor-options-toggle span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dispositor-options-chevron {
+    color: rgba(30, 58, 95, 0.58);
+    font-size: 12px;
+    line-height: 1;
+}
+
+.dispositor-options-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 20;
+    width: min(238px, calc(100vw - 34px));
+    overflow: hidden;
+    border: 1px solid rgba(30, 58, 95, 0.16);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 18px 42px rgba(26, 22, 20, 0.16);
+}
+
+.dispositor-options-group {
+    display: grid;
+}
+
+.dispositor-options-divider {
+    height: 1px;
+    background: rgba(30, 58, 95, 0.10);
+}
+
+.dispositor-option-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 40px;
+    padding: 9px 12px;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.15;
+    border-bottom: 1px solid rgba(30, 58, 95, 0.08);
+}
+
+.dispositor-option-row:last-child {
+    border-bottom: 0;
+}
+
+.dispositor-option-row:hover {
+    background: rgba(30, 58, 95, 0.05);
+}
+
+.dispositor-option-row input {
+    appearance: auto;
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    accent-color: var(--accent);
+}
+
 .dispositor-mode-tabs {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));

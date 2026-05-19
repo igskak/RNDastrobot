@@ -484,6 +484,18 @@
         "modalClose": "Close diagram",
         "modalTitle": "Dispositor scheme",
         "modeLabel": "Mode",
+        "chainModes": {
+          "detriment": "Detriment",
+          "domicile": "Disposition",
+          "exaltation": "Exaltation",
+          "fall": "Fall"
+        },
+        "options": {
+          "arrowDirection": "Arrow direction",
+          "chainType": "Chain type",
+          "classicalRulers": "Classical rulers",
+          "houseRulers": "House rulers"
+        },
         "openSchema": "Open chain diagram"
       },
       "chat": {

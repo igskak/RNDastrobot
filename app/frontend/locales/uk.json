@@ -484,6 +484,18 @@
         "modalClose": "Закрити схему",
         "modalTitle": "Схема диспозиторів",
         "modeLabel": "Режим",
+        "chainModes": {
+          "detriment": "Вигнання",
+          "domicile": "Диспозиція",
+          "exaltation": "Екзальтація",
+          "fall": "Падіння"
+        },
+        "options": {
+          "arrowDirection": "Напрямок стрілок",
+          "chainType": "Тип ланцюжка",
+          "classicalRulers": "Класичні управителі",
+          "houseRulers": "Управителі домів"
+        },
         "openSchema": "Відкрити схему ланцюжків"
       },
       "chat": {
