@@ -24,6 +24,20 @@
 
 .solar-page .forecast-controls {
     justify-content: center;
+    overflow: visible;
+    position: relative;
+    z-index: 40;
+}
+
+.solar-page #solarLocationGroup,
+.solar-page #solarLocationFields,
+.solar-page .solar-place-wrapper {
+    position: relative;
+    z-index: 45;
+}
+
+.solar-page #solarPlaceSuggestions {
+    z-index: 1000;
 }
 
 .solar-page #pane-solar {
@@ -34,4 +48,6 @@
     max-width: 1180px;
     margin-left: auto;
     margin-right: auto;
+    position: relative;
+    z-index: 1;
 }
