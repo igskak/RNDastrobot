@@ -964,6 +964,42 @@
         `;
     }
 
+    function renderCompactDispositorSection(chains, housesByRuler, displayOptions) {
+        return `
+            <div class="dispositor-section">
+                <div class="dispositor-section-head">
+                    <div>
+                        <span class="dispositor-card-kicker">${escapeHtml(t('page.chart.rulers.mainKicker'))}</span>
+                        <h4>${escapeHtml(t('page.chart.rulers.modalTitle'))}</h4>
+                    </div>
+                    ${renderDisplayOptionsControl(displayOptions)}
+                </div>
+                ${renderCompactDiagram(chains, housesByRuler, displayOptions)}
+            </div>
+        `;
+    }
+
+    function renderTabbedPanel(chartData, chains, housesByRuler, displayOptions) {
+        return `
+            <div class="dispositor-panel dispositor-panel--tabs">
+                <div class="dispositor-tabs" role="tablist" aria-label="${escapeHtml(t('page.chart.rulers.tabs.label'))}">
+                    <button type="button" class="dispositor-tab active" data-dispositor-tab="jones" role="tab" aria-selected="true">
+                        ${escapeHtml(t('page.chart.rulers.tabs.jones'))}
+                    </button>
+                    <button type="button" class="dispositor-tab" data-dispositor-tab="scheme" role="tab" aria-selected="false">
+                        ${escapeHtml(t('page.chart.rulers.tabs.scheme'))}
+                    </button>
+                </div>
+                <div class="dispositor-tab-panel active" data-dispositor-panel="jones" role="tabpanel">
+                    ${renderJonesPattern(chartData?.cosmogram_pattern)}
+                </div>
+                <div class="dispositor-tab-panel" data-dispositor-panel="scheme" role="tabpanel">
+                    ${renderCompactDispositorSection(chains, housesByRuler, displayOptions)}
+                </div>
+            </div>
+        `;
+    }
+
     function openModal(chartData, options = {}, mode = 'domicile') {
         closeModal();
         const { chains, mainRulers } = buildChains(chartData, mode);
@@ -1015,21 +1051,28 @@
         const displayOptions = readDisplayOptions(options);
         const { chains, housesByRuler } = buildHouseDispositorScheme(chartData, displayOptions.mode, displayOptions);
 
-        container.innerHTML = `
-            <div class="dispositor-panel">
-                ${renderJonesPattern(chartData?.cosmogram_pattern)}
-                <div class="dispositor-section">
-                    <div class="dispositor-section-head">
-                        <div>
-                            <span class="dispositor-card-kicker">${escapeHtml(t('page.chart.rulers.mainKicker'))}</span>
-                            <h4>${escapeHtml(t('page.chart.rulers.modalTitle'))}</h4>
-                        </div>
-                        ${renderDisplayOptionsControl(displayOptions)}
-                    </div>
-                    ${renderCompactDiagram(chains, housesByRuler, displayOptions)}
+        container.innerHTML = options.layout === 'tabs'
+            ? renderTabbedPanel(chartData, chains, housesByRuler, displayOptions)
+            : `
+                <div class="dispositor-panel">
+                    ${renderJonesPattern(chartData?.cosmogram_pattern)}
+                    ${renderCompactDispositorSection(chains, housesByRuler, displayOptions)}
                 </div>
-            </div>
-        `;
+            `;
+
+        container.querySelectorAll('[data-dispositor-tab]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const tab = button.dataset.dispositorTab;
+                container.querySelectorAll('[data-dispositor-tab]').forEach((item) => {
+                    const isActive = item.dataset.dispositorTab === tab;
+                    item.classList.toggle('active', isActive);
+                    item.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                });
+                container.querySelectorAll('[data-dispositor-panel]').forEach((panel) => {
+                    panel.classList.toggle('active', panel.dataset.dispositorPanel === tab);
+                });
+            });
+        });
 
         const toggle = container.querySelector('[data-dispositor-options-toggle]');
         const menu = container.querySelector('[data-dispositor-options-menu]');

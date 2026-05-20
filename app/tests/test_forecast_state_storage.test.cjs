@@ -49,10 +49,7 @@ test('buildPersistedState normalizes invalid forecast values', () => {
             transitMoment: 'bad-date',
             pendingBiwheelDate: '2026-03-18',
             directionType: 'wrong',
-            biwheelOrientation: 'bad',
             biwheelDisplayMode: 'natal-peek',
-            solarOrientation: 'bad',
-            solarPanelTab: 'bad',
             tableSortCol: 'bad',
             tableSortAsc: false,
             hasCalculatedState: true,
@@ -66,7 +63,6 @@ test('buildPersistedState normalizes invalid forecast values', () => {
             startDate: '2026-03-10',
             endDate: 'invalid',
             singleDate: '2026-03-18',
-            solarYear: '2201',
             filterMajor: false,
         },
     });
@@ -77,10 +73,7 @@ test('buildPersistedState normalizes invalid forecast values', () => {
     assert.equal(snapshot.transitMoment, '');
     assert.equal(snapshot.pendingBiwheelDate, '2026-03-18');
     assert.equal(snapshot.directionType, 'solar_arc');
-    assert.equal(snapshot.biwheelOrientation, 'aries');
     assert.equal(snapshot.biwheelDisplayMode, 'prognostic');
-    assert.equal(snapshot.solarOrientation, 'aries');
-    assert.equal(snapshot.solarPanelTab, 'solar-planets-list');
     assert.equal(snapshot.tableSortCol, 'date');
     assert.equal(snapshot.tableSortAsc, false);
     assert.equal(snapshot.hasCalculatedState, true);
@@ -93,7 +86,6 @@ test('buildPersistedState normalizes invalid forecast values', () => {
         startDate: '2026-03-10',
         endDate: '',
         singleDate: '2026-03-18',
-        solarYear: '',
         filterMajor: false,
     });
 });
@@ -128,7 +120,6 @@ test('parsePersistedState restores only snapshots for the same chart', () => {
             startDate: '2026-03-01',
             endDate: '2026-03-31',
             singleDate: '2026-03-18',
-            solarYear: '2026',
             filterMajor: true,
         },
     });

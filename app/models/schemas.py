@@ -770,6 +770,11 @@ class SolarReturnResponse(BaseModel):
     houses: List[HousePosition]
     angles: Dict[str, AnglePosition]
     aspects: Optional[List[AspectInfo]] = None
+    aspect_configurations: Optional[List[ConfigurationInfo]] = None
+    stelliums: Optional[List[StelliumInfo]] = None
+    cosmogram_pattern: Optional[CosmogramPatternInfo] = None
+    planet_distribution: Optional[PlanetDistributionInfo] = None
+    balances: Optional[BalancesInfo] = None
 
 
 class SolarReturnListItem(BaseModel):

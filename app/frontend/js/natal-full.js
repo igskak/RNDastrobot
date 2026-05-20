@@ -723,6 +723,7 @@ function setupReportSections() {
 function renderNatalFullRulers(data) {
     window.DispositorChains?.render?.('natalFullRulersContainer', data, {
         selectId: 'natalFullRulersModeSelect',
+        layout: 'tabs',
     });
 }
 

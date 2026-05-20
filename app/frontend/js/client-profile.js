@@ -564,34 +564,12 @@ async function openSavedSolarReturn(year) {
             partnerUserId: null,
         });
 
-        const storage = window.ForecastStateStorage;
-        const storageKey = storage?.buildStorageKey?.(natalData);
         const solarInfo = solarData.solar_info || {};
         const location = solarInfo.location || {};
-        if (storage && storageKey) {
-            const payload = storage.buildPersistedState({
-                natalData,
-                state: {
-                    currentTab: 'solar',
-                    hasCalculatedState: true,
-                    solarPanelTab: 'solar-planets-list',
-                    solarCalculatedYear: solarInfo.year || Number.parseInt(year, 10),
-                    cachedData: {
-                        solarData,
-                        solarCalculatedYear: solarInfo.year || Number.parseInt(year, 10),
-                    },
-                },
-                controls: {
-                    solarYear: String(solarInfo.year || year),
-                },
-            });
-            if (payload) {
-                sessionStorage.setItem(storageKey, JSON.stringify(payload));
-            }
-        }
+        sessionStorage.setItem('solarReturnData', JSON.stringify(solarData));
 
         if (Number.isFinite(Number(location.latitude)) && Number.isFinite(Number(location.longitude))) {
-            localStorage.setItem('forecastSolarLocation', JSON.stringify({
+            localStorage.setItem('solarLocation', JSON.stringify({
                 name: location.name || '',
                 lat: Number(location.latitude),
                 lon: Number(location.longitude),

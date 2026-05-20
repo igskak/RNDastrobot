@@ -496,6 +496,11 @@
           "classicalRulers": "Classical rulers",
           "houseRulers": "House rulers"
         },
+        "tabs": {
+          "jones": "Jones pattern",
+          "label": "Pattern and dispositors",
+          "scheme": "Dispositor scheme"
+        },
         "openSchema": "Open chain diagram"
       },
       "chat": {

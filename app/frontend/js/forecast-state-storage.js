@@ -3,11 +3,10 @@
 
     const STORAGE_PREFIX = 'forecastViewState';
     const STORAGE_VERSION = 1;
-    const VALID_TABS = ['biwheel', 'timeline', 'table', 'solar'];
+    const VALID_TABS = ['biwheel', 'timeline', 'table'];
     const VALID_SCALE_UNITS = ['day', 'week', 'month'];
     const VALID_DIRECTION_TYPES = ['solar_arc', 'symbolic', 'equatorial'];
     const VALID_BIWHEEL_DISPLAY_MODES = ['prognostic', 'natal-pinned'];
-    const VALID_SOLAR_PANEL_TABS = ['solar-planets-list', 'solar-aspects-list', 'solar-grid-list'];
     const VALID_TABLE_SORT_COLS = ['date', 'method', 'transit', 'aspect', 'natal', 'orb', 'type'];
 
     function normalizeToken(value) {
@@ -64,7 +63,6 @@
             startDate: sanitizeDateValue(source.startDate),
             endDate: sanitizeDateValue(source.endDate),
             singleDate: sanitizeDateValue(source.singleDate),
-            solarYear: sanitizeYearValue(source.solarYear),
             filterMajor: source.filterMajor !== false,
         };
     }
@@ -88,7 +86,6 @@
             pendingBiwheelDate: sanitizeDateValue(source.pendingBiwheelDate),
             directionType: pickEnum(source.directionType, VALID_DIRECTION_TYPES, 'solar_arc'),
             biwheelDisplayMode: pickEnum(source.biwheelDisplayMode, VALID_BIWHEEL_DISPLAY_MODES, 'prognostic'),
-            solarPanelTab: pickEnum(source.solarPanelTab, VALID_SOLAR_PANEL_TABS, 'solar-planets-list'),
             tableSortCol: pickEnum(source.tableSortCol, VALID_TABLE_SORT_COLS, 'date'),
             tableSortAsc: source.tableSortAsc !== false,
             hasCalculatedState: source.hasCalculatedState === true,

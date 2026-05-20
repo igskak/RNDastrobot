@@ -188,25 +188,6 @@ const ForecastState = {
     combinedBiwheelData: null,
     combinedBiwheelCache: {},
     combinedBiwheelInFlight: {},
-    solarData: null,
-    solarCache: {},
-    solarOrientation: 'aries',
-    solarAspectScope: 'all',
-    solarMatrixRows: window.AstroPreferences?.ensureMatrixRows?.({}) || {},
-    solarEnabledAspectTypes: [...FORECAST_ASPECT_TYPES],
-    solarShowApplyingSeparating: false,
-    solarShowSpeed: true,
-    solarShowStationary: true,
-    solarShowAspectText: false,
-    solarAngleAscDscBold: readSavedAngleBold(ANGLE_ASC_DSC_BOLD_STORAGE_KEY),
-    solarAngleMcIcBold: readSavedAngleBold(ANGLE_MC_IC_BOLD_STORAGE_KEY),
-    solarPointScale: 1.0,
-    solarWheel: null,
-    solarDataRenderer: null,
-    solarPanelTab: 'solar-planets-list',
-    solarHoveredAspectKey: null,
-    solarPinnedAspectKey: null,
-    solarAspectInteractionsInit: false,
     // Table data for sorting
     tableRowsRaw: [],
     tableRows: [],
@@ -222,7 +203,6 @@ const ForecastState = {
     biwheelDisplayMode: 'prognostic',
     accountPreferences: null,
     biwheelResolvedPreferences: null,
-    solarResolvedPreferences: {},
     transitScaleUnit: 'week',
     transitScalePoints: [],
     transitScaleIndex: 0,
@@ -248,7 +228,6 @@ const ForecastState = {
     progressionTargetDate: null,
     directionTargetDate: null,
     directionType: null,
-    solarCalculatedYear: null,
     tableDataKey: null,
     timezone: 'UTC',
     activeRunId: null,
@@ -265,8 +244,6 @@ const ForecastState = {
 };
 window.ForecastState = ForecastState;
 
-const SOLAR_LOCATION_STORAGE_KEY = 'forecastSolarLocation';
-const SOLAR_YEAR_STORAGE_KEY = 'forecastSolarYear';
 const DIRECTION_TYPE_STORAGE_KEY = 'forecastDirectionType';
 const INGRESS_SUMMARY_CACHE_VERSION = 'v5';
 const BIWHEEL_NATAL_SCALE_STORAGE_KEY = 'bwNatalPointScale';
@@ -283,8 +260,6 @@ const FORECAST_PERSIST_WATCH_IDS = new Set([
     'startDate',
     'endDate',
     'singleDate',
-    'solarYear',
-    'solarName',
     'filterMajor',
     'biwheelStepSelect',
     'bwDirectionTypeSelect',
@@ -371,44 +346,29 @@ function resolveForecastEnabledAspectTypes(availableAspectTypes = [], enabledAsp
 }
 
 function getForecastViewState(viewType) {
-    if (viewType === 'biwheel') {
-        return {
-            orientation: ForecastState.biwheelOrientation,
-            aspectScope: ForecastState.biwheelAspectScope,
-            matrixRows: ForecastState.biwheelMatrixRows,
-            enabledAspectTypes: ForecastState.biwheelEnabledAspectTypes,
-            showApplyingSeparating: false,
-            showSpeed: true,
-            showStationary: true,
-            showAspectText: ForecastState.biwheelShowAspectText,
-            angleAscDscBold: ForecastState.biwheelAngleAscDscBold,
-            angleMcIcBold: ForecastState.biwheelAngleMcIcBold,
-        };
-    }
-
+    if (viewType !== 'biwheel') return null;
     return {
-        orientation: ForecastState.solarOrientation,
-        aspectScope: ForecastState.solarAspectScope,
-        matrixRows: ForecastState.solarMatrixRows,
-        enabledAspectTypes: ForecastState.solarEnabledAspectTypes,
-        showApplyingSeparating: ForecastState.solarShowApplyingSeparating,
-        showSpeed: ForecastState.solarShowSpeed,
-        showStationary: ForecastState.solarShowStationary,
-        showAspectText: ForecastState.solarShowAspectText,
-        angleAscDscBold: ForecastState.solarAngleAscDscBold,
-        angleMcIcBold: ForecastState.solarAngleMcIcBold,
+        orientation: ForecastState.biwheelOrientation,
+        aspectScope: ForecastState.biwheelAspectScope,
+        matrixRows: ForecastState.biwheelMatrixRows,
+        enabledAspectTypes: ForecastState.biwheelEnabledAspectTypes,
+        showApplyingSeparating: false,
+        showSpeed: true,
+        showStationary: true,
+        showAspectText: ForecastState.biwheelShowAspectText,
+        angleAscDscBold: ForecastState.biwheelAngleAscDscBold,
+        angleMcIcBold: ForecastState.biwheelAngleMcIcBold,
     };
 }
 
 function buildResolvedForecastViewForPersistence(viewType) {
     const helpers = getForecastPreferenceHelpers();
-    const source = viewType === 'biwheel'
-        ? ForecastState.biwheelResolvedPreferences
-        : ForecastState.solarResolvedPreferences[ForecastState.solarData?.solar_id];
+    const source = viewType === 'biwheel' ? ForecastState.biwheelResolvedPreferences : null;
     const normalized = helpers.normalizeViewSettings
         ? helpers.normalizeViewSettings(source?.resolved || {})
         : (source?.resolved || {});
     const state = getForecastViewState(viewType);
+    if (!state) return normalized;
     return {
         ...normalized,
         matrix: {
@@ -499,30 +459,9 @@ function syncForecastOrientationControls() {
     const biwheelOrientationSelect = document.getElementById('biwheelOrientationSelect');
     if (biwheelOrientationSelect) biwheelOrientationSelect.value = ForecastState.biwheelOrientation;
 
-    const solarOrientationSelect = document.getElementById('solarOrientationSelect');
-    if (solarOrientationSelect) solarOrientationSelect.value = ForecastState.solarOrientation;
-
-    const solarOrientationSelectModal = document.getElementById('solarOrientationSelectModal');
-    if (solarOrientationSelectModal) solarOrientationSelectModal.value = ForecastState.solarOrientation;
-
     const bwAspectScopeSelect = document.getElementById('bwAspectScopeSelect');
     if (bwAspectScopeSelect) bwAspectScopeSelect.value = ForecastState.biwheelAspectScope;
 
-    const solarAspectScopeSelect = document.getElementById('solarAspectScopeSelect');
-    if (solarAspectScopeSelect) solarAspectScopeSelect.value = ForecastState.solarAspectScope;
-
-    const solarShowApplyingSeparatingToggle = document.getElementById('solarShowApplyingSeparatingToggle');
-    if (solarShowApplyingSeparatingToggle) {
-        solarShowApplyingSeparatingToggle.checked = ForecastState.solarShowApplyingSeparating === true;
-    }
-    const solarShowSpeedToggle = document.getElementById('solarShowSpeedToggle');
-    if (solarShowSpeedToggle) {
-        solarShowSpeedToggle.checked = ForecastState.solarShowSpeed !== false;
-    }
-    const solarShowStationaryToggle = document.getElementById('solarShowStationaryToggle');
-    if (solarShowStationaryToggle) {
-        solarShowStationaryToggle.checked = ForecastState.solarShowStationary !== false;
-    }
     const bwAngleAscDscBoldToggle = document.getElementById('bwAngleAscDscBoldToggle');
     if (bwAngleAscDscBoldToggle) {
         bwAngleAscDscBoldToggle.checked = ForecastState.biwheelAngleAscDscBold !== false;
@@ -531,19 +470,8 @@ function syncForecastOrientationControls() {
     if (bwAngleMcIcBoldToggle) {
         bwAngleMcIcBoldToggle.checked = ForecastState.biwheelAngleMcIcBold !== false;
     }
-    const solarAngleAscDscBoldToggle = document.getElementById('solarAngleAscDscBoldToggle');
-    if (solarAngleAscDscBoldToggle) {
-        solarAngleAscDscBoldToggle.checked = ForecastState.solarAngleAscDscBold !== false;
-    }
-    const solarAngleMcIcBoldToggle = document.getElementById('solarAngleMcIcBoldToggle');
-    if (solarAngleMcIcBoldToggle) {
-        solarAngleMcIcBoldToggle.checked = ForecastState.solarAngleMcIcBold !== false;
-    }
-
     renderForecastMatrixEditor('bwMatrixEditor', ForecastState.biwheelMatrixRows);
     renderForecastAspectTypeToggles('bwAspectTypeToggles', ForecastState.biwheelEnabledAspectTypes, ForecastState.biwheelAspectScope);
-    renderForecastMatrixEditor('solarMatrixEditor', ForecastState.solarMatrixRows);
-    renderForecastAspectTypeToggles('solarAspectTypeToggles', ForecastState.solarEnabledAspectTypes, ForecastState.solarAspectScope);
 }
 
 function readForecastMatrixRowsFromContainer(containerId, fallbackRows = {}) {
@@ -609,85 +537,6 @@ async function applyBiwheelSettingsFromControls({ persist = true } = {}) {
     }
 }
 
-async function applySolarSettingsFromControls({ persist = true } = {}) {
-    const modalOrientation = document.getElementById('solarOrientationSelectModal')?.value;
-    if (modalOrientation) {
-        ForecastState.solarOrientation = modalOrientation === 'asc' ? 'asc' : 'aries';
-    }
-    ForecastState.solarAspectScope = document.getElementById('solarAspectScopeSelect')?.value || ForecastState.solarAspectScope || 'all';
-    ForecastState.solarMatrixRows = readForecastMatrixRowsFromContainer('solarMatrixEditor', ForecastState.solarMatrixRows);
-    const nextSolarAspectTypes = readForecastAspectTypesFromContainer('solarAspectTypeToggles', ForecastState.solarEnabledAspectTypes);
-    ForecastState.solarEnabledAspectTypes = window.AstroPreferences?.healEnabledAspectTypesForScope
-        ? window.AstroPreferences.healEnabledAspectTypesForScope(
-            nextSolarAspectTypes,
-            ForecastState.solarAspectScope,
-            FORECAST_ASPECT_TYPES,
-        )
-        : nextSolarAspectTypes;
-    ForecastState.solarShowApplyingSeparating = document.getElementById('solarShowApplyingSeparatingToggle')?.checked === true;
-    ForecastState.solarShowSpeed = document.getElementById('solarShowSpeedToggle')?.checked !== false;
-    ForecastState.solarShowStationary = document.getElementById('solarShowStationaryToggle')?.checked !== false;
-    ForecastState.solarAngleAscDscBold = document.getElementById('solarAngleAscDscBoldToggle')?.checked !== false;
-    ForecastState.solarAngleMcIcBold = document.getElementById('solarAngleMcIcBoldToggle')?.checked !== false;
-    localStorage.setItem(ANGLE_ASC_DSC_BOLD_STORAGE_KEY, ForecastState.solarAngleAscDscBold ? 'true' : 'false');
-    localStorage.setItem(ANGLE_MC_IC_BOLD_STORAGE_KEY, ForecastState.solarAngleMcIcBold ? 'true' : 'false');
-
-    syncForecastOrientationControls();
-    if (ForecastState.solarData) {
-        renderSolar(ForecastState.solarData);
-    }
-
-    if (persist) {
-        try {
-            await persistForecastViewOverride('solar');
-        } catch (error) {
-            console.warn('Failed to persist solar settings:', error);
-        }
-    }
-}
-
-function getFilteredSolarViewData(data) {
-    const enrichedData = window.AstroAspectPhase?.enrichChartDataWithAspectPhases
-        ? window.AstroAspectPhase.enrichChartDataWithAspectPhases(data)
-        : data;
-    const rows = ensureForecastMatrixRows(ForecastState.solarMatrixRows);
-    const visibleBodies = new Set();
-    const aspectingBodies = new Set();
-    Object.entries(rows).forEach(([body, config]) => {
-        if (config?.display !== false) visibleBodies.add(body);
-        if (config?.aspecting !== false) aspectingBodies.add(body);
-    });
-    const scope = ForecastState.solarAspectScope || 'all';
-    const availableAspectTypes = (Array.isArray(enrichedData?.aspects) ? enrichedData.aspects : [])
-        .map((aspect) => aspect?.aspect_type)
-        .filter(Boolean);
-    const enabledAspectTypes = resolveForecastEnabledAspectTypes(
-        availableAspectTypes,
-        ForecastState.solarEnabledAspectTypes,
-        scope,
-    );
-
-    return {
-        planets: (Array.isArray(enrichedData?.planets) ? enrichedData.planets : []).filter((planet) => {
-            const name = normalizeForecastBodyName(planet.name);
-            return !rows[name] || visibleBodies.has(name);
-        }),
-        houses: Array.isArray(enrichedData?.houses) ? enrichedData.houses : [],
-        angles: enrichedData?.angles || {},
-        aspects: (Array.isArray(enrichedData?.aspects) ? enrichedData.aspects : []).filter((aspect) => {
-            const left = normalizeForecastBodyName(aspect.planet_1);
-            const right = normalizeForecastBodyName(aspect.planet_2);
-            if ((!rows[left] || visibleBodies.has(left)) === false) return false;
-            if ((!rows[right] || visibleBodies.has(right)) === false) return false;
-            if ((!rows[left] || aspectingBodies.has(left)) === false) return false;
-            if ((!rows[right] || aspectingBodies.has(right)) === false) return false;
-            if (scope === 'major' && !aspect.is_major) return false;
-            if (scope === 'minor' && aspect.is_major) return false;
-            return enabledAspectTypes.has(aspect.aspect_type);
-        }),
-    };
-}
-
 function readLegacyForecastOrientationState() {
     const storageApi = getForecastStorageApi();
     const storageKey = storageApi?.buildStorageKey?.(ForecastState.natalData);
@@ -706,14 +555,6 @@ function updateLocalForecastResolved(viewType, resolved, overrides) {
             resolved,
             overrides: overrides || {},
         };
-        return;
-    }
-    if (viewType === 'solar' && ForecastState.solarData?.solar_id) {
-        ForecastState.solarResolvedPreferences[ForecastState.solarData.solar_id] = {
-            ...(ForecastState.solarResolvedPreferences[ForecastState.solarData.solar_id] || {}),
-            resolved,
-            overrides: overrides || {},
-        };
     }
 }
 
@@ -722,13 +563,12 @@ async function persistForecastViewOverride(viewType) {
     const userId = ForecastState.userId;
     if (!window.AstroAPI?.saveChartViewOverride) return;
 
-    const source = viewType === 'biwheel'
-        ? ForecastState.biwheelResolvedPreferences
-        : ForecastState.solarResolvedPreferences[ForecastState.solarData?.solar_id];
+    if (viewType !== 'biwheel') return;
+    const source = ForecastState.biwheelResolvedPreferences;
     if (!source) return;
 
-    const chartId = viewType === 'biwheel' ? userId : ForecastState.solarData?.solar_id;
-    const chartKind = viewType === 'biwheel' ? 'natal' : 'solar';
+    const chartId = userId;
+    const chartKind = 'natal';
     if (!chartId) return;
 
     const accountDefaults = helpers.normalizeViewSettings
@@ -757,71 +597,41 @@ async function persistForecastViewOverride(viewType) {
 }
 
 function applyForecastResolvedPreferences(viewType, payload) {
+    if (viewType !== 'biwheel') return;
     const resolved = getForecastResolvedView(payload);
     const orientation = resolved?.view_options?.orientation === 'asc' ? 'asc' : 'aries';
-    if (viewType === 'biwheel') {
-        ForecastState.biwheelResolvedPreferences = payload;
-        ForecastState.biwheelOrientation = orientation;
-        ForecastState.biwheelAspectScope = resolved?.aspects?.scope || 'major';
-        ForecastState.biwheelMatrixRows = ensureForecastMatrixRows(resolved?.matrix?.rows || {});
-        ForecastState.biwheelAngleAscDscBold = resolved?.view_options?.bold_asc_dsc !== false;
-        ForecastState.biwheelAngleMcIcBold = resolved?.view_options?.bold_mc_ic !== false;
-        ForecastState.biwheelEnabledAspectTypes = window.AstroPreferences?.healEnabledAspectTypesForScope
-            ? window.AstroPreferences.healEnabledAspectTypesForScope(
-                resolved?.aspects?.enabled_types,
-                ForecastState.biwheelAspectScope,
-                FORECAST_ASPECT_TYPES,
-            )
-            : (Array.isArray(resolved?.aspects?.enabled_types) && resolved.aspects.enabled_types.length
-                ? [...resolved.aspects.enabled_types]
-                : [...FORECAST_ASPECT_TYPES]);
-        ForecastState.biwheelShowAspectText = resolved?.table_options?.show_aspect_text === true;
-        if (window.ForecastBiwheel?.setOrientationMode) {
-            window.ForecastBiwheel.setOrientationMode(ForecastState.biwheelOrientation);
-        }
-        if (ForecastState.accountPreferences?.visual) {
-            window.ForecastBiwheel?.setVisualPreferences?.(ForecastState.accountPreferences.visual);
-        }
-        window.ForecastBiwheel?.setMatrixRows?.(ForecastState.biwheelMatrixRows);
-        window.ForecastBiwheel?.setEnabledAspectTypes?.(ForecastState.biwheelEnabledAspectTypes);
-        window.ForecastBiwheel?.setAspectFilter?.(ForecastState.biwheelAspectScope);
-        window.ForecastBiwheel?.setAngleMarkerOptions?.({
-            ascDscBold: ForecastState.biwheelAngleAscDscBold,
-            mcIcBold: ForecastState.biwheelAngleMcIcBold,
-        });
-        renderNatalOverlay();
-        if (window.ForecastBiwheel?.hasLastRender?.()) {
-            window.ForecastBiwheel.rerenderLast();
-        }
-    } else {
-        if (ForecastState.solarData?.solar_id) {
-            ForecastState.solarResolvedPreferences[ForecastState.solarData.solar_id] = payload;
-        }
-        ForecastState.solarOrientation = orientation;
-        ForecastState.solarAspectScope = resolved?.aspects?.scope || 'all';
-        ForecastState.solarMatrixRows = ensureForecastMatrixRows(resolved?.matrix?.rows || {});
-        ForecastState.solarEnabledAspectTypes = window.AstroPreferences?.healEnabledAspectTypesForScope
-            ? window.AstroPreferences.healEnabledAspectTypesForScope(
-                resolved?.aspects?.enabled_types,
-                ForecastState.solarAspectScope,
-                FORECAST_ASPECT_TYPES,
-            )
-            : (Array.isArray(resolved?.aspects?.enabled_types) && resolved.aspects.enabled_types.length
-                ? [...resolved.aspects.enabled_types]
-                : [...FORECAST_ASPECT_TYPES]);
-        ForecastState.solarShowApplyingSeparating = resolved?.aspects?.show_applying_separating === true;
-        ForecastState.solarShowSpeed = resolved?.table_options?.show_speed !== false;
-        ForecastState.solarShowStationary = resolved?.table_options?.show_stationary !== false;
-        ForecastState.solarShowAspectText = resolved?.table_options?.show_aspect_text === true;
-        ForecastState.solarAngleAscDscBold = resolved?.view_options?.bold_asc_dsc !== false;
-        ForecastState.solarAngleMcIcBold = resolved?.view_options?.bold_mc_ic !== false;
-        if (ForecastState.accountPreferences?.visual) {
-            ForecastState.solarWheel?.setVisualPreferences?.(ForecastState.accountPreferences.visual, { redraw: false });
-            getSolarDataRenderer()?.setVisualPreferences?.(ForecastState.accountPreferences.visual);
-        }
-        if (ForecastState.solarData) {
-            renderSolar(ForecastState.solarData);
-        }
+    ForecastState.biwheelResolvedPreferences = payload;
+    ForecastState.biwheelOrientation = orientation;
+    ForecastState.biwheelAspectScope = resolved?.aspects?.scope || 'major';
+    ForecastState.biwheelMatrixRows = ensureForecastMatrixRows(resolved?.matrix?.rows || {});
+    ForecastState.biwheelAngleAscDscBold = resolved?.view_options?.bold_asc_dsc !== false;
+    ForecastState.biwheelAngleMcIcBold = resolved?.view_options?.bold_mc_ic !== false;
+    ForecastState.biwheelEnabledAspectTypes = window.AstroPreferences?.healEnabledAspectTypesForScope
+        ? window.AstroPreferences.healEnabledAspectTypesForScope(
+            resolved?.aspects?.enabled_types,
+            ForecastState.biwheelAspectScope,
+            FORECAST_ASPECT_TYPES,
+        )
+        : (Array.isArray(resolved?.aspects?.enabled_types) && resolved.aspects.enabled_types.length
+            ? [...resolved.aspects.enabled_types]
+            : [...FORECAST_ASPECT_TYPES]);
+    ForecastState.biwheelShowAspectText = resolved?.table_options?.show_aspect_text === true;
+    if (window.ForecastBiwheel?.setOrientationMode) {
+        window.ForecastBiwheel.setOrientationMode(ForecastState.biwheelOrientation);
+    }
+    if (ForecastState.accountPreferences?.visual) {
+        window.ForecastBiwheel?.setVisualPreferences?.(ForecastState.accountPreferences.visual);
+    }
+    window.ForecastBiwheel?.setMatrixRows?.(ForecastState.biwheelMatrixRows);
+    window.ForecastBiwheel?.setEnabledAspectTypes?.(ForecastState.biwheelEnabledAspectTypes);
+    window.ForecastBiwheel?.setAspectFilter?.(ForecastState.biwheelAspectScope);
+    window.ForecastBiwheel?.setAngleMarkerOptions?.({
+        ascDscBold: ForecastState.biwheelAngleAscDscBold,
+        mcIcBold: ForecastState.biwheelAngleMcIcBold,
+    });
+    renderNatalOverlay();
+    if (window.ForecastBiwheel?.hasLastRender?.()) {
+        window.ForecastBiwheel.rerenderLast();
     }
     syncForecastOrientationControls();
 }
@@ -862,70 +672,28 @@ async function hydrateForecastPreferences() {
     }
 }
 
-async function hydrateSolarPreferences() {
-    const solarId = ForecastState.solarData?.solar_id;
-    if (!solarId || !window.AstroAPI?.getResolvedPreferences) return;
-
-    try {
-        const payload = await window.AstroAPI.getResolvedPreferences({
-            chart_kind: 'solar',
-            chart_id: solarId,
-            view_type: 'solar',
-        });
-        applyForecastResolvedPreferences('solar', payload);
-
-        const legacyState = readLegacyForecastOrientationState();
-        const hasOverrides = payload?.overrides && Object.keys(payload.overrides).length > 0;
-        if (!hasOverrides && legacyState?.solarOrientation === 'asc') {
-            ForecastState.solarOrientation = 'asc';
-            syncForecastOrientationControls();
-            await persistForecastViewOverride('solar');
-            if (ForecastState.solarData) {
-                renderSolarChart(ForecastState.solarData);
-            }
-        }
-    } catch (error) {
-        console.warn('Failed to hydrate solar preferences:', error);
-    }
-}
-
 async function resetForecastViewToDefaults(viewType) {
     if (!window.AstroAPI?.deleteChartViewOverride || !window.AstroAPI?.getResolvedPreferences) return;
 
-    if (viewType === 'biwheel') {
-        await window.AstroAPI.deleteChartViewOverride({
-            chart_kind: 'natal',
-            chart_id: ForecastState.userId,
-            view_type: 'biwheel',
-        });
-        ForecastState.biwheelResolvedPreferences = await window.AstroAPI.getResolvedPreferences({
-            chart_kind: 'natal',
-            chart_id: ForecastState.userId,
-            view_type: 'biwheel',
-        });
-        applyForecastResolvedPreferences('biwheel', ForecastState.biwheelResolvedPreferences);
-        return;
-    }
-
-    const solarId = ForecastState.solarData?.solar_id;
-    if (!solarId) return;
+    if (viewType !== 'biwheel') return;
 
     await window.AstroAPI.deleteChartViewOverride({
-        chart_kind: 'solar',
-        chart_id: solarId,
-        view_type: 'solar',
+        chart_kind: 'natal',
+        chart_id: ForecastState.userId,
+        view_type: 'biwheel',
     });
-    const payload = await window.AstroAPI.getResolvedPreferences({
-        chart_kind: 'solar',
-        chart_id: solarId,
-        view_type: 'solar',
+    ForecastState.biwheelResolvedPreferences = await window.AstroAPI.getResolvedPreferences({
+        chart_kind: 'natal',
+        chart_id: ForecastState.userId,
+        view_type: 'biwheel',
     });
-    applyForecastResolvedPreferences('solar', payload);
+    applyForecastResolvedPreferences('biwheel', ForecastState.biwheelResolvedPreferences);
 }
 
 async function refreshForecastResolvedView(viewType) {
-    const chartId = viewType === 'biwheel' ? ForecastState.userId : ForecastState.solarData?.solar_id;
-    const chartKind = viewType === 'biwheel' ? 'natal' : 'solar';
+    if (viewType !== 'biwheel') return null;
+    const chartId = ForecastState.userId;
+    const chartKind = 'natal';
     if (!chartId || !window.AstroAPI?.getResolvedPreferences) return null;
 
     const payload = await window.AstroAPI.getResolvedPreferences({
@@ -979,7 +747,6 @@ function captureForecastControlState() {
         startDate: document.getElementById('startDate')?.value || '',
         endDate: document.getElementById('endDate')?.value || '',
         singleDate: document.getElementById('singleDate')?.value || '',
-        solarYear: document.getElementById('solarYear')?.value || '',
         filterMajor: document.getElementById('filterMajor')?.checked !== false,
     };
 }
@@ -997,7 +764,6 @@ function captureForecastCachedData() {
         || (currentTab === 'table' && tableKey.startsWith('combined_table|'));
     const needsIngressSummary = currentTab === 'biwheel'
         || (currentTab === 'table' && tableKey.startsWith('combined_table|'));
-    const needsSolarData = currentTab === 'solar';
 
     if (needsTransitPeriod && ForecastState.transitPeriodKey && ForecastState.transitEvents) {
         cachedData.transitPeriodKey = ForecastState.transitPeriodKey;
@@ -1024,19 +790,6 @@ function captureForecastCachedData() {
 
     if (currentTab === 'table' && ForecastState.tableDataKey) {
         cachedData.tableDataKey = ForecastState.tableDataKey;
-    }
-
-    if (needsSolarData && ForecastState.solarData) {
-        const year = Number.parseInt(document.getElementById('solarYear')?.value, 10);
-        const lat = Number.parseFloat(document.getElementById('solarLocationLat')?.value);
-        const lon = Number.parseFloat(document.getElementById('solarLocationLon')?.value);
-        const name = document.getElementById('solarLocationName')?.value?.trim() || '';
-        const timezone = document.getElementById('solarLocationTimezone')?.value?.trim() || '';
-        cachedData.solarCalculatedYear = ForecastState.solarCalculatedYear;
-        cachedData.solarData = ForecastState.solarData;
-        if (Number.isFinite(year) && Number.isFinite(lat) && Number.isFinite(lon)) {
-            cachedData.solarCacheKey = getSolarCacheKey(year, lat, lon, name, timezone);
-        }
     }
 
     return Object.keys(cachedData).length ? cachedData : null;
@@ -1089,15 +842,6 @@ function restoreForecastCachedData(cachedData) {
         restoredAny = true;
     }
 
-    if (cachedData.solarData) {
-        ForecastState.solarData = cachedData.solarData;
-        ForecastState.solarCalculatedYear = cachedData.solarCalculatedYear || ForecastState.solarCalculatedYear;
-        if (cachedData.solarCacheKey) {
-            ForecastState.solarCache[cachedData.solarCacheKey] = cachedData.solarData;
-        }
-        restoredAny = true;
-    }
-
     return restoredAny;
 }
 
@@ -1113,8 +857,6 @@ function applyForecastControlState(controls = {}) {
     setValue('startDate', controls.startDate);
     setValue('endDate', controls.endDate);
     setValue('singleDate', controls.singleDate);
-    setValue('solarYear', controls.solarYear);
-
     const filterMajor = document.getElementById('filterMajor');
     if (filterMajor && typeof controls.filterMajor === 'boolean') {
         filterMajor.checked = controls.filterMajor;
@@ -1126,7 +868,6 @@ function hasForecastCalculatedState() {
         ForecastState.transitMoment
         || ForecastState.transitPeriodKey
         || ForecastState.tableDataKey
-        || ForecastState.solarCalculatedYear
         || ForecastState.activeRunId
     );
 }
@@ -1152,7 +893,6 @@ function flushForecastStatePersist() {
             pendingBiwheelDate: ForecastState.pendingBiwheelDate,
             directionType: ForecastState.directionType,
             biwheelDisplayMode: ForecastState.biwheelDisplayMode,
-            solarPanelTab: ForecastState.solarPanelTab,
             tableSortCol: ForecastState.tableSortCol,
             tableSortAsc: ForecastState.tableSortAsc,
             hasCalculatedState: hasForecastCalculatedState(),
@@ -1205,7 +945,6 @@ function restoreForecastStateSnapshot() {
     ForecastState.pendingBiwheelDate = restored.pendingBiwheelDate || restored.transitMoment || null;
     ForecastState.directionType = normalizeDirectionType(restored.directionType || ForecastState.directionType || 'solar_arc');
     ForecastState.biwheelDisplayMode = normalizeForecastBiwheelDisplayMode(restored.biwheelDisplayMode, { persisted: false });
-    ForecastState.solarPanelTab = restored.solarPanelTab;
     ForecastState.tableSortCol = restored.tableSortCol;
     ForecastState.tableSortAsc = restored.tableSortAsc;
     ForecastState.activeRunId = restored.activeRunId || null;
@@ -1236,9 +975,6 @@ function bindForecastStatePersistence() {
 }
 
 function hasRenderableCachedForecastState() {
-    if (ForecastState.currentTab === 'solar') {
-        return Boolean(ForecastState.solarData);
-    }
     if (ForecastState.currentTab === 'timeline') {
         return Boolean(ForecastState.transitEvents);
     }
@@ -1263,7 +999,7 @@ function hasRenderableCachedForecastState() {
 }
 
 function activateForecastTab(tabId, { render = true } = {}) {
-    const nextTab = ['biwheel', 'timeline', 'table', 'solar'].includes(tabId) ? tabId : 'biwheel';
+    const nextTab = ['biwheel', 'timeline', 'table'].includes(tabId) ? tabId : 'biwheel';
     document.querySelectorAll('.forecast-tab').forEach((tab) => {
         tab.classList.toggle('active', tab.dataset.tab === nextTab);
     });
@@ -1293,7 +1029,6 @@ async function hydrateForecastStateSnapshot(restored) {
     if (!restored) return;
 
     activateForecastTab(restored.currentTab, { render: false });
-    activateSolarPanelTab(ForecastState.solarPanelTab || 'solar-planets-list');
     updateControlsVisibility();
 
     if (!restored.hasCalculatedState) {
@@ -1304,18 +1039,6 @@ async function hydrateForecastStateSnapshot(restored) {
     try {
         if (hasRenderableCachedForecastState()) {
             await renderCurrentTabFromCache();
-            return;
-        }
-
-        if (ForecastState.currentTab === 'solar') {
-            const year = parseInt(document.getElementById('solarYear')?.value, 10);
-            const lat = parseFloat(document.getElementById('solarLocationLat')?.value);
-            const lon = parseFloat(document.getElementById('solarLocationLon')?.value);
-            if (Number.isFinite(year) && Number.isFinite(lat) && Number.isFinite(lon)) {
-                await calculateSolar();
-            } else {
-                showState('solar', 'empty');
-            }
             return;
         }
 
@@ -1331,10 +1054,6 @@ function clampChartPointScale(v) {
     const n = Number(v);
     if (!Number.isFinite(n)) return 1;
     return Math.min(1.7, Math.max(0.8, n));
-}
-
-function readChartPointScale() {
-    return clampChartPointScale(parseFloat(localStorage.getItem('solarPointScale') || '1.2'));
 }
 
 function getPreparedNatalWheelData() {
@@ -1853,12 +1572,6 @@ function buildForecastChatContext() {
     const startDate = document.getElementById('startDate')?.value || null;
     const endDate = document.getElementById('endDate')?.value || null;
     const singleDate = document.getElementById('singleDate')?.value || null;
-    const solarYearRaw = document.getElementById('solarYear')?.value;
-    const solarYear = solarYearRaw ? parseInt(solarYearRaw, 10) : null;
-
-    const solarLatRaw = parseFloat(document.getElementById('solarLocationLat')?.value);
-    const solarLonRaw = parseFloat(document.getElementById('solarLocationLon')?.value);
-
     const context = {
         page: 'forecast',
         active_tab: ForecastState.currentTab,
@@ -1869,16 +1582,11 @@ function buildForecastChatContext() {
             start_date: startDate,
             end_date: endDate,
             single_date: singleDate,
-            solar_year: Number.isNaN(solarYear) ? null : solarYear,
-            solar_location_name: document.getElementById('solarLocationName')?.value?.trim() || null,
-            solar_location_lat: Number.isFinite(solarLatRaw) ? solarLatRaw : null,
-            solar_location_lon: Number.isFinite(solarLonRaw) ? solarLonRaw : null,
         },
         calculated: {
             transits: null,
             progressions: null,
             directions: null,
-            solar_return: null,
         },
     };
 
@@ -1915,31 +1623,10 @@ function buildForecastChatContext() {
         };
     }
 
-    if (ForecastState.solarData) {
-        context.calculated.solar_return = {
-            year: ForecastState.solarCalculatedYear || (Number.isNaN(solarYear) ? null : solarYear),
-            data: ForecastState.solarData,
-        };
-    }
-
     return context;
 }
 
 window.getForecastChatContext = buildForecastChatContext;
-
-// ─── Solar Zoom/Pan ─────────────────────────────────────
-let solarZoomLevel = 1;
-let solarPanX = 0;
-let solarPanY = 0;
-let solarIsPanning = false;
-let solarPanStartX = 0;
-let solarPanStartY = 0;
-let solarPinchDistance = 0;
-let solarPinchStartZoom = 1;
-const SOLAR_VIEWBOX_SIZE = 500;
-const SOLAR_ZOOM_MIN = 0.5;
-const SOLAR_ZOOM_MAX = 4;
-const SOLAR_ZOOM_STEP = 0.08;
 
 // ─── Init ───────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
@@ -1986,27 +1673,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // the restored state overriding the requested date.
     const urlParams = new URLSearchParams(window.location.search);
     const hasDeepLink = urlParams.has('tab');
-    const isSolarPage = document.body?.classList?.contains('solar-page');
-
-    if (isSolarPage && !hasDeepLink) {
-        const restoredState = restoreForecastStateSnapshot();
-        bindForecastStatePersistence();
-        if (restoredState?.currentTab === 'solar' && restoredState?.cachedData?.solarData) {
-            await hydrateForecastStateSnapshot(restoredState);
-            renderForecastSummary();
-            return;
-        }
-        activateForecastTab('solar', { render: false });
-        fillSolarLocationFromNatalBirthData();
-        try {
-            await calculateSolar();
-        } catch (err) {
-            console.error('Solar page initial load failed:', err);
-            showState('solar', 'empty');
-        }
-        renderForecastSummary();
-        return;
-    }
 
     if (!hasDeepLink) {
         const restoredState = restoreForecastStateSnapshot();
@@ -2045,18 +1711,10 @@ async function handleForecastDeepLink() {
         return;
     }
 
-    if (tab === 'solar' && solarYear) {
-        activateForecastTab('solar', { render: false });
-        const solarYearEl = document.getElementById('solarYear');
-        if (solarYearEl) solarYearEl.value = solarYear;
-
-        fillSolarLocationFromNatalBirthData();
-
-        try {
-            await calculateSolar();
-        } catch (err) {
-            console.error('Deep-link solar load failed:', err);
-        }
+    if (tab === 'solar') {
+        const target = new URL('/solar.html', window.location.origin);
+        if (solarYear) target.searchParams.set('solarYear', solarYear);
+        window.location.href = target.toString();
         return;
     }
 
@@ -2083,13 +1741,6 @@ function formatForecastSummaryDate(dateStr) {
 }
 
 function getForecastSummaryWindowText() {
-    if (ForecastState.currentTab === 'solar') {
-        const year = document.getElementById('solarYear')?.value || '';
-        const location = document.getElementById('solarLocationName')?.value?.trim() || '';
-        if (!year && !location) return t('page.forecast.summary.window.notSet');
-        return [year, location].filter(Boolean).join(' · ');
-    }
-
     if (ForecastState.currentTab === 'biwheel') {
         const selectedDate = ForecastState.transitMoment
             || document.getElementById('singleDate')?.value
@@ -2108,9 +1759,6 @@ function getForecastSummaryStatusKey() {
     if (ForecastState.currentTab === 'biwheel' && ForecastState.isFocusMode) {
         return 'focus';
     }
-    if (ForecastState.currentTab === 'solar') {
-        return ForecastState.solarData ? 'ready' : 'needsCalculation';
-    }
     if (ForecastState.currentTab === 'timeline') {
         return ForecastState.transitEvents ? 'ready' : 'needsCalculation';
     }
@@ -2121,13 +1769,6 @@ function getForecastSummaryStatusKey() {
 }
 
 function getForecastSummaryText() {
-    if (ForecastState.currentTab === 'solar') {
-        const year = document.getElementById('solarYear')?.value || '—';
-        return ForecastState.solarData
-            ? t('page.forecast.summary.solarReady', { year })
-            : t('page.forecast.summary.solarPending');
-    }
-
     if (ForecastState.currentTab === 'timeline' && ForecastState.transitEvents?.events?.length) {
         return t('page.forecast.summary.timelineReady', {
             count: ForecastState.transitEvents.events.length,
@@ -2214,15 +1855,6 @@ function initDefaults() {
     document.getElementById('startDate').value = fmt(today);
     applyDatePreset(6, 'months'); // default 6 months
     document.getElementById('singleDate').value = fmt(today);
-    const savedSolarYear = parseInt(localStorage.getItem(SOLAR_YEAR_STORAGE_KEY), 10);
-    document.getElementById('solarYear').value = (
-        Number.isFinite(savedSolarYear) && savedSolarYear >= 1900 && savedSolarYear <= 2100
-    ) ? savedSolarYear : today.getFullYear();
-    ForecastState.solarPointScale = readChartPointScale();
-    const solarScaleRange = document.getElementById('solarPointScaleRange');
-    const solarScaleValue = document.getElementById('solarPointScaleValue');
-    if (solarScaleRange) solarScaleRange.value = String(Math.round(ForecastState.solarPointScale * 100));
-    if (solarScaleValue) solarScaleValue.textContent = `${Math.round(ForecastState.solarPointScale * 100)}%`;
     const stepSelect = document.getElementById('biwheelStepSelect');
     if (stepSelect) stepSelect.value = ForecastState.transitScaleUnit;
     ForecastState.isFocusMode = false;
@@ -2231,7 +1863,6 @@ function initDefaults() {
     ForecastState.directionType = normalizeDirectionType(localStorage.getItem(DIRECTION_TYPE_STORAGE_KEY) || 'solar_arc');
     const directionTypeSelect = document.getElementById('bwDirectionTypeSelect');
     if (directionTypeSelect) directionTypeSelect.value = ForecastState.directionType;
-    restoreSolarLocationFromStorage();
     updateBiwheelFocusButton();
     applyForecastFocusState();
     applyBiwheelDisplayModeState();
@@ -2329,217 +1960,6 @@ function initTabs() {
     });
 }
 
-function activateSolarPanelTab(tabId) {
-    const nextTab = tabId || 'solar-planets-list';
-    const tabButtons = document.querySelectorAll('.solar-panel-tab');
-    const panes = document.querySelectorAll('.solar-panel-pane');
-
-    tabButtons.forEach((btn) => {
-        btn.classList.toggle('active', btn.dataset.solarPanelTab === nextTab);
-    });
-    panes.forEach((pane) => {
-        pane.classList.toggle('active', pane.id === nextTab);
-    });
-    ForecastState.solarPanelTab = nextTab;
-    syncSolarHoveredAspectToActiveSurface();
-    scheduleForecastStatePersist();
-}
-
-function initSolarPanelTabs() {
-    const tabButtons = document.querySelectorAll('.solar-panel-tab');
-    if (!tabButtons.length) return;
-
-    tabButtons.forEach((btn) => {
-        btn.addEventListener('click', () => {
-            activateSolarPanelTab(btn.dataset.solarPanelTab);
-        });
-    });
-
-    activateSolarPanelTab(ForecastState.solarPanelTab || 'solar-planets-list');
-}
-
-function getSolarDataRenderer() {
-    if (!window.ChartDataRenderer) return null;
-    if (!ForecastState.solarDataRenderer) {
-        ForecastState.solarDataRenderer = new window.ChartDataRenderer({
-            planetsTableId: 'solarPlanetsTable',
-            aspectsTableId: 'solarAspectsTable',
-            aspectGridContainerId: 'solarAspectGridContainer',
-            aspectSortHeadersSelector: '#solar-aspects-list th.sortable[data-sort]',
-        });
-    }
-    return ForecastState.solarDataRenderer;
-}
-
-function getSolarFocusedAspectKey() {
-    return ForecastState.solarPinnedAspectKey || ForecastState.solarHoveredAspectKey || null;
-}
-
-function getActiveSolarAspectSurface() {
-    const aspectsPane = document.getElementById('solar-aspects-list');
-    const gridPane = document.getElementById('solar-grid-list');
-    if (aspectsPane?.classList.contains('active')) return 'table';
-    if (gridPane?.classList.contains('active')) return 'grid';
-    return null;
-}
-
-function syncSolarHoveredAspectToActiveSurface() {
-    const renderer = getSolarDataRenderer();
-    if (!renderer || typeof renderer.setHoveredAspect !== 'function') return;
-
-    const aspectKey = getSolarFocusedAspectKey();
-    const surface = getActiveSolarAspectSurface();
-
-    if (!aspectKey || !surface) {
-        renderer.clearHoveredAspect?.();
-        return;
-    }
-
-    renderer.setHoveredAspect(aspectKey, { surface });
-}
-
-function findSolarAspectLine(aspectKey) {
-    const svg = document.getElementById('solarWheel');
-    if (!svg || !aspectKey) return null;
-    const lines = svg.querySelectorAll('.aspect-line');
-    for (const line of lines) {
-        if (line.dataset.aspectKey === aspectKey) return line;
-    }
-    return null;
-}
-
-function applySolarAspectFocus() {
-    const svg = document.getElementById('solarWheel');
-    if (!svg) return;
-
-    svg.querySelectorAll('.aspect-line.solar-aspect-focus')
-        .forEach((line) => line.classList.remove('solar-aspect-focus'));
-    svg.querySelectorAll('.planet-group.solar-planet-focus')
-        .forEach((group) => group.classList.remove('solar-planet-focus'));
-
-    const aspectKey = getSolarFocusedAspectKey();
-    if (!aspectKey) {
-        syncSolarHoveredAspectToActiveSurface();
-        return;
-    }
-
-    const line = findSolarAspectLine(aspectKey);
-    if (!line) {
-        if (ForecastState.solarPinnedAspectKey === aspectKey) ForecastState.solarPinnedAspectKey = null;
-        if (ForecastState.solarHoveredAspectKey === aspectKey) ForecastState.solarHoveredAspectKey = null;
-        syncSolarHoveredAspectToActiveSurface();
-        return;
-    }
-
-    line.classList.add('solar-aspect-focus');
-    const bodies = [line.dataset.planet1, line.dataset.planet2].filter(Boolean);
-    bodies.forEach((bodyName) => {
-        svg.querySelector(`[data-planet="${bodyName}"]`)?.classList.add('solar-planet-focus');
-    });
-
-    syncSolarHoveredAspectToActiveSurface();
-}
-
-function setSolarHoveredAspectKey(aspectKey) {
-    ForecastState.solarHoveredAspectKey = aspectKey || null;
-    applySolarAspectFocus();
-}
-
-function toggleSolarPinnedAspect(aspectKey) {
-    const normalizedKey = aspectKey || null;
-    ForecastState.solarPinnedAspectKey = ForecastState.solarPinnedAspectKey === normalizedKey ? null : normalizedKey;
-    ForecastState.solarHoveredAspectKey = ForecastState.solarPinnedAspectKey;
-    applySolarAspectFocus();
-}
-
-function initSolarAspectInteractions() {
-    if (ForecastState.solarAspectInteractionsInit) return;
-    ForecastState.solarAspectInteractionsInit = true;
-
-    const aspectsPane = document.getElementById('solar-aspects-list');
-    if (aspectsPane) {
-        aspectsPane.addEventListener('mouseover', (event) => {
-            if (ForecastState.solarPinnedAspectKey) return;
-            if (!(event.target instanceof Element)) return;
-            const row = event.target.closest('tr[data-aspect-key]');
-            const key = row?.dataset?.aspectKey;
-            if (key) setSolarHoveredAspectKey(key);
-        });
-
-        aspectsPane.addEventListener('mouseout', (event) => {
-            if (ForecastState.solarPinnedAspectKey) return;
-            if (!(event.target instanceof Element)) return;
-            const row = event.target.closest('tr[data-aspect-key]');
-            if (!row) return;
-            if (row.contains(event.relatedTarget)) return;
-            setSolarHoveredAspectKey(null);
-        });
-
-        aspectsPane.addEventListener('click', (event) => {
-            if (!(event.target instanceof Element)) return;
-            const row = event.target.closest('tr[data-aspect-key]');
-            const key = row?.dataset?.aspectKey;
-            if (!key) return;
-            toggleSolarPinnedAspect(key);
-        });
-    }
-
-    const gridPane = document.getElementById('solar-grid-list');
-    if (gridPane) {
-        gridPane.addEventListener('mouseover', (event) => {
-            if (ForecastState.solarPinnedAspectKey) return;
-            if (!(event.target instanceof Element)) return;
-            const cell = event.target.closest('td[data-aspect-key]');
-            const key = cell?.dataset?.aspectKey;
-            if (key) setSolarHoveredAspectKey(key);
-        });
-
-        gridPane.addEventListener('mouseout', (event) => {
-            if (ForecastState.solarPinnedAspectKey) return;
-            if (!(event.target instanceof Element)) return;
-            const cell = event.target.closest('td[data-aspect-key]');
-            if (!cell) return;
-            if (cell.contains(event.relatedTarget)) return;
-            setSolarHoveredAspectKey(null);
-        });
-
-        gridPane.addEventListener('click', (event) => {
-            if (!(event.target instanceof Element)) return;
-            const cell = event.target.closest('td[data-aspect-key]');
-            const key = cell?.dataset?.aspectKey;
-            if (!key) return;
-            toggleSolarPinnedAspect(key);
-        });
-    }
-
-    document.addEventListener('chart:aspect-hover', (event) => {
-        const key = event?.detail?.aspectKey;
-        if (!key || ForecastState.currentTab !== 'solar') return;
-        if (!findSolarAspectLine(key)) return;
-        if (ForecastState.solarPinnedAspectKey) return;
-        setSolarHoveredAspectKey(key);
-    });
-
-    document.addEventListener('chart:aspect-leave', (event) => {
-        const key = event?.detail?.aspectKey || null;
-        if (ForecastState.currentTab !== 'solar') return;
-        if (ForecastState.solarPinnedAspectKey) return;
-        if (key && ForecastState.solarHoveredAspectKey && key !== ForecastState.solarHoveredAspectKey) return;
-        setSolarHoveredAspectKey(null);
-    });
-
-    const solarWheel = document.getElementById('solarWheel');
-    if (solarWheel) {
-        solarWheel.addEventListener('click', (event) => {
-            if (!(event.target instanceof Element)) return;
-            const line = event.target.closest('.aspect-line');
-            const key = line?.dataset?.aspectKey;
-            if (!key) return;
-            toggleSolarPinnedAspect(key);
-        });
-    }
-}
-
 // ─── Controls ───────────────────────────────────────────
 function initControls() {
     // Help overlay
@@ -2570,7 +1990,7 @@ function initControls() {
             if (ForecastState.transitEvents) renderTimeline();
         });
     });
-    ['startDate', 'endDate', 'singleDate', 'solarYear', 'solarLocationName'].forEach((id) => {
+    ['startDate', 'endDate', 'singleDate'].forEach((id) => {
         const el = document.getElementById(id);
         if (!el) return;
         ['input', 'change'].forEach((eventName) => {
@@ -2649,11 +2069,6 @@ function initControls() {
         resetTableFilters();
         applyTableFiltersAndRender();
     });
-    // Solar location geocoding with autocomplete
-    initSolarPlaceAutocomplete();
-    initSolarZoomPan();
-    initSolarPanelTabs();
-    initSolarAspectInteractions();
     initBiwheelNatalInteractions();
 
     const orientationSelect = document.getElementById('biwheelOrientationSelect');
@@ -2677,39 +2092,8 @@ function initControls() {
         });
     }
 
-    const solarOrientationSelect = document.getElementById('solarOrientationSelect');
-    if (solarOrientationSelect) {
-        solarOrientationSelect.value = ForecastState.solarOrientation;
-        solarOrientationSelect.addEventListener('change', async e => {
-            ForecastState.solarOrientation = e.target.value === 'asc' ? 'asc' : 'aries';
-            if (ForecastState.solarData) {
-                renderSolar(ForecastState.solarData);
-            }
-            try {
-                await persistForecastViewOverride('solar');
-            } catch (error) {
-                console.warn('Failed to persist solar orientation:', error);
-            }
-            syncForecastOrientationControls();
-        });
-    }
-    document.getElementById('solarOrientationSelectModal')?.addEventListener('change', async (e) => {
-        ForecastState.solarOrientation = e.target.value === 'asc' ? 'asc' : 'aries';
-        syncForecastOrientationControls();
-        if (ForecastState.solarData) {
-            renderSolar(ForecastState.solarData);
-        }
-        try {
-            await persistForecastViewOverride('solar');
-        } catch (error) {
-            console.warn('Failed to persist solar orientation:', error);
-        }
-    });
     document.getElementById('bwAspectScopeSelect')?.addEventListener('change', () => {
         applyBiwheelSettingsFromControls({ persist: true });
-    });
-    document.getElementById('solarAspectScopeSelect')?.addEventListener('change', () => {
-        applySolarSettingsFromControls({ persist: true });
     });
     document.getElementById('bwMatrixEditor')?.addEventListener('change', () => {
         applyBiwheelSettingsFromControls({ persist: true });
@@ -2723,64 +2107,6 @@ function initControls() {
     document.getElementById('bwAngleMcIcBoldToggle')?.addEventListener('change', () => {
         applyBiwheelSettingsFromControls({ persist: true });
     });
-    document.getElementById('solarMatrixEditor')?.addEventListener('change', () => {
-        applySolarSettingsFromControls({ persist: true });
-    });
-    document.getElementById('solarAspectTypeToggles')?.addEventListener('change', () => {
-        applySolarSettingsFromControls({ persist: true });
-    });
-    document.getElementById('solarAngleAscDscBoldToggle')?.addEventListener('change', () => {
-        applySolarSettingsFromControls({ persist: true });
-    });
-    document.getElementById('solarAngleMcIcBoldToggle')?.addEventListener('change', () => {
-        applySolarSettingsFromControls({ persist: true });
-    });
-    document.getElementById('solarShowApplyingSeparatingToggle')?.addEventListener('change', () => {
-        applySolarSettingsFromControls({ persist: true });
-    });
-    document.getElementById('solarShowSpeedToggle')?.addEventListener('change', () => {
-        applySolarSettingsFromControls({ persist: true });
-    });
-    document.getElementById('solarShowStationaryToggle')?.addEventListener('change', () => {
-        applySolarSettingsFromControls({ persist: true });
-    });
-    const solarPointScaleRange = document.getElementById('solarPointScaleRange');
-    const solarPointScaleValue = document.getElementById('solarPointScaleValue');
-    if (solarPointScaleRange) {
-        solarPointScaleRange.addEventListener('input', e => {
-            ForecastState.solarPointScale = clampChartPointScale((Number(e.target.value) || 100) / 100);
-            localStorage.setItem('solarPointScale', String(ForecastState.solarPointScale));
-            if (solarPointScaleValue) {
-                solarPointScaleValue.textContent = `${Math.round(ForecastState.solarPointScale * 100)}%`;
-            }
-            if (ForecastState.solarData) {
-                renderSolarChart(ForecastState.solarData);
-            }
-        });
-    }
-    const solarSettingsBtn = document.getElementById('solarSettingsBtn');
-    const solarSettingsPanel = document.getElementById('solarSettingsPanel');
-    if (solarSettingsBtn && solarSettingsPanel) {
-        mountSettingsPanel(solarSettingsPanel);
-        const closeSolarSettingsPanel = () => toggleSettingsPanel(solarSettingsPanel, false);
-
-        solarSettingsBtn.addEventListener('click', () => {
-            toggleSettingsPanel(solarSettingsPanel, true);
-        });
-        solarSettingsPanel.addEventListener('click', e => {
-            if (e.target === solarSettingsPanel) {
-                closeSolarSettingsPanel();
-            }
-        });
-        document.getElementById('solarSettingsClose')?.addEventListener('click', () => {
-            closeSolarSettingsPanel();
-        });
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Escape' && !solarSettingsPanel.classList.contains('hidden')) {
-                closeSolarSettingsPanel();
-            }
-        });
-    }
     document.getElementById('bwResetDefaultsBtn')?.addEventListener('click', async () => {
         try {
             await resetForecastViewToDefaults('biwheel');
@@ -2812,24 +2138,6 @@ function initControls() {
             showForecastToast('Account defaults updated', 'success');
         } catch (error) {
             console.warn('Failed to save biwheel defaults:', error);
-            showForecastToast(error.message || 'Failed to update account defaults', 'error');
-        }
-    });
-    document.getElementById('solarResetDefaultsBtn')?.addEventListener('click', async () => {
-        try {
-            await resetForecastViewToDefaults('solar');
-            showForecastToast('Defaults restored', 'success');
-        } catch (error) {
-            console.warn('Failed to reset solar defaults:', error);
-            showForecastToast(error.message || 'Failed to reset defaults', 'error');
-        }
-    });
-    document.getElementById('solarSaveDefaultsBtn')?.addEventListener('click', async () => {
-        try {
-            await saveForecastViewAsAccountDefaults('solar');
-            showForecastToast('Account defaults updated', 'success');
-        } catch (error) {
-            console.warn('Failed to save solar defaults:', error);
             showForecastToast(error.message || 'Failed to update account defaults', 'error');
         }
     });
@@ -2925,133 +2233,6 @@ function setForecastFocusMode(enabled) {
     applyForecastFocusState();
     updateControlsVisibility();
     scheduleForecastStatePersist();
-}
-
-function applySolarViewBox() {
-    const svg = document.getElementById('solarWheel');
-    if (!svg) return;
-    const width = SOLAR_VIEWBOX_SIZE / solarZoomLevel;
-    const height = SOLAR_VIEWBOX_SIZE / solarZoomLevel;
-    const cx = SOLAR_VIEWBOX_SIZE / 2 + solarPanX;
-    const cy = SOLAR_VIEWBOX_SIZE / 2 + solarPanY;
-    svg.setAttribute('viewBox', `${cx - width / 2} ${cy - height / 2} ${width} ${height}`);
-}
-
-function resetSolarView() {
-    const svg = document.getElementById('solarWheel');
-    solarZoomLevel = 1;
-    solarPanX = 0;
-    solarPanY = 0;
-    if (svg) {
-        svg.setAttribute('viewBox', `0 0 ${SOLAR_VIEWBOX_SIZE} ${SOLAR_VIEWBOX_SIZE}`);
-        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-    }
-    applySolarViewBox();
-}
-
-function initSolarZoomPan() {
-    const wrapper = document.getElementById('solarWheelWrapper');
-    if (!wrapper || wrapper.dataset.zoomInit === '1') return;
-    wrapper.dataset.zoomInit = '1';
-
-    const getSolarTouchDistance = (touchA, touchB) => {
-        const dx = touchA.clientX - touchB.clientX;
-        const dy = touchA.clientY - touchB.clientY;
-        return Math.sqrt(dx * dx + dy * dy);
-    };
-
-    const isBlockedSolarZoomTarget = (target) => target instanceof Element
-        && Boolean(target.closest('.biwheel-zoom-controls, .bw-settings-panel'));
-
-    wrapper.addEventListener('wheel', (e) => {
-        if (isBlockedSolarZoomTarget(e.target)) return;
-        e.preventDefault();
-        const delta = e.deltaY > 0 ? -SOLAR_ZOOM_STEP : SOLAR_ZOOM_STEP;
-        solarZoomLevel = Math.min(SOLAR_ZOOM_MAX, Math.max(SOLAR_ZOOM_MIN, solarZoomLevel + delta));
-        applySolarViewBox();
-    }, { passive: false });
-
-    wrapper.addEventListener('mousedown', (e) => {
-        if (e.button !== 0 || isBlockedSolarZoomTarget(e.target)) return;
-        solarIsPanning = true;
-        solarPanStartX = e.clientX;
-        solarPanStartY = e.clientY;
-    });
-    window.addEventListener('mousemove', (e) => {
-        if (!solarIsPanning) return;
-        const scale = SOLAR_VIEWBOX_SIZE / (solarZoomLevel * (wrapper.clientWidth || SOLAR_VIEWBOX_SIZE));
-        solarPanX -= (e.clientX - solarPanStartX) * scale;
-        solarPanY -= (e.clientY - solarPanStartY) * scale;
-        solarPanStartX = e.clientX;
-        solarPanStartY = e.clientY;
-        applySolarViewBox();
-    });
-    window.addEventListener('mouseup', () => { solarIsPanning = false; });
-
-    wrapper.addEventListener('touchstart', (e) => {
-        if (isBlockedSolarZoomTarget(e.target)) return;
-        if (e.touches.length === 2) {
-            solarPinchDistance = getSolarTouchDistance(e.touches[0], e.touches[1]);
-            solarPinchStartZoom = solarZoomLevel;
-            solarIsPanning = false;
-            e.preventDefault();
-            return;
-        }
-        if (e.touches.length !== 1) {
-            solarIsPanning = false;
-            solarPinchDistance = 0;
-            return;
-        }
-        solarIsPanning = true;
-        solarPanStartX = e.touches[0].clientX;
-        solarPanStartY = e.touches[0].clientY;
-    }, { passive: false });
-    wrapper.addEventListener('touchmove', (e) => {
-        if (e.touches.length === 2 && solarPinchDistance > 0) {
-            e.preventDefault();
-            const currentDistance = getSolarTouchDistance(e.touches[0], e.touches[1]);
-            const nextZoom = solarPinchStartZoom * (currentDistance / solarPinchDistance);
-            solarZoomLevel = Math.min(SOLAR_ZOOM_MAX, Math.max(SOLAR_ZOOM_MIN, nextZoom));
-            applySolarViewBox();
-            return;
-        }
-        if (e.touches.length !== 1 || !solarIsPanning) return;
-        e.preventDefault();
-        const scale = SOLAR_VIEWBOX_SIZE / (solarZoomLevel * (wrapper.clientWidth || SOLAR_VIEWBOX_SIZE));
-        solarPanX -= (e.touches[0].clientX - solarPanStartX) * scale;
-        solarPanY -= (e.touches[0].clientY - solarPanStartY) * scale;
-        solarPanStartX = e.touches[0].clientX;
-        solarPanStartY = e.touches[0].clientY;
-        applySolarViewBox();
-    }, { passive: false });
-    wrapper.addEventListener('touchend', (e) => {
-        if (e.touches.length < 2) {
-            solarPinchDistance = 0;
-        }
-        if (e.touches.length === 1) {
-            solarIsPanning = true;
-            solarPanStartX = e.touches[0].clientX;
-            solarPanStartY = e.touches[0].clientY;
-            return;
-        }
-        solarIsPanning = false;
-    });
-    wrapper.addEventListener('touchcancel', () => {
-        solarIsPanning = false;
-        solarPinchDistance = 0;
-    });
-
-    document.getElementById('solarZoomIn')?.addEventListener('click', () => {
-        solarZoomLevel = Math.min(SOLAR_ZOOM_MAX, solarZoomLevel + SOLAR_ZOOM_STEP * 2);
-        applySolarViewBox();
-    });
-    document.getElementById('solarZoomOut')?.addEventListener('click', () => {
-        solarZoomLevel = Math.max(SOLAR_ZOOM_MIN, solarZoomLevel - SOLAR_ZOOM_STEP * 2);
-        applySolarViewBox();
-    });
-    document.getElementById('solarZoomReset')?.addEventListener('click', resetSolarView);
-
-    resetSolarView();
 }
 
 function getTransitScaleDateByIndex(index) {
@@ -3326,162 +2507,19 @@ function toggleTransitScalePlayback() {
     else startTransitScalePlayback();
 }
 
-function initSolarPlaceAutocomplete() {
-    const input = document.getElementById('solarLocationName');
-    const suggestions = document.getElementById('solarPlaceSuggestions');
-    if (!input || !suggestions) return;
-
-    let bound = false;
-    const bind = () => {
-        if (bound || !window.PlaceAutocomplete) return;
-        bound = true;
-        PlaceAutocomplete.attach({
-            input,
-            suggestions,
-            minChars: 2,
-            debounceMs: 350,
-            limit: 5,
-            getLabel: (item) => item.shortName || item.displayName,
-            onInput: () => {
-                // Force explicit place selection from suggestions for valid coords.
-                document.getElementById('solarLocationLat').value = '';
-                document.getElementById('solarLocationLon').value = '';
-                document.getElementById('solarLocationSourceId').value = '';
-                document.getElementById('solarLocationTimezone').value = '';
-                document.getElementById('solarCoordsDisplay').textContent = '';
-                persistSolarLocationToStorage();
-            },
-            onSelect: async (item) => {
-                document.getElementById('solarLocationLat').value = item.lat;
-                document.getElementById('solarLocationLon').value = item.lon;
-                document.getElementById('solarLocationSourceId').value = item.sourceId || '';
-                document.getElementById('solarCoordsDisplay').textContent = `(${item.lat.toFixed(2)}°, ${item.lon.toFixed(2)}°)`;
-                let resolvedTz = null;
-                if (item.sourceId && window.AstroAPI?.resolvePlaceTimezone) {
-                    try {
-                        resolvedTz = await window.AstroAPI.resolvePlaceTimezone(item.sourceId);
-                    } catch (_error) {
-                        resolvedTz = null;
-                    }
-                }
-                if (!resolvedTz) {
-                    resolvedTz = window.Timezones?.guess?.(item.displayName || item.shortName) || null;
-                }
-                document.getElementById('solarLocationTimezone').value = resolvedTz || '';
-                persistSolarLocationToStorage();
-            }
-        });
-    };
-
-    input.addEventListener('focus', bind, { once: true });
-}
-
-function getSolarCacheKey(year, lat, lon, name, timezone) {
-    const latKey = Number.isFinite(lat) ? lat.toFixed(5) : 'NaN';
-    const lonKey = Number.isFinite(lon) ? lon.toFixed(5) : 'NaN';
-    const nameKey = (name || '').trim().toLowerCase();
-    const timezoneKey = (timezone || '').trim();
-    return `${year}|${latKey}|${lonKey}|${nameKey}|${timezoneKey}`;
-}
-
-function persistSolarLocationToStorage() {
-    const name = document.getElementById('solarLocationName')?.value?.trim() || '';
-    const lat = parseFloat(document.getElementById('solarLocationLat')?.value);
-    const lon = parseFloat(document.getElementById('solarLocationLon')?.value);
-    const sourceId = document.getElementById('solarLocationSourceId')?.value?.trim() || '';
-    const timezone = document.getElementById('solarLocationTimezone')?.value?.trim() || '';
-    const payload = {
-        name,
-        lat: Number.isFinite(lat) ? lat : null,
-        lon: Number.isFinite(lon) ? lon : null,
-        source_id: sourceId || null,
-        timezone: timezone || null,
-    };
-    localStorage.setItem(SOLAR_LOCATION_STORAGE_KEY, JSON.stringify(payload));
-}
-
-function restoreSolarLocationFromStorage() {
-    const raw = localStorage.getItem(SOLAR_LOCATION_STORAGE_KEY);
-    if (!raw) return;
-    let parsed;
-    try {
-        parsed = JSON.parse(raw);
-    } catch {
-        return;
-    }
-    const nameInput = document.getElementById('solarLocationName');
-    const latInput = document.getElementById('solarLocationLat');
-    const lonInput = document.getElementById('solarLocationLon');
-    const sourceIdInput = document.getElementById('solarLocationSourceId');
-    const timezoneInput = document.getElementById('solarLocationTimezone');
-    const coordsDisplay = document.getElementById('solarCoordsDisplay');
-    if (!nameInput || !latInput || !lonInput || !sourceIdInput || !timezoneInput || !coordsDisplay) return;
-
-    if (typeof parsed?.name === 'string') nameInput.value = parsed.name;
-    if (Number.isFinite(parsed?.lat)) latInput.value = String(parsed.lat);
-    if (Number.isFinite(parsed?.lon)) lonInput.value = String(parsed.lon);
-    if (typeof parsed?.source_id === 'string') sourceIdInput.value = parsed.source_id;
-    if (typeof parsed?.timezone === 'string') timezoneInput.value = parsed.timezone;
-    if (Number.isFinite(parsed?.lat) && Number.isFinite(parsed?.lon)) {
-        coordsDisplay.textContent = `(${parsed.lat.toFixed(2)}°, ${parsed.lon.toFixed(2)}°)`;
-    } else {
-        coordsDisplay.textContent = '';
-    }
-}
-
-function fillSolarLocationFromNatalBirthData({ overwrite = false } = {}) {
-    const birthData = ForecastState.natalData?.birth_data;
-    if (!birthData) return;
-
-    const latEl = document.getElementById('solarLocationLat');
-    const lonEl = document.getElementById('solarLocationLon');
-    const nameEl = document.getElementById('solarLocationName');
-    const tzEl = document.getElementById('solarLocationTimezone');
-    const coordsEl = document.getElementById('solarCoordsDisplay');
-    if (!latEl || !lonEl || !nameEl || !tzEl) return;
-
-    if (!overwrite && (latEl.value || lonEl.value || nameEl.value)) return;
-
-    latEl.value = birthData.latitude ?? '';
-    lonEl.value = birthData.longitude ?? '';
-    nameEl.value = birthData.place ?? '';
-    tzEl.value = birthData.timezone ?? '';
-
-    const lat = Number.parseFloat(latEl.value);
-    const lon = Number.parseFloat(lonEl.value);
-    if (coordsEl) {
-        coordsEl.textContent = Number.isFinite(lat) && Number.isFinite(lon)
-            ? `(${lat.toFixed(2)}°, ${lon.toFixed(2)}°)`
-            : '';
-    }
-}
-
 function updateControlsVisibility() {
     const tab = ForecastState.currentTab;
     const dateRange = document.getElementById('dateRangeGroup');
     const singleDate = document.getElementById('singleDateGroup');
-    const solarYear = document.getElementById('solarYearGroup');
-    const solarName = document.getElementById('solarNameGroup');
-    const solarOrientation = document.getElementById('solarOrientationGroup');
-    const solarLocation = document.getElementById('solarLocationGroup');
     const biwheelTimeControls = document.getElementById('biwheelTimeControls');
     const biwheelScaleTicks = document.getElementById('biwheelScaleTicks');
     const isFocusBiwheel = tab === 'biwheel' && ForecastState.isFocusMode;
 
-    dateRange.style.display = 'none';
-    singleDate.style.display = 'none';
-    solarYear.style.display = 'none';
-    solarName.style.display = 'none';
-    solarOrientation.style.display = 'none';
-    solarLocation.style.display = 'none';
+    if (dateRange) dateRange.style.display = 'none';
+    if (singleDate) singleDate.style.display = 'none';
 
-    if (tab === 'solar') {
-        solarYear.style.display = '';
-        solarName.style.display = '';
-        solarOrientation.style.display = '';
-        solarLocation.style.display = '';
-    } else if (!isFocusBiwheel && (tab === 'timeline' || tab === 'biwheel' || tab === 'table')) {
-        dateRange.style.display = '';
+    if (!isFocusBiwheel && (tab === 'timeline' || tab === 'biwheel' || tab === 'table')) {
+        if (dateRange) dateRange.style.display = '';
     }
 
     if (biwheelTimeControls) {
@@ -3513,15 +2551,11 @@ async function onCalculate() {
     if (summaryBtn) summaryBtn.disabled = true;
     try {
         const tab = ForecastState.currentTab;
-        if (tab === 'solar') {
-            await calculateSolar();
-        } else {
-            const forcedMethod = tab === 'timeline' ? 'transits' : null;
-            await calculateAllForecastViews(forcedMethod);
-            await renderCurrentTabFromCache();
-            if (tab === 'biwheel') {
-                setForecastFocusMode(true);
-            }
+        const forcedMethod = tab === 'timeline' ? 'transits' : null;
+        await calculateAllForecastViews(forcedMethod);
+        await renderCurrentTabFromCache();
+        if (tab === 'biwheel') {
+            setForecastFocusMode(true);
         }
         if (isForecastMobileViewport()) {
             setForecastControlsExpanded(false);
@@ -4095,32 +3129,6 @@ function rebuildTableFromCachedState(method) {
 async function renderCurrentTabFromCache() {
     const tab = ForecastState.currentTab;
     const method = document.getElementById('methodSelect').value;
-    if (tab === 'solar') {
-        if (ForecastState.solarData) {
-            await hydrateSolarPreferences();
-            showState('solar', 'content');
-            renderSolar(ForecastState.solarData);
-        } else {
-            const year = parseInt(document.getElementById('solarYear').value, 10);
-            const lat = parseFloat(document.getElementById('solarLocationLat')?.value);
-            const lon = parseFloat(document.getElementById('solarLocationLon')?.value);
-            const name = document.getElementById('solarLocationName')?.value?.trim() || '';
-            const timezone = document.getElementById('solarLocationTimezone')?.value?.trim() || '';
-            const key = getSolarCacheKey(year, lat, lon, name, timezone);
-            const cached = ForecastState.solarCache[key];
-            if (cached) {
-                ForecastState.solarData = cached;
-                ForecastState.solarCalculatedYear = year;
-                await hydrateSolarPreferences();
-                showState('solar', 'content');
-                renderSolar(cached);
-            } else {
-                showState('solar', 'empty');
-            }
-        }
-        return;
-    }
-
     if (tab === 'timeline') {
         if (ForecastState.transitEvents) {
             showState('timeline', 'content');
@@ -4195,120 +3203,6 @@ async function renderCurrentTabFromCache() {
             showState('table', 'empty');
         }
     }
-}
-
-// ─── Solar calculation ──────────────────────────────────
-async function calculateSolar() {
-    showState('solar', 'loading');
-    const year = parseInt(document.getElementById('solarYear').value, 10);
-    if (!year || year < 1900 || year > 2100) throw new Error(t('page.forecast.errors.yearRange'));
-    localStorage.setItem(SOLAR_YEAR_STORAGE_KEY, String(year));
-
-    // Build request payload
-    const payload = {
-        user_id: ForecastState.userId,
-        year: year,
-        save_to_db: true,
-    };
-    const solarName = document.getElementById('solarName')?.value?.trim();
-    if (solarName) payload.name = solarName;
-
-    const lat = parseFloat(document.getElementById('solarLocationLat').value);
-    const lon = parseFloat(document.getElementById('solarLocationLon').value);
-    const name = document.getElementById('solarLocationName').value?.trim();
-    const sourceId = document.getElementById('solarLocationSourceId').value?.trim();
-    const locationTimezone = document.getElementById('solarLocationTimezone').value?.trim();
-    if (!isNaN(lat) && !isNaN(lon)) {
-        payload.location_latitude = lat;
-        payload.location_longitude = lon;
-        if (name) payload.location_name = name;
-        if (sourceId) payload.location_source_id = sourceId;
-        if (locationTimezone) payload.location_timezone = locationTimezone;
-        persistSolarLocationToStorage();
-    } else {
-        throw new Error(t('page.forecast.errors.selectLocationFromList'));
-    }
-
-    const cacheKey = getSolarCacheKey(year, lat, lon, name || '', locationTimezone || '');
-    const cached = ForecastState.solarCache[cacheKey];
-    if (cached) {
-        ForecastState.solarData = cached;
-        ForecastState.solarCalculatedYear = year;
-        await hydrateSolarPreferences();
-        showState('solar', 'content');
-        renderSolar(cached);
-        scheduleForecastStatePersist();
-        return;
-    }
-
-    const data = await apiPost('/solar/calculate', payload);
-    ForecastState.solarCache[cacheKey] = data;
-    ForecastState.solarData = data;
-    ForecastState.solarCalculatedYear = year;
-    await hydrateSolarPreferences();
-    showState('solar', 'content');
-    renderSolar(data);
-    scheduleForecastStatePersist();
-}
-
-function renderSolar(data) {
-    // Info bar
-    const infoBar = document.getElementById('solarInfoBar');
-    const si = data.solar_info;
-    infoBar.innerHTML = `
-        <div class="solar-info-item"><div class="si-label">${t('common.year')}</div><div class="si-value">${si.year}</div></div>
-        <div class="solar-info-item"><div class="si-label">${t('page.forecast.solar.info.utcDate')}</div><div class="si-value">${si.solar_datetime_utc}</div></div>
-        <div class="solar-info-item"><div class="si-label">${t('page.forecast.solar.info.localDate')}</div><div class="si-value">${si.solar_datetime_local}</div></div>
-        <div class="solar-info-item"><div class="si-label">${t('common.location')}</div><div class="si-value">${si.location?.name || t('common.notAvailable')}</div></div>
-    `;
-    renderSolarChart(data);
-    // Planets table
-    renderSolarPlanetsTable(data);
-}
-
-function renderSolarChart(data) {
-    const svg = document.getElementById('solarWheel');
-    if (!svg) return;
-    const filteredData = getFilteredSolarViewData(data);
-    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-    if (!ForecastState.solarWheel) {
-        ForecastState.solarWheel = new ChartWheel(svg);
-    }
-    if (typeof ForecastState.solarWheel.setPointScale === 'function') {
-        ForecastState.solarWheel.setPointScale(ForecastState.solarPointScale, { redraw: false });
-    }
-    ForecastState.solarWheel.setOrientationMode(ForecastState.solarOrientation, { redraw: false });
-    ForecastState.solarWheel.setAngleMarkerOptions?.({
-        ascDscBold: ForecastState.solarAngleAscDscBold,
-        mcIcBold: ForecastState.solarAngleMcIcBold,
-    }, { redraw: false });
-    ForecastState.solarWheel.draw(filteredData);
-    applySolarAspectFocus();
-    resetSolarView();
-}
-
-function renderSolarPlanetsTable(data) {
-    const renderer = getSolarDataRenderer();
-    if (!renderer) return;
-    const filteredData = getFilteredSolarViewData(data);
-    renderer.setAspectTypeFilter(ForecastState.solarAspectScope);
-    renderer.setDisplayPreferences({
-        showSpeed: ForecastState.solarShowSpeed,
-        showStationary: ForecastState.solarShowStationary,
-        showApplyingSeparating: ForecastState.solarShowApplyingSeparating,
-        showAspectText: ForecastState.solarShowAspectText,
-    });
-
-    renderer.render({
-        planets: filteredData.planets,
-        aspects: filteredData.aspects,
-        houses: [],
-        aspect_configurations: [],
-        stelliums: [],
-        balances: null,
-        cosmogram_pattern: null,
-    });
-    syncSolarHoveredAspectToActiveSurface();
 }
 
 // ─── UI Helpers ─────────────────────────────────────────

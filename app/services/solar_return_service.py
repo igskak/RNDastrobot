@@ -17,6 +17,7 @@ from app.database.models import User, NatalPlanet, SolarReturn
 from app.services.swisseph_engine import SwissEphemerisEngine
 from app.services.time_service import TimeService
 from app.services.aspect_service import AspectService
+from app.services.chart_derivation_service import ChartDerivationService
 from app.services.geocoding_service import GeocodingService
 from app.services.planet_characteristics_service import PlanetCharacteristicsService
 from app.services.preferences_runtime import PreferencesRuntimeResolver
@@ -205,6 +206,11 @@ class SolarReturnService:
             solar_aspects=solar_aspects,
             effective_timezone=effective_timezone,
         )
+        result = ChartDerivationService(self.db).enrich_solar_payload(
+            result,
+            user_id=user_id,
+            astrologer_id=user.astrologer_id,
+        )
         
         # 10. Сохранить в БД если нужно
         if save_to_db:
@@ -381,7 +387,20 @@ class SolarReturnService:
             payload['solar_id'] = str(solar.solar_id)
             payload['name'] = solar.name
             payload['planets'] = self._enrich_motion_flags(payload.get('planets', []), user_id=user_id)
-            return self._annotate_payload_aspects_with_phase(payload)
+            payload = self._annotate_payload_aspects_with_phase(payload)
+            derivation_service = ChartDerivationService(self.db)
+            if not derivation_service.has_extended_blocks(payload):
+                user = self.db.query(User).filter(User.user_id == user_id).first()
+                payload = derivation_service.enrich_solar_payload(
+                    payload,
+                    user_id=user_id,
+                    astrologer_id=user.astrologer_id if user else None,
+                )
+                payload['solar_id'] = str(solar.solar_id)
+                payload['name'] = solar.name
+                solar.chart_data = json.dumps(payload)
+                self.db.commit()
+            return payload
         return None
 
     def get_solar_return_by_id(self, solar_id: UUID) -> Optional[SolarReturn]:

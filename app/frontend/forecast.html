@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecast.title"></title>
-    <link rel="stylesheet" href="bundles/forecast.bundle.css?v=a7feb5d57535">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=a7feb5d57535">
+    <link rel="stylesheet" href="bundles/forecast.bundle.css?v=9d56311800ed">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=9d56311800ed">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = 'a7feb5d57535';</script>
+    <script>window.__APP_BUILD_ID__ = '9d56311800ed';</script>
 </head>
 <body class="forecast-page">
     <div class="page-loader" id="pageLoader">
@@ -78,11 +78,6 @@
                 <p data-i18n-html="page.forecast.help.sections.table.text"></p>
             </div>
 
-            <div class="help-section">
-                <h3 data-i18n="page.forecast.help.sections.solar.title"></h3>
-                <p data-i18n-html="page.forecast.help.sections.solar.text"></p>
-            </div>
-
             <div class="help-section help-tips">
                 <h3 data-i18n="page.forecast.help.sections.tips.title"></h3>
                 <ul>
@@ -125,7 +120,6 @@
             <button type="button" class="forecast-summary-view-btn active" data-forecast-quick-tab="timeline" data-i18n="page.forecast.tabs.timeline"></button>
             <button type="button" class="forecast-summary-view-btn" data-forecast-quick-tab="biwheel" data-i18n="page.forecast.tabs.biwheel"></button>
             <button type="button" class="forecast-summary-view-btn" data-forecast-quick-tab="table" data-i18n="page.forecast.tabs.table"></button>
-            <button type="button" class="forecast-summary-view-btn" data-forecast-quick-tab="solar" data-i18n="page.forecast.tabs.solar"></button>
         </div>
     </section>
 
@@ -149,35 +143,6 @@
             <input type="date" id="singleDate">
             <button class="preset-btn today-btn" id="btnToday" data-i18n="common.today"></button>
         </div>
-        <div class="control-group" id="solarYearGroup" style="display:none">
-            <label data-i18n="common.year"></label>
-            <input type="number" id="solarYear" min="1900" max="2100" style="width:80px">
-        </div>
-        <div class="control-group" id="solarNameGroup" style="display:none">
-            <label data-i18n="page.forecast.solar.nameLabel"></label>
-            <input type="text" id="solarName" maxlength="160" data-i18n-placeholder="page.forecast.solar.namePlaceholder">
-        </div>
-        <div class="control-group" id="solarOrientationGroup" style="display:none">
-            <label data-i18n="page.forecast.solar.orientation"></label>
-            <select id="solarOrientationSelect">
-                <option value="aries" selected data-i18n="page.forecast.solar.orientationAries"></option>
-                <option value="asc" data-i18n="page.forecast.solar.orientationAsc"></option>
-            </select>
-        </div>
-        <div class="control-group" id="solarLocationGroup" style="display:none">
-            <label data-i18n="common.location"></label>
-            <div id="solarLocationFields">
-                <div class="solar-place-wrapper">
-                    <input type="text" id="solarLocationName" data-i18n-placeholder="page.forecast.solar.locationPlaceholder" autocomplete="off">
-                    <div id="solarPlaceSuggestions" class="place-suggestions"></div>
-                </div>
-                <span class="solar-coords-display" id="solarCoordsDisplay"></span>
-                <input type="hidden" id="solarLocationLat">
-                <input type="hidden" id="solarLocationLon">
-                <input type="hidden" id="solarLocationSourceId">
-                <input type="hidden" id="solarLocationTimezone">
-            </div>
-        </div>
         <button class="btn-calculate" id="btnCalculate" data-i18n="common.calculate"></button>
     </div>
 
@@ -185,7 +150,6 @@
         <button class="forecast-tab active" data-tab="biwheel"><svg class="tab-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><circle cx="8" cy="8" r="3.5"/></svg><span data-i18n="page.forecast.tabs.biwheel"></span></button>
         <button class="forecast-tab" data-tab="timeline"><svg class="tab-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="2" y1="5" x2="11" y2="5"/><line x1="4" y1="8.5" x2="13" y2="8.5"/><line x1="2" y1="12" x2="8.5" y2="12"/></svg><span data-i18n="page.forecast.tabs.timeline"></span></button>
         <button class="forecast-tab" data-tab="table"><svg class="tab-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="1.5" y="1.5" width="13" height="13" rx="1"/><line x1="1.5" y1="5.5" x2="14.5" y2="5.5"/><line x1="1.5" y1="9.5" x2="14.5" y2="9.5"/></svg><span data-i18n="page.forecast.tabs.table"></span></button>
-        <button class="forecast-tab" data-tab="solar"><svg class="tab-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="2.8"/><line x1="8" y1="1.5" x2="8" y2="3"/><line x1="8" y1="13" x2="8" y2="14.5"/><line x1="1.5" y1="8" x2="3" y2="8"/><line x1="13" y1="8" x2="14.5" y2="8"/><line x1="3.4" y1="3.4" x2="4.4" y2="4.4"/><line x1="11.6" y1="11.6" x2="12.6" y2="12.6"/><line x1="12.6" y1="3.4" x2="11.6" y2="4.4"/><line x1="4.4" y1="11.6" x2="3.4" y2="12.6"/></svg><span data-i18n="page.forecast.tabs.solar"></span></button>
     </div>
 
     <div class="forecast-content">
@@ -425,129 +389,12 @@
             </div>
         </div>
 
-        <div class="forecast-pane" id="pane-solar">
-            <div class="forecast-empty" id="solarEmpty">
-                <div class="empty-icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="16" cy="16" r="5.5"/><line x1="16" y1="3" x2="16" y2="6"/><line x1="16" y1="26" x2="16" y2="29"/><line x1="3" y1="16" x2="6" y2="16"/><line x1="26" y1="16" x2="29" y2="16"/><line x1="6.8" y1="6.8" x2="8.9" y2="8.9"/><line x1="23.1" y1="23.1" x2="25.2" y2="25.2"/><line x1="25.2" y1="6.8" x2="23.1" y2="8.9"/><line x1="8.9" y1="23.1" x2="6.8" y2="25.2"/></svg></div>
-                <div data-i18n="page.forecast.solar.empty"></div>
-            </div>
-            <div class="forecast-loading" id="solarLoading" style="display:none">
-                <div class="spinner"></div>
-                <div data-i18n="page.forecast.solar.loading"></div>
-            </div>
-            <div class="solar-container" id="solarContainer" style="display:none">
-                <div class="solar-info-bar" id="solarInfoBar"></div>
-                <div class="solar-main-row">
-                    <aside class="solar-data-section" id="solarDataSection">
-                        <div class="solar-panel-tabs">
-                            <button class="solar-panel-tab active" data-solar-panel-tab="solar-planets-list" data-i18n="page.chart.tabs.planets"></button>
-                            <button class="solar-panel-tab" data-solar-panel-tab="solar-aspects-list" data-i18n="page.chart.tabs.aspects"></button>
-                            <button class="solar-panel-tab" data-solar-panel-tab="solar-grid-list" data-i18n="page.chart.tabs.grid"></button>
-                        </div>
-                        <div class="solar-panel-content">
-                            <div id="solar-planets-list" class="solar-panel-pane active">
-                                <table class="data-table compact">
-                                    <thead>
-                                        <tr>
-                                            <th data-i18n="page.chart.table.planets.symbol"></th>
-                                            <th data-i18n="page.chart.table.planets.position"></th>
-                                            <th class="planet-speed-col" data-i18n="page.chart.table.planets.speed"></th>
-                                            <th data-i18n="page.chart.table.planets.house"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="solarPlanetsTable"></tbody>
-                                </table>
-                            </div>
-                            <div id="solar-aspects-list" class="solar-panel-pane">
-                                <table class="data-table compact">
-                                    <thead>
-                                        <tr>
-                                            <th colspan="2" class="sortable" data-sort="planet" data-i18n="page.chart.table.aspects.aspect"></th>
-                                            <th class="sortable" data-sort="type" data-i18n="page.chart.table.aspects.type"></th>
-                                            <th class="sortable" data-sort="orb" data-i18n="page.chart.table.aspects.orb"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="solarAspectsTable"></tbody>
-                                </table>
-                            </div>
-                            <div id="solar-grid-list" class="solar-panel-pane">
-                                <h4 class="subsection-title" data-i18n="page.chart.grid.title"></h4>
-                                <div id="solarAspectGridContainer"></div>
-                            </div>
-                        </div>
-                    </aside>
-                    <div class="solar-chart-section">
-                        <div class="solar-wheel-wrapper" id="solarWheelWrapper">
-                            <svg id="solarWheel" viewBox="0 0 500 500"></svg>
-                            <div class="bw-settings-panel hidden" id="solarSettingsPanel">
-                                <div class="bw-settings-dialog solar-settings-dialog">
-                                    <button class="bw-settings-close" id="solarSettingsClose" data-i18n-title="common.close">✕</button>
-                                    <div class="bw-settings-title" data-i18n="page.forecast.solar.orientation"></div>
-                                    <select id="solarOrientationSelectModal" class="bw-settings-select">
-                                        <option value="aries" selected data-i18n="page.forecast.solar.orientationAries"></option>
-                                        <option value="asc" data-i18n="page.forecast.solar.orientationAsc"></option>
-                                    </select>
-                                    <div class="bw-settings-title">Aspect Scope</div>
-                                    <select id="solarAspectScopeSelect" class="bw-settings-select">
-                                        <option value="all">All</option>
-                                        <option value="major">Major</option>
-                                        <option value="minor">Minor</option>
-                                    </select>
-                                    <div class="bw-settings-title" data-i18n="page.forecast.solar.settings.pointSize"></div>
-                                    <div class="bw-size-control">
-                                        <input type="range" id="solarPointScaleRange" min="80" max="170" step="5" value="100">
-                                        <span id="solarPointScaleValue">100%</span>
-                                    </div>
-                                    <div class="forecast-settings-stack">
-                                        <label class="forecast-settings-check">
-                                            <input type="checkbox" id="solarAngleAscDscBoldToggle" checked>
-                                            <span data-i18n="page.chart.settings.boldAscDsc"></span>
-                                        </label>
-                                        <label class="forecast-settings-check">
-                                            <input type="checkbox" id="solarAngleMcIcBoldToggle" checked>
-                                            <span data-i18n="page.chart.settings.boldMcIc"></span>
-                                        </label>
-                                    </div>
-                                    <div class="bw-settings-title">Bodies Matrix</div>
-                                    <div class="forecast-settings-matrix" id="solarMatrixEditor"></div>
-                                    <div class="bw-settings-title">Aspect Types</div>
-                                    <div class="forecast-settings-grid" id="solarAspectTypeToggles"></div>
-                                    <div class="forecast-settings-stack">
-                                        <label class="forecast-settings-check">
-                                            <input type="checkbox" id="solarShowApplyingSeparatingToggle">
-                                            <span data-i18n="page.accountSettings.options.showApplyingSeparating"></span>
-                                        </label>
-                                        <label class="forecast-settings-check">
-                                            <input type="checkbox" id="solarShowSpeedToggle">
-                                            <span>Show speed</span>
-                                        </label>
-                                        <label class="forecast-settings-check">
-                                            <input type="checkbox" id="solarShowStationaryToggle">
-                                            <span>Show stationary</span>
-                                        </label>
-                                    </div>
-                                    <div class="bw-settings-row">
-                                        <button class="bw-settings-action" id="solarSaveDefaultsBtn">Save as account defaults</button>
-                                        <button class="bw-settings-action" id="solarResetDefaultsBtn">Reset to defaults</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="biwheel-zoom-controls">
-                                <button class="bw-zoom-btn" id="solarZoomIn" data-i18n-title="common.zoomIn">+</button>
-                                <button class="bw-zoom-btn" id="solarZoomOut" data-i18n-title="common.zoomOut">−</button>
-                                <button class="bw-zoom-btn" id="solarZoomReset" data-i18n-title="common.resetView">⟳</button>
-                                <button class="bw-zoom-btn bw-settings-btn" id="solarSettingsBtn" data-i18n-title="common.settings">⚙</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <div class="timeline-tooltip" id="timelineTooltip"></div>
     <div id="forecastToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/forecast.bundle.js?v=a7feb5d57535"></script>
-    <script src="js/locale-switcher.js?v=a7feb5d57535"></script>
+    <script type="module" src="js/bundles/forecast.bundle.js?v=9d56311800ed"></script>
+    <script src="js/locale-switcher.js?v=9d56311800ed"></script>
 </body>
 </html>

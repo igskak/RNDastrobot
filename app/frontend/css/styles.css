@@ -1556,6 +1556,54 @@ input[type="number"] {
     gap: 14px;
 }
 
+.dispositor-panel--tabs {
+    gap: 12px;
+}
+
+.dispositor-tabs {
+    display: inline-grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: min(100%, 420px);
+    padding: 3px;
+    border: 1px solid rgba(30, 58, 95, 0.10);
+    border-radius: 10px;
+    background: rgba(240, 237, 228, 0.72);
+}
+
+.dispositor-tab {
+    appearance: none;
+    min-height: 34px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 8px 10px;
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.1;
+    transition: background var(--transition), color var(--transition), box-shadow var(--transition);
+}
+
+.dispositor-tab:hover {
+    color: var(--accent);
+}
+
+.dispositor-tab.active {
+    background: rgba(255, 255, 255, 0.94);
+    color: var(--accent);
+    box-shadow: 0 6px 14px rgba(26, 22, 20, 0.06);
+}
+
+.dispositor-tab-panel {
+    display: none;
+}
+
+.dispositor-tab-panel.active {
+    display: block;
+}
+
 .dispositor-jones-card,
 .dispositor-section {
     border: 1px solid rgba(30, 58, 95, 0.10);
