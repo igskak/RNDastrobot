@@ -613,7 +613,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                     };
                     const isMajor = MAJOR_ASPECTS.has(aspect.aspect_type);
                     const color = this.getAspectColor(aspect.aspect_type, aspect.harmonic_type);
-                    const thickness = Math.max(0.3, 1.5 - ((Number(aspect.orb) || 0) / 12) * 1.2);
+                    const thickness = Math.max(0.6, 3 - ((Number(aspect.orb) || 0) / 12) * 2.4);
                     const aspectAttrs = {
                         'data-aspect': aspectKey,
                         'data-aspect-key': aspectKey,

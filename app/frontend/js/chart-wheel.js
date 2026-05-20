@@ -764,9 +764,9 @@ class ChartWheel {
             // Цвет по типу аспекта
             const color = this.getAspectColor(aspect.aspect_type, aspect.harmonic_type);
 
-            // Толщина: более тонкие линии (0° → 1.5px, 10° → 0.3px)
+            // Толщина: более заметные линии (0° → 3px, 10° → 0.6px)
             const maxOrb = 12;
-            const thickness = Math.max(0.3, 1.5 - (aspect.orb / maxOrb) * 1.2);
+            const thickness = Math.max(0.6, 3 - (aspect.orb / maxOrb) * 2.4);
 
             const dashArray = isMajor ? 'none' : '3,2';
 

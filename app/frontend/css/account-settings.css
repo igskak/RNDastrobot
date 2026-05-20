@@ -839,13 +839,18 @@ body.account-settings-modal-open {
 .account-settings-table--dignities tbody th[scope="row"] {
     width: 52px;
     min-width: 52px;
-    padding-left: 8px;
-    padding-right: 8px;
+    padding: 4px 6px;
     text-align: center;
 }
 
+.account-settings-table--dignities thead th,
+.account-settings-table--dignities tbody th,
 .account-settings-table--dignities tbody td {
-    padding: 8px 6px;
+    border-bottom: none;
+}
+
+.account-settings-table--dignities tbody td {
+    padding: 4px 5px;
 }
 
 .account-settings-dignities-wrap {
@@ -858,16 +863,16 @@ body.account-settings-modal-open {
 .account-settings-dignity-stack {
     display: inline-flex;
     flex-wrap: nowrap;
-    gap: 4px;
+    gap: 3px;
     min-width: max-content;
 }
 
 .account-settings-dignity-glyph {
-    min-width: 24px;
-    height: 24px;
+    min-width: 20px;
+    height: 20px;
     padding: 0;
     border: 1px solid rgba(30, 58, 95, 0.08);
-    border-radius: 8px;
+    border-radius: 7px;
     background: rgba(255, 255, 255, 0.82);
     color: rgba(30, 58, 95, 0.28);
     display: inline-flex;
