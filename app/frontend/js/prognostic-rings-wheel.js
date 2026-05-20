@@ -374,7 +374,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                 const pInner = this.polar(ring.inner, angle);
                 const houseNumber = Number(house.number);
                 const innerStroke = ring.method === 'natal' ? this.getHouseLineColor(false) : ring.color;
-                const innerStrokeWidth = ring.method === 'natal' ? 1 : 0.7;
+                const innerStrokeWidth = this.getHouseCuspStrokeWidth(houseNumber, ring.method === 'natal' ? 1 : 0.7);
                 const innerOpacity = ring.method === 'natal'
                     ? 1
                     : 0.48;
@@ -453,6 +453,17 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                 }
                 this.layers.houses.appendChild(group);
             });
+        }
+
+        getHouseCuspStrokeWidth(houseNumber, normalWidth = 1) {
+            const number = Number(houseNumber);
+            if (number === 1 || number === 7) {
+                return this.angleAscDscBold !== false ? Math.max(2.2, normalWidth) : normalWidth;
+            }
+            if (number === 4 || number === 10) {
+                return this.angleMcIcBold !== false ? Math.max(2.2, normalWidth) : normalWidth;
+            }
+            return normalWidth;
         }
 
         getNatalCuspOuterRadius() {

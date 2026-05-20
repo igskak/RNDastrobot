@@ -621,7 +621,7 @@ class ChartWheel {
                 x2: this.center + lineOuterR * Math.cos(angle),
                 y2: this.center + lineOuterR * Math.sin(angle),
                 stroke: this.getHouseLineColor(false),
-                'stroke-width': 1,
+                'stroke-width': this.getHouseCuspStrokeWidth(house.number, 1),
                 class: 'house-cusp-line'
             }));
 
@@ -642,7 +642,7 @@ class ChartWheel {
                     x2: this.center + outsideSegmentEndR * Math.cos(angle),
                     y2: this.center + outsideSegmentEndR * Math.sin(angle),
                     stroke: this.getHouseLineColor(false),
-                    'stroke-width': 1.2,
+                    'stroke-width': this.getHouseCuspStrokeWidth(house.number, 1.2),
                     class: 'house-cusp-line'
                 }));
             }
@@ -1143,6 +1143,10 @@ class ChartWheel {
         const lineInnerR = this.outerRadius + 1;
         const lineOuterR = this.outerRadius + outsideExtension;
         const labelR = this.outerRadius + (this.houseLabelsOutside ? 20 : 8);
+        const isAscDsc = label === 'ASC' || label === 'DSC';
+        const isMcIc = label === 'MC' || label === 'IC';
+        const isBoldAngle = (isAscDsc && this.angleMarkerOptions.ascDscBold !== false)
+            || (isMcIc && this.angleMarkerOptions.mcIcBold !== false);
 
         if (this.houseLabelsOutside) {
             this.layers.angles.appendChild(this.createSvgElement('line', {
@@ -1151,7 +1155,7 @@ class ChartWheel {
                 x2: this.center + lineOuterR * Math.cos(angle),
                 y2: this.center + lineOuterR * Math.sin(angle),
                 stroke: this.getHouseLineColor(false),
-                'stroke-width': 1.2
+                'stroke-width': isBoldAngle ? 2.4 : 1.2
             }));
         }
 
@@ -1166,9 +1170,20 @@ class ChartWheel {
             y: this.center + labelR * Math.sin(angle) + 3,
             'text-anchor': anchor,
             'font-size': '9',
-            'font-weight': '500',
+            'font-weight': isBoldAngle ? '800' : '500',
             fill: this.houseLabelsOutside ? this.getHouseLabelColor(false) : this.angleMarkerOptions.color
         }, label));
+    }
+
+    getHouseCuspStrokeWidth(houseNumber, normalWidth = 1) {
+        const number = Number(houseNumber);
+        if (number === 1 || number === 7) {
+            return this.angleMarkerOptions.ascDscBold !== false ? 2.4 : normalWidth;
+        }
+        if (number === 4 || number === 10) {
+            return this.angleMarkerOptions.mcIcBold !== false ? 2.4 : normalWidth;
+        }
+        return normalWidth;
     }
 
     drawArc(outerR, innerR, startAngle, endAngle, fill, layer = null) {
