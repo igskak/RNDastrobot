@@ -624,7 +624,10 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                     };
                     const isMajor = MAJOR_ASPECTS.has(aspect.aspect_type);
                     const color = this.getAspectColor(aspect.aspect_type, aspect.harmonic_type);
-                    const thickness = Math.max(0.6, 3 - ((Number(aspect.orb) || 0) / 12) * 2.4);
+                    const baseThickness = Math.max(0.3, 1.5 - ((Number(aspect.orb) || 0) / 12) * 1.2);
+                    const thickness = aspect.aspect_type === 'Conjunction'
+                        ? baseThickness * 2
+                        : baseThickness;
                     const aspectAttrs = {
                         'data-aspect': aspectKey,
                         'data-aspect-key': aspectKey,
@@ -642,7 +645,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                             r: this.conjunctionDisplay.dotRadius,
                             fill: color,
                             stroke: color,
-                            'stroke-width': 1.2,
+                            'stroke-width': aspect.aspect_type === 'Conjunction' ? 2.4 : 1.2,
                             opacity: isMajor ? 0.82 : 0.55,
                             class: 'aspect-line aspect-dot',
                             ...aspectAttrs,

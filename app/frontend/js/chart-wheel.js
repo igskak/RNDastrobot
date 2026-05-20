@@ -764,9 +764,12 @@ class ChartWheel {
             // Цвет по типу аспекта
             const color = this.getAspectColor(aspect.aspect_type, aspect.harmonic_type);
 
-            // Толщина: более заметные линии (0° → 3px, 10° → 0.6px)
+            // Толщина: обычные аспекты прежние, соединение в 2 раза заметнее.
             const maxOrb = 12;
-            const thickness = Math.max(0.6, 3 - (aspect.orb / maxOrb) * 2.4);
+            const baseThickness = Math.max(0.3, 1.5 - (aspect.orb / maxOrb) * 1.2);
+            const thickness = aspect.aspect_type === 'Conjunction'
+                ? baseThickness * 2
+                : baseThickness;
 
             const dashArray = isMajor ? 'none' : '3,2';
 
@@ -787,7 +790,7 @@ class ChartWheel {
                     r: this.conjunctionDisplay.dotRadius,
                     fill: color,
                     stroke: color,
-                    'stroke-width': 1.2,
+                    'stroke-width': aspect.aspect_type === 'Conjunction' ? 2.4 : 1.2,
                     opacity: isMajor ? 0.82 : 0.55,
                     class: 'aspect-line aspect-dot',
                     ...aspectAttrs,
