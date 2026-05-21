@@ -47,6 +47,32 @@ test('forecast new storage normalizes invalid custom time steps', () => {
     assert.deepEqual(snapshot.customStep, { amount: 1, unit: 'day' });
 });
 
+test('forecast new storage normalizes direction type values', () => {
+    const natalData = makeNatalChart();
+    const invalidSnapshot = buildPersistedState({
+        natalData,
+        state: {
+            directionType: 'wrong',
+        },
+    });
+    const legacySnapshot = buildPersistedState({
+        natalData,
+        state: {
+            directionType: 'symbolic',
+        },
+    });
+    const naibodSnapshot = buildPersistedState({
+        natalData,
+        state: {
+            directionType: 'equatorial',
+        },
+    });
+
+    assert.equal(invalidSnapshot.directionType, 'zodiacal');
+    assert.equal(legacySnapshot.directionType, 'zodiacal');
+    assert.equal(naibodSnapshot.directionType, 'equatorial');
+});
+
 test('forecast new storage preserves prognostic cusp visibility toggles', () => {
     const natalData = makeNatalChart();
     const snapshot = buildPersistedState({

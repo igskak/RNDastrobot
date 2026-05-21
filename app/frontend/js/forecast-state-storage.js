@@ -5,7 +5,8 @@
     const STORAGE_VERSION = 1;
     const VALID_TABS = ['biwheel', 'timeline', 'table'];
     const VALID_SCALE_UNITS = ['day', 'week', 'month'];
-    const VALID_DIRECTION_TYPES = ['solar_arc', 'symbolic', 'equatorial'];
+    const DEFAULT_DIRECTION_TYPE = 'zodiacal';
+    const VALID_DIRECTION_TYPES = ['solar_arc', 'zodiacal', 'equatorial'];
     const VALID_BIWHEEL_DISPLAY_MODES = ['prognostic', 'natal-pinned'];
     const VALID_TABLE_SORT_COLS = ['date', 'method', 'transit', 'aspect', 'natal', 'orb', 'type'];
 
@@ -31,6 +32,12 @@
     function sanitizeInteger(value, fallback = 0) {
         const parsed = Number.parseInt(value, 10);
         return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+    }
+
+    function normalizeDirectionType(value) {
+        const normalized = String(value || '').trim();
+        if (normalized === 'symbolic') return 'zodiacal';
+        return VALID_DIRECTION_TYPES.includes(normalized) ? normalized : DEFAULT_DIRECTION_TYPE;
     }
 
     function pickEnum(value, allowed, fallback) {
@@ -84,7 +91,7 @@
             transitScaleIndex: sanitizeInteger(source.transitScaleIndex, 0),
             transitMoment: sanitizeDateValue(source.transitMoment),
             pendingBiwheelDate: sanitizeDateValue(source.pendingBiwheelDate),
-            directionType: pickEnum(source.directionType, VALID_DIRECTION_TYPES, 'solar_arc'),
+            directionType: normalizeDirectionType(source.directionType),
             biwheelDisplayMode: pickEnum(source.biwheelDisplayMode, VALID_BIWHEEL_DISPLAY_MODES, 'prognostic'),
             tableSortCol: pickEnum(source.tableSortCol, VALID_TABLE_SORT_COLS, 'date'),
             tableSortAsc: source.tableSortAsc !== false,

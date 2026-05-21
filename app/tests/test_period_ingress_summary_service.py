@@ -4,6 +4,7 @@ from datetime import date
 from uuid import uuid4
 
 from app.services.period_ingress_summary_service import (
+    NAIBOD_KEY,
     PeriodIngressSummaryService,
     _NatalContext,
 )
@@ -105,3 +106,18 @@ def test_sort_priority_matches_required_order():
     assert PeriodIngressSummaryService._object_sort_priority("Pluto") < PeriodIngressSummaryService._object_sort_priority("TrueNorthNode")
     assert PeriodIngressSummaryService._object_sort_priority("TrueNorthNode") < PeriodIngressSummaryService._object_sort_priority("Cusp1")
     assert PeriodIngressSummaryService._object_sort_priority("Cusp1") < PeriodIngressSummaryService._object_sort_priority("Cusp12")
+
+
+def test_direction_type_normalization_uses_zodiacal_default_and_alias():
+    assert PeriodIngressSummaryService._normalize_direction_type("") == "zodiacal"
+    assert PeriodIngressSummaryService._normalize_direction_type("symbolic") == "zodiacal"
+    assert PeriodIngressSummaryService._normalize_direction_type("solar_arc") == "solar_arc"
+
+
+def test_period_summary_naibod_arc_uses_key_once():
+    age_years = 57.56180581785621
+
+    arc = PeriodIngressSummaryService._calculate_direction_arc("equatorial", 0, age_years)
+
+    assert arc == age_years * NAIBOD_KEY
+    assert arc < age_years

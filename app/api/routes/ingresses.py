@@ -21,8 +21,8 @@ class PeriodIngressSummaryRequest(BaseModel):
     start_date: date_type = Field(..., description="Начало периода")
     end_date: date_type = Field(..., description="Конец периода")
     timezone: str = Field("UTC", description="IANA timezone")
-    direction_type: Literal["solar_arc", "symbolic", "equatorial"] = Field(
-        "solar_arc",
+    direction_type: Literal["solar_arc", "zodiacal", "symbolic", "equatorial"] = Field(
+        "zodiacal",
         description="Тип дирекций для части directions в summary",
     )
 

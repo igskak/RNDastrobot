@@ -22,6 +22,10 @@ from app.utils.ephemeris import get_ephemeris_path
 
 TROPICAL_YEAR_DAYS = 365.2421897
 NAIBOD_KEY = 0.98565
+DEFAULT_DIRECTION_TYPE = "zodiacal"
+DIRECTION_TYPE_ALIASES = {
+    "symbolic": "zodiacal",
+}
 
 PLANET_SUMMARY_ORDER = [
     "Sun", "Moon", "Mercury", "Venus", "Mars", "Jupiter", "Saturn",
@@ -63,7 +67,7 @@ class PeriodIngressSummaryService:
     """Server-side ingress summary for a whole period (biwheel table)."""
 
     CACHE_TTL_SECONDS = 15 * 60
-    CALC_VERSION = "ingress_period_summary_v5"
+    CALC_VERSION = "ingress_period_summary_v6"
 
     _cache: Dict[str, _CacheEntry] = {}
     _in_flight: Dict[str, _InFlightEntry] = {}
@@ -196,8 +200,9 @@ class PeriodIngressSummaryService:
 
     @staticmethod
     def _normalize_direction_type(direction_type: str) -> str:
-        value = str(direction_type or "").strip()
-        return value if value in {"solar_arc", "symbolic", "equatorial"} else "solar_arc"
+        value = str(direction_type or DEFAULT_DIRECTION_TYPE).strip()
+        value = DIRECTION_TYPE_ALIASES.get(value, value)
+        return value if value in {"solar_arc", "zodiacal", "equatorial"} else DEFAULT_DIRECTION_TYPE
 
     @classmethod
     def _build_cache_key(
@@ -445,10 +450,10 @@ class PeriodIngressSummaryService:
             prog_sun_data, _ = swe.calc_ut(progressed_jd, swe.SUN, swe.FLG_SWIEPH)
             arc = prog_sun_data[0] - natal_sun_data[0]
             return arc + 360 if arc < 0 else arc
-        if direction_type == "symbolic":
+        if direction_type in {"zodiacal", "symbolic"}:
             return age_years
         if direction_type == "equatorial":
-            return (age_years * NAIBOD_KEY * TROPICAL_YEAR_DAYS) % 360
+            return (age_years * NAIBOD_KEY) % 360
         return 0.0
 
     def _build_period_rows(self, snapshots: List[Dict], method: str, timezone: str) -> List[Dict]:

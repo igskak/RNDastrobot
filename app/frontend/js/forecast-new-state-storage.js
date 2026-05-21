@@ -5,6 +5,8 @@
     const STORAGE_VERSION = 1;
     const MATRIX_SCHEMA_VERSION = 2;
     const VALID_LAYERS = ['transit', 'progression', 'direction'];
+    const DEFAULT_DIRECTION_TYPE = 'zodiacal';
+    const VALID_DIRECTION_TYPES = ['solar_arc', 'zodiacal', 'equatorial'];
     const VALID_STEP_MODES = ['second', 'minute', 'hour', 'day', 'week', 'month', 'year'];
     const VALID_CUSTOM_STEP_UNITS = ['second', 'minute', 'hour', 'day', 'week', 'month', 'year'];
     const VALID_TABS = ['Planets', 'Aspects', 'Grid', 'Configs', 'Balances', 'Rulers'];
@@ -44,6 +46,12 @@
 
     function pickEnum(value, allowed, fallback) {
         return allowed.includes(value) ? value : fallback;
+    }
+
+    function normalizeDirectionType(value) {
+        const normalized = String(value || '').trim();
+        if (normalized === 'symbolic') return 'zodiacal';
+        return VALID_DIRECTION_TYPES.includes(normalized) ? normalized : DEFAULT_DIRECTION_TYPE;
     }
 
     function sanitizeLayerList(value) {
@@ -94,6 +102,7 @@
             } : { name: '', latitude: null, longitude: null },
             activeLayers: sanitizeLayerList(source.activeLayers),
             selectedRightLayer: pickEnum(source.selectedRightLayer, VALID_LAYERS, 'transit'),
+            directionType: normalizeDirectionType(source.directionType),
             stepMode: pickEnum(source.stepMode, VALID_STEP_MODES, 'hour'),
             customStep: sanitizeCustomStep(source.customStep),
             leftTab: pickEnum(source.leftTab, VALID_TABS, 'Planets'),

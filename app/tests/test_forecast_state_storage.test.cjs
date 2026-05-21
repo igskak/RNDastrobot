@@ -72,7 +72,7 @@ test('buildPersistedState normalizes invalid forecast values', () => {
     assert.equal(snapshot.transitScaleIndex, 0);
     assert.equal(snapshot.transitMoment, '');
     assert.equal(snapshot.pendingBiwheelDate, '2026-03-18');
-    assert.equal(snapshot.directionType, 'solar_arc');
+    assert.equal(snapshot.directionType, 'zodiacal');
     assert.equal(snapshot.biwheelDisplayMode, 'prognostic');
     assert.equal(snapshot.tableSortCol, 'date');
     assert.equal(snapshot.tableSortAsc, false);
@@ -88,6 +88,18 @@ test('buildPersistedState normalizes invalid forecast values', () => {
         singleDate: '2026-03-18',
         filterMajor: false,
     });
+});
+
+test('direction type storage normalizes legacy symbolic to zodiacal', () => {
+    const natalChart = makeNatalChart();
+    const snapshot = buildPersistedState({
+        natalData: natalChart,
+        state: {
+            directionType: 'symbolic',
+        },
+    });
+
+    assert.equal(snapshot.directionType, 'zodiacal');
 });
 
 test('parsePersistedState restores only snapshots for the same chart', () => {

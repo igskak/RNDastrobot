@@ -3,8 +3,8 @@ Direction Service — расчёт дирекций (Directions)
 
 Реализация по образцу ZET. Поддерживаемые типы дирекций:
 1. Solar Arc — дуга = движение прогрессивного Солнца от натального
-2. Symbolic — дуга = возраст × 1° (1 градус = 1 год)
-3. Equatorial (Naibod) — дуга = возраст × ключ Найбода (0.98565°/день)
+2. Zodiacal — дуга = возраст × 1° (1 градус = 1 год)
+3. Equatorial (Naibod) — дуга = возраст × ключ Найбода (0.98565°/год)
 
 Все точки карты (планеты, углы, спецточки) смещаются на вычисленную дугу.
 Дома остаются натальными.
@@ -33,14 +33,18 @@ from app.utils.constants import (
 
 # Константы
 TROPICAL_YEAR_DAYS = 365.2421897  # Тропический год в днях
-NAIBOD_KEY = 0.98565  # Ключ Найбода: среднее суточное движение Солнца в градусах
+NAIBOD_KEY = 0.98565  # Ключ Найбода: среднее суточное движение Солнца как годовая дуга
+DEFAULT_DIRECTION_TYPE = 'zodiacal'
+DIRECTION_TYPE_ALIASES = {
+    'symbolic': 'zodiacal',
+}
 
 
 class DirectionService:
     """Сервис для расчёта дирекций"""
 
     # Допустимые типы дирекций
-    DIRECTION_TYPES = ('solar_arc', 'symbolic', 'equatorial')
+    DIRECTION_TYPES = ('solar_arc', 'zodiacal', 'symbolic', 'equatorial')
 
     def __init__(self, db_session: Session, ephe_path: str = None):
         self.db = db_session
@@ -55,7 +59,7 @@ class DirectionService:
         self,
         user_id: UUID,
         target_date: date,
-        direction_type: str = 'solar_arc',
+        direction_type: str = DEFAULT_DIRECTION_TYPE,
         save_to_db: bool = False
     ) -> Dict:
         """
@@ -64,12 +68,13 @@ class DirectionService:
         Args:
             user_id: UUID пользователя с натальной картой
             target_date: Дата, на которую рассчитывается дирекция
-            direction_type: Тип дирекции (solar_arc, symbolic, equatorial)
+            direction_type: Тип дирекции (solar_arc, zodiacal/symbolic, equatorial)
             save_to_db: Сохранить результат в БД
             
         Returns:
             Dict с полными данными дирекционной карты
         """
+        direction_type = self.normalize_direction_type(direction_type)
         if direction_type not in self.DIRECTION_TYPES:
             raise ValueError(f"Invalid direction_type: {direction_type}. "
                            f"Must be one of: {self.DIRECTION_TYPES}")
@@ -204,24 +209,27 @@ class DirectionService:
                         f"prog_sun={prog_sun_lon:.4f}°, arc={arc:.4f}°")
             return arc
 
-        elif direction_type == 'symbolic':
-            # Symbolic: 1° = 1 год
+        elif direction_type in ('zodiacal', 'symbolic'):
+            # Zodiacal: 1° = 1 год
             arc = age_years * 1.0
-            logger.debug(f"Symbolic: age={age_years:.4f} years, arc={arc:.4f}°")
+            logger.debug(f"Zodiacal: age={age_years:.4f} years, arc={arc:.4f}°")
             return arc
 
         elif direction_type == 'equatorial':
-            # Equatorial (Naibod): ключ Найбода = 0.98565°/день
-            # За год: 0.98565° × 365.2421897 ≈ 360°
-            # Но для дирекций используется: arc = age × 360° / 365.2421897
-            # Что эквивалентно: arc = age × NAIBOD_KEY × 365.2421897
-            arc = age_years * NAIBOD_KEY * TROPICAL_YEAR_DAYS
+            # Equatorial (Naibod): 1 год жизни = среднее суточное движение Солнца.
+            arc = age_years * NAIBOD_KEY
             # Нормализуем к 0-360
             arc = arc % 360
             logger.debug(f"Equatorial (Naibod): age={age_years:.4f} years, arc={arc:.4f}°")
             return arc
 
         raise ValueError(f"Unknown direction_type: {direction_type}")
+
+    @staticmethod
+    def normalize_direction_type(direction_type: str) -> str:
+        """Normalize legacy API values to canonical direction method names."""
+        value = str(direction_type or DEFAULT_DIRECTION_TYPE).strip()
+        return DIRECTION_TYPE_ALIASES.get(value, value or DEFAULT_DIRECTION_TYPE)
 
     def _apply_arc_to_objects(
         self,
@@ -280,8 +288,9 @@ class DirectionService:
         """Получить описание метода дирекции"""
         descriptions = {
             'solar_arc': 'Solar Arc Directions: все точки смещаются на дугу движения Солнца',
-            'symbolic': 'Symbolic Directions: 1° = 1 год жизни',
-            'equatorial': 'Equatorial (Naibod) Directions: ключ Найбода (0.98565°/день)',
+            'zodiacal': 'Zodiacal Directions: 1° = 1 год жизни',
+            'symbolic': 'Zodiacal Directions: 1° = 1 год жизни',
+            'equatorial': 'Equatorial (Naibod) Directions: ключ Найбода (0.98565°/год)',
         }
         return descriptions.get(direction_type, 'Unknown method')
 
@@ -584,6 +593,7 @@ class DirectionService:
         direction_type: str
     ) -> Optional[Dict]:
         """Получить сохранённую дирекцию из БД"""
+        direction_type = self.normalize_direction_type(direction_type)
         direction = self.db.query(Direction).filter(
             Direction.user_id == user_id,
             Direction.target_date == target_date,

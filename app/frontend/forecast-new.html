@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Прогностика New</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=c953d520abd4">
-    <script>window.__APP_BUILD_ID__ = 'c953d520abd4';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=52c70a2f286e">
+    <script>window.__APP_BUILD_ID__ = '52c70a2f286e';</script>
 </head>
 <body class="forecast-new-page">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -28,10 +28,17 @@
                 <input type="checkbox" data-layer-toggle="progression">
                 <span>Прогрессии</span>
             </label>
-            <label class="forecast-new-layer-toggle forecast-new-layer-toggle--direction">
-                <input type="checkbox" data-layer-toggle="direction">
-                <span>Дирекции</span>
-            </label>
+            <div class="forecast-new-layer-direction-control">
+                <label class="forecast-new-layer-toggle forecast-new-layer-toggle--direction">
+                    <input type="checkbox" data-layer-toggle="direction">
+                    <span>Дирекции</span>
+                </label>
+                <select id="forecastNewDirectionTypeSelect" class="forecast-new-direction-type-select" aria-label="Тип дирекций">
+                    <option value="zodiacal">Зодиакальные</option>
+                    <option value="solar_arc">Солнечная дуга</option>
+                    <option value="equatorial">Найбод</option>
+                </select>
+            </div>
         </div>
         <div class="header-nav-buttons forecast-new-header-actions">
             <a href="/" class="header-nav-btn" data-i18n="page.chart.nav.home"></a>
@@ -354,6 +361,6 @@
         </aside>
     </main>
 
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=c953d520abd4"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=52c70a2f286e"></script>
 </body>
 </html>

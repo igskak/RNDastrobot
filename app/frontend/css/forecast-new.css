@@ -74,6 +74,29 @@
     accent-color: #0f766e;
 }
 
+.forecast-new-layer-direction-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.forecast-new-direction-type-select {
+    min-height: 34px;
+    max-width: 152px;
+    padding: 0 28px 0 10px;
+    border: 1px solid rgba(30, 58, 95, 0.14);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.74);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.forecast-new-direction-type-select:hover {
+    background: rgba(255, 255, 255, 0.92);
+}
+
 .forecast-new-layout {
     --forecast-new-side-panel-width: clamp(224px, 21vw, 324px);
 

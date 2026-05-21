@@ -26,9 +26,9 @@ class DirectionRequest(BaseModel):
     """Входные данные для расчёта дирекции"""
     user_id: UUID = Field(..., description="ID пользователя с сохранённой натальной картой")
     target_date: date_type = Field(..., description="Дата, на которую рассчитывается дирекция")
-    direction_type: Literal['solar_arc', 'symbolic', 'equatorial'] = Field(
-        'solar_arc', 
-        description="Тип дирекции: solar_arc, symbolic (1°=1 год), equatorial (Naibod)"
+    direction_type: Literal['solar_arc', 'zodiacal', 'symbolic', 'equatorial'] = Field(
+        'zodiacal',
+        description="Тип дирекции: solar_arc, zodiacal/symbolic (1°=1 год), equatorial (Naibod)"
     )
     save_to_db: bool = Field(False, description="Сохранить результат в базу данных")
 
@@ -161,7 +161,7 @@ def calculate_direction(
 
     - **user_id**: UUID пользователя с сохранённой натальной картой
     - **target_date**: Дата, на которую рассчитывается дирекция
-    - **direction_type**: Тип дирекции (solar_arc, symbolic, equatorial)
+    - **direction_type**: Тип дирекции (solar_arc, zodiacal/symbolic, equatorial)
     - **save_to_db**: Сохранить результат в БД (по умолчанию False)
     """
     try:

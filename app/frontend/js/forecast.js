@@ -8,6 +8,7 @@ const API_BASE = window.location.hostname === 'localhost'
     : '/api/v1';
 const ANGLE_ASC_DSC_BOLD_STORAGE_KEY = 'natalAngleAscDscBold';
 const ANGLE_MC_IC_BOLD_STORAGE_KEY = 'natalAngleMcIcBold';
+const DEFAULT_DIRECTION_TYPE = 'zodiacal';
 
 function readSavedAngleBold(storageKey) {
     return localStorage.getItem(storageKey) !== 'false';
@@ -774,7 +775,7 @@ function captureForecastCachedData() {
     if (needsCombinedData && ForecastState.combinedBiwheelData) {
         const combinedTargetDate = ForecastState.combinedBiwheelData?._targetDate || ForecastState.transitMoment;
         const combinedDirectionType = normalizeDirectionType(
-            ForecastState.combinedBiwheelData?._directionType || ForecastState.directionType || 'solar_arc'
+            ForecastState.combinedBiwheelData?._directionType || ForecastState.directionType || DEFAULT_DIRECTION_TYPE
         );
         if (combinedTargetDate) {
             cachedData.combinedPointKey = getCombinedPointKey(combinedTargetDate, combinedDirectionType);
@@ -819,7 +820,7 @@ function restoreForecastCachedData(cachedData) {
         ForecastState.directionData = combinedData?._layers?.direction || null;
         ForecastState.directionTargetDate = combinedData?._targetDate || ForecastState.directionTargetDate;
         ForecastState.directionType = normalizeDirectionType(
-            combinedData?._directionType || ForecastState.directionType || 'solar_arc'
+            combinedData?._directionType || ForecastState.directionType || DEFAULT_DIRECTION_TYPE
         );
         if (ForecastState.transitMoment && combinedData?._layers?.transit) {
             ForecastState.transitBiwheelCache[ForecastState.transitMoment] = combinedData._layers.transit;
@@ -943,7 +944,7 @@ function restoreForecastStateSnapshot() {
     ForecastState.transitScaleIndex = restored.transitScaleIndex;
     ForecastState.transitMoment = restored.transitMoment || null;
     ForecastState.pendingBiwheelDate = restored.pendingBiwheelDate || restored.transitMoment || null;
-    ForecastState.directionType = normalizeDirectionType(restored.directionType || ForecastState.directionType || 'solar_arc');
+    ForecastState.directionType = normalizeDirectionType(restored.directionType || ForecastState.directionType || DEFAULT_DIRECTION_TYPE);
     ForecastState.biwheelDisplayMode = normalizeForecastBiwheelDisplayMode(restored.biwheelDisplayMode, { persisted: false });
     ForecastState.tableSortCol = restored.tableSortCol;
     ForecastState.tableSortAsc = restored.tableSortAsc;
@@ -1615,7 +1616,7 @@ function buildForecastChatContext() {
     if (ForecastState.directionData) {
         const directionType = method.startsWith('directions_')
             ? method.replace('directions_', '')
-            : (ForecastState.directionType || ForecastState.directionData.direction_info?.direction_type || 'solar_arc');
+            : (ForecastState.directionType || ForecastState.directionData.direction_info?.direction_type || DEFAULT_DIRECTION_TYPE);
         context.calculated.directions = {
             target_date: ForecastState.directionTargetDate || singleDate,
             direction_type: directionType,
@@ -1860,7 +1861,7 @@ function initDefaults() {
     ForecastState.isFocusMode = false;
     ForecastState.controlsExpanded = !isForecastMobileViewport();
     ForecastState.biwheelDisplayMode = 'prognostic';
-    ForecastState.directionType = normalizeDirectionType(localStorage.getItem(DIRECTION_TYPE_STORAGE_KEY) || 'solar_arc');
+    ForecastState.directionType = normalizeDirectionType(localStorage.getItem(DIRECTION_TYPE_STORAGE_KEY) || DEFAULT_DIRECTION_TYPE);
     const directionTypeSelect = document.getElementById('bwDirectionTypeSelect');
     if (directionTypeSelect) directionTypeSelect.value = ForecastState.directionType;
     updateBiwheelFocusButton();
@@ -2184,7 +2185,7 @@ function initControls() {
     });
     const directionTypeSelect = document.getElementById('bwDirectionTypeSelect');
     if (directionTypeSelect) {
-        directionTypeSelect.value = normalizeDirectionType(ForecastState.directionType || 'solar_arc');
+        directionTypeSelect.value = normalizeDirectionType(ForecastState.directionType || DEFAULT_DIRECTION_TYPE);
         directionTypeSelect.addEventListener('change', async e => {
             const nextType = normalizeDirectionType(e.target.value);
             ForecastState.directionType = nextType;
@@ -2758,27 +2759,28 @@ function getPrognosticPointKey(method, targetDate) {
 }
 
 function getCombinedPointKey(targetDate, directionType) {
-    return `combined|${targetDate}|${directionType || 'solar_arc'}`;
+    return `combined|${targetDate}|${directionType || DEFAULT_DIRECTION_TYPE}`;
 }
 
 function getCombinedTableKey(targetDate, directionType, startDate = '', endDate = '') {
-    return `combined_table|${targetDate}|${directionType || 'solar_arc'}|${startDate}|${endDate}`;
+    return `combined_table|${targetDate}|${directionType || DEFAULT_DIRECTION_TYPE}|${startDate}|${endDate}`;
 }
 
 function getIngressSummaryKey(startDate, endDate, directionType) {
-    return `ingress_summary|${INGRESS_SUMMARY_CACHE_VERSION}|${startDate}|${endDate}|${directionType || 'solar_arc'}`;
+    return `ingress_summary|${INGRESS_SUMMARY_CACHE_VERSION}|${startDate}|${endDate}|${directionType || DEFAULT_DIRECTION_TYPE}`;
 }
 
 function normalizeDirectionType(directionType) {
     const value = String(directionType || '').trim();
-    return ['solar_arc', 'symbolic', 'equatorial'].includes(value) ? value : 'solar_arc';
+    if (value === 'symbolic') return 'zodiacal';
+    return ['solar_arc', 'zodiacal', 'equatorial'].includes(value) ? value : DEFAULT_DIRECTION_TYPE;
 }
 
 function resolveDirectionTypeForCombined(method) {
     if (method && method.startsWith('directions_')) {
         return normalizeDirectionType(method.replace('directions_', ''));
     }
-    return normalizeDirectionType(ForecastState.directionType || 'solar_arc');
+    return normalizeDirectionType(ForecastState.directionType || DEFAULT_DIRECTION_TYPE);
 }
 
 function resolveBiwheelTargetDate(method) {
@@ -2904,7 +2906,7 @@ async function ensurePrognosticPointData(method, targetDate) {
     return data;
 }
 
-async function ensureCombinedBiwheelData(targetDate, { directionType = 'solar_arc' } = {}) {
+async function ensureCombinedBiwheelData(targetDate, { directionType = DEFAULT_DIRECTION_TYPE } = {}) {
     if (!targetDate) throw new Error(t('page.forecast.errors.dateRequired'));
     const normalizedDirectionType = normalizeDirectionType(directionType);
     const key = getCombinedPointKey(targetDate, normalizedDirectionType);
@@ -3250,6 +3252,7 @@ function getMethodLabel(method) {
         'progressions': t('common.method.progression'),
         'directions': t('common.method.direction'),
         'directions_solar_arc': t('common.method.directionSolarArc'),
+        'directions_zodiacal': t('common.method.directionZodiacal'),
         'directions_symbolic': t('common.method.directionSymbolic'),
         'directions_equatorial': t('common.method.directionNaibod'),
     };
@@ -3807,7 +3810,7 @@ function populateTableFromCombinedData(combinedData, targetDate, { transitPeriod
     const transitLayer = layers.transit || null;
     const progressionLayer = layers.progression || null;
     const directionLayer = layers.direction || null;
-    const directionType = normalizeDirectionType(combinedData?._directionType || ForecastState.directionType || 'solar_arc');
+    const directionType = normalizeDirectionType(combinedData?._directionType || ForecastState.directionType || DEFAULT_DIRECTION_TYPE);
 
     const collectLayerPlanets = (layer) => {
         if (!layer) return [];
@@ -3828,6 +3831,7 @@ function populateTableFromCombinedData(combinedData, targetDate, { transitPeriod
         transits: buildPlanetMotionLookup(collectLayerPlanets(transitLayer)),
         progressions: buildPlanetMotionLookup(collectLayerPlanets(progressionLayer)),
         directions_solar_arc: buildPlanetMotionLookup(collectLayerPlanets(directionLayer)),
+        directions_zodiacal: buildPlanetMotionLookup(collectLayerPlanets(directionLayer)),
         directions_symbolic: buildPlanetMotionLookup(collectLayerPlanets(directionLayer)),
         directions_equatorial: buildPlanetMotionLookup(collectLayerPlanets(directionLayer)),
     };

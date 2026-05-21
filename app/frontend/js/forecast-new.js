@@ -5,6 +5,7 @@
         ? 'http://localhost:8000/api/v1'
         : '/api/v1';
     const LAYER_ORDER = ['transit', 'progression', 'direction'];
+    const DEFAULT_DIRECTION_TYPE = 'zodiacal';
     const LAYER_CACHE_PREFIX = 'forecastNewLayerCache:';
     const LAYER_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
     const DEFAULT_ASPECT_TYPES = window.AstroPreferences?.DEFAULT_ENABLED_ASPECT_TYPES || [
@@ -97,6 +98,7 @@
         location: { name: '', latitude: null, longitude: null, sourceId: null },
         activeLayers: ['transit'],
         selectedRightLayer: 'transit',
+        directionType: DEFAULT_DIRECTION_TYPE,
         stepMode: 'hour',
         customStep: { amount: 1, unit: 'day' },
         isCustomStepOpen: false,
@@ -310,6 +312,7 @@
         [
             'pageLoader', 'forecastNewLayout', 'forecastNewError', 'forecastNewErrorMsg',
             'forecastNewBackBtn', 'forecastNewTitle', 'forecastNewSubtitle', 'openNatalBtn', 'openNatalTablesBtn', 'openSynastryBtn',
+            'forecastNewDirectionTypeSelect',
             'forecastNewNatalPanel', 'forecastNewProgPanel',
             'natalPanelMeta', 'prognosticPanelTitle', 'prognosticPanelMeta',
             'prognosticMomentToggle', 'forecastNewMomentCard',
@@ -405,6 +408,15 @@
                 schedulePersist();
                 await loadActiveLayers();
             });
+        });
+
+        refs.forecastNewDirectionTypeSelect?.addEventListener('change', async () => {
+            state.directionType = normalizeDirectionType(refs.forecastNewDirectionTypeSelect.value);
+            refs.forecastNewDirectionTypeSelect.value = state.directionType;
+            schedulePersist();
+            if (state.activeLayers.includes('direction')) {
+                await loadActiveLayers({ lightweight: true });
+            }
         });
 
         refs.targetDateInput?.addEventListener('change', onTargetDatetimeChange);
@@ -803,6 +815,7 @@
         if (refs.angleMcIcBoldToggle) refs.angleMcIcBoldToggle.checked = state.pageSettings.angleMcIcBold !== false;
         if (refs.showSpeedToggle) refs.showSpeedToggle.checked = state.pageSettings.showSpeed !== false;
         if (refs.showStationaryToggle) refs.showStationaryToggle.checked = state.pageSettings.showStationary !== false;
+        if (refs.forecastNewDirectionTypeSelect) refs.forecastNewDirectionTypeSelect.value = normalizeDirectionType(state.directionType);
         refs.layerToggles.forEach((input) => {
             input.checked = state.activeLayers.includes(input.dataset.layerToggle);
         });
@@ -2054,6 +2067,7 @@
             selectedDateTime: targetDateTime,
             timezone: targetTimezone,
             location: targetLocation,
+            directionType: state.directionType,
         });
         if (state.cache[key]) return state.cache[key];
         const cachedLayer = readPersistedLayerCache(key);
@@ -2089,7 +2103,7 @@
             return apiPost('/directions/calculate', {
                 user_id: state.userId,
                 target_date: date,
-                direction_type: 'solar_arc',
+                direction_type: normalizeDirectionType(state.directionType),
             }, { signal: controller.signal });
         })().then((data) => {
             state.cache[key] = data;
@@ -2842,6 +2856,7 @@
         state.enabledLayers = state.activeLayers;
         state.selectedRightLayer = restored.selectedRightLayer || state.selectedRightLayer;
         state.activeRightMethodTab = state.selectedRightLayer;
+        state.directionType = normalizeDirectionType(restored.directionType || state.directionType);
         state.stepMode = restored.stepMode || state.stepMode;
         state.customStep = normalizeCustomStep(restored.customStep || state.customStep);
         state.leftTab = restored.leftTab || state.leftTab;
@@ -3054,6 +3069,7 @@
                 location: state.location,
                 activeLayers: state.activeLayers,
                 selectedRightLayer: state.selectedRightLayer,
+                directionType: state.directionType,
                 stepMode: state.stepMode,
                 customStep: state.customStep,
                 leftTab: state.leftTab,
@@ -3188,6 +3204,7 @@
         const selectedDateTime = context.selectedDateTime || state.selectedDateTime;
         const timezone = context.timezone || state.timezone;
         const location = context.location || state.location || {};
+        const directionType = normalizeDirectionType(context.directionType || state.directionType);
         if (method === 'transit') {
             return [
                 method,
@@ -3199,7 +3216,7 @@
             ].join('|');
         }
         if (method === 'direction') {
-            return [method, date, 'solar_arc'].join('|');
+            return [method, date, directionType].join('|');
         }
         return [method, date].join('|');
     }
@@ -3287,6 +3304,12 @@
             amount: Number.isFinite(amount) ? Math.min(9999, Math.max(1, amount)) : 1,
             unit,
         };
+    }
+
+    function normalizeDirectionType(value) {
+        const normalized = String(value || '').trim();
+        if (normalized === 'symbolic') return 'zodiacal';
+        return ['solar_arc', 'zodiacal', 'equatorial'].includes(normalized) ? normalized : DEFAULT_DIRECTION_TYPE;
     }
 
     function formatCustomStepLabel(value) {

@@ -155,7 +155,8 @@
       "direction": "Дирекції",
       "directionNaibod": "Дирекції (Найбод)",
       "directionSolarArc": "Дирекції (Сонячна дуга)",
-      "directionSymbolic": "Дирекції (Символічні)",
+      "directionSymbolic": "Дирекції (Зодіакальні)",
+      "directionZodiacal": "Дирекції (Зодіакальні)",
       "progression": "Прогресії",
       "solar": "Соляр",
       "transit": "Транзити"
@@ -1040,7 +1041,8 @@
       "directionType": {
         "equatorial": "Найбод (екваторіальні)",
         "solarArc": "Сонячна дуга",
-        "symbolic": "Символічні"
+        "symbolic": "Зодіакальні",
+        "zodiacal": "Зодіакальні"
       },
       "errors": {
         "dateRequired": "Потрібно вказати дату",

@@ -938,7 +938,8 @@ class Direction(Base):
 
     Типы дирекций (как в ZET):
     - solar_arc: Solar Arc Directions (дуга = движение прогрессивного Солнца)
-    - symbolic: Symbolic Directions (1° = 1 год)
+    - zodiacal: Zodiacal Directions (1° = 1 год)
+    - symbolic: legacy alias for zodiacal
     - equatorial: Equatorial/Naibod Directions (ключ Найбода)
     """
     __tablename__ = 'directions'
@@ -948,7 +949,7 @@ class Direction(Base):
     target_date = Column(Date, nullable=False)  # Дата, на которую рассчитана дирекция
 
     # Тип дирекции
-    direction_type = Column(String(20), nullable=False)  # solar_arc, symbolic, equatorial
+    direction_type = Column(String(20), nullable=False)  # solar_arc, zodiacal, symbolic, equatorial
 
     # Дуга дирекции (в градусах)
     arc_degrees = Column(Numeric(10, 6), nullable=False)
@@ -972,7 +973,7 @@ class Direction(Base):
         Index('idx_directions_target_date', 'target_date'),
         Index('idx_directions_type', 'direction_type'),
         CheckConstraint(
-            "direction_type IN ('solar_arc', 'symbolic', 'equatorial')",
+            "direction_type IN ('solar_arc', 'zodiacal', 'symbolic', 'equatorial')",
             name='valid_direction_type'
         ),
     )

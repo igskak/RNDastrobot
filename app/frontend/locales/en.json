@@ -155,7 +155,8 @@
       "direction": "Directions",
       "directionNaibod": "Directions (Naibod)",
       "directionSolarArc": "Directions (Solar Arc)",
-      "directionSymbolic": "Directions (Symbolic)",
+      "directionSymbolic": "Directions (Zodiacal)",
+      "directionZodiacal": "Directions (Zodiacal)",
       "progression": "Progressions",
       "solar": "Solar return",
       "transit": "Transits"
@@ -1040,7 +1041,8 @@
       "directionType": {
         "equatorial": "Naibod (equatorial)",
         "solarArc": "Solar Arc",
-        "symbolic": "Symbolic"
+        "symbolic": "Zodiacal",
+        "zodiacal": "Zodiacal"
       },
       "errors": {
         "dateRequired": "Date is required",
