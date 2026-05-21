@@ -911,6 +911,10 @@ class Progression(Base):
     progression_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
     target_date = Column(Date, nullable=False)  # Дата, на которую рассчитана прогрессия
+    target_time = Column(Time)  # Локальное время прогностического момента
+    timezone = Column(String(50))  # IANA timezone прогностического момента
+    target_utc = Column(DateTime(timezone=True))  # UTC datetime прогностического момента
+    target_moment_key = Column(String(80), nullable=False, default='date-only', server_default='date-only')
 
     # Прогрессивный момент
     progressed_jd = Column(Numeric(15, 6), nullable=False)  # JD прогрессивной карты
@@ -926,9 +930,10 @@ class Progression(Base):
     user = relationship("User", back_populates="progressions")
 
     __table_args__ = (
-        # Уникальный индекс: одна прогрессия на пользователя на дату
-        Index('idx_progressions_user_date', 'user_id', 'target_date', unique=True),
+        # Уникальный индекс: одна прогрессия на пользователя на точный прогностический момент
+        Index('idx_progressions_user_moment', 'user_id', 'target_date', 'target_moment_key', unique=True),
         Index('idx_progressions_target_date', 'target_date'),
+        Index('idx_progressions_target_utc', 'target_utc'),
     )
 
 

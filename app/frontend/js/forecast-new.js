@@ -2098,6 +2098,8 @@
                 return apiPost('/progressions/calculate', {
                     user_id: state.userId,
                     target_date: date,
+                    target_time: time,
+                    timezone: targetTimezone,
                 }, { signal: controller.signal });
             }
             return apiPost('/directions/calculate', {
@@ -2784,7 +2786,13 @@
         }
         if (method === 'progression') {
             const info = raw?.progression_info || {};
-            return [info.target_date, info.method, info.rate].filter(Boolean).join(' · ');
+            const targetTime = info.target_time || '';
+            return [
+                [info.target_date, targetTime].filter(Boolean).join(' '),
+                formatHeaderTimezone(info.timezone),
+                info.method,
+                info.rate,
+            ].filter(Boolean).join(' · ');
         }
         const info = raw?.direction_info || {};
         return [info.target_date, info.direction_type, info.arc_formatted].filter(Boolean).join(' · ');
@@ -3217,6 +3225,9 @@
         }
         if (method === 'direction') {
             return [method, date, directionType].join('|');
+        }
+        if (method === 'progression') {
+            return [method, selectedDateTime, timezone].join('|');
         }
         return [method, date].join('|');
     }

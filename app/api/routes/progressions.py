@@ -4,9 +4,10 @@ API эндпоинты для работы с прогрессиями (Secondar
 from fastapi import APIRouter, HTTPException, status, Depends, Query, Request
 from sqlalchemy.orm import Session
 from uuid import UUID
-from pydantic import BaseModel, Field, field_validator
-from datetime import date as date_type
+from pydantic import BaseModel, Field, field_validator, model_validator
+from datetime import date as date_type, time as time_type
 from typing import List, Optional
+import pytz
 
 from app.services.progression_service import ProgressionService
 from app.database.connection import get_db
@@ -26,7 +27,26 @@ class ProgressionRequest(BaseModel):
     """Входные данные для расчёта прогрессии"""
     user_id: UUID = Field(..., description="ID пользователя с сохранённой натальной картой")
     target_date: date_type = Field(..., description="Дата, на которую рассчитывается прогрессия (YYYY-MM-DD)")
+    target_time: Optional[time_type] = Field(None, description="Локальное время прогностического момента (HH:MM:SS)")
+    timezone: Optional[str] = Field(None, description="IANA timezone прогностического момента")
     save_to_db: bool = Field(False, description="Сохранить результат в базу данных")
+
+    @field_validator('timezone')
+    @classmethod
+    def validate_timezone(cls, value: Optional[str]) -> Optional[str]:
+        if value in (None, ''):
+            return None
+        try:
+            pytz.timezone(value)
+        except pytz.exceptions.UnknownTimeZoneError:
+            raise ValueError(f"Unknown timezone: {value}")
+        return value
+
+    @model_validator(mode='after')
+    def require_timezone_for_time(self):
+        if self.target_time is not None and not self.timezone:
+            raise ValueError("timezone is required when target_time is provided")
+        return self
 
 
 class ProgressedPlanetInfo(BaseModel):
@@ -60,9 +80,14 @@ class ProgressionAspectInfo(BaseModel):
 class ProgressionInfoBlock(BaseModel):
     """Метаданные прогрессии"""
     target_date: str
+    target_time: Optional[str] = None
+    target_datetime: Optional[str] = None
+    timezone: Optional[str] = None
+    target_utc: Optional[str] = None
     age_years: float
     progressed_jd: float
     progressed_date: str
+    progressed_datetime: Optional[str] = None
     method: str
     rate: str
 
@@ -113,6 +138,9 @@ class ProgressionResponse(BaseModel):
 class ProgressionListItem(BaseModel):
     """Элемент списка прогрессий"""
     target_date: str
+    target_time: Optional[str] = None
+    timezone: Optional[str] = None
+    target_utc: Optional[str] = None
     progressed_jd: float
 
 
@@ -150,6 +178,8 @@ def calculate_progression(
         result = progression_service.calculate_progression(
             user_id=request.user_id,
             target_date=request.target_date,
+            target_time=request.target_time,
+            timezone=request.timezone,
             save_to_db=request.save_to_db
         )
         return result

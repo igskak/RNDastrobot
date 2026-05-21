@@ -48,7 +48,8 @@ class TimeService:
         hour_decimal = (
             utc_datetime.hour + 
             utc_datetime.minute / 60.0 + 
-            utc_datetime.second / 3600.0
+            utc_datetime.second / 3600.0 +
+            utc_datetime.microsecond / 3600000000.0
         )
         
         jd = swe.julday(
@@ -82,4 +83,3 @@ class TimeService:
         jd = TimeService.to_julian_day(utc_dt)
         
         return utc_dt, jd
-

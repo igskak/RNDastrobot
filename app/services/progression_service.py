@@ -3,13 +3,12 @@ Progression Service - расчёт вторичных прогрессий (Seco
 
 Реализация по образцу ZET:
 - Формула: 1 день после рождения = 1 год жизни
-- Прогрессивный JD = birth_JD + (target_date - birth_date).days / 365.25
+- Прогрессивный JD = birth_JD + elapsed_days / 365.2421897
 """
 from typing import Dict, List, Optional, Tuple
 from uuid import UUID
-from datetime import date, time, datetime
+from datetime import date, time, datetime, timedelta
 from decimal import Decimal
-import pytz
 import swisseph as swe
 from sqlalchemy.orm import Session
 from loguru import logger
@@ -46,39 +45,46 @@ class ProgressionService:
         self._aspect_types_cache: Optional[List[RefAspectType]] = None
         self._planet_orbs_cache: Optional[Dict[Tuple[str, str], float]] = None
 
-    def calculate_progressed_jd(self, birth_jd: float, birth_date: date, target_date: date) -> float:
+    def calculate_progressed_jd(
+        self,
+        birth_jd: float,
+        birth_date: date,
+        target_date: date,
+        target_time: Optional[time] = None,
+        timezone: Optional[str] = None,
+    ) -> float:
         """
         Рассчитать прогрессивный Julian Day
         
         Формула (по ZET): 1 день = 1 год
         progressed_jd = birth_jd + (years_elapsed)
-        где years_elapsed = (target_date - birth_date).days / 365.2421897
+        где years_elapsed = elapsed_days / 365.2421897
         
         Args:
             birth_jd: Julian Day рождения
             birth_date: Дата рождения
             target_date: Целевая дата прогрессии
+            target_time: Локальное время прогностического момента
+            timezone: IANA timezone для прогностического момента
             
         Returns:
             Julian Day для прогрессивной карты
         """
-        days_elapsed = (target_date - birth_date).days
-        years_elapsed = days_elapsed / TROPICAL_YEAR_DAYS
-        
-        # Прогрессивный JD = birth_jd + количество дней (= количество лет)
-        progressed_jd = birth_jd + years_elapsed
-        
-        logger.debug(
-            f"Progression: birth_jd={birth_jd:.6f}, days_elapsed={days_elapsed}, "
-            f"years={years_elapsed:.4f}, progressed_jd={progressed_jd:.6f}"
+        timing = self._calculate_progression_timing(
+            birth_jd=birth_jd,
+            birth_date=birth_date,
+            target_date=target_date,
+            target_time=target_time,
+            timezone=timezone,
         )
-        
-        return progressed_jd
+        return timing['progressed_jd']
 
     def calculate_progression(
         self,
         user_id: UUID,
         target_date: date,
+        target_time: Optional[time] = None,
+        timezone: Optional[str] = None,
         save_to_db: bool = False
     ) -> Dict:
         """
@@ -87,6 +93,8 @@ class ProgressionService:
         Args:
             user_id: UUID пользователя с натальной картой
             target_date: Дата, на которую рассчитывается прогрессия
+            target_time: Локальное время прогностического момента
+            timezone: IANA timezone для прогностического момента
             save_to_db: Сохранить результат в БД
             
         Returns:
@@ -101,7 +109,14 @@ class ProgressionService:
         birth_date_val = user.birth_date
         
         # 2. Рассчитать прогрессивный JD
-        progressed_jd = self.calculate_progressed_jd(birth_jd, birth_date_val, target_date)
+        timing = self._calculate_progression_timing(
+            birth_jd=birth_jd,
+            birth_date=birth_date_val,
+            target_date=target_date,
+            target_time=target_time,
+            timezone=timezone,
+        )
+        progressed_jd = timing['progressed_jd']
         
         # 3. Рассчитать прогрессивные планеты + узлы и Лилит
         progressed_planets = self.swisseph_engine.calculate_planets(progressed_jd)
@@ -140,18 +155,28 @@ class ProgressionService:
         )
 
         # 8. Рассчитать возраст
-        age_years = (target_date - birth_date_val).days / TROPICAL_YEAR_DAYS
-        
+        age_years = timing['age_years']
+
         # 9. Конвертировать прогрессивный JD в дату
         progressed_date = self._jd_to_date(progressed_jd)
+        progressed_datetime = self._jd_to_datetime_iso(progressed_jd)
         
         # 10. Формируем результат
+        target_datetime = None
+        if target_time is not None:
+            target_datetime = f"{target_date.isoformat()}T{target_time.isoformat()}"
+
         result = {
             'progression_info': {
                 'target_date': target_date.isoformat(),
-                'age_years': round(age_years, 2),
+                'target_time': target_time.isoformat() if target_time is not None else None,
+                'target_datetime': target_datetime,
+                'timezone': timezone if target_time is not None else None,
+                'target_utc': timing['target_utc'].isoformat() if timing.get('target_utc') else None,
+                'age_years': round(age_years, 6),
                 'progressed_jd': progressed_jd,
                 'progressed_date': progressed_date.isoformat(),
+                'progressed_datetime': progressed_datetime,
                 'method': 'secondary',  # Вторичные прогрессии
                 'rate': '1 day = 1 year',
             },
@@ -174,6 +199,40 @@ class ProgressionService:
             self._save_progression(user_id, target_date, result)
 
         return result
+
+    def _calculate_progression_timing(
+        self,
+        *,
+        birth_jd: float,
+        birth_date: date,
+        target_date: date,
+        target_time: Optional[time] = None,
+        timezone: Optional[str] = None,
+    ) -> Dict:
+        """Calculate elapsed/progressed timing, preserving legacy date-only behavior."""
+        target_utc = None
+        if target_time is None:
+            days_elapsed = (target_date - birth_date).days
+        else:
+            if not timezone:
+                raise ValueError("timezone is required when target_time is provided")
+            target_utc, target_jd = TimeService.process_birth_time(target_date, target_time, timezone)
+            days_elapsed = target_jd - birth_jd
+
+        age_years = days_elapsed / TROPICAL_YEAR_DAYS
+        progressed_jd = birth_jd + age_years
+
+        logger.debug(
+            f"Progression: birth_jd={birth_jd:.6f}, days_elapsed={days_elapsed:.6f}, "
+            f"years={age_years:.6f}, progressed_jd={progressed_jd:.6f}"
+        )
+
+        return {
+            'days_elapsed': days_elapsed,
+            'age_years': age_years,
+            'progressed_jd': progressed_jd,
+            'target_utc': target_utc,
+        }
 
     def _enrich_motion_flags(self, planets: List[Dict], *, user_id: UUID) -> List[Dict]:
         stationary_threshold_percent = self.preferences_runtime.get_stationary_threshold_for_user(user_id)
@@ -435,42 +494,96 @@ class ProgressionService:
         year, month, day, _ = swe.revjul(jd)
         return date(year, month, day)
 
+    def _jd_to_datetime_iso(self, jd: float) -> str:
+        """Конвертировать Julian Day в UTC datetime ISO без timezone suffix."""
+        year, month, day, hour_decimal = swe.revjul(jd)
+        hours = int(hour_decimal)
+        minute_decimal = (hour_decimal - hours) * 60
+        minutes = int(minute_decimal)
+        second_decimal = (minute_decimal - minutes) * 60
+        seconds = int(second_decimal)
+        microseconds = int(round((second_decimal - seconds) * 1_000_000))
+        if microseconds >= 1_000_000:
+            seconds += 1
+            microseconds -= 1_000_000
+        dt = datetime(year, month, day) + timedelta(
+            hours=hours,
+            minutes=minutes,
+            seconds=seconds,
+            microseconds=microseconds,
+        )
+        return dt.isoformat(timespec='seconds')
+
     def _save_progression(self, user_id: UUID, target_date: date, result: Dict) -> None:
         """Сохранить прогрессию в БД"""
         from app.database.models import Progression
         import json
 
-        # Проверяем, есть ли уже прогрессия для этой даты
+        prog_info = result['progression_info']
+        target_time_value = time.fromisoformat(prog_info['target_time']) if prog_info.get('target_time') else None
+        target_moment_key = self._build_target_moment_key(target_time_value, prog_info.get('timezone'))
+
+        # Проверяем, есть ли уже прогрессия для этого прогностического момента
         existing = self.db.query(Progression).filter(
             Progression.user_id == user_id,
-            Progression.target_date == target_date
+            Progression.target_date == target_date,
+            Progression.target_moment_key == target_moment_key,
         ).first()
-
-        prog_info = result['progression_info']
 
         if existing:
             existing.progressed_jd = Decimal(str(prog_info['progressed_jd']))
+            existing.target_time = target_time_value
+            existing.timezone = prog_info.get('timezone')
+            existing.target_utc = (
+                datetime.fromisoformat(prog_info['target_utc'])
+                if prog_info.get('target_utc') else None
+            )
+            existing.target_moment_key = target_moment_key
             existing.chart_data = json.dumps(result)
         else:
             progression = Progression(
                 user_id=user_id,
                 target_date=target_date,
+                target_time=target_time_value,
+                timezone=prog_info.get('timezone'),
+                target_utc=(
+                    datetime.fromisoformat(prog_info['target_utc'])
+                    if prog_info.get('target_utc') else None
+                ),
+                target_moment_key=target_moment_key,
                 progressed_jd=Decimal(str(prog_info['progressed_jd'])),
                 chart_data=json.dumps(result)
             )
             self.db.add(progression)
 
         self.db.commit()
-        logger.info(f"Progression saved: user={user_id}, target_date={target_date}")
+        logger.info(
+            f"Progression saved: user={user_id}, target_date={target_date}, "
+            f"target_moment_key={target_moment_key}"
+        )
 
-    def get_progression(self, user_id: UUID, target_date: date) -> Optional[Dict]:
+    @staticmethod
+    def _build_target_moment_key(target_time: Optional[time], timezone: Optional[str]) -> str:
+        if target_time is None:
+            return 'date-only'
+        return f"{target_time.isoformat()}|{timezone or ''}"
+
+    def get_progression(
+        self,
+        user_id: UUID,
+        target_date: date,
+        target_time: Optional[time] = None,
+        timezone: Optional[str] = None,
+    ) -> Optional[Dict]:
         """Получить сохранённую прогрессию из БД"""
         from app.database.models import Progression
         import json
 
+        target_moment_key = self._build_target_moment_key(target_time, timezone)
         prog = self.db.query(Progression).filter(
             Progression.user_id == user_id,
-            Progression.target_date == target_date
+            Progression.target_date == target_date,
+            Progression.target_moment_key == target_moment_key,
         ).first()
 
         if prog and prog.chart_data:
@@ -483,11 +596,17 @@ class ProgressionService:
 
         progs = self.db.query(Progression).filter(
             Progression.user_id == user_id
-        ).order_by(Progression.target_date.desc()).all()
+        ).order_by(
+            Progression.target_date.desc(),
+            Progression.target_time.desc().nullslast(),
+        ).all()
 
         return [
             {
                 'target_date': p.target_date.isoformat(),
+                'target_time': p.target_time.isoformat() if p.target_time else None,
+                'timezone': p.timezone,
+                'target_utc': p.target_utc.isoformat() if p.target_utc else None,
                 'progressed_jd': float(p.progressed_jd),
             }
             for p in progs
