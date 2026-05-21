@@ -173,12 +173,13 @@ function bindEvents() {
         if (actionBtn) {
             const { action, userId } = actionBtn.dataset;
             if (!userId) return;
+            event.stopPropagation();
+            if (action === 'delete') { await handleDelete(userId, actionBtn); return; }
             closeAllDropdowns();
             if (action === 'edit') {
                 await openEditClientDialog(userId);
                 return;
             }
-            if (action === 'delete') { await handleDelete(userId, actionBtn); return; }
             if (action === 'open-chart') { await openChart(userId); return; }
             if (action === 'open-forecast') { await openForecastForUser(userId); return; }
             if (action === 'log-session') { openLogSessionDialog(userId); return; }
@@ -970,6 +971,7 @@ async function handleDelete(userId, button) {
         }
 
         showToast(t('page.clients.messages.deleted'), 'success');
+        closeAllDropdowns();
     } catch (error) {
         button.disabled = false;
         button.dataset.confirming = 'false';

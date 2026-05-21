@@ -1172,6 +1172,16 @@ class ChartDataRenderer {
             ]);
         }
 
+        if (viewKey === 'by_house' && balanceSet.house_group_balance) {
+            const hgb = balanceSet.house_group_balance;
+            const total = hgb.angular + hgb.succedent + hgb.cadent;
+            html += this.renderBalanceSection(this.t('page.chart.balances.houseGroupsTitle'), [
+                { label: this.t('page.chart.balances.angular'), value: hgb.angular, total, color: neutralBalanceColor },
+                { label: this.t('page.chart.balances.succedent'), value: hgb.succedent, total, color: neutralBalanceColor },
+                { label: this.t('page.chart.balances.cadent'), value: hgb.cadent, total, color: neutralBalanceColor }
+            ]);
+        }
+
         if (balanceSet.gender_balance) {
             const gb = balanceSet.gender_balance;
             const total = gb.masculine + gb.feminine;
@@ -1211,16 +1221,6 @@ class ChartDataRenderer {
                 { label: this.t('page.chart.balances.upper'), value: hb.upper, total: verticalTotal, color: neutralBalanceColor },
                 { label: this.t('page.chart.balances.east'), value: hb.eastern, total: horizontalTotal, color: neutralBalanceColor },
                 { label: this.t('page.chart.balances.west'), value: hb.western, total: horizontalTotal, color: neutralBalanceColor }
-            ]);
-        }
-
-        if (viewKey === 'by_house' && balanceSet.house_group_balance) {
-            const hgb = balanceSet.house_group_balance;
-            const total = hgb.angular + hgb.succedent + hgb.cadent;
-            html += this.renderBalanceSection(this.t('page.chart.balances.houseGroupsTitle'), [
-                { label: this.t('page.chart.balances.angular'), value: hgb.angular, total, color: neutralBalanceColor },
-                { label: this.t('page.chart.balances.succedent'), value: hgb.succedent, total, color: neutralBalanceColor },
-                { label: this.t('page.chart.balances.cadent'), value: hgb.cadent, total, color: neutralBalanceColor }
             ]);
         }
 
