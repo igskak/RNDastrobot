@@ -312,6 +312,7 @@
         [
             'pageLoader', 'forecastNewLayout', 'forecastNewError', 'forecastNewErrorMsg',
             'forecastNewBackBtn', 'forecastNewTitle', 'forecastNewSubtitle', 'openNatalBtn', 'openNatalTablesBtn', 'openSynastryBtn',
+            'savePrognosticChartBtn',
             'forecastNewDirectionTypeSelect',
             'forecastNewNatalPanel', 'forecastNewProgPanel',
             'natalPanelMeta', 'prognosticPanelTitle', 'prognosticPanelMeta',
@@ -387,6 +388,7 @@
             window.AstroAPI?.saveFormData?.(window.AstroAPI.chartToFormData(state.natalData));
             navigateFromForecast(getForecastSynastryUrl() || '/chart.html?open=synastry');
         });
+        refs.savePrognosticChartBtn?.addEventListener('click', saveSelectedPrognosticChart);
 
         refs.layerToggles.forEach((input) => {
             input.addEventListener('change', async () => {
@@ -2100,12 +2102,16 @@
                     target_date: date,
                     target_time: time,
                     timezone: targetTimezone,
+                    save_to_db: options.saveToDb === true,
+                    name: options.name || null,
                 }, { signal: controller.signal });
             }
             return apiPost('/directions/calculate', {
                 user_id: state.userId,
                 target_date: date,
                 direction_type: normalizeDirectionType(state.directionType),
+                save_to_db: options.saveToDb === true,
+                name: options.name || null,
             }, { signal: controller.signal });
         })().then((data) => {
             state.cache[key] = data;
@@ -3050,13 +3056,56 @@
         if (/^\d{4}-\d{2}-\d{2}$/.test(date || '')) {
             setSelectedDateTime(`${date}T${normalizeTime(time || splitTargetDatetime(state.selectedDateTime)[1])}`);
         }
+        const directionType = params.get('directionType');
+        if (directionType) {
+            state.directionType = normalizeDirectionType(directionType);
+        }
         const layer = params.get('layer');
         if (LAYER_ORDER.includes(layer)) {
             state.activeLayers = LAYER_ORDER.filter((method) => method === 'transit' || method === layer);
+            state.enabledLayers = state.activeLayers;
             state.selectedRightLayer = layer;
+            state.activeRightMethodTab = layer;
         }
-        if (params.has('date') || params.has('time') || params.has('layer')) {
+        if (params.has('date') || params.has('time') || params.has('layer') || params.has('directionType')) {
             window.history.replaceState({}, '', window.location.pathname);
+        }
+    }
+
+    async function saveSelectedPrognosticChart() {
+        if (!state.userId) return;
+        const [date, time] = splitTargetDatetime(state.selectedDateTime);
+        const defaultName = `Прогностика ${date}`;
+        const name = window.prompt('Название карты', defaultName);
+        if (name === null) return;
+
+        refs.savePrognosticChartBtn.disabled = true;
+        try {
+            const params = new URLSearchParams();
+            params.set('date', date);
+            params.set('time', time);
+            params.set('layer', state.selectedRightLayer || state.activeLayers.find((layer) => layer !== 'transit') || 'transit');
+            params.set('directionType', normalizeDirectionType(state.directionType));
+            await apiPost('/saved-charts', {
+                user_id: state.userId,
+                chart_type: 'forecast',
+                name,
+                target_date: date,
+                target_time: time,
+                timezone: state.timezone,
+                url_path: `/forecast-new.html?${params.toString()}`,
+                metadata: {
+                    active_layers: state.activeLayers,
+                    selected_layer: state.selectedRightLayer,
+                    direction_type: normalizeDirectionType(state.directionType),
+                    location: state.location,
+                },
+            });
+            window.alert('Карта сохранена в профиле клиента.');
+        } catch (error) {
+            window.alert(`Не удалось сохранить карту: ${error.message}`);
+        } finally {
+            refs.savePrognosticChartBtn.disabled = false;
         }
     }
 

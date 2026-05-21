@@ -60,7 +60,8 @@ class DirectionService:
         user_id: UUID,
         target_date: date,
         direction_type: str = DEFAULT_DIRECTION_TYPE,
-        save_to_db: bool = False
+        save_to_db: bool = False,
+        name: Optional[str] = None,
     ) -> Dict:
         """
         Рассчитать дирекционную карту для пользователя.
@@ -165,8 +166,17 @@ class DirectionService:
 
         # 9. Сохранить в БД если нужно
         if save_to_db:
-            self._save_direction(user_id, target_date, direction_type, arc_degrees,
-                               age_years, result)
+            direction_id = self._save_direction(
+                user_id,
+                target_date,
+                direction_type,
+                arc_degrees,
+                age_years,
+                result,
+                name=name,
+            )
+            result['direction_id'] = str(direction_id)
+            result['name'] = self._normalize_saved_chart_name(name)
 
         return result
 
@@ -558,9 +568,12 @@ class DirectionService:
         direction_type: str,
         arc_degrees: float,
         age_years: float,
-        result: Dict
-    ) -> None:
+        result: Dict,
+        *,
+        name: Optional[str] = None,
+    ) -> UUID:
         """Сохранить дирекцию в БД"""
+        chart_name = self._normalize_saved_chart_name(name)
         # Проверяем, есть ли уже дирекция для этой даты и типа
         existing = self.db.query(Direction).filter(
             Direction.user_id == user_id,
@@ -571,10 +584,14 @@ class DirectionService:
         if existing:
             existing.arc_degrees = Decimal(str(arc_degrees))
             existing.age_years = Decimal(str(age_years))
+            if chart_name is not None:
+                existing.name = chart_name
             existing.chart_data = json.dumps(result)
+            direction_id = existing.direction_id
         else:
             direction = Direction(
                 user_id=user_id,
+                name=chart_name,
                 target_date=target_date,
                 direction_type=direction_type,
                 arc_degrees=Decimal(str(arc_degrees)),
@@ -582,9 +599,17 @@ class DirectionService:
                 chart_data=json.dumps(result)
             )
             self.db.add(direction)
+            self.db.flush()
+            direction_id = direction.direction_id
 
         self.db.commit()
         logger.info(f"Direction saved: user={user_id}, date={target_date}, type={direction_type}")
+        return direction_id
+
+    @staticmethod
+    def _normalize_saved_chart_name(name: Optional[str]) -> Optional[str]:
+        normalized = str(name or '').strip()
+        return normalized[:160] or None
 
     def get_direction(
         self,
@@ -601,8 +626,33 @@ class DirectionService:
         ).first()
 
         if direction and direction.chart_data:
-            return json.loads(direction.chart_data)
+            payload = json.loads(direction.chart_data)
+            payload['direction_id'] = str(direction.direction_id)
+            payload['name'] = direction.name
+            return payload
         return None
+
+    def get_direction_by_id(self, direction_id: UUID) -> Optional[Direction]:
+        """Получить запись дирекции по ID."""
+        return self.db.query(Direction).filter(Direction.direction_id == direction_id).first()
+
+    def rename_direction(self, direction_id: UUID, name: Optional[str]) -> Optional[Dict]:
+        """Переименовать сохранённую дирекцию и вернуть элемент списка."""
+        direction = self.get_direction_by_id(direction_id)
+        if not direction:
+            return None
+
+        direction.name = self._normalize_saved_chart_name(name)
+        self.db.commit()
+        self.db.refresh(direction)
+        return {
+            'direction_id': str(direction.direction_id),
+            'name': direction.name,
+            'target_date': direction.target_date.isoformat(),
+            'direction_type': direction.direction_type,
+            'arc_degrees': float(direction.arc_degrees),
+            'age_years': float(direction.age_years) if direction.age_years else None,
+        }
 
     def list_directions(self, user_id: UUID) -> List[Dict]:
         """Получить список всех дирекций пользователя"""
@@ -612,6 +662,8 @@ class DirectionService:
 
         return [
             {
+                'direction_id': str(d.direction_id),
+                'name': d.name,
                 'target_date': d.target_date.isoformat(),
                 'direction_type': d.direction_type,
                 'arc_degrees': float(d.arc_degrees),

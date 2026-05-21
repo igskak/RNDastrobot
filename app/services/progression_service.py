@@ -85,7 +85,8 @@ class ProgressionService:
         target_date: date,
         target_time: Optional[time] = None,
         timezone: Optional[str] = None,
-        save_to_db: bool = False
+        save_to_db: bool = False,
+        name: Optional[str] = None,
     ) -> Dict:
         """
         Рассчитать прогрессивную карту для пользователя
@@ -196,7 +197,9 @@ class ProgressionService:
         
         # 11. Сохранить в БД если нужно
         if save_to_db:
-            self._save_progression(user_id, target_date, result)
+            progression_id = self._save_progression(user_id, target_date, result, name=name)
+            result['progression_id'] = str(progression_id)
+            result['name'] = self._normalize_saved_chart_name(name)
 
         return result
 
@@ -514,7 +517,12 @@ class ProgressionService:
         )
         return dt.isoformat(timespec='seconds')
 
-    def _save_progression(self, user_id: UUID, target_date: date, result: Dict) -> None:
+    @staticmethod
+    def _normalize_saved_chart_name(name: Optional[str]) -> Optional[str]:
+        normalized = str(name or '').strip()
+        return normalized[:160] or None
+
+    def _save_progression(self, user_id: UUID, target_date: date, result: Dict, *, name: Optional[str] = None) -> UUID:
         """Сохранить прогрессию в БД"""
         from app.database.models import Progression
         import json
@@ -522,6 +530,7 @@ class ProgressionService:
         prog_info = result['progression_info']
         target_time_value = time.fromisoformat(prog_info['target_time']) if prog_info.get('target_time') else None
         target_moment_key = self._build_target_moment_key(target_time_value, prog_info.get('timezone'))
+        chart_name = self._normalize_saved_chart_name(name)
 
         # Проверяем, есть ли уже прогрессия для этого прогностического момента
         existing = self.db.query(Progression).filter(
@@ -539,10 +548,14 @@ class ProgressionService:
                 if prog_info.get('target_utc') else None
             )
             existing.target_moment_key = target_moment_key
+            if chart_name is not None:
+                existing.name = chart_name
             existing.chart_data = json.dumps(result)
+            progression_id = existing.progression_id
         else:
             progression = Progression(
                 user_id=user_id,
+                name=chart_name,
                 target_date=target_date,
                 target_time=target_time_value,
                 timezone=prog_info.get('timezone'),
@@ -555,12 +568,15 @@ class ProgressionService:
                 chart_data=json.dumps(result)
             )
             self.db.add(progression)
+            self.db.flush()
+            progression_id = progression.progression_id
 
         self.db.commit()
         logger.info(
             f"Progression saved: user={user_id}, target_date={target_date}, "
             f"target_moment_key={target_moment_key}"
         )
+        return progression_id
 
     @staticmethod
     def _build_target_moment_key(target_time: Optional[time], timezone: Optional[str]) -> str:
@@ -587,8 +603,35 @@ class ProgressionService:
         ).first()
 
         if prog and prog.chart_data:
-            return json.loads(prog.chart_data)
+            payload = json.loads(prog.chart_data)
+            payload['progression_id'] = str(prog.progression_id)
+            payload['name'] = prog.name
+            return payload
         return None
+
+    def get_progression_by_id(self, progression_id: UUID):
+        """Получить запись прогрессии по ID."""
+        from app.database.models import Progression
+        return self.db.query(Progression).filter(Progression.progression_id == progression_id).first()
+
+    def rename_progression(self, progression_id: UUID, name: Optional[str]) -> Optional[Dict]:
+        """Переименовать сохранённую прогрессию и вернуть элемент списка."""
+        prog = self.get_progression_by_id(progression_id)
+        if not prog:
+            return None
+
+        prog.name = self._normalize_saved_chart_name(name)
+        self.db.commit()
+        self.db.refresh(prog)
+        return {
+            'progression_id': str(prog.progression_id),
+            'name': prog.name,
+            'target_date': prog.target_date.isoformat(),
+            'target_time': prog.target_time.isoformat() if prog.target_time else None,
+            'timezone': prog.timezone,
+            'target_utc': prog.target_utc.isoformat() if prog.target_utc else None,
+            'progressed_jd': float(prog.progressed_jd),
+        }
 
     def list_progressions(self, user_id: UUID) -> List[Dict]:
         """Получить список всех прогрессий пользователя"""
@@ -603,6 +646,8 @@ class ProgressionService:
 
         return [
             {
+                'progression_id': str(p.progression_id),
+                'name': p.name,
                 'target_date': p.target_date.isoformat(),
                 'target_time': p.target_time.isoformat() if p.target_time else None,
                 'timezone': p.timezone,

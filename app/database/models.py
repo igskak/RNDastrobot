@@ -910,6 +910,7 @@ class Progression(Base):
 
     progression_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
+    name = Column(String(160))  # Пользовательское название сохранённой прогрессии
     target_date = Column(Date, nullable=False)  # Дата, на которую рассчитана прогрессия
     target_time = Column(Time)  # Локальное время прогностического момента
     timezone = Column(String(50))  # IANA timezone прогностического момента
@@ -951,6 +952,7 @@ class Direction(Base):
 
     direction_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
+    name = Column(String(160))  # Пользовательское название сохранённой дирекции
     target_date = Column(Date, nullable=False)  # Дата, на которую рассчитана дирекция
 
     # Тип дирекции
@@ -981,6 +983,30 @@ class Direction(Base):
             "direction_type IN ('solar_arc', 'zodiacal', 'symbolic', 'equatorial')",
             name='valid_direction_type'
         ),
+    )
+
+
+class SavedChart(Base):
+    """Пользовательская ссылка на сохранённую карту в профиле клиента."""
+    __tablename__ = 'saved_charts'
+
+    saved_chart_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
+    chart_type = Column(String(32), nullable=False)  # forecast, progression, direction, transit, custom
+    name = Column(String(160))
+    target_date = Column(Date)
+    target_time = Column(Time)
+    timezone = Column(String(50))
+    url_path = Column(Text, nullable=False)
+    chart_metadata = Column("metadata", JSONB, nullable=False, default=dict, server_default='{}')
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    user = relationship("User")
+
+    __table_args__ = (
+        Index('idx_saved_charts_user_created', 'user_id', 'created_at'),
+        Index('idx_saved_charts_user_type', 'user_id', 'chart_type'),
     )
 
 

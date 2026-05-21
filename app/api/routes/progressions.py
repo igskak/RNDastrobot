@@ -30,6 +30,7 @@ class ProgressionRequest(BaseModel):
     target_time: Optional[time_type] = Field(None, description="Локальное время прогностического момента (HH:MM:SS)")
     timezone: Optional[str] = Field(None, description="IANA timezone прогностического момента")
     save_to_db: bool = Field(False, description="Сохранить результат в базу данных")
+    name: Optional[str] = Field(None, max_length=160, description="Название сохранённой прогрессии")
 
     @field_validator('timezone')
     @classmethod
@@ -126,6 +127,8 @@ class NatalHouseInfo(BaseModel):
 
 class ProgressionResponse(BaseModel):
     """Ответ с данными прогрессии"""
+    progression_id: Optional[str] = None
+    name: Optional[str] = None
     progression_info: ProgressionInfoBlock
     birth_data: BirthDataBlock
     progressed_planets: List[ProgressedPlanetInfo]
@@ -137,6 +140,8 @@ class ProgressionResponse(BaseModel):
 
 class ProgressionListItem(BaseModel):
     """Элемент списка прогрессий"""
+    progression_id: Optional[str] = None
+    name: Optional[str] = None
     target_date: str
     target_time: Optional[str] = None
     timezone: Optional[str] = None
@@ -148,6 +153,19 @@ class ProgressionListResponse(BaseModel):
     """Список прогрессий пользователя"""
     user_id: UUID
     progressions: List[ProgressionListItem]
+
+
+class ProgressionUpdateRequest(BaseModel):
+    """Обновление метаданных сохранённой прогрессии"""
+    name: Optional[str] = Field(None, max_length=160)
+
+    @field_validator('name')
+    @classmethod
+    def normalize_name(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
 
 
 # === API Endpoints ===
@@ -180,7 +198,8 @@ def calculate_progression(
             target_date=request.target_date,
             target_time=request.target_time,
             timezone=request.timezone,
-            save_to_db=request.save_to_db
+            save_to_db=request.save_to_db,
+            name=request.name,
         )
         return result
 
@@ -224,4 +243,39 @@ def list_progressions(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Ошибка получения списка прогрессий: {str(e)}"
+        )
+
+
+@router.patch(
+    "/progressions/{progression_id}",
+    response_model=ProgressionListItem,
+    status_code=status.HTTP_200_OK,
+    summary="Переименовать сохранённую прогрессию",
+)
+def update_progression(
+    progression_id: UUID,
+    payload: ProgressionUpdateRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+):
+    try:
+        progression_service = ProgressionService(db_session=db, ephe_path=EPHE_PATH)
+        progression = progression_service.get_progression_by_id(progression_id)
+        if not progression:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Прогрессия не найдена")
+
+        ensure_client_access(db, request, auth, progression.user_id, action="client.progressions.update")
+        updated = progression_service.rename_progression(progression_id, payload.name)
+        if not updated:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Прогрессия не найдена")
+        return updated
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Error updating progression: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка обновления прогрессии: {str(e)}"
         )

@@ -892,6 +892,7 @@
         "statistics": "Statistics",
         "relatedPeople": "Their people",
         "solarReturns": "Saved solar returns",
+        "savedCharts": "Saved charts",
         "keyInsights": "Key insights",
         "consultations": "Session history",
         "recordings": "Call recordings"
@@ -925,6 +926,27 @@
         "rename": "Rename",
         "renameFailed": "Failed to rename solar return",
         "renamed": "Solar return name saved"
+      },
+      "savedCharts": {
+        "defaultName": "Chart",
+        "defaultSolarName": "Solar return {year}",
+        "defaultForecastName": "Forecast",
+        "defaultProgressionName": "Progression",
+        "defaultDirectionName": "Direction",
+        "empty": "No saved charts yet. Save a solar return, progression, or direction, and it will appear here.",
+        "namePrompt": "Chart name",
+        "open": "Open",
+        "openFailed": "Failed to open chart",
+        "rename": "Rename",
+        "renameFailed": "Failed to rename chart",
+        "renamed": "Chart name saved",
+        "types": {
+          "chart": "Chart",
+          "forecast": "Forecast",
+          "solar_return": "Solar return",
+          "progression": "Progression",
+          "direction": "Direction"
+        }
       },
       "related": {
         "add": "Add person",

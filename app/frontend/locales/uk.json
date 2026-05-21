@@ -892,6 +892,7 @@
         "statistics": "Статистика",
         "relatedPeople": "Його люди",
         "solarReturns": "Збережені соляри",
+        "savedCharts": "Збережені карти",
         "keyInsights": "Ключові інсайти",
         "consultations": "Історія зустрічей",
         "recordings": "Записи дзвінків"
@@ -925,6 +926,27 @@
         "rename": "Перейменувати",
         "renameFailed": "Не вдалося перейменувати соляр",
         "renamed": "Назву соляра збережено"
+      },
+      "savedCharts": {
+        "defaultName": "Карта",
+        "defaultSolarName": "Соляр {year}",
+        "defaultForecastName": "Прогностика",
+        "defaultProgressionName": "Прогресія",
+        "defaultDirectionName": "Дирекція",
+        "empty": "Збережених карт ще немає. Збережіть соляр, прогресію або дирекцію, і вона з'явиться тут.",
+        "namePrompt": "Назва карти",
+        "open": "Відкрити",
+        "openFailed": "Не вдалося відкрити карту",
+        "rename": "Перейменувати",
+        "renameFailed": "Не вдалося перейменувати карту",
+        "renamed": "Назву карти збережено",
+        "types": {
+          "chart": "Карта",
+          "forecast": "Прогностична",
+          "solar_return": "Соляр",
+          "progression": "Прогресія",
+          "direction": "Дирекція"
+        }
       },
       "related": {
         "add": "Додати людину",

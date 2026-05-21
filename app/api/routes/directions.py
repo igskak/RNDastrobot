@@ -4,7 +4,7 @@ API эндпоинты для работы с дирекциями (Directions)
 from fastapi import APIRouter, HTTPException, status, Depends, Request
 from sqlalchemy.orm import Session
 from uuid import UUID
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from datetime import date as date_type
 from typing import List, Optional, Literal
 
@@ -31,6 +31,7 @@ class DirectionRequest(BaseModel):
         description="Тип дирекции: solar_arc, zodiacal/symbolic (1°=1 год), equatorial (Naibod)"
     )
     save_to_db: bool = Field(False, description="Сохранить результат в базу данных")
+    name: Optional[str] = Field(None, max_length=160, description="Название сохранённой дирекции")
 
 
 class DirectedObjectInfo(BaseModel):
@@ -115,6 +116,8 @@ class NatalHouseInfo(BaseModel):
 
 class DirectionResponse(BaseModel):
     """Ответ с данными дирекции"""
+    direction_id: Optional[str] = None
+    name: Optional[str] = None
     direction_info: DirectionInfoBlock
     birth_data: BirthDataBlock
     directed_planets: List[DirectedObjectInfo]
@@ -129,6 +132,8 @@ class DirectionResponse(BaseModel):
 
 class DirectionListItem(BaseModel):
     """Элемент списка дирекций"""
+    direction_id: Optional[str] = None
+    name: Optional[str] = None
     target_date: str
     direction_type: str
     arc_degrees: float
@@ -139,6 +144,19 @@ class DirectionListResponse(BaseModel):
     """Список дирекций пользователя"""
     user_id: UUID
     directions: List[DirectionListItem]
+
+
+class DirectionUpdateRequest(BaseModel):
+    """Обновление метаданных сохранённой дирекции"""
+    name: Optional[str] = Field(None, max_length=160)
+
+    @field_validator('name')
+    @classmethod
+    def normalize_name(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
 
 
 # === API Endpoints ===
@@ -171,7 +189,8 @@ def calculate_direction(
             user_id=request.user_id,
             target_date=request.target_date,
             direction_type=request.direction_type,
-            save_to_db=request.save_to_db
+            save_to_db=request.save_to_db,
+            name=request.name,
         )
         return result
 
@@ -215,4 +234,39 @@ def list_directions(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Ошибка получения списка дирекций: {str(e)}"
+        )
+
+
+@router.patch(
+    "/directions/{direction_id}",
+    response_model=DirectionListItem,
+    status_code=status.HTTP_200_OK,
+    summary="Переименовать сохранённую дирекцию",
+)
+def update_direction(
+    direction_id: UUID,
+    payload: DirectionUpdateRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+):
+    try:
+        direction_service = DirectionService(db_session=db, ephe_path=EPHE_PATH)
+        direction = direction_service.get_direction_by_id(direction_id)
+        if not direction:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Дирекция не найдена")
+
+        ensure_client_access(db, request, auth, direction.user_id, action="client.directions.update")
+        updated = direction_service.rename_direction(direction_id, payload.name)
+        if not updated:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Дирекция не найдена")
+        return updated
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Error updating direction: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка обновления дирекции: {str(e)}"
         )

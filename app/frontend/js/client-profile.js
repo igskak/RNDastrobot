@@ -273,15 +273,15 @@ function bindPageEvents() {
     });
 
     refs.solarReturnsList?.addEventListener('click', async (e) => {
-        const openBtn = e.target.closest('[data-action="open-solar-return"]');
+        const openBtn = e.target.closest('[data-action="open-saved-chart"]');
         if (openBtn) {
-            await openSavedSolarReturn(openBtn.dataset.solarYear);
+            await openSavedChart(openBtn.dataset.chartType, openBtn.dataset.chartPayload);
             return;
         }
 
-        const renameBtn = e.target.closest('[data-action="rename-solar-return"]');
+        const renameBtn = e.target.closest('[data-action="rename-saved-chart"]');
         if (renameBtn) {
-            await renameSavedSolarReturn(renameBtn.dataset.solarId);
+            await renameSavedChart(renameBtn.dataset.chartType, renameBtn.dataset.chartId);
         }
     });
 
@@ -335,7 +335,7 @@ function renderAll(data) {
     renderContact(data.user);
     renderStats(data.stats);
     renderRelatedPeople(relatedPeople);
-    renderSolarReturns(data.solar_returns || []);
+    renderSavedCharts(data.saved_charts || data.solar_returns || []);
     renderInsights(data.aggregated_key_points);
     renderConsultations();
     renderRecordings(data.call_sessions);
@@ -483,75 +483,151 @@ function renderRelatedPeople(items) {
     }).join('');
 }
 
-function getSolarReturnTitle(solar) {
-    return solar?.name || t('page.clientProfile.solar.defaultName', { year: solar?.year || '' });
+function normalizeSavedChart(item) {
+    if (item?.chart_type) return item;
+    return {
+        ...item,
+        id: item?.solar_id,
+        chart_type: 'solar_return',
+        target_date: item?.solar_datetime ? item.solar_datetime.split('T')[0] : null,
+        datetime: item?.solar_datetime,
+    };
 }
 
-function renderSolarReturns(items) {
-    if (!refs.solarReturnsList || !refs.solarReturnsEmpty) return;
+function getSavedChartDefaultName(chart) {
+    if (chart?.chart_type === 'solar_return') {
+        return t('page.clientProfile.savedCharts.defaultSolarName', { year: chart?.year || '' });
+    }
+    if (chart?.chart_type === 'forecast') return t('page.clientProfile.savedCharts.defaultForecastName');
+    if (chart?.chart_type === 'progression') return t('page.clientProfile.savedCharts.defaultProgressionName');
+    if (chart?.chart_type === 'direction') return t('page.clientProfile.savedCharts.defaultDirectionName');
+    return t('page.clientProfile.savedCharts.defaultName');
+}
 
-    if (!items || items.length === 0) {
+function getSavedChartTypeLabel(chart) {
+    if (chart?.chart_type === 'solar_return') return t('page.clientProfile.savedCharts.types.solar_return');
+    if (chart?.chart_type === 'forecast') return t('page.clientProfile.savedCharts.types.forecast');
+    if (chart?.chart_type === 'progression') return t('page.clientProfile.savedCharts.types.progression');
+    if (chart?.chart_type === 'direction') return t('page.clientProfile.savedCharts.types.direction');
+    return t('page.clientProfile.savedCharts.types.chart');
+}
+
+function renderSavedCharts(items) {
+    if (!refs.solarReturnsList || !refs.solarReturnsEmpty) return;
+    const charts = (items || []).map(normalizeSavedChart);
+
+    if (charts.length === 0) {
         refs.solarReturnsList.innerHTML = '';
         refs.solarReturnsEmpty.classList.remove('hidden');
         return;
     }
 
     refs.solarReturnsEmpty.classList.add('hidden');
-    refs.solarReturnsList.innerHTML = items.map((solar) => {
-        const dateStr = solar.solar_datetime ? formatDateTime(solar.solar_datetime) : '';
+    refs.solarReturnsList.innerHTML = charts.map((chart) => {
+        const dateStr = chart.datetime
+            ? formatDateTime(chart.datetime)
+            : (chart.target_date ? formatDate(chart.target_date) : '');
         const meta = [
-            solar.year,
-            solar.location_name,
+            getSavedChartTypeLabel(chart),
+            chart.year,
+            chart.location_name,
             dateStr,
         ].filter(Boolean).join(' · ');
+        const payload = encodeURIComponent(JSON.stringify({
+            type: chart.chart_type,
+            year: chart.year,
+            targetDate: chart.target_date,
+            targetTime: chart.target_time,
+            timezone: chart.timezone,
+            directionType: chart.direction_type,
+            urlPath: chart.url_path,
+        }));
 
         return `
             <article class="profile-solar-card">
                 <div class="profile-solar-main">
-                    <h3 class="profile-solar-name">${escapeHtml(getSolarReturnTitle(solar))}</h3>
+                    <h3 class="profile-solar-name">${escapeHtml(chart.name || getSavedChartDefaultName(chart))}</h3>
                     <p class="profile-solar-meta">${escapeHtml(meta || t('common.notAvailable'))}</p>
                 </div>
                 <div class="profile-solar-actions">
-                    <button class="btn-new btn-sm" type="button" data-action="open-solar-return" data-solar-year="${escapeHtml(solar.year)}">${escapeHtml(t('page.clientProfile.solar.open'))}</button>
-                    <button class="btn-logout btn-sm" type="button" data-action="rename-solar-return" data-solar-id="${escapeHtml(solar.solar_id)}">${escapeHtml(t('page.clientProfile.solar.rename'))}</button>
+                    <button class="btn-new btn-sm" type="button" data-action="open-saved-chart" data-chart-type="${escapeHtml(chart.chart_type)}" data-chart-payload="${escapeHtml(payload)}">${escapeHtml(t('page.clientProfile.savedCharts.open'))}</button>
+                    <button class="btn-logout btn-sm" type="button" data-action="rename-saved-chart" data-chart-type="${escapeHtml(chart.chart_type)}" data-chart-id="${escapeHtml(chart.id)}" data-saved-link="${chart.url_path ? 'true' : 'false'}">${escapeHtml(t('page.clientProfile.savedCharts.rename'))}</button>
                 </div>
             </article>`;
     }).join('');
 }
 
-async function renameSavedSolarReturn(solarId) {
-    if (!solarId || !profileData) return;
-    const solar = (profileData.solar_returns || []).find((item) => String(item.solar_id) === String(solarId));
-    const currentName = solar?.name || '';
-    const nextName = window.prompt(t('page.clientProfile.solar.namePrompt'), currentName);
+async function renameSavedChart(chartType, chartId) {
+    if (!chartId || !profileData) return;
+    const chart = (profileData.saved_charts || profileData.solar_returns || [])
+        .map(normalizeSavedChart)
+        .find((item) => String(item.id) === String(chartId));
+    const currentName = chart?.name || '';
+    const nextName = window.prompt(t('page.clientProfile.savedCharts.namePrompt'), currentName);
     if (nextName === null) return;
 
     try {
-        const res = await apiFetch(`${API_BASE}/solar/${encodeURIComponent(solarId)}`, {
+        const isSavedLink = chart?.url_path;
+        const endpoint = isSavedLink
+            ? `/saved-charts/${encodeURIComponent(chartId)}`
+            : chartType === 'solar_return'
+            ? `/solar/${encodeURIComponent(chartId)}`
+            : chartType === 'progression'
+                ? `/progressions/${encodeURIComponent(chartId)}`
+                : `/directions/${encodeURIComponent(chartId)}`;
+        const res = await apiFetch(`${API_BASE}${endpoint}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: nextName }),
         });
         if (!res.ok) {
             const detail = await res.json().catch(() => ({}));
-            throw new Error(detail.detail || t('page.clientProfile.solar.renameFailed'));
+            throw new Error(detail.detail || t('page.clientProfile.savedCharts.renameFailed'));
         }
-        showToast(t('page.clientProfile.solar.renamed'), 'success');
+        showToast(t('page.clientProfile.savedCharts.renamed'), 'success');
         await loadProfile();
     } catch (err) {
         showToast(t('common.errorWithMessage', { message: err.message }), 'error');
     }
 }
 
-async function openSavedSolarReturn(year) {
-    if (!year) return;
+async function openSavedChart(chartType, encodedPayload) {
+    const payload = JSON.parse(decodeURIComponent(encodedPayload || '%7B%7D'));
+    if (payload.urlPath) {
+        window.AstroAPI.saveNavigationState?.({
+            sourceView: 'client-profile',
+            sourceUrl: window.AstroAPI.buildClientProfileUrl?.(userId) || `/client/${encodeURIComponent(userId)}`,
+            clientUserId: String(userId),
+            partnerUserId: null,
+        });
+        window.showPageLoader?.();
+        window.location.href = payload.urlPath;
+        return;
+    }
+    if (chartType !== 'solar_return') {
+        const params = new URLSearchParams();
+        if (payload.targetDate) params.set('date', payload.targetDate);
+        if (payload.targetTime) params.set('time', String(payload.targetTime).slice(0, 8));
+        params.set('layer', chartType === 'direction' ? 'direction' : 'progression');
+        if (payload.directionType) params.set('directionType', payload.directionType);
+        window.AstroAPI.saveNavigationState?.({
+            sourceView: 'client-profile',
+            sourceUrl: window.AstroAPI.buildClientProfileUrl?.(userId) || `/client/${encodeURIComponent(userId)}`,
+            clientUserId: String(userId),
+            partnerUserId: null,
+        });
+        window.showPageLoader?.();
+        window.location.href = `/forecast-new.html?${params.toString()}`;
+        return;
+    }
+    if (!payload.year) return;
     try {
         const [natalRes, solarRes] = await Promise.all([
             apiFetch(`${API_BASE}/natal/${userId}`),
-            apiFetch(`${API_BASE}/solar/${userId}/${encodeURIComponent(year)}`),
+            apiFetch(`${API_BASE}/solar/${userId}/${encodeURIComponent(payload.year)}`),
         ]);
         if (!natalRes.ok) throw new Error(t('page.clients.errors.chartNotFound'));
-        if (!solarRes.ok) throw new Error(t('page.clientProfile.solar.openFailed'));
+        if (!solarRes.ok) throw new Error(t('page.clientProfile.savedCharts.openFailed'));
 
         const natalData = await natalRes.json();
         const solarData = await solarRes.json();

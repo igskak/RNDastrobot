@@ -38,7 +38,7 @@ from app.services.natal_chart_service import NatalChartService
 from app.services.preferences_service import PreferencesService
 from app.database.connection import get_db
 from app.database.repositories.user_repository import UserRepository
-from app.database.models import User, Consultation, CallSession, SolarReturn
+from app.database.models import User, Consultation, CallSession, SolarReturn, Progression, Direction, SavedChart
 from app.api.routes.call_session_utils import TERMINAL_CALL_SESSION_STATUSES
 from app.auth.dependencies import AuthContext, create_audit_event, ensure_client_access, require_auth
 from app.utils.ephemeris import get_ephemeris_path
@@ -637,6 +637,84 @@ def get_user_profile(
             .order_by(SolarReturn.year.desc(), SolarReturn.created_at.desc().nullslast())
             .all()
         )
+        progressions = (
+            db.query(Progression)
+            .filter(Progression.user_id == user_id)
+            .order_by(
+                Progression.target_date.desc(),
+                Progression.target_time.desc().nullslast(),
+                Progression.created_at.desc().nullslast(),
+            )
+            .all()
+        )
+        directions = (
+            db.query(Direction)
+            .filter(Direction.user_id == user_id)
+            .order_by(Direction.target_date.desc(), Direction.created_at.desc().nullslast())
+            .all()
+        )
+        saved_chart_links = (
+            db.query(SavedChart)
+            .filter(SavedChart.user_id == user_id)
+            .order_by(SavedChart.created_at.desc().nullslast())
+            .all()
+        )
+        saved_charts = []
+        saved_charts.extend(
+            {
+                "id": str(c.saved_chart_id),
+                "chart_type": c.chart_type,
+                "name": c.name,
+                "target_date": c.target_date.isoformat() if c.target_date else None,
+                "target_time": c.target_time.isoformat() if c.target_time else None,
+                "timezone": c.timezone,
+                "url_path": c.url_path,
+                "metadata": c.chart_metadata or {},
+                "created_at": c.created_at.isoformat() if c.created_at else None,
+            }
+            for c in saved_chart_links
+        )
+        saved_charts.extend(
+            {
+                "id": str(s.solar_id),
+                "chart_type": "solar_return",
+                "name": s.name,
+                "target_date": s.solar_datetime.date().isoformat() if s.solar_datetime else None,
+                "target_time": s.solar_datetime.time().isoformat() if s.solar_datetime else None,
+                "datetime": s.solar_datetime.isoformat() if s.solar_datetime else None,
+                "year": s.year,
+                "location_name": s.location_name,
+                "created_at": s.created_at.isoformat() if s.created_at else None,
+            }
+            for s in solar_returns
+        )
+        saved_charts.extend(
+            {
+                "id": str(p.progression_id),
+                "chart_type": "progression",
+                "name": p.name,
+                "target_date": p.target_date.isoformat() if p.target_date else None,
+                "target_time": p.target_time.isoformat() if p.target_time else None,
+                "timezone": p.timezone,
+                "datetime": p.target_utc.isoformat() if p.target_utc else None,
+                "created_at": p.created_at.isoformat() if p.created_at else None,
+            }
+            for p in progressions
+        )
+        saved_charts.extend(
+            {
+                "id": str(d.direction_id),
+                "chart_type": "direction",
+                "name": d.name,
+                "target_date": d.target_date.isoformat() if d.target_date else None,
+                "direction_type": d.direction_type,
+                "arc_degrees": float(d.arc_degrees) if d.arc_degrees is not None else None,
+                "age_years": float(d.age_years) if d.age_years is not None else None,
+                "created_at": d.created_at.isoformat() if d.created_at else None,
+            }
+            for d in directions
+        )
+        saved_charts.sort(key=lambda item: item.get("created_at") or "", reverse=True)
 
         # Stats
         total = len(consultations)
@@ -740,6 +818,7 @@ def get_user_profile(
                 }
                 for s in solar_returns
             ],
+            "saved_charts": saved_charts,
             "aggregated_key_points": aggregated_key_points,
         }
     except HTTPException:
