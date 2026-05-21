@@ -89,6 +89,7 @@
             'solarShowStationaryToggle', 'solarShowAspectTextToggle',
             'solarAngleAscDscBoldToggle', 'solarAngleMcIcBoldToggle',
             'solarSaveDefaultsBtn', 'solarResetDefaultsBtn',
+            'solarActionsToggle', 'solarActionsMenu',
             'solarConfigurationsContainer', 'solarBalancesContainer',
             'solarRulersContainer', 'solarToast',
         ].forEach((id) => {
@@ -831,6 +832,8 @@
     }
 
     function bindEvents() {
+        initSolarActionsMenu();
+
         refs.solarCalculateBtn.addEventListener('click', () => {
             calculateSolar().catch((error) => {
                 console.error('Solar calculation failed:', error);
@@ -862,6 +865,28 @@
         document.addEventListener('frontend:locale-changed', () => {
             window.FrontendI18nUi?.applyI18n?.(document);
             if (state.solarData) renderSolar(state.solarData, { hydratePreferences: false });
+        });
+    }
+
+    function initSolarActionsMenu() {
+        const toggle = refs.solarActionsToggle;
+        const menu = refs.solarActionsMenu;
+        if (!toggle || !menu) return;
+
+        const setOpen = (isOpen) => {
+            menu.classList.toggle('hidden', !isOpen);
+            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        };
+
+        toggle.addEventListener('click', (event) => {
+            event.stopPropagation();
+            setOpen(menu.classList.contains('hidden'));
+        });
+        menu.addEventListener('click', () => setOpen(false));
+        menu.addEventListener('click', (event) => event.stopPropagation());
+        document.addEventListener('click', () => setOpen(false));
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') setOpen(false);
         });
     }
 

@@ -426,6 +426,7 @@
         "openMenu": "Open chart actions",
         "openSynastry": "Synastry",
         "resetDefaults": "Reset local settings",
+        "saveChart": "Save chart",
         "saveDefaults": "Save as local settings"
       },
       "aspects": {

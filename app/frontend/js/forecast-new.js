@@ -312,7 +312,7 @@
         [
             'pageLoader', 'forecastNewLayout', 'forecastNewError', 'forecastNewErrorMsg',
             'forecastNewBackBtn', 'forecastNewTitle', 'forecastNewSubtitle', 'openNatalBtn', 'openNatalTablesBtn', 'openSynastryBtn',
-            'savePrognosticChartBtn',
+            'savePrognosticChartBtn', 'forecastNewActionsToggle', 'forecastNewActionsMenu',
             'forecastNewDirectionTypeSelect',
             'forecastNewNatalPanel', 'forecastNewProgPanel',
             'natalPanelMeta', 'prognosticPanelTitle', 'prognosticPanelMeta',
@@ -370,6 +370,8 @@
     }
 
     function bindEvents() {
+        initForecastNewActionsMenu();
+
         refs.openNatalBtn?.addEventListener('click', () => {
             window.AstroAPI?.saveChartToSession?.(state.natalData);
             window.AstroAPI?.saveFormData?.(window.AstroAPI.chartToFormData(state.natalData));
@@ -739,6 +741,28 @@
                 state.hoveredAspectKey = null;
                 applyHoveredAspectFocus();
             }
+        });
+    }
+
+    function initForecastNewActionsMenu() {
+        const toggle = refs.forecastNewActionsToggle;
+        const menu = refs.forecastNewActionsMenu;
+        if (!toggle || !menu) return;
+
+        const setOpen = (isOpen) => {
+            menu.classList.toggle('hidden', !isOpen);
+            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        };
+
+        toggle.addEventListener('click', (event) => {
+            event.stopPropagation();
+            setOpen(menu.classList.contains('hidden'));
+        });
+        menu.addEventListener('click', () => setOpen(false));
+        menu.addEventListener('click', (event) => event.stopPropagation());
+        document.addEventListener('click', () => setOpen(false));
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') setOpen(false);
         });
     }
 

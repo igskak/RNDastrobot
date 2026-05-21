@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Прогностика New</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=127d52978958">
-    <script>window.__APP_BUILD_ID__ = '127d52978958';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=6cbad8995be5">
+    <script>window.__APP_BUILD_ID__ = '6cbad8995be5';</script>
 </head>
 <body class="forecast-new-page">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -43,11 +43,23 @@
         <div class="header-nav-buttons forecast-new-header-actions">
             <a href="/" class="header-nav-btn" data-i18n="page.chart.nav.home"></a>
             <button type="button" class="header-nav-btn" id="openNatalBtn" data-i18n="page.natalFull.nav.wheel"></button>
-            <button type="button" class="header-nav-btn" id="openNatalTablesBtn" data-i18n="page.chart.nav.tables"></button>
-            <button type="button" class="header-nav-btn" id="openSynastryBtn" data-i18n="page.chart.nav.synastry"></button>
-            <button type="button" class="header-nav-btn" id="savePrognosticChartBtn">Сохранить</button>
             <a href="solar.html" class="header-nav-btn" data-i18n="page.chart.nav.solar"></a>
-            <a href="/account-settings.html" class="header-nav-btn">Settings</a>
+            <div class="header-action-menu">
+                <button type="button" class="header-nav-btn header-nav-btn--icon" id="forecastNewActionsToggle" aria-haspopup="true" aria-expanded="false" data-i18n-aria-label="page.chart.actions.openMenu">
+                    <svg class="nav-btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+                        <circle cx="7" cy="2.5" r="1"/>
+                        <circle cx="7" cy="7" r="1"/>
+                        <circle cx="7" cy="11.5" r="1"/>
+                    </svg>
+                    <span data-i18n="page.chart.actions.label"></span>
+                </button>
+                <div class="chart-actions-menu hidden" id="forecastNewActionsMenu" role="menu">
+                    <button type="button" class="chart-action-item" id="openNatalTablesBtn" role="menuitem" data-i18n="page.chart.nav.tables"></button>
+                    <button type="button" class="chart-action-item" id="openSynastryBtn" role="menuitem" data-i18n="page.chart.nav.synastry"></button>
+                    <button type="button" class="chart-action-item" id="savePrognosticChartBtn" role="menuitem" data-i18n="page.chart.actions.saveChart"></button>
+                    <a href="/account-settings.html" class="chart-action-item chart-action-item--link" role="menuitem" data-i18n="page.accountSettings.title"></a>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -362,6 +374,6 @@
         </aside>
     </main>
 
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=127d52978958"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=6cbad8995be5"></script>
 </body>
 </html>

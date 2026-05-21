@@ -268,21 +268,16 @@ function navigateFromChart(target) {
 
 function configureChartHeaderNavigation() {
     const backBtn = document.querySelector('.back-btn-compact');
-    const tablesBtn = document.querySelector('.header-nav-buttons a[href="natal-full.html"]');
+    const tablesBtn = document.getElementById('openNatalTablesAction');
     const forecastBtn = document.querySelector('.header-nav-buttons a[href="forecast-new.html"]');
-    const synastryBtn = document.getElementById('openSynastryNavBtn');
-    const userId = getCurrentChartUserId();
 
     if (backBtn) {
         backBtn.href = getChartBackUrl();
     }
 
-    if (synastryBtn) {
-        synastryBtn.disabled = !userId;
-    }
-
     tablesBtn?.addEventListener('click', (event) => {
         event.preventDefault();
+        setChartActionsMenuOpen(false);
         navigateFromChart('/natal-full.html');
     });
 
@@ -291,14 +286,6 @@ function configureChartHeaderNavigation() {
         navigateFromChart('/forecast-new.html');
     });
 
-    synastryBtn?.addEventListener('click', () => {
-        const synastryUrl = getChartSynastryUrl();
-        if (synastryUrl) {
-            navigateFromChart(synastryUrl);
-            return;
-        }
-        openSynastryLauncherDialog();
-    });
 }
 
 function handleChartOpenQueryAction() {
@@ -1732,6 +1719,11 @@ function initChartActions() {
 
     openSynastryAction?.addEventListener('click', () => {
         setChartActionsMenuOpen(false);
+        const synastryUrl = getChartSynastryUrl();
+        if (synastryUrl) {
+            navigateFromChart(synastryUrl);
+            return;
+        }
         openSynastryLauncherDialog();
     });
 

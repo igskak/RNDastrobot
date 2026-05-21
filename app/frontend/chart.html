@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.chart.title"></title>
-    <link rel="stylesheet" href="bundles/chart.bundle.css?v=d06eeb394b62">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=d06eeb394b62">
-    <script>window.__APP_BUILD_ID__ = 'd06eeb394b62';</script>
+    <link rel="stylesheet" href="bundles/chart.bundle.css?v=7c520fede807">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=7c520fede807">
+    <script>window.__APP_BUILD_ID__ = '7c520fede807';</script>
 </head>
 <body class="chart-page">
     <div class="page-loader" id="pageLoader">
@@ -22,13 +22,6 @@
         </div>
         <div class="header-nav-buttons">
             <a href="/" class="header-nav-btn"><span data-i18n="page.chart.nav.home"></span></a>
-            <button type="button" class="header-nav-btn" id="openSynastryNavBtn">
-                <svg class="nav-btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                    <circle cx="4.5" cy="7" r="2.5"/><circle cx="9.5" cy="7" r="2.5"/><path d="M6.8 7h.4"/>
-                </svg>
-                <span data-i18n="page.chart.nav.synastry"></span>
-            </button>
-            <a href="natal-full.html" class="header-nav-btn"><svg class="nav-btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="1" y="1" width="12" height="12" rx="1"/><line x1="1" y1="5" x2="13" y2="5"/><line x1="1" y1="9" x2="13" y2="9"/></svg><span data-i18n="page.chart.nav.tables"></span></a>
             <a href="forecast-new.html" class="header-nav-btn"><svg class="nav-btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="7" cy="7" r="6"/><circle cx="7" cy="7" r="3"/><line x1="7" y1="1" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13"/><line x1="1" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13" y2="7"/></svg><span data-i18n="page.chart.nav.forecast"></span></a>
             <a href="solar.html" class="header-nav-btn"><svg class="nav-btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="7" cy="7" r="2.4"/><line x1="7" y1="1" x2="7" y2="3"/><line x1="7" y1="11" x2="7" y2="13"/><line x1="1" y1="7" x2="3" y2="7"/><line x1="11" y1="7" x2="13" y2="7"/><line x1="2.8" y1="2.8" x2="4.2" y2="4.2"/><line x1="9.8" y1="9.8" x2="11.2" y2="11.2"/><line x1="11.2" y1="2.8" x2="9.8" y2="4.2"/><line x1="4.2" y1="9.8" x2="2.8" y2="11.2"/></svg><span data-i18n="page.chart.nav.solar"></span></a>
             <div class="header-action-menu">
@@ -42,6 +35,7 @@
                 </button>
                 <div class="chart-actions-menu hidden" id="chartActionsMenu" role="menu">
                     <button type="button" class="chart-action-item" id="editClientAction" role="menuitem" data-i18n="page.chart.actions.editClient"></button>
+                    <a href="natal-full.html" class="chart-action-item chart-action-item--link" id="openNatalTablesAction" role="menuitem" data-i18n="page.chart.nav.tables"></a>
                     <button type="button" class="chart-action-item hidden" id="openSynastryAction" role="menuitem" data-i18n="page.chart.actions.openSynastry"></button>
                     <a href="account-settings.html" class="chart-action-item chart-action-item--link" role="menuitem" data-i18n="page.accountSettings.title"></a>
                     <button type="button" class="chart-action-item" id="saveNatalDefaultsAction" role="menuitem" data-i18n="page.chart.actions.saveDefaults"></button>
@@ -435,7 +429,7 @@
 
     <div id="chartToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/chart.bundle.js?v=d06eeb394b62"></script>
-    <script src="js/locale-switcher.js?v=d06eeb394b62"></script>
+    <script type="module" src="js/bundles/chart.bundle.js?v=7c520fede807"></script>
+    <script src="js/locale-switcher.js?v=7c520fede807"></script>
 </body>
 </html>

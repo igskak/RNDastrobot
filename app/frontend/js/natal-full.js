@@ -361,6 +361,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     chartData = await loadFreshNatalFullChartData(chartData);
     configureNatalFullNavigation();
+    setupNatalFullActionsMenu();
 
     renderFullChart(chartData);
     setupLegendToggle();
@@ -408,6 +409,28 @@ function setupLegendToggle() {
 
     btn.addEventListener('click', () => {
         panel.classList.toggle('hidden');
+    });
+}
+
+function setupNatalFullActionsMenu() {
+    const toggle = document.getElementById('natalFullActionsToggle');
+    const menu = document.getElementById('natalFullActionsMenu');
+    if (!toggle || !menu) return;
+
+    const setOpen = (isOpen) => {
+        menu.classList.toggle('hidden', !isOpen);
+        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    };
+
+    toggle.addEventListener('click', (event) => {
+        event.stopPropagation();
+        setOpen(menu.classList.contains('hidden'));
+    });
+    menu.addEventListener('click', () => setOpen(false));
+    menu.addEventListener('click', (event) => event.stopPropagation());
+    document.addEventListener('click', () => setOpen(false));
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') setOpen(false);
     });
 }
 
