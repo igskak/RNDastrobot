@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecast.tabs.solar"></title>
-    <link rel="stylesheet" href="bundles/solar.bundle.css?v=913665b0886a">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=913665b0886a">
+    <link rel="stylesheet" href="bundles/solar.bundle.css?v=db6aa8f4fecd">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=db6aa8f4fecd">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '913665b0886a';</script>
+    <script>window.__APP_BUILD_ID__ = 'db6aa8f4fecd';</script>
 </head>
-<body class="chart-page solar-page">
+<body class="chart-page forecast-new-page solar-page">
     <div class="page-loader" id="pageLoader">
         <div class="pl-spinner"></div>
         <div class="pl-text" data-i18n="common.loading"></div>
@@ -76,41 +76,11 @@
                     <div class="chart-actions-menu hidden" id="solarActionsMenu" role="menu">
                         <a href="natal-full.html" class="chart-action-item chart-action-item--link" role="menuitem" data-i18n="page.chart.nav.tables"></a>
                         <a href="chart.html?open=synastry" class="chart-action-item chart-action-item--link" role="menuitem" data-i18n="page.chart.nav.synastry"></a>
+                        <button type="button" class="chart-action-item" id="solarSaveChartBtn" role="menuitem" data-i18n="page.chart.actions.saveChart"></button>
                         <a href="account-settings.html" class="chart-action-item chart-action-item--link" role="menuitem" data-i18n="page.accountSettings.title"></a>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="solar-header-form-shell">
-            <div class="solar-header-toolbar">
-                <div class="solar-header-form-copy">
-                    <span class="solar-card-kicker" data-i18n="page.forecast.tabs.solar"></span>
-                    <strong id="solarStatusLabel"></strong>
-                </div>
-                <div class="solar-form-grid solar-form-grid--header">
-                    <label>
-                        <span data-i18n="common.year"></span>
-                        <input type="number" id="solarYear" min="1900" max="2100">
-                    </label>
-                    <label>
-                        <span data-i18n="page.forecast.solar.nameLabel"></span>
-                        <input type="text" id="solarName" maxlength="160" data-i18n-placeholder="page.forecast.solar.namePlaceholder">
-                    </label>
-                    <label class="solar-location-field">
-                        <span data-i18n="common.location"></span>
-                        <div class="place-autocomplete-wrapper">
-                            <input type="text" id="solarLocationName" data-i18n-placeholder="page.forecast.solar.locationPlaceholder" autocomplete="off">
-                            <div id="solarPlaceSuggestions" class="place-suggestions"></div>
-                        </div>
-                    </label>
-                </div>
-                <div class="solar-coords-display" id="solarCoordsDisplay"></div>
-                <button type="button" class="btn-calculate solar-calculate-btn" id="solarCalculateBtn" data-i18n="common.calculate"></button>
-            </div>
-            <input type="hidden" id="solarLocationLat">
-            <input type="hidden" id="solarLocationLon">
-            <input type="hidden" id="solarLocationSourceId">
-            <input type="hidden" id="solarLocationTimezone">
         </div>
     </header>
 
@@ -119,42 +89,57 @@
         <a href="/" class="btn-logout" data-i18n="page.clientProfile.backToClients"></a>
     </div>
 
-    <main class="chart-layout solar-layout hidden" id="solarLayout">
-        <aside class="side-panel left-panel solar-controls-panel">
-            <div class="panel-tabs solar-tabs">
-                <button class="panel-tab active" data-panel-target="solarPlanetsView" data-i18n="page.chart.tabs.planets"></button>
-                <button class="panel-tab" data-panel-target="solarHousesView" data-i18n="page.chart.tabs.houses"></button>
-                <button class="panel-tab" data-panel-target="solarAspectsView" data-i18n="page.chart.tabs.aspects"></button>
-                <button class="panel-tab" data-panel-target="solarGridView" data-i18n="page.chart.tabs.grid"></button>
+    <main class="forecast-new-layout solar-layout hidden" id="solarLayout">
+        <aside class="side-panel left-panel forecast-new-side-panel solar-natal-panel">
+            <div class="forecast-new-side-head">
+                <button type="button" class="forecast-new-moment-toggle" aria-expanded="false">
+                    <span class="forecast-new-moment-toggle-title">Натал</span>
+                    <span class="forecast-new-moment-toggle-meta" id="solarNatalPanelMeta"></span>
+                </button>
             </div>
-            <div class="panel-content solar-panel-content">
-                <div id="solarPlanetsView" class="panel-tab-content active">
-                    <table class="data-table compact">
+            <div class="panel-tabs forecast-new-tabs solar-tabs">
+                <button class="panel-tab active" data-panel-target="solarNatalPlanetsView" data-i18n="page.chart.tabs.planets"></button>
+                <button class="panel-tab" data-panel-target="solarNatalHousesView" data-i18n="page.chart.tabs.houses"></button>
+                <button class="panel-tab" data-panel-target="solarNatalAspectsView" data-i18n="page.chart.tabs.aspects"></button>
+                <div class="forecast-new-tabs-overflow" data-tabs-overflow>
+                    <button type="button" class="panel-tab forecast-new-tabs-overflow-toggle" data-tabs-overflow-toggle aria-label="Дополнительные вкладки" aria-haspopup="true" aria-expanded="false">▸</button>
+                    <div class="forecast-new-tabs-overflow-menu" data-tabs-overflow-menu>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="solarNatalGridView" data-i18n="page.chart.tabs.grid"></button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="solarNatalConfigsView" data-i18n="page.chart.tabs.configurations"></button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="solarNatalBalancesView" data-i18n="page.chart.tabs.balances"></button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="solarNatalRulersView" data-i18n="page.chart.tabs.rulers"></button>
+                    </div>
+                </div>
+            </div>
+            <div class="panel-content forecast-new-panel-content solar-panel-content">
+                <div id="solarNatalPlanetsView" class="panel-tab-content active">
+                    <table class="data-table compact forecast-new-planets-table">
                         <thead><tr><th data-i18n="page.chart.table.planets.symbol"></th><th data-i18n="page.chart.table.planets.position"></th><th class="planet-speed-col" data-i18n="page.chart.table.planets.speed"></th><th data-i18n="page.chart.table.planets.house"></th></tr></thead>
-                        <tbody id="solarPlanetsTable"></tbody>
+                        <tbody id="solarNatalPlanetsTable"></tbody>
                     </table>
                 </div>
-                <div id="solarHousesView" class="panel-tab-content">
+                <div id="solarNatalHousesView" class="panel-tab-content">
                     <table class="data-table compact">
                         <thead><tr><th data-i18n="common.house"></th><th data-i18n="page.chart.table.houses.cusp"></th><th data-i18n="page.chart.table.houses.ruler"></th></tr></thead>
-                        <tbody id="solarHousesTable"></tbody>
+                        <tbody id="solarNatalHousesTable"></tbody>
                     </table>
                 </div>
-                <div id="solarAspectsView" class="panel-tab-content">
+                <div id="solarNatalAspectsView" class="panel-tab-content">
                     <table class="data-table compact">
                         <thead><tr><th colspan="2" class="sortable" data-sort="planet" data-i18n="page.chart.table.aspects.aspect"></th><th class="sortable" data-sort="type" data-i18n="page.chart.table.aspects.type"></th><th class="sortable" data-sort="orb" data-i18n="page.chart.table.aspects.orb"></th></tr></thead>
-                        <tbody id="solarAspectsTable"></tbody>
+                        <tbody id="solarNatalAspectsTable"></tbody>
                     </table>
                 </div>
-                <div id="solarGridView" class="panel-tab-content">
-                    <div id="solarAspectGridContainer"></div>
-                </div>
+                <div id="solarNatalGridView" class="panel-tab-content"><div id="solarNatalAspectGridContainer"></div></div>
+                <div id="solarNatalConfigsView" class="panel-tab-content"><div id="solarNatalConfigurationsContainer"></div></div>
+                <div id="solarNatalBalancesView" class="panel-tab-content"><div id="solarNatalBalancesContainer"></div></div>
+                <div id="solarNatalRulersView" class="panel-tab-content"><div id="solarNatalRulersContainer"></div></div>
             </div>
         </aside>
 
-        <section class="chart-center solar-center">
-            <div class="solar-wheel-shell" id="solarWheelWrapper">
-                <svg id="solarWheel" viewBox="0 0 500 500" preserveAspectRatio="xMidYMid meet"></svg>
+        <section class="chart-center forecast-new-center solar-center">
+            <div class="forecast-new-wheel-shell solar-wheel-shell" id="solarWheelWrapper">
+                <svg id="solarWheel" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid meet"></svg>
             </div>
             <div class="zoom-controls-float solar-zoom-controls">
                 <button class="zoom-btn" id="solarZoomIn" data-i18n-title="common.zoomIn">+</button>
@@ -169,6 +154,17 @@
                     <select id="solarOrientationSelect" class="settings-select">
                         <option value="aries" data-i18n="page.forecast.solar.orientationAries"></option>
                         <option value="asc" data-i18n="page.forecast.solar.orientationAsc"></option>
+                    </select>
+                </div>
+                <div class="settings-section">
+                    <label class="settings-label" data-i18n="page.chart.settings.houseSystem.label"></label>
+                    <select id="solarHouseSystemSelect" class="settings-select">
+                        <option value="P" data-i18n="astro.houseSystem.placidus"></option>
+                        <option value="K" data-i18n="astro.houseSystem.koch"></option>
+                        <option value="W" data-i18n="astro.houseSystem.wholeSign"></option>
+                        <option value="E" data-i18n="astro.houseSystem.equal"></option>
+                        <option value="C" data-i18n="astro.houseSystem.campanus"></option>
+                        <option value="R" data-i18n="astro.houseSystem.regiomontanus"></option>
                     </select>
                 </div>
                 <div class="settings-section">
@@ -191,8 +187,45 @@
                     <div class="forecast-settings-grid solar-aspect-types" id="solarAspectTypeToggles"></div>
                 </div>
                 <div class="settings-section">
+                    <label class="settings-label" data-i18n="page.chart.settings.aspectOptions"></label>
+                    <div class="settings-check-stack">
+                        <label class="settings-check-option">
+                            <input type="checkbox" id="solarAspectPhaseApplyingToggle">
+                            <span data-i18n="page.chart.settings.aspectPhase.applying"></span>
+                        </label>
+                        <label class="settings-check-option">
+                            <input type="checkbox" id="solarAspectPhaseSeparatingToggle">
+                            <span data-i18n="page.chart.settings.aspectPhase.separating"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="settings-section">
                     <label class="settings-label" data-i18n="page.accountSettings.fields.matrixTitle"></label>
                     <div class="forecast-settings-matrix solar-matrix" id="solarMatrixEditor"></div>
+                </div>
+                <div class="settings-section">
+                    <label class="settings-label" data-i18n="page.chart.settings.houseLabels.label"></label>
+                    <select id="solarHouseNumberStyleSelect" class="settings-select">
+                        <option value="arabic" data-i18n="page.chart.settings.houseLabels.arabic"></option>
+                        <option value="roman" data-i18n="page.chart.settings.houseLabels.roman"></option>
+                    </select>
+                    <label class="settings-check-option">
+                        <input type="checkbox" id="solarHouseLabelsOutsideToggle">
+                        <span data-i18n="page.chart.settings.houseLabels.outside"></span>
+                    </label>
+                </div>
+                <div class="settings-section">
+                    <label class="settings-label" data-i18n="page.chart.settings.wheelOptions"></label>
+                    <div class="settings-check-stack">
+                        <label class="settings-check-option">
+                            <input type="checkbox" id="solarShowWheelStationaryToggle">
+                            <span data-i18n="page.chart.settings.showPlanetStationary"></span>
+                        </label>
+                        <label class="settings-check-option">
+                            <input type="checkbox" id="solarShowWheelDegreeToggle">
+                            <span data-i18n="page.chart.settings.showPlanetDegree"></span>
+                        </label>
+                    </div>
                 </div>
                 <div class="settings-section forecast-settings-stack">
                     <label class="forecast-settings-check"><input type="checkbox" id="solarShowApplyingSeparatingToggle"><span data-i18n="page.accountSettings.options.showApplyingSeparating"></span></label>
@@ -209,14 +242,83 @@
             </div>
         </section>
 
-        <aside class="side-panel right-panel solar-derived-panel">
-            <div class="panel-tabs solar-tabs">
-                <button class="panel-tab active" data-panel-target="solarConfigsView" data-i18n="page.chart.tabs.configurations"></button>
-                <button class="panel-tab" data-panel-target="solarBalancesView" data-i18n="page.chart.tabs.balances"></button>
-                <button class="panel-tab" data-panel-target="solarRulersView" data-i18n="page.chart.tabs.rulers"></button>
+        <aside class="side-panel right-panel forecast-new-side-panel solar-derived-panel">
+            <div class="forecast-new-side-head">
+                <button type="button" class="forecast-new-moment-toggle" id="solarMomentToggle" aria-expanded="false" aria-controls="solarMomentCard">
+                    <span class="forecast-new-moment-toggle-title">Соляр</span>
+                    <span class="forecast-new-moment-toggle-meta" id="solarPanelMeta"></span>
+                </button>
             </div>
-            <div class="panel-content solar-panel-content">
-                <div id="solarConfigsView" class="panel-tab-content active"><div id="solarConfigurationsContainer"></div></div>
+            <div class="forecast-new-moment-card solar-moment-card hidden" id="solarMomentCard">
+                <label data-i18n="page.forecast.tabs.solar"></label>
+                <strong id="solarStatusLabel"></strong>
+                <div class="solar-form-grid solar-form-grid--panel">
+                    <label>
+                        <span data-i18n="common.year"></span>
+                        <input type="number" id="solarYear" min="1900" max="2100">
+                    </label>
+                    <label>
+                        <span data-i18n="page.forecast.solar.nameLabel"></span>
+                        <input type="text" id="solarName" maxlength="160" data-i18n-placeholder="page.forecast.solar.namePlaceholder">
+                    </label>
+                </div>
+                <div class="forecast-new-location-grid solar-location-grid">
+                    <select id="solarLocationTimezone">
+                        <option value="">Timezone</option>
+                    </select>
+                    <div class="place-autocomplete-wrapper forecast-new-location-autocomplete">
+                        <input type="text" id="solarLocationName" data-i18n-placeholder="page.forecast.solar.locationPlaceholder" autocomplete="off">
+                        <div id="solarPlaceSuggestions" class="place-suggestions"></div>
+                    </div>
+                    <input type="number" id="solarLocationLat" step="0.0001" placeholder="Lat">
+                    <input type="number" id="solarLocationLon" step="0.0001" placeholder="Lon">
+                </div>
+                <div class="solar-panel-actions">
+                    <span class="solar-coords-display" id="solarCoordsDisplay"></span>
+                    <button type="button" class="btn-calculate solar-calculate-btn" id="solarCalculateBtn" data-i18n="common.calculate"></button>
+                </div>
+                <input type="hidden" id="solarLocationSourceId">
+            </div>
+            <div class="solar-display-mode" aria-label="Отображение карты">
+                <label><input type="radio" name="solarDisplayMode" value="both" checked><span>Натал + Соляр</span></label>
+                <label><input type="radio" name="solarDisplayMode" value="natal"><span>Натал</span></label>
+                <label><input type="radio" name="solarDisplayMode" value="solar"><span>Соляр</span></label>
+            </div>
+            <div class="panel-tabs forecast-new-tabs solar-tabs">
+                <button class="panel-tab active" data-panel-target="solarPlanetsView" data-i18n="page.chart.tabs.planets"></button>
+                <button class="panel-tab" data-panel-target="solarHousesView" data-i18n="page.chart.tabs.houses"></button>
+                <button class="panel-tab" data-panel-target="solarAspectsView" data-i18n="page.chart.tabs.aspects"></button>
+                <div class="forecast-new-tabs-overflow" data-tabs-overflow>
+                    <button type="button" class="panel-tab forecast-new-tabs-overflow-toggle" data-tabs-overflow-toggle aria-label="Дополнительные вкладки" aria-haspopup="true" aria-expanded="false">▸</button>
+                    <div class="forecast-new-tabs-overflow-menu" data-tabs-overflow-menu>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="solarGridView" data-i18n="page.chart.tabs.grid"></button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="solarConfigsView" data-i18n="page.chart.tabs.configurations"></button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="solarBalancesView" data-i18n="page.chart.tabs.balances"></button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="solarRulersView" data-i18n="page.chart.tabs.rulers"></button>
+                    </div>
+                </div>
+            </div>
+            <div class="panel-content forecast-new-panel-content solar-panel-content">
+                <div id="solarPlanetsView" class="panel-tab-content active">
+                    <table class="data-table compact forecast-new-planets-table">
+                        <thead><tr><th data-i18n="page.chart.table.planets.symbol"></th><th data-i18n="page.chart.table.planets.position"></th><th class="planet-speed-col" data-i18n="page.chart.table.planets.speed"></th><th data-i18n="page.chart.table.planets.house"></th></tr></thead>
+                        <tbody id="solarPlanetsTable"></tbody>
+                    </table>
+                </div>
+                <div id="solarHousesView" class="panel-tab-content">
+                    <table class="data-table compact">
+                        <thead><tr><th data-i18n="common.house"></th><th data-i18n="page.chart.table.houses.cusp"></th><th data-i18n="page.chart.table.houses.ruler"></th></tr></thead>
+                        <tbody id="solarHousesTable"></tbody>
+                    </table>
+                </div>
+                <div id="solarAspectsView" class="panel-tab-content">
+                    <table class="data-table compact">
+                        <thead><tr><th colspan="2" class="sortable" data-sort="planet" data-i18n="page.chart.table.aspects.aspect"></th><th class="sortable" data-sort="type" data-i18n="page.chart.table.aspects.type"></th><th class="sortable" data-sort="orb" data-i18n="page.chart.table.aspects.orb"></th></tr></thead>
+                        <tbody id="solarAspectsTable"></tbody>
+                    </table>
+                </div>
+                <div id="solarGridView" class="panel-tab-content"><div id="solarAspectGridContainer"></div></div>
+                <div id="solarConfigsView" class="panel-tab-content"><div id="solarConfigurationsContainer"></div></div>
                 <div id="solarBalancesView" class="panel-tab-content"><div id="solarBalancesContainer"></div></div>
                 <div id="solarRulersView" class="panel-tab-content"><div id="solarRulersContainer"></div></div>
             </div>
@@ -225,6 +327,6 @@
 
     <div id="solarToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/solar.bundle.js?v=913665b0886a"></script>
+    <script type="module" src="js/bundles/solar.bundle.js?v=db6aa8f4fecd"></script>
 </body>
 </html>

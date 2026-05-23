@@ -1,11 +1,12 @@
 (function() {
     'use strict';
 
-    const METHOD_ORDER = ['transit', 'progression', 'direction'];
+    const METHOD_ORDER = ['transit', 'progression', 'direction', 'solar_return'];
     const METHOD_META = {
         transit: { label: 'Транзиты', color: '#1e3a5f' },
         progression: { label: 'Прогрессии', color: '#7c3aed' },
         direction: { label: 'Дирекции', color: '#0f766e' },
+        solar_return: { label: 'Соляр', color: '#b45309' },
     };
 
     function cloneArray(value) {
@@ -16,6 +17,7 @@
         if (method === 'transits') return 'transit';
         if (method === 'progressions') return 'progression';
         if (method === 'directions') return 'direction';
+        if (method === 'solar' || method === 'solar_return') return 'solar_return';
         return METHOD_ORDER.includes(method) ? method : 'transit';
     }
 
@@ -88,6 +90,29 @@
         });
     }
 
+    function normalizeSolarReturn(data, ringIndex = 1) {
+        const bodies = cloneArray(data?.planets).map((planet) => ({
+            ...planet,
+            house: planet.house ?? null,
+        }));
+        const aspects = cloneArray(data?.aspects_to_natal).map((aspect) => ({
+            ...aspect,
+            planet_1: aspect.solar_planet || aspect.planet_1 || aspect.left_planet,
+            planet_2: aspect.natal_object || aspect.planet_2 || aspect.right_planet,
+            left_planet: aspect.solar_planet || aspect.left_planet || aspect.planet_1,
+            right_planet: aspect.natal_object || aspect.right_planet || aspect.planet_2,
+            method: 'solar_return',
+        }));
+        return buildLayer({
+            method: 'solar_return',
+            bodies,
+            houses: cloneArray(data?.houses),
+            aspects,
+            raw: data,
+            ringIndex,
+        });
+    }
+
     function buildLayer({ method, bodies, houses, aspects, raw, ringIndex }) {
         const normalizedMethod = normalizeMethod(method);
         return {
@@ -108,6 +133,7 @@
         const normalizedMethod = normalizeMethod(method);
         if (normalizedMethod === 'progression') return normalizeProgression(data, ringIndex);
         if (normalizedMethod === 'direction') return normalizeDirection(data, ringIndex);
+        if (normalizedMethod === 'solar_return') return normalizeSolarReturn(data, ringIndex);
         return normalizeTransit(data, ringIndex);
     }
 

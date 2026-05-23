@@ -11,5 +11,7 @@ import '../js/planet-svg-icons.js';
 import '../js/natal-wheel-data.js';
 import '../js/chart-data.js';
 import '../js/dispositor-chains.js';
-import '../js/chart-wheel.js';
+import '../js/aspect-phase.js';
+import '../js/prognostic-layer-normalizer.js';
+import '../js/prognostic-rings-wheel.js';
 import '../js/solar.js';

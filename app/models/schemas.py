@@ -760,6 +760,23 @@ class SolarBirthData(BaseModel):
     birth_place: Optional[str] = None
 
 
+class SolarReturnNatalAspectInfo(BaseModel):
+    """Аспект солярного объекта к натальному объекту."""
+    planet_1: str
+    planet_2: str
+    left_planet: Optional[str] = None
+    right_planet: Optional[str] = None
+    solar_planet: str
+    natal_object: str
+    natal_object_type: str
+    aspect_type: str
+    orb: float
+    is_exact: bool = False
+    is_major: bool
+    harmonic_type: Optional[str] = None
+    applying: Optional[bool] = None
+
+
 class SolarReturnResponse(BaseModel):
     """Полный ответ с соларной картой"""
     solar_id: Optional[UUID] = None
@@ -770,6 +787,7 @@ class SolarReturnResponse(BaseModel):
     houses: List[HousePosition]
     angles: Dict[str, AnglePosition]
     aspects: Optional[List[AspectInfo]] = None
+    aspects_to_natal: Optional[List[SolarReturnNatalAspectInfo]] = None
     aspect_configurations: Optional[List[ConfigurationInfo]] = None
     stelliums: Optional[List[StelliumInfo]] = None
     cosmogram_pattern: Optional[CosmogramPatternInfo] = None

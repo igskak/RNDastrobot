@@ -8,12 +8,35 @@
     const SOLAR_STATE_KEY_PREFIX = 'solarViewState:';
     const DEFAULT_ASPECT_TYPES = window.AstroPreferences?.DEFAULT_ENABLED_ASPECT_TYPES
         || ['Conjunction', 'Opposition', 'Trine', 'Square', 'Sextile'];
+    const HOUSE_SYSTEM_CODES = {
+        P: 'P',
+        K: 'K',
+        O: 'O',
+        R: 'R',
+        C: 'C',
+        E: 'E',
+        W: 'W',
+        X: 'X',
+        H: 'H',
+        T: 'T',
+        B: 'B',
+        M: 'M',
+        PLACIDUS: 'P',
+        KOCH: 'K',
+        PORPHYRY: 'O',
+        REGIOMONTANUS: 'R',
+        CAMPANUS: 'C',
+        EQUAL: 'E',
+        WHOLE_SIGN: 'W',
+        WHOLESIGN: 'W',
+    };
+    const DEFAULT_ASPECT_PHASE_FILTER = ['applying', 'separating'];
     const MATRIX_BODIES = window.AstroPreferences?.MATRIX_BODIES || [
         'Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn',
         'Uranus', 'Neptune', 'Pluto', 'Chiron', 'Proserpina',
         'TrueNode', 'SouthNode', 'BlackMoon', 'WhiteMoon', 'PartOfFortune'
     ];
-    const VIEWBOX_SIZE = 500;
+    const VIEWBOX_SIZE = 600;
     const ZOOM_MIN = 1;
     const ZOOM_MAX = 2.8;
     const ZOOM_STEP = 0.12;
@@ -21,23 +44,31 @@
     const state = {
         natalData: null,
         solarData: null,
+        natalRenderer: null,
         renderer: null,
         wheel: null,
         accountPreferences: null,
         resolvedPreferences: null,
         settings: {
+            houseSystem: 'P',
             orientation: 'aries',
             aspectScope: 'all',
             enabledAspectTypes: [...DEFAULT_ASPECT_TYPES],
             matrixRows: window.AstroPreferences?.ensureMatrixRows?.({}) || {},
             pointScale: 1,
             showApplyingSeparating: false,
+            aspectPhaseFilter: [...DEFAULT_ASPECT_PHASE_FILTER],
             showSpeed: true,
             showStationary: true,
             showAspectText: false,
+            showWheelStationary: false,
+            showWheelDegree: false,
+            houseNumberStyle: 'arabic',
+            houseLabelsOutside: false,
             angleAscDscBold: true,
             angleMcIcBold: true,
         },
+        displayMode: 'both',
         zoom: 1,
         panX: 0,
         panY: 0,
@@ -70,10 +101,39 @@
         }
     }
 
+    function normalizeHouseSystemCode(value) {
+        const raw = String(value || 'P').trim().toUpperCase().replace(/[\s-]+/g, '_');
+        return HOUSE_SYSTEM_CODES[raw] || 'P';
+    }
+
+    function normalizeAspectPhaseFilter(value) {
+        if (window.AstroAspectPhase?.normalizeAspectPhaseFilter) {
+            return window.AstroAspectPhase.normalizeAspectPhaseFilter(value);
+        }
+        if (Array.isArray(value)) {
+            const normalized = value
+                .map((entry) => String(entry || '').trim().toLowerCase())
+                .filter((entry) => DEFAULT_ASPECT_PHASE_FILTER.includes(entry));
+            return [...new Set(normalized)];
+        }
+        const raw = String(value || '').trim().toLowerCase();
+        if (!raw || raw === 'all') return [...DEFAULT_ASPECT_PHASE_FILTER];
+        if (raw.includes(',')) return normalizeAspectPhaseFilter(raw.split(','));
+        return DEFAULT_ASPECT_PHASE_FILTER.includes(raw) ? [raw] : [...DEFAULT_ASPECT_PHASE_FILTER];
+    }
+
+    function aspectMatchesPhaseFilter(aspect) {
+        if (window.AstroAspectPhase?.aspectMatchesPhaseFilter) {
+            return window.AstroAspectPhase.aspectMatchesPhaseFilter(aspect, state.settings.aspectPhaseFilter);
+        }
+        return true;
+    }
+
     function collectRefs() {
         [
             'pageLoader', 'solarError', 'solarErrorMsg', 'solarLayout', 'solarSummaryBar',
             'solarBackBtn', 'solarTitle', 'solarSubtitle', 'solarStatusLabel',
+            'solarNatalPanelMeta', 'solarPanelMeta',
             'solarYear', 'solarName', 'solarLocationName', 'solarPlaceSuggestions',
             'solarLocationLat', 'solarLocationLon', 'solarLocationSourceId',
             'solarLocationTimezone', 'solarCoordsDisplay', 'solarCalculateBtn',
@@ -82,16 +142,23 @@
             'solarWheelWrapper', 'solarWheel',
             'solarZoomIn', 'solarZoomOut', 'solarZoomReset',
             'solarSettingsToggle', 'solarSettingsPanel',
-            'solarOrientationSelect', 'solarAspectScopeSelect',
+            'solarOrientationSelect', 'solarHouseSystemSelect', 'solarAspectScopeSelect',
             'solarPointScaleRange', 'solarPointScaleValue',
             'solarAspectTypeToggles', 'solarMatrixEditor',
+            'solarAspectPhaseApplyingToggle', 'solarAspectPhaseSeparatingToggle',
+            'solarHouseNumberStyleSelect', 'solarHouseLabelsOutsideToggle',
+            'solarShowWheelStationaryToggle', 'solarShowWheelDegreeToggle',
             'solarShowApplyingSeparatingToggle', 'solarShowSpeedToggle',
             'solarShowStationaryToggle', 'solarShowAspectTextToggle',
             'solarAngleAscDscBoldToggle', 'solarAngleMcIcBoldToggle',
-            'solarSaveDefaultsBtn', 'solarResetDefaultsBtn',
-            'solarActionsToggle', 'solarActionsMenu',
+            'solarSaveDefaultsBtn', 'solarResetDefaultsBtn', 'solarSaveChartBtn',
+            'solarActionsToggle', 'solarActionsMenu', 'solarMomentToggle', 'solarMomentCard',
             'solarConfigurationsContainer', 'solarBalancesContainer',
-            'solarRulersContainer', 'solarToast',
+            'solarRulersContainer',
+            'solarNatalPlanetsTable', 'solarNatalHousesTable', 'solarNatalAspectsTable',
+            'solarNatalAspectGridContainer', 'solarNatalConfigurationsContainer',
+            'solarNatalBalancesContainer', 'solarNatalRulersContainer',
+            'solarToast',
         ].forEach((id) => {
             refs[id] = document.getElementById(id);
         });
@@ -197,6 +264,7 @@
         try {
             localStorage.setItem(getStateStorageKey(), JSON.stringify({
                 settings: state.settings,
+                displayMode: state.displayMode,
                 year: refs.solarYear?.value || '',
                 name: refs.solarName?.value || '',
             }));
@@ -218,6 +286,7 @@
             clientUserId: String(state.natalData?.user_id || ''),
             partnerUserId: navState.partnerUserId || null,
         });
+        updateNatalPanelMeta();
     }
 
     function formatDateTime(value) {
@@ -227,6 +296,14 @@
 
     function formatTimezone(value) {
         return window.Timezones?.formatOffsetLabel?.(value) || String(value || '');
+    }
+
+    function updateNatalPanelMeta() {
+        const birth = state.natalData?.birth_data || {};
+        if (!refs.solarNatalPanelMeta) return;
+        refs.solarNatalPanelMeta.textContent = [birth.date || birth.birth_date, birth.time || birth.birth_time, birth.place || birth.birth_place]
+            .filter(Boolean)
+            .join(' · ');
     }
 
     function restoreLocation() {
@@ -320,9 +397,47 @@
         });
     }
 
+    function populateTimezoneOptions() {
+        if (!refs.solarLocationTimezone) return;
+        const selected = refs.solarLocationTimezone.value || '';
+        window.Timezones?.populate?.(refs.solarLocationTimezone);
+        if (selected) refs.solarLocationTimezone.value = selected;
+    }
+
+    function parseNatalBirthday() {
+        const birth = state.natalData?.birth_data || {};
+        const value = birth.date || birth.birth_date || '';
+        const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (!match) return null;
+        return {
+            month: Number(match[2]),
+            day: Number(match[3]),
+        };
+    }
+
+    function birthdayDateForYear(year, birthday) {
+        if (!birthday) return null;
+        const date = new Date(year, birthday.month - 1, birthday.day);
+        if (date.getMonth() === birthday.month - 1) return date;
+        return new Date(year, 1, 28);
+    }
+
     function defaultYear() {
         const now = new Date();
-        return now.getFullYear();
+        const birthday = parseNatalBirthday();
+        if (!birthday) return now.getFullYear();
+        const currentYearBirthday = birthdayDateForYear(now.getFullYear(), birthday);
+        const previousYear = currentYearBirthday && currentYearBirthday > now
+            ? now.getFullYear() - 1
+            : now.getFullYear();
+        const futureYear = currentYearBirthday && currentYearBirthday > now
+            ? now.getFullYear()
+            : now.getFullYear() + 1;
+        const previous = birthdayDateForYear(previousYear, birthday);
+        const future = birthdayDateForYear(futureYear, birthday);
+        const previousDiff = previous ? Math.abs(now.getTime() - previous.getTime()) : Number.POSITIVE_INFINITY;
+        const futureDiff = future ? Math.abs(future.getTime() - now.getTime()) : Number.POSITIVE_INFINITY;
+        return futureDiff < previousDiff ? futureYear : previousYear;
     }
 
     function applyInitialForm() {
@@ -349,17 +464,33 @@
                 ...storedView.settings,
             });
         }
+        state.displayMode = normalizeDisplayMode(storedView.displayMode || state.displayMode);
+        syncDisplayModeControls();
         syncSettingsControls();
         if (solarData?.planets) {
             renderSolar(solarData, { hydratePreferences: true });
         } else {
-            setEmptyState();
+            calculateSolar({ saveToDb: false, showSuccess: false }).catch((error) => {
+                console.warn('Initial solar calculation failed:', error);
+                setEmptyState();
+            });
         }
+    }
+
+    function normalizeDisplayMode(value) {
+        return ['both', 'natal', 'solar'].includes(value) ? value : 'both';
+    }
+
+    function syncDisplayModeControls() {
+        document.querySelectorAll('input[name="solarDisplayMode"]').forEach((input) => {
+            input.checked = input.value === state.displayMode;
+        });
     }
 
     function normalizeSettings(settings = {}) {
         const aspectScope = ['all', 'major', 'minor'].includes(settings.aspectScope) ? settings.aspectScope : 'all';
         return {
+            houseSystem: normalizeHouseSystemCode(settings.houseSystem),
             orientation: settings.orientation === 'asc' ? 'asc' : 'aries',
             aspectScope,
             enabledAspectTypes: window.AstroPreferences?.healEnabledAspectTypesForScope
@@ -372,9 +503,14 @@
             matrixRows: window.AstroPreferences?.ensureMatrixRows?.(settings.matrixRows || {}) || (settings.matrixRows || {}),
             pointScale: Math.max(0.8, Math.min(1.7, Number(settings.pointScale) || 1)),
             showApplyingSeparating: settings.showApplyingSeparating === true,
+            aspectPhaseFilter: normalizeAspectPhaseFilter(settings.aspectPhaseFilter),
             showSpeed: settings.showSpeed !== false,
             showStationary: settings.showStationary !== false,
             showAspectText: settings.showAspectText === true,
+            showWheelStationary: settings.showWheelStationary === true,
+            showWheelDegree: settings.showWheelDegree === true,
+            houseNumberStyle: settings.houseNumberStyle === 'roman' ? 'roman' : 'arabic',
+            houseLabelsOutside: settings.houseLabelsOutside === true,
             angleAscDscBold: settings.angleAscDscBold !== false,
             angleMcIcBold: settings.angleMcIcBold !== false,
         };
@@ -382,15 +518,21 @@
 
     function viewSettingsToPageSettings(view = {}) {
         return normalizeSettings({
+            houseSystem: view?.chart_meta?.house_system || view?.view_options?.house_system || view?.house_system || 'P',
             orientation: view?.view_options?.orientation,
             aspectScope: view?.aspects?.scope,
             enabledAspectTypes: view?.aspects?.enabled_types,
             matrixRows: view?.matrix?.rows,
             pointScale: view?.view_options?.point_scale || 1,
             showApplyingSeparating: view?.aspects?.show_applying_separating,
+            aspectPhaseFilter: view?.aspects?.phase_filter || view?.aspects?.aspect_phase_filter,
             showSpeed: view?.table_options?.show_speed,
             showStationary: view?.table_options?.show_stationary,
             showAspectText: view?.table_options?.show_aspect_text,
+            showWheelStationary: view?.view_options?.show_planet_stationary,
+            showWheelDegree: view?.view_options?.show_planet_degree,
+            houseNumberStyle: view?.view_options?.house_number_style,
+            houseLabelsOutside: view?.view_options?.house_labels_outside,
             angleAscDscBold: view?.view_options?.bold_asc_dsc,
             angleMcIcBold: view?.view_options?.bold_mc_ic,
         });
@@ -399,8 +541,13 @@
     function buildViewSettings() {
         return {
             view_options: {
+                house_system: state.settings.houseSystem,
                 orientation: state.settings.orientation,
                 point_scale: state.settings.pointScale,
+                house_number_style: state.settings.houseNumberStyle,
+                house_labels_outside: state.settings.houseLabelsOutside === true,
+                show_planet_stationary: state.settings.showWheelStationary === true,
+                show_planet_degree: state.settings.showWheelDegree === true,
                 bold_asc_dsc: state.settings.angleAscDscBold !== false,
                 bold_mc_ic: state.settings.angleMcIcBold !== false,
             },
@@ -408,6 +555,7 @@
                 scope: state.settings.aspectScope,
                 enabled_types: state.settings.enabledAspectTypes,
                 show_applying_separating: state.settings.showApplyingSeparating === true,
+                phase_filter: [...normalizeAspectPhaseFilter(state.settings.aspectPhaseFilter)],
             },
             matrix: {
                 rows: state.settings.matrixRows,
@@ -435,9 +583,17 @@
 
     function syncSettingsControls() {
         refs.solarOrientationSelect.value = state.settings.orientation;
+        refs.solarHouseSystemSelect.value = state.settings.houseSystem;
         refs.solarAspectScopeSelect.value = state.settings.aspectScope;
         refs.solarPointScaleRange.value = String(Math.round(state.settings.pointScale * 100));
         refs.solarPointScaleValue.textContent = `${Math.round(state.settings.pointScale * 100)}%`;
+        const aspectPhaseFilter = normalizeAspectPhaseFilter(state.settings.aspectPhaseFilter);
+        refs.solarAspectPhaseApplyingToggle.checked = aspectPhaseFilter.includes('applying');
+        refs.solarAspectPhaseSeparatingToggle.checked = aspectPhaseFilter.includes('separating');
+        refs.solarHouseNumberStyleSelect.value = state.settings.houseNumberStyle;
+        refs.solarHouseLabelsOutsideToggle.checked = state.settings.houseLabelsOutside === true;
+        refs.solarShowWheelStationaryToggle.checked = state.settings.showWheelStationary === true;
+        refs.solarShowWheelDegreeToggle.checked = state.settings.showWheelDegree === true;
         refs.solarShowApplyingSeparatingToggle.checked = state.settings.showApplyingSeparating === true;
         refs.solarShowSpeedToggle.checked = state.settings.showSpeed !== false;
         refs.solarShowStationaryToggle.checked = state.settings.showStationary !== false;
@@ -453,10 +609,11 @@
         const active = new Set(state.settings.enabledAspectTypes || []);
         refs.solarAspectTypeToggles.innerHTML = DEFAULT_ASPECT_TYPES.map((type) => {
             const label = window.Symbols?.getAspectDisplay?.(type) || type;
+            const title = t(`astro.aspect.${type}`, null, type);
             return `
-                <label class="forecast-settings-check">
-                    <input type="checkbox" data-solar-aspect-type="${escapeHtml(type)}" ${active.has(type) ? 'checked' : ''}>
-                    <span>${escapeHtml(label)}</span>
+                <label class="settings-check-option settings-check-option--pill settings-check-option--icon-only" title="${escapeHtml(title)}">
+                    <input type="checkbox" data-solar-aspect-type="${escapeHtml(type)}" ${active.has(type) ? 'checked' : ''} aria-label="${escapeHtml(title)}">
+                    <span class="settings-check-option-glyph" aria-hidden="true"><span class="astro-symbol">${escapeHtml(label)}</span></span>
                 </label>
             `;
         }).join('');
@@ -470,20 +627,35 @@
     function renderMatrixEditor() {
         if (!refs.solarMatrixEditor) return;
         const rows = window.AstroPreferences?.ensureMatrixRows?.(state.settings.matrixRows || {}) || {};
-        refs.solarMatrixEditor.innerHTML = MATRIX_BODIES.map((body) => {
-            const normalized = window.AstroPreferences?.normalizeMatrixBodyName?.(body) || body;
-            const row = rows[normalized] || { display: true, aspecting: true };
-            return `
-                <div class="forecast-settings-matrix-row" data-solar-matrix-body="${escapeHtml(normalized)}">
-                    <span class="forecast-settings-matrix-body" title="${escapeHtml(body)}">${matrixBodyLabel(body)}</span>
-                    <label><input type="checkbox" data-solar-matrix-field="display" ${row.display !== false ? 'checked' : ''}> П</label>
-                    <label><input type="checkbox" data-solar-matrix-field="aspecting" ${row.aspecting !== false ? 'checked' : ''}> А</label>
-                </div>
-            `;
-        }).join('');
+        refs.solarMatrixEditor.innerHTML = `
+            <table class="natal-matrix-table solar-matrix-table">
+                <thead>
+                    <tr>
+                        <th>Body</th>
+                        <th>${escapeHtml(t('page.accountSettings.matrix.columns.display', null, 'Display'))}</th>
+                        <th>${escapeHtml(t('page.accountSettings.matrix.columns.aspecting', null, 'Aspecting'))}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${MATRIX_BODIES.map((body) => {
+                        const normalized = window.AstroPreferences?.normalizeMatrixBodyName?.(body) || body;
+                        const row = rows[normalized] || { display: true, aspecting: true };
+                        const label = escapeHtml(body);
+                        return `
+                            <tr data-solar-matrix-body="${escapeHtml(normalized)}">
+                                <td><span class="natal-matrix-body natal-matrix-body--icon-only" title="${label}" aria-label="${label}">${matrixBodyLabel(body)}</span></td>
+                                <td><label class="natal-matrix-check"><input type="checkbox" data-solar-matrix-field="display" ${row.display !== false ? 'checked' : ''}></label></td>
+                                <td><label class="natal-matrix-check"><input type="checkbox" data-solar-matrix-field="aspecting" ${row.aspecting !== false ? 'checked' : ''}></label></td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        `;
     }
 
     function readSettingsControls() {
+        const previousHouseSystem = state.settings.houseSystem;
         const rows = window.AstroPreferences?.ensureMatrixRows?.(state.settings.matrixRows || {}) || {};
         refs.solarMatrixEditor?.querySelectorAll('[data-solar-matrix-body]').forEach((rowEl) => {
             const body = rowEl.dataset.solarMatrixBody;
@@ -498,21 +670,35 @@
 
         state.settings = normalizeSettings({
             ...state.settings,
+            houseSystem: refs.solarHouseSystemSelect.value,
             orientation: refs.solarOrientationSelect.value,
             aspectScope: refs.solarAspectScopeSelect.value,
             pointScale: Number(refs.solarPointScaleRange.value) / 100,
             matrixRows: rows,
             enabledAspectTypes,
             showApplyingSeparating: refs.solarShowApplyingSeparatingToggle.checked,
+            aspectPhaseFilter: [
+                refs.solarAspectPhaseApplyingToggle.checked ? 'applying' : null,
+                refs.solarAspectPhaseSeparatingToggle.checked ? 'separating' : null,
+            ],
             showSpeed: refs.solarShowSpeedToggle.checked,
             showStationary: refs.solarShowStationaryToggle.checked,
             showAspectText: refs.solarShowAspectTextToggle.checked,
+            showWheelStationary: refs.solarShowWheelStationaryToggle.checked,
+            showWheelDegree: refs.solarShowWheelDegreeToggle.checked,
+            houseNumberStyle: refs.solarHouseNumberStyleSelect.value,
+            houseLabelsOutside: refs.solarHouseLabelsOutsideToggle.checked,
             angleAscDscBold: refs.solarAngleAscDscBoldToggle.checked,
             angleMcIcBold: refs.solarAngleMcIcBoldToggle.checked,
         });
         syncSettingsControls();
         persistViewState();
-        if (state.solarData) renderSolar(state.solarData, { hydratePreferences: false });
+        if (state.solarData && previousHouseSystem !== state.settings.houseSystem) {
+            calculateSolar({ saveToDb: Boolean(state.solarData.solar_id), showSuccess: false })
+                .catch((error) => showToast(error.message, 'error'));
+        } else if (state.solarData) {
+            renderSolar(state.solarData, { hydratePreferences: false });
+        }
     }
 
     function getMatrixRow(body) {
@@ -532,6 +718,31 @@
             const second = window.AstroPreferences?.normalizeMatrixBodyName?.(aspect.planet_2) || aspect.planet_2;
             if (!visible.has(first) || !visible.has(second)) return false;
             return getMatrixRow(first).aspecting !== false && getMatrixRow(second).aspecting !== false;
+        }).filter(aspectMatchesPhaseFilter);
+        return {
+            ...data,
+            planets,
+            aspects,
+        };
+    }
+
+    function aspectAllowedBySettings(aspect, primaryBody, secondaryBody = null) {
+        const enabled = new Set(state.settings.enabledAspectTypes || []);
+        if (state.settings.aspectScope === 'major' && aspect.is_major === false) return false;
+        if (state.settings.aspectScope === 'minor' && aspect.is_major !== false) return false;
+        if (enabled.size && !enabled.has(aspect.aspect_type)) return false;
+        if (primaryBody && getMatrixRow(primaryBody).aspecting === false) return false;
+        if (secondaryBody && getMatrixRow(secondaryBody).aspecting === false) return false;
+        return aspectMatchesPhaseFilter(aspect);
+    }
+
+    function filterSolarPanelData(data = {}) {
+        const planets = (data.planets || []).filter((planet) => getMatrixRow(planet.name).display !== false);
+        const visibleSolar = new Set(planets.map((planet) => window.AstroPreferences?.normalizeMatrixBodyName?.(planet.name) || planet.name));
+        const aspects = (data.aspects || []).filter((aspect) => {
+            const first = window.AstroPreferences?.normalizeMatrixBodyName?.(aspect.planet_1 || aspect.left_planet) || aspect.planet_1 || aspect.left_planet;
+            const second = window.AstroPreferences?.normalizeMatrixBodyName?.(aspect.planet_2 || aspect.right_planet) || aspect.planet_2 || aspect.right_planet;
+            return visibleSolar.has(first) && visibleSolar.has(second) && aspectAllowedBySettings(aspect, first, second);
         });
         return {
             ...data,
@@ -540,11 +751,64 @@
         };
     }
 
+    function filterSolarViewModel(viewModel) {
+        if (!viewModel) return viewModel;
+        const natalLayer = viewModel.natalLayer
+            ? {
+                ...viewModel.natalLayer,
+                bodies: (viewModel.natalLayer.bodies || []).filter((body) => getMatrixRow(body.name).display !== false),
+            }
+            : null;
+        const hasNatalLayer = Boolean(viewModel.natalLayer);
+        const activePrognosticLayers = (viewModel.activePrognosticLayers || []).map((layer) => {
+            const bodies = (layer.bodies || []).filter((body) => getMatrixRow(body.name).display !== false);
+            const visibleSolar = new Set(bodies.map((body) => window.AstroPreferences?.normalizeMatrixBodyName?.(body.name) || body.name));
+            const aspects = (layer.aspects || []).filter((aspect) => {
+                const solarBody = window.AstroPreferences?.normalizeMatrixBodyName?.(aspect.planet_1 || aspect.left_planet) || aspect.planet_1 || aspect.left_planet;
+                const natalBody = window.AstroPreferences?.normalizeMatrixBodyName?.(aspect.planet_2 || aspect.right_planet) || aspect.planet_2 || aspect.right_planet;
+                if (!visibleSolar.has(solarBody)) return false;
+                if (!hasNatalLayer && !visibleSolar.has(natalBody)) return false;
+                return aspectAllowedBySettings(aspect, solarBody, natalBody);
+            });
+            return { ...layer, bodies, aspects };
+        });
+        return { ...viewModel, natalLayer, activePrognosticLayers };
+    }
+
+    function renderNatalPanel() {
+        if (!state.natalRenderer || !state.natalData) return;
+        const sourceData = window.AstroAspectPhase?.enrichChartDataWithAspectPhases
+            ? window.AstroAspectPhase.enrichChartDataWithAspectPhases(state.natalData)
+            : state.natalData;
+        const filtered = filterChartData(sourceData);
+        state.natalRenderer.setAspectTypeFilter?.(state.settings.aspectScope);
+        state.natalRenderer.setHouseNumberStyle?.(state.settings.houseNumberStyle);
+        state.natalRenderer.setDisplayPreferences?.({
+            showSpeed: state.settings.showSpeed,
+            showStationary: state.settings.showStationary,
+            showApplyingSeparating: state.settings.showApplyingSeparating,
+            showAspectText: state.settings.showAspectText,
+        });
+        state.natalRenderer.render({
+            ...filtered,
+            houses: state.natalData.houses || [],
+            aspect_configurations: state.natalData.aspect_configurations || [],
+            stelliums: state.natalData.stelliums || [],
+            balances: state.natalData.balances || null,
+            cosmogram_pattern: state.natalData.cosmogram_pattern || null,
+        });
+        window.DispositorChains?.render?.('solarNatalRulersContainer', state.natalData, {
+            selectId: 'solarNatalRulersModeSelect',
+            layout: 'tabs',
+        });
+    }
+
     function setEmptyState() {
         refs.solarLayout.classList.remove('hidden');
         refs.solarSummaryBar?.classList.remove('hidden');
         refs.solarStatusLabel.textContent = t('page.forecast.solar.empty', null, '');
         clearSummary();
+        renderNatalPanel();
         state.renderer?.render({
             planets: [], houses: [], aspects: [], aspect_configurations: [],
             stelliums: [], balances: null, cosmogram_pattern: null,
@@ -559,7 +823,8 @@
         });
     }
 
-    async function calculateSolar() {
+    async function calculateSolar(options = {}) {
+        const { saveToDb = true, showSuccess = true } = options;
         const year = Number.parseInt(refs.solarYear.value, 10);
         const lat = Number.parseFloat(refs.solarLocationLat.value);
         const lon = Number.parseFloat(refs.solarLocationLon.value);
@@ -572,7 +837,8 @@
         const payload = {
             user_id: state.natalData.user_id,
             year,
-            save_to_db: true,
+            house_system: state.settings.houseSystem || 'P',
+            save_to_db: saveToDb === true,
             location_latitude: lat,
             location_longitude: lon,
             location_name: refs.solarLocationName.value.trim(),
@@ -588,7 +854,7 @@
             persistLocation();
             localStorage.setItem('forecastSolarYear', String(year));
             await renderSolar(data, { hydratePreferences: true });
-            showToast(t('page.clientProfile.solar.renamed', null, 'Saved'), 'success');
+            if (showSuccess) showToast(t('page.clientProfile.solar.renamed', null, 'Saved'), 'success');
         } finally {
             refs.solarCalculateBtn.disabled = false;
         }
@@ -598,9 +864,16 @@
         state.solarData = data;
         saveSolarData(data);
         if (hydratePreferences) await hydratePreferencesForRender();
+        state.settings = normalizeSettings({
+            ...state.settings,
+            houseSystem: data?.solar_info?.house_system || state.settings.houseSystem,
+        });
+        syncSettingsControls();
         refs.solarLayout.classList.remove('hidden');
         refs.solarSummaryBar?.classList.remove('hidden');
         refs.solarStatusLabel.textContent = buildSolarStatus(data);
+        refs.solarPanelMeta.textContent = buildSolarStatus(data);
+        updateNatalPanelMeta();
         updateInfoFromSolar(data);
         updateSummary(data);
         renderWheel(data);
@@ -686,29 +959,65 @@
 
     function renderWheel(data) {
         if (!state.wheel) {
-            state.wheel = new window.ChartWheel(refs.solarWheel);
+            state.wheel = new window.PrognosticRingsWheel(refs.solarWheel);
         }
-        const filtered = filterChartData(data);
-        state.wheel.setVisualPreferences?.(state.accountPreferences?.visual || {}, { redraw: false });
-        state.wheel.setPointScale(state.settings.pointScale, { redraw: false });
-        state.wheel.setOrientationMode(state.settings.orientation, { redraw: false });
-        state.wheel.setAspectFilter(state.settings.aspectScope);
-        state.wheel.setAngleMarkerOptions?.({
-            ascDscBold: state.settings.angleAscDscBold,
-            mcIcBold: state.settings.angleMcIcBold,
-        }, { redraw: false });
-        state.wheel.setPlanetAnnotationOptions?.({
-            showStationary: state.settings.showStationary,
-            showAspectText: state.settings.showAspectText,
-        }, { redraw: false });
-        state.wheel.draw(filtered);
-        state.wheel.applyMatrixRows?.(state.settings.matrixRows);
+        const sourceData = window.AstroAspectPhase?.enrichChartDataWithAspectPhases
+            ? window.AstroAspectPhase.enrichChartDataWithAspectPhases(data)
+            : data;
+        const includeNatal = state.displayMode !== 'solar';
+        const includeSolar = state.displayMode !== 'natal';
+        const rawViewModel = window.PrognosticLayerNormalizer.buildViewModel(
+            state.natalData,
+            includeSolar ? { solar_return: sourceData } : {},
+            { activeMethods: includeSolar ? ['solar_return'] : [] },
+        );
+        if (!includeNatal && includeSolar && rawViewModel.activePrognosticLayers?.[0]) {
+            rawViewModel.activePrognosticLayers[0] = {
+                ...rawViewModel.activePrognosticLayers[0],
+                aspects: (sourceData.aspects || []).map((aspect) => ({
+                    ...aspect,
+                    left_planet: aspect.left_planet || aspect.planet_1,
+                    right_planet: aspect.right_planet || aspect.planet_2,
+                    method: 'solar_return',
+                })),
+            };
+        }
+        const viewModel = filterSolarViewModel({
+            ...rawViewModel,
+            natalLayer: includeNatal ? rawViewModel.natalLayer : null,
+        });
+        state.wheel.setOptions({
+            orientation: state.settings.orientation,
+            natalMatrixRows: state.settings.matrixRows,
+            prognosticMatrixRows: state.settings.matrixRows,
+            matrixRows: state.settings.matrixRows,
+            planetScale: state.settings.pointScale,
+            pointScale: state.settings.pointScale,
+            aspectScope: state.settings.aspectScope,
+            enabledAspectTypes: state.settings.enabledAspectTypes,
+            houseNumberStyle: state.settings.houseNumberStyle,
+            houseLabelsOutside: state.settings.houseLabelsOutside,
+            showPlanetStationary: state.settings.showWheelStationary,
+            showPlanetDegree: state.settings.showWheelDegree,
+            showAspectText: state.settings.showAspectText === true,
+            angleAscDscBold: state.settings.angleAscDscBold,
+            angleMcIcBold: state.settings.angleMcIcBold,
+            minimumRingCount: 2,
+            alignSingleRingOuter: includeNatal !== includeSolar,
+            visualPreferences: state.accountPreferences?.visual || null,
+        });
+        state.wheel.render(viewModel);
         resetView();
     }
 
     function renderPanels(data) {
-        const filtered = filterChartData(data);
+        renderNatalPanel();
+        const sourceData = window.AstroAspectPhase?.enrichChartDataWithAspectPhases
+            ? window.AstroAspectPhase.enrichChartDataWithAspectPhases(data)
+            : data;
+        const filtered = filterSolarPanelData(sourceData);
         state.renderer.setAspectTypeFilter?.(state.settings.aspectScope);
+        state.renderer.setHouseNumberStyle?.(state.settings.houseNumberStyle);
         state.renderer.setDisplayPreferences?.({
             showSpeed: state.settings.showSpeed,
             showStationary: state.settings.showStationary,
@@ -730,6 +1039,15 @@
     }
 
     function initRenderer() {
+        state.natalRenderer = new window.ChartDataRenderer({
+            planetsTableId: 'solarNatalPlanetsTable',
+            housesTableId: 'solarNatalHousesTable',
+            aspectsTableId: 'solarNatalAspectsTable',
+            aspectGridContainerId: 'solarNatalAspectGridContainer',
+            configsContainerId: 'solarNatalConfigurationsContainer',
+            balancesContainerId: 'solarNatalBalancesContainer',
+            aspectSortHeadersSelector: '#solarNatalAspectsView th.sortable[data-sort]',
+        });
         state.renderer = new window.ChartDataRenderer({
             planetsTableId: 'solarPlanetsTable',
             housesTableId: 'solarHousesTable',
@@ -831,14 +1149,53 @@
         showToast(t('common.reset', null, 'Reset'), 'info');
     }
 
+    async function saveSolarChart() {
+        const year = Number.parseInt(refs.solarYear.value, 10);
+        const defaultName = refs.solarName.value.trim() || `Соляр ${Number.isInteger(year) ? year : ''}`.trim();
+        const name = window.prompt(t('page.clientProfile.savedCharts.namePrompt', null, 'Название карты'), defaultName);
+        if (name === null) return;
+        refs.solarName.value = name.trim();
+        await calculateSolar({ saveToDb: true, showSuccess: false });
+        showToast(t('page.clientProfile.savedCharts.renamed', null, 'Карта сохранена'), 'success');
+    }
+
     function bindEvents() {
         initSolarActionsMenu();
 
         refs.solarCalculateBtn.addEventListener('click', () => {
-            calculateSolar().catch((error) => {
+            calculateSolar({ saveToDb: false }).catch((error) => {
                 console.error('Solar calculation failed:', error);
                 showToast(t('common.errorWithMessage', { message: error.message }, error.message), 'error');
                 refs.solarStatusLabel.textContent = t('common.error', null, 'Error');
+            });
+        });
+        refs.solarMomentToggle?.addEventListener('click', () => {
+            const isOpen = refs.solarMomentCard?.classList.contains('hidden');
+            refs.solarMomentCard?.classList.toggle('hidden', !isOpen);
+            refs.solarMomentToggle?.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+        refs.solarSaveChartBtn?.addEventListener('click', () => {
+            saveSolarChart().catch((error) => showToast(error.message, 'error'));
+        });
+        document.querySelectorAll('input[name="solarDisplayMode"]').forEach((input) => {
+            input.addEventListener('change', () => {
+                if (!input.checked) return;
+                state.displayMode = normalizeDisplayMode(input.value);
+                persistViewState();
+                if (state.solarData) renderWheel(state.solarData);
+            });
+        });
+        ['solarYear', 'solarName', 'solarLocationTimezone', 'solarLocationName', 'solarLocationLat', 'solarLocationLon'].forEach((id) => {
+            refs[id]?.addEventListener('change', () => {
+                updateCoordsDisplay();
+                persistLocation();
+                persistViewState();
+            });
+            refs[id]?.addEventListener('input', () => {
+                updateCoordsDisplay();
+                if (id === 'solarLocationName') {
+                    refs.solarLocationSourceId.value = '';
+                }
             });
         });
         refs.solarSettingsToggle.addEventListener('click', () => {
@@ -846,8 +1203,15 @@
         });
         [
             refs.solarOrientationSelect,
+            refs.solarHouseSystemSelect,
             refs.solarAspectScopeSelect,
             refs.solarPointScaleRange,
+            refs.solarAspectPhaseApplyingToggle,
+            refs.solarAspectPhaseSeparatingToggle,
+            refs.solarHouseNumberStyleSelect,
+            refs.solarHouseLabelsOutsideToggle,
+            refs.solarShowWheelStationaryToggle,
+            refs.solarShowWheelDegreeToggle,
             refs.solarShowApplyingSeparatingToggle,
             refs.solarShowSpeedToggle,
             refs.solarShowStationaryToggle,
@@ -911,6 +1275,7 @@
             updateHeader();
             initRenderer();
             initPanelTabs();
+            populateTimezoneOptions();
             initPlaceAutocomplete();
             initZoomPan();
             bindEvents();

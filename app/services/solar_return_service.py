@@ -13,7 +13,7 @@ import swisseph as swe
 from sqlalchemy.orm import Session
 from loguru import logger
 
-from app.database.models import User, NatalPlanet, SolarReturn
+from app.database.models import User, NatalPlanet, NatalSpecialPoint, Angle, SolarReturn, RefAspectType
 from app.services.swisseph_engine import SwissEphemerisEngine
 from app.services.time_service import TimeService
 from app.services.aspect_service import AspectService
@@ -21,7 +21,14 @@ from app.services.chart_derivation_service import ChartDerivationService
 from app.services.geocoding_service import GeocodingService
 from app.services.planet_characteristics_service import PlanetCharacteristicsService
 from app.services.preferences_runtime import PreferencesRuntimeResolver
-from app.utils.constants import get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds
+from app.utils.constants import (
+    PROGNOSTIC_DEFAULT_ORB,
+    PROGNOSTIC_EXACT_ORB,
+    PROGNOSTIC_EXCLUDED_NATAL_TARGETS,
+    get_zodiac_sign,
+    get_degree_in_sign,
+    format_degree_minutes_seconds,
+)
 
 
 class SolarReturnService:
@@ -185,8 +192,9 @@ class SolarReturnService:
                 planet['longitude'], solar_houses
             )
 
-        # 8.1 Рассчитать аспекты внутри солярной карты
+        # 8.1 Рассчитать аспекты внутри солярной карты и соляр → натал
         solar_aspects = self._calculate_solar_aspects(solar_planets, user_id=user_id)
+        aspects_to_natal = self._calculate_solar_to_natal_aspects(user_id, solar_planets)
         solar_planets = self._enrich_motion_flags(solar_planets, user_id=user_id)
         
         # 9. Формируем результат
@@ -204,6 +212,7 @@ class SolarReturnService:
             solar_angles=solar_angles,
             natal_sun_lon=natal_sun_lon,
             solar_aspects=solar_aspects,
+            aspects_to_natal=aspects_to_natal,
             effective_timezone=effective_timezone,
         )
         result = ChartDerivationService(self.db).enrich_solar_payload(
@@ -234,6 +243,7 @@ class SolarReturnService:
         solar_angles: Dict,
         natal_sun_lon: float,
         solar_aspects: List[Dict],
+        aspects_to_natal: List[Dict],
         effective_timezone: str,
     ) -> Dict:
         """Сформировать ответ с данными соляра"""
@@ -262,7 +272,127 @@ class SolarReturnService:
             'houses': solar_houses,
             'angles': solar_angles,
             'aspects': solar_aspects,
+            'aspects_to_natal': aspects_to_natal,
         }
+
+    def _load_natal_aspect_targets(self, user_id: UUID) -> List[Dict]:
+        planets = self.db.query(NatalPlanet).filter(NatalPlanet.user_id == user_id).all()
+        targets: List[Dict] = [
+            {
+                'name': p.planet,
+                'longitude': float(p.degree),
+                'type': 'planet',
+                'speed': float(p.speed) if p.speed is not None else 0.0,
+            }
+            for p in planets
+        ]
+
+        special_points = self.db.query(NatalSpecialPoint).filter(
+            NatalSpecialPoint.user_id == user_id
+        ).all()
+        targets.extend(
+            {
+                'name': sp.point,
+                'longitude': float(sp.degree),
+                'type': 'special_point',
+                'speed': 0.0,
+            }
+            for sp in special_points
+        )
+
+        angles = self.db.query(Angle).filter(Angle.user_id == user_id).first()
+        if angles:
+            targets.extend([
+                {'name': 'ASC', 'longitude': float(angles.asc_degree), 'type': 'angle', 'speed': 0.0},
+                {'name': 'MC', 'longitude': float(angles.mc_degree), 'type': 'angle', 'speed': 0.0},
+                {'name': 'IC', 'longitude': float(angles.ic_degree), 'type': 'angle', 'speed': 0.0},
+                {'name': 'DSC', 'longitude': float(angles.dsc_degree), 'type': 'angle', 'speed': 0.0},
+            ])
+            if angles.vertex_degree:
+                targets.append({'name': 'Vertex', 'longitude': float(angles.vertex_degree), 'type': 'angle', 'speed': 0.0})
+
+        return [
+            target for target in targets
+            if target['name'] not in PROGNOSTIC_EXCLUDED_NATAL_TARGETS
+        ]
+
+    def _get_aspect_types(self) -> List[RefAspectType]:
+        return self.db.query(RefAspectType).all()
+
+    def _calculate_prognostic_allowed_orb(self, user_id: UUID, body_a: str, body_b: str, aspect_type: str) -> float:
+        astrologer_id = self.preferences_runtime.get_astrologer_id_for_user(user_id)
+        if astrologer_id:
+            return self.preferences_runtime.resolve_orb_for_astrologer(
+                astrologer_id,
+                body_a,
+                body_b,
+                aspect_type,
+                orb_profile='prognostic',
+            )
+        return PROGNOSTIC_DEFAULT_ORB
+
+    @staticmethod
+    def _angular_distance(longitude_a: float, longitude_b: float) -> float:
+        diff = abs((float(longitude_a) % 360.0) - (float(longitude_b) % 360.0))
+        return 360.0 - diff if diff > 180.0 else diff
+
+    def _calculate_solar_to_natal_aspects(self, user_id: UUID, solar_planets: List[Dict]) -> List[Dict]:
+        """Рассчитать аспекты солярных объектов к натальным объектам."""
+        natal_targets = self._load_natal_aspect_targets(user_id)
+        if not solar_planets or not natal_targets:
+            return []
+
+        aspect_types = self._get_aspect_types()
+        phase_objects = [
+            {
+                'name': planet.get('name'),
+                'longitude': planet.get('longitude'),
+                'speed': planet.get('speed') or 0.0,
+                'type': 'solar_planet',
+            }
+            for planet in solar_planets
+            if planet.get('name') and planet.get('longitude') is not None
+        ] + natal_targets
+
+        aspect_service = AspectService(self.db)
+        aspects: List[Dict] = []
+        for solar_obj in phase_objects:
+            if solar_obj.get('type') != 'solar_planet':
+                continue
+            for natal_obj in natal_targets:
+                distance = self._angular_distance(solar_obj['longitude'], natal_obj['longitude'])
+                for aspect_type in aspect_types:
+                    max_orb = self._calculate_prognostic_allowed_orb(
+                        user_id,
+                        solar_obj['name'],
+                        natal_obj['name'],
+                        aspect_type.aspect_type,
+                    )
+                    deviation = abs(distance - float(aspect_type.exact_angle))
+                    if deviation > max_orb:
+                        continue
+
+                    aspect = {
+                        'planet_1': solar_obj['name'],
+                        'planet_2': natal_obj['name'],
+                        'left_planet': solar_obj['name'],
+                        'right_planet': natal_obj['name'],
+                        'solar_planet': solar_obj['name'],
+                        'natal_object': natal_obj['name'],
+                        'natal_object_type': natal_obj['type'],
+                        'aspect_type': aspect_type.aspect_type,
+                        'orb': round(deviation, 4),
+                        'is_exact': deviation <= PROGNOSTIC_EXACT_ORB,
+                        'is_major': aspect_type.class_ == 'major',
+                        'harmonic_type': aspect_type.character,
+                    }
+                    applying = aspect_service.infer_aspect_phase(aspect, aspect_service._build_phase_objects_lookup(phase_objects))
+                    if applying is not None:
+                        aspect['applying'] = applying
+                    aspects.append(aspect)
+                    break
+
+        return aspects
 
     def _calculate_solar_aspects(self, solar_planets: List[Dict], *, user_id: UUID) -> List[Dict]:
         """
@@ -387,6 +517,10 @@ class SolarReturnService:
             payload['solar_id'] = str(solar.solar_id)
             payload['name'] = solar.name
             payload['planets'] = self._enrich_motion_flags(payload.get('planets', []), user_id=user_id)
+            changed = False
+            if 'aspects_to_natal' not in payload:
+                payload['aspects_to_natal'] = self._calculate_solar_to_natal_aspects(user_id, payload.get('planets', []))
+                changed = True
             payload = self._annotate_payload_aspects_with_phase(payload)
             derivation_service = ChartDerivationService(self.db)
             if not derivation_service.has_extended_blocks(payload):
@@ -398,6 +532,8 @@ class SolarReturnService:
                 )
                 payload['solar_id'] = str(solar.solar_id)
                 payload['name'] = solar.name
+                changed = True
+            if changed:
                 solar.chart_data = json.dumps(payload)
                 self.db.commit()
             return payload

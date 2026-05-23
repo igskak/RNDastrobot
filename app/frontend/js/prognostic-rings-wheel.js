@@ -71,6 +71,8 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             this.showPlanetStationary = false;
             this.showPlanetDegree = false;
             this.showAspectText = false;
+            this.minimumRingCount = 1;
+            this.alignSingleRingOuter = false;
             this.natalGlyphBaseSize = 18;
             this.planetLeaderColor = '#6b7280';
             this.houseVisualOptions = {
@@ -147,6 +149,12 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             if (Object.prototype.hasOwnProperty.call(options, 'showAspectText')) {
                 this.showAspectText = options.showAspectText === true;
             }
+            if (Object.prototype.hasOwnProperty.call(options, 'minimumRingCount')) {
+                this.minimumRingCount = Math.max(1, Number(options.minimumRingCount) || 1);
+            }
+            if (Object.prototype.hasOwnProperty.call(options, 'alignSingleRingOuter')) {
+                this.alignSingleRingOuter = options.alignSingleRingOuter === true;
+            }
             if (Object.prototype.hasOwnProperty.call(options, 'angleAscDscBold')) {
                 this.angleAscDscBold = options.angleAscDscBold !== false;
             }
@@ -166,13 +174,15 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
         }
 
         isAspectElementVisibleByMatrix(element) {
-            const first = element?.dataset?.planet1;
-            const second = element?.dataset?.planet2;
+            const first = element?.getAttribute?.('data-planet-1') || element?.dataset?.planet1;
+            const second = element?.getAttribute?.('data-planet-2') || element?.dataset?.planet2;
             if (!first || !second) return true;
-            return this.isBodyDisplayed(first, 'prognostic')
-                && this.isBodyDisplayed(second, 'natal')
-                && this.isBodyAspecting(first, 'prognostic')
-                && this.isBodyAspecting(second, 'natal');
+            const firstMethod = element?.getAttribute?.('data-method-1') || element?.dataset?.method1 || element?.dataset?.method || 'prognostic';
+            const secondMethod = element?.getAttribute?.('data-method-2') || element?.dataset?.method2 || element?.dataset?.method || 'natal';
+            return this.isBodyDisplayed(first, firstMethod)
+                && this.isBodyDisplayed(second, secondMethod)
+                && this.isBodyAspecting(first, firstMethod)
+                && this.isBodyAspecting(second, secondMethod);
         }
 
         applyMatrixVisibilityToDom() {
@@ -225,11 +235,12 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                 viewModel?.natalLayer,
                 ...(viewModel?.activePrognosticLayers || []),
             ].filter(Boolean);
-            const count = Math.max(1, allLayers.length);
+            const count = Math.max(1, allLayers.length, this.minimumRingCount || 1);
             const available = ZODIAC_INNER_R - FIRST_RING_INNER_R - RING_GAP * (count - 1);
             const width = Math.max(28, available / count);
             return allLayers.map((layer, index) => {
-                const inner = FIRST_RING_INNER_R + index * (width + RING_GAP);
+                const visualIndex = allLayers.length === 1 && this.alignSingleRingOuter ? count - 1 : index;
+                const inner = FIRST_RING_INNER_R + visualIndex * (width + RING_GAP);
                 const outer = inner + width;
                 return {
                     ...layer,
@@ -582,7 +593,10 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
 
         drawAspects(rings) {
             const natalRing = rings.find((ring) => ring.method === 'natal');
-            if (!natalRing) return;
+            if (!natalRing || rings.length === 1) {
+                rings.forEach((ring) => this.drawInternalAspectsForRing(ring));
+                return;
+            }
             const aspectRadius = this.getAspectBoundaryRadius(natalRing);
             this.aspectRadius = aspectRadius;
             const natalMap = new Map((natalRing.bodies || [])
@@ -634,6 +648,8 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                         'data-aspect-key': aspectKey,
                         'data-planet-1': movingName,
                         'data-planet-2': natalName,
+                        'data-method-1': ring.method,
+                        'data-method-2': 'natal',
                         'data-type': aspect.aspect_type,
                         'data-major': isMajor ? 'true' : 'false',
                         'data-conjunction-collapsed': geometry.collapsed ? 'true' : 'false',
@@ -704,6 +720,130 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                         }
                     }
                 });
+            });
+        }
+
+        drawInternalAspectsForRing(ring) {
+            if (!ring) return;
+            const aspectRadius = this.getAspectBoundaryRadius(ring);
+            this.aspectRadius = aspectRadius;
+            const bodyMap = new Map((ring.bodies || [])
+                .filter((body) => body?.name && this.isBodyAvailableForAspects(body.name, ring.method))
+                .map((body) => [this.normalizeBodyName(body.name), body]));
+            const aspects = (ring.aspects || []).filter((aspect) => this.isAspectEnabled(aspect));
+            const sorted = [...aspects].sort((a, b) => Number(b.orb) - Number(a.orb));
+            sorted.forEach((aspect) => {
+                const firstName = this.normalizeBodyName(aspect.planet_1 || aspect.left_planet);
+                const secondName = this.normalizeBodyName(aspect.planet_2 || aspect.right_planet);
+                if (!this.isBodyAvailableForAspects(firstName, ring.method) || !this.isBodyAvailableForAspects(secondName, ring.method)) return;
+                const firstBody = bodyMap.get(firstName);
+                const secondBody = bodyMap.get(secondName);
+                if (!firstBody || !secondBody) return;
+
+                const angle1 = this.longToAngle(firstBody.longitude) * Math.PI / 180;
+                const angle2 = this.longToAngle(secondBody.longitude) * Math.PI / 180;
+                const p1 = this.polar(aspectRadius, angle1 * 180 / Math.PI);
+                const p2 = this.polar(aspectRadius, angle2 * 180 / Math.PI);
+                const geometry = this.resolveAspectLineGeometry({
+                    x1: p1.x,
+                    y1: p1.y,
+                    x2: p2.x,
+                    y2: p2.y,
+                    angle1,
+                    angle2,
+                    aspectType: aspect.aspect_type,
+                    orb: aspect.orb,
+                });
+                const aspectKey = this.buildAspectKey(firstName, secondName);
+                this.aspectLookupByKey[aspectKey] = {
+                    ...aspect,
+                    planet_1: firstName,
+                    planet_2: secondName,
+                    left_planet: this.normalizeAspectBodyName(aspect.left_planet || firstName),
+                    right_planet: this.normalizeAspectBodyName(aspect.right_planet || secondName),
+                    method: aspect.method || ring.method,
+                };
+                const isMajor = MAJOR_ASPECTS.has(aspect.aspect_type);
+                const color = this.getAspectColor(aspect.aspect_type, aspect.harmonic_type);
+                const baseThickness = Math.max(0.3, 1.5 - ((Number(aspect.orb) || 0) / 12) * 1.2);
+                const thickness = aspect.aspect_type === 'Conjunction'
+                    ? baseThickness * 2
+                    : baseThickness;
+                const aspectAttrs = {
+                    'data-aspect': aspectKey,
+                    'data-aspect-key': aspectKey,
+                    'data-planet-1': firstName,
+                    'data-planet-2': secondName,
+                    'data-method-1': ring.method,
+                    'data-method-2': ring.method,
+                    'data-type': aspect.aspect_type,
+                    'data-major': isMajor ? 'true' : 'false',
+                    'data-conjunction-collapsed': geometry.collapsed ? 'true' : 'false',
+                };
+
+                const aspectElement = geometry.drawDot
+                    ? this.el('circle', {
+                        cx: geometry.midX,
+                        cy: geometry.midY,
+                        r: this.conjunctionDisplay.dotRadius,
+                        fill: color,
+                        stroke: color,
+                        'stroke-width': aspect.aspect_type === 'Conjunction' ? 2.4 : 1.2,
+                        opacity: isMajor ? 0.82 : 0.55,
+                        class: 'aspect-line aspect-dot',
+                        ...aspectAttrs,
+                    })
+                    : this.el('line', {
+                        x1: geometry.x1, y1: geometry.y1, x2: geometry.x2, y2: geometry.y2,
+                        stroke: color,
+                        'stroke-width': thickness,
+                        'stroke-dasharray': isMajor ? 'none' : '3,2',
+                        'stroke-linecap': aspect.aspect_type === 'Conjunction' ? 'round' : 'butt',
+                        opacity: isMajor ? 0.7 : 0.45,
+                        class: 'aspect-line',
+                        ...aspectAttrs,
+                    });
+                this.layers.aspects.appendChild(aspectElement);
+
+                const shouldDrawAspectGlyph = isMajor
+                    && Number(aspect.orb) < 5
+                    && !geometry.drawDot
+                    && (aspect.aspect_type !== 'Conjunction' || geometry.collapsed);
+                if (!shouldDrawAspectGlyph) return;
+                const glyph = ASPECT_SYMBOLS[aspect.aspect_type];
+                if (!glyph) return;
+                const symbolGroup = this.el('g', {
+                    class: 'aspect-symbol-group',
+                    style: 'pointer-events: none;',
+                    ...aspectAttrs,
+                });
+                const symbolText = this.el('text', {
+                    x: geometry.midX,
+                    y: geometry.midY + 2.5,
+                    'text-anchor': 'middle',
+                    'font-size': 8,
+                    fill: color,
+                    class: 'aspect-symbol-text',
+                    style: 'pointer-events: none;',
+                }, glyph);
+                symbolGroup.appendChild(symbolText);
+                this.layers.aspects.appendChild(symbolGroup);
+
+                try {
+                    const bbox = symbolText.getBBox();
+                    const backdropRadius = Math.max(bbox.width, bbox.height) / 2 + 1.5;
+                    const backdrop = this.el('circle', {
+                        cx: bbox.x + bbox.width / 2,
+                        cy: bbox.y + bbox.height / 2,
+                        r: backdropRadius,
+                        fill: WHEEL_BG,
+                        opacity: 0.96,
+                        class: 'aspect-symbol-backdrop',
+                    });
+                    symbolGroup.insertBefore(backdrop, symbolText);
+                } catch (error) {
+                    // Ignore bbox issues and keep the text visible even without backdrop.
+                }
             });
         }
 
@@ -982,8 +1122,9 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
         }
 
         longToAngle(longitude) {
+            const referenceLayer = this.viewModel?.natalLayer || this.viewModel?.activePrognosticLayers?.[0];
             const reference = this.orientation === 'asc'
-                ? (this.viewModel?.natalLayer?.raw?.angles?.ASC?.longitude || 0)
+                ? (referenceLayer?.raw?.angles?.ASC?.longitude || 0)
                 : 0;
             let angle = 180 - (Number(longitude) - reference);
             while (angle < 0) angle += 360;

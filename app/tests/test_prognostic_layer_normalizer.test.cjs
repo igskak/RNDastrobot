@@ -42,3 +42,40 @@ test('transit layer prefers explicit transit houses when backend provides them',
 
     assert.deepEqual(viewModel.activePrognosticLayers[0].houses, transitHouses);
 });
+
+test('solar return layer normalizes solar bodies, houses, and natal aspects', () => {
+    const natalData = {
+        planets: [{ name: 'Sun', longitude: 95 }],
+        aspects: [],
+        houses: [{ number: 1, longitude: 10, sign: 'Aries', degree_in_sign: 10 }],
+    };
+    const solarHouses = [{ number: 1, longitude: 24, sign: 'Aries', degree_in_sign: 24 }];
+    const solarData = {
+        planets: [{ name: 'Mars', longitude: 120, house: 4 }],
+        houses: solarHouses,
+        aspects_to_natal: [
+            {
+                solar_planet: 'Mars',
+                natal_object: 'Sun',
+                aspect_type: 'Square',
+                orb: 1.2,
+                is_major: true,
+            },
+        ],
+    };
+
+    const viewModel = normalizer.buildViewModel(
+        natalData,
+        { solar_return: solarData },
+        { activeMethods: ['solar_return'] },
+    );
+    const solarLayer = viewModel.activePrognosticLayers[0];
+
+    assert.equal(solarLayer.method, 'solar_return');
+    assert.equal(solarLayer.label, 'Соляр');
+    assert.deepEqual(solarLayer.houses, solarHouses);
+    assert.equal(solarLayer.bodies[0].name, 'Mars');
+    assert.equal(solarLayer.aspects[0].planet_1, 'Mars');
+    assert.equal(solarLayer.aspects[0].planet_2, 'Sun');
+    assert.equal(solarLayer.aspects[0].method, 'solar_return');
+});
