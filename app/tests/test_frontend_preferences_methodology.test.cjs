@@ -119,7 +119,20 @@ test('resolveVisualPreferences uses chart-default element palette', () => {
     assert.equal(visual.planet_colors.element_palette.Earth, '#84cc16');
     assert.equal(visual.planet_colors.element_palette.Air, '#f59e0b');
     assert.equal(visual.planet_colors.element_palette.Water, '#3b82f6');
+    assert.equal(visual.wheel.angular_cusps_black, false);
     assert.equal(visual.timezone_label_format, 'UTC');
+});
+
+test('resolveVisualPreferences preserves black angular cusp setting', () => {
+    const visual = preferences.resolveVisualPreferences({
+        wheel: {
+            angular_cusps_black: true,
+        },
+    });
+
+    assert.equal(visual.wheel.angular_cusps_black, true);
+    assert.equal(preferences.shouldUseBlackAngularCusps(visual), true);
+    assert.equal(preferences.shouldUseBlackAngularCusps({}), false);
 });
 
 test('getPlanetColor resolves body override aliases', () => {

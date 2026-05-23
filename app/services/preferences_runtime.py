@@ -218,6 +218,9 @@ def build_default_visual_settings(aspect_types: Iterable[RefAspectType]) -> Dict
             'element_palette': deepcopy(DEFAULT_ELEMENT_PALETTE),
             'body_overrides': deepcopy(DEFAULT_BODY_COLOR_OVERRIDES),
         },
+        'wheel': {
+            'angular_cusps_black': False,
+        },
         'timezone_label_format': DEFAULT_TIMEZONE_LABEL_FORMAT,
     }
 

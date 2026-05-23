@@ -84,6 +84,7 @@ def test_build_default_visual_settings_uses_per_aspect_palette():
     assert visual["planet_colors"]["element_palette"]["Earth"] == "#84cc16"
     assert visual["planet_colors"]["element_palette"]["Air"] == "#f59e0b"
     assert visual["planet_colors"]["element_palette"]["Water"] == "#3b82f6"
+    assert visual["wheel"]["angular_cusps_black"] is False
     assert visual["timezone_label_format"] == "UTC"
 
 

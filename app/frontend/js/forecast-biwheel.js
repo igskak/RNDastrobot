@@ -266,6 +266,12 @@
             : (element ? (ELEMENT_COLORS[element] || defaultColor) : defaultColor);
     }
 
+    function shouldUseBlackAngularCusps() {
+        return window.AstroPreferences?.shouldUseBlackAngularCusps
+            ? window.AstroPreferences.shouldUseBlackAngularCusps(visualPreferences)
+            : visualPreferences?.wheel?.angular_cusps_black === true;
+    }
+
     function normalizeBodyNameForColor(bodyName) {
         return window.AstroPreferences?.normalizeMatrixBodyName
             ? window.AstroPreferences.normalizeMatrixBodyName(bodyName)
@@ -959,6 +965,7 @@
             const isAscDsc = h.number === 1 || h.number === 7;
             const isMcIc = h.number === 10 || h.number === 4;
             const isBoldAngle = (isAscDsc && angleAscDscBold !== false) || (isMcIc && angleMcIcBold !== false);
+            const useBlackAngularCusp = isAngular && shouldUseBlackAngularCusps();
             const innerR = isPrognostic
                 ? wheelBand.inner
                 : (showOutsideLabels ? natalBand.inner : natalInnerContourRadius);
@@ -966,10 +973,10 @@
                 ? wheelBand.outer
                 : (showOutsideLabels ? natalBand.outer : SIGN_INNER_R);
             const strokeColor = showOutsideLabels
-                ? houseTheme.color
+                ? (isPrognostic || useBlackAngularCusp ? houseTheme.color : '#7c746c')
                 : isPrognostic
                 ? withAlpha(progColor, prognosticStyle.cuspAlpha)
-                : (isAngular ? '#111111' : (extendNatalCuspsToForecastWheels ? '#94a3b8' : '#c7d2db'));
+                : (useBlackAngularCusp ? '#111111' : (extendNatalCuspsToForecastWheels ? '#94a3b8' : '#c7d2db'));
             const strokeWidth = isPrognostic
                 ? (isAngular ? (isBoldAngle ? 2.3 : 1.5) : 1.9)
                 : (isAngular ? (isBoldAngle ? 1.5 : 0.95) : (extendNatalCuspsToForecastWheels ? 0.95 : 0.5));
@@ -1007,7 +1014,7 @@
                 cuspGroup.appendChild(el('line', {
                     x1: C + (OUTER_R - 3) * Math.cos(angle), y1: C + (OUTER_R - 3) * Math.sin(angle),
                     x2: C + (OUTER_R + 4) * Math.cos(angle), y2: C + (OUTER_R + 4) * Math.sin(angle),
-                    stroke: houseTheme.color,
+                    stroke: isPrognostic || useBlackAngularCusp ? houseTheme.color : '#7c746c',
                     'stroke-width': isAngular ? (isBoldAngle ? 1.8 : 1.2) : 1.2,
                     opacity: '0.95',
                     style: 'pointer-events:none'
@@ -1020,7 +1027,7 @@
                     'dominant-baseline': 'middle',
                     'font-size': '9.5',
                     'font-weight': isAngular ? (isBoldAngle ? '600' : '500') : '500',
-                    fill: houseTheme.color,
+                    fill: isPrognostic || useBlackAngularCusp ? houseTheme.color : '#5c554e',
                     stroke: '#fafafa',
                     'stroke-width': '2.4',
                     'stroke-linejoin': 'round',
@@ -1036,7 +1043,7 @@
                 const textR = natalBand.center;
                 cuspGroup.appendChild(el('text', {
                     x: C + textR * Math.cos(midAngle), y: C + textR * Math.sin(midAngle) + 3,
-                    'text-anchor':'middle', 'font-size':'10', fill: isAngular ? '#111111' : '#6b7280',
+                    'text-anchor':'middle', 'font-size':'10', fill: useBlackAngularCusp ? '#111111' : '#6b7280',
                     'font-weight': isAngular ? (isBoldAngle ? '700' : '500') : '400', style:'pointer-events:none'
                 }, formatHouseLabel(h.number)));
             }

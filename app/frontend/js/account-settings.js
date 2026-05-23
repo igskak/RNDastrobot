@@ -873,6 +873,10 @@
         const resolvedVisual = resolveVisualPreferences(visual);
         const elementPalette = resolvedVisual?.planet_colors?.element_palette || {};
         const bodyOverrides = resolvedVisual?.planet_colors?.body_overrides || {};
+        const angularCuspsToggle = document.getElementById('accountAngularCuspsBlackToggle');
+        if (angularCuspsToggle) {
+            angularCuspsToggle.checked = resolvedVisual?.wheel?.angular_cusps_black === true;
+        }
 
         elementBody.innerHTML = Object.keys(elementPalette).map((element) => `
             <tr>
@@ -1110,6 +1114,9 @@
             planet_colors: {
                 element_palette: elementPalette,
                 body_overrides: bodyOverrides,
+            },
+            wheel: {
+                angular_cusps_black: document.getElementById('accountAngularCuspsBlackToggle')?.checked === true,
             },
             timezone_label_format: getTimezoneLabelFormatSelect()?.value || 'UTC',
             date_format: getDateFormatSelect()?.value || 'DD_MM_YYYY',

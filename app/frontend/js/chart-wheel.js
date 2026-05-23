@@ -340,15 +340,27 @@ class ChartWheel {
     }
 
     getHouseLabelColor(isAngular) {
+        if (isAngular && !this.shouldUseBlackAngularCusps()) {
+            return this.houseVisualOptions.insideMutedColor;
+        }
         return isAngular
             ? this.houseVisualOptions.insideAngularColor
             : this.houseVisualOptions.insideMutedColor;
     }
 
     getHouseLineColor(isAngular) {
+        if (isAngular && !this.shouldUseBlackAngularCusps()) {
+            return this.houseVisualOptions.insideMutedLineColor;
+        }
         return isAngular
             ? this.houseVisualOptions.insideAngularLineColor
             : this.houseVisualOptions.insideMutedLineColor;
+    }
+
+    shouldUseBlackAngularCusps() {
+        return window.AstroPreferences?.shouldUseBlackAngularCusps
+            ? window.AstroPreferences.shouldUseBlackAngularCusps(this.visualPreferences)
+            : this.visualPreferences?.wheel?.angular_cusps_black === true;
     }
 
     getOutsideHouseLabelGeometry(angle) {
@@ -620,7 +632,7 @@ class ChartWheel {
                 y1: this.center + lineInnerR * Math.sin(angle),
                 x2: this.center + lineOuterR * Math.cos(angle),
                 y2: this.center + lineOuterR * Math.sin(angle),
-                stroke: this.getHouseLineColor(false),
+                stroke: this.getHouseLineColor(isAngular),
                 'stroke-width': this.getHouseCuspStrokeWidth(house.number, 1),
                 class: 'house-cusp-line'
             }));
@@ -641,7 +653,7 @@ class ChartWheel {
                     y1: this.center + outsideSegmentStartR * Math.sin(angle),
                     x2: this.center + outsideSegmentEndR * Math.cos(angle),
                     y2: this.center + outsideSegmentEndR * Math.sin(angle),
-                    stroke: this.getHouseLineColor(false),
+                    stroke: this.getHouseLineColor(isAngular),
                     'stroke-width': this.getHouseCuspStrokeWidth(house.number, 1.2),
                     class: 'house-cusp-line'
                 }));
@@ -665,7 +677,7 @@ class ChartWheel {
                     'dominant-baseline': 'middle',
                     'font-size': '9.5',
                     'font-weight': '500',
-                    fill: this.getHouseLabelColor(false),
+                    fill: this.getHouseLabelColor(isAngular),
                     stroke: '#fafafa',
                     'stroke-width': '2.4',
                     'stroke-linejoin': 'round',
@@ -680,7 +692,7 @@ class ChartWheel {
                     'text-anchor': 'middle',
                     'font-size': '10',
                     'font-weight': '400',
-                    fill: this.getHouseLabelColor(false),
+                    fill: this.getHouseLabelColor(isAngular),
                     style: 'pointer-events: none;'
                 }, this.formatHouseLabel(house.number)));
             }
@@ -1157,7 +1169,7 @@ class ChartWheel {
                 y1: this.center + lineInnerR * Math.sin(angle),
                 x2: this.center + lineOuterR * Math.cos(angle),
                 y2: this.center + lineOuterR * Math.sin(angle),
-                stroke: this.getHouseLineColor(false),
+                stroke: this.getHouseLineColor(this.shouldUseBlackAngularCusps()),
                 'stroke-width': isBoldAngle ? 2.4 : 1.2
             }));
         }
@@ -1174,7 +1186,9 @@ class ChartWheel {
             'text-anchor': anchor,
             'font-size': '9',
             'font-weight': isBoldAngle ? '800' : '500',
-            fill: this.houseLabelsOutside ? this.getHouseLabelColor(false) : this.angleMarkerOptions.color
+            fill: this.houseLabelsOutside
+                ? this.getHouseLabelColor(this.shouldUseBlackAngularCusps())
+                : this.angleMarkerOptions.color
         }, label));
     }
 

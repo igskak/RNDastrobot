@@ -373,7 +373,8 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                 const pOuter = this.polar(cuspOuterRadius, angle);
                 const pInner = this.polar(ring.inner, angle);
                 const houseNumber = Number(house.number);
-                const innerStroke = ring.method === 'natal' ? this.getHouseLineColor(false) : ring.color;
+                const isAngular = [1, 4, 7, 10].includes(houseNumber);
+                const innerStroke = ring.method === 'natal' ? this.getHouseLineColor(isAngular) : ring.color;
                 const innerStrokeWidth = this.getHouseCuspStrokeWidth(houseNumber, ring.method === 'natal' ? 1 : 0.7);
                 const innerOpacity = ring.method === 'natal'
                     ? 1
@@ -432,7 +433,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                         'dominant-baseline': 'middle',
                         'font-size': ring.method === 'natal' ? 9.5 : 8.5,
                         'font-weight': '500',
-                        fill: ring.method === 'natal' ? this.getHouseLabelColor(false) : ring.color,
+                        fill: ring.method === 'natal' ? this.getHouseLabelColor(isAngular) : ring.color,
                         stroke: '#fafafa',
                         'stroke-width': '2.4',
                         'stroke-linejoin': 'round',
@@ -447,7 +448,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                         'text-anchor': 'middle',
                         'font-size': ring.method === 'natal' ? 10 : 8,
                         'font-weight': ring.method === 'natal' ? '400' : '700',
-                        fill: ring.method === 'natal' ? this.getHouseLabelColor(false) : ring.color,
+                        fill: ring.method === 'natal' ? this.getHouseLabelColor(isAngular) : ring.color,
                         opacity: ring.method === 'natal' ? 0.9 : 0.78,
                     }, this.getDisplayedHouseLabel(house.number)));
                 }
@@ -1065,11 +1066,17 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
         }
 
         getHouseLabelColor(isAngular) {
-            return isAngular ? '#111111' : '#5c554e';
+            return isAngular && this.shouldUseBlackAngularCusps() ? '#111111' : '#5c554e';
         }
 
         getHouseLineColor(isAngular) {
-            return isAngular ? '#111111' : '#7c746c';
+            return isAngular && this.shouldUseBlackAngularCusps() ? '#111111' : '#7c746c';
+        }
+
+        shouldUseBlackAngularCusps() {
+            return window.AstroPreferences?.shouldUseBlackAngularCusps
+                ? window.AstroPreferences.shouldUseBlackAngularCusps(this.visualPreferences)
+                : this.visualPreferences?.wheel?.angular_cusps_black === true;
         }
 
         getHouseLayerTheme(method = 'natal') {

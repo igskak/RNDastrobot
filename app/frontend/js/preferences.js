@@ -94,6 +94,9 @@
             element_palette: { ...DEFAULT_ELEMENT_PALETTE },
             body_overrides: {},
         },
+        wheel: {
+            angular_cusps_black: false,
+        },
     };
 
     function deepClone(value) {
@@ -552,6 +555,9 @@
                     ...(visual?.planet_colors?.body_overrides || {}),
                 },
             },
+            wheel: {
+                angular_cusps_black: visual?.wheel?.angular_cusps_black === true,
+            },
             timezone_label_format: timezoneLabelFormat,
             date_format: dateFormat,
             degree_format: degreeFormat,
@@ -608,6 +614,11 @@
         return ['DEGREES_ONLY', 'DEGREES_MINUTES', 'DEGREES_MINUTES_SECONDS'].includes(resolved?.degree_format)
             ? resolved.degree_format
             : 'DEGREES_ONLY';
+    }
+
+    function shouldUseBlackAngularCusps(visual = null) {
+        const resolved = visual ? resolveVisualPreferences(visual) : accountVisualPreferences;
+        return resolved?.wheel?.angular_cusps_black === true;
     }
 
     function shouldShowAspectText(viewSettings = {}) {
@@ -681,6 +692,7 @@
         getTimezoneLabelFormat,
         getDateFormat,
         getDegreeFormat,
+        shouldUseBlackAngularCusps,
         shouldShowAspectText,
         getHiddenBodiesFromMatrix,
         buildMatrixRowsFromHiddenBodies,
