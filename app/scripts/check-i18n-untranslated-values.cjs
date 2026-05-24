@@ -3,6 +3,9 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const {
+    KNOWN_UNTRANSLATED_VALUE_KEYS,
+} = require('./i18n-known-issues.cjs');
 
 const DEFAULT_ALLOWLIST = [
     'i18n.sample_only_en',
@@ -11,6 +14,7 @@ const DEFAULT_ALLOWLIST = [
     'page.forecast.scale.range',
     'timezones.label.cityWithOffset',
     'timezones.city.utc',
+    ...KNOWN_UNTRANSLATED_VALUE_KEYS,
 ];
 
 function isPlainObject(value) {

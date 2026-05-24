@@ -9,12 +9,14 @@ from sqlalchemy.orm import Session
 from app.database.connection import get_db_session
 from app.database.models import Astrologer, NatalPlanet, User
 from app.services.natal_chart_service import NatalChartService
+from app.tests.sqlite_schema_helpers import ensure_sqlite_aspect_runtime_schema
 
 
 @pytest.fixture
 def db_session():
     """Фикстура для БД сессии"""
     session = get_db_session()
+    ensure_sqlite_aspect_runtime_schema(session)
     yield session
     session.close()
 
@@ -31,7 +33,7 @@ def test_astrologer_id(db_session: Session):
     db_session.commit()
     db_session.refresh(astrologer)
     yield astrologer.id
-    db_session.delete(astrologer)
+    db_session.query(Astrologer).filter(Astrologer.id == astrologer.id).delete(synchronize_session=False)
     db_session.commit()
 
 

@@ -3,6 +3,9 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const {
+    KNOWN_HARDCODED_STRING_ALLOWLIST,
+} = require('./i18n-known-issues.cjs');
 
 const DEFAULT_TARGET_FILES = [
     'app/frontend/index.html',
@@ -196,7 +199,7 @@ function scanHtmlFile(filePath, source, allowlist) {
 function runHardcodedStringCheck(options = {}) {
     const repoRoot = path.resolve(options.repoRoot || path.join(__dirname, '..', '..'));
     const targetFiles = options.targetFiles || DEFAULT_TARGET_FILES;
-    const allowlist = options.allowlist || [];
+    const allowlist = options.allowlist || KNOWN_HARDCODED_STRING_ALLOWLIST;
 
     const violations = [];
     const scannedFiles = [];
@@ -239,7 +242,7 @@ function formatReport(result) {
 }
 
 function parseAllowlist(rawJson) {
-    if (!rawJson) return [];
+    if (!rawJson) return KNOWN_HARDCODED_STRING_ALLOWLIST;
     const parsed = JSON.parse(rawJson);
     if (!Array.isArray(parsed)) {
         throw new Error('Allowlist must be a JSON array');

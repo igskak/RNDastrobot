@@ -256,7 +256,7 @@ select:focus-visible,
 
 .toolbar-card {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 260px;
+    grid-template-columns: minmax(0, 1fr) 220px 260px;
     gap: 14px;
     padding: 18px;
     margin-bottom: 14px;
@@ -301,6 +301,12 @@ select {
     font-family: var(--font-ui);
     font-size: 15px;
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+select:disabled {
+    color: rgba(92, 85, 78, 0.58);
+    background: rgba(255, 255, 255, 0.62);
+    cursor: not-allowed;
 }
 
 .search-input {
@@ -1376,6 +1382,55 @@ select:focus {
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: rgba(92, 85, 78, 0.7);
+}
+
+.tag-suggestions {
+    display: grid;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.tag-suggestions-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(92, 85, 78, 0.7);
+}
+
+.tag-suggestions-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tag-suggestion {
+    min-height: 30px;
+    padding: 6px 10px;
+    border: 1px solid rgba(30, 58, 95, 0.12);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.78);
+    color: var(--text-secondary);
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition), border-color var(--transition), color var(--transition), transform var(--transition);
+}
+
+.tag-suggestion:hover,
+.tag-suggestion:focus-visible {
+    background: var(--gold-pale);
+    border-color: rgba(184, 147, 90, 0.35);
+    color: var(--text-primary);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.tag-suggestion.is-selected {
+    background: var(--accent-light);
+    border-color: rgba(30, 58, 95, 0.24);
+    color: var(--accent);
 }
 
 .form-group-row {

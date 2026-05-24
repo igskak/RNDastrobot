@@ -11,6 +11,7 @@ const userId = window.location.pathname.split('/')[2] || '';
 
 let profileData = null;   // full server response
 let relatedPeople = [];
+let tagSourceUsers = [];
 let consultationFilter = 'all';
 let toastTimer = null;
 let relatedPeoplePicker = null;
@@ -100,6 +101,17 @@ function showToast(message, type = 'info') {
     requestAnimationFrame(() => refs.toast.classList.add('visible'));
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => refs.toast.classList.remove('visible'), 2800);
+}
+
+function getNameCollator() {
+    if (window.LocaleFormatters?.getCollator) {
+        return window.LocaleFormatters.getCollator({
+            sensitivity: 'base',
+            numeric: true,
+        });
+    }
+    const locale = window.FrontendI18n?.getLocale?.() || 'en';
+    return new Intl.Collator(locale, { sensitivity: 'base', numeric: true });
 }
 
 /* ─── Bootstrap ─────────────────────────────────────────────────────────── */
@@ -195,6 +207,8 @@ function cacheElements() {
     refs.editPhone      = document.getElementById('editPhone');
     refs.editMessenger  = document.getElementById('editMessenger');
     refs.editTags       = document.getElementById('editTags');
+    refs.editTagSuggestionsWrap = document.getElementById('editTagSuggestionsWrap');
+    refs.editTagSuggestions = document.getElementById('editTagSuggestions');
     refs.editNotes      = document.getElementById('editNotes');
     refs.editRelationGroup = document.getElementById('editRelationGroup');
     refs.editRelationLabel = document.getElementById('editRelationLabel');
@@ -285,9 +299,17 @@ function bindPageEvents() {
         }
     });
 
+    refs.editTags?.addEventListener('input', renderEditTagSuggestions);
+    refs.editTagSuggestions?.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-tag]');
+        if (!button) return;
+        addTagToEditInput(button.dataset.tag);
+    });
+
     document.addEventListener('frontend:locale-changed', () => {
         if (profileData) renderAll(profileData);
         relatedPeoplePicker?.refreshLocale?.();
+        renderEditTagSuggestions();
     });
 }
 
@@ -295,9 +317,10 @@ function bindPageEvents() {
 
 async function loadProfile() {
     try {
-        const [profileRes, relatedPeoplePayload] = await Promise.all([
+        const [profileRes, relatedPeoplePayload, usersPayload] = await Promise.all([
             apiFetch(`${API_BASE}/users/${userId}/profile`),
             window.AstroAPI.getRelatedPeople(userId).catch(() => []),
+            apiFetch(`${API_BASE}/users`).then((res) => (res.ok ? res.json() : [])).catch(() => []),
         ]);
 
         if (profileRes.status === 401) { window.location.href = '/login.html'; return; }
@@ -306,6 +329,7 @@ async function loadProfile() {
 
         profileData = await profileRes.json();
         relatedPeople = Array.isArray(relatedPeoplePayload) ? relatedPeoplePayload : [];
+        tagSourceUsers = Array.isArray(usersPayload) ? usersPayload : [];
         renderAll(profileData);
 
         refs.profileMain.classList.remove('hidden');
@@ -401,6 +425,89 @@ function renderContact(user) {
         refs.profileNotesWrap.classList.remove('hidden');
     } else {
         refs.profileNotesWrap.classList.add('hidden');
+    }
+}
+
+function getUserTags(user) {
+    if (!Array.isArray(user?.tags)) return [];
+    return user.tags
+        .map((tag) => String(tag || '').trim())
+        .filter(Boolean);
+}
+
+function normalizeTag(tag) {
+    return String(tag || '').trim().toLowerCase();
+}
+
+function getAvailableTags() {
+    const tagsByKey = new Map();
+    const users = [
+        ...(tagSourceUsers || []),
+        ...(profileData?.user ? [profileData.user] : []),
+    ];
+
+    for (const user of users) {
+        for (const tag of getUserTags(user)) {
+            const key = normalizeTag(tag);
+            if (key && !tagsByKey.has(key)) {
+                tagsByKey.set(key, tag);
+            }
+        }
+    }
+
+    const collator = getNameCollator();
+    return [...tagsByKey.values()].sort((a, b) => collator.compare(a, b));
+}
+
+function parseTagInput(value) {
+    const tagsByKey = new Map();
+    String(value || '')
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean)
+        .forEach((tag) => {
+            const key = normalizeTag(tag);
+            if (key && !tagsByKey.has(key)) {
+                tagsByKey.set(key, tag);
+            }
+        });
+    return [...tagsByKey.values()];
+}
+
+function setEditTags(tags) {
+    if (!refs.editTags) return;
+    refs.editTags.value = parseTagInput((tags || []).join(', ')).join(', ');
+    renderEditTagSuggestions();
+}
+
+function addTagToEditInput(tag) {
+    const nextTags = parseTagInput(refs.editTags?.value || '');
+    const key = normalizeTag(tag);
+    if (!key || nextTags.some((item) => normalizeTag(item) === key)) {
+        renderEditTagSuggestions();
+        return;
+    }
+    nextTags.push(String(tag).trim());
+    setEditTags(nextTags);
+    refs.editTags?.focus();
+}
+
+function renderEditTagSuggestions() {
+    if (!refs.editTagSuggestions || !refs.editTagSuggestionsWrap) return;
+
+    const tags = getAvailableTags();
+    refs.editTagSuggestions.innerHTML = '';
+    refs.editTagSuggestionsWrap.classList.toggle('hidden', tags.length === 0);
+    if (tags.length === 0) return;
+
+    const selectedKeys = new Set(parseTagInput(refs.editTags?.value || '').map(normalizeTag));
+    for (const tag of tags) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `tag-suggestion${selectedKeys.has(normalizeTag(tag)) ? ' is-selected' : ''}`;
+        button.dataset.tag = tag;
+        button.textContent = tag;
+        refs.editTagSuggestions.appendChild(button);
     }
 }
 
@@ -1105,6 +1212,7 @@ async function openEditClientDialog(uid) {
         if (refs.editTags)     refs.editTags.value     = Array.isArray(user?.tags) ? user.tags.join(', ') : '';
         if (refs.editNotes)    refs.editNotes.value    = user?.notes    || '';
         if (refs.editRelationLabel) refs.editRelationLabel.value = '';
+        renderEditTagSuggestions();
 
         window.Timezones?.populate?.(refs.editTimezone);
         refs.editTimezone.value = formData.timezone || '';
@@ -1232,8 +1340,7 @@ async function handleEditClientSubmit(e) {
     }
 
     const place = refs.editPlaceInput.value.trim();
-    const tagsRaw = (refs.editTags?.value || '').trim();
-    const tags = tagsRaw ? tagsRaw.split(',').map((s) => s.trim()).filter(Boolean) : [];
+    const tags = parseTagInput(refs.editTags?.value || '');
     const requestData = {
         first_name: refs.editFirstName.value.trim(),
         last_name:  refs.editLastName.value.trim(),

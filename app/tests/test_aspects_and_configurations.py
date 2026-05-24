@@ -15,9 +15,10 @@ from app.services.configuration_service import ConfigurationService
 from app.services.cosmogram_service import CosmogramService
 from app.database.models import (
     Astrologer, AstrologerPreference, NatalAspect, NatalConfiguration, NatalStellium,
-    NatalPlanetDistribution, CosmogramPattern, RefAspectType
+    NatalPlanetDistribution, CosmogramPattern, RefAspectType, RefPlanetOrb
 )
 from app.database.models import User
+from app.tests.sqlite_schema_helpers import ensure_sqlite_aspect_runtime_schema
 
 
 TEST_ASPECT_TYPES = [
@@ -34,19 +35,27 @@ TEST_ASPECT_TYPES = [
 
 def ensure_test_aspect_types(db_session: Session):
     RefAspectType.__table__.create(bind=db_session.get_bind(), checkfirst=True)
+    RefPlanetOrb.__table__.create(bind=db_session.get_bind(), checkfirst=True)
     for aspect_type, exact_angle, base_orb, class_, character, color, description in TEST_ASPECT_TYPES:
         existing = db_session.get(RefAspectType, aspect_type)
-        if existing:
-            continue
-        db_session.add(RefAspectType(
-            aspect_type=aspect_type,
-            exact_angle=exact_angle,
-            base_orb=base_orb,
-            class_=class_,
-            character=character,
-            color=color,
-            description=description,
-        ))
+        if not existing:
+            db_session.add(RefAspectType(
+                aspect_type=aspect_type,
+                exact_angle=exact_angle,
+                base_orb=base_orb,
+                class_=class_,
+                character=character,
+                color=color,
+                description=description,
+            ))
+        for body in ('Sun', 'Moon', 'Mars'):
+            if db_session.get(RefPlanetOrb, (body, aspect_type)):
+                continue
+            db_session.add(RefPlanetOrb(
+                planet=body,
+                aspect_type=aspect_type,
+                orb=10.0 if aspect_type == 'Square' else base_orb,
+            ))
     db_session.commit()
 
 
@@ -54,6 +63,7 @@ def ensure_test_aspect_types(db_session: Session):
 def db_session():
     """Фікстура для БД сесії"""
     session = get_db_session()
+    ensure_sqlite_aspect_runtime_schema(session)
     ensure_test_aspect_types(session)
     yield session
     session.close()
@@ -71,7 +81,7 @@ def test_astrologer_id(db_session: Session):
     db_session.commit()
     db_session.refresh(astrologer)
     yield astrologer.id
-    db_session.delete(astrologer)
+    db_session.query(Astrologer).filter(Astrologer.id == astrologer.id).delete(synchronize_session=False)
     db_session.commit()
 
 
@@ -283,7 +293,7 @@ class TestConfigurationService:
         assert details['orb_planet_1'] == 30
         assert details['orb_planet_2'] == 30
 
-        db_session.delete(user)
+        db_session.query(User).filter(User.user_id == user.user_id).delete(synchronize_session=False)
         db_session.query(AstrologerPreference).filter(
             AstrologerPreference.astrologer_id == test_astrologer_id
         ).delete()

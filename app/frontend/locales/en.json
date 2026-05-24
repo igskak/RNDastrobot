@@ -765,10 +765,15 @@
     },
     "newCard": "Add profile",
     "noResults": "Nothing found yet",
-    "noResultsHint": "Try a different name, place, or sort order to find the profile you need.",
+    "noResultsHint": "Try a different name, place, tag, or sort order to find the profile you need.",
     "searchLabel": "Find a profile",
     "searchAriaLabel": "Search profiles",
     "searchPlaceholder": "Search by name/place",
+    "tagFilter": {
+        "all": "All tags",
+        "ariaLabel": "Filter profiles by tag",
+        "label": "Tag"
+      },
     "sortLabel": "Sort order",
     "sort": {
         "birthAsc": "Birth date oldest first",
@@ -816,6 +821,7 @@
         "notesPlaceholder": "Private notes about this profile...",
         "tags": "Tags",
         "tagsPlaceholder": "vip, regular, new (comma-separated)",
+        "existingTags": "Existing tags",
         "noContact": "No contact info"
       },
       "detail": {

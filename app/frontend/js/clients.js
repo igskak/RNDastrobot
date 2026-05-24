@@ -10,6 +10,7 @@ const state = {
     users: [],
     filteredUsers: [],
     searchTerm: '',
+    activeTag: '',
     sortBy: 'created_desc',
     expandedUserId: null,
     consultationsCache: {},
@@ -83,6 +84,7 @@ function cacheElements() {
     refs.tbody = document.getElementById('clientsBody');
     refs.countEl = document.getElementById('clientCount');
     refs.searchInput = document.getElementById('searchInput');
+    refs.tagFilterSelect = document.getElementById('tagFilterSelect');
     refs.sortSelect = document.getElementById('sortSelect');
     refs.resultsMeta = document.getElementById('resultsMeta');
     refs.toast = document.getElementById('toast');
@@ -104,6 +106,8 @@ function cacheElements() {
     refs.editPhone = document.getElementById('editPhone');
     refs.editMessenger = document.getElementById('editMessenger');
     refs.editTags = document.getElementById('editTags');
+    refs.editTagSuggestionsWrap = document.getElementById('editTagSuggestionsWrap');
+    refs.editTagSuggestions = document.getElementById('editTagSuggestions');
     refs.editNotes = document.getElementById('editNotes');
     // Log session dialog
     refs.logSessionBackdrop = document.getElementById('logSessionBackdrop');
@@ -143,6 +147,11 @@ function cacheElements() {
 function bindEvents() {
     refs.searchInput.addEventListener('input', (event) => {
         state.searchTerm = event.target.value.trim().toLowerCase();
+        renderUsers();
+    });
+
+    refs.tagFilterSelect?.addEventListener('change', (event) => {
+        state.activeTag = normalizeTag(event.target.value);
         renderUsers();
     });
 
@@ -223,6 +232,7 @@ function bindEvents() {
             refs.loading.textContent = t('common.loading');
         }
         renderProfileSummary();
+        renderTagFilterOptions();
         renderUsers();
         refreshEditDialogLocale();
     });
@@ -317,6 +327,7 @@ async function loadClients() {
 
         const users = await response.json();
         state.users = Array.isArray(users) ? users : [];
+        renderTagFilterOptions();
 
         refs.loading.classList.add('hidden');
 
@@ -335,7 +346,7 @@ async function loadClients() {
 }
 
 function renderUsers() {
-    const filtered = filterUsers(state.users, state.searchTerm);
+    const filtered = filterUsers(state.users, state.searchTerm, state.activeTag);
     const sorted = sortUsers(filtered, state.sortBy);
     state.filteredUsers = sorted;
 
@@ -355,6 +366,28 @@ function renderUsers() {
     }
 
     updateCounters();
+}
+
+function renderTagFilterOptions() {
+    if (!refs.tagFilterSelect) return;
+
+    const currentValue = state.activeTag;
+    const tags = getAvailableTags(state.users);
+    const hasCurrent = currentValue && tags.some((tag) => normalizeTag(tag) === currentValue);
+    if (currentValue && !hasCurrent) {
+        state.activeTag = '';
+    }
+
+    refs.tagFilterSelect.innerHTML = '';
+    refs.tagFilterSelect.appendChild(new Option(t('page.clients.tagFilter.all'), ''));
+
+    for (const tag of tags) {
+        const option = new Option(tag, normalizeTag(tag));
+        refs.tagFilterSelect.appendChild(option);
+    }
+
+    refs.tagFilterSelect.value = state.activeTag;
+    refs.tagFilterSelect.disabled = tags.length === 0;
 }
 
 function closeAllDropdowns() {
@@ -462,16 +495,50 @@ function buildUserRow(user) {
     return tr;
 }
 
-function filterUsers(users, searchTerm) {
-    if (!searchTerm) return [...users];
+function filterUsers(users, searchTerm, activeTag = '') {
+    const normalizedTag = normalizeTag(activeTag);
+    if (!searchTerm && !normalizedTag) return [...users];
 
     return users.filter((user) => {
+        const tags = getUserTags(user);
+        const matchesTag = !normalizedTag || tags.some((tag) => normalizeTag(tag) === normalizedTag);
+        if (!matchesTag) return false;
+
+        if (!searchTerm) return true;
+
         const name = [user.first_name, user.last_name].filter(Boolean).join(' ').toLowerCase();
         const place = (user.birth_place || '').toLowerCase();
         const birthDate = user.birth_date ? formatDate(user.birth_date).toLowerCase() : '';
+        const tagsText = tags.join(' ').toLowerCase();
 
-        return name.includes(searchTerm) || place.includes(searchTerm) || birthDate.includes(searchTerm);
+        return name.includes(searchTerm) || place.includes(searchTerm) || birthDate.includes(searchTerm) || tagsText.includes(searchTerm);
     });
+}
+
+function getUserTags(user) {
+    if (!Array.isArray(user?.tags)) return [];
+    return user.tags
+        .map((tag) => String(tag || '').trim())
+        .filter(Boolean);
+}
+
+function normalizeTag(tag) {
+    return String(tag || '').trim().toLowerCase();
+}
+
+function getAvailableTags(users) {
+    const tagsByKey = new Map();
+    for (const user of users || []) {
+        for (const tag of getUserTags(user)) {
+            const key = normalizeTag(tag);
+            if (key && !tagsByKey.has(key)) {
+                tagsByKey.set(key, tag);
+            }
+        }
+    }
+
+    const collator = getNameCollator();
+    return [...tagsByKey.values()].sort((a, b) => collator.compare(a, b));
 }
 
 function sortUsers(users, sortBy) {
@@ -534,7 +601,7 @@ function updateCounters() {
         refs.statUnpaid.textContent = String(unpaid);
     }
 
-    if (state.searchTerm) {
+    if (state.searchTerm || state.activeTag) {
         refs.resultsMeta.textContent = t('page.clients.counters.shownOf', { shown, total });
         refs.resultsMeta.style.display = '';
         return;
@@ -605,6 +672,12 @@ function initEditClientDialog() {
     refs.editForm?.addEventListener('submit', handleEditClientSubmit);
     refs.editPlaceInput?.addEventListener('input', handleEditPlaceInput);
     refs.editPlaceInput?.addEventListener('focus', bindEditPlaceAutocomplete, { once: true });
+    refs.editTags?.addEventListener('input', renderEditTagSuggestions);
+    refs.editTagSuggestions?.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-tag]');
+        if (!button) return;
+        addTagToEditInput(button.dataset.tag);
+    });
 
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && !refs.editDialog.classList.contains('hidden')) {
@@ -655,6 +728,7 @@ async function openEditClientDialog(userId) {
         if (refs.editMessenger) refs.editMessenger.value = userRecord?.messenger || '';
         if (refs.editTags) refs.editTags.value = Array.isArray(userRecord?.tags) ? userRecord.tags.join(', ') : '';
         if (refs.editNotes) refs.editNotes.value = userRecord?.notes || '';
+        renderEditTagSuggestions();
 
         window.Timezones?.populate?.(refs.editTimezone);
         refs.editTimezone.value = formData.timezone || '';
@@ -822,8 +896,7 @@ async function handleEditClientSubmit(event) {
     }
 
     const place = refs.editPlaceInput.value.trim();
-    const tagsRaw = (refs.editTags?.value || '').trim();
-    const tags = tagsRaw ? tagsRaw.split(',').map((t) => t.trim()).filter(Boolean) : [];
+    const tags = parseTagInput(refs.editTags?.value || '');
     const requestData = {
         first_name: refs.editFirstName.value.trim(),
         last_name: refs.editLastName.value.trim(),
@@ -884,6 +957,58 @@ function buildUpdatedUserRecord(user, chartData, requestData) {
         tags: requestData?.tags ?? user.tags,
         notes: requestData?.notes ?? user.notes,
     };
+}
+
+function parseTagInput(value) {
+    const tagsByKey = new Map();
+    String(value || '')
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean)
+        .forEach((tag) => {
+            const key = normalizeTag(tag);
+            if (key && !tagsByKey.has(key)) {
+                tagsByKey.set(key, tag);
+            }
+        });
+    return [...tagsByKey.values()];
+}
+
+function setEditTags(tags) {
+    if (!refs.editTags) return;
+    refs.editTags.value = parseTagInput((tags || []).join(', ')).join(', ');
+    renderEditTagSuggestions();
+}
+
+function addTagToEditInput(tag) {
+    const nextTags = parseTagInput(refs.editTags?.value || '');
+    const key = normalizeTag(tag);
+    if (!key || nextTags.some((item) => normalizeTag(item) === key)) {
+        renderEditTagSuggestions();
+        return;
+    }
+    nextTags.push(String(tag).trim());
+    setEditTags(nextTags);
+    refs.editTags?.focus();
+}
+
+function renderEditTagSuggestions() {
+    if (!refs.editTagSuggestions || !refs.editTagSuggestionsWrap) return;
+
+    const tags = getAvailableTags(state.users);
+    refs.editTagSuggestions.innerHTML = '';
+    refs.editTagSuggestionsWrap.classList.toggle('hidden', tags.length === 0);
+    if (tags.length === 0) return;
+
+    const selectedKeys = new Set(parseTagInput(refs.editTags?.value || '').map(normalizeTag));
+    for (const tag of tags) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `tag-suggestion${selectedKeys.has(normalizeTag(tag)) ? ' is-selected' : ''}`;
+        button.dataset.tag = tag;
+        button.textContent = tag;
+        refs.editTagSuggestions.appendChild(button);
+    }
 }
 
 function resolveEditCoords(place) {
