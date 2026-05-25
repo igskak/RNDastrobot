@@ -119,6 +119,7 @@ def test_register_success_creates_verified_local_account_without_token(monkeypat
         assert astrologer.auth_provider == "local"
         assert astrologer.email_verified_at is not None
         assert astrologer.password_hash != "StrongPass123"
+        assert astrologer.plan_code == "trial"
 
         token = db.query(EmailVerificationToken).filter(EmailVerificationToken.astrologer_id == astrologer.id).first()
         assert token is None
@@ -126,6 +127,48 @@ def test_register_success_creates_verified_local_account_without_token(monkeypat
         audit_actions = {row.action for row in db.query(AuditEvent).all()}
         assert "auth.register" in audit_actions
         assert "auth.verification.sent" not in audit_actions
+    finally:
+        db.close()
+
+
+def test_register_can_choose_solo_plan():
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/auth/register",
+            json={
+                "email": "solo-new@example.com",
+                "password": "StrongPass123",
+                "plan_code": "solo",
+            },
+        )
+
+    assert response.status_code == 200
+
+    db = TestingSessionLocal()
+    try:
+        astrologer = db.query(Astrologer).filter(Astrologer.email == "solo-new@example.com").first()
+        assert astrologer is not None
+        assert astrologer.plan_code == "solo"
+    finally:
+        db.close()
+
+
+def test_register_rejects_paid_plan_selection():
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/auth/register",
+            json={
+                "email": "paid-new@example.com",
+                "password": "StrongPass123",
+                "plan_code": "pro",
+            },
+        )
+
+    assert response.status_code == 422
+
+    db = TestingSessionLocal()
+    try:
+        assert db.query(Astrologer).filter(Astrologer.email == "paid-new@example.com").first() is None
     finally:
         db.close()
 

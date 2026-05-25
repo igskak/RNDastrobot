@@ -23,6 +23,7 @@ from app.api.routes.call_session_utils import TERMINAL_CALL_SESSION_STATUSES
 from app.services.livekit_service import livekit_service
 from app.services.storage_service import storage_service
 from app.services.processing_pipeline import run_post_call_pipeline
+from app.services.entitlements_service import FEATURE_CALLS, FEATURE_RECORDING, assert_feature_enabled
 
 router = APIRouter(prefix="/call-sessions")
 
@@ -107,6 +108,7 @@ def create_call_session(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
+    assert_feature_enabled(auth.astrologer, FEATURE_CALLS)
     # Verify client belongs to this astrologer
     user = db.query(User).filter(
         User.user_id == payload.user_id,
@@ -170,6 +172,7 @@ def list_call_sessions(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
+    assert_feature_enabled(auth.astrologer, FEATURE_CALLS)
     q = db.query(CallSession).filter(CallSession.astrologer_id == auth.astrologer.id)
     if user_id:
         q = q.filter(CallSession.user_id == user_id)
@@ -186,6 +189,7 @@ def get_call_session(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
+    assert_feature_enabled(auth.astrologer, FEATURE_CALLS)
     cs = _ensure_session_access(db, auth, session_id)
     user = db.query(User).filter(User.user_id == cs.user_id).first()
     return _serialize(cs, user=user)
@@ -198,6 +202,7 @@ def get_astrologer_token(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
+    assert_feature_enabled(auth.astrologer, FEATURE_CALLS)
     cs = _ensure_session_access(db, auth, session_id)
 
     if cs.call_status == "failed":
@@ -236,6 +241,7 @@ def astrologer_consent(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
+    assert_feature_enabled(auth.astrologer, FEATURE_CALLS)
     cs = _ensure_session_access(db, auth, session_id)
 
     if cs.astrologer_consent_at:
@@ -267,6 +273,8 @@ async def start_recording(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
+    assert_feature_enabled(auth.astrologer, FEATURE_CALLS)
+    assert_feature_enabled(auth.astrologer, FEATURE_RECORDING)
     cs = _ensure_session_access(db, auth, session_id)
 
     if cs.recording_started_at:
@@ -319,6 +327,8 @@ async def stop_recording(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
+    assert_feature_enabled(auth.astrologer, FEATURE_CALLS)
+    assert_feature_enabled(auth.astrologer, FEATURE_RECORDING)
     cs = _ensure_session_access(db, auth, session_id)
 
     if not cs.livekit_egress_id:
@@ -346,6 +356,7 @@ async def end_call(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
+    assert_feature_enabled(auth.astrologer, FEATURE_CALLS)
     cs = _ensure_session_access(db, auth, session_id)
 
     if cs.call_status in ("ended", "processing", "completed", "failed"):
@@ -393,6 +404,8 @@ def get_audio_url(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
+    assert_feature_enabled(auth.astrologer, FEATURE_CALLS)
+    assert_feature_enabled(auth.astrologer, FEATURE_RECORDING)
     cs = _ensure_session_access(db, auth, session_id)
     if not cs.audio_storage_path:
         raise HTTPException(status_code=404, detail="No recording available yet")
@@ -414,6 +427,8 @@ async def reprocess_call(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
+    assert_feature_enabled(auth.astrologer, FEATURE_CALLS)
+    assert_feature_enabled(auth.astrologer, FEATURE_RECORDING)
     cs = _ensure_session_access(db, auth, session_id)
 
     if not cs.audio_storage_path:

@@ -71,7 +71,7 @@ def _db_setup():
     app.dependency_overrides.clear()
 
 
-def _create_astrologer(email: str, password: str) -> Astrologer:
+def _create_astrologer(email: str, password: str, *, plan_code: str = "pro") -> Astrologer:
     db = TestingSessionLocal()
     astrologer = Astrologer(
         email=email,
@@ -79,12 +79,19 @@ def _create_astrologer(email: str, password: str) -> Astrologer:
         auth_provider="local",
         email_verified_at=utcnow(),
         is_active=True,
+        plan_code=plan_code,
     )
     db.add(astrologer)
     db.commit()
     db.refresh(astrologer)
     db.close()
     return astrologer
+
+
+def _login(client: TestClient, email: str, password: str = "password123"):
+    response = client.post("/api/v1/auth/login", json={"email": email, "password": password})
+    assert response.status_code == 200
+    return response
 
 
 def _create_user(astrologer_id):
@@ -126,6 +133,136 @@ def test_password_login_me_logout_flow():
 
         me_after = client.get("/api/v1/auth/me")
         assert me_after.status_code == 401
+
+
+def test_me_includes_plan_entitlements_and_usage():
+    astrologer = _create_astrologer("standard@example.com", "password123", plan_code="standard")
+    _create_user(astrologer.id)
+
+    with TestClient(app) as client:
+        _login(client, "standard@example.com")
+        me = client.get("/api/v1/auth/me")
+
+    assert me.status_code == 200
+    payload = me.json()
+    assert payload["plan_code"] == "standard"
+    assert payload["entitlements"]["calls_enabled"] is False
+    assert payload["entitlements"]["clients_enabled"] is True
+    assert payload["usage"]["saved_charts_count"] == 1
+    assert payload["usage"]["max_saved_charts"] is None
+
+
+def test_authenticated_user_can_update_plan_without_payment():
+    _create_astrologer("upgrade@example.com", "password123", plan_code="trial")
+
+    with TestClient(app) as client:
+        _login(client, "upgrade@example.com")
+        response = client.patch("/api/v1/auth/me/plan", json={"plan_code": "pro"})
+        me = client.get("/api/v1/auth/me")
+
+    assert response.status_code == 200
+    assert response.json()["plan_code"] == "pro"
+    assert response.json()["entitlements"]["calls_enabled"] is True
+    assert me.status_code == 200
+    assert me.json()["plan_code"] == "pro"
+
+
+def test_authenticated_plan_update_rejects_unknown_plan():
+    _create_astrologer("bad-upgrade@example.com", "password123", plan_code="trial")
+
+    with TestClient(app) as client:
+        _login(client, "bad-upgrade@example.com")
+        response = client.patch("/api/v1/auth/me/plan", json={"plan_code": "enterprise"})
+
+    assert response.status_code == 422
+
+
+def test_trial_saved_chart_limit_blocks_new_persisted_chart(monkeypatch):
+    astrologer = _create_astrologer("trial@example.com", "password123", plan_code="trial")
+    for _ in range(5):
+        _create_user(astrologer.id)
+
+    called = {"value": False}
+
+    def _fake_calculate(*_args, **_kwargs):
+        called["value"] = True
+        return {}
+
+    monkeypatch.setattr(natal_route.natal_service, "calculate_natal_chart", _fake_calculate)
+
+    payload = {
+        "first_name": "Limit",
+        "last_name": "Reached",
+        "date": "1990-01-01",
+        "time": "12:00:00",
+        "timezone": "UTC",
+        "place": "Kyiv",
+        "latitude": 50.45,
+        "longitude": 30.523,
+        "house_system": "P",
+    }
+
+    with TestClient(app) as client:
+        _login(client, "trial@example.com")
+        response = client.post("/api/v1/natal/calculate", json=payload)
+
+    assert response.status_code == 403
+    assert response.json()["error_code"] == "PLAN_LIMIT_REACHED"
+    assert called["value"] is False
+
+
+def test_standard_plan_blocks_call_session_creation():
+    astrologer = _create_astrologer("standard-calls@example.com", "password123", plan_code="standard")
+    user = _create_user(astrologer.id)
+
+    with TestClient(app) as client:
+        _login(client, "standard-calls@example.com")
+        response = client.post("/api/v1/call-sessions", json={"user_id": str(user.user_id)})
+
+    assert response.status_code == 403
+    assert response.json()["error_code"] == "PLAN_FEATURE_LOCKED"
+
+
+def test_pro_plan_allows_call_session_creation():
+    astrologer = _create_astrologer("pro-calls@example.com", "password123", plan_code="pro")
+    user = _create_user(astrologer.id)
+
+    with TestClient(app) as client:
+        _login(client, "pro-calls@example.com")
+        response = client.post("/api/v1/call-sessions", json={"user_id": str(user.user_id)})
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert payload["user_id"] == str(user.user_id)
+    assert payload["join_url"]
+
+
+def test_solo_plan_blocks_consultations():
+    astrologer = _create_astrologer("solo@example.com", "password123", plan_code="solo")
+    user = _create_user(astrologer.id)
+
+    with TestClient(app) as client:
+        _login(client, "solo@example.com")
+        response = client.get(f"/api/v1/consultations?user_id={user.user_id}")
+
+    assert response.status_code == 403
+    assert response.json()["error_code"] == "PLAN_FEATURE_LOCKED"
+
+
+def test_solo_plan_blocks_related_people_and_synastry():
+    astrologer = _create_astrologer("solo-synastry@example.com", "password123", plan_code="solo")
+    user = _create_user(astrologer.id)
+    partner = _create_user(astrologer.id)
+
+    with TestClient(app) as client:
+        _login(client, "solo-synastry@example.com")
+        related = client.get(f"/api/v1/users/{user.user_id}/related-people")
+        synastry = client.get(f"/api/v1/synastry?user_id={user.user_id}&partner_id={partner.user_id}")
+
+    assert related.status_code == 403
+    assert related.json()["error_code"] == "PLAN_FEATURE_LOCKED"
+    assert synastry.status_code == 403
+    assert synastry.json()["error_code"] == "PLAN_FEATURE_LOCKED"
 
 
 def test_tenant_isolation_list_open_forbidden(monkeypatch):

@@ -11,6 +11,7 @@
         ? 'http://localhost:8000/api/v1'
         : '/api/v1';
     const NAVIGATION_STATE_KEY = 'astroNavigationState';
+    let currentAstrologerCache = null;
 
     function getCurrentLocale() {
         return root?.FrontendI18n?.getLocale?.() || 'en';
@@ -34,6 +35,15 @@
             return root.FrontendI18n.t(key, params);
         }
         return fallback;
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
     function apiFetch(url, init = {}) {
@@ -149,21 +159,210 @@
             headers: withLocaleHeaders(),
         });
         if (!response.ok) {
+            currentAstrologerCache = null;
             return null;
         }
-        return response.json();
+        currentAstrologerCache = await response.json();
+        return currentAstrologerCache;
     }
 
     async function requireAuth(options = {}) {
         const redirectTo = options.redirectTo || '/login.html';
         const me = await getCurrentAstrologer();
         if (me) {
+            currentAstrologerCache = me;
             return me;
         }
         if (typeof window !== 'undefined' && redirectTo) {
             window.location.href = redirectTo;
         }
         return null;
+    }
+
+    function getCachedAstrologer() {
+        return currentAstrologerCache;
+    }
+
+    function getPlanCode(astrologer = currentAstrologerCache) {
+        return String(astrologer?.plan_code || 'pro').trim().toLowerCase() || 'pro';
+    }
+
+    function getEntitlements(astrologer = currentAstrologerCache) {
+        return astrologer?.entitlements && typeof astrologer.entitlements === 'object'
+            ? astrologer.entitlements
+            : {};
+    }
+
+    function canUseFeature(feature, astrologer = currentAstrologerCache) {
+        const entitlements = getEntitlements(astrologer);
+        const flagByFeature = {
+            clients: 'clients_enabled',
+            consultations: 'consultations_enabled',
+            calls: 'calls_enabled',
+            recording: 'recording_enabled',
+            transcription: 'transcription_enabled',
+            meeting_stats: 'meeting_stats_enabled',
+        };
+        const flag = flagByFeature[feature] || feature;
+        return entitlements[flag] === true;
+    }
+
+    function isSoloPlan(astrologer = currentAstrologerCache) {
+        return getPlanCode(astrologer) === 'solo';
+    }
+
+    function getUsage(astrologer = currentAstrologerCache) {
+        return astrologer?.usage && typeof astrologer.usage === 'object'
+            ? astrologer.usage
+            : {};
+    }
+
+    function getSavedChartLimitState(astrologer = currentAstrologerCache) {
+        const usage = getUsage(astrologer);
+        const current = Number(usage.saved_charts_count || 0);
+        const maxRaw = usage.max_saved_charts;
+        const max = maxRaw === null || maxRaw === undefined ? null : Number(maxRaw);
+        return {
+            current: Number.isFinite(current) ? current : 0,
+            max: Number.isFinite(max) ? max : null,
+            reached: Number.isFinite(max) && current >= max,
+        };
+    }
+
+    async function updateCurrentPlan(planCode) {
+        const response = await apiFetch(`${API_BASE_URL}/auth/me/plan`, {
+            method: 'PATCH',
+            headers: withLocaleHeaders({
+                'Content-Type': 'application/json',
+            }),
+            body: JSON.stringify({ plan_code: planCode }),
+        });
+
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(
+                response,
+                'page.plan.modal.errors.updateFailed',
+                'Unable to update plan right now.'
+            ));
+        }
+
+        currentAstrologerCache = await response.json();
+        return currentAstrologerCache;
+    }
+
+    function getUpgradePlanCodes(reason, astrologer = currentAstrologerCache) {
+        const current = getPlanCode(astrologer);
+        if (reason === 'calls' || reason === 'recording' || reason === 'transcription') {
+            return current === 'pro' ? [] : ['pro'];
+        }
+        if (current === 'solo' && reason === 'consultations') {
+            return ['trial', 'standard', 'pro'];
+        }
+        return ['standard', 'pro'].filter((planCode) => planCode !== current);
+    }
+
+    function ensurePlanModalStyles() {
+        if (!hasDocument || document.getElementById('astroPlanModalStyles')) return;
+        const style = document.createElement('style');
+        style.id = 'astroPlanModalStyles';
+        style.textContent = `
+            .astro-plan-modal-backdrop{position:fixed;inset:0;z-index:220;background:rgba(17,24,39,.48);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:18px}
+            .astro-plan-modal{width:min(680px,100%);max-height:min(88vh,760px);overflow:auto;border:1px solid rgba(184,147,90,.24);border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(249,247,242,.98));box-shadow:0 32px 72px rgba(18,28,45,.24);padding:24px}
+            .astro-plan-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:18px}
+            .astro-plan-modal-kicker{margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#b8935a}
+            .astro-plan-modal-title{margin:0;font-family:var(--font-display, Georgia, serif);font-size:clamp(30px,4vw,40px);font-weight:500;line-height:.98;color:#1a1614}
+            .astro-plan-modal-copy{margin:10px 0 0;max-width:54ch;font-size:14px;line-height:1.55;color:#5c554e}
+            .astro-plan-modal-close{width:40px;height:40px;flex:0 0 auto;border:1px solid rgba(30,58,95,.12);border-radius:999px;background:#fff;color:#5c554e;font-size:24px;line-height:1;cursor:pointer}
+            .astro-plan-modal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+            .astro-plan-option{display:grid;gap:10px;text-align:left;border:1px solid rgba(30,58,95,.1);border-radius:18px;background:#fff;padding:15px;cursor:pointer;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+            .astro-plan-option:hover:not(:disabled){transform:translateY(-1px);border-color:rgba(30,58,95,.32);box-shadow:0 14px 28px rgba(30,58,95,.12)}
+            .astro-plan-option:disabled{opacity:.62;cursor:not-allowed}
+            .astro-plan-option-title{font-size:17px;font-weight:700;color:#1a1614}
+            .astro-plan-option-copy{font-size:13px;line-height:1.45;color:#5c554e}
+            .astro-plan-option-action{width:max-content;min-height:30px;display:inline-flex;align-items:center;padding:0 11px;border-radius:999px;background:#1e3a5f;color:#fff;font-size:12px;font-weight:700}
+            .astro-plan-modal-note,.astro-plan-modal-error{margin:14px 0 0;font-size:12px;line-height:1.45;color:#7a5a2c}
+            .astro-plan-modal-error{color:#9b2c2c}
+            @media(max-width:560px){.astro-plan-modal{padding:20px 16px;border-radius:22px}.astro-plan-modal-head{gap:12px}.astro-plan-modal-grid{grid-template-columns:1fr}}
+        `;
+        document.head.appendChild(style);
+    }
+
+    function closePlanUpgradeModal() {
+        if (!hasDocument) return;
+        document.querySelector('.astro-plan-modal-backdrop')?.remove();
+        document.body.style.overflow = '';
+    }
+
+    function showPlanUpgradeModal(options = {}) {
+        if (!hasDocument) return;
+        ensurePlanModalStyles();
+        closePlanUpgradeModal();
+
+        const reason = options.reason || 'default';
+        const planCodes = options.planCodes || getUpgradePlanCodes(reason, options.astrologer);
+        const backdrop = document.createElement('div');
+        backdrop.className = 'astro-plan-modal-backdrop';
+        backdrop.innerHTML = `
+            <section class="astro-plan-modal" role="dialog" aria-modal="true" aria-labelledby="astroPlanModalTitle">
+                <div class="astro-plan-modal-head">
+                    <div>
+                        <p class="astro-plan-modal-kicker">${escapeHtml(t('page.plan.modal.kicker', null, 'Plan upgrade'))}</p>
+                        <h2 class="astro-plan-modal-title" id="astroPlanModalTitle">${escapeHtml(t('page.plan.modal.title', null, 'Choose a workspace plan'))}</h2>
+                        <p class="astro-plan-modal-copy">${escapeHtml(t(`page.plan.modal.copy.${reason}`, null, t('page.plan.modal.copy.default', null, 'Choose a plan to unlock this workspace.')))}</p>
+                    </div>
+                    <button class="astro-plan-modal-close" type="button" data-plan-modal-close aria-label="${escapeHtml(t('common.close', null, 'Close'))}">×</button>
+                </div>
+                <div class="astro-plan-modal-grid">
+                    ${planCodes.map((planCode) => `
+                        <button class="astro-plan-option" type="button" data-plan-code="${escapeHtml(planCode)}">
+                            <span class="astro-plan-option-title">${escapeHtml(t(`page.plan.names.${planCode}`, null, planCode))}</span>
+                            <span class="astro-plan-option-copy">${escapeHtml(t(`page.plan.descriptions.${planCode}`, null, ''))}</span>
+                            <span class="astro-plan-option-action">${escapeHtml(t('page.plan.modal.choosePlan', { plan: t(`page.plan.names.${planCode}`, null, planCode) }, `Switch to ${planCode}`))}</span>
+                        </button>
+                    `).join('')}
+                </div>
+                <p class="astro-plan-modal-note">${escapeHtml(t('page.plan.modal.devNote', null, 'For now, plan changes are activated immediately without payment.'))}</p>
+                <p class="astro-plan-modal-error" data-plan-modal-error hidden></p>
+            </section>
+        `;
+
+        backdrop.addEventListener('click', async (event) => {
+            if (event.target === backdrop || event.target.closest('[data-plan-modal-close]')) {
+                closePlanUpgradeModal();
+                return;
+            }
+            const button = event.target.closest('[data-plan-code]');
+            if (!button) return;
+
+            const errorEl = backdrop.querySelector('[data-plan-modal-error]');
+            backdrop.querySelectorAll('[data-plan-code]').forEach((node) => {
+                node.disabled = true;
+            });
+            button.querySelector('.astro-plan-option-action').textContent = t('page.plan.modal.activating');
+            if (errorEl) errorEl.hidden = true;
+
+            try {
+                const updated = await updateCurrentPlan(button.dataset.planCode);
+                root.dispatchEvent?.(new CustomEvent('astro:plan-updated', { detail: updated }));
+                if (options.reload !== false && root.location) {
+                    root.location.reload();
+                    return;
+                }
+                closePlanUpgradeModal();
+            } catch (error) {
+                if (errorEl) {
+                    errorEl.textContent = error.message || t('page.plan.modal.errors.updateFailed');
+                    errorEl.hidden = false;
+                }
+                backdrop.querySelectorAll('[data-plan-code]').forEach((node) => {
+                    node.disabled = false;
+                });
+            }
+        });
+
+        document.body.appendChild(backdrop);
+        document.body.style.overflow = 'hidden';
+        backdrop.querySelector('[data-plan-code], [data-plan-modal-close]')?.focus();
     }
 
     async function logout() {
@@ -653,6 +852,15 @@
         updateClientChart,
         getCurrentAstrologer,
         requireAuth,
+        getCachedAstrologer,
+        getPlanCode,
+        getEntitlements,
+        canUseFeature,
+        isSoloPlan,
+        getUsage,
+        getSavedChartLimitState,
+        updateCurrentPlan,
+        showPlanUpgradeModal,
         logout,
         resolvePlaceTimezone,
         getAccountPreferences,
@@ -689,6 +897,17 @@
     };
 
     root.AstroAPI = api;
+    root.AstroPlan = {
+        getCachedAstrologer,
+        getPlanCode,
+        getEntitlements,
+        canUseFeature,
+        isSoloPlan,
+        getUsage,
+        getSavedChartLimitState,
+        updateCurrentPlan,
+        showUpgradeModal: showPlanUpgradeModal,
+    };
     root.showPageLoader = showPageLoader;
     root.hidePageLoader = hidePageLoader;
 

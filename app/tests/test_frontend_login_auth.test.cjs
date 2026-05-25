@@ -84,12 +84,14 @@ test('validateRegistrationPayload enforces registration fields and policy', () =
         password: 'weakpass',
         confirmPassword: 'other',
         firstName: 'A'.repeat(101),
+        planCode: 'pro',
     });
     assert.equal(invalid.valid, false);
     assert.equal(invalid.errors.email, 'page.login.validation.emailInvalid');
     assert.equal(invalid.errors.password, 'page.login.validation.passwordPolicy');
     assert.equal(invalid.errors.confirmPassword, 'page.login.validation.passwordMismatch');
     assert.equal(invalid.errors.firstName, 'page.login.validation.nameTooLong');
+    assert.equal(invalid.errors.planCode, 'page.login.validation.accountTypeInvalid');
 
     const valid = AstroLogin.validateRegistrationPayload({
         email: 'astro@example.com',
@@ -97,9 +99,19 @@ test('validateRegistrationPayload enforces registration fields and policy', () =
         confirmPassword: 'Strong123',
         firstName: 'Ihor',
         lastName: 'Skakovskyi',
+        planCode: 'solo',
     });
     assert.equal(valid.valid, true);
     assert.deepEqual(valid.errors, {});
+    assert.equal(valid.values.planCode, 'solo');
+
+    const defaultPlan = AstroLogin.validateRegistrationPayload({
+        email: 'trial@example.com',
+        password: 'Strong123',
+        confirmPassword: 'Strong123',
+    });
+    assert.equal(defaultPlan.valid, true);
+    assert.equal(defaultPlan.values.planCode, 'trial');
 });
 
 test('new auth copy is localized for en, ru, uk', async () => {
@@ -113,6 +125,8 @@ test('new auth copy is localized for en, ru, uk', async () => {
         const accountReady = global.FrontendI18n.t('page.login.status.accountReady');
         const spamTitle = global.FrontendI18n.t('page.login.hints.emailDeliverySpamTitle');
         const spamHint = global.FrontendI18n.t('page.login.hints.emailDeliverySpam');
+        const accountType = global.FrontendI18n.t('page.login.fields.accountType.label');
+        const planName = global.FrontendI18n.t('page.plan.names.solo');
 
         assert.notEqual(title, 'page.login.views.reset.title');
         assert.notEqual(success, 'page.login.views.success.body');
@@ -122,6 +136,8 @@ test('new auth copy is localized for en, ru, uk', async () => {
         assert.notEqual(accountReady, 'page.login.status.accountReady');
         assert.notEqual(spamTitle, 'page.login.hints.emailDeliverySpamTitle');
         assert.notEqual(spamHint, 'page.login.hints.emailDeliverySpam');
+        assert.notEqual(accountType, 'page.login.fields.accountType.label');
+        assert.notEqual(planName, 'page.plan.names.solo');
     }
 
     delete global.FrontendI18n;

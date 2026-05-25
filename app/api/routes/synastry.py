@@ -22,6 +22,7 @@ from app.models.schemas import (
 )
 from app.services.natal_chart_service import NatalChartService
 from app.services.synastry_service import SynastryService
+from app.services.entitlements_service import FEATURE_CLIENTS, assert_can_create_saved_chart, assert_feature_enabled
 from app.utils.ephemeris import get_ephemeris_path
 
 
@@ -80,6 +81,7 @@ def list_related_people(
     auth: AuthContext = Depends(require_auth),
 ) -> List[RelatedPersonResponse]:
     try:
+        assert_feature_enabled(auth.astrologer, FEATURE_CLIENTS)
         ensure_client_access(db, request, auth, user_id, action="client.related_people.list")
 
         rows = (
@@ -116,6 +118,7 @@ def add_related_person(
     auth: AuthContext = Depends(require_auth),
 ) -> RelatedPersonResponse:
     try:
+        assert_feature_enabled(auth.astrologer, FEATURE_CLIENTS)
         ensure_client_access(db, request, auth, user_id, action="client.related_people.link")
         related_user = ensure_client_access(
             db,
@@ -181,6 +184,8 @@ def create_related_person(
     auth: AuthContext = Depends(require_auth),
 ) -> RelatedPersonResponse:
     try:
+        assert_feature_enabled(auth.astrologer, FEATURE_CLIENTS)
+        assert_can_create_saved_chart(db, auth.astrologer)
         ensure_client_access(db, request, auth, user_id, action="client.related_people.create")
 
         chart_data = natal_service.calculate_natal_chart(
@@ -256,6 +261,7 @@ def delete_related_person(
     auth: AuthContext = Depends(require_auth),
 ) -> dict:
     try:
+        assert_feature_enabled(auth.astrologer, FEATURE_CLIENTS)
         ensure_client_access(db, request, auth, user_id, action="client.related_people.delete")
         ensure_client_access(db, request, auth, related_user_id, action="client.related_people.delete_target")
 
@@ -299,6 +305,7 @@ def get_synastry_workspace(
     auth: AuthContext = Depends(require_auth),
 ) -> SynastryResponse:
     try:
+        assert_feature_enabled(auth.astrologer, FEATURE_CLIENTS)
         if user_id == partner_id:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Synastry requires two different clients")
 

@@ -218,6 +218,49 @@
     }
   },
   "page": {
+    "plan": {
+      "names": {
+        "trial": "Trial",
+        "solo": "Solo",
+        "standard": "Standard",
+        "pro": "Pro"
+      },
+      "descriptions": {
+        "trial": "For trying the workspace with up to five saved charts. Calls, recordings, and transcription stay locked.",
+        "solo": "For studying astrology or working with one personal chart. Client workflow, sessions, and meeting stats are hidden.",
+        "standard": "Unlimited saved charts and the full client workflow without calls, recordings, or transcription.",
+        "pro": "Full workspace access, including calls, recordings, transcription, and meeting intelligence."
+      },
+      "usage": {
+        "savedChartsLimited": "{current}/{max} charts",
+        "savedChartsUnlimited": "{current} charts"
+      },
+      "statusWithLimitedCharts": "{plan} · {current}/{max} charts",
+      "statusWithUnlimitedCharts": "{plan} · {current} charts",
+      "modal": {
+        "kicker": "Plan upgrade",
+        "title": "Choose a workspace plan",
+        "copy": {
+          "default": "Choose a plan to unlock this workspace.",
+          "limit": "You have reached the saved chart limit on your current plan. Choose a plan with more room to continue.",
+          "calls": "Calls, recordings, and transcription are available on the Pro plan.",
+          "consultations": "Client sessions and consultation history are available on practice-oriented plans."
+        },
+        "choosePlan": "Switch to {plan}",
+        "activating": "Activating...",
+        "devNote": "For now, plan changes are activated immediately without payment.",
+        "errors": {
+          "updateFailed": "Unable to update plan right now."
+        }
+      },
+      "limits": {
+        "savedChartsReached": "Your current plan limit for saved charts has been reached."
+      },
+      "upgrade": {
+        "callsLocked": "Calls and recordings are available on the Pro plan.",
+        "consultationsLocked": "Session history is not available on your current plan."
+      }
+    },
     "accountSettings": {
       "actions": {
         "reload": "Reload",
@@ -230,6 +273,9 @@
         "copy": "All user general settings will be reset to the standard defaults with no way to restore the previous state.",
         "kicker": "Confirmation",
         "title": "Reset settings to defaults?"
+      },
+      "plan": {
+        "kicker": "Current plan"
       },
       "creation": {
         "copy": "Choose the base house system that new charts should start with before any per-view overrides apply.",
@@ -827,6 +873,8 @@
       "detail": {
         "openChart": "Open chart",
         "logSession": "Add session note",
+        "startingCall": "Starting...",
+        "callStartFailed": "Failed to create call session",
         "consultations": "Session history",
         "noConsultations": "No session notes yet",
         "paidBadge": "Paid",
@@ -1581,6 +1629,20 @@
           "label": "Last name (optional)",
           "placeholder": "Last name"
         },
+        "accountType": {
+          "label": "Account type",
+          "hint": "This only sets the starting workspace. Paid upgrades will be handled separately.",
+          "trial": {
+            "title": "Professional trial",
+            "copy": "For astrologers who run consultations or want to test a practice workspace.",
+            "badge": "5 charts"
+          },
+          "solo": {
+            "title": "Beginner",
+            "copy": "For learning astrology or starting with one personal chart.",
+            "badge": "1 chart"
+          }
+        },
         "registerPassword": {
           "placeholder": "Create a password (letters and numbers)"
         }
@@ -1652,7 +1714,8 @@
         "confirmPasswordRequired": "Confirm your new password.",
         "passwordMismatch": "Passwords do not match.",
         "passwordPolicy": "Use letters and numbers.",
-        "nameTooLong": "Use up to 100 characters."
+        "nameTooLong": "Use up to 100 characters.",
+        "accountTypeInvalid": "Choose a valid account type."
       },
       "errors": {
         "invalidCredentials": "Incorrect email or password.",

@@ -43,6 +43,7 @@ from app.api.routes.call_session_utils import TERMINAL_CALL_SESSION_STATUSES
 from app.auth.dependencies import AuthContext, create_audit_event, ensure_client_access, require_auth
 from app.utils.ephemeris import get_ephemeris_path
 from app.services.geocoding_service import GeocodingTimeoutError, GeocodingServiceError
+from app.services.entitlements_service import assert_can_create_saved_chart, get_entitlements
 from sqlalchemy import func as sa_func, case, and_
 import os
 from loguru import logger
@@ -143,6 +144,9 @@ def calculate_natal_chart(
     - Если save_to_db=True, также возвращает user_id
     """
     try:
+        if save_to_db:
+            assert_can_create_saved_chart(db, auth.astrologer)
+
         # Расчёт натальной карты
         chart_data = natal_service.calculate_natal_chart(
             birth_date=birth_data.date,
@@ -181,6 +185,9 @@ def calculate_natal_chart(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Сервис геокодирования временно недоступен"
         )
+
+    except HTTPException:
+        raise
     
     except Exception as e:
         logger.exception(f"Неожиданная ошибка при расчёте натальной карты: {str(e)}")
@@ -345,6 +352,47 @@ def list_users(
 ):
     """Получить список всех пользователей с CRM-данными"""
     try:
+        entitlements = get_entitlements(auth.astrologer)
+        consultations_enabled = entitlements.get("consultations_enabled") is True
+
+        if not consultations_enabled:
+            users = (
+                db.query(User)
+                .filter(User.astrologer_id == auth.astrologer.id)
+                .order_by(User.created_at.desc())
+                .all()
+            )
+            create_audit_event(
+                db,
+                request,
+                actor_id=auth.astrologer.id,
+                action="client.list",
+                resource_type="users",
+                resource_id=None,
+                result="success",
+            )
+            return [
+                {
+                    "user_id": str(u.user_id),
+                    "first_name": u.first_name,
+                    "last_name": u.last_name,
+                    "birth_date": u.birth_date.isoformat() if u.birth_date else None,
+                    "birth_place": u.birth_place,
+                    "created_at": u.created_at.isoformat() if u.created_at else None,
+                    "email": None,
+                    "phone": None,
+                    "messenger": None,
+                    "tags": [],
+                    "notes": None,
+                    "consultation_count": 0,
+                    "last_consultation_at": None,
+                    "last_consultation_type": None,
+                    "unpaid_count": 0,
+                    "upcoming_count": 0,
+                }
+                for u in users
+            ]
+
         # Subquery: consultation stats per user
         consult_stats = (
             db.query(
@@ -602,6 +650,10 @@ def get_user_profile(
     """Агрегированный профиль клиента для страницы /client/{user_id}."""
     try:
         ensure_client_access(db, request, auth, user_id, action="client.profile.view")
+        entitlements = get_entitlements(auth.astrologer)
+        consultations_enabled = entitlements.get("consultations_enabled") is True
+        calls_enabled = entitlements.get("calls_enabled") is True
+        meeting_stats_enabled = entitlements.get("meeting_stats_enabled") is True
 
         user = db.query(User).filter(
             User.user_id == user_id,
@@ -610,26 +662,30 @@ def get_user_profile(
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client not found")
 
-        consultations = (
-            db.query(Consultation)
-            .filter(
-                Consultation.user_id == user_id,
-                Consultation.astrologer_id == auth.astrologer.id,
+        consultations = []
+        if consultations_enabled:
+            consultations = (
+                db.query(Consultation)
+                .filter(
+                    Consultation.user_id == user_id,
+                    Consultation.astrologer_id == auth.astrologer.id,
+                )
+                .order_by(Consultation.scheduled_at.desc().nullslast())
+                .all()
             )
-            .order_by(Consultation.scheduled_at.desc().nullslast())
-            .all()
-        )
 
-        call_sessions = (
-            db.query(CallSession)
-            .filter(
-                CallSession.user_id == user_id,
-                CallSession.astrologer_id == auth.astrologer.id,
-                CallSession.call_status.in_(TERMINAL_CALL_SESSION_STATUSES),
+        call_sessions = []
+        if calls_enabled:
+            call_sessions = (
+                db.query(CallSession)
+                .filter(
+                    CallSession.user_id == user_id,
+                    CallSession.astrologer_id == auth.astrologer.id,
+                    CallSession.call_status.in_(TERMINAL_CALL_SESSION_STATUSES),
+                )
+                .order_by(CallSession.started_at.desc().nullslast())
+                .all()
             )
-            .order_by(CallSession.started_at.desc().nullslast())
-            .all()
-        )
 
         solar_returns = (
             db.query(SolarReturn)
@@ -717,16 +773,16 @@ def get_user_profile(
         saved_charts.sort(key=lambda item: item.get("created_at") or "", reverse=True)
 
         # Stats
-        total = len(consultations)
-        completed = sum(1 for c in consultations if c.status == 'completed')
-        planned = sum(1 for c in consultations if c.status == 'planned')
-        cancelled = sum(1 for c in consultations if c.status == 'cancelled')
-        no_show = sum(1 for c in consultations if c.status == 'no_show')
-        paid = sum(1 for c in consultations if c.is_paid)
-        total_duration = sum(c.duration_minutes or 0 for c in consultations)
-        completed_calls = sum(1 for cs in call_sessions if cs.call_status == 'completed')
+        total = len(consultations) if meeting_stats_enabled else 0
+        completed = sum(1 for c in consultations if c.status == 'completed') if meeting_stats_enabled else 0
+        planned = sum(1 for c in consultations if c.status == 'planned') if meeting_stats_enabled else 0
+        cancelled = sum(1 for c in consultations if c.status == 'cancelled') if meeting_stats_enabled else 0
+        no_show = sum(1 for c in consultations if c.status == 'no_show') if meeting_stats_enabled else 0
+        paid = sum(1 for c in consultations if c.is_paid) if meeting_stats_enabled else 0
+        total_duration = sum(c.duration_minutes or 0 for c in consultations) if meeting_stats_enabled else 0
+        completed_calls = sum(1 for cs in call_sessions if cs.call_status == 'completed') if calls_enabled else 0
 
-        last_consultation = consultations[0] if consultations else None
+        last_consultation = consultations[0] if consultations and meeting_stats_enabled else None
 
         # Aggregate key_points from all completed call sessions
         aggregated_key_points = []

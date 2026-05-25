@@ -78,6 +78,43 @@
         return translated && translated !== key ? translated : fallback;
     }
 
+    function getPlanCode(me) {
+        return window.AstroPlan?.getPlanCode?.(me) || String(me?.plan_code || 'pro').trim().toLowerCase() || 'pro';
+    }
+
+    function getPlanUsageLabel(me) {
+        const usage = window.AstroPlan?.getSavedChartLimitState?.(me);
+        if (!usage || usage.max === null || usage.max === undefined) {
+            return t('page.plan.usage.savedChartsUnlimited', { current: usage?.current || 0 });
+        }
+        return t('page.plan.usage.savedChartsLimited', {
+            current: usage.current,
+            max: usage.max,
+        });
+    }
+
+    function renderAccountPlan(me) {
+        const card = document.getElementById('accountPlanCard');
+        if (!card) return;
+
+        const planCode = getPlanCode(me);
+        const title = document.getElementById('accountPlanTitle');
+        const copy = document.getElementById('accountPlanCopy');
+        const usage = document.getElementById('accountPlanUsage');
+
+        if (title) {
+            title.textContent = t(`page.plan.names.${planCode}`);
+        }
+        if (copy) {
+            copy.textContent = t(`page.plan.descriptions.${planCode}`);
+        }
+        if (usage) {
+            usage.textContent = getPlanUsageLabel(me);
+        }
+
+        card.dataset.planCode = planCode;
+    }
+
     function getBodyLabel(body) {
         return translateOrFallback(`astro.planet.${body}`, window.Symbols?.getPlanetNameRu?.(body) || body);
     }
@@ -1277,6 +1314,7 @@
                 ? t('page.accountSettings.subtitleWithEmail', { email: me.email })
                 : t('page.accountSettings.subtitle');
         }
+        renderAccountPlan(me);
 
         const [metadata, preferences] = await Promise.all([
             window.AstroAPI.getPreferencesMetadata?.(),

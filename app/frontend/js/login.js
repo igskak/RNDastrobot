@@ -231,6 +231,7 @@
         const confirmPassword = String(payload.confirmPassword || '');
         const firstName = String(payload.firstName || '').trim();
         const lastName = String(payload.lastName || '').trim();
+        const planCode = String(payload.planCode || 'trial').trim().toLowerCase();
         const errors = {};
 
         if (!email) {
@@ -259,10 +260,13 @@
         if (lastName.length > 100) {
             errors.lastName = 'page.login.validation.nameTooLong';
         }
+        if (!['trial', 'solo'].includes(planCode)) {
+            errors.planCode = 'page.login.validation.accountTypeInvalid';
+        }
 
         return {
             valid: Object.keys(errors).length === 0,
-            values: { email, password, confirmPassword, firstName, lastName },
+            values: { email, password, confirmPassword, firstName, lastName, planCode },
             errors,
         };
     }
@@ -601,6 +605,7 @@
                 confirmPassword: refs.registerPasswordConfirm?.value,
                 firstName: refs.registerFirstName?.value,
                 lastName: refs.registerLastName?.value,
+                planCode: refs.registerPlanCodeInputs?.find((input) => input.checked)?.value,
             });
 
             setFieldError(refs.registerEmail, refs.registerEmailError, result.errors.email || '');
@@ -828,6 +833,7 @@
                         first_name: values.firstName || null,
                         last_name: values.lastName || null,
                         locale: getCurrentLocale(),
+                        plan_code: values.planCode,
                     }),
                 }, fetchFn);
                 if (!response.ok) {
@@ -1211,6 +1217,7 @@
             refs.registerPasswordConfirm = documentRef.getElementById('registerPasswordConfirm');
             refs.registerFirstName = documentRef.getElementById('registerFirstName');
             refs.registerLastName = documentRef.getElementById('registerLastName');
+            refs.registerPlanCodeInputs = Array.from(documentRef.querySelectorAll('input[name="registerPlanCode"]'));
             refs.verifyResendEmail = documentRef.getElementById('verifyResendEmail');
 
             refs.loginEmailError = documentRef.getElementById('loginEmailError');

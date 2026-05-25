@@ -5,7 +5,7 @@ import logging
 import os
 import re
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field, field_validator
@@ -44,6 +44,15 @@ from app.auth.supabase import verify_supabase_token
 from app.database.connection import get_db
 from app.database.models import Astrologer, EmailVerificationToken, PasswordResetToken
 from app.i18n.locale import normalize_locale
+from app.services.entitlements_service import (
+    PLAN_PRO,
+    PLAN_SOLO,
+    PLAN_STANDARD,
+    PLAN_TRIAL,
+    get_entitlements,
+    get_usage,
+    normalize_plan_code,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -121,6 +130,7 @@ class RegisterRequest(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     locale: Optional[str] = None
+    plan_code: Optional[str] = None
 
     @field_validator("email")
     @classmethod
@@ -146,6 +156,16 @@ class RegisterRequest(BaseModel):
     @classmethod
     def validate_locale(cls, value: Optional[str]) -> Optional[str]:
         return _normalize_locale_value(value)
+
+    @field_validator("plan_code")
+    @classmethod
+    def validate_plan_code(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        normalized = value.strip().lower()
+        if normalized not in {PLAN_TRIAL, PLAN_SOLO}:
+            raise ValueError("Invalid registration plan")
+        return normalized
 
 
 class VerifyEmailRequest(BaseModel):
@@ -212,11 +232,26 @@ class GoogleAuthRequest(BaseModel):
     id_token: Optional[str] = None
 
 
+class PlanUpdateRequest(BaseModel):
+    plan_code: str
+
+    @field_validator("plan_code")
+    @classmethod
+    def validate_plan_code(cls, value: str) -> str:
+        normalized = str(value or "").strip().lower()
+        if normalized not in {PLAN_TRIAL, PLAN_SOLO, PLAN_STANDARD, PLAN_PRO}:
+            raise ValueError("Invalid plan")
+        return normalized
+
+
 class MeResponse(BaseModel):
     id: str
     email: str
     auth_provider: str
     is_active: bool
+    plan_code: str
+    entitlements: Dict[str, Any]
+    usage: Dict[str, Any]
 
 
 class FrontendAuthConfig(BaseModel):
@@ -294,6 +329,18 @@ def _is_email_verified(astrologer: Astrologer) -> bool:
 def _mark_email_verified(astrologer: Astrologer) -> None:
     if astrologer.email_verified_at is None:
         astrologer.email_verified_at = utcnow()
+
+
+def _build_me_response(db: Session, astrologer: Astrologer) -> MeResponse:
+    return MeResponse(
+        id=str(astrologer.id),
+        email=astrologer.email,
+        auth_provider=astrologer.auth_provider,
+        is_active=astrologer.is_active,
+        plan_code=normalize_plan_code(getattr(astrologer, "plan_code", None)),
+        entitlements=get_entitlements(astrologer),
+        usage=get_usage(db, astrologer),
+    )
 
 
 def _verification_cooldown_remaining(db: Session, astrologer: Astrologer) -> int:
@@ -489,6 +536,7 @@ def register(
         auth_provider="local",
         is_active=True,
         email_verified_at=utcnow(),
+        plan_code=payload.plan_code or PLAN_TRIAL,
     )
     db.add(astrologer)
     try:
@@ -723,12 +771,7 @@ def login(
         resource_id=email,
         result="success",
     )
-    return MeResponse(
-        id=str(astrologer.id),
-        email=astrologer.email,
-        auth_provider=astrologer.auth_provider,
-        is_active=astrologer.is_active,
-    )
+    return _build_me_response(db, astrologer)
 
 
 @router.post("/forgot-password", response_model=GenericAuthResponse)
@@ -901,6 +944,7 @@ def google_login(
             google_sub=identity.sub,
             is_active=True,
             email_verified_at=utcnow(),
+            plan_code=PLAN_TRIAL,
         )
         db.add(astrologer)
         db.flush()
@@ -935,23 +979,41 @@ def google_login(
         resource_id=identity.email,
         result="success",
     )
-    return MeResponse(
-        id=str(astrologer.id),
-        email=astrologer.email,
-        auth_provider=astrologer.auth_provider,
-        is_active=astrologer.is_active,
-    )
+    return _build_me_response(db, astrologer)
 
 
 @router.get("/me", response_model=MeResponse)
-def me(auth: AuthContext = Depends(require_auth)):
+def me(
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+):
     astrologer = auth.astrologer
-    return MeResponse(
-        id=str(astrologer.id),
-        email=astrologer.email,
-        auth_provider=astrologer.auth_provider,
-        is_active=astrologer.is_active,
+    return _build_me_response(db, astrologer)
+
+
+@router.patch("/me/plan", response_model=MeResponse)
+def update_me_plan(
+    payload: PlanUpdateRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+):
+    astrologer = auth.astrologer
+    old_plan = normalize_plan_code(getattr(astrologer, "plan_code", None))
+    astrologer.plan_code = payload.plan_code
+    astrologer.plan_assigned_at = utcnow()
+    astrologer.plan_expires_at = None
+    create_audit_event(
+        db,
+        request,
+        actor_id=astrologer.id,
+        action="auth.plan.update",
+        resource_type="astrologer",
+        resource_id=astrologer.email,
+        result=f"{old_plan}->{payload.plan_code}",
     )
+    db.flush()
+    return _build_me_response(db, astrologer)
 
 
 @router.post("/logout")

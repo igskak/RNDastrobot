@@ -15,6 +15,7 @@ let tagSourceUsers = [];
 let consultationFilter = 'all';
 let toastTimer = null;
 let relatedPeoplePicker = null;
+let currentAstrologer = null;
 
 const refs = {};
 
@@ -46,6 +47,23 @@ function withLocaleHeaders(headers = {}) {
         return window.AstroAPI.withLocaleHeaders(headers);
     }
     return headers;
+}
+
+function planCan(feature) {
+    if (!window.AstroPlan?.canUseFeature) return true;
+    return window.AstroPlan.canUseFeature(feature, currentAstrologer);
+}
+
+function isSoloPlan() {
+    return window.AstroPlan?.isSoloPlan?.(currentAstrologer) === true;
+}
+
+function openPlanUpgrade(reason) {
+    if (window.AstroPlan?.showUpgradeModal) {
+        window.AstroPlan.showUpgradeModal({ reason, astrologer: currentAstrologer });
+        return;
+    }
+    showToast(t('page.plan.modal.copy.default'), 'error');
 }
 
 /* ─── Utilities ─────────────────────────────────────────────────────────── */
@@ -125,8 +143,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    const astrologer = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
-    if (!astrologer) return;
+    currentAstrologer = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
+    if (!currentAstrologer) return;
+    applyPlanUi();
 
     if (window.AstroAPI?.getAccountPreferences) {
         try {
@@ -243,9 +262,21 @@ function cacheElements() {
 function bindPageEvents() {
     refs.openChartBtn?.addEventListener('click', openChart);
     refs.openForecastBtn?.addEventListener('click', () => openForecast());
-    refs.startCallBtn?.addEventListener('click', startCallSession);
+    refs.startCallBtn?.addEventListener('click', () => {
+        if (!planCan('calls')) {
+            openPlanUpgrade('calls');
+            return;
+        }
+        startCallSession();
+    });
     refs.editClientBtn?.addEventListener('click', () => openEditClientDialog(userId));
-    refs.logSessionBtn?.addEventListener('click', () => openLogSessionDialog(userId));
+    refs.logSessionBtn?.addEventListener('click', () => {
+        if (!planCan('consultations')) {
+            openPlanUpgrade('consultations');
+            return;
+        }
+        openLogSessionDialog(userId);
+    });
     refs.addRelatedPersonBtn?.addEventListener('click', openCreateRelatedPersonDialog);
     refs.linkExistingPersonBtn?.addEventListener('click', openRelatedPickerDialog);
 
@@ -311,6 +342,25 @@ function bindPageEvents() {
         relatedPeoplePicker?.refreshLocale?.();
         renderEditTagSuggestions();
     });
+}
+
+function applyPlanUi() {
+    const solo = isSoloPlan();
+    if (refs.startCallBtn) {
+        refs.startCallBtn.classList.toggle('hidden', solo);
+        refs.startCallBtn.disabled = !planCan('calls');
+        refs.startCallBtn.setAttribute('aria-disabled', planCan('calls') ? 'false' : 'true');
+        if (!planCan('calls')) {
+            refs.startCallBtn.title = t('page.plan.upgrade.callsLocked');
+        }
+    }
+    refs.logSessionBtn?.classList.toggle('hidden', !planCan('consultations'));
+    refs.profileContactList?.closest('.profile-card')?.classList.toggle('hidden', solo || !planCan('clients'));
+    refs.profileStatsGrid?.closest('.profile-card')?.classList.toggle('hidden', solo || !planCan('meeting_stats'));
+    refs.profileInsightsCard?.classList.toggle('hidden', !planCan('calls'));
+    refs.relatedPeopleList?.closest('.profile-card')?.classList.toggle('hidden', solo || !planCan('clients'));
+    refs.consultationsList?.closest('.profile-card')?.classList.toggle('hidden', !planCan('consultations'));
+    refs.recordingsList?.closest('.profile-card')?.classList.toggle('hidden', !planCan('calls'));
 }
 
 /* ─── Load & render ─────────────────────────────────────────────────────── */
@@ -1103,9 +1153,13 @@ function openSynastry(relatedUserId) {
 }
 
 async function startCallSession() {
+    if (!planCan('calls')) {
+        openPlanUpgrade('calls');
+        return;
+    }
     refs.startCallBtn.disabled = true;
     const origHtml = refs.startCallBtn.innerHTML;
-    refs.startCallBtn.textContent = 'Starting…';
+    refs.startCallBtn.textContent = t('page.clients.detail.startingCall');
     try {
         const res = await apiFetch(`${API_BASE}/call-sessions`, {
             method: 'POST',
@@ -1114,13 +1168,13 @@ async function startCallSession() {
         });
         if (!res.ok) {
             const d = await res.json().catch(() => ({}));
-            throw new Error(d.detail || 'Failed to create call session');
+            throw new Error(d.message || d.detail || t('page.clients.detail.callStartFailed'));
         }
         const session = await res.json();
         const joinParam = session.join_url ? `&join_url=${encodeURIComponent(session.join_url)}` : '';
         window.location.href = `/consultation-call.html?session_id=${session.id}&user_id=${userId}${joinParam}`;
     } catch (err) {
-        showToast(err.message || 'Could not start call', 'error');
+        showToast(err.message || t('page.clients.detail.callStartFailed'), 'error');
         refs.startCallBtn.disabled = false;
         refs.startCallBtn.innerHTML = origHtml;
     }

@@ -110,6 +110,9 @@ class Astrologer(Base):
     last_name = Column(String(100))
     preferred_locale = Column(String(8))
     default_house_system = Column(String(1), nullable=False, default='P', server_default='P')
+    plan_code = Column(String(32), nullable=False, default='pro', server_default='pro')
+    plan_assigned_at = Column(DateTime, server_default=func.now(), nullable=False)
+    plan_expires_at = Column(DateTime)
     password_hash = Column(Text)
     auth_provider = Column(String(16), nullable=False, default='local')
     google_sub = Column(String(255), unique=True)
@@ -128,7 +131,9 @@ class Astrologer(Base):
 
     __table_args__ = (
         CheckConstraint("auth_provider IN ('local', 'google')", name='valid_auth_provider'),
+        CheckConstraint("plan_code IN ('trial', 'solo', 'standard', 'pro')", name='chk_astrologers_plan_code'),
         Index('idx_astrologers_google_sub', 'google_sub'),
+        Index('idx_astrologers_plan_code', 'plan_code'),
     )
 
 

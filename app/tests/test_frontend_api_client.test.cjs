@@ -180,6 +180,92 @@ test('AstroAPI.updateClientChart sends PUT request with locale headers', async (
     assert.equal(captured.init.body, JSON.stringify(payload));
 });
 
+test('AstroAPI exposes plan helper state from auth response', async () => {
+    global.fetch = async () => ({
+        ok: true,
+        async json() {
+            return {
+                id: 'a-1',
+                email: 'astro@example.com',
+                plan_code: 'trial',
+                entitlements: {
+                    calls_enabled: false,
+                    consultations_enabled: true,
+                },
+                usage: {
+                    saved_charts_count: 5,
+                    max_saved_charts: 5,
+                },
+            };
+        },
+    });
+
+    const windowOverride = {
+        location: { hostname: 'example.com' },
+        FrontendI18n: {
+            getLocale() {
+                return 'en';
+            },
+        },
+    };
+    const api = loadApiModule(windowOverride);
+    const me = await api.getCurrentAstrologer();
+
+    assert.equal(me.plan_code, 'trial');
+    assert.equal(api.canUseFeature('calls'), false);
+    assert.equal(api.canUseFeature('consultations'), true);
+    assert.deepEqual(api.getSavedChartLimitState(), {
+        current: 5,
+        max: 5,
+        reached: true,
+    });
+    assert.equal(windowOverride.AstroPlan.canUseFeature('calls'), false);
+});
+
+test('AstroAPI.updateCurrentPlan sends selected plan and refreshes cache', async () => {
+    let captured = null;
+    global.fetch = async (url, init) => {
+        captured = { url, init };
+        return {
+            ok: true,
+            async json() {
+                return {
+                    id: 'a-1',
+                    email: 'astro@example.com',
+                    plan_code: 'pro',
+                    entitlements: {
+                        calls_enabled: true,
+                    },
+                    usage: {
+                        saved_charts_count: 2,
+                        max_saved_charts: null,
+                    },
+                };
+            },
+        };
+    };
+
+    const api = loadApiModule({
+        location: { hostname: 'localhost' },
+        FrontendI18n: {
+            getLocale() {
+                return 'en';
+            },
+        },
+    });
+
+    const updated = await api.updateCurrentPlan('pro');
+
+    assert.equal(captured.url, 'http://localhost:8000/api/v1/auth/me/plan');
+    assert.equal(captured.init.method, 'PATCH');
+    assert.equal(captured.init.headers['Content-Type'], 'application/json');
+    assert.equal(captured.init.headers['Accept-Language'], 'en');
+    assert.equal(captured.init.body, JSON.stringify({ plan_code: 'pro' }));
+    assert.equal(updated.plan_code, 'pro');
+    assert.equal(api.canUseFeature('calls'), true);
+    assert.equal(api.getSavedChartLimitState().max, null);
+});
+
 test('AstroAPI preserves backend speed_percent when normalizing chart motion', () => {
     const storage = new Map();
     const sessionStorage = {

@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 from app.database.connection import get_db
 from app.database.models import User, Consultation
 from app.auth.dependencies import AuthContext, create_audit_event, require_auth
+from app.services.entitlements_service import FEATURE_CONSULTATIONS, assert_feature_enabled
 from loguru import logger
 
 router = APIRouter(prefix="/consultations")
@@ -55,6 +56,7 @@ def list_consultations(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
+    assert_feature_enabled(auth.astrologer, FEATURE_CONSULTATIONS)
     try:
         q = (
             db.query(Consultation)
@@ -96,6 +98,7 @@ def calendar_consultations(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
+    assert_feature_enabled(auth.astrologer, FEATURE_CONSULTATIONS)
     _TYPE_LABELS = {
         "natal": "Natal", "transit": "Transit", "solar_return": "Solar Return",
         "progression": "Progression", "direction": "Direction",
@@ -153,6 +156,7 @@ def create_consultation(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
+    assert_feature_enabled(auth.astrologer, FEATURE_CONSULTATIONS)
     try:
         # Verify the client belongs to this astrologer
         user = db.query(User).filter(
@@ -216,6 +220,7 @@ def update_consultation(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
+    assert_feature_enabled(auth.astrologer, FEATURE_CONSULTATIONS)
     try:
         c = _ensure_consultation_access(db, auth, consultation_id)
 
@@ -266,6 +271,7 @@ def delete_consultation(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
+    assert_feature_enabled(auth.astrologer, FEATURE_CONSULTATIONS)
     try:
         c = _ensure_consultation_access(db, auth, consultation_id)
         db.delete(c)

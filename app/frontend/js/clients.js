@@ -48,6 +48,44 @@ function withLocaleHeaders(headers = {}) {
     return headers;
 }
 
+function planCan(feature) {
+    if (!window.AstroPlan?.canUseFeature) return true;
+    return window.AstroPlan.canUseFeature(feature, currentAstrologer);
+}
+
+function isSoloPlan() {
+    return window.AstroPlan?.isSoloPlan?.(currentAstrologer) === true;
+}
+
+function isSavedChartLimitReached() {
+    return window.AstroPlan?.getSavedChartLimitState?.(currentAstrologer)?.reached === true;
+}
+
+function openPlanUpgrade(reason) {
+    if (window.AstroPlan?.showUpgradeModal) {
+        window.AstroPlan.showUpgradeModal({ reason, astrologer: currentAstrologer });
+        return;
+    }
+    showToast(t('page.plan.modal.copy.default'), 'error');
+}
+
+function getPlanStatusLabel() {
+    const planCode = window.AstroPlan?.getPlanCode?.(currentAstrologer) || currentAstrologer?.plan_code || 'pro';
+    const planName = t(`page.plan.names.${planCode}`);
+    const usage = window.AstroPlan?.getSavedChartLimitState?.(currentAstrologer);
+    if (!usage || usage.max === null || usage.max === undefined) {
+        return t('page.plan.statusWithUnlimitedCharts', {
+            plan: planName,
+            current: usage?.current || 0,
+        });
+    }
+    return t('page.plan.statusWithLimitedCharts', {
+        plan: planName,
+        current: usage.current,
+        max: usage.max,
+    });
+}
+
 function getNameCollator() {
     if (window.LocaleFormatters?.getCollator) {
         return window.LocaleFormatters.getCollator({
@@ -90,6 +128,7 @@ function cacheElements() {
     refs.toast = document.getElementById('toast');
     refs.logoutBtn = document.getElementById('logoutBtn');
     refs.welcome = document.getElementById('welcomeLabel');
+    refs.planStatus = document.getElementById('planStatusLabel');
     refs.statTotal = document.getElementById('statTotal');
     refs.statUpcoming = document.getElementById('statUpcoming');
     refs.statUnpaid = document.getElementById('statUnpaid');
@@ -150,6 +189,13 @@ function bindEvents() {
         renderUsers();
     });
 
+    document.addEventListener('click', (event) => {
+        const newChartLink = event.target.closest('a[data-plan-new-chart-link="true"]');
+        if (!newChartLink || !isSavedChartLimitReached()) return;
+        event.preventDefault();
+        openPlanUpgrade('limit');
+    });
+
     refs.tagFilterSelect?.addEventListener('change', (event) => {
         state.activeTag = normalizeTag(event.target.value);
         renderUsers();
@@ -191,8 +237,22 @@ function bindEvents() {
             }
             if (action === 'open-chart') { await openChart(userId); return; }
             if (action === 'open-forecast') { await openForecastForUser(userId); return; }
-            if (action === 'log-session') { openLogSessionDialog(userId); return; }
-            if (action === 'start-call') { await startCallSession(userId); return; }
+            if (action === 'log-session') {
+                if (!planCan('consultations')) {
+                    openPlanUpgrade('consultations');
+                    return;
+                }
+                openLogSessionDialog(userId);
+                return;
+            }
+            if (action === 'start-call') {
+                if (!planCan('calls')) {
+                    openPlanUpgrade('calls');
+                    return;
+                }
+                await startCallSession(userId);
+                return;
+            }
             if (action === 'delete-consultation') {
                 await deleteConsultation(actionBtn.dataset.consultationId, userId);
                 return;
@@ -254,6 +314,7 @@ function bindEvents() {
 async function bootstrapPage() {
     currentAstrologer = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
     if (!currentAstrologer) return;
+    applyPlanUi();
 
     if (window.AstroAPI?.getAccountPreferences) {
         try {
@@ -268,14 +329,42 @@ async function bootstrapPage() {
     applyHeroPlacement();
 
     await loadClients();
-    loadAlerts();
-    initMiniCal();
+    if (planCan('consultations')) {
+        initMiniCal();
+    }
+    if (planCan('meeting_stats')) {
+        loadAlerts();
+    }
+}
+
+function applyPlanUi() {
+    const solo = isSoloPlan();
+    document.querySelectorAll('a[href="/calendar"], #miniCal').forEach((el) => {
+        el.classList.toggle('hidden', solo || !planCan('consultations'));
+    });
+    refs.alertsPanel?.classList.toggle('hidden', solo || !planCan('meeting_stats'));
+    refs.tagFilterSelect?.closest('.toolbar-field')?.classList.toggle('hidden', solo || !planCan('clients'));
+    refs.searchInput?.closest('.toolbar-field')?.classList.toggle('toolbar-field-search--wide', solo);
+
+    const limitReached = isSavedChartLimitReached();
+    document.querySelectorAll('a[href="/new"], a[href="/index.html"]').forEach((link) => {
+        if (!link.dataset.planOriginalHref) {
+            link.dataset.planOriginalHref = link.getAttribute('href') || '/new';
+        }
+        link.dataset.planNewChartLink = 'true';
+        link.setAttribute('href', limitReached ? '#' : link.dataset.planOriginalHref);
+        link.classList.toggle('is-disabled', limitReached);
+        link.setAttribute('aria-disabled', limitReached ? 'true' : 'false');
+    });
 }
 
 function renderProfileSummary() {
     if (!refs.welcome) return;
     const email = currentAstrologer?.email || t('common.notAvailable');
     refs.welcome.textContent = t('page.clients.profile.signedInAs', { email });
+    if (refs.planStatus) {
+        refs.planStatus.textContent = getPlanStatusLabel();
+    }
 }
 
 function applyHeroPlacement() {
@@ -425,7 +514,7 @@ function buildUserRow(user) {
     const unpaidCount = Number(user.unpaid_count || 0);
     const summaryChips = [];
 
-    if (upcomingCount > 0) {
+    if (planCan('meeting_stats') && upcomingCount > 0) {
         summaryChips.push(`
             <span class="client-summary-chip client-summary-chip-upcoming">
                 ${escapeHtml(t('page.clients.statsUpcoming'))}: ${escapeHtml(String(upcomingCount))}
@@ -433,7 +522,7 @@ function buildUserRow(user) {
         `);
     }
 
-    if (unpaidCount > 0) {
+    if (planCan('meeting_stats') && unpaidCount > 0) {
         summaryChips.push(`
             <span class="client-summary-chip client-summary-chip-unpaid">
                 ${escapeHtml(t('page.clients.statsUnpaid'))}: ${escapeHtml(String(unpaidCount))}
@@ -1170,12 +1259,12 @@ async function toggleDetailPanel(userId) {
     let callSessions  = state.callSessionsCache[userId];
 
     const fetches = [];
-    if (!consultations) fetches.push(
+    if (planCan('consultations') && !consultations) fetches.push(
         apiFetch(`${API_BASE}/consultations?user_id=${userId}`)
             .then(r => r.ok ? r.json() : []).catch(() => [])
             .then(d => { consultations = d; state.consultationsCache[userId] = d; })
     );
-    if (!callSessions) fetches.push(
+    if (planCan('calls') && !callSessions) fetches.push(
         apiFetch(`${API_BASE}/call-sessions?user_id=${userId}&include_non_terminal=true`)
             .then(r => r.ok ? r.json() : []).catch(() => [])
             .then(d => { callSessions = d; state.callSessionsCache[userId] = d; })
@@ -1214,21 +1303,24 @@ async function refreshClientDetailPanel(userId) {
 
 function buildDetailPanelHTML(user, consultations, callSessions = []) {
     const userId = escapeHtml(String(user.user_id));
-    const callSessionsHTML = buildCallSessionsHTML(callSessions);
+    const consultationsEnabled = planCan('consultations');
+    const callsEnabled = planCan('calls');
+    const clientsEnabled = planCan('clients');
+    const callSessionsHTML = callsEnabled ? buildCallSessionsHTML(callSessions) : '';
 
     // Contact summary — email only in quick view
-    const contactHTML = user.email
+    const contactHTML = clientsEnabled && user.email
         ? `<span class="detail-contact-item">${escapeHtml(user.email)}</span>`
         : `<span class="detail-contacts-empty">${escapeHtml(t('page.clients.crm.noContact'))}</span>`;
 
     // Tags
-    const tagsHTML = Array.isArray(user.tags) && user.tags.length > 0
+    const tagsHTML = clientsEnabled && Array.isArray(user.tags) && user.tags.length > 0
         ? `<div class="detail-tags">${user.tags.map((tag) => `<span class="detail-tag">${escapeHtml(tag)}</span>`).join('')}</div>`
         : '';
 
     // Last consultation summary (one line)
     let lastSessionHTML = '';
-    if (consultations.length > 0) {
+    if (consultationsEnabled && consultations.length > 0) {
         const last = consultations[0];
         const typeLabel = t(`page.clients.consultation.types.${last.consultation_type}`) || last.consultation_type;
         const statusLabel = t(`page.clients.consultation.statuses.${last.status}`) || last.status;
@@ -1243,7 +1335,7 @@ function buildDetailPanelHTML(user, consultations, callSessions = []) {
     }
 
     // Next planned consultation
-    const nextPlanned = consultations.find((c) => c.status === 'planned');
+    const nextPlanned = consultationsEnabled ? consultations.find((c) => c.status === 'planned') : null;
     let nextSessionHTML = '';
     if (nextPlanned) {
         const typeLabel = t(`page.clients.consultation.types.${nextPlanned.consultation_type}`) || nextPlanned.consultation_type;
@@ -1267,9 +1359,9 @@ function buildDetailPanelHTML(user, consultations, callSessions = []) {
                 <a class="btn-new btn-sm" href="/client/${userId}">${escapeHtml(t('page.clientProfile.viewProfile'))}</a>
                 <button class="btn-new btn-sm btn-secondary" type="button" data-action="open-chart" data-user-id="${userId}">${escapeHtml(t('page.clients.detail.openChart'))}</button>
                 <button class="btn-new btn-sm btn-secondary" type="button" data-action="open-forecast" data-user-id="${userId}">${escapeHtml(t('page.chart.nav.forecast'))}</button>
-                <button class="btn-new btn-sm btn-secondary" type="button" data-action="log-session" data-user-id="${userId}">${escapeHtml(t('page.clients.detail.logSession'))}</button>
+                ${consultationsEnabled ? `<button class="btn-new btn-sm btn-secondary" type="button" data-action="log-session" data-user-id="${userId}">${escapeHtml(t('page.clients.detail.logSession'))}</button>` : ''}
                 <button class="btn-new btn-sm btn-secondary" type="button" data-action="edit" data-user-id="${userId}">${escapeHtml(t('page.clients.actions.edit'))}</button>
-                <button class="btn-new btn-sm btn-call" type="button" data-action="start-call" data-user-id="${userId}">
+                <button class="btn-new btn-sm btn-call" type="button" data-action="start-call" data-user-id="${userId}" ${callsEnabled ? '' : 'disabled aria-disabled="true"'} title="${callsEnabled ? '' : escapeHtml(t('page.plan.upgrade.callsLocked'))}">
                     <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><rect x="1" y="3" width="8" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M9 5.5l3-2v6l-3-2V5.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
                     ${escapeHtml(t('page.clientProfile.startCall'))}
                 </button>
@@ -1524,6 +1616,10 @@ async function retryProcessing(sessionId, btn) {
 /* ─── Start Call ──────────────────────────────────────────────────────── */
 
 async function startCallSession(userId) {
+    if (!planCan('calls')) {
+        openPlanUpgrade('calls');
+        return;
+    }
     const btn = refs.tbody.querySelector(`button[data-action="start-call"][data-user-id="${userId}"]`);
     if (btn) {
         btn.disabled = true;
@@ -1537,13 +1633,13 @@ async function startCallSession(userId) {
         });
         if (!res.ok) {
             const data = await res.json().catch(() => ({}));
-            throw new Error(data.detail || 'Failed to create call session');
+            throw new Error(data.message || data.detail || t('page.clients.detail.callStartFailed'));
         }
         const session = await res.json();
         const joinParam = session.join_url ? `&join_url=${encodeURIComponent(session.join_url)}` : '';
         window.location.href = `/consultation-call.html?session_id=${session.id}&user_id=${userId}${joinParam}`;
     } catch (err) {
-        showToast(err.message || 'Could not start call', 'error');
+        showToast(err.message || t('page.clients.detail.callStartFailed'), 'error');
         if (btn) {
             btn.disabled = false;
             btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><rect x="1" y="3" width="8" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M9 5.5l3-2v6l-3-2V5.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg> Start call';
