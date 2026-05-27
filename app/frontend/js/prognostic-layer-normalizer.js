@@ -1,12 +1,13 @@
 (function() {
     'use strict';
 
-    const METHOD_ORDER = ['transit', 'progression', 'direction', 'solar_return'];
+    const METHOD_ORDER = ['transit', 'progression', 'direction', 'solar_return', 'synastry_partner'];
     const METHOD_META = {
         transit: { label: 'Транзиты', color: '#1e3a5f' },
         progression: { label: 'Прогрессии', color: '#7c3aed' },
         direction: { label: 'Дирекции', color: '#0f766e' },
         solar_return: { label: 'Соляр', color: '#b45309' },
+        synastry_partner: { label: 'Партнёр', color: '#1e3a5f' },
     };
 
     function cloneArray(value) {
@@ -18,6 +19,7 @@
         if (method === 'progressions') return 'progression';
         if (method === 'directions') return 'direction';
         if (method === 'solar' || method === 'solar_return') return 'solar_return';
+        if (method === 'synastry' || method === 'partner' || method === 'synastry_partner') return 'synastry_partner';
         return METHOD_ORDER.includes(method) ? method : 'transit';
     }
 
@@ -113,6 +115,31 @@
         });
     }
 
+    function normalizeSynastryPartner(data, ringIndex = 1) {
+        const partnerChart = data?.partner_chart || data?.partnerChart || data?.chart || data || {};
+        const bodies = [
+            ...cloneArray(partnerChart?.planets),
+            ...Object.values(partnerChart?.special_points || {}).map((item) => ({ ...(item || {}) })),
+            ...Object.values(partnerChart?.angles || {}).map((item) => ({ ...(item || {}) })),
+        ].filter((body) => body?.name && body?.longitude != null);
+        const aspects = cloneArray(data?.inter_aspects || data?.aspects).map((aspect) => ({
+            ...aspect,
+            planet_1: aspect.planet_2 || aspect.right_planet,
+            planet_2: aspect.planet_1 || aspect.left_planet,
+            left_planet: aspect.planet_2 || aspect.right_planet,
+            right_planet: aspect.planet_1 || aspect.left_planet,
+            method: 'synastry_partner',
+        }));
+        return buildLayer({
+            method: 'synastry_partner',
+            bodies,
+            houses: cloneArray(partnerChart?.houses),
+            aspects,
+            raw: data,
+            ringIndex,
+        });
+    }
+
     function buildLayer({ method, bodies, houses, aspects, raw, ringIndex }) {
         const normalizedMethod = normalizeMethod(method);
         return {
@@ -134,6 +161,7 @@
         if (normalizedMethod === 'progression') return normalizeProgression(data, ringIndex);
         if (normalizedMethod === 'direction') return normalizeDirection(data, ringIndex);
         if (normalizedMethod === 'solar_return') return normalizeSolarReturn(data, ringIndex);
+        if (normalizedMethod === 'synastry_partner') return normalizeSynastryPartner(data, ringIndex);
         return normalizeTransit(data, ringIndex);
     }
 

@@ -31,19 +31,15 @@ const PLANET_SCALE_STORAGE_KEY = 'natalPlanetScale';
 const POINT_SCALE_STORAGE_KEY = 'natalPointScale';
 const HOUSE_NUMBER_STYLE_STORAGE_KEY = 'natalHouseNumberStyle';
 const HOUSE_LABELS_OUTSIDE_STORAGE_KEY = 'natalHouseLabelsOutside';
-const SYNASTRY_HOUSE_COLORS = Object.freeze({
-    primary: '#111111',
-    partner: '#1e3a5f',
-});
+const SYNASTRY_VIEW_STATE_KEY_PREFIX = 'synastryViewState:';
 
 const synastryRefs = {};
 const synastryState = {
     payload: null,
-    wheelMode: 'compare',
+    displayMode: 'both',
     primaryRenderer: null,
     partnerRenderer: null,
-    baseWheel: null,
-    overlayWheel: null,
+    wheel: null,
     accountVisualPreferences: null,
     resolvedPreferences: null,
     applySettingsTimer: null,
@@ -123,6 +119,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!astrologer) return;
 
     configureSynastryNavigation();
+    hydrateSynastryViewState();
     bindSynastryEvents();
     await loadSynastry();
 });
@@ -144,10 +141,11 @@ function cacheSynastryElements() {
     synastryRefs.primaryPanelMeta = document.getElementById('primaryPanelMeta');
     synastryRefs.partnerPanelTitle = document.getElementById('partnerPanelTitle');
     synastryRefs.partnerPanelMeta = document.getElementById('partnerPanelMeta');
-    synastryRefs.modeButtons = [...document.querySelectorAll('.synastry-mode-btn')];
+    synastryRefs.displayModeInputs = [...document.querySelectorAll('input[name="synastryDisplayMode"]')];
     synastryRefs.wheelCaption = document.getElementById('synastryWheelCaption');
     synastryRefs.wheelWrapper = document.getElementById('synastryWheelWrapper');
-    synastryRefs.overlay = document.getElementById('synastryOverlay');
+    synastryRefs.wheelSvg = document.getElementById('synastryWheel');
+    synastryRefs.tabsOverflow = [...document.querySelectorAll('[data-tabs-overflow]')];
     synastryRefs.primaryInterAspects = document.getElementById('primaryInterAspectsTable');
     synastryRefs.partnerInterAspects = document.getElementById('partnerInterAspectsTable');
     synastryRefs.primaryOverlayList = document.getElementById('primaryOverlayList');
@@ -172,6 +170,35 @@ function cacheSynastryElements() {
 
 function getSynastryNavigationState() {
     return window.AstroAPI?.getNavigationState?.() || {};
+}
+
+function getSynastryViewStateKey() {
+    return `${SYNASTRY_VIEW_STATE_KEY_PREFIX}${primaryUserId || 'primary'}:${partnerUserId || 'partner'}`;
+}
+
+function normalizeSynastryDisplayMode(value) {
+    return ['both', 'primary', 'partner'].includes(value) ? value : 'both';
+}
+
+function hydrateSynastryViewState() {
+    try {
+        const raw = localStorage.getItem(getSynastryViewStateKey());
+        const parsed = raw ? JSON.parse(raw) : {};
+        synastryState.displayMode = normalizeSynastryDisplayMode(parsed.displayMode || synastryState.displayMode);
+    } catch {
+        synastryState.displayMode = 'both';
+    }
+    syncSynastryDisplayModeControls();
+}
+
+function persistSynastryViewState() {
+    try {
+        localStorage.setItem(getSynastryViewStateKey(), JSON.stringify({
+            displayMode: synastryState.displayMode,
+        }));
+    } catch {
+        // View state is a convenience only.
+    }
 }
 
 function configureSynastryNavigation() {
@@ -207,9 +234,11 @@ async function preparePrimaryChartForNavigation() {
 }
 
 function bindSynastryEvents() {
-    synastryRefs.modeButtons.forEach((button) => {
-        button.addEventListener('click', () => {
-            synastryState.wheelMode = button.dataset.mode || 'compare';
+    synastryRefs.displayModeInputs.forEach((input) => {
+        input.addEventListener('change', () => {
+            if (!input.checked) return;
+            synastryState.displayMode = normalizeSynastryDisplayMode(input.value);
+            persistSynastryViewState();
             renderWheelMode();
         });
     });
@@ -267,10 +296,18 @@ function bindSynastryEvents() {
             const tab = event.target.closest('.panel-tab[data-panel-target]');
             if (!tab) return;
 
-            panel.querySelectorAll('.panel-tab').forEach((node) => node.classList.toggle('active', node === tab));
-            panel.querySelectorAll('.panel-tab-content').forEach((content) => {
-                content.classList.toggle('active', content.id === tab.dataset.panelTarget);
-            });
+            activateSynastryPanelTab(panel, tab.dataset.panelTarget);
+        });
+    });
+
+    synastryRefs.tabsOverflow.forEach((overflow) => {
+        const toggle = overflow.querySelector('[data-tabs-overflow-toggle]');
+        toggle?.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const shouldOpen = !overflow.classList.contains('is-open');
+            closeSynastryTabsOverflowMenus();
+            overflow.classList.toggle('is-open', shouldOpen);
+            syncSynastryTabsOverflowToggleState();
         });
     });
 
@@ -281,6 +318,40 @@ function bindSynastryEvents() {
         if (synastryState.payload) {
             renderSynastry();
         }
+    });
+}
+
+function activateSynastryPanelTab(panel, targetId) {
+    if (!panel || !targetId) return;
+    panel.querySelectorAll('.panel-tab').forEach((node) => {
+        node.classList.toggle('active', node.dataset.panelTarget === targetId);
+    });
+    panel.querySelectorAll('.panel-tab-content').forEach((content) => {
+        content.classList.toggle('active', content.id === targetId);
+    });
+    panel.querySelectorAll('[data-tabs-overflow]').forEach((overflow) => {
+        const hasActiveOverflowTab = !!overflow.querySelector(`.panel-tab[data-panel-target="${targetId}"]`);
+        overflow.classList.toggle('is-active', hasActiveOverflowTab);
+        overflow.classList.remove('is-open');
+    });
+    syncSynastryTabsOverflowToggleState();
+}
+
+function closeSynastryTabsOverflowMenus() {
+    synastryRefs.tabsOverflow?.forEach((overflow) => overflow.classList.remove('is-open'));
+    syncSynastryTabsOverflowToggleState();
+}
+
+function syncSynastryTabsOverflowToggleState() {
+    synastryRefs.tabsOverflow?.forEach((overflow) => {
+        const toggle = overflow.querySelector('[data-tabs-overflow-toggle]');
+        toggle?.setAttribute('aria-expanded', overflow.classList.contains('is-open') ? 'true' : 'false');
+    });
+}
+
+function syncSynastryDisplayModeControls() {
+    synastryRefs.displayModeInputs?.forEach((input) => {
+        input.checked = input.value === synastryState.displayMode;
     });
 }
 
@@ -556,6 +627,10 @@ function renderSynastrySide(side, chartData) {
     });
     renderer.render(chartData);
     renderer.setAspectTypeFilter(synastryState.settings.aspectScope);
+    window.DispositorChains?.render?.(`${side}RulersContainer`, chartData, {
+        selectId: `${side}RulersModeSelect`,
+        layout: 'tabs',
+    });
 }
 
 function ensureSideRenderer(side) {
@@ -584,86 +659,86 @@ function ensureSideRenderer(side) {
     return synastryState[key];
 }
 
-function ensureWheels() {
-    if (!synastryState.baseWheel && window.ChartWheel) {
-        synastryState.baseWheel = new window.ChartWheel(document.getElementById('synastryBaseWheel'));
+function ensureSynastryWheel() {
+    if (!synastryState.wheel && window.PrognosticRingsWheel && synastryRefs.wheelSvg) {
+        synastryState.wheel = new window.PrognosticRingsWheel(synastryRefs.wheelSvg);
     }
-    if (!synastryState.overlayWheel && window.ChartWheel) {
-        synastryState.overlayWheel = new window.ChartWheel(document.getElementById('synastryOverlayWheel'));
-    }
-
-    if (synastryState.accountVisualPreferences) {
-        synastryState.baseWheel?.setVisualPreferences?.(synastryState.accountVisualPreferences, { redraw: false });
-        synastryState.overlayWheel?.setVisualPreferences?.(synastryState.accountVisualPreferences, { redraw: false });
-    }
-}
-
-function applySynastryHouseThemes(mode) {
-    const primaryTheme = {
-        outsideColor: SYNASTRY_HOUSE_COLORS.primary,
-        outsideLineColor: SYNASTRY_HOUSE_COLORS.primary,
-        outsideRadialOffset: 8,
-        outsideTangentOffset: -14,
-    };
-    const partnerTheme = {
-        outsideColor: SYNASTRY_HOUSE_COLORS.partner,
-        outsideLineColor: SYNASTRY_HOUSE_COLORS.partner,
-        outsideRadialOffset: 8,
-        outsideTangentOffset: 14,
-    };
-    const baseTheme = mode === 'partner' ? partnerTheme : primaryTheme;
-
-    synastryState.baseWheel?.setHouseVisualOptions?.(baseTheme, { redraw: false });
-    synastryState.overlayWheel?.setHouseVisualOptions?.(partnerTheme, { redraw: false });
+    return synastryState.wheel;
 }
 
 function renderWheelMode(primaryChartOverride, partnerChartOverride) {
     if (!synastryState.payload) return;
-    ensureWheels();
-    if (!synastryState.baseWheel) return;
+    const wheel = ensureSynastryWheel();
+    if (!wheel) return;
 
     const primaryChart = primaryChartOverride || getFilteredSynastryChartData(synastryState.payload.primary_chart);
     const partnerChart = partnerChartOverride || getFilteredSynastryChartData(synastryState.payload.partner_chart);
-    const mode = synastryState.wheelMode;
-
-    synastryRefs.modeButtons.forEach((button) => {
-        button.classList.toggle('active', button.dataset.mode === mode);
+    const viewModel = buildSynastryWheelViewModel(primaryChart, partnerChart);
+    const matrixRows = getCurrentSynastryMatrixRows();
+    syncSynastryDisplayModeControls();
+    wheel.setOptions({
+        orientation: synastryState.settings.orientation,
+        natalMatrixRows: matrixRows,
+        prognosticMatrixRows: matrixRows,
+        matrixRows,
+        planetScale: synastryState.settings.planetScale,
+        pointScale: synastryState.settings.pointScale,
+        aspectScope: synastryState.settings.aspectScope,
+        enabledAspectTypes: synastryState.settings.enabledAspectTypes,
+        houseNumberStyle: synastryState.settings.houseNumberStyle,
+        houseLabelsOutside: synastryState.settings.houseLabelsOutside,
+        showAspectText: synastryState.settings.showAspectText === true,
+        minimumRingCount: 2,
+        alignSingleRingOuter: synastryState.displayMode !== 'both',
+        visualPreferences: synastryState.accountVisualPreferences || null,
     });
+    wheel.render(viewModel);
+    resetSynastryZoom();
 
-    [synastryState.baseWheel, synastryState.overlayWheel].forEach((wheel) => {
-        wheel?.setOrientationMode(synastryState.settings.orientation, { redraw: false });
-        wheel?.setPointScales({
-            planets: synastryState.settings.planetScale,
-            points: synastryState.settings.pointScale,
-        }, { redraw: false });
-        wheel?.setHouseLabelOptions({
-            style: synastryState.settings.houseNumberStyle,
-            outside: synastryState.settings.houseLabelsOutside,
-        }, { redraw: false });
-        wheel?.setPlanetAnnotationOptions?.({
-            showAspectText: synastryState.settings.showAspectText,
-        }, { redraw: false });
-        wheel?.applyMatrixRows?.(getCurrentSynastryMatrixRows());
-    });
-    applySynastryHouseThemes(mode);
+    const captionKey = {
+        primary: 'page.synastry.compare.clientOnly',
+        partner: 'page.synastry.compare.partnerOnly',
+        both: 'page.synastry.compare.overlayHint',
+    }[synastryState.displayMode] || 'page.synastry.compare.overlayHint';
+    synastryRefs.wheelCaption.textContent = synT(captionKey);
+}
 
+function buildSynastryWheelViewModel(primaryChart, partnerChart) {
+    const mode = normalizeSynastryDisplayMode(synastryState.displayMode);
+    if (mode === 'primary') {
+        return window.PrognosticLayerNormalizer.buildViewModel(primaryChart, {}, { activeMethods: [] });
+    }
     if (mode === 'partner') {
-        synastryState.baseWheel.draw(partnerChart);
-        synastryRefs.overlay.classList.remove('visible');
-        synastryRefs.wheelCaption.textContent = synT('page.synastry.compare.partnerOnly');
-        return;
+        const partnerLayer = window.PrognosticLayerNormalizer.normalizeLayer('synastry_partner', {
+            partner_chart: {
+                ...partnerChart,
+                aspects: normalizePartnerInternalAspects(partnerChart?.aspects || []),
+            },
+            aspects: normalizePartnerInternalAspects(partnerChart?.aspects || []),
+        }, 1);
+        partnerLayer.aspects = normalizePartnerInternalAspects(partnerChart?.aspects || []);
+        return {
+            natalLayer: null,
+            activePrognosticLayers: [partnerLayer],
+        };
     }
+    return window.PrognosticLayerNormalizer.buildViewModel(primaryChart, {
+        synastry_partner: {
+            partner_chart: partnerChart,
+            inter_aspects: getFilteredInterAspects(),
+        },
+    }, { activeMethods: ['synastry_partner'] });
+}
 
-    synastryState.baseWheel.draw(primaryChart);
-    if (mode === 'compare' && synastryState.overlayWheel) {
-        synastryState.overlayWheel.draw(partnerChart);
-        synastryRefs.overlay.classList.add('visible');
-        synastryRefs.wheelCaption.textContent = synT('page.synastry.compare.overlayHint');
-        return;
-    }
-
-    synastryRefs.overlay.classList.remove('visible');
-    synastryRefs.wheelCaption.textContent = synT('page.synastry.compare.clientOnly');
+function normalizePartnerInternalAspects(aspects = []) {
+    return (aspects || []).map((aspect) => ({
+        ...aspect,
+        planet_1: aspect.planet_1 || aspect.left_planet,
+        planet_2: aspect.planet_2 || aspect.right_planet,
+        left_planet: aspect.left_planet || aspect.planet_1,
+        right_planet: aspect.right_planet || aspect.planet_2,
+        method: 'synastry_partner',
+    }));
 }
 
 function syncSynastrySettingsControls() {
@@ -869,8 +944,11 @@ function renderSynastryTablesAndApplyMatrixFast() {
         synastryRefs.partnerOverlayList,
         getFilteredHouseOverlayItems(synastryState.payload?.house_overlays?.partner_in_primary_houses || []),
     );
-    synastryState.baseWheel?.applyMatrixRows?.(getCurrentSynastryMatrixRows());
-    synastryState.overlayWheel?.applyMatrixRows?.(getCurrentSynastryMatrixRows());
+    const matrixRows = getCurrentSynastryMatrixRows();
+    synastryState.wheel?.applyMatrixRows?.(matrixRows, {
+        natalMatrixRows: matrixRows,
+        prognosticMatrixRows: matrixRows,
+    });
 }
 
 function scheduleApplySynastrySettings() {

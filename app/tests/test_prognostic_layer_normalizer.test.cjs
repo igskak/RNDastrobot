@@ -79,3 +79,43 @@ test('solar return layer normalizes solar bodies, houses, and natal aspects', ()
     assert.equal(solarLayer.aspects[0].planet_2, 'Sun');
     assert.equal(solarLayer.aspects[0].method, 'solar_return');
 });
+
+test('synastry partner layer normalizes partner bodies, houses, and inter-aspects toward natal', () => {
+    const natalData = {
+        planets: [{ name: 'Sun', longitude: 95 }],
+        aspects: [],
+        houses: [{ number: 1, longitude: 10, sign: 'Aries', degree_in_sign: 10 }],
+    };
+    const partnerHouses = [{ number: 1, longitude: 240, sign: 'Sagittarius', degree_in_sign: 0 }];
+    const partnerChart = {
+        planets: [{ name: 'Moon', longitude: 121, house: 7 }],
+        houses: partnerHouses,
+    };
+    const viewModel = normalizer.buildViewModel(
+        natalData,
+        {
+            synastry_partner: {
+                partner_chart: partnerChart,
+                inter_aspects: [
+                    {
+                        planet_1: 'Sun',
+                        planet_2: 'Moon',
+                        aspect_type: 'Square',
+                        orb: 1.2,
+                        is_major: true,
+                    },
+                ],
+            },
+        },
+        { activeMethods: ['synastry_partner'] },
+    );
+    const partnerLayer = viewModel.activePrognosticLayers[0];
+
+    assert.equal(partnerLayer.method, 'synastry_partner');
+    assert.equal(partnerLayer.label, 'Партнёр');
+    assert.deepEqual(partnerLayer.houses, partnerHouses);
+    assert.equal(partnerLayer.bodies[0].name, 'Moon');
+    assert.equal(partnerLayer.aspects[0].planet_1, 'Moon');
+    assert.equal(partnerLayer.aspects[0].planet_2, 'Sun');
+    assert.equal(partnerLayer.aspects[0].method, 'synastry_partner');
+});

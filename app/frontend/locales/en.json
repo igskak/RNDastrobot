@@ -137,6 +137,7 @@
     "back": "Back",
     "calculate": "Calculate",
     "cancel": "Cancel",
+    "chart": "Chart",
     "close": "Close",
     "date": "Date",
     "day": "Day",
@@ -1054,7 +1055,8 @@
       "phase": "Phase",
       "tabs": {
         "interAspects": "Inter-aspects",
-        "houseOverlays": "Overlays"
+        "houseOverlays": "Overlays",
+        "more": "More tabs"
       },
       "modes": {
         "client": "Primary",
@@ -1075,13 +1077,20 @@
         "partnerInClient": "Partner in primary profile houses"
       },
       "people": {
+        "natal": "Natal",
         "client": "Primary profile",
+        "partner": "Partner"
+      },
+      "displayMode": {
+        "label": "Synastry display",
+        "both": "Natal + partner",
+        "natal": "Natal",
         "partner": "Partner"
       },
       "compare": {
         "clientOnly": "Showing the primary natal chart.",
         "partnerOnly": "Showing the partner natal chart.",
-        "overlayHint": "The partner chart is overlaid on top of the primary chart for quick visual comparison."
+        "overlayHint": "The natal chart and partner chart are shown in one wheel."
       },
       "errors": {
         "missingParams": "Two profiles are required for synastry.",

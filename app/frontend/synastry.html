@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.synastry.title"></title>
-    <link rel="stylesheet" href="/bundles/synastry.bundle.css?v=9e4e5fb6d8be">
-    <script>window.__APP_BUILD_ID__ = '9e4e5fb6d8be';</script>
+    <link rel="stylesheet" href="/bundles/synastry.bundle.css?v=0043fd94e1a8">
+    <script>window.__APP_BUILD_ID__ = '0043fd94e1a8';</script>
 </head>
-<body class="synastry-page">
+<body class="chart-page forecast-new-page synastry-page">
     <div class="page-loader synastry-loader" id="pageLoader">
         <div class="synastry-loader-card">
             <div class="pl-spinner"></div>
@@ -36,23 +36,32 @@
         <a href="/" class="btn-logout" data-i18n="page.clientProfile.backToClients"></a>
     </div>
 
-    <main class="synastry-layout hidden" id="synastryLayout">
-        <aside class="side-panel left-panel synastry-side-panel" id="primaryPanel">
-            <div class="synastry-side-head">
+    <main class="forecast-new-layout synastry-layout hidden" id="synastryLayout">
+        <aside class="side-panel left-panel forecast-new-side-panel synastry-side-panel synastry-primary-panel" id="primaryPanel">
+            <div class="forecast-new-side-head synastry-side-head">
+                <button type="button" class="forecast-new-moment-toggle" aria-expanded="false">
+                    <span class="forecast-new-moment-toggle-title" data-i18n="page.synastry.people.natal"></span>
+                    <span class="forecast-new-moment-toggle-meta" id="primaryPanelMeta"></span>
+                </button>
                 <h3 id="primaryPanelTitle"></h3>
-                <p id="primaryPanelMeta"></p>
             </div>
-            <div class="panel-tabs synastry-tabs">
+            <div class="panel-tabs forecast-new-tabs synastry-tabs">
                 <button class="panel-tab active" data-panel-target="primaryPlanetsView" data-i18n="page.chart.tabs.planets"></button>
                 <button class="panel-tab" data-panel-target="primaryHousesView" data-i18n="page.chart.tabs.houses"></button>
                 <button class="panel-tab" data-panel-target="primaryAspectsView" data-i18n="page.chart.tabs.aspects"></button>
-                <button class="panel-tab" data-panel-target="primaryGridView" data-i18n="page.chart.tabs.grid"></button>
-                <button class="panel-tab" data-panel-target="primaryConfigsView" data-i18n="page.chart.tabs.configurations"></button>
-                <button class="panel-tab" data-panel-target="primaryBalancesView" data-i18n="page.chart.tabs.balances"></button>
-                <button class="panel-tab" data-panel-target="primaryInterAspectsView" data-i18n="page.synastry.tabs.interAspects"></button>
-                <button class="panel-tab" data-panel-target="primaryOverlayView" data-i18n="page.synastry.tabs.houseOverlays"></button>
+                <div class="forecast-new-tabs-overflow" data-tabs-overflow>
+                    <button type="button" class="panel-tab forecast-new-tabs-overflow-toggle" data-tabs-overflow-toggle data-i18n-aria-label="page.synastry.tabs.more" aria-haspopup="true" aria-expanded="false">▸</button>
+                    <div class="forecast-new-tabs-overflow-menu" data-tabs-overflow-menu>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="primaryGridView" data-i18n="page.chart.tabs.grid"></button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="primaryConfigsView" data-i18n="page.chart.tabs.configurations"></button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="primaryBalancesView" data-i18n="page.chart.tabs.balances"></button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="primaryRulersView" data-i18n="page.chart.tabs.rulers"></button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="primaryInterAspectsView" data-i18n="page.synastry.tabs.interAspects"></button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="primaryOverlayView" data-i18n="page.synastry.tabs.houseOverlays"></button>
+                    </div>
+                </div>
             </div>
-            <div class="panel-content synastry-panel-content">
+            <div class="panel-content forecast-new-panel-content synastry-panel-content">
                 <div id="primaryPlanetsView" class="panel-tab-content active">
                     <table class="data-table compact">
                         <thead>
@@ -99,6 +108,9 @@
                 <div id="primaryBalancesView" class="panel-tab-content synastry-balances-view">
                     <div id="primaryBalancesContainer"></div>
                 </div>
+                <div id="primaryRulersView" class="panel-tab-content">
+                    <div id="primaryRulersContainer"></div>
+                </div>
                 <div id="primaryInterAspectsView" class="panel-tab-content synastry-panel-section">
                     <h4 class="subsection-title" data-i18n="page.synastry.sections.interAspects"></h4>
                     <div class="synastry-table-wrap">
@@ -122,18 +134,15 @@
             </div>
         </aside>
 
-        <section class="chart-center synastry-center">
-            <div class="chart-wheel-wrapper synastry-wheel-wrapper" id="synastryWheelWrapper">
-                <svg id="synastryBaseWheel" viewBox="0 0 500 500"></svg>
-                <div class="synastry-wheel-overlay" id="synastryOverlay">
-                    <svg id="synastryOverlayWheel" viewBox="0 0 500 500"></svg>
-                </div>
+        <section class="chart-center forecast-new-center synastry-center">
+            <div class="forecast-new-wheel-shell synastry-wheel-shell" id="synastryWheelWrapper">
+                <svg id="synastryWheel" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid meet"></svg>
             </div>
             <div class="synastry-controls-float">
-                <div class="synastry-mode-switch">
-                    <button type="button" class="synastry-mode-btn" id="modePrimaryBtn" data-mode="primary" data-i18n="page.synastry.modes.client"></button>
-                    <button type="button" class="synastry-mode-btn active" id="modeCompareBtn" data-mode="compare" data-i18n="page.synastry.modes.compare"></button>
-                    <button type="button" class="synastry-mode-btn" id="modePartnerBtn" data-mode="partner" data-i18n="page.synastry.modes.partner"></button>
+                <div class="solar-display-mode synastry-display-mode" data-i18n-aria-label="page.synastry.displayMode.label">
+                    <label><input type="radio" name="synastryDisplayMode" value="both" checked><span data-i18n="page.synastry.displayMode.both"></span></label>
+                    <label><input type="radio" name="synastryDisplayMode" value="primary"><span data-i18n="page.synastry.displayMode.natal"></span></label>
+                    <label><input type="radio" name="synastryDisplayMode" value="partner"><span data-i18n="page.synastry.displayMode.partner"></span></label>
                 </div>
                 <a href="/account-settings.html" class="header-nav-btn header-nav-btn--icon synastry-settings-link" data-i18n-aria-label="page.accountSettings.title" data-i18n-title="page.accountSettings.title">
                     <svg class="nav-btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
@@ -153,13 +162,13 @@
                 </button>
             </div>
             <p class="synastry-wheel-caption" id="synastryWheelCaption"></p>
-            <div class="zoom-controls-float synastry-zoom-controls">
+            <div class="zoom-controls-float solar-zoom-controls synastry-zoom-controls">
                 <button class="zoom-btn" id="zoomIn" data-i18n-title="common.zoomIn">+</button>
                 <button class="zoom-btn" id="zoomOut" data-i18n-title="common.zoomOut">−</button>
                 <button class="zoom-btn" id="zoomReset" data-i18n-title="common.resetView">⟲</button>
             </div>
 
-            <div id="settingsPanel" class="settings-panel hidden">
+            <div id="settingsPanel" class="settings-panel solar-settings-panel synastry-settings-panel hidden">
                 <h4 data-i18n="common.displaySettings"></h4>
 
                 <div class="settings-section">
@@ -233,10 +242,13 @@
             </div>
         </section>
 
-        <aside class="side-panel right-panel synastry-side-panel" id="partnerPanel">
-            <div class="synastry-side-head">
+        <aside class="side-panel right-panel forecast-new-side-panel synastry-side-panel synastry-partner-panel" id="partnerPanel">
+            <div class="forecast-new-side-head synastry-side-head">
                 <div class="synastry-side-title-row">
-                    <h3 id="partnerPanelTitle"></h3>
+                    <button type="button" class="forecast-new-moment-toggle" aria-expanded="false">
+                        <span class="forecast-new-moment-toggle-title" data-i18n="page.synastry.people.partner"></span>
+                        <span class="forecast-new-moment-toggle-meta" id="partnerPanelMeta"></span>
+                    </button>
                     <button type="button" class="panel-quick-open-btn" id="openRelatedPeopleBtn" data-i18n-aria-label="page.clientProfile.quickOpen.relatedPeople" data-i18n-title="page.clientProfile.quickOpen.relatedPeople">
                         <svg class="panel-quick-open-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.45" aria-hidden="true">
                             <circle cx="6" cy="5" r="2.2"/>
@@ -246,19 +258,25 @@
                         </svg>
                     </button>
                 </div>
-                <p id="partnerPanelMeta"></p>
+                <h3 id="partnerPanelTitle"></h3>
             </div>
-            <div class="panel-tabs synastry-tabs">
+            <div class="panel-tabs forecast-new-tabs synastry-tabs">
                 <button class="panel-tab active" data-panel-target="partnerPlanetsView" data-i18n="page.chart.tabs.planets"></button>
                 <button class="panel-tab" data-panel-target="partnerHousesView" data-i18n="page.chart.tabs.houses"></button>
                 <button class="panel-tab" data-panel-target="partnerAspectsView" data-i18n="page.chart.tabs.aspects"></button>
-                <button class="panel-tab" data-panel-target="partnerGridView" data-i18n="page.chart.tabs.grid"></button>
-                <button class="panel-tab" data-panel-target="partnerConfigsView" data-i18n="page.chart.tabs.configurations"></button>
-                <button class="panel-tab" data-panel-target="partnerBalancesView" data-i18n="page.chart.tabs.balances"></button>
-                <button class="panel-tab" data-panel-target="partnerInterAspectsView" data-i18n="page.synastry.tabs.interAspects"></button>
-                <button class="panel-tab" data-panel-target="partnerOverlayView" data-i18n="page.synastry.tabs.houseOverlays"></button>
+                <div class="forecast-new-tabs-overflow" data-tabs-overflow>
+                    <button type="button" class="panel-tab forecast-new-tabs-overflow-toggle" data-tabs-overflow-toggle data-i18n-aria-label="page.synastry.tabs.more" aria-haspopup="true" aria-expanded="false">▸</button>
+                    <div class="forecast-new-tabs-overflow-menu" data-tabs-overflow-menu>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="partnerGridView" data-i18n="page.chart.tabs.grid"></button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="partnerConfigsView" data-i18n="page.chart.tabs.configurations"></button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="partnerBalancesView" data-i18n="page.chart.tabs.balances"></button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="partnerRulersView" data-i18n="page.chart.tabs.rulers"></button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="partnerInterAspectsView" data-i18n="page.synastry.tabs.interAspects"></button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="partnerOverlayView" data-i18n="page.synastry.tabs.houseOverlays"></button>
+                    </div>
+                </div>
             </div>
-            <div class="panel-content synastry-panel-content">
+            <div class="panel-content forecast-new-panel-content synastry-panel-content">
                 <div id="partnerPlanetsView" class="panel-tab-content active">
                     <table class="data-table compact">
                         <thead>
@@ -305,6 +323,9 @@
                 <div id="partnerBalancesView" class="panel-tab-content synastry-balances-view">
                     <div id="partnerBalancesContainer"></div>
                 </div>
+                <div id="partnerRulersView" class="panel-tab-content">
+                    <div id="partnerRulersContainer"></div>
+                </div>
                 <div id="partnerInterAspectsView" class="panel-tab-content synastry-panel-section">
                     <h4 class="subsection-title" data-i18n="page.synastry.sections.interAspects"></h4>
                     <div class="synastry-table-wrap">
@@ -329,6 +350,6 @@
         </aside>
     </main>
 
-    <script type="module" src="/js/bundles/synastry.bundle.js?v=9e4e5fb6d8be"></script>
+    <script type="module" src="/js/bundles/synastry.bundle.js?v=0043fd94e1a8"></script>
 </body>
 </html>

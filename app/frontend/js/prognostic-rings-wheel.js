@@ -49,6 +49,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
         progression: { color: '#7c3aed', radialOffset: 16, tangentOffset: 8 },
         direction: { color: '#0f766e', radialOffset: 22, tangentOffset: 8 },
         solar_return: { color: '#b45309', radialOffset: 22, tangentOffset: 8 },
+        synastry_partner: { color: '#1e3a5f', radialOffset: 22, tangentOffset: 8 },
     };
 
     class PrognosticRingsWheel {
@@ -86,6 +87,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                 transit: true,
                 progression: true,
                 direction: true,
+                synastry_partner: true,
             };
             this.aspectLookupByKey = {};
             this.conjunctionDisplay = {
@@ -1597,12 +1599,20 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
         }
 
         methodLabel(method) {
-            return ({
-                natal: 'Натал',
-                transit: 'Транзиты',
-                progression: 'Прогрессии',
-                direction: 'Дирекции',
-            })[String(method || '')] || 'Карта';
+            const keyByMethod = {
+                natal: 'page.synastry.people.natal',
+                transit: 'common.method.transit',
+                progression: 'common.method.progression',
+                direction: 'common.method.direction',
+                solar_return: 'common.method.solar',
+                synastry_partner: 'page.synastry.people.partner',
+            };
+            const key = keyByMethod[String(method || '')];
+            if (key) {
+                const translated = this.t(key);
+                if (translated && translated !== key) return translated;
+            }
+            return this.t('common.chart') !== 'common.chart' ? this.t('common.chart') : 'Карта';
         }
 
         houseLabel(number) {
