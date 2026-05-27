@@ -139,6 +139,7 @@ function cacheSynastryElements() {
     synastryRefs.openPrimaryForecastBtn = document.getElementById('openPrimaryForecastBtn');
     synastryRefs.openPrimaryProfileBtn = document.getElementById('openPrimaryProfileBtn');
     synastryRefs.openPartnerProfileBtn = document.getElementById('openPartnerProfileBtn');
+    synastryRefs.openRelatedPeopleBtn = document.getElementById('openRelatedPeopleBtn');
     synastryRefs.primaryPanelTitle = document.getElementById('primaryPanelTitle');
     synastryRefs.primaryPanelMeta = document.getElementById('primaryPanelMeta');
     synastryRefs.partnerPanelTitle = document.getElementById('partnerPanelTitle');
@@ -251,6 +252,14 @@ function bindSynastryEvents() {
 
     synastryRefs.openPartnerProfileBtn?.addEventListener('click', () => {
         window.location.href = `/client/${encodeURIComponent(partnerUserId)}`;
+    });
+
+    synastryRefs.openRelatedPeopleBtn?.addEventListener('click', () => {
+        window.AstroQuickOpen?.openRelatedPeople?.({
+            userId: primaryUserId,
+            sourceView: 'synastry',
+            sourceUrl: window.location.pathname + (window.location.search || ''),
+        });
     });
 
     document.querySelectorAll('.synastry-side-panel').forEach((panel) => {

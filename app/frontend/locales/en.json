@@ -946,6 +946,14 @@
       "backToClients": "Back to practice",
       "viewProfile": "View profile",
       "startCall": "Start call",
+      "quickOpen": {
+        "savedCharts": "Open saved charts",
+        "relatedPeople": "Open profile people",
+        "savedChartsTitle": "Saved charts",
+        "savedChartsSubtitle": "Choose a chart to open it from here.",
+        "relatedPeopleTitle": "Profile people",
+        "relatedPeopleSubtitle": "Choose a person for synastry."
+      },
       "sections": {
         "contact": "Contact & notes",
         "notes": "Notes",

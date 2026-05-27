@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Прогностика New</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=2b1daccb5277">
-    <script>window.__APP_BUILD_ID__ = '2b1daccb5277';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=675300f383e7">
+    <script>window.__APP_BUILD_ID__ = '675300f383e7';</script>
 </head>
 <body class="forecast-new-page">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -289,10 +289,18 @@
 
         <aside class="side-panel right-panel forecast-new-side-panel" id="forecastNewProgPanel">
             <div class="forecast-new-side-head">
-                <button type="button" class="forecast-new-moment-toggle" id="prognosticMomentToggle" aria-expanded="false" aria-controls="forecastNewMomentCard">
-                    <span class="forecast-new-moment-toggle-title" id="prognosticPanelTitle">Транзиты</span>
-                    <span class="forecast-new-moment-toggle-meta" id="prognosticPanelMeta"></span>
-                </button>
+                <div class="forecast-new-side-title-row">
+                    <button type="button" class="forecast-new-moment-toggle" id="prognosticMomentToggle" aria-expanded="false" aria-controls="forecastNewMomentCard">
+                        <span class="forecast-new-moment-toggle-title" id="prognosticPanelTitle">Транзиты</span>
+                        <span class="forecast-new-moment-toggle-meta" id="prognosticPanelMeta"></span>
+                    </button>
+                    <button type="button" class="panel-quick-open-btn" id="forecastSavedChartsBtn" data-i18n-aria-label="page.clientProfile.quickOpen.savedCharts" data-i18n-title="page.clientProfile.quickOpen.savedCharts">
+                        <svg class="panel-quick-open-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.45" aria-hidden="true">
+                            <path d="M2.5 4.5h4l1.2 1.4h5.8v6.6a1 1 0 0 1-1 1h-10a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1Z"/>
+                            <path d="M2.5 4.5V3.5a1 1 0 0 1 1-1h3.2l1.1 1.2h4.7a1 1 0 0 1 1 1v1.2"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
             <div class="forecast-new-time-stepper" id="forecastNewTimeStepper" aria-label="Управление временем транзитов"></div>
             <div class="forecast-new-moment-card hidden" id="forecastNewMomentCard">
@@ -374,6 +382,6 @@
         </aside>
     </main>
 
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=2b1daccb5277"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=675300f383e7"></script>
 </body>
 </html>

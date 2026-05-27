@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.synastry.title"></title>
-    <link rel="stylesheet" href="/bundles/synastry.bundle.css?v=13b1d34e89c9">
-    <script>window.__APP_BUILD_ID__ = '13b1d34e89c9';</script>
+    <link rel="stylesheet" href="/bundles/synastry.bundle.css?v=9e4e5fb6d8be">
+    <script>window.__APP_BUILD_ID__ = '9e4e5fb6d8be';</script>
 </head>
 <body class="synastry-page">
     <div class="page-loader synastry-loader" id="pageLoader">
@@ -235,7 +235,17 @@
 
         <aside class="side-panel right-panel synastry-side-panel" id="partnerPanel">
             <div class="synastry-side-head">
-                <h3 id="partnerPanelTitle"></h3>
+                <div class="synastry-side-title-row">
+                    <h3 id="partnerPanelTitle"></h3>
+                    <button type="button" class="panel-quick-open-btn" id="openRelatedPeopleBtn" data-i18n-aria-label="page.clientProfile.quickOpen.relatedPeople" data-i18n-title="page.clientProfile.quickOpen.relatedPeople">
+                        <svg class="panel-quick-open-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.45" aria-hidden="true">
+                            <circle cx="6" cy="5" r="2.2"/>
+                            <path d="M2.6 13.1c.5-2.3 1.7-3.5 3.4-3.5s2.9 1.2 3.4 3.5"/>
+                            <circle cx="11.1" cy="6.1" r="1.7"/>
+                            <path d="M9.7 10.1c1.9.1 3.1 1.1 3.7 3"/>
+                        </svg>
+                    </button>
+                </div>
                 <p id="partnerPanelMeta"></p>
             </div>
             <div class="panel-tabs synastry-tabs">
@@ -319,6 +329,6 @@
         </aside>
     </main>
 
-    <script type="module" src="/js/bundles/synastry.bundle.js?v=13b1d34e89c9"></script>
+    <script type="module" src="/js/bundles/synastry.bundle.js?v=9e4e5fb6d8be"></script>
 </body>
 </html>

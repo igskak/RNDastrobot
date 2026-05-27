@@ -152,7 +152,7 @@
             'solarShowStationaryToggle', 'solarShowAspectTextToggle',
             'solarAngleAscDscBoldToggle', 'solarAngleMcIcBoldToggle',
             'solarSaveDefaultsBtn', 'solarResetDefaultsBtn', 'solarSaveChartBtn',
-            'solarActionsToggle', 'solarActionsMenu', 'solarMomentToggle', 'solarMomentCard',
+            'solarActionsToggle', 'solarActionsMenu', 'solarMomentToggle', 'solarSavedChartsBtn', 'solarMomentCard',
             'solarConfigurationsContainer', 'solarBalancesContainer',
             'solarRulersContainer',
             'solarNatalPlanetsTable', 'solarNatalHousesTable', 'solarNatalAspectsTable',
@@ -1173,6 +1173,14 @@
             const isOpen = refs.solarMomentCard?.classList.contains('hidden');
             refs.solarMomentCard?.classList.toggle('hidden', !isOpen);
             refs.solarMomentToggle?.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+        refs.solarSavedChartsBtn?.addEventListener('click', (event) => {
+            event.stopPropagation();
+            window.AstroQuickOpen?.openSavedCharts?.({
+                userId: state.natalData?.user_id,
+                sourceView: 'solar',
+                sourceUrl: `/solar.html${window.location.search || ''}`,
+            });
         });
         refs.solarSaveChartBtn?.addEventListener('click', () => {
             saveSolarChart().catch((error) => showToast(error.message, 'error'));

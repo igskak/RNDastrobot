@@ -316,7 +316,7 @@
             'forecastNewDirectionTypeSelect',
             'forecastNewNatalPanel', 'forecastNewProgPanel',
             'natalPanelMeta', 'prognosticPanelTitle', 'prognosticPanelMeta',
-            'prognosticMomentToggle', 'forecastNewMomentCard',
+            'prognosticMomentToggle', 'forecastSavedChartsBtn', 'forecastNewMomentCard',
             'forecastNewWheel', 'forecastNewWheelShell', 'targetDateInput', 'targetTimeInput',
             'forecastNewTimeStepper',
             'stepModeSelect', 'stepBackward', 'stepForward', 'timezoneInput', 'locationInput',
@@ -389,6 +389,14 @@
             window.AstroAPI?.saveChartToSession?.(state.natalData);
             window.AstroAPI?.saveFormData?.(window.AstroAPI.chartToFormData(state.natalData));
             navigateFromForecast(getForecastSynastryUrl() || '/chart.html?open=synastry');
+        });
+        refs.forecastSavedChartsBtn?.addEventListener('click', (event) => {
+            event.stopPropagation();
+            window.AstroQuickOpen?.openSavedCharts?.({
+                userId: state.userId,
+                sourceView: 'forecast-new',
+                sourceUrl: `/forecast-new.html${window.location.search || ''}`,
+            });
         });
         refs.savePrognosticChartBtn?.addEventListener('click', saveSelectedPrognosticChart);
 

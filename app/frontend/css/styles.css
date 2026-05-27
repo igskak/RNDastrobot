@@ -11,6 +11,198 @@
     font-display: swap;
 }
 
+body.quick-open-active {
+    overflow: hidden;
+}
+
+.quick-open-popover.hidden {
+    display: none;
+}
+
+.quick-open-popover {
+    position: fixed;
+    inset: 0;
+    z-index: 2200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 22px;
+}
+
+.quick-open-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(26, 22, 20, 0.32);
+    backdrop-filter: blur(8px);
+}
+
+.quick-open-dialog {
+    position: relative;
+    z-index: 1;
+    width: min(460px, 100%);
+    max-height: min(640px, calc(100vh - 44px));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(184, 147, 90, 0.22);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 24px 56px rgba(26, 22, 20, 0.18);
+}
+
+.quick-open-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 34px;
+    gap: 12px;
+    align-items: start;
+    padding: 18px 18px 14px;
+    border-bottom: 1px solid rgba(30, 58, 95, 0.08);
+    background: linear-gradient(180deg, rgba(249, 247, 242, 0.82), rgba(255, 255, 255, 0.72));
+}
+
+.quick-open-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--text-primary);
+}
+
+.quick-open-subtitle {
+    margin: 6px 0 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.quick-open-close {
+    width: 32px;
+    height: 32px;
+    border: 1px solid rgba(30, 58, 95, 0.1);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.82);
+    color: var(--text-secondary);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.quick-open-close:hover {
+    background: var(--gold-pale);
+    color: var(--text-primary);
+}
+
+.quick-open-list {
+    display: grid;
+    gap: 8px;
+    min-height: 120px;
+    overflow: auto;
+    padding: 12px;
+}
+
+.quick-open-list--busy {
+    pointer-events: none;
+    opacity: 0.58;
+}
+
+.quick-open-status,
+.quick-open-empty {
+    padding: 28px 18px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    text-align: center;
+}
+
+.quick-open-empty--error {
+    color: var(--error);
+}
+
+.quick-open-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+    padding: 12px 12px;
+    border: 1px solid rgba(30, 58, 95, 0.08);
+    border-radius: 10px;
+    background: rgba(249, 247, 242, 0.48);
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color var(--transition), background var(--transition), transform var(--transition);
+}
+
+.quick-open-item:hover {
+    border-color: rgba(184, 147, 90, 0.36);
+    background: #fff;
+    transform: translateY(-1px);
+}
+
+.quick-open-item:focus-visible,
+.quick-open-close:focus-visible {
+    outline: none;
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.14);
+}
+
+.quick-open-item-main {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+}
+
+.quick-open-item-title {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.quick-open-item-meta {
+    color: var(--text-secondary);
+    font-size: 12.5px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.quick-open-item-action {
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+    .quick-open-popover {
+        align-items: flex-end;
+        padding: 10px;
+    }
+
+    .quick-open-dialog {
+        max-height: calc(100vh - 20px);
+        border-radius: 14px;
+    }
+
+    .quick-open-title {
+        font-size: 24px;
+    }
+
+    .quick-open-item {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .quick-open-item-action {
+        justify-self: start;
+    }
+}
+
 @font-face {
     font-family: 'Noto Sans Symbols Local';
     src: url('../fonts/NotoSansSymbols.ttf') format('truetype');

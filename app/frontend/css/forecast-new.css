@@ -455,6 +455,13 @@
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(249, 247, 242, 0.36));
 }
 
+.forecast-new-side-title-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 34px;
+    align-items: start;
+    gap: 8px;
+}
+
 .forecast-new-side-head h3,
 .forecast-new-moment-toggle-title {
     margin: 0;
@@ -491,6 +498,40 @@
     font: inherit;
     text-align: left;
     cursor: pointer;
+}
+
+.panel-quick-open-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin-top: 1px;
+    border: 1px solid rgba(30, 58, 95, 0.12);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.78);
+    color: var(--accent);
+    cursor: pointer;
+    transition: border-color var(--transition), background var(--transition), color var(--transition), transform var(--transition);
+}
+
+.panel-quick-open-btn:hover {
+    border-color: rgba(184, 147, 90, 0.38);
+    background: var(--gold-pale);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+}
+
+.panel-quick-open-btn:focus-visible {
+    outline: none;
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.14);
+}
+
+.panel-quick-open-icon {
+    width: 17px;
+    height: 17px;
+    flex: 0 0 auto;
 }
 
 .forecast-new-moment-toggle:hover,

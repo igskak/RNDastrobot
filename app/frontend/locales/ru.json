@@ -946,6 +946,14 @@
       "backToClients": "К практике",
       "viewProfile": "Открыть профиль",
       "startCall": "Начать звонок",
+      "quickOpen": {
+        "savedCharts": "Открыть сохранённые карты",
+        "relatedPeople": "Открыть людей профиля",
+        "savedChartsTitle": "Сохранённые карты",
+        "savedChartsSubtitle": "Выберите карту, чтобы открыть её прямо отсюда.",
+        "relatedPeopleTitle": "Люди профиля",
+        "relatedPeopleSubtitle": "Выберите человека для синастрии."
+      },
       "sections": {
         "contact": "Контакты и заметки",
         "notes": "Заметки",
