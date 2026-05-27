@@ -60,8 +60,8 @@ PLAN_DEFINITIONS: Dict[str, PlanDefinition] = {
     ),
     PLAN_SOLO: PlanDefinition(
         plan_code=PLAN_SOLO,
-        max_saved_charts=1,
-        clients_enabled=False,
+        max_saved_charts=None,
+        clients_enabled=True,
         consultations_enabled=False,
         calls_enabled=False,
         recording_enabled=False,

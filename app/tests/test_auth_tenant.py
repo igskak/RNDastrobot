@@ -16,9 +16,10 @@ os.environ.setdefault("SUPABASE_JWT_AUDIENCE", "authenticated")
 from app.api.main import app  # noqa: E402
 from app.api.routes import auth as auth_route  # noqa: E402
 from app.api.routes import natal as natal_route  # noqa: E402
+from app.api.routes import synastry as synastry_route  # noqa: E402
 from app.auth.security import hash_password, utcnow  # noqa: E402
 from app.database.connection import get_db  # noqa: E402
-from app.database.models import Astrologer, AuditEvent, AuthSession, CallSession, Consultation, EmailVerificationToken, PasswordResetToken, User  # noqa: E402
+from app.database.models import Astrologer, AuditEvent, AuthSession, CallSession, ClientRelationship, Consultation, EmailVerificationToken, PasswordResetToken, User  # noqa: E402
 
 
 engine = create_engine("sqlite:///./_auth_tenant_test.sqlite3", connect_args={"check_same_thread": False})
@@ -48,6 +49,7 @@ def _db_setup():
     _prepare_sqlite_json_columns()
     for table in (
         CallSession.__table__,
+        ClientRelationship.__table__,
         Consultation.__table__,
         AuditEvent.__table__,
         AuthSession.__table__,
@@ -60,6 +62,7 @@ def _db_setup():
     Astrologer.__table__.create(bind=engine, checkfirst=True)
     User.__table__.create(bind=engine, checkfirst=True)
     Consultation.__table__.create(bind=engine, checkfirst=True)
+    ClientRelationship.__table__.create(bind=engine, checkfirst=True)
     CallSession.__table__.create(bind=engine, checkfirst=True)
     AuthSession.__table__.create(bind=engine, checkfirst=True)
     AuditEvent.__table__.create(bind=engine, checkfirst=True)
@@ -114,6 +117,42 @@ def _create_user(astrologer_id):
     db.refresh(user)
     db.close()
     return user
+
+
+def _fake_chart_payload(user_id):
+    return {
+        "user_id": str(user_id),
+        "birth_data": {
+            "date": "1990-01-01",
+            "time": "12:00:00",
+            "timezone": "UTC",
+            "utc_time": "1990-01-01T12:00:00+00:00",
+            "julian_day": 2447892.5,
+            "latitude": 50.45,
+            "longitude": 30.523,
+            "place": "Kyiv",
+        },
+        "planets": [],
+        "houses": [],
+        "angles": {},
+        "special_points": {},
+        "configurations": {},
+        "aspects": [],
+        "aspect_configurations": [],
+        "stelliums": [],
+        "cosmogram_pattern": None,
+        "planet_distribution": None,
+        "balances": None,
+        "karmic_analysis": {
+            "nodes": {"north_node": {}, "south_node": {}},
+            "saturn_analysis": {},
+            "lunar_points_analysis": {"black_moon": {}, "white_moon": {}},
+            "karmic_status": {},
+            "karmic_support": {"harmonic_trines": []},
+            "karmic_development": {},
+            "jones_pattern": {},
+        },
+    }
 
 
 def test_password_login_me_logout_flow():
@@ -249,20 +288,49 @@ def test_solo_plan_blocks_consultations():
     assert response.json()["error_code"] == "PLAN_FEATURE_LOCKED"
 
 
-def test_solo_plan_blocks_related_people_and_synastry():
+def test_solo_plan_allows_saved_charts_related_people_and_synastry(monkeypatch):
     astrologer = _create_astrologer("solo-synastry@example.com", "password123", plan_code="solo")
     user = _create_user(astrologer.id)
     partner = _create_user(astrologer.id)
 
+    class FakeSynastryService:
+        def __init__(self, *_args, **_kwargs):
+            pass
+
+        def build_synastry_payload(self, *, astrologer, user_id, partner_id):
+            return {
+                "primary_chart": _fake_chart_payload(user_id),
+                "partner_chart": _fake_chart_payload(partner_id),
+                "inter_aspects": [],
+                "house_overlays": {
+                    "primary_in_partner_houses": [],
+                    "partner_in_primary_houses": [],
+                },
+                "resolved_preferences": {},
+            }
+
+    monkeypatch.setattr(synastry_route, "SynastryService", FakeSynastryService)
+
     with TestClient(app) as client:
         _login(client, "solo-synastry@example.com")
+        me = client.get("/api/v1/auth/me")
         related = client.get(f"/api/v1/users/{user.user_id}/related-people")
+        link = client.post(
+            f"/api/v1/users/{user.user_id}/related-people",
+            json={"related_user_id": str(partner.user_id), "relation_label": "Partner"},
+        )
         synastry = client.get(f"/api/v1/synastry?user_id={user.user_id}&partner_id={partner.user_id}")
 
-    assert related.status_code == 403
-    assert related.json()["error_code"] == "PLAN_FEATURE_LOCKED"
-    assert synastry.status_code == 403
-    assert synastry.json()["error_code"] == "PLAN_FEATURE_LOCKED"
+    assert me.status_code == 200
+    assert me.json()["entitlements"]["clients_enabled"] is True
+    assert me.json()["usage"]["max_saved_charts"] is None
+    assert related.status_code == 200
+    assert related.json() == []
+    assert link.status_code == 201
+    assert link.json()["user_id"] == str(partner.user_id)
+    assert synastry.status_code == 200
+    assert synastry.json()["primary_chart"]["user_id"] == str(user.user_id)
+    assert synastry.json()["partner_chart"]["user_id"] == str(partner.user_id)
 
 
 def test_tenant_isolation_list_open_forbidden(monkeypatch):

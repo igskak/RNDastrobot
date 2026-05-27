@@ -221,13 +221,13 @@
     "plan": {
       "names": {
         "trial": "Trial",
-        "solo": "Solo",
+        "solo": "Beginner",
         "standard": "Standard",
         "pro": "Pro"
       },
       "descriptions": {
         "trial": "For trying the workspace with up to five saved charts. Calls, recordings, and transcription stay locked.",
-        "solo": "For studying astrology or working with one personal chart. Client workflow, sessions, and meeting stats are hidden.",
+        "solo": "For learning and personal practice: unlimited saved charts, related people, and synastry. Calls, sessions, and meeting stats stay locked.",
         "standard": "Unlimited saved charts and the full client workflow without calls, recordings, or transcription.",
         "pro": "Full workspace access, including calls, recordings, transcription, and meeting intelligence."
       },
@@ -1639,8 +1639,8 @@
           },
           "solo": {
             "title": "Beginner",
-            "copy": "For learning astrology or starting with one personal chart.",
-            "badge": "1 chart"
+            "copy": "For learning astrology or starting your practice: save charts and build synastry.",
+            "badge": "Charts and synastry"
           }
         },
         "registerPassword": {

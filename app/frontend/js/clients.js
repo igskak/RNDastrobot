@@ -53,10 +53,6 @@ function planCan(feature) {
     return window.AstroPlan.canUseFeature(feature, currentAstrologer);
 }
 
-function isSoloPlan() {
-    return window.AstroPlan?.isSoloPlan?.(currentAstrologer) === true;
-}
-
 function isSavedChartLimitReached() {
     return window.AstroPlan?.getSavedChartLimitState?.(currentAstrologer)?.reached === true;
 }
@@ -338,13 +334,12 @@ async function bootstrapPage() {
 }
 
 function applyPlanUi() {
-    const solo = isSoloPlan();
     document.querySelectorAll('a[href="/calendar"], #miniCal').forEach((el) => {
-        el.classList.toggle('hidden', solo || !planCan('consultations'));
+        el.classList.toggle('hidden', !planCan('consultations'));
     });
-    refs.alertsPanel?.classList.toggle('hidden', solo || !planCan('meeting_stats'));
-    refs.tagFilterSelect?.closest('.toolbar-field')?.classList.toggle('hidden', solo || !planCan('clients'));
-    refs.searchInput?.closest('.toolbar-field')?.classList.toggle('toolbar-field-search--wide', solo);
+    refs.alertsPanel?.classList.toggle('hidden', !planCan('meeting_stats'));
+    refs.tagFilterSelect?.closest('.toolbar-field')?.classList.toggle('hidden', !planCan('clients'));
+    refs.searchInput?.closest('.toolbar-field')?.classList.toggle('toolbar-field-search--wide', !planCan('clients'));
 
     const limitReached = isSavedChartLimitReached();
     document.querySelectorAll('a[href="/new"], a[href="/index.html"]').forEach((link) => {

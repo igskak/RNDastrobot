@@ -54,10 +54,6 @@ function planCan(feature) {
     return window.AstroPlan.canUseFeature(feature, currentAstrologer);
 }
 
-function isSoloPlan() {
-    return window.AstroPlan?.isSoloPlan?.(currentAstrologer) === true;
-}
-
 function openPlanUpgrade(reason) {
     if (window.AstroPlan?.showUpgradeModal) {
         window.AstroPlan.showUpgradeModal({ reason, astrologer: currentAstrologer });
@@ -345,9 +341,7 @@ function bindPageEvents() {
 }
 
 function applyPlanUi() {
-    const solo = isSoloPlan();
     if (refs.startCallBtn) {
-        refs.startCallBtn.classList.toggle('hidden', solo);
         refs.startCallBtn.disabled = !planCan('calls');
         refs.startCallBtn.setAttribute('aria-disabled', planCan('calls') ? 'false' : 'true');
         if (!planCan('calls')) {
@@ -355,10 +349,10 @@ function applyPlanUi() {
         }
     }
     refs.logSessionBtn?.classList.toggle('hidden', !planCan('consultations'));
-    refs.profileContactList?.closest('.profile-card')?.classList.toggle('hidden', solo || !planCan('clients'));
-    refs.profileStatsGrid?.closest('.profile-card')?.classList.toggle('hidden', solo || !planCan('meeting_stats'));
+    refs.profileContactList?.closest('.profile-card')?.classList.toggle('hidden', !planCan('clients'));
+    refs.profileStatsGrid?.closest('.profile-card')?.classList.toggle('hidden', !planCan('meeting_stats'));
     refs.profileInsightsCard?.classList.toggle('hidden', !planCan('calls'));
-    refs.relatedPeopleList?.closest('.profile-card')?.classList.toggle('hidden', solo || !planCan('clients'));
+    refs.relatedPeopleList?.closest('.profile-card')?.classList.toggle('hidden', !planCan('clients'));
     refs.consultationsList?.closest('.profile-card')?.classList.toggle('hidden', !planCan('consultations'));
     refs.recordingsList?.closest('.profile-card')?.classList.toggle('hidden', !planCan('calls'));
 }
