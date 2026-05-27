@@ -69,30 +69,6 @@
     border-radius: 0;
 }
 
-.synastry-side-head {
-    padding: 10px 12px 12px;
-    border-bottom: 1px solid rgba(184, 147, 90, 0.14);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(249, 247, 242, 0.38));
-}
-
-.synastry-side-title-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 34px;
-    align-items: start;
-    gap: 8px;
-}
-
-.synastry-side-head h3 {
-    margin: 8px 0 0;
-    font-family: var(--font-display);
-    font-size: 24px;
-    font-weight: 500;
-    line-height: 0.95;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
 .synastry-side-title-row .panel-quick-open-btn {
     margin-top: 0;
 }
@@ -128,26 +104,6 @@
     width: 17px;
     height: 17px;
     flex: 0 0 auto;
-}
-
-.synastry-tabs {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 4px;
-    overflow: visible;
-    padding: 6px;
-    flex-shrink: 0;
-}
-
-.synastry-tabs .panel-tab {
-    min-width: 0;
-    padding: 9px 8px;
-    font-size: 11px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.2;
-    text-align: center;
 }
 
 .synastry-panel-content {

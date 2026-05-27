@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.synastry.title"></title>
-    <link rel="stylesheet" href="/bundles/synastry.bundle.css?v=0043fd94e1a8">
-    <script>window.__APP_BUILD_ID__ = '0043fd94e1a8';</script>
+    <link rel="stylesheet" href="/bundles/synastry.bundle.css?v=055ce191f6c9">
+    <script>window.__APP_BUILD_ID__ = '055ce191f6c9';</script>
 </head>
 <body class="chart-page forecast-new-page synastry-page">
     <div class="page-loader synastry-loader" id="pageLoader">
@@ -40,10 +40,9 @@
         <aside class="side-panel left-panel forecast-new-side-panel synastry-side-panel synastry-primary-panel" id="primaryPanel">
             <div class="forecast-new-side-head synastry-side-head">
                 <button type="button" class="forecast-new-moment-toggle" aria-expanded="false">
-                    <span class="forecast-new-moment-toggle-title" data-i18n="page.synastry.people.natal"></span>
+                    <span class="forecast-new-moment-toggle-title" id="primaryPanelTitle" data-i18n="page.synastry.people.natal"></span>
                     <span class="forecast-new-moment-toggle-meta" id="primaryPanelMeta"></span>
                 </button>
-                <h3 id="primaryPanelTitle"></h3>
             </div>
             <div class="panel-tabs forecast-new-tabs synastry-tabs">
                 <button class="panel-tab active" data-panel-target="primaryPlanetsView" data-i18n="page.chart.tabs.planets"></button>
@@ -63,20 +62,31 @@
             </div>
             <div class="panel-content forecast-new-panel-content synastry-panel-content">
                 <div id="primaryPlanetsView" class="panel-tab-content active">
-                    <table class="data-table compact">
+                    <table class="data-table compact forecast-new-planets-table">
+                        <colgroup>
+                            <col class="forecast-new-symbol-column">
+                            <col class="forecast-new-position-column">
+                            <col class="forecast-new-matrix-column">
+                            <col class="forecast-new-matrix-column">
+                        </colgroup>
                         <thead>
                             <tr>
                                 <th data-i18n="page.chart.table.planets.symbol"></th>
                                 <th data-i18n="page.chart.table.planets.position"></th>
-                                <th class="planet-speed-col" data-i18n="page.chart.table.planets.speed"></th>
-                                <th data-i18n="page.chart.table.planets.house"></th>
+                                <th class="forecast-new-matrix-col" title="Показ">П</th>
+                                <th class="forecast-new-matrix-col" title="Аспектация">А</th>
                             </tr>
                         </thead>
                         <tbody id="primaryPlanetsTable"></tbody>
                     </table>
                 </div>
                 <div id="primaryHousesView" class="panel-tab-content">
-                    <table class="data-table compact">
+                    <table class="data-table compact forecast-new-houses-table">
+                        <colgroup>
+                            <col class="forecast-new-house-cusp-column">
+                            <col class="forecast-new-house-sign-column">
+                            <col class="forecast-new-house-ruler-column">
+                        </colgroup>
                         <thead>
                             <tr>
                                 <th data-i18n="page.chart.table.houses.cusp"></th>
@@ -88,7 +98,7 @@
                     </table>
                 </div>
                 <div id="primaryAspectsView" class="panel-tab-content">
-                    <table class="data-table compact">
+                    <table class="data-table compact aspect-list-table">
                         <thead>
                             <tr>
                                 <th colspan="2" class="sortable" data-sort="planet" data-i18n="page.chart.table.aspects.aspect"></th>
@@ -244,9 +254,9 @@
 
         <aside class="side-panel right-panel forecast-new-side-panel synastry-side-panel synastry-partner-panel" id="partnerPanel">
             <div class="forecast-new-side-head synastry-side-head">
-                <div class="synastry-side-title-row">
+                <div class="forecast-new-side-title-row synastry-side-title-row">
                     <button type="button" class="forecast-new-moment-toggle" aria-expanded="false">
-                        <span class="forecast-new-moment-toggle-title" data-i18n="page.synastry.people.partner"></span>
+                        <span class="forecast-new-moment-toggle-title" id="partnerPanelTitle" data-i18n="page.synastry.people.partner"></span>
                         <span class="forecast-new-moment-toggle-meta" id="partnerPanelMeta"></span>
                     </button>
                     <button type="button" class="panel-quick-open-btn" id="openRelatedPeopleBtn" data-i18n-aria-label="page.clientProfile.quickOpen.relatedPeople" data-i18n-title="page.clientProfile.quickOpen.relatedPeople">
@@ -258,7 +268,6 @@
                         </svg>
                     </button>
                 </div>
-                <h3 id="partnerPanelTitle"></h3>
             </div>
             <div class="panel-tabs forecast-new-tabs synastry-tabs">
                 <button class="panel-tab active" data-panel-target="partnerPlanetsView" data-i18n="page.chart.tabs.planets"></button>
@@ -278,20 +287,31 @@
             </div>
             <div class="panel-content forecast-new-panel-content synastry-panel-content">
                 <div id="partnerPlanetsView" class="panel-tab-content active">
-                    <table class="data-table compact">
+                    <table class="data-table compact forecast-new-planets-table">
+                        <colgroup>
+                            <col class="forecast-new-symbol-column">
+                            <col class="forecast-new-position-column">
+                            <col class="forecast-new-matrix-column">
+                            <col class="forecast-new-matrix-column">
+                        </colgroup>
                         <thead>
                             <tr>
                                 <th data-i18n="page.chart.table.planets.symbol"></th>
                                 <th data-i18n="page.chart.table.planets.position"></th>
-                                <th class="planet-speed-col" data-i18n="page.chart.table.planets.speed"></th>
-                                <th data-i18n="page.chart.table.planets.house"></th>
+                                <th class="forecast-new-matrix-col" title="Показ">П</th>
+                                <th class="forecast-new-matrix-col" title="Аспектация">А</th>
                             </tr>
                         </thead>
                         <tbody id="partnerPlanetsTable"></tbody>
                     </table>
                 </div>
                 <div id="partnerHousesView" class="panel-tab-content">
-                    <table class="data-table compact">
+                    <table class="data-table compact forecast-new-houses-table">
+                        <colgroup>
+                            <col class="forecast-new-house-cusp-column">
+                            <col class="forecast-new-house-sign-column">
+                            <col class="forecast-new-house-ruler-column">
+                        </colgroup>
                         <thead>
                             <tr>
                                 <th data-i18n="page.chart.table.houses.cusp"></th>
@@ -303,7 +323,7 @@
                     </table>
                 </div>
                 <div id="partnerAspectsView" class="panel-tab-content">
-                    <table class="data-table compact">
+                    <table class="data-table compact aspect-list-table">
                         <thead>
                             <tr>
                                 <th colspan="2" class="sortable" data-sort="planet" data-i18n="page.chart.table.aspects.aspect"></th>
@@ -350,6 +370,6 @@
         </aside>
     </main>
 
-    <script type="module" src="/js/bundles/synastry.bundle.js?v=0043fd94e1a8"></script>
+    <script type="module" src="/js/bundles/synastry.bundle.js?v=055ce191f6c9"></script>
 </body>
 </html>

@@ -293,10 +293,21 @@ function bindSynastryEvents() {
 
     document.querySelectorAll('.synastry-side-panel').forEach((panel) => {
         panel.addEventListener('click', (event) => {
+            if (event.target.closest('.forecast-new-matrix-inline')) {
+                event.stopPropagation();
+                return;
+            }
             const tab = event.target.closest('.panel-tab[data-panel-target]');
             if (!tab) return;
 
             activateSynastryPanelTab(panel, tab.dataset.panelTarget);
+        });
+        panel.addEventListener('change', (event) => {
+            const input = event.target instanceof HTMLInputElement
+                ? event.target.closest('.forecast-new-matrix-inline input[data-matrix-body][data-matrix-field]')
+                : null;
+            if (!input) return;
+            applySynastryInlineMatrixChange(input);
         });
     });
 
@@ -626,11 +637,87 @@ function renderSynastrySide(side, chartData) {
         showAspectText: synastryState.settings.showAspectText,
     });
     renderer.render(chartData);
+    renderSynastryInlineMatrixControls(side);
     renderer.setAspectTypeFilter(synastryState.settings.aspectScope);
     window.DispositorChains?.render?.(`${side}RulersContainer`, chartData, {
         selectId: `${side}RulersModeSelect`,
         layout: 'tabs',
     });
+}
+
+function renderSynastryInlineMatrixControls(side) {
+    const table = document.getElementById(`${side}PlanetsTable`);
+    if (!table) return;
+    const rows = getCurrentSynastryMatrixRows();
+    table.querySelectorAll('tr[data-planet]').forEach((row) => {
+        row.querySelectorAll('.forecast-new-matrix-inline-cell').forEach((cell) => cell.remove());
+        const body = getSynastryMatrixBodyKey(row.dataset.planet);
+        row.insertAdjacentHTML('beforeend', renderSynastryMatrixControlCells(body, rows));
+    });
+}
+
+function renderSynastryMatrixControlCells(bodyName, rows) {
+    const body = getSynastryMatrixBodyKey(bodyName);
+    if (!body) {
+        return '<td class="forecast-new-matrix-inline-cell forecast-new-matrix-inline-empty"></td><td class="forecast-new-matrix-inline-cell forecast-new-matrix-inline-empty"></td>';
+    }
+    return ['display', 'aspecting'].map((field) => {
+        const checked = rows?.[body]?.[field] !== false ? 'checked' : '';
+        const shortLabel = field === 'display' ? 'Показ' : 'Аспектация';
+        const label = `${shortLabel}: ${getBodyLabel(body)}`;
+        return `
+            <td class="forecast-new-matrix-inline-cell">
+                <label class="forecast-new-matrix-inline" title="${escapeSynAttribute(label)}" aria-label="${escapeSynAttribute(label)}">
+                    <input type="checkbox" data-matrix-body="${escapeSynAttribute(body)}" data-matrix-field="${field}" ${checked}>
+                </label>
+            </td>
+        `;
+    }).join('');
+}
+
+function getSynastryMatrixBodyKey(name) {
+    return window.AstroPreferences?.normalizeMatrixBodyName
+        ? window.AstroPreferences.normalizeMatrixBodyName(name)
+        : String(name || '');
+}
+
+function applySynastryInlineMatrixChange(input) {
+    const body = getSynastryMatrixBodyKey(input.dataset.matrixBody);
+    const field = input.dataset.matrixField;
+    if (!body || !['display', 'aspecting'].includes(field)) return;
+
+    const previousSettings = snapshotSynastrySettings();
+    const rows = cloneSynastryMatrixRows(getCurrentSynastryMatrixRows());
+    rows[body] = {
+        ...(rows[body] || { display: true, aspecting: true }),
+        [field]: input.checked,
+    };
+    synastryState.settings.matrixRows = window.AstroPreferences?.ensureMatrixRows
+        ? window.AstroPreferences.ensureMatrixRows(rows)
+        : rows;
+    syncSynastryMatrixInputsFromState();
+
+    if (canApplySynastrySettingsFast(previousSettings, snapshotSynastrySettings())) {
+        renderSynastryTablesAndApplyMatrixFast();
+    } else {
+        renderSynastryWorkspace();
+    }
+
+    persistSynastryViewOverrides().catch((error) => {
+        console.warn('Failed to persist synastry matrix settings:', error);
+    });
+}
+
+function syncSynastryMatrixInputsFromState() {
+    const rows = getCurrentSynastryMatrixRows();
+    document
+        .querySelectorAll('input[data-matrix-body][data-matrix-field]')
+        .forEach((input) => {
+            const body = getSynastryMatrixBodyKey(input.dataset.matrixBody);
+            const field = input.dataset.matrixField;
+            if (!body || !['display', 'aspecting'].includes(field)) return;
+            input.checked = rows?.[body]?.[field] !== false;
+        });
 }
 
 function ensureSideRenderer(side) {
@@ -650,6 +737,8 @@ function ensureSideRenderer(side) {
         configsContainerId: `${side}ConfigurationsContainer`,
         balancesContainerId: `${side}BalancesContainer`,
         aspectSortHeadersSelector: `#${side}AspectsView th.sortable[data-sort]`,
+        showSpeedColumn: false,
+        showHouseColumn: false,
     });
 
     if (synastryState.accountVisualPreferences) {
@@ -777,6 +866,7 @@ function renderSynastrySettingsEditors() {
     renderSynastryMatrixEditor();
     renderSynastryAspectTypeToggles();
     bindDynamicSettingsHandlers();
+    syncSynastryMatrixInputsFromState();
 }
 
 function renderSynastryMatrixEditor() {
