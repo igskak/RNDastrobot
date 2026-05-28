@@ -117,7 +117,7 @@
             orientation: 'aries',
             planetScale: 1.2,
             pointScale: 1.2,
-            aspectScope: 'all',
+            aspectScope: 'major',
             enabledAspectTypes: [...DEFAULT_ASPECT_TYPES],
             showApplyingSeparating: true,
             aspectPhaseFilter: [...DEFAULT_ASPECT_PHASE_FILTER],
@@ -1896,12 +1896,12 @@
 
     async function applySettings() {
         const previousSettings = { ...state.pageSettings };
-        const nextHouseSystem = normalizeHouseSystemCode(refs.houseSystemSelect?.value || state.pageSettings.houseSystem);
-        const nextOrientation = refs.orientationSelect?.value === 'asc' ? 'asc' : 'aries';
+        const nextHouseSystem = normalizeHouseSystemCode(state.pageSettings.houseSystem);
+        const nextOrientation = state.pageSettings.orientation === 'asc' ? 'asc' : 'aries';
         const iconScale = clampPointScale(Number(refs.iconScaleRange?.value || Math.round((state.pageSettings.planetScale || 1.2) * 100)) / 100);
         const nextAspectScope = ['all', 'major', 'minor'].includes(refs.aspectScopeSelect?.value)
             ? refs.aspectScopeSelect.value
-            : 'all';
+            : 'major';
         const nextEnabledAspectTypes = window.AstroPreferences?.healEnabledAspectTypesForScope
             ? window.AstroPreferences.healEnabledAspectTypesForScope(
                 readEnabledAspectTypesFromControls(),
@@ -1929,10 +1929,10 @@
             showAspectText: state.pageSettings.showAspectText === true,
             showWheelStationary: refs.showWheelStationaryToggle?.checked === true,
             showWheelDegree: refs.showWheelDegreeToggle?.checked === true,
-            angleAscDscBold: refs.angleAscDscBoldToggle?.checked !== false,
-            angleMcIcBold: refs.angleMcIcBoldToggle?.checked !== false,
-            houseNumberStyle: refs.houseNumberStyleSelect?.value === 'roman' ? 'roman' : 'arabic',
-            houseLabelsOutside: refs.houseLabelsOutsideToggle?.checked === true,
+            angleAscDscBold: state.pageSettings.angleAscDscBold !== false,
+            angleMcIcBold: state.pageSettings.angleMcIcBold !== false,
+            houseNumberStyle: state.pageSettings.houseNumberStyle === 'roman' ? 'roman' : 'arabic',
+            houseLabelsOutside: state.pageSettings.houseLabelsOutside === true,
             showTransitCusps: refs.showTransitCuspsToggle?.checked !== false,
             showProgressionCusps: refs.showProgressionCuspsToggle?.checked !== false,
             showDirectionCusps: refs.showDirectionCuspsToggle?.checked !== false,
@@ -2770,7 +2770,7 @@
             ? window.AstroPreferences.filterChartDataByViewPreferences(filtered, {
                 matrixRows: getMatrixRowsForScope(scope),
                 aspectMatrixRows: aspectMatrixRowsForRenderer(scope),
-                aspectScope: state.pageSettings.aspectScope || 'all',
+                aspectScope: state.pageSettings.aspectScope || 'major',
                 enabledAspectTypes: Array.isArray(state.pageSettings.enabledAspectTypes) && state.pageSettings.enabledAspectTypes.length
                     ? state.pageSettings.enabledAspectTypes
                     : DEFAULT_ASPECT_TYPES,
@@ -2797,7 +2797,7 @@
             ? window.AstroPreferences.filterChartDataByViewPreferences(filtered, {
                 matrixRows: matrixRowsForSidePanel(scope),
                 aspectMatrixRows: aspectMatrixRowsForSidePanel(scope),
-                aspectScope: state.pageSettings.aspectScope || 'all',
+                aspectScope: state.pageSettings.aspectScope || 'major',
                 enabledAspectTypes: Array.isArray(state.pageSettings.enabledAspectTypes) && state.pageSettings.enabledAspectTypes.length
                     ? state.pageSettings.enabledAspectTypes
                     : DEFAULT_ASPECT_TYPES,
@@ -2994,7 +2994,7 @@
                 orientation: resolved?.view_options?.orientation === 'asc' ? 'asc' : (state.pageSettings.orientation || 'aries'),
                 aspectScope: ['all', 'major', 'minor'].includes(resolved?.aspects?.scope)
                     ? resolved.aspects.scope
-                    : state.pageSettings.aspectScope,
+                    : (state.pageSettings.aspectScope || 'major'),
                 enabledAspectTypes: Array.isArray(resolved?.aspects?.enabled_types) && resolved.aspects.enabled_types.length
                     ? resolved.aspects.enabled_types
                     : state.pageSettings.enabledAspectTypes,
@@ -3031,7 +3031,7 @@
                 natal_rows: ensureMatrixRows(state.natalMatrixRows),
             },
             aspects: {
-                scope: state.pageSettings.aspectScope || 'all',
+                scope: state.pageSettings.aspectScope || 'major',
                 enabled_types: Array.isArray(state.pageSettings.enabledAspectTypes) && state.pageSettings.enabledAspectTypes.length
                     ? [...state.pageSettings.enabledAspectTypes]
                     : [...DEFAULT_ASPECT_TYPES],

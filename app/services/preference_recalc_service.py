@@ -9,7 +9,7 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.database.connection import get_db_session
-from app.database.models import PreferenceRecalcJob, SolarReturn, User
+from app.database.models import Astrologer, PreferenceRecalcJob, SolarReturn, User
 from app.services.natal_chart_service import NatalChartService
 from app.services.solar_return_service import SolarReturnService
 
@@ -144,6 +144,8 @@ class PreferenceRecalcService:
         try:
             natal_service = NatalChartService()
             solar_service = SolarReturnService(self.db)
+            astrologer = self.db.query(Astrologer).filter(Astrologer.id == job.astrologer_id).first()
+            house_system = astrologer.default_house_system if astrologer and astrologer.default_house_system else 'P'
 
             for user in users:
                 try:
@@ -157,7 +159,7 @@ class PreferenceRecalcService:
                         place=user.birth_place,
                         latitude=float(user.lat),
                         longitude=float(user.lon),
-                        house_system=user.house_system or 'P',
+                        house_system=house_system,
                         first_name=user.first_name,
                         last_name=user.last_name,
                     )
@@ -192,7 +194,7 @@ class PreferenceRecalcService:
                         location_lon=float(solar.location_lon) if solar.location_lon is not None else None,
                         location_name=solar.location_name,
                         location_timezone=solar_info.get('timezone'),
-                        house_system=solar.house_system or 'P',
+                        house_system=house_system,
                         save_to_db=True,
                     )
                 except Exception as exc:

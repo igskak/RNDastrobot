@@ -162,7 +162,7 @@ let currentSettings = {
     houseSystem: 'P',
     hiddenPlanets: [],
     orientation: 'aries',
-    aspectScope: 'all',
+    aspectScope: 'major',
     matrixRows: window.AstroPreferences?.ensureMatrixRows?.({}) || {},
     enabledAspectTypes: [...NATAL_ASPECT_TYPES],
     showApplyingSeparating: true,
@@ -380,7 +380,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const prefiltered = window.AstroPreferences?.filterChartDataByViewPreferences
         ? window.AstroPreferences.filterChartDataByViewPreferences(chartData, {
             matrixRows: getCurrentNatalMatrixRows(),
-            aspectScope: currentSettings.aspectScope || 'all',
+            aspectScope: currentSettings.aspectScope || 'major',
             enabledAspectTypes: Array.isArray(currentSettings.enabledAspectTypes) && currentSettings.enabledAspectTypes.length
                 ? currentSettings.enabledAspectTypes
                 : NATAL_ASPECT_TYPES,
@@ -658,7 +658,7 @@ function getNatalResolvedViewSettings() {
         : {
             matrix: { rows: currentSettings.matrixRows || {} },
             aspects: {
-                scope: currentSettings.aspectScope || 'all',
+                scope: currentSettings.aspectScope || 'major',
                 enabled_types: [...(currentSettings.enabledAspectTypes || NATAL_ASPECT_TYPES)],
                 show_applying_separating: currentSettings.showApplyingSeparating === true,
             },
@@ -685,7 +685,7 @@ function getNatalResolvedViewSettings() {
         },
         aspects: {
             ...(base.aspects || {}),
-            scope: currentSettings.aspectScope || base.aspects?.scope || 'all',
+            scope: currentSettings.aspectScope || base.aspects?.scope || 'major',
             enabled_types: Array.isArray(currentSettings.enabledAspectTypes) && currentSettings.enabledAspectTypes.length
                 ? [...currentSettings.enabledAspectTypes]
                 : [...(base.aspects?.enabled_types || NATAL_ASPECT_TYPES)],
@@ -855,7 +855,7 @@ function filterChartDataForNatalTables(chartData) {
     const filteredByView = window.AstroPreferences?.filterChartDataByViewPreferences
         ? window.AstroPreferences.filterChartDataByViewPreferences(chartData, {
             matrixRows: getNatalMatrixRowsForTables(),
-            aspectScope: currentSettings.aspectScope || 'all',
+            aspectScope: currentSettings.aspectScope || 'major',
             enabledAspectTypes: Array.isArray(currentSettings.enabledAspectTypes) && currentSettings.enabledAspectTypes.length
                 ? currentSettings.enabledAspectTypes
                 : NATAL_ASPECT_TYPES,
@@ -944,7 +944,7 @@ function applyResolvedNatalPreferences(payload, { redraw = true } = {}) {
 
     currentSettings.houseSystem = normalizeHouseSystemCode(payload.chart_meta?.house_system || currentSettings.houseSystem);
     currentSettings.orientation = resolved.view_options?.orientation === 'asc' ? 'asc' : 'aries';
-    currentSettings.aspectScope = resolved.aspects?.scope || 'all';
+    currentSettings.aspectScope = resolved.aspects?.scope || 'major';
     currentSettings.enabledAspectTypes = window.AstroPreferences?.healEnabledAspectTypesForScope
         ? window.AstroPreferences.healEnabledAspectTypesForScope(
             resolved.aspects?.enabled_types,
@@ -1148,7 +1148,7 @@ async function hydrateNatalPreferences(chartData, formData) {
 }
 
 async function applyNatalAspectScope(filter, { persist = true } = {}) {
-    const nextFilter = ['all', 'major', 'minor'].includes(filter) ? filter : 'all';
+    const nextFilter = ['all', 'major', 'minor'].includes(filter) ? filter : 'major';
     currentSettings.aspectScope = nextFilter;
 
     if (window.chartWheel) {
@@ -1491,9 +1491,9 @@ async function applySettings(options = {}) {
         applySettingsTimer = null;
     }
     const applyNow = async () => {
-        const houseSystem = normalizeHouseSystemCode(document.getElementById('houseSystemSelect').value);
-        const orientation = document.getElementById('orientationSelect')?.value || 'aries';
-        const aspectScope = document.getElementById('aspectScopeSelect')?.value || 'all';
+        const houseSystem = normalizeHouseSystemCode(currentSettings.houseSystem);
+        const orientation = currentSettings.orientation;
+        const aspectScope = document.getElementById('aspectScopeSelect')?.value || 'major';
         const iconScalePct = Number(document.getElementById('iconScaleRange')?.value || 120);
         const iconScale = clampPointScale(iconScalePct / 100);
         const matrixRows = readNatalMatrixRowsFromControls();
@@ -1510,13 +1510,13 @@ async function applySettings(options = {}) {
         const showStationary = document.getElementById('showStationaryToggle')?.checked !== false;
         const showWheelStationary = document.getElementById('showWheelStationaryToggle')?.checked === true;
         const showWheelDegree = document.getElementById('showWheelDegreeToggle')?.checked === true;
-        const houseNumberStyle = document.getElementById('houseNumberStyleSelect')?.value === 'roman' ? 'roman' : 'arabic';
-        const houseLabelsOutside = document.getElementById('houseLabelsOutsideToggle')?.checked === true;
-        const angleAscDscBold = document.getElementById('angleAscDscBoldToggle')?.checked !== false;
-        const angleMcIcBold = document.getElementById('angleMcIcBoldToggle')?.checked !== false;
+        const houseNumberStyle = currentSettings.houseNumberStyle === 'roman' ? 'roman' : 'arabic';
+        const houseLabelsOutside = currentSettings.houseLabelsOutside === true;
+        const angleAscDscBold = currentSettings.angleAscDscBold !== false;
+        const angleMcIcBold = currentSettings.angleMcIcBold !== false;
 
         currentSettings.orientation = orientation === 'asc' ? 'asc' : 'aries';
-        currentSettings.aspectScope = ['all', 'major', 'minor'].includes(aspectScope) ? aspectScope : 'all';
+        currentSettings.aspectScope = ['all', 'major', 'minor'].includes(aspectScope) ? aspectScope : 'major';
         currentSettings.planetScale = iconScale;
         currentSettings.pointScale = iconScale;
         currentSettings.matrixRows = matrixRows;
@@ -1692,7 +1692,7 @@ function redrawChart(chartData, hiddenPlanets, orientation = currentSettings.ori
     const filteredByView = window.AstroPreferences?.filterChartDataByViewPreferences
         ? window.AstroPreferences.filterChartDataByViewPreferences(chartData, {
             matrixRows: getCurrentNatalMatrixRows(),
-            aspectScope: currentSettings.aspectScope || 'all',
+            aspectScope: currentSettings.aspectScope || 'major',
             enabledAspectTypes: Array.isArray(currentSettings.enabledAspectTypes) && currentSettings.enabledAspectTypes.length
                 ? currentSettings.enabledAspectTypes
                 : NATAL_ASPECT_TYPES,

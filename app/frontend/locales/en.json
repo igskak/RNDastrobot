@@ -659,6 +659,7 @@
         "pointSize": "Point size",
         "boldAscDsc": "Make ASC and DSC bold",
         "boldMcIc": "Make MC and IC bold",
+        "boldAngularCusps": "Show angular house cusps in bold",
         "showPlanetDegree": "Show planet degree on wheel",
         "showPlanetStationary": "Show stationary on wheel",
         "wheelOptions": "Wheel options",

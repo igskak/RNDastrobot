@@ -438,11 +438,11 @@
                 natal_rows: ensureMatrixRows(viewSettings?.matrix?.natal_rows),
             },
             aspects: {
-                scope: viewSettings?.aspects?.scope || 'all',
+                scope: viewSettings?.aspects?.scope || 'major',
                 enabled_types: Array.isArray(viewSettings?.aspects?.enabled_types)
                     ? [...viewSettings.aspects.enabled_types]
                     : [...DEFAULT_ENABLED_ASPECT_TYPES],
-                show_applying_separating: viewSettings?.aspects?.show_applying_separating === true,
+                show_applying_separating: viewSettings?.aspects?.show_applying_separating !== false,
             },
             table_options: {
                 show_speed: viewSettings?.table_options?.show_speed !== false,
@@ -453,6 +453,8 @@
                 orientation: viewSettings?.view_options?.orientation === 'asc' ? 'asc' : 'aries',
                 bold_asc_dsc: viewSettings?.view_options?.bold_asc_dsc !== false,
                 bold_mc_ic: viewSettings?.view_options?.bold_mc_ic !== false,
+                house_number_style: viewSettings?.view_options?.house_number_style === 'roman' ? 'roman' : 'arabic',
+                house_labels_outside: viewSettings?.view_options?.house_labels_outside === true,
             },
         };
     }

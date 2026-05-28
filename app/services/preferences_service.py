@@ -54,75 +54,39 @@ def _build_default_matrix() -> Dict[str, Any]:
     }
 
 
+def _build_default_view_settings(*, include_speed: bool = True) -> Dict[str, Any]:
+    table_options = {
+        'show_stationary': True,
+        'show_aspect_text': False,
+    }
+    if include_speed:
+        table_options['show_speed'] = True
+    return {
+        'matrix': _build_default_matrix(),
+        'aspects': {
+            'scope': 'major',
+            'enabled_types': list(DEFAULT_ENABLED_ASPECT_TYPES),
+            'show_applying_separating': True,
+        },
+        'table_options': table_options,
+        'view_options': {
+            'orientation': 'aries',
+            'house_number_style': 'arabic',
+            'house_labels_outside': False,
+            'bold_asc_dsc': True,
+            'bold_mc_ic': True,
+        },
+    }
+
+
 def build_default_preferences(default_house_system: str = 'P') -> Dict[str, Any]:
-    biwheel_scope = 'major'
     return {
         'version': PREFERENCE_VERSION,
         'chart_defaults': {
-            'natal': {
-                'matrix': _build_default_matrix(),
-                'aspects': {
-                    'scope': 'all',
-                    'enabled_types': list(DEFAULT_ENABLED_ASPECT_TYPES),
-                    'show_applying_separating': False,
-                },
-                'table_options': {
-                    'show_speed': True,
-                    'show_stationary': True,
-                    'show_aspect_text': False,
-                },
-                'view_options': {
-                    'orientation': 'aries',
-                },
-            },
-            'biwheel': {
-                'matrix': _build_default_matrix(),
-                'aspects': {
-                    'scope': biwheel_scope,
-                    'enabled_types': list(DEFAULT_ENABLED_ASPECT_TYPES),
-                    'show_applying_separating': False,
-                },
-                'table_options': {
-                    'show_speed': True,
-                    'show_stationary': True,
-                    'show_aspect_text': False,
-                },
-                'view_options': {
-                    'orientation': 'aries',
-                },
-            },
-            'forecast_new': {
-                'matrix': _build_default_matrix(),
-                'aspects': {
-                    'scope': 'all',
-                    'enabled_types': list(DEFAULT_ENABLED_ASPECT_TYPES),
-                    'show_applying_separating': False,
-                },
-                'table_options': {
-                    'show_speed': True,
-                    'show_stationary': True,
-                    'show_aspect_text': False,
-                },
-                'view_options': {
-                    'orientation': 'aries',
-                },
-            },
-            'solar': {
-                'matrix': _build_default_matrix(),
-                'aspects': {
-                    'scope': 'all',
-                    'enabled_types': list(DEFAULT_ENABLED_ASPECT_TYPES),
-                    'show_applying_separating': False,
-                },
-                'table_options': {
-                    'show_speed': True,
-                    'show_stationary': True,
-                    'show_aspect_text': False,
-                },
-                'view_options': {
-                    'orientation': 'aries',
-                },
-            },
+            'natal': _build_default_view_settings(),
+            'biwheel': _build_default_view_settings(),
+            'forecast_new': _build_default_view_settings(include_speed=False),
+            'solar': _build_default_view_settings(),
         },
         'methodology': {
             'orbs': {},
@@ -136,6 +100,57 @@ def build_default_preferences(default_house_system: str = 'P') -> Dict[str, Any]
             'house_system': normalize_house_system_code(default_house_system),
         },
     }
+
+
+def _first_present(*values: Any) -> Any:
+    for value in values:
+        if value is not None:
+            return value
+    return None
+
+
+def _extract_global_chart_defaults(chart_defaults: Dict[str, Any]) -> Dict[str, Any]:
+    """Keep only account-level settings that are intentionally global."""
+    chart_defaults = chart_defaults or {}
+    natal = chart_defaults.get('natal') or {}
+    solar = chart_defaults.get('solar') or {}
+    biwheel = chart_defaults.get('biwheel') or {}
+    forecast_new = chart_defaults.get('forecast_new') or {}
+
+    def view_options_for(view_type: str) -> Dict[str, Any]:
+        source = (
+            (chart_defaults.get(view_type) or {}).get('view_options') or {}
+        )
+        natal_view = natal.get('view_options') or {}
+        return {
+            'orientation': _first_present(source.get('orientation'), natal_view.get('orientation')),
+            'house_number_style': _first_present(source.get('house_number_style'), natal_view.get('house_number_style')),
+            'house_labels_outside': _first_present(source.get('house_labels_outside'), natal_view.get('house_labels_outside')),
+            'bold_asc_dsc': _first_present(source.get('bold_asc_dsc'), natal_view.get('bold_asc_dsc')),
+            'bold_mc_ic': _first_present(source.get('bold_mc_ic'), natal_view.get('bold_mc_ic')),
+        }
+
+    show_aspect_text = _first_present(
+        (natal.get('table_options') or {}).get('show_aspect_text'),
+        (solar.get('table_options') or {}).get('show_aspect_text'),
+        (biwheel.get('table_options') or {}).get('show_aspect_text'),
+        (forecast_new.get('table_options') or {}).get('show_aspect_text'),
+    )
+
+    result: Dict[str, Any] = {}
+    for view_type in VIEW_TYPES:
+        cleaned_view_options = {
+            key: value
+            for key, value in view_options_for(view_type).items()
+            if value is not None
+        }
+        cleaned: Dict[str, Any] = {}
+        if cleaned_view_options:
+            cleaned['view_options'] = cleaned_view_options
+        if show_aspect_text is not None:
+            cleaned['table_options'] = {'show_aspect_text': bool(show_aspect_text)}
+        result[view_type] = cleaned
+    return result
 
 
 def deep_merge_dicts(base: Dict[str, Any], overlay: Dict[str, Any]) -> Dict[str, Any]:
@@ -187,9 +202,10 @@ class PreferencesService:
             astrologer.id,
             default_house_system=default_house_system,
         )
+        global_chart_defaults = _extract_global_chart_defaults(record.chart_defaults or {})
         payload = {
             'version': record.version,
-            'chart_defaults': deep_merge_dicts(defaults['chart_defaults'], record.chart_defaults or {}),
+            'chart_defaults': deep_merge_dicts(defaults['chart_defaults'], global_chart_defaults),
             'methodology': runtime_payload.get('methodology', {}) or {},
             'visual': runtime_payload.get('visual', {}) or {},
             'chart_creation_defaults': {
@@ -311,7 +327,7 @@ class PreferencesService:
                 'chart_kind': chart_kind,
                 'chart_id': user.user_id,
                 'view_type': view_type,
-                'house_system': normalize_house_system_code(user.house_system or astrologer.default_house_system),
+                'house_system': normalize_house_system_code(astrologer.default_house_system),
                 'user_id': str(user.user_id),
             }
 
@@ -327,7 +343,7 @@ class PreferencesService:
             'chart_kind': chart_kind,
             'chart_id': solar.solar_id,
             'view_type': view_type,
-            'house_system': normalize_house_system_code(solar.house_system or astrologer.default_house_system),
+            'house_system': normalize_house_system_code(astrologer.default_house_system),
             'user_id': str(solar.user_id),
             'solar_id': str(solar.solar_id),
             'solar_year': solar.year,

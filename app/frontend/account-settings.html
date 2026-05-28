@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.accountSettings.title"></title>
-    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=05195ac2b135">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=05195ac2b135">
+    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=c4b17eac4843">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=c4b17eac4843">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '05195ac2b135';</script>
+    <script>window.__APP_BUILD_ID__ = 'c4b17eac4843';</script>
 </head>
 <body class="account-settings-page">
     <div class="page-loader" id="pageLoader">
@@ -53,36 +53,76 @@
                     <section class="account-settings-toolbar account-settings-toolbar--sidebar">
                         <div class="account-settings-toolbar-main">
                             <p class="account-settings-note-kicker" data-i18n="page.accountSettings.creation.kicker"></p>
-                            <label class="account-settings-label" for="accountHouseSystemSelect" data-i18n="page.accountSettings.creation.houseSystem"></label>
-                            <select id="accountHouseSystemSelect" class="account-settings-select account-settings-select--compact">
-                                <option value="P" data-i18n="astro.houseSystem.placidus"></option>
-                                <option value="K" data-i18n="astro.houseSystem.koch"></option>
-                                <option value="W" data-i18n="astro.houseSystem.wholeSign"></option>
-                                <option value="E" data-i18n="astro.houseSystem.equal"></option>
-                                <option value="R" data-i18n="astro.houseSystem.regiomontanus"></option>
-                                <option value="C" data-i18n="astro.houseSystem.campanus"></option>
-                            </select>
-                            <label class="account-settings-label" for="accountTimezoneLabelFormatSelect" data-i18n="page.accountSettings.creation.timezoneLabelFormat"></label>
-                            <select id="accountTimezoneLabelFormatSelect" class="account-settings-select account-settings-select--compact">
-                                <option value="UTC" data-i18n="page.accountSettings.creation.timezoneLabelFormatOptions.utc"></option>
-                                <option value="GMT" data-i18n="page.accountSettings.creation.timezoneLabelFormatOptions.gmt"></option>
-                            </select>
-                            <p class="account-settings-toolbar-copy" data-i18n="page.accountSettings.creation.timezoneLabelFormatCopy"></p>
-                            <label class="account-settings-label" for="accountDateFormatSelect" data-i18n="page.accountSettings.creation.dateFormat"></label>
-                            <select id="accountDateFormatSelect" class="account-settings-select account-settings-select--compact">
-                                <option value="DD_MM_YYYY" data-i18n="page.accountSettings.creation.dateFormatOptions.ddmmyyyy"></option>
-                                <option value="MM_DD_YYYY" data-i18n="page.accountSettings.creation.dateFormatOptions.mmddyyyy"></option>
-                                <option value="YYYY_MM_DD" data-i18n="page.accountSettings.creation.dateFormatOptions.yyyymmdd"></option>
-                                <option value="LOCALE" data-i18n="page.accountSettings.creation.dateFormatOptions.locale"></option>
-                            </select>
-                            <p class="account-settings-toolbar-copy" data-i18n="page.accountSettings.creation.dateFormatCopy"></p>
-                            <label class="account-settings-label" for="accountDegreeFormatSelect" data-i18n="page.accountSettings.creation.degreeFormat"></label>
-                            <select id="accountDegreeFormatSelect" class="account-settings-select account-settings-select--compact">
-                                <option value="DEGREES_ONLY" data-i18n="page.accountSettings.creation.degreeFormatOptions.degreesOnly"></option>
-                                <option value="DEGREES_MINUTES" data-i18n="page.accountSettings.creation.degreeFormatOptions.degreesMinutes"></option>
-                                <option value="DEGREES_MINUTES_SECONDS" data-i18n="page.accountSettings.creation.degreeFormatOptions.degreesMinutesSeconds"></option>
-                            </select>
-                            <p class="account-settings-toolbar-copy" data-i18n="page.accountSettings.creation.degreeFormatCopy"></p>
+                            <div class="account-settings-field-grid">
+                                <div class="account-settings-field">
+                                    <label class="account-settings-label" for="accountHouseSystemSelect" data-i18n="page.accountSettings.creation.houseSystem"></label>
+                                    <select id="accountHouseSystemSelect" class="account-settings-select account-settings-select--compact">
+                                        <option value="P" data-i18n="astro.houseSystem.placidus"></option>
+                                        <option value="K" data-i18n="astro.houseSystem.koch"></option>
+                                        <option value="W" data-i18n="astro.houseSystem.wholeSign"></option>
+                                        <option value="E" data-i18n="astro.houseSystem.equal"></option>
+                                        <option value="R" data-i18n="astro.houseSystem.regiomontanus"></option>
+                                        <option value="C" data-i18n="astro.houseSystem.campanus"></option>
+                                    </select>
+                                </div>
+                                <div class="account-settings-field">
+                                    <label class="account-settings-label" for="accountOrientationSelect" data-i18n="page.accountSettings.fields.orientation"></label>
+                                    <select id="accountOrientationSelect" class="account-settings-select account-settings-select--compact">
+                                        <option value="aries" data-i18n="page.accountSettings.options.orientationAries"></option>
+                                        <option value="asc" data-i18n="page.accountSettings.options.orientationAsc"></option>
+                                    </select>
+                                </div>
+                                <div class="account-settings-field">
+                                    <label class="account-settings-label" for="accountHouseNumberStyleSelect" data-i18n="page.chart.settings.houseLabels.label"></label>
+                                    <select id="accountHouseNumberStyleSelect" class="account-settings-select account-settings-select--compact">
+                                        <option value="arabic" data-i18n="page.chart.settings.houseLabels.arabic"></option>
+                                        <option value="roman" data-i18n="page.chart.settings.houseLabels.roman"></option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="account-settings-toggle-grid">
+                                <label class="account-settings-option-toggle">
+                                    <span data-i18n="page.chart.settings.houseLabels.outside"></span>
+                                    <input type="checkbox" id="accountHouseLabelsOutsideToggle">
+                                </label>
+                                <label class="account-settings-option-toggle">
+                                    <span data-i18n="page.accountSettings.options.showAspectText"></span>
+                                    <input type="checkbox" id="accountShowAspectTextToggle">
+                                </label>
+                                <label class="account-settings-option-toggle">
+                                    <span data-i18n="page.chart.settings.boldAngularCusps"></span>
+                                    <input type="checkbox" id="accountAngularCuspsBoldToggle">
+                                </label>
+                            </div>
+                            <div class="account-settings-field-grid account-settings-field-grid--formats">
+                                <div class="account-settings-field">
+                                    <label class="account-settings-label" for="accountTimezoneLabelFormatSelect" data-i18n="page.accountSettings.creation.timezoneLabelFormat"></label>
+                                    <select id="accountTimezoneLabelFormatSelect" class="account-settings-select account-settings-select--compact">
+                                        <option value="UTC" data-i18n="page.accountSettings.creation.timezoneLabelFormatOptions.utc"></option>
+                                        <option value="GMT" data-i18n="page.accountSettings.creation.timezoneLabelFormatOptions.gmt"></option>
+                                    </select>
+                                    <p class="account-settings-toolbar-copy" data-i18n="page.accountSettings.creation.timezoneLabelFormatCopy"></p>
+                                </div>
+                                <div class="account-settings-field">
+                                    <label class="account-settings-label" for="accountDateFormatSelect" data-i18n="page.accountSettings.creation.dateFormat"></label>
+                                    <select id="accountDateFormatSelect" class="account-settings-select account-settings-select--compact">
+                                        <option value="DD_MM_YYYY" data-i18n="page.accountSettings.creation.dateFormatOptions.ddmmyyyy"></option>
+                                        <option value="MM_DD_YYYY" data-i18n="page.accountSettings.creation.dateFormatOptions.mmddyyyy"></option>
+                                        <option value="YYYY_MM_DD" data-i18n="page.accountSettings.creation.dateFormatOptions.yyyymmdd"></option>
+                                        <option value="LOCALE" data-i18n="page.accountSettings.creation.dateFormatOptions.locale"></option>
+                                    </select>
+                                    <p class="account-settings-toolbar-copy" data-i18n="page.accountSettings.creation.dateFormatCopy"></p>
+                                </div>
+                                <div class="account-settings-field">
+                                    <label class="account-settings-label" for="accountDegreeFormatSelect" data-i18n="page.accountSettings.creation.degreeFormat"></label>
+                                    <select id="accountDegreeFormatSelect" class="account-settings-select account-settings-select--compact">
+                                        <option value="DEGREES_ONLY" data-i18n="page.accountSettings.creation.degreeFormatOptions.degreesOnly"></option>
+                                        <option value="DEGREES_MINUTES" data-i18n="page.accountSettings.creation.degreeFormatOptions.degreesMinutes"></option>
+                                        <option value="DEGREES_MINUTES_SECONDS" data-i18n="page.accountSettings.creation.degreeFormatOptions.degreesMinutesSeconds"></option>
+                                    </select>
+                                    <p class="account-settings-toolbar-copy" data-i18n="page.accountSettings.creation.degreeFormatCopy"></p>
+                                </div>
+                            </div>
                             <p class="account-settings-toolbar-copy" data-i18n="page.accountSettings.creation.copy"></p>
                         </div>
                         <aside class="account-settings-toolbar-note">
@@ -93,7 +133,7 @@
                 </aside>
 
                 <div class="account-settings-sheet">
-                    <section class="account-settings-card">
+                    <section class="account-settings-card hidden">
                 <div class="account-settings-card-head account-settings-card-head--compact">
                     <div>
                         <p class="account-settings-section-kicker" data-i18n="page.accountSettings.tables.defaults.kicker"></p>
@@ -240,7 +280,7 @@
                 </div>
                     </section>
 
-                    <section class="account-settings-card">
+                    <section class="account-settings-card hidden">
                 <div class="account-settings-card-head account-settings-card-head--compact">
                     <div>
                         <p class="account-settings-section-kicker" data-i18n="page.accountSettings.tables.aspects.kicker"></p>
@@ -263,7 +303,7 @@
                 </div>
                     </section>
 
-                    <details class="account-settings-card account-settings-card--details">
+                    <details class="account-settings-card account-settings-card--details hidden">
                 <summary class="account-settings-card-summary">
                     <span>
                         <p class="account-settings-section-kicker" data-i18n="page.accountSettings.tables.bodies.kicker"></p>
@@ -607,7 +647,7 @@
 
     <div id="accountSettingsToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/account-settings.bundle.js?v=05195ac2b135"></script>
-    <script src="js/locale-switcher.js?v=05195ac2b135"></script>
+    <script type="module" src="js/bundles/account-settings.bundle.js?v=c4b17eac4843"></script>
+    <script src="js/locale-switcher.js?v=c4b17eac4843"></script>
 </body>
 </html>

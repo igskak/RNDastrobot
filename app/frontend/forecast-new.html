@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Прогностика New</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=75e9ea6c33c3">
-    <script>window.__APP_BUILD_ID__ = '75e9ea6c33c3';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=d43b47611b26">
+    <script>window.__APP_BUILD_ID__ = 'd43b47611b26';</script>
 </head>
 <body class="forecast-new-page">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -173,24 +173,6 @@
             <div id="forecastNewSettingsPanel" class="settings-panel forecast-new-settings-panel hidden">
                 <h4>Настройки карты</h4>
                 <div class="settings-section">
-                    <label class="settings-label">Ориентация</label>
-                    <select id="orientationSelect" class="settings-select">
-                        <option value="aries">Овен слева</option>
-                        <option value="asc">ASC слева</option>
-                    </select>
-                </div>
-                <div class="settings-section">
-                    <label class="settings-label">Система домов</label>
-                    <select id="houseSystemSelect" class="settings-select">
-                        <option value="P">Плацидус</option>
-                        <option value="K">Кох</option>
-                        <option value="W">Целые знаки</option>
-                        <option value="E">Равнодомная</option>
-                        <option value="C">Кампанус</option>
-                        <option value="R">Региомонтан</option>
-                    </select>
-                </div>
-                <div class="settings-section">
                     <label class="settings-label">Размер иконок</label>
                     <div class="settings-size-control">
                         <input type="range" id="iconScaleRange" min="80" max="170" step="5" value="120">
@@ -227,17 +209,6 @@
                     </div>
                 </div>
                 <div class="settings-section">
-                    <label class="settings-label">Подписи домов</label>
-                    <select id="houseNumberStyleSelect" class="settings-select">
-                        <option value="arabic">Арабские</option>
-                        <option value="roman">Римские</option>
-                    </select>
-                    <label class="settings-check-option">
-                        <input type="checkbox" id="houseLabelsOutsideToggle">
-                        <span data-i18n="page.chart.settings.houseLabels.outside"></span>
-                    </label>
-                </div>
-                <div class="settings-section">
                     <label class="settings-label">Куспиды кругов</label>
                     <div class="settings-check-stack">
                         <label class="settings-check-option">
@@ -264,14 +235,6 @@
                         <label class="settings-check-option">
                             <input type="checkbox" id="showWheelDegreeToggle">
                             <span>Показывать градус</span>
-                        </label>
-                        <label class="settings-check-option">
-                            <input type="checkbox" id="angleAscDscBoldToggle" checked>
-                            <span data-i18n="page.chart.settings.boldAscDsc"></span>
-                        </label>
-                        <label class="settings-check-option">
-                            <input type="checkbox" id="angleMcIcBoldToggle" checked>
-                            <span data-i18n="page.chart.settings.boldMcIc"></span>
                         </label>
                     </div>
                 </div>
@@ -382,6 +345,6 @@
         </aside>
     </main>
 
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=75e9ea6c33c3"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=d43b47611b26"></script>
 </body>
 </html>

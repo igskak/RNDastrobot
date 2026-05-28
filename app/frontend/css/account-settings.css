@@ -38,7 +38,7 @@ body.account-settings-modal-open {
 
 .account-settings-header {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(360px, 1fr) minmax(520px, auto);
     gap: 14px;
     align-items: flex-start;
     padding: 14px 16px;
@@ -133,9 +133,11 @@ body.account-settings-modal-open {
     gap: 8px;
     justify-content: flex-end;
     align-items: flex-start;
+    max-width: 700px;
 }
 
 .account-plan-card {
+    flex: 1 1 320px;
     width: min(360px, 100%);
     padding: 12px 14px;
     border: 1px solid rgba(30, 58, 95, 0.1);
@@ -268,7 +270,7 @@ body.account-settings-modal-open {
 
 .account-settings-toolbar--sidebar {
     display: grid;
-    grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 0.52fr);
     gap: 12px;
     height: auto;
 }
@@ -280,6 +282,22 @@ body.account-settings-modal-open {
     padding: 12px 14px;
     border-radius: 18px;
     background: rgba(247, 242, 233, 0.72);
+}
+
+.account-settings-toolbar-main {
+    display: grid;
+    gap: 10px;
+}
+
+.account-settings-field-grid,
+.account-settings-toggle-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.account-settings-field {
+    min-width: 0;
 }
 
 .account-settings-toolbar-copy {
@@ -605,20 +623,30 @@ body.account-settings-modal-open {
 
 .account-settings-option-toggle {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 12px;
-    min-height: 58px;
-    padding: 12px;
+    min-height: 44px;
+    padding: 9px 10px;
     border: 1px solid rgba(30, 58, 95, 0.1);
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.78);
     cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.account-settings-option-toggle span {
+    min-width: 0;
+    overflow-wrap: normal;
 }
 
 .account-settings-option-toggle input {
     flex: 0 0 auto;
-    margin-top: 2px;
+    width: 16px;
+    height: 16px;
+    margin: 0;
     accent-color: #1e3a5f;
 }
 
@@ -1199,6 +1227,15 @@ body.account-settings-modal-open {
     .account-settings-toolbar--sidebar {
         grid-template-columns: 1fr;
     }
+
+    .account-settings-actions {
+        max-width: none;
+    }
+
+    .account-settings-field-grid,
+    .account-settings-toggle-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 720px) {
@@ -1256,6 +1293,11 @@ body.account-settings-modal-open {
 
     .account-settings-profile-tabs {
         width: 100%;
+    }
+
+    .account-settings-field-grid,
+    .account-settings-toggle-grid {
+        grid-template-columns: 1fr;
     }
 
     .account-settings-confirm-dialog {

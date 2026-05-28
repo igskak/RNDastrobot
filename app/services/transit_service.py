@@ -18,7 +18,7 @@ from loguru import logger
 
 from app.database.models import (
     User, NatalPlanet, NatalSpecialPoint, Angle, NatalHouse, RefAspectType, RefPlanetOrb,
-    TransitEventsCache
+    TransitEventsCache, Astrologer
 )
 from app.services.swisseph_engine import SwissEphemerisEngine
 from app.services.time_service import TimeService
@@ -81,7 +81,10 @@ class TransitService:
         transit_angles = {}
         if latitude is not None and longitude is not None:
             user = self.db.query(User).filter(User.user_id == user_id).first()
-            house_system = user.house_system if user and user.house_system else 'P'
+            house_system = 'P'
+            if user and user.astrologer_id:
+                astrologer = self.db.query(Astrologer).filter(Astrologer.id == user.astrologer_id).first()
+                house_system = astrologer.default_house_system if astrologer and astrologer.default_house_system else 'P'
             transit_houses, transit_angles = self.swisseph_engine.calculate_houses(
                 jd=jd_transit,
                 lat=float(latitude),

@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecast.tabs.solar"></title>
-    <link rel="stylesheet" href="bundles/solar.bundle.css?v=ee990abd1bc6">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=ee990abd1bc6">
+    <link rel="stylesheet" href="bundles/solar.bundle.css?v=2611bfb4ac2c">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=2611bfb4ac2c">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = 'ee990abd1bc6';</script>
+    <script>window.__APP_BUILD_ID__ = '2611bfb4ac2c';</script>
 </head>
 <body class="chart-page forecast-new-page solar-page">
     <div class="page-loader" id="pageLoader">
@@ -150,24 +150,6 @@
             <div id="solarSettingsPanel" class="settings-panel solar-settings-panel hidden">
                 <h4 data-i18n="common.settings"></h4>
                 <div class="settings-section">
-                    <label class="settings-label" data-i18n="page.forecast.solar.orientation"></label>
-                    <select id="solarOrientationSelect" class="settings-select">
-                        <option value="aries" data-i18n="page.forecast.solar.orientationAries"></option>
-                        <option value="asc" data-i18n="page.forecast.solar.orientationAsc"></option>
-                    </select>
-                </div>
-                <div class="settings-section">
-                    <label class="settings-label" data-i18n="page.chart.settings.houseSystem.label"></label>
-                    <select id="solarHouseSystemSelect" class="settings-select">
-                        <option value="P" data-i18n="astro.houseSystem.placidus"></option>
-                        <option value="K" data-i18n="astro.houseSystem.koch"></option>
-                        <option value="W" data-i18n="astro.houseSystem.wholeSign"></option>
-                        <option value="E" data-i18n="astro.houseSystem.equal"></option>
-                        <option value="C" data-i18n="astro.houseSystem.campanus"></option>
-                        <option value="R" data-i18n="astro.houseSystem.regiomontanus"></option>
-                    </select>
-                </div>
-                <div class="settings-section">
                     <label class="settings-label" data-i18n="page.accountSettings.fields.aspectScope"></label>
                     <select id="solarAspectScopeSelect" class="settings-select">
                         <option value="all" data-i18n="common.all"></option>
@@ -204,17 +186,6 @@
                     <div class="forecast-settings-matrix solar-matrix" id="solarMatrixEditor"></div>
                 </div>
                 <div class="settings-section">
-                    <label class="settings-label" data-i18n="page.chart.settings.houseLabels.label"></label>
-                    <select id="solarHouseNumberStyleSelect" class="settings-select">
-                        <option value="arabic" data-i18n="page.chart.settings.houseLabels.arabic"></option>
-                        <option value="roman" data-i18n="page.chart.settings.houseLabels.roman"></option>
-                    </select>
-                    <label class="settings-check-option">
-                        <input type="checkbox" id="solarHouseLabelsOutsideToggle">
-                        <span data-i18n="page.chart.settings.houseLabels.outside"></span>
-                    </label>
-                </div>
-                <div class="settings-section">
                     <label class="settings-label" data-i18n="page.chart.settings.wheelOptions"></label>
                     <div class="settings-check-stack">
                         <label class="settings-check-option">
@@ -231,9 +202,6 @@
                     <label class="forecast-settings-check"><input type="checkbox" id="solarShowApplyingSeparatingToggle"><span data-i18n="page.accountSettings.options.showApplyingSeparating"></span></label>
                     <label class="forecast-settings-check"><input type="checkbox" id="solarShowSpeedToggle"><span data-i18n="page.accountSettings.options.showSpeed"></span></label>
                     <label class="forecast-settings-check"><input type="checkbox" id="solarShowStationaryToggle"><span data-i18n="page.accountSettings.options.showStationary"></span></label>
-                    <label class="forecast-settings-check"><input type="checkbox" id="solarShowAspectTextToggle"><span data-i18n="page.accountSettings.options.showAspectText"></span></label>
-                    <label class="forecast-settings-check"><input type="checkbox" id="solarAngleAscDscBoldToggle"><span data-i18n="page.chart.settings.boldAscDsc"></span></label>
-                    <label class="forecast-settings-check"><input type="checkbox" id="solarAngleMcIcBoldToggle"><span data-i18n="page.chart.settings.boldMcIc"></span></label>
                 </div>
                 <div class="settings-actions">
                     <button type="button" class="preset-btn" id="solarSaveDefaultsBtn" data-i18n="page.accountSettings.actions.save"></button>
@@ -335,6 +303,6 @@
 
     <div id="solarToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/solar.bundle.js?v=ee990abd1bc6"></script>
+    <script type="module" src="js/bundles/solar.bundle.js?v=2611bfb4ac2c"></script>
 </body>
 </html>

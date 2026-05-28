@@ -659,6 +659,7 @@
         "pointSize": "Размер точек",
         "boldAscDsc": "Сделать жирным ASC и DSC",
         "boldMcIc": "Сделать жирным MC и IC",
+        "boldAngularCusps": "Отображать куспиды угловых домов жирным",
         "showPlanetDegree": "Показывать градус планеты на колесе",
         "showPlanetStationary": "Показывать стационарность на колесе",
         "wheelOptions": "Параметры колеса",

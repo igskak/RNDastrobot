@@ -53,7 +53,7 @@
         settings: {
             houseSystem: 'P',
             orientation: 'aries',
-            aspectScope: 'all',
+            aspectScope: 'major',
             enabledAspectTypes: [...DEFAULT_ASPECT_TYPES],
             matrixRows: window.AstroPreferences?.ensureMatrixRows?.({}) || {},
             pointScale: 1,
@@ -490,7 +490,7 @@
     }
 
     function normalizeSettings(settings = {}) {
-        const aspectScope = ['all', 'major', 'minor'].includes(settings.aspectScope) ? settings.aspectScope : 'all';
+        const aspectScope = ['all', 'major', 'minor'].includes(settings.aspectScope) ? settings.aspectScope : 'major';
         return {
             houseSystem: normalizeHouseSystemCode(settings.houseSystem),
             orientation: settings.orientation === 'asc' ? 'asc' : 'aries',
@@ -584,24 +584,24 @@
     }
 
     function syncSettingsControls() {
-        refs.solarOrientationSelect.value = state.settings.orientation;
-        refs.solarHouseSystemSelect.value = state.settings.houseSystem;
+        if (refs.solarOrientationSelect) refs.solarOrientationSelect.value = state.settings.orientation;
+        if (refs.solarHouseSystemSelect) refs.solarHouseSystemSelect.value = state.settings.houseSystem;
         refs.solarAspectScopeSelect.value = state.settings.aspectScope;
         refs.solarPointScaleRange.value = String(Math.round(state.settings.pointScale * 100));
         refs.solarPointScaleValue.textContent = `${Math.round(state.settings.pointScale * 100)}%`;
         const aspectPhaseFilter = normalizeAspectPhaseFilter(state.settings.aspectPhaseFilter);
         refs.solarAspectPhaseApplyingToggle.checked = aspectPhaseFilter.includes('applying');
         refs.solarAspectPhaseSeparatingToggle.checked = aspectPhaseFilter.includes('separating');
-        refs.solarHouseNumberStyleSelect.value = state.settings.houseNumberStyle;
-        refs.solarHouseLabelsOutsideToggle.checked = state.settings.houseLabelsOutside === true;
+        if (refs.solarHouseNumberStyleSelect) refs.solarHouseNumberStyleSelect.value = state.settings.houseNumberStyle;
+        if (refs.solarHouseLabelsOutsideToggle) refs.solarHouseLabelsOutsideToggle.checked = state.settings.houseLabelsOutside === true;
         refs.solarShowWheelStationaryToggle.checked = state.settings.showWheelStationary === true;
         refs.solarShowWheelDegreeToggle.checked = state.settings.showWheelDegree === true;
         refs.solarShowApplyingSeparatingToggle.checked = state.settings.showApplyingSeparating === true;
         refs.solarShowSpeedToggle.checked = state.settings.showSpeed !== false;
         refs.solarShowStationaryToggle.checked = state.settings.showStationary !== false;
-        refs.solarShowAspectTextToggle.checked = state.settings.showAspectText === true;
-        refs.solarAngleAscDscBoldToggle.checked = state.settings.angleAscDscBold !== false;
-        refs.solarAngleMcIcBoldToggle.checked = state.settings.angleMcIcBold !== false;
+        if (refs.solarShowAspectTextToggle) refs.solarShowAspectTextToggle.checked = state.settings.showAspectText === true;
+        if (refs.solarAngleAscDscBoldToggle) refs.solarAngleAscDscBoldToggle.checked = state.settings.angleAscDscBold !== false;
+        if (refs.solarAngleMcIcBoldToggle) refs.solarAngleMcIcBoldToggle.checked = state.settings.angleMcIcBold !== false;
         renderAspectTypeToggles();
         renderMatrixEditor();
     }
@@ -672,8 +672,8 @@
 
         state.settings = normalizeSettings({
             ...state.settings,
-            houseSystem: refs.solarHouseSystemSelect.value,
-            orientation: refs.solarOrientationSelect.value,
+            houseSystem: state.settings.houseSystem,
+            orientation: state.settings.orientation,
             aspectScope: refs.solarAspectScopeSelect.value,
             pointScale: Number(refs.solarPointScaleRange.value) / 100,
             matrixRows: rows,
@@ -685,13 +685,13 @@
             ],
             showSpeed: refs.solarShowSpeedToggle.checked,
             showStationary: refs.solarShowStationaryToggle.checked,
-            showAspectText: refs.solarShowAspectTextToggle.checked,
+            showAspectText: state.settings.showAspectText === true,
             showWheelStationary: refs.solarShowWheelStationaryToggle.checked,
             showWheelDegree: refs.solarShowWheelDegreeToggle.checked,
-            houseNumberStyle: refs.solarHouseNumberStyleSelect.value,
-            houseLabelsOutside: refs.solarHouseLabelsOutsideToggle.checked,
-            angleAscDscBold: refs.solarAngleAscDscBoldToggle.checked,
-            angleMcIcBold: refs.solarAngleMcIcBoldToggle.checked,
+            houseNumberStyle: state.settings.houseNumberStyle,
+            houseLabelsOutside: state.settings.houseLabelsOutside === true,
+            angleAscDscBold: state.settings.angleAscDscBold !== false,
+            angleMcIcBold: state.settings.angleMcIcBold !== false,
         });
         state.natalWheelData = prepareNatalPanelData(state.natalData);
         syncSettingsControls();

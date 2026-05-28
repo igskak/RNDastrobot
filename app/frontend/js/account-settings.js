@@ -300,7 +300,8 @@
         return {
             chart_defaults: {
                 natal: normalizeViewSettings({}),
-                biwheel: normalizeViewSettings({ aspects: { scope: 'major' } }),
+                biwheel: normalizeViewSettings({}),
+                forecast_new: normalizeViewSettings({}),
                 solar: normalizeViewSettings({}),
             },
             chart_creation_defaults: {
@@ -968,6 +969,7 @@
             chart_defaults: {
                 natal: normalizeViewSettings(preferences?.chart_defaults?.natal || {}),
                 biwheel: normalizeViewSettings(preferences?.chart_defaults?.biwheel || {}),
+                forecast_new: normalizeViewSettings(preferences?.chart_defaults?.forecast_new || {}),
                 solar: normalizeViewSettings(preferences?.chart_defaults?.solar || {}),
             },
             chart_creation_defaults: {
@@ -987,6 +989,28 @@
         const houseSystemSelect = document.getElementById('accountHouseSystemSelect');
         if (houseSystemSelect) {
             houseSystemSelect.value = normalized.chart_creation_defaults.house_system || 'P';
+        }
+        const globalViewOptions = normalized.chart_defaults.natal?.view_options || {};
+        const globalTableOptions = normalized.chart_defaults.natal?.table_options || {};
+        const orientationSelect = document.getElementById('accountOrientationSelect');
+        if (orientationSelect) {
+            orientationSelect.value = globalViewOptions.orientation === 'asc' ? 'asc' : 'aries';
+        }
+        const houseNumberStyleSelect = document.getElementById('accountHouseNumberStyleSelect');
+        if (houseNumberStyleSelect) {
+            houseNumberStyleSelect.value = globalViewOptions.house_number_style === 'roman' ? 'roman' : 'arabic';
+        }
+        const houseLabelsOutsideToggle = document.getElementById('accountHouseLabelsOutsideToggle');
+        if (houseLabelsOutsideToggle) {
+            houseLabelsOutsideToggle.checked = globalViewOptions.house_labels_outside === true;
+        }
+        const showAspectTextToggle = document.getElementById('accountShowAspectTextToggle');
+        if (showAspectTextToggle) {
+            showAspectTextToggle.checked = globalTableOptions.show_aspect_text === true;
+        }
+        const angularCuspsBoldToggle = document.getElementById('accountAngularCuspsBoldToggle');
+        if (angularCuspsBoldToggle) {
+            angularCuspsBoldToggle.checked = globalViewOptions.bold_asc_dsc !== false && globalViewOptions.bold_mc_ic !== false;
         }
         const timezoneLabelFormatSelect = getTimezoneLabelFormatSelect();
         if (timezoneLabelFormatSelect) {
@@ -1161,15 +1185,37 @@
         });
     }
 
+    function collectGlobalViewSettings() {
+        const orientation = document.getElementById('accountOrientationSelect')?.value === 'asc' ? 'asc' : 'aries';
+        const houseNumberStyle = document.getElementById('accountHouseNumberStyleSelect')?.value === 'roman' ? 'roman' : 'arabic';
+        const houseLabelsOutside = document.getElementById('accountHouseLabelsOutsideToggle')?.checked === true;
+        const showAspectText = document.getElementById('accountShowAspectTextToggle')?.checked === true;
+        const angularCuspsBold = document.getElementById('accountAngularCuspsBoldToggle')?.checked !== false;
+        return {
+            table_options: {
+                show_aspect_text: showAspectText,
+            },
+            view_options: {
+                orientation,
+                house_number_style: houseNumberStyle,
+                house_labels_outside: houseLabelsOutside,
+                bold_asc_dsc: angularCuspsBold,
+                bold_mc_ic: angularCuspsBold,
+            },
+        };
+    }
+
     function collectPayload() {
+        const globalViewSettings = collectGlobalViewSettings();
         return {
             chart_creation_defaults: {
                 house_system: document.getElementById('accountHouseSystemSelect')?.value || 'P',
             },
             chart_defaults: {
-                natal: collectViewSettings('natal'),
-                biwheel: collectViewSettings('biwheel'),
-                solar: collectViewSettings('solar'),
+                natal: deepClone(globalViewSettings),
+                biwheel: deepClone(globalViewSettings),
+                forecast_new: deepClone(globalViewSettings),
+                solar: deepClone(globalViewSettings),
             },
             methodology: collectMethodology(),
             visual: collectVisual(),
@@ -1345,10 +1391,14 @@
                 normalizeMethodologySettings(persistedMethodologyBaseline || {}),
                 payload.methodology
             );
+            const defaultHouseSystemChanged = (
+                (accountPreferences?.chart_creation_defaults?.house_system || 'P')
+                !== (payload.chart_creation_defaults?.house_system || 'P')
+            );
             const updated = await window.AstroAPI.patchAccountPreferences(payload);
             populateForm(updated, { updateBaseline: true });
 
-            if (methodologyChanged && window.AstroAPI?.createPreferenceRecalcJob) {
+            if ((methodologyChanged || defaultHouseSystemChanged) && window.AstroAPI?.createPreferenceRecalcJob) {
                 const job = await window.AstroAPI.createPreferenceRecalcJob({
                     job_type: 'methodology_recalc',
                     payload: {
