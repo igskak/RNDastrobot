@@ -626,10 +626,8 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                     const angle1 = this.longToAngle(moving.longitude) * Math.PI / 180;
                     const angle2 = this.longToAngle(natal.longitude) * Math.PI / 180;
                     const isSynastryComparison = ring.method === 'synastry_partner';
-                    const movingAspectRadius = isSynastryComparison ? this.getBodyAnchorRadius(ring) : aspectRadius;
-                    const natalAspectRadius = isSynastryComparison ? this.getBodyAnchorRadius(natalRing) : aspectRadius;
-                    const p1 = this.polar(movingAspectRadius, angle1 * 180 / Math.PI);
-                    const p2 = this.polar(natalAspectRadius, angle2 * 180 / Math.PI);
+                    const p1 = this.polar(aspectRadius, angle1 * 180 / Math.PI);
+                    const p2 = this.polar(aspectRadius, angle2 * 180 / Math.PI);
                     const geometry = this.resolveAspectLineGeometry({
                         x1: p1.x,
                         y1: p1.y,

@@ -21,6 +21,7 @@ from app.services.chart_derivation_service import ChartDerivationService
 from app.services.geocoding_service import GeocodingService
 from app.services.planet_characteristics_service import PlanetCharacteristicsService
 from app.services.preferences_runtime import PreferencesRuntimeResolver
+from app.services.special_points_service import SpecialPointsService
 from app.utils.constants import (
     PROGNOSTIC_DEFAULT_ORB,
     PROGNOSTIC_EXACT_ORB,
@@ -78,6 +79,62 @@ class SolarReturnService:
         logger.debug(f"Solar return for Sun@{natal_sun_lon:.4f}° in {year}: JD={jd_solar}")
         
         return jd_solar
+
+    def _calculate_solar_special_bodies(
+        self,
+        jd: float,
+        *,
+        solar_houses: List[Dict],
+        solar_angles: Dict,
+        solar_planets: List[Dict],
+        latitude: float,
+        longitude: float,
+    ) -> List[Dict]:
+        """Рассчитать солярные спецточки тем же набором, что и в остальных панелях."""
+        north, south = SpecialPointsService.calculate_true_nodes(jd)
+        lilith = SpecialPointsService.calculate_black_moon(jd)
+        selena = SpecialPointsService.calculate_white_moon(jd)
+        special_longs = [
+            ('TrueNorthNode', north),
+            ('TrueSouthNode', south),
+            ('BlackMoon', lilith),
+            ('WhiteMoon', selena),
+        ]
+
+        asc_lon = (solar_angles or {}).get('ASC', {}).get('longitude')
+        sun = next((body for body in (solar_planets or []) if body.get('name') == 'Sun'), None)
+        moon = next((body for body in (solar_planets or []) if body.get('name') == 'Moon'), None)
+        if asc_lon is not None and sun and moon:
+            sun_house = sun.get('house') or self.swisseph_engine.get_planet_house(
+                sun['longitude'],
+                solar_houses,
+            )
+            fortune = SpecialPointsService.calculate_part_of_fortune(
+                asc_lon,
+                sun['longitude'],
+                moon['longitude'],
+                sun_house,
+                jd=jd,
+                latitude=latitude,
+                longitude=longitude,
+            )
+            special_longs.append(('Fortune', fortune))
+
+        bodies: List[Dict] = []
+        for name, longitude_value in special_longs:
+            degree_in_sign = get_degree_in_sign(longitude_value)
+            bodies.append({
+                'name': name,
+                'longitude': longitude_value,
+                'sign': get_zodiac_sign(longitude_value),
+                'degree_in_sign': degree_in_sign,
+                'degree_in_sign_formatted': format_degree_minutes_seconds(degree_in_sign),
+                'house': self.swisseph_engine.get_planet_house(longitude_value, solar_houses),
+                'retrograde': False,
+                'speed': 0.0,
+                'type': 'solar_point',
+            })
+        return bodies
 
     def jd_to_datetime(self, jd: float, timezone: str) -> datetime:
         """Конвертировать Julian Day в datetime с учётом timezone"""
@@ -191,6 +248,14 @@ class SolarReturnService:
             planet['house'] = self.swisseph_engine.get_planet_house(
                 planet['longitude'], solar_houses
             )
+        solar_planets.extend(self._calculate_solar_special_bodies(
+            jd_solar,
+            solar_houses=solar_houses,
+            solar_angles=solar_angles,
+            solar_planets=solar_planets,
+            latitude=location_lat,
+            longitude=location_lon,
+        ))
 
         # 8.1 Рассчитать аспекты внутри солярной карты и соляр → натал
         solar_aspects = self._calculate_solar_aspects(solar_planets, user_id=user_id)

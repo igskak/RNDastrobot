@@ -119,18 +119,25 @@ class ProgressionService:
         )
         progressed_jd = timing['progressed_jd']
         
-        # 3. Рассчитать прогрессивные планеты + узлы и Лилит
+        # 3. Рассчитать прогрессивные планеты
         progressed_planets = self.swisseph_engine.calculate_planets(progressed_jd)
-        progressed_planets.extend(self._calculate_progressed_special_bodies(progressed_jd))
-        progressed_planets = self._enrich_motion_flags(progressed_planets, user_id=user_id)
 
         # 3.1 Рассчитать прогрессивные куспиды домов
-        progressed_houses, _ = self.swisseph_engine.calculate_houses(
+        progressed_houses, progressed_angles = self.swisseph_engine.calculate_houses(
             jd=progressed_jd,
             lat=float(user.lat),
             lon=float(user.lon),
             hsys='P',
         )
+        progressed_planets.extend(self._calculate_progressed_special_bodies(
+            progressed_jd,
+            progressed_houses=progressed_houses,
+            progressed_angles=progressed_angles,
+            progressed_planets=progressed_planets,
+            latitude=float(user.lat),
+            longitude=float(user.lon),
+        ))
+        progressed_planets = self._enrich_motion_flags(progressed_planets, user_id=user_id)
         
         # 4. Загрузить натальные данные для аспектов и домов
         natal_data = self._load_natal_data(user_id)
@@ -348,19 +355,49 @@ class ProgressionService:
             return PROGNOSTIC_MOON_ORB
         return PROGNOSTIC_DEFAULT_ORB
 
-    def _calculate_progressed_special_bodies(self, jd: float) -> List[Dict]:
-        """Рассчитать прогрессивные позиции узлов и Лилит."""
+    def _calculate_progressed_special_bodies(
+        self,
+        jd: float,
+        *,
+        progressed_houses: Optional[List[Dict]] = None,
+        progressed_angles: Optional[Dict] = None,
+        progressed_planets: Optional[List[Dict]] = None,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+    ) -> List[Dict]:
+        """Рассчитать прогрессивные позиции спецточек единым набором для панелей."""
         north, south = SpecialPointsService.calculate_true_nodes(jd)
         lilith = SpecialPointsService.calculate_black_moon(jd)
+        selena = SpecialPointsService.calculate_white_moon(jd)
         special_longs = [
             ('TrueNorthNode', north),
             ('TrueSouthNode', south),
             ('BlackMoon', lilith),
+            ('WhiteMoon', selena),
         ]
+        asc_lon = (progressed_angles or {}).get('ASC', {}).get('longitude')
+        sun = next((body for body in (progressed_planets or []) if body.get('name') == 'Sun'), None)
+        moon = next((body for body in (progressed_planets or []) if body.get('name') == 'Moon'), None)
+        if asc_lon is not None and sun and moon:
+            sun_house = (
+                self.swisseph_engine.get_planet_house(sun['longitude'], progressed_houses or [])
+                if progressed_houses else 1
+            )
+            fortune = SpecialPointsService.calculate_part_of_fortune(
+                asc_lon,
+                sun['longitude'],
+                moon['longitude'],
+                sun_house,
+                jd=jd,
+                latitude=latitude,
+                longitude=longitude,
+            )
+            special_longs.append(('Fortune', fortune))
+
         bodies: List[Dict] = []
         for name, longitude in special_longs:
             degree_in_sign = get_degree_in_sign(longitude)
-            bodies.append({
+            body = {
                 'name': name,
                 'longitude': longitude,
                 'sign': get_zodiac_sign(longitude),
@@ -369,7 +406,10 @@ class ProgressionService:
                 'retrograde': False,
                 'speed': 0.0,
                 'type': 'progressed_planet',
-            })
+            }
+            if progressed_houses:
+                body['house'] = self.swisseph_engine.get_planet_house(longitude, progressed_houses)
+            bodies.append(body)
         return bodies
 
     def _calculate_progression_aspects(

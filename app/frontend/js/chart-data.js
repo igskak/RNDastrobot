@@ -437,17 +437,21 @@ class ChartDataRenderer {
     static PLANET_ORDER = [
         'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
         'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto',
-        'Chiron', 'TrueNode', 'SouthNode', 'BlackMoon', 'WhiteMoon', 'Proserpina',
+        'Chiron', 'Proserpina', 'TrueNode', 'SouthNode', 'BlackMoon', 'WhiteMoon',
         'PartOfFortune'
     ];
+
+    static normalizeBodyName(name) {
+        return window.Symbols?.normalizeBodyName?.(name) || name;
+    }
 
     renderPlanets(planets) {
         if (!planets || !this.planetsTable) return;
         this.updatePlanetsTableColumns();
 
         const sorted = [...planets].sort((a, b) => {
-            const iA = ChartDataRenderer.PLANET_ORDER.indexOf(a.name);
-            const iB = ChartDataRenderer.PLANET_ORDER.indexOf(b.name);
+            const iA = ChartDataRenderer.PLANET_ORDER.indexOf(ChartDataRenderer.normalizeBodyName(a.name));
+            const iB = ChartDataRenderer.PLANET_ORDER.indexOf(ChartDataRenderer.normalizeBodyName(b.name));
             return (iA === -1 ? 999 : iA) - (iB === -1 ? 999 : iB);
         });
 

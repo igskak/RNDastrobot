@@ -3,6 +3,12 @@ const assert = require('node:assert/strict');
 
 const preferences = require('../frontend/js/preferences.js');
 
+test('getPlanetColor uses fixed body colors before element fallback', () => {
+    assert.equal(preferences.getPlanetColor('Sun', 'Fire'), preferences.getPlanetColor('Sun', 'Air'));
+    assert.equal(preferences.getPlanetColor('TrueNorthNode', 'Fire'), preferences.getPlanetColor('TrueNode', 'Water'));
+    assert.notEqual(preferences.getPlanetColor('Sun', 'Fire'), preferences.getPlanetColor('Moon', 'Fire'));
+});
+
 test('filterChartDataByViewPreferences hides aspects and configurations for non-aspecting bodies', () => {
     const chartData = {
         planets: [

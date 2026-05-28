@@ -43,6 +43,7 @@
 
     const state = {
         natalData: null,
+        natalWheelData: null,
         solarData: null,
         natalRenderer: null,
         renderer: null,
@@ -223,6 +224,7 @@
             throw new Error(t('page.clients.errors.chartNotFound', null, 'Chart not found'));
         }
         state.natalData = natalData;
+        state.natalWheelData = prepareNatalPanelData(natalData);
         localStorage.setItem('currentUserId', natalData.user_id);
         return natalData;
     }
@@ -691,6 +693,7 @@
             angleAscDscBold: refs.solarAngleAscDscBoldToggle.checked,
             angleMcIcBold: refs.solarAngleMcIcBoldToggle.checked,
         });
+        state.natalWheelData = prepareNatalPanelData(state.natalData);
         syncSettingsControls();
         persistViewState();
         if (state.solarData && previousHouseSystem !== state.settings.houseSystem) {
@@ -775,11 +778,20 @@
         return { ...viewModel, natalLayer, activePrognosticLayers };
     }
 
+    function prepareNatalPanelData(natalData) {
+        if (!natalData) return natalData;
+        const houseSystem = state.settings.houseSystem || natalData?.birth_data?.house_system || 'P';
+        return window.NatalWheelData?.prepareNatalWheelData
+            ? window.NatalWheelData.prepareNatalWheelData(natalData, { houseSystem })
+            : natalData;
+    }
+
     function renderNatalPanel() {
         if (!state.natalRenderer || !state.natalData) return;
+        const natalPanelData = state.natalWheelData || prepareNatalPanelData(state.natalData);
         const sourceData = window.AstroAspectPhase?.enrichChartDataWithAspectPhases
-            ? window.AstroAspectPhase.enrichChartDataWithAspectPhases(state.natalData)
-            : state.natalData;
+            ? window.AstroAspectPhase.enrichChartDataWithAspectPhases(natalPanelData)
+            : natalPanelData;
         const filtered = filterChartData(sourceData);
         state.natalRenderer.setAspectTypeFilter?.(state.settings.aspectScope);
         state.natalRenderer.setHouseNumberStyle?.(state.settings.houseNumberStyle);
@@ -791,13 +803,13 @@
         });
         state.natalRenderer.render({
             ...filtered,
-            houses: state.natalData.houses || [],
-            aspect_configurations: state.natalData.aspect_configurations || [],
-            stelliums: state.natalData.stelliums || [],
-            balances: state.natalData.balances || null,
-            cosmogram_pattern: state.natalData.cosmogram_pattern || null,
+            houses: natalPanelData.houses || [],
+            aspect_configurations: natalPanelData.aspect_configurations || [],
+            stelliums: natalPanelData.stelliums || [],
+            balances: natalPanelData.balances || null,
+            cosmogram_pattern: natalPanelData.cosmogram_pattern || null,
         });
-        window.DispositorChains?.render?.('solarNatalRulersContainer', state.natalData, {
+        window.DispositorChains?.render?.('solarNatalRulersContainer', natalPanelData, {
             selectId: 'solarNatalRulersModeSelect',
             layout: 'tabs',
         });
@@ -868,6 +880,7 @@
             ...state.settings,
             houseSystem: data?.solar_info?.house_system || state.settings.houseSystem,
         });
+        state.natalWheelData = prepareNatalPanelData(state.natalData);
         syncSettingsControls();
         refs.solarLayout.classList.remove('hidden');
         refs.solarSummaryBar?.classList.remove('hidden');
@@ -967,7 +980,7 @@
         const includeNatal = state.displayMode !== 'solar';
         const includeSolar = state.displayMode !== 'natal';
         const rawViewModel = window.PrognosticLayerNormalizer.buildViewModel(
-            state.natalData,
+            state.natalWheelData || prepareNatalPanelData(state.natalData),
             includeSolar ? { solar_return: sourceData } : {},
             { activeMethods: includeSolar ? ['solar_return'] : [] },
         );

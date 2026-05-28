@@ -50,6 +50,34 @@
         Air: '#f59e0b',
         Water: '#3b82f6',
     };
+    const DEFAULT_BODY_COLORS = {
+        Sun: '#ef4444',
+        Moon: '#84cc16',
+        Mercury: '#84cc16',
+        Venus: '#ef4444',
+        Mars: '#3b82f6',
+        Jupiter: '#84cc16',
+        Saturn: '#3b82f6',
+        Uranus: '#3b82f6',
+        Neptune: '#ef4444',
+        Pluto: '#f59e0b',
+        Chiron: '#ef4444',
+        Proserpina: '#f59e0b',
+        TrueNode: '#3b82f6',
+        TrueNorthNode: '#3b82f6',
+        SouthNode: '#84cc16',
+        TrueSouthNode: '#84cc16',
+        BlackMoon: '#ef4444',
+        WhiteMoon: '#3b82f6',
+        PartOfFortune: '#84cc16',
+        Fortune: '#84cc16',
+        ASC: '#1e3a5f',
+        DSC: '#1e3a5f',
+        MC: '#1e3a5f',
+        IC: '#1e3a5f',
+        Vertex: '#b8935a',
+        AntiVertex: '#b8935a',
+    };
     const MAJOR_ASPECT_TYPES = [
         'Conjunction',
         'Opposition',
@@ -594,6 +622,8 @@
         const bodyOverrides = resolved?.planet_colors?.body_overrides || {};
         const bodyOverride = bodyOverrides?.[normalizedBodyName] || bodyOverrides?.[bodyName];
         if (bodyOverride) return bodyOverride;
+        const defaultBodyColor = DEFAULT_BODY_COLORS[normalizedBodyName] || DEFAULT_BODY_COLORS[bodyName];
+        if (defaultBodyColor) return defaultBodyColor;
         return getElementColor(element, resolved);
     }
 
@@ -662,6 +692,7 @@
         DEFAULT_ENABLED_ASPECT_TYPES,
         DEFAULT_ASPECT_COLORS,
         DEFAULT_ELEMENT_PALETTE,
+        DEFAULT_BODY_COLORS,
         ORB_PROFILE_IDS,
         DIGNITY_SIGNS,
         DEFAULT_ORB_PAIR_STRATEGY,

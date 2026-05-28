@@ -74,21 +74,30 @@ class TransitService:
         # 2. Рассчитать транзитный JD
         utc_dt, jd_transit = TimeService.process_birth_time(transit_date, transit_time, timezone)
 
-        # 3. Рассчитать транзитные планеты + узлы и Лилит
+        # 3. Рассчитать транзитные планеты и дома
         transit_planets = self.swisseph_engine.calculate_planets(jd_transit)
-        transit_planets.extend(self._calculate_transit_special_bodies(jd_transit))
-        self._enrich_motion_flags(transit_planets, user_id=user_id)
 
         transit_houses = []
+        transit_angles = {}
         if latitude is not None and longitude is not None:
             user = self.db.query(User).filter(User.user_id == user_id).first()
             house_system = user.house_system if user and user.house_system else 'P'
-            transit_houses, _ = self.swisseph_engine.calculate_houses(
+            transit_houses, transit_angles = self.swisseph_engine.calculate_houses(
                 jd=jd_transit,
                 lat=float(latitude),
                 lon=float(longitude),
                 hsys=house_system,
             )
+
+        transit_planets.extend(self._calculate_transit_special_bodies(
+            jd_transit,
+            transit_houses=transit_houses,
+            transit_angles=transit_angles,
+            transit_planets=transit_planets,
+            latitude=latitude,
+            longitude=longitude,
+        ))
+        self._enrich_motion_flags(transit_planets, user_id=user_id)
 
         # 4. Определить натальные и транзитные дома для транзитных планет
         for planet in transit_planets:
@@ -235,19 +244,49 @@ class TransitService:
             )
         return PROGNOSTIC_DEFAULT_ORB
 
-    def _calculate_transit_special_bodies(self, jd: float) -> List[Dict]:
-        """Рассчитать транзитные позиции узлов и Лилит."""
+    def _calculate_transit_special_bodies(
+        self,
+        jd: float,
+        *,
+        transit_houses: Optional[List[Dict]] = None,
+        transit_angles: Optional[Dict] = None,
+        transit_planets: Optional[List[Dict]] = None,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+    ) -> List[Dict]:
+        """Рассчитать транзитные позиции спецточек единым набором для панелей."""
         north, south = SpecialPointsService.calculate_true_nodes(jd)
         lilith = SpecialPointsService.calculate_black_moon(jd)
+        selena = SpecialPointsService.calculate_white_moon(jd)
         special_longs = [
             ('TrueNorthNode', north),
             ('TrueSouthNode', south),
             ('BlackMoon', lilith),
+            ('WhiteMoon', selena),
         ]
+        asc_lon = (transit_angles or {}).get('ASC', {}).get('longitude')
+        sun = next((body for body in (transit_planets or []) if body.get('name') == 'Sun'), None)
+        moon = next((body for body in (transit_planets or []) if body.get('name') == 'Moon'), None)
+        if asc_lon is not None and sun and moon:
+            sun_house = sun.get('house') or (
+                self.swisseph_engine.get_planet_house(sun['longitude'], transit_houses or [])
+                if transit_houses else 1
+            )
+            fortune = SpecialPointsService.calculate_part_of_fortune(
+                asc_lon,
+                sun['longitude'],
+                moon['longitude'],
+                sun_house,
+                jd=jd,
+                latitude=latitude,
+                longitude=longitude,
+            )
+            special_longs.append(('Fortune', fortune))
+
         bodies: List[Dict] = []
         for name, longitude in special_longs:
             degree_in_sign = get_degree_in_sign(longitude)
-            bodies.append({
+            body = {
                 'name': name,
                 'longitude': longitude,
                 'sign': get_zodiac_sign(longitude),
@@ -256,7 +295,10 @@ class TransitService:
                 'retrograde': False,
                 'speed': 0.0,
                 'type': 'transit_planet',
-            })
+            }
+            if transit_houses:
+                body['house'] = self.swisseph_engine.get_planet_house(longitude, transit_houses)
+            bodies.append(body)
         return bodies
 
     def _calculate_transit_aspects(
