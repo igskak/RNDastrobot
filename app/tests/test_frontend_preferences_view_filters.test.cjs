@@ -9,6 +9,42 @@ test('getPlanetColor uses fixed body colors before element fallback', () => {
     assert.notEqual(preferences.getPlanetColor('Sun', 'Fire'), preferences.getPlanetColor('Moon', 'Fire'));
 });
 
+test('chart view drafts round-trip through localStorage', () => {
+    const storage = new Map();
+    const previousLocalStorage = globalThis.localStorage;
+    globalThis.localStorage = {
+        getItem(key) {
+            return storage.has(key) ? storage.get(key) : null;
+        },
+        setItem(key, value) {
+            storage.set(key, String(value));
+        },
+        removeItem(key) {
+            storage.delete(key);
+        },
+    };
+
+    try {
+        const meta = { chart_kind: 'natal', chart_id: 'user-1', view_type: 'natal' };
+        const resolved = {
+            view_options: { orientation: 'asc' },
+            matrix: { rows: { Sun: { display: false, aspecting: false } } },
+        };
+
+        preferences.saveChartViewDraft(meta, resolved);
+        assert.deepEqual(preferences.readChartViewDraft(meta), resolved);
+
+        preferences.clearChartViewDraft(meta);
+        assert.equal(preferences.readChartViewDraft(meta), null);
+    } finally {
+        if (previousLocalStorage === undefined) {
+            delete globalThis.localStorage;
+        } else {
+            globalThis.localStorage = previousLocalStorage;
+        }
+    }
+});
+
 test('filterChartDataByViewPreferences hides aspects and configurations for non-aspecting bodies', () => {
     const chartData = {
         planets: [

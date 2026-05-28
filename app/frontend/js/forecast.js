@@ -576,6 +576,12 @@ async function persistForecastViewOverride(viewType) {
         ? helpers.normalizeViewSettings(source.account_defaults || {})
         : (source.account_defaults || {});
     const resolved = buildResolvedForecastViewForPersistence(viewType);
+    const draftMeta = {
+        chart_kind: chartKind,
+        chart_id: chartId,
+        view_type: viewType,
+    };
+    window.AstroPreferences?.saveChartViewDraft?.(draftMeta, resolved);
     const diff = helpers.buildSparseDiff ? helpers.buildSparseDiff(accountDefaults, resolved) : resolved;
 
     if (!diff || (typeof diff === 'object' && Object.keys(diff).length === 0)) {
@@ -585,6 +591,7 @@ async function persistForecastViewOverride(viewType) {
             view_type: viewType,
         });
         updateLocalForecastResolved(viewType, resolved, {});
+        window.AstroPreferences?.clearChartViewDraft?.(draftMeta);
         return;
     }
 
@@ -595,6 +602,7 @@ async function persistForecastViewOverride(viewType) {
         overrides: diff,
     });
     updateLocalForecastResolved(viewType, resolved, diff);
+    window.AstroPreferences?.clearChartViewDraft?.(draftMeta);
 }
 
 function applyForecastResolvedPreferences(viewType, payload) {
@@ -667,7 +675,24 @@ async function hydrateForecastPreferences() {
             }
         }
 
+        const draftResolved = window.AstroPreferences?.readChartViewDraft?.({
+            chart_kind: 'natal',
+            chart_id: userId,
+            view_type: 'biwheel',
+        });
+        if (draftResolved) {
+            ForecastState.biwheelResolvedPreferences = {
+                ...ForecastState.biwheelResolvedPreferences,
+                resolved: draftResolved,
+            };
+        }
+
         applyForecastResolvedPreferences('biwheel', ForecastState.biwheelResolvedPreferences);
+        if (draftResolved) {
+            persistForecastViewOverride('biwheel').catch((error) => {
+                console.warn('Failed to replay forecast settings draft:', error);
+            });
+        }
     } catch (error) {
         console.warn('Failed to hydrate forecast preferences:', error);
     }

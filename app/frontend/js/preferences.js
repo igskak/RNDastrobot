@@ -106,6 +106,7 @@
     const DEFAULT_PROGNOSTIC_ORB = 1;
     const DEFAULT_PROGNOSTIC_MOON_ORB = 3;
     const DEFAULT_STATIONARY_THRESHOLD_PERCENT = 10;
+    const VIEW_DRAFT_STORAGE_PREFIX = 'astroChartViewDraft:';
     const DIGNITY_SIGNS = [
         'Aries', 'Taurus', 'Gemini', 'Cancer',
         'Leo', 'Virgo', 'Libra', 'Scorpio',
@@ -655,6 +656,52 @@
         return normalizeViewSettings(viewSettings)?.table_options?.show_aspect_text === true;
     }
 
+    function buildChartViewDraftKey(meta = {}) {
+        const chartKind = String(meta.chart_kind || meta.chartKind || '').trim();
+        const chartId = String(meta.chart_id || meta.chartId || '').trim();
+        const viewType = String(meta.view_type || meta.viewType || '').trim();
+        if (!chartKind || !chartId || !viewType) return null;
+        return `${VIEW_DRAFT_STORAGE_PREFIX}${chartKind}:${chartId}:${viewType}`;
+    }
+
+    function saveChartViewDraft(meta = {}, resolved = {}) {
+        const key = buildChartViewDraftKey(meta);
+        if (!key || typeof localStorage === 'undefined') return;
+        try {
+            localStorage.setItem(key, JSON.stringify({
+                chart_kind: meta.chart_kind || meta.chartKind,
+                chart_id: meta.chart_id || meta.chartId,
+                view_type: meta.view_type || meta.viewType,
+                resolved: deepClone(resolved || {}),
+                updated_at: Date.now(),
+            }));
+        } catch {
+            // Draft persistence is a best-effort safety net for fast navigation.
+        }
+    }
+
+    function readChartViewDraft(meta = {}) {
+        const key = buildChartViewDraftKey(meta);
+        if (!key || typeof localStorage === 'undefined') return null;
+        try {
+            const parsed = JSON.parse(localStorage.getItem(key) || 'null');
+            if (!parsed || typeof parsed !== 'object') return null;
+            return parsed.resolved && typeof parsed.resolved === 'object' ? parsed.resolved : null;
+        } catch {
+            return null;
+        }
+    }
+
+    function clearChartViewDraft(meta = {}) {
+        const key = buildChartViewDraftKey(meta);
+        if (!key || typeof localStorage === 'undefined') return;
+        try {
+            localStorage.removeItem(key);
+        } catch {
+            // Ignore storage cleanup failures.
+        }
+    }
+
     function buildLegacyNatalPatch({ formData, chartData, currentSettings } = {}) {
         const patch = {};
         const formHouseSystem = String(formData?.houseSystem || chartData?.birth_data?.house_system || '').trim();
@@ -725,6 +772,10 @@
         getDegreeFormat,
         shouldUseBlackAngularCusps,
         shouldShowAspectText,
+        buildChartViewDraftKey,
+        saveChartViewDraft,
+        readChartViewDraft,
+        clearChartViewDraft,
         getHiddenBodiesFromMatrix,
         buildMatrixRowsFromHiddenBodies,
         filterChartDataByViewPreferences,

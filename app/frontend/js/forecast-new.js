@@ -231,6 +231,8 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+        window.addEventListener('pagehide', flushPendingPersistence);
+        window.addEventListener('beforeunload', flushPendingPersistence);
         await waitForI18nReady();
         cacheElements();
         const me = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
@@ -1935,6 +1937,11 @@
             showProgressionCusps: refs.showProgressionCuspsToggle?.checked !== false,
             showDirectionCusps: refs.showDirectionCuspsToggle?.checked !== false,
         };
+        window.AstroPreferences?.saveChartViewDraft?.({
+            chart_kind: 'natal',
+            chart_id: state.userId,
+            view_type: 'forecast_new',
+        }, getResolvedForecastNewViewSettings());
 
         if (refs.iconScaleValue) {
             refs.iconScaleValue.textContent = `${Math.round(iconScale * 100)}%`;
@@ -2967,7 +2974,12 @@
             }
             const payload = resolvedResult.value;
             state.resolvedPreferences = payload;
-            const resolved = payload?.resolved || {};
+            const draftResolved = window.AstroPreferences?.readChartViewDraft?.({
+                chart_kind: 'natal',
+                chart_id: state.userId,
+                view_type: 'forecast_new',
+            });
+            const resolved = draftResolved || payload?.resolved || {};
             const matrixSettings = resolved?.matrix || {};
             const hasSplitMatrixPreferences = Number(matrixSettings.schema_version) >= 2;
             state.natalMatrixRows = normalizeForecastNewMatrixRows(
@@ -2996,6 +3008,15 @@
                 showProgressionCusps: resolved?.view_options?.show_progression_cusps !== false,
                 showDirectionCusps: resolved?.view_options?.show_direction_cusps !== false,
             };
+            if (draftResolved) {
+                state.resolvedPreferences = {
+                    ...state.resolvedPreferences,
+                    resolved: draftResolved,
+                };
+                persistForecastNewViewOverrides().catch((error) => {
+                    console.warn('Failed to replay Forecast New settings draft:', error);
+                });
+            }
         } catch (error) {
             console.warn('Forecast New preferences fallback to local defaults:', error);
         }
@@ -3035,6 +3056,12 @@
     async function persistForecastNewViewOverrides() {
         if (!state.userId || !window.AstroAPI?.saveChartViewOverride) return;
         const resolved = getResolvedForecastNewViewSettings();
+        const draftMeta = {
+            chart_kind: 'natal',
+            chart_id: state.userId,
+            view_type: 'forecast_new',
+        };
+        window.AstroPreferences?.saveChartViewDraft?.(draftMeta, resolved);
         const accountDefaults = window.AstroPreferences?.normalizeViewSettings
             ? window.AstroPreferences.normalizeViewSettings(state.resolvedPreferences?.account_defaults || {})
             : (state.resolvedPreferences?.account_defaults || {});
@@ -3053,6 +3080,7 @@
                 overrides: {},
                 resolved,
             };
+            window.AstroPreferences?.clearChartViewDraft?.(draftMeta);
             return;
         }
 
@@ -3067,6 +3095,7 @@
             overrides: diff,
             resolved,
         };
+        window.AstroPreferences?.clearChartViewDraft?.(draftMeta);
     }
 
     function schedulePersistViewOverrides(delay = 650) {
@@ -3144,6 +3173,28 @@
     function schedulePersist() {
         clearTimeout(state.persistTimer);
         state.persistTimer = setTimeout(persistState, 120);
+    }
+
+    function flushPendingPersistence() {
+        if (state.applySettingsTimer) {
+            clearTimeout(state.applySettingsTimer);
+            state.applySettingsTimer = null;
+            applySettings().catch((error) => {
+                console.warn('Failed to flush Forecast New settings:', error);
+            });
+        }
+        if (state.persistTimer) {
+            clearTimeout(state.persistTimer);
+            state.persistTimer = null;
+        }
+        persistState();
+        if (state.viewOverridesPersistTimer) {
+            clearTimeout(state.viewOverridesPersistTimer);
+            state.viewOverridesPersistTimer = null;
+            persistForecastNewViewOverrides().catch((error) => {
+                console.warn('Failed to flush Forecast New view overrides:', error);
+            });
+        }
     }
 
     function persistState() {

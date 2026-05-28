@@ -319,6 +319,8 @@ async function loadFreshNatalChartData(fallbackChartData) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    window.addEventListener('pagehide', flushPendingNatalSettings);
+    window.addEventListener('beforeunload', flushPendingNatalSettings);
     await waitForI18nReady();
 
     const me = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
@@ -1006,6 +1008,16 @@ function updateLocalResolvedNatalPreferences(nextResolvedView, overrides) {
     };
 }
 
+function getNatalViewDraftMeta() {
+    const userId = getCurrentChartUserId();
+    if (!userId) return null;
+    return {
+        chart_kind: 'natal',
+        chart_id: userId,
+        view_type: 'natal',
+    };
+}
+
 async function persistNatalViewOverrides() {
     const userId = getCurrentChartUserId();
     if (!userId || !currentResolvedPreferences || !window.AstroAPI?.saveChartViewOverride) return;
@@ -1016,6 +1028,8 @@ async function persistNatalViewOverrides() {
         : (currentResolvedPreferences.account_defaults || {});
     const resolved = getNatalResolvedViewSettings();
     const diff = helpers.buildSparseDiff ? helpers.buildSparseDiff(accountDefaults, resolved) : resolved;
+    const draftMeta = getNatalViewDraftMeta();
+    window.AstroPreferences?.saveChartViewDraft?.(draftMeta, resolved);
 
     if (!diff || (typeof diff === 'object' && Object.keys(diff).length === 0)) {
         await window.AstroAPI.deleteChartViewOverride({
@@ -1024,6 +1038,7 @@ async function persistNatalViewOverrides() {
             view_type: 'natal',
         });
         updateLocalResolvedNatalPreferences(resolved, {});
+        window.AstroPreferences?.clearChartViewDraft?.(draftMeta);
         return;
     }
 
@@ -1034,6 +1049,7 @@ async function persistNatalViewOverrides() {
         overrides: diff,
     });
     updateLocalResolvedNatalPreferences(resolved, diff);
+    window.AstroPreferences?.clearChartViewDraft?.(draftMeta);
 }
 
 async function migrateNatalHouseSystemIfNeeded(formData) {
@@ -1087,6 +1103,19 @@ async function hydrateNatalPreferences(chartData, formData) {
             throw resolvedResult.reason;
         }
         currentResolvedPreferences = resolvedResult.value;
+        let shouldReplayDraft = false;
+        const draftResolved = window.AstroPreferences?.readChartViewDraft?.({
+            chart_kind: 'natal',
+            chart_id: userId,
+            view_type: 'natal',
+        });
+        if (draftResolved) {
+            currentResolvedPreferences = {
+                ...currentResolvedPreferences,
+                resolved: draftResolved,
+            };
+            shouldReplayDraft = true;
+        }
 
         const migratedChartData = await migrateNatalHouseSystemIfNeeded(formData);
         if (migratedChartData) {
@@ -1108,6 +1137,11 @@ async function hydrateNatalPreferences(chartData, formData) {
         }
 
         applyResolvedNatalPreferences(currentResolvedPreferences, { redraw: true });
+        if (shouldReplayDraft) {
+            persistNatalViewOverrides().catch((error) => {
+                console.warn('Failed to replay natal settings draft:', error);
+            });
+        }
     } catch (error) {
         console.warn('Failed to hydrate natal preferences:', error);
     }
@@ -1451,11 +1485,12 @@ function readNatalEnabledAspectTypesFromControls() {
  */
 let applySettingsTimer = null;
 let bodyActionMenuBound = false;
-async function applySettings() {
+async function applySettings(options = {}) {
     if (applySettingsTimer) {
         clearTimeout(applySettingsTimer);
+        applySettingsTimer = null;
     }
-    applySettingsTimer = setTimeout(async () => {
+    const applyNow = async () => {
         const houseSystem = normalizeHouseSystemCode(document.getElementById('houseSystemSelect').value);
         const orientation = document.getElementById('orientationSelect')?.value || 'aries';
         const aspectScope = document.getElementById('aspectScopeSelect')?.value || 'all';
@@ -1510,6 +1545,7 @@ async function applySettings() {
         localStorage.setItem(HOUSE_LABELS_OUTSIDE_STORAGE_KEY, houseLabelsOutside ? 'true' : 'false');
         localStorage.setItem(ANGLE_ASC_DSC_BOLD_STORAGE_KEY, angleAscDscBold ? 'true' : 'false');
         localStorage.setItem(ANGLE_MC_IC_BOLD_STORAGE_KEY, angleMcIcBold ? 'true' : 'false');
+        window.AstroPreferences?.saveChartViewDraft?.(getNatalViewDraftMeta(), getNatalResolvedViewSettings());
         chartWheel?.setHouseLabelOptions?.({
             style: houseNumberStyle,
             outside: houseLabelsOutside,
@@ -1593,7 +1629,19 @@ async function applySettings() {
         } finally {
             applySettingsTimer = null;
         }
-    }, 120);
+    };
+    if (options.immediate === true) {
+        await applyNow();
+        return;
+    }
+    applySettingsTimer = setTimeout(applyNow, 120);
+}
+
+function flushPendingNatalSettings() {
+    if (!applySettingsTimer) return;
+    applySettings({ immediate: true }).catch((error) => {
+        console.warn('Failed to flush pending natal settings:', error);
+    });
 }
 
 function buildChartRequestFromFormData(formData, houseSystem) {
