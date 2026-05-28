@@ -119,3 +119,51 @@ test('synastry partner layer normalizes partner bodies, houses, and inter-aspect
     assert.equal(partnerLayer.aspects[0].planet_2, 'Sun');
     assert.equal(partnerLayer.aspects[0].method, 'synastry_partner');
 });
+
+test('synastry partner layer deduplicates prepared special points by canonical body name', () => {
+    const viewModel = normalizer.buildViewModel(
+        { planets: [{ name: 'Sun', longitude: 95 }], aspects: [], houses: [] },
+        {
+            synastry_partner: {
+                partner_chart: {
+                    planets: [
+                        { name: 'Moon', longitude: 121 },
+                        { name: 'TrueNode', longitude: 20 },
+                    ],
+                    special_points: {
+                        TrueNorthNode: { name: 'TrueNorthNode', longitude: 20 },
+                        Fortune: { name: 'Fortune', longitude: 75 },
+                    },
+                    houses: [],
+                },
+                inter_aspects: [],
+            },
+        },
+        { activeMethods: ['synastry_partner'] },
+    );
+
+    const names = viewModel.activePrognosticLayers[0].bodies.map((body) => body.name);
+    assert.deepEqual(names, ['Moon', 'TrueNode', 'PartOfFortune']);
+});
+
+test('natal layer exposes angles and special points for cross-wheel aspect lookup', () => {
+    const natalData = {
+        planets: [{ name: 'Sun', longitude: 95 }],
+        special_points: {
+            TrueNorthNode: { name: 'TrueNorthNode', longitude: 20 },
+        },
+        angles: {
+            ASC: { name: 'ASC', longitude: 10 },
+            MC: { name: 'MC', longitude: 280 },
+        },
+        aspects: [],
+        houses: [],
+    };
+
+    const viewModel = normalizer.buildViewModel(natalData, {}, { activeMethods: [] });
+    const visualBodyNames = viewModel.natalLayer.bodies.map((body) => body.name);
+    const aspectBodyNames = viewModel.natalLayer.aspectBodies.map((body) => body.name);
+
+    assert.deepEqual(visualBodyNames, ['Sun']);
+    assert.deepEqual(aspectBodyNames, ['Sun', 'TrueNode', 'ASC', 'MC']);
+});

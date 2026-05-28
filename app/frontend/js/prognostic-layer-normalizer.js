@@ -14,6 +14,41 @@
         return Array.isArray(value) ? value.map((item) => ({ ...(item || {}) })) : [];
     }
 
+    function cloneObjectValues(value) {
+        return value && typeof value === 'object'
+            ? Object.values(value).map((item) => ({ ...(item || {}) }))
+            : [];
+    }
+
+    function normalizeBodyName(name) {
+        const rawName = String(name || '').trim();
+        const root = typeof window !== 'undefined' ? window : globalThis;
+        return root.AstroPreferences?.normalizeMatrixBodyName?.(rawName)
+            || root.Symbols?.normalizeBodyName?.(rawName)
+            || ({
+                TrueNorthNode: 'TrueNode',
+                TrueSouthNode: 'SouthNode',
+                Fortune: 'PartOfFortune',
+            })[rawName]
+            || rawName;
+    }
+
+    function collectAspectBodies(chartData = {}) {
+        const bodiesByName = new Map();
+        [
+            ...cloneArray(chartData?.planets),
+            ...cloneObjectValues(chartData?.special_points),
+            ...cloneObjectValues(chartData?.angles),
+        ].forEach((body) => {
+            if (!body?.name || body?.longitude == null) return;
+            const normalizedName = normalizeBodyName(body.name);
+            if (!bodiesByName.has(normalizedName)) {
+                bodiesByName.set(normalizedName, { ...body, name: normalizedName });
+            }
+        });
+        return [...bodiesByName.values()];
+    }
+
     function normalizeMethod(method) {
         if (method === 'transits') return 'transit';
         if (method === 'progressions') return 'progression';
@@ -117,11 +152,7 @@
 
     function normalizeSynastryPartner(data, ringIndex = 1) {
         const partnerChart = data?.partner_chart || data?.partnerChart || data?.chart || data || {};
-        const bodies = [
-            ...cloneArray(partnerChart?.planets),
-            ...Object.values(partnerChart?.special_points || {}).map((item) => ({ ...(item || {}) })),
-            ...Object.values(partnerChart?.angles || {}).map((item) => ({ ...(item || {}) })),
-        ].filter((body) => body?.name && body?.longitude != null);
+        const bodies = collectAspectBodies(partnerChart);
         const aspects = cloneArray(data?.inter_aspects || data?.aspects).map((aspect) => ({
             ...aspect,
             planet_1: aspect.planet_2 || aspect.right_planet,
@@ -133,6 +164,7 @@
         return buildLayer({
             method: 'synastry_partner',
             bodies,
+            aspectBodies: bodies,
             houses: cloneArray(partnerChart?.houses),
             aspects,
             raw: data,
@@ -140,12 +172,13 @@
         });
     }
 
-    function buildLayer({ method, bodies, houses, aspects, raw, ringIndex }) {
+    function buildLayer({ method, bodies, aspectBodies, houses, aspects, raw, ringIndex }) {
         const normalizedMethod = normalizeMethod(method);
         return {
             method: normalizedMethod,
             label: METHOD_META[normalizedMethod].label,
             bodies,
+            aspectBodies: aspectBodies || bodies,
             houses,
             aspects,
             raw,
@@ -180,6 +213,7 @@
                 method: 'natal',
                 label: 'Натал',
                 bodies: cloneArray(natalData?.planets),
+                aspectBodies: collectAspectBodies(natalData),
                 houses: cloneArray(natalData?.houses),
                 aspects: cloneArray(natalData?.aspects),
                 raw: natalData,

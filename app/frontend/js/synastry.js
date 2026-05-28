@@ -68,6 +68,12 @@ const synastryState = {
     },
 };
 
+function prepareSynastryChartData(chartData) {
+    return window.NatalWheelData?.prepareNatalWheelData
+        ? window.NatalWheelData.prepareNatalWheelData(chartData || {})
+        : (chartData || {});
+}
+
 function synT(key, params) {
     return window.FrontendI18n?.t?.(key, params) || key;
 }
@@ -526,7 +532,11 @@ async function loadSynastry() {
                 ? window.AstroAPI.getAccountPreferences().catch(() => null)
                 : Promise.resolve(null),
         ]);
-        synastryState.payload = payload;
+        synastryState.payload = {
+            ...payload,
+            primary_chart: prepareSynastryChartData(payload?.primary_chart || {}),
+            partner_chart: prepareSynastryChartData(payload?.partner_chart || {}),
+        };
         synastryState.accountVisualPreferences = accountPreferences?.visual || null;
         initializeSynastrySettings();
         renderSynastry();

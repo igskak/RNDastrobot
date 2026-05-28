@@ -593,6 +593,12 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             return ring.inner;
         }
 
+        getAspectBodies(ring) {
+            return Array.isArray(ring?.aspectBodies) && ring.aspectBodies.length
+                ? ring.aspectBodies
+                : (ring?.bodies || []);
+        }
+
         drawAspects(rings) {
             const natalRing = rings.find((ring) => ring.method === 'natal');
             if (!natalRing || rings.length === 1) {
@@ -601,11 +607,11 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             }
             const aspectRadius = this.getAspectBoundaryRadius(natalRing);
             this.aspectRadius = aspectRadius;
-            const natalMap = new Map((natalRing.bodies || [])
+            const natalMap = new Map(this.getAspectBodies(natalRing)
                 .filter((body) => body?.name && this.isBodyAvailableForAspects(body.name, 'natal'))
                 .map((body) => [this.normalizeBodyName(body.name), body]));
             rings.filter((ring) => ring.method !== 'natal').forEach((ring) => {
-                const bodyMap = new Map((ring.bodies || [])
+                const bodyMap = new Map(this.getAspectBodies(ring)
                     .filter((body) => body?.name && this.isBodyAvailableForAspects(body.name, ring.method))
                     .map((body) => [this.normalizeBodyName(body.name), body]));
                 const aspects = (ring.aspects || []).filter((aspect) => this.isAspectEnabled(aspect));
@@ -733,7 +739,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             if (!ring) return;
             const aspectRadius = this.getAspectBoundaryRadius(ring);
             this.aspectRadius = aspectRadius;
-            const bodyMap = new Map((ring.bodies || [])
+            const bodyMap = new Map(this.getAspectBodies(ring)
                 .filter((body) => body?.name && this.isBodyAvailableForAspects(body.name, ring.method))
                 .map((body) => [this.normalizeBodyName(body.name), body]));
             const aspects = (ring.aspects || []).filter((aspect) => this.isAspectEnabled(aspect));
