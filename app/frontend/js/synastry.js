@@ -54,7 +54,8 @@ const synastryState = {
     settings: {
         orientation: 'aries',
         aspectScope: 'all',
-        matrixRows: window.AstroPreferences?.ensureMatrixRows?.({}) || {},
+        primaryMatrixRows: window.AstroPreferences?.ensureMatrixRows?.({}) || {},
+        partnerMatrixRows: window.AstroPreferences?.ensureMatrixRows?.({}) || {},
         enabledAspectTypes: [...SYNASTRY_ASPECT_TYPES],
         showApplyingSeparating: false,
         showSpeed: true,
@@ -566,9 +567,16 @@ function initializeSynastrySettings() {
     synastryState.resolvedPreferences = synastryState.payload?.resolved_preferences?.synastry || null;
     synastryState.settings.orientation = resolved?.view_options?.orientation === 'asc' ? 'asc' : 'aries';
     synastryState.settings.aspectScope = resolved?.aspects?.scope || 'all';
-    synastryState.settings.matrixRows = window.AstroPreferences?.ensureMatrixRows
-        ? window.AstroPreferences.ensureMatrixRows(resolved?.matrix?.rows || {})
-        : (resolved?.matrix?.rows || {});
+    const matrixSettings = resolved?.matrix || {};
+    const hasSplitMatrixRows = Number(matrixSettings.schema_version) >= 2;
+    const primaryRows = hasSplitMatrixRows
+        ? (matrixSettings.natal_rows || matrixSettings.rows || {})
+        : (matrixSettings.rows || {});
+    const partnerRows = hasSplitMatrixRows
+        ? (matrixSettings.prognostic_rows || matrixSettings.rows || {})
+        : (matrixSettings.rows || {});
+    synastryState.settings.primaryMatrixRows = ensureSynastryMatrixRows(primaryRows);
+    synastryState.settings.partnerMatrixRows = ensureSynastryMatrixRows(partnerRows);
     synastryState.settings.enabledAspectTypes = window.AstroPreferences?.healEnabledAspectTypesForScope
         ? window.AstroPreferences.healEnabledAspectTypesForScope(
             resolved?.aspects?.enabled_types,
@@ -598,10 +606,10 @@ function renderSynastry() {
 }
 
 function renderSynastryWorkspace() {
-    const primarySideChart = getFilteredSynastryChartData(synastryState.payload?.primary_chart || {}, { target: 'side-panel' });
-    const partnerSideChart = getFilteredSynastryChartData(synastryState.payload?.partner_chart || {}, { target: 'side-panel' });
-    const primaryWheelChart = getFilteredSynastryChartData(synastryState.payload?.primary_chart || {}, { target: 'wheel' });
-    const partnerWheelChart = getFilteredSynastryChartData(synastryState.payload?.partner_chart || {}, { target: 'wheel' });
+    const primarySideChart = getFilteredSynastryChartData(synastryState.payload?.primary_chart || {}, { target: 'side-panel', side: 'primary' });
+    const partnerSideChart = getFilteredSynastryChartData(synastryState.payload?.partner_chart || {}, { target: 'side-panel', side: 'partner' });
+    const primaryWheelChart = getFilteredSynastryChartData(synastryState.payload?.primary_chart || {}, { target: 'wheel', side: 'primary' });
+    const partnerWheelChart = getFilteredSynastryChartData(synastryState.payload?.partner_chart || {}, { target: 'wheel', side: 'partner' });
 
     renderSynastrySide('primary', primarySideChart);
     renderSynastrySide('partner', partnerSideChart);
@@ -650,15 +658,15 @@ function renderSynastrySide(side, chartData) {
 function renderSynastryInlineMatrixControls(side) {
     const table = document.getElementById(`${side}PlanetsTable`);
     if (!table) return;
-    const rows = getCurrentSynastryMatrixRows();
+    const rows = getCurrentSynastryMatrixRows(side);
     table.querySelectorAll('tr[data-planet]').forEach((row) => {
         row.querySelectorAll('.forecast-new-matrix-inline-cell').forEach((cell) => cell.remove());
         const body = getSynastryMatrixBodyKey(row.dataset.planet);
-        row.insertAdjacentHTML('beforeend', renderSynastryMatrixControlCells(body, rows));
+        row.insertAdjacentHTML('beforeend', renderSynastryMatrixControlCells(body, rows, side));
     });
 }
 
-function renderSynastryMatrixControlCells(bodyName, rows) {
+function renderSynastryMatrixControlCells(bodyName, rows, side = 'partner') {
     const body = getSynastryMatrixBodyKey(bodyName);
     if (!body) {
         return '<td class="forecast-new-matrix-inline-cell forecast-new-matrix-inline-empty"></td><td class="forecast-new-matrix-inline-cell forecast-new-matrix-inline-empty"></td>';
@@ -670,7 +678,7 @@ function renderSynastryMatrixControlCells(bodyName, rows) {
         return `
             <td class="forecast-new-matrix-inline-cell">
                 <label class="forecast-new-matrix-inline" title="${escapeSynAttribute(label)}" aria-label="${escapeSynAttribute(label)}">
-                    <input type="checkbox" data-matrix-body="${escapeSynAttribute(body)}" data-matrix-field="${field}" ${checked}>
+                    <input type="checkbox" data-matrix-side="${escapeSynAttribute(normalizeSynastryMatrixSide(side))}" data-matrix-body="${escapeSynAttribute(body)}" data-matrix-field="${field}" ${checked}>
                 </label>
             </td>
         `;
@@ -684,19 +692,18 @@ function getSynastryMatrixBodyKey(name) {
 }
 
 function applySynastryInlineMatrixChange(input) {
+    const side = normalizeSynastryMatrixSide(input.dataset.matrixSide);
     const body = getSynastryMatrixBodyKey(input.dataset.matrixBody);
     const field = input.dataset.matrixField;
     if (!body || !['display', 'aspecting'].includes(field)) return;
 
     const previousSettings = snapshotSynastrySettings();
-    const rows = cloneSynastryMatrixRows(getCurrentSynastryMatrixRows());
+    const rows = cloneSynastryMatrixRows(getCurrentSynastryMatrixRows(side));
     rows[body] = {
         ...(rows[body] || { display: true, aspecting: true }),
         [field]: input.checked,
     };
-    synastryState.settings.matrixRows = window.AstroPreferences?.ensureMatrixRows
-        ? window.AstroPreferences.ensureMatrixRows(rows)
-        : rows;
+    setSynastryMatrixRowsForSide(side, rows);
     syncSynastryMatrixInputsFromState();
 
     if (canApplySynastrySettingsFast(previousSettings, snapshotSynastrySettings())) {
@@ -711,10 +718,11 @@ function applySynastryInlineMatrixChange(input) {
 }
 
 function syncSynastryMatrixInputsFromState() {
-    const rows = getCurrentSynastryMatrixRows();
     document
         .querySelectorAll('input[data-matrix-body][data-matrix-field]')
         .forEach((input) => {
+            const side = normalizeSynastryMatrixSide(input.dataset.matrixSide);
+            const rows = getCurrentSynastryMatrixRows(side);
             const body = getSynastryMatrixBodyKey(input.dataset.matrixBody);
             const field = input.dataset.matrixField;
             if (!body || !['display', 'aspecting'].includes(field)) return;
@@ -762,16 +770,17 @@ function renderWheelMode(primaryChartOverride, partnerChartOverride) {
     const wheel = ensureSynastryWheel();
     if (!wheel) return;
 
-    const primaryChart = primaryChartOverride || getFilteredSynastryChartData(synastryState.payload.primary_chart, { target: 'wheel' });
-    const partnerChart = partnerChartOverride || getFilteredSynastryChartData(synastryState.payload.partner_chart, { target: 'wheel' });
+    const primaryChart = primaryChartOverride || getFilteredSynastryChartData(synastryState.payload.primary_chart, { target: 'wheel', side: 'primary' });
+    const partnerChart = partnerChartOverride || getFilteredSynastryChartData(synastryState.payload.partner_chart, { target: 'wheel', side: 'partner' });
     const viewModel = buildSynastryWheelViewModel(primaryChart, partnerChart);
-    const matrixRows = getCurrentSynastryMatrixRows();
+    const primaryMatrixRows = getCurrentSynastryMatrixRows('primary');
+    const partnerMatrixRows = getCurrentSynastryMatrixRows('partner');
     syncSynastryDisplayModeControls();
     wheel.setOptions({
         orientation: synastryState.settings.orientation,
-        natalMatrixRows: matrixRows,
-        prognosticMatrixRows: matrixRows,
-        matrixRows,
+        natalMatrixRows: primaryMatrixRows,
+        prognosticMatrixRows: partnerMatrixRows,
+        matrixRows: partnerMatrixRows,
         planetScale: synastryState.settings.planetScale,
         pointScale: synastryState.settings.pointScale,
         aspectScope: synastryState.settings.aspectScope,
@@ -874,7 +883,7 @@ function renderSynastrySettingsEditors() {
 function renderSynastryMatrixEditor() {
     if (!synastryRefs.matrixEditor) return;
 
-    const rows = getCurrentSynastryMatrixRows();
+    const rows = getCurrentSynastryMatrixRows('primary');
     const bodies = window.AstroPreferences?.MATRIX_BODIES || [];
     synastryRefs.matrixEditor.innerHTML = `
         <table class="natal-matrix-table">
@@ -901,12 +910,12 @@ function renderSynastryMatrixEditor() {
                             </td>
                             <td>
                                 <label class="natal-matrix-check">
-                                    <input type="checkbox" data-matrix-body="${body}" data-matrix-field="display" ${displayChecked}>
+                                    <input type="checkbox" data-matrix-side="primary" data-matrix-body="${body}" data-matrix-field="display" ${displayChecked}>
                                 </label>
                             </td>
                             <td>
                                 <label class="natal-matrix-check">
-                                    <input type="checkbox" data-matrix-body="${body}" data-matrix-field="aspecting" ${aspectingChecked}>
+                                    <input type="checkbox" data-matrix-side="primary" data-matrix-body="${body}" data-matrix-field="aspecting" ${aspectingChecked}>
                                 </label>
                             </td>
                         </tr>
@@ -953,7 +962,8 @@ function snapshotSynastrySettings() {
     return {
         orientation: synastryState.settings.orientation,
         aspectScope: synastryState.settings.aspectScope,
-        matrixRows: cloneSynastryMatrixRows(getCurrentSynastryMatrixRows()),
+        primaryMatrixRows: cloneSynastryMatrixRows(getCurrentSynastryMatrixRows('primary')),
+        partnerMatrixRows: cloneSynastryMatrixRows(getCurrentSynastryMatrixRows('partner')),
         enabledAspectTypes: [...(synastryState.settings.enabledAspectTypes || [])],
         showApplyingSeparating: synastryState.settings.showApplyingSeparating === true,
         showSpeed: synastryState.settings.showSpeed !== false,
@@ -1013,16 +1023,21 @@ function canApplySynastrySettingsFast(previousSettings, nextSettings) {
         || previousSettings.showApplyingSeparating !== nextSettings.showApplyingSeparating;
     if (aspectOptionsChanged) return false;
 
-    if (!matrixRowsChanged(previousSettings.matrixRows, nextSettings.matrixRows)) {
+    const primaryRowsChanged = matrixRowsChanged(previousSettings.primaryMatrixRows, nextSettings.primaryMatrixRows);
+    const partnerRowsChanged = matrixRowsChanged(previousSettings.partnerMatrixRows, nextSettings.partnerMatrixRows);
+    if (!primaryRowsChanged && !partnerRowsChanged) {
         return true;
     }
 
-    return !matrixChangeEnablesBodyOrAspects(previousSettings.matrixRows, nextSettings.matrixRows);
+    return !(
+        matrixChangeEnablesBodyOrAspects(previousSettings.primaryMatrixRows, nextSettings.primaryMatrixRows)
+        || matrixChangeEnablesBodyOrAspects(previousSettings.partnerMatrixRows, nextSettings.partnerMatrixRows)
+    );
 }
 
 function renderSynastryTablesAndApplyMatrixFast() {
-    const primaryChart = getFilteredSynastryChartData(synastryState.payload?.primary_chart || {}, { target: 'side-panel' });
-    const partnerChart = getFilteredSynastryChartData(synastryState.payload?.partner_chart || {}, { target: 'side-panel' });
+    const primaryChart = getFilteredSynastryChartData(synastryState.payload?.primary_chart || {}, { target: 'side-panel', side: 'primary' });
+    const partnerChart = getFilteredSynastryChartData(synastryState.payload?.partner_chart || {}, { target: 'side-panel', side: 'partner' });
 
     renderSynastrySide('primary', primaryChart);
     renderSynastrySide('partner', partnerChart);
@@ -1036,10 +1051,11 @@ function renderSynastryTablesAndApplyMatrixFast() {
         synastryRefs.partnerOverlayList,
         getFilteredHouseOverlayItems(synastryState.payload?.house_overlays?.partner_in_primary_houses || []),
     );
-    const matrixRows = getCurrentSynastryMatrixRows();
-    synastryState.wheel?.applyMatrixRows?.(matrixRows, {
-        natalMatrixRows: matrixRows,
-        prognosticMatrixRows: matrixRows,
+    const primaryMatrixRows = getCurrentSynastryMatrixRows('primary');
+    const partnerMatrixRows = getCurrentSynastryMatrixRows('partner');
+    synastryState.wheel?.applyMatrixRows?.(partnerMatrixRows, {
+        natalMatrixRows: primaryMatrixRows,
+        prognosticMatrixRows: partnerMatrixRows,
     });
 }
 
@@ -1056,7 +1072,7 @@ function scheduleApplySynastrySettings() {
         const iconScale = clampPointScale(Number(synastryRefs.iconScaleRange?.value || 120) / 100);
         synastryState.settings.planetScale = iconScale;
         synastryState.settings.pointScale = iconScale;
-        synastryState.settings.matrixRows = readSynastryMatrixRowsFromControls();
+        synastryState.settings.primaryMatrixRows = readSynastryMatrixRowsFromControls('primary');
         synastryState.settings.enabledAspectTypes = window.AstroPreferences?.healEnabledAspectTypesForScope
             ? window.AstroPreferences.healEnabledAspectTypesForScope(
                 readSynastryEnabledAspectTypesFromControls(),
@@ -1130,9 +1146,14 @@ async function persistSynastryViewOverrides() {
 }
 
 function getCurrentSynastryViewSettings() {
+    const primaryMatrixRows = getCurrentSynastryMatrixRows('primary');
+    const partnerMatrixRows = getCurrentSynastryMatrixRows('partner');
     return {
         matrix: {
-            rows: getCurrentSynastryMatrixRows(),
+            schema_version: 2,
+            rows: partnerMatrixRows,
+            natal_rows: primaryMatrixRows,
+            prognostic_rows: partnerMatrixRows,
         },
         aspects: {
             scope: synastryState.settings.aspectScope || 'all',
@@ -1152,15 +1173,30 @@ function getCurrentSynastryViewSettings() {
     };
 }
 
-function getCurrentSynastryMatrixRows() {
+function ensureSynastryMatrixRows(rows = {}) {
     return window.AstroPreferences?.ensureMatrixRows
-        ? window.AstroPreferences.ensureMatrixRows(synastryState.settings.matrixRows || {})
-        : (synastryState.settings.matrixRows || {});
+        ? window.AstroPreferences.ensureMatrixRows(rows || {})
+        : (rows || {});
 }
 
-function readSynastryMatrixRowsFromControls() {
-    const rows = getCurrentSynastryMatrixRows();
-    document.querySelectorAll('#natalMatrixEditor input[data-matrix-body][data-matrix-field]').forEach((input) => {
+function normalizeSynastryMatrixSide(side) {
+    return side === 'primary' ? 'primary' : 'partner';
+}
+
+function getCurrentSynastryMatrixRows(side = 'partner') {
+    const key = normalizeSynastryMatrixSide(side) === 'primary' ? 'primaryMatrixRows' : 'partnerMatrixRows';
+    return ensureSynastryMatrixRows(synastryState.settings[key] || {});
+}
+
+function setSynastryMatrixRowsForSide(side = 'partner', rows = {}) {
+    const key = normalizeSynastryMatrixSide(side) === 'primary' ? 'primaryMatrixRows' : 'partnerMatrixRows';
+    synastryState.settings[key] = ensureSynastryMatrixRows(rows);
+}
+
+function readSynastryMatrixRowsFromControls(side = 'primary') {
+    const normalizedSide = normalizeSynastryMatrixSide(side);
+    const rows = cloneSynastryMatrixRows(getCurrentSynastryMatrixRows(normalizedSide));
+    document.querySelectorAll(`#natalMatrixEditor input[data-matrix-side="${normalizedSide}"][data-matrix-body][data-matrix-field]`).forEach((input) => {
         const body = input.dataset.matrixBody;
         const field = input.dataset.matrixField;
         if (!body || !field) return;
@@ -1184,9 +1220,12 @@ function readSynastryEnabledAspectTypesFromControls() {
 
 function getFilteredSynastryChartData(chartData = {}, options = {}) {
     const target = options.target === 'wheel' ? 'wheel' : 'side-panel';
+    const side = normalizeSynastryMatrixSide(options.side);
     const filtered = window.AstroPreferences?.filterChartDataByViewPreferences
         ? window.AstroPreferences.filterChartDataByViewPreferences(chartData, {
-            matrixRows: target === 'wheel' ? getCurrentSynastryMatrixRows() : getSynastryMatrixRowsForSidePanel(),
+            matrixRows: target === 'wheel'
+                ? getCurrentSynastryMatrixRows(side)
+                : getSynastryMatrixRowsForSidePanel(side),
             aspectScope: synastryState.settings.aspectScope || 'all',
             enabledAspectTypes: Array.isArray(synastryState.settings.enabledAspectTypes) && synastryState.settings.enabledAspectTypes.length
                 ? synastryState.settings.enabledAspectTypes
@@ -1198,7 +1237,7 @@ function getFilteredSynastryChartData(chartData = {}, options = {}) {
         return filtered;
     }
 
-    const filterVisible = (entry) => bodyIsVisible(entry?.name);
+    const filterVisible = (entry) => bodyIsVisible(entry?.name, side);
     return {
         ...filtered,
         special_points: Object.fromEntries(
@@ -1210,8 +1249,8 @@ function getFilteredSynastryChartData(chartData = {}, options = {}) {
     };
 }
 
-function getSynastryMatrixRowsForSidePanel() {
-    return Object.fromEntries(Object.entries(getCurrentSynastryMatrixRows()).map(([body, config]) => [
+function getSynastryMatrixRowsForSidePanel(side = 'partner') {
+    return Object.fromEntries(Object.entries(getCurrentSynastryMatrixRows(side)).map(([body, config]) => [
         body,
         {
             ...config,
@@ -1222,7 +1261,8 @@ function getSynastryMatrixRowsForSidePanel() {
 
 function getFilteredInterAspects(options = {}) {
     const target = options.target === 'wheel' ? 'wheel' : 'side-panel';
-    const matrixRows = getCurrentSynastryMatrixRows();
+    const primaryMatrixRows = getCurrentSynastryMatrixRows('primary');
+    const partnerMatrixRows = getCurrentSynastryMatrixRows('partner');
     const enabledAspectTypes = window.AstroPreferences?.resolveEnabledAspectTypesForScope
         ? window.AstroPreferences.resolveEnabledAspectTypesForScope({
             enabledAspectTypes: synastryState.settings.enabledAspectTypes,
@@ -1234,30 +1274,36 @@ function getFilteredInterAspects(options = {}) {
     const normalizeBody = (name) => window.AstroPreferences?.normalizeMatrixBodyName
         ? window.AstroPreferences.normalizeMatrixBodyName(name)
         : name;
-    const bodyIsDisplayable = (name) => {
+    const bodyIsDisplayable = (name, side = 'partner') => {
+        const matrixRows = normalizeSynastryMatrixSide(side) === 'primary' ? primaryMatrixRows : partnerMatrixRows;
         const normalized = normalizeBody(name);
         return !matrixRows[normalized] || matrixRows[normalized]?.display !== false;
     };
-    const bodyIsAspecting = (name) => {
+    const bodyIsAspecting = (name, side = 'partner') => {
+        const matrixRows = normalizeSynastryMatrixSide(side) === 'primary' ? primaryMatrixRows : partnerMatrixRows;
         const normalized = normalizeBody(name);
         return !matrixRows[normalized] || matrixRows[normalized]?.aspecting !== false;
     };
 
-    return (synastryState.payload?.inter_aspects || []).filter((aspect) => (
-        (target !== 'wheel' || bodyIsDisplayable(aspect?.planet_1))
-        && (target !== 'wheel' || bodyIsDisplayable(aspect?.planet_2))
-        && bodyIsAspecting(aspect?.planet_1)
-        && bodyIsAspecting(aspect?.planet_2)
-        && enabledAspectTypes.has(aspect?.aspect_type)
-    ));
+    return (synastryState.payload?.inter_aspects || []).filter((aspect) => {
+        const firstSide = aspect?.chart_1 === 'partner' ? 'partner' : 'primary';
+        const secondSide = aspect?.chart_2 === 'primary' ? 'primary' : 'partner';
+        return (
+            (target !== 'wheel' || bodyIsDisplayable(aspect?.planet_1, firstSide))
+            && (target !== 'wheel' || bodyIsDisplayable(aspect?.planet_2, secondSide))
+            && bodyIsAspecting(aspect?.planet_1, firstSide)
+            && bodyIsAspecting(aspect?.planet_2, secondSide)
+            && enabledAspectTypes.has(aspect?.aspect_type)
+        );
+    });
 }
 
 function getFilteredHouseOverlayItems(items = []) {
     return items;
 }
 
-function bodyIsVisible(bodyName) {
-    const rows = getCurrentSynastryMatrixRows();
+function bodyIsVisible(bodyName, side = 'partner') {
+    const rows = getCurrentSynastryMatrixRows(side);
     const normalized = window.AstroPreferences?.normalizeMatrixBodyName
         ? window.AstroPreferences.normalizeMatrixBodyName(bodyName)
         : bodyName;
