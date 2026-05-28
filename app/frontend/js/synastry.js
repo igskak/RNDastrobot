@@ -598,11 +598,13 @@ function renderSynastry() {
 }
 
 function renderSynastryWorkspace() {
-    const primaryChart = getFilteredSynastryChartData(synastryState.payload?.primary_chart || {});
-    const partnerChart = getFilteredSynastryChartData(synastryState.payload?.partner_chart || {});
+    const primarySideChart = getFilteredSynastryChartData(synastryState.payload?.primary_chart || {}, { target: 'side-panel' });
+    const partnerSideChart = getFilteredSynastryChartData(synastryState.payload?.partner_chart || {}, { target: 'side-panel' });
+    const primaryWheelChart = getFilteredSynastryChartData(synastryState.payload?.primary_chart || {}, { target: 'wheel' });
+    const partnerWheelChart = getFilteredSynastryChartData(synastryState.payload?.partner_chart || {}, { target: 'wheel' });
 
-    renderSynastrySide('primary', primaryChart);
-    renderSynastrySide('partner', partnerChart);
+    renderSynastrySide('primary', primarySideChart);
+    renderSynastrySide('partner', partnerSideChart);
     renderPerspectiveInterAspects(synastryRefs.primaryInterAspects, 'primary');
     renderPerspectiveInterAspects(synastryRefs.partnerInterAspects, 'partner');
     renderHouseOverlayList(
@@ -613,7 +615,7 @@ function renderSynastryWorkspace() {
         synastryRefs.partnerOverlayList,
         getFilteredHouseOverlayItems(synastryState.payload?.house_overlays?.partner_in_primary_houses || []),
     );
-    renderWheelMode(primaryChart, partnerChart);
+    renderWheelMode(primaryWheelChart, partnerWheelChart);
 }
 
 function renderSynastryHeader(primaryChart, partnerChart) {
@@ -760,8 +762,8 @@ function renderWheelMode(primaryChartOverride, partnerChartOverride) {
     const wheel = ensureSynastryWheel();
     if (!wheel) return;
 
-    const primaryChart = primaryChartOverride || getFilteredSynastryChartData(synastryState.payload.primary_chart);
-    const partnerChart = partnerChartOverride || getFilteredSynastryChartData(synastryState.payload.partner_chart);
+    const primaryChart = primaryChartOverride || getFilteredSynastryChartData(synastryState.payload.primary_chart, { target: 'wheel' });
+    const partnerChart = partnerChartOverride || getFilteredSynastryChartData(synastryState.payload.partner_chart, { target: 'wheel' });
     const viewModel = buildSynastryWheelViewModel(primaryChart, partnerChart);
     const matrixRows = getCurrentSynastryMatrixRows();
     syncSynastryDisplayModeControls();
@@ -814,7 +816,7 @@ function buildSynastryWheelViewModel(primaryChart, partnerChart) {
     return window.PrognosticLayerNormalizer.buildViewModel(primaryChart, {
         synastry_partner: {
             partner_chart: partnerChart,
-            inter_aspects: getFilteredInterAspects(),
+            inter_aspects: getFilteredInterAspects({ target: 'wheel' }),
         },
     }, { activeMethods: ['synastry_partner'] });
 }
@@ -1019,8 +1021,8 @@ function canApplySynastrySettingsFast(previousSettings, nextSettings) {
 }
 
 function renderSynastryTablesAndApplyMatrixFast() {
-    const primaryChart = getFilteredSynastryChartData(synastryState.payload?.primary_chart || {});
-    const partnerChart = getFilteredSynastryChartData(synastryState.payload?.partner_chart || {});
+    const primaryChart = getFilteredSynastryChartData(synastryState.payload?.primary_chart || {}, { target: 'side-panel' });
+    const partnerChart = getFilteredSynastryChartData(synastryState.payload?.partner_chart || {}, { target: 'side-panel' });
 
     renderSynastrySide('primary', primaryChart);
     renderSynastrySide('partner', partnerChart);
@@ -1180,16 +1182,21 @@ function readSynastryEnabledAspectTypesFromControls() {
     return enabled.length ? enabled : [...SYNASTRY_ASPECT_TYPES];
 }
 
-function getFilteredSynastryChartData(chartData = {}) {
+function getFilteredSynastryChartData(chartData = {}, options = {}) {
+    const target = options.target === 'wheel' ? 'wheel' : 'side-panel';
     const filtered = window.AstroPreferences?.filterChartDataByViewPreferences
         ? window.AstroPreferences.filterChartDataByViewPreferences(chartData, {
-            matrixRows: getCurrentSynastryMatrixRows(),
+            matrixRows: target === 'wheel' ? getCurrentSynastryMatrixRows() : getSynastryMatrixRowsForSidePanel(),
             aspectScope: synastryState.settings.aspectScope || 'all',
             enabledAspectTypes: Array.isArray(synastryState.settings.enabledAspectTypes) && synastryState.settings.enabledAspectTypes.length
                 ? synastryState.settings.enabledAspectTypes
                 : SYNASTRY_ASPECT_TYPES,
         })
         : chartData;
+
+    if (target !== 'wheel') {
+        return filtered;
+    }
 
     const filterVisible = (entry) => bodyIsVisible(entry?.name);
     return {
@@ -1203,7 +1210,18 @@ function getFilteredSynastryChartData(chartData = {}) {
     };
 }
 
-function getFilteredInterAspects() {
+function getSynastryMatrixRowsForSidePanel() {
+    return Object.fromEntries(Object.entries(getCurrentSynastryMatrixRows()).map(([body, config]) => [
+        body,
+        {
+            ...config,
+            display: true,
+        },
+    ]));
+}
+
+function getFilteredInterAspects(options = {}) {
+    const target = options.target === 'wheel' ? 'wheel' : 'side-panel';
     const matrixRows = getCurrentSynastryMatrixRows();
     const enabledAspectTypes = window.AstroPreferences?.resolveEnabledAspectTypesForScope
         ? window.AstroPreferences.resolveEnabledAspectTypesForScope({
@@ -1226,8 +1244,8 @@ function getFilteredInterAspects() {
     };
 
     return (synastryState.payload?.inter_aspects || []).filter((aspect) => (
-        bodyIsDisplayable(aspect?.planet_1)
-        && bodyIsDisplayable(aspect?.planet_2)
+        (target !== 'wheel' || bodyIsDisplayable(aspect?.planet_1))
+        && (target !== 'wheel' || bodyIsDisplayable(aspect?.planet_2))
         && bodyIsAspecting(aspect?.planet_1)
         && bodyIsAspecting(aspect?.planet_2)
         && enabledAspectTypes.has(aspect?.aspect_type)
@@ -1235,7 +1253,7 @@ function getFilteredInterAspects() {
 }
 
 function getFilteredHouseOverlayItems(items = []) {
-    return items.filter((item) => bodyIsVisible(item?.body_name));
+    return items;
 }
 
 function bodyIsVisible(bodyName) {
