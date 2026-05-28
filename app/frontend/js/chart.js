@@ -381,7 +381,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ? window.AstroPreferences.filterChartDataByViewPreferences(chartData, {
             matrixRows: getCurrentNatalMatrixRows(),
             aspectScope: currentSettings.aspectScope || 'major',
-            enabledAspectTypes: Array.isArray(currentSettings.enabledAspectTypes) && currentSettings.enabledAspectTypes.length
+            enabledAspectTypes: Array.isArray(currentSettings.enabledAspectTypes)
                 ? currentSettings.enabledAspectTypes
                 : NATAL_ASPECT_TYPES,
         })
@@ -686,10 +686,11 @@ function getNatalResolvedViewSettings() {
         aspects: {
             ...(base.aspects || {}),
             scope: currentSettings.aspectScope || base.aspects?.scope || 'major',
-            enabled_types: Array.isArray(currentSettings.enabledAspectTypes) && currentSettings.enabledAspectTypes.length
+            enabled_types: Array.isArray(currentSettings.enabledAspectTypes)
                 ? [...currentSettings.enabledAspectTypes]
                 : [...(base.aspects?.enabled_types || NATAL_ASPECT_TYPES)],
             show_applying_separating: currentSettings.showApplyingSeparating === true,
+            phase_filter: [...normalizeAspectPhaseFilter(currentSettings.aspectPhaseFilter || base.aspects?.phase_filter || [])],
         },
         table_options: {
             ...(base.table_options || {}),
@@ -700,6 +701,9 @@ function getNatalResolvedViewSettings() {
         view_options: {
             ...(base.view_options || {}),
             orientation: currentSettings.orientation === 'asc' ? 'asc' : 'aries',
+            point_scale: currentSettings.pointScale || currentSettings.planetScale || base.view_options?.point_scale || 1,
+            house_number_style: currentSettings.houseNumberStyle === 'roman' ? 'roman' : 'arabic',
+            house_labels_outside: currentSettings.houseLabelsOutside === true,
             show_planet_stationary: currentSettings.showWheelStationary === true,
             show_planet_degree: currentSettings.showWheelDegree === true,
             bold_asc_dsc: currentSettings.angleAscDscBold !== false,
@@ -856,7 +860,7 @@ function filterChartDataForNatalTables(chartData) {
         ? window.AstroPreferences.filterChartDataByViewPreferences(chartData, {
             matrixRows: getNatalMatrixRowsForTables(),
             aspectScope: currentSettings.aspectScope || 'major',
-            enabledAspectTypes: Array.isArray(currentSettings.enabledAspectTypes) && currentSettings.enabledAspectTypes.length
+            enabledAspectTypes: Array.isArray(currentSettings.enabledAspectTypes)
                 ? currentSettings.enabledAspectTypes
                 : NATAL_ASPECT_TYPES,
         })
@@ -951,10 +955,11 @@ function applyResolvedNatalPreferences(payload, { redraw = true } = {}) {
             currentSettings.aspectScope,
             NATAL_ASPECT_TYPES,
         )
-        : (Array.isArray(resolved.aspects?.enabled_types) && resolved.aspects.enabled_types.length
+        : (Array.isArray(resolved.aspects?.enabled_types)
             ? [...resolved.aspects.enabled_types]
             : [...NATAL_ASPECT_TYPES]);
-    currentSettings.showApplyingSeparating = true;
+    currentSettings.showApplyingSeparating = resolved.aspects?.show_applying_separating !== false;
+    currentSettings.aspectPhaseFilter = normalizeAspectPhaseFilter(resolved.aspects?.phase_filter || currentSettings.aspectPhaseFilter || []);
     currentSettings.matrixRows = helpers.ensureMatrixRows
         ? helpers.ensureMatrixRows(resolved.matrix?.rows || {})
         : (resolved.matrix?.rows || {});
@@ -964,8 +969,12 @@ function applyResolvedNatalPreferences(payload, { redraw = true } = {}) {
     currentSettings.showSpeed = resolved.table_options?.show_speed !== false;
     currentSettings.showStationary = resolved.table_options?.show_stationary !== false;
     currentSettings.showAspectText = resolved.table_options?.show_aspect_text === true;
+    currentSettings.pointScale = clampPointScale(resolved.view_options?.point_scale || currentSettings.pointScale || currentSettings.planetScale || 1.2);
+    currentSettings.planetScale = currentSettings.pointScale;
     currentSettings.showWheelStationary = resolved.view_options?.show_planet_stationary === true;
     currentSettings.showWheelDegree = resolved.view_options?.show_planet_degree === true;
+    currentSettings.houseNumberStyle = resolved.view_options?.house_number_style === 'roman' ? 'roman' : 'arabic';
+    currentSettings.houseLabelsOutside = resolved.view_options?.house_labels_outside === true;
     currentSettings.angleAscDscBold = resolved.view_options?.bold_asc_dsc !== false;
     currentSettings.angleMcIcBold = resolved.view_options?.bold_mc_ic !== false;
 
@@ -1020,35 +1029,28 @@ function getNatalViewDraftMeta() {
 
 async function persistNatalViewOverrides() {
     const userId = getCurrentChartUserId();
-    if (!userId || !currentResolvedPreferences || !window.AstroAPI?.saveChartViewOverride) return;
+    if (!userId || !currentResolvedPreferences || !window.AstroAPI?.patchAccountPreferences) return;
 
-    const helpers = getNatalPreferenceHelpers();
-    const accountDefaults = helpers.normalizeViewSettings
-        ? helpers.normalizeViewSettings(currentResolvedPreferences.account_defaults || {})
-        : (currentResolvedPreferences.account_defaults || {});
     const resolved = getNatalResolvedViewSettings();
-    const diff = helpers.buildSparseDiff ? helpers.buildSparseDiff(accountDefaults, resolved) : resolved;
     const draftMeta = getNatalViewDraftMeta();
     window.AstroPreferences?.saveChartViewDraft?.(draftMeta, resolved);
 
-    if (!diff || (typeof diff === 'object' && Object.keys(diff).length === 0)) {
+    await window.AstroAPI.patchAccountPreferences({
+        chart_defaults: { natal: resolved },
+    });
+    if (window.AstroAPI?.deleteChartViewOverride) {
         await window.AstroAPI.deleteChartViewOverride({
             chart_kind: 'natal',
             chart_id: userId,
             view_type: 'natal',
-        });
-        updateLocalResolvedNatalPreferences(resolved, {});
-        window.AstroPreferences?.clearChartViewDraft?.(draftMeta);
-        return;
+        }).catch(() => null);
     }
-
-    await window.AstroAPI.saveChartViewOverride({
-        chart_kind: 'natal',
-        chart_id: userId,
-        view_type: 'natal',
-        overrides: diff,
-    });
-    updateLocalResolvedNatalPreferences(resolved, diff);
+    currentResolvedPreferences = {
+        ...currentResolvedPreferences,
+        account_defaults: resolved,
+        overrides: {},
+        resolved,
+    };
     window.AstroPreferences?.clearChartViewDraft?.(draftMeta);
 }
 
@@ -1167,35 +1169,6 @@ async function applyNatalAspectScope(filter, { persist = true } = {}) {
     }
 }
 
-async function saveNatalSettingsAsAccountDefaults() {
-    const userId = getCurrentChartUserId();
-    if (!userId || !window.AstroAPI?.patchAccountPreferences || !window.AstroAPI?.getResolvedPreferences) {
-        throw new Error('Account defaults are unavailable');
-    }
-
-    await window.AstroAPI.patchAccountPreferences({
-        chart_defaults: {
-            natal: getNatalResolvedViewSettings(),
-        },
-        chart_creation_defaults: {
-            house_system: normalizeHouseSystemCode(currentSettings.houseSystem),
-        },
-    });
-
-    currentResolvedPreferences = await window.AstroAPI.getResolvedPreferences({
-        chart_kind: 'natal',
-        chart_id: userId,
-        view_type: 'natal',
-    });
-    await persistNatalViewOverrides();
-    currentResolvedPreferences = await window.AstroAPI.getResolvedPreferences({
-        chart_kind: 'natal',
-        chart_id: userId,
-        view_type: 'natal',
-    });
-    applyResolvedNatalPreferences(currentResolvedPreferences, { redraw: true });
-}
-
 /**
  * Инициализация вкладок
  */
@@ -1304,6 +1277,21 @@ function initSettings(chartData) {
         });
     }
 
+    if (settingsPanel && window.ChartConfigPresets) {
+        window.ChartConfigPresets.attach({
+            container: settingsPanel,
+            viewType: 'natal',
+            getSettings: () => getNatalResolvedViewSettings(),
+            applySettings: async (resolvedView) => {
+                applyResolvedNatalPreferences(
+                    { ...(currentResolvedPreferences || {}), resolved: resolvedView },
+                    { redraw: true },
+                );
+                await persistNatalViewOverrides();
+            },
+        });
+    }
+
     if (orientationSelect) {
         orientationSelect.value = currentSettings.orientation;
         orientationSelect.addEventListener('change', () => applySettings());
@@ -1379,7 +1367,7 @@ function renderNatalAspectTypeToggles() {
     if (!toggles) return;
 
     const enabledTypes = new Set(
-        Array.isArray(currentSettings.enabledAspectTypes) && currentSettings.enabledAspectTypes.length
+        Array.isArray(currentSettings.enabledAspectTypes)
             ? currentSettings.enabledAspectTypes
             : NATAL_ASPECT_TYPES
     );
@@ -1477,7 +1465,7 @@ function readNatalEnabledAspectTypesFromControls() {
             enabled.push(input.dataset.aspectType);
         }
     });
-    return enabled.length ? enabled : [...NATAL_ASPECT_TYPES];
+    return enabled;
 }
 
 /**
@@ -1693,7 +1681,7 @@ function redrawChart(chartData, hiddenPlanets, orientation = currentSettings.ori
         ? window.AstroPreferences.filterChartDataByViewPreferences(chartData, {
             matrixRows: getCurrentNatalMatrixRows(),
             aspectScope: currentSettings.aspectScope || 'major',
-            enabledAspectTypes: Array.isArray(currentSettings.enabledAspectTypes) && currentSettings.enabledAspectTypes.length
+            enabledAspectTypes: Array.isArray(currentSettings.enabledAspectTypes)
                 ? currentSettings.enabledAspectTypes
                 : NATAL_ASPECT_TYPES,
         })
@@ -1746,9 +1734,6 @@ function initChartActions() {
     const menu = document.getElementById('chartActionsMenu');
     const editAction = document.getElementById('editClientAction');
     const openSynastryAction = document.getElementById('openSynastryAction');
-    const saveDefaultsAction = document.getElementById('saveNatalDefaultsAction');
-    const resetAction = document.getElementById('resetDefaultsAction');
-
     if (!toggle || !menu || !editAction) return;
 
     const hasPersistedUser = Boolean(getCurrentChartUserId());
@@ -1773,41 +1758,6 @@ function initChartActions() {
             return;
         }
         openSynastryLauncherDialog();
-    });
-
-    saveDefaultsAction?.addEventListener('click', async () => {
-        setChartActionsMenuOpen(false);
-        try {
-            await saveNatalSettingsAsAccountDefaults();
-            showChartToast(t('page.chart.toasts.defaultsSaved'), 'success');
-        } catch (error) {
-            showChartToast(error.message || t('page.chart.toasts.defaultsSaveFailed'), 'error');
-        }
-    });
-
-    resetAction?.addEventListener('click', async () => {
-        const userId = getCurrentChartUserId();
-        if (!userId || !window.AstroAPI?.resetUserViewToDefaults) return;
-
-        setChartActionsMenuOpen(false);
-        try {
-            const response = await window.AstroAPI.resetUserViewToDefaults(userId, 'natal');
-            if (response?.chart_data) {
-                const preparedChartData = applyChartState(
-                    ensureChartUserId(response.chart_data, userId),
-                    { houseSystem: response.chart_data?.birth_data?.house_system || currentSettings.houseSystem }
-                );
-                updateHeader(preparedChartData);
-            }
-            if (response?.resolved_preferences) {
-                applyResolvedNatalPreferences(response.resolved_preferences, { redraw: true });
-            } else {
-                redrawChart(window.chartDataCache, currentSettings.hiddenPlanets || [], currentSettings.orientation);
-            }
-            showChartToast(t('page.chart.toasts.defaultsRestored'), 'success');
-        } catch (error) {
-            showChartToast(error.message || t('page.chart.toasts.defaultsResetFailed'), 'error');
-        }
     });
 
     document.addEventListener('click', (event) => {

@@ -477,9 +477,7 @@
         "label": "Actions",
         "openMenu": "Open chart actions",
         "openSynastry": "Synastry",
-        "resetDefaults": "Reset local settings",
-        "saveChart": "Save chart",
-        "saveDefaults": "Save as local settings"
+        "saveChart": "Save chart"
       },
       "aspects": {
         "settings": {
@@ -692,11 +690,22 @@
         "planets": "Planets",
         "rulers": "Pattern / rulers"
       },
-      "toasts": {
-        "defaultsResetFailed": "Failed to reset local settings",
-        "defaultsRestored": "Local settings reset",
-        "defaultsSaveFailed": "Failed to save local settings",
-        "defaultsSaved": "Local settings saved"
+      "toasts": {},
+      "presets": {
+        "saveBtn": "Save configuration",
+        "pickerLabel": "Saved configurations",
+        "pickerHeader": "Saved configurations",
+        "emptyList": "No saved configurations yet",
+        "promptName": "Configuration name",
+        "defaultName": "My configuration",
+        "untitled": "Untitled",
+        "savedToast": "Configuration saved",
+        "saveFailed": "Failed to save configuration",
+        "applied": "Configuration applied",
+        "applyFailed": "Failed to apply configuration",
+        "deleteConfirm": "Delete this configuration?",
+        "deleteAria": "Delete configuration",
+        "deleteFailed": "Failed to delete configuration"
       },
       "title": "Natal Chart"
     },

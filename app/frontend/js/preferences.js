@@ -228,7 +228,7 @@
 
     function normalizeEnabledAspectTypes(enabledAspectTypes, fallbackAspectTypes = DEFAULT_ENABLED_ASPECT_TYPES) {
         const fallback = getKnownAspectTypes(fallbackAspectTypes);
-        if (!Array.isArray(enabledAspectTypes) || !enabledAspectTypes.length) {
+        if (!Array.isArray(enabledAspectTypes)) {
             return [...fallback];
         }
 
@@ -237,7 +237,7 @@
             if (!aspectType || normalized.includes(aspectType)) return;
             normalized.push(aspectType);
         });
-        return normalized.length ? normalized : [...fallback];
+        return normalized;
     }
 
     function getAspectFamilyTypes(aspectScope = 'all', availableAspectTypes = []) {
@@ -285,6 +285,7 @@
         availableAspectTypes = [],
     } = {}) {
         const knownAspectTypes = getKnownAspectTypes(availableAspectTypes);
+        const hasExplicitAspectTypes = Array.isArray(enabledAspectTypes);
         const normalized = healEnabledAspectTypesForScope(enabledAspectTypes, aspectScope, knownAspectTypes);
 
         if (aspectScope === 'all') {
@@ -296,6 +297,10 @@
 
         if (intersection.length) {
             return new Set(intersection);
+        }
+
+        if (hasExplicitAspectTypes) {
+            return new Set();
         }
 
         return new Set(scopedAspectTypes);
@@ -443,6 +448,9 @@
                     ? [...viewSettings.aspects.enabled_types]
                     : [...DEFAULT_ENABLED_ASPECT_TYPES],
                 show_applying_separating: viewSettings?.aspects?.show_applying_separating !== false,
+                phase_filter: Array.isArray(viewSettings?.aspects?.phase_filter)
+                    ? [...viewSettings.aspects.phase_filter]
+                    : undefined,
             },
             table_options: {
                 show_speed: viewSettings?.table_options?.show_speed !== false,
@@ -451,10 +459,18 @@
             },
             view_options: {
                 orientation: viewSettings?.view_options?.orientation === 'asc' ? 'asc' : 'aries',
+                point_scale: Number.isFinite(Number(viewSettings?.view_options?.point_scale))
+                    ? Number(viewSettings.view_options.point_scale)
+                    : undefined,
                 bold_asc_dsc: viewSettings?.view_options?.bold_asc_dsc !== false,
                 bold_mc_ic: viewSettings?.view_options?.bold_mc_ic !== false,
+                show_planet_stationary: viewSettings?.view_options?.show_planet_stationary === true,
+                show_planet_degree: viewSettings?.view_options?.show_planet_degree === true,
                 house_number_style: viewSettings?.view_options?.house_number_style === 'roman' ? 'roman' : 'arabic',
                 house_labels_outside: viewSettings?.view_options?.house_labels_outside === true,
+                show_transit_cusps: viewSettings?.view_options?.show_transit_cusps !== false,
+                show_progression_cusps: viewSettings?.view_options?.show_progression_cusps !== false,
+                show_direction_cusps: viewSettings?.view_options?.show_direction_cusps !== false,
             },
         };
     }

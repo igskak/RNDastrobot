@@ -7,6 +7,7 @@ import '../js/quick-open-popover.js';
 import '../js/timezones.js';
 import '../js/place-autocomplete.js';
 import '../js/preferences.js';
+import '../js/chart-config-presets.js';
 import '../js/symbols.js';
 import '../js/planet-svg-icons.js';
 import '../js/natal-wheel-data.js';

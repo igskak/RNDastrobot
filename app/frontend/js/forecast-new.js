@@ -685,6 +685,14 @@
             refs.forecastNewSettingsPanel?.classList.toggle('hidden');
         });
         refs.forecastNewSettingsPanel?.addEventListener('click', (event) => event.stopPropagation());
+        if (refs.forecastNewSettingsPanel && window.ChartConfigPresets) {
+            window.ChartConfigPresets.attach({
+                container: refs.forecastNewSettingsPanel,
+                viewType: 'prognostic',
+                getSettings: () => getResolvedForecastNewViewSettings(),
+                applySettings: (resolvedView) => applyResolvedForecastNewView(resolvedView || {}),
+            });
+        }
         document.addEventListener('click', () => {
             closeBodyActionMenu();
             refs.forecastNewSettingsPanel?.classList.add('hidden');
@@ -1800,7 +1808,7 @@
 
     function renderAspectTypeToggles() {
         if (!refs.aspectTypeToggles) return;
-        const enabled = new Set(state.pageSettings.enabledAspectTypes?.length ? state.pageSettings.enabledAspectTypes : DEFAULT_ASPECT_TYPES);
+        const enabled = new Set(Array.isArray(state.pageSettings.enabledAspectTypes) ? state.pageSettings.enabledAspectTypes : DEFAULT_ASPECT_TYPES);
         refs.aspectTypeToggles.innerHTML = DEFAULT_ASPECT_TYPES.map((aspectType) => {
             const label = escapeHtml(aspectName(aspectType));
             const symbol = escapeHtml(Symbols?.getAspectDisplay?.(aspectType) || Symbols?.aspects?.[aspectType] || aspectType[0]);
@@ -1820,7 +1828,42 @@
                 enabled.push(input.dataset.aspectType);
             }
         });
-        return enabled.length ? enabled : [...DEFAULT_ASPECT_TYPES];
+        return enabled;
+    }
+
+    function applyResolvedForecastNewView(resolvedView = {}) {
+        const resolved = window.AstroPreferences?.normalizeViewSettings
+            ? window.AstroPreferences.normalizeViewSettings(resolvedView)
+            : resolvedView;
+        const matrixSettings = resolved?.matrix || {};
+        const hasSplitMatrixPreferences = Number(matrixSettings.schema_version) >= 2;
+        state.natalMatrixRows = normalizeForecastNewMatrixRows(
+            hasSplitMatrixPreferences ? (matrixSettings.natal_rows || state.natalMatrixRows) : state.natalMatrixRows
+        );
+        state.matrixRows = normalizeForecastNewMatrixRows(
+            matrixSettings.prognostic_rows || matrixSettings.rows || state.matrixRows
+        );
+        state.pageSettings = {
+            ...state.pageSettings,
+            orientation: resolved?.view_options?.orientation === 'asc' ? 'asc' : (state.pageSettings.orientation || 'aries'),
+            aspectScope: ['all', 'major', 'minor'].includes(resolved?.aspects?.scope)
+                ? resolved.aspects.scope
+                : (state.pageSettings.aspectScope || 'major'),
+            enabledAspectTypes: Array.isArray(resolved?.aspects?.enabled_types)
+                ? [...resolved.aspects.enabled_types]
+                : state.pageSettings.enabledAspectTypes,
+            showApplyingSeparating: resolved?.aspects?.show_applying_separating !== false,
+            showSpeed: resolved?.table_options?.show_speed !== false,
+            showStationary: resolved?.table_options?.show_stationary !== false,
+            showAspectText: resolved?.table_options?.show_aspect_text === true,
+            angleAscDscBold: resolved?.view_options?.bold_asc_dsc !== false,
+            angleMcIcBold: resolved?.view_options?.bold_mc_ic !== false,
+            showTransitCusps: resolved?.view_options?.show_transit_cusps !== false,
+            showProgressionCusps: resolved?.view_options?.show_progression_cusps !== false,
+            showDirectionCusps: resolved?.view_options?.show_direction_cusps !== false,
+        };
+        syncControlsFromState();
+        return applySettings();
     }
 
     function scheduleApplySettings() {
@@ -2771,7 +2814,7 @@
                 matrixRows: getMatrixRowsForScope(scope),
                 aspectMatrixRows: aspectMatrixRowsForRenderer(scope),
                 aspectScope: state.pageSettings.aspectScope || 'major',
-                enabledAspectTypes: Array.isArray(state.pageSettings.enabledAspectTypes) && state.pageSettings.enabledAspectTypes.length
+                enabledAspectTypes: Array.isArray(state.pageSettings.enabledAspectTypes)
                     ? state.pageSettings.enabledAspectTypes
                     : DEFAULT_ASPECT_TYPES,
             })
@@ -2798,7 +2841,7 @@
                 matrixRows: matrixRowsForSidePanel(scope),
                 aspectMatrixRows: aspectMatrixRowsForSidePanel(scope),
                 aspectScope: state.pageSettings.aspectScope || 'major',
-                enabledAspectTypes: Array.isArray(state.pageSettings.enabledAspectTypes) && state.pageSettings.enabledAspectTypes.length
+                enabledAspectTypes: Array.isArray(state.pageSettings.enabledAspectTypes)
                     ? state.pageSettings.enabledAspectTypes
                     : DEFAULT_ASPECT_TYPES,
             })
@@ -2995,7 +3038,7 @@
                 aspectScope: ['all', 'major', 'minor'].includes(resolved?.aspects?.scope)
                     ? resolved.aspects.scope
                     : (state.pageSettings.aspectScope || 'major'),
-                enabledAspectTypes: Array.isArray(resolved?.aspects?.enabled_types) && resolved.aspects.enabled_types.length
+                enabledAspectTypes: Array.isArray(resolved?.aspects?.enabled_types)
                     ? resolved.aspects.enabled_types
                     : state.pageSettings.enabledAspectTypes,
                 showApplyingSeparating: resolved?.aspects?.show_applying_separating !== false,
@@ -3032,7 +3075,7 @@
             },
             aspects: {
                 scope: state.pageSettings.aspectScope || 'major',
-                enabled_types: Array.isArray(state.pageSettings.enabledAspectTypes) && state.pageSettings.enabledAspectTypes.length
+                enabled_types: Array.isArray(state.pageSettings.enabledAspectTypes)
                     ? [...state.pageSettings.enabledAspectTypes]
                     : [...DEFAULT_ASPECT_TYPES],
                 show_applying_separating: state.pageSettings.showApplyingSeparating === true,
@@ -3054,7 +3097,7 @@
     }
 
     async function persistForecastNewViewOverrides() {
-        if (!state.userId || !window.AstroAPI?.saveChartViewOverride) return;
+        if (!state.userId || !window.AstroAPI?.patchAccountPreferences) return;
         const resolved = getResolvedForecastNewViewSettings();
         const draftMeta = {
             chart_kind: 'natal',
@@ -3062,37 +3105,21 @@
             view_type: 'forecast_new',
         };
         window.AstroPreferences?.saveChartViewDraft?.(draftMeta, resolved);
-        const accountDefaults = window.AstroPreferences?.normalizeViewSettings
-            ? window.AstroPreferences.normalizeViewSettings(state.resolvedPreferences?.account_defaults || {})
-            : (state.resolvedPreferences?.account_defaults || {});
-        const diff = window.AstroPreferences?.buildSparseDiff
-            ? window.AstroPreferences.buildSparseDiff(accountDefaults, resolved)
-            : resolved;
 
-        if (!diff || (typeof diff === 'object' && Object.keys(diff).length === 0)) {
-            await window.AstroAPI?.deleteChartViewOverride?.({
+        await window.AstroAPI.patchAccountPreferences({
+            chart_defaults: { forecast_new: resolved },
+        });
+        if (window.AstroAPI?.deleteChartViewOverride) {
+            await window.AstroAPI.deleteChartViewOverride({
                 chart_kind: 'natal',
                 chart_id: state.userId,
                 view_type: 'forecast_new',
-            });
-            state.resolvedPreferences = {
-                ...(state.resolvedPreferences || {}),
-                overrides: {},
-                resolved,
-            };
-            window.AstroPreferences?.clearChartViewDraft?.(draftMeta);
-            return;
+            }).catch(() => null);
         }
-
-        await window.AstroAPI.saveChartViewOverride({
-            chart_kind: 'natal',
-            chart_id: state.userId,
-            view_type: 'forecast_new',
-            overrides: diff,
-        });
         state.resolvedPreferences = {
             ...(state.resolvedPreferences || {}),
-            overrides: diff,
+            account_defaults: resolved,
+            overrides: {},
             resolved,
         };
         window.AstroPreferences?.clearChartViewDraft?.(draftMeta);

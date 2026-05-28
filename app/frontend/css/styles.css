@@ -3148,3 +3148,103 @@ input[type="number"] {
         min-width: 3ch;
     }
 }
+
+/* Chart configuration presets — save current settings as a named config + reapply later */
+.chart-presets-row {
+    position: relative;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin: 0 0 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+.chart-presets-row .preset-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+}
+.chart-presets-picker-btn {
+    padding: 5px 8px !important;
+}
+.chart-presets-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+.chart-presets-popover {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 60;
+    min-width: 220px;
+    max-width: 280px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    padding: 8px;
+}
+.chart-presets-popover.hidden { display: none; }
+.chart-presets-popover-header {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted, var(--text-secondary));
+    padding: 2px 6px 8px;
+}
+.chart-presets-popover-empty {
+    padding: 6px 6px 4px;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+}
+.chart-presets-popover-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 260px;
+    overflow-y: auto;
+}
+.chart-presets-popover-item {
+    display: flex;
+    align-items: stretch;
+    gap: 4px;
+    border-radius: 6px;
+    transition: background 0.15s ease;
+}
+.chart-presets-popover-item:hover { background: var(--bg-hover, rgba(0, 0, 0, 0.04)); }
+.chart-presets-popover-apply {
+    flex: 1 1 auto;
+    text-align: left;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    padding: 7px 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border-radius: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.chart-presets-popover-delete {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    width: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+.chart-presets-popover-delete:hover {
+    color: var(--danger, #d04848);
+    background: rgba(208, 72, 72, 0.08);
+}
+.chart-presets-popover-delete svg {
+    width: 12px;
+    height: 12px;
+}

@@ -340,7 +340,7 @@ function resolveForecastEnabledAspectTypes(availableAspectTypes = [], enabledAsp
         });
     }
 
-    const fallbackTypes = Array.isArray(enabledAspectTypes) && enabledAspectTypes.length
+    const fallbackTypes = Array.isArray(enabledAspectTypes)
         ? enabledAspectTypes
         : FORECAST_ASPECT_TYPES;
     return new Set(fallbackTypes);
@@ -379,7 +379,7 @@ function buildResolvedForecastViewForPersistence(viewType) {
         aspects: {
             ...(normalized.aspects || {}),
             scope: ['all', 'major', 'minor'].includes(state.aspectScope) ? state.aspectScope : 'all',
-            enabled_types: Array.isArray(state.enabledAspectTypes) && state.enabledAspectTypes.length
+            enabled_types: Array.isArray(state.enabledAspectTypes)
                 ? [...state.enabledAspectTypes]
                 : [...FORECAST_ASPECT_TYPES],
             show_applying_separating: state.showApplyingSeparating === true,
@@ -440,7 +440,7 @@ function renderForecastMatrixEditor(containerId, rows) {
 function renderForecastAspectTypeToggles(containerId, enabledAspectTypes = [], aspectScope = 'all') {
     const container = document.getElementById(containerId);
     if (!container) return;
-    const enabled = new Set(Array.isArray(enabledAspectTypes) && enabledAspectTypes.length
+    const enabled = new Set(Array.isArray(enabledAspectTypes)
         ? enabledAspectTypes
         : FORECAST_ASPECT_TYPES);
     container.innerHTML = FORECAST_ASPECT_TYPES.map((aspectType) => {
@@ -621,7 +621,7 @@ function applyForecastResolvedPreferences(viewType, payload) {
             ForecastState.biwheelAspectScope,
             FORECAST_ASPECT_TYPES,
         )
-        : (Array.isArray(resolved?.aspects?.enabled_types) && resolved.aspects.enabled_types.length
+        : (Array.isArray(resolved?.aspects?.enabled_types)
             ? [...resolved.aspects.enabled_types]
             : [...FORECAST_ASPECT_TYPES]);
     ForecastState.biwheelShowAspectText = resolved?.table_options?.show_aspect_text === true;

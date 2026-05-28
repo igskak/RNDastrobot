@@ -152,7 +152,7 @@
             'solarShowApplyingSeparatingToggle', 'solarShowSpeedToggle',
             'solarShowStationaryToggle', 'solarShowAspectTextToggle',
             'solarAngleAscDscBoldToggle', 'solarAngleMcIcBoldToggle',
-            'solarSaveDefaultsBtn', 'solarResetDefaultsBtn', 'solarSaveChartBtn',
+            'solarSaveChartBtn',
             'solarActionsToggle', 'solarActionsMenu', 'solarMomentToggle', 'solarSavedChartsBtn', 'solarMomentCard',
             'solarConfigurationsContainer', 'solarBalancesContainer',
             'solarRulersContainer',
@@ -702,6 +702,41 @@
         } else if (state.solarData) {
             renderSolar(state.solarData, { hydratePreferences: false });
         }
+        schedulePersistSolarAccountDefaults();
+    }
+
+    let solarAccountPersistTimer = null;
+    function schedulePersistSolarAccountDefaults() {
+        clearTimeout(solarAccountPersistTimer);
+        solarAccountPersistTimer = setTimeout(() => {
+            solarAccountPersistTimer = null;
+            persistSolarAccountDefaults().catch((err) => {
+                console.warn('Failed to persist solar account defaults:', err);
+            });
+        }, 400);
+    }
+
+    async function persistSolarAccountDefaults() {
+        if (!window.AstroAPI?.patchAccountPreferences) return;
+        const resolved = buildViewSettings();
+        await window.AstroAPI.patchAccountPreferences({
+            chart_defaults: { solar: resolved },
+        });
+        if (state.solarData?.solar_id && window.AstroAPI?.deleteChartViewOverride) {
+            await window.AstroAPI.deleteChartViewOverride({
+                chart_kind: 'solar',
+                chart_id: state.solarData.solar_id,
+                view_type: 'solar',
+            }).catch(() => null);
+        }
+        if (state.resolvedPreferences) {
+            state.resolvedPreferences = {
+                ...state.resolvedPreferences,
+                account_defaults: resolved,
+                overrides: {},
+                resolved,
+            };
+        }
     }
 
     function getMatrixRow(body) {
@@ -711,12 +746,13 @@
 
     function filterChartData(data) {
         const enabled = new Set(state.settings.enabledAspectTypes || []);
+        const hasExplicitAspectTypes = Array.isArray(state.settings.enabledAspectTypes);
         const planets = (data.planets || []).filter((planet) => getMatrixRow(planet.name).display !== false);
         const visible = new Set(planets.map((planet) => window.AstroPreferences?.normalizeMatrixBodyName?.(planet.name) || planet.name));
         const aspects = (data.aspects || []).filter((aspect) => {
             if (state.settings.aspectScope === 'major' && aspect.is_major === false) return false;
             if (state.settings.aspectScope === 'minor' && aspect.is_major !== false) return false;
-            if (enabled.size && !enabled.has(aspect.aspect_type)) return false;
+            if (hasExplicitAspectTypes && !enabled.has(aspect.aspect_type)) return false;
             const first = window.AstroPreferences?.normalizeMatrixBodyName?.(aspect.planet_1) || aspect.planet_1;
             const second = window.AstroPreferences?.normalizeMatrixBodyName?.(aspect.planet_2) || aspect.planet_2;
             if (!visible.has(first) || !visible.has(second)) return false;
@@ -731,9 +767,10 @@
 
     function aspectAllowedBySettings(aspect, primaryBody, secondaryBody = null) {
         const enabled = new Set(state.settings.enabledAspectTypes || []);
+        const hasExplicitAspectTypes = Array.isArray(state.settings.enabledAspectTypes);
         if (state.settings.aspectScope === 'major' && aspect.is_major === false) return false;
         if (state.settings.aspectScope === 'minor' && aspect.is_major !== false) return false;
-        if (enabled.size && !enabled.has(aspect.aspect_type)) return false;
+        if (hasExplicitAspectTypes && !enabled.has(aspect.aspect_type)) return false;
         if (primaryBody && getMatrixRow(primaryBody).aspecting === false) return false;
         if (secondaryBody && getMatrixRow(secondaryBody).aspecting === false) return false;
         return aspectMatchesPhaseFilter(aspect);
@@ -1137,31 +1174,6 @@
         window.addEventListener('mouseup', () => { state.panning = false; });
     }
 
-    async function saveViewOverride() {
-        if (!state.solarData?.solar_id || !window.AstroAPI?.saveChartViewOverride) return;
-        await window.AstroAPI.saveChartViewOverride({
-            chart_kind: 'solar',
-            chart_id: state.solarData.solar_id,
-            view_type: 'solar',
-            overrides: buildViewSettings(),
-        });
-        showToast(t('page.accountSettings.toasts.saved', null, 'Saved'), 'success');
-    }
-
-    async function resetViewOverride() {
-        if (state.solarData?.solar_id && window.AstroAPI?.deleteChartViewOverride) {
-            await window.AstroAPI.deleteChartViewOverride({
-                chart_kind: 'solar',
-                chart_id: state.solarData.solar_id,
-                view_type: 'solar',
-            }).catch(() => null);
-        }
-        state.settings = viewSettingsToPageSettings(state.accountPreferences?.chart_defaults?.solar || {});
-        syncSettingsControls();
-        if (state.solarData) renderSolar(state.solarData, { hydratePreferences: false });
-        showToast(t('common.reset', null, 'Reset'), 'info');
-    }
-
     async function saveSolarChart() {
         const year = Number.parseInt(refs.solarYear.value, 10);
         const defaultName = refs.solarName.value.trim() || `Соляр ${Number.isInteger(year) ? year : ''}`.trim();
@@ -1222,6 +1234,24 @@
         refs.solarSettingsToggle.addEventListener('click', () => {
             refs.solarSettingsPanel.classList.toggle('hidden');
         });
+        if (refs.solarSettingsPanel && window.ChartConfigPresets) {
+            window.ChartConfigPresets.attach({
+                container: refs.solarSettingsPanel,
+                viewType: 'solar',
+                getSettings: () => buildViewSettings(),
+                applySettings: async (resolvedView) => {
+                    state.settings = viewSettingsToPageSettings(resolvedView || {});
+                    syncSettingsControls();
+                    persistViewState();
+                    if (state.solarData) {
+                        renderSolar(state.solarData, { hydratePreferences: false });
+                    }
+                    await persistSolarAccountDefaults().catch((err) => {
+                        console.warn('Failed to persist solar preset:', err);
+                    });
+                },
+            });
+        }
         [
             refs.solarOrientationSelect,
             refs.solarHouseSystemSelect,
@@ -1245,8 +1275,6 @@
         });
         refs.solarAspectTypeToggles.addEventListener('change', readSettingsControls);
         refs.solarMatrixEditor.addEventListener('change', readSettingsControls);
-        refs.solarSaveDefaultsBtn.addEventListener('click', () => saveViewOverride().catch((error) => showToast(error.message, 'error')));
-        refs.solarResetDefaultsBtn.addEventListener('click', () => resetViewOverride().catch((error) => showToast(error.message, 'error')));
         document.addEventListener('frontend:locale-changed', () => {
             window.FrontendI18nUi?.applyI18n?.(document);
             if (state.solarData) renderSolar(state.solarData, { hydratePreferences: false });

@@ -45,6 +45,77 @@ test('chart view drafts round-trip through localStorage', () => {
     }
 });
 
+test('normalizeViewSettings preserves aspect and wheel options', () => {
+    const normalized = preferences.normalizeViewSettings({
+        aspects: {
+            scope: 'minor',
+            enabled_types: [],
+            show_applying_separating: false,
+            phase_filter: ['applying'],
+        },
+        view_options: {
+            orientation: 'asc',
+            point_scale: 1.35,
+            show_planet_stationary: true,
+            show_planet_degree: true,
+            house_number_style: 'roman',
+            house_labels_outside: true,
+            bold_asc_dsc: false,
+            bold_mc_ic: false,
+        },
+    });
+
+    assert.deepEqual(normalized.aspects.enabled_types, []);
+    assert.equal(normalized.aspects.show_applying_separating, false);
+    assert.deepEqual(normalized.aspects.phase_filter, ['applying']);
+    assert.equal(normalized.view_options.point_scale, 1.35);
+    assert.equal(normalized.view_options.show_planet_stationary, true);
+    assert.equal(normalized.view_options.show_planet_degree, true);
+    assert.equal(normalized.view_options.house_number_style, 'roman');
+    assert.equal(normalized.view_options.house_labels_outside, true);
+    assert.equal(normalized.view_options.bold_asc_dsc, false);
+    assert.equal(normalized.view_options.bold_mc_ic, false);
+});
+
+test('filterChartDataByViewPreferences treats an empty aspect type list as hide all', () => {
+    const chartData = {
+        planets: [
+            { name: 'Sun' },
+            { name: 'Mars' },
+        ],
+        aspects: [
+            { planet_1: 'Sun', planet_2: 'Mars', aspect_type: 'Square' },
+        ],
+        aspect_configurations: [
+            {
+                type: 'TestConfig',
+                planets_involved: ['Sun', 'Mars'],
+                aspects: [{ planet_1: 'Sun', planet_2: 'Mars', aspect_type: 'Square' }],
+            },
+        ],
+        stelliums: [],
+    };
+
+    const filtered = preferences.filterChartDataByViewPreferences(chartData, {
+        matrixRows: {},
+        aspectScope: 'all',
+        enabledAspectTypes: [],
+    });
+
+    assert.deepEqual(filtered.aspects, []);
+    assert.deepEqual(filtered.aspect_configurations, []);
+});
+
+test('resolveEnabledAspectTypesForScope keeps an explicit empty selection empty', () => {
+    const enabled = preferences.resolveEnabledAspectTypesForScope({
+        enabledAspectTypes: [],
+        aspectScope: 'major',
+        availableAspectTypes: ['Square', 'Trine'],
+    });
+
+    assert.deepEqual([...enabled], []);
+});
+
 test('filterChartDataByViewPreferences hides aspects and configurations for non-aspecting bodies', () => {
     const chartData = {
         planets: [

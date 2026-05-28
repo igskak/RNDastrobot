@@ -271,6 +271,15 @@ function bindSynastryEvents() {
         event.stopPropagation();
     });
 
+    if (synastryRefs.settingsPanel && window.ChartConfigPresets) {
+        window.ChartConfigPresets.attach({
+            container: synastryRefs.settingsPanel,
+            viewType: 'synastry',
+            getSettings: () => getCurrentSynastryViewSettings(),
+            applySettings: (resolvedView) => applySynastryResolvedView(resolvedView || {}),
+        });
+    }
+
     document.addEventListener('click', () => {
         setSynastrySettingsOpen(false);
     });
@@ -616,7 +625,7 @@ function initializeSynastrySettings() {
             synastryState.settings.aspectScope,
             SYNASTRY_ASPECT_TYPES,
         )
-        : (Array.isArray(resolved?.aspects?.enabled_types) && resolved.aspects.enabled_types.length
+        : (Array.isArray(resolved?.aspects?.enabled_types)
             ? [...resolved.aspects.enabled_types]
             : [...SYNASTRY_ASPECT_TYPES]);
     synastryState.settings.showApplyingSeparating = resolved?.aspects?.show_applying_separating !== false;
@@ -632,6 +641,43 @@ function initializeSynastrySettings() {
             console.warn('Failed to replay synastry settings draft:', error);
         });
     }
+}
+
+function applySynastryResolvedView(resolvedView = {}) {
+    const resolved = window.AstroPreferences?.normalizeViewSettings
+        ? window.AstroPreferences.normalizeViewSettings(resolvedView)
+        : resolvedView;
+    synastryState.settings.orientation = resolved?.view_options?.orientation === 'asc' ? 'asc' : 'aries';
+    synastryState.settings.aspectScope = resolved?.aspects?.scope || 'major';
+    const matrixSettings = resolved?.matrix || {};
+    const hasSplitMatrixRows = Number(matrixSettings.schema_version) >= 2;
+    const primaryRows = hasSplitMatrixRows
+        ? (matrixSettings.natal_rows || matrixSettings.rows || {})
+        : (matrixSettings.rows || {});
+    const partnerRows = hasSplitMatrixRows
+        ? (matrixSettings.prognostic_rows || matrixSettings.rows || {})
+        : (matrixSettings.rows || {});
+    synastryState.settings.primaryMatrixRows = ensureSynastryMatrixRows(primaryRows);
+    synastryState.settings.partnerMatrixRows = ensureSynastryMatrixRows(partnerRows);
+    synastryState.settings.enabledAspectTypes = window.AstroPreferences?.healEnabledAspectTypesForScope
+        ? window.AstroPreferences.healEnabledAspectTypesForScope(
+            resolved?.aspects?.enabled_types,
+            synastryState.settings.aspectScope,
+            SYNASTRY_ASPECT_TYPES,
+        )
+        : (Array.isArray(resolved?.aspects?.enabled_types)
+            ? [...resolved.aspects.enabled_types]
+            : [...SYNASTRY_ASPECT_TYPES]);
+    synastryState.settings.showApplyingSeparating = resolved?.aspects?.show_applying_separating !== false;
+    synastryState.settings.showSpeed = resolved?.table_options?.show_speed !== false;
+    synastryState.settings.showStationary = resolved?.table_options?.show_stationary !== false;
+    synastryState.settings.showAspectText = resolved?.table_options?.show_aspect_text === true;
+    synastryState.settings.houseNumberStyle = resolved?.view_options?.house_number_style === 'roman' ? 'roman' : 'arabic';
+    synastryState.settings.houseLabelsOutside = resolved?.view_options?.house_labels_outside === true;
+    syncSynastrySettingsControls();
+    renderSynastryMatrixEditor();
+    renderSynastryAspectTypeToggles();
+    return applySynastrySettingsNow();
 }
 
 function renderSynastry() {
@@ -968,7 +1014,7 @@ function renderSynastryAspectTypeToggles() {
     if (!synastryRefs.aspectTypeToggles) return;
 
     const enabledTypes = new Set(
-        Array.isArray(synastryState.settings.enabledAspectTypes) && synastryState.settings.enabledAspectTypes.length
+        Array.isArray(synastryState.settings.enabledAspectTypes)
             ? synastryState.settings.enabledAspectTypes
             : SYNASTRY_ASPECT_TYPES
     );
@@ -1155,11 +1201,8 @@ async function applySynastrySettingsNow() {
 }
 
 async function persistSynastryViewOverrides() {
-    if (!synastryState.resolvedPreferences || !window.AstroAPI?.saveChartViewOverride) return;
+    if (!synastryState.resolvedPreferences || !window.AstroAPI?.patchAccountPreferences) return;
 
-    const accountDefaults = window.AstroPreferences?.normalizeViewSettings
-        ? window.AstroPreferences.normalizeViewSettings(synastryState.resolvedPreferences.account_defaults || {})
-        : (synastryState.resolvedPreferences.account_defaults || {});
     const resolved = getCurrentSynastryViewSettings();
     const draftMeta = {
         chart_kind: 'natal',
@@ -1167,34 +1210,21 @@ async function persistSynastryViewOverrides() {
         view_type: 'biwheel',
     };
     window.AstroPreferences?.saveChartViewDraft?.(draftMeta, resolved);
-    const diff = window.AstroPreferences?.buildSparseDiff
-        ? window.AstroPreferences.buildSparseDiff(accountDefaults, resolved)
-        : resolved;
 
-    if (!diff || (typeof diff === 'object' && Object.keys(diff).length === 0)) {
+    await window.AstroAPI.patchAccountPreferences({
+        chart_defaults: { biwheel: resolved },
+    });
+    if (window.AstroAPI?.deleteChartViewOverride) {
         await window.AstroAPI.deleteChartViewOverride({
             chart_kind: 'natal',
             chart_id: primaryUserId,
             view_type: 'biwheel',
-        });
-        synastryState.resolvedPreferences = {
-            ...synastryState.resolvedPreferences,
-            overrides: {},
-            resolved,
-        };
-        window.AstroPreferences?.clearChartViewDraft?.(draftMeta);
-        return;
+        }).catch(() => null);
     }
-
-    await window.AstroAPI.saveChartViewOverride({
-        chart_kind: 'natal',
-        chart_id: primaryUserId,
-        view_type: 'biwheel',
-        overrides: diff,
-    });
     synastryState.resolvedPreferences = {
         ...synastryState.resolvedPreferences,
-        overrides: diff,
+        account_defaults: resolved,
+        overrides: {},
         resolved,
     };
     window.AstroPreferences?.clearChartViewDraft?.(draftMeta);
@@ -1212,7 +1242,7 @@ function getCurrentSynastryViewSettings() {
         },
         aspects: {
             scope: synastryState.settings.aspectScope || 'major',
-            enabled_types: Array.isArray(synastryState.settings.enabledAspectTypes) && synastryState.settings.enabledAspectTypes.length
+            enabled_types: Array.isArray(synastryState.settings.enabledAspectTypes)
                 ? [...synastryState.settings.enabledAspectTypes]
                 : [...SYNASTRY_ASPECT_TYPES],
             show_applying_separating: synastryState.settings.showApplyingSeparating === true,
@@ -1272,7 +1302,7 @@ function readSynastryEnabledAspectTypesFromControls() {
             enabled.push(input.dataset.aspectType);
         }
     });
-    return enabled.length ? enabled : [...SYNASTRY_ASPECT_TYPES];
+    return enabled;
 }
 
 function getFilteredSynastryChartData(chartData = {}, options = {}) {
@@ -1284,7 +1314,7 @@ function getFilteredSynastryChartData(chartData = {}, options = {}) {
                 ? getCurrentSynastryMatrixRows(side)
                 : getSynastryMatrixRowsForSidePanel(side),
             aspectScope: synastryState.settings.aspectScope || 'major',
-            enabledAspectTypes: Array.isArray(synastryState.settings.enabledAspectTypes) && synastryState.settings.enabledAspectTypes.length
+            enabledAspectTypes: Array.isArray(synastryState.settings.enabledAspectTypes)
                 ? synastryState.settings.enabledAspectTypes
                 : SYNASTRY_ASPECT_TYPES,
         })

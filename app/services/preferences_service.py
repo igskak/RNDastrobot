@@ -110,46 +110,49 @@ def _first_present(*values: Any) -> Any:
 
 
 def _extract_global_chart_defaults(chart_defaults: Dict[str, Any]) -> Dict[str, Any]:
-    """Keep only account-level settings that are intentionally global."""
+    """Return account-level chart defaults.
+
+    The full per-view-type payload is preserved so that any setting changed on
+    one chart propagates to other charts of the same type. Cross-view fallbacks
+    are layered on top for select visual options (orientation, house styling,
+    show_aspect_text) so views inherit shared chrome from the natal defaults.
+    Top-level non-view keys (e.g. ``saved_configurations``) are passed through.
+    """
     chart_defaults = chart_defaults or {}
     natal = chart_defaults.get('natal') or {}
-    solar = chart_defaults.get('solar') or {}
-    biwheel = chart_defaults.get('biwheel') or {}
-    forecast_new = chart_defaults.get('forecast_new') or {}
+    natal_view = natal.get('view_options') or {}
 
-    def view_options_for(view_type: str) -> Dict[str, Any]:
-        source = (
-            (chart_defaults.get(view_type) or {}).get('view_options') or {}
-        )
-        natal_view = natal.get('view_options') or {}
-        return {
-            'orientation': _first_present(source.get('orientation'), natal_view.get('orientation')),
-            'house_number_style': _first_present(source.get('house_number_style'), natal_view.get('house_number_style')),
-            'house_labels_outside': _first_present(source.get('house_labels_outside'), natal_view.get('house_labels_outside')),
-            'bold_asc_dsc': _first_present(source.get('bold_asc_dsc'), natal_view.get('bold_asc_dsc')),
-            'bold_mc_ic': _first_present(source.get('bold_mc_ic'), natal_view.get('bold_mc_ic')),
-        }
-
-    show_aspect_text = _first_present(
-        (natal.get('table_options') or {}).get('show_aspect_text'),
-        (solar.get('table_options') or {}).get('show_aspect_text'),
-        (biwheel.get('table_options') or {}).get('show_aspect_text'),
-        (forecast_new.get('table_options') or {}).get('show_aspect_text'),
-    )
+    show_aspect_text = _first_present(*(
+        ((chart_defaults.get(view_type) or {}).get('table_options') or {}).get('show_aspect_text')
+        for view_type in VIEW_TYPES
+    ))
 
     result: Dict[str, Any] = {}
+    for key, value in chart_defaults.items():
+        if key not in VIEW_TYPES:
+            result[key] = deepcopy(value)
+
     for view_type in VIEW_TYPES:
-        cleaned_view_options = {
-            key: value
-            for key, value in view_options_for(view_type).items()
-            if value is not None
+        view_data = deepcopy(chart_defaults.get(view_type) or {})
+        source_view_options = view_data.get('view_options') or {}
+        propagated = {
+            'orientation': _first_present(source_view_options.get('orientation'), natal_view.get('orientation')),
+            'house_number_style': _first_present(source_view_options.get('house_number_style'), natal_view.get('house_number_style')),
+            'house_labels_outside': _first_present(source_view_options.get('house_labels_outside'), natal_view.get('house_labels_outside')),
+            'bold_asc_dsc': _first_present(source_view_options.get('bold_asc_dsc'), natal_view.get('bold_asc_dsc')),
+            'bold_mc_ic': _first_present(source_view_options.get('bold_mc_ic'), natal_view.get('bold_mc_ic')),
         }
-        cleaned: Dict[str, Any] = {}
-        if cleaned_view_options:
-            cleaned['view_options'] = cleaned_view_options
+        merged_view_options = dict(source_view_options)
+        for key, value in propagated.items():
+            if value is not None and merged_view_options.get(key) is None:
+                merged_view_options[key] = value
+        if merged_view_options:
+            view_data['view_options'] = merged_view_options
         if show_aspect_text is not None:
-            cleaned['table_options'] = {'show_aspect_text': bool(show_aspect_text)}
-        result[view_type] = cleaned
+            table_options = dict(view_data.get('table_options') or {})
+            table_options['show_aspect_text'] = bool(show_aspect_text)
+            view_data['table_options'] = table_options
+        result[view_type] = view_data
     return result
 
 
