@@ -135,9 +135,14 @@
             const secondFloat = (minuteFloat - minutes) * 60;
             const seconds = Math.max(0, Math.min(59, Math.floor(secondFloat)));
             const sign = payload.sign || options.sign || '';
-            const signSymbol = options.signSymbol
+            const rawSignSymbol = options.signSymbol
                 || root?.Symbols?.signs?.[sign]
                 || sign;
+            // signClass (opt-in): оборачивает символ знака в span для масштабирования/шрифта.
+            // Используется только HTML-вызовами (таблицы); SVG/textContent-вызовы его не передают.
+            const signSymbol = (rawSignSymbol && options.signClass)
+                ? `<span class="${options.signClass}">${rawSignSymbol}</span>`
+                : rawSignSymbol;
             const degreeFormat = String(
                 options.degreeFormat
                 || root?.AstroPreferences?.getDegreeFormat?.(getVisualPreferences())

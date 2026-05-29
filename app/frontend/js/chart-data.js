@@ -478,7 +478,7 @@ class ChartDataRenderer {
                     </td>
                     <td class="mono">
                         <div class="planet-position-layout">
-                            <div class="planet-position-main">${this.escapeHtml(position)}</div>
+                            <div class="planet-position-main">${position}</div>
                         </div>
                     </td>
                     ${this.showSpeedColumn ? `<td class="planet-speed-cell mono">${this.showSpeed ? speedChip : ''}</td>` : ''}
@@ -543,7 +543,7 @@ class ChartDataRenderer {
                 <tr id="row-house-${h.number}" class="${isAngular ? 'house-angular' : ''}">
                     <td class="mono">${this.escapeHtml(this.formatHouseNumber(h.number))}</td>
                     <td class="mono house-sign-cell">
-                        <div class="house-sign-main">${this.escapeHtml(position)}</div>
+                        <div class="house-sign-main">${position}</div>
                         ${includedSign ? `
                             <div class="house-sign-meta" title="${this.escapeHtml(includedSignTitle)}">
                                 <span class="house-sign-badge">${this.escapeHtml(this.t('astro.feature.short.intercepted'))}</span>
@@ -568,6 +568,7 @@ class ChartDataRenderer {
         if (window.LocaleFormatters?.formatAstroCoordinate) {
             return window.LocaleFormatters.formatAstroCoordinate(item, {
                 signSymbol: Symbols?.signs?.[item?.sign],
+                signClass: 'astro-symbol',
             });
         }
 
@@ -575,7 +576,9 @@ class ChartDataRenderer {
         if (!Number.isFinite(degree)) return '';
         const d = Math.floor(degree);
         const m = Math.floor((degree - d) * 60);
-        return [`${d}°`, Symbols?.signs?.[item?.sign] || item?.sign || '', `${String(m).padStart(2, '0')}'`]
+        const signSymbol = Symbols?.signs?.[item?.sign] || item?.sign || '';
+        const signMarkup = signSymbol ? `<span class="astro-symbol">${signSymbol}</span>` : '';
+        return [`${d}°`, signMarkup, `${String(m).padStart(2, '0')}'`]
             .filter(Boolean)
             .join(' ');
     }
