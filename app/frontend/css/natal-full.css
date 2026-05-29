@@ -181,7 +181,7 @@
 
 .summary-label-glyph {
     font-family: var(--font-symbol);
-    font-size: 20px;
+    font-size: calc(20px * var(--glyph-scale));
     line-height: 1;
     letter-spacing: 0;
     text-transform: none;

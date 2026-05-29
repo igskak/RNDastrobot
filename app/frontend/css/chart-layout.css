@@ -343,7 +343,7 @@
 .symbol-cell {
     width: 30px;
     text-align: center;
-    font-size: 16px;
+    font-size: calc(16px * var(--glyph-scale));
     font-family: var(--font-symbol);
 }
 

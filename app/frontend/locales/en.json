@@ -343,7 +343,8 @@
       "copy": "Keep separate natal and prognostic orb presets in one compact matrix. Prognostic applies to transits, progressions, directions, and solar.",
       "hints": {
         "natal": "Natal orbs are used for natal aspect calculations.",
-        "prognostic": "Prognostic orbs are used for transits, progressions, directions, and solar calculations."
+        "prognostic": "Prognostic orbs are used for transits, progressions, directions, and solar calculations.",
+        "synastry": "Synastry orbs are used for cross-aspects between two charts. Narrow them to reduce the number of inter-chart aspects."
       },
       "kicker": "Methodology",
       "matrix": {
@@ -359,7 +360,8 @@
       "tabs": {
         "ariaLabel": "Orb profiles",
         "natal": "Natal",
-        "prognostic": "Prognostic"
+        "prognostic": "Prognostic",
+        "synastry": "Synastry"
       },
       "viewMode": {
         "ariaLabel": "Orb table view",
@@ -1029,13 +1031,13 @@
       },
       "related": {
         "add": "Add person",
-        "linkExisting": "Link existing",
+        "linkExisting": "Select existing",
         "linkKicker": "Saved people",
-        "linkTitle": "Link an existing profile",
+        "linkTitle": "Select an existing profile",
         "linkSubtitle": "Pick a profile from your database to use as a recurring synastry person.",
         "searchLabel": "Search profile",
         "searchPlaceholder": "First name, last name, or birthplace",
-        "linkSubmit": "Link profile",
+        "linkSubmit": "Select",
         "linked": "Profile linked",
         "linkFailed": "Failed to link profile",
         "loadCandidatesFailed": "Failed to load profiles list",

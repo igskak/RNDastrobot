@@ -1260,10 +1260,24 @@ function getCurrentSynastryViewSettings() {
     };
 }
 
+// Фиктивные точки, которые по умолчанию НЕ аспектируют в синастрии.
+// Астролог может включить их аспектацию вручную через матрицу в настройках карты.
+const SYNASTRY_NON_ASPECTING_DEFAULT_BODIES = ['BlackMoon', 'WhiteMoon', 'PartOfFortune', 'Vertex', 'AntiVertex'];
+
 function ensureSynastryMatrixRows(rows = {}) {
-    return window.AstroPreferences?.ensureMatrixRows
+    const ensured = window.AstroPreferences?.ensureMatrixRows
         ? window.AstroPreferences.ensureMatrixRows(rows || {})
         : (rows || {});
+    // По умолчанию фиктивные точки не аспектируют: применяем false, пока астролог
+    // явно не выставил aspecting:true в настройках карты.
+    SYNASTRY_NON_ASPECTING_DEFAULT_BODIES.forEach((body) => {
+        if (!ensured[body]) return;
+        const explicitlyEnabled = rows?.[body]?.aspecting === true;
+        if (!explicitlyEnabled) {
+            ensured[body] = { ...ensured[body], aspecting: false };
+        }
+    });
+    return ensured;
 }
 
 function normalizeSynastryMatrixSide(side) {

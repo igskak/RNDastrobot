@@ -22,7 +22,7 @@
         'Biquintile',
         'Quincunx',
     ];
-    const ORB_PROFILE_IDS = window.AstroPreferences?.ORB_PROFILE_IDS || ['natal', 'prognostic'];
+    const ORB_PROFILE_IDS = window.AstroPreferences?.ORB_PROFILE_IDS || ['natal', 'prognostic', 'synastry'];
     const DEFAULT_ORB_PAIR_STRATEGY = window.AstroPreferences?.DEFAULT_ORB_PAIR_STRATEGY || 'larger';
     const ACTIVE_RECALC_JOB_KEY = 'activePreferenceRecalcJobId';
     const ORB_VIEW_MODE_STORAGE_KEY = 'accountOrbViewMode';
@@ -494,7 +494,7 @@
             hint.textContent = t(`page.accountSettings.orbs.hints.${activeOrbProfile}`);
         }
         if (applyBtn) {
-            applyBtn.classList.toggle('hidden', activeOrbProfile !== 'prognostic');
+            applyBtn.classList.toggle('hidden', activeOrbProfile === 'natal');
         }
     }
 
@@ -1504,12 +1504,12 @@
             });
         });
         applyNatalOrbsBtn?.addEventListener('click', () => {
+            if (activeOrbProfile === 'natal') return;
             syncOrbMatrixFromDom();
             const methodology = ensureMethodologyState();
-            methodology.orbs.profiles.prognostic = {
+            methodology.orbs.profiles[activeOrbProfile] = {
                 matrix: JSON.parse(JSON.stringify(getOrbProfileMatrix('natal'))),
             };
-            activeOrbProfile = 'prognostic';
             renderOrbsMatrix(methodology);
             showToast(t('page.accountSettings.toasts.orbsCopied'), 'info');
         });

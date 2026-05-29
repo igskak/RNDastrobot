@@ -64,6 +64,10 @@ bin/natal_chart
 bin/natal_chart_json
 bin/swetest
 bin/swevents
+swisseph/bin/
+
+# Local backups / dumps
+backups/
 
 # Swiss Ephemeris data files (большие бинарные файлы)
 # Исключаем только очень большие файлы (>100MB)

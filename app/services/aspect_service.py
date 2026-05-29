@@ -204,6 +204,7 @@ class AspectService:
         aspect_type: str,
         *,
         astrologer_id: Optional[UUID] = None,
+        orb_profile: str = 'natal',
     ) -> float:
         """
         Расчет допустимого орбиса для пары тел согласно правилу:
@@ -223,7 +224,7 @@ class AspectService:
                 body_a,
                 body_b,
                 aspect_type,
-                orb_profile='natal',
+                orb_profile=orb_profile,
             )
 
         planet_orbs = self._get_planet_orbs()
@@ -315,6 +316,7 @@ class AspectService:
         *,
         user_id: Optional[UUID] = None,
         astrologer_id: Optional[UUID] = None,
+        orb_profile: str = 'natal',
     ) -> Optional[Dict]:
         """
         Розрахунок аспекту між двома об'єктами з використанням індивідуальних орбісів
@@ -359,6 +361,7 @@ class AspectService:
                 obj2['name'],
                 aspect_type.aspect_type,
                 astrologer_id=resolved_astrologer_id,
+                orb_profile=orb_profile,
             )
 
             # 4. Рассчитать отклонение от точного аспекта

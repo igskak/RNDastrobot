@@ -560,9 +560,8 @@ function updateLocalForecastResolved(viewType, resolved, overrides) {
 }
 
 async function persistForecastViewOverride(viewType) {
-    const helpers = getForecastPreferenceHelpers();
     const userId = ForecastState.userId;
-    if (!window.AstroAPI?.saveChartViewOverride) return;
+    if (!window.AstroAPI?.patchAccountPreferences) return;
 
     if (viewType !== 'biwheel') return;
     const source = ForecastState.biwheelResolvedPreferences;
@@ -572,9 +571,9 @@ async function persistForecastViewOverride(viewType) {
     const chartKind = 'natal';
     if (!chartId) return;
 
-    const accountDefaults = helpers.normalizeViewSettings
-        ? helpers.normalizeViewSettings(source.account_defaults || {})
-        : (source.account_defaults || {});
+    // Biwheel side-panel settings are stored globally per view type so they
+    // carry over across charts and profiles. Persist to the account defaults and
+    // drop any stale per-chart override that would otherwise shadow them.
     const resolved = buildResolvedForecastViewForPersistence(viewType);
     const draftMeta = {
         chart_kind: chartKind,
@@ -582,26 +581,18 @@ async function persistForecastViewOverride(viewType) {
         view_type: viewType,
     };
     window.AstroPreferences?.saveChartViewDraft?.(draftMeta, resolved);
-    const diff = helpers.buildSparseDiff ? helpers.buildSparseDiff(accountDefaults, resolved) : resolved;
 
-    if (!diff || (typeof diff === 'object' && Object.keys(diff).length === 0)) {
+    await window.AstroAPI.patchAccountPreferences({
+        chart_defaults: { biwheel: resolved },
+    });
+    if (window.AstroAPI?.deleteChartViewOverride) {
         await window.AstroAPI.deleteChartViewOverride({
             chart_kind: chartKind,
             chart_id: chartId,
             view_type: viewType,
-        });
-        updateLocalForecastResolved(viewType, resolved, {});
-        window.AstroPreferences?.clearChartViewDraft?.(draftMeta);
-        return;
+        }).catch(() => null);
     }
-
-    await window.AstroAPI.saveChartViewOverride({
-        chart_kind: chartKind,
-        chart_id: chartId,
-        view_type: viewType,
-        overrides: diff,
-    });
-    updateLocalForecastResolved(viewType, resolved, diff);
+    updateLocalForecastResolved(viewType, resolved, {});
     window.AstroPreferences?.clearChartViewDraft?.(draftMeta);
 }
 

@@ -267,6 +267,9 @@ body.quick-open-active {
     --font-display: 'Cormorant Garamond', Georgia, serif;
     --font-symbol:  'Astronomicon Local', 'Noto Sans Symbols Local', 'Noto Sans Symbols 2 Local', 'Segoe UI Symbol', 'Apple Symbols', sans-serif;
     --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+    /* Множитель видимого размера астро-глифов вне колеса (таблицы/фильтры/легенды) */
+    --glyph-scale: 1.2;
 }
 
 * {
@@ -397,6 +400,21 @@ body::selection {
     overflow: visible;
     transform-origin: center center;
     transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+/* Глифы вне колеса крупнее цифр на --glyph-scale */
+.astro-symbol,
+.planet-icon {
+    font-size: calc(1em * var(--glyph-scale));
+    line-height: 1;
+    vertical-align: middle;
+}
+
+/* SVG-иконки планет в инлайн-контекстах (таблицы/фильтры/чипы):
+   увеличиваем рисунок без изменения бокса, чтобы не ломать узкие ячейки */
+.planet-icon-svg svg {
+    transform: scale(var(--glyph-scale));
+    transform-origin: center;
 }
 
 /* ============ LAYOUT ============ */

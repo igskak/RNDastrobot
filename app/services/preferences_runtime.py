@@ -102,7 +102,7 @@ DEFAULT_ASPECT_COLOR_BY_TYPE: Dict[str, str] = {
 }
 
 DEFAULT_STATIONARY_THRESHOLD_PERCENT = 10.0
-ORB_PROFILE_IDS = ('natal', 'prognostic')
+ORB_PROFILE_IDS = ('natal', 'prognostic', 'synastry')
 DEFAULT_ORB_PAIR_STRATEGY = 'larger'
 ORB_PAIR_STRATEGY_ALIASES: Dict[str, str] = {
     'larger': 'larger',
@@ -260,6 +260,11 @@ def build_default_orb_settings(
             },
             'prognostic': {
                 'matrix': deepcopy(prognostic_matrix),
+            },
+            # Synastry defaults to the natal orb matrix; astrologers usually
+            # narrow it from the dedicated profile to cut cross-aspect noise.
+            'synastry': {
+                'matrix': deepcopy(natal_matrix),
             },
         },
     }
@@ -651,7 +656,7 @@ class PreferencesRuntimeResolver:
         body_b: str,
         aspect_type: str,
         *,
-        orb_profile: Literal['natal', 'prognostic'] = 'natal',
+        orb_profile: Literal['natal', 'prognostic', 'synastry'] = 'natal',
         default_house_system: str = 'P',
     ) -> float:
         normalized_orbs = self._get_normalized_orb_settings_for_astrologer(
@@ -698,7 +703,7 @@ class PreferencesRuntimeResolver:
         body: str,
         aspect_type: str,
         *,
-        orb_profile: Literal['natal', 'prognostic'] = 'natal',
+        orb_profile: Literal['natal', 'prognostic', 'synastry'] = 'natal',
         default_house_system: str = 'P',
     ) -> float:
         normalized_orbs = self._get_normalized_orb_settings_for_astrologer(

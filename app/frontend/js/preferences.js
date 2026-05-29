@@ -101,7 +101,7 @@
         'Biquintile',
         'Quincunx',
     ];
-    const ORB_PROFILE_IDS = ['natal', 'prognostic'];
+    const ORB_PROFILE_IDS = ['natal', 'prognostic', 'synastry'];
     const DEFAULT_ORB_PAIR_STRATEGY = 'larger';
     const DEFAULT_PROGNOSTIC_ORB = 1;
     const DEFAULT_PROGNOSTIC_MOON_ORB = 3;

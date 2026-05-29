@@ -88,6 +88,7 @@ class SynastryService:
                     partner_object,
                     aspect_types,
                     astrologer_id=astrologer_id,
+                    orb_profile='synastry',
                 )
                 if not aspect:
                     continue
