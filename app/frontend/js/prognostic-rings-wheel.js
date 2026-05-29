@@ -6,6 +6,9 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
     const NS = 'http://www.w3.org/2000/svg';
     const C = 300;
     const SIZE = 600;
+    // Outside house labels and angle markers (MC/DSC/ASC/IC, degree numbers) are
+    // drawn beyond OUTER_R, so the viewBox is padded to keep them from clipping.
+    const VIEW_PADDING = 52;
     const OUTER_R = 285;
     const DEGREE_RING = 10;
     const SIGN_RING = 26;
@@ -207,7 +210,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             this.viewModel = viewModel;
             this.aspectLookupByKey = {};
             this.svg.innerHTML = '';
-            this.svg.setAttribute('viewBox', `0 0 ${SIZE} ${SIZE}`);
+            this.svg.setAttribute('viewBox', `${-VIEW_PADDING} ${-VIEW_PADDING} ${SIZE + VIEW_PADDING * 2} ${SIZE + VIEW_PADDING * 2}`);
             this.layers = {
                 background: this.el('g', { id: 'prognostic-bg' }),
                 zodiac: this.el('g', { id: 'prognostic-zodiac' }),

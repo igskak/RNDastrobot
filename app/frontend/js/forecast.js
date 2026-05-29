@@ -201,6 +201,8 @@ const ForecastState = {
     biwheelShowAspectText: false,
     biwheelAngleAscDscBold: readSavedAngleBold(ANGLE_ASC_DSC_BOLD_STORAGE_KEY),
     biwheelAngleMcIcBold: readSavedAngleBold(ANGLE_MC_IC_BOLD_STORAGE_KEY),
+    biwheelHouseNumberStyle: localStorage.getItem('natalHouseNumberStyle') === 'roman' ? 'roman' : 'arabic',
+    biwheelHouseLabelsOutside: localStorage.getItem('natalHouseLabelsOutside') === 'true',
     biwheelDisplayMode: 'prognostic',
     accountPreferences: null,
     biwheelResolvedPreferences: null,
@@ -522,6 +524,10 @@ async function applyBiwheelSettingsFromControls({ persist = true } = {}) {
         ascDscBold: ForecastState.biwheelAngleAscDscBold,
         mcIcBold: ForecastState.biwheelAngleMcIcBold,
     });
+    window.ForecastBiwheel?.setHouseLabelOptions?.({
+        style: ForecastState.biwheelHouseNumberStyle === 'roman' ? 'roman' : 'arabic',
+        outside: ForecastState.biwheelHouseLabelsOutside === true,
+    });
     renderNatalOverlay();
     if (window.ForecastBiwheel?.hasLastRender?.()) {
         window.ForecastBiwheel.rerenderLast();
@@ -606,6 +612,8 @@ function applyForecastResolvedPreferences(viewType, payload) {
     ForecastState.biwheelMatrixRows = ensureForecastMatrixRows(resolved?.matrix?.rows || {});
     ForecastState.biwheelAngleAscDscBold = resolved?.view_options?.bold_asc_dsc !== false;
     ForecastState.biwheelAngleMcIcBold = resolved?.view_options?.bold_mc_ic !== false;
+    ForecastState.biwheelHouseNumberStyle = resolved?.view_options?.house_number_style === 'roman' ? 'roman' : 'arabic';
+    ForecastState.biwheelHouseLabelsOutside = resolved?.view_options?.house_labels_outside === true;
     ForecastState.biwheelEnabledAspectTypes = window.AstroPreferences?.healEnabledAspectTypesForScope
         ? window.AstroPreferences.healEnabledAspectTypesForScope(
             resolved?.aspects?.enabled_types,
@@ -628,6 +636,10 @@ function applyForecastResolvedPreferences(viewType, payload) {
     window.ForecastBiwheel?.setAngleMarkerOptions?.({
         ascDscBold: ForecastState.biwheelAngleAscDscBold,
         mcIcBold: ForecastState.biwheelAngleMcIcBold,
+    });
+    window.ForecastBiwheel?.setHouseLabelOptions?.({
+        style: ForecastState.biwheelHouseNumberStyle === 'roman' ? 'roman' : 'arabic',
+        outside: ForecastState.biwheelHouseLabelsOutside === true,
     });
     renderNatalOverlay();
     if (window.ForecastBiwheel?.hasLastRender?.()) {
@@ -1339,8 +1351,8 @@ function renderNatalOverlay() {
     if (!wheel || !natalWheelData) return null;
 
     const natalPointScale = readBiwheelNatalPointScale();
-    const houseNumberStyle = localStorage.getItem('natalHouseNumberStyle') === 'roman' ? 'roman' : 'arabic';
-    const houseLabelsOutside = localStorage.getItem('natalHouseLabelsOutside') === 'true';
+    const houseNumberStyle = ForecastState.biwheelHouseNumberStyle === 'roman' ? 'roman' : 'arabic';
+    const houseLabelsOutside = ForecastState.biwheelHouseLabelsOutside === true;
     wheel.setOrientationMode(ForecastState.biwheelOrientation, { redraw: false });
     wheel.setPointScales({
         planets: natalPointScale,
@@ -2840,8 +2852,8 @@ async function fetchTransitBiwheelData(dateStr) {
 
 function renderBiwheelData(data) {
     if (!window.ForecastBiwheel || !data) return;
-    const houseNumberStyle = localStorage.getItem('natalHouseNumberStyle') === 'roman' ? 'roman' : 'arabic';
-    const houseLabelsOutside = localStorage.getItem('natalHouseLabelsOutside') === 'true';
+    const houseNumberStyle = ForecastState.biwheelHouseNumberStyle === 'roman' ? 'roman' : 'arabic';
+    const houseLabelsOutside = ForecastState.biwheelHouseLabelsOutside === true;
     if (window.ForecastBiwheel.setOrientationMode) {
         window.ForecastBiwheel.setOrientationMode(ForecastState.biwheelOrientation);
     }

@@ -320,8 +320,6 @@ body::selection {
 .form-summary-card,
 .advanced-fields,
 .data-panel,
-.clients-table tbody tr,
-.data-table tbody tr,
 .chart-wheel-container,
 .workspace-main,
 .workspace-panel,
@@ -346,8 +344,6 @@ body::selection {
     animation: element-arrive 0.48s var(--motion-soft) both;
 }
 
-.clients-table tbody tr,
-.data-table tbody tr,
 .profile-card,
 .account-settings-section,
 .natal-section,

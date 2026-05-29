@@ -1846,6 +1846,8 @@
         state.pageSettings = {
             ...state.pageSettings,
             orientation: resolved?.view_options?.orientation === 'asc' ? 'asc' : (state.pageSettings.orientation || 'aries'),
+            houseNumberStyle: resolved?.view_options?.house_number_style === 'roman' ? 'roman' : 'arabic',
+            houseLabelsOutside: resolved?.view_options?.house_labels_outside === true,
             aspectScope: ['all', 'major', 'minor'].includes(resolved?.aspects?.scope)
                 ? resolved.aspects.scope
                 : (state.pageSettings.aspectScope || 'major'),
@@ -1928,6 +1930,9 @@
 
         if (displayPreferenceChanged) {
             applyRendererDisplayPreferences();
+            // Перерисовка таблиц планет стирает инлайновые ячейки матрицы — восстанавливаем их.
+            renderInlineMatrixControls();
+            applyInlineMatrixRowState();
         }
         if (aspectFilterChanged) {
             renderMatrixSensitivePanelData();
@@ -3035,6 +3040,8 @@
                 ...state.pageSettings,
                 houseSystem: normalizeHouseSystemCode(payload?.chart_meta?.house_system || state.pageSettings.houseSystem),
                 orientation: resolved?.view_options?.orientation === 'asc' ? 'asc' : (state.pageSettings.orientation || 'aries'),
+                houseNumberStyle: resolved?.view_options?.house_number_style === 'roman' ? 'roman' : 'arabic',
+                houseLabelsOutside: resolved?.view_options?.house_labels_outside === true,
                 aspectScope: ['all', 'major', 'minor'].includes(resolved?.aspects?.scope)
                     ? resolved.aspects.scope
                     : (state.pageSettings.aspectScope || 'major'),
