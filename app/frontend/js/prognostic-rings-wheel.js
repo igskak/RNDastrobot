@@ -1426,7 +1426,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
 
             this.showTooltip(`
                 <strong>${this.escapeHtml(methodLabel)} · ${this.escapeHtml(this.houseLabel(houseNumber))}</strong><br>
-                ${this.escapeHtml(position)}<br>
+                ${position}<br>
                 ${this.escapeHtml(this.t('common.longitude'))}: ${this.formatDMS(longitude)}
             `, event);
         }
@@ -1525,7 +1525,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             const position = this.formatAstroCoordinate(body);
             return `
                 <strong>${this.escapeHtml(methodLabel)} · <span class="astro-symbol">${this.escapeHtml(symbol)}</span> ${this.escapeHtml(this.bodyName(body.name))}</strong><br>
-                ${this.escapeHtml(position)}<br>
+                ${position}<br>
                 ${this.escapeHtml(this.t('common.house'))}: ${this.escapeHtml(String(house))}${body.retrograde ? ' <span style="color:#dc2626">R</span>' : ''}
             `;
         }
@@ -1648,6 +1648,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             if (window.LocaleFormatters?.formatAstroCoordinate) {
                 return window.LocaleFormatters.formatAstroCoordinate(item, {
                     signSymbol: Symbols?.signs?.[item?.sign],
+                    signClass: 'astro-symbol',
                 });
             }
 
@@ -1655,7 +1656,9 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             if (!Number.isFinite(degree)) return '';
             const d = Math.floor(degree);
             const m = Math.floor((degree - d) * 60);
-            return [`${d}°`, Symbols?.signs?.[item?.sign] || item?.sign || '', `${String(m).padStart(2, '0')}'`]
+            const signSymbol = Symbols?.signs?.[item?.sign] || item?.sign || '';
+            const signMarkup = signSymbol ? `<span class="astro-symbol">${signSymbol}</span>` : '';
+            return [`${d}°`, signMarkup, `${String(m).padStart(2, '0')}'`]
                 .filter(Boolean)
                 .join(' ');
         }

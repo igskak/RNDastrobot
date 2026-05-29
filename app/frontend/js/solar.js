@@ -959,6 +959,7 @@
     function coordinate(item) {
         return window.LocaleFormatters?.formatAstroCoordinate?.(item, {
             signSymbol: window.Symbols?.signs?.[item?.sign] || item?.sign,
+            signClass: 'astro-symbol',
             emptyValue: '—',
         }) || '—';
     }
@@ -992,10 +993,10 @@
     function updateSummary(data) {
         if (!refs.summaryAsc) return;
         const planets = data.planets || [];
-        refs.summaryAsc.textContent = data.angles?.ASC ? coordinate(data.angles.ASC) : '—';
-        refs.summaryMc.textContent = data.angles?.MC ? coordinate(data.angles.MC) : '—';
-        refs.summarySun.textContent = coordinate(planets.find((planet) => planet.name === 'Sun'));
-        refs.summaryMoon.textContent = coordinate(planets.find((planet) => planet.name === 'Moon'));
+        refs.summaryAsc.innerHTML = data.angles?.ASC ? coordinate(data.angles.ASC) : '—';
+        refs.summaryMc.innerHTML = data.angles?.MC ? coordinate(data.angles.MC) : '—';
+        refs.summarySun.innerHTML = coordinate(planets.find((planet) => planet.name === 'Sun'));
+        refs.summaryMoon.innerHTML = coordinate(planets.find((planet) => planet.name === 'Moon'));
         refs.summaryPattern.textContent = patternName(data.cosmogram_pattern);
 
         const parts = [];

@@ -35,6 +35,7 @@
         if (window.LocaleFormatters?.formatAstroCoordinate) {
             return window.LocaleFormatters.formatAstroCoordinate(item, {
                 signSymbol: Symbols?.signs?.[item?.sign],
+                signClass: 'astro-symbol',
             });
         }
 
@@ -42,7 +43,9 @@
         if (!Number.isFinite(degree)) return '';
         const d = Math.floor(degree);
         const m = Math.floor((degree - d) * 60);
-        return [`${d}°`, Symbols?.signs?.[item?.sign] || item?.sign || '', `${String(m).padStart(2, '0')}'`]
+        const signSymbol = Symbols?.signs?.[item?.sign] || item?.sign || '';
+        const signMarkup = signSymbol ? `<span class="astro-symbol">${signSymbol}</span>` : '';
+        return [`${d}°`, signMarkup, `${String(m).padStart(2, '0')}'`]
             .filter(Boolean)
             .join(' ');
     }
@@ -166,7 +169,7 @@
 
                     tooltip.innerHTML = `
                         <strong>${symbolMarkup} ${nameRu}</strong><br>
-                        ${escapeHtml(position)}<br>
+                        ${position}<br>
                         ${t('common.house')}: ${Symbols?.formatHouseLabel?.(planet.house) || planet.house}
                     `;
                     tooltip.style.display = 'block';

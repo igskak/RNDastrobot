@@ -1461,7 +1461,7 @@ function renderHouseOverlayList(container, items) {
                 <span>${escapeSynHtml(getBodyLabel(item.body_name))}</span>
             </div>
             <div class="synastry-overlay-meta">
-                <span>${escapeSynHtml(formatSynAstroCoordinate(item))}</span>
+                <span>${formatSynAstroCoordinate(item)}</span>
                 <strong>H${Number(item.overlay_house || 0)}</strong>
             </div>
         </div>
@@ -1513,14 +1513,16 @@ function formatSynAstroCoordinate(item) {
     if (!item?.sign) return '';
     const formatted = window.LocaleFormatters?.formatAstroCoordinate?.(item, {
         signSymbol: getSignSymbol(item.sign),
+        signClass: 'astro-symbol',
     });
     if (formatted) return formatted;
 
     const degree = Number(item.degree_in_sign);
-    if (!Number.isFinite(degree)) return getSignSymbol(item.sign);
+    const signMarkup = `<span class="astro-symbol">${getSignSymbol(item.sign)}</span>`;
+    if (!Number.isFinite(degree)) return signMarkup;
     const d = Math.floor(degree);
     const m = Math.floor((degree - d) * 60);
-    return [`${d}°`, getSignSymbol(item.sign), `${String(m).padStart(2, '0')}'`].join(' ');
+    return [`${d}°`, signMarkup, `${String(m).padStart(2, '0')}'`].join(' ');
 }
 
 function escapeSynHtml(value) {

@@ -593,25 +593,25 @@ function renderSummaryBar(data) {
 
     if (angles?.ASC) {
         const asc = angles.ASC;
-        summaryAsc.textContent =
+        summaryAsc.innerHTML =
             formatAstroCoordinate(asc);
     }
 
     if (angles?.MC) {
         const mc = angles.MC;
-        summaryMc.textContent =
+        summaryMc.innerHTML =
             formatAstroCoordinate(mc);
     }
 
     const sun = planets?.find((p) => p.name === 'Sun');
     if (sun) {
-        summarySun.textContent =
+        summarySun.innerHTML =
             formatAstroCoordinate(sun);
     }
 
     const moon = planets?.find((p) => p.name === 'Moon');
     if (moon) {
-        summaryMoon.textContent =
+        summaryMoon.innerHTML =
             formatAstroCoordinate(moon);
     }
 
@@ -793,6 +793,7 @@ function getMaxBalance(balanceObj) {
 function formatAstroCoordinate(item) {
     const formatted = window.LocaleFormatters?.formatAstroCoordinate?.(item, {
         signSymbol: getSignSymbol(item?.sign),
+        signClass: 'astro-symbol',
         emptyValue: EMPTY,
     });
     if (formatted) return formatted;
@@ -801,7 +802,9 @@ function formatAstroCoordinate(item) {
     if (!Number.isFinite(degree)) return EMPTY;
     const d = Math.floor(degree);
     const m = Math.floor((degree - d) * 60);
-    return [`${d}°`, getSignSymbol(item?.sign), `${String(m).padStart(2, '0')}'`]
+    const signSymbol = getSignSymbol(item?.sign);
+    const signMarkup = signSymbol ? `<span class="astro-symbol">${signSymbol}</span>` : '';
+    return [`${d}°`, signMarkup, `${String(m).padStart(2, '0')}'`]
         .filter(Boolean)
         .join(' ');
 }
@@ -844,7 +847,7 @@ function createPlanetRow(planet) {
 
     const tdPos = document.createElement('td');
     tdPos.className = 'position-cell';
-    tdPos.textContent = formatAstroCoordinate(planet);
+    tdPos.innerHTML = formatAstroCoordinate(planet);
     tr.appendChild(tdPos);
 
     const tdHouse = document.createElement('td');
@@ -985,7 +988,7 @@ function renderHousesTable(houses, planets) {
 
         const tdSign = document.createElement('td');
         tdSign.className = 'position-cell';
-        tdSign.textContent = formatAstroCoordinate(house);
+        tdSign.innerHTML = formatAstroCoordinate(house);
         tr.appendChild(tdSign);
 
         const tdRuler = document.createElement('td');
@@ -1406,7 +1409,7 @@ function renderSpecialPoints(specialPoints) {
 
         const tdPos = document.createElement('td');
         tdPos.className = 'position-cell';
-        tdPos.textContent = formatAstroCoordinate(point);
+        tdPos.innerHTML = formatAstroCoordinate(point);
         tr.appendChild(tdPos);
 
         const tdHouse = document.createElement('td');
