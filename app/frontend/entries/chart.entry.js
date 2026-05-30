@@ -17,3 +17,4 @@ import '../js/dispositor-chains.js';
 import '../js/aspect-phase.js';
 import '../js/chart.js';
 import '../js/chart-layout.js';
+import '../js/forecast-nav-menu.js';

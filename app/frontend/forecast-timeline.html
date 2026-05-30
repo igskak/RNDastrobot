@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="page.forecast.tabs.timeline"></title>
+    <link rel="stylesheet" href="bundles/forecast-timeline.bundle.css?v=552c9ebf430b">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=552c9ebf430b">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <script>window.__APP_BUILD_ID__ = '552c9ebf430b';</script>
+</head>
+<body class="chart-page forecast-range-page">
+    <div class="page-loader" id="pageLoader">
+        <div class="pl-spinner"></div>
+        <div class="pl-text" data-i18n="common.loading"></div>
+    </div>
+
+    <header class="chart-header-compact">
+        <a href="forecast-new.html" class="back-btn-compact" id="forecastBackBtn" data-i18n-aria-label="common.back" data-i18n-title="common.back">←</a>
+        <div class="birth-info-compact">
+            <h2 id="pageTitle" data-i18n="page.forecast.tabs.timeline"></h2>
+            <p id="pageSubtitle"></p>
+        </div>
+        <div class="header-nav-buttons">
+            <a href="/" class="header-nav-btn"><span data-i18n="page.chart.nav.home"></span></a>
+            <div class="forecast-nav-menu">
+                <a href="forecast-new.html" class="header-nav-btn">
+                    <svg class="nav-btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="7" cy="7" r="6"></circle><circle cx="7" cy="7" r="3"></circle></svg>
+                    <span data-i18n="page.chart.nav.forecast"></span>
+                </a>
+                <button type="button" class="header-nav-btn header-nav-btn--icon forecast-nav-caret" data-forecast-nav-toggle aria-haspopup="true" aria-expanded="false" aria-label="Forecast views">▾</button>
+                <div class="forecast-nav-dropdown hidden">
+                    <a href="forecast-timeline.html" class="forecast-nav-item" aria-current="page" data-i18n="page.forecast.tabs.timeline"></a>
+                    <a href="forecast-tables.html" class="forecast-nav-item" data-i18n="page.forecast.tabs.table"></a>
+                </div>
+            </div>
+            <a href="solar.html" class="header-nav-btn"><span data-i18n="page.chart.nav.solar"></span></a>
+        </div>
+    </header>
+
+    <div class="profile-error hidden" id="pageError">
+        <p id="pageErrorMsg"></p>
+        <a href="/" class="btn-logout" data-i18n="common.back"></a>
+    </div>
+
+    <div class="forecast-controls" id="forecastControls">
+        <div class="control-group">
+            <label data-i18n="common.from"></label>
+            <input type="date" id="startDate">
+            <label data-i18n="common.to"></label>
+            <input type="date" id="endDate">
+            <div class="date-presets" id="datePresets">
+                <button type="button" class="preset-btn" data-days="1" data-i18n="page.forecast.presets.oneDay"></button>
+                <button type="button" class="preset-btn" data-months="1" data-i18n="page.forecast.presets.oneMonth"></button>
+                <button type="button" class="preset-btn" data-months="3" data-i18n="page.forecast.presets.threeMonths"></button>
+                <button type="button" class="preset-btn active" data-months="6" data-i18n="page.forecast.presets.sixMonths"></button>
+                <button type="button" class="preset-btn" data-months="12" data-i18n="page.forecast.presets.oneYear"></button>
+            </div>
+        </div>
+        <button type="button" class="btn-calculate" id="btnCalculate" data-i18n="common.calculate"></button>
+    </div>
+
+    <div class="forecast-content">
+        <div class="forecast-empty" id="timelineEmpty">
+            <div class="empty-icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="4" y1="9" x2="20" y2="9"/><line x1="8" y1="16" x2="26" y2="16"/><line x1="4" y1="23" x2="17" y2="23"/></svg></div>
+            <div data-i18n="page.forecast.timeline.empty"></div>
+        </div>
+        <div class="forecast-loading" id="timelineLoading" style="display:none">
+            <div class="spinner"></div>
+            <div data-i18n="page.forecast.timeline.loading"></div>
+        </div>
+        <div class="timeline-container" id="timelineContainer" style="display:none">
+            <div class="active-events-summary" id="activeEventsSummary"></div>
+            <div class="timeline-filters">
+                <label class="tl-filter"><input type="checkbox" id="filterMajor" checked> <span data-i18n="common.major"></span></label>
+                <span class="tl-event-count" id="tlEventCount"></span>
+            </div>
+            <div class="timeline-canvas-wrapper">
+                <canvas id="timelineCanvas"></canvas>
+            </div>
+            <div class="timeline-legend" id="timelineLegend"></div>
+        </div>
+    </div>
+
+    <div class="timeline-tooltip" id="timelineTooltip"></div>
+
+    <script type="module" src="js/bundles/forecast-timeline.bundle.js?v=552c9ebf430b"></script>
+    <script src="js/locale-switcher.js?v=552c9ebf430b"></script>
+</body>
+</html>

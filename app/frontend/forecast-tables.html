@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="page.forecast.tabs.table"></title>
+    <link rel="stylesheet" href="bundles/forecast-tables.bundle.css?v=8c0e839b4eb8">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=8c0e839b4eb8">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <script>window.__APP_BUILD_ID__ = '8c0e839b4eb8';</script>
+</head>
+<body class="chart-page forecast-range-page">
+    <div class="page-loader" id="pageLoader">
+        <div class="pl-spinner"></div>
+        <div class="pl-text" data-i18n="common.loading"></div>
+    </div>
+
+    <header class="chart-header-compact">
+        <a href="forecast-new.html" class="back-btn-compact" id="forecastBackBtn" data-i18n-aria-label="common.back" data-i18n-title="common.back">←</a>
+        <div class="birth-info-compact">
+            <h2 id="pageTitle" data-i18n="page.forecast.tabs.table"></h2>
+            <p id="pageSubtitle"></p>
+        </div>
+        <div class="header-nav-buttons">
+            <a href="/" class="header-nav-btn"><span data-i18n="page.chart.nav.home"></span></a>
+            <div class="forecast-nav-menu">
+                <a href="forecast-new.html" class="header-nav-btn">
+                    <svg class="nav-btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="7" cy="7" r="6"></circle><circle cx="7" cy="7" r="3"></circle></svg>
+                    <span data-i18n="page.chart.nav.forecast"></span>
+                </a>
+                <button type="button" class="header-nav-btn header-nav-btn--icon forecast-nav-caret" data-forecast-nav-toggle aria-haspopup="true" aria-expanded="false" aria-label="Forecast views">▾</button>
+                <div class="forecast-nav-dropdown hidden">
+                    <a href="forecast-timeline.html" class="forecast-nav-item" data-i18n="page.forecast.tabs.timeline"></a>
+                    <a href="forecast-tables.html" class="forecast-nav-item" aria-current="page" data-i18n="page.forecast.tabs.table"></a>
+                </div>
+            </div>
+            <a href="solar.html" class="header-nav-btn"><span data-i18n="page.chart.nav.solar"></span></a>
+        </div>
+    </header>
+
+    <div class="profile-error hidden" id="pageError">
+        <p id="pageErrorMsg"></p>
+        <a href="/" class="btn-logout" data-i18n="common.back"></a>
+    </div>
+
+    <div class="forecast-controls" id="forecastControls">
+        <div class="control-group">
+            <label data-i18n="common.from"></label>
+            <input type="date" id="startDate">
+            <label data-i18n="common.to"></label>
+            <input type="date" id="endDate">
+            <div class="date-presets" id="datePresets">
+                <button type="button" class="preset-btn" data-days="1" data-i18n="page.forecast.presets.oneDay"></button>
+                <button type="button" class="preset-btn" data-months="1" data-i18n="page.forecast.presets.oneMonth"></button>
+                <button type="button" class="preset-btn" data-months="3" data-i18n="page.forecast.presets.threeMonths"></button>
+                <button type="button" class="preset-btn active" data-months="6" data-i18n="page.forecast.presets.sixMonths"></button>
+                <button type="button" class="preset-btn" data-months="12" data-i18n="page.forecast.presets.oneYear"></button>
+            </div>
+        </div>
+        <div class="control-group">
+            <label data-i18n="page.forecast.biwheel.legend.directionType"></label>
+            <select id="directionTypeSelect">
+                <option value="zodiacal" data-i18n="common.method.directionZodiacal"></option>
+                <option value="solar_arc" data-i18n="common.method.directionSolarArc"></option>
+                <option value="equatorial" data-i18n="common.method.directionNaibod"></option>
+            </select>
+        </div>
+        <button type="button" class="btn-calculate" id="btnCalculate" data-i18n="common.calculate"></button>
+    </div>
+
+    <div class="forecast-content">
+        <div class="forecast-empty" id="tableEmpty">
+            <div class="empty-icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="3" width="26" height="26" rx="2"/><line x1="3" y1="11" x2="29" y2="11"/><line x1="3" y1="19" x2="29" y2="19"/></svg></div>
+            <div data-i18n="page.forecast.table.empty"></div>
+        </div>
+        <div class="forecast-loading" id="tableLoading" style="display:none">
+            <div class="spinner"></div>
+            <div data-i18n="common.loading"></div>
+        </div>
+        <div class="forecast-table-container" id="tableContainer" style="display:none">
+            <div class="table-filters-toolbar">
+                <button type="button" class="table-filters-toggle" id="tableFiltersToggle" aria-expanded="false" data-i18n="page.forecast.table.filters.buttonClosed"></button>
+                <span class="table-filters-count" id="tableFiltersCount" style="display:none">0</span>
+            </div>
+            <div class="table-filters table-filters-collapsed" id="tableFilters">
+                <label data-i18n="page.forecast.table.filters.events"></label>
+                <select id="tableFilterKind">
+                    <option value="all" data-i18n="common.all"></option>
+                    <option value="aspect" data-i18n="page.forecast.table.filters.onlyAspects"></option>
+                    <option value="ingress" data-i18n="page.forecast.table.filters.onlyIngresses"></option>
+                </select>
+                <label data-i18n="page.forecast.table.filters.type"></label>
+                <select id="tableFilterStrength">
+                    <option value="all" data-i18n="common.all"></option>
+                    <option value="major" data-i18n="common.major"></option>
+                    <option value="minor" data-i18n="common.minor"></option>
+                </select>
+                <label data-i18n="page.forecast.table.filters.aspect"></label>
+                <select id="tableFilterAspect">
+                    <option value="all" data-i18n="common.all"></option>
+                </select>
+                <label data-i18n="page.forecast.table.filters.maxOrb"></label>
+                <input id="tableFilterMaxOrb" type="number" min="0" step="0.1" data-i18n-placeholder="page.forecast.table.filters.maxOrbPlaceholder">
+                <label data-i18n="page.forecast.table.filters.search"></label>
+                <input id="tableFilterSearch" type="text" data-i18n-placeholder="page.forecast.table.filters.searchPlaceholder">
+                <button type="button" class="preset-btn" id="tableFilterReset" data-i18n="common.reset"></button>
+            </div>
+            <table class="forecast-table">
+                <thead>
+                    <tr>
+                        <th class="sortable" data-sort="date" data-i18n="page.forecast.table.columns.dateSort"></th>
+                        <th class="sortable" data-sort="method" data-i18n="page.forecast.table.columns.methodSort"></th>
+                        <th class="sortable" data-sort="transit" data-i18n="page.forecast.table.columns.transitSort"></th>
+                        <th class="sortable" data-sort="aspect" data-i18n="page.forecast.table.columns.aspectSort"></th>
+                        <th class="sortable" data-sort="natal" data-i18n="page.forecast.table.columns.natalSort"></th>
+                        <th class="sortable" data-sort="orb" data-i18n="page.forecast.table.columns.orbSort"></th>
+                        <th class="sortable" data-sort="type" data-i18n="page.forecast.table.columns.typeSort"></th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+            <div class="ingress-section" id="ingressSection" style="display:none">
+                <div class="ingress-section-title" data-i18n="page.forecast.table.ingresses.title"></div>
+                <table class="forecast-table ingress-table">
+                    <thead>
+                        <tr>
+                            <th data-i18n="common.date"></th>
+                            <th data-i18n="page.forecast.table.columns.method"></th>
+                            <th data-i18n="page.forecast.table.columns.object"></th>
+                            <th data-i18n="page.forecast.table.columns.ingressType"></th>
+                            <th data-i18n="page.forecast.table.columns.transition"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="ingressTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/bundles/forecast-tables.bundle.js?v=8c0e839b4eb8"></script>
+    <script src="js/locale-switcher.js?v=8c0e839b4eb8"></script>
+</body>
+</html>

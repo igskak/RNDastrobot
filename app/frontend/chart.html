@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.chart.title"></title>
-    <link rel="stylesheet" href="bundles/chart.bundle.css?v=3ab16e6d0409">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=3ab16e6d0409">
-    <script>window.__APP_BUILD_ID__ = '3ab16e6d0409';</script>
+    <link rel="stylesheet" href="bundles/chart.bundle.css?v=a3acf5ccecdc">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=a3acf5ccecdc">
+    <script>window.__APP_BUILD_ID__ = 'a3acf5ccecdc';</script>
 </head>
 <body class="chart-page">
     <div class="page-loader" id="pageLoader">
@@ -22,7 +22,14 @@
         </div>
         <div class="header-nav-buttons">
             <a href="/" class="header-nav-btn"><span data-i18n="page.chart.nav.home"></span></a>
-            <a href="forecast-new.html" class="header-nav-btn"><svg class="nav-btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="7" cy="7" r="6"/><circle cx="7" cy="7" r="3"/><line x1="7" y1="1" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13"/><line x1="1" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13" y2="7"/></svg><span data-i18n="page.chart.nav.forecast"></span></a>
+            <div class="forecast-nav-menu">
+                <a href="forecast-new.html" class="header-nav-btn"><svg class="nav-btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="7" cy="7" r="6"/><circle cx="7" cy="7" r="3"/><line x1="7" y1="1" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13"/><line x1="1" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13" y2="7"/></svg><span data-i18n="page.chart.nav.forecast"></span></a>
+                <button type="button" class="header-nav-btn header-nav-btn--icon forecast-nav-caret" data-forecast-nav-toggle aria-haspopup="true" aria-expanded="false" aria-label="Forecast views">▾</button>
+                <div class="forecast-nav-dropdown hidden">
+                    <a href="forecast-timeline.html" class="forecast-nav-item" data-i18n="page.forecast.tabs.timeline"></a>
+                    <a href="forecast-tables.html" class="forecast-nav-item" data-i18n="page.forecast.tabs.table"></a>
+                </div>
+            </div>
             <a href="solar.html" class="header-nav-btn"><svg class="nav-btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="7" cy="7" r="2.4"/><line x1="7" y1="1" x2="7" y2="3"/><line x1="7" y1="11" x2="7" y2="13"/><line x1="1" y1="7" x2="3" y2="7"/><line x1="11" y1="7" x2="13" y2="7"/><line x1="2.8" y1="2.8" x2="4.2" y2="4.2"/><line x1="9.8" y1="9.8" x2="11.2" y2="11.2"/><line x1="11.2" y1="2.8" x2="9.8" y2="4.2"/><line x1="4.2" y1="9.8" x2="2.8" y2="11.2"/></svg><span data-i18n="page.chart.nav.solar"></span></a>
             <div class="header-action-menu">
                 <button type="button" class="header-nav-btn header-nav-btn--icon" id="chartActionsToggle" aria-haspopup="true" aria-expanded="false" data-i18n-aria-label="page.chart.actions.openMenu">
@@ -387,7 +394,7 @@
 
     <div id="chartToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/chart.bundle.js?v=3ab16e6d0409"></script>
-    <script src="js/locale-switcher.js?v=3ab16e6d0409"></script>
+    <script type="module" src="js/bundles/chart.bundle.js?v=a3acf5ccecdc"></script>
+    <script src="js/locale-switcher.js?v=a3acf5ccecdc"></script>
 </body>
 </html>

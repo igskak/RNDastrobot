@@ -111,7 +111,10 @@ async def static_cache_headers(request: Request, call_next):
         "/natal-full.html",
         "/solar",
         "/solar.html",
-        "/forecast.html",
+        "/forecast-tables",
+        "/forecast-tables.html",
+        "/forecast-timeline",
+        "/forecast-timeline.html",
         "/calendar",
         "/calendar.html",
         "/consultation-call.html",
@@ -259,15 +262,6 @@ async def natal_full_page():
     raise HTTPException(status_code=404, detail="Natal full page not found")
 
 
-@app.get("/forecast.html")
-async def forecast_page():
-    """Страница прогностики"""
-    forecast_path = os.path.join(FRONTEND_PATH, "forecast.html")
-    if os.path.exists(forecast_path):
-        return FileResponse(forecast_path)
-    raise HTTPException(status_code=404, detail="Forecast page not found")
-
-
 @app.get("/solar")
 @app.get("/solar.html")
 async def solar_page():
@@ -286,6 +280,26 @@ async def forecast_new_page():
     if os.path.exists(forecast_new_path):
         return FileResponse(forecast_new_path)
     raise HTTPException(status_code=404, detail="Forecast New page not found")
+
+
+@app.get("/forecast-tables")
+@app.get("/forecast-tables.html")
+async def forecast_tables_page():
+    """Страница таблиц прогностики (диапазон дат)."""
+    forecast_tables_path = os.path.join(FRONTEND_PATH, "forecast-tables.html")
+    if os.path.exists(forecast_tables_path):
+        return FileResponse(forecast_tables_path)
+    raise HTTPException(status_code=404, detail="Forecast Tables page not found")
+
+
+@app.get("/forecast-timeline")
+@app.get("/forecast-timeline.html")
+async def forecast_timeline_page():
+    """Страница таймлайна прогностики (диапазон дат)."""
+    forecast_timeline_path = os.path.join(FRONTEND_PATH, "forecast-timeline.html")
+    if os.path.exists(forecast_timeline_path):
+        return FileResponse(forecast_timeline_path)
+    raise HTTPException(status_code=404, detail="Forecast Timeline page not found")
 
 
 @app.get("/calendar")

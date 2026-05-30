@@ -1,0 +1,47 @@
+/* Forecast navigation dropdown (caret next to the Forecast header button) */
+.forecast-nav-menu {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+.forecast-nav-caret {
+    padding: 0 6px;
+    min-width: 0;
+}
+.forecast-nav-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 60;
+    min-width: 180px;
+    display: flex;
+    flex-direction: column;
+    padding: 6px;
+    gap: 2px;
+    background: var(--bg-secondary, #fff);
+    border: 1px solid var(--border, rgba(0, 0, 0, 0.12));
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+}
+.forecast-nav-dropdown.hidden {
+    display: none;
+}
+.forecast-nav-dropdown .forecast-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 7px;
+    font-size: 0.86rem;
+    color: var(--text-primary, #1f2937);
+    text-decoration: none;
+    cursor: pointer;
+    background: none;
+    border: none;
+    text-align: left;
+    width: 100%;
+}
+.forecast-nav-dropdown .forecast-nav-item:hover {
+    background: var(--bg-primary, rgba(0, 0, 0, 0.05));
+    color: var(--accent, #1e3a5f);
+}

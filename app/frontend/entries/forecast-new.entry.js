@@ -17,3 +17,4 @@ import '../js/prognostic-layer-normalizer.js';
 import '../js/prognostic-rings-wheel.js';
 import '../js/forecast-new-state-storage.js';
 import '../js/forecast-new.js';
+import '../js/forecast-nav-menu.js';

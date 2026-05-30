@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.natalFull.title"></title>
-    <link rel="stylesheet" href="bundles/natal-full.bundle.css?v=7f3899ba8bf3">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=7f3899ba8bf3">
+    <link rel="stylesheet" href="bundles/natal-full.bundle.css?v=f456e427f166">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=f456e427f166">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '7f3899ba8bf3';</script>
+    <script>window.__APP_BUILD_ID__ = 'f456e427f166';</script>
 </head>
 <body class="natal-full-page">
     <div class="page-loader" id="pageLoader">
@@ -39,17 +39,24 @@
                     </svg>
                     <span data-i18n="page.natalFull.nav.wheel"></span>
                 </a>
-                <a href="forecast-new.html" class="view-chart-btn">
-                    <svg class="header-btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                        <circle cx="7" cy="7" r="6"></circle>
-                        <circle cx="7" cy="7" r="3"></circle>
-                        <line x1="7" y1="1" x2="7" y2="2.5"></line>
-                        <line x1="7" y1="11.5" x2="7" y2="13"></line>
-                        <line x1="1" y1="7" x2="2.5" y2="7"></line>
-                        <line x1="11.5" y1="7" x2="13" y2="7"></line>
-                    </svg>
-                    <span data-i18n="page.chart.nav.forecast"></span>
-                </a>
+                <div class="forecast-nav-menu">
+                    <a href="forecast-new.html" class="view-chart-btn">
+                        <svg class="header-btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                            <circle cx="7" cy="7" r="6"></circle>
+                            <circle cx="7" cy="7" r="3"></circle>
+                            <line x1="7" y1="1" x2="7" y2="2.5"></line>
+                            <line x1="7" y1="11.5" x2="7" y2="13"></line>
+                            <line x1="1" y1="7" x2="2.5" y2="7"></line>
+                            <line x1="11.5" y1="7" x2="13" y2="7"></line>
+                        </svg>
+                        <span data-i18n="page.chart.nav.forecast"></span>
+                    </a>
+                    <button type="button" class="view-chart-btn forecast-nav-caret" data-forecast-nav-toggle aria-haspopup="true" aria-expanded="false" aria-label="Forecast views">▾</button>
+                    <div class="forecast-nav-dropdown hidden">
+                        <a href="forecast-timeline.html" class="forecast-nav-item" data-i18n="page.forecast.tabs.timeline"></a>
+                        <a href="forecast-tables.html" class="forecast-nav-item" data-i18n="page.forecast.tabs.table"></a>
+                    </div>
+                </div>
                 <a href="solar.html" class="view-chart-btn">
                     <svg class="header-btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
                         <circle cx="7" cy="7" r="2.4"></circle>
@@ -361,7 +368,7 @@
         </details>
     </main>
 
-    <script type="module" src="js/bundles/natal-full.bundle.js?v=7f3899ba8bf3"></script>
-    <script src="js/locale-switcher.js?v=7f3899ba8bf3"></script>
+    <script type="module" src="js/bundles/natal-full.bundle.js?v=f456e427f166"></script>
+    <script src="js/locale-switcher.js?v=f456e427f166"></script>
 </body>
 </html>
