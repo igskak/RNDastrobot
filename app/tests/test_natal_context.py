@@ -18,6 +18,8 @@ from app.services.natal_chart_service import NatalChartService
 from app.services.transit_service import TransitService
 from app.services.progression_service import ProgressionService
 from app.services.direction_service import DirectionService
+from app.services.solar_return_service import SolarReturnService
+from app.services.chart_derivation_service import ChartDerivationService
 from app.utils.ephemeris import get_ephemeris_path
 
 
@@ -215,3 +217,28 @@ def test_inline_direction_computes_without_saved_user_or_db(monkeypatch):
     assert isinstance(result['aspects_to_natal'], list)
     assert result['direction_info']['direction_type'] == 'zodiacal'
     assert result['birth_data']['user_id'] is None  # ephemeral
+
+
+def test_inline_solar_return_sources_natal_from_context(monkeypatch):
+    """Соляр: натальное Солнце и место рождения берутся из inline-контекста, без сохранённого
+    клиента. Ref-зависимые коллабораторы (AspectService/ChartDerivation) замоканы — изолируем
+    развязку натала (C1)."""
+    context, ephe = _inline_natal_context()
+    # Inline-контекст несёт натальное Солнце и цели для аспектов
+    assert any(p['name'] == 'Sun' for p in context.natal_data['planets'])
+    assert context.natal_aspect_targets, "ожидались натальные цели для аспектов"
+
+    service = SolarReturnService(db_session=None, ephe_path=ephe)
+    # Изолируем ref-data-зависимые куски (нужна БД); проверяем натал-развязку, не аспекты
+    monkeypatch.setattr(service, '_calculate_solar_aspects', lambda *a, **k: [])
+    monkeypatch.setattr(service, '_calculate_solar_to_natal_aspects', lambda *a, **k: [])
+    monkeypatch.setattr(ChartDerivationService, 'enrich_solar_payload', lambda self, payload, **k: payload)
+
+    result = service.calculate_solar_return_from_context(context, year=2026)
+
+    assert result['solar_info']['year'] == 2026
+    assert result['solar_info']['julian_day'] > 0
+    # место соляра по умолчанию = место рождения из контекста
+    assert result['solar_info']['location']['latitude'] == 50.45
+    assert result['planets'], "ожидались планеты соляра"
+    assert result['birth_data']['user_id'] is None  # ephemeral, натал не из БД

@@ -16,6 +16,8 @@ from app.models.schemas import (
 from app.database.connection import get_db
 from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
 from app.services.solar_return_service import SolarReturnService
+from app.services.natal_chart_service import NatalChartService
+from app.services.natal_context import NatalContext
 from app.utils.ephemeris import get_ephemeris_path
 
 router = APIRouter(prefix="/solar", tags=["Solar Return"])
@@ -58,10 +60,48 @@ def calculate_solar_return(
     **Возвращает:**
     - Полные данные соларной карты: планеты, дома, углы
     """
+    solar_service = SolarReturnService(db_session=db, ephe_path=EPHE_PATH)
+
+    # --- Inline-натал (ephemeral) ---
+    if request.natal is not None:
+        try:
+            calc_result = NatalChartService(ephe_path=EPHE_PATH).calculate_natal_chart(
+                birth_date=request.natal.date,
+                birth_time=request.natal.time,
+                timezone=request.natal.timezone,
+                astrologer_id=auth.astrologer.id,
+                place=request.natal.place,
+                latitude=request.natal.latitude,
+                longitude=request.natal.longitude,
+                house_system=request.natal.house_system,
+                save_to_db=False,
+                db_session=db,
+            )
+        except ValueError as e:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        context = NatalContext.from_inline(calc_result, astrologer_id=auth.astrologer.id)
+        try:
+            return solar_service.calculate_solar_return_from_context(
+                context,
+                year=request.year,
+                location_lat=request.location_latitude,
+                location_lon=request.location_longitude,
+                location_name=request.location_name,
+                location_source_id=request.location_source_id,
+                location_timezone=request.location_timezone,
+                house_system=request.house_system,
+            )
+        except ValueError as e:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Ошибка расчёта соляра: {str(e)}",
+            )
+
+    # --- Сохранённый клиент (DB-путь) ---
     try:
         ensure_client_access(db, http_request, auth, request.user_id, action="client.solar.calculate")
-        solar_service = SolarReturnService(db_session=db, ephe_path=EPHE_PATH)
-        
         result = solar_service.calculate_solar_return(
             user_id=request.user_id,
             year=request.year,
@@ -74,9 +114,9 @@ def calculate_solar_return(
             save_to_db=request.save_to_db,
             name=request.name,
         )
-        
+
         return result
-        
+
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

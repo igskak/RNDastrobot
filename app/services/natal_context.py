@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date as date_type
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 from uuid import UUID
 
 from app.utils.constants import PROGNOSTIC_EXCLUDED_NATAL_TARGETS
@@ -89,6 +89,33 @@ def natal_data_from_calc_result(calc_result: Dict, *, apply_exclusions: bool = T
     }
 
 
+def aspect_targets_from_calc_result(calc_result: Dict) -> List[Dict]:
+    """Натальные цели для аспектов соляр→натал (со скоростями), форма как у
+    solar_return_service._load_natal_aspect_targets. Скорости планет берём из calc_result."""
+    targets: List[Dict] = []
+    for p in (calc_result.get('planets') or []):
+        targets.append({
+            'name': p['name'],
+            'longitude': float(p['longitude']),
+            'type': 'planet',
+            'speed': float(p['speed']) if p.get('speed') is not None else 0.0,
+        })
+    sp_in = calc_result.get('special_points') or {}
+    sp_items = sp_in.items() if isinstance(sp_in, dict) else [(sp.get('name'), sp) for sp in sp_in]
+    for name, data in sp_items:
+        if data and data.get('longitude') is not None:
+            targets.append({'name': name, 'longitude': float(data['longitude']), 'type': 'special_point', 'speed': 0.0})
+    angles_in = calc_result.get('angles') or {}
+    for name in ('ASC', 'MC', 'IC', 'DSC'):
+        a = angles_in.get(name)
+        if a and a.get('longitude') is not None:
+            targets.append({'name': name, 'longitude': float(a['longitude']), 'type': 'angle', 'speed': 0.0})
+    vertex = angles_in.get('Vertex')
+    if vertex and vertex.get('longitude') is not None:
+        targets.append({'name': 'Vertex', 'longitude': float(vertex['longitude']), 'type': 'angle', 'speed': 0.0})
+    return [t for t in targets if t['name'] not in PROGNOSTIC_EXCLUDED_NATAL_TARGETS]
+
+
 @dataclass
 class NatalContext:
     """Источник натальной карты для прогностических сервисов.
@@ -111,6 +138,10 @@ class NatalContext:
     birth_date: Optional[date_type] = None
     birth_lat: Optional[float] = None
     birth_lon: Optional[float] = None
+    birth_timezone: Optional[str] = None
+    # Натальные цели для аспектов соляр→натал (со скоростями). DB-путь и inline
+    # заполняют их по-своему, чтобы поведение DB-пути осталось идентичным.
+    natal_aspect_targets: Optional[List[Dict]] = None
 
     @property
     def is_ephemeral(self) -> bool:
@@ -138,4 +169,6 @@ class NatalContext:
             birth_date=_parse_iso_date(birth_data.get('date')),
             birth_lat=birth_data.get('latitude'),
             birth_lon=birth_data.get('longitude'),
+            birth_timezone=birth_data.get('timezone'),
+            natal_aspect_targets=aspect_targets_from_calc_result(calc_result),
         )

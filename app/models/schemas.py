@@ -1,7 +1,7 @@
 """
 Pydantic модели для валидации данных API
 """
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from datetime import date as date_type, time as time_type
 from typing import Any, Optional, List, Dict
 from uuid import UUID
@@ -708,8 +708,16 @@ class ResetViewToDefaultsRequest(BaseModel):
 # ============================================================================
 
 class SolarReturnRequest(BaseModel):
-    """Запрос на расчёт соляра"""
-    user_id: UUID = Field(..., description="UUID пользователя с сохранённой натальной картой")
+    """Запрос на расчёт соляра.
+
+    Источник натала — ровно один из ``user_id`` (сохранённый клиент) либо ``natal`` (inline).
+    """
+    user_id: Optional[UUID] = Field(
+        None, description="UUID сохранённого клиента. Взаимоисключающе с `natal`."
+    )
+    natal: Optional[BirthDataInput] = Field(
+        None, description="Inline данные рождения (ephemeral). Взаимоисключающе с `user_id`."
+    )
     year: int = Field(..., ge=1900, le=2100, description="Год соляра")
     name: Optional[str] = Field(None, max_length=160, description="Название сохранённого соляра")
 
@@ -731,6 +739,15 @@ class SolarReturnRequest(BaseModel):
         if code not in VALID_HOUSE_SYSTEMS:
             raise ValueError(f'Недопустимая система домов: {v}')
         return code
+
+    @model_validator(mode='after')
+    def exactly_one_source(self):
+        if bool(self.user_id) == bool(self.natal):
+            raise ValueError("Укажите ровно один источник натала: `user_id` или `natal`")
+        # inline-натал ephemeral: в БД не сохраняем (нет user_id)
+        if self.natal is not None:
+            self.save_to_db = False
+        return self
 
 
 class SolarLocationInfo(BaseModel):

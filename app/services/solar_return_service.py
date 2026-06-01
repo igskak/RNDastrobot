@@ -20,7 +20,10 @@ from app.services.aspect_service import AspectService
 from app.services.chart_derivation_service import ChartDerivationService
 from app.services.geocoding_service import GeocodingService
 from app.services.planet_characteristics_service import PlanetCharacteristicsService
-from app.services.preferences_runtime import PreferencesRuntimeResolver
+from app.services.preferences_runtime import (
+    PreferencesRuntimeResolver, DEFAULT_STATIONARY_THRESHOLD_PERCENT,
+)
+from app.services.natal_context import NatalContext
 from app.services.special_points_service import SpecialPointsService
 from app.utils.constants import (
     PROGNOSTIC_DEFAULT_ORB,
@@ -154,8 +157,11 @@ class SolarReturnService:
         
         return local_dt
 
-    def _enrich_motion_flags(self, planets: List[Dict], *, user_id: UUID) -> List[Dict]:
-        stationary_threshold_percent = self.preferences_runtime.get_stationary_threshold_for_user(user_id)
+    def _enrich_motion_flags(self, planets: List[Dict], *, astrologer_id: Optional[UUID]) -> List[Dict]:
+        if astrologer_id:
+            stationary_threshold_percent = self.preferences_runtime.get_stationary_threshold_for_astrologer(astrologer_id)
+        else:
+            stationary_threshold_percent = DEFAULT_STATIONARY_THRESHOLD_PERCENT
         for planet in planets:
             name = planet.get('name', '')
             speed = float(planet.get('speed') or 0.0)
@@ -199,27 +205,52 @@ class SolarReturnService:
         Returns:
             Dict с полными данными соларной карты
         """
-        # 1. Загрузить натальные данные пользователя
-        user = self.db.query(User).filter(User.user_id == user_id).first()
-        if not user:
-            raise ValueError(f"User not found: {user_id}")
-        
-        # 2. Получить долготу натального Солнца
-        natal_sun = self.db.query(NatalPlanet).filter(
-            NatalPlanet.user_id == user_id,
-            NatalPlanet.planet == 'Sun'
-        ).first()
-        if not natal_sun:
-            raise ValueError(f"Natal Sun not found for user: {user_id}")
-        
-        natal_sun_lon = float(natal_sun.degree)
-        
-        # 3. Определить место соляра
+        # 1. Построить контекст натала из сохранённого клиента (DB-путь)
+        context = self._build_context_from_user_id(user_id)
+        result = self.calculate_solar_return_from_context(
+            context,
+            year,
+            location_lat=location_lat,
+            location_lon=location_lon,
+            location_name=location_name,
+            location_source_id=location_source_id,
+            location_timezone=location_timezone,
+            house_system=house_system,
+        )
+
+        # 10. Сохранить в БД если нужно (только для сохранённого клиента)
+        if save_to_db:
+            result['solar_id'] = str(self._save_solar_return(user_id, year, result, name=name))
+            result['name'] = self._normalize_solar_name(name)
+
+        return result
+
+    def calculate_solar_return_from_context(
+        self,
+        context: 'NatalContext',
+        year: int,
+        *,
+        location_lat: Optional[float] = None,
+        location_lon: Optional[float] = None,
+        location_name: Optional[str] = None,
+        location_source_id: Optional[str] = None,
+        location_timezone: Optional[str] = None,
+        house_system: str = 'P',
+    ) -> Dict:
+        """Соляр для произвольного источника натала (сохранённый или inline-ephemeral).
+
+        Ядро метода. ``calculate_solar_return(user_id, ...)`` — обёртка, строящая контекст
+        из БД и опционально сохраняющая результат. ``db`` используется только для ref-данных
+        (типы аспектов, словари достоинств), натал берётся из контекста.
+        """
+        # 2. Долгота натального Солнца — из натала контекста
+        natal_sun_lon = self._natal_sun_longitude(context)
+
+        # 3. Определить место соляра (по умолчанию — место рождения из контекста)
         if location_lat is None or location_lon is None:
-            # По умолчанию — место рождения
-            location_lat = float(user.lat)
-            location_lon = float(user.lon)
-            location_name = location_name or user.birth_place
+            location_lat = context.birth_lat
+            location_lon = context.birth_lon
+            location_name = location_name or (context.birth_data or {}).get('place')
 
         effective_timezone = self._normalize_timezone_candidate(location_timezone)
         if effective_timezone is None and location_source_id:
@@ -227,22 +258,25 @@ class SolarReturnService:
                 self.geocoding_service.resolve_timezone_by_source(location_source_id, self.db)
             )
         if effective_timezone is None:
-            effective_timezone = self._normalize_timezone_candidate(user.timezone) or "UTC"
-        
+            effective_timezone = self._normalize_timezone_candidate(context.birth_timezone) or "UTC"
+
+        location_lat = float(location_lat)
+        location_lon = float(location_lon)
+
         # 4. Найти момент соляра
         jd_solar = self.find_solar_return_moment(natal_sun_lon, year)
-        
+
         # 5. Конвертировать в datetime
         solar_datetime = self.jd_to_datetime(jd_solar, effective_timezone)
-        
+
         # 6. Рассчитать планеты на момент соляра
         solar_planets = self.swisseph_engine.calculate_planets(jd_solar)
-        
+
         # 7. Рассчитать дома на момент соляра для места соляра
         solar_houses, solar_angles = self.swisseph_engine.calculate_houses(
             jd_solar, location_lat, location_lon, house_system
         )
-        
+
         # 8. Определить дома для планет
         for planet in solar_planets:
             planet['house'] = self.swisseph_engine.get_planet_house(
@@ -257,14 +291,17 @@ class SolarReturnService:
             longitude=location_lon,
         ))
 
-        # 8.1 Рассчитать аспекты внутри солярной карты и соляр → натал
-        solar_aspects = self._calculate_solar_aspects(solar_planets, user_id=user_id)
-        aspects_to_natal = self._calculate_solar_to_natal_aspects(user_id, solar_planets)
-        solar_planets = self._enrich_motion_flags(solar_planets, user_id=user_id)
-        
+        # 8.1 Аспекты внутри соляра и соляр → натал
+        solar_aspects = self._calculate_solar_aspects(solar_planets, astrologer_id=context.astrologer_id)
+        natal_targets = context.natal_aspect_targets or []
+        aspects_to_natal = self._calculate_solar_to_natal_aspects(
+            context.astrologer_id, solar_planets, natal_targets,
+        )
+        solar_planets = self._enrich_motion_flags(solar_planets, astrologer_id=context.astrologer_id)
+
         # 9. Формируем результат
         result = self._build_solar_response(
-            user=user,
+            birth_data=context.birth_data or {},
             year=year,
             jd_solar=jd_solar,
             solar_datetime=solar_datetime,
@@ -282,20 +319,55 @@ class SolarReturnService:
         )
         result = ChartDerivationService(self.db).enrich_solar_payload(
             result,
-            user_id=user_id,
-            astrologer_id=user.astrologer_id,
+            user_id=context.user_id,
+            astrologer_id=context.astrologer_id,
         )
-        
-        # 10. Сохранить в БД если нужно
-        if save_to_db:
-            result['solar_id'] = str(self._save_solar_return(user_id, year, result, name=name))
-            result['name'] = self._normalize_solar_name(name)
-
         return result
+
+    def _build_context_from_user_id(self, user_id: UUID) -> 'NatalContext':
+        """Построить NatalContext из сохранённого клиента (DB-путь). Соляру нужны
+        натальное Солнце, координаты/таймзона рождения и натальные цели для аспектов."""
+        user = self.db.query(User).filter(User.user_id == user_id).first()
+        if not user:
+            raise ValueError(f"User not found: {user_id}")
+        natal_planets = self.db.query(NatalPlanet).filter(NatalPlanet.user_id == user_id).all()
+        if not any(p.planet == 'Sun' for p in natal_planets):
+            raise ValueError(f"Natal Sun not found for user: {user_id}")
+        natal_data = {
+            'planets': [
+                {'name': p.planet, 'longitude': float(p.degree), 'type': 'planet'}
+                for p in natal_planets
+            ],
+        }
+        astrologer_id = self.preferences_runtime.get_astrologer_id_for_user(user_id)
+        birth_data = {
+            'user_id': str(user.user_id),
+            'date': user.birth_date.isoformat() if user.birth_date else None,
+            'time': user.birth_time.isoformat() if user.birth_time else None,
+            'place': user.birth_place,
+            'timezone': user.timezone,
+        }
+        return NatalContext(
+            natal_data=natal_data,
+            astrologer_id=astrologer_id,
+            user_id=user_id,
+            birth_data=birth_data,
+            birth_lat=float(user.lat),
+            birth_lon=float(user.lon),
+            birth_timezone=user.timezone,
+            natal_aspect_targets=self._load_natal_aspect_targets(user_id),
+        )
+
+    @staticmethod
+    def _natal_sun_longitude(context: 'NatalContext') -> float:
+        for p in (context.natal_data or {}).get('planets', []):
+            if p.get('name') == 'Sun':
+                return float(p['longitude'])
+        raise ValueError("Natal Sun not found in natal context")
 
     def _build_solar_response(
         self,
-        user: User,
+        birth_data: Dict,
         year: int,
         jd_solar: float,
         solar_datetime: datetime,
@@ -328,10 +400,10 @@ class SolarReturnService:
                 'timezone': effective_timezone,
             },
             'birth_data': {
-                'user_id': str(user.user_id),
-                'birth_date': user.birth_date.isoformat(),
-                'birth_time': user.birth_time.isoformat() if user.birth_time else None,
-                'birth_place': user.birth_place,
+                'user_id': birth_data.get('user_id'),
+                'birth_date': birth_data.get('date'),
+                'birth_time': birth_data.get('time'),
+                'birth_place': birth_data.get('place'),
             },
             'planets': solar_planets,
             'houses': solar_houses,
@@ -384,8 +456,7 @@ class SolarReturnService:
     def _get_aspect_types(self) -> List[RefAspectType]:
         return self.db.query(RefAspectType).all()
 
-    def _calculate_prognostic_allowed_orb(self, user_id: UUID, body_a: str, body_b: str, aspect_type: str) -> float:
-        astrologer_id = self.preferences_runtime.get_astrologer_id_for_user(user_id)
+    def _calculate_prognostic_allowed_orb(self, astrologer_id: Optional[UUID], body_a: str, body_b: str, aspect_type: str) -> float:
         if astrologer_id:
             return self.preferences_runtime.resolve_orb_for_astrologer(
                 astrologer_id,
@@ -401,9 +472,10 @@ class SolarReturnService:
         diff = abs((float(longitude_a) % 360.0) - (float(longitude_b) % 360.0))
         return 360.0 - diff if diff > 180.0 else diff
 
-    def _calculate_solar_to_natal_aspects(self, user_id: UUID, solar_planets: List[Dict]) -> List[Dict]:
+    def _calculate_solar_to_natal_aspects(
+        self, astrologer_id: Optional[UUID], solar_planets: List[Dict], natal_targets: List[Dict],
+    ) -> List[Dict]:
         """Рассчитать аспекты солярных объектов к натальным объектам."""
-        natal_targets = self._load_natal_aspect_targets(user_id)
         if not solar_planets or not natal_targets:
             return []
 
@@ -428,7 +500,7 @@ class SolarReturnService:
                 distance = self._angular_distance(solar_obj['longitude'], natal_obj['longitude'])
                 for aspect_type in aspect_types:
                     max_orb = self._calculate_prognostic_allowed_orb(
-                        user_id,
+                        astrologer_id,
                         solar_obj['name'],
                         natal_obj['name'],
                         aspect_type.aspect_type,
@@ -459,7 +531,7 @@ class SolarReturnService:
 
         return aspects
 
-    def _calculate_solar_aspects(self, solar_planets: List[Dict], *, user_id: UUID) -> List[Dict]:
+    def _calculate_solar_aspects(self, solar_planets: List[Dict], *, astrologer_id: Optional[UUID]) -> List[Dict]:
         """
         Рассчитать аспекты между объектами солярной карты (планеты/точки).
 
@@ -481,7 +553,7 @@ class SolarReturnService:
             return []
 
         aspect_service = AspectService(self.db)
-        return aspect_service.calculate_aspects_for_objects(objects, user_id=user_id)
+        return aspect_service.calculate_aspects_for_objects(objects, astrologer_id=astrologer_id)
 
     def _annotate_payload_aspects_with_phase(self, payload: Dict) -> Dict:
         """Дообогатить сохранённый payload соляра фазой аспектов, если её ещё нет."""
@@ -581,10 +653,13 @@ class SolarReturnService:
             payload = json.loads(solar.chart_data) if isinstance(solar.chart_data, str) else dict(solar.chart_data)
             payload['solar_id'] = str(solar.solar_id)
             payload['name'] = solar.name
-            payload['planets'] = self._enrich_motion_flags(payload.get('planets', []), user_id=user_id)
+            astrologer_id = self.preferences_runtime.get_astrologer_id_for_user(user_id)
+            payload['planets'] = self._enrich_motion_flags(payload.get('planets', []), astrologer_id=astrologer_id)
             changed = False
             if 'aspects_to_natal' not in payload:
-                payload['aspects_to_natal'] = self._calculate_solar_to_natal_aspects(user_id, payload.get('planets', []))
+                payload['aspects_to_natal'] = self._calculate_solar_to_natal_aspects(
+                    astrologer_id, payload.get('planets', []), self._load_natal_aspect_targets(user_id),
+                )
                 changed = True
             payload = self._annotate_payload_aspects_with_phase(payload)
             derivation_service = ChartDerivationService(self.db)
