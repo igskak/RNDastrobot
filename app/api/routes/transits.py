@@ -4,11 +4,14 @@ API эндпоинты для работы с транзитами
 from fastapi import APIRouter, HTTPException, status, Depends, Request
 from sqlalchemy.orm import Session
 from uuid import UUID
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from datetime import date as date_type, time as time_type
 from typing import List, Optional
 
 from app.services.transit_service import TransitService
+from app.services.natal_chart_service import NatalChartService
+from app.services.natal_context import NatalContext
+from app.models.schemas import BirthDataInput
 from app.database.connection import get_db
 from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
 from app.utils.ephemeris import get_ephemeris_path
@@ -23,8 +26,18 @@ EPHE_PATH = get_ephemeris_path()
 # === Pydantic Schemas ===
 
 class TransitRequest(BaseModel):
-    """Входные данные для расчёта транзитов"""
-    user_id: UUID = Field(..., description="ID пользователя с сохранённой натальной картой")
+    """Входные данные для расчёта транзитов.
+
+    Источник натала — ровно один из:
+      - ``user_id``: сохранённый клиент (DB-путь);
+      - ``natal``: inline данные рождения (ephemeral, без записи в БД) — план D3.
+    """
+    user_id: Optional[UUID] = Field(
+        None, description="ID сохранённого клиента. Взаимоисключающе с `natal`."
+    )
+    natal: Optional[BirthDataInput] = Field(
+        None, description="Inline данные рождения (ephemeral). Взаимоисключающе с `user_id`."
+    )
     date: date_type = Field(..., description="Дата транзита (YYYY-MM-DD)")
     time: time_type = Field(..., description="Время транзита (HH:MM:SS)")
     timezone: str = Field(..., description="Часовой пояс (например, 'Europe/Kiev')")
@@ -41,6 +54,12 @@ class TransitRequest(BaseModel):
         except pytz.exceptions.UnknownTimeZoneError:
             raise ValueError(f'Неизвестная временная зона: {v}')
         return v
+
+    @model_validator(mode='after')
+    def exactly_one_source(self):
+        if bool(self.user_id) == bool(self.natal):
+            raise ValueError("Укажите ровно один источник натала: `user_id` или `natal`")
+        return self
 
 
 class TransitPlanetInfo(BaseModel):
@@ -178,9 +197,54 @@ def calculate_transits(
     - **time**: Время транзита
     - **timezone**: Часовой пояс
     """
+    transit_service = TransitService(db_session=db, ephe_path=EPHE_PATH)
+
+    # --- Inline-натал (ephemeral): данные рождения переданы напрямую, без сохранённого клиента ---
+    if request.natal is not None:
+        try:
+            natal_service = NatalChartService(ephe_path=EPHE_PATH)
+            calc_result = natal_service.calculate_natal_chart(
+                birth_date=request.natal.date,
+                birth_time=request.natal.time,
+                timezone=request.natal.timezone,
+                astrologer_id=auth.astrologer.id,
+                place=request.natal.place,
+                latitude=request.natal.latitude,
+                longitude=request.natal.longitude,
+                house_system=request.natal.house_system,
+                save_to_db=False,
+                db_session=db,
+            )
+        except ValueError as e:
+            # Плохие inline-данные (геокод/дата/место) — это ошибка ввода, не 404
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        except Exception as e:
+            logger.exception(f"Error computing inline natal for transits: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Ошибка расчёта inline-натала: {str(e)}",
+            )
+        context = NatalContext.from_inline(calc_result, astrologer_id=auth.astrologer.id)
+        try:
+            return transit_service.calculate_transits_from_context(
+                context,
+                transit_date=request.date,
+                transit_time=request.time,
+                timezone=request.timezone,
+                location=request.location,
+                latitude=request.latitude,
+                longitude=request.longitude,
+            )
+        except Exception as e:
+            logger.exception(f"Error calculating transits (inline): {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Ошибка расчёта транзитов: {str(e)}",
+            )
+
+    # --- Сохранённый клиент (DB-путь): прежнее поведение, авторизация обязательна ---
     try:
         ensure_client_access(db, http_request, auth, request.user_id, action="client.transits.calculate")
-        transit_service = TransitService(db_session=db, ephe_path=EPHE_PATH)
         result = transit_service.calculate_transits(
             user_id=request.user_id,
             transit_date=request.date,

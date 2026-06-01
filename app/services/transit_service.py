@@ -24,7 +24,10 @@ from app.services.swisseph_engine import SwissEphemerisEngine
 from app.services.time_service import TimeService
 from app.services.special_points_service import SpecialPointsService
 from app.services.planet_characteristics_service import PlanetCharacteristicsService
-from app.services.preferences_runtime import PreferencesRuntimeResolver
+from app.services.preferences_runtime import (
+    PreferencesRuntimeResolver, DEFAULT_STATIONARY_THRESHOLD_PERCENT,
+)
+from app.services.natal_context import NatalContext
 from app.utils.constants import (
     get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds,
     PROGNOSTIC_EXCLUDED_NATAL_TARGETS, PROGNOSTIC_EXACT_ORB, PROGNOSTIC_DEFAULT_ORB,
@@ -66,10 +69,37 @@ class TransitService:
         Returns:
             Dict с транзитными данными и аспектами к наталу
         """
-        # 1. Загрузить натальные данные
-        natal_data = self._load_natal_data(user_id)
-        if natal_data is None:
+        # 1. Построить контекст натала из сохранённого клиента (DB-путь)
+        context = self._build_context_from_user_id(user_id)
+        if context is None:
             raise ValueError(f"Natal chart not found for user_id={user_id}")
+        return self.calculate_transits_from_context(
+            context,
+            transit_date,
+            transit_time,
+            timezone,
+            location=location,
+            latitude=latitude,
+            longitude=longitude,
+        )
+
+    def calculate_transits_from_context(
+        self,
+        context: NatalContext,
+        transit_date: date,
+        transit_time: time,
+        timezone: str,
+        location: Optional[str] = None,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+    ) -> Dict:
+        """Расчёт транзитов для произвольного источника натала (сохранённого или inline).
+
+        Это «настоящее» ядро: ``calculate_transits(user_id, ...)`` — тонкая обёртка,
+        строящая контекст из БД. Inline-путь (ephemeral-карта) строит контекст через
+        ``NatalContext.from_inline`` и зовёт этот метод напрямую.
+        """
+        natal_data = context.natal_data
 
         # 2. Рассчитать транзитный JD
         utc_dt, jd_transit = TimeService.process_birth_time(transit_date, transit_time, timezone)
@@ -80,16 +110,11 @@ class TransitService:
         transit_houses = []
         transit_angles = {}
         if latitude is not None and longitude is not None:
-            user = self.db.query(User).filter(User.user_id == user_id).first()
-            house_system = 'P'
-            if user and user.astrologer_id:
-                astrologer = self.db.query(Astrologer).filter(Astrologer.id == user.astrologer_id).first()
-                house_system = astrologer.default_house_system if astrologer and astrologer.default_house_system else 'P'
             transit_houses, transit_angles = self.swisseph_engine.calculate_houses(
                 jd=jd_transit,
                 lat=float(latitude),
                 lon=float(longitude),
-                hsys=house_system,
+                hsys=context.house_system,
             )
 
         transit_planets.extend(self._calculate_transit_special_bodies(
@@ -100,7 +125,7 @@ class TransitService:
             latitude=latitude,
             longitude=longitude,
         ))
-        self._enrich_motion_flags(transit_planets, user_id=user_id)
+        self._enrich_motion_flags(transit_planets, astrologer_id=context.astrologer_id)
 
         # 4. Определить натальные и транзитные дома для транзитных планет
         for planet in transit_planets:
@@ -113,7 +138,7 @@ class TransitService:
                 )
 
         # 5. Рассчитать транзит→натал аспекты
-        aspects = self._calculate_transit_aspects(user_id, transit_planets, natal_data)
+        aspects = self._calculate_transit_aspects(context.astrologer_id, transit_planets, natal_data)
 
         return {
             'transit_info': {
@@ -131,8 +156,35 @@ class TransitService:
             'aspects': aspects,
         }
 
-    def _enrich_motion_flags(self, planets: List[Dict], *, user_id: UUID) -> List[Dict]:
-        stationary_threshold_percent = self.preferences_runtime.get_stationary_threshold_for_user(user_id)
+    def _build_context_from_user_id(
+        self, user_id: UUID, *, apply_exclusions: bool = True
+    ) -> Optional[NatalContext]:
+        """Построить NatalContext из сохранённого клиента (DB-путь).
+
+        Несёт всё, что user_id давал косвенно: натал, astrologer_id (орбисы/стационарность),
+        house_system. Inline-путь строит контекст через ``NatalContext.from_inline``.
+        """
+        natal_data = self._load_natal_data(user_id, apply_exclusions=apply_exclusions)
+        if natal_data is None:
+            return None
+        astrologer_id = self.preferences_runtime.get_astrologer_id_for_user(user_id)
+        house_system = 'P'
+        user = self.db.query(User).filter(User.user_id == user_id).first()
+        if user and user.astrologer_id:
+            astrologer = self.db.query(Astrologer).filter(Astrologer.id == user.astrologer_id).first()
+            house_system = astrologer.default_house_system if astrologer and astrologer.default_house_system else 'P'
+        return NatalContext(
+            natal_data=natal_data,
+            astrologer_id=astrologer_id,
+            house_system=house_system,
+            user_id=user_id,
+        )
+
+    def _enrich_motion_flags(self, planets: List[Dict], *, astrologer_id: Optional[UUID]) -> List[Dict]:
+        if astrologer_id:
+            stationary_threshold_percent = self.preferences_runtime.get_stationary_threshold_for_astrologer(astrologer_id)
+        else:
+            stationary_threshold_percent = DEFAULT_STATIONARY_THRESHOLD_PERCENT
         for planet in planets:
             name = planet.get('name', '')
             speed = float(planet.get('speed') or 0.0)
@@ -234,9 +286,8 @@ class TransitService:
             self._base_orbs_cache = {a.aspect_type: float(a.base_orb) for a in aspects}
         return self._base_orbs_cache
 
-    def _calculate_allowed_orb(self, user_id: UUID, body_a: str, body_b: str, aspect_type: str) -> float:
+    def _calculate_allowed_orb(self, astrologer_id: Optional[UUID], body_a: str, body_b: str, aspect_type: str) -> float:
         """Разрешённый орбис для транзитной пары через account methodology."""
-        astrologer_id = self.preferences_runtime.get_astrologer_id_for_user(user_id)
         if astrologer_id:
             return self.preferences_runtime.resolve_orb_for_astrologer(
                 astrologer_id,
@@ -306,7 +357,7 @@ class TransitService:
 
     def _calculate_transit_aspects(
         self,
-        user_id: UUID,
+        astrologer_id: Optional[UUID],
         transit_planets: List[Dict],
         natal_data: Dict
     ) -> List[Dict]:
@@ -331,7 +382,7 @@ class TransitService:
                 for asp in aspect_types:
                     key = (t_obj['name'], n_obj['name'], asp.aspect_type)
                     orb_lookup[key] = self._calculate_allowed_orb(
-                        user_id, t_obj['name'], n_obj['name'], asp.aspect_type
+                        astrologer_id, t_obj['name'], n_obj['name'], asp.aspect_type
                     )
 
         for transit_obj in transit_objects:
@@ -431,6 +482,7 @@ class TransitService:
         natal_data = self._load_natal_data(user_id, apply_exclusions=False)
         if natal_data is None:
             raise ValueError(f"Natal chart not found for user_id={user_id}")
+        astrologer_id = self.preferences_runtime.get_astrologer_id_for_user(user_id)
 
         # 2. Получить типы аспектов
         all_aspect_types = self._get_aspect_types()
@@ -461,7 +513,7 @@ class TransitService:
                 for n_obj in natal_objects:
                     key = (t_name, n_obj['name'], asp.aspect_type)
                     orb_lookup[key] = self._calculate_allowed_orb(
-                        user_id, t_name, n_obj['name'], asp.aspect_type
+                        astrologer_id, t_name, n_obj['name'], asp.aspect_type
                     )
 
         # Словарь для отслеживания активных аспектов
