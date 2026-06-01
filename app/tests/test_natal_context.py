@@ -219,6 +219,20 @@ def test_inline_direction_computes_without_saved_user_or_db(monkeypatch):
     assert result['birth_data']['user_id'] is None  # ephemeral
 
 
+def test_response_schemas_accept_ephemeral_null_user_id():
+    """Регресс на живой баг: response_model для progression/direction/solar требовал
+    birth_data.user_id: str → inline-натал (user_id=None) падал ResponseValidationError.
+    Юнит-тесты сервисов это не ловили (проверяли dict, минуя response_model)."""
+    from app.api.routes.progressions import BirthDataBlock as ProgBirth
+    from app.api.routes.directions import BirthDataBlock as DirBirth
+    from app.models.schemas import SolarBirthData
+
+    # Должны конструироваться без user_id (ephemeral), не кидая ValidationError
+    ProgBirth(user_id=None, birth_date='1990-09-11', birth_jd=2448145.9)
+    DirBirth(user_id=None, birth_date='1990-09-11', birth_jd=2448145.9)
+    SolarBirthData(user_id=None, birth_date='1990-09-11')
+
+
 def test_inline_solar_return_sources_natal_from_context(monkeypatch):
     """Соляр: натальное Солнце и место рождения берутся из inline-контекста, без сохранённого
     клиента. Ref-зависимые коллабораторы (AspectService/ChartDerivation) замоканы — изолируем

@@ -771,7 +771,7 @@ class SolarInfo(BaseModel):
 
 class SolarBirthData(BaseModel):
     """Данные рождения для соляра"""
-    user_id: str
+    user_id: Optional[str] = None   # None для inline-натала (ephemeral)
     birth_date: str
     birth_time: Optional[str] = None
     birth_place: Optional[str] = None

@@ -117,10 +117,10 @@ class HouseCuspIngressInfo(BaseModel):
 
 class BirthDataBlock(BaseModel):
     """Данные рождения"""
-    user_id: str
+    user_id: Optional[str] = None   # None для inline-натала (ephemeral)
     birth_date: str
     birth_time: Optional[str] = None
-    birth_place: str
+    birth_place: Optional[str] = None
     birth_jd: float
 
 
