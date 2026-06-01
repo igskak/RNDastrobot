@@ -142,6 +142,23 @@ workspaceState = {
 
 * **PA1 — Фикс stale `user_id` в forecast-new (Eng C2).** При пересчёте натал-момента `loadNatal()` считает натал в памяти (`saveToDb:false`), но `fetchLayer` шлёт `user_id` → бэк грузит СТАРЫЙ натал из БД, транзиты считаются против старого натала. После приземления Фазы 1 (`NatalContext`/inline-натал) — перевести этот путь на inline-натал, чтобы транзиты считались против пересчитанного натала. Добавить регрессионный тест: пересчёт натала → транзитные аспекты меняются соответственно. Зависит от Фазы 1.
 
+## 5.2 Результат спайка (Фаза 0 + Фаза 1)
+
+Сделано и покрыто тестами (ветка `feat/unified-workspace-spike`):
+- **`NatalContext`** + адаптер inline→internal. Inline-натал считается без БД и без сохранённого клиента.
+- **Phase 1 backend перенесён на 3 из 4 сервисов:** transit, progression, direction. Каждый: context-ядро + тонкая `user_id`-обёртка, проброс `astrologer_id` через орбисы/стационарность, поля рождения (JD/координаты) на контексте для производных методик.
+- **Роуты transit/progression/direction:** union `user_id` XOR `natal` с валидатором «ровно один», пропуск `ensure_client_access` для ephemeral, запрет `save_to_db` для inline, ошибки ввода → **422**.
+- **`ChartSourcePanel`** (Phase 0): чистая DOM-agnostic модель источника, `buildSourcePayload` → backend-union.
+- Тесты: 6 inline-сервисных (zero-DB) + 9 панели + 21 регрессионный — зелёные.
+
+**Solar — отдельный follow-up (PA2), сложнее остальных:**
+- `_build_solar_response(user=...)` принимает ORM-`User` (а не поля) — нужно развязать.
+- `ChartDerivationService.enrich_solar_payload(user_id=, astrologer_id=)` делает DB-обогащение по `user_id` — для inline нужен путь по `astrologer_id`/без БД, либо пропуск обогащения.
+- Вход — год (не datetime) + релокация: требует `inputVariant='year'` в `ChartSourcePanel` (уже заложен) и спец-обработки (Findings Design 4.4).
+- Натальное Солнце берётся из БД (`NatalPlanet`), для inline — из `calc_result.planets`.
+
+**Остаётся для Фазы 0 (риск/H2-развилка):** проводка DOM `ChartSourcePanel` в `forecast-new.js` (3543 стр.) с characterization-тестами на живом файле — отдельный чекпоинт.
+
 ## 6. Не в объёме (NOT in scope)
 
 * Изменение астрологических расчётов/движка Swiss Ephemeris — только переупаковка вызовов.
