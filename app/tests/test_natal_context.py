@@ -16,6 +16,8 @@ from uuid import uuid4
 from app.services.natal_context import NatalContext, natal_data_from_calc_result
 from app.services.natal_chart_service import NatalChartService
 from app.services.transit_service import TransitService
+from app.services.progression_service import ProgressionService
+from app.services.direction_service import DirectionService
 from app.utils.ephemeris import get_ephemeris_path
 
 
@@ -148,3 +150,68 @@ def test_inline_transits_compute_without_saved_user_or_db(monkeypatch):
     for asp in result['aspects']:
         assert 'transit_planet' in asp and 'natal_object' in asp
         assert asp['aspect_type'] in {'conjunction', 'opposition', 'trine', 'square', 'sextile'}
+
+
+def _inline_natal_context():
+    """Inline-натал → ephemeral NatalContext (для прогрессий/дирекций)."""
+    ephe = get_ephemeris_path()
+    calc_result = NatalChartService(ephe_path=ephe).calculate_natal_chart(
+        birth_date=date(1990, 9, 11),
+        birth_time=time(10, 30, 0),
+        timezone='Europe/Kiev',
+        place='Kyiv',
+        latitude=50.45,
+        longitude=30.52,
+        house_system='P',
+        save_to_db=False,
+    )
+    return NatalContext.from_inline(calc_result, astrologer_id=None), ephe
+
+
+def _mock_aspect_types(monkeypatch, service):
+    monkeypatch.setattr(
+        service, '_get_aspect_types',
+        lambda: [
+            FakeAspect('conjunction', 0.0, 'major', 'neutral'),
+            FakeAspect('opposition', 180.0, 'major', 'tense'),
+            FakeAspect('trine', 120.0, 'major', 'harmonious'),
+            FakeAspect('square', 90.0, 'major', 'tense'),
+            FakeAspect('sextile', 60.0, 'minor', 'harmonious'),
+        ],
+    )
+
+
+def test_inline_progression_computes_without_saved_user_or_db(monkeypatch):
+    context, ephe = _inline_natal_context()
+    # NatalContext несёт birth_jd/birth_date — прогрессии этого достаточно, ноль БД
+    assert context.birth_jd is not None and context.birth_date is not None
+
+    service = ProgressionService(db_session=None, ephe_path=ephe)
+    _mock_aspect_types(monkeypatch, service)
+
+    result = service.calculate_progression_from_context(
+        context,
+        target_date=date(2026, 6, 1),
+        target_time=time(12, 0, 0),
+        timezone='Europe/Kiev',
+    )
+    assert result['progressed_planets'], "ожидались прогрессивные планеты"
+    assert isinstance(result['aspects_to_natal'], list)
+    assert len(result['aspects_to_natal']) > 0, "ожидались прогрессия→натал аспекты"
+    assert result['birth_data']['user_id'] is None  # ephemeral
+
+
+def test_inline_direction_computes_without_saved_user_or_db(monkeypatch):
+    context, ephe = _inline_natal_context()
+    service = DirectionService(db_session=None, ephe_path=ephe)
+    _mock_aspect_types(monkeypatch, service)
+
+    result = service.calculate_direction_from_context(
+        context,
+        target_date=date(2026, 6, 1),
+        direction_type='zodiacal',
+    )
+    assert result['directed_planets'], "ожидались дирекционные планеты"
+    assert isinstance(result['aspects_to_natal'], list)
+    assert result['direction_info']['direction_type'] == 'zodiacal'
+    assert result['birth_data']['user_id'] is None  # ephemeral

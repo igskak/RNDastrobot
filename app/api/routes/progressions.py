@@ -10,6 +10,9 @@ from typing import List, Optional
 import pytz
 
 from app.services.progression_service import ProgressionService
+from app.services.natal_chart_service import NatalChartService
+from app.services.natal_context import NatalContext
+from app.models.schemas import BirthDataInput
 from app.database.connection import get_db
 from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
 from app.utils.ephemeris import get_ephemeris_path
@@ -24,8 +27,16 @@ EPHE_PATH = get_ephemeris_path()
 # === Pydantic Schemas ===
 
 class ProgressionRequest(BaseModel):
-    """Входные данные для расчёта прогрессии"""
-    user_id: UUID = Field(..., description="ID пользователя с сохранённой натальной картой")
+    """Входные данные для расчёта прогрессии.
+
+    Источник натала — ровно один из ``user_id`` (сохранённый клиент) либо ``natal`` (inline).
+    """
+    user_id: Optional[UUID] = Field(
+        None, description="ID сохранённого клиента. Взаимоисключающе с `natal`."
+    )
+    natal: Optional[BirthDataInput] = Field(
+        None, description="Inline данные рождения (ephemeral). Взаимоисключающе с `user_id`."
+    )
     target_date: date_type = Field(..., description="Дата, на которую рассчитывается прогрессия (YYYY-MM-DD)")
     target_time: Optional[time_type] = Field(None, description="Локальное время прогностического момента (HH:MM:SS)")
     timezone: Optional[str] = Field(None, description="IANA timezone прогностического момента")
@@ -47,6 +58,14 @@ class ProgressionRequest(BaseModel):
     def require_timezone_for_time(self):
         if self.target_time is not None and not self.timezone:
             raise ValueError("timezone is required when target_time is provided")
+        return self
+
+    @model_validator(mode='after')
+    def exactly_one_source(self):
+        if bool(self.user_id) == bool(self.natal):
+            raise ValueError("Укажите ровно один источник натала: `user_id` или `natal`")
+        if self.natal is not None and self.save_to_db:
+            raise ValueError("save_to_db недоступно для inline-натала (ephemeral)")
         return self
 
 
@@ -190,9 +209,46 @@ def calculate_progression(
     - **target_date**: Дата, на которую рассчитывается прогрессия
     - **save_to_db**: Сохранить результат в БД (по умолчанию False)
     """
+    progression_service = ProgressionService(db_session=db, ephe_path=EPHE_PATH)
+
+    # --- Inline-натал (ephemeral) ---
+    if request.natal is not None:
+        try:
+            calc_result = NatalChartService(ephe_path=EPHE_PATH).calculate_natal_chart(
+                birth_date=request.natal.date,
+                birth_time=request.natal.time,
+                timezone=request.natal.timezone,
+                astrologer_id=auth.astrologer.id,
+                place=request.natal.place,
+                latitude=request.natal.latitude,
+                longitude=request.natal.longitude,
+                house_system=request.natal.house_system,
+                save_to_db=False,
+                db_session=db,
+            )
+        except ValueError as e:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        context = NatalContext.from_inline(calc_result, astrologer_id=auth.astrologer.id)
+        try:
+            return progression_service.calculate_progression_from_context(
+                context,
+                target_date=request.target_date,
+                target_time=request.target_time,
+                timezone=request.timezone,
+            )
+        except ValueError as e:
+            # ошибки методики (например, timezone) — это ввод, 422
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        except Exception as e:
+            logger.exception(f"Error calculating progression (inline): {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Ошибка расчёта прогрессии: {str(e)}",
+            )
+
+    # --- Сохранённый клиент (DB-путь) ---
     try:
         ensure_client_access(db, http_request, auth, request.user_id, action="client.progressions.calculate")
-        progression_service = ProgressionService(db_session=db, ephe_path=EPHE_PATH)
         result = progression_service.calculate_progression(
             user_id=request.user_id,
             target_date=request.target_date,

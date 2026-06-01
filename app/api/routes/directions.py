@@ -4,11 +4,14 @@ API эндпоинты для работы с дирекциями (Directions)
 from fastapi import APIRouter, HTTPException, status, Depends, Request
 from sqlalchemy.orm import Session
 from uuid import UUID
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from datetime import date as date_type
 from typing import List, Optional, Literal
 
 from app.services.direction_service import DirectionService
+from app.services.natal_chart_service import NatalChartService
+from app.services.natal_context import NatalContext
+from app.models.schemas import BirthDataInput
 from app.database.connection import get_db
 from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
 from app.utils.ephemeris import get_ephemeris_path
@@ -23,8 +26,16 @@ EPHE_PATH = get_ephemeris_path()
 # === Pydantic Schemas ===
 
 class DirectionRequest(BaseModel):
-    """Входные данные для расчёта дирекции"""
-    user_id: UUID = Field(..., description="ID пользователя с сохранённой натальной картой")
+    """Входные данные для расчёта дирекции.
+
+    Источник натала — ровно один из ``user_id`` (сохранённый клиент) либо ``natal`` (inline).
+    """
+    user_id: Optional[UUID] = Field(
+        None, description="ID сохранённого клиента. Взаимоисключающе с `natal`."
+    )
+    natal: Optional[BirthDataInput] = Field(
+        None, description="Inline данные рождения (ephemeral). Взаимоисключающе с `user_id`."
+    )
     target_date: date_type = Field(..., description="Дата, на которую рассчитывается дирекция")
     direction_type: Literal['solar_arc', 'zodiacal', 'symbolic', 'equatorial'] = Field(
         'zodiacal',
@@ -32,6 +43,14 @@ class DirectionRequest(BaseModel):
     )
     save_to_db: bool = Field(False, description="Сохранить результат в базу данных")
     name: Optional[str] = Field(None, max_length=160, description="Название сохранённой дирекции")
+
+    @model_validator(mode='after')
+    def exactly_one_source(self):
+        if bool(self.user_id) == bool(self.natal):
+            raise ValueError("Укажите ровно один источник натала: `user_id` или `natal`")
+        if self.natal is not None and self.save_to_db:
+            raise ValueError("save_to_db недоступно для inline-натала (ephemeral)")
+        return self
 
 
 class DirectedObjectInfo(BaseModel):
@@ -182,9 +201,44 @@ def calculate_direction(
     - **direction_type**: Тип дирекции (solar_arc, zodiacal/symbolic, equatorial)
     - **save_to_db**: Сохранить результат в БД (по умолчанию False)
     """
+    direction_service = DirectionService(db_session=db, ephe_path=EPHE_PATH)
+
+    # --- Inline-натал (ephemeral) ---
+    if request.natal is not None:
+        try:
+            calc_result = NatalChartService(ephe_path=EPHE_PATH).calculate_natal_chart(
+                birth_date=request.natal.date,
+                birth_time=request.natal.time,
+                timezone=request.natal.timezone,
+                astrologer_id=auth.astrologer.id,
+                place=request.natal.place,
+                latitude=request.natal.latitude,
+                longitude=request.natal.longitude,
+                house_system=request.natal.house_system,
+                save_to_db=False,
+                db_session=db,
+            )
+        except ValueError as e:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        context = NatalContext.from_inline(calc_result, astrologer_id=auth.astrologer.id)
+        try:
+            return direction_service.calculate_direction_from_context(
+                context,
+                target_date=request.target_date,
+                direction_type=request.direction_type,
+            )
+        except ValueError as e:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        except Exception as e:
+            logger.exception(f"Error calculating direction (inline): {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Ошибка расчёта дирекции: {str(e)}",
+            )
+
+    # --- Сохранённый клиент (DB-путь) ---
     try:
         ensure_client_access(db, http_request, auth, request.user_id, action="client.directions.calculate")
-        direction_service = DirectionService(db_session=db, ephe_path=EPHE_PATH)
         result = direction_service.calculate_direction(
             user_id=request.user_id,
             target_date=request.target_date,

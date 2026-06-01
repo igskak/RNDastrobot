@@ -20,7 +20,10 @@ from app.services.swisseph_engine import SwissEphemerisEngine
 from app.services.time_service import TimeService
 from app.services.special_points_service import SpecialPointsService
 from app.services.planet_characteristics_service import PlanetCharacteristicsService
-from app.services.preferences_runtime import PreferencesRuntimeResolver
+from app.services.preferences_runtime import (
+    PreferencesRuntimeResolver, DEFAULT_STATIONARY_THRESHOLD_PERCENT,
+)
+from app.services.natal_context import NatalContext
 from app.utils.constants import (
     get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds,
     PROGNOSTIC_EXCLUDED_NATAL_TARGETS, PROGNOSTIC_EXACT_ORB,
@@ -101,14 +104,37 @@ class ProgressionService:
         Returns:
             Dict с полными данными прогрессивной карты
         """
-        # 1. Загрузить натальные данные пользователя
-        user = self.db.query(User).filter(User.user_id == user_id).first()
-        if not user:
-            raise ValueError(f"User not found: {user_id}")
-        
-        birth_jd = float(user.julian_day)
-        birth_date_val = user.birth_date
-        
+        # 1. Построить контекст натала из сохранённого клиента (DB-путь)
+        context = self._build_context_from_user_id(user_id)
+        result = self.calculate_progression_from_context(
+            context, target_date, target_time=target_time, timezone=timezone,
+        )
+
+        # Сохранить в БД если нужно (только для сохранённого клиента)
+        if save_to_db:
+            progression_id = self._save_progression(user_id, target_date, result, name=name)
+            result['progression_id'] = str(progression_id)
+            result['name'] = self._normalize_saved_chart_name(name)
+
+        return result
+
+    def calculate_progression_from_context(
+        self,
+        context: NatalContext,
+        target_date: date,
+        target_time: Optional[time] = None,
+        timezone: Optional[str] = None,
+    ) -> Dict:
+        """Прогрессия для произвольного источника натала (сохранённый или inline-ephemeral).
+
+        Ядро метода. ``calculate_progression(user_id, ...)`` — тонкая обёртка, строящая
+        контекст из БД и опционально сохраняющая результат.
+        """
+        birth_jd = context.birth_jd
+        birth_date_val = context.birth_date
+        lat = context.birth_lat
+        lon = context.birth_lon
+
         # 2. Рассчитать прогрессивный JD
         timing = self._calculate_progression_timing(
             birth_jd=birth_jd,
@@ -118,15 +144,15 @@ class ProgressionService:
             timezone=timezone,
         )
         progressed_jd = timing['progressed_jd']
-        
+
         # 3. Рассчитать прогрессивные планеты
         progressed_planets = self.swisseph_engine.calculate_planets(progressed_jd)
 
         # 3.1 Рассчитать прогрессивные куспиды домов
         progressed_houses, progressed_angles = self.swisseph_engine.calculate_houses(
             jd=progressed_jd,
-            lat=float(user.lat),
-            lon=float(user.lon),
+            lat=float(lat),
+            lon=float(lon),
             hsys='P',
         )
         progressed_planets.extend(self._calculate_progressed_special_bodies(
@@ -134,14 +160,14 @@ class ProgressionService:
             progressed_houses=progressed_houses,
             progressed_angles=progressed_angles,
             progressed_planets=progressed_planets,
-            latitude=float(user.lat),
-            longitude=float(user.lon),
+            latitude=float(lat),
+            longitude=float(lon),
         ))
-        progressed_planets = self._enrich_motion_flags(progressed_planets, user_id=user_id)
-        
-        # 4. Загрузить натальные данные для аспектов и домов
-        natal_data = self._load_natal_data(user_id)
-        
+        progressed_planets = self._enrich_motion_flags(progressed_planets, astrologer_id=context.astrologer_id)
+
+        # 4. Натальные данные для аспектов и домов
+        natal_data = context.natal_data
+
         # 5. Определить натальные и прогрессивные дома для прогрессивных планет
         for planet in progressed_planets:
             planet['natal_house'] = self.swisseph_engine.get_planet_house(
@@ -154,7 +180,7 @@ class ProgressionService:
             planet['house'] = planet['progressed_house']
         
         # 6. Рассчитать аспекты прогрессия→натал
-        aspects = self._calculate_progression_aspects(user_id, progressed_planets, natal_data)
+        aspects = self._calculate_progression_aspects(context.astrologer_id, progressed_planets, natal_data)
         
         # 7. Рассчитать ингрессии планет (знак/дом)
         planet_ingresses = self._calculate_planet_ingresses(
@@ -189,10 +215,10 @@ class ProgressionService:
                 'rate': '1 day = 1 year',
             },
             'birth_data': {
-                'user_id': str(user.user_id),
-                'birth_date': user.birth_date.isoformat(),
-                'birth_time': user.birth_time.isoformat() if user.birth_time else None,
-                'birth_place': user.birth_place,
+                'user_id': (context.birth_data or {}).get('user_id'),
+                'birth_date': birth_date_val.isoformat() if birth_date_val else None,
+                'birth_time': (context.birth_data or {}).get('time'),
+                'birth_place': (context.birth_data or {}).get('place'),
                 'birth_jd': birth_jd,
             },
             'progressed_planets': progressed_planets,
@@ -201,14 +227,40 @@ class ProgressionService:
             'aspects_to_natal': aspects,
             'planet_ingresses': planet_ingresses,
         }
-        
-        # 11. Сохранить в БД если нужно
-        if save_to_db:
-            progression_id = self._save_progression(user_id, target_date, result, name=name)
-            result['progression_id'] = str(progression_id)
-            result['name'] = self._normalize_saved_chart_name(name)
 
         return result
+
+    def _build_context_from_user_id(self, user_id: UUID) -> NatalContext:
+        """Построить NatalContext из сохранённого клиента (DB-путь).
+
+        Несёт натал, astrologer_id (орбисы/стационарность) и поля рождения (JD/координаты),
+        которые прогрессии нужны для расчёта прогрессивных позиций. Inline-путь строит
+        контекст через ``NatalContext.from_inline`` и зовёт ``calculate_progression_from_context``.
+        """
+        user = self.db.query(User).filter(User.user_id == user_id).first()
+        if not user:
+            raise ValueError(f"User not found: {user_id}")
+        natal_data = self._load_natal_data(user_id)
+        astrologer_id = self.preferences_runtime.get_astrologer_id_for_user(user_id)
+        birth_data = {
+            'user_id': str(user.user_id),
+            'date': user.birth_date.isoformat() if user.birth_date else None,
+            'time': user.birth_time.isoformat() if user.birth_time else None,
+            'place': user.birth_place,
+            'julian_day': float(user.julian_day),
+            'latitude': float(user.lat),
+            'longitude': float(user.lon),
+        }
+        return NatalContext(
+            natal_data=natal_data,
+            astrologer_id=astrologer_id,
+            user_id=user_id,
+            birth_data=birth_data,
+            birth_jd=float(user.julian_day),
+            birth_date=user.birth_date,
+            birth_lat=float(user.lat),
+            birth_lon=float(user.lon),
+        )
 
     def _calculate_progression_timing(
         self,
@@ -244,8 +296,11 @@ class ProgressionService:
             'target_utc': target_utc,
         }
 
-    def _enrich_motion_flags(self, planets: List[Dict], *, user_id: UUID) -> List[Dict]:
-        stationary_threshold_percent = self.preferences_runtime.get_stationary_threshold_for_user(user_id)
+    def _enrich_motion_flags(self, planets: List[Dict], *, astrologer_id: Optional[UUID]) -> List[Dict]:
+        if astrologer_id:
+            stationary_threshold_percent = self.preferences_runtime.get_stationary_threshold_for_astrologer(astrologer_id)
+        else:
+            stationary_threshold_percent = DEFAULT_STATIONARY_THRESHOLD_PERCENT
         for planet in planets:
             name = planet.get('name', '')
             speed = float(planet.get('speed') or 0.0)
@@ -341,8 +396,7 @@ class ProgressionService:
             self._base_orbs_cache = {a.aspect_type: float(a.base_orb) for a in aspects}
         return self._base_orbs_cache
 
-    def _calculate_allowed_orb(self, user_id: UUID, body_a: str, body_b: str, aspect_type: str) -> float:
-        astrologer_id = self.preferences_runtime.get_astrologer_id_for_user(user_id)
+    def _calculate_allowed_orb(self, astrologer_id: Optional[UUID], body_a: str, body_b: str, aspect_type: str) -> float:
         if astrologer_id:
             return self.preferences_runtime.resolve_orb_for_astrologer(
                 astrologer_id,
@@ -414,7 +468,7 @@ class ProgressionService:
 
     def _calculate_progression_aspects(
         self,
-        user_id: UUID,
+        astrologer_id: Optional[UUID],
         progressed_planets: List[Dict],
         natal_data: Dict
     ) -> List[Dict]:
@@ -425,7 +479,7 @@ class ProgressionService:
 
         for prog_planet in progressed_planets:
             for natal_obj in natal_objects:
-                aspect = self._check_aspect(user_id, prog_planet, natal_obj, aspect_types)
+                aspect = self._check_aspect(astrologer_id, prog_planet, natal_obj, aspect_types)
                 if aspect:
                     aspects.append(aspect)
 
@@ -498,7 +552,7 @@ class ProgressionService:
 
     def _check_aspect(
         self,
-        user_id: UUID,
+        astrologer_id: Optional[UUID],
         prog_obj: Dict,
         natal_obj: Dict,
         aspect_types: List[RefAspectType]
@@ -511,7 +565,7 @@ class ProgressionService:
         for aspect_type in aspect_types:
             exact_angle = float(aspect_type.exact_angle)
             max_orb = self._calculate_allowed_orb(
-                user_id,
+                astrologer_id,
                 prog_obj['name'],
                 natal_obj['name'],
                 aspect_type.aspect_type,

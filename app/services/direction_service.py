@@ -24,6 +24,7 @@ from app.database.models import (
 )
 from app.services.swisseph_engine import SwissEphemerisEngine
 from app.services.preferences_runtime import PreferencesRuntimeResolver
+from app.services.natal_context import NatalContext
 from app.utils.constants import (
     get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds,
     PROGNOSTIC_EXCLUDED_NATAL_TARGETS, PROGNOSTIC_EXACT_ORB, PROGNOSTIC_DEFAULT_ORB,
@@ -75,18 +76,46 @@ class DirectionService:
         Returns:
             Dict с полными данными дирекционной карты
         """
+        # 1. Построить контекст натала из сохранённого клиента (DB-путь)
+        context = self._build_context_from_user_id(user_id)
+        result = self.calculate_direction_from_context(context, target_date, direction_type)
+
+        # Сохранить в БД если нужно (только для сохранённого клиента)
+        if save_to_db:
+            arc_degrees = result['direction_info']['arc_degrees']
+            age_years = result['direction_info']['age_years']
+            direction_id = self._save_direction(
+                user_id,
+                target_date,
+                result['direction_info']['direction_type'],
+                arc_degrees,
+                age_years,
+                result,
+                name=name,
+            )
+            result['direction_id'] = str(direction_id)
+            result['name'] = self._normalize_saved_chart_name(name)
+
+        return result
+
+    def calculate_direction_from_context(
+        self,
+        context: NatalContext,
+        target_date: date,
+        direction_type: str = DEFAULT_DIRECTION_TYPE,
+    ) -> Dict:
+        """Дирекция для произвольного источника натала (сохранённый или inline-ephemeral).
+
+        Ядро метода. ``calculate_direction(user_id, ...)`` — тонкая обёртка, строящая
+        контекст из БД и опционально сохраняющая результат.
+        """
         direction_type = self.normalize_direction_type(direction_type)
         if direction_type not in self.DIRECTION_TYPES:
             raise ValueError(f"Invalid direction_type: {direction_type}. "
                            f"Must be one of: {self.DIRECTION_TYPES}")
 
-        # 1. Загрузить данные пользователя
-        user = self.db.query(User).filter(User.user_id == user_id).first()
-        if not user:
-            raise ValueError(f"User not found: {user_id}")
-
-        birth_jd = float(user.julian_day)
-        birth_date_val = user.birth_date
+        birth_jd = context.birth_jd
+        birth_date_val = context.birth_date
 
         # 2. Рассчитать возраст в годах
         days_elapsed = (target_date - birth_date_val).days
@@ -99,8 +128,8 @@ class DirectionService:
             age_years=age_years
         )
 
-        # 4. Загрузить натальные данные
-        natal_data = self._load_natal_data(user_id)
+        # 4. Натальные данные
+        natal_data = context.natal_data
         directed_houses = self._apply_arc_to_houses(natal_data['houses'], arc_degrees)
 
         # 5. Применить дугу ко всем точкам карты
@@ -124,7 +153,7 @@ class DirectionService:
 
         # 7. Рассчитать аспекты направленное→натал
         aspects = self._calculate_direction_aspects(
-            user_id=user_id,
+            astrologer_id=context.astrologer_id,
             directed_objects=directed_objects,
             natal_data=natal_data
         )
@@ -148,10 +177,10 @@ class DirectionService:
                 'method_description': self._get_method_description(direction_type),
             },
             'birth_data': {
-                'user_id': str(user.user_id),
-                'birth_date': user.birth_date.isoformat(),
-                'birth_time': user.birth_time.isoformat() if user.birth_time else None,
-                'birth_place': user.birth_place,
+                'user_id': (context.birth_data or {}).get('user_id'),
+                'birth_date': birth_date_val.isoformat() if birth_date_val else None,
+                'birth_time': (context.birth_data or {}).get('time'),
+                'birth_place': (context.birth_data or {}).get('place'),
                 'birth_jd': birth_jd,
             },
             'directed_planets': directed_planets,
@@ -164,21 +193,36 @@ class DirectionService:
             'house_cusp_ingresses': house_cusp_ingresses,
         }
 
-        # 9. Сохранить в БД если нужно
-        if save_to_db:
-            direction_id = self._save_direction(
-                user_id,
-                target_date,
-                direction_type,
-                arc_degrees,
-                age_years,
-                result,
-                name=name,
-            )
-            result['direction_id'] = str(direction_id)
-            result['name'] = self._normalize_saved_chart_name(name)
-
         return result
+
+    def _build_context_from_user_id(self, user_id: UUID) -> NatalContext:
+        """Построить NatalContext из сохранённого клиента (DB-путь). Дирекциям нужны
+        натал, astrologer_id (орбисы) и JD/дата рождения (для дуги). Inline-путь —
+        ``NatalContext.from_inline`` + ``calculate_direction_from_context``."""
+        user = self.db.query(User).filter(User.user_id == user_id).first()
+        if not user:
+            raise ValueError(f"User not found: {user_id}")
+        natal_data = self._load_natal_data(user_id)
+        astrologer_id = self.preferences_runtime.get_astrologer_id_for_user(user_id)
+        birth_data = {
+            'user_id': str(user.user_id),
+            'date': user.birth_date.isoformat() if user.birth_date else None,
+            'time': user.birth_time.isoformat() if user.birth_time else None,
+            'place': user.birth_place,
+            'julian_day': float(user.julian_day),
+            'latitude': float(user.lat) if user.lat is not None else None,
+            'longitude': float(user.lon) if user.lon is not None else None,
+        }
+        return NatalContext(
+            natal_data=natal_data,
+            astrologer_id=astrologer_id,
+            user_id=user_id,
+            birth_data=birth_data,
+            birth_jd=float(user.julian_day),
+            birth_date=user.birth_date,
+            birth_lat=birth_data['latitude'],
+            birth_lon=birth_data['longitude'],
+        )
 
     def _calculate_arc(
         self,
@@ -389,8 +433,7 @@ class DirectionService:
             self._base_orbs_cache = {a.aspect_type: float(a.base_orb) for a in aspects}
         return self._base_orbs_cache
 
-    def _calculate_allowed_orb(self, user_id: UUID, body_a: str, body_b: str, aspect_type: str) -> float:
-        astrologer_id = self.preferences_runtime.get_astrologer_id_for_user(user_id)
+    def _calculate_allowed_orb(self, astrologer_id: Optional[UUID], body_a: str, body_b: str, aspect_type: str) -> float:
         if astrologer_id:
             return self.preferences_runtime.resolve_orb_for_astrologer(
                 astrologer_id,
@@ -403,7 +446,7 @@ class DirectionService:
 
     def _calculate_direction_aspects(
         self,
-        user_id: UUID,
+        astrologer_id: Optional[UUID],
         directed_objects: List[Dict],
         natal_data: Dict
     ) -> List[Dict]:
@@ -418,7 +461,7 @@ class DirectionService:
                 if dir_obj['name'] == natal_obj['name']:
                     continue
 
-                aspect = self._check_aspect(user_id, dir_obj, natal_obj, aspect_types)
+                aspect = self._check_aspect(astrologer_id, dir_obj, natal_obj, aspect_types)
                 if aspect:
                     aspects.append(aspect)
 
@@ -526,7 +569,7 @@ class DirectionService:
 
     def _check_aspect(
         self,
-        user_id: UUID,
+        astrologer_id: Optional[UUID],
         dir_obj: Dict,
         natal_obj: Dict,
         aspect_types: List[RefAspectType]
@@ -539,7 +582,7 @@ class DirectionService:
         for aspect_type in aspect_types:
             exact_angle = float(aspect_type.exact_angle)
             max_orb = self._calculate_allowed_orb(
-                user_id,
+                astrologer_id,
                 dir_obj['name'],
                 natal_obj['name'],
                 aspect_type.aspect_type,

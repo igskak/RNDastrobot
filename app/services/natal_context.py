@@ -17,10 +17,22 @@ DB-путь (``TransitService._load_natal_data``), — это база для pa
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date as date_type
 from typing import Dict, Optional
 from uuid import UUID
 
 from app.utils.constants import PROGNOSTIC_EXCLUDED_NATAL_TARGETS
+
+
+def _parse_iso_date(value) -> Optional[date_type]:
+    if value is None or value == '':
+        return None
+    if isinstance(value, date_type):
+        return value
+    try:
+        return date_type.fromisoformat(str(value)[:10])
+    except (ValueError, TypeError):
+        return None
 
 
 def natal_data_from_calc_result(calc_result: Dict, *, apply_exclusions: bool = True) -> Dict:
@@ -93,6 +105,12 @@ class NatalContext:
     house_system: str = 'P'
     user_id: Optional[UUID] = None
     birth_data: Optional[Dict] = None
+    # Поля рождения, нужные производным методикам (прогрессии/дирекции/соляр):
+    # им мало позиций — нужен JD и координаты натала.
+    birth_jd: Optional[float] = None
+    birth_date: Optional[date_type] = None
+    birth_lat: Optional[float] = None
+    birth_lon: Optional[float] = None
 
     @property
     def is_ephemeral(self) -> bool:
@@ -116,4 +134,8 @@ class NatalContext:
             house_system=(birth_data.get('house_system') or 'P'),
             user_id=None,
             birth_data=birth_data,
+            birth_jd=birth_data.get('julian_day'),
+            birth_date=_parse_iso_date(birth_data.get('date')),
+            birth_lat=birth_data.get('latitude'),
+            birth_lon=birth_data.get('longitude'),
         )
