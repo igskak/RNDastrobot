@@ -3347,9 +3347,8 @@
     }
 
     function splitTargetDatetime(value) {
-        const raw = String(value || '');
-        const [date, time = '12:00:00'] = raw.split('T');
-        return [/^\d{4}-\d{2}-\d{2}$/.test(date) ? date : todayIsoDate(), normalizeTime(time)];
+        // Делегируем в общий модуль (Фаза 0: вынесенный тестируемый шов). Поведение идентично.
+        return window.ForecastSourceUtils.splitTargetDatetime(value);
     }
 
     function normalizeLooseText(value) {
@@ -3363,15 +3362,7 @@
     }
 
     function normalizeTimezoneValue(value, placeName = '') {
-        const raw = String(value || '').trim();
-        if (!raw) return '';
-        const normalized = window.Timezones?.list?.find((timezone) => timezone.value === raw)?.value;
-        if (normalized) return normalized;
-        const guessedByValue = window.Timezones?.guess?.(raw);
-        if (guessedByValue) return guessedByValue;
-        const guessedByPlace = window.Timezones?.guess?.(placeName);
-        if (guessedByPlace) return guessedByPlace;
-        return '';
+        return window.ForecastSourceUtils.normalizeTimezoneValue(value, placeName, window.Timezones);
     }
 
     function buildLayerCacheKey(method, date, context = {}) {
@@ -3431,15 +3422,11 @@
     }
 
     function normalizeTime(value) {
-        const raw = String(value || '12:00:00');
-        if (/^\d{2}:\d{2}:\d{2}$/.test(raw)) return raw;
-        if (/^\d{2}:\d{2}$/.test(raw)) return `${raw}:00`;
-        return '12:00:00';
+        return window.ForecastSourceUtils.normalizeTime(value);
     }
 
     function todayIsoDate() {
-        const now = new Date();
-        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        return window.ForecastSourceUtils.todayIsoDate();
     }
 
     function getLocalNowIso(timezone) {
