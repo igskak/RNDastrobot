@@ -5,6 +5,7 @@
     "build:frontend": "node scripts/build-frontend-bundles.mjs"
   },
   "devDependencies": {
-    "esbuild": "^0.25.9"
+    "esbuild": "^0.25.9",
+    "jsdom": "^29.1.1"
   }
 }

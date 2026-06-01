@@ -154,6 +154,75 @@
         return this;
     };
 
+    function _numOrNull(value) {
+        if (value === null || value === undefined || value === '') return null;
+        const n = Number(value);
+        return Number.isFinite(n) ? n : null;
+    }
+
+    /**
+     * Привязать панель к DOM-инпутам (Фаза 0: DOM-слой компонента). `elements` — любой
+     * поднабор: { dateInput, timeInput, timezoneInput, locationInput, latitudeInput,
+     * longitudeInput, yearInput }. Гидратирует состояние из DOM, навешивает слушатели
+     * (input → update + emit 'change'). Фреймворк-free, работает в jsdom.
+     */
+    ChartSourcePanel.prototype.attachDom = function (elements) {
+        this._dom = elements || {};
+        this.hydrateFromDom();
+        const onInput = () => this.update(this._readDom());
+        Object.keys(this._dom).forEach((key) => {
+            const el = this._dom[key];
+            if (el && typeof el.addEventListener === 'function') {
+                el.addEventListener('input', onInput);
+                el.addEventListener('change', onInput);
+            }
+        });
+        return this;
+    };
+
+    /** Собрать patch состояния из текущих значений DOM-инпутов. */
+    ChartSourcePanel.prototype._readDom = function () {
+        const d = this._dom || {};
+        const patch = {};
+        if (d.dateInput || d.timeInput) {
+            const date = d.dateInput ? String(d.dateInput.value || '') : (this._state.datetime.split('T')[0] || '');
+            const time = d.timeInput ? String(d.timeInput.value || '') : (this._state.datetime.split('T')[1] || '');
+            patch.datetime = `${date}T${time || '00:00:00'}`;
+        }
+        if (d.timezoneInput) patch.timezone = String(d.timezoneInput.value || 'UTC');
+        if (d.yearInput) patch.year = _numOrNull(d.yearInput.value);
+        if (d.locationInput || d.latitudeInput || d.longitudeInput) {
+            patch.location = {
+                name: d.locationInput ? String(d.locationInput.value || '') : this._state.location.name,
+                latitude: d.latitudeInput ? _numOrNull(d.latitudeInput.value) : this._state.location.latitude,
+                longitude: d.longitudeInput ? _numOrNull(d.longitudeInput.value) : this._state.location.longitude,
+                sourceId: this._state.location.sourceId,
+            };
+        }
+        return patch;
+    };
+
+    /** Прочитать DOM в состояние без emit (начальная гидратация). */
+    ChartSourcePanel.prototype.hydrateFromDom = function () {
+        Object.assign(this._state, this._readDom());
+        return this;
+    };
+
+    /** Записать состояние обратно в DOM-инпуты. */
+    ChartSourcePanel.prototype.syncToDom = function () {
+        const d = this._dom || {};
+        const s = this._state;
+        const [datePart, timePart] = String(s.datetime || '').split('T');
+        if (d.dateInput) d.dateInput.value = datePart || '';
+        if (d.timeInput) d.timeInput.value = (timePart || '').slice(0, 8);
+        if (d.timezoneInput) d.timezoneInput.value = s.timezone || '';
+        if (d.yearInput) d.yearInput.value = s.year != null ? String(s.year) : '';
+        if (d.locationInput) d.locationInput.value = s.location.name || '';
+        if (d.latitudeInput) d.latitudeInput.value = s.location.latitude != null ? String(s.location.latitude) : '';
+        if (d.longitudeInput) d.longitudeInput.value = s.location.longitude != null ? String(s.location.longitude) : '';
+        return this;
+    };
+
     ChartSourcePanel.prototype.isEphemeral = function () {
         return this._state.mode === 'manual' && !this._state.userId;
     };
