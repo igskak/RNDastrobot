@@ -152,8 +152,13 @@ workspaceState = {
 - **Solar развязан** (был сложнее): `_build_solar_response` принимает поля вместо ORM-`User`; `enrich_solar_payload`/`AspectService` идут по `astrologer_id` (терпят `user_id=None`); натальное Солнце и цели аспектов — из контекста (`NatalContext.natal_aspect_targets`); вход-год через `calculate_solar_return_from_context`.
 - Тесты: 7 inline-сервисных (натал не из БД) + 9 панели + 32 регрессионных прохода — зелёные.
 
-**Backend Phase 1 — ЗАВЕРШЁН.** Остаётся одно:
-**Фаза 0 DOM (риск/H2-развилка):** проводка `ChartSourcePanel` в `forecast-new.js` (3543 стр.) с characterization-тестами на живом файле — отдельный чекпоинт.
+**Backend Phase 1 — ЗАВЕРШЁН.**
+
+**Фаза 0 — в работе:**
+- Вынесены чистые хелперы панели (`forecast-source-utils.js`) + 12 characterization-тестов; `forecast-new.js` делегирует (поведение идентично) — первый тестируемый шов.
+- `ChartSourcePanel` получил DOM-слой (`attachDom`/`hydrateFromDom`/`syncToDom`) — фреймворк-free, биндит date/time/timezone/location/year. Добавлен `jsdom` (dev) — 6 jsdom-тестов. Переиспользуемый компонент панели готов и протестирован.
+
+**Остаётся (риск/H2-развилка):** проводка `ChartSourcePanel` в живой `forecast-new.js` (натал- и таргет-панели). `forecast-new.js` — авто-исполняемый IIFE, требующий полного DOM + глобалов, поэтому интеграцию юнит-тестами не покрыть — **верификация через browser-preview на поднятом стеке** (FastAPI + фронт + авторизация + карта в сессии). Делать осознанно, отдельным заходом.
 
 ## 6. Не в объёме (NOT in scope)
 
