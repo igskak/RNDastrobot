@@ -114,10 +114,7 @@
             if (state.view === 'single') {
                 const viewModel = window.PrognosticLayerNormalizer.buildViewModel(natalData, {}, { activeMethods: [] });
                 renderViewModel(viewModel, { singleChart: true });
-                const ephemeralNote = baseSnapshot.mode === 'manual'
-                    ? ' · временная карта (без внутринатальных аспектов — follow-up бэка)'
-                    : '';
-                setStatus(`Готово: натал${ephemeralNote}`);
+                setStatus(baseSnapshot.mode === 'manual' ? 'Готово: натал · временная карта' : 'Готово: натал');
                 return;
             }
 

@@ -181,6 +181,46 @@ class NatalChartService:
         # 8.1. Добавляем связи дом-планета
         planets, houses = self._enrich_house_planet_relations(planets, houses)
 
+        # 8.2. Внутринатальные аспекты для in-memory пути (фикс: inline/ephemeral карты
+        # приходили с aspects=[] — аспекты считались только на DB-пути). Зеркалим
+        # AspectService._get_all_objects: планеты(+speed) + спецточки + ASC/MC/IC/DSC.
+        # Тривиальные фильтруем — как при сохранении в БД (_save_aspects) → паритет
+        # с GET /natal/{user_id}. Нужна db_session (ref-данные типов аспектов).
+        aspects = []
+        if db_session is not None:
+            aspect_objects = [
+                {
+                    'name': p['name'],
+                    'longitude': float(p['longitude']),
+                    'type': 'planet',
+                    'speed': float(p.get('speed') or 0.0),
+                }
+                for p in planets
+                if p.get('name') and p.get('longitude') is not None
+            ]
+            for point_name, point_data in (special_points or {}).items():
+                if point_data and point_data.get('longitude') is not None:
+                    aspect_objects.append({
+                        'name': point_name,
+                        'longitude': float(point_data['longitude']),
+                        'type': 'special_point',
+                        'speed': 0.0,
+                    })
+            for angle_name in ('ASC', 'MC', 'IC', 'DSC'):
+                angle_data = (angles or {}).get(angle_name)
+                if angle_data and angle_data.get('longitude') is not None:
+                    aspect_objects.append({
+                        'name': angle_name,
+                        'longitude': float(angle_data['longitude']),
+                        'type': 'angle',
+                        'speed': 0.0,
+                    })
+            aspects = AspectService(db_session).calculate_aspects_for_objects(
+                aspect_objects,
+                filter_trivial=True,
+                astrologer_id=astrologer_id,
+            )
+
         # 9. Формируем результат
         result = {
             'user_id': None,  # Будет заполнено если save_to_db=True
@@ -201,6 +241,7 @@ class NatalChartService:
             'houses': houses,
             'angles': angles,
             'special_points': special_points,
+            'aspects': aspects,
             'configurations': configurations,
         }
 
