@@ -1,3 +1,44 @@
+/* ── Forecast view tab strip (Колесо | Таблиця | Таймлайн) ────────────────── */
+.forecast-view-tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    background: var(--bg-secondary, rgba(0,0,0,0.06));
+    border-radius: 9px;
+    padding: 3px;
+}
+.forecast-view-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 13px;
+    border-radius: 7px;
+    font-size: 0.83rem;
+    color: var(--text-secondary, #6b7280);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color .15s, background .15s;
+    line-height: 1;
+}
+.forecast-view-tab:hover {
+    color: var(--text-primary, #1f2937);
+    background: var(--bg-primary, rgba(0,0,0,0.04));
+}
+.forecast-view-tab[aria-current="page"] {
+    background: var(--bg-primary, #fff);
+    color: var(--text-primary, #1f2937);
+    font-weight: 500;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.13);
+}
+.forecast-view-tab-icon {
+    opacity: 0.65;
+    font-style: normal;
+    font-size: 0.9em;
+}
+.forecast-view-tab[aria-current="page"] .forecast-view-tab-icon {
+    opacity: 1;
+}
+
 /* Forecast navigation dropdown (caret next to the Forecast header button) */
 .forecast-nav-menu {
     position: relative;
