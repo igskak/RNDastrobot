@@ -143,7 +143,12 @@ workspaceState = {
 - **W5 ✅**: `chart-wheel-adapter.js` (ChartWheelUnified) экспонирует API ChartWheel поверх единого движка; chart.js переключён (с fallback). Форматы aspect-key и события `chart:*` идентичны → интерактив таблиц сохранён. Верифицировано в браузере: колесо, углы, тултипы, подсветки. 10 jsdom-тестов.
 - **W6 (осталось)**: retire `chart-wheel.js` — после визуальной проверки человеком chart.html на едином движке.
 
-**Фазы 3–4 — Workspace MVP. ✅ (скелет, коммит `7355b44`)** Страница `/workspace`: переключатель «одно колесо / мульти», базовая карта (из базы / ручной ephemeral ввод через `ChartSourcePanel`), кольцо сравнения по методике из реестра, рендер единым движком (одиночный = D6-вид с маркерами). Cold-start экран (A9), year-вариант для соляра (Design 4.4), ephemeral-подсказка (D3), 422 в статус. E2E в браузере: 4 сценария. Не в MVP (follow-ups): синастрия как методика, 3+ кольца, вкладки tables/timeline/report, кнопка «Сохранить» (Фаза 5), quick-open вместо select, persistence состояния.
+**Фазы 3–4 — Workspace MVP. ✅ (скелет, коммит `7355b44`)** Страница `/workspace`: переключатель «одно колесо / мульти», базовая карта (из базы / ручной ephemeral ввод через `ChartSourcePanel`), кольцо сравнения по методике из реестра, рендер единым движком (одиночный = D6-вид с маркерами). Cold-start экран (A9), year-вариант для соляра (Design 4.4), ephemeral-подсказка (D3), 422 в статус. E2E в браузере: 4 сценария.
+**Дальше доделано (коммиты `847de17`, `9d311d2`):**
+- **3+ кольца** ✅ — чекбоксы методик, параллельные слои, по-слойная изоляция ошибок (Design 2.3-lite). Проверено: натал+транзит+прогрессия+дирекция (4 кольца).
+- **Фаза 5 «Сохранить» (D3)** ✅ — ручная карта → имя → `save_to_db=true` (auth+квота), автовыбор нового клиента.
+- **Синастрия как методика** ✅ — бэк: `build_synastry_payload_from_charts` (ядро на dict-картах) + `POST /synastry/calculate` (двойной union: каждая сторона user_id XOR natal, «синастрия на лету» без ClientRelationship); фронт: партнёрский блок (из базы / вручную), кольцо `synastry_partner`. Проверено: saved+saved/saved+inline/inline+inline.
+Остаточные follow-ups: вкладки tables/timeline/report в workspace, quick-open вместо select, persistence состояния, перевод forecast-new на реестр.
 
 **Фаза 3 — `WorkspaceShell` (single-wheel). (детализация — см. MVP выше)** Новый `workspace.html` + entry. Вид «одно колесо»: `ChartSourcePanel` + методики single (natal/event/solar-snapshot/progressed-snapshot) → `ChartWheel`. Вкладки tables/report подключить как режимы (переиспользовать `natal-full`, `forecast-tables`).
 
