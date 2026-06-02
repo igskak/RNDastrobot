@@ -26,6 +26,7 @@ const htmlPages = [
   'calendar.html',
   'consultation-call.html',
   'consultation-join.html',
+  'workspace.html',
 ];
 
 const jsEntryPoints = {
@@ -44,6 +45,7 @@ const jsEntryPoints = {
   calendar: path.join(frontendRoot, 'entries', 'calendar.entry.js'),
   'consultation-call': path.join(frontendRoot, 'entries', 'consultation-call.entry.js'),
   'consultation-join': path.join(frontendRoot, 'entries', 'consultation-join.entry.js'),
+  workspace: path.join(frontendRoot, 'entries', 'workspace.entry.js'),
 };
 
 const cssEntryPoints = {
@@ -62,6 +64,7 @@ const cssEntryPoints = {
   calendar: path.join(frontendRoot, 'entries-css', 'calendar.entry.css'),
   'consultation-call': path.join(frontendRoot, 'entries-css', 'consultation-call.entry.css'),
   'consultation-join': path.join(frontendRoot, 'entries-css', 'consultation-join.entry.css'),
+  workspace: path.join(frontendRoot, 'entries-css', 'workspace.entry.css'),
 };
 
 function pageEntryName(page) {

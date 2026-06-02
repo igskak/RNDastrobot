@@ -119,6 +119,8 @@ async def static_cache_headers(request: Request, call_next):
         "/calendar.html",
         "/consultation-call.html",
         "/consultation-join.html",
+        "/workspace",
+        "/workspace.html",
     }
 
     if path in frontend_document_paths or path.startswith("/client/"):
@@ -232,6 +234,16 @@ async def account_settings_page():
     if os.path.exists(account_settings_path):
         return FileResponse(account_settings_path)
     raise HTTPException(status_code=404, detail="Account settings page not found")
+
+
+@app.get("/workspace")
+@app.get("/workspace.html")
+async def workspace_page():
+    """Единый workspace (одно колесо / мульти-колесо)."""
+    workspace_path = os.path.join(FRONTEND_PATH, "workspace.html")
+    if os.path.exists(workspace_path):
+        return FileResponse(workspace_path)
+    raise HTTPException(status_code=404, detail="Workspace page not found")
 
 
 @app.get("/chart.html")

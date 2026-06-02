@@ -1,0 +1,42 @@
+/* Workspace MVP (Фаза 3 плана) — минимальный каркас */
+.workspace-page { margin: 0; background: #f6f4f1; font-family: inherit; }
+.workspace-header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 12px 20px; background: #fff; border-bottom: 1px solid #e5e1da;
+}
+.workspace-header h1 { font-size: 18px; margin: 0; flex: 0 0 auto; }
+.workspace-back { text-decoration: none; font-size: 18px; color: #374151; }
+.workspace-view-switch { margin-left: auto; display: flex; gap: 14px; font-size: 14px; }
+.workspace-view-switch label { cursor: pointer; }
+
+.workspace-main { display: flex; gap: 16px; padding: 16px 20px; align-items: flex-start; }
+.workspace-side { flex: 0 0 320px; display: flex; flex-direction: column; gap: 12px; }
+.ws-card { background: #fff; border: 1px solid #e5e1da; border-radius: 12px; padding: 14px 16px; }
+.ws-card h2 { font-size: 14px; margin: 0 0 10px; color: #374151; }
+.ws-source-mode { display: flex; gap: 12px; font-size: 13px; margin-bottom: 10px; }
+.ws-field { display: block; font-size: 12px; color: #6b7280; margin-bottom: 8px; position: relative; }
+.ws-field input, .ws-field select {
+    display: block; width: 100%; box-sizing: border-box; margin-top: 3px;
+    padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 13px;
+}
+.ws-row { display: flex; gap: 8px; }
+.ws-row .ws-field { flex: 1; }
+.ws-hint { font-size: 11px; color: #9ca3af; margin: 4px 0 0; }
+.ws-suggestions { position: absolute; z-index: 30; left: 0; right: 0; background: #fff;
+    border: 1px solid #d1d5db; border-radius: 8px; max-height: 180px; overflow: auto; }
+.ws-suggestions:empty { display: none; }
+.ws-suggestions div { padding: 6px 8px; cursor: pointer; font-size: 13px; }
+.ws-suggestions div:hover { background: #f3f4f6; }
+.ws-build-btn {
+    padding: 10px 14px; border: none; border-radius: 10px; cursor: pointer;
+    background: #111827; color: #fff; font-size: 14px;
+}
+.ws-build-btn:disabled { opacity: .6; cursor: wait; }
+.ws-status { font-size: 13px; color: #374151; min-height: 18px; margin: 0; }
+.ws-status--error { color: #dc2626; }
+
+.workspace-wheel-shell { flex: 1; background: #fff; border: 1px solid #e5e1da; border-radius: 12px;
+    min-height: 640px; display: flex; align-items: center; justify-content: center; position: relative; }
+.workspace-wheel-shell svg { width: min(86vh, 100%); height: auto; display: block; }
+.ws-empty { color: #9ca3af; font-size: 14px; max-width: 360px; text-align: center; padding: 24px; }
+.hidden { display: none !important; }
