@@ -355,7 +355,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateHeader(chartData);
     // Инициализируем круговую карту
     const svgElement = document.getElementById('chartWheel');
-    chartWheel = new ChartWheel(svgElement);
+    // W5 (Фаза W): одиночная карта рендерится единым движком через адаптер
+    // совместимости; ChartWheel остаётся fallback'ом до W6 (retire).
+    chartWheel = window.ChartWheelUnified
+        ? new window.ChartWheelUnified(svgElement)
+        : new ChartWheel(svgElement);
     chartWheel.setOrientationMode(currentSettings.orientation, { redraw: false });
     chartWheel.setPointScales({
         planets: currentSettings.planetScale,
@@ -540,13 +544,13 @@ function initPlanetRowClick() {
     // Clicking the chart canvas deselects
     document.getElementById('view-chart')?.addEventListener('click', (e) => {
         if (!activePlanetName) return;
-        if (e.target.closest('.planet-group')) return; // let wheel handle its own clicks
+        if (e.target.closest('.planet-group, .prognostic-body')) return; // let wheel handle its own clicks
         clearActivePlanetSelection();
     });
 
     document.addEventListener('click', (e) => {
         if (!activePlanetName) return;
-        if (e.target.closest('tr[data-planet]') || e.target.closest('.planet-group')) return;
+        if (e.target.closest('tr[data-planet]') || e.target.closest('.planet-group, .prognostic-body')) return;
         clearActivePlanetSelection();
     });
 }
@@ -1808,7 +1812,7 @@ function highlightConfigurationCard(card) {
     });
 
     planetNames.forEach((planetName) => {
-        const group = chartWheel.svg.querySelector(`.planet-group[data-planet="${escapeAttribute(planetName)}"]`);
+        const group = chartWheel.svg.querySelector(`.planet-group[data-planet="${escapeAttribute(planetName)}"], .prognostic-body[data-planet="${escapeAttribute(planetName)}"]`);
         if (group) {
             group.classList.add('config-highlight-planet');
         }

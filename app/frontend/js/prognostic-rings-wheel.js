@@ -1204,10 +1204,17 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
          */
         drawAngleMarkers(rings) {
             if (!this.showAngleMarkers || !this.layers.angles) return;
-            const ring = (rings || []).find((r) => r?.angles && (r.angles.ASC || r.angles.MC));
+            // angles на слое напрямую, либо fallback в raw (так слои строит
+            // PrognosticLayerNormalizer для существующих страниц)
+            const resolveAngles = (r) => r?.angles || r?.raw?.angles || null;
+            const ring = (rings || []).find((r) => {
+                const a = resolveAngles(r);
+                return a && (a.ASC || a.MC);
+            });
             if (!ring) return;
+            const angles = resolveAngles(ring);
             ['ASC', 'MC', 'DSC', 'IC'].forEach((label) => {
-                const data = ring.angles[label];
+                const data = angles[label];
                 const longitude = data && data.longitude;
                 if (longitude === null || longitude === undefined) return;
                 this.drawAngleMarker(this.longToAngle(Number(longitude)), label, ring);

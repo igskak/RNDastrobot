@@ -216,6 +216,8 @@
                 aspectBodies: collectAspectBodies(natalData),
                 houses: cloneArray(natalData?.houses),
                 aspects: cloneArray(natalData?.aspects),
+                // W3 (Фаза W): углы нужны единому движку для маркеров ASC/MC/DSC/IC
+                angles: natalData?.angles || null,
                 raw: natalData,
                 ringIndex: 0,
                 style: { color: '#111111' },

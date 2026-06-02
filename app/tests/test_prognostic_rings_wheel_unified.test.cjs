@@ -113,6 +113,66 @@ test('W4: filter that matches nothing falls back to all rings (UI desync guard)'
     assert.equal(wheel.rings.length, 2);
 });
 
+test('W3: buildViewModel adapts flat natal chartData to a renderable single-ring viewModel', async () => {
+    const Wheel = await loadEngine();
+    const normalizer = require('../frontend/js/prognostic-layer-normalizer.js');
+    const chartData = {
+        planets: [],
+        houses: [],
+        aspects: [],
+        angles: NATAL_ANGLES,
+        birth_data: { date: '1990-09-11' },
+    };
+    const vm = normalizer.buildViewModel(chartData, {}, { activeMethods: [] });
+    assert.equal(vm.natalLayer.method, 'natal');
+    assert.deepEqual(vm.activePrognosticLayers, []);
+    assert.equal(vm.natalLayer.angles, NATAL_ANGLES);   // W3: углы прокинуты
+
+    const svg = makeSvg();
+    const wheel = new Wheel(svg);
+    wheel.setOptions({ showAngleMarkers: true });
+    wheel.render(vm);
+    assert.equal(wheel.rings.length, 1);
+    assert.equal(svg.querySelectorAll('.angle-marker-label').length, 4);
+});
+
+test('W3: engine falls back to ring.raw.angles when layer has no direct angles', async () => {
+    const Wheel = await loadEngine();
+    const svg = makeSvg();
+    const wheel = new Wheel(svg);
+    wheel.setOptions({ showAngleMarkers: true });
+    wheel.render({
+        natalLayer: natalLayer({ angles: undefined, raw: { angles: NATAL_ANGLES } }),
+        activePrognosticLayers: [],
+    });
+    assert.equal(svg.querySelectorAll('.angle-marker-label').length, 4);
+});
+
+test('W5: ChartWheelUnified adapter drives the unified engine with ChartWheel API', async () => {
+    const Wheel = await loadEngine();
+    // адаптер ожидает window.PrognosticRingsWheel + window.PrognosticLayerNormalizer
+    dom.window.PrognosticLayerNormalizer = require('../frontend/js/prognostic-layer-normalizer.js');
+    await import('../frontend/js/chart-wheel-adapter.js');
+    const Adapter = dom.window.ChartWheelUnified;
+    assert.ok(Adapter, 'adapter should export window.ChartWheelUnified');
+
+    const svg = makeSvg();
+    const wheel = new Adapter(svg);
+    wheel.setOrientationMode('aries', { redraw: false });
+    wheel.setPointScales({ planets: 1, points: 1 }, { redraw: false });
+    wheel.setPlanetAnnotationOptions({ showStationary: true, showDegree: false }, { redraw: false });
+    wheel.setHouseLabelOptions({ style: 'roman', outside: false }, { redraw: false });
+    wheel.setAngleMarkerOptions({ ascDscBold: true, mcIcBold: true }, { redraw: false });
+
+    wheel.draw({ planets: [], houses: [], aspects: [], angles: NATAL_ANGLES });
+    assert.equal(wheel.engine.rings.length, 1, 'single chart = 1 ring');
+    assert.equal(svg.querySelectorAll('.angle-marker-label').length, 4, 'angle markers on for parity');
+
+    wheel.setAspectFilter('major');                       // redraw из кэша как у ChartWheel
+    assert.equal(wheel.engine.aspectScope, 'major');
+    assert.equal(wheel.engine.rings.length, 1);
+});
+
 test('W4: legacy minimumRingCount behavior preserved when no filter is applied', async () => {
     const Wheel = await loadEngine();
     const svg = makeSvg();
