@@ -769,6 +769,13 @@
     transform: scale(0.94);
 }
 
+/* D6: переключатель вида колеса (одно / мульти) */
+.forecast-new-zoom-controls .forecast-new-view-btn.is-active {
+    background: rgba(30, 58, 95, 0.14);
+    color: var(--accent);
+    box-shadow: inset 0 0 0 1px rgba(30, 58, 95, 0.28);
+}
+
 .forecast-new-settings-btn {
     position: relative;
 }

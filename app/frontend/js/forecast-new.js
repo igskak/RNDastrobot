@@ -99,6 +99,9 @@
         activeLayers: ['transit'],
         selectedRightLayer: 'transit',
         directionType: DEFAULT_DIRECTION_TYPE,
+        // D6: вид колеса — 'multi' (натал + кольца, как сейчас) | 'single' (только
+        // натал в виде одиночной карты: внешний слот + маркеры углов).
+        wheelView: 'multi',
         stepMode: 'hour',
         customStep: { amount: 1, unit: 'day' },
         isCustomStepOpen: false,
@@ -337,6 +340,7 @@
             'natalTimezoneInput', 'natalLocationInput', 'natalLocationSuggestions',
             'natalLatitudeInput', 'natalLongitudeInput',
             'forecastNewMatrixEditor', 'forecastNewSettingsMatrixEditor',
+            'forecastNewViewSingle', 'forecastNewViewMulti',
             'forecastNewZoomIn', 'forecastNewZoomOut',
             'forecastNewZoomReset', 'forecastNewSettingsToggle', 'forecastNewSettingsPanel',
             'orientationSelect', 'houseSystemSelect', 'iconScaleRange', 'iconScaleValue',
@@ -739,6 +743,9 @@
         });
         refs.aspectTypeToggles?.addEventListener('change', () => scheduleApplySettings());
 
+        refs.forecastNewViewSingle?.addEventListener('click', () => setWheelView('single'));
+        refs.forecastNewViewMulti?.addEventListener('click', () => setWheelView('multi'));
+        syncWheelViewButtons();
         refs.forecastNewZoomIn?.addEventListener('click', () => setViewport({ zoom: state.viewport.zoom * 1.18 }));
         refs.forecastNewZoomOut?.addEventListener('click', () => setViewport({ zoom: state.viewport.zoom / 1.18 }));
         refs.forecastNewZoomReset?.addEventListener('click', () => setViewport({ zoom: 1, panX: 0, panY: 0 }));
@@ -2410,10 +2417,28 @@
             showAspectText: state.pageSettings.showAspectText === true,
             angleAscDscBold: state.pageSettings.angleAscDscBold,
             angleMcIcBold: state.pageSettings.angleMcIcBold,
+            // D6: «Одно колесо» = только натал в виде одиночной карты (внешний слот
+            // 2-слотовой сетки + маркеры углов), весь остальной UI остаётся.
+            visibleMethods: state.wheelView === 'single' ? ['natal'] : null,
+            showAngleMarkers: state.wheelView === 'single',
             visualPreferences: window.AstroPreferences?.getAccountVisualPreferences?.() || window.accountPreferencesCache?.visual || null,
         });
         state.wheel.render(viewModel);
         applyHoveredAspectFocus();
+    }
+
+    function setWheelView(view) {
+        const next = view === 'single' ? 'single' : 'multi';
+        if (state.wheelView === next) return;
+        state.wheelView = next;
+        syncWheelViewButtons();
+        renderWheel();
+        persistState();
+    }
+
+    function syncWheelViewButtons() {
+        refs.forecastNewViewSingle?.classList.toggle('is-active', state.wheelView === 'single');
+        refs.forecastNewViewMulti?.classList.toggle('is-active', state.wheelView !== 'single');
     }
 
     function renderRightLayerTabs() {
@@ -3009,6 +3034,7 @@
         state.directionType = normalizeDirectionType(restored.directionType || state.directionType);
         state.stepMode = restored.stepMode || state.stepMode;
         state.customStep = normalizeCustomStep(restored.customStep || state.customStep);
+        state.wheelView = restored.wheelView === 'single' ? 'single' : 'multi';
         state.leftTab = restored.leftTab || state.leftTab;
         state.rightTab = restored.rightTab || state.rightTab;
         const hasSplitMatrixState = Number(restored.matrixSchemaVersion) >= 2;
@@ -3295,6 +3321,7 @@
                 directionType: state.directionType,
                 stepMode: state.stepMode,
                 customStep: state.customStep,
+                wheelView: state.wheelView,
                 leftTab: state.leftTab,
                 rightTab: state.rightTab,
                 matrixSchemaVersion: window.ForecastNewStateStorage?.MATRIX_SCHEMA_VERSION || 2,

@@ -22,6 +22,16 @@ function makeNatalChart() {
     };
 }
 
+test('wheel view persists and round-trips; invalid values fall back to multi', () => {
+    const chart = makeNatalChart();
+    const single = buildPersistedState({ natalData: chart, state: { wheelView: 'single' } });
+    assert.equal(single.wheelView, 'single');
+    const restored = parsePersistedState(JSON.stringify(single), chart);
+    assert.equal(restored.wheelView, 'single');
+    const bogus = buildPersistedState({ natalData: chart, state: { wheelView: 'tri-wheel' } });
+    assert.equal(bogus.wheelView, 'multi');
+});
+
 test('forecast new storage preserves a valid custom time step', () => {
     const natalData = makeNatalChart();
     const snapshot = buildPersistedState({

@@ -105,6 +105,7 @@
             directionType: normalizeDirectionType(source.directionType),
             stepMode: pickEnum(source.stepMode, VALID_STEP_MODES, 'hour'),
             customStep: sanitizeCustomStep(source.customStep),
+            wheelView: pickEnum(source.wheelView, ['single', 'multi'], 'multi'),
             leftTab: pickEnum(source.leftTab, VALID_TABS, 'Planets'),
             rightTab: pickEnum(source.rightTab, VALID_TABS, 'Planets'),
             matrixSchemaVersion: Number(source.matrixSchemaVersion) === MATRIX_SCHEMA_VERSION ? MATRIX_SCHEMA_VERSION : 1,
