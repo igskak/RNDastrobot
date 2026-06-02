@@ -262,22 +262,27 @@
     }
 
     function bindPlaceAutocomplete(input, suggestions, panel) {
-        if (!window.PlaceAutocomplete?.attach || !input) return;
-        window.PlaceAutocomplete.attach(input, suggestions, {
+        if (!window.PlaceAutocomplete?.attach || !input || !suggestions) return;
+        // attach(config) — один объект (см. place-autocomplete.js / form.js)
+        window.PlaceAutocomplete.attach({
+            input,
+            suggestions,
             onSelect(place) {
+                const latitude = place.lat ?? place.latitude ?? null;
+                const longitude = place.lon ?? place.longitude ?? null;
+                const timezone = place.timezone
+                    || window.Timezones?.guess?.(place.displayName || place.shortName || input.value)
+                    || null;
                 panel.update({
                     location: {
-                        name: place.name || input.value,
-                        latitude: place.latitude ?? place.lat ?? null,
-                        longitude: place.longitude ?? place.lon ?? null,
-                        sourceId: place.source_id || place.sourceId || null,
+                        name: place.shortName || place.displayName || input.value,
+                        latitude,
+                        longitude,
+                        sourceId: place.sourceId || place.source_id || null,
                     },
+                    ...(timezone ? { timezone } : {}),
                 });
                 panel.syncToDom();
-                if (place.timezone) {
-                    panel.update({ timezone: place.timezone });
-                    panel.syncToDom();
-                }
             },
         });
     }
