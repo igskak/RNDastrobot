@@ -6,6 +6,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from loguru import logger
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy.orm import Session
 
 from app.api.routes.natal import build_natal_chart_response
@@ -13,6 +14,7 @@ from app.auth.dependencies import AuthContext, create_audit_event, ensure_client
 from app.database.connection import get_db
 from app.database.models import ClientRelationship, User
 from app.models.schemas import (
+    BirthDataInput,
     HouseOverlaySet,
     RelatedPersonCreateRequest,
     RelatedPersonLinkRequest,
@@ -289,6 +291,86 @@ def delete_related_person(
     except Exception as exc:
         logger.exception(f"Failed to delete related person link: {exc}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc))
+
+
+class SynastrySourceInput(BaseModel):
+    """Источник одной карты синастрии: ровно один из user_id / natal (inline)."""
+    user_id: UUID | None = Field(None, description="Сохранённый клиент. Взаимоисключающе с `natal`.")
+    natal: BirthDataInput | None = Field(None, description="Inline данные рождения (ephemeral). Взаимоисключающе с `user_id`.")
+
+    @model_validator(mode='after')
+    def exactly_one_source(self):
+        if bool(self.user_id) == bool(self.natal):
+            raise ValueError("Укажите ровно один источник карты: `user_id` или `natal`")
+        return self
+
+
+class SynastryCalculateRequest(BaseModel):
+    """Синастрия для произвольных источников: сохранённые клиенты и/или inline-карты."""
+    primary: SynastrySourceInput
+    partner: SynastrySourceInput
+
+
+@router.post(
+    "/synastry/calculate",
+    status_code=status.HTTP_200_OK,
+    summary="Synastry for arbitrary chart sources (saved client or inline natal)",
+)
+def calculate_synastry(
+    payload_in: SynastryCalculateRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+):
+    """Синастрия workspace-уровня: каждая сторона — сохранённый клиент ИЛИ inline-натал
+    (ephemeral, без записи в БД). Ответ: primary_chart, partner_chart, inter_aspects,
+    house_overlays (без resolved_preferences — они привязаны к сохранённым chart_id)."""
+    assert_feature_enabled(auth.astrologer, FEATURE_CLIENTS)
+
+    def resolve_side(side: str, source: SynastrySourceInput):
+        if source.user_id:
+            ensure_client_access(db, request, auth, source.user_id, action=f"client.synastry.calculate_{side}")
+            chart = natal_service.get_natal_chart_from_db(source.user_id, db)
+            if chart is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Natal chart not found for {side} client",
+                )
+            return chart
+        try:
+            return natal_service.calculate_natal_chart(
+                birth_date=source.natal.date,
+                birth_time=source.natal.time,
+                timezone=source.natal.timezone,
+                astrologer_id=auth.astrologer.id,
+                place=source.natal.place,
+                latitude=source.natal.latitude,
+                longitude=source.natal.longitude,
+                house_system=source.natal.house_system,
+                save_to_db=False,
+                db_session=db,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
+
+    primary_chart = resolve_side('primary', payload_in.primary)
+    partner_chart = resolve_side('partner', payload_in.partner)
+
+    try:
+        service = SynastryService(db, ephe_path=EPHE_PATH)
+        return service.build_synastry_payload_from_charts(
+            astrologer=auth.astrologer,
+            primary_chart=primary_chart,
+            partner_chart=partner_chart,
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception(f"Error calculating synastry: {exc}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка расчёта синастрии: {exc}",
+        )
 
 
 @router.get(

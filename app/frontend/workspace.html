@@ -55,6 +55,31 @@
                     <label><input type="checkbox" data-ws-method="progression"> Прогрессии</label>
                     <label><input type="checkbox" data-ws-method="direction"> Дирекции</label>
                     <label><input type="checkbox" data-ws-method="solar_return"> Соляр</label>
+                    <label><input type="checkbox" data-ws-method="synastry"> Синастрия</label>
+                </div>
+                <div class="hidden ws-partner-block" id="wsPartnerBlock">
+                    <h3>Партнёр</h3>
+                    <div class="ws-source-mode" role="radiogroup" aria-label="Источник партнёра">
+                        <label><input type="radio" name="wsPartnerMode" value="saved" checked> Из базы</label>
+                        <label><input type="radio" name="wsPartnerMode" value="manual"> Вручную</label>
+                    </div>
+                    <div id="wsPartnerSavedBlock">
+                        <label class="ws-field">Партнёр
+                            <select id="wsPartnerSelect"><option value="">— выберите клиента —</option></select>
+                        </label>
+                    </div>
+                    <div class="hidden" id="wsPartnerManualBlock">
+                        <label class="ws-field">Дата <input type="date" id="wsPartnerDate"></label>
+                        <label class="ws-field">Время <input type="time" id="wsPartnerTime" step="1" value="12:00:00"></label>
+                        <label class="ws-field">Таймзона <select id="wsPartnerTimezone"></select></label>
+                        <label class="ws-field">Место <input type="text" id="wsPartnerPlace" autocomplete="off" placeholder="Город">
+                            <div id="wsPartnerPlaceSuggestions" class="ws-suggestions"></div>
+                        </label>
+                        <div class="ws-row">
+                            <label class="ws-field">Широта <input type="text" id="wsPartnerLat" inputmode="decimal"></label>
+                            <label class="ws-field">Долгота <input type="text" id="wsPartnerLon" inputmode="decimal"></label>
+                        </div>
+                    </div>
                 </div>
                 <label class="ws-field hidden" id="wsDirectionTypeField">Тип дирекции
                     <select id="wsDirectionType">

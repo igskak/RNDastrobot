@@ -17,7 +17,7 @@ const TARGET = {
 };
 
 test('registry lists the supported methodologies', () => {
-    assert.deepEqual(listMethods().sort(), ['direction', 'progression', 'solar_return', 'transit']);
+    assert.deepEqual(listMethods().sort(), ['direction', 'progression', 'solar_return', 'synastry', 'transit']);
 });
 
 test('transit request: saved source -> user_id + transit moment fields', () => {
@@ -64,6 +64,15 @@ test('solar_return uses the year input variant', () => {
     const req = buildLayerRequest('solar_return', SAVED, { year: 2026, timezone: 'Europe/Kiev', location: { latitude: 50.45, longitude: 30.52, name: 'Kyiv' } });
     assert.equal(req.body.year, 2026);
     assert.equal(req.body.save_to_db, false);
+});
+
+test('synastry builds a dual-source body ({primary, partner} unions)', () => {
+    const req = buildLayerRequest('synastry', SAVED, MANUAL);
+    assert.equal(req.endpoint, '/synastry/calculate');
+    assert.equal(req.ringMethod, 'synastry_partner');
+    assert.deepEqual(req.body.primary, { user_id: 'user-1' });
+    assert.equal('user_id' in req.body.partner, false);
+    assert.equal(req.body.partner.natal.date, '1990-09-11');
 });
 
 test('unknown methodology throws', () => {

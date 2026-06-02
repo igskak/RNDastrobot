@@ -22,6 +22,31 @@ class SynastryService:
         self.preferences_service = PreferencesService(db_session)
         self.swisseph_engine = self.natal_service.swisseph_engine
 
+    def build_synastry_payload_from_charts(
+        self,
+        *,
+        astrologer,
+        primary_chart: Dict,
+        partner_chart: Dict,
+    ) -> Dict:
+        """Ядро синастрии для произвольных источников карт (сохранённых или inline-ephemeral).
+
+        Работает на dict-картах (форма get_natal_chart_from_db / calculate_natal_chart):
+        интер-аспекты (орбисы synastry-профиля по astrologer_id) + house overlays.
+        Per-chart resolved_preferences НЕ резолвит (нужны chart_id сохранённых карт) —
+        это делает обёртка build_synastry_payload.
+        """
+        return {
+            'primary_chart': primary_chart,
+            'partner_chart': partner_chart,
+            'inter_aspects': self._build_inter_aspects(
+                primary_chart,
+                partner_chart,
+                astrologer_id=astrologer.id,
+            ),
+            'house_overlays': self._build_house_overlays(primary_chart, partner_chart),
+        }
+
     def build_synastry_payload(
         self,
         *,
@@ -38,14 +63,11 @@ class SynastryService:
             raise ValueError("Partner natal chart not found")
 
         return {
-            'primary_chart': primary_chart,
-            'partner_chart': partner_chart,
-            'inter_aspects': self._build_inter_aspects(
-                primary_chart,
-                partner_chart,
-                astrologer_id=astrologer.id,
+            **self.build_synastry_payload_from_charts(
+                astrologer=astrologer,
+                primary_chart=primary_chart,
+                partner_chart=partner_chart,
             ),
-            'house_overlays': self._build_house_overlays(primary_chart, partner_chart),
             'resolved_preferences': {
                 'primary_natal': self.preferences_service.resolve_preferences(
                     astrologer,

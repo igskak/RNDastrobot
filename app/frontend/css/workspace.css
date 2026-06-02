@@ -48,3 +48,5 @@
 .workspace-wheel-shell svg { width: min(86vh, 100%); height: auto; display: block; }
 .ws-empty { color: #9ca3af; font-size: 14px; max-width: 360px; text-align: center; padding: 24px; }
 .hidden { display: none !important; }
+.ws-partner-block { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #e5e1da; }
+.ws-partner-block h3 { font-size: 13px; margin: 0 0 8px; color: #374151; }

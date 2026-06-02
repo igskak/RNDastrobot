@@ -15,10 +15,12 @@
     const state = {
         view: 'single',                 // single | multi
         baseMode: 'saved',              // saved | manual
+        partnerMode: 'saved',           // источник партнёра для синастрии
         methods: ['transit'],           // выбранные методики (3+ колец: база + N)
         wheel: null,
         basePanel: null,
         targetPanel: null,
+        partnerPanel: null,
         clients: [],
     };
 
@@ -56,11 +58,13 @@
         try {
             const users = await api('/users');
             state.clients = Array.isArray(users) ? users : [];
-            refs.clientSelect.innerHTML = '<option value="">— выберите клиента —</option>'
+            const options = '<option value="">— выберите клиента —</option>'
                 + state.clients.map((u) => {
                     const name = [u.first_name, u.last_name].filter(Boolean).join(' ') || u.user_id.slice(0, 8);
                     return `<option value="${u.user_id}">${name} · ${u.birth_date || ''}</option>`;
                 }).join('');
+            refs.clientSelect.innerHTML = options;
+            if (refs.partnerSelect) refs.partnerSelect.innerHTML = options;
         } catch (error) {
             setStatus(`Не удалось загрузить клиентов: ${error.message}`, true);
         }
@@ -71,6 +75,19 @@
             return { mode: 'saved', userId: refs.clientSelect.value || null };
         }
         return state.basePanel.getSource();
+    }
+
+    function partnerSourceSnapshot() {
+        if (state.partnerMode === 'saved') {
+            const userId = refs.partnerSelect.value || null;
+            if (!userId) throw new Error('Выберите партнёра из базы (или введите вручную)');
+            return { mode: 'saved', userId };
+        }
+        const snapshot = state.partnerPanel.getSource();
+        if (!snapshot.datetime || !snapshot.datetime.split('T')[0]) {
+            throw new Error('Укажите дату рождения партнёра');
+        }
+        return snapshot;
     }
 
     async function fetchBaseNatal(snapshot) {
@@ -132,7 +149,7 @@
                 request: window.MethodologyRegistry.buildLayerRequest(
                     method,
                     baseSnapshot,
-                    targetSnapshot,
+                    method === 'synastry' ? partnerSourceSnapshot() : targetSnapshot,
                     { directionType: refs.directionType.value },
                 ),
             }));
@@ -145,7 +162,10 @@
             settled.forEach((result, index) => {
                 const { method, request } = requests[index];
                 if (result.status === 'fulfilled') {
-                    layers[request.ringMethod] = result.value;
+                    // Синастрия отдаёт обе карты — кольцу нужны партнёрская + интер-аспекты
+                    layers[request.ringMethod] = method === 'synastry'
+                        ? { partner_chart: result.value.partner_chart, inter_aspects: result.value.inter_aspects }
+                        : result.value;
                     okMethods.push(request.ringMethod);
                 } else {
                     failed.push(`${labelForMethod(method)}: ${result.reason?.message || result.reason}`);
@@ -176,6 +196,8 @@
             progression: 'прогрессии',
             direction: 'дирекции',
             solar_return: 'соляр',
+            synastry: 'синастрия',
+            synastry_partner: 'синастрия',
         }[method] || method;
     }
 
@@ -221,9 +243,16 @@
     function syncMethodUi() {
         const hasDatetime = state.methods.some((m) => DATETIME_METHODS.includes(m));
         const hasSolar = state.methods.includes('solar_return');
+        const hasSynastry = state.methods.includes('synastry');
         refs.directionTypeField.classList.toggle('hidden', !state.methods.includes('direction'));
         refs.targetDatetimeBlock.classList.toggle('hidden', !hasDatetime);
         refs.targetYearBlock.classList.toggle('hidden', !hasSolar);
+        refs.partnerBlock.classList.toggle('hidden', !hasSynastry);
+    }
+
+    function syncPartnerModeUi() {
+        refs.partnerSavedBlock.classList.toggle('hidden', state.partnerMode !== 'saved');
+        refs.partnerManualBlock.classList.toggle('hidden', state.partnerMode !== 'manual');
     }
 
     function readCheckedMethods() {
@@ -260,6 +289,10 @@
             baseManualBlock: $('wsBaseManualBlock'),
             ringCard: $('wsRingCard'),
             saveBtn: $('wsSaveBtn'),
+            partnerBlock: $('wsPartnerBlock'),
+            partnerSelect: $('wsPartnerSelect'),
+            partnerSavedBlock: $('wsPartnerSavedBlock'),
+            partnerManualBlock: $('wsPartnerManualBlock'),
             directionType: $('wsDirectionType'),
             directionTypeField: $('wsDirectionTypeField'),
             targetDatetimeBlock: $('wsTargetDatetimeBlock'),
@@ -299,8 +332,20 @@
             yearInput: $('wsTargetYear'),
         });
 
+        // Панель партнёра (синастрия, ручной ввод)
+        window.Timezones?.populate?.($('wsPartnerTimezone'));
+        state.partnerPanel = new window.ChartSourcePanel.ChartSourcePanel({ mode: 'manual' }).attachDom({
+            dateInput: $('wsPartnerDate'),
+            timeInput: $('wsPartnerTime'),
+            timezoneInput: $('wsPartnerTimezone'),
+            locationInput: $('wsPartnerPlace'),
+            latitudeInput: $('wsPartnerLat'),
+            longitudeInput: $('wsPartnerLon'),
+        });
+
         bindPlaceAutocomplete($('wsBasePlace'), $('wsBasePlaceSuggestions'), state.basePanel);
         bindPlaceAutocomplete($('wsTargetPlace'), $('wsTargetPlaceSuggestions'), state.targetPanel);
+        bindPlaceAutocomplete($('wsPartnerPlace'), $('wsPartnerPlaceSuggestions'), state.partnerPanel);
 
         // Переключатели
         document.querySelectorAll('input[name="wsView"]').forEach((input) => {
@@ -317,6 +362,13 @@
                 syncBaseModeUi();
             });
         });
+        document.querySelectorAll('input[name="wsPartnerMode"]').forEach((input) => {
+            input.addEventListener('change', () => {
+                if (!input.checked) return;
+                state.partnerMode = input.value === 'manual' ? 'manual' : 'saved';
+                syncPartnerModeUi();
+            });
+        });
         document.querySelectorAll('#wsMethodChecks input[data-ws-method]').forEach((input) => {
             input.addEventListener('change', () => {
                 state.methods = readCheckedMethods();
@@ -329,6 +381,7 @@
         state.methods = readCheckedMethods();
         syncViewUi();
         syncBaseModeUi();
+        syncPartnerModeUi();
         syncMethodUi();
         loadClients();
     }

@@ -82,6 +82,19 @@
                 };
             },
         },
+        synastry: {
+            endpoint: '/synastry/calculate',
+            ringMethod: 'synastry_partner',
+            targetInputVariant: 'partner',
+            // Синастрия — две равноправные карты-источника: тело собирается целиком
+            // (override), обе стороны через единый buildSourcePayload (union как в бэке).
+            buildRequestBody(sourceSnapshot, partnerSnapshot) {
+                return {
+                    primary: sourcePanel.buildSourcePayload(sourceSnapshot),
+                    partner: sourcePanel.buildSourcePayload(partnerSnapshot),
+                };
+            },
+        },
     };
 
     function listMethods() {
@@ -100,14 +113,13 @@
      */
     function buildLayerRequest(method, sourceSnapshot, targetSnapshot, opts = {}) {
         const entry = getEntry(method);
-        return {
-            endpoint: entry.endpoint,
-            ringMethod: entry.ringMethod,
-            body: {
+        const body = entry.buildRequestBody
+            ? entry.buildRequestBody(sourceSnapshot, targetSnapshot, opts)
+            : {
                 ...sourcePanel.buildSourcePayload(sourceSnapshot),
                 ...entry.buildMethodologyPayload(targetSnapshot, opts),
-            },
-        };
+            };
+        return { endpoint: entry.endpoint, ringMethod: entry.ringMethod, body };
     }
 
     const api = { REGISTRY, listMethods, getEntry, buildLayerRequest };
