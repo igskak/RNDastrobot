@@ -529,7 +529,7 @@
                 Object.fromEntries(
                     (bodies || []).map((body) => [
                         body,
-                        profileId === 'prognostic'
+                        profileId === 'prognostic' || profileId === 'synastry'
                             ? (body === 'Moon' ? DEFAULT_PROGNOSTIC_MOON_ORB : DEFAULT_PROGNOSTIC_ORB)
                             : Number(aspect.base_orb || 5),
                     ])
