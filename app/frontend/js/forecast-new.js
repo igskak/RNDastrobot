@@ -2649,6 +2649,10 @@
         const layer = state.viewModel?.activePrognosticLayers?.find((item) => item.method === method);
         refs.prognosticPanelTitle.textContent = layerLabel(method);
         refs.prognosticPanelMeta.textContent = buildPrognosticMomentSummary();
+        // Solar return is defined by year only — target-date stepper is irrelevant
+        const isSolar = method === 'solar_return';
+        refs.forecastNewTimeStepper?.classList.toggle('hidden', isSolar);
+        refs.prognosticMomentToggle?.classList.toggle('hidden', isSolar);
         refs.targetDatetimeLabel.textContent = state.selectedDateTime.replace('T', ' ');
 
         if (!layer) {
