@@ -769,6 +769,16 @@
     transform: scale(0.94);
 }
 
+/* Path B шаг 2: поле года соляра в шапке слоёв */
+.forecast-new-solar-year-input {
+    width: 64px;
+    padding: 4px 6px;
+    border: 1px solid rgba(44, 39, 35, 0.18);
+    border-radius: 8px;
+    font-size: 12px;
+    background: #fff;
+}
+
 /* D6: переключатель вида колеса (одно / мульти) */
 .forecast-new-zoom-controls .forecast-new-view-btn.is-active {
     background: rgba(30, 58, 95, 0.14);

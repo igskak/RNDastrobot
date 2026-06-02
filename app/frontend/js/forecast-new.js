@@ -4,7 +4,7 @@
     const API_BASE = window.location.hostname === 'localhost'
         ? 'http://localhost:8000/api/v1'
         : '/api/v1';
-    const LAYER_ORDER = ['transit', 'progression', 'direction'];
+    const LAYER_ORDER = ['transit', 'progression', 'direction', 'solar_return', 'synastry_partner'];
     const DEFAULT_DIRECTION_TYPE = 'zodiacal';
     const LAYER_CACHE_PREFIX = 'forecastNewLayerCache:';
     const LAYER_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
@@ -102,6 +102,9 @@
         // D6: вид колеса — 'multi' (натал + кольца, как сейчас) | 'single' (только
         // натал в виде одиночной карты: внешний слот + маркеры углов).
         wheelView: 'multi',
+        // Параметры новых слоёв (Path B шаг 2)
+        solarYear: new Date().getFullYear(),
+        synastryPartnerId: '',
         stepMode: 'hour',
         customStep: { amount: 1, unit: 'day' },
         isCustomStepOpen: false,
@@ -295,6 +298,8 @@
 
         hydrateState();
         applyDeepLinkParams();
+        syncLayerControlInputs();
+        void populateSynastryPartnerOptions();
         populateTimezoneOptions();
         populateNatalTimezoneOptions();
         initRenderers();
@@ -341,6 +346,7 @@
             'natalLatitudeInput', 'natalLongitudeInput',
             'forecastNewMatrixEditor', 'forecastNewSettingsMatrixEditor',
             'forecastNewViewSingle', 'forecastNewViewMulti',
+            'forecastNewSolarYearInput', 'forecastNewSynastryPartnerSelect',
             'forecastNewZoomIn', 'forecastNewZoomOut',
             'forecastNewZoomReset', 'forecastNewSettingsToggle', 'forecastNewSettingsPanel',
             'orientationSelect', 'houseSystemSelect', 'iconScaleRange', 'iconScaleValue',
@@ -442,6 +448,26 @@
             refs.forecastNewDirectionTypeSelect.value = state.directionType;
             schedulePersist();
             if (state.activeLayers.includes('direction')) {
+                await loadActiveLayers({ lightweight: true });
+            }
+        });
+
+        refs.forecastNewSolarYearInput?.addEventListener('change', async () => {
+            const year = Number(refs.forecastNewSolarYearInput.value);
+            state.solarYear = Number.isFinite(year)
+                ? Math.min(2100, Math.max(1900, Math.trunc(year)))
+                : new Date().getFullYear();
+            refs.forecastNewSolarYearInput.value = String(state.solarYear);
+            schedulePersist();
+            if (state.activeLayers.includes('solar_return')) {
+                await loadActiveLayers({ lightweight: true });
+            }
+        });
+
+        refs.forecastNewSynastryPartnerSelect?.addEventListener('change', async () => {
+            state.synastryPartnerId = refs.forecastNewSynastryPartnerSelect.value || '';
+            schedulePersist();
+            if (state.activeLayers.includes('synastry_partner') && state.synastryPartnerId) {
                 await loadActiveLayers({ lightweight: true });
             }
         });
@@ -2249,6 +2275,26 @@
                     name: options.name || null,
                 }, { signal: controller.signal });
             }
+            if (method === 'solar_return') {
+                return apiPost('/solar/calculate', {
+                    ...natalSource,
+                    year: state.solarYear,
+                    save_to_db: false,
+                }, { signal: controller.signal });
+            }
+            if (method === 'synastry_partner') {
+                if (!state.synastryPartnerId) {
+                    throw new Error('Выберите партнёра для синастрии');
+                }
+                // primary = тот же источник натала, что у остальных слоёв (saved или inline)
+                return apiPost('/synastry/calculate', {
+                    primary: natalSource,
+                    partner: { user_id: state.synastryPartnerId },
+                }, { signal: controller.signal }).then((resp) => ({
+                    partner_chart: resp.partner_chart,
+                    inter_aspects: resp.inter_aspects,
+                }));
+            }
             return apiPost('/directions/calculate', {
                 ...natalSource,
                 target_date: date,
@@ -2335,6 +2381,41 @@
             return addDateTimeUnit(state.selectedDateTime, unit, amount * action.direction);
         }
         return '';
+    }
+
+    /** Значения контролов новых слоёв из state (после hydrate). */
+    function syncLayerControlInputs() {
+        if (refs.forecastNewSolarYearInput) {
+            refs.forecastNewSolarYearInput.value = String(state.solarYear);
+        }
+        if (refs.forecastNewSynastryPartnerSelect && state.synastryPartnerId) {
+            refs.forecastNewSynastryPartnerSelect.value = state.synastryPartnerId;
+        }
+    }
+
+    /** Список партнёров для синастрии: все сохранённые клиенты, кроме текущего. */
+    async function populateSynastryPartnerOptions() {
+        const select = refs.forecastNewSynastryPartnerSelect;
+        if (!select) return;
+        try {
+            const response = await fetch(`${API_BASE}/users`, { credentials: 'include' });
+            if (!response.ok) return;
+            const users = await response.json();
+            const currentId = String(state.userId || '');
+            const options = (Array.isArray(users) ? users : [])
+                .filter((user) => String(user.user_id) !== currentId)
+                .map((user) => {
+                    const name = [user.first_name, user.last_name].filter(Boolean).join(' ')
+                        || String(user.user_id).slice(0, 8);
+                    return `<option value="${user.user_id}">${name}</option>`;
+                })
+                .join('');
+            select.innerHTML = `<option value="">— партнёр —</option>${options}`;
+            if (state.synastryPartnerId) select.value = state.synastryPartnerId;
+            if (select.value !== state.synastryPartnerId) state.synastryPartnerId = select.value || '';
+        } catch {
+            // нет сети/прав — селект останется пустым, слой синастрии сообщит об этом при включении
+        }
     }
 
     async function apiPost(endpoint, body, options = {}) {
@@ -3035,6 +3116,11 @@
         state.stepMode = restored.stepMode || state.stepMode;
         state.customStep = normalizeCustomStep(restored.customStep || state.customStep);
         state.wheelView = restored.wheelView === 'single' ? 'single' : 'multi';
+        const restoredSolarYear = Number(restored.solarYear);
+        if (Number.isFinite(restoredSolarYear) && restoredSolarYear >= 1900 && restoredSolarYear <= 2100) {
+            state.solarYear = Math.trunc(restoredSolarYear);
+        }
+        state.synastryPartnerId = typeof restored.synastryPartnerId === 'string' ? restored.synastryPartnerId : state.synastryPartnerId;
         state.leftTab = restored.leftTab || state.leftTab;
         state.rightTab = restored.rightTab || state.rightTab;
         const hasSplitMatrixState = Number(restored.matrixSchemaVersion) >= 2;
@@ -3322,6 +3408,8 @@
                 stepMode: state.stepMode,
                 customStep: state.customStep,
                 wheelView: state.wheelView,
+                solarYear: state.solarYear,
+                synastryPartnerId: state.synastryPartnerId,
                 leftTab: state.leftTab,
                 rightTab: state.rightTab,
                 matrixSchemaVersion: window.ForecastNewStateStorage?.MATRIX_SCHEMA_VERSION || 2,
@@ -3403,7 +3491,13 @@
     }
 
     function layerLabel(method) {
-        return ({ transit: 'Транзиты', progression: 'Прогрессии', direction: 'Дирекции' })[method] || method;
+        return ({
+            transit: 'Транзиты',
+            progression: 'Прогрессии',
+            direction: 'Дирекции',
+            solar_return: 'Соляр',
+            synastry_partner: 'Синастрия',
+        })[method] || method;
     }
 
     function planetName(name) {
@@ -3465,6 +3559,12 @@
         }
         if (method === 'progression') {
             return [method, natalToken, selectedDateTime, timezone].join('|');
+        }
+        if (method === 'solar_return') {
+            return [method, natalToken, state.solarYear].join('|');
+        }
+        if (method === 'synastry_partner') {
+            return [method, natalToken, state.synastryPartnerId || ''].join('|');
         }
         return [method, natalToken, date].join('|');
     }

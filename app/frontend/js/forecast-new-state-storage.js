@@ -4,7 +4,7 @@
     const STORAGE_PREFIX = 'forecastNewViewState';
     const STORAGE_VERSION = 1;
     const MATRIX_SCHEMA_VERSION = 2;
-    const VALID_LAYERS = ['transit', 'progression', 'direction'];
+    const VALID_LAYERS = ['transit', 'progression', 'direction', 'solar_return', 'synastry_partner'];
     const DEFAULT_DIRECTION_TYPE = 'zodiacal';
     const VALID_DIRECTION_TYPES = ['solar_arc', 'zodiacal', 'equatorial'];
     const VALID_STEP_MODES = ['second', 'minute', 'hour', 'day', 'week', 'month', 'year'];
@@ -106,6 +106,11 @@
             stepMode: pickEnum(source.stepMode, VALID_STEP_MODES, 'hour'),
             customStep: sanitizeCustomStep(source.customStep),
             wheelView: pickEnum(source.wheelView, ['single', 'multi'], 'multi'),
+            solarYear: (() => {
+                const year = Number(source.solarYear);
+                return Number.isFinite(year) && year >= 1900 && year <= 2100 ? Math.trunc(year) : null;
+            })(),
+            synastryPartnerId: typeof source.synastryPartnerId === 'string' ? source.synastryPartnerId : '',
             leftTab: pickEnum(source.leftTab, VALID_TABS, 'Planets'),
             rightTab: pickEnum(source.rightTab, VALID_TABS, 'Planets'),
             matrixSchemaVersion: Number(source.matrixSchemaVersion) === MATRIX_SCHEMA_VERSION ? MATRIX_SCHEMA_VERSION : 1,
