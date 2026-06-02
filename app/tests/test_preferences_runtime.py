@@ -105,6 +105,31 @@ def test_build_default_orb_settings_uses_fixed_prognostic_defaults():
     assert defaults["profiles"]["prognostic"]["matrix"]["Conjunction"]["Moon"] == 3.0
     assert defaults["profiles"]["prognostic"]["matrix"]["Square"]["Moon"] == 3.0
     assert defaults["profiles"]["prognostic"]["matrix"]["Square"]["Mars"] == 1.0
+    assert defaults["profiles"]["synastry"]["matrix"] == defaults["profiles"]["prognostic"]["matrix"]
+
+
+def test_normalize_orb_settings_preserves_existing_synastry_profile():
+    default_orbs = {
+        "version": 2,
+        "pair_strategy": "larger",
+        "profiles": {
+            "synastry": {"matrix": {"Conjunction": {"Sun": 1.0, "Moon": 3.0}}},
+        },
+    }
+
+    normalized = normalize_orb_settings(
+        {
+            "version": 2,
+            "pair_strategy": "larger",
+            "profiles": {
+                "synastry": {"matrix": {"Conjunction": {"Sun": 8.0, "Moon": 7.0}}},
+            },
+        },
+        default_orbs=default_orbs,
+    )
+
+    assert normalized["profiles"]["synastry"]["matrix"]["Conjunction"]["Sun"] == 8.0
+    assert normalized["profiles"]["synastry"]["matrix"]["Conjunction"]["Moon"] == 7.0
 
 
 def test_apply_fixed_prognostic_defaults_overwrites_existing_prognostic_profile_only():

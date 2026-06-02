@@ -90,12 +90,14 @@ test('buildDefaultOrbProfileMatrix uses fixed prognostic defaults', () => {
 
     const natalMatrix = preferences.buildDefaultOrbProfileMatrix(aspectTypes, bodies, 'natal');
     const prognosticMatrix = preferences.buildDefaultOrbProfileMatrix(aspectTypes, bodies, 'prognostic');
+    const synastryMatrix = preferences.buildDefaultOrbProfileMatrix(aspectTypes, bodies, 'synastry');
 
     assert.equal(natalMatrix.Conjunction.Sun, 8);
     assert.equal(natalMatrix.Square.Moon, 6);
     assert.equal(prognosticMatrix.Conjunction.Sun, 1);
     assert.equal(prognosticMatrix.Conjunction.Moon, 3);
     assert.equal(prognosticMatrix.Square.Mars, 1);
+    assert.deepEqual(synastryMatrix, prognosticMatrix);
 });
 
 test('resolveVisualPreferences keeps explicit aspect colors and getAspectColor ignores harmony groups', () => {

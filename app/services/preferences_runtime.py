@@ -261,10 +261,8 @@ def build_default_orb_settings(
             'prognostic': {
                 'matrix': deepcopy(prognostic_matrix),
             },
-            # Synastry defaults to the natal orb matrix; astrologers usually
-            # narrow it from the dedicated profile to cut cross-aspect noise.
             'synastry': {
-                'matrix': deepcopy(natal_matrix),
+                'matrix': deepcopy(prognostic_matrix),
             },
         },
     }
