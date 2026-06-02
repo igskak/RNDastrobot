@@ -15,12 +15,14 @@
     const state = {
         view: 'single',                 // single | multi
         baseMode: 'saved',              // saved | manual
-        method: 'transit',
+        methods: ['transit'],           // выбранные методики (3+ колец: база + N)
         wheel: null,
         basePanel: null,
         targetPanel: null,
         clients: [],
     };
+
+    const DATETIME_METHODS = ['transit', 'progression', 'direction'];
 
     const refs = {};
 
@@ -118,29 +120,49 @@
                 return;
             }
 
-            // multi: база + производное кольцо по методике
-            const entry = window.MethodologyRegistry.getEntry(state.method);
+            // multi: база + N производных колец (3+ колец как на прогностике)
+            if (!state.methods.length) throw new Error('Выберите хотя бы одну методику');
             const targetSnapshot = state.targetPanel.getSource();
-            if (entry.targetInputVariant === 'year' && !targetSnapshot.year) {
+            if (state.methods.includes('solar_return') && !targetSnapshot.year) {
                 throw new Error('Укажите год соляра');
             }
-            const request = window.MethodologyRegistry.buildLayerRequest(
-                state.method,
-                baseSnapshot,
-                targetSnapshot,
-                { directionType: refs.directionType.value },
-            );
-            const layerRaw = await api(request.endpoint, {
-                method: 'POST',
-                body: JSON.stringify(request.body),
+
+            const requests = state.methods.map((method) => ({
+                method,
+                request: window.MethodologyRegistry.buildLayerRequest(
+                    method,
+                    baseSnapshot,
+                    targetSnapshot,
+                    { directionType: refs.directionType.value },
+                ),
+            }));
+            const settled = await Promise.allSettled(requests.map(({ request }) =>
+                api(request.endpoint, { method: 'POST', body: JSON.stringify(request.body) })));
+
+            const layers = {};
+            const okMethods = [];
+            const failed = [];
+            settled.forEach((result, index) => {
+                const { method, request } = requests[index];
+                if (result.status === 'fulfilled') {
+                    layers[request.ringMethod] = result.value;
+                    okMethods.push(request.ringMethod);
+                } else {
+                    failed.push(`${labelForMethod(method)}: ${result.reason?.message || result.reason}`);
+                }
             });
+            if (!okMethods.length) throw new Error(failed.join(' · ') || 'Не удалось посчитать слои');
+
             const viewModel = window.PrognosticLayerNormalizer.buildViewModel(
                 natalData,
-                { [request.ringMethod]: layerRaw },
-                { activeMethods: [request.ringMethod] },
+                layers,
+                { activeMethods: okMethods },
             );
             renderViewModel(viewModel, { singleChart: false });
-            setStatus(`Готово: натал + ${labelForMethod(state.method)}`);
+            const okLabel = okMethods.map(labelForMethod).join(' + ');
+            setStatus(failed.length
+                ? `Готово: натал + ${okLabel} · ошибки: ${failed.join(' · ')}`
+                : `Готово: натал + ${okLabel}`, failed.length > 0);
         } catch (error) {
             setStatus(error.message, true);
         } finally {
@@ -157,6 +179,34 @@
         }[method] || method;
     }
 
+    /** Фаза 5 (D3): осознанное сохранение ручной (ephemeral) карты в базу клиентов. */
+    async function saveManualChart() {
+        const name = ($('wsSaveName')?.value || '').trim();
+        if (!name) { setStatus('Укажите имя для сохранения', true); return; }
+        const snapshot = state.basePanel.getSource();
+        const payload = window.ChartSourcePanel.buildSourcePayload(snapshot);
+        if (!payload.natal?.date) { setStatus('Укажите дату рождения', true); return; }
+        refs.saveBtn.disabled = true;
+        setStatus('Сохраняю…');
+        try {
+            const saved = await api('/natal/calculate?save_to_db=true', {
+                method: 'POST',
+                body: JSON.stringify({ ...payload.natal, first_name: name }),
+            });
+            await loadClients();
+            if (saved?.user_id) {
+                refs.clientSelect.value = saved.user_id;
+                const savedRadio = document.querySelector('input[name="wsBaseMode"][value="saved"]');
+                if (savedRadio) { savedRadio.checked = true; savedRadio.dispatchEvent(new Event('change', { bubbles: true })); }
+            }
+            setStatus(`Сохранено: ${name}`);
+        } catch (error) {
+            setStatus(`Не удалось сохранить: ${error.message}`, true);
+        } finally {
+            refs.saveBtn.disabled = false;
+        }
+    }
+
     // ---------- UI-связка ----------
 
     function syncViewUi() {
@@ -169,11 +219,17 @@
     }
 
     function syncMethodUi() {
-        const entry = window.MethodologyRegistry.getEntry(state.method);
-        refs.directionTypeField.classList.toggle('hidden', state.method !== 'direction');
-        refs.targetDatetimeBlock.classList.toggle('hidden', entry.targetInputVariant !== 'datetime');
-        refs.targetYearBlock.classList.toggle('hidden', entry.targetInputVariant !== 'year');
-        state.targetPanel.setInputVariant(entry.targetInputVariant);
+        const hasDatetime = state.methods.some((m) => DATETIME_METHODS.includes(m));
+        const hasSolar = state.methods.includes('solar_return');
+        refs.directionTypeField.classList.toggle('hidden', !state.methods.includes('direction'));
+        refs.targetDatetimeBlock.classList.toggle('hidden', !hasDatetime);
+        refs.targetYearBlock.classList.toggle('hidden', !hasSolar);
+    }
+
+    function readCheckedMethods() {
+        return Array.from(document.querySelectorAll('#wsMethodChecks input[data-ws-method]'))
+            .filter((input) => input.checked)
+            .map((input) => input.getAttribute('data-ws-method'));
     }
 
     function bindPlaceAutocomplete(input, suggestions, panel) {
@@ -203,7 +259,7 @@
             baseSavedBlock: $('wsBaseSavedBlock'),
             baseManualBlock: $('wsBaseManualBlock'),
             ringCard: $('wsRingCard'),
-            methodSelect: $('wsMethodSelect'),
+            saveBtn: $('wsSaveBtn'),
             directionType: $('wsDirectionType'),
             directionTypeField: $('wsDirectionTypeField'),
             targetDatetimeBlock: $('wsTargetDatetimeBlock'),
@@ -261,12 +317,16 @@
                 syncBaseModeUi();
             });
         });
-        refs.methodSelect.addEventListener('change', () => {
-            state.method = refs.methodSelect.value;
-            syncMethodUi();
+        document.querySelectorAll('#wsMethodChecks input[data-ws-method]').forEach((input) => {
+            input.addEventListener('change', () => {
+                state.methods = readCheckedMethods();
+                syncMethodUi();
+            });
         });
         refs.buildBtn.addEventListener('click', build);
+        refs.saveBtn?.addEventListener('click', saveManualChart);
 
+        state.methods = readCheckedMethods();
         syncViewUi();
         syncBaseModeUi();
         syncMethodUi();

@@ -27,6 +27,14 @@
 .ws-suggestions:empty { display: none; }
 .ws-suggestions div { padding: 6px 8px; cursor: pointer; font-size: 13px; }
 .ws-suggestions div:hover { background: #f3f4f6; }
+.ws-method-checks { display: flex; flex-wrap: wrap; gap: 10px 14px; font-size: 13px; margin-bottom: 10px; }
+.ws-method-checks label { cursor: pointer; white-space: nowrap; }
+.ws-save-block { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #e5e1da; }
+.ws-save-btn {
+    padding: 7px 12px; border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer;
+    background: #fff; color: #111827; font-size: 13px;
+}
+.ws-save-btn:disabled { opacity: .6; cursor: wait; }
 .ws-build-btn {
     padding: 10px 14px; border: none; border-radius: 10px; cursor: pointer;
     background: #111827; color: #fff; font-size: 14px;

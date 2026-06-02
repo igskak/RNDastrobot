@@ -41,19 +41,21 @@
                         <label class="ws-field">Долгота <input type="text" id="wsBaseLon" inputmode="decimal"></label>
                     </div>
                     <p class="ws-hint" id="wsEphemeralHint">Карта временная — в базу не сохраняется (D3)</p>
+                    <div class="ws-save-block">
+                        <label class="ws-field">Имя для сохранения <input type="text" id="wsSaveName" placeholder="Клиент / событие"></label>
+                        <button id="wsSaveBtn" class="ws-save-btn" type="button">Сохранить в базу клиентов</button>
+                    </div>
                 </div>
             </section>
 
             <section class="ws-card hidden" id="wsRingCard">
-                <h2>Кольцо сравнения</h2>
-                <label class="ws-field">Методика
-                    <select id="wsMethodSelect">
-                        <option value="transit" selected>Транзиты</option>
-                        <option value="progression">Прогрессии</option>
-                        <option value="direction">Дирекции</option>
-                        <option value="solar_return">Соляр</option>
-                    </select>
-                </label>
+                <h2>Кольца сравнения</h2>
+                <div class="ws-method-checks" id="wsMethodChecks">
+                    <label><input type="checkbox" data-ws-method="transit" checked> Транзиты</label>
+                    <label><input type="checkbox" data-ws-method="progression"> Прогрессии</label>
+                    <label><input type="checkbox" data-ws-method="direction"> Дирекции</label>
+                    <label><input type="checkbox" data-ws-method="solar_return"> Соляр</label>
+                </div>
                 <label class="ws-field hidden" id="wsDirectionTypeField">Тип дирекции
                     <select id="wsDirectionType">
                         <option value="zodiacal" selected>Зодиакальные</option>
