@@ -104,6 +104,7 @@
         wheelView: 'multi',
         // Параметры новых слоёв (Path B шаг 2)
         solarYear: new Date().getFullYear(),
+        solarLocation: null,    // {name, latitude, longitude, timezone} | null = birth place
         synastryPartnerId: '',
         stepMode: 'hour',
         customStep: { amount: 1, unit: 'day' },
@@ -307,6 +308,7 @@
         bindEvents();
         bindLocationAutocomplete();
         bindNatalLocationAutocomplete();
+        bindSolarLocationAutocomplete();
         initAspectInteractions();
         syncControlsFromState();
         renderStaticNatal();
@@ -346,7 +348,8 @@
             'natalLatitudeInput', 'natalLongitudeInput',
             'forecastNewMatrixEditor', 'forecastNewSettingsMatrixEditor',
             'forecastNewViewSingle', 'forecastNewViewMulti',
-            'forecastNewSolarYearInput', 'forecastNewSynastryPartnerSelect',
+            'forecastNewSolarYearInput', 'forecastNewSolarLocationInput', 'forecastNewSolarLocationSuggestions',
+            'forecastNewSolarLat', 'forecastNewSolarLon', 'forecastNewSynastryPartnerSelect',
             'forecastNewZoomIn', 'forecastNewZoomOut',
             'forecastNewZoomReset', 'forecastNewSettingsToggle', 'forecastNewSettingsPanel',
             'orientationSelect', 'houseSystemSelect', 'iconScaleRange', 'iconScaleValue',
@@ -1047,6 +1050,35 @@
     }
 
     function buildPrognosticMomentSummary() {
+        const method = state.selectedRightLayer;
+
+        if (method === 'solar_return') {
+            // Show solar year + location (where the solar return is calculated)
+            const layer = state.viewModel?.activePrognosticLayers?.find((l) => l.method === 'solar_return');
+            const solarInfo = layer?.raw?.solar_info;
+            const year = solarInfo?.year ?? state.solarYear;
+            const locName = solarInfo?.location?.name
+                || state.solarLocation?.name
+                || state.location?.name
+                || '';
+            return [String(year), locName].filter(Boolean).join(' · ');
+        }
+
+        if (method === 'synastry_partner') {
+            // Show partner name + birth date + place
+            const select = refs.forecastNewSynastryPartnerSelect;
+            const partnerName = select && select.selectedIndex > 0
+                ? (select.options[select.selectedIndex]?.text || '')
+                : '';
+            const layer = state.viewModel?.activePrognosticLayers?.find((l) => l.method === 'synastry_partner');
+            const bd = layer?.raw?.partner_chart?.birth_data;
+            const partnerMeta = bd
+                ? [bd.date, bd.place].filter(Boolean).join(' · ')
+                : '';
+            return [partnerName, partnerMeta].filter(Boolean).join(' · ');
+        }
+
+        // transit / progression / direction — target date + tz + place
         const locationName = state.location?.name || '';
         return [state.selectedDateTime.replace('T', ' · '), formatHeaderTimezone(state.timezone), locationName]
             .filter(Boolean)
@@ -1408,6 +1440,67 @@
                 renderNatalTimeStepper();
                 await loadNatal();
             },
+        });
+    }
+
+    function bindSolarLocationAutocomplete() {
+        if (!window.PlaceAutocomplete || !refs.forecastNewSolarLocationInput || !refs.forecastNewSolarLocationSuggestions) return;
+        window.PlaceAutocomplete.attach({
+            input: refs.forecastNewSolarLocationInput,
+            suggestions: refs.forecastNewSolarLocationSuggestions,
+            minChars: 2,
+            debounceMs: 350,
+            limit: 5,
+            getLabel: (item) => item.shortName || item.displayName,
+            onInput: () => {
+                // Clear coordinates if user types manually
+                state.solarLocation = state.solarLocation
+                    ? { ...state.solarLocation, latitude: null, longitude: null, sourceId: null }
+                    : null;
+                if (refs.forecastNewSolarLat) refs.forecastNewSolarLat.value = '';
+                if (refs.forecastNewSolarLon) refs.forecastNewSolarLon.value = '';
+            },
+            onSelect: async (item) => {
+                if (refs.forecastNewSolarLocationInput) refs.forecastNewSolarLocationInput.value = item.shortName || item.displayName;
+                const latitude = item.lat ?? item.latitude ?? null;
+                const longitude = item.lon ?? item.longitude ?? null;
+                if (refs.forecastNewSolarLat) refs.forecastNewSolarLat.value = latitude !== null ? String(latitude) : '';
+                if (refs.forecastNewSolarLon) refs.forecastNewSolarLon.value = longitude !== null ? String(longitude) : '';
+
+                let resolvedTimezone = null;
+                if (item.sourceId && window.AstroAPI?.resolvePlaceTimezone) {
+                    try { resolvedTimezone = await window.AstroAPI.resolvePlaceTimezone(item.sourceId); } catch (_) { /* ignore */ }
+                }
+                state.solarLocation = {
+                    name: item.shortName || item.displayName,
+                    latitude,
+                    longitude,
+                    sourceId: item.sourceId || item.source_id || null,
+                    timezone: resolvedTimezone || window.Timezones?.guess?.(item.displayName || item.shortName) || null,
+                };
+                // Invalidate cache and refetch solar layer
+                const cacheKey = buildLayerCacheKey('solar_return');
+                delete state.layers?.solar_return;
+                sessionStorage.removeItem(LAYER_CACHE_PREFIX + cacheKey);
+                schedulePersist();
+                if (state.activeLayers.includes('solar_return')) {
+                    void loadActiveLayers({ lightweight: false });
+                }
+            },
+        });
+
+        // Clear solar location when input is emptied
+        refs.forecastNewSolarLocationInput.addEventListener('change', () => {
+            if (!refs.forecastNewSolarLocationInput.value.trim()) {
+                state.solarLocation = null;
+                if (refs.forecastNewSolarLat) refs.forecastNewSolarLat.value = '';
+                if (refs.forecastNewSolarLon) refs.forecastNewSolarLon.value = '';
+                if (state.activeLayers.includes('solar_return')) {
+                    delete state.layers?.solar_return;
+                    void loadActiveLayers({ lightweight: false });
+                }
+                schedulePersist();
+            }
         });
     }
 
@@ -2276,11 +2369,18 @@
                 }, { signal: controller.signal });
             }
             if (method === 'solar_return') {
-                return apiPost('/solar/calculate', {
+                const solarBody = {
                     ...natalSource,
                     year: state.solarYear,
                     save_to_db: false,
-                }, { signal: controller.signal });
+                };
+                if (state.solarLocation?.latitude !== null && state.solarLocation?.latitude !== undefined) {
+                    solarBody.location_latitude = state.solarLocation.latitude;
+                    solarBody.location_longitude = state.solarLocation.longitude;
+                    if (state.solarLocation.name) solarBody.location_name = state.solarLocation.name;
+                    if (state.solarLocation.timezone) solarBody.location_timezone = state.solarLocation.timezone;
+                }
+                return apiPost('/solar/calculate', solarBody, { signal: controller.signal });
             }
             if (method === 'synastry_partner') {
                 if (!state.synastryPartnerId) {
@@ -3120,6 +3220,22 @@
         if (Number.isFinite(restoredSolarYear) && restoredSolarYear >= 1900 && restoredSolarYear <= 2100) {
             state.solarYear = Math.trunc(restoredSolarYear);
         }
+        if (restored.solarLocation && typeof restored.solarLocation === 'object') {
+            const lat = Number(restored.solarLocation.latitude);
+            const lon = Number(restored.solarLocation.longitude);
+            if (Number.isFinite(lat) && Number.isFinite(lon)) {
+                state.solarLocation = {
+                    name: restored.solarLocation.name || '',
+                    latitude: lat,
+                    longitude: lon,
+                    timezone: restored.solarLocation.timezone || null,
+                    sourceId: restored.solarLocation.sourceId || null,
+                };
+                if (refs.forecastNewSolarLocationInput) refs.forecastNewSolarLocationInput.value = state.solarLocation.name;
+                if (refs.forecastNewSolarLat) refs.forecastNewSolarLat.value = String(lat);
+                if (refs.forecastNewSolarLon) refs.forecastNewSolarLon.value = String(lon);
+            }
+        }
         state.synastryPartnerId = typeof restored.synastryPartnerId === 'string' ? restored.synastryPartnerId : state.synastryPartnerId;
         state.leftTab = restored.leftTab || state.leftTab;
         state.rightTab = restored.rightTab || state.rightTab;
@@ -3409,6 +3525,7 @@
                 customStep: state.customStep,
                 wheelView: state.wheelView,
                 solarYear: state.solarYear,
+                solarLocation: state.solarLocation,
                 synastryPartnerId: state.synastryPartnerId,
                 leftTab: state.leftTab,
                 rightTab: state.rightTab,
@@ -3561,7 +3678,8 @@
             return [method, natalToken, selectedDateTime, timezone].join('|');
         }
         if (method === 'solar_return') {
-            return [method, natalToken, state.solarYear].join('|');
+            return [method, natalToken, state.solarYear,
+                state.solarLocation?.latitude ?? '', state.solarLocation?.longitude ?? ''].join('|');
         }
         if (method === 'synastry_partner') {
             return [method, natalToken, state.synastryPartnerId || ''].join('|');

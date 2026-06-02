@@ -110,6 +110,14 @@
                 const year = Number(source.solarYear);
                 return Number.isFinite(year) && year >= 1900 && year <= 2100 ? Math.trunc(year) : null;
             })(),
+            solarLocation: (() => {
+                const loc = source.solarLocation;
+                if (!loc || typeof loc !== 'object') return null;
+                const lat = Number(loc.latitude);
+                const lon = Number(loc.longitude);
+                if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+                return { name: String(loc.name || ''), latitude: lat, longitude: lon, timezone: loc.timezone || null, sourceId: loc.sourceId || null };
+            })(),
             synastryPartnerId: typeof source.synastryPartnerId === 'string' ? source.synastryPartnerId : '',
             leftTab: pickEnum(source.leftTab, VALID_TABS, 'Planets'),
             rightTab: pickEnum(source.rightTab, VALID_TABS, 'Planets'),
