@@ -246,7 +246,7 @@
 
         const natalData = window.AstroAPI?.getChartFromSession?.();
         if (!natalData) {
-            window.location.href = '/';
+            showColdStartOverlay();
             return;
         }
 
@@ -3707,4 +3707,235 @@
     }
 
     window.ForecastNewState = state;
+
+    // ─── Cold-start overlay ───────────────────────────────────────────────────
+    // Shown when forecast-new.html is opened without a natal chart in session.
+    // Two tabs: pick a saved client, or enter birth data manually.
+    // On selection → saveChartToSession → location.reload() (re-runs clean init).
+
+    function coldFetch(url, init) {
+        return fetch(url, { credentials: 'include', ...(init || {}) });
+    }
+
+    function showColdStartOverlay() {
+        const overlay = document.createElement('div');
+        overlay.id = 'coldStartOverlay';
+        overlay.innerHTML = `
+<style>
+#coldStartOverlay{position:fixed;inset:0;background:#0e0e16;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:40px 16px 24px;overflow-y:auto;font-family:inherit}
+#coldStartOverlay h2{color:#e8e6f0!important;font-size:1.25rem;margin:0 0 8px;text-align:center}
+#coldStartOverlay p{color:#9d9ab0!important;font-size:.875rem;margin:0 0 24px;text-align:center}
+.cold-tabs{display:flex;gap:8px;margin-bottom:20px}
+.cold-tab{padding:8px 20px;border-radius:8px;border:1px solid #2a2840;background:transparent;color:#9d9ab0!important;cursor:pointer;font-size:.875rem;transition:all .15s}
+.cold-tab.active{background:#6c5ce7;border-color:#6c5ce7;color:#fff!important}
+.cold-panel{width:100%;max-width:480px}
+.cold-panel.hidden{display:none}
+.cold-client-list{display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto}
+.cold-client-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:8px;border:1px solid #2a2840;background:#16151f;cursor:pointer;color:#e8e6f0!important;font-size:.875rem;transition:border-color .15s}
+.cold-client-item:hover{border-color:#6c5ce7}
+.cold-client-name{font-weight:500;color:#e8e6f0!important}
+.cold-client-meta{color:#9d9ab0!important;font-size:.8rem}
+.cold-status{color:#9d9ab0!important;font-size:.875rem;text-align:center;padding:16px 0}
+.cold-form{display:flex;flex-direction:column;gap:12px}
+.cold-form label{color:#9d9ab0!important;font-size:.8rem;margin-bottom:2px;display:block}
+.cold-form input,.cold-form select{width:100%;padding:9px 12px;border-radius:8px;border:1px solid #2a2840;background:#16151f;color:#e8e6f0!important;font-size:.875rem;box-sizing:border-box;outline:none}
+.cold-form input:focus,.cold-form select:focus{border-color:#6c5ce7}
+.cold-place-wrap{position:relative}
+.cold-suggestions{position:absolute;top:100%;left:0;right:0;z-index:10;background:#16151f;border:1px solid #2a2840;border-radius:8px;max-height:180px;overflow-y:auto;display:none}
+.cold-suggestions.visible{display:block}
+.cold-btn{padding:10px 20px;border-radius:8px;background:#6c5ce7;border:none;color:#fff!important;font-size:.875rem;cursor:pointer;width:100%;transition:opacity .15s}
+.cold-btn:disabled{opacity:.5;cursor:not-allowed}
+.cold-err{color:#ff6b6b!important;font-size:.8rem;text-align:center;min-height:20px}
+</style>
+<h2 data-cold-i18n="page.forecastNew.coldStart.title">Відкрити карту</h2>
+<p data-cold-i18n="page.forecastNew.coldStart.subtitle">Виберіть клієнта або введіть дані вручну</p>
+<div class="cold-tabs">
+  <button class="cold-tab active" id="coldTabClients">Клієнти</button>
+  <button class="cold-tab" id="coldTabManual">Вручну</button>
+</div>
+<div class="cold-panel" id="coldPanelClients">
+  <div class="cold-client-list" id="coldClientList">
+    <div class="cold-status" id="coldClientsStatus">Завантаження…</div>
+  </div>
+</div>
+<div class="cold-panel hidden" id="coldPanelManual">
+  <div class="cold-form" id="coldManualForm">
+    <div><label>Дата народження</label><input type="date" id="coldDate" required></div>
+    <div><label>Час народження</label><input type="time" id="coldTime" value="12:00" step="1"></div>
+    <div>
+      <label>Місце народження</label>
+      <div class="cold-place-wrap">
+        <input type="text" id="coldPlace" autocomplete="off" placeholder="Місто…">
+        <div class="cold-suggestions" id="coldSuggestions"></div>
+      </div>
+    </div>
+    <div><label>Часовий пояс</label><select id="coldTimezone"></select></div>
+    <input type="hidden" id="coldLat">
+    <input type="hidden" id="coldLon">
+    <div class="cold-err" id="coldManualErr"></div>
+    <button class="cold-btn" id="coldBuildBtn">Побудувати карту</button>
+  </div>
+</div>`;
+        document.body.appendChild(overlay);
+
+        // i18n labels (best-effort, silent on failure)
+        overlay.querySelectorAll('[data-cold-i18n]').forEach((el) => {
+            try {
+                const val = window.i18n?.t?.(el.dataset.coldI18n);
+                if (val && val !== el.dataset.coldI18n) el.textContent = val;
+            } catch (_) { /* ignore */ }
+        });
+
+        // Tab switching
+        const tabClients = overlay.querySelector('#coldTabClients');
+        const tabManual = overlay.querySelector('#coldTabManual');
+        const panelClients = overlay.querySelector('#coldPanelClients');
+        const panelManual = overlay.querySelector('#coldPanelManual');
+
+        tabClients.addEventListener('click', () => {
+            tabClients.classList.add('active'); tabManual.classList.remove('active');
+            panelClients.classList.remove('hidden'); panelManual.classList.add('hidden');
+        });
+        tabManual.addEventListener('click', () => {
+            tabManual.classList.add('active'); tabClients.classList.remove('active');
+            panelManual.classList.remove('hidden'); panelClients.classList.add('hidden');
+            initManualPanel();
+        });
+
+        // ── Tab: Clients ──────────────────────────────────────────────────────
+        const clientList = overlay.querySelector('#coldClientList');
+        const clientsStatus = overlay.querySelector('#coldClientsStatus');
+
+        coldFetch(`${API_BASE}/users`)
+            .then((r) => r.ok ? r.json() : Promise.reject(new Error('Помилка завантаження')))
+            .then((users) => {
+                if (!Array.isArray(users) || !users.length) {
+                    clientsStatus.textContent = 'Немає збережених клієнтів';
+                    return;
+                }
+                clientsStatus.remove();
+                users.forEach((u) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'cold-client-item';
+                    const name = [u.first_name, u.last_name].filter(Boolean).join(' ') || '(без імені)';
+                    const meta = u.birth_date ? u.birth_date + (u.birth_place ? ' · ' + u.birth_place : '') : (u.birth_place || '');
+                    btn.innerHTML = `<span class="cold-client-name">${escapeHtml(name)}</span>${meta ? `<span class="cold-client-meta">${escapeHtml(meta)}</span>` : ''}`;
+                    btn.addEventListener('click', () => openClient(u.user_id, btn));
+                    clientList.appendChild(btn);
+                });
+            })
+            .catch((err) => { clientsStatus.textContent = err.message || 'Помилка'; });
+
+        async function openClient(userId, btn) {
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            try {
+                const resp = await coldFetch(`${API_BASE}/natal/${encodeURIComponent(String(userId))}`);
+                if (!resp.ok) throw new Error('Не вдалося завантажити карту');
+                const natalData = await resp.json();
+                window.AstroAPI?.saveChartToSession?.(natalData);
+                window.AstroAPI?.saveFormData?.(window.AstroAPI.chartToFormData?.(natalData));
+                window.location.reload();
+            } catch (err) {
+                btn.disabled = false;
+                btn.style.opacity = '';
+                clientsStatus.textContent = err.message || 'Помилка';
+            }
+        }
+
+        // ── Tab: Manual entry ─────────────────────────────────────────────────
+        let manualPanelInited = false;
+        let coldPanel = null;
+
+        function initManualPanel() {
+            if (manualPanelInited) return;
+            manualPanelInited = true;
+
+            const tzSelect = overlay.querySelector('#coldTimezone');
+            window.Timezones?.populate?.(tzSelect);
+            const guessedTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+            tzSelect.value = guessedTz;
+
+            const placeInput = overlay.querySelector('#coldPlace');
+            const suggestions = overlay.querySelector('#coldSuggestions');
+            const latInput = overlay.querySelector('#coldLat');
+            const lonInput = overlay.querySelector('#coldLon');
+
+            coldPanel = new window.ChartSourcePanel.ChartSourcePanel({ mode: 'manual' }).attachDom({
+                dateInput: overlay.querySelector('#coldDate'),
+                timeInput: overlay.querySelector('#coldTime'),
+                timezoneInput: tzSelect,
+                locationInput: placeInput,
+                latitudeInput: latInput,
+                longitudeInput: lonInput,
+            });
+
+            // Place autocomplete
+            if (window.PlaceAutocomplete?.attach) {
+                window.PlaceAutocomplete.attach({
+                    input: placeInput,
+                    suggestions,
+                    onSelect(place) {
+                        const latitude = place.lat ?? place.latitude ?? null;
+                        const longitude = place.lon ?? place.longitude ?? null;
+                        const timezone = place.timezone
+                            || window.Timezones?.guess?.(place.displayName || place.shortName || placeInput.value)
+                            || null;
+                        coldPanel.update({
+                            location: {
+                                name: place.shortName || place.displayName || placeInput.value,
+                                latitude,
+                                longitude,
+                                sourceId: place.sourceId || place.source_id || null,
+                            },
+                            ...(timezone ? { timezone } : {}),
+                        });
+                        coldPanel.syncToDom();
+                        suggestions.classList.remove('visible');
+                    },
+                });
+            }
+
+            // Show/hide suggestions box
+            placeInput.addEventListener('input', () => {
+                suggestions.classList.toggle('visible', suggestions.children.length > 0);
+            });
+        }
+
+        const buildBtn = overlay.querySelector('#coldBuildBtn');
+        const manualErr = overlay.querySelector('#coldManualErr');
+
+        buildBtn.addEventListener('click', async () => {
+            manualErr.textContent = '';
+            const snapshot = coldPanel?.getSource?.() || {};
+            const payload = window.ChartSourcePanel?.buildSourcePayload?.(snapshot);
+            if (!payload?.natal?.date) {
+                manualErr.textContent = 'Введіть дату народження';
+                return;
+            }
+            buildBtn.disabled = true;
+            try {
+                const resp = await coldFetch(`${API_BASE}/natal/calculate?save_to_db=false`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload.natal),
+                });
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    throw new Error(err.detail || 'Помилка розрахунку');
+                }
+                const natalData = await resp.json();
+                window.AstroAPI?.saveChartToSession?.(natalData);
+                window.location.reload();
+            } catch (err) {
+                manualErr.textContent = err.message || 'Помилка';
+                buildBtn.disabled = false;
+            }
+        });
+    }
+
+    function escapeHtml(str) {
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    // ── End cold-start overlay ────────────────────────────────────────────────
 })();

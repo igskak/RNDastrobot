@@ -1,11 +1,12 @@
 /**
- * Workspace — единый рабочий стол астролога (Фаза 3/4 плана, MVP-скелет).
+ * Workspace — редирект на forecast-new.html (Path B завершено).
  *
- * Два вида одного движка (D6): «одно колесо» = 1 кольцо, «мульти» = база +
- * производное кольцо по методике. Источник базовой карты — ChartSourcePanel
- * (из базы клиентов или ручной ввод, ephemeral по D3). Запросы слоёв собирает
- * MethodologyRegistry ({user_id} XOR {natal} через buildSourcePayload — тот же
- * union, что NatalSourceMixin на бэке).
+ * forecast-new.html тепер містить повний cold-start шлях (вибір клієнта або
+ * ручний ввід). Скелет /workspace більше не потрібен як окрема сторінка —
+ * всі сценарії покриті forecast-new.
+ *
+ * Якщо в сесії є карта — передаємо на forecast-new з тими ж query-params.
+ * Якщо немає — forecast-new покаже cold-start overlay.
  */
 (function () {
     'use strict';
@@ -391,9 +392,15 @@
         loadClients();
     }
 
+    function redirectToForecastNew() {
+        // Preserve any query params (e.g. deep-link date/layer params)
+        const search = window.location.search || '';
+        window.location.replace('/forecast-new.html' + search);
+    }
+
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', redirectToForecastNew);
     } else {
-        init();
+        redirectToForecastNew();
     }
 })();
