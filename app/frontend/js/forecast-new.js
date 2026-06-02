@@ -348,7 +348,6 @@
             'natalLatitudeInput', 'natalLongitudeInput',
             'forecastNewMatrixEditor', 'forecastNewSettingsMatrixEditor',
             'forecastNewViewSingle', 'forecastNewViewMulti',
-            'forecastNewSolarYearStepper',
             'forecastNewSolarYearInput', 'forecastNewSolarLocationInput', 'forecastNewSolarLocationSuggestions',
             'forecastNewSolarLat', 'forecastNewSolarLon', 'forecastNewSynastryPartnerSelect',
             'forecastNewZoomIn', 'forecastNewZoomOut',
@@ -397,10 +396,10 @@
     function bindEvents() {
         initForecastNewActionsMenu();
 
-        // Solar year stepper — delegated via container (re-rendered on each solar tab switch)
+        // Solar year stepper — delegated via the regular stepper container
         document.addEventListener('click', (event) => {
             const btn = event.target.closest('[data-solar-year-step]');
-            if (!btn || !refs.forecastNewSolarYearStepper?.contains(btn)) return;
+            if (!btn || !refs.forecastNewTimeStepper?.contains(btn)) return;
             const delta = Number(btn.dataset.solarYearStep);
             if (!delta) return;
             const next = clamp(state.solarYear + delta, 1900, 2100);
@@ -1216,28 +1215,28 @@
     }
 
     function renderSolarYearStepper() {
-        const container = refs.forecastNewSolarYearStepper;
+        // Render a year-only stepper into the regular stepper slot (#forecastNewTimeStepper)
+        const container = refs.forecastNewTimeStepper;
         if (!container) return;
-        container.classList.remove('hidden');
         container.innerHTML = `
-            <button type="button" class="forecast-new-time-stepper-btn forecast-new-stepper-action"
-                data-solar-year-step="-1" aria-label="Предыдущий год" title="Предыдущий год">↺</button>
-            <span class="forecast-new-time-stepper-segment forecast-new-time-stepper-segment--year"
-                data-solar-year-segment tabindex="0" role="spinbutton"
-                aria-label="Год соляра" aria-valuetext="${state.solarYear}">
-                <button type="button" class="forecast-new-time-stepper-btn forecast-new-time-stepper-btn--up"
-                    data-solar-year-step="1" aria-label="Следующий год">▲</button>
-                <span class="forecast-new-time-stepper-value">${state.solarYear}</span>
-                <button type="button" class="forecast-new-time-stepper-btn forecast-new-time-stepper-btn--down"
-                    data-solar-year-step="-1" aria-label="Предыдущий год">▼</button>
+            <span class="forecast-new-time-stepper-display">
+                <span class="forecast-new-time-stepper-segment forecast-new-time-stepper-segment--yearOnes"
+                    data-solar-year-segment tabindex="0" role="spinbutton"
+                    aria-label="Год соляра" aria-valuetext="${state.solarYear}">
+                    <button type="button" class="forecast-new-time-stepper-btn forecast-new-time-stepper-btn--up"
+                        data-solar-year-step="1" aria-label="Следующий год"></button>
+                    <span class="forecast-new-time-stepper-value">${state.solarYear}</span>
+                    <button type="button" class="forecast-new-time-stepper-btn forecast-new-time-stepper-btn--down"
+                        data-solar-year-step="-1" aria-label="Предыдущий год"></button>
+                </span>
             </span>
         `;
     }
 
     function updateSolarYearStepperValue() {
-        const container = refs.forecastNewSolarYearStepper;
+        const container = refs.forecastNewTimeStepper;
         if (!container) return;
-        const valueEl = container.querySelector('.forecast-new-time-stepper-value');
+        const valueEl = container.querySelector('[data-solar-year-segment] .forecast-new-time-stepper-value');
         const segmentEl = container.querySelector('[data-solar-year-segment]');
         if (valueEl) valueEl.textContent = String(state.solarYear);
         if (segmentEl) segmentEl.setAttribute('aria-valuetext', String(state.solarYear));
@@ -2712,11 +2711,9 @@
         const layer = state.viewModel?.activePrognosticLayers?.find((item) => item.method === method);
         refs.prognosticPanelTitle.textContent = layerLabel(method);
         refs.prognosticPanelMeta.textContent = buildPrognosticMomentSummary();
-        // Solar return is year-only — swap date stepper for year stepper
-        const isSolar = method === 'solar_return';
-        refs.forecastNewTimeStepper?.classList.toggle('hidden', isSolar);
-        refs.prognosticMomentToggle?.classList.toggle('hidden', isSolar);
-        if (isSolar) renderSolarYearStepper();
+        // Solar return: render year-only stepper into the regular stepper slot
+        if (method === 'solar_return') renderSolarYearStepper();
+        else renderOrUpdateTimeStepper();
         refs.targetDatetimeLabel.textContent = state.selectedDateTime.replace('T', ' ');
 
         if (!layer) {
