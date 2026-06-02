@@ -1053,8 +1053,11 @@
             showAspectText: state.settings.showAspectText === true,
             angleAscDscBold: state.settings.angleAscDscBold,
             angleMcIcBold: state.settings.angleMcIcBold,
-            minimumRingCount: 2,
-            alignSingleRingOuter: includeNatal !== includeSolar,
+            // D6: одиночный режим отображения = настоящий вид одной карты
+            // (кольцо во всю ширину + маркеры углов), как на chart.html.
+            minimumRingCount: includeNatal !== includeSolar ? 1 : 2,
+            alignSingleRingOuter: false,
+            showAngleMarkers: includeNatal !== includeSolar,
             visualPreferences: state.accountPreferences?.visual || null,
         });
         state.wheel.render(viewModel);

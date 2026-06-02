@@ -872,8 +872,11 @@ function renderWheelMode(primaryChartOverride, partnerChartOverride) {
         houseNumberStyle: synastryState.settings.houseNumberStyle,
         houseLabelsOutside: synastryState.settings.houseLabelsOutside,
         showAspectText: synastryState.settings.showAspectText === true,
-        minimumRingCount: 2,
-        alignSingleRingOuter: synastryState.displayMode !== 'both',
+        // D6: одиночный режим отображения = настоящий вид одной карты
+        // (кольцо во всю ширину + маркеры углов), как на chart.html.
+        minimumRingCount: synastryState.displayMode !== 'both' ? 1 : 2,
+        alignSingleRingOuter: false,
+        showAngleMarkers: synastryState.displayMode !== 'both',
         visualPreferences: synastryState.accountVisualPreferences || null,
     });
     wheel.render(viewModel);
@@ -901,6 +904,9 @@ function buildSynastryWheelViewModel(primaryChart, partnerChart) {
             aspects: normalizePartnerInternalAspects(partnerChart?.aspects || []),
         }, 1);
         partnerLayer.aspects = normalizePartnerInternalAspects(partnerChart?.aspects || []);
+        // D6: в одиночном виде партнёра движку нужны углы партнёрской карты
+        // для маркеров ASC/MC/DSC/IC (как у одиночной карты).
+        partnerLayer.angles = partnerChart?.angles || null;
         return {
             natalLayer: null,
             activePrognosticLayers: [partnerLayer],
