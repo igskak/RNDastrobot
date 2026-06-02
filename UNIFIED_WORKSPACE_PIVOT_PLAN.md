@@ -133,7 +133,7 @@ workspaceState = {
 
 **Фаза 1 — Backend inline-натал.** Расширить схемы запросов (`TransitRequest` и др.) полем `natal`. Добавить ветку «считать из памяти» в сервисы. Тесты на оба пути (user_id и inline). Без изменения старых вызовов.
 
-**Фаза 2 — `MethodologyRegistry`.** Декларативный реестр методик (endpoint/payload/normalizer/ringMethod). Перевести существующие форкаст-вызовы `forecast-new.js` на реестр (рефактор без новой функциональности).
+**Фаза 2 — `MethodologyRegistry`. ✅ (ядро)** `methodology-registry.js`: декларативный реестр (transit/progression/direction/solar_return) — {endpoint, ringMethod, buildMethodologyPayload, targetInputVariant}; источник натала отдельно через `buildSourcePayload` (DX#2). 7 тестов. Перевод forecast-new на реестр — follow-up.
 
 **Фаза W — Унификация движка колеса (D6, перед Фазой 3).** `PrognosticRingsWheel` — единственный движок:
 - **W1 ✅**: маркеры углов ASC/MC/DSC/IC (порт из ChartWheel; opt-in `showAngleMarkers`) + `angles` на слое.
@@ -143,7 +143,9 @@ workspaceState = {
 - **W5 ✅**: `chart-wheel-adapter.js` (ChartWheelUnified) экспонирует API ChartWheel поверх единого движка; chart.js переключён (с fallback). Форматы aspect-key и события `chart:*` идентичны → интерактив таблиц сохранён. Верифицировано в браузере: колесо, углы, тултипы, подсветки. 10 jsdom-тестов.
 - **W6 (осталось)**: retire `chart-wheel.js` — после визуальной проверки человеком chart.html на едином движке.
 
-**Фаза 3 — `WorkspaceShell` (single-wheel).** Новый `workspace.html` + entry. Вид «одно колесо»: `ChartSourcePanel` + методики single (natal/event/solar-snapshot/progressed-snapshot) → `ChartWheel`. Вкладки tables/report подключить как режимы (переиспользовать `natal-full`, `forecast-tables`).
+**Фазы 3–4 — Workspace MVP. ✅ (скелет, коммит `7355b44`)** Страница `/workspace`: переключатель «одно колесо / мульти», базовая карта (из базы / ручной ephemeral ввод через `ChartSourcePanel`), кольцо сравнения по методике из реестра, рендер единым движком (одиночный = D6-вид с маркерами). Cold-start экран (A9), year-вариант для соляра (Design 4.4), ephemeral-подсказка (D3), 422 в статус. E2E в браузере: 4 сценария. Не в MVP (follow-ups): синастрия как методика, 3+ кольца, вкладки tables/timeline/report, кнопка «Сохранить» (Фаза 5), quick-open вместо select, persistence состояния.
+
+**Фаза 3 — `WorkspaceShell` (single-wheel). (детализация — см. MVP выше)** Новый `workspace.html` + entry. Вид «одно колесо»: `ChartSourcePanel` + методики single (natal/event/solar-snapshot/progressed-snapshot) → `ChartWheel`. Вкладки tables/report подключить как режимы (переиспользовать `natal-full`, `forecast-tables`).
 
 **Фаза 4 — Multi-wheel.** Вид «два и более колец»: base + N производных колец, каждое со своим `ChartSourcePanel` и методикой → `PrognosticRingsWheel`. Покрыть transit/progression/direction/solar/synastry. Кросс-аспекты уже есть в движке.
 
