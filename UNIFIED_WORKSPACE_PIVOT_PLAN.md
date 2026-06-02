@@ -135,13 +135,13 @@ workspaceState = {
 
 **Фаза 2 — `MethodologyRegistry`.** Декларативный реестр методик (endpoint/payload/normalizer/ringMethod). Перевести существующие форкаст-вызовы `forecast-new.js` на реестр (рефактор без новой функциональности).
 
-**Фаза W — Унификация движка колеса (D6, перед Фазой 3).** `PrognosticRingsWheel` становится единственным движком:
-- **W1**: рендер маркеров углов ASC/MC/DSC/IC (порт `drawAnglesEnhanced` из ChartWheel; opt-in `showAngleMarkers`, чтобы не менять текущие страницы) + слот `angles` в слое viewModel.
-- **W2**: `setAspectTypeFilter('all'|'major'|'minor')` — паритет с ChartWheel.
-- **W3**: адаптер `natalChartDataToViewModel(chartData)` (плоский натал → natalLayer с bodies/houses/aspects/angles).
-- **W4**: engine-level `setVisibleMethods([...])` — «показать только кольцо X» как функция движка; synastry/solar display-mode переводится на неё (вместо пересборки viewModel на странице). 1 видимое кольцо = вид одной карты.
-- **W5**: миграция `chart.js` на единый движок через W3, parity-проверка в браузере (до/после).
-- **W6**: retire `chart-wheel.js`.
+**Фаза W — Унификация движка колеса (D6, перед Фазой 3).** `PrognosticRingsWheel` — единственный движок:
+- **W1 ✅**: маркеры углов ASC/MC/DSC/IC (порт из ChartWheel; opt-in `showAngleMarkers`) + `angles` на слое.
+- **W2 ✅ (уже существовал)**: фильтрация аспектов в движке была (`aspectScope`+`enabledAspectTypes`) — gap-отчёт ошибся.
+- **W3 ✅**: `buildViewModel` нормализатора несёт `angles`; движок умеет fallback `ring.raw.angles`. Нормализатор = адаптер плоского натала.
+- **W4 ✅**: `setVisibleMethods([...])` — 1 видимое кольцо раскладывается как настоящая одиночная карта (минуя `minimumRingCount`); пустой фильтр → все кольца; legacy-поведение страниц сохранено. Перевод display-mode synastry/solar на это API — follow-up.
+- **W5 ✅**: `chart-wheel-adapter.js` (ChartWheelUnified) экспонирует API ChartWheel поверх единого движка; chart.js переключён (с fallback). Форматы aspect-key и события `chart:*` идентичны → интерактив таблиц сохранён. Верифицировано в браузере: колесо, углы, тултипы, подсветки. 10 jsdom-тестов.
+- **W6 (осталось)**: retire `chart-wheel.js` — после визуальной проверки человеком chart.html на едином движке.
 
 **Фаза 3 — `WorkspaceShell` (single-wheel).** Новый `workspace.html` + entry. Вид «одно колесо»: `ChartSourcePanel` + методики single (natal/event/solar-snapshot/progressed-snapshot) → `ChartWheel`. Вкладки tables/report подключить как режимы (переиспользовать `natal-full`, `forecast-tables`).
 
