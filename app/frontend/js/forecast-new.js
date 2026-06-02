@@ -348,6 +348,7 @@
             'natalLatitudeInput', 'natalLongitudeInput',
             'forecastNewMatrixEditor', 'forecastNewSettingsMatrixEditor',
             'forecastNewViewSingle', 'forecastNewViewMulti',
+            'forecastNewSolarYearStepper',
             'forecastNewSolarYearInput', 'forecastNewSolarLocationInput', 'forecastNewSolarLocationSuggestions',
             'forecastNewSolarLat', 'forecastNewSolarLon', 'forecastNewSynastryPartnerSelect',
             'forecastNewZoomIn', 'forecastNewZoomOut',
@@ -395,6 +396,41 @@
 
     function bindEvents() {
         initForecastNewActionsMenu();
+
+        // Solar year stepper — delegated via container (re-rendered on each solar tab switch)
+        document.addEventListener('click', (event) => {
+            const btn = event.target.closest('[data-solar-year-step]');
+            if (!btn || !refs.forecastNewSolarYearStepper?.contains(btn)) return;
+            const delta = Number(btn.dataset.solarYearStep);
+            if (!delta) return;
+            const next = clamp(state.solarYear + delta, 1900, 2100);
+            if (next === state.solarYear) return;
+            state.solarYear = next;
+            // Sync header year input
+            if (refs.forecastNewSolarYearInput) refs.forecastNewSolarYearInput.value = String(next);
+            updateSolarYearStepperValue();
+            // Invalidate cache and refetch
+            delete state.layers?.solar_return;
+            if (state.activeLayers.includes('solar_return')) {
+                void loadActiveLayers({ lightweight: false });
+            }
+            // Update subtitle
+            if (refs.prognosticPanelMeta) refs.prognosticPanelMeta.textContent = buildPrognosticMomentSummary();
+            schedulePersist();
+        });
+
+        // Keyboard on solar year segment
+        document.addEventListener('keydown', (event) => {
+            const seg = event.target.closest('[data-solar-year-segment]');
+            if (!seg) return;
+            let delta = 0;
+            if (event.key === 'ArrowUp') delta = 1;
+            else if (event.key === 'ArrowDown') delta = -1;
+            else return;
+            event.preventDefault();
+            const btn = seg.querySelector(`[data-solar-year-step="${delta}"]`);
+            btn?.click();
+        });
 
         refs.openNatalBtn?.addEventListener('click', () => {
             window.AstroAPI?.saveChartToSession?.(state.natalData);
@@ -1053,11 +1089,10 @@
         const method = state.selectedRightLayer;
 
         if (method === 'solar_return') {
-            // Show solar year + location (where the solar return is calculated)
+            // Always use state.solarYear (user's selection), not the stale API response year
+            const year = state.solarYear;
             const layer = state.viewModel?.activePrognosticLayers?.find((l) => l.method === 'solar_return');
-            const solarInfo = layer?.raw?.solar_info;
-            const year = solarInfo?.year ?? state.solarYear;
-            const locName = solarInfo?.location?.name
+            const locName = layer?.raw?.solar_info?.location?.name
                 || state.solarLocation?.name
                 || state.location?.name
                 || '';
@@ -1178,6 +1213,34 @@
             return;
         }
         updateTimeStepperValues(refs.forecastNewTimeStepper, state.selectedDateTime);
+    }
+
+    function renderSolarYearStepper() {
+        const container = refs.forecastNewSolarYearStepper;
+        if (!container) return;
+        container.classList.remove('hidden');
+        container.innerHTML = `
+            <button type="button" class="forecast-new-time-stepper-btn forecast-new-stepper-action"
+                data-solar-year-step="-1" aria-label="Предыдущий год" title="Предыдущий год">↺</button>
+            <span class="forecast-new-time-stepper-segment forecast-new-time-stepper-segment--year"
+                data-solar-year-segment tabindex="0" role="spinbutton"
+                aria-label="Год соляра" aria-valuetext="${state.solarYear}">
+                <button type="button" class="forecast-new-time-stepper-btn forecast-new-time-stepper-btn--up"
+                    data-solar-year-step="1" aria-label="Следующий год">▲</button>
+                <span class="forecast-new-time-stepper-value">${state.solarYear}</span>
+                <button type="button" class="forecast-new-time-stepper-btn forecast-new-time-stepper-btn--down"
+                    data-solar-year-step="-1" aria-label="Предыдущий год">▼</button>
+            </span>
+        `;
+    }
+
+    function updateSolarYearStepperValue() {
+        const container = refs.forecastNewSolarYearStepper;
+        if (!container) return;
+        const valueEl = container.querySelector('.forecast-new-time-stepper-value');
+        const segmentEl = container.querySelector('[data-solar-year-segment]');
+        if (valueEl) valueEl.textContent = String(state.solarYear);
+        if (segmentEl) segmentEl.setAttribute('aria-valuetext', String(state.solarYear));
     }
 
     function renderNatalTimeStepper() {
@@ -2649,10 +2712,11 @@
         const layer = state.viewModel?.activePrognosticLayers?.find((item) => item.method === method);
         refs.prognosticPanelTitle.textContent = layerLabel(method);
         refs.prognosticPanelMeta.textContent = buildPrognosticMomentSummary();
-        // Solar return is defined by year only — target-date stepper is irrelevant
+        // Solar return is year-only — swap date stepper for year stepper
         const isSolar = method === 'solar_return';
         refs.forecastNewTimeStepper?.classList.toggle('hidden', isSolar);
         refs.prognosticMomentToggle?.classList.toggle('hidden', isSolar);
+        if (isSolar) renderSolarYearStepper();
         refs.targetDatetimeLabel.textContent = state.selectedDateTime.replace('T', ' ');
 
         if (!layer) {
