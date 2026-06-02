@@ -16,7 +16,14 @@
       "Sesquiquadrate": "Півтораквадрат",
       "Sextile": "Секстиль",
       "Square": "Квадрат",
-      "Trine": "Трин"
+      "Trine": "Трин",
+      "Vigintile": "Вігінтиль",
+      "Semi_Nonagon": "Напівнонагон",
+      "Decile": "Дециль",
+      "Nonagon": "Нонагон",
+      "Binonagon": "Бінонагон",
+      "Sentagon": "Сентагон",
+      "Tridecile": "Тридециль"
     },
     "configuration": {
       "Bisextile": "Бісекстиль",
@@ -111,7 +118,10 @@
       "Uranus": "Уран",
       "Venus": "Венера",
       "Vertex": "Вертекс",
-      "WhiteMoon": "Білий Місяць"
+      "WhiteMoon": "Білий Місяць",
+      "Fortune": "Парс",
+      "TrueNorthNode": "Північний вузол",
+      "TrueSouthNode": "Південний вузол"
     },
     "polarity": {
       "Feminine": "Жіночий",

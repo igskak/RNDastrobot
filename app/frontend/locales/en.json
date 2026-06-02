@@ -16,7 +16,14 @@
       "Sesquiquadrate": "Sesquiquadrate",
       "Sextile": "Sextile",
       "Square": "Square",
-      "Trine": "Trine"
+      "Trine": "Trine",
+      "Vigintile": "Vigintile",
+      "Semi_Nonagon": "Semi-Nonagon",
+      "Decile": "Decile",
+      "Nonagon": "Nonagon",
+      "Binonagon": "Binonagon",
+      "Sentagon": "Sentagon",
+      "Tridecile": "Tridecile"
     },
     "configuration": {
       "Bisextile": "Bisextile",
@@ -111,7 +118,10 @@
       "Uranus": "Uranus",
       "Venus": "Venus",
       "Vertex": "Vertex",
-      "WhiteMoon": "White Moon"
+      "WhiteMoon": "White Moon",
+      "Fortune": "Pars",
+      "TrueNorthNode": "North Node",
+      "TrueSouthNode": "South Node"
     },
     "polarity": {
       "Feminine": "Feminine",
