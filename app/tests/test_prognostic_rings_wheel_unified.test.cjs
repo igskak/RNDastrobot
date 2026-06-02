@@ -74,7 +74,7 @@ test('W1: missing angles on all rings -> no markers, no crash', async () => {
     assert.equal(svg.querySelectorAll('.angle-marker-label').length, 0);
 });
 
-test('W4: setVisibleMethods filters rings; single visible ring gets single-chart layout', async () => {
+test('W4: setVisibleMethods filters rings; single ring keeps the 2-slot thickness at the outer slot', async () => {
     const Wheel = await loadEngine();
     const svg = makeSvg();
     const wheel = new Wheel(svg);
@@ -82,14 +82,28 @@ test('W4: setVisibleMethods filters rings; single visible ring gets single-chart
     wheel.render(vm);
     assert.equal(wheel.rings.length, 2);
     const twoRingWidth = wheel.rings[0].outer - wheel.rings[0].inner;
+    const outerSlotInner = wheel.rings[1].inner;
 
     wheel.setVisibleMethods(['natal']);            // re-render внутри
     assert.equal(wheel.rings.length, 1);
     assert.equal(wheel.rings[0].method, 'natal');
     const singleWidth = wheel.rings[0].outer - wheel.rings[0].inner;
-    // одиночная раскладка: кольцо занимает всю доступную ширину, а не половину
-    assert.ok(singleWidth > twoRingWidth * 1.5,
-        `single ring (${singleWidth}) should be much wider than a 2-ring slot (${twoRingWidth})`);
+    // Требование астролога: одиночное колесо ТОЙ ЖЕ толщины, что слот
+    // двухкольцевой раскладки, и прижато к зодиаку (внешний слот).
+    assert.ok(Math.abs(singleWidth - twoRingWidth) < 0.001,
+        `single ring (${singleWidth}) must equal a 2-ring slot (${twoRingWidth})`);
+    assert.ok(Math.abs(wheel.rings[0].inner - outerSlotInner) < 0.001,
+        `single ring must sit at the outer slot (inner ${wheel.rings[0].inner} vs ${outerSlotInner})`);
+});
+
+test('single-layer viewModel renders with 2-slot thickness regardless of options', async () => {
+    const Wheel = await loadEngine();
+    const svg = makeSvg();
+    const wheel = new Wheel(svg);
+    wheel.setOptions({ minimumRingCount: 1, alignSingleRingOuter: false });
+    wheel.render({ natalLayer: natalLayer(), activePrognosticLayers: [] });
+    const width = wheel.rings[0].outer - wheel.rings[0].inner;
+    assert.ok(width < 100, `single ring must be slim (2-slot), got ${width}`);
 });
 
 test('W4: setVisibleMethods(null) restores all rings', async () => {

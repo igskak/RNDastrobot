@@ -872,8 +872,8 @@ function renderWheelMode(primaryChartOverride, partnerChartOverride) {
         houseNumberStyle: synastryState.settings.houseNumberStyle,
         houseLabelsOutside: synastryState.settings.houseLabelsOutside,
         showAspectText: synastryState.settings.showAspectText === true,
-        // D6: одиночный режим отображения = настоящий вид одной карты
-        // (кольцо во всю ширину + маркеры углов), как на chart.html.
+        // D6: одиночный режим отображения = вид одной карты, как chart.html
+        // (тонкое кольцо у зодиака + маркеры углов; толщину задаёт движок).
         minimumRingCount: synastryState.displayMode !== 'both' ? 1 : 2,
         alignSingleRingOuter: false,
         showAngleMarkers: synastryState.displayMode !== 'both',

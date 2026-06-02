@@ -1053,8 +1053,8 @@
             showAspectText: state.settings.showAspectText === true,
             angleAscDscBold: state.settings.angleAscDscBold,
             angleMcIcBold: state.settings.angleMcIcBold,
-            // D6: одиночный режим отображения = настоящий вид одной карты
-            // (кольцо во всю ширину + маркеры углов), как на chart.html.
+            // D6: одиночный режим отображения = вид одной карты, как chart.html
+            // (тонкое кольцо у зодиака + маркеры углов; толщину задаёт движок).
             minimumRingCount: includeNatal !== includeSolar ? 1 : 2,
             alignSingleRingOuter: false,
             showAngleMarkers: includeNatal !== includeSolar,

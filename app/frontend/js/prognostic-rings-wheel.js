@@ -267,9 +267,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                 ...(viewModel?.activePrognosticLayers || []),
             ].filter(Boolean);
             // W4: фильтр видимых колец. Если фильтр опустошает набор — игнорируем его
-            // (защита от рассинхрона UI), показываем все. Когда фильтр реально сузил
-            // набор, minimumRingCount не применяется: 1 видимое кольцо раскладывается
-            // как настоящая одиночная карта (D6), а не как кольцо в мульти-раскладке.
+            // (защита от рассинхрона UI), показываем все.
             let visibleFilterApplied = false;
             if (this.visibleMethods) {
                 const filtered = allLayers.filter((layer) => this.visibleMethods.includes(layer?.method));
@@ -278,13 +276,18 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                     allLayers = filtered;
                 }
             }
-            const count = visibleFilterApplied
+            let count = visibleFilterApplied
                 ? allLayers.length
                 : Math.max(1, allLayers.length, this.minimumRingCount || 1);
+            // D6 (требование астролога): одиночное колесо имеет ту же толщину, что
+            // кольцо двухкольцевой раскладки, и прижато к зодиаку — большое поле
+            // аспектов в центре, как у классической одиночной карты. Поэтому одно
+            // кольцо ВСЕГДА раскладывается как внешний слот ≥2-слотовой сетки.
+            if (allLayers.length === 1) count = Math.max(2, count);
             const available = ZODIAC_INNER_R - FIRST_RING_INNER_R - RING_GAP * (count - 1);
             const width = Math.max(28, available / count);
             return allLayers.map((layer, index) => {
-                const visualIndex = allLayers.length === 1 && this.alignSingleRingOuter ? count - 1 : index;
+                const visualIndex = allLayers.length === 1 ? count - 1 : index;
                 const inner = FIRST_RING_INNER_R + visualIndex * (width + RING_GAP);
                 const outer = inner + width;
                 return {
