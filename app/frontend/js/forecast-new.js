@@ -280,6 +280,15 @@
             longitude: numberOrNull(natalData.birth_data?.longitude),
             sourceId: null,
         };
+        // Снимок исходного натала (сохранённого клиента) — для isNatalEdited():
+        // если астролог сдвинул момент/место натала, форкаст-слои должны считаться
+        // против пересчитанного натала (inline), а не против stale user_id (фикс C2).
+        state.natalInitialSource = {
+            timezone: state.natalTimezone,
+            locationName: state.natalLocation.name || '',
+            latitude: state.natalLocation.latitude,
+            longitude: state.natalLocation.longitude,
+        };
 
         hydrateState();
         applyDeepLinkParams();
@@ -2147,6 +2156,45 @@
         }
     }
 
+    function isNatalEdited() {
+        if (!state.natalInitialDateTime) return false;
+        if (state.natalSelectedDateTime !== state.natalInitialDateTime) return true;
+        const init = state.natalInitialSource;
+        if (!init) return false;
+        return state.natalTimezone !== init.timezone
+            || (state.natalLocation?.name || '') !== init.locationName
+            || state.natalLocation?.latitude !== init.latitude
+            || state.natalLocation?.longitude !== init.longitude;
+    }
+
+    /**
+     * Источник натала для форкаст-запросов (фикс C2 / план PA1).
+     * Сохранённый клиент → {user_id}. Отредактированный момент натала → inline {natal}
+     * через ChartSourcePanel.buildSourcePayload — слои считаются против пересчитанного
+     * натала, а не против stale user_id из БД.
+     */
+    function buildNatalSourcePayload() {
+        if (!isNatalEdited()) return { user_id: state.userId };
+        return window.ChartSourcePanel.buildSourcePayload({
+            mode: 'manual',
+            datetime: state.natalSelectedDateTime,
+            timezone: state.natalTimezone,
+            location: state.natalLocation,
+        });
+    }
+
+    /** Идентичность натала в ключе кэша слоёв (фикс M2: две разные правки натала не коллидируют). */
+    function natalCacheToken() {
+        if (!isNatalEdited()) return 'natal:saved';
+        return [
+            'natal',
+            state.natalSelectedDateTime,
+            state.natalTimezone,
+            state.natalLocation?.latitude ?? '',
+            state.natalLocation?.longitude ?? '',
+        ].join('|');
+    }
+
     async function fetchLayer(method, options = {}) {
         const targetDateTime = options.targetDateTime || state.selectedDateTime;
         const targetTimezone = options.timezone || state.timezone;
@@ -2172,9 +2220,10 @@
         const controller = new AbortController();
 
         const request = (async () => {
+            const natalSource = buildNatalSourcePayload();
             if (method === 'transit') {
                 return apiPost('/transits/calculate', {
-                    user_id: state.userId,
+                    ...natalSource,
                     date,
                     time,
                     timezone: targetTimezone,
@@ -2185,19 +2234,19 @@
             }
             if (method === 'progression') {
                 return apiPost('/progressions/calculate', {
-                    user_id: state.userId,
+                    ...natalSource,
                     target_date: date,
                     target_time: time,
                     timezone: targetTimezone,
-                    save_to_db: options.saveToDb === true,
+                    save_to_db: options.saveToDb === true && !natalSource.natal,
                     name: options.name || null,
                 }, { signal: controller.signal });
             }
             return apiPost('/directions/calculate', {
-                user_id: state.userId,
+                ...natalSource,
                 target_date: date,
                 direction_type: normalizeDirectionType(state.directionType),
-                save_to_db: options.saveToDb === true,
+                save_to_db: options.saveToDb === true && !natalSource.natal,
                 name: options.name || null,
             }, { signal: controller.signal });
         })().then((data) => {
@@ -3370,9 +3419,13 @@
         const timezone = context.timezone || state.timezone;
         const location = context.location || state.location || {};
         const directionType = normalizeDirectionType(context.directionType || state.directionType);
+        // Идентичность натала в ключе (фикс M2): слой против отредактированного натала
+        // не должен коллидировать со слоем против сохранённого (или другой правки).
+        const natalToken = natalCacheToken();
         if (method === 'transit') {
             return [
                 method,
+                natalToken,
                 selectedDateTime,
                 timezone,
                 location?.name || '',
@@ -3381,12 +3434,12 @@
             ].join('|');
         }
         if (method === 'direction') {
-            return [method, date, directionType].join('|');
+            return [method, natalToken, date, directionType].join('|');
         }
         if (method === 'progression') {
-            return [method, selectedDateTime, timezone].join('|');
+            return [method, natalToken, selectedDateTime, timezone].join('|');
         }
-        return [method, date].join('|');
+        return [method, natalToken, date].join('|');
     }
 
     function getTimeStepperSegmentValues(value) {
