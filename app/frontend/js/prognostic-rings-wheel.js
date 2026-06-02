@@ -77,6 +77,12 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             this.showAspectText = false;
             this.minimumRingCount = 1;
             this.alignSingleRingOuter = false;
+            // W1 (Фаза W): маркеры углов ASC/MC/DSC/IC за кругом (паритет с ChartWheel).
+            // Opt-in, чтобы не менять вид существующих страниц до их явного включения.
+            this.showAngleMarkers = false;
+            // W4 (Фаза W): engine-level видимость колец. null = все кольца.
+            // ['natal'] на мульти-viewModel = в точности вид одной карты (D6).
+            this.visibleMethods = null;
             this.natalGlyphBaseSize = 18;
             this.planetLeaderColor = '#6b7280';
             this.houseVisualOptions = {
@@ -166,7 +172,25 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             if (Object.prototype.hasOwnProperty.call(options, 'angleMcIcBold')) {
                 this.angleMcIcBold = options.angleMcIcBold !== false;
             }
+            if (Object.prototype.hasOwnProperty.call(options, 'showAngleMarkers')) {
+                this.showAngleMarkers = options.showAngleMarkers === true;
+            }
+            if (Object.prototype.hasOwnProperty.call(options, 'visibleMethods')) {
+                this.visibleMethods = Array.isArray(options.visibleMethods) && options.visibleMethods.length
+                    ? options.visibleMethods.slice()
+                    : null;
+            }
             if (options.visualPreferences) this.visualPreferences = options.visualPreferences;
+        }
+
+        /**
+         * W4: показать только указанные кольца (по `method`). null/[] = все.
+         * Одно видимое кольцо раскладывается как одиночная карта — «показать одно
+         * колесо» из любого мульти-вида даёт ровно вид одной карты (D6).
+         */
+        setVisibleMethods(methods) {
+            this.visibleMethods = Array.isArray(methods) && methods.length ? methods.slice() : null;
+            if (this.viewModel) this.render(this.viewModel);
         }
 
         applyMatrixRows(matrixRows = {}, options = {}) {
@@ -218,6 +242,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                 aspects: this.el('g', { id: 'prognostic-aspects' }),
                 bodies: this.el('g', { id: 'prognostic-bodies' }),
                 labels: this.el('g', { id: 'prognostic-labels' }),
+                angles: this.el('g', { id: 'prognostic-angles' }),
             };
             Object.values(this.layers).forEach((layer) => this.svg.appendChild(layer));
 
@@ -231,16 +256,31 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             this.drawRingBoundaries(rings);
             this.drawAspects(rings);
             rings.forEach((ring) => this.drawBodies(ring));
+            this.drawAngleMarkers(rings);
             this.bindEvents();
             this.applyMatrixVisibilityToDom();
         }
 
         buildRings(viewModel) {
-            const allLayers = [
+            let allLayers = [
                 viewModel?.natalLayer,
                 ...(viewModel?.activePrognosticLayers || []),
             ].filter(Boolean);
-            const count = Math.max(1, allLayers.length, this.minimumRingCount || 1);
+            // W4: фильтр видимых колец. Если фильтр опустошает набор — игнорируем его
+            // (защита от рассинхрона UI), показываем все. Когда фильтр реально сузил
+            // набор, minimumRingCount не применяется: 1 видимое кольцо раскладывается
+            // как настоящая одиночная карта (D6), а не как кольцо в мульти-раскладке.
+            let visibleFilterApplied = false;
+            if (this.visibleMethods) {
+                const filtered = allLayers.filter((layer) => this.visibleMethods.includes(layer?.method));
+                if (filtered.length) {
+                    visibleFilterApplied = filtered.length < allLayers.length;
+                    allLayers = filtered;
+                }
+            }
+            const count = visibleFilterApplied
+                ? allLayers.length
+                : Math.max(1, allLayers.length, this.minimumRingCount || 1);
             const available = ZODIAC_INNER_R - FIRST_RING_INNER_R - RING_GAP * (count - 1);
             const width = Math.max(28, available / count);
             return allLayers.map((layer, index) => {
@@ -1154,6 +1194,60 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
         polar(radius, degrees) {
             const rad = degrees * Math.PI / 180;
             return { x: C + radius * Math.cos(rad), y: C + radius * Math.sin(rad) };
+        }
+
+        /**
+         * W1 (Фаза W): маркеры углов ASC/MC/DSC/IC за кругом — порт drawAnglesEnhanced
+         * из ChartWheel для паритета одиночной карты. Рисуются для первого кольца,
+         * несущего `angles` (обычно базовое/натальное). Opt-in: showAngleMarkers.
+         * Форма данных: ring.angles = { ASC: {longitude}, MC: {...}, DSC, IC }.
+         */
+        drawAngleMarkers(rings) {
+            if (!this.showAngleMarkers || !this.layers.angles) return;
+            const ring = (rings || []).find((r) => r?.angles && (r.angles.ASC || r.angles.MC));
+            if (!ring) return;
+            ['ASC', 'MC', 'DSC', 'IC'].forEach((label) => {
+                const data = ring.angles[label];
+                const longitude = data && data.longitude;
+                if (longitude === null || longitude === undefined) return;
+                this.drawAngleMarker(this.longToAngle(Number(longitude)), label, ring);
+            });
+        }
+
+        drawAngleMarker(angleDeg, label, ring) {
+            const outsideExtension = Number(this.houseVisualOptions.outsideExtension) || 14;
+            const isAscDsc = label === 'ASC' || label === 'DSC';
+            const isBold = (isAscDsc && this.angleAscDscBold !== false)
+                || (!isAscDsc && this.angleMcIcBold !== false);
+            const stroke = ring.method === 'natal' ? '#111111' : (ring.color || '#111111');
+
+            const p1 = this.polar(OUTER_R + 1, angleDeg);
+            const p2 = this.polar(OUTER_R + outsideExtension, angleDeg);
+            this.layers.angles.appendChild(this.el('line', {
+                x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y,
+                stroke,
+                'stroke-width': isBold ? 2.4 : 1.2,
+                class: 'angle-marker-line',
+                'data-angle': label,
+                'data-method': ring.method || '',
+            }));
+
+            const labelR = OUTER_R + (this.houseLabelsOutside ? 26 : 20);
+            const pos = this.polar(labelR, angleDeg);
+            const relX = (pos.x - C) / labelR;   // косинус экранного угла
+            const anchor = Math.abs(relX) < 0.2 ? 'middle' : (relX > 0 ? 'start' : 'end');
+            const dx = anchor === 'middle' ? 0 : (anchor === 'start' ? 3 : -3);
+            this.layers.angles.appendChild(this.el('text', {
+                x: pos.x + dx,
+                y: pos.y + 3,
+                'text-anchor': anchor,
+                'font-size': '9',
+                'font-weight': isBold ? '800' : '500',
+                fill: stroke,
+                class: 'angle-marker-label',
+                'data-angle': label,
+                'data-method': ring.method || '',
+            }, label));
         }
 
         drawArc(outerR, innerR, startAngle, endAngle, fill, parent) {

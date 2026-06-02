@@ -22,6 +22,7 @@
 | D1 | Объём объединения | Колёса → 2 вида. `forecast-tables`, `forecast-timeline`, `natal-full` остаются **аналитическими вкладками/режимами** внутри workspace, не сворачиваются в колесо. | Колесо = «момент». Таблицы/таймлайн = «период». Разные ментальные модели, но один контейнер. |
 | D2 | Модель карт в мульти-колесе | **Асимметрично**: внутреннее/левое кольцо — базовая карта, внешние кольца строятся относительно неё (transit / progression / direction / solar / synastry_partner). | Совпадает с уже построенным `prognostic-rings-wheel.js`. Бэкенд-методики и так производны от натала. |
 | D3 | Ручной ввод карт | **Ephemeral**: введённые руками карты живут в сессии, в базу не попадают. Кнопка «Сохранить как клиента/событие». | Требует рефактора форкаст-сервисов: принимать inline-натал без обязательного `user_id`. Главное backend-изменение. |
+| D6 | Движок колеса | **Единый**: `PrognosticRingsWheel` — универсальное колесо (1..N колец); одна карта = 1-кольцевой режим; «показать одно кольцо» из любого мульти-вида = вид одной карты; `ChartWheel` retired после паритета (Фаза W). | Запрос астролога о консистентности. Gap: 85% совместимы, дыры W1–W4 локальные. |
 | D4 | Переход со старых страниц | **Feature-flag + параллельный запуск** (пересмотрено после ревью — все 3 модели против жёсткого перехода). Workspace выкатывается за флагом (env или localStorage), старые страницы живы. Откат = переключить флаг, без redeploy. Редиректы — только после подтверждённого паритета по телеметрии. | Безопасный откат для инструмента, которым биллят клиентов. Цена: пара недель двойной сборки бандлов. |
 
 ## 3. Ключевой вывод: рендер-движки готовы, бэкенд недооценён
@@ -67,9 +68,13 @@ workspace.html
 │            | solar-return | synastry
 │   каждая методика → { endpoint, payloadBuilder, normalizer, ringMethod }
 │
-├── Рендер:
-│   ├── single  → ChartWheel (chart-wheel.js)            [как сейчас]
-│   └── multi   → PrognosticRingsWheel (prognostic-rings-wheel.js) [как сейчас]
+├── Рендер: ЕДИНЫЙ движок (решение D6, запрос астролога о консистентности)
+│   └── PrognosticRingsWheel → универсальное колесо: одна карта = 1 кольцо,
+│       соляр/синастрия = 2, прогностика = 2+. «Показать одно кольцо» в любом
+│       виде = в точности вид одной карты. ChartWheel retired после паритета.
+│       Gap-анализ: движки на 85% совместимы; дыры: углы ASC/MC/DSC/IC (W1),
+│       фильтр аспектов (W2), адаптер chartData→viewModel (W3),
+│       engine-level setVisibleMethods (W4).
 │
 └── Общие модули (без изменений): api.js, preferences.js, i18n*, symbols.js,
     chart-data.js, aspect-phase.js, natal-wheel-data.js, place-autocomplete.js,
@@ -129,6 +134,14 @@ workspaceState = {
 **Фаза 1 — Backend inline-натал.** Расширить схемы запросов (`TransitRequest` и др.) полем `natal`. Добавить ветку «считать из памяти» в сервисы. Тесты на оба пути (user_id и inline). Без изменения старых вызовов.
 
 **Фаза 2 — `MethodologyRegistry`.** Декларативный реестр методик (endpoint/payload/normalizer/ringMethod). Перевести существующие форкаст-вызовы `forecast-new.js` на реестр (рефактор без новой функциональности).
+
+**Фаза W — Унификация движка колеса (D6, перед Фазой 3).** `PrognosticRingsWheel` становится единственным движком:
+- **W1**: рендер маркеров углов ASC/MC/DSC/IC (порт `drawAnglesEnhanced` из ChartWheel; opt-in `showAngleMarkers`, чтобы не менять текущие страницы) + слот `angles` в слое viewModel.
+- **W2**: `setAspectTypeFilter('all'|'major'|'minor')` — паритет с ChartWheel.
+- **W3**: адаптер `natalChartDataToViewModel(chartData)` (плоский натал → natalLayer с bodies/houses/aspects/angles).
+- **W4**: engine-level `setVisibleMethods([...])` — «показать только кольцо X» как функция движка; synastry/solar display-mode переводится на неё (вместо пересборки viewModel на странице). 1 видимое кольцо = вид одной карты.
+- **W5**: миграция `chart.js` на единый движок через W3, parity-проверка в браузере (до/после).
+- **W6**: retire `chart-wheel.js`.
 
 **Фаза 3 — `WorkspaceShell` (single-wheel).** Новый `workspace.html` + entry. Вид «одно колесо»: `ChartSourcePanel` + методики single (natal/event/solar-snapshot/progressed-snapshot) → `ChartWheel`. Вкладки tables/report подключить как режимы (переиспользовать `natal-full`, `forecast-tables`).
 
