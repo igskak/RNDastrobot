@@ -2560,7 +2560,10 @@
      * натала, а не против stale user_id из БД.
      */
     function buildNatalSourcePayload() {
-        if (!isNatalEdited()) return { user_id: state.userId };
+        // Сохранённый клиент с неизменённым наталом → {user_id}.
+        // Ручная (несохранённая) карта не имеет user_id — для неё всегда inline {natal},
+        // иначе бэкенд отвечает 422 «укажите ровно один источник натала» (user_id=null).
+        if (state.userId && !isNatalEdited()) return { user_id: state.userId };
         return window.ChartSourcePanel.buildSourcePayload({
             mode: 'manual',
             datetime: state.natalSelectedDateTime,
@@ -2571,7 +2574,7 @@
 
     /** Идентичность натала в ключе кэша слоёв (фикс M2: две разные правки натала не коллидируют). */
     function natalCacheToken() {
-        if (!isNatalEdited()) return 'natal:saved';
+        if (state.userId && !isNatalEdited()) return 'natal:saved';
         return [
             'natal',
             state.natalSelectedDateTime,
