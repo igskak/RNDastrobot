@@ -32,69 +32,188 @@
     display: inline-flex;
     flex-wrap: wrap;
     justify-content: center;
+    align-items: center;
     gap: 8px;
 }
 
-.forecast-new-layer-toggle {
+.forecast-new-layer-pop {
+    position: relative;
+    display: inline-flex;
+}
+
+/* Layer chip — pure on/off toggle. Active state is a filled pill, not a checkbox tick. */
+.forecast-new-layer-chip {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     min-height: 34px;
-    padding: 0 10px;
-    border: 1px solid rgba(30, 58, 95, 0.14);
+    padding: 0 14px;
+    border: 1px solid rgba(30, 58, 95, 0.16);
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.74);
     color: var(--text-secondary);
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
-    transition: transform var(--transition), border-color var(--transition), background var(--transition);
+    transition: transform var(--transition), border-color var(--transition), background var(--transition), color var(--transition);
 }
 
-.forecast-new-layer-toggle:hover {
+.forecast-new-layer-chip:hover {
     transform: translateY(-1px);
     background: rgba(255, 255, 255, 0.92);
 }
 
-.forecast-new-layer-toggle input {
-    width: 14px;
-    height: 14px;
-    accent-color: var(--accent);
+.forecast-new-layer-chip input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
 }
 
-.forecast-new-layer-toggle--transit input {
-    accent-color: #1e3a5f;
+.forecast-new-layer-chip:focus-within {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 
-.forecast-new-layer-toggle--progression input {
-    accent-color: #7c3aed;
+.forecast-new-layer-chip:has(input:checked) {
+    background: #1e3a5f;
+    border-color: transparent;
+    color: #fff;
 }
 
-.forecast-new-layer-toggle--direction input {
-    accent-color: #0f766e;
+.forecast-new-layer-chip:has(input:checked):hover {
+    background: #1e3a5f;
 }
 
-.forecast-new-layer-direction-control {
+.forecast-new-layer-chip--progression:has(input:checked),
+.forecast-new-layer-chip--progression:has(input:checked):hover { background: #7c3aed; }
+.forecast-new-layer-chip--direction:has(input:checked),
+.forecast-new-layer-chip--direction:has(input:checked):hover { background: #0f766e; }
+.forecast-new-layer-chip--solar:has(input:checked),
+.forecast-new-layer-chip--solar:has(input:checked):hover { background: #b8935a; }
+.forecast-new-layer-chip--synastry:has(input:checked),
+.forecast-new-layer-chip--synastry:has(input:checked):hover { background: #be185d; }
+
+/* Per-layer parameter popover, anchored under its chip and opened on activation. */
+.forecast-new-layer-popover {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: max-content;
+    min-width: 208px;
+    max-width: 288px;
+    padding: 14px;
+    border: 1px solid rgba(30, 58, 95, 0.16);
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 18px 40px rgba(26, 22, 20, 0.18);
+}
+
+.forecast-new-layer-popover.hidden {
+    display: none;
+}
+
+.forecast-new-pop-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+}
+
+.forecast-new-pop-input,
+.forecast-new-pop-select {
+    width: 100%;
+    min-height: 36px;
+    padding: 6px 10px;
+    border: 1px solid rgba(44, 39, 35, 0.18);
+    border-radius: 9px;
+    background: #fff;
+    color: var(--text-primary);
+    font-size: 13px;
+}
+
+.forecast-new-pop-input:focus,
+.forecast-new-pop-select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(30, 58, 95, 0.16);
+}
+
+/* Synastry: source switch (saved client vs manual entry) */
+.forecast-new-synastry-mode {
     display: inline-flex;
-    align-items: center;
-    gap: 6px;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 999px;
+    background: rgba(30, 58, 95, 0.08);
 }
 
-.forecast-new-direction-type-select {
-    min-height: 34px;
-    max-width: 152px;
-    padding: 0 28px 0 10px;
-    border: 1px solid rgba(30, 58, 95, 0.14);
+.forecast-new-synastry-mode-btn {
+    flex: 1;
+    min-height: 28px;
+    padding: 0 12px;
+    border: none;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.74);
+    background: transparent;
     color: var(--text-secondary);
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
 }
 
-.forecast-new-direction-type-select:hover {
-    background: rgba(255, 255, 255, 0.92);
+.forecast-new-synastry-mode-btn.is-active {
+    background: #fff;
+    color: var(--text-primary);
+    box-shadow: 0 1px 3px rgba(26, 22, 20, 0.16);
+}
+
+.forecast-new-synastry-pane {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.forecast-new-synastry-pane.hidden {
+    display: none;
+}
+
+.forecast-new-synastry-manual-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.forecast-new-synastry-apply {
+    min-height: 34px;
+    border: none;
+    border-radius: 9px;
+    background: #1e3a5f;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.forecast-new-synastry-apply:hover {
+    filter: brightness(1.08);
+}
+
+.forecast-new-synastry-manual-error {
+    margin: 0;
+    color: var(--error, #c0392b);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.forecast-new-synastry-manual-error.hidden {
+    display: none;
 }
 
 .forecast-new-layout {

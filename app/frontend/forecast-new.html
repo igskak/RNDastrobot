@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Прогностика New</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=bcb9800f5ab5">
-    <script>window.__APP_BUILD_ID__ = 'bcb9800f5ab5';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=b019c1b78d0b">
+    <script>window.__APP_BUILD_ID__ = 'b019c1b78d0b';</script>
 </head>
 <body class="forecast-new-page">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -20,57 +20,87 @@
             <p id="forecastNewSubtitle"></p>
         </div>
         <div class="forecast-new-layer-toggles" aria-label="Слои прогностики">
-            <label class="forecast-new-layer-toggle forecast-new-layer-toggle--transit">
+            <label class="forecast-new-layer-chip forecast-new-layer-chip--transit">
                 <input type="checkbox" data-layer-toggle="transit" checked>
                 <span>Транзиты</span>
             </label>
-            <label class="forecast-new-layer-toggle forecast-new-layer-toggle--progression">
+            <label class="forecast-new-layer-chip forecast-new-layer-chip--progression">
                 <input type="checkbox" data-layer-toggle="progression">
                 <span>Прогрессии</span>
             </label>
-            <div class="forecast-new-layer-direction-control">
-                <label class="forecast-new-layer-toggle forecast-new-layer-toggle--direction">
+            <div class="forecast-new-layer-pop" data-layer-pop="direction">
+                <label class="forecast-new-layer-chip forecast-new-layer-chip--direction">
                     <input type="checkbox" data-layer-toggle="direction">
                     <span>Дирекции</span>
                 </label>
-                <select id="forecastNewDirectionTypeSelect" class="forecast-new-direction-type-select" aria-label="Тип дирекций">
-                    <option value="zodiacal">Зодиакальные</option>
-                    <option value="solar_arc">Солнечная дуга</option>
-                    <option value="equatorial">Найбод</option>
-                </select>
+                <div class="forecast-new-layer-popover hidden" data-layer-popover="direction" role="dialog" aria-label="Параметры дирекций">
+                    <label class="forecast-new-pop-label">Тип дирекций</label>
+                    <select id="forecastNewDirectionTypeSelect" class="forecast-new-pop-select" aria-label="Тип дирекций">
+                        <option value="zodiacal">Зодиакальные</option>
+                        <option value="solar_arc">Солнечная дуга</option>
+                        <option value="equatorial">Найбод</option>
+                    </select>
+                </div>
             </div>
-            <div class="forecast-new-layer-direction-control">
-                <label class="forecast-new-layer-toggle forecast-new-layer-toggle--solar">
+            <div class="forecast-new-layer-pop" data-layer-pop="solar_return">
+                <label class="forecast-new-layer-chip forecast-new-layer-chip--solar">
                     <input type="checkbox" data-layer-toggle="solar_return">
                     <span>Соляр</span>
                 </label>
-                <input type="number" id="forecastNewSolarYearInput" class="forecast-new-solar-year-input" min="1900" max="2100" aria-label="Год соляра" title="Год соляра">
-                <div class="place-autocomplete-wrapper forecast-new-solar-location-wrap">
-                    <input type="text" id="forecastNewSolarLocationInput" class="forecast-new-solar-location-input" placeholder="Місце соляру…" autocomplete="off" aria-label="Місце соляру">
-                    <div id="forecastNewSolarLocationSuggestions" class="place-suggestions"></div>
+                <div class="forecast-new-layer-popover hidden" data-layer-popover="solar_return" role="dialog" aria-label="Параметры соляра">
+                    <label class="forecast-new-pop-label">Год соляра</label>
+                    <input type="number" id="forecastNewSolarYearInput" class="forecast-new-pop-input" min="1900" max="2100" aria-label="Год соляра">
+                    <label class="forecast-new-pop-label">Место соляра</label>
+                    <div class="place-autocomplete-wrapper forecast-new-solar-location-wrap">
+                        <input type="text" id="forecastNewSolarLocationInput" class="forecast-new-pop-input forecast-new-solar-location-input" placeholder="Место соляра…" autocomplete="off" aria-label="Место соляра">
+                        <div id="forecastNewSolarLocationSuggestions" class="place-suggestions"></div>
+                    </div>
+                    <input type="hidden" id="forecastNewSolarLat">
+                    <input type="hidden" id="forecastNewSolarLon">
                 </div>
-                <input type="hidden" id="forecastNewSolarLat">
-                <input type="hidden" id="forecastNewSolarLon">
             </div>
-            <div class="forecast-new-layer-direction-control">
-                <label class="forecast-new-layer-toggle forecast-new-layer-toggle--synastry">
+            <div class="forecast-new-layer-pop" data-layer-pop="synastry_partner">
+                <label class="forecast-new-layer-chip forecast-new-layer-chip--synastry">
                     <input type="checkbox" data-layer-toggle="synastry_partner">
                     <span>Синастрия</span>
                 </label>
-                <select id="forecastNewSynastryPartnerSelect" class="forecast-new-direction-type-select" aria-label="Партнёр для синастрии" title="Партнёр">
-                    <option value="">— партнёр —</option>
-                </select>
+                <div class="forecast-new-layer-popover hidden" data-layer-popover="synastry_partner" role="dialog" aria-label="Партнёр для синастрии">
+                    <div class="forecast-new-synastry-mode" role="tablist" aria-label="Источник партнёра">
+                        <button type="button" class="forecast-new-synastry-mode-btn is-active" data-synastry-mode="db" role="tab" aria-selected="true">Из базы</button>
+                        <button type="button" class="forecast-new-synastry-mode-btn" data-synastry-mode="manual" role="tab" aria-selected="false">Вручную</button>
+                    </div>
+                    <div class="forecast-new-synastry-pane" data-synastry-pane="db">
+                        <select id="forecastNewSynastryPartnerSelect" class="forecast-new-pop-select" aria-label="Партнёр для синастрии">
+                            <option value="">— партнёр —</option>
+                        </select>
+                    </div>
+                    <div class="forecast-new-synastry-pane hidden" data-synastry-pane="manual">
+                        <input type="text" id="forecastNewSynastryManualName" class="forecast-new-pop-input" placeholder="Имя партнёра" autocomplete="off">
+                        <div class="forecast-new-synastry-manual-grid">
+                            <input type="date" id="forecastNewSynastryManualDate" class="forecast-new-pop-input" aria-label="Дата рождения партнёра">
+                            <input type="time" id="forecastNewSynastryManualTime" class="forecast-new-pop-input" step="1" aria-label="Время рождения партнёра">
+                        </div>
+                        <select id="forecastNewSynastryManualTimezone" class="forecast-new-pop-select" aria-label="Часовой пояс партнёра">
+                            <option value="">Часовой пояс</option>
+                        </select>
+                        <div class="place-autocomplete-wrapper">
+                            <input type="text" id="forecastNewSynastryManualLocation" class="forecast-new-pop-input" placeholder="Место рождения" autocomplete="off" aria-label="Место рождения партнёра">
+                            <div id="forecastNewSynastryManualSuggestions" class="place-suggestions"></div>
+                        </div>
+                        <input type="hidden" id="forecastNewSynastryManualLat">
+                        <input type="hidden" id="forecastNewSynastryManualLon">
+                        <button type="button" class="forecast-new-synastry-apply" id="forecastNewSynastryManualApply">Применить</button>
+                        <p class="forecast-new-synastry-manual-error hidden" id="forecastNewSynastryManualError"></p>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="header-nav-buttons forecast-new-header-actions">
-            <a href="/" class="header-nav-btn" data-i18n="page.chart.nav.home"></a>
-            <button type="button" class="header-nav-btn" id="openNatalBtn" data-i18n="page.natalFull.nav.wheel"></button>
             <div class="forecast-view-tabs">
                 <a href="forecast-new.html" class="forecast-view-tab" aria-current="page" data-i18n="page.chart.nav.forecast"><i class="forecast-view-tab-icon" aria-hidden="true">◯</i></a>
                 <a href="forecast-tables.html" class="forecast-view-tab" data-i18n="page.forecast.tabs.table"></a>
                 <a href="forecast-timeline.html" class="forecast-view-tab" data-i18n="page.forecast.tabs.timeline"></a>
             </div>
-            <a href="solar.html" class="header-nav-btn" data-i18n="page.chart.nav.solar"></a>
             <div class="header-action-menu">
                 <button type="button" class="header-nav-btn header-nav-btn--icon" id="forecastNewActionsToggle" aria-haspopup="true" aria-expanded="false" data-i18n-aria-label="page.chart.actions.openMenu">
                     <svg class="nav-btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
@@ -81,6 +111,9 @@
                     <span data-i18n="page.chart.actions.label"></span>
                 </button>
                 <div class="chart-actions-menu hidden" id="forecastNewActionsMenu" role="menu">
+                    <a href="/" class="chart-action-item chart-action-item--link" role="menuitem" data-i18n="page.chart.nav.home"></a>
+                    <button type="button" class="chart-action-item" id="openNatalBtn" role="menuitem" data-i18n="page.natalFull.nav.wheel"></button>
+                    <a href="solar.html" class="chart-action-item chart-action-item--link" role="menuitem" data-i18n="page.chart.nav.solar"></a>
                     <button type="button" class="chart-action-item" id="openNatalTablesBtn" role="menuitem" data-i18n="page.chart.nav.tables"></button>
                     <button type="button" class="chart-action-item" id="openSynastryBtn" role="menuitem" data-i18n="page.chart.nav.synastry"></button>
                     <button type="button" class="chart-action-item" id="savePrognosticChartBtn" role="menuitem" data-i18n="page.chart.actions.saveChart"></button>
@@ -374,6 +407,6 @@
         </aside>
     </main>
 
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=bcb9800f5ab5"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=b019c1b78d0b"></script>
 </body>
 </html>

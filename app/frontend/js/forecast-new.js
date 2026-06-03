@@ -106,6 +106,8 @@
         solarYear: new Date().getFullYear(),
         solarLocation: null,    // {name, latitude, longitude, timezone} | null = birth place
         synastryPartnerId: '',
+        synastryMode: 'db',     // 'db' = сохранённый клиент | 'manual' = ручной ввод партнёра
+        synastryManual: null,   // {name, date, time, timezone, place, latitude, longitude} | null
         stepMode: 'hour',
         customStep: { amount: 1, unit: 'day' },
         isCustomStepOpen: false,
@@ -309,6 +311,8 @@
         bindLocationAutocomplete();
         bindNatalLocationAutocomplete();
         bindSolarLocationAutocomplete();
+        bindSynastryManualControls();
+        initLayerPopovers();
         initAspectInteractions();
         syncControlsFromState();
         renderStaticNatal();
@@ -350,6 +354,9 @@
             'forecastNewViewSingle', 'forecastNewViewMulti',
             'forecastNewSolarYearInput', 'forecastNewSolarLocationInput', 'forecastNewSolarLocationSuggestions',
             'forecastNewSolarLat', 'forecastNewSolarLon', 'forecastNewSynastryPartnerSelect',
+            'forecastNewSynastryManualName', 'forecastNewSynastryManualDate', 'forecastNewSynastryManualTime',
+            'forecastNewSynastryManualTimezone', 'forecastNewSynastryManualLocation', 'forecastNewSynastryManualSuggestions',
+            'forecastNewSynastryManualLat', 'forecastNewSynastryManualLon', 'forecastNewSynastryManualApply', 'forecastNewSynastryManualError',
             'forecastNewZoomIn', 'forecastNewZoomOut',
             'forecastNewZoomReset', 'forecastNewSettingsToggle', 'forecastNewSettingsPanel',
             'orientationSelect', 'houseSystemSelect', 'iconScaleRange', 'iconScaleValue',
@@ -462,6 +469,9 @@
         refs.layerToggles.forEach((input) => {
             input.addEventListener('change', async () => {
                 const layer = input.dataset.layerToggle;
+                // Параметры слоя живут в поповере, который открывается при включении слоя.
+                if (input.checked) openLayerPopover(layer);
+                else closeLayerPopover(layer);
                 state.activeLayers = LAYER_ORDER.filter((method) => {
                     const toggle = document.querySelector(`[data-layer-toggle="${method}"]`);
                     return toggle?.checked;
@@ -864,6 +874,186 @@
         });
     }
 
+    // ── Поповеры параметров слоёв (Дирекции / Соляр / Синастрия) ──────────────
+    function getLayerPopover(layer) {
+        return document.querySelector(`[data-layer-popover="${layer}"]`);
+    }
+
+    function closeAllLayerPopovers(except) {
+        document.querySelectorAll('[data-layer-popover]').forEach((pop) => {
+            if (pop !== except) pop.classList.add('hidden');
+        });
+    }
+
+    function openLayerPopover(layer) {
+        const pop = getLayerPopover(layer);
+        if (!pop) return;
+        closeAllLayerPopovers(pop);
+        pop.classList.remove('hidden');
+        // Фокус на первый осмысленный контрол поповера
+        pop.querySelector('select, input:not([type=hidden]), button')?.focus({ preventScroll: true });
+    }
+
+    function closeLayerPopover(layer) {
+        getLayerPopover(layer)?.classList.add('hidden');
+    }
+
+    function initLayerPopovers() {
+        // Закрытие по клику вне поповера/чипа и по Escape.
+        document.addEventListener('click', (event) => {
+            if (event.target.closest('.forecast-new-layer-pop')) return;
+            closeAllLayerPopovers(null);
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') closeAllLayerPopovers(null);
+        });
+
+        // Переключатель источника партнёра синастрии: «Из базы» / «Вручную».
+        document.querySelectorAll('[data-synastry-mode]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                setSynastryMode(btn.dataset.synastryMode);
+            });
+        });
+    }
+
+    function setSynastryMode(mode) {
+        const next = mode === 'manual' ? 'manual' : 'db';
+        state.synastryMode = next;
+        document.querySelectorAll('[data-synastry-mode]').forEach((btn) => {
+            const isActive = btn.dataset.synastryMode === next;
+            btn.classList.toggle('is-active', isActive);
+            btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+        document.querySelectorAll('[data-synastry-pane]').forEach((pane) => {
+            pane.classList.toggle('hidden', pane.dataset.synastryPane !== next);
+        });
+        schedulePersist();
+    }
+
+    function bindSynastryManualControls() {
+        // Часовые пояса в ручной форме — тем же источником, что и остальные селекты.
+        if (refs.forecastNewSynastryManualTimezone) {
+            window.Timezones?.populate?.(refs.forecastNewSynastryManualTimezone);
+        }
+
+        if (window.PlaceAutocomplete && refs.forecastNewSynastryManualLocation && refs.forecastNewSynastryManualSuggestions) {
+            window.PlaceAutocomplete.attach({
+                input: refs.forecastNewSynastryManualLocation,
+                suggestions: refs.forecastNewSynastryManualSuggestions,
+                minChars: 2,
+                debounceMs: 350,
+                limit: 5,
+                getLabel: (item) => item.shortName || item.displayName,
+                onInput: () => {
+                    if (refs.forecastNewSynastryManualLat) refs.forecastNewSynastryManualLat.value = '';
+                    if (refs.forecastNewSynastryManualLon) refs.forecastNewSynastryManualLon.value = '';
+                },
+                onSelect: async (item) => {
+                    refs.forecastNewSynastryManualLocation.value = item.shortName || item.displayName;
+                    const latitude = item.lat ?? item.latitude ?? null;
+                    const longitude = item.lon ?? item.longitude ?? null;
+                    if (refs.forecastNewSynastryManualLat) refs.forecastNewSynastryManualLat.value = latitude !== null ? String(latitude) : '';
+                    if (refs.forecastNewSynastryManualLon) refs.forecastNewSynastryManualLon.value = longitude !== null ? String(longitude) : '';
+                    if (refs.forecastNewSynastryManualTimezone && !refs.forecastNewSynastryManualTimezone.value) {
+                        let tz = null;
+                        if (item.sourceId && window.AstroAPI?.resolvePlaceTimezone) {
+                            try { tz = await window.AstroAPI.resolvePlaceTimezone(item.sourceId); } catch (_) { /* ignore */ }
+                        }
+                        tz = tz || window.Timezones?.guess?.(item.displayName || item.shortName) || null;
+                        if (tz) refs.forecastNewSynastryManualTimezone.value = tz;
+                    }
+                },
+            });
+        }
+
+        refs.forecastNewSynastryManualApply?.addEventListener('click', applyManualSynastryPartner);
+    }
+
+    function showSynastryManualError(message) {
+        const el = refs.forecastNewSynastryManualError;
+        if (!el) return;
+        if (message) {
+            el.textContent = message;
+            el.classList.remove('hidden');
+        } else {
+            el.textContent = '';
+            el.classList.add('hidden');
+        }
+    }
+
+    async function applyManualSynastryPartner() {
+        const name = (refs.forecastNewSynastryManualName?.value || '').trim();
+        const date = refs.forecastNewSynastryManualDate?.value || '';
+        const time = refs.forecastNewSynastryManualTime?.value || '';
+        const timezone = refs.forecastNewSynastryManualTimezone?.value || '';
+        const place = (refs.forecastNewSynastryManualLocation?.value || '').trim();
+        const latRaw = refs.forecastNewSynastryManualLat?.value || '';
+        const lonRaw = refs.forecastNewSynastryManualLon?.value || '';
+        const hasCoords = latRaw !== '' && lonRaw !== '';
+
+        if (!date || !time) {
+            showSynastryManualError('Укажите дату и время рождения партнёра.');
+            return;
+        }
+        if (!timezone) {
+            showSynastryManualError('Выберите часовой пояс партнёра.');
+            return;
+        }
+        if (!place && !hasCoords) {
+            showSynastryManualError('Укажите место рождения партнёра.');
+            return;
+        }
+        showSynastryManualError('');
+
+        state.synastryManual = {
+            name,
+            date,
+            time: time.length === 5 ? `${time}:00` : time,
+            timezone,
+            place: place || null,
+            latitude: hasCoords ? Number(latRaw) : null,
+            longitude: hasCoords ? Number(lonRaw) : null,
+        };
+        state.synastryMode = 'manual';
+        // Сброс кэша слоя синастрии — данные партнёра поменялись.
+        delete state.layers?.synastry_partner;
+        schedulePersist();
+        closeLayerPopover('synastry_partner');
+        if (state.activeLayers.includes('synastry_partner')) {
+            await loadActiveLayers({ lightweight: false });
+        }
+    }
+
+    function hasUsableSynastryPartner() {
+        if (state.synastryMode === 'manual') {
+            const m = state.synastryManual;
+            return !!(m && m.date && m.time && m.timezone && (m.place || (m.latitude !== null && m.longitude !== null)));
+        }
+        return !!state.synastryPartnerId;
+    }
+
+    function buildSynastryPartnerSource() {
+        if (state.synastryMode === 'manual' && state.synastryManual) {
+            const m = state.synastryManual;
+            const natal = {
+                date: m.date,
+                time: m.time,
+                timezone: m.timezone,
+                house_system: state.pageSettings?.houseSystem || 'P',
+            };
+            if (m.name) natal.first_name = m.name;
+            if (m.latitude !== null && m.longitude !== null) {
+                natal.latitude = m.latitude;
+                natal.longitude = m.longitude;
+                if (m.place) natal.place = m.place;
+            } else if (m.place) {
+                natal.place = m.place;
+            }
+            return { natal };
+        }
+        return { user_id: state.synastryPartnerId };
+    }
+
     function bindWheelPanZoom() {
         const shell = refs.forecastNewWheelShell;
         if (!shell) return;
@@ -1101,9 +1291,11 @@
         if (method === 'synastry_partner') {
             // Show partner name + birth date + place
             const select = refs.forecastNewSynastryPartnerSelect;
-            const partnerName = select && select.selectedIndex > 0
-                ? (select.options[select.selectedIndex]?.text || '')
-                : '';
+            const partnerName = state.synastryMode === 'manual'
+                ? (state.synastryManual?.name || 'Партнёр (вручную)')
+                : (select && select.selectedIndex > 0
+                    ? (select.options[select.selectedIndex]?.text || '')
+                    : '');
             const layer = state.viewModel?.activePrognosticLayers?.find((l) => l.method === 'synastry_partner');
             const bd = layer?.raw?.partner_chart?.birth_data;
             const partnerMeta = bd
@@ -2445,13 +2637,15 @@
                 return apiPost('/solar/calculate', solarBody, { signal: controller.signal });
             }
             if (method === 'synastry_partner') {
-                if (!state.synastryPartnerId) {
-                    throw new Error('Выберите партнёра для синастрии');
+                if (!hasUsableSynastryPartner()) {
+                    throw new Error(state.synastryMode === 'manual'
+                        ? 'Заполните данные партнёра для синастрии'
+                        : 'Выберите партнёра для синастрии');
                 }
                 // primary = тот же источник натала, что у остальных слоёв (saved или inline)
                 return apiPost('/synastry/calculate', {
                     primary: natalSource,
-                    partner: { user_id: state.synastryPartnerId },
+                    partner: buildSynastryPartnerSource(),
                 }, { signal: controller.signal }).then((resp) => ({
                     partner_chart: resp.partner_chart,
                     inter_aspects: resp.inter_aspects,
@@ -2552,6 +2746,18 @@
         }
         if (refs.forecastNewSynastryPartnerSelect && state.synastryPartnerId) {
             refs.forecastNewSynastryPartnerSelect.value = state.synastryPartnerId;
+        }
+        // Источник партнёра (из базы / вручную) + поля ручной формы.
+        setSynastryMode(state.synastryMode);
+        const m = state.synastryManual;
+        if (m) {
+            if (refs.forecastNewSynastryManualName) refs.forecastNewSynastryManualName.value = m.name || '';
+            if (refs.forecastNewSynastryManualDate) refs.forecastNewSynastryManualDate.value = m.date || '';
+            if (refs.forecastNewSynastryManualTime) refs.forecastNewSynastryManualTime.value = (m.time || '').slice(0, 5);
+            if (refs.forecastNewSynastryManualTimezone && m.timezone) refs.forecastNewSynastryManualTimezone.value = m.timezone;
+            if (refs.forecastNewSynastryManualLocation) refs.forecastNewSynastryManualLocation.value = m.place || '';
+            if (refs.forecastNewSynastryManualLat) refs.forecastNewSynastryManualLat.value = m.latitude !== null && m.latitude !== undefined ? String(m.latitude) : '';
+            if (refs.forecastNewSynastryManualLon) refs.forecastNewSynastryManualLon.value = m.longitude !== null && m.longitude !== undefined ? String(m.longitude) : '';
         }
     }
 
@@ -3302,6 +3508,10 @@
             }
         }
         state.synastryPartnerId = typeof restored.synastryPartnerId === 'string' ? restored.synastryPartnerId : state.synastryPartnerId;
+        state.synastryMode = restored.synastryMode === 'manual' ? 'manual' : 'db';
+        state.synastryManual = (restored.synastryManual && typeof restored.synastryManual === 'object')
+            ? restored.synastryManual
+            : state.synastryManual;
         state.leftTab = restored.leftTab || state.leftTab;
         state.rightTab = restored.rightTab || state.rightTab;
         const hasSplitMatrixState = Number(restored.matrixSchemaVersion) >= 2;
@@ -3592,6 +3802,8 @@
                 solarYear: state.solarYear,
                 solarLocation: state.solarLocation,
                 synastryPartnerId: state.synastryPartnerId,
+                synastryMode: state.synastryMode,
+                synastryManual: state.synastryManual,
                 leftTab: state.leftTab,
                 rightTab: state.rightTab,
                 matrixSchemaVersion: window.ForecastNewStateStorage?.MATRIX_SCHEMA_VERSION || 2,
@@ -3747,6 +3959,11 @@
                 state.solarLocation?.latitude ?? '', state.solarLocation?.longitude ?? ''].join('|');
         }
         if (method === 'synastry_partner') {
+            if (state.synastryMode === 'manual') {
+                const m = state.synastryManual || {};
+                return [method, natalToken, 'manual', m.date || '', m.time || '', m.timezone || '',
+                    m.latitude ?? '', m.longitude ?? '', m.place || ''].join('|');
+            }
             return [method, natalToken, state.synastryPartnerId || ''].join('|');
         }
         return [method, natalToken, date].join('|');
