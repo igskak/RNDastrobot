@@ -2484,10 +2484,16 @@
         const seq = ++state.requestSeq;
         state.pendingRequestToken = seq;
         const activeMethods = [...state.activeLayers];
+        // Synastry can't be computed until a partner is chosen. Toggling it on opens the
+        // partner popover (see the layer toggle handler); skip loading the layer until a
+        // partner exists so one un-configured layer can't throw and tear down the layers
+        // that did load (transit/progression/solar).
+        const methodsToLoad = activeMethods.filter((method) =>
+            method !== 'synastry_partner' || hasUsableSynastryPartner());
         const nextLayers = {};
         let hasRenderedPartial = false;
-        const hasCompletePreviousLayers = activeMethods.length > 0
-            && activeMethods.every((method) => state.layers?.[method]);
+        const hasCompletePreviousLayers = methodsToLoad.length > 0
+            && methodsToLoad.every((method) => state.layers?.[method]);
         if (options.showLoader) showLoader();
         if (options.lightweight) setLightweightLoading(true);
         state.layers = Object.fromEntries(activeMethods
@@ -2495,7 +2501,7 @@
             .map((method) => [method, state.layers[method]]));
         renderRightLayerTabs();
         try {
-            const results = await Promise.allSettled(activeMethods.map(async (method) => {
+            const results = await Promise.allSettled(methodsToLoad.map(async (method) => {
                 const data = await fetchLayer(method, { seq });
                 if (seq !== state.requestSeq) return null;
                 nextLayers[method] = data;
