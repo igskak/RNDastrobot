@@ -28,6 +28,8 @@ class UserRepository:
         house_system: str = 'P',
         first_name: Optional[str] = None,
         last_name: Optional[str] = None,
+        title: Optional[str] = None,
+        chart_kind: str = 'birth',
     ) -> User:
         """
         Создать нового пользователя
@@ -50,6 +52,8 @@ class UserRepository:
             astrologer_id=astrologer_id,
             first_name=first_name,
             last_name=last_name,
+            title=title,
+            chart_kind=chart_kind,
             birth_date=birth_date,
             birth_time=birth_time,
             timezone=timezone,

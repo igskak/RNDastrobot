@@ -22,6 +22,8 @@ class User(Base):
     astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='RESTRICT'), nullable=False)
     first_name = Column(String(100))
     last_name = Column(String(100))
+    title = Column(String(160))
+    chart_kind = Column(String(32), nullable=False, default='birth', server_default='birth')
     birth_date = Column(Date, nullable=False)
     birth_time = Column(Time, nullable=False)
     timezone = Column(String(50), nullable=False)
@@ -69,6 +71,10 @@ class User(Base):
     __table_args__ = (
         CheckConstraint('lat >= -90 AND lat <= 90', name='valid_latitude'),
         CheckConstraint('lon >= -180 AND lon <= 180', name='valid_longitude'),
+        CheckConstraint(
+            "chart_kind IN ('birth', 'event', 'company', 'horary', 'relocation', 'solar_point', 'test', 'other')",
+            name='valid_chart_kind',
+        ),
         Index('idx_users_birth_date', 'birth_date'),
         Index('idx_users_location', 'lat', 'lon'),
         Index('idx_users_astrologer_id', 'astrologer_id'),

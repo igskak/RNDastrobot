@@ -31,7 +31,7 @@ if os.getenv('APP_ENV') == 'production':
     logger.remove()  # Удаляем default handler
     logger.add(sys.stderr, level="WARNING")  # Только WARNING и выше
 
-from app.api.routes import auth, natal, transits, solar, progressions, directions, ingresses, places, consultations, alerts, preferences, call_sessions, synastry, saved_charts
+from app.api.routes import auth, natal, transits, solar, progressions, directions, ingresses, places, consultations, alerts, preferences, call_sessions, synastry, saved_charts, charts
 from app.api.error_handlers import register_error_handlers
 from app.api.locale_dependency import locale_context_dependency
 from app.services.processing_pipeline import recover_stuck_sessions
@@ -156,6 +156,7 @@ app.include_router(alerts.router, prefix="/api/v1", tags=["Alerts"])
 app.include_router(preferences.router, prefix="/api/v1", tags=["Preferences"])
 app.include_router(synastry.router, prefix="/api/v1", tags=["Synastry"])
 app.include_router(saved_charts.router, prefix="/api/v1", tags=["Saved Charts"])
+app.include_router(charts.router, prefix="/api/v1", tags=["Charts"])
 
 # Статические файлы (CSS, JS)
 if os.path.exists(FRONTEND_PATH):
