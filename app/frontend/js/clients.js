@@ -432,12 +432,20 @@ async function loadClients() {
             window.location.href = '/login.html';
             return;
         }
-        if (!chartsResponse.ok || !usersResponse.ok) throw new Error(t('page.clients.errors.fetchList'));
+        // People data is load-critical; charts degrade gracefully if unavailable.
+        if (!usersResponse.ok) throw new Error(t('page.clients.errors.fetchList'));
 
-        const charts = await chartsResponse.json();
         const users = await usersResponse.json();
-        state.charts = Array.isArray(charts) ? charts : [];
         state.people = Array.isArray(users) ? users : [];
+
+        if (chartsResponse.ok) {
+            const charts = await chartsResponse.json();
+            state.charts = Array.isArray(charts) ? charts : [];
+        } else {
+            state.charts = [];
+            console.warn('Charts API unavailable, falling back to people-only view');
+        }
+
         state.users = getActiveLibraryItems();
         renderTagFilterOptions();
 
