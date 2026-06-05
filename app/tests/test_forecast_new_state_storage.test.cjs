@@ -32,6 +32,16 @@ test('wheel view persists and round-trips; invalid values fall back to multi', (
     assert.equal(bogus.wheelView, 'multi');
 });
 
+test('result view persists and round-trips; invalid values fall back to wheel', () => {
+    const chart = makeNatalChart();
+    const aspects = buildPersistedState({ natalData: chart, state: { resultView: 'aspects' } });
+    assert.equal(aspects.resultView, 'aspects');
+    const restored = parsePersistedState(JSON.stringify(aspects), chart);
+    assert.equal(restored.resultView, 'aspects');
+    const bogus = buildPersistedState({ natalData: chart, state: { resultView: 'timeline' } });
+    assert.equal(bogus.resultView, 'wheel');
+});
+
 test('forecast new storage preserves a valid custom time step', () => {
     const natalData = makeNatalChart();
     const snapshot = buildPersistedState({

@@ -53,6 +53,7 @@
         WHOLESIGN: 'W',
     };
     const DEFAULT_ASPECT_PHASE_FILTER = ['applying', 'separating'];
+    const RESULT_VIEWS = ['wheel', 'layers', 'aspects'];
     const DEFAULT_ASPECTING_BODIES = new Set([
         'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
         'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto',
@@ -102,6 +103,7 @@
         // D6: вид колеса — 'multi' (натал + кольца, как сейчас) | 'single' (только
         // натал в виде одиночной карты: внешний слот + маркеры углов).
         wheelView: 'multi',
+        resultView: 'wheel',
         // Параметры новых слоёв (Path B шаг 2)
         solarYear: new Date().getFullYear(),
         solarLocation: null,    // {name, latitude, longitude, timezone} | null = birth place
@@ -342,7 +344,7 @@
             'forecastNewNatalPanel', 'forecastNewProgPanel',
             'natalPanelMeta', 'prognosticPanelTitle', 'prognosticPanelMeta',
             'prognosticMomentToggle', 'forecastSavedChartsBtn', 'forecastNewMomentCard',
-            'forecastNewWheel', 'forecastNewWheelShell', 'targetDateInput', 'targetTimeInput',
+            'forecastNewWheel', 'forecastNewWheelShell', 'forecastNewResultViews', 'forecastNewResultPane', 'targetDateInput', 'targetTimeInput',
             'forecastNewTimeStepper',
             'stepModeSelect', 'stepBackward', 'stepForward', 'timezoneInput', 'locationInput',
             'latitudeInput', 'longitudeInput', 'locationSuggestions', 'targetDatetimeLabel', 'rightLayerTabs',
@@ -738,6 +740,26 @@
             schedulePersist();
         });
 
+        refs.forecastNewResultViews?.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-result-view]');
+            if (!button) return;
+            setResultView(button.dataset.resultView);
+        });
+        refs.forecastNewResultPane?.addEventListener('click', (event) => {
+            const row = event.target.closest('[data-result-layer]');
+            if (!row) return;
+            const method = row.dataset.resultLayer;
+            if (LAYER_ORDER.includes(method)) {
+                state.selectedRightLayer = method;
+                state.activeRightMethodTab = method;
+                renderRightLayerTabs();
+                renderRightPanel();
+            }
+            const aspectKey = row.dataset.resultAspectKey;
+            if (aspectKey) togglePinnedAspectKey(aspectKey);
+            schedulePersist();
+        });
+
         [refs.forecastNewMatrixEditor, refs.forecastNewSettingsMatrixEditor].forEach((editor) => {
             editor?.addEventListener('change', async (event) => {
                 const input = event.target instanceof Element
@@ -836,6 +858,8 @@
             renderStaticNatal();
             renderRightPanel();
             renderWheel();
+            syncResultViewButtons();
+            renderResultView();
         });
 
         document.addEventListener('click', (event) => {
@@ -2964,6 +2988,7 @@
         });
         state.wheel.render(viewModel);
         applyHoveredAspectFocus();
+        renderResultView();
     }
 
     function setWheelView(view) {
@@ -2978,6 +3003,175 @@
     function syncWheelViewButtons() {
         refs.forecastNewViewSingle?.classList.toggle('is-active', state.wheelView === 'single');
         refs.forecastNewViewMulti?.classList.toggle('is-active', state.wheelView !== 'single');
+    }
+
+    function normalizeResultView(view) {
+        return RESULT_VIEWS.includes(view) ? view : 'wheel';
+    }
+
+    function setResultView(view) {
+        const next = normalizeResultView(view);
+        if (state.resultView === next) return;
+        state.resultView = next;
+        syncResultViewButtons();
+        renderResultView();
+        schedulePersist();
+    }
+
+    function syncResultViewButtons() {
+        const current = normalizeResultView(state.resultView);
+        state.resultView = current;
+        refs.forecastNewResultViews?.querySelectorAll('[data-result-view]').forEach((button) => {
+            const active = button.dataset.resultView === current;
+            button.classList.toggle('is-active', active);
+            button.setAttribute('aria-selected', active ? 'true' : 'false');
+            button.textContent = resultViewLabel(button.dataset.resultView);
+        });
+        refs.forecastNewWheelShell?.closest('.forecast-new-center')?.setAttribute('data-result-view', current);
+        refs.forecastNewResultPane?.classList.toggle('hidden', current === 'wheel');
+    }
+
+    function resultViewLabel(view) {
+        return ({
+            wheel: t('page.forecastNew.resultViews.wheel'),
+            layers: t('page.forecastNew.resultViews.layers'),
+            aspects: t('page.forecastNew.resultViews.aspects'),
+        })[view] || view;
+    }
+
+    function renderResultView() {
+        syncResultViewButtons();
+        if (!refs.forecastNewResultPane || state.resultView === 'wheel') return;
+        refs.forecastNewResultPane.innerHTML = state.resultView === 'aspects'
+            ? renderResultAspectsView()
+            : renderResultLayersView();
+    }
+
+    function resultLayers() {
+        const layers = state.viewModel?.activePrognosticLayers || [];
+        return LAYER_ORDER
+            .map((method) => layers.find((layer) => layer.method === method))
+            .filter(Boolean);
+    }
+
+    function renderResultHead(titleKey, subtitleKey, count) {
+        return `
+            <div class="forecast-new-result-head">
+                <div>
+                    <h3>${escapeHtml(t(titleKey))}</h3>
+                    <p>${escapeHtml(t(subtitleKey))}</p>
+                </div>
+                <span class="forecast-new-result-count">${escapeHtml(String(count))}</span>
+            </div>
+        `;
+    }
+
+    function renderResultLayersView() {
+        const layers = resultLayers();
+        if (!layers.length) {
+            return `${renderResultHead('page.forecastNew.resultViews.layersTitle', 'page.forecastNew.resultViews.layersSubtitle', 0)}
+                <div class="forecast-new-result-empty">${escapeHtml(t('page.forecastNew.resultViews.emptyLayers'))}</div>`;
+        }
+        return `
+            ${renderResultHead('page.forecastNew.resultViews.layersTitle', 'page.forecastNew.resultViews.layersSubtitle', layers.length)}
+            <table class="forecast-new-result-table">
+                <thead>
+                    <tr>
+                        <th>${escapeHtml(t('page.forecastNew.resultViews.layer'))}</th>
+                        <th>${escapeHtml(t('page.forecastNew.resultViews.source'))}</th>
+                        <th>${escapeHtml(t('page.forecastNew.resultViews.bodies'))}</th>
+                        <th>${escapeHtml(t('page.forecastNew.resultViews.aspectsCount'))}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${layers.map((layer) => `
+                        <tr data-result-layer="${escapeHtml(layer.method)}">
+                            <td>
+                                <span class="forecast-new-result-layer-name">
+                                    <span class="forecast-new-result-layer-dot"></span>
+                                    ${escapeHtml(layerLabel(layer.method))}
+                                </span>
+                            </td>
+                            <td>${escapeHtml(buildResultLayerMeta(layer.method, layer)) || '—'}</td>
+                            <td class="mono">${escapeHtml(String((layer.bodies || []).length))}</td>
+                            <td class="mono">${escapeHtml(String((layer.aspects || []).length))}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    function renderResultAspectsView() {
+        const aspects = resultLayers().flatMap((layer) => (layer.aspects || []).map((aspect) => ({
+            layerMethod: layer.method,
+            aspect: state.prognosticRenderer?.normalizeAspectForDisplay
+                ? state.prognosticRenderer.normalizeAspectForDisplay(aspect)
+                : aspect,
+        })));
+        if (!aspects.length) {
+            return `${renderResultHead('page.forecastNew.resultViews.aspectsTitle', 'page.forecastNew.resultViews.aspectsSubtitle', 0)}
+                <div class="forecast-new-result-empty">${escapeHtml(t('page.forecastNew.resultViews.emptyAspects'))}</div>`;
+        }
+        const sorted = aspects.sort((a, b) => {
+            const orbA = Number(a.aspect?.orb);
+            const orbB = Number(b.aspect?.orb);
+            if (Number.isFinite(orbA) && Number.isFinite(orbB) && orbA !== orbB) return orbA - orbB;
+            return LAYER_ORDER.indexOf(a.layerMethod) - LAYER_ORDER.indexOf(b.layerMethod);
+        });
+        return `
+            ${renderResultHead('page.forecastNew.resultViews.aspectsTitle', 'page.forecastNew.resultViews.aspectsSubtitle', sorted.length)}
+            <table class="forecast-new-result-table">
+                <thead>
+                    <tr>
+                        <th>${escapeHtml(t('page.forecastNew.resultViews.layer'))}</th>
+                        <th>${escapeHtml(t('page.forecastNew.resultViews.aspect'))}</th>
+                        <th>${escapeHtml(t('page.forecastNew.resultViews.phase'))}</th>
+                        <th>${escapeHtml(t('page.forecastNew.resultViews.orb'))}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${sorted.map(({ layerMethod, aspect }) => {
+                        const aspectKey = state.prognosticRenderer?.getAspectKey?.(aspect) || '';
+                        const phase = state.prognosticRenderer?.getApplyingSeparatingShortLabel?.(aspect) || '';
+                        const orb = Number(aspect?.orb);
+                        return `
+                            <tr data-result-layer="${escapeHtml(layerMethod)}" data-result-aspect-key="${escapeHtml(aspectKey)}">
+                                <td>${escapeHtml(layerLabel(layerMethod))}</td>
+                                <td>${state.prognosticRenderer?.renderAspectPairCell?.(aspect) || escapeHtml(formatAspectText(aspect))}</td>
+                                <td>${phase ? escapeHtml(phase) : '—'}</td>
+                                <td class="mono">${Number.isFinite(orb) ? `${orb.toFixed(2)}°` : '—'}</td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    function formatAspectText(aspect) {
+        return [aspect?.left_planet || aspect?.planet_1, aspect?.aspect_type, aspect?.right_planet || aspect?.planet_2]
+            .filter(Boolean)
+            .join(' ');
+    }
+
+    function buildResultLayerMeta(method, layer) {
+        if (method === 'solar_return') {
+            const info = layer?.raw?.solar_info || {};
+            const locName = info?.location?.name || state.solarLocation?.name || state.location?.name || '';
+            return [String(state.solarYear || info.year || ''), locName].filter(Boolean).join(' · ');
+        }
+        if (method === 'synastry_partner') return buildSynastryLayerMeta(layer);
+        return buildLayerMeta(method, layer?.raw || {});
+    }
+
+    function buildSynastryLayerMeta(layer) {
+        const select = refs.forecastNewSynastryPartnerSelect;
+        const partnerName = state.synastryMode === 'manual'
+            ? (state.synastryManual?.name || t('page.forecastNew.resultViews.manualPartner'))
+            : (select && select.selectedIndex > 0 ? (select.options[select.selectedIndex]?.text || '') : '');
+        const bd = layer?.raw?.partner_chart?.birth_data;
+        return [partnerName, bd?.date, bd?.place].filter(Boolean).join(' · ');
     }
 
     function renderRightLayerTabs() {
@@ -3032,6 +3226,7 @@
             state.prognosticRenderer?.render({ planets: [], houses: [], aspects: [], aspect_configurations: [], stelliums: [], balances: null, cosmogram_pattern: null });
             renderForecastNewRulersTab('progRulersContainer', null, 'forecastNewProgRulersMode');
             syncPrognosticHousesVisibility([]);
+            renderResultView();
             return;
         }
         state.prognosticRenderer?.setAspectTypeFilter?.('all');
@@ -3062,6 +3257,7 @@
         syncPrognosticHousesVisibility(layer.houses || []);
         syncHoveredAspectToActiveSurface();
         activateSavedTabs();
+        renderResultView();
     }
 
     function syncPrognosticHousesVisibility(houses = []) {
@@ -3592,6 +3788,7 @@
         state.stepMode = restored.stepMode || state.stepMode;
         state.customStep = normalizeCustomStep(restored.customStep || state.customStep);
         state.wheelView = restored.wheelView === 'single' ? 'single' : 'multi';
+        state.resultView = normalizeResultView(restored.resultView);
         const restoredSolarYear = Number(restored.solarYear);
         if (Number.isFinite(restoredSolarYear) && restoredSolarYear >= 1900 && restoredSolarYear <= 2100) {
             state.solarYear = Math.trunc(restoredSolarYear);
@@ -3972,6 +4169,7 @@
                 stepMode: state.stepMode,
                 customStep: state.customStep,
                 wheelView: state.wheelView,
+                resultView: state.resultView,
                 solarYear: state.solarYear,
                 solarLocation: state.solarLocation,
                 synastryPartnerId: state.synastryPartnerId,

@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Прогностика New</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=fda209d266f0">
-    <script>window.__APP_BUILD_ID__ = 'fda209d266f0';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=17e376d673e6">
+    <script>window.__APP_BUILD_ID__ = '17e376d673e6';</script>
 </head>
 <body class="forecast-new-page">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -216,9 +216,15 @@
         </aside>
 
         <section class="chart-center forecast-new-center">
+            <div class="forecast-new-result-switch" id="forecastNewResultViews" role="tablist" aria-label="Представление результата">
+                <button type="button" class="forecast-new-result-tab is-active" data-result-view="wheel" role="tab" aria-selected="true">Карта</button>
+                <button type="button" class="forecast-new-result-tab" data-result-view="layers" role="tab" aria-selected="false">Слои</button>
+                <button type="button" class="forecast-new-result-tab" data-result-view="aspects" role="tab" aria-selected="false">Аспекты</button>
+            </div>
             <div class="forecast-new-wheel-shell" id="forecastNewWheelShell">
                 <svg id="forecastNewWheel" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid meet"></svg>
             </div>
+            <div class="forecast-new-result-pane hidden" id="forecastNewResultPane" aria-live="polite"></div>
             <div class="forecast-new-zoom-controls zoom-controls-float">
                 <button class="zoom-btn forecast-new-view-btn" id="forecastNewViewSingle" title="Одно колесо" aria-label="Одно колесо">◯</button>
                 <button class="zoom-btn forecast-new-view-btn is-active" id="forecastNewViewMulti" title="Мульти-колесо" aria-label="Мульти-колесо">◎</button>
@@ -408,6 +414,6 @@
         </aside>
     </main>
 
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=fda209d266f0"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=17e376d673e6"></script>
 </body>
 </html>

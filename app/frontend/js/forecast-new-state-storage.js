@@ -10,6 +10,7 @@
     const VALID_STEP_MODES = ['second', 'minute', 'hour', 'day', 'week', 'month', 'year'];
     const VALID_CUSTOM_STEP_UNITS = ['second', 'minute', 'hour', 'day', 'week', 'month', 'year'];
     const VALID_TABS = ['Planets', 'Aspects', 'Grid', 'Configs', 'Balances', 'Rulers'];
+    const VALID_RESULT_VIEWS = ['wheel', 'layers', 'aspects'];
 
     function normalizeToken(value) {
         if (value === null || value === undefined) return '';
@@ -106,6 +107,7 @@
             stepMode: pickEnum(source.stepMode, VALID_STEP_MODES, 'hour'),
             customStep: sanitizeCustomStep(source.customStep),
             wheelView: pickEnum(source.wheelView, ['single', 'multi'], 'multi'),
+            resultView: pickEnum(source.resultView, VALID_RESULT_VIEWS, 'wheel'),
             solarYear: (() => {
                 const year = Number(source.solarYear);
                 return Number.isFinite(year) && year >= 1900 && year <= 2100 ? Math.trunc(year) : null;

@@ -24,6 +24,7 @@ class User(Base):
     last_name = Column(String(100))
     title = Column(String(160))
     chart_kind = Column(String(32), nullable=False, default='birth', server_default='birth')
+    person_id = Column(UUID(as_uuid=True), ForeignKey('persons.person_id', ondelete='SET NULL'))
     birth_date = Column(Date, nullable=False)
     birth_time = Column(Time, nullable=False)
     timezone = Column(String(50), nullable=False)
@@ -66,6 +67,7 @@ class User(Base):
     quadrant_balance = relationship("UserQuadrantBalance", back_populates="user", uselist=False, cascade="all, delete-orphan")
     house_group_balance = relationship("UserHouseGroupBalance", back_populates="user", uselist=False, cascade="all, delete-orphan")
     astrologer = relationship("Astrologer", back_populates="users")
+    person = relationship("Person", back_populates="charts")
     call_sessions = relationship("CallSession", back_populates="user", cascade="all, delete-orphan")
 
     __table_args__ = (
@@ -79,6 +81,33 @@ class User(Base):
         Index('idx_users_location', 'lat', 'lon'),
         Index('idx_users_astrologer_id', 'astrologer_id'),
         Index('idx_users_astrologer_chart_kind', 'astrologer_id', 'chart_kind'),
+        Index('idx_users_astrologer_person_id', 'astrologer_id', 'person_id'),
+    )
+
+
+class Person(Base):
+    """Human CRM/contact entity that can own multiple chart sources."""
+    __tablename__ = 'persons'
+
+    person_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='CASCADE'), nullable=False)
+    first_name = Column(String(100))
+    last_name = Column(String(100))
+    display_name = Column(String(200))
+    email = Column(String(255))
+    phone = Column(String(50))
+    messenger = Column(String(255))
+    tags = Column(JSONB, server_default='[]')
+    notes = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    astrologer = relationship("Astrologer", back_populates="persons")
+    charts = relationship("User", back_populates="person")
+
+    __table_args__ = (
+        Index('idx_persons_astrologer_name', 'astrologer_id', 'last_name', 'first_name'),
+        Index('idx_persons_astrologer_created', 'astrologer_id', 'created_at'),
     )
 
 
@@ -129,6 +158,7 @@ class Astrologer(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     users = relationship("User", back_populates="astrologer")
+    persons = relationship("Person", back_populates="astrologer", cascade="all, delete-orphan")
     call_sessions = relationship("CallSession", back_populates="astrologer", cascade="all, delete-orphan")
     sessions = relationship("AuthSession", back_populates="astrologer", cascade="all, delete-orphan")
     password_reset_tokens = relationship("PasswordResetToken", back_populates="astrologer", cascade="all, delete-orphan")

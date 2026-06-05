@@ -229,6 +229,27 @@
     }
   },
   "page": {
+    "forecastNew": {
+      "resultViews": {
+        "wheel": "Карта",
+        "layers": "Слои",
+        "aspects": "Аспекты",
+        "layersTitle": "Активные слои",
+        "layersSubtitle": "Сводка методик, рассчитанных для текущей карты.",
+        "aspectsTitle": "Аспекты активных слоев",
+        "aspectsSubtitle": "Агрегированный список аспектов по всем включенным слоям.",
+        "emptyLayers": "Нет активных рассчитанных слоев.",
+        "emptyAspects": "В активных слоях нет аспектов для текущих фильтров.",
+        "layer": "Слой",
+        "source": "Источник",
+        "bodies": "Тела",
+        "aspectsCount": "Аспекты",
+        "aspect": "Аспект",
+        "phase": "Фаза",
+        "orb": "Орб",
+        "manualPartner": "Партнер (вручную)"
+      }
+    },
     "plan": {
       "names": {
         "trial": "Пробный",
@@ -825,6 +846,10 @@
       },
       "charts": {
         "openWorkspace": "Открыть Workspace"
+      },
+      "people": {
+        "chartCount": "Карт: {count}",
+        "noPrimaryChart": "Нет основной карты"
       },
       "calendar": {
         "nextMonth": "Следующий месяц",

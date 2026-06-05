@@ -229,6 +229,27 @@
     }
   },
   "page": {
+    "forecastNew": {
+      "resultViews": {
+        "wheel": "Карта",
+        "layers": "Шари",
+        "aspects": "Аспекти",
+        "layersTitle": "Активні шари",
+        "layersSubtitle": "Зведення методик, розрахованих для поточної карти.",
+        "aspectsTitle": "Аспекти активних шарів",
+        "aspectsSubtitle": "Об'єднаний список аспектів за всіма увімкненими шарами.",
+        "emptyLayers": "Немає активних розрахованих шарів.",
+        "emptyAspects": "В активних шарах немає аспектів для поточних фільтрів.",
+        "layer": "Шар",
+        "source": "Джерело",
+        "bodies": "Тіла",
+        "aspectsCount": "Аспекти",
+        "aspect": "Аспект",
+        "phase": "Фаза",
+        "orb": "Орб",
+        "manualPartner": "Партнер (вручну)"
+      }
+    },
     "plan": {
       "names": {
         "trial": "Пробний",
@@ -816,6 +837,10 @@
       },
       "charts": {
         "openWorkspace": "Відкрити Workspace"
+      },
+      "people": {
+        "chartCount": "Карт: {count}",
+        "noPrimaryChart": "Немає основної карти"
       },
       "calendar": {
         "nextMonth": "Наступний місяць",

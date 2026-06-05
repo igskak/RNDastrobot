@@ -299,6 +299,14 @@ function bindEvents() {
                 await openForecastForUser(row.dataset.userId);
                 return;
             }
+            if (state.libraryView === 'people') {
+                if (row.dataset.primaryChartId) {
+                    await openForecastForUser(row.dataset.primaryChartId);
+                } else {
+                    showToast(t('page.clients.people.noPrimaryChart'), 'warning');
+                }
+                return;
+            }
             await toggleDetailPanel(row.dataset.userId);
         }
     });
@@ -424,19 +432,26 @@ async function loadClients() {
     refs.tableWrap.classList.add('hidden');
 
     try {
-        const [chartsResponse, usersResponse] = await Promise.all([
+        const [chartsResponse, personsResponse, usersResponse] = await Promise.all([
             apiFetch(`${API_BASE}/charts`, { method: 'GET' }),
+            apiFetch(`${API_BASE}/persons`, { method: 'GET' }),
             apiFetch(`${API_BASE}/users`, { method: 'GET' }),
         ]);
-        if (chartsResponse.status === 401 || usersResponse.status === 401) {
+        if (chartsResponse.status === 401 || personsResponse.status === 401 || usersResponse.status === 401) {
             window.location.href = '/login.html';
             return;
         }
-        // People data is load-critical; charts degrade gracefully if unavailable.
-        if (!usersResponse.ok) throw new Error(t('page.clients.errors.fetchList'));
+        // Legacy users remain a fallback while Persons rolls out.
+        if (!personsResponse.ok && !usersResponse.ok) throw new Error(t('page.clients.errors.fetchList'));
 
-        const users = await usersResponse.json();
-        state.people = Array.isArray(users) ? users : [];
+        if (personsResponse.ok) {
+            const persons = await personsResponse.json();
+            state.people = Array.isArray(persons) ? persons : [];
+        } else {
+            const users = await usersResponse.json();
+            state.people = Array.isArray(users) ? users : [];
+            console.warn('Persons API unavailable, falling back to legacy users view');
+        }
 
         if (chartsResponse.ok) {
             const charts = await chartsResponse.json();
@@ -553,10 +568,12 @@ function buildUserRow(user) {
     const tr = document.createElement('tr');
 
     const isChartsView = state.libraryView === 'charts';
-    const userId = String(user.chart_id || user.user_id || '');
+    const userId = String(isChartsView ? (user.chart_id || user.user_id || '') : (user.person_id || user.user_id || ''));
+    const primaryChartId = String(user.primary_chart_id || user.user_id || '');
+    const forecastTargetId = isChartsView ? userId : primaryChartId;
     const name = isChartsView
         ? (user.display_title || user.title || [user.first_name, user.last_name].filter(Boolean).join(' ') || t('common.notAvailable'))
-        : ([user.first_name, user.last_name].filter(Boolean).join(' ') || t('common.notAvailable'));
+        : (user.display_name || [user.first_name, user.last_name].filter(Boolean).join(' ') || t('common.notAvailable'));
     const initials = (isChartsView ? name.split(/\s+/) : [user.first_name, user.last_name])
         .filter(Boolean)
         .map((n) => n[0].toUpperCase())
@@ -596,17 +613,20 @@ function buildUserRow(user) {
     }
 
     tr.dataset.userId = userId;
+    if (!isChartsView && primaryChartId) {
+        tr.dataset.primaryChartId = primaryChartId;
+    }
     tr.innerHTML = `
         <td class="client-cell client-cell-name" data-label="${labelName}">
             <div class="client-name-cell">
                 <span class="client-avatar">${escapeHtml(initials)}</span>
                 <div class="client-name-stack">
                     <strong class="client-name-text">${escapeHtml(name)}</strong>
-                    ${isChartsView ? `<div class="client-summary-chips"><span class="client-summary-chip">${escapeHtml(getChartKindLabel(user.chart_kind))}</span></div>` : ''}
+                    ${isChartsView ? `<div class="client-summary-chips"><span class="client-summary-chip">${escapeHtml(getChartKindLabel(user.chart_kind))}</span></div>` : renderPersonChips(user)}
                     ${summaryChips.length > 0 ? `<div class="client-summary-chips">${summaryChips.join('')}</div>` : ''}
                     <div class="client-card-quick-actions">
-                        ${isChartsView ? '' : `<button class="client-quick-btn client-quick-btn-primary" type="button" data-action="open-chart" data-user-id="${escapeHtml(userId)}">${openChartLabel}</button>`}
-                        <button class="client-quick-btn" type="button" data-action="open-forecast" data-user-id="${escapeHtml(userId)}">
+                        ${isChartsView ? '' : `<button class="client-quick-btn client-quick-btn-primary" type="button" data-action="open-chart" data-user-id="${escapeHtml(primaryChartId)}" ${primaryChartId ? '' : 'disabled'}>${openChartLabel}</button>`}
+                        <button class="client-quick-btn" type="button" data-action="open-forecast" data-user-id="${escapeHtml(forecastTargetId)}" ${forecastTargetId ? '' : 'disabled'}>
                             ${forecastLabel}
                         </button>
                     </div>
@@ -637,8 +657,7 @@ function buildUserRow(user) {
                     <svg width="14" height="4" viewBox="0 0 14 4" fill="none"><circle cx="2" cy="2" r="1.4" fill="currentColor"/><circle cx="7" cy="2" r="1.4" fill="currentColor"/><circle cx="12" cy="2" r="1.4" fill="currentColor"/></svg>
                 </button>
                 <div class="actions-dropdown">
-                    ${isChartsView ? '' : `<a class="action-item" href="/client/${escapeHtml(userId)}">${escapeHtml(t('page.clientProfile.viewProfile'))}</a>`}
-                    ${isChartsView ? '' : `<button class="action-item" type="button" data-action="edit" data-user-id="${escapeHtml(userId)}">${editLabel}</button>`}
+                    ${isChartsView || !primaryChartId ? '' : `<a class="action-item" href="/client/${escapeHtml(primaryChartId)}">${escapeHtml(t('page.clientProfile.viewProfile'))}</a>`}
                     <button class="action-item danger" type="button" data-action="delete" data-user-id="${escapeHtml(userId)}">${deleteLabel}</button>
                 </div>
             </div>
@@ -646,6 +665,16 @@ function buildUserRow(user) {
     `;
 
     return tr;
+}
+
+function renderPersonChips(person) {
+    const chips = [];
+    const chartCount = Number(person.chart_count || 0);
+    chips.push(`<span class="client-summary-chip">${escapeHtml(t('page.clients.people.chartCount', { count: chartCount }))}</span>`);
+    if (!person.primary_chart_id) {
+        chips.push(`<span class="client-summary-chip">${escapeHtml(t('page.clients.people.noPrimaryChart'))}</span>`);
+    }
+    return `<div class="client-summary-chips">${chips.join('')}</div>`;
 }
 
 function filterUsers(users, searchTerm, activeTag = '') {
@@ -663,9 +692,12 @@ function filterUsers(users, searchTerm, activeTag = '') {
 
         const name = [
             user.display_title,
+            user.display_name,
             user.title,
             user.first_name,
             user.last_name,
+            user.email,
+            user.phone,
         ].filter(Boolean).join(' ').toLowerCase();
         const place = (user.birth_place || user.location_name || '').toLowerCase();
         const rawDate = user.birth_date || user.date;
@@ -737,7 +769,7 @@ function sortUsers(users, sortBy) {
 }
 
 function getName(user) {
-    return (user.display_title || user.title || [user.first_name, user.last_name].filter(Boolean).join(' ')).trim();
+    return (user.display_title || user.display_name || user.title || [user.first_name, user.last_name].filter(Boolean).join(' ')).trim();
 }
 
 function normalizeDateSortItem(item) {
@@ -1234,7 +1266,7 @@ async function handleDelete(userId, button) {
     button.textContent = '...';
 
     try {
-        const endpoint = state.libraryView === 'charts' ? `${API_BASE}/charts/${userId}` : `${API_BASE}/users/${userId}`;
+        const endpoint = state.libraryView === 'charts' ? `${API_BASE}/charts/${userId}` : `${API_BASE}/persons/${userId}`;
         const response = await apiFetch(endpoint, {
             method: 'DELETE',
         });
@@ -1253,7 +1285,7 @@ async function handleDelete(userId, button) {
             throw new Error(message);
         }
 
-        state.people = state.people.filter((user) => String(user.user_id) !== String(userId));
+        state.people = state.people.filter((user) => String(user.person_id || user.user_id) !== String(userId));
         state.charts = state.charts.filter((chart) => String(chart.chart_id || chart.user_id) !== String(userId));
         state.users = getActiveLibraryItems();
 

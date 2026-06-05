@@ -229,6 +229,27 @@
     }
   },
   "page": {
+    "forecastNew": {
+      "resultViews": {
+        "wheel": "Chart",
+        "layers": "Layers",
+        "aspects": "Aspects",
+        "layersTitle": "Active layers",
+        "layersSubtitle": "Summary of methodologies calculated for the current chart.",
+        "aspectsTitle": "Active layer aspects",
+        "aspectsSubtitle": "Combined aspect list across all enabled layers.",
+        "emptyLayers": "No active calculated layers.",
+        "emptyAspects": "No aspects in active layers for the current filters.",
+        "layer": "Layer",
+        "source": "Source",
+        "bodies": "Bodies",
+        "aspectsCount": "Aspects",
+        "aspect": "Aspect",
+        "phase": "Phase",
+        "orb": "Orb",
+        "manualPartner": "Partner (manual)"
+      }
+    },
     "plan": {
       "names": {
         "trial": "Trial",
@@ -825,6 +846,10 @@
       },
       "charts": {
         "openWorkspace": "Open workspace"
+      },
+      "people": {
+        "chartCount": "Charts: {count}",
+        "noPrimaryChart": "No primary chart"
       },
       "calendar": {
         "nextMonth": "Next month",

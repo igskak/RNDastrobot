@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.auth.dependencies import AuthContext, create_audit_event, ensure_client_access, require_auth
 from app.database.connection import get_db
-from app.database.models import User
+from app.database.models import Person, User
 from app.database.repositories.user_repository import UserRepository
 from app.models.schemas import normalize_house_system_code, VALID_HOUSE_SYSTEMS
 from app.services.entitlements_service import assert_can_create_saved_chart
@@ -88,6 +88,7 @@ class ChartCreateRequest(BaseModel):
     house_system: str = Field("P")
     first_name: Optional[str] = Field(None, max_length=100)
     last_name: Optional[str] = Field(None, max_length=100)
+    person_id: Optional[UUID] = None
     tags: Optional[List[str]] = None
     notes: Optional[str] = None
 
@@ -127,6 +128,7 @@ class ChartCreateRequest(BaseModel):
 class ChartPatchRequest(BaseModel):
     title: Optional[str] = Field(None, max_length=160)
     chart_kind: Optional[str] = None
+    person_id: Optional[UUID] = None
     tags: Optional[List[str]] = None
     notes: Optional[str] = None
 
@@ -159,6 +161,7 @@ class ChartResponse(BaseModel):
     title: Optional[str]
     display_title: str
     chart_kind: str
+    person_id: Optional[UUID]
     date: date_type
     time: time_type
     timezone: str
@@ -181,6 +184,7 @@ def _chart_response(user: User) -> ChartResponse:
         title=user.title,
         display_title=_display_title(user),
         chart_kind=user.chart_kind or "birth",
+        person_id=user.person_id,
         date=user.birth_date,
         time=user.birth_time,
         timezone=user.timezone,
@@ -206,6 +210,17 @@ def _get_chart_or_404(db: Session, astrologer_id: UUID, chart_id: UUID) -> User:
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chart not found")
     return user
+
+
+def _get_person_or_404(db: Session, astrologer_id: UUID, person_id: UUID) -> Person:
+    person = (
+        db.query(Person)
+        .filter(Person.person_id == person_id, Person.astrologer_id == astrologer_id)
+        .first()
+    )
+    if not person:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Person not found")
+    return person
 
 
 @router.get("", response_model=List[ChartResponse])
@@ -278,6 +293,9 @@ def create_chart(
         user = _get_chart_or_404(db, auth.astrologer.id, user_id)
         user.title = payload.title
         user.chart_kind = payload.chart_kind
+        if payload.person_id is not None:
+            _get_person_or_404(db, auth.astrologer.id, payload.person_id)
+            user.person_id = payload.person_id
         user.tags = payload.tags or []
         user.notes = payload.notes
         db.flush()
@@ -328,6 +346,8 @@ def update_chart(
     ensure_client_access(db, request, auth, chart_id, action="chart.update")
     user = _get_chart_or_404(db, auth.astrologer.id, chart_id)
     update = payload.model_dump(exclude_unset=True)
+    if "person_id" in update and update["person_id"] is not None:
+        _get_person_or_404(db, auth.astrologer.id, update["person_id"])
     for field, value in update.items():
         setattr(user, field, value)
     db.flush()

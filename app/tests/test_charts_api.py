@@ -14,7 +14,7 @@ from app.api.main import app  # noqa: E402
 from app.api.routes import charts as charts_route  # noqa: E402
 from app.auth.dependencies import AuthContext, require_auth  # noqa: E402
 from app.database.connection import get_db  # noqa: E402
-from app.database.models import Astrologer, AuditEvent, User  # noqa: E402
+from app.database.models import Astrologer, AuditEvent, Person, User  # noqa: E402
 
 
 engine = create_engine("sqlite:///./_charts_api_test.sqlite3", connect_args={"check_same_thread": False})
@@ -35,9 +35,11 @@ def _override_get_db():
 
 def _prepare_tables():
     User.__table__.c.tags.type = JSON()
-    for table in (AuditEvent.__table__, User.__table__, Astrologer.__table__):
+    Person.__table__.c.tags.type = JSON()
+    for table in (AuditEvent.__table__, User.__table__, Person.__table__, Astrologer.__table__):
         table.drop(bind=engine, checkfirst=True)
     Astrologer.__table__.create(bind=engine, checkfirst=True)
+    Person.__table__.create(bind=engine, checkfirst=True)
     User.__table__.create(bind=engine, checkfirst=True)
     AuditEvent.__table__.create(bind=engine, checkfirst=True)
 
@@ -86,6 +88,23 @@ def _create_chart(astrologer_id, *, title, chart_kind="birth", tags=None, place=
         db.close()
 
 
+def _create_person(astrologer_id, *, first_name="Andrii", last_name="Test", tags=None):
+    db = TestingSessionLocal()
+    try:
+        person = Person(
+            astrologer_id=astrologer_id,
+            first_name=first_name,
+            last_name=last_name,
+            tags=tags or [],
+        )
+        db.add(person)
+        db.commit()
+        db.refresh(person)
+        return person.person_id
+    finally:
+        db.close()
+
+
 def _auth_override(astrologer_id):
     db = TestingSessionLocal()
     try:
@@ -125,18 +144,20 @@ def test_list_charts_filters_to_current_astrologer_and_searches_metadata():
 def test_patch_chart_updates_only_chart_metadata():
     owner_id = _create_astrologer()
     chart_id = _create_chart(owner_id, title="Old title", tags=["old"])
+    person_id = _create_person(owner_id)
 
     app.dependency_overrides[require_auth] = lambda: _auth_override(owner_id)
     with TestClient(app) as client:
         response = client.patch(
             f"/api/v1/charts/{chart_id}",
-            json={"title": "Запуск проекта", "chart_kind": "company", "tags": ["work", "work", " launch "]},
+            json={"title": "Запуск проекта", "chart_kind": "company", "person_id": str(person_id), "tags": ["work", "work", " launch "]},
         )
 
     assert response.status_code == 200
     data = response.json()
     assert data["title"] == "Запуск проекта"
     assert data["chart_kind"] == "company"
+    assert data["person_id"] == str(person_id)
     assert data["tags"] == ["work", "launch"]
     assert data["date"] == "1990-06-26"
 
