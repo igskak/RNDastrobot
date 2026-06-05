@@ -4059,11 +4059,11 @@
 
     function layerLabel(method) {
         return ({
-            transit: 'Транзиты',
-            progression: 'Прогрессии',
-            direction: 'Дирекции',
-            solar_return: 'Соляр',
-            synastry_partner: 'Синастрия',
+            transit: t('common.method.transit'),
+            progression: t('common.method.progression'),
+            direction: t('common.method.direction'),
+            solar_return: t('common.method.solar'),
+            synastry_partner: t('page.chart.nav.synastry'),
         })[method] || method;
     }
 
