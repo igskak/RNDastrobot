@@ -795,6 +795,29 @@
       "title": "Practice",
       "subtitle": "Search, sort, and reopen past work so each person's history stays close at hand."
     },
+    "libraryTabs": {
+      "ariaLabel": "Library sections",
+      "charts": "Charts",
+      "people": "People"
+    },
+    "chartKindFilter": {
+      "label": "Chart type",
+      "ariaLabel": "Filter charts by type",
+      "all": "All types"
+    },
+    "chartKinds": {
+      "birth": "Birth",
+      "event": "Event",
+      "company": "Company",
+      "horary": "Horary",
+      "relocation": "Relocation",
+      "solar_point": "Solar point",
+      "test": "Test",
+      "other": "Other"
+    },
+    "charts": {
+      "openWorkspace": "Open workspace"
+    },
     "calendar": {
       "nextMonth": "Next month",
       "openFull": "Open full calendar",

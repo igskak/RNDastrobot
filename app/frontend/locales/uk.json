@@ -786,6 +786,29 @@
       "title": "Практика",
       "subtitle": "Шукайте, сортуйте й відкривайте минулу роботу так, щоб історія кожної людини завжди була поруч."
     },
+    "libraryTabs": {
+      "ariaLabel": "Розділи бібліотеки",
+      "charts": "Карти",
+      "people": "Люди"
+    },
+    "chartKindFilter": {
+      "label": "Тип карти",
+      "ariaLabel": "Фільтр карт за типом",
+      "all": "Усі типи"
+    },
+    "chartKinds": {
+      "birth": "Народження",
+      "event": "Подія",
+      "company": "Компанія",
+      "horary": "Хорар",
+      "relocation": "Релокація",
+      "solar_point": "Солярна точка",
+      "test": "Тест",
+      "other": "Інше"
+    },
+    "charts": {
+      "openWorkspace": "Відкрити Workspace"
+    },
     "calendar": {
       "nextMonth": "Наступний місяць",
       "openFull": "Відкрити календар",

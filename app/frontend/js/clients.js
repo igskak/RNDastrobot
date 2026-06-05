@@ -7,10 +7,14 @@ const API_BASE = window.location.hostname === 'localhost'
     : '/api/v1';
 
 const state = {
+    libraryView: 'charts',
     users: [],
+    charts: [],
+    people: [],
     filteredUsers: [],
     searchTerm: '',
     activeTag: '',
+    activeChartKind: '',
     sortBy: 'created_desc',
     expandedUserId: null,
     consultationsCache: {},
@@ -119,7 +123,10 @@ function cacheElements() {
     refs.countEl = document.getElementById('clientCount');
     refs.searchInput = document.getElementById('searchInput');
     refs.tagFilterSelect = document.getElementById('tagFilterSelect');
+    refs.chartKindFilterField = document.getElementById('chartKindFilterField');
+    refs.chartKindFilterSelect = document.getElementById('chartKindFilterSelect');
     refs.sortSelect = document.getElementById('sortSelect');
+    refs.libraryTabs = Array.from(document.querySelectorAll('[data-library-view]'));
     refs.resultsMeta = document.getElementById('resultsMeta');
     refs.toast = document.getElementById('toast');
     refs.logoutBtn = document.getElementById('logoutBtn');
@@ -185,6 +192,12 @@ function bindEvents() {
         renderUsers();
     });
 
+    refs.libraryTabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+            setLibraryView(tab.dataset.libraryView);
+        });
+    });
+
     document.addEventListener('click', (event) => {
         const newChartLink = event.target.closest('a[data-plan-new-chart-link="true"]');
         if (!newChartLink || !isSavedChartLimitReached()) return;
@@ -194,6 +207,11 @@ function bindEvents() {
 
     refs.tagFilterSelect?.addEventListener('change', (event) => {
         state.activeTag = normalizeTag(event.target.value);
+        renderUsers();
+    });
+
+    refs.chartKindFilterSelect?.addEventListener('change', (event) => {
+        state.activeChartKind = String(event.target.value || '');
         renderUsers();
     });
 
@@ -277,6 +295,10 @@ function bindEvents() {
         closeAllDropdowns();
         const row = event.target.closest('tr[data-user-id]:not(.client-detail-row)');
         if (row) {
+            if (state.libraryView === 'charts') {
+                await openForecastForUser(row.dataset.userId);
+                return;
+            }
             await toggleDetailPanel(row.dataset.userId);
         }
     });
@@ -402,15 +424,21 @@ async function loadClients() {
     refs.tableWrap.classList.add('hidden');
 
     try {
-        const response = await apiFetch(`${API_BASE}/users`, { method: 'GET' });
-        if (response.status === 401) {
+        const [chartsResponse, usersResponse] = await Promise.all([
+            apiFetch(`${API_BASE}/charts`, { method: 'GET' }),
+            apiFetch(`${API_BASE}/users`, { method: 'GET' }),
+        ]);
+        if (chartsResponse.status === 401 || usersResponse.status === 401) {
             window.location.href = '/login.html';
             return;
         }
-        if (!response.ok) throw new Error(t('page.clients.errors.fetchList'));
+        if (!chartsResponse.ok || !usersResponse.ok) throw new Error(t('page.clients.errors.fetchList'));
 
-        const users = await response.json();
-        state.users = Array.isArray(users) ? users : [];
+        const charts = await chartsResponse.json();
+        const users = await usersResponse.json();
+        state.charts = Array.isArray(charts) ? charts : [];
+        state.people = Array.isArray(users) ? users : [];
+        state.users = getActiveLibraryItems();
         renderTagFilterOptions();
 
         refs.loading.classList.add('hidden');
@@ -426,6 +454,36 @@ async function loadClients() {
     } catch (error) {
         refs.loading.textContent = t('page.clients.errors.loadingWithMessage', { message: error.message });
         console.error(error);
+    }
+}
+
+function setLibraryView(view) {
+    if (!['charts', 'people'].includes(view) || state.libraryView === view) return;
+    state.libraryView = view;
+    state.users = getActiveLibraryItems();
+    state.filteredUsers = [];
+    state.activeTag = '';
+    state.activeChartKind = '';
+    state.expandedUserId = null;
+    closeAllDropdowns();
+    syncLibraryChrome();
+    renderTagFilterOptions();
+    renderUsers();
+}
+
+function getActiveLibraryItems() {
+    return state.libraryView === 'people' ? state.people : state.charts;
+}
+
+function syncLibraryChrome() {
+    refs.libraryTabs.forEach((tab) => {
+        const active = tab.dataset.libraryView === state.libraryView;
+        tab.classList.toggle('active', active);
+        tab.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    refs.chartKindFilterField?.classList.toggle('hidden', state.libraryView !== 'charts');
+    if (refs.chartKindFilterSelect && state.libraryView !== 'charts') {
+        refs.chartKindFilterSelect.value = '';
     }
 }
 
@@ -486,15 +544,19 @@ function closeAllDropdowns() {
 function buildUserRow(user) {
     const tr = document.createElement('tr');
 
-    const userId = String(user.user_id || '');
-    const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || t('common.notAvailable');
-    const initials = [user.first_name, user.last_name]
+    const isChartsView = state.libraryView === 'charts';
+    const userId = String(user.chart_id || user.user_id || '');
+    const name = isChartsView
+        ? (user.display_title || user.title || [user.first_name, user.last_name].filter(Boolean).join(' ') || t('common.notAvailable'))
+        : ([user.first_name, user.last_name].filter(Boolean).join(' ') || t('common.notAvailable'));
+    const initials = (isChartsView ? name.split(/\s+/) : [user.first_name, user.last_name])
         .filter(Boolean)
         .map((n) => n[0].toUpperCase())
         .join('')
         .slice(0, 2) || '?';
-    const birthDate = user.birth_date ? formatDate(user.birth_date) : t('common.notAvailable');
-    const place = user.birth_place || t('common.notAvailable');
+    const birthDateRaw = user.birth_date || user.date;
+    const birthDate = birthDateRaw ? formatDate(birthDateRaw) : t('common.notAvailable');
+    const place = user.birth_place || user.location_name || t('common.notAvailable');
     const created = user.created_at ? formatDateTime(user.created_at) : t('common.notAvailable');
     const labelName = escapeHtml(t('page.clients.table.name'));
     const labelBirthDate = escapeHtml(t('page.clients.table.birthDate'));
@@ -504,7 +566,7 @@ function buildUserRow(user) {
     const editLabel = escapeHtml(t('page.clients.actions.edit'));
     const deleteLabel = escapeHtml(t('page.clients.actions.delete'));
     const openChartLabel = escapeHtml(t('page.clients.detail.openChart'));
-    const forecastLabel = escapeHtml(t('page.chart.nav.forecast'));
+    const forecastLabel = escapeHtml(isChartsView ? t('page.clients.charts.openWorkspace') : t('page.chart.nav.forecast'));
     const upcomingCount = Number(user.upcoming_count || 0);
     const unpaidCount = Number(user.unpaid_count || 0);
     const summaryChips = [];
@@ -532,11 +594,10 @@ function buildUserRow(user) {
                 <span class="client-avatar">${escapeHtml(initials)}</span>
                 <div class="client-name-stack">
                     <strong class="client-name-text">${escapeHtml(name)}</strong>
+                    ${isChartsView ? `<div class="client-summary-chips"><span class="client-summary-chip">${escapeHtml(getChartKindLabel(user.chart_kind))}</span></div>` : ''}
                     ${summaryChips.length > 0 ? `<div class="client-summary-chips">${summaryChips.join('')}</div>` : ''}
                     <div class="client-card-quick-actions">
-                        <button class="client-quick-btn client-quick-btn-primary" type="button" data-action="open-chart" data-user-id="${escapeHtml(userId)}">
-                            ${openChartLabel}
-                        </button>
+                        ${isChartsView ? '' : `<button class="client-quick-btn client-quick-btn-primary" type="button" data-action="open-chart" data-user-id="${escapeHtml(userId)}">${openChartLabel}</button>`}
                         <button class="client-quick-btn" type="button" data-action="open-forecast" data-user-id="${escapeHtml(userId)}">
                             ${forecastLabel}
                         </button>
@@ -568,8 +629,8 @@ function buildUserRow(user) {
                     <svg width="14" height="4" viewBox="0 0 14 4" fill="none"><circle cx="2" cy="2" r="1.4" fill="currentColor"/><circle cx="7" cy="2" r="1.4" fill="currentColor"/><circle cx="12" cy="2" r="1.4" fill="currentColor"/></svg>
                 </button>
                 <div class="actions-dropdown">
-                    <a class="action-item" href="/client/${escapeHtml(userId)}">${escapeHtml(t('page.clientProfile.viewProfile'))}</a>
-                    <button class="action-item" type="button" data-action="edit" data-user-id="${escapeHtml(userId)}">${editLabel}</button>
+                    ${isChartsView ? '' : `<a class="action-item" href="/client/${escapeHtml(userId)}">${escapeHtml(t('page.clientProfile.viewProfile'))}</a>`}
+                    ${isChartsView ? '' : `<button class="action-item" type="button" data-action="edit" data-user-id="${escapeHtml(userId)}">${editLabel}</button>`}
                     <button class="action-item danger" type="button" data-action="delete" data-user-id="${escapeHtml(userId)}">${deleteLabel}</button>
                 </div>
             </div>
@@ -581,18 +642,26 @@ function buildUserRow(user) {
 
 function filterUsers(users, searchTerm, activeTag = '') {
     const normalizedTag = normalizeTag(activeTag);
-    if (!searchTerm && !normalizedTag) return [...users];
+    const chartKind = state.libraryView === 'charts' ? state.activeChartKind : '';
+    if (!searchTerm && !normalizedTag && !chartKind) return [...users];
 
     return users.filter((user) => {
+        if (chartKind && user.chart_kind !== chartKind) return false;
         const tags = getUserTags(user);
         const matchesTag = !normalizedTag || tags.some((tag) => normalizeTag(tag) === normalizedTag);
         if (!matchesTag) return false;
 
         if (!searchTerm) return true;
 
-        const name = [user.first_name, user.last_name].filter(Boolean).join(' ').toLowerCase();
-        const place = (user.birth_place || '').toLowerCase();
-        const birthDate = user.birth_date ? formatDate(user.birth_date).toLowerCase() : '';
+        const name = [
+            user.display_title,
+            user.title,
+            user.first_name,
+            user.last_name,
+        ].filter(Boolean).join(' ').toLowerCase();
+        const place = (user.birth_place || user.location_name || '').toLowerCase();
+        const rawDate = user.birth_date || user.date;
+        const birthDate = rawDate ? formatDate(rawDate).toLowerCase() : '';
         const tagsText = tags.join(' ').toLowerCase();
 
         return name.includes(searchTerm) || place.includes(searchTerm) || birthDate.includes(searchTerm) || tagsText.includes(searchTerm);
@@ -643,11 +712,11 @@ function sortUsers(users, sortBy) {
     }
 
     if (sortBy === 'birth_asc') {
-        return list.sort((a, b) => compareDate(a, b, 'birth_date', 1));
+        return list.sort((a, b) => compareDate(normalizeDateSortItem(a), normalizeDateSortItem(b), 'birth_date', 1));
     }
 
     if (sortBy === 'birth_desc') {
-        return list.sort((a, b) => compareDate(a, b, 'birth_date', -1));
+        return list.sort((a, b) => compareDate(normalizeDateSortItem(a), normalizeDateSortItem(b), 'birth_date', -1));
     }
 
     if (sortBy === 'name_desc') {
@@ -660,7 +729,17 @@ function sortUsers(users, sortBy) {
 }
 
 function getName(user) {
-    return [user.first_name, user.last_name].filter(Boolean).join(' ').trim();
+    return (user.display_title || user.title || [user.first_name, user.last_name].filter(Boolean).join(' ')).trim();
+}
+
+function normalizeDateSortItem(item) {
+    return { ...item, birth_date: item.birth_date || item.date };
+}
+
+function getChartKindLabel(kind) {
+    const key = `page.clients.chartKinds.${kind || 'birth'}`;
+    const label = t(key);
+    return label === key ? (kind || 'birth') : label;
 }
 
 function updateCounters() {
@@ -1147,7 +1226,8 @@ async function handleDelete(userId, button) {
     button.textContent = '...';
 
     try {
-        const response = await apiFetch(`${API_BASE}/users/${userId}`, {
+        const endpoint = state.libraryView === 'charts' ? `${API_BASE}/charts/${userId}` : `${API_BASE}/users/${userId}`;
+        const response = await apiFetch(endpoint, {
             method: 'DELETE',
         });
         if (!response.ok) {
@@ -1165,7 +1245,9 @@ async function handleDelete(userId, button) {
             throw new Error(message);
         }
 
-        state.users = state.users.filter((user) => String(user.user_id) !== String(userId));
+        state.people = state.people.filter((user) => String(user.user_id) !== String(userId));
+        state.charts = state.charts.filter((chart) => String(chart.chart_id || chart.user_id) !== String(userId));
+        state.users = getActiveLibraryItems();
 
         if (state.users.length === 0) {
             refs.tableWrap.classList.add('hidden');

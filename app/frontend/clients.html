@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.clients.title"></title>
-    <link rel="stylesheet" href="bundles/clients.bundle.css?v=19d302b66002">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=19d302b66002">
+    <link rel="stylesheet" href="bundles/clients.bundle.css?v=f5509c78f0fd">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=f5509c78f0fd">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '19d302b66002';</script>
+    <script>window.__APP_BUILD_ID__ = 'f5509c78f0fd';</script>
 </head>
 <body class="clients-page">
     <div class="page-loader" id="pageLoader">
@@ -56,6 +56,10 @@
                 <div class="clients-card-top">
                     <div class="clients-card-heading">
                         <h2 class="section-title" data-i18n="page.clients.workspace.title"></h2>
+                        <div class="library-tabs" role="tablist" data-i18n-aria-label="page.clients.libraryTabs.ariaLabel">
+                            <button id="chartsTab" class="library-tab active" type="button" role="tab" aria-selected="true" data-library-view="charts" data-i18n="page.clients.libraryTabs.charts"></button>
+                            <button id="peopleTab" class="library-tab" type="button" role="tab" aria-selected="false" data-library-view="people" data-i18n="page.clients.libraryTabs.people"></button>
+                        </div>
                     </div>
 
                     <div class="clients-card-actions">
@@ -80,6 +84,21 @@
                         <label class="toolbar-label" for="tagFilterSelect" data-i18n="page.clients.tagFilter.label"></label>
                         <select id="tagFilterSelect" data-i18n-aria-label="page.clients.tagFilter.ariaLabel">
                             <option value="" data-i18n="page.clients.tagFilter.all"></option>
+                        </select>
+                    </div>
+
+                    <div class="toolbar-field toolbar-field-kind" id="chartKindFilterField">
+                        <label class="toolbar-label" for="chartKindFilterSelect" data-i18n="page.clients.chartKindFilter.label"></label>
+                        <select id="chartKindFilterSelect" data-i18n-aria-label="page.clients.chartKindFilter.ariaLabel">
+                            <option value="" data-i18n="page.clients.chartKindFilter.all"></option>
+                            <option value="birth" data-i18n="page.clients.chartKinds.birth"></option>
+                            <option value="event" data-i18n="page.clients.chartKinds.event"></option>
+                            <option value="company" data-i18n="page.clients.chartKinds.company"></option>
+                            <option value="horary" data-i18n="page.clients.chartKinds.horary"></option>
+                            <option value="relocation" data-i18n="page.clients.chartKinds.relocation"></option>
+                            <option value="solar_point" data-i18n="page.clients.chartKinds.solar_point"></option>
+                            <option value="test" data-i18n="page.clients.chartKinds.test"></option>
+                            <option value="other" data-i18n="page.clients.chartKinds.other"></option>
                         </select>
                     </div>
 
@@ -371,7 +390,7 @@
 
     <div id="toast" class="toast"></div>
 
-    <script type="module" src="js/bundles/clients.bundle.js?v=19d302b66002"></script>
-    <script src="js/locale-switcher.js?v=19d302b66002"></script>
+    <script type="module" src="js/bundles/clients.bundle.js?v=f5509c78f0fd"></script>
+    <script src="js/locale-switcher.js?v=f5509c78f0fd"></script>
 </body>
 </html>
