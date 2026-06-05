@@ -169,6 +169,7 @@
             method: null,
             scope: 'prognostic',
         },
+        singleRightTab: 'Grid',
     };
 
     function t(key, params) {
@@ -317,6 +318,7 @@
         initLayerPopovers();
         initAspectInteractions();
         syncControlsFromState();
+        syncWorkspaceModePanels();
         renderStaticNatal();
         refreshViewModel();
         renderWheel();
@@ -339,7 +341,7 @@
         [
             'pageLoader', 'forecastNewLayout', 'forecastNewError', 'forecastNewErrorMsg',
             'forecastNewBackBtn', 'forecastNewTitle', 'forecastNewSubtitle', 'openNatalBtn', 'openNatalTablesBtn', 'openSynastryBtn',
-            'saveSourceChartBtn', 'savePrognosticChartBtn', 'forecastNewActionsToggle', 'forecastNewActionsMenu',
+            'saveSourceChartBtn', 'forecastNewActionsToggle', 'forecastNewActionsMenu',
             'forecastNewDirectionTypeSelect',
             'forecastNewNatalPanel', 'forecastNewProgPanel',
             'natalPanelMeta', 'prognosticPanelTitle', 'prognosticPanelMeta',
@@ -460,13 +462,12 @@
         });
         refs.forecastSavedChartsBtn?.addEventListener('click', (event) => {
             event.stopPropagation();
-            window.AstroQuickOpen?.openSavedCharts?.({
-                userId: state.userId,
-                sourceView: 'forecast-new',
-                sourceUrl: `/forecast-new.html${window.location.search || ''}`,
+            window.AstroChartPicker?.open?.({
+                title: t('page.chartPicker.momentTitle', null, 'Load saved chart'),
+                subtitle: t('page.chartPicker.momentSubtitle', null, 'Its date, time and place apply to the active layer.'),
+                onSelect: applySavedChartMoment,
             });
         });
-        refs.savePrognosticChartBtn?.addEventListener('click', saveSelectedPrognosticChart);
         refs.saveSourceChartBtn?.addEventListener('click', saveCurrentSourceAsChart);
 
         refs.layerToggles.forEach((input) => {
@@ -501,9 +502,30 @@
         refs.forecastNewSynastryPartnerSelect?.addEventListener('change', async () => {
             state.synastryPartnerId = refs.forecastNewSynastryPartnerSelect.value || '';
             schedulePersist();
-            if (state.activeLayers.includes('synastry_partner') && state.synastryPartnerId) {
-                await loadActiveLayers({ lightweight: true });
+            if (state.synastryPartnerId) {
+                closeLayerPopover('synastry_partner');
+                await ensureSynastryLayerActive({ lightweight: true });
             }
+        });
+
+        document.getElementById('forecastNewSynastryPickerBtn')?.addEventListener('click', () => {
+            window.AstroChartPicker?.open?.({
+                excludeId: state.userId,
+                onSelect(chart) {
+                    const select = refs.forecastNewSynastryPartnerSelect;
+                    if (!select || !chart?.user_id) return;
+                    const id = String(chart.user_id);
+                    if (!Array.from(select.options).some((opt) => opt.value === id)) {
+                        const opt = document.createElement('option');
+                        opt.value = id;
+                        opt.textContent = chart.display_title || chart.title
+                            || [chart.first_name, chart.last_name].filter(Boolean).join(' ') || id.slice(0, 8);
+                        select.appendChild(opt);
+                    }
+                    select.value = id;
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                },
+            });
         });
 
         refs.targetDateInput?.addEventListener('change', onTargetDatetimeChange);
@@ -699,7 +721,11 @@
                 if (!tab) return;
                 activatePanelTab(panel, tab.dataset.panelTarget);
                 if (panel.id === 'forecastNewNatalPanel') state.leftTab = PANEL_TARGET_TO_TAB[tab.dataset.panelTarget] || 'Planets';
-                if (panel.id === 'forecastNewProgPanel') state.rightTab = PANEL_TARGET_TO_TAB[tab.dataset.panelTarget] || 'Planets';
+                if (panel.id === 'forecastNewProgPanel') {
+                    const selectedTab = PANEL_TARGET_TO_TAB[tab.dataset.panelTarget] || 'Planets';
+                    state.rightTab = selectedTab;
+                    if (state.wheelView === 'single') state.singleRightTab = normalizeSingleRightTab(selectedTab);
+                }
                 syncHoveredAspectToActiveSurface();
                 schedulePersist();
             });
@@ -732,10 +758,18 @@
                 return;
             }
 
+            const removeButton = event.target.closest('[data-remove-layer]');
+            if (removeButton) {
+                event.stopPropagation();
+                void deactivateLayer(removeButton.dataset.removeLayer);
+                return;
+            }
+
             const button = event.target.closest('[data-right-layer]');
             if (!button) return;
             state.selectedRightLayer = button.dataset.rightLayer;
             state.activeRightMethodTab = state.selectedRightLayer;
+            syncControlsFromState();
             renderRightPanel();
             schedulePersist();
         });
@@ -929,10 +963,9 @@
 
     function normalizeActiveLayers() {
         state.activeLayers = LAYER_ORDER.filter((method) => state.activeLayers.includes(method));
-        if (!state.activeLayers.length) state.activeLayers = ['transit'];
         state.enabledLayers = state.activeLayers;
         if (!state.activeLayers.includes(state.selectedRightLayer)) {
-            state.selectedRightLayer = state.activeLayers[0];
+            state.selectedRightLayer = state.activeLayers[0] || '';
         }
         state.activeRightMethodTab = state.selectedRightLayer;
         syncLayerTogglesFromState();
@@ -940,7 +973,16 @@
 
     async function activateLayer(method, { openConfig = false } = {}) {
         if (!LAYER_ORDER.includes(method)) return;
-        if (!state.activeLayers.includes(method)) {
+        const wasInactive = !state.activeLayers.includes(method);
+        if (method === 'transit' && wasInactive) {
+            setSelectedDateTime(getLocalNowIso(state.timezone));
+            state.lastStepperAction = null;
+            syncControlsFromState();
+        }
+        if (method === 'solar_return' && wasInactive) {
+            initializeSolarDefaultsFromNatal();
+        }
+        if (wasInactive) {
             state.activeLayers = LAYER_ORDER.filter((item) => item === method || state.activeLayers.includes(item));
         }
         state.selectedRightLayer = method;
@@ -950,6 +992,27 @@
         if (openConfig) openLayerPopover(method);
         schedulePersist();
         await loadActiveLayers();
+    }
+
+    function initializeSolarDefaultsFromNatal() {
+        const [currentYear] = splitTargetDatetime(getLocalNowIso(state.timezone || state.natalTimezone));
+        const year = Number(currentYear?.slice(0, 4));
+        state.solarYear = Number.isFinite(year) ? year : new Date().getFullYear();
+
+        const source = state.natalLocation || {};
+        state.solarLocation = {
+            name: source.name || state.natalData?.birth_data?.place || '',
+            latitude: numberOrNull(source.latitude),
+            longitude: numberOrNull(source.longitude),
+            timezone: state.natalTimezone || state.timezone || null,
+            sourceId: source.sourceId || null,
+        };
+
+        if (refs.forecastNewSolarYearInput) refs.forecastNewSolarYearInput.value = String(state.solarYear);
+        if (refs.forecastNewSolarLocationInput) refs.forecastNewSolarLocationInput.value = state.solarLocation.name || '';
+        if (refs.forecastNewSolarLat) refs.forecastNewSolarLat.value = state.solarLocation.latitude !== null ? String(state.solarLocation.latitude) : '';
+        if (refs.forecastNewSolarLon) refs.forecastNewSolarLon.value = state.solarLocation.longitude !== null ? String(state.solarLocation.longitude) : '';
+        delete state.layers?.solar_return;
     }
 
     async function deactivateLayer(method) {
@@ -1104,9 +1167,7 @@
         delete state.layers?.synastry_partner;
         schedulePersist();
         closeLayerPopover('synastry_partner');
-        if (state.activeLayers.includes('synastry_partner')) {
-            await loadActiveLayers({ lightweight: false });
-        }
+        await ensureSynastryLayerActive({ lightweight: false });
     }
 
     function hasUsableSynastryPartner() {
@@ -1115,6 +1176,128 @@
             return !!(m && m.date && m.time && m.timezone && (m.place || (m.latitude !== null && m.longitude !== null)));
         }
         return !!state.synastryPartnerId;
+    }
+
+    function isSynastryMomentActive() {
+        return state.selectedRightLayer === 'synastry_partner';
+    }
+
+    function getDisplayedMomentDateTime() {
+        if (isSynastryMomentActive()) {
+            const bd = state.viewModel?.activePrognosticLayers
+                ?.find((layer) => layer.method === 'synastry_partner')
+                ?.raw?.partner_chart?.birth_data;
+            const date = state.synastryMode === 'manual'
+                ? state.synastryManual?.date
+                : (bd?.date || state.synastryManual?.date);
+            const time = state.synastryMode === 'manual'
+                ? state.synastryManual?.time
+                : (bd?.time || state.synastryManual?.time);
+            if (date) return `${date}T${normalizeTime(time || '12:00:00')}`;
+        }
+        return state.selectedDateTime;
+    }
+
+    function buildManualSynastryFromMoment(moment, source = {}) {
+        return {
+            name: source.display_title || source.title || source.person_display_name
+                || [source.first_name, source.last_name].filter(Boolean).join(' ')
+                || state.synastryManual?.name
+                || '',
+            date: moment.date,
+            time: normalizeTime(moment.time || '12:00:00'),
+            timezone: moment.timezone || state.synastryManual?.timezone || state.timezone || 'UTC',
+            place: moment.locationName || state.synastryManual?.place || null,
+            latitude: moment.latitude,
+            longitude: moment.longitude,
+        };
+    }
+
+    function ensureManualSynastryPartnerForEdit() {
+        if (state.synastryMode === 'manual' && state.synastryManual) return state.synastryManual;
+        const layer = state.viewModel?.activePrognosticLayers?.find((item) => item.method === 'synastry_partner');
+        const bd = layer?.raw?.partner_chart?.birth_data || {};
+        const select = refs.forecastNewSynastryPartnerSelect;
+        const name = select && select.selectedIndex > 0
+            ? (select.options[select.selectedIndex]?.text || '')
+            : '';
+        state.synastryMode = 'manual';
+        state.synastryManual = buildManualSynastryFromMoment({
+            date: bd.date || splitTargetDatetime(state.selectedDateTime)[0],
+            time: bd.time || splitTargetDatetime(state.selectedDateTime)[1],
+            timezone: bd.timezone || state.synastryManual?.timezone || state.timezone || 'UTC',
+            locationName: bd.place || state.synastryManual?.place || '',
+            latitude: numberOrNull(bd.latitude),
+            longitude: numberOrNull(bd.longitude),
+        }, { display_title: name });
+        state.synastryPartnerId = '';
+        setSynastryMode('manual');
+        syncSynastryManualControlsFromState();
+        return state.synastryManual;
+    }
+
+    function applyDisplayedMomentDateTime(value) {
+        if (!isSynastryMomentActive()) {
+            setSelectedDateTime(value);
+            return;
+        }
+        const [date, time] = splitTargetDatetime(value);
+        const manual = ensureManualSynastryPartnerForEdit();
+        state.synastryManual = {
+            ...manual,
+            date,
+            time,
+        };
+        delete state.layers?.synastry_partner;
+        syncSynastryManualControlsFromState();
+    }
+
+    async function loadDisplayedMomentLayers(options = {}) {
+        if (isSynastryMomentActive()) {
+            await ensureSynastryLayerActive(options);
+            return;
+        }
+        await loadActiveLayers(options);
+    }
+
+    function readChartMoment(chart = {}) {
+        const date = chart.date || chart.birth_date || chart.birthData?.date || '';
+        const time = chart.time || chart.birth_time || chart.birthData?.time || '';
+        const lat = Number(chart.latitude ?? chart.lat ?? chart.birthData?.latitude);
+        const lon = Number(chart.longitude ?? chart.lon ?? chart.birthData?.longitude);
+        return {
+            date,
+            time,
+            timezone: chart.timezone || chart.birthData?.timezone || '',
+            locationName: chart.location_name || chart.birth_place || chart.place || chart.birthData?.place || '',
+            latitude: Number.isFinite(lat) ? lat : null,
+            longitude: Number.isFinite(lon) ? lon : null,
+        };
+    }
+
+    function syncSynastryManualControlsFromState() {
+        const m = state.synastryManual;
+        if (!m) return;
+        if (refs.forecastNewSynastryManualName) refs.forecastNewSynastryManualName.value = m.name || '';
+        if (refs.forecastNewSynastryManualDate) refs.forecastNewSynastryManualDate.value = m.date || '';
+        if (refs.forecastNewSynastryManualTime) refs.forecastNewSynastryManualTime.value = (m.time || '').slice(0, 8);
+        if (refs.forecastNewSynastryManualTimezone && m.timezone) refs.forecastNewSynastryManualTimezone.value = m.timezone;
+        if (refs.forecastNewSynastryManualLocation) refs.forecastNewSynastryManualLocation.value = m.place || '';
+        if (refs.forecastNewSynastryManualLat) refs.forecastNewSynastryManualLat.value = m.latitude !== null && m.latitude !== undefined ? String(m.latitude) : '';
+        if (refs.forecastNewSynastryManualLon) refs.forecastNewSynastryManualLon.value = m.longitude !== null && m.longitude !== undefined ? String(m.longitude) : '';
+    }
+
+    async function ensureSynastryLayerActive(options = {}) {
+        if (!hasUsableSynastryPartner()) return;
+        if (!state.activeLayers.includes('synastry_partner')) {
+            await activateLayer('synastry_partner', { openConfig: false });
+            return;
+        }
+        state.selectedRightLayer = 'synastry_partner';
+        normalizeActiveLayers();
+        renderRightLayerTabs();
+        scheduleRightPanelRender();
+        await loadActiveLayers(options);
     }
 
     function buildSynastryPartnerSource() {
@@ -1186,7 +1369,7 @@
     }
 
     function syncControlsFromState() {
-        const [date, time] = splitTargetDatetime(state.selectedDateTime);
+        const [date, time] = splitTargetDatetime(getDisplayedMomentDateTime());
         if (refs.targetDateInput) refs.targetDateInput.value = date;
         if (refs.targetTimeInput) refs.targetTimeInput.value = time;
         renderOrUpdateTimeStepper();
@@ -1355,7 +1538,7 @@
     }
 
     function updatePrognosticTimeMeta() {
-        if (refs.targetDatetimeLabel) refs.targetDatetimeLabel.textContent = state.selectedDateTime.replace('T', ' ');
+        if (refs.targetDatetimeLabel) refs.targetDatetimeLabel.textContent = getDisplayedMomentDateTime().replace('T', ' ');
         if (refs.prognosticPanelMeta) refs.prognosticPanelMeta.textContent = buildPrognosticMomentSummary();
     }
 
@@ -1408,7 +1591,7 @@
 
     function renderTimeStepper() {
         if (!refs.forecastNewTimeStepper) return;
-        const values = getTimeStepperSegmentValues(state.selectedDateTime);
+        const values = getTimeStepperSegmentValues(getDisplayedMomentDateTime());
         const customStep = normalizeCustomStep(state.customStep);
         const customStepLabel = formatCustomStepLabel(customStep);
         const customStepTooltip = `Кастомный шаг: ${customStepLabel}`;
@@ -1488,7 +1671,7 @@
             renderTimeStepper();
             return;
         }
-        updateTimeStepperValues(refs.forecastNewTimeStepper, state.selectedDateTime);
+        updateTimeStepperValues(refs.forecastNewTimeStepper, getDisplayedMomentDateTime());
     }
 
     function renderSolarYearStepper() {
@@ -2522,31 +2705,90 @@
     }
 
     async function onTargetDatetimeChange() {
-        const date = refs.targetDateInput?.value || splitTargetDatetime(state.selectedDateTime)[0];
+        const date = refs.targetDateInput?.value || splitTargetDatetime(getDisplayedMomentDateTime())[0];
         const time = refs.targetTimeInput?.value || '12:00:00';
-        setSelectedDateTime(`${date}T${normalizeTime(time)}`);
+        applyDisplayedMomentDateTime(`${date}T${normalizeTime(time)}`);
         state.lastStepperAction = null;
         syncControlsFromState();
+        schedulePersist();
+        await loadDisplayedMomentLayers({ lightweight: true });
+    }
+
+    // Apply a saved chart (date/time/place) as the prognostic moment of the active layer.
+    async function applySavedChartMoment(chart) {
+        if (isSynastryMomentActive()) {
+            await applySavedSynastryPartnerChart(chart);
+            return;
+        }
+        const moment = readChartMoment(chart);
+        if (!moment.date) return;
+        setSelectedDateTime(`${moment.date}T${normalizeTime(moment.time || '12:00:00')}`);
+        const tz = normalizeTimezoneValue(moment.timezone, moment.locationName);
+        if (tz) state.timezone = tz;
+        state.location = {
+            name: moment.locationName || '',
+            latitude: moment.latitude,
+            longitude: moment.longitude,
+        };
+        state.lastStepperAction = null;
+        syncControlsFromState();
+        updatePrognosticTimeMeta();
         schedulePersist();
         await loadActiveLayers({ lightweight: true });
     }
 
-    async function stepTargetDatetime(direction) {
-        setSelectedDateTime(addStep(state.selectedDateTime, state.stepMode, direction));
+    async function applySavedSynastryPartnerChart(chart) {
+        const moment = readChartMoment(chart);
+        if (!moment.date) return;
+        const id = chart?.user_id || chart?.chart_id || '';
+        if (id) {
+            state.synastryMode = 'db';
+            state.synastryPartnerId = String(id);
+            state.synastryManual = buildManualSynastryFromMoment(moment, chart);
+            if (refs.forecastNewSynastryPartnerSelect) {
+                const select = refs.forecastNewSynastryPartnerSelect;
+                if (!Array.from(select.options).some((opt) => opt.value === String(id))) {
+                    const opt = document.createElement('option');
+                    opt.value = String(id);
+                    opt.textContent = chart.display_title || chart.title
+                        || chart.person_display_name
+                        || [chart.first_name, chart.last_name].filter(Boolean).join(' ')
+                        || String(id).slice(0, 8);
+                    select.appendChild(opt);
+                }
+                select.value = String(id);
+            }
+            setSynastryMode('db');
+        } else {
+            state.synastryMode = 'manual';
+            state.synastryPartnerId = '';
+            state.synastryManual = buildManualSynastryFromMoment(moment, chart);
+            setSynastryMode('manual');
+            syncSynastryManualControlsFromState();
+        }
+        delete state.layers?.synastry_partner;
+        state.lastStepperAction = null;
         syncControlsFromState();
         schedulePersist();
-        await loadActiveLayers({ lightweight: true });
+        await ensureSynastryLayerActive({ lightweight: true });
+    }
+
+    async function stepTargetDatetime(direction) {
+        applyDisplayedMomentDateTime(addStep(getDisplayedMomentDateTime(), state.stepMode, direction));
+        syncControlsFromState();
+        schedulePersist();
+        await loadDisplayedMomentLayers({ lightweight: true });
     }
 
     function stepSelectedDateTimeSegment(segment, direction) {
         const dir = direction >= 0 ? 1 : -1;
-        setSelectedDateTime(addDateTimeUnit(state.selectedDateTime, segment.unit, segment.amount * dir));
+        applyDisplayedMomentDateTime(addDateTimeUnit(getDisplayedMomentDateTime(), segment.unit, segment.amount * dir));
         state.lastStepperAction = { type: 'segment', segment, direction: dir };
         syncControlsFromState();
         updatePrognosticTimeMeta();
         setLightweightLoading(true);
         schedulePersist();
-        void loadActiveLayers({ lightweight: true });
+        void loadDisplayedMomentLayers({ lightweight: true });
     }
 
     function stepSelectedDateTimeByCustom(direction) {
@@ -2555,14 +2797,14 @@
         const dir = direction >= 0 ? 1 : -1;
         const unit = step.unit === 'week' ? 'day' : step.unit;
         const amount = step.unit === 'week' ? step.amount * 7 : step.amount;
-        setSelectedDateTime(addDateTimeUnit(state.selectedDateTime, unit, amount * dir));
+        applyDisplayedMomentDateTime(addDateTimeUnit(getDisplayedMomentDateTime(), unit, amount * dir));
         state.lastStepperAction = { type: 'custom', step, direction: dir };
         syncControlsFromState();
         setCustomStepPopoverOpen(true);
         updatePrognosticTimeMeta();
         setLightweightLoading(true);
         schedulePersist();
-        void loadActiveLayers({ lightweight: true });
+        void loadDisplayedMomentLayers({ lightweight: true });
     }
 
     async function loadActiveLayers(options = {}) {
@@ -2995,8 +3237,12 @@
         const next = view === 'single' ? 'single' : 'multi';
         if (state.wheelView === next) return;
         state.wheelView = next;
+        if (next === 'single') state.singleRightTab = normalizeSingleRightTab(state.singleRightTab || state.rightTab);
+        syncWorkspaceModePanels();
         syncWheelViewButtons();
         renderWheel();
+        renderRightLayerTabs();
+        renderRightPanel();
         persistState();
     }
 
@@ -3005,8 +3251,19 @@
         refs.forecastNewViewMulti?.classList.toggle('is-active', state.wheelView !== 'single');
     }
 
+    function syncWorkspaceModePanels() {
+        const isSingle = state.wheelView === 'single';
+        if (isSingle) {
+            state.leftTab = normalizeSingleLeftTab(state.leftTab);
+            state.singleRightTab = normalizeSingleRightTab(state.singleRightTab || state.rightTab);
+        }
+        document.body.classList.toggle('forecast-new-single-mode', isSingle);
+        document.body.classList.toggle('forecast-new-multi-mode', !isSingle);
+        refs.forecastNewProgPanel?.setAttribute('data-panel-mode', isSingle ? 'natal' : 'prognostic');
+    }
+
     function normalizeResultView(view) {
-        return RESULT_VIEWS.includes(view) ? view : 'wheel';
+        return 'wheel';
     }
 
     function setResultView(view) {
@@ -3176,10 +3433,15 @@
 
     function renderRightLayerTabs() {
         if (!refs.rightLayerTabs) return;
+        if (state.wheelView === 'single') {
+            refs.rightLayerTabs.innerHTML = '';
+            return;
+        }
         normalizeActiveLayers();
         const activeTabs = state.activeLayers.map((method) => `
             <button type="button" class="forecast-new-right-layer-tab ${method === state.selectedRightLayer ? 'active' : ''}" data-right-layer="${method}">
-                ${layerLabel(method)}
+                <span class="forecast-new-right-layer-label">${layerLabel(method)}</span>
+                <span type="button" class="forecast-new-right-layer-remove" data-remove-layer="${method}" aria-label="Убрать слой ${escapeHtml(layerLabel(method))}" title="Убрать слой">−</span>
             </button>
         `).join('');
         const layerButtons = LAYER_ORDER.map((method) => {
@@ -3212,14 +3474,29 @@
     }
 
     function renderRightPanel() {
+        if (state.wheelView === 'single') {
+            renderSingleNatalRightPanel();
+            return;
+        }
         const method = state.selectedRightLayer;
+        if (!method) {
+            refs.prognosticPanelTitle.textContent = 'Слой не выбран';
+            refs.prognosticPanelMeta.textContent = 'Добавьте слой для расчёта';
+            if (refs.forecastNewTimeStepper) refs.forecastNewTimeStepper.innerHTML = '';
+            if (refs.targetDatetimeLabel) refs.targetDatetimeLabel.textContent = '';
+            state.prognosticRenderer?.render({ planets: [], houses: [], aspects: [], aspect_configurations: [], stelliums: [], balances: null, cosmogram_pattern: null });
+            renderForecastNewRulersTab('progRulersContainer', null, 'forecastNewProgRulersMode');
+            syncPrognosticHousesVisibility([]);
+            renderResultView();
+            return;
+        }
         const layer = state.viewModel?.activePrognosticLayers?.find((item) => item.method === method);
         refs.prognosticPanelTitle.textContent = layerLabel(method);
         refs.prognosticPanelMeta.textContent = buildPrognosticMomentSummary();
         // Solar return: render year-only stepper into the regular stepper slot
         if (method === 'solar_return') renderSolarYearStepper();
         else renderOrUpdateTimeStepper();
-        refs.targetDatetimeLabel.textContent = state.selectedDateTime.replace('T', ' ');
+        refs.targetDatetimeLabel.textContent = getDisplayedMomentDateTime().replace('T', ' ');
 
         if (!layer) {
             state.prognosticRenderer?.setHouseNumberStyle?.(state.pageSettings.houseNumberStyle);
@@ -3257,6 +3534,28 @@
         syncPrognosticHousesVisibility(layer.houses || []);
         syncHoveredAspectToActiveSurface();
         activateSavedTabs();
+        renderResultView();
+    }
+
+    function renderSingleNatalRightPanel() {
+        if (!refs.prognosticPanelTitle || !refs.prognosticPanelMeta) return;
+        refs.prognosticPanelTitle.textContent = 'Натал';
+        refs.prognosticPanelMeta.textContent = refs.natalPanelMeta?.textContent || '';
+        if (refs.forecastNewTimeStepper) refs.forecastNewTimeStepper.innerHTML = '';
+        refs.targetDatetimeLabel.textContent = state.natalSelectedDateTime.replace('T', ' ');
+        state.prognosticRenderer?.setAspectTypeFilter?.('all');
+        state.prognosticRenderer?.setHouseNumberStyle?.(state.pageSettings.houseNumberStyle);
+        state.prognosticRenderer?.setDisplayPreferences?.({
+            showSpeed: false,
+            showStationary: state.pageSettings.showStationary !== false,
+            showApplyingSeparating: state.pageSettings.showApplyingSeparating === true,
+            showAspectText: state.pageSettings.showAspectText === true,
+        });
+        state.prognosticRenderer?.render(filterChartDataForSidePanel(state.natalWheelData, { scope: 'natal' }));
+        renderForecastNewRulersTab('progRulersContainer', state.natalWheelData, 'forecastNewSingleNatalRulersMode');
+        syncPrognosticHousesVisibility(state.natalWheelData?.houses || []);
+        activatePanelTab(refs.forecastNewNatalPanel, tabToNatalTarget(normalizeSingleLeftTab(state.leftTab)));
+        activatePanelTab(refs.forecastNewProgPanel, tabToProgTarget(normalizeSingleRightTab(state.singleRightTab)));
         renderResultView();
     }
 
@@ -3759,6 +4058,14 @@
         }[tab] || 'progPlanetsView';
     }
 
+    function normalizeSingleRightTab(tab) {
+        return ['Grid', 'Configs', 'Balances', 'Rulers'].includes(tab) ? tab : 'Grid';
+    }
+
+    function normalizeSingleLeftTab(tab) {
+        return ['Planets', 'Houses', 'Aspects'].includes(tab) ? tab : 'Planets';
+    }
+
     function closeTabsOverflowMenus() {
         refs.tabsOverflow?.forEach((overflow) => overflow.classList.remove('is-open'));
         syncTabsOverflowToggleState();
@@ -3788,7 +4095,7 @@
         state.stepMode = restored.stepMode || state.stepMode;
         state.customStep = normalizeCustomStep(restored.customStep || state.customStep);
         state.wheelView = restored.wheelView === 'single' ? 'single' : 'multi';
-        state.resultView = normalizeResultView(restored.resultView);
+        state.resultView = 'wheel';
         const restoredSolarYear = Number(restored.solarYear);
         if (Number.isFinite(restoredSolarYear) && restoredSolarYear >= 1900 && restoredSolarYear <= 2100) {
             state.solarYear = Math.trunc(restoredSolarYear);
@@ -4000,6 +4307,15 @@
 
     function applyDeepLinkParams() {
         const params = new URLSearchParams(window.location.search);
+        const tab = params.get('tab');
+        if (tab === 'biwheel') {
+            state.wheelView = 'single';
+            state.activeLayers = [];
+            state.enabledLayers = [];
+            state.selectedRightLayer = '';
+            state.activeRightMethodTab = '';
+            window.history.replaceState({}, '', window.location.pathname);
+        }
         const date = params.get('date');
         const time = params.get('time');
         if (/^\d{4}-\d{2}-\d{2}$/.test(date || '')) {
@@ -4018,43 +4334,6 @@
         }
         if (params.has('date') || params.has('time') || params.has('layer') || params.has('directionType')) {
             window.history.replaceState({}, '', window.location.pathname);
-        }
-    }
-
-    async function saveSelectedPrognosticChart() {
-        if (!state.userId) return;
-        const [date, time] = splitTargetDatetime(state.selectedDateTime);
-        const defaultName = `Прогностика ${date}`;
-        const name = window.prompt('Название карты', defaultName);
-        if (name === null) return;
-
-        refs.savePrognosticChartBtn.disabled = true;
-        try {
-            const params = new URLSearchParams();
-            params.set('date', date);
-            params.set('time', time);
-            params.set('layer', state.selectedRightLayer || state.activeLayers.find((layer) => layer !== 'transit') || 'transit');
-            params.set('directionType', normalizeDirectionType(state.directionType));
-            await apiPost('/saved-charts', {
-                user_id: state.userId,
-                chart_type: 'forecast',
-                name,
-                target_date: date,
-                target_time: time,
-                timezone: state.timezone,
-                url_path: `/forecast-new.html?${params.toString()}`,
-                metadata: {
-                    active_layers: state.activeLayers,
-                    selected_layer: state.selectedRightLayer,
-                    direction_type: normalizeDirectionType(state.directionType),
-                    location: state.location,
-                },
-            });
-            window.alert('Карта сохранена в профиле клиента.');
-        } catch (error) {
-            window.alert(`Не удалось сохранить карту: ${error.message}`);
-        } finally {
-            refs.savePrognosticChartBtn.disabled = false;
         }
     }
 
@@ -4169,7 +4448,7 @@
                 stepMode: state.stepMode,
                 customStep: state.customStep,
                 wheelView: state.wheelView,
-                resultView: state.resultView,
+                resultView: 'wheel',
                 solarYear: state.solarYear,
                 solarLocation: state.solarLocation,
                 synastryPartnerId: state.synastryPartnerId,

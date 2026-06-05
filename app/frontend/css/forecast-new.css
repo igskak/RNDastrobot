@@ -24,12 +24,20 @@
     gap: 14px;
 }
 
+.forecast-new-page .forecast-view-tab[aria-current="page"] {
+    display: none;
+}
+
+.forecast-new-single-mode .forecast-view-tab--multi-only {
+    display: none;
+}
+
 .forecast-new-client {
     min-width: 220px;
 }
 
 .forecast-new-layer-toggles {
-    display: inline-flex;
+    display: none;
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
@@ -246,7 +254,7 @@
     position: absolute;
     top: calc(100% + 7px);
     right: 0;
-    z-index: 55;
+    z-index: 140;
     display: flex;
     flex-direction: column;
     min-width: 176px;
@@ -319,6 +327,8 @@
 
 #forecastNewProgPanel {
     position: relative;
+    overflow: visible;
+    z-index: 80;
 }
 
 .forecast-new-center {
@@ -1439,6 +1449,8 @@
 }
 
 .forecast-new-right-layer-tabs {
+    position: relative;
+    z-index: 120;
     display: flex;
     gap: 3px;
     padding: 6px 14px 2px;
@@ -1446,10 +1458,14 @@
 }
 
 .forecast-new-right-layer-tab {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     flex: 1;
     min-height: 28px;
     min-width: 0;
-    padding: 0 6px;
+    padding: 0 22px 0 8px;
     border: 1px solid rgba(30, 58, 95, 0.12);
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.72);
@@ -1468,6 +1484,80 @@
     border-color: rgba(30, 58, 95, 0.28);
     background: var(--accent);
     color: #fff;
+}
+
+.forecast-new-right-layer-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.forecast-new-right-layer-remove {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    display: inline-flex;
+    width: 16px;
+    height: 16px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    color: currentColor;
+    line-height: 1;
+    opacity: 0;
+    transform: translateY(-50%);
+    transition: opacity var(--transition), background var(--transition);
+}
+
+.forecast-new-right-layer-tab:hover .forecast-new-right-layer-remove,
+.forecast-new-right-layer-tab:focus-visible .forecast-new-right-layer-remove {
+    opacity: 0.84;
+}
+
+.forecast-new-right-layer-remove:hover {
+    background: rgba(255, 255, 255, 0.24);
+}
+
+.forecast-new-single-mode #forecastNewNatalPanel [data-tabs-overflow] {
+    display: none;
+}
+
+.forecast-new-single-mode #forecastNewNatalPanel .forecast-new-tabs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.forecast-new-single-mode #forecastNewProgPanel .forecast-new-side-head,
+.forecast-new-single-mode #forecastNewProgPanel .forecast-new-right-layer-tabs,
+.forecast-new-single-mode #forecastNewProgPanel #forecastNewTimeStepper,
+.forecast-new-single-mode #forecastNewProgPanel #forecastNewMomentCard,
+.forecast-new-single-mode #forecastNewProgPanel #forecastSavedChartsBtn {
+    display: none;
+}
+
+.forecast-new-single-mode #forecastNewProgPanel .forecast-new-tabs {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.forecast-new-single-mode #forecastNewProgPanel .forecast-new-tabs > .panel-tab[data-panel-target="progPlanetsView"],
+.forecast-new-single-mode #forecastNewProgPanel .forecast-new-tabs > .panel-tab[data-panel-target="progHousesView"],
+.forecast-new-single-mode #forecastNewProgPanel .forecast-new-tabs > .panel-tab[data-panel-target="progAspectsView"],
+.forecast-new-single-mode #forecastNewProgPanel [data-tabs-overflow],
+.forecast-new-single-mode #forecastNewProgPanel [data-tabs-overflow-menu] {
+    display: contents;
+}
+
+.forecast-new-single-mode #forecastNewProgPanel .forecast-new-tabs > .panel-tab[data-panel-target="progPlanetsView"],
+.forecast-new-single-mode #forecastNewProgPanel .forecast-new-tabs > .panel-tab[data-panel-target="progHousesView"],
+.forecast-new-single-mode #forecastNewProgPanel .forecast-new-tabs > .panel-tab[data-panel-target="progAspectsView"],
+.forecast-new-single-mode #forecastNewProgPanel [data-tabs-overflow-toggle] {
+    display: none;
+}
+
+.forecast-new-single-mode #forecastNewProgPanel .forecast-new-tabs-overflow-item {
+    display: inline-flex;
+    width: auto;
+    align-items: center;
+    justify-content: center;
 }
 
 .forecast-new-side-panel .balance-subtabs {

@@ -1754,6 +1754,27 @@ function initChartActions() {
         openEditClientDialog();
     });
 
+    document.getElementById('openChartPickerAction')?.addEventListener('click', () => {
+        setChartActionsMenuOpen(false);
+        window.AstroChartPicker?.open?.({
+            async onSelect(chart) {
+                if (!chart?.user_id || !window.AstroAPI?.getNatalChart) return;
+                try {
+                    window.showPageLoader?.();
+                    const natalData = await window.AstroAPI.getNatalChart(chart.user_id);
+                    window.AstroAPI.saveChartToSession(natalData);
+                    if (window.AstroAPI.chartToFormData) {
+                        window.AstroAPI.saveFormData?.(window.AstroAPI.chartToFormData(natalData));
+                    }
+                    window.location.href = '/chart.html';
+                } catch (error) {
+                    window.hidePageLoader?.();
+                    console.warn('Failed to open selected chart:', error);
+                }
+            },
+        });
+    });
+
     openSynastryAction?.addEventListener('click', () => {
         setChartActionsMenuOpen(false);
         const synastryUrl = getChartSynastryUrl();

@@ -318,6 +318,18 @@ function bindSynastryEvents() {
         });
     });
 
+    document.getElementById('openPartnerPickerBtn')?.addEventListener('click', () => {
+        window.AstroChartPicker?.open?.({
+            onSelect(chart) {
+                if (!chart?.user_id || String(chart.user_id) === String(primaryUserId)) return;
+                const targetUrl = window.AstroAPI?.buildSynastryUrl?.(primaryUserId, chart.user_id)
+                    || `/synastry.html?client=${encodeURIComponent(primaryUserId)}&partner=${encodeURIComponent(chart.user_id)}`;
+                window.showPageLoader?.();
+                window.location.href = targetUrl;
+            },
+        });
+    });
+
     document.querySelectorAll('.synastry-side-panel').forEach((panel) => {
         panel.addEventListener('click', (event) => {
             if (event.target.closest('.forecast-new-matrix-inline')) {

@@ -22,8 +22,15 @@ const state = {
 };
 
 let toastTimer = null;
+const newChartState = {
+    autocompleteBound: false,
+    selectedCoords: null,
+    selectedPlaceLabel: '',
+};
+
 const editClientState = {
     autocompleteBound: false,
+    isChartMode: false,
     userId: null,
     loadedChartData: null,
     originalCoords: null,
@@ -187,6 +194,35 @@ function cacheElements() {
     refs.editPlaceHint = document.getElementById('editPlaceHint');
     refs.editTimezone = document.getElementById('editTimezone');
     refs.editTimezoneHint = document.getElementById('editTimezoneHint');
+    refs.editChartTitle = document.getElementById('editChartTitle');
+    refs.editChartTitleGroup = document.getElementById('editChartTitleGroup');
+    refs.editChartPerson = document.getElementById('editChartPerson');
+    refs.editChartPersonGroup = document.getElementById('editChartPersonGroup');
+    refs.editCrmContactSection = document.getElementById('editCrmContactSection');
+    refs.editKicker = refs.editDialog?.querySelector('.clients-dialog-kicker');
+    refs.editTitleEl = document.getElementById('editClientTitle');
+    refs.editSubtitle = refs.editDialog?.querySelector('.clients-dialog-copy');
+    // New chart modal
+    refs.newItemBtn = document.getElementById('newItemBtn');
+    refs.newItemBtnLabel = document.getElementById('newItemBtnLabel');
+    refs.emptyStateNewBtn = document.getElementById('emptyStateNewBtn');
+    refs.emptyStateNewBtnLabel = document.getElementById('emptyStateNewBtnLabel');
+    refs.newChartBackdrop = document.getElementById('newChartBackdrop');
+    refs.newChartDialog = document.getElementById('newChartDialog');
+    refs.newChartForm = document.getElementById('newChartForm');
+    refs.newChartClose = document.getElementById('newChartClose');
+    refs.newChartCancel = document.getElementById('newChartCancel');
+    refs.newChartSubmit = document.getElementById('newChartSubmit');
+    refs.newChartError = document.getElementById('newChartError');
+    refs.newChartTitle = document.getElementById('newChartTitle');
+    refs.newChartDay = document.getElementById('newChartDay');
+    refs.newChartMonth = document.getElementById('newChartMonth');
+    refs.newChartYear = document.getElementById('newChartYear');
+    refs.newChartHour = document.getElementById('newChartHour');
+    refs.newChartMinute = document.getElementById('newChartMinute');
+    refs.newChartPlace = document.getElementById('newChartPlace');
+    refs.newChartPlaceSuggestions = document.getElementById('newChartPlaceSuggestions');
+    refs.newChartTimezone = document.getElementById('newChartTimezone');
 }
 
 function bindEvents() {
@@ -200,6 +236,14 @@ function bindEvents() {
             setLibraryView(tab.dataset.libraryView);
         });
     });
+
+    refs.newItemBtn?.addEventListener('click', () => handleNewItemClick());
+    refs.emptyStateNewBtn?.addEventListener('click', () => handleNewItemClick());
+
+    refs.newChartClose?.addEventListener('click', closeNewChartDialog);
+    refs.newChartCancel?.addEventListener('click', closeNewChartDialog);
+    refs.newChartBackdrop?.addEventListener('click', closeNewChartDialog);
+    refs.newChartForm?.addEventListener('submit', (e) => { e.preventDefault(); submitNewChart(); });
 
     document.addEventListener('click', (event) => {
         const newChartLink = event.target.closest('a[data-plan-new-chart-link="true"]');
@@ -253,8 +297,13 @@ function bindEvents() {
             event.stopPropagation();
             if (action === 'delete') { await handleDelete(userId, actionBtn); return; }
             closeAllDropdowns();
+            if (action === 'rename') { await handleRenameChart(userId); return; }
             if (action === 'edit') {
-                await openEditClientDialog(userId);
+                if (state.libraryView === 'charts') {
+                    await openEditChartDialog(userId);
+                } else {
+                    await openEditClientDialog(userId);
+                }
                 return;
             }
             if (action === 'open-chart') { await openChart(userId); return; }
@@ -609,6 +658,18 @@ function syncLibraryChrome() {
     refs.tableHeadTags?.classList.toggle('hidden', state.libraryView !== 'charts');
     setTranslatedHeading(refs.tableHeadTags, headings.tags);
     setTranslatedHeading(refs.tableHeadMeta, headings.meta);
+
+    const isChartsView = state.libraryView === 'charts';
+    const newBtnKey = isChartsView ? 'page.clients.newChart.btnLabel' : 'page.clients.newCard';
+    const emptyBtnKey = isChartsView ? 'page.clients.newChart.btnLabel' : 'page.clients.createFirstCard';
+    if (refs.newItemBtnLabel) {
+        refs.newItemBtnLabel.dataset.i18n = newBtnKey;
+        refs.newItemBtnLabel.textContent = t(newBtnKey);
+    }
+    if (refs.emptyStateNewBtnLabel) {
+        refs.emptyStateNewBtnLabel.dataset.i18n = emptyBtnKey;
+        refs.emptyStateNewBtnLabel.textContent = t(emptyBtnKey);
+    }
 }
 
 function setTranslatedHeading(element, key) {
@@ -681,11 +742,6 @@ function buildUserRow(user) {
     const name = isChartsView
         ? (user.display_title || user.title || [user.first_name, user.last_name].filter(Boolean).join(' ') || t('common.notAvailable'))
         : (user.display_name || [user.first_name, user.last_name].filter(Boolean).join(' ') || t('common.notAvailable'));
-    const initials = (isChartsView ? name.split(/\s+/) : [user.first_name, user.last_name])
-        .filter(Boolean)
-        .map((n) => n[0].toUpperCase())
-        .join('')
-        .slice(0, 2) || '?';
     const birthDateRaw = user.birth_date || user.date;
     const chartTime = isChartsView ? formatTime(user.time) : '';
     const birthDate = birthDateRaw ? formatDate(birthDateRaw) : t('common.notAvailable');
@@ -699,6 +755,7 @@ function buildUserRow(user) {
     const labelCreated = escapeHtml(t(isChartsView ? 'page.clients.table.profiles' : 'page.clients.table.created'));
     const labelActions = escapeHtml(t('page.clients.table.actions'));
     const editLabel = escapeHtml(t('page.clients.actions.edit'));
+    const renameLabel = escapeHtml(t('page.clients.actions.rename'));
     const deleteLabel = escapeHtml(t('page.clients.actions.delete'));
     const openChartLabel = escapeHtml(t('page.clients.detail.openChart'));
     const forecastLabel = escapeHtml(isChartsView ? t('page.clients.charts.openWorkspace') : t('page.chart.nav.forecast'));
@@ -729,7 +786,6 @@ function buildUserRow(user) {
     tr.innerHTML = `
         <td class="client-cell client-cell-name" data-label="${labelName}">
             <div class="client-name-cell">
-                <span class="client-avatar">${escapeHtml(initials)}</span>
                 <div class="client-name-stack">
                     <strong class="client-name-text">${escapeHtml(name)}</strong>
                     ${isChartsView ? '' : renderPersonChips(user)}
@@ -775,7 +831,13 @@ function buildUserRow(user) {
                     <svg width="14" height="4" viewBox="0 0 14 4" fill="none"><circle cx="2" cy="2" r="1.4" fill="currentColor"/><circle cx="7" cy="2" r="1.4" fill="currentColor"/><circle cx="12" cy="2" r="1.4" fill="currentColor"/></svg>
                 </button>
                 <div class="actions-dropdown">
-                    ${isChartsView ? '' : `<a class="action-item" href="/client/${escapeHtml(primaryChartId || userId)}">${escapeHtml(t('page.clientProfile.viewProfile'))}</a>`}
+                    ${isChartsView
+                        ? `<button class="action-item" type="button" data-action="rename" data-user-id="${escapeHtml(userId)}">${renameLabel}</button>
+                           <button class="action-item" type="button" data-action="edit" data-user-id="${escapeHtml(userId)}">${editLabel}</button>`
+                        : primaryChartId
+                            ? `<a class="action-item" href="/client/${escapeHtml(primaryChartId)}">${escapeHtml(t('page.clientProfile.viewProfile'))}</a>`
+                            : `<button class="action-item" type="button" data-action="open-profile-no-chart" disabled>${escapeHtml(t('page.clientProfile.viewProfile'))}</button>`
+                    }
                     <button class="action-item danger" type="button" data-action="delete" data-user-id="${escapeHtml(userId)}">${deleteLabel}</button>
                 </div>
             </div>
@@ -1154,6 +1216,7 @@ async function openEditClientDialog(userId) {
         refs.editError.classList.add('hidden');
         refs.editError.textContent = '';
 
+        setEditDialogMode(false);
         renderEditPlaceHint('current');
         setEditClientSubmitting(false);
 
@@ -1163,6 +1226,124 @@ async function openEditClientDialog(userId) {
         document.body.style.overflow = 'hidden';
     } catch (error) {
         showToast(t('common.errorWithMessage', { message: error.message }), 'error');
+    }
+}
+
+function setEditDialogMode(isChartMode) {
+    editClientState.isChartMode = isChartMode;
+    refs.editChartTitleGroup?.classList.toggle('hidden', !isChartMode);
+    refs.editChartPersonGroup?.classList.toggle('hidden', !isChartMode);
+    refs.editCrmContactSection?.classList.toggle('hidden', isChartMode);
+
+    const kickerKey = isChartMode ? 'page.clients.edit.chartMode.kicker' : 'page.clients.edit.kicker';
+    const titleKey = isChartMode ? 'page.clients.edit.chartMode.title' : 'page.clients.edit.title';
+    const subtitleKey = isChartMode ? 'page.clients.edit.chartMode.subtitle' : 'page.clients.edit.subtitle';
+    if (refs.editKicker) { refs.editKicker.setAttribute('data-i18n', kickerKey); refs.editKicker.textContent = t(kickerKey); }
+    if (refs.editTitleEl) { refs.editTitleEl.setAttribute('data-i18n', titleKey); refs.editTitleEl.textContent = t(titleKey); }
+    if (refs.editSubtitle) { refs.editSubtitle.setAttribute('data-i18n', subtitleKey); refs.editSubtitle.textContent = t(subtitleKey); }
+}
+
+function populatePersonSelect(currentPersonId) {
+    if (!refs.editChartPerson) return;
+    const noLinkLabel = t('page.clients.edit.noLinkedPerson');
+    refs.editChartPerson.innerHTML = `<option value="">${escapeHtml(noLinkLabel)}</option>`;
+    for (const person of (state.people || [])) {
+        const personId = String(person.person_id || '');
+        if (!personId) continue;
+        const name = person.display_name
+            || [person.first_name, person.last_name].filter(Boolean).join(' ')
+            || personId;
+        const opt = document.createElement('option');
+        opt.value = personId;
+        opt.textContent = name;
+        if (personId === String(currentPersonId || '')) opt.selected = true;
+        refs.editChartPerson.appendChild(opt);
+    }
+}
+
+async function handleRenameChart(userId) {
+    const chart = state.charts.find((c) => String(c.chart_id || c.user_id) === String(userId));
+    const currentTitle = chart?.title || chart?.display_title || '';
+    const nextTitle = window.prompt(t('page.clients.edit.chartTitle'), currentTitle);
+    if (nextTitle === null) return;
+
+    try {
+        const res = await apiFetch(`${API_BASE}/charts/${encodeURIComponent(userId)}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: nextTitle.trim() || null }),
+        });
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || t('page.clients.edit.errors.saveFailed'));
+        const updated = await res.json();
+        state.charts = state.charts.map((c) =>
+            String(c.chart_id || c.user_id) === String(userId)
+                ? { ...c, title: updated.title, display_title: updated.display_title }
+                : c
+        );
+        state.users = getActiveLibraryItems();
+        renderUsers();
+        showToast(t('page.clients.messages.chartRenamed'), 'success');
+    } catch (err) {
+        showToast(t('common.errorWithMessage', { message: err.message }), 'error');
+    }
+}
+
+async function openEditChartDialog(userId) {
+    if (!userId) return;
+    try {
+        const [natalRes, chartRes] = await Promise.all([
+            apiFetch(`${API_BASE}/natal/${userId}`),
+            apiFetch(`${API_BASE}/charts/${userId}`),
+        ]);
+        if (!natalRes.ok) throw new Error(t('page.clients.edit.errors.loadFailed'));
+
+        const chartData = await natalRes.json();
+        const chartMeta = chartRes.ok ? await chartRes.json() : null;
+        const formData = AstroAPI.chartToFormData(chartData);
+        const place = String(formData.place || '').trim();
+        const latitude = formData.latitude == null ? Number.NaN : Number(formData.latitude);
+        const longitude = formData.longitude == null ? Number.NaN : Number(formData.longitude);
+
+        editClientState.userId = String(chartData.user_id || userId);
+        editClientState.loadedChartData = chartData;
+        editClientState.originalCoords = { lat: latitude, lon: longitude };
+        editClientState.selectedCoords = { lat: latitude, lon: longitude };
+        editClientState.originalPlace = normalizeLooseText(place);
+        editClientState.selectedPlaceLabel = normalizeLooseText(place);
+
+        refs.editFirstName.value = formData.firstName || '';
+        refs.editLastName.value = formData.lastName || '';
+        refs.editDay.value = formData.day || '';
+        refs.editMonth.value = formData.month || '';
+        refs.editYear.value = formData.year || '';
+        refs.editHour.value = formData.hour || '';
+        refs.editMinute.value = formData.minute || '';
+        refs.editPlaceInput.value = place;
+
+        if (refs.editChartTitle) refs.editChartTitle.value = chartMeta?.title || '';
+        if (refs.editTags) refs.editTags.value = Array.isArray(chartMeta?.tags) ? chartMeta.tags.join(', ') : '';
+        if (refs.editNotes) refs.editNotes.value = chartMeta?.notes || '';
+        renderEditTagSuggestions();
+
+        populatePersonSelect(chartMeta?.person_id || null);
+
+        window.Timezones?.populate?.(refs.editTimezone);
+        refs.editTimezone.value = formData.timezone || '';
+        refs.editTimezoneHint.textContent = '';
+        refs.editTimezoneHint.style.color = '';
+        refs.editError.classList.add('hidden');
+        refs.editError.textContent = '';
+
+        setEditDialogMode(true);
+        renderEditPlaceHint('current');
+        setEditClientSubmitting(false);
+
+        refs.editBackdrop.classList.remove('hidden');
+        refs.editDialog.classList.remove('hidden');
+        refs.editFirstName.focus();
+        document.body.style.overflow = 'hidden';
+    } catch (err) {
+        showToast(t('common.errorWithMessage', { message: err.message }), 'error');
     }
 }
 
@@ -1177,6 +1358,7 @@ function closeEditClientDialog() {
     refs.editTimezoneHint.style.color = '';
     editClientState.userId = null;
     editClientState.loadedChartData = null;
+    setEditDialogMode(false);
     document.body.style.overflow = '';
 }
 
@@ -1314,6 +1496,7 @@ async function handleEditClientSubmit(event) {
 
     const place = refs.editPlaceInput.value.trim();
     const tags = parseTagInput(refs.editTags?.value || '');
+    const isChartMode = editClientState.isChartMode;
     const requestData = {
         first_name: refs.editFirstName.value.trim(),
         last_name: refs.editLastName.value.trim(),
@@ -1324,9 +1507,11 @@ async function handleEditClientSubmit(event) {
         house_system: editClientState.loadedChartData?.birth_data?.house_system
             || AstroAPI.getFormData()?.houseSystem
             || 'P',
-        email: refs.editEmail?.value?.trim() || '',
-        phone: refs.editPhone?.value?.trim() || '',
-        messenger: refs.editMessenger?.value?.trim() || '',
+        ...(isChartMode ? {} : {
+            email: refs.editEmail?.value?.trim() || '',
+            phone: refs.editPhone?.value?.trim() || '',
+            messenger: refs.editMessenger?.value?.trim() || '',
+        }),
         tags,
         notes: refs.editNotes?.value?.trim() || '',
     };
@@ -1342,15 +1527,41 @@ async function handleEditClientSubmit(event) {
     setEditClientSubmitting(true);
 
     try {
-        const updatedChartData = await AstroAPI.updateClientChart(editClientState.userId, requestData);
+        const userId = editClientState.userId;
+        const updatedChartData = await AstroAPI.updateClientChart(userId, requestData);
+
+        let patchedMeta = null;
+        if (isChartMode) {
+            const chartTitle = refs.editChartTitle?.value?.trim() || null;
+            const personId = refs.editChartPerson?.value || null;
+            const patchRes = await apiFetch(`${API_BASE}/charts/${encodeURIComponent(userId)}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: chartTitle || null, person_id: personId || null }),
+            });
+            if (patchRes.ok) patchedMeta = await patchRes.json();
+        }
+
+        state.charts = state.charts.map((c) => {
+            if (String(c.chart_id || c.user_id) !== String(updatedChartData.user_id)) return c;
+            const base = buildUpdatedChartRecord(c, updatedChartData, requestData);
+            if (patchedMeta) {
+                base.title = patchedMeta.title;
+                base.display_title = patchedMeta.display_title;
+                base.person_id = patchedMeta.person_id;
+                base.person_display_name = patchedMeta.person_display_name;
+            }
+            return base;
+        });
         state.users = state.users.map((user) => (
             String(user.user_id) === String(updatedChartData.user_id)
                 ? buildUpdatedUserRecord(user, updatedChartData, requestData)
                 : user
         ));
+        state.users = getActiveLibraryItems();
         renderUsers();
         closeEditClientDialog();
-        showToast(t('page.clients.messages.updated'), 'success');
+        showToast(t(isChartMode ? 'page.clients.messages.chartUpdated' : 'page.clients.messages.updated'), 'success');
     } catch (error) {
         refs.editError.textContent = error.message || t('page.clients.edit.errors.saveFailed');
         refs.editError.classList.remove('hidden');
@@ -1373,6 +1584,23 @@ function buildUpdatedUserRecord(user, chartData, requestData) {
         messenger: requestData?.messenger ?? user.messenger,
         tags: requestData?.tags ?? user.tags,
         notes: requestData?.notes ?? user.notes,
+    };
+}
+
+function buildUpdatedChartRecord(chart, natalData, requestData) {
+    const birthData = natalData?.birth_data || {};
+    return {
+        ...chart,
+        chart_id: natalData?.user_id || chart.chart_id,
+        user_id: natalData?.user_id || chart.user_id,
+        first_name: birthData.first_name || '',
+        last_name: birthData.last_name || '',
+        date: birthData.date || chart.date,
+        birth_date: birthData.date || chart.birth_date,
+        location_name: birthData.place || chart.location_name,
+        birth_place: birthData.place || chart.birth_place,
+        tags: requestData?.tags ?? chart.tags,
+        notes: requestData?.notes ?? chart.notes,
     };
 }
 
@@ -2363,4 +2591,129 @@ function initMiniCal() {
     });
 
     renderMonth();
+}
+
+// --- New standalone chart modal ---
+
+function handleNewItemClick() {
+    if (isSavedChartLimitReached()) { openPlanUpgrade('limit'); return; }
+    if (state.libraryView === 'charts') {
+        openNewChartDialog();
+    } else {
+        window.location.href = '/new';
+    }
+}
+
+function openNewChartDialog() {
+    if (!refs.newChartDialog) return;
+    refs.newChartForm?.reset();
+    newChartState.selectedCoords = null;
+    newChartState.selectedPlaceLabel = '';
+    refs.newChartError?.classList.add('hidden');
+    refs.newChartError && (refs.newChartError.textContent = '');
+    window.Timezones?.populate?.(refs.newChartTimezone);
+    refs.newChartBackdrop?.classList.remove('hidden');
+    refs.newChartDialog.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    bindNewChartAutocomplete();
+    refs.newChartDay?.focus();
+}
+
+function closeNewChartDialog() {
+    refs.newChartBackdrop?.classList.add('hidden');
+    refs.newChartDialog?.classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+function bindNewChartAutocomplete() {
+    if (newChartState.autocompleteBound || !window.PlaceAutocomplete || !refs.newChartPlace || !refs.newChartPlaceSuggestions) return;
+    newChartState.autocompleteBound = true;
+    window.PlaceAutocomplete.attach({
+        input: refs.newChartPlace,
+        suggestions: refs.newChartPlaceSuggestions,
+        minChars: 2,
+        debounceMs: 350,
+        limit: 5,
+        getLabel: (item) => item.shortName || item.displayName,
+        onSelect: async (item) => {
+            newChartState.selectedCoords = { lat: item.lat, lon: item.lon };
+            newChartState.selectedPlaceLabel = item.shortName || item.displayName;
+            let tz = null;
+            if (item.sourceId && window.AstroAPI?.resolvePlaceTimezone) {
+                try { tz = await window.AstroAPI.resolvePlaceTimezone(item.sourceId); } catch (_) {}
+            }
+            if (!tz) tz = window.Timezones?.guess?.(item.displayName || item.shortName) || null;
+            if (tz && refs.newChartTimezone) refs.newChartTimezone.value = tz;
+        },
+    });
+}
+
+async function submitNewChart() {
+    if (!refs.newChartSubmit) return;
+    const day = refs.newChartDay?.value?.trim();
+    const month = refs.newChartMonth?.value;
+    const year = refs.newChartYear?.value?.trim();
+    const hour = refs.newChartHour?.value?.trim();
+    const minute = refs.newChartMinute?.value?.trim();
+    const place = refs.newChartPlace?.value?.trim();
+    const timezone = refs.newChartTimezone?.value;
+    const title = refs.newChartTitle?.value?.trim() || null;
+
+    const showError = (msg) => {
+        if (!refs.newChartError) return;
+        refs.newChartError.textContent = msg;
+        refs.newChartError.classList.remove('hidden');
+    };
+
+    if (!day || !month || !year) { showError(t('page.clients.newChart.errors.dateRequired')); return; }
+    if (hour === '' || minute === '') { showError(t('page.clients.newChart.errors.timeRequired')); return; }
+    if (!place) { showError(t('page.clients.newChart.errors.placeRequired')); return; }
+    if (!timezone) { showError(t('page.clients.newChart.errors.timezoneRequired')); return; }
+
+    const dateStr = `${String(year).padStart(4,'0')}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const timeStr = `${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}:00`;
+
+    const body = {
+        date: dateStr,
+        time: timeStr,
+        timezone,
+        location_name: newChartState.selectedCoords ? null : place,
+        latitude: newChartState.selectedCoords?.lat ?? null,
+        longitude: newChartState.selectedCoords?.lon ?? null,
+        title,
+        chart_kind: 'birth',
+    };
+    if (!body.location_name && (body.latitude === null || body.longitude === null)) {
+        showError(t('page.clients.newChart.errors.placeRequired'));
+        return;
+    }
+
+    refs.newChartSubmit.disabled = true;
+    refs.newChartSubmit.querySelector('.btn-text')?.classList.add('hidden');
+    refs.newChartSubmit.querySelector('.btn-loader')?.classList.remove('hidden');
+    refs.newChartError?.classList.add('hidden');
+
+    try {
+        const res = await apiFetch(`${API_BASE}/charts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.detail || t('common.errorGeneric'));
+        }
+        const chart = await res.json();
+        state.charts = [chart, ...state.charts];
+        state.users = getActiveLibraryItems();
+        closeNewChartDialog();
+        renderUsers();
+        showToast(t('page.clients.newChart.successToast'), 'success');
+    } catch (err) {
+        showError(err.message);
+    } finally {
+        refs.newChartSubmit.disabled = false;
+        refs.newChartSubmit.querySelector('.btn-text')?.classList.remove('hidden');
+        refs.newChartSubmit.querySelector('.btn-loader')?.classList.add('hidden');
+    }
 }

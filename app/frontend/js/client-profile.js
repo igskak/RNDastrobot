@@ -238,6 +238,20 @@ function cacheElements() {
     refs.relatedPickerList = document.getElementById('relatedPickerList');
     refs.relatedPickerEmpty = document.getElementById('relatedPickerEmpty');
     refs.relatedPickerSubmit = document.getElementById('relatedPickerSubmit');
+    // Linked charts
+    refs.linkedChartsCard    = document.getElementById('linkedChartsCard');
+    refs.linkedChartsList    = document.getElementById('linkedChartsList');
+    refs.linkedChartsEmpty   = document.getElementById('linkedChartsEmpty');
+    refs.linkChartBtn        = document.getElementById('linkChartBtn');
+    refs.linkChartBackdrop   = document.getElementById('linkChartBackdrop');
+    refs.linkChartDialog     = document.getElementById('linkChartDialog');
+    refs.linkChartClose      = document.getElementById('linkChartClose');
+    refs.linkChartCancel     = document.getElementById('linkChartCancel');
+    refs.linkChartSearch     = document.getElementById('linkChartSearch');
+    refs.linkChartPickerList = document.getElementById('linkChartPickerList');
+    refs.linkChartPickerEmpty = document.getElementById('linkChartPickerEmpty');
+    refs.linkChartPickerLoading = document.getElementById('linkChartPickerLoading');
+    refs.linkChartError      = document.getElementById('linkChartError');
 
     // Log session dialog
     refs.logSessionBackdrop = document.getElementById('logSessionBackdrop');
@@ -258,6 +272,11 @@ function cacheElements() {
 function bindPageEvents() {
     refs.openChartBtn?.addEventListener('click', openChart);
     refs.openForecastBtn?.addEventListener('click', () => openForecast());
+    refs.linkChartBtn?.addEventListener('click', openLinkChartDialog);
+    refs.linkChartClose?.addEventListener('click', closeLinkChartDialog);
+    refs.linkChartCancel?.addEventListener('click', closeLinkChartDialog);
+    refs.linkChartBackdrop?.addEventListener('click', closeLinkChartDialog);
+    refs.linkChartSearch?.addEventListener('input', () => renderLinkChartPickerList());
     refs.startCallBtn?.addEventListener('click', () => {
         if (!planCan('calls')) {
             openPlanUpgrade('calls');
@@ -402,6 +421,7 @@ function renderAll(data) {
     renderHeader(data.user);
     renderContact(data.user);
     renderStats(data.stats);
+    loadAndRenderLinkedCharts(data.user.person_id);
     renderRelatedPeople(relatedPeople);
     renderSavedCharts(data.saved_charts || data.solar_returns || []);
     renderInsights(data.aggregated_key_points);
@@ -718,10 +738,7 @@ async function renameSavedChart(chartType, chartId) {
     if (nextName === null) return;
 
     try {
-        const isSavedLink = chart?.url_path;
-        const endpoint = isSavedLink
-            ? `/saved-charts/${encodeURIComponent(chartId)}`
-            : chartType === 'solar_return'
+        const endpoint = chartType === 'solar_return'
             ? `/solar/${encodeURIComponent(chartId)}`
             : chartType === 'progression'
                 ? `/progressions/${encodeURIComponent(chartId)}`
@@ -1553,5 +1570,166 @@ async function handleLogSessionSubmit(e) {
         }
     } finally {
         setLogSessionSubmitting(false);
+    }
+}
+
+// --- Linked charts ---
+
+let allChartsCache = null;   // full chart list for picker
+let linkedChartIds = new Set();
+let currentPersonId = null;
+
+async function loadAndRenderLinkedCharts(personId) {
+    if (!personId) {
+        refs.linkedChartsCard?.classList.add('hidden');
+        return;
+    }
+    currentPersonId = personId;
+    refs.linkedChartsCard?.classList.remove('hidden');
+
+    try {
+        const res = await apiFetch(`${API_BASE}/persons/${personId}/charts`);
+        if (!res.ok) return;
+        const charts = await res.json();
+        linkedChartIds = new Set(charts.map((c) => String(c.chart_id)));
+        renderLinkedChartsList(charts);
+    } catch (_) {}
+}
+
+function renderLinkedChartsList(charts) {
+    if (!refs.linkedChartsList) return;
+    if (!charts.length) {
+        refs.linkedChartsEmpty?.classList.remove('hidden');
+        refs.linkedChartsList.innerHTML = '';
+        return;
+    }
+    refs.linkedChartsEmpty?.classList.add('hidden');
+    refs.linkedChartsList.innerHTML = charts.map((c) => {
+        const date = c.date ? formatDate(c.date) : '';
+        const place = c.place || '';
+        const meta = [date, place].filter(Boolean).join(' · ');
+        const isCurrentChart = String(c.chart_id) === String(userId);
+        return `<div class="profile-linked-chart-item" data-chart-id="${escapeHtml(String(c.chart_id))}">
+            <div class="profile-linked-chart-info">
+                <span class="profile-linked-chart-title">${escapeHtml(c.display_title)}</span>
+                ${meta ? `<span class="profile-linked-chart-meta">${escapeHtml(meta)}</span>` : ''}
+            </div>
+            <div class="profile-linked-chart-actions">
+                ${!isCurrentChart ? `<a href="/client/${escapeHtml(String(c.chart_id))}" class="btn-logout btn-sm">${escapeHtml(t('page.clientProfile.linkedCharts.open'))}</a>` : ''}
+                ${c.link_source === 'm2m' ? `<button class="btn-logout btn-sm" type="button" data-action="unlink-chart" data-chart-id="${escapeHtml(String(c.chart_id))}">${escapeHtml(t('page.clientProfile.linkedCharts.unlink'))}</button>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+
+    refs.linkedChartsList.querySelectorAll('[data-action="unlink-chart"]').forEach((btn) => {
+        btn.addEventListener('click', () => unlinkChart(btn.dataset.chartId));
+    });
+}
+
+async function unlinkChart(chartId) {
+    if (!currentPersonId || !chartId) return;
+    try {
+        const res = await apiFetch(`${API_BASE}/persons/${currentPersonId}/charts/${chartId}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error();
+        linkedChartIds.delete(String(chartId));
+        await loadAndRenderLinkedCharts(currentPersonId);
+        showToast(t('page.clientProfile.linkedCharts.unlinkedToast'), 'success');
+    } catch (_) {
+        showToast(t('common.errorGeneric'), 'error');
+    }
+}
+
+async function openLinkChartDialog() {
+    if (!currentPersonId) return;
+    refs.linkChartBackdrop?.classList.remove('hidden');
+    refs.linkChartDialog?.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    if (refs.linkChartSearch) refs.linkChartSearch.value = '';
+    refs.linkChartError?.classList.add('hidden');
+
+    if (!allChartsCache) {
+        refs.linkChartPickerLoading?.classList.remove('hidden');
+        refs.linkChartPickerEmpty?.classList.add('hidden');
+        refs.linkChartPickerList && (refs.linkChartPickerList.innerHTML = '');
+        try {
+            const res = await apiFetch(`${API_BASE}/charts`);
+            allChartsCache = res.ok ? await res.json() : [];
+        } catch (_) {
+            allChartsCache = [];
+        }
+        refs.linkChartPickerLoading?.classList.add('hidden');
+    }
+
+    renderLinkChartPickerList();
+}
+
+function closeLinkChartDialog() {
+    refs.linkChartBackdrop?.classList.add('hidden');
+    refs.linkChartDialog?.classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+function renderLinkChartPickerList() {
+    if (!refs.linkChartPickerList || !allChartsCache) return;
+    const q = (refs.linkChartSearch?.value || '').trim().toLowerCase();
+    const filtered = allChartsCache.filter((c) => {
+        if (!q) return true;
+        const haystack = [c.display_title, c.location_name, c.first_name, c.last_name]
+            .filter(Boolean).join(' ').toLowerCase();
+        return haystack.includes(q);
+    });
+
+    if (!filtered.length) {
+        refs.linkChartPickerEmpty?.classList.remove('hidden');
+        refs.linkChartPickerList.innerHTML = '';
+        return;
+    }
+    refs.linkChartPickerEmpty?.classList.add('hidden');
+
+    refs.linkChartPickerList.innerHTML = filtered.map((c) => {
+        const chartId = String(c.chart_id || c.user_id);
+        const already = linkedChartIds.has(chartId);
+        const date = c.date ? formatDate(c.date) : '';
+        const meta = [date, c.location_name].filter(Boolean).join(' · ');
+        return `<div class="profile-picker-item${already ? ' is-linked' : ''}" data-chart-id="${escapeHtml(chartId)}">
+            <div class="profile-picker-item-info">
+                <span class="profile-picker-item-title">${escapeHtml(c.display_title)}</span>
+                ${meta ? `<span class="profile-picker-item-meta">${escapeHtml(meta)}</span>` : ''}
+            </div>
+            <button class="btn-new btn-sm" type="button" ${already ? 'disabled' : ''} data-action="link-chart" data-chart-id="${escapeHtml(chartId)}">
+                ${already ? escapeHtml(t('page.clientProfile.linkedCharts.alreadyLinked')) : escapeHtml(t('page.clientProfile.linkedCharts.linkAction'))}
+            </button>
+        </div>`;
+    }).join('');
+
+    refs.linkChartPickerList.querySelectorAll('[data-action="link-chart"]').forEach((btn) => {
+        btn.addEventListener('click', () => linkChart(btn.dataset.chartId, btn));
+    });
+}
+
+async function linkChart(chartId, btn) {
+    if (!currentPersonId || !chartId || btn?.disabled) return;
+    btn && (btn.disabled = true);
+    refs.linkChartError?.classList.add('hidden');
+    try {
+        const res = await apiFetch(`${API_BASE}/persons/${currentPersonId}/charts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chart_id: chartId }),
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.detail || t('common.errorGeneric'));
+        }
+        linkedChartIds.add(String(chartId));
+        closeLinkChartDialog();
+        await loadAndRenderLinkedCharts(currentPersonId);
+        showToast(t('page.clientProfile.linkedCharts.linkedToast'), 'success');
+    } catch (err) {
+        if (refs.linkChartError) {
+            refs.linkChartError.textContent = err.message;
+            refs.linkChartError.classList.remove('hidden');
+        }
+        btn && (btn.disabled = false);
     }
 }

@@ -3,7 +3,7 @@ SQLAlchemy ORM модели для базы данных
 """
 from sqlalchemy import (
     Column, String, Integer, Numeric, Boolean, DateTime, Date, Time,
-    ForeignKey, CheckConstraint, Index, Text
+    ForeignKey, CheckConstraint, Index, Text, Table, UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.ext.declarative import declarative_base
@@ -12,6 +12,16 @@ from sqlalchemy.sql import func
 import uuid
 
 Base = declarative_base()
+
+# Junction table for M2M Person ↔ Chart links
+person_chart_links = Table(
+    'person_chart_links',
+    Base.metadata,
+    Column('person_id', UUID(as_uuid=True), ForeignKey('persons.person_id', ondelete='CASCADE'), nullable=False),
+    Column('chart_id', UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False),
+    Column('created_at', DateTime, server_default=func.now()),
+    UniqueConstraint('person_id', 'chart_id', name='uq_person_chart_links'),
+)
 
 
 class User(Base):
@@ -68,6 +78,7 @@ class User(Base):
     house_group_balance = relationship("UserHouseGroupBalance", back_populates="user", uselist=False, cascade="all, delete-orphan")
     astrologer = relationship("Astrologer", back_populates="users")
     person = relationship("Person", back_populates="charts")
+    linked_persons = relationship("Person", secondary="person_chart_links", back_populates="linked_charts")
     call_sessions = relationship("CallSession", back_populates="user", cascade="all, delete-orphan")
 
     __table_args__ = (
@@ -104,6 +115,7 @@ class Person(Base):
 
     astrologer = relationship("Astrologer", back_populates="persons")
     charts = relationship("User", back_populates="person")
+    linked_charts = relationship("User", secondary="person_chart_links", back_populates="linked_persons")
 
     __table_args__ = (
         Index('idx_persons_astrologer_name', 'astrologer_id', 'last_name', 'first_name'),
@@ -1025,30 +1037,6 @@ class Direction(Base):
             "direction_type IN ('solar_arc', 'zodiacal', 'symbolic', 'equatorial')",
             name='valid_direction_type'
         ),
-    )
-
-
-class SavedChart(Base):
-    """Пользовательская ссылка на сохранённую карту в профиле клиента."""
-    __tablename__ = 'saved_charts'
-
-    saved_chart_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
-    chart_type = Column(String(32), nullable=False)  # forecast, progression, direction, transit, custom
-    name = Column(String(160))
-    target_date = Column(Date)
-    target_time = Column(Time)
-    timezone = Column(String(50))
-    url_path = Column(Text, nullable=False)
-    chart_metadata = Column("metadata", JSONB, nullable=False, default=dict, server_default='{}')
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-
-    user = relationship("User")
-
-    __table_args__ = (
-        Index('idx_saved_charts_user_created', 'user_id', 'created_at'),
-        Index('idx_saved_charts_user_type', 'user_id', 'chart_type'),
     )
 
 

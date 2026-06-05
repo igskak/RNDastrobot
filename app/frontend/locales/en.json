@@ -868,7 +868,8 @@
         "confirmDelete": "Confirm delete",
         "delete": "Delete",
         "edit": "Edit",
-        "logout": "Log out"
+        "logout": "Log out",
+        "rename": "Rename"
       },
       "counters": {
         "shown": "Shown: {shown}",
@@ -888,9 +889,26 @@
       "messages": {
         "confirmDeleteHint": "Click delete again to confirm",
         "deleted": "Profile deleted",
-        "updated": "Profile updated"
+        "updated": "Profile updated",
+        "chartRenamed": "Chart renamed",
+        "chartUpdated": "Chart updated"
       },
       "newCard": "Add profile",
+      "newChart": {
+        "btnLabel": "New chart",
+        "kicker": "Chart",
+        "title": "New chart",
+        "chartTitle": "Chart title",
+        "chartTitlePlaceholder": "Client, event… (optional)",
+        "submit": "Save chart",
+        "successToast": "Chart saved",
+        "errors": {
+          "dateRequired": "Birth date is required",
+          "timeRequired": "Birth time is required",
+          "placeRequired": "Enter a place and select it from the list",
+          "timezoneRequired": "Timezone is required"
+        }
+      },
       "noResults": "Nothing found yet",
       "noResultsHint": "Try a different name, place, tag, or sort order to find the profile you need.",
       "searchLabel": "Find a profile",
@@ -940,7 +958,16 @@
         "submit": "Save changes",
         "submitting": "Saving...",
         "subtitle": "Correct birth details without leaving the practice workspace.",
-        "title": "Edit profile"
+        "title": "Edit profile",
+        "chartTitle": "Chart name",
+        "chartTitlePlaceholder": "e.g. Natal Petrova",
+        "linkedPerson": "Linked person",
+        "noLinkedPerson": "— not linked —",
+        "chartMode": {
+          "kicker": "Edit chart",
+          "title": "Edit chart",
+          "subtitle": "Update chart details and recalculate."
+        }
       },
       "title": "Profile database",
       "crm": {
@@ -1022,6 +1049,15 @@
         "noAlerts": "No notable events this month"
       }
     },
+    "chartPicker": {
+      "title": "Select a chart",
+      "subtitle": "Search by title, person, or tag.",
+      "searchPlaceholder": "Search charts…",
+      "select": "Select",
+      "empty": "No charts found.",
+      "momentTitle": "Load saved chart",
+      "momentSubtitle": "Its date, time and place apply to the active layer."
+    },
     "clientProfile": {
       "title": "Profile",
       "backToClients": "Back to practice",
@@ -1096,6 +1132,20 @@
           "progression": "Progression",
           "direction": "Direction"
         }
+      },
+      "linkedCharts": {
+        "title": "Profile charts",
+        "linkBtn": "Link chart from library",
+        "empty": "No linked charts",
+        "open": "Open",
+        "unlink": "Unlink",
+        "linkedToast": "Chart linked to profile",
+        "unlinkedToast": "Chart unlinked from profile",
+        "pickerKicker": "Charts",
+        "pickerTitle": "Select a chart from library",
+        "pickerEmpty": "No charts found",
+        "linkAction": "Link",
+        "alreadyLinked": "Linked"
       },
       "related": {
         "add": "Add person",

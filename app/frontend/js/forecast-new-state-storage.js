@@ -9,7 +9,7 @@
     const VALID_DIRECTION_TYPES = ['solar_arc', 'zodiacal', 'equatorial'];
     const VALID_STEP_MODES = ['second', 'minute', 'hour', 'day', 'week', 'month', 'year'];
     const VALID_CUSTOM_STEP_UNITS = ['second', 'minute', 'hour', 'day', 'week', 'month', 'year'];
-    const VALID_TABS = ['Planets', 'Aspects', 'Grid', 'Configs', 'Balances', 'Rulers'];
+    const VALID_TABS = ['Planets', 'Houses', 'Aspects', 'Grid', 'Configs', 'Balances', 'Rulers'];
     const VALID_RESULT_VIEWS = ['wheel', 'layers', 'aspects'];
 
     function normalizeToken(value) {
@@ -56,11 +56,10 @@
     }
 
     function sanitizeLayerList(value) {
-        const source = Array.isArray(value) && value.length ? value : ['transit'];
-        const layers = source.filter((layer, index, arr) => (
+        const source = Array.isArray(value) ? value : ['transit'];
+        return source.filter((layer, index, arr) => (
             VALID_LAYERS.includes(layer) && arr.indexOf(layer) === index
         ));
-        return layers.length ? layers : ['transit'];
     }
 
     function sanitizeViewport(value) {
@@ -102,7 +101,7 @@
                 longitude: Number.isFinite(Number(source.location.longitude)) ? Number(source.location.longitude) : null,
             } : { name: '', latitude: null, longitude: null },
             activeLayers: sanitizeLayerList(source.activeLayers),
-            selectedRightLayer: pickEnum(source.selectedRightLayer, VALID_LAYERS, 'transit'),
+            selectedRightLayer: pickEnum(source.selectedRightLayer, VALID_LAYERS, ''),
             directionType: normalizeDirectionType(source.directionType),
             stepMode: pickEnum(source.stepMode, VALID_STEP_MODES, 'hour'),
             customStep: sanitizeCustomStep(source.customStep),

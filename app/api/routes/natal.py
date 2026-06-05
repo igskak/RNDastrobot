@@ -38,7 +38,7 @@ from app.services.natal_chart_service import NatalChartService
 from app.services.preferences_service import PreferencesService
 from app.database.connection import get_db
 from app.database.repositories.user_repository import UserRepository
-from app.database.models import User, Consultation, CallSession, SolarReturn, Progression, Direction, SavedChart
+from app.database.models import User, Consultation, CallSession, SolarReturn, Progression, Direction
 from app.api.routes.call_session_utils import TERMINAL_CALL_SESSION_STATUSES
 from app.auth.dependencies import AuthContext, create_audit_event, ensure_client_access, require_auth
 from app.utils.ephemeris import get_ephemeris_path
@@ -709,27 +709,7 @@ def get_user_profile(
             .order_by(Direction.target_date.desc(), Direction.created_at.desc().nullslast())
             .all()
         )
-        saved_chart_links = (
-            db.query(SavedChart)
-            .filter(SavedChart.user_id == user_id)
-            .order_by(SavedChart.created_at.desc().nullslast())
-            .all()
-        )
         saved_charts = []
-        saved_charts.extend(
-            {
-                "id": str(c.saved_chart_id),
-                "chart_type": c.chart_type,
-                "name": c.name,
-                "target_date": c.target_date.isoformat() if c.target_date else None,
-                "target_time": c.target_time.isoformat() if c.target_time else None,
-                "timezone": c.timezone,
-                "url_path": c.url_path,
-                "metadata": c.chart_metadata or {},
-                "created_at": c.created_at.isoformat() if c.created_at else None,
-            }
-            for c in saved_chart_links
-        )
         saved_charts.extend(
             {
                 "id": str(s.solar_id),

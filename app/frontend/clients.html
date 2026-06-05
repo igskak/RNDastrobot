@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.clients.title"></title>
-    <link rel="stylesheet" href="bundles/clients.bundle.css?v=4482881106f5">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=4482881106f5">
+    <link rel="stylesheet" href="bundles/clients.bundle.css?v=a5873f01bd4a">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=a5873f01bd4a">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '4482881106f5';</script>
+    <script>window.__APP_BUILD_ID__ = 'a5873f01bd4a';</script>
 </head>
 <body class="clients-page">
     <div class="page-loader" id="pageLoader">
@@ -63,10 +63,10 @@
                     </div>
 
                     <div class="clients-card-actions">
-                        <a href="/new" class="btn-new">
+                        <button id="newItemBtn" class="btn-new" type="button">
                             <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                            <span data-i18n="page.clients.newCard"></span>
-                        </a>
+                            <span id="newItemBtnLabel" data-i18n="page.clients.newCard"></span>
+                        </button>
                     </div>
 
                 </div>
@@ -108,10 +108,10 @@
                     <svg class="empty-state-icon" width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true"><rect x="10" y="12" width="36" height="32" rx="4" stroke="currentColor" stroke-width="1.5"/><line x1="10" y1="20" x2="46" y2="20" stroke="currentColor" stroke-width="1.5"/><line x1="18" y1="12" x2="18" y2="20" stroke="currentColor" stroke-width="1.5"/><line x1="38" y1="12" x2="38" y2="20" stroke="currentColor" stroke-width="1.5"/><line x1="18" y1="29" x2="38" y2="29" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="18" y1="36" x2="31" y2="36" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     <h3 class="state-title" data-i18n="page.clients.empty"></h3>
                     <p class="state-copy" data-i18n="page.clients.emptyHint"></p>
-                    <a href="/new" class="btn-new state-cta">
+                    <button id="emptyStateNewBtn" class="btn-new state-cta" type="button">
                         <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-                        <span data-i18n="page.clients.createFirstCard"></span>
-                    </a>
+                        <span id="emptyStateNewBtnLabel" data-i18n="page.clients.createFirstCard"></span>
+                    </button>
                 </div>
 
                 <div id="noResultsState" class="empty-state hidden">
@@ -193,6 +193,11 @@
             </div>
 
             <div class="clients-dialog-grid">
+                <div id="editChartTitleGroup" class="form-group hidden">
+                    <label class="form-label" for="editChartTitle" data-i18n="page.clients.edit.chartTitle"></label>
+                    <input id="editChartTitle" type="text" data-i18n-placeholder="page.clients.edit.chartTitlePlaceholder">
+                </div>
+
                 <div class="form-group">
                     <label class="form-label" for="editFirstName" data-i18n="page.index.form.fullName.label"></label>
                     <div class="name-inputs">
@@ -250,23 +255,25 @@
                     <span id="editTimezoneHint" class="hint"></span>
                 </div>
 
-                <div class="form-group-divider">
-                    <span class="form-divider-label" data-i18n="page.clients.crm.contactHeader"></span>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="editEmail" data-i18n="page.clients.crm.email"></label>
-                    <input id="editEmail" type="email" data-i18n-placeholder="page.clients.crm.emailPlaceholder">
-                </div>
-
-                <div class="form-group form-group-row">
-                    <div class="form-group">
-                        <label class="form-label" for="editPhone" data-i18n="page.clients.crm.phone"></label>
-                        <input id="editPhone" type="tel" data-i18n-placeholder="page.clients.crm.phonePlaceholder">
+                <div id="editCrmContactSection">
+                    <div class="form-group-divider">
+                        <span class="form-divider-label" data-i18n="page.clients.crm.contactHeader"></span>
                     </div>
+
                     <div class="form-group">
-                        <label class="form-label" for="editMessenger" data-i18n="page.clients.crm.messenger"></label>
-                        <input id="editMessenger" type="text" data-i18n-placeholder="page.clients.crm.messengerPlaceholder">
+                        <label class="form-label" for="editEmail" data-i18n="page.clients.crm.email"></label>
+                        <input id="editEmail" type="email" data-i18n-placeholder="page.clients.crm.emailPlaceholder">
+                    </div>
+
+                    <div class="form-group form-group-row">
+                        <div class="form-group">
+                            <label class="form-label" for="editPhone" data-i18n="page.clients.crm.phone"></label>
+                            <input id="editPhone" type="tel" data-i18n-placeholder="page.clients.crm.phonePlaceholder">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="editMessenger" data-i18n="page.clients.crm.messenger"></label>
+                            <input id="editMessenger" type="text" data-i18n-placeholder="page.clients.crm.messengerPlaceholder">
+                        </div>
                     </div>
                 </div>
 
@@ -282,6 +289,13 @@
                 <div class="form-group">
                     <label class="form-label" for="editNotes" data-i18n="page.clients.crm.notes"></label>
                     <textarea id="editNotes" rows="3" data-i18n-placeholder="page.clients.crm.notesPlaceholder"></textarea>
+                </div>
+
+                <div id="editChartPersonGroup" class="form-group hidden">
+                    <label class="form-label" for="editChartPerson" data-i18n="page.clients.edit.linkedPerson"></label>
+                    <select id="editChartPerson">
+                        <option value="" data-i18n="page.clients.edit.noLinkedPerson"></option>
+                    </select>
                 </div>
             </div>
 
@@ -374,9 +388,87 @@
         </form>
     </section>
 
+    <!-- Create standalone chart modal -->
+    <div id="newChartBackdrop" class="clients-dialog-backdrop hidden"></div>
+    <section id="newChartDialog" class="clients-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="newChartDialogTitle">
+        <form id="newChartForm" class="clients-dialog-card">
+            <div class="clients-dialog-header">
+                <div>
+                    <p class="clients-dialog-kicker" data-i18n="page.clients.newChart.kicker"></p>
+                    <h3 id="newChartDialogTitle" class="clients-dialog-title" data-i18n="page.clients.newChart.title"></h3>
+                </div>
+                <button id="newChartClose" class="clients-dialog-close" type="button" data-i18n-aria-label="common.close">×</button>
+            </div>
+
+            <div class="clients-dialog-grid">
+                <div class="form-group">
+                    <label class="form-label" for="newChartTitle" data-i18n="page.clients.newChart.chartTitle"></label>
+                    <input id="newChartTitle" type="text" data-i18n-placeholder="page.clients.newChart.chartTitlePlaceholder">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" data-i18n="page.index.form.birthDate.label"></label>
+                    <div class="date-inputs">
+                        <input id="newChartDay" type="number" min="1" max="31" data-i18n-placeholder="page.index.form.birthDate.dayPlaceholder" required>
+                        <select id="newChartMonth" required>
+                            <option value="" data-i18n="page.index.form.birthDate.monthPlaceholder"></option>
+                            <option value="01" data-i18n="common.month.long.january"></option>
+                            <option value="02" data-i18n="common.month.long.february"></option>
+                            <option value="03" data-i18n="common.month.long.march"></option>
+                            <option value="04" data-i18n="common.month.long.april"></option>
+                            <option value="05" data-i18n="common.month.long.may"></option>
+                            <option value="06" data-i18n="common.month.long.june"></option>
+                            <option value="07" data-i18n="common.month.long.july"></option>
+                            <option value="08" data-i18n="common.month.long.august"></option>
+                            <option value="09" data-i18n="common.month.long.september"></option>
+                            <option value="10" data-i18n="common.month.long.october"></option>
+                            <option value="11" data-i18n="common.month.long.november"></option>
+                            <option value="12" data-i18n="common.month.long.december"></option>
+                        </select>
+                        <input id="newChartYear" type="number" min="1800" max="2100" data-i18n-placeholder="page.index.form.birthDate.yearPlaceholder" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" data-i18n="page.index.form.birthTime.label"></label>
+                    <div class="time-inputs">
+                        <input id="newChartHour" type="number" min="0" max="23" data-i18n-placeholder="page.index.form.birthTime.hoursPlaceholder" required>
+                        <span class="time-separator">:</span>
+                        <input id="newChartMinute" type="number" min="0" max="59" data-i18n-placeholder="page.index.form.birthTime.minutesPlaceholder" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="newChartPlace" data-i18n="page.index.form.birthPlace.label"></label>
+                    <div class="place-autocomplete-wrapper">
+                        <input id="newChartPlace" class="place-input" type="text" data-i18n-placeholder="page.index.form.birthPlace.placeholder" autocomplete="off" required>
+                        <div id="newChartPlaceSuggestions" class="place-suggestions"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="newChartTimezone" data-i18n="page.index.form.timezone.label"></label>
+                    <select id="newChartTimezone" required>
+                        <option value="" data-i18n="page.index.form.timezone.placeholder"></option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="newChartError" class="error-message hidden"></div>
+
+            <div class="clients-dialog-actions">
+                <button id="newChartCancel" class="btn-logout clients-dialog-cancel" type="button" data-i18n="common.cancel"></button>
+                <button id="newChartSubmit" class="btn-new clients-dialog-submit" type="submit">
+                    <span class="btn-text" data-i18n="page.clients.newChart.submit"></span>
+                    <span class="btn-loader hidden" data-i18n="common.loading"></span>
+                </button>
+            </div>
+        </form>
+    </section>
+
     <div id="toast" class="toast"></div>
 
-    <script type="module" src="js/bundles/clients.bundle.js?v=4482881106f5"></script>
-    <script src="js/locale-switcher.js?v=4482881106f5"></script>
+    <script type="module" src="js/bundles/clients.bundle.js?v=a5873f01bd4a"></script>
+    <script src="js/locale-switcher.js?v=a5873f01bd4a"></script>
 </body>
 </html>

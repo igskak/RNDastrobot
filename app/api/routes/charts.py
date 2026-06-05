@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.auth.dependencies import AuthContext, create_audit_event, ensure_client_access, require_auth
 from app.database.connection import get_db
-from app.database.models import Person, User
+from app.database.models import Person, User, person_chart_links
 from app.database.repositories.user_repository import UserRepository
 from app.models.schemas import normalize_house_system_code, VALID_HOUSE_SYSTEMS
 from app.services.entitlements_service import assert_can_create_saved_chart
@@ -173,6 +173,7 @@ class ChartResponse(BaseModel):
     chart_kind: str
     person_id: Optional[UUID]
     person_display_name: Optional[str]
+    linked_person_ids: List[UUID]
     date: date_type
     time: time_type
     timezone: str
@@ -189,6 +190,7 @@ class ChartResponse(BaseModel):
 
 
 def _chart_response(user: User) -> ChartResponse:
+    linked_ids = [p.person_id for p in (user.linked_persons or [])]
     return ChartResponse(
         chart_id=user.user_id,
         user_id=user.user_id,
@@ -197,6 +199,7 @@ def _chart_response(user: User) -> ChartResponse:
         chart_kind=user.chart_kind or "birth",
         person_id=user.person_id,
         person_display_name=_person_display_name(user.person),
+        linked_person_ids=linked_ids,
         date=user.birth_date,
         time=user.birth_time,
         timezone=user.timezone,

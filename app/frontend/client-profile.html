@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.clientProfile.title"></title>
-    <link rel="stylesheet" href="/bundles/client-profile.bundle.css?v=1f53c433b795">
-    <link rel="stylesheet" href="/css/locale-switcher.css?v=1f53c433b795">
+    <link rel="stylesheet" href="/bundles/client-profile.bundle.css?v=f98d3fb9dae6">
+    <link rel="stylesheet" href="/css/locale-switcher.css?v=f98d3fb9dae6">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '1f53c433b795';</script>
+    <script>window.__APP_BUILD_ID__ = 'f98d3fb9dae6';</script>
 </head>
 <body class="profile-page">
     <div class="page-loader" id="pageLoader">
@@ -78,6 +78,16 @@
                 </section>
 
             </div>
+
+            <!-- Row 1b: Linked Charts (person context) -->
+            <section class="profile-card hidden" id="linkedChartsCard">
+                <div class="profile-card-header">
+                    <h2 class="profile-card-title" data-i18n="page.clientProfile.linkedCharts.title"></h2>
+                    <button class="btn-new btn-sm" type="button" id="linkChartBtn" data-i18n="page.clientProfile.linkedCharts.linkBtn"></button>
+                </div>
+                <p class="profile-empty hidden" id="linkedChartsEmpty" data-i18n="page.clientProfile.linkedCharts.empty"></p>
+                <div class="profile-linked-charts-list" id="linkedChartsList"></div>
+            </section>
 
             <!-- Row 2: Related People -->
             <section class="profile-card">
@@ -389,7 +399,37 @@
         </div>
     </section>
 
-    <script type="module" src="/js/bundles/client-profile.bundle.js?v=1f53c433b795"></script>
-    <script src="/js/locale-switcher.js?v=1f53c433b795"></script>
+    <!-- Link chart picker modal -->
+    <div id="linkChartBackdrop" class="clients-dialog-backdrop hidden"></div>
+    <section id="linkChartDialog" class="clients-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="linkChartDialogTitle">
+        <div class="clients-dialog-card">
+            <div class="clients-dialog-header">
+                <div>
+                    <p class="clients-dialog-kicker" data-i18n="page.clientProfile.linkedCharts.pickerKicker"></p>
+                    <h3 id="linkChartDialogTitle" class="clients-dialog-title" data-i18n="page.clientProfile.linkedCharts.pickerTitle"></h3>
+                </div>
+                <button id="linkChartClose" class="clients-dialog-close" type="button" data-i18n-aria-label="common.close">×</button>
+            </div>
+
+            <div class="clients-dialog-grid">
+                <div class="form-group">
+                    <label class="form-label" for="linkChartSearch" data-i18n="page.clients.searchLabel"></label>
+                    <input id="linkChartSearch" class="search-input" type="search" data-i18n-placeholder="page.clients.searchPlaceholder" autocomplete="off">
+                </div>
+            </div>
+
+            <div id="linkChartPickerList" class="profile-picker-list"></div>
+            <p id="linkChartPickerEmpty" class="profile-empty hidden" data-i18n="page.clientProfile.linkedCharts.pickerEmpty"></p>
+            <p id="linkChartPickerLoading" class="profile-empty hidden" data-i18n="common.loading"></p>
+            <p id="linkChartError" class="error-message hidden"></p>
+
+            <div class="clients-dialog-actions">
+                <button id="linkChartCancel" class="btn-logout clients-dialog-cancel" type="button" data-i18n="common.cancel"></button>
+            </div>
+        </div>
+    </section>
+
+    <script type="module" src="/js/bundles/client-profile.bundle.js?v=f98d3fb9dae6"></script>
+    <script src="/js/locale-switcher.js?v=f98d3fb9dae6"></script>
 </body>
 </html>

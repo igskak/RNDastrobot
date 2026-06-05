@@ -858,6 +858,21 @@
       "subtitle": "Профілі",
       "listAriaLabel": "Список профілів",
       "newCard": "Додати профіль",
+      "newChart": {
+        "btnLabel": "Нова карта",
+        "kicker": "Карта",
+        "title": "Нова карта",
+        "chartTitle": "Назва карти",
+        "chartTitlePlaceholder": "Клієнт, подія… (необов'язково)",
+        "submit": "Зберегти карту",
+        "successToast": "Карту збережено",
+        "errors": {
+          "dateRequired": "Вкажіть дату народження",
+          "timeRequired": "Вкажіть час народження",
+          "placeRequired": "Вкажіть місце та оберіть зі списку",
+          "timezoneRequired": "Вкажіть часовий пояс"
+        }
+      },
       "searchLabel": "Знайти профіль",
       "searchPlaceholder": "Пошук за ім'ям або місцем",
       "searchAriaLabel": "Пошук профілів",
@@ -905,12 +920,15 @@
         "confirmDelete": "Підтвердити видалення",
         "delete": "Видалити",
         "edit": "Редагувати",
-        "logout": "Вийти"
+        "logout": "Вийти",
+        "rename": "Перейменувати"
       },
       "messages": {
         "confirmDeleteHint": "Натисніть «Видалити» ще раз, щоб підтвердити",
         "deleted": "Профіль видалено",
-        "updated": "Дані профілю оновлено"
+        "updated": "Дані профілю оновлено",
+        "chartRenamed": "Карту перейменовано",
+        "chartUpdated": "Карту оновлено"
       },
       "errors": {
         "fetchList": "Не вдалося завантажити список профілів",
@@ -932,7 +950,16 @@
         "submit": "Зберегти зміни",
         "submitting": "Зберігаємо...",
         "subtitle": "Виправте дані народження, не залишаючи простір практики.",
-        "title": "Оновити профіль"
+        "title": "Оновити профіль",
+        "chartTitle": "Назва карти",
+        "chartTitlePlaceholder": "напр. Натал Петрова",
+        "linkedPerson": "Прив'язана людина",
+        "noLinkedPerson": "— не прив'язано —",
+        "chartMode": {
+          "kicker": "Редагування карти",
+          "title": "Редагувати карту",
+          "subtitle": "Змініть дані карти та перерахуйте."
+        }
       },
       "crm": {
         "contactHeader": "Контактні дані",
@@ -1013,6 +1040,15 @@
         "noAlerts": "Немає подій цього місяця"
       }
     },
+    "chartPicker": {
+      "title": "Вибір карти",
+      "subtitle": "Пошук за назвою, людиною або тегом.",
+      "searchPlaceholder": "Пошук карт…",
+      "select": "Вибрати",
+      "empty": "Карт не знайдено.",
+      "momentTitle": "Завантажити збережену карту",
+      "momentSubtitle": "Її дата, час і місце застосуються до активного шару."
+    },
     "clientProfile": {
       "title": "Профіль",
       "backToClients": "До практики",
@@ -1087,6 +1123,20 @@
           "progression": "Прогресія",
           "direction": "Дирекція"
         }
+      },
+      "linkedCharts": {
+        "title": "Карти профілю",
+        "linkBtn": "Прив'язати карту з бази",
+        "empty": "Немає прив'язаних карт",
+        "open": "Відкрити",
+        "unlink": "Від'язати",
+        "linkedToast": "Карту прив'язано до профілю",
+        "unlinkedToast": "Карту від'язано від профілю",
+        "pickerKicker": "Карти",
+        "pickerTitle": "Вибрати карту з бази",
+        "pickerEmpty": "Карт не знайдено",
+        "linkAction": "Прив'язати",
+        "alreadyLinked": "Прив'язана"
       },
       "related": {
         "add": "Додати людину",

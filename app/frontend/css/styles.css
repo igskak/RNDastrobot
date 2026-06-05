@@ -179,6 +179,61 @@ body.quick-open-active {
     white-space: nowrap;
 }
 
+.chart-picker-search-row {
+    padding: 12px 18px 6px;
+}
+
+.chart-picker-search {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid rgba(30, 58, 95, 0.12);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 14px;
+}
+
+.chart-picker-search:focus-visible {
+    outline: none;
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.14);
+}
+
+.chart-picker-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 0 18px 8px;
+}
+
+.chart-picker-tags[hidden] {
+    display: none;
+}
+
+.chart-picker-tag {
+    padding: 4px 10px;
+    border: 1px solid rgba(30, 58, 95, 0.12);
+    border-radius: 999px;
+    background: rgba(249, 247, 242, 0.6);
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    transition: border-color var(--transition), background var(--transition), color var(--transition);
+}
+
+.chart-picker-tag:hover {
+    border-color: rgba(184, 147, 90, 0.36);
+    color: var(--text-primary);
+}
+
+.chart-picker-tag.is-active {
+    background: var(--accent-light);
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 700;
+}
+
 @media (max-width: 520px) {
     .quick-open-popover {
         align-items: flex-end;

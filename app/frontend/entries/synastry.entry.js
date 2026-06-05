@@ -4,6 +4,7 @@ import '../js/locale-formatters.js';
 import '../js/locale-switcher.js';
 import '../js/api.js';
 import '../js/quick-open-popover.js';
+import '../js/chart-picker.js';
 import '../js/preferences.js';
 import '../js/chart-config-presets.js';
 import '../js/symbols.js';
