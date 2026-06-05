@@ -395,9 +395,13 @@ select:focus {
 
 .clients-table th,
 .clients-table td {
-    padding: 15px 16px;
+    padding: 11px 16px;
     text-align: left;
     vertical-align: middle;
+}
+
+.clients-table td {
+    font-size: 14px;
 }
 
 .clients-table thead tr {
@@ -444,6 +448,10 @@ select:focus {
 
 .client-name-text {
     display: block;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.005em;
+    color: #1f2b3a;
 }
 
 .client-summary-chips,
