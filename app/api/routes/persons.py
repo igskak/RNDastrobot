@@ -97,6 +97,8 @@ class PersonResponse(BaseModel):
     display_name: str
     first_name: Optional[str]
     last_name: Optional[str]
+    birth_date: Optional[str]
+    birth_place: Optional[str]
     email: Optional[str]
     phone: Optional[str]
     messenger: Optional[str]
@@ -124,6 +126,8 @@ def _person_response(person: Person) -> PersonResponse:
         display_name=_person_display_name(person),
         first_name=person.first_name,
         last_name=person.last_name,
+        birth_date=primary.birth_date.isoformat() if primary and primary.birth_date else None,
+        birth_place=primary.birth_place if primary else None,
         email=person.email,
         phone=person.phone,
         messenger=person.messenger,

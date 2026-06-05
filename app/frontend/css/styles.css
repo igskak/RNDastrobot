@@ -344,6 +344,40 @@ body::selection {
     animation: element-arrive 0.48s var(--motion-soft) both;
 }
 
+.client-inline-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.client-inline-chip {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    padding: 3px 8px;
+    border: 1px solid rgba(30, 58, 95, .1);
+    border-radius: 999px;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.client-inline-chip:hover {
+    border-color: rgba(30, 58, 95, .22);
+    background: #fff;
+}
+
+.client-inline-chip.is-active {
+    border-color: rgba(184, 147, 90, .42);
+    background: var(--gold-pale);
+    color: var(--text-primary);
+}
+
 .profile-card,
 .account-settings-section,
 .natal-section,

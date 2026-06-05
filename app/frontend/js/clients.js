@@ -14,7 +14,7 @@ const state = {
     filteredUsers: [],
     searchTerm: '',
     activeTag: '',
-    activeChartKind: '',
+    activeProfileId: '',
     sortBy: 'created_desc',
     expandedUserId: null,
     consultationsCache: {},
@@ -123,9 +123,12 @@ function cacheElements() {
     refs.countEl = document.getElementById('clientCount');
     refs.searchInput = document.getElementById('searchInput');
     refs.tagFilterSelect = document.getElementById('tagFilterSelect');
-    refs.chartKindFilterField = document.getElementById('chartKindFilterField');
-    refs.chartKindFilterSelect = document.getElementById('chartKindFilterSelect');
     refs.sortSelect = document.getElementById('sortSelect');
+    refs.tableHeadName = document.getElementById('clientsTableHeadName');
+    refs.tableHeadDate = document.getElementById('clientsTableHeadDate');
+    refs.tableHeadPlace = document.getElementById('clientsTableHeadPlace');
+    refs.tableHeadTags = document.getElementById('clientsTableHeadTags');
+    refs.tableHeadMeta = document.getElementById('clientsTableHeadMeta');
     refs.libraryTabs = Array.from(document.querySelectorAll('[data-library-view]'));
     refs.resultsMeta = document.getElementById('resultsMeta');
     refs.toast = document.getElementById('toast');
@@ -210,11 +213,6 @@ function bindEvents() {
         renderUsers();
     });
 
-    refs.chartKindFilterSelect?.addEventListener('change', (event) => {
-        state.activeChartKind = String(event.target.value || '');
-        renderUsers();
-    });
-
     refs.sortSelect.addEventListener('change', (event) => {
         state.sortBy = event.target.value;
         renderUsers();
@@ -241,6 +239,16 @@ function bindEvents() {
         const actionBtn = event.target.closest('button[data-action]');
         if (actionBtn) {
             const { action, userId } = actionBtn.dataset;
+            if (action === 'filter-tag') {
+                event.stopPropagation();
+                applyTagFilter(actionBtn.dataset.tag || '');
+                return;
+            }
+            if (action === 'filter-profile') {
+                event.stopPropagation();
+                applyProfileFilter(actionBtn.dataset.profileId || '');
+                return;
+            }
             if (!userId) return;
             event.stopPropagation();
             if (action === 'delete') { await handleDelete(userId, actionBtn); return; }
@@ -301,7 +309,7 @@ function bindEvents() {
             }
             if (state.libraryView === 'people') {
                 if (row.dataset.primaryChartId) {
-                    await openForecastForUser(row.dataset.primaryChartId);
+                    openProfile(row.dataset.primaryChartId);
                 } else {
                     showToast(t('page.clients.people.noPrimaryChart'), 'warning');
                 }
@@ -319,6 +327,7 @@ function bindEvents() {
         }
         renderProfileSummary();
         renderTagFilterOptions();
+        syncLibraryChrome();
         renderUsers();
         refreshEditDialogLocale();
     });
@@ -461,8 +470,10 @@ async function loadClients() {
             console.warn('Charts API unavailable, falling back to people-only view');
         }
 
+        state.people = enrichPeopleFromCharts(state.people, state.charts);
         state.users = getActiveLibraryItems();
         renderTagFilterOptions();
+        syncLibraryChrome();
 
         refs.loading.classList.add('hidden');
 
@@ -486,7 +497,7 @@ function setLibraryView(view) {
     state.users = getActiveLibraryItems();
     state.filteredUsers = [];
     state.activeTag = '';
-    state.activeChartKind = '';
+    state.activeProfileId = '';
     state.expandedUserId = null;
     closeAllDropdowns();
     syncLibraryChrome();
@@ -498,20 +509,116 @@ function getActiveLibraryItems() {
     return state.libraryView === 'people' ? state.people : state.charts;
 }
 
+function enrichPeopleFromCharts(people = [], charts = []) {
+    if (!Array.isArray(people) || !Array.isArray(charts) || charts.length === 0) return people;
+    return people.map((person) => {
+        const chart = findPrimaryChartForPerson(person, charts);
+        if (!chart) return person;
+        return {
+            ...person,
+            primary_chart_id: person.primary_chart_id || chart.chart_id || chart.user_id || null,
+            birth_date: person.birth_date || chart.birth_date || chart.date || null,
+            birth_place: person.birth_place || chart.birth_place || chart.location_name || null,
+            chart_count: Math.max(Number(person.chart_count || 0), countChartsForPerson(person, charts)),
+        };
+    });
+}
+
+function findPrimaryChartForPerson(person, charts = []) {
+    const primaryId = String(person?.primary_chart_id || '');
+    if (primaryId) {
+        const byPrimaryId = charts.find((chart) => String(chart.chart_id || chart.user_id || '') === primaryId);
+        if (byPrimaryId) return byPrimaryId;
+    }
+
+    const personId = String(person?.person_id || '');
+    if (personId) {
+        const linked = charts
+            .filter((chart) => String(chart.person_id || '') === personId)
+            .sort(comparePrimaryChartCandidates);
+        if (linked.length) return linked[0];
+    }
+
+    const personName = normalizePersonLookupName(person);
+    if (!personName) return null;
+    const matched = charts
+        .filter((chart) => normalizeChartLookupName(chart) === personName)
+        .sort(comparePrimaryChartCandidates);
+    return matched[0] || null;
+}
+
+function countChartsForPerson(person, charts = []) {
+    const personId = String(person?.person_id || '');
+    const personName = normalizePersonLookupName(person);
+    return charts.filter((chart) => {
+        if (personId && String(chart.person_id || '') === personId) return true;
+        return personName && normalizeChartLookupName(chart) === personName;
+    }).length;
+}
+
+function comparePrimaryChartCandidates(a, b) {
+    const aBirth = (a.chart_kind || 'birth') === 'birth' ? 0 : 1;
+    const bBirth = (b.chart_kind || 'birth') === 'birth' ? 0 : 1;
+    if (aBirth !== bBirth) return aBirth - bBirth;
+    return String(a.created_at || '').localeCompare(String(b.created_at || ''));
+}
+
+function normalizePersonLookupName(person) {
+    return normalizeLooseText(
+        person?.display_name
+        || [person?.first_name, person?.last_name].filter(Boolean).join(' '),
+    );
+}
+
+function normalizeChartLookupName(chart) {
+    return normalizeLooseText(
+        chart?.display_title
+        || chart?.title
+        || [chart?.first_name, chart?.last_name].filter(Boolean).join(' '),
+    );
+}
+
+function normalizeLooseText(value) {
+    return String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
 function syncLibraryChrome() {
     refs.libraryTabs.forEach((tab) => {
         const active = tab.dataset.libraryView === state.libraryView;
         tab.classList.toggle('active', active);
         tab.setAttribute('aria-selected', active ? 'true' : 'false');
     });
-    refs.chartKindFilterField?.classList.toggle('hidden', state.libraryView !== 'charts');
-    if (refs.chartKindFilterSelect && state.libraryView !== 'charts') {
-        refs.chartKindFilterSelect.value = '';
-    }
+    const headings = state.libraryView === 'charts'
+        ? {
+            name: 'page.clients.table.chartName',
+            date: 'page.clients.table.chartDate',
+            place: 'page.clients.table.chartPlace',
+            tags: 'page.clients.table.tags',
+            meta: 'page.clients.table.profiles',
+        }
+        : {
+            name: 'page.clients.table.name',
+            date: 'page.clients.table.birthDate',
+            place: 'page.clients.table.place',
+            tags: '',
+            meta: 'page.clients.table.created',
+        };
+    setTranslatedHeading(refs.tableHeadName, headings.name);
+    setTranslatedHeading(refs.tableHeadDate, headings.date);
+    setTranslatedHeading(refs.tableHeadPlace, headings.place);
+    refs.tableHeadTags?.classList.toggle('hidden', state.libraryView !== 'charts');
+    setTranslatedHeading(refs.tableHeadTags, headings.tags);
+    setTranslatedHeading(refs.tableHeadMeta, headings.meta);
+}
+
+function setTranslatedHeading(element, key) {
+    if (!element) return;
+    element.dataset.i18n = key;
+    element.textContent = t(key);
 }
 
 function renderUsers() {
-    const filtered = filterUsers(state.users, state.searchTerm, state.activeTag);
+    const filtered = filterUsers(state.users, state.searchTerm, state.activeTag, state.activeProfileId);
     const sorted = sortUsers(filtered, state.sortBy);
     state.filteredUsers = sorted;
 
@@ -580,13 +687,16 @@ function buildUserRow(user) {
         .join('')
         .slice(0, 2) || '?';
     const birthDateRaw = user.birth_date || user.date;
+    const chartTime = isChartsView ? formatTime(user.time) : '';
     const birthDate = birthDateRaw ? formatDate(birthDateRaw) : t('common.notAvailable');
+    const dateValue = isChartsView && chartTime ? `${birthDate} · ${chartTime}` : birthDate;
     const place = user.birth_place || user.location_name || t('common.notAvailable');
     const created = user.created_at ? formatDateTime(user.created_at) : t('common.notAvailable');
-    const labelName = escapeHtml(t('page.clients.table.name'));
-    const labelBirthDate = escapeHtml(t('page.clients.table.birthDate'));
-    const labelPlace = escapeHtml(t('page.clients.table.place'));
-    const labelCreated = escapeHtml(t('page.clients.table.created'));
+    const labelName = escapeHtml(t(isChartsView ? 'page.clients.table.chartName' : 'page.clients.table.name'));
+    const labelBirthDate = escapeHtml(t(isChartsView ? 'page.clients.table.chartDate' : 'page.clients.table.birthDate'));
+    const labelPlace = escapeHtml(t(isChartsView ? 'page.clients.table.chartPlace' : 'page.clients.table.place'));
+    const labelTags = escapeHtml(t('page.clients.table.tags'));
+    const labelCreated = escapeHtml(t(isChartsView ? 'page.clients.table.profiles' : 'page.clients.table.created'));
     const labelActions = escapeHtml(t('page.clients.table.actions'));
     const editLabel = escapeHtml(t('page.clients.actions.edit'));
     const deleteLabel = escapeHtml(t('page.clients.actions.delete'));
@@ -622,7 +732,7 @@ function buildUserRow(user) {
                 <span class="client-avatar">${escapeHtml(initials)}</span>
                 <div class="client-name-stack">
                     <strong class="client-name-text">${escapeHtml(name)}</strong>
-                    ${isChartsView ? `<div class="client-summary-chips"><span class="client-summary-chip">${escapeHtml(getChartKindLabel(user.chart_kind))}</span></div>` : renderPersonChips(user)}
+                    ${isChartsView ? '' : renderPersonChips(user)}
                     ${summaryChips.length > 0 ? `<div class="client-summary-chips">${summaryChips.join('')}</div>` : ''}
                     <div class="client-card-quick-actions">
                         ${isChartsView ? '' : `<button class="client-quick-btn client-quick-btn-primary" type="button" data-action="open-chart" data-user-id="${escapeHtml(primaryChartId)}" ${primaryChartId ? '' : 'disabled'}>${openChartLabel}</button>`}
@@ -636,7 +746,7 @@ function buildUserRow(user) {
         <td class="client-cell client-cell-birth" data-label="${labelBirthDate}">
             <div class="client-fact">
                 <span class="client-fact-label">${labelBirthDate}</span>
-                <span class="client-fact-value">${escapeHtml(birthDate)}</span>
+                <span class="client-fact-value">${escapeHtml(dateValue)}</span>
             </div>
         </td>
         <td class="client-cell client-cell-place" data-label="${labelPlace}">
@@ -645,10 +755,18 @@ function buildUserRow(user) {
                 <span class="client-fact-value">${escapeHtml(place)}</span>
             </div>
         </td>
+        ${isChartsView ? `
+            <td class="client-cell client-cell-tags" data-label="${labelTags}">
+                <div class="client-fact">
+                    <span class="client-fact-label">${labelTags}</span>
+                    <span class="client-fact-value">${renderChartTagFilters(user)}</span>
+                </div>
+            </td>
+        ` : ''}
         <td class="client-cell client-cell-created" data-label="${labelCreated}">
             <div class="client-fact">
                 <span class="client-fact-label">${labelCreated}</span>
-                <span class="client-fact-value">${escapeHtml(created)}</span>
+                <span class="client-fact-value">${isChartsView ? renderChartProfileFilters(user) : escapeHtml(created)}</span>
             </div>
         </td>
         <td class="client-cell client-cell-actions" data-label="${labelActions}">
@@ -657,7 +775,7 @@ function buildUserRow(user) {
                     <svg width="14" height="4" viewBox="0 0 14 4" fill="none"><circle cx="2" cy="2" r="1.4" fill="currentColor"/><circle cx="7" cy="2" r="1.4" fill="currentColor"/><circle cx="12" cy="2" r="1.4" fill="currentColor"/></svg>
                 </button>
                 <div class="actions-dropdown">
-                    ${isChartsView || !primaryChartId ? '' : `<a class="action-item" href="/client/${escapeHtml(primaryChartId)}">${escapeHtml(t('page.clientProfile.viewProfile'))}</a>`}
+                    ${isChartsView ? '' : `<a class="action-item" href="/client/${escapeHtml(primaryChartId || userId)}">${escapeHtml(t('page.clientProfile.viewProfile'))}</a>`}
                     <button class="action-item danger" type="button" data-action="delete" data-user-id="${escapeHtml(userId)}">${deleteLabel}</button>
                 </div>
             </div>
@@ -665,6 +783,79 @@ function buildUserRow(user) {
     `;
 
     return tr;
+}
+
+function renderChartTagFilters(chart) {
+    const tags = getUserTags(chart);
+    if (!tags.length) {
+        return escapeHtml(t('page.clients.table.noTags'));
+    }
+    return `<span class="client-inline-chips">${tags.map((tag) => {
+        const normalized = normalizeTag(tag);
+        const active = normalized && normalized === state.activeTag;
+        return `
+            <button class="client-inline-chip${active ? ' is-active' : ''}" type="button" data-action="filter-tag" data-tag="${escapeHtml(tag)}">
+                ${escapeHtml(tag)}
+            </button>
+        `;
+    }).join('')}</span>`;
+}
+
+function renderChartProfileFilters(chart) {
+    const related = getChartRelatedProfiles(chart);
+    if (!related.length) {
+        return escapeHtml(t('page.clients.table.noProfiles'));
+    }
+    return `<span class="client-inline-chips">${related.map((profile) => {
+        const id = String(profile.id || '');
+        const label = resolveProfileLabel(profile) || t('common.notAvailable');
+        const active = id && id === state.activeProfileId;
+        return id
+            ? `<button class="client-inline-chip${active ? ' is-active' : ''}" type="button" data-action="filter-profile" data-profile-id="${escapeHtml(id)}">${escapeHtml(label)}</button>`
+            : `<span class="client-inline-chip">${escapeHtml(label)}</span>`;
+    }).join('')}</span>`;
+}
+
+function getChartRelatedProfiles(chart) {
+    const related = [];
+    const seen = new Set();
+    const add = (id, name) => {
+        const normalizedId = id ? String(id) : '';
+        const normalizedName = String(name || '').trim();
+        const key = normalizedId || normalizedName.toLowerCase();
+        if (!key || seen.has(key)) return;
+        seen.add(key);
+        related.push({ id: normalizedId, name: normalizedName });
+    };
+
+    add(chart.person_id, chart.person_display_name || chart.person_name || chart.display_name);
+    if (Array.isArray(chart.related_persons)) {
+        chart.related_persons.forEach((person) => {
+            add(
+                person.person_id || person.user_id || person.id,
+                person.display_name || person.name || [person.first_name, person.last_name].filter(Boolean).join(' '),
+            );
+        });
+    }
+    return related;
+}
+
+function resolveProfileLabel(profile) {
+    const explicitName = String(profile?.name || '').trim();
+    if (explicitName) return explicitName;
+
+    const id = String(profile?.id || '');
+    if (!id) return '';
+
+    const person = state.people.find((item) => String(item.person_id || item.user_id || '') === id);
+    if (!person) return '';
+
+    return (
+        person.display_name
+        || [person.first_name, person.last_name].filter(Boolean).join(' ')
+        || person.email
+        || ''
+    ).trim();
 }
 
 function renderPersonChips(person) {
@@ -677,16 +868,17 @@ function renderPersonChips(person) {
     return `<div class="client-summary-chips">${chips.join('')}</div>`;
 }
 
-function filterUsers(users, searchTerm, activeTag = '') {
+function filterUsers(users, searchTerm, activeTag = '', activeProfileId = '') {
     const normalizedTag = normalizeTag(activeTag);
-    const chartKind = state.libraryView === 'charts' ? state.activeChartKind : '';
-    if (!searchTerm && !normalizedTag && !chartKind) return [...users];
+    const normalizedProfileId = String(activeProfileId || '');
+    if (!searchTerm && !normalizedTag && !normalizedProfileId) return [...users];
 
     return users.filter((user) => {
-        if (chartKind && user.chart_kind !== chartKind) return false;
         const tags = getUserTags(user);
         const matchesTag = !normalizedTag || tags.some((tag) => normalizeTag(tag) === normalizedTag);
         if (!matchesTag) return false;
+        const matchesProfile = !normalizedProfileId || getChartRelatedProfiles(user).some((profile) => String(profile.id || '') === normalizedProfileId);
+        if (!matchesProfile) return false;
 
         if (!searchTerm) return true;
 
@@ -703,8 +895,9 @@ function filterUsers(users, searchTerm, activeTag = '') {
         const rawDate = user.birth_date || user.date;
         const birthDate = rawDate ? formatDate(rawDate).toLowerCase() : '';
         const tagsText = tags.join(' ').toLowerCase();
+        const relatedText = getChartRelatedProfiles(user).map((profile) => profile.name).join(' ').toLowerCase();
 
-        return name.includes(searchTerm) || place.includes(searchTerm) || birthDate.includes(searchTerm) || tagsText.includes(searchTerm);
+        return name.includes(searchTerm) || place.includes(searchTerm) || birthDate.includes(searchTerm) || tagsText.includes(searchTerm) || relatedText.includes(searchTerm);
     });
 }
 
@@ -732,6 +925,21 @@ function getAvailableTags(users) {
 
     const collator = getNameCollator();
     return [...tagsByKey.values()].sort((a, b) => collator.compare(a, b));
+}
+
+function applyTagFilter(tag) {
+    const normalized = normalizeTag(tag);
+    state.activeTag = state.activeTag === normalized ? '' : normalized;
+    if (refs.tagFilterSelect) {
+        refs.tagFilterSelect.value = state.activeTag;
+    }
+    renderUsers();
+}
+
+function applyProfileFilter(profileId) {
+    const normalized = String(profileId || '');
+    state.activeProfileId = state.activeProfileId === normalized ? '' : normalized;
+    renderUsers();
 }
 
 function sortUsers(users, sortBy) {
@@ -804,7 +1012,7 @@ function updateCounters() {
         refs.statUnpaid.textContent = String(unpaid);
     }
 
-    if (state.searchTerm || state.activeTag) {
+    if (state.searchTerm || state.activeTag || state.activeProfileId) {
         refs.resultsMeta.textContent = t('page.clients.counters.shownOf', { shown, total });
         refs.resultsMeta.style.display = '';
         return;
@@ -861,6 +1069,12 @@ async function openForecastForUser(userId, { tab = 'biwheel', date, solarYear } 
     } catch (error) {
         showToast(t('common.errorWithMessage', { message: error.message }), 'error');
     }
+}
+
+function openProfile(userId) {
+    if (!userId) return;
+    window.showPageLoader?.();
+    window.location.href = `/client/${encodeURIComponent(String(userId))}`;
 }
 
 function initEditClientDialog() {
@@ -1333,6 +1547,12 @@ function formatDate(isoDate) {
     const parts = String(isoDate || '').split('-');
     if (parts.length !== 3) return String(isoDate || '');
     return `${parts[2]}.${parts[1]}.${parts[0]}`;
+}
+
+function formatTime(value) {
+    const parts = String(value || '').split(':');
+    if (parts.length < 2) return '';
+    return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
 }
 
 function formatDateTime(isoStr) {

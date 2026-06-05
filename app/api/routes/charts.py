@@ -76,6 +76,16 @@ def _display_title(user: User) -> str:
     return fallback or str(user.user_id)
 
 
+def _person_display_name(person: Optional[Person]) -> Optional[str]:
+    if person is None:
+        return None
+    display_name = _clean_optional_str(person.display_name)
+    if display_name:
+        return display_name
+    name = " ".join(part for part in [person.first_name, person.last_name] if part).strip()
+    return name or None
+
+
 class ChartCreateRequest(BaseModel):
     title: Optional[str] = Field(None, max_length=160)
     chart_kind: str = Field("birth")
@@ -162,6 +172,7 @@ class ChartResponse(BaseModel):
     display_title: str
     chart_kind: str
     person_id: Optional[UUID]
+    person_display_name: Optional[str]
     date: date_type
     time: time_type
     timezone: str
@@ -185,6 +196,7 @@ def _chart_response(user: User) -> ChartResponse:
         display_title=_display_title(user),
         chart_kind=user.chart_kind or "birth",
         person_id=user.person_id,
+        person_display_name=_person_display_name(user.person),
         date=user.birth_date,
         time=user.birth_time,
         timezone=user.timezone,

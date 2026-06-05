@@ -915,8 +915,15 @@
       "table": {
         "actions": "Actions",
         "birthDate": "Birth date",
+        "chartDate": "Chart date and time",
+        "tags": "Tags",
+        "profiles": "Profiles",
+        "chartName": "Chart",
+        "chartPlace": "Chart place",
         "created": "Created",
         "name": "Name",
+        "noProfiles": "No profile",
+        "noTags": "No tags",
         "place": "Place"
       },
       "edit": {
