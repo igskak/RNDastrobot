@@ -489,7 +489,8 @@
         "label": "Actions",
         "openMenu": "Open chart actions",
         "openSynastry": "Synastry",
-        "saveChart": "Save chart"
+        "saveChart": "Save chart",
+        "saveSourceChart": "Save source as chart"
       },
       "aspects": {
         "settings": {

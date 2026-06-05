@@ -489,7 +489,8 @@
         "label": "Действия",
         "openMenu": "Открыть действия для карты",
         "openSynastry": "Синастрия",
-        "saveChart": "Сохранить карту"
+        "saveChart": "Сохранить карту",
+        "saveSourceChart": "Сохранить источник как карту"
       },
       "aspects": {
         "settings": {

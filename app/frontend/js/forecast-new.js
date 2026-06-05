@@ -337,7 +337,7 @@
         [
             'pageLoader', 'forecastNewLayout', 'forecastNewError', 'forecastNewErrorMsg',
             'forecastNewBackBtn', 'forecastNewTitle', 'forecastNewSubtitle', 'openNatalBtn', 'openNatalTablesBtn', 'openSynastryBtn',
-            'savePrognosticChartBtn', 'forecastNewActionsToggle', 'forecastNewActionsMenu',
+            'saveSourceChartBtn', 'savePrognosticChartBtn', 'forecastNewActionsToggle', 'forecastNewActionsMenu',
             'forecastNewDirectionTypeSelect',
             'forecastNewNatalPanel', 'forecastNewProgPanel',
             'natalPanelMeta', 'prognosticPanelTitle', 'prognosticPanelMeta',
@@ -465,6 +465,7 @@
             });
         });
         refs.savePrognosticChartBtn?.addEventListener('click', saveSelectedPrognosticChart);
+        refs.saveSourceChartBtn?.addEventListener('click', saveCurrentSourceAsChart);
 
         refs.layerToggles.forEach((input) => {
             input.addEventListener('change', async () => {
@@ -2799,9 +2800,29 @@
         const withLocaleHeaders = window.AstroAPI?.withLocaleHeaders || ((headers) => headers);
         const response = await fetch(`${API_BASE}${endpoint}`, {
             method: 'POST',
+            credentials: 'include',
             headers: withLocaleHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify(body),
             signal: options.signal,
+        });
+        if (!response.ok) {
+            let detail = `HTTP ${response.status}`;
+            try {
+                const error = await response.json();
+                detail = typeof error?.detail === 'string' ? error.detail : JSON.stringify(error?.detail || error);
+            } catch {
+                detail = await response.text().catch(() => detail);
+            }
+            throw new Error(detail);
+        }
+        return response.json();
+    }
+
+    async function apiGet(endpoint) {
+        const withLocaleHeaders = window.AstroAPI?.withLocaleHeaders || ((headers) => headers);
+        const response = await fetch(`${API_BASE}${endpoint}`, {
+            credentials: 'include',
+            headers: withLocaleHeaders({}),
         });
         if (!response.ok) {
             let detail = `HTTP ${response.status}`;
@@ -3762,6 +3783,74 @@
             window.alert(`Не удалось сохранить карту: ${error.message}`);
         } finally {
             refs.savePrognosticChartBtn.disabled = false;
+        }
+    }
+
+    function buildCurrentSourceChartPayload({ title, chartKind }) {
+        const [date, time] = splitTargetDatetime(state.natalSelectedDateTime);
+        const location = state.natalLocation || {};
+        return {
+            title,
+            chart_kind: chartKind || 'birth',
+            date,
+            time: normalizeTime(time || '12:00:00'),
+            timezone: state.natalTimezone || 'UTC',
+            location_name: location.name || state.natalData?.birth_data?.place || null,
+            latitude: location.latitude,
+            longitude: location.longitude,
+            house_system: normalizeHouseSystemCode(state.pageSettings.houseSystem || state.natalData?.birth_data?.house_system || 'P'),
+            tags: [],
+        };
+    }
+
+    function defaultSourceChartTitle() {
+        const birth = state.natalData?.birth_data || {};
+        const name = [birth.first_name, birth.last_name].filter(Boolean).join(' ').trim();
+        const [date] = splitTargetDatetime(state.natalSelectedDateTime);
+        if (name && isNatalEdited()) return `${name} · ${date}`;
+        if (name) return name;
+        return `Карта ${date || ''}`.trim();
+    }
+
+    async function saveCurrentSourceAsChart() {
+        const defaultTitle = defaultSourceChartTitle();
+        const title = window.prompt('Название карты', defaultTitle);
+        if (title === null) return;
+        const cleanedTitle = String(title || '').trim();
+        if (!cleanedTitle) {
+            window.alert('Укажите название карты.');
+            return;
+        }
+        const chartKind = window.prompt('Тип карты: birth, event, company, horary, relocation, solar_point, test, other', 'birth');
+        if (chartKind === null) return;
+
+        refs.saveSourceChartBtn.disabled = true;
+        try {
+            const saved = await apiPost('/charts', buildCurrentSourceChartPayload({
+                title: cleanedTitle,
+                chartKind: String(chartKind || 'birth').trim() || 'birth',
+            }));
+            const resp = await apiGet(`/natal/${encodeURIComponent(String(saved.chart_id || saved.user_id))}`);
+            state.userId = resp.user_id || saved.chart_id || saved.user_id;
+            state.natalData = resp;
+            state.natalWheelData = window.NatalWheelData?.prepareNatalWheelData
+                ? window.NatalWheelData.prepareNatalWheelData(resp, { houseSystem: resp.birth_data?.house_system || undefined })
+                : resp;
+            window.AstroAPI?.saveChartToSession?.(resp);
+            window.AstroAPI?.saveFormData?.(window.AstroAPI.chartToFormData?.(resp));
+            window.AstroAPI?.saveNavigationState?.({
+                sourceView: 'forecast-new',
+                sourceUrl: `/forecast-new.html${window.location.search || ''}`,
+                clientUserId: String(state.userId),
+                partnerUserId: null,
+            });
+            localStorage.setItem('currentUserId', String(state.userId));
+            window.alert('Карта сохранена в библиотеке.');
+            window.location.reload();
+        } catch (error) {
+            window.alert(`Не удалось сохранить карту: ${error.message}`);
+        } finally {
+            refs.saveSourceChartBtn.disabled = false;
         }
     }
 

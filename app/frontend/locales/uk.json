@@ -491,6 +491,7 @@
         "openSynastry": "Синастрія",
         "resetDefaults": "Скинути локальні налаштування",
         "saveChart": "Зберегти карту",
+        "saveSourceChart": "Зберегти джерело як карту",
         "saveDefaults": "Зберегти як локальні налаштування"
       },
       "aspects": {
