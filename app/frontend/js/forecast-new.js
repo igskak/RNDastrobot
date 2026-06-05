@@ -470,25 +470,8 @@
         refs.layerToggles.forEach((input) => {
             input.addEventListener('change', async () => {
                 const layer = input.dataset.layerToggle;
-                // Параметры слоя живут в поповере, который открывается при включении слоя.
-                if (input.checked) openLayerPopover(layer);
-                else closeLayerPopover(layer);
-                state.activeLayers = LAYER_ORDER.filter((method) => {
-                    const toggle = document.querySelector(`[data-layer-toggle="${method}"]`);
-                    return toggle?.checked;
-                });
-                if (!state.activeLayers.length) {
-                    state.activeLayers = ['transit'];
-                    const transitToggle = document.querySelector('[data-layer-toggle="transit"]');
-                    if (transitToggle) transitToggle.checked = true;
-                }
-                if (layer && !state.activeLayers.includes(state.selectedRightLayer)) {
-                    state.selectedRightLayer = state.activeLayers[0];
-                }
-                state.enabledLayers = state.activeLayers;
-                state.activeRightMethodTab = state.selectedRightLayer;
-                schedulePersist();
-                await loadActiveLayers();
+                if (input.checked) await activateLayer(layer, { openConfig: true });
+                else await deactivateLayer(layer);
             });
         });
 
@@ -732,6 +715,21 @@
         });
 
         refs.rightLayerTabs?.addEventListener('click', (event) => {
+            const addToggle = event.target.closest('[data-add-layer-toggle]');
+            if (addToggle) {
+                event.stopPropagation();
+                toggleAddLayerMenu();
+                return;
+            }
+
+            const addButton = event.target.closest('[data-add-layer-method]');
+            if (addButton) {
+                event.stopPropagation();
+                closeAddLayerMenu();
+                void activateLayer(addButton.dataset.addLayerMethod, { openConfig: true });
+                return;
+            }
+
             const button = event.target.closest('[data-right-layer]');
             if (!button) return;
             state.selectedRightLayer = button.dataset.rightLayer;
@@ -899,14 +897,76 @@
         getLayerPopover(layer)?.classList.add('hidden');
     }
 
+    function syncLayerTogglesFromState() {
+        refs.layerToggles?.forEach((input) => {
+            input.checked = state.activeLayers.includes(input.dataset.layerToggle);
+        });
+    }
+
+    function normalizeActiveLayers() {
+        state.activeLayers = LAYER_ORDER.filter((method) => state.activeLayers.includes(method));
+        if (!state.activeLayers.length) state.activeLayers = ['transit'];
+        state.enabledLayers = state.activeLayers;
+        if (!state.activeLayers.includes(state.selectedRightLayer)) {
+            state.selectedRightLayer = state.activeLayers[0];
+        }
+        state.activeRightMethodTab = state.selectedRightLayer;
+        syncLayerTogglesFromState();
+    }
+
+    async function activateLayer(method, { openConfig = false } = {}) {
+        if (!LAYER_ORDER.includes(method)) return;
+        if (!state.activeLayers.includes(method)) {
+            state.activeLayers = LAYER_ORDER.filter((item) => item === method || state.activeLayers.includes(item));
+        }
+        state.selectedRightLayer = method;
+        normalizeActiveLayers();
+        renderRightLayerTabs();
+        scheduleRightPanelRender();
+        if (openConfig) openLayerPopover(method);
+        schedulePersist();
+        await loadActiveLayers();
+    }
+
+    async function deactivateLayer(method) {
+        if (!LAYER_ORDER.includes(method)) return;
+        closeLayerPopover(method);
+        state.activeLayers = state.activeLayers.filter((item) => item !== method);
+        normalizeActiveLayers();
+        renderRightLayerTabs();
+        scheduleRightPanelRender();
+        schedulePersist();
+        await loadActiveLayers();
+    }
+
+    function closeAddLayerMenu() {
+        refs.rightLayerTabs?.querySelector('[data-add-layer-menu]')?.classList.add('hidden');
+        refs.rightLayerTabs?.querySelector('[data-add-layer-toggle]')?.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleAddLayerMenu() {
+        const menu = refs.rightLayerTabs?.querySelector('[data-add-layer-menu]');
+        const toggle = refs.rightLayerTabs?.querySelector('[data-add-layer-toggle]');
+        if (!menu || !toggle) return;
+        const willOpen = menu.classList.contains('hidden');
+        menu.classList.toggle('hidden', !willOpen);
+        toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        if (willOpen) menu.querySelector('[data-add-layer-method]:not(:disabled)')?.focus({ preventScroll: true });
+    }
+
     function initLayerPopovers() {
         // Закрытие по клику вне поповера/чипа и по Escape.
         document.addEventListener('click', (event) => {
             if (event.target.closest('.forecast-new-layer-pop')) return;
+            if (event.target.closest('.forecast-new-add-layer')) return;
             closeAllLayerPopovers(null);
+            closeAddLayerMenu();
         });
         document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape') closeAllLayerPopovers(null);
+            if (event.key === 'Escape') {
+                closeAllLayerPopovers(null);
+                closeAddLayerMenu();
+            }
         });
 
         // Переключатель источника партнёра синастрии: «Из базы» / «Вручную».
@@ -2922,14 +2982,29 @@
 
     function renderRightLayerTabs() {
         if (!refs.rightLayerTabs) return;
-        if (!state.activeLayers.includes(state.selectedRightLayer)) {
-            state.selectedRightLayer = state.activeLayers[0] || 'transit';
-        }
-        refs.rightLayerTabs.innerHTML = state.activeLayers.map((method) => `
+        normalizeActiveLayers();
+        const activeTabs = state.activeLayers.map((method) => `
             <button type="button" class="forecast-new-right-layer-tab ${method === state.selectedRightLayer ? 'active' : ''}" data-right-layer="${method}">
                 ${layerLabel(method)}
             </button>
         `).join('');
+        const layerButtons = LAYER_ORDER.map((method) => {
+            const active = state.activeLayers.includes(method);
+            return `
+                <button type="button" class="forecast-new-add-layer-item" data-add-layer-method="${method}" ${active ? 'disabled' : ''}>
+                    ${active ? '✓ ' : '+ '}${layerLabel(method)}
+                </button>
+            `;
+        }).join('');
+        refs.rightLayerTabs.innerHTML = `
+            ${activeTabs}
+            <span class="forecast-new-add-layer">
+                <button type="button" class="forecast-new-add-layer-toggle" data-add-layer-toggle aria-haspopup="menu" aria-expanded="false">+ ${t('page.chart.actions.addLayer')}</button>
+                <span class="forecast-new-add-layer-menu hidden" data-add-layer-menu role="menu">
+                    ${layerButtons}
+                </span>
+            </span>
+        `;
     }
 
     function scheduleRightPanelRender() {

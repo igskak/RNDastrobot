@@ -485,6 +485,7 @@
     },
     "chart": {
       "actions": {
+        "addLayer": "Add layer",
         "editClient": "Edit client data",
         "label": "Actions",
         "openMenu": "Open chart actions",
