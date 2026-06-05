@@ -203,3 +203,29 @@ def test_create_chart_persists_chart_metadata_after_existing_natal_save(monkeypa
     assert data["chart_kind"] == "event"
     assert data["tags"] == ["работа", "событие"]
     assert data["location_name"] == "Madrid"
+
+
+def test_delete_chart_removes_it():
+    owner_id = _create_astrologer()
+    chart_id = _create_chart(owner_id, title="To delete")
+
+    app.dependency_overrides[require_auth] = lambda: _auth_override(owner_id)
+    with TestClient(app) as client:
+        response = client.delete(f"/api/v1/charts/{chart_id}")
+        assert response.status_code == 200
+        assert response.json()["status"] == "ok"
+        # Verify it's gone — 404 because ensure_client_access finds no record
+        gone = client.get(f"/api/v1/charts/{chart_id}")
+        assert gone.status_code == 404
+
+
+def test_delete_foreign_chart_is_forbidden():
+    owner_id = _create_astrologer("owner@example.com")
+    other_id = _create_astrologer("other@example.com")
+    foreign_chart_id = _create_chart(other_id, title="Foreign")
+
+    app.dependency_overrides[require_auth] = lambda: _auth_override(owner_id)
+    with TestClient(app) as client:
+        response = client.delete(f"/api/v1/charts/{foreign_chart_id}")
+
+    assert response.status_code == 403

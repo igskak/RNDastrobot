@@ -351,9 +351,9 @@ def delete_chart(
     auth: AuthContext = Depends(require_auth),
 ):
     ensure_client_access(db, request, auth, chart_id, action="chart.delete")
+    _get_chart_or_404(db, auth.astrologer.id, chart_id)  # ownership verified via astrologer_id
     repo = UserRepository(db)
-    if not repo.delete_user(chart_id):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chart not found")
+    repo.delete_user(chart_id)
     create_audit_event(
         db,
         request,

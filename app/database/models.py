@@ -78,6 +78,7 @@ class User(Base):
         Index('idx_users_birth_date', 'birth_date'),
         Index('idx_users_location', 'lat', 'lon'),
         Index('idx_users_astrologer_id', 'astrologer_id'),
+        Index('idx_users_astrologer_chart_kind', 'astrologer_id', 'chart_kind'),
     )
 
 
