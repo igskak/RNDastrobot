@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Прогностика New</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=17e376d673e6">
-    <script>window.__APP_BUILD_ID__ = '17e376d673e6';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=e51fc5a80c7c">
+    <script>window.__APP_BUILD_ID__ = 'e51fc5a80c7c';</script>
 </head>
 <body class="forecast-new-page">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -22,16 +22,16 @@
         <div class="forecast-new-layer-toggles" aria-label="Слои прогностики">
             <label class="forecast-new-layer-chip forecast-new-layer-chip--transit">
                 <input type="checkbox" data-layer-toggle="transit" checked>
-                <span>Транзиты</span>
+                <span data-i18n="common.method.transit">Транзиты</span>
             </label>
             <label class="forecast-new-layer-chip forecast-new-layer-chip--progression">
                 <input type="checkbox" data-layer-toggle="progression">
-                <span>Прогрессии</span>
+                <span data-i18n="common.method.progression">Прогрессии</span>
             </label>
             <div class="forecast-new-layer-pop" data-layer-pop="direction">
                 <label class="forecast-new-layer-chip forecast-new-layer-chip--direction">
                     <input type="checkbox" data-layer-toggle="direction">
-                    <span>Дирекции</span>
+                    <span data-i18n="common.method.direction">Дирекции</span>
                 </label>
                 <div class="forecast-new-layer-popover hidden" data-layer-popover="direction" role="dialog" aria-label="Параметры дирекций">
                     <label class="forecast-new-pop-label">Тип дирекций</label>
@@ -45,7 +45,7 @@
             <div class="forecast-new-layer-pop" data-layer-pop="solar_return">
                 <label class="forecast-new-layer-chip forecast-new-layer-chip--solar">
                     <input type="checkbox" data-layer-toggle="solar_return">
-                    <span>Соляр</span>
+                    <span data-i18n="common.method.solar">Соляр</span>
                 </label>
                 <div class="forecast-new-layer-popover hidden" data-layer-popover="solar_return" role="dialog" aria-label="Параметры соляра">
                     <label class="forecast-new-pop-label">Год соляра</label>
@@ -62,7 +62,7 @@
             <div class="forecast-new-layer-pop" data-layer-pop="synastry_partner">
                 <label class="forecast-new-layer-chip forecast-new-layer-chip--synastry">
                     <input type="checkbox" data-layer-toggle="synastry_partner">
-                    <span>Синастрия</span>
+                    <span data-i18n="page.chart.nav.synastry">Синастрия</span>
                 </label>
                 <div class="forecast-new-layer-popover hidden" data-layer-popover="synastry_partner" role="dialog" aria-label="Партнёр для синастрии">
                     <div class="forecast-new-synastry-mode" role="tablist" aria-label="Источник партнёра">
@@ -158,9 +158,9 @@
                 </div>
             </div>
             <div class="panel-tabs forecast-new-tabs">
-                <button class="panel-tab active" data-panel-target="natalPlanetsView">Планеты</button>
-                <button class="panel-tab" data-panel-target="natalHousesView">Дома</button>
-                <button class="panel-tab" data-panel-target="natalAspectsView">Аспекты</button>
+                <button class="panel-tab active" data-panel-target="natalPlanetsView" data-i18n="page.chart.tabs.planets">Планеты</button>
+                <button class="panel-tab" data-panel-target="natalHousesView" data-i18n="page.chart.tabs.houses">Дома</button>
+                <button class="panel-tab" data-panel-target="natalAspectsView" data-i18n="page.chart.tabs.aspects">Аспекты</button>
                 <div class="forecast-new-tabs-overflow" data-tabs-overflow>
                     <button
                         type="button"
@@ -356,9 +356,9 @@
             </div>
             <div class="forecast-new-right-layer-tabs" id="rightLayerTabs"></div>
             <div class="panel-tabs forecast-new-tabs">
-                <button class="panel-tab active" data-panel-target="progPlanetsView">Планеты</button>
-                <button class="panel-tab" data-panel-target="progHousesView">Дома</button>
-                <button class="panel-tab" data-panel-target="progAspectsView">Аспекты</button>
+                <button class="panel-tab active" data-panel-target="progPlanetsView" data-i18n="page.chart.tabs.planets">Планеты</button>
+                <button class="panel-tab" data-panel-target="progHousesView" data-i18n="page.chart.tabs.houses">Дома</button>
+                <button class="panel-tab" data-panel-target="progAspectsView" data-i18n="page.chart.tabs.aspects">Аспекты</button>
                 <div class="forecast-new-tabs-overflow" data-tabs-overflow>
                     <button
                         type="button"
@@ -414,6 +414,6 @@
         </aside>
     </main>
 
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=17e376d673e6"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=e51fc5a80c7c"></script>
 </body>
 </html>
