@@ -243,6 +243,16 @@
     transition: background var(--transition), border-color var(--transition), color var(--transition);
 }
 
+.forecast-new-add-layer--compact .forecast-new-add-layer-toggle {
+    width: 30px;
+    padding: 0;
+    font-size: 16px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .forecast-new-add-layer-toggle:hover,
 .forecast-new-add-layer-toggle[aria-expanded="true"] {
     background: #fff;
@@ -1396,7 +1406,7 @@
     top: 82px;
     left: 10px;
     right: 10px;
-    z-index: 70;
+    z-index: 150;
     margin: 0;
     padding: 12px;
     border: 1px solid rgba(30, 58, 95, 0.1);

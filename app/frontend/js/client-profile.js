@@ -172,7 +172,6 @@ function cacheElements() {
     refs.profileBirth   = document.getElementById('profileBirth');
     refs.profileTags    = document.getElementById('profileTags');
     refs.openChartBtn   = document.getElementById('openChartBtn');
-    refs.openForecastBtn = document.getElementById('openForecastBtn');
     refs.startCallBtn   = document.getElementById('startCallBtn');
     refs.editClientBtn  = document.getElementById('editClientBtn');
 
@@ -188,8 +187,6 @@ function cacheElements() {
     refs.relatedPeopleEmpty  = document.getElementById('relatedPeopleEmpty');
     refs.addRelatedPersonBtn = document.getElementById('addRelatedPersonBtn');
     refs.linkExistingPersonBtn = document.getElementById('linkExistingPersonBtn');
-    refs.solarReturnsList    = document.getElementById('solarReturnsList');
-    refs.solarReturnsEmpty   = document.getElementById('solarReturnsEmpty');
     refs.consultationsList   = document.getElementById('consultationsList');
     refs.consultationsEmpty  = document.getElementById('consultationsEmpty');
     refs.filterTabs          = document.getElementById('consultationFilterTabs');
@@ -271,7 +268,6 @@ function cacheElements() {
 
 function bindPageEvents() {
     refs.openChartBtn?.addEventListener('click', openChart);
-    refs.openForecastBtn?.addEventListener('click', () => openForecast());
     refs.linkChartBtn?.addEventListener('click', openLinkChartDialog);
     refs.linkChartClose?.addEventListener('click', closeLinkChartDialog);
     refs.linkChartCancel?.addEventListener('click', closeLinkChartDialog);
@@ -329,19 +325,6 @@ function bindPageEvents() {
         const deleteBtn = e.target.closest('[data-action="delete-related-person"]');
         if (deleteBtn) {
             await deleteRelatedPerson(deleteBtn.dataset.relatedUserId);
-        }
-    });
-
-    refs.solarReturnsList?.addEventListener('click', async (e) => {
-        const openBtn = e.target.closest('[data-action="open-saved-chart"]');
-        if (openBtn) {
-            await openSavedChart(openBtn.dataset.chartType, openBtn.dataset.chartPayload);
-            return;
-        }
-
-        const renameBtn = e.target.closest('[data-action="rename-saved-chart"]');
-        if (renameBtn) {
-            await renameSavedChart(renameBtn.dataset.chartType, renameBtn.dataset.chartId);
         }
     });
 
@@ -423,7 +406,6 @@ function renderAll(data) {
     renderStats(data.stats);
     loadAndRenderLinkedCharts(data.user.person_id);
     renderRelatedPeople(relatedPeople);
-    renderSavedCharts(data.saved_charts || data.solar_returns || []);
     renderInsights(data.aggregated_key_points);
     renderConsultations();
     renderRecordings(data.call_sessions);
@@ -652,181 +634,6 @@ function renderRelatedPeople(items) {
             </article>
         `;
     }).join('');
-}
-
-function normalizeSavedChart(item) {
-    if (item?.chart_type) return item;
-    return {
-        ...item,
-        id: item?.solar_id,
-        chart_type: 'solar_return',
-        target_date: item?.solar_datetime ? item.solar_datetime.split('T')[0] : null,
-        datetime: item?.solar_datetime,
-    };
-}
-
-function getSavedChartDefaultName(chart) {
-    if (chart?.chart_type === 'solar_return') {
-        return t('page.clientProfile.savedCharts.defaultSolarName', { year: chart?.year || '' });
-    }
-    if (chart?.chart_type === 'forecast') return t('page.clientProfile.savedCharts.defaultForecastName');
-    if (chart?.chart_type === 'progression') return t('page.clientProfile.savedCharts.defaultProgressionName');
-    if (chart?.chart_type === 'direction') return t('page.clientProfile.savedCharts.defaultDirectionName');
-    return t('page.clientProfile.savedCharts.defaultName');
-}
-
-function getSavedChartTypeLabel(chart) {
-    if (chart?.chart_type === 'solar_return') return t('page.clientProfile.savedCharts.types.solar_return');
-    if (chart?.chart_type === 'forecast') return t('page.clientProfile.savedCharts.types.forecast');
-    if (chart?.chart_type === 'progression') return t('page.clientProfile.savedCharts.types.progression');
-    if (chart?.chart_type === 'direction') return t('page.clientProfile.savedCharts.types.direction');
-    return t('page.clientProfile.savedCharts.types.chart');
-}
-
-function renderSavedCharts(items) {
-    if (!refs.solarReturnsList || !refs.solarReturnsEmpty) return;
-    const charts = (items || []).map(normalizeSavedChart);
-
-    if (charts.length === 0) {
-        refs.solarReturnsList.innerHTML = '';
-        refs.solarReturnsEmpty.classList.remove('hidden');
-        return;
-    }
-
-    refs.solarReturnsEmpty.classList.add('hidden');
-    refs.solarReturnsList.innerHTML = charts.map((chart) => {
-        const dateStr = chart.datetime
-            ? formatDateTime(chart.datetime)
-            : (chart.target_date ? formatDate(chart.target_date) : '');
-        const meta = [
-            getSavedChartTypeLabel(chart),
-            chart.year,
-            chart.location_name,
-            dateStr,
-        ].filter(Boolean).join(' · ');
-        const payload = encodeURIComponent(JSON.stringify({
-            type: chart.chart_type,
-            year: chart.year,
-            targetDate: chart.target_date,
-            targetTime: chart.target_time,
-            timezone: chart.timezone,
-            directionType: chart.direction_type,
-            urlPath: chart.url_path,
-        }));
-
-        return `
-            <article class="profile-solar-card">
-                <div class="profile-solar-main">
-                    <h3 class="profile-solar-name">${escapeHtml(chart.name || getSavedChartDefaultName(chart))}</h3>
-                    <p class="profile-solar-meta">${escapeHtml(meta || t('common.notAvailable'))}</p>
-                </div>
-                <div class="profile-solar-actions">
-                    <button class="btn-new btn-sm" type="button" data-action="open-saved-chart" data-chart-type="${escapeHtml(chart.chart_type)}" data-chart-payload="${escapeHtml(payload)}">${escapeHtml(t('page.clientProfile.savedCharts.open'))}</button>
-                    <button class="btn-logout btn-sm" type="button" data-action="rename-saved-chart" data-chart-type="${escapeHtml(chart.chart_type)}" data-chart-id="${escapeHtml(chart.id)}" data-saved-link="${chart.url_path ? 'true' : 'false'}">${escapeHtml(t('page.clientProfile.savedCharts.rename'))}</button>
-                </div>
-            </article>`;
-    }).join('');
-}
-
-async function renameSavedChart(chartType, chartId) {
-    if (!chartId || !profileData) return;
-    const chart = (profileData.saved_charts || profileData.solar_returns || [])
-        .map(normalizeSavedChart)
-        .find((item) => String(item.id) === String(chartId));
-    const currentName = chart?.name || '';
-    const nextName = window.prompt(t('page.clientProfile.savedCharts.namePrompt'), currentName);
-    if (nextName === null) return;
-
-    try {
-        const endpoint = chartType === 'solar_return'
-            ? `/solar/${encodeURIComponent(chartId)}`
-            : chartType === 'progression'
-                ? `/progressions/${encodeURIComponent(chartId)}`
-                : `/directions/${encodeURIComponent(chartId)}`;
-        const res = await apiFetch(`${API_BASE}${endpoint}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: nextName }),
-        });
-        if (!res.ok) {
-            const detail = await res.json().catch(() => ({}));
-            throw new Error(detail.detail || t('page.clientProfile.savedCharts.renameFailed'));
-        }
-        showToast(t('page.clientProfile.savedCharts.renamed'), 'success');
-        await loadProfile();
-    } catch (err) {
-        showToast(t('common.errorWithMessage', { message: err.message }), 'error');
-    }
-}
-
-async function openSavedChart(chartType, encodedPayload) {
-    const payload = JSON.parse(decodeURIComponent(encodedPayload || '%7B%7D'));
-    if (payload.urlPath) {
-        window.AstroAPI.saveNavigationState?.({
-            sourceView: 'client-profile',
-            sourceUrl: window.AstroAPI.buildClientProfileUrl?.(userId) || `/client/${encodeURIComponent(userId)}`,
-            clientUserId: String(userId),
-            partnerUserId: null,
-        });
-        window.showPageLoader?.();
-        window.location.href = payload.urlPath;
-        return;
-    }
-    if (chartType !== 'solar_return') {
-        const params = new URLSearchParams();
-        if (payload.targetDate) params.set('date', payload.targetDate);
-        if (payload.targetTime) params.set('time', String(payload.targetTime).slice(0, 8));
-        params.set('layer', chartType === 'direction' ? 'direction' : 'progression');
-        if (payload.directionType) params.set('directionType', payload.directionType);
-        window.AstroAPI.saveNavigationState?.({
-            sourceView: 'client-profile',
-            sourceUrl: window.AstroAPI.buildClientProfileUrl?.(userId) || `/client/${encodeURIComponent(userId)}`,
-            clientUserId: String(userId),
-            partnerUserId: null,
-        });
-        window.showPageLoader?.();
-        window.location.href = `/forecast-new.html?${params.toString()}`;
-        return;
-    }
-    if (!payload.year) return;
-    try {
-        const [natalRes, solarRes] = await Promise.all([
-            apiFetch(`${API_BASE}/natal/${userId}`),
-            apiFetch(`${API_BASE}/solar/${userId}/${encodeURIComponent(payload.year)}`),
-        ]);
-        if (!natalRes.ok) throw new Error(t('page.clients.errors.chartNotFound'));
-        if (!solarRes.ok) throw new Error(t('page.clientProfile.savedCharts.openFailed'));
-
-        const natalData = await natalRes.json();
-        const solarData = await solarRes.json();
-        window.AstroAPI.saveChartToSession(natalData);
-        window.AstroAPI.saveFormData(window.AstroAPI.chartToFormData(natalData));
-        window.AstroAPI.saveNavigationState?.({
-            sourceView: 'client-profile',
-            sourceUrl: window.AstroAPI.buildClientProfileUrl?.(userId) || `/client/${encodeURIComponent(userId)}`,
-            clientUserId: String(userId),
-            partnerUserId: null,
-        });
-
-        const solarInfo = solarData.solar_info || {};
-        const location = solarInfo.location || {};
-        sessionStorage.setItem('solarReturnData', JSON.stringify(solarData));
-
-        if (Number.isFinite(Number(location.latitude)) && Number.isFinite(Number(location.longitude))) {
-            localStorage.setItem('solarLocation', JSON.stringify({
-                name: location.name || '',
-                lat: Number(location.latitude),
-                lon: Number(location.longitude),
-                sourceId: '',
-                timezone: solarInfo.timezone || '',
-            }));
-        }
-
-        window.showPageLoader?.();
-        window.location.href = '/solar.html';
-    } catch (err) {
-        showToast(t('common.errorWithMessage', { message: err.message }), 'error');
-    }
 }
 
 function initRelatedPeoplePicker() {
@@ -1111,26 +918,6 @@ async function retryProcessing(sessionId, btn) {
 /* ─── Navigation actions ─────────────────────────────────────────────────── */
 
 async function openChart() {
-    try {
-        const res = await apiFetch(`${API_BASE}/natal/${userId}`);
-        if (!res.ok) throw new Error(t('page.clients.errors.chartNotFound'));
-        const chartData = await res.json();
-        window.AstroAPI.saveChartToSession(chartData);
-        window.AstroAPI.saveFormData(window.AstroAPI.chartToFormData(chartData));
-        window.AstroAPI.saveNavigationState?.({
-            sourceView: 'client-profile',
-            sourceUrl: window.AstroAPI.buildClientProfileUrl?.(userId) || `/client/${encodeURIComponent(userId)}`,
-            clientUserId: String(userId),
-            partnerUserId: null,
-        });
-        window.showPageLoader?.();
-        window.location.href = '/chart.html';
-    } catch (err) {
-        showToast(t('common.errorWithMessage', { message: err.message }), 'error');
-    }
-}
-
-async function openForecast() {
     try {
         const res = await apiFetch(`${API_BASE}/natal/${userId}`);
         if (!res.ok) throw new Error(t('page.clients.errors.chartNotFound'));
@@ -1609,21 +1396,44 @@ function renderLinkedChartsList(charts) {
         const place = c.place || '';
         const meta = [date, place].filter(Boolean).join(' · ');
         const isCurrentChart = String(c.chart_id) === String(userId);
-        return `<div class="profile-linked-chart-item" data-chart-id="${escapeHtml(String(c.chart_id))}">
+        const cls = `profile-linked-chart-item${isCurrentChart ? ' is-current' : ' is-clickable'}`;
+        const attrs = isCurrentChart
+            ? ''
+            : ` role="button" tabindex="0" data-action="open-linked-chart"`;
+        return `<div class="${cls}" data-chart-id="${escapeHtml(String(c.chart_id))}"${attrs}>
             <div class="profile-linked-chart-info">
                 <span class="profile-linked-chart-title">${escapeHtml(c.display_title)}</span>
                 ${meta ? `<span class="profile-linked-chart-meta">${escapeHtml(meta)}</span>` : ''}
             </div>
             <div class="profile-linked-chart-actions">
-                ${!isCurrentChart ? `<a href="/client/${escapeHtml(String(c.chart_id))}" class="btn-logout btn-sm">${escapeHtml(t('page.clientProfile.linkedCharts.open'))}</a>` : ''}
                 ${c.link_source === 'm2m' ? `<button class="btn-logout btn-sm" type="button" data-action="unlink-chart" data-chart-id="${escapeHtml(String(c.chart_id))}">${escapeHtml(t('page.clientProfile.linkedCharts.unlink'))}</button>` : ''}
             </div>
         </div>`;
     }).join('');
 
     refs.linkedChartsList.querySelectorAll('[data-action="unlink-chart"]').forEach((btn) => {
-        btn.addEventListener('click', () => unlinkChart(btn.dataset.chartId));
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            unlinkChart(btn.dataset.chartId);
+        });
     });
+
+    refs.linkedChartsList.querySelectorAll('[data-action="open-linked-chart"]').forEach((card) => {
+        const open = () => openLinkedChart(card.dataset.chartId);
+        card.addEventListener('click', open);
+        card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                open();
+            }
+        });
+    });
+}
+
+function openLinkedChart(chartId) {
+    if (!chartId) return;
+    window.showPageLoader?.();
+    window.location.href = `/client/${encodeURIComponent(chartId)}`;
 }
 
 async function unlinkChart(chartId) {

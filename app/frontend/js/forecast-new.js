@@ -314,6 +314,7 @@
         initRenderers();
         configureForecastNavigation();
         bindEvents();
+        bindSaveChartModal();
         bindLocationAutocomplete();
         bindNatalLocationAutocomplete();
         bindSolarLocationAutocomplete();
@@ -374,6 +375,8 @@
             'showWheelStationaryToggle', 'showWheelDegreeToggle',
             'angleAscDscBoldToggle', 'angleMcIcBoldToggle',
             'showSpeedToggle', 'showStationaryToggle',
+            'saveChartBackdrop', 'saveChartDialog', 'saveChartForm',
+            'saveChartClose', 'saveChartCancel', 'saveChartSubmit', 'saveChartError', 'saveChartTitleInput',
         ].forEach((id) => {
             refs[id] = document.getElementById(id);
         });
@@ -3460,14 +3463,20 @@
                 </button>
             `;
         }).join('');
-        refs.rightLayerTabs.innerHTML = `
-            ${activeTabs}
-            <span class="forecast-new-add-layer">
-                <button type="button" class="forecast-new-add-layer-toggle" data-add-layer-toggle aria-haspopup="menu" aria-expanded="false">+ ${t('page.chart.actions.addLayer')}</button>
+        const allLayersActive = state.activeLayers.length >= LAYER_ORDER.length;
+        const compact = state.activeLayers.length > 0;
+        const addLayerLabel = t('page.chart.actions.addLayer');
+        const addLayerMarkup = allLayersActive ? '' : `
+            <span class="forecast-new-add-layer${compact ? ' forecast-new-add-layer--compact' : ''}">
+                <button type="button" class="forecast-new-add-layer-toggle" data-add-layer-toggle aria-haspopup="menu" aria-expanded="false"${compact ? ` aria-label="${escapeHtml(addLayerLabel)}" title="${escapeHtml(addLayerLabel)}"` : ''}>${compact ? '+' : `+ ${addLayerLabel}`}</button>
                 <span class="forecast-new-add-layer-menu hidden" data-add-layer-menu role="menu">
                     ${layerButtons}
                 </span>
             </span>
+        `;
+        refs.rightLayerTabs.innerHTML = `
+            ${activeTabs}
+            ${addLayerMarkup}
         `;
     }
 
@@ -4371,46 +4380,77 @@
         return t('page.chart.actions.saveSourceChartDefaultTitle', { date: date || '' }).trim();
     }
 
-    async function saveCurrentSourceAsChart() {
-        const defaultTitle = defaultSourceChartTitle();
-        const title = window.prompt(t('page.chart.actions.saveSourceChartPromptTitle'), defaultTitle);
-        if (title === null) return;
-        const cleanedTitle = String(title || '').trim();
-        if (!cleanedTitle) {
-            window.alert(t('page.chart.actions.saveSourceChartTitleRequired'));
-            return;
-        }
-        const chartKind = window.prompt(t('page.chart.actions.saveSourceChartKindPrompt'), 'birth');
-        if (chartKind === null) return;
+    function openSaveChartModal() {
+        if (!refs.saveChartDialog) return;
+        if (refs.saveChartTitleInput) refs.saveChartTitleInput.value = defaultSourceChartTitle();
+        if (refs.saveChartError) { refs.saveChartError.textContent = ''; refs.saveChartError.classList.add('hidden'); }
+        setSaveChartSubmitting(false);
+        refs.saveChartBackdrop?.classList.remove('hidden');
+        refs.saveChartDialog.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        refs.saveChartTitleInput?.focus();
+    }
 
-        refs.saveSourceChartBtn.disabled = true;
-        try {
-            const saved = await apiPost('/charts', buildCurrentSourceChartPayload({
-                title: cleanedTitle,
-                chartKind: String(chartKind || 'birth').trim() || 'birth',
-            }));
-            const resp = await apiGet(`/natal/${encodeURIComponent(String(saved.chart_id || saved.user_id))}`);
-            state.userId = resp.user_id || saved.chart_id || saved.user_id;
-            state.natalData = resp;
-            state.natalWheelData = window.NatalWheelData?.prepareNatalWheelData
-                ? window.NatalWheelData.prepareNatalWheelData(resp, { houseSystem: resp.birth_data?.house_system || undefined })
-                : resp;
-            window.AstroAPI?.saveChartToSession?.(resp);
-            window.AstroAPI?.saveFormData?.(window.AstroAPI.chartToFormData?.(resp));
-            window.AstroAPI?.saveNavigationState?.({
-                sourceView: 'forecast-new',
-                sourceUrl: `/forecast-new.html${window.location.search || ''}`,
-                clientUserId: String(state.userId),
-                partnerUserId: null,
-            });
-            localStorage.setItem('currentUserId', String(state.userId));
-            window.alert(t('page.chart.actions.saveSourceChartSaved'));
-            window.location.reload();
-        } catch (error) {
-            window.alert(t('page.chart.actions.saveSourceChartError', { error: error.message }));
-        } finally {
-            refs.saveSourceChartBtn.disabled = false;
-        }
+    function closeSaveChartModal() {
+        refs.saveChartBackdrop?.classList.add('hidden');
+        refs.saveChartDialog?.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    function setSaveChartSubmitting(isSubmitting) {
+        if (!refs.saveChartSubmit) return;
+        refs.saveChartSubmit.disabled = isSubmitting;
+        refs.saveChartSubmit.querySelector('.btn-text')?.classList.toggle('hidden', isSubmitting);
+        refs.saveChartSubmit.querySelector('.btn-loader')?.classList.toggle('hidden', !isSubmitting);
+    }
+
+    function bindSaveChartModal() {
+        refs.saveChartClose?.addEventListener('click', closeSaveChartModal);
+        refs.saveChartCancel?.addEventListener('click', closeSaveChartModal);
+        refs.saveChartBackdrop?.addEventListener('click', closeSaveChartModal);
+        refs.saveChartForm?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = String(refs.saveChartTitleInput?.value || '').trim();
+            if (!title) {
+                if (refs.saveChartError) {
+                    refs.saveChartError.textContent = t('page.chart.actions.saveSourceChartTitleRequired');
+                    refs.saveChartError.classList.remove('hidden');
+                }
+                return;
+            }
+            setSaveChartSubmitting(true);
+            if (refs.saveChartError) refs.saveChartError.classList.add('hidden');
+            try {
+                const saved = await apiPost('/charts', buildCurrentSourceChartPayload({ title, chartKind: 'birth' }));
+                const resp = await apiGet(`/natal/${encodeURIComponent(String(saved.chart_id || saved.user_id))}`);
+                state.userId = resp.user_id || saved.chart_id || saved.user_id;
+                state.natalData = resp;
+                state.natalWheelData = window.NatalWheelData?.prepareNatalWheelData
+                    ? window.NatalWheelData.prepareNatalWheelData(resp, { houseSystem: resp.birth_data?.house_system || undefined })
+                    : resp;
+                window.AstroAPI?.saveChartToSession?.(resp);
+                window.AstroAPI?.saveFormData?.(window.AstroAPI.chartToFormData?.(resp));
+                window.AstroAPI?.saveNavigationState?.({
+                    sourceView: 'forecast-new',
+                    sourceUrl: `/forecast-new.html${window.location.search || ''}`,
+                    clientUserId: String(state.userId),
+                    partnerUserId: null,
+                });
+                localStorage.setItem('currentUserId', String(state.userId));
+                closeSaveChartModal();
+                window.location.reload();
+            } catch (error) {
+                if (refs.saveChartError) {
+                    refs.saveChartError.textContent = t('page.chart.actions.saveSourceChartError', { error: error.message });
+                    refs.saveChartError.classList.remove('hidden');
+                }
+                setSaveChartSubmitting(false);
+            }
+        });
+    }
+
+    function saveCurrentSourceAsChart() {
+        openSaveChartModal();
     }
 
     function schedulePersist() {

@@ -321,15 +321,15 @@
     margin-bottom: 0;
 }
 
-/* ── Saved Solar Returns ────────────────────────────────────────────────── */
+/* ── Linked Charts ──────────────────────────────────────────────────────── */
 
-.profile-solar-list {
+.profile-linked-charts-list {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
-.profile-solar-card {
+.profile-linked-chart-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -338,26 +338,48 @@
     border: 1px solid rgba(30, 58, 95, 0.08);
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.58);
+    transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
 }
 
-.profile-solar-main {
+.profile-linked-chart-item.is-clickable {
+    cursor: pointer;
+}
+
+.profile-linked-chart-item.is-clickable:hover {
+    border-color: rgba(184, 147, 90, 0.45);
+    background: rgba(255, 255, 255, 0.85);
+    transform: translateY(-1px);
+}
+
+.profile-linked-chart-item.is-clickable:focus-visible {
+    outline: 2px solid rgba(184, 147, 90, 0.55);
+    outline-offset: 2px;
+}
+
+.profile-linked-chart-item.is-current {
+    border-style: dashed;
+    opacity: 0.8;
+}
+
+.profile-linked-chart-info {
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
-.profile-solar-name {
-    margin: 0 0 4px;
+.profile-linked-chart-title {
     font-size: 15px;
     font-weight: 600;
     color: var(--text-primary);
 }
 
-.profile-solar-meta {
-    margin: 0;
+.profile-linked-chart-meta {
     font-size: 12px;
     color: var(--text-secondary);
 }
 
-.profile-solar-actions {
+.profile-linked-chart-actions {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -367,12 +389,12 @@
 }
 
 @media (max-width: 640px) {
-    .profile-solar-card {
+    .profile-linked-chart-item {
         align-items: flex-start;
         flex-direction: column;
     }
 
-    .profile-solar-actions {
+    .profile-linked-chart-actions {
         justify-content: flex-start;
     }
 }
