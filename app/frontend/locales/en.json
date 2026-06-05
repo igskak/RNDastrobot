@@ -248,7 +248,9 @@
         "phase": "Phase",
         "orb": "Orb",
         "manualPartner": "Partner (manual)"
-      }
+      },
+      "pageTitle": "Forecast",
+      "unknownClient": "Client"
     },
     "plan": {
       "names": {

@@ -1332,8 +1332,8 @@
 
     function updateHeaderInfo() {
         const birth = state.natalData?.birth_data || {};
-        const name = [birth.first_name, birth.last_name].filter(Boolean).join(' ').trim() || 'Клиент';
-        refs.forecastNewTitle.textContent = `${name} · Прогностика New`;
+        const name = [birth.first_name, birth.last_name].filter(Boolean).join(' ').trim() || t('page.forecastNew.unknownClient');
+        refs.forecastNewTitle.textContent = `${name} · ${t('page.forecastNew.pageTitle')}`;
         refs.forecastNewSubtitle.textContent = [
             birth.date,
             birth.time,

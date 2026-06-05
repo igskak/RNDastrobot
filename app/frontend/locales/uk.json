@@ -248,7 +248,9 @@
         "phase": "Фаза",
         "orb": "Орб",
         "manualPartner": "Партнер (вручну)"
-      }
+      },
+      "pageTitle": "Прогностика",
+      "unknownClient": "Клієнт"
     },
     "plan": {
       "names": {
