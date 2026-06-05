@@ -514,7 +514,7 @@
         "openMenu": "Open chart actions",
         "openSynastry": "Synastry",
         "saveChart": "Save chart",
-        "saveSourceChart": "Save source as chart",
+        "saveSourceChart": "Save chart",
         "saveSourceChartPromptTitle": "Chart title",
         "saveSourceChartKindPrompt": "Chart kind: birth, event, company, horary, relocation, solar_point, test, other",
         "saveSourceChartTitleRequired": "Please enter a chart title.",

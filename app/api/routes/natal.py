@@ -782,6 +782,7 @@ def get_user_profile(
         return {
             "user": {
                 "user_id": str(user.user_id),
+                "person_id": str(user.person_id) if user.person_id else None,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
                 "birth_date": user.birth_date.isoformat() if user.birth_date else None,

@@ -233,6 +233,9 @@
         if (refs.openSynastryBtn) {
             refs.openSynastryBtn.disabled = !state.userId;
         }
+        if (refs.openClientProfileBtn) {
+            refs.openClientProfileBtn.disabled = !state.userId;
+        }
         window.AstroAPI?.patchNavigationState?.({
             currentView: 'forecast-new',
             clientUserId: state.userId ? String(state.userId) : navState.clientUserId,
@@ -341,7 +344,7 @@
         [
             'pageLoader', 'forecastNewLayout', 'forecastNewError', 'forecastNewErrorMsg',
             'forecastNewBackBtn', 'forecastNewTitle', 'forecastNewSubtitle', 'openNatalBtn', 'openNatalTablesBtn', 'openSynastryBtn',
-            'saveSourceChartBtn', 'forecastNewActionsToggle', 'forecastNewActionsMenu',
+            'openClientProfileBtn', 'saveSourceChartBtn', 'forecastNewActionsToggle', 'forecastNewActionsMenu',
             'forecastNewDirectionTypeSelect',
             'forecastNewNatalPanel', 'forecastNewProgPanel',
             'natalPanelMeta', 'prognosticPanelTitle', 'prognosticPanelMeta',
@@ -459,6 +462,11 @@
             window.AstroAPI?.saveChartToSession?.(state.natalData);
             window.AstroAPI?.saveFormData?.(window.AstroAPI.chartToFormData(state.natalData));
             navigateFromForecast(getForecastSynastryUrl() || '/chart.html?open=synastry');
+        });
+
+        refs.openClientProfileBtn?.addEventListener('click', () => {
+            if (!state.userId) return;
+            window.location.href = `/client/${encodeURIComponent(state.userId)}`;
         });
         refs.forecastSavedChartsBtn?.addEventListener('click', (event) => {
             event.stopPropagation();

@@ -515,7 +515,7 @@
         "openSynastry": "Синастрія",
         "resetDefaults": "Скинути локальні налаштування",
         "saveChart": "Зберегти карту",
-        "saveSourceChart": "Зберегти джерело як карту",
+        "saveSourceChart": "Зберегти карту",
         "saveDefaults": "Зберегти як локальні налаштування",
         "saveSourceChartPromptTitle": "Назва карти",
         "saveSourceChartKindPrompt": "Тип карти: birth, event, company, horary, relocation, solar_point, test, other",

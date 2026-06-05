@@ -514,7 +514,7 @@
         "openMenu": "Открыть действия для карты",
         "openSynastry": "Синастрия",
         "saveChart": "Сохранить карту",
-        "saveSourceChart": "Сохранить источник как карту",
+        "saveSourceChart": "Сохранить карту",
         "saveSourceChartPromptTitle": "Название карты",
         "saveSourceChartKindPrompt": "Тип карты: birth, event, company, horary, relocation, solar_point, test, other",
         "saveSourceChartTitleRequired": "Укажите название карты.",
