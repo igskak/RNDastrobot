@@ -340,43 +340,43 @@
       },
       "options": {
         "orientationAries": "Aries 0°",
-      "orientationAsc": "Ascendant",
-      "showApplyingSeparating": "Show applying / separating aspects",
-      "showSpeed": "Show speed",
-      "showStationary": "Show stationary",
-      "showAspectText": "Show aspect name as text"
-    },
+        "orientationAsc": "Ascendant",
+        "showApplyingSeparating": "Show applying / separating aspects",
+        "showSpeed": "Show speed",
+        "showStationary": "Show stationary",
+        "showAspectText": "Show aspect name as text"
+      },
       "orbs": {
         "actions": {
           "applyNatal": "Apply natal orbs"
         },
-      "copy": "Keep separate natal and prognostic orb presets in one compact matrix. Prognostic applies to transits, progressions, directions, and solar.",
-      "hints": {
-        "natal": "Natal orbs are used for natal aspect calculations.",
-        "prognostic": "Prognostic orbs are used for transits, progressions, directions, and solar calculations.",
-        "synastry": "Synastry orbs are used for cross-aspects between two charts. Narrow them to reduce the number of inter-chart aspects."
-      },
-      "kicker": "Methodology",
-      "matrix": {
-        "cornerTitle": "Orb matrix by aspect and body"
-      },
-      "pairStrategy": {
-        "average": "Average",
-        "hint": "When two bodies have different orb values, choose whether aspects use the larger, smaller, or average orb.",
-        "label": "Orb used in aspects",
-        "larger": "Larger",
-        "smaller": "Smaller"
-      },
-      "tabs": {
-        "ariaLabel": "Orb profiles",
-        "natal": "Natal",
-        "prognostic": "Prognostic",
-        "synastry": "Synastry"
-      },
-      "viewMode": {
-        "ariaLabel": "Orb table view",
-        "compact": "Compact",
-        "default": "Default"
+        "copy": "Keep separate natal and prognostic orb presets in one compact matrix. Prognostic applies to transits, progressions, directions, and solar.",
+        "hints": {
+          "natal": "Natal orbs are used for natal aspect calculations.",
+          "prognostic": "Prognostic orbs are used for transits, progressions, directions, and solar calculations.",
+          "synastry": "Synastry orbs are used for cross-aspects between two charts. Narrow them to reduce the number of inter-chart aspects."
+        },
+        "kicker": "Methodology",
+        "matrix": {
+          "cornerTitle": "Orb matrix by aspect and body"
+        },
+        "pairStrategy": {
+          "average": "Average",
+          "hint": "When two bodies have different orb values, choose whether aspects use the larger, smaller, or average orb.",
+          "label": "Orb used in aspects",
+          "larger": "Larger",
+          "smaller": "Smaller"
+        },
+        "tabs": {
+          "ariaLabel": "Orb profiles",
+          "natal": "Natal",
+          "prognostic": "Prognostic",
+          "synastry": "Synastry"
+        },
+        "viewMode": {
+          "ariaLabel": "Orb table view",
+          "compact": "Compact",
+          "default": "Default"
         },
         "title": "Orb profiles"
       },
@@ -453,9 +453,9 @@
         "title": "Visual palette"
       },
       "toasts": {
-      "loadFailed": "Failed to load general settings",
-      "orbsCopied": "Natal orbs copied into the prognostic profile",
-      "reloadFailed": "Failed to reload settings",
+        "loadFailed": "Failed to load general settings",
+        "orbsCopied": "Natal orbs copied into the prognostic profile",
+        "reloadFailed": "Failed to reload settings",
         "restored": "Standard defaults loaded into the form",
         "saveFailed": "Failed to save general settings",
         "saved": "General settings saved"
@@ -490,7 +490,13 @@
         "openMenu": "Open chart actions",
         "openSynastry": "Synastry",
         "saveChart": "Save chart",
-        "saveSourceChart": "Save source as chart"
+        "saveSourceChart": "Save source as chart",
+        "saveSourceChartPromptTitle": "Chart title",
+        "saveSourceChartKindPrompt": "Chart kind: birth, event, company, horary, relocation, solar_point, test, other",
+        "saveSourceChartTitleRequired": "Please enter a chart title.",
+        "saveSourceChartSaved": "Chart saved to the library.",
+        "saveSourceChartError": "Could not save chart: {error}",
+        "saveSourceChartDefaultTitle": "Chart {date}"
       },
       "aspects": {
         "settings": {
@@ -766,85 +772,85 @@
         "week": "Week"
       }
     },
-  "clients": {
-    "hero": {
-      "eyebrow": "Astrologer workspace",
-      "kicker": "A calmer way to organize your practice",
-      "title": "Run your practice in a clear, calm workspace.",
-      "subtitle": "Keep charts, notes, and next steps easy to return to whenever someone comes back for another session.",
-      "badgesAriaLabel": "Workspace highlights",
-      "badges": {
-        "private": "Private profiles and notes",
-        "history": "Saved chart history",
-        "reports": "Materials kept in one place"
+    "clients": {
+      "hero": {
+        "eyebrow": "Astrologer workspace",
+        "kicker": "A calmer way to organize your practice",
+        "title": "Run your practice in a clear, calm workspace.",
+        "subtitle": "Keep charts, notes, and next steps easy to return to whenever someone comes back for another session.",
+        "badgesAriaLabel": "Workspace highlights",
+        "badges": {
+          "private": "Private profiles and notes",
+          "history": "Saved chart history",
+          "reports": "Materials kept in one place"
+        },
+        "aside": {
+          "label": "Practice rhythm",
+          "title": "Your practice should feel as composed as your readings.",
+          "subtitle": "This space supports continuity, trust, and quick access whenever someone returns.",
+          "point1": "See profiles and notes at a glance without losing warmth or clarity.",
+          "point2": "Open charts and context quickly so follow-up sessions stay seamless.",
+          "point3": "Keep the work organized in a way that feels steady and easy to maintain."
+        }
       },
-      "aside": {
-        "label": "Practice rhythm",
-        "title": "Your practice should feel as composed as your readings.",
-        "subtitle": "This space supports continuity, trust, and quick access whenever someone returns.",
-        "point1": "See profiles and notes at a glance without losing warmth or clarity.",
-        "point2": "Open charts and context quickly so follow-up sessions stay seamless.",
-        "point3": "Keep the work organized in a way that feels steady and easy to maintain."
-      }
-    },
-    "profile": {
-      "label": "Signed in",
-      "signedInAs": "{email}"
-    },
-    "workspace": {
-      "kicker": "Practice space",
-      "title": "Practice",
-      "subtitle": "Search, sort, and reopen past work so each person's history stays close at hand."
-    },
-    "libraryTabs": {
-      "ariaLabel": "Library sections",
-      "charts": "Charts",
-      "people": "People"
-    },
-    "chartKindFilter": {
-      "label": "Chart type",
-      "ariaLabel": "Filter charts by type",
-      "all": "All types"
-    },
-    "chartKinds": {
-      "birth": "Birth",
-      "event": "Event",
-      "company": "Company",
-      "horary": "Horary",
-      "relocation": "Relocation",
-      "solar_point": "Solar point",
-      "test": "Test",
-      "other": "Other"
-    },
-    "charts": {
-      "openWorkspace": "Open workspace"
-    },
-    "calendar": {
-      "nextMonth": "Next month",
-      "openFull": "Open full calendar",
-      "previousMonth": "Previous month"
-    },
-    "stats": {
-      "total": "Total profiles",
-      "visible": "Visible now",
-      "latest": "Latest added"
-    },
-    "actions": {
-        "confirmDelete": "Confirm?",
+      "profile": {
+        "label": "Signed in",
+        "signedInAs": "{email}"
+      },
+      "workspace": {
+        "kicker": "Practice space",
+        "title": "Practice",
+        "subtitle": "Search, sort, and reopen past work so each person's history stays close at hand."
+      },
+      "libraryTabs": {
+        "ariaLabel": "Library sections",
+        "charts": "Charts",
+        "people": "People"
+      },
+      "chartKindFilter": {
+        "label": "Chart type",
+        "ariaLabel": "Filter charts by type",
+        "all": "All types"
+      },
+      "chartKinds": {
+        "birth": "Birth",
+        "event": "Event",
+        "company": "Company",
+        "horary": "Horary",
+        "relocation": "Relocation",
+        "solar_point": "Solar point",
+        "test": "Test",
+        "other": "Other"
+      },
+      "charts": {
+        "openWorkspace": "Open workspace"
+      },
+      "calendar": {
+        "nextMonth": "Next month",
+        "openFull": "Open full calendar",
+        "previousMonth": "Previous month"
+      },
+      "stats": {
+        "total": "Total profiles",
+        "visible": "Visible now",
+        "latest": "Latest added"
+      },
+      "actions": {
+        "calendar": "Calendar",
+        "confirmDelete": "Confirm delete",
         "delete": "Delete",
-        "edit": "Edit data",
-        "open": "Open",
-        "logout": "Logout"
+        "edit": "Edit",
+        "logout": "Log out"
       },
       "counters": {
         "shown": "Shown: {shown}",
         "shownOf": "Shown: {shown} of {total}",
         "total": "Total: {total}"
-    },
-    "createFirstCard": "Create first chart",
-    "empty": "No profiles yet",
-    "emptyHint": "Start with your first chart and build a practice space that is easy to revisit for future readings.",
-    "errors": {
+      },
+      "createFirstCard": "Create first chart",
+      "empty": "No profiles yet",
+      "emptyHint": "Start with your first chart and build a practice space that is easy to revisit for future readings.",
+      "errors": {
         "chartNotFound": "Chart data not found",
         "deleteFailed": "Failed to delete profile",
         "fetchList": "Failed to load profiles list",
@@ -855,20 +861,20 @@
         "confirmDeleteHint": "Click delete again to confirm",
         "deleted": "Profile deleted",
         "updated": "Profile updated"
-    },
-    "newCard": "Add profile",
-    "noResults": "Nothing found yet",
-    "noResultsHint": "Try a different name, place, tag, or sort order to find the profile you need.",
-    "searchLabel": "Find a profile",
-    "searchAriaLabel": "Search profiles",
-    "searchPlaceholder": "Search by name/place",
-    "tagFilter": {
+      },
+      "newCard": "Add profile",
+      "noResults": "Nothing found yet",
+      "noResultsHint": "Try a different name, place, tag, or sort order to find the profile you need.",
+      "searchLabel": "Find a profile",
+      "searchAriaLabel": "Search profiles",
+      "searchPlaceholder": "Search by name/place",
+      "tagFilter": {
         "all": "All tags",
         "ariaLabel": "Filter profiles by tag",
         "label": "Tag"
       },
-    "sortLabel": "Sort order",
-    "sort": {
+      "sortLabel": "Sort order",
+      "sort": {
         "birthAsc": "Birth date oldest first",
         "birthDesc": "Birth date newest first",
         "createdAsc": "Created oldest first",
@@ -979,13 +985,6 @@
         "tomorrow": "Tomorrow",
         "openChart": "Open",
         "noAlerts": "No notable events this month"
-      },
-      "actions": {
-        "calendar": "Calendar",
-        "confirmDelete": "Confirm delete",
-        "delete": "Delete",
-        "edit": "Edit",
-        "logout": "Log out"
       }
     },
     "clientProfile": {

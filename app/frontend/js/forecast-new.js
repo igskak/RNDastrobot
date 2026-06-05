@@ -3809,19 +3809,19 @@
         const [date] = splitTargetDatetime(state.natalSelectedDateTime);
         if (name && isNatalEdited()) return `${name} · ${date}`;
         if (name) return name;
-        return `Карта ${date || ''}`.trim();
+        return t('page.chart.actions.saveSourceChartDefaultTitle', { date: date || '' }).trim();
     }
 
     async function saveCurrentSourceAsChart() {
         const defaultTitle = defaultSourceChartTitle();
-        const title = window.prompt('Название карты', defaultTitle);
+        const title = window.prompt(t('page.chart.actions.saveSourceChartPromptTitle'), defaultTitle);
         if (title === null) return;
         const cleanedTitle = String(title || '').trim();
         if (!cleanedTitle) {
-            window.alert('Укажите название карты.');
+            window.alert(t('page.chart.actions.saveSourceChartTitleRequired'));
             return;
         }
-        const chartKind = window.prompt('Тип карты: birth, event, company, horary, relocation, solar_point, test, other', 'birth');
+        const chartKind = window.prompt(t('page.chart.actions.saveSourceChartKindPrompt'), 'birth');
         if (chartKind === null) return;
 
         refs.saveSourceChartBtn.disabled = true;
@@ -3845,10 +3845,10 @@
                 partnerUserId: null,
             });
             localStorage.setItem('currentUserId', String(state.userId));
-            window.alert('Карта сохранена в библиотеке.');
+            window.alert(t('page.chart.actions.saveSourceChartSaved'));
             window.location.reload();
         } catch (error) {
-            window.alert(`Не удалось сохранить карту: ${error.message}`);
+            window.alert(t('page.chart.actions.saveSourceChartError', { error: error.message }));
         } finally {
             refs.saveSourceChartBtn.disabled = false;
         }
