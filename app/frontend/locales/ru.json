@@ -214,7 +214,8 @@
       "westShort": "З"
     },
     "brandName": "Steliara",
-    "monthLabel": "Месяц"
+    "monthLabel": "Месяц",
+    "errorGeneric": "Что-то пошло не так. Попробуйте ещё раз."
   },
   "i18n": {
     "loading": "Загрузка...",
@@ -250,7 +251,63 @@
         "manualPartner": "Партнер (вручную)"
       },
       "pageTitle": "Прогностика",
-      "unknownClient": "Клиент"
+      "unknownClient": "Клиент",
+      "loader": "Загружаем прогностику",
+      "layersAria": "Слои прогностики",
+      "backToClients": "К списку клиентов",
+      "natalPanelTitle": "Натал",
+      "birthDateTimeLabel": "Дата рождения / время",
+      "dateTimeLabel": "Дата / время",
+      "natalStepperAria": "Управление датой рождения",
+      "transitStepperAria": "Управление временем транзитов",
+      "locationPlaceholder": "Место рождения",
+      "prognosticLocationPlaceholder": "Локация",
+      "timezonePlaceholder": "Часовой пояс",
+      "tabsOverflowAria": "Дополнительные вкладки",
+      "tabs": {
+        "grid": "Таблица аспектов",
+        "configs": "Конфигурации",
+        "balances": "Балансы"
+      },
+      "view": {
+        "single": "Одно колесо",
+        "multi": "Мульти-колесо"
+      },
+      "settings": {
+        "cuspCircles": "Куспиды кругов"
+      },
+      "direction": {
+        "popoverAria": "Параметры дирекций",
+        "typeLabel": "Тип дирекций",
+        "zodiacal": "Зодиакальные",
+        "solarArc": "Солнечная дуга",
+        "naibod": "Найбод"
+      },
+      "solar": {
+        "popoverAria": "Параметры соляра",
+        "yearLabel": "Год соляра",
+        "placeLabel": "Место соляра",
+        "placePlaceholder": "Место соляра…"
+      },
+      "synastry": {
+        "popoverAria": "Партнёр для синастрии",
+        "sourceAria": "Источник партнёра",
+        "fromDb": "Из базы",
+        "manual": "Вручную",
+        "partnerOption": "— партнёр —",
+        "namePlaceholder": "Имя партнёра",
+        "dateAria": "Дата рождения партнёра",
+        "timeAria": "Время рождения партнёра",
+        "timezoneAria": "Часовой пояс партнёра",
+        "timezoneOption": "Часовой пояс",
+        "locationPlaceholder": "Место рождения",
+        "locationAria": "Место рождения партнёра",
+        "apply": "Применить"
+      },
+      "matrix": {
+        "displayShort": "П",
+        "aspectingShort": "А"
+      }
     },
     "plan": {
       "names": {
@@ -668,7 +725,8 @@
         "home": "На главную",
         "solar": "Соляр",
         "synastry": "Синастрия",
-        "tables": "Таблицы"
+        "tables": "Таблицы",
+        "forecastViewsAria": "Виды прогностики"
       },
       "settings": {
         "aspectOptions": "Параметры аспектов",
@@ -721,7 +779,8 @@
           "house": "Дом",
           "position": "Положение",
           "speed": "Скорость",
-          "symbol": "Символ"
+          "symbol": "Символ",
+          "speedHint": "Суточная скорость в % от средней. Синий — почти стационар, красный — быстрый."
         }
       },
       "tabs": {
@@ -863,7 +922,7 @@
         "visible": "Показано сейчас",
         "latest": "Последний добавленный"
       },
-      "title": "База профилей",
+      "title": "Практика — Steliara",
       "subtitle": "Профили",
       "listAriaLabel": "Список профилей",
       "newCard": "Добавить профиль",
@@ -1174,7 +1233,8 @@
         "noId": "ID профиля не указан в URL",
         "notFound": "Профиль не найден",
         "loadFailed": "Не удалось загрузить профиль"
-      }
+      },
+      "unnamed": "Профиль без имени"
     },
     "synastry": {
       "title": "Синастрия",
@@ -1405,7 +1465,8 @@
           "transitShort": "Т",
           "transitSort": "Транзит ⇅",
           "transition": "Переход",
-          "typeSort": "Тип ⇅"
+          "typeSort": "Тип ⇅",
+          "typeHint": "M — мажорный аспект · m — минорный аспект"
         },
         "empty": "Нет данных таблицы прогноза",
         "filters": {
@@ -1445,8 +1506,14 @@
       "timeline": {
         "activeNow": {
           "empty": "Рядом с сегодняшней датой точных событий нет",
-          "exactDaysAgo": "Точное событие было {days} дн. назад",
-          "exactInDays": "Точное событие через {days} дн.",
+          "exactDaysAgo": {
+            "one": "Точное событие было {days} дн. назад",
+            "other": "Точное событие было {days} дн. назад"
+          },
+          "exactInDays": {
+            "one": "Точное событие через {days} дн.",
+            "other": "Точное событие через {days} дн."
+          },
           "exactToday": "Точно сегодня",
           "title": "Активно сейчас"
         },
@@ -1532,7 +1599,7 @@
           "placeholder": "Выберите часовой пояс"
         }
       },
-      "subtitle": "Профессиональные астрологические расчеты карт на базе Swiss Ephemeris",
+      "subtitle": "Рабочее пространство астролога",
       "title": "Калькулятор натальной карты",
       "logo": "Steliara"
     },
@@ -1712,7 +1779,7 @@
       },
       "heading": "Безопасный вход",
       "subheading": "Войдите через Google или с помощью email и пароля.",
-      "divider": "или используйте email и пароль",
+      "divider": "или войдите через Google",
       "hints": {
         "capsLock": "Включен Caps Lock.",
         "emailDeliverySpamTitle": "Важно",

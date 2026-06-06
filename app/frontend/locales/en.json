@@ -214,7 +214,8 @@
       "westShort": "W"
     },
     "brandName": "Steliara",
-    "monthLabel": "Month"
+    "monthLabel": "Month",
+    "errorGeneric": "Something went wrong. Please try again."
   },
   "i18n": {
     "loading": "Loading...",
@@ -250,7 +251,63 @@
         "manualPartner": "Partner (manual)"
       },
       "pageTitle": "Forecast",
-      "unknownClient": "Client"
+      "unknownClient": "Client",
+      "loader": "Loading forecast",
+      "layersAria": "Forecast layers",
+      "backToClients": "Back to clients",
+      "natalPanelTitle": "Natal",
+      "birthDateTimeLabel": "Birth date / time",
+      "dateTimeLabel": "Date / time",
+      "natalStepperAria": "Birth date control",
+      "transitStepperAria": "Transit time control",
+      "locationPlaceholder": "Birth place",
+      "prognosticLocationPlaceholder": "Location",
+      "timezonePlaceholder": "Timezone",
+      "tabsOverflowAria": "More tabs",
+      "tabs": {
+        "grid": "Aspect grid",
+        "configs": "Configurations",
+        "balances": "Balances"
+      },
+      "view": {
+        "single": "Single wheel",
+        "multi": "Multi-wheel"
+      },
+      "settings": {
+        "cuspCircles": "Cusp circles"
+      },
+      "direction": {
+        "popoverAria": "Direction options",
+        "typeLabel": "Direction type",
+        "zodiacal": "Zodiacal",
+        "solarArc": "Solar arc",
+        "naibod": "Naibod"
+      },
+      "solar": {
+        "popoverAria": "Solar return options",
+        "yearLabel": "Solar return year",
+        "placeLabel": "Solar return place",
+        "placePlaceholder": "Solar return place…"
+      },
+      "synastry": {
+        "popoverAria": "Synastry partner",
+        "sourceAria": "Partner source",
+        "fromDb": "From database",
+        "manual": "Manual",
+        "partnerOption": "— partner —",
+        "namePlaceholder": "Partner name",
+        "dateAria": "Partner birth date",
+        "timeAria": "Partner birth time",
+        "timezoneAria": "Partner timezone",
+        "timezoneOption": "Timezone",
+        "locationPlaceholder": "Birth place",
+        "locationAria": "Partner birth place",
+        "apply": "Apply"
+      },
+      "matrix": {
+        "displayShort": "D",
+        "aspectingShort": "A"
+      }
     },
     "plan": {
       "names": {
@@ -668,7 +725,8 @@
         "home": "Home",
         "solar": "Solar return",
         "synastry": "Synastry",
-        "tables": "Tables"
+        "tables": "Tables",
+        "forecastViewsAria": "Forecast views"
       },
       "settings": {
         "aspectOptions": "Aspect options",
@@ -721,7 +779,8 @@
           "house": "House",
           "position": "Position",
           "speed": "Speed",
-          "symbol": "Symbol"
+          "symbol": "Symbol",
+          "speedHint": "Daily motion as % of average speed. Blue = near-stationary, red = fast."
         }
       },
       "tabs": {
@@ -969,7 +1028,7 @@
           "subtitle": "Update chart details and recalculate."
         }
       },
-      "title": "Profile database",
+      "title": "Practice — Steliara",
       "crm": {
         "contactHeader": "Contact details",
         "email": "Email",
@@ -1174,7 +1233,8 @@
         "noId": "No profile ID in URL",
         "notFound": "Profile not found",
         "loadFailed": "Failed to load profile"
-      }
+      },
+      "unnamed": "Unnamed profile"
     },
     "synastry": {
       "title": "Synastry",
@@ -1405,7 +1465,8 @@
           "transitShort": "T",
           "transitSort": "Transit ⇅",
           "transition": "Transition",
-          "typeSort": "Type ⇅"
+          "typeSort": "Type ⇅",
+          "typeHint": "M = major aspect · m = minor aspect"
         },
         "empty": "No forecast table data",
         "filters": {
@@ -1445,8 +1506,14 @@
       "timeline": {
         "activeNow": {
           "empty": "No exact hits near today",
-          "exactDaysAgo": "Exact {days} day(s) ago",
-          "exactInDays": "Exact in {days} day(s)",
+          "exactDaysAgo": {
+            "one": "Exact {days} day ago",
+            "other": "Exact {days} days ago"
+          },
+          "exactInDays": {
+            "one": "Exact in {days} day",
+            "other": "Exact in {days} days"
+          },
           "exactToday": "Exact today",
           "title": "Active now"
         },
@@ -1532,7 +1599,7 @@
           "placeholder": "Select timezone"
         }
       },
-      "subtitle": "Professional astrology chart calculations powered by Swiss Ephemeris",
+      "subtitle": "Astrologer workspace",
       "title": "Natal Chart Calculator",
       "logo": "Steliara"
     },
@@ -1712,7 +1779,7 @@
       },
       "heading": "Secure sign in",
       "subheading": "Continue with Google or your email and password.",
-      "divider": "or continue with email",
+      "divider": "or continue with Google",
       "hints": {
         "capsLock": "Caps Lock is on.",
         "emailDeliverySpamTitle": "Important",

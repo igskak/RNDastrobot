@@ -236,23 +236,32 @@ body.account-settings-modal-open {
 
 .account-settings-layout {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 12px;
     align-items: start;
     width: 100%;
+    min-width: 0;
 }
 
 .account-settings-sidebar {
     display: grid;
     gap: 0;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     align-items: stretch;
+    min-width: 0;
 }
 
 .account-settings-sheet {
     display: grid;
     gap: 12px;
     width: 100%;
+    min-width: 0;
+}
+
+.account-settings-sheet > .account-settings-card,
+.account-settings-sheet > .account-settings-card--details,
+.account-settings-card {
+    min-width: 0;
 }
 
 .account-settings-card,
@@ -332,9 +341,18 @@ body.account-settings-modal-open {
 .account-settings-card-head--compact {
     margin-bottom: 8px;
     display: flex;
+    flex-wrap: wrap;
     align-items: flex-start;
     justify-content: space-between;
     gap: 14px;
+}
+
+.account-settings-card-head--compact > * {
+    min-width: 0;
+}
+
+.account-settings-orb-toolbar {
+    flex-shrink: 1;
 }
 
 .account-settings-orb-toolbar {

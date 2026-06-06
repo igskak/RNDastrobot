@@ -1181,9 +1181,13 @@
     async function saveSolarChart() {
         const year = Number.parseInt(refs.solarYear.value, 10);
         const defaultName = refs.solarName.value.trim() || `Соляр ${Number.isInteger(year) ? year : ''}`.trim();
-        const name = window.prompt(t('page.clientProfile.savedCharts.namePrompt', null, 'Название карты'), defaultName);
-        if (name === null) return;
-        refs.solarName.value = name.trim();
+        const result = await window.SaveChartModal?.open({
+            defaultTitle: defaultName,
+            showTags: false,
+            showPerson: false,
+        });
+        if (!result) return;
+        refs.solarName.value = result.title.trim();
         await calculateSolar({ saveToDb: true, showSuccess: false });
         showToast(t('page.clientProfile.savedCharts.renamed', null, 'Карта сохранена'), 'success');
     }

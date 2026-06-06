@@ -1462,7 +1462,8 @@
     position: relative;
     z-index: 120;
     display: flex;
-    gap: 3px;
+    flex-wrap: wrap;
+    gap: 4px;
     padding: 6px 14px 2px;
     background: rgba(240, 237, 228, 0.52);
 }
@@ -1472,10 +1473,10 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    flex: 1;
+    flex: 0 1 auto;
     min-height: 28px;
     min-width: 0;
-    padding: 0 22px 0 8px;
+    padding: 0 22px 0 10px;
     border: 1px solid rgba(30, 58, 95, 0.12);
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.72);

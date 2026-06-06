@@ -16,5 +16,6 @@ import '../js/dispositor-chains.js';
 import '../js/aspect-phase.js';
 import '../js/prognostic-layer-normalizer.js';
 import '../js/prognostic-rings-wheel.js';
+import '../js/save-chart-modal.js';
 import '../js/solar.js';
 import '../js/forecast-nav-menu.js';

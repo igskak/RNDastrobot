@@ -214,7 +214,8 @@
       "westShort": "Зх"
     },
     "brandName": "Steliara",
-    "monthLabel": "Місяць"
+    "monthLabel": "Місяць",
+    "errorGeneric": "Щось пішло не так. Спробуйте ще раз."
   },
   "i18n": {
     "loading": "Завантаження...",
@@ -250,7 +251,63 @@
         "manualPartner": "Партнер (вручну)"
       },
       "pageTitle": "Прогностика",
-      "unknownClient": "Клієнт"
+      "unknownClient": "Клієнт",
+      "loader": "Завантажуємо прогностику",
+      "layersAria": "Шари прогностики",
+      "backToClients": "До списку клієнтів",
+      "natalPanelTitle": "Натал",
+      "birthDateTimeLabel": "Дата народження / час",
+      "dateTimeLabel": "Дата / час",
+      "natalStepperAria": "Керування датою народження",
+      "transitStepperAria": "Керування часом транзитів",
+      "locationPlaceholder": "Місце народження",
+      "prognosticLocationPlaceholder": "Локація",
+      "timezonePlaceholder": "Часовий пояс",
+      "tabsOverflowAria": "Додаткові вкладки",
+      "tabs": {
+        "grid": "Сітка аспектів",
+        "configs": "Конфігурації",
+        "balances": "Баланси"
+      },
+      "view": {
+        "single": "Одне колесо",
+        "multi": "Мульти-колесо"
+      },
+      "settings": {
+        "cuspCircles": "Куспіди кіл"
+      },
+      "direction": {
+        "popoverAria": "Параметри дирекцій",
+        "typeLabel": "Тип дирекцій",
+        "zodiacal": "Зодіакальні",
+        "solarArc": "Сонячна дуга",
+        "naibod": "Найбод"
+      },
+      "solar": {
+        "popoverAria": "Параметри соляра",
+        "yearLabel": "Рік соляра",
+        "placeLabel": "Місце соляра",
+        "placePlaceholder": "Місце соляра…"
+      },
+      "synastry": {
+        "popoverAria": "Партнер для синастрії",
+        "sourceAria": "Джерело партнера",
+        "fromDb": "З бази",
+        "manual": "Вручну",
+        "partnerOption": "— партнер —",
+        "namePlaceholder": "Ім'я партнера",
+        "dateAria": "Дата народження партнера",
+        "timeAria": "Час народження партнера",
+        "timezoneAria": "Часовий пояс партнера",
+        "timezoneOption": "Часовий пояс",
+        "locationPlaceholder": "Місце народження",
+        "locationAria": "Місце народження партнера",
+        "apply": "Застосувати"
+      },
+      "matrix": {
+        "displayShort": "П",
+        "aspectingShort": "А"
+      }
     },
     "plan": {
       "names": {
@@ -670,7 +727,8 @@
         "home": "На головну",
         "solar": "Соляр",
         "synastry": "Синастрія",
-        "tables": "Таблиці"
+        "tables": "Таблиці",
+        "forecastViewsAria": "Види прогностики"
       },
       "settings": {
         "aspectOptions": "Параметри аспектів",
@@ -723,7 +781,8 @@
           "house": "Дім",
           "position": "Положення",
           "speed": "Швидкість",
-          "symbol": "Символ"
+          "symbol": "Символ",
+          "speedHint": "Добова швидкість у % від середньої. Синій — майже стаціонар, червоний — швидкий."
         }
       },
       "tabs": {
@@ -741,7 +800,23 @@
         "defaultsSaveFailed": "Не вдалося зберегти локальні налаштування",
         "defaultsSaved": "Локальні налаштування збережено"
       },
-      "title": "Натальна карта"
+      "title": "Натальна карта",
+      "presets": {
+        "saveBtn": "Зберегти конфігурацію",
+        "pickerLabel": "Збережені конфігурації",
+        "pickerHeader": "Збережені конфігурації",
+        "emptyList": "Поки немає збережених конфігурацій",
+        "promptName": "Назва конфігурації",
+        "defaultName": "Моя конфігурація",
+        "untitled": "Без назви",
+        "savedToast": "Конфігурацію збережено",
+        "saveFailed": "Не вдалося зберегти конфігурацію",
+        "applied": "Конфігурацію застосовано",
+        "applyFailed": "Не вдалося застосувати конфігурацію",
+        "deleteConfirm": "Видалити цю конфігурацію?",
+        "deleteAria": "Видалити конфігурацію",
+        "deleteFailed": "Не вдалося видалити конфігурацію"
+      }
     },
     "chat": {
       "errors": {
@@ -854,7 +929,7 @@
         "visible": "Показано зараз",
         "latest": "Останній доданий"
       },
-      "title": "База профілів",
+      "title": "Практика — Steliara",
       "subtitle": "Профілі",
       "listAriaLabel": "Список профілів",
       "newCard": "Додати профіль",
@@ -1165,7 +1240,8 @@
         "noId": "ID профілю не вказано в URL",
         "notFound": "Профіль не знайдено",
         "loadFailed": "Не вдалося завантажити профіль"
-      }
+      },
+      "unnamed": "Профіль без імені"
     },
     "synastry": {
       "title": "Синастрія",
@@ -1396,7 +1472,8 @@
           "transitShort": "Т",
           "transitSort": "Транзит ⇅",
           "transition": "Перехід",
-          "typeSort": "Тип ⇅"
+          "typeSort": "Тип ⇅",
+          "typeHint": "M — мажорний аспект · m — мінорний аспект"
         },
         "empty": "Немає даних таблиці прогнозу",
         "filters": {
@@ -1436,8 +1513,14 @@
       "timeline": {
         "activeNow": {
           "empty": "Поруч із сьогоднішньою датою точних подій немає",
-          "exactDaysAgo": "Точна подія була {days} дн. тому",
-          "exactInDays": "Точна подія через {days} дн.",
+          "exactDaysAgo": {
+            "one": "Точна подія була {days} дн. тому",
+            "other": "Точна подія була {days} дн. тому"
+          },
+          "exactInDays": {
+            "one": "Точна подія через {days} дн.",
+            "other": "Точна подія через {days} дн."
+          },
           "exactToday": "Точно сьогодні",
           "title": "Активно зараз"
         },
@@ -1523,7 +1606,7 @@
           "placeholder": "Виберіть часовий пояс"
         }
       },
-      "subtitle": "Професійні астрологічні розрахунки карт на базі Swiss Ephemeris",
+      "subtitle": "Робочий простір астролога",
       "title": "Калькулятор натальної карти",
       "logo": "Steliara"
     },
@@ -1703,7 +1786,7 @@
       },
       "heading": "Безпечний вхід",
       "subheading": "Увійдіть через Google або за допомогою email і пароля.",
-      "divider": "або використайте email і пароль",
+      "divider": "або увійдіть через Google",
       "hints": {
         "capsLock": "Увімкнено Caps Lock.",
         "emailDeliverySpamTitle": "Важливо",

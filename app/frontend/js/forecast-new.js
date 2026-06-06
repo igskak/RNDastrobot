@@ -375,8 +375,7 @@
             'showWheelStationaryToggle', 'showWheelDegreeToggle',
             'angleAscDscBoldToggle', 'angleMcIcBoldToggle',
             'showSpeedToggle', 'showStationaryToggle',
-            'saveChartBackdrop', 'saveChartDialog', 'saveChartForm',
-            'saveChartClose', 'saveChartCancel', 'saveChartSubmit', 'saveChartError', 'saveChartTitleInput',
+            // save-chart modal elements removed — handled by window.SaveChartModal
         ].forEach((id) => {
             refs[id] = document.getElementById(id);
         });
@@ -4354,10 +4353,10 @@
         }
     }
 
-    function buildCurrentSourceChartPayload({ title, chartKind }) {
+    function buildCurrentSourceChartPayload({ title, chartKind, tags, personId }) {
         const [date, time] = splitTargetDatetime(state.natalSelectedDateTime);
         const location = state.natalLocation || {};
-        return {
+        const payload = {
             title,
             chart_kind: chartKind || 'birth',
             date,
@@ -4367,8 +4366,10 @@
             latitude: location.latitude,
             longitude: location.longitude,
             house_system: normalizeHouseSystemCode(state.pageSettings.houseSystem || state.natalData?.birth_data?.house_system || 'P'),
-            tags: [],
+            tags: Array.isArray(tags) ? tags : [],
         };
+        if (personId) payload.person_id = personId;
+        return payload;
     }
 
     function defaultSourceChartTitle() {
@@ -4380,77 +4381,46 @@
         return t('page.chart.actions.saveSourceChartDefaultTitle', { date: date || '' }).trim();
     }
 
-    function openSaveChartModal() {
-        if (!refs.saveChartDialog) return;
-        if (refs.saveChartTitleInput) refs.saveChartTitleInput.value = defaultSourceChartTitle();
-        if (refs.saveChartError) { refs.saveChartError.textContent = ''; refs.saveChartError.classList.add('hidden'); }
-        setSaveChartSubmitting(false);
-        refs.saveChartBackdrop?.classList.remove('hidden');
-        refs.saveChartDialog.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-        refs.saveChartTitleInput?.focus();
-    }
-
-    function closeSaveChartModal() {
-        refs.saveChartBackdrop?.classList.add('hidden');
-        refs.saveChartDialog?.classList.add('hidden');
-        document.body.style.overflow = '';
-    }
-
-    function setSaveChartSubmitting(isSubmitting) {
-        if (!refs.saveChartSubmit) return;
-        refs.saveChartSubmit.disabled = isSubmitting;
-        refs.saveChartSubmit.querySelector('.btn-text')?.classList.toggle('hidden', isSubmitting);
-        refs.saveChartSubmit.querySelector('.btn-loader')?.classList.toggle('hidden', !isSubmitting);
-    }
-
     function bindSaveChartModal() {
-        refs.saveChartClose?.addEventListener('click', closeSaveChartModal);
-        refs.saveChartCancel?.addEventListener('click', closeSaveChartModal);
-        refs.saveChartBackdrop?.addEventListener('click', closeSaveChartModal);
-        refs.saveChartForm?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const title = String(refs.saveChartTitleInput?.value || '').trim();
-            if (!title) {
-                if (refs.saveChartError) {
-                    refs.saveChartError.textContent = t('page.chart.actions.saveSourceChartTitleRequired');
-                    refs.saveChartError.classList.remove('hidden');
-                }
-                return;
-            }
-            setSaveChartSubmitting(true);
-            if (refs.saveChartError) refs.saveChartError.classList.add('hidden');
-            try {
-                const saved = await apiPost('/charts', buildCurrentSourceChartPayload({ title, chartKind: 'birth' }));
-                const resp = await apiGet(`/natal/${encodeURIComponent(String(saved.chart_id || saved.user_id))}`);
-                state.userId = resp.user_id || saved.chart_id || saved.user_id;
-                state.natalData = resp;
-                state.natalWheelData = window.NatalWheelData?.prepareNatalWheelData
-                    ? window.NatalWheelData.prepareNatalWheelData(resp, { houseSystem: resp.birth_data?.house_system || undefined })
-                    : resp;
-                window.AstroAPI?.saveChartToSession?.(resp);
-                window.AstroAPI?.saveFormData?.(window.AstroAPI.chartToFormData?.(resp));
-                window.AstroAPI?.saveNavigationState?.({
-                    sourceView: 'forecast-new',
-                    sourceUrl: `/forecast-new.html${window.location.search || ''}`,
-                    clientUserId: String(state.userId),
-                    partnerUserId: null,
-                });
-                localStorage.setItem('currentUserId', String(state.userId));
-                closeSaveChartModal();
-                window.location.reload();
-            } catch (error) {
-                if (refs.saveChartError) {
-                    refs.saveChartError.textContent = t('page.chart.actions.saveSourceChartError', { error: error.message });
-                    refs.saveChartError.classList.remove('hidden');
-                }
-                setSaveChartSubmitting(false);
-            }
-        });
+        // Modal UI is managed by window.SaveChartModal (save-chart-modal.js)
     }
 
-    function saveCurrentSourceAsChart() {
-        openSaveChartModal();
+    async function saveCurrentSourceAsChart() {
+        const result = await window.SaveChartModal?.open({
+            defaultTitle: defaultSourceChartTitle(),
+            showTags: true,
+            showPerson: true,
+        });
+        if (!result) return;
+        try {
+            const saved = await apiPost('/charts', buildCurrentSourceChartPayload({
+                title: result.title,
+                chartKind: 'birth',
+                tags: result.tags,
+                personId: result.personId,
+            }));
+            const resp = await apiGet(`/natal/${encodeURIComponent(String(saved.chart_id || saved.user_id))}`);
+            state.userId = resp.user_id || saved.chart_id || saved.user_id;
+            state.natalData = resp;
+            state.natalWheelData = window.NatalWheelData?.prepareNatalWheelData
+                ? window.NatalWheelData.prepareNatalWheelData(resp, { houseSystem: resp.birth_data?.house_system || undefined })
+                : resp;
+            window.AstroAPI?.saveChartToSession?.(resp);
+            window.AstroAPI?.saveFormData?.(window.AstroAPI.chartToFormData?.(resp));
+            window.AstroAPI?.saveNavigationState?.({
+                sourceView: 'forecast-new',
+                sourceUrl: `/forecast-new.html${window.location.search || ''}`,
+                clientUserId: String(state.userId),
+                partnerUserId: null,
+            });
+            localStorage.setItem('currentUserId', String(state.userId));
+            window.location.reload();
+        } catch (error) {
+            window.showToast?.(
+                t('page.chart.actions.saveSourceChartError', { error: error.message }, error.message),
+                'error'
+            );
+        }
     }
 
     function schedulePersist() {

@@ -19,5 +19,6 @@ import '../js/prognostic-rings-wheel.js';
 import '../js/forecast-new-state-storage.js';
 import '../js/forecast-source-utils.js';
 import '../js/chart-source-panel.js';
+import '../js/save-chart-modal.js';
 import '../js/forecast-new.js';
 import '../js/forecast-nav-menu.js';

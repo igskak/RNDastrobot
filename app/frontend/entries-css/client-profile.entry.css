@@ -164,15 +164,15 @@
 }
 
 .btn-call {
-    border: 0;
-    background: linear-gradient(135deg, #2B7A4B, #1e5c37);
-    color: #fff;
-    box-shadow: 0 8px 20px rgba(43, 122, 75, 0.2);
+    border: 1px solid rgba(43, 122, 75, 0.42);
+    background: rgba(255, 255, 255, 0.7);
+    color: #1e5c37;
 }
 
 .btn-call:hover {
     transform: translateY(-1px);
-    box-shadow: 0 12px 24px rgba(43, 122, 75, 0.28);
+    background: rgba(43, 122, 75, 0.08);
+    border-color: rgba(43, 122, 75, 0.58);
 }
 
 .btn-new:disabled,

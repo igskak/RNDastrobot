@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.chart.title"></title>
-    <link rel="stylesheet" href="bundles/chart.bundle.css?v=b791fd685035">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=b791fd685035">
-    <script>window.__APP_BUILD_ID__ = 'b791fd685035';</script>
+    <link rel="stylesheet" href="bundles/chart.bundle.css?v=d52badf429e1">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=d52badf429e1">
+    <script>window.__APP_BUILD_ID__ = 'd52badf429e1';</script>
 </head>
 <body class="chart-page">
     <div class="page-loader" id="pageLoader">
@@ -24,7 +24,7 @@
             <a href="/" class="header-nav-btn"><span data-i18n="page.chart.nav.home"></span></a>
             <div class="forecast-nav-menu">
                 <a href="forecast-new.html" class="header-nav-btn"><svg class="nav-btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="7" cy="7" r="6"/><circle cx="7" cy="7" r="3"/><line x1="7" y1="1" x2="7" y2="2.5"/><line x1="7" y1="11.5" x2="7" y2="13"/><line x1="1" y1="7" x2="2.5" y2="7"/><line x1="11.5" y1="7" x2="13" y2="7"/></svg><span data-i18n="page.chart.nav.forecast"></span></a>
-                <button type="button" class="header-nav-btn header-nav-btn--icon forecast-nav-caret" data-forecast-nav-toggle aria-haspopup="true" aria-expanded="false" aria-label="Forecast views">▾</button>
+                <button type="button" class="header-nav-btn header-nav-btn--icon forecast-nav-caret" data-forecast-nav-toggle aria-haspopup="true" aria-expanded="false" data-i18n-aria-label="page.chart.nav.forecastViewsAria" aria-label="Forecast views">▾</button>
                 <div class="forecast-nav-dropdown hidden">
                     <a href="forecast-timeline.html" class="forecast-nav-item" data-i18n="page.forecast.tabs.timeline"></a>
                     <a href="forecast-tables.html" class="forecast-nav-item" data-i18n="page.forecast.tabs.table"></a>
@@ -65,7 +65,7 @@
                             <tr>
                                 <th data-i18n="page.chart.table.planets.symbol"></th>
                                 <th data-i18n="page.chart.table.planets.position"></th>
-                                <th class="planet-speed-col" data-i18n="page.chart.table.planets.speed"></th>
+                                <th class="planet-speed-col" data-i18n="page.chart.table.planets.speed" data-i18n-title="page.chart.table.planets.speedHint"></th>
                                 <th data-i18n="page.chart.table.planets.house"></th>
                             </tr>
                         </thead>
@@ -395,7 +395,7 @@
 
     <div id="chartToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/chart.bundle.js?v=b791fd685035"></script>
-    <script src="js/locale-switcher.js?v=b791fd685035"></script>
+    <script type="module" src="js/bundles/chart.bundle.js?v=d52badf429e1"></script>
+    <script src="js/locale-switcher.js?v=d52badf429e1"></script>
 </body>
 </html>

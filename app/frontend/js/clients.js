@@ -195,6 +195,7 @@ function cacheElements() {
     refs.editTimezone = document.getElementById('editTimezone');
     refs.editTimezoneHint = document.getElementById('editTimezoneHint');
     refs.editChartTitle = document.getElementById('editChartTitle');
+    refs.editFullNameGroup = document.getElementById('editFullNameGroup');
     refs.editChartTitleGroup = document.getElementById('editChartTitleGroup');
     refs.editChartPerson = document.getElementById('editChartPerson');
     refs.editChartPersonGroup = document.getElementById('editChartPersonGroup');
@@ -1235,6 +1236,13 @@ function setEditDialogMode(isChartMode) {
     refs.editChartPersonGroup?.classList.toggle('hidden', !isChartMode);
     refs.editCrmContactSection?.classList.toggle('hidden', isChartMode);
 
+    // A chart carries its own title and an optional person link — the personal
+    // full name belongs to the linked person, not the chart. Hide and un-require
+    // those inputs in chart mode so an unlinked chart can be saved.
+    refs.editFullNameGroup?.classList.toggle('hidden', isChartMode);
+    if (refs.editFirstName) refs.editFirstName.required = !isChartMode;
+    if (refs.editLastName) refs.editLastName.required = !isChartMode;
+
     const kickerKey = isChartMode ? 'page.clients.edit.chartMode.kicker' : 'page.clients.edit.kicker';
     const titleKey = isChartMode ? 'page.clients.edit.chartMode.title' : 'page.clients.edit.title';
     const subtitleKey = isChartMode ? 'page.clients.edit.chartMode.subtitle' : 'page.clients.edit.subtitle';
@@ -1340,7 +1348,7 @@ async function openEditChartDialog(userId) {
 
         refs.editBackdrop.classList.remove('hidden');
         refs.editDialog.classList.remove('hidden');
-        refs.editFirstName.focus();
+        (refs.editChartTitle || refs.editFirstName)?.focus();
         document.body.style.overflow = 'hidden';
     } catch (err) {
         showToast(t('common.errorWithMessage', { message: err.message }), 'error');

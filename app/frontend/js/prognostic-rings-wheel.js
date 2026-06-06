@@ -1314,13 +1314,19 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
 
         getDisplayedHouseLabel(number) {
             const numeric = Number(number) || 0;
-            const angleLabels = {
-                1: 'ASC',
-                4: 'IC',
-                7: 'DSC',
-                10: 'MC',
-            };
-            return angleLabels[numeric] || this.formatHouseLabel(numeric);
+            // When outer angle markers (ASC/IC/DSC/MC) are drawn, keep the inner
+            // angular-house labels numeric so the axis names are not duplicated
+            // both outside the ring and on the cusps.
+            if (!this.showAngleMarkers) {
+                const angleLabels = {
+                    1: 'ASC',
+                    4: 'IC',
+                    7: 'DSC',
+                    10: 'MC',
+                };
+                if (angleLabels[numeric]) return angleLabels[numeric];
+            }
+            return this.formatHouseLabel(numeric);
         }
 
         getHouseLabelColor(isAngular) {

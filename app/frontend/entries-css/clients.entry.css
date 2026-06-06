@@ -306,7 +306,7 @@ select:focus-visible,
 
 .toolbar-card {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 190px 190px 230px;
+    grid-template-columns: minmax(0, 1.5fr) minmax(170px, 1fr) minmax(210px, 1fr);
     gap: 14px;
     padding: 18px;
     margin-bottom: 14px;

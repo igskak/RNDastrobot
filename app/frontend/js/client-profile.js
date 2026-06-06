@@ -414,7 +414,7 @@ function renderAll(data) {
 /* ─── Header ─────────────────────────────────────────────────────────────── */
 
 function renderHeader(user) {
-    const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || t('common.notAvailable');
+    const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || t('page.clientProfile.unnamed');
     const initials = [user.first_name, user.last_name]
         .filter(Boolean).map((n) => n[0].toUpperCase()).join('').slice(0, 2) || '?';
 

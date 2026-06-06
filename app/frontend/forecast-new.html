@@ -1,25 +1,25 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Прогностика New</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=356b3a937fea">
-    <script>window.__APP_BUILD_ID__ = '356b3a937fea';</script>
+    <title data-i18n="page.forecastNew.pageTitle">Forecast</title>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=69656ed8593a">
+    <script>window.__APP_BUILD_ID__ = '69656ed8593a';</script>
 </head>
 <body class="forecast-new-page">
     <div class="page-loader forecast-new-loader" id="pageLoader">
         <div class="pl-spinner"></div>
-        <div class="pl-text">Загружаем прогностику</div>
+        <div class="pl-text" data-i18n="page.forecastNew.loader">Loading forecast</div>
     </div>
 
     <header class="chart-header-compact forecast-new-header">
-        <a href="/" class="back-btn-compact" id="forecastNewBackBtn" aria-label="Назад" title="Назад">←</a>
+        <a href="/" class="back-btn-compact" id="forecastNewBackBtn" data-i18n-aria-label="common.back" data-i18n-title="common.back" aria-label="Back" title="Back">←</a>
         <div class="birth-info-compact forecast-new-client">
-            <h2 id="forecastNewTitle">Прогностика New</h2>
+            <h2 id="forecastNewTitle" data-i18n="page.forecastNew.pageTitle">Forecast</h2>
             <p id="forecastNewSubtitle"></p>
         </div>
-        <div class="forecast-new-layer-toggles" aria-label="Слои прогностики">
+        <div class="forecast-new-layer-toggles" data-i18n-aria-label="page.forecastNew.layersAria" aria-label="Forecast layers">
             <label class="forecast-new-layer-chip forecast-new-layer-chip--transit">
                 <input type="checkbox" data-layer-toggle="transit" checked>
                 <span data-i18n="common.method.transit">Транзиты</span>
@@ -33,12 +33,12 @@
                     <input type="checkbox" data-layer-toggle="direction">
                     <span data-i18n="common.method.direction">Дирекции</span>
                 </label>
-                <div class="forecast-new-layer-popover hidden" data-layer-popover="direction" role="dialog" aria-label="Параметры дирекций">
-                    <label class="forecast-new-pop-label">Тип дирекций</label>
-                    <select id="forecastNewDirectionTypeSelect" class="forecast-new-pop-select" aria-label="Тип дирекций">
-                        <option value="zodiacal">Зодиакальные</option>
-                        <option value="solar_arc">Солнечная дуга</option>
-                        <option value="equatorial">Найбод</option>
+                <div class="forecast-new-layer-popover hidden" data-layer-popover="direction" role="dialog" data-i18n-aria-label="page.forecastNew.direction.popoverAria" aria-label="Direction options">
+                    <label class="forecast-new-pop-label" data-i18n="page.forecastNew.direction.typeLabel">Direction type</label>
+                    <select id="forecastNewDirectionTypeSelect" class="forecast-new-pop-select" data-i18n-aria-label="page.forecastNew.direction.typeLabel" aria-label="Direction type">
+                        <option value="zodiacal" data-i18n="page.forecastNew.direction.zodiacal">Zodiacal</option>
+                        <option value="solar_arc" data-i18n="page.forecastNew.direction.solarArc">Solar arc</option>
+                        <option value="equatorial" data-i18n="page.forecastNew.direction.naibod">Naibod</option>
                     </select>
                 </div>
             </div>
@@ -47,12 +47,12 @@
                     <input type="checkbox" data-layer-toggle="solar_return">
                     <span data-i18n="common.method.solar">Соляр</span>
                 </label>
-                <div class="forecast-new-layer-popover hidden" data-layer-popover="solar_return" role="dialog" aria-label="Параметры соляра">
-                    <label class="forecast-new-pop-label">Год соляра</label>
-                    <input type="number" id="forecastNewSolarYearInput" class="forecast-new-pop-input" min="1900" max="2100" aria-label="Год соляра">
-                    <label class="forecast-new-pop-label">Место соляра</label>
+                <div class="forecast-new-layer-popover hidden" data-layer-popover="solar_return" role="dialog" data-i18n-aria-label="page.forecastNew.solar.popoverAria" aria-label="Solar return options">
+                    <label class="forecast-new-pop-label" data-i18n="page.forecastNew.solar.yearLabel">Solar return year</label>
+                    <input type="number" id="forecastNewSolarYearInput" class="forecast-new-pop-input" min="1900" max="2100" data-i18n-aria-label="page.forecastNew.solar.yearLabel" aria-label="Solar return year">
+                    <label class="forecast-new-pop-label" data-i18n="page.forecastNew.solar.placeLabel">Solar return place</label>
                     <div class="place-autocomplete-wrapper forecast-new-solar-location-wrap">
-                        <input type="text" id="forecastNewSolarLocationInput" class="forecast-new-pop-input forecast-new-solar-location-input" placeholder="Место соляра…" autocomplete="off" aria-label="Место соляра">
+                        <input type="text" id="forecastNewSolarLocationInput" class="forecast-new-pop-input forecast-new-solar-location-input" placeholder="Solar return place…" data-i18n-placeholder="page.forecastNew.solar.placePlaceholder" autocomplete="off" data-i18n-aria-label="page.forecastNew.solar.placeLabel" aria-label="Solar return place">
                         <div id="forecastNewSolarLocationSuggestions" class="place-suggestions"></div>
                     </div>
                     <input type="hidden" id="forecastNewSolarLat">
@@ -64,33 +64,33 @@
                     <input type="checkbox" data-layer-toggle="synastry_partner">
                     <span data-i18n="page.chart.nav.synastry">Синастрия</span>
                 </label>
-                <div class="forecast-new-layer-popover hidden" data-layer-popover="synastry_partner" role="dialog" aria-label="Партнёр для синастрии">
-                    <div class="forecast-new-synastry-mode" role="tablist" aria-label="Источник партнёра">
-                        <button type="button" class="forecast-new-synastry-mode-btn is-active" data-synastry-mode="db" role="tab" aria-selected="true">Из базы</button>
-                        <button type="button" class="forecast-new-synastry-mode-btn" data-synastry-mode="manual" role="tab" aria-selected="false">Вручную</button>
+                <div class="forecast-new-layer-popover hidden" data-layer-popover="synastry_partner" role="dialog" data-i18n-aria-label="page.forecastNew.synastry.popoverAria" aria-label="Synastry partner">
+                    <div class="forecast-new-synastry-mode" role="tablist" data-i18n-aria-label="page.forecastNew.synastry.sourceAria" aria-label="Partner source">
+                        <button type="button" class="forecast-new-synastry-mode-btn is-active" data-synastry-mode="db" role="tab" aria-selected="true" data-i18n="page.forecastNew.synastry.fromDb">From database</button>
+                        <button type="button" class="forecast-new-synastry-mode-btn" data-synastry-mode="manual" role="tab" aria-selected="false" data-i18n="page.forecastNew.synastry.manual">Manual</button>
                     </div>
                     <div class="forecast-new-synastry-pane" data-synastry-pane="db">
-                        <select id="forecastNewSynastryPartnerSelect" class="forecast-new-pop-select" aria-label="Партнёр для синастрии">
-                            <option value="">— партнёр —</option>
+                        <select id="forecastNewSynastryPartnerSelect" class="forecast-new-pop-select" data-i18n-aria-label="page.forecastNew.synastry.popoverAria" aria-label="Synastry partner">
+                            <option value="" data-i18n="page.forecastNew.synastry.partnerOption">— partner —</option>
                         </select>
                         <button type="button" class="forecast-new-synastry-apply" id="forecastNewSynastryPickerBtn" data-i18n="page.chartPicker.title">Выбор карты</button>
                     </div>
                     <div class="forecast-new-synastry-pane hidden" data-synastry-pane="manual">
-                        <input type="text" id="forecastNewSynastryManualName" class="forecast-new-pop-input" placeholder="Имя партнёра" autocomplete="off">
+                        <input type="text" id="forecastNewSynastryManualName" class="forecast-new-pop-input" placeholder="Partner name" data-i18n-placeholder="page.forecastNew.synastry.namePlaceholder" autocomplete="off">
                         <div class="forecast-new-synastry-manual-grid">
-                            <input type="date" id="forecastNewSynastryManualDate" class="forecast-new-pop-input" aria-label="Дата рождения партнёра">
-                            <input type="time" id="forecastNewSynastryManualTime" class="forecast-new-pop-input" step="1" aria-label="Время рождения партнёра">
+                            <input type="date" id="forecastNewSynastryManualDate" class="forecast-new-pop-input" data-i18n-aria-label="page.forecastNew.synastry.dateAria" aria-label="Partner birth date">
+                            <input type="time" id="forecastNewSynastryManualTime" class="forecast-new-pop-input" step="1" data-i18n-aria-label="page.forecastNew.synastry.timeAria" aria-label="Partner birth time">
                         </div>
-                        <select id="forecastNewSynastryManualTimezone" class="forecast-new-pop-select" aria-label="Часовой пояс партнёра">
-                            <option value="">Часовой пояс</option>
+                        <select id="forecastNewSynastryManualTimezone" class="forecast-new-pop-select" data-i18n-aria-label="page.forecastNew.synastry.timezoneAria" aria-label="Partner timezone">
+                            <option value="" data-i18n="page.forecastNew.synastry.timezoneOption">Timezone</option>
                         </select>
                         <div class="place-autocomplete-wrapper">
-                            <input type="text" id="forecastNewSynastryManualLocation" class="forecast-new-pop-input" placeholder="Место рождения" autocomplete="off" aria-label="Место рождения партнёра">
+                            <input type="text" id="forecastNewSynastryManualLocation" class="forecast-new-pop-input" placeholder="Birth place" data-i18n-placeholder="page.forecastNew.synastry.locationPlaceholder" autocomplete="off" data-i18n-aria-label="page.forecastNew.synastry.locationAria" aria-label="Partner birth place">
                             <div id="forecastNewSynastryManualSuggestions" class="place-suggestions"></div>
                         </div>
                         <input type="hidden" id="forecastNewSynastryManualLat">
                         <input type="hidden" id="forecastNewSynastryManualLon">
-                        <button type="button" class="forecast-new-synastry-apply" id="forecastNewSynastryManualApply">Применить</button>
+                        <button type="button" class="forecast-new-synastry-apply" id="forecastNewSynastryManualApply" data-i18n="page.forecastNew.synastry.apply">Apply</button>
                         <p class="forecast-new-synastry-manual-error hidden" id="forecastNewSynastryManualError"></p>
                     </div>
                 </div>
@@ -127,20 +127,20 @@
 
     <div class="profile-error hidden" id="forecastNewError">
         <p id="forecastNewErrorMsg"></p>
-        <a href="/" class="btn-logout">К списку клиентов</a>
+        <a href="/" class="btn-logout" data-i18n="page.forecastNew.backToClients">Back to clients</a>
     </div>
 
     <main class="forecast-new-layout hidden" id="forecastNewLayout">
         <aside class="side-panel left-panel forecast-new-side-panel" id="forecastNewNatalPanel">
             <div class="forecast-new-side-head">
                 <button type="button" class="forecast-new-moment-toggle" id="natalMomentToggle" aria-expanded="false" aria-controls="forecastNewNatalCard">
-                    <span class="forecast-new-moment-toggle-title">Натал</span>
+                    <span class="forecast-new-moment-toggle-title" data-i18n="page.forecastNew.natalPanelTitle">Natal</span>
                     <span class="forecast-new-moment-toggle-meta" id="natalPanelMeta"></span>
                 </button>
             </div>
-            <div class="forecast-new-time-stepper" id="forecastNewNatalTimeStepper" aria-label="Управление датой рождения"></div>
+            <div class="forecast-new-time-stepper" id="forecastNewNatalTimeStepper" data-i18n-aria-label="page.forecastNew.natalStepperAria" aria-label="Birth date control"></div>
             <div class="forecast-new-moment-card hidden" id="forecastNewNatalCard">
-                <label>Дата рождения / время</label>
+                <label data-i18n="page.forecastNew.birthDateTimeLabel">Birth date / time</label>
                 <strong id="natalDatetimeLabel"></strong>
                 <div class="forecast-new-native-datetime">
                     <input type="date" id="natalDateInput">
@@ -148,10 +148,10 @@
                 </div>
                 <div class="forecast-new-location-grid">
                     <select id="natalTimezoneInput">
-                        <option value="">Timezone</option>
+                        <option value="" data-i18n="page.forecastNew.timezonePlaceholder">Timezone</option>
                     </select>
                     <div class="place-autocomplete-wrapper forecast-new-location-autocomplete">
-                        <input type="text" id="natalLocationInput" placeholder="Место рождения" autocomplete="off">
+                        <input type="text" id="natalLocationInput" placeholder="Birth place" data-i18n-placeholder="page.forecastNew.locationPlaceholder" autocomplete="off">
                         <div id="natalLocationSuggestions" class="place-suggestions"></div>
                     </div>
                     <input type="number" id="natalLatitudeInput" step="0.0001" placeholder="Lat">
@@ -167,14 +167,15 @@
                         type="button"
                         class="panel-tab forecast-new-tabs-overflow-toggle"
                         data-tabs-overflow-toggle
-                        aria-label="Дополнительные вкладки"
+                        data-i18n-aria-label="page.forecastNew.tabsOverflowAria"
+                        aria-label="More tabs"
                         aria-haspopup="true"
                         aria-expanded="false"
                     >▸</button>
                     <div class="forecast-new-tabs-overflow-menu" data-tabs-overflow-menu>
-                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="natalGridView">Таблица аспектов</button>
-                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="natalConfigsView">Конфигурации</button>
-                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="natalBalancesView">Балансы</button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="natalGridView" data-i18n="page.forecastNew.tabs.grid">Aspect grid</button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="natalConfigsView" data-i18n="page.forecastNew.tabs.configs">Configurations</button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="natalBalancesView" data-i18n="page.forecastNew.tabs.balances">Balances</button>
                         <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="natalRulersView" data-i18n="page.chart.tabs.rulers"></button>
                     </div>
                 </div>
@@ -188,7 +189,7 @@
                             <col class="forecast-new-matrix-column">
                             <col class="forecast-new-matrix-column">
                         </colgroup>
-                        <thead><tr><th>Симв.</th><th>Позиция</th><th class="forecast-new-matrix-col" title="Показ">П</th><th class="forecast-new-matrix-col" title="Аспектация">А</th></tr></thead>
+                        <thead><tr><th data-i18n="page.chart.table.planets.symbol">Symbol</th><th data-i18n="page.chart.table.planets.position">Position</th><th class="forecast-new-matrix-col" data-i18n="page.forecastNew.matrix.displayShort" data-i18n-title="page.accountSettings.matrix.columns.display" title="Display">D</th><th class="forecast-new-matrix-col" data-i18n="page.forecastNew.matrix.aspectingShort" data-i18n-title="page.accountSettings.matrix.columns.aspecting" title="Aspecting">A</th></tr></thead>
                         <tbody id="natalPlanetsTable"></tbody>
                     </table>
                 </div>
@@ -199,13 +200,13 @@
                             <col class="forecast-new-house-sign-column">
                             <col class="forecast-new-house-ruler-column">
                         </colgroup>
-                        <thead><tr><th>Куспид</th><th>Знак</th><th>Упр.</th></tr></thead>
+                        <thead><tr><th data-i18n="page.chart.table.houses.cusp">House cusp</th><th data-i18n="page.chart.table.houses.sign">Sign</th><th data-i18n="page.chart.table.houses.ruler">Ruler</th></tr></thead>
                         <tbody id="natalHousesTable"></tbody>
                     </table>
                 </div>
                 <div id="natalAspectsView" class="panel-tab-content">
                     <table class="data-table compact aspect-list-table">
-                        <thead><tr><th class="sortable" data-sort="planet">Аспект</th><th class="sortable" data-sort="type">Фаза</th><th class="sortable" data-sort="orb">Орб</th></tr></thead>
+                        <thead><tr><th class="sortable" data-sort="planet" data-i18n="page.chart.table.aspects.aspect">Aspect</th><th class="sortable" data-sort="type" data-i18n="page.chart.table.aspects.type">Phase</th><th class="sortable" data-sort="orb" data-i18n="page.chart.table.aspects.orb">Orb</th></tr></thead>
                         <tbody id="natalAspectsTable"></tbody>
                     </table>
                 </div>
@@ -221,8 +222,8 @@
                 <svg id="forecastNewWheel" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid meet"></svg>
             </div>
             <div class="forecast-new-zoom-controls zoom-controls-float">
-                <button class="zoom-btn forecast-new-view-btn" id="forecastNewViewSingle" title="Одно колесо" aria-label="Одно колесо">◯</button>
-                <button class="zoom-btn forecast-new-view-btn is-active" id="forecastNewViewMulti" title="Мульти-колесо" aria-label="Мульти-колесо">◎</button>
+                <button class="zoom-btn forecast-new-view-btn" id="forecastNewViewSingle" data-i18n-title="page.forecastNew.view.single" data-i18n-aria-label="page.forecastNew.view.single" title="Single wheel" aria-label="Single wheel">◯</button>
+                <button class="zoom-btn forecast-new-view-btn is-active" id="forecastNewViewMulti" data-i18n-title="page.forecastNew.view.multi" data-i18n-aria-label="page.forecastNew.view.multi" title="Multi-wheel" aria-label="Multi-wheel">◎</button>
                 <button class="zoom-btn" id="forecastNewZoomIn" title="Zoom in">+</button>
                 <button class="zoom-btn" id="forecastNewZoomOut" title="Zoom out">−</button>
                 <button class="zoom-btn" id="forecastNewZoomReset" title="Reset">⟲</button>
@@ -235,79 +236,79 @@
                 </button>
             </div>
             <div id="forecastNewSettingsPanel" class="settings-panel forecast-new-settings-panel hidden">
-                <h4>Настройки карты</h4>
+                <h4 data-i18n="common.displaySettings">Display settings</h4>
                 <div class="settings-section">
-                    <label class="settings-label">Размер иконок</label>
+                    <label class="settings-label" data-i18n="page.chart.settings.iconSize">Icon size</label>
                     <div class="settings-size-control">
                         <input type="range" id="iconScaleRange" min="80" max="170" step="5" value="120">
                         <span id="iconScaleValue">120%</span>
                     </div>
                 </div>
                 <div class="settings-section">
-                    <label class="settings-label">Фильтр аспектов</label>
+                    <label class="settings-label" data-i18n="page.chart.settings.aspectScope.label">Aspect scope</label>
                     <select id="aspectScopeSelect" class="settings-select">
-                        <option value="all">Все</option>
-                        <option value="major">Мажорные</option>
-                        <option value="minor">Минорные</option>
+                        <option value="all" data-i18n="common.all">All</option>
+                        <option value="major" data-i18n="common.major">Major</option>
+                        <option value="minor" data-i18n="common.minor">Minor</option>
                     </select>
                 </div>
                 <div class="settings-section">
-                    <label class="settings-label">Планеты и точки</label>
+                    <label class="settings-label" data-i18n="page.chart.settings.planetsAndPoints">Planets and points</label>
                     <div class="natal-matrix-editor" id="forecastNewSettingsMatrixEditor"></div>
                 </div>
                 <div class="settings-section">
-                    <label class="settings-label">Типы аспектов</label>
+                    <label class="settings-label" data-i18n="page.accountSettings.fields.aspectTypes">Aspect types</label>
                     <div class="settings-check-grid settings-check-grid--compact" id="aspectTypeToggles"></div>
                 </div>
                 <div class="settings-section">
-                    <label class="settings-label">Параметры аспектов</label>
+                    <label class="settings-label" data-i18n="page.chart.settings.aspectOptions">Aspect options</label>
                     <div class="settings-check-stack">
                         <label class="settings-check-option">
                             <input type="checkbox" id="aspectPhaseApplyingToggle">
-                            <span>Сходящиеся</span>
+                            <span data-i18n="page.chart.settings.aspectPhase.applying">Applying</span>
                         </label>
                         <label class="settings-check-option">
                             <input type="checkbox" id="aspectPhaseSeparatingToggle">
-                            <span>Расходящиеся</span>
+                            <span data-i18n="page.chart.settings.aspectPhase.separating">Separating</span>
                         </label>
                     </div>
                 </div>
                 <div class="settings-section">
-                    <label class="settings-label">Куспиды кругов</label>
+                    <label class="settings-label" data-i18n="page.forecastNew.settings.cuspCircles">Cusp circles</label>
                     <div class="settings-check-stack">
                         <label class="settings-check-option">
                             <input type="checkbox" id="showTransitCuspsToggle" checked>
-                            <span>Транзиты</span>
+                            <span data-i18n="common.method.transit">Transits</span>
                         </label>
                         <label class="settings-check-option">
                             <input type="checkbox" id="showProgressionCuspsToggle" checked>
-                            <span>Прогрессии</span>
+                            <span data-i18n="common.method.progression">Progressions</span>
                         </label>
                         <label class="settings-check-option">
                             <input type="checkbox" id="showDirectionCuspsToggle" checked>
-                            <span>Дирекции</span>
+                            <span data-i18n="common.method.direction">Directions</span>
                         </label>
                     </div>
                 </div>
                 <div class="settings-section">
-                    <label class="settings-label">Подписи на колесе</label>
+                    <label class="settings-label" data-i18n="page.chart.settings.wheelOptions">Wheel labels</label>
                     <div class="settings-check-stack">
                         <label class="settings-check-option">
                             <input type="checkbox" id="showWheelStationaryToggle">
-                            <span>Показывать стационарность</span>
+                            <span data-i18n="page.chart.settings.showPlanetStationary">Show stationary</span>
                         </label>
                         <label class="settings-check-option">
                             <input type="checkbox" id="showWheelDegreeToggle">
-                            <span>Показывать градус</span>
+                            <span data-i18n="page.chart.settings.showPlanetDegree">Show degree</span>
                         </label>
                     </div>
                 </div>
                 <div class="settings-section">
-                    <label class="settings-label">Таблицы</label>
+                    <label class="settings-label" data-i18n="page.chart.settings.tableOptions">Table options</label>
                     <div class="settings-check-stack">
                         <label class="settings-check-option">
                             <input type="checkbox" id="showStationaryToggle">
-                            <span>Показывать стационарность</span>
+                            <span data-i18n="page.accountSettings.options.showStationary">Show stationary</span>
                         </label>
                     </div>
                 </div>
@@ -318,7 +319,7 @@
             <div class="forecast-new-side-head">
                 <div class="forecast-new-side-title-row">
                     <button type="button" class="forecast-new-moment-toggle" id="prognosticMomentToggle" aria-expanded="false" aria-controls="forecastNewMomentCard">
-                        <span class="forecast-new-moment-toggle-title" id="prognosticPanelTitle">Транзиты</span>
+                        <span class="forecast-new-moment-toggle-title" id="prognosticPanelTitle">Transits</span>
                         <span class="forecast-new-moment-toggle-meta" id="prognosticPanelMeta"></span>
                     </button>
                     <button type="button" class="panel-quick-open-btn" id="forecastSavedChartsBtn" data-i18n-aria-label="page.clientProfile.quickOpen.savedCharts" data-i18n-title="page.clientProfile.quickOpen.savedCharts">
@@ -329,9 +330,9 @@
                     </button>
                 </div>
             </div>
-            <div class="forecast-new-time-stepper" id="forecastNewTimeStepper" aria-label="Управление временем транзитов"></div>
+            <div class="forecast-new-time-stepper" id="forecastNewTimeStepper" data-i18n-aria-label="page.forecastNew.transitStepperAria" aria-label="Transit time control"></div>
             <div class="forecast-new-moment-card hidden" id="forecastNewMomentCard">
-                <label>Дата / время</label>
+                <label data-i18n="page.forecastNew.dateTimeLabel">Date / time</label>
                 <strong id="targetDatetimeLabel"></strong>
                 <div class="forecast-new-native-datetime">
                     <input type="date" id="targetDateInput">
@@ -339,10 +340,10 @@
                 </div>
                 <div class="forecast-new-location-grid">
                     <select id="timezoneInput">
-                        <option value="">Timezone</option>
+                        <option value="" data-i18n="page.forecastNew.timezonePlaceholder">Timezone</option>
                     </select>
                     <div class="place-autocomplete-wrapper forecast-new-location-autocomplete">
-                        <input type="text" id="locationInput" placeholder="Локация" autocomplete="off">
+                        <input type="text" id="locationInput" placeholder="Location" data-i18n-placeholder="page.forecastNew.prognosticLocationPlaceholder" autocomplete="off">
                         <div id="locationSuggestions" class="place-suggestions"></div>
                     </div>
                     <input type="number" id="latitudeInput" step="0.0001" placeholder="Lat">
@@ -359,14 +360,15 @@
                         type="button"
                         class="panel-tab forecast-new-tabs-overflow-toggle"
                         data-tabs-overflow-toggle
-                        aria-label="Дополнительные вкладки"
+                        data-i18n-aria-label="page.forecastNew.tabsOverflowAria"
+                        aria-label="More tabs"
                         aria-haspopup="true"
                         aria-expanded="false"
                     >▸</button>
                     <div class="forecast-new-tabs-overflow-menu" data-tabs-overflow-menu>
-                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="progGridView">Таблица аспектов</button>
-                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="progConfigsView">Конфигурации</button>
-                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="progBalancesView">Балансы</button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="progGridView" data-i18n="page.forecastNew.tabs.grid">Aspect grid</button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="progConfigsView" data-i18n="page.forecastNew.tabs.configs">Configurations</button>
+                        <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="progBalancesView" data-i18n="page.forecastNew.tabs.balances">Balances</button>
                         <button class="panel-tab forecast-new-tabs-overflow-item" data-panel-target="progRulersView" data-i18n="page.chart.tabs.rulers"></button>
                     </div>
                 </div>
@@ -380,7 +382,7 @@
                             <col class="forecast-new-matrix-column">
                             <col class="forecast-new-matrix-column">
                         </colgroup>
-                        <thead><tr><th>Симв.</th><th>Позиция</th><th class="forecast-new-matrix-col" title="Показ">П</th><th class="forecast-new-matrix-col" title="Аспектация">А</th></tr></thead>
+                        <thead><tr><th data-i18n="page.chart.table.planets.symbol">Symbol</th><th data-i18n="page.chart.table.planets.position">Position</th><th class="forecast-new-matrix-col" data-i18n="page.forecastNew.matrix.displayShort" data-i18n-title="page.accountSettings.matrix.columns.display" title="Display">D</th><th class="forecast-new-matrix-col" data-i18n="page.forecastNew.matrix.aspectingShort" data-i18n-title="page.accountSettings.matrix.columns.aspecting" title="Aspecting">A</th></tr></thead>
                         <tbody id="progPlanetsTable"></tbody>
                     </table>
                 </div>
@@ -391,13 +393,13 @@
                             <col class="forecast-new-house-sign-column">
                             <col class="forecast-new-house-ruler-column">
                         </colgroup>
-                        <thead><tr><th>Куспид</th><th>Знак</th><th>Упр.</th></tr></thead>
+                        <thead><tr><th data-i18n="page.chart.table.houses.cusp">House cusp</th><th data-i18n="page.chart.table.houses.sign">Sign</th><th data-i18n="page.chart.table.houses.ruler">Ruler</th></tr></thead>
                         <tbody id="progHousesTable"></tbody>
                     </table>
                 </div>
                 <div id="progAspectsView" class="panel-tab-content">
                     <table class="data-table compact aspect-list-table">
-                        <thead><tr><th class="sortable" data-sort="planet">Аспект</th><th class="sortable" data-sort="type">Фаза</th><th class="sortable" data-sort="orb">Орб</th></tr></thead>
+                        <thead><tr><th class="sortable" data-sort="planet" data-i18n="page.chart.table.aspects.aspect">Aspect</th><th class="sortable" data-sort="type" data-i18n="page.chart.table.aspects.type">Phase</th><th class="sortable" data-sort="orb" data-i18n="page.chart.table.aspects.orb">Orb</th></tr></thead>
                         <tbody id="progAspectsTable"></tbody>
                     </table>
                 </div>
@@ -409,32 +411,8 @@
         </aside>
     </main>
 
-    <div class="chart-dialog-backdrop hidden" id="saveChartBackdrop"></div>
-    <section class="chart-dialog hidden" id="saveChartDialog" role="dialog" aria-modal="true" aria-labelledby="saveChartDialogTitle">
-        <form class="chart-dialog-card chart-dialog-card--compact" id="saveChartForm">
-            <div class="chart-dialog-header">
-                <div>
-                    <h3 id="saveChartDialogTitle" class="chart-dialog-title" data-i18n="page.chart.actions.saveChart"></h3>
-                </div>
-                <button type="button" class="chart-dialog-close" id="saveChartClose" data-i18n-aria-label="common.close">×</button>
-            </div>
-            <div class="chart-dialog-grid">
-                <div class="form-group">
-                    <label class="form-label" for="saveChartTitleInput" data-i18n="page.chart.actions.saveSourceChartPromptTitle"></label>
-                    <input id="saveChartTitleInput" type="text" required>
-                </div>
-            </div>
-            <div id="saveChartError" class="error-message hidden"></div>
-            <div class="chart-dialog-actions">
-                <button type="button" class="header-nav-btn" id="saveChartCancel" data-i18n="common.cancel"></button>
-                <button type="submit" class="submit-btn chart-dialog-submit" id="saveChartSubmit">
-                    <span class="btn-text" data-i18n="page.chart.actions.saveSourceChart"></span>
-                    <span class="btn-loader hidden" data-i18n="common.loading"></span>
-                </button>
-            </div>
-        </form>
-    </section>
+    <!-- Save-chart modal is injected by SaveChartModal module (save-chart-modal.js) -->
 
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=356b3a937fea"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=69656ed8593a"></script>
 </body>
 </html>

@@ -21,6 +21,20 @@
         return window.FrontendI18n?.t?.(key, params) || key;
     }
 
+    function tPlural(baseKey, count, params) {
+        const locale = window.FrontendI18n?.getLocale?.() || 'en';
+        let category = 'other';
+        try {
+            category = new Intl.PluralRules(locale).select(count);
+        } catch (e) {
+            category = 'other';
+        }
+        const exactKey = `${baseKey}.${category}`;
+        const resolved = t(exactKey, params);
+        if (resolved !== exactKey) return resolved;
+        return t(`${baseKey}.other`, params);
+    }
+
     async function waitForI18n() {
         if (window.FrontendI18n?.ready) {
             await Promise.resolve(window.FrontendI18n.ready).catch(() => {});
@@ -140,8 +154,8 @@
             const exactLabel = daysToExact === 0
                 ? t('page.forecast.timeline.activeNow.exactToday')
                 : daysToExact > 0
-                    ? t('page.forecast.timeline.activeNow.exactInDays', { days: daysToExact })
-                    : t('page.forecast.timeline.activeNow.exactDaysAgo', { days: Math.abs(daysToExact) });
+                    ? tPlural('page.forecast.timeline.activeNow.exactInDays', daysToExact, { days: daysToExact })
+                    : tPlural('page.forecast.timeline.activeNow.exactDaysAgo', Math.abs(daysToExact), { days: Math.abs(daysToExact) });
             return `<div class="aes-chip ${harmony}" title="${ev.transit_body} ${ev.aspect_type} ${ev.natal_body}\n${t('common.orb')}: ${ev.min_orb?.toFixed(2)}°\n${exactLabel}">
                 <span class="aes-planets">${pSym} ${aSym} ${nSym}</span>
                 <span class="aes-exact">${exactLabel}</span>
