@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forecast · Clean Studio (C)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Spline+Sans:wght@400;500;600;700&family=STIX+Two+Text:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ===== OPTION C — CLEAN STUDIO : light, crisp, hairline-dense, chart-first =====
+   Near-white surfaces, single indigo accent, tight spacing, big wheel.        */
+:root{
+  --bg:#f6f7fb; --card:#ffffff; --ink:#1d2030; --ink-soft:#5b6076; --ink-faint:#9aa0b4;
+  --accent:#4f5bd5; --accent-2:#7c86ec; --accent-wash:#eef0fc;
+  --pink:#e879a8; --gold:#d6a64a; --mint:#3fb8a0;
+  --line:rgba(40,45,80,0.09); --line-2:rgba(40,45,80,0.06);
+  --r-lg:16px; --r-md:11px; --r-sm:8px; --r-pill:999px;
+  --shadow:0 1px 1px rgba(30,35,70,.04),0 8px 24px -14px rgba(40,45,90,.22);
+  --ease:cubic-bezier(.22,.61,.36,1); --astro:"STIX Two Text",serif;
+  --wheel-line:rgba(40,45,80,.14); --wheel-nat:#4f5bd5; --wheel-trans:#e879a8; --wheel-disc:#ffffff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:"Spline Sans",system-ui,sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;overflow:hidden}
+.astro{font-family:var(--astro);font-variant-emoji:text}
+/* faint top wash only — no heavy gradients eating space */
+body::before{content:"";position:fixed;inset:0 0 auto 0;height:40vh;z-index:-1;
+  background:radial-gradient(70% 100% at 50% 0,rgba(124,134,236,.10),transparent 70%)}
+
+.app{height:100vh;display:flex;flex-direction:column;padding:8px 10px 10px;gap:8px}
+.topbar{display:flex;align-items:center;gap:12px;padding:6px 10px;border-radius:var(--r-md);background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow)}
+.back{width:30px;height:30px;flex:none;border:1px solid var(--line);cursor:pointer;border-radius:var(--r-sm);background:var(--card);color:var(--ink-soft);font-size:15px;display:grid;place-items:center;transition:.2s}
+.back:hover{color:var(--accent);border-color:var(--accent)}
+.who{display:flex;flex-direction:column;min-width:160px}
+.who .name{font-family:"Instrument Serif",serif;font-size:21px;line-height:1.05;letter-spacing:.2px}
+.who .meta{font-size:11px;color:var(--ink-faint)}
+.layers{display:flex;gap:5px;margin:0 auto;flex-wrap:wrap}
+.chip{--c:var(--accent);display:inline-flex;align-items:center;gap:6px;cursor:pointer;height:28px;padding:0 11px;border-radius:var(--r-pill);
+  font-size:11.5px;font-weight:600;color:var(--ink-soft);background:var(--card);border:1px solid var(--line);transition:.22s var(--ease)}
+.chip .dot{width:7px;height:7px;border-radius:50%;background:var(--c);opacity:.55}
+.chip:hover{border-color:var(--c);color:var(--ink)}
+.chip.on{color:#fff;border-color:transparent;background:var(--c);box-shadow:0 5px 14px -6px var(--c)}
+.chip.on .dot{background:#fff;opacity:1}
+.chip.prog{--c:var(--accent-2)}.chip.dir{--c:var(--mint)}.chip.solar{--c:var(--gold)}.chip.syn{--c:var(--pink)}
+.topbar-actions{display:flex;gap:6px;align-items:center}
+.viewtabs{display:flex;background:var(--accent-wash);border-radius:var(--r-pill);padding:3px}
+.viewtabs button{border:none;background:none;cursor:pointer;height:24px;padding:0 11px;border-radius:var(--r-pill);font:inherit;font-size:11.5px;font-weight:600;color:var(--ink-soft);transition:.2s}
+.viewtabs button.active{background:var(--card);color:var(--accent);box-shadow:var(--shadow)}
+.icon-btn{width:30px;height:30px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--card);cursor:pointer;color:var(--ink-soft);display:grid;place-items:center}
+
+.work{flex:1;min-height:0;display:grid;grid-template-columns:262px 1fr 262px;gap:8px}
+.panel{border-radius:var(--r-lg);background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden}
+.side-head{padding:9px 11px 5px;display:flex;align-items:center;justify-content:space-between;gap:6px;border-bottom:1px solid var(--line-2)}
+.moment-toggle{background:none;border:none;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:0}
+.moment-toggle .title{font-family:"Instrument Serif",serif;font-size:17px;line-height:1.1;display:flex;align-items:center;gap:5px}
+.moment-toggle .title::after{content:"⌄";font-family:"Spline Sans";font-size:11px;color:var(--ink-faint)}
+.moment-toggle .meta{font-size:10.5px;color:var(--ink-faint)}
+.quick-btn{width:27px;height:27px;border-radius:7px;border:1px solid var(--line);background:var(--card);cursor:pointer;color:var(--ink-soft);display:grid;place-items:center}
+.stepper{margin:6px 11px;display:flex;align-items:center;gap:2px;padding:2px;border-radius:var(--r-sm);background:var(--accent-wash)}
+.stepper button{border:none;background:none;width:24px;height:24px;border-radius:6px;cursor:pointer;color:var(--ink-soft);font-size:11px}
+.stepper button:hover{background:var(--card);color:var(--accent)}
+.stepper .val{flex:1;text-align:center;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums}
+.stepper .val small{font-weight:500;color:var(--ink-faint);margin-left:4px}
+.layer-tabs{display:flex;gap:0;padding:0 11px 4px;flex-wrap:wrap}
+.layer-tabs button{border:none;background:none;cursor:pointer;font:inherit;font-size:10.5px;font-weight:600;color:var(--ink-faint);padding:3px 9px;border-radius:var(--r-pill)}
+.layer-tabs button.active{background:var(--accent);color:#fff}
+.tabs{display:flex;gap:1px;padding:0 9px 4px;border-bottom:1px solid var(--line-2)}
+.tabs button{border:none;background:none;cursor:pointer;font:inherit;font-size:11px;font-weight:600;color:var(--ink-faint);padding:5px 9px;position:relative}
+.tabs button.active{color:var(--accent)}
+.tabs button.active::after{content:"";position:absolute;left:9px;right:9px;bottom:-1px;height:2px;border-radius:2px;background:var(--accent)}
+.scroll{flex:1;overflow-y:auto;padding:2px 6px 6px}
+.scroll::-webkit-scrollbar{width:6px}.scroll::-webkit-scrollbar-thumb{background:rgba(40,45,80,.14);border-radius:3px}
+table.data{width:100%;border-collapse:collapse}
+table.data thead th{font-size:9px;text-transform:uppercase;letter-spacing:.04em;font-weight:700;color:var(--ink-faint);text-align:left;padding:3px 6px 4px}
+table.data thead th.mx{text-align:center;width:26px}
+table.data tbody tr{border-bottom:1px solid var(--line-2)}
+table.data tbody tr:hover{background:var(--accent-wash)}
+table.data td{padding:3px 6px}
+.glyph{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-size:13px;line-height:1;background:var(--accent-wash);color:var(--accent)}
+.posrow{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.pname{font-size:12px;font-weight:600}
+.pdeg{font-variant-numeric:tabular-nums;font-size:11px;color:var(--ink-soft);font-weight:600}
+.pdeg .sg{font-family:var(--astro);font-variant-emoji:text;color:var(--accent);margin-right:2px}
+.mx-cell{text-align:center}
+.mx{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:4px;border:1px solid var(--line);background:var(--card);cursor:pointer}
+.mx.on{background:var(--accent);border-color:transparent}
+.mx.on::after{content:"";width:6px;height:6px;border-radius:2px;background:#fff}
+.center{padding:0}
+.center .stage{flex:1;display:grid;place-items:center;position:relative;padding:8px}
+.wheel-card{width:min(100%,680px);aspect-ratio:1;border-radius:50%;position:relative;background:var(--card);box-shadow:inset 0 0 0 1px var(--line-2);display:grid;place-items:center}
+.wheel-card svg{width:100%;height:100%;display:block}
+.float-tools{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:5px}
+.float-tools button{width:32px;height:32px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--card);cursor:pointer;color:var(--ink-soft);font-size:13px;display:grid;place-items:center;box-shadow:var(--shadow)}
+.float-tools button:hover{color:var(--accent)}
+.float-tools .seg{display:flex;flex-direction:column;border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--line)}
+.float-tools .seg button{border:none;border-radius:0;width:32px;height:28px}
+.float-tools .seg button.active{background:var(--accent);color:#fff}
+.draw{stroke-dashoffset:1;pathLength:1;animation:draw 1.3s var(--ease) forwards}@keyframes draw{to{stroke-dashoffset:0}}
+.fade-pl{opacity:0;animation:f .5s var(--ease) forwards}@keyframes f{to{opacity:1}}
+@media(max-width:1100px){.work{grid-template-columns:1fr}.panel.left,.panel.right{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <button class="back">←</button>
+    <div class="who"><span class="name">Elena Voronova</span><span class="meta">12 Mar 1991 · 04:20 · Kyiv</span></div>
+    <nav class="layers">
+      <span class="chip transit on"><span class="dot"></span>Transits</span>
+      <span class="chip prog"><span class="dot"></span>Progressions</span>
+      <span class="chip dir"><span class="dot"></span>Directions</span>
+      <span class="chip solar"><span class="dot"></span>Solar return</span>
+      <span class="chip syn"><span class="dot"></span>Synastry</span>
+    </nav>
+    <div class="topbar-actions">
+      <div class="viewtabs"><button class="active"><span class="astro">◯</span> Wheel</button><button>Table</button><button>Timeline</button></div>
+      <button class="icon-btn">⋯</button>
+    </div>
+  </header>
+  <div class="work">
+    <aside class="panel left">
+      <div class="side-head"><button class="moment-toggle"><span class="title">Natal</span><span class="meta">12 Mar 1991, 04:20 · Kyiv</span></button></div>
+      <div class="stepper"><button>‹‹</button><button>‹</button><span class="val">12 Mar 1991<small>04:20</small></span><button>›</button><button>››</button></div>
+      <div class="tabs"><button class="active">Planets</button><button>Houses</button><button>Aspects</button><button>›</button></div>
+      <div class="scroll"><table class="data"><thead><tr><th>Sym</th><th>Position</th><th class="mx">D</th><th class="mx">A</th></tr></thead><tbody id="natalBody"></tbody></table></div>
+    </aside>
+    <section class="panel center">
+      <div class="stage">
+        <div class="wheel-card"><svg id="wheel" viewBox="0 0 600 600"></svg></div>
+        <div class="float-tools">
+          <div class="seg"><button><span class="astro">◯</span></button><button class="active"><span class="astro">◎</span></button></div>
+          <button>+</button><button>−</button><button><span class="astro">⟲</span></button><button>⚙</button>
+        </div>
+      </div>
+    </section>
+    <aside class="panel right">
+      <div class="side-head"><button class="moment-toggle"><span class="title">Transits</span><span class="meta">6 Jun 2026 · Kyiv</span></button>
+        <button class="quick-btn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.45" width="15" height="15"><path d="M2.5 4.5h4l1.2 1.4h5.8v6.6a1 1 0 0 1-1 1h-10a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1Z"/></svg></button>
+      </div>
+      <div class="stepper"><button>‹‹</button><button>‹</button><span class="val">6 Jun 2026<small>14:30</small></span><button>›</button><button>››</button></div>
+      <div class="layer-tabs"><button class="active">Transits</button><button>Progressions</button><button>Directions</button></div>
+      <div class="tabs"><button class="active">Planets</button><button>Houses</button><button>Aspects</button><button>›</button></div>
+      <div class="scroll"><table class="data"><thead><tr><th>Sym</th><th>Position</th><th class="mx">D</th><th class="mx">A</th></tr></thead><tbody id="transBody"></tbody></table></div>
+    </aside>
+  </div>
+</div>
+<script src="forecast-demo-wheel.js"></script>
+</body>
+</html>

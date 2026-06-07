@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forecast · Soft Aurora</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=STIX+Two+Text:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   SOFT AURORA — re-skin of the existing forecast-new UX.
+   Same structure (natal | wheel | prognostic mirror panels,
+   layer chips, D/A matrix columns, time steppers, zoom tools).
+   Only the surface changes: frosted glass, aurora light, rounded.
+   ============================================================ */
+:root{
+  --ink:#2a2740; --ink-soft:#6b6786; --ink-faint:#9a96b3;
+  --violet:#8b7cf6; --violet-deep:#6d5ce0; --pink:#f4a6c8; --gold:#e9c47a; --mint:#9fe6d0;
+  --glass:rgba(255,255,255,0.55); --glass-strong:rgba(255,255,255,0.72);
+  --hairline:rgba(120,110,170,0.16); --hairline-2:rgba(120,110,170,0.10);
+  --r-lg:28px; --r-md:20px; --r-sm:14px; --r-pill:999px;
+  --shadow-soft:0 1px 2px rgba(60,40,120,0.04),0 10px 30px -12px rgba(80,60,160,0.18);
+  --shadow-lift:0 2px 6px rgba(60,40,120,0.06),0 24px 60px -20px rgba(90,60,180,0.30);
+  --ease:cubic-bezier(.22,.61,.36,1);
+  /* monochrome astro glyphs — never emoji */
+  --astro:"STIX Two Text","Times New Roman",serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:"Plus Jakarta Sans",-apple-system,system-ui,sans-serif;color:var(--ink);
+  -webkit-font-smoothing:antialiased;overflow:hidden;background:#f4f1fb}
+
+/* kill emoji presentation everywhere glyphs appear */
+.astro{font-family:var(--astro);font-variant-emoji:text;}
+
+/* ---- Aurora atmosphere ---- */
+.aurora{position:fixed;inset:0;z-index:-2;overflow:hidden;background:linear-gradient(165deg,#fbfaff,#f2eefb 55%,#eef3fc)}
+.aurora::before,.aurora::after,.aurora i{content:"";position:absolute;border-radius:50%;filter:blur(70px);opacity:.5;animation:drift 26s var(--ease) infinite alternate}
+.aurora::before{width:46vw;height:46vw;left:-8vw;top:-12vw;background:radial-gradient(circle,rgba(139,124,246,.5),transparent 65%)}
+.aurora::after{width:42vw;height:42vw;right:-6vw;top:-8vw;background:radial-gradient(circle,rgba(255,202,166,.5),transparent 65%);animation-delay:-8s}
+.aurora i{width:50vw;height:50vw;left:30vw;bottom:-22vw;background:radial-gradient(circle,rgba(167,211,255,.45),transparent 65%);animation-delay:-14s}
+@keyframes drift{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(4vw,3vh,0) scale(1.12)}}
+.grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.35;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E")}
+
+.app{height:100vh;display:flex;flex-direction:column;padding:14px 18px 18px;gap:14px}
+
+/* ---- header (identical UX: back, client, layer chips, view tabs, actions) ---- */
+.topbar{display:flex;align-items:center;gap:16px;padding:10px 14px;border-radius:var(--r-md);
+  background:var(--glass);backdrop-filter:blur(24px) saturate(140%);-webkit-backdrop-filter:blur(24px) saturate(140%);
+  border:1px solid var(--hairline);box-shadow:var(--shadow-soft);animation:rise .7s var(--ease) both}
+.back{width:36px;height:36px;flex:none;border:1px solid var(--hairline);cursor:pointer;border-radius:var(--r-sm);
+  background:rgba(255,255,255,.6);color:var(--ink-soft);font-size:17px;display:grid;place-items:center;transition:.25s var(--ease)}
+.back:hover{transform:translateX(-2px);color:var(--violet-deep);background:#fff}
+.who{display:flex;flex-direction:column;min-width:190px}
+.who .name{font-family:"Fraunces",serif;font-size:19px;font-weight:600;letter-spacing:-.01em}
+.who .meta{font-size:12px;color:var(--ink-faint);font-weight:500;margin-top:1px}
+.layers{display:flex;gap:7px;margin:0 auto;flex-wrap:wrap}
+.chip{--c:var(--violet);display:inline-flex;align-items:center;gap:7px;cursor:pointer;user-select:none;height:36px;
+  padding:0 15px;border-radius:var(--r-pill);font-size:12.5px;font-weight:600;color:var(--ink-soft);
+  background:rgba(255,255,255,.5);border:1px solid var(--hairline);transition:.28s var(--ease)}
+.chip .dot{width:8px;height:8px;border-radius:50%;background:var(--c);opacity:.55;transition:.28s}
+.chip:hover{transform:translateY(-1px);background:#fff;box-shadow:var(--shadow-soft)}
+.chip.on{color:#fff;border-color:transparent;background:linear-gradient(135deg,var(--c),color-mix(in srgb,var(--c) 70%,#fff));box-shadow:0 8px 22px -8px var(--c)}
+.chip.on .dot{background:#fff;opacity:1}
+.chip.transit{--c:var(--violet)} .chip.prog{--c:#b58bf0} .chip.dir{--c:var(--mint)} .chip.solar{--c:var(--gold)} .chip.syn{--c:var(--pink)}
+.topbar-actions{display:flex;gap:8px;align-items:center}
+.viewtabs{display:flex;background:rgba(255,255,255,.5);border:1px solid var(--hairline);border-radius:var(--r-pill);padding:4px}
+.viewtabs button{border:none;background:none;cursor:pointer;height:28px;padding:0 14px;border-radius:var(--r-pill);font:inherit;font-size:12px;font-weight:600;color:var(--ink-soft);transition:.25s var(--ease)}
+.viewtabs button.active{background:#fff;color:var(--violet-deep);box-shadow:var(--shadow-soft)}
+.icon-btn{width:36px;height:36px;border-radius:var(--r-sm);border:1px solid var(--hairline);background:rgba(255,255,255,.6);cursor:pointer;color:var(--ink-soft);display:grid;place-items:center;transition:.25s var(--ease)}
+.icon-btn:hover{background:#fff;color:var(--violet-deep)}
+
+/* ---- workspace ---- */
+.work{flex:1;min-height:0;display:grid;grid-template-columns:312px 1fr 312px;gap:14px}
+.panel{border-radius:var(--r-lg);background:var(--glass);backdrop-filter:blur(26px) saturate(150%);-webkit-backdrop-filter:blur(26px) saturate(150%);
+  border:1px solid var(--hairline);box-shadow:var(--shadow-soft);display:flex;flex-direction:column;overflow:hidden;animation:rise .8s var(--ease) both}
+.panel.left{animation-delay:.05s}.panel.center{animation-delay:.12s}.panel.right{animation-delay:.19s}
+
+/* side-head: moment toggle (title + meta) + optional quick button */
+.side-head{padding:16px 18px 10px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.moment-toggle{background:none;border:none;cursor:pointer;text-align:left;padding:0;display:flex;flex-direction:column;gap:2px}
+.moment-toggle .title{font-family:"Fraunces",serif;font-size:16px;font-weight:600;letter-spacing:-.01em;color:var(--ink);display:flex;align-items:center;gap:6px}
+.moment-toggle .title::after{content:"⌄";font-family:"Plus Jakarta Sans";font-size:13px;color:var(--ink-faint)}
+.moment-toggle .meta{font-size:11.5px;color:var(--ink-faint);font-weight:500}
+.quick-btn{width:32px;height:32px;border-radius:10px;border:1px solid var(--hairline);background:rgba(255,255,255,.6);cursor:pointer;color:var(--ink-soft);display:grid;place-items:center;transition:.22s var(--ease)}
+.quick-btn:hover{color:var(--violet-deep);background:#fff}
+
+/* time stepper — the existing per-panel date control */
+.stepper{margin:0 18px 12px;display:flex;align-items:center;gap:4px;padding:5px;border-radius:var(--r-pill);
+  background:rgba(255,255,255,.55);border:1px solid var(--hairline)}
+.stepper button{border:none;background:none;width:30px;height:30px;border-radius:var(--r-pill);cursor:pointer;color:var(--ink-soft);font-size:13px;transition:.2s var(--ease)}
+.stepper button:hover{background:rgba(255,255,255,.85);color:var(--violet-deep)}
+.stepper .val{flex:1;text-align:center;font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.stepper .val small{font-weight:500;color:var(--ink-faint);margin-left:5px}
+
+/* layer sub-tabs (right panel: which forecast layer's data) */
+.layer-tabs{display:flex;gap:5px;padding:0 18px 8px;flex-wrap:wrap}
+.layer-tabs button{border:1px solid var(--hairline);background:rgba(255,255,255,.5);cursor:pointer;font:inherit;
+  font-size:11px;font-weight:600;color:var(--ink-soft);padding:4px 10px;border-radius:var(--r-pill);transition:.2s var(--ease)}
+.layer-tabs button.active{background:linear-gradient(135deg,var(--violet),#b58bf0);color:#fff;border-color:transparent}
+
+/* data tabs (Planets / Houses / Aspects / ···) */
+.tabs{display:flex;gap:3px;padding:0 16px 10px;align-items:center}
+.tabs button{border:none;background:none;cursor:pointer;font:inherit;font-size:12px;font-weight:600;color:var(--ink-faint);padding:6px 11px;border-radius:var(--r-pill);transition:.22s var(--ease)}
+.tabs button:hover{color:var(--ink)}
+.tabs button.active{color:var(--violet-deep);background:rgba(255,255,255,.7);box-shadow:var(--shadow-soft)}
+
+.scroll{flex:1;overflow-y:auto;padding:0 12px 16px}
+.scroll::-webkit-scrollbar{width:8px}
+.scroll::-webkit-scrollbar-thumb{background:rgba(120,110,170,.22);border-radius:4px;border:2px solid transparent;background-clip:padding-box}
+
+/* planets table — keeps Symbol | Position | D | A matrix columns */
+table.data{width:100%;border-collapse:collapse}
+table.data thead th{font-size:10px;text-transform:uppercase;letter-spacing:.05em;font-weight:700;color:var(--ink-faint);
+  text-align:left;padding:4px 8px 8px}
+table.data thead th.mx{text-align:center;width:34px}
+table.data tbody tr{transition:.18s var(--ease)}
+table.data tbody tr:hover{background:rgba(255,255,255,.6)}
+table.data td{padding:8px;border-radius:0}
+table.data tbody tr td:first-child{border-radius:var(--r-sm) 0 0 var(--r-sm)}
+table.data tbody tr td:last-child{border-radius:0 var(--r-sm) var(--r-sm) 0}
+.glyph{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-size:17px;line-height:1;
+  background:rgba(255,255,255,.7);border:1px solid var(--hairline);color:var(--violet-deep)}
+.pname{font-size:13px;font-weight:600}
+.pname small{display:block;font-size:11px;color:var(--ink-faint);font-weight:500}
+.pdeg{font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--ink-soft);font-weight:600;text-align:right}
+.pdeg .sg{font-family:var(--astro);font-variant-emoji:text;color:var(--violet-deep);margin-right:3px}
+/* D/A matrix toggles */
+.mx-cell{text-align:center}
+.mx{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:6px;border:1px solid var(--hairline);
+  background:rgba(255,255,255,.6);cursor:pointer;transition:.18s var(--ease)}
+.mx.on{background:var(--violet);border-color:transparent}
+.mx.on::after{content:"";width:7px;height:7px;border-radius:2px;background:#fff}
+
+/* center wheel */
+.center .stage{flex:1;display:grid;place-items:center;position:relative;padding:24px}
+.wheel-card{width:min(100%,560px);aspect-ratio:1;border-radius:50%;position:relative;
+  background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.9),rgba(255,255,255,.5));
+  box-shadow:var(--shadow-lift),inset 0 0 60px rgba(255,255,255,.6);display:grid;place-items:center}
+.wheel-card svg{width:100%;height:100%;display:block}
+.float-tools{position:absolute;right:18px;bottom:18px;display:flex;flex-direction:column;gap:7px}
+.float-tools button{width:38px;height:38px;border-radius:var(--r-sm);border:1px solid var(--hairline);background:var(--glass-strong);backdrop-filter:blur(14px);cursor:pointer;color:var(--ink-soft);font-size:15px;display:grid;place-items:center;box-shadow:var(--shadow-soft);transition:.22s var(--ease)}
+.float-tools button:hover{color:var(--violet-deep);transform:scale(1.06)}
+.float-tools button .astro{font-size:16px}
+.float-tools .seg{display:flex;flex-direction:column;border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--hairline);box-shadow:var(--shadow-soft)}
+.float-tools .seg button{border:none;border-radius:0;box-shadow:none;width:38px;height:34px}
+.float-tools .seg button.active{background:linear-gradient(135deg,var(--violet),var(--violet-deep));color:#fff}
+
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.draw{stroke-dashoffset:1;pathLength:1;animation:draw 1.4s var(--ease) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.fade-pl{opacity:0;animation:fadepl .6s var(--ease) forwards}
+@keyframes fadepl{to{opacity:1}}
+@media(max-width:1100px){.work{grid-template-columns:1fr}.panel.left,.panel.right{display:none}}
+</style>
+</head>
+<body>
+<div class="aurora"><i></i></div>
+<div class="grain"></div>
+
+<div class="app">
+
+  <header class="topbar">
+    <button class="back" aria-label="Back">←</button>
+    <div class="who">
+      <span class="name">Elena Voronova</span>
+      <span class="meta">12 Mar 1991 · 04:20 · Kyiv</span>
+    </div>
+    <nav class="layers" aria-label="Forecast layers">
+      <span class="chip transit on"><span class="dot"></span>Transits</span>
+      <span class="chip prog"><span class="dot"></span>Progressions</span>
+      <span class="chip dir"><span class="dot"></span>Directions</span>
+      <span class="chip solar"><span class="dot"></span>Solar return</span>
+      <span class="chip syn"><span class="dot"></span>Synastry</span>
+    </nav>
+    <div class="topbar-actions">
+      <div class="viewtabs">
+        <button class="active"><span class="astro">◯</span> Wheel</button>
+        <button>Table</button>
+        <button>Timeline</button>
+      </div>
+      <button class="icon-btn" aria-label="More">⋯</button>
+    </div>
+  </header>
+
+  <div class="work">
+
+    <!-- LEFT — natal data panel (unchanged UX) -->
+    <aside class="panel left">
+      <div class="side-head">
+        <button class="moment-toggle">
+          <span class="title">Natal</span>
+          <span class="meta">12 Mar 1991, 04:20 · Kyiv</span>
+        </button>
+      </div>
+      <div class="stepper">
+        <button>‹‹</button><button>‹</button>
+        <span class="val">12 Mar 1991<small>04:20</small></span>
+        <button>›</button><button>››</button>
+      </div>
+      <div class="tabs">
+        <button class="active">Planets</button><button>Houses</button><button>Aspects</button><button>›</button>
+      </div>
+      <div class="scroll"><table class="data"><thead><tr>
+        <th>Sym</th><th>Position</th><th class="mx">D</th><th class="mx">A</th>
+      </tr></thead><tbody id="natalBody"></tbody></table></div>
+    </aside>
+
+    <!-- CENTER — wheel + floating zoom/settings tools (unchanged UX) -->
+    <section class="panel center">
+      <div class="stage">
+        <div class="wheel-card"><svg id="wheel" viewBox="0 0 600 600" aria-label="Chart wheel"></svg></div>
+        <div class="float-tools">
+          <div class="seg">
+            <button title="Single wheel"><span class="astro">◯</span></button>
+            <button class="active" title="Multi-wheel"><span class="astro">◎</span></button>
+          </div>
+          <button title="Zoom in">+</button>
+          <button title="Zoom out">−</button>
+          <button title="Reset"><span class="astro">⟲</span></button>
+          <button title="Settings">⚙</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT — prognostic mirror panel (same tables + D/A + layer sub-tabs) -->
+    <aside class="panel right">
+      <div class="side-head">
+        <button class="moment-toggle">
+          <span class="title">Transits</span>
+          <span class="meta">6 Jun 2026 · Kyiv</span>
+        </button>
+        <button class="quick-btn" title="Saved charts" aria-label="Saved charts">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.45" width="16" height="16">
+            <path d="M2.5 4.5h4l1.2 1.4h5.8v6.6a1 1 0 0 1-1 1h-10a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1Z"/>
+            <path d="M2.5 4.5V3.5a1 1 0 0 1 1-1h3.2l1.1 1.2h4.7a1 1 0 0 1 1 1v1.2"/>
+          </svg>
+        </button>
+      </div>
+      <div class="stepper">
+        <button>‹‹</button><button>‹</button>
+        <span class="val">6 Jun 2026<small>14:30</small></span>
+        <button>›</button><button>››</button>
+      </div>
+      <div class="layer-tabs">
+        <button class="active">Transits</button><button>Progressions</button><button>Directions</button>
+      </div>
+      <div class="tabs">
+        <button class="active">Planets</button><button>Houses</button><button>Aspects</button><button>›</button>
+      </div>
+      <div class="scroll"><table class="data"><thead><tr>
+        <th>Sym</th><th>Position</th><th class="mx">D</th><th class="mx">A</th>
+      </tr></thead><tbody id="transBody"></tbody></table></div>
+    </aside>
+
+  </div>
+</div>
+
+<script>
+/* glyphs forced to text presentation via ︎ + serif astro font */
+const VS="︎";
+const SIGN_GLYPH=["♈","♉","♊","♋","♌","♍","♎","♏","♐","♑","♒","♓"];
+const SIGN_AB=["Ari","Tau","Gem","Can","Leo","Vir","Lib","Sco","Sag","Cap","Aqu","Pis"];
+const PLANETS=[
+  {g:"☉",n:"Sun",s:0,deg:"21°14'"},{g:"☽",n:"Moon",s:7,deg:"03°48'"},
+  {g:"☿",n:"Mercury",s:10,deg:"28°02'"},{g:"♀",n:"Venus",s:0,deg:"06°31'"},
+  {g:"♂",n:"Mars",s:9,deg:"14°55'"},{g:"♃",n:"Jupiter",s:4,deg:"09°17'"},
+  {g:"♄",n:"Saturn",s:10,deg:"02°40'"},{g:"♅",n:"Uranus",s:9,deg:"11°09'"},
+  {g:"♆",n:"Neptune",s:9,deg:"15°22'"},{g:"♇",n:"Pluto",s:7,deg:"20°41'"},
+];
+const natalLon=[351,213,328,6,284,129,302,281,285,230];
+const transLon=[76,11,52,40,250,98,330,40,355,300];
+
+function rows(body,onD,onA){
+  body.innerHTML=PLANETS.map((p,i)=>`
+    <tr>
+      <td><span class="glyph astro">${p.g+VS}</span></td>
+      <td><span class="pname">${p.n}<small>${SIGN_AB[p.s]}</small></span></td>
+      <td class="mx-cell"><span class="mx ${onD.includes(i)?'on':''}"></span></td>
+      <td class="mx-cell"><span class="mx ${onA.includes(i)?'on':''}"></span></td>
+    </tr>
+    <tr style="display:none"></tr>`).join("")
+    .replace(/<small>([^<]+)<\/small>/g,(m,ab)=>`<small>${ab}</small>`);
+  // attach degree to position cell
+  [...body.querySelectorAll('tr')].forEach((tr,idx)=>{
+    const p=PLANETS[idx]; if(!p)return;
+    const pn=tr.querySelector('.pname'); if(!pn)return;
+    const d=document.createElement('span'); d.className='pdeg';
+  });
+}
+// simpler: build with degree inline
+function build(body,onD,onA){
+  body.innerHTML=PLANETS.map((p,i)=>`
+    <tr>
+      <td><span class="glyph astro">${p.g+VS}</span></td>
+      <td><div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <span class="pname">${p.n}</span>
+        <span class="pdeg"><span class="sg">${SIGN_GLYPH[p.s]+VS}</span>${p.deg}</span>
+      </div></td>
+      <td class="mx-cell"><span class="mx ${onD.includes(i)?'on':''}"></span></td>
+      <td class="mx-cell"><span class="mx ${onA.includes(i)?'on':''}"></span></td>
+    </tr>`).join("");
+}
+build(natalBody,[0,1,2,3,4,5,6,7,8,9],[0,1,2,3,4,5,6]);
+build(transBody,[0,1,2,3,4,5,6,7,8,9],[0,1,2,5]);
+
+/* ---- wheel ---- */
+const NS="http://www.w3.org/2000/svg";
+const wheel=document.getElementById("wheel"),cx=300,cy=300;
+const el=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+const pol=(r,d)=>{const a=(180-d)*Math.PI/180;return[cx+r*Math.cos(a),cy-r*Math.sin(a)];};
+const R_OUT=288,R_SIGN=250,R_HOUSE=216,R_INNER=150,R_TRANS=270,R_NAT=186;
+
+const defs=el("defs",{});
+defs.innerHTML=`<radialGradient id="ring" cx="50%" cy="42%" r="60%"><stop offset="55%" stop-color="rgba(255,255,255,0)"/><stop offset="100%" stop-color="rgba(139,124,246,.10)"/></radialGradient>
+<linearGradient id="zod" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b7cf6"/><stop offset="1" stop-color="#f4a6c8"/></linearGradient>`;
+wheel.appendChild(defs);
+wheel.appendChild(el("circle",{cx,cy,r:R_OUT,fill:"url(#ring)"}));
+[R_OUT,R_SIGN,R_HOUSE,R_INNER].forEach(r=>wheel.appendChild(el("circle",{cx,cy,r,fill:"none",stroke:"rgba(120,110,170,.18)","stroke-width":1})));
+for(let i=0;i<12;i++){
+  const a0=i*30;const[x1,y1]=pol(R_SIGN,a0);
+  wheel.appendChild(el("line",{x1,y1,x2:pol(R_OUT,a0)[0],y2:pol(R_OUT,a0)[1],stroke:"rgba(120,110,170,.22)","stroke-width":1}));
+  const[gx,gy]=pol((R_SIGN+R_OUT)/2,a0+15);
+  const t=el("text",{x:gx,y:gy,"text-anchor":"middle","dominant-baseline":"central","font-size":20,fill:"#6d5ce0","font-family":"STIX Two Text,serif",opacity:.85});
+  t.textContent=SIGN_GLYPH[i]+VS;wheel.appendChild(t);
+}
+for(let i=0;i<12;i++){
+  const a0=i*30+8;const[x1,y1]=pol(R_INNER,a0),[x2,y2]=pol(R_HOUSE,a0);
+  wheel.appendChild(el("line",{x1,y1,x2,y2,stroke:"rgba(120,110,170,.14)","stroke-width":1}));
+  const[nx,ny]=pol(R_INNER+16,a0+15);
+  const t=el("text",{x:nx,y:ny,"text-anchor":"middle","dominant-baseline":"central","font-size":11,fill:"#9a96b3","font-weight":600});
+  t.textContent=i+1;wheel.appendChild(t);
+}
+[[0,5],[1,3],[2,4],[0,9],[6,2]].forEach(([i,j],k)=>{
+  const[x1,y1]=pol(R_INNER,natalLon[i]),[x2,y2]=pol(R_INNER,natalLon[j]);
+  wheel.appendChild(el("line",{x1,y1,x2,y2,stroke:"url(#zod)","stroke-width":1.4,opacity:.5,class:"draw",style:`animation-delay:${.4+k*.12}s`}));
+});
+function place(lons,radius,color,delayBase){
+  lons.forEach((lon,idx)=>{
+    const[x,y]=pol(radius,lon);
+    const[tx,ty]=pol(radius+13,lon),[ex,ey]=pol(R_SIGN-2,lon);
+    wheel.appendChild(el("line",{x1:tx,y1:ty,x2:ex,y2:ey,stroke:color,"stroke-width":.8,opacity:.25}));
+    const g=el("g",{class:"fade-pl",style:`animation-delay:${delayBase+idx*.05}s`});
+    g.appendChild(el("circle",{cx:x,cy:y,r:13,fill:"rgba(255,255,255,.92)",stroke:color,"stroke-width":1.5}));
+    const t=el("text",{x,y,"text-anchor":"middle","dominant-baseline":"central","font-size":15,fill:color,"font-family":"STIX Two Text,serif"});
+    t.textContent=PLANETS[idx].g+VS;g.appendChild(t);
+    wheel.appendChild(g);
+  });
+}
+place(natalLon,R_NAT,"#6d5ce0",.6);
+place(transLon,R_TRANS,"#e08bb0",1.0);
+</script>
+</body>
+</html>

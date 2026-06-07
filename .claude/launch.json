@@ -6,6 +6,12 @@
       "runtimeExecutable": "bash",
       "runtimeArgs": ["-c", "PYTHONPATH=$(pwd) .venv/bin/uvicorn app.api.main:app --host 127.0.0.1 --port 8000"],
       "port": 8000
+    },
+    {
+      "name": "aurora-demo",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8777", "--directory", "app/frontend"],
+      "port": 8777
     }
   ]
 }
