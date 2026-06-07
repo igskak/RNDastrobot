@@ -251,10 +251,10 @@
         "manualPartner": "Partner (manual)"
       },
       "pageTitle": "Forecast",
-      "unknownClient": "Client",
+      "unknownClient": "",
       "loader": "Loading forecast",
       "layersAria": "Forecast layers",
-      "backToClients": "Back to clients",
+      "backToClients": "Back to practice",
       "natalPanelTitle": "Natal",
       "birthDateTimeLabel": "Birth date / time",
       "dateTimeLabel": "Date / time",
@@ -274,7 +274,8 @@
         "multi": "Multi-wheel"
       },
       "settings": {
-        "cuspCircles": "Cusp circles"
+        "cuspCircles": "Cusp circles",
+        "resetLocalSettings": "Reset view settings"
       },
       "direction": {
         "popoverAria": "Direction options",
@@ -319,7 +320,7 @@
       "descriptions": {
         "trial": "For trying the workspace with up to five saved charts. Calls, recordings, and transcription stay locked.",
         "solo": "For learning and personal practice: unlimited saved charts, related people, and synastry. Calls, sessions, and meeting stats stay locked.",
-        "standard": "Unlimited saved charts and the full client workflow without calls, recordings, or transcription.",
+        "standard": "Unlimited saved charts and the full practice workflow without calls, recordings, or transcription.",
         "pro": "Full workspace access, including calls, recordings, transcription, and meeting intelligence."
       },
       "usage": {
@@ -335,7 +336,7 @@
           "default": "Choose a plan to unlock this workspace.",
           "limit": "You have reached the saved chart limit on your current plan. Choose a plan with more room to continue.",
           "calls": "Calls, recordings, and transcription are available on the Pro plan.",
-          "consultations": "Client sessions and consultation history are available on practice-oriented plans."
+          "consultations": "Sessions and consultation history are available on practice-oriented plans."
         },
         "choosePlan": "Switch to {plan}",
         "activating": "Activating...",
@@ -566,7 +567,7 @@
     "chart": {
       "actions": {
         "addLayer": "Add layer",
-        "editClient": "Edit client data",
+        "editClient": "Edit profile data",
         "label": "Actions",
         "openMenu": "Open chart actions",
         "openSynastry": "Synastry",
@@ -660,9 +661,9 @@
       },
       "edit": {
         "errors": {
-          "chartUnavailable": "The current chart is unavailable. Please reopen the client card.",
-          "saveFailed": "Failed to update client data",
-          "userIdMissing": "User id is missing. Open the client chart again."
+          "chartUnavailable": "The current chart is unavailable. Please reopen the chart.",
+          "saveFailed": "Failed to update profile data",
+          "userIdMissing": "Profile id is missing. Please reopen the chart."
         },
         "kicker": "Correction mode",
         "placeCurrent": "Current coordinates will be kept unless you choose another place.",
@@ -672,14 +673,14 @@
         "submit": "Save and recalculate",
         "submitting": "Updating chart...",
         "subtitle": "Fix the birth data and immediately continue working with the corrected chart.",
-        "success": "Client data updated",
+        "success": "Profile data updated",
         "title": "Edit birth data"
       },
       "synastry": {
         "createKicker": "New person",
         "createSubmitting": "Creating and calculating chart...",
         "createSubtitle": "Add the second person directly from the natal chart, then open synastry immediately.",
-        "empty": "There are no linked people yet. You can create a new person or link an existing client.",
+        "empty": "There are no linked people yet. You can create a new person or link an existing one.",
         "kicker": "Who do you want to compare with",
         "loadFailed": "Failed to load linked people",
         "subtitle": "Choose someone from the list or add a new person without leaving the natal chart.",
@@ -820,13 +821,13 @@
     "calendar": {
       "clientUnnamed": "Unnamed",
       "dialog": {
-        "client": "Client",
-        "loadingClients": "Loading clients...",
-        "selectClient": "Select client"
+        "client": "Person",
+        "loadingClients": "Loading...",
+        "selectClient": "Select person"
       },
       "errors": {
         "loadEvents": "Failed to load events",
-        "selectClient": "Please select a client."
+        "selectClient": "Please select a person."
       },
       "header": {
         "kicker": "Schedule",
@@ -846,7 +847,7 @@
         "title": "Calendar - Steliara"
       },
       "nav": {
-        "clients": "Clients"
+        "clients": "People"
       },
       "view": {
         "day": "Day",
@@ -958,7 +959,7 @@
         "kicker": "Chart",
         "title": "New chart",
         "chartTitle": "Chart title",
-        "chartTitlePlaceholder": "Client, event… (optional)",
+        "chartTitlePlaceholder": "Person, event… (optional)",
         "submit": "Save chart",
         "successToast": "Chart saved",
         "errors": {

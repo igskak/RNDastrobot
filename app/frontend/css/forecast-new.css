@@ -1529,14 +1529,33 @@
     background: rgba(255, 255, 255, 0.24);
 }
 
-.forecast-new-single-mode #forecastNewNatalPanel [data-tabs-overflow] {
-    display: none;
-}
-
+/* Left panel in single mode: Planets | Aspects | Grid (like chart.html left panel) */
 .forecast-new-single-mode #forecastNewNatalPanel .forecast-new-tabs {
     grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.forecast-new-single-mode #forecastNewNatalPanel .forecast-new-tabs > .panel-tab[data-panel-target="natalHousesView"] {
+    display: none;
+}
+
+.forecast-new-single-mode #forecastNewNatalPanel [data-tabs-overflow],
+.forecast-new-single-mode #forecastNewNatalPanel [data-tabs-overflow-menu] {
+    display: contents;
+}
+
+.forecast-new-single-mode #forecastNewNatalPanel [data-tabs-overflow-toggle],
+.forecast-new-single-mode #forecastNewNatalPanel .forecast-new-tabs-overflow-item {
+    display: none;
+}
+
+.forecast-new-single-mode #forecastNewNatalPanel .forecast-new-tabs-overflow-item[data-panel-target="natalGridView"] {
+    display: inline-flex;
+    width: auto;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Right panel in single mode: hide header/stepper/saved btn */
 .forecast-new-single-mode #forecastNewProgPanel .forecast-new-side-head,
 .forecast-new-single-mode #forecastNewProgPanel .forecast-new-right-layer-tabs,
 .forecast-new-single-mode #forecastNewProgPanel #forecastNewTimeStepper,
@@ -1545,20 +1564,17 @@
     display: none;
 }
 
+/* Right panel in single mode: Houses | Configs | Balances | Rulers (like chart.html right panel) */
 .forecast-new-single-mode #forecastNewProgPanel .forecast-new-tabs {
     grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.forecast-new-single-mode #forecastNewProgPanel .forecast-new-tabs > .panel-tab[data-panel-target="progPlanetsView"],
-.forecast-new-single-mode #forecastNewProgPanel .forecast-new-tabs > .panel-tab[data-panel-target="progHousesView"],
-.forecast-new-single-mode #forecastNewProgPanel .forecast-new-tabs > .panel-tab[data-panel-target="progAspectsView"],
 .forecast-new-single-mode #forecastNewProgPanel [data-tabs-overflow],
 .forecast-new-single-mode #forecastNewProgPanel [data-tabs-overflow-menu] {
     display: contents;
 }
 
 .forecast-new-single-mode #forecastNewProgPanel .forecast-new-tabs > .panel-tab[data-panel-target="progPlanetsView"],
-.forecast-new-single-mode #forecastNewProgPanel .forecast-new-tabs > .panel-tab[data-panel-target="progHousesView"],
 .forecast-new-single-mode #forecastNewProgPanel .forecast-new-tabs > .panel-tab[data-panel-target="progAspectsView"],
 .forecast-new-single-mode #forecastNewProgPanel [data-tabs-overflow-toggle] {
     display: none;
@@ -1569,6 +1585,10 @@
     width: auto;
     align-items: center;
     justify-content: center;
+}
+
+.forecast-new-single-mode #forecastNewProgPanel .forecast-new-tabs-overflow-item[data-panel-target="progGridView"] {
+    display: none;
 }
 
 .forecast-new-side-panel .balance-subtabs {
@@ -2015,6 +2035,33 @@
     padding: 0 6px;
     font-size: 16px;
     background: rgba(30, 58, 95, 0.07);
+}
+
+/* Reset local settings button in settings panel */
+.forecast-new-settings-reset-section {
+    padding-top: 4px;
+    border-top: 1px solid var(--border, rgba(0,0,0,0.08));
+    margin-top: 4px;
+}
+
+.forecast-new-settings-reset-btn {
+    display: block;
+    width: 100%;
+    padding: 6px 10px;
+    background: none;
+    border: 1px solid var(--border, rgba(0,0,0,0.12));
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--text-secondary, rgba(0,0,0,0.5));
+    cursor: pointer;
+    text-align: center;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.forecast-new-settings-reset-btn:hover {
+    background: var(--bg-hover, rgba(0,0,0,0.04));
+    color: var(--text, rgba(0,0,0,0.75));
+    border-color: var(--border-strong, rgba(0,0,0,0.2));
 }
 
 .forecast-new-chart-library-actions {

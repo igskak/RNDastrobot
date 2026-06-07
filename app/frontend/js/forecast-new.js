@@ -375,6 +375,7 @@
             'showWheelStationaryToggle', 'showWheelDegreeToggle',
             'angleAscDscBoldToggle', 'angleMcIcBoldToggle',
             'showSpeedToggle', 'showStationaryToggle',
+            'forecastNewResetLocalBtn',
             // save-chart modal elements removed — handled by window.SaveChartModal
         ].forEach((id) => {
             refs[id] = document.getElementById(id);
@@ -881,6 +882,16 @@
             });
         });
         refs.aspectTypeToggles?.addEventListener('change', () => scheduleApplySettings());
+
+        refs.forecastNewResetLocalBtn?.addEventListener('click', () => {
+            const storage = window.ForecastNewStateStorage;
+            const key = storage?.buildStorageKey?.(state.natalData);
+            if (key) {
+                try { localStorage.removeItem(key); } catch (_) { /* ignore */ }
+            }
+            refs.forecastNewSettingsPanel?.classList.add('hidden');
+            window.location.reload();
+        });
 
         refs.forecastNewViewSingle?.addEventListener('click', () => setWheelView('single'));
         refs.forecastNewViewMulti?.addEventListener('click', () => setWheelView('multi'));
@@ -1525,14 +1536,9 @@
 
     function updateHeaderInfo() {
         const birth = state.natalData?.birth_data || {};
-        const name = [birth.first_name, birth.last_name].filter(Boolean).join(' ').trim() || t('page.forecastNew.unknownClient');
-        refs.forecastNewTitle.textContent = `${name} · ${t('page.forecastNew.pageTitle')}`;
-        refs.forecastNewSubtitle.textContent = [
-            birth.date,
-            birth.time,
-            formatHeaderTimezone(birth.timezone),
-            birth.place,
-        ].filter(Boolean).join(' · ');
+        const name = [birth.first_name, birth.last_name].filter(Boolean).join(' ').trim();
+        refs.forecastNewTitle.textContent = name;
+        refs.forecastNewSubtitle.textContent = '';
         updateNatalMomentMeta();
     }
 
@@ -4075,11 +4081,11 @@
     }
 
     function normalizeSingleRightTab(tab) {
-        return ['Grid', 'Configs', 'Balances', 'Rulers'].includes(tab) ? tab : 'Grid';
+        return ['Houses', 'Configs', 'Balances', 'Rulers'].includes(tab) ? tab : 'Houses';
     }
 
     function normalizeSingleLeftTab(tab) {
-        return ['Planets', 'Houses', 'Aspects'].includes(tab) ? tab : 'Planets';
+        return ['Planets', 'Aspects', 'Grid'].includes(tab) ? tab : 'Planets';
     }
 
     function closeTabsOverflowMenus() {
