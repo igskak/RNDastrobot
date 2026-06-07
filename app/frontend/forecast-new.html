@@ -118,7 +118,6 @@
                     <button type="button" class="chart-action-item" id="openNatalTablesBtn" role="menuitem" data-i18n="page.chart.nav.tables"></button>
                     <button type="button" class="chart-action-item" id="openSynastryBtn" role="menuitem" data-i18n="page.chart.nav.synastry"></button>
                     <button type="button" class="chart-action-item" id="openClientProfileBtn" role="menuitem" data-i18n="page.clientProfile.viewProfile"></button>
-                    <button type="button" class="chart-action-item" id="saveSourceChartBtn" role="menuitem" data-i18n="page.chart.actions.saveSourceChart"></button>
                     <a href="/account-settings.html" class="chart-action-item chart-action-item--link" role="menuitem" data-i18n="page.accountSettings.title"></a>
                 </div>
             </div>
@@ -322,12 +321,20 @@
                         <span class="forecast-new-moment-toggle-title" id="prognosticPanelTitle">Transits</span>
                         <span class="forecast-new-moment-toggle-meta" id="prognosticPanelMeta"></span>
                     </button>
-                    <button type="button" class="panel-quick-open-btn" id="forecastSavedChartsBtn" data-i18n-aria-label="page.clientProfile.quickOpen.savedCharts" data-i18n-title="page.clientProfile.quickOpen.savedCharts">
-                        <svg class="panel-quick-open-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.45" aria-hidden="true">
-                            <path d="M2.5 4.5h4l1.2 1.4h5.8v6.6a1 1 0 0 1-1 1h-10a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1Z"/>
-                            <path d="M2.5 4.5V3.5a1 1 0 0 1 1-1h3.2l1.1 1.2h4.7a1 1 0 0 1 1 1v1.2"/>
-                        </svg>
-                    </button>
+                    <div class="forecast-new-chart-library-actions">
+                        <button type="button" class="panel-quick-open-btn" id="forecastSavedChartsBtn" data-i18n-aria-label="page.clientProfile.quickOpen.savedCharts" data-i18n-title="page.clientProfile.quickOpen.savedCharts">
+                            <svg class="panel-quick-open-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.45" aria-hidden="true">
+                                <path d="M2.5 4.25h4l1.25 1.5h5.75v6.5a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1v-8z"/>
+                                <path d="M5 8.5h6M8 6v5M6.25 9.25 8 11l1.75-1.75"/>
+                            </svg>
+                        </button>
+                        <button type="button" class="panel-quick-open-btn forecast-new-save-chart-btn" id="saveSourceChartBtn" data-i18n-aria-label="page.chart.actions.saveSourceChart" data-i18n-title="page.chart.actions.saveSourceChart" aria-label="Save chart" title="Save chart">
+                            <svg class="panel-quick-open-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.45" aria-hidden="true">
+                                <path d="M3 2.75h8l2 2v8.5H3V2.75z"/>
+                                <path d="M5 2.75v3.5h5v-3.5M5 13.25V9h6v4.25"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="forecast-new-time-stepper" id="forecastNewTimeStepper" data-i18n-aria-label="page.forecastNew.transitStepperAria" aria-label="Transit time control"></div>

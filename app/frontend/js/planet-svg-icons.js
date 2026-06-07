@@ -12,7 +12,6 @@
         'Saturn',
         'Uranus',
         'Neptune',
-        'Pluto',
         'Chiron',
         'TrueNode',
         'TrueNorthNode',
@@ -244,10 +243,14 @@
     }
 
     function appendPluto(root) {
-        addCircle(root, 50, 22, 12);
-        addPath(root, 'M 36 42 C 42 34 58 34 64 42');
-        addLine(root, 50, 42, 50, 84);
-        addLine(root, 40, 72, 60, 72);
+        const glyph = append(root, createSvgElement('g', { transform: 'translate(9 9) scale(.82)' }));
+        addCircle(glyph, 50, 27, 18, { 'stroke-width': 5.5 });
+        addPath(glyph, 'M 20 32 V 39 C 20 58 33 69 50 69 C 67 69 80 58 80 39 V 32', {
+            'stroke-width': 5.5,
+            'stroke-linecap': 'butt',
+        });
+        addLine(glyph, 50, 69, 50, 92, { 'stroke-width': 5.5, 'stroke-linecap': 'butt' });
+        addLine(glyph, 36, 82, 64, 82, { 'stroke-width': 5.5, 'stroke-linecap': 'butt' });
     }
 
     function appendChiron(root) {
