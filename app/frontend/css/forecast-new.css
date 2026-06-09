@@ -878,26 +878,38 @@
 }
 
 .forecast-new-side-panel .config-card--compact {
-    padding: 7px 8px 6px;
-    margin-bottom: 6px;
-    border-radius: 7px;
+    display: grid;
+    grid-template-columns: minmax(0, max-content) minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px;
+    min-height: 30px;
+    padding: 3px 5px;
+    margin-bottom: 3px;
+    border-radius: 6px;
 }
 
 .forecast-new-side-panel .config-card-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 6px;
-    margin-bottom: 3px;
+    display: contents;
 }
 
 .forecast-new-side-panel .config-card h4 {
+    display: block;
     min-width: 0;
+    max-width: 120px;
     margin: 0;
-    gap: 4px;
-    font-size: 12.5px;
+    font-size: 12px;
     font-weight: 600;
     line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.forecast-new-side-panel .config-stellium-sign {
+    margin-right: 2px;
+    color: var(--accent);
+    font-size: 14px;
+    vertical-align: -1px;
 }
 
 .forecast-new-side-panel .config-strength-badge {
@@ -905,8 +917,9 @@
     flex: 0 0 auto;
     align-items: center;
     justify-content: center;
-    min-height: 18px;
-    padding: 0 6px;
+    grid-column: 3;
+    min-height: 16px;
+    padding: 0 5px;
     border-radius: 999px;
     background: rgba(30, 58, 95, 0.08);
     color: var(--accent);
@@ -917,22 +930,31 @@
 }
 
 .forecast-new-side-panel .config-planets--compact {
-    gap: 3px;
-    margin-top: 2px;
+    grid-column: 2;
+    grid-row: 1;
+    flex-wrap: nowrap;
+    justify-self: start;
+    gap: 2px;
+    margin: 0;
 }
 
 .forecast-new-side-panel .planet-tag--icon-only {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 22px;
-    min-height: 22px;
-    padding: 0 4px;
-    font-size: 14px;
+    min-width: 18px;
+    min-height: 18px;
+    padding: 0 1px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    font-size: 13px;
 }
 
 .forecast-new-side-panel .config-apex-chip {
-    gap: 2px;
+    flex: 0 0 auto;
+    gap: 0;
     margin-right: 0;
 }
 

@@ -188,14 +188,14 @@ const SIGN_ELEMENTS = {
 };
 
 const CONFIG_ICONS = {
-    'T_Square': '🔺',
-    'Grand_Trine': '🔷',
+    'T_Square': '⊥',
+    'Grand_Trine': '△',
     'Grand_Cross': '✚',
-    'Yod': '🔻',
+    'Yod': '⋔',
     'Mystic_Rectangle': '▭',
-    'Kite': '🪁',
+    'Kite': '◇',
     'Star_of_David': '✡',
-    'Stellium': '⭐'
+    'Stellium': '●'
 };
 
 const PLANET_GLYPH_SCALE = {
