@@ -333,7 +333,8 @@
         "presetNamePrompt": "Название конфигурации:",
         "presetLoad": "Загрузить",
         "presetLoaded": "Загружено",
-        "presetDeleted": "удалено"
+        "presetDeleted": "удалено",
+        "dragHint": "Перетащить"
       }
     },
     "plan": {

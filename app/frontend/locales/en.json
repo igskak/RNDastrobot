@@ -333,7 +333,8 @@
         "presetNamePrompt": "Configuration name:",
         "presetLoad": "Load",
         "presetLoaded": "Loaded",
-        "presetDeleted": "deleted"
+        "presetDeleted": "deleted",
+        "dragHint": "Drag"
       }
     },
     "plan": {

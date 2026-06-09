@@ -1,3 +1,5 @@
+import Sortable from 'sortablejs';
+if (typeof window !== 'undefined') window.Sortable = Sortable;
 import '../js/i18n.js';
 import '../js/i18n-ui.js';
 import '../js/locale-formatters.js';

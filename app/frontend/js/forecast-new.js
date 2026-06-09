@@ -4378,9 +4378,14 @@
         .forecast-new-pe-tab-actions,.forecast-new-pe-block-actions{display:inline-flex;gap:2px}
         .forecast-new-pe-tab-actions button,.forecast-new-pe-block-actions button{border:1px solid rgba(120,120,160,.25);background:var(--surface,#fff);border-radius:6px;cursor:pointer;width:24px;height:24px;line-height:1;font-size:12px;color:inherit}
         .forecast-new-pe-tab-actions button:hover,.forecast-new-pe-block-actions button:hover{background:rgba(120,120,200,.14)}
-        .forecast-new-pe-blocks{list-style:none;margin:8px 0 6px;padding:0;display:flex;flex-direction:column;gap:4px}
+        .forecast-new-pe-blocks{list-style:none;margin:8px 0 6px;padding:0;display:flex;flex-direction:column;gap:4px;min-height:18px}
         .forecast-new-pe-block{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 6px;border-radius:6px;background:rgba(120,120,200,.07)}
-        .forecast-new-pe-block-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .forecast-new-pe-block-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .forecast-new-pe-tab-grip,.forecast-new-pe-block-grip{cursor:grab;opacity:.4;font-size:13px;line-height:1;user-select:none;padding:0 2px;flex-shrink:0}
+        .forecast-new-pe-tab-grip:hover,.forecast-new-pe-block-grip:hover{opacity:.75}
+        .forecast-new-pe-tab-grip:active,.forecast-new-pe-block-grip:active{cursor:grabbing}
+        .forecast-new-pe-ghost{opacity:.4;background:rgba(120,120,200,.22)!important}
+        .forecast-new-pe-chosen{box-shadow:0 0 0 2px rgba(120,120,200,.45)}
         .forecast-new-pe-add-block,.forecast-new-pe-add-tab{width:100%;margin-top:4px;padding:5px 6px;border:1px dashed rgba(120,120,160,.4);border-radius:6px;background:transparent;cursor:pointer;color:inherit;font-size:12px}
         .forecast-new-pe-add-tab[disabled]{opacity:.4;cursor:not-allowed}
         .forecast-new-pe-footer{display:flex;align-items:center;gap:6px;padding:10px 14px;border-top:1px solid rgba(120,120,160,.18);position:sticky;bottom:0;background:inherit}
@@ -4462,7 +4467,8 @@
         const title = tab.title != null ? tab.title : '';
         const placeholder = escapeHtml(PL.autoTabTitle(tab, t));
         const blocksHtml = tab.blocks.map((b) => `
-            <li class="forecast-new-pe-block">
+            <li class="forecast-new-pe-block" data-blockkey="${b.source}:${b.view}">
+                <span class="forecast-new-pe-block-grip" title="${escapeHtml(t('page.forecastNew.panelEditor.dragHint') || 'Перетащить')}" aria-hidden="true">⠿</span>
                 <span class="forecast-new-pe-block-label">${escapeHtml(blockLabel(b))}</span>
                 <span class="forecast-new-pe-block-actions">
                     <button type="button" data-pe-action="move-block" data-side="${side}" data-tab="${tab.id}" data-blockkey="${b.source}:${b.view}" data-dir="up" title="↑">↑</button>
@@ -4482,6 +4488,7 @@
         return `
             <div class="forecast-new-pe-tab" data-tab="${tab.id}">
                 <div class="forecast-new-pe-tab-head">
+                    <span class="forecast-new-pe-tab-grip" title="${escapeHtml(t('page.forecastNew.panelEditor.dragHint') || 'Перетащить')}" aria-hidden="true">⠿</span>
                     <input type="text" class="forecast-new-pe-title" data-pe-action="rename-tab" data-side="${side}" data-tab="${tab.id}" value="${escapeHtml(title)}" placeholder="${placeholder}">
                     <span class="forecast-new-pe-tab-actions">
                         <button type="button" data-pe-action="move-tab" data-side="${side}" data-tab="${tab.id}" data-dir="up" title="↑">↑</button>
@@ -4511,6 +4518,7 @@
     function renderPanelEditor() {
         if (!state.panelEditMode || !state.panelLayout) return;
         const editor = ensurePanelEditor();
+        destroyEditorDnd(); // tear down stale Sortable instances before replacing innerHTML
         const mode = currentWheelMode();
         const modeLabel = mode === 'single'
             ? (t('page.forecastNew.view.single') || 'Одиночное колесо')
@@ -4551,6 +4559,87 @@
                 </div>
                 <button type="button" class="forecast-new-pe-reset" data-pe-action="reset">${escapeHtml(t('page.forecastNew.panelEditor.reset') || 'Сбросить к стандартной')}</button>
             </div>`;
+        initEditorDnd();
+    }
+
+    // ---- drag-and-drop for the panel configurator (SortableJS) ----
+    function destroyEditorDnd() {
+        (state._editorSortables || []).forEach((s) => { try { s.destroy(); } catch (_) { /* ignore */ } });
+        state._editorSortables = [];
+    }
+
+    function initEditorDnd() {
+        if (!window.Sortable) return;
+        destroyEditorDnd();
+        const editor = document.getElementById('forecastNewPanelEditor');
+        if (!editor) return;
+        state._editorSortables = [];
+        // Defer commit to next tick so we never destroy a Sortable instance
+        // synchronously inside its own onEnd handler.
+        const commit = () => setTimeout(commitLayoutFromEditorDom, 0);
+        // Tabs: each panel side is a sortable list of tab cards; shared group
+        // lets a tab move between the left and right panels.
+        editor.querySelectorAll('.forecast-new-pe-side').forEach((sideEl) => {
+            state._editorSortables.push(window.Sortable.create(sideEl, {
+                group: 'fn-tabs',
+                draggable: '.forecast-new-pe-tab',
+                handle: '.forecast-new-pe-tab-grip',
+                animation: 150,
+                ghostClass: 'forecast-new-pe-ghost',
+                chosenClass: 'forecast-new-pe-chosen',
+                onEnd: commit,
+            }));
+        });
+        // Blocks: each tab's <ul> is a sortable list; shared group lets a block
+        // move between tabs and across panels.
+        editor.querySelectorAll('.forecast-new-pe-blocks').forEach((ul) => {
+            state._editorSortables.push(window.Sortable.create(ul, {
+                group: 'fn-blocks',
+                handle: '.forecast-new-pe-block-grip',
+                animation: 150,
+                ghostClass: 'forecast-new-pe-ghost',
+                chosenClass: 'forecast-new-pe-chosen',
+                onEnd: commit,
+            }));
+        });
+    }
+
+    // Rebuild the current wheel mode's panels from the editor DOM order after a
+    // drag, then normalize/render/persist. The other mode is left untouched.
+    function readPanelEditorDom(mode) {
+        const editor = document.getElementById('forecastNewPanelEditor');
+        const result = { left: [], right: [] };
+        if (!editor) return result;
+        ['left', 'right'].forEach((side) => {
+            const sideEl = editor.querySelector(`.forecast-new-pe-side[data-side="${side}"]`);
+            if (!sideEl) return;
+            sideEl.querySelectorAll('.forecast-new-pe-tab').forEach((tabEl) => {
+                const id = tabEl.dataset.tab || null;
+                const input = tabEl.querySelector('.forecast-new-pe-title');
+                const titleRaw = input ? input.value.trim() : '';
+                const blocks = [];
+                tabEl.querySelectorAll('.forecast-new-pe-block').forEach((li) => {
+                    const key = li.dataset.blockkey || '';
+                    const [source, view] = key.split(':');
+                    if (source && view) blocks.push({ source, view });
+                });
+                result[side].push({ id, title: titleRaw || null, blocks });
+            });
+        });
+        return result;
+    }
+
+    function commitLayoutFromEditorDom() {
+        const PL = window.ForecastNewPanelLayout;
+        if (!PL || !state.panelLayout) return;
+        const mode = currentWheelMode();
+        const dom = readPanelEditorDom(mode);
+        state.layoutUndo = JSON.parse(JSON.stringify(state.panelLayout));
+        state.panelLayout.panels[mode] = { left: dom.left, right: dom.right };
+        state.panelLayout = PL.normalizeLayout(state.panelLayout);
+        renderPanels();
+        renderPanelEditor();
+        scheduleLayoutPersist();
     }
 
     function togglePanelEditMode(force) {
@@ -4563,6 +4652,7 @@
         const editor = ensurePanelEditor();
         editor.classList.toggle('hidden', !next);
         if (next) renderPanelEditor();
+        else destroyEditorDnd();
     }
 
     function bindPanelConfigurator() {
