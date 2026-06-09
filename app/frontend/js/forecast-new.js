@@ -751,16 +751,22 @@
             });
         });
 
-        refs.tabsOverflow.forEach((overflow) => {
-            const toggle = overflow.querySelector('[data-tabs-overflow-toggle]');
-            toggle?.addEventListener('click', (event) => {
+        // Overflow toggles are rebuilt on every renderPanels(); use delegation.
+        document.querySelectorAll('.forecast-new-side-panel').forEach((panel) => {
+            panel.addEventListener('click', (event) => {
+                const toggle = event.target.closest('[data-tabs-overflow-toggle]');
+                if (!toggle) return;
                 event.stopPropagation();
+                const overflow = toggle.closest('[data-tabs-overflow]');
+                if (!overflow) return;
                 const shouldOpen = !overflow.classList.contains('is-open');
                 closeTabsOverflowMenus();
                 overflow.classList.toggle('is-open', shouldOpen);
                 syncTabsOverflowToggleState();
             });
         });
+        // Close overflow menus when clicking outside.
+        document.addEventListener('click', () => closeTabsOverflowMenus());
 
         refs.rightLayerTabs?.addEventListener('click', (event) => {
             const addToggle = event.target.closest('[data-add-layer-toggle]');
@@ -4087,6 +4093,13 @@
             node.classList.toggle('active', node.dataset.tabId === tabId));
         panel.querySelectorAll('.panel-content [data-tab-id]').forEach((node) =>
             node.classList.toggle('active', node.dataset.tabId === tabId));
+        // Mark overflow wrapper is-active when the active tab lives in the overflow menu.
+        const overflow = panel.querySelector('[data-tabs-overflow]');
+        if (overflow) {
+            const inOverflow = !!overflow.querySelector(`.forecast-new-tabs-overflow-item[data-tab-id="${tabId}"]`);
+            overflow.classList.toggle('is-active', inOverflow);
+        }
+        closeTabsOverflowMenus();
     }
 
     // Back-compat alias retained at call sites; rebuilds chrome from layout.
@@ -4124,10 +4137,19 @@
         renderPanels();
     }
 
-    // No-op shims: the bespoke overflow "▸" menu is replaced by a scrollable
-    // tab bar; these are kept so legacy call sites stay safe.
-    function closeTabsOverflowMenus() {}
-    function syncTabsOverflowToggleState() {}
+    function closeTabsOverflowMenus() {
+        document.querySelectorAll('[data-tabs-overflow].is-open').forEach((el) => {
+            el.classList.remove('is-open');
+            const toggle = el.querySelector('[data-tabs-overflow-toggle]');
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        });
+    }
+    function syncTabsOverflowToggleState() {
+        document.querySelectorAll('[data-tabs-overflow]').forEach((el) => {
+            const toggle = el.querySelector('[data-tabs-overflow-toggle]');
+            if (toggle) toggle.setAttribute('aria-expanded', String(el.classList.contains('is-open')));
+        });
+    }
 
     // ====================================================================
     // Inline panel configurator (no drag-and-drop). Explicit controls:

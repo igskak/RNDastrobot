@@ -316,7 +316,14 @@
 
             tabsBar.innerHTML = '';
             tabsBar.classList.add('forecast-new-tabs');
-            tabs.forEach(function (tab) {
+
+            // First VISIBLE_COUNT tabs render inline; the rest go behind the ▸ overflow toggle.
+            var VISIBLE_COUNT = 3;
+            var visibleTabs = tabs.slice(0, VISIBLE_COUNT);
+            var overflowTabs = tabs.slice(VISIBLE_COUNT);
+            var activeInOverflow = overflowTabs.some(function (t) { return t.id === activeId; });
+
+            visibleTabs.forEach(function (tab) {
                 var btn = doc.createElement('button');
                 btn.type = 'button';
                 btn.className = 'panel-tab' + (tab.id === activeId ? ' active' : '');
@@ -324,6 +331,35 @@
                 btn.textContent = autoTabTitle(tab, translate);
                 tabsBar.appendChild(btn);
             });
+
+            // Always render the overflow container as the 4th grid cell.
+            var overflowWrap = doc.createElement('div');
+            overflowWrap.className = 'forecast-new-tabs-overflow' + (activeInOverflow ? ' is-active' : '');
+            overflowWrap.setAttribute('data-tabs-overflow', '');
+            var toggle = doc.createElement('button');
+            toggle.type = 'button';
+            toggle.className = 'panel-tab forecast-new-tabs-overflow-toggle';
+            toggle.setAttribute('data-tabs-overflow-toggle', '');
+            toggle.setAttribute('aria-haspopup', 'true');
+            toggle.setAttribute('aria-expanded', 'false');
+            toggle.textContent = '▸';
+            if (overflowTabs.length === 0) toggle.style.visibility = 'hidden';
+            overflowWrap.appendChild(toggle);
+            if (overflowTabs.length > 0) {
+                var menu = doc.createElement('div');
+                menu.className = 'forecast-new-tabs-overflow-menu';
+                menu.setAttribute('data-tabs-overflow-menu', '');
+                overflowTabs.forEach(function (tab) {
+                    var btn = doc.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'panel-tab forecast-new-tabs-overflow-item' + (tab.id === activeId ? ' active' : '');
+                    btn.dataset.tabId = tab.id;
+                    btn.textContent = autoTabTitle(tab, translate);
+                    menu.appendChild(btn);
+                });
+                overflowWrap.appendChild(menu);
+            }
+            tabsBar.appendChild(overflowWrap);
 
             Array.prototype.forEach.call(content.querySelectorAll('[data-tab-id]'), function (n) { n.remove(); });
             tabs.forEach(function (tab) {

@@ -22,7 +22,8 @@ function panelContent(doc, side) {
 }
 function tabButtons(doc, side) {
     const id = L.PANEL_SIDE_IDS[side];
-    return doc.getElementById(id).querySelectorAll('.panel-tabs .panel-tab');
+    // Exclude the overflow toggle (▸) which has no data-tab-id.
+    return doc.getElementById(id).querySelectorAll('.panel-tabs .panel-tab[data-tab-id]');
 }
 
 // --- default multi layout ---
