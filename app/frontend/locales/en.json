@@ -268,7 +268,10 @@
         "grid": "Aspect grid",
         "configs": "Configurations",
         "balances": "Balances",
-        "prognosticShort": "Forecast"
+        "prognosticShort": "Forecast",
+        "stelliums": "Stelliums",
+        "jones": "Jones cosmogram",
+        "dispositors": "Dispositor scheme"
       },
       "view": {
         "single": "Single wheel",
@@ -276,7 +279,8 @@
       },
       "settings": {
         "cuspCircles": "Cusp circles",
-        "resetLocalSettings": "Reset view settings"
+        "resetLocalSettings": "Reset view settings",
+        "resetConfirm": "Reset chart settings to defaults?"
       },
       "direction": {
         "popoverAria": "Direction options",
@@ -321,7 +325,8 @@
         "resetConfirm": "Reset panel layout to default?",
         "undo": "Undo",
         "tabRemoved": "Tab removed",
-        "saveFailed": "Couldn't save layout"
+        "saveFailed": "Couldn't save layout",
+        "newTabTitle": "New tab"
       }
     },
     "plan": {
@@ -713,7 +718,8 @@
       "empty": {
         "noBalances": "No balances data",
         "noConfigurations": "No configurations found",
-        "noDignities": "No dignities data"
+        "noDignities": "No dignities data",
+        "noStelliums": "No stelliums"
       },
       "grid": {
         "title": "Aspect grid"

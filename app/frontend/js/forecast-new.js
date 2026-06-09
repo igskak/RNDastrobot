@@ -377,7 +377,7 @@
             'forecastNewSynastryManualTimezone', 'forecastNewSynastryManualLocation', 'forecastNewSynastryManualSuggestions',
             'forecastNewSynastryManualLat', 'forecastNewSynastryManualLon', 'forecastNewSynastryManualApply', 'forecastNewSynastryManualError',
             'forecastNewZoomIn', 'forecastNewZoomOut',
-            'forecastNewZoomReset', 'forecastNewSettingsToggle', 'forecastNewSettingsPanel',
+            'forecastNewSettingsToggle', 'forecastNewSettingsPanel',
             'orientationSelect', 'houseSystemSelect', 'iconScaleRange', 'iconScaleValue',
             'aspectScopeSelect', 'aspectTypeToggles',
             'aspectPhaseApplyingToggle', 'aspectPhaseSeparatingToggle',
@@ -403,6 +403,7 @@
             aspectsTableId: 'natalAspectsTable',
             aspectGridContainerId: 'natalAspectGridContainer',
             configsContainerId: 'natalConfigurationsContainer',
+            stelliumsContainerId: 'natalStelliumsContainer',
             balancesContainerId: 'natalBalancesContainer',
             aspectSortHeadersSelector: '#natalAspectsView th.sortable[data-sort]',
             showSpeedColumn: true,
@@ -414,6 +415,7 @@
             aspectsTableId: 'progAspectsTable',
             aspectGridContainerId: 'progAspectGridContainer',
             configsContainerId: 'progConfigurationsContainer',
+            stelliumsContainerId: 'progStelliumsContainer',
             balancesContainerId: 'progBalancesContainer',
             aspectSortHeadersSelector: '#progAspectsView th.sortable[data-sort]',
             showSpeedColumn: true,
@@ -891,6 +893,9 @@
         refs.aspectTypeToggles?.addEventListener('change', () => scheduleApplySettings());
 
         refs.forecastNewResetLocalBtn?.addEventListener('click', () => {
+            const confirmMsg = t('page.forecastNew.settings.resetConfirm')
+                || 'Сбросить настройки карты к стандартным?';
+            if (!window.confirm(confirmMsg)) return;
             const storage = window.ForecastNewStateStorage;
             const key = storage?.buildStorageKey?.(state.natalData);
             if (key) {
@@ -905,7 +910,6 @@
         syncWheelViewButtons();
         refs.forecastNewZoomIn?.addEventListener('click', () => setViewport({ zoom: state.viewport.zoom * 1.18 }));
         refs.forecastNewZoomOut?.addEventListener('click', () => setViewport({ zoom: state.viewport.zoom / 1.18 }));
-        refs.forecastNewZoomReset?.addEventListener('click', () => setViewport({ zoom: 1, panX: 0, panY: 0 }));
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') closeBodyActionMenu();
         });
@@ -2204,20 +2208,25 @@
             showAspectText: state.pageSettings.showAspectText === true,
         });
         state.natalRenderer?.render(filterChartDataForSidePanel(state.natalWheelData, { scope: 'natal' }));
-        renderForecastNewRulersTab('natalRulersContainer', state.natalWheelData, 'forecastNewNatalRulersMode');
+        renderForecastNewDispositorBlocks('natal', state.natalWheelData);
         renderInlineMatrixControls();
         applyInlineMatrixRowState();
         renderMatrixEditor();
         activateSavedTabs();
     }
 
-    function renderForecastNewRulersTab(containerId, chartData, selectId) {
-        window.DispositorChains?.render?.(containerId, chartData || {
+    // Granular dispositor blocks: Jones cosmogram and the dispositor scheme are
+    // rendered into their own containers (natal*/prog*) instead of the former
+    // combined "rulers" block.
+    function renderForecastNewDispositorBlocks(prefix, chartData) {
+        const data = chartData || {
             planets: [],
             houses: [],
             balances: null,
             cosmogram_pattern: null,
-        }, { selectId });
+        };
+        window.DispositorChains?.render?.(`${prefix}JonesContainer`, data, { section: 'jones' });
+        window.DispositorChains?.render?.(`${prefix}DispositorsContainer`, data, { section: 'scheme' });
     }
 
     function renderMatrixEditor() {
@@ -3513,7 +3522,7 @@
             if (refs.forecastNewTimeStepper) refs.forecastNewTimeStepper.innerHTML = '';
             if (refs.targetDatetimeLabel) refs.targetDatetimeLabel.textContent = '';
             state.prognosticRenderer?.render({ planets: [], houses: [], aspects: [], aspect_configurations: [], stelliums: [], balances: null, cosmogram_pattern: null });
-            renderForecastNewRulersTab('progRulersContainer', null, 'forecastNewProgRulersMode');
+            renderForecastNewDispositorBlocks('prog', null);
             syncPrognosticHousesVisibility([]);
             renderResultView();
             return;
@@ -3529,7 +3538,7 @@
         if (!layer) {
             state.prognosticRenderer?.setHouseNumberStyle?.(state.pageSettings.houseNumberStyle);
             state.prognosticRenderer?.render({ planets: [], houses: [], aspects: [], aspect_configurations: [], stelliums: [], balances: null, cosmogram_pattern: null });
-            renderForecastNewRulersTab('progRulersContainer', null, 'forecastNewProgRulersMode');
+            renderForecastNewDispositorBlocks('prog', null);
             syncPrognosticHousesVisibility([]);
             renderResultView();
             return;
@@ -3551,12 +3560,12 @@
             balances: layer.balances || null,
             cosmogram_pattern: layer.cosmogram_pattern || null,
         }, { scope: 'prognostic' }));
-        renderForecastNewRulersTab('progRulersContainer', {
+        renderForecastNewDispositorBlocks('prog', {
             planets: layer.bodies || [],
             houses: layer.houses || [],
             balances: layer.balances || null,
             cosmogram_pattern: layer.cosmogram_pattern || null,
-        }, 'forecastNewProgRulersMode');
+        });
         renderInlineMatrixControls();
         applyInlineMatrixRowState();
         syncPrognosticHousesVisibility(layer.houses || []);
@@ -4141,24 +4150,27 @@
         return src + ' · ' + view;
     }
 
-    function placedBlockKeys(mode) {
-        const set = new Set();
-        const m = state.panelLayout.panels[mode];
-        ['left', 'right'].forEach((side) => (m[side] || []).forEach((tab) =>
-            tab.blocks.forEach((b) => set.add(b.source + ':' + b.view))));
-        return set;
-    }
-
-    function availableBlocksForMode(mode) {
+    // The full catalog of blocks for a mode. A block may only live in one place
+    // at a time (one DOM container), so "adding" a block that already exists
+    // elsewhere MOVES it. The add menus therefore offer the whole catalog and we
+    // remove the block from its current home before placing it (see add-block /
+    // removeBlockFromMode). This avoids the dead-end where every block is already
+    // placed and nothing can be added.
+    function allBlocksForMode(mode) {
         const PL = window.ForecastNewPanelLayout;
-        const placed = placedBlockKeys(mode);
         const sources = mode === 'single' ? ['natal'] : ['natal', 'prog'];
         const out = [];
         sources.forEach((source) => PL.VIEW_KEYS.forEach((view) => {
-            const key = source + ':' + view;
-            if (!placed.has(key)) out.push({ source: source, view: view });
+            out.push({ source: source, view: view });
         }));
         return out;
+    }
+
+    // Remove a blockKey from every tab in the mode (used before re-placing it).
+    function removeBlockFromMode(layout, mode, blockKey) {
+        ['left', 'right'].forEach((side) => (layout.panels[mode][side] || []).forEach((tab) => {
+            tab.blocks = tab.blocks.filter((b) => (b.source + ':' + b.view) !== blockKey);
+        }));
     }
 
     function mutateLayout(fn, { skipUndo } = {}) {
@@ -4183,9 +4195,8 @@
         switch (action) {
             case 'add-tab':
                 mutateLayout((l) => {
-                    const avail = availableBlocksForMode(mode);
-                    if (!avail.length) return;
-                    l.panels[mode][side].push({ id: PL.makeTabId(), title: null, blocks: [avail[0]] });
+                    const title = t('page.forecastNew.panelEditor.newTabTitle') || 'Новая вкладка';
+                    l.panels[mode][side].push({ id: PL.makeTabId(), title: title, blocks: [] });
                 });
                 break;
             case 'remove-tab':
@@ -4229,7 +4240,11 @@
                     const tab = findTab(l, mode, side, tabId);
                     if (!tab) return;
                     const source = mode === 'single' ? 'natal' : (ds.source || 'natal');
-                    tab.blocks.push({ source: source, view: ds.view });
+                    // Move-on-add: a block lives in exactly one place, so detach
+                    // it from any current home before appending it here.
+                    removeBlockFromMode(l, mode, source + ':' + ds.view);
+                    const target = findTab(l, mode, side, tabId);
+                    if (target) target.blocks.push({ source: source, view: ds.view });
                 });
                 break;
             case 'remove-block':
@@ -4362,7 +4377,10 @@
                     <button type="button" data-pe-action="remove-block" data-side="${side}" data-tab="${tab.id}" data-blockkey="${b.source}:${b.view}" title="✕">✕</button>
                 </span>
             </li>`).join('');
-        const avail = availableBlocksForMode(mode);
+        // Offer the whole catalog except blocks already in THIS tab. Adding a
+        // block placed elsewhere moves it here.
+        const inThisTab = new Set(tab.blocks.map((b) => b.source + ':' + b.view));
+        const avail = allBlocksForMode(mode).filter((b) => !inThisTab.has(b.source + ':' + b.view));
         const addOptions = avail.map((b) => `<option value="${b.source}:${b.view}">${escapeHtml(blockLabel(b))}</option>`).join('');
         const addSelect = avail.length
             ? `<select class="forecast-new-pe-add-block" data-pe-action="add-block" data-side="${side}" data-tab="${tab.id}"><option value="">+ ${escapeHtml(t('page.forecastNew.panelEditor.addBlock') || 'Добавить блок')}</option>${addOptions}</select>`
@@ -4389,12 +4407,11 @@
         const head = side === 'left'
             ? (t('page.forecastNew.natalPanelTitle') || 'Левая панель')
             : (t('page.forecastNew.panelEditor.rightPanel') || 'Правая панель');
-        const canAdd = availableBlocksForMode(mode).length > 0;
         return `
             <div class="forecast-new-pe-side" data-side="${side}">
                 <div class="forecast-new-pe-side-head">${escapeHtml(head)}</div>
                 ${tabs.map((tab) => renderTabEditorCard(tab, side, mode)).join('')}
-                <button type="button" class="forecast-new-pe-add-tab" data-pe-action="add-tab" data-side="${side}" ${canAdd ? '' : 'disabled'}>+ ${escapeHtml(t('page.forecastNew.panelEditor.addTab') || 'Вкладка')}</button>
+                <button type="button" class="forecast-new-pe-add-tab" data-pe-action="add-tab" data-side="${side}">+ ${escapeHtml(t('page.forecastNew.panelEditor.addTab') || 'Вкладка')}</button>
             </div>`;
     }
 

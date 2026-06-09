@@ -268,7 +268,10 @@
         "grid": "Таблица аспектов",
         "configs": "Конфигурации",
         "balances": "Балансы",
-        "prognosticShort": "Прогноз"
+        "prognosticShort": "Прогноз",
+        "stelliums": "Стеллиумы",
+        "jones": "Космограмма Джонса",
+        "dispositors": "Схема диспозиторов"
       },
       "view": {
         "single": "Одно колесо",
@@ -276,7 +279,8 @@
       },
       "settings": {
         "cuspCircles": "Куспиды кругов",
-        "resetLocalSettings": "Сбросить настройки вида"
+        "resetLocalSettings": "Сбросить настройки вида",
+        "resetConfirm": "Сбросить настройки карты к стандартным?"
       },
       "direction": {
         "popoverAria": "Параметры дирекций",
@@ -321,7 +325,8 @@
         "resetConfirm": "Сбросить раскладку панелей к стандартной?",
         "undo": "Отменить",
         "tabRemoved": "Вкладка удалена",
-        "saveFailed": "Не удалось сохранить раскладку"
+        "saveFailed": "Не удалось сохранить раскладку",
+        "newTabTitle": "Новая вкладка"
       }
     },
     "plan": {
@@ -713,7 +718,8 @@
       "empty": {
         "noBalances": "Нет данных баланса",
         "noConfigurations": "Конфигурации не найдены",
-        "noDignities": "Нет данных по достоинствам"
+        "noDignities": "Нет данных по достоинствам",
+        "noStelliums": "Стеллиумов нет"
       },
       "grid": {
         "title": "Таблица аспектов"

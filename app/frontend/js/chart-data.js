@@ -16,6 +16,11 @@ class ChartDataRenderer {
         this.aspectsTable = resolveElement(options.aspectsTable, options.aspectsTableId, 'aspectsTable');
         this.aspectGridContainer = resolveElement(options.aspectGridContainer, options.aspectGridContainerId, 'aspectGridContainer');
         this.configsContainer = resolveElement(options.configsContainer, options.configsContainerId, 'configurationsContainer');
+        // Optional separate container for stelliums. When provided (forecast-new
+        // granular blocks), configurations and stelliums render into distinct
+        // containers. When absent (chart.html / synastry.html), they stack in
+        // configsContainer as before.
+        this.stelliumsContainer = resolveElement(options.stelliumsContainer, options.stelliumsContainerId, null);
         this.balancesContainer = resolveElement(options.balancesContainer, options.balancesContainerId, 'balancesContainer');
         this.dignitiesContainer = resolveElement(options.dignitiesContainer, options.dignitiesContainerId, 'dignitiesContainer');
         this.aspectSortHeadersSelector = options.aspectSortHeadersSelector || '#aspects-list th.sortable[data-sort]';
@@ -940,9 +945,13 @@ class ChartDataRenderer {
     }
 
     renderConfigurations(configurations, stelliums) {
-        if (!this.configsContainer) return;
+        if (!this.configsContainer && !this.stelliumsContainer) return;
 
+        // When a dedicated stelliums container is wired (forecast-new granular
+        // blocks), configurations and stelliums render into separate containers.
+        const splitStelliums = Boolean(this.stelliumsContainer);
         let html = '';
+        let stelliumsHtml = '';
 
         // Конфигурации (сортируем по силе)
         if (configurations && configurations.length > 0) {
@@ -973,13 +982,12 @@ class ChartDataRenderer {
                                 title="${this.escapeHtml(this.t('page.chart.configurations.apex', { planet: this.planetName(c.apex_planet) }))}"
                                 aria-label="${this.escapeHtml(this.t('page.chart.configurations.apex', { planet: this.planetName(c.apex_planet) }))}"
                             >
-                                <span class="config-apex-label" aria-hidden="true">▲</span>
                                 <span class="planet-tag planet-tag--icon-only planet-tag--config-point">
                                     ${this.getPlanetSymbolMarkup(c.apex_planet, { size: 16, title: this.planetName(c.apex_planet) })}
                                 </span>
                             </span>
                         ` : ''}
-                        ${c.planets_involved.map((planetName) => {
+                        ${c.planets_involved.filter((planetName) => planetName !== c.apex_planet).map((planetName) => {
                             const pointTooltip = this.buildConfigurationPointTooltip(planetName, c.aspects || []);
                             const pointName = this.escapeHtml(this.planetName(planetName));
                             const tooltipAttrs = pointTooltip
@@ -1003,8 +1011,12 @@ class ChartDataRenderer {
                 return (b.count || 0) - (a.count || 0);
             });
 
-            html += `<h3 style="margin: 20px 0 12px; font-size: 15px;">${this.t('page.chart.configurations.stelliums')}</h3>`;
-            html += sortedStelliums.map(s => `
+            // In split mode stelliums go to their own container without the
+            // duplicate heading; in combined mode they keep the section heading.
+            if (!splitStelliums) {
+                html += `<h3 style="margin: 20px 0 12px; font-size: 15px;">${this.t('page.chart.configurations.stelliums')}</h3>`;
+            }
+            const sink = sortedStelliums.map(s => `
                 <div
                     class="config-card config-card--compact"
                     data-config-planets="${this.escapeHtml((s.planets || []).join('|'))}"
@@ -1012,9 +1024,9 @@ class ChartDataRenderer {
                 >
                     <div class="config-card-head">
                         <h4>
-                            ⭐ ${s.type === 'house'
+                            ${s.type === 'house'
                                 ? this.t('page.chart.configurations.houseLabel', { house: this.formatHouseNumber(s.house_number) })
-                                : this.signName(s.sign)}
+                                : `<span class="astro-symbol config-stellium-sign" aria-hidden="true">${Symbols.signs[s.sign] || ''}</span> ${this.signName(s.sign)}`}
                         </h4>
                         <span class="config-strength-badge">${this.t('page.chart.configurations.countShort', { count: s.count })}</span>
                     </div>
@@ -1027,12 +1039,25 @@ class ChartDataRenderer {
                     </div>
                 </div>
             `).join('');
+            if (splitStelliums) stelliumsHtml += sink; else html += sink;
         }
-        
+
+        if (splitStelliums) {
+            if (this.configsContainer) {
+                this.configsContainer.innerHTML = html
+                    || `<p style="color: #6e6e73; text-align: center; padding: 40px;">${this.t('page.chart.empty.noConfigurations')}</p>`;
+            }
+            if (this.stelliumsContainer) {
+                this.stelliumsContainer.innerHTML = stelliumsHtml
+                    || `<p style="color: #6e6e73; text-align: center; padding: 40px;">${this.t('page.chart.empty.noStelliums') || this.t('page.chart.empty.noConfigurations')}</p>`;
+            }
+            return;
+        }
+
         if (!html) {
             html = `<p style="color: #6e6e73; text-align: center; padding: 40px;">${this.t('page.chart.empty.noConfigurations')}</p>`;
         }
-        
+
         this.configsContainer.innerHTML = html;
     }
 

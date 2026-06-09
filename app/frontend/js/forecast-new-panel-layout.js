@@ -27,7 +27,10 @@
     var SCHEMA_VERSION = 1;
 
     // Canonical view catalog. Order here is the default tab order.
-    var VIEW_KEYS = ['planets', 'houses', 'aspects', 'grid', 'configs', 'balances', 'rulers'];
+    // Granular blocks: the former 'configs' block is split into 'configs'
+    // (configuration aspects) + 'stelliums'; the former 'rulers' block is split
+    // into 'jones' (Jones cosmogram) + 'dispositors' (dispositor scheme).
+    var VIEW_KEYS = ['planets', 'houses', 'aspects', 'grid', 'configs', 'stelliums', 'balances', 'jones', 'dispositors'];
 
     // i18n keys for auto-titling a tab from its (first) block's view.
     var VIEW_I18N = {
@@ -36,8 +39,10 @@
         aspects: 'page.chart.tabs.aspects',
         grid: 'page.forecastNew.tabs.grid',
         configs: 'page.forecastNew.tabs.configs',
+        stelliums: 'page.forecastNew.tabs.stelliums',
         balances: 'page.forecastNew.tabs.balances',
-        rulers: 'page.chart.tabs.rulers',
+        jones: 'page.forecastNew.tabs.jones',
+        dispositors: 'page.forecastNew.tabs.dispositors',
     };
 
     var SOURCES = ['natal', 'prog'];
@@ -114,10 +119,9 @@
             right: VIEW_KEYS.map(function (v) { return singleBlockTab('multi', 'right', 'prog', v); }),
         };
 
-        // single: natal-only. left = planets/aspects/grid, right = houses/configs/balances/rulers
-        // (matches legacy normalizeSingleLeftTab / normalizeSingleRightTab).
-        var singleLeftViews = ['planets', 'aspects', 'grid'];
-        var singleRightViews = ['houses', 'configs', 'balances', 'rulers'];
+        // single: natal-only.
+        var singleLeftViews = ['planets', 'aspects', 'grid', 'configs', 'stelliums'];
+        var singleRightViews = ['houses', 'balances', 'jones', 'dispositors'];
         layout.panels.single = {
             left: singleLeftViews.map(function (v) { return singleBlockTab('single', 'left', 'natal', v); }),
             right: singleRightViews.map(function (v) { return singleBlockTab('single', 'right', 'natal', v); }),
@@ -148,7 +152,11 @@
                 blocks.push({ source: source, view: view });
             });
 
-            if (blocks.length === 0) return; // drop empty tabs
+            // A tab whose blocks were ALL dropped (unknown view / dedup) is
+            // discarded, but a tab that was intentionally empty (input blocks
+            // array empty) is KEPT — that's how the configurator creates a fresh
+            // named tab for the user to fill.
+            if (blocks.length === 0 && rawBlocks.length > 0) return;
 
             // --- id ---
             var id = typeof rawTab.id === 'string' && rawTab.id ? rawTab.id : '';

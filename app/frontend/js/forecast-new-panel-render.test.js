@@ -30,8 +30,8 @@ function tabButtons(doc, side) {
     const doc = freshDoc();
     const layout = L.buildDefaultForecastNewLayout();
     const active = L.renderPanelsToDom({ document: doc, layout, mode: 'multi', activeTab: {}, translate: t });
-    ok(tabButtons(doc, 'left').length === 7, 'multi: left has 7 tab buttons');
-    ok(panelContent(doc, 'left').querySelectorAll('[data-tab-id]').length === 7, 'multi: left has 7 panes');
+    ok(tabButtons(doc, 'left').length === 9, 'multi: left has 9 tab buttons');
+    ok(panelContent(doc, 'left').querySelectorAll('[data-tab-id]').length === 9, 'multi: left has 9 panes');
     ok(panelContent(doc, 'left').contains(doc.getElementById('natalPlanetsView')), 'multi: natalPlanetsView in left');
     ok(panelContent(doc, 'right').contains(doc.getElementById('progPlanetsView')), 'multi: progPlanetsView in right');
     const firstPane = panelContent(doc, 'left').querySelector('[data-tab-id]');
@@ -104,7 +104,7 @@ function tabButtons(doc, side) {
     L.renderPanelsToDom({ document: doc, layout, mode: 'multi', activeTab: {}, translate: t });
     L.renderPanelsToDom({ document: doc, layout, mode: 'multi', activeTab: {}, translate: t });
     ok(doc.querySelectorAll('#natalPlanetsView').length === 1, 'stable: no duplicate block divs after re-render');
-    ok(panelContent(doc, 'left').querySelectorAll('[data-tab-id]').length === 7, 'stable: still 7 panes after re-render');
+    ok(panelContent(doc, 'left').querySelectorAll('[data-tab-id]').length === 9, 'stable: still 9 panes after re-render');
 })();
 
 console.log(`\n${pass} passed, ${fail} failed`);

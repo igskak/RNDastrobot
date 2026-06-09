@@ -268,7 +268,10 @@
         "grid": "Сітка аспектів",
         "configs": "Конфігурації",
         "balances": "Баланси",
-        "prognosticShort": "Прогноз"
+        "prognosticShort": "Прогноз",
+        "stelliums": "Стеліуми",
+        "jones": "Космограма Джонса",
+        "dispositors": "Схема диспозиторів"
       },
       "view": {
         "single": "Одне колесо",
@@ -276,7 +279,8 @@
       },
       "settings": {
         "cuspCircles": "Куспіди кіл",
-        "resetLocalSettings": "Скинути налаштування вигляду"
+        "resetLocalSettings": "Скинути налаштування вигляду",
+        "resetConfirm": "Скинути налаштування карти до стандартних?"
       },
       "direction": {
         "popoverAria": "Параметри дирекцій",
@@ -321,7 +325,8 @@
         "resetConfirm": "Скинути розкладку панелей до стандартної?",
         "undo": "Скасувати",
         "tabRemoved": "Вкладку видалено",
-        "saveFailed": "Не вдалося зберегти розкладку"
+        "saveFailed": "Не вдалося зберегти розкладку",
+        "newTabTitle": "Нова вкладка"
       }
     },
     "plan": {
@@ -715,7 +720,8 @@
       "empty": {
         "noBalances": "Немає даних балансу",
         "noConfigurations": "Конфігурацій не знайдено",
-        "noDignities": "Немає даних по гідностях"
+        "noDignities": "Немає даних по гідностях",
+        "noStelliums": "Стеліумів немає"
       },
       "grid": {
         "title": "Аспектна сітка"

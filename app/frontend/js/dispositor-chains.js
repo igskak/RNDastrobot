@@ -1051,14 +1051,23 @@
         const displayOptions = readDisplayOptions(options);
         const { chains, housesByRuler } = buildHouseDispositorScheme(chartData, displayOptions.mode, displayOptions);
 
-        container.innerHTML = options.layout === 'tabs'
-            ? renderTabbedPanel(chartData, chains, housesByRuler, displayOptions)
-            : `
-                <div class="dispositor-panel">
-                    ${renderJonesPattern(chartData?.cosmogram_pattern)}
-                    ${renderCompactDispositorSection(chains, housesByRuler, displayOptions)}
-                </div>
-            `;
+        // Granular forecast-new blocks request a single section instead of the
+        // combined/tabbed panel: 'jones' (cosmogram only) or 'scheme'
+        // (dispositor scheme only).
+        if (options.section === 'jones') {
+            container.innerHTML = `<div class="dispositor-panel">${renderJonesPattern(chartData?.cosmogram_pattern)}</div>`;
+        } else if (options.section === 'scheme') {
+            container.innerHTML = `<div class="dispositor-panel">${renderCompactDispositorSection(chains, housesByRuler, displayOptions)}</div>`;
+        } else {
+            container.innerHTML = options.layout === 'tabs'
+                ? renderTabbedPanel(chartData, chains, housesByRuler, displayOptions)
+                : `
+                    <div class="dispositor-panel">
+                        ${renderJonesPattern(chartData?.cosmogram_pattern)}
+                        ${renderCompactDispositorSection(chains, housesByRuler, displayOptions)}
+                    </div>
+                `;
+        }
 
         container.querySelectorAll('[data-dispositor-tab]').forEach((button) => {
             button.addEventListener('click', () => {
