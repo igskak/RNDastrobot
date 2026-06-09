@@ -4236,28 +4236,6 @@
                 }, { skipUndo: true });
                 break;
             }
-            case 'move-tab': {
-                const dir = ds.dir === 'up' ? -1 : 1;
-                mutateLayout((l) => {
-                    const arr = l.panels[mode][side];
-                    const i = arr.findIndex((tb) => tb.id === tabId);
-                    const j = i + dir;
-                    if (i < 0 || j < 0 || j >= arr.length) return;
-                    const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
-                });
-                break;
-            }
-            case 'switch-panel': {
-                const other = side === 'left' ? 'right' : 'left';
-                mutateLayout((l) => {
-                    const arr = l.panels[mode][side];
-                    const i = arr.findIndex((tb) => tb.id === tabId);
-                    if (i < 0) return;
-                    const [tab] = arr.splice(i, 1);
-                    l.panels[mode][other].push(tab);
-                });
-                break;
-            }
             case 'add-block':
                 mutateLayout((l) => {
                     const tab = findTab(l, mode, side, tabId);
@@ -4277,18 +4255,6 @@
                     tab.blocks = tab.blocks.filter((b) => (b.source + ':' + b.view) !== ds.blockkey);
                 });
                 break;
-            case 'move-block': {
-                const dir = ds.dir === 'up' ? -1 : 1;
-                mutateLayout((l) => {
-                    const tab = findTab(l, mode, side, tabId);
-                    if (!tab) return;
-                    const i = tab.blocks.findIndex((b) => (b.source + ':' + b.view) === ds.blockkey);
-                    const j = i + dir;
-                    if (i < 0 || j < 0 || j >= tab.blocks.length) return;
-                    const tmp = tab.blocks[i]; tab.blocks[i] = tab.blocks[j]; tab.blocks[j] = tmp;
-                });
-                break;
-            }
             case 'reset':
                 if (!window.confirm(t('page.forecastNew.panelEditor.resetConfirm') || 'Сбросить раскладку панелей к стандартной?')) return;
                 state.layoutUndo = JSON.parse(JSON.stringify(state.panelLayout));
@@ -4372,14 +4338,14 @@
         .forecast-new-pe-body{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 14px}
         @media (max-width:640px){.forecast-new-pe-body{grid-template-columns:1fr}}
         .forecast-new-pe-side-head{font-weight:600;margin-bottom:6px;opacity:.8}
-        .forecast-new-pe-tab{border:1px solid rgba(120,120,160,.22);border-radius:10px;padding:8px;margin-bottom:8px;background:rgba(140,140,180,.05)}
+        .forecast-new-pe-tab{position:relative;border:1px solid rgba(120,120,160,.22);border-radius:10px;padding:8px;margin-bottom:8px;background:rgba(140,140,180,.05)}
         .forecast-new-pe-tab-head{display:flex;gap:6px;align-items:center}
         .forecast-new-pe-title{flex:1;min-width:0;padding:4px 6px;border:1px solid rgba(120,120,160,.3);border-radius:6px;background:var(--surface,#fff);color:inherit}
-        .forecast-new-pe-tab-actions,.forecast-new-pe-block-actions{display:inline-flex;gap:2px}
-        .forecast-new-pe-tab-actions button,.forecast-new-pe-block-actions button{border:1px solid rgba(120,120,160,.25);background:var(--surface,#fff);border-radius:6px;cursor:pointer;width:24px;height:24px;line-height:1;font-size:12px;color:inherit}
-        .forecast-new-pe-tab-actions button:hover,.forecast-new-pe-block-actions button:hover{background:rgba(120,120,200,.14)}
+        .forecast-new-pe-tab-remove,.forecast-new-pe-block-remove{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border:0;border-radius:999px;background:transparent;color:inherit;cursor:pointer;font-size:11px;line-height:1;opacity:0;transition:opacity .15s,background .15s}
+        .forecast-new-pe-tab:hover .forecast-new-pe-tab-remove,.forecast-new-pe-tab:focus-within .forecast-new-pe-tab-remove,.forecast-new-pe-block:hover .forecast-new-pe-block-remove,.forecast-new-pe-block:focus-within .forecast-new-pe-block-remove{opacity:.7}
+        .forecast-new-pe-tab-remove:hover,.forecast-new-pe-block-remove:hover{opacity:1!important;background:rgba(200,80,80,.16);color:#c25}
         .forecast-new-pe-blocks{list-style:none;margin:8px 0 6px;padding:0;display:flex;flex-direction:column;gap:4px;min-height:18px}
-        .forecast-new-pe-block{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 6px;border-radius:6px;background:rgba(120,120,200,.07)}
+        .forecast-new-pe-block{display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:6px;background:rgba(120,120,200,.07)}
         .forecast-new-pe-block-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         .forecast-new-pe-tab-grip,.forecast-new-pe-block-grip{cursor:grab;opacity:.4;font-size:13px;line-height:1;user-select:none;padding:0 2px;flex-shrink:0}
         .forecast-new-pe-tab-grip:hover,.forecast-new-pe-block-grip:hover{opacity:.75}
@@ -4470,11 +4436,7 @@
             <li class="forecast-new-pe-block" data-blockkey="${b.source}:${b.view}">
                 <span class="forecast-new-pe-block-grip" title="${escapeHtml(t('page.forecastNew.panelEditor.dragHint') || 'Перетащить')}" aria-hidden="true">⠿</span>
                 <span class="forecast-new-pe-block-label">${escapeHtml(blockLabel(b))}</span>
-                <span class="forecast-new-pe-block-actions">
-                    <button type="button" data-pe-action="move-block" data-side="${side}" data-tab="${tab.id}" data-blockkey="${b.source}:${b.view}" data-dir="up" title="↑">↑</button>
-                    <button type="button" data-pe-action="move-block" data-side="${side}" data-tab="${tab.id}" data-blockkey="${b.source}:${b.view}" data-dir="down" title="↓">↓</button>
-                    <button type="button" data-pe-action="remove-block" data-side="${side}" data-tab="${tab.id}" data-blockkey="${b.source}:${b.view}" title="✕">✕</button>
-                </span>
+                <button type="button" class="forecast-new-pe-block-remove" data-pe-action="remove-block" data-side="${side}" data-tab="${tab.id}" data-blockkey="${b.source}:${b.view}" title="${escapeHtml(t('common.delete') || 'Удалить')}" aria-label="${escapeHtml(t('common.delete') || 'Удалить')}">✕</button>
             </li>`).join('');
         // Offer the whole catalog except blocks already in THIS tab. Adding a
         // block placed elsewhere moves it here.
@@ -4484,18 +4446,12 @@
         const addSelect = avail.length
             ? `<select class="forecast-new-pe-add-block" data-pe-action="add-block" data-side="${side}" data-tab="${tab.id}"><option value="">+ ${escapeHtml(t('page.forecastNew.panelEditor.addBlock') || 'Добавить блок')}</option>${addOptions}</select>`
             : '';
-        const otherSideLabel = side === 'left' ? '→' : '←';
         return `
             <div class="forecast-new-pe-tab" data-tab="${tab.id}">
                 <div class="forecast-new-pe-tab-head">
                     <span class="forecast-new-pe-tab-grip" title="${escapeHtml(t('page.forecastNew.panelEditor.dragHint') || 'Перетащить')}" aria-hidden="true">⠿</span>
                     <input type="text" class="forecast-new-pe-title" data-pe-action="rename-tab" data-side="${side}" data-tab="${tab.id}" value="${escapeHtml(title)}" placeholder="${placeholder}">
-                    <span class="forecast-new-pe-tab-actions">
-                        <button type="button" data-pe-action="move-tab" data-side="${side}" data-tab="${tab.id}" data-dir="up" title="↑">↑</button>
-                        <button type="button" data-pe-action="move-tab" data-side="${side}" data-tab="${tab.id}" data-dir="down" title="↓">↓</button>
-                        <button type="button" data-pe-action="switch-panel" data-side="${side}" data-tab="${tab.id}" title="${escapeHtml(t('page.forecastNew.panelEditor.switchPanel') || 'Сменить панель')}">${otherSideLabel}</button>
-                        <button type="button" data-pe-action="remove-tab" data-side="${side}" data-tab="${tab.id}" title="✕">✕</button>
-                    </span>
+                    <button type="button" class="forecast-new-pe-tab-remove" data-pe-action="remove-tab" data-side="${side}" data-tab="${tab.id}" title="${escapeHtml(t('common.delete') || 'Удалить')}" aria-label="${escapeHtml(t('common.delete') || 'Удалить')}">✕</button>
                 </div>
                 <ul class="forecast-new-pe-blocks">${blocksHtml}</ul>
                 ${addSelect}
