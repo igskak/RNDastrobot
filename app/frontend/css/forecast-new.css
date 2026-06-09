@@ -349,8 +349,8 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: 6px;
-    padding: 8px 12px 10px;
+    gap: 5px;
+    padding: 5px 10px 6px;
     border-bottom: 1px solid rgba(184, 147, 90, 0.14);
     background: rgba(255, 255, 255, 0.66);
     overflow-x: auto;
@@ -379,7 +379,7 @@
     justify-content: center;
     width: 26px;
     min-width: 26px;
-    min-height: 30px;
+    min-height: 28px;
     padding: 0;
     border: 1px solid rgba(30, 58, 95, 0.14);
     border-radius: 8px;
@@ -415,7 +415,7 @@
     justify-content: center;
     width: 26px;
     min-width: 26px;
-    min-height: 30px;
+    min-height: 28px;
     padding: 0;
     border: 1px solid rgba(30, 58, 95, 0.14);
     border-radius: 8px;
@@ -662,8 +662,8 @@
 }
 
 .forecast-new-side-head {
-    min-height: 64px;
-    padding: 12px 14px;
+    min-height: 52px;
+    padding: 7px 10px;
     border-bottom: 1px solid rgba(184, 147, 90, 0.14);
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(249, 247, 242, 0.36));
 }
@@ -688,21 +688,19 @@
 
 .forecast-new-side-head p,
 .forecast-new-moment-toggle-meta {
-    margin: 5px 0 0;
+    margin: 2px 0 0;
     color: var(--text-secondary);
-    font-size: 12.5px;
+    font-size: 11.5px;
     font-weight: 600;
-    line-height: 1.35;
+    line-height: 1.25;
     white-space: normal;
-    overflow: visible;
-    text-overflow: clip;
     overflow-wrap: anywhere;
 }
 
 .forecast-new-moment-toggle {
     display: block;
     width: 100%;
-    min-height: 42px;
+    min-height: 36px;
     padding: 0;
     border: 1px solid transparent;
     border-radius: 8px;
@@ -765,15 +763,15 @@
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr)) 36px;
     align-items: stretch;
-    gap: 4px;
+    gap: 3px;
     overflow: visible;
-    padding: 6px;
+    padding: 4px;
 }
 
 .forecast-new-tabs .panel-tab {
     min-width: 0;
-    min-height: 38px;
-    padding: 8px 6px;
+    min-height: 32px;
+    padding: 5px 5px;
     font-size: 12px;
     white-space: normal;
     line-height: 1.15;
@@ -852,7 +850,7 @@
 #progBalancesView,
 #natalConfigsView,
 #progConfigsView {
-    padding: 14px 14px 18px;
+    padding: 10px 10px 12px;
 }
 
 #natalBalancesContainer,
@@ -863,6 +861,83 @@
 #progDignitiesContainer {
     width: 100%;
     max-width: 100%;
+}
+
+#natalConfigurationsContainer > h3,
+#progConfigurationsContainer > h3 {
+    margin: 0 0 6px !important;
+    font-size: 12px !important;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--text-secondary);
+}
+
+#natalConfigurationsContainer > h3:not(:first-child),
+#progConfigurationsContainer > h3:not(:first-child) {
+    margin-top: 12px !important;
+}
+
+.forecast-new-side-panel .config-card--compact {
+    padding: 7px 8px 6px;
+    margin-bottom: 6px;
+    border-radius: 7px;
+}
+
+.forecast-new-side-panel .config-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    margin-bottom: 3px;
+}
+
+.forecast-new-side-panel .config-card h4 {
+    min-width: 0;
+    margin: 0;
+    gap: 4px;
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.forecast-new-side-panel .config-strength-badge {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    min-height: 18px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: rgba(30, 58, 95, 0.08);
+    color: var(--accent);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+}
+
+.forecast-new-side-panel .config-planets--compact {
+    gap: 3px;
+    margin-top: 2px;
+}
+
+.forecast-new-side-panel .planet-tag--icon-only {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    min-height: 22px;
+    padding: 0 4px;
+    font-size: 14px;
+}
+
+.forecast-new-side-panel .config-apex-chip {
+    gap: 2px;
+    margin-right: 0;
+}
+
+.forecast-new-side-panel .config-apex-label {
+    font-size: 9px;
 }
 
 .forecast-new-center {
@@ -1029,8 +1104,10 @@
 }
 
 .forecast-new-wheel-shell {
-    width: min(100%, 820px);
-    height: min(100%, calc(100vh - 166px));
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1043,8 +1120,8 @@
 }
 
 #forecastNewWheel {
-    width: min(100%, 820px);
-    height: min(100%, 820px);
+    width: 100%;
+    height: 100%;
     overflow: visible;
 }
 
@@ -1302,10 +1379,10 @@
     table-layout: fixed;
 }
 
-.forecast-new-side-panel .forecast-new-symbol-column { width: 28%; }
-.forecast-new-side-panel .forecast-new-position-column { width: 50%; }
-.forecast-new-side-panel .forecast-new-planets-table col:nth-child(3) { width: 11%; }
-.forecast-new-side-panel .forecast-new-planets-table col:nth-child(4) { width: 11%; }
+.forecast-new-side-panel .forecast-new-symbol-column { width: 27%; }
+.forecast-new-side-panel .forecast-new-position-column { width: 29%; }
+.forecast-new-side-panel .forecast-new-speed-column { width: 22%; }
+.forecast-new-side-panel .forecast-new-matrix-column { width: 11%; }
 
 /* У houses знак забирает остаток */
 .forecast-new-side-panel .forecast-new-house-cusp-column  { width: 31%; }
@@ -1328,9 +1405,23 @@
     text-overflow: ellipsis;
 }
 
+.forecast-new-side-panel .forecast-new-planets-table td:nth-child(3),
+.forecast-new-side-panel .forecast-new-planets-table th:nth-child(3),
 .forecast-new-side-panel .forecast-new-planets-table td:nth-child(4),
-.forecast-new-side-panel .forecast-new-planets-table th:nth-child(4) {
+.forecast-new-side-panel .forecast-new-planets-table th:nth-child(4),
+.forecast-new-side-panel .forecast-new-planets-table td:nth-child(5),
+.forecast-new-side-panel .forecast-new-planets-table th:nth-child(5) {
     text-align: center !important;
+}
+
+.forecast-new-side-panel .forecast-new-planets-table .planet-speed-cell {
+    width: auto;
+    padding-inline: 4px;
+}
+
+.forecast-new-side-panel .forecast-new-planets-table th:nth-child(3) {
+    padding-inline: 2px;
+    white-space: nowrap;
 }
 
 .forecast-new-side-panel .forecast-new-houses-table td:nth-child(2),
@@ -1342,6 +1433,66 @@
 .forecast-new-side-panel .forecast-new-houses-table td,
 .forecast-new-side-panel .forecast-new-houses-table th {
     white-space: nowrap;
+}
+
+.forecast-new-side-panel .data-table.compact th,
+.forecast-new-side-panel .data-table.compact td {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    font-size: 12.5px;
+    line-height: 1.2;
+}
+
+.forecast-new-side-panel .data-table.compact th {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    font-size: 9.5px;
+    line-height: 1.15;
+}
+
+.forecast-new-side-panel .data-table.compact .mono {
+    font-size: 12px;
+}
+
+.forecast-new-side-panel .forecast-new-planets-table td {
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.forecast-new-side-panel .forecast-new-houses-table td {
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+
+.forecast-new-side-panel .house-sign-meta {
+    margin-top: 1px;
+    min-height: 11px;
+    gap: 2px;
+}
+
+.forecast-new-side-panel .house-ruler-group {
+    gap: 0;
+}
+
+.forecast-new-side-panel .house-ruler-group--included {
+    margin-top: 1px;
+}
+
+.forecast-new-side-panel .house-ruler-row {
+    min-height: 16px;
+    column-gap: 4px;
+}
+
+.forecast-new-side-panel .house-ruler-symbol-wrap {
+    width: 18px;
+    min-width: 18px;
+    height: 16px;
+}
+
+.forecast-new-side-panel .house-ruler-house {
+    min-height: 16px;
+    font-size: 11px;
+    transform: none;
 }
 
 .forecast-new-page .planet-symbol-cell {
@@ -1463,8 +1614,8 @@
     z-index: 120;
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
-    padding: 6px 14px 2px;
+    gap: 3px;
+    padding: 4px 10px 2px;
     background: rgba(240, 237, 228, 0.52);
 }
 
@@ -1474,7 +1625,7 @@
     align-items: center;
     justify-content: center;
     flex: 0 1 auto;
-    min-height: 28px;
+    min-height: 24px;
     min-width: 0;
     padding: 0 22px 0 10px;
     border: 1px solid rgba(30, 58, 95, 0.12);
@@ -1595,7 +1746,9 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
-    margin-bottom: 18px;
+    gap: 3px;
+    padding: 3px;
+    margin-bottom: 8px;
 }
 
 .forecast-new-side-panel .balance-subtab-btn {
@@ -1604,15 +1757,44 @@
     justify-content: center;
     width: 100%;
     min-width: 0;
+    min-height: 28px;
+    padding: 0 8px;
+    font-size: 11.5px;
+}
+
+.forecast-new-side-panel .balance-section {
+    margin-bottom: 14px;
 }
 
 .forecast-new-side-panel .balance-section:last-child {
     margin-bottom: 0;
 }
 
+.forecast-new-side-panel .balance-title {
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text-secondary);
+}
+
 .forecast-new-side-panel .balance-row {
-    grid-template-columns: minmax(92px, 116px) minmax(0, 1fr) minmax(3ch, auto);
-    column-gap: 12px;
+    grid-template-columns: minmax(82px, 104px) minmax(0, 1fr) minmax(3ch, auto);
+    column-gap: 7px;
+    margin-bottom: 4px;
+}
+
+.forecast-new-side-panel .balance-label {
+    font-size: 12px;
+    line-height: 1.2;
+}
+
+.forecast-new-side-panel .balance-bar-container {
+    height: 6px;
+}
+
+.forecast-new-side-panel .balance-value {
+    font-size: 11.5px;
 }
 
 .forecast-new-loading {

@@ -394,7 +394,7 @@
             configsContainerId: 'natalConfigurationsContainer',
             balancesContainerId: 'natalBalancesContainer',
             aspectSortHeadersSelector: '#natalAspectsView th.sortable[data-sort]',
-            showSpeedColumn: false,
+            showSpeedColumn: true,
             showHouseColumn: false,
         });
         state.prognosticRenderer = new ChartDataRenderer({
@@ -405,7 +405,7 @@
             configsContainerId: 'progConfigurationsContainer',
             balancesContainerId: 'progBalancesContainer',
             aspectSortHeadersSelector: '#progAspectsView th.sortable[data-sort]',
-            showSpeedColumn: false,
+            showSpeedColumn: true,
             showHouseColumn: false,
         });
     }
