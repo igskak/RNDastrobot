@@ -4308,6 +4308,11 @@
             case 'close':
                 togglePanelEditMode(false);
                 break;
+            case 'toggle-presets': {
+                const wrap = document.querySelector('[data-pe-presets-wrap]');
+                if (wrap) wrap.classList.toggle('is-open');
+                return; // no re-render needed
+            }
             case 'save-preset': {
                 const name = window.prompt(t('page.forecastNew.panelEditor.presetNamePrompt') || 'Название конфигурации:');
                 if (!name || !name.trim()) return;
@@ -4378,23 +4383,26 @@
         .forecast-new-pe-block-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         .forecast-new-pe-add-block,.forecast-new-pe-add-tab{width:100%;margin-top:4px;padding:5px 6px;border:1px dashed rgba(120,120,160,.4);border-radius:6px;background:transparent;cursor:pointer;color:inherit;font-size:12px}
         .forecast-new-pe-add-tab[disabled]{opacity:.4;cursor:not-allowed}
-        .forecast-new-pe-footer{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid rgba(120,120,160,.18);position:sticky;bottom:0;background:inherit}
+        .forecast-new-pe-footer{display:flex;align-items:center;gap:6px;padding:10px 14px;border-top:1px solid rgba(120,120,160,.18);position:sticky;bottom:0;background:inherit}
         .forecast-new-pe-footer span[data-pe-undo-slot]{flex:1;font-size:12px;opacity:.85}
-        .forecast-new-pe-reset{border:1px solid rgba(200,80,80,.4);color:#c25;background:transparent;border-radius:8px;padding:6px 10px;cursor:pointer}
-        .forecast-new-pe-link{border:0;background:transparent;color:#46c;cursor:pointer;text-decoration:underline;padding:0;font:inherit}
-        .forecast-new-panel-edit-btn.is-active{background:rgba(120,120,200,.2)}
-        .forecast-new-pe-presets-section{border-top:1px solid rgba(120,120,160,.18);padding:10px 14px}
-        .forecast-new-pe-presets-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-weight:600;font-size:12px;opacity:.8}
-        .forecast-new-pe-preset-save{border:1px solid rgba(120,120,200,.4);background:transparent;border-radius:8px;padding:4px 10px;cursor:pointer;color:inherit;font-size:12px}
-        .forecast-new-pe-preset-save:hover{background:rgba(120,120,200,.1)}
-        .forecast-new-pe-presets-list{display:flex;flex-direction:column;gap:4px}
-        .forecast-new-pe-presets-empty{font-size:12px;opacity:.5;padding:4px 0}
-        .forecast-new-pe-preset{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-radius:8px;background:rgba(120,120,180,.07);border:1px solid rgba(120,120,160,.15)}
+        .forecast-new-pe-preset-save{display:inline-flex;align-items:center;gap:6px;flex:1;min-width:0;border:1px solid rgba(120,120,160,.3);background:var(--surface,#fff);border-radius:8px;padding:7px 12px;cursor:pointer;color:inherit;font-size:12px;font-weight:500}
+        .forecast-new-pe-preset-save:hover{background:rgba(120,120,200,.08)}
+        .forecast-new-pe-presets-wrap{position:relative;flex-shrink:0}
+        .forecast-new-pe-presets-toggle{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid rgba(120,120,160,.3);background:var(--surface,#fff);border-radius:8px;cursor:pointer;color:inherit}
+        .forecast-new-pe-presets-toggle:hover{background:rgba(120,120,200,.08)}
+        .forecast-new-pe-presets-wrap.is-open .forecast-new-pe-presets-toggle{background:rgba(120,120,200,.15);border-color:rgba(120,120,200,.5)}
+        .forecast-new-pe-presets-dropdown{display:none;position:absolute;bottom:calc(100% + 6px);right:0;min-width:240px;background:var(--surface,#fff);border:1px solid rgba(120,120,160,.25);border-radius:10px;box-shadow:0 8px 24px rgba(20,20,50,.16);padding:6px;z-index:10}
+        .forecast-new-pe-presets-wrap.is-open .forecast-new-pe-presets-dropdown{display:flex;flex-direction:column;gap:4px}
+        .forecast-new-pe-presets-empty{font-size:12px;opacity:.5;padding:6px 8px}
+        .forecast-new-pe-preset{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-radius:7px;background:rgba(120,120,180,.06);border:1px solid rgba(120,120,160,.12)}
         .forecast-new-pe-preset-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
         .forecast-new-pe-preset-actions{display:flex;gap:4px;flex-shrink:0}
         .forecast-new-pe-preset-load{border:1px solid rgba(120,120,200,.4);background:transparent;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px;color:inherit}
         .forecast-new-pe-preset-load:hover{background:rgba(120,120,200,.12)}
-        .forecast-new-pe-preset-delete{border:1px solid rgba(200,80,80,.3);background:transparent;border-radius:6px;width:22px;height:22px;cursor:pointer;font-size:11px;color:#c25;line-height:1}`;
+        .forecast-new-pe-preset-delete{border:1px solid rgba(200,80,80,.3);background:transparent;border-radius:6px;width:22px;height:22px;cursor:pointer;font-size:11px;color:#c25;line-height:1}
+        .forecast-new-pe-reset{border:1px solid rgba(200,80,80,.4);color:#c25;background:transparent;border-radius:8px;padding:6px 10px;cursor:pointer;flex-shrink:0}
+        .forecast-new-pe-link{border:0;background:transparent;color:#46c;cursor:pointer;text-decoration:underline;padding:0;font:inherit}
+        .forecast-new-panel-edit-btn.is-active{background:rgba(120,120,200,.2)}`;
         const style = document.createElement('style');
         style.id = 'forecastNewPanelEditorStyles';
         style.textContent = css;
@@ -4508,7 +4516,7 @@
             ? (t('page.forecastNew.view.single') || 'Одиночное колесо')
             : (t('page.forecastNew.view.multi') || 'Мульти-колесо');
         const presets = state.panelPresets || [];
-        const presetsHtml = presets.length === 0
+        const presetsDropdownHtml = presets.length === 0
             ? `<div class="forecast-new-pe-presets-empty">${escapeHtml(t('page.forecastNew.panelEditor.presetsEmpty') || 'Нет сохранённых конфигураций')}</div>`
             : presets.map((p) => `
                 <div class="forecast-new-pe-preset">
@@ -4528,15 +4536,20 @@
                 ${renderPanelEditorSide('left', mode)}
                 ${renderPanelEditorSide('right', mode)}
             </div>
-            <div class="forecast-new-pe-presets-section">
-                <div class="forecast-new-pe-presets-head">
-                    <span>${escapeHtml(t('page.forecastNew.panelEditor.presets') || 'Конфигурации')}</span>
-                    <button type="button" class="forecast-new-pe-preset-save" data-pe-action="save-preset">${escapeHtml(t('page.forecastNew.panelEditor.presetSave') || '+ Сохранить текущую')}</button>
-                </div>
-                <div class="forecast-new-pe-presets-list">${presetsHtml}</div>
-            </div>
             <div class="forecast-new-pe-footer">
                 <span data-pe-undo-slot></span>
+                <button type="button" class="forecast-new-pe-preset-save" data-pe-action="save-preset">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="1.5"/><rect x="5" y="2" width="6" height="4" rx=".5"/><rect x="4" y="9" width="8" height="5" rx=".5"/></svg>
+                    ${escapeHtml(t('page.forecastNew.panelEditor.presetSave') || 'Сохранить конфигурацию')}
+                </button>
+                <div class="forecast-new-pe-presets-wrap" data-pe-presets-wrap>
+                    <button type="button" class="forecast-new-pe-presets-toggle" data-pe-action="toggle-presets" title="${escapeHtml(t('page.forecastNew.panelEditor.presets') || 'Конфигурации')}">
+                        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><ellipse cx="8" cy="4.5" rx="5" ry="2"/><path d="M3 4.5v3c0 1.1 2.24 2 5 2s5-.9 5-2v-3"/><path d="M3 7.5v3c0 1.1 2.24 2 5 2s5-.9 5-2v-3"/></svg>
+                    </button>
+                    <div class="forecast-new-pe-presets-dropdown" data-pe-presets-dropdown>
+                        ${presetsDropdownHtml}
+                    </div>
+                </div>
                 <button type="button" class="forecast-new-pe-reset" data-pe-action="reset">${escapeHtml(t('page.forecastNew.panelEditor.reset') || 'Сбросить к стандартной')}</button>
             </div>`;
     }
