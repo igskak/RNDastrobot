@@ -267,7 +267,8 @@
       "tabs": {
         "grid": "Aspect grid",
         "configs": "Configurations",
-        "balances": "Balances"
+        "balances": "Balances",
+        "prognosticShort": "Forecast"
       },
       "view": {
         "single": "Single wheel",
@@ -308,6 +309,19 @@
       "matrix": {
         "displayShort": "D",
         "aspectingShort": "A"
+      },
+      "panelEditor": {
+        "toggle": "Configure panels",
+        "title": "Panel setup",
+        "addTab": "Tab",
+        "addBlock": "Add block",
+        "switchPanel": "Switch panel",
+        "rightPanel": "Right panel",
+        "reset": "Reset to default",
+        "resetConfirm": "Reset panel layout to default?",
+        "undo": "Undo",
+        "tabRemoved": "Tab removed",
+        "saveFailed": "Couldn't save layout"
       }
     },
     "plan": {

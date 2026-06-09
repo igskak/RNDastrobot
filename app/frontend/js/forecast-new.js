@@ -170,6 +170,15 @@
             scope: 'prognostic',
         },
         singleRightTab: 'Grid',
+        // Configurable side panels (see forecast-new-panel-layout.js). panelLayout
+        // is the normalized {schema_version, panels:{multi,single:{left,right}}}.
+        // activeTab maps multiLeft/multiRight/singleLeft/singleRight -> tab id.
+        panelLayout: null,
+        activeTab: {},
+        panelLayoutDirty: false,
+        panelEditMode: false,
+        layoutPersistSeq: 0,
+        layoutUndo: null,
     };
 
     function t(key, params) {
@@ -322,6 +331,8 @@
         initLayerPopovers();
         initAspectInteractions();
         syncControlsFromState();
+        initPanelLayout();
+        bindPanelConfigurator();
         syncWorkspaceModePanels();
         renderStaticNatal();
         refreshViewModel();
@@ -728,15 +739,11 @@
 
         document.querySelectorAll('.forecast-new-side-panel').forEach((panel) => {
             panel.addEventListener('click', (event) => {
-                const tab = event.target.closest('.panel-tab[data-panel-target]');
+                if (state.panelEditMode) return; // edit-mode clicks handled by the configurator
+                const tab = event.target.closest('.panel-tab[data-tab-id]');
                 if (!tab) return;
-                activatePanelTab(panel, tab.dataset.panelTarget);
-                if (panel.id === 'forecastNewNatalPanel') state.leftTab = PANEL_TARGET_TO_TAB[tab.dataset.panelTarget] || 'Planets';
-                if (panel.id === 'forecastNewProgPanel') {
-                    const selectedTab = PANEL_TARGET_TO_TAB[tab.dataset.panelTarget] || 'Planets';
-                    state.rightTab = selectedTab;
-                    if (state.wheelView === 'single') state.singleRightTab = normalizeSingleRightTab(selectedTab);
-                }
+                const side = panel.id === 'forecastNewProgPanel' ? 'right' : 'left';
+                activatePanelTab(side, tab.dataset.tabId);
                 syncHoveredAspectToActiveSurface();
                 schedulePersist();
             });
@@ -2537,6 +2544,8 @@
             showProgressionCusps: resolved?.view_options?.show_progression_cusps !== false,
             showDirectionCusps: resolved?.view_options?.show_direction_cusps !== false,
         };
+        // Panel layout lives outside normalizeViewSettings; read from raw view.
+        if (resolvedView && resolvedView.panels) applyPanelLayout(resolvedView.panels);
         syncControlsFromState();
         return applySettings();
     }
@@ -3253,7 +3262,6 @@
         const next = view === 'single' ? 'single' : 'multi';
         if (state.wheelView === next) return;
         state.wheelView = next;
-        if (next === 'single') state.singleRightTab = normalizeSingleRightTab(state.singleRightTab || state.rightTab);
         syncWorkspaceModePanels();
         syncWheelViewButtons();
         renderWheel();
@@ -3269,13 +3277,11 @@
 
     function syncWorkspaceModePanels() {
         const isSingle = state.wheelView === 'single';
-        if (isSingle) {
-            state.leftTab = normalizeSingleLeftTab(state.leftTab);
-            state.singleRightTab = normalizeSingleRightTab(state.singleRightTab || state.rightTab);
-        }
         document.body.classList.toggle('forecast-new-single-mode', isSingle);
         document.body.classList.toggle('forecast-new-multi-mode', !isSingle);
         refs.forecastNewProgPanel?.setAttribute('data-panel-mode', isSingle ? 'natal' : 'prognostic');
+        // Rebuild chrome for the new mode's layout (panels.single vs panels.multi).
+        if (state.panelLayout) renderPanels();
     }
 
     function normalizeResultView(view) {
@@ -3564,20 +3570,12 @@
         refs.prognosticPanelTitle.textContent = 'Натал';
         refs.prognosticPanelMeta.textContent = refs.natalPanelMeta?.textContent || '';
         if (refs.forecastNewTimeStepper) refs.forecastNewTimeStepper.innerHTML = '';
-        refs.targetDatetimeLabel.textContent = state.natalSelectedDateTime.replace('T', ' ');
-        state.prognosticRenderer?.setAspectTypeFilter?.('all');
-        state.prognosticRenderer?.setHouseNumberStyle?.(state.pageSettings.houseNumberStyle);
-        state.prognosticRenderer?.setDisplayPreferences?.({
-            showSpeed: false,
-            showStationary: state.pageSettings.showStationary !== false,
-            showApplyingSeparating: state.pageSettings.showApplyingSeparating === true,
-            showAspectText: state.pageSettings.showAspectText === true,
-        });
-        state.prognosticRenderer?.render(filterChartDataForSidePanel(state.natalWheelData, { scope: 'natal' }));
-        renderForecastNewRulersTab('progRulersContainer', state.natalWheelData, 'forecastNewSingleNatalRulersMode');
-        syncPrognosticHousesVisibility(state.natalWheelData?.houses || []);
-        activatePanelTab(refs.forecastNewNatalPanel, tabToNatalTarget(normalizeSingleLeftTab(state.leftTab)));
-        activatePanelTab(refs.forecastNewProgPanel, tabToProgTarget(normalizeSingleRightTab(state.singleRightTab)));
+        if (refs.targetDatetimeLabel) refs.targetDatetimeLabel.textContent = state.natalSelectedDateTime.replace('T', ' ');
+        // Single mode is natal-only. The natal* containers are filled by
+        // renderStaticNatal()/state.natalRenderer and distributed across BOTH
+        // panels by renderPanels() according to panels.single. The legacy reuse
+        // of prog* containers for natal data is gone.
+        renderPanels();
         renderResultView();
     }
 
@@ -4039,65 +4037,436 @@
         return [info.target_date, info.direction_type, info.arc_formatted].filter(Boolean).join(' · ');
     }
 
+    // ====================================================================
+    // Configurable side panels — chrome rendered from state.panelLayout.
+    // Each block keeps its fixed content <div id> (populated by the renderers);
+    // here we only (re)build the tab bar + tab panes and re-parent block divs.
+    // ====================================================================
+    const PANEL_SIDE_IDS = { left: 'forecastNewNatalPanel', right: 'forecastNewProgPanel' };
+
+    function currentWheelMode() {
+        return state.wheelView === 'single' ? 'single' : 'multi';
+    }
+
+    function activeTabStateKey(side) {
+        const mode = currentWheelMode();
+        const cap = side === 'left' ? 'Left' : 'Right';
+        return mode + cap; // multiLeft | multiRight | singleLeft | singleRight
+    }
+
+    // Rebuild BOTH panels from the current layout. Delegates the DOM work to the
+    // pure (jsdom-testable) module so cross-panel moves never clobber: it detaches
+    // every block div to a hidden store, then re-homes per side in one pass.
+    function renderPanels() {
+        if (!state.panelLayout || !window.ForecastNewPanelLayout) return;
+        window.ForecastNewPanelLayout.renderPanelsToDom({
+            document,
+            layout: state.panelLayout,
+            mode: currentWheelMode(),
+            activeTab: state.activeTab,
+            translate: t,
+        });
+        syncHoveredAspectToActiveSurface?.();
+    }
+
+    // Activate a tab without rebuilding chrome (used on tab click).
+    function activatePanelTab(side, tabId) {
+        const panel = document.getElementById(PANEL_SIDE_IDS[side]);
+        if (!panel || !tabId) return;
+        state.activeTab[activeTabStateKey(side)] = tabId;
+        panel.querySelectorAll('.panel-tabs .panel-tab').forEach((node) =>
+            node.classList.toggle('active', node.dataset.tabId === tabId));
+        panel.querySelectorAll('.panel-content [data-tab-id]').forEach((node) =>
+            node.classList.toggle('active', node.dataset.tabId === tabId));
+    }
+
+    // Back-compat alias retained at call sites; rebuilds chrome from layout.
     function activateSavedTabs() {
-        activatePanelTab(document.getElementById('forecastNewNatalPanel'), tabToNatalTarget(state.leftTab));
-        activatePanelTab(document.getElementById('forecastNewProgPanel'), tabToProgTarget(state.rightTab));
+        renderPanels();
     }
 
-    function activatePanelTab(panel, targetId) {
-        if (!panel || !targetId) return;
-        panel.querySelectorAll('.panel-tab').forEach((node) => node.classList.toggle('active', node.dataset.panelTarget === targetId));
-        panel.querySelectorAll('.panel-tab-content').forEach((node) => node.classList.toggle('active', node.id === targetId));
-        panel.querySelectorAll('[data-tabs-overflow]').forEach((overflow) => {
-            const hasActiveOverflowTab = !!overflow.querySelector(`.panel-tab[data-panel-target="${targetId}"]`);
-            overflow.classList.toggle('is-active', hasActiveOverflowTab);
-            overflow.classList.remove('is-open');
+    // Initialize panelLayout/activeTab from defaults, migrating legacy localStorage
+    // active-tab labels. Called before the first chrome render.
+    function initPanelLayout() {
+        const PL = window.ForecastNewPanelLayout;
+        if (!PL) return;
+        state.panelLayout = PL.normalizeLayout(PL.buildDefaultForecastNewLayout());
+        const migrated = PL.migrateLegacyActiveTab(
+            { leftTab: state.leftTab, rightTab: state.rightTab, singleRightTab: state.singleRightTab },
+            state.panelLayout
+        );
+        state.activeTab = migrated;
+    }
+
+    // Apply a layout coming from server prefs (resolved.panels), preserving the
+    // active tab where possible.
+    function applyPanelLayout(rawPanelsLayout) {
+        const PL = window.ForecastNewPanelLayout;
+        if (!PL || !rawPanelsLayout) return;
+        state.panelLayout = PL.normalizeLayout(rawPanelsLayout);
+        const def = PL.defaultActiveTabs(state.panelLayout);
+        // Keep current active tab ids that still exist; else fall back to first.
+        ['multiLeft', 'multiRight', 'singleLeft', 'singleRight'].forEach((k) => {
+            const mode = k.startsWith('multi') ? 'multi' : 'single';
+            const side = k.endsWith('Left') ? 'left' : 'right';
+            const tabs = state.panelLayout.panels[mode][side] || [];
+            if (!tabs.some((tb) => tb.id === state.activeTab[k])) state.activeTab[k] = def[k];
         });
-        syncTabsOverflowToggleState();
+        renderPanels();
     }
 
-    function tabToNatalTarget(tab) {
-        return {
-            Planets: 'natalPlanetsView',
-            Houses: 'natalHousesView',
-            Aspects: 'natalAspectsView',
-            Grid: 'natalGridView',
-            Configs: 'natalConfigsView',
-            Balances: 'natalBalancesView',
-            Rulers: 'natalRulersView',
-        }[tab] || 'natalPlanetsView';
+    // No-op shims: the bespoke overflow "▸" menu is replaced by a scrollable
+    // tab bar; these are kept so legacy call sites stay safe.
+    function closeTabsOverflowMenus() {}
+    function syncTabsOverflowToggleState() {}
+
+    // ====================================================================
+    // Inline panel configurator (no drag-and-drop). Explicit controls:
+    // add/rename/delete/reorder tabs, switch tab panel side, add/remove/reorder
+    // blocks within a tab, reset to default. Edits the CURRENT wheel mode's
+    // layout (what you see is what you configure).
+    // ====================================================================
+    const SOURCE_LABEL_I18N = {
+        natal: 'page.forecastNew.natalPanelTitle',
+        prog: 'page.forecastNew.tabs.prognosticShort',
+    };
+
+    function blockLabel(block) {
+        const PL = window.ForecastNewPanelLayout;
+        const view = PL.autoTabTitle({ blocks: [block] }, t);
+        if (currentWheelMode() === 'single') return view; // single = natal only, no need to disambiguate
+        const srcKey = SOURCE_LABEL_I18N[block.source];
+        let src = srcKey ? t(srcKey) : block.source;
+        if (!src || src === srcKey) src = block.source === 'prog' ? 'Прогноз' : 'Натал';
+        return src + ' · ' + view;
     }
 
-    function tabToProgTarget(tab) {
-        return {
-            Planets: 'progPlanetsView',
-            Houses: 'progHousesView',
-            Aspects: 'progAspectsView',
-            Grid: 'progGridView',
-            Configs: 'progConfigsView',
-            Balances: 'progBalancesView',
-            Rulers: 'progRulersView',
-        }[tab] || 'progPlanetsView';
+    function placedBlockKeys(mode) {
+        const set = new Set();
+        const m = state.panelLayout.panels[mode];
+        ['left', 'right'].forEach((side) => (m[side] || []).forEach((tab) =>
+            tab.blocks.forEach((b) => set.add(b.source + ':' + b.view))));
+        return set;
     }
 
-    function normalizeSingleRightTab(tab) {
-        return ['Houses', 'Configs', 'Balances', 'Rulers'].includes(tab) ? tab : 'Houses';
+    function availableBlocksForMode(mode) {
+        const PL = window.ForecastNewPanelLayout;
+        const placed = placedBlockKeys(mode);
+        const sources = mode === 'single' ? ['natal'] : ['natal', 'prog'];
+        const out = [];
+        sources.forEach((source) => PL.VIEW_KEYS.forEach((view) => {
+            const key = source + ':' + view;
+            if (!placed.has(key)) out.push({ source: source, view: view });
+        }));
+        return out;
     }
 
-    function normalizeSingleLeftTab(tab) {
-        return ['Planets', 'Aspects', 'Grid'].includes(tab) ? tab : 'Planets';
+    function mutateLayout(fn, { skipUndo } = {}) {
+        const PL = window.ForecastNewPanelLayout;
+        if (!skipUndo) state.layoutUndo = JSON.parse(JSON.stringify(state.panelLayout));
+        fn(state.panelLayout);
+        state.panelLayout = PL.normalizeLayout(state.panelLayout);
+        renderPanels();
+        renderPanelEditor();
+        scheduleLayoutPersist();
     }
 
-    function closeTabsOverflowMenus() {
-        refs.tabsOverflow?.forEach((overflow) => overflow.classList.remove('is-open'));
-        syncTabsOverflowToggleState();
+    function findTab(layout, mode, side, tabId) {
+        return (layout.panels[mode][side] || []).find((tb) => tb.id === tabId);
     }
 
-    function syncTabsOverflowToggleState() {
-        refs.tabsOverflow?.forEach((overflow) => {
-            const toggle = overflow.querySelector('[data-tabs-overflow-toggle]');
-            if (toggle) toggle.setAttribute('aria-expanded', overflow.classList.contains('is-open') ? 'true' : 'false');
+    function handleEditorAction(action, ds) {
+        const PL = window.ForecastNewPanelLayout;
+        const mode = currentWheelMode();
+        const side = ds.side;
+        const tabId = ds.tab;
+        switch (action) {
+            case 'add-tab':
+                mutateLayout((l) => {
+                    const avail = availableBlocksForMode(mode);
+                    if (!avail.length) return;
+                    l.panels[mode][side].push({ id: PL.makeTabId(), title: null, blocks: [avail[0]] });
+                });
+                break;
+            case 'remove-tab':
+                mutateLayout((l) => {
+                    l.panels[mode][side] = l.panels[mode][side].filter((tb) => tb.id !== tabId);
+                });
+                announceUndo(t('page.forecastNew.panelEditor.tabRemoved') || 'Вкладка удалена');
+                break;
+            case 'rename-tab': {
+                const value = ds.value != null ? ds.value : '';
+                mutateLayout((l) => {
+                    const tab = findTab(l, mode, side, tabId);
+                    if (tab) tab.title = value.trim() ? value.trim() : null;
+                }, { skipUndo: true });
+                break;
+            }
+            case 'move-tab': {
+                const dir = ds.dir === 'up' ? -1 : 1;
+                mutateLayout((l) => {
+                    const arr = l.panels[mode][side];
+                    const i = arr.findIndex((tb) => tb.id === tabId);
+                    const j = i + dir;
+                    if (i < 0 || j < 0 || j >= arr.length) return;
+                    const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+                });
+                break;
+            }
+            case 'switch-panel': {
+                const other = side === 'left' ? 'right' : 'left';
+                mutateLayout((l) => {
+                    const arr = l.panels[mode][side];
+                    const i = arr.findIndex((tb) => tb.id === tabId);
+                    if (i < 0) return;
+                    const [tab] = arr.splice(i, 1);
+                    l.panels[mode][other].push(tab);
+                });
+                break;
+            }
+            case 'add-block':
+                mutateLayout((l) => {
+                    const tab = findTab(l, mode, side, tabId);
+                    if (!tab) return;
+                    const source = mode === 'single' ? 'natal' : (ds.source || 'natal');
+                    tab.blocks.push({ source: source, view: ds.view });
+                });
+                break;
+            case 'remove-block':
+                mutateLayout((l) => {
+                    const tab = findTab(l, mode, side, tabId);
+                    if (!tab) return;
+                    tab.blocks = tab.blocks.filter((b) => (b.source + ':' + b.view) !== ds.blockkey);
+                });
+                break;
+            case 'move-block': {
+                const dir = ds.dir === 'up' ? -1 : 1;
+                mutateLayout((l) => {
+                    const tab = findTab(l, mode, side, tabId);
+                    if (!tab) return;
+                    const i = tab.blocks.findIndex((b) => (b.source + ':' + b.view) === ds.blockkey);
+                    const j = i + dir;
+                    if (i < 0 || j < 0 || j >= tab.blocks.length) return;
+                    const tmp = tab.blocks[i]; tab.blocks[i] = tab.blocks[j]; tab.blocks[j] = tmp;
+                });
+                break;
+            }
+            case 'reset':
+                if (!window.confirm(t('page.forecastNew.panelEditor.resetConfirm') || 'Сбросить раскладку панелей к стандартной?')) return;
+                state.layoutUndo = JSON.parse(JSON.stringify(state.panelLayout));
+                state.panelLayout = PL.normalizeLayout(PL.buildDefaultForecastNewLayout());
+                renderPanels();
+                renderPanelEditor();
+                scheduleLayoutPersist();
+                break;
+            case 'undo':
+                if (!state.layoutUndo) return;
+                state.panelLayout = PL.normalizeLayout(state.layoutUndo);
+                state.layoutUndo = null;
+                renderPanels();
+                renderPanelEditor();
+                scheduleLayoutPersist();
+                break;
+            case 'close':
+                togglePanelEditMode(false);
+                break;
+            default:
+                break;
+        }
+    }
+
+    function announceUndo(message) {
+        const editor = document.getElementById('forecastNewPanelEditor');
+        const slot = editor?.querySelector('[data-pe-undo-slot]');
+        if (!slot) return;
+        slot.innerHTML = `<span class="forecast-new-pe-undo">${escapeHtml(message)} <button type="button" class="forecast-new-pe-link" data-pe-action="undo">${escapeHtml(t('page.forecastNew.panelEditor.undo') || 'Отменить')}</button></span>`;
+        clearTimeout(state._undoTimer);
+        state._undoTimer = setTimeout(() => { if (slot) slot.innerHTML = ''; }, 8000);
+    }
+
+    function injectPanelEditorStyles() {
+        if (document.getElementById('forecastNewPanelEditorStyles')) return;
+        const css = `
+        body.forecast-new-panel-edit .forecast-new-side-panel{outline:2px dashed rgba(120,120,200,.45);outline-offset:-2px}
+        .forecast-new-block-header{position:sticky;top:0;z-index:2;font-size:11px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;opacity:.65;padding:6px 8px 4px;background:var(--surface,#fff)}
+        .forecast-new-block{border-top:1px solid rgba(120,120,140,.18)}
+        .forecast-new-block:first-child{border-top:0}
+        #forecastNewPanelEditor{position:fixed;right:16px;bottom:16px;width:min(560px,92vw);max-height:78vh;overflow:auto;z-index:9999;background:var(--surface,#fff);color:var(--text,#1a1a2e);border:1px solid rgba(120,120,160,.3);border-radius:14px;box-shadow:0 18px 48px rgba(20,20,50,.28);font-size:13px}
+        #forecastNewPanelEditor.hidden{display:none}
+        .forecast-new-pe-header{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid rgba(120,120,160,.18);position:sticky;top:0;background:inherit;z-index:3}
+        .forecast-new-pe-header strong{font-size:14px}
+        .forecast-new-pe-mode{font-size:11px;opacity:.6;padding:2px 8px;border-radius:99px;background:rgba(120,120,200,.12)}
+        .forecast-new-pe-close{margin-left:auto;border:0;background:transparent;cursor:pointer;font-size:16px;opacity:.6}
+        .forecast-new-pe-body{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 14px}
+        @media (max-width:640px){.forecast-new-pe-body{grid-template-columns:1fr}}
+        .forecast-new-pe-side-head{font-weight:600;margin-bottom:6px;opacity:.8}
+        .forecast-new-pe-tab{border:1px solid rgba(120,120,160,.22);border-radius:10px;padding:8px;margin-bottom:8px;background:rgba(140,140,180,.05)}
+        .forecast-new-pe-tab-head{display:flex;gap:6px;align-items:center}
+        .forecast-new-pe-title{flex:1;min-width:0;padding:4px 6px;border:1px solid rgba(120,120,160,.3);border-radius:6px;background:var(--surface,#fff);color:inherit}
+        .forecast-new-pe-tab-actions,.forecast-new-pe-block-actions{display:inline-flex;gap:2px}
+        .forecast-new-pe-tab-actions button,.forecast-new-pe-block-actions button{border:1px solid rgba(120,120,160,.25);background:var(--surface,#fff);border-radius:6px;cursor:pointer;width:24px;height:24px;line-height:1;font-size:12px;color:inherit}
+        .forecast-new-pe-tab-actions button:hover,.forecast-new-pe-block-actions button:hover{background:rgba(120,120,200,.14)}
+        .forecast-new-pe-blocks{list-style:none;margin:8px 0 6px;padding:0;display:flex;flex-direction:column;gap:4px}
+        .forecast-new-pe-block{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 6px;border-radius:6px;background:rgba(120,120,200,.07)}
+        .forecast-new-pe-block-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .forecast-new-pe-add-block,.forecast-new-pe-add-tab{width:100%;margin-top:4px;padding:5px 6px;border:1px dashed rgba(120,120,160,.4);border-radius:6px;background:transparent;cursor:pointer;color:inherit;font-size:12px}
+        .forecast-new-pe-add-tab[disabled]{opacity:.4;cursor:not-allowed}
+        .forecast-new-pe-footer{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid rgba(120,120,160,.18);position:sticky;bottom:0;background:inherit}
+        .forecast-new-pe-footer span[data-pe-undo-slot]{flex:1;font-size:12px;opacity:.85}
+        .forecast-new-pe-reset{border:1px solid rgba(200,80,80,.4);color:#c25;background:transparent;border-radius:8px;padding:6px 10px;cursor:pointer}
+        .forecast-new-pe-link{border:0;background:transparent;color:#46c;cursor:pointer;text-decoration:underline;padding:0;font:inherit}
+        .forecast-new-panel-edit-btn.is-active{background:rgba(120,120,200,.2)}`;
+        const style = document.createElement('style');
+        style.id = 'forecastNewPanelEditorStyles';
+        style.textContent = css;
+        document.head.appendChild(style);
+    }
+
+    function ensurePanelEditor() {
+        injectPanelEditorStyles();
+        let editor = document.getElementById('forecastNewPanelEditor');
+        if (editor) return editor;
+        editor = document.createElement('div');
+        editor.id = 'forecastNewPanelEditor';
+        editor.className = 'forecast-new-panel-editor hidden';
+        document.body.appendChild(editor);
+        editor.addEventListener('click', (event) => {
+            const btn = event.target.closest('[data-pe-action]');
+            if (!btn) return;
+            handleEditorAction(btn.dataset.peAction, btn.dataset);
         });
+        editor.addEventListener('change', (event) => {
+            const sel = event.target.closest('select[data-pe-action="add-block"]');
+            if (sel) {
+                const [source, view] = sel.value.split(':');
+                if (view) handleEditorAction('add-block', { side: sel.dataset.side, tab: sel.dataset.tab, source, view });
+            }
+        });
+        editor.addEventListener('input', (event) => {
+            const input = event.target.closest('input[data-pe-action="rename-tab"]');
+            if (input) handleEditorAction('rename-tab', { side: input.dataset.side, tab: input.dataset.tab, value: input.value });
+        });
+        return editor;
+    }
+
+    function renderTabEditorCard(tab, side, mode) {
+        const PL = window.ForecastNewPanelLayout;
+        const title = tab.title != null ? tab.title : '';
+        const placeholder = escapeHtml(PL.autoTabTitle(tab, t));
+        const blocksHtml = tab.blocks.map((b) => `
+            <li class="forecast-new-pe-block">
+                <span class="forecast-new-pe-block-label">${escapeHtml(blockLabel(b))}</span>
+                <span class="forecast-new-pe-block-actions">
+                    <button type="button" data-pe-action="move-block" data-side="${side}" data-tab="${tab.id}" data-blockkey="${b.source}:${b.view}" data-dir="up" title="↑">↑</button>
+                    <button type="button" data-pe-action="move-block" data-side="${side}" data-tab="${tab.id}" data-blockkey="${b.source}:${b.view}" data-dir="down" title="↓">↓</button>
+                    <button type="button" data-pe-action="remove-block" data-side="${side}" data-tab="${tab.id}" data-blockkey="${b.source}:${b.view}" title="✕">✕</button>
+                </span>
+            </li>`).join('');
+        const avail = availableBlocksForMode(mode);
+        const addOptions = avail.map((b) => `<option value="${b.source}:${b.view}">${escapeHtml(blockLabel(b))}</option>`).join('');
+        const addSelect = avail.length
+            ? `<select class="forecast-new-pe-add-block" data-pe-action="add-block" data-side="${side}" data-tab="${tab.id}"><option value="">+ ${escapeHtml(t('page.forecastNew.panelEditor.addBlock') || 'Добавить блок')}</option>${addOptions}</select>`
+            : '';
+        const otherSideLabel = side === 'left' ? '→' : '←';
+        return `
+            <div class="forecast-new-pe-tab" data-tab="${tab.id}">
+                <div class="forecast-new-pe-tab-head">
+                    <input type="text" class="forecast-new-pe-title" data-pe-action="rename-tab" data-side="${side}" data-tab="${tab.id}" value="${escapeHtml(title)}" placeholder="${placeholder}">
+                    <span class="forecast-new-pe-tab-actions">
+                        <button type="button" data-pe-action="move-tab" data-side="${side}" data-tab="${tab.id}" data-dir="up" title="↑">↑</button>
+                        <button type="button" data-pe-action="move-tab" data-side="${side}" data-tab="${tab.id}" data-dir="down" title="↓">↓</button>
+                        <button type="button" data-pe-action="switch-panel" data-side="${side}" data-tab="${tab.id}" title="${escapeHtml(t('page.forecastNew.panelEditor.switchPanel') || 'Сменить панель')}">${otherSideLabel}</button>
+                        <button type="button" data-pe-action="remove-tab" data-side="${side}" data-tab="${tab.id}" title="✕">✕</button>
+                    </span>
+                </div>
+                <ul class="forecast-new-pe-blocks">${blocksHtml}</ul>
+                ${addSelect}
+            </div>`;
+    }
+
+    function renderPanelEditorSide(side, mode) {
+        const tabs = state.panelLayout.panels[mode][side] || [];
+        const head = side === 'left'
+            ? (t('page.forecastNew.natalPanelTitle') || 'Левая панель')
+            : (t('page.forecastNew.panelEditor.rightPanel') || 'Правая панель');
+        const canAdd = availableBlocksForMode(mode).length > 0;
+        return `
+            <div class="forecast-new-pe-side" data-side="${side}">
+                <div class="forecast-new-pe-side-head">${escapeHtml(head)}</div>
+                ${tabs.map((tab) => renderTabEditorCard(tab, side, mode)).join('')}
+                <button type="button" class="forecast-new-pe-add-tab" data-pe-action="add-tab" data-side="${side}" ${canAdd ? '' : 'disabled'}>+ ${escapeHtml(t('page.forecastNew.panelEditor.addTab') || 'Вкладка')}</button>
+            </div>`;
+    }
+
+    function renderPanelEditor() {
+        if (!state.panelEditMode || !state.panelLayout) return;
+        const editor = ensurePanelEditor();
+        const mode = currentWheelMode();
+        const modeLabel = mode === 'single'
+            ? (t('page.forecastNew.view.single') || 'Одиночное колесо')
+            : (t('page.forecastNew.view.multi') || 'Мульти-колесо');
+        editor.innerHTML = `
+            <div class="forecast-new-pe-header">
+                <strong>${escapeHtml(t('page.forecastNew.panelEditor.title') || 'Настройка панелей')}</strong>
+                <span class="forecast-new-pe-mode">${escapeHtml(modeLabel)}</span>
+                <button type="button" class="forecast-new-pe-close" data-pe-action="close" aria-label="${escapeHtml(t('common.close') || 'Закрыть')}">✕</button>
+            </div>
+            <div class="forecast-new-pe-body">
+                ${renderPanelEditorSide('left', mode)}
+                ${renderPanelEditorSide('right', mode)}
+            </div>
+            <div class="forecast-new-pe-footer">
+                <span data-pe-undo-slot></span>
+                <button type="button" class="forecast-new-pe-reset" data-pe-action="reset">${escapeHtml(t('page.forecastNew.panelEditor.reset') || 'Сбросить к стандартной')}</button>
+            </div>`;
+    }
+
+    function togglePanelEditMode(force) {
+        const next = typeof force === 'boolean' ? force : !state.panelEditMode;
+        state.panelEditMode = next;
+        document.body.classList.toggle('forecast-new-panel-edit', next);
+        const toggle = document.getElementById('forecastNewPanelEditToggle');
+        if (toggle) toggle.setAttribute('aria-pressed', next ? 'true' : 'false');
+        toggle?.classList.toggle('is-active', next);
+        const editor = ensurePanelEditor();
+        editor.classList.toggle('hidden', !next);
+        if (next) renderPanelEditor();
+    }
+
+    function bindPanelConfigurator() {
+        const toggle = document.getElementById('forecastNewPanelEditToggle');
+        toggle?.addEventListener('click', () => togglePanelEditMode());
+    }
+
+    // ---- persistence of panel layout (account-level default) ----
+    function scheduleLayoutPersist() {
+        state.panelLayoutDirty = true;
+        clearTimeout(state._layoutPersistTimer);
+        state._layoutPersistTimer = setTimeout(persistPanelLayout, 600);
+    }
+
+    function persistPanelLayout() {
+        const PL = window.ForecastNewPanelLayout;
+        if (!PL || !state.panelLayout) return;
+        const layout = PL.normalizeLayout(state.panelLayout);
+        state.panelLayout = layout;
+        if (!window.AstroAPI?.patchAccountPreferences || !state.userId) return;
+        const seq = ++state.layoutPersistSeq;
+        window.AstroAPI.patchAccountPreferences({
+            chart_defaults: { forecast_new: { panels: layout } },
+        }).then(() => {
+            if (seq === state.layoutPersistSeq) state.panelLayoutDirty = false;
+        }).catch((err) => {
+            state.panelLayoutDirty = true;
+            console.warn('Forecast New panel layout save failed:', err);
+            announceUndo(t('page.forecastNew.panelEditor.saveFailed') || 'Не удалось сохранить раскладку');
+        });
+    }
+
+    function flushLayoutPersist() {
+        if (!state.panelLayoutDirty) return;
+        clearTimeout(state._layoutPersistTimer);
+        persistPanelLayout();
     }
 
     function hydrateState() {
@@ -4211,6 +4580,9 @@
                 view_type: 'forecast_new',
             });
             const resolved = draftResolved || payload?.resolved || {};
+            // Configurable panel layout (account default). resolved.panels is the
+            // raw saved layout; applyPanelLayout normalizes + re-renders chrome.
+            if (resolved && resolved.panels) applyPanelLayout(resolved.panels);
             const matrixSettings = resolved?.matrix || {};
             const hasSplitMatrixPreferences = Number(matrixSettings.schema_version) >= 2;
             state.natalMatrixRows = normalizeForecastNewMatrixRows(
@@ -4435,6 +4807,7 @@
     }
 
     function flushPendingPersistence() {
+        flushLayoutPersist();
         if (state.applySettingsTimer) {
             clearTimeout(state.applySettingsTimer);
             state.applySettingsTimer = null;
