@@ -123,13 +123,12 @@ import{a as at,c as K}from"./chunk-N4BP6O56.js";var it=at((ct,Q)=>{(function(){"
                                 title="${this.escapeHtml(this.t("page.chart.configurations.apex",{planet:this.planetName(i.apex_planet)}))}"
                                 aria-label="${this.escapeHtml(this.t("page.chart.configurations.apex",{planet:this.planetName(i.apex_planet)}))}"
                             >
-                                <span class="config-apex-label" aria-hidden="true">▲</span>
                                 <span class="planet-tag planet-tag--icon-only planet-tag--config-point">
                                     ${this.getPlanetSymbolMarkup(i.apex_planet,{size:16,title:this.planetName(i.apex_planet)})}
                                 </span>
                             </span>
                         `:""}
-                        ${i.planets_involved.map(o=>{let m=this.buildConfigurationPointTooltip(o,i.aspects||[]),g=this.escapeHtml(this.planetName(o)),v=m?` data-config-point-tooltip="${this.escapeHtml(m)}" data-config-point-name="${g}"`:"";return`
+                        ${i.planets_involved.filter(o=>o!==i.apex_planet).map(o=>{let m=this.buildConfigurationPointTooltip(o,i.aspects||[]),g=this.escapeHtml(this.planetName(o)),v=m?` data-config-point-tooltip="${this.escapeHtml(m)}" data-config-point-name="${g}"`:"";return`
                             <span class="planet-tag planet-tag--icon-only planet-tag--config-point"${m?"":` title="${g}"`} aria-label="${g}"${v}>
                                 ${this.getPlanetSymbolMarkup(o,{size:16,title:this.planetName(o)})}
                             </span>
@@ -144,7 +143,7 @@ import{a as at,c as K}from"./chunk-N4BP6O56.js";var it=at((ct,Q)=>{(function(){"
                 >
                     <div class="config-card-head">
                         <h4>
-                            ⭐ ${i.type==="house"?this.t("page.chart.configurations.houseLabel",{house:this.formatHouseNumber(i.house_number)}):this.signName(i.sign)}
+                            ${i.type==="house"?this.t("page.chart.configurations.houseLabel",{house:this.formatHouseNumber(i.house_number)}):`<span class="astro-symbol config-stellium-sign" aria-hidden="true">${Symbols.signs[i.sign]||""}</span> ${this.signName(i.sign)}`}
                         </h4>
                         <span class="config-strength-badge">${this.t("page.chart.configurations.countShort",{count:i.count})}</span>
                     </div>
