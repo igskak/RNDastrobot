@@ -4385,7 +4385,7 @@
         .forecast-new-pe-add-tab[disabled]{opacity:.4;cursor:not-allowed}
         .forecast-new-pe-footer{display:flex;align-items:center;gap:6px;padding:10px 14px;border-top:1px solid rgba(120,120,160,.18);position:sticky;bottom:0;background:inherit}
         .forecast-new-pe-footer span[data-pe-undo-slot]{flex:1;font-size:12px;opacity:.85}
-        .forecast-new-pe-preset-save{display:inline-flex;align-items:center;gap:6px;flex:1;min-width:0;border:1px solid rgba(120,120,160,.3);background:var(--surface,#fff);border-radius:8px;padding:7px 12px;cursor:pointer;color:inherit;font-size:12px;font-weight:500}
+        .forecast-new-pe-preset-save{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid rgba(120,120,160,.3);background:var(--surface,#fff);border-radius:8px;cursor:pointer;color:inherit;flex-shrink:0}
         .forecast-new-pe-preset-save:hover{background:rgba(120,120,200,.08)}
         .forecast-new-pe-presets-wrap{position:relative;flex-shrink:0}
         .forecast-new-pe-presets-toggle{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid rgba(120,120,160,.3);background:var(--surface,#fff);border-radius:8px;cursor:pointer;color:inherit}
@@ -4538,9 +4538,8 @@
             </div>
             <div class="forecast-new-pe-footer">
                 <span data-pe-undo-slot></span>
-                <button type="button" class="forecast-new-pe-preset-save" data-pe-action="save-preset">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="1.5"/><rect x="5" y="2" width="6" height="4" rx=".5"/><rect x="4" y="9" width="8" height="5" rx=".5"/></svg>
-                    ${escapeHtml(t('page.forecastNew.panelEditor.presetSave') || 'Сохранить конфигурацию')}
+                <button type="button" class="forecast-new-pe-preset-save" data-pe-action="save-preset" title="${escapeHtml(t('page.forecastNew.panelEditor.presetSave') || 'Сохранить конфигурацию')}">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="1.5"/><rect x="5" y="2" width="6" height="4" rx=".5"/><rect x="4" y="9" width="8" height="5" rx=".5"/></svg>
                 </button>
                 <div class="forecast-new-pe-presets-wrap" data-pe-presets-wrap>
                     <button type="button" class="forecast-new-pe-presets-toggle" data-pe-action="toggle-presets" title="${escapeHtml(t('page.forecastNew.panelEditor.presets') || 'Конфигурации')}">
