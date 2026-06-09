@@ -4346,7 +4346,11 @@
         editor.className = 'forecast-new-panel-editor hidden';
         document.body.appendChild(editor);
         editor.addEventListener('click', (event) => {
-            const btn = event.target.closest('[data-pe-action]');
+            // Only buttons act on click. The add-block <select> also carries a
+            // data-pe-action but must be handled via 'change' — otherwise the
+            // click that opens its dropdown would mutate the layout and re-render
+            // the editor, closing the dropdown before a choice is made.
+            const btn = event.target.closest('button[data-pe-action]');
             if (!btn) return;
             handleEditorAction(btn.dataset.peAction, btn.dataset);
         });
