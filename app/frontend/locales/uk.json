@@ -326,7 +326,14 @@
         "undo": "Скасувати",
         "tabRemoved": "Вкладку видалено",
         "saveFailed": "Не вдалося зберегти розкладку",
-        "newTabTitle": "Нова вкладка"
+        "newTabTitle": "Нова вкладка",
+        "presets": "Конфігурації",
+        "presetsEmpty": "Немає збережених конфігурацій",
+        "presetSave": "+ Зберегти поточну",
+        "presetNamePrompt": "Назва конфігурації:",
+        "presetLoad": "Завантажити",
+        "presetLoaded": "Завантажено",
+        "presetDeleted": "видалено"
       }
     },
     "plan": {

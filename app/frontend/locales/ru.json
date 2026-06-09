@@ -326,7 +326,14 @@
         "undo": "Отменить",
         "tabRemoved": "Вкладка удалена",
         "saveFailed": "Не удалось сохранить раскладку",
-        "newTabTitle": "Новая вкладка"
+        "newTabTitle": "Новая вкладка",
+        "presets": "Конфигурации",
+        "presetsEmpty": "Нет сохранённых конфигураций",
+        "presetSave": "+ Сохранить текущую",
+        "presetNamePrompt": "Название конфигурации:",
+        "presetLoad": "Загрузить",
+        "presetLoaded": "Загружено",
+        "presetDeleted": "удалено"
       }
     },
     "plan": {

@@ -326,7 +326,14 @@
         "undo": "Undo",
         "tabRemoved": "Tab removed",
         "saveFailed": "Couldn't save layout",
-        "newTabTitle": "New tab"
+        "newTabTitle": "New tab",
+        "presets": "Configurations",
+        "presetsEmpty": "No saved configurations",
+        "presetSave": "+ Save current",
+        "presetNamePrompt": "Configuration name:",
+        "presetLoad": "Load",
+        "presetLoaded": "Loaded",
+        "presetDeleted": "deleted"
       }
     },
     "plan": {

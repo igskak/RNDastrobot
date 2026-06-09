@@ -175,6 +175,7 @@
         // activeTab maps multiLeft/multiRight/singleLeft/singleRight -> tab id.
         panelLayout: null,
         activeTab: {},
+        panelPresets: [],
         panelLayoutDirty: false,
         panelEditMode: false,
         layoutPersistSeq: 0,
@@ -4307,6 +4308,35 @@
             case 'close':
                 togglePanelEditMode(false);
                 break;
+            case 'save-preset': {
+                const name = window.prompt(t('page.forecastNew.panelEditor.presetNamePrompt') || 'Название конфигурации:');
+                if (!name || !name.trim()) return;
+                const PL2 = window.ForecastNewPanelLayout;
+                const newPreset = { id: PL2.makeTabId(), name: name.trim(), layout: PL2.normalizeLayout(state.panelLayout) };
+                state.panelPresets = [...(state.panelPresets || []), newPreset];
+                renderPanelEditor();
+                persistPanelPresets();
+                break;
+            }
+            case 'load-preset': {
+                const preset = (state.panelPresets || []).find((p) => p.id === ds.presetId);
+                if (!preset) return;
+                state.layoutUndo = JSON.parse(JSON.stringify(state.panelLayout));
+                applyPanelLayout(preset.layout);
+                scheduleLayoutPersist();
+                announceUndo(t('page.forecastNew.panelEditor.presetLoaded') || `Загружено: ${preset.name}`);
+                break;
+            }
+            case 'delete-preset': {
+                const idx = (state.panelPresets || []).findIndex((p) => p.id === ds.presetId);
+                if (idx === -1) return;
+                const deleted = state.panelPresets[idx];
+                state.panelPresets = state.panelPresets.filter((_, i) => i !== idx);
+                renderPanelEditor();
+                persistPanelPresets();
+                announceUndo(`${escapeHtml(deleted.name)} ${t('page.forecastNew.panelEditor.presetDeleted') || 'удалено'}`);
+                break;
+            }
             default:
                 break;
         }
@@ -4352,7 +4382,19 @@
         .forecast-new-pe-footer span[data-pe-undo-slot]{flex:1;font-size:12px;opacity:.85}
         .forecast-new-pe-reset{border:1px solid rgba(200,80,80,.4);color:#c25;background:transparent;border-radius:8px;padding:6px 10px;cursor:pointer}
         .forecast-new-pe-link{border:0;background:transparent;color:#46c;cursor:pointer;text-decoration:underline;padding:0;font:inherit}
-        .forecast-new-panel-edit-btn.is-active{background:rgba(120,120,200,.2)}`;
+        .forecast-new-panel-edit-btn.is-active{background:rgba(120,120,200,.2)}
+        .forecast-new-pe-presets-section{border-top:1px solid rgba(120,120,160,.18);padding:10px 14px}
+        .forecast-new-pe-presets-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-weight:600;font-size:12px;opacity:.8}
+        .forecast-new-pe-preset-save{border:1px solid rgba(120,120,200,.4);background:transparent;border-radius:8px;padding:4px 10px;cursor:pointer;color:inherit;font-size:12px}
+        .forecast-new-pe-preset-save:hover{background:rgba(120,120,200,.1)}
+        .forecast-new-pe-presets-list{display:flex;flex-direction:column;gap:4px}
+        .forecast-new-pe-presets-empty{font-size:12px;opacity:.5;padding:4px 0}
+        .forecast-new-pe-preset{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-radius:8px;background:rgba(120,120,180,.07);border:1px solid rgba(120,120,160,.15)}
+        .forecast-new-pe-preset-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+        .forecast-new-pe-preset-actions{display:flex;gap:4px;flex-shrink:0}
+        .forecast-new-pe-preset-load{border:1px solid rgba(120,120,200,.4);background:transparent;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px;color:inherit}
+        .forecast-new-pe-preset-load:hover{background:rgba(120,120,200,.12)}
+        .forecast-new-pe-preset-delete{border:1px solid rgba(200,80,80,.3);background:transparent;border-radius:6px;width:22px;height:22px;cursor:pointer;font-size:11px;color:#c25;line-height:1}`;
         const style = document.createElement('style');
         style.id = 'forecastNewPanelEditorStyles';
         style.textContent = css;
@@ -4465,6 +4507,17 @@
         const modeLabel = mode === 'single'
             ? (t('page.forecastNew.view.single') || 'Одиночное колесо')
             : (t('page.forecastNew.view.multi') || 'Мульти-колесо');
+        const presets = state.panelPresets || [];
+        const presetsHtml = presets.length === 0
+            ? `<div class="forecast-new-pe-presets-empty">${escapeHtml(t('page.forecastNew.panelEditor.presetsEmpty') || 'Нет сохранённых конфигураций')}</div>`
+            : presets.map((p) => `
+                <div class="forecast-new-pe-preset">
+                    <span class="forecast-new-pe-preset-name">${escapeHtml(p.name)}</span>
+                    <div class="forecast-new-pe-preset-actions">
+                        <button type="button" class="forecast-new-pe-preset-load" data-pe-action="load-preset" data-preset-id="${escapeHtml(p.id)}">${escapeHtml(t('page.forecastNew.panelEditor.presetLoad') || 'Загрузить')}</button>
+                        <button type="button" class="forecast-new-pe-preset-delete" data-pe-action="delete-preset" data-preset-id="${escapeHtml(p.id)}" title="${escapeHtml(t('common.delete') || 'Удалить')}">✕</button>
+                    </div>
+                </div>`).join('');
         editor.innerHTML = `
             <div class="forecast-new-pe-header">
                 <strong>${escapeHtml(t('page.forecastNew.panelEditor.title') || 'Настройка панелей')}</strong>
@@ -4474,6 +4527,13 @@
             <div class="forecast-new-pe-body">
                 ${renderPanelEditorSide('left', mode)}
                 ${renderPanelEditorSide('right', mode)}
+            </div>
+            <div class="forecast-new-pe-presets-section">
+                <div class="forecast-new-pe-presets-head">
+                    <span>${escapeHtml(t('page.forecastNew.panelEditor.presets') || 'Конфигурации')}</span>
+                    <button type="button" class="forecast-new-pe-preset-save" data-pe-action="save-preset">${escapeHtml(t('page.forecastNew.panelEditor.presetSave') || '+ Сохранить текущую')}</button>
+                </div>
+                <div class="forecast-new-pe-presets-list">${presetsHtml}</div>
             </div>
             <div class="forecast-new-pe-footer">
                 <span data-pe-undo-slot></span>
@@ -4496,6 +4556,31 @@
     function bindPanelConfigurator() {
         const toggle = document.getElementById('forecastNewPanelEditToggle');
         toggle?.addEventListener('click', () => togglePanelEditMode());
+    }
+
+    // ---- panel presets (named saved configurations) ----
+    function normalizePanelPresets(raw) {
+        if (!Array.isArray(raw)) return [];
+        const PL = window.ForecastNewPanelLayout;
+        return raw.reduce((out, item) => {
+            if (!item || typeof item !== 'object') return out;
+            const name = typeof item.name === 'string' && item.name.trim() ? item.name.trim() : null;
+            if (!name) return out;
+            const id = typeof item.id === 'string' && item.id ? item.id : PL.makeTabId();
+            const layout = item.layout && typeof item.layout === 'object'
+                ? PL.normalizeLayout(item.layout) : null;
+            if (!layout) return out;
+            out.push({ id, name, layout });
+            return out;
+        }, []);
+    }
+
+    function persistPanelPresets() {
+        if (!window.AstroAPI?.patchAccountPreferences || !state.userId) return;
+        const presets = (state.panelPresets || []).map(({ id, name, layout }) => ({ id, name, layout }));
+        window.AstroAPI.patchAccountPreferences({
+            chart_defaults: { forecast_new: { panel_presets: presets } },
+        }).catch((err) => console.warn('Panel presets save failed:', err));
     }
 
     // ---- persistence of panel layout (account-level default) ----
@@ -4643,6 +4728,10 @@
             // Configurable panel layout (account default). resolved.panels is the
             // raw saved layout; applyPanelLayout normalizes + re-renders chrome.
             if (resolved && resolved.panels) applyPanelLayout(resolved.panels);
+            // Named panel presets saved alongside the active layout.
+            if (Array.isArray(resolved?.panel_presets)) {
+                state.panelPresets = normalizePanelPresets(resolved.panel_presets);
+            }
             const matrixSettings = resolved?.matrix || {};
             const hasSplitMatrixPreferences = Number(matrixSettings.schema_version) >= 2;
             state.natalMatrixRows = normalizeForecastNewMatrixRows(
