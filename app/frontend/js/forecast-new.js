@@ -4173,13 +4173,13 @@
         }));
     }
 
-    function mutateLayout(fn, { skipUndo } = {}) {
+    function mutateLayout(fn, { skipUndo, skipEditorRender } = {}) {
         const PL = window.ForecastNewPanelLayout;
         if (!skipUndo) state.layoutUndo = JSON.parse(JSON.stringify(state.panelLayout));
         fn(state.panelLayout);
         state.panelLayout = PL.normalizeLayout(state.panelLayout);
         renderPanels();
-        renderPanelEditor();
+        if (!skipEditorRender) renderPanelEditor();
         scheduleLayoutPersist();
     }
 
@@ -4363,8 +4363,25 @@
         });
         editor.addEventListener('input', (event) => {
             const input = event.target.closest('input[data-pe-action="rename-tab"]');
-            if (input) handleEditorAction('rename-tab', { side: input.dataset.side, tab: input.dataset.tab, value: input.value });
+            if (!input) return;
+            // Update state without re-rendering the editor — re-rendering would
+            // destroy the focused input, losing the caret after every keystroke.
+            const mode = currentWheelMode();
+            const { side, tab: tabId } = input.dataset;
+            const value = input.value;
+            mutateLayout((l) => {
+                const tab = findTab(l, mode, side, tabId);
+                if (tab) tab.title = value.trim() ? value.trim() : null;
+            }, { skipUndo: true, skipEditorRender: true });
         });
+        editor.addEventListener('keydown', (event) => {
+            const input = event.target.closest('input[data-pe-action="rename-tab"]');
+            if (input && event.key === 'Enter') { input.blur(); }
+        });
+        editor.addEventListener('blur', (event) => {
+            const input = event.target.closest('input[data-pe-action="rename-tab"]');
+            if (input) renderPanelEditor();
+        }, true);
         return editor;
     }
 
