@@ -17,6 +17,7 @@ import '../js/dispositor-chains.js';
 import '../js/prognostic-layer-normalizer.js';
 import '../js/prognostic-rings-wheel.js';
 import '../js/forecast-new-state-storage.js';
+import '../js/forecast-new-panel-layout.js';
 import '../js/forecast-source-utils.js';
 import '../js/chart-source-panel.js';
 import '../js/save-chart-modal.js';

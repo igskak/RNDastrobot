@@ -267,7 +267,8 @@
       "tabs": {
         "grid": "Таблица аспектов",
         "configs": "Конфигурации",
-        "balances": "Балансы"
+        "balances": "Балансы",
+        "prognosticShort": "Прогноз"
       },
       "view": {
         "single": "Одно колесо",
@@ -308,6 +309,19 @@
       "matrix": {
         "displayShort": "П",
         "aspectingShort": "А"
+      },
+      "panelEditor": {
+        "toggle": "Настроить панели",
+        "title": "Настройка панелей",
+        "addTab": "Вкладка",
+        "addBlock": "Добавить блок",
+        "switchPanel": "Сменить панель",
+        "rightPanel": "Правая панель",
+        "reset": "Сбросить к стандартной",
+        "resetConfirm": "Сбросить раскладку панелей к стандартной?",
+        "undo": "Отменить",
+        "tabRemoved": "Вкладка удалена",
+        "saveFailed": "Не удалось сохранить раскладку"
       }
     },
     "plan": {
