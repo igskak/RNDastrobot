@@ -1670,6 +1670,42 @@
     color: #fff;
 }
 
+/* Селектор метода левой/первичной панели (натал/прогрессии/дирекции/соляр). */
+.forecast-new-left-layer-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 6px 10px 0;
+}
+
+.forecast-new-left-layer-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 24px;
+    padding: 0 10px;
+    border: 1px solid rgba(30, 58, 95, 0.12);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.72);
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.1;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.forecast-new-left-layer-tab.active {
+    border-color: rgba(30, 58, 95, 0.28);
+    background: var(--accent);
+    color: #fff;
+}
+
+.forecast-new-left-layer-tab:hover {
+    border-color: rgba(30, 58, 95, 0.28);
+}
+
 .forecast-new-right-layer-label {
     min-width: 0;
     overflow: hidden;
