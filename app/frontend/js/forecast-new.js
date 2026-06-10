@@ -376,7 +376,7 @@
             'forecastNewDirectionTypeSelect',
             'forecastNewNatalPanel', 'forecastNewProgPanel',
             'natalPanelMeta', 'prognosticPanelTitle', 'prognosticPanelMeta',
-            'prognosticMomentToggle', 'forecastSavedChartsBtn', 'forecastNewMomentCard',
+            'prognosticMomentToggle', 'forecastSavedChartsBtn', 'natalSavedChartsBtn', 'forecastNewMomentCard',
             'forecastNewWheel', 'forecastNewWheelShell', 'forecastNewResultViews', 'forecastNewResultPane', 'targetDateInput', 'targetTimeInput',
             'forecastNewTimeStepper',
             'stepModeSelect', 'stepBackward', 'stepForward', 'timezoneInput', 'locationInput',
@@ -506,6 +506,14 @@
                 title: t('page.chartPicker.momentTitle', null, 'Load saved chart'),
                 subtitle: t('page.chartPicker.momentSubtitle', null, 'Its date, time and place apply to the active layer.'),
                 onSelect: applySavedChartMoment,
+            });
+        });
+        refs.natalSavedChartsBtn?.addEventListener('click', (event) => {
+            event.stopPropagation();
+            window.AstroChartPicker?.open?.({
+                title: t('page.chartPicker.natalMomentTitle', null, 'Load saved chart'),
+                subtitle: t('page.chartPicker.natalMomentSubtitle', null, 'It becomes the natal chart of this workspace.'),
+                onSelect: applySavedChartToNatal,
             });
         });
         refs.saveSourceChartBtn?.addEventListener('click', saveCurrentSourceAsChart);
@@ -2910,6 +2918,48 @@
         updatePrognosticTimeMeta();
         schedulePersist();
         await loadActiveLayers({ lightweight: true });
+    }
+
+    async function applySavedChartToNatal(chart) {
+        const moment = readChartMoment(chart);
+        if (!moment.date) return;
+        state.natalSelectedDateTime = `${moment.date}T${normalizeTime(moment.time || '12:00:00')}`;
+        const tz = normalizeTimezoneValue(moment.timezone, moment.locationName);
+        if (tz) state.natalTimezone = tz;
+        state.natalLocation = {
+            name: moment.locationName || '',
+            latitude: moment.latitude,
+            longitude: moment.longitude,
+            sourceId: null,
+        };
+        if (state.natalData) {
+            state.natalData = {
+                ...state.natalData,
+                birth_data: {
+                    ...state.natalData.birth_data,
+                    first_name: chart?.first_name || chart?.birthData?.first_name || '',
+                    last_name: chart?.last_name || chart?.birthData?.last_name || '',
+                },
+            };
+        }
+        if (chart?.user_id) {
+            // Загруженная карта становится новым «сохранённым» наталом воркспейса:
+            // isNatalEdited() → false, слои считаются по user_id, а не inline.
+            state.userId = String(chart.user_id);
+            state.natalInitialDateTime = state.natalSelectedDateTime;
+            state.natalInitialSource = {
+                timezone: state.natalTimezone,
+                locationName: state.natalLocation.name || '',
+                latitude: state.natalLocation.latitude,
+                longitude: state.natalLocation.longitude,
+            };
+            configureForecastNavigation();
+            void populateSynastryPartnerOptions();
+        }
+        syncControlsFromState();
+        updateNatalMomentMeta();
+        schedulePersist();
+        await loadNatal({ lightweight: true });
     }
 
     async function applySavedSynastryPartnerChart(chart) {

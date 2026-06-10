@@ -133,10 +133,20 @@
     <main class="forecast-new-layout hidden" id="forecastNewLayout">
         <aside class="side-panel left-panel forecast-new-side-panel" id="forecastNewNatalPanel">
             <div class="forecast-new-side-head">
-                <button type="button" class="forecast-new-moment-toggle" id="natalMomentToggle" aria-expanded="false" aria-controls="forecastNewNatalCard">
-                    <span class="forecast-new-moment-toggle-title" data-i18n="page.forecastNew.natalPanelTitle">Natal</span>
-                    <span class="forecast-new-moment-toggle-meta" id="natalPanelMeta"></span>
-                </button>
+                <div class="forecast-new-side-title-row">
+                    <button type="button" class="forecast-new-moment-toggle" id="natalMomentToggle" aria-expanded="false" aria-controls="forecastNewNatalCard">
+                        <span class="forecast-new-moment-toggle-title" data-i18n="page.forecastNew.natalPanelTitle">Natal</span>
+                        <span class="forecast-new-moment-toggle-meta" id="natalPanelMeta"></span>
+                    </button>
+                    <div class="forecast-new-chart-library-actions">
+                        <button type="button" class="panel-quick-open-btn" id="natalSavedChartsBtn" data-i18n-aria-label="page.clientProfile.quickOpen.savedCharts" data-i18n-title="page.clientProfile.quickOpen.savedCharts">
+                            <svg class="panel-quick-open-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.45" aria-hidden="true">
+                                <path d="M2.5 4.25h4l1.25 1.5h5.75v6.5a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1v-8z"/>
+                                <path d="M5 8.5h6M8 6v5M6.25 9.25 8 11l1.75-1.75"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="forecast-new-left-layer-tabs" id="leftLayerTabs" role="tablist" data-i18n-aria-label="page.forecastNew.leftLayerAria" aria-label="Метод левой панели"></div>
             <div class="forecast-new-time-stepper" id="forecastNewNatalTimeStepper" data-i18n-aria-label="page.forecastNew.natalStepperAria" aria-label="Birth date control"></div>

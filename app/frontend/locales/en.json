@@ -1155,7 +1155,9 @@
       "select": "Select",
       "empty": "No charts found.",
       "momentTitle": "Load saved chart",
-      "momentSubtitle": "Its date, time and place apply to the active layer."
+      "momentSubtitle": "Its date, time and place apply to the active layer.",
+      "natalMomentTitle": "Load saved chart",
+      "natalMomentSubtitle": "It becomes the natal chart of this workspace."
     },
     "clientProfile": {
       "title": "Profile",
