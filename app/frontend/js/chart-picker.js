@@ -11,6 +11,7 @@
         closeBtn: null,
         lastFocus: null,
         charts: [],
+        availableTags: [],
         query: '',
         activeTag: '',
         onSelect: null,
@@ -112,7 +113,7 @@
                 const tag = tagButton.dataset.chartPickerTag || '';
                 state.activeTag = normalizeTag(tag) === normalizeTag(state.activeTag) ? '' : tag;
                 renderTags();
-                renderList();
+                loadCharts();
                 return;
             }
             const item = event.target.closest('[data-chart-picker-index]');
@@ -143,11 +144,11 @@
     }
 
     function filterCharts() {
-        const tag = normalizeTag(state.activeTag);
+        // Tag filtering is done server-side (transitively, incl. family tags on
+        // people), so here we only apply the local text query.
         const query = state.query;
         return state.charts.filter((chart) => {
             if (state.excludeId && String(chart.user_id) === String(state.excludeId)) return false;
-            if (tag && !getTags(chart).some((value) => normalizeTag(value) === tag)) return false;
             if (!query) return true;
             const haystack = [
                 chart.display_title, chart.title, chart.first_name, chart.last_name,
@@ -160,9 +161,7 @@
     }
 
     function renderTags() {
-        const tagSet = new Set();
-        state.charts.forEach((chart) => getTags(chart).forEach((tag) => tagSet.add(tag)));
-        const tags = Array.from(tagSet).sort((a, b) => a.localeCompare(b));
+        const tags = state.availableTags;
         if (!tags.length) {
             state.tagRow.innerHTML = '';
             state.tagRow.hidden = true;
@@ -196,6 +195,18 @@
         }).join('');
     }
 
+    async function loadCharts() {
+        state.list.innerHTML = `<div class="quick-open-status">${escapeHtml(t('common.loading', null, 'Loading'))}</div>`;
+        try {
+            const tag = state.activeTag ? `?tag=${encodeURIComponent(state.activeTag)}` : '';
+            const charts = await apiFetch(`/charts${tag}`);
+            state.charts = Array.isArray(charts) ? charts : [];
+            renderList();
+        } catch (error) {
+            state.list.innerHTML = `<div class="quick-open-empty quick-open-empty--error">${escapeHtml(error?.message || t('common.error', null, 'Error'))}</div>`;
+        }
+    }
+
     function close() {
         if (!state.root) return;
         state.root.classList.add('hidden');
@@ -211,6 +222,8 @@
         state.excludeId = options.excludeId || null;
         state.query = '';
         state.activeTag = '';
+        state.charts = [];
+        state.availableTags = [];
         state.search.value = '';
         state.lastFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
@@ -224,13 +237,13 @@
         state.search.focus();
 
         try {
-            const charts = await apiFetch('/charts');
-            state.charts = Array.isArray(charts) ? charts : [];
+            const tags = await apiFetch('/charts/tags').catch(() => []);
+            state.availableTags = Array.isArray(tags) ? tags : [];
             renderTags();
-            renderList();
-        } catch (error) {
-            state.list.innerHTML = `<div class="quick-open-empty quick-open-empty--error">${escapeHtml(error?.message || t('common.error', null, 'Error'))}</div>`;
+        } catch (_) {
+            state.availableTags = [];
         }
+        await loadCharts();
     }
 
     root.AstroChartPicker = { open, close };

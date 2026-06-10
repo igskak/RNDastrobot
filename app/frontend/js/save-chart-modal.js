@@ -46,8 +46,7 @@
     let _resolve = null;
     let _tags = [];
     let _allTags = [];          // existing tags from user's charts
-    let _personId = null;
-    let _personName = '';
+    let _persons = [];          // [{ id, name }] — first is the primary (FK), rest via M2M
     let _personTimer = null;
     let _domBuilt = false;
     let _eventsAttached = false;
@@ -79,9 +78,7 @@
         R.personWrap    = q('scm-person-wrap');
         R.personInput   = q('scm-person-input');
         R.personDropdown = q('scm-person-dropdown');
-        R.personBadge   = q('scm-person-badge');
-        R.personBadgeName = q('scm-person-badge-name');
-        R.personClear   = q('scm-person-clear');
+        R.personChips   = q('scm-person-chips');
     }
 
     // ─── Build DOM ───────────────────────────────────────────────────────────────
@@ -119,14 +116,11 @@
         <!-- Person -->
         <div class="form-group" id="scm-person-section" style="grid-column:1/-1">
           <label class="form-label" id="scm-person-label"></label>
-          <div class="scm-person-wrap" id="scm-person-wrap">
-            <div class="scm-person-badge hidden" id="scm-person-badge">
-              <span id="scm-person-badge-name"></span>
-              <button type="button" id="scm-person-clear" aria-label="Clear">×</button>
-            </div>
+          <div class="scm-person-wrap scm-tag-input-wrap" id="scm-person-wrap">
             <input id="scm-person-input" type="text" autocomplete="off">
             <div class="place-suggestions" id="scm-person-dropdown"></div>
           </div>
+          <div class="scm-person-chips" id="scm-person-chips"></div>
         </div>
 
       </div>
@@ -164,7 +158,7 @@
         if (tagsLabel) tagsLabel.textContent = t('page.chart.saveModal.tagsLabel', null, 'Теги');
 
         const personLabel = q('scm-person-label');
-        if (personLabel) personLabel.textContent = t('page.chart.saveModal.personLabel', null, 'Привязать к человеку');
+        if (personLabel) personLabel.textContent = t('page.chart.saveModal.personLabel', null, 'Привязать к людям');
 
         if (R.cancelBtn) R.cancelBtn.textContent = t('common.cancel', null, 'Отмена');
         if (R.submitText) R.submitText.textContent = t('page.chart.actions.saveSourceChart', null, 'Сохранить');
@@ -223,12 +217,9 @@
 
     async function loadExistingTags() {
         try {
-            const charts = await apiFetch('/charts?_limit=200');
-            const tagSet = new Set();
-            (Array.isArray(charts) ? charts : []).forEach(c => {
-                (c.tags || []).forEach(tag => { if (tag) tagSet.add(tag); });
-            });
-            _allTags = Array.from(tagSet).sort((a, b) => a.localeCompare(b));
+            // Includes person ("family") tags, not just chart tags.
+            const tags = await apiFetch('/charts/tags');
+            _allTags = Array.isArray(tags) ? tags : [];
         } catch {
             _allTags = [];
         }
@@ -239,6 +230,7 @@
     function showPersonDropdown(items) {
         if (!R.personDropdown) return;
         R.personDropdown.innerHTML = '';
+        items = items.filter(p => !_persons.some(sel => String(sel.id) === String(p.person_id)));
         if (!items.length) { R.personDropdown.classList.remove('active'); return; }
         items.forEach(person => {
             const btn = document.createElement('button');
@@ -262,20 +254,34 @@
         } catch { /* silent */ }
     }
 
-    function selectPerson(id, name) {
-        _personId = id;
-        _personName = name;
-        if (R.personBadge)     R.personBadge.classList.remove('hidden');
-        if (R.personBadgeName) R.personBadgeName.textContent = name;
-        if (R.personInput)     R.personInput.classList.add('hidden');
-        if (R.personDropdown)  R.personDropdown.classList.remove('active');
+    function renderPersonChips() {
+        if (!R.personChips) return;
+        R.personChips.innerHTML = '';
+        _persons.forEach((person, i) => {
+            const chip = document.createElement('span');
+            chip.className = 'scm-tag-chip scm-person-chip';
+            const name = document.createElement('span');
+            // First selected person is the primary one (chart's person_id).
+            name.textContent = i === 0
+                ? `${person.name} · ${t('page.chart.saveModal.personPrimary', null, 'основной')}`
+                : person.name;
+            const del = document.createElement('button');
+            del.type = 'button';
+            del.className = 'scm-tag-chip-del';
+            del.setAttribute('aria-label', 'Remove ' + person.name);
+            del.textContent = '×';
+            del.addEventListener('click', () => { _persons.splice(i, 1); renderPersonChips(); });
+            chip.append(name, del);
+            R.personChips.appendChild(chip);
+        });
     }
 
-    function clearPerson() {
-        _personId = null;
-        _personName = '';
-        if (R.personBadge)    R.personBadge.classList.add('hidden');
-        if (R.personInput)    { R.personInput.classList.remove('hidden'); R.personInput.value = ''; R.personInput.focus(); }
+    function selectPerson(id, name) {
+        if (!_persons.some((p) => String(p.id) === String(id))) {
+            _persons.push({ id, name });
+            renderPersonChips();
+        }
+        if (R.personInput)    { R.personInput.value = ''; R.personInput.focus(); }
         if (R.personDropdown) R.personDropdown.classList.remove('active');
     }
 
@@ -331,8 +337,6 @@
             if (R.personWrap && !R.personWrap.contains(e.target)) R.personDropdown?.classList.remove('active');
         }, { capture: true });
 
-        R.personClear?.addEventListener('click', clearPerson);
-
         // Submit
         R.form?.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -342,7 +346,13 @@
                 R.titleInput?.focus();
                 return;
             }
-            close({ title, tags: [..._tags], personId: _personId || null });
+            const personIds = _persons.map((p) => p.id);
+            close({
+                title,
+                tags: [..._tags],
+                personId: personIds[0] || null,   // primary (FK)
+                personIds,                          // full list (primary first)
+            });
         });
     }
 
@@ -355,12 +365,11 @@
 
     function resetState() {
         _tags = [];
-        _personId = null;
-        _personName = '';
+        _persons = [];
         clearTimeout(_personTimer);
         if (R.tagInput)      R.tagInput.value = '';
         if (R.personInput)   { R.personInput.value = ''; R.personInput.classList.remove('hidden'); }
-        if (R.personBadge)   R.personBadge.classList.add('hidden');
+        if (R.personChips)   R.personChips.innerHTML = '';
         if (R.personDropdown) R.personDropdown.classList.remove('active');
         if (R.error)         { R.error.textContent = ''; R.error.classList.add('hidden'); }
         renderTagChips();

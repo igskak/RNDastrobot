@@ -12,6 +12,7 @@ const userId = window.location.pathname.split('/')[2] || '';
 let profileData = null;   // full server response
 let relatedPeople = [];
 let tagSourceUsers = [];
+let apiTagPool = [];   // distinct tags across charts + persons (incl. family tags)
 let consultationFilter = 'all';
 let toastTimer = null;
 let relatedPeoplePicker = null;
@@ -363,10 +364,11 @@ function applyPlanUi() {
 
 async function loadProfile() {
     try {
-        const [profileRes, relatedPeoplePayload, usersPayload] = await Promise.all([
+        const [profileRes, relatedPeoplePayload, usersPayload, tagsPayload] = await Promise.all([
             apiFetch(`${API_BASE}/users/${userId}/profile`),
             window.AstroAPI.getRelatedPeople(userId).catch(() => []),
             apiFetch(`${API_BASE}/users`).then((res) => (res.ok ? res.json() : [])).catch(() => []),
+            apiFetch(`${API_BASE}/charts/tags`).then((res) => (res.ok ? res.json() : [])).catch(() => []),
         ]);
 
         if (profileRes.status === 401) { window.location.href = '/login.html'; return; }
@@ -376,6 +378,7 @@ async function loadProfile() {
         profileData = await profileRes.json();
         relatedPeople = Array.isArray(relatedPeoplePayload) ? relatedPeoplePayload : [];
         tagSourceUsers = Array.isArray(usersPayload) ? usersPayload : [];
+        apiTagPool = Array.isArray(tagsPayload) ? tagsPayload : [];
         renderAll(profileData);
 
         refs.profileMain.classList.remove('hidden');
@@ -498,6 +501,14 @@ function getAvailableTags() {
             if (key && !tagsByKey.has(key)) {
                 tagsByKey.set(key, tag);
             }
+        }
+    }
+
+    // Pool from API: distinct tags across all charts AND persons (family tags).
+    for (const tag of (apiTagPool || [])) {
+        const key = normalizeTag(tag);
+        if (key && !tagsByKey.has(key)) {
+            tagsByKey.set(key, tag);
         }
     }
 

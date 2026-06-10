@@ -8,7 +8,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from loguru import logger
 from pydantic import BaseModel, Field, field_validator, model_validator
-from sqlalchemy import or_
+from sqlalchemy import or_, text
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import AuthContext, create_audit_event, ensure_client_access, require_auth
@@ -238,6 +238,58 @@ def _get_person_or_404(db: Session, astrologer_id: UUID, person_id: UUID) -> Per
     return person
 
 
+# SQL: chart_ids whose own tags OR any linked person's tags (FK person_id or
+# person_chart_links M2M) contain the wanted tag, case-insensitively. This is
+# what lets a tag applied only to people ("Ивановы") surface their charts.
+_TRANSITIVE_TAG_SQL = text(
+    """
+    SELECT u.user_id
+    FROM users u
+    LEFT JOIN persons p_fk ON p_fk.person_id = u.person_id
+    LEFT JOIN person_chart_links pcl ON pcl.chart_id = u.user_id
+    LEFT JOIN persons p_m2m ON p_m2m.person_id = pcl.person_id
+    WHERE u.astrologer_id = :astrologer_id
+      AND (
+        EXISTS (SELECT 1 FROM jsonb_array_elements_text(u.tags) t
+                WHERE lower(t) = lower(:tag))
+        OR EXISTS (SELECT 1 FROM jsonb_array_elements_text(coalesce(p_fk.tags, '[]'::jsonb)) t
+                   WHERE lower(t) = lower(:tag))
+        OR EXISTS (SELECT 1 FROM jsonb_array_elements_text(coalesce(p_m2m.tags, '[]'::jsonb)) t
+                   WHERE lower(t) = lower(:tag))
+      )
+    """
+)
+
+
+@router.get("/tags", response_model=List[str])
+def list_chart_tags(
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+) -> List[str]:
+    """All distinct tag strings across charts and persons of this astrologer.
+
+    Person tags are included so family-style tags (applied only to people) show
+    up in the chart picker filter even though no chart carries them directly.
+    """
+    rows = db.execute(
+        text(
+            """
+            SELECT DISTINCT tag FROM (
+                SELECT jsonb_array_elements_text(tags) AS tag FROM users
+                WHERE astrologer_id = :astrologer_id
+                UNION
+                SELECT jsonb_array_elements_text(tags) AS tag FROM persons
+                WHERE astrologer_id = :astrologer_id
+            ) s
+            WHERE tag IS NOT NULL AND length(trim(tag)) > 0
+            """
+        ),
+        {"astrologer_id": str(auth.astrologer.id)},
+    ).fetchall()
+    return sorted((row[0] for row in rows), key=lambda s: s.casefold())
+
+
 @router.get("", response_model=List[ChartResponse])
 def list_charts(
     request: Request,
@@ -265,9 +317,13 @@ def list_charts(
         )
 
     users = query.order_by(User.created_at.desc()).all()
-    if tag:
-        wanted = tag.strip().casefold()
-        users = [u for u in users if wanted in {str(t).casefold() for t in (u.tags or [])}]
+    if tag and tag.strip():
+        rows = db.execute(
+            _TRANSITIVE_TAG_SQL,
+            {"astrologer_id": str(auth.astrologer.id), "tag": tag.strip()},
+        ).fetchall()
+        matching = {str(row[0]) for row in rows}
+        users = [u for u in users if str(u.user_id) in matching]
 
     create_audit_event(
         db,

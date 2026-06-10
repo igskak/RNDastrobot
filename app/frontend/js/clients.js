@@ -11,6 +11,7 @@ const state = {
     users: [],
     charts: [],
     people: [],
+    apiTagPool: [],   // distinct tags across charts + persons (incl. family tags)
     filteredUsers: [],
     searchTerm: '',
     activeTag: '',
@@ -37,6 +38,9 @@ const editClientState = {
     selectedCoords: null,
     originalPlace: '',
     selectedPlaceLabel: '',
+    selectedPersons: [],        // [{ id, name }] — first is primary (FK), rest via M2M
+    originalLinkedIds: [],      // person_ids currently linked via M2M (from chart meta)
+    personAutocompleteBound: false,
 };
 
 const refs = {};
@@ -197,8 +201,11 @@ function cacheElements() {
     refs.editChartTitle = document.getElementById('editChartTitle');
     refs.editFullNameGroup = document.getElementById('editFullNameGroup');
     refs.editChartTitleGroup = document.getElementById('editChartTitleGroup');
-    refs.editChartPerson = document.getElementById('editChartPerson');
     refs.editChartPersonGroup = document.getElementById('editChartPersonGroup');
+    refs.editChartPersonInput = document.getElementById('editChartPersonInput');
+    refs.editChartPersonDropdown = document.getElementById('editChartPersonDropdown');
+    refs.editChartPersonChips = document.getElementById('editChartPersonChips');
+    refs.editChartPersonWrap = document.getElementById('editChartPersonWrap');
     refs.editCrmContactSection = document.getElementById('editCrmContactSection');
     refs.editKicker = refs.editDialog?.querySelector('.clients-dialog-kicker');
     refs.editTitleEl = document.getElementById('editClientTitle');
@@ -491,10 +498,11 @@ async function loadClients() {
     refs.tableWrap.classList.add('hidden');
 
     try {
-        const [chartsResponse, personsResponse, usersResponse] = await Promise.all([
+        const [chartsResponse, personsResponse, usersResponse, tagsResponse] = await Promise.all([
             apiFetch(`${API_BASE}/charts`, { method: 'GET' }),
             apiFetch(`${API_BASE}/persons`, { method: 'GET' }),
             apiFetch(`${API_BASE}/users`, { method: 'GET' }),
+            apiFetch(`${API_BASE}/charts/tags`, { method: 'GET' }).catch(() => null),
         ]);
         if (chartsResponse.status === 401 || personsResponse.status === 401 || usersResponse.status === 401) {
             window.location.href = '/login.html';
@@ -518,6 +526,13 @@ async function loadClients() {
         } else {
             state.charts = [];
             console.warn('Charts API unavailable, falling back to people-only view');
+        }
+
+        if (tagsResponse && tagsResponse.ok) {
+            const pool = await tagsResponse.json().catch(() => []);
+            state.apiTagPool = Array.isArray(pool) ? pool : [];
+        } else {
+            state.apiTagPool = [];
         }
 
         state.people = enrichPeopleFromCharts(state.people, state.charts);
@@ -936,9 +951,13 @@ function filterUsers(users, searchTerm, activeTag = '', activeProfileId = '') {
     const normalizedProfileId = String(activeProfileId || '');
     if (!searchTerm && !normalizedTag && !normalizedProfileId) return [...users];
 
+    const personTagIndex = buildPersonTagIndex();
+
     return users.filter((user) => {
         const tags = getUserTags(user);
-        const matchesTag = !normalizedTag || tags.some((tag) => normalizeTag(tag) === normalizedTag);
+        // Transitive match: include tags of linked people (family tags).
+        const effectiveTags = getEffectiveTags(user, personTagIndex);
+        const matchesTag = !normalizedTag || effectiveTags.some((tag) => normalizeTag(tag) === normalizedTag);
         if (!matchesTag) return false;
         const matchesProfile = !normalizedProfileId || getChartRelatedProfiles(user).some((profile) => String(profile.id || '') === normalizedProfileId);
         if (!matchesProfile) return false;
@@ -986,8 +1005,44 @@ function getAvailableTags(users) {
         }
     }
 
+    // Pool from API: distinct tags across all charts AND persons, so family tags
+    // (which live on people) are offered even on the charts tab.
+    for (const tag of (state.apiTagPool || [])) {
+        const key = normalizeTag(tag);
+        if (key && !tagsByKey.has(key)) {
+            tagsByKey.set(key, tag);
+        }
+    }
+
     const collator = getNameCollator();
     return [...tagsByKey.values()].sort((a, b) => collator.compare(a, b));
+}
+
+// Map person_id -> normalized tag set, for transitive ("family") tag matching.
+function buildPersonTagIndex() {
+    const index = new Map();
+    for (const person of (state.people || [])) {
+        const id = String(person?.person_id || '');
+        if (!id) continue;
+        index.set(id, getUserTags(person).map(normalizeTag).filter(Boolean));
+    }
+    return index;
+}
+
+// Effective tags for a chart = its own tags PLUS the tags of every linked person
+// (primary person_id + M2M linked_person_ids). For a person item, just its tags.
+function getEffectiveTags(item, personTagIndex) {
+    const own = getUserTags(item);
+    const linkedIds = [
+        item?.person_id,
+        ...(Array.isArray(item?.linked_person_ids) ? item.linked_person_ids : []),
+    ].map((id) => String(id || '')).filter(Boolean);
+    if (!linkedIds.length || !personTagIndex) return own;
+    const out = own.slice();
+    for (const id of linkedIds) {
+        for (const tag of (personTagIndex.get(id) || [])) out.push(tag);
+    }
+    return out;
 }
 
 function applyTagFilter(tag) {
@@ -1251,22 +1306,100 @@ function setEditDialogMode(isChartMode) {
     if (refs.editSubtitle) { refs.editSubtitle.setAttribute('data-i18n', subtitleKey); refs.editSubtitle.textContent = t(subtitleKey); }
 }
 
-function populatePersonSelect(currentPersonId) {
-    if (!refs.editChartPerson) return;
-    const noLinkLabel = t('page.clients.edit.noLinkedPerson');
-    refs.editChartPerson.innerHTML = `<option value="">${escapeHtml(noLinkLabel)}</option>`;
-    for (const person of (state.people || [])) {
-        const personId = String(person.person_id || '');
-        if (!personId) continue;
-        const name = person.display_name
-            || [person.first_name, person.last_name].filter(Boolean).join(' ')
-            || personId;
-        const opt = document.createElement('option');
-        opt.value = personId;
-        opt.textContent = name;
-        if (personId === String(currentPersonId || '')) opt.selected = true;
-        refs.editChartPerson.appendChild(opt);
-    }
+function personName(person) {
+    return person.display_name
+        || [person.first_name, person.last_name].filter(Boolean).join(' ')
+        || String(person.person_id || '');
+}
+
+// Initialise the chip multi-select. primaryId becomes the first chip (FK),
+// linkedIds are the additional people linked via the M2M endpoint.
+function initEditPersons(primaryId, linkedIds) {
+    editClientState.originalLinkedIds = (linkedIds || []).map((id) => String(id));
+    const byId = new Map((state.people || []).map((p) => [String(p.person_id), p]));
+    const chosen = [];
+    const seen = new Set();
+    const pushId = (id) => {
+        const key = String(id || '');
+        if (!key || seen.has(key)) return;
+        const person = byId.get(key);
+        if (!person) return;
+        seen.add(key);
+        chosen.push({ id: key, name: personName(person) });
+    };
+    pushId(primaryId);
+    (linkedIds || []).forEach(pushId);
+    editClientState.selectedPersons = chosen;
+    renderEditPersonChips();
+    bindEditPersonAutocomplete();
+    if (refs.editChartPersonInput) refs.editChartPersonInput.value = '';
+    refs.editChartPersonDropdown?.classList.remove('active');
+}
+
+function renderEditPersonChips() {
+    if (!refs.editChartPersonChips) return;
+    refs.editChartPersonChips.innerHTML = '';
+    editClientState.selectedPersons.forEach((person, i) => {
+        const chip = document.createElement('span');
+        chip.className = 'scm-tag-chip scm-person-chip';
+        const name = document.createElement('span');
+        name.textContent = i === 0
+            ? `${person.name} · ${t('page.chart.saveModal.personPrimary') || 'основной'}`
+            : person.name;
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'scm-tag-chip-del';
+        del.setAttribute('aria-label', `Remove ${person.name}`);
+        del.textContent = '×';
+        del.addEventListener('click', () => {
+            editClientState.selectedPersons.splice(i, 1);
+            renderEditPersonChips();
+        });
+        chip.append(name, del);
+        refs.editChartPersonChips.appendChild(chip);
+    });
+}
+
+function showEditPersonDropdown(query) {
+    const dropdown = refs.editChartPersonDropdown;
+    if (!dropdown) return;
+    const q = String(query || '').trim().toLowerCase();
+    dropdown.innerHTML = '';
+    if (!q) { dropdown.classList.remove('active'); return; }
+    const selectedIds = new Set(editClientState.selectedPersons.map((p) => String(p.id)));
+    const matches = (state.people || [])
+        .filter((p) => p.person_id && !selectedIds.has(String(p.person_id)))
+        .filter((p) => personName(p).toLowerCase().includes(q))
+        .slice(0, 8);
+    if (!matches.length) { dropdown.classList.remove('active'); return; }
+    matches.forEach((person) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'place-suggestion';
+        btn.textContent = personName(person);
+        btn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            editClientState.selectedPersons.push({ id: String(person.person_id), name: personName(person) });
+            renderEditPersonChips();
+            if (refs.editChartPersonInput) refs.editChartPersonInput.value = '';
+            dropdown.classList.remove('active');
+        });
+        dropdown.appendChild(btn);
+    });
+    dropdown.classList.add('active');
+}
+
+function bindEditPersonAutocomplete() {
+    if (editClientState.personAutocompleteBound) return;
+    editClientState.personAutocompleteBound = true;
+    refs.editChartPersonInput?.addEventListener('input', () => {
+        showEditPersonDropdown(refs.editChartPersonInput.value);
+    });
+    document.addEventListener('click', (e) => {
+        if (refs.editChartPersonWrap && !refs.editChartPersonWrap.contains(e.target)) {
+            refs.editChartPersonDropdown?.classList.remove('active');
+        }
+    }, { capture: true });
 }
 
 async function handleRenameChart(userId) {
@@ -1333,7 +1466,7 @@ async function openEditChartDialog(userId) {
         if (refs.editNotes) refs.editNotes.value = chartMeta?.notes || '';
         renderEditTagSuggestions();
 
-        populatePersonSelect(chartMeta?.person_id || null);
+        initEditPersons(chartMeta?.person_id || null, chartMeta?.linked_person_ids || []);
 
         window.Timezones?.populate?.(refs.editTimezone);
         refs.editTimezone.value = formData.timezone || '';
@@ -1541,13 +1674,32 @@ async function handleEditClientSubmit(event) {
         let patchedMeta = null;
         if (isChartMode) {
             const chartTitle = refs.editChartTitle?.value?.trim() || null;
-            const personId = refs.editChartPerson?.value || null;
+            const chosen = editClientState.selectedPersons || [];
+            const primaryId = chosen[0]?.id || null;
             const patchRes = await apiFetch(`${API_BASE}/charts/${encodeURIComponent(userId)}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: chartTitle || null, person_id: personId || null }),
+                body: JSON.stringify({ title: chartTitle || null, person_id: primaryId || null }),
             });
             if (patchRes.ok) patchedMeta = await patchRes.json();
+
+            // Reconcile M2M links for the non-primary people.
+            const desiredM2M = new Set(chosen.slice(1).map((p) => String(p.id)));
+            const originalM2M = new Set(editClientState.originalLinkedIds || []);
+            const toAdd = [...desiredM2M].filter((id) => !originalM2M.has(id));
+            const toRemove = [...originalM2M].filter((id) => !desiredM2M.has(id));
+            for (const pid of toAdd) {
+                await apiFetch(`${API_BASE}/persons/${encodeURIComponent(pid)}/charts`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chart_id: userId }),
+                }).catch((err) => console.warn('link person failed', pid, err));
+            }
+            for (const pid of toRemove) {
+                await apiFetch(`${API_BASE}/persons/${encodeURIComponent(pid)}/charts/${encodeURIComponent(userId)}`, {
+                    method: 'DELETE',
+                }).catch((err) => console.warn('unlink person failed', pid, err));
+            }
         }
 
         state.charts = state.charts.map((c) => {

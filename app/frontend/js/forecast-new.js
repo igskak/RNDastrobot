@@ -4984,6 +4984,17 @@
                 tags: result.tags,
                 personId: result.personId,
             }));
+            const newChartId = saved.chart_id || saved.user_id;
+            // Primary person is set via person_id (FK above); link any extra
+            // selected people through the M2M endpoint so the chart belongs to all.
+            const extraPersonIds = (result.personIds || []).slice(1);
+            for (const pid of extraPersonIds) {
+                try {
+                    await apiPost(`/persons/${encodeURIComponent(pid)}/charts`, { chart_id: newChartId });
+                } catch (linkErr) {
+                    console.warn('Failed to link extra person to chart', pid, linkErr);
+                }
+            }
             const resp = await apiGet(`/natal/${encodeURIComponent(String(saved.chart_id || saved.user_id))}`);
             state.userId = resp.user_id || saved.chart_id || saved.user_id;
             state.natalData = resp;

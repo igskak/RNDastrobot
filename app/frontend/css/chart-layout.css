@@ -396,6 +396,18 @@
     /* inherits chart-picker-tag styles */
 }
 
+/* Selected people — chips below the search input */
+.scm-person-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.scm-person-chips:empty {
+    display: none;
+}
+
 /* Person search */
 .scm-person-wrap {
     position: relative;
