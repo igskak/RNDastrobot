@@ -12,7 +12,8 @@ import pytz
 from app.services.progression_service import ProgressionService
 from app.services.natal_chart_service import NatalChartService
 from app.services.natal_context import NatalContext
-from app.models.schemas import BirthDataInput
+from app.services.primary_chart_service import apply_primary
+from app.models.schemas import BirthDataInput, PrimarySpec
 from app.database.connection import get_db
 from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
 from app.utils.ephemeris import get_ephemeris_path
@@ -42,6 +43,9 @@ class ProgressionRequest(BaseModel):
     timezone: Optional[str] = Field(None, description="IANA timezone прогностического момента")
     save_to_db: bool = Field(False, description="Сохранить результат в базу данных")
     name: Optional[str] = Field(None, max_length=160, description="Название сохранённой прогрессии")
+    primary: Optional[PrimarySpec] = Field(
+        None, description="Первичная карта — цель аспектов. Опущено/natal → аспекты к наталу."
+    )
 
     @field_validator('timezone')
     @classmethod
@@ -230,6 +234,8 @@ def calculate_progression(
             raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
         context = NatalContext.from_inline(calc_result, astrologer_id=auth.astrologer.id)
         try:
+            if request.primary is not None:
+                context = apply_primary(db, context, request.primary.method, request.primary.params)
             return progression_service.calculate_progression_from_context(
                 context,
                 target_date=request.target_date,
@@ -249,6 +255,16 @@ def calculate_progression(
     # --- Сохранённый клиент (DB-путь) ---
     try:
         ensure_client_access(db, http_request, auth, request.user_id, action="client.progressions.calculate")
+        # Первичная карта != натал: считаем через контекст (аспекты к первичной, без сохранения).
+        if request.primary is not None and request.primary.method != 'natal':
+            base = progression_service._build_context_from_user_id(request.user_id)
+            context = apply_primary(db, base, request.primary.method, request.primary.params)
+            return progression_service.calculate_progression_from_context(
+                context,
+                target_date=request.target_date,
+                target_time=request.target_time,
+                timezone=request.timezone,
+            )
         result = progression_service.calculate_progression(
             user_id=request.user_id,
             target_date=request.target_date,

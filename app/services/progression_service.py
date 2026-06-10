@@ -168,19 +168,21 @@ class ProgressionService:
         # 4. Натальные данные для аспектов и домов
         natal_data = context.natal_data
 
-        # 5. Определить натальные и прогрессивные дома для прогрессивных планет
+        # 5. Определить дома карты-цели (натал/первичная) и прогрессивные дома
+        reference_houses = context.effective_reference_houses(natal_data['houses'])
         for planet in progressed_planets:
             planet['natal_house'] = self.swisseph_engine.get_planet_house(
-                planet['longitude'], natal_data['houses']
+                planet['longitude'], reference_houses
             )
             planet['progressed_house'] = self.swisseph_engine.get_planet_house(
                 planet['longitude'], progressed_houses
             )
             # Поле house используется фронтендом в подсказке
             planet['house'] = planet['progressed_house']
-        
-        # 6. Рассчитать аспекты прогрессия→натал
-        aspects = self._calculate_progression_aspects(context.astrologer_id, progressed_planets, natal_data)
+
+        # 6. Рассчитать аспекты прогрессия→цель (цель = натал либо первичная карта)
+        aspect_targets = context.effective_aspect_targets(natal_data['all_objects'])
+        aspects = self._calculate_progression_aspects(context.astrologer_id, progressed_planets, aspect_targets)
         
         # 7. Рассчитать ингрессии планет (знак/дом)
         planet_ingresses = self._calculate_planet_ingresses(
@@ -470,12 +472,12 @@ class ProgressionService:
         self,
         astrologer_id: Optional[UUID],
         progressed_planets: List[Dict],
-        natal_data: Dict
+        natal_objects: List[Dict]
     ) -> List[Dict]:
-        """Расчёт аспектов между прогрессивными и натальными объектами"""
+        """Расчёт аспектов между прогрессивными объектами и объектами карты-цели
+        (натал по умолчанию либо произвольная первичная карта)."""
         aspects = []
         aspect_types = self._get_aspect_types()
-        natal_objects = natal_data['all_objects']
 
         for prog_planet in progressed_planets:
             for natal_obj in natal_objects:

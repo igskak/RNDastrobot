@@ -100,6 +100,33 @@ class BirthDataInput(BaseModel):
             raise ValueError('Необходимо указать либо place, либо latitude и longitude')
 
 
+# Допустимые методы первичной карты (цель аспектов слоёв). Держим набор здесь, чтобы
+# схема не зависела от сервиса; ``primary_chart_service.VALID_PRIMARY_METHODS`` — тот же набор.
+PRIMARY_METHODS = {'natal', 'progression', 'direction', 'solar_return'}
+
+
+class PrimarySpec(BaseModel):
+    """Спецификация «первичной карты» — карты, к которой слой считает аспекты
+    (фича aspects_to_<primary>).
+
+    Первичная деривируется от того же натала, что и слой (источник натала берётся из
+    самого запроса: ``user_id``/``natal``). ``method='natal'`` (по умолчанию) → аспекты
+    к наталу, исходное поведение. ``params`` несёт метод-специфичные поля:
+      - direction: ``target_date``, ``direction_type``
+      - progression: ``target_date``, ``target_time``, ``timezone``
+      - solar_return: ``year``, ``location_lat``, ``location_lon``, ``location_name``, ``location_timezone``
+    """
+    method: str = Field('natal', description="natal|progression|direction|solar_return")
+    params: Dict[str, Any] = Field(default_factory=dict, description="Параметры метода первичной карты")
+
+    @field_validator('method')
+    @classmethod
+    def validate_method(cls, v: str) -> str:
+        if v not in PRIMARY_METHODS:
+            raise ValueError(f'Недопустимый primary.method: {v}. Допустимые: {", ".join(sorted(PRIMARY_METHODS))}')
+        return v
+
+
 class PlanetPosition(BaseModel):
     """Позиция планеты"""
     name: str
@@ -731,6 +758,9 @@ class SolarReturnRequest(BaseModel):
     # Параметры расчёта
     house_system: str = Field(default="P", description="Система домов")
     save_to_db: bool = Field(default=True, description="Сохранить результат в БД")
+    primary: Optional[PrimarySpec] = Field(
+        None, description="Первичная карта — цель аспектов. Опущено/natal → аспекты к наталу."
+    )
 
     @field_validator('house_system')
     @classmethod

@@ -293,9 +293,10 @@ class SolarReturnService:
 
         # 8.1 Аспекты внутри соляра и соляр → натал
         solar_aspects = self._calculate_solar_aspects(solar_planets, astrologer_id=context.astrologer_id)
-        natal_targets = context.natal_aspect_targets or []
+        # Цель аспектов: натал по умолчанию либо произвольная первичная карта.
+        aspect_targets = context.effective_aspect_targets(context.natal_aspect_targets or [])
         aspects_to_natal = self._calculate_solar_to_natal_aspects(
-            context.astrologer_id, solar_planets, natal_targets,
+            context.astrologer_id, solar_planets, aspect_targets,
         )
         solar_planets = self._enrich_motion_flags(solar_planets, astrologer_id=context.astrologer_id)
 

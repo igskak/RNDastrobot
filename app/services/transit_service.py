@@ -127,18 +127,20 @@ class TransitService:
         ))
         self._enrich_motion_flags(transit_planets, astrologer_id=context.astrologer_id)
 
-        # 4. Определить натальные и транзитные дома для транзитных планет
+        # 4. Определить дома карты-цели (натал или первичная карта) и транзитные дома
+        reference_houses = context.effective_reference_houses(natal_data['houses'])
         for planet in transit_planets:
             planet['natal_house'] = self.swisseph_engine.get_planet_house(
-                planet['longitude'], natal_data['houses']
+                planet['longitude'], reference_houses
             )
             if transit_houses:
                 planet['house'] = self.swisseph_engine.get_planet_house(
                     planet['longitude'], transit_houses
                 )
 
-        # 5. Рассчитать транзит→натал аспекты
-        aspects = self._calculate_transit_aspects(context.astrologer_id, transit_planets, natal_data)
+        # 5. Рассчитать транзит→цель аспекты (цель = натал либо первичная карта)
+        aspect_targets = context.effective_aspect_targets(natal_data['all_objects'])
+        aspects = self._calculate_transit_aspects(context.astrologer_id, transit_planets, aspect_targets)
 
         return {
             'transit_info': {
@@ -359,15 +361,15 @@ class TransitService:
         self,
         astrologer_id: Optional[UUID],
         transit_planets: List[Dict],
-        natal_data: Dict
+        natal_objects: List[Dict]
     ) -> List[Dict]:
         """
-        Расчёт аспектов между транзитными и натальными объектами.
-        Транзит → Натал (не натал→натал и не транзит→транзит).
+        Расчёт аспектов между транзитными объектами и объектами карты-цели.
+        Цель — натал (по умолчанию) либо произвольная первичная карта
+        (``context.effective_aspect_targets``). Транзит → Цель.
         """
         aspects = []
         aspect_types = self._get_aspect_types()
-        natal_objects = natal_data['all_objects']
 
         # Конвертируем транзитные планеты в формат объектов
         transit_objects = [

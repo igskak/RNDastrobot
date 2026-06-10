@@ -16,7 +16,7 @@ DB-путь (``TransitService._load_natal_data``), — это база для pa
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date as date_type
 from typing import Dict, List, Optional
 from uuid import UUID
@@ -142,10 +142,61 @@ class NatalContext:
     # Натальные цели для аспектов соляр→натал (со скоростями). DB-путь и inline
     # заполняют их по-своему, чтобы поведение DB-пути осталось идентичным.
     natal_aspect_targets: Optional[List[Dict]] = None
+    # Произвольная «первичная карта» как цель аспектов слоёв (aspects_to_<primary>).
+    # Форма: {'targets': [{name, longitude, type, speed}], 'houses': [{number, longitude}]}.
+    # None → слои аспектируют к наталу (исходное поведение, 100% обратная совместимость).
+    # Деривация слоёв (natal_data, birth_jd, ...) НЕ затрагивается — меняется только цель.
+    aspect_reference: Optional[Dict] = None
 
     @property
     def is_ephemeral(self) -> bool:
         return self.user_id is None
+
+    @property
+    def has_primary(self) -> bool:
+        """True, если задана не-натальная первичная карта для целей аспектов."""
+        return bool(self.aspect_reference and self.aspect_reference.get('targets') is not None)
+
+    def effective_aspect_targets(self, fallback: List[Dict]) -> List[Dict]:
+        """Цели аспектов слоя: первичная карта, если задана, иначе натальный fallback.
+
+        ``fallback`` — текущий натальный источник конкретного сервиса
+        (``natal_data['all_objects']`` для транзита/прогрессии/дирекции либо
+        ``natal_aspect_targets`` для соляра). Когда ``aspect_reference`` пуст,
+        возвращается ровно ``fallback`` → поведение идентично исходному.
+        """
+        if self.has_primary:
+            return self.aspect_reference['targets']
+        return fallback
+
+    def effective_reference_houses(self, fallback: List[Dict]) -> List[Dict]:
+        """Дома карты-цели для размещения тел слоя: дома первичной карты, если она
+        задана, иначе натальные дома (``fallback``)."""
+        if self.aspect_reference and self.aspect_reference.get('houses'):
+            return self.aspect_reference['houses']
+        return fallback
+
+    @classmethod
+    def with_primary(cls, base: "NatalContext", primary_calc_result: Dict) -> "NatalContext":
+        """Копия ``base`` с целями аспектов, указывающими на произвольную первичную карту.
+
+        Все деривационные поля (натал субъекта, JD/координаты рождения) сохраняются,
+        чтобы прогрессии/дирекции по-прежнему деривировались от натала субъекта; меняется
+        только ``aspect_reference``. Цели строятся тем же ``aspect_targets_from_calc_result``,
+        что и натальные, поэтому орбисы/фазы/исключения работают единообразно.
+        """
+        houses = [
+            {'number': h['number'], 'longitude': float(h['longitude'])}
+            for h in (primary_calc_result.get('houses') or [])
+            if h.get('longitude') is not None
+        ]
+        return replace(
+            base,
+            aspect_reference={
+                'targets': aspect_targets_from_calc_result(primary_calc_result),
+                'houses': houses,
+            },
+        )
 
     @classmethod
     def from_inline(
