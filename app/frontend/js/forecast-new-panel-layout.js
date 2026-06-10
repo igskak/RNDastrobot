@@ -366,14 +366,16 @@
                 var pane = doc.createElement('div');
                 pane.className = 'panel-tab-content forecast-new-tab-pane' + (tab.id === activeId ? ' active' : '');
                 pane.dataset.tabId = tab.id;
-                var multi = tab.blocks.length > 1;
+                // Mini block headers only in multi-wheel mode; single mode is
+                // natal-only and the headers read as redundant labels there.
+                var showHeaders = tab.blocks.length > 1 && mode !== 'single';
                 tab.blocks.forEach(function (block) {
                     var meta = BLOCK_TARGET_MAP[block.source + ':' + block.view];
                     if (!meta) return;
                     var el = doc.getElementById(meta.containerId) || store.querySelector('#' + meta.containerId);
                     if (!el) return;
                     el.classList.add('active');
-                    if (multi) {
+                    if (showHeaders) {
                         var wrap = doc.createElement('div');
                         wrap.className = 'forecast-new-block';
                         var head = doc.createElement('div');
