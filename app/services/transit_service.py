@@ -903,6 +903,366 @@ class TransitService:
         return local_dt.isoformat(timespec='seconds')
 
     # ========================================================================
+    # Aspect passes engine (assistant feature — signed-angle root finding)
+    #
+    # Unlike find_transit_events (which collapses a retrograde loop into ONE
+    # interval with ONE jd_exact), this finds EVERY exact crossing within a
+    # contact by locating the roots of a signed, unwrapped angular residual.
+    # That makes it correct for conjunctions (residual is the signed
+    # separation, sign-changing at 0°), oppositions (the ±180° branch is
+    # handled by re-wrapping the residual), and retrograde triple-passes.
+    # Orbs come from the astrologer's configured prognostic profile via
+    # _calculate_allowed_orb (no hardcoded orbs).
+    # ========================================================================
+
+    CALC_VERSION = 'aspect_passes_v1'
+
+    # Forward-scan caps (days) for next_contact auto-expansion, by transit body.
+    _NEXT_CONTACT_CAP_DAYS: Dict[str, int] = {
+        'Moon': 45, 'Sun': 420, 'Mercury': 420, 'Venus': 540, 'Mars': 900,
+        'Jupiter': 650, 'Saturn': 1150, 'Chiron': 1900,
+        'Uranus': 1650, 'Neptune': 2300, 'Pluto': 2700, 'Proserpina': 4000,
+    }
+    _DEFAULT_NEXT_CONTACT_CAP_DAYS = 1150
+    _MAX_SCAN_SAMPLES = 60000  # hard guard against runaway scans
+
+    @staticmethod
+    def _wrap_pm180(value: float) -> float:
+        """Wrap an angle into (-180, 180]."""
+        return ((value + 180.0) % 360.0) - 180.0
+
+    def _signed_sep_at_jd(
+        self, jd: float, transit_body: str, natal_longitude: float
+    ) -> Optional[float]:
+        """Signed ecliptic separation transit−natal, wrapped to (-180, 180]."""
+        tlon = self._get_transit_body_longitude(jd, transit_body)
+        if tlon is None:
+            return None
+        return self._wrap_pm180(tlon - natal_longitude)
+
+    def _aspect_residual_at_jd(
+        self, jd: float, transit_body: str, natal_longitude: float, target: float
+    ) -> Optional[float]:
+        """
+        Residual whose root is the exact aspect on the given side.
+
+        target is +exact_angle or -exact_angle. The residual is re-wrapped to
+        (-180, 180] so it is continuous and changes sign across the aspect even
+        at the 180° branch (opposition).
+        """
+        sep = self._signed_sep_at_jd(jd, transit_body, natal_longitude)
+        if sep is None:
+            return None
+        return self._wrap_pm180(sep - target)
+
+    def _transit_speed_at_jd(
+        self, jd: float, transit_body: str, h: float = 0.05
+    ) -> float:
+        """Longitudinal speed (deg/day) via central finite difference."""
+        before = self._get_transit_body_longitude(jd - h, transit_body)
+        after = self._get_transit_body_longitude(jd + h, transit_body)
+        if before is None or after is None:
+            return 0.0
+        return self._wrap_pm180(after - before) / (2.0 * h)
+
+    def _bisect_residual_root(
+        self, jd_lo: float, jd_hi: float, transit_body: str,
+        natal_longitude: float, target: float,
+    ) -> float:
+        """Refine an exact aspect crossing bracketed by a residual sign change."""
+        r_lo = self._aspect_residual_at_jd(jd_lo, transit_body, natal_longitude, target)
+        if r_lo is None:
+            return 0.5 * (jd_lo + jd_hi)
+        for _ in range(40):
+            jd_mid = 0.5 * (jd_lo + jd_hi)
+            r_mid = self._aspect_residual_at_jd(jd_mid, transit_body, natal_longitude, target)
+            if r_mid is None:
+                return jd_mid
+            if (r_lo <= 0) == (r_mid <= 0):
+                jd_lo, r_lo = jd_mid, r_mid
+            else:
+                jd_hi = jd_mid
+        return 0.5 * (jd_lo + jd_hi)
+
+    def _bisect_orb_boundary(
+        self, jd_a: float, jd_b: float, transit_body: str,
+        natal_longitude: float, exact_angle: float, max_orb: float,
+    ) -> float:
+        """Refine the orb-boundary crossing (deviation == max_orb)."""
+        f_a = self._aspect_deviation_at_jd(jd_a, transit_body, natal_longitude, exact_angle) - max_orb
+        for _ in range(30):
+            jd_m = 0.5 * (jd_a + jd_b)
+            f_m = self._aspect_deviation_at_jd(jd_m, transit_body, natal_longitude, exact_angle) - max_orb
+            if (f_a <= 0) == (f_m <= 0):
+                jd_a, f_a = jd_m, f_m
+            else:
+                jd_b = jd_m
+        return 0.5 * (jd_a + jd_b)
+
+    def _bisect_speed_zero(
+        self, jd_a: float, jd_b: float, transit_body: str,
+    ) -> float:
+        """Refine a station (speed == 0) bracketed by a speed sign change."""
+        s_a = self._transit_speed_at_jd(jd_a, transit_body)
+        for _ in range(30):
+            jd_m = 0.5 * (jd_a + jd_b)
+            s_m = self._transit_speed_at_jd(jd_m, transit_body)
+            if (s_a < 0) == (s_m < 0):
+                jd_a, s_a = jd_m, s_m
+            else:
+                jd_b = jd_m
+        return 0.5 * (jd_a + jd_b)
+
+    def _scan_aspect_contacts(
+        self, transit_body: str, natal_longitude: float, exact_angle: float,
+        max_orb: float, jd_start: float, jd_end: float, step_jd: float,
+    ) -> List[Dict]:
+        """
+        Scan [jd_start, jd_end] and return contact intervals with their exact
+        passes (roots) and stations. A contact is a maximal interval where the
+        unsigned orb deviation stays within max_orb.
+        """
+        # Conjunction (0°) and opposition (180°) have a single aspect side;
+        # every other aspect has two (transit ahead vs behind natal).
+        if exact_angle in (0.0, 180.0):
+            targets = [exact_angle]
+        else:
+            targets = [exact_angle, -exact_angle]
+
+        contacts: List[Dict] = []
+        cur: Optional[Dict] = None
+        prev_jd: Optional[float] = None
+        prev_res: Dict[float, Optional[float]] = {t: None for t in targets}
+        prev_speed: Optional[float] = None
+
+        jd = jd_start
+        samples = 0
+        while jd <= jd_end + 1e-9:
+            samples += 1
+            if samples > self._MAX_SCAN_SAMPLES:
+                break
+            dev = self._aspect_deviation_at_jd(jd, transit_body, natal_longitude, exact_angle)
+            in_orb = dev <= max_orb
+            speed = self._transit_speed_at_jd(jd, transit_body)
+            res = {
+                t: self._aspect_residual_at_jd(jd, transit_body, natal_longitude, t)
+                for t in targets
+            }
+
+            if in_orb and cur is None:
+                if prev_jd is not None:
+                    enter_jd = self._bisect_orb_boundary(
+                        prev_jd, jd, transit_body, natal_longitude, exact_angle, max_orb)
+                    enter_complete = True
+                else:
+                    enter_jd = jd  # window opened already inside orb
+                    enter_complete = False
+                cur = {
+                    'jd_enter': enter_jd, 'enter_complete': enter_complete,
+                    'passes': [], 'stations': [],
+                    'min_orb': dev, 'min_orb_jd': jd,
+                }
+
+            if cur is not None and in_orb:
+                if dev < cur['min_orb']:
+                    cur['min_orb'] = dev
+                    cur['min_orb_jd'] = jd
+                # Exact crossings: residual root per aspect side. A root that
+                # lands exactly on a sample (r1 == 0) is captured directly;
+                # otherwise a strict sign change brackets it for bisection.
+                for t in targets:
+                    r0 = prev_res[t]
+                    r1 = res[t]
+                    if r1 is None:
+                        continue
+                    if r1 == 0.0:
+                        root_jd = jd
+                    elif (r0 is not None and r0 != 0.0
+                            and (r0 < 0) != (r1 < 0)):
+                        root_jd = self._bisect_residual_root(
+                            prev_jd, jd, transit_body, natal_longitude, t)
+                    else:
+                        continue
+                    spd = self._transit_speed_at_jd(root_jd, transit_body)
+                    root_dev = self._aspect_deviation_at_jd(
+                        root_jd, transit_body, natal_longitude, exact_angle)
+                    cur['passes'].append({
+                        'jd': root_jd,
+                        'motion': 'retrograde' if spd < 0 else 'direct',
+                        'orb': root_dev,
+                    })
+                # Stations: speed sign change inside the contact.
+                if (prev_speed is not None and prev_speed != 0.0
+                        and (prev_speed < 0) != (speed < 0)):
+                    st_jd = self._bisect_speed_zero(prev_jd, jd, transit_body)
+                    cur['stations'].append({
+                        'jd': st_jd,
+                        'type': 'R' if prev_speed > 0 and speed < 0 else 'D',
+                    })
+
+            if cur is not None and not in_orb:
+                cur['jd_leave'] = self._bisect_orb_boundary(
+                    prev_jd, jd, transit_body, natal_longitude, exact_angle, max_orb)
+                cur['leave_complete'] = True
+                contacts.append(cur)
+                cur = None
+
+            prev_jd = jd
+            prev_res = res
+            prev_speed = speed
+            jd += step_jd
+
+        if cur is not None:
+            cur['jd_leave'] = jd_end
+            cur['leave_complete'] = False
+            contacts.append(cur)
+
+        return contacts
+
+    def find_aspect_passes(
+        self,
+        user_id: UUID,
+        transit_body: str,
+        natal_body: str,
+        aspect_type: str,
+        timezone: str,
+        *,
+        anchor_date: Optional[date] = None,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+        max_expansion_days: Optional[int] = None,
+    ) -> Dict:
+        """
+        Find when a transiting body forms a given aspect to a natal object:
+        enter / each exact crossing / leave, with retrograde motion per pass
+        and station dates through each contact.
+
+        Window resolution:
+        - If start_date AND end_date are given → mode 'window' (scan that range).
+        - Otherwise → mode 'next_contact': scan forward from anchor_date
+          (default today), auto-expanding up to a per-body cap, and return the
+          first contact found.
+
+        Orbs are the astrologer's configured prognostic orbs.
+        Returns a structured dict (see CALC_VERSION) with machine-readable
+        result-quality fields so a caller never has to trust prose.
+        """
+        natal_data = self._load_natal_data(user_id, apply_exclusions=False)
+        if natal_data is None:
+            raise ValueError(f"Natal chart not found for user_id={user_id}")
+
+        natal_obj = next(
+            (o for o in natal_data['all_objects'] if o['name'] == natal_body), None)
+        aspect_type_obj = next(
+            (a for a in self._get_aspect_types() if a.aspect_type == aspect_type), None)
+
+        base = {
+            'transit_body': transit_body,
+            'natal_body': natal_body,
+            'aspect_type': aspect_type,
+            'timezone': timezone,
+            'calc_version': self.CALC_VERSION,
+        }
+        if natal_obj is None:
+            return {**base, 'status': 'unknown_natal_body', 'contacts': []}
+        if aspect_type_obj is None:
+            return {**base, 'status': 'unknown_aspect_type', 'contacts': []}
+
+        natal_longitude = float(natal_obj['longitude'])
+        exact_angle = float(aspect_type_obj.exact_angle)
+
+        astrologer_id = self.preferences_runtime.get_astrologer_id_for_user(user_id)
+        max_orb = self._calculate_allowed_orb(
+            astrologer_id, transit_body, natal_body, aspect_type)
+        base['exact_angle'] = exact_angle
+        base['orb_used'] = round(max_orb, 4)
+        base['orb_source'] = 'astrologer_settings' if astrologer_id else 'default'
+
+        # Resolve scan window.
+        if start_date is not None and end_date is not None:
+            mode = 'window'
+            _, jd_start = TimeService.process_birth_time(start_date, time(0, 0), timezone)
+            _, jd_end = TimeService.process_birth_time(end_date, time(23, 59, 59), timezone)
+            requested_window = {'start': start_date.isoformat(), 'end': end_date.isoformat()}
+            cap_days = None
+        else:
+            mode = 'next_contact'
+            anchor = anchor_date or date.today()
+            cap_days = max_expansion_days or self._NEXT_CONTACT_CAP_DAYS.get(
+                transit_body, self._DEFAULT_NEXT_CONTACT_CAP_DAYS)
+            _, jd_start = TimeService.process_birth_time(anchor, time(0, 0), timezone)
+            _, jd_end = TimeService.process_birth_time(
+                anchor + timedelta(days=cap_days), time(23, 59, 59), timezone)
+            requested_window = {'anchor': anchor.isoformat(), 'cap_days': cap_days}
+
+        # Validate transit body resolves at all.
+        if self._get_transit_body_longitude(jd_start, transit_body) is None:
+            return {**base, 'status': 'unsupported_transit_body', 'contacts': []}
+
+        # Moon needs a fine step; everyone else 6h is safe for slow contacts.
+        step_jd = (1.0 / 24.0) if transit_body == 'Moon' else (6.0 / 24.0)
+
+        contacts_raw = self._scan_aspect_contacts(
+            transit_body, natal_longitude, exact_angle, max_orb,
+            jd_start, jd_end, step_jd)
+
+        if mode == 'next_contact':
+            contacts_raw = contacts_raw[:1]
+
+        contacts = [self._format_aspect_contact(c, timezone) for c in contacts_raw]
+
+        if contacts:
+            status = 'ok'
+            window_cap_reached = (
+                mode == 'next_contact' and not contacts_raw[-1]['leave_complete'])
+            boundary_complete = all(
+                c['enter_complete'] and c['leave_complete'] for c in contacts_raw)
+        else:
+            status = 'no_contact_in_window'
+            window_cap_reached = (mode == 'next_contact')
+            boundary_complete = True
+
+        return {
+            **base,
+            'status': status,
+            'mode': mode,
+            'requested_window': requested_window,
+            'effective_window': {
+                'start': self._jd_to_iso(jd_start, timezone),
+                'end': self._jd_to_iso(jd_end, timezone),
+            },
+            'window_cap_reached': window_cap_reached,
+            'boundary_complete': boundary_complete,
+            'contacts': contacts,
+        }
+
+    def _format_aspect_contact(self, contact: Dict, timezone: str) -> Dict:
+        """Format an internal contact (JD-based) into an API-facing dict."""
+        return {
+            'enter': self._jd_to_iso(contact['jd_enter'], timezone),
+            'enter_complete': contact['enter_complete'],
+            'leave': self._jd_to_iso(contact['jd_leave'], timezone),
+            'leave_complete': contact['leave_complete'],
+            'exact_pass_count': len(contact['passes']),
+            'passes': [
+                {
+                    'date': self._jd_to_iso(p['jd'], timezone),
+                    'motion': p['motion'],
+                    'orb': round(p['orb'], 4),
+                }
+                for p in sorted(contact['passes'], key=lambda p: p['jd'])
+            ],
+            'stations': [
+                {'date': self._jd_to_iso(s['jd'], timezone), 'type': s['type']}
+                for s in sorted(contact['stations'], key=lambda s: s['jd'])
+            ],
+            'closest_approach': {
+                'orb': round(contact['min_orb'], 4),
+                'date': self._jd_to_iso(contact['min_orb_jd'], timezone),
+            },
+        }
+
+    # ========================================================================
     # Cache methods
     # ========================================================================
 
