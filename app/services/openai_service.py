@@ -9,7 +9,25 @@ from loguru import logger
 from openai import OpenAI
 
 _API_KEY = os.getenv("OPENAI_API_KEY", "")
-_MODEL   = os.getenv("OPENAI_SUMMARY_MODEL", "gpt-4.1")
+_MODEL = os.getenv("OPENAI_SUMMARY_MODEL", "gpt-4.1")
+
+# Shared client across OpenAI-backed services (summary, assistant, …).
+_SHARED_CLIENT: Optional[OpenAI] = None
+
+
+def is_openai_configured() -> bool:
+    return bool(_API_KEY)
+
+
+def get_openai_client() -> OpenAI:
+    """Return a process-wide OpenAI client. Raises if the key is unset."""
+    global _SHARED_CLIENT
+    if not _API_KEY:
+        raise RuntimeError("OPENAI_API_KEY not configured")
+    if _SHARED_CLIENT is None:
+        _SHARED_CLIENT = OpenAI(api_key=_API_KEY)
+    return _SHARED_CLIENT
+
 
 _SYSTEM_PROMPT = """You are an expert astrology consultation assistant.
 Your task is to analyze a consultation transcript and produce structured notes.

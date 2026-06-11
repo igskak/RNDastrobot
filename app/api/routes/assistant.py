@@ -21,31 +21,23 @@ from loguru import logger
 
 from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
 from app.database.connection import get_db
+from app.services.astro_assistant_service import (
+    ASPECT_TYPE_NAMES as _ASPECT_TYPES,
+    AstroAssistantService,
+    NATAL_BODY_NAMES as _NATAL_BODY_NAMES,
+    TRANSIT_BODY_NAMES as _TRANSIT_BODY_NAMES,
+)
+from app.services.openai_service import is_openai_configured
 from app.services.transit_service import TransitService
-from app.utils.constants import PLANETS, SPECIAL_POINTS
 from app.utils.ephemeris import get_ephemeris_path
 
 router = APIRouter(prefix="/assistant", tags=["Assistant"])
 
 EPHE_PATH = get_ephemeris_path()
 
-# Deterministic vocabularies — built from constants so they never drift from
-# the rest of the app. The agent (PR3) emits these same sets into its tool
-# JSON-schema enums so the model cannot invent body or aspect labels.
-_PLANET_NAMES = frozenset(PLANETS.values())
-_ANGLE_NAMES = frozenset({'ASC', 'MC', 'IC', 'DSC', 'Vertex', 'AntiVertex'})
-_TRANSIT_BODY_NAMES = _PLANET_NAMES | frozenset(
-    {'TrueNorthNode', 'TrueSouthNode', 'BlackMoon', 'WhiteMoon'})
-_NATAL_BODY_NAMES = _PLANET_NAMES | frozenset(SPECIAL_POINTS.keys()) | _ANGLE_NAMES
-# Mirrors database/seeds/02_aspect_types.sql (ref_aspect_types).
-_ASPECT_TYPES = frozenset({
-    'Conjunction', 'Sextile', 'Square', 'Trine', 'Opposition',
-    'Vigintile', 'Semi_Nonagon', 'Semisextile', 'Decile', 'Nonagon',
-    'Semisquare', 'Quintile', 'Binonagon', 'Sentagon', 'Tridecile',
-    'Sesquiquadrate', 'Biquintile', 'Quincunx',
-})
-
 MAX_EXPANSION_DAYS = 4000
+MAX_CHAT_MESSAGES = 40
+MAX_CHAT_CONTENT_CHARS = 4000
 
 
 class AspectPassesRequest(BaseModel):
@@ -200,4 +192,77 @@ def aspect_passes(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Aspect passes calculation failed",
+        )
+
+
+class ChatMessage(BaseModel):
+    role: str = Field(..., description="'user' or 'assistant'.")
+    content: str = Field(..., max_length=MAX_CHAT_CONTENT_CHARS)
+
+    @field_validator('role')
+    @classmethod
+    def _validate_role(cls, v: str) -> str:
+        if v not in ('user', 'assistant'):
+            raise ValueError("role must be 'user' or 'assistant'")
+        return v
+
+
+class ChatRequest(BaseModel):
+    """A chat turn bound to the active chart."""
+
+    user_id: UUID = Field(..., description="Active chart's user_id (server-bound context).")
+    timezone: str = Field('UTC', description="Active chart's timezone (default for tools).")
+    messages: List[ChatMessage] = Field(..., min_length=1, max_length=MAX_CHAT_MESSAGES)
+
+    @field_validator('timezone')
+    @classmethod
+    def _validate_timezone(cls, v: str) -> str:
+        try:
+            pytz.timezone(v)
+        except pytz.exceptions.UnknownTimeZoneError:
+            raise ValueError(f"Unknown timezone: {v}")
+        return v
+
+
+class ChatResponse(BaseModel):
+    reply: str
+    tool_results: List[dict] = Field(default_factory=list)
+    iterations: int
+    max_iterations_reached: bool
+
+
+@router.post(
+    "/chat",
+    response_model=ChatResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Astrologer assistant chat turn",
+    description=(
+        "Runs the function-calling assistant for the active chart. The model "
+        "selects deterministic tools; the chart's user_id is bound server-side "
+        "and never controlled by the model."
+    ),
+)
+def chat(
+    request: ChatRequest,
+    http_request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+):
+    if not is_openai_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Assistant is not configured",
+        )
+    ensure_client_access(db, http_request, auth, request.user_id, action="client.assistant.chat")
+    service = AstroAssistantService(db_session=db, default_timezone=request.timezone)
+    try:
+        return service.chat(
+            user_id=request.user_id,
+            messages=[m.model_dump() for m in request.messages],
+        )
+    except Exception:
+        logger.exception("assistant chat failed")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Assistant request failed",
         )
