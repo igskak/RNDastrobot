@@ -11,7 +11,7 @@ const API_BASE_URL = window.location.hostname === 'localhost'
     : '/api/v1';
 
 const MAX_HISTORY = 40;
-const MAX_RECORDING_MS = 60_000;
+const MAX_RECORDING_MS = 5 * 60_000;
 
 function t(key, params) {
     return window.FrontendI18n?.t?.(key, params) || key;
