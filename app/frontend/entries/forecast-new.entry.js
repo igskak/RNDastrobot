@@ -25,3 +25,4 @@ import '../js/chart-source-panel.js';
 import '../js/save-chart-modal.js';
 import '../js/forecast-new.js';
 import '../js/forecast-nav-menu.js';
+import '../js/chat.js';

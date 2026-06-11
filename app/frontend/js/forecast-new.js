@@ -182,6 +182,11 @@
         layoutUndo: null,
     };
 
+    window.getAssistantChartContext = () => ({
+        userId: state.userId || localStorage.getItem('currentUserId') || null,
+        timezone: state.natalTimezone || state.timezone || 'UTC',
+    });
+
     function t(key, params) {
         return window.FrontendI18n?.t?.(key, params) || key;
     }

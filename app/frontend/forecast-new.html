@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecastNew.pageTitle">Forecast</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=4bcd94eddf11">
-    <script>window.__APP_BUILD_ID__ = '4bcd94eddf11';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=004f98d33652">
+    <script>window.__APP_BUILD_ID__ = '004f98d33652';</script>
 </head>
 <body class="forecast-new-page">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -428,6 +428,33 @@
 
     <!-- Save-chart modal is injected by SaveChartModal module (save-chart-modal.js) -->
 
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=4bcd94eddf11"></script>
+    <!-- Astrologer assistant chat (corner dock) -->
+    <button type="button" id="chatToggle" class="chat-toggle" data-i18n-aria-label="page.chart.chat.toggle">
+        <span aria-hidden="true">✦</span>
+    </button>
+    <section id="chatWidget" class="chat-widget" aria-labelledby="chatTitle">
+        <header class="chat-widget-header">
+            <h2 id="chatTitle" class="chat-widget-title" data-i18n="page.chart.chat.title"></h2>
+            <button type="button" id="chatClose" class="chat-widget-close" data-i18n-aria-label="page.chart.chat.close">
+                <span aria-hidden="true">×</span>
+            </button>
+        </header>
+        <div id="chatMessages" class="chat-messages" role="log" aria-live="polite">
+            <p class="chat-empty" data-i18n="page.chart.chat.empty"></p>
+        </div>
+        <div class="chat-input-row">
+            <textarea id="chatInput" class="chat-input" rows="1"
+                      data-i18n-placeholder="page.chart.chat.placeholder"></textarea>
+            <button type="button" id="chatMic" class="chat-mic" aria-pressed="false"
+                    data-i18n-aria-label="page.chart.chat.mic">
+                <span aria-hidden="true">🎙</span>
+            </button>
+            <button type="button" id="chatSend" class="chat-send" data-i18n-aria-label="page.chart.chat.send">
+                <span aria-hidden="true">➤</span>
+            </button>
+        </div>
+    </section>
+
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=004f98d33652"></script>
 </body>
 </html>

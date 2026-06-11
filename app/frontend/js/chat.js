@@ -90,9 +90,11 @@ class ChatWidget {
     }
 
     getActiveChartContext() {
+        const assistantContext = window.getAssistantChartContext?.();
         const cache = window.chartDataRawCache || window.chartDataCache || null;
-        const userId = cache?.user_id || localStorage.getItem('currentUserId') || null;
-        const timezone = cache?.timezone || 'UTC';
+        const userId = assistantContext?.userId || cache?.user_id
+            || localStorage.getItem('currentUserId') || null;
+        const timezone = assistantContext?.timezone || cache?.timezone || 'UTC';
         return { userId, timezone };
     }
 
