@@ -62,6 +62,8 @@ def test_assistant_defaults_to_compact_modern_model():
     assert "every `Точно` pass" in svc._SYSTEM_PROMPT
     assert "`Вход`" in svc._SYSTEM_PROMPT
     assert "`Выход`" in svc._SYSTEM_PROMPT
+    assert "`D` (direct) or `R` (retrograde)" in svc._SYSTEM_PROMPT
+    assert "`Станция R/D`" in svc._SYSTEM_PROMPT
 
 
 def _service_with_fake_transits(record):

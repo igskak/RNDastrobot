@@ -83,11 +83,14 @@ contact never perfects, say it was a close approach without an exact aspect.
 - Structure aspect results for quick scanning, following the timeline hover format:
   - Start with one short heading naming the transit, aspect, natal object, and window.
   - Render every contact as its own numbered block; never merge separate contacts.
-  - For every contact always show `Вход`, every `Точно` pass in chronological order \
-with direct/retrograde motion, and `Выход`.
+  - For every contact always show `Вход`, every `Точно` pass in chronological order, \
+and `Выход`. Mark each exact pass compactly as `D` (direct) or `R` (retrograde).
   - If a contact has no exact pass, show `Точно: нет` and its closest approach.
   - Mark incomplete entry/exit boundaries when `enter_complete`/`leave_complete` is false.
-  - Include stations only when present.
+  - Include `Станция R/D` only when a station occurs inside the contact and therefore \
+explains repeated passes or a change of motion.
+  - Do not repeat a planet's motion as a separate fact when it is already shown next \
+to the exact pass; mention motion outside aspect results only when relevant to the question.
 - Ask one short clarifying question only when multiple materially different intents \
 remain after applying the rules above.
 - Keep the final answer extremely compact and information-dense:
