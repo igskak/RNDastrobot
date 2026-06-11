@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.chart.title"></title>
-    <link rel="stylesheet" href="bundles/chart.bundle.css?v=b8f1fe38b395">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=b8f1fe38b395">
-    <script>window.__APP_BUILD_ID__ = 'b8f1fe38b395';</script>
+    <link rel="stylesheet" href="bundles/chart.bundle.css?v=5dae3c704e24">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=5dae3c704e24">
+    <script>window.__APP_BUILD_ID__ = '5dae3c704e24';</script>
 </head>
 <body class="chart-page">
     <div class="page-loader" id="pageLoader">
@@ -395,7 +395,30 @@
 
     <div id="chartToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/chart.bundle.js?v=b8f1fe38b395"></script>
-    <script src="js/locale-switcher.js?v=b8f1fe38b395"></script>
+    <!-- Astrologer assistant chat (corner dock) -->
+    <button type="button" id="chatToggle" class="chat-toggle" data-i18n-aria-label="page.chart.chat.toggle">
+        <span aria-hidden="true">✦</span>
+    </button>
+    <section id="chatWidget" class="chat-widget" aria-labelledby="chatTitle">
+        <header class="chat-widget-header">
+            <h2 id="chatTitle" class="chat-widget-title" data-i18n="page.chart.chat.title"></h2>
+            <button type="button" id="chatClose" class="chat-widget-close" data-i18n-aria-label="page.chart.chat.close">
+                <span aria-hidden="true">×</span>
+            </button>
+        </header>
+        <div id="chatMessages" class="chat-messages" role="log" aria-live="polite">
+            <p class="chat-empty" data-i18n="page.chart.chat.empty"></p>
+        </div>
+        <div class="chat-input-row">
+            <textarea id="chatInput" class="chat-input" rows="1"
+                      data-i18n-placeholder="page.chart.chat.placeholder"></textarea>
+            <button type="button" id="chatSend" class="chat-send" data-i18n-aria-label="page.chart.chat.send">
+                <span aria-hidden="true">➤</span>
+            </button>
+        </div>
+    </section>
+
+    <script type="module" src="js/bundles/chart.bundle.js?v=5dae3c704e24"></script>
+    <script src="js/locale-switcher.js?v=5dae3c704e24"></script>
 </body>
 </html>

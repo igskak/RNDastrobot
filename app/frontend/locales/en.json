@@ -684,7 +684,14 @@
         "openSchema": "Open chain diagram"
       },
       "chat": {
-        "title": "Ask about this chart"
+        "close": "Close assistant",
+        "empty": "Ask about transits, aspect timings, retrogrades or stations for this chart.",
+        "noChart": "Open a chart first, then ask about it here.",
+        "placeholder": "Ask about this chart…",
+        "send": "Send",
+        "thinking": "Calculating…",
+        "title": "Ask about this chart",
+        "toggle": "Open chart assistant"
       },
       "edit": {
         "errors": {
