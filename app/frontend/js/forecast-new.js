@@ -185,6 +185,7 @@
     window.getAssistantChartContext = () => ({
         userId: state.userId || localStorage.getItem('currentUserId') || null,
         timezone: state.natalTimezone || state.timezone || 'UTC',
+        anchorDate: state.selectedDateTime?.split('T')[0] || null,
     });
 
     function t(key, params) {

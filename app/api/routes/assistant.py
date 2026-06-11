@@ -243,6 +243,8 @@ class ChatRequest(BaseModel):
 
     user_id: UUID = Field(..., description="Active chart's user_id (server-bound context).")
     timezone: str = Field('UTC', description="Active chart's timezone (default for tools).")
+    anchor_date: Optional[date_type] = Field(
+        None, description="Date currently selected in the chart workspace.")
     messages: List[ChatMessage] = Field(..., min_length=1, max_length=MAX_CHAT_MESSAGES)
 
     @field_validator('timezone')
@@ -285,7 +287,11 @@ def chat(
             detail="Assistant is not configured",
         )
     ensure_client_access(db, http_request, auth, request.user_id, action="client.assistant.chat")
-    service = AstroAssistantService(db_session=db, default_timezone=request.timezone)
+    service = AstroAssistantService(
+        db_session=db,
+        default_timezone=request.timezone,
+        default_anchor_date=request.anchor_date,
+    )
     try:
         return service.chat(
             user_id=request.user_id,

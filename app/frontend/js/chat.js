@@ -95,7 +95,8 @@ class ChatWidget {
         const userId = assistantContext?.userId || cache?.user_id
             || localStorage.getItem('currentUserId') || null;
         const timezone = assistantContext?.timezone || cache?.timezone || 'UTC';
-        return { userId, timezone };
+        const anchorDate = assistantContext?.anchorDate || null;
+        return { userId, timezone, anchorDate };
     }
 
     addMessage(content, role = 'user') {
@@ -126,7 +127,7 @@ class ChatWidget {
         const message = this.input.value.trim();
         if (!message || this.isLoading) return;
 
-        const { userId, timezone } = this.getActiveChartContext();
+        const { userId, timezone, anchorDate } = this.getActiveChartContext();
         this.addMessage(message, 'user');
         this.input.value = '';
         this.input.style.height = 'auto';
@@ -153,6 +154,7 @@ class ChatWidget {
                 body: JSON.stringify({
                     user_id: userId,
                     timezone,
+                    ...(anchorDate ? { anchor_date: anchorDate } : {}),
                     messages: this.history,
                 }),
             });

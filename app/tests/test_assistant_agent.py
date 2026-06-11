@@ -6,6 +6,7 @@ dispatch, that the active chart's user_id is injected server-side (never a
 model argument), and that the tool schema exposes deterministic enums.
 """
 from types import SimpleNamespace
+from datetime import date
 from uuid import uuid4
 
 import app.services.astro_assistant_service as svc
@@ -57,6 +58,7 @@ def _service_with_fake_transits(record):
     service = AstroAssistantService.__new__(AstroAssistantService)
     service.db = None
     service.default_timezone = "Europe/Kiev"
+    service.default_anchor_date = date(2026, 6, 11)
 
     class _FakeTransits:
         def find_aspect_passes(self, **kwargs):
@@ -91,6 +93,8 @@ def test_chat_dispatches_tool_and_injects_active_chart_user_id(monkeypatch):
     assert captured["user_id"] == bound_user
     assert captured["transit_body"] == "Uranus"
     assert captured["timezone"] == "Europe/Kiev"  # default applied when model omits it
+    assert captured["start_date"] == date(2016, 6, 11)
+    assert captured["end_date"] == date(2036, 6, 11)
     assert len(result["tool_results"]) == 1
     assert result["tool_results"][0]["name"] == "find_aspect_passes"
 
@@ -99,6 +103,7 @@ def test_chat_handles_tool_error_without_crashing(monkeypatch):
     service = AstroAssistantService.__new__(AstroAssistantService)
     service.db = None
     service.default_timezone = "UTC"
+    service.default_anchor_date = date(2026, 6, 11)
 
     class _RaisingTransits:
         def find_aspect_passes(self, **kwargs):
@@ -118,3 +123,34 @@ def test_chat_handles_tool_error_without_crashing(monkeypatch):
     result = service.chat(uuid4(), [{"role": "user", "content": "mars square sun?"}])
     assert result["tool_results"][0]["result"]["status"] == "error"
     assert result["reply"] == "I couldn't find that chart."
+
+
+def test_periodless_fast_body_uses_one_year_overview():
+    captured = {}
+    service = _service_with_fake_transits(captured)
+
+    service._exec_find_aspect_passes(uuid4(), {
+        "transit_body": "Mars",
+        "natal_body": "Sun",
+        "aspect_type": "Square",
+    })
+
+    assert captured["start_date"] == date(2025, 6, 11)
+    assert captured["end_date"] == date(2027, 6, 11)
+
+
+def test_explicit_next_contact_is_not_rewritten():
+    captured = {}
+    service = _service_with_fake_transits(captured)
+
+    service._exec_find_aspect_passes(uuid4(), {
+        "transit_body": "Uranus",
+        "natal_body": "Venus",
+        "aspect_type": "Conjunction",
+        "mode": "next_contact",
+        "anchor_date": "2028-01-15",
+    })
+
+    assert captured["anchor_date"] == date(2028, 1, 15)
+    assert captured["start_date"] is None
+    assert captured["end_date"] is None

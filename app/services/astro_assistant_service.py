@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import date as date_type
 from typing import Callable, Dict, List, Optional
 from uuid import UUID
 
@@ -44,6 +45,21 @@ MAX_TOOL_ITERATIONS = 5
 REQUEST_TIMEOUT_S = 60.0
 _MODEL = os.getenv("OPENAI_ASSISTANT_MODEL", "gpt-4.1")
 
+# Broad overview windows used only when the model omits period intent entirely.
+_FAST_TRANSIT_BODIES = frozenset({'Moon', 'Sun', 'Mercury', 'Venus', 'Mars'})
+_DEFAULT_OVERVIEW_YEARS = {
+    'fast': 1,
+    'slow': 10,
+}
+
+
+def _shift_years(value: date_type, years: int) -> date_type:
+    """Shift by calendar years, clamping leap day to February 28."""
+    try:
+        return value.replace(year=value.year + years)
+    except ValueError:
+        return value.replace(year=value.year + years, day=28)
+
 _SYSTEM_PROMPT = """\
 You are a computational assistant for a professional astrologer who is working \
 with a specific chart on screen (the "active chart"). Answer their data questions \
@@ -55,10 +71,16 @@ or counts: every number must come from a tool result.
 Rules:
 - The active chart is fixed by the system; do not ask which chart or pass any id.
 - Always state the time window the result covers, and whether the search auto-expanded.
+- Choose the search window from the astrologer's intent:
+  1. Preserve any explicit period or dates exactly.
+  2. "Next/when will" means mode=next_contact from the active forecast date.
+  3. A general overview with no direction or period means a symmetric window around \
+the active forecast date: ±1 year for Moon/Sun/Mercury/Venus/Mars and ±10 years for \
+slower bodies. This is intentionally broad enough to show rare slow-planet contacts.
 - Report exact-pass counts faithfully (a retrograde loop can perfect 3 times); if a \
 contact never perfects, say it was a close approach without an exact aspect.
-- If the question is genuinely ambiguous (e.g. no period for a fast body), ask one \
-short clarifying question instead of guessing.
+- Ask one short clarifying question only when multiple materially different intents \
+remain after applying the rules above.
 - Reply in the astrologer's language."""
 
 
@@ -101,9 +123,16 @@ def build_tools() -> List[Dict]:
 
 
 class AstroAssistantService:
-    def __init__(self, db_session: Session, *, default_timezone: str = "UTC"):
+    def __init__(
+        self,
+        db_session: Session,
+        *,
+        default_timezone: str = "UTC",
+        default_anchor_date: Optional[date_type] = None,
+    ):
         self.db = db_session
         self.default_timezone = default_timezone
+        self.default_anchor_date = default_anchor_date or date_type.today()
         self._transit_service: Optional[TransitService] = None
 
     def _transits(self) -> TransitService:
@@ -114,12 +143,29 @@ class AstroAssistantService:
 
     # --- tool execution -------------------------------------------------
 
-    def _exec_find_aspect_passes(self, user_id: UUID, args: Dict) -> Dict:
-        from datetime import date as date_type
+    def _resolve_aspect_window(self, args: Dict) -> Dict:
+        """Apply deterministic overview defaults only when period intent is absent."""
+        resolved = dict(args)
+        if any(resolved.get(key) is not None for key in (
+            "mode", "start_date", "end_date", "anchor_date", "max_expansion_days",
+        )):
+            return resolved
 
+        years = _DEFAULT_OVERVIEW_YEARS[
+            'fast' if resolved.get("transit_body") in _FAST_TRANSIT_BODIES else 'slow'
+        ]
+        resolved.update({
+            "mode": "window",
+            "start_date": _shift_years(self.default_anchor_date, -years).isoformat(),
+            "end_date": _shift_years(self.default_anchor_date, years).isoformat(),
+        })
+        return resolved
+
+    def _exec_find_aspect_passes(self, user_id: UUID, args: Dict) -> Dict:
         def _parse_date(value):
             return date_type.fromisoformat(value) if value else None
 
+        args = self._resolve_aspect_window(args)
         mode = args.get("mode", "next_contact")
         return self._transits().find_aspect_passes(
             user_id=user_id,
