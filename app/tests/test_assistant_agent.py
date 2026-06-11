@@ -59,6 +59,9 @@ def test_build_tools_exposes_enums_and_hides_user_id():
 def test_assistant_defaults_to_compact_modern_model():
     assert svc._MODEL == "gpt-5.4-mini"
     assert "at most 80 words" in svc._SYSTEM_PROMPT
+    assert "every `Точно` pass" in svc._SYSTEM_PROMPT
+    assert "`Вход`" in svc._SYSTEM_PROMPT
+    assert "`Выход`" in svc._SYSTEM_PROMPT
 
 
 def _service_with_fake_transits(record):
