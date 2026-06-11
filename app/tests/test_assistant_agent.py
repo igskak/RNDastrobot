@@ -54,6 +54,11 @@ def test_build_tools_exposes_enums_and_hides_user_id():
     assert params["required"] == ["transit_body", "natal_body", "aspect_type"]
 
 
+def test_assistant_defaults_to_compact_modern_model():
+    assert svc._MODEL == "gpt-5.4-mini"
+    assert "at most 80 words" in svc._SYSTEM_PROMPT
+
+
 def _service_with_fake_transits(record):
     service = AstroAssistantService.__new__(AstroAssistantService)
     service.db = None

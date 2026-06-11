@@ -43,7 +43,7 @@ ASPECT_TYPE_NAMES = frozenset({
 # Cost controls — hard requirements, not knobs (per plan review).
 MAX_TOOL_ITERATIONS = 5
 REQUEST_TIMEOUT_S = 60.0
-_MODEL = os.getenv("OPENAI_ASSISTANT_MODEL", "gpt-4.1")
+_MODEL = os.getenv("OPENAI_ASSISTANT_MODEL", "gpt-5.4-mini")
 
 # Broad overview windows used only when the model omits period intent entirely.
 _FAST_TRANSIT_BODIES = frozenset({'Moon', 'Sun', 'Mercury', 'Venus', 'Mars'})
@@ -81,6 +81,13 @@ slower bodies. This is intentionally broad enough to show rare slow-planet conta
 contact never perfects, say it was a close approach without an exact aspect.
 - Ask one short clarifying question only when multiple materially different intents \
 remain after applying the rules above.
+- Keep the final answer extremely compact and information-dense:
+  - Start directly with the result; no greeting, preamble, or conclusion.
+  - Do not restate the question or explain that you used tools.
+  - Avoid generic AI phrases, filler, advice, and interpretation not requested.
+  - Prefer 1-4 short bullets. Include only the window, exact dates/counts, motion, \
+stations, and a brief caveat when materially relevant.
+  - Use at most 80 words unless the astrologer explicitly asks for detail.
 - Reply in the astrologer's language."""
 
 
