@@ -850,6 +850,9 @@ class TransitService:
 
     def _get_transit_body_longitude(self, jd: float, transit_body: str) -> Optional[float]:
         """Получить долготу транзитного тела на момент JD."""
+        longitude = self.swisseph_engine.calculate_planet_longitude(jd, transit_body)
+        if longitude is not None:
+            return longitude
         positions = self._get_transit_positions(jd)
         return positions.get(transit_body)
 
@@ -925,6 +928,14 @@ class TransitService:
     }
     _DEFAULT_NEXT_CONTACT_CAP_DAYS = 1150
     _MAX_SCAN_SAMPLES = 60000  # hard guard against runaway scans
+    _SCAN_STEP_DAYS: Dict[str, float] = {
+        'Moon': 1.0 / 24.0,
+        'Sun': 0.25,
+        'Mercury': 0.25,
+        'Venus': 0.25,
+        'Mars': 0.5,
+    }
+    _DEFAULT_SCAN_STEP_DAYS = 1.0
 
     @staticmethod
     def _wrap_pm180(value: float) -> float:
@@ -1199,8 +1210,9 @@ class TransitService:
         if self._get_transit_body_longitude(jd_start, transit_body) is None:
             return {**base, 'status': 'unsupported_transit_body', 'contacts': []}
 
-        # Moon needs a fine step; everyone else 6h is safe for slow contacts.
-        step_jd = (1.0 / 24.0) if transit_body == 'Moon' else (6.0 / 24.0)
+        # Fast bodies need finer sampling; slow-body roots and boundaries are
+        # bracketed safely at one day and then refined independently.
+        step_jd = self._SCAN_STEP_DAYS.get(transit_body, self._DEFAULT_SCAN_STEP_DAYS)
 
         contacts_raw = self._scan_aspect_contacts(
             transit_body, natal_longitude, exact_angle, max_orb,

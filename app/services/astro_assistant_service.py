@@ -43,6 +43,7 @@ ASPECT_TYPE_NAMES = frozenset({
 # Cost controls — hard requirements, not knobs (per plan review).
 MAX_TOOL_ITERATIONS = 5
 REQUEST_TIMEOUT_S = 60.0
+MAX_COMPLETION_TOKENS = 300
 _MODEL = os.getenv("OPENAI_ASSISTANT_MODEL", "gpt-5.4-mini")
 
 # Broad overview windows used only when the model omits period intent entirely.
@@ -228,6 +229,9 @@ class AstroAssistantService:
                 messages=convo,
                 tools=tools,
                 tool_choice="auto",
+                reasoning_effort="low",
+                verbosity="low",
+                max_completion_tokens=MAX_COMPLETION_TOKENS,
                 timeout=REQUEST_TIMEOUT_S,
             )
             msg = response.choices[0].message
@@ -266,7 +270,13 @@ class AstroAssistantService:
 
         # Iteration cap hit — ask the model for a final answer with no more tools.
         final = client.chat.completions.create(
-            model=_MODEL, messages=convo, timeout=REQUEST_TIMEOUT_S)
+            model=_MODEL,
+            messages=convo,
+            reasoning_effort="low",
+            verbosity="low",
+            max_completion_tokens=MAX_COMPLETION_TOKENS,
+            timeout=REQUEST_TIMEOUT_S,
+        )
         return {
             "reply": final.choices[0].message.content or "",
             "tool_results": tool_results,

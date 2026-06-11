@@ -82,6 +82,23 @@ class SwissEphemerisEngine:
             })
 
         return planets_data
+
+    def calculate_planet_longitude(self, jd: float, planet_name: str) -> float | None:
+        """Calculate one planet longitude without computing the full planet set."""
+        planet_id = next((pid for pid, name in PLANETS.items() if name == planet_name), None)
+        if planet_id is None:
+            return None
+        if planet_id == 1000:
+            return float(SpecialPointsService.calculate_proserpina(jd))
+
+        self._ensure_ephe_path()
+        try:
+            planet_data, _ = swe.calc_ut(jd, planet_id, swe.FLG_SWIEPH | swe.FLG_SPEED)
+        except Exception as e:
+            self._ensure_ephe_path()
+            logger.warning("SwissEph calc_ut retry after path reset: {}", str(e))
+            planet_data, _ = swe.calc_ut(jd, planet_id, swe.FLG_SWIEPH | swe.FLG_SPEED)
+        return float(planet_data[0])
     
     def calculate_houses(
         self,

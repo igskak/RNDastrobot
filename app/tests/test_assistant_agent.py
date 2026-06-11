@@ -31,8 +31,10 @@ def _tool_call(call_id, name, arguments):
 class _FakeCompletions:
     def __init__(self, scripted):
         self._scripted = list(scripted)
+        self.calls = []
 
     def create(self, **kwargs):
+        self.calls.append(kwargs)
         msg = self._scripted.pop(0)
         return SimpleNamespace(choices=[SimpleNamespace(message=msg)])
 
@@ -87,7 +89,8 @@ def test_chat_dispatches_tool_and_injects_active_chart_user_id(monkeypatch):
         _msg(content="Uranus first perfects conjunction to Venus on ..."),
     ]
     monkeypatch.setattr(svc, "is_openai_configured", lambda: True)
-    monkeypatch.setattr(svc, "get_openai_client", lambda: _FakeClient(scripted))
+    client = _FakeClient(scripted)
+    monkeypatch.setattr(svc, "get_openai_client", lambda: client)
 
     result = service.chat(bound_user, [{"role": "user", "content": "when uranus conj venus?"}])
 
@@ -102,6 +105,8 @@ def test_chat_dispatches_tool_and_injects_active_chart_user_id(monkeypatch):
     assert captured["end_date"] == date(2036, 6, 11)
     assert len(result["tool_results"]) == 1
     assert result["tool_results"][0]["name"] == "find_aspect_passes"
+    assert all(call["reasoning_effort"] == "low" for call in client.chat.completions.calls)
+    assert all(call["verbosity"] == "low" for call in client.chat.completions.calls)
 
 
 def test_chat_handles_tool_error_without_crashing(monkeypatch):

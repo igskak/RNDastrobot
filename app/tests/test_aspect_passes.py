@@ -114,3 +114,17 @@ def test_opposition_branch_crossing():
     the_pass = next(p for c in contacts for p in c['passes'])
     assert the_pass['motion'] == 'direct'
     assert the_pass['orb'] < 0.05, f"opposition root not exact: orb={the_pass['orb']}"
+
+
+def test_planet_longitude_fast_path_does_not_calculate_all_planets(monkeypatch):
+    eng = _engine()
+    expected, _ = _uranus(swe.julday(2026, 6, 11, 0.0))
+
+    monkeypatch.setattr(
+        eng.swisseph_engine,
+        'calculate_planets',
+        lambda _jd: (_ for _ in ()).throw(AssertionError("full calculation used")),
+    )
+
+    actual = eng._get_transit_body_longitude(swe.julday(2026, 6, 11, 0.0), 'Uranus')
+    assert abs(actual - expected) < 1e-8
