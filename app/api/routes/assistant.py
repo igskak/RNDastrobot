@@ -14,10 +14,11 @@ from typing import List, Optional
 from uuid import UUID
 
 import pytz
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy.orm import Session
 from loguru import logger
+from starlette.concurrency import run_in_threadpool
 
 from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
 from app.database.connection import get_db
@@ -27,7 +28,7 @@ from app.services.astro_assistant_service import (
     NATAL_BODY_NAMES as _NATAL_BODY_NAMES,
     TRANSIT_BODY_NAMES as _TRANSIT_BODY_NAMES,
 )
-from app.services.openai_service import is_openai_configured
+from app.services.openai_service import is_openai_configured, transcribe_audio
 from app.services.transit_service import TransitService
 from app.utils.ephemeris import get_ephemeris_path
 
@@ -38,6 +39,36 @@ EPHE_PATH = get_ephemeris_path()
 MAX_EXPANSION_DAYS = 4000
 MAX_CHAT_MESSAGES = 40
 MAX_CHAT_CONTENT_CHARS = 4000
+
+# Push-to-talk dictation limits.
+MAX_AUDIO_BYTES = 10 * 1024 * 1024  # 10 MB
+ALLOWED_AUDIO_TYPES = frozenset({
+    'audio/webm', 'audio/ogg', 'audio/mpeg', 'audio/mp3',
+    'audio/mp4', 'audio/m4a', 'audio/x-m4a', 'audio/wav', 'audio/x-wav',
+})
+_AUDIO_EXTENSIONS = {
+    'audio/webm': 'webm',
+    'audio/ogg': 'ogg',
+    'audio/mpeg': 'mp3',
+    'audio/mp3': 'mp3',
+    'audio/mp4': 'mp4',
+    'audio/m4a': 'm4a',
+    'audio/x-m4a': 'm4a',
+    'audio/wav': 'wav',
+    'audio/x-wav': 'wav',
+}
+
+
+def validate_audio_upload(content_type: str, size_bytes: int) -> str:
+    """Return '' if acceptable, else an error code. Pure, so it's unit-testable."""
+    base_type = (content_type or '').split(';', 1)[0].strip().lower()
+    if size_bytes <= 0:
+        return 'empty'
+    if size_bytes > MAX_AUDIO_BYTES:
+        return 'too_large'
+    if base_type not in ALLOWED_AUDIO_TYPES:
+        return 'unsupported_type'
+    return ''
 
 
 class AspectPassesRequest(BaseModel):
@@ -265,4 +296,50 @@ def chat(
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Assistant request failed",
+        )
+
+
+class TranscribeResponse(BaseModel):
+    text: str
+
+
+@router.post(
+    "/transcribe",
+    response_model=TranscribeResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Transcribe a short dictation clip",
+    description="Push-to-talk speech-to-text for the assistant composer (OpenAI).",
+)
+async def transcribe(
+    audio: UploadFile = File(...),
+    auth: AuthContext = Depends(require_auth),
+):
+    if not is_openai_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Transcription is not configured",
+        )
+
+    data = await audio.read(MAX_AUDIO_BYTES + 1)
+    await audio.close()
+    content_type = (audio.content_type or '').split(';', 1)[0].strip().lower()
+    error = validate_audio_upload(content_type, len(data))
+    if error == 'empty':
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Empty audio")
+    if error == 'too_large':
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Audio too large")
+    if error == 'unsupported_type':
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail="Unsupported audio type")
+
+    try:
+        filename = f"dictation.{_AUDIO_EXTENSIONS[content_type]}"
+        text = await run_in_threadpool(transcribe_audio, data, filename, content_type)
+        return {"text": text}
+    except Exception:
+        logger.exception("assistant transcribe failed")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Transcription failed",
         )

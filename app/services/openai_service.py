@@ -10,6 +10,7 @@ from openai import OpenAI
 
 _API_KEY = os.getenv("OPENAI_API_KEY", "")
 _MODEL = os.getenv("OPENAI_SUMMARY_MODEL", "gpt-4.1")
+_TRANSCRIBE_MODEL = os.getenv("OPENAI_TRANSCRIBE_MODEL", "gpt-4o-transcribe")
 
 # Shared client across OpenAI-backed services (summary, assistant, …).
 _SHARED_CLIENT: Optional[OpenAI] = None
@@ -27,6 +28,21 @@ def get_openai_client() -> OpenAI:
     if _SHARED_CLIENT is None:
         _SHARED_CLIENT = OpenAI(api_key=_API_KEY)
     return _SHARED_CLIENT
+
+
+def transcribe_audio(file_bytes: bytes, filename: str, content_type: str) -> str:
+    """
+    Transcribe a short dictation clip synchronously via OpenAI.
+
+    Used for push-to-talk in the assistant chat (not the AssemblyAI
+    transcription_service, which is async/URL-based for long recordings).
+    """
+    client = get_openai_client()
+    result = client.audio.transcriptions.create(
+        model=_TRANSCRIBE_MODEL,
+        file=(filename, file_bytes, content_type),
+    )
+    return (getattr(result, "text", "") or "").strip()
 
 
 _SYSTEM_PROMPT = """You are an expert astrology consultation assistant.

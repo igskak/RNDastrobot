@@ -5,13 +5,21 @@ The endpoint's defense against the model inventing body/aspect labels lives in
 the request schema (deterministic enums + window-mode coherence). These run
 without a database.
 """
+import asyncio
 from datetime import date
+from io import BytesIO
 from uuid import uuid4
 
 import pytest
 from pydantic import ValidationError
+from starlette.datastructures import Headers, UploadFile
 
-from app.api.routes.assistant import AspectPassesRequest
+import app.api.routes.assistant as assistant_routes
+from app.api.routes.assistant import (
+    AspectPassesRequest,
+    MAX_AUDIO_BYTES,
+    validate_audio_upload,
+)
 
 
 def _base(**overrides):
@@ -70,3 +78,66 @@ def test_angle_and_node_targets_allowed():
     AspectPassesRequest(**_base(natal_body='ASC'))
     AspectPassesRequest(**_base(transit_body='Saturn', natal_body='MC'))
     AspectPassesRequest(**_base(transit_body='TrueNorthNode', natal_body='Sun'))
+
+
+@pytest.mark.parametrize('content_type', [
+    'audio/webm',
+    'audio/webm;codecs=opus',
+    'audio/ogg',
+    'audio/mpeg',
+    'audio/mp4',
+    'audio/wav',
+])
+def test_audio_upload_accepts_supported_types(content_type):
+    assert validate_audio_upload(content_type, 1024) == ''
+
+
+def test_audio_upload_rejects_empty_file():
+    assert validate_audio_upload('audio/webm', 0) == 'empty'
+
+
+def test_audio_upload_rejects_large_file():
+    assert validate_audio_upload('audio/webm', MAX_AUDIO_BYTES + 1) == 'too_large'
+
+
+def test_audio_upload_rejects_unsupported_type():
+    assert validate_audio_upload('application/octet-stream', 1024) == 'unsupported_type'
+
+
+def _audio_upload(data: bytes, content_type: str = 'audio/webm') -> UploadFile:
+    return UploadFile(
+        file=BytesIO(data),
+        filename='untrusted-name.bin',
+        headers=Headers({'content-type': content_type}),
+    )
+
+
+def test_transcribe_endpoint_normalizes_filename(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(assistant_routes, 'is_openai_configured', lambda: True)
+
+    def fake_transcribe(data, filename, content_type):
+        captured.update(data=data, filename=filename, content_type=content_type)
+        return 'recognized text'
+
+    monkeypatch.setattr(assistant_routes, 'transcribe_audio', fake_transcribe)
+    result = asyncio.run(assistant_routes.transcribe(_audio_upload(b'audio'), auth=None))
+
+    assert result == {'text': 'recognized text'}
+    assert captured == {
+        'data': b'audio',
+        'filename': 'dictation.webm',
+        'content_type': 'audio/webm',
+    }
+
+
+def test_transcribe_endpoint_rejects_unsupported_type(monkeypatch):
+    monkeypatch.setattr(assistant_routes, 'is_openai_configured', lambda: True)
+
+    with pytest.raises(assistant_routes.HTTPException) as exc_info:
+        asyncio.run(assistant_routes.transcribe(
+            _audio_upload(b'audio', 'application/octet-stream'),
+            auth=None,
+        ))
+
+    assert exc_info.value.status_code == 415

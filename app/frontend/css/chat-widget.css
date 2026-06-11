@@ -162,7 +162,8 @@
     outline-offset: 1px;
 }
 
-.chat-send {
+.chat-send,
+.chat-mic {
     flex: 0 0 auto;
     width: 38px;
     height: 38px;
@@ -174,12 +175,30 @@
     cursor: pointer;
 }
 
-.chat-send:disabled {
+.chat-mic {
+    background: var(--surface-muted, #f3f4f6);
+    color: var(--text-color, #111827);
+}
+
+.chat-mic.recording {
+    background: #ef4444;
+    color: #fff;
+    animation: chat-mic-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes chat-mic-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+    50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+}
+
+.chat-send:disabled,
+.chat-mic:disabled {
     opacity: 0.5;
     cursor: default;
 }
 
-.chat-send:focus-visible {
+.chat-send:focus-visible,
+.chat-mic:focus-visible {
     outline: 2px solid var(--accent-color, #6366f1);
     outline-offset: 2px;
 }
