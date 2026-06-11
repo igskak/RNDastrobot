@@ -105,7 +105,7 @@ def test_chat_dispatches_tool_and_injects_active_chart_user_id(monkeypatch):
     assert captured["end_date"] == date(2036, 6, 11)
     assert len(result["tool_results"]) == 1
     assert result["tool_results"][0]["name"] == "find_aspect_passes"
-    assert all(call["reasoning_effort"] == "low" for call in client.chat.completions.calls)
+    assert all("reasoning_effort" not in call for call in client.chat.completions.calls)
     assert all(call["verbosity"] == "low" for call in client.chat.completions.calls)
 
 

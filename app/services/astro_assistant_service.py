@@ -229,7 +229,6 @@ class AstroAssistantService:
                 messages=convo,
                 tools=tools,
                 tool_choice="auto",
-                reasoning_effort="low",
                 verbosity="low",
                 max_completion_tokens=MAX_COMPLETION_TOKENS,
                 timeout=REQUEST_TIMEOUT_S,
@@ -272,7 +271,6 @@ class AstroAssistantService:
         final = client.chat.completions.create(
             model=_MODEL,
             messages=convo,
-            reasoning_effort="low",
             verbosity="low",
             max_completion_tokens=MAX_COMPLETION_TOKENS,
             timeout=REQUEST_TIMEOUT_S,
