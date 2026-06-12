@@ -130,6 +130,91 @@
         return layout;
     }
 
+    function tab(id, title, blocks) {
+        return { id: id, title: title || null, blocks: blocks };
+    }
+
+    function blocks(source, views) {
+        return views.map(function (view) { return { source: source, view: view }; });
+    }
+
+    function buildBuiltinWorkspaceLayout(workspaceId, baseLayout) {
+        var layout = normalizeLayout(baseLayout || buildDefaultForecastNewLayout());
+        var modeLayouts = {
+            natal_consultation: {
+                left: [
+                    tab('builtin-natal-core', null, blocks('natal', ['planets', 'houses'])),
+                    tab('builtin-natal-aspects', null, blocks('natal', ['aspects', 'grid'])),
+                ],
+                right: [
+                    tab('builtin-natal-analysis', null, blocks('natal', ['configs', 'stelliums', 'balances'])),
+                    tab('builtin-natal-patterns', null, blocks('natal', ['jones', 'dispositors'])),
+                ],
+            },
+            transits: {
+                left: [
+                    tab('builtin-transit-natal', null, blocks('natal', ['planets', 'houses', 'aspects'])),
+                    tab('builtin-transit-natal-analysis', null, blocks('natal', ['configs', 'balances'])),
+                ],
+                right: [
+                    tab('builtin-transit-current', null, blocks('prog', ['planets', 'houses', 'aspects', 'grid'])),
+                    tab('builtin-transit-analysis', null, blocks('prog', ['configs', 'stelliums', 'balances', 'jones', 'dispositors'])),
+                ],
+            },
+            progressions_directions: {
+                left: [
+                    tab('builtin-pd-natal', null, blocks('natal', ['planets', 'houses', 'aspects', 'grid'])),
+                    tab('builtin-pd-foundation', null, blocks('natal', ['configs', 'balances', 'dispositors'])),
+                ],
+                right: [
+                    tab('builtin-pd-current', null, blocks('prog', ['planets', 'houses', 'aspects', 'grid'])),
+                    tab('builtin-pd-analysis', null, blocks('prog', ['configs', 'stelliums', 'balances', 'jones', 'dispositors'])),
+                ],
+            },
+            natal_forecast_comparison: {
+                left: [
+                    tab('builtin-compare-natal', null, blocks('natal', ['planets', 'houses', 'aspects', 'grid', 'configs', 'balances'])),
+                ],
+                right: [
+                    tab('builtin-compare-forecast', null, blocks('prog', ['planets', 'houses', 'aspects', 'grid', 'configs', 'balances'])),
+                ],
+            },
+            compact: {
+                left: [tab('builtin-compact-primary', null, blocks('natal', ['planets', 'aspects', 'grid']))],
+                right: [tab('builtin-compact-compare', null, blocks('prog', ['planets', 'aspects', 'grid']))],
+            },
+        };
+        var chosen = modeLayouts[workspaceId];
+        if (!chosen) return layout;
+        layout.panels.multi = chosen;
+        if (workspaceId === 'compact') {
+            layout.panels.single = {
+                left: [tab('builtin-compact-single-primary', null, blocks('natal', ['planets', 'aspects', 'grid']))],
+                right: [tab('builtin-compact-single-secondary', null, blocks('natal', ['houses', 'balances']))],
+            };
+        } else if (workspaceId === 'natal_consultation') {
+            layout.panels.single = {
+                left: [
+                    tab('builtin-natal-single-core', null, blocks('natal', ['planets', 'houses'])),
+                    tab('builtin-natal-single-aspects', null, blocks('natal', ['aspects', 'grid'])),
+                ],
+                right: [
+                    tab('builtin-natal-single-analysis', null, blocks('natal', ['configs', 'stelliums', 'balances'])),
+                    tab('builtin-natal-single-patterns', null, blocks('natal', ['jones', 'dispositors'])),
+                ],
+            };
+        }
+        return normalizeLayout(layout);
+    }
+
+    var BUILTIN_WORKSPACES = [
+        { id: 'natal_consultation', labelKey: 'page.forecastNew.panelEditor.workspaces.natalConsultation' },
+        { id: 'transits', labelKey: 'page.forecastNew.panelEditor.workspaces.transits' },
+        { id: 'progressions_directions', labelKey: 'page.forecastNew.panelEditor.workspaces.progressionsDirections' },
+        { id: 'natal_forecast_comparison', labelKey: 'page.forecastNew.panelEditor.workspaces.natalForecastComparison' },
+        { id: 'compact', labelKey: 'page.forecastNew.panelEditor.workspaces.compact' },
+    ];
+
     function normalizePanelArray(tabs, mode, side, seenBlockKeys, seenTabIds) {
         if (!Array.isArray(tabs)) return [];
         var out = [];
@@ -406,6 +491,8 @@
         isValidView: isValidView,
         makeTabId: makeTabId,
         buildDefaultForecastNewLayout: buildDefaultForecastNewLayout,
+        buildBuiltinWorkspaceLayout: buildBuiltinWorkspaceLayout,
+        BUILTIN_WORKSPACES: BUILTIN_WORKSPACES,
         normalizeLayout: normalizeLayout,
         migrateLegacyActiveTab: migrateLegacyActiveTab,
         defaultActiveTabs: defaultActiveTabs,

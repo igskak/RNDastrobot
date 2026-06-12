@@ -74,5 +74,18 @@ ok(mig.singleRight === def.panels.single.right.find(t => t.blocks[0].view === 'b
 ok(L.normalizeLayout(null).panels.multi.left.length === 9, 'null -> default');
 ok(L.normalizeLayout({ foo: 1 }).panels.single.right.length === 4, 'garbage -> default');
 
+// --- built-in astrologer workspaces are valid and preserve the schema ---
+ok(L.BUILTIN_WORKSPACES.length === 5, 'five built-in workspaces');
+L.BUILTIN_WORKSPACES.forEach(({ id }) => {
+  const workspace = L.buildBuiltinWorkspaceLayout(id);
+  ok(workspace.schema_version === 1, `workspace ${id}: schema version`);
+  ok(workspace.panels.multi.left.length > 0 && workspace.panels.multi.right.length > 0, `workspace ${id}: usable multi panels`);
+  ok(JSON.stringify(L.normalizeLayout(workspace)) === JSON.stringify(workspace), `workspace ${id}: normalized`);
+});
+const compact = L.buildBuiltinWorkspaceLayout('compact');
+ok(compact.panels.multi.left[0].blocks.length === 3, 'compact workspace keeps a concise primary tab');
+const unknownWorkspace = L.buildBuiltinWorkspaceLayout('unknown', def);
+ok(JSON.stringify(unknownWorkspace) === JSON.stringify(def), 'unknown workspace preserves current layout');
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

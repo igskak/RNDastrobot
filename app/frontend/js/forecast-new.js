@@ -187,6 +187,9 @@
         panelEditMode: false,
         layoutPersistSeq: 0,
         layoutUndo: null,
+        panelSaveState: 'saved',
+        panelDialog: null,
+        panelEditReturnFocus: null,
     };
 
     window.getAssistantChartContext = () => ({
@@ -765,7 +768,6 @@
 
         document.querySelectorAll('.forecast-new-side-panel').forEach((panel) => {
             panel.addEventListener('click', (event) => {
-                if (state.panelEditMode) return; // edit-mode clicks handled by the configurator
                 const tab = event.target.closest('.panel-tab[data-tab-id]');
                 if (!tab) return;
                 const side = panel.id === 'forecastNewProgPanel' ? 'right' : 'left';
@@ -4373,6 +4375,109 @@
         return out;
     }
 
+    const VIEW_GROUPS = {
+        chart: ['planets', 'houses'],
+        positions: ['grid'],
+        aspects: ['aspects', 'configs', 'stelliums'],
+        analysis: ['balances', 'jones', 'dispositors'],
+    };
+
+    function findBlockLocation(mode, blockKey) {
+        for (const side of ['left', 'right']) {
+            for (const tab of state.panelLayout.panels[mode][side] || []) {
+                if (tab.blocks.some((block) => `${block.source}:${block.view}` === blockKey)) return { side, tab };
+            }
+        }
+        return null;
+    }
+
+    function panelSideLabel(side, mode = currentWheelMode()) {
+        if (mode === 'single') return t('page.forecastNew.panelEditor.chartData') || 'Данные карты';
+        return side === 'left'
+            ? (t('page.forecastNew.panelEditor.primaryChart') || 'Основная карта')
+            : (t('page.forecastNew.panelEditor.comparisonChart') || 'Карта сравнения');
+    }
+
+    function setPanelSaveState(next) {
+        state.panelSaveState = next;
+        const status = document.querySelector('[data-pe-save-status]');
+        if (!status) return;
+        const keys = {
+            saving: 'page.forecastNew.panelEditor.saving',
+            saved: 'page.forecastNew.panelEditor.saved',
+            error: 'page.forecastNew.panelEditor.saveFailed',
+        };
+        status.dataset.state = next;
+        status.innerHTML = escapeHtml(t(keys[next]) || keys[next]);
+        if (next === 'error') {
+            status.innerHTML += ` · <button type="button" class="forecast-new-pe-link" data-pe-action="retry-save">${escapeHtml(t('page.forecastNew.panelEditor.retry') || 'Повторить')}</button>`;
+        }
+    }
+
+    function closePanelDialog(result = false) {
+        const dialog = document.getElementById('forecastNewPanelDialog');
+        if (!dialog || !state.panelDialog) return;
+        dialog.classList.add('hidden');
+        dialog.setAttribute('aria-hidden', 'true');
+        const pending = state.panelDialog;
+        state.panelDialog = null;
+        pending.restoreFocus?.focus?.();
+        pending.resolve(result);
+    }
+
+    function showPanelDialog({ title, copy, confirmLabel, inputLabel, destructive = false }) {
+        const dialog = ensurePanelDialog();
+        const active = document.activeElement;
+        dialog.querySelector('[data-pe-dialog-title]').textContent = title;
+        dialog.querySelector('[data-pe-dialog-copy]').textContent = copy || '';
+        const inputWrap = dialog.querySelector('[data-pe-dialog-input-wrap]');
+        const input = dialog.querySelector('[data-pe-dialog-input]');
+        inputWrap.classList.toggle('hidden', !inputLabel);
+        input.value = '';
+        input.placeholder = inputLabel || '';
+        const confirm = dialog.querySelector('[data-pe-dialog-confirm]');
+        confirm.textContent = confirmLabel;
+        confirm.classList.toggle('is-destructive', destructive);
+        dialog.classList.remove('hidden');
+        dialog.setAttribute('aria-hidden', 'false');
+        setTimeout(() => (inputLabel ? input : confirm).focus(), 0);
+        return new Promise((resolve) => { state.panelDialog = { resolve, input, inputLabel, restoreFocus: active }; });
+    }
+
+    function ensurePanelDialog() {
+        let dialog = document.getElementById('forecastNewPanelDialog');
+        if (dialog) return dialog;
+        dialog = document.createElement('div');
+        dialog.id = 'forecastNewPanelDialog';
+        dialog.className = 'forecast-new-pe-dialog hidden';
+        dialog.setAttribute('role', 'dialog');
+        dialog.setAttribute('aria-modal', 'true');
+        dialog.setAttribute('aria-hidden', 'true');
+        dialog.innerHTML = `
+            <div class="forecast-new-pe-dialog-card">
+                <h2 data-pe-dialog-title></h2>
+                <p data-pe-dialog-copy></p>
+                <label class="forecast-new-pe-dialog-input-wrap hidden">
+                    <span>${escapeHtml(t('page.forecastNew.panelEditor.workspaceName') || 'Название')}</span>
+                    <input type="text" data-pe-dialog-input>
+                </label>
+                <div class="forecast-new-pe-dialog-actions">
+                    <button type="button" class="forecast-new-pe-secondary" data-pe-dialog-cancel>${escapeHtml(t('common.cancel') || 'Отмена')}</button>
+                    <button type="button" class="forecast-new-pe-primary" data-pe-dialog-confirm></button>
+                </div>
+            </div>`;
+        document.body.appendChild(dialog);
+        dialog.addEventListener('click', (event) => {
+            if (event.target === dialog || event.target.closest('[data-pe-dialog-cancel]')) closePanelDialog(false);
+            if (event.target.closest('[data-pe-dialog-confirm]')) {
+                const value = state.panelDialog?.inputLabel ? state.panelDialog.input.value.trim() : true;
+                if (state.panelDialog?.inputLabel && !value) return state.panelDialog.input.focus();
+                closePanelDialog(value);
+            }
+        });
+        return dialog;
+    }
+
     // Remove a blockKey from every tab in the mode (used before re-placing it).
     function removeBlockFromMode(layout, mode, blockKey) {
         ['left', 'right'].forEach((side) => (layout.panels[mode][side] || []).forEach((tab) => {
@@ -4394,7 +4499,7 @@
         return (layout.panels[mode][side] || []).find((tb) => tb.id === tabId);
     }
 
-    function handleEditorAction(action, ds) {
+    async function handleEditorAction(action, ds) {
         const PL = window.ForecastNewPanelLayout;
         const mode = currentWheelMode();
         const side = ds.side;
@@ -4421,6 +4526,18 @@
                 break;
             }
             case 'add-block':
+                {
+                const blockKey = `${mode === 'single' ? 'natal' : (ds.source || 'natal')}:${ds.view}`;
+                const location = findBlockLocation(mode, blockKey);
+                if (location && (location.side !== side || location.tab.id !== tabId)) {
+                    const from = `${panelSideLabel(location.side, mode)} · ${window.ForecastNewPanelLayout.autoTabTitle(location.tab, t)}`;
+                    const accepted = await showPanelDialog({
+                        title: t('page.forecastNew.panelEditor.moveBlockTitle') || 'Переместить блок?',
+                        copy: (t('page.forecastNew.panelEditor.moveBlockCopy', { location: from }) || `Блок уже находится в «${from}». Переместить его сюда?`),
+                        confirmLabel: t('page.forecastNew.panelEditor.move') || 'Переместить',
+                    });
+                    if (!accepted) return;
+                }
                 mutateLayout((l) => {
                     const tab = findTab(l, mode, side, tabId);
                     if (!tab) return;
@@ -4431,7 +4548,9 @@
                     const target = findTab(l, mode, side, tabId);
                     if (target) target.blocks.push({ source: source, view: ds.view });
                 });
+                announceUndo(t('page.forecastNew.panelEditor.blockMoved') || 'Блок перемещён');
                 break;
+                }
             case 'remove-block':
                 mutateLayout((l) => {
                     const tab = findTab(l, mode, side, tabId);
@@ -4440,12 +4559,18 @@
                 });
                 break;
             case 'reset':
-                if (!window.confirm(t('page.forecastNew.panelEditor.resetConfirm') || 'Сбросить раскладку панелей к стандартной?')) return;
+                if (!await showPanelDialog({
+                    title: t('page.forecastNew.panelEditor.reset') || 'Сбросить к стандартной',
+                    copy: t('page.forecastNew.panelEditor.resetConfirm') || 'Сбросить раскладку панелей к стандартной?',
+                    confirmLabel: t('page.forecastNew.panelEditor.reset') || 'Сбросить',
+                    destructive: true,
+                })) return;
                 state.layoutUndo = JSON.parse(JSON.stringify(state.panelLayout));
                 state.panelLayout = PL.normalizeLayout(PL.buildDefaultForecastNewLayout());
                 renderPanels();
                 renderPanelEditor();
                 scheduleLayoutPersist();
+                announceUndo(t('page.forecastNew.panelEditor.workspaceReset') || 'Рабочее пространство сброшено');
                 break;
             case 'undo':
                 if (!state.layoutUndo) return;
@@ -4464,10 +4589,15 @@
                 return; // no re-render needed
             }
             case 'save-preset': {
-                const name = window.prompt(t('page.forecastNew.panelEditor.presetNamePrompt') || 'Название конфигурации:');
-                if (!name || !name.trim()) return;
+                const name = await showPanelDialog({
+                    title: t('page.forecastNew.panelEditor.saveAsNew') || 'Сохранить как новое',
+                    copy: t('page.forecastNew.panelEditor.saveWorkspaceCopy') || 'Назовите рабочее пространство, чтобы быстро использовать его позже.',
+                    inputLabel: t('page.forecastNew.panelEditor.workspaceName') || 'Название',
+                    confirmLabel: t('page.forecastNew.panelEditor.save') || 'Сохранить',
+                });
+                if (!name) return;
                 const PL2 = window.ForecastNewPanelLayout;
-                const newPreset = { id: PL2.makeTabId(), name: name.trim(), layout: PL2.normalizeLayout(state.panelLayout) };
+                const newPreset = { id: PL2.makeTabId(), name, layout: PL2.normalizeLayout(state.panelLayout) };
                 state.panelPresets = [...(state.panelPresets || []), newPreset];
                 renderPanelEditor();
                 persistPanelPresets();
@@ -4486,12 +4616,34 @@
                 const idx = (state.panelPresets || []).findIndex((p) => p.id === ds.presetId);
                 if (idx === -1) return;
                 const deleted = state.panelPresets[idx];
+                if (!await showPanelDialog({
+                    title: t('page.forecastNew.panelEditor.deleteWorkspaceTitle') || 'Удалить рабочее пространство?',
+                    copy: deleted.name,
+                    confirmLabel: t('common.delete') || 'Удалить',
+                    destructive: true,
+                })) return;
                 state.panelPresets = state.panelPresets.filter((_, i) => i !== idx);
                 renderPanelEditor();
                 persistPanelPresets();
                 announceUndo(`${escapeHtml(deleted.name)} ${t('page.forecastNew.panelEditor.presetDeleted') || 'удалено'}`);
                 break;
             }
+            case 'apply-workspace': {
+                const workspace = PL.BUILTIN_WORKSPACES.find((item) => item.id === ds.workspaceId);
+                if (!workspace) return;
+                state.layoutUndo = JSON.parse(JSON.stringify(state.panelLayout));
+                const built = PL.buildBuiltinWorkspaceLayout(workspace.id, state.panelLayout);
+                state.panelLayout.panels[mode] = built.panels[mode];
+                state.panelLayout = PL.normalizeLayout(state.panelLayout);
+                renderPanels();
+                renderPanelEditor();
+                scheduleLayoutPersist();
+                announceUndo(t('page.forecastNew.panelEditor.workspaceApplied') || 'Рабочее пространство применено');
+                break;
+            }
+            case 'retry-save':
+                persistPanelLayout();
+                break;
             default:
                 break;
         }
@@ -4501,9 +4653,15 @@
         const editor = document.getElementById('forecastNewPanelEditor');
         const slot = editor?.querySelector('[data-pe-undo-slot]');
         if (!slot) return;
-        slot.innerHTML = `<span class="forecast-new-pe-undo">${escapeHtml(message)} <button type="button" class="forecast-new-pe-link" data-pe-action="undo">${escapeHtml(t('page.forecastNew.panelEditor.undo') || 'Отменить')}</button></span>`;
+        slot.textContent = message;
+        syncUndoButton();
         clearTimeout(state._undoTimer);
-        state._undoTimer = setTimeout(() => { if (slot) slot.innerHTML = ''; }, 8000);
+        state._undoTimer = setTimeout(() => { if (slot) slot.textContent = ''; }, 8000);
+    }
+
+    function syncUndoButton() {
+        const button = document.querySelector('[data-pe-action="undo"]');
+        if (button) button.disabled = !state.layoutUndo;
     }
 
     function injectPanelEditorStyles() {
@@ -4565,7 +4723,6 @@
     }
 
     function ensurePanelEditor() {
-        injectPanelEditorStyles();
         let editor = document.getElementById('forecastNewPanelEditor');
         if (editor) return editor;
         editor = document.createElement('div');
@@ -4584,8 +4741,10 @@
         editor.addEventListener('change', (event) => {
             const sel = event.target.closest('select[data-pe-action="add-block"]');
             if (sel) {
-                const [source, view] = sel.value.split(':');
-                if (view) handleEditorAction('add-block', { side: sel.dataset.side, tab: sel.dataset.tab, source, view });
+                const value = sel.value;
+                const [source, view] = value.split(':');
+                sel.value = '';
+                if (view) void handleEditorAction('add-block', { side: sel.dataset.side, tab: sel.dataset.tab, source, view });
             }
         });
         editor.addEventListener('input', (event) => {
@@ -4604,12 +4763,44 @@
         editor.addEventListener('keydown', (event) => {
             const input = event.target.closest('input[data-pe-action="rename-tab"]');
             if (input && event.key === 'Enter') { input.blur(); }
+            if (event.key === 'Escape') togglePanelEditMode(false);
         });
         editor.addEventListener('blur', (event) => {
             const input = event.target.closest('input[data-pe-action="rename-tab"]');
             if (input) renderPanelEditor();
         }, true);
+        editor.addEventListener('mouseover', previewEditorTarget);
+        editor.addEventListener('focusin', previewEditorTarget);
+        editor.addEventListener('mouseout', (event) => {
+            if (!editor.contains(event.relatedTarget)) clearEditorPreview();
+            else if (event.target.closest('.forecast-new-pe-tab') !== event.relatedTarget?.closest?.('.forecast-new-pe-tab')) {
+                clearEditorPreview();
+            }
+        });
+        editor.addEventListener('focusout', (event) => {
+            if (!editor.contains(event.relatedTarget)) clearEditorPreview();
+        });
         return editor;
+    }
+
+    function clearEditorPreview() {
+        document.querySelectorAll('.forecast-new-pe-preview').forEach((node) => node.classList.remove('forecast-new-pe-preview'));
+    }
+
+    function previewEditorTarget(event) {
+        const editorTab = event.target.closest('.forecast-new-pe-tab');
+        if (!editorTab) {
+            clearEditorPreview();
+            return;
+        }
+        clearEditorPreview();
+        const side = editorTab.closest('.forecast-new-pe-side')?.dataset.side;
+        const panel = document.getElementById(PANEL_SIDE_IDS[side]);
+        panel?.querySelector(`.panel-tab[data-tab-id="${editorTab.dataset.tab}"]`)?.classList.add('forecast-new-pe-preview');
+        const editorBlock = event.target.closest('.forecast-new-pe-block[data-blockkey]');
+        if (!editorBlock) return;
+        const meta = window.ForecastNewPanelLayout.BLOCK_TARGET_MAP[editorBlock.dataset.blockkey];
+        document.getElementById(meta?.containerId)?.classList.add('forecast-new-pe-preview');
     }
 
     function renderTabEditorCard(tab, side, mode) {
@@ -4617,8 +4808,8 @@
         const title = tab.title != null ? tab.title : '';
         const placeholder = escapeHtml(PL.autoTabTitle(tab, t));
         const blocksHtml = tab.blocks.map((b) => `
-            <li class="forecast-new-pe-block" data-blockkey="${b.source}:${b.view}">
-                <span class="forecast-new-pe-block-grip" title="${escapeHtml(t('page.forecastNew.panelEditor.dragHint') || 'Перетащить')}" aria-hidden="true">⠿</span>
+            <li class="forecast-new-pe-block" data-blockkey="${b.source}:${b.view}" tabindex="0">
+                <span class="forecast-new-pe-block-grip" title="${escapeHtml(t('page.forecastNew.panelEditor.dragHint') || 'Перетащить')}" aria-label="${escapeHtml(t('page.forecastNew.panelEditor.dragHint') || 'Перетащить')}" role="button">⠿</span>
                 <span class="forecast-new-pe-block-label">${escapeHtml(blockLabel(b))}</span>
                 <button type="button" class="forecast-new-pe-block-remove" data-pe-action="remove-block" data-side="${side}" data-tab="${tab.id}" data-blockkey="${b.source}:${b.view}" title="${escapeHtml(t('common.delete') || 'Удалить')}" aria-label="${escapeHtml(t('common.delete') || 'Удалить')}">✕</button>
             </li>`).join('');
@@ -4626,14 +4817,18 @@
         // block placed elsewhere moves it here.
         const inThisTab = new Set(tab.blocks.map((b) => b.source + ':' + b.view));
         const avail = allBlocksForMode(mode).filter((b) => !inThisTab.has(b.source + ':' + b.view));
-        const addOptions = avail.map((b) => `<option value="${b.source}:${b.view}">${escapeHtml(blockLabel(b))}</option>`).join('');
+        const addOptions = Object.entries(VIEW_GROUPS).map(([group, views]) => {
+            const options = avail.filter((block) => views.includes(block.view))
+                .map((block) => `<option value="${block.source}:${block.view}">${escapeHtml(blockLabel(block))}</option>`).join('');
+            return options ? `<optgroup label="${escapeHtml(t(`page.forecastNew.panelEditor.groups.${group}`) || group)}">${options}</optgroup>` : '';
+        }).join('');
         const addSelect = avail.length
             ? `<select class="forecast-new-pe-add-block" data-pe-action="add-block" data-side="${side}" data-tab="${tab.id}"><option value="">+ ${escapeHtml(t('page.forecastNew.panelEditor.addBlock') || 'Добавить блок')}</option>${addOptions}</select>`
             : '';
         return `
             <div class="forecast-new-pe-tab" data-tab="${tab.id}">
                 <div class="forecast-new-pe-tab-head">
-                    <span class="forecast-new-pe-tab-grip" title="${escapeHtml(t('page.forecastNew.panelEditor.dragHint') || 'Перетащить')}" aria-hidden="true">⠿</span>
+                    <span class="forecast-new-pe-tab-grip" title="${escapeHtml(t('page.forecastNew.panelEditor.dragHint') || 'Перетащить')}" aria-label="${escapeHtml(t('page.forecastNew.panelEditor.dragHint') || 'Перетащить')}" role="button">⠿</span>
                     <input type="text" class="forecast-new-pe-title" data-pe-action="rename-tab" data-side="${side}" data-tab="${tab.id}" value="${escapeHtml(title)}" placeholder="${placeholder}">
                     <button type="button" class="forecast-new-pe-tab-remove" data-pe-action="remove-tab" data-side="${side}" data-tab="${tab.id}" title="${escapeHtml(t('common.delete') || 'Удалить')}" aria-label="${escapeHtml(t('common.delete') || 'Удалить')}">✕</button>
                 </div>
@@ -4644,9 +4839,7 @@
 
     function renderPanelEditorSide(side, mode) {
         const tabs = state.panelLayout.panels[mode][side] || [];
-        const head = side === 'left'
-            ? (t('page.forecastNew.natalPanelTitle') || 'Левая панель')
-            : (t('page.forecastNew.panelEditor.rightPanel') || 'Правая панель');
+        const head = panelSideLabel(side, mode);
         return `
             <div class="forecast-new-pe-side" data-side="${side}">
                 <div class="forecast-new-pe-side-head">${escapeHtml(head)}</div>
@@ -4661,10 +4854,14 @@
         destroyEditorDnd(); // tear down stale Sortable instances before replacing innerHTML
         const mode = currentWheelMode();
         const modeLabel = mode === 'single'
-            ? (t('page.forecastNew.view.single') || 'Одиночное колесо')
-            : (t('page.forecastNew.view.multi') || 'Мульти-колесо');
+            ? (t('page.forecastNew.panelEditor.chartData') || 'Данные карты')
+            : (t('page.forecastNew.panelEditor.comparisonMode') || 'Режим сравнения');
         const presets = state.panelPresets || [];
-        const presetsDropdownHtml = presets.length === 0
+        const builtinHtml = window.ForecastNewPanelLayout.BUILTIN_WORKSPACES.map((workspace) => `
+            <button type="button" class="forecast-new-pe-workspace" data-pe-action="apply-workspace" data-workspace-id="${workspace.id}">
+                ${escapeHtml(t(workspace.labelKey) || workspace.id)}
+            </button>`).join('');
+        const presetsHtml = presets.length === 0
             ? `<div class="forecast-new-pe-presets-empty">${escapeHtml(t('page.forecastNew.panelEditor.presetsEmpty') || 'Нет сохранённых конфигураций')}</div>`
             : presets.map((p) => `
                 <div class="forecast-new-pe-preset">
@@ -4676,29 +4873,28 @@
                 </div>`).join('');
         editor.innerHTML = `
             <div class="forecast-new-pe-header">
-                <strong>${escapeHtml(t('page.forecastNew.panelEditor.title') || 'Настройка панелей')}</strong>
+                <div><strong>${escapeHtml(t('page.forecastNew.panelEditor.title') || 'Настройка рабочего пространства')}</strong>
+                <p>${escapeHtml(t('page.forecastNew.panelEditor.instructions') || 'Перетаскивайте вкладки и блоки между областями.')}</p></div>
                 <span class="forecast-new-pe-mode">${escapeHtml(modeLabel)}</span>
-                <button type="button" class="forecast-new-pe-close" data-pe-action="close" aria-label="${escapeHtml(t('common.close') || 'Закрыть')}">✕</button>
+                <button type="button" class="forecast-new-pe-primary forecast-new-pe-close" data-pe-action="close">${escapeHtml(t('page.forecastNew.panelEditor.done') || 'Готово')}</button>
+            </div>
+            <div class="forecast-new-pe-workspaces">
+                <div><span class="forecast-new-pe-kicker">${escapeHtml(t('page.forecastNew.panelEditor.builtinWorkspaces') || 'Готовые рабочие пространства')}</span><div class="forecast-new-pe-workspace-list">${builtinHtml}</div></div>
+                <div><span class="forecast-new-pe-kicker">${escapeHtml(t('page.forecastNew.panelEditor.myWorkspaces') || 'Мои рабочие пространства')}</span><div class="forecast-new-pe-preset-list">${presetsHtml}</div></div>
+                <button type="button" class="forecast-new-pe-secondary" data-pe-action="save-preset">${escapeHtml(t('page.forecastNew.panelEditor.saveAsNew') || 'Сохранить как новое')}</button>
             </div>
             <div class="forecast-new-pe-body">
                 ${renderPanelEditorSide('left', mode)}
                 ${renderPanelEditorSide('right', mode)}
             </div>
             <div class="forecast-new-pe-footer">
-                <span data-pe-undo-slot></span>
-                <button type="button" class="forecast-new-pe-preset-save" data-pe-action="save-preset" title="${escapeHtml(t('page.forecastNew.panelEditor.presetSave') || 'Сохранить конфигурацию')}">
-                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="1.5"/><rect x="5" y="2" width="6" height="4" rx=".5"/><rect x="4" y="9" width="8" height="5" rx=".5"/></svg>
-                </button>
-                <div class="forecast-new-pe-presets-wrap" data-pe-presets-wrap>
-                    <button type="button" class="forecast-new-pe-presets-toggle" data-pe-action="toggle-presets" title="${escapeHtml(t('page.forecastNew.panelEditor.presets') || 'Конфигурации')}">
-                        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><ellipse cx="8" cy="4.5" rx="5" ry="2"/><path d="M3 4.5v3c0 1.1 2.24 2 5 2s5-.9 5-2v-3"/><path d="M3 7.5v3c0 1.1 2.24 2 5 2s5-.9 5-2v-3"/></svg>
-                    </button>
-                    <div class="forecast-new-pe-presets-dropdown" data-pe-presets-dropdown>
-                        ${presetsDropdownHtml}
-                    </div>
-                </div>
+                <span data-pe-save-status aria-live="polite"></span>
+                <span data-pe-undo-slot aria-live="polite"></span>
+                <button type="button" class="forecast-new-pe-secondary forecast-new-pe-undo-button" data-pe-action="undo">${escapeHtml(t('page.forecastNew.panelEditor.undo') || 'Отменить')}</button>
                 <button type="button" class="forecast-new-pe-reset" data-pe-action="reset">${escapeHtml(t('page.forecastNew.panelEditor.reset') || 'Сбросить к стандартной')}</button>
             </div>`;
+        setPanelSaveState(state.panelSaveState);
+        syncUndoButton();
         initEditorDnd();
     }
 
@@ -4791,8 +4987,15 @@
         toggle?.classList.toggle('is-active', next);
         const editor = ensurePanelEditor();
         editor.classList.toggle('hidden', !next);
-        if (next) renderPanelEditor();
-        else destroyEditorDnd();
+        if (next) {
+            state.panelEditReturnFocus = document.activeElement;
+            renderPanelEditor();
+            setTimeout(() => editor.querySelector('.forecast-new-pe-close')?.focus(), 0);
+        } else {
+            destroyEditorDnd();
+            state.panelEditReturnFocus?.focus?.();
+            state.panelEditReturnFocus = null;
+        }
     }
 
     function bindPanelConfigurator() {
@@ -4828,6 +5031,7 @@
     // ---- persistence of panel layout (account-level default) ----
     function scheduleLayoutPersist() {
         state.panelLayoutDirty = true;
+        setPanelSaveState('saving');
         clearTimeout(state._layoutPersistTimer);
         state._layoutPersistTimer = setTimeout(persistPanelLayout, 600);
     }
@@ -4837,14 +5041,22 @@
         if (!PL || !state.panelLayout) return;
         const layout = PL.normalizeLayout(state.panelLayout);
         state.panelLayout = layout;
-        if (!window.AstroAPI?.patchAccountPreferences || !state.userId) return;
+        if (!window.AstroAPI?.patchAccountPreferences || !state.userId) {
+            setPanelSaveState('saved');
+            return;
+        }
+        setPanelSaveState('saving');
         const seq = ++state.layoutPersistSeq;
         window.AstroAPI.patchAccountPreferences({
             chart_defaults: { forecast_new: { panels: layout } },
         }).then(() => {
-            if (seq === state.layoutPersistSeq) state.panelLayoutDirty = false;
+            if (seq === state.layoutPersistSeq) {
+                state.panelLayoutDirty = false;
+                setPanelSaveState('saved');
+            }
         }).catch((err) => {
             state.panelLayoutDirty = true;
+            setPanelSaveState('error');
             console.warn('Forecast New panel layout save failed:', err);
             announceUndo(t('page.forecastNew.panelEditor.saveFailed') || 'Не удалось сохранить раскладку');
         });
