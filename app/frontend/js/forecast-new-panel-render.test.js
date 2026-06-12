@@ -108,5 +108,62 @@ function tabButtons(doc, side) {
     ok(panelContent(doc, 'left').querySelectorAll('[data-tab-id]').length === 9, 'stable: still 9 panes after re-render');
 })();
 
+// --- corner: assigned block re-homed into corner host, NOT in any panel pane ---
+(() => {
+    const doc = freshDoc();
+    const layout = L.normalizeLayout({
+        schema_version: 1,
+        panels: {
+            multi: {
+                left: [{ id: 'l1', blocks: [{ source: 'natal', view: 'houses' }] }],
+                right: [{ id: 'r1', blocks: [{ source: 'prog', view: 'planets' }] }],
+                corners: { tl: { source: 'natal', view: 'planets' }, tr: null, bl: null, br: null },
+            },
+            single: { left: [], right: [] },
+        },
+    });
+    L.renderPanelsToDom({ document: doc, layout, mode: 'multi', activeTab: {}, translate: t });
+    const corner = doc.getElementById('forecastNewCornerTl');
+    const planets = doc.getElementById('natalPlanetsView');
+    ok(corner.contains(planets), 'corner: natalPlanetsView re-homed into top-left corner host');
+    ok(!planelContains(doc, 'left', planets) && !planelContains(doc, 'right', planets), 'corner: planets NOT in any panel pane');
+    ok(planets.classList.contains('is-compact'), 'corner: block carries .is-compact');
+    ok(!corner.hidden && corner.classList.contains('forecast-new-corner-filled'), 'corner: filled corner visible');
+    ok(doc.getElementById('forecastNewCornerTr').hidden, 'corner: empty corner hidden');
+    ok(doc.querySelectorAll('#natalPlanetsView').length === 1, 'corner: still exactly one planets node');
+})();
+
+// helper: does a side panel's content contain node?
+function planelContains(doc, side, node) {
+    return panelContent(doc, side).contains(node);
+}
+
+// --- corner -> panel: moving block out of a corner re-homes it and hides corner ---
+(() => {
+    const doc = freshDoc();
+    const withCorner = L.normalizeLayout({
+        schema_version: 1,
+        panels: {
+            multi: { left: [], right: [], corners: { tl: { source: 'natal', view: 'planets' }, tr: null, bl: null, br: null } },
+            single: { left: [], right: [] },
+        },
+    });
+    L.renderPanelsToDom({ document: doc, layout: withCorner, mode: 'multi', activeTab: {}, translate: t });
+    ok(doc.getElementById('forecastNewCornerTl').contains(doc.getElementById('natalPlanetsView')), 'cornermove: starts in corner');
+    // now move it to the left panel
+    const moved = L.normalizeLayout({
+        schema_version: 1,
+        panels: {
+            multi: { left: [{ id: 'l1', blocks: [{ source: 'natal', view: 'planets' }] }], right: [], corners: { tl: null, tr: null, bl: null, br: null } },
+            single: { left: [], right: [] },
+        },
+    });
+    L.renderPanelsToDom({ document: doc, layout: moved, mode: 'multi', activeTab: {}, translate: t });
+    ok(panelContent(doc, 'left').contains(doc.getElementById('natalPlanetsView')), 'cornermove: re-homed to left panel');
+    ok(!doc.getElementById('natalPlanetsView').classList.contains('is-compact'), 'cornermove: .is-compact shed in panel');
+    ok(doc.getElementById('forecastNewCornerTl').hidden, 'cornermove: emptied corner hidden again');
+    ok(doc.querySelectorAll('#natalPlanetsView').length === 1, 'cornermove: still exactly one planets node');
+})();
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

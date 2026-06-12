@@ -74,5 +74,75 @@ ok(mig.singleRight === def.panels.single.right.find(t => t.blocks[0].view === 'b
 ok(L.normalizeLayout(null).panels.multi.left.length === 9, 'null -> default');
 ok(L.normalizeLayout({ foo: 1 }).panels.single.right.length === 4, 'garbage -> default');
 
+// ===================== corners (Option C) =====================
+
+// default carries empty corners on both modes
+ok(def.panels.multi.corners && L.cornersEmpty(def.panels.multi.corners), 'default multi corners empty');
+ok(def.panels.single.corners && L.cornersEmpty(def.panels.single.corners), 'default single corners empty');
+
+// legacy layout WITHOUT corners normalizes: panels intact + corners all-null
+const legacy = { schema_version: 1, panels: {
+  multi: { left: [{ id: 'a', blocks: [{ source: 'natal', view: 'planets' }] }], right: [] },
+  single: { left: [{ id: 's', blocks: [{ source: 'natal', view: 'houses' }] }], right: [] },
+} };
+const nl = L.normalizeLayout(legacy);
+ok(nl.panels.multi.left.length === 1, 'legacy: panel preserved');
+ok(nl.panels.multi.corners && L.cornersEmpty(nl.panels.multi.corners), 'legacy: corners defaulted to all-null');
+
+// corner block accepted and realized
+const wc = { schema_version: 1, panels: {
+  multi: { left: [{ id: 'a', blocks: [{ source: 'natal', view: 'houses' }] }], right: [],
+           corners: { tl: { source: 'natal', view: 'planets' }, tr: null, bl: null, br: null } },
+  single: { left: [], right: [] },
+} };
+const nwc = L.normalizeLayout(wc);
+ok(nwc.panels.multi.corners.tl && nwc.panels.multi.corners.tl.view === 'planets', 'corner block kept');
+
+// dedup: a blockKey in BOTH a panel and a corner -> panel wins, corner drops it
+const clash = { schema_version: 1, panels: {
+  multi: { left: [{ id: 'a', blocks: [{ source: 'natal', view: 'planets' }] }], right: [],
+           corners: { tl: { source: 'natal', view: 'planets' }, tr: null, bl: null, br: null } },
+  single: { left: [], right: [] },
+} };
+const ncl = L.normalizeLayout(clash);
+ok(ncl.panels.multi.left[0].blocks.length === 1, 'clash: panel keeps planets');
+ok(ncl.panels.multi.corners.tl === null, 'clash: corner yields planets to panel');
+
+// dedup across two corners: same block can't sit in tl AND tr
+const twoCorners = { schema_version: 1, panels: {
+  multi: { left: [], right: [],
+           corners: { tl: { source: 'natal', view: 'planets' }, tr: { source: 'natal', view: 'planets' }, bl: null, br: null } },
+  single: { left: [], right: [] },
+} };
+const ntc = L.normalizeLayout(twoCorners);
+ok(!!ntc.panels.multi.corners.tl && ntc.panels.multi.corners.tr === null, 'corner dedup: only first keeps the block');
+
+// corner-only mode is NOT wiped by the empty-rebuild fallback
+const cornerOnly = { schema_version: 1, panels: {
+  multi: { left: [], right: [], corners: { tl: { source: 'natal', view: 'planets' }, tr: null, bl: null, br: null } },
+  single: { left: [{ id: 's', blocks: [{ source: 'natal', view: 'houses' }] }], right: [] },
+} };
+const nco = L.normalizeLayout(cornerOnly);
+ok(nco.panels.multi.left.length === 0 && !!nco.panels.multi.corners.tl, 'corner-only mode preserved (not rebuilt from default)');
+
+// single mode forces corner source to natal
+const singleCorner = { schema_version: 1, panels: {
+  multi: { left: [{ id: 'x', blocks: [{ source: 'natal', view: 'planets' }] }], right: [] },
+  single: { left: [], right: [], corners: { tl: { source: 'prog', view: 'houses' }, tr: null, bl: null, br: null } },
+} };
+const nsc = L.normalizeLayout(singleCorner);
+ok(nsc.panels.single.corners.tl.source === 'natal', 'single: corner source forced to natal');
+
+// unknown corner view is dropped
+const badCorner = { schema_version: 1, panels: {
+  multi: { left: [{ id: 'x', blocks: [{ source: 'natal', view: 'planets' }] }], right: [],
+           corners: { tl: { source: 'natal', view: 'bogus' }, tr: null, bl: null, br: null } },
+  single: { left: [], right: [] },
+} };
+ok(L.normalizeLayout(badCorner).panels.multi.corners.tl === null, 'unknown corner view dropped');
+
+// corners survive a normalize round-trip (idempotent)
+ok(JSON.stringify(L.normalizeLayout(nwc)) === JSON.stringify(nwc), 'normalize(withCorners) idempotent');
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
