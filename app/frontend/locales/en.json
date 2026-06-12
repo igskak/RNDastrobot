@@ -334,7 +334,12 @@
         "presetLoad": "Load",
         "presetLoaded": "Loaded",
         "presetDeleted": "deleted",
-        "dragHint": "Drag"
+        "dragHint": "Drag",
+        "corners": "Corners",
+        "cornerTl": "↖ Top-left",
+        "cornerTr": "↗ Top-right",
+        "cornerBl": "↙ Bottom-left",
+        "cornerBr": "↘ Bottom-right"
       }
     },
     "plan": {

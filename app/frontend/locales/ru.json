@@ -334,7 +334,12 @@
         "presetLoad": "Загрузить",
         "presetLoaded": "Загружено",
         "presetDeleted": "удалено",
-        "dragHint": "Перетащить"
+        "dragHint": "Перетащить",
+        "corners": "Углы",
+        "cornerTl": "↖ Верх-лево",
+        "cornerTr": "↗ Верх-право",
+        "cornerBl": "↙ Низ-лево",
+        "cornerBr": "↘ Низ-право"
       }
     },
     "plan": {

@@ -4373,11 +4373,19 @@
         return out;
     }
 
-    // Remove a blockKey from every tab in the mode (used before re-placing it).
+    // Remove a blockKey from every tab AND every corner in the mode (used before
+    // re-placing it). A block lives in exactly one slot — panel tab or corner.
     function removeBlockFromMode(layout, mode, blockKey) {
         ['left', 'right'].forEach((side) => (layout.panels[mode][side] || []).forEach((tab) => {
             tab.blocks = tab.blocks.filter((b) => (b.source + ':' + b.view) !== blockKey);
         }));
+        const corners = layout.panels[mode].corners;
+        if (corners) {
+            (window.ForecastNewPanelLayout.CORNER_KEYS || ['tl', 'tr', 'bl', 'br']).forEach((pos) => {
+                const b = corners[pos];
+                if (b && (b.source + ':' + b.view) === blockKey) corners[pos] = null;
+            });
+        }
     }
 
     function mutateLayout(fn, { skipUndo, skipEditorRender } = {}) {
@@ -4437,6 +4445,25 @@
                     const tab = findTab(l, mode, side, tabId);
                     if (!tab) return;
                     tab.blocks = tab.blocks.filter((b) => (b.source + ':' + b.view) !== ds.blockkey);
+                });
+                break;
+            case 'set-corner':
+                mutateLayout((l) => {
+                    const pos = ds.corner;
+                    if (!l.panels[mode].corners || !(pos in l.panels[mode].corners)) return;
+                    const source = mode === 'single' ? 'natal' : (ds.source || 'natal');
+                    // Move-on-set: a block lives in one slot, so detach it from any
+                    // current home (panel tab or other corner) before placing here.
+                    removeBlockFromMode(l, mode, source + ':' + ds.view);
+                    l.panels[mode].corners[pos] = { source: source, view: ds.view };
+                });
+                break;
+            case 'clear-corner':
+                mutateLayout((l) => {
+                    const pos = ds.corner;
+                    if (l.panels[mode].corners && (pos in l.panels[mode].corners)) {
+                        l.panels[mode].corners[pos] = null;
+                    }
                 });
                 break;
             case 'reset':
@@ -4519,8 +4546,13 @@
         .forecast-new-pe-header strong{font-size:14px}
         .forecast-new-pe-mode{font-size:11px;opacity:.6;padding:2px 8px;border-radius:99px;background:rgba(120,120,200,.12)}
         .forecast-new-pe-close{margin-left:auto;border:0;background:transparent;cursor:pointer;font-size:16px;opacity:.6}
-        .forecast-new-pe-body{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 14px}
+        .forecast-new-pe-body{display:grid;grid-template-columns:1fr minmax(150px,0.8fr) 1fr;gap:12px;padding:12px 14px}
         @media (max-width:640px){.forecast-new-pe-body{grid-template-columns:1fr}}
+        .forecast-new-pe-corners-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+        .forecast-new-pe-corner{border:1px solid rgba(120,120,160,.22);border-radius:10px;padding:6px;background:rgba(140,140,180,.05);min-height:54px;display:flex;flex-direction:column;gap:4px}
+        .forecast-new-pe-corner-label{font-size:11px;opacity:.6;font-weight:600}
+        .forecast-new-pe-corner-blocks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;min-height:16px}
+        .forecast-new-pe-corner-add{width:100%;padding:4px 5px;border:1px dashed rgba(120,120,160,.4);border-radius:6px;background:transparent;cursor:pointer;color:inherit;font-size:11px}
         .forecast-new-pe-side-head{font-weight:600;margin-bottom:6px;opacity:.8}
         .forecast-new-pe-tab{position:relative;border:1px solid rgba(120,120,160,.22);border-radius:10px;padding:8px;margin-bottom:8px;background:rgba(140,140,180,.05)}
         .forecast-new-pe-tab-head{display:flex;gap:6px;align-items:center}
@@ -4586,6 +4618,12 @@
             if (sel) {
                 const [source, view] = sel.value.split(':');
                 if (view) handleEditorAction('add-block', { side: sel.dataset.side, tab: sel.dataset.tab, source, view });
+                return;
+            }
+            const cornerSel = event.target.closest('select[data-pe-action="set-corner"]');
+            if (cornerSel) {
+                const [source, view] = cornerSel.value.split(':');
+                if (view) handleEditorAction('set-corner', { corner: cornerSel.dataset.corner, source, view });
             }
         });
         editor.addEventListener('input', (event) => {
@@ -4655,6 +4693,52 @@
             </div>`;
     }
 
+    // The four chart-corner slots, laid out as a 2×2 grid that mirrors the
+    // physical screen positions (tl/tr over bl/br). Each slot holds 0 or 1 block.
+    const CORNER_LABEL_I18N = {
+        tl: 'page.forecastNew.panelEditor.cornerTl',
+        tr: 'page.forecastNew.panelEditor.cornerTr',
+        bl: 'page.forecastNew.panelEditor.cornerBl',
+        br: 'page.forecastNew.panelEditor.cornerBr',
+    };
+    const CORNER_LABEL_FALLBACK = { tl: '↖', tr: '↗', bl: '↙', br: '↘' };
+
+    function renderCornerSlot(pos, mode) {
+        const PL = window.ForecastNewPanelLayout;
+        const corners = state.panelLayout.panels[mode].corners || PL.emptyCorners();
+        const block = corners[pos] || null;
+        const labelKey = CORNER_LABEL_I18N[pos];
+        let label = labelKey ? t(labelKey) : '';
+        if (!label || label === labelKey) label = CORNER_LABEL_FALLBACK[pos];
+        const blockLi = block ? `
+            <li class="forecast-new-pe-block" data-blockkey="${block.source}:${block.view}">
+                <span class="forecast-new-pe-block-grip" aria-hidden="true">⠿</span>
+                <span class="forecast-new-pe-block-label">${escapeHtml(blockLabel(block))}</span>
+                <button type="button" class="forecast-new-pe-block-remove" data-pe-action="clear-corner" data-corner="${pos}" title="${escapeHtml(t('common.delete') || 'Удалить')}" aria-label="${escapeHtml(t('common.delete') || 'Удалить')}">✕</button>
+            </li>` : '';
+        // The add-select offers the whole catalog; choosing one MOVES it here.
+        const avail = allBlocksForMode(mode).filter((b) => !block || (b.source + ':' + b.view) !== (block.source + ':' + block.view));
+        const addOptions = avail.map((b) => `<option value="${b.source}:${b.view}">${escapeHtml(blockLabel(b))}</option>`).join('');
+        const addSelect = block ? '' : `<select class="forecast-new-pe-corner-add" data-pe-action="set-corner" data-corner="${pos}"><option value="">+ ${escapeHtml(t('page.forecastNew.panelEditor.addBlock') || 'Добавить блок')}</option>${addOptions}</select>`;
+        return `
+            <div class="forecast-new-pe-corner" data-corner="${pos}">
+                <div class="forecast-new-pe-corner-label">${escapeHtml(label)}</div>
+                <ul class="forecast-new-pe-corner-blocks" data-corner="${pos}">${blockLi}</ul>
+                ${addSelect}
+            </div>`;
+    }
+
+    function renderPanelEditorCorners(mode) {
+        const PL = window.ForecastNewPanelLayout;
+        const head = t('page.forecastNew.panelEditor.corners') || 'Углы';
+        const slots = (PL.CORNER_KEYS || ['tl', 'tr', 'bl', 'br']).map((pos) => renderCornerSlot(pos, mode)).join('');
+        return `
+            <div class="forecast-new-pe-corners">
+                <div class="forecast-new-pe-side-head">${escapeHtml(head)}</div>
+                <div class="forecast-new-pe-corners-grid">${slots}</div>
+            </div>`;
+    }
+
     function renderPanelEditor() {
         if (!state.panelEditMode || !state.panelLayout) return;
         const editor = ensurePanelEditor();
@@ -4682,6 +4766,7 @@
             </div>
             <div class="forecast-new-pe-body">
                 ${renderPanelEditorSide('left', mode)}
+                ${renderPanelEditorCorners(mode)}
                 ${renderPanelEditorSide('right', mode)}
             </div>
             <div class="forecast-new-pe-footer">
@@ -4742,13 +4827,26 @@
                 onEnd: commit,
             }));
         });
+        // Corner slots: same block group so a block drags between a panel and a
+        // corner (move-on-drop = Option C). put() caps each corner at one block.
+        editor.querySelectorAll('.forecast-new-pe-corner-blocks').forEach((ul) => {
+            state._editorSortables.push(window.Sortable.create(ul, {
+                group: { name: 'fn-blocks', pull: true, put: (to) => to.el.children.length < 1 },
+                handle: '.forecast-new-pe-block-grip',
+                animation: 150,
+                ghostClass: 'forecast-new-pe-ghost',
+                chosenClass: 'forecast-new-pe-chosen',
+                onEnd: commit,
+            }));
+        });
     }
 
     // Rebuild the current wheel mode's panels from the editor DOM order after a
     // drag, then normalize/render/persist. The other mode is left untouched.
     function readPanelEditorDom(mode) {
+        const PL = window.ForecastNewPanelLayout;
         const editor = document.getElementById('forecastNewPanelEditor');
-        const result = { left: [], right: [] };
+        const result = { left: [], right: [], corners: PL.emptyCorners() };
         if (!editor) return result;
         ['left', 'right'].forEach((side) => {
             const sideEl = editor.querySelector(`.forecast-new-pe-side[data-side="${side}"]`);
@@ -4766,6 +4864,16 @@
                 result[side].push({ id, title: titleRaw || null, blocks });
             });
         });
+        // Corners: read the FIRST block in each corner slot (max 1). A DnD that
+        // momentarily stacks two resolves to one here; normalize re-renders.
+        (PL.CORNER_KEYS || ['tl', 'tr', 'bl', 'br']).forEach((pos) => {
+            const slot = editor.querySelector(`.forecast-new-pe-corner-blocks[data-corner="${pos}"]`);
+            if (!slot) return;
+            const li = slot.querySelector('.forecast-new-pe-block');
+            if (!li) return;
+            const [source, view] = (li.dataset.blockkey || '').split(':');
+            if (source && view) result.corners[pos] = { source, view };
+        });
         return result;
     }
 
@@ -4775,7 +4883,7 @@
         const mode = currentWheelMode();
         const dom = readPanelEditorDom(mode);
         state.layoutUndo = JSON.parse(JSON.stringify(state.panelLayout));
-        state.panelLayout.panels[mode] = { left: dom.left, right: dom.right };
+        state.panelLayout.panels[mode] = { left: dom.left, right: dom.right, corners: dom.corners };
         state.panelLayout = PL.normalizeLayout(state.panelLayout);
         renderPanels();
         renderPanelEditor();
