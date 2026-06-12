@@ -235,6 +235,12 @@
             <div class="forecast-new-wheel-shell" id="forecastNewWheelShell">
                 <svg id="forecastNewWheel" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid meet"></svg>
             </div>
+            <!-- Corner overlay slots (Option C): configurable, one block each, sit in
+                 the dead triangles around the round wheel. Empty/hidden by default. -->
+            <div class="forecast-new-corner forecast-new-corner-tl" id="forecastNewCornerTl" data-corner="tl" hidden></div>
+            <div class="forecast-new-corner forecast-new-corner-tr" id="forecastNewCornerTr" data-corner="tr" hidden></div>
+            <div class="forecast-new-corner forecast-new-corner-bl" id="forecastNewCornerBl" data-corner="bl" hidden></div>
+            <div class="forecast-new-corner forecast-new-corner-br" id="forecastNewCornerBr" data-corner="br" hidden></div>
             <div class="forecast-new-zoom-controls zoom-controls-float">
                 <button class="zoom-btn forecast-new-view-btn" id="forecastNewViewSingle" data-i18n-title="page.forecastNew.view.single" data-i18n-aria-label="page.forecastNew.view.single" title="Single wheel" aria-label="Single wheel">◯</button>
                 <button class="zoom-btn forecast-new-view-btn is-active" id="forecastNewViewMulti" data-i18n-title="page.forecastNew.view.multi" data-i18n-aria-label="page.forecastNew.view.multi" title="Multi-wheel" aria-label="Multi-wheel">◎</button>

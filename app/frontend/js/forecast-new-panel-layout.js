@@ -47,6 +47,30 @@
 
     var SOURCES = ['natal', 'prog'];
 
+    // Corner overlay slots (Option C: a block lives in a side panel OR one
+    // corner, never both — corners share the per-mode block pool with panels).
+    // Each corner holds 0 or 1 block. Order = visual reading order.
+    var CORNER_KEYS = ['tl', 'tr', 'bl', 'br'];
+
+    // Corner slot -> overlay host element id in forecast-new.html. The block's
+    // own content container (BLOCK_TARGET_MAP[...].containerId) is re-homed INTO
+    // this host, exactly like a panel pane.
+    var CORNER_CONTAINER_IDS = {
+        tl: 'forecastNewCornerTl',
+        tr: 'forecastNewCornerTr',
+        bl: 'forecastNewCornerBl',
+        br: 'forecastNewCornerBr',
+    };
+
+    function emptyCorners() {
+        return { tl: null, tr: null, bl: null, br: null };
+    }
+
+    function cornersEmpty(corners) {
+        if (!corners) return true;
+        return CORNER_KEYS.every(function (pos) { return !corners[pos]; });
+    }
+
     function viewToContainerSuffix(view) {
         // grid -> GridView, configs -> ConfigsView, etc. Matches the ids in
         // forecast-new.html (natalGridView, progConfigsView, ...).
@@ -114,9 +138,11 @@
         var layout = { schema_version: SCHEMA_VERSION, panels: {} };
 
         // multi: left = 7 natal tabs, right = 7 prog tabs (current order).
+        // corners empty by default — opt-in via the editor (no first-run clutter).
         layout.panels.multi = {
             left: VIEW_KEYS.map(function (v) { return singleBlockTab('multi', 'left', 'natal', v); }),
             right: VIEW_KEYS.map(function (v) { return singleBlockTab('multi', 'right', 'prog', v); }),
+            corners: emptyCorners(),
         };
 
         // single: natal-only.
@@ -125,6 +151,7 @@
         layout.panels.single = {
             left: singleLeftViews.map(function (v) { return singleBlockTab('single', 'left', 'natal', v); }),
             right: singleRightViews.map(function (v) { return singleBlockTab('single', 'right', 'natal', v); }),
+            corners: emptyCorners(),
         };
 
         return layout;
@@ -173,6 +200,32 @@
     }
 
     /**
+     * Normalize the four corner slots for a mode. Shares `seenBlockKeys` with the
+     * panel pass so a blockKey can live in a panel OR a corner, never both
+     * (Option C). MUST be called AFTER the panels are normalized so panels win a
+     * collision and the corner yields (deterministic precedence). Drops unknown
+     * views, non-realizable blocks, and (in single mode) forces source 'natal'.
+     */
+    function normalizeCorners(rawCorners, mode, seenBlockKeys) {
+        var out = emptyCorners();
+        if (!rawCorners || typeof rawCorners !== 'object') return out;
+        CORNER_KEYS.forEach(function (pos) {
+            var b = rawCorners[pos];
+            if (!b || typeof b !== 'object') return;
+            var view = b.view;
+            if (!isValidView(view)) return;
+            var source = b.source === 'prog' ? 'prog' : 'natal';
+            if (mode === 'single') source = 'natal'; // single = natal only
+            var key = source + ':' + view;
+            if (!BLOCK_TARGET_MAP[key]) return; // not DOM-realizable
+            if (seenBlockKeys[key]) return; // already claimed by a panel (or earlier corner)
+            seenBlockKeys[key] = true;
+            out[pos] = { source: source, view: view };
+        });
+        return out;
+    }
+
+    /**
      * Sanitize an arbitrary (possibly corrupt / partial / legacy) layout into a
      * DOM-realizable, deduped, versioned layout. Falls back to defaults per
      * mode when a mode is unusable.
@@ -191,13 +244,16 @@
             var seenTabIds = {};
             var left = normalizePanelArray(rawMode.left, mode, 'left', seenBlockKeys, seenTabIds);
             var right = normalizePanelArray(rawMode.right, mode, 'right', seenBlockKeys, seenTabIds);
+            // Corners AFTER panels: shared seenBlockKeys, panels win a collision.
+            var corners = normalizeCorners(rawMode.corners, mode, seenBlockKeys);
 
-            // If a mode is entirely empty (no usable tabs anywhere), rebuild it
-            // from defaults so the user is never stranded with blank panels.
-            if (left.length === 0 && right.length === 0) {
+            // If a mode is entirely empty (no usable tabs AND no corner blocks),
+            // rebuild it from defaults so the user is never stranded with a blank
+            // workspace. A corner-only layout is valid and must NOT be wiped.
+            if (left.length === 0 && right.length === 0 && cornersEmpty(corners)) {
                 result.panels[mode] = fallback.panels[mode];
             } else {
-                result.panels[mode] = { left: left, right: right };
+                result.panels[mode] = { left: left, right: right, corners: corners };
             }
         });
 
@@ -375,6 +431,7 @@
                     var el = doc.getElementById(meta.containerId) || store.querySelector('#' + meta.containerId);
                     if (!el) return;
                     el.classList.add('active');
+                    el.classList.remove('is-compact'); // shed corner-compact styling when back in a panel
                     if (showHeaders) {
                         var wrap = doc.createElement('div');
                         wrap.className = 'forecast-new-block';
@@ -391,6 +448,32 @@
                 content.appendChild(pane);
             });
         });
+
+        // --- corners (Option C) ---
+        // The detach pass above already moved every block container to the store,
+        // so corner hosts start empty each render. Re-home each assigned block
+        // into its corner host with compact styling; hide unfilled corners.
+        var corners = (layout.panels[mode] && layout.panels[mode].corners) || emptyCorners();
+        CORNER_KEYS.forEach(function (pos) {
+            var host = doc.getElementById(CORNER_CONTAINER_IDS[pos]);
+            if (!host) return;
+            var block = corners[pos];
+            var filled = false;
+            if (block) {
+                var meta = BLOCK_TARGET_MAP[block.source + ':' + block.view];
+                if (meta) {
+                    var el = doc.getElementById(meta.containerId) || store.querySelector('#' + meta.containerId);
+                    if (el) {
+                        el.classList.add('active', 'is-compact');
+                        host.appendChild(el);
+                        filled = true;
+                    }
+                }
+            }
+            host.classList.toggle('forecast-new-corner-filled', filled);
+            host.hidden = !filled;
+        });
+
         return activeTab;
     }
 
@@ -401,6 +484,10 @@
         VIEW_KEYS: VIEW_KEYS,
         VIEW_I18N: VIEW_I18N,
         SOURCES: SOURCES,
+        CORNER_KEYS: CORNER_KEYS,
+        CORNER_CONTAINER_IDS: CORNER_CONTAINER_IDS,
+        emptyCorners: emptyCorners,
+        cornersEmpty: cornersEmpty,
         BLOCK_TARGET_MAP: BLOCK_TARGET_MAP,
         blockKeyOf: blockKeyOf,
         isValidView: isValidView,
