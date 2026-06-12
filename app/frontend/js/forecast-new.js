@@ -826,10 +826,8 @@
             schedulePersist();
         });
 
-        refs.leftLayerTabs?.addEventListener('click', (event) => {
-            const button = event.target.closest('[data-left-layer]');
-            if (!button) return;
-            void selectLeftLayer(button.dataset.leftLayer);
+        refs.leftLayerTabs?.addEventListener('change', (event) => {
+            void selectLeftLayer(event.target.value);
         });
 
         refs.forecastNewResultViews?.addEventListener('click', (event) => {
@@ -2282,6 +2280,21 @@
         }
     }
 
+    function getPrimaryWheelData() {
+        const layer = getLeftViewLayer();
+        if (!layer) return state.natalWheelData;
+        return {
+            planets: layer.bodies || [],
+            houses: layer.houses || [],
+            aspects: layer.aspects || [],
+            angles: layer.raw?.angles || null,
+            birth_data: {
+                ...(state.natalWheelData?.birth_data || {}),
+                house_system: state.pageSettings.houseSystem,
+            },
+        };
+    }
+
     function renderLeftLayerPanel() {
         const layer = getLeftViewLayer();
         if (!layer) {
@@ -2318,7 +2331,7 @@
     function renderLeftLayerTabs() {
         if (!refs.leftLayerTabs) return;
         refs.leftLayerTabs.innerHTML = LEFT_LAYER_ORDER.map((method) => `
-            <button type="button" class="forecast-new-left-layer-tab${method === state.selectedLeftLayer ? ' active' : ''}" data-left-layer="${method}" role="tab" aria-selected="${method === state.selectedLeftLayer ? 'true' : 'false'}">${escapeHtml(layerLabel(method))}</button>
+            <option value="${method}"${method === state.selectedLeftLayer ? ' selected' : ''}>${escapeHtml(layerLabel(method))}</option>
         `).join('');
     }
 
@@ -3423,7 +3436,7 @@
     function renderWheel() {
         if (!state.wheel || !state.natalWheelData) return;
         const rawViewModel = window.PrognosticLayerNormalizer.buildViewModel(
-            state.natalWheelData,
+            getPrimaryWheelData(),
             state.layers || {},
             { activeMethods: state.activeLayers },
         );
@@ -4247,6 +4260,9 @@
     const PANEL_SIDE_IDS = { left: 'forecastNewNatalPanel', right: 'forecastNewProgPanel' };
 
     function currentWheelMode() {
+        const singleActive = document.getElementById('forecastNewViewSingle')?.classList.contains('is-active');
+        const multiActive = document.getElementById('forecastNewViewMulti')?.classList.contains('is-active');
+        if (singleActive !== multiActive) return singleActive ? 'single' : 'multi';
         return state.wheelView === 'single' ? 'single' : 'multi';
     }
 
@@ -4388,7 +4404,18 @@
                 if (tab.blocks.some((block) => `${block.source}:${block.view}` === blockKey)) return { side, tab };
             }
         }
+        const corners = state.panelLayout.panels[mode].corners || {};
+        for (const corner of window.ForecastNewPanelLayout.CORNER_KEYS || ['tl', 'tr', 'bl', 'br']) {
+            const block = corners[corner];
+            if (block && `${block.source}:${block.view}` === blockKey) return { corner };
+        }
         return null;
+    }
+
+    function blockLocationLabel(location, mode = currentWheelMode()) {
+        if (!location) return '';
+        if (location.corner) return t(CORNER_LABEL_I18N[location.corner]) || CORNER_LABEL_FALLBACK[location.corner];
+        return `${panelSideLabel(location.side, mode)} · ${window.ForecastNewPanelLayout.autoTabTitle(location.tab, t)}`;
     }
 
     function panelSideLabel(side, mode = currentWheelMode()) {
@@ -4493,6 +4520,17 @@
         }
     }
 
+    function restoreCornerBlockToPanel(layout, mode, pos) {
+        const block = layout.panels[mode].corners?.[pos];
+        if (!block) return;
+        const side = mode === 'single' || block.source === 'natal' ? 'left' : 'right';
+        const tabs = layout.panels[mode][side];
+        const matchingTab = tabs.find((tab) => tab.blocks.some((item) => item.view === block.view));
+        if (matchingTab) matchingTab.blocks.push(block);
+        else tabs.push({ id: window.ForecastNewPanelLayout.makeTabId(), title: null, blocks: [block] });
+        layout.panels[mode].corners[pos] = null;
+    }
+
     function mutateLayout(fn, { skipUndo, skipEditorRender } = {}) {
         const PL = window.ForecastNewPanelLayout;
         if (!skipUndo) state.layoutUndo = JSON.parse(JSON.stringify(state.panelLayout));
@@ -4567,24 +4605,45 @@
                 });
                 break;
             case 'set-corner':
+                {
+                const source = mode === 'single' ? 'natal' : (ds.source || 'natal');
+                const blockKey = `${source}:${ds.view}`;
+                const location = findBlockLocation(mode, blockKey);
+                const existing = state.panelLayout.panels[mode].corners?.[ds.corner];
+                const discouraged = PL.CORNER_DISCOURAGED_VIEWS.includes(ds.view);
+                const copy = [
+                    existing ? (t('page.forecastNew.panelEditor.widgetReplaceCopy') || 'Текущий виджет в этой позиции будет заменён.') : '',
+                    discouraged ? (t('page.forecastNew.panelEditor.widgetDenseWarning') || 'Этот блок может быть трудно читать в компактном виде.') : '',
+                ].filter(Boolean).join(' ');
+                if (copy && !await showPanelDialog({
+                    title: t('page.forecastNew.panelEditor.addWidgetTitle') || 'Добавить виджет вокруг карты?',
+                    copy,
+                    confirmLabel: existing ? (t('page.forecastNew.panelEditor.replace') || 'Заменить') : (t('page.forecastNew.panelEditor.move') || 'Переместить'),
+                })) return;
                 mutateLayout((l) => {
                     const pos = ds.corner;
                     if (!l.panels[mode].corners || !(pos in l.panels[mode].corners)) return;
-                    const source = mode === 'single' ? 'natal' : (ds.source || 'natal');
                     // Move-on-set: a block lives in one slot, so detach it from any
                     // current home (panel tab or other corner) before placing here.
                     removeBlockFromMode(l, mode, source + ':' + ds.view);
                     l.panels[mode].corners[pos] = { source: source, view: ds.view };
                 });
-                announceUndo(t('page.forecastNew.panelEditor.blockMoved') || 'Блок перемещён');
+                announceUndo(location
+                    ? (t('page.forecastNew.panelEditor.widgetMovedFrom', { location: blockLocationLabel(location, mode) }) || `Виджет добавлен, блок перемещён из «${blockLocationLabel(location, mode)}»`)
+                    : (t('page.forecastNew.panelEditor.widgetAdded') || 'Виджет добавлен'));
                 break;
+                }
             case 'clear-corner':
                 mutateLayout((l) => {
                     const pos = ds.corner;
-                    if (l.panels[mode].corners && (pos in l.panels[mode].corners)) {
-                        l.panels[mode].corners[pos] = null;
-                    }
+                    restoreCornerBlockToPanel(l, mode, pos);
                 });
+                break;
+            case 'clear-corners':
+                mutateLayout((l) => {
+                    (PL.CORNER_KEYS || ['tl', 'tr', 'bl', 'br']).forEach((pos) => restoreCornerBlockToPanel(l, mode, pos));
+                });
+                announceUndo(t('page.forecastNew.panelEditor.widgetsCleared') || 'Виджеты убраны');
                 break;
             case 'reset':
                 if (!await showPanelDialog({
@@ -4594,7 +4653,15 @@
                     destructive: true,
                 })) return;
                 state.layoutUndo = JSON.parse(JSON.stringify(state.panelLayout));
-                state.panelLayout = PL.normalizeLayout(PL.buildDefaultForecastNewLayout());
+                state.panelLayout = PL.resetModeToDefault(state.panelLayout, mode);
+                const defaultTabs = PL.defaultActiveTabs(state.panelLayout);
+                if (mode === 'multi') {
+                    state.activeTab.multiLeft = defaultTabs.multiLeft;
+                    state.activeTab.multiRight = defaultTabs.multiRight;
+                } else {
+                    state.activeTab.singleLeft = defaultTabs.singleLeft;
+                    state.activeTab.singleRight = defaultTabs.singleRight;
+                }
                 renderPanels();
                 renderPanelEditor();
                 scheduleLayoutPersist();
@@ -4828,6 +4895,12 @@
     }
 
     function previewEditorTarget(event) {
+        const editorCorner = event.target.closest('.forecast-new-pe-corner[data-corner]');
+        if (editorCorner) {
+            clearEditorPreview();
+            document.getElementById(window.ForecastNewPanelLayout.CORNER_CONTAINER_IDS[editorCorner.dataset.corner])?.classList.add('forecast-new-pe-preview');
+            return;
+        }
         const editorTab = event.target.closest('.forecast-new-pe-tab');
         if (!editorTab) {
             clearEditorPreview();
@@ -4912,8 +4985,17 @@
                 <button type="button" class="forecast-new-pe-block-remove" data-pe-action="clear-corner" data-corner="${pos}" title="${escapeHtml(t('common.delete') || 'Удалить')}" aria-label="${escapeHtml(t('common.delete') || 'Удалить')}">✕</button>
             </li>` : '';
         const avail = allBlocksForMode(mode).filter((b) => !block || (b.source + ':' + b.view) !== (block.source + ':' + block.view));
-        const addOptions = avail.map((b) => `<option value="${b.source}:${b.view}">${escapeHtml(blockLabel(b))}</option>`).join('');
-        const addSelect = block ? '' : `<select class="forecast-new-pe-corner-add" data-pe-action="set-corner" data-corner="${pos}"><option value="">+ ${escapeHtml(t('page.forecastNew.panelEditor.addBlock') || 'Добавить блок')}</option>${addOptions}</select>`;
+        const optionGroup = (labelKey, views) => {
+            const options = avail.filter((item) => views.includes(item.view))
+                .map((item) => `<option value="${item.source}:${item.view}">${escapeHtml(blockLabel(item))}</option>`).join('');
+            return options ? `<optgroup label="${escapeHtml(t(labelKey) || labelKey)}">${options}</optgroup>` : '';
+        };
+        const addOptions = [
+            optionGroup('page.forecastNew.panelEditor.widgetRecommended', PL.CORNER_RECOMMENDED_VIEWS),
+            optionGroup('page.forecastNew.panelEditor.widgetCompactTables', PL.CORNER_COMPACT_VIEWS),
+            optionGroup('page.forecastNew.panelEditor.widgetOther', PL.CORNER_DISCOURAGED_VIEWS),
+        ].join('');
+        const addSelect = `<select class="forecast-new-pe-corner-add" data-pe-action="set-corner" data-corner="${pos}"><option value="">+ ${escapeHtml(block ? (t('page.forecastNew.panelEditor.replaceWidget') || 'Заменить виджет') : (t('page.forecastNew.panelEditor.addWidget') || 'Добавить виджет'))}</option>${addOptions}</select>`;
         return `
             <div class="forecast-new-pe-corner" data-corner="${pos}">
                 <div class="forecast-new-pe-corner-label">${escapeHtml(label)}</div>
@@ -4924,12 +5006,15 @@
 
     function renderPanelEditorCorners(mode) {
         const PL = window.ForecastNewPanelLayout;
-        const head = t('page.forecastNew.panelEditor.corners') || 'Углы';
+        const head = t('page.forecastNew.panelEditor.corners') || 'Виджеты вокруг карты';
+        const count = (PL.CORNER_KEYS || ['tl', 'tr', 'bl', 'br']).filter((pos) => state.panelLayout.panels[mode].corners?.[pos]).length;
         const slots = (PL.CORNER_KEYS || ['tl', 'tr', 'bl', 'br']).map((pos) => renderCornerSlot(pos, mode)).join('');
         return `
             <div class="forecast-new-pe-corners">
-                <div class="forecast-new-pe-side-head">${escapeHtml(head)}</div>
-                <div class="forecast-new-pe-corners-grid">${slots}</div>
+                <div class="forecast-new-pe-side-head">${escapeHtml(head)} <span class="forecast-new-pe-corner-count">${count}/4</span></div>
+                <p class="forecast-new-pe-corners-copy">${escapeHtml(t('page.forecastNew.panelEditor.cornersCopy') || 'Закрепите компактные показатели рядом с колесом.')}</p>
+                <div class="forecast-new-pe-corner-stage"><div class="forecast-new-pe-corner-wheel" aria-hidden="true">◎</div><div class="forecast-new-pe-corners-grid">${slots}</div></div>
+                <button type="button" class="forecast-new-pe-clear-corners" data-pe-action="clear-corners" ${count ? '' : 'disabled'}>${escapeHtml(t('page.forecastNew.panelEditor.clearWidgets') || 'Очистить все виджеты')}</button>
             </div>`;
     }
 
@@ -5109,6 +5194,15 @@
     function bindPanelConfigurator() {
         const toggle = document.getElementById('forecastNewPanelEditToggle');
         toggle?.addEventListener('click', () => togglePanelEditMode());
+        document.querySelector('.forecast-new-center')?.addEventListener('click', (event) => {
+            const remove = event.target.closest('[data-corner-remove]');
+            if (!remove) return;
+            event.stopPropagation();
+            const mode = currentWheelMode();
+            mutateLayout((layout) => {
+                restoreCornerBlockToPanel(layout, mode, remove.dataset.cornerRemove);
+            });
+        });
     }
 
     // ---- panel presets (named saved configurations) ----
@@ -5659,7 +5753,7 @@
     function layerLabel(method) {
         const natalLabel = t('common.method.natal');
         return ({
-            natal: natalLabel === 'common.method.natal' ? 'Радикс' : natalLabel,
+            natal: natalLabel === 'common.method.natal' ? 'Натал' : natalLabel,
             transit: t('common.method.transit'),
             progression: t('common.method.progression'),
             direction: t('common.method.direction'),

@@ -51,6 +51,9 @@
     // corner, never both — corners share the per-mode block pool with panels).
     // Each corner holds 0 or 1 block. Order = visual reading order.
     var CORNER_KEYS = ['tl', 'tr', 'bl', 'br'];
+    var CORNER_RECOMMENDED_VIEWS = ['balances', 'configs', 'stelliums', 'jones'];
+    var CORNER_COMPACT_VIEWS = ['planets', 'houses', 'aspects'];
+    var CORNER_DISCOURAGED_VIEWS = ['grid', 'dispositors'];
 
     // Corner slot -> overlay host element id in forecast-new.html. The block's
     // own content container (BLOCK_TARGET_MAP[...].containerId) is re-homed INTO
@@ -157,6 +160,14 @@
         return layout;
     }
 
+    function resetModeToDefault(layout, mode) {
+        var normalized = normalizeLayout(layout);
+        var defaults = buildDefaultForecastNewLayout();
+        var targetMode = mode === 'single' ? 'single' : 'multi';
+        normalized.panels[targetMode] = JSON.parse(JSON.stringify(defaults.panels[targetMode]));
+        return normalized;
+    }
+
     function tab(id, title, blocks) {
         return { id: id, title: title || null, blocks: blocks };
     }
@@ -209,6 +220,12 @@
             compact: {
                 left: [tab('builtin-compact-primary', null, blocks('natal', ['planets', 'aspects', 'grid']))],
                 right: [tab('builtin-compact-compare', null, blocks('prog', ['planets', 'aspects', 'grid']))],
+                corners: {
+                    tl: { source: 'natal', view: 'balances' },
+                    tr: { source: 'prog', view: 'balances' },
+                    bl: { source: 'natal', view: 'configs' },
+                    br: { source: 'prog', view: 'configs' },
+                },
             },
         };
         var chosen = modeLayouts[workspaceId];
@@ -217,7 +234,13 @@
         if (workspaceId === 'compact') {
             layout.panels.single = {
                 left: [tab('builtin-compact-single-primary', null, blocks('natal', ['planets', 'aspects', 'grid']))],
-                right: [tab('builtin-compact-single-secondary', null, blocks('natal', ['houses', 'balances']))],
+                right: [tab('builtin-compact-single-secondary', null, blocks('natal', ['houses', 'dispositors']))],
+                corners: {
+                    tl: { source: 'natal', view: 'balances' },
+                    tr: { source: 'natal', view: 'configs' },
+                    bl: { source: 'natal', view: 'stelliums' },
+                    br: { source: 'natal', view: 'jones' },
+                },
             };
         } else if (workspaceId === 'natal_consultation') {
             layout.panels.single = {
@@ -517,6 +540,7 @@
                     if (!el) return;
                     el.classList.add('active');
                     el.classList.remove('is-compact'); // shed corner-compact styling when back in a panel
+                    delete el.dataset.cornerView;
                     if (showHeaders) {
                         var wrap = doc.createElement('div');
                         wrap.className = 'forecast-new-block';
@@ -542,6 +566,7 @@
         CORNER_KEYS.forEach(function (pos) {
             var host = doc.getElementById(CORNER_CONTAINER_IDS[pos]);
             if (!host) return;
+            Array.prototype.forEach.call(host.querySelectorAll('.forecast-new-corner-toolbar'), function (node) { node.remove(); });
             var block = corners[pos];
             var filled = false;
             if (block) {
@@ -550,6 +575,21 @@
                     var el = doc.getElementById(meta.containerId) || store.querySelector('#' + meta.containerId);
                     if (el) {
                         el.classList.add('active', 'is-compact');
+                        el.dataset.cornerView = block.view;
+                        var toolbar = doc.createElement('div');
+                        toolbar.className = 'forecast-new-corner-toolbar';
+                        var title = doc.createElement('span');
+                        title.className = 'forecast-new-corner-title';
+                        title.textContent = autoTabTitle({ blocks: [block] }, translate);
+                        var remove = doc.createElement('button');
+                        remove.type = 'button';
+                        remove.className = 'forecast-new-corner-remove';
+                        remove.dataset.cornerRemove = pos;
+                        remove.setAttribute('aria-label', translate('page.forecastNew.panelEditor.removeWidget'));
+                        remove.textContent = '×';
+                        toolbar.appendChild(title);
+                        toolbar.appendChild(remove);
+                        host.appendChild(toolbar);
                         host.appendChild(el);
                         filled = true;
                     }
@@ -570,6 +610,9 @@
         VIEW_I18N: VIEW_I18N,
         SOURCES: SOURCES,
         CORNER_KEYS: CORNER_KEYS,
+        CORNER_RECOMMENDED_VIEWS: CORNER_RECOMMENDED_VIEWS,
+        CORNER_COMPACT_VIEWS: CORNER_COMPACT_VIEWS,
+        CORNER_DISCOURAGED_VIEWS: CORNER_DISCOURAGED_VIEWS,
         CORNER_CONTAINER_IDS: CORNER_CONTAINER_IDS,
         emptyCorners: emptyCorners,
         cornersEmpty: cornersEmpty,
@@ -578,6 +621,7 @@
         isValidView: isValidView,
         makeTabId: makeTabId,
         buildDefaultForecastNewLayout: buildDefaultForecastNewLayout,
+        resetModeToDefault: resetModeToDefault,
         buildBuiltinWorkspaceLayout: buildBuiltinWorkspaceLayout,
         BUILTIN_WORKSPACES: BUILTIN_WORKSPACES,
         normalizeLayout: normalizeLayout,

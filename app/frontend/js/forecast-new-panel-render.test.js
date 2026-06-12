@@ -129,6 +129,8 @@ function tabButtons(doc, side) {
     ok(!planelContains(doc, 'left', planets) && !planelContains(doc, 'right', planets), 'corner: planets NOT in any panel pane');
     ok(planets.classList.contains('is-compact'), 'corner: block carries .is-compact');
     ok(!corner.hidden && corner.classList.contains('forecast-new-corner-filled'), 'corner: filled corner visible');
+    ok(corner.querySelector('[data-corner-remove="tl"]'), 'corner: direct remove control rendered');
+    ok(planets.dataset.cornerView === 'planets', 'corner: compact view identity exposed');
     ok(doc.getElementById('forecastNewCornerTr').hidden, 'corner: empty corner hidden');
     ok(doc.querySelectorAll('#natalPlanetsView').length === 1, 'corner: still exactly one planets node');
 })();

@@ -221,7 +221,7 @@
         }
 
         return `
-            <article class="dispositor-jones-card">
+            <article class="dispositor-jones-card" title="${escapeHtml([t('page.chart.rulers.jonesKicker'), patternName, ...details].join(' · '))}">
                 <span class="dispositor-card-kicker">${escapeHtml(t('page.chart.rulers.jonesKicker'))}</span>
                 <h4>${escapeHtml(patternName)}</h4>
                 ${details.length ? `<p>${escapeHtml(details.join(' · '))}</p>` : ''}

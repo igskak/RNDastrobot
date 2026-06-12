@@ -1055,33 +1055,211 @@
 }
 .forecast-new-corner[hidden] { display: none; }
 .forecast-new-corner-tl { top: 14px; left: 14px; align-items: flex-start; justify-content: flex-start; }
-.forecast-new-corner-tr { top: 58px; right: 14px; align-items: flex-start; justify-content: flex-end; } /* offset down to clear zoom controls */
+.forecast-new-corner-tr { top: 14px; right: 72px; align-items: flex-start; justify-content: flex-end; } /* clear zoom controls */
 .forecast-new-corner-bl { bottom: 64px; left: 14px; align-items: flex-end; justify-content: flex-start; } /* offset up to clear datebar */
 .forecast-new-corner-br { bottom: 64px; right: 14px; align-items: flex-end; justify-content: flex-end; }
 
-/* The re-homed block container, compact + scrollable, is the only part that
-   takes pointer events. Transparent-ish glassy backdrop to read over the wheel. */
+/* The re-homed block container is intentionally just typography over the wheel:
+   no card surface, border, or shadow. */
 .forecast-new-corner > .is-compact {
     pointer-events: auto;
     max-height: 100%;
     max-width: 220px;
     overflow: auto;
-    font-size: 11px;
-    line-height: 1.3;
+    font-family: var(--font-ui);
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.35;
     font-variant-numeric: tabular-nums;
-    padding: 6px 8px;
-    border: 1px solid rgba(30, 58, 95, 0.12);
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.86);
-    box-shadow: 0 8px 22px rgba(26, 22, 20, 0.10);
-    backdrop-filter: blur(12px);
+    color: rgba(57, 52, 48, 0.88);
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.92);
+    padding: 3px 4px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    scrollbar-width: none;
+}
+.forecast-new-corner > .is-compact::-webkit-scrollbar {
+    display: none;
+}
+.forecast-new-corner > .is-compact table,
+.forecast-new-corner > .is-compact thead,
+.forecast-new-corner > .is-compact tbody,
+.forecast-new-corner > .is-compact tr,
+.forecast-new-corner > .is-compact th,
+.forecast-new-corner > .is-compact td {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+}
+.forecast-new-corner > .is-compact th {
+    color: rgba(92, 85, 78, 0.72);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+.forecast-new-corner > .is-compact td {
+    color: rgba(57, 52, 48, 0.88);
+}
+.forecast-new-corner > .is-compact h3,
+.forecast-new-corner > .is-compact .forecast-new-block-header {
+    display: none !important;
+}
+.forecast-new-corner > .is-compact .config-card,
+.forecast-new-corner > .is-compact .config-card--compact {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 0;
+    margin: 0 0 5px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+.forecast-new-corner > .is-compact .config-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 4px;
+}
+.forecast-new-corner > .is-compact .config-card h4 {
+    width: 13px;
+    max-width: 13px;
+    overflow: hidden;
+    font-size: 0;
+    line-height: 1;
+    white-space: nowrap;
+}
+.forecast-new-corner > .is-compact .config-card h4 > .astro-symbol,
+.forecast-new-corner > .is-compact .config-card h4::first-letter {
+    font-size: 13px;
+}
+.forecast-new-corner > .is-compact .config-strength-badge {
+    display: inline;
+    min-height: 0;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    color: rgba(92, 85, 78, 0.72);
+    width: auto;
+    font-size: 0;
+    font-weight: 600;
+    letter-spacing: 0;
+    white-space: nowrap;
+}
+.forecast-new-corner > .is-compact .config-strength-badge::after {
+    content: attr(data-compact-value);
+    font-size: 10px;
+}
+.forecast-new-corner > .is-compact .config-planets--compact {
+    order: 2;
+    gap: 7px;
+    margin: 0;
+}
+.forecast-new-corner > .is-compact .config-card-head {
+    order: 1;
+}
+.forecast-new-corner > .is-compact .planet-tag,
+.forecast-new-corner > .is-compact .planet-tag--icon-only {
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    font-size: 13px;
+}
+.forecast-new-corner > .is-compact .dispositor-jones-card {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+.forecast-new-corner > .is-compact .dispositor-card-kicker {
+    display: none;
+}
+.forecast-new-corner > .is-compact .dispositor-jones-card h4 {
+    display: block;
+    margin: 0;
+    font-family: var(--font-ui);
+    font-size: 11.5px;
+    font-weight: 650;
+    line-height: 1.35;
+}
+.forecast-new-corner > .is-compact .dispositor-jones-card p {
+    margin: 3px 0 0;
+    color: rgba(57, 52, 48, 0.78);
+    font-size: 10.5px;
+    line-height: 1.35;
+}
+.forecast-new-corner-toolbar {
+    position: absolute;
+    z-index: 2;
+    top: 4px;
+    left: 4px;
+    right: 4px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 26px;
+    padding: 3px 4px 3px 8px;
+    border-radius: 0;
+    background: transparent;
+    color: var(--text-secondary);
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.92);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-3px);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+body.forecast-new-panel-edit .forecast-new-corner:hover .forecast-new-corner-toolbar,
+body.forecast-new-panel-edit .forecast-new-corner:focus-within .forecast-new-corner-toolbar {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+.forecast-new-corner-title {
+    flex: 1;
+    overflow: hidden;
+    font-size: 11px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.forecast-new-corner-remove {
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--error);
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.92);
+    cursor: pointer;
 }
 /* Compact: shrink dense tables, hide non-essential chrome that won't fit. */
-.forecast-new-corner > .is-compact table { font-size: 10.5px; }
+.forecast-new-corner > .is-compact table { font-size: 11px; }
 .forecast-new-corner > .is-compact th,
 .forecast-new-corner > .is-compact td { padding: 1px 4px; }
 .forecast-new-corner > .is-compact h3,
 .forecast-new-corner > .is-compact h4 { font-size: 11px; margin: 2px 0; }
+.forecast-new-corner > .is-compact[data-corner-view="planets"] th:nth-child(n+3),
+.forecast-new-corner > .is-compact[data-corner-view="planets"] td:nth-child(n+3),
+.forecast-new-corner > .is-compact[data-corner-view="houses"] th:nth-child(n+3),
+.forecast-new-corner > .is-compact[data-corner-view="houses"] td:nth-child(n+3) {
+    display: none;
+}
+.forecast-new-corner > .is-compact[data-corner-view="aspects"] tbody tr:nth-child(n+7),
+.forecast-new-corner > .is-compact[data-corner-view="configs"] > *:nth-child(n+7),
+.forecast-new-corner > .is-compact[data-corner-view="stelliums"] > *:nth-child(n+7) {
+    display: none;
+}
 
 /* Edit-mode affordance: outline the corner drop targets even when empty. */
 body.forecast-new-panel-edit .forecast-new-corner {
@@ -1730,40 +1908,38 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     color: #fff;
 }
 
-/* Селектор метода левой/первичной панели (натал/прогрессии/дирекции/соляр). */
-.forecast-new-left-layer-tabs {
+.forecast-new-primary-title {
     display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    padding: 6px 10px 0;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
-.forecast-new-left-layer-tab {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 24px;
-    padding: 0 10px;
-    border: 1px solid rgba(30, 58, 95, 0.12);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.72);
-    color: var(--text-secondary);
+.forecast-new-left-layer-select {
+    max-width: 100%;
+    min-height: 25px;
+    padding: 1px 24px 1px 0;
+    border: 0;
+    background-color: transparent;
+    color: var(--text-primary);
     font: inherit;
-    font-size: 11px;
-    font-weight: 700;
-    line-height: 1.1;
-    white-space: nowrap;
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 600;
     cursor: pointer;
 }
 
-.forecast-new-left-layer-tab.active {
-    border-color: rgba(30, 58, 95, 0.28);
-    background: var(--accent);
-    color: #fff;
+.forecast-new-method-title {
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 25px;
 }
 
-.forecast-new-left-layer-tab:hover {
-    border-color: rgba(30, 58, 95, 0.28);
+.forecast-new-left-layer-select:hover,
+.forecast-new-left-layer-select:focus-visible {
+    color: var(--accent);
 }
 
 .forecast-new-right-layer-label {
@@ -2355,6 +2531,124 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
     font-size: 13px;
 }
 
+@media (min-width: 721px) and (max-width: 1512px) {
+    #forecastNewPanelEditor {
+        inset: 2vh 12px;
+        font-size: 12px;
+    }
+
+    .forecast-new-pe-header,
+    .forecast-new-pe-footer,
+    .forecast-new-pe-workspaces {
+        gap: 9px;
+        padding: 9px 12px;
+    }
+
+    .forecast-new-pe-header strong {
+        font-size: 21px;
+    }
+
+    .forecast-new-pe-header p {
+        font-size: 12px;
+    }
+
+    .forecast-new-pe-workspaces {
+        display: grid;
+        grid-template-columns: minmax(0, 1.8fr) minmax(150px, 0.7fr) auto;
+        align-items: end;
+    }
+
+    .forecast-new-pe-kicker {
+        margin-bottom: 4px;
+        font-size: 9px;
+    }
+
+    .forecast-new-pe-workspace-list,
+    .forecast-new-pe-preset-list {
+        gap: 4px;
+    }
+
+    .forecast-new-pe-workspace,
+    .forecast-new-pe-preset,
+    .forecast-new-pe-secondary,
+    .forecast-new-pe-primary,
+    .forecast-new-pe-reset {
+        min-height: 31px;
+        padding: 5px 8px;
+        border-radius: 8px;
+    }
+
+    .forecast-new-pe-body {
+        grid-template-columns: minmax(300px, 0.92fr) minmax(190px, 0.56fr) minmax(300px, 0.92fr);
+        gap: 10px;
+        padding: 10px 12px;
+    }
+
+    .forecast-new-pe-side {
+        min-height: 120px;
+        padding: 7px;
+        border-radius: 11px;
+    }
+
+    .forecast-new-pe-side-head {
+        margin-bottom: 6px;
+        font-size: 13px;
+    }
+
+    .forecast-new-pe-tab {
+        margin-bottom: 6px;
+        padding: 6px;
+        border-radius: 8px;
+    }
+
+    .forecast-new-pe-title {
+        padding: 5px 7px;
+    }
+
+    .forecast-new-pe-blocks {
+        gap: 3px;
+        margin: 5px 0;
+    }
+
+    .forecast-new-pe-block {
+        min-height: 30px;
+        padding: 4px 6px;
+    }
+
+    .forecast-new-pe-tab-remove,
+    .forecast-new-pe-block-remove,
+    .forecast-new-pe-preset-delete {
+        width: 28px;
+        height: 28px;
+    }
+
+    .forecast-new-pe-add-block,
+    .forecast-new-pe-add-tab,
+    .forecast-new-pe-corner-add {
+        min-height: 32px;
+    }
+
+    .forecast-new-pe-corners-grid {
+        gap: 42px 8px;
+    }
+
+    .forecast-new-pe-corner {
+        min-height: 56px;
+        padding: 6px;
+    }
+
+    .forecast-new-pe-corner-wheel {
+        width: 74px;
+        height: 74px;
+        font-size: 28px;
+    }
+
+    .forecast-new-pe-corners-copy {
+        margin-bottom: 6px;
+        font-size: 10px;
+    }
+}
+
 #forecastNewPanelEditor.hidden,
 .forecast-new-pe-dialog.hidden {
     display: none;
@@ -2451,9 +2745,31 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
 
 /* Corner config sits in the center column, mirroring the on-screen positions. */
 .forecast-new-pe-corners-grid {
+    position: relative;
+    z-index: 1;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 58px 12px;
+}
+
+.forecast-new-pe-corner-stage {
+    position: relative;
+    padding: 8px 0;
+}
+
+.forecast-new-pe-corner-wheel {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    display: grid;
+    place-items: center;
+    width: 92px;
+    height: 92px;
+    border: 1px solid rgba(184, 147, 90, 0.32);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,.94) 0 34%, rgba(235,240,247,.72) 35% 36%, transparent 37%);
+    color: rgba(30, 58, 95, 0.46);
+    font-size: 36px;
+    transform: translate(-50%, -50%);
 }
 
 .forecast-new-pe-corner {
@@ -2465,6 +2781,44 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
     display: flex;
     flex-direction: column;
     gap: 6px;
+}
+
+.forecast-new-pe-corner:hover,
+.forecast-new-pe-corner:focus-within {
+    border-color: rgba(184, 147, 90, 0.62);
+    background: var(--gold-pale);
+}
+
+.forecast-new-pe-corner-count {
+    margin-left: 5px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 11px;
+}
+
+.forecast-new-pe-corners-copy {
+    margin: -4px 0 9px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.forecast-new-pe-clear-corners {
+    width: 100%;
+    min-height: 34px;
+    margin-top: 8px;
+    border: 1px solid rgba(30, 58, 95, 0.12);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.forecast-new-pe-clear-corners:disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
 }
 
 .forecast-new-pe-corner-label {
@@ -2663,5 +3017,22 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
 
     .forecast-new-pe-body {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 1180px) {
+    .forecast-new-corner-bl,
+    .forecast-new-corner-br {
+        display: none;
+    }
+}
+
+@media (max-width: 860px) {
+    .forecast-new-corner {
+        display: none;
+    }
+
+    body.forecast-new-panel-edit .forecast-new-corner {
+        display: none;
     }
 }

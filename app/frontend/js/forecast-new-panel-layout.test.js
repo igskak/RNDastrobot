@@ -22,6 +22,27 @@ ok(def.panels.single.right.every(t => t.blocks[0].source === 'natal'), 'single a
 // --- normalize is idempotent on the default ---
 ok(JSON.stringify(L.normalizeLayout(def)) === JSON.stringify(def), 'normalize(default) === default');
 
+// --- reset only the requested wheel mode ---
+const customizedForReset = L.buildBuiltinWorkspaceLayout('compact');
+const resetMulti = L.resetModeToDefault(customizedForReset, 'multi');
+ok(JSON.stringify(resetMulti.panels.multi) === JSON.stringify(def.panels.multi), 'reset multi restores default multi layout');
+ok(JSON.stringify(resetMulti.panels.single) === JSON.stringify(customizedForReset.panels.single), 'reset multi preserves single layout');
+const missingProgPlanets = L.normalizeLayout({
+  schema_version: 1,
+  panels: {
+    multi: {
+      left: def.panels.multi.left,
+      right: def.panels.multi.right.filter(tab => tab.blocks[0].view !== 'planets'),
+      corners: { tl: null, tr: null, bl: null, br: null },
+    },
+    single: def.panels.single,
+  },
+});
+const restoredProgPlanets = L.resetModeToDefault(missingProgPlanets, 'multi');
+ok(restoredProgPlanets.panels.multi.right.some(tab =>
+  tab.blocks.some(block => block.source === 'prog' && block.view === 'planets')
+), 'reset multi restores removed prognostic planets tab');
+
 // --- dedup same blockKey across the whole mode ---
 const dup = { schema_version: 1, panels: { multi: { left: [
   { id: 'a', blocks: [{ source: 'natal', view: 'planets' }] },
@@ -143,6 +164,8 @@ ok(L.normalizeLayout(badCorner).panels.multi.corners.tl === null, 'unknown corne
 
 // corners survive a normalize round-trip (idempotent)
 ok(JSON.stringify(L.normalizeLayout(nwc)) === JSON.stringify(nwc), 'normalize(withCorners) idempotent');
+ok(L.CORNER_RECOMMENDED_VIEWS.includes('balances'), 'corner recommendations include balances');
+ok(L.CORNER_DISCOURAGED_VIEWS.includes('grid'), 'dense grid is discouraged for corners');
 // --- built-in astrologer workspaces are valid and preserve the schema ---
 ok(L.BUILTIN_WORKSPACES.length === 5, 'five built-in workspaces');
 L.BUILTIN_WORKSPACES.forEach(({ id }) => {
@@ -153,6 +176,7 @@ L.BUILTIN_WORKSPACES.forEach(({ id }) => {
 });
 const compact = L.buildBuiltinWorkspaceLayout('compact');
 ok(compact.panels.multi.left[0].blocks.length === 3, 'compact workspace keeps a concise primary tab');
+ok(!L.cornersEmpty(compact.panels.multi.corners), 'compact workspace includes observation widgets');
 const unknownWorkspace = L.buildBuiltinWorkspaceLayout('unknown', def);
 ok(JSON.stringify(unknownWorkspace) === JSON.stringify(def), 'unknown workspace preserves current layout');
 

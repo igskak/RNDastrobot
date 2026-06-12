@@ -967,13 +967,15 @@ class ChartDataRenderer {
                     class="config-card config-card--compact"
                     data-config-planets="${this.escapeHtml((c.planets_involved || []).join('|'))}"
                     data-config-aspect-keys="${this.escapeHtml((c.aspects || []).map((aspect) => this.getAspectKey(aspect)).filter(Boolean).join('|'))}"
+                    data-compact-value="${Math.round(c.strength_score || 0)}"
+                    title="${this.escapeHtml(`${this.formatConfigType(c.type)} · ${this.t('page.chart.configurations.strengthShort', { value: Math.round(c.strength_score || 0) })}`)}"
                 >
                     <div class="config-card-head">
                         <h4>
                             ${Symbols.configIcons[c.type] || '◆'}
                             ${this.formatConfigType(c.type)}
                         </h4>
-                        <span class="config-strength-badge">${this.t('page.chart.configurations.strengthShort', { value: Math.round(c.strength_score || 0) })}</span>
+                        <span class="config-strength-badge" data-compact-value="${Math.round(c.strength_score || 0)}">${this.t('page.chart.configurations.strengthShort', { value: Math.round(c.strength_score || 0) })}</span>
                     </div>
                     <div class="config-planets config-planets--compact">
                         ${c.apex_planet ? `
@@ -1021,6 +1023,10 @@ class ChartDataRenderer {
                     class="config-card config-card--compact"
                     data-config-planets="${this.escapeHtml((s.planets || []).join('|'))}"
                     data-config-aspect-keys=""
+                    data-compact-value="${Number(s.count || 0)}"
+                    title="${this.escapeHtml(s.type === 'house'
+                        ? this.t('page.chart.configurations.houseLabel', { house: this.formatHouseNumber(s.house_number) })
+                        : this.signName(s.sign))}"
                 >
                     <div class="config-card-head">
                         <h4>
@@ -1028,7 +1034,7 @@ class ChartDataRenderer {
                                 ? this.t('page.chart.configurations.houseLabel', { house: this.formatHouseNumber(s.house_number) })
                                 : `<span class="astro-symbol config-stellium-sign" aria-hidden="true">${Symbols.signs[s.sign] || ''}</span> ${this.signName(s.sign)}`}
                         </h4>
-                        <span class="config-strength-badge">${this.t('page.chart.configurations.countShort', { count: s.count })}</span>
+                        <span class="config-strength-badge" data-compact-value="${Number(s.count || 0)}">${this.t('page.chart.configurations.countShort', { count: s.count })}</span>
                     </div>
                     <div class="config-planets config-planets--compact">
                         ${s.planets.map((planetName) => `
