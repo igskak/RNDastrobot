@@ -33,8 +33,10 @@
     right: 24px;
     bottom: 88px;
     width: 360px;
+    min-width: 320px;
     max-width: calc(100vw - 32px);
     height: 480px;
+    min-height: 320px;
     max-height: calc(100vh - 120px);
     display: none;
     flex-direction: column;
@@ -44,6 +46,7 @@
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
     z-index: 1201;
     overflow: hidden;
+    resize: both;
 }
 
 .chat-widget.open {
@@ -136,6 +139,30 @@
     font-style: italic;
 }
 
+.chat-voice-status {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 28px;
+    padding: 5px 13px 0;
+    color: var(--text-muted, #6b7280);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.chat-voice-status[hidden] {
+    display: none;
+}
+
+.chat-voice-status.recording::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12);
+}
+
 .chat-input-row {
     display: flex;
     align-items: flex-end;
@@ -201,4 +228,12 @@
 .chat-mic:focus-visible {
     outline: 2px solid var(--accent-color, #6366f1);
     outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+    .chat-widget {
+        min-width: 0;
+        min-height: 280px;
+        resize: none;
+    }
 }
