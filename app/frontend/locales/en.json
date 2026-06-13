@@ -746,6 +746,7 @@
         "noChart": "Open a chart first, then ask about it here.",
         "placeholder": "Ask about this chart…",
         "recording": "Recording {time}",
+        "resize": "Resize assistant",
         "send": "Send",
         "thinking": "Calculating…",
         "title": "Ask about this chart",

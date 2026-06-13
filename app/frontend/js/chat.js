@@ -13,6 +13,10 @@ const API_BASE_URL = window.location.hostname === 'localhost'
 const MAX_HISTORY = 40;
 const MAX_RECORDING_MS = 5 * 60_000;
 const CHAT_SIZE_STORAGE_KEY = 'astrobotChatSize';
+const CHAT_MIN_WIDTH = 320;
+const CHAT_MIN_HEIGHT = 320;
+const CHAT_VIEWPORT_GUTTER = 32;
+const CHAT_VIEWPORT_VERTICAL_OFFSET = 120;
 
 function t(key, params) {
     return window.FrontendI18n?.t?.(key, params) || key;
@@ -35,6 +39,7 @@ class ChatWidget {
         this.widget = document.getElementById('chatWidget');
         this.toggle = document.getElementById('chatToggle');
         this.closeBtn = document.getElementById('chatClose');
+        this.resizeHandle = document.getElementById('chatResizeHandle');
         this.messages = document.getElementById('chatMessages');
         this.input = document.getElementById('chatInput');
         this.send = document.getElementById('chatSend');
@@ -71,6 +76,8 @@ class ChatWidget {
         this.closeBtn?.addEventListener('click', () => this.closePanel());
         this.send.addEventListener('click', () => this.sendMessage());
         this.mic?.addEventListener('click', () => this.toggleRecording());
+        this.resizeHandle?.addEventListener('pointerdown', (event) => this.startResize(event));
+        this.resizeHandle?.addEventListener('keydown', (event) => this.resizeWithKeyboard(event));
 
         this.input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -95,9 +102,62 @@ class ChatWidget {
         try {
             const saved = JSON.parse(localStorage.getItem(CHAT_SIZE_STORAGE_KEY) || 'null');
             if (!saved?.width || !saved?.height) return;
-            this.widget.style.width = `${Math.min(saved.width, window.innerWidth - 32)}px`;
-            this.widget.style.height = `${Math.min(saved.height, window.innerHeight - 120)}px`;
+            this.applySize(saved.width, saved.height);
         } catch {}
+    }
+
+    applySize(width, height) {
+        const maxWidth = window.innerWidth - CHAT_VIEWPORT_GUTTER;
+        const maxHeight = window.innerHeight - CHAT_VIEWPORT_VERTICAL_OFFSET;
+        const minWidth = Math.min(CHAT_MIN_WIDTH, maxWidth);
+        const minHeight = Math.min(CHAT_MIN_HEIGHT, maxHeight);
+        this.widget.style.width = `${Math.max(minWidth, Math.min(width, maxWidth))}px`;
+        this.widget.style.height = `${Math.max(minHeight, Math.min(height, maxHeight))}px`;
+    }
+
+    startResize(event) {
+        if (event.button !== 0 || window.matchMedia?.('(max-width: 640px)').matches) return;
+        event.preventDefault();
+        const startX = event.clientX;
+        const startY = event.clientY;
+        const { width: startWidth, height: startHeight } = this.widget.getBoundingClientRect();
+
+        this.widget.classList.add('resizing');
+        this.resizeHandle.setPointerCapture?.(event.pointerId);
+
+        const resize = (moveEvent) => {
+            this.applySize(
+                startWidth + startX - moveEvent.clientX,
+                startHeight + startY - moveEvent.clientY,
+            );
+        };
+        const finish = () => {
+            this.widget.classList.remove('resizing');
+            this.resizeHandle.removeEventListener('pointermove', resize);
+            this.resizeHandle.removeEventListener('pointerup', finish);
+            this.resizeHandle.removeEventListener('pointercancel', finish);
+            this.saveSize();
+        };
+
+        this.resizeHandle.addEventListener('pointermove', resize);
+        this.resizeHandle.addEventListener('pointerup', finish);
+        this.resizeHandle.addEventListener('pointercancel', finish);
+    }
+
+    resizeWithKeyboard(event) {
+        const directions = {
+            ArrowLeft: [1, 0],
+            ArrowRight: [-1, 0],
+            ArrowUp: [0, 1],
+            ArrowDown: [0, -1],
+        };
+        const direction = directions[event.key];
+        if (!direction || window.matchMedia?.('(max-width: 640px)').matches) return;
+        event.preventDefault();
+        const step = event.shiftKey ? 32 : 10;
+        const { width, height } = this.widget.getBoundingClientRect();
+        this.applySize(width + direction[0] * step, height + direction[1] * step);
+        this.saveSize();
     }
 
     saveSize() {
