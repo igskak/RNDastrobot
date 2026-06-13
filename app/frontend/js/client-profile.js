@@ -950,15 +950,10 @@ async function openChart() {
 
 function openSynastry(relatedUserId) {
     if (!relatedUserId) return;
-    window.AstroAPI.saveNavigationState?.({
+    window.AstroAPI?.openForecastForSynastry?.(userId, relatedUserId, {
         sourceView: 'client-profile',
         sourceUrl: window.AstroAPI.buildClientProfileUrl?.(userId) || `/client/${encodeURIComponent(userId)}`,
-        clientUserId: String(userId),
-        partnerUserId: String(relatedUserId),
     });
-    window.showPageLoader?.();
-    window.location.href = window.AstroAPI.buildSynastryUrl?.(userId, relatedUserId)
-        || `/synastry.html?client=${encodeURIComponent(userId)}&partner=${encodeURIComponent(relatedUserId)}`;
 }
 
 async function startCallSession() {

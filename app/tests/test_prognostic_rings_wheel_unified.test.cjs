@@ -162,30 +162,10 @@ test('W3: engine falls back to ring.raw.angles when layer has no direct angles',
     assert.equal(svg.querySelectorAll('.angle-marker-label').length, 4);
 });
 
-test('W5: ChartWheelUnified adapter drives the unified engine with ChartWheel API', async () => {
-    const Wheel = await loadEngine();
-    // адаптер ожидает window.PrognosticRingsWheel + window.PrognosticLayerNormalizer
-    dom.window.PrognosticLayerNormalizer = require('../frontend/js/prognostic-layer-normalizer.js');
-    await import('../frontend/js/chart-wheel-adapter.js');
-    const Adapter = dom.window.ChartWheelUnified;
-    assert.ok(Adapter, 'adapter should export window.ChartWheelUnified');
-
-    const svg = makeSvg();
-    const wheel = new Adapter(svg);
-    wheel.setOrientationMode('aries', { redraw: false });
-    wheel.setPointScales({ planets: 1, points: 1 }, { redraw: false });
-    wheel.setPlanetAnnotationOptions({ showStationary: true, showDegree: false }, { redraw: false });
-    wheel.setHouseLabelOptions({ style: 'roman', outside: false }, { redraw: false });
-    wheel.setAngleMarkerOptions({ ascDscBold: true, mcIcBold: true }, { redraw: false });
-
-    wheel.draw({ planets: [], houses: [], aspects: [], angles: NATAL_ANGLES });
-    assert.equal(wheel.engine.rings.length, 1, 'single chart = 1 ring');
-    assert.equal(svg.querySelectorAll('.angle-marker-label').length, 4, 'angle markers on for parity');
-
-    wheel.setAspectFilter('major');                       // redraw из кэша как у ChartWheel
-    assert.equal(wheel.engine.aspectScope, 'major');
-    assert.equal(wheel.engine.rings.length, 1);
-});
+// NOTE: the W5 "ChartWheelUnified adapter" test was removed when chart.html /
+// synastry.html (and with them chart-wheel.js + chart-wheel-adapter.js) were
+// retired. forecast-new drives prognostic-rings-wheel.js directly; the adapter
+// no longer exists, so there is nothing to assert parity against.
 
 test('W4: legacy minimumRingCount behavior preserved when no filter is applied', async () => {
     const Wheel = await loadEngine();

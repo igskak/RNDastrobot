@@ -17,17 +17,24 @@ def test_health_endpoint_smoke() -> None:
 
 
 def test_html_entrypoints_smoke() -> None:
+    # chart.html / solar.html / synastry.html were retired; forecast-new is the
+    # single workspace. Solar/synastry now live as ring layers inside it.
     with TestClient(app) as client:
         root_response = client.get("/")
         index_response = client.get("/index.html")
-        chart_response = client.get("/chart.html")
-        solar_response = client.get("/solar.html")
+        forecast_response = client.get("/forecast-new.html")
 
     assert root_response.status_code == 200
     assert index_response.status_code == 200
-    assert chart_response.status_code == 200
-    assert solar_response.status_code == 200
+    assert forecast_response.status_code == 200
     assert "text/html" in root_response.headers.get("content-type", "")
     assert "text/html" in index_response.headers.get("content-type", "")
-    assert "text/html" in chart_response.headers.get("content-type", "")
-    assert "text/html" in solar_response.headers.get("content-type", "")
+    assert "text/html" in forecast_response.headers.get("content-type", "")
+
+
+def test_retired_pages_return_404() -> None:
+    # Regression guard: the old chart pages must no longer be served.
+    with TestClient(app) as client:
+        assert client.get("/chart.html").status_code == 404
+        assert client.get("/solar.html").status_code == 404
+        assert client.get("/synastry.html").status_code == 404

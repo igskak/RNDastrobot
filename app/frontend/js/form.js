@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             // Переходим на страницу результата
             window.showPageLoader?.();
-            window.location.href = 'chart.html';
+            window.location.href = 'forecast-new.html';
 
         } catch (error) {
             console.error('Ошибка:', error);

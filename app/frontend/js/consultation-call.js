@@ -148,7 +148,9 @@
                 refs.callClientName.textContent = cs.client_name;
             }
             if (refs.callEndedClientLink && state.userId) {
-                refs.callEndedClientLink.href = `/chart.html?user_id=${state.userId}`;
+                // chart.html retired — send to the client profile (forecast-new needs the
+                // chart in sessionStorage, which a bare ?user_id= link can't provide).
+                refs.callEndedClientLink.href = `/client/${encodeURIComponent(state.userId)}`;
             }
 
             // Reflect existing consent states

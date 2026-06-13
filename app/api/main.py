@@ -105,12 +105,7 @@ async def static_cache_headers(request: Request, call_next):
         "/index.html",
         "/account-settings",
         "/account-settings.html",
-        "/chart.html",
-        "/synastry",
-        "/synastry.html",
         "/natal-full.html",
-        "/solar",
-        "/solar.html",
         "/forecast-tables",
         "/forecast-tables.html",
         "/forecast-timeline",
@@ -236,25 +231,6 @@ async def account_settings_page():
     raise HTTPException(status_code=404, detail="Account settings page not found")
 
 
-@app.get("/chart.html")
-async def chart_page():
-    """Страница натальной карты"""
-    chart_path = os.path.join(FRONTEND_PATH, "chart.html")
-    if os.path.exists(chart_path):
-        return FileResponse(chart_path)
-    raise HTTPException(status_code=404, detail="Chart page not found")
-
-
-@app.get("/synastry")
-@app.get("/synastry.html")
-async def synastry_page():
-    """Страница синастрии."""
-    synastry_path = os.path.join(FRONTEND_PATH, "synastry.html")
-    if os.path.exists(synastry_path):
-        return FileResponse(synastry_path)
-    raise HTTPException(status_code=404, detail="Synastry page not found")
-
-
 @app.get("/natal-full.html")
 async def natal_full_page():
     """Страница полной натальной карты (табличный вид)"""
@@ -262,16 +238,6 @@ async def natal_full_page():
     if os.path.exists(natal_full_path):
         return FileResponse(natal_full_path)
     raise HTTPException(status_code=404, detail="Natal full page not found")
-
-
-@app.get("/solar")
-@app.get("/solar.html")
-async def solar_page():
-    """Страница соляра."""
-    solar_path = os.path.join(FRONTEND_PATH, "solar.html")
-    if os.path.exists(solar_path):
-        return FileResponse(solar_path)
-    raise HTTPException(status_code=404, detail="Solar page not found")
 
 
 @app.get("/forecast-new")

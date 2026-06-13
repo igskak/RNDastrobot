@@ -258,7 +258,7 @@
                         timezone: solarInfo.timezone || '',
                     }));
                 }
-                navigate('/solar.html');
+                navigate(`/forecast-new.html?layer=solar_return&solarYear=${encodeURIComponent(String(chart.year))}`);
                 return;
             }
 
@@ -282,10 +282,11 @@
     function openRelatedPerson(relatedUserId) {
         const userId = state.context.userId;
         if (!userId || !relatedUserId) return;
-        saveNavigationState(relatedUserId);
-        const targetUrl = root.AstroAPI?.buildSynastryUrl?.(userId, relatedUserId)
-            || `/synastry.html?client=${encodeURIComponent(userId)}&partner=${encodeURIComponent(relatedUserId)}`;
-        navigate(targetUrl);
+        close();
+        root.AstroAPI?.openForecastForSynastry?.(userId, relatedUserId, {
+            sourceView: state.context.sourceView || 'quick-open',
+            sourceUrl: state.context.sourceUrl || `${window.location.pathname}${window.location.search || ''}`,
+        });
     }
 
     async function openSavedCharts(options = {}) {

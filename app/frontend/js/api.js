@@ -759,11 +759,42 @@
     }
 
     function buildSynastryUrl(clientUserId, partnerUserId) {
+        // Synastry now lives as a ring layer inside forecast-new. The client chart
+        // is loaded from sessionStorage; the partner rides in as a deep-link param.
         const params = new URLSearchParams({
-            client: String(clientUserId || ''),
+            layer: 'synastry_partner',
             partner: String(partnerUserId || ''),
         });
-        return `/synastry.html?${params.toString()}`;
+        return `/forecast-new.html?${params.toString()}`;
+    }
+
+    // Session-aware synastry open: forecast-new needs the client's natal chart in
+    // sessionStorage (it shows a cold-start picker otherwise), so fetch + persist
+    // before navigating. Callers used to jump straight to synastry.html?client&partner.
+    async function openForecastForSynastry(clientUserId, partnerUserId, navMeta = {}) {
+        const cid = String(clientUserId || '');
+        const pid = String(partnerUserId || '');
+        if (!cid || !pid) return;
+        saveNavigationState({
+            sourceView: navMeta.sourceView || 'clients',
+            sourceUrl: navMeta.sourceUrl || '/',
+            clientUserId: cid,
+            partnerUserId: pid,
+        });
+        try {
+            const response = await apiFetch(`${API_BASE_URL}/natal/${encodeURIComponent(cid)}`, { method: 'GET' });
+            if (response.ok) {
+                const chartData = await response.json();
+                saveChartToSession(chartData);
+                saveFormData(chartToFormData(chartData));
+            }
+        } catch (_) {
+            // Fall through — forecast-new's cold-start overlay can recover.
+        }
+        if (hasWindow) {
+            window.showPageLoader?.();
+            window.location.href = buildSynastryUrl(cid, pid);
+        }
     }
 
     function chartToFormData(chartData, options = {}) {
@@ -890,6 +921,7 @@
         clearNavigationState,
         buildClientProfileUrl,
         buildSynastryUrl,
+        openForecastForSynastry,
         chartToFormData,
         withLocaleHeaders,
         showPageLoader,

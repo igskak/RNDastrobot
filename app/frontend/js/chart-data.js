@@ -18,8 +18,7 @@ class ChartDataRenderer {
         this.configsContainer = resolveElement(options.configsContainer, options.configsContainerId, 'configurationsContainer');
         // Optional separate container for stelliums. When provided (forecast-new
         // granular blocks), configurations and stelliums render into distinct
-        // containers. When absent (chart.html / synastry.html), they stack in
-        // configsContainer as before.
+        // containers. When absent, they stack in configsContainer as before.
         this.stelliumsContainer = resolveElement(options.stelliumsContainer, options.stelliumsContainerId, null);
         this.balancesContainer = resolveElement(options.balancesContainer, options.balancesContainerId, 'balancesContainer');
         this.dignitiesContainer = resolveElement(options.dignitiesContainer, options.dignitiesContainerId, 'dignitiesContainer');

@@ -7,8 +7,7 @@ const frontendDir = path.join(__dirname, '..', 'frontend');
 const htmlPages = [
     'index.html',
     'clients.html',
-    'chart.html',
-    'forecast.html',
+    'forecast-new.html',
     'natal-full.html',
     'login.html',
     'calendar.html',

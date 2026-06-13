@@ -79,23 +79,16 @@
         const sourcePath = root.location.pathname || '/';
         const sourceView = sourcePath.startsWith('/client/')
             ? 'client-profile'
-            : sourcePath.endsWith('/chart.html')
-                ? 'chart'
-                : sourcePath.endsWith('/forecast-new.html')
-                    ? 'forecast-new'
-                    : sourcePath.endsWith('/natal-full.html')
-                        ? 'natal-full'
-                        : 'clients';
+            : sourcePath.endsWith('/forecast-new.html')
+                ? 'forecast-new'
+                : sourcePath.endsWith('/natal-full.html')
+                    ? 'natal-full'
+                    : 'clients';
 
-        root.AstroAPI?.saveNavigationState?.({
+        root.AstroAPI?.openForecastForSynastry?.(clientUserId, partnerUserId, {
             sourceView,
             sourceUrl: `${sourcePath}${root.location.search || ''}`,
-            clientUserId: String(clientUserId),
-            partnerUserId: String(partnerUserId),
         });
-
-        root.location.href = root.AstroAPI?.buildSynastryUrl?.(clientUserId, partnerUserId)
-            || `/synastry.html?client=${encodeURIComponent(String(clientUserId))}&partner=${encodeURIComponent(String(partnerUserId))}`;
     }
 
     function createRelatedPeoplePicker(options = {}) {

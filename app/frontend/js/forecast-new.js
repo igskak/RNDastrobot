@@ -226,15 +226,7 @@
 
     function getForecastBackUrl() {
         const navState = getForecastNavigationState();
-        return navState.sourceUrl || '/chart.html';
-    }
-
-    function getForecastSynastryUrl() {
-        const navState = getForecastNavigationState();
-        if (state.userId && navState.partnerUserId && String(navState.clientUserId || '') === String(state.userId)) {
-            return window.AstroAPI?.buildSynastryUrl?.(state.userId, navState.partnerUserId) || null;
-        }
-        return null;
+        return navState.sourceUrl || '/';
     }
 
     function navigateFromForecast(targetUrl) {
@@ -255,9 +247,6 @@
         const navState = getForecastNavigationState();
         if (refs.forecastNewBackBtn) {
             refs.forecastNewBackBtn.href = getForecastBackUrl();
-        }
-        if (refs.openSynastryBtn) {
-            refs.openSynastryBtn.disabled = !state.userId;
         }
         if (refs.openClientProfileBtn) {
             refs.openClientProfileBtn.disabled = !state.userId;
@@ -374,7 +363,7 @@
     function cacheElements() {
         [
             'pageLoader', 'forecastNewLayout', 'forecastNewError', 'forecastNewErrorMsg',
-            'forecastNewBackBtn', 'forecastNewTitle', 'forecastNewSubtitle', 'openNatalBtn', 'openNatalTablesBtn', 'openSynastryBtn',
+            'forecastNewBackBtn', 'forecastNewTitle', 'forecastNewSubtitle', 'openNatalTablesBtn',
             'openClientProfileBtn', 'saveSourceChartBtn', 'forecastNewActionsToggle', 'forecastNewActionsMenu',
             'forecastNewDirectionTypeSelect',
             'forecastNewNatalPanel', 'forecastNewProgPanel',
@@ -480,23 +469,10 @@
             btn?.click();
         });
 
-        refs.openNatalBtn?.addEventListener('click', () => {
-            window.AstroAPI?.saveChartToSession?.(state.natalData);
-            window.AstroAPI?.saveFormData?.(window.AstroAPI.chartToFormData(state.natalData));
-            navigateFromForecast('/chart.html');
-        });
-
         refs.openNatalTablesBtn?.addEventListener('click', () => {
             window.AstroAPI?.saveChartToSession?.(state.natalData);
             window.AstroAPI?.saveFormData?.(window.AstroAPI.chartToFormData(state.natalData));
             navigateFromForecast('/natal-full.html');
-        });
-
-        refs.openSynastryBtn?.addEventListener('click', () => {
-            if (!state.userId) return;
-            window.AstroAPI?.saveChartToSession?.(state.natalData);
-            window.AstroAPI?.saveFormData?.(window.AstroAPI.chartToFormData(state.natalData));
-            navigateFromForecast(getForecastSynastryUrl() || '/chart.html?open=synastry');
         });
 
         refs.openClientProfileBtn?.addEventListener('click', () => {
@@ -5538,7 +5514,20 @@
             state.selectedRightLayer = layer;
             state.activeRightMethodTab = layer;
         }
-        if (params.has('date') || params.has('time') || params.has('layer') || params.has('directionType')) {
+        // Synastry deep-link (from clients / client-profile / related-people): preselect
+        // the partner so the synastry_partner layer loads on cold open.
+        const partner = params.get('partner');
+        if (partner && layer === 'synastry_partner') {
+            state.synastryPartnerId = String(partner);
+            state.synastryMode = 'db';
+        }
+        // Solar deep-link (from clients / quick-open saved solar charts): preselect year.
+        const solarYearParam = Number(params.get('solarYear'));
+        if (Number.isFinite(solarYearParam) && solarYearParam >= 1900 && solarYearParam <= 2100) {
+            state.solarYear = solarYearParam;
+        }
+        if (params.has('date') || params.has('time') || params.has('layer')
+            || params.has('directionType') || params.has('partner') || params.has('solarYear')) {
             window.history.replaceState({}, '', window.location.pathname);
         }
     }

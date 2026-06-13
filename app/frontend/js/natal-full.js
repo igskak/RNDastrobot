@@ -446,7 +446,7 @@ function configureNatalFullNavigation() {
     const navState = getNatalFullNavigationState();
     const currentUserId = getNatalFullUserId();
     const backBtn = document.getElementById('natalFullBackBtn');
-    const wheelBtn = document.querySelector('.header-actions a[href="chart.html"]');
+    const wheelBtn = document.querySelector('.header-actions a[href="forecast-new.html?tab=biwheel"]');
     const forecastBtn = document.querySelector('.header-actions a[href="forecast-new.html"]');
     const synastryBtn = document.getElementById('openNatalFullSynastryBtn');
     const hasMatchingPartner = String(navState.clientUserId || '') === String(currentUserId || '') && navState.partnerUserId;
@@ -474,7 +474,7 @@ function configureNatalFullNavigation() {
             partnerUserId: hasMatchingPartner ? String(navState.partnerUserId) : null,
         });
         window.showPageLoader?.();
-        window.location.href = '/chart.html';
+        window.location.href = '/forecast-new.html?tab=biwheel';
     });
 
     forecastBtn?.addEventListener('click', (event) => {
@@ -492,17 +492,23 @@ function configureNatalFullNavigation() {
     synastryBtn?.addEventListener('click', (event) => {
         event.preventDefault();
         if (!currentUserId) return;
-        const targetUrl = hasMatchingPartner
-            ? window.AstroAPI?.buildSynastryUrl?.(currentUserId, navState.partnerUserId)
-            : '/chart.html?open=synastry';
+        if (hasMatchingPartner) {
+            // Known partner → open forecast-new with the synastry layer preloaded.
+            window.AstroAPI?.openForecastForSynastry?.(currentUserId, navState.partnerUserId, {
+                sourceView: 'natal-full',
+                sourceUrl: '/natal-full.html',
+            });
+            return;
+        }
+        // No partner yet → land on forecast-new; astrologer picks the partner in-panel.
         window.AstroAPI?.saveNavigationState?.({
             sourceView: 'natal-full',
             sourceUrl: '/natal-full.html',
             clientUserId: currentUserId ? String(currentUserId) : navState.clientUserId,
-            partnerUserId: hasMatchingPartner ? String(navState.partnerUserId) : null,
+            partnerUserId: null,
         });
         window.showPageLoader?.();
-        window.location.href = targetUrl;
+        window.location.href = '/forecast-new.html?layer=synastry_partner';
     });
 }
 

@@ -1156,7 +1156,7 @@ async function openChart(userId) {
         });
 
         window.showPageLoader?.();
-        window.location.href = '/chart.html';
+        window.location.href = '/forecast-new.html';
     } catch (error) {
         showToast(t('common.errorWithMessage', { message: error.message }), 'error');
     }
