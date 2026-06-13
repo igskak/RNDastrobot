@@ -4444,6 +4444,7 @@
     function closePanelDialog(result = false) {
         const dialog = document.getElementById('forecastNewPanelDialog');
         if (!dialog || !state.panelDialog) return;
+        if (typeof dialog.close === 'function' && dialog.open) dialog.close();
         dialog.classList.add('hidden');
         dialog.setAttribute('aria-hidden', 'true');
         const pending = state.panelDialog;
@@ -4467,6 +4468,7 @@
         confirm.classList.toggle('is-destructive', destructive);
         dialog.classList.remove('hidden');
         dialog.setAttribute('aria-hidden', 'false');
+        if (typeof dialog.showModal === 'function' && !dialog.open) dialog.showModal();
         setTimeout(() => (inputLabel ? input : confirm).focus(), 0);
         return new Promise((resolve) => { state.panelDialog = { resolve, input, inputLabel, restoreFocus: active }; });
     }
@@ -4474,11 +4476,9 @@
     function ensurePanelDialog() {
         let dialog = document.getElementById('forecastNewPanelDialog');
         if (dialog) return dialog;
-        dialog = document.createElement('div');
+        dialog = document.createElement('dialog');
         dialog.id = 'forecastNewPanelDialog';
         dialog.className = 'forecast-new-pe-dialog hidden';
-        dialog.setAttribute('role', 'dialog');
-        dialog.setAttribute('aria-modal', 'true');
         dialog.setAttribute('aria-hidden', 'true');
         dialog.innerHTML = `
             <div class="forecast-new-pe-dialog-card">
@@ -4494,6 +4494,10 @@
                 </div>
             </div>`;
         document.body.appendChild(dialog);
+        dialog.addEventListener('cancel', (event) => {
+            event.preventDefault();
+            closePanelDialog(false);
+        });
         dialog.addEventListener('click', (event) => {
             if (event.target === dialog || event.target.closest('[data-pe-dialog-cancel]')) closePanelDialog(false);
             if (event.target.closest('[data-pe-dialog-confirm]')) {
@@ -4653,15 +4657,9 @@
                     destructive: true,
                 })) return;
                 state.layoutUndo = JSON.parse(JSON.stringify(state.panelLayout));
-                state.panelLayout = PL.resetModeToDefault(state.panelLayout, mode);
+                state.panelLayout = PL.normalizeLayout(PL.buildDefaultForecastNewLayout());
                 const defaultTabs = PL.defaultActiveTabs(state.panelLayout);
-                if (mode === 'multi') {
-                    state.activeTab.multiLeft = defaultTabs.multiLeft;
-                    state.activeTab.multiRight = defaultTabs.multiRight;
-                } else {
-                    state.activeTab.singleLeft = defaultTabs.singleLeft;
-                    state.activeTab.singleRight = defaultTabs.singleRight;
-                }
+                state.activeTab = { ...state.activeTab, ...defaultTabs };
                 renderPanels();
                 renderPanelEditor();
                 scheduleLayoutPersist();
@@ -4713,7 +4711,7 @@
                 const deleted = state.panelPresets[idx];
                 if (!await showPanelDialog({
                     title: t('page.forecastNew.panelEditor.deleteWorkspaceTitle') || 'Удалить рабочее пространство?',
-                    copy: deleted.name,
+                    copy: `«${deleted.name}»`,
                     confirmLabel: t('common.delete') || 'Удалить',
                     destructive: true,
                 })) return;
@@ -4836,7 +4834,9 @@
             // the editor, closing the dropdown before a choice is made.
             const btn = event.target.closest('button[data-pe-action]');
             if (!btn) return;
-            handleEditorAction(btn.dataset.peAction, btn.dataset);
+            void handleEditorAction(btn.dataset.peAction, btn.dataset).catch((error) => {
+                console.error('Panel editor action failed:', error);
+            });
         });
         editor.addEventListener('change', (event) => {
             const sel = event.target.closest('select[data-pe-action="add-block"]');
@@ -5038,7 +5038,7 @@
                     <span class="forecast-new-pe-preset-name">${escapeHtml(p.name)}</span>
                     <div class="forecast-new-pe-preset-actions">
                         <button type="button" class="forecast-new-pe-preset-load" data-pe-action="load-preset" data-preset-id="${escapeHtml(p.id)}">${escapeHtml(t('page.forecastNew.panelEditor.presetLoad') || 'Загрузить')}</button>
-                        <button type="button" class="forecast-new-pe-preset-delete" data-pe-action="delete-preset" data-preset-id="${escapeHtml(p.id)}" title="${escapeHtml(t('common.delete') || 'Удалить')}">✕</button>
+                        <button type="button" class="forecast-new-pe-preset-delete" data-pe-action="delete-preset" data-preset-id="${escapeHtml(p.id)}" title="${escapeHtml(t('common.delete') || 'Удалить')}" aria-label="${escapeHtml(t('common.delete') || 'Удалить')}">✕</button>
                     </div>
                 </div>`).join('');
         editor.innerHTML = `
@@ -5050,8 +5050,13 @@
             </div>
             <div class="forecast-new-pe-workspaces">
                 <div><span class="forecast-new-pe-kicker">${escapeHtml(t('page.forecastNew.panelEditor.builtinWorkspaces') || 'Готовые рабочие пространства')}</span><div class="forecast-new-pe-workspace-list">${builtinHtml}</div></div>
-                <div><span class="forecast-new-pe-kicker">${escapeHtml(t('page.forecastNew.panelEditor.myWorkspaces') || 'Мои рабочие пространства')}</span><div class="forecast-new-pe-preset-list">${presetsHtml}</div></div>
-                <button type="button" class="forecast-new-pe-secondary" data-pe-action="save-preset">${escapeHtml(t('page.forecastNew.panelEditor.saveAsNew') || 'Сохранить как новое')}</button>
+                <div class="forecast-new-pe-saved-workspaces">
+                    <div class="forecast-new-pe-saved-head">
+                        <span class="forecast-new-pe-kicker">${escapeHtml(t('page.forecastNew.panelEditor.myWorkspaces') || 'Мои рабочие пространства')}</span>
+                        <button type="button" class="forecast-new-pe-save-preset" data-pe-action="save-preset">+ ${escapeHtml(t('page.forecastNew.panelEditor.save') || 'Сохранить')}</button>
+                    </div>
+                    <div class="forecast-new-pe-preset-list">${presetsHtml}</div>
+                </div>
             </div>
             <div class="forecast-new-pe-body">
                 ${renderPanelEditorSide('left', mode)}

@@ -2554,8 +2554,8 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
 
     .forecast-new-pe-workspaces {
         display: grid;
-        grid-template-columns: minmax(0, 1.8fr) minmax(150px, 0.7fr) auto;
-        align-items: end;
+        grid-template-columns: minmax(0, 1.8fr) minmax(220px, 0.8fr);
+        align-items: start;
     }
 
     .forecast-new-pe-kicker {
@@ -2579,7 +2579,7 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
     }
 
     .forecast-new-pe-body {
-        grid-template-columns: minmax(300px, 0.92fr) minmax(190px, 0.56fr) minmax(300px, 0.92fr);
+        grid-template-columns: minmax(250px, 0.78fr) minmax(360px, 1.15fr) minmax(250px, 0.78fr);
         gap: 10px;
         padding: 10px 12px;
     }
@@ -2685,7 +2685,7 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
 }
 
 .forecast-new-pe-workspaces {
-    align-items: end;
+    align-items: start;
     background: rgba(249, 247, 242, 0.72);
 }
 
@@ -2708,6 +2708,50 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+}
+
+.forecast-new-pe-saved-workspaces {
+    display: grid;
+    gap: 7px;
+    padding: 8px 10px;
+    border: 1px solid rgba(30, 58, 95, 0.1);
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.forecast-new-pe-saved-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.forecast-new-pe-saved-head .forecast-new-pe-kicker {
+    margin: 0;
+}
+
+.forecast-new-pe-save-preset {
+    min-height: 26px;
+    margin-left: auto;
+    padding: 3px 8px;
+    border: 1px solid rgba(30, 58, 95, 0.16);
+    border-radius: 7px;
+    background: #fff;
+    color: var(--accent);
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.forecast-new-pe-preset-list {
+    display: grid;
+    gap: 4px;
+}
+
+.forecast-new-pe-presets-empty {
+    padding: 4px 0;
+    color: var(--text-muted);
+    font-size: 11px;
 }
 
 .forecast-new-pe-workspace,
@@ -2737,13 +2781,20 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
 
 .forecast-new-pe-body {
     display: grid;
-    grid-template-columns: 1fr minmax(160px, 0.8fr) 1fr;
+    grid-template-columns: minmax(280px, 0.78fr) minmax(400px, 1.15fr) minmax(280px, 0.78fr);
     gap: 16px;
     padding: 16px 18px;
     overflow: auto;
 }
 
 /* Corner config sits in the center column, mirroring the on-screen positions. */
+.forecast-new-pe-corners,
+.forecast-new-pe-side,
+.forecast-new-pe-tab,
+.forecast-new-pe-corner {
+    min-width: 0;
+}
+
 .forecast-new-pe-corners-grid {
     position: relative;
     z-index: 1;
@@ -2835,6 +2886,7 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
     flex-direction: column;
     gap: 4px;
     min-height: 18px;
+    min-width: 0;
 }
 
 .forecast-new-pe-side {
@@ -2883,6 +2935,7 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
 }
 
 .forecast-new-pe-block {
+    min-width: 0;
     padding: 6px 8px;
     border-radius: 7px;
     background: var(--bg-primary);
@@ -2892,6 +2945,54 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
 .forecast-new-pe-preset-name {
     flex: 1;
     min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.forecast-new-pe-preset {
+    min-height: 30px;
+    padding: 3px 4px 3px 8px;
+    border-color: rgba(30, 58, 95, 0.1);
+    border-radius: 7px;
+    background: rgba(249, 247, 242, 0.72);
+}
+
+.forecast-new-pe-preset-name {
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.forecast-new-pe-preset-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.forecast-new-pe-preset-load {
+    min-height: 24px;
+    padding: 2px 7px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--accent);
+    font: inherit;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.forecast-new-pe-preset-load:hover,
+.forecast-new-pe-save-preset:hover {
+    background: var(--accent-light);
+}
+
+.forecast-new-pe-corner .forecast-new-pe-block-label {
+    line-height: 1.35;
+}
+
+.forecast-new-pe-add-block,
+.forecast-new-pe-corner-add {
+    min-width: 0;
+    max-width: 100%;
 }
 
 .forecast-new-pe-tab-remove,
@@ -2904,6 +3005,13 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
     background: transparent;
     color: var(--error);
     cursor: pointer;
+}
+
+.forecast-new-pe-preset-delete {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    font-size: 11px;
 }
 
 .forecast-new-pe-tab-grip,
@@ -2967,10 +3075,20 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
 .forecast-new-pe-dialog {
     position: fixed;
     inset: 0;
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    margin: 0;
+    border: 0;
     z-index: 10000;
     display: grid;
     place-items: center;
     padding: 20px;
+    background: rgba(26, 22, 20, 0.38);
+}
+
+.forecast-new-pe-dialog::backdrop {
     background: rgba(26, 22, 20, 0.38);
 }
 
