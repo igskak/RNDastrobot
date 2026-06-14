@@ -139,12 +139,11 @@ class DirectionService:
             natal_data['special_points'], arc_degrees
         )
 
-        # 6. Определить дома карты-цели (натал/первичная) и дирекционные дома
-        reference_houses = context.effective_reference_houses(natal_data['houses'])
+        # 6. Определить натальные и дирекционные дома для направленных объектов
         directed_objects = directed_planets + directed_angles + directed_special_points
         for obj in directed_objects:
             obj['natal_house'] = self.swisseph_engine.get_planet_house(
-                obj['longitude'], reference_houses
+                obj['longitude'], natal_data['houses']
             )
             obj['directed_house'] = self.swisseph_engine.get_planet_house(
                 obj['longitude'], directed_houses
@@ -152,12 +151,11 @@ class DirectionService:
             # Поле house используется фронтендом в подсказке
             obj['house'] = obj['directed_house']
 
-        # 7. Рассчитать аспекты направленное→цель (цель = натал либо первичная карта)
-        aspect_targets = context.effective_aspect_targets(natal_data['all_objects'])
+        # 7. Рассчитать аспекты направленное→натал
         aspects = self._calculate_direction_aspects(
             astrologer_id=context.astrologer_id,
             directed_objects=directed_objects,
-            natal_objects=aspect_targets
+            natal_data=natal_data
         )
         planet_ingresses = self._calculate_planet_ingresses(
             directed_planets=directed_planets,
@@ -450,12 +448,12 @@ class DirectionService:
         self,
         astrologer_id: Optional[UUID],
         directed_objects: List[Dict],
-        natal_objects: List[Dict]
+        natal_data: Dict
     ) -> List[Dict]:
-        """Расчёт аспектов между направленными объектами и объектами карты-цели
-        (натал по умолчанию либо произвольная первичная карта)."""
+        """Расчёт аспектов между направленными и натальными объектами"""
         aspects = []
         aspect_types = self._get_aspect_types()
+        natal_objects = natal_data['all_objects']
 
         for dir_obj in directed_objects:
             for natal_obj in natal_objects:

@@ -11,8 +11,7 @@ from typing import List, Optional
 from app.services.transit_service import TransitService
 from app.services.natal_chart_service import NatalChartService
 from app.services.natal_context import NatalContext
-from app.services.primary_chart_service import apply_primary
-from app.models.schemas import BirthDataInput, PrimarySpec
+from app.models.schemas import BirthDataInput
 from app.database.connection import get_db
 from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
 from app.utils.ephemeris import get_ephemeris_path
@@ -45,9 +44,6 @@ class TransitRequest(BaseModel):
     location: Optional[str] = Field(None, description="Место транзита")
     latitude: Optional[float] = Field(None, ge=-90, le=90, description="Широта места транзита")
     longitude: Optional[float] = Field(None, ge=-180, le=180, description="Долгота места транзита")
-    primary: Optional[PrimarySpec] = Field(
-        None, description="Первичная карта — цель аспектов. Опущено/natal → аспекты к наталу."
-    )
 
     @field_validator('timezone')
     @classmethod
@@ -230,8 +226,6 @@ def calculate_transits(
             )
         context = NatalContext.from_inline(calc_result, astrologer_id=auth.astrologer.id)
         try:
-            if request.primary is not None:
-                context = apply_primary(db, context, request.primary.method, request.primary.params)
             return transit_service.calculate_transits_from_context(
                 context,
                 transit_date=request.date,
@@ -241,8 +235,6 @@ def calculate_transits(
                 latitude=request.latitude,
                 longitude=request.longitude,
             )
-        except ValueError as e:
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
         except Exception as e:
             logger.exception(f"Error calculating transits (inline): {e}")
             raise HTTPException(
@@ -253,19 +245,6 @@ def calculate_transits(
     # --- Сохранённый клиент (DB-путь): прежнее поведение, авторизация обязательна ---
     try:
         ensure_client_access(db, http_request, auth, request.user_id, action="client.transits.calculate")
-        # Первичная карта != натал: считаем через контекст (аспекты к первичной).
-        if request.primary is not None and request.primary.method != 'natal':
-            base = transit_service._build_context_from_user_id(request.user_id)
-            context = apply_primary(db, base, request.primary.method, request.primary.params)
-            return transit_service.calculate_transits_from_context(
-                context,
-                transit_date=request.date,
-                transit_time=request.time,
-                timezone=request.timezone,
-                location=request.location,
-                latitude=request.latitude,
-                longitude=request.longitude,
-            )
         result = transit_service.calculate_transits(
             user_id=request.user_id,
             transit_date=request.date,

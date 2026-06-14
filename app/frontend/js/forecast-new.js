@@ -5,9 +5,6 @@
         ? 'http://localhost:8000/api/v1'
         : '/api/v1';
     const LAYER_ORDER = ['transit', 'progression', 'direction', 'solar_return', 'synastry_partner'];
-    // Методы левой/первичной панели: натал + самостоятельные производные карты.
-    // Транзиты/синастрия относительны (живут только во внешних кольцах справа).
-    const LEFT_LAYER_ORDER = ['natal', 'progression', 'direction', 'solar_return'];
     const DEFAULT_DIRECTION_TYPE = 'zodiacal';
     const LAYER_CACHE_PREFIX = 'forecastNewLayerCache:';
     const LAYER_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
@@ -102,10 +99,6 @@
         location: { name: '', latitude: null, longitude: null, sourceId: null },
         activeLayers: ['transit'],
         selectedRightLayer: 'transit',
-        // Левая/первичная панель: какой картой считается базовая (натал по умолчанию).
-        // Развязано от activeLayers (D1): выбор слева не трогает правые вкладки/кольца.
-        selectedLeftLayer: 'natal',
-        leftLayerData: null,   // сырой payload выбранного не-натального метода левой панели
         directionType: DEFAULT_DIRECTION_TYPE,
         // D6: вид колеса — 'multi' (натал + кольца, как сейчас) | 'single' (только
         // натал в виде одиночной карты: внешний слот + маркеры углов).
@@ -340,12 +333,10 @@
         initPanelLayout();
         bindPanelConfigurator();
         syncWorkspaceModePanels();
-        renderLeftLayerTabs();
         renderStaticNatal();
         refreshViewModel();
         renderWheel();
         renderRightLayerTabs();
-        hydrateLeftLayer();
         showLayout();
         hideLoader();
 
@@ -372,7 +363,7 @@
             'forecastNewWheel', 'forecastNewWheelShell', 'forecastNewResultViews', 'forecastNewResultPane', 'targetDateInput', 'targetTimeInput',
             'forecastNewTimeStepper',
             'stepModeSelect', 'stepBackward', 'stepForward', 'timezoneInput', 'locationInput',
-            'latitudeInput', 'longitudeInput', 'locationSuggestions', 'targetDatetimeLabel', 'rightLayerTabs', 'leftLayerTabs',
+            'latitudeInput', 'longitudeInput', 'locationSuggestions', 'targetDatetimeLabel', 'rightLayerTabs',
             'forecastNewNatalTimeStepper', 'natalMomentToggle', 'forecastNewNatalCard',
             'natalDatetimeLabel', 'natalDateInput', 'natalTimeInput',
             'natalTimezoneInput', 'natalLocationInput', 'natalLocationSuggestions',
@@ -800,10 +791,6 @@
             syncControlsFromState();
             renderRightPanel();
             schedulePersist();
-        });
-
-        refs.leftLayerTabs?.addEventListener('change', (event) => {
-            void selectLeftLayer(event.target.value);
         });
 
         refs.forecastNewResultViews?.addEventListener('click', (event) => {
@@ -2210,18 +2197,7 @@
         schedulePersist();
     }
 
-    // Левая панель показывает выбранную «первичную» карту: натал (по умолчанию) либо
-    // самостоятельную производную (прогрессии/дирекции/соляр). Диспетчер по selectedLeftLayer —
-    // все существующие вызовы renderStaticNatal() уважают выбор первичной карты.
     function renderStaticNatal() {
-        if (state.selectedLeftLayer && state.selectedLeftLayer !== 'natal') {
-            renderLeftLayerPanel();
-            return;
-        }
-        renderNatalIntoLeftPanel();
-    }
-
-    function renderNatalIntoLeftPanel() {
         state.natalRenderer?.setAspectTypeFilter?.('all');
         state.natalRenderer?.setHouseNumberStyle?.(state.pageSettings.houseNumberStyle);
         state.natalRenderer?.setDisplayPreferences?.({
@@ -2236,123 +2212,6 @@
         applyInlineMatrixRowState();
         renderMatrixEditor();
         activateSavedTabs();
-    }
-
-    // Нормализованный слой выбранной левой первичной карты из сырого state.leftLayerData.
-    // Переиспользует тот же нормализатор, что и колесо/правая панель (одна форма данных).
-    function getLeftViewLayer() {
-        const method = state.selectedLeftLayer;
-        if (!method || method === 'natal' || !state.leftLayerData || !state.natalWheelData) return null;
-        try {
-            const vm = window.PrognosticLayerNormalizer.buildViewModel(
-                state.natalWheelData,
-                { [method]: state.leftLayerData },
-                { activeMethods: [method] },
-            );
-            return vm?.activePrognosticLayers?.find((l) => l.method === method) || null;
-        } catch (err) {
-            console.error('Left primary normalize failed:', err);
-            return null;
-        }
-    }
-
-    function getPrimaryWheelData() {
-        const layer = getLeftViewLayer();
-        if (!layer) return state.natalWheelData;
-        return {
-            planets: layer.bodies || [],
-            houses: layer.houses || [],
-            aspects: layer.aspects || [],
-            angles: layer.raw?.angles || null,
-            birth_data: {
-                ...(state.natalWheelData?.birth_data || {}),
-                house_system: state.pageSettings.houseSystem,
-            },
-        };
-    }
-
-    function renderLeftLayerPanel() {
-        const layer = getLeftViewLayer();
-        if (!layer) {
-            // Данные ещё не досчитаны/ошибка — пустое состояние, без падения (guard).
-            state.natalRenderer?.render({ planets: [], houses: [], aspects: [], aspect_configurations: [], stelliums: [], balances: null, cosmogram_pattern: null });
-            renderForecastNewDispositorBlocks('natal', null);
-            activateSavedTabs();
-            return;
-        }
-        state.natalRenderer?.setAspectTypeFilter?.('all');
-        state.natalRenderer?.setHouseNumberStyle?.(state.pageSettings.houseNumberStyle);
-        state.natalRenderer?.setDisplayPreferences?.({
-            showSpeed: state.pageSettings.showSpeed !== false,
-            showStationary: state.pageSettings.showStationary !== false,
-            showApplyingSeparating: state.pageSettings.showApplyingSeparating === true,
-            showAspectText: state.pageSettings.showAspectText === true,
-        });
-        const chartData = {
-            planets: layer.bodies || [],
-            houses: layer.houses || [],
-            aspects: layer.aspects || [],
-            aspect_configurations: [],
-            stelliums: [],
-            balances: layer.balances || null,
-            cosmogram_pattern: layer.cosmogram_pattern || null,
-        };
-        state.natalRenderer?.render(filterChartDataForSidePanel(chartData, { scope: 'natal' }));
-        renderForecastNewDispositorBlocks('natal', chartData);
-        renderInlineMatrixControls();
-        applyInlineMatrixRowState();
-        activateSavedTabs();
-    }
-
-    function renderLeftLayerTabs() {
-        if (!refs.leftLayerTabs) return;
-        refs.leftLayerTabs.innerHTML = LEFT_LAYER_ORDER.map((method) => `
-            <option value="${method}"${method === state.selectedLeftLayer ? ' selected' : ''}>${escapeHtml(layerLabel(method))}</option>
-        `).join('');
-    }
-
-    // Выбор метода левой/первичной панели. Натал → исходный путь; иначе досчитываем слой
-    // в общий кеш (fetchLayer, D1) и рисуем его таблицы в левой панели.
-    async function selectLeftLayer(method) {
-        if (!LEFT_LAYER_ORDER.includes(method) || method === state.selectedLeftLayer) return;
-        state.selectedLeftLayer = method;
-        renderLeftLayerTabs();
-        schedulePersist();
-        if (method === 'natal') {
-            state.leftLayerData = null;
-            renderStaticNatal();
-            renderWheel();
-            return;
-        }
-        await loadLeftLayer(method);
-    }
-
-    // Досчитать данные не-натальной первичной карты в общий кеш и отрисовать левую панель.
-    // Используется и при выборе (selectLeftLayer), и при восстановлении состояния (hydrate).
-    async function loadLeftLayer(method) {
-        if (!method || method === 'natal') return;
-        setNatalLightweightLoading(true);
-        try {
-            const data = await fetchLayer(method, {});
-            if (state.selectedLeftLayer !== method) return; // выбор успел смениться
-            state.leftLayerData = data;
-            renderStaticNatal();
-            renderWheel();
-        } catch (err) {
-            if (!isAbortError(err)) {
-                console.error('Left primary load failed:', err);
-                showError(err.message || 'Ошибка загрузки метода левой панели');
-            }
-        } finally {
-            if (state.selectedLeftLayer === method) setNatalLightweightLoading(false);
-        }
-    }
-
-    // Подгрузить первичную карту после восстановления состояния, если выбран не-натал.
-    function hydrateLeftLayer() {
-        if (state.selectedLeftLayer && state.selectedLeftLayer !== 'natal' && !state.leftLayerData) {
-            void loadLeftLayer(state.selectedLeftLayer);
-        }
     }
 
     // Granular dispositor blocks: Jones cosmogram and the dispositor scheme are
@@ -3412,7 +3271,7 @@
     function renderWheel() {
         if (!state.wheel || !state.natalWheelData) return;
         const rawViewModel = window.PrognosticLayerNormalizer.buildViewModel(
-            getPrimaryWheelData(),
+            state.natalWheelData,
             state.layers || {},
             { activeMethods: state.activeLayers },
         );
@@ -5275,8 +5134,6 @@
         state.enabledLayers = state.activeLayers;
         state.selectedRightLayer = restored.selectedRightLayer || state.selectedRightLayer;
         state.activeRightMethodTab = state.selectedRightLayer;
-        state.selectedLeftLayer = LEFT_LAYER_ORDER.includes(restored.selectedLeftLayer)
-            ? restored.selectedLeftLayer : 'natal';
         state.directionType = normalizeDirectionType(restored.directionType || state.directionType);
         state.stepMode = restored.stepMode || state.stepMode;
         state.customStep = normalizeCustomStep(restored.customStep || state.customStep);
@@ -5664,7 +5521,6 @@
                 location: state.location,
                 activeLayers: state.activeLayers,
                 selectedRightLayer: state.selectedRightLayer,
-                selectedLeftLayer: state.selectedLeftLayer,
                 directionType: state.directionType,
                 stepMode: state.stepMode,
                 customStep: state.customStep,
@@ -5756,9 +5612,7 @@
     }
 
     function layerLabel(method) {
-        const natalLabel = t('common.method.natal');
         return ({
-            natal: natalLabel === 'common.method.natal' ? 'Натал' : natalLabel,
             transit: t('common.method.transit'),
             progression: t('common.method.progression'),
             direction: t('common.method.direction'),

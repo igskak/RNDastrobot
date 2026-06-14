@@ -18,7 +18,6 @@ from app.auth.dependencies import AuthContext, ensure_client_access, require_aut
 from app.services.solar_return_service import SolarReturnService
 from app.services.natal_chart_service import NatalChartService
 from app.services.natal_context import NatalContext
-from app.services.primary_chart_service import apply_primary
 from app.utils.ephemeris import get_ephemeris_path
 
 router = APIRouter(prefix="/solar", tags=["Solar Return"])
@@ -82,8 +81,6 @@ def calculate_solar_return(
             raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
         context = NatalContext.from_inline(calc_result, astrologer_id=auth.astrologer.id)
         try:
-            if request.primary is not None:
-                context = apply_primary(db, context, request.primary.method, request.primary.params)
             return solar_service.calculate_solar_return_from_context(
                 context,
                 year=request.year,
@@ -105,20 +102,6 @@ def calculate_solar_return(
     # --- Сохранённый клиент (DB-путь) ---
     try:
         ensure_client_access(db, http_request, auth, request.user_id, action="client.solar.calculate")
-        # Первичная карта != натал: считаем через контекст (аспекты к первичной, без сохранения).
-        if request.primary is not None and request.primary.method != 'natal':
-            base = solar_service._build_context_from_user_id(request.user_id)
-            context = apply_primary(db, base, request.primary.method, request.primary.params)
-            return solar_service.calculate_solar_return_from_context(
-                context,
-                year=request.year,
-                location_lat=request.location_latitude,
-                location_lon=request.location_longitude,
-                location_name=request.location_name,
-                location_source_id=request.location_source_id,
-                location_timezone=request.location_timezone,
-                house_system=request.house_system,
-            )
         result = solar_service.calculate_solar_return(
             user_id=request.user_id,
             year=request.year,
