@@ -60,3 +60,6 @@ livekit-api>=0.7.0
 # AI post-call processing
 openai>=1.30.0
 assemblyai>=0.31.0
+# LLM observability — drop-in OpenAI tracing (tokens, latency, cost).
+# Activated only when LANGFUSE_PUBLIC_KEY is set; otherwise unused.
+langfuse>=2.0.0

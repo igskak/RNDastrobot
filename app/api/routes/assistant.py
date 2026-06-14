@@ -28,6 +28,13 @@ from app.services.astro_assistant_service import (
     NATAL_BODY_NAMES as _NATAL_BODY_NAMES,
     TRANSIT_BODY_NAMES as _TRANSIT_BODY_NAMES,
 )
+from app.services.assistant_log_service import (
+    delete_conversation,
+    get_conversation,
+    latest_user_message,
+    list_conversations,
+    log_turn,
+)
 from app.services.openai_service import is_openai_configured, transcribe_audio
 from app.services.transit_service import TransitService
 from app.utils.ephemeris import get_ephemeris_path
@@ -245,6 +252,8 @@ class ChatRequest(BaseModel):
     timezone: str = Field('UTC', description="Active chart's timezone (default for tools).")
     anchor_date: Optional[date_type] = Field(
         None, description="Date currently selected in the chart workspace.")
+    conversation_id: Optional[UUID] = Field(
+        None, description="Existing conversation to append to; omit to start a new one.")
     messages: List[ChatMessage] = Field(..., min_length=1, max_length=MAX_CHAT_MESSAGES)
 
     @field_validator('timezone')
@@ -262,6 +271,8 @@ class ChatResponse(BaseModel):
     tool_results: List[dict] = Field(default_factory=list)
     iterations: int
     max_iterations_reached: bool
+    conversation_id: Optional[str] = None
+    metrics: Optional[dict] = None
 
 
 @router.post(
@@ -292,17 +303,124 @@ def chat(
         default_timezone=request.timezone,
         default_anchor_date=request.anchor_date,
     )
+    messages = [m.model_dump() for m in request.messages]
     try:
-        return service.chat(
-            user_id=request.user_id,
-            messages=[m.model_dump() for m in request.messages],
-        )
+        result = service.chat(user_id=request.user_id, messages=messages)
     except Exception:
         logger.exception("assistant chat failed")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Assistant request failed",
         )
+
+    # Persist the turn (history + cost/latency). Never fails the response.
+    conv_id = log_turn(
+        db,
+        astrologer_id=auth.astrologer.id,
+        chart_user_id=request.user_id,
+        conversation_id=request.conversation_id,
+        user_message=latest_user_message(messages),
+        assistant_reply=result.get("reply", ""),
+        metrics=result.get("metrics") or {},
+        max_iterations_reached=result.get("max_iterations_reached", False),
+    )
+
+    return ChatResponse(
+        reply=result.get("reply", ""),
+        tool_results=result.get("tool_results", []),
+        iterations=result.get("iterations", 0),
+        max_iterations_reached=result.get("max_iterations_reached", False),
+        conversation_id=str(conv_id) if conv_id else None,
+        metrics=result.get("metrics"),
+    )
+
+
+class ConversationSummary(BaseModel):
+    id: str
+    title: Optional[str] = None
+    chart_user_id: Optional[str] = None
+    message_count: int
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
+class ConversationListResponse(BaseModel):
+    conversations: List[ConversationSummary] = Field(default_factory=list)
+
+
+@router.get(
+    "/conversations",
+    response_model=ConversationListResponse,
+    summary="List the astrologer's assistant threads",
+    description=(
+        "Threads owned by the authenticated astrologer, newest first. Pass "
+        "chart_user_id to scope to one chart's history."
+    ),
+)
+def list_threads(
+    auth: AuthContext = Depends(require_auth),
+    db: Session = Depends(get_db),
+    chart_user_id: Optional[UUID] = None,
+    limit: int = 50,
+):
+    limit = max(1, min(limit, 100))
+    return {
+        "conversations": list_conversations(
+            db,
+            astrologer_id=auth.astrologer.id,
+            chart_user_id=chart_user_id,
+            limit=limit,
+        )
+    }
+
+
+class ConversationDetailMessage(BaseModel):
+    role: str
+    content: str
+    created_at: Optional[str] = None
+
+
+class ConversationDetailResponse(BaseModel):
+    id: str
+    title: Optional[str] = None
+    chart_user_id: Optional[str] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+    messages: List[ConversationDetailMessage] = Field(default_factory=list)
+
+
+@router.get(
+    "/conversations/{conversation_id}",
+    response_model=ConversationDetailResponse,
+    summary="Load one assistant thread with its messages",
+)
+def get_thread(
+    conversation_id: UUID,
+    auth: AuthContext = Depends(require_auth),
+    db: Session = Depends(get_db),
+):
+    conv = get_conversation(
+        db, astrologer_id=auth.astrologer.id, conversation_id=conversation_id)
+    if conv is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+    return conv
+
+
+@router.delete(
+    "/conversations/{conversation_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete an assistant thread",
+)
+def delete_thread(
+    conversation_id: UUID,
+    auth: AuthContext = Depends(require_auth),
+    db: Session = Depends(get_db),
+):
+    removed = delete_conversation(
+        db, astrologer_id=auth.astrologer.id, conversation_id=conversation_id)
+    if not removed:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+    return None
 
 
 class TranscribeResponse(BaseModel):

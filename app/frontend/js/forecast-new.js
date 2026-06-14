@@ -4420,7 +4420,6 @@
     function closePanelDialog(result = false) {
         const dialog = document.getElementById('forecastNewPanelDialog');
         if (!dialog || !state.panelDialog) return;
-        if (typeof dialog.close === 'function' && dialog.open) dialog.close();
         dialog.classList.add('hidden');
         dialog.setAttribute('aria-hidden', 'true');
         const pending = state.panelDialog;
@@ -4432,48 +4431,59 @@
     function showPanelDialog({ title, copy, confirmLabel, inputLabel, destructive = false }) {
         const dialog = ensurePanelDialog();
         const active = document.activeElement;
-        dialog.querySelector('[data-pe-dialog-title]').textContent = title;
-        dialog.querySelector('[data-pe-dialog-copy]').textContent = copy || '';
+        const dialogTitle = dialog.querySelector('[data-pe-dialog-title]');
+        const dialogCopy = dialog.querySelector('[data-pe-dialog-copy]');
         const inputWrap = dialog.querySelector('[data-pe-dialog-input-wrap]');
         const input = dialog.querySelector('[data-pe-dialog-input]');
+        const confirm = dialog.querySelector('[data-pe-dialog-confirm]');
+        if (!dialogTitle || !dialogCopy || !inputWrap || !input || !confirm) {
+            throw new Error('Panel dialog is missing required controls');
+        }
+        dialogTitle.textContent = title;
+        dialogCopy.textContent = copy || '';
         inputWrap.classList.toggle('hidden', !inputLabel);
         input.value = '';
         input.placeholder = inputLabel || '';
-        const confirm = dialog.querySelector('[data-pe-dialog-confirm]');
         confirm.textContent = confirmLabel;
         confirm.classList.toggle('is-destructive', destructive);
         dialog.classList.remove('hidden');
         dialog.setAttribute('aria-hidden', 'false');
-        if (typeof dialog.showModal === 'function' && !dialog.open) dialog.showModal();
         setTimeout(() => (inputLabel ? input : confirm).focus(), 0);
         return new Promise((resolve) => { state.panelDialog = { resolve, input, inputLabel, restoreFocus: active }; });
     }
 
     function ensurePanelDialog() {
         let dialog = document.getElementById('forecastNewPanelDialog');
-        if (dialog) return dialog;
-        dialog = document.createElement('dialog');
+        const requiredSelectors = [
+            '[data-pe-dialog-title]',
+            '[data-pe-dialog-copy]',
+            '[data-pe-dialog-input-wrap]',
+            '[data-pe-dialog-input]',
+            '[data-pe-dialog-cancel]',
+            '[data-pe-dialog-confirm]',
+        ];
+        if (dialog && requiredSelectors.every((selector) => dialog.querySelector(selector))) return dialog;
+        dialog?.remove();
+        dialog = document.createElement('div');
         dialog.id = 'forecastNewPanelDialog';
         dialog.className = 'forecast-new-pe-dialog hidden';
+        dialog.setAttribute('role', 'dialog');
+        dialog.setAttribute('aria-modal', 'true');
         dialog.setAttribute('aria-hidden', 'true');
         dialog.innerHTML = `
             <div class="forecast-new-pe-dialog-card">
                 <h2 data-pe-dialog-title></h2>
                 <p data-pe-dialog-copy></p>
-                <label class="forecast-new-pe-dialog-input-wrap hidden">
+                <label class="forecast-new-pe-dialog-input-wrap hidden" data-pe-dialog-input-wrap>
                     <span>${escapeHtml(t('page.forecastNew.panelEditor.workspaceName') || 'Название')}</span>
                     <input type="text" data-pe-dialog-input>
                 </label>
                 <div class="forecast-new-pe-dialog-actions">
                     <button type="button" class="forecast-new-pe-secondary" data-pe-dialog-cancel>${escapeHtml(t('common.cancel') || 'Отмена')}</button>
-                    <button type="button" class="forecast-new-pe-primary" data-pe-dialog-confirm></button>
+                    <button type="button" class="forecast-new-pe-primary forecast-new-pe-dialog-confirm" data-pe-dialog-confirm></button>
                 </div>
             </div>`;
         document.body.appendChild(dialog);
-        dialog.addEventListener('cancel', (event) => {
-            event.preventDefault();
-            closePanelDialog(false);
-        });
         dialog.addEventListener('click', (event) => {
             if (event.target === dialog || event.target.closest('[data-pe-dialog-cancel]')) closePanelDialog(false);
             if (event.target.closest('[data-pe-dialog-confirm]')) {
@@ -4677,6 +4687,7 @@
                 if (!preset) return;
                 state.layoutUndo = JSON.parse(JSON.stringify(state.panelLayout));
                 applyPanelLayout(preset.layout);
+                renderPanelEditor();
                 scheduleLayoutPersist();
                 announceUndo(t('page.forecastNew.panelEditor.presetLoaded') || `Загружено: ${preset.name}`);
                 break;
@@ -4810,7 +4821,7 @@
             // the editor, closing the dropdown before a choice is made.
             const btn = event.target.closest('button[data-pe-action]');
             if (!btn) return;
-            void handleEditorAction(btn.dataset.peAction, btn.dataset).catch((error) => {
+            void handleEditorAction(btn.dataset.peAction, { ...btn.dataset }).catch((error) => {
                 console.error('Panel editor action failed:', error);
             });
         });
@@ -5029,7 +5040,7 @@
                 <div class="forecast-new-pe-saved-workspaces">
                     <div class="forecast-new-pe-saved-head">
                         <span class="forecast-new-pe-kicker">${escapeHtml(t('page.forecastNew.panelEditor.myWorkspaces') || 'Мои рабочие пространства')}</span>
-                        <button type="button" class="forecast-new-pe-save-preset" data-pe-action="save-preset">+ ${escapeHtml(t('page.forecastNew.panelEditor.save') || 'Сохранить')}</button>
+                        <button type="button" class="forecast-new-pe-save-preset" data-pe-action="save-preset">${escapeHtml(t('page.forecastNew.panelEditor.save') || 'Сохранить')}</button>
                     </div>
                     <div class="forecast-new-pe-preset-list">${presetsHtml}</div>
                 </div>

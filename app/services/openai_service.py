@@ -6,7 +6,25 @@ import os
 from typing import Optional
 
 from loguru import logger
-from openai import OpenAI
+
+# Langfuse drop-in observability. When LANGFUSE_PUBLIC_KEY is set we import the
+# instrumented OpenAI client, which transparently traces every request —
+# latency, prompt/completion/total tokens, cost and the full payload — to the
+# Langfuse dashboard. Without the key (or the package) we fall back to the plain
+# client and behaviour is identical. The import is the ONLY integration point.
+_LANGFUSE_ENABLED = bool(os.getenv("LANGFUSE_PUBLIC_KEY"))
+if _LANGFUSE_ENABLED:
+    try:
+        from langfuse.openai import OpenAI  # type: ignore
+
+        logger.info("Langfuse observability enabled for OpenAI client")
+    except ImportError:
+        from openai import OpenAI
+
+        logger.warning("langfuse not installed; using plain OpenAI client")
+        _LANGFUSE_ENABLED = False
+else:
+    from openai import OpenAI
 
 _API_KEY = os.getenv("OPENAI_API_KEY", "")
 _MODEL = os.getenv("OPENAI_SUMMARY_MODEL", "gpt-4.1")

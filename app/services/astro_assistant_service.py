@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from datetime import date as date_type
 from typing import Callable, Dict, List, Optional
 from uuid import UUID
@@ -60,6 +61,46 @@ def _shift_years(value: date_type, years: int) -> date_type:
         return value.replace(year=value.year + years)
     except ValueError:
         return value.replace(year=value.year + years, day=28)
+
+
+def _elapsed_ms(started: float) -> int:
+    """Wall-clock milliseconds since a perf_counter() reading."""
+    return int((time.perf_counter() - started) * 1000)
+
+
+class _UsageAccumulator:
+    """Sums OpenAI token usage across every model call in one chat turn.
+
+    A single turn can fan out into several completions (one per tool
+    iteration), so per-turn cost is only visible by accumulating them.
+    """
+
+    __slots__ = ("prompt_tokens", "completion_tokens", "total_tokens", "calls")
+
+    def __init__(self) -> None:
+        self.prompt_tokens = 0
+        self.completion_tokens = 0
+        self.total_tokens = 0
+        self.calls = 0
+
+    def add(self, usage) -> None:
+        if usage is None:
+            return
+        self.prompt_tokens += getattr(usage, "prompt_tokens", 0) or 0
+        self.completion_tokens += getattr(usage, "completion_tokens", 0) or 0
+        self.total_tokens += getattr(usage, "total_tokens", 0) or 0
+        self.calls += 1
+
+    def as_metrics(self, *, iterations: int, latency_ms: int, model: str) -> Dict:
+        return {
+            "model": model,
+            "iterations": iterations,
+            "model_calls": self.calls,
+            "latency_ms": latency_ms,
+            "prompt_tokens": self.prompt_tokens,
+            "completion_tokens": self.completion_tokens,
+            "total_tokens": self.total_tokens,
+        }
 
 _SYSTEM_PROMPT = """\
 You are a computational assistant for a professional astrologer who is working \
@@ -232,6 +273,8 @@ class AstroAssistantService:
 
         tool_results: List[Dict] = []
         iterations = 0
+        usage = _UsageAccumulator()
+        started = time.perf_counter()
 
         while iterations < MAX_TOOL_ITERATIONS:
             iterations += 1
@@ -244,6 +287,7 @@ class AstroAssistantService:
                 max_completion_tokens=MAX_COMPLETION_TOKENS,
                 timeout=REQUEST_TIMEOUT_S,
             )
+            usage.add(getattr(response, "usage", None))
             msg = response.choices[0].message
             if not getattr(msg, "tool_calls", None):
                 return {
@@ -251,6 +295,11 @@ class AstroAssistantService:
                     "tool_results": tool_results,
                     "iterations": iterations,
                     "max_iterations_reached": False,
+                    "metrics": usage.as_metrics(
+                        iterations=iterations,
+                        latency_ms=_elapsed_ms(started),
+                        model=_MODEL,
+                    ),
                 }
 
             convo.append({
@@ -286,9 +335,15 @@ class AstroAssistantService:
             max_completion_tokens=MAX_COMPLETION_TOKENS,
             timeout=REQUEST_TIMEOUT_S,
         )
+        usage.add(getattr(final, "usage", None))
         return {
             "reply": final.choices[0].message.content or "",
             "tool_results": tool_results,
             "iterations": iterations,
             "max_iterations_reached": True,
+            "metrics": usage.as_metrics(
+                iterations=iterations,
+                latency_ms=_elapsed_ms(started),
+                model=_MODEL,
+            ),
         }

@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecastNew.pageTitle">Forecast</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=cb7941470577">
-    <script>window.__APP_BUILD_ID__ = 'cb7941470577';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=4e996ec38a8d">
+    <script>window.__APP_BUILD_ID__ = '4e996ec38a8d';</script>
 </head>
 <body class="forecast-new-page">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -451,11 +451,23 @@
         <button type="button" id="chatResizeHandle" class="chat-resize-handle"
                 data-i18n-aria-label="page.chart.chat.resize"></button>
         <header class="chat-widget-header">
+            <button type="button" id="chatHistoryToggle" class="chat-widget-icon"
+                    data-i18n-aria-label="page.chart.chat.history" aria-expanded="false">
+                <span aria-hidden="true">≡</span>
+            </button>
             <h2 id="chatTitle" class="chat-widget-title" data-i18n="page.chart.chat.title"></h2>
+            <button type="button" id="chatNewThread" class="chat-widget-icon"
+                    data-i18n-aria-label="page.chart.chat.newThread">
+                <span aria-hidden="true">＋</span>
+            </button>
             <button type="button" id="chatClose" class="chat-widget-close" data-i18n-aria-label="page.chart.chat.close">
                 <span aria-hidden="true">×</span>
             </button>
         </header>
+        <div id="chatHistory" class="chat-history" hidden>
+            <p class="chat-history-title" data-i18n="page.chart.chat.historyTitle"></p>
+            <ul id="chatHistoryList" class="chat-history-list"></ul>
+        </div>
         <div id="chatMessages" class="chat-messages" role="log" aria-live="polite">
             <p class="chat-empty" data-i18n="page.chart.chat.empty"></p>
         </div>
@@ -465,14 +477,14 @@
                       data-i18n-placeholder="page.chart.chat.placeholder"></textarea>
             <button type="button" id="chatMic" class="chat-mic" aria-pressed="false"
                     data-i18n-aria-label="page.chart.chat.mic">
-                <span aria-hidden="true">🎙</span>
+                <span aria-hidden="true">●</span>
             </button>
             <button type="button" id="chatSend" class="chat-send" data-i18n-aria-label="page.chart.chat.send">
-                <span aria-hidden="true">➤</span>
+                <span aria-hidden="true">↑</span>
             </button>
         </div>
     </section>
 
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=cb7941470577"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=4e996ec38a8d"></script>
 </body>
 </html>

@@ -1227,3 +1227,90 @@ class CallSession(Base):
         Index('idx_call_sessions_status', 'call_status'),
         Index('idx_call_sessions_token', 'client_join_token_hash'),
     )
+
+
+class AssistantConversation(Base):
+    """A thread of astrologer-assistant chat, owned by an astrologer."""
+    __tablename__ = 'assistant_conversations'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    astrologer_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey('astrologers.id', ondelete='CASCADE'),
+        nullable=False,
+    )
+    # Active chart the turn was bound to; no FK so usage survives chart deletion.
+    chart_user_id = Column(UUID(as_uuid=True))
+    title = Column(String(255))
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    messages = relationship(
+        "AssistantMessage",
+        back_populates="conversation",
+        cascade="all, delete-orphan",
+        order_by="AssistantMessage.created_at",
+    )
+    turn_metrics = relationship(
+        "AssistantTurnMetric",
+        back_populates="conversation",
+        cascade="all, delete-orphan",
+    )
+
+    __table_args__ = (
+        Index('idx_assistant_conv_astrologer', 'astrologer_id', 'updated_at'),
+    )
+
+
+class AssistantMessage(Base):
+    """A single user/assistant message inside a conversation."""
+    __tablename__ = 'assistant_messages'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    conversation_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey('assistant_conversations.id', ondelete='CASCADE'),
+        nullable=False,
+    )
+    role = Column(String(20), nullable=False)
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+
+    conversation = relationship("AssistantConversation", back_populates="messages")
+
+    __table_args__ = (
+        CheckConstraint("role IN ('user','assistant')", name='chk_assistant_msg_role'),
+        Index('idx_assistant_msg_conversation', 'conversation_id', 'created_at'),
+    )
+
+
+class AssistantTurnMetric(Base):
+    """Per-turn cost and latency for one assistant response."""
+    __tablename__ = 'assistant_turn_metrics'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    conversation_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey('assistant_conversations.id', ondelete='CASCADE'),
+        nullable=False,
+    )
+    astrologer_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey('astrologers.id', ondelete='CASCADE'),
+        nullable=False,
+    )
+    model = Column(String(80), nullable=False)
+    iterations = Column(Integer, nullable=False, default=0)
+    model_calls = Column(Integer, nullable=False, default=0)
+    latency_ms = Column(Integer, nullable=False, default=0)
+    prompt_tokens = Column(Integer, nullable=False, default=0)
+    completion_tokens = Column(Integer, nullable=False, default=0)
+    total_tokens = Column(Integer, nullable=False, default=0)
+    max_iterations_reached = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, server_default=func.now())
+
+    conversation = relationship("AssistantConversation", back_populates="turn_metrics")
+
+    __table_args__ = (
+        Index('idx_assistant_metrics_astrologer', 'astrologer_id', 'created_at'),
+    )

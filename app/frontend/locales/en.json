@@ -753,7 +753,15 @@
         "toggle": "Open chart assistant",
         "transcribing": "Transcribing…",
         "transcribingAndSending": "Transcribing and sending…",
-        "transcribeFailed": "Could not transcribe the audio. Please try again or type your question."
+        "transcribeFailed": "Could not transcribe the audio. Please try again or type your question.",
+        "history": "Chat history",
+        "historyTitle": "Conversations",
+        "newThread": "New chat",
+        "noThreads": "No conversations yet.",
+        "untitled": "Untitled chat",
+        "delete": "Delete conversation",
+        "deleteConfirm": "Delete this conversation? This cannot be undone.",
+        "loadFailed": "Could not load conversations."
       },
       "edit": {
         "errors": {
