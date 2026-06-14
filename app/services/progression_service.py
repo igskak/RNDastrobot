@@ -58,7 +58,7 @@ class ProgressionService:
     ) -> float:
         """
         Рассчитать прогрессивный Julian Day
-        
+
         Формула (по ZET): 1 день = 1 год
         progressed_jd = birth_jd + (years_elapsed)
         где years_elapsed = elapsed_days / 365.2421897
