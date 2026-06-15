@@ -134,11 +134,10 @@ The metrics above are blocked in places by missing instrumentation. Each gap is 
 | G3 | No `session_id` | Sessions, session length, pages-per-session, true bounce | Issue a session id at login/visit; stamp it on audit rows via G1; (client analytics can also own this) | session issuance + audit helper | M | P2 |
 | G4 | No raw pageviews — static HTML loads not logged | Navigation/funnel between pages, time-on-page, entry/exit pages | Client-side pageview tracking. **Recommend PostHog** (self-host, bot-friendly) over GA4 (drops automated browsers) | new analytics snippet in HTML templates / shared bundle | M | P2 |
 | G5 | No billing events | All Revenue metrics: trial→paid, MRR, ARR, ARPU, churn, LTV:CAC | Paddle webhooks → write subscription transitions; `reconcile_subscription` as sole `plan_code` writer (per `MONETIZATION_PLAN.md`) | billing layer (does not exist yet) + `auth.plan.update` | L | P2 |
-| G6 | No way to exclude test/bot traffic | Clean grant numbers once synthetic users run on prod | Tag synthetic accounts (known `actor_id` set or a service flag in G1 `properties`); filter in every metric query and dashboard | accounts + analysis layer | S | **P1** (before bots hit prod) |
 
 Notes:
-- **P1 items (G1, G2, G6) are cheap and unblock the most grant-relevant story** (acquisition channels + clean data) — do them first.
-- G1 is a dependency of G2, G3, and G6: ship the `properties JSONB` column first, then the rest ride on it.
+- **P1 items (G1, G2) are cheap and unblock the most grant-relevant story** (acquisition channels) — do them first.
+- G1 is a dependency of G2 and G3: ship the `properties JSONB` column first, then the rest ride on it.
 - G4/G5 are larger and can land in Phase 1–2 (Section 7); the grant baseline does **not** require them — Section 2–4 audit-based metrics carry the application.
 
 ---
@@ -153,18 +152,19 @@ Suggested behavioural mix per simulated astrologer (funnel-shaped, not uniform):
 - ~25% use the AI assistant.
 - ~10% create a recorded consultation.
 - Region assignment via per-context proxy + matching locale/timezone/geolocation.
-- **Test data must be taggable & filterable out of production metrics** (e.g. a known set of `actor_id`s, or a service tag) so bots never pollute the real grant numbers.
+
+Note: bot-generated data is **not** segregated or filtered — for now these synthetic users are the only traffic, so their events *are* the metrics. No test/prod tagging is needed.
 
 ---
 
 ## 7. Recommended build order
 
 1. **Phase 0 (now, no code):** compute Section 2–4 metrics already in `audit_events` via a read-only analysis script → baseline + confirm gaps. Validates the data is even usable.
-2. **Phase 1 (P1 gaps — cheap, high grant value):** **G1** `properties JSONB`, **G2** UTM at register, **G6** test-traffic tagging. Unblocks channel mix + clean numbers before bots.
+2. **Phase 1 (P1 gaps — cheap, high grant value):** **G1** `properties JSONB`, **G2** UTM at register. Unblocks channel mix.
 3. **Phase 2 (P2 instrumentation):** **G3** `session_id`, **G4** pageview tracking (PostHog).
 4. **Phase 3 (billing):** **G5** Paddle webhooks → revenue/churn/LTV metrics.
 5. **Phase 4:** grant dashboard (per-country, retention cohorts, funnel) assembled from the above.
-6. **Synthetic-user bots** run against any phase to load-test the pipeline and populate the dashboard (must respect **G6** tagging before hitting prod).
+6. **Synthetic-user bots** run against any phase to load-test the pipeline and populate the dashboard.
 
 ---
 
