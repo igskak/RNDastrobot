@@ -266,6 +266,48 @@ test('AstroAPI.updateCurrentPlan sends selected plan and refreshes cache', async
     assert.equal(api.getSavedChartLimitState().max, null);
 });
 
+test('AstroAPI.createBillingCheckout starts hosted checkout with locale headers', async () => {
+    let captured = null;
+    global.fetch = async (url, init) => {
+        captured = { url, init };
+        return {
+            ok: true,
+            async json() {
+                return {
+                    checkout_url: 'https://checkout.example/session',
+                    provider: 'paddle',
+                };
+            },
+        };
+    };
+
+    const api = loadApiModule({
+        location: { hostname: 'localhost' },
+        FrontendI18n: {
+            getLocale() {
+                return 'en';
+            },
+        },
+    });
+
+    const checkout = await api.createBillingCheckout({
+        planCode: 'pro',
+        interval: 'monthly',
+        couponCode: 'WELCOME',
+    });
+
+    assert.equal(captured.url, 'http://localhost:8000/api/v1/billing/checkout');
+    assert.equal(captured.init.method, 'POST');
+    assert.equal(captured.init.headers['Content-Type'], 'application/json');
+    assert.equal(captured.init.headers['Accept-Language'], 'en');
+    assert.equal(captured.init.body, JSON.stringify({
+        plan_code: 'pro',
+        interval: 'monthly',
+        coupon_code: 'WELCOME',
+    }));
+    assert.equal(checkout.checkout_url, 'https://checkout.example/session');
+});
+
 test('AstroAPI preserves backend speed_percent when normalizing chart motion', () => {
     const storage = new Map();
     const sessionStorage = {

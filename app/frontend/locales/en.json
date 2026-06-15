@@ -421,9 +421,11 @@
         },
         "choosePlan": "Switch to {plan}",
         "activating": "Activating...",
-        "devNote": "For now, plan changes are activated immediately without payment.",
+        "openingCheckout": "Opening checkout...",
         "errors": {
-          "updateFailed": "Unable to update plan right now."
+          "updateFailed": "Unable to update plan right now.",
+          "checkoutFailed": "Unable to open checkout right now.",
+          "portalFailed": "Unable to open subscription management right now."
         }
       },
       "limits": {
@@ -448,7 +450,19 @@
         "title": "Reset settings to defaults?"
       },
       "plan": {
-        "kicker": "Current plan"
+        "kicker": "Current plan",
+        "portal": "Manage subscription",
+        "billingFree": "Free plan without an active paid subscription.",
+        "billingRenewsAt": "Subscription is active. Next renewal: {date}.",
+        "billingCancelsAt": "Subscription cancels at period end: {date}.",
+        "billingStatus": {
+          "active": "Subscription is active.",
+          "trialing": "Subscription trial is active.",
+          "past_due": "Payment is past due; access remains until the paid period ends.",
+          "canceled": "Subscription is canceled.",
+          "expired": "Subscription has expired.",
+          "unknown": "Subscription status is being checked."
+        }
       },
       "creation": {
         "copy": "Choose the base house system that new charts should start with before any per-view overrides apply.",

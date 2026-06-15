@@ -250,13 +250,60 @@
         return currentAstrologerCache;
     }
 
+    async function createBillingCheckout(options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/billing/checkout`, {
+            method: 'POST',
+            headers: withLocaleHeaders({
+                'Content-Type': 'application/json',
+            }),
+            body: JSON.stringify({
+                plan_code: options.planCode,
+                interval: options.interval || 'monthly',
+                coupon_code: options.couponCode || undefined,
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(
+                response,
+                'page.plan.modal.errors.checkoutFailed',
+                'Unable to start checkout right now.'
+            ));
+        }
+
+        return response.json();
+    }
+
+    async function getBillingPortal() {
+        const response = await apiFetch(`${API_BASE_URL}/billing/portal`, {
+            method: 'GET',
+            headers: withLocaleHeaders(),
+        });
+
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(
+                response,
+                'page.plan.modal.errors.portalFailed',
+                'Unable to open the billing portal right now.'
+            ));
+        }
+
+        return response.json();
+    }
+
+    async function getBillingSubscription() {
+        const response = await apiFetch(`${API_BASE_URL}/billing/subscription`, {
+            method: 'GET',
+            headers: withLocaleHeaders(),
+        });
+        if (!response.ok) return null;
+        return response.json();
+    }
+
     function getUpgradePlanCodes(reason, astrologer = currentAstrologerCache) {
         const current = getPlanCode(astrologer);
         if (reason === 'calls' || reason === 'recording' || reason === 'transcription') {
             return current === 'pro' ? [] : ['pro'];
-        }
-        if (current === 'solo' && reason === 'consultations') {
-            return ['trial', 'standard', 'pro'];
         }
         return ['standard', 'pro'].filter((planCode) => planCode !== current);
     }
@@ -321,7 +368,6 @@
                         </button>
                     `).join('')}
                 </div>
-                <p class="astro-plan-modal-note">${escapeHtml(t('page.plan.modal.devNote', null, 'For now, plan changes are activated immediately without payment.'))}</p>
                 <p class="astro-plan-modal-error" data-plan-modal-error hidden></p>
             </section>
         `;
@@ -338,20 +384,23 @@
             backdrop.querySelectorAll('[data-plan-code]').forEach((node) => {
                 node.disabled = true;
             });
-            button.querySelector('.astro-plan-option-action').textContent = t('page.plan.modal.activating');
+            button.querySelector('.astro-plan-option-action').textContent = t('page.plan.modal.openingCheckout');
             if (errorEl) errorEl.hidden = true;
 
             try {
-                const updated = await updateCurrentPlan(button.dataset.planCode);
-                root.dispatchEvent?.(new CustomEvent('astro:plan-updated', { detail: updated }));
-                if (options.reload !== false && root.location) {
-                    root.location.reload();
+                const checkout = await createBillingCheckout({
+                    planCode: button.dataset.planCode,
+                    interval: options.interval || 'monthly',
+                    couponCode: options.couponCode || null,
+                });
+                if (checkout?.checkout_url && root.location) {
+                    root.location.href = checkout.checkout_url;
                     return;
                 }
-                closePlanUpgradeModal();
+                throw new Error(t('page.plan.modal.errors.checkoutFailed'));
             } catch (error) {
                 if (errorEl) {
-                    errorEl.textContent = error.message || t('page.plan.modal.errors.updateFailed');
+                    errorEl.textContent = error.message || t('page.plan.modal.errors.checkoutFailed');
                     errorEl.hidden = false;
                 }
                 backdrop.querySelectorAll('[data-plan-code]').forEach((node) => {
@@ -891,6 +940,9 @@
         getUsage,
         getSavedChartLimitState,
         updateCurrentPlan,
+        createBillingCheckout,
+        getBillingPortal,
+        getBillingSubscription,
         showPlanUpgradeModal,
         logout,
         resolvePlaceTimezone,
@@ -938,6 +990,9 @@
         getUsage,
         getSavedChartLimitState,
         updateCurrentPlan,
+        createBillingCheckout,
+        getBillingPortal,
+        getBillingSubscription,
         showUpgradeModal: showPlanUpgradeModal,
     };
     root.showPageLoader = showPageLoader;

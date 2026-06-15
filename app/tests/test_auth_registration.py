@@ -18,6 +18,10 @@ from app.database.models import (  # noqa: E402
     Astrologer,
     AuditEvent,
     AuthSession,
+    BillingCustomer,
+    BillingEvent,
+    BillingPriceMap,
+    BillingSubscription,
     EmailVerificationToken,
     PasswordResetToken,
     User,
@@ -30,6 +34,9 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 def _prepare_sqlite_user_table():
     User.__table__.c.tags.type = JSON()
+    BillingCustomer.__table__.c.raw_provider_payload.type = JSON()
+    BillingSubscription.__table__.c.raw_provider_payload.type = JSON()
+    BillingEvent.__table__.c.raw_payload.type = JSON()
 
 
 def _override_get_db():
@@ -50,6 +57,10 @@ def _db_setup(monkeypatch):
     for table in (
         AuditEvent.__table__,
         AuthSession.__table__,
+        BillingEvent.__table__,
+        BillingSubscription.__table__,
+        BillingPriceMap.__table__,
+        BillingCustomer.__table__,
         EmailVerificationToken.__table__,
         PasswordResetToken.__table__,
         User.__table__,
@@ -59,6 +70,10 @@ def _db_setup(monkeypatch):
 
     Astrologer.__table__.create(bind=engine, checkfirst=True)
     User.__table__.create(bind=engine, checkfirst=True)
+    BillingCustomer.__table__.create(bind=engine, checkfirst=True)
+    BillingPriceMap.__table__.create(bind=engine, checkfirst=True)
+    BillingSubscription.__table__.create(bind=engine, checkfirst=True)
+    BillingEvent.__table__.create(bind=engine, checkfirst=True)
     AuthSession.__table__.create(bind=engine, checkfirst=True)
     AuditEvent.__table__.create(bind=engine, checkfirst=True)
     EmailVerificationToken.__table__.create(bind=engine, checkfirst=True)

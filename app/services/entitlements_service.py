@@ -108,7 +108,8 @@ def normalize_plan_code(plan_code: Optional[str]) -> str:
 
 
 def get_plan_definition(astrologer: Astrologer) -> PlanDefinition:
-    return PLAN_DEFINITIONS[normalize_plan_code(getattr(astrologer, "plan_code", None))]
+    effective_plan_code = getattr(astrologer, "_effective_plan_code", None)
+    return PLAN_DEFINITIONS[normalize_plan_code(effective_plan_code or getattr(astrologer, "plan_code", None))]
 
 
 def get_entitlements(astrologer: Astrologer) -> Dict[str, Any]:

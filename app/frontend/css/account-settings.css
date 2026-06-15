@@ -191,6 +191,26 @@ body.account-settings-modal-open {
     color: var(--text-secondary);
 }
 
+.account-plan-billing {
+    margin: 8px 0 0;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--text-muted);
+}
+
+.account-plan-portal {
+    margin-top: 10px;
+    min-height: 32px;
+    padding: 0 11px;
+    border: 1px solid rgba(30, 58, 95, 0.12);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.78);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
 .account-settings-btn {
     min-height: 38px;
     padding: 0 14px;

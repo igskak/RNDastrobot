@@ -1,5 +1,8 @@
 import os
-from datetime import date, time as time_type
+import hashlib
+import hmac
+import json
+from datetime import date, timedelta, time as time_type
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -19,7 +22,8 @@ from app.api.routes import natal as natal_route  # noqa: E402
 from app.api.routes import synastry as synastry_route  # noqa: E402
 from app.auth.security import hash_password, utcnow  # noqa: E402
 from app.database.connection import get_db  # noqa: E402
-from app.database.models import Astrologer, AuditEvent, AuthSession, CallSession, ClientRelationship, Consultation, EmailVerificationToken, PasswordResetToken, User  # noqa: E402
+from app.database.models import Astrologer, AuditEvent, AuthSession, BillingCustomer, BillingEvent, BillingPriceMap, BillingSubscription, CallSession, ClientRelationship, Consultation, EmailVerificationToken, PasswordResetToken, User  # noqa: E402
+from app.services import billing_service  # noqa: E402
 
 
 engine = create_engine("sqlite:///./_auth_tenant_test.sqlite3", connect_args={"check_same_thread": False})
@@ -30,6 +34,9 @@ def _prepare_sqlite_json_columns():
     User.__table__.c.tags.type = JSON()
     CallSession.__table__.c.transcript_segments.type = JSON()
     CallSession.__table__.c.key_points.type = JSON()
+    BillingCustomer.__table__.c.raw_provider_payload.type = JSON()
+    BillingSubscription.__table__.c.raw_provider_payload.type = JSON()
+    BillingEvent.__table__.c.raw_payload.type = JSON()
 
 
 def _override_get_db():
@@ -49,6 +56,10 @@ def _db_setup():
     _prepare_sqlite_json_columns()
     for table in (
         CallSession.__table__,
+        BillingEvent.__table__,
+        BillingSubscription.__table__,
+        BillingPriceMap.__table__,
+        BillingCustomer.__table__,
         ClientRelationship.__table__,
         Consultation.__table__,
         AuditEvent.__table__,
@@ -61,6 +72,10 @@ def _db_setup():
         table.drop(bind=engine, checkfirst=True)
     Astrologer.__table__.create(bind=engine, checkfirst=True)
     User.__table__.create(bind=engine, checkfirst=True)
+    BillingCustomer.__table__.create(bind=engine, checkfirst=True)
+    BillingPriceMap.__table__.create(bind=engine, checkfirst=True)
+    BillingSubscription.__table__.create(bind=engine, checkfirst=True)
+    BillingEvent.__table__.create(bind=engine, checkfirst=True)
     Consultation.__table__.create(bind=engine, checkfirst=True)
     ClientRelationship.__table__.create(bind=engine, checkfirst=True)
     CallSession.__table__.create(bind=engine, checkfirst=True)
@@ -117,6 +132,27 @@ def _create_user(astrologer_id):
     db.refresh(user)
     db.close()
     return user
+
+
+def _create_price_map(plan_code="pro", interval="monthly", price_id="pri_test"):
+    db = TestingSessionLocal()
+    row = BillingPriceMap(
+        provider="paddle",
+        plan_code=plan_code,
+        interval=interval,
+        provider_price_id=price_id,
+        is_active=True,
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    db.close()
+    return row
+
+
+def _paddle_signature(body: bytes, secret: str, timestamp: str = "1710000000") -> str:
+    digest = hmac.new(secret.encode("utf-8"), f"{timestamp}:".encode("utf-8") + body, hashlib.sha256).hexdigest()
+    return f"ts={timestamp};h1={digest}"
 
 
 def _fake_chart_payload(user_id):
@@ -214,6 +250,114 @@ def test_authenticated_plan_update_rejects_unknown_plan():
         response = client.patch("/api/v1/auth/me/plan", json={"plan_code": "enterprise"})
 
     assert response.status_code == 422
+
+
+def test_authenticated_plan_update_is_disabled_in_production(monkeypatch):
+    _create_astrologer("prod-upgrade@example.com", "password123", plan_code="trial")
+    monkeypatch.setenv("APP_ENV", "production")
+
+    with TestClient(app) as client:
+        _login(client, "prod-upgrade@example.com")
+        response = client.patch("/api/v1/auth/me/plan", json={"plan_code": "pro"})
+
+    assert response.status_code == 404
+
+
+def test_billing_checkout_creates_paddle_checkout_with_coupon(monkeypatch):
+    _create_astrologer("checkout@example.com", "password123", plan_code="trial")
+    _create_price_map(plan_code="pro", interval="monthly", price_id="pri_pro_month")
+    captured = {}
+
+    def _fake_api_request(self, method, path, payload=None):
+        captured.update({"method": method, "path": path, "payload": payload})
+        return {"data": {"checkout": {"url": "https://checkout.paddle.test/session"}}}
+
+    monkeypatch.setenv("PADDLE_API_KEY", "test-key")
+    monkeypatch.setattr(billing_service.PaddleBillingProvider, "_api_request", _fake_api_request)
+
+    with TestClient(app) as client:
+        _login(client, "checkout@example.com")
+        response = client.post(
+            "/api/v1/billing/checkout",
+            json={"plan_code": "pro", "interval": "monthly", "coupon_code": "WELCOME"},
+        )
+
+    assert response.status_code == 200
+    assert response.json()["checkout_url"] == "https://checkout.paddle.test/session"
+    assert captured["method"] == "POST"
+    assert captured["path"] == "/transactions"
+    assert captured["payload"]["items"] == [{"price_id": "pri_pro_month", "quantity": 1}]
+    assert captured["payload"]["discount_id"] == "WELCOME"
+    assert captured["payload"]["custom_data"]["coupon_code"] == "WELCOME"
+    assert captured["payload"]["custom_data"]["plan_code"] == "pro"
+
+
+def test_paddle_webhook_activates_paid_effective_plan_and_replay_is_idempotent(monkeypatch):
+    astrologer = _create_astrologer("webhook@example.com", "password123", plan_code="trial")
+    _create_price_map(plan_code="pro", interval="monthly", price_id="pri_pro_month")
+    secret = "whsec_test"
+    monkeypatch.setenv("PADDLE_WEBHOOK_SECRET", secret)
+    period_end = (utcnow() + timedelta(days=30)).isoformat()
+    payload = {
+        "event_id": "evt_123",
+        "event_type": "subscription.activated",
+        "data": {
+            "id": "sub_123",
+            "customer_id": "ctm_123",
+            "status": "active",
+            "custom_data": {
+                "astrologer_id": str(astrologer.id),
+                "plan_code": "pro",
+                "interval": "monthly",
+            },
+            "items": [
+                {
+                    "price": {
+                        "id": "pri_pro_month",
+                        "billing_cycle": {"interval": "month"},
+                    }
+                }
+            ],
+            "current_billing_period": {
+                "starts_at": utcnow().isoformat(),
+                "ends_at": period_end,
+            },
+        },
+    }
+    body = json.dumps(payload, separators=(",", ":")).encode("utf-8")
+    headers = {
+        "Content-Type": "application/json",
+        "Paddle-Signature": _paddle_signature(body, secret),
+    }
+
+    with TestClient(app) as client:
+        first = client.post("/api/v1/webhooks/billing/paddle", data=body, headers=headers)
+        replay = client.post("/api/v1/webhooks/billing/paddle", data=body, headers=headers)
+        _login(client, "webhook@example.com")
+        me = client.get("/api/v1/auth/me")
+
+    assert first.status_code == 200
+    assert first.json()["status"] == "processed"
+    assert replay.status_code == 200
+    assert replay.json()["status"] == "duplicate"
+    assert me.status_code == 200
+    assert me.json()["base_plan_code"] == "trial"
+    assert me.json()["plan_code"] == "pro"
+    assert me.json()["entitlements"]["calls_enabled"] is True
+    assert me.json()["billing"]["subscription"]["status"] == "active"
+
+
+def test_paddle_webhook_rejects_invalid_signature(monkeypatch):
+    monkeypatch.setenv("PADDLE_WEBHOOK_SECRET", "whsec_test")
+
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/webhooks/billing/paddle",
+            data=b'{"event_id":"evt_bad","event_type":"subscription.activated"}',
+            headers={"Paddle-Signature": "ts=1710000000;h1=bad"},
+        )
+
+    assert response.status_code == 401
 
 
 def test_trial_saved_chart_limit_blocks_new_persisted_chart(monkeypatch):

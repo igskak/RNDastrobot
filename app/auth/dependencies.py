@@ -20,6 +20,7 @@ from app.auth.security import (
 )
 from app.database.connection import get_db
 from app.database.models import Astrologer, AuthSession, AuditEvent, EmailVerificationToken, PasswordResetToken, User
+from app.services.billing_service import get_effective_plan_code
 
 
 RATE_LIMIT_WINDOW_SECONDS = 60
@@ -178,6 +179,7 @@ def require_auth(request: Request, db: Session = Depends(get_db)) -> AuthContext
     if not astrologer:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Astrologer account is inactive")
 
+    astrologer._effective_plan_code = get_effective_plan_code(db, astrologer)
     return AuthContext(astrologer=astrologer, session=session)
 
 

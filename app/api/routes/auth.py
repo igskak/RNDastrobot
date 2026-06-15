@@ -44,6 +44,7 @@ from app.auth.supabase import verify_supabase_token
 from app.database.connection import get_db
 from app.database.models import Astrologer, EmailVerificationToken, PasswordResetToken
 from app.i18n.locale import normalize_locale
+from app.services.billing_service import get_billing_summary, get_effective_plan_code
 from app.services.entitlements_service import (
     PLAN_PRO,
     PLAN_SOLO,
@@ -250,8 +251,10 @@ class MeResponse(BaseModel):
     auth_provider: str
     is_active: bool
     plan_code: str
+    base_plan_code: str
     entitlements: Dict[str, Any]
     usage: Dict[str, Any]
+    billing: Dict[str, Any] = Field(default_factory=dict)
 
 
 class FrontendAuthConfig(BaseModel):
@@ -332,14 +335,19 @@ def _mark_email_verified(astrologer: Astrologer) -> None:
 
 
 def _build_me_response(db: Session, astrologer: Astrologer) -> MeResponse:
+    base_plan_code = normalize_plan_code(getattr(astrologer, "plan_code", None))
+    effective_plan_code = get_effective_plan_code(db, astrologer)
+    astrologer._effective_plan_code = effective_plan_code
     return MeResponse(
         id=str(astrologer.id),
         email=astrologer.email,
         auth_provider=astrologer.auth_provider,
         is_active=astrologer.is_active,
-        plan_code=normalize_plan_code(getattr(astrologer, "plan_code", None)),
+        plan_code=effective_plan_code,
+        base_plan_code=base_plan_code,
         entitlements=get_entitlements(astrologer),
         usage=get_usage(db, astrologer),
+        billing=get_billing_summary(db, astrologer),
     )
 
 
@@ -998,6 +1006,8 @@ def update_me_plan(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
+    if os.getenv("APP_ENV", "development").lower() == "production":
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
     astrologer = auth.astrologer
     old_plan = normalize_plan_code(getattr(astrologer, "plan_code", None))
     astrologer.plan_code = payload.plan_code

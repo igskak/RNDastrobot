@@ -93,6 +93,33 @@
         });
     }
 
+    function formatBillingDate(value) {
+        if (!value) return '';
+        if (window.LocaleFormatters?.formatDate) {
+            return window.LocaleFormatters.formatDate(value);
+        }
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString();
+    }
+
+    function getBillingStatusLabel(me) {
+        const subscription = me?.billing?.subscription;
+        if (!subscription) {
+            return t('page.accountSettings.plan.billingFree');
+        }
+        if (subscription.cancel_at_period_end && subscription.current_period_end) {
+            return t('page.accountSettings.plan.billingCancelsAt', {
+                date: formatBillingDate(subscription.current_period_end),
+            });
+        }
+        if (subscription.current_period_end) {
+            return t('page.accountSettings.plan.billingRenewsAt', {
+                date: formatBillingDate(subscription.current_period_end),
+            });
+        }
+        return t(`page.accountSettings.plan.billingStatus.${subscription.status}`) || subscription.status;
+    }
+
     function renderAccountPlan(me) {
         const card = document.getElementById('accountPlanCard');
         if (!card) return;
@@ -101,6 +128,8 @@
         const title = document.getElementById('accountPlanTitle');
         const copy = document.getElementById('accountPlanCopy');
         const usage = document.getElementById('accountPlanUsage');
+        const billingStatus = document.getElementById('accountPlanBillingStatus');
+        const portalBtn = document.getElementById('accountPlanPortalBtn');
 
         if (title) {
             title.textContent = t(`page.plan.names.${planCode}`);
@@ -110,6 +139,26 @@
         }
         if (usage) {
             usage.textContent = getPlanUsageLabel(me);
+        }
+        if (billingStatus) {
+            billingStatus.textContent = getBillingStatusLabel(me);
+        }
+        if (portalBtn) {
+            const hasSubscription = !!me?.billing?.subscription;
+            portalBtn.classList.toggle('hidden', !hasSubscription);
+            portalBtn.onclick = async () => {
+                try {
+                    portalBtn.disabled = true;
+                    const portal = await window.AstroAPI.getBillingPortal();
+                    if (portal?.portal_url) {
+                        window.location.href = portal.portal_url;
+                    }
+                } catch (error) {
+                    showToast(error.message || t('page.plan.modal.errors.portalFailed'), 'error');
+                } finally {
+                    portalBtn.disabled = false;
+                }
+            };
         }
 
         card.dataset.planCode = planCode;

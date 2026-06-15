@@ -3,7 +3,7 @@ SQLAlchemy ORM модели для базы данных
 """
 from sqlalchemy import (
     Column, String, Integer, Numeric, Boolean, DateTime, Date, Time,
-    ForeignKey, CheckConstraint, Index, Text, Table, UniqueConstraint,
+    ForeignKey, CheckConstraint, Index, Text, Table, UniqueConstraint, JSON,
 )
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.ext.declarative import declarative_base
@@ -177,12 +177,112 @@ class Astrologer(Base):
     email_verification_tokens = relationship("EmailVerificationToken", back_populates="astrologer", cascade="all, delete-orphan")
     preferences = relationship("AstrologerPreference", back_populates="astrologer", uselist=False, cascade="all, delete-orphan")
     preference_recalc_jobs = relationship("PreferenceRecalcJob", back_populates="astrologer", cascade="all, delete-orphan")
+    billing_customers = relationship("BillingCustomer", back_populates="astrologer", cascade="all, delete-orphan")
+    billing_subscriptions = relationship("BillingSubscription", back_populates="astrologer", cascade="all, delete-orphan")
 
     __table_args__ = (
         CheckConstraint("auth_provider IN ('local', 'google')", name='valid_auth_provider'),
         CheckConstraint("plan_code IN ('trial', 'solo', 'standard', 'pro')", name='chk_astrologers_plan_code'),
         Index('idx_astrologers_google_sub', 'google_sub'),
         Index('idx_astrologers_plan_code', 'plan_code'),
+    )
+
+
+class BillingCustomer(Base):
+    """Payment-provider customer linked to an astrologer account."""
+    __tablename__ = 'billing_customers'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='CASCADE'), nullable=False)
+    provider = Column(String(32), nullable=False)
+    provider_customer_id = Column(String(255), nullable=False)
+    email = Column(String(255))
+    raw_provider_payload = Column(JSON)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    astrologer = relationship("Astrologer", back_populates="billing_customers")
+
+    __table_args__ = (
+        CheckConstraint("provider IN ('paddle')", name='chk_billing_customers_provider'),
+        Index('idx_billing_customers_astrologer', 'astrologer_id'),
+        Index('uq_billing_customers_provider_customer', 'provider', 'provider_customer_id', unique=True),
+    )
+
+
+class BillingSubscription(Base):
+    """Normalized subscription state from the active billing provider."""
+    __tablename__ = 'billing_subscriptions'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='CASCADE'), nullable=False)
+    billing_customer_id = Column(UUID(as_uuid=True), ForeignKey('billing_customers.id', ondelete='SET NULL'))
+    provider = Column(String(32), nullable=False)
+    provider_subscription_id = Column(String(255), nullable=False)
+    plan_code = Column(String(32), nullable=False)
+    interval = Column(String(16))
+    status = Column(String(32), nullable=False)
+    current_period_start = Column(DateTime)
+    current_period_end = Column(DateTime)
+    cancel_at_period_end = Column(Boolean, nullable=False, default=False, server_default='false')
+    access_until = Column(DateTime)
+    coupon_code = Column(String(100))
+    raw_provider_payload = Column(JSON)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    astrologer = relationship("Astrologer", back_populates="billing_subscriptions")
+    billing_customer = relationship("BillingCustomer")
+
+    __table_args__ = (
+        CheckConstraint("provider IN ('paddle')", name='chk_billing_subscriptions_provider'),
+        CheckConstraint("plan_code IN ('standard', 'pro')", name='chk_billing_subscriptions_plan_code'),
+        Index('idx_billing_subscriptions_astrologer', 'astrologer_id'),
+        Index('idx_billing_subscriptions_status', 'status'),
+        Index('uq_billing_subscriptions_provider_subscription', 'provider', 'provider_subscription_id', unique=True),
+    )
+
+
+class BillingEvent(Base):
+    """Idempotency and audit log for provider webhooks."""
+    __tablename__ = 'billing_events'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    provider = Column(String(32), nullable=False)
+    provider_event_id = Column(String(255), nullable=False)
+    event_type = Column(String(128), nullable=False)
+    status = Column(String(32), nullable=False, default='received', server_default='received')
+    raw_payload = Column(JSON)
+    error_message = Column(Text)
+    received_at = Column(DateTime, server_default=func.now())
+    processed_at = Column(DateTime)
+
+    __table_args__ = (
+        CheckConstraint("provider IN ('paddle')", name='chk_billing_events_provider'),
+        Index('idx_billing_events_provider_type', 'provider', 'event_type'),
+        Index('uq_billing_events_provider_event', 'provider', 'provider_event_id', unique=True),
+    )
+
+
+class BillingPriceMap(Base):
+    """Maps internal plans to provider price identifiers."""
+    __tablename__ = 'billing_price_map'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    provider = Column(String(32), nullable=False)
+    plan_code = Column(String(32), nullable=False)
+    interval = Column(String(16), nullable=False)
+    provider_price_id = Column(String(255), nullable=False)
+    is_active = Column(Boolean, nullable=False, default=True, server_default='true')
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        CheckConstraint("provider IN ('paddle')", name='chk_billing_price_map_provider'),
+        CheckConstraint("plan_code IN ('standard', 'pro')", name='chk_billing_price_map_plan_code'),
+        CheckConstraint("interval IN ('monthly', 'yearly')", name='chk_billing_price_map_interval'),
+        Index('idx_billing_price_map_lookup', 'provider', 'plan_code', 'interval', 'is_active'),
+        Index('uq_billing_price_map_provider_plan_interval', 'provider', 'plan_code', 'interval', unique=True),
     )
 
 
