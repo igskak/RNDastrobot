@@ -5428,6 +5428,8 @@
     async function saveCurrentSourceAsChart() {
         const result = await window.SaveChartModal?.open({
             defaultTitle: defaultSourceChartTitle(),
+            defaultDate: splitTargetDatetime(state.natalSelectedDateTime)[0],
+            defaultTime: splitTargetDatetime(state.natalSelectedDateTime)[1],
             showTags: true,
             showPerson: true,
         });
@@ -5436,6 +5438,8 @@
             const saved = await apiPost('/charts', buildCurrentSourceChartPayload({
                 title: result.title,
                 chartKind: 'birth',
+                date: result.date,
+                time: result.time,
                 tags: result.tags,
                 personId: result.personId,
             }));

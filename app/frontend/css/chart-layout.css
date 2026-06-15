@@ -275,11 +275,12 @@
 }
 
 .chart-dialog-card--compact {
-    width: min(640px, 100%);
+    width: min(440px, 100%);
+    padding: 18px;
 }
 
 .chart-dialog-title--compact {
-    font-size: 28px;
+    font-size: 23px;
 }
 
 .chart-dialog-actions--split {
@@ -305,14 +306,100 @@
 
 /* ── Save-Chart Modal (SCM) ─────────────────────────────────────────────── */
 
+#scm-dialog .chart-dialog-header {
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+#scm-dialog .chart-dialog-close {
+    width: 34px;
+    height: 34px;
+    font-size: 20px;
+}
+
+#scm-dialog .chart-dialog-grid {
+    gap: 8px;
+}
+
+#scm-dialog .form-group {
+    margin-bottom: 0;
+}
+
+#scm-dialog .form-label {
+    margin-bottom: 3px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+#scm-dialog input {
+    min-height: 34px;
+    padding: 6px 10px;
+    font-size: 13px;
+}
+
+.scm-title-group,
+#scm-tags-section,
+#scm-person-section {
+    grid-column: 1 / -1;
+}
+
+.scm-moment-grid {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.scm-moment-grid .form-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.scm-moment-grid .form-label {
+    margin: 0 !important;
+    white-space: nowrap;
+}
+
+#scm-date-input {
+    width: 148px;
+}
+
+#scm-time-input {
+    width: 100px;
+}
+
+#scm-dialog .chart-dialog-actions {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(184, 147, 90, 0.16);
+}
+
+#scm-dialog .chart-dialog-submit {
+    min-width: 130px;
+    min-height: 36px;
+    padding: 7px 14px;
+    font-size: 13px;
+}
+
+#scm-dialog .chart-dialog-actions .header-nav-btn {
+    min-height: 36px;
+    padding: 7px 12px;
+    font-size: 13px;
+}
+
 /* Tag chip input wrap — multiline pill container */
 .scm-tag-input-wrap {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 5px;
-    min-height: 44px;
-    padding: 6px 10px;
+    min-height: 34px;
+    padding: 3px 8px;
     border: 1.5px solid var(--border);
     border-radius: var(--radius-sm, 10px);
     background: rgba(255, 255, 255, 0.85);
@@ -385,7 +472,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 5px;
-    margin-top: 7px;
+    margin-top: 5px;
 }
 
 .scm-tag-suggestions[hidden] {
@@ -401,7 +488,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    margin-top: 8px;
+    margin-top: 5px;
 }
 
 .scm-person-chips:empty {
@@ -509,6 +596,24 @@
     background: rgba(184, 147, 90, 0.09);
     color: var(--text-primary);
     outline: none;
+}
+
+@media (max-width: 520px) {
+    .chart-dialog-card--compact {
+        padding: 16px;
+    }
+
+    .scm-moment-grid {
+        gap: 8px;
+    }
+
+    #scm-date-input {
+        width: 136px;
+    }
+
+    #scm-time-input {
+        width: 92px;
+    }
 }
 
 /* Main 3-column layout */

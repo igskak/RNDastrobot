@@ -1,6 +1,6 @@
 /**
  * SaveChartModal — shared modal for saving a chart.
- * Fields: title · tags (chip input + existing tags as quick-select) · person (autocomplete).
+ * Fields: title · date/time · tags (chip input + existing tags as quick-select) · person (autocomplete).
  *
  * Usage:
  *   const result = await window.SaveChartModal.open({ defaultTitle: 'My Chart' });
@@ -67,6 +67,8 @@
         R.submitText    = q('scm-submit-text');
         R.submitLoader  = q('scm-submit-loader');
         R.titleInput    = q('scm-title-input');
+        R.dateInput     = q('scm-date-input');
+        R.timeInput     = q('scm-time-input');
         R.error         = q('scm-error');
         // tags
         R.tagsSection   = q('scm-tags-section');
@@ -99,9 +101,21 @@
       <div class="chart-dialog-grid">
 
         <!-- Title -->
-        <div class="form-group" style="grid-column:1/-1">
+        <div class="form-group scm-title-group">
           <label class="form-label" for="scm-title-input" id="scm-title-label"></label>
           <input id="scm-title-input" type="text" autocomplete="off">
+        </div>
+
+        <!-- Date and time -->
+        <div class="scm-moment-grid">
+          <div class="form-group">
+            <label class="form-label" for="scm-date-input" id="scm-date-label"></label>
+            <input id="scm-date-input" type="date" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="scm-time-input" id="scm-time-label"></label>
+            <input id="scm-time-input" type="time" step="60" required>
+          </div>
         </div>
 
         <!-- Tags -->
@@ -156,6 +170,12 @@
 
         const tagsLabel = q('scm-tags-label');
         if (tagsLabel) tagsLabel.textContent = t('page.chart.saveModal.tagsLabel', null, 'Теги');
+
+        const dateLabel = q('scm-date-label');
+        if (dateLabel) dateLabel.textContent = t('common.date', null, 'Дата');
+
+        const timeLabel = q('scm-time-label');
+        if (timeLabel) timeLabel.textContent = t('common.time', null, 'Время');
 
         const personLabel = q('scm-person-label');
         if (personLabel) personLabel.textContent = t('page.chart.saveModal.personLabel', null, 'Привязать к людям');
@@ -346,9 +366,16 @@
                 R.titleInput?.focus();
                 return;
             }
+            if (!R.dateInput?.value || !R.timeInput?.value) {
+                showError(t('page.chart.saveModal.momentRequired', null, 'Укажите дату и время карты.'));
+                (!R.dateInput?.value ? R.dateInput : R.timeInput)?.focus();
+                return;
+            }
             const personIds = _persons.map((p) => p.id);
             close({
                 title,
+                date: R.dateInput.value,
+                time: R.timeInput.value,
                 tags: [..._tags],
                 personId: personIds[0] || null,   // primary (FK)
                 personIds,                          // full list (primary first)
@@ -391,7 +418,13 @@
 
     // ─── Public API ───────────────────────────────────────────────────────────────
     function open(opts = {}) {
-        const { defaultTitle = '', showTags = true, showPerson = true } = opts;
+        const {
+            defaultTitle = '',
+            defaultDate = '',
+            defaultTime = '',
+            showTags = true,
+            showPerson = true,
+        } = opts;
 
         buildDOM();
         applyStrings();
@@ -399,6 +432,8 @@
         setSubmitting(false);
 
         if (R.titleInput)  { R.titleInput.value = defaultTitle; }
+        if (R.dateInput) R.dateInput.value = defaultDate;
+        if (R.timeInput) R.timeInput.value = String(defaultTime || '').slice(0, 5);
         if (R.tagsSection)   R.tagsSection.classList.toggle('hidden', !showTags);
         if (R.personSection) R.personSection.classList.toggle('hidden', !showPerson);
 
