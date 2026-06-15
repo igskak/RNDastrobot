@@ -355,7 +355,7 @@
         [
             'pageLoader', 'forecastNewLayout', 'forecastNewError', 'forecastNewErrorMsg',
             'forecastNewBackBtn', 'forecastNewTitle', 'forecastNewSubtitle', 'openNatalTablesBtn',
-            'openClientProfileBtn', 'saveSourceChartBtn', 'forecastNewActionsToggle', 'forecastNewActionsMenu',
+            'openClientProfileBtn', 'saveSourceChartBtn', 'saveNatalChartBtn', 'forecastNewActionsToggle', 'forecastNewActionsMenu',
             'forecastNewDirectionTypeSelect',
             'forecastNewNatalPanel', 'forecastNewProgPanel',
             'natalPanelMeta', 'prognosticPanelTitle', 'prognosticPanelMeta',
@@ -487,6 +487,7 @@
             });
         });
         refs.saveSourceChartBtn?.addEventListener('click', saveCurrentSourceAsChart);
+        refs.saveNatalChartBtn?.addEventListener('click', saveCurrentSourceAsChart);
 
         refs.layerToggles.forEach((input) => {
             input.addEventListener('change', async () => {
@@ -1638,14 +1639,26 @@
         };
 
         refs.forecastNewTimeStepper.innerHTML = `
-            <button
-                type="button"
-                class="forecast-new-stepper-action"
-                data-reset-moment="prognostic"
-                title="Вернуть текущие дату и время"
-                aria-label="Вернуть текущие дату и время"
-            >↺</button>
-            <span class="forecast-new-custom-step ${state.isCustomStepOpen ? 'is-open' : ''}">
+            <span class="forecast-new-time-stepper-display">
+                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--date" aria-label="Дата">
+                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--year">${segmentMarkup('yearThousands')}${segmentMarkup('yearHundreds')}${segmentMarkup('yearTens')}${segmentMarkup('yearOnes')}</span>
+                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">.</span>
+                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--month">${segmentMarkup('monthTens')}${segmentMarkup('monthOnes')}</span>
+                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">.</span>
+                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--day">${segmentMarkup('dayTens')}${segmentMarkup('dayOnes')}</span>
+                </span>
+                <span class="forecast-new-time-stepper-separator forecast-new-time-stepper-separator--major" aria-hidden="true">,</span>
+                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--time" aria-label="Время">
+                    ${segmentMarkup('hour')}
+                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">:</span>
+                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--minute">${segmentMarkup('tenMinute')}${segmentMarkup('minute')}</span>
+                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">:</span>
+                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--second">${segmentMarkup('tenSecond')}${segmentMarkup('second')}</span>
+                </span>
+            </span>
+            <span class="forecast-new-time-stepper-actions">
+                <button type="button" class="forecast-new-stepper-action" data-reset-moment="prognostic" title="Вернуть текущие дату и время" aria-label="Вернуть текущие дату и время">↺</button>
+                <span class="forecast-new-custom-step ${state.isCustomStepOpen ? 'is-open' : ''}">
                 <button
                     type="button"
                     class="forecast-new-custom-step-toggle"
@@ -1671,22 +1684,6 @@
                         <select data-custom-step-input="unit">${customStepUnitOptions}</select>
                     </label>
                 </span>
-            </span>
-            <span class="forecast-new-time-stepper-display">
-                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--date" aria-label="Дата">
-                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--year">${segmentMarkup('yearThousands')}${segmentMarkup('yearHundreds')}${segmentMarkup('yearTens')}${segmentMarkup('yearOnes')}</span>
-                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">.</span>
-                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--month">${segmentMarkup('monthTens')}${segmentMarkup('monthOnes')}</span>
-                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">.</span>
-                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--day">${segmentMarkup('dayTens')}${segmentMarkup('dayOnes')}</span>
-                </span>
-                <span class="forecast-new-time-stepper-separator forecast-new-time-stepper-separator--major" aria-hidden="true">,</span>
-                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--time" aria-label="Время">
-                    ${segmentMarkup('hour')}
-                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">:</span>
-                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--minute">${segmentMarkup('tenMinute')}${segmentMarkup('minute')}</span>
-                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">:</span>
-                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--second">${segmentMarkup('tenSecond')}${segmentMarkup('second')}</span>
                 </span>
             </span>
         `;
@@ -1751,14 +1748,26 @@
         };
 
         refs.forecastNewNatalTimeStepper.innerHTML = `
-            <button
-                type="button"
-                class="forecast-new-stepper-action"
-                data-reset-moment="natal"
-                title="Вернуть дату и время рождения"
-                aria-label="Вернуть дату и время рождения"
-            >↺</button>
-            <span class="forecast-new-custom-step ${state.natalIsCustomStepOpen ? 'is-open' : ''}">
+            <span class="forecast-new-time-stepper-display">
+                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--date" aria-label="Дата рождения">
+                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--year">${segmentMarkup('yearThousands')}${segmentMarkup('yearHundreds')}${segmentMarkup('yearTens')}${segmentMarkup('yearOnes')}</span>
+                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">.</span>
+                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--month">${segmentMarkup('monthTens')}${segmentMarkup('monthOnes')}</span>
+                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">.</span>
+                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--day">${segmentMarkup('dayTens')}${segmentMarkup('dayOnes')}</span>
+                </span>
+                <span class="forecast-new-time-stepper-separator forecast-new-time-stepper-separator--major" aria-hidden="true">,</span>
+                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--time" aria-label="Время рождения">
+                    ${segmentMarkup('hour')}
+                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">:</span>
+                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--minute">${segmentMarkup('tenMinute')}${segmentMarkup('minute')}</span>
+                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">:</span>
+                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--second">${segmentMarkup('tenSecond')}${segmentMarkup('second')}</span>
+                </span>
+            </span>
+            <span class="forecast-new-time-stepper-actions">
+                <button type="button" class="forecast-new-stepper-action" data-reset-moment="natal" title="Вернуть дату и время рождения" aria-label="Вернуть дату и время рождения">↺</button>
+                <span class="forecast-new-custom-step ${state.natalIsCustomStepOpen ? 'is-open' : ''}">
                 <button
                     type="button"
                     class="forecast-new-custom-step-toggle"
@@ -1784,22 +1793,6 @@
                         <select data-custom-step-input="unit">${customStepUnitOptions}</select>
                     </label>
                 </span>
-            </span>
-            <span class="forecast-new-time-stepper-display">
-                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--date" aria-label="Дата рождения">
-                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--year">${segmentMarkup('yearThousands')}${segmentMarkup('yearHundreds')}${segmentMarkup('yearTens')}${segmentMarkup('yearOnes')}</span>
-                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">.</span>
-                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--month">${segmentMarkup('monthTens')}${segmentMarkup('monthOnes')}</span>
-                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">.</span>
-                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--day">${segmentMarkup('dayTens')}${segmentMarkup('dayOnes')}</span>
-                </span>
-                <span class="forecast-new-time-stepper-separator forecast-new-time-stepper-separator--major" aria-hidden="true">,</span>
-                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--time" aria-label="Время рождения">
-                    ${segmentMarkup('hour')}
-                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">:</span>
-                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--minute">${segmentMarkup('tenMinute')}${segmentMarkup('minute')}</span>
-                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">:</span>
-                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--second">${segmentMarkup('tenSecond')}${segmentMarkup('second')}</span>
                 </span>
             </span>
         `;

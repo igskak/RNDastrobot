@@ -494,8 +494,8 @@ class ChartDataRenderer {
 
     renderPlanetSpeedChip(planet) {
         if (!planet) return '';
-        if (planet.speed_percent !== undefined && planet.speed_percent !== null) {
-            const speedPct = Number(planet.speed_percent);
+        const speedPct = this.resolveSpeedPercent(planet);
+        if (speedPct !== null) {
             if (!Number.isFinite(speedPct)) return '';
             let speedClass = '';
             if (speedPct < 10) speedClass = ' planet-meta-chip--speed-slow';
@@ -509,12 +509,26 @@ class ChartDataRenderer {
             if (speed === 0) {
                 return '<span class="planet-meta-chip planet-meta-chip--speed-slow">0%</span>';
             }
-            const value = this.formatSpeedValue(speed);
-            const label = this.t('page.natalFull.units.degPerDay', { value });
-            return `<span class="planet-meta-chip">${this.escapeHtml(label)}</span>`;
+            const compactLabel = this.formatCompactSpeed(speed);
+            const preciseValue = this.formatSpeedValue(speed);
+            const preciseLabel = this.t('page.natalFull.units.degPerDay', { value: preciseValue });
+            return `<span class="planet-meta-chip" title="${this.escapeHtml(preciseLabel)}">${this.escapeHtml(compactLabel)}</span>`;
         }
 
         return '';
+    }
+
+    resolveSpeedPercent(planet) {
+        const supplied = Number(planet?.speed_percent);
+        if (Number.isFinite(supplied)) return supplied;
+
+        const fallbackMeanSpeeds = {
+            Proserpina: 0.001478,
+        };
+        const speed = Number(planet?.speed);
+        const meanSpeed = fallbackMeanSpeeds[planet?.name];
+        if (!Number.isFinite(speed) || !meanSpeed) return null;
+        return Math.round((Math.abs(speed) / meanSpeed) * 10000) / 100;
     }
 
     formatSpeedValue(speed) {
@@ -524,6 +538,18 @@ class ChartDataRenderer {
         if (absolute >= 0.1) return absolute.toFixed(3);
         if (absolute >= 0.01) return absolute.toFixed(4);
         return absolute.toFixed(5);
+    }
+
+    formatCompactSpeed(speed) {
+        const absoluteDegrees = Math.abs(Number(speed));
+        if (!Number.isFinite(absoluteDegrees) || absoluteDegrees === 0) return '0°/д';
+        if (absoluteDegrees >= 1) return `${absoluteDegrees.toFixed(2)}°/д`;
+
+        const arcMinutes = absoluteDegrees * 60;
+        if (arcMinutes >= 1) return `${arcMinutes.toFixed(1)}′/д`;
+
+        const arcSeconds = arcMinutes * 60;
+        return `${arcSeconds.toFixed(1)}″/д`;
     }
 
     renderHouses(houses) {

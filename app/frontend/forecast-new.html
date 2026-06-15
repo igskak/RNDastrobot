@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecastNew.pageTitle">Forecast</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=5daa115301c1">
-    <script>window.__APP_BUILD_ID__ = '5daa115301c1';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=337b58f1eb9d">
+    <script>window.__APP_BUILD_ID__ = '337b58f1eb9d';</script>
 </head>
 <body class="forecast-new-page">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -96,6 +96,7 @@
                 </div>
             </div>
         </div>
+        <div class="forecast-new-right-layer-tabs" id="rightLayerTabs"></div>
         <div class="header-nav-buttons forecast-new-header-actions">
             <div class="forecast-view-tabs">
                 <a href="forecast-new.html" class="forecast-view-tab" aria-current="page" data-i18n="page.chart.nav.forecast"><i class="forecast-view-tab-icon" aria-hidden="true">◯</i></a>
@@ -136,16 +137,26 @@
                         <span class="forecast-new-moment-toggle-meta" id="natalPanelMeta"></span>
                     </button>
                     <div class="forecast-new-chart-library-actions">
-                        <button type="button" class="panel-quick-open-btn" id="natalSavedChartsBtn" data-i18n-aria-label="page.clientProfile.quickOpen.savedCharts" data-i18n-title="page.clientProfile.quickOpen.savedCharts">
-                            <svg class="panel-quick-open-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.45" aria-hidden="true">
-                                <path d="M2.5 4.25h4l1.25 1.5h5.75v6.5a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1v-8z"/>
-                                <path d="M5 8.5h6M8 6v5M6.25 9.25 8 11l1.75-1.75"/>
+                        <button type="button" class="forecast-new-time-action-btn" id="natalSavedChartsBtn" data-i18n-aria-label="page.clientProfile.quickOpen.savedCharts" data-i18n-title="page.clientProfile.quickOpen.savedCharts">
+                            <svg class="panel-quick-open-icon panel-quick-open-icon--database" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <ellipse cx="10" cy="4.5" rx="6.25" ry="2.25"/>
+                                <path d="M3.75 4.5v10.75c0 1.25 2.8 2.25 6.25 2.25s6.25-1 6.25-2.25V4.5M3.75 8.25c0 1.25 2.8 2.25 6.25 2.25s6.25-1 6.25-2.25M3.75 12c0 1.25 2.8 2.25 6.25 2.25s6.25-1 6.25-2.25"/>
                             </svg>
                         </button>
                     </div>
                 </div>
             </div>
-            <div class="forecast-new-time-stepper" id="forecastNewNatalTimeStepper" data-i18n-aria-label="page.forecastNew.natalStepperAria" aria-label="Birth date control"></div>
+            <div class="forecast-new-time-stepper-row">
+                <div class="forecast-new-time-stepper" id="forecastNewNatalTimeStepper" data-i18n-aria-label="page.forecastNew.natalStepperAria" aria-label="Birth date control"></div>
+                <div class="forecast-new-time-stepper-save">
+                    <button type="button" class="forecast-new-time-action-btn forecast-new-save-chart-btn" id="saveNatalChartBtn" data-i18n-aria-label="page.chart.actions.saveSourceChart" data-i18n-title="page.chart.actions.saveSourceChart" aria-label="Save chart" title="Save chart">
+                        <svg class="panel-quick-open-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.45" aria-hidden="true">
+                            <path d="M3 2.75h8l2 2v8.5H3V2.75z"/>
+                            <path d="M5 2.75v3.5h5v-3.5M5 13.25V9h6v4.25"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
             <div class="forecast-new-moment-card hidden" id="forecastNewNatalCard">
                 <label data-i18n="page.forecastNew.birthDateTimeLabel">Birth date / time</label>
                 <strong id="natalDatetimeLabel"></strong>
@@ -340,22 +351,26 @@
                         <span class="forecast-new-moment-toggle-meta" id="prognosticPanelMeta"></span>
                     </button>
                     <div class="forecast-new-chart-library-actions">
-                        <button type="button" class="panel-quick-open-btn" id="forecastSavedChartsBtn" data-i18n-aria-label="page.clientProfile.quickOpen.savedCharts" data-i18n-title="page.clientProfile.quickOpen.savedCharts">
-                            <svg class="panel-quick-open-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.45" aria-hidden="true">
-                                <path d="M2.5 4.25h4l1.25 1.5h5.75v6.5a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1v-8z"/>
-                                <path d="M5 8.5h6M8 6v5M6.25 9.25 8 11l1.75-1.75"/>
-                            </svg>
-                        </button>
-                        <button type="button" class="panel-quick-open-btn forecast-new-save-chart-btn" id="saveSourceChartBtn" data-i18n-aria-label="page.chart.actions.saveSourceChart" data-i18n-title="page.chart.actions.saveSourceChart" aria-label="Save chart" title="Save chart">
-                            <svg class="panel-quick-open-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.45" aria-hidden="true">
-                                <path d="M3 2.75h8l2 2v8.5H3V2.75z"/>
-                                <path d="M5 2.75v3.5h5v-3.5M5 13.25V9h6v4.25"/>
+                        <button type="button" class="forecast-new-time-action-btn" id="forecastSavedChartsBtn" data-i18n-aria-label="page.clientProfile.quickOpen.savedCharts" data-i18n-title="page.clientProfile.quickOpen.savedCharts">
+                            <svg class="panel-quick-open-icon panel-quick-open-icon--database" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <ellipse cx="10" cy="4.5" rx="6.25" ry="2.25"/>
+                                <path d="M3.75 4.5v10.75c0 1.25 2.8 2.25 6.25 2.25s6.25-1 6.25-2.25V4.5M3.75 8.25c0 1.25 2.8 2.25 6.25 2.25s6.25-1 6.25-2.25M3.75 12c0 1.25 2.8 2.25 6.25 2.25s6.25-1 6.25-2.25"/>
                             </svg>
                         </button>
                     </div>
                 </div>
             </div>
-            <div class="forecast-new-time-stepper" id="forecastNewTimeStepper" data-i18n-aria-label="page.forecastNew.transitStepperAria" aria-label="Transit time control"></div>
+            <div class="forecast-new-time-stepper-row">
+                <div class="forecast-new-time-stepper" id="forecastNewTimeStepper" data-i18n-aria-label="page.forecastNew.transitStepperAria" aria-label="Transit time control"></div>
+                <div class="forecast-new-time-stepper-save">
+                    <button type="button" class="forecast-new-time-action-btn forecast-new-save-chart-btn" id="saveSourceChartBtn" data-i18n-aria-label="page.chart.actions.saveSourceChart" data-i18n-title="page.chart.actions.saveSourceChart" aria-label="Save chart" title="Save chart">
+                        <svg class="panel-quick-open-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.45" aria-hidden="true">
+                            <path d="M3 2.75h8l2 2v8.5H3V2.75z"/>
+                            <path d="M5 2.75v3.5h5v-3.5M5 13.25V9h6v4.25"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
             <div class="forecast-new-moment-card hidden" id="forecastNewMomentCard">
                 <label data-i18n="page.forecastNew.dateTimeLabel">Date / time</label>
                 <strong id="targetDatetimeLabel"></strong>
@@ -375,7 +390,6 @@
                     <input type="number" id="longitudeInput" step="0.0001" placeholder="Lon">
                 </div>
             </div>
-            <div class="forecast-new-right-layer-tabs" id="rightLayerTabs"></div>
             <div class="panel-tabs forecast-new-tabs">
                 <button class="panel-tab active" data-panel-target="progPlanetsView" data-i18n="page.chart.tabs.planets">Планеты</button>
                 <button class="panel-tab" data-panel-target="progHousesView" data-i18n="page.chart.tabs.houses">Дома</button>
@@ -483,6 +497,6 @@
         </div>
     </section>
 
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=5daa115301c1"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=337b58f1eb9d"></script>
 </body>
 </html>

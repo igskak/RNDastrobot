@@ -71,6 +71,7 @@ Non-gating for now (track as TODO):
 - For every new async UI flow, define and implement states: loading, empty, error.
 - Ensure keyboard focus is visible and interactive elements are semantic (`button`, `label`, `aria-*` when needed).
 - Default UI convention for astrology objects: render the icon without inline text label; reveal the object name on hover/tooltip instead of placing text next to the icon unless the screen explicitly requires a textual list/table view.
+- For paired or mirrored work panels, keep their visual geometry symmetric: equal widths, matching header and toolbar heights, identical action sizing and spacing, and truncated variable-length metadata so one side does not visually drift from the other.
 
 ## Delivery Workflow
 - Split feature work into small PRs: contract -> data -> logic -> UI -> tests.

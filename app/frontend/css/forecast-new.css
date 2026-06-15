@@ -310,6 +310,10 @@
 
 .forecast-new-layout {
     --forecast-new-side-panel-width: clamp(224px, 21vw, 324px);
+    --forecast-new-panel-action-size: 28px;
+    --forecast-new-panel-action-gap: 8px;
+    --forecast-new-panel-head-height: 58px;
+    --forecast-new-panel-stepper-height: 40px;
 
     display: grid;
     grid-template-columns:
@@ -349,14 +353,89 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: 5px;
-    padding: 5px 10px 6px;
+    gap: 4px;
+    padding: 5px 8px 6px;
     border-bottom: 1px solid rgba(184, 147, 90, 0.14);
     background: rgba(255, 255, 255, 0.66);
     overflow-x: auto;
     overflow-y: hidden;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
+    min-height: var(--forecast-new-panel-stepper-height);
+}
+
+.forecast-new-time-stepper-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    border-bottom: 1px solid rgba(184, 147, 90, 0.14);
+    background: rgba(255, 255, 255, 0.66);
+    min-height: var(--forecast-new-panel-stepper-height);
+}
+
+.forecast-new-time-stepper-row .forecast-new-time-stepper {
+    border-bottom: 0;
+    min-width: 0;
+}
+
+.forecast-new-time-stepper-save {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(var(--forecast-new-panel-action-size) + 8px);
+    padding: 0 8px 0 0;
+}
+
+.forecast-new-time-action-btn,
+.forecast-new-stepper-action,
+.forecast-new-custom-step-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--forecast-new-panel-action-size);
+    min-width: var(--forecast-new-panel-action-size);
+    height: var(--forecast-new-panel-action-size);
+    min-height: var(--forecast-new-panel-action-size);
+    margin: 0;
+    padding: 0;
+    border: 1px solid rgba(30, 58, 95, 0.14);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.82);
+    color: rgba(30, 58, 95, 0.78);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(30, 58, 95, 0.04);
+    transition: border-color var(--transition), background var(--transition), color var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+
+.forecast-new-time-action-btn:hover,
+.forecast-new-time-action-btn:focus-visible,
+.forecast-new-stepper-action:hover,
+.forecast-new-stepper-action:focus-visible,
+.forecast-new-custom-step-toggle:hover,
+.forecast-new-custom-step-toggle:focus-visible,
+.forecast-new-custom-step.is-open .forecast-new-custom-step-toggle {
+    border-color: rgba(184, 147, 90, 0.32);
+    background: #ffffff;
+    color: var(--accent);
+    box-shadow: 0 3px 10px rgba(30, 58, 95, 0.08);
+    transform: translateY(-1px);
+    outline: none;
+}
+
+.forecast-new-time-stepper-actions {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: var(--forecast-new-panel-action-gap);
+    margin-left: auto;
+}
+
+.forecast-new-time-stepper .forecast-new-time-stepper-actions {
+    padding-left: 8px;
 }
 
 .forecast-new-time-stepper::-webkit-scrollbar {
@@ -369,37 +448,12 @@
     justify-content: flex-start;
     flex: 1 1 auto;
     min-width: 0;
-    width: max-content;
+    width: auto;
+    white-space: nowrap;
 }
 
 .forecast-new-stepper-action {
     flex: 0 0 auto;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    min-width: 26px;
-    min-height: 28px;
-    padding: 0;
-    border: 1px solid rgba(30, 58, 95, 0.14);
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.72);
-    color: rgba(30, 58, 95, 0.72);
-    font: inherit;
-    font-size: 15px;
-    font-weight: 700;
-    line-height: 1;
-    cursor: pointer;
-    transition: border-color var(--transition), background var(--transition), color var(--transition), transform var(--transition);
-}
-
-.forecast-new-stepper-action:hover,
-.forecast-new-stepper-action:focus-visible {
-    border-color: rgba(30, 58, 95, 0.28);
-    background: #ffffff;
-    color: var(--accent);
-    transform: translateY(-1px);
-    outline: none;
 }
 
 .forecast-new-custom-step {
@@ -410,33 +464,7 @@
 }
 
 .forecast-new-custom-step-toggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    min-width: 26px;
-    min-height: 28px;
-    padding: 0;
-    border: 1px solid rgba(30, 58, 95, 0.14);
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.72);
-    color: rgba(30, 58, 95, 0.72);
-    font: inherit;
     font-size: 14px;
-    font-weight: 700;
-    line-height: 1;
-    cursor: pointer;
-    transition: border-color var(--transition), background var(--transition), color var(--transition), transform var(--transition);
-}
-
-.forecast-new-custom-step-toggle:hover,
-.forecast-new-custom-step-toggle:focus-visible,
-.forecast-new-custom-step.is-open .forecast-new-custom-step-toggle {
-    border-color: rgba(30, 58, 95, 0.28);
-    background: #ffffff;
-    color: var(--accent);
-    transform: translateY(-1px);
-    outline: none;
 }
 
 .forecast-new-custom-step-popover {
@@ -536,7 +564,7 @@
     justify-content: center;
     min-width: 0;
     height: 28px;
-    padding: 0 1px;
+    padding: 0;
     border-radius: 6px;
     vertical-align: middle;
 }
@@ -610,7 +638,7 @@
 
 .forecast-new-time-stepper-value {
     font-family: var(--font-mono);
-    font-size: clamp(12px, 0.95vw, 14px);
+    font-size: clamp(12.5px, 1vw, 14px);
     font-weight: 700;
     line-height: 1;
     text-align: center;
@@ -625,14 +653,14 @@
     justify-content: center;
     color: rgba(92, 85, 78, 0.72);
     font-family: var(--font-mono);
-    font-size: clamp(12px, 0.95vw, 14px);
+    font-size: clamp(12.5px, 1vw, 14px);
     font-weight: 600;
     line-height: 1;
-    margin: 0 1px;
+    margin: 0;
 }
 
 .forecast-new-time-stepper-separator--major {
-    margin: 0 6px 0 2px;
+    margin: 0 5px 0 2px;
 }
 
 .forecast-new-time-stepper-group--date .forecast-new-time-stepper-segment,
@@ -643,7 +671,7 @@
 }
 
 .forecast-new-time-stepper-segment--hour {
-    min-width: 28px;
+    min-width: 26px;
 }
 
 .forecast-new-time-stepper-segment--yearThousands,
@@ -662,7 +690,8 @@
 }
 
 .forecast-new-side-head {
-    min-height: 52px;
+    height: var(--forecast-new-panel-head-height);
+    min-height: var(--forecast-new-panel-head-height);
     padding: 7px 10px;
     border-bottom: 1px solid rgba(184, 147, 90, 0.14);
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(249, 247, 242, 0.36));
@@ -670,7 +699,7 @@
 
 .forecast-new-side-title-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 34px;
+    grid-template-columns: minmax(0, 1fr) var(--forecast-new-panel-action-size);
     align-items: start;
     gap: 8px;
 }
@@ -693,8 +722,9 @@
     font-size: 11.5px;
     font-weight: 600;
     line-height: 1.25;
-    white-space: normal;
-    overflow-wrap: anywhere;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .forecast-new-moment-toggle {
@@ -715,7 +745,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
+    width: 40px;
     height: 32px;
     margin-top: 1px;
     border: 1px solid rgba(30, 58, 95, 0.12);
@@ -743,6 +773,11 @@
     width: 17px;
     height: 17px;
     flex: 0 0 auto;
+}
+
+.panel-quick-open-icon--database {
+    width: 17px;
+    height: 17px;
 }
 
 .forecast-new-moment-toggle:hover,
@@ -1639,9 +1674,9 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     table-layout: fixed;
 }
 
-.forecast-new-side-panel .forecast-new-symbol-column { width: 27%; }
-.forecast-new-side-panel .forecast-new-position-column { width: 29%; }
-.forecast-new-side-panel .forecast-new-speed-column { width: 22%; }
+.forecast-new-side-panel .forecast-new-symbol-column { width: 24%; }
+.forecast-new-side-panel .forecast-new-position-column { width: 27%; }
+.forecast-new-side-panel .forecast-new-speed-column { width: 27%; }
 .forecast-new-side-panel .forecast-new-matrix-column { width: 11%; }
 
 /* У houses знак забирает остаток */
@@ -1676,7 +1711,11 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
 
 .forecast-new-side-panel .forecast-new-planets-table .planet-speed-cell {
     width: auto;
-    padding-inline: 4px;
+    max-width: 0;
+    padding-inline: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .forecast-new-side-panel .forecast-new-planets-table th:nth-child(3) {
@@ -1874,9 +1913,10 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     z-index: 120;
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: 3px;
-    padding: 4px 10px 2px;
-    background: rgba(240, 237, 228, 0.52);
+    align-items: center;
+    min-width: 0;
 }
 
 .forecast-new-right-layer-tab {
@@ -1943,8 +1983,8 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
 /* Left panel in single mode: Planets | Aspects | Grid (like chart.html left panel) */
 /* Right panel in single mode: hide header/stepper/saved btn */
 .forecast-new-single-mode #forecastNewProgPanel .forecast-new-side-head,
-.forecast-new-single-mode #forecastNewProgPanel .forecast-new-right-layer-tabs,
-.forecast-new-single-mode #forecastNewProgPanel #forecastNewTimeStepper,
+.forecast-new-single-mode .forecast-new-right-layer-tabs,
+.forecast-new-single-mode #forecastNewProgPanel .forecast-new-time-stepper-row,
 .forecast-new-single-mode #forecastNewProgPanel #forecastNewMomentCard,
 .forecast-new-single-mode #forecastNewProgPanel #forecastSavedChartsBtn {
     display: none;
@@ -2457,24 +2497,7 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
 .forecast-new-chart-library-actions {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-}
-
-.forecast-new-chart-library-actions .panel-quick-open-btn {
-    border: 1px solid rgba(30, 58, 95, 0.12);
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.72);
-    box-shadow: 0 1px 2px rgba(30, 58, 95, 0.04);
-}
-
-.forecast-new-chart-library-actions .panel-quick-open-btn:hover {
-    border-color: rgba(184, 147, 90, 0.32);
-    background: #fff;
-    box-shadow: 0 3px 10px rgba(30, 58, 95, 0.08);
-}
-
-.forecast-new-chart-library-actions .forecast-new-save-chart-btn {
-    color: var(--accent, #1e3a5f);
+    gap: 8px;
 }
 
 body.forecast-new-panel-edit .forecast-new-side-panel {
