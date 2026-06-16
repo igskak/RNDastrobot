@@ -42,3 +42,31 @@ def test_migration_status_lists_pending_and_applied(tmp_path, monkeypatch):
         ("001_create_example.sql", "applied"),
         ("002_next.sql", "pending"),
     ]
+
+
+def test_apply_all_pending_runs_each_migration_once(tmp_path, monkeypatch):
+    migrations_dir = tmp_path / "migrations"
+    migrations_dir.mkdir()
+    (migrations_dir / "001_create_example.sql").write_text(
+        "CREATE TABLE example_items (id INTEGER PRIMARY KEY)",
+        encoding="utf-8",
+    )
+    (migrations_dir / "002_insert_example.sql").write_text(
+        "INSERT INTO example_items (id) VALUES (1)",
+        encoding="utf-8",
+    )
+
+    engine = create_engine(f"sqlite:///{tmp_path / 'migration.sqlite3'}")
+    session_factory = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    monkeypatch.setattr(migration_runner, "MIGRATIONS_DIR", migrations_dir)
+    monkeypatch.setattr(migration_runner, "get_db_session", session_factory)
+
+    assert migration_runner.apply_all_pending() is True
+    assert migration_runner.apply_all_pending() is True
+
+    with engine.connect() as connection:
+        item_count = connection.execute(text("SELECT COUNT(*) FROM example_items")).scalar_one()
+        migration_rows = connection.execute(text("SELECT COUNT(*) FROM schema_migrations")).scalar_one()
+
+    assert item_count == 1
+    assert migration_rows == 2
