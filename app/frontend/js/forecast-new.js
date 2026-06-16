@@ -372,6 +372,8 @@
             'forecastNewViewSingle', 'forecastNewViewMulti',
             'forecastNewSolarYearInput', 'forecastNewSolarLocationInput', 'forecastNewSolarLocationSuggestions',
             'forecastNewSolarLat', 'forecastNewSolarLon', 'forecastNewSynastryPartnerSelect',
+            'momentSolarYearInput', 'momentSolarLocationInput', 'momentSolarLocationSuggestions',
+            'momentSolarLat', 'momentSolarLon',
             'forecastNewSynastryManualName', 'forecastNewSynastryManualDate', 'forecastNewSynastryManualTime',
             'forecastNewSynastryManualTimezone', 'forecastNewSynastryManualLocation', 'forecastNewSynastryManualSuggestions',
             'forecastNewSynastryManualLat', 'forecastNewSynastryManualLon', 'forecastNewSynastryManualApply', 'forecastNewSynastryManualError',
@@ -434,8 +436,8 @@
             const next = clamp(state.solarYear + delta, 1900, 2100);
             if (next === state.solarYear) return;
             state.solarYear = next;
-            // Sync header year input
-            if (refs.forecastNewSolarYearInput) refs.forecastNewSolarYearInput.value = String(next);
+            // Sync both solar year inputs
+            syncSolarInputs();
             updateSolarYearStepperValue();
             // Invalidate cache and refetch
             delete state.layers?.solar_return;
@@ -506,16 +508,11 @@
             }
         });
 
-        refs.forecastNewSolarYearInput?.addEventListener('change', async () => {
-            const year = Number(refs.forecastNewSolarYearInput.value);
-            state.solarYear = Number.isFinite(year)
-                ? Math.min(2100, Math.max(1900, Math.trunc(year)))
-                : new Date().getFullYear();
-            refs.forecastNewSolarYearInput.value = String(state.solarYear);
-            schedulePersist();
-            if (state.activeLayers.includes('solar_return')) {
-                await loadActiveLayers({ lightweight: true });
-            }
+        refs.forecastNewSolarYearInput?.addEventListener('change', () => {
+            void applySolarYear(refs.forecastNewSolarYearInput.value);
+        });
+        refs.momentSolarYearInput?.addEventListener('change', () => {
+            void applySolarYear(refs.momentSolarYearInput.value);
         });
 
         refs.forecastNewSynastryPartnerSelect?.addEventListener('change', async () => {
@@ -724,7 +721,7 @@
             refs[id]?.addEventListener('change', async () => {
                 applyLocationInputsToState();
                 schedulePersist();
-                await loadActiveLayers();
+                await loadDisplayedMomentLayers();
             });
         });
         refs.locationInput?.addEventListener('input', handleLocationInput);
@@ -1040,10 +1037,7 @@
             sourceId: source.sourceId || null,
         };
 
-        if (refs.forecastNewSolarYearInput) refs.forecastNewSolarYearInput.value = String(state.solarYear);
-        if (refs.forecastNewSolarLocationInput) refs.forecastNewSolarLocationInput.value = state.solarLocation.name || '';
-        if (refs.forecastNewSolarLat) refs.forecastNewSolarLat.value = state.solarLocation.latitude !== null ? String(state.solarLocation.latitude) : '';
-        if (refs.forecastNewSolarLon) refs.forecastNewSolarLon.value = state.solarLocation.longitude !== null ? String(state.solarLocation.longitude) : '';
+        syncSolarInputs();
         delete state.layers?.solar_return;
     }
 
@@ -1319,6 +1313,48 @@
         if (refs.forecastNewSynastryManualLon) refs.forecastNewSynastryManualLon.value = m.longitude !== null && m.longitude !== undefined ? String(m.longitude) : '';
     }
 
+    // Place/timezone shown in the moment card belong to the partner when synastry
+    // is the selected layer (its "moment" is the partner's birth data), otherwise
+    // to the transit moment (state.location / state.timezone).
+    function getMomentPlaceView() {
+        if (isSynastryMomentActive()) {
+            if (state.synastryMode === 'manual' && state.synastryManual) {
+                const m = state.synastryManual;
+                return { name: m.place || '', latitude: m.latitude ?? null, longitude: m.longitude ?? null, timezone: m.timezone || '' };
+            }
+            const bd = state.viewModel?.activePrognosticLayers
+                ?.find((l) => l.method === 'synastry_partner')?.raw?.partner_chart?.birth_data || {};
+            return { name: bd.place || '', latitude: numberOrNull(bd.latitude), longitude: numberOrNull(bd.longitude), timezone: bd.timezone || '' };
+        }
+        return { name: state.location?.name || '', latitude: state.location?.latitude ?? null, longitude: state.location?.longitude ?? null, timezone: state.timezone };
+    }
+
+    // Write an edited place/timezone back to the right target: the synastry
+    // partner (switching it to manual, as editing a saved chart forks it) or the
+    // transit moment. Mirrors how applyDisplayedMomentDateTime routes date/time.
+    function commitMomentPlace({ name, latitude, longitude, sourceId, timezone }) {
+        if (isSynastryMomentActive()) {
+            const manual = ensureManualSynastryPartnerForEdit();
+            state.synastryManual = {
+                ...manual,
+                place: name || '',
+                latitude: numberOrNull(latitude),
+                longitude: numberOrNull(longitude),
+                timezone: timezone || manual.timezone,
+            };
+            delete state.layers?.synastry_partner;
+            syncSynastryManualControlsFromState();
+            return;
+        }
+        state.location = {
+            name: name || '',
+            latitude: numberOrNull(latitude),
+            longitude: numberOrNull(longitude),
+            sourceId: sourceId || null,
+        };
+        if (timezone) state.timezone = timezone;
+    }
+
     async function ensureSynastryLayerActive(options = {}) {
         if (!hasUsableSynastryPartner()) return;
         if (!state.activeLayers.includes('synastry_partner')) {
@@ -1407,10 +1443,11 @@
         renderOrUpdateTimeStepper();
         renderOrUpdateNatalTimeStepper();
         updateNatalMomentControls();
-        if (refs.timezoneInput) refs.timezoneInput.value = normalizeTimezoneValue(state.timezone, state.location?.name) || '';
-        if (refs.locationInput) refs.locationInput.value = state.location.name || '';
-        if (refs.latitudeInput) refs.latitudeInput.value = state.location.latitude ?? '';
-        if (refs.longitudeInput) refs.longitudeInput.value = state.location.longitude ?? '';
+        const momentPlace = getMomentPlaceView();
+        if (refs.timezoneInput) refs.timezoneInput.value = normalizeTimezoneValue(momentPlace.timezone, momentPlace.name) || '';
+        if (refs.locationInput) refs.locationInput.value = momentPlace.name || '';
+        if (refs.latitudeInput) refs.latitudeInput.value = momentPlace.latitude ?? '';
+        if (refs.longitudeInput) refs.longitudeInput.value = momentPlace.longitude ?? '';
         if (refs.houseSystemSelect) refs.houseSystemSelect.value = normalizeHouseSystemCode(state.pageSettings.houseSystem);
         if (refs.orientationSelect) refs.orientationSelect.value = state.pageSettings.orientation;
         if (refs.iconScaleRange) refs.iconScaleRange.value = String(Math.round((state.pageSettings.planetScale || 1.2) * 100));
@@ -1433,11 +1470,89 @@
         refs.layerToggles.forEach((input) => {
             input.checked = state.activeLayers.includes(input.dataset.layerToggle);
         });
+        syncSolarInputs();
+        syncMomentCardLayout();
         updateHeaderInfo();
         updatePrognosticTimeMeta();
         renderMatrixEditor();
         renderAspectTypeToggles();
         applyViewport();
+    }
+
+    // Mirror state.solarYear / state.solarLocation into both solar editors:
+    // the gear popover on the layer toggle and the "Date / time" moment card.
+    function syncSolarInputs() {
+        const year = String(state.solarYear);
+        const name = state.solarLocation?.name || '';
+        const lat = state.solarLocation?.latitude;
+        const lon = state.solarLocation?.longitude;
+        const latStr = lat !== null && lat !== undefined ? String(lat) : '';
+        const lonStr = lon !== null && lon !== undefined ? String(lon) : '';
+        if (refs.forecastNewSolarYearInput) refs.forecastNewSolarYearInput.value = year;
+        if (refs.forecastNewSolarLocationInput) refs.forecastNewSolarLocationInput.value = name;
+        if (refs.forecastNewSolarLat) refs.forecastNewSolarLat.value = latStr;
+        if (refs.forecastNewSolarLon) refs.forecastNewSolarLon.value = lonStr;
+        if (refs.momentSolarYearInput) refs.momentSolarYearInput.value = year;
+        if (refs.momentSolarLocationInput) refs.momentSolarLocationInput.value = name;
+        if (refs.momentSolarLat) refs.momentSolarLat.value = latStr;
+        if (refs.momentSolarLon) refs.momentSolarLon.value = lonStr;
+    }
+
+    // When solar_return is the selected layer the moment card edits the solar
+    // chart (year + place), not the irrelevant transit date/location.
+    function syncMomentCardLayout() {
+        const card = refs.forecastNewMomentCard;
+        if (!card) return;
+        const isSolar = state.selectedRightLayer === 'solar_return';
+        card.querySelector('[data-moment-transit]')?.classList.toggle('hidden', isSolar);
+        card.querySelector('[data-moment-solar]')?.classList.toggle('hidden', !isSolar);
+    }
+
+    async function applySolarYear(rawYear) {
+        const year = Number(rawYear);
+        state.solarYear = Number.isFinite(year)
+            ? Math.min(2100, Math.max(1900, Math.trunc(year)))
+            : new Date().getFullYear();
+        syncSolarInputs();
+        renderSolarYearStepper();
+        schedulePersist();
+        if (state.activeLayers.includes('solar_return')) {
+            await loadActiveLayers({ lightweight: true });
+        }
+    }
+
+    async function applySolarLocationSelection(item) {
+        const latitude = item.lat ?? item.latitude ?? null;
+        const longitude = item.lon ?? item.longitude ?? null;
+        let resolvedTimezone = null;
+        if (item.sourceId && window.AstroAPI?.resolvePlaceTimezone) {
+            try { resolvedTimezone = await window.AstroAPI.resolvePlaceTimezone(item.sourceId); } catch (_) { /* ignore */ }
+        }
+        state.solarLocation = {
+            name: item.shortName || item.displayName,
+            latitude,
+            longitude,
+            sourceId: item.sourceId || item.source_id || null,
+            timezone: resolvedTimezone || window.Timezones?.guess?.(item.displayName || item.shortName) || null,
+        };
+        syncSolarInputs();
+        const cacheKey = buildLayerCacheKey('solar_return');
+        delete state.layers?.solar_return;
+        sessionStorage.removeItem(LAYER_CACHE_PREFIX + cacheKey);
+        schedulePersist();
+        if (state.activeLayers.includes('solar_return')) {
+            void loadActiveLayers({ lightweight: false });
+        }
+    }
+
+    function clearSolarLocation() {
+        state.solarLocation = null;
+        syncSolarInputs();
+        if (state.activeLayers.includes('solar_return')) {
+            delete state.layers?.solar_return;
+            void loadActiveLayers({ lightweight: false });
+        }
+        schedulePersist();
     }
 
     function populateTimezoneOptions() {
@@ -1461,20 +1576,17 @@
             limit: 5,
             getLabel: (item) => item.shortName || item.displayName,
             onInput: (place) => {
-                state.location = {
-                    ...state.location,
+                const guessedTimezone = window.Timezones?.guess?.(place) || null;
+                commitMomentPlace({
                     name: refs.locationInput.value.trim(),
                     latitude: null,
                     longitude: null,
                     sourceId: null,
-                };
+                    timezone: guessedTimezone,
+                });
                 if (refs.latitudeInput) refs.latitudeInput.value = '';
                 if (refs.longitudeInput) refs.longitudeInput.value = '';
-                const guessedTimezone = window.Timezones?.guess?.(place);
-                if (guessedTimezone && refs.timezoneInput) {
-                    refs.timezoneInput.value = guessedTimezone;
-                    state.timezone = guessedTimezone;
-                }
+                if (guessedTimezone && refs.timezoneInput) refs.timezoneInput.value = guessedTimezone;
                 updatePrognosticTimeMeta();
                 schedulePersist();
             },
@@ -1498,35 +1610,27 @@
                     refs.timezoneInput.value = resolvedTimezone;
                 }
 
-                state.location = {
+                commitMomentPlace({
                     name: item.shortName || item.displayName,
                     latitude: item.lat,
                     longitude: item.lon,
                     sourceId: item.sourceId || null,
-                };
-                if (resolvedTimezone) {
-                    state.timezone = resolvedTimezone;
-                }
+                    timezone: resolvedTimezone || null,
+                });
                 updatePrognosticTimeMeta();
                 syncControlsFromState();
                 schedulePersist();
-                await loadActiveLayers();
+                await loadDisplayedMomentLayers();
             },
         });
     }
 
     function handleLocationInput() {
         const nextValue = refs.locationInput?.value?.trim() || '';
-        const normalizedSelected = normalizeLooseText(state.location?.name);
+        const normalizedSelected = normalizeLooseText(getMomentPlaceView().name);
         const normalizedNext = normalizeLooseText(nextValue);
         if (!normalizedNext || normalizedNext !== normalizedSelected) {
-            state.location = {
-                ...state.location,
-                name: nextValue,
-                latitude: null,
-                longitude: null,
-                sourceId: null,
-            };
+            commitMomentPlace({ name: nextValue, latitude: null, longitude: null, sourceId: null });
             if (refs.latitudeInput) refs.latitudeInput.value = '';
             if (refs.longitudeInput) refs.longitudeInput.value = '';
             updatePrognosticTimeMeta();
@@ -1534,15 +1638,16 @@
     }
 
     function applyLocationInputsToState() {
-        state.timezone = normalizeTimezoneValue(refs.timezoneInput?.value?.trim(), refs.locationInput?.value?.trim())
+        const timezone = normalizeTimezoneValue(refs.timezoneInput?.value?.trim(), refs.locationInput?.value?.trim())
             || normalizeTimezoneValue(state.timezone, refs.locationInput?.value?.trim())
             || 'UTC';
-        state.location = {
+        commitMomentPlace({
             name: refs.locationInput?.value?.trim() || '',
-            latitude: numberOrNull(refs.latitudeInput?.value),
-            longitude: numberOrNull(refs.longitudeInput?.value),
+            latitude: refs.latitudeInput?.value,
+            longitude: refs.longitudeInput?.value,
             sourceId: state.location?.sourceId || null,
-        };
+            timezone,
+        });
     }
 
     function updateHeaderInfo() {
@@ -1985,63 +2090,38 @@
     }
 
     function bindSolarLocationAutocomplete() {
-        if (!window.PlaceAutocomplete || !refs.forecastNewSolarLocationInput || !refs.forecastNewSolarLocationSuggestions) return;
+        // Two solar-place editors share the same state: the gear popover on the
+        // layer toggle and the "Date / time" moment card.
+        attachSolarLocationAutocomplete(refs.forecastNewSolarLocationInput, refs.forecastNewSolarLocationSuggestions);
+        attachSolarLocationAutocomplete(refs.momentSolarLocationInput, refs.momentSolarLocationSuggestions);
+    }
+
+    function attachSolarLocationAutocomplete(input, suggestions) {
+        if (!window.PlaceAutocomplete || !input || !suggestions) return;
         window.PlaceAutocomplete.attach({
-            input: refs.forecastNewSolarLocationInput,
-            suggestions: refs.forecastNewSolarLocationSuggestions,
+            input,
+            suggestions,
             minChars: 2,
             debounceMs: 350,
             limit: 5,
             getLabel: (item) => item.shortName || item.displayName,
             onInput: () => {
-                // Clear coordinates if user types manually
+                // Coordinates are stale once the user edits the query manually, but do
+                // NOT rewrite the text inputs here — that would clobber what's being typed.
                 state.solarLocation = state.solarLocation
                     ? { ...state.solarLocation, latitude: null, longitude: null, sourceId: null }
                     : null;
                 if (refs.forecastNewSolarLat) refs.forecastNewSolarLat.value = '';
                 if (refs.forecastNewSolarLon) refs.forecastNewSolarLon.value = '';
+                if (refs.momentSolarLat) refs.momentSolarLat.value = '';
+                if (refs.momentSolarLon) refs.momentSolarLon.value = '';
             },
-            onSelect: async (item) => {
-                if (refs.forecastNewSolarLocationInput) refs.forecastNewSolarLocationInput.value = item.shortName || item.displayName;
-                const latitude = item.lat ?? item.latitude ?? null;
-                const longitude = item.lon ?? item.longitude ?? null;
-                if (refs.forecastNewSolarLat) refs.forecastNewSolarLat.value = latitude !== null ? String(latitude) : '';
-                if (refs.forecastNewSolarLon) refs.forecastNewSolarLon.value = longitude !== null ? String(longitude) : '';
-
-                let resolvedTimezone = null;
-                if (item.sourceId && window.AstroAPI?.resolvePlaceTimezone) {
-                    try { resolvedTimezone = await window.AstroAPI.resolvePlaceTimezone(item.sourceId); } catch (_) { /* ignore */ }
-                }
-                state.solarLocation = {
-                    name: item.shortName || item.displayName,
-                    latitude,
-                    longitude,
-                    sourceId: item.sourceId || item.source_id || null,
-                    timezone: resolvedTimezone || window.Timezones?.guess?.(item.displayName || item.shortName) || null,
-                };
-                // Invalidate cache and refetch solar layer
-                const cacheKey = buildLayerCacheKey('solar_return');
-                delete state.layers?.solar_return;
-                sessionStorage.removeItem(LAYER_CACHE_PREFIX + cacheKey);
-                schedulePersist();
-                if (state.activeLayers.includes('solar_return')) {
-                    void loadActiveLayers({ lightweight: false });
-                }
-            },
+            onSelect: (item) => { void applySolarLocationSelection(item); },
         });
 
         // Clear solar location when input is emptied
-        refs.forecastNewSolarLocationInput.addEventListener('change', () => {
-            if (!refs.forecastNewSolarLocationInput.value.trim()) {
-                state.solarLocation = null;
-                if (refs.forecastNewSolarLat) refs.forecastNewSolarLat.value = '';
-                if (refs.forecastNewSolarLon) refs.forecastNewSolarLon.value = '';
-                if (state.activeLayers.includes('solar_return')) {
-                    delete state.layers?.solar_return;
-                    void loadActiveLayers({ lightweight: false });
-                }
-                schedulePersist();
-            }
+        input.addEventListener('change', () => {
+            if (!input.value.trim()) clearSolarLocation();
         });
     }
 
@@ -3145,9 +3225,7 @@
 
     /** Значения контролов новых слоёв из state (после hydrate). */
     function syncLayerControlInputs() {
-        if (refs.forecastNewSolarYearInput) {
-            refs.forecastNewSolarYearInput.value = String(state.solarYear);
-        }
+        syncSolarInputs();
         if (refs.forecastNewSynastryPartnerSelect && state.synastryPartnerId) {
             refs.forecastNewSynastryPartnerSelect.value = state.synastryPartnerId;
         }
@@ -3564,6 +3642,7 @@
         const layer = state.viewModel?.activePrognosticLayers?.find((item) => item.method === method);
         refs.prognosticPanelTitle.textContent = layerLabel(method);
         refs.prognosticPanelMeta.textContent = buildPrognosticMomentSummary();
+        syncMomentCardLayout();
         // Solar return: render year-only stepper into the regular stepper slot
         if (method === 'solar_return') renderSolarYearStepper();
         else renderOrUpdateTimeStepper();
@@ -5147,9 +5226,7 @@
                     timezone: restored.solarLocation.timezone || null,
                     sourceId: restored.solarLocation.sourceId || null,
                 };
-                if (refs.forecastNewSolarLocationInput) refs.forecastNewSolarLocationInput.value = state.solarLocation.name;
-                if (refs.forecastNewSolarLat) refs.forecastNewSolarLat.value = String(lat);
-                if (refs.forecastNewSolarLon) refs.forecastNewSolarLon.value = String(lon);
+                syncSolarInputs();
             }
         }
         state.synastryPartnerId = typeof restored.synastryPartnerId === 'string' ? restored.synastryPartnerId : state.synastryPartnerId;

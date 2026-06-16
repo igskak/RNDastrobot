@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecastNew.pageTitle">Forecast</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=d81d51884d18">
-    <script>window.__APP_BUILD_ID__ = 'd81d51884d18';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=fcba59d70ebb">
+    <script>window.__APP_BUILD_ID__ = 'fcba59d70ebb';</script>
 </head>
 <body class="forecast-new-page">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -372,22 +372,36 @@
                 </div>
             </div>
             <div class="forecast-new-moment-card hidden" id="forecastNewMomentCard">
-                <label data-i18n="page.forecastNew.dateTimeLabel">Date / time</label>
-                <strong id="targetDatetimeLabel"></strong>
-                <div class="forecast-new-native-datetime">
-                    <input type="date" id="targetDateInput">
-                    <input type="time" id="targetTimeInput" step="1">
-                </div>
-                <div class="forecast-new-location-grid">
-                    <select id="timezoneInput">
-                        <option value="" data-i18n="page.forecastNew.timezonePlaceholder">Timezone</option>
-                    </select>
-                    <div class="place-autocomplete-wrapper forecast-new-location-autocomplete">
-                        <input type="text" id="locationInput" placeholder="Location" data-i18n-placeholder="page.forecastNew.prognosticLocationPlaceholder" autocomplete="off">
-                        <div id="locationSuggestions" class="place-suggestions"></div>
+                <div data-moment-transit>
+                    <label data-i18n="page.forecastNew.dateTimeLabel">Date / time</label>
+                    <strong id="targetDatetimeLabel"></strong>
+                    <div class="forecast-new-native-datetime">
+                        <input type="date" id="targetDateInput">
+                        <input type="time" id="targetTimeInput" step="1">
                     </div>
-                    <input type="number" id="latitudeInput" step="0.0001" placeholder="Lat">
-                    <input type="number" id="longitudeInput" step="0.0001" placeholder="Lon">
+                    <div class="forecast-new-location-grid">
+                        <select id="timezoneInput">
+                            <option value="" data-i18n="page.forecastNew.timezonePlaceholder">Timezone</option>
+                        </select>
+                        <div class="place-autocomplete-wrapper forecast-new-location-autocomplete">
+                            <input type="text" id="locationInput" placeholder="Location" data-i18n-placeholder="page.forecastNew.prognosticLocationPlaceholder" autocomplete="off">
+                            <div id="locationSuggestions" class="place-suggestions"></div>
+                        </div>
+                        <input type="number" id="latitudeInput" step="0.0001" placeholder="Lat">
+                        <input type="number" id="longitudeInput" step="0.0001" placeholder="Lon">
+                    </div>
+                </div>
+                <div data-moment-solar class="hidden">
+                    <label data-i18n="page.forecastNew.solar.yearLabel">Solar return year</label>
+                    <div class="forecast-new-location-grid">
+                        <input type="number" id="momentSolarYearInput" min="1900" max="2100" data-i18n-aria-label="page.forecastNew.solar.yearLabel" aria-label="Solar return year">
+                        <div class="place-autocomplete-wrapper forecast-new-location-autocomplete forecast-new-solar-location-input">
+                            <input type="text" id="momentSolarLocationInput" placeholder="Solar return place…" data-i18n-placeholder="page.forecastNew.solar.placePlaceholder" autocomplete="off" data-i18n-aria-label="page.forecastNew.solar.placeLabel" aria-label="Solar return place">
+                            <div id="momentSolarLocationSuggestions" class="place-suggestions"></div>
+                        </div>
+                        <input type="number" id="momentSolarLat" step="0.0001" placeholder="Lat">
+                        <input type="number" id="momentSolarLon" step="0.0001" placeholder="Lon">
+                    </div>
                 </div>
             </div>
             <div class="panel-tabs forecast-new-tabs">
@@ -497,6 +511,6 @@
         </div>
     </section>
 
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=d81d51884d18"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=fcba59d70ebb"></script>
 </body>
 </html>
