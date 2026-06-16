@@ -337,7 +337,6 @@ def _mark_email_verified(astrologer: Astrologer) -> None:
 def _build_me_response(db: Session, astrologer: Astrologer) -> MeResponse:
     base_plan_code = normalize_plan_code(getattr(astrologer, "plan_code", None))
     effective_plan_code = get_effective_plan_code(db, astrologer)
-    astrologer._effective_plan_code = effective_plan_code
     return MeResponse(
         id=str(astrologer.id),
         email=astrologer.email,
@@ -345,8 +344,8 @@ def _build_me_response(db: Session, astrologer: Astrologer) -> MeResponse:
         is_active=astrologer.is_active,
         plan_code=effective_plan_code,
         base_plan_code=base_plan_code,
-        entitlements=get_entitlements(astrologer),
-        usage=get_usage(db, astrologer),
+        entitlements=get_entitlements(astrologer, plan_code=effective_plan_code),
+        usage=get_usage(db, astrologer, plan_code=effective_plan_code),
         billing=get_billing_summary(db, astrologer),
     )
 

@@ -145,7 +145,7 @@ def calculate_natal_chart(
     """
     try:
         if save_to_db:
-            assert_can_create_saved_chart(db, auth.astrologer)
+            assert_can_create_saved_chart(db, auth.astrologer, plan_code=auth.effective_plan_code)
 
         # Расчёт натальной карты
         chart_data = natal_service.calculate_natal_chart(
@@ -352,7 +352,7 @@ def list_users(
 ):
     """Получить список всех пользователей с CRM-данными"""
     try:
-        entitlements = get_entitlements(auth.astrologer)
+        entitlements = get_entitlements(auth.astrologer, plan_code=auth.effective_plan_code)
         consultations_enabled = entitlements.get("consultations_enabled") is True
 
         if not consultations_enabled:
@@ -411,15 +411,17 @@ def list_users(
             .subquery()
         )
 
-        # Last consultation type via DISTINCT ON (single pass, no correlated subquery)
-        last_consult_sub = (
+        # Last consultation type via window function; portable across PostgreSQL and SQLite tests.
+        ranked_consult_sub = (
             db.query(
                 Consultation.user_id.label("lc_user_id"),
                 Consultation.consultation_type.label("last_consultation_type"),
+                sa_func.row_number().over(
+                    partition_by=Consultation.user_id,
+                    order_by=Consultation.scheduled_at.desc().nullslast(),
+                ).label("row_num"),
             )
             .filter(Consultation.astrologer_id == auth.astrologer.id)
-            .distinct(Consultation.user_id)
-            .order_by(Consultation.user_id, Consultation.scheduled_at.desc().nullslast())
             .subquery()
         )
 
@@ -430,10 +432,13 @@ def list_users(
                 consult_stats.c.last_consultation_at,
                 consult_stats.c.unpaid_count,
                 consult_stats.c.upcoming_count,
-                last_consult_sub.c.last_consultation_type,
+                ranked_consult_sub.c.last_consultation_type,
             )
             .outerjoin(consult_stats, User.user_id == consult_stats.c.user_id)
-            .outerjoin(last_consult_sub, User.user_id == last_consult_sub.c.lc_user_id)
+            .outerjoin(
+                ranked_consult_sub,
+                and_(User.user_id == ranked_consult_sub.c.lc_user_id, ranked_consult_sub.c.row_num == 1),
+            )
             .filter(User.astrologer_id == auth.astrologer.id)
             .order_by(User.created_at.desc())
             .all()
@@ -650,7 +655,7 @@ def get_user_profile(
     """Агрегированный профиль клиента для страницы /client/{user_id}."""
     try:
         ensure_client_access(db, request, auth, user_id, action="client.profile.view")
-        entitlements = get_entitlements(auth.astrologer)
+        entitlements = get_entitlements(auth.astrologer, plan_code=auth.effective_plan_code)
         consultations_enabled = entitlements.get("consultations_enabled") is True
         calls_enabled = entitlements.get("calls_enabled") is True
         meeting_stats_enabled = entitlements.get("meeting_stats_enabled") is True

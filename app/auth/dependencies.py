@@ -33,6 +33,14 @@ LOCKOUT_MAX_FAILURES = 5
 class AuthContext:
     astrologer: Astrologer
     session: AuthSession
+    effective_plan_code: Optional[str] = None
+    base_plan_code: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        if self.base_plan_code is None:
+            self.base_plan_code = getattr(self.astrologer, "plan_code", None)
+        if self.effective_plan_code is None:
+            self.effective_plan_code = self.base_plan_code
 
 
 def get_client_ip(request: Request) -> Optional[str]:
@@ -179,8 +187,12 @@ def require_auth(request: Request, db: Session = Depends(get_db)) -> AuthContext
     if not astrologer:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Astrologer account is inactive")
 
-    astrologer._effective_plan_code = get_effective_plan_code(db, astrologer)
-    return AuthContext(astrologer=astrologer, session=session)
+    return AuthContext(
+        astrologer=astrologer,
+        session=session,
+        base_plan_code=getattr(astrologer, "plan_code", None),
+        effective_plan_code=get_effective_plan_code(db, astrologer),
+    )
 
 
 def ensure_client_access(

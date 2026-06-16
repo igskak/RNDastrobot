@@ -83,7 +83,7 @@ def list_related_people(
     auth: AuthContext = Depends(require_auth),
 ) -> List[RelatedPersonResponse]:
     try:
-        assert_feature_enabled(auth.astrologer, FEATURE_CLIENTS)
+        assert_feature_enabled(auth.astrologer, FEATURE_CLIENTS, plan_code=auth.effective_plan_code)
         ensure_client_access(db, request, auth, user_id, action="client.related_people.list")
 
         rows = (
@@ -120,7 +120,7 @@ def add_related_person(
     auth: AuthContext = Depends(require_auth),
 ) -> RelatedPersonResponse:
     try:
-        assert_feature_enabled(auth.astrologer, FEATURE_CLIENTS)
+        assert_feature_enabled(auth.astrologer, FEATURE_CLIENTS, plan_code=auth.effective_plan_code)
         ensure_client_access(db, request, auth, user_id, action="client.related_people.link")
         related_user = ensure_client_access(
             db,
@@ -186,8 +186,8 @@ def create_related_person(
     auth: AuthContext = Depends(require_auth),
 ) -> RelatedPersonResponse:
     try:
-        assert_feature_enabled(auth.astrologer, FEATURE_CLIENTS)
-        assert_can_create_saved_chart(db, auth.astrologer)
+        assert_feature_enabled(auth.astrologer, FEATURE_CLIENTS, plan_code=auth.effective_plan_code)
+        assert_can_create_saved_chart(db, auth.astrologer, plan_code=auth.effective_plan_code)
         ensure_client_access(db, request, auth, user_id, action="client.related_people.create")
 
         chart_data = natal_service.calculate_natal_chart(
@@ -263,7 +263,7 @@ def delete_related_person(
     auth: AuthContext = Depends(require_auth),
 ) -> dict:
     try:
-        assert_feature_enabled(auth.astrologer, FEATURE_CLIENTS)
+        assert_feature_enabled(auth.astrologer, FEATURE_CLIENTS, plan_code=auth.effective_plan_code)
         ensure_client_access(db, request, auth, user_id, action="client.related_people.delete")
         ensure_client_access(db, request, auth, related_user_id, action="client.related_people.delete_target")
 
@@ -325,7 +325,7 @@ def calculate_synastry(
     """Синастрия workspace-уровня: каждая сторона — сохранённый клиент ИЛИ inline-натал
     (ephemeral, без записи в БД). Ответ: primary_chart, partner_chart, inter_aspects,
     house_overlays (без resolved_preferences — они привязаны к сохранённым chart_id)."""
-    assert_feature_enabled(auth.astrologer, FEATURE_CLIENTS)
+    assert_feature_enabled(auth.astrologer, FEATURE_CLIENTS, plan_code=auth.effective_plan_code)
 
     def resolve_side(side: str, source: SynastrySourceInput):
         if source.user_id:
@@ -387,7 +387,7 @@ def get_synastry_workspace(
     auth: AuthContext = Depends(require_auth),
 ) -> SynastryResponse:
     try:
-        assert_feature_enabled(auth.astrologer, FEATURE_CLIENTS)
+        assert_feature_enabled(auth.astrologer, FEATURE_CLIENTS, plan_code=auth.effective_plan_code)
         if user_id == partner_id:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Synastry requires two different clients")
 

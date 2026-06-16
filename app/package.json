@@ -2,7 +2,8 @@
   "name": "astrobot-frontend-build",
   "private": true,
   "scripts": {
-    "build:frontend": "node scripts/build-frontend-bundles.mjs"
+    "build:frontend": "node scripts/build-frontend-bundles.mjs",
+    "check:frontend-build": "npm run build:frontend && git -C .. diff --exit-code -- app/frontend/*.html app/frontend/js/bundles app/frontend/bundles"
   },
   "devDependencies": {
     "esbuild": "^0.25.9",

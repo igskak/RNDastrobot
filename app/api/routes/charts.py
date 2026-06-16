@@ -261,6 +261,19 @@ _TRANSITIVE_TAG_SQL = text(
 )
 
 
+def _has_tag(tags: Optional[List[str]], wanted: str) -> bool:
+    wanted = wanted.casefold()
+    return wanted in {str(tag).casefold() for tag in (tags or [])}
+
+
+def _chart_or_linked_person_has_tag(user: User, tag: str) -> bool:
+    if _has_tag(user.tags, tag):
+        return True
+    if user.person and _has_tag(user.person.tags, tag):
+        return True
+    return any(_has_tag(person.tags, tag) for person in (user.linked_persons or []))
+
+
 @router.get("/tags", response_model=List[str])
 def list_chart_tags(
     request: Request,
@@ -318,12 +331,16 @@ def list_charts(
 
     users = query.order_by(User.created_at.desc()).all()
     if tag and tag.strip():
-        rows = db.execute(
-            _TRANSITIVE_TAG_SQL,
-            {"astrologer_id": str(auth.astrologer.id), "tag": tag.strip()},
-        ).fetchall()
-        matching = {str(row[0]) for row in rows}
-        users = [u for u in users if str(u.user_id) in matching]
+        normalized_tag = tag.strip()
+        if db.bind and db.bind.dialect.name == "sqlite":
+            users = [u for u in users if _chart_or_linked_person_has_tag(u, normalized_tag)]
+        else:
+            rows = db.execute(
+                _TRANSITIVE_TAG_SQL,
+                {"astrologer_id": str(auth.astrologer.id), "tag": normalized_tag},
+            ).fetchall()
+            matching = {str(row[0]) for row in rows}
+            users = [u for u in users if str(u.user_id) in matching]
 
     create_audit_event(
         db,
@@ -345,7 +362,7 @@ def create_chart(
     auth: AuthContext = Depends(require_auth),
 ) -> ChartResponse:
     try:
-        assert_can_create_saved_chart(db, auth.astrologer)
+        assert_can_create_saved_chart(db, auth.astrologer, plan_code=auth.effective_plan_code)
         result = natal_service.calculate_natal_chart(
             birth_date=payload.date,
             birth_time=payload.time,

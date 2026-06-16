@@ -56,7 +56,7 @@ def list_consultations(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
-    assert_feature_enabled(auth.astrologer, FEATURE_CONSULTATIONS)
+    assert_feature_enabled(auth.astrologer, FEATURE_CONSULTATIONS, plan_code=auth.effective_plan_code)
     try:
         q = (
             db.query(Consultation)
@@ -98,7 +98,7 @@ def calendar_consultations(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
-    assert_feature_enabled(auth.astrologer, FEATURE_CONSULTATIONS)
+    assert_feature_enabled(auth.astrologer, FEATURE_CONSULTATIONS, plan_code=auth.effective_plan_code)
     _TYPE_LABELS = {
         "natal": "Natal", "transit": "Transit", "solar_return": "Solar Return",
         "progression": "Progression", "direction": "Direction",
@@ -156,7 +156,7 @@ def create_consultation(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
-    assert_feature_enabled(auth.astrologer, FEATURE_CONSULTATIONS)
+    assert_feature_enabled(auth.astrologer, FEATURE_CONSULTATIONS, plan_code=auth.effective_plan_code)
     try:
         # Verify the client belongs to this astrologer
         user = db.query(User).filter(
@@ -220,7 +220,7 @@ def update_consultation(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
-    assert_feature_enabled(auth.astrologer, FEATURE_CONSULTATIONS)
+    assert_feature_enabled(auth.astrologer, FEATURE_CONSULTATIONS, plan_code=auth.effective_plan_code)
     try:
         c = _ensure_consultation_access(db, auth, consultation_id)
 
@@ -271,7 +271,7 @@ def delete_consultation(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
-    assert_feature_enabled(auth.astrologer, FEATURE_CONSULTATIONS)
+    assert_feature_enabled(auth.astrologer, FEATURE_CONSULTATIONS, plan_code=auth.effective_plan_code)
     try:
         c = _ensure_consultation_access(db, auth, consultation_id)
         db.delete(c)

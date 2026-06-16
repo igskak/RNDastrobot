@@ -4,8 +4,6 @@ from types import SimpleNamespace
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
-from sqlalchemy import JSON, create_engine
-from sqlalchemy.orm import sessionmaker
 
 os.environ.setdefault("DATABASE_URL", "sqlite+pysqlite:///./_charts_api_test.db")
 os.environ.setdefault("COOKIE_SECURE", "false")
@@ -14,34 +12,11 @@ from app.api.main import app  # noqa: E402
 from app.api.routes import charts as charts_route  # noqa: E402
 from app.auth.dependencies import AuthContext, require_auth  # noqa: E402
 from app.database.connection import get_db  # noqa: E402
-from app.database.models import Astrologer, AuditEvent, Person, User  # noqa: E402
+from app.database.models import Astrologer, Person, User  # noqa: E402
+from app.tests.api_test_db import create_sqlite_test_session_factory, make_get_db_override, reset_sqlite_schema  # noqa: E402
 
 
-engine = create_engine("sqlite:///./_charts_api_test.sqlite3", connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-def _override_get_db():
-    db = TestingSessionLocal()
-    try:
-        yield db
-        db.commit()
-    except Exception:
-        db.rollback()
-        raise
-    finally:
-        db.close()
-
-
-def _prepare_tables():
-    User.__table__.c.tags.type = JSON()
-    Person.__table__.c.tags.type = JSON()
-    for table in (AuditEvent.__table__, User.__table__, Person.__table__, Astrologer.__table__):
-        table.drop(bind=engine, checkfirst=True)
-    Astrologer.__table__.create(bind=engine, checkfirst=True)
-    Person.__table__.create(bind=engine, checkfirst=True)
-    User.__table__.create(bind=engine, checkfirst=True)
-    AuditEvent.__table__.create(bind=engine, checkfirst=True)
+engine, TestingSessionLocal = create_sqlite_test_session_factory("./_charts_api_test.sqlite3")
 
 
 def _create_astrologer(email="owner@example.com"):
@@ -115,8 +90,8 @@ def _auth_override(astrologer_id):
 
 
 def setup_function(_):
-    _prepare_tables()
-    app.dependency_overrides[get_db] = _override_get_db
+    reset_sqlite_schema(engine)
+    app.dependency_overrides[get_db] = make_get_db_override(TestingSessionLocal)
 
 
 def teardown_function(_):

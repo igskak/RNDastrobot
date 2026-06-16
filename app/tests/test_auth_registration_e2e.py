@@ -2,8 +2,6 @@ import os
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import JSON, create_engine
-from sqlalchemy.orm import sessionmaker
 
 os.environ.setdefault("DATABASE_URL", "sqlite+pysqlite:///./_auth_registration_e2e_test.db")
 os.environ.setdefault("COOKIE_SECURE", "false")
@@ -12,67 +10,20 @@ from app.api.main import app  # noqa: E402
 from app.api.routes import auth as auth_route  # noqa: E402
 from app.auth import dependencies as auth_dependencies  # noqa: E402
 from app.database.connection import get_db  # noqa: E402
-from app.database.models import (  # noqa: E402
-    Astrologer,
-    AuditEvent,
-    AuthSession,
-    CallSession,
-    Consultation,
-    EmailVerificationToken,
-    PasswordResetToken,
-    User,
-)
+from app.database.models import Astrologer  # noqa: E402
+from app.tests.api_test_db import create_sqlite_test_session_factory, make_get_db_override, reset_sqlite_schema  # noqa: E402
 
 
-engine = create_engine("sqlite:///./_auth_registration_e2e_test.sqlite3", connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-def _prepare_sqlite_user_table():
-    User.__table__.c.tags.type = JSON()
-    CallSession.__table__.c.transcript_segments.type = JSON()
-    CallSession.__table__.c.key_points.type = JSON()
-
-
-def _override_get_db():
-    db = TestingSessionLocal()
-    try:
-        yield db
-        db.commit()
-    except Exception:
-        db.rollback()
-        raise
-    finally:
-        db.close()
+engine, TestingSessionLocal = create_sqlite_test_session_factory("./_auth_registration_e2e_test.sqlite3")
 
 
 @pytest.fixture(autouse=True)
 def _db_setup(monkeypatch):
-    _prepare_sqlite_user_table()
-    for table in (
-        CallSession.__table__,
-        Consultation.__table__,
-        AuditEvent.__table__,
-        AuthSession.__table__,
-        EmailVerificationToken.__table__,
-        PasswordResetToken.__table__,
-        User.__table__,
-        Astrologer.__table__,
-    ):
-        table.drop(bind=engine, checkfirst=True)
-
-    Astrologer.__table__.create(bind=engine, checkfirst=True)
-    User.__table__.create(bind=engine, checkfirst=True)
-    Consultation.__table__.create(bind=engine, checkfirst=True)
-    CallSession.__table__.create(bind=engine, checkfirst=True)
-    AuthSession.__table__.create(bind=engine, checkfirst=True)
-    AuditEvent.__table__.create(bind=engine, checkfirst=True)
-    EmailVerificationToken.__table__.create(bind=engine, checkfirst=True)
-    PasswordResetToken.__table__.create(bind=engine, checkfirst=True)
+    reset_sqlite_schema(engine)
 
     monkeypatch.setattr(auth_dependencies, "RATE_LIMIT_MAX_PER_IP", 25)
     monkeypatch.setattr(auth_dependencies, "LOCKOUT_MAX_FAILURES", 5)
-    app.dependency_overrides[get_db] = _override_get_db
+    app.dependency_overrides[get_db] = make_get_db_override(TestingSessionLocal)
     yield
     app.dependency_overrides.clear()
 

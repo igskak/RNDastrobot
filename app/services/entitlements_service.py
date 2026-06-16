@@ -107,13 +107,12 @@ def normalize_plan_code(plan_code: Optional[str]) -> str:
     return DEFAULT_PLAN_CODE
 
 
-def get_plan_definition(astrologer: Astrologer) -> PlanDefinition:
-    effective_plan_code = getattr(astrologer, "_effective_plan_code", None)
-    return PLAN_DEFINITIONS[normalize_plan_code(effective_plan_code or getattr(astrologer, "plan_code", None))]
+def get_plan_definition(astrologer: Astrologer, *, plan_code: Optional[str] = None) -> PlanDefinition:
+    return PLAN_DEFINITIONS[normalize_plan_code(plan_code or getattr(astrologer, "plan_code", None))]
 
 
-def get_entitlements(astrologer: Astrologer) -> Dict[str, Any]:
-    return get_plan_definition(astrologer).as_entitlements()
+def get_entitlements(astrologer: Astrologer, *, plan_code: Optional[str] = None) -> Dict[str, Any]:
+    return get_plan_definition(astrologer, plan_code=plan_code).as_entitlements()
 
 
 def count_saved_charts(db: Session, astrologer_id) -> int:
@@ -124,8 +123,8 @@ def count_saved_charts(db: Session, astrologer_id) -> int:
     )
 
 
-def get_usage(db: Session, astrologer: Astrologer) -> Dict[str, Any]:
-    plan = get_plan_definition(astrologer)
+def get_usage(db: Session, astrologer: Astrologer, *, plan_code: Optional[str] = None) -> Dict[str, Any]:
+    plan = get_plan_definition(astrologer, plan_code=plan_code)
     return {
         "saved_charts_count": count_saved_charts(db, astrologer.id),
         "max_saved_charts": plan.max_saved_charts,
@@ -139,11 +138,11 @@ def _forbidden_detail(error_code: str, message: str, *, feature: Optional[str] =
     return detail
 
 
-def assert_feature_enabled(astrologer: Astrologer, feature: str) -> None:
+def assert_feature_enabled(astrologer: Astrologer, feature: str, *, plan_code: Optional[str] = None) -> None:
     flag_name = FEATURE_TO_FLAG.get(feature)
     if not flag_name:
         raise ValueError(f"Unknown entitlement feature: {feature}")
-    entitlements = get_entitlements(astrologer)
+    entitlements = get_entitlements(astrologer, plan_code=plan_code)
     if entitlements.get(flag_name) is True:
         return
     raise HTTPException(
@@ -156,8 +155,8 @@ def assert_feature_enabled(astrologer: Astrologer, feature: str) -> None:
     )
 
 
-def assert_can_create_saved_chart(db: Session, astrologer: Astrologer) -> None:
-    plan = get_plan_definition(astrologer)
+def assert_can_create_saved_chart(db: Session, astrologer: Astrologer, *, plan_code: Optional[str] = None) -> None:
+    plan = get_plan_definition(astrologer, plan_code=plan_code)
     if plan.max_saved_charts is None:
         return
 
