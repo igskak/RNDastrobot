@@ -263,6 +263,40 @@ class PlanetCharacteristicsService:
 
         return None
 
+    # Светила (Солнце/Луна) не имеют ориентальной/окцидентальной фазы.
+    _SOLAR_PHASE_EXCLUDED = frozenset({'Sun', 'Moon'})
+
+    @classmethod
+    def calculate_solar_phase(
+        cls,
+        planet_name: str,
+        planet_longitude: float,
+        sun_longitude: float,
+    ) -> Optional[str]:
+        """
+        Ориентальность/окцидентальность планеты относительно Солнца.
+
+        Планета восточнее Солнца по зодиакальному порядку (впереди Солнца) садится
+        после него — вечерняя видимость → 'occidental' (vespertine). Планета позади
+        Солнца восходит раньше него — утренняя видимость → 'oriental' (matutine).
+
+        Args:
+            planet_name: Название планеты
+            planet_longitude: Абсолютная долгота планеты (0-360)
+            sun_longitude: Абсолютная долгота Солнца (0-360)
+
+        Returns:
+            'oriental' | 'occidental' | None (для светил и точной конъюнкции)
+        """
+        if planet_name in cls._SOLAR_PHASE_EXCLUDED:
+            return None
+
+        # Знаковая элонгация в диапазоне (-180, 180].
+        delta = (planet_longitude - sun_longitude + 180.0) % 360.0 - 180.0
+        if delta == 0.0:
+            return None
+        return 'occidental' if delta > 0.0 else 'oriental'
+
     # =========================================================================
     # УРОВЕНЬ 3: Дома и знаки
     # =========================================================================
@@ -915,8 +949,13 @@ class PlanetCharacteristicsService:
                 planet['sun_relation'] = cls.calculate_sun_relation(
                     name, longitude, sun_longitude, sun_is_strong
                 )
+                # УРОВЕНЬ 2: Ориентальность/окцидентальность (утренняя/вечерняя фаза)
+                planet['solar_phase'] = cls.calculate_solar_phase(
+                    name, longitude, sun_longitude
+                )
             else:
                 planet['sun_relation'] = None
+                planet['solar_phase'] = None
 
             # УРОВЕНЬ 3: Планета во включённом знаке
             planet['in_intercepted_sign'] = cls.is_planet_in_intercepted_sign(sign, intercepted_signs)

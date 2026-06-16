@@ -24,6 +24,8 @@ const FEATURE_KEYS = {
     combust: 'astro.feature.short.combust',
     cazimi: 'astro.feature.short.cazimi',
     under_rays: 'astro.feature.short.under_rays',
+    oriental: 'astro.feature.short.oriental',
+    occidental: 'astro.feature.short.occidental',
     handle: 'astro.feature.short.handle',
     aspect_king: 'astro.feature.short.aspect_king',
     doryphoros: 'astro.feature.short.doryphoros',
@@ -946,6 +948,10 @@ function createPlanetRow(planet) {
 
     if (planet.sun_relation) {
         features.push(getFeatureLabel(planet.sun_relation));
+    }
+
+    if (planet.solar_phase) {
+        features.push(getFeatureLabel(planet.solar_phase));
     }
 
     if (planet.is_elevated) features.push(getFeatureLabel('elevated'));

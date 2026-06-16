@@ -68,7 +68,9 @@
         "middle": "серед.",
         "peregrine": "перегр.",
         "royal": "корол.",
-        "under_rays": "в променях"
+        "under_rays": "в променях",
+        "oriental": "ранк.",
+        "occidental": "веч."
       }
     },
     "houseSystem": {
