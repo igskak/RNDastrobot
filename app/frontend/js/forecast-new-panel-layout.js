@@ -32,6 +32,12 @@
     // into 'jones' (Jones cosmogram) + 'dispositors' (dispositor scheme).
     var VIEW_KEYS = ['planets', 'houses', 'aspects', 'grid', 'configs', 'stelliums', 'balances', 'jones', 'dispositors'];
 
+    // "Moment now" views: not a property of the natal/prog chart but of the
+    // current instant (source 'now'). They are registered as explicit blocks
+    // (NOT via the SOURCES x VIEW_KEYS cross product) so we never create bogus
+    // pairings like now:planets or natal:lunar.
+    var NOW_VIEWS = ['lunar'];
+
     // i18n keys for auto-titling a tab from its (first) block's view.
     var VIEW_I18N = {
         planets: 'page.chart.tabs.planets',
@@ -43,6 +49,7 @@
         balances: 'page.forecastNew.tabs.balances',
         jones: 'page.forecastNew.tabs.jones',
         dispositors: 'page.forecastNew.tabs.dispositors',
+        lunar: 'page.forecastNew.tabs.lunar',
     };
 
     var SOURCES = ['natal', 'prog'];
@@ -51,8 +58,8 @@
     // corner, never both — corners share the per-mode block pool with panels).
     // Each corner holds 0 or 1 block. Order = visual reading order.
     var CORNER_KEYS = ['tl', 'tr', 'bl', 'br'];
-    var CORNER_RECOMMENDED_VIEWS = ['balances', 'configs', 'stelliums', 'jones'];
-    var CORNER_COMPACT_VIEWS = ['planets', 'houses', 'aspects'];
+    var CORNER_RECOMMENDED_VIEWS = ['balances', 'configs', 'stelliums', 'jones', 'lunar'];
+    var CORNER_COMPACT_VIEWS = ['planets', 'houses', 'aspects', 'lunar'];
     var CORNER_DISCOURAGED_VIEWS = ['grid', 'dispositors'];
 
     // Corner slot -> overlay host element id in forecast-new.html. The block's
@@ -102,11 +109,37 @@
                 };
             });
         });
+        // "now" blocks: explicit registration, single instance each (no biwheel
+        // natal/prog duplication — the current moment is the same on both sides).
+        NOW_VIEWS.forEach(function (view) {
+            map['now:' + view] = {
+                source: 'now',
+                view: view,
+                containerId: 'now' + viewToContainerSuffix(view),
+                rendererKey: 'now', // owned by the lightweight "now" renderer
+            };
+        });
         return map;
     })();
 
+    function isNowView(view) {
+        return NOW_VIEWS.indexOf(view) !== -1;
+    }
+
     function isValidView(view) {
-        return VIEW_KEYS.indexOf(view) !== -1;
+        return VIEW_KEYS.indexOf(view) !== -1 || isNowView(view);
+    }
+
+    /**
+     * Resolve the effective source for a (rawSource, view) pair, honoring the
+     * wheel mode. Returns null when the pair is not DOM-realizable.
+     * - now-views are always source 'now' (mode-agnostic — the moment is shared).
+     * - chart-views are 'prog' only when explicitly asked AND not in single mode.
+     */
+    function resolveSource(rawSource, view, mode) {
+        if (isNowView(view)) return 'now';
+        if (mode === 'single') return 'natal'; // single = natal only
+        return rawSource === 'prog' ? 'prog' : 'natal';
     }
 
     function blockKeyOf(block) {
@@ -278,8 +311,7 @@
                 if (!b || typeof b !== 'object') return;
                 var view = b.view;
                 if (!isValidView(view)) return; // drop unknown view
-                var source = b.source === 'prog' ? 'prog' : 'natal';
-                if (mode === 'single') source = 'natal'; // single = natal only
+                var source = resolveSource(b.source, view, mode);
                 var key = source + ':' + view;
                 if (!BLOCK_TARGET_MAP[key]) return; // not DOM-realizable
                 if (seenBlockKeys[key]) return; // dedup across the whole mode
@@ -322,8 +354,7 @@
             if (!b || typeof b !== 'object') return;
             var view = b.view;
             if (!isValidView(view)) return;
-            var source = b.source === 'prog' ? 'prog' : 'natal';
-            if (mode === 'single') source = 'natal'; // single = natal only
+            var source = resolveSource(b.source, view, mode);
             var key = source + ':' + view;
             if (!BLOCK_TARGET_MAP[key]) return; // not DOM-realizable
             if (seenBlockKeys[key]) return; // already claimed by a panel (or earlier corner)
@@ -607,8 +638,10 @@
         PANEL_SIDE_IDS: PANEL_SIDE_IDS,
         renderPanelsToDom: renderPanelsToDom,
         VIEW_KEYS: VIEW_KEYS,
+        NOW_VIEWS: NOW_VIEWS,
         VIEW_I18N: VIEW_I18N,
         SOURCES: SOURCES,
+        isNowView: isNowView,
         CORNER_KEYS: CORNER_KEYS,
         CORNER_RECOMMENDED_VIEWS: CORNER_RECOMMENDED_VIEWS,
         CORNER_COMPACT_VIEWS: CORNER_COMPACT_VIEWS,

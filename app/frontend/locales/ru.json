@@ -272,7 +272,8 @@
         "prognosticShort": "Прогноз",
         "stelliums": "Стеллиумы",
         "jones": "Космограмма Джонса",
-        "dispositors": "Схема диспозиторов"
+        "dispositors": "Схема диспозиторов",
+        "lunar": "Луна"
       },
       "view": {
         "single": "Одно колесо",
@@ -381,13 +382,41 @@
         "workspaceApplied": "Рабочее пространство применено",
         "workspaceReset": "Рабочее пространство сброшено",
         "deleteWorkspaceTitle": "Удалить рабочее пространство?",
-        "groups": { "chart": "Карта", "positions": "Положения", "aspects": "Аспекты", "analysis": "Анализ" },
+        "groups": {
+          "chart": "Карта",
+          "positions": "Положения",
+          "aspects": "Аспекты",
+          "analysis": "Анализ",
+          "now": "Момент"
+        },
         "workspaces": {
           "natalConsultation": "Натальная консультация",
           "transits": "Транзиты",
           "progressionsDirections": "Прогрессии и дирекции",
           "natalForecastComparison": "Сравнение натала и прогноза",
           "compact": "Компактный режим"
+        }
+      },
+      "lunar": {
+        "phase": {
+          "new": "Новолуние",
+          "waxing_crescent": "Растущий серп",
+          "first_quarter": "Первая четверть",
+          "waxing_gibbous": "Растущая Луна",
+          "full": "Полнолуние",
+          "waning_gibbous": "Убывающая Луна",
+          "last_quarter": "Последняя четверть",
+          "waning_crescent": "Убывающий серп"
+        },
+        "vocActive": "Без курса",
+        "vocInactive": "В курсе",
+        "untilEgress": "до смены знака",
+        "nextAspect": "след. аспект",
+        "new_moon": "Новолуние",
+        "full_moon": "Полнолуние",
+        "eclipse": {
+          "solar": "Солнечное затмение",
+          "lunar": "Лунное затмение"
         }
       }
     },

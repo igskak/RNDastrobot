@@ -272,7 +272,8 @@
         "prognosticShort": "Forecast",
         "stelliums": "Stelliums",
         "jones": "Jones cosmogram",
-        "dispositors": "Dispositor scheme"
+        "dispositors": "Dispositor scheme",
+        "lunar": "Moon"
       },
       "view": {
         "single": "Single wheel",
@@ -381,13 +382,41 @@
         "workspaceApplied": "Workspace applied",
         "workspaceReset": "Workspace reset",
         "deleteWorkspaceTitle": "Delete workspace?",
-        "groups": { "chart": "Chart", "positions": "Positions", "aspects": "Aspects", "analysis": "Analysis" },
+        "groups": {
+          "chart": "Chart",
+          "positions": "Positions",
+          "aspects": "Aspects",
+          "analysis": "Analysis",
+          "now": "Now"
+        },
         "workspaces": {
           "natalConsultation": "Natal consultation",
           "transits": "Transits",
           "progressionsDirections": "Progressions and directions",
           "natalForecastComparison": "Natal and forecast comparison",
           "compact": "Compact mode"
+        }
+      },
+      "lunar": {
+        "phase": {
+          "new": "New Moon",
+          "waxing_crescent": "Waxing Crescent",
+          "first_quarter": "First Quarter",
+          "waxing_gibbous": "Waxing Gibbous",
+          "full": "Full Moon",
+          "waning_gibbous": "Waning Gibbous",
+          "last_quarter": "Last Quarter",
+          "waning_crescent": "Waning Crescent"
+        },
+        "vocActive": "Void of Course",
+        "vocInactive": "In course",
+        "untilEgress": "until sign egress",
+        "nextAspect": "next aspect",
+        "new_moon": "New Moon",
+        "full_moon": "Full Moon",
+        "eclipse": {
+          "solar": "Solar eclipse",
+          "lunar": "Lunar eclipse"
         }
       }
     },

@@ -167,5 +167,37 @@ function planelContains(doc, side, node) {
     ok(doc.querySelectorAll('#natalPlanetsView').length === 1, 'cornermove: still exactly one planets node');
 })();
 
+// --- "now" lunar block re-homes into a corner ---
+(() => {
+    const doc = freshDoc();
+    const layout = L.normalizeLayout({
+        schema_version: 1,
+        panels: {
+            multi: { left: [], right: [], corners: { tl: { source: 'now', view: 'lunar' }, tr: null, bl: null, br: null } },
+            single: { left: [], right: [], corners: L.emptyCorners() },
+        },
+    });
+    L.renderPanelsToDom({ document: doc, layout, mode: 'multi', activeTab: {}, translate: t });
+    const host = doc.getElementById('forecastNewCornerTl');
+    ok(host.contains(doc.getElementById('nowLunarView')), 'lunar: nowLunarView re-homed into corner tl');
+    ok(!host.hidden, 'lunar: filled corner is visible');
+    ok(doc.getElementById('nowLunarView').classList.contains('is-compact'), 'lunar: compact styling applied in corner');
+})();
+
+// --- "now" lunar block re-homes into a side panel tab ---
+(() => {
+    const doc = freshDoc();
+    const layout = L.normalizeLayout({
+        schema_version: 1,
+        panels: {
+            multi: { left: [{ id: 'lt', blocks: [{ source: 'now', view: 'lunar' }] }], right: [], corners: L.emptyCorners() },
+            single: { left: [], right: [], corners: L.emptyCorners() },
+        },
+    });
+    L.renderPanelsToDom({ document: doc, layout, mode: 'multi', activeTab: {}, translate: t });
+    ok(panelContent(doc, 'left').contains(doc.getElementById('nowLunarView')), 'lunar: nowLunarView in left panel');
+    ok(doc.querySelectorAll('#nowLunarView').length === 1, 'lunar: exactly one lunar node');
+})();
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

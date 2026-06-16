@@ -180,5 +180,31 @@ ok(!L.cornersEmpty(compact.panels.multi.corners), 'compact workspace includes ob
 const unknownWorkspace = L.buildBuiltinWorkspaceLayout('unknown', def);
 ok(JSON.stringify(unknownWorkspace) === JSON.stringify(def), 'unknown workspace preserves current layout');
 
+// --- "now" source / lunar block ---
+ok(L.isNowView('lunar'), 'lunar is a now-view');
+ok(!L.isNowView('planets'), 'planets is not a now-view');
+ok(L.isValidView('lunar'), 'lunar is a valid view');
+ok(L.BLOCK_TARGET_MAP['now:lunar'], 'now:lunar is DOM-realizable');
+ok(L.BLOCK_TARGET_MAP['now:lunar'].containerId === 'nowLunarView', 'now:lunar -> nowLunarView container');
+ok(L.BLOCK_TARGET_MAP['now:lunar'].rendererKey === 'now', 'now:lunar owned by now renderer');
+ok(!L.BLOCK_TARGET_MAP['natal:lunar'], 'no natal:lunar pairing');
+ok(!L.BLOCK_TARGET_MAP['now:planets'], 'no now:planets pairing');
+const nowLayout = L.normalizeLayout({
+  panels: {
+    multi: { left: [{ id: 'a', blocks: [{ source: 'prog', view: 'lunar' }] }], right: [], corners: L.emptyCorners() },
+    single: { left: [{ id: 'b', blocks: [{ source: 'prog', view: 'lunar' }] }], right: [], corners: L.emptyCorners() },
+  },
+});
+ok(nowLayout.panels.multi.left[0].blocks[0].source === 'now', 'multi: lunar forced to source now');
+ok(nowLayout.panels.single.left[0].blocks[0].source === 'now', 'single: lunar forced to source now (not natal)');
+const lunarCorner = L.normalizeLayout({
+  panels: {
+    multi: { left: [], right: [], corners: { tl: { source: 'now', view: 'lunar' }, tr: null, bl: null, br: null } },
+    single: { left: [], right: [], corners: L.emptyCorners() },
+  },
+});
+ok(lunarCorner.panels.multi.corners.tl && lunarCorner.panels.multi.corners.tl.view === 'lunar', 'lunar lives in a corner');
+ok(L.CORNER_COMPACT_VIEWS.includes('lunar'), 'lunar offered as a compact corner widget');
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

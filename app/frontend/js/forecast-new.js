@@ -4113,6 +4113,112 @@
             translate: t,
         });
         syncHoveredAspectToActiveSurface?.();
+        renderNowBlocks();
+    }
+
+    // True when the current mode's layout places the given now-view anywhere
+    // (a side panel tab or a corner).
+    function layoutHasBlock(blockKey) {
+        const mode = currentWheelMode();
+        const pane = state.panelLayout?.panels?.[mode];
+        if (!pane) return false;
+        for (const side of ['left', 'right']) {
+            for (const tab of pane[side] || []) {
+                if ((tab.blocks || []).some((b) => `${b.source}:${b.view}` === blockKey)) return true;
+            }
+        }
+        const corners = pane.corners || {};
+        return Object.keys(corners).some((k) => {
+            const b = corners[k];
+            return b && `${b.source}:${b.view}` === blockKey;
+        });
+    }
+
+    function renderNowBlocks() {
+        if (layoutHasBlock('now:lunar')) renderLunarBlock();
+    }
+
+    function formatLunarMoment(iso) {
+        if (!iso) return '';
+        try {
+            return new Date(iso).toLocaleString(undefined, {
+                day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
+            });
+        } catch {
+            return iso;
+        }
+    }
+
+    function lunarBlockMarkup(snapshot) {
+        const phase = snapshot.phase || {};
+        const voc = snapshot.void_of_course || {};
+        const signKey = `astro.sign.${phase.moon_sign || ''}`;
+        const signLabel = t(signKey) && t(signKey) !== signKey ? t(signKey) : (phase.moon_sign || '');
+        const deg = Math.floor(phase.moon_degree_in_sign || 0);
+        const phaseKey = `page.forecastNew.lunar.phase.${phase.phase_key || ''}`;
+        const phaseLabel = t(phaseKey) && t(phaseKey) !== phaseKey ? t(phaseKey) : (phase.phase_label || '');
+        const illum = phase.illumination != null ? `${phase.illumination}%` : '';
+
+        const vocLabel = voc.is_void
+            ? (t('page.forecastNew.lunar.vocActive') || 'Без курса')
+            : (t('page.forecastNew.lunar.vocInactive') || 'В курсе');
+        let vocDetail = '';
+        if (voc.is_void && voc.egress_at) {
+            vocDetail = `${t('page.forecastNew.lunar.untilEgress') || 'до смены знака'} ${escapeHtml(formatLunarMoment(voc.egress_at))}`;
+        } else if (!voc.is_void && voc.next_aspect) {
+            const body = voc.next_aspect.body || '';
+            vocDetail = `${t('page.forecastNew.lunar.nextAspect') || 'след. аспект'} ${escapeHtml(body)} ${escapeHtml(formatLunarMoment(voc.next_aspect.at))}`;
+        }
+
+        const lunations = (snapshot.lunations || []).slice(0, 3).map((e) => {
+            const kindLabel = t(`page.forecastNew.lunar.${e.kind}`) || e.kind;
+            let ecl = '';
+            if (e.eclipse) {
+                const typeLabel = t(`page.forecastNew.lunar.eclipse.${e.eclipse.type}`) || e.eclipse.type;
+                ecl = ` · ${escapeHtml(typeLabel)} (${escapeHtml((e.eclipse.classes || []).join(', '))})`;
+            }
+            return `<li class="forecast-new-lunar-event">
+                <span class="forecast-new-lunar-event-when">${escapeHtml(formatLunarMoment(e.at))}</span>
+                <span class="forecast-new-lunar-event-kind">${escapeHtml(kindLabel)}${ecl}</span>
+            </li>`;
+        }).join('');
+
+        return `
+            <div class="forecast-new-lunar">
+                <div class="forecast-new-lunar-phase">
+                    <span class="forecast-new-lunar-phase-name">${escapeHtml(phaseLabel)}</span>
+                    <span class="forecast-new-lunar-illum">${escapeHtml(illum)}</span>
+                </div>
+                <div class="forecast-new-lunar-pos">${escapeHtml(`${deg}° ${signLabel}`)}</div>
+                <div class="forecast-new-lunar-voc" data-void="${voc.is_void ? '1' : '0'}">
+                    <span class="forecast-new-lunar-voc-label">${escapeHtml(vocLabel)}</span>
+                    <span class="forecast-new-lunar-voc-detail">${vocDetail}</span>
+                </div>
+                <ul class="forecast-new-lunar-events">${lunations}</ul>
+            </div>`;
+    }
+
+    async function renderLunarBlock() {
+        const el = document.getElementById('nowLunarView')
+            || document.getElementById('forecastNewBlockStore')?.querySelector('#nowLunarView');
+        if (!el) return;
+        // Cache for 10 minutes — the moment moves slowly relative to a session.
+        const fresh = state.lunarSnapshot && (Date.now() - state.lunarSnapshotAt) < 600000;
+        if (fresh) {
+            el.innerHTML = lunarBlockMarkup(state.lunarSnapshot);
+            return;
+        }
+        if (!state.lunarSnapshot) {
+            el.innerHTML = `<div class="forecast-new-lunar-loading">${escapeHtml(t('common.loading') || '…')}</div>`;
+        }
+        try {
+            const snapshot = await apiGet('/lunar/snapshot');
+            state.lunarSnapshot = snapshot;
+            state.lunarSnapshotAt = Date.now();
+            el.innerHTML = lunarBlockMarkup(snapshot);
+        } catch (error) {
+            el.innerHTML = `<div class="forecast-new-lunar-error">${escapeHtml(t('common.error') || 'Ошибка')}</div>`;
+        }
     }
 
     // Activate a tab without rebuilding chrome (used on tab click).
@@ -4216,6 +4322,8 @@
         sources.forEach((source) => PL.VIEW_KEYS.forEach((view) => {
             out.push({ source: source, view: view });
         }));
+        // "now" blocks are mode-agnostic single instances (source 'now').
+        (PL.NOW_VIEWS || []).forEach((view) => out.push({ source: 'now', view: view }));
         return out;
     }
 
@@ -4224,6 +4332,7 @@
         positions: ['grid'],
         aspects: ['aspects', 'configs', 'stelliums'],
         analysis: ['balances', 'jones', 'dispositors'],
+        now: ['lunar'],
     };
 
     function findBlockLocation(mode, blockKey) {

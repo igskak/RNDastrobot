@@ -272,7 +272,8 @@
         "prognosticShort": "Прогноз",
         "stelliums": "Стеліуми",
         "jones": "Космограма Джонса",
-        "dispositors": "Схема диспозиторів"
+        "dispositors": "Схема диспозиторів",
+        "lunar": "Місяць"
       },
       "view": {
         "single": "Одне колесо",
@@ -381,13 +382,41 @@
         "workspaceApplied": "Робочий простір застосовано",
         "workspaceReset": "Робочий простір скинуто",
         "deleteWorkspaceTitle": "Видалити робочий простір?",
-        "groups": { "chart": "Карта", "positions": "Положення", "aspects": "Аспекти", "analysis": "Аналіз" },
+        "groups": {
+          "chart": "Карта",
+          "positions": "Положення",
+          "aspects": "Аспекти",
+          "analysis": "Аналіз",
+          "now": "Момент"
+        },
         "workspaces": {
           "natalConsultation": "Натальна консультація",
           "transits": "Транзити",
           "progressionsDirections": "Прогресії та дирекції",
           "natalForecastComparison": "Порівняння наталу та прогнозу",
           "compact": "Компактний режим"
+        }
+      },
+      "lunar": {
+        "phase": {
+          "new": "Новий місяць",
+          "waxing_crescent": "Зростаючий серп",
+          "first_quarter": "Перша чверть",
+          "waxing_gibbous": "Зростаючий Місяць",
+          "full": "Повний місяць",
+          "waning_gibbous": "Спадаючий Місяць",
+          "last_quarter": "Остання чверть",
+          "waning_crescent": "Спадаючий серп"
+        },
+        "vocActive": "Без курсу",
+        "vocInactive": "У курсі",
+        "untilEgress": "до зміни знака",
+        "nextAspect": "наст. аспект",
+        "new_moon": "Новий місяць",
+        "full_moon": "Повний місяць",
+        "eclipse": {
+          "solar": "Сонячне затемнення",
+          "lunar": "Місячне затемнення"
         }
       }
     },

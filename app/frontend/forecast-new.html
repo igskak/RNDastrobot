@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecastNew.pageTitle">Forecast</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=d81d51884d18">
-    <script>window.__APP_BUILD_ID__ = 'd81d51884d18';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=2bdee1def9c9">
+    <script>window.__APP_BUILD_ID__ = '2bdee1def9c9';</script>
 </head>
 <body class="forecast-new-page">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -248,6 +248,10 @@
             <div class="forecast-new-corner forecast-new-corner-tr" id="forecastNewCornerTr" data-corner="tr" hidden></div>
             <div class="forecast-new-corner forecast-new-corner-bl" id="forecastNewCornerBl" data-corner="bl" hidden></div>
             <div class="forecast-new-corner forecast-new-corner-br" id="forecastNewCornerBr" data-corner="br" hidden></div>
+            <!-- "Now" block containers (source 'now'): live here at load and are
+                 re-homed into a panel/corner by the layout engine. Populated by
+                 renderLunarBlock() from /lunar/snapshot. -->
+            <div id="nowLunarView" class="panel-tab-content forecast-new-now-block" hidden></div>
             <div class="forecast-new-zoom-controls zoom-controls-float">
                 <button class="zoom-btn forecast-new-view-btn" id="forecastNewViewSingle" data-i18n-title="page.forecastNew.view.single" data-i18n-aria-label="page.forecastNew.view.single" title="Single wheel" aria-label="Single wheel">◯</button>
                 <button class="zoom-btn forecast-new-view-btn is-active" id="forecastNewViewMulti" data-i18n-title="page.forecastNew.view.multi" data-i18n-aria-label="page.forecastNew.view.multi" title="Multi-wheel" aria-label="Multi-wheel">◎</button>
@@ -497,6 +501,6 @@
         </div>
     </section>
 
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=d81d51884d18"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=2bdee1def9c9"></script>
 </body>
 </html>
