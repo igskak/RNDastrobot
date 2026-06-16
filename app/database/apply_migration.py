@@ -12,10 +12,12 @@ from dotenv import load_dotenv
 import logging
 from sqlalchemy import text
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from database.connection import get_db_session
+try:
+    from app.database.connection import get_db_session
+except ImportError:
+    # Script execution from app/database still needs the historical import path.
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+    from database.connection import get_db_session
 
 # Setup logging
 logging.basicConfig(
@@ -23,9 +25,52 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+MIGRATIONS_DIR = Path(__file__).parent / 'migrations'
+SCHEMA_MIGRATIONS_TABLE = 'schema_migrations'
 
 # Load environment variables
 load_dotenv()
+
+
+def _ensure_schema_migrations_table(db):
+    db.execute(text(
+        f"""
+        CREATE TABLE IF NOT EXISTS {SCHEMA_MIGRATIONS_TABLE} (
+            filename TEXT PRIMARY KEY,
+            applied_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    ))
+
+
+def _is_applied(db, migration_file: str) -> bool:
+    _ensure_schema_migrations_table(db)
+    row = db.execute(
+        text(f"SELECT 1 FROM {SCHEMA_MIGRATIONS_TABLE} WHERE filename = :filename"),
+        {"filename": migration_file},
+    ).first()
+    return row is not None
+
+
+def _record_applied(db, migration_file: str) -> None:
+    db.execute(
+        text(
+            f"""
+            INSERT INTO {SCHEMA_MIGRATIONS_TABLE} (filename)
+            VALUES (:filename)
+            ON CONFLICT (filename) DO NOTHING
+            """
+        ),
+        {"filename": migration_file},
+    )
+
+
+def list_migration_files() -> list[str]:
+    return sorted(
+        path.name
+        for path in MIGRATIONS_DIR.glob("*.sql")
+        if not path.name.endswith("_down.sql")
+    )
 
 
 def apply_migration(migration_file: str):
@@ -33,7 +78,7 @@ def apply_migration(migration_file: str):
     db = None
     try:
         # Get migration file path
-        migration_path = Path(__file__).parent / 'migrations' / migration_file
+        migration_path = MIGRATIONS_DIR / migration_file
         
         if not migration_path.exists():
             logger.error(f"Migration file not found: {migration_file}")
@@ -41,15 +86,21 @@ def apply_migration(migration_file: str):
         
         logger.info(f"Applying migration: {migration_file}")
         
+        # Get database session
+        db = get_db_session()
+
+        if _is_applied(db, migration_file):
+            logger.info(f"Migration {migration_file} already applied; skipping")
+            db.commit()
+            return True
+
         # Read migration file
         with open(migration_path, 'r', encoding='utf-8') as f:
             sql_content = f.read()
         
-        # Get database session
-        db = get_db_session()
-        
         # Execute migration
         db.execute(text(sql_content))
+        _record_applied(db, migration_file)
         db.commit()
         
         logger.info(f"✓ Migration {migration_file} applied successfully")
@@ -65,14 +116,56 @@ def apply_migration(migration_file: str):
             db.close()
 
 
+def migration_status() -> list[tuple[str, str]]:
+    db = None
+    try:
+        db = get_db_session()
+        _ensure_schema_migrations_table(db)
+        applied = {
+            row[0]
+            for row in db.execute(text(f"SELECT filename FROM {SCHEMA_MIGRATIONS_TABLE}")).fetchall()
+        }
+        db.commit()
+        return [(filename, "applied" if filename in applied else "pending") for filename in list_migration_files()]
+    except Exception as e:
+        logger.error(f"✗ Error reading migration status: {e}")
+        if db:
+            db.rollback()
+        return []
+    finally:
+        if db:
+            db.close()
+
+
+def apply_all_pending() -> bool:
+    ok = True
+    for filename, state in migration_status():
+        if state == "pending":
+            ok = apply_migration(filename) and ok
+    return ok
+
+
 def main():
     """Main function"""
     if len(sys.argv) < 2:
-        logger.error("Usage: python apply_migration.py <migration_file>")
+        logger.error("Usage: python apply_migration.py <migration_file>|--all|--status")
         logger.info("Example: python apply_migration.py 004_add_new_configuration_types.sql")
         sys.exit(1)
     
     migration_file = sys.argv[1]
+
+    if migration_file == "--status":
+        for filename, state in migration_status():
+            logger.info(f"{state:8} {filename}")
+        return
+
+    if migration_file == "--all":
+        logger.info("Applying all pending migrations")
+        if apply_all_pending():
+            logger.info("\n✓ Pending migrations applied successfully!")
+            return
+        logger.error("\n✗ One or more migrations failed")
+        sys.exit(1)
     
     logger.info("="*60)
     logger.info("Applying Database Migration")
@@ -90,4 +183,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
