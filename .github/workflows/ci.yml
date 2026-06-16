@@ -37,11 +37,11 @@ jobs:
       - name: Run Swiss Ephemeris regression tests
         run: make test
 
-      - name: Build frontend bundles
-        run: npm --prefix app run build:frontend
+      - name: Build frontend bundles and verify committed assets
+        run: npm --prefix app run check:frontend-build
 
       - name: Python syntax smoke checks
-        run: python -m compileall -q app/api app/services app/models app/utils app/i18n
+        run: python -m compileall -q app/api app/database app/services app/models app/utils app/i18n
 
       - name: Python lint (scoped baseline)
         run: flake8 app/utils/ephemeris.py app/i18n/context.py app/i18n/errors.py --count
