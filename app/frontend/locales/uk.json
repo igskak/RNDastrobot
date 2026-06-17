@@ -277,7 +277,10 @@
         "dispositors": "Схема диспозиторів",
         "lunar": "Місяць",
         "hours": "Години",
-        "profections": "Профекції"
+        "profections": "Профекції",
+        "antiscia": "Антиси",
+        "asteroids": "Астероїди",
+        "dominants": "Домінанти"
       },
       "view": {
         "single": "Одне колесо",
@@ -391,7 +394,8 @@
           "positions": "Положення",
           "aspects": "Аспекти",
           "analysis": "Аналіз",
-          "now": "Момент"
+          "now": "Момент",
+          "advanced": "Розширене"
         },
         "workspaces": {
           "natalConsultation": "Натальна консультація",
@@ -457,6 +461,34 @@
         "davison": "Davison",
         "unavailable": "Davison недоступний для неповних даних народження",
         "noPartner": "Спочатку виберіть партнера"
+      },
+      "antiscia": {
+        "empty": "Немає даних",
+        "antiscion": "Антис",
+        "contra_antiscion": "Контрантис",
+        "contacts": "Контакти"
+      },
+      "asteroids": {
+        "empty": "Немає даних",
+        "house": "Дім {house}"
+      },
+      "dominants": {
+        "empty": "Немає даних",
+        "planets": "Планети",
+        "signs": "Знаки",
+        "elements": "Стихії",
+        "modes": "Хрести",
+        "element": {
+          "fire": "Вогонь",
+          "earth": "Земля",
+          "air": "Повітря",
+          "water": "Вода"
+        },
+        "mode": {
+          "cardinal": "Кардинальний",
+          "fixed": "Фіксований",
+          "mutable": "Мутабельний"
+        }
       }
     },
     "plan": {

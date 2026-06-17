@@ -12,7 +12,7 @@ function ok(cond, msg) { if (cond) { pass++; } else { fail++; console.log('FAIL:
 // --- defaults reproduce current UX ---
 const def = L.buildDefaultForecastNewLayout();
 ok(def.schema_version === 1, 'schema_version stamped');
-ok(def.panels.multi.left.length === 10, 'multi.left has 10 tabs');
+ok(def.panels.multi.left.length === L.VIEW_KEYS.length, 'multi.left has all catalog views');
 ok(def.panels.multi.left.every(t => t.blocks[0].source === 'natal'), 'multi.left all natal');
 ok(def.panels.multi.right.length === 9, 'multi.right has 9 prognostic tabs');
 ok(def.panels.multi.right.every(t => t.blocks[0].source === 'prog'), 'multi.right all prog');
@@ -67,7 +67,7 @@ ok(L.normalizeLayout(sf).panels.single.left[0].blocks[0].source === 'natal', 'si
 const empty = { schema_version: 1, panels: { multi: { left: [], right: [] },
   single: { left: [{ id: 's', blocks: [{ source: 'natal', view: 'planets' }] }], right: [] } } };
 const ne = L.normalizeLayout(empty);
-ok(ne.panels.multi.left.length === 10, 'empty multi mode rebuilt from default');
+ok(ne.panels.multi.left.length === L.VIEW_KEYS.length, 'empty multi mode rebuilt from default');
 ok(ne.panels.single.left.length === 1, 'non-empty single preserved');
 
 // --- duplicate tab ids regenerated ---
@@ -93,7 +93,7 @@ ok(mig.multiLeft === def.panels.multi.left.find(t => t.blocks[0].view === 'aspec
 ok(mig.singleRight === def.panels.single.right.find(t => t.blocks[0].view === 'balances').id, 'legacy singleRightTab=Balances maps');
 
 // --- garbage falls back to default ---
-ok(L.normalizeLayout(null).panels.multi.left.length === 10, 'null -> default');
+ok(L.normalizeLayout(null).panels.multi.left.length === L.VIEW_KEYS.length, 'null -> default');
 ok(L.normalizeLayout({ foo: 1 }).panels.single.right.length === 4, 'garbage -> default');
 
 // ===================== corners (Option C) =====================
@@ -221,6 +221,16 @@ ok(L.BLOCK_TARGET_MAP['natal:profections'].containerId === 'natalProfectionsView
 ok(L.BLOCK_TARGET_MAP['natal:profections'].rendererKey === 'natal', 'natal:profections owned by natal renderer');
 ok(!L.BLOCK_TARGET_MAP['prog:profections'], 'no prog:profections pairing');
 ok(!L.BLOCK_TARGET_MAP['now:profections'], 'no now:profections pairing');
+
+// --- antiscia / asteroids / dominants (natal-only catalog views) ---
+['antiscia', 'asteroids', 'dominants'].forEach((view) => {
+  ok(L.isValidView(view), view + ' is a valid view');
+  ok(!L.isNowView(view), view + ' is not a now-view');
+  const expectedContainer = 'natal' + view.charAt(0).toUpperCase() + view.slice(1) + 'View';
+  ok(L.BLOCK_TARGET_MAP['natal:' + view], 'natal:' + view + ' is DOM-realizable');
+  ok(L.BLOCK_TARGET_MAP['natal:' + view].containerId === expectedContainer, 'natal:' + view + ' -> ' + expectedContainer);
+  ok(!L.BLOCK_TARGET_MAP['prog:' + view], 'no prog:' + view + ' pairing (natal-only)');
+});
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

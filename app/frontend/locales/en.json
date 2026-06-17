@@ -277,7 +277,10 @@
         "dispositors": "Dispositor scheme",
         "lunar": "Moon",
         "hours": "Hours",
-        "profections": "Profections"
+        "profections": "Profections",
+        "antiscia": "Antiscia",
+        "asteroids": "Asteroids",
+        "dominants": "Dominants"
       },
       "view": {
         "single": "Single wheel",
@@ -391,7 +394,8 @@
           "positions": "Positions",
           "aspects": "Aspects",
           "analysis": "Analysis",
-          "now": "Now"
+          "now": "Now",
+          "advanced": "Advanced"
         },
         "workspaces": {
           "natalConsultation": "Natal consultation",
@@ -457,6 +461,34 @@
         "davison": "Davison",
         "unavailable": "Davison is unavailable for incomplete birth data",
         "noPartner": "Choose a partner first"
+      },
+      "antiscia": {
+        "empty": "No data",
+        "antiscion": "Antiscion",
+        "contra_antiscion": "Contra",
+        "contacts": "Contacts"
+      },
+      "asteroids": {
+        "empty": "No data",
+        "house": "House {house}"
+      },
+      "dominants": {
+        "empty": "No data",
+        "planets": "Planets",
+        "signs": "Signs",
+        "elements": "Elements",
+        "modes": "Modes",
+        "element": {
+          "fire": "Fire",
+          "earth": "Earth",
+          "air": "Air",
+          "water": "Water"
+        },
+        "mode": {
+          "cardinal": "Cardinal",
+          "fixed": "Fixed",
+          "mutable": "Mutable"
+        }
       }
     },
     "plan": {

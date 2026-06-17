@@ -3352,3 +3352,120 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
 .forecast-new-composite-table td:last-child {
     text-align: right;
 }
+
+/* ============================================================
+   Aux natal blocks: antiscia, asteroids, dominants.
+   ============================================================ */
+.forecast-new-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 10px;
+    font-size: 12px;
+}
+
+.forecast-new-list-head,
+.forecast-new-list-subhead {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    opacity: 0.55;
+}
+
+.forecast-new-list-body {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.forecast-new-list-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 10px;
+    align-items: baseline;
+}
+
+.forecast-new-list-val {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.forecast-new-list-val--dim {
+    opacity: 0.6;
+    min-width: 3.2em;
+}
+
+.forecast-new-retro {
+    color: #8f2f2f;
+    font-weight: 700;
+}
+
+.forecast-new-antiscia-contacts {
+    margin-top: 6px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    padding-top: 6px;
+}
+
+.forecast-new-antiscia-contacts ul {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0;
+}
+
+.forecast-new-antiscia-contact {
+    font-size: 11px;
+    opacity: 0.85;
+}
+
+.forecast-new-dominants {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 10px;
+    font-size: 12px;
+}
+
+.forecast-new-dominants-headline {
+    font-weight: 600;
+}
+
+.forecast-new-dominants-row {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+}
+
+.forecast-new-dominants-label {
+    min-width: 5.5em;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    opacity: 0.55;
+}
+
+.forecast-new-dominants-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.forecast-new-dominants-chip {
+    background: rgba(30, 58, 95, 0.06);
+    border-radius: 6px;
+    padding: 1px 6px;
+    font-size: 11px;
+}
+
+.forecast-new-list-empty,
+.forecast-new-list-loading,
+.forecast-new-list-error {
+    padding: 10px;
+    opacity: 0.6;
+    font-size: 11px;
+}

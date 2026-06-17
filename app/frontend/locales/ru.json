@@ -277,7 +277,10 @@
         "dispositors": "Схема диспозиторов",
         "lunar": "Луна",
         "hours": "Часы",
-        "profections": "Профекции"
+        "profections": "Профекции",
+        "antiscia": "Антисы",
+        "asteroids": "Астероиды",
+        "dominants": "Доминанты"
       },
       "view": {
         "single": "Одно колесо",
@@ -391,7 +394,8 @@
           "positions": "Положения",
           "aspects": "Аспекты",
           "analysis": "Анализ",
-          "now": "Момент"
+          "now": "Момент",
+          "advanced": "Продвинутое"
         },
         "workspaces": {
           "natalConsultation": "Натальная консультация",
@@ -457,6 +461,34 @@
         "davison": "Davison",
         "unavailable": "Davison недоступен для неполных данных рождения",
         "noPartner": "Сначала выберите партнёра"
+      },
+      "antiscia": {
+        "empty": "Нет данных",
+        "antiscion": "Антис",
+        "contra_antiscion": "Контрантис",
+        "contacts": "Контакты"
+      },
+      "asteroids": {
+        "empty": "Нет данных",
+        "house": "Дом {house}"
+      },
+      "dominants": {
+        "empty": "Нет данных",
+        "planets": "Планеты",
+        "signs": "Знаки",
+        "elements": "Стихии",
+        "modes": "Кресты",
+        "element": {
+          "fire": "Огонь",
+          "earth": "Земля",
+          "air": "Воздух",
+          "water": "Вода"
+        },
+        "mode": {
+          "cardinal": "Кардинальный",
+          "fixed": "Фиксированный",
+          "mutable": "Мутабельный"
+        }
       }
     },
     "plan": {

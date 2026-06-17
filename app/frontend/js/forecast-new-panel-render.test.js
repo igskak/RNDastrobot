@@ -31,8 +31,8 @@ function tabButtons(doc, side) {
     const doc = freshDoc();
     const layout = L.buildDefaultForecastNewLayout();
     const active = L.renderPanelsToDom({ document: doc, layout, mode: 'multi', activeTab: {}, translate: t });
-    ok(tabButtons(doc, 'left').length === 10, 'multi: left has 10 tab buttons');
-    ok(panelContent(doc, 'left').querySelectorAll('[data-tab-id]').length === 10, 'multi: left has 10 panes');
+    ok(tabButtons(doc, 'left').length === L.VIEW_KEYS.length, 'multi: left has all catalog tab buttons');
+    ok(panelContent(doc, 'left').querySelectorAll('[data-tab-id]').length === L.VIEW_KEYS.length, 'multi: left has all catalog panes');
     ok(panelContent(doc, 'left').contains(doc.getElementById('natalPlanetsView')), 'multi: natalPlanetsView in left');
     ok(panelContent(doc, 'right').contains(doc.getElementById('progPlanetsView')), 'multi: progPlanetsView in right');
     const firstPane = panelContent(doc, 'left').querySelector('[data-tab-id]');
@@ -105,7 +105,7 @@ function tabButtons(doc, side) {
     L.renderPanelsToDom({ document: doc, layout, mode: 'multi', activeTab: {}, translate: t });
     L.renderPanelsToDom({ document: doc, layout, mode: 'multi', activeTab: {}, translate: t });
     ok(doc.querySelectorAll('#natalPlanetsView').length === 1, 'stable: no duplicate block divs after re-render');
-    ok(panelContent(doc, 'left').querySelectorAll('[data-tab-id]').length === 10, 'stable: still 10 panes after re-render');
+    ok(panelContent(doc, 'left').querySelectorAll('[data-tab-id]').length === L.VIEW_KEYS.length, 'stable: still all panes after re-render');
 })();
 
 // --- corner: assigned block re-homed into corner host, NOT in any panel pane ---
@@ -229,6 +229,25 @@ function planelContains(doc, side, node) {
     ok(panelContent(doc, 'left').contains(doc.getElementById('natalProfectionsView')), 'profections: natalProfectionsView in left panel');
     ok(doc.querySelectorAll('#natalProfectionsView').length === 1, 'profections: exactly one node');
 })();
+
+// --- antiscia / asteroids / dominants blocks re-home into a panel tab ---
+[
+    { view: 'antiscia', container: 'natalAntisciaView' },
+    { view: 'asteroids', container: 'natalAsteroidsView' },
+    { view: 'dominants', container: 'natalDominantsView' },
+].forEach(({ view, container }) => {
+    const doc = freshDoc();
+    const layout = L.normalizeLayout({
+        schema_version: 1,
+        panels: {
+            multi: { left: [{ id: 'l_' + view, blocks: [{ source: 'natal', view }] }], right: [], corners: L.emptyCorners() },
+            single: { left: [], right: [], corners: L.emptyCorners() },
+        },
+    });
+    L.renderPanelsToDom({ document: doc, layout, mode: 'multi', activeTab: {}, translate: t });
+    ok(panelContent(doc, 'left').contains(doc.getElementById(container)), view + ': ' + container + ' in left panel');
+    ok(doc.querySelectorAll('#' + container).length === 1, view + ': exactly one node');
+});
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

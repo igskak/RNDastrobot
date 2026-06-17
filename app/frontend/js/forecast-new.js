@@ -2871,6 +2871,9 @@
                 ? window.NatalWheelData.prepareNatalWheelData(natalData, { houseSystem: state.pageSettings.houseSystem })
                 : natalData;
             state.profectionsData = null;
+            state.antisciaData = null;
+            state.asteroidsData = null;
+            state.dominantsData = null;
             updateHeaderInfo();
             syncZodiacControlsFromNatal();
             renderStaticNatal();
@@ -4361,6 +4364,127 @@
         if (layoutHasBlock('now:lunar')) renderLunarBlock();
         if (layoutHasBlock('now:hours')) renderHoursBlock();
         if (layoutHasBlock('natal:profections')) renderProfectionsBlock();
+        if (layoutHasBlock('natal:antiscia')) renderAntisciaBlock();
+        if (layoutHasBlock('natal:asteroids')) renderAsteroidsBlock();
+        if (layoutHasBlock('natal:dominants')) renderDominantsBlock();
+    }
+
+    function pointShort(point) {
+        if (!point) return '';
+        const deg = Math.floor(point.degree_in_sign || 0);
+        return `${deg}° ${signLabel(point.sign)}`;
+    }
+
+    function antisciaBlockMarkup(data) {
+        if (!data || !Array.isArray(data.points) || data.points.length === 0) {
+            return `<div class="forecast-new-list-empty">${escapeHtml(t('page.forecastNew.antiscia.empty') || '—')}</div>`;
+        }
+        const rows = data.points.map((p) => `
+            <li class="forecast-new-list-row">
+                <span class="forecast-new-list-name">${escapeHtml(planetLabel(p.name))}</span>
+                <span class="forecast-new-list-val">${escapeHtml(pointShort(p.antiscion))}</span>
+                <span class="forecast-new-list-val forecast-new-list-val--dim">${escapeHtml(pointShort(p.contra_antiscion))}</span>
+            </li>`).join('');
+        const contacts = (data.contacts || []).map((c) => {
+            const kind = t(`page.forecastNew.antiscia.${c.kind}`) || c.kind;
+            return `<li class="forecast-new-antiscia-contact">${escapeHtml(planetLabel(c.from))} → ${escapeHtml(planetLabel(c.to))} · ${escapeHtml(kind)} (${escapeHtml(String(c.orb))}°)</li>`;
+        }).join('');
+        return `
+            <div class="forecast-new-list forecast-new-antiscia">
+                <div class="forecast-new-list-head">
+                    <span>${escapeHtml(t('page.forecastNew.antiscia.antiscion') || 'Antiscion')}</span>
+                    <span>${escapeHtml(t('page.forecastNew.antiscia.contra_antiscion') || 'Contra')}</span>
+                </div>
+                <ul class="forecast-new-list-body">${rows}</ul>
+                ${contacts ? `<div class="forecast-new-antiscia-contacts"><div class="forecast-new-list-subhead">${escapeHtml(t('page.forecastNew.antiscia.contacts') || 'Contacts')}</div><ul>${contacts}</ul></div>` : ''}
+            </div>`;
+    }
+
+    function asteroidsBlockMarkup(data) {
+        const list = data && Array.isArray(data.asteroids) ? data.asteroids : [];
+        if (list.length === 0) {
+            return `<div class="forecast-new-list-empty">${escapeHtml(t('page.forecastNew.asteroids.empty') || '—')}</div>`;
+        }
+        const rows = list.map((a) => `
+            <li class="forecast-new-list-row">
+                <span class="forecast-new-list-name">${escapeHtml(planetLabel(a.name))}${a.retrograde ? ' <span class="forecast-new-retro">R</span>' : ''}</span>
+                <span class="forecast-new-list-val">${escapeHtml(`${Math.floor(a.degree_in_sign || 0)}° ${signLabel(a.sign)}`)}</span>
+                <span class="forecast-new-list-val forecast-new-list-val--dim">${a.house ? escapeHtml(t('page.forecastNew.asteroids.house', { house: a.house }) || `${a.house}`) : ''}</span>
+            </li>`).join('');
+        return `<div class="forecast-new-list forecast-new-asteroids"><ul class="forecast-new-list-body">${rows}</ul></div>`;
+    }
+
+    function dominantsBlockMarkup(data) {
+        if (!data || !data.dominant) {
+            return `<div class="forecast-new-list-empty">${escapeHtml(t('page.forecastNew.dominants.empty') || '—')}</div>`;
+        }
+        const d = data.dominant;
+        const headline = `
+            <div class="forecast-new-dominants-headline">
+                ${escapeHtml(planetLabel(d.planet))} · ${escapeHtml(signLabel(d.sign))} ·
+                ${escapeHtml(t(`page.forecastNew.dominants.element.${d.element}`) || d.element || '')} ·
+                ${escapeHtml(t(`page.forecastNew.dominants.mode.${d.mode}`) || d.mode || '')}
+            </div>`;
+        const ranked = (label, items, mapKey) => {
+            if (!items || items.length === 0) return '';
+            const cells = items.map((it) => {
+                const name = mapKey ? (t(`${mapKey}.${it.key}`) || it.key)
+                    : (it.key.match(/^[A-Z]/) ? planetLabel(it.key) : signLabel(it.key));
+                return `<span class="forecast-new-dominants-chip">${escapeHtml(name)} <b>${escapeHtml(String(it.score))}</b></span>`;
+            }).join('');
+            return `<div class="forecast-new-dominants-row"><span class="forecast-new-dominants-label">${escapeHtml(t(label) || label)}</span><span class="forecast-new-dominants-chips">${cells}</span></div>`;
+        };
+        return `
+            <div class="forecast-new-dominants">
+                ${headline}
+                ${ranked('page.forecastNew.dominants.planets', data.planets)}
+                ${ranked('page.forecastNew.dominants.signs', data.signs)}
+                ${ranked('page.forecastNew.dominants.elements', data.elements, 'page.forecastNew.dominants.element')}
+                ${ranked('page.forecastNew.dominants.modes', data.modes, 'page.forecastNew.dominants.mode')}
+            </div>`;
+    }
+
+    async function renderNatalAuxBlock(opts) {
+        const { containerId, endpoint, cacheKey, markup } = opts;
+        const el = document.getElementById(containerId)
+            || document.getElementById('forecastNewBlockStore')?.querySelector('#' + containerId);
+        if (!el) return;
+        if (!state.userId) {
+            el.innerHTML = `<div class="forecast-new-list-empty">${escapeHtml(t('page.forecastNew.profections.noSavedChart') || '—')}</div>`;
+            return;
+        }
+        const cache = state[cacheKey];
+        if (cache && cache.userId === state.userId) {
+            el.innerHTML = markup(cache.data);
+            return;
+        }
+        el.innerHTML = `<div class="forecast-new-list-loading">${escapeHtml(t('common.loading') || '…')}</div>`;
+        try {
+            const data = await apiGet(`${endpoint}?user_id=${encodeURIComponent(String(state.userId))}`);
+            state[cacheKey] = { userId: state.userId, data };
+            el.innerHTML = markup(data);
+        } catch (error) {
+            el.innerHTML = `<div class="forecast-new-list-error">${escapeHtml(t('common.error') || 'Ошибка')}</div>`;
+        }
+    }
+
+    function renderAntisciaBlock() {
+        return renderNatalAuxBlock({
+            containerId: 'natalAntisciaView', endpoint: '/antiscia',
+            cacheKey: 'antisciaData', markup: antisciaBlockMarkup,
+        });
+    }
+    function renderAsteroidsBlock() {
+        return renderNatalAuxBlock({
+            containerId: 'natalAsteroidsView', endpoint: '/asteroids',
+            cacheKey: 'asteroidsData', markup: asteroidsBlockMarkup,
+        });
+    }
+    function renderDominantsBlock() {
+        return renderNatalAuxBlock({
+            containerId: 'natalDominantsView', endpoint: '/dominants',
+            cacheKey: 'dominantsData', markup: dominantsBlockMarkup,
+        });
     }
 
     function signLabel(name) {
@@ -4699,6 +4823,7 @@
         positions: ['grid'],
         aspects: ['aspects', 'configs', 'stelliums'],
         analysis: ['balances', 'jones', 'dispositors'],
+        advanced: ['profections', 'antiscia', 'asteroids', 'dominants'],
         now: ['lunar', 'hours'],
     };
 
