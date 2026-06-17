@@ -7,6 +7,7 @@ from typing import Any, Optional, List, Dict
 from uuid import UUID
 
 VALID_HOUSE_SYSTEMS = ['P', 'K', 'O', 'R', 'C', 'E', 'W', 'X', 'H', 'T', 'B', 'M']
+VALID_AYANAMSHAS = frozenset({'lahiri', 'fagan_bradley', 'krishnamurti', 'raman', 'de_luce'})
 HOUSE_SYSTEM_ALIASES = {
     'P': 'P',
     'K': 'K',
@@ -66,6 +67,10 @@ class BirthDataInput(BaseModel):
     # Система домов
     house_system: str = Field(default="P", description="Система домов (P=Placidus, K=Koch, W=Whole Sign и т.д.)")
 
+    # Зодиак
+    zodiac: str = Field(default="tropical", description="Зодиак: tropical или sidereal")
+    ayanamsha: str = Field(default="lahiri", description="Аянамша для сидерического зодиака")
+
     # CRM contact fields (optional, used by PUT /users/{id})
     email: Optional[str] = Field(None, description="Email клиента")
     phone: Optional[str] = Field(None, description="Телефон клиента")
@@ -80,6 +85,22 @@ class BirthDataInput(BaseModel):
         code = normalize_house_system_code(v)
         if code not in VALID_HOUSE_SYSTEMS:
             raise ValueError(f'Недопустимая система домов: {v}. Допустимые: {", ".join(VALID_HOUSE_SYSTEMS)}')
+        return code
+
+    @field_validator('zodiac')
+    @classmethod
+    def validate_zodiac(cls, v: str) -> str:
+        code = (v or 'tropical').strip().lower()
+        if code not in ('tropical', 'sidereal'):
+            raise ValueError(f'Недопустимый зодиак: {v}. Допустимые: tropical, sidereal')
+        return code
+
+    @field_validator('ayanamsha')
+    @classmethod
+    def validate_ayanamsha(cls, v: str) -> str:
+        code = (v or 'lahiri').strip().lower()
+        if code not in VALID_AYANAMSHAS:
+            raise ValueError(f'Недопустимая аянамша: {v}. Допустимые: {", ".join(sorted(VALID_AYANAMSHAS))}')
         return code
     
     @field_validator('timezone')

@@ -15,7 +15,7 @@ from app.services.dignity_service import DignityService
 from app.services.planet_characteristics_service import PlanetCharacteristicsService
 from app.services.preferences_runtime import PreferencesRuntimeResolver
 from app.services.aspect_service import AspectService
-from app.utils.constants import get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds
+from app.utils.constants import get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds, normalize_longitude
 from app.database.repositories import UserRepository, NatalChartRepository
 from app.database.models import NatalAspect, NatalConfigurationAspect
 
@@ -114,6 +114,8 @@ class NatalChartService:
         db_session: Optional[Session] = None,
         first_name: Optional[str] = None,
         last_name: Optional[str] = None,
+        zodiac: str = 'tropical',
+        ayanamsha: str = 'lahiri',
     ) -> Dict:
         """
         Расчёт полной натальной карты
@@ -146,19 +148,23 @@ class NatalChartService:
         )
         
         # 3. Рассчитываем планеты
-        planets = self.swisseph_engine.calculate_planets(jd)
-        
+        planets = self.swisseph_engine.calculate_planets(jd, zodiac=zodiac, ayanamsha=ayanamsha)
+
         # 4. Рассчитываем дома и углы
-        houses, angles = self.swisseph_engine.calculate_houses(jd, lat, lon, house_system)
-        
+        houses, angles = self.swisseph_engine.calculate_houses(
+            jd, lat, lon, house_system, zodiac=zodiac, ayanamsha=ayanamsha
+        )
+
         # 5. Определяем дома для планет
         for planet in planets:
             planet['house'] = self.swisseph_engine.get_planet_house(
                 planet['longitude'], houses
             )
-        
+
         # 6. Рассчитываем специальные точки
-        special_points = self._calculate_special_points(jd, angles, planets, houses, lat, lon)
+        special_points = self._calculate_special_points(
+            jd, angles, planets, houses, lat, lon, zodiac=zodiac, ayanamsha=ayanamsha
+        )
 
         # 7. Рассчитываем конфигурации (Крест Судьбы)
         configurations = self._calculate_configurations(special_points, houses)
@@ -236,6 +242,8 @@ class NatalChartService:
                 'longitude': lon,
                 'place': place_name or place,
                 'house_system': house_system,
+                'zodiac': zodiac,
+                'ayanamsha': ayanamsha if (zodiac or 'tropical').lower() == 'sidereal' else None,
             },
             'planets': planets,
             'houses': houses,
@@ -312,26 +320,39 @@ class NatalChartService:
         planets: list,
         houses: list,
         lat: float,
-        lon: float
+        lon: float,
+        zodiac: str = 'tropical',
+        ayanamsha: str = 'lahiri',
     ) -> Dict:
         """
         Расчёт всех специальных точек
 
         Примечание: Chiron теперь рассчитывается как планета в calculate_planets(),
         поэтому здесь его нет.
+
+        Для сидерического зодиака точки, считаемые тропически (узлы, Лилит,
+        Селена), сдвигаются на аянамшу. Фортуна и Вертекс берутся из уже
+        сидерических входов (ASC/Солнце/Луна, angles), поэтому не сдвигаются.
         """
+        is_sidereal = (zodiac or 'tropical').lower() == 'sidereal'
+        ayan = self.swisseph_engine.get_ayanamsha(jd, ayanamsha) if is_sidereal else 0.0
+
+        def _sid(value):
+            return normalize_longitude(value - ayan) if is_sidereal else value
 
         # Получаем данные для расчёта Фортуны
         sun = next(p for p in planets if p['name'] == 'Sun')
         moon = next(p for p in planets if p['name'] == 'Moon')
         asc_lon = angles['ASC']['longitude']
 
-        # Рассчитываем узлы
+        # Рассчитываем узлы (тропически → сдвиг на аянамшу для сидерики)
         north_node_lon, south_node_lon = self.special_points_service.calculate_true_nodes(jd)
+        north_node_lon = _sid(north_node_lon)
+        south_node_lon = _sid(south_node_lon)
 
-        # Рассчитываем Лилит и Селену
-        black_moon_lon = self.special_points_service.calculate_black_moon(jd)
-        white_moon_lon = self.special_points_service.calculate_white_moon(jd)
+        # Рассчитываем Лилит и Селену (тропически → сдвиг)
+        black_moon_lon = _sid(self.special_points_service.calculate_black_moon(jd))
+        white_moon_lon = _sid(self.special_points_service.calculate_white_moon(jd))
 
         # Рассчитываем Фортуну
         fortune_lon = self.special_points_service.calculate_part_of_fortune(

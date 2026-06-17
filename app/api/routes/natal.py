@@ -161,8 +161,10 @@ def calculate_natal_chart(
             db_session=db,
             first_name=birth_data.first_name,
             last_name=birth_data.last_name,
+            zodiac=birth_data.zodiac,
+            ayanamsha=birth_data.ayanamsha,
         )
-        
+
         return build_natal_chart_response(chart_data)
     
     except ValueError as e:
