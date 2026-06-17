@@ -331,8 +331,8 @@ def test_paddle_webhook_activates_paid_effective_plan_and_replay_is_idempotent(m
     }
 
     with TestClient(app) as client:
-        first = client.post("/api/v1/webhooks/billing/paddle", data=body, headers=headers)
-        replay = client.post("/api/v1/webhooks/billing/paddle", data=body, headers=headers)
+        first = client.post("/api/v1/webhooks/billing/paddle", content=body, headers=headers)
+        replay = client.post("/api/v1/webhooks/billing/paddle", content=body, headers=headers)
         _login(client, "webhook@example.com")
         me = client.get("/api/v1/auth/me")
 
@@ -353,7 +353,7 @@ def test_paddle_webhook_rejects_invalid_signature(monkeypatch):
     with TestClient(app) as client:
         response = client.post(
             "/api/v1/webhooks/billing/paddle",
-            data=b'{"event_id":"evt_bad","event_type":"subscription.activated"}',
+            content=b'{"event_id":"evt_bad","event_type":"subscription.activated"}',
             headers={"Paddle-Signature": "ts=1710000000;h1=bad"},
         )
 

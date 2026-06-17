@@ -145,6 +145,57 @@ psql "postgresql://postgres:Skak26062022@db.xxxxxxxxxxxxx.supabase.co:5432/postg
 
 ---
 
+## Incremental SQL Migrations
+
+After the initial schema is installed, use the SQL migration runner for incremental changes in
+`database/migrations`.
+
+### Check Migration Status
+
+From the repository root:
+
+```bash
+python3 app/database/apply_migration.py --status
+```
+
+The runner creates and reads a `schema_migrations` ledger table. Each migration is identified by
+filename, so do not rename migration files after they have been applied to an environment.
+
+### Apply One Migration
+
+```bash
+python3 app/database/apply_migration.py 042_add_billing_foundation.sql
+```
+
+If the filename already exists in `schema_migrations`, the runner skips it and exits successfully.
+
+### Apply All Pending Migrations
+
+```bash
+python3 app/database/apply_migration.py --all
+```
+
+This applies pending `*.sql` files in lexicographic order and records each successful file in
+`schema_migrations`.
+
+### Adding A Migration
+
+1. Add a new file under `app/database/migrations`.
+2. Use a stable numeric prefix, for example `043_add_example_table.sql`.
+3. Keep each migration forward-only and idempotent where practical.
+4. Do not edit or rename already-applied migration files.
+5. Run `python3 app/database/apply_migration.py --status` before applying changes to shared environments.
+6. Add or update tests for the code that depends on the new schema.
+
+Rollback files named `*_down.sql` are kept as manual references only. They are not included in
+`--status` or `--all`.
+
+The current migration folder contains historical PostgreSQL/Supabase SQL. Some old files may not be
+portable to SQLite; API tests use ORM metadata for test schema creation instead of replaying the full
+production migration history.
+
+---
+
 ## Verification
 
 ### Check Tables Created
