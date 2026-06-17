@@ -182,6 +182,35 @@ class ChartDataRenderer {
         `;
     }
 
+    // Compact single/double-glyph badges for the Sun relation (cazimi / combust /
+    // under rays) and the solar phase (oriental / occidental). Tooltip carries the
+    // full translated label (astro.feature.short.*).
+    solarBadgeTitle(featureKey) {
+        const key = `astro.feature.short.${featureKey}`;
+        const translated = this.t(key);
+        return translated === key ? featureKey : translated;
+    }
+
+    sunRelationIndicatorHtml(planet, variantClass = '') {
+        const relation = String(planet?.sun_relation || '').trim();
+        const glyphs = { cazimi: 'Cz', combust: 'Cb', under_rays: 'Ur' };
+        const glyph = glyphs[relation];
+        if (!glyph) return '';
+        const suffix = variantClass ? ` ${variantClass}` : '';
+        const title = this.escapeHtml(this.solarBadgeTitle(relation));
+        return `<span class="planet-status-badge planet-status-badge--sun-relation planet-status-badge--${this.escapeHtml(relation)}${suffix}" title="${title}" aria-label="${title}">${glyph}</span>`;
+    }
+
+    solarPhaseIndicatorHtml(planet, variantClass = '') {
+        const phase = String(planet?.solar_phase || '').trim();
+        const glyphs = { oriental: 'Or', occidental: 'Oc' };
+        const glyph = glyphs[phase];
+        if (!glyph) return '';
+        const suffix = variantClass ? ` ${variantClass}` : '';
+        const title = this.escapeHtml(this.solarBadgeTitle(phase));
+        return `<span class="planet-status-badge planet-status-badge--solar-phase planet-status-badge--${this.escapeHtml(phase)}${suffix}" title="${title}" aria-label="${title}">${glyph}</span>`;
+    }
+
     buildRetrogradeLookup(planets = []) {
         const lookup = new Map();
         planets.forEach((planet) => {
@@ -469,7 +498,9 @@ class ChartDataRenderer {
                 this.retroIndicatorHtml(p.retrograde, 'retro-indicator--small')
             ].filter(Boolean).join('');
             const specialPositionBadges = [
-                this.dignityIndicatorHtml(p, 'planet-status-badge--small')
+                this.dignityIndicatorHtml(p, 'planet-status-badge--small'),
+                this.sunRelationIndicatorHtml(p, 'planet-status-badge--small'),
+                this.solarPhaseIndicatorHtml(p, 'planet-status-badge--small')
             ].filter(Boolean).join('');
             return `
                 <tr id="row-${p.name}" data-planet="${p.name}">

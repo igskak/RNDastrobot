@@ -1528,6 +1528,46 @@ input[type="number"] {
     text-transform: uppercase;
 }
 
+/* Sun-relation badges (cazimi / combust / under rays). */
+.planet-status-badge--sun-relation {
+    letter-spacing: 0.01em;
+}
+
+.planet-status-badge--cazimi {
+    background: rgba(212, 175, 55, 0.22);
+    color: #8a6d12;
+    border-color: rgba(212, 175, 55, 0.35);
+}
+
+.planet-status-badge--combust {
+    background: rgba(184, 50, 50, 0.1);
+    color: #8f2f2f;
+    border-color: rgba(184, 50, 50, 0.16);
+}
+
+.planet-status-badge--under_rays {
+    background: rgba(184, 147, 90, 0.12);
+    color: #866231;
+    border-color: rgba(184, 147, 90, 0.18);
+}
+
+/* Solar-phase badges (oriental / occidental). */
+.planet-status-badge--solar-phase {
+    letter-spacing: 0.01em;
+}
+
+.planet-status-badge--oriental {
+    background: rgba(30, 58, 95, 0.08);
+    color: var(--accent);
+    border-color: rgba(30, 58, 95, 0.14);
+}
+
+.planet-status-badge--occidental {
+    background: rgba(90, 70, 120, 0.1);
+    color: #5a4678;
+    border-color: rgba(90, 70, 120, 0.16);
+}
+
 .planet-status-badge--domicile {
     background: rgba(43, 122, 75, 0.1);
     color: #1f5d39;
