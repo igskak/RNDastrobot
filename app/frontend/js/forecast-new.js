@@ -4425,11 +4425,19 @@
                 ${escapeHtml(t(`page.forecastNew.dominants.element.${d.element}`) || d.element || '')} ·
                 ${escapeHtml(t(`page.forecastNew.dominants.mode.${d.mode}`) || d.mode || '')}
             </div>`;
-        const ranked = (label, items, mapKey) => {
+        const ranked = (label, items, mapKey, formatKey) => {
             if (!items || items.length === 0) return '';
             const cells = items.map((it) => {
-                const name = mapKey ? (t(`${mapKey}.${it.key}`) || it.key)
-                    : (it.key.match(/^[A-Z]/) ? planetLabel(it.key) : signLabel(it.key));
+                let name = it.key;
+                if (mapKey) {
+                    name = t(`${mapKey}.${it.key}`) || it.key;
+                } else if (formatKey === 'planet') {
+                    name = planetLabel(it.key);
+                } else if (formatKey === 'sign') {
+                    name = signLabel(it.key);
+                } else if (formatKey === 'house') {
+                    name = t('page.forecastNew.asteroids.house', { house: it.key }) || it.key;
+                }
                 return `<span class="forecast-new-dominants-chip">${escapeHtml(name)} <b>${escapeHtml(String(it.score))}</b></span>`;
             }).join('');
             return `<div class="forecast-new-dominants-row"><span class="forecast-new-dominants-label">${escapeHtml(t(label) || label)}</span><span class="forecast-new-dominants-chips">${cells}</span></div>`;
@@ -4437,8 +4445,9 @@
         return `
             <div class="forecast-new-dominants">
                 ${headline}
-                ${ranked('page.forecastNew.dominants.planets', data.planets)}
-                ${ranked('page.forecastNew.dominants.signs', data.signs)}
+                ${ranked('page.forecastNew.dominants.planets', data.planets, null, 'planet')}
+                ${ranked('page.forecastNew.dominants.signs', data.signs, null, 'sign')}
+                ${ranked('page.forecastNew.dominants.houses', data.houses, null, 'house')}
                 ${ranked('page.forecastNew.dominants.elements', data.elements, 'page.forecastNew.dominants.element')}
                 ${ranked('page.forecastNew.dominants.modes', data.modes, 'page.forecastNew.dominants.mode')}
             </div>`;
