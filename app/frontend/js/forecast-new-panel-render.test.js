@@ -31,8 +31,8 @@ function tabButtons(doc, side) {
     const doc = freshDoc();
     const layout = L.buildDefaultForecastNewLayout();
     const active = L.renderPanelsToDom({ document: doc, layout, mode: 'multi', activeTab: {}, translate: t });
-    ok(tabButtons(doc, 'left').length === 9, 'multi: left has 9 tab buttons');
-    ok(panelContent(doc, 'left').querySelectorAll('[data-tab-id]').length === 9, 'multi: left has 9 panes');
+    ok(tabButtons(doc, 'left').length === 10, 'multi: left has 10 tab buttons');
+    ok(panelContent(doc, 'left').querySelectorAll('[data-tab-id]').length === 10, 'multi: left has 10 panes');
     ok(panelContent(doc, 'left').contains(doc.getElementById('natalPlanetsView')), 'multi: natalPlanetsView in left');
     ok(panelContent(doc, 'right').contains(doc.getElementById('progPlanetsView')), 'multi: progPlanetsView in right');
     const firstPane = panelContent(doc, 'left').querySelector('[data-tab-id]');
@@ -105,7 +105,7 @@ function tabButtons(doc, side) {
     L.renderPanelsToDom({ document: doc, layout, mode: 'multi', activeTab: {}, translate: t });
     L.renderPanelsToDom({ document: doc, layout, mode: 'multi', activeTab: {}, translate: t });
     ok(doc.querySelectorAll('#natalPlanetsView').length === 1, 'stable: no duplicate block divs after re-render');
-    ok(panelContent(doc, 'left').querySelectorAll('[data-tab-id]').length === 9, 'stable: still 9 panes after re-render');
+    ok(panelContent(doc, 'left').querySelectorAll('[data-tab-id]').length === 10, 'stable: still 10 panes after re-render');
 })();
 
 // --- corner: assigned block re-homed into corner host, NOT in any panel pane ---
@@ -213,6 +213,21 @@ function planelContains(doc, side, node) {
     ok(doc.getElementById('forecastNewCornerTl').contains(doc.getElementById('nowHoursView')), 'hours: nowHoursView re-homed into corner tl');
     ok(L.BLOCK_TARGET_MAP['now:hours'].containerId === 'nowHoursView', 'hours: now:hours -> nowHoursView');
     ok(!L.BLOCK_TARGET_MAP['natal:hours'], 'no natal:hours pairing');
+})();
+
+// --- profections block re-homes into a side panel tab ---
+(() => {
+    const doc = freshDoc();
+    const layout = L.normalizeLayout({
+        schema_version: 1,
+        panels: {
+            multi: { left: [{ id: 'lp', blocks: [{ source: 'natal', view: 'profections' }] }], right: [], corners: L.emptyCorners() },
+            single: { left: [], right: [], corners: L.emptyCorners() },
+        },
+    });
+    L.renderPanelsToDom({ document: doc, layout, mode: 'multi', activeTab: {}, translate: t });
+    ok(panelContent(doc, 'left').contains(doc.getElementById('natalProfectionsView')), 'profections: natalProfectionsView in left panel');
+    ok(doc.querySelectorAll('#natalProfectionsView').length === 1, 'profections: exactly one node');
 })();
 
 console.log(`\n${pass} passed, ${fail} failed`);

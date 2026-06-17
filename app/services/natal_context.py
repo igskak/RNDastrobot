@@ -130,6 +130,8 @@ class NatalContext:
     natal_data: Dict
     astrologer_id: Optional[UUID] = None
     house_system: str = 'P'
+    zodiac: str = 'tropical'
+    ayanamsha: Optional[str] = None
     user_id: Optional[UUID] = None
     birth_data: Optional[Dict] = None
     # Поля рождения, нужные производным методикам (прогрессии/дирекции/соляр):
@@ -163,6 +165,8 @@ class NatalContext:
             natal_data=natal_data_from_calc_result(calc_result, apply_exclusions=apply_exclusions),
             astrologer_id=astrologer_id,
             house_system=(birth_data.get('house_system') or 'P'),
+            zodiac=(birth_data.get('zodiac') or 'tropical'),
+            ayanamsha=birth_data.get('ayanamsha'),
             user_id=None,
             birth_data=birth_data,
             birth_jd=birth_data.get('julian_day'),

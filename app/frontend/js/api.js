@@ -573,6 +573,21 @@
         return response.json();
     }
 
+    async function updateUserZodiac(userId, zodiac, ayanamsha = 'lahiri', options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/users/${encodeURIComponent(String(userId))}/zodiac`, {
+            method: 'PATCH',
+            headers: withLocaleHeaders({
+                'Content-Type': 'application/json',
+            }),
+            body: JSON.stringify({ zodiac, ayanamsha }),
+            signal: options.signal,
+        });
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(response, 'common.error', 'Failed to update zodiac'));
+        }
+        return response.json();
+    }
+
     async function resetUserViewToDefaults(userId, viewType, options = {}) {
         const response = await apiFetch(`${API_BASE_URL}/users/${encodeURIComponent(String(userId))}/reset-view-to-defaults`, {
             method: 'POST',
@@ -955,6 +970,7 @@
         saveChartViewOverride,
         deleteChartViewOverride,
         updateUserHouseSystem,
+        updateUserZodiac,
         resetUserViewToDefaults,
         getRelatedPeople,
         createRelatedPerson,

@@ -276,7 +276,8 @@
         "jones": "Космограма Джонса",
         "dispositors": "Схема диспозиторів",
         "lunar": "Місяць",
-        "hours": "Години"
+        "hours": "Години",
+        "profections": "Профекції"
       },
       "view": {
         "single": "Одне колесо",
@@ -432,7 +433,30 @@
       },
       "zodiac": {
         "sidereal": "Сидеричний",
-        "tropical": "Тропічний"
+        "tropical": "Тропічний",
+        "label": "Зодіак",
+        "ayanamsha": {
+          "lahiri": "Lahiri",
+          "fagan_bradley": "Fagan-Bradley",
+          "krishnamurti": "Krishnamurti",
+          "raman": "Raman",
+          "de_luce": "De Luce"
+        }
+      },
+      "profections": {
+        "age": "Вік",
+        "annual": "Річна",
+        "monthly": "Місячна",
+        "house": "Дім {house}",
+        "empty": "Немає даних профекцій",
+        "noSavedChart": "Збережіть карту, щоб показати профекції"
+      },
+      "composite": {
+        "calculate": "Композит",
+        "midpoint": "Midpoint",
+        "davison": "Davison",
+        "unavailable": "Davison недоступний для неповних даних народження",
+        "noPartner": "Спочатку виберіть партнера"
       }
     },
     "plan": {

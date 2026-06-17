@@ -3153,11 +3153,41 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
 }
 
 .forecast-new-lunar,
-.forecast-new-hours {
+.forecast-new-hours,
+.forecast-new-profections {
     display: flex;
     flex-direction: column;
     gap: 6px;
     padding: 8px 10px;
+}
+
+.forecast-new-profections-head,
+.forecast-new-profections-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(30, 58, 95, 0.08);
+    font-size: 11px;
+}
+
+.forecast-new-profections-head {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.forecast-new-profections-row:last-child {
+    border-bottom: 0;
+}
+
+.forecast-new-profections-label {
+    opacity: 0.7;
+}
+
+.forecast-new-profections-value {
+    font-weight: 600;
+    text-align: right;
 }
 
 .forecast-new-lunar-phase {
@@ -3268,8 +3298,57 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
 .forecast-new-lunar-error,
 .forecast-new-hours-loading,
 .forecast-new-hours-error,
-.forecast-new-hours-empty {
+.forecast-new-hours-empty,
+.forecast-new-profections-loading,
+.forecast-new-profections-error,
+.forecast-new-profections-empty {
     padding: 10px;
     opacity: 0.6;
     font-size: 11px;
+}
+
+.forecast-new-composite-panel {
+    margin-top: 10px;
+    max-height: min(420px, 54vh);
+    overflow: auto;
+    border-top: 1px solid rgba(30, 58, 95, 0.12);
+    padding-top: 10px;
+}
+
+.forecast-new-composite {
+    display: grid;
+    gap: 12px;
+}
+
+.forecast-new-composite-section h5 {
+    margin: 0 0 6px;
+    color: var(--text-primary);
+    font: 700 12px/1.3 var(--font-ui);
+}
+
+.forecast-new-composite-meta,
+.forecast-new-composite-empty,
+.forecast-new-composite-loading,
+.forecast-new-composite-error {
+    margin: 0 0 6px;
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.forecast-new-composite-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.forecast-new-composite-table th,
+.forecast-new-composite-table td {
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(30, 58, 95, 0.08);
+    text-align: left;
+}
+
+.forecast-new-composite-table th:last-child,
+.forecast-new-composite-table td:last-child {
+    text-align: right;
 }

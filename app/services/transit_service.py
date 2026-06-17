@@ -105,7 +105,13 @@ class TransitService:
         utc_dt, jd_transit = TimeService.process_birth_time(transit_date, transit_time, timezone)
 
         # 3. Рассчитать транзитные планеты и дома
-        transit_planets = self.swisseph_engine.calculate_planets(jd_transit)
+        self._active_zodiac = context.zodiac or 'tropical'
+        self._active_ayanamsha = context.ayanamsha or 'lahiri'
+        transit_planets = self.swisseph_engine.calculate_planets(
+            jd_transit,
+            zodiac=self._active_zodiac,
+            ayanamsha=self._active_ayanamsha,
+        )
 
         transit_houses = []
         transit_angles = {}
@@ -115,6 +121,8 @@ class TransitService:
                 lat=float(latitude),
                 lon=float(longitude),
                 hsys=context.house_system,
+                zodiac=self._active_zodiac,
+                ayanamsha=self._active_ayanamsha,
             )
 
         transit_planets.extend(self._calculate_transit_special_bodies(
@@ -177,6 +185,8 @@ class TransitService:
             natal_data=natal_data,
             astrologer_id=astrologer_id,
             house_system=house_system,
+            zodiac=getattr(user, 'zodiac', None) or 'tropical',
+            ayanamsha=getattr(user, 'ayanamsha', None),
             user_id=user_id,
         )
 
@@ -850,7 +860,12 @@ class TransitService:
 
     def _get_transit_body_longitude(self, jd: float, transit_body: str) -> Optional[float]:
         """Получить долготу транзитного тела на момент JD."""
-        longitude = self.swisseph_engine.calculate_planet_longitude(jd, transit_body)
+        longitude = self.swisseph_engine.calculate_planet_longitude(
+            jd,
+            transit_body,
+            zodiac=getattr(self, '_active_zodiac', 'tropical'),
+            ayanamsha=getattr(self, '_active_ayanamsha', 'lahiri'),
+        )
         if longitude is not None:
             return longitude
         positions = self._get_transit_positions(jd)
@@ -862,7 +877,7 @@ class TransitService:
         Ключ кеша нормализован по точности float, чтобы повторные вычисления
         в бинарном/тернарном поиске не пересчитывали ephemeris заново.
         """
-        cache_key = round(jd, 10)
+        cache_key = (round(jd, 10), getattr(self, '_active_zodiac', 'tropical'), getattr(self, '_active_ayanamsha', 'lahiri'))
         cached = self._transit_positions_cache.get(cache_key)
         if cached is not None:
             return cached
@@ -870,7 +885,11 @@ class TransitService:
         if len(self._transit_positions_cache) > 10000:
             self._transit_positions_cache.clear()
 
-        transit_planets = self.swisseph_engine.calculate_planets(jd)
+        transit_planets = self.swisseph_engine.calculate_planets(
+            jd,
+            zodiac=getattr(self, '_active_zodiac', 'tropical'),
+            ayanamsha=getattr(self, '_active_ayanamsha', 'lahiri'),
+        )
         transit_planets.extend(self._calculate_transit_special_bodies(jd))
         positions = {body['name']: float(body['longitude']) for body in transit_planets}
         self._transit_positions_cache[cache_key] = positions

@@ -52,6 +52,7 @@
         WHOLE_SIGN: 'W',
         WHOLESIGN: 'W',
     };
+    const VALID_AYANAMSHAS = ['lahiri', 'fagan_bradley', 'krishnamurti', 'raman', 'de_luce'];
     const DEFAULT_ASPECT_PHASE_FILTER = ['applying', 'separating'];
     const RESULT_VIEWS = ['wheel', 'layers', 'aspects'];
     const DEFAULT_ASPECTING_BODIES = new Set([
@@ -371,13 +372,13 @@
             'forecastNewMatrixEditor', 'forecastNewSettingsMatrixEditor',
             'forecastNewViewSingle', 'forecastNewViewMulti',
             'forecastNewSolarYearInput', 'forecastNewSolarLocationInput', 'forecastNewSolarLocationSuggestions',
-            'forecastNewSolarLat', 'forecastNewSolarLon', 'forecastNewSynastryPartnerSelect',
+            'forecastNewSolarLat', 'forecastNewSolarLon', 'forecastNewSynastryPartnerSelect', 'forecastNewCompositeBtn', 'forecastNewCompositePanel',
             'forecastNewSynastryManualName', 'forecastNewSynastryManualDate', 'forecastNewSynastryManualTime',
             'forecastNewSynastryManualTimezone', 'forecastNewSynastryManualLocation', 'forecastNewSynastryManualSuggestions',
             'forecastNewSynastryManualLat', 'forecastNewSynastryManualLon', 'forecastNewSynastryManualApply', 'forecastNewSynastryManualError',
             'forecastNewZoomIn', 'forecastNewZoomOut',
             'forecastNewSettingsToggle', 'forecastNewSettingsPanel',
-            'orientationSelect', 'houseSystemSelect', 'iconScaleRange', 'iconScaleValue',
+            'orientationSelect', 'houseSystemSelect', 'zodiacSelect', 'ayanamshaSelect', 'iconScaleRange', 'iconScaleValue',
             'aspectScopeSelect', 'aspectTypeToggles',
             'aspectPhaseApplyingToggle', 'aspectPhaseSeparatingToggle',
             'houseNumberStyleSelect', 'houseLabelsOutsideToggle',
@@ -505,6 +506,13 @@
                 await loadActiveLayers({ lightweight: true });
             }
         });
+        refs.zodiacSelect?.addEventListener('change', () => {
+            if (refs.ayanamshaSelect) {
+                refs.ayanamshaSelect.disabled = normalizeZodiac(refs.zodiacSelect?.value) !== 'sidereal';
+            }
+            scheduleApplySettings();
+        });
+        refs.ayanamshaSelect?.addEventListener('change', scheduleApplySettings);
 
         refs.forecastNewSolarYearInput?.addEventListener('change', async () => {
             const year = Number(refs.forecastNewSolarYearInput.value);
@@ -520,12 +528,14 @@
 
         refs.forecastNewSynastryPartnerSelect?.addEventListener('change', async () => {
             state.synastryPartnerId = refs.forecastNewSynastryPartnerSelect.value || '';
+            clearCompositePanel();
             schedulePersist();
             if (state.synastryPartnerId) {
                 closeLayerPopover('synastry_partner');
                 await ensureSynastryLayerActive({ lightweight: true });
             }
         });
+        refs.forecastNewCompositeBtn?.addEventListener('click', renderCompositePanel);
 
         document.getElementById('forecastNewSynastryPickerBtn')?.addEventListener('click', () => {
             window.AstroChartPicker?.open?.({
@@ -1412,6 +1422,7 @@
         if (refs.latitudeInput) refs.latitudeInput.value = state.location.latitude ?? '';
         if (refs.longitudeInput) refs.longitudeInput.value = state.location.longitude ?? '';
         if (refs.houseSystemSelect) refs.houseSystemSelect.value = normalizeHouseSystemCode(state.pageSettings.houseSystem);
+        syncZodiacControlsFromNatal();
         if (refs.orientationSelect) refs.orientationSelect.value = state.pageSettings.orientation;
         if (refs.iconScaleRange) refs.iconScaleRange.value = String(Math.round((state.pageSettings.planetScale || 1.2) * 100));
         if (refs.iconScaleValue) refs.iconScaleValue.textContent = `${Math.round((state.pageSettings.planetScale || 1.2) * 100)}%`;
@@ -1513,6 +1524,26 @@
                 await loadActiveLayers();
             },
         });
+    }
+
+    function normalizeZodiac(value) {
+        return String(value || 'tropical').toLowerCase() === 'sidereal' ? 'sidereal' : 'tropical';
+    }
+
+    function normalizeAyanamsha(value) {
+        const normalized = String(value || 'lahiri').toLowerCase();
+        return VALID_AYANAMSHAS.includes(normalized) ? normalized : 'lahiri';
+    }
+
+    function syncZodiacControlsFromNatal() {
+        const birth = state.natalData?.birth_data || {};
+        const zodiac = normalizeZodiac(birth.zodiac);
+        const ayanamsha = normalizeAyanamsha(birth.ayanamsha);
+        if (refs.zodiacSelect) refs.zodiacSelect.value = zodiac;
+        if (refs.ayanamshaSelect) {
+            refs.ayanamshaSelect.value = ayanamsha;
+            refs.ayanamshaSelect.disabled = zodiac !== 'sidereal';
+        }
     }
 
     function handleLocationInput() {
@@ -2637,6 +2668,8 @@
     async function applySettings() {
         const previousSettings = { ...state.pageSettings };
         const nextHouseSystem = normalizeHouseSystemCode(state.pageSettings.houseSystem);
+        const nextZodiac = normalizeZodiac(refs.zodiacSelect?.value || state.natalData?.birth_data?.zodiac);
+        const nextAyanamsha = normalizeAyanamsha(refs.ayanamshaSelect?.value || state.natalData?.birth_data?.ayanamsha);
         const nextOrientation = state.pageSettings.orientation === 'asc' ? 'asc' : 'aries';
         const iconScale = clampPointScale(Number(refs.iconScaleRange?.value || Math.round((state.pageSettings.planetScale || 1.2) * 100)) / 100);
         const nextAspectScope = ['all', 'major', 'minor'].includes(refs.aspectScopeSelect?.value)
@@ -2687,7 +2720,11 @@
             refs.iconScaleValue.textContent = `${Math.round(iconScale * 100)}%`;
         }
 
-        if (state.pageSettings.houseSystem !== normalizeHouseSystemCode(state.natalData?.birth_data?.house_system || 'P')) {
+        const currentZodiac = normalizeZodiac(state.natalData?.birth_data?.zodiac);
+        const currentAyanamsha = normalizeAyanamsha(state.natalData?.birth_data?.ayanamsha);
+        if (nextZodiac !== currentZodiac || (nextZodiac === 'sidereal' && nextAyanamsha !== currentAyanamsha)) {
+            await updateZodiac(nextZodiac, nextAyanamsha);
+        } else if (state.pageSettings.houseSystem !== normalizeHouseSystemCode(state.natalData?.birth_data?.house_system || 'P')) {
             await updateHouseSystem(nextHouseSystem);
         } else {
             const wheelSettingsChanged = haveAnySettingsChanged(previousSettings, state.pageSettings, [
@@ -2736,6 +2773,31 @@
             console.error('Forecast New house system update failed:', error);
             state.pageSettings.houseSystem = normalizeHouseSystemCode(state.natalData?.birth_data?.house_system || 'P');
             syncControlsFromState();
+        }
+    }
+
+    async function updateZodiac(nextZodiac, nextAyanamsha) {
+        if (!state.userId || !window.AstroAPI?.updateUserZodiac) {
+            renderStaticNatal();
+            renderRightPanel();
+            renderWheel();
+            return;
+        }
+
+        try {
+            const natalData = await window.AstroAPI.updateUserZodiac(state.userId, nextZodiac, nextAyanamsha);
+            state.natalData = natalData;
+            state.natalWheelData = window.NatalWheelData?.prepareNatalWheelData
+                ? window.NatalWheelData.prepareNatalWheelData(natalData, { houseSystem: state.pageSettings.houseSystem })
+                : natalData;
+            state.profectionsData = null;
+            updateHeaderInfo();
+            syncZodiacControlsFromNatal();
+            renderStaticNatal();
+            await loadActiveLayers();
+        } catch (error) {
+            console.error('Forecast New zodiac update failed:', error);
+            syncZodiacControlsFromNatal();
         }
     }
 
@@ -2931,6 +2993,7 @@
             renderRightLayerTabs();
             scheduleRightPanelRender();
             showLayout();
+            renderNowBlocks();
             schedulePersist();
             scheduleAdjacentLayerPrefetch();
         } catch (error) {
@@ -3503,6 +3566,78 @@
             : (select && select.selectedIndex > 0 ? (select.options[select.selectedIndex]?.text || '') : '');
         const bd = layer?.raw?.partner_chart?.birth_data;
         return [partnerName, bd?.date, bd?.place].filter(Boolean).join(' · ');
+    }
+
+    function clearCompositePanel() {
+        if (!refs.forecastNewCompositePanel) return;
+        refs.forecastNewCompositePanel.classList.add('hidden');
+        refs.forecastNewCompositePanel.innerHTML = '';
+    }
+
+    function formatCompositePoint(point) {
+        const degree = point?.degree_in_sign_formatted || (
+            point?.degree_in_sign != null ? `${Number(point.degree_in_sign).toFixed(2)}°` : ''
+        );
+        return [degree, signLabel(point?.sign)].filter(Boolean).join(' ');
+    }
+
+    function compositeRows(points = []) {
+        return (points || []).map((point) => `
+            <tr>
+                <td>${escapeHtml(planetLabel(point.name))}</td>
+                <td>${escapeHtml(formatCompositePoint(point))}</td>
+            </tr>
+        `).join('');
+    }
+
+    function compositeSection(titleKey, chart) {
+        if (!chart) {
+            return `<section class="forecast-new-composite-section">
+                <h5>${escapeHtml(t(titleKey) || titleKey)}</h5>
+                <p class="forecast-new-composite-empty">${escapeHtml(t('page.forecastNew.composite.unavailable') || '—')}</p>
+            </section>`;
+        }
+        const midpointTime = chart.midpoint_time
+            ? `<p class="forecast-new-composite-meta">${escapeHtml([
+                chart.midpoint_time.date,
+                chart.midpoint_time.time,
+                chart.midpoint_time.place || chart.midpoint_time.location,
+            ].filter(Boolean).join(' · '))}</p>`
+            : '';
+        return `<section class="forecast-new-composite-section">
+            <h5>${escapeHtml(t(titleKey) || titleKey)}</h5>
+            ${midpointTime}
+            <table class="forecast-new-composite-table">
+                <thead><tr><th>${escapeHtml(t('page.chart.table.planets.symbol') || 'Body')}</th><th>${escapeHtml(t('page.chart.table.planets.position') || 'Position')}</th></tr></thead>
+                <tbody>${compositeRows(chart.planets)}</tbody>
+            </table>
+        </section>`;
+    }
+
+    async function renderCompositePanel() {
+        const panel = refs.forecastNewCompositePanel;
+        if (!panel) return;
+        if (!state.userId || !state.synastryPartnerId) {
+            panel.classList.remove('hidden');
+            panel.innerHTML = `<p class="forecast-new-composite-empty">${escapeHtml(t('page.forecastNew.composite.noPartner') || '—')}</p>`;
+            return;
+        }
+        panel.classList.remove('hidden');
+        panel.innerHTML = `<p class="forecast-new-composite-loading">${escapeHtml(t('common.loading') || '…')}</p>`;
+        try {
+            const data = await apiPost('/composite/calculate', {
+                user_id: state.userId,
+                partner_id: state.synastryPartnerId,
+                house_system: state.pageSettings.houseSystem || state.natalData?.birth_data?.house_system || 'P',
+            });
+            panel.innerHTML = `
+                <div class="forecast-new-composite">
+                    ${compositeSection('page.forecastNew.composite.midpoint', data.midpoint)}
+                    ${compositeSection('page.forecastNew.composite.davison', data.davison)}
+                </div>`;
+        } catch (error) {
+            panel.innerHTML = `<p class="forecast-new-composite-error">${escapeHtml(error.message || t('common.error') || 'Ошибка')}</p>`;
+        }
     }
 
     function renderRightLayerTabs() {
@@ -4146,6 +4281,66 @@
     function renderNowBlocks() {
         if (layoutHasBlock('now:lunar')) renderLunarBlock();
         if (layoutHasBlock('now:hours')) renderHoursBlock();
+        if (layoutHasBlock('natal:profections')) renderProfectionsBlock();
+    }
+
+    function signLabel(name) {
+        if (!name) return '';
+        const key = `astro.sign.${name}`;
+        const tr = t(key);
+        return tr && tr !== key ? tr : name;
+    }
+
+    function profectionsBlockMarkup(data) {
+        if (!data) {
+            return `<div class="forecast-new-profections-empty">${escapeHtml(t('page.forecastNew.profections.empty') || '—')}</div>`;
+        }
+        const annual = data.annual || {};
+        const monthly = data.monthly || {};
+        const row = (labelKey, house, sign, lord) => `
+            <div class="forecast-new-profections-row">
+                <span class="forecast-new-profections-label">${escapeHtml(t(labelKey) || labelKey)}</span>
+                <span class="forecast-new-profections-value">
+                    ${escapeHtml(t('page.forecastNew.profections.house', { house }) || `${house}`)}
+                    · ${escapeHtml(signLabel(sign))}
+                    · ${escapeHtml(planetLabel(lord))}
+                </span>
+            </div>`;
+        return `
+            <div class="forecast-new-profections">
+                <div class="forecast-new-profections-head">
+                    <span>${escapeHtml(t('page.forecastNew.profections.age') || 'Age')}: ${escapeHtml(data.age)}</span>
+                    <span>${escapeHtml(data.target_date || '')}</span>
+                </div>
+                ${row('page.forecastNew.profections.annual', annual.house, annual.sign, annual.lord)}
+                ${row('page.forecastNew.profections.monthly', monthly.house, monthly.sign, monthly.lord)}
+            </div>`;
+    }
+
+    async function renderProfectionsBlock() {
+        const el = document.getElementById('natalProfectionsView')
+            || document.getElementById('forecastNewBlockStore')?.querySelector('#natalProfectionsView');
+        if (!el) return;
+        if (!state.userId) {
+            el.innerHTML = `<div class="forecast-new-profections-empty">${escapeHtml(t('page.forecastNew.profections.noSavedChart') || '—')}</div>`;
+            return;
+        }
+        const targetDate = splitTargetDatetime(getDisplayedMomentDateTime())[0];
+        const fresh = state.profectionsData && state.profectionsDate === targetDate && state.profectionsUserId === state.userId;
+        if (fresh) {
+            el.innerHTML = profectionsBlockMarkup(state.profectionsData);
+            return;
+        }
+        el.innerHTML = `<div class="forecast-new-profections-loading">${escapeHtml(t('common.loading') || '…')}</div>`;
+        try {
+            const data = await apiGet(`/profections?user_id=${encodeURIComponent(String(state.userId))}&at=${encodeURIComponent(targetDate)}`);
+            state.profectionsData = data;
+            state.profectionsDate = targetDate;
+            state.profectionsUserId = state.userId;
+            el.innerHTML = profectionsBlockMarkup(data);
+        } catch (error) {
+            el.innerHTML = `<div class="forecast-new-profections-error">${escapeHtml(t('common.error') || 'Ошибка')}</div>`;
+        }
     }
 
     function formatLunarMoment(iso) {
@@ -4411,7 +4606,9 @@
         const sources = mode === 'single' ? ['natal'] : ['natal', 'prog'];
         const out = [];
         sources.forEach((source) => PL.VIEW_KEYS.forEach((view) => {
-            out.push({ source: source, view: view });
+            if (PL.BLOCK_TARGET_MAP?.[`${source}:${view}`]) {
+                out.push({ source: source, view: view });
+            }
         }));
         // "now" blocks are mode-agnostic single instances (source 'now').
         (PL.NOW_VIEWS || []).forEach((view) => out.push({ source: 'now', view: view }));

@@ -146,7 +146,11 @@ class ProgressionService:
         progressed_jd = timing['progressed_jd']
 
         # 3. Рассчитать прогрессивные планеты
-        progressed_planets = self.swisseph_engine.calculate_planets(progressed_jd)
+        progressed_planets = self.swisseph_engine.calculate_planets(
+            progressed_jd,
+            zodiac=context.zodiac or 'tropical',
+            ayanamsha=context.ayanamsha or 'lahiri',
+        )
 
         # 3.1 Рассчитать прогрессивные куспиды домов
         progressed_houses, progressed_angles = self.swisseph_engine.calculate_houses(
@@ -154,6 +158,8 @@ class ProgressionService:
             lat=float(lat),
             lon=float(lon),
             hsys='P',
+            zodiac=context.zodiac or 'tropical',
+            ayanamsha=context.ayanamsha or 'lahiri',
         )
         progressed_planets.extend(self._calculate_progressed_special_bodies(
             progressed_jd,
@@ -250,12 +256,16 @@ class ProgressionService:
             'julian_day': float(user.julian_day),
             'latitude': float(user.lat),
             'longitude': float(user.lon),
+            'zodiac': getattr(user, 'zodiac', None) or 'tropical',
+            'ayanamsha': getattr(user, 'ayanamsha', None),
         }
         return NatalContext(
             natal_data=natal_data,
             astrologer_id=astrologer_id,
             user_id=user_id,
             birth_data=birth_data,
+            zodiac=birth_data['zodiac'],
+            ayanamsha=birth_data['ayanamsha'],
             birth_jd=float(user.julian_day),
             birth_date=user.birth_date,
             birth_lat=float(user.lat),

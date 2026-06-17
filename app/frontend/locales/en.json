@@ -276,7 +276,8 @@
         "jones": "Jones cosmogram",
         "dispositors": "Dispositor scheme",
         "lunar": "Moon",
-        "hours": "Hours"
+        "hours": "Hours",
+        "profections": "Profections"
       },
       "view": {
         "single": "Single wheel",
@@ -432,7 +433,30 @@
       },
       "zodiac": {
         "sidereal": "Sidereal",
-        "tropical": "Tropical"
+        "tropical": "Tropical",
+        "label": "Zodiac",
+        "ayanamsha": {
+          "lahiri": "Lahiri",
+          "fagan_bradley": "Fagan-Bradley",
+          "krishnamurti": "Krishnamurti",
+          "raman": "Raman",
+          "de_luce": "De Luce"
+        }
+      },
+      "profections": {
+        "age": "Age",
+        "annual": "Annual",
+        "monthly": "Monthly",
+        "house": "House {house}",
+        "empty": "No profections data",
+        "noSavedChart": "Save the chart to show profections"
+      },
+      "composite": {
+        "calculate": "Composite",
+        "midpoint": "Midpoint",
+        "davison": "Davison",
+        "unavailable": "Davison is unavailable for incomplete birth data",
+        "noPartner": "Choose a partner first"
       }
     },
     "plan": {

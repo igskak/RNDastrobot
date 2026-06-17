@@ -32,6 +32,7 @@ from app.utils.constants import (
     get_zodiac_sign,
     get_degree_in_sign,
     format_degree_minutes_seconds,
+    normalize_longitude,
 )
 
 
@@ -60,7 +61,10 @@ class SolarReturnService:
     def find_solar_return_moment(
         self,
         natal_sun_lon: float,
-        year: int
+        year: int,
+        *,
+        zodiac: str = 'tropical',
+        ayanamsha: Optional[str] = None,
     ) -> float:
         """
         Найти точный момент соляра (возвращения Солнца на натальную позицию)
@@ -74,6 +78,13 @@ class SolarReturnService:
         """
         # Начинаем поиск с 1 января нужного года
         jd_start = swe.julday(year, 1, 1, 0.0)
+
+        if (zodiac or 'tropical').lower() == 'sidereal':
+            return self._find_sidereal_solar_return_moment(
+                natal_sun_lon,
+                jd_start,
+                ayanamsha=ayanamsha or 'lahiri',
+            )
         
         # swe.solcross_ut находит момент когда Солнце пересекает заданную долготу
         # Возвращает Julian Day
@@ -82,6 +93,43 @@ class SolarReturnService:
         logger.debug(f"Solar return for Sun@{natal_sun_lon:.4f}° in {year}: JD={jd_solar}")
         
         return jd_solar
+
+    def _find_sidereal_solar_return_moment(
+        self,
+        natal_sun_lon: float,
+        jd_start: float,
+        *,
+        ayanamsha: str,
+    ) -> float:
+        def signed_delta(jd: float) -> float:
+            lon = self.swisseph_engine.calculate_planet_longitude(
+                jd,
+                'Sun',
+                zodiac='sidereal',
+                ayanamsha=ayanamsha,
+            )
+            return ((normalize_longitude(lon - natal_sun_lon) + 180.0) % 360.0) - 180.0
+
+        prev_jd = jd_start
+        prev = signed_delta(prev_jd)
+        step = 1.0
+        for idx in range(1, 370):
+            cur_jd = jd_start + idx * step
+            cur = signed_delta(cur_jd)
+            if prev == 0 or (prev < 0 <= cur) or (prev > 0 >= cur):
+                lo, hi = prev_jd, cur_jd
+                lo_val = prev
+                for _ in range(48):
+                    mid = (lo + hi) / 2.0
+                    mid_val = signed_delta(mid)
+                    if (lo_val < 0 <= mid_val) or (lo_val > 0 >= mid_val):
+                        hi = mid
+                    else:
+                        lo = mid
+                        lo_val = mid_val
+                return (lo + hi) / 2.0
+            prev_jd, prev = cur_jd, cur
+        raise ValueError("Solar return crossing not found")
 
     def _calculate_solar_special_bodies(
         self,
@@ -264,17 +312,31 @@ class SolarReturnService:
         location_lon = float(location_lon)
 
         # 4. Найти момент соляра
-        jd_solar = self.find_solar_return_moment(natal_sun_lon, year)
+        jd_solar = self.find_solar_return_moment(
+            natal_sun_lon,
+            year,
+            zodiac=context.zodiac or 'tropical',
+            ayanamsha=context.ayanamsha or 'lahiri',
+        )
 
         # 5. Конвертировать в datetime
         solar_datetime = self.jd_to_datetime(jd_solar, effective_timezone)
 
         # 6. Рассчитать планеты на момент соляра
-        solar_planets = self.swisseph_engine.calculate_planets(jd_solar)
+        solar_planets = self.swisseph_engine.calculate_planets(
+            jd_solar,
+            zodiac=context.zodiac or 'tropical',
+            ayanamsha=context.ayanamsha or 'lahiri',
+        )
 
         # 7. Рассчитать дома на момент соляра для места соляра
         solar_houses, solar_angles = self.swisseph_engine.calculate_houses(
-            jd_solar, location_lat, location_lon, house_system
+            jd_solar,
+            location_lat,
+            location_lon,
+            house_system,
+            zodiac=context.zodiac or 'tropical',
+            ayanamsha=context.ayanamsha or 'lahiri',
         )
 
         # 8. Определить дома для планет
@@ -346,12 +408,16 @@ class SolarReturnService:
             'time': user.birth_time.isoformat() if user.birth_time else None,
             'place': user.birth_place,
             'timezone': user.timezone,
+            'zodiac': getattr(user, 'zodiac', None) or 'tropical',
+            'ayanamsha': getattr(user, 'ayanamsha', None),
         }
         return NatalContext(
             natal_data=natal_data,
             astrologer_id=astrologer_id,
             user_id=user_id,
             birth_data=birth_data,
+            zodiac=birth_data['zodiac'],
+            ayanamsha=birth_data['ayanamsha'],
             birth_lat=float(user.lat),
             birth_lon=float(user.lon),
             birth_timezone=user.timezone,

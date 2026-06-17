@@ -212,12 +212,16 @@ class DirectionService:
             'julian_day': float(user.julian_day),
             'latitude': float(user.lat) if user.lat is not None else None,
             'longitude': float(user.lon) if user.lon is not None else None,
+            'zodiac': getattr(user, 'zodiac', None) or 'tropical',
+            'ayanamsha': getattr(user, 'ayanamsha', None),
         }
         return NatalContext(
             natal_data=natal_data,
             astrologer_id=astrologer_id,
             user_id=user_id,
             birth_data=birth_data,
+            zodiac=birth_data['zodiac'],
+            ayanamsha=birth_data['ayanamsha'],
             birth_jd=float(user.julian_day),
             birth_date=user.birth_date,
             birth_lat=birth_data['latitude'],

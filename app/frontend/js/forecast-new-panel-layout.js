@@ -30,7 +30,7 @@
     // Granular blocks: the former 'configs' block is split into 'configs'
     // (configuration aspects) + 'stelliums'; the former 'rulers' block is split
     // into 'jones' (Jones cosmogram) + 'dispositors' (dispositor scheme).
-    var VIEW_KEYS = ['planets', 'houses', 'aspects', 'grid', 'configs', 'stelliums', 'balances', 'jones', 'dispositors'];
+    var VIEW_KEYS = ['planets', 'houses', 'aspects', 'grid', 'configs', 'stelliums', 'balances', 'jones', 'dispositors', 'profections'];
 
     // "Moment now" views: not a property of the natal/prog chart but of the
     // current instant (source 'now'). They are registered as explicit blocks
@@ -49,17 +49,19 @@
         balances: 'page.forecastNew.tabs.balances',
         jones: 'page.forecastNew.tabs.jones',
         dispositors: 'page.forecastNew.tabs.dispositors',
+        profections: 'page.forecastNew.tabs.profections',
         lunar: 'page.forecastNew.tabs.lunar',
         hours: 'page.forecastNew.tabs.hours',
     };
 
     var SOURCES = ['natal', 'prog'];
+    var NATAL_ONLY_VIEWS = ['profections'];
 
     // Corner overlay slots (Option C: a block lives in a side panel OR one
     // corner, never both — corners share the per-mode block pool with panels).
     // Each corner holds 0 or 1 block. Order = visual reading order.
     var CORNER_KEYS = ['tl', 'tr', 'bl', 'br'];
-    var CORNER_RECOMMENDED_VIEWS = ['balances', 'configs', 'stelliums', 'jones', 'lunar', 'hours'];
+    var CORNER_RECOMMENDED_VIEWS = ['balances', 'configs', 'stelliums', 'jones', 'profections', 'lunar', 'hours'];
     var CORNER_COMPACT_VIEWS = ['planets', 'houses', 'aspects', 'lunar', 'hours'];
     var CORNER_DISCOURAGED_VIEWS = ['grid', 'dispositors'];
 
@@ -101,6 +103,7 @@
         var map = {};
         SOURCES.forEach(function (source) {
             VIEW_KEYS.forEach(function (view) {
+                if (source !== 'natal' && NATAL_ONLY_VIEWS.indexOf(view) !== -1) return;
                 var key = source + ':' + view;
                 map[key] = {
                     source: source,
@@ -178,7 +181,9 @@
         // corners empty by default — opt-in via the editor (no first-run clutter).
         layout.panels.multi = {
             left: VIEW_KEYS.map(function (v) { return singleBlockTab('multi', 'left', 'natal', v); }),
-            right: VIEW_KEYS.map(function (v) { return singleBlockTab('multi', 'right', 'prog', v); }),
+            right: VIEW_KEYS
+                .filter(function (v) { return NATAL_ONLY_VIEWS.indexOf(v) === -1; })
+                .map(function (v) { return singleBlockTab('multi', 'right', 'prog', v); }),
             corners: emptyCorners(),
         };
 

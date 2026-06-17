@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecastNew.pageTitle">Forecast</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=6ac6b615e172">
-    <script>window.__APP_BUILD_ID__ = '6ac6b615e172';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=e17824aa2d8d">
+    <script>window.__APP_BUILD_ID__ = 'e17824aa2d8d';</script>
 </head>
 <body class="forecast-new-page">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -74,6 +74,7 @@
                             <option value="" data-i18n="page.forecastNew.synastry.partnerOption">— partner —</option>
                         </select>
                         <button type="button" class="forecast-new-synastry-apply" id="forecastNewSynastryPickerBtn" data-i18n="page.chartPicker.title">Выбор карты</button>
+                        <button type="button" class="forecast-new-synastry-apply" id="forecastNewCompositeBtn" data-i18n="page.forecastNew.composite.calculate">Composite</button>
                     </div>
                     <div class="forecast-new-synastry-pane hidden" data-synastry-pane="manual">
                         <input type="text" id="forecastNewSynastryManualName" class="forecast-new-pop-input" placeholder="Partner name" data-i18n-placeholder="page.forecastNew.synastry.namePlaceholder" autocomplete="off">
@@ -93,6 +94,7 @@
                         <button type="button" class="forecast-new-synastry-apply" id="forecastNewSynastryManualApply" data-i18n="page.forecastNew.synastry.apply">Apply</button>
                         <p class="forecast-new-synastry-manual-error hidden" id="forecastNewSynastryManualError"></p>
                     </div>
+                    <div class="forecast-new-composite-panel hidden" id="forecastNewCompositePanel" aria-live="polite"></div>
                 </div>
             </div>
         </div>
@@ -235,6 +237,7 @@
                 <div id="natalBalancesView" class="panel-tab-content"><div id="natalBalancesContainer"></div></div>
                 <div id="natalJonesView" class="panel-tab-content"><div id="natalJonesContainer"></div></div>
                 <div id="natalDispositorsView" class="panel-tab-content"><div id="natalDispositorsContainer"></div></div>
+                <div id="natalProfectionsView" class="panel-tab-content"></div>
             </div>
         </aside>
 
@@ -280,6 +283,20 @@
                         <option value="all" data-i18n="common.all">All</option>
                         <option value="major" data-i18n="common.major">Major</option>
                         <option value="minor" data-i18n="common.minor">Minor</option>
+                    </select>
+                </div>
+                <div class="settings-section">
+                    <label class="settings-label" data-i18n="page.forecastNew.zodiac.label">Zodiac</label>
+                    <select id="zodiacSelect" class="settings-select">
+                        <option value="tropical" data-i18n="page.forecastNew.zodiac.tropical">Tropical</option>
+                        <option value="sidereal" data-i18n="page.forecastNew.zodiac.sidereal">Sidereal</option>
+                    </select>
+                    <select id="ayanamshaSelect" class="settings-select">
+                        <option value="lahiri" data-i18n="page.forecastNew.zodiac.ayanamsha.lahiri">Lahiri</option>
+                        <option value="fagan_bradley" data-i18n="page.forecastNew.zodiac.ayanamsha.fagan_bradley">Fagan-Bradley</option>
+                        <option value="krishnamurti" data-i18n="page.forecastNew.zodiac.ayanamsha.krishnamurti">Krishnamurti</option>
+                        <option value="raman" data-i18n="page.forecastNew.zodiac.ayanamsha.raman">Raman</option>
+                        <option value="de_luce" data-i18n="page.forecastNew.zodiac.ayanamsha.de_luce">De Luce</option>
                     </select>
                 </div>
                 <div class="settings-section">
@@ -502,6 +519,6 @@
         </div>
     </section>
 
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=6ac6b615e172"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=e17824aa2d8d"></script>
 </body>
 </html>

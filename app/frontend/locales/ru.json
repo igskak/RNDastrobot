@@ -276,7 +276,8 @@
         "jones": "Космограмма Джонса",
         "dispositors": "Схема диспозиторов",
         "lunar": "Луна",
-        "hours": "Часы"
+        "hours": "Часы",
+        "profections": "Профекции"
       },
       "view": {
         "single": "Одно колесо",
@@ -432,7 +433,30 @@
       },
       "zodiac": {
         "sidereal": "Сидерический",
-        "tropical": "Тропический"
+        "tropical": "Тропический",
+        "label": "Зодиак",
+        "ayanamsha": {
+          "lahiri": "Lahiri",
+          "fagan_bradley": "Fagan-Bradley",
+          "krishnamurti": "Krishnamurti",
+          "raman": "Raman",
+          "de_luce": "De Luce"
+        }
+      },
+      "profections": {
+        "age": "Возраст",
+        "annual": "Годовая",
+        "monthly": "Месячная",
+        "house": "Дом {house}",
+        "empty": "Нет данных профекций",
+        "noSavedChart": "Сохраните карту, чтобы показать профекции"
+      },
+      "composite": {
+        "calculate": "Композит",
+        "midpoint": "Midpoint",
+        "davison": "Davison",
+        "unavailable": "Davison недоступен для неполных данных рождения",
+        "noPartner": "Сначала выберите партнёра"
       }
     },
     "plan": {
