@@ -206,5 +206,11 @@ const lunarCorner = L.normalizeLayout({
 ok(lunarCorner.panels.multi.corners.tl && lunarCorner.panels.multi.corners.tl.view === 'lunar', 'lunar lives in a corner');
 ok(L.CORNER_COMPACT_VIEWS.includes('lunar'), 'lunar offered as a compact corner widget');
 
+// --- "now" hours block ---
+ok(L.isNowView('hours'), 'hours is a now-view');
+ok(L.BLOCK_TARGET_MAP['now:hours'] && L.BLOCK_TARGET_MAP['now:hours'].rendererKey === 'now', 'now:hours owned by now renderer');
+ok(!L.BLOCK_TARGET_MAP['prog:hours'], 'no prog:hours pairing');
+ok(L.CORNER_COMPACT_VIEWS.includes('hours'), 'hours offered as a compact corner widget');
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

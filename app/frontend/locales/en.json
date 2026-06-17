@@ -275,7 +275,8 @@
         "stelliums": "Stelliums",
         "jones": "Jones cosmogram",
         "dispositors": "Dispositor scheme",
-        "lunar": "Moon"
+        "lunar": "Moon",
+        "hours": "Hours"
       },
       "view": {
         "single": "Single wheel",
@@ -420,6 +421,14 @@
           "solar": "Solar eclipse",
           "lunar": "Lunar eclipse"
         }
+      },
+      "hours": {
+        "dayRuler": "Day ruler",
+        "lunarDay": "Lunar day",
+        "day": "day",
+        "night": "night",
+        "unavailable": "Unavailable (polar day/night)",
+        "noLocation": "No chart coordinates"
       }
     },
     "plan": {

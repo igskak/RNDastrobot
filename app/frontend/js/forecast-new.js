@@ -4136,6 +4136,7 @@
 
     function renderNowBlocks() {
         if (layoutHasBlock('now:lunar')) renderLunarBlock();
+        if (layoutHasBlock('now:hours')) renderHoursBlock();
     }
 
     function formatLunarMoment(iso) {
@@ -4218,6 +4219,87 @@
             el.innerHTML = lunarBlockMarkup(snapshot);
         } catch (error) {
             el.innerHTML = `<div class="forecast-new-lunar-error">${escapeHtml(t('common.error') || 'Ошибка')}</div>`;
+        }
+    }
+
+    function planetLabel(name) {
+        const key = `astro.planet.${name}`;
+        const tr = t(key);
+        return tr && tr !== key ? tr : name;
+    }
+
+    function formatHourRange(startIso, endIso) {
+        const fmt = (iso) => {
+            try {
+                return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+            } catch { return iso; }
+        };
+        return `${fmt(startIso)}–${fmt(endIso)}`;
+    }
+
+    function hoursBlockMarkup(data) {
+        if (!data || data.available === false) {
+            return `<div class="forecast-new-hours-empty">${escapeHtml(t('page.forecastNew.hours.unavailable') || '—')}</div>`;
+        }
+        const cur = data.current_hour;
+        const dayRuler = escapeHtml(planetLabel(data.day_ruler));
+        const lunarDay = data.lunar_day != null
+            ? `<span class="forecast-new-hours-lunarday">${escapeHtml(t('page.forecastNew.hours.lunarDay') || 'Лунный день')}: ${data.lunar_day}</span>`
+            : '';
+        const currentHtml = cur
+            ? `<div class="forecast-new-hours-current">
+                    <span class="forecast-new-hours-current-ruler">${escapeHtml(planetLabel(cur.ruler))}</span>
+                    <span class="forecast-new-hours-current-range">${escapeHtml(formatHourRange(cur.start, cur.end))}</span>
+                    <span class="forecast-new-hours-current-dn">${escapeHtml(cur.is_day ? (t('page.forecastNew.hours.day') || 'день') : (t('page.forecastNew.hours.night') || 'ночь'))}</span>
+               </div>`
+            : '';
+        const rows = (data.hours || []).map((h) => {
+            const isCur = cur && h.index === cur.index;
+            return `<li class="forecast-new-hours-row${isCur ? ' is-current' : ''}" data-day="${h.is_day ? '1' : '0'}">
+                <span class="forecast-new-hours-idx">${h.index}</span>
+                <span class="forecast-new-hours-ruler">${escapeHtml(planetLabel(h.ruler))}</span>
+                <span class="forecast-new-hours-range">${escapeHtml(formatHourRange(h.start, h.end))}</span>
+            </li>`;
+        }).join('');
+        return `
+            <div class="forecast-new-hours">
+                <div class="forecast-new-hours-head">
+                    <span class="forecast-new-hours-dayruler">${escapeHtml(t('page.forecastNew.hours.dayRuler') || 'Управитель дня')}: ${dayRuler}</span>
+                    ${lunarDay}
+                </div>
+                ${currentHtml}
+                <ul class="forecast-new-hours-list">${rows}</ul>
+            </div>`;
+    }
+
+    async function renderHoursBlock() {
+        const el = document.getElementById('nowHoursView')
+            || document.getElementById('forecastNewBlockStore')?.querySelector('#nowHoursView');
+        if (!el) return;
+        const lat = state.location?.latitude;
+        const lon = state.location?.longitude;
+        if (lat == null || lon == null) {
+            el.innerHTML = `<div class="forecast-new-hours-empty">${escapeHtml(t('page.forecastNew.hours.noLocation') || '—')}</div>`;
+            return;
+        }
+        const fresh = state.hoursData && (Date.now() - state.hoursDataAt) < 600000
+            && state.hoursDataLat === lat && state.hoursDataLon === lon;
+        if (fresh) {
+            el.innerHTML = hoursBlockMarkup(state.hoursData);
+            return;
+        }
+        if (!state.hoursData) {
+            el.innerHTML = `<div class="forecast-new-hours-loading">${escapeHtml(t('common.loading') || '…')}</div>`;
+        }
+        try {
+            const data = await apiGet(`/electional/planetary-hours?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`);
+            state.hoursData = data;
+            state.hoursDataAt = Date.now();
+            state.hoursDataLat = lat;
+            state.hoursDataLon = lon;
+            el.innerHTML = hoursBlockMarkup(data);
+        } catch (error) {
+            el.innerHTML = `<div class="forecast-new-hours-error">${escapeHtml(t('common.error') || 'Ошибка')}</div>`;
         }
     }
 
@@ -4332,7 +4414,7 @@
         positions: ['grid'],
         aspects: ['aspects', 'configs', 'stelliums'],
         analysis: ['balances', 'jones', 'dispositors'],
-        now: ['lunar'],
+        now: ['lunar', 'hours'],
     };
 
     function findBlockLocation(mode, blockKey) {

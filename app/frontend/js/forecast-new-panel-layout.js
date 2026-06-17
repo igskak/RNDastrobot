@@ -36,7 +36,7 @@
     // current instant (source 'now'). They are registered as explicit blocks
     // (NOT via the SOURCES x VIEW_KEYS cross product) so we never create bogus
     // pairings like now:planets or natal:lunar.
-    var NOW_VIEWS = ['lunar'];
+    var NOW_VIEWS = ['lunar', 'hours'];
 
     // i18n keys for auto-titling a tab from its (first) block's view.
     var VIEW_I18N = {
@@ -50,6 +50,7 @@
         jones: 'page.forecastNew.tabs.jones',
         dispositors: 'page.forecastNew.tabs.dispositors',
         lunar: 'page.forecastNew.tabs.lunar',
+        hours: 'page.forecastNew.tabs.hours',
     };
 
     var SOURCES = ['natal', 'prog'];
@@ -58,8 +59,8 @@
     // corner, never both — corners share the per-mode block pool with panels).
     // Each corner holds 0 or 1 block. Order = visual reading order.
     var CORNER_KEYS = ['tl', 'tr', 'bl', 'br'];
-    var CORNER_RECOMMENDED_VIEWS = ['balances', 'configs', 'stelliums', 'jones', 'lunar'];
-    var CORNER_COMPACT_VIEWS = ['planets', 'houses', 'aspects', 'lunar'];
+    var CORNER_RECOMMENDED_VIEWS = ['balances', 'configs', 'stelliums', 'jones', 'lunar', 'hours'];
+    var CORNER_COMPACT_VIEWS = ['planets', 'houses', 'aspects', 'lunar', 'hours'];
     var CORNER_DISCOURAGED_VIEWS = ['grid', 'dispositors'];
 
     // Corner slot -> overlay host element id in forecast-new.html. The block's

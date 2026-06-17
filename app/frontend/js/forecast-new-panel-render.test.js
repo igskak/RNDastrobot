@@ -199,5 +199,21 @@ function planelContains(doc, side, node) {
     ok(doc.querySelectorAll('#nowLunarView').length === 1, 'lunar: exactly one lunar node');
 })();
 
+// --- "now" hours block re-homes into a corner ---
+(() => {
+    const doc = freshDoc();
+    const layout = L.normalizeLayout({
+        schema_version: 1,
+        panels: {
+            multi: { left: [], right: [], corners: { tl: { source: 'now', view: 'hours' }, tr: null, bl: null, br: null } },
+            single: { left: [], right: [], corners: L.emptyCorners() },
+        },
+    });
+    L.renderPanelsToDom({ document: doc, layout, mode: 'multi', activeTab: {}, translate: t });
+    ok(doc.getElementById('forecastNewCornerTl').contains(doc.getElementById('nowHoursView')), 'hours: nowHoursView re-homed into corner tl');
+    ok(L.BLOCK_TARGET_MAP['now:hours'].containerId === 'nowHoursView', 'hours: now:hours -> nowHoursView');
+    ok(!L.BLOCK_TARGET_MAP['natal:hours'], 'no natal:hours pairing');
+})();
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

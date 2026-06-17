@@ -3143,3 +3143,133 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
         display: none;
     }
 }
+
+/* ============================================================
+   "Now" workspace blocks: Moon (lunar) and planetary hours.
+   ============================================================ */
+.forecast-new-now-block {
+    font-size: 12px;
+    color: var(--text, #2c2c2c);
+}
+
+.forecast-new-lunar,
+.forecast-new-hours {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 10px;
+}
+
+.forecast-new-lunar-phase {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.forecast-new-lunar-phase-name {
+    font-weight: 600;
+}
+
+.forecast-new-lunar-illum,
+.forecast-new-hours-current-range,
+.forecast-new-hours-range {
+    font-variant-numeric: tabular-nums;
+    opacity: 0.7;
+}
+
+.forecast-new-lunar-pos {
+    font-variant-numeric: tabular-nums;
+}
+
+.forecast-new-lunar-voc {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    font-size: 11px;
+}
+
+.forecast-new-lunar-voc[data-void="1"] .forecast-new-lunar-voc-label {
+    color: #8f2f2f;
+    font-weight: 600;
+}
+
+.forecast-new-lunar-voc-detail,
+.forecast-new-hours-lunarday {
+    opacity: 0.7;
+}
+
+.forecast-new-lunar-events,
+.forecast-new-hours-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.forecast-new-lunar-event {
+    display: flex;
+    gap: 8px;
+    font-size: 11px;
+}
+
+.forecast-new-hours-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 11px;
+}
+
+.forecast-new-hours-current {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    padding: 4px 6px;
+    border-radius: 6px;
+    background: rgba(30, 58, 95, 0.06);
+}
+
+.forecast-new-hours-current-ruler {
+    font-weight: 600;
+}
+
+.forecast-new-hours-current-dn {
+    opacity: 0.6;
+    font-size: 11px;
+}
+
+.forecast-new-hours-row {
+    display: grid;
+    grid-template-columns: 1.6em 1fr auto;
+    gap: 8px;
+    align-items: baseline;
+    padding: 1px 4px;
+    border-radius: 4px;
+}
+
+.forecast-new-hours-row[data-day="0"] {
+    opacity: 0.72;
+}
+
+.forecast-new-hours-row.is-current {
+    background: rgba(30, 58, 95, 0.1);
+    font-weight: 600;
+}
+
+.forecast-new-hours-idx {
+    opacity: 0.5;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.forecast-new-lunar-loading,
+.forecast-new-lunar-error,
+.forecast-new-hours-loading,
+.forecast-new-hours-error,
+.forecast-new-hours-empty {
+    padding: 10px;
+    opacity: 0.6;
+    font-size: 11px;
+}
