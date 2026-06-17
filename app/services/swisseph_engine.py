@@ -22,6 +22,14 @@ AYANAMSHA_MODES = {
 }
 DEFAULT_AYANAMSHA = 'lahiri'
 
+# Основные астероиды (опциональные точки, не входят в always-on PLANETS).
+ASTEROIDS = {
+    swe.CERES: 'Ceres',
+    swe.PALLAS: 'Pallas',
+    swe.JUNO: 'Juno',
+    swe.VESTA: 'Vesta',
+}
+
 
 class SwissEphemerisEngine:
     """Движок для астрономических расчётов с использованием Swiss Ephemeris"""
@@ -131,6 +139,47 @@ class SwissEphemerisEngine:
             })
 
         return planets_data
+
+    def calculate_asteroids(
+        self,
+        jd: float,
+        zodiac: str = 'tropical',
+        ayanamsha: str = DEFAULT_AYANAMSHA,
+    ) -> List[Dict]:
+        """
+        Позиции основных астероидов (Церера, Паллада, Юнона, Веста).
+
+        Отдельный метод (не always-on PLANETS), чтобы не менять форму базовой
+        карты. Поддерживает сидерический зодиак.
+        """
+        self._ensure_ephe_path()
+        sid_flag = self._sidereal_flag(zodiac, ayanamsha)
+        flags = swe.FLG_SWIEPH | swe.FLG_SPEED | sid_flag
+
+        out: List[Dict] = []
+        for ast_id, ast_name in ASTEROIDS.items():
+            try:
+                data, _ = swe.calc_ut(jd, ast_id, flags)
+            except Exception as e:
+                self._ensure_ephe_path()
+                logger.warning("SwissEph asteroid calc retry: {}", str(e))
+                data, _ = swe.calc_ut(jd, ast_id, flags)
+            longitude = data[0]
+            speed_lon = data[3]
+            degree_in_sign = get_degree_in_sign(longitude)
+            out.append({
+                'id': ast_id,
+                'name': ast_name,
+                'longitude': longitude,
+                'latitude': data[1],
+                'distance': data[2],
+                'speed': speed_lon,
+                'sign': get_zodiac_sign(longitude),
+                'degree_in_sign': degree_in_sign,
+                'degree_in_sign_formatted': format_degree_minutes_seconds(degree_in_sign),
+                'retrograde': speed_lon < 0,
+            })
+        return out
 
     def calculate_planet_longitude(
         self,
