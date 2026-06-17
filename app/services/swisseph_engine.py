@@ -224,7 +224,33 @@ class SwissEphemerisEngine:
             'degree_in_sign': ic_deg,
             'degree_in_sign_formatted': format_degree_minutes_seconds(ic_deg),
         }
-        
+
+        # AntiVertex — противоположная Вертексу точка (восточная сторона карты).
+        if vertex_lon is not None:
+            antivertex_lon = (vertex_lon + 180) % 360
+            antivertex_deg = get_degree_in_sign(antivertex_lon)
+            angles_data['AntiVertex'] = {
+                'name': 'AntiVertex',
+                'longitude': antivertex_lon,
+                'sign': get_zodiac_sign(antivertex_lon),
+                'degree_in_sign': antivertex_deg,
+                'degree_in_sign_formatted': format_degree_minutes_seconds(antivertex_deg),
+            }
+
+        # East Point (Equatorial Ascendant) — ascmc[4]. Не определён в полярном
+        # fallback (длина ascmc может быть < 5 или значение None).
+        east_point_lon = ascmc[4] if len(ascmc) > 4 and ascmc[4] is not None else None
+        if east_point_lon is not None:
+            east_point_lon = east_point_lon % 360
+            ep_deg = get_degree_in_sign(east_point_lon)
+            angles_data['EastPoint'] = {
+                'name': 'EastPoint',
+                'longitude': east_point_lon,
+                'sign': get_zodiac_sign(east_point_lon),
+                'degree_in_sign': ep_deg,
+                'degree_in_sign_formatted': format_degree_minutes_seconds(ep_deg),
+            }
+
         return houses_data, angles_data
     
     def get_planet_house(self, planet_lon: float, houses: List[Dict]) -> int:
