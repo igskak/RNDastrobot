@@ -3,15 +3,29 @@
 """
 import swisseph as swe
 from typing import List, Dict, Tuple
-from app.utils.constants import PLANETS, get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds
+from app.utils.constants import (
+    PLANETS, get_zodiac_sign, get_degree_in_sign,
+    format_degree_minutes_seconds, normalize_longitude,
+)
 from app.services.special_points_service import SpecialPointsService
 from app.utils.ephemeris import get_ephemeris_path
 from loguru import logger
 
 
+# Поддерживаемые аянамши (сидерический зодиак): имя -> SIDM-константа Swiss Ephemeris.
+AYANAMSHA_MODES = {
+    'lahiri': swe.SIDM_LAHIRI,
+    'fagan_bradley': swe.SIDM_FAGAN_BRADLEY,
+    'krishnamurti': swe.SIDM_KRISHNAMURTI,
+    'raman': swe.SIDM_RAMAN,
+    'de_luce': swe.SIDM_DELUCE,
+}
+DEFAULT_AYANAMSHA = 'lahiri'
+
+
 class SwissEphemerisEngine:
     """Движок для астрономических расчётов с использованием Swiss Ephemeris"""
-    
+
     def __init__(self, ephe_path: str = None):
         """
         Инициализация движка
@@ -25,13 +39,41 @@ class SwissEphemerisEngine:
     def _ensure_ephe_path(self) -> None:
         """Гарантированно применяет путь к файлам эфемерид."""
         swe.set_ephe_path(self.ephe_path)
+
+    @staticmethod
+    def _is_sidereal(zodiac: str) -> bool:
+        return (zodiac or 'tropical').lower() == 'sidereal'
+
+    def _sidereal_flag(self, zodiac: str, ayanamsha: str) -> int:
+        """
+        Возвращает FLG_SIDEREAL и настраивает sid-режим для сидерического зодиака,
+        либо 0 для тропического (поведение по умолчанию не меняется).
+        """
+        if not self._is_sidereal(zodiac):
+            return 0
+        mode = AYANAMSHA_MODES.get((ayanamsha or DEFAULT_AYANAMSHA).lower(), swe.SIDM_LAHIRI)
+        swe.set_sid_mode(mode, 0, 0)
+        return swe.FLG_SIDEREAL
+
+    def get_ayanamsha(self, jd: float, ayanamsha: str = DEFAULT_AYANAMSHA) -> float:
+        """Значение аянамши (в градусах) на момент jd для выбранного режима."""
+        mode = AYANAMSHA_MODES.get((ayanamsha or DEFAULT_AYANAMSHA).lower(), swe.SIDM_LAHIRI)
+        swe.set_sid_mode(mode, 0, 0)
+        return float(swe.get_ayanamsa_ut(jd))
     
-    def calculate_planets(self, jd: float) -> List[Dict]:
+    def calculate_planets(
+        self,
+        jd: float,
+        zodiac: str = 'tropical',
+        ayanamsha: str = DEFAULT_AYANAMSHA,
+    ) -> List[Dict]:
         """
         Расчёт позиций планет
 
         Args:
             jd: Юлианский день
+            zodiac: 'tropical' (по умолчанию) или 'sidereal'
+            ayanamsha: имя аянамши для сидерического зодиака
 
         Returns:
             Список словарей с данными о планетах
@@ -39,10 +81,17 @@ class SwissEphemerisEngine:
         self._ensure_ephe_path()
         planets_data = []
 
+        sid_flag = self._sidereal_flag(zodiac, ayanamsha)
+        base_flags = swe.FLG_SWIEPH | swe.FLG_SPEED | sid_flag
+        # Сдвиг аянамши для фиктивных точек, считаемых тропически (Прозерпина).
+        ayan_offset = self.get_ayanamsha(jd, ayanamsha) if sid_flag else 0.0
+
         for planet_id, planet_name in PLANETS.items():
             # Прозерпина (ID=1000) рассчитывается отдельно методом интерполяции
             if planet_id == 1000:
                 longitude = SpecialPointsService.calculate_proserpina(jd)
+                if sid_flag:
+                    longitude = normalize_longitude(longitude - ayan_offset)
                 latitude = 0.0  # Фиктивная планета, широта = 0
                 distance = 0.0  # Расстояние не определено
                 speed_lon = 0.461968 / 365.25  # Средняя скорость в градусах/день (27.72' в год)
@@ -50,13 +99,13 @@ class SwissEphemerisEngine:
             else:
                 # Расчёт позиции планеты через Swiss Ephemeris
                 try:
-                    planet_data, ret = swe.calc_ut(jd, planet_id, swe.FLG_SWIEPH | swe.FLG_SPEED)
+                    planet_data, ret = swe.calc_ut(jd, planet_id, base_flags)
                 except Exception as e:
                     # После swe.close() глобальный ephe_path может сбрасываться.
                     # Повторно применяем путь и делаем один retry.
                     self._ensure_ephe_path()
                     logger.warning("SwissEph calc_ut retry after path reset: {}", str(e))
-                    planet_data, ret = swe.calc_ut(jd, planet_id, swe.FLG_SWIEPH | swe.FLG_SPEED)
+                    planet_data, ret = swe.calc_ut(jd, planet_id, base_flags)
 
                 longitude = planet_data[0]  # Эклиптическая долгота
                 latitude = planet_data[1]   # Эклиптическая широта
@@ -83,21 +132,32 @@ class SwissEphemerisEngine:
 
         return planets_data
 
-    def calculate_planet_longitude(self, jd: float, planet_name: str) -> float | None:
+    def calculate_planet_longitude(
+        self,
+        jd: float,
+        planet_name: str,
+        zodiac: str = 'tropical',
+        ayanamsha: str = DEFAULT_AYANAMSHA,
+    ) -> float | None:
         """Calculate one planet longitude without computing the full planet set."""
         planet_id = next((pid for pid, name in PLANETS.items() if name == planet_name), None)
         if planet_id is None:
             return None
+        sid_flag = self._sidereal_flag(zodiac, ayanamsha)
         if planet_id == 1000:
-            return float(SpecialPointsService.calculate_proserpina(jd))
+            lon = float(SpecialPointsService.calculate_proserpina(jd))
+            if sid_flag:
+                lon = normalize_longitude(lon - self.get_ayanamsha(jd, ayanamsha))
+            return lon
 
         self._ensure_ephe_path()
+        flags = swe.FLG_SWIEPH | swe.FLG_SPEED | sid_flag
         try:
-            planet_data, _ = swe.calc_ut(jd, planet_id, swe.FLG_SWIEPH | swe.FLG_SPEED)
+            planet_data, _ = swe.calc_ut(jd, planet_id, flags)
         except Exception as e:
             self._ensure_ephe_path()
             logger.warning("SwissEph calc_ut retry after path reset: {}", str(e))
-            planet_data, _ = swe.calc_ut(jd, planet_id, swe.FLG_SWIEPH | swe.FLG_SPEED)
+            planet_data, _ = swe.calc_ut(jd, planet_id, flags)
         return float(planet_data[0])
     
     def calculate_houses(
@@ -105,7 +165,9 @@ class SwissEphemerisEngine:
         jd: float,
         lat: float,
         lon: float,
-        hsys: str = 'P'
+        hsys: str = 'P',
+        zodiac: str = 'tropical',
+        ayanamsha: str = DEFAULT_AYANAMSHA,
     ) -> Tuple[List[Dict], Dict]:
         """
         Расчёт домов и углов
@@ -115,6 +177,8 @@ class SwissEphemerisEngine:
             lat: Широта места рождения
             lon: Долгота места рождения
             hsys: Система домов (P=Placidus, K=Koch и т.д.)
+            zodiac: 'tropical' (по умолчанию) или 'sidereal'
+            ayanamsha: имя аянамши для сидерического зодиака
 
         Returns:
             Кортеж (список домов, словарь углов)
@@ -124,11 +188,16 @@ class SwissEphemerisEngine:
         swe.close()
         self._ensure_ephe_path()
 
+        sid_flag = self._sidereal_flag(zodiac, ayanamsha)
+
         # Расчёт домов через Swiss Ephemeris
         # Для высоких широт (>66°) Placidus и Koch не работают
         polar_mode = False
         try:
-            cusps, ascmc = swe.houses(jd, lat, lon, hsys.encode())
+            if sid_flag:
+                cusps, ascmc = swe.houses_ex(jd, lat, lon, hsys.encode(), sid_flag)
+            else:
+                cusps, ascmc = swe.houses(jd, lat, lon, hsys.encode())
         except Exception as e:
             # Если ошибка - используем Equal houses от MC (как в ZET)
             # Берём реальный MC и откладываем дома по 30° от него
