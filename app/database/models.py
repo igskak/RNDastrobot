@@ -42,6 +42,8 @@ class User(Base):
     lon = Column(Numeric(10, 7), nullable=False)
     julian_day = Column(Numeric(15, 6))
     house_system = Column(String(1), nullable=False, default='P', server_default='P')
+    zodiac = Column(String(16), nullable=False, default='tropical', server_default='tropical')
+    ayanamsha = Column(String(32))
     # CRM contact fields
     email = Column(String(255))
     phone = Column(String(50))

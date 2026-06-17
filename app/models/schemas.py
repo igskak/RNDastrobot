@@ -209,6 +209,8 @@ class BirthDataOutput(BaseModel):
     longitude: float
     place: Optional[str] = None
     house_system: str = "P"
+    zodiac: str = "tropical"
+    ayanamsha: Optional[str] = None
 
 
 class AspectInfo(BaseModel):
@@ -716,6 +718,28 @@ class HouseSystemUpdateRequest(BaseModel):
         code = normalize_house_system_code(v)
         if code not in VALID_HOUSE_SYSTEMS:
             raise ValueError(f'Недопустимая система домов: {v}. Допустимые: {", ".join(VALID_HOUSE_SYSTEMS)}')
+        return code
+
+
+class ZodiacUpdateRequest(BaseModel):
+    """Persisted zodiac/ayanamsha update for an existing natal chart."""
+    zodiac: str = Field(..., description="Зодиак: tropical или sidereal")
+    ayanamsha: str = Field(default="lahiri", description="Аянамша для сидерического зодиака")
+
+    @field_validator('zodiac')
+    @classmethod
+    def validate_zodiac(cls, v: str) -> str:
+        code = (v or 'tropical').strip().lower()
+        if code not in ('tropical', 'sidereal'):
+            raise ValueError(f'Недопустимый зодиак: {v}. Допустимые: tropical, sidereal')
+        return code
+
+    @field_validator('ayanamsha')
+    @classmethod
+    def validate_ayanamsha(cls, v: str) -> str:
+        code = (v or 'lahiri').strip().lower()
+        if code not in VALID_AYANAMSHAS:
+            raise ValueError(f'Недопустимая аянамша: {v}. Допустимые: {", ".join(sorted(VALID_AYANAMSHAS))}')
         return code
 
 

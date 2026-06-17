@@ -278,6 +278,8 @@ class NatalChartService:
                 last_name=last_name,
                 astrologer_id=astrologer_id,
                 house_system=house_system,
+                zodiac=zodiac,
+                ayanamsha=ayanamsha if (zodiac or 'tropical').lower() == 'sidereal' else None,
             )
 
             # Читаємо повні дані з БД (включаючи похідні: аспекти, конфігурації, тощо)
@@ -890,6 +892,8 @@ class NatalChartService:
         last_name: Optional[str] = None,
         astrologer_id: Optional[UUID] = None,
         house_system: str = 'P',
+        zodiac: str = 'tropical',
+        ayanamsha: Optional[str] = None,
     ) -> UUID:
         """
         Сохранить натальную карту в базу данных
@@ -927,6 +931,8 @@ class NatalChartService:
             house_system=house_system,
             first_name=first_name,
             last_name=last_name,
+            zodiac=zodiac or 'tropical',
+            ayanamsha=ayanamsha,
         )
 
         return self._persist_chart_for_user(
@@ -973,15 +979,23 @@ class NatalChartService:
             birth_date, birth_time, timezone
         )
 
-        planets = self.swisseph_engine.calculate_planets(jd)
-        houses, angles = self.swisseph_engine.calculate_houses(jd, lat, lon, house_system)
+        # Сохраняем методику зодиака клиента — правка данных рождения её не меняет.
+        zodiac = getattr(user, 'zodiac', None) or 'tropical'
+        ayanamsha = getattr(user, 'ayanamsha', None) or 'lahiri'
+
+        planets = self.swisseph_engine.calculate_planets(jd, zodiac=zodiac, ayanamsha=ayanamsha)
+        houses, angles = self.swisseph_engine.calculate_houses(
+            jd, lat, lon, house_system, zodiac=zodiac, ayanamsha=ayanamsha
+        )
 
         for planet in planets:
             planet['house'] = self.swisseph_engine.get_planet_house(
                 planet['longitude'], houses
             )
 
-        special_points = self._calculate_special_points(jd, angles, planets, houses, lat, lon)
+        special_points = self._calculate_special_points(
+            jd, angles, planets, houses, lat, lon, zodiac=zodiac, ayanamsha=ayanamsha
+        )
         configurations = self._calculate_configurations(special_points, houses)
 
         user.first_name = first_name
@@ -1142,6 +1156,47 @@ class NatalChartService:
             last_name=user.last_name,
         )
 
+    def update_zodiac_for_user(
+        self,
+        user_id: UUID,
+        *,
+        zodiac: str,
+        ayanamsha: Optional[str] = None,
+        astrologer_id: UUID,
+        db_session: Session,
+    ) -> Dict:
+        """Recalculate an existing natal chart with a new persisted zodiac/ayanamsha."""
+        user_repo = UserRepository(db_session)
+        user = user_repo.get_user_by_id(user_id, astrologer_id=astrologer_id)
+        if not user:
+            raise ValueError("Пользователь не найден")
+
+        zodiac = (zodiac or 'tropical').lower()
+        if zodiac not in ('tropical', 'sidereal'):
+            raise ValueError(f"Недопустимый зодиак: {zodiac}")
+        resolved_ayanamsha = (ayanamsha or 'lahiri').lower() if zodiac == 'sidereal' else None
+
+        # Persist the choice on the user, then recompute via update_existing_chart
+        # (which reads the stored zodiac/ayanamsha).
+        user.zodiac = zodiac
+        user.ayanamsha = resolved_ayanamsha
+        db_session.flush()
+
+        return self.update_existing_chart(
+            user_id=user_id,
+            db_session=db_session,
+            birth_date=user.birth_date,
+            birth_time=user.birth_time,
+            timezone=user.timezone,
+            astrologer_id=astrologer_id,
+            place=user.birth_place,
+            latitude=float(user.lat),
+            longitude=float(user.lon),
+            house_system=user.house_system or 'P',
+            first_name=user.first_name,
+            last_name=user.last_name,
+        )
+
     def _invalidate_dependent_chart_artifacts(self, user_id: UUID, db_session: Session) -> None:
         """
         Очистить прогнозные и AI-артефакты, которые становятся невалидны после смены birth-data.
@@ -1212,6 +1267,8 @@ class NatalChartService:
                 'longitude': float(user.lon),
                 'place': user.birth_place,
                 'house_system': user.house_system or 'P',
+                'zodiac': getattr(user, 'zodiac', None) or 'tropical',
+                'ayanamsha': getattr(user, 'ayanamsha', None),
             },
             'planets': [
                 {

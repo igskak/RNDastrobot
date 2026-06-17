@@ -429,6 +429,10 @@
         "night": "night",
         "unavailable": "Unavailable (polar day/night)",
         "noLocation": "No chart coordinates"
+      },
+      "zodiac": {
+        "sidereal": "Sidereal",
+        "tropical": "Tropical"
       }
     },
     "plan": {

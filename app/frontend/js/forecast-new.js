@@ -1549,7 +1549,16 @@
         const birth = state.natalData?.birth_data || {};
         const name = [birth.first_name, birth.last_name].filter(Boolean).join(' ').trim();
         refs.forecastNewTitle.textContent = name;
-        refs.forecastNewSubtitle.textContent = '';
+        // Zodiac indicator: shown only for sidereal (tropical is the implicit default).
+        if ((birth.zodiac || 'tropical') === 'sidereal') {
+            const label = t('page.forecastNew.zodiac.sidereal') || 'Sidereal';
+            const ayan = birth.ayanamsha
+                ? ` · ${birth.ayanamsha.charAt(0).toUpperCase()}${birth.ayanamsha.slice(1)}`
+                : '';
+            refs.forecastNewSubtitle.textContent = `${label}${ayan}`;
+        } else {
+            refs.forecastNewSubtitle.textContent = '';
+        }
         updateNatalMomentMeta();
     }
 

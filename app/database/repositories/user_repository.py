@@ -30,6 +30,8 @@ class UserRepository:
         last_name: Optional[str] = None,
         title: Optional[str] = None,
         chart_kind: str = 'birth',
+        zodiac: str = 'tropical',
+        ayanamsha: Optional[str] = None,
     ) -> User:
         """
         Создать нового пользователя
@@ -62,8 +64,10 @@ class UserRepository:
             lon=lon,
             julian_day=julian_day,
             house_system=house_system,
+            zodiac=zodiac or 'tropical',
+            ayanamsha=ayanamsha,
         )
-        
+
         self.session.add(user)
         self.session.flush()  # Получить user_id без commit
         

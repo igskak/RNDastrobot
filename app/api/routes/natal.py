@@ -32,6 +32,7 @@ from app.models.schemas import (
     HouseGroupBalanceInfo,
     GeneralOverviewResponse,
     HouseSystemUpdateRequest,
+    ZodiacUpdateRequest,
     ResetViewToDefaultsRequest,
 )
 from app.services.natal_chart_service import NatalChartService
@@ -587,6 +588,41 @@ def update_user_house_system(
         raise
     except Exception as e:
         logger.exception(f"Ошибка при обновлении house system клиента: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Внутренняя ошибка сервера: {str(e)}"
+        )
+
+
+@router.patch(
+    "/users/{user_id}/zodiac",
+    response_model=NatalChartResponse,
+    summary="Обновить persisted зодиак (tropical/sidereal) клиента",
+    description="Сохраняет зодиак и аянамшу на уровне карты, пересчитывает натальную карту и возвращает свежий результат",
+)
+def update_user_zodiac(
+    user_id: UUID,
+    payload: ZodiacUpdateRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+) -> NatalChartResponse:
+    try:
+        ensure_client_access(db, request, auth, user_id, action="client.natal.zodiac.update")
+        chart_data = natal_service.update_zodiac_for_user(
+            user_id,
+            zodiac=payload.zodiac,
+            ayanamsha=payload.ayanamsha,
+            astrologer_id=auth.astrologer.id,
+            db_session=db,
+        )
+        return build_natal_chart_response(chart_data)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Ошибка при обновлении зодиака клиента: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Внутренняя ошибка сервера: {str(e)}"
