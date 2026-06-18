@@ -716,6 +716,21 @@
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ── Client memory (consultation history) ────────────────────────────────── */
+
+.mem-list { display: flex; flex-direction: column; gap: 10px; }
+.mem-item { padding: 12px 14px; border: 1px solid rgba(30,58,95,0.08); border-radius: 12px; background: rgba(255,255,255,0.6); }
+.mem-item-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+.mem-cat { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; background: rgba(30,58,95,0.08); color: var(--accent); }
+.mem-provenance { font-size: 10px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 4px; }
+.mem-provenance.is-ai { color: #7a5c28; }
+.mem-internal { font-size: 10px; color: var(--text-muted); font-style: italic; margin-left: auto; }
+.mem-text { font-size: 13px; color: var(--text-secondary); line-height: 1.55; margin: 0; }
+.mem-actions { display: flex; gap: 8px; margin-top: 8px; }
+.mem-del-btn { background: transparent; border: 1px solid rgba(30,58,95,0.12); border-radius: 8px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: var(--text-secondary); cursor: pointer; }
+.mem-del-btn:hover { border-color: var(--error); color: var(--error); }
+.cs-row--expandable .btn-new.btn-sm, .cs-panel-inner .btn-new.btn-sm { min-height: 30px; padding: 6px 12px; font-size: 12px; }
+
 /* ── Empty / misc ────────────────────────────────────────────────────────── */
 
 .profile-empty {

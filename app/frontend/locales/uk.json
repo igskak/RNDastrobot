@@ -217,7 +217,10 @@
     },
     "brandName": "Steliara",
     "monthLabel": "Місяць",
-    "errorGeneric": "Щось пішло не так. Спробуйте ще раз."
+    "errorGeneric": "Щось пішло не так. Спробуйте ще раз.",
+    "edit": "Редагувати",
+    "delete": "Видалити",
+    "save": "Зберегти"
   },
   "i18n": {
     "loading": "Завантаження...",
@@ -1369,7 +1372,8 @@
         "savedCharts": "Збережені карти",
         "keyInsights": "Ключові інсайти",
         "consultations": "Історія зустрічей",
-        "recordings": "Записи дзвінків"
+        "recordings": "Записи дзвінків",
+        "clientHistory": "Історія клієнта"
       },
       "stats": {
         "totalSessions": "Всього сесій",
@@ -1389,7 +1393,17 @@
         "all": "Всі"
       },
       "recordings": {
-        "empty": "Записів дзвінків ще немає."
+        "empty": "Записів дзвінків ще немає.",
+        "summary": "Резюме",
+        "keyPoints": "Ключові моменти",
+        "reviewShare": "Перегляд і надсилання",
+        "fullTranscript": "Повна розшифровка",
+        "speakerAstrologer": "Астролог",
+        "speakerGuest": "Гість",
+        "noData": "Поки немає даних запису.",
+        "failed": "Обробка не вдалася.",
+        "retry": "Повторити",
+        "summaryFailed": "Розшифровку готово, але резюме не вдалося згенерувати."
       },
       "solar": {
         "defaultName": "Соляр {year}",
@@ -1464,7 +1478,19 @@
         "notFound": "Профіль не знайдено",
         "loadFailed": "Не вдалося завантажити профіль"
       },
-      "unnamed": "Профіль без імені"
+      "unnamed": "Профіль без імені",
+      "clientHistory": {
+        "empty": "Поки немає історії консультацій."
+      },
+      "callStatus": {
+        "created": "Заплановано",
+        "active": "Триває",
+        "ended": "Завершено",
+        "processing": "Обробка…",
+        "completed": "Готово",
+        "failed": "Помилка",
+        "summaryFailed": "Помилка резюме"
+      }
     },
     "synastry": {
       "title": "Синастрія",
@@ -2176,6 +2202,94 @@
         "registerFailed": "Зараз не вдалося створити акаунт.",
         "verifyFailed": "Зараз не вдалося підтвердити email.",
         "resendVerificationFailed": "Зараз не вдалося надіслати посилання підтвердження."
+      }
+    },
+    "consultation": {
+      "title": "Консультація",
+      "back": "Назад до клієнта",
+      "notFound": "Консультацію не знайдено.",
+      "legacy": "Цю консультацію створено до структурованих резюме.",
+      "summaryFailed": "Не вдалося згенерувати резюме для цієї консультації.",
+      "summary": {
+        "title": "Резюме",
+        "showDetailed": "Показати докладне резюме"
+      },
+      "report": {
+        "title": "Звіт для клієнта",
+        "reviewRequired": "Потребує перевірки",
+        "save": "Зберегти чернетку",
+        "copy": "Скопіювати звіт",
+        "unsaved": "Незбережені зміни",
+        "saved": "Збережено",
+        "saveFailed": "Не вдалося зберегти",
+        "copied": "Звіт скопійовано",
+        "copyFailed": "Не вдалося скопіювати",
+        "sharedAt": "Надіслано"
+      },
+      "keyPoints": {
+        "title": "Ключові моменти"
+      },
+      "openQuestions": {
+        "title": "Відкриті питання",
+        "none": "Нічого незрозумілого не позначено."
+      },
+      "memory": {
+        "title": "Історія клієнта",
+        "empty": "Поки немає записів.",
+        "loadError": "Не вдалося завантажити історію.",
+        "aiSuggested": "Запропоновано ШІ",
+        "byAstrologer": "Додано вами",
+        "internal": "Не надається клієнту",
+        "confirmDelete": "Видалити цей запис?",
+        "deleted": "Запис видалено"
+      },
+      "consultationType": {
+        "natal": "Натал",
+        "synastry": "Синастрія",
+        "solar": "Соляр",
+        "transits": "Транзити",
+        "progressions": "Прогресії",
+        "relocation": "Релокація",
+        "rectification": "Ректифікація",
+        "horary": "Хорар",
+        "compatibility": "Сумісність",
+        "general_consultation": "Загальна",
+        "other": "Інше",
+        "unknown": "Невідомо"
+      },
+      "mentionedBy": {
+        "client": "клієнт",
+        "astrologer": "астролог",
+        "both": "обидва",
+        "unknown": "невідомо"
+      },
+      "keyPointCategory": {
+        "client_question": "Запит клієнта",
+        "life_context": "Життєвий контекст",
+        "astrological_focus": "Астрологічний фокус",
+        "guidance_given": "Надані рекомендації",
+        "decision_or_plan": "Рішення або план",
+        "follow_up": "Подальші кроки",
+        "sensitive": "Делікатне"
+      },
+      "memoryCategory": {
+        "relationship": "Стосунки",
+        "career": "Кар'єра",
+        "money": "Гроші",
+        "family": "Сім'я",
+        "health_wellbeing": "Здоров'я та добробут",
+        "relocation": "Релокація",
+        "education": "Освіта",
+        "spiritual_practice": "Духовна практика",
+        "timing": "Таймінг",
+        "follow_up": "Подальші кроки",
+        "other": "Інше"
+      },
+      "openQuestionReason": {
+        "unclear_transcript_fragment": "Незрозумілий фрагмент",
+        "ambiguous_statement": "Неоднозначне твердження",
+        "incomplete_context": "Неповний контекст",
+        "unresolved_topic": "Невирішена тема"
       }
     }
   },

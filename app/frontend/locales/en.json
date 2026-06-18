@@ -217,7 +217,10 @@
     },
     "brandName": "Steliara",
     "monthLabel": "Month",
-    "errorGeneric": "Something went wrong. Please try again."
+    "errorGeneric": "Something went wrong. Please try again.",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save"
   },
   "i18n": {
     "loading": "Loading...",
@@ -1362,7 +1365,8 @@
         "savedCharts": "Saved charts",
         "keyInsights": "Key insights",
         "consultations": "Session history",
-        "recordings": "Call recordings"
+        "recordings": "Call recordings",
+        "clientHistory": "Client history"
       },
       "stats": {
         "totalSessions": "Total sessions",
@@ -1382,7 +1386,17 @@
         "all": "All"
       },
       "recordings": {
-        "empty": "No call recordings yet."
+        "empty": "No call recordings yet.",
+        "summary": "Summary",
+        "keyPoints": "Key points",
+        "reviewShare": "Review & share",
+        "fullTranscript": "Full transcript",
+        "speakerAstrologer": "Astrologer",
+        "speakerGuest": "Guest",
+        "noData": "No recording data available yet.",
+        "failed": "Processing failed.",
+        "retry": "Retry processing",
+        "summaryFailed": "Transcript ready, but the summary could not be generated."
       },
       "solar": {
         "defaultName": "Solar return {year}",
@@ -1457,7 +1471,19 @@
         "notFound": "Profile not found",
         "loadFailed": "Failed to load profile"
       },
-      "unnamed": "Unnamed profile"
+      "unnamed": "Unnamed profile",
+      "clientHistory": {
+        "empty": "No consultation history yet."
+      },
+      "callStatus": {
+        "created": "Scheduled",
+        "active": "In progress",
+        "ended": "Ended",
+        "processing": "Processing…",
+        "completed": "Completed",
+        "failed": "Failed",
+        "summaryFailed": "Summary failed"
+      }
     },
     "synastry": {
       "title": "Synastry",
@@ -2169,6 +2195,94 @@
         "registerFailed": "Unable to create an account right now.",
         "verifyFailed": "Unable to verify your email right now.",
         "resendVerificationFailed": "Unable to resend verification right now."
+      }
+    },
+    "consultation": {
+      "title": "Consultation",
+      "back": "Back to client",
+      "notFound": "Consultation not found.",
+      "legacy": "This consultation predates structured summaries.",
+      "summaryFailed": "The summary could not be generated for this consultation.",
+      "summary": {
+        "title": "Summary",
+        "showDetailed": "Show detailed summary"
+      },
+      "report": {
+        "title": "Client report",
+        "reviewRequired": "Review required",
+        "save": "Save draft",
+        "copy": "Copy report",
+        "unsaved": "Unsaved changes",
+        "saved": "Saved",
+        "saveFailed": "Could not save",
+        "copied": "Report copied to clipboard",
+        "copyFailed": "Could not copy",
+        "sharedAt": "Shared"
+      },
+      "keyPoints": {
+        "title": "Key points"
+      },
+      "openQuestions": {
+        "title": "Open questions",
+        "none": "Nothing flagged as unclear."
+      },
+      "memory": {
+        "title": "Client history",
+        "empty": "No history entries yet.",
+        "loadError": "Could not load history.",
+        "aiSuggested": "AI-suggested",
+        "byAstrologer": "Added by you",
+        "internal": "Not shared with client",
+        "confirmDelete": "Delete this history entry?",
+        "deleted": "Entry deleted"
+      },
+      "consultationType": {
+        "natal": "Natal",
+        "synastry": "Synastry",
+        "solar": "Solar",
+        "transits": "Transits",
+        "progressions": "Progressions",
+        "relocation": "Relocation",
+        "rectification": "Rectification",
+        "horary": "Horary",
+        "compatibility": "Compatibility",
+        "general_consultation": "General",
+        "other": "Other",
+        "unknown": "Unknown"
+      },
+      "mentionedBy": {
+        "client": "client",
+        "astrologer": "astrologer",
+        "both": "both",
+        "unknown": "unknown"
+      },
+      "keyPointCategory": {
+        "client_question": "Client question",
+        "life_context": "Life context",
+        "astrological_focus": "Astrological focus",
+        "guidance_given": "Guidance given",
+        "decision_or_plan": "Decision or plan",
+        "follow_up": "Follow-up",
+        "sensitive": "Sensitive"
+      },
+      "memoryCategory": {
+        "relationship": "Relationship",
+        "career": "Career",
+        "money": "Money",
+        "family": "Family",
+        "health_wellbeing": "Health & wellbeing",
+        "relocation": "Relocation",
+        "education": "Education",
+        "spiritual_practice": "Spiritual practice",
+        "timing": "Timing",
+        "follow_up": "Follow-up",
+        "other": "Other"
+      },
+      "openQuestionReason": {
+        "unclear_transcript_fragment": "Unclear fragment",
+        "ambiguous_statement": "Ambiguous statement",
+        "incomplete_context": "Incomplete context",
+        "unresolved_topic": "Unresolved topic"
       }
     }
   },

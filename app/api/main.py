@@ -31,7 +31,7 @@ if os.getenv('APP_ENV') == 'production':
     logger.remove()  # Удаляем default handler
     logger.add(sys.stderr, level="WARNING")  # Только WARNING и выше
 
-from app.api.routes import auth, natal, transits, solar, progressions, directions, ingresses, places, consultations, alerts, preferences, call_sessions, synastry, charts, persons, assistant, billing, lunar, electional, composite, profections, antiscia, asteroids, dominants
+from app.api.routes import auth, natal, transits, solar, progressions, directions, ingresses, places, consultations, alerts, preferences, call_sessions, synastry, charts, persons, assistant, billing, lunar, electional, composite, profections, antiscia, asteroids, dominants, client_memory
 from app.api.error_handlers import register_error_handlers
 from app.api.locale_dependency import locale_context_dependency
 from app.services.processing_pipeline import recover_stuck_sessions
@@ -116,7 +116,7 @@ async def static_cache_headers(request: Request, call_next):
         "/consultation-join.html",
     }
 
-    if path in frontend_document_paths or path.startswith("/client/"):
+    if path in frontend_document_paths or path.startswith(("/client/", "/consultation/")):
         # HTML documents should always revalidate so deploys pick up the latest
         # versioned asset markers immediately after rollout.
         response.headers["Cache-Control"] = "no-store, max-age=0"
@@ -145,6 +145,7 @@ app.include_router(ingresses.router, prefix="/api/v1", tags=["Ingresses"])
 app.include_router(places.router, prefix="/api/v1", tags=["Places"])
 app.include_router(consultations.router, prefix="/api/v1", tags=["Consultations"])
 app.include_router(call_sessions.router, prefix="/api/v1", tags=["Call Sessions"])
+app.include_router(client_memory.router, prefix="/api/v1", tags=["Client Memory"])
 app.include_router(alerts.router, prefix="/api/v1", tags=["Alerts"])
 app.include_router(preferences.router, prefix="/api/v1", tags=["Preferences"])
 app.include_router(synastry.router, prefix="/api/v1", tags=["Synastry"])
@@ -310,6 +311,15 @@ async def consultation_join_page(token: str):
 async def client_profile_page(user_id: str):
     """Client profile page — served for any /client/{user_id} path."""
     page_path = os.path.join(FRONTEND_PATH, "client-profile.html")
+    if os.path.exists(page_path):
+        return FileResponse(page_path)
+    raise HTTPException(status_code=404, detail="Page not found")
+
+
+@app.get("/consultation/{session_id}")
+async def consultation_detail_page(session_id: str):
+    """Consultation detail page — review/edit/share the summary for a call session."""
+    page_path = os.path.join(FRONTEND_PATH, "consultation.html")
     if os.path.exists(page_path):
         return FileResponse(page_path)
     raise HTTPException(status_code=404, detail="Page not found")

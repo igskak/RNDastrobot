@@ -1301,11 +1301,18 @@ class CallSession(Base):
     transcript_text = Column(Text)
     transcript_segments = Column(JSONB)    # [{speaker, start_ms, end_ms, text}, ...]
 
-    # AI summary (OpenAI)
+    # AI summary (OpenAI) — legacy shape (kept for rendering pre-v1 sessions)
     summary_text = Column(Text)
     key_points = Column(JSONB)             # [{topic, detail}, ...]
     client_facing_summary = Column(Text)
     ai_model_used = Column(String(50))
+
+    # Summarizer v1 (§4 strict JSON contract)
+    summary_json = Column(JSONB)                  # full §4 object; NULL for legacy/summary_failed
+    summary_schema_version = Column(String(8))    # "1.0"
+    summary_error = Column(Text)                   # set when call_status='summary_failed'
+    client_report_edited = Column(Text)            # astrologer-edited client_facing_report.text
+    client_report_shared_at = Column(DateTime)     # when astrologer marked the draft shared (copy)
 
     # Error tracking
     processing_error = Column(Text)
@@ -1319,7 +1326,7 @@ class CallSession(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "call_status IN ('created','active','ended','processing','completed','failed')",
+            "call_status IN ('created','active','ended','processing','completed','failed','summary_failed')",
             name='chk_call_session_status',
         ),
         Index('idx_call_sessions_astrologer', 'astrologer_id'),
@@ -1327,6 +1334,62 @@ class CallSession(Base):
         Index('idx_call_sessions_astrologer_user', 'astrologer_id', 'user_id', 'created_at'),
         Index('idx_call_sessions_status', 'call_status'),
         Index('idx_call_sessions_token', 'client_join_token_hash'),
+    )
+
+
+class ConsultationTranscript(Base):
+    """Immutable source-of-truth transcript for a call session (spec §2.1).
+
+    INSERT-once: the pipeline writes this exactly once per call_session_id (UNIQUE).
+    call_sessions.transcript_text is a denormalized display cache; this is canonical.
+    """
+    __tablename__ = 'consultation_transcripts'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    call_session_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey('call_sessions.id', ondelete='CASCADE'),
+        nullable=False, unique=True,
+    )
+    astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='CASCADE'), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
+    transcript_text = Column(Text, nullable=False)
+    transcript_segments = Column(JSONB)
+    language = Column(String(8))
+    created_at = Column(DateTime, server_default=func.now())
+
+    __table_args__ = (
+        Index('idx_consultation_transcripts_tenant', 'astrologer_id', 'user_id', 'created_at'),
+    )
+
+
+class ClientMemoryEntry(Base):
+    """Durable per-client consultation history (spec §2.2 / §5.11).
+
+    Two actors:
+      - pipeline INSERTs rows with source='ai' (never UPDATE/DELETE existing rows);
+      - astrologer owns full CRUD on their own rows via edited_at / deleted_at (soft-delete).
+    Reprocess idempotency is enforced by delete-then-insert of un-edited AI rows in the
+    pipeline plus the partial unique index uq_cme_ai_session_text.
+    """
+    __tablename__ = 'client_memory_entries'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    call_session_id = Column(UUID(as_uuid=True), ForeignKey('call_sessions.id', ondelete='SET NULL'))
+    astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='CASCADE'), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
+    category = Column(String(32), nullable=False)
+    text = Column(Text, nullable=False)
+    mentioned_by = Column(String(16), nullable=False)
+    source = Column(String(16), nullable=False, default='ai')
+    reviewed_at = Column(DateTime)
+    edited_at = Column(DateTime)
+    deleted_at = Column(DateTime)
+    created_at = Column(DateTime, server_default=func.now())
+
+    __table_args__ = (
+        CheckConstraint("source IN ('ai','astrologer')", name='chk_cme_source'),
+        Index('idx_cme_tenant', 'astrologer_id', 'user_id', 'created_at'),
     )
 
 

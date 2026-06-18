@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="page.consultation.title"></title>
+    <link rel="stylesheet" href="/bundles/consultation.bundle.css?v=2acc8f3f384b">
+    <link rel="stylesheet" href="/css/locale-switcher.css?v=2acc8f3f384b">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <script>window.__APP_BUILD_ID__ = '2acc8f3f384b';</script>
+</head>
+<body class="consult-page">
+    <div class="page-loader" id="pageLoader">
+        <div class="pl-spinner"></div>
+        <div class="pl-text" data-i18n="common.loading"></div>
+    </div>
+
+    <div class="consult-shell">
+        <a href="#" id="backLink" class="consult-back">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span data-i18n="page.consultation.back"></span>
+        </a>
+
+        <div id="consultRoot">
+            <div class="consult-loading"><span class="consult-spinner"></span> <span data-i18n="common.loading"></span></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script type="module" src="/js/bundles/consultation.bundle.js?v=2acc8f3f384b"></script>
+    <script src="/js/locale-switcher.js?v=2acc8f3f384b"></script>
+</body>
+</html>

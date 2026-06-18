@@ -100,13 +100,24 @@ class OpenAIService:
         self,
         transcript_text: str,
         segments: list,
+        session_id: str,
+        client_id: str,
         astrologer_name: str = "the astrologer",
         client_name: str = "the client",
     ) -> dict:
         """
-        Returns { summary_text, key_points, client_facing_summary }.
-        Falls back to a minimal dict on failure.
+        Summarizer v1 — faithful summarizer producing the strict §4 JSON contract.
+
+        Returns { summary: <§4 dict>, model, tokens }.
+        Raises RuntimeError on a hard LLM failure (refusal / unparseable);
+        SummaryValidationError (from consultation_summary) on structural §10 failure.
         """
+        from app.services.consultation_summary import (
+            SUMMARY_JSON_SCHEMA,
+            build_prompt,
+            validate_summary,
+        )
+
         if not self.is_configured():
             raise RuntimeError("OPENAI_API_KEY not configured")
 
@@ -120,29 +131,41 @@ class OpenAIService:
         else:
             formatted = transcript_text
 
-        user_prompt = (
-            f"Astrologer: {astrologer_name}\n"
-            f"Client: {client_name}\n\n"
-            f"Transcript:\n{formatted}"
-        )
+        prompt = build_prompt(session_id=session_id, client_id=client_id, transcript=formatted)
 
-        logger.info(f"Sending transcript to {_MODEL} for summarization…")
+        logger.info(f"Sending transcript to {_MODEL} for summarization (v1 contract)…")
         client = self._get_client()
 
         response = client.chat.completions.create(
             model=_MODEL,
-            messages=[
-                {"role": "system", "content": _SYSTEM_PROMPT},
-                {"role": "user",   "content": user_prompt},
-            ],
-            response_format={"type": "json_object"},
-            temperature=0.4,
+            messages=[{"role": "user", "content": prompt}],
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "consultation_summary_v1",
+                    "schema": SUMMARY_JSON_SCHEMA,
+                    "strict": True,
+                },
+            },
+            temperature=0.1,  # faithful-only: minimize creativity
         )
 
-        raw = response.choices[0].message.content or "{}"
-        result = json.loads(raw)
-        logger.info("Summary generation complete")
-        return result
+        message = response.choices[0].message
+        refusal = getattr(message, "refusal", None)
+        if refusal:
+            raise RuntimeError(f"model refused to summarize: {refusal}")
+
+        raw = message.content or ""
+        if not raw.strip():
+            raise RuntimeError("empty completion from model")
+        data = json.loads(raw)  # raises JSONDecodeError → caught by pipeline
+
+        summary = validate_summary(data, session_id=session_id, client_id=client_id)
+
+        usage = getattr(response, "usage", None)
+        tokens = getattr(usage, "total_tokens", 0) if usage else 0
+        logger.info(f"Summary v1 generated — {tokens} tokens")
+        return {"summary": summary, "model": _MODEL, "tokens": tokens}
 
 
 openai_service = OpenAIService()

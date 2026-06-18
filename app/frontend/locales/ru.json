@@ -217,7 +217,10 @@
     },
     "brandName": "Steliara",
     "monthLabel": "Месяц",
-    "errorGeneric": "Что-то пошло не так. Попробуйте ещё раз."
+    "errorGeneric": "Что-то пошло не так. Попробуйте ещё раз.",
+    "edit": "Изменить",
+    "delete": "Удалить",
+    "save": "Сохранить"
   },
   "i18n": {
     "loading": "Загрузка...",
@@ -1362,7 +1365,8 @@
         "savedCharts": "Сохранённые карты",
         "keyInsights": "Ключевые инсайты",
         "consultations": "История встреч",
-        "recordings": "Записи звонков"
+        "recordings": "Записи звонков",
+        "clientHistory": "История клиента"
       },
       "stats": {
         "totalSessions": "Всего сессий",
@@ -1382,7 +1386,17 @@
         "all": "Все"
       },
       "recordings": {
-        "empty": "Записей звонков пока нет."
+        "empty": "Записей звонков пока нет.",
+        "summary": "Резюме",
+        "keyPoints": "Ключевые моменты",
+        "reviewShare": "Просмотр и отправка",
+        "fullTranscript": "Полная расшифровка",
+        "speakerAstrologer": "Астролог",
+        "speakerGuest": "Гость",
+        "noData": "Пока нет данных записи.",
+        "failed": "Обработка не удалась.",
+        "retry": "Повторить",
+        "summaryFailed": "Расшифровка готова, но резюме не удалось сгенерировать."
       },
       "solar": {
         "defaultName": "Соляр {year}",
@@ -1457,7 +1471,19 @@
         "notFound": "Профиль не найден",
         "loadFailed": "Не удалось загрузить профиль"
       },
-      "unnamed": "Профиль без имени"
+      "unnamed": "Профиль без имени",
+      "clientHistory": {
+        "empty": "Пока нет истории консультаций."
+      },
+      "callStatus": {
+        "created": "Запланирован",
+        "active": "Идёт",
+        "ended": "Завершён",
+        "processing": "Обработка…",
+        "completed": "Готово",
+        "failed": "Ошибка",
+        "summaryFailed": "Ошибка резюме"
+      }
     },
     "synastry": {
       "title": "Синастрия",
@@ -2169,6 +2195,94 @@
         "registerFailed": "Сейчас не удалось создать аккаунт.",
         "verifyFailed": "Сейчас не удалось подтвердить email.",
         "resendVerificationFailed": "Сейчас не удалось отправить ссылку подтверждения."
+      }
+    },
+    "consultation": {
+      "title": "Консультация",
+      "back": "Назад к клиенту",
+      "notFound": "Консультация не найдена.",
+      "legacy": "Эта консультация создана до структурированных резюме.",
+      "summaryFailed": "Не удалось сгенерировать резюме для этой консультации.",
+      "summary": {
+        "title": "Резюме",
+        "showDetailed": "Показать подробное резюме"
+      },
+      "report": {
+        "title": "Отчёт для клиента",
+        "reviewRequired": "Требует проверки",
+        "save": "Сохранить черновик",
+        "copy": "Скопировать отчёт",
+        "unsaved": "Несохранённые изменения",
+        "saved": "Сохранено",
+        "saveFailed": "Не удалось сохранить",
+        "copied": "Отчёт скопирован",
+        "copyFailed": "Не удалось скопировать",
+        "sharedAt": "Отправлено"
+      },
+      "keyPoints": {
+        "title": "Ключевые моменты"
+      },
+      "openQuestions": {
+        "title": "Открытые вопросы",
+        "none": "Ничего неясного не отмечено."
+      },
+      "memory": {
+        "title": "История клиента",
+        "empty": "Пока нет записей.",
+        "loadError": "Не удалось загрузить историю.",
+        "aiSuggested": "Предложено ИИ",
+        "byAstrologer": "Добавлено вами",
+        "internal": "Не передаётся клиенту",
+        "confirmDelete": "Удалить эту запись?",
+        "deleted": "Запись удалена"
+      },
+      "consultationType": {
+        "natal": "Натал",
+        "synastry": "Синастрия",
+        "solar": "Соляр",
+        "transits": "Транзиты",
+        "progressions": "Прогрессии",
+        "relocation": "Релокация",
+        "rectification": "Ректификация",
+        "horary": "Хорар",
+        "compatibility": "Совместимость",
+        "general_consultation": "Общая",
+        "other": "Другое",
+        "unknown": "Неизвестно"
+      },
+      "mentionedBy": {
+        "client": "клиент",
+        "astrologer": "астролог",
+        "both": "оба",
+        "unknown": "неизвестно"
+      },
+      "keyPointCategory": {
+        "client_question": "Запрос клиента",
+        "life_context": "Жизненный контекст",
+        "astrological_focus": "Астрологический фокус",
+        "guidance_given": "Данные рекомендации",
+        "decision_or_plan": "Решение или план",
+        "follow_up": "Дальнейшие шаги",
+        "sensitive": "Деликатное"
+      },
+      "memoryCategory": {
+        "relationship": "Отношения",
+        "career": "Карьера",
+        "money": "Деньги",
+        "family": "Семья",
+        "health_wellbeing": "Здоровье и благополучие",
+        "relocation": "Релокация",
+        "education": "Образование",
+        "spiritual_practice": "Духовная практика",
+        "timing": "Тайминг",
+        "follow_up": "Дальнейшие шаги",
+        "other": "Другое"
+      },
+      "openQuestionReason": {
+        "unclear_transcript_fragment": "Неясный фрагмент",
+        "ambiguous_statement": "Неоднозначное утверждение",
+        "incomplete_context": "Неполный контекст",
+        "unresolved_topic": "Нерешённая тема"
       }
     }
   },

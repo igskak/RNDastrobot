@@ -412,6 +412,65 @@ function renderAll(data) {
     renderInsights(data.aggregated_key_points);
     renderConsultations();
     renderRecordings(data.call_sessions);
+    loadClientMemory();
+}
+
+/* ─── Client history (consultation memory) ───────────────────────────────── */
+
+const MEM_CATEGORY_KEY = (c) => `page.consultation.memoryCategory.${c}`;
+
+async function loadClientMemory() {
+    const list = document.getElementById('clientMemoryList');
+    const empty = document.getElementById('clientMemoryEmpty');
+    if (!list) return;
+    try {
+        const res = await apiFetch(`${API_BASE}/clients/${userId}/memory`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        const entries = data.entries || [];
+        if (!entries.length) {
+            list.innerHTML = '';
+            empty?.classList.remove('hidden');
+            return;
+        }
+        empty?.classList.add('hidden');
+        list.innerHTML = entries.map((e) => {
+            const catLabel = t(MEM_CATEGORY_KEY(e.category));
+            const cat = catLabel === MEM_CATEGORY_KEY(e.category) ? e.category : catLabel;
+            const prov = e.source === 'ai'
+                ? `<span class="mem-provenance is-ai">✦ ${escapeHtml(t('page.consultation.memory.aiSuggested'))}</span>`
+                : `<span class="mem-provenance">${escapeHtml(t('page.consultation.memory.byAstrologer'))}</span>`;
+            return `<div class="mem-item" data-id="${escapeHtml(e.id)}">
+                <div class="mem-item-head">
+                    <span class="mem-cat">${escapeHtml(cat)}</span>
+                    ${prov}
+                    <span class="mem-internal">${escapeHtml(t('page.consultation.memory.internal'))}</span>
+                </div>
+                <p class="mem-text">${escapeHtml(e.text)}</p>
+                <div class="mem-actions">
+                    <button class="mem-del-btn" data-mem-del="${escapeHtml(e.id)}">${escapeHtml(t('common.delete'))}</button>
+                </div>
+            </div>`;
+        }).join('');
+        list.querySelectorAll('[data-mem-del]').forEach((btn) => {
+            btn.addEventListener('click', () => deleteClientMemory(btn.dataset.memDel));
+        });
+    } catch (_) {
+        list.innerHTML = '';
+        empty?.classList.remove('hidden');
+    }
+}
+
+async function deleteClientMemory(id) {
+    if (!confirm(t('page.consultation.memory.confirmDelete'))) return;
+    try {
+        const res = await apiFetch(`${API_BASE}/memory/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error();
+        showToast(t('page.consultation.memory.deleted'), 'success');
+        loadClientMemory();
+    } catch (_) {
+        showToast(t('common.error'), 'error');
+    }
 }
 
 /* ─── Header ─────────────────────────────────────────────────────────────── */
@@ -726,14 +785,26 @@ function renderConsultations() {
 
 /* ─── Call Recordings ────────────────────────────────────────────────────── */
 
-const CS_STATUS_LABELS = {
-    created:    { label: 'Scheduled',   cls: 'cs-status--created'    },
-    active:     { label: 'In progress', cls: 'cs-status--active'     },
-    ended:      { label: 'Ended',       cls: 'cs-status--ended'      },
-    processing: { label: 'Processing…', cls: 'cs-status--processing' },
-    completed:  { label: 'Completed',   cls: 'cs-status--completed'  },
-    failed:     { label: 'Failed',      cls: 'cs-status--failed'     },
+const CS_STATUS_META = {
+    created:        { key: 'page.clientProfile.callStatus.created',       cls: 'cs-status--created'    },
+    active:         { key: 'page.clientProfile.callStatus.active',        cls: 'cs-status--active'     },
+    ended:          { key: 'page.clientProfile.callStatus.ended',         cls: 'cs-status--ended'      },
+    processing:     { key: 'page.clientProfile.callStatus.processing',    cls: 'cs-status--processing' },
+    completed:      { key: 'page.clientProfile.callStatus.completed',     cls: 'cs-status--completed'  },
+    failed:         { key: 'page.clientProfile.callStatus.failed',        cls: 'cs-status--failed'     },
+    summary_failed: { key: 'page.clientProfile.callStatus.summaryFailed', cls: 'cs-status--failed'     },
 };
+function csStatusLabel(status) {
+    const m = CS_STATUS_META[status];
+    return m ? t(m.key) : status;
+}
+function csStatusCls(status) {
+    return CS_STATUS_META[status]?.cls || '';
+}
+// completed → full v1 recap; summary_failed → transcript + retry; both expandable.
+function csIsExpandable(status) {
+    return status === 'completed' || status === 'summary_failed';
+}
 
 function renderRecordings(sessions) {
     if (!sessions || sessions.length === 0) {
@@ -744,12 +815,11 @@ function renderRecordings(sessions) {
     refs.recordingsEmpty.classList.add('hidden');
 
     refs.recordingsList.innerHTML = sessions.map((cs) => {
-        const st = CS_STATUS_LABELS[cs.call_status] || { label: cs.call_status, cls: '' };
         const dateStr = cs.started_at
             ? formatDateTime(`${cs.started_at}Z`)
             : (cs.created_at ? formatDate(`${cs.created_at}Z`) : '—');
         const dur = cs.duration_seconds ? formatDuration(cs.duration_seconds) : '';
-        const isExpandable = cs.call_status === 'completed';
+        const isExpandable = csIsExpandable(cs.call_status);
         const expandIcon = isExpandable
             ? `<svg class="cs-expand-icon" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`
             : '';
@@ -759,7 +829,7 @@ function renderRecordings(sessions) {
             <div class="cs-row${isExpandable ? ' cs-row--expandable' : ''}" data-session-id="${escapeHtml(cs.id)}">
                 <span class="cs-date">${escapeHtml(dateStr)}</span>
                 ${dur ? `<span class="cs-duration">${escapeHtml(dur)}</span>` : '<span class="cs-duration"></span>'}
-                <span class="cs-status ${st.cls}">${spinner}${escapeHtml(st.label)}</span>
+                <span class="cs-status ${csStatusCls(cs.call_status)}">${spinner}${escapeHtml(csStatusLabel(cs.call_status))}</span>
                 ${expandIcon}
             </div>
             <div class="cs-recording-panel" id="cs-panel-${escapeHtml(cs.id)}" hidden></div>`;
@@ -824,8 +894,8 @@ function pollProcessingSession(sessionId, panel, rowEl) {
 
             const badge = rowEl.querySelector('.cs-status');
             if (badge) {
-                const s = CS_STATUS_LABELS[cs.call_status];
-                if (s) { badge.className = `cs-status ${s.cls}`; badge.textContent = s.label; }
+                badge.className = `cs-status ${csStatusCls(cs.call_status)}`;
+                badge.textContent = csStatusLabel(cs.call_status);
             }
 
             const audioRes = cs.audio_storage_path
@@ -844,9 +914,9 @@ function buildRecordingPanelHTML(cs, audioUrl, sessionId) {
             ? `<p class="cs-panel-error">${escapeHtml(cs.processing_error)}</p>`
             : '';
         return `<div class="cs-panel-inner">
-            <p class="cs-panel-error">Processing failed.</p>
+            <p class="cs-panel-error">${escapeHtml(t('page.clientProfile.recordings.failed'))}</p>
             ${errMsg}
-            <button class="btn-new btn-sm cs-retry-btn" data-session-id="${escapeHtml(sessionId)}">Retry processing</button>
+            <button class="btn-new btn-sm cs-retry-btn" data-session-id="${escapeHtml(sessionId)}">${escapeHtml(t('page.clientProfile.recordings.retry'))}</button>
         </div>`;
     }
 
@@ -854,33 +924,59 @@ function buildRecordingPanelHTML(cs, audioUrl, sessionId) {
 
     if (audioUrl) {
         html += `<div class="cs-audio-wrap">
-            <audio class="cs-audio-player" controls preload="none" src="${escapeHtml(audioUrl)}">
-                Your browser doesn't support audio playback.
-            </audio>
+            <audio class="cs-audio-player" controls preload="none" src="${escapeHtml(audioUrl)}"></audio>
         </div>`;
     }
 
-    if (cs?.summary_text) {
-        html += `<div class="cs-summary">
-            <h5 class="cs-section-title">Summary</h5>
-            <p class="cs-summary-text">${escapeHtml(cs.summary_text)}</p>
-        </div>`;
-    }
+    const sj = cs?.summary_json;
 
-    if (cs?.key_points?.length) {
-        const items = cs.key_points.map((p) => {
-            const text = typeof p === 'string' ? p : (p.detail || p.topic || '');
-            return `<li>${escapeHtml(text)}</li>`;
-        }).join('');
-        html += `<div class="cs-key-points">
-            <h5 class="cs-section-title">Key points</h5>
-            <ul class="cs-key-points-list">${items}</ul>
-        </div>`;
+    if (cs?.call_status === 'summary_failed') {
+        // Transcript succeeded but the summary failed §10 — show note + retry, keep transcript below.
+        html += `<p class="cs-panel-error">${escapeHtml(t('page.clientProfile.recordings.summaryFailed'))}</p>
+            <button class="btn-new btn-sm cs-retry-btn" data-session-id="${escapeHtml(sessionId)}">${escapeHtml(t('page.clientProfile.recordings.retry'))}</button>`;
+    } else if (sj) {
+        // v1 contract — brief recap + categorized key points + a link to the full review page.
+        const brief = sj.session_summary?.brief || '';
+        if (brief) {
+            html += `<div class="cs-summary">
+                <h5 class="cs-section-title">${escapeHtml(t('page.clientProfile.recordings.summary'))}</h5>
+                <p class="cs-summary-text">${escapeHtml(brief)}</p>
+            </div>`;
+        }
+        const kps = sj.key_points || [];
+        if (kps.length) {
+            const items = kps.slice(0, 6).map((p) => `<li>${escapeHtml(p.text || '')}</li>`).join('');
+            html += `<div class="cs-key-points">
+                <h5 class="cs-section-title">${escapeHtml(t('page.clientProfile.recordings.keyPoints'))}</h5>
+                <ul class="cs-key-points-list">${items}</ul>
+            </div>`;
+        }
+        html += `<a class="btn-new btn-sm" href="/consultation/${encodeURIComponent(sessionId)}">${escapeHtml(t('page.clientProfile.recordings.reviewShare'))} →</a>`;
+    } else {
+        // Legacy pre-v1 rows: render the old shape so historical sessions still display.
+        if (cs?.summary_text) {
+            html += `<div class="cs-summary">
+                <h5 class="cs-section-title">${escapeHtml(t('page.clientProfile.recordings.summary'))}</h5>
+                <p class="cs-summary-text">${escapeHtml(cs.summary_text)}</p>
+            </div>`;
+        }
+        if (cs?.key_points?.length) {
+            const items = cs.key_points.map((p) => {
+                const text = typeof p === 'string' ? p : (p.detail || p.topic || '');
+                return `<li>${escapeHtml(text)}</li>`;
+            }).join('');
+            html += `<div class="cs-key-points">
+                <h5 class="cs-section-title">${escapeHtml(t('page.clientProfile.recordings.keyPoints'))}</h5>
+                <ul class="cs-key-points-list">${items}</ul>
+            </div>`;
+        }
     }
 
     if (cs?.transcript_segments?.length) {
         const segs = cs.transcript_segments.map((seg) => {
-            const speakerLabel = seg.speaker === 'A' ? 'Astrologer' : 'Guest';
+            const speakerLabel = seg.speaker === 'A'
+                ? t('page.clientProfile.recordings.speakerAstrologer')
+                : t('page.clientProfile.recordings.speakerGuest');
             const cls = seg.speaker === 'A' ? 'cs-seg--astrologer' : 'cs-seg--client';
             return `<div class="cs-segment ${cls}">
                 <span class="cs-seg-speaker">${escapeHtml(speakerLabel)}</span>
@@ -888,17 +984,17 @@ function buildRecordingPanelHTML(cs, audioUrl, sessionId) {
             </div>`;
         }).join('');
         html += `<details class="cs-transcript-details">
-            <summary class="cs-transcript-toggle">Full transcript</summary>
+            <summary class="cs-transcript-toggle">${escapeHtml(t('page.clientProfile.recordings.fullTranscript'))}</summary>
             <div class="cs-transcript">${segs}</div>
         </details>`;
     } else if (cs?.transcript_text) {
         html += `<details class="cs-transcript-details">
-            <summary class="cs-transcript-toggle">Full transcript</summary>
+            <summary class="cs-transcript-toggle">${escapeHtml(t('page.clientProfile.recordings.fullTranscript'))}</summary>
             <p class="cs-transcript-plain">${escapeHtml(cs.transcript_text)}</p>
         </details>`;
     }
 
-    if (!html) html = `<p class="cs-panel-empty">No recording data available yet.</p>`;
+    if (!html) html = `<p class="cs-panel-empty">${escapeHtml(t('page.clientProfile.recordings.noData'))}</p>`;
     return `<div class="cs-panel-inner">${html}</div>`;
 }
 

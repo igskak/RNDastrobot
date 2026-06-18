@@ -80,6 +80,12 @@ def _serialize(cs: CallSession, join_url: Optional[str] = None, user=None) -> di
         "summary_text": cs.summary_text,
         "key_points": cs.key_points,
         "client_facing_summary": cs.client_facing_summary,
+        # Summarizer v1 (§4). NULL on legacy/summary_failed rows — UI falls back to legacy fields.
+        "summary_json": cs.summary_json,
+        "summary_schema_version": cs.summary_schema_version,
+        "summary_error": cs.summary_error,
+        "client_report_edited": cs.client_report_edited,
+        "client_report_shared_at": cs.client_report_shared_at.isoformat() if cs.client_report_shared_at else None,
         "processing_error": cs.processing_error,
         "created_at": cs.created_at.isoformat() if cs.created_at else None,
     }
@@ -452,6 +458,115 @@ async def reprocess_call(
         result="success",
     )
     return {"message": "Reprocessing started", "call_status": "processing"}
+
+
+# ---------------------------------------------------------------------------
+# Dev-only — simulate a completed consultation from a transcript (no LiveKit/AssemblyAI)
+# ---------------------------------------------------------------------------
+
+class DevSimulateRequest(BaseModel):
+    user_id: UUID
+    transcript: str
+
+
+@router.post("/dev/simulate-summary", summary="DEV: run a transcript through the summarizer pipeline")
+def dev_simulate_summary(
+    payload: DevSimulateRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+):
+    """Skips the video/recording/transcription stack and feeds a transcript straight
+    into the summarize → persist → memory steps. Guarded: dev only, never production."""
+    dev_on = os.getenv("ENABLE_DEV_BOOTSTRAP", "").strip().lower() in {"1", "true", "yes", "on"}
+    if not dev_on or os.getenv("APP_ENV", "development").lower() == "production":
+        raise HTTPException(status_code=403, detail="Dev simulate is disabled")
+
+    user = db.query(User).filter(
+        User.user_id == payload.user_id, User.astrologer_id == auth.astrologer.id
+    ).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Client not found")
+    if not payload.transcript.strip():
+        raise HTTPException(status_code=422, detail="transcript is required")
+
+    from app.services.processing_pipeline import (
+        _store_immutable_transcript, _summarize_with_retry, _append_ai_memory,
+    )
+    from app.services.consultation_summary import SummaryValidationError
+
+    cs = CallSession(
+        astrologer_id=auth.astrologer.id,
+        user_id=user.user_id,
+        livekit_room_name=f"dev-{secrets.token_hex(8)}",
+        call_status="processing",
+        transcript_text=payload.transcript,
+        started_at=_utcnow(),
+        ended_at=_utcnow(),
+    )
+    db.add(cs)
+    db.commit()
+
+    _store_immutable_transcript(db, cs, payload.transcript, [])
+    astro_name = f"{auth.astrologer.first_name or ''} {auth.astrologer.last_name or ''}".strip() or "Astrologer"
+    client_name = f"{user.first_name or ''} {user.last_name or ''}".strip() or "Client"
+    try:
+        result = _summarize_with_retry(
+            transcript_text=payload.transcript, segments=[],
+            session_id=str(cs.id), client_id=str(cs.user_id),
+            astrologer_name=astro_name, client_name=client_name,
+        )
+    except (SummaryValidationError, ValueError, RuntimeError) as e:
+        cs.call_status = "summary_failed"
+        cs.summary_error = str(e)[:500]
+        db.commit()
+        raise HTTPException(status_code=502, detail=f"Summary failed: {e}")
+
+    sj = result["summary"]
+    cs.summary_json = sj
+    cs.summary_schema_version = sj.get("schema_version", "1.0")
+    cs.ai_model_used = result.get("model")
+    cs.client_report_edited = sj.get("client_facing_report", {}).get("text", "")
+    cs.call_status = "completed"
+    db.commit()
+    _append_ai_memory(db, cs, sj.get("memory_entries_to_append", []))
+
+    return {"session_id": str(cs.id), "call_status": "completed", "tokens": result.get("tokens")}
+
+
+# ---------------------------------------------------------------------------
+# Summarizer v1 — client-facing report draft (review → edit → copy/share)
+# ---------------------------------------------------------------------------
+
+class ReportEditRequest(BaseModel):
+    text: str
+
+
+@router.patch("/{session_id}/report", summary="Save the edited client-facing report draft")
+def save_report_draft(
+    session_id: UUID,
+    payload: ReportEditRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+):
+    cs = _ensure_session_access(db, auth, session_id)  # 404 on cross-tenant
+    cs.client_report_edited = payload.text
+    db.commit()
+    return {"message": "Report draft saved", "client_report_edited": cs.client_report_edited}
+
+
+@router.post("/{session_id}/report/shared", summary="Mark the client report as shared (copy)")
+def mark_report_shared(
+    session_id: UUID,
+    request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+):
+    cs = _ensure_session_access(db, auth, session_id)
+    cs.client_report_shared_at = _utcnow()
+    db.commit()
+    return {"message": "Marked shared", "client_report_shared_at": cs.client_report_shared_at.isoformat()}
 
 
 # ---------------------------------------------------------------------------
