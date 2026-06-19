@@ -1854,7 +1854,8 @@
       "nav": {
         "solution": "How it helps",
         "benefits": "In practice",
-        "faq": "Questions"
+        "faq": "Questions",
+        "pricing": "Pricing"
       },
       "cta": {
         "primary": "Create a chart",
@@ -2485,6 +2486,135 @@
         "incomplete_context": "Incomplete context",
         "unresolved_topic": "Unresolved topic"
       }
+    },
+    "pricing": {
+      "meta": {
+        "title": "Pricing — Steliara"
+      },
+      "nav": {
+        "product": "Product",
+        "pricing": "Pricing",
+        "signin": "Sign in"
+      },
+      "hero": {
+        "kicker": "Pricing",
+        "title": "A calm workspace for your astrology practice",
+        "text": "Generate charts, keep every client’s history in one place, and get fast answers from the data during a session. Pick a plan and start with a free trial."
+      },
+      "billing": {
+        "monthly": "Monthly",
+        "annual": "Annual",
+        "save": "save ~17%"
+      },
+      "period": "/ month",
+      "plans": {
+        "practitioner": {
+          "name": "Practitioner",
+          "tagline": "Everything one astrologer needs to run a focused practice.",
+          "cta": "Start free trial",
+          "subMonthly": "Billed monthly.",
+          "subAnnual": "Billed annually ($240/year).",
+          "f1": "Precise natal & transit charts (Swiss Ephemeris)",
+          "f2": "Unlimited client profiles, notes & recordings",
+          "f3": "Forecast timeline & tables",
+          "f4": "Multiple house systems",
+          "f5": "Email support"
+        },
+        "studio": {
+          "tag": "Most popular",
+          "name": "Studio",
+          "tagline": "For a busy practice that lives in the data every day.",
+          "cta": "Start free trial",
+          "subMonthly": "Billed monthly.",
+          "subAnnual": "Billed annually ($384/year).",
+          "f1": "Everything in Practitioner",
+          "f2": "Fast answers from chart data during sessions",
+          "f3": "Consultation summaries & session recordings",
+          "f4": "Advanced points: asteroids, antiscia, dominants",
+          "f5": "Priority support"
+        }
+      },
+      "trialNote": "Every plan starts with a free trial. No charge until the trial ends — cancel anytime.",
+      "faq": {
+        "title": "Questions",
+        "q1": "Is there a free trial?",
+        "a1": "Yes. Both plans begin with a free trial so you can set up your workspace and run a few charts before any payment is taken.",
+        "q2": "Can I switch between monthly and annual?",
+        "a2": "Anytime. Annual billing is the same product at a lower effective rate — about 17% off the monthly price.",
+        "q3": "Can I cancel?",
+        "a3": "Yes, you can cancel at any time from your account settings. You keep access until the end of the period you’ve paid for.",
+        "q4": "How is payment handled?",
+        "a4": "Payments and invoicing are securely processed by our reseller, Paddle. Paddle is the merchant of record and handles billing, taxes and receipts.",
+        "q5": "What currencies do you support?",
+        "a5": "Prices are listed in USD. Paddle automatically presents the right local currency and tax at checkout."
+      },
+      "footer": {
+        "terms": "Terms",
+        "privacy": "Privacy",
+        "refund": "Refund policy",
+        "contact": "Contact",
+        "copyright": "© 2026 Steliara. Payments processed by Paddle.com as merchant of record."
+      }
+    },
+    "legal": {
+      "meta": {
+        "title": "Terms & Policies — Steliara"
+      },
+      "title": "Terms & Policies",
+      "updated": "Last updated: 19 June 2026",
+      "back": "← Back to Steliara",
+      "nav": {
+        "pricing": "Pricing"
+      },
+      "toc": {
+        "terms": "Terms of Service",
+        "privacy": "Privacy Policy",
+        "refund": "Refund & Cancellation",
+        "contact": "Contact"
+      },
+      "terms": {
+        "heading": "Terms of Service",
+        "lead": "These Terms of Service (\"Terms\") govern your access to and use of Steliara (the \"Service\"), a workspace for professional astrologers that provides chart calculation, people profiles, notes, recordings, and related tools. By creating an account or using the Service, you agree to these Terms.",
+        "s1": "<h3>1. Who we are</h3><p>The Service is operated by Steliara (\"Steliara\", \"we\", \"us\", or \"our\"). Our full legal entity and registered address are set out in the <a href=\"#contact\">Contact</a> section. Online payments and subscription billing are handled by our authorized reseller and Merchant of Record, <strong>Paddle.com Market Ltd</strong> (\"Paddle\"). Paddle's own <a href=\"https://www.paddle.com/legal/checkout-buyer-terms\" target=\"_blank\" rel=\"noopener\">Buyer Terms</a> apply to every purchase in addition to these Terms.</p>",
+        "s2": "<h3>2. Eligibility &amp; accounts</h3><ul><li>You must be at least 18 years old and able to enter into a binding contract.</li><li>You are responsible for keeping your login credentials secure and for all activity under your account.</li><li>You must provide accurate registration information and keep it up to date.</li><li>You may not share your account or resell access without our written permission.</li></ul>",
+        "s3": "<h3>3. Subscriptions &amp; payment</h3><ul><li>The Service is offered on a subscription basis. Plan names, prices, billing intervals, and any free-trial terms are shown at checkout before you confirm.</li><li>Subscriptions renew automatically at the end of each billing period unless cancelled beforehand. The applicable price for the next period is the price displayed at the time of renewal.</li><li>All payments are processed by Paddle as Merchant of Record. Paddle is responsible for charging your payment method, issuing invoices, and collecting applicable taxes (e.g. VAT/sales tax).</li><li>Prices are shown exclusive or inclusive of taxes as indicated at checkout; final tax is determined by your billing location.</li></ul>",
+        "s4": "<h3>4. Acceptable use</h3><p>You agree not to: (a) use the Service for unlawful purposes; (b) attempt to gain unauthorized access to the Service or its systems; (c) reverse engineer, scrape, or overload the Service; (d) upload content that is illegal, infringing, or violates the privacy or rights of others; or (e) use the Service to send spam or malicious code.</p>",
+        "s5": "<h3>5. Your content &amp; the people you work with</h3><p>You retain ownership of the data you add to Steliara — including charts, profiles, notes, and recordings (\"Your Content\"). You grant us a limited license to host, process, and display Your Content solely to provide the Service. You are responsible for having a lawful basis to store information about the people you work with, and for informing them as required by applicable law.</p>",
+        "s6": "<h3>6. Astrological content disclaimer</h3><div class=\"callout\">Steliara provides astrological calculations and tools for informational and professional-practice purposes only. The Service does not provide medical, legal, financial, or psychological advice, and no outcome is guaranteed. Calculations are based on the Swiss Ephemeris and modern astronomical standards.</div>",
+        "s7": "<h3>7. Service availability &amp; changes</h3><p>We aim to keep the Service available but do not guarantee uninterrupted access. We may modify, suspend, or discontinue features, and may update these Terms. Material changes will be communicated by email or in-app notice; continued use after changes take effect constitutes acceptance.</p>",
+        "s8": "<h3>8. Termination</h3><p>You may cancel at any time (see <a href=\"#refund\">Refund &amp; Cancellation</a>). We may suspend or terminate your account if you breach these Terms or use the Service in a way that harms us or other users. On termination you may lose access to Your Content; we recommend exporting any data you wish to keep.</p>",
+        "s9": "<h3>9. Limitation of liability</h3><p>To the maximum extent permitted by law, the Service is provided \"as is\" without warranties of any kind. We are not liable for indirect, incidental, or consequential damages, or for loss of data or profits. Our total liability for any claim is limited to the amount you paid for the Service in the 12 months before the claim.</p>",
+        "s10": "<h3>10. Governing law</h3><p>These Terms are governed by the laws of the jurisdiction in which Steliara's legal entity is registered, without regard to conflict-of-law rules. Nothing in these Terms limits any mandatory consumer rights you have under your local law.</p>"
+      },
+      "privacy": {
+        "heading": "Privacy Policy",
+        "lead": "This Privacy Policy explains what personal data we collect, why, and your rights regarding it. We act as the data controller for account data and as a processor for the data you store about the people you work with.",
+        "s1": "<h3>1. Data we collect</h3><ul><li><strong>Account data:</strong> name, email address, password (stored hashed), and account preferences.</li><li><strong>Content data:</strong> charts, people profiles, birth data, notes, and recordings you create in the Service.</li><li><strong>Billing data:</strong> handled by Paddle. We receive limited transaction details (e.g. plan, status, country, last four digits) but never your full card number.</li><li><strong>Usage data:</strong> log data, device/browser information, and audit events used to operate and secure the Service.</li></ul>",
+        "s2": "<h3>2. How we use data</h3><ul><li>To provide, maintain, and improve the Service.</li><li>To process subscriptions and prevent fraud (via Paddle).</li><li>To communicate with you about your account, security, and service updates.</li><li>To comply with legal obligations.</li></ul>",
+        "s3": "<h3>3. Legal bases (GDPR)</h3><p>We process personal data under one or more of: performance of a contract (providing the Service), legitimate interests (securing and improving the Service), legal obligation (tax and accounting), and consent (where required, e.g. optional communications).</p>",
+        "s4": "<h3>4. Sharing &amp; sub-processors</h3><p>We share data only with service providers who help us run Steliara, including: <strong>Paddle</strong> (payments &amp; tax), our hosting and database providers, and email delivery providers. These parties process data on our behalf under appropriate agreements. We do not sell your personal data.</p>",
+        "s5": "<h3>5. Data retention</h3><p>We keep account and content data for as long as your account is active. After account closure we delete or anonymize data within a reasonable period, except where retention is required for legal, tax, or security purposes.</p>",
+        "s6": "<h3>6. International transfers</h3><p>Data may be processed in countries outside your own. Where this happens, we rely on appropriate safeguards such as Standard Contractual Clauses.</p>",
+        "s7": "<h3>7. Your rights</h3><p>Subject to applicable law, you may request access, correction, deletion, restriction, or portability of your personal data, and you may object to certain processing. To exercise these rights, contact us using the details in the <a href=\"#contact\">Contact</a> section. You also have the right to lodge a complaint with your local data protection authority.</p>",
+        "s8": "<h3>8. Security</h3><p>We use industry-standard measures including encryption in transit, hashed passwords, and access controls. No method of transmission or storage is fully secure, but we work to protect your data.</p>",
+        "s9": "<h3>9. Cookies</h3><p>We use strictly necessary cookies to keep you signed in and to operate the Service. Paddle may set cookies during checkout to process payments securely.</p>"
+      },
+      "refund": {
+        "heading": "Refund & Cancellation Policy",
+        "lead": "We want Steliara to be useful for your practice. This policy explains how cancellations and refunds work. Payments are processed by Paddle as Merchant of Record, and refunds are issued through Paddle.",
+        "s1": "<h3>1. Cancelling your subscription</h3><ul><li>You can cancel at any time from your account settings or via the billing portal link in your Paddle receipt email.</li><li>When you cancel, your subscription remains active until the end of the current paid period, and it will not renew afterward.</li><li>You will not be charged again after cancellation.</li></ul>",
+        "s2": "<h3>2. Refunds</h3><ul><li>If you are within 14 days of your first purchase and have not made substantial use of the Service, you may request a full refund.</li><li>Renewal charges are generally non-refundable, but if you were charged unexpectedly (for example, you intended to cancel before renewal), contact us and we will review your request fairly.</li><li>We may issue refunds at our discretion for service issues or billing errors.</li><li>Approved refunds are returned to your original payment method by Paddle, typically within 5–10 business days.</li></ul>",
+        "s3": "<h3>3. Statutory consumer rights</h3><p>If you are a consumer in the EU/UK, you may have a statutory right of withdrawal within 14 days of purchase. By starting to use a digital service during that period you may agree that the service begins immediately, which can affect this right. Nothing in this policy limits mandatory rights under your local law.</p>",
+        "s4": "<h3>4. How to request a refund</h3><p>Email us at the address in the <a href=\"#contact\">Contact</a> section with your account email and the receipt/order ID from your Paddle confirmation. You can also reply directly to your Paddle receipt email to reach Paddle's buyer support.</p>"
+      },
+      "contact": {
+        "heading": "Contact",
+        "intro": "For any questions about these Terms, privacy, or billing, please reach out:",
+        "list": "<ul><li><strong>Support email:</strong> <a href=\"mailto:skak.igor@gmail.com\">skak.igor@gmail.com</a></li><li><strong>Service:</strong> Steliara — astrologer workspace</li><li><strong>Merchant of Record:</strong> Paddle.com Market Ltd, Judd House, 18–29 Mora Street, London EC1V 8BT, United Kingdom</li></ul>",
+        "operator": "<strong>Operator (legal entity):</strong><br>Ihor Skakovskyi — sole trader (OSVČ) registered in the Czech Trade Licensing Register<br>Business ID (IČO): 17328691<br>Registered seat: Ostrovského 1083/26, 150 00 Prague 5 – Smíchov, Czech Republic<br>Registering authority: Trade Licensing Office, Prague 5 Municipal District (Úřad městské části Praha 5)",
+        "paddle": "For billing and payment questions you can also contact Paddle directly via <a href=\"https://paddle.net\" target=\"_blank\" rel=\"noopener\">paddle.net</a>."
+      },
+      "footer": "© 2026 Steliara. Astrology calculations based on Swiss Ephemeris and modern astronomical standards."
     }
   },
   "timezones": {
