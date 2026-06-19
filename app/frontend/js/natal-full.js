@@ -962,6 +962,8 @@ function createPlanetRow(planet) {
         features.push(getFeatureLabel(planet.solar_phase));
     }
 
+    if (planet.out_of_bounds) features.push(getFeatureLabel('out_of_bounds'));
+
     if (planet.is_elevated) features.push(getFeatureLabel('elevated'));
     if (planet.is_peregrine) features.push(getFeatureLabel('peregrine'));
     if (planet.in_intercepted_sign) features.push(getFeatureLabel('intercepted'));

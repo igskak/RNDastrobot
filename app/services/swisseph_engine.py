@@ -1,8 +1,8 @@
 """
 Сервис для работы с Swiss Ephemeris
 """
-import math
 import swisseph as swe
+from math import asin, sin, radians, degrees
 from typing import List, Dict, Tuple
 from app.utils.constants import (
     PLANETS, get_zodiac_sign, get_degree_in_sign,
@@ -113,7 +113,9 @@ class SwissEphemerisEngine:
         base_flags = swe.FLG_SWIEPH | swe.FLG_SPEED | sid_flag
         # Сдвиг аянамши для фиктивных точек, считаемых тропически (Прозерпина).
         ayan_offset = self.get_ayanamsha(jd, ayanamsha) if sid_flag else 0.0
-        # Наклонность эклиптики — граница out-of-bounds (одинакова для всех тел).
+        # Наклон эклиптики (true obliquity) для границы out-of-bounds:
+        # планета вне границ, если |склонение| > наклона эклиптики (~23°26').
+        # Склонение — экваториальная величина, не зависит от зодиака.
         obliquity = self.calculate_obliquity(jd)
 
         for planet_id, planet_name in PLANETS.items():
@@ -126,8 +128,8 @@ class SwissEphemerisEngine:
                 speed_lon = 0.461968 / 365.25  # Средняя скорость в градусах/день (27.72' в год)
                 is_retrograde = False  # Прозерпина всегда директная
                 # Точка на эклиптике (широта 0): склонение по тропической долготе.
-                declination = math.degrees(math.asin(
-                    math.sin(math.radians(obliquity)) * math.sin(math.radians(trop_lon))
+                declination = degrees(asin(
+                    sin(radians(obliquity)) * sin(radians(trop_lon))
                 ))
             else:
                 # Расчёт позиции планеты через Swiss Ephemeris
@@ -148,6 +150,8 @@ class SwissEphemerisEngine:
                 # Определяем ретроградность (скорость < 0)
                 is_retrograde = speed_lon < 0
 
+                declination = self._planet_declination(jd, planet_id)
+                # Экваториальное склонение (равно для троп./сидер.).
                 declination = self._planet_declination(jd, planet_id)
 
             degree_in_sign = get_degree_in_sign(longitude)
