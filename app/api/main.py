@@ -114,6 +114,8 @@ async def static_cache_headers(request: Request, call_next):
         "/calendar.html",
         "/consultation-call.html",
         "/consultation-join.html",
+        "/pricing.html",
+        "/terms.html",
     }
 
     if path in frontend_document_paths or path.startswith(("/client/", "/consultation/")):
@@ -323,6 +325,24 @@ async def consultation_detail_page(session_id: str):
     if os.path.exists(page_path):
         return FileResponse(page_path)
     raise HTTPException(status_code=404, detail="Page not found")
+
+
+@app.get("/pricing.html")
+async def pricing_page():
+    """Public pricing page."""
+    page_path = os.path.join(FRONTEND_PATH, "pricing.html")
+    if os.path.exists(page_path):
+        return FileResponse(page_path)
+    raise HTTPException(status_code=404, detail="Pricing page not found")
+
+
+@app.get("/terms.html")
+async def terms_page():
+    """Public legal terms, privacy, and refund page."""
+    page_path = os.path.join(FRONTEND_PATH, "terms.html")
+    if os.path.exists(page_path):
+        return FileResponse(page_path)
+    raise HTTPException(status_code=404, detail="Terms page not found")
 
 
 @app.get("/health")
