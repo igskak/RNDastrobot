@@ -76,6 +76,25 @@
     overflow: hidden;
 }
 
+.landing-header-actions .locale-switcher--inline {
+    min-height: 34px;
+    margin-left: 0;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.82);
+}
+
+.landing-header-actions .locale-switcher-label {
+    display: none;
+}
+
+.landing-header-actions .locale-switcher-select {
+    min-width: 76px;
+    border: 0;
+    background-color: transparent;
+    box-shadow: none;
+}
+
 .account-settings-actions .locale-switcher--inline {
     display: inline-flex;
     align-items: center;

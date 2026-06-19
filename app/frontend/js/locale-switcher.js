@@ -9,7 +9,6 @@
         if (!body) return true;
 
         const hiddenOnPages = [
-            'index-page',
             'chart-page',
             'forecast-page',
             'forecast-new-page',
@@ -23,6 +22,15 @@
     }
 
     function resolveMountTarget() {
+        const landingHeaderActions = document.querySelector('.landing-header-actions');
+        if (landingHeaderActions) {
+            return {
+                parent: landingHeaderActions,
+                beforeNode: landingHeaderActions.querySelector('.index-header-link-primary'),
+                inline: true
+            };
+        }
+
         const clientsHeaderActions = document.querySelector('.clients-header-actions');
         if (clientsHeaderActions) {
             return {

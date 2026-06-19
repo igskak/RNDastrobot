@@ -1849,8 +1849,209 @@
         }
       },
       "subtitle": "Astrologer workspace",
-      "title": "Natal Chart Calculator",
-      "logo": "Steliara"
+      "title": "Steliara — astrologer workspace",
+      "logo": "Steliara",
+      "nav": {
+        "solution": "How it helps",
+        "benefits": "In practice",
+        "faq": "Questions"
+      },
+      "cta": {
+        "primary": "Create a chart",
+        "secondary": "See what it does"
+      },
+      "hero": {
+        "kicker": "For astrologers who hold their practice with care",
+        "title": "Charts, people profiles, and important context in one calm workspace",
+        "text": "Steliara helps you return quickly to a person, their chart, previous conversations, notes, and key periods. Less searching through files and messages, more attention for the reading itself.",
+        "proof": {
+          "accuracy": "Calculations based on Swiss Ephemeris",
+          "workspace": "Profiles, charts, notes, and recordings together",
+          "assistant": "A data-aware chat answers in seconds"
+        }
+      },
+      "preview": {
+        "title": "Practice profile",
+        "status": "Context nearby",
+        "insightTitle": "Remember what matters",
+        "insight": "Before a meeting, you can see the chart, recordings, notes, and important points without rebuilding the history from memory.",
+        "metricOne": {
+          "label": "Profile",
+          "value": "Person + notes"
+        },
+        "metricTwo": {
+          "label": "Material",
+          "value": "Charts + periods"
+        }
+      },
+      "socialProof": {
+        "lead": "Not another calculator. A place where your practice can gather: people, charts, observations, conversations, and quick answers from astrological data.",
+        "itemOne": "Professional house systems",
+        "itemTwo": "Conversation history and notes",
+        "itemThree": "Easy movement between charts"
+      },
+      "problem": {
+        "kicker": "What gets in the way",
+        "title": "In practice, knowledge is not what gets lost. Context is.",
+        "text": "Before a meeting, you often need to remember which chart was open, what was discussed before, which periods mattered, where the notes are, and what needs checking.",
+        "cards": {
+          "fragmented": {
+            "title": "Everything lives in different places",
+            "text": "Charts in one tool, notes in another, recordings elsewhere, important dates in messages. Returning to a person quickly becomes difficult."
+          },
+          "prep": {
+            "title": "Too much manual searching",
+            "text": "A simple question such as a transit Uranus conjunction to natal Venus can become several minutes of manual period checking."
+          },
+          "trust": {
+            "title": "Continuity is hard to hold",
+            "text": "When this is not the first meeting, past themes matter. Without one shared space, they are easy to lose."
+          }
+        }
+      },
+      "solution": {
+        "kicker": "How Steliara helps",
+        "title": "Everything connected to a person and their charts stays within reach.",
+        "text": "Create a profile, build charts, save notes and recordings, move between related materials, and ask the chat questions from the data. For example: “show transit Uranus conjunctions to natal Venus for the past and next 5 years” — and get the periods in seconds.",
+        "steps": {
+          "calculate": {
+            "title": "Create a chart without extra steps",
+            "text": "Date, time, place, timezone, coordinates, and house system move through one clear flow."
+          },
+          "read": {
+            "title": "Keep the story nearby",
+            "text": "A profile keeps charts, notes, conversation recordings, and important points together."
+          },
+          "prepare": {
+            "title": "Ask the chart data",
+            "text": "The chat helps find periods, aspects, and repeating themes that would otherwise take manual searching."
+          }
+        }
+      },
+      "benefits": {
+        "kicker": "What changes in practice",
+        "title": "Less sorting through material. More presence in the work itself.",
+        "cards": {
+          "depth": {
+            "title": "The picture is easier to hold",
+            "text": "Charts, periods, and notes can be read together instead of as separate fragments."
+          },
+          "speed": {
+            "title": "Return to a person faster",
+            "text": "Before a meeting, see previous themes, recordings, charts, and important points quickly."
+          },
+          "memory": {
+            "title": "Important details stay together",
+            "text": "Your practice depends less on random files, screenshots, and memory of where things are."
+          },
+          "confidence": {
+            "title": "The conversation feels calmer",
+            "text": "When the material is gathered, it is easier to speak clearly without technical searching."
+          }
+        }
+      },
+      "features": {
+        "kicker": "Capabilities",
+        "title": "Tools that support a living practice",
+        "items": {
+          "ephemeris": {
+            "title": "Accurate calculations",
+            "text": "Natal and forecast calculations are based on Swiss Ephemeris."
+          },
+          "forecast": {
+            "title": "Forecast periods",
+            "text": "Transits, progressions, directions, and solar returns are easier to view beside the chart and profile history."
+          },
+          "clients": {
+            "title": "People profiles",
+            "text": "Charts, notes, conversation recordings, and key moments stay together so context is easy to recover."
+          },
+          "assistant": {
+            "title": "Chat with chart data",
+            "text": "Ask about periods, aspects, and repetitions instead of looking them up manually across tables."
+          }
+        }
+      },
+      "testimonials": {
+        "kicker": "How it feels in use",
+        "title": "Less returning to search. More returning to the person.",
+        "items": {
+          "one": {
+            "quote": "“Before a meeting I can quickly see what we discussed, which charts I opened, and which periods mattered.”",
+            "author": "Practicing astrologer"
+          },
+          "two": {
+            "quote": "“The most valuable part is not rebuilding context from scratch. I open the profile and remember why the person came.”",
+            "author": "Consulting astrologer"
+          },
+          "three": {
+            "quote": "“I ask the chat about specific placements and find the dates faster than checking tables by hand.”",
+            "author": "Astrology teacher"
+          }
+        }
+      },
+      "formIntro": {
+        "kicker": "Start with a chart",
+        "title": "Create the first chart and see how the workspace is arranged.",
+        "text": "Enter birth data. After calculation, the chart opens as part of a future profile you can return to."
+      },
+      "faq": {
+        "kicker": "Questions",
+        "title": "A short explanation of how it works",
+        "items": {
+          "one": {
+            "q": "Is this just a natal chart calculator?",
+            "a": "No. The chart is only the beginning. Steliara also supports people profiles, conversation history, notes, recordings, and quick search through astrological data."
+          },
+          "two": {
+            "q": "What can be stored in a profile?",
+            "a": "Charts, notes, conversation recordings, and key moments that help you recover context before the next meeting."
+          },
+          "three": {
+            "q": "How does the chat work?",
+            "a": "Ask a question from chart or forecast data. For example, ask for transit Uranus conjunctions to natal Venus for the past and next 5 years and get the periods without manual searching."
+          },
+          "four": {
+            "q": "Will it interpret the chart for me?",
+            "a": "No. The point is not to replace your interpretation. The chat helps retrieve data, dates, and links faster."
+          },
+          "five": {
+            "q": "Can I use professional settings?",
+            "a": "Yes. House systems, coordinates, and settings are available for careful astrological work."
+          },
+          "six": {
+            "q": "Does it help with long-term practice with the same people?",
+            "a": "Yes. Profiles, notes, recordings, and key moments help keep the story from getting lost."
+          },
+          "seven": {
+            "q": "What changes before a consultation?",
+            "a": "You can remember the person, previous themes, important periods, and current charts faster."
+          },
+          "eight": {
+            "q": "What are calculations based on?",
+            "a": "Calculations are based on Swiss Ephemeris and modern astronomical standards."
+          },
+          "nine": {
+            "q": "Do I need to change my style?",
+            "a": "No. Steliara should support the way you practice, not impose a ready-made voice."
+          },
+          "ten": {
+            "q": "Where should I begin?",
+            "a": "Create the first chart, save a profile, and ask the chat a concrete question about a period or aspect."
+          }
+        }
+      },
+      "finalCta": {
+        "kicker": "First step",
+        "title": "Start with one chart and one profile.",
+        "text": "See how much easier it is to return to a person when the chart, notes, and important context are nearby."
+      },
+      "a11y": {
+        "navigation": "Landing navigation",
+        "proofPoints": "Key capabilities",
+        "productPreview": "Workspace preview",
+        "trustIndicators": "Key capabilities"
+      }
     },
     "natalFull": {
       "balances": {

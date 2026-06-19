@@ -29,9 +29,6 @@ async function waitForI18nReady() {
 document.addEventListener('DOMContentLoaded', async () => {
     await waitForI18nReady();
 
-    const me = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
-    if (!me) return;
-
     const form = document.getElementById('birthDataForm');
     const placeInput = document.getElementById('birthPlace');
     const timezoneSelect = document.getElementById('timezone');
@@ -44,7 +41,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const houseSystemSelect = document.getElementById('houseSystem');
     let accountDefaultHouseSystem = 'P';
 
-    if (window.AstroAPI?.getAccountPreferences) {
+    let me = await window.AstroAPI?.getCurrentAstrologer?.().catch(() => null);
+
+    async function loadAccountDefaults() {
+        if (!window.AstroAPI?.getAccountPreferences) return;
         try {
             const preferences = await window.AstroAPI.getAccountPreferences();
             accountDefaultHouseSystem = normalizeHouseSystemCode(
@@ -52,9 +52,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 || preferences?.default_house_system
                 || 'P'
             );
+            if (houseSystemSelect && !AstroAPI.getFormData()) {
+                houseSystemSelect.value = accountDefaultHouseSystem;
+            }
         } catch (error) {
             console.warn('Failed to load account preferences for form defaults:', error);
         }
+    }
+
+    if (me) {
+        await loadAccountDefaults();
     }
 
     function hasValue(element) {
@@ -152,6 +159,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         submitBtn.querySelector('.btn-loader').classList.remove('hidden');
 
         try {
+            if (!me) {
+                me = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
+                if (!me) return;
+                await loadAccountDefaults();
+            }
+
             // Собираем данные
             const firstName = document.getElementById('firstName').value.trim();
             const lastName = document.getElementById('lastName').value.trim();
