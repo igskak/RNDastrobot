@@ -2,6 +2,7 @@
 Сервис для работы с Swiss Ephemeris
 """
 import swisseph as swe
+from math import asin, sin, radians, degrees
 from typing import List, Dict, Tuple
 from app.utils.constants import (
     PLANETS, get_zodiac_sign, get_degree_in_sign,
@@ -68,6 +69,25 @@ class SwissEphemerisEngine:
         mode = AYANAMSHA_MODES.get((ayanamsha or DEFAULT_AYANAMSHA).lower(), swe.SIDM_LAHIRI)
         swe.set_sid_mode(mode, 0, 0)
         return float(swe.get_ayanamsa_ut(jd))
+
+    def _obliquity(self, jd: float) -> float:
+        """Истинный наклон эклиптики (градусы) — граница out-of-bounds."""
+        self._ensure_ephe_path()
+        # SE_ECL_NUT: [0]=true obliquity, [1]=mean obliquity, [2..3]=нутация.
+        ecl_nut, _ = swe.calc_ut(jd, swe.ECL_NUT, swe.FLG_SWIEPH)
+        return float(ecl_nut[0])
+
+    def _declination(self, jd: float, planet_id: int) -> float:
+        """Экваториальное склонение планеты (градусы). Не зависит от зодиака."""
+        flags = swe.FLG_SWIEPH | swe.FLG_EQUATORIAL
+        try:
+            eq_data, _ = swe.calc_ut(jd, planet_id, flags)
+        except Exception as e:
+            self._ensure_ephe_path()
+            logger.warning("SwissEph equatorial calc_ut retry after path reset: {}", str(e))
+            eq_data, _ = swe.calc_ut(jd, planet_id, flags)
+        # FLG_EQUATORIAL: [0]=прямое восхождение, [1]=склонение.
+        return float(eq_data[1])
     
     def calculate_planets(
         self,
@@ -94,16 +114,27 @@ class SwissEphemerisEngine:
         # Сдвиг аянамши для фиктивных точек, считаемых тропически (Прозерпина).
         ayan_offset = self.get_ayanamsha(jd, ayanamsha) if sid_flag else 0.0
 
+        # Наклон эклиптики (true obliquity) для границы out-of-bounds:
+        # планета вне границ, если |склонение| > наклона эклиптики (~23°26').
+        # Склонение — экваториальная величина, не зависит от зодиака.
+        obliquity = self._obliquity(jd)
+
         for planet_id, planet_name in PLANETS.items():
             # Прозерпина (ID=1000) рассчитывается отдельно методом интерполяции
             if planet_id == 1000:
-                longitude = SpecialPointsService.calculate_proserpina(jd)
+                tropical_longitude = SpecialPointsService.calculate_proserpina(jd)
+                longitude = tropical_longitude
                 if sid_flag:
                     longitude = normalize_longitude(longitude - ayan_offset)
                 latitude = 0.0  # Фиктивная планета, широта = 0
                 distance = 0.0  # Расстояние не определено
                 speed_lon = 0.461968 / 365.25  # Средняя скорость в градусах/день (27.72' в год)
                 is_retrograde = False  # Прозерпина всегда директная
+                # Склонение фиктивной точки в плоскости эклиптики (β=0):
+                # δ = asin(sin(ε)·sin(λ_tropical)).
+                declination = degrees(asin(
+                    sin(radians(obliquity)) * sin(radians(tropical_longitude))
+                ))
             else:
                 # Расчёт позиции планеты через Swiss Ephemeris
                 try:
@@ -123,7 +154,14 @@ class SwissEphemerisEngine:
                 # Определяем ретроградность (скорость < 0)
                 is_retrograde = speed_lon < 0
 
+                # Экваториальное склонение (равно для троп./сидер.). Отдельный
+                # запрос с FLG_EQUATORIAL: [0]=прямое восхождение, [1]=склонение.
+                declination = self._declination(jd, planet_id)
+
             degree_in_sign = get_degree_in_sign(longitude)
+
+            # Out-of-bounds: |склонение| превышает наклон эклиптики.
+            out_of_bounds = abs(declination) > obliquity
 
             planets_data.append({
                 'id': planet_id,
@@ -136,6 +174,8 @@ class SwissEphemerisEngine:
                 'degree_in_sign': degree_in_sign,
                 'degree_in_sign_formatted': format_degree_minutes_seconds(degree_in_sign),
                 'retrograde': is_retrograde,
+                'declination': declination,
+                'out_of_bounds': out_of_bounds,
             })
 
         return planets_data

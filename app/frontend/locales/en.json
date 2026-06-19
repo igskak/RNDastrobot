@@ -70,7 +70,8 @@
         "royal": "royal",
         "under_rays": "under rays",
         "oriental": "orient.",
-        "occidental": "occid."
+        "occidental": "occid.",
+        "out_of_bounds": "out of bounds"
       }
     },
     "houseSystem": {

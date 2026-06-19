@@ -26,6 +26,7 @@ const FEATURE_KEYS = {
     under_rays: 'astro.feature.short.under_rays',
     oriental: 'astro.feature.short.oriental',
     occidental: 'astro.feature.short.occidental',
+    out_of_bounds: 'astro.feature.short.out_of_bounds',
     handle: 'astro.feature.short.handle',
     aspect_king: 'astro.feature.short.aspect_king',
     doryphoros: 'astro.feature.short.doryphoros',
@@ -953,6 +954,8 @@ function createPlanetRow(planet) {
     if (planet.solar_phase) {
         features.push(getFeatureLabel(planet.solar_phase));
     }
+
+    if (planet.out_of_bounds) features.push(getFeatureLabel('out_of_bounds'));
 
     if (planet.is_elevated) features.push(getFeatureLabel('elevated'));
     if (planet.is_peregrine) features.push(getFeatureLabel('peregrine'));

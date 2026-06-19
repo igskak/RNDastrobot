@@ -1568,6 +1568,14 @@ input[type="number"] {
     border-color: rgba(90, 70, 120, 0.16);
 }
 
+/* Out-of-bounds badge (|declination| > obliquity of the ecliptic). */
+.planet-status-badge--out-of-bounds {
+    background: rgba(160, 82, 45, 0.12);
+    color: #a0522d;
+    border-color: rgba(160, 82, 45, 0.2);
+    letter-spacing: 0.01em;
+}
+
 .planet-status-badge--domicile {
     background: rgba(43, 122, 75, 0.1);
     color: #1f5d39;
