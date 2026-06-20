@@ -3953,7 +3953,11 @@
 
     function syncCompositeHeaderButton() {
         if (!refs.forecastNewCompositeHeaderBtn) return;
-        const visible = state.wheelView !== 'single' && state.selectedRightLayer === 'synastry_partner';
+        // Discoverable whenever a synastry partner layer is active — not only when
+        // it's the *selected* layer (P5). Users no longer have to hunt for it.
+        const hasSynastry = state.selectedRightLayer === 'synastry_partner'
+            || (Array.isArray(state.activeLayers) && state.activeLayers.includes('synastry_partner'));
+        const visible = state.wheelView !== 'single' && hasSynastry;
         refs.forecastNewCompositeHeaderBtn.classList.toggle('hidden', !visible);
         refs.forecastNewCompositeHeaderBtn.disabled = !visible;
         if (!visible && refs.forecastNewCompositeInlinePanel) {
