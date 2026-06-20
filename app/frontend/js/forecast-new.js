@@ -205,10 +205,10 @@
     // state.layers[method] / buildLayerCacheKey(method)).
     let _layerInstanceSeq = 0;
     function isMultiInstanceMethod(method) {
-        return method === 'transit' || method === 'progression' || method === 'direction';
+        // Ship 2: solar_return и synastry_partner тоже мультиинстанс (per-layer config).
+        return LAYER_ORDER.includes(method);
     }
     function nextLayerInstanceId(method) {
-        if (!isMultiInstanceMethod(method)) return method;
         let id;
         do {
             _layerInstanceSeq += 1;
@@ -234,9 +234,81 @@
     function selectedRightMethod() {
         return selectedLayerInstance()?.method || '';
     }
+    // Слой viewModel для выбранного инстанса (для сводок момента/партнёра).
+    function selectedViewModelLayer() {
+        const layers = state.viewModel?.activePrognosticLayers || [];
+        return layers.find((l) => l.id === state.selectedRightLayerId)
+            || layers.find((l) => l.method === selectedRightMethod())
+            || null;
+    }
     function sortActiveLayersInPlace() {
         // Стабильная сортировка по LAYER_ORDER; внутри метода порядок добавления.
         state.activeLayers.sort((a, b) => LAYER_ORDER.indexOf(a.method) - LAYER_ORDER.indexOf(b.method));
+    }
+
+    // ── Per-instance конфиг solar_return / synastry_partner (Ship 2) ─────────
+    // Глобальные state.solar*/synastry* — это «scratch» редактора ВЫБРАННОГО слоя.
+    // Каждый инстанс хранит свой снимок в inst.config; fetch/cacheKey читают его.
+    function methodHasConfig(method) {
+        return method === 'solar_return' || method === 'synastry_partner';
+    }
+    function ensureLayerConfig(inst) {
+        if (!inst) return null;
+        if (!inst.config) inst.config = {};
+        return inst.config;
+    }
+    function layerConfigOf(layerOrInst) {
+        // Принимает инстанс или строку-метод; возвращает конфиг для fetch/cacheKey.
+        if (layerOrInst && typeof layerOrInst === 'object' && layerOrInst.config
+            && Object.keys(layerOrInst.config).length) {
+            return layerOrInst.config;
+        }
+        const method = typeof layerOrInst === 'string' ? layerOrInst : layerOrInst?.method;
+        if (method === 'solar_return') return { year: state.solarYear, location: state.solarLocation };
+        if (method === 'synastry_partner') return synastryScratchConfig();
+        return {};
+    }
+    // scratch (глобальный state) → inst.config
+    function captureScratchToConfig(inst) {
+        if (!inst || !methodHasConfig(inst.method)) return;
+        const cfg = ensureLayerConfig(inst);
+        if (inst.method === 'solar_return') {
+            cfg.year = state.solarYear;
+            cfg.location = state.solarLocation ? { ...state.solarLocation } : null;
+        } else {
+            cfg.mode = state.synastryMode;
+            cfg.partnerId = state.synastryPartnerId;
+            cfg.manual = state.synastryManual ? { ...state.synastryManual } : null;
+        }
+    }
+    // inst.config → scratch (+ синк DOM-редакторов)
+    function applyConfigToScratch(inst) {
+        if (!inst || !methodHasConfig(inst.method)) return;
+        const cfg = inst.config || {};
+        if (inst.method === 'solar_return') {
+            if (Number.isFinite(Number(cfg.year))) state.solarYear = Number(cfg.year);
+            state.solarLocation = cfg.location ? { ...cfg.location } : null;
+            syncSolarInputs();
+        } else {
+            state.synastryMode = cfg.mode === 'manual' ? 'manual' : 'db';
+            state.synastryPartnerId = cfg.partnerId || '';
+            state.synastryManual = cfg.manual ? { ...cfg.manual } : null;
+            setSynastryMode(state.synastryMode);
+            syncSynastryManualControlsFromState();
+            if (refs.forecastNewSynastryPartnerSelect) {
+                refs.forecastNewSynastryPartnerSelect.value = state.synastryPartnerId;
+            }
+        }
+    }
+    // Инвалидировать кэш слоя по id и перезагрузить, если нужно.
+    function invalidateLayerById(id) {
+        if (id) delete state.layers?.[id];
+    }
+    // Зафиксировать scratch в выбранном слое и сбросить его кэш (после правки редактора).
+    function commitSelectedLayerEdit() {
+        const inst = selectedLayerInstance();
+        captureScratchToConfig(inst);
+        invalidateLayerById(inst?.id);
     }
 
     function escapeHtml(value) {
@@ -483,8 +555,8 @@
             // Sync both solar year inputs
             syncSolarInputs();
             updateSolarYearStepperValue();
-            // Invalidate cache and refetch
-            delete state.layers?.solar_return;
+            // Зафиксировать год в выбранном слое соляра и сбросить его кэш.
+            commitSelectedLayerEdit();
             if (hasActiveMethod('solar_return')) {
                 void loadActiveLayers({ lightweight: false });
             }
@@ -568,6 +640,7 @@
 
         refs.forecastNewSynastryPartnerSelect?.addEventListener('change', async () => {
             state.synastryPartnerId = refs.forecastNewSynastryPartnerSelect.value || '';
+            state.synastryMode = 'db';
             clearCompositePanel();
             schedulePersist();
             if (state.synastryPartnerId) {
@@ -840,6 +913,7 @@
             if (!button) return;
             state.selectedRightLayerId = button.dataset.rightLayer;
             state.activeRightMethodTab = selectedRightMethod();
+            applyConfigToScratch(selectedLayerInstance());
             syncControlsFromState();
             renderRightPanel();
             schedulePersist();
@@ -858,6 +932,7 @@
             if (inst) {
                 state.selectedRightLayerId = layerId;
                 state.activeRightMethodTab = inst.method;
+                applyConfigToScratch(inst);
                 renderRightLayerTabs();
                 renderRightPanel();
             }
@@ -1072,9 +1147,20 @@
             }
             instance = { id: nextLayerInstanceId(method), method };
             state.activeLayers.push(instance);
-            if (method === 'solar_return') initializeSolarDefaultsFromNatal();
+            if (method === 'solar_return') {
+                initializeSolarDefaultsFromNatal();
+            } else if (method === 'synastry_partner') {
+                // Новый слой синастрии стартует с пустым партнёром (не наследует прошлый).
+                state.synastryMode = 'db';
+                state.synastryPartnerId = '';
+                state.synastryManual = null;
+            }
+            // Снимок scratch → конфиг нового инстанса.
+            captureScratchToConfig(instance);
         }
         state.selectedRightLayerId = instance.id;
+        // Переключение на слой загружает его конфиг в редактор (scratch).
+        applyConfigToScratch(instance);
         normalizeActiveLayers();
         renderRightLayerTabs();
         scheduleRightPanelRender();
@@ -1098,7 +1184,6 @@
         };
 
         syncSolarInputs();
-        delete state.layers?.solar_return;
     }
 
     // Снять весь метод (используется чекбоксами слоёв слева) — удаляет все его инстансы.
@@ -1267,19 +1352,24 @@
             longitude: hasCoords ? Number(lonRaw) : null,
         };
         state.synastryMode = 'manual';
-        // Сброс кэша слоя синастрии — данные партнёра поменялись.
-        delete state.layers?.synastry_partner;
+        // Партнёр поменялся — ensureSynastryLayerActive зафиксирует конфиг и сбросит кэш слоя.
         schedulePersist();
         closeLayerPopover('synastry_partner');
         await ensureSynastryLayerActive({ lightweight: false });
     }
 
-    function hasUsableSynastryPartner() {
-        if (state.synastryMode === 'manual') {
-            const m = state.synastryManual;
+    // cfg — снимок конфига синастрии слоя { mode, manual, partnerId }. По умолчанию
+    // берём глобальный «scratch» (state.synastry*), который зеркалит выбранный слой.
+    function synastryScratchConfig() {
+        return { mode: state.synastryMode, manual: state.synastryManual, partnerId: state.synastryPartnerId };
+    }
+    function hasUsableSynastryPartner(cfg) {
+        const c = cfg || synastryScratchConfig();
+        if (c.mode === 'manual') {
+            const m = c.manual;
             return !!(m && m.date && m.time && m.timezone && (m.place || (m.latitude !== null && m.longitude !== null)));
         }
-        return !!state.synastryPartnerId;
+        return !!c.partnerId;
     }
 
     function isSynastryMomentActive() {
@@ -1288,9 +1378,7 @@
 
     function getDisplayedMomentDateTime() {
         if (isSynastryMomentActive()) {
-            const bd = state.viewModel?.activePrognosticLayers
-                ?.find((layer) => layer.method === 'synastry_partner')
-                ?.raw?.partner_chart?.birth_data;
+            const bd = selectedViewModelLayer()?.raw?.partner_chart?.birth_data;
             const date = state.synastryMode === 'manual'
                 ? state.synastryManual?.date
                 : (bd?.date || state.synastryManual?.date);
@@ -1319,8 +1407,7 @@
 
     function ensureManualSynastryPartnerForEdit() {
         if (state.synastryMode === 'manual' && state.synastryManual) return state.synastryManual;
-        const layer = state.viewModel?.activePrognosticLayers?.find((item) => item.method === 'synastry_partner');
-        const bd = layer?.raw?.partner_chart?.birth_data || {};
+        const bd = selectedViewModelLayer()?.raw?.partner_chart?.birth_data || {};
         const select = refs.forecastNewSynastryPartnerSelect;
         const name = select && select.selectedIndex > 0
             ? (select.options[select.selectedIndex]?.text || '')
@@ -1352,7 +1439,7 @@
             date,
             time,
         };
-        delete state.layers?.synastry_partner;
+        commitSelectedLayerEdit();
         syncSynastryManualControlsFromState();
     }
 
@@ -1400,8 +1487,7 @@
                 const m = state.synastryManual;
                 return { name: m.place || '', latitude: m.latitude ?? null, longitude: m.longitude ?? null, timezone: m.timezone || '' };
             }
-            const bd = state.viewModel?.activePrognosticLayers
-                ?.find((l) => l.method === 'synastry_partner')?.raw?.partner_chart?.birth_data || {};
+            const bd = selectedViewModelLayer()?.raw?.partner_chart?.birth_data || {};
             return { name: bd.place || '', latitude: numberOrNull(bd.latitude), longitude: numberOrNull(bd.longitude), timezone: bd.timezone || '' };
         }
         return { name: state.location?.name || '', latitude: state.location?.latitude ?? null, longitude: state.location?.longitude ?? null, timezone: state.timezone };
@@ -1420,7 +1506,7 @@
                 longitude: numberOrNull(longitude),
                 timezone: timezone || manual.timezone,
             };
-            delete state.layers?.synastry_partner;
+            commitSelectedLayerEdit();
             syncSynastryManualControlsFromState();
             return;
         }
@@ -1435,21 +1521,28 @@
 
     async function ensureSynastryLayerActive(options = {}) {
         if (!hasUsableSynastryPartner()) return;
-        const existing = instancesOfMethod('synastry_partner')[0];
-        if (!existing) {
+        // Если выбран слой синастрии — правки относятся к нему; иначе берём первый
+        // активный слой синастрии, а при отсутствии создаём новый.
+        let target = selectedRightMethod() === 'synastry_partner'
+            ? selectedLayerInstance()
+            : instancesOfMethod('synastry_partner')[0];
+        if (!target) {
             await activateLayer('synastry_partner', { openConfig: false });
             return;
         }
-        state.selectedRightLayerId = existing.id;
+        state.selectedRightLayerId = target.id;
+        captureScratchToConfig(target);   // зафиксировать отредактированного партнёра в слое
+        invalidateLayerById(target.id);   // партнёр изменился — сбросить кэш этого слоя
         normalizeActiveLayers();
         renderRightLayerTabs();
         scheduleRightPanelRender();
         await loadActiveLayers(options);
     }
 
-    function buildSynastryPartnerSource() {
-        if (state.synastryMode === 'manual' && state.synastryManual) {
-            const m = state.synastryManual;
+    function buildSynastryPartnerSource(cfg) {
+        const c = cfg || synastryScratchConfig();
+        if (c.mode === 'manual' && c.manual) {
+            const m = c.manual;
             const natal = {
                 date: m.date,
                 time: m.time,
@@ -1466,7 +1559,7 @@
             }
             return { natal };
         }
-        return { user_id: state.synastryPartnerId };
+        return { user_id: c.partnerId };
     }
 
     function bindWheelPanZoom() {
@@ -1617,8 +1710,10 @@
             timezone: resolvedTimezone || window.Timezones?.guess?.(item.displayName || item.shortName) || null,
         };
         syncSolarInputs();
-        const cacheKey = buildLayerCacheKey('solar_return');
-        delete state.layers?.solar_return;
+        const selInst = selectedLayerInstance();
+        captureScratchToConfig(selInst);
+        const cacheKey = buildLayerCacheKey(selInst || 'solar_return');
+        invalidateLayerById(selInst?.id);
         sessionStorage.removeItem(LAYER_CACHE_PREFIX + cacheKey);
         schedulePersist();
         if (hasActiveMethod('solar_return')) {
@@ -1630,7 +1725,7 @@
         state.solarLocation = null;
         syncSolarInputs();
         if (hasActiveMethod('solar_return')) {
-            delete state.layers?.solar_return;
+            commitSelectedLayerEdit();
             void loadActiveLayers({ lightweight: false });
         }
         schedulePersist();
@@ -1790,7 +1885,7 @@
         if (method === 'solar_return') {
             // Always use state.solarYear (user's selection), not the stale API response year
             const year = state.solarYear;
-            const layer = state.viewModel?.activePrognosticLayers?.find((l) => l.method === 'solar_return');
+            const layer = selectedViewModelLayer();
             const locName = layer?.raw?.solar_info?.location?.name
                 || state.solarLocation?.name
                 || state.location?.name
@@ -1806,7 +1901,7 @@
                 : (select && select.selectedIndex > 0
                     ? (select.options[select.selectedIndex]?.text || '')
                     : '');
-            const layer = state.viewModel?.activePrognosticLayers?.find((l) => l.method === 'synastry_partner');
+            const layer = selectedViewModelLayer();
             const bd = layer?.raw?.partner_chart?.birth_data;
             const partnerMeta = bd
                 ? [bd.date, bd.place].filter(Boolean).join(' · ')
@@ -3061,7 +3156,7 @@
             setSynastryMode('manual');
             syncSynastryManualControlsFromState();
         }
-        delete state.layers?.synastry_partner;
+        // ensureSynastryLayerActive зафиксирует конфиг и сбросит кэш слоя.
         state.lastStepperAction = null;
         syncControlsFromState();
         schedulePersist();
@@ -3112,7 +3207,7 @@
         // partner exists so one un-configured layer can't throw and tear down the layers
         // that did load (transit/progression/solar).
         const instancesToLoad = activeInstances.filter((inst) =>
-            inst.method !== 'synastry_partner' || hasUsableSynastryPartner());
+            inst.method !== 'synastry_partner' || hasUsableSynastryPartner(layerConfigOf(inst)));
         const nextLayers = {};
         let hasRenderedPartial = false;
         const hasCompletePreviousLayers = instancesToLoad.length > 0
@@ -3259,29 +3354,32 @@
                 }, { signal: controller.signal });
             }
             if (method === 'solar_return') {
+                const solarCfg = layerConfigOf(layer);
+                const solarLoc = solarCfg.location;
                 const solarBody = {
                     ...natalSource,
-                    year: state.solarYear,
+                    year: solarCfg.year,
                     save_to_db: false,
                 };
-                if (state.solarLocation?.latitude !== null && state.solarLocation?.latitude !== undefined) {
-                    solarBody.location_latitude = state.solarLocation.latitude;
-                    solarBody.location_longitude = state.solarLocation.longitude;
-                    if (state.solarLocation.name) solarBody.location_name = state.solarLocation.name;
-                    if (state.solarLocation.timezone) solarBody.location_timezone = state.solarLocation.timezone;
+                if (solarLoc?.latitude !== null && solarLoc?.latitude !== undefined) {
+                    solarBody.location_latitude = solarLoc.latitude;
+                    solarBody.location_longitude = solarLoc.longitude;
+                    if (solarLoc.name) solarBody.location_name = solarLoc.name;
+                    if (solarLoc.timezone) solarBody.location_timezone = solarLoc.timezone;
                 }
                 return apiPost('/solar/calculate', solarBody, { signal: controller.signal });
             }
             if (method === 'synastry_partner') {
-                if (!hasUsableSynastryPartner()) {
-                    throw new Error(state.synastryMode === 'manual'
+                const synCfg = layerConfigOf(layer);
+                if (!hasUsableSynastryPartner(synCfg)) {
+                    throw new Error(synCfg.mode === 'manual'
                         ? 'Заполните данные партнёра для синастрии'
                         : 'Выберите партнёра для синастрии');
                 }
                 // primary = тот же источник натала, что у остальных слоёв (saved или inline)
                 return apiPost('/synastry/calculate', {
                     primary: natalSource,
-                    partner: buildSynastryPartnerSource(),
+                    partner: buildSynastryPartnerSource(synCfg),
                 }, { signal: controller.signal }).then((resp) => ({
                     partner_chart: resp.partner_chart,
                     inter_aspects: resp.inter_aspects,
@@ -6103,7 +6201,11 @@
         state.timezone = normalizeTimezoneValue(restored.timezone, restored.location?.name) || state.timezone;
         state.location = restored.location || state.location;
         if (Array.isArray(restored.activeLayers) && restored.activeLayers.length) {
-            state.activeLayers = restored.activeLayers.map((l) => ({ id: l.id, method: l.method }));
+            state.activeLayers = restored.activeLayers.map((l) => {
+                const inst = { id: l.id, method: l.method };
+                if (l.config && typeof l.config === 'object') inst.config = l.config;
+                return inst;
+            });
             // Сдвинуть генератор id, чтобы новые инстансы не коллизировали с восстановленными.
             state.activeLayers.forEach((l) => {
                 const m = /-(\d+)$/.exec(l.id || '');
@@ -6183,6 +6285,13 @@
             angleAscDscBold: restored.pageSettings?.angleAscDscBold !== false,
             angleMcIcBold: restored.pageSettings?.angleMcIcBold !== false,
         };
+
+        // Ship 2: засеять per-instance config из legacy-полей для слоёв без config
+        // (старые снимки), затем загрузить config выбранного слоя в редактор-scratch.
+        state.activeLayers.forEach((inst) => {
+            if (methodHasConfig(inst.method) && !inst.config) captureScratchToConfig(inst);
+        });
+        applyConfigToScratch(selectedLayerInstance());
     }
 
     async function hydratePreferences() {
@@ -6383,6 +6492,10 @@
         const solarYearParam = Number(params.get('solarYear'));
         if (Number.isFinite(solarYearParam) && solarYearParam >= 1900 && solarYearParam <= 2100) {
             state.solarYear = solarYearParam;
+        }
+        // Зафиксировать deep-link конфиг в соответствующем инстансе слоя.
+        if (layer === 'synastry_partner' || layer === 'solar_return') {
+            captureScratchToConfig(state.activeLayers.find((l) => l.method === layer));
         }
         if (params.has('date') || params.has('time') || params.has('layer')
             || params.has('directionType') || params.has('partner') || params.has('solarYear')) {
@@ -6681,16 +6794,19 @@
             return [layerId, natalToken, selectedDateTime, timezone].join('|');
         }
         if (method === 'solar_return') {
-            return [layerId, natalToken, state.solarYear,
-                state.solarLocation?.latitude ?? '', state.solarLocation?.longitude ?? ''].join('|');
+            const cfg = layerConfigOf(layer);
+            const loc = cfg.location || {};
+            return [layerId, natalToken, cfg.year ?? '',
+                loc.latitude ?? '', loc.longitude ?? ''].join('|');
         }
         if (method === 'synastry_partner') {
-            if (state.synastryMode === 'manual') {
-                const m = state.synastryManual || {};
+            const cfg = layerConfigOf(layer);
+            if (cfg.mode === 'manual') {
+                const m = cfg.manual || {};
                 return [layerId, natalToken, 'manual', m.date || '', m.time || '', m.timezone || '',
                     m.latitude ?? '', m.longitude ?? '', m.place || ''].join('|');
             }
-            return [layerId, natalToken, state.synastryPartnerId || ''].join('|');
+            return [layerId, natalToken, cfg.partnerId || ''].join('|');
         }
         return [layerId, natalToken, date].join('|');
     }

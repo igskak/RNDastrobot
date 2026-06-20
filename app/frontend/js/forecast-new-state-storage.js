@@ -83,9 +83,52 @@
                 if (m) seenSeq[method] = Math.max(seenSeq[method] || 0, Number(m[1]));
             }
             seenIds.add(id);
-            out.push({ id, method });
+            const inst = { id, method };
+            // Per-instance конфиг (Ship 2) для solar_return / synastry_partner.
+            if (entry && typeof entry === 'object' && entry.config && typeof entry.config === 'object') {
+                inst.config = sanitizeLayerConfig(method, entry.config);
+            }
+            out.push(inst);
         });
         return out.length ? out : [{ id: 'transit-1', method: 'transit' }];
+    }
+
+    function sanitizeLayerConfig(method, config) {
+        if (method === 'solar_return') {
+            const year = Number(config.year);
+            const loc = config.location;
+            const out = {};
+            if (Number.isFinite(year) && year >= 1900 && year <= 2100) out.year = Math.trunc(year);
+            if (loc && typeof loc === 'object') {
+                out.location = {
+                    name: String(loc.name || ''),
+                    latitude: Number.isFinite(Number(loc.latitude)) ? Number(loc.latitude) : null,
+                    longitude: Number.isFinite(Number(loc.longitude)) ? Number(loc.longitude) : null,
+                    timezone: loc.timezone || null,
+                    sourceId: loc.sourceId || null,
+                };
+            } else {
+                out.location = null;
+            }
+            return out;
+        }
+        if (method === 'synastry_partner') {
+            const manual = config.manual;
+            return {
+                mode: config.mode === 'manual' ? 'manual' : 'db',
+                partnerId: typeof config.partnerId === 'string' ? config.partnerId : '',
+                manual: manual && typeof manual === 'object' ? {
+                    name: String(manual.name || ''),
+                    date: manual.date || '',
+                    time: manual.time || '',
+                    timezone: manual.timezone || '',
+                    place: manual.place || null,
+                    latitude: Number.isFinite(Number(manual.latitude)) ? Number(manual.latitude) : null,
+                    longitude: Number.isFinite(Number(manual.longitude)) ? Number(manual.longitude) : null,
+                } : null,
+            };
+        }
+        return undefined;
     }
 
     function sanitizeViewport(value) {

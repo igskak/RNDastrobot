@@ -89,6 +89,32 @@ function ok(cond, msg) { if (cond) { pass++; } else { fail++; console.log('FAIL:
     });
     ok(new Set(persistedCollide.activeLayers.map((l) => l.id)).size === 2,
         'storage: duplicate ids are regenerated to be unique');
+
+    // Ship 2: per-instance config (solar year/location, synastry partner) round-trips
+    const persistedCfg = Storage.buildPersistedState({
+        natalData,
+        state: {
+            activeLayers: [
+                { id: 'solar_return-1', method: 'solar_return', config: { year: 2030, location: { name: 'Kyiv', latitude: 50.45, longitude: 30.52 } } },
+                { id: 'solar_return-2', method: 'solar_return', config: { year: 2031, location: null } },
+                { id: 'synastry_partner-1', method: 'synastry_partner', config: { mode: 'db', partnerId: 'p123', manual: null } },
+            ],
+        },
+    });
+    const sr1 = persistedCfg.activeLayers.find((l) => l.id === 'solar_return-1');
+    const sr2 = persistedCfg.activeLayers.find((l) => l.id === 'solar_return-2');
+    const syn = persistedCfg.activeLayers.find((l) => l.id === 'synastry_partner-1');
+    ok(sr1.config.year === 2030 && sr1.config.location.name === 'Kyiv',
+        'storage: solar instance keeps its own year + location');
+    ok(sr2.config.year === 2031 && sr2.config.location === null,
+        'storage: a second solar instance keeps a distinct year');
+    ok(syn.config.mode === 'db' && syn.config.partnerId === 'p123',
+        'storage: synastry instance keeps its own partner config');
+
+    // round-trip through parse keeps configs
+    const reparsed = Storage.parsePersistedState(JSON.stringify(persistedCfg), natalData);
+    ok(reparsed.activeLayers.find((l) => l.id === 'solar_return-1').config.year === 2030,
+        'storage: per-instance config survives parse round-trip');
 })();
 
 // --- wheel: two same-method rings get distinct (tinted) colors ---
