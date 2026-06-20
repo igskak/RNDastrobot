@@ -15,7 +15,8 @@ from app.services.dignity_service import DignityService
 from app.services.planet_characteristics_service import PlanetCharacteristicsService
 from app.services.preferences_runtime import PreferencesRuntimeResolver
 from app.services.aspect_service import AspectService
-from app.utils.constants import get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds, normalize_longitude
+from app.utils.constants import get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds, normalize_longitude, PLANETS
+from app.services.declination_service import DeclinationService
 from app.database.repositories import UserRepository, NatalChartRepository
 from app.database.models import NatalAspect, NatalConfigurationAspect
 
@@ -251,6 +252,8 @@ class NatalChartService:
             'special_points': special_points,
             'aspects': aspects,
             'configurations': configurations,
+            # Деклинационные аспекты (параллели/контрпараллели) — планеты уже несут declination.
+            'declination_aspects': DeclinationService.find_declination_aspects(planets),
         }
 
         # 10. Сохраняем в БД если требуется
@@ -315,6 +318,38 @@ class NatalChartService:
             dignity_service=dignity_service,
         )
     
+    def _enrich_with_declination(self, planets: list, jd: Optional[float]) -> None:
+        """
+        Доставить склонение + out_of_bounds на планеты (пересчёт от jd).
+        Склонение зодиак-независимо, поэтому корректно для любой сохранённой карты.
+        Применяется на read-пути, где поля не хранятся в БД.
+        """
+        if jd is None:
+            return
+        try:
+            obliquity = self.swisseph_engine.calculate_obliquity(jd)
+        except Exception as exc:  # pragma: no cover
+            logger.warning("declination enrich skipped: {}", str(exc))
+            return
+        import math
+        name_to_id = {name: pid for pid, name in PLANETS.items()}
+        for p in planets:
+            if p.get('declination') is not None:
+                continue
+            pid = name_to_id.get(p.get('name'))
+            dec = None
+            if pid == 1000:  # Прозерпина: точка на эклиптике (широта 0)
+                lon = p.get('longitude')
+                if lon is not None:
+                    dec = math.degrees(math.asin(
+                        math.sin(math.radians(obliquity)) * math.sin(math.radians(float(lon)))
+                    ))
+            elif pid is not None:
+                dec = self.swisseph_engine._planet_declination(jd, pid)
+            if dec is not None:
+                p['declination'] = round(dec, 4)
+                p['out_of_bounds'] = abs(dec) > obliquity
+
     def _calculate_special_points(
         self,
         jd: float,
@@ -1597,6 +1632,9 @@ class NatalChartService:
             astrologer_id=user.astrologer_id,
             db_session=db_session,
         )
+        # Склонение/OOB не хранятся в БД — пересчитываем; деклинационные аспекты.
+        self._enrich_with_declination(result.get('planets') or [], result['birth_data'].get('julian_day'))
+        result['declination_aspects'] = DeclinationService.find_declination_aspects(result.get('planets') or [])
         return result
 
     def refresh_methodology_dependent_artifacts(self, user_id: UUID, db_session: Session) -> bool:

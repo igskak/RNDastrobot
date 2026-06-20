@@ -475,6 +475,7 @@ class NatalChartResponse(BaseModel):
     # Новые поля из пункта 3.3 спецификации
     aspects: Optional[List[AspectInfo]] = None
     aspect_configurations: Optional[List[ConfigurationInfo]] = None
+    declination_aspects: Optional[List[Dict[str, Any]]] = Field(None, description="Деклинационные аспекты: параллели/контрпараллели")
     stelliums: Optional[List[StelliumInfo]] = None
     cosmogram_pattern: Optional[CosmogramPatternInfo] = None
     planet_distribution: Optional[PlanetDistributionInfo] = None
