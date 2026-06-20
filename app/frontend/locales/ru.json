@@ -70,7 +70,8 @@
         "royal": "корол.",
         "under_rays": "в лучах",
         "oriental": "утр.",
-        "occidental": "веч."
+        "occidental": "веч.",
+        "out_of_bounds": "вне гр."
       }
     },
     "houseSystem": {

@@ -144,6 +144,8 @@ class PlanetPosition(BaseModel):
     speed_percent: Optional[float] = Field(None, description="Скорость в % от средней (100% = средняя)")
     critical_degrees: Optional[List[str]] = Field(default=[], description="Критические градусы: jubilee, middle, anareta, royal, destructive")
     sun_relation: Optional[str] = Field(None, description="Отношение к Солнцу: cazimi, combust, under_rays")
+    declination: Optional[float] = Field(None, description="Склонение (°), экваториальная координата")
+    out_of_bounds: Optional[bool] = Field(None, description="Планета вне границ склонения Солнца (|dec| > наклонности)")
     in_intercepted_sign: Optional[bool] = Field(default=False, description="Планета во включённом знаке")
     is_elevated: Optional[bool] = Field(default=False, description="Элевация - самая высокая планета")
     is_peregrine: Optional[bool] = Field(default=False, description="В шахте - без мажорных аспектов")

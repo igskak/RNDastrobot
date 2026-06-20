@@ -211,6 +211,15 @@ class ChartDataRenderer {
         return `<span class="planet-status-badge planet-status-badge--solar-phase planet-status-badge--${this.escapeHtml(phase)}${suffix}" title="${title}" aria-label="${title}">${glyph}</span>`;
     }
 
+    outOfBoundsIndicatorHtml(planet, variantClass = '') {
+        if (!planet?.out_of_bounds) return '';
+        const suffix = variantClass ? ` ${variantClass}` : '';
+        const key = 'astro.feature.short.out_of_bounds';
+        const tr = this.t(key);
+        const title = this.escapeHtml(tr && tr !== key ? tr : 'Out of bounds');
+        return `<span class="planet-status-badge planet-status-badge--oob${suffix}" title="${title}" aria-label="${title}">OOB</span>`;
+    }
+
     buildRetrogradeLookup(planets = []) {
         const lookup = new Map();
         planets.forEach((planet) => {
@@ -500,7 +509,8 @@ class ChartDataRenderer {
             const specialPositionBadges = [
                 this.dignityIndicatorHtml(p, 'planet-status-badge--small'),
                 this.sunRelationIndicatorHtml(p, 'planet-status-badge--small'),
-                this.solarPhaseIndicatorHtml(p, 'planet-status-badge--small')
+                this.solarPhaseIndicatorHtml(p, 'planet-status-badge--small'),
+                this.outOfBoundsIndicatorHtml(p, 'planet-status-badge--small')
             ].filter(Boolean).join('');
             return `
                 <tr id="row-${p.name}" data-planet="${p.name}">
