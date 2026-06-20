@@ -2052,6 +2052,10 @@
         "proofPoints": "Key capabilities",
         "productPreview": "Workspace preview",
         "trustIndicators": "Key capabilities"
+      },
+      "auth": {
+        "signIn": "Sign in",
+        "signUp": "Start practice"
       }
     },
     "natalFull": {

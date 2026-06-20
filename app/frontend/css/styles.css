@@ -1213,6 +1213,21 @@ input[type="number"] {
     color: #fff;
 }
 
+.landing-auth-link {
+    background: rgba(255, 255, 255, 0.64);
+}
+
+.landing-auth-link-primary {
+    border-color: rgba(184, 147, 90, 0.32);
+    background: var(--gold-pale);
+    color: var(--text-primary);
+}
+
+.landing-auth-link-primary:hover {
+    border-color: rgba(184, 147, 90, 0.48);
+    background: rgba(255, 255, 255, 0.96);
+}
+
 .landing-main {
     display: grid;
     gap: 72px;
@@ -4050,9 +4065,13 @@ input[type="number"] {
 
     .index-page .landing-header-actions .index-header-link {
         flex: 1;
-        min-width: 0;
+        min-width: calc(50% - 4px);
         padding-inline: 10px;
         text-align: center;
+    }
+
+    .index-page .landing-header-actions .index-header-link-primary {
+        min-width: 100%;
     }
 
     .landing-hero-title {
