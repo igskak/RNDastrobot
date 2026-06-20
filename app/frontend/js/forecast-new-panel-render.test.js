@@ -235,6 +235,7 @@ function planelContains(doc, side, node) {
     { view: 'antiscia', container: 'natalAntisciaView' },
     { view: 'asteroids', container: 'natalAsteroidsView' },
     { view: 'dominants', container: 'natalDominantsView' },
+    { view: 'fixstars', container: 'natalFixstarsView' },
 ].forEach(({ view, container }) => {
     const doc = freshDoc();
     const layout = L.normalizeLayout({

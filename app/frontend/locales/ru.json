@@ -70,7 +70,8 @@
         "royal": "корол.",
         "under_rays": "в лучах",
         "oriental": "утр.",
-        "occidental": "веч."
+        "occidental": "веч.",
+        "out_of_bounds": "вне гр."
       }
     },
     "houseSystem": {
@@ -283,7 +284,8 @@
         "profections": "Профекции",
         "antiscia": "Антисы",
         "asteroids": "Астероиды",
-        "dominants": "Доминанты"
+        "dominants": "Доминанты",
+        "fixstars": "Звёзды"
       },
       "view": {
         "single": "Одно колесо",
@@ -493,6 +495,10 @@
           "fixed": "Фиксированный",
           "mutable": "Мутабельный"
         }
+      },
+      "fixstars": {
+        "empty": "Нет соединений",
+        "conjunctions": "Соединения"
       }
     },
     "plan": {
@@ -986,7 +992,8 @@
         "showPlanetDegree": "Показывать градус планеты на колесе",
         "showPlanetStationary": "Показывать стационарность на колесе",
         "wheelOptions": "Параметры колеса",
-        "tableOptions": "Параметры таблиц"
+        "tableOptions": "Параметры таблиц",
+        "showDeclinationAspects": "Параллели (склонение)"
       },
       "table": {
         "aspects": {

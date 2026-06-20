@@ -2124,6 +2124,14 @@ input[type="number"] {
     letter-spacing: 0.01em;
 }
 
+/* Out-of-bounds badge (declination beyond the Sun's). */
+.planet-status-badge--oob {
+    background: rgba(184, 50, 50, 0.12);
+    color: #8f2f2f;
+    border-color: rgba(184, 50, 50, 0.2);
+    letter-spacing: 0.01em;
+}
+
 .planet-status-badge--oriental {
     background: rgba(30, 58, 95, 0.08);
     color: var(--accent);

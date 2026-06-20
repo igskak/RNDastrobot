@@ -70,7 +70,8 @@
         "royal": "корол.",
         "under_rays": "в променях",
         "oriental": "ранк.",
-        "occidental": "веч."
+        "occidental": "веч.",
+        "out_of_bounds": "поза меж."
       }
     },
     "houseSystem": {
@@ -283,7 +284,8 @@
         "profections": "Профекції",
         "antiscia": "Антиси",
         "asteroids": "Астероїди",
-        "dominants": "Домінанти"
+        "dominants": "Домінанти",
+        "fixstars": "Зірки"
       },
       "view": {
         "single": "Одне колесо",
@@ -493,6 +495,10 @@
           "fixed": "Фіксований",
           "mutable": "Мутабельний"
         }
+      },
+      "fixstars": {
+        "empty": "Немає з’єднань",
+        "conjunctions": "З’єднання"
       }
     },
     "plan": {
@@ -988,7 +994,8 @@
         "showPlanetDegree": "Показувати градус планети на колесі",
         "showPlanetStationary": "Показувати стаціонарність на колесі",
         "wheelOptions": "Параметри колеса",
-        "tableOptions": "Параметри таблиць"
+        "tableOptions": "Параметри таблиць",
+        "showDeclinationAspects": "Паралелі (схилення)"
       },
       "table": {
         "aspects": {

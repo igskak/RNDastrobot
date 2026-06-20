@@ -75,6 +75,8 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             this.showPlanetStationary = false;
             this.showPlanetDegree = false;
             this.showAspectText = false;
+            this.showDeclinationAspects = false;
+            this.declinationAspects = [];
             this.minimumRingCount = 1;
             this.alignSingleRingOuter = false;
             // W1 (Фаза W): маркеры углов ASC/MC/DSC/IC за кругом (паритет с ChartWheel).
@@ -159,6 +161,14 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             }
             if (Object.prototype.hasOwnProperty.call(options, 'showAspectText')) {
                 this.showAspectText = options.showAspectText === true;
+            }
+            if (Object.prototype.hasOwnProperty.call(options, 'showDeclinationAspects')) {
+                this.showDeclinationAspects = options.showDeclinationAspects === true;
+            }
+            if (Object.prototype.hasOwnProperty.call(options, 'declinationAspects')) {
+                this.declinationAspects = Array.isArray(options.declinationAspects)
+                    ? options.declinationAspects.slice()
+                    : [];
             }
             if (Object.prototype.hasOwnProperty.call(options, 'minimumRingCount')) {
                 this.minimumRingCount = Math.max(1, Number(options.minimumRingCount) || 1);
@@ -255,6 +265,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             rings.forEach((ring) => this.drawHouses(ring));
             this.drawRingBoundaries(rings);
             this.drawAspects(rings);
+            if (this.showDeclinationAspects) this.drawDeclinationAspects(rings);
             rings.forEach((ring) => this.drawBodies(ring));
             this.drawAngleMarkers(rings);
             this.bindEvents();
@@ -776,6 +787,46 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                         }
                     }
                 });
+            });
+        }
+
+        /**
+         * Declinational aspects (parallels / contra-parallels). Opt-in overlay
+         * drawn as dotted lines so they read as a distinct kind from the
+         * longitudinal aspects. Within-chart only → uses the natal ring.
+         */
+        drawDeclinationAspects(rings) {
+            const list = Array.isArray(this.declinationAspects) ? this.declinationAspects : [];
+            if (!list.length) return;
+            const ring = rings.find((r) => r.method === 'natal') || rings[0];
+            if (!ring) return;
+            const aspectRadius = this.aspectRadius || this.getAspectBoundaryRadius(ring);
+            const bodyMap = new Map(this.getAspectBodies(ring)
+                .filter((body) => body?.name && this.isBodyAvailableForAspects(body.name, ring.method))
+                .map((body) => [this.normalizeBodyName(body.name), body]));
+            list.forEach((aspect) => {
+                const n1 = this.normalizeBodyName(aspect.planet_1);
+                const n2 = this.normalizeBodyName(aspect.planet_2);
+                const b1 = bodyMap.get(n1);
+                const b2 = bodyMap.get(n2);
+                if (!b1 || !b2) return;
+                const p1 = this.polar(aspectRadius, this.longToAngle(b1.longitude));
+                const p2 = this.polar(aspectRadius, this.longToAngle(b2.longitude));
+                const isContra = aspect.type === 'contra_parallel';
+                const color = isContra ? '#b06a1f' : '#2b7a4b'; // contra=amber, parallel=green
+                const lineEl = this.el('line', {
+                    x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y,
+                    stroke: color,
+                    'stroke-width': 1,
+                    'stroke-dasharray': '1,3',
+                    'stroke-linecap': 'round',
+                    opacity: 0.7,
+                    class: 'declination-aspect-line',
+                    'data-decl-type': aspect.type,
+                    'data-planet-1': n1,
+                    'data-planet-2': n2,
+                });
+                this.layers.aspects.appendChild(lineEl);
             });
         }
 

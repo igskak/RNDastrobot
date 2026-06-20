@@ -1,6 +1,7 @@
 """
 Сервис для работы с Swiss Ephemeris
 """
+import math
 import swisseph as swe
 from typing import List, Dict, Tuple
 from app.utils.constants import (
@@ -68,6 +69,25 @@ class SwissEphemerisEngine:
         mode = AYANAMSHA_MODES.get((ayanamsha or DEFAULT_AYANAMSHA).lower(), swe.SIDM_LAHIRI)
         swe.set_sid_mode(mode, 0, 0)
         return float(swe.get_ayanamsa_ut(jd))
+
+    def calculate_obliquity(self, jd: float) -> float:
+        """Истинная наклонность эклиптики (°) на момент jd."""
+        self._ensure_ephe_path()
+        data, _ = swe.calc_ut(jd, swe.ECL_NUT, swe.FLG_SWIEPH)
+        return float(data[0])
+
+    def _planet_declination(self, jd: float, planet_id: int) -> float | None:
+        """Склонение тела (°) — экваториальная координата, не зависит от зодиака."""
+        try:
+            data, _ = swe.calc_ut(jd, planet_id, swe.FLG_SWIEPH | swe.FLG_EQUATORIAL)
+        except Exception as e:  # pragma: no cover
+            self._ensure_ephe_path()
+            logger.warning("SwissEph equatorial calc retry: {}", str(e))
+            try:
+                data, _ = swe.calc_ut(jd, planet_id, swe.FLG_SWIEPH | swe.FLG_EQUATORIAL)
+            except Exception:
+                return None
+        return float(data[1])  # [RA, declination, ...]
     
     def calculate_planets(
         self,
@@ -93,17 +113,22 @@ class SwissEphemerisEngine:
         base_flags = swe.FLG_SWIEPH | swe.FLG_SPEED | sid_flag
         # Сдвиг аянамши для фиктивных точек, считаемых тропически (Прозерпина).
         ayan_offset = self.get_ayanamsha(jd, ayanamsha) if sid_flag else 0.0
+        # Наклонность эклиптики — граница out-of-bounds (одинакова для всех тел).
+        obliquity = self.calculate_obliquity(jd)
 
         for planet_id, planet_name in PLANETS.items():
             # Прозерпина (ID=1000) рассчитывается отдельно методом интерполяции
             if planet_id == 1000:
-                longitude = SpecialPointsService.calculate_proserpina(jd)
-                if sid_flag:
-                    longitude = normalize_longitude(longitude - ayan_offset)
+                trop_lon = SpecialPointsService.calculate_proserpina(jd)
+                longitude = normalize_longitude(trop_lon - ayan_offset) if sid_flag else trop_lon
                 latitude = 0.0  # Фиктивная планета, широта = 0
                 distance = 0.0  # Расстояние не определено
                 speed_lon = 0.461968 / 365.25  # Средняя скорость в градусах/день (27.72' в год)
                 is_retrograde = False  # Прозерпина всегда директная
+                # Точка на эклиптике (широта 0): склонение по тропической долготе.
+                declination = math.degrees(math.asin(
+                    math.sin(math.radians(obliquity)) * math.sin(math.radians(trop_lon))
+                ))
             else:
                 # Расчёт позиции планеты через Swiss Ephemeris
                 try:
@@ -123,7 +148,12 @@ class SwissEphemerisEngine:
                 # Определяем ретроградность (скорость < 0)
                 is_retrograde = speed_lon < 0
 
+                declination = self._planet_declination(jd, planet_id)
+
             degree_in_sign = get_degree_in_sign(longitude)
+            out_of_bounds = (
+                abs(declination) > obliquity if declination is not None else None
+            )
 
             planets_data.append({
                 'id': planet_id,
@@ -136,6 +166,8 @@ class SwissEphemerisEngine:
                 'degree_in_sign': degree_in_sign,
                 'degree_in_sign_formatted': format_degree_minutes_seconds(degree_in_sign),
                 'retrograde': is_retrograde,
+                'declination': round(declination, 4) if declination is not None else None,
+                'out_of_bounds': out_of_bounds,
             })
 
         return planets_data

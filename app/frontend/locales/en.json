@@ -70,7 +70,8 @@
         "royal": "royal",
         "under_rays": "under rays",
         "oriental": "orient.",
-        "occidental": "occid."
+        "occidental": "occid.",
+        "out_of_bounds": "OOB"
       }
     },
     "houseSystem": {
@@ -283,7 +284,8 @@
         "profections": "Profections",
         "antiscia": "Antiscia",
         "asteroids": "Asteroids",
-        "dominants": "Dominants"
+        "dominants": "Dominants",
+        "fixstars": "Stars"
       },
       "view": {
         "single": "Single wheel",
@@ -493,6 +495,10 @@
           "fixed": "Fixed",
           "mutable": "Mutable"
         }
+      },
+      "fixstars": {
+        "empty": "No conjunctions",
+        "conjunctions": "Conjunctions"
       }
     },
     "plan": {
@@ -986,7 +992,8 @@
         "showPlanetDegree": "Show planet degree on wheel",
         "showPlanetStationary": "Show stationary on wheel",
         "wheelOptions": "Wheel options",
-        "tableOptions": "Table options"
+        "tableOptions": "Table options",
+        "showDeclinationAspects": "Parallels (declination)"
       },
       "table": {
         "aspects": {
