@@ -55,11 +55,37 @@
         return VALID_DIRECTION_TYPES.includes(normalized) ? normalized : DEFAULT_DIRECTION_TYPE;
     }
 
+    // Multi-instance: activeLayers хранится как массив инстансов { id, method }.
+    // Бэк-компат: старый формат (массив строк-методов) мигрируется в инстансы id=method.
     function sanitizeLayerList(value) {
         const source = Array.isArray(value) ? value : ['transit'];
-        return source.filter((layer, index, arr) => (
-            VALID_LAYERS.includes(layer) && arr.indexOf(layer) === index
-        ));
+        const seenIds = new Set();
+        const seenSeq = {};
+        const out = [];
+        source.forEach((entry) => {
+            let method;
+            let id;
+            if (typeof entry === 'string') {
+                method = entry;
+            } else if (entry && typeof entry === 'object') {
+                method = entry.method;
+                id = typeof entry.id === 'string' ? entry.id : undefined;
+            }
+            if (!VALID_LAYERS.includes(method)) return;
+            if (!id || seenIds.has(id)) {
+                // сгенерировать стабильный id из метода + порядкового номера
+                let seq = (seenSeq[method] || 0) + 1;
+                while (seenIds.has(`${method}-${seq}`)) seq += 1;
+                seenSeq[method] = seq;
+                id = `${method}-${seq}`;
+            } else {
+                const m = /-(\d+)$/.exec(id);
+                if (m) seenSeq[method] = Math.max(seenSeq[method] || 0, Number(m[1]));
+            }
+            seenIds.add(id);
+            out.push({ id, method });
+        });
+        return out.length ? out : [{ id: 'transit-1', method: 'transit' }];
     }
 
     function sanitizeViewport(value) {
@@ -101,6 +127,7 @@
                 longitude: Number.isFinite(Number(source.location.longitude)) ? Number(source.location.longitude) : null,
             } : { name: '', latitude: null, longitude: null },
             activeLayers: sanitizeLayerList(source.activeLayers),
+            selectedRightLayerId: typeof source.selectedRightLayerId === 'string' ? source.selectedRightLayerId : '',
             selectedRightLayer: pickEnum(source.selectedRightLayer, VALID_LAYERS, ''),
             directionType: normalizeDirectionType(source.directionType),
             stepMode: pickEnum(source.stepMode, VALID_STEP_MODES, 'hour'),

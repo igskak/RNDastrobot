@@ -198,18 +198,41 @@
         return normalizeTransit(data, ringIndex);
     }
 
-    function buildViewModel(natalData, layers, options = {}) {
+    /**
+     * Multi-instance модель: каждый прогностический слой — инстанс с собственным id.
+     * `options.activeInstances` = [{ id, method }] (порядок уже отсортирован вызывающим);
+     * `layers` ключуется по id инстанса. Бэк-компат: если передан только `activeMethods`
+     * (массив имён методов), строим по-старому, где id === method.
+     */
+    function resolveActiveInstances(layers, options) {
+        if (Array.isArray(options.activeInstances)) {
+            return options.activeInstances
+                .map((inst) => (inst && typeof inst === 'object'
+                    ? { id: inst.id, method: normalizeMethod(inst.method) }
+                    : null))
+                .filter((inst) => inst && inst.id);
+        }
         const activeMethods = Array.isArray(options.activeMethods) ? options.activeMethods : METHOD_ORDER;
-        const ordered = METHOD_ORDER
+        return METHOD_ORDER
             .filter((method) => activeMethods.includes(method))
-            .map((method, index) => {
-                const raw = layers?.[method];
-                return raw ? normalizeLayer(method, raw, index + 1) : null;
+            .map((method) => ({ id: method, method }));
+    }
+
+    function buildViewModel(natalData, layers, options = {}) {
+        const instances = resolveActiveInstances(layers, options);
+        const ordered = instances
+            .map((inst, index) => {
+                const raw = layers?.[inst.id];
+                if (!raw) return null;
+                const layer = normalizeLayer(inst.method, raw, index + 1);
+                layer.id = inst.id;
+                return layer;
             })
             .filter(Boolean);
 
         return {
             natalLayer: {
+                id: 'natal',
                 method: 'natal',
                 label: 'Натал',
                 bodies: cloneArray(natalData?.planets),

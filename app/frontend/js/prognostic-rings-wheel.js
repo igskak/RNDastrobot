@@ -46,6 +46,23 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
         Semisquare: '#f97316',
         Sesquiquadrate: '#f97316',
     };
+    // Multi-instance: два кольца одного метода (напр. два транзита) различаются
+    // оттенком базового цвета метода. instanceIndex 0 = базовый цвет; каждый
+    // следующий инстанс осветляется к белому фиксированным шагом.
+    function tintLayerColor(hex, instanceIndex) {
+        const idx = Number(instanceIndex) || 0;
+        if (idx <= 0) return hex;
+        const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || ''));
+        if (!m) return hex;
+        const num = parseInt(m[1], 16);
+        const factor = Math.min(0.6, idx * 0.22); // доля смешивания с белым
+        const mix = (c) => Math.round(c + (255 - c) * factor);
+        const r = mix((num >> 16) & 0xff);
+        const g = mix((num >> 8) & 0xff);
+        const b = mix(num & 0xff);
+        return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+    }
+
     const HOUSE_LAYER_THEMES = {
         natal: { color: '#111111', radialOffset: 4, tangentOffset: 8 },
         transit: { color: '#1e3a5f', radialOffset: 10, tangentOffset: 8 },
@@ -297,17 +314,24 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             if (allLayers.length === 1) count = Math.max(2, count);
             const available = ZODIAC_INNER_R - FIRST_RING_INNER_R - RING_GAP * (count - 1);
             const width = Math.max(28, available / count);
+            // Порядковый номер инстанса среди колец того же метода (0-based) — для оттенка.
+            const methodSeen = {};
             return allLayers.map((layer, index) => {
                 const visualIndex = allLayers.length === 1 ? count - 1 : index;
                 const inner = FIRST_RING_INNER_R + visualIndex * (width + RING_GAP);
                 const outer = inner + width;
+                const method = layer?.method;
+                const instanceIndex = methodSeen[method] || 0;
+                methodSeen[method] = instanceIndex + 1;
+                const baseColor = layer?.style?.color || '#111111';
                 return {
                     ...layer,
                     inner,
                     outer,
                     center: inner + width / 2,
                     index,
-                    color: layer?.style?.color || '#111111',
+                    instanceIndex,
+                    color: method === 'natal' ? baseColor : tintLayerColor(baseColor, instanceIndex),
                 };
             });
         }

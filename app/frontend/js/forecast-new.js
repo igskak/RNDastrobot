@@ -98,8 +98,8 @@
         targetDatetime: '',
         timezone: 'UTC',
         location: { name: '', latitude: null, longitude: null, sourceId: null },
-        activeLayers: ['transit'],
-        selectedRightLayer: 'transit',
+        activeLayers: [{ id: 'transit-1', method: 'transit' }],
+        selectedRightLayerId: 'transit-1',
         directionType: DEFAULT_DIRECTION_TYPE,
         // D6: вид колеса — 'multi' (натал + кольца, как сейчас) | 'single' (только
         // натал в виде одиночной карты: внешний слот + маркеры углов).
@@ -151,7 +151,7 @@
         cache: {},
         inFlight: {},
         inFlightByKey: {},
-        inFlightByMethod: {},
+        inFlightById: {},
         wheel: null,
         natalRenderer: null,
         prognosticRenderer: null,
@@ -195,6 +195,48 @@
 
     function t(key, params) {
         return window.FrontendI18n?.t?.(key, params) || key;
+    }
+
+    // ── Множественные слои одного типа (multi-instance) ──────────────────────
+    // Слой — инстанс { id, method }. transit/progression/direction можно
+    // добавлять несколько раз; solar_return/synastry_partner пока single
+    // (их конфиг живёт в глобальном state — Ship 2 перенесёт его в инстанс),
+    // поэтому для них id === method (это сохраняет совместимость
+    // state.layers[method] / buildLayerCacheKey(method)).
+    let _layerInstanceSeq = 0;
+    function isMultiInstanceMethod(method) {
+        return method === 'transit' || method === 'progression' || method === 'direction';
+    }
+    function nextLayerInstanceId(method) {
+        if (!isMultiInstanceMethod(method)) return method;
+        let id;
+        do {
+            _layerInstanceSeq += 1;
+            id = `${method}-${_layerInstanceSeq}`;
+        } while (state.activeLayers.some((l) => l.id === id));
+        return id;
+    }
+    function activeLayerMethods() {
+        return state.activeLayers.map((l) => l.method);
+    }
+    function hasActiveMethod(method) {
+        return state.activeLayers.some((l) => l.method === method);
+    }
+    function instancesOfMethod(method) {
+        return state.activeLayers.filter((l) => l.method === method);
+    }
+    function findLayerInstance(id) {
+        return state.activeLayers.find((l) => l.id === id) || null;
+    }
+    function selectedLayerInstance() {
+        return findLayerInstance(state.selectedRightLayerId);
+    }
+    function selectedRightMethod() {
+        return selectedLayerInstance()?.method || '';
+    }
+    function sortActiveLayersInPlace() {
+        // Стабильная сортировка по LAYER_ORDER; внутри метода порядок добавления.
+        state.activeLayers.sort((a, b) => LAYER_ORDER.indexOf(a.method) - LAYER_ORDER.indexOf(b.method));
     }
 
     function escapeHtml(value) {
@@ -443,7 +485,7 @@
             updateSolarYearStepperValue();
             // Invalidate cache and refetch
             delete state.layers?.solar_return;
-            if (state.activeLayers.includes('solar_return')) {
+            if (hasActiveMethod('solar_return')) {
                 void loadActiveLayers({ lightweight: false });
             }
             // Update subtitle
@@ -497,7 +539,7 @@
             input.addEventListener('change', async () => {
                 const layer = input.dataset.layerToggle;
                 if (input.checked) await activateLayer(layer, { openConfig: true });
-                else await deactivateLayer(layer);
+                else await deactivateMethod(layer);
             });
         });
 
@@ -505,7 +547,7 @@
             state.directionType = normalizeDirectionType(refs.forecastNewDirectionTypeSelect.value);
             refs.forecastNewDirectionTypeSelect.value = state.directionType;
             schedulePersist();
-            if (state.activeLayers.includes('direction')) {
+            if (hasActiveMethod('direction')) {
                 await loadActiveLayers({ lightweight: true });
             }
         });
@@ -790,14 +832,14 @@
             const removeButton = event.target.closest('[data-remove-layer]');
             if (removeButton) {
                 event.stopPropagation();
-                void deactivateLayer(removeButton.dataset.removeLayer);
+                void removeLayerInstance(removeButton.dataset.removeLayer);
                 return;
             }
 
             const button = event.target.closest('[data-right-layer]');
             if (!button) return;
-            state.selectedRightLayer = button.dataset.rightLayer;
-            state.activeRightMethodTab = state.selectedRightLayer;
+            state.selectedRightLayerId = button.dataset.rightLayer;
+            state.activeRightMethodTab = selectedRightMethod();
             syncControlsFromState();
             renderRightPanel();
             schedulePersist();
@@ -811,10 +853,11 @@
         refs.forecastNewResultPane?.addEventListener('click', (event) => {
             const row = event.target.closest('[data-result-layer]');
             if (!row) return;
-            const method = row.dataset.resultLayer;
-            if (LAYER_ORDER.includes(method)) {
-                state.selectedRightLayer = method;
-                state.activeRightMethodTab = method;
+            const layerId = row.dataset.resultLayer;
+            const inst = findLayerInstance(layerId);
+            if (inst) {
+                state.selectedRightLayerId = layerId;
+                state.activeRightMethodTab = inst.method;
                 renderRightLayerTabs();
                 renderRightPanel();
             }
@@ -999,35 +1042,39 @@
 
     function syncLayerTogglesFromState() {
         refs.layerToggles?.forEach((input) => {
-            input.checked = state.activeLayers.includes(input.dataset.layerToggle);
+            input.checked = hasActiveMethod(input.dataset.layerToggle);
         });
     }
 
     function normalizeActiveLayers() {
-        state.activeLayers = LAYER_ORDER.filter((method) => state.activeLayers.includes(method));
+        state.activeLayers = state.activeLayers.filter((l) => l && l.id && LAYER_ORDER.includes(l.method));
+        sortActiveLayersInPlace();
         state.enabledLayers = state.activeLayers;
-        if (!state.activeLayers.includes(state.selectedRightLayer)) {
-            state.selectedRightLayer = state.activeLayers[0] || '';
+        if (!selectedLayerInstance()) {
+            state.selectedRightLayerId = state.activeLayers[0]?.id || '';
         }
-        state.activeRightMethodTab = state.selectedRightLayer;
+        state.activeRightMethodTab = selectedRightMethod();
         syncLayerTogglesFromState();
     }
 
     async function activateLayer(method, { openConfig = false } = {}) {
         if (!LAYER_ORDER.includes(method)) return;
-        const wasInactive = !state.activeLayers.includes(method);
-        if (method === 'transit' && wasInactive) {
-            setSelectedDateTime(getLocalNowIso(state.timezone));
-            state.lastStepperAction = null;
-            syncControlsFromState();
+        const existing = instancesOfMethod(method);
+        let instance;
+        if (!isMultiInstanceMethod(method) && existing.length) {
+            // Single-instance метод уже активен — просто переключаемся на него.
+            instance = existing[0];
+        } else {
+            if (method === 'transit' && existing.length === 0) {
+                setSelectedDateTime(getLocalNowIso(state.timezone));
+                state.lastStepperAction = null;
+                syncControlsFromState();
+            }
+            instance = { id: nextLayerInstanceId(method), method };
+            state.activeLayers.push(instance);
+            if (method === 'solar_return') initializeSolarDefaultsFromNatal();
         }
-        if (method === 'solar_return' && wasInactive) {
-            initializeSolarDefaultsFromNatal();
-        }
-        if (wasInactive) {
-            state.activeLayers = LAYER_ORDER.filter((item) => item === method || state.activeLayers.includes(item));
-        }
-        state.selectedRightLayer = method;
+        state.selectedRightLayerId = instance.id;
         normalizeActiveLayers();
         renderRightLayerTabs();
         scheduleRightPanelRender();
@@ -1054,10 +1101,28 @@
         delete state.layers?.solar_return;
     }
 
-    async function deactivateLayer(method) {
+    // Снять весь метод (используется чекбоксами слоёв слева) — удаляет все его инстансы.
+    async function deactivateMethod(method) {
         if (!LAYER_ORDER.includes(method)) return;
         closeLayerPopover(method);
-        state.activeLayers = state.activeLayers.filter((item) => item !== method);
+        instancesOfMethod(method).forEach((l) => { delete state.layers?.[l.id]; });
+        state.activeLayers = state.activeLayers.filter((l) => l.method !== method);
+        normalizeActiveLayers();
+        renderRightLayerTabs();
+        scheduleRightPanelRender();
+        schedulePersist();
+        await loadActiveLayers();
+    }
+
+    // Удалить один инстанс слоя по id (кнопка «−» на вкладке слоя).
+    async function removeLayerInstance(id) {
+        const inst = findLayerInstance(id);
+        if (!inst) return;
+        if (!isMultiInstanceMethod(inst.method) && instancesOfMethod(inst.method).length <= 1) {
+            closeLayerPopover(inst.method);
+        }
+        delete state.layers?.[id];
+        state.activeLayers = state.activeLayers.filter((l) => l.id !== id);
         normalizeActiveLayers();
         renderRightLayerTabs();
         scheduleRightPanelRender();
@@ -1218,7 +1283,7 @@
     }
 
     function isSynastryMomentActive() {
-        return state.selectedRightLayer === 'synastry_partner';
+        return selectedRightMethod() === 'synastry_partner';
     }
 
     function getDisplayedMomentDateTime() {
@@ -1370,11 +1435,12 @@
 
     async function ensureSynastryLayerActive(options = {}) {
         if (!hasUsableSynastryPartner()) return;
-        if (!state.activeLayers.includes('synastry_partner')) {
+        const existing = instancesOfMethod('synastry_partner')[0];
+        if (!existing) {
             await activateLayer('synastry_partner', { openConfig: false });
             return;
         }
-        state.selectedRightLayer = 'synastry_partner';
+        state.selectedRightLayerId = existing.id;
         normalizeActiveLayers();
         renderRightLayerTabs();
         scheduleRightPanelRender();
@@ -1483,7 +1549,7 @@
         if (refs.showStationaryToggle) refs.showStationaryToggle.checked = state.pageSettings.showStationary !== false;
         if (refs.forecastNewDirectionTypeSelect) refs.forecastNewDirectionTypeSelect.value = normalizeDirectionType(state.directionType);
         refs.layerToggles.forEach((input) => {
-            input.checked = state.activeLayers.includes(input.dataset.layerToggle);
+            input.checked = hasActiveMethod(input.dataset.layerToggle);
         });
         syncSolarInputs();
         syncMomentCardLayout();
@@ -1518,7 +1584,7 @@
     function syncMomentCardLayout() {
         const card = refs.forecastNewMomentCard;
         if (!card) return;
-        const isSolar = state.selectedRightLayer === 'solar_return';
+        const isSolar = selectedRightMethod() === 'solar_return';
         card.querySelector('[data-moment-transit]')?.classList.toggle('hidden', isSolar);
         card.querySelector('[data-moment-solar]')?.classList.toggle('hidden', !isSolar);
     }
@@ -1531,7 +1597,7 @@
         syncSolarInputs();
         renderSolarYearStepper();
         schedulePersist();
-        if (state.activeLayers.includes('solar_return')) {
+        if (hasActiveMethod('solar_return')) {
             await loadActiveLayers({ lightweight: true });
         }
     }
@@ -1555,7 +1621,7 @@
         delete state.layers?.solar_return;
         sessionStorage.removeItem(LAYER_CACHE_PREFIX + cacheKey);
         schedulePersist();
-        if (state.activeLayers.includes('solar_return')) {
+        if (hasActiveMethod('solar_return')) {
             void loadActiveLayers({ lightweight: false });
         }
     }
@@ -1563,7 +1629,7 @@
     function clearSolarLocation() {
         state.solarLocation = null;
         syncSolarInputs();
-        if (state.activeLayers.includes('solar_return')) {
+        if (hasActiveMethod('solar_return')) {
             delete state.layers?.solar_return;
             void loadActiveLayers({ lightweight: false });
         }
@@ -1719,7 +1785,7 @@
     }
 
     function buildPrognosticMomentSummary() {
-        const method = state.selectedRightLayer;
+        const method = selectedRightMethod();
 
         if (method === 'solar_return') {
             // Always use state.solarYear (user's selection), not the stale API response year
@@ -2419,7 +2485,7 @@
         const rawViewModel = window.PrognosticLayerNormalizer.buildViewModel(
             state.natalWheelData,
             state.layers || {},
-            { activeMethods: state.activeLayers },
+            { activeInstances: state.activeLayers },
         );
         state.viewModel = filterViewModelForSettings(rawViewModel);
     }
@@ -2441,8 +2507,8 @@
             filterChartDataForSidePanel(state.natalWheelData, { scope: 'natal' })
         );
 
-        const method = state.selectedRightLayer;
-        const layer = state.viewModel?.activePrognosticLayers?.find((item) => item.method === method);
+        const layer = state.viewModel?.activePrognosticLayers?.find((item) => item.id === state.selectedRightLayerId)
+            || state.viewModel?.activePrognosticLayers?.find((item) => item.method === selectedRightMethod());
         if (layer) {
             updateRendererMatrixSensitiveData(state.prognosticRenderer, filterChartDataForSidePanel({
                 planets: layer.bodies || [],
@@ -3039,28 +3105,29 @@
     async function loadActiveLayers(options = {}) {
         const seq = ++state.requestSeq;
         state.pendingRequestToken = seq;
-        const activeMethods = [...state.activeLayers];
+        const activeInstances = [...state.activeLayers];
+        const activeIds = activeInstances.map((l) => l.id);
         // Synastry can't be computed until a partner is chosen. Toggling it on opens the
         // partner popover (see the layer toggle handler); skip loading the layer until a
         // partner exists so one un-configured layer can't throw and tear down the layers
         // that did load (transit/progression/solar).
-        const methodsToLoad = activeMethods.filter((method) =>
-            method !== 'synastry_partner' || hasUsableSynastryPartner());
+        const instancesToLoad = activeInstances.filter((inst) =>
+            inst.method !== 'synastry_partner' || hasUsableSynastryPartner());
         const nextLayers = {};
         let hasRenderedPartial = false;
-        const hasCompletePreviousLayers = methodsToLoad.length > 0
-            && methodsToLoad.every((method) => state.layers?.[method]);
+        const hasCompletePreviousLayers = instancesToLoad.length > 0
+            && instancesToLoad.every((inst) => state.layers?.[inst.id]);
         if (options.showLoader) showLoader();
         if (options.lightweight) setLightweightLoading(true);
-        state.layers = Object.fromEntries(activeMethods
-            .filter((method) => state.layers?.[method])
-            .map((method) => [method, state.layers[method]]));
+        state.layers = Object.fromEntries(activeIds
+            .filter((id) => state.layers?.[id])
+            .map((id) => [id, state.layers[id]]));
         renderRightLayerTabs();
         try {
-            const results = await Promise.allSettled(methodsToLoad.map(async (method) => {
-                const data = await fetchLayer(method, { seq });
+            const results = await Promise.allSettled(instancesToLoad.map(async (inst) => {
+                const data = await fetchLayer(inst, { seq });
                 if (seq !== state.requestSeq) return null;
-                nextLayers[method] = data;
+                nextLayers[inst.id] = data;
                 if (!hasCompletePreviousLayers) {
                     state.layers = { ...nextLayers };
                     renderWheel();
@@ -3077,7 +3144,7 @@
                 throw failures[0].reason;
             }
             state.layers = nextLayers;
-            state.lastCalculatedTransitDateTime = activeMethods.includes('transit') ? state.selectedDateTime : state.lastCalculatedTransitDateTime;
+            state.lastCalculatedTransitDateTime = activeInstances.some((l) => l.method === 'transit') ? state.selectedDateTime : state.lastCalculatedTransitDateTime;
             state.lastCalculatedPrognosticDate = splitTargetDatetime(state.selectedDateTime)[0];
             if (!hasRenderedPartial || hasCompletePreviousLayers) renderWheel();
             renderRightLayerTabs();
@@ -3141,12 +3208,15 @@
         ].join('|');
     }
 
-    async function fetchLayer(method, options = {}) {
+    async function fetchLayer(layer, options = {}) {
+        // layer — инстанс { id, method } либо строка-метод (для standalone-вызовов).
+        const method = typeof layer === 'string' ? layer : layer.method;
+        const layerId = typeof layer === 'string' ? layer : layer.id;
         const targetDateTime = options.targetDateTime || state.selectedDateTime;
         const targetTimezone = options.timezone || state.timezone;
         const targetLocation = options.location || state.location || {};
         const [date, time] = splitTargetDatetime(targetDateTime);
-        const key = buildLayerCacheKey(method, date, {
+        const key = buildLayerCacheKey(layer, date, {
             selectedDateTime: targetDateTime,
             timezone: targetTimezone,
             location: targetLocation,
@@ -3160,7 +3230,7 @@
         }
         if (state.inFlight[key]) return state.inFlight[key];
         if (!options.prefetch) {
-            abortInFlightLayerMethod(method, key);
+            abortInFlightLayerInstance(layerId, key);
         }
 
         const controller = new AbortController();
@@ -3231,26 +3301,26 @@
         }).finally(() => {
             delete state.inFlight[key];
             delete state.inFlightByKey[key];
-            if (state.inFlightByMethod[method]?.key === key) {
-                delete state.inFlightByMethod[method];
+            if (state.inFlightById[layerId]?.key === key) {
+                delete state.inFlightById[layerId];
             }
         });
 
         state.inFlight[key] = request;
         state.inFlightByKey[key] = controller;
         if (!options.prefetch) {
-            state.inFlightByMethod[method] = { key, controller };
+            state.inFlightById[layerId] = { key, controller };
         }
         return request;
     }
 
-    function abortInFlightLayerMethod(method, nextKey) {
-        const inFlight = state.inFlightByMethod[method];
+    function abortInFlightLayerInstance(layerId, nextKey) {
+        const inFlight = state.inFlightById[layerId];
         if (!inFlight || inFlight.key === nextKey) return;
         inFlight.controller?.abort?.();
         delete state.inFlight[inFlight.key];
         delete state.inFlightByKey[inFlight.key];
-        delete state.inFlightByMethod[method];
+        delete state.inFlightById[layerId];
     }
 
     function abortAllInFlightLayerRequests() {
@@ -3259,7 +3329,7 @@
         });
         state.inFlight = {};
         state.inFlightByKey = {};
-        state.inFlightByMethod = {};
+        state.inFlightById = {};
     }
 
     function isAbortError(error) {
@@ -3277,8 +3347,8 @@
     async function prefetchAdjacentLayers() {
         const nextDateTime = getAdjacentPrefetchDateTime();
         if (!nextDateTime) return;
-        const activeMethods = [...state.activeLayers];
-        await Promise.allSettled(activeMethods.map((method) => fetchLayer(method, {
+        const activeInstances = [...state.activeLayers];
+        await Promise.allSettled(activeInstances.map((inst) => fetchLayer(inst, {
             targetDateTime: nextDateTime,
             timezone: state.timezone,
             location: state.location,
@@ -3426,7 +3496,7 @@
         const rawViewModel = window.PrognosticLayerNormalizer.buildViewModel(
             state.natalWheelData,
             state.layers || {},
-            { activeMethods: state.activeLayers },
+            { activeInstances: state.activeLayers },
         );
         const viewModel = filterViewModelForSettings(rawViewModel);
         state.viewModel = viewModel;
@@ -3532,10 +3602,18 @@
     }
 
     function resultLayers() {
-        const layers = state.viewModel?.activePrognosticLayers || [];
-        return LAYER_ORDER
-            .map((method) => layers.find((layer) => layer.method === method))
-            .filter(Boolean);
+        // activePrognosticLayers уже отсортирован buildViewModel по порядку инстансов;
+        // каждый инстанс (включая дубли одного метода) попадает в результат отдельной строкой.
+        return [...(state.viewModel?.activePrognosticLayers || [])];
+    }
+
+    // Подпись слоя с порядковым номером при дублях метода («Транзит 2»).
+    function resultLayerLabel(layer, layers) {
+        const base = layerLabel(layer.method);
+        const sameMethod = layers.filter((l) => l.method === layer.method);
+        if (sameMethod.length <= 1) return base;
+        const ordinal = sameMethod.indexOf(layer) + 1;
+        return `${base} ${ordinal}`;
     }
 
     function renderResultHead(titleKey, subtitleKey, count) {
@@ -3569,11 +3647,11 @@
                 </thead>
                 <tbody>
                     ${layers.map((layer) => `
-                        <tr data-result-layer="${escapeHtml(layer.method)}">
+                        <tr data-result-layer="${escapeHtml(layer.id || layer.method)}">
                             <td>
                                 <span class="forecast-new-result-layer-name">
                                     <span class="forecast-new-result-layer-dot"></span>
-                                    ${escapeHtml(layerLabel(layer.method))}
+                                    ${escapeHtml(resultLayerLabel(layer, layers))}
                                 </span>
                             </td>
                             <td>${escapeHtml(buildResultLayerMeta(layer.method, layer)) || '—'}</td>
@@ -3587,8 +3665,11 @@
     }
 
     function renderResultAspectsView() {
-        const aspects = resultLayers().flatMap((layer) => (layer.aspects || []).map((aspect) => ({
+        const allLayers = resultLayers();
+        const aspects = allLayers.flatMap((layer) => (layer.aspects || []).map((aspect) => ({
             layerMethod: layer.method,
+            layerId: layer.id || layer.method,
+            layerLabelText: resultLayerLabel(layer, allLayers),
             aspect: state.prognosticRenderer?.normalizeAspectForDisplay
                 ? state.prognosticRenderer.normalizeAspectForDisplay(aspect)
                 : aspect,
@@ -3615,13 +3696,13 @@
                     </tr>
                 </thead>
                 <tbody>
-                    ${sorted.map(({ layerMethod, aspect }) => {
+                    ${sorted.map(({ layerId, layerLabelText, aspect }) => {
                         const aspectKey = state.prognosticRenderer?.getAspectKey?.(aspect) || '';
                         const phase = state.prognosticRenderer?.getApplyingSeparatingShortLabel?.(aspect) || '';
                         const orb = Number(aspect?.orb);
                         return `
-                            <tr data-result-layer="${escapeHtml(layerMethod)}" data-result-aspect-key="${escapeHtml(aspectKey)}">
-                                <td>${escapeHtml(layerLabel(layerMethod))}</td>
+                            <tr data-result-layer="${escapeHtml(layerId)}" data-result-aspect-key="${escapeHtml(aspectKey)}">
+                                <td>${escapeHtml(layerLabelText)}</td>
                                 <td>${state.prognosticRenderer?.renderAspectPairCell?.(aspect) || escapeHtml(formatAspectText(aspect))}</td>
                                 <td>${phase ? escapeHtml(phase) : '—'}</td>
                                 <td class="mono">${Number.isFinite(orb) ? `${orb.toFixed(2)}°` : '—'}</td>
@@ -3919,21 +4000,36 @@
             return;
         }
         normalizeActiveLayers();
-        const activeTabs = state.activeLayers.map((method) => `
-            <button type="button" class="forecast-new-right-layer-tab ${method === state.selectedRightLayer ? 'active' : ''}" data-right-layer="${method}">
-                <span class="forecast-new-right-layer-label">${layerLabel(method)}</span>
-                <span type="button" class="forecast-new-right-layer-remove" data-remove-layer="${method}" aria-label="Убрать слой ${escapeHtml(layerLabel(method))}" title="Убрать слой">−</span>
-            </button>
-        `).join('');
-        const layerButtons = LAYER_ORDER.map((method) => {
-            const active = state.activeLayers.includes(method);
+        // Порядковый номер инстанса в рамках метода — для подписи «Транзит 2» при дублях.
+        const methodTotals = {};
+        state.activeLayers.forEach((l) => { methodTotals[l.method] = (methodTotals[l.method] || 0) + 1; });
+        const methodSeen = {};
+        const activeTabs = state.activeLayers.map((inst) => {
+            methodSeen[inst.method] = (methodSeen[inst.method] || 0) + 1;
+            const ordinal = methodSeen[inst.method];
+            const base = layerLabel(inst.method);
+            const label = methodTotals[inst.method] > 1 ? `${base} ${ordinal}` : base;
+            const isActive = inst.id === state.selectedRightLayerId;
             return `
-                <button type="button" class="forecast-new-add-layer-item" data-add-layer-method="${method}" ${active ? 'disabled' : ''}>
-                    ${active ? '✓ ' : '+ '}${layerLabel(method)}
+            <button type="button" class="forecast-new-right-layer-tab ${isActive ? 'active' : ''}" data-right-layer="${escapeHtml(inst.id)}">
+                <span class="forecast-new-right-layer-label">${escapeHtml(label)}</span>
+                <span type="button" class="forecast-new-right-layer-remove" data-remove-layer="${escapeHtml(inst.id)}" aria-label="Убрать слой ${escapeHtml(label)}" title="Убрать слой">−</span>
+            </button>
+        `;
+        }).join('');
+        // Single-instance методы (соляр/синастрия) скрываются из меню, когда уже активны;
+        // multi-instance (транзит/прогрессия/дирекция) можно добавлять повторно.
+        const layerButtons = LAYER_ORDER.map((method) => {
+            const active = hasActiveMethod(method);
+            const disabled = active && !isMultiInstanceMethod(method);
+            return `
+                <button type="button" class="forecast-new-add-layer-item" data-add-layer-method="${method}" ${disabled ? 'disabled' : ''}>
+                    ${disabled ? '✓ ' : '+ '}${layerLabel(method)}
                 </button>
             `;
         }).join('');
-        const allLayersActive = state.activeLayers.length >= LAYER_ORDER.length;
+        // Меню добавления показываем всегда: мульти-методы можно добавлять повторно.
+        const allLayersActive = false;
         const compact = state.activeLayers.length > 0;
         const addLayerLabel = t('page.chart.actions.addLayer');
         const addLayerMarkup = allLayersActive ? '' : `
@@ -3955,8 +4051,7 @@
         if (!refs.forecastNewCompositeHeaderBtn) return;
         // Discoverable whenever a synastry partner layer is active — not only when
         // it's the *selected* layer (P5). Users no longer have to hunt for it.
-        const hasSynastry = state.selectedRightLayer === 'synastry_partner'
-            || (Array.isArray(state.activeLayers) && state.activeLayers.includes('synastry_partner'));
+        const hasSynastry = hasActiveMethod('synastry_partner');
         const visible = state.wheelView !== 'single' && hasSynastry;
         refs.forecastNewCompositeHeaderBtn.classList.toggle('hidden', !visible);
         refs.forecastNewCompositeHeaderBtn.disabled = !visible;
@@ -3981,7 +4076,7 @@
             renderSingleNatalRightPanel();
             return;
         }
-        const method = state.selectedRightLayer;
+        const method = selectedRightMethod();
         if (!method) {
             refs.prognosticPanelTitle.textContent = 'Слой не выбран';
             refs.prognosticPanelMeta.textContent = 'Добавьте слой для расчёта';
@@ -3993,7 +4088,8 @@
             renderResultView();
             return;
         }
-        const layer = state.viewModel?.activePrognosticLayers?.find((item) => item.method === method);
+        const layer = state.viewModel?.activePrognosticLayers?.find((item) => item.id === state.selectedRightLayerId)
+            || state.viewModel?.activePrognosticLayers?.find((item) => item.method === method);
         refs.prognosticPanelTitle.textContent = layerLabel(method);
         refs.prognosticPanelMeta.textContent = buildPrognosticMomentSummary();
         syncMomentCardLayout();
@@ -4203,7 +4299,7 @@
             const row = event.target.closest('tr[data-planet]');
             if (!row) return;
             const planetName = row.dataset.planet;
-            const method = scope === 'natal' ? 'natal' : state.selectedRightLayer;
+            const method = scope === 'natal' ? 'natal' : selectedRightMethod();
             hoverPlanetRow(planetName, method, row, true);
         });
 
@@ -4223,7 +4319,7 @@
             if (!row) return;
             event.stopPropagation();
             const planetName = row.dataset.planet;
-            const method = scope === 'natal' ? 'natal' : state.selectedRightLayer;
+            const method = scope === 'natal' ? 'natal' : selectedRightMethod();
             togglePlanetSelection(planetName, method, row, scope);
         });
     }
@@ -4237,7 +4333,7 @@
             if (!row) return;
             const houseNumber = Number(String(row.id).replace('row-house-', ''));
             if (!Number.isFinite(houseNumber)) return;
-            const method = scope === 'natal' ? 'natal' : state.selectedRightLayer;
+            const method = scope === 'natal' ? 'natal' : selectedRightMethod();
             hoverHouseRow(houseNumber, method, row);
         });
 
@@ -6006,10 +6102,26 @@
         setSelectedDateTime(restored.targetDatetime || state.selectedDateTime);
         state.timezone = normalizeTimezoneValue(restored.timezone, restored.location?.name) || state.timezone;
         state.location = restored.location || state.location;
-        state.activeLayers = restored.activeLayers || state.activeLayers;
+        if (Array.isArray(restored.activeLayers) && restored.activeLayers.length) {
+            state.activeLayers = restored.activeLayers.map((l) => ({ id: l.id, method: l.method }));
+            // Сдвинуть генератор id, чтобы новые инстансы не коллизировали с восстановленными.
+            state.activeLayers.forEach((l) => {
+                const m = /-(\d+)$/.exec(l.id || '');
+                if (m) _layerInstanceSeq = Math.max(_layerInstanceSeq, Number(m[1]));
+            });
+        }
         state.enabledLayers = state.activeLayers;
-        state.selectedRightLayer = restored.selectedRightLayer || state.selectedRightLayer;
-        state.activeRightMethodTab = state.selectedRightLayer;
+        // selectedRightLayerId предпочтительно; для старых снимков — первый инстанс метода.
+        const restoredSelId = restored.selectedRightLayerId
+            || (restored.selectedRightLayer
+                ? state.activeLayers.find((l) => l.method === restored.selectedRightLayer)?.id
+                : '');
+        if (restoredSelId && state.activeLayers.some((l) => l.id === restoredSelId)) {
+            state.selectedRightLayerId = restoredSelId;
+        } else if (!selectedLayerInstance()) {
+            state.selectedRightLayerId = state.activeLayers[0]?.id || '';
+        }
+        state.activeRightMethodTab = selectedRightMethod();
         state.directionType = normalizeDirectionType(restored.directionType || state.directionType);
         state.stepMode = restored.stepMode || state.stepMode;
         state.customStep = normalizeCustomStep(restored.customStep || state.customStep);
@@ -6237,7 +6349,7 @@
             state.wheelView = 'single';
             state.activeLayers = [];
             state.enabledLayers = [];
-            state.selectedRightLayer = '';
+            state.selectedRightLayerId = '';
             state.activeRightMethodTab = '';
             window.history.replaceState({}, '', window.location.pathname);
         }
@@ -6252,10 +6364,13 @@
         }
         const layer = params.get('layer');
         if (LAYER_ORDER.includes(layer)) {
-            state.activeLayers = LAYER_ORDER.filter((method) => method === 'transit' || method === layer);
+            // Транзит всегда присутствует; целевой слой добавляется (или совпадает с транзитом).
+            const methods = layer === 'transit' ? ['transit'] : ['transit', layer];
+            state.activeLayers = methods.map((method) => ({ id: nextLayerInstanceId(method), method }));
             state.enabledLayers = state.activeLayers;
-            state.selectedRightLayer = layer;
-            state.activeRightMethodTab = layer;
+            const sel = state.activeLayers.find((l) => l.method === layer) || state.activeLayers[0];
+            state.selectedRightLayerId = sel?.id || '';
+            state.activeRightMethodTab = sel?.method || '';
         }
         // Synastry deep-link (from clients / client-profile / related-people): preselect
         // the partner so the synastry_partner layer loads on cold open.
@@ -6399,7 +6514,8 @@
                 timezone: state.timezone,
                 location: state.location,
                 activeLayers: state.activeLayers,
-                selectedRightLayer: state.selectedRightLayer,
+                selectedRightLayerId: state.selectedRightLayerId,
+                selectedRightLayer: selectedRightMethod(),
                 directionType: state.directionType,
                 stepMode: state.stepMode,
                 customStep: state.customStep,
@@ -6535,7 +6651,11 @@
         return window.ForecastSourceUtils.normalizeTimezoneValue(value, placeName, window.Timezones);
     }
 
-    function buildLayerCacheKey(method, date, context = {}) {
+    function buildLayerCacheKey(layer, date, context = {}) {
+        // layer — инстанс { id, method } либо строка-метод. layerId различает
+        // несколько инстансов одного метода (два транзита → разные ключи кэша).
+        const method = typeof layer === 'string' ? layer : layer?.method;
+        const layerId = typeof layer === 'string' ? layer : (layer?.id || layer?.method);
         const selectedDateTime = context.selectedDateTime || state.selectedDateTime;
         const timezone = context.timezone || state.timezone;
         const location = context.location || state.location || {};
@@ -6545,7 +6665,7 @@
         const natalToken = natalCacheToken();
         if (method === 'transit') {
             return [
-                method,
+                layerId,
                 natalToken,
                 selectedDateTime,
                 timezone,
@@ -6555,24 +6675,24 @@
             ].join('|');
         }
         if (method === 'direction') {
-            return [method, natalToken, date, directionType].join('|');
+            return [layerId, natalToken, date, directionType].join('|');
         }
         if (method === 'progression') {
-            return [method, natalToken, selectedDateTime, timezone].join('|');
+            return [layerId, natalToken, selectedDateTime, timezone].join('|');
         }
         if (method === 'solar_return') {
-            return [method, natalToken, state.solarYear,
+            return [layerId, natalToken, state.solarYear,
                 state.solarLocation?.latitude ?? '', state.solarLocation?.longitude ?? ''].join('|');
         }
         if (method === 'synastry_partner') {
             if (state.synastryMode === 'manual') {
                 const m = state.synastryManual || {};
-                return [method, natalToken, 'manual', m.date || '', m.time || '', m.timezone || '',
+                return [layerId, natalToken, 'manual', m.date || '', m.time || '', m.timezone || '',
                     m.latitude ?? '', m.longitude ?? '', m.place || ''].join('|');
             }
-            return [method, natalToken, state.synastryPartnerId || ''].join('|');
+            return [layerId, natalToken, state.synastryPartnerId || ''].join('|');
         }
-        return [method, natalToken, date].join('|');
+        return [layerId, natalToken, date].join('|');
     }
 
     function getTimeStepperSegmentValues(value) {
