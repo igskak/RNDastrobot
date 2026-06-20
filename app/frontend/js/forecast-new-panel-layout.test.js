@@ -230,6 +230,7 @@ ok(!L.BLOCK_TARGET_MAP['now:profections'], 'no now:profections pairing');
   ok(L.BLOCK_TARGET_MAP['natal:' + view], 'natal:' + view + ' is DOM-realizable');
   ok(L.BLOCK_TARGET_MAP['natal:' + view].containerId === expectedContainer, 'natal:' + view + ' -> ' + expectedContainer);
   ok(!L.BLOCK_TARGET_MAP['prog:' + view], 'no prog:' + view + ' pairing (natal-only)');
+  ok(L.CORNER_RECOMMENDED_VIEWS.includes(view), view + ' offered in corner widget dropdown');
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);

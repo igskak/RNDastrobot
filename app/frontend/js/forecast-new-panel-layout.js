@@ -65,7 +65,7 @@
     // corner, never both — corners share the per-mode block pool with panels).
     // Each corner holds 0 or 1 block. Order = visual reading order.
     var CORNER_KEYS = ['tl', 'tr', 'bl', 'br'];
-    var CORNER_RECOMMENDED_VIEWS = ['balances', 'configs', 'stelliums', 'jones', 'profections', 'dominants', 'lunar', 'hours'];
+    var CORNER_RECOMMENDED_VIEWS = ['balances', 'configs', 'stelliums', 'jones', 'profections', 'antiscia', 'asteroids', 'dominants', 'fixstars', 'lunar', 'hours'];
     var CORNER_COMPACT_VIEWS = ['planets', 'houses', 'aspects', 'lunar', 'hours'];
     var CORNER_DISCOURAGED_VIEWS = ['grid', 'dispositors'];
 
