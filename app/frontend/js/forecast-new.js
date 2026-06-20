@@ -4924,7 +4924,7 @@
         positions: ['grid'],
         aspects: ['aspects', 'configs', 'stelliums'],
         analysis: ['balances', 'jones', 'dispositors'],
-        advanced: ['profections', 'antiscia', 'asteroids', 'dominants', 'fixstars'],
+        advanced: ['profections', 'extraangles', 'antiscia', 'asteroids', 'dominants', 'fixstars'],
         now: ['lunar', 'hours'],
     };
 
