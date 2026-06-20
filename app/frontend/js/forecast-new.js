@@ -138,6 +138,7 @@
             showAspectText: false,
             showWheelStationary: false,
             showWheelDegree: false,
+            showDeclinationAspects: false,
             angleAscDscBold: true,
             angleMcIcBold: true,
             houseNumberStyle: 'arabic',
@@ -385,7 +386,7 @@
             'aspectPhaseApplyingToggle', 'aspectPhaseSeparatingToggle',
             'houseNumberStyleSelect', 'houseLabelsOutsideToggle',
             'showTransitCuspsToggle', 'showProgressionCuspsToggle', 'showDirectionCuspsToggle',
-            'showWheelStationaryToggle', 'showWheelDegreeToggle',
+            'showWheelStationaryToggle', 'showWheelDegreeToggle', 'showDeclinationAspectsToggle',
             'angleAscDscBoldToggle', 'angleMcIcBoldToggle',
             'showSpeedToggle', 'showStationaryToggle',
             'forecastNewResetLocalBtn',
@@ -885,6 +886,7 @@
             refs.showDirectionCuspsToggle,
             refs.showWheelStationaryToggle,
             refs.showWheelDegreeToggle,
+            refs.showDeclinationAspectsToggle,
             refs.angleAscDscBoldToggle,
             refs.angleMcIcBoldToggle,
             refs.showSpeedToggle,
@@ -1473,6 +1475,7 @@
         if (refs.showDirectionCuspsToggle) refs.showDirectionCuspsToggle.checked = state.pageSettings.showDirectionCusps !== false;
         if (refs.showWheelStationaryToggle) refs.showWheelStationaryToggle.checked = state.pageSettings.showWheelStationary === true;
         if (refs.showWheelDegreeToggle) refs.showWheelDegreeToggle.checked = state.pageSettings.showWheelDegree === true;
+        if (refs.showDeclinationAspectsToggle) refs.showDeclinationAspectsToggle.checked = state.pageSettings.showDeclinationAspects === true;
         if (refs.angleAscDscBoldToggle) refs.angleAscDscBoldToggle.checked = state.pageSettings.angleAscDscBold !== false;
         if (refs.angleMcIcBoldToggle) refs.angleMcIcBoldToggle.checked = state.pageSettings.angleMcIcBold !== false;
         if (refs.showSpeedToggle) refs.showSpeedToggle.checked = state.pageSettings.showSpeed !== false;
@@ -2782,6 +2785,7 @@
             showAspectText: state.pageSettings.showAspectText === true,
             showWheelStationary: refs.showWheelStationaryToggle?.checked === true,
             showWheelDegree: refs.showWheelDegreeToggle?.checked === true,
+            showDeclinationAspects: refs.showDeclinationAspectsToggle?.checked === true,
             angleAscDscBold: state.pageSettings.angleAscDscBold !== false,
             angleMcIcBold: state.pageSettings.angleMcIcBold !== false,
             houseNumberStyle: state.pageSettings.houseNumberStyle === 'roman' ? 'roman' : 'arabic',
@@ -2820,6 +2824,7 @@
                 'showDirectionCusps',
                 'showWheelStationary',
                 'showWheelDegree',
+                'showDeclinationAspects',
                 'angleAscDscBold',
                 'angleMcIcBold',
             ]);
@@ -3442,6 +3447,8 @@
             showPlanetStationary: state.pageSettings.showWheelStationary,
             showPlanetDegree: state.pageSettings.showWheelDegree,
             showAspectText: state.pageSettings.showAspectText === true,
+            showDeclinationAspects: state.pageSettings.showDeclinationAspects === true,
+            declinationAspects: state.natalWheelData?.declination_aspects || [],
             angleAscDscBold: state.pageSettings.angleAscDscBold,
             angleMcIcBold: state.pageSettings.angleMcIcBold,
             // D6: «Одно колесо» = только натал в виде одиночной карты (внешний слот
@@ -5820,6 +5827,7 @@
             showAspectText: restored.pageSettings?.showAspectText === true,
             showWheelStationary: restored.pageSettings?.showWheelStationary === true,
             showWheelDegree: restored.pageSettings?.showWheelDegree === true,
+            showDeclinationAspects: restored.pageSettings?.showDeclinationAspects === true,
             angleAscDscBold: restored.pageSettings?.angleAscDscBold !== false,
             angleMcIcBold: restored.pageSettings?.angleMcIcBold !== false,
         };

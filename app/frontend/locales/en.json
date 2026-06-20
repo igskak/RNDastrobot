@@ -989,7 +989,8 @@
         "showPlanetDegree": "Show planet degree on wheel",
         "showPlanetStationary": "Show stationary on wheel",
         "wheelOptions": "Wheel options",
-        "tableOptions": "Table options"
+        "tableOptions": "Table options",
+        "showDeclinationAspects": "Parallels (declination)"
       },
       "table": {
         "aspects": {

@@ -991,7 +991,8 @@
         "showPlanetDegree": "Показувати градус планети на колесі",
         "showPlanetStationary": "Показувати стаціонарність на колесі",
         "wheelOptions": "Параметри колеса",
-        "tableOptions": "Параметри таблиць"
+        "tableOptions": "Параметри таблиць",
+        "showDeclinationAspects": "Паралелі (схилення)"
       },
       "table": {
         "aspects": {
