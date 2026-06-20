@@ -3793,29 +3793,72 @@
         </section>`;
     }
 
+    // Build the /composite/calculate request body for the current partner.
+    // DB partner → partner_id; manual partner → inline partner_birth_data (D4).
+    // Returns null when there is no usable partner.
+    function buildCompositeRequest() {
+        if (!state.userId) return null;
+        const houseSystem = state.pageSettings.houseSystem
+            || state.natalData?.birth_data?.house_system || 'P';
+        if (state.synastryMode === 'manual') {
+            const m = state.synastryManual;
+            if (!m || !m.date || !m.time || !m.timezone) return null;
+            return {
+                user_id: state.userId,
+                house_system: houseSystem,
+                partner_birth_data: {
+                    name: m.name || null,
+                    date: m.date,
+                    time: m.time,
+                    timezone: m.timezone,
+                    place: m.place || null,
+                    latitude: m.latitude != null ? m.latitude : null,
+                    longitude: m.longitude != null ? m.longitude : null,
+                },
+            };
+        }
+        if (!state.synastryPartnerId) return null;
+        return {
+            user_id: state.userId,
+            partner_id: state.synastryPartnerId,
+            house_system: houseSystem,
+        };
+    }
+
+    // Client-side memo: re-opening the panel for the same partner shouldn't
+    // recompute (the endpoint now builds charts + may geocode). Keyed by body.
+    let _compositeMemo = { key: null, data: null };
+
+    function renderCompositeData(panel, data) {
+        panel.innerHTML = `
+            <div class="forecast-new-composite">
+                ${compositeSection('page.forecastNew.composite.midpoint', data.midpoint)}
+                ${compositeSection('page.forecastNew.composite.davison', data.davison, data.davison_unavailable_reason)}
+            </div>`;
+    }
+
     async function renderCompositePanel(options = {}) {
         const panel = options.target === 'inline'
             ? (refs.forecastNewCompositeInlinePanel || refs.forecastNewCompositePanel)
             : refs.forecastNewCompositePanel;
         if (!panel) return;
-        if (!state.userId || !state.synastryPartnerId) {
+        const body = buildCompositeRequest();
+        if (!body) {
             panel.classList.remove('hidden');
             panel.innerHTML = `<p class="forecast-new-composite-empty">${escapeHtml(t('page.forecastNew.composite.noPartner') || '—')}</p>`;
             return;
         }
         panel.classList.remove('hidden');
+        const key = JSON.stringify(body);
+        if (_compositeMemo.key === key && _compositeMemo.data) {
+            renderCompositeData(panel, _compositeMemo.data);
+            return;
+        }
         panel.innerHTML = `<p class="forecast-new-composite-loading">${escapeHtml(t('common.loading') || '…')}</p>`;
         try {
-            const data = await apiPost('/composite/calculate', {
-                user_id: state.userId,
-                partner_id: state.synastryPartnerId,
-                house_system: state.pageSettings.houseSystem || state.natalData?.birth_data?.house_system || 'P',
-            });
-            panel.innerHTML = `
-                <div class="forecast-new-composite">
-                    ${compositeSection('page.forecastNew.composite.midpoint', data.midpoint)}
-                    ${compositeSection('page.forecastNew.composite.davison', data.davison, data.davison_unavailable_reason)}
-                </div>`;
+            const data = await apiPost('/composite/calculate', body);
+            _compositeMemo = { key, data };
+            renderCompositeData(panel, data);
         } catch (error) {
             panel.innerHTML = `<p class="forecast-new-composite-error">${escapeHtml(error.message || t('common.error') || 'Ошибка')}</p>`;
         }
