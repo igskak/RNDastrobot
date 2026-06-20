@@ -77,3 +77,4 @@ Non-gating for now (track as TODO):
 - Split feature work into small PRs: contract -> data -> logic -> UI -> tests.
 - Run mandatory verification before asking for review.
 - Run `codex review` (or `/review` in app) as a separate quality gate before merge.
+- When asked to push committed changes, push the same commit to both configured remotes so GitLab (`origin`) and GitHub (`github`) stay current.
