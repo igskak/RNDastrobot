@@ -281,7 +281,8 @@
         "profections": "Profections",
         "antiscia": "Antiscia",
         "asteroids": "Asteroids",
-        "dominants": "Dominants"
+        "dominants": "Dominants",
+        "fixstars": "Stars"
       },
       "view": {
         "single": "Single wheel",
@@ -491,6 +492,10 @@
           "fixed": "Fixed",
           "mutable": "Mutable"
         }
+      },
+      "fixstars": {
+        "empty": "No conjunctions",
+        "conjunctions": "Conjunctions"
       }
     },
     "plan": {

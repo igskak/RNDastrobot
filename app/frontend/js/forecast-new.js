@@ -2874,6 +2874,7 @@
             state.antisciaData = null;
             state.asteroidsData = null;
             state.dominantsData = null;
+            state.fixstarsData = null;
             updateHeaderInfo();
             syncZodiacControlsFromNatal();
             renderStaticNatal();
@@ -4367,6 +4368,31 @@
         if (layoutHasBlock('natal:antiscia')) renderAntisciaBlock();
         if (layoutHasBlock('natal:asteroids')) renderAsteroidsBlock();
         if (layoutHasBlock('natal:dominants')) renderDominantsBlock();
+        if (layoutHasBlock('natal:fixstars')) renderFixstarsBlock();
+    }
+
+    function fixstarsBlockMarkup(data) {
+        const contacts = data && Array.isArray(data.conjunctions) ? data.conjunctions : [];
+        if (contacts.length === 0) {
+            return `<div class="forecast-new-list-empty">${escapeHtml(t('page.forecastNew.fixstars.empty') || '—')}</div>`;
+        }
+        const rows = contacts.map((c) => `
+            <li class="forecast-new-list-row">
+                <span class="forecast-new-list-name">${escapeHtml(planetLabel(c.object))} · ${escapeHtml(c.star)}</span>
+                <span class="forecast-new-list-val">${escapeHtml(c.star_position || '')}</span>
+                <span class="forecast-new-list-val forecast-new-list-val--dim">${escapeHtml(c.nature || '')} · ${escapeHtml(String(c.orb))}°</span>
+            </li>`).join('');
+        return `<div class="forecast-new-list forecast-new-fixstars">
+                <div class="forecast-new-list-subhead">${escapeHtml(t('page.forecastNew.fixstars.conjunctions') || 'Conjunctions')}</div>
+                <ul class="forecast-new-list-body">${rows}</ul>
+            </div>`;
+    }
+
+    function renderFixstarsBlock() {
+        return renderNatalAuxBlock({
+            containerId: 'natalFixstarsView', endpoint: '/fixed-stars',
+            cacheKey: 'fixstarsData', markup: fixstarsBlockMarkup,
+        });
     }
 
     function pointShort(point) {
@@ -4832,7 +4858,7 @@
         positions: ['grid'],
         aspects: ['aspects', 'configs', 'stelliums'],
         analysis: ['balances', 'jones', 'dispositors'],
-        advanced: ['profections', 'antiscia', 'asteroids', 'dominants'],
+        advanced: ['profections', 'antiscia', 'asteroids', 'dominants', 'fixstars'],
         now: ['lunar', 'hours'],
     };
 

@@ -281,7 +281,8 @@
         "profections": "Профекции",
         "antiscia": "Антисы",
         "asteroids": "Астероиды",
-        "dominants": "Доминанты"
+        "dominants": "Доминанты",
+        "fixstars": "Звёзды"
       },
       "view": {
         "single": "Одно колесо",
@@ -491,6 +492,10 @@
           "fixed": "Фиксированный",
           "mutable": "Мутабельный"
         }
+      },
+      "fixstars": {
+        "empty": "Нет соединений",
+        "conjunctions": "Соединения"
       }
     },
     "plan": {

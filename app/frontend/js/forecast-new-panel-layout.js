@@ -30,7 +30,7 @@
     // Granular blocks: the former 'configs' block is split into 'configs'
     // (configuration aspects) + 'stelliums'; the former 'rulers' block is split
     // into 'jones' (Jones cosmogram) + 'dispositors' (dispositor scheme).
-    var VIEW_KEYS = ['planets', 'houses', 'aspects', 'grid', 'configs', 'stelliums', 'balances', 'jones', 'dispositors', 'profections', 'antiscia', 'asteroids', 'dominants'];
+    var VIEW_KEYS = ['planets', 'houses', 'aspects', 'grid', 'configs', 'stelliums', 'balances', 'jones', 'dispositors', 'profections', 'antiscia', 'asteroids', 'dominants', 'fixstars'];
 
     // "Moment now" views: not a property of the natal/prog chart but of the
     // current instant (source 'now'). They are registered as explicit blocks
@@ -53,12 +53,13 @@
         antiscia: 'page.forecastNew.tabs.antiscia',
         asteroids: 'page.forecastNew.tabs.asteroids',
         dominants: 'page.forecastNew.tabs.dominants',
+        fixstars: 'page.forecastNew.tabs.fixstars',
         lunar: 'page.forecastNew.tabs.lunar',
         hours: 'page.forecastNew.tabs.hours',
     };
 
     var SOURCES = ['natal', 'prog'];
-    var NATAL_ONLY_VIEWS = ['profections', 'antiscia', 'asteroids', 'dominants'];
+    var NATAL_ONLY_VIEWS = ['profections', 'antiscia', 'asteroids', 'dominants', 'fixstars'];
 
     // Corner overlay slots (Option C: a block lives in a side panel OR one
     // corner, never both — corners share the per-mode block pool with panels).
