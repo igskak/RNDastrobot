@@ -2864,9 +2864,14 @@ async function submitNewChart() {
             throw new Error(err.detail || t('common.errorGeneric'));
         }
         const chart = await res.json();
+        const chartId = chart.chart_id || chart.user_id;
+        closeNewChartDialog();
+        if (chartId) {
+            await openChart(chartId);
+            return;
+        }
         state.charts = [chart, ...state.charts];
         state.users = getActiveLibraryItems();
-        closeNewChartDialog();
         renderUsers();
         showToast(t('page.clients.newChart.successToast'), 'success');
     } catch (err) {

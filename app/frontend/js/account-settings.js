@@ -61,7 +61,16 @@
         const backLink = document.querySelector('.account-settings-back');
         if (!backLink) return;
         const navigationState = window.AstroAPI?.getNavigationState?.() || {};
-        backLink.href = navigationState.sourceUrl || '/';
+        let referrerUrl = '';
+        try {
+            const referrer = document.referrer ? new URL(document.referrer) : null;
+            if (referrer && referrer.origin === window.location.origin && !referrer.pathname.endsWith('/account-settings.html')) {
+                referrerUrl = `${referrer.pathname}${referrer.search || ''}${referrer.hash || ''}`;
+            }
+        } catch (_error) {
+            referrerUrl = '';
+        }
+        backLink.href = referrerUrl || window.AstroAPI?.getAccountSettingsReturnUrl?.() || navigationState.sourceUrl || '/';
     }
 
     function escapeHtml(value) {

@@ -11,6 +11,7 @@
         ? 'http://localhost:8000/api/v1'
         : '/api/v1';
     const NAVIGATION_STATE_KEY = 'astroNavigationState';
+    const ACCOUNT_SETTINGS_RETURN_URL_KEY = 'accountSettingsReturnUrl';
     let currentAstrologerCache = null;
 
     function getCurrentLocale() {
@@ -818,6 +819,37 @@
         window.sessionStorage.removeItem(NAVIGATION_STATE_KEY);
     }
 
+    function getCurrentReturnUrl() {
+        if (!hasWindow) return '/';
+        return `${window.location.pathname}${window.location.search || ''}${window.location.hash || ''}` || '/';
+    }
+
+    function isAccountSettingsHref(href) {
+        if (!href || href.startsWith('#') || href.startsWith('javascript:')) return false;
+        try {
+            const url = new URL(href, window.location.origin);
+            return url.origin === window.location.origin && url.pathname.endsWith('/account-settings.html');
+        } catch (_error) {
+            return href.includes('account-settings.html');
+        }
+    }
+
+    function saveAccountSettingsReturnUrl(returnUrl = getCurrentReturnUrl()) {
+        if (!hasWindow || !window.sessionStorage) return returnUrl || '/';
+        const normalizedReturnUrl = returnUrl || '/';
+        window.sessionStorage.setItem(ACCOUNT_SETTINGS_RETURN_URL_KEY, normalizedReturnUrl);
+        patchNavigationState({
+            sourceView: 'account-settings-return',
+            sourceUrl: normalizedReturnUrl,
+        });
+        return normalizedReturnUrl;
+    }
+
+    function getAccountSettingsReturnUrl() {
+        if (!hasWindow || !window.sessionStorage) return '';
+        return window.sessionStorage.getItem(ACCOUNT_SETTINGS_RETURN_URL_KEY) || '';
+    }
+
     function buildClientProfileUrl(userId) {
         return `/client/${encodeURIComponent(String(userId || ''))}`;
     }
@@ -928,15 +960,19 @@
             if (!link) return;
             const href = link.getAttribute('href');
             // Только локальные переходы на .html страницы
-            if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('javascript') || link.target === '_blank') return;
-            if (href.includes('account-settings.html')) {
-                patchNavigationState({
-                    sourceView: 'account-settings-return',
-                    sourceUrl: `${window.location.pathname}${window.location.search || ''}`,
-                });
+            if (!href || href.startsWith('#') || href.startsWith('javascript') || link.target === '_blank') return;
+            if (href.startsWith('http')) {
+                try {
+                    if (new URL(href).origin !== window.location.origin) return;
+                } catch (_error) {
+                    return;
+                }
+            }
+            if (isAccountSettingsHref(href)) {
+                saveAccountSettingsReturnUrl();
             }
             showPageLoader();
-        });
+        }, { capture: true });
     }
 
     // Экспорт для использования
@@ -987,6 +1023,8 @@
         saveNavigationState,
         patchNavigationState,
         clearNavigationState,
+        saveAccountSettingsReturnUrl,
+        getAccountSettingsReturnUrl,
         buildClientProfileUrl,
         buildSynastryUrl,
         openForecastForSynastry,
