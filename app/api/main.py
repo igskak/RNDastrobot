@@ -178,11 +178,25 @@ if os.path.exists(FRONTEND_PATH):
 
 
 @app.get("/")
-async def root():
-    """Главная страница - база клиентов"""
-    clients_path = os.path.join(FRONTEND_PATH, "clients.html")
-    if os.path.exists(clients_path):
-        return FileResponse(clients_path)
+async def root(request: Request):
+    """Root entrypoint.
+
+    Anonymous visitors (and crawlers/bots — e.g. payment-provider domain
+    verification) get the public marketing landing page. Signed-in users get
+    their workspace (client base). The cookie presence check only drives which
+    page is served; real authorization is still enforced by the API.
+    """
+    has_session = bool(request.cookies.get("astrobot_session"))
+
+    if has_session:
+        clients_path = os.path.join(FRONTEND_PATH, "clients.html")
+        if os.path.exists(clients_path):
+            return FileResponse(clients_path)
+
+    index_path = os.path.join(FRONTEND_PATH, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+
     return {
         "message": "Astrobot API",
         "version": "1.0.0",
