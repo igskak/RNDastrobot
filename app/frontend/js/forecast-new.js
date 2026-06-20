@@ -249,13 +249,26 @@
     // ── Per-instance конфиг solar_return / synastry_partner (Ship 2) ─────────
     // Глобальные state.solar*/synastry* — это «scratch» редактора ВЫБРАННОГО слоя.
     // Каждый инстанс хранит свой снимок в inst.config; fetch/cacheKey читают его.
+    // transit/progression/direction несут «момент» (дата/время/место[/тип дирекции]);
+    // solar_return и synastry_partner — свой конфиг. Все методы конфигурируемы.
+    function isMomentMethod(method) {
+        return method === 'transit' || method === 'progression' || method === 'direction';
+    }
     function methodHasConfig(method) {
-        return method === 'solar_return' || method === 'synastry_partner';
+        return LAYER_ORDER.includes(method);
     }
     function ensureLayerConfig(inst) {
         if (!inst) return null;
         if (!inst.config) inst.config = {};
         return inst.config;
+    }
+    function momentScratchConfig() {
+        return {
+            datetime: state.selectedDateTime,
+            timezone: state.timezone,
+            location: state.location ? { ...state.location } : null,
+            directionType: state.directionType,
+        };
     }
     function layerConfigOf(layerOrInst) {
         // Принимает инстанс или строку-метод; возвращает конфиг для fetch/cacheKey.
@@ -266,6 +279,7 @@
         const method = typeof layerOrInst === 'string' ? layerOrInst : layerOrInst?.method;
         if (method === 'solar_return') return { year: state.solarYear, location: state.solarLocation };
         if (method === 'synastry_partner') return synastryScratchConfig();
+        if (isMomentMethod(method)) return momentScratchConfig();
         return {};
     }
     // scratch (глобальный state) → inst.config
@@ -275,10 +289,15 @@
         if (inst.method === 'solar_return') {
             cfg.year = state.solarYear;
             cfg.location = state.solarLocation ? { ...state.solarLocation } : null;
-        } else {
+        } else if (inst.method === 'synastry_partner') {
             cfg.mode = state.synastryMode;
             cfg.partnerId = state.synastryPartnerId;
             cfg.manual = state.synastryManual ? { ...state.synastryManual } : null;
+        } else {
+            cfg.datetime = state.selectedDateTime;
+            cfg.timezone = state.timezone;
+            cfg.location = state.location ? { ...state.location } : null;
+            if (inst.method === 'direction') cfg.directionType = state.directionType;
         }
     }
     // inst.config → scratch (+ синк DOM-редакторов)
@@ -289,7 +308,7 @@
             if (Number.isFinite(Number(cfg.year))) state.solarYear = Number(cfg.year);
             state.solarLocation = cfg.location ? { ...cfg.location } : null;
             syncSolarInputs();
-        } else {
+        } else if (inst.method === 'synastry_partner') {
             state.synastryMode = cfg.mode === 'manual' ? 'manual' : 'db';
             state.synastryPartnerId = cfg.partnerId || '';
             state.synastryManual = cfg.manual ? { ...cfg.manual } : null;
@@ -298,6 +317,14 @@
             if (refs.forecastNewSynastryPartnerSelect) {
                 refs.forecastNewSynastryPartnerSelect.value = state.synastryPartnerId;
             }
+        } else {
+            if (cfg.datetime) setSelectedDateTime(cfg.datetime);
+            if (cfg.timezone) state.timezone = cfg.timezone;
+            if (cfg.location) state.location = { ...cfg.location };
+            if (inst.method === 'direction' && cfg.directionType) {
+                state.directionType = normalizeDirectionType(cfg.directionType);
+            }
+            syncControlsFromState();
         }
     }
     // Инвалидировать кэш слоя по id и перезагрузить, если нужно.
@@ -431,6 +458,13 @@
 
         hydrateState();
         applyDeepLinkParams();
+        // Гарантируем, что у каждого слоя есть свой config (момент/конфиг). Несохранённые
+        // слои берут текущий scratch (на холодном старте — единственный транзит = «сейчас»),
+        // затем загружаем config выбранного слоя в редактор.
+        state.activeLayers.forEach((inst) => {
+            if (methodHasConfig(inst.method) && !inst.config) captureScratchToConfig(inst);
+        });
+        applyConfigToScratch(selectedLayerInstance());
         syncLayerControlInputs();
         void populateSynastryPartnerOptions();
         populateTimezoneOptions();
@@ -618,6 +652,8 @@
         refs.forecastNewDirectionTypeSelect?.addEventListener('change', async () => {
             state.directionType = normalizeDirectionType(refs.forecastNewDirectionTypeSelect.value);
             refs.forecastNewDirectionTypeSelect.value = state.directionType;
+            // Тип дирекции относится к выбранному слою дирекции.
+            if (selectedRightMethod() === 'direction') commitSelectedLayerEdit();
             schedulePersist();
             if (hasActiveMethod('direction')) {
                 await loadActiveLayers({ lightweight: true });
@@ -1430,6 +1466,7 @@
     function applyDisplayedMomentDateTime(value) {
         if (!isSynastryMomentActive()) {
             setSelectedDateTime(value);
+            commitSelectedLayerEdit();
             return;
         }
         const [date, time] = splitTargetDatetime(value);
@@ -1517,6 +1554,7 @@
             sourceId: sourceId || null,
         };
         if (timezone) state.timezone = timezone;
+        commitSelectedLayerEdit();
     }
 
     async function ensureSynastryLayerActive(options = {}) {
@@ -3078,6 +3116,7 @@
             latitude: moment.latitude,
             longitude: moment.longitude,
         };
+        commitSelectedLayerEdit();
         state.lastStepperAction = null;
         syncControlsFromState();
         updatePrognosticTimeMeta();
@@ -3307,15 +3346,19 @@
         // layer — инстанс { id, method } либо строка-метод (для standalone-вызовов).
         const method = typeof layer === 'string' ? layer : layer.method;
         const layerId = typeof layer === 'string' ? layer : layer.id;
-        const targetDateTime = options.targetDateTime || state.selectedDateTime;
-        const targetTimezone = options.timezone || state.timezone;
-        const targetLocation = options.location || state.location || {};
+        // Момент (дата/время/место/тип дирекции) берём из конфига слоя; options.* —
+        // переопределение для префетча соседних дат.
+        const moment = isMomentMethod(method) ? layerConfigOf(layer) : {};
+        const targetDateTime = options.targetDateTime || moment.datetime || state.selectedDateTime;
+        const targetTimezone = options.timezone || moment.timezone || state.timezone;
+        const targetLocation = options.location || moment.location || state.location || {};
+        const targetDirectionType = moment.directionType || state.directionType;
         const [date, time] = splitTargetDatetime(targetDateTime);
         const key = buildLayerCacheKey(layer, date, {
             selectedDateTime: targetDateTime,
             timezone: targetTimezone,
             location: targetLocation,
-            directionType: state.directionType,
+            directionType: targetDirectionType,
         });
         if (state.cache[key]) return state.cache[key];
         const cachedLayer = readPersistedLayerCache(key);
@@ -3388,7 +3431,7 @@
             return apiPost('/directions/calculate', {
                 ...natalSource,
                 target_date: date,
-                direction_type: normalizeDirectionType(state.directionType),
+                direction_type: normalizeDirectionType(targetDirectionType),
                 save_to_db: options.saveToDb === true && !natalSource.natal,
                 name: options.name || null,
             }, { signal: controller.signal });
@@ -3445,13 +3488,15 @@
     async function prefetchAdjacentLayers() {
         const nextDateTime = getAdjacentPrefetchDateTime();
         if (!nextDateTime) return;
-        const activeInstances = [...state.activeLayers];
-        await Promise.allSettled(activeInstances.map((inst) => fetchLayer(inst, {
+        // Степпер двигает момент ВЫБРАННОГО слоя — префетчим только его соседнюю дату.
+        const inst = selectedLayerInstance();
+        if (!inst || !isMomentMethod(inst.method)) return;
+        await fetchLayer(inst, {
             targetDateTime: nextDateTime,
             timezone: state.timezone,
             location: state.location,
             prefetch: true,
-        })));
+        });
     }
 
     function getAdjacentPrefetchDateTime() {

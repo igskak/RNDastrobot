@@ -115,6 +115,27 @@ function ok(cond, msg) { if (cond) { pass++; } else { fail++; console.log('FAIL:
     const reparsed = Storage.parsePersistedState(JSON.stringify(persistedCfg), natalData);
     ok(reparsed.activeLayers.find((l) => l.id === 'solar_return-1').config.year === 2030,
         'storage: per-instance config survives parse round-trip');
+
+    // Ship 3: per-instance moment (date/time/place) for transit/progression/direction
+    const persistedMoment = Storage.buildPersistedState({
+        natalData,
+        state: {
+            activeLayers: [
+                { id: 'transit-1', method: 'transit', config: { datetime: '2026-01-01T12:00:00', timezone: 'UTC', location: { name: 'A', latitude: 1, longitude: 2 } } },
+                { id: 'transit-2', method: 'transit', config: { datetime: '2026-06-01T08:30:00', timezone: 'Europe/Kyiv', location: { name: 'B', latitude: 50, longitude: 30 } } },
+                { id: 'direction-1', method: 'direction', config: { datetime: '2027-03-03T03:03:00', timezone: 'UTC', location: null, directionType: 'solar_arc' } },
+            ],
+        },
+    });
+    const mt1 = persistedMoment.activeLayers.find((l) => l.id === 'transit-1');
+    const mt2 = persistedMoment.activeLayers.find((l) => l.id === 'transit-2');
+    const md = persistedMoment.activeLayers.find((l) => l.id === 'direction-1');
+    ok(mt1.config.datetime === '2026-01-01T12:00:00' && mt2.config.datetime === '2026-06-01T08:30:00',
+        'storage: two transits keep distinct moments');
+    ok(mt1.config.location.name === 'A' && mt2.config.location.name === 'B',
+        'storage: two transits keep distinct places');
+    ok(md.config.directionType === 'solar_arc',
+        'storage: direction instance keeps its own directionType');
 })();
 
 // --- wheel: two same-method rings get distinct (tinted) colors ---

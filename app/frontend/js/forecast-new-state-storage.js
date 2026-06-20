@@ -128,7 +128,20 @@
                 } : null,
             };
         }
-        return undefined;
+        // transit / progression / direction — момент (дата/время/место[/тип]).
+        const loc = config.location;
+        const out = {
+            datetime: sanitizeTargetDatetime(config.datetime),
+            timezone: typeof config.timezone === 'string' ? config.timezone.trim() : '',
+            location: loc && typeof loc === 'object' ? {
+                name: String(loc.name || ''),
+                latitude: Number.isFinite(Number(loc.latitude)) ? Number(loc.latitude) : null,
+                longitude: Number.isFinite(Number(loc.longitude)) ? Number(loc.longitude) : null,
+                sourceId: loc.sourceId || null,
+            } : null,
+        };
+        if (method === 'direction') out.directionType = normalizeDirectionType(config.directionType);
+        return out;
     }
 
     function sanitizeViewport(value) {
