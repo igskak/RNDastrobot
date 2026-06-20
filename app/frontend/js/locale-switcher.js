@@ -92,9 +92,30 @@
         };
     }
 
-    function buildOption(locale) {
-        const title = window.FrontendI18n?.t?.(`locale.name.${locale}`) || locale.toUpperCase();
-        return `<option value="${locale}">${title}</option>`;
+    function getLocaleShortLabel(locale) {
+        const labels = {
+            en: 'EN',
+            uk: 'УКР',
+            ru: 'RU',
+        };
+        return labels[locale] || String(locale || '').toUpperCase();
+    }
+
+    function getLocaleFullLabel(locale) {
+        return window.FrontendI18n?.t?.(`locale.name.${locale}`) || getLocaleShortLabel(locale);
+    }
+
+    function buildLocaleButton(locale) {
+        const active = locale === window.FrontendI18n.getLocale();
+        return `
+            <button
+                class="locale-switcher-option${active ? ' is-active' : ''}"
+                type="button"
+                data-locale="${locale}"
+                aria-pressed="${active ? 'true' : 'false'}"
+                title="${getLocaleFullLabel(locale)}"
+            >${getLocaleShortLabel(locale)}</button>
+        `;
     }
 
     function renderSwitcher() {
@@ -112,20 +133,19 @@
         switcher.id = 'localeSwitcher';
         switcher.className = 'locale-switcher';
 
-        switcher.innerHTML = `
-            <label class="locale-switcher-label" for="localeSwitcherSelect">${window.FrontendI18n.t('app.language')}</label>
-            <select id="localeSwitcherSelect" class="locale-switcher-select" aria-label="${window.FrontendI18n.t('app.language')}">
-                ${window.FrontendI18n.SUPPORTED_LOCALES.map(buildOption).join('')}
-            </select>
-        `;
+        switcher.setAttribute('role', 'group');
+        switcher.setAttribute('aria-label', window.FrontendI18n.t('app.language'));
+        switcher.innerHTML = window.FrontendI18n.SUPPORTED_LOCALES.map(buildLocaleButton).join('');
 
         const mount = resolveMountTarget();
         switcher.classList.add(mount.inline ? 'locale-switcher--inline' : 'locale-switcher--floating');
 
-        const select = switcher.querySelector('#localeSwitcherSelect');
-        select.value = window.FrontendI18n.getLocale();
-        select.addEventListener('change', async (event) => {
-            await window.FrontendI18n.setLocale(event.target.value, { source: 'switcher' });
+        switcher.addEventListener('click', async (event) => {
+            const button = event.target?.closest?.('[data-locale]');
+            if (!button) return;
+            const locale = button.dataset.locale;
+            if (!locale || locale === window.FrontendI18n.getLocale()) return;
+            await window.FrontendI18n.setLocale(locale, { source: 'switcher' });
         });
 
         if (mount.beforeNode) {
@@ -136,15 +156,12 @@
 
         document.addEventListener('frontend:locale-changed', (event) => {
             const locale = event?.detail?.locale || window.FrontendI18n.getLocale();
-            select.value = locale;
-            const label = switcher.querySelector('.locale-switcher-label');
-            if (label) {
-                const title = window.FrontendI18n.t('app.language');
-                label.textContent = title;
-                select.setAttribute('aria-label', title);
-            }
-            Array.from(select.options).forEach((option) => {
-                option.textContent = window.FrontendI18n.t(`locale.name.${option.value}`);
+            switcher.setAttribute('aria-label', window.FrontendI18n.t('app.language'));
+            switcher.querySelectorAll('[data-locale]').forEach((button) => {
+                const isActive = button.dataset.locale === locale;
+                button.classList.toggle('is-active', isActive);
+                button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+                button.setAttribute('title', getLocaleFullLabel(button.dataset.locale));
             });
         });
     }
