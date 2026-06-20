@@ -3385,6 +3385,14 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
     text-align: right;
 }
 
+.forecast-new-composite-wheel {
+    display: block;
+    width: 100%;
+    max-width: 240px;
+    aspect-ratio: 1 / 1;
+    margin: 4px auto 10px;
+}
+
 .forecast-new-composite-subhead {
     margin: 10px 0 2px;
     color: var(--text-secondary);

@@ -3760,7 +3760,46 @@
         return `<h6 class="forecast-new-composite-subhead">${escapeHtml(t(key) || fallback)}</h6>`;
     }
 
-    function compositeSection(titleKey, chart, unavailableReason) {
+    // Thin adapter: map a composite chart onto the shared wheel's viewModel as a
+    // single natal-shaped ring with no prognostic layers (D3). Midpoint has no
+    // houses (empty array) — the wheel renders a sign-only ring; Davison has houses.
+    function buildCompositeViewModel(chart, label) {
+        const planets = chart.planets || [];
+        const angles = chart.angles || null;
+        const aspectBodies = planets.concat(angles ? Object.values(angles) : []);
+        return {
+            natalLayer: {
+                method: 'natal',
+                label: label || '',
+                bodies: planets,
+                aspectBodies,
+                houses: chart.houses || [],
+                aspects: chart.aspects || [],
+                angles,
+                raw: chart,
+                ringIndex: 0,
+                style: { color: '#111111' },
+            },
+            activePrognosticLayers: [],
+        };
+    }
+
+    // Render a composite chart onto its section's <svg>. Failures are swallowed
+    // so a wheel problem never blanks the (already-rendered) tables.
+    function renderCompositeWheel(panel, method, chart) {
+        if (!chart || !panel || !window.PrognosticRingsWheel) return;
+        const svg = panel.querySelector(`svg[data-composite-wheel="${method}"]`);
+        if (!svg) return;
+        try {
+            const label = t(`page.forecastNew.composite.${method}`) || method;
+            const wheel = new window.PrognosticRingsWheel(svg);
+            wheel.render(buildCompositeViewModel(chart, label));
+        } catch (error) {
+            if (window.console) console.warn('Composite wheel render failed', error);
+        }
+    }
+
+    function compositeSection(titleKey, chart, unavailableReason, method) {
         if (!chart) {
             const reason = unavailableReason
                 ? `<p class="forecast-new-composite-meta">${escapeHtml(unavailableReason)}</p>`
@@ -3783,9 +3822,13 @@
         const housesBlock = houseRows
             ? `${compositeSubhead('page.forecastNew.composite.houses', 'Houses')}${compositePositionTable(houseRows)}`
             : '';
+        const wheel = method
+            ? `<svg class="forecast-new-composite-wheel" data-composite-wheel="${escapeHtml(method)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${escapeHtml(t(titleKey) || titleKey)}"></svg>`
+            : '';
         return `<section class="forecast-new-composite-section">
             <h5>${escapeHtml(t(titleKey) || titleKey)}</h5>
             ${compositeMetaLine(chart)}
+            ${wheel}
             ${planetsBlock}
             ${anglesBlock}
             ${housesBlock}
@@ -3832,9 +3875,13 @@
     function renderCompositeData(panel, data) {
         panel.innerHTML = `
             <div class="forecast-new-composite">
-                ${compositeSection('page.forecastNew.composite.midpoint', data.midpoint)}
-                ${compositeSection('page.forecastNew.composite.davison', data.davison, data.davison_unavailable_reason)}
+                ${compositeSection('page.forecastNew.composite.midpoint', data.midpoint, null, 'midpoint')}
+                ${compositeSection('page.forecastNew.composite.davison', data.davison, data.davison_unavailable_reason, 'davison')}
             </div>`;
+        // Draw the wheels after the SVGs exist in the DOM (the renderer measures
+        // text via getBBox, so the nodes must be attached first).
+        renderCompositeWheel(panel, 'midpoint', data.midpoint);
+        renderCompositeWheel(panel, 'davison', data.davison);
     }
 
     async function renderCompositePanel(options = {}) {
