@@ -3385,6 +3385,21 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
     text-align: right;
 }
 
+.forecast-new-composite-subhead {
+    margin: 10px 0 2px;
+    color: var(--text-secondary);
+    font: 700 11px/1.3 var(--font-ui);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+/* Aspect table: 3 columns, last (orb) right-aligned via the rule above;
+   keep the middle phase column left so '—' lines up under the header. */
+.forecast-new-composite-aspects td:nth-child(2),
+.forecast-new-composite-aspects th:nth-child(2) {
+    text-align: center;
+}
+
 /* ============================================================
    Aux natal blocks: antiscia, asteroids, dominants.
    ============================================================ */

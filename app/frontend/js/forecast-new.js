@@ -3682,27 +3682,114 @@
         `).join('');
     }
 
-    function compositeSection(titleKey, chart) {
+    // A small two-column position table (body/angle/house → position).
+    // Returns '' when there are no rows so the section degrades gracefully
+    // (e.g. midpoint has no houses; a partner with no birth time has no angles).
+    function compositePositionTable(rows) {
+        if (!rows) return '';
+        return `
+            <table class="forecast-new-composite-table">
+                <thead><tr><th>${escapeHtml(t('page.chart.table.planets.symbol') || 'Body')}</th><th>${escapeHtml(t('page.chart.table.planets.position') || 'Position')}</th></tr></thead>
+                <tbody>${rows}</tbody>
+            </table>`;
+    }
+
+    function compositeAnglesRows(angles) {
+        const entries = Object.values(angles || {}).filter((a) => a && a.longitude != null);
+        if (!entries.length) return '';
+        return entries.map((angle) => `
+            <tr>
+                <td>${escapeHtml(planetLabel(angle.name))}</td>
+                <td>${escapeHtml(formatCompositePoint(angle))}</td>
+            </tr>
+        `).join('');
+    }
+
+    function compositeHousesRows(houses) {
+        const list = (houses || []).filter((h) => h && h.longitude != null);
+        if (!list.length) return '';
+        return list.map((house) => `
+            <tr>
+                <td>${escapeHtml(`${t('page.chart.table.houses.house') || 'House'} ${house.number}`)}</td>
+                <td>${escapeHtml(formatCompositePoint(house))}</td>
+            </tr>
+        `).join('');
+    }
+
+    // Aspect rows. Midpoint aspects carry no `applying` field (no planet speeds),
+    // so the phase column renders '—'; Davison aspects carry it.
+    function compositeAspectsSection(aspects) {
+        const list = aspects || [];
+        if (!list.length) return '';
+        const sorted = list.slice().sort((a, b) => (Number(a?.orb) || 0) - (Number(b?.orb) || 0));
+        const rows = sorted.map((aspect) => {
+            const phase = state.prognosticRenderer?.getApplyingSeparatingShortLabel?.(aspect) || '';
+            const orb = Number(aspect?.orb);
+            return `
+                <tr>
+                    <td>${escapeHtml(formatAspectText(aspect))}</td>
+                    <td>${phase ? escapeHtml(phase) : '—'}</td>
+                    <td class="mono">${Number.isFinite(orb) ? `${orb.toFixed(2)}°` : '—'}</td>
+                </tr>`;
+        }).join('');
+        return `
+            ${compositeSubhead('page.forecastNew.composite.aspects', 'Aspects')}
+            <table class="forecast-new-composite-table forecast-new-composite-aspects">
+                <thead><tr>
+                    <th>${escapeHtml(t('page.forecastNew.resultViews.aspect') || 'Aspect')}</th>
+                    <th>${escapeHtml(t('page.forecastNew.resultViews.phase') || 'Phase')}</th>
+                    <th>${escapeHtml(t('page.forecastNew.resultViews.orb') || 'Orb')}</th>
+                </tr></thead>
+                <tbody>${rows}</tbody>
+            </table>`;
+    }
+
+    function compositeMetaLine(chart) {
+        const mt = chart.midpoint_time;
+        if (!mt) return '';
+        const coords = (mt.latitude != null && mt.longitude != null)
+            ? `${Number(mt.latitude).toFixed(2)}, ${Number(mt.longitude).toFixed(2)}`
+            : (mt.place || mt.location || '');
+        const parts = [mt.date_utc || mt.date, mt.time_utc ? `${mt.time_utc} UTC` : mt.time, coords]
+            .filter(Boolean);
+        if (!parts.length) return '';
+        return `<p class="forecast-new-composite-meta">${escapeHtml(parts.join(' · '))}</p>`;
+    }
+
+    function compositeSubhead(key, fallback) {
+        return `<h6 class="forecast-new-composite-subhead">${escapeHtml(t(key) || fallback)}</h6>`;
+    }
+
+    function compositeSection(titleKey, chart, unavailableReason) {
         if (!chart) {
+            const reason = unavailableReason
+                ? `<p class="forecast-new-composite-meta">${escapeHtml(unavailableReason)}</p>`
+                : '';
             return `<section class="forecast-new-composite-section">
                 <h5>${escapeHtml(t(titleKey) || titleKey)}</h5>
                 <p class="forecast-new-composite-empty">${escapeHtml(t('page.forecastNew.composite.unavailable') || '—')}</p>
+                ${reason}
             </section>`;
         }
-        const midpointTime = chart.midpoint_time
-            ? `<p class="forecast-new-composite-meta">${escapeHtml([
-                chart.midpoint_time.date,
-                chart.midpoint_time.time,
-                chart.midpoint_time.place || chart.midpoint_time.location,
-            ].filter(Boolean).join(' · '))}</p>`
+        const planetRows = compositeRows(chart.planets);
+        const angleRows = compositeAnglesRows(chart.angles);
+        const houseRows = compositeHousesRows(chart.houses);
+        const planetsBlock = planetRows
+            ? `${compositeSubhead('page.forecastNew.composite.planets', 'Planets')}${compositePositionTable(planetRows)}`
+            : '';
+        const anglesBlock = angleRows
+            ? `${compositeSubhead('page.forecastNew.composite.angles', 'Angles')}${compositePositionTable(angleRows)}`
+            : '';
+        const housesBlock = houseRows
+            ? `${compositeSubhead('page.forecastNew.composite.houses', 'Houses')}${compositePositionTable(houseRows)}`
             : '';
         return `<section class="forecast-new-composite-section">
             <h5>${escapeHtml(t(titleKey) || titleKey)}</h5>
-            ${midpointTime}
-            <table class="forecast-new-composite-table">
-                <thead><tr><th>${escapeHtml(t('page.chart.table.planets.symbol') || 'Body')}</th><th>${escapeHtml(t('page.chart.table.planets.position') || 'Position')}</th></tr></thead>
-                <tbody>${compositeRows(chart.planets)}</tbody>
-            </table>
+            ${compositeMetaLine(chart)}
+            ${planetsBlock}
+            ${anglesBlock}
+            ${housesBlock}
+            ${compositeAspectsSection(chart.aspects)}
         </section>`;
     }
 
@@ -3727,7 +3814,7 @@
             panel.innerHTML = `
                 <div class="forecast-new-composite">
                     ${compositeSection('page.forecastNew.composite.midpoint', data.midpoint)}
-                    ${compositeSection('page.forecastNew.composite.davison', data.davison)}
+                    ${compositeSection('page.forecastNew.composite.davison', data.davison, data.davison_unavailable_reason)}
                 </div>`;
         } catch (error) {
             panel.innerHTML = `<p class="forecast-new-composite-error">${escapeHtml(error.message || t('common.error') || 'Ошибка')}</p>`;

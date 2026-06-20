@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
 from app.database.connection import get_db
+from app.services.aspect_service import AspectService
 from app.services.composite_service import CompositeService
 from app.services.entitlements_service import FEATURE_CLIENTS, assert_feature_enabled
 from app.services.natal_chart_service import NatalChartService
@@ -54,14 +55,30 @@ def calculate_composite(
 
         service = CompositeService(engine=SwissEphemerisEngine(ephe_path=EPHE_PATH))
         midpoint = CompositeService.midpoint_composite(primary, partner)
+        davison_unavailable_reason: str | None = None
         try:
             davison = service.davison(primary, partner, house_system=payload.house_system)
         except ValueError as exc:
             # Birth data incomplete for Davison — still return the midpoint composite.
             logger.info("Davison skipped: {}", str(exc))
             davison = None
+            davison_unavailable_reason = str(exc)
 
-        return {"midpoint": midpoint, "davison": davison}
+        # In-composite aspects. Midpoint has no planet speeds, so omit phase;
+        # Davison has real speeds, so annotate applying/separating (D5).
+        aspect_service = AspectService(db)
+        CompositeService.attach_aspects(
+            midpoint, aspect_service, with_phase=False, astrologer_id=auth.astrologer.id
+        )
+        CompositeService.attach_aspects(
+            davison, aspect_service, with_phase=True, astrologer_id=auth.astrologer.id
+        )
+
+        return {
+            "midpoint": midpoint,
+            "davison": davison,
+            "davison_unavailable_reason": davison_unavailable_reason,
+        }
     except HTTPException:
         raise
     except Exception as exc:

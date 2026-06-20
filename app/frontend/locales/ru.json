@@ -467,7 +467,11 @@
         "midpoint": "Средние точки",
         "davison": "Davison",
         "unavailable": "Davison недоступен для неполных данных рождения",
-        "noPartner": "Сначала выберите партнёра"
+        "noPartner": "Сначала выберите партнёра",
+        "planets": "Планеты",
+        "angles": "Углы",
+        "houses": "Дома",
+        "aspects": "Аспекты"
       },
       "extraangles": {
         "empty": "Нет данных по дополнительным углам"

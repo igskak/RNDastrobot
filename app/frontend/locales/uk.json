@@ -465,7 +465,11 @@
         "midpoint": "Середні точки",
         "davison": "Davison",
         "unavailable": "Davison недоступний для неповних даних народження",
-        "noPartner": "Спочатку виберіть партнера"
+        "noPartner": "Спочатку виберіть партнера",
+        "planets": "Планети",
+        "angles": "Кути",
+        "houses": "Доми",
+        "aspects": "Аспекти"
       },
       "antiscia": {
         "empty": "Немає даних",

@@ -467,7 +467,11 @@
         "midpoint": "Midpoint",
         "davison": "Davison",
         "unavailable": "Davison is unavailable for incomplete birth data",
-        "noPartner": "Choose a partner first"
+        "noPartner": "Choose a partner first",
+        "planets": "Planets",
+        "angles": "Angles",
+        "houses": "Houses",
+        "aspects": "Aspects"
       },
       "extraangles": {
         "empty": "No additional angle data"

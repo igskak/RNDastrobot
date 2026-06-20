@@ -41,6 +41,67 @@ def test_midpoint_composite_matches_common_planets_only():
     assert comp["angles"]["MC"]["longitude"] == pytest.approx(280.0)
 
 
+class _FakeAspectService:
+    """Records calls so we can assert phase is only annotated for Davison."""
+
+    def __init__(self):
+        self.objects_seen = None
+        self.annotate_called = False
+
+    def calculate_aspects_for_objects(self, objects, astrologer_id=None):
+        self.objects_seen = objects
+        # One synthetic aspect between the first two objects, if present.
+        if len(objects) >= 2:
+            return [{"planet_1": objects[0]["name"], "planet_2": objects[1]["name"],
+                     "aspect_type": "conjunction", "orb": 1.0}]
+        return []
+
+    def annotate_aspects_with_phase(self, aspects, objects):
+        self.annotate_called = True
+        return [{**a, "applying": True} for a in aspects]
+
+
+def test_aspect_objects_flattens_planets_and_angles():
+    comp = {
+        "planets": [
+            {"name": "Sun", "longitude": 10.0, "type": "planet"},
+            {"name": "Moon", "longitude": 100.0, "type": "planet", "speed": 13.0},
+            {"name": "Nil", "longitude": None, "type": "planet"},  # dropped
+        ],
+        "angles": {"ASC": {"name": "ASC", "longitude": 0.0}, "MC": {"longitude": None}},
+    }
+    objs = CompositeService._aspect_objects(comp)
+    by_name = {o["name"]: o for o in objs}
+    assert set(by_name) == {"Sun", "Moon", "ASC"}  # null-longitude entries dropped
+    assert "speed" not in by_name["Sun"]            # midpoint planet, no speed
+    assert by_name["Moon"]["speed"] == 13.0
+    assert by_name["ASC"]["type"] == "angle"
+
+
+def test_attach_aspects_midpoint_omits_phase():
+    comp = {"method": "midpoint", "planets": [
+        {"name": "Sun", "longitude": 10.0}, {"name": "Moon", "longitude": 12.0}], "angles": {}}
+    fake = _FakeAspectService()
+    CompositeService.attach_aspects(comp, fake, with_phase=False)
+    assert fake.annotate_called is False
+    assert comp["aspects"] and "applying" not in comp["aspects"][0]
+
+
+def test_attach_aspects_davison_adds_phase():
+    comp = {"method": "davison", "planets": [
+        {"name": "Sun", "longitude": 10.0, "speed": 1.0},
+        {"name": "Moon", "longitude": 12.0, "speed": 13.0}], "angles": {}}
+    fake = _FakeAspectService()
+    CompositeService.attach_aspects(comp, fake, with_phase=True)
+    assert fake.annotate_called is True
+    assert comp["aspects"][0]["applying"] is True
+
+
+def test_attach_aspects_handles_none_composite():
+    fake = _FakeAspectService()
+    assert CompositeService.attach_aspects(None, fake, with_phase=True) is None
+
+
 def test_davison_requires_engine():
     svc = CompositeService(engine=None)
     with pytest.raises(ValueError):

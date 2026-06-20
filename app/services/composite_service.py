@@ -16,6 +16,27 @@ from typing import Dict, List, Optional
 from app.utils.constants import get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds
 
 
+def _jd_to_utc(jd: float) -> Dict:
+    """Julian Day → human UTC date/time for the Davison mean moment.
+
+    Returns {date_utc: 'YYYY-MM-DD', time_utc: 'HH:MM'}. Best-effort: if
+    swisseph is unavailable we return an empty dict so the caller degrades.
+    """
+    try:
+        import swisseph as swe
+    except ImportError:  # pragma: no cover - swisseph present in all runtimes
+        return {}
+    year, month, day, hour = swe.revjul(jd, swe.GREG_CAL)
+    h = int(hour)
+    m = int(round((hour - h) * 60.0))
+    if m == 60:  # rounding spillover
+        h, m = (h + 1) % 24, 0
+    return {
+        "date_utc": f"{int(year):04d}-{int(month):02d}-{int(day):02d}",
+        "time_utc": f"{h:02d}:{m:02d}",
+    }
+
+
 def circular_midpoint(a: float, b: float) -> float:
     """Средняя точка двух долгот по короткой дуге, нормализованная в [0, 360)."""
     diff = ((b - a + 180.0) % 360.0) - 180.0  # знаковая кратчайшая дуга a→b
@@ -82,6 +103,60 @@ class CompositeService:
 
         return {"method": "midpoint", "planets": planets, "angles": angles}
 
+    # --- aspects --------------------------------------------------------
+
+    @staticmethod
+    def _aspect_objects(composite: Dict) -> List[Dict]:
+        """Flatten a composite dict into the {name,longitude,type,speed?} objects
+        the aspect engine expects. Midpoint planets carry no speed; Davison do."""
+        objs: List[Dict] = []
+        for p in composite.get("planets") or []:
+            if p.get("longitude") is None:
+                continue
+            obj = {
+                "name": p.get("name"),
+                "longitude": float(p["longitude"]),
+                "type": p.get("type", "planet"),
+            }
+            if p.get("speed") is not None:
+                obj["speed"] = float(p["speed"])
+            objs.append(obj)
+        for key, angle in (composite.get("angles") or {}).items():
+            if not angle or angle.get("longitude") is None:
+                continue
+            objs.append({
+                "name": angle.get("name", key),
+                "longitude": float(angle["longitude"]),
+                "type": "angle",
+            })
+        return objs
+
+    @classmethod
+    def attach_aspects(
+        cls,
+        composite: Optional[Dict],
+        aspect_service,
+        *,
+        with_phase: bool,
+        astrologer_id=None,
+    ) -> Optional[Dict]:
+        """Compute in-composite aspects and attach them as composite["aspects"].
+
+        with_phase: Davison has real planet speeds, so applying/separating is
+        meaningful. Midpoint has no speeds, so we omit the phase entirely rather
+        than emit a fabricated one (see D5).
+        """
+        if not composite:
+            return composite
+        objects = cls._aspect_objects(composite)
+        aspects = aspect_service.calculate_aspects_for_objects(
+            objects, astrologer_id=astrologer_id
+        )
+        if with_phase:
+            aspects = aspect_service.annotate_aspects_with_phase(aspects, objects)
+        composite["aspects"] = aspects
+        return composite
+
     # --- Davison --------------------------------------------------------
 
     def davison(
@@ -116,8 +191,9 @@ class CompositeService:
             "method": "davison",
             "midpoint_time": {
                 "julian_day": mean_jd,
-                "latitude": mean_lat,
-                "longitude": mean_lon,
+                "latitude": round(mean_lat, 4),
+                "longitude": round(mean_lon, 4),
+                **_jd_to_utc(mean_jd),
             },
             "planets": planets,
             "houses": houses,
