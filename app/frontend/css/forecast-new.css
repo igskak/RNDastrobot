@@ -213,6 +213,26 @@
     filter: brightness(1.08);
 }
 
+.forecast-new-composite-header-btn {
+    min-height: 34px;
+    padding: 0 12px;
+    border: 1px solid rgba(30, 58, 95, 0.16);
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: 0 8px 18px rgba(30, 58, 95, 0.18);
+}
+
+.forecast-new-composite-header-btn:hover {
+    background: var(--accent-hover);
+}
+
 .forecast-new-synastry-manual-error {
     margin: 0;
     color: var(--error, #c0392b);
@@ -3313,6 +3333,10 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
     overflow: auto;
     border-top: 1px solid rgba(30, 58, 95, 0.12);
     padding-top: 10px;
+}
+
+.forecast-new-composite-panel--inline {
+    margin: 8px 14px 0;
 }
 
 .forecast-new-composite {

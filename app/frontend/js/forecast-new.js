@@ -373,7 +373,7 @@
             'forecastNewMatrixEditor', 'forecastNewSettingsMatrixEditor',
             'forecastNewViewSingle', 'forecastNewViewMulti',
             'forecastNewSolarYearInput', 'forecastNewSolarLocationInput', 'forecastNewSolarLocationSuggestions',
-            'forecastNewSolarLat', 'forecastNewSolarLon', 'forecastNewSynastryPartnerSelect', 'forecastNewCompositeBtn', 'forecastNewCompositePanel',
+            'forecastNewSolarLat', 'forecastNewSolarLon', 'forecastNewSynastryPartnerSelect', 'forecastNewCompositeBtn', 'forecastNewCompositeHeaderBtn', 'forecastNewCompositePanel', 'forecastNewCompositeInlinePanel',
             'momentSolarYearInput', 'momentSolarLocationInput', 'momentSolarLocationSuggestions',
             'momentSolarLat', 'momentSolarLon',
             'forecastNewSynastryManualName', 'forecastNewSynastryManualDate', 'forecastNewSynastryManualTime',
@@ -534,6 +534,7 @@
             }
         });
         refs.forecastNewCompositeBtn?.addEventListener('click', renderCompositePanel);
+        refs.forecastNewCompositeHeaderBtn?.addEventListener('click', () => renderCompositePanel({ target: 'inline' }));
 
         document.getElementById('forecastNewSynastryPickerBtn')?.addEventListener('click', () => {
             window.AstroChartPicker?.open?.({
@@ -3658,9 +3659,11 @@
     }
 
     function clearCompositePanel() {
-        if (!refs.forecastNewCompositePanel) return;
-        refs.forecastNewCompositePanel.classList.add('hidden');
-        refs.forecastNewCompositePanel.innerHTML = '';
+        [refs.forecastNewCompositePanel, refs.forecastNewCompositeInlinePanel].forEach((panel) => {
+            if (!panel) return;
+            panel.classList.add('hidden');
+            panel.innerHTML = '';
+        });
     }
 
     function formatCompositePoint(point) {
@@ -3703,8 +3706,10 @@
         </section>`;
     }
 
-    async function renderCompositePanel() {
-        const panel = refs.forecastNewCompositePanel;
+    async function renderCompositePanel(options = {}) {
+        const panel = options.target === 'inline'
+            ? (refs.forecastNewCompositeInlinePanel || refs.forecastNewCompositePanel)
+            : refs.forecastNewCompositePanel;
         if (!panel) return;
         if (!state.userId || !state.synastryPartnerId) {
             panel.classList.remove('hidden');
@@ -3733,6 +3738,7 @@
         if (!refs.rightLayerTabs) return;
         if (state.wheelView === 'single') {
             refs.rightLayerTabs.innerHTML = '';
+            syncCompositeHeaderButton();
             return;
         }
         normalizeActiveLayers();
@@ -3765,6 +3771,17 @@
             ${activeTabs}
             ${addLayerMarkup}
         `;
+        syncCompositeHeaderButton();
+    }
+
+    function syncCompositeHeaderButton() {
+        if (!refs.forecastNewCompositeHeaderBtn) return;
+        const visible = state.wheelView !== 'single' && state.selectedRightLayer === 'synastry_partner';
+        refs.forecastNewCompositeHeaderBtn.classList.toggle('hidden', !visible);
+        refs.forecastNewCompositeHeaderBtn.disabled = !visible;
+        if (!visible && refs.forecastNewCompositeInlinePanel) {
+            refs.forecastNewCompositeInlinePanel.classList.add('hidden');
+        }
     }
 
     function scheduleRightPanelRender() {
@@ -3778,6 +3795,7 @@
     }
 
     function renderRightPanel() {
+        syncCompositeHeaderButton();
         if (state.wheelView === 'single') {
             renderSingleNatalRightPanel();
             return;
@@ -4372,6 +4390,7 @@
         if (layoutHasBlock('now:lunar')) renderLunarBlock();
         if (layoutHasBlock('now:hours')) renderHoursBlock();
         if (layoutHasBlock('natal:profections')) renderProfectionsBlock();
+        if (layoutHasBlock('natal:extraangles')) renderExtraAnglesBlock();
         if (layoutHasBlock('natal:antiscia')) renderAntisciaBlock();
         if (layoutHasBlock('natal:asteroids')) renderAsteroidsBlock();
         if (layoutHasBlock('natal:dominants')) renderDominantsBlock();
@@ -4406,6 +4425,46 @@
         if (!point) return '';
         const deg = Math.floor(point.degree_in_sign || 0);
         return `${deg}° ${signLabel(point.sign)}`;
+    }
+
+    function anglePointShort(point) {
+        if (!point) return '';
+        if (Number.isFinite(Number(point.degree_in_sign)) && point.sign) return pointShort(point);
+        if (Number.isFinite(Number(point.longitude))) {
+            const lon = ((Number(point.longitude) % 360) + 360) % 360;
+            const deg = Math.floor(lon % 30);
+            const signIndex = Math.floor(lon / 30);
+            const sign = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'][signIndex] || '';
+            return `${deg}° ${signLabel(sign)}`;
+        }
+        return '';
+    }
+
+    function extraAnglesBlockMarkup(chartData) {
+        const angles = chartData?.angles || {};
+        const specialPoints = chartData?.special_points || {};
+        const names = ['ASC', 'DSC', 'MC', 'IC', 'Vertex', 'AntiVertex', 'EastPoint'];
+        const rows = names.map((name) => {
+            const point = angles[name] || specialPoints[name];
+            if (!point || point.longitude == null) return '';
+            return `
+                <li class="forecast-new-list-row">
+                    <span class="forecast-new-list-name">${escapeHtml(planetLabel(name))}</span>
+                    <span class="forecast-new-list-val">${escapeHtml(anglePointShort(point))}</span>
+                    <span class="forecast-new-list-val forecast-new-list-val--dim">${point.house ? escapeHtml(t('page.forecastNew.asteroids.house', { house: point.house }) || String(point.house)) : ''}</span>
+                </li>`;
+        }).filter(Boolean).join('');
+        if (!rows) {
+            return `<div class="forecast-new-list-empty">${escapeHtml(t('page.forecastNew.extraangles.empty') || '—')}</div>`;
+        }
+        return `<div class="forecast-new-list forecast-new-extraangles"><ul class="forecast-new-list-body">${rows}</ul></div>`;
+    }
+
+    function renderExtraAnglesBlock() {
+        const el = document.getElementById('natalExtraanglesView')
+            || document.getElementById('forecastNewBlockStore')?.querySelector('#natalExtraanglesView');
+        if (!el) return;
+        el.innerHTML = extraAnglesBlockMarkup(state.natalData || state.natalWheelData || {});
     }
 
     function antisciaBlockMarkup(data) {

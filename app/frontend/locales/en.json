@@ -104,6 +104,7 @@
       "BlackMoon": "Black Moon",
       "Chiron": "Chiron",
       "DSC": "Descendant",
+      "EastPoint": "East Point",
       "IC": "Imum Coeli",
       "Jupiter": "Jupiter",
       "MC": "Midheaven",
@@ -282,6 +283,7 @@
         "lunar": "Moon",
         "hours": "Hours",
         "profections": "Profections",
+        "extraangles": "Additional angles",
         "antiscia": "Antiscia",
         "asteroids": "Asteroids",
         "dominants": "Dominants",
@@ -466,6 +468,9 @@
         "davison": "Davison",
         "unavailable": "Davison is unavailable for incomplete birth data",
         "noPartner": "Choose a partner first"
+      },
+      "extraangles": {
+        "empty": "No additional angle data"
       },
       "antiscia": {
         "empty": "No data",

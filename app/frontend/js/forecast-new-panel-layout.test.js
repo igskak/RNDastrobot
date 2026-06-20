@@ -222,8 +222,8 @@ ok(L.BLOCK_TARGET_MAP['natal:profections'].rendererKey === 'natal', 'natal:profe
 ok(!L.BLOCK_TARGET_MAP['prog:profections'], 'no prog:profections pairing');
 ok(!L.BLOCK_TARGET_MAP['now:profections'], 'no now:profections pairing');
 
-// --- antiscia / asteroids / dominants (natal-only catalog views) ---
-['antiscia', 'asteroids', 'dominants', 'fixstars'].forEach((view) => {
+// --- additional natal-only catalog views ---
+['extraangles', 'antiscia', 'asteroids', 'dominants', 'fixstars'].forEach((view) => {
   ok(L.isValidView(view), view + ' is a valid view');
   ok(!L.isNowView(view), view + ' is not a now-view');
   const expectedContainer = 'natal' + view.charAt(0).toUpperCase() + view.slice(1) + 'View';

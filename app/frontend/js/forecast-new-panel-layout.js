@@ -30,7 +30,7 @@
     // Granular blocks: the former 'configs' block is split into 'configs'
     // (configuration aspects) + 'stelliums'; the former 'rulers' block is split
     // into 'jones' (Jones cosmogram) + 'dispositors' (dispositor scheme).
-    var VIEW_KEYS = ['planets', 'houses', 'aspects', 'grid', 'configs', 'stelliums', 'balances', 'jones', 'dispositors', 'profections', 'antiscia', 'asteroids', 'dominants', 'fixstars'];
+    var VIEW_KEYS = ['planets', 'houses', 'aspects', 'grid', 'configs', 'stelliums', 'balances', 'jones', 'dispositors', 'profections', 'extraangles', 'antiscia', 'asteroids', 'dominants', 'fixstars'];
 
     // "Moment now" views: not a property of the natal/prog chart but of the
     // current instant (source 'now'). They are registered as explicit blocks
@@ -50,6 +50,7 @@
         jones: 'page.forecastNew.tabs.jones',
         dispositors: 'page.forecastNew.tabs.dispositors',
         profections: 'page.forecastNew.tabs.profections',
+        extraangles: 'page.forecastNew.tabs.extraangles',
         antiscia: 'page.forecastNew.tabs.antiscia',
         asteroids: 'page.forecastNew.tabs.asteroids',
         dominants: 'page.forecastNew.tabs.dominants',
@@ -59,13 +60,13 @@
     };
 
     var SOURCES = ['natal', 'prog'];
-    var NATAL_ONLY_VIEWS = ['profections', 'antiscia', 'asteroids', 'dominants', 'fixstars'];
+    var NATAL_ONLY_VIEWS = ['profections', 'extraangles', 'antiscia', 'asteroids', 'dominants', 'fixstars'];
 
     // Corner overlay slots (Option C: a block lives in a side panel OR one
     // corner, never both — corners share the per-mode block pool with panels).
     // Each corner holds 0 or 1 block. Order = visual reading order.
     var CORNER_KEYS = ['tl', 'tr', 'bl', 'br'];
-    var CORNER_RECOMMENDED_VIEWS = ['balances', 'configs', 'stelliums', 'jones', 'profections', 'antiscia', 'asteroids', 'dominants', 'fixstars', 'lunar', 'hours'];
+    var CORNER_RECOMMENDED_VIEWS = ['balances', 'configs', 'stelliums', 'jones', 'profections', 'extraangles', 'antiscia', 'asteroids', 'dominants', 'fixstars', 'lunar', 'hours'];
     var CORNER_COMPACT_VIEWS = ['planets', 'houses', 'aspects', 'lunar', 'hours'];
     var CORNER_DISCOURAGED_VIEWS = ['grid', 'dispositors'];
 
