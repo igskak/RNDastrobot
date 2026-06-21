@@ -104,6 +104,11 @@
         // D6: вид колеса — 'multi' (натал + кольца, как сейчас) | 'single' (только
         // натал в виде одиночной карты: внешний слот + маркеры углов).
         wheelView: 'multi',
+        singleChartMode: 'natal',
+        compositeMethod: 'midpoint',
+        compositeData: null,
+        compositeChartData: null,
+        compositeMeta: null,
         resultView: 'wheel',
         // Параметры новых слоёв (Path B шаг 2)
         solarYear: new Date().getFullYear(),
@@ -146,6 +151,7 @@
             showTransitCusps: true,
             showProgressionCusps: true,
             showDirectionCusps: true,
+            compositeMethod: 'midpoint',
         },
         viewport: { zoom: 1, panX: 0, panY: 0 },
         cache: {},
@@ -499,6 +505,9 @@
             scheduleRightPanelRender();
         });
         void loadActiveLayers({ lightweight: true });
+        if (state.singleChartMode === 'composite') {
+            void enterCompositeMode();
+        }
     });
 
     function cacheElements() {
@@ -521,7 +530,7 @@
             'forecastNewMatrixEditor', 'forecastNewSettingsMatrixEditor',
             'forecastNewViewSingle', 'forecastNewViewMulti',
             'forecastNewSolarYearInput', 'forecastNewSolarLocationInput', 'forecastNewSolarLocationSuggestions',
-            'forecastNewSolarLat', 'forecastNewSolarLon', 'forecastNewSynastryPartnerSelect', 'forecastNewCompositeBtn', 'forecastNewCompositeHeaderBtn', 'forecastNewCompositePanel', 'forecastNewCompositeInlinePanel',
+            'forecastNewSolarLat', 'forecastNewSolarLon', 'forecastNewSynastryPartnerSelect', 'forecastNewCompositeHeaderBtn',
             'momentSolarYearInput', 'momentSolarLocationInput', 'momentSolarLocationSuggestions',
             'momentSolarLat', 'momentSolarLon',
             'forecastNewSynastryManualName', 'forecastNewSynastryManualDate', 'forecastNewSynastryManualTime',
@@ -529,7 +538,7 @@
             'forecastNewSynastryManualLat', 'forecastNewSynastryManualLon', 'forecastNewSynastryManualApply', 'forecastNewSynastryManualError',
             'forecastNewZoomIn', 'forecastNewZoomOut',
             'forecastNewSettingsToggle', 'forecastNewSettingsPanel',
-            'orientationSelect', 'houseSystemSelect', 'zodiacSelect', 'ayanamshaSelect', 'iconScaleRange', 'iconScaleValue',
+            'orientationSelect', 'houseSystemSelect', 'zodiacSelect', 'ayanamshaSelect', 'compositeMethodSettingsSection', 'compositeMethodSelect', 'iconScaleRange', 'iconScaleValue',
             'aspectScopeSelect', 'aspectTypeToggles',
             'aspectPhaseApplyingToggle', 'aspectPhaseSeparatingToggle',
             'houseNumberStyleSelect', 'houseLabelsOutsideToggle',
@@ -677,15 +686,19 @@
         refs.forecastNewSynastryPartnerSelect?.addEventListener('change', async () => {
             state.synastryPartnerId = refs.forecastNewSynastryPartnerSelect.value || '';
             state.synastryMode = 'db';
-            clearCompositePanel();
+            invalidateCompositeCache();
             schedulePersist();
             if (state.synastryPartnerId) {
                 closeLayerPopover('synastry_partner');
                 await ensureSynastryLayerActive({ lightweight: true });
+                if (state.singleChartMode === 'composite') {
+                    await enterCompositeMode();
+                }
             }
         });
-        refs.forecastNewCompositeBtn?.addEventListener('click', renderCompositePanel);
-        refs.forecastNewCompositeHeaderBtn?.addEventListener('click', () => renderCompositePanel({ target: 'inline' }));
+        refs.forecastNewCompositeHeaderBtn?.addEventListener('click', () => {
+            void enterCompositeMode();
+        });
 
         document.getElementById('forecastNewSynastryPickerBtn')?.addEventListener('click', () => {
             window.AstroChartPicker?.open?.({
@@ -1009,6 +1022,9 @@
             event.stopPropagation();
             refs.forecastNewSettingsPanel?.classList.toggle('hidden');
         });
+        refs.compositeMethodSelect?.addEventListener('change', () => {
+            scheduleApplySettings();
+        });
         refs.forecastNewSettingsPanel?.addEventListener('click', (event) => event.stopPropagation());
         if (refs.forecastNewSettingsPanel && window.ChartConfigPresets) {
             window.ChartConfigPresets.attach({
@@ -1069,7 +1085,7 @@
             window.location.reload();
         });
 
-        refs.forecastNewViewSingle?.addEventListener('click', () => setWheelView('single'));
+        refs.forecastNewViewSingle?.addEventListener('click', () => setWheelView('single', { singleChartMode: 'natal' }));
         refs.forecastNewViewMulti?.addEventListener('click', () => setWheelView('multi'));
         syncWheelViewButtons();
         refs.forecastNewZoomIn?.addEventListener('click', () => setViewport({ zoom: state.viewport.zoom * 1.18 }));
@@ -1388,10 +1404,14 @@
             longitude: hasCoords ? Number(lonRaw) : null,
         };
         state.synastryMode = 'manual';
+        invalidateCompositeCache();
         // Партнёр поменялся — ensureSynastryLayerActive зафиксирует конфиг и сбросит кэш слоя.
         schedulePersist();
         closeLayerPopover('synastry_partner');
         await ensureSynastryLayerActive({ lightweight: false });
+        if (state.singleChartMode === 'composite') {
+            await enterCompositeMode();
+        }
     }
 
     // cfg — снимок конфига синастрии слоя { mode, manual, partnerId }. По умолчанию
@@ -1659,6 +1679,10 @@
         if (refs.latitudeInput) refs.latitudeInput.value = momentPlace.latitude ?? '';
         if (refs.longitudeInput) refs.longitudeInput.value = momentPlace.longitude ?? '';
         if (refs.houseSystemSelect) refs.houseSystemSelect.value = normalizeHouseSystemCode(state.pageSettings.houseSystem);
+        state.compositeMethod = normalizeCompositeMethod(state.compositeMethod || state.pageSettings.compositeMethod);
+        state.pageSettings.compositeMethod = state.compositeMethod;
+        refs.compositeMethodSettingsSection?.classList.toggle('hidden', state.singleChartMode !== 'composite');
+        if (refs.compositeMethodSelect) refs.compositeMethodSelect.value = state.compositeMethod;
         syncZodiacControlsFromNatal();
         if (refs.orientationSelect) refs.orientationSelect.value = state.pageSettings.orientation;
         if (refs.iconScaleRange) refs.iconScaleRange.value = String(Math.round((state.pageSettings.planetScale || 1.2) * 100));
@@ -2458,6 +2482,22 @@
         refs.forecastNewWheelShell?.classList.toggle('forecast-new-loading', isLoading);
     }
 
+    function isCompositeSingleMode() {
+        return state.wheelView === 'single' && state.singleChartMode === 'composite' && !!state.compositeChartData;
+    }
+
+    function activeBaseChartData() {
+        return isCompositeSingleMode() ? state.compositeChartData : state.natalData;
+    }
+
+    function activeBaseWheelData() {
+        return isCompositeSingleMode()
+            ? (window.NatalWheelData?.prepareNatalWheelData
+                ? window.NatalWheelData.prepareNatalWheelData(state.compositeChartData, { houseSystem: state.pageSettings.houseSystem })
+                : state.compositeChartData)
+            : state.natalWheelData;
+    }
+
     function toggleCustomStepPopover() {
         setCustomStepPopoverOpen(!state.isCustomStepOpen);
     }
@@ -2514,6 +2554,7 @@
     }
 
     function renderStaticNatal() {
+        const chartData = activeBaseWheelData();
         state.natalRenderer?.setAspectTypeFilter?.('all');
         state.natalRenderer?.setHouseNumberStyle?.(state.pageSettings.houseNumberStyle);
         state.natalRenderer?.setDisplayPreferences?.({
@@ -2522,8 +2563,8 @@
             showApplyingSeparating: state.pageSettings.showApplyingSeparating === true,
             showAspectText: state.pageSettings.showAspectText === true,
         });
-        state.natalRenderer?.render(filterChartDataForSidePanel(state.natalWheelData, { scope: 'natal' }));
-        renderForecastNewDispositorBlocks('natal', state.natalWheelData);
+        state.natalRenderer?.render(filterChartDataForSidePanel(chartData, { scope: 'natal' }));
+        renderForecastNewDispositorBlocks('natal', chartData);
         renderInlineMatrixControls();
         applyInlineMatrixRowState();
         renderMatrixEditor();
@@ -2614,11 +2655,12 @@
     }
 
     function refreshViewModel() {
-        if (!state.natalWheelData) return;
+        const baseData = activeBaseWheelData();
+        if (!baseData) return;
         const rawViewModel = window.PrognosticLayerNormalizer.buildViewModel(
-            state.natalWheelData,
+            baseData,
             state.layers || {},
-            { activeInstances: state.activeLayers },
+            { activeInstances: isCompositeSingleMode() ? [] : state.activeLayers },
         );
         state.viewModel = filterViewModelForSettings(rawViewModel);
     }
@@ -2637,7 +2679,7 @@
     function renderMatrixSensitivePanelData() {
         updateRendererMatrixSensitiveData(
             state.natalRenderer,
-            filterChartDataForSidePanel(state.natalWheelData, { scope: 'natal' })
+            filterChartDataForSidePanel(activeBaseWheelData(), { scope: 'natal' })
         );
 
         const layer = state.viewModel?.activePrognosticLayers?.find((item) => item.id === state.selectedRightLayerId)
@@ -2850,6 +2892,7 @@
         state.pageSettings = {
             ...state.pageSettings,
             orientation: resolved?.view_options?.orientation === 'asc' ? 'asc' : (state.pageSettings.orientation || 'aries'),
+            compositeMethod: normalizeCompositeMethod(resolved?.view_options?.composite_method || state.pageSettings.compositeMethod || state.compositeMethod),
             houseNumberStyle: resolved?.view_options?.house_number_style === 'roman' ? 'roman' : 'arabic',
             houseLabelsOutside: resolved?.view_options?.house_labels_outside === true,
             aspectScope: ['all', 'major', 'minor'].includes(resolved?.aspects?.scope)
@@ -2950,7 +2993,8 @@
 
     async function applySettings() {
         const previousSettings = { ...state.pageSettings };
-        const nextHouseSystem = normalizeHouseSystemCode(state.pageSettings.houseSystem);
+        const nextHouseSystem = normalizeHouseSystemCode(refs.houseSystemSelect?.value || state.pageSettings.houseSystem);
+        const nextCompositeMethod = normalizeCompositeMethod(refs.compositeMethodSelect?.value || state.compositeMethod || state.pageSettings.compositeMethod);
         const nextZodiac = normalizeZodiac(refs.zodiacSelect?.value || state.natalData?.birth_data?.zodiac);
         const nextAyanamsha = normalizeAyanamsha(refs.ayanamshaSelect?.value || state.natalData?.birth_data?.ayanamsha);
         const nextOrientation = state.pageSettings.orientation === 'asc' ? 'asc' : 'aries';
@@ -2973,6 +3017,7 @@
         state.pageSettings = {
             ...state.pageSettings,
             houseSystem: nextHouseSystem,
+            compositeMethod: nextCompositeMethod,
             orientation: nextOrientation,
             planetScale: iconScale,
             pointScale: iconScale,
@@ -2994,6 +3039,7 @@
             showProgressionCusps: refs.showProgressionCuspsToggle?.checked !== false,
             showDirectionCusps: refs.showDirectionCuspsToggle?.checked !== false,
         };
+        state.compositeMethod = nextCompositeMethod;
         window.AstroPreferences?.saveChartViewDraft?.({
             chart_kind: 'natal',
             chart_id: state.userId,
@@ -3008,6 +3054,11 @@
         const currentAyanamsha = normalizeAyanamsha(state.natalData?.birth_data?.ayanamsha);
         if (nextZodiac !== currentZodiac || (nextZodiac === 'sidereal' && nextAyanamsha !== currentAyanamsha)) {
             await updateZodiac(nextZodiac, nextAyanamsha);
+        } else if (state.singleChartMode === 'composite' && (
+            previousSettings.houseSystem !== state.pageSettings.houseSystem
+            || previousSettings.compositeMethod !== state.pageSettings.compositeMethod
+        )) {
+            await loadCompositeChart({ force: true });
         } else if (state.pageSettings.houseSystem !== normalizeHouseSystemCode(state.natalData?.birth_data?.house_system || 'P')) {
             await updateHouseSystem(nextHouseSystem);
         } else {
@@ -3174,6 +3225,7 @@
             state.synastryMode = 'db';
             state.synastryPartnerId = String(id);
             state.synastryManual = buildManualSynastryFromMoment(moment, chart);
+            invalidateCompositeCache();
             if (refs.forecastNewSynastryPartnerSelect) {
                 const select = refs.forecastNewSynastryPartnerSelect;
                 if (!Array.from(select.options).some((opt) => opt.value === String(id))) {
@@ -3192,6 +3244,7 @@
             state.synastryMode = 'manual';
             state.synastryPartnerId = '';
             state.synastryManual = buildManualSynastryFromMoment(moment, chart);
+            invalidateCompositeCache();
             setSynastryMode('manual');
             syncSynastryManualControlsFromState();
         }
@@ -3200,6 +3253,9 @@
         syncControlsFromState();
         schedulePersist();
         await ensureSynastryLayerActive({ lightweight: true });
+        if (state.singleChartMode === 'composite') {
+            await enterCompositeMode();
+        }
     }
 
     async function stepTargetDatetime(direction) {
@@ -3635,11 +3691,12 @@
     }
 
     function renderWheel() {
-        if (!state.wheel || !state.natalWheelData) return;
+        const baseData = activeBaseWheelData();
+        if (!state.wheel || !baseData) return;
         const rawViewModel = window.PrognosticLayerNormalizer.buildViewModel(
-            state.natalWheelData,
+            baseData,
             state.layers || {},
-            { activeInstances: state.activeLayers },
+            { activeInstances: isCompositeSingleMode() ? [] : state.activeLayers },
         );
         const viewModel = filterViewModelForSettings(rawViewModel);
         state.viewModel = viewModel;
@@ -3676,12 +3733,18 @@
         renderResultView();
     }
 
-    function setWheelView(view) {
+    function setWheelView(view, options = {}) {
         const next = view === 'single' ? 'single' : 'multi';
-        if (state.wheelView === next) return;
+        const nextSingleMode = next === 'single'
+            ? (options.singleChartMode === 'composite' ? 'composite' : 'natal')
+            : 'natal';
+        if (state.wheelView === next && state.singleChartMode === nextSingleMode) return;
         state.wheelView = next;
+        state.singleChartMode = nextSingleMode;
         syncWorkspaceModePanels();
         syncWheelViewButtons();
+        renderStaticNatal();
+        refreshViewModel();
         renderWheel();
         renderRightLayerTabs();
         renderRightPanel();
@@ -3697,6 +3760,7 @@
         const isSingle = state.wheelView === 'single';
         document.body.classList.toggle('forecast-new-single-mode', isSingle);
         document.body.classList.toggle('forecast-new-multi-mode', !isSingle);
+        document.body.classList.toggle('forecast-new-composite-mode', isCompositeSingleMode());
         refs.forecastNewProgPanel?.setAttribute('data-panel-mode', isSingle ? 'natal' : 'prognostic');
         // Rebuild chrome for the new mode's layout (panels.single vs panels.multi).
         if (state.panelLayout) renderPanels();
@@ -3882,182 +3946,80 @@
         return [partnerName, bd?.date, bd?.place].filter(Boolean).join(' · ');
     }
 
-    function clearCompositePanel() {
-        [refs.forecastNewCompositePanel, refs.forecastNewCompositeInlinePanel].forEach((panel) => {
-            if (!panel) return;
-            panel.classList.add('hidden');
-            panel.innerHTML = '';
-        });
+    function normalizeCompositeMethod(method) {
+        return method === 'davison' ? 'davison' : 'midpoint';
     }
 
-    function formatCompositePoint(point) {
-        const degree = point?.degree_in_sign_formatted || (
-            point?.degree_in_sign != null ? `${Number(point.degree_in_sign).toFixed(2)}°` : ''
-        );
-        return [degree, signLabel(point?.sign)].filter(Boolean).join(' ');
+    function invalidateCompositeCache() {
+        state.compositeData = null;
+        state.compositeChartData = null;
+        state.compositeMeta = null;
     }
 
-    function compositeRows(points = []) {
-        return (points || []).map((point) => `
-            <tr>
-                <td>${escapeHtml(planetLabel(point.name))}</td>
-                <td>${escapeHtml(formatCompositePoint(point))}</td>
-            </tr>
-        `).join('');
+    function selectedPartnerName() {
+        if (state.synastryMode === 'manual') {
+            return state.synastryManual?.name || t('page.forecastNew.resultViews.manualPartner') || 'Партнёр';
+        }
+        const select = refs.forecastNewSynastryPartnerSelect;
+        return select && select.selectedIndex > 0
+            ? (select.options[select.selectedIndex]?.text || '')
+            : '';
     }
 
-    // A small two-column position table (body/angle/house → position).
-    // Returns '' when there are no rows so the section degrades gracefully
-    // (e.g. midpoint has no houses; a partner with no birth time has no angles).
-    function compositePositionTable(rows) {
-        if (!rows) return '';
-        return `
-            <table class="forecast-new-composite-table">
-                <thead><tr><th>${escapeHtml(t('page.chart.table.planets.symbol') || 'Body')}</th><th>${escapeHtml(t('page.chart.table.planets.position') || 'Position')}</th></tr></thead>
-                <tbody>${rows}</tbody>
-            </table>`;
+    function compositePairTitle() {
+        const birth = state.natalData?.birth_data || {};
+        const primary = [birth.first_name, birth.last_name].filter(Boolean).join(' ').trim()
+            || refs.forecastNewTitle?.textContent
+            || t('page.synastry.people.primary')
+            || 'Карта';
+        return [primary, selectedPartnerName()].filter(Boolean).join(' + ');
     }
 
-    function compositeAnglesRows(angles) {
-        const entries = Object.values(angles || {}).filter((a) => a && a.longitude != null);
-        if (!entries.length) return '';
-        return entries.map((angle) => `
-            <tr>
-                <td>${escapeHtml(planetLabel(angle.name))}</td>
-                <td>${escapeHtml(formatCompositePoint(angle))}</td>
-            </tr>
-        `).join('');
+    function compositeMethodLabel(method = state.compositeMethod) {
+        return t(`page.forecastNew.composite.${normalizeCompositeMethod(method)}`);
     }
 
-    function compositeHousesRows(houses) {
-        const list = (houses || []).filter((h) => h && h.longitude != null);
-        if (!list.length) return '';
-        return list.map((house) => `
-            <tr>
-                <td>${escapeHtml(`${t('page.chart.table.houses.house') || 'House'} ${house.number}`)}</td>
-                <td>${escapeHtml(formatCompositePoint(house))}</td>
-            </tr>
-        `).join('');
-    }
-
-    // Aspect rows. Midpoint aspects carry no `applying` field (no planet speeds),
-    // so the phase column renders '—'; Davison aspects carry it.
-    function compositeAspectsSection(aspects) {
-        const list = aspects || [];
-        if (!list.length) return '';
-        const sorted = list.slice().sort((a, b) => (Number(a?.orb) || 0) - (Number(b?.orb) || 0));
-        const rows = sorted.map((aspect) => {
-            const phase = state.prognosticRenderer?.getApplyingSeparatingShortLabel?.(aspect) || '';
-            const orb = Number(aspect?.orb);
-            return `
-                <tr>
-                    <td>${escapeHtml(formatAspectText(aspect))}</td>
-                    <td>${phase ? escapeHtml(phase) : '—'}</td>
-                    <td class="mono">${Number.isFinite(orb) ? `${orb.toFixed(2)}°` : '—'}</td>
-                </tr>`;
-        }).join('');
-        return `
-            ${compositeSubhead('page.forecastNew.composite.aspects', 'Aspects')}
-            <table class="forecast-new-composite-table forecast-new-composite-aspects">
-                <thead><tr>
-                    <th>${escapeHtml(t('page.forecastNew.resultViews.aspect') || 'Aspect')}</th>
-                    <th>${escapeHtml(t('page.forecastNew.resultViews.phase') || 'Phase')}</th>
-                    <th>${escapeHtml(t('page.forecastNew.resultViews.orb') || 'Orb')}</th>
-                </tr></thead>
-                <tbody>${rows}</tbody>
-            </table>`;
-    }
-
-    function compositeMetaLine(chart) {
-        const mt = chart.midpoint_time;
-        if (!mt) return '';
-        const coords = (mt.latitude != null && mt.longitude != null)
-            ? `${Number(mt.latitude).toFixed(2)}, ${Number(mt.longitude).toFixed(2)}`
-            : (mt.place || mt.location || '');
-        const parts = [mt.date_utc || mt.date, mt.time_utc ? `${mt.time_utc} UTC` : mt.time, coords]
-            .filter(Boolean);
-        if (!parts.length) return '';
-        return `<p class="forecast-new-composite-meta">${escapeHtml(parts.join(' · '))}</p>`;
-    }
-
-    function compositeSubhead(key, fallback) {
-        return `<h6 class="forecast-new-composite-subhead">${escapeHtml(t(key) || fallback)}</h6>`;
-    }
-
-    // Thin adapter: map a composite chart onto the shared wheel's viewModel as a
-    // single natal-shaped ring with no prognostic layers (D3). Midpoint has no
-    // houses (empty array) — the wheel renders a sign-only ring; Davison has houses.
-    function buildCompositeViewModel(chart, label) {
-        const planets = chart.planets || [];
-        const angles = chart.angles || null;
-        const aspectBodies = planets.concat(angles ? Object.values(angles) : []);
+    function buildCompositeChartData(chart, method, response = {}) {
+        if (!chart) return null;
+        const pairTitle = compositePairTitle();
+        const methodLabel = compositeMethodLabel(method);
+        const mt = chart.midpoint_time || {};
+        const metaParts = [
+            methodLabel,
+            state.pageSettings.houseSystem,
+            mt.date_utc ? `${mt.date_utc}${mt.time_utc ? ` ${mt.time_utc} UTC` : ''}` : '',
+        ].filter(Boolean);
         return {
-            natalLayer: {
-                method: 'natal',
-                label: label || '',
-                bodies: planets,
-                aspectBodies,
-                houses: chart.houses || [],
-                aspects: chart.aspects || [],
-                angles,
-                raw: chart,
-                ringIndex: 0,
-                style: { color: '#111111' },
+            ...chart,
+            user_id: state.userId,
+            title: `${t('page.forecastNew.composite.calculate') || 'Композит'}: ${pairTitle}`,
+            chart_kind: 'composite',
+            composite_method: method,
+            composite_pair_title: pairTitle,
+            composite_meta: metaParts.join(' · '),
+            davison_unavailable_reason: response.davison_unavailable_reason || null,
+            birth_data: {
+                ...(state.natalData?.birth_data || {}),
+                first_name: t('page.forecastNew.composite.calculate') || 'Композит',
+                last_name: pairTitle,
+                house_system: state.pageSettings.houseSystem,
+                date: mt.date_utc || state.natalData?.birth_data?.date || '',
+                time: mt.time_utc || state.natalData?.birth_data?.time || '',
+                timezone: mt.time_utc ? 'UTC' : state.natalData?.birth_data?.timezone,
+                latitude: mt.latitude ?? state.natalData?.birth_data?.latitude,
+                longitude: mt.longitude ?? state.natalData?.birth_data?.longitude,
+                place: pairTitle,
             },
-            activePrognosticLayers: [],
+            planets: chart.planets || [],
+            houses: chart.houses || [],
+            angles: chart.angles || {},
+            aspects: chart.aspects || [],
+            special_points: chart.special_points || {},
+            aspect_configurations: chart.aspect_configurations || [],
+            stelliums: chart.stelliums || [],
+            balances: chart.balances || null,
+            cosmogram_pattern: chart.cosmogram_pattern || null,
         };
-    }
-
-    // Render a composite chart onto its section's <svg>. Failures are swallowed
-    // so a wheel problem never blanks the (already-rendered) tables.
-    function renderCompositeWheel(panel, method, chart) {
-        if (!chart || !panel || !window.PrognosticRingsWheel) return;
-        const svg = panel.querySelector(`svg[data-composite-wheel="${method}"]`);
-        if (!svg) return;
-        try {
-            const label = t(`page.forecastNew.composite.${method}`) || method;
-            const wheel = new window.PrognosticRingsWheel(svg);
-            wheel.render(buildCompositeViewModel(chart, label));
-        } catch (error) {
-            if (window.console) console.warn('Composite wheel render failed', error);
-        }
-    }
-
-    function compositeSection(titleKey, chart, unavailableReason, method) {
-        if (!chart) {
-            const reason = unavailableReason
-                ? `<p class="forecast-new-composite-meta">${escapeHtml(unavailableReason)}</p>`
-                : '';
-            return `<section class="forecast-new-composite-section">
-                <h5>${escapeHtml(t(titleKey) || titleKey)}</h5>
-                <p class="forecast-new-composite-empty">${escapeHtml(t('page.forecastNew.composite.unavailable') || '—')}</p>
-                ${reason}
-            </section>`;
-        }
-        const planetRows = compositeRows(chart.planets);
-        const angleRows = compositeAnglesRows(chart.angles);
-        const houseRows = compositeHousesRows(chart.houses);
-        const planetsBlock = planetRows
-            ? `${compositeSubhead('page.forecastNew.composite.planets', 'Planets')}${compositePositionTable(planetRows)}`
-            : '';
-        const anglesBlock = angleRows
-            ? `${compositeSubhead('page.forecastNew.composite.angles', 'Angles')}${compositePositionTable(angleRows)}`
-            : '';
-        const housesBlock = houseRows
-            ? `${compositeSubhead('page.forecastNew.composite.houses', 'Houses')}${compositePositionTable(houseRows)}`
-            : '';
-        const wheel = method
-            ? `<svg class="forecast-new-composite-wheel" data-composite-wheel="${escapeHtml(method)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${escapeHtml(t(titleKey) || titleKey)}"></svg>`
-            : '';
-        return `<section class="forecast-new-composite-section">
-            <h5>${escapeHtml(t(titleKey) || titleKey)}</h5>
-            ${compositeMetaLine(chart)}
-            ${wheel}
-            ${planetsBlock}
-            ${anglesBlock}
-            ${housesBlock}
-            ${compositeAspectsSection(chart.aspects)}
-        </section>`;
     }
 
     // Build the /composite/calculate request body for the current partner.
@@ -4067,12 +4029,14 @@
         if (!state.userId) return null;
         const houseSystem = state.pageSettings.houseSystem
             || state.natalData?.birth_data?.house_system || 'P';
+        const method = normalizeCompositeMethod(state.compositeMethod);
         if (state.synastryMode === 'manual') {
             const m = state.synastryManual;
             if (!m || !m.date || !m.time || !m.timezone) return null;
             return {
                 user_id: state.userId,
                 house_system: houseSystem,
+                method,
                 partner_birth_data: {
                     name: m.name || null,
                     date: m.date,
@@ -4089,6 +4053,7 @@
             user_id: state.userId,
             partner_id: state.synastryPartnerId,
             house_system: houseSystem,
+            method,
         };
     }
 
@@ -4096,43 +4061,77 @@
     // recompute (the endpoint now builds charts + may geocode). Keyed by body.
     let _compositeMemo = { key: null, data: null };
 
-    function renderCompositeData(panel, data) {
-        panel.innerHTML = `
-            <div class="forecast-new-composite">
-                ${compositeSection('page.forecastNew.composite.midpoint', data.midpoint, null, 'midpoint')}
-                ${compositeSection('page.forecastNew.composite.davison', data.davison, data.davison_unavailable_reason, 'davison')}
-            </div>`;
-        // Draw the wheels after the SVGs exist in the DOM (the renderer measures
-        // text via getBBox, so the nodes must be attached first).
-        renderCompositeWheel(panel, 'midpoint', data.midpoint);
-        renderCompositeWheel(panel, 'davison', data.davison);
-    }
-
-    async function renderCompositePanel(options = {}) {
-        const panel = options.target === 'inline'
-            ? (refs.forecastNewCompositeInlinePanel || refs.forecastNewCompositePanel)
-            : refs.forecastNewCompositePanel;
-        if (!panel) return;
+    async function loadCompositeChart(options = {}) {
         const body = buildCompositeRequest();
         if (!body) {
-            panel.classList.remove('hidden');
-            panel.innerHTML = `<p class="forecast-new-composite-empty">${escapeHtml(t('page.forecastNew.composite.noPartner') || '—')}</p>`;
+            window.showToast?.(t('page.forecastNew.composite.noPartner') || 'Сначала выберите партнёра', 'warning');
             return;
         }
-        panel.classList.remove('hidden');
         const key = JSON.stringify(body);
-        if (_compositeMemo.key === key && _compositeMemo.data) {
-            renderCompositeData(panel, _compositeMemo.data);
-            return;
+        if (!options.force && _compositeMemo.key === key && _compositeMemo.data) {
+            state.compositeData = _compositeMemo.data;
+            const method = normalizeCompositeMethod(state.compositeMethod);
+            const chart = state.compositeData[method];
+            if (!chart) {
+                const message = state.compositeData.davison_unavailable_reason
+                    || t('page.forecastNew.composite.unavailable')
+                    || 'Композит недоступен';
+                window.showToast?.(message, 'warning');
+                return null;
+            }
+            state.compositeChartData = buildCompositeChartData(chart, method, state.compositeData);
+            state.compositeMeta = state.compositeChartData?.composite_meta || '';
+            renderCompositeWorkspace();
+            return state.compositeChartData;
         }
-        panel.innerHTML = `<p class="forecast-new-composite-loading">${escapeHtml(t('common.loading') || '…')}</p>`;
+        refs.forecastNewWheelShell?.classList.add('forecast-new-loading');
+        refs.forecastNewProgPanel?.classList.add('forecast-new-loading');
         try {
             const data = await apiPost('/composite/calculate', body);
             _compositeMemo = { key, data };
-            renderCompositeData(panel, data);
+            state.compositeData = data;
+            const method = normalizeCompositeMethod(state.compositeMethod);
+            const chart = data[method];
+            if (!chart) {
+                const message = data.davison_unavailable_reason
+                    || t('page.forecastNew.composite.unavailable')
+                    || 'Композит недоступен';
+                window.showToast?.(message, 'warning');
+                return null;
+            }
+            state.compositeChartData = buildCompositeChartData(chart, method, data);
+            state.compositeMeta = state.compositeChartData?.composite_meta || '';
+            renderCompositeWorkspace();
+            return state.compositeChartData;
         } catch (error) {
-            panel.innerHTML = `<p class="forecast-new-composite-error">${escapeHtml(error.message || t('common.error') || 'Ошибка')}</p>`;
+            window.showToast?.(error.message || t('common.error') || 'Ошибка', 'error');
+            return null;
+        } finally {
+            refs.forecastNewWheelShell?.classList.remove('forecast-new-loading');
+            refs.forecastNewProgPanel?.classList.remove('forecast-new-loading');
         }
+    }
+
+    async function enterCompositeMode() {
+        state.compositeMethod = normalizeCompositeMethod(state.compositeMethod || state.pageSettings.compositeMethod);
+        state.pageSettings.compositeMethod = state.compositeMethod;
+        state.singleChartMode = 'composite';
+        state.wheelView = 'single';
+        syncWorkspaceModePanels();
+        syncWheelViewButtons();
+        syncControlsFromState();
+        await loadCompositeChart();
+        renderRightLayerTabs();
+        schedulePersist();
+    }
+
+    function renderCompositeWorkspace() {
+        syncWorkspaceModePanels();
+        syncControlsFromState();
+        renderStaticNatal();
+        refreshViewModel();
+        renderWheel();
+        renderRightPanel();
     }
 
     function renderRightLayerTabs() {
@@ -4195,12 +4194,9 @@
         // Discoverable whenever a synastry partner layer is active — not only when
         // it's the *selected* layer (P5). Users no longer have to hunt for it.
         const hasSynastry = hasActiveMethod('synastry_partner');
-        const visible = state.wheelView !== 'single' && hasSynastry;
+        const visible = state.singleChartMode !== 'composite' && hasSynastry;
         refs.forecastNewCompositeHeaderBtn.classList.toggle('hidden', !visible);
         refs.forecastNewCompositeHeaderBtn.disabled = !visible;
-        if (!visible && refs.forecastNewCompositeInlinePanel) {
-            refs.forecastNewCompositeInlinePanel.classList.add('hidden');
-        }
     }
 
     function scheduleRightPanelRender() {
@@ -4282,10 +4278,19 @@
 
     function renderSingleNatalRightPanel() {
         if (!refs.prognosticPanelTitle || !refs.prognosticPanelMeta) return;
-        refs.prognosticPanelTitle.textContent = 'Натал';
-        refs.prognosticPanelMeta.textContent = refs.natalPanelMeta?.textContent || '';
+        const activeChart = activeBaseChartData();
+        refs.prognosticPanelTitle.textContent = isCompositeSingleMode()
+            ? (t('page.forecastNew.composite.calculate') || 'Композит')
+            : 'Натал';
+        refs.prognosticPanelMeta.textContent = isCompositeSingleMode()
+            ? (activeChart?.composite_meta || state.compositeMeta || '')
+            : (refs.natalPanelMeta?.textContent || '');
         if (refs.forecastNewTimeStepper) refs.forecastNewTimeStepper.innerHTML = '';
-        if (refs.targetDatetimeLabel) refs.targetDatetimeLabel.textContent = state.natalSelectedDateTime.replace('T', ' ');
+        if (refs.targetDatetimeLabel) {
+            const bd = activeChart?.birth_data || {};
+            refs.targetDatetimeLabel.textContent = [bd.date, bd.time].filter(Boolean).join(' ')
+                || state.natalSelectedDateTime.replace('T', ' ');
+        }
         // Single mode is natal-only. The natal* containers are filled by
         // renderStaticNatal()/state.natalRenderer and distributed across BOTH
         // panels by renderPanels() according to panels.single. The legacy reuse
@@ -6273,6 +6278,8 @@
         state.stepMode = restored.stepMode || state.stepMode;
         state.customStep = normalizeCustomStep(restored.customStep || state.customStep);
         state.wheelView = restored.wheelView === 'single' ? 'single' : 'multi';
+        state.singleChartMode = restored.singleChartMode === 'composite' ? 'composite' : 'natal';
+        state.compositeMethod = normalizeCompositeMethod(restored.compositeMethod || restored.pageSettings?.compositeMethod || state.compositeMethod);
         state.resultView = 'wheel';
         const restoredSolarYear = Number(restored.solarYear);
         if (Number.isFinite(restoredSolarYear) && restoredSolarYear >= 1900 && restoredSolarYear <= 2100) {
@@ -6309,6 +6316,7 @@
             ...state.pageSettings,
             ...(restored.pageSettings || {}),
             houseSystem: normalizeHouseSystemCode(restored.pageSettings?.houseSystem || state.pageSettings.houseSystem),
+            compositeMethod: state.compositeMethod,
             planetScale: clampPointScale(restored.pageSettings?.planetScale ?? state.pageSettings.planetScale),
             pointScale: clampPointScale(restored.pageSettings?.pointScale ?? state.pageSettings.pointScale),
             enabledAspectTypes: Array.isArray(restored.pageSettings?.enabledAspectTypes)
@@ -6389,10 +6397,11 @@
                 matrixSettings.prognostic_rows || matrixSettings.rows || state.matrixRows
             );
             state.pageSettings = {
-                ...state.pageSettings,
-                houseSystem: normalizeHouseSystemCode(payload?.chart_meta?.house_system || state.pageSettings.houseSystem),
-                orientation: resolved?.view_options?.orientation === 'asc' ? 'asc' : (state.pageSettings.orientation || 'aries'),
-                houseNumberStyle: resolved?.view_options?.house_number_style === 'roman' ? 'roman' : 'arabic',
+            ...state.pageSettings,
+            houseSystem: normalizeHouseSystemCode(payload?.chart_meta?.house_system || state.pageSettings.houseSystem),
+            orientation: resolved?.view_options?.orientation === 'asc' ? 'asc' : (state.pageSettings.orientation || 'aries'),
+            compositeMethod: normalizeCompositeMethod(resolved?.view_options?.composite_method || state.pageSettings.compositeMethod || state.compositeMethod),
+            houseNumberStyle: resolved?.view_options?.house_number_style === 'roman' ? 'roman' : 'arabic',
                 houseLabelsOutside: resolved?.view_options?.house_labels_outside === true,
                 aspectScope: ['all', 'major', 'minor'].includes(resolved?.aspects?.scope)
                     ? resolved.aspects.scope
@@ -6446,6 +6455,7 @@
             },
             view_options: {
                 orientation: state.pageSettings.orientation === 'asc' ? 'asc' : 'aries',
+                composite_method: normalizeCompositeMethod(state.pageSettings.compositeMethod || state.compositeMethod),
                 bold_asc_dsc: state.pageSettings.angleAscDscBold !== false,
                 bold_mc_ic: state.pageSettings.angleMcIcBold !== false,
                 show_transit_cusps: state.pageSettings.showTransitCusps !== false,
@@ -6678,6 +6688,8 @@
                 stepMode: state.stepMode,
                 customStep: state.customStep,
                 wheelView: state.wheelView,
+                singleChartMode: state.singleChartMode,
+                compositeMethod: state.compositeMethod,
                 resultView: 'wheel',
                 solarYear: state.solarYear,
                 solarLocation: state.solarLocation,

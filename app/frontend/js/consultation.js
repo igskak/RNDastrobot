@@ -125,25 +125,33 @@ function render() {
     </div>
     <p class="consult-meta">${escapeHtml(dateStr)}${cs.client_name ? ' · ' + escapeHtml(cs.client_name) : ''}</p>`;
 
+    let primaryHtml = '';
+    let sideHtml = '';
+
     if (cs.call_status === 'summary_failed') {
-        html += `<div class="consult-card">
+        primaryHtml += `<div class="consult-card consult-card-status">
             <p class="consult-empty">${escapeHtml(t('page.consultation.summaryFailed'))}</p>
             ${cs.summary_error ? `<p class="consult-empty">${escapeHtml(cs.summary_error)}</p>` : ''}
         </div>`;
     } else if (!sj) {
         // Legacy row (pre-v1): render old shape read-only.
-        html += renderLegacy(cs);
+        primaryHtml += renderLegacy(cs);
     } else {
-        html += renderInternalSummary(sj);
-        html += renderClientReport(cs, sj);
-        html += renderKeyPoints(sj.key_points || []);
-        html += renderOpenQuestions(sj.open_questions_or_unclear_items || []);
+        primaryHtml += renderInternalSummary(sj);
+        primaryHtml += renderClientReport(cs, sj);
+        sideHtml += renderKeyPoints(sj.key_points || []);
+        sideHtml += renderOpenQuestions(sj.open_questions_or_unclear_items || []);
     }
 
     // Client memory (history) — always show, it's client-level
-    html += `<div class="consult-card">
+    sideHtml += `<div class="consult-card consult-card-memory">
         <div class="consult-card-title"><span>${escapeHtml(t('page.consultation.memory.title'))}</span></div>
         <div id="memList" class="mem-list"><div class="consult-loading"><span class="consult-spinner"></span></div></div>
+    </div>`;
+
+    html += `<div class="consult-detail-grid">
+        <div class="consult-column consult-column-main">${primaryHtml}</div>
+        <div class="consult-column consult-column-side">${sideHtml}</div>
     </div>`;
 
     root.innerHTML = html;
@@ -152,13 +160,13 @@ function render() {
 }
 
 function renderLegacy(cs) {
-    let h = `<div class="consult-card"><div class="consult-card-title"><span>${escapeHtml(t('page.consultation.summary.title'))}</span></div>`;
+    let h = `<div class="consult-card consult-card-summary"><div class="consult-card-title"><span>${escapeHtml(t('page.consultation.summary.title'))}</span></div>`;
     h += cs.summary_text
         ? `<p class="consult-text">${escapeHtml(cs.summary_text)}</p>`
         : `<p class="consult-empty">${escapeHtml(t('page.consultation.legacy'))}</p>`;
     h += `</div>`;
     if (cs.client_facing_summary) {
-        h += `<div class="consult-card"><div class="consult-card-title"><span>${escapeHtml(t('page.consultation.report.title'))}</span></div>
+        h += `<div class="consult-card consult-card-report"><div class="consult-card-title"><span>${escapeHtml(t('page.consultation.report.title'))}</span></div>
             <p class="consult-text">${escapeHtml(cs.client_facing_summary)}</p></div>`;
     }
     return h;
@@ -166,11 +174,11 @@ function renderLegacy(cs) {
 
 function renderInternalSummary(sj) {
     const ss = sj.session_summary || {};
-    return `<div class="consult-card">
+    return `<div class="consult-card consult-card-summary">
         <div class="consult-card-title"><span>${escapeHtml(t('page.consultation.summary.title'))}</span></div>
         <p class="consult-text">${escapeHtml(ss.brief || '')}</p>
         ${ss.detailed ? `<details><summary class="consult-detail-toggle">${escapeHtml(t('page.consultation.summary.showDetailed'))}</summary>
-            <p class="consult-text" style="margin-top:10px">${escapeHtml(ss.detailed)}</p></details>` : ''}
+            <p class="consult-text consult-text-detail">${escapeHtml(ss.detailed)}</p></details>` : ''}
     </div>`;
 }
 
@@ -181,7 +189,7 @@ function renderClientReport(cs, sj) {
     const sharedNote = cs.client_report_shared_at
         ? `<span class="consult-shared-note">${escapeHtml(t('page.consultation.report.sharedAt'))} ${escapeHtml(new Date(`${cs.client_report_shared_at}Z`).toLocaleString())}</span>`
         : '';
-    return `<div class="consult-card">
+    return `<div class="consult-card consult-card-report">
         <div class="consult-card-title">
             <span>${escapeHtml(t('page.consultation.report.title'))}</span>
             <span class="consult-review-badge">${escapeHtml(t('page.consultation.report.reviewRequired'))}</span>
@@ -211,7 +219,7 @@ function renderKeyPoints(points) {
             <ul class="consult-kp-list">${items}</ul>
         </div>`;
     });
-    return `<div class="consult-card">
+    return `<div class="consult-card consult-card-keypoints">
         <div class="consult-card-title"><span>${escapeHtml(t('page.consultation.keyPoints.title'))}</span></div>
         ${groups}
     </div>`;
@@ -219,7 +227,7 @@ function renderKeyPoints(points) {
 
 function renderOpenQuestions(items) {
     if (!items.length) {
-        return `<div class="consult-card">
+        return `<div class="consult-card consult-card-questions">
             <div class="consult-card-title"><span>${escapeHtml(t('page.consultation.openQuestions.title'))}</span></div>
             <p class="consult-empty">${escapeHtml(t('page.consultation.openQuestions.none'))}</p>
         </div>`;
@@ -229,7 +237,7 @@ function renderOpenQuestions(items) {
             <div class="consult-oq-reason">${escapeHtml(enumLabel('openQuestionReason', o.reason))} · ${escapeHtml(enumLabel('mentionedBy', o.mentioned_by))}</div>
         </li>`
     ).join('');
-    return `<div class="consult-card">
+    return `<div class="consult-card consult-card-questions">
         <div class="consult-card-title"><span>${escapeHtml(t('page.consultation.openQuestions.title'))}</span></div>
         <ul class="consult-oq-list">${lis}</ul>
     </div>`;

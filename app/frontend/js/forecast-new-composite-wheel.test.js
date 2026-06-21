@@ -7,7 +7,7 @@
  * (buildCompositeViewModel) — it does NOT modify the engine. These tests are the
  * permanent regression net D7 asked for: prove natal + a prognostic (forecast)
  * layer still render, and that composite-shaped viewModels render in both their
- * forms (midpoint = no houses, Davison = with houses).
+ * forms (midpoint = midpoint houses, Davison = real houses).
  *
  * jsdom has no SVG measurement, so getBBox/getBoundingClientRect are stubbed.
  */
@@ -90,12 +90,12 @@ const HOUSES = Array.from({ length: 12 }, (_, i) => ({ number: i + 1, longitude:
     ok(bodyCount(svg) >= 3, 'forecast: natal + transit bodies rendered (>=3)');
 })();
 
-// --- composite midpoint: planets + angles, NO houses ---
+// --- composite midpoint: planets + angles + midpoint houses ---
 (() => {
     const svg = newSvg();
-    new Wheel(svg).render({ natalLayer: natalLayer(SUN_MOON, [], ANGLES), activePrognosticLayers: [] });
-    ok(bodyCount(svg) >= 2, 'composite-midpoint: bodies rendered without houses');
-    ok(houseCount(svg) === 0, 'composite-midpoint: no house cusps (midpoint has no houses)');
+    new Wheel(svg).render({ natalLayer: natalLayer(SUN_MOON, HOUSES, ANGLES), activePrognosticLayers: [] });
+    ok(bodyCount(svg) >= 2, 'composite-midpoint: bodies rendered');
+    ok(houseCount(svg) >= 12, 'composite-midpoint: midpoint house cusps rendered');
 })();
 
 // --- composite Davison: planets + angles + houses ---

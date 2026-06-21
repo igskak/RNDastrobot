@@ -464,6 +464,7 @@
       },
       "composite": {
         "calculate": "Composite",
+        "methodLabel": "Composite method",
         "midpoint": "Midpoint",
         "davison": "Davison",
         "unavailable": "Davison is unavailable for incomplete birth data",
@@ -1878,20 +1879,55 @@
         "secondary": "See what it does"
       },
       "hero": {
-        "kicker": "For astrologers who hold their practice with care",
-        "title": "Charts, people profiles, and important context in one calm workspace",
-        "text": "Steliara helps you return quickly to a person, their chart, previous conversations, notes, and key periods. Less searching through files and messages, more attention for the reading itself.",
+        "kicker": "For careful astrological practice",
+        "title": "Astrologer workspace",
+        "text": "Steliara keeps the person, chart, notes, conversations, and key periods close. Less searching through files, more attention for the reading itself.",
         "proof": {
           "accuracy": "Calculations based on Swiss Ephemeris",
           "workspace": "Profiles, charts, notes, and recordings together",
-          "assistant": "A data-aware chat answers in seconds"
+          "assistant": "Data-aware chat answers in seconds"
         }
       },
       "preview": {
         "title": "Practice profile",
         "status": "Context nearby",
+        "modes": {
+          "profile": "Profile",
+          "forecast": "Periods",
+          "chat": "Chat"
+        },
         "insightTitle": "Remember what matters",
         "insight": "Before a meeting, you can see the chart, recordings, notes, and important points without rebuilding the history from memory.",
+        "context": {
+          "personLabel": "Client",
+          "personValue": "Natal profile",
+          "notesLabel": "Notes",
+          "notesValue": "12 saved points",
+          "recordingsLabel": "Calls",
+          "recordingsValue": "2 recordings",
+          "chartsLabel": "Charts",
+          "chartsValue": "Natal + forecast"
+        },
+        "timeline": {
+          "itemOne": {
+            "label": "Oct 2025 - May 2026",
+            "value": "Transit Uranus to natal Venus"
+          },
+          "itemTwo": {
+            "label": "Current focus",
+            "value": "Solar return and monthly triggers"
+          },
+          "itemThree": {
+            "label": "Saved for session",
+            "value": "Key dates stay attached to the profile"
+          }
+        },
+        "chat": {
+          "query": "Show Uranus-Venus conjunctions for the past and next 5 years.",
+          "meta": "Answer from chart data",
+          "answerTitle": "Three exact windows found",
+          "answer": "The assistant returns dates, context, and the chart links you need before the session."
+        },
         "metricOne": {
           "label": "Profile",
           "value": "Person + notes"
@@ -1899,6 +1935,10 @@
         "metricTwo": {
           "label": "Material",
           "value": "Charts + periods"
+        },
+        "metricThree": {
+          "label": "Assistant",
+          "value": "Answers from data"
         }
       },
       "socialProof": {
@@ -2066,6 +2106,7 @@
       "a11y": {
         "navigation": "Landing navigation",
         "proofPoints": "Key capabilities",
+        "previewTabs": "Workspace preview modes",
         "productPreview": "Workspace preview",
         "trustIndicators": "Key capabilities"
       },

@@ -17,21 +17,24 @@ def test_circular_midpoint_is_symmetric():
     assert circular_midpoint(100.0, 200.0) == pytest.approx(circular_midpoint(200.0, 100.0))
 
 
-def _chart(planets, angles=None):
-    return {"planets": planets, "angles": angles or {}}
+def _chart(planets, angles=None, houses=None):
+    return {"planets": planets, "angles": angles or {}, "houses": houses or []}
 
 
 def test_midpoint_composite_matches_common_planets_only():
     primary = _chart(
         [{"name": "Sun", "longitude": 10.0}, {"name": "Moon", "longitude": 100.0}],
         {"ASC": {"longitude": 0.0}, "MC": {"longitude": 270.0}},
+        [{"number": 1, "longitude": 350.0}, {"number": 2, "longitude": 40.0}],
     )
     partner = _chart(
         [{"name": "Sun", "longitude": 50.0}, {"name": "Mars", "longitude": 200.0}],
         {"ASC": {"longitude": 20.0}, "MC": {"longitude": 290.0}},
+        [{"number": 1, "longitude": 10.0}, {"number": 2, "longitude": 80.0}],
     )
     comp = CompositeService.midpoint_composite(primary, partner)
     by_name = {p["name"]: p for p in comp["planets"]}
+    houses_by_number = {h["number"]: h for h in comp["houses"]}
     assert comp["method"] == "midpoint"
     # Only Sun is common.
     assert set(by_name) == {"Sun"}
@@ -39,6 +42,10 @@ def test_midpoint_composite_matches_common_planets_only():
     assert by_name["Sun"]["sign"] == "Taurus"  # 30° = Aries/Taurus boundary → Taurus
     assert comp["angles"]["ASC"]["longitude"] == pytest.approx(10.0)
     assert comp["angles"]["MC"]["longitude"] == pytest.approx(280.0)
+    assert comp["angles"]["DSC"]["longitude"] == pytest.approx(190.0)
+    assert comp["angles"]["IC"]["longitude"] == pytest.approx(100.0)
+    assert houses_by_number[1]["longitude"] == pytest.approx(0.0)
+    assert houses_by_number[2]["longitude"] == pytest.approx(60.0)
 
 
 class _FakeAspectService:

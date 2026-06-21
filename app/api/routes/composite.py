@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import date as date_type, time as time_type
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Literal, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -43,6 +43,9 @@ class CompositeRequest(BaseModel):
         None, description="Данные рождения партнёра, введённые вручную"
     )
     house_system: str = Field("P", description="Система домов для Davison")
+    method: Literal["both", "midpoint", "davison"] = Field(
+        "both", description="Какой метод композита рассчитать"
+    )
 
     @model_validator(mode="after")
     def _exactly_one_partner(self) -> "CompositeRequest":
@@ -89,6 +92,39 @@ def _build_manual_partner(
         )
 
 
+def _chart_for_house_system(
+    chart: Dict[str, Any],
+    house_system: str,
+    auth: AuthContext,
+    db: Session,
+) -> Dict[str, Any]:
+    """Return a chart calculated with the requested house system when possible.
+
+    Saved charts may have been stored with another house system. Midpoint houses
+    must be based on the currently selected system, so we recalculate in memory
+    from birth_data and keep the saved chart untouched.
+    """
+    birth = chart.get("birth_data") or {}
+    if not all(birth.get(key) for key in ("date", "time", "timezone")):
+        return chart
+    return _natal_service.calculate_natal_chart(
+        birth_date=date_type.fromisoformat(str(birth["date"])),
+        birth_time=time_type.fromisoformat(str(birth["time"])),
+        timezone=str(birth["timezone"]),
+        astrologer_id=auth.astrologer.id,
+        place=birth.get("place"),
+        latitude=birth.get("latitude"),
+        longitude=birth.get("longitude"),
+        house_system=house_system,
+        save_to_db=False,
+        db_session=db,
+        first_name=birth.get("first_name"),
+        last_name=birth.get("last_name"),
+        zodiac=birth.get("zodiac") or "tropical",
+        ayanamsha=birth.get("ayanamsha") or "lahiri",
+    )
+
+
 @router.post(
     "/composite/calculate",
     status_code=status.HTTP_200_OK,
@@ -107,6 +143,7 @@ def calculate_composite(
         primary = _natal_service.get_natal_chart_from_db(payload.user_id, db)
         if primary is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Primary natal chart not found")
+        primary = _chart_for_house_system(primary, payload.house_system, auth, db)
 
         if payload.partner_id is not None:
             # Saved partner: authorize and load from DB.
@@ -114,21 +151,25 @@ def calculate_composite(
             partner = _natal_service.get_natal_chart_from_db(payload.partner_id, db)
             if partner is None:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Partner natal chart not found")
+            partner = _chart_for_house_system(partner, payload.house_system, auth, db)
         else:
             # Manual partner: user-supplied data, no DB record to authorize (D2).
             # Built in-memory only — save_to_db stays False so nothing is persisted.
             partner = _build_manual_partner(payload.partner_birth_data, payload.house_system, auth, db)
 
         service = CompositeService(engine=SwissEphemerisEngine(ephe_path=EPHE_PATH))
-        midpoint = CompositeService.midpoint_composite(primary, partner)
+        midpoint = None
+        if payload.method in ("both", "midpoint"):
+            midpoint = CompositeService.midpoint_composite(primary, partner)
         davison_unavailable_reason: str | None = None
-        try:
-            davison = service.davison(primary, partner, house_system=payload.house_system)
-        except ValueError as exc:
-            # Birth data incomplete for Davison — still return the midpoint composite.
-            logger.info("Davison skipped: {}", str(exc))
-            davison = None
-            davison_unavailable_reason = str(exc)
+        davison = None
+        if payload.method in ("both", "davison"):
+            try:
+                davison = service.davison(primary, partner, house_system=payload.house_system)
+            except ValueError as exc:
+                # Birth data incomplete for Davison — still return the midpoint composite.
+                logger.info("Davison skipped: {}", str(exc))
+                davison_unavailable_reason = str(exc)
 
         # In-composite aspects. Midpoint has no planet speeds, so omit phase;
         # Davison has real speeds, so annotate applying/separating (D5).

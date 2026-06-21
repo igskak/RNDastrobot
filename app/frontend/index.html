@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.index.title"></title>
-    <link rel="stylesheet" href="bundles/index.bundle.css?v=150edf815b13">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=150edf815b13">
+    <link rel="stylesheet" href="bundles/index.bundle.css?v=29ac0c9baa05">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=29ac0c9baa05">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '150edf815b13';</script>
+    <script>window.__APP_BUILD_ID__ = '29ac0c9baa05';</script>
 </head>
 <body class="index-page">
     <div class="page-loader" id="pageLoader">
@@ -63,19 +63,67 @@
                 </div>
 
                 <aside class="landing-hero-panel" data-i18n-aria-label="page.index.a11y.productPreview">
-                    <div class="landing-preview-card">
+                    <div class="landing-preview-card" data-preview-card>
                         <div class="landing-preview-head">
                             <span data-i18n="page.index.preview.title"></span>
                             <strong data-i18n="page.index.preview.status"></strong>
                         </div>
-                        <div class="landing-preview-wheel" aria-hidden="true">
-                            <span></span>
-                            <span></span>
-                            <span></span>
+                        <div class="landing-preview-tabs" role="tablist" data-i18n-aria-label="page.index.a11y.previewTabs">
+                            <button type="button" id="previewTabProfile" class="landing-preview-tab is-active" role="tab" aria-controls="previewPaneProfile" aria-selected="true" data-preview-tab="profile" data-i18n="page.index.preview.modes.profile"></button>
+                            <button type="button" id="previewTabForecast" class="landing-preview-tab" role="tab" aria-controls="previewPaneForecast" aria-selected="false" tabindex="-1" data-preview-tab="forecast" data-i18n="page.index.preview.modes.forecast"></button>
+                            <button type="button" id="previewTabChat" class="landing-preview-tab" role="tab" aria-controls="previewPaneChat" aria-selected="false" tabindex="-1" data-preview-tab="chat" data-i18n="page.index.preview.modes.chat"></button>
                         </div>
-                        <div class="landing-preview-note">
-                            <strong data-i18n="page.index.preview.insightTitle"></strong>
-                            <p data-i18n="page.index.preview.insight"></p>
+                        <div class="landing-preview-stage" data-preview-stage>
+                            <section id="previewPaneProfile" class="landing-preview-pane is-active" role="tabpanel" aria-labelledby="previewTabProfile" data-preview-pane="profile">
+                                <div class="landing-product-frame">
+                                    <div class="landing-product-sidebar" aria-hidden="true">
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                    </div>
+                                    <div class="landing-product-main">
+                                        <div class="landing-product-person">
+                                            <div class="landing-product-avatar" aria-hidden="true"></div>
+                                            <div>
+                                                <span data-i18n="page.index.preview.context.personLabel"></span>
+                                                <strong data-i18n="page.index.preview.context.personValue"></strong>
+                                            </div>
+                                        </div>
+                                        <div class="landing-product-context">
+                                            <div><span data-i18n="page.index.preview.context.notesLabel"></span><strong data-i18n="page.index.preview.context.notesValue"></strong></div>
+                                            <div><span data-i18n="page.index.preview.context.recordingsLabel"></span><strong data-i18n="page.index.preview.context.recordingsValue"></strong></div>
+                                            <div><span data-i18n="page.index.preview.context.chartsLabel"></span><strong data-i18n="page.index.preview.context.chartsValue"></strong></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="landing-preview-note">
+                                    <strong data-i18n="page.index.preview.insightTitle"></strong>
+                                    <p data-i18n="page.index.preview.insight"></p>
+                                </div>
+                            </section>
+                            <section id="previewPaneForecast" class="landing-preview-pane" role="tabpanel" aria-labelledby="previewTabForecast" data-preview-pane="forecast" hidden>
+                                <div class="landing-preview-wheel" aria-hidden="true">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                                <div class="landing-timeline-preview">
+                                    <div><span data-i18n="page.index.preview.timeline.itemOne.label"></span><strong data-i18n="page.index.preview.timeline.itemOne.value"></strong></div>
+                                    <div><span data-i18n="page.index.preview.timeline.itemTwo.label"></span><strong data-i18n="page.index.preview.timeline.itemTwo.value"></strong></div>
+                                    <div><span data-i18n="page.index.preview.timeline.itemThree.label"></span><strong data-i18n="page.index.preview.timeline.itemThree.value"></strong></div>
+                                </div>
+                            </section>
+                            <section id="previewPaneChat" class="landing-preview-pane" role="tabpanel" aria-labelledby="previewTabChat" data-preview-pane="chat" hidden>
+                                <div class="landing-chat-preview">
+                                    <div class="landing-chat-bubble landing-chat-bubble-user" data-i18n="page.index.preview.chat.query"></div>
+                                    <div class="landing-chat-bubble landing-chat-bubble-assistant">
+                                        <span data-i18n="page.index.preview.chat.meta"></span>
+                                        <strong data-i18n="page.index.preview.chat.answerTitle"></strong>
+                                        <p data-i18n="page.index.preview.chat.answer"></p>
+                                    </div>
+                                </div>
+                            </section>
                         </div>
                         <div class="landing-preview-grid">
                             <div>
@@ -85,6 +133,10 @@
                             <div>
                                 <span data-i18n="page.index.preview.metricTwo.label"></span>
                                 <strong data-i18n="page.index.preview.metricTwo.value"></strong>
+                            </div>
+                            <div>
+                                <span data-i18n="page.index.preview.metricThree.label"></span>
+                                <strong data-i18n="page.index.preview.metricThree.value"></strong>
                             </div>
                         </div>
                     </div>
@@ -391,7 +443,7 @@
         </footer>
     </div>
 
-    <script type="module" src="js/bundles/index.bundle.js?v=150edf815b13"></script>
-    <script src="js/locale-switcher.js?v=150edf815b13"></script>
+    <script type="module" src="js/bundles/index.bundle.js?v=29ac0c9baa05"></script>
+    <script src="js/locale-switcher.js?v=29ac0c9baa05"></script>
 </body>
 </html>

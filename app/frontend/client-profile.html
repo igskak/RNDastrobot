@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.clientProfile.title"></title>
-    <link rel="stylesheet" href="/bundles/client-profile.bundle.css?v=8d2a2cdfef35">
-    <link rel="stylesheet" href="/css/locale-switcher.css?v=8d2a2cdfef35">
+    <link rel="stylesheet" href="/bundles/client-profile.bundle.css?v=9a6a3f55714a">
+    <link rel="stylesheet" href="/css/locale-switcher.css?v=9a6a3f55714a">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '8d2a2cdfef35';</script>
+    <script>window.__APP_BUILD_ID__ = '9a6a3f55714a';</script>
 </head>
 <body class="profile-page">
     <div class="page-loader" id="pageLoader">
@@ -78,80 +78,90 @@
 
             </div>
 
-            <!-- Row 1b: Linked Charts (person context) -->
-            <section class="profile-card hidden" id="linkedChartsCard">
-                <div class="profile-card-header">
-                    <h2 class="profile-card-title" data-i18n="page.clientProfile.linkedCharts.title"></h2>
-                    <button class="btn-new btn-sm" type="button" id="linkChartBtn" data-i18n="page.clientProfile.linkedCharts.linkBtn"></button>
-                </div>
-                <p class="profile-empty hidden" id="linkedChartsEmpty" data-i18n="page.clientProfile.linkedCharts.empty"></p>
-                <div class="profile-linked-charts-list" id="linkedChartsList"></div>
-            </section>
+            <div class="profile-detail-grid">
+                <div class="profile-column profile-column-main">
 
-            <!-- Row 2: Related People -->
-            <section class="profile-card">
-                <div class="profile-card-header">
-                    <h2 class="profile-card-title" data-i18n="page.clientProfile.sections.relatedPeople"></h2>
-                    <div class="profile-related-header-actions">
-                        <button class="btn-logout btn-sm" type="button" id="linkExistingPersonBtn" data-i18n="page.clientProfile.related.linkExisting"></button>
-                        <button class="btn-new btn-sm" type="button" id="addRelatedPersonBtn" data-i18n="page.clientProfile.related.add"></button>
-                    </div>
-                </div>
-                <p class="profile-empty hidden" id="relatedPeopleEmpty" data-i18n="page.clientProfile.related.empty"></p>
-                <div class="profile-related-list" id="relatedPeopleList"></div>
-            </section>
+                    <!-- Row 1b: Linked Charts (person context) -->
+                    <section class="profile-card profile-card-linked hidden" id="linkedChartsCard">
+                        <div class="profile-card-header">
+                            <h2 class="profile-card-title" data-i18n="page.clientProfile.linkedCharts.title"></h2>
+                            <button class="btn-new btn-sm" type="button" id="linkChartBtn" data-i18n="page.clientProfile.linkedCharts.linkBtn"></button>
+                        </div>
+                        <p class="profile-empty hidden" id="linkedChartsEmpty" data-i18n="page.clientProfile.linkedCharts.empty"></p>
+                        <div class="profile-linked-charts-list" id="linkedChartsList"></div>
+                    </section>
 
-            <!-- Row 4: Key Insights -->
-            <section class="profile-card profile-card-insights" id="profileInsightsCard">
-                <h2 class="profile-card-title">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" style="opacity:.5"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M7 4v3.5l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-                    <span data-i18n="page.clientProfile.sections.keyInsights"></span>
-                </h2>
-                <ul class="profile-insights-list" id="profileInsightsList"></ul>
-                <p class="profile-insights-empty hidden" id="profileInsightsEmpty" data-i18n="page.clientProfile.insights.empty"></p>
-            </section>
+                    <!-- Row 2: Related People -->
+                    <section class="profile-card profile-card-related">
+                        <div class="profile-card-header">
+                            <h2 class="profile-card-title" data-i18n="page.clientProfile.sections.relatedPeople"></h2>
+                            <div class="profile-related-header-actions">
+                                <button class="btn-logout btn-sm" type="button" id="linkExistingPersonBtn" data-i18n="page.clientProfile.related.linkExisting"></button>
+                                <button class="btn-new btn-sm" type="button" id="addRelatedPersonBtn" data-i18n="page.clientProfile.related.add"></button>
+                            </div>
+                        </div>
+                        <p class="profile-empty hidden" id="relatedPeopleEmpty" data-i18n="page.clientProfile.related.empty"></p>
+                        <div class="profile-related-list" id="relatedPeopleList"></div>
+                    </section>
 
-            <!-- Row 4b: Client History (consultation memory) -->
-            <section class="profile-card" id="clientMemoryCard">
-                <h2 class="profile-card-title">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" style="opacity:.5"><path d="M2 3.5h10M2 7h10M2 10.5h7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-                    <span data-i18n="page.clientProfile.sections.clientHistory"></span>
-                </h2>
-                <div class="mem-list" id="clientMemoryList"></div>
-                <p class="profile-empty hidden" id="clientMemoryEmpty" data-i18n="page.clientProfile.clientHistory.empty"></p>
-            </section>
+                    <!-- Row 5: Consultation History -->
+                    <section class="profile-card profile-card-consultations">
+                        <div class="profile-card-header">
+                            <h2 class="profile-card-title" data-i18n="page.clientProfile.sections.consultations"></h2>
+                            <button class="btn-new btn-sm" type="button" id="logSessionBtn" data-i18n="page.clients.detail.logSession"></button>
+                        </div>
 
-            <!-- Row 5: Consultation History -->
-            <section class="profile-card">
-                <div class="profile-card-header">
-                    <h2 class="profile-card-title" data-i18n="page.clientProfile.sections.consultations"></h2>
-                    <button class="btn-new btn-sm" type="button" id="logSessionBtn" data-i18n="page.clients.detail.logSession"></button>
+                        <div class="profile-filter-tabs" id="consultationFilterTabs">
+                            <button class="profile-filter-tab active" data-filter="all" data-i18n="page.clientProfile.filter.all"></button>
+                            <button class="profile-filter-tab" data-filter="planned" data-i18n="page.clients.consultation.statuses.planned"></button>
+                            <button class="profile-filter-tab" data-filter="completed" data-i18n="page.clients.consultation.statuses.completed"></button>
+                            <button class="profile-filter-tab" data-filter="cancelled" data-i18n="page.clients.consultation.statuses.cancelled"></button>
+                        </div>
+
+                        <div id="consultationsWrap">
+                            <p class="profile-empty" id="consultationsEmpty" data-i18n="page.clients.detail.noConsultations"></p>
+                            <div class="profile-consultations-list" id="consultationsList"></div>
+                        </div>
+                    </section>
+
                 </div>
 
-                <div class="profile-filter-tabs" id="consultationFilterTabs">
-                    <button class="profile-filter-tab active" data-filter="all" data-i18n="page.clientProfile.filter.all"></button>
-                    <button class="profile-filter-tab" data-filter="planned" data-i18n="page.clients.consultation.statuses.planned"></button>
-                    <button class="profile-filter-tab" data-filter="completed" data-i18n="page.clients.consultation.statuses.completed"></button>
-                    <button class="profile-filter-tab" data-filter="cancelled" data-i18n="page.clients.consultation.statuses.cancelled"></button>
-                </div>
+                <div class="profile-column profile-column-side">
 
-                <div id="consultationsWrap">
-                    <p class="profile-empty" id="consultationsEmpty" data-i18n="page.clients.detail.noConsultations"></p>
-                    <div class="profile-consultations-list" id="consultationsList"></div>
-                </div>
-            </section>
+                    <!-- Row 4: Key Insights -->
+                    <section class="profile-card profile-card-insights" id="profileInsightsCard">
+                        <h2 class="profile-card-title">
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" style="opacity:.5"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M7 4v3.5l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                            <span data-i18n="page.clientProfile.sections.keyInsights"></span>
+                        </h2>
+                        <ul class="profile-insights-list" id="profileInsightsList"></ul>
+                        <p class="profile-insights-empty hidden" id="profileInsightsEmpty" data-i18n="page.clientProfile.insights.empty"></p>
+                    </section>
 
-            <!-- Row 6: Call Recordings -->
-            <section class="profile-card">
-                <div class="profile-card-header">
-                    <h2 class="profile-card-title">
-                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true" style="opacity:.55;margin-right:4px;vertical-align:-1px"><rect x="1" y="3" width="8" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M9 5.5l3-2v6l-3-2V5.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
-                        <span data-i18n="page.clientProfile.sections.recordings"></span>
-                    </h2>
+                    <!-- Row 4b: Client History (consultation memory) -->
+                    <section class="profile-card" id="clientMemoryCard">
+                        <h2 class="profile-card-title">
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true" style="opacity:.5"><path d="M2 3.5h10M2 7h10M2 10.5h7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                            <span data-i18n="page.clientProfile.sections.clientHistory"></span>
+                        </h2>
+                        <div class="mem-list" id="clientMemoryList"></div>
+                        <p class="profile-empty hidden" id="clientMemoryEmpty" data-i18n="page.clientProfile.clientHistory.empty"></p>
+                    </section>
+
+                    <!-- Row 6: Call Recordings -->
+                    <section class="profile-card profile-card-recordings">
+                        <div class="profile-card-header">
+                            <h2 class="profile-card-title">
+                                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true" style="opacity:.55;margin-right:4px;vertical-align:-1px"><rect x="1" y="3" width="8" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M9 5.5l3-2v6l-3-2V5.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+                                <span data-i18n="page.clientProfile.sections.recordings"></span>
+                            </h2>
+                        </div>
+                        <p class="profile-empty hidden" id="recordingsEmpty" data-i18n="page.clientProfile.recordings.empty"></p>
+                        <div class="profile-recordings-list" id="recordingsList"></div>
+                    </section>
+
                 </div>
-                <p class="profile-empty hidden" id="recordingsEmpty" data-i18n="page.clientProfile.recordings.empty"></p>
-                <div class="profile-recordings-list" id="recordingsList"></div>
-            </section>
+            </div>
 
         </main>
 
@@ -429,7 +439,7 @@
         </div>
     </section>
 
-    <script type="module" src="/js/bundles/client-profile.bundle.js?v=8d2a2cdfef35"></script>
-    <script src="/js/locale-switcher.js?v=8d2a2cdfef35"></script>
+    <script type="module" src="/js/bundles/client-profile.bundle.js?v=9a6a3f55714a"></script>
+    <script src="/js/locale-switcher.js?v=9a6a3f55714a"></script>
 </body>
 </html>

@@ -73,10 +73,26 @@ class CompositeService:
                 out[name] = it
         return out
 
+    @staticmethod
+    def _index_houses_by_number(items: List[Dict]) -> Dict[int, Dict]:
+        out: Dict[int, Dict] = {}
+        for it in items or []:
+            try:
+                number = int(it.get("number"))
+            except (TypeError, ValueError):
+                continue
+            if 1 <= number <= 12 and it.get("longitude") is not None:
+                out[number] = it
+        return out
+
     @classmethod
     def midpoint_composite(cls, primary_chart: Dict, partner_chart: Dict) -> Dict:
         """
-        Midpoint-композит: круговые средние долгот общих планет и углов (ASC/MC).
+        Midpoint-композит: круговые средние долгот общих планет, домов и углов.
+
+        Дома midpoint-композита считаются по одноимённым куспидам 1..12 уже
+        рассчитанных исходных карт. Поэтому выбранная система домов применяется
+        к исходным картам до вызова этого метода.
         """
         p_planets = cls._index_by_name(primary_chart.get("planets"))
         q_planets = cls._index_by_name(partner_chart.get("planets"))
@@ -90,6 +106,19 @@ class CompositeService:
             )
             planets.append(_position_payload(name, mid, type_="planet"))
 
+        p_houses = cls._index_houses_by_number(primary_chart.get("houses"))
+        q_houses = cls._index_houses_by_number(partner_chart.get("houses"))
+        houses: List[Dict] = []
+        for number in range(1, 13):
+            ph = p_houses.get(number) or {}
+            qh = q_houses.get(number) or {}
+            if ph.get("longitude") is None or qh.get("longitude") is None:
+                continue
+            mid = circular_midpoint(float(ph["longitude"]), float(qh["longitude"]))
+            house = _position_payload(f"House {number}", mid, type_="house")
+            house["number"] = number
+            houses.append(house)
+
         p_angles = primary_chart.get("angles") or {}
         q_angles = partner_chart.get("angles") or {}
         angles: Dict[str, Dict] = {}
@@ -101,7 +130,16 @@ class CompositeService:
             mid = circular_midpoint(float(pa["longitude"]), float(qa["longitude"]))
             angles[key] = _position_payload(key, mid, type_="angle")
 
-        return {"method": "midpoint", "planets": planets, "angles": angles}
+        if angles.get("ASC") and "DSC" not in angles:
+            angles["DSC"] = _position_payload(
+                "DSC", (float(angles["ASC"]["longitude"]) + 180.0) % 360.0, type_="angle"
+            )
+        if angles.get("MC") and "IC" not in angles:
+            angles["IC"] = _position_payload(
+                "IC", (float(angles["MC"]["longitude"]) + 180.0) % 360.0, type_="angle"
+            )
+
+        return {"method": "midpoint", "planets": planets, "houses": houses, "angles": angles}
 
     # --- aspects --------------------------------------------------------
 
