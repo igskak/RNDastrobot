@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecastNew.pageTitle">Forecast</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=299c29ee0cf1">
-    <script>window.__APP_BUILD_ID__ = '299c29ee0cf1';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=46f80b6de895">
+    <script>window.__APP_BUILD_ID__ = '46f80b6de895';</script>
 </head>
 <body class="forecast-new-page">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -402,6 +402,10 @@
                     </div>
                 </div>
             </div>
+            <div class="forecast-new-relationship-switch hidden" id="forecastNewRelationshipSwitch" role="tablist" data-i18n-aria-label="page.forecastNew.composite.relationshipModeAria" aria-label="Relationship mode">
+                <button type="button" class="forecast-new-relationship-switch-btn is-active" id="forecastNewRelationshipSynastryBtn" data-relationship-mode="synastry" role="tab" aria-selected="true" data-i18n="page.chart.nav.synastry">Синастрия</button>
+                <button type="button" class="forecast-new-relationship-switch-btn" id="forecastNewRelationshipCompositeBtn" data-relationship-mode="composite" role="tab" aria-selected="false" data-i18n="page.forecastNew.composite.calculate">Композит</button>
+            </div>
             <div class="forecast-new-time-stepper-row">
                 <div class="forecast-new-time-stepper" id="forecastNewTimeStepper" data-i18n-aria-label="page.forecastNew.transitStepperAria" aria-label="Transit time control"></div>
                 <div class="forecast-new-time-stepper-save">
@@ -553,6 +557,6 @@
         </div>
     </section>
 
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=299c29ee0cf1"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=46f80b6de895"></script>
 </body>
 </html>

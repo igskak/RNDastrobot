@@ -406,6 +406,35 @@
     min-width: 0;
 }
 
+.forecast-new-relationship-switch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding: 7px 10px;
+    border-bottom: 1px solid rgba(184, 147, 90, 0.14);
+    background: rgba(249, 247, 242, 0.72);
+}
+
+.forecast-new-relationship-switch.hidden {
+    display: none;
+}
+
+.forecast-new-relationship-switch-btn {
+    min-height: 30px;
+    border: 1px solid rgba(30, 58, 95, 0.12);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.72);
+    color: var(--text-secondary);
+    font: 700 12px/1.2 var(--font-ui);
+    cursor: pointer;
+}
+
+.forecast-new-relationship-switch-btn.is-active {
+    border-color: rgba(30, 58, 95, 0.28);
+    background: var(--accent);
+    color: #fff;
+}
+
 .forecast-new-time-stepper-save {
     display: flex;
     align-items: center;
@@ -2013,6 +2042,7 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
 .forecast-new-single-mode #forecastNewProgPanel .forecast-new-side-head,
 .forecast-new-single-mode .forecast-new-right-layer-tabs,
 .forecast-new-single-mode #forecastNewProgPanel .forecast-new-time-stepper-row,
+.forecast-new-single-mode:not(.forecast-new-composite-mode) #forecastNewProgPanel .forecast-new-relationship-switch,
 .forecast-new-single-mode #forecastNewProgPanel #forecastNewMomentCard,
 .forecast-new-single-mode #forecastNewProgPanel #forecastSavedChartsBtn {
     display: none;

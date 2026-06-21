@@ -463,8 +463,10 @@
       "composite": {
         "calculate": "Композит",
         "methodLabel": "Метод композиту",
+        "relationshipModeAria": "Режим аналізу стосунків",
         "midpoint": "Середні точки",
         "davison": "Davison",
+        "saved": "Композит збережено",
         "unavailable": "Davison недоступний для неповних даних народження",
         "noPartner": "Спочатку виберіть партнера",
         "planets": "Планети",

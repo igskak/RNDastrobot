@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.database.models import Astrologer, User
+from app.database.models import Astrologer, CompositeChart, User
 
 
 PLAN_TRIAL = "trial"
@@ -116,11 +116,17 @@ def get_entitlements(astrologer: Astrologer, *, plan_code: Optional[str] = None)
 
 
 def count_saved_charts(db: Session, astrologer_id) -> int:
-    return (
+    source_charts = (
         db.query(User)
         .filter(User.astrologer_id == astrologer_id)
         .count()
     )
+    composite_charts = (
+        db.query(CompositeChart)
+        .filter(CompositeChart.astrologer_id == astrologer_id)
+        .count()
+    )
+    return source_charts + composite_charts
 
 
 def get_usage(db: Session, astrologer: Astrologer, *, plan_code: Optional[str] = None) -> Dict[str, Any]:

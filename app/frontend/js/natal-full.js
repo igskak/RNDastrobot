@@ -86,6 +86,9 @@ async function waitForI18nReady() {
 }
 
 async function loadFreshNatalFullChartData(fallbackChartData) {
+    if (fallbackChartData?.chart_kind === 'composite') {
+        return fallbackChartData;
+    }
     const userId = fallbackChartData?.user_id || localStorage.getItem('currentUserId');
     if (!userId || !window.AstroAPI?.getNatalChart) {
         return fallbackChartData;

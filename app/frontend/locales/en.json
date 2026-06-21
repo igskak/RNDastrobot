@@ -465,8 +465,10 @@
       "composite": {
         "calculate": "Composite",
         "methodLabel": "Composite method",
+        "relationshipModeAria": "Relationship analysis mode",
         "midpoint": "Midpoint",
         "davison": "Davison",
+        "saved": "Composite saved",
         "unavailable": "Davison is unavailable for incomplete birth data",
         "noPartner": "Choose a partner first",
         "planets": "Planets",

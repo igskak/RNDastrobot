@@ -16,6 +16,7 @@
         activeTag: '',
         onSelect: null,
         excludeId: null,
+        includeComposites: false,
     };
 
     function t(key, params, fallback = '') {
@@ -65,10 +66,50 @@
     }
 
     function chartMeta(chart) {
+        if (chart.chart_kind === 'composite') {
+            const method = chart.composite_method || chart.method || '';
+            const methodLabel = method
+                ? t(`page.forecastNew.composite.${method}`, null, method)
+                : '';
+            return [
+                t('page.forecastNew.composite.calculate', null, 'Composite'),
+                methodLabel,
+                chart.house_system,
+            ].filter(Boolean).join(' · ');
+        }
         const date = chart.date ? formatDate(chart.date) : '';
         return [chart.person_display_name, date, chart.location_name]
             .filter(Boolean)
             .join(' · ');
+    }
+
+    function normalizeCompositeChart(item) {
+        const data = item?.chart_data || {};
+        const birth = data.birth_data || {};
+        const method = item?.method || data.composite_method || '';
+        return {
+            ...data,
+            ...item,
+            chart_kind: 'composite',
+            composite_chart_id: item?.composite_chart_id || data.composite_saved_chart_id,
+            composite_saved_chart_id: item?.composite_chart_id || data.composite_saved_chart_id,
+            display_title: item?.title || data.title || data.composite_pair_title || '',
+            title: item?.title || data.title || data.composite_pair_title || '',
+            date: birth.date || data.date || (item?.created_at ? String(item.created_at).slice(0, 10) : ''),
+            time: birth.time || data.time || '',
+            timezone: birth.timezone || data.timezone || '',
+            location_name: data.composite_pair_title || birth.place || '',
+            latitude: birth.latitude ?? data.latitude ?? null,
+            longitude: birth.longitude ?? data.longitude ?? null,
+            method,
+            composite_method: method,
+            house_system: item?.house_system || birth.house_system || data.house_system || '',
+            tags: Array.isArray(item?.tags) ? item.tags : (Array.isArray(data.tags) ? data.tags : []),
+            chart_data: data,
+            primary_user_id: item?.primary_user_id || data.source?.primary_user_id || null,
+            partner_user_id: item?.partner_user_id || data.source?.partner_user_id || null,
+            partner_birth_data: item?.partner_birth_data || data.source?.partner_birth_data || null,
+        };
     }
 
     function ensureDialog() {
@@ -144,16 +185,19 @@
     }
 
     function filterCharts() {
-        // Tag filtering is done server-side (transitively, incl. family tags on
-        // people), so here we only apply the local text query.
+        // Tag filtering for saved people is done server-side (incl. family tags);
+        // composites are fetched by their own tag endpoint when enabled.
         const query = state.query;
         return state.charts.filter((chart) => {
-            if (state.excludeId && String(chart.user_id) === String(state.excludeId)) return false;
+            if (chart.chart_kind !== 'composite'
+                && state.excludeId
+                && String(chart.user_id) === String(state.excludeId)) return false;
             if (!query) return true;
             const haystack = [
                 chart.display_title, chart.title, chart.first_name, chart.last_name,
                 chart.person_display_name, chart.location_name,
                 chart.date ? formatDate(chart.date) : '', chart.date,
+                chart.chart_kind, chart.method, chart.composite_method, chart.house_system,
                 getTags(chart).join(' '),
             ].filter(Boolean).join(' ').toLowerCase();
             return haystack.includes(query);
@@ -199,8 +243,13 @@
         state.list.innerHTML = `<div class="quick-open-status">${escapeHtml(t('common.loading', null, 'Loading'))}</div>`;
         try {
             const tag = state.activeTag ? `?tag=${encodeURIComponent(state.activeTag)}` : '';
-            const charts = await apiFetch(`/charts${tag}`);
-            state.charts = Array.isArray(charts) ? charts : [];
+            const [charts, composites] = await Promise.all([
+                apiFetch(`/charts${tag}`),
+                state.includeComposites ? apiFetch(`/composite/saved${tag}`).catch(() => []) : Promise.resolve([]),
+            ]);
+            const regularCharts = Array.isArray(charts) ? charts : [];
+            const compositeCharts = Array.isArray(composites) ? composites.map(normalizeCompositeChart) : [];
+            state.charts = regularCharts.concat(compositeCharts);
             renderList();
         } catch (error) {
             state.list.innerHTML = `<div class="quick-open-empty quick-open-empty--error">${escapeHtml(error?.message || t('common.error', null, 'Error'))}</div>`;
@@ -220,6 +269,7 @@
         ensureDialog();
         state.onSelect = options.onSelect;
         state.excludeId = options.excludeId || null;
+        state.includeComposites = options.includeComposites === true;
         state.query = '';
         state.activeTag = '';
         state.charts = [];

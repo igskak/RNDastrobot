@@ -149,6 +149,36 @@ class ClientRelationship(Base):
     )
 
 
+class CompositeChart(Base):
+    """Persisted relationship composite chart payload."""
+    __tablename__ = 'composite_charts'
+
+    composite_chart_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='CASCADE'), nullable=False)
+    title = Column(String(160))
+    primary_user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='SET NULL'))
+    partner_user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='SET NULL'))
+    partner_birth_data = Column(JSONB)
+    method = Column(String(16), nullable=False)
+    house_system = Column(String(1), nullable=False, default='P', server_default='P')
+    chart_data = Column(JSONB, nullable=False)
+    tags = Column(JSONB, server_default='[]')
+    notes = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    astrologer = relationship("Astrologer")
+    primary_user = relationship("User", foreign_keys=[primary_user_id])
+    partner_user = relationship("User", foreign_keys=[partner_user_id])
+
+    __table_args__ = (
+        CheckConstraint("method IN ('midpoint', 'davison')", name='valid_composite_method'),
+        Index('idx_composite_charts_astrologer_created', 'astrologer_id', 'created_at'),
+        Index('idx_composite_charts_primary', 'astrologer_id', 'primary_user_id'),
+        Index('idx_composite_charts_partner', 'astrologer_id', 'partner_user_id'),
+    )
+
+
 class Astrologer(Base):
     """Модель астролога (tenant owner)."""
     __tablename__ = 'astrologers'

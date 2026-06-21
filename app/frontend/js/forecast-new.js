@@ -519,6 +519,7 @@
             'forecastNewNatalPanel', 'forecastNewProgPanel',
             'natalPanelMeta', 'prognosticPanelTitle', 'prognosticPanelMeta',
             'prognosticMomentToggle', 'forecastSavedChartsBtn', 'natalSavedChartsBtn', 'forecastNewMomentCard',
+            'forecastNewRelationshipSwitch', 'forecastNewRelationshipSynastryBtn', 'forecastNewRelationshipCompositeBtn',
             'forecastNewWheel', 'forecastNewWheelShell', 'forecastNewResultViews', 'forecastNewResultPane', 'targetDateInput', 'targetTimeInput',
             'forecastNewTimeStepper',
             'stepModeSelect', 'stepBackward', 'stepForward', 'timezoneInput', 'locationInput',
@@ -622,8 +623,11 @@
         });
 
         refs.openNatalTablesBtn?.addEventListener('click', () => {
-            window.AstroAPI?.saveChartToSession?.(state.natalData);
-            window.AstroAPI?.saveFormData?.(window.AstroAPI.chartToFormData(state.natalData));
+            const chart = getActiveReportChartData();
+            window.AstroAPI?.saveChartToSession?.(chart);
+            if (chart?.chart_kind !== 'composite') {
+                window.AstroAPI?.saveFormData?.(window.AstroAPI.chartToFormData(chart));
+            }
             navigateFromForecast('/natal-full.html');
         });
 
@@ -636,6 +640,7 @@
             window.AstroChartPicker?.open?.({
                 title: t('page.chartPicker.momentTitle', null, 'Load saved chart'),
                 subtitle: t('page.chartPicker.momentSubtitle', null, 'Its date, time and place apply to the active layer.'),
+                includeComposites: true,
                 onSelect: applySavedChartMoment,
             });
         });
@@ -698,6 +703,12 @@
         });
         refs.forecastNewCompositeHeaderBtn?.addEventListener('click', () => {
             void enterCompositeMode();
+        });
+        refs.forecastNewRelationshipCompositeBtn?.addEventListener('click', () => {
+            void enterCompositeMode();
+        });
+        refs.forecastNewRelationshipSynastryBtn?.addEventListener('click', () => {
+            void enterSynastryMode();
         });
 
         document.getElementById('forecastNewSynastryPickerBtn')?.addEventListener('click', () => {
@@ -3153,6 +3164,12 @@
 
     // Apply a saved chart (date/time/place) as the prognostic moment of the active layer.
     async function applySavedChartMoment(chart) {
+        if (chart?.chart_kind === 'composite') {
+            await loadSavedCompositeChart(
+                chart.composite_chart_id || chart.composite_saved_chart_id
+            );
+            return;
+        }
         if (isSynastryMomentActive()) {
             await applySavedSynastryPartnerChart(chart);
             return;
@@ -3760,10 +3777,23 @@
         const isSingle = state.wheelView === 'single';
         document.body.classList.toggle('forecast-new-single-mode', isSingle);
         document.body.classList.toggle('forecast-new-multi-mode', !isSingle);
-        document.body.classList.toggle('forecast-new-composite-mode', isCompositeSingleMode());
+        document.body.classList.toggle('forecast-new-composite-mode', state.singleChartMode === 'composite');
+        syncRelationshipSwitch();
         refs.forecastNewProgPanel?.setAttribute('data-panel-mode', isSingle ? 'natal' : 'prognostic');
         // Rebuild chrome for the new mode's layout (panels.single vs panels.multi).
         if (state.panelLayout) renderPanels();
+    }
+
+    function syncRelationshipSwitch() {
+        const hasRelationshipContext = hasActiveMethod('synastry_partner')
+            || state.singleChartMode === 'composite'
+            || hasUsableSynastryPartner();
+        refs.forecastNewRelationshipSwitch?.classList.toggle('hidden', !hasRelationshipContext);
+        const compositeActive = state.singleChartMode === 'composite';
+        refs.forecastNewRelationshipSynastryBtn?.classList.toggle('is-active', !compositeActive);
+        refs.forecastNewRelationshipCompositeBtn?.classList.toggle('is-active', compositeActive);
+        refs.forecastNewRelationshipSynastryBtn?.setAttribute('aria-selected', compositeActive ? 'false' : 'true');
+        refs.forecastNewRelationshipCompositeBtn?.setAttribute('aria-selected', compositeActive ? 'true' : 'false');
     }
 
     function normalizeResultView(view) {
@@ -3956,6 +3986,63 @@
         state.compositeMeta = null;
     }
 
+    async function loadSavedCompositeChart(compositeChartId) {
+        if (!compositeChartId) return;
+        refs.forecastNewWheelShell?.classList.add('forecast-new-loading');
+        refs.forecastNewProgPanel?.classList.add('forecast-new-loading');
+        try {
+            const saved = await apiGet(`/composite/saved/${encodeURIComponent(compositeChartId)}`);
+            const method = normalizeCompositeMethod(saved.method || saved.chart_data?.composite_method);
+            const chartData = {
+                ...(saved.chart_data || {}),
+                chart_kind: 'composite',
+                composite_saved_chart_id: saved.composite_chart_id || compositeChartId,
+                composite_method: method,
+                title: saved.title || saved.chart_data?.title || saved.chart_data?.composite_pair_title || '',
+            };
+            state.compositeMethod = method;
+            state.pageSettings.compositeMethod = method;
+            if (saved.house_system) {
+                state.pageSettings.houseSystem = normalizeHouseSystemCode(saved.house_system);
+            }
+            state.compositeData = {
+                [method]: chartData,
+                davison_unavailable_reason: null,
+            };
+            state.compositeChartData = chartData;
+            state.compositeMeta = chartData.composite_meta || '';
+            state.singleChartMode = 'composite';
+            state.wheelView = 'single';
+            if (saved.partner_user_id) {
+                state.synastryMode = 'db';
+                state.synastryPartnerId = String(saved.partner_user_id);
+                state.synastryManual = null;
+                setSynastryMode('db');
+                if (refs.forecastNewSynastryPartnerSelect) {
+                    refs.forecastNewSynastryPartnerSelect.value = String(saved.partner_user_id);
+                }
+            } else if (saved.partner_birth_data) {
+                state.synastryMode = 'manual';
+                state.synastryPartnerId = '';
+                state.synastryManual = saved.partner_birth_data;
+                setSynastryMode('manual');
+                syncSynastryManualControlsFromState();
+            }
+            syncWorkspaceModePanels();
+            syncWheelViewButtons();
+            syncControlsFromState();
+            renderCompositeWorkspace();
+            renderRightLayerTabs();
+            window.AstroAPI?.saveChartToSession?.(state.compositeChartData);
+            schedulePersist();
+        } catch (error) {
+            window.showToast?.(error.message || t('common.error') || 'Ошибка', 'error');
+        } finally {
+            refs.forecastNewWheelShell?.classList.remove('forecast-new-loading');
+            refs.forecastNewProgPanel?.classList.remove('forecast-new-loading');
+        }
+    }
+
     function selectedPartnerName() {
         if (state.synastryMode === 'manual') {
             return state.synastryManual?.name || t('page.forecastNew.resultViews.manualPartner') || 'Партнёр';
@@ -4125,6 +4212,27 @@
         schedulePersist();
     }
 
+    async function enterSynastryMode() {
+        state.singleChartMode = 'natal';
+        state.wheelView = 'multi';
+        if (hasUsableSynastryPartner()) {
+            await ensureSynastryLayerActive({ lightweight: true });
+            const synastryLayer = instancesOfMethod('synastry_partner')[0];
+            if (synastryLayer) {
+                state.selectedRightLayerId = synastryLayer.id;
+                applyConfigToScratch(synastryLayer);
+            }
+        }
+        syncWorkspaceModePanels();
+        syncWheelViewButtons();
+        renderStaticNatal();
+        refreshViewModel();
+        renderWheel();
+        renderRightLayerTabs();
+        renderRightPanel();
+        schedulePersist();
+    }
+
     function renderCompositeWorkspace() {
         syncWorkspaceModePanels();
         syncControlsFromState();
@@ -4187,6 +4295,7 @@
             ${addLayerMarkup}
         `;
         syncCompositeHeaderButton();
+        syncRelationshipSwitch();
     }
 
     function syncCompositeHeaderButton() {
@@ -4197,6 +4306,7 @@
         const visible = state.singleChartMode !== 'composite' && hasSynastry;
         refs.forecastNewCompositeHeaderBtn.classList.toggle('hidden', !visible);
         refs.forecastNewCompositeHeaderBtn.disabled = !visible;
+        syncRelationshipSwitch();
     }
 
     function scheduleRightPanelRender() {
@@ -6577,7 +6687,55 @@
         return payload;
     }
 
+    function getActiveReportChartData() {
+        return isCompositeSingleMode() && state.compositeChartData
+            ? state.compositeChartData
+            : state.natalData;
+    }
+
+    async function saveCompositeChart() {
+        if (!state.compositeChartData) {
+            window.showToast?.(t('page.forecastNew.composite.noPartner') || 'Сначала выберите партнёра', 'warning');
+            return;
+        }
+        const result = await window.SaveChartModal?.open({
+            defaultTitle: defaultSourceChartTitle(),
+            defaultDate: state.compositeChartData.birth_data?.date || splitTargetDatetime(state.natalSelectedDateTime)[0],
+            defaultTime: state.compositeChartData.birth_data?.time || splitTargetDatetime(state.natalSelectedDateTime)[1],
+            showTags: true,
+            showPerson: false,
+        });
+        if (!result) return;
+        const body = buildCompositeRequest();
+        if (!body) return;
+        try {
+            const saved = await apiPost('/composite/save', {
+                ...body,
+                method: normalizeCompositeMethod(state.compositeMethod),
+                title: result.title,
+                tags: result.tags || [],
+            });
+            state.compositeChartData = {
+                ...(saved.chart_data || state.compositeChartData),
+                chart_kind: 'composite',
+                composite_saved_chart_id: saved.composite_chart_id,
+                title: saved.title || result.title || state.compositeChartData.title,
+            };
+            state.compositeMeta = state.compositeChartData.composite_meta || state.compositeMeta;
+            window.AstroAPI?.saveChartToSession?.(state.compositeChartData);
+            window.showToast?.(t('page.forecastNew.composite.saved') || 'Композит сохранён', 'success');
+        } catch (error) {
+            window.showToast?.(
+                t('page.chart.actions.saveSourceChartError', { error: error.message }, error.message),
+                'error'
+            );
+        }
+    }
+
     function defaultSourceChartTitle() {
+        if (isCompositeSingleMode() && state.compositeChartData) {
+            return state.compositeChartData.title || state.compositeChartData.composite_pair_title || 'Композит';
+        }
         const birth = state.natalData?.birth_data || {};
         const name = [birth.first_name, birth.last_name].filter(Boolean).join(' ').trim();
         const [date] = splitTargetDatetime(state.natalSelectedDateTime);
@@ -6591,6 +6749,10 @@
     }
 
     async function saveCurrentSourceAsChart() {
+        if (isCompositeSingleMode()) {
+            await saveCompositeChart();
+            return;
+        }
         const result = await window.SaveChartModal?.open({
             defaultTitle: defaultSourceChartTitle(),
             defaultDate: splitTargetDatetime(state.natalSelectedDateTime)[0],
