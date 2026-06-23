@@ -99,6 +99,7 @@
             const loc = config.location;
             const out = {};
             if (Number.isFinite(year) && year >= 1900 && year <= 2100) out.year = Math.trunc(year);
+            if (typeof config.chartTitle === 'string') out.chartTitle = config.chartTitle.trim();
             if (loc && typeof loc === 'object') {
                 out.location = {
                     name: String(loc.name || ''),
@@ -115,6 +116,7 @@
         if (method === 'synastry_partner') {
             const manual = config.manual;
             return {
+                chartTitle: typeof config.chartTitle === 'string' ? config.chartTitle.trim() : '',
                 mode: config.mode === 'manual' ? 'manual' : 'db',
                 partnerId: typeof config.partnerId === 'string' ? config.partnerId : '',
                 manual: manual && typeof manual === 'object' ? {
@@ -131,6 +133,7 @@
         // transit / progression / direction — момент (дата/время/место[/тип]).
         const loc = config.location;
         const out = {
+            chartTitle: typeof config.chartTitle === 'string' ? config.chartTitle.trim() : '',
             datetime: sanitizeTargetDatetime(config.datetime),
             timezone: typeof config.timezone === 'string' ? config.timezone.trim() : '',
             location: loc && typeof loc === 'object' ? {

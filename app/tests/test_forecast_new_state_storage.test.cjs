@@ -55,6 +55,30 @@ test('forecast new storage preserves a valid custom time step', () => {
     assert.deepEqual(restored.customStep, { amount: 12, unit: 'hour' });
 });
 
+test('forecast new storage preserves saved chart titles per layer', () => {
+    const natalData = makeNatalChart();
+    const snapshot = buildPersistedState({
+        natalData,
+        state: {
+            activeLayers: [
+                {
+                    id: 'transit-1',
+                    method: 'transit',
+                    config: {
+                        chartTitle: 'Consultation chart',
+                        datetime: '2026-06-23T12:00:00',
+                        timezone: 'Europe/Warsaw',
+                        location: { name: 'Warsaw', latitude: 52.23, longitude: 21.01 },
+                    },
+                },
+            ],
+        },
+    });
+
+    const restored = parsePersistedState(JSON.stringify(snapshot), natalData);
+    assert.equal(restored.activeLayers[0].config.chartTitle, 'Consultation chart');
+});
+
 test('forecast new storage normalizes invalid custom time steps', () => {
     const natalData = makeNatalChart();
     const snapshot = buildPersistedState({

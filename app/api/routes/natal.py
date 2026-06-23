@@ -86,6 +86,8 @@ def build_natal_chart_response(chart_data: dict) -> NatalChartResponse:
 
     return NatalChartResponse(
         user_id=UUID(chart_data['user_id']) if chart_data.get('user_id') else None,
+        title=chart_data.get('title'),
+        display_title=chart_data.get('display_title'),
         birth_data=BirthDataOutput(**chart_data['birth_data']),
         planets=[PlanetPosition(**p) for p in chart_data['planets']],
         houses=[HousePosition(**h) for h in chart_data['houses']],

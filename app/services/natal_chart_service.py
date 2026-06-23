@@ -1290,6 +1290,10 @@ class NatalChartService:
         # Преобразуем ORM модели в словари
         result = {
             'user_id': str(user.user_id),
+            'title': user.title,
+            'display_title': user.title or " ".join(
+                part for part in [user.first_name, user.last_name] if part
+            ) or user.birth_place or str(user.user_id),
             'birth_data': {
                 'first_name': user.first_name,
                 'last_name': user.last_name,

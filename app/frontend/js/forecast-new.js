@@ -384,10 +384,40 @@
         return window.Timezones?.formatOffsetLabel?.(value, options) || String(value || '').trim();
     }
 
+    function buildPanelLocationMeta(locationName, timezone, datetimeOrOptions = {}) {
+        return [
+            locationName,
+            formatHeaderTimezone(timezone, datetimeOrOptions),
+        ].filter(Boolean).join(' · ');
+    }
+
+    function chartDisplayTitle(chart = {}, fallback = '') {
+        const birth = chart.birth_data || chart.birthData || {};
+        return chart.display_title
+            || chart.title
+            || [birth.first_name, birth.last_name].filter(Boolean).join(' ').trim()
+            || [chart.first_name, chart.last_name].filter(Boolean).join(' ').trim()
+            || fallback;
+    }
+
+    function selectedPanelTitle(method) {
+        const inst = selectedLayerInstance();
+        if (inst?.config?.chartTitle) return inst.config.chartTitle;
+        if (method === 'synastry_partner') {
+            return state.synastryManual?.name || layerLabel(method);
+        }
+        return layerLabel(method);
+    }
+
     function buildNatalHeaderSubtitle(birth = {}) {
         const locationName = state.natalLocation?.name || birth.place || '';
-        const timezoneLabel = formatHeaderTimezone(state.natalTimezone || birth.timezone, state.natalSelectedDateTime);
-        const parts = [locationName, timezoneLabel].filter(Boolean);
+        const parts = [
+            buildPanelLocationMeta(
+                locationName,
+                state.natalTimezone || birth.timezone,
+                state.natalSelectedDateTime,
+            ),
+        ].filter(Boolean);
 
         // Zodiac indicator: shown only for sidereal (tropical is the implicit default).
         if ((birth.zodiac || 'tropical') === 'sidereal') {
@@ -556,7 +586,7 @@
             'openClientProfileBtn', 'saveSourceChartBtn', 'saveNatalChartBtn', 'forecastNewActionsToggle', 'forecastNewActionsMenu',
             'forecastNewDirectionTypeSelect',
             'forecastNewNatalPanel', 'forecastNewProgPanel',
-            'natalPanelMeta', 'prognosticPanelTitle', 'prognosticPanelMeta',
+            'natalPanelTitle', 'natalPanelMeta', 'prognosticPanelTitle', 'prognosticPanelMeta',
             'prognosticMomentToggle', 'forecastSavedChartsBtn', 'natalSavedChartsBtn', 'forecastNewMomentCard',
             'forecastNewRelationshipSwitch', 'forecastNewRelationshipSynastryBtn', 'forecastNewRelationshipCompositeBtn',
             'forecastNewWheel', 'forecastNewWheelShell', 'forecastNewResultViews', 'forecastNewResultPane', 'targetDateInput', 'targetTimeInput',
@@ -1975,12 +2005,18 @@
     }
 
     function updateNatalMomentMeta() {
-        const [date, time] = splitTargetDatetime(state.natalSelectedDateTime);
-        const summary = [
-            `${formatChartDate(date)} · ${time}`,
-            formatHeaderTimezone(state.natalTimezone, state.natalSelectedDateTime),
-            state.natalLocation?.name || '',
-        ].filter(Boolean).join(' · ');
+        const birth = state.natalData?.birth_data || {};
+        if (refs.natalPanelTitle) {
+            refs.natalPanelTitle.textContent = chartDisplayTitle(
+                state.natalData,
+                t('page.forecastNew.natalPanelTitle'),
+            );
+        }
+        const summary = buildPanelLocationMeta(
+            state.natalLocation?.name || birth.place || '',
+            state.natalTimezone || birth.timezone,
+            state.natalSelectedDateTime,
+        );
         if (refs.natalPanelMeta) refs.natalPanelMeta.textContent = summary;
         if (refs.natalDatetimeLabel) refs.natalDatetimeLabel.textContent = formatChartDateTimeLabel(state.natalSelectedDateTime);
     }
@@ -2014,31 +2050,22 @@
         const method = selectedRightMethod();
 
         if (method === 'solar_return') {
-            // Always use state.solarYear (user's selection), not the stale API response year
-            return buildSolarMomentMeta(selectedViewModelLayer()?.raw?.solar_info, { year: state.solarYear });
+            const info = selectedViewModelLayer()?.raw?.solar_info || {};
+            const locationName = info?.location?.name
+                || state.solarLocation?.name
+                || state.location?.name
+                || '';
+            const [date, time] = String(info.solar_datetime_local || '').split('T');
+            const timezone = info.timezone || state.solarLocation?.timezone || state.timezone;
+            return buildPanelLocationMeta(locationName, timezone, { date, time });
         }
 
-        if (method === 'synastry_partner') {
-            // Show partner name + birth date + place
-            const select = refs.forecastNewSynastryPartnerSelect;
-            const partnerName = state.synastryMode === 'manual'
-                ? (state.synastryManual?.name || 'Партнёр (вручную)')
-                : (select && select.selectedIndex > 0
-                    ? (select.options[select.selectedIndex]?.text || '')
-                    : '');
-            const layer = selectedViewModelLayer();
-            const bd = layer?.raw?.partner_chart?.birth_data;
-            const partnerMeta = bd
-                ? [formatChartDate(bd.date), bd.place].filter(Boolean).join(' · ')
-                : '';
-            return [partnerName, partnerMeta].filter(Boolean).join(' · ');
-        }
-
-        // transit / progression / direction — target date + tz + place
-        const locationName = state.location?.name || '';
-        return [formatChartDateTimeLabel(state.selectedDateTime, ' · '), formatHeaderTimezone(state.timezone, state.selectedDateTime), locationName]
-            .filter(Boolean)
-            .join(' · ');
+        const place = getMomentPlaceView();
+        return buildPanelLocationMeta(
+            place.name,
+            place.timezone,
+            getDisplayedMomentDateTime(),
+        );
     }
 
     function toggleMomentEditor() {
@@ -3244,6 +3271,7 @@
             latitude: moment.latitude,
             longitude: moment.longitude,
         };
+        ensureLayerConfig(selectedLayerInstance()).chartTitle = chartDisplayTitle(chart);
         commitSelectedLayerEdit();
         state.lastStepperAction = null;
         syncControlsFromState();
@@ -3267,6 +3295,8 @@
         if (state.natalData) {
             state.natalData = {
                 ...state.natalData,
+                title: chart?.title || null,
+                display_title: chartDisplayTitle(chart),
                 birth_data: {
                     ...state.natalData.birth_data,
                     first_name: chart?.first_name || chart?.birthData?.first_name || '',
@@ -3297,6 +3327,7 @@
     async function applySavedSynastryPartnerChart(chart) {
         const moment = readChartMoment(chart);
         if (!moment.date) return;
+        ensureLayerConfig(selectedLayerInstance()).chartTitle = chartDisplayTitle(chart);
         const id = chart?.user_id || chart?.chart_id || '';
         if (id) {
             state.synastryMode = 'db';
@@ -4397,7 +4428,7 @@
         }
         const layer = state.viewModel?.activePrognosticLayers?.find((item) => item.id === state.selectedRightLayerId)
             || state.viewModel?.activePrognosticLayers?.find((item) => item.method === method);
-        refs.prognosticPanelTitle.textContent = layerLabel(method);
+        refs.prognosticPanelTitle.textContent = selectedPanelTitle(method);
         refs.prognosticPanelMeta.textContent = buildPrognosticMomentSummary();
         syncMomentCardLayout();
         // Solar return: render year-only stepper into the regular stepper slot
@@ -4447,9 +4478,12 @@
     function renderSingleNatalRightPanel() {
         if (!refs.prognosticPanelTitle || !refs.prognosticPanelMeta) return;
         const activeChart = activeBaseChartData();
-        refs.prognosticPanelTitle.textContent = isCompositeSingleMode()
-            ? (t('page.forecastNew.composite.calculate') || 'Композит')
-            : 'Натал';
+        refs.prognosticPanelTitle.textContent = chartDisplayTitle(
+            activeChart,
+            isCompositeSingleMode()
+                ? (t('page.forecastNew.composite.calculate') || 'Композит')
+                : t('page.forecastNew.natalPanelTitle'),
+        );
         refs.prognosticPanelMeta.textContent = isCompositeSingleMode()
             ? (activeChart?.composite_meta || state.compositeMeta || '')
             : (refs.natalPanelMeta?.textContent || '');
