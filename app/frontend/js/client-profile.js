@@ -691,15 +691,17 @@ function renderRelatedPeople(items) {
                 <div class="profile-related-main">
                     <div class="profile-related-name-row">
                         <h3 class="profile-related-name">${escapeHtml(name)}</h3>
+                        <span class="profile-related-meta">${escapeHtml(details.join(' · ') || t('common.notAvailable'))}</span>
                         ${person.relation_label ? `<span class="profile-related-badge">${escapeHtml(person.relation_label)}</span>` : ''}
                     </div>
-                    <p class="profile-related-meta">${escapeHtml(details.join(' · ') || t('common.notAvailable'))}</p>
                     ${person.relation_notes ? `<p class="profile-related-notes">${escapeHtml(person.relation_notes)}</p>` : ''}
                 </div>
                 <div class="profile-related-actions">
                     <button class="btn-new btn-sm" type="button" data-action="open-synastry" data-related-user-id="${escapeHtml(person.user_id)}">${escapeHtml(t('page.clients.consultation.types.synastry'))}</button>
-                    <button class="btn-logout btn-sm" type="button" data-action="open-related-profile" data-related-user-id="${escapeHtml(person.user_id)}">${escapeHtml(t('page.clientProfile.viewProfile'))}</button>
-                    <button class="btn-logout btn-sm" type="button" data-action="delete-related-person" data-related-user-id="${escapeHtml(person.user_id)}">${escapeHtml(t('page.clients.actions.delete'))}</button>
+                    <button class="btn-logout btn-sm" type="button" data-action="open-related-profile" data-related-user-id="${escapeHtml(person.user_id)}">${escapeHtml(t('page.clientProfile.profileAction'))}</button>
+                    <button class="profile-icon-btn profile-icon-btn--danger" type="button" data-action="delete-related-person" data-related-user-id="${escapeHtml(person.user_id)}" aria-label="${escapeHtml(t('page.clients.actions.delete'))}" title="${escapeHtml(t('page.clients.actions.delete'))}">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 4.5h9M6 2.5h4l.5 2H5.5l.5-2ZM5 6.5v6m3-6v6m3-6v6M4.5 4.5l.6 9h5.8l.6-9" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
                 </div>
             </article>
         `;
@@ -1024,9 +1026,10 @@ async function retryProcessing(sessionId, btn) {
 
 /* ─── Navigation actions ─────────────────────────────────────────────────── */
 
-async function openChart() {
+async function openChart(chartId = userId) {
+    if (!chartId) return;
     try {
-        const res = await apiFetch(`${API_BASE}/natal/${userId}`);
+        const res = await apiFetch(`${API_BASE}/natal/${encodeURIComponent(chartId)}`);
         if (!res.ok) throw new Error(t('page.clients.errors.chartNotFound'));
         const chartData = await res.json();
         window.AstroAPI.saveChartToSession(chartData);
@@ -1034,7 +1037,7 @@ async function openChart() {
         window.AstroAPI.saveNavigationState?.({
             sourceView: 'client-profile',
             sourceUrl: window.AstroAPI.buildClientProfileUrl?.(userId) || `/client/${encodeURIComponent(userId)}`,
-            clientUserId: String(userId),
+            clientUserId: String(chartId),
             partnerUserId: null,
         });
         window.showPageLoader?.();
@@ -1498,17 +1501,15 @@ function renderLinkedChartsList(charts) {
         const place = c.place || '';
         const meta = [date, place].filter(Boolean).join(' · ');
         const isCurrentChart = String(c.chart_id) === String(userId);
-        const cls = `profile-linked-chart-item${isCurrentChart ? ' is-current' : ' is-clickable'}`;
-        const attrs = isCurrentChart
-            ? ''
-            : ` role="button" tabindex="0" data-action="open-linked-chart"`;
+        const cls = `profile-linked-chart-item is-clickable${isCurrentChart ? ' is-current' : ''}`;
+        const attrs = ` role="button" tabindex="0" data-action="open-linked-chart"`;
         return `<div class="${cls}" data-chart-id="${escapeHtml(String(c.chart_id))}"${attrs}>
             <div class="profile-linked-chart-info">
                 <span class="profile-linked-chart-title">${escapeHtml(c.display_title)}</span>
                 ${meta ? `<span class="profile-linked-chart-meta">${escapeHtml(meta)}</span>` : ''}
             </div>
             <div class="profile-linked-chart-actions">
-                ${c.link_source === 'm2m' ? `<button class="btn-logout btn-sm" type="button" data-action="unlink-chart" data-chart-id="${escapeHtml(String(c.chart_id))}">${escapeHtml(t('page.clientProfile.linkedCharts.unlink'))}</button>` : ''}
+                ${c.link_source === 'm2m' ? `<button class="profile-icon-btn profile-icon-btn--danger" type="button" data-action="unlink-chart" data-chart-id="${escapeHtml(String(c.chart_id))}" aria-label="${escapeHtml(t('page.clientProfile.linkedCharts.unlink'))}" title="${escapeHtml(t('page.clientProfile.linkedCharts.unlink'))}"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 4.5h9M6 2.5h4l.5 2H5.5l.5-2ZM5 6.5v6m3-6v6m3-6v6M4.5 4.5l.6 9h5.8l.6-9" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></button>` : ''}
             </div>
         </div>`;
     }).join('');
@@ -1533,9 +1534,7 @@ function renderLinkedChartsList(charts) {
 }
 
 function openLinkedChart(chartId) {
-    if (!chartId) return;
-    window.showPageLoader?.();
-    window.location.href = `/client/${encodeURIComponent(chartId)}`;
+    openChart(chartId);
 }
 
 async function unlinkChart(chartId) {

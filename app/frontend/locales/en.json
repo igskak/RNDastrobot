@@ -1369,6 +1369,7 @@
       "title": "Profile",
       "backToClients": "Back to practice",
       "viewProfile": "View profile",
+      "profileAction": "Profile",
       "startCall": "Start call",
       "quickOpen": {
         "savedCharts": "Open saved charts",
