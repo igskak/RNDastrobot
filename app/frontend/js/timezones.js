@@ -131,6 +131,100 @@ function normalizeOffsetPrefix(offset, prefix = 'UTC') {
     return `${normalizedPrefix}${rawOffset}`;
 }
 
+function parseTimezoneDateTime(options = {}) {
+    const rawDatetime = String(options.datetime || options.dateTime || '').trim();
+    if (rawDatetime) {
+        const match = rawDatetime.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2})(?::(\d{2}))?)?/);
+        if (match) {
+            return {
+                year: Number(match[1]),
+                month: Number(match[2]),
+                day: Number(match[3]),
+                hour: Number(match[4] || 12),
+                minute: Number(match[5] || 0),
+                second: Number(match[6] || 0),
+            };
+        }
+    }
+
+    const rawDate = String(options.date || '').trim();
+    const dateMatch = rawDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!dateMatch) return null;
+
+    const rawTime = String(options.time || '').trim();
+    const timeMatch = rawTime.match(/^(\d{2}):(\d{2})(?::(\d{2}))?/);
+    return {
+        year: Number(dateMatch[1]),
+        month: Number(dateMatch[2]),
+        day: Number(dateMatch[3]),
+        hour: timeMatch ? Number(timeMatch[1]) : 12,
+        minute: timeMatch ? Number(timeMatch[2]) : 0,
+        second: timeMatch ? Number(timeMatch[3] || 0) : 0,
+    };
+}
+
+function getTimezoneOffsetMinutes(timezone, options = {}) {
+    const parts = parseTimezoneDateTime(options);
+    if (!timezone || !parts) return null;
+
+    try {
+        const wallTimeAsUtc = Date.UTC(
+            parts.year,
+            parts.month - 1,
+            parts.day,
+            parts.hour,
+            parts.minute,
+            parts.second,
+        );
+        const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: timezone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hourCycle: 'h23',
+        });
+        const offsetForInstant = (utcMs) => {
+            const formatted = Object.fromEntries(
+                formatter.formatToParts(new Date(utcMs))
+                    .filter((part) => part.type !== 'literal')
+                    .map((part) => [part.type, part.value]),
+            );
+            const localAsUtc = Date.UTC(
+                Number(formatted.year),
+                Number(formatted.month) - 1,
+                Number(formatted.day),
+                Number(formatted.hour),
+                Number(formatted.minute),
+                Number(formatted.second),
+            );
+            const offsetMinutes = Math.round((localAsUtc - utcMs) / 60000);
+            return Number.isFinite(offsetMinutes) ? offsetMinutes : null;
+        };
+        const initialOffset = offsetForInstant(wallTimeAsUtc);
+        if (initialOffset === null) return null;
+
+        const candidateUtc = wallTimeAsUtc - (initialOffset * 60000);
+        return offsetForInstant(candidateUtc);
+    } catch (error) {
+        return null;
+    }
+}
+
+function formatOffsetMinutes(offsetMinutes, prefix = 'UTC') {
+    if (!Number.isFinite(offsetMinutes)) return '';
+    const normalizedPrefix = String(prefix || 'UTC').toUpperCase();
+    if (offsetMinutes === 0) return normalizedPrefix;
+
+    const sign = offsetMinutes >= 0 ? '+' : '-';
+    const absoluteMinutes = Math.abs(offsetMinutes);
+    const hours = Math.floor(absoluteMinutes / 60);
+    const minutes = absoluteMinutes % 60;
+    return `${normalizedPrefix}${sign}${hours}${minutes ? `:${String(minutes).padStart(2, '0')}` : ''}`;
+}
+
 function formatTimezoneOffsetLabel(value, options = {}) {
     const raw = String(value || '').trim();
     if (!raw) return '';
@@ -140,6 +234,8 @@ function formatTimezoneOffsetLabel(value, options = {}) {
         || 'UTC';
     const matchedTimezone = TIMEZONES.find((timezone) => timezone.value === raw);
     if (matchedTimezone?.offset) {
+        const exactOffset = getTimezoneOffsetMinutes(matchedTimezone.value, options);
+        if (exactOffset !== null) return formatOffsetMinutes(exactOffset, prefix);
         return normalizeOffsetPrefix(matchedTimezone.offset, prefix);
     }
 
@@ -150,6 +246,8 @@ function formatTimezoneOffsetLabel(value, options = {}) {
     const guessedTimezone = guessTimezone(raw);
     const guessedMatch = TIMEZONES.find((timezone) => timezone.value === guessedTimezone);
     if (guessedMatch?.offset) {
+        const exactOffset = getTimezoneOffsetMinutes(guessedMatch.value, options);
+        if (exactOffset !== null) return formatOffsetMinutes(exactOffset, prefix);
         return normalizeOffsetPrefix(guessedMatch.offset, prefix);
     }
 
@@ -218,6 +316,7 @@ window.Timezones = {
     guess: guessTimezone,
     formatLabel: formatTimezoneLabel,
     formatOffsetLabel: formatTimezoneOffsetLabel,
+    getOffsetMinutes: getTimezoneOffsetMinutes,
 };
 
 if (typeof module !== 'undefined' && module.exports) {
@@ -227,5 +326,6 @@ if (typeof module !== 'undefined' && module.exports) {
         guessTimezone,
         formatTimezoneLabel,
         formatTimezoneOffsetLabel,
+        getTimezoneOffsetMinutes,
     };
 }

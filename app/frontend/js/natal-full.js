@@ -107,8 +107,8 @@ async function loadFreshNatalFullChartData(fallbackChartData) {
     }
 }
 
-function formatHeaderTimezone(value) {
-    return window.Timezones?.formatOffsetLabel?.(value) || String(value || '').trim();
+function formatHeaderTimezone(value, options = {}) {
+    return window.Timezones?.formatOffsetLabel?.(value, options) || String(value || '').trim();
 }
 
 function getTranslatedAstroName(type, name, fallbackMap) {
@@ -559,7 +559,7 @@ function renderHeader(data) {
             details.push(dateTime);
         }
         if (birthData.timezone) {
-            details.push(`(${formatHeaderTimezone(birthData.timezone)})`);
+            details.push(`(${formatHeaderTimezone(birthData.timezone, { date: birthData.date, time: birthData.time })})`);
         }
         if (place) {
             details.push(place);

@@ -11,6 +11,7 @@
  *   defaultTitle  {string}   Pre-filled chart name
  *   showTags      {boolean}  Show tags section (default true)
  *   showPerson    {boolean}  Show person section (default true)
+ *   defaultPersons {Array}   Pre-selected linked people [{ id, name }] — first is primary
  */
 (function () {
     'use strict';
@@ -424,6 +425,7 @@
             defaultTime = '',
             showTags = true,
             showPerson = true,
+            defaultPersons = [],
         } = opts;
 
         buildDOM();
@@ -436,6 +438,15 @@
         if (R.timeInput) R.timeInput.value = String(defaultTime || '').slice(0, 5);
         if (R.tagsSection)   R.tagsSection.classList.toggle('hidden', !showTags);
         if (R.personSection) R.personSection.classList.toggle('hidden', !showPerson);
+
+        // Pre-fill linked people (e.g. the main chart's person). First entry
+        // becomes the primary one (chart's person_id).
+        if (showPerson && Array.isArray(defaultPersons) && defaultPersons.length) {
+            _persons = defaultPersons
+                .filter((p) => p && p.id != null)
+                .map((p) => ({ id: p.id, name: p.name || '' }));
+            renderPersonChips();
+        }
 
         // Load existing tags in background
         if (showTags) loadExistingTags();

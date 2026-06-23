@@ -87,6 +87,19 @@ test('formatTimezoneOffsetLabel returns UTC offset without city name', () => {
     delete global.window;
 });
 
+test('formatTimezoneOffsetLabel returns concrete offset for chart date', () => {
+    global.window = {};
+
+    const { formatTimezoneOffsetLabel } = loadModule();
+
+    assert.equal(formatTimezoneOffsetLabel('Europe/Madrid', { date: '2007-01-28', time: '11:22:00' }), 'UTC+1');
+    assert.equal(formatTimezoneOffsetLabel('Europe/Madrid', { date: '2007-09-28', time: '11:22:00' }), 'UTC+2');
+    assert.equal(formatTimezoneOffsetLabel('America/New_York', { datetime: '2026-01-01T12:00:00' }), 'UTC-5');
+    assert.equal(formatTimezoneOffsetLabel('America/New_York', { datetime: '2026-07-01T12:00:00' }), 'UTC-4');
+
+    delete global.window;
+});
+
 test('formatTimezoneOffsetLabel uses account preference prefix when not passed explicitly', () => {
     global.window = {
         AstroPreferences: {
@@ -99,6 +112,7 @@ test('formatTimezoneOffsetLabel uses account preference prefix when not passed e
     const { formatTimezoneOffsetLabel } = loadModule();
 
     assert.equal(formatTimezoneOffsetLabel('Europe/Kyiv'), 'GMT+2/+3');
+    assert.equal(formatTimezoneOffsetLabel('Europe/Madrid', { date: '2007-09-28', time: '11:22:00' }), 'GMT+2');
 
     delete global.window;
 });

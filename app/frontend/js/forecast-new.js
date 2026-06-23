@@ -358,8 +358,11 @@
         await Promise.resolve(window.FrontendI18n.ready).catch(() => {});
     }
 
-    function formatHeaderTimezone(value) {
-        return window.Timezones?.formatOffsetLabel?.(value) || String(value || '').trim();
+    function formatHeaderTimezone(value, datetimeOrOptions = {}) {
+        const options = typeof datetimeOrOptions === 'string'
+            ? { datetime: datetimeOrOptions }
+            : (datetimeOrOptions || {});
+        return window.Timezones?.formatOffsetLabel?.(value, options) || String(value || '').trim();
     }
 
     function getForecastNavigationState() {
@@ -1940,7 +1943,7 @@
         const [date, time] = splitTargetDatetime(state.natalSelectedDateTime);
         const summary = [
             `${date} · ${time}`,
-            formatHeaderTimezone(state.natalTimezone),
+            formatHeaderTimezone(state.natalTimezone, state.natalSelectedDateTime),
             state.natalLocation?.name || '',
         ].filter(Boolean).join(' · ');
         if (refs.natalPanelMeta) refs.natalPanelMeta.textContent = summary;
@@ -1984,7 +1987,7 @@
 
         // transit / progression / direction — target date + tz + place
         const locationName = state.location?.name || '';
-        return [state.selectedDateTime.replace('T', ' · '), formatHeaderTimezone(state.timezone), locationName]
+        return [state.selectedDateTime.replace('T', ' · '), formatHeaderTimezone(state.timezone, state.selectedDateTime), locationName]
             .filter(Boolean)
             .join(' · ');
     }
@@ -4851,14 +4854,14 @@
     function buildLayerMeta(method, raw) {
         if (method === 'transit') {
             const info = raw?.transit_info || {};
-            return [info.date, info.time, formatHeaderTimezone(info.timezone)].filter(Boolean).join(' · ');
+            return [info.date, info.time, formatHeaderTimezone(info.timezone, { date: info.date, time: info.time })].filter(Boolean).join(' · ');
         }
         if (method === 'progression') {
             const info = raw?.progression_info || {};
             const targetTime = info.target_time || '';
             return [
                 [info.target_date, targetTime].filter(Boolean).join(' '),
-                formatHeaderTimezone(info.timezone),
+                formatHeaderTimezone(info.timezone, { date: info.target_date, time: targetTime }),
                 info.method,
                 info.rate,
             ].filter(Boolean).join(' · ');
@@ -6748,6 +6751,27 @@
         // Modal UI is managed by window.SaveChartModal (save-chart-modal.js)
     }
 
+    // The person of the main (source) chart — used to pre-fill linked people when
+    // saving a derived chart, so by default it belongs to the same person.
+    async function resolveMainChartPersons() {
+        const chartId = state.userId;
+        if (!chartId) return [];
+        try {
+            const chart = await apiGet(`/charts/${encodeURIComponent(String(chartId))}`);
+            if (chart?.person_id) {
+                return [{
+                    id: chart.person_id,
+                    name: chart.person_display_name
+                        || [chart.first_name, chart.last_name].filter(Boolean).join(' ').trim()
+                        || '',
+                }];
+            }
+        } catch (error) {
+            console.warn('Failed to resolve main chart person', error);
+        }
+        return [];
+    }
+
     async function saveCurrentSourceAsChart() {
         if (isCompositeSingleMode()) {
             await saveCompositeChart();
@@ -6759,6 +6783,7 @@
             defaultTime: splitTargetDatetime(state.natalSelectedDateTime)[1],
             showTags: true,
             showPerson: true,
+            defaultPersons: await resolveMainChartPersons(),
         });
         if (!result) return;
         try {
