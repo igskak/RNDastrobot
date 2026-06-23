@@ -76,6 +76,18 @@ async function init() {
     });
 
     if (!state.sessionId) { renderError(t('page.consultation.notFound')); return; }
+
+    // Hydrate account visual preferences (e.g. date format) so rendered dates
+    // honor the astrologer's settings instead of falling back to defaults.
+    if (window.AstroAPI?.getAccountPreferences) {
+        try {
+            window.accountPreferencesCache = await window.AstroAPI.getAccountPreferences();
+            window.AstroPreferences?.setAccountVisualPreferences?.(window.accountPreferencesCache?.visual || {});
+        } catch (error) {
+            console.warn('Consultation account preferences fallback to defaults:', error);
+        }
+    }
+
     await load();
     document.getElementById('pageLoader')?.classList.add('hidden');
 }
