@@ -365,6 +365,23 @@
         return window.Timezones?.formatOffsetLabel?.(value, options) || String(value || '').trim();
     }
 
+    function buildNatalHeaderSubtitle(birth = {}) {
+        const locationName = state.natalLocation?.name || birth.place || '';
+        const timezoneLabel = formatHeaderTimezone(state.natalTimezone || birth.timezone, state.natalSelectedDateTime);
+        const parts = [locationName, timezoneLabel].filter(Boolean);
+
+        // Zodiac indicator: shown only for sidereal (tropical is the implicit default).
+        if ((birth.zodiac || 'tropical') === 'sidereal') {
+            const label = t('page.forecastNew.zodiac.sidereal') || 'Sidereal';
+            const ayan = birth.ayanamsha
+                ? ` · ${birth.ayanamsha.charAt(0).toUpperCase()}${birth.ayanamsha.slice(1)}`
+                : '';
+            parts.push(`${label}${ayan}`);
+        }
+
+        return parts.join(' · ');
+    }
+
     function getForecastNavigationState() {
         return window.AstroAPI?.getNavigationState?.() || {};
     }
@@ -1926,16 +1943,7 @@
         const birth = state.natalData?.birth_data || {};
         const name = [birth.first_name, birth.last_name].filter(Boolean).join(' ').trim();
         refs.forecastNewTitle.textContent = name;
-        // Zodiac indicator: shown only for sidereal (tropical is the implicit default).
-        if ((birth.zodiac || 'tropical') === 'sidereal') {
-            const label = t('page.forecastNew.zodiac.sidereal') || 'Sidereal';
-            const ayan = birth.ayanamsha
-                ? ` · ${birth.ayanamsha.charAt(0).toUpperCase()}${birth.ayanamsha.slice(1)}`
-                : '';
-            refs.forecastNewSubtitle.textContent = `${label}${ayan}`;
-        } else {
-            refs.forecastNewSubtitle.textContent = '';
-        }
+        refs.forecastNewSubtitle.textContent = buildNatalHeaderSubtitle(birth);
         updateNatalMomentMeta();
     }
 
