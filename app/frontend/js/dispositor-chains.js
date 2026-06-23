@@ -402,7 +402,7 @@
                 title="${escapeHtml(label)}"
                 aria-label="${escapeHtml(label)}"
             >
-                <span class="dispositor-compact-symbol">${planetSymbol(node.planet, 24)}</span>
+                <span class="dispositor-compact-symbol">${planetSymbol(node.planet, 32)}</span>
                 ${node.retrograde ? '<span class="dispositor-node-retro">r</span>' : ''}
                 ${houseLabel ? `<span class="dispositor-house-label">${escapeHtml(houseLabel)}</span>` : ''}
             </span>
@@ -451,8 +451,8 @@
                             <div class="dispositor-compact-graph" style="--graph-width:${layout.width}px; --graph-height:${layout.height}px;">
                                 <svg class="dispositor-compact-lines" viewBox="0 0 ${layout.width} ${layout.height}" aria-hidden="true">
                                     <defs>
-                                        <marker id="dispositorCompactArrow${index}" markerWidth="5" markerHeight="5" refX="4.5" refY="2.5" orient="auto-start-reverse" markerUnits="strokeWidth">
-                                            <path d="M0,0 L5,2.5 L0,5 Z"></path>
+                                        <marker id="dispositorCompactArrow${index}" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+                                            <path d="M1,1 L10,6 L1,11"></path>
                                         </marker>
                                     </defs>
                                     ${layout.edges.map((edge) => `
@@ -472,11 +472,11 @@
     }
 
     function buildCompactLayout(finalKey, groupChains) {
-        const nodeWidth = 34;
-        const nodeHeight = 44;
-        const xGap = 44;
-        const yGap = 54;
-        const cycleGap = 46;
+        const nodeWidth = 42;
+        const nodeHeight = 58;
+        const xGap = 60;
+        const yGap = 58;
+        const cycleGap = 72;
         const pad = 8;
         const rootPlanets = finalKey && finalKey !== 'none' ? finalKey.split('+').filter(Boolean) : [];
         const nodes = new Map();
@@ -631,14 +631,13 @@
             const child = nodeByPlanet.get(edge.child);
             const parent = nodeByPlanet.get(edge.parent);
             if (!child || !parent) return null;
-            const arrowGap = 5;
+            const arrowGap = 1;
             const childIsLeft = child.x < parent.x;
             const startX = childIsLeft ? child.x + nodeWidth + arrowGap : child.x - arrowGap;
             const endX = childIsLeft ? parent.x - arrowGap : parent.x + nodeWidth + arrowGap;
-            const startY = child.y + 18;
-            const endY = parent.y + 18;
-            const midX = startX + (endX - startX) / 2;
-            return { ...edge, path: `M${startX},${startY} H${midX} V${endY} H${endX}` };
+            const startY = child.y + 21;
+            const endY = parent.y + 21;
+            return { ...edge, path: `M${startX},${startY} L${endX},${endY}` };
         };
         const connectorEdges = normalEdges.map(makePath).filter(Boolean);
         const connectorMutualEdges = mutualEdges.map(makePath).filter(Boolean);
@@ -1109,6 +1108,8 @@
     window.DispositorChains = {
         render,
         buildChains,
+        buildHouseDispositorScheme,
+        buildCompactLayout,
         closeModal,
     };
 
