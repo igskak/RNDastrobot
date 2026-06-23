@@ -35,6 +35,15 @@ from app.utils.constants import (
     normalize_longitude,
 )
 
+# Поиск момента соляра стартует не с 1 января, а за несколько дней до дня
+# рождения в целевом году. Иначе для рождённых в самом начале января
+# `solcross_ut` (берёт ПЕРВОЕ пересечение после старта) проскакивает их
+# январский возврат и цепляет декабрьский — соляр уезжает на год.
+# Возврат отклоняется от григорианской даты рождения в пределах ≈[-1.5, +2.1]
+# суток (скан 1900–2100), поэтому 3 дня — безопасный отступ: заведомо раньше
+# истинного возврата и при этом много меньше ~365-дневного зазора до соседнего.
+SOLAR_RETURN_SEARCH_MARGIN_DAYS = 3.0
+
 
 class SolarReturnService:
     """Сервис для расчёта соларных карт"""
@@ -65,19 +74,28 @@ class SolarReturnService:
         *,
         zodiac: str = 'tropical',
         ayanamsha: Optional[str] = None,
+        birth_month: Optional[int] = None,
+        birth_day: Optional[int] = None,
     ) -> float:
         """
         Найти точный момент соляра (возвращения Солнца на натальную позицию)
-        
+
         Args:
             natal_sun_lon: Долгота натального Солнца (0-360°)
             year: Год для соляра
-            
+            birth_month/birth_day: дата рождения — поиск стартует за
+                ``SOLAR_RETURN_SEARCH_MARGIN_DAYS`` дней до дня рождения в
+                целевом году. Если не передана — fallback к 1 января (старое
+                поведение; корректно для всех, кроме рождённых ~1–2 января).
+
         Returns:
             Julian Day момента соляра
         """
-        # Начинаем поиск с 1 января нужного года
-        jd_start = swe.julday(year, 1, 1, 0.0)
+        if birth_month and birth_day:
+            jd_start = swe.julday(year, birth_month, birth_day, 0.0) - SOLAR_RETURN_SEARCH_MARGIN_DAYS
+        else:
+            # Дата рождения неизвестна — стартуем с 1 января нужного года.
+            jd_start = swe.julday(year, 1, 1, 0.0)
 
         if (zodiac or 'tropical').lower() == 'sidereal':
             return self._find_sidereal_solar_return_moment(
@@ -85,13 +103,13 @@ class SolarReturnService:
                 jd_start,
                 ayanamsha=ayanamsha or 'lahiri',
             )
-        
+
         # swe.solcross_ut находит момент когда Солнце пересекает заданную долготу
         # Возвращает Julian Day
         jd_solar = swe.solcross_ut(natal_sun_lon, jd_start, swe.FLG_SWIEPH)
-        
+
         logger.debug(f"Solar return for Sun@{natal_sun_lon:.4f}° in {year}: JD={jd_solar}")
-        
+
         return jd_solar
 
     def _find_sidereal_solar_return_moment(
@@ -311,12 +329,15 @@ class SolarReturnService:
         location_lat = float(location_lat)
         location_lon = float(location_lon)
 
-        # 4. Найти момент соляра
+        # 4. Найти момент соляра (поиск якорим на дне рождения, см. find_solar_return_moment)
+        birth_month, birth_day = self._birth_month_day(context)
         jd_solar = self.find_solar_return_moment(
             natal_sun_lon,
             year,
             zodiac=context.zodiac or 'tropical',
             ayanamsha=context.ayanamsha or 'lahiri',
+            birth_month=birth_month,
+            birth_day=birth_day,
         )
 
         # 5. Конвертировать в datetime
@@ -418,11 +439,32 @@ class SolarReturnService:
             birth_data=birth_data,
             zodiac=birth_data['zodiac'],
             ayanamsha=birth_data['ayanamsha'],
+            birth_date=user.birth_date,
             birth_lat=float(user.lat),
             birth_lon=float(user.lon),
             birth_timezone=user.timezone,
             natal_aspect_targets=self._load_natal_aspect_targets(user_id),
         )
+
+    @staticmethod
+    def _birth_month_day(context: 'NatalContext') -> tuple:
+        """Месяц/день рождения для якоря поиска соляра.
+
+        Предпочитаем типизированное ``context.birth_date``; иначе парсим
+        ISO-строку из ``birth_data['date']``. Возвращаем (None, None), если
+        дата недоступна — find_solar_return_moment откатится к 1 января.
+        """
+        bd = getattr(context, 'birth_date', None)
+        if bd is not None:
+            return bd.month, bd.day
+        raw = str((context.birth_data or {}).get('date') or '').strip()
+        if not raw:
+            return None, None
+        try:
+            parsed = date.fromisoformat(raw[:10])
+        except ValueError:
+            return None, None
+        return parsed.month, parsed.day
 
     @staticmethod
     def _natal_sun_longitude(context: 'NatalContext') -> float:

@@ -307,7 +307,10 @@
         "popoverAria": "Параметри соляра",
         "yearLabel": "Рік соляра",
         "placeLabel": "Місце соляра",
-        "placePlaceholder": "Місце соляра…"
+        "placePlaceholder": "Місце соляра…",
+        "chartTitlePrefix": "Соляр",
+        "saved": "Соляр збережено як карту",
+        "notReady": "Спочатку розрахуйте соляр"
       },
       "synastry": {
         "popoverAria": "Партнер для синастрії",

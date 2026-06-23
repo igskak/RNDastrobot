@@ -309,7 +309,10 @@
         "popoverAria": "Solar return options",
         "yearLabel": "Solar return year",
         "placeLabel": "Solar return place",
-        "placePlaceholder": "Solar return place…"
+        "placePlaceholder": "Solar return place…",
+        "chartTitlePrefix": "Solar",
+        "saved": "Solar saved as a chart",
+        "notReady": "Calculate the solar return first"
       },
       "synastry": {
         "popoverAria": "Synastry partner",

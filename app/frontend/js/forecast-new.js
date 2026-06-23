@@ -672,7 +672,10 @@
                 onSelect: applySavedChartToNatal,
             });
         });
-        refs.saveSourceChartBtn?.addEventListener('click', saveCurrentSourceAsChart);
+        // Right (prognostic) panel save targets the chart shown there: for a
+        // solar layer that's the solar chart, not the natal. Left (natal) panel
+        // always saves the natal source.
+        refs.saveSourceChartBtn?.addEventListener('click', saveRightPanelAsChart);
         refs.saveNatalChartBtn?.addEventListener('click', saveCurrentSourceAsChart);
 
         refs.layerToggles.forEach((input) => {
@@ -1963,18 +1966,32 @@
         if (refs.prognosticPanelMeta) refs.prognosticPanelMeta.textContent = buildPrognosticMomentSummary();
     }
 
+    // Compact meta for a solar layer: year + the COMPUTED solar moment
+    // (date · time · TZ offset of the solar place) + location. The moment is
+    // shown like every other method because it drifts from the birthday — the
+    // Sun returns to its natal longitude ~6 h later each year.
+    function buildSolarMomentMeta(solarInfo, { year } = {}) {
+        const info = solarInfo || {};
+        const resolvedYear = String(year || info.year || '');
+        const locName = info?.location?.name
+            || state.solarLocation?.name
+            || state.location?.name
+            || '';
+        const [solarDate, solarClock] = String(info.solar_datetime_local || '').split('T');
+        const solarTime = (solarClock || '').slice(0, 5);
+        const moment = [
+            [solarDate, solarTime].filter(Boolean).join(' '),
+            formatHeaderTimezone(info.timezone, { date: solarDate, time: solarTime }),
+        ].filter(Boolean).join(' · ');
+        return [resolvedYear, moment, locName].filter(Boolean).join(' · ');
+    }
+
     function buildPrognosticMomentSummary() {
         const method = selectedRightMethod();
 
         if (method === 'solar_return') {
             // Always use state.solarYear (user's selection), not the stale API response year
-            const year = state.solarYear;
-            const layer = selectedViewModelLayer();
-            const locName = layer?.raw?.solar_info?.location?.name
-                || state.solarLocation?.name
-                || state.location?.name
-                || '';
-            return [String(year), locName].filter(Boolean).join(' · ');
+            return buildSolarMomentMeta(selectedViewModelLayer()?.raw?.solar_info, { year: state.solarYear });
         }
 
         if (method === 'synastry_partner') {
@@ -3970,9 +3987,7 @@
 
     function buildResultLayerMeta(method, layer) {
         if (method === 'solar_return') {
-            const info = layer?.raw?.solar_info || {};
-            const locName = info?.location?.name || state.solarLocation?.name || state.location?.name || '';
-            return [String(state.solarYear || info.year || ''), locName].filter(Boolean).join(' · ');
+            return buildSolarMomentMeta(layer?.raw?.solar_info, { year: state.solarYear });
         }
         if (method === 'synastry_partner') return buildSynastryLayerMeta(layer);
         return buildLayerMeta(method, layer?.raw || {});
@@ -6836,6 +6851,87 @@
                 'error'
             );
         }
+    }
+
+    // Right-panel save dispatcher. The button lives on the prognostic panel, so
+    // it should save whatever chart that panel shows. Today only solar has its
+    // own savable chart entity; other methods fall back to the natal source.
+    async function saveRightPanelAsChart() {
+        if (selectedRightMethod() === 'solar_return') {
+            await saveSolarAsChart();
+            return;
+        }
+        await saveCurrentSourceAsChart();
+    }
+
+    // Save the currently displayed solar return as a standalone chart
+    // (chart_kind=solar_point). The save modal is pre-filled with the COMPUTED
+    // solar moment (date/time/place differ from birth) so the user just confirms.
+    // This only ADDS a new chart; it never touches the natal or other charts.
+    async function saveSolarAsChart() {
+        const info = selectedViewModelLayer()?.raw?.solar_info;
+        if (!info || !info.solar_datetime_local) {
+            window.showToast?.(
+                t('page.forecastNew.solar.notReady', null, 'Сначала рассчитайте соляр'),
+                'warning',
+            );
+            return;
+        }
+        const [solarDate, solarClock] = String(info.solar_datetime_local).split('T');
+        // Strip the TZ offset/Z suffix from the clock part → bare HH:MM:SS.
+        const solarTime = String(solarClock || '').split(/[+\-Z]/)[0].slice(0, 8);
+        const result = await window.SaveChartModal?.open({
+            defaultTitle: defaultSolarChartTitle(info),
+            defaultDate: solarDate,
+            defaultTime: solarTime,
+            showTags: true,
+            showPerson: true,
+            defaultPersons: await resolveMainChartPersons(),
+        });
+        if (!result) return;
+        try {
+            const payload = {
+                title: result.title,
+                chart_kind: 'solar_point',
+                date: result.date,
+                time: normalizeTime(result.time || solarTime || '12:00:00'),
+                timezone: info.timezone || 'UTC',
+                location_name: info.location?.name || null,
+                latitude: info.location?.latitude,
+                longitude: info.location?.longitude,
+                house_system: normalizeHouseSystemCode(info.house_system || 'P'),
+                tags: Array.isArray(result.tags) ? result.tags : [],
+            };
+            if (result.personId) payload.person_id = result.personId;
+            const saved = await apiPost('/charts', payload);
+            const newChartId = saved.chart_id || saved.user_id;
+            const extraPersonIds = (result.personIds || []).slice(1);
+            for (const pid of extraPersonIds) {
+                try {
+                    await apiPost(`/persons/${encodeURIComponent(pid)}/charts`, { chart_id: newChartId });
+                } catch (linkErr) {
+                    console.warn('Failed to link extra person to solar chart', pid, linkErr);
+                }
+            }
+            // Stay in the current workspace — we only added a chart to the library.
+            window.showToast?.(
+                t('page.forecastNew.solar.saved', null, 'Соляр сохранён как карта'),
+                'success',
+            );
+        } catch (error) {
+            window.showToast?.(
+                t('page.chart.actions.saveSourceChartError', { error: error.message }, error.message),
+                'error',
+            );
+        }
+    }
+
+    function defaultSolarChartTitle(info) {
+        const birth = state.natalData?.birth_data || {};
+        const name = [birth.first_name, birth.last_name].filter(Boolean).join(' ').trim();
+        const year = String(state.solarYear || info?.year || '');
+        const label = t('page.forecastNew.solar.chartTitlePrefix', null, 'Соляр');
+        return [name, [label, year].filter(Boolean).join(' ')].filter(Boolean).join(' · ');
     }
 
     function schedulePersist() {
