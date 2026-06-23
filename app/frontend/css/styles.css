@@ -312,6 +312,19 @@ body.quick-open-active {
     --radius-lg: 16px;
     --radius-xl: 24px;
 
+    /* Compact workspace density */
+    --density-space-1: 4px;
+    --density-space-2: 6px;
+    --density-space-3: 8px;
+    --density-space-4: 10px;
+    --density-space-5: 12px;
+    --density-control-height: 32px;
+    --density-touch-target: 40px;
+    --density-radius: 10px;
+    --density-surface-padding: 12px;
+    --density-row-padding: 7px 10px;
+    --density-surface-shadow: 0 1px 3px rgba(26, 22, 20, 0.045);
+
     /* Transition */
     --transition: 0.2s ease;
     --transition-soft: 0.42s cubic-bezier(0.22, 1, 0.36, 1);
@@ -345,6 +358,188 @@ body {
 
 body::selection {
     background: rgba(184, 147, 90, 0.24);
+}
+
+/* ============ COMPACT WORKSPACE SYSTEM ============ */
+.workspace-compact {
+    --workspace-gap: var(--density-space-4);
+    --workspace-surface-radius: var(--density-radius);
+    --workspace-surface-padding: var(--density-surface-padding);
+    --workspace-control-height: var(--density-control-height);
+}
+
+.workspace-compact .btn-new,
+.workspace-compact .btn-logout,
+.workspace-compact .btn-call,
+.workspace-compact .btn-ghost {
+    min-height: var(--workspace-control-height);
+    padding: 6px 11px;
+    border-radius: 8px;
+    font-size: 12px;
+    gap: 6px;
+}
+
+.workspace-compact .btn-new {
+    box-shadow: 0 6px 14px rgba(30, 58, 95, 0.14);
+}
+
+.workspace-compact .btn-new:hover {
+    box-shadow: 0 8px 18px rgba(30, 58, 95, 0.18);
+}
+
+.workspace-compact .clients-header {
+    gap: 14px;
+    margin-bottom: var(--workspace-gap);
+}
+
+.workspace-compact .header-account-pill {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    padding: 6px 9px;
+    border-radius: var(--workspace-surface-radius);
+    box-shadow: var(--density-surface-shadow);
+}
+
+.workspace-compact .header-account-label {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+}
+
+.workspace-compact .header-account-value {
+    font-size: 12px;
+    line-height: 1.25;
+}
+
+.workspace-compact .header-plan-status {
+    min-height: 20px;
+    padding: 0 7px;
+    font-size: 9px;
+}
+
+.workspace-compact .clients-dialog {
+    padding: 14px;
+}
+
+.workspace-compact .clients-dialog-card {
+    padding: 16px;
+    border-radius: 14px;
+    box-shadow: 0 18px 42px rgba(26, 22, 20, 0.15);
+}
+
+.workspace-compact .clients-dialog-header {
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.workspace-compact .clients-dialog-kicker {
+    margin-bottom: 3px;
+    font-size: 9px;
+}
+
+.workspace-compact .clients-dialog-title {
+    margin-bottom: 4px;
+    font-size: 24px;
+    line-height: 1;
+}
+
+.workspace-compact .clients-dialog-copy {
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.workspace-compact .clients-dialog-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    font-size: 18px;
+}
+
+.workspace-compact .clients-dialog-grid {
+    gap: 0 12px;
+}
+
+.workspace-compact .clients-dialog-actions {
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.workspace-compact .clients-dialog-cancel,
+.workspace-compact .clients-dialog-submit {
+    min-width: 0;
+}
+
+.workspace-compact .form-group {
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+.workspace-compact .form-label {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+}
+
+.workspace-compact .form-group input,
+.workspace-compact .form-group select,
+.workspace-compact .form-group textarea {
+    min-height: var(--workspace-control-height);
+    padding: 7px 9px;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.workspace-compact .profile-icon-btn,
+.workspace-compact .compact-icon-btn {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+}
+
+.compact-icon-btn {
+    display: inline-grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid rgba(30, 58, 95, 0.1);
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color var(--transition), border-color var(--transition), background var(--transition);
+}
+
+.compact-icon-btn:hover,
+.compact-icon-btn:focus-visible {
+    color: var(--text-primary);
+    border-color: rgba(30, 58, 95, 0.2);
+    background: rgba(30, 58, 95, 0.045);
+}
+
+.compact-icon-btn--danger:hover,
+.compact-icon-btn--danger:focus-visible {
+    color: var(--error);
+    border-color: rgba(184, 50, 50, 0.24);
+    background: rgba(184, 50, 50, 0.06);
+}
+
+.workspace-compact .footer {
+    margin-top: 16px;
+    font-size: 11px;
+}
+
+@media (max-width: 720px) {
+    .workspace-compact {
+        --workspace-control-height: var(--density-touch-target);
+    }
+
+    .workspace-compact .profile-icon-btn,
+    .workspace-compact .compact-icon-btn {
+        width: var(--density-touch-target);
+        height: var(--density-touch-target);
+        min-width: var(--density-touch-target);
+        min-height: var(--density-touch-target);
+    }
 }
 
 /* ============ SOFT PAGE ARRIVAL ============ */

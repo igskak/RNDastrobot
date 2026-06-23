@@ -129,11 +129,14 @@ function render() {
     // Header
     const types = (sj?.session?.consultation_types || [])
         .map((c) => `<span class="consult-type-chip">${escapeHtml(enumLabel('consultationType', c))}</span>`).join('');
+    const meta = `${dateStr}${cs.client_name ? ` · ${cs.client_name}` : ''}`;
     html += `<div class="consult-head">
-        <h1 class="consult-title">${escapeHtml(t('page.consultation.title'))}</h1>
+        <div class="consult-head-main">
+            <h1 class="consult-title">${escapeHtml(t('page.consultation.title'))}</h1>
+            <span class="consult-meta">${escapeHtml(meta)}</span>
+        </div>
         <span class="consult-types">${types}</span>
-    </div>
-    <p class="consult-meta">${escapeHtml(dateStr)}${cs.client_name ? ' · ' + escapeHtml(cs.client_name) : ''}</p>`;
+    </div>`;
 
     let primaryHtml = '';
     let sideHtml = '';
@@ -327,7 +330,9 @@ function renderMemory(entries) {
             <p class="mem-text">${escapeHtml(e.text)}</p>
             <div class="mem-actions">
                 <button class="mem-edit-btn" data-act="edit">${escapeHtml(t('common.edit'))}</button>
-                <button class="mem-del-btn" data-act="del">${escapeHtml(t('common.delete'))}</button>
+                <button class="compact-icon-btn compact-icon-btn--danger" data-act="del" aria-label="${escapeHtml(t('common.delete'))}" title="${escapeHtml(t('common.delete'))}">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 4.5h9M6 2.5h4l.5 2H5.5l.5-2ZM5 6.5v6m3-6v6m3-6v6M4.5 4.5l.6 9h5.8l.6-9" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
             </div>
         </div>`;
     }).join('');

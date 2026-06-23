@@ -1349,7 +1349,7 @@ function renderEditPersonChips() {
         const del = document.createElement('button');
         del.type = 'button';
         del.className = 'scm-tag-chip-del';
-        del.setAttribute('aria-label', `Remove ${person.name}`);
+        del.setAttribute('aria-label', `${t('common.delete')}: ${person.name}`);
         del.textContent = '×';
         del.addEventListener('click', () => {
             editClientState.selectedPersons.splice(i, 1);

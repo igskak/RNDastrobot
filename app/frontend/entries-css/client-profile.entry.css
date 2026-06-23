@@ -222,7 +222,7 @@
     gap: 10px;
     padding: 6px 8px 6px 10px;
     border: 1px solid rgba(184, 147, 90, 0.14);
-    border-radius: 9px;
+    border-radius: var(--workspace-surface-radius, 9px);
     background: rgba(250, 247, 241, 0.78);
 }
 
@@ -383,9 +383,9 @@
 .profile-card {
     background: rgba(255, 255, 255, 0.72);
     border: 1px solid rgba(30, 58, 95, 0.08);
-    border-radius: 11px;
-    padding: 11px 13px;
-    box-shadow: 0 1px 3px rgba(30, 58, 95, 0.045);
+    border-radius: var(--workspace-surface-radius, 11px);
+    padding: var(--workspace-surface-padding, 11px 13px);
+    box-shadow: var(--density-surface-shadow);
     min-width: 0;
 }
 
@@ -429,7 +429,7 @@
     gap: 10px;
     padding: 6px 8px 6px 10px;
     border: 1px solid rgba(30, 58, 95, 0.08);
-    border-radius: 9px;
+    border-radius: var(--workspace-surface-radius, 9px);
     background: rgba(255, 255, 255, 0.58);
     transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
 }
