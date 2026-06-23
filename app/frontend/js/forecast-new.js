@@ -2051,6 +2051,26 @@
         refs.prognosticMomentToggle?.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
     }
 
+    // Build the date portion of a time stepper, ordering the day/month/year
+    // groups and choosing the separator from the account date-format preference.
+    function buildStepperDateGroup(segmentMarkup, ariaLabel) {
+        const yearGroup = `<span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--year">${segmentMarkup('yearThousands')}${segmentMarkup('yearHundreds')}${segmentMarkup('yearTens')}${segmentMarkup('yearOnes')}</span>`;
+        const monthGroup = `<span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--month">${segmentMarkup('monthTens')}${segmentMarkup('monthOnes')}</span>`;
+        const dayGroup = `<span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--day">${segmentMarkup('dayTens')}${segmentMarkup('dayOnes')}</span>`;
+        const fmt = String(window.AstroPreferences?.getDateFormat?.() || 'DD_MM_YYYY').trim().toUpperCase();
+        let order = [dayGroup, monthGroup, yearGroup];
+        let sep = '.';
+        if (fmt === 'MM_DD_YYYY') {
+            order = [monthGroup, dayGroup, yearGroup];
+            sep = '/';
+        } else if (fmt === 'YYYY_MM_DD') {
+            order = [yearGroup, monthGroup, dayGroup];
+            sep = '-';
+        }
+        const separator = `<span class="forecast-new-time-stepper-separator" aria-hidden="true">${sep}</span>`;
+        return `<span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--date" aria-label="${escapeHtml(ariaLabel)}">${order.join(separator)}</span>`;
+    }
+
     function renderTimeStepper() {
         if (!refs.forecastNewTimeStepper) return;
         const values = getTimeStepperSegmentValues(getDisplayedMomentDateTime());
@@ -2075,13 +2095,7 @@
 
         refs.forecastNewTimeStepper.innerHTML = `
             <span class="forecast-new-time-stepper-display">
-                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--date" aria-label="Дата">
-                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--year">${segmentMarkup('yearThousands')}${segmentMarkup('yearHundreds')}${segmentMarkup('yearTens')}${segmentMarkup('yearOnes')}</span>
-                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">.</span>
-                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--month">${segmentMarkup('monthTens')}${segmentMarkup('monthOnes')}</span>
-                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">.</span>
-                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--day">${segmentMarkup('dayTens')}${segmentMarkup('dayOnes')}</span>
-                </span>
+                ${buildStepperDateGroup(segmentMarkup, 'Дата')}
                 <span class="forecast-new-time-stepper-separator forecast-new-time-stepper-separator--major" aria-hidden="true">,</span>
                 <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--time" aria-label="Время">
                     ${segmentMarkup('hour')}
@@ -2184,13 +2198,7 @@
 
         refs.forecastNewNatalTimeStepper.innerHTML = `
             <span class="forecast-new-time-stepper-display">
-                <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--date" aria-label="Дата рождения">
-                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--year">${segmentMarkup('yearThousands')}${segmentMarkup('yearHundreds')}${segmentMarkup('yearTens')}${segmentMarkup('yearOnes')}</span>
-                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">.</span>
-                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--month">${segmentMarkup('monthTens')}${segmentMarkup('monthOnes')}</span>
-                    <span class="forecast-new-time-stepper-separator" aria-hidden="true">.</span>
-                    <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--day">${segmentMarkup('dayTens')}${segmentMarkup('dayOnes')}</span>
-                </span>
+                ${buildStepperDateGroup(segmentMarkup, 'Дата рождения')}
                 <span class="forecast-new-time-stepper-separator forecast-new-time-stepper-separator--major" aria-hidden="true">,</span>
                 <span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--time" aria-label="Время рождения">
                     ${segmentMarkup('hour')}
