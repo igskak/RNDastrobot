@@ -227,6 +227,14 @@
         cacheRefs();
         await waitForI18n();
         if (window.AstroAPI?.requireAuth && !await window.AstroAPI.requireAuth({ redirectTo: '/login.html' })) return;
+        if (window.AstroAPI?.getAccountPreferences) {
+            try {
+                window.accountPreferencesCache = await window.AstroAPI.getAccountPreferences();
+                window.AstroPreferences?.setAccountVisualPreferences?.(window.accountPreferencesCache?.visual || {});
+            } catch (error) {
+                console.warn('Forecast timeline account preferences fallback to defaults:', error);
+            }
+        }
         try {
             await loadNatalData();
         } catch (err) {
