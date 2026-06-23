@@ -53,6 +53,12 @@ test('formatDateTime uses DD.MM.YYYY by default', () => {
     assert.equal(formatted.includes('17.05.2026 17.05.2026'), false);
 });
 
+test('formatDate keeps a bare YYYY-MM-DD day stable across timezones', () => {
+    // A date-only string must be parsed in local time, otherwise a UTC parse
+    // would shift the day by -1 for viewers in negative-offset timezones.
+    assert.equal(formatDate('2026-05-17'), '17.05.2026');
+});
+
 test('formatDate honors locale preference override', () => {
     globalThis.AstroPreferences = {
         getAccountVisualPreferences: () => ({ date_format: 'LOCALE' }),
