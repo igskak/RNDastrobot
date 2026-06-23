@@ -1117,6 +1117,11 @@
             renderWheel();
             syncResultViewButtons();
             renderResultView();
+            // Workspace "now" blocks (lunar, hours, profections, …) are rendered
+            // once into cached markup and otherwise never refreshed — re-render
+            // them so their labels follow the active locale instead of getting
+            // stuck in whatever language was active on first paint.
+            renderNowBlocks();
         });
 
         document.addEventListener('click', (event) => {
