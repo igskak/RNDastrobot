@@ -99,7 +99,9 @@
 
     function updateHeader() {
         const birth = state.natalData?.birth_data || {};
-        const parts = [birth.date || birth.birth_date, birth.time || birth.birth_time, birth.place || birth.birth_place]
+        const rawDate = birth.date || birth.birth_date;
+        const displayDate = rawDate ? (window.LocaleFormatters?.formatDate?.(rawDate) || rawDate) : '';
+        const parts = [displayDate, birth.time || birth.birth_time, birth.place || birth.birth_place]
             .filter(Boolean);
         if (refs.subtitle) refs.subtitle.textContent = parts.join(' · ');
     }

@@ -358,6 +358,25 @@
         await Promise.resolve(window.FrontendI18n.ready).catch(() => {});
     }
 
+    // Format a bare "YYYY-MM-DD" date per the account date-format preference.
+    // Builds a local Date (no UTC parse) so the day never shifts across timezones.
+    function formatChartDate(isoDate) {
+        const raw = String(isoDate || '').trim();
+        const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (!m || !window.LocaleFormatters?.formatDate) return raw;
+        const localDate = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+        return window.LocaleFormatters.formatDate(localDate);
+    }
+
+    // Format a "YYYY-MM-DDTHH:MM[:SS]" moment: date follows the preference,
+    // the time portion is preserved as-is.
+    function formatChartDateTimeLabel(isoDateTime, separator = ' ') {
+        const raw = String(isoDateTime || '').trim();
+        if (!raw.includes('T')) return formatChartDate(raw);
+        const [datePart, timePart] = raw.split('T');
+        return [formatChartDate(datePart), timePart].filter(Boolean).join(separator);
+    }
+
     function formatHeaderTimezone(value, datetimeOrOptions = {}) {
         const options = typeof datetimeOrOptions === 'string'
             ? { datetime: datetimeOrOptions }
@@ -1958,16 +1977,16 @@
     function updateNatalMomentMeta() {
         const [date, time] = splitTargetDatetime(state.natalSelectedDateTime);
         const summary = [
-            `${date} · ${time}`,
+            `${formatChartDate(date)} · ${time}`,
             formatHeaderTimezone(state.natalTimezone, state.natalSelectedDateTime),
             state.natalLocation?.name || '',
         ].filter(Boolean).join(' · ');
         if (refs.natalPanelMeta) refs.natalPanelMeta.textContent = summary;
-        if (refs.natalDatetimeLabel) refs.natalDatetimeLabel.textContent = state.natalSelectedDateTime.replace('T', ' ');
+        if (refs.natalDatetimeLabel) refs.natalDatetimeLabel.textContent = formatChartDateTimeLabel(state.natalSelectedDateTime);
     }
 
     function updatePrognosticTimeMeta() {
-        if (refs.targetDatetimeLabel) refs.targetDatetimeLabel.textContent = getDisplayedMomentDateTime().replace('T', ' ');
+        if (refs.targetDatetimeLabel) refs.targetDatetimeLabel.textContent = formatChartDateTimeLabel(getDisplayedMomentDateTime());
         if (refs.prognosticPanelMeta) refs.prognosticPanelMeta.textContent = buildPrognosticMomentSummary();
     }
 
@@ -2010,14 +2029,14 @@
             const layer = selectedViewModelLayer();
             const bd = layer?.raw?.partner_chart?.birth_data;
             const partnerMeta = bd
-                ? [bd.date, bd.place].filter(Boolean).join(' · ')
+                ? [formatChartDate(bd.date), bd.place].filter(Boolean).join(' · ')
                 : '';
             return [partnerName, partnerMeta].filter(Boolean).join(' · ');
         }
 
         // transit / progression / direction — target date + tz + place
         const locationName = state.location?.name || '';
-        return [state.selectedDateTime.replace('T', ' · '), formatHeaderTimezone(state.timezone, state.selectedDateTime), locationName]
+        return [formatChartDateTimeLabel(state.selectedDateTime, ' · '), formatHeaderTimezone(state.timezone, state.selectedDateTime), locationName]
             .filter(Boolean)
             .join(' · ');
     }
@@ -4004,7 +4023,7 @@
             ? (state.synastryManual?.name || t('page.forecastNew.resultViews.manualPartner'))
             : (select && select.selectedIndex > 0 ? (select.options[select.selectedIndex]?.text || '') : '');
         const bd = layer?.raw?.partner_chart?.birth_data;
-        return [partnerName, bd?.date, bd?.place].filter(Boolean).join(' · ');
+        return [partnerName, formatChartDate(bd?.date), bd?.place].filter(Boolean).join(' · ');
     }
 
     function normalizeCompositeMethod(method) {
@@ -4105,7 +4124,7 @@
         const metaParts = [
             methodLabel,
             state.pageSettings.houseSystem,
-            mt.date_utc ? `${mt.date_utc}${mt.time_utc ? ` ${mt.time_utc} UTC` : ''}` : '',
+            mt.date_utc ? `${formatChartDate(mt.date_utc)}${mt.time_utc ? ` ${mt.time_utc} UTC` : ''}` : '',
         ].filter(Boolean);
         return {
             ...chart,
@@ -4376,7 +4395,7 @@
         // Solar return: render year-only stepper into the regular stepper slot
         if (method === 'solar_return') renderSolarYearStepper();
         else renderOrUpdateTimeStepper();
-        refs.targetDatetimeLabel.textContent = getDisplayedMomentDateTime().replace('T', ' ');
+        refs.targetDatetimeLabel.textContent = formatChartDateTimeLabel(getDisplayedMomentDateTime());
 
         if (!layer) {
             state.prognosticRenderer?.setHouseNumberStyle?.(state.pageSettings.houseNumberStyle);
@@ -4429,8 +4448,8 @@
         if (refs.forecastNewTimeStepper) refs.forecastNewTimeStepper.innerHTML = '';
         if (refs.targetDatetimeLabel) {
             const bd = activeChart?.birth_data || {};
-            refs.targetDatetimeLabel.textContent = [bd.date, bd.time].filter(Boolean).join(' ')
-                || state.natalSelectedDateTime.replace('T', ' ');
+            refs.targetDatetimeLabel.textContent = [formatChartDate(bd.date), bd.time].filter(Boolean).join(' ')
+                || formatChartDateTimeLabel(state.natalSelectedDateTime);
         }
         // Single mode is natal-only. The natal* containers are filled by
         // renderStaticNatal()/state.natalRenderer and distributed across BOTH
@@ -4882,20 +4901,20 @@
     function buildLayerMeta(method, raw) {
         if (method === 'transit') {
             const info = raw?.transit_info || {};
-            return [info.date, info.time, formatHeaderTimezone(info.timezone, { date: info.date, time: info.time })].filter(Boolean).join(' · ');
+            return [formatChartDate(info.date), info.time, formatHeaderTimezone(info.timezone, { date: info.date, time: info.time })].filter(Boolean).join(' · ');
         }
         if (method === 'progression') {
             const info = raw?.progression_info || {};
             const targetTime = info.target_time || '';
             return [
-                [info.target_date, targetTime].filter(Boolean).join(' '),
+                [formatChartDate(info.target_date), targetTime].filter(Boolean).join(' '),
                 formatHeaderTimezone(info.timezone, { date: info.target_date, time: targetTime }),
                 info.method,
                 info.rate,
             ].filter(Boolean).join(' · ');
         }
         const info = raw?.direction_info || {};
-        return [info.target_date, info.direction_type, info.arc_formatted].filter(Boolean).join(' · ');
+        return [formatChartDate(info.target_date), info.direction_type, info.arc_formatted].filter(Boolean).join(' · ');
     }
 
     // ====================================================================
@@ -5180,7 +5199,7 @@
             <div class="forecast-new-profections">
                 <div class="forecast-new-profections-head">
                     <span>${escapeHtml(t('page.forecastNew.profections.age') || 'Age')}: ${escapeHtml(data.age)}</span>
-                    <span>${escapeHtml(data.target_date || '')}</span>
+                    <span>${escapeHtml(formatChartDate(data.target_date))}</span>
                 </div>
                 ${row('page.forecastNew.profections.annual', annual.house, annual.sign, annual.lord)}
                 ${row('page.forecastNew.profections.monthly', monthly.house, monthly.sign, monthly.lord)}

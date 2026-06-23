@@ -89,15 +89,29 @@
             return formatter;
         }
 
+        // Parse a value into a Date. A bare "YYYY-MM-DD" string is interpreted in
+        // local time (not UTC), so the displayed day never shifts by ±1 depending
+        // on the viewer's timezone.
+        function toDate(value) {
+            if (value instanceof Date) return value;
+            const dateOnly = typeof value === 'string'
+                ? value.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/)
+                : null;
+            if (dateOnly) {
+                return new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]));
+            }
+            return new Date(value);
+        }
+
         function formatDate(value, intlOptions = {}) {
-            const date = value instanceof Date ? value : new Date(value);
+            const date = toDate(value);
             if (Number.isNaN(date.getTime())) return String(value);
             const locale = toIntlLocale(getLocale());
             return formatDateByPreference(date, locale, intlOptions);
         }
 
         function formatDateTime(value, intlOptions = {}) {
-            const date = value instanceof Date ? value : new Date(value);
+            const date = toDate(value);
             if (Number.isNaN(date.getTime())) return String(value);
 
             const optionsWithDefaults = {

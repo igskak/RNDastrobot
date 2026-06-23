@@ -183,7 +183,7 @@
 
     function formatPersonMeta(person) {
         return root.RelatedPeopleUI?.formatRelatedPersonMeta?.(person)
-            || [person?.relation_label, person?.birth_date, person?.birth_place].filter(Boolean).join(' · ')
+            || [person?.relation_label, person?.birth_date ? formatDate(person.birth_date) : '', person?.birth_place].filter(Boolean).join(' · ')
             || t('common.notAvailable', null, 'Not available');
     }
 

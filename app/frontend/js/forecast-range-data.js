@@ -223,17 +223,27 @@
         return Number.isNaN(date.getTime()) ? null : date;
     }
 
+    function composeShortDate(dd, mm, yyyy) {
+        const yy = String(yyyy).slice(-2);
+        const fmt = String(
+            globalThis?.AstroPreferences?.getDateFormat?.() || 'DD_MM_YYYY'
+        ).trim().toUpperCase();
+        if (fmt === 'MM_DD_YYYY') return `${mm}/${dd}/${yy}`;
+        if (fmt === 'YYYY_MM_DD') return `${yy}-${mm}-${dd}`;
+        // DD_MM_YYYY and LOCALE both fall back to the compact day-first form.
+        return `${dd}.${mm}.${yy}`;
+    }
+
     function formatDateShort6(value) {
         const raw = String(value || '').trim();
         if (!raw || raw === '—') return '—';
         const direct = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
-        if (direct) return `${direct[3]}.${direct[2]}.${direct[1].slice(2)}`;
+        if (direct) return composeShortDate(direct[3], direct[2], direct[1]);
         const dt = new Date(raw);
         if (Number.isNaN(dt.getTime())) return raw;
         const dd = String(dt.getDate()).padStart(2, '0');
         const mm = String(dt.getMonth() + 1).padStart(2, '0');
-        const yy = String(dt.getFullYear()).slice(-2);
-        return `${dd}.${mm}.${yy}`;
+        return composeShortDate(dd, mm, String(dt.getFullYear()));
     }
 
     /**

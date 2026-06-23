@@ -32,6 +32,16 @@ function escapeHtml(s) {
         { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
     ));
 }
+
+function formatConsultDateTime(value) {
+    if (!value) return '';
+    const dt = new Date(value);
+    if (Number.isNaN(dt.getTime())) return String(value);
+    if (window.LocaleFormatters?.formatDateTime) {
+        return window.LocaleFormatters.formatDateTime(dt);
+    }
+    return dt.toLocaleString();
+}
 function enumLabel(ns, value) {
     if (!value) return '';
     const key = `page.consultation.${ns}.${value}`;
@@ -111,8 +121,8 @@ function render() {
     const root = document.getElementById('consultRoot');
 
     const dateStr = cs.started_at
-        ? new Date(`${cs.started_at}Z`).toLocaleString()
-        : (cs.created_at ? new Date(`${cs.created_at}Z`).toLocaleString() : '');
+        ? formatConsultDateTime(`${cs.started_at}Z`)
+        : (cs.created_at ? formatConsultDateTime(`${cs.created_at}Z`) : '');
 
     let html = '';
 
@@ -187,7 +197,7 @@ function renderClientReport(cs, sj) {
         ? cs.client_report_edited
         : (sj.client_facing_report?.text || '');
     const sharedNote = cs.client_report_shared_at
-        ? `<span class="consult-shared-note">${escapeHtml(t('page.consultation.report.sharedAt'))} ${escapeHtml(new Date(`${cs.client_report_shared_at}Z`).toLocaleString())}</span>`
+        ? `<span class="consult-shared-note">${escapeHtml(t('page.consultation.report.sharedAt'))} ${escapeHtml(formatConsultDateTime(`${cs.client_report_shared_at}Z`))}</span>`
         : '';
     return `<div class="consult-card consult-card-report">
         <div class="consult-card-title">
