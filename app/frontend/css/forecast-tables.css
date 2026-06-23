@@ -310,3 +310,124 @@
 .method-badge.transit { background: rgba(14, 165, 233, 0.16); color: #0ea5e9; }
 .method-badge.progression { background: rgba(192, 38, 211, 0.16); color: #c026d3; }
 .method-badge.direction { background: rgba(249, 115, 22, 0.16); color: #f97316; }
+
+/* Compact table workspace */
+body.forecast-range-page.workspace-compact .forecast-controls {
+    gap: 5px 8px;
+    padding: 6px 10px;
+}
+
+body.forecast-range-page.workspace-compact .forecast-controls input[type="date"],
+body.forecast-range-page.workspace-compact .btn-calculate {
+    min-height: var(--density-control-height);
+    padding: 4px 9px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+}
+
+body.forecast-range-page.workspace-compact .control-group {
+    gap: 4px;
+}
+
+body.forecast-range-page.workspace-compact .date-presets {
+    gap: 2px;
+    margin-left: 2px;
+}
+
+body.forecast-range-page.workspace-compact .preset-btn {
+    min-height: 28px;
+    padding: 3px 8px;
+    font-size: 0.72rem;
+}
+
+body.forecast-range-page.workspace-compact .forecast-loading,
+body.forecast-range-page.workspace-compact .forecast-empty {
+    padding: 36px 16px;
+    gap: 8px;
+}
+
+body.forecast-range-page.workspace-compact .forecast-empty .empty-icon svg {
+    width: 36px;
+    height: 36px;
+}
+
+body.forecast-range-page.workspace-compact .forecast-table-container {
+    padding: 8px 10px;
+}
+
+body.forecast-range-page.workspace-compact .table-filters-toolbar {
+    gap: 6px;
+    margin-bottom: 5px;
+}
+
+body.forecast-range-page.workspace-compact .table-filters-toggle {
+    min-height: 28px;
+    padding: 3px 8px;
+}
+
+body.forecast-range-page.workspace-compact .table-filters {
+    gap: 5px 7px;
+    margin-bottom: 6px;
+    padding: 5px 6px;
+    border-radius: 8px;
+}
+
+body.forecast-range-page.workspace-compact .table-filters select,
+body.forecast-range-page.workspace-compact .table-filters input {
+    min-height: 28px;
+    padding: 3px 7px;
+    border-radius: 7px;
+    font-size: 0.76rem;
+}
+
+body.forecast-range-page.workspace-compact .forecast-table {
+    font-size: 0.76rem;
+}
+
+body.forecast-range-page.workspace-compact .forecast-table th,
+body.forecast-range-page.workspace-compact .forecast-table td {
+    padding: 4px 8px;
+}
+
+body.forecast-range-page.workspace-compact .ingress-section {
+    margin-top: 10px;
+}
+
+body.forecast-range-page.workspace-compact .ingress-section-title {
+    margin-bottom: 5px;
+    font-size: 0.8rem;
+}
+
+body.forecast-range-page.workspace-compact .chart-tooltip.table-ingress-tooltip {
+    padding: 6px 9px;
+    border-radius: 8px;
+}
+
+@media (max-width: 720px) {
+    body.forecast-range-page.workspace-compact .forecast-controls {
+        gap: 6px;
+        padding: 6px 8px;
+    }
+
+    body.forecast-range-page.workspace-compact .forecast-controls input[type="date"],
+    body.forecast-range-page.workspace-compact .btn-calculate,
+    body.forecast-range-page.workspace-compact .preset-btn,
+    body.forecast-range-page.workspace-compact .table-filters-toggle,
+    body.forecast-range-page.workspace-compact .table-filters select,
+    body.forecast-range-page.workspace-compact .table-filters input {
+        min-height: var(--density-touch-target);
+    }
+
+    body.forecast-range-page.workspace-compact .btn-calculate {
+        margin-left: 0;
+    }
+
+    body.forecast-range-page.workspace-compact .forecast-table-container {
+        padding: 6px 8px;
+    }
+
+    body.forecast-range-page.workspace-compact .forecast-table th,
+    body.forecast-range-page.workspace-compact .forecast-table td {
+        padding: 6px 8px;
+    }
+}

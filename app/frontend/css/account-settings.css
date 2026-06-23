@@ -1358,3 +1358,339 @@ body.account-settings-modal-open {
         width: 100%;
     }
 }
+
+/* Compact workspace density */
+body.account-settings-page.workspace-compact .account-settings-shell {
+    padding: 8px 0 24px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-topbar {
+    top: 6px;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-back {
+    width: 32px;
+    height: 32px;
+    font-size: 17px;
+    box-shadow: var(--density-surface-shadow);
+}
+
+body.account-settings-page.workspace-compact .account-settings-header {
+    grid-template-columns: minmax(320px, 1fr) minmax(420px, 0.72fr);
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-radius: var(--density-radius);
+    box-shadow: var(--density-surface-shadow);
+}
+
+body.account-settings-page.workspace-compact .account-settings-title {
+    font-size: clamp(25px, 3vw, 31px);
+    line-height: 1;
+}
+
+body.account-settings-page.workspace-compact .account-settings-badge,
+body.account-settings-page.workspace-compact .account-plan-pill {
+    min-height: 22px;
+    padding-inline: 8px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-copy {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+body.account-settings-page.workspace-compact .account-settings-actions {
+    gap: 6px;
+}
+
+body.account-settings-page.workspace-compact .account-plan-card {
+    width: min(420px, 100%);
+    padding: 8px 10px;
+    border-radius: var(--density-radius);
+    box-shadow: none;
+}
+
+body.account-settings-page.workspace-compact .account-plan-kicker {
+    margin-bottom: 3px;
+}
+
+body.account-settings-page.workspace-compact .account-plan-title {
+    font-size: 21px;
+}
+
+body.account-settings-page.workspace-compact .account-plan-copy {
+    margin-top: 4px;
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+body.account-settings-page.workspace-compact .account-plan-billing {
+    margin-top: 4px;
+}
+
+body.account-settings-page.workspace-compact .account-plan-portal {
+    margin-top: 6px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-btn,
+body.account-settings-page.workspace-compact .account-settings-secondary-action,
+body.account-settings-page.workspace-compact .account-settings-profile-tab,
+body.account-settings-page.workspace-compact .account-plan-portal {
+    min-height: var(--density-control-height);
+    padding-inline: 10px;
+    box-shadow: none;
+}
+
+body.account-settings-page.workspace-compact .account-settings-content,
+body.account-settings-page.workspace-compact .account-settings-layout,
+body.account-settings-page.workspace-compact .account-settings-sheet {
+    gap: 8px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-card,
+body.account-settings-page.workspace-compact .account-settings-note,
+body.account-settings-page.workspace-compact .account-settings-toolbar {
+    border-radius: var(--density-radius);
+    box-shadow: var(--density-surface-shadow);
+}
+
+body.account-settings-page.workspace-compact .account-settings-toolbar,
+body.account-settings-page.workspace-compact .account-settings-card {
+    padding: var(--density-surface-padding);
+}
+
+body.account-settings-page.workspace-compact .account-settings-toolbar--sidebar {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 0.42fr);
+    gap: 8px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-toolbar-main,
+body.account-settings-page.workspace-compact .account-settings-toolbar-note,
+body.account-settings-page.workspace-compact .account-settings-note--sidebar {
+    padding: 9px 10px;
+    border-radius: 8px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-toolbar-main,
+body.account-settings-page.workspace-compact .account-settings-field-grid,
+body.account-settings-page.workspace-compact .account-settings-toggle-grid {
+    gap: 7px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-card-head {
+    margin-bottom: 7px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-card-head--compact {
+    gap: 8px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-profile-tabs {
+    gap: 2px;
+    padding: 2px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-profile-tab {
+    flex-basis: 112px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-card-summary {
+    min-height: 44px;
+    padding: 9px 10px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-section-title {
+    font-size: 20px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-section-copy,
+body.account-settings-page.workspace-compact .account-settings-note-copy,
+body.account-settings-page.workspace-compact .account-settings-toolbar-copy {
+    margin-top: 3px;
+    line-height: 1.35;
+}
+
+body.account-settings-page.workspace-compact .account-settings-label {
+    margin-bottom: 4px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-select {
+    min-height: var(--density-control-height);
+    padding-inline: 9px;
+    border-radius: 8px;
+    font-size: 12px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-table-wrap {
+    padding: 5px 6px 6px;
+    border-radius: 8px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-table-wrap--tight {
+    margin: 0 10px 10px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-table th,
+body.account-settings-page.workspace-compact .account-settings-table td {
+    padding: 7px 8px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-table--methodology thead th:not(:first-child),
+body.account-settings-page.workspace-compact .account-settings-table--methodology tbody td {
+    padding: 4px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-inline-toggle,
+body.account-settings-page.workspace-compact .account-settings-empty-cell,
+body.account-settings-page.workspace-compact .account-settings-aspect-cell,
+body.account-settings-page.workspace-compact .account-settings-matrix-toggle {
+    min-height: 30px;
+    border-radius: 8px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-option-toggle {
+    min-height: 32px;
+    padding: 6px 8px;
+    border-radius: 8px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-check-glyph,
+body.account-settings-page.workspace-compact .account-settings-body-badge {
+    min-width: 24px;
+    height: 24px;
+    padding-inline: 6px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-note {
+    padding: 9px 10px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-grid {
+    gap: 10px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-grid--compact-panels {
+    gap: 7px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-utility-grid {
+    grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+    gap: 8px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-number-input,
+body.account-settings-page.workspace-compact .account-settings-hex-input,
+body.account-settings-page.workspace-compact .account-settings-color-input,
+body.account-settings-page.workspace-compact .account-settings-orb-input,
+body.account-settings-page.workspace-compact .account-settings-compact-input {
+    min-height: var(--density-control-height);
+    height: var(--density-control-height);
+    border-radius: 8px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-orb-matrix-wrap.is-compact {
+    padding: 4px;
+    border-radius: 8px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-table--methodology.is-compact {
+    border-spacing: 3px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-status {
+    margin: 0 10px 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-shell > .account-settings-status {
+    margin: 0 0 8px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-confirm-card {
+    padding: 18px;
+    border-radius: 14px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-confirm-title {
+    font-size: clamp(26px, 4vw, 32px);
+}
+
+body.account-settings-page.workspace-compact .account-settings-confirm-actions {
+    margin-top: 16px;
+}
+
+@media (max-width: 1100px) {
+    body.account-settings-page.workspace-compact .account-settings-header,
+    body.account-settings-page.workspace-compact .account-settings-toolbar--sidebar,
+    body.account-settings-page.workspace-compact .account-settings-utility-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px) {
+    body.account-settings-page.workspace-compact .account-settings-shell {
+        padding-top: 6px;
+    }
+
+    body.account-settings-page.workspace-compact .account-settings-back,
+    body.account-settings-page.workspace-compact .account-settings-btn,
+    body.account-settings-page.workspace-compact .account-settings-secondary-action,
+    body.account-settings-page.workspace-compact .account-settings-profile-tab,
+    body.account-settings-page.workspace-compact .account-plan-portal,
+    body.account-settings-page.workspace-compact .account-settings-select,
+    body.account-settings-page.workspace-compact .account-settings-number-input,
+    body.account-settings-page.workspace-compact .account-settings-hex-input,
+    body.account-settings-page.workspace-compact .account-settings-color-input,
+    body.account-settings-page.workspace-compact .account-settings-orb-input,
+    body.account-settings-page.workspace-compact .account-settings-compact-input {
+        min-height: var(--density-touch-target);
+        height: var(--density-touch-target);
+    }
+
+    body.account-settings-page.workspace-compact .account-settings-back,
+    body.account-settings-page.workspace-compact .account-settings-reset-chip,
+    body.account-settings-page.workspace-compact .account-settings-swatch-input,
+    body.account-settings-page.workspace-compact .account-settings-dignity-glyph,
+    body.account-settings-page.workspace-compact .account-settings-check-glyph,
+    body.account-settings-page.workspace-compact .account-settings-body-badge,
+    body.account-settings-page.workspace-compact .account-settings-confirm-close {
+        width: var(--density-touch-target);
+        min-width: var(--density-touch-target);
+        height: var(--density-touch-target);
+        min-height: var(--density-touch-target);
+    }
+
+    body.account-settings-page.workspace-compact .account-settings-header,
+    body.account-settings-page.workspace-compact .account-settings-card,
+    body.account-settings-page.workspace-compact .account-settings-toolbar {
+        padding: 10px;
+    }
+
+    body.account-settings-page.workspace-compact .account-settings-card-summary {
+        min-height: var(--density-touch-target);
+        padding: 9px 10px;
+    }
+
+    body.account-settings-page.workspace-compact .account-settings-option-toggle,
+    body.account-settings-page.workspace-compact .account-settings-inline-toggle,
+    body.account-settings-page.workspace-compact .account-settings-aspect-cell,
+    body.account-settings-page.workspace-compact .account-settings-matrix-toggle {
+        min-height: var(--density-touch-target);
+    }
+
+    body.account-settings-page.workspace-compact .account-settings-table th,
+    body.account-settings-page.workspace-compact .account-settings-table td {
+        padding: 8px;
+    }
+
+    body.account-settings-page.workspace-compact .account-settings-confirm-card {
+        padding: 16px 14px;
+        border-radius: 12px;
+    }
+}

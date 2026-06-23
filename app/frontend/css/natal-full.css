@@ -1169,3 +1169,317 @@
         flex-basis: 100%;
     }
 }
+
+/* Compact report workspace */
+body.natal-full-page.workspace-compact .natal-header {
+    padding: 8px 14px;
+    box-shadow: var(--density-surface-shadow);
+}
+
+body.natal-full-page.workspace-compact .header-content {
+    gap: 10px;
+}
+
+body.natal-full-page.workspace-compact .back-btn,
+body.natal-full-page.workspace-compact .view-chart-btn,
+body.natal-full-page.workspace-compact .legend-toggle-btn {
+    min-height: var(--density-control-height);
+    padding: 5px 10px;
+    gap: 6px;
+}
+
+body.natal-full-page.workspace-compact .natal-full-actions-menu {
+    top: calc(100% + 5px);
+    min-width: 200px;
+    border-radius: 10px;
+}
+
+body.natal-full-page.workspace-compact .birth-info {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8px;
+}
+
+body.natal-full-page.workspace-compact .birth-info h1 {
+    flex: 0 1 auto;
+    margin: 0;
+    font-size: clamp(1.55rem, 2.2vw, 2rem);
+}
+
+body.natal-full-page.workspace-compact .birth-details {
+    flex: 0 1 auto;
+    font-size: 12px;
+}
+
+body.natal-full-page.workspace-compact .summary-bar {
+    padding: 7px 14px;
+}
+
+body.natal-full-page.workspace-compact .summary-content {
+    gap: 6px 12px;
+}
+
+body.natal-full-page.workspace-compact .summary-item {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 5px;
+    min-width: 0;
+}
+
+body.natal-full-page.workspace-compact .summary-label {
+    font-size: 9px;
+}
+
+body.natal-full-page.workspace-compact .summary-label-glyph {
+    font-size: calc(17px * var(--glyph-scale));
+}
+
+body.natal-full-page.workspace-compact .summary-value {
+    font-size: 13px;
+}
+
+body.natal-full-page.workspace-compact .summary-divider {
+    height: 22px;
+}
+
+body.natal-full-page.workspace-compact .summary-item.dominants {
+    min-width: 150px;
+    font-size: 12px;
+}
+
+body.natal-full-page.workspace-compact .report-intro {
+    margin-top: 10px;
+    padding: 0 16px;
+    gap: 9px;
+}
+
+body.natal-full-page.workspace-compact .report-intro-copy {
+    gap: 5px;
+    padding: 13px 15px;
+    border-radius: 12px;
+    box-shadow: var(--density-surface-shadow);
+}
+
+body.natal-full-page.workspace-compact .report-title {
+    font-size: clamp(28px, 3.4vw, 38px);
+    line-height: 1;
+}
+
+body.natal-full-page.workspace-compact .report-subtitle {
+    line-height: 1.5;
+}
+
+body.natal-full-page.workspace-compact .report-glance-grid {
+    gap: 8px;
+}
+
+body.natal-full-page.workspace-compact .report-glance-card {
+    gap: 4px;
+    padding: 9px 11px;
+    border-radius: 10px;
+    box-shadow: var(--density-surface-shadow);
+}
+
+body.natal-full-page.workspace-compact .report-glance-value {
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+body.natal-full-page.workspace-compact .report-shortcuts {
+    gap: 5px;
+}
+
+body.natal-full-page.workspace-compact .report-shortcut {
+    min-height: 30px;
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+body.natal-full-page.workspace-compact .legend-panel {
+    padding: 9px 16px;
+}
+
+body.natal-full-page.workspace-compact .legend-content {
+    gap: 18px;
+}
+
+body.natal-full-page.workspace-compact .legend-group,
+body.natal-full-page.workspace-compact .legend-items {
+    gap: 5px;
+}
+
+body.natal-full-page.workspace-compact .natal-content {
+    padding: 14px 16px 24px;
+}
+
+body.natal-full-page.workspace-compact .report-priority-grid,
+body.natal-full-page.workspace-compact .report-data-grid {
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+body.natal-full-page.workspace-compact .section,
+body.natal-full-page.workspace-compact .collapsible-section {
+    margin-bottom: 10px;
+    border-radius: 10px;
+    box-shadow: var(--density-surface-shadow);
+}
+
+body.natal-full-page.workspace-compact .section-summary {
+    min-height: 44px;
+    gap: 10px;
+    padding: 9px 11px;
+}
+
+body.natal-full-page.workspace-compact .section-title {
+    font-size: 21px;
+}
+
+body.natal-full-page.workspace-compact .section-summary-copy,
+body.natal-full-page.workspace-compact .section-summary-meta {
+    gap: 7px;
+}
+
+body.natal-full-page.workspace-compact .section-count,
+body.natal-full-page.workspace-compact .section-summary-chevron {
+    min-width: 26px;
+    width: 26px;
+    min-height: 26px;
+    height: 26px;
+    padding: 0 7px;
+}
+
+body.natal-full-page.workspace-compact .section-body {
+    padding: 0 11px 11px;
+}
+
+body.natal-full-page.workspace-compact .minor-aspects-toggle {
+    margin-top: 8px;
+    padding-top: 8px;
+}
+
+body.natal-full-page.workspace-compact .compact-table th,
+body.natal-full-page.workspace-compact .compact-table td,
+body.natal-full-page.workspace-compact .data-table th,
+body.natal-full-page.workspace-compact .data-table td {
+    padding: 6px 8px;
+}
+
+body.natal-full-page.workspace-compact .data-table {
+    font-size: 13px;
+}
+
+body.natal-full-page.workspace-compact .compact-table {
+    font-size: 12px;
+}
+
+body.natal-full-page.workspace-compact .configs-row {
+    gap: 8px;
+}
+
+body.natal-full-page.workspace-compact .config-card {
+    padding: 9px 10px;
+    border-radius: 9px;
+}
+
+body.natal-full-page.workspace-compact .balance-tabs {
+    gap: 3px;
+    padding: 2px;
+    margin-bottom: 8px;
+}
+
+body.natal-full-page.workspace-compact .balance-tab-btn {
+    min-height: var(--density-control-height);
+    padding-inline: 10px;
+}
+
+body.natal-full-page.workspace-compact .balances-compact {
+    gap: 8px;
+}
+
+body.natal-full-page.workspace-compact .balance-group {
+    gap: 6px 9px;
+    padding: 9px 10px;
+    border-radius: 9px;
+}
+
+@media (max-width: 1024px) {
+    body.natal-full-page.workspace-compact .report-glance-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    body.natal-full-page.workspace-compact .natal-header {
+        padding: 8px;
+    }
+
+    body.natal-full-page.workspace-compact .header-content {
+        align-items: center;
+    }
+
+    body.natal-full-page.workspace-compact .birth-info {
+        display: block;
+        text-align: left;
+    }
+
+    body.natal-full-page.workspace-compact .birth-info h1 {
+        font-size: 26px;
+    }
+
+    body.natal-full-page.workspace-compact .back-btn,
+    body.natal-full-page.workspace-compact .view-chart-btn,
+    body.natal-full-page.workspace-compact .legend-toggle-btn,
+    body.natal-full-page.workspace-compact .natal-full-action-item,
+    body.natal-full-page.workspace-compact .report-shortcut,
+    body.natal-full-page.workspace-compact .balance-tab-btn {
+        min-height: var(--density-touch-target);
+    }
+
+    body.natal-full-page.workspace-compact .summary-bar {
+        padding: 8px;
+    }
+
+    body.natal-full-page.workspace-compact .summary-content {
+        gap: 6px;
+    }
+
+    body.natal-full-page.workspace-compact .summary-item {
+        min-width: calc(50% - 3px);
+    }
+
+    body.natal-full-page.workspace-compact .report-intro {
+        margin-top: 8px;
+        padding: 0 8px;
+        gap: 8px;
+    }
+
+    body.natal-full-page.workspace-compact .report-intro-copy {
+        padding: 12px;
+        border-radius: 10px;
+    }
+
+    body.natal-full-page.workspace-compact .report-title {
+        font-size: clamp(27px, 8vw, 34px);
+    }
+
+    body.natal-full-page.workspace-compact .report-glance-grid {
+        grid-template-columns: 1fr;
+    }
+
+    body.natal-full-page.workspace-compact .natal-content {
+        padding: 10px 8px 18px;
+    }
+
+    body.natal-full-page.workspace-compact .section-summary {
+        min-height: var(--density-touch-target);
+    }
+
+    body.natal-full-page.workspace-compact .compact-table th,
+    body.natal-full-page.workspace-compact .compact-table td,
+    body.natal-full-page.workspace-compact .data-table th,
+    body.natal-full-page.workspace-compact .data-table td {
+        padding: 7px 8px;
+    }
+}

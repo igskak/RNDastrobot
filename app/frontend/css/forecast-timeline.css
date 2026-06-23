@@ -266,3 +266,124 @@
     height: 4px;
     border-radius: 2px;
 }
+
+/* Compact timeline workspace */
+body.forecast-range-page.workspace-compact .forecast-controls {
+    gap: 5px 8px;
+    padding: 6px 10px;
+}
+
+body.forecast-range-page.workspace-compact .forecast-controls input[type="date"],
+body.forecast-range-page.workspace-compact .btn-calculate {
+    min-height: var(--density-control-height);
+    padding: 4px 9px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+}
+
+body.forecast-range-page.workspace-compact .control-group {
+    gap: 4px;
+}
+
+body.forecast-range-page.workspace-compact .date-presets {
+    gap: 2px;
+    margin-left: 2px;
+}
+
+body.forecast-range-page.workspace-compact .preset-btn {
+    min-height: 28px;
+    padding: 3px 8px;
+    font-size: 0.72rem;
+}
+
+body.forecast-range-page.workspace-compact .forecast-loading,
+body.forecast-range-page.workspace-compact .forecast-empty {
+    padding: 36px 16px;
+    gap: 8px;
+}
+
+body.forecast-range-page.workspace-compact .forecast-empty .empty-icon svg {
+    width: 36px;
+    height: 36px;
+}
+
+body.forecast-range-page.workspace-compact .active-events-summary {
+    padding: 6px 10px;
+}
+
+body.forecast-range-page.workspace-compact .aes-header {
+    margin-bottom: 4px;
+    font-size: 0.78rem;
+}
+
+body.forecast-range-page.workspace-compact .aes-chips {
+    gap: 4px;
+}
+
+body.forecast-range-page.workspace-compact .aes-chip {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 5px;
+    padding: 3px 7px;
+    border-radius: 7px;
+    font-size: 0.74rem;
+}
+
+body.forecast-range-page.workspace-compact .aes-exact {
+    margin-top: 0;
+}
+
+body.forecast-range-page.workspace-compact .timeline-filters {
+    gap: 8px;
+    padding: 5px 10px;
+    font-size: 0.74rem;
+}
+
+body.forecast-range-page.workspace-compact .timeline-click-hint {
+    padding: 4px 10px;
+}
+
+body.forecast-range-page.workspace-compact .timeline-tooltip {
+    padding: 6px 9px;
+    border-radius: 8px;
+    font-size: 0.76rem;
+}
+
+body.forecast-range-page.workspace-compact .timeline-legend {
+    gap: 8px 12px;
+    padding: 5px 10px;
+    font-size: 0.74rem;
+}
+
+@media (max-width: 720px) {
+    body.forecast-range-page.workspace-compact .forecast-controls {
+        gap: 6px;
+        padding: 6px 8px;
+    }
+
+    body.forecast-range-page.workspace-compact .forecast-controls input[type="date"],
+    body.forecast-range-page.workspace-compact .btn-calculate,
+    body.forecast-range-page.workspace-compact .preset-btn {
+        min-height: var(--density-touch-target);
+    }
+
+    body.forecast-range-page.workspace-compact .btn-calculate {
+        margin-left: 0;
+    }
+
+    body.forecast-range-page.workspace-compact .timeline-filters {
+        gap: 4px 8px;
+        padding: 4px 8px;
+        flex-wrap: wrap;
+    }
+
+    body.forecast-range-page.workspace-compact .tl-filter {
+        min-height: var(--density-touch-target);
+    }
+
+    body.forecast-range-page.workspace-compact .tl-event-count {
+        width: 100%;
+        margin-left: 0;
+    }
+}
