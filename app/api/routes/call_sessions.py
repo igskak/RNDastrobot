@@ -20,7 +20,7 @@ from app.auth.dependencies import AuthContext, create_audit_event, require_auth
 from app.database.connection import get_db
 from app.database.models import Astrologer, CallSession, Consultation, User
 from app.api.routes.call_session_utils import TERMINAL_CALL_SESSION_STATUSES
-from app.services.livekit_service import livekit_service
+from app.services.livekit_service import livekit_service, EGRESS_FAILURE_STATUSES, EGRESS_COMPLETE_STATUS
 from app.services.storage_service import storage_service
 from app.services.processing_pipeline import run_post_call_pipeline
 from app.services.entitlements_service import FEATURE_CALLS, FEATURE_RECORDING, assert_feature_enabled
@@ -688,7 +688,10 @@ async def livekit_webhook(
                 db.commit()
                 logger.info(f"Room finished — auto-ended session {cs.id}")
 
-    # Egress ended — audio file is now in Supabase Storage → trigger processing pipeline
+    # Egress ended — terminal state. Only EGRESS_COMPLETE means the audio file
+    # actually landed in storage; FAILED/ABORTED/LIMIT_REACHED (e.g. Supabase
+    # HTTP 413 EntityTooLarge on oversized recordings) must be surfaced as a
+    # failure instead of running the pipeline against a file that isn't there.
     if event_type == "egress_ended":
         egress = getattr(event, "egress_info", None)
         if egress:
@@ -696,16 +699,32 @@ async def livekit_webhook(
                 CallSession.livekit_egress_id == egress.egress_id
             ).first()
             if cs:
+                egress_status = getattr(egress, "status", None)
+
+                if egress_status in EGRESS_FAILURE_STATUSES:
+                    egress_error = (getattr(egress, "error", "") or "").strip()
+                    detail = egress_error or f"egress ended with status {egress_status}"
+                    logger.error(f"Egress failed for call session {cs.id}: {detail}")
+                    # Don't clobber a session that already completed (e.g. via reprocess).
+                    if cs.call_status != "completed":
+                        cs.call_status = "failed"
+                        cs.processing_error = f"Recording failed: {detail}"[:500]
+                    db.commit()
+                    return {"ok": True}
+
                 file_results = getattr(egress, "file_results", [])
                 if file_results:
                     cs.audio_storage_path = file_results[0].filename
                     cs.audio_duration_seconds = int(getattr(egress, "duration", 0) / 1_000_000_000)
                 db.commit()
+
                 if cs.call_status in ("processing", "completed", "failed"):
                     logger.info(f"Duplicate egress_ended webhook — session {cs.id} already {cs.call_status}, skipping pipeline")
-                else:
+                elif egress_status == EGRESS_COMPLETE_STATUS:
                     logger.info(f"Egress completed for call session {cs.id} — queuing pipeline")
                     background_tasks.add_task(run_post_call_pipeline, cs.id)
+                else:
+                    logger.warning(f"Egress for session {cs.id} ended with non-terminal status {egress_status} — not queuing pipeline")
 
     return {"ok": True}
 

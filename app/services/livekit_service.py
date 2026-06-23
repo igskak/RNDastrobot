@@ -15,11 +15,25 @@ from livekit.api import (
     RoomCompositeEgressRequest,
     EncodedFileOutput,
     EncodedFileType,
+    EncodingOptions,
+    AudioCodec,
     S3Upload,
     StopEgressRequest,
     DeleteRoomRequest,
+    EgressStatus,
 )
 from loguru import logger
+
+
+# Egress terminal statuses (from the LiveKit egress webhook EgressInfo.status).
+# Only COMPLETE means the file landed in storage; the rest are failures we must
+# surface instead of blindly running the post-call pipeline against a missing file.
+EGRESS_COMPLETE_STATUS = EgressStatus.EGRESS_COMPLETE
+EGRESS_FAILURE_STATUSES = frozenset({
+    EgressStatus.EGRESS_FAILED,
+    EgressStatus.EGRESS_ABORTED,
+    EgressStatus.EGRESS_LIMIT_REACHED,
+})
 
 
 _LIVEKIT_URL = os.getenv("LIVEKIT_URL", "")
@@ -35,6 +49,13 @@ _STORAGE_S3_REGION = os.getenv("SUPABASE_STORAGE_S3_REGION", "us-east-1")
 
 # LiveKit token TTL for call participants
 _TOKEN_TTL_SECONDS = 4 * 60 * 60  # 4 hours
+
+# Audio egress bitrate (kbps). Supabase Storage caps single uploads (50 MB on the
+# free plan), and a 2.5h consultation at the LiveKit default of 128 kbps is ~140 MB
+# — which fails mid-upload with HTTP 413 EntityTooLarge and loses the recording.
+# 24 kbps Opus is ample for speech + transcription and keeps even a ~4.8h call
+# under 50 MB. Override via env if the storage limit is raised.
+_EGRESS_AUDIO_BITRATE_KBPS = int(os.getenv("EGRESS_AUDIO_BITRATE_KBPS", "24"))
 
 
 class LiveKitService:
@@ -130,10 +151,16 @@ class LiveKitService:
                 api_key=_API_KEY,
                 api_secret=_API_SECRET,
             ) as lk:
-                # Audio-only composite egress: record all audio tracks mixed together
+                # Audio-only composite egress: record all audio tracks mixed together.
+                # Force a low Opus bitrate so long calls stay under the storage upload
+                # size limit (see _EGRESS_AUDIO_BITRATE_KBPS above).
                 req = RoomCompositeEgressRequest(
                     room_name=room_name,
                     audio_only=True,
+                    advanced=EncodingOptions(
+                        audio_codec=AudioCodec.OPUS,
+                        audio_bitrate=_EGRESS_AUDIO_BITRATE_KBPS,  # kbps
+                    ),
                     file=EncodedFileOutput(
                         file_type=EncodedFileType.OGG,
                         filepath=storage_path,
