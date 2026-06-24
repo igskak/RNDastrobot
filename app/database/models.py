@@ -351,7 +351,8 @@ class AuditEvent(Base):
     user_agent = Column(Text)
     # Structured event context (G1) + session correlation key (G3) for
     # behaviour analytics / PostHog mirroring. See migration 046.
-    properties = Column(JSONB)
+    # JSONB on Postgres, JSON on SQLite so the test harness can build this table.
+    properties = Column(JSONB().with_variant(JSON(), "sqlite"))
     session_id = Column(String(255))
     created_at = Column(DateTime, server_default=func.now())
 
