@@ -433,7 +433,7 @@
 
         // Show ended panel
         const elapsed = state.callStartTime ? Math.floor((Date.now() - state.callStartTime) / 1000) : 0;
-        if (window.AstroAnalytics) {
+        if (typeof window.AstroAnalytics?.track === 'function') {
             window.AstroAnalytics.track('consultation_completed', { duration_seconds: elapsed });
         }
         refs.callEndedDuration.textContent = t('page.call.ended.duration', { duration: formatSeconds(elapsed) });

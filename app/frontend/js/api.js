@@ -395,7 +395,7 @@
                     couponCode: options.couponCode || null,
                 });
                 if (checkout?.checkout_url && root.location) {
-                    if (root.AstroAnalytics) {
+                    if (typeof root.AstroAnalytics?.track === 'function') {
                         root.AstroAnalytics.track('begin_checkout', {
                             plan_code: button.dataset.planCode,
                             interval: options.interval || 'monthly',
