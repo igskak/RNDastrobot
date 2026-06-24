@@ -412,6 +412,7 @@
     function buildNatalHeaderSubtitle(birth = {}) {
         const locationName = state.natalLocation?.name || birth.place || '';
         const parts = [
+            formatChartDateTimeLabel(state.natalSelectedDateTime),
             buildPanelLocationMeta(
                 locationName,
                 state.natalTimezone || birth.timezone,
@@ -1716,7 +1717,7 @@
         let startY = 0;
         shell.addEventListener('wheel', (event) => {
             event.preventDefault();
-            setViewport({ zoom: state.viewport.zoom * (event.deltaY > 0 ? 0.92 : 1.08) });
+            setViewport({ zoom: state.viewport.zoom * (event.deltaY > 0 ? 0.96 : 1.04) });
         }, { passive: false });
         shell.addEventListener('mousedown', (event) => {
             if (event.button !== 0) return;
