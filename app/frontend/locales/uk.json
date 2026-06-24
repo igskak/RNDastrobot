@@ -124,7 +124,8 @@
       "WhiteMoon": "Білий Місяць",
       "Fortune": "Парс",
       "TrueNorthNode": "Північний вузол",
-      "TrueSouthNode": "Південний вузол"
+      "TrueSouthNode": "Південний вузол",
+      "EastPoint": "Точка Сходу"
     },
     "polarity": {
       "Feminine": "Жіночий",
@@ -221,7 +222,8 @@
     "errorGeneric": "Щось пішло не так. Спробуйте ще раз.",
     "edit": "Редагувати",
     "delete": "Видалити",
-    "save": "Зберегти"
+    "save": "Зберегти",
+    "time": "Час"
   },
   "i18n": {
     "loading": "Завантаження...",
@@ -285,7 +287,8 @@
         "antiscia": "Антиси",
         "asteroids": "Астероїди",
         "dominants": "Домінанти",
-        "fixstars": "Зірки"
+        "fixstars": "Зірки",
+        "extraangles": "Додаткові кути"
       },
       "view": {
         "single": "Одне колесо",
@@ -509,6 +512,9 @@
       "fixstars": {
         "empty": "Немає з’єднань",
         "conjunctions": "З’єднання"
+      },
+      "extraangles": {
+        "empty": "Немає даних щодо додаткових кутів"
       }
     },
     "plan": {
@@ -1057,6 +1063,14 @@
         "deleteConfirm": "Видалити цю конфігурацію?",
         "deleteAria": "Видалити конфігурацію",
         "deleteFailed": "Не вдалося видалити конфігурацію"
+      },
+      "saveModal": {
+        "momentRequired": "Вкажіть дату й час карти.",
+        "personLabel": "Прив'язати до людей",
+        "personPlaceholder": "Шукати людину…",
+        "personPrimary": "основний",
+        "tagsLabel": "Теги",
+        "tagsPlaceholder": "Новий тег…"
       }
     },
     "chat": {
@@ -1543,7 +1557,8 @@
       "people": {
         "natal": "Натал",
         "client": "Основний профіль",
-        "partner": "Партнер"
+        "partner": "Партнер",
+        "primary": "Основний"
       },
       "displayMode": {
         "label": "Відображення синастрії",

@@ -30,6 +30,18 @@ const KNOWN_UNTRANSLATED_VALUE_KEYS = [
     'page.natalFull.balances.quadrant2',
     'page.natalFull.balances.quadrant3',
     'page.natalFull.balances.quadrant4',
+    // Ayanamsha systems are proper nouns (named after their authors) and stay
+    // identical across locales.
+    'page.forecastNew.zodiac.ayanamsha.lahiri',
+    'page.forecastNew.zodiac.ayanamsha.fagan_bradley',
+    'page.forecastNew.zodiac.ayanamsha.krishnamurti',
+    'page.forecastNew.zodiac.ayanamsha.raman',
+    'page.forecastNew.zodiac.ayanamsha.de_luce',
+    // Davison is a named composite-chart method.
+    'page.forecastNew.composite.davison',
+    // Subscription tier names are kept as brand labels in every locale.
+    'page.pricing.plans.practitioner.name',
+    'page.pricing.plans.studio.name',
 ];
 
 module.exports = {

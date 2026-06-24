@@ -222,7 +222,8 @@
     "errorGeneric": "Something went wrong. Please try again.",
     "edit": "Edit",
     "delete": "Delete",
-    "save": "Save"
+    "save": "Save",
+    "time": "Time"
   },
   "i18n": {
     "loading": "Loading...",
@@ -1055,7 +1056,15 @@
         "deleteAria": "Delete configuration",
         "deleteFailed": "Failed to delete configuration"
       },
-      "title": "Natal Chart"
+      "title": "Natal Chart",
+      "saveModal": {
+        "momentRequired": "Enter the chart's date and time.",
+        "personLabel": "Link to people",
+        "personPlaceholder": "Search for a person…",
+        "personPrimary": "primary",
+        "tagsLabel": "Tags",
+        "tagsPlaceholder": "New tag…"
+      }
     },
     "chat": {
       "errors": {
@@ -1541,7 +1550,8 @@
       "people": {
         "natal": "Natal",
         "client": "Primary profile",
-        "partner": "Partner"
+        "partner": "Partner",
+        "primary": "Primary"
       },
       "displayMode": {
         "label": "Synastry display",
