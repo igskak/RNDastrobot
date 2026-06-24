@@ -3,29 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consultation Call — Steliara</title>
-    <link rel="stylesheet" href="bundles/consultation-call.bundle.css?v=6d748284c26e">
+    <title data-i18n="page.call.title">Consultation Call — Steliara</title>
+    <link rel="stylesheet" href="bundles/consultation-call.bundle.css?v=f941f2aaca67">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <!-- LiveKit Client SDK -->
     <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
-    <script>window.__APP_BUILD_ID__ = '6d748284c26e';</script>
+    <script>window.__APP_BUILD_ID__ = 'f941f2aaca67';</script>
 </head>
 <body class="call-page">
 
     <!-- Loading overlay -->
     <div class="page-loader" id="pageLoader">
         <div class="pl-spinner"></div>
-        <div class="pl-text">Connecting…</div>
+        <div class="pl-text" data-i18n="page.call.connecting">Connecting…</div>
     </div>
 
     <!-- Error overlay (no session ID in URL etc.) -->
     <div class="call-error-overlay" id="callErrorOverlay" hidden>
         <div class="call-error-box">
-            <h2 class="call-error-title">Session not found</h2>
-            <p class="call-error-body" id="callErrorMsg">Unable to load this call session.</p>
-            <a href="/" class="btn-primary">Back to practice</a>
+            <h2 class="call-error-title" data-i18n="page.call.error.title">Session not found</h2>
+            <p class="call-error-body" id="callErrorMsg" data-i18n="page.call.error.body">Unable to load this call session.</p>
+            <a href="/" class="btn-primary" data-i18n="page.call.error.back">Back to practice</a>
         </div>
     </div>
 
@@ -35,21 +35,21 @@
         <!-- Header -->
         <header class="call-header">
             <div class="call-header-left">
-                <a href="/" class="call-back-link" title="Back to practice">
+                <a href="/" class="call-back-link" data-i18n-title="page.call.back" title="Back to practice">
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </a>
-                <span class="call-client-name" id="callClientName">Loading…</span>
+                <span class="call-client-name" id="callClientName" data-i18n="page.call.loadingClient">Loading…</span>
             </div>
             <div class="call-header-center">
-                <span class="call-status-badge" id="callStatusBadge">Connecting</span>
+                <span class="call-status-badge" id="callStatusBadge" data-i18n="page.call.status.connecting">Connecting</span>
                 <span class="call-rec-indicator" id="callRecIndicator" hidden>
-                    <span class="call-rec-dot"></span> REC <span id="callRecTimer">0:00</span>
+                    <span class="call-rec-dot"></span> <span data-i18n="page.call.rec">REC</span> <span id="callRecTimer">0:00</span>
                 </span>
             </div>
             <div class="call-header-right">
-                <button class="call-copy-link-btn" id="btnCopyLink" title="Copy client join link" hidden>
+                <button class="call-copy-link-btn" id="btnCopyLink" data-i18n-title="page.call.copyLinkTitle" title="Copy client join link" hidden>
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M3 10H2a1 1 0 01-1-1V2a1 1 0 011-1h7a1 1 0 011 1v1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-                    <span id="btnCopyLinkLabel">Copy invite link</span>
+                    <span id="btnCopyLinkLabel" data-i18n="page.call.copyLink">Copy invite link</span>
                 </button>
                 <span class="call-timer" id="callDurationTimer">0:00</span>
             </div>
@@ -60,7 +60,7 @@
             <!-- Remote (client) video — primary -->
             <div class="call-video-tile call-video-remote" id="callVideoRemote">
                 <video id="remoteVideo" autoplay playsinline></video>
-                <div class="call-tile-label" id="remoteName">Guest</div>
+                <div class="call-tile-label" id="remoteName" data-i18n="page.call.tile.guest">Guest</div>
                 <div class="call-tile-audio-off" id="remoteAudioOff" hidden>
                     <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M12 9a3 3 0 01-6 0V5a3 3 0 016 0v4z" fill="currentColor" opacity=".4"/><path d="M3 9a6 6 0 0012 0M9 15v2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="3" y1="3" x2="15" y2="15" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
                 </div>
@@ -69,48 +69,52 @@
             <!-- Local (astrologer) video — secondary -->
             <div class="call-video-tile call-video-local" id="callVideoLocal">
                 <video id="localVideo" autoplay playsinline muted></video>
-                <div class="call-tile-label" id="localName">You</div>
+                <div class="call-tile-label" id="localName" data-i18n="page.call.tile.you">You</div>
             </div>
 
             <!-- Screen share tile (shown when sharing) -->
             <div class="call-video-tile call-video-screen" id="callVideoScreen" hidden>
                 <video id="screenVideo" autoplay playsinline></video>
-                <div class="call-tile-label">Screen share</div>
+                <div class="call-tile-label" data-i18n="page.call.tile.screenShare">Screen share</div>
             </div>
         </div>
 
         <!-- Controls -->
         <div class="call-controls">
             <div class="call-controls-left">
-                <button class="call-ctrl-btn" id="btnToggleMic" title="Mute / unmute">
+                <button class="call-ctrl-btn" id="btnToggleMic" data-i18n-title="page.call.controls.micTitle" title="Mute / unmute">
                     <svg class="icon-mic-on" width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 2a4 4 0 014 4v5a4 4 0 01-8 0V6a4 4 0 014-4z" fill="currentColor" opacity=".2" stroke="currentColor" stroke-width="1.3"/><path d="M4 11a7 7 0 0014 0M11 18v3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
                     <svg class="icon-mic-off" width="22" height="22" viewBox="0 0 22 22" fill="none" hidden><path d="M11 2a4 4 0 014 4v5a4 4 0 01-8 0V6a4 4 0 014-4z" fill="currentColor" opacity=".2" stroke="currentColor" stroke-width="1.3"/><path d="M4 11a7 7 0 0014 0M11 18v3M3 3l16 16" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
                 </button>
-                <button class="call-ctrl-btn" id="btnToggleCam" title="Camera on / off">
+                <button class="call-ctrl-btn" id="btnToggleCam" data-i18n-title="page.call.controls.camTitle" title="Camera on / off">
                     <svg class="icon-cam-on" width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="1" y="5" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M15 9l6-3v10l-6-3V9z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
                     <svg class="icon-cam-off" width="22" height="22" viewBox="0 0 22 22" fill="none" hidden><rect x="1" y="5" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M15 9l6-3v10l-6-3V9zM3 3l16 16" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
                 </button>
-                <button class="call-ctrl-btn" id="btnShareScreen" title="Share screen">
+                <button class="call-ctrl-btn" id="btnShareScreen" data-i18n-title="page.call.controls.shareTitle" title="Share screen">
                     <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="1" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M8 21h6M11 17v4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M7 10l4-4 4 4M11 6v7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="call-ctrl-btn" id="btnPiP" data-i18n-title="page.call.controls.pipTitle" title="Picture-in-picture" hidden>
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="3" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.3"/><rect x="10.5" y="9" width="8" height="6" rx="1" fill="currentColor"/></svg>
+                    <span data-i18n="page.call.controls.pip">Mini view</span>
                 </button>
             </div>
 
             <div class="call-controls-center">
                 <!-- Record button — opens consent modal -->
-                <button class="call-ctrl-btn call-ctrl-btn--record" id="btnRecord" title="Start recording">
+                <button class="call-ctrl-btn call-ctrl-btn--record" id="btnRecord" data-i18n-title="page.call.controls.recordTitle" title="Start recording">
                     <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.3"/><circle cx="11" cy="11" r="4" fill="currentColor"/></svg>
-                    <span>Record</span>
+                    <span data-i18n="page.call.controls.record">Record</span>
                 </button>
-                <button class="call-ctrl-btn call-ctrl-btn--record-stop" id="btnStopRecord" title="Stop recording" hidden>
+                <button class="call-ctrl-btn call-ctrl-btn--record-stop" id="btnStopRecord" data-i18n-title="page.call.controls.recordStopTitle" title="Stop recording" hidden>
                     <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="var(--danger,#c0392b)" stroke-width="1.3"/><rect x="8" y="8" width="6" height="6" fill="var(--danger,#c0392b)"/></svg>
-                    <span>Stop Rec</span>
+                    <span data-i18n="page.call.controls.recordStop">Stop Rec</span>
                 </button>
             </div>
 
             <div class="call-controls-right">
-                <button class="call-ctrl-btn call-ctrl-btn--end" id="btnEndCall" title="End call">
+                <button class="call-ctrl-btn call-ctrl-btn--end" id="btnEndCall" data-i18n-title="page.call.controls.endCallTitle" title="End call">
                     <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M2 15.5c0-1.1.9-2 2-2h2a2 2 0 012 2v1a10 10 0 005 0v-1a2 2 0 012-2h2a2 2 0 012 2v2a12 12 0 01-19 0v-2z" fill="currentColor" opacity=".25" stroke="currentColor" stroke-width="1.3"/><line x1="4" y1="4" x2="18" y2="18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                    <span>End Call</span>
+                    <span data-i18n="page.call.controls.endCall">End Call</span>
                 </button>
             </div>
         </div>
@@ -119,17 +123,17 @@
     <!-- Consent modal (shown before recording starts) -->
     <div class="modal-overlay" id="consentModal" hidden>
         <div class="modal-box">
-            <h3 class="modal-title">Record this session?</h3>
-            <p class="modal-body">
+            <h3 class="modal-title" data-i18n="page.call.consent.title">Record this session?</h3>
+            <p class="modal-body" data-i18n="page.call.consent.body">
                 Only audio will be recorded. The recording will be stored securely in the profile
                 and automatically transcribed. Both sides must agree before recording begins.
             </p>
-            <p class="modal-body modal-body--note" id="consentWaitNote" hidden>
+            <p class="modal-body modal-body--note" id="consentWaitNote" data-i18n="page.call.consent.waitNote" hidden>
                 Waiting for the other person to confirm consent…
             </p>
             <div class="modal-actions">
-                <button class="btn-secondary" id="btnConsentCancel">Cancel</button>
-                <button class="btn-primary" id="btnConsentAgree">I agree — request consent</button>
+                <button class="btn-secondary" id="btnConsentCancel" data-i18n="page.call.consent.cancel">Cancel</button>
+                <button class="btn-primary" id="btnConsentAgree" data-i18n="page.call.consent.agree">I agree — request consent</button>
             </div>
         </div>
     </div>
@@ -138,16 +142,16 @@
     <div class="call-ended-panel" id="callEndedPanel" hidden>
         <div class="call-ended-box">
             <svg class="call-ended-icon" width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18" stroke="var(--accent)" stroke-width="1.5"/><path d="M12 21l6 6 11-13" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <h2 class="call-ended-title">Call ended</h2>
+            <h2 class="call-ended-title" data-i18n="page.call.ended.title">Call ended</h2>
             <p class="call-ended-duration" id="callEndedDuration"></p>
-            <p class="call-ended-note" id="callEndedNote">Audio is being processed. The transcript and summary will appear in the profile shortly.</p>
+            <p class="call-ended-note" id="callEndedNote" data-i18n="page.call.ended.note">Audio is being processed. The transcript and summary will appear in the profile shortly.</p>
             <div class="call-ended-actions">
-                <a href="/" class="btn-secondary">Back to practice</a>
-                <a href="#" class="btn-primary" id="callEndedClientLink">Open profile</a>
+                <a href="/" class="btn-secondary" data-i18n="page.call.ended.back">Back to practice</a>
+                <a href="#" class="btn-primary" id="callEndedClientLink" data-i18n="page.call.ended.openProfile">Open profile</a>
             </div>
         </div>
     </div>
 
-    <script type="module" src="js/bundles/consultation-call.bundle.js?v=6d748284c26e"></script>
+    <script type="module" src="js/bundles/consultation-call.bundle.js?v=f941f2aaca67"></script>
 </body>
 </html>

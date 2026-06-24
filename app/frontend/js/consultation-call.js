@@ -55,6 +55,7 @@
         btnToggleMic:     $('btnToggleMic'),
         btnToggleCam:     $('btnToggleCam'),
         btnShareScreen:   $('btnShareScreen'),
+        btnPiP:           $('btnPiP'),
         btnRecord:        $('btnRecord'),
         btnStopRecord:    $('btnStopRecord'),
         btnEndCall:       $('btnEndCall'),
@@ -71,23 +72,38 @@
     };
 
     // -------------------------------------------------------------------------
+    // i18n helper
+    // -------------------------------------------------------------------------
+    function t(key, params) {
+        return (window.FrontendI18n && window.FrontendI18n.t)
+            ? window.FrontendI18n.t(key, params)
+            : key;
+    }
+
+    // -------------------------------------------------------------------------
     // Init
     // -------------------------------------------------------------------------
     async function init() {
+        // Make sure the active locale catalog is loaded before we render any
+        // dynamic strings, otherwise t() would briefly emit raw keys.
+        if (window.FrontendI18n && window.FrontendI18n.ready) {
+            try { await window.FrontendI18n.ready; } catch (_) { /* best-effort */ }
+        }
+
         const params = new URLSearchParams(window.location.search);
         state.sessionId = params.get('session_id');
         state.userId    = params.get('user_id');
         state.joinUrl   = params.get('join_url');
 
         if (!state.sessionId) {
-            showError('No call session specified. Please start the call from the profile page.');
+            showError(t('page.call.error.noSession'));
             return;
         }
 
         try {
             await connectToRoom();
         } catch (err) {
-            showError(err.message || 'Failed to connect to the call.');
+            showError(err.message || t('page.call.error.connectFailed'));
         }
     }
 
@@ -96,7 +112,7 @@
         const res = await apiFetch(`${API_BASE}/call-sessions/${state.sessionId}/token`, { method: 'POST' });
         if (!res.ok) {
             const data = await res.json().catch(() => ({}));
-            throw new Error(data.detail || 'Could not get call token');
+            throw new Error(data.detail || t('page.call.error.tokenFailed'));
         }
         const data = await res.json();
 
@@ -133,7 +149,7 @@
         await room.localParticipant.enableCameraAndMicrophone();
         attachLocalVideo();
 
-        setStatus('In call');
+        setStatus(t('page.call.status.inCall'));
         bindControls();
     }
 
@@ -176,11 +192,51 @@
         refs.btnConsentCancel.addEventListener('click', closeConsentModal);
         refs.btnConsentAgree.addEventListener('click', submitAstrologerConsent);
 
+        // Picture-in-picture button — only when the browser supports it
+        if (refs.btnPiP && window.CallPiP && window.CallPiP.isSupported()) {
+            show(refs.btnPiP);
+            refs.btnPiP.addEventListener('click', togglePiP);
+            // Mimic Google Meet: when the astrologer switches to another window
+            // (e.g. to present), pop the client into a floating mini-window.
+            document.addEventListener('visibilitychange', onVisibilityChange);
+        }
+
         // Copy invite link button
         if (state.joinUrl && refs.btnCopyLink) {
             show(refs.btnCopyLink);
             refs.btnCopyLink.addEventListener('click', copyInviteLink);
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Picture-in-Picture
+    // -------------------------------------------------------------------------
+    function pipOptions() {
+        return {
+            remoteVideo: refs.remoteVideo,
+            localVideo: refs.localVideo,
+            getLabel: () => refs.remoteName.textContent,
+            onClose: () => refs.btnPiP.classList.remove('call-ctrl-btn--active'),
+        };
+    }
+
+    async function togglePiP() {
+        try {
+            await window.CallPiP.toggle(pipOptions());
+        } catch (err) {
+            console.error('Picture-in-picture error:', err);
+        }
+        refs.btnPiP.classList.toggle('call-ctrl-btn--active', window.CallPiP.isActive());
+    }
+
+    function onVisibilityChange() {
+        if (document.visibilityState !== 'hidden') return;
+        if (!state.room || !window.CallPiP || window.CallPiP.isActive()) return;
+        // Best-effort: browsers may block auto-PiP without a user gesture, in
+        // which case the manual button stays the reliable path.
+        window.CallPiP.open(pipOptions())
+            .then(() => refs.btnPiP.classList.toggle('call-ctrl-btn--active', window.CallPiP.isActive()))
+            .catch(() => { /* requires user gesture — ignore */ });
     }
 
     async function toggleMic() {
@@ -225,6 +281,14 @@
             refs.btnShareScreen.classList.add('call-ctrl-btn--active');
 
             screenStream.getVideoTracks()[0].addEventListener('ended', stopScreenShare);
+
+            // Sharing the screen is exactly when seeing the client matters most —
+            // float them into a picture-in-picture window (best-effort).
+            if (window.CallPiP && window.CallPiP.isSupported() && !window.CallPiP.isActive()) {
+                window.CallPiP.open(pipOptions())
+                    .then(() => refs.btnPiP.classList.toggle('call-ctrl-btn--active', window.CallPiP.isActive()))
+                    .catch(() => { /* requires user gesture — ignore */ });
+            }
         } catch (err) {
             if (err.name !== 'NotAllowedError') {
                 console.error('Screen share error:', err);
@@ -349,8 +413,9 @@
     // End call
     // -------------------------------------------------------------------------
     async function endCall() {
-        if (!confirm('End the consultation? The call will close for both parties.')) return;
+        if (!confirm(t('page.call.endConfirm'))) return;
 
+        if (window.CallPiP && window.CallPiP.isActive()) await window.CallPiP.close();
         if (state.recording) await stopRecording();
         if (state.screenSharing) await stopScreenShare();
 
@@ -368,7 +433,7 @@
 
         // Show ended panel
         const elapsed = state.callStartTime ? Math.floor((Date.now() - state.callStartTime) / 1000) : 0;
-        refs.callEndedDuration.textContent = `Duration: ${formatSeconds(elapsed)}`;
+        refs.callEndedDuration.textContent = t('page.call.ended.duration', { duration: formatSeconds(elapsed) });
         show(refs.callEndedPanel);
     }
 
@@ -386,6 +451,7 @@
         } else if (track.kind === LivekitClient.Track.Kind.Audio) {
             track.attach(); // audio auto-plays
         }
+        if (window.CallPiP) window.CallPiP.sync();
     }
 
     function onTrackUnsubscribed(track) {
@@ -393,20 +459,22 @@
         if (track.source === LivekitClient.Track.Source.ScreenShare) {
             refs.callVideoScreen.hidden = true;
         }
+        if (window.CallPiP) window.CallPiP.sync();
     }
 
     function onParticipantConnected(participant) {
-        const name = participant.name || participant.identity || 'Guest';
+        const name = participant.name || participant.identity || t('page.call.tile.guest');
         refs.remoteName.textContent = name;
-        setStatus('In call');
+        setStatus(t('page.call.status.inCall'));
+        if (window.CallPiP) window.CallPiP.sync();
     }
 
     function onParticipantDisconnected() {
-        setStatus('The other side left');
+        setStatus(t('page.call.status.otherLeft'));
     }
 
     function onRoomDisconnected() {
-        setStatus('Call ended');
+        setStatus(t('page.call.status.ended'));
     }
 
     function onDataReceived(data) {
@@ -427,8 +495,8 @@
     async function copyInviteLink() {
         try {
             await navigator.clipboard.writeText(state.joinUrl);
-            refs.btnCopyLinkLabel.textContent = 'Copied!';
-            setTimeout(() => { refs.btnCopyLinkLabel.textContent = 'Copy invite link'; }, 2000);
+            refs.btnCopyLinkLabel.textContent = t('page.call.copied');
+            setTimeout(() => { refs.btnCopyLinkLabel.textContent = t('page.call.copyLink'); }, 2000);
         } catch (_) {
             // Fallback: select a temp input
             const inp = document.createElement('input');
@@ -437,8 +505,8 @@
             inp.select();
             document.execCommand('copy');
             document.body.removeChild(inp);
-            refs.btnCopyLinkLabel.textContent = 'Copied!';
-            setTimeout(() => { refs.btnCopyLinkLabel.textContent = 'Copy invite link'; }, 2000);
+            refs.btnCopyLinkLabel.textContent = t('page.call.copied');
+            setTimeout(() => { refs.btnCopyLinkLabel.textContent = t('page.call.copyLink'); }, 2000);
         }
     }
 

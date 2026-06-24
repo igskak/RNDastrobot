@@ -56,6 +56,7 @@
         btnToggleMic:     $('btnToggleMic'),
         btnToggleCam:     $('btnToggleCam'),
         btnShareScreen:   $('btnShareScreen'),
+        btnPiP:           $('btnPiP'),
         btnLeaveCall:     $('btnLeaveCall'),
         consentModal:     $('consentModal'),
         btnConsentDecline:$('btnConsentDecline'),
@@ -64,22 +65,36 @@
     };
 
     // -------------------------------------------------------------------------
+    // i18n helper
+    // -------------------------------------------------------------------------
+    function t(key, params) {
+        return (window.FrontendI18n && window.FrontendI18n.t)
+            ? window.FrontendI18n.t(key, params)
+            : key;
+    }
+
+    // -------------------------------------------------------------------------
     // Init
     // -------------------------------------------------------------------------
     async function init() {
+        // Wait for the locale catalog so dynamic strings render translated.
+        if (window.FrontendI18n && window.FrontendI18n.ready) {
+            try { await window.FrontendI18n.ready; } catch (_) { /* best-effort */ }
+        }
+
         // Extract token from path: /call/{token}
         const pathParts = window.location.pathname.split('/');
         state.rawToken = pathParts[pathParts.length - 1] || null;
 
         if (!state.rawToken || state.rawToken === 'call') {
-            showError('Invalid link', 'This consultation link is not valid.');
+            showError(t('page.join.error.invalidTitle'), t('page.join.error.invalidBody'));
             return;
         }
 
         try {
             await loadSessionAndShowLobby();
         } catch (err) {
-            showError('Link unavailable', err.message || 'This consultation link is no longer valid.');
+            showError(t('page.join.error.title'), err.message || t('page.join.error.body'));
         }
     }
 
@@ -92,7 +107,7 @@
 
         if (!res.ok) {
             const data = await res.json().catch(() => ({}));
-            const msg = data.detail || 'This call link is invalid or has expired.';
+            const msg = data.detail || t('page.join.error.expired');
             throw new Error(msg);
         }
 
@@ -101,7 +116,7 @@
         state.livekitUrl     = data.livekit_url;
         state.livekitToken   = data.token;
         state.roomName       = data.room_name;
-        state.astrologerName = data.astrologer_name || 'Your astrologer';
+        state.astrologerName = data.astrologer_name || t('page.join.defaultAstrologerName');
         state.recordingActive = data.recording_active;
 
         refs.lobbyAstrologerName.textContent = state.astrologerName;
@@ -158,7 +173,7 @@
     // -------------------------------------------------------------------------
     async function joinCall() {
         refs.btnJoinCall.disabled = true;
-        refs.btnJoinCall.textContent = 'Joining…';
+        refs.btnJoinCall.textContent = t('page.join.lobby.joining');
 
         // Stop lobby preview — LiveKit will manage tracks
         if (state.localStream) {
@@ -198,7 +213,7 @@
 
         state.callStartTime = Date.now();
         state.callTimerHandle = setInterval(updateCallTimer, 1000);
-        setStatus('In call');
+        setStatus(t('page.join.status.inCall'));
 
         // Show recording indicator if already recording
         if (state.recordingActive) {
@@ -218,6 +233,43 @@
         refs.btnLeaveCall.addEventListener('click', leaveCall);
         refs.btnConsentDecline.addEventListener('click', declineConsent);
         refs.btnConsentAccept.addEventListener('click', acceptConsent);
+
+        // Picture-in-picture — keep the astrologer (and their shared screen)
+        // floating on top while looking at other windows.
+        if (refs.btnPiP && window.CallPiP && window.CallPiP.isSupported()) {
+            show(refs.btnPiP);
+            refs.btnPiP.addEventListener('click', togglePiP);
+            document.addEventListener('visibilitychange', onVisibilityChange);
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Picture-in-Picture
+    // -------------------------------------------------------------------------
+    function pipOptions() {
+        return {
+            remoteVideo: refs.remoteVideo,
+            localVideo: refs.localVideo,
+            getLabel: () => refs.remoteName.textContent,
+            onClose: () => refs.btnPiP.classList.remove('call-ctrl-btn--active'),
+        };
+    }
+
+    async function togglePiP() {
+        try {
+            await window.CallPiP.toggle(pipOptions());
+        } catch (err) {
+            console.error('Picture-in-picture error:', err);
+        }
+        refs.btnPiP.classList.toggle('call-ctrl-btn--active', window.CallPiP.isActive());
+    }
+
+    function onVisibilityChange() {
+        if (document.visibilityState !== 'hidden') return;
+        if (!state.room || !window.CallPiP || window.CallPiP.isActive()) return;
+        window.CallPiP.open(pipOptions())
+            .then(() => refs.btnPiP.classList.toggle('call-ctrl-btn--active', window.CallPiP.isActive()))
+            .catch(() => { /* requires user gesture — ignore */ });
     }
 
     async function toggleMic() {
@@ -260,6 +312,12 @@
             refs.screenVideo.srcObject = stream;
             refs.btnShareScreen.classList.add('call-ctrl-btn--active');
             stream.getVideoTracks()[0].addEventListener('ended', stopScreenShare);
+
+            if (window.CallPiP && window.CallPiP.isSupported() && !window.CallPiP.isActive()) {
+                window.CallPiP.open(pipOptions())
+                    .then(() => refs.btnPiP.classList.toggle('call-ctrl-btn--active', window.CallPiP.isActive()))
+                    .catch(() => { /* requires user gesture — ignore */ });
+            }
         } catch (err) {
             if (err.name !== 'NotAllowedError') console.error(err);
         }
@@ -278,6 +336,7 @@
     }
 
     async function leaveCall() {
+        if (window.CallPiP && window.CallPiP.isActive()) await window.CallPiP.close();
         if (state.screenSharing) await stopScreenShare();
         if (state.room) {
             await state.room.disconnect();
@@ -332,6 +391,7 @@
         } else if (track.kind === LivekitClient.Track.Kind.Audio) {
             track.attach();
         }
+        if (window.CallPiP) window.CallPiP.sync();
     }
 
     function onTrackUnsubscribed(track) {
@@ -339,15 +399,17 @@
         if (track.source === LivekitClient.Track.Source.ScreenShare) {
             refs.callVideoScreen.hidden = true;
         }
+        if (window.CallPiP) window.CallPiP.sync();
     }
 
     function onParticipantConnected(participant) {
-        setStatus('In call');
-        refs.remoteName.textContent = participant.name || state.astrologerName || 'Guide';
+        setStatus(t('page.join.status.inCall'));
+        refs.remoteName.textContent = participant.name || state.astrologerName || t('page.join.guide');
+        if (window.CallPiP) window.CallPiP.sync();
     }
 
     function onParticipantDisconnected() {
-        setStatus('The other side left');
+        setStatus(t('page.join.status.otherLeft'));
     }
 
     function onRoomDisconnected() {

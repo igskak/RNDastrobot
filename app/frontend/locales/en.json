@@ -2682,6 +2682,118 @@
         "paddle": "For billing and payment questions you can also contact Paddle directly via <a href=\"https://paddle.net\" target=\"_blank\" rel=\"noopener\">paddle.net</a>."
       },
       "footer": "© 2026 Steliara. Astrology calculations based on Swiss Ephemeris and modern astronomical standards."
+    },
+    "call": {
+      "title": "Consultation Call — Steliara",
+      "connecting": "Connecting…",
+      "loadingClient": "Loading…",
+      "back": "Back to practice",
+      "status": {
+        "connecting": "Connecting",
+        "inCall": "In call",
+        "otherLeft": "The other side left",
+        "ended": "Call ended"
+      },
+      "rec": "REC",
+      "copyLink": "Copy invite link",
+      "copyLinkTitle": "Copy client join link",
+      "copied": "Copied!",
+      "tile": {
+        "you": "You",
+        "guest": "Guest",
+        "screenShare": "Screen share"
+      },
+      "controls": {
+        "micTitle": "Mute / unmute",
+        "camTitle": "Camera on / off",
+        "shareTitle": "Share screen",
+        "pip": "Mini view",
+        "pipTitle": "Picture-in-picture",
+        "pipExitTitle": "Exit picture-in-picture",
+        "record": "Record",
+        "recordTitle": "Start recording",
+        "recordStop": "Stop Rec",
+        "recordStopTitle": "Stop recording",
+        "endCall": "End Call",
+        "endCallTitle": "End call"
+      },
+      "consent": {
+        "title": "Record this session?",
+        "body": "Only audio will be recorded. The recording will be stored securely in the profile and automatically transcribed. Both sides must agree before recording begins.",
+        "waitNote": "Waiting for the other person to confirm consent…",
+        "cancel": "Cancel",
+        "agree": "I agree — request consent"
+      },
+      "endConfirm": "End the consultation? The call will close for both parties.",
+      "error": {
+        "title": "Session not found",
+        "body": "Unable to load this call session.",
+        "noSession": "No call session specified. Please start the call from the profile page.",
+        "tokenFailed": "Could not get call token",
+        "connectFailed": "Failed to connect to the call.",
+        "back": "Back to practice"
+      },
+      "ended": {
+        "title": "Call ended",
+        "duration": "Duration: {duration}",
+        "note": "Audio is being processed. The transcript and summary will appear in the profile shortly.",
+        "back": "Back to practice",
+        "openProfile": "Open profile"
+      }
+    },
+    "join": {
+      "title": "Join Consultation — Steliara",
+      "connecting": "Connecting…",
+      "error": {
+        "title": "Link unavailable",
+        "body": "This consultation link is no longer valid.",
+        "invalidTitle": "Invalid link",
+        "invalidBody": "This consultation link is not valid.",
+        "expired": "This call link is invalid or has expired."
+      },
+      "lobby": {
+        "sessionWith": "Session with",
+        "defaultAstrologer": "your astrologer",
+        "subtitle": "Check your camera and microphone before joining the call.",
+        "cameraOff": "Camera off",
+        "mic": "Mic",
+        "micTitle": "Toggle microphone",
+        "camera": "Camera",
+        "cameraTitle": "Toggle camera",
+        "join": "Join call",
+        "joining": "Joining…"
+      },
+      "defaultAstrologerName": "Your astrologer",
+      "guide": "Guide",
+      "status": {
+        "inCall": "In call",
+        "otherLeft": "The other side left"
+      },
+      "rec": "REC",
+      "tile": {
+        "you": "You",
+        "screenShare": "Screen share"
+      },
+      "controls": {
+        "micTitle": "Mute / unmute",
+        "camTitle": "Camera on / off",
+        "shareTitle": "Share screen",
+        "pip": "Mini view",
+        "pipTitle": "Picture-in-picture",
+        "pipExitTitle": "Exit picture-in-picture",
+        "leave": "Leave",
+        "leaveTitle": "Leave call"
+      },
+      "consent": {
+        "title": "Recording consent",
+        "body": "The astrologer would like to record this session. <strong>Only audio will be recorded — no video.</strong> The recording will be used to prepare a summary for your records.",
+        "decline": "Decline",
+        "accept": "I agree"
+      },
+      "ended": {
+        "title": "Thank you!",
+        "note": "See you next time."
+      }
     }
   },
   "timezones": {
