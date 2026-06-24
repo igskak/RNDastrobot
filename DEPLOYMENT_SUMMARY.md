@@ -135,11 +135,11 @@ SUPABASE_SERVICE_KEY=your_key
 
 ## 🎯 Endpoints после деплоя:
 
-- **Главная:** `https://astrobot.onrender.com/`
-- **API Docs:** `https://astrobot.onrender.com/api/docs`
-- **ReDoc:** `https://astrobot.onrender.com/api/redoc`
-- **Health:** `https://astrobot.onrender.com/health`
-- **Calculate:** `POST https://astrobot.onrender.com/api/v1/natal/calculate`
+- **Главная:** `https://steliara.com/`
+- **API Docs:** `https://steliara.com/api/docs`
+- **ReDoc:** `https://steliara.com/api/redoc`
+- **Health:** `https://steliara.com/health`
+- **Calculate:** `POST https://steliara.com/api/v1/natal/calculate`
 
 ---
 

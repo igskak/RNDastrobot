@@ -65,9 +65,9 @@ SUPABASE_SERVICE_KEY=your_service_key_here
 
 После деплоя приложение будет доступно:
 
-- **Главная:** https://astrobot.onrender.com/
-- **API Docs:** https://astrobot.onrender.com/api/docs
-- **Health:** https://astrobot.onrender.com/health
+- **Главная:** https://steliara.com/
+- **API Docs:** https://steliara.com/api/docs
+- **Health:** https://steliara.com/health
 
 ---
 

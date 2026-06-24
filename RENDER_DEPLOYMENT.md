@@ -88,13 +88,13 @@ SUPABASE_SERVICE_KEY=your_service_key
 
 Ваше приложение будет доступно по адресу:
 ```
-https://astrobot.onrender.com
+https://steliara.com
 ```
 
 **Endpoints:**
-- Главная страница: `https://astrobot.onrender.com/`
-- API документация: `https://astrobot.onrender.com/api/docs`
-- Health check: `https://astrobot.onrender.com/health`
+- Главная страница: `https://steliara.com/`
+- API документация: `https://steliara.com/api/docs`
+- Health check: `https://steliara.com/health`
 
 ### Просмотр логов
 
