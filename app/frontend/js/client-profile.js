@@ -1074,6 +1074,7 @@ async function startCallSession() {
             throw new Error(d.message || d.detail || t('page.clients.detail.callStartFailed'));
         }
         const session = await res.json();
+        if (window.AstroAnalytics) window.AstroAnalytics.track('consultation_started', {});
         const joinParam = session.join_url ? `&join_url=${encodeURIComponent(session.join_url)}` : '';
         window.location.href = `/consultation-call.html?session_id=${session.id}&user_id=${userId}${joinParam}`;
     } catch (err) {

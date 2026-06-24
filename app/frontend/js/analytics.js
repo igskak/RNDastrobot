@@ -321,12 +321,21 @@
         enabled: true,
         screen: resolveScreen(),
         track: function (event, props) {
+            var payload = Object.assign(
+                { screen: window.AstroAnalytics.screen, locale: currentLocale() },
+                props || {}
+            );
             safe(function () {
-                window.posthog.capture(event, Object.assign(
-                    { screen: window.AstroAnalytics.screen, locale: currentLocale() },
-                    props || {}
-                ));
+                window.posthog.capture(event, payload);
             });
+            // Mirror business events to GA4 for Google Ads conversions. Skip
+            // screen_view (GA4 enhanced measurement already sends page_view)
+            // and PostHog's $-prefixed internal events (invalid GA4 names).
+            if (GA4_ID && window.gtag && event !== 'screen_view' && event.charAt(0) !== '$') {
+                safe(function () {
+                    window.gtag('event', event, payload);
+                });
+            }
         },
         identify: function (astrologer) {
             if (!astrologer || !astrologer.id || identified) return;

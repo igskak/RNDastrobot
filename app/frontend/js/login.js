@@ -784,6 +784,7 @@
                 if (!response.ok) {
                     throw new Error(await readErrorMessage(response));
                 }
+                if (window.AstroAnalytics) window.AstroAnalytics.track('login', { method: 'password' });
                 redirect('/');
             } catch (error) {
                 const mapped = mapAuthErrorToKey('login', error.message);
@@ -845,6 +846,9 @@
                     throw new Error(await readErrorMessage(response));
                 }
                 await response.json().catch(() => ({}));
+                if (window.AstroAnalytics) {
+                    window.AstroAnalytics.track('sign_up', { method: 'password', plan_code: values.planCode });
+                }
                 state.lastVerificationEmail = '';
                 state.verificationResendCooldownUntil = 0;
                 refs.email.value = values.email;
@@ -1069,6 +1073,7 @@
                 if (historyRef?.replaceState) {
                     historyRef.replaceState({}, documentRef?.title || '', '/login.html');
                 }
+                if (window.AstroAnalytics) window.AstroAnalytics.track('login', { method: 'google' });
                 redirect('/');
             } catch (error) {
                 setStatus(mapAuthErrorToKey('google', error.message), 'error');
