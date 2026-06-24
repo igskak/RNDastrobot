@@ -193,6 +193,9 @@ async def runtime_config_js():
         "posthogKey": os.getenv("POSTHOG_PROJECT_API_KEY", ""),
         "posthogHost": os.getenv("POSTHOG_HOST", "https://eu.i.posthog.com"),
         "appEnv": os.getenv("APP_ENV", "production"),
+        # GA4 Measurement ID (G-XXXXXXXXXX). Public by design; gated client-side
+        # behind the same consent banner via gtag Consent Mode. Empty => GA4 off.
+        "ga4MeasurementId": os.getenv("GA4_MEASUREMENT_ID", ""),
     }
     body = f"window.__RUNTIME_CONFIG__ = {json.dumps(config)};"
     return Response(

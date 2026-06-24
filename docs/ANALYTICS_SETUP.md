@@ -20,6 +20,12 @@ Set on the server (Render env):
 |---|---|---|
 | `POSTHOG_PROJECT_API_KEY` | Public project token (write-only, safe in client). Enables both layers. | _(empty → analytics disabled / no-op)_ |
 | `POSTHOG_HOST` | PostHog ingestion host. | `https://eu.i.posthog.com` |
+| `GA4_MEASUREMENT_ID` | GA4 Measurement ID (`G-XXXXXXXXXX`). Public by design; powers Google Ads conversion/audience signals. | _(empty → GA4 off)_ |
+
+GA4 loads via `gtag.js` and runs under **Consent Mode v2**: `analytics_storage`
+starts `denied` and flips to `granted` only when the user accepts the same
+consent banner that gates PostHog. Empty `GA4_MEASUREMENT_ID` → no GA4 script
+loads.
 
 The key is exposed to the browser via `GET /runtime-config.js`
 (`window.__RUNTIME_CONFIG__`). **Use the EU project** (`eu.posthog.com`) for

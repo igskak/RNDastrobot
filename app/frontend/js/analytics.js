@@ -21,8 +21,55 @@
     var cfg = (window.__RUNTIME_CONFIG__ || {});
     var POSTHOG_KEY = cfg.posthogKey || '';
     var POSTHOG_HOST = cfg.posthogHost || 'https://eu.i.posthog.com';
+    var GA4_ID = cfg.ga4MeasurementId || '';
 
     function noop() {}
+
+    // --- GA4 (gtag.js) with Consent Mode v2 ----------------------------------
+    // GA4 runs alongside PostHog for Google Ads conversion/audience signals.
+    // Consent Mode keeps analytics_storage 'denied' until the user accepts,
+    // mirroring PostHog's opt-out-by-default posture. The same consent banner
+    // drives both: setGa4Consent() is called from applyConsent()/the banner.
+    var ga4Ready = false;
+    function initGa4() {
+        if (ga4Ready || !GA4_ID) return;
+        ga4Ready = true;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { window.dataLayer.push(arguments); };
+        window.gtag('consent', 'default', {
+            ad_storage: 'denied',
+            analytics_storage: 'denied',
+            ad_user_data: 'denied',
+            ad_personalization: 'denied',
+        });
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(GA4_ID);
+        (document.getElementsByTagName('script')[0] || document.head).appendChild(s);
+        window.gtag('js', new Date());
+        window.gtag('config', GA4_ID);
+    }
+    function setGa4Consent(granted) {
+        if (!GA4_ID) return;
+        initGa4();
+        try {
+            window.gtag('consent', 'update', {
+                ad_storage: granted ? 'granted' : 'denied',
+                analytics_storage: granted ? 'granted' : 'denied',
+                ad_user_data: granted ? 'granted' : 'denied',
+                ad_personalization: granted ? 'granted' : 'denied',
+            });
+        } catch (e) { /* analytics must never break the app */ }
+    }
+
+    // GA4 is independent of PostHog: initialize it (consent denied by default)
+    // and reflect any prior decision immediately, even if PostHog is unset.
+    if (GA4_ID) {
+        initGa4();
+        var ga4Prior = null;
+        try { ga4Prior = window.localStorage.getItem('steliara_consent'); } catch (e) { ga4Prior = null; }
+        if (ga4Prior === 'granted') setGa4Consent(true);
+    }
 
     // Derive a stable, low-cardinality screen name for navigation/heatmap.
     function resolveScreen() {
@@ -183,8 +230,8 @@
     }
     function applyConsent(ph) {
         var state = getConsent();
-        if (state === 'granted') { safe(function () { ph.opt_in_capturing(); }); return; }
-        if (state === 'denied') { safe(function () { ph.opt_out_capturing(); }); return; }
+        if (state === 'granted') { safe(function () { ph.opt_in_capturing(); }); setGa4Consent(true); return; }
+        if (state === 'denied') { safe(function () { ph.opt_out_capturing(); }); setGa4Consent(false); return; }
         renderConsentBanner(ph);              // undecided -> ask
     }
 
@@ -243,6 +290,7 @@
             accept.addEventListener('click', function () {
                 setConsent('granted');
                 safe(function () { ph.opt_in_capturing(); });
+                setGa4Consent(true);
                 // Events before consent were dropped (not queued): re-identify the
                 // current astrologer and count this screen now that we're opted in.
                 safe(function () {
@@ -258,6 +306,7 @@
                 setConsent('denied');
                 // Enforce opt-out explicitly — overrides any prior persisted opt-in.
                 safe(function () { ph.opt_out_capturing(); });
+                setGa4Consent(false);
                 bar.remove();
             });
 
