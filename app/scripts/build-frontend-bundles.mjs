@@ -86,6 +86,9 @@ async function buildVersionForPage(page, source) {
   if (source.includes('js/locale-switcher.js')) {
     files.push(path.join(frontendRoot, 'js', 'locale-switcher.js'));
   }
+  if (source.includes('js/analytics.js')) {
+    files.push(path.join(frontendRoot, 'js', 'analytics.js'));
+  }
   return hashExistingFiles(files);
 }
 
@@ -93,7 +96,7 @@ function rewriteHtmlBuildMarkers(source, buildId, page) {
   const entryName = pageEntryName(page);
   const escapedEntryName = entryName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const assetPattern = new RegExp(
-    `((?:/)?(?:bundles/${escapedEntryName}\\.bundle\\.css|js/bundles/${escapedEntryName}\\.bundle\\.js|css/locale-switcher\\.css|js/locale-switcher\\.js))\\?v=[^"' ]+`,
+    `((?:/)?(?:bundles/${escapedEntryName}\\.bundle\\.css|js/bundles/${escapedEntryName}\\.bundle\\.js|css/locale-switcher\\.css|js/locale-switcher\\.js|js/analytics\\.js))\\?v=[^"' ]+`,
     'g',
   );
 

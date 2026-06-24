@@ -349,12 +349,17 @@ class AuditEvent(Base):
     result = Column(String(32), nullable=False)
     ip = Column(String(64))
     user_agent = Column(Text)
+    # Structured event context (G1) + session correlation key (G3) for
+    # behaviour analytics / PostHog mirroring. See migration 046.
+    properties = Column(JSONB)
+    session_id = Column(String(255))
     created_at = Column(DateTime, server_default=func.now())
 
     __table_args__ = (
         Index('idx_audit_events_actor_created_at', 'actor_id', 'created_at'),
         Index('idx_audit_events_action_created_at', 'action', 'created_at'),
         Index('idx_audit_events_ip_created_at', 'ip', 'created_at'),
+        Index('idx_audit_events_session', 'session_id', 'created_at'),
     )
 
 

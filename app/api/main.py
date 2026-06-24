@@ -7,7 +7,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse, Response
 import os
 import sys
 import logging
@@ -177,6 +177,29 @@ if os.path.exists(FRONTEND_PATH):
         app.mount("/locales", StaticFiles(directory=os.path.join(FRONTEND_PATH, "locales")), name="locales")
     if os.path.exists(os.path.join(FRONTEND_PATH, "assets")):
         app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_PATH, "assets")), name="assets")
+
+
+@app.get("/runtime-config.js")
+async def runtime_config_js():
+    """Expose public client-side runtime config (analytics, env) as JS.
+
+    Served dynamically so the public PostHog project key and EU host come from
+    env vars instead of being committed into the static frontend. The PostHog
+    *project* key is publishable by design; no secret is exposed here.
+    """
+    import json
+
+    config = {
+        "posthogKey": os.getenv("POSTHOG_PROJECT_API_KEY", ""),
+        "posthogHost": os.getenv("POSTHOG_HOST", "https://eu.i.posthog.com"),
+        "appEnv": os.getenv("APP_ENV", "production"),
+    }
+    body = f"window.__RUNTIME_CONFIG__ = {json.dumps(config)};"
+    return Response(
+        content=body,
+        media_type="application/javascript",
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 @app.get("/")

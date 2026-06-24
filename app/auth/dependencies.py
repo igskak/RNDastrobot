@@ -59,7 +59,14 @@ def create_audit_event(
     resource_type: str,
     resource_id: Optional[str],
     result: str,
+    properties: Optional[dict] = None,
+    session_id: Optional[str] = None,
 ) -> None:
+    # The session cookie value *is* the server-side session id; derive it so
+    # every authenticated event is correlated without touching call sites.
+    if session_id is None:
+        session_id = request.cookies.get(SESSION_COOKIE_NAME)
+
     try:
         db.add(
             AuditEvent(
@@ -70,11 +77,31 @@ def create_audit_event(
                 result=result,
                 ip=get_client_ip(request),
                 user_agent=request.headers.get("user-agent"),
+                properties=properties,
+                session_id=session_id,
             )
         )
         db.flush()
     except Exception:
         # Audit must not break business flow.
+        pass
+
+    # Best-effort mirror of value events to PostHog (no-op without a key or for
+    # non-allowlisted actions). Imported lazily to avoid import-time coupling.
+    try:
+        from app.analytics.posthog import mirror_audit_event
+
+        mirror_audit_event(
+            actor_id=actor_id,
+            action=action,
+            result=result,
+            resource_type=resource_type,
+            resource_id=resource_id,
+            session_id=session_id,
+            properties=properties,
+        )
+    except Exception:
+        # Analytics must never break business flow.
         pass
 
 
