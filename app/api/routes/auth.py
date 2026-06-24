@@ -26,6 +26,7 @@ from app.auth.dependencies import (
     revoke_astrologer_sessions,
     revoke_session,
 )
+from app.analytics.attribution import read_attribution
 from app.auth.mailer import send_email_verification_email, send_password_reset_email
 from app.auth.security import (
     email_verification_cooldown_seconds,
@@ -572,6 +573,7 @@ def register(
         resource_type="astrologer",
         resource_id=email,
         result="success",
+        properties=read_attribution(request),
     )
     return _neutral_register_response()
 

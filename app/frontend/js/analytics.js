@@ -79,12 +79,16 @@
         person_profiles: 'identified_only',
         // Persist attribution (utm/referrer) for the marketing funnel.
         persistence: 'localStorage+cookie',
+        // GDPR: capture NOTHING until the user consents. We opt in on accept.
+        opt_out_capturing_by_default: true,
         loaded: function (ph) {
             try {
                 var screen = resolveScreen();
                 ph.register({ screen: screen, app_env: cfg.appEnv || 'production' });
                 var locale = currentLocale();
                 if (locale) ph.register({ locale: locale });
+                captureAttribution(ph);   // first-touch utm/referrer (PH3)
+                applyConsent(ph);         // opt-in if already granted, else banner (PH4)
                 bootstrapIdentity();
             } catch (e) { /* analytics must never break the app */ }
         },
@@ -117,6 +121,151 @@
 
     function safe(fn) {
         try { return fn(); } catch (e) { /* swallow */ }
+    }
+
+    // --- Cookies ---------------------------------------------------------------
+    function setCookie(name, value, days) {
+        try {
+            var exp = new Date(Date.now() + days * 864e5).toUTCString();
+            document.cookie = name + '=' + encodeURIComponent(value)
+                + '; expires=' + exp + '; path=/; SameSite=Lax';
+        } catch (e) { /* ignore */ }
+    }
+    function getCookie(name) {
+        try {
+            var m = document.cookie.match('(?:^|; )' + name + '=([^;]*)');
+            return m ? decodeURIComponent(m[1]) : null;
+        } catch (e) { return null; }
+    }
+
+    // --- PH3: first-touch marketing attribution (utm/referrer) -----------------
+    // Stored first-party for our own signup conversion measurement; the server
+    // reads the same cookie at /auth/register. First-touch = never overwrite.
+    function captureAttribution(ph) {
+        safe(function () {
+            if (getCookie('steliara_attribution')) {
+                registerAttributionSuper(ph);
+                return;
+            }
+            var params = new URLSearchParams(window.location.search || '');
+            var attr = {};
+            ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']
+                .forEach(function (k) { if (params.get(k)) attr[k] = params.get(k); });
+
+            var ref = document.referrer || '';
+            if (ref && ref.indexOf(window.location.origin) !== 0) attr.referrer = ref;
+            attr.landing_path = window.location.pathname || '/';
+
+            // Only persist if there's a real signal (campaign or external referrer).
+            var hasSignal = Object.keys(attr).some(function (k) {
+                return k.indexOf('utm_') === 0 || k === 'referrer';
+            });
+            if (hasSignal) {
+                setCookie('steliara_attribution', JSON.stringify(attr), 90);
+                registerAttributionSuper(ph);
+            }
+        });
+    }
+    function registerAttributionSuper(ph) {
+        safe(function () {
+            var raw = getCookie('steliara_attribution');
+            if (raw) ph.register(JSON.parse(raw));   // rides on events once opted in
+        });
+    }
+
+    // --- PH4: consent gating (GDPR) -------------------------------------------
+    var CONSENT_KEY = 'steliara_consent';
+    function getConsent() {
+        try { return window.localStorage.getItem(CONSENT_KEY); } catch (e) { return null; }
+    }
+    function setConsent(value) {
+        try { window.localStorage.setItem(CONSENT_KEY, value); } catch (e) { /* ignore */ }
+    }
+    function applyConsent(ph) {
+        var state = getConsent();
+        if (state === 'granted') { safe(function () { ph.opt_in_capturing(); }); return; }
+        if (state === 'denied') { safe(function () { ph.opt_out_capturing(); }); return; }
+        renderConsentBanner(ph);              // undecided -> ask
+    }
+
+    var CONSENT_COPY = {
+        en: {
+            text: 'We use privacy-friendly analytics to improve the product. No recordings; personal data is masked.',
+            accept: 'Accept', decline: 'Decline',
+        },
+        ru: {
+            text: 'Мы используем аналитику без записи экрана, чтобы улучшать продукт. Персональные данные маскируются.',
+            accept: 'Принять', decline: 'Отклонить',
+        },
+        uk: {
+            text: 'Ми використовуємо аналітику без запису екрана, щоб покращувати продукт. Персональні дані маскуються.',
+            accept: 'Прийняти', decline: 'Відхилити',
+        },
+    };
+    function renderConsentBanner(ph) {
+        safe(function () {
+            if (!document.body || document.getElementById('steliara-consent')) return;
+            var loc = (currentLocale() || 'en').slice(0, 2);
+            var c = CONSENT_COPY[loc] || CONSENT_COPY.en;
+
+            var bar = document.createElement('div');
+            bar.id = 'steliara-consent';
+            bar.setAttribute('role', 'dialog');
+            bar.setAttribute('aria-label', c.text);
+            bar.style.cssText = [
+                'position:fixed', 'left:16px', 'right:16px', 'bottom:16px', 'z-index:2147483000',
+                'max-width:560px', 'margin:0 auto', 'display:flex', 'gap:12px',
+                'align-items:center', 'flex-wrap:wrap', 'justify-content:center',
+                'padding:12px 16px', 'border-radius:12px',
+                'background:rgba(26,22,20,0.96)', 'color:#fff',
+                'font:14px/1.4 -apple-system,system-ui,sans-serif',
+                'box-shadow:0 8px 24px rgba(0,0,0,0.25)',
+            ].join(';');
+
+            var msg = document.createElement('span');
+            msg.textContent = c.text;
+            msg.style.cssText = 'flex:1 1 240px;min-width:200px';
+
+            function mkBtn(label, primary) {
+                var b = document.createElement('button');
+                b.type = 'button';
+                b.textContent = label;
+                b.style.cssText = [
+                    'cursor:pointer', 'border:0', 'border-radius:8px',
+                    'padding:8px 16px', 'font:inherit', 'font-weight:600',
+                    primary ? 'background:#b8935a' : 'background:rgba(255,255,255,0.14)',
+                    'color:#fff',
+                ].join(';');
+                return b;
+            }
+            var accept = mkBtn(c.accept, true);
+            var decline = mkBtn(c.decline, false);
+            accept.addEventListener('click', function () {
+                setConsent('granted');
+                safe(function () { ph.opt_in_capturing(); });
+                // Events before consent were dropped (not queued): re-identify the
+                // current astrologer and count this screen now that we're opted in.
+                safe(function () {
+                    identified = false;
+                    var astro = window.AstroAPI && window.AstroAPI.getCachedAstrologer
+                        ? window.AstroAPI.getCachedAstrologer() : null;
+                    if (astro) window.AstroAnalytics.identify(astro);
+                    window.AstroAnalytics.track('screen_view', {});
+                });
+                bar.remove();
+            });
+            decline.addEventListener('click', function () {
+                setConsent('denied');
+                // Enforce opt-out explicitly — overrides any prior persisted opt-in.
+                safe(function () { ph.opt_out_capturing(); });
+                bar.remove();
+            });
+
+            bar.appendChild(msg);
+            bar.appendChild(accept);
+            bar.appendChild(decline);
+            document.body.appendChild(bar);
+        });
     }
 
     window.AstroAnalytics = {
