@@ -1882,7 +1882,7 @@
         }
       },
       "subtitle": "Astrologer workspace",
-      "title": "Steliara — astrologer workspace",
+      "title": "Steliara, astrologer workspace",
       "logo": "Steliara",
       "nav": {
         "solution": "How it helps",
@@ -1896,13 +1896,15 @@
       },
       "hero": {
         "kicker": "For careful astrological practice",
-        "title": "Astrologer workspace",
-        "text": "Steliara keeps the person, chart, notes, conversations, and key periods close. Less searching through files, more attention for the reading itself.",
+        "title": "Everything about every person you read for, in one place",
+        "text": "Charts, notes, and recorded consultations stay together. Before a meeting you don't rebuild the story from memory. It is already here.",
         "proof": {
           "accuracy": "Calculations based on Swiss Ephemeris",
-          "workspace": "Profiles, charts, notes, and recordings together",
-          "assistant": "Data-aware chat answers in seconds"
-        }
+          "workspace": "Sessions recorded, transcribed and summarized",
+          "assistant": "Data-aware chat answers in seconds",
+          "platform": "Works on Mac, Windows and any browser"
+        },
+        "trialNote": "Free 14-day trial. No card needed."
       },
       "preview": {
         "title": "Practice profile",
@@ -1915,7 +1917,7 @@
         "insightTitle": "Remember what matters",
         "insight": "Before a meeting, you can see the chart, recordings, notes, and important points without rebuilding the history from memory.",
         "context": {
-          "personLabel": "Client",
+          "personLabel": "Person",
           "personValue": "Natal profile",
           "notesLabel": "Notes",
           "notesValue": "12 saved points",
@@ -1959,9 +1961,9 @@
       },
       "socialProof": {
         "lead": "Not another calculator. A place where your practice can gather: people, charts, observations, conversations, and quick answers from astrological data.",
-        "itemOne": "Professional house systems",
-        "itemTwo": "Conversation history and notes",
-        "itemThree": "Easy movement between charts"
+        "itemOne": "Professional house systems and settings",
+        "itemTwo": "Recordings, transcripts and notes in one profile",
+        "itemThree": "Simpler than the old desktop programs"
       },
       "problem": {
         "kicker": "What gets in the way",
@@ -1985,7 +1987,7 @@
       "solution": {
         "kicker": "How Steliara helps",
         "title": "Everything connected to a person and their charts stays within reach.",
-        "text": "Create a profile, build charts, save notes and recordings, move between related materials, and ask the chat questions from the data. For example: “show transit Uranus conjunctions to natal Venus for the past and next 5 years” — and get the periods in seconds.",
+        "text": "Create a profile, build charts, save notes and recordings, move between related materials, and ask the chat questions from the data. For example: “show transit Uranus conjunctions to natal Venus for the past and next 5 years.” You get the periods in seconds.",
         "steps": {
           "calculate": {
             "title": "Create a chart without extra steps",
@@ -1993,7 +1995,7 @@
           },
           "read": {
             "title": "Keep the story nearby",
-            "text": "A profile keeps charts, notes, conversation recordings, and important points together."
+            "text": "A profile keeps charts, notes, recorded consultations with transcripts and summaries, and important points together."
           },
           "prepare": {
             "title": "Ask the chart data",
@@ -2036,8 +2038,8 @@
             "text": "Transits, progressions, directions, and solar returns are easier to view beside the chart and profile history."
           },
           "clients": {
-            "title": "People profiles",
-            "text": "Charts, notes, conversation recordings, and key moments stay together so context is easy to recover."
+            "title": "People profiles with recorded sessions",
+            "text": "Charts, notes, recorded consultations with transcripts and summaries, and key moments stay together, so context is easy to recover."
           },
           "assistant": {
             "title": "Chat with chart data",
