@@ -126,6 +126,9 @@
         person_profiles: 'identified_only',
         // Persist attribution (utm/referrer) for the marketing funnel.
         persistence: 'localStorage+cookie',
+        // Scroll-depth / click-density heatmaps (rendered in PostHog → Heatmaps).
+        // Coordinate-only data; respects the masking config above.
+        enable_heatmaps: true,
         // GDPR: capture NOTHING until the user consents. We opt in on accept.
         opt_out_capturing_by_default: true,
         loaded: function (ph) {
