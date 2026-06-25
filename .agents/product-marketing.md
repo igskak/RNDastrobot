@@ -2,7 +2,7 @@
 
 *Last updated: 2026-06-24*
 
-> V1 auto-drafted from the codebase (README, MONETIZATION_PLAN.md, GTM_EXECUTION_PLAN.md) and prior product work. **Review and correct** — flagged uncertainties marked with ⚠️.
+> V1 auto-drafted from the codebase (README, prior planning docs now consolidated into [STELIARA_GTM_MASTER_PLAN.md](../STELIARA_GTM_MASTER_PLAN.md)) and prior product work. Review and correct; flagged uncertainties marked with ⚠️.
 
 ## Product Overview
 **One-liner:** Steliara — the daily workspace for practicing astrologers: charts, the people you read for, forecasts, and recorded consultations in one place.
