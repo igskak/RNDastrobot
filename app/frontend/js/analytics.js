@@ -112,8 +112,47 @@
 
     var posthog = window.posthog;
 
+    // --- Strip OAuth secrets from any URL before it leaves the browser -------
+    // The Supabase auth callback lands on /login.html?oauth=callback with the
+    // PKCE `code`/`state` in the query string (and, under implicit flow, the
+    // access/refresh/provider tokens in the URL #hash). PostHog's pageview/
+    // autocapture would otherwise ship that full URL as $current_url. We scrub
+    // both the hash and the sensitive query params from every URL-bearing prop.
+    var SENSITIVE_URL_PARAMS = [
+        'access_token', 'refresh_token', 'provider_token', 'provider_refresh_token',
+        'id_token', 'code', 'state', 'token', 'token_type', 'expires_in', 'expires_at',
+    ];
+    function scrubUrl(value) {
+        if (typeof value !== 'string' || value.indexOf('http') !== 0) return value;
+        try {
+            var url = new URL(value);
+            // The hash carries implicit-flow tokens wholesale — drop it entirely.
+            if (url.hash) url.hash = '';
+            for (var i = 0; i < SENSITIVE_URL_PARAMS.length; i++) {
+                if (url.searchParams.has(SENSITIVE_URL_PARAMS[i])) {
+                    url.searchParams.set(SENSITIVE_URL_PARAMS[i], 'redacted');
+                }
+            }
+            return url.toString();
+        } catch (e) {
+            return value;
+        }
+    }
+    function sanitizeProperties(properties) {
+        if (!properties) return properties;
+        var urlKeys = ['$current_url', '$referrer', '$referring_domain', '$pathname'];
+        for (var i = 0; i < urlKeys.length; i++) {
+            if (properties[urlKeys[i]]) {
+                properties[urlKeys[i]] = scrubUrl(properties[urlKeys[i]]);
+            }
+        }
+        return properties;
+    }
+
     posthog.init(POSTHOG_KEY, {
         api_host: POSTHOG_HOST,
+        // Scrub OAuth tokens/codes from captured URLs (see scrubUrl above).
+        sanitize_properties: sanitizeProperties,
         // --- Behavioural capture (clicks/heatmaps/paths/time-on-page) --------
         autocapture: true,
         capture_pageview: true,
