@@ -73,6 +73,23 @@ function apiFetch(url, init = {}) {
     });
 }
 
+function scheduleAfterPaint(callback, timeout = 1200) {
+    const task = () => {
+        try {
+            Promise.resolve(callback()).catch((error) => {
+                console.warn('Deferred client profile task failed:', error);
+            });
+        } catch (error) {
+            console.warn('Deferred client profile task failed:', error);
+        }
+    };
+    if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(task, { timeout });
+        return;
+    }
+    window.setTimeout(task, 0);
+}
+
 function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = String(str ?? '');
@@ -364,25 +381,18 @@ function applyPlanUi() {
 
 async function loadProfile() {
     try {
-        const [profileRes, relatedPeoplePayload, usersPayload, tagsPayload] = await Promise.all([
-            apiFetch(`${API_BASE}/users/${userId}/profile`),
-            window.AstroAPI.getRelatedPeople(userId).catch(() => []),
-            apiFetch(`${API_BASE}/users`).then((res) => (res.ok ? res.json() : [])).catch(() => []),
-            apiFetch(`${API_BASE}/charts/tags`).then((res) => (res.ok ? res.json() : [])).catch(() => []),
-        ]);
+        const profileRes = await apiFetch(`${API_BASE}/users/${userId}/profile`);
 
         if (profileRes.status === 401) { window.location.href = '/login.html'; return; }
         if (profileRes.status === 404) { showError(t('page.clientProfile.errors.notFound')); return; }
         if (!profileRes.ok) throw new Error(t('page.clientProfile.errors.loadFailed'));
 
         profileData = await profileRes.json();
-        relatedPeople = Array.isArray(relatedPeoplePayload) ? relatedPeoplePayload : [];
-        tagSourceUsers = Array.isArray(usersPayload) ? usersPayload : [];
-        apiTagPool = Array.isArray(tagsPayload) ? tagsPayload : [];
         renderAll(profileData);
 
         refs.profileMain.classList.remove('hidden');
         hidePageLoader();
+        scheduleSecondaryProfileLoads();
     } catch (err) {
         showError(err.message);
     }
@@ -407,12 +417,41 @@ function renderAll(data) {
     renderHeader(data.user);
     renderContact(data.user);
     renderStats(data.stats);
-    loadAndRenderLinkedCharts(data.user.person_id);
-    renderRelatedPeople(relatedPeople);
+    renderDeferredSectionPlaceholders(data);
     renderInsights(data.aggregated_key_points);
     renderConsultations();
     renderRecordings(data.call_sessions);
-    loadClientMemory();
+}
+
+function renderDeferredSectionPlaceholders(data) {
+    renderRelatedPeopleLoading();
+    renderClientMemoryLoading();
+    renderLinkedChartsLoading(data?.user?.person_id);
+}
+
+function scheduleSecondaryProfileLoads() {
+    scheduleAfterPaint(() => {
+        loadProfileSecondaryData();
+        loadAndRenderLinkedCharts(profileData?.user?.person_id);
+        loadClientMemory();
+    });
+}
+
+async function loadProfileSecondaryData() {
+    try {
+        const [relatedPeoplePayload, usersPayload, tagsPayload] = await Promise.all([
+            (window.AstroAPI?.getRelatedPeople?.(userId) || Promise.resolve([])).catch(() => []),
+            apiFetch(`${API_BASE}/users`).then((res) => (res.ok ? res.json() : [])).catch(() => []),
+            apiFetch(`${API_BASE}/charts/tags`).then((res) => (res.ok ? res.json() : [])).catch(() => []),
+        ]);
+        relatedPeople = Array.isArray(relatedPeoplePayload) ? relatedPeoplePayload : [];
+        tagSourceUsers = Array.isArray(usersPayload) ? usersPayload : [];
+        apiTagPool = Array.isArray(tagsPayload) ? tagsPayload : [];
+        renderRelatedPeople(relatedPeople);
+    } catch (_) {
+        relatedPeople = [];
+        renderRelatedPeople(relatedPeople);
+    }
 }
 
 /* ─── Client history (consultation memory) ───────────────────────────────── */
@@ -459,6 +498,14 @@ async function loadClientMemory() {
         list.innerHTML = '';
         empty?.classList.remove('hidden');
     }
+}
+
+function renderClientMemoryLoading() {
+    const list = document.getElementById('clientMemoryList');
+    const empty = document.getElementById('clientMemoryEmpty');
+    if (!list) return;
+    empty?.classList.add('hidden');
+    list.innerHTML = `<p class="profile-empty">${escapeHtml(t('common.loading'))}</p>`;
 }
 
 async function deleteClientMemory(id) {
@@ -706,6 +753,12 @@ function renderRelatedPeople(items) {
             </article>
         `;
     }).join('');
+}
+
+function renderRelatedPeopleLoading() {
+    if (!refs.relatedPeopleList || !refs.relatedPeopleEmpty) return;
+    refs.relatedPeopleEmpty.classList.add('hidden');
+    refs.relatedPeopleList.innerHTML = `<p class="profile-empty">${escapeHtml(t('common.loading'))}</p>`;
 }
 
 function initRelatedPeoplePicker() {
@@ -1473,6 +1526,18 @@ async function handleLogSessionSubmit(e) {
 let allChartsCache = null;   // full chart list for picker
 let linkedChartIds = new Set();
 let currentPersonId = null;
+
+function renderLinkedChartsLoading(personId) {
+    if (!personId) {
+        refs.linkedChartsCard?.classList.add('hidden');
+        return;
+    }
+    refs.linkedChartsCard?.classList.remove('hidden');
+    refs.linkedChartsEmpty?.classList.add('hidden');
+    if (refs.linkedChartsList) {
+        refs.linkedChartsList.innerHTML = `<p class="profile-empty">${escapeHtml(t('common.loading'))}</p>`;
+    }
+}
 
 async function loadAndRenderLinkedCharts(personId) {
     if (!personId) {
