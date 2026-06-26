@@ -559,24 +559,16 @@
         initPanelLayout();
         bindPanelConfigurator();
         syncWorkspaceModePanels();
+        await hydratePreferences();
+        syncControlsFromState();
         renderStaticNatal();
-        refreshViewModel();
-        renderWheel();
         renderRightLayerTabs();
-        showLayout();
-        hideLoader();
-
-        void hydratePreferences().then(() => {
-            syncControlsFromState();
-            renderStaticNatal();
-            refreshViewModel();
-            renderWheel();
-            renderRightLayerTabs();
-            scheduleRightPanelRender();
-        });
-        void loadActiveLayers({ lightweight: true });
         if (state.singleChartMode === 'composite') {
-            void enterCompositeMode();
+            await enterCompositeMode();
+            showLayout();
+            hideLoader();
+        } else {
+            await loadActiveLayers({ waitForComplete: true });
         }
     });
 
@@ -3427,7 +3419,7 @@
                 const data = await fetchLayer(inst, { seq });
                 if (seq !== state.requestSeq) return null;
                 nextLayers[inst.id] = data;
-                if (!hasCompletePreviousLayers) {
+                if (!hasCompletePreviousLayers && !options.waitForComplete) {
                     state.layers = { ...nextLayers };
                     renderWheel();
                     scheduleRightPanelRender();
@@ -3445,7 +3437,7 @@
             state.layers = nextLayers;
             state.lastCalculatedTransitDateTime = activeInstances.some((l) => l.method === 'transit') ? state.selectedDateTime : state.lastCalculatedTransitDateTime;
             state.lastCalculatedPrognosticDate = splitTargetDatetime(state.selectedDateTime)[0];
-            if (!hasRenderedPartial || hasCompletePreviousLayers) renderWheel();
+            if (!hasRenderedPartial || hasCompletePreviousLayers || options.waitForComplete) renderWheel();
             renderRightLayerTabs();
             scheduleRightPanelRender();
             showLayout();
