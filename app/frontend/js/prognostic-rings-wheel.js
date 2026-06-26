@@ -260,8 +260,8 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
         render(viewModel) {
             this.viewModel = viewModel;
             this.aspectLookupByKey = {};
-            this.svg.innerHTML = '';
             this.svg.setAttribute('viewBox', `${-VIEW_PADDING} ${-VIEW_PADDING} ${SIZE + VIEW_PADDING * 2} ${SIZE + VIEW_PADDING * 2}`);
+            const fragment = document.createDocumentFragment();
             this.layers = {
                 background: this.el('g', { id: 'prognostic-bg' }),
                 zodiac: this.el('g', { id: 'prognostic-zodiac' }),
@@ -271,7 +271,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                 labels: this.el('g', { id: 'prognostic-labels' }),
                 angles: this.el('g', { id: 'prognostic-angles' }),
             };
-            Object.values(this.layers).forEach((layer) => this.svg.appendChild(layer));
+            Object.values(this.layers).forEach((layer) => fragment.appendChild(layer));
 
             this.drawBackground();
             this.drawZodiac();
@@ -285,6 +285,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             if (this.showDeclinationAspects) this.drawDeclinationAspects(rings);
             rings.forEach((ring) => this.drawBodies(ring));
             this.drawAngleMarkers(rings);
+            this.svg.replaceChildren(fragment);
             this.bindEvents();
             this.applyMatrixVisibilityToDom();
         }
