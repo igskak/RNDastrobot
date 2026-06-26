@@ -1,4 +1,4 @@
-"""Provider-neutral billing and Paddle adapter."""
+"""Provider-neutral billing with Paddle and Stripe adapters."""
 from __future__ import annotations
 
 import hashlib
@@ -7,9 +7,10 @@ import json
 import os
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Tuple
 from urllib import error as urlerror
 from urllib import request as urlrequest
+from urllib.parse import urlencode
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -92,8 +93,19 @@ def _parse_datetime(value: Any) -> Optional[datetime]:
         return None
     if isinstance(value, datetime):
         return _as_utc(value)
+    if isinstance(value, (int, float)):
+        try:
+            return datetime.fromtimestamp(value, tz=timezone.utc)
+        except (OverflowError, OSError, ValueError):
+            return None
+    text = str(value).strip()
+    if text.isdigit():  # Stripe returns Unix epoch seconds.
+        try:
+            return datetime.fromtimestamp(int(text), tz=timezone.utc)
+        except (OverflowError, OSError, ValueError):
+            return None
     try:
-        return datetime.fromisoformat(str(value).replace("Z", "+00:00")).astimezone(timezone.utc)
+        return datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone(timezone.utc)
     except ValueError:
         return None
 
@@ -107,11 +119,36 @@ def _nested(payload: Dict[str, Any], *keys: str) -> Any:
     return current
 
 
+def _stripe_encode(data: Dict[str, Any]) -> str:
+    """Flatten a nested dict into Stripe's bracketed form-urlencoded format."""
+    pairs: List[Tuple[str, str]] = []
+
+    def add(key: str, value: Any) -> None:
+        if value is None:
+            return
+        if isinstance(value, bool):
+            pairs.append((key, "true" if value else "false"))
+        elif isinstance(value, dict):
+            for sub_key, sub_value in value.items():
+                add(f"{key}[{sub_key}]", sub_value)
+        elif isinstance(value, (list, tuple)):
+            for index, item in enumerate(value):
+                add(f"{key}[{index}]", item)
+        else:
+            pairs.append((key, str(value)))
+
+    for top_key, top_value in data.items():
+        add(top_key, top_value)
+    return urlencode(pairs)
+
+
 def _normalize_status(provider_status: Optional[str]) -> str:
     status_value = str(provider_status or "").strip().lower()
     if status_value in {"active", "trialing", "past_due", "paused", "canceled", "cancelled", "expired"}:
         return "canceled" if status_value == "cancelled" else status_value
-    if status_value in {"deleted"}:
+    # Stripe terminal/non-paying states collapse to expired; "incomplete"
+    # falls through unchanged so it never grants access.
+    if status_value in {"deleted", "unpaid", "incomplete_expired"}:
         return "expired"
     return status_value or "unknown"
 
@@ -387,14 +424,236 @@ class PaddleBillingProvider(BillingProvider):
         )
 
 
+STRIPE_API_BASE_URL = "https://api.stripe.com"
+STRIPE_DEFAULT_API_VERSION = "2025-03-31.basil"
+
+
+class StripeBillingProvider(BillingProvider):
+    """Stripe Managed Payments (merchant of record) adapter.
+
+    Managed Payments is regular Stripe Checkout + Subscriptions with
+    ``managed_payments[enabled]=true``; Stripe becomes the merchant of record
+    and handles tax, disputes and fraud. Requires API version >= 2025-03-31.basil
+    and the account to be activated for Managed Payments in the Dashboard.
+    """
+
+    provider = BILLING_PROVIDER_STRIPE
+
+    def __init__(self) -> None:
+        self.api_key = os.getenv("STRIPE_SECRET_KEY", "").strip()
+        self.api_base_url = os.getenv("STRIPE_API_BASE_URL", STRIPE_API_BASE_URL).rstrip("/")
+        self.api_version = os.getenv("STRIPE_API_VERSION", STRIPE_DEFAULT_API_VERSION).strip() or STRIPE_DEFAULT_API_VERSION
+        self.webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip()
+        self.success_url = os.getenv("STRIPE_SUCCESS_URL", "").strip()
+        self.cancel_url = os.getenv("STRIPE_CANCEL_URL", "").strip()
+        self.base_url = (
+            os.getenv("FRONTEND_BASE_URL", "").strip()
+            or os.getenv("APP_BASE_URL", "").strip()
+        ).rstrip("/")
+
+    def _resolve_success_url(self) -> str:
+        if self.success_url:
+            return self.success_url
+        if self.base_url:
+            return f"{self.base_url}/pricing.html?checkout=success"
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Stripe checkout success URL is not configured (set STRIPE_SUCCESS_URL or FRONTEND_BASE_URL).",
+        )
+
+    def _resolve_cancel_url(self) -> str:
+        if self.cancel_url:
+            return self.cancel_url
+        if self.base_url:
+            return f"{self.base_url}/pricing.html?checkout=cancel"
+        return self._resolve_success_url()
+
+    def _api_request(self, method: str, path: str, payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        if not self.api_key:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Stripe API key is not configured.")
+
+        body = _stripe_encode(payload).encode("utf-8") if payload is not None else None
+        req = urlrequest.Request(
+            f"{self.api_base_url}{path}",
+            data=body,
+            method=method,
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Accept": "application/json",
+                "Stripe-Version": self.api_version,
+            },
+        )
+        try:
+            with urlrequest.urlopen(req, timeout=20) as response:
+                return json.loads(response.read().decode("utf-8") or "{}")
+        except urlerror.HTTPError as exc:
+            message = exc.read().decode("utf-8", errors="replace")
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Stripe API error: {message}") from exc
+        except urlerror.URLError as exc:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Stripe API unavailable: {exc.reason}") from exc
+
+    def create_checkout(self, db: Session, *, astrologer: Astrologer, plan_code: str, interval: str, coupon_code: Optional[str]) -> BillingCheckout:
+        price_id = get_price_id(db, provider=self.provider, plan_code=plan_code, interval=interval)
+        metadata: Dict[str, Any] = {
+            "astrologer_id": str(astrologer.id),
+            "plan_code": plan_code,
+            "interval": interval,
+        }
+        if coupon_code:
+            metadata["coupon_code"] = coupon_code.strip()
+        payload: Dict[str, Any] = {
+            "mode": "subscription",
+            "line_items": [{"price": price_id, "quantity": 1}],
+            "managed_payments": {"enabled": True},
+            "customer_email": astrologer.email,
+            "client_reference_id": str(astrologer.id),
+            "success_url": self._resolve_success_url(),
+            "cancel_url": self._resolve_cancel_url(),
+            "metadata": metadata,
+            # Mirror metadata onto the subscription so customer.subscription.*
+            # webhooks carry astrologer_id/plan_code without a session lookup.
+            "subscription_data": {"metadata": metadata},
+        }
+        if coupon_code:
+            payload["discounts"] = [{"promotion_code": coupon_code.strip()}]
+
+        response = self._api_request("POST", "/v1/checkout/sessions", payload)
+        checkout_url = response.get("url")
+        if not checkout_url:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Stripe did not return a checkout URL.")
+        return BillingCheckout(checkout_url=str(checkout_url), provider=self.provider)
+
+    def create_customer_portal(self, db: Session, *, astrologer: Astrologer) -> BillingPortal:
+        # NOTE: under Managed Payments, end-customer subscription management also
+        # lives on the Link site (link.com). The Stripe Billing portal is offered
+        # here as the in-app option; confirm it is enabled for the account.
+        customer = (
+            db.query(BillingCustomer)
+            .filter(
+                BillingCustomer.provider == self.provider,
+                BillingCustomer.astrologer_id == astrologer.id,
+            )
+            .order_by(BillingCustomer.updated_at.desc().nullslast(), BillingCustomer.created_at.desc().nullslast())
+            .first()
+        )
+        if not customer or not customer.provider_customer_id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No billing customer found.")
+        payload: Dict[str, Any] = {"customer": customer.provider_customer_id}
+        if self.base_url:
+            payload["return_url"] = f"{self.base_url}/pricing.html"
+        response = self._api_request("POST", "/v1/billing_portal/sessions", payload)
+        portal_url = response.get("url")
+        if not portal_url:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Stripe did not return a portal URL.")
+        return BillingPortal(portal_url=str(portal_url), provider=self.provider)
+
+    def verify_webhook(self, raw_body: bytes, headers: Dict[str, str]) -> Dict[str, Any]:
+        if not self.webhook_secret:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Stripe webhook secret is not configured.")
+        signature_header = headers.get("stripe-signature") or headers.get("Stripe-Signature") or ""
+        timestamp: Optional[str] = None
+        signatures: List[str] = []
+        for item in signature_header.split(","):
+            if "=" not in item:
+                continue
+            key, value = item.split("=", 1)
+            key = key.strip()
+            value = value.strip()
+            if key == "t":
+                timestamp = value
+            elif key == "v1":
+                signatures.append(value)
+        if not timestamp or not signatures:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Stripe webhook signature.")
+        signed_payload = f"{timestamp}.".encode("utf-8") + raw_body
+        expected = hmac.new(self.webhook_secret.encode("utf-8"), signed_payload, hashlib.sha256).hexdigest()
+        if not any(hmac.compare_digest(expected, candidate) for candidate in signatures):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Stripe webhook signature.")
+        return json.loads(raw_body.decode("utf-8") or "{}")
+
+    @staticmethod
+    def _interval_from_item(item: Dict[str, Any]) -> Optional[str]:
+        interval = _nested(item, "price", "recurring", "interval")
+        value = str(interval or "").strip().lower()
+        if value in {"month", "monthly"}:
+            return "monthly"
+        if value in {"year", "yearly", "annual"}:
+            return "yearly"
+        return None
+
+    def normalize_event(self, db: Session, payload: Dict[str, Any]) -> NormalizedBillingEvent:
+        event_id = str(payload.get("id") or "")
+        event_type = str(payload.get("type") or "")
+        obj = _nested(payload, "data", "object") or {}
+        object_type = obj.get("object")
+
+        if object_type == "checkout.session":
+            subscription_id = str(obj.get("subscription") or "")
+            customer_id = str(obj.get("customer") or "")
+            metadata = obj.get("metadata") or {}
+            sub_status = None
+            cancel_at_period_end = False
+            items: List[Dict[str, Any]] = []
+            discount = None
+        else:  # customer.subscription.* — the subscription object itself
+            subscription_id = str(obj.get("id") or "")
+            customer_id = str(obj.get("customer") or "")
+            metadata = obj.get("metadata") or {}
+            sub_status = obj.get("status")
+            cancel_at_period_end = bool(obj.get("cancel_at_period_end"))
+            items = _nested(obj, "items", "data") or []
+            discount = obj.get("discount")
+
+        first_item = items[0] if items else {}
+        price_id = _nested(first_item, "price", "id") or obj.get("price")
+        raw_plan_code = metadata.get("plan_code") or _normalize_plan_from_price(db, self.provider, price_id)
+        plan_code = normalize_plan_code(raw_plan_code) if raw_plan_code else None
+        if plan_code not in PAID_PLAN_CODES:
+            plan_code = None
+
+        raw_astrologer = metadata.get("astrologer_id") or obj.get("client_reference_id")
+        astrologer_id = None
+        try:
+            astrologer_id = UUID(str(raw_astrologer)) if raw_astrologer else None
+        except ValueError:
+            astrologer_id = None
+
+        coupon_code = _nested(discount, "coupon", "id") or metadata.get("coupon_code") or None
+
+        return NormalizedBillingEvent(
+            provider_event_id=event_id or f"{event_type}:{subscription_id}",
+            event_type=event_type,
+            action=event_type.split(".")[-1] if event_type else "unknown",
+            subscription_id=subscription_id,
+            customer_id=customer_id,
+            astrologer_id=astrologer_id,
+            plan_code=plan_code,
+            interval=self._interval_from_item(first_item) or metadata.get("interval"),
+            status=_normalize_status(sub_status) if sub_status else None,
+            current_period_start=_parse_datetime(obj.get("current_period_start")),
+            current_period_end=_parse_datetime(obj.get("current_period_end")),
+            cancel_at_period_end=cancel_at_period_end,
+            coupon_code=str(coupon_code) if coupon_code else None,
+            raw_payload=payload,
+        )
+
+
 def get_billing_provider() -> BillingProvider:
     provider = billing_provider_name()
     if provider == BILLING_PROVIDER_PADDLE:
         return PaddleBillingProvider()
+    if provider == BILLING_PROVIDER_STRIPE:
+        return StripeBillingProvider()
     raise RuntimeError(f"Unsupported billing provider: {provider}")
 
 
-def upsert_subscription_from_event(db: Session, event: NormalizedBillingEvent) -> Optional[BillingSubscription]:
+def upsert_subscription_from_event(
+    db: Session,
+    event: NormalizedBillingEvent,
+    *,
+    provider: str = BILLING_PROVIDER_PADDLE,
+) -> Optional[BillingSubscription]:
     if not event.subscription_id:
         return None
 
@@ -402,7 +661,7 @@ def upsert_subscription_from_event(db: Session, event: NormalizedBillingEvent) -
     if not astrologer and event.customer_id:
         customer = (
             db.query(BillingCustomer)
-            .filter(BillingCustomer.provider == BILLING_PROVIDER_PADDLE, BillingCustomer.provider_customer_id == event.customer_id)
+            .filter(BillingCustomer.provider == provider, BillingCustomer.provider_customer_id == event.customer_id)
             .first()
         )
         astrologer = customer.astrologer if customer else None
@@ -413,13 +672,13 @@ def upsert_subscription_from_event(db: Session, event: NormalizedBillingEvent) -
     if event.customer_id:
         customer_row = (
             db.query(BillingCustomer)
-            .filter(BillingCustomer.provider == BILLING_PROVIDER_PADDLE, BillingCustomer.provider_customer_id == event.customer_id)
+            .filter(BillingCustomer.provider == provider, BillingCustomer.provider_customer_id == event.customer_id)
             .first()
         )
         if not customer_row:
             customer_row = BillingCustomer(
                 astrologer_id=astrologer.id,
-                provider=BILLING_PROVIDER_PADDLE,
+                provider=provider,
                 provider_customer_id=event.customer_id,
                 email=astrologer.email,
                 raw_provider_payload=event.raw_payload.get("data"),
@@ -430,7 +689,7 @@ def upsert_subscription_from_event(db: Session, event: NormalizedBillingEvent) -
     subscription = (
         db.query(BillingSubscription)
         .filter(
-            BillingSubscription.provider == BILLING_PROVIDER_PADDLE,
+            BillingSubscription.provider == provider,
             BillingSubscription.provider_subscription_id == event.subscription_id,
         )
         .first()
@@ -438,7 +697,7 @@ def upsert_subscription_from_event(db: Session, event: NormalizedBillingEvent) -
     if not subscription:
         subscription = BillingSubscription(
             astrologer_id=astrologer.id,
-            provider=BILLING_PROVIDER_PADDLE,
+            provider=provider,
             provider_subscription_id=event.subscription_id,
             plan_code=event.plan_code,
             status=event.status or "unknown",
@@ -485,7 +744,7 @@ def process_billing_webhook(db: Session, *, provider: BillingProvider, payload: 
             return {"status": "duplicate", "event_id": event.provider_event_id}
 
     try:
-        subscription = upsert_subscription_from_event(db, event)
+        subscription = upsert_subscription_from_event(db, event, provider=provider.provider)
         billing_event.status = "processed"
         billing_event.processed_at = utcnow()
         db.flush()
