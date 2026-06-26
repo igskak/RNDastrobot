@@ -47,6 +47,21 @@ const refs = {};
 let currentAstrologer = null;
 const HERO_SEEN_STORAGE_PREFIX = 'steliara.clients.hero-seen';
 
+function scheduleAfterPaint(callback, timeout = 1200) {
+    const task = () => {
+        try {
+            callback();
+        } catch (error) {
+            console.warn('Deferred clients task failed:', error);
+        }
+    };
+    if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(task, { timeout });
+        return;
+    }
+    window.setTimeout(task, 0);
+}
+
 function t(key, params) {
     return window.FrontendI18n?.t?.(key, params) || key;
 }
@@ -421,12 +436,18 @@ async function bootstrapPage() {
     applyHeroPlacement();
 
     await loadClients();
-    if (planCan('consultations')) {
-        initMiniCal();
-    }
-    if (planCan('meeting_stats')) {
-        loadAlerts();
-    }
+    scheduleSecondaryPanels();
+}
+
+function scheduleSecondaryPanels() {
+    scheduleAfterPaint(() => {
+        if (planCan('consultations')) {
+            initMiniCal();
+        }
+        if (planCan('meeting_stats')) {
+            loadAlerts();
+        }
+    });
 }
 
 function applyPlanUi() {
@@ -498,23 +519,25 @@ async function loadClients() {
     refs.tableWrap.classList.add('hidden');
 
     try {
-        const [chartsResponse, personsResponse, usersResponse, tagsResponse] = await Promise.all([
+        const [chartsResponse, personsResponse] = await Promise.all([
             apiFetch(`${API_BASE}/charts`, { method: 'GET' }),
             apiFetch(`${API_BASE}/persons`, { method: 'GET' }),
-            apiFetch(`${API_BASE}/users`, { method: 'GET' }),
-            apiFetch(`${API_BASE}/charts/tags`, { method: 'GET' }).catch(() => null),
         ]);
-        if (chartsResponse.status === 401 || personsResponse.status === 401 || usersResponse.status === 401) {
+        if (chartsResponse.status === 401 || personsResponse.status === 401) {
             window.location.href = '/login.html';
             return;
         }
         // Legacy users remain a fallback while Persons rolls out.
-        if (!personsResponse.ok && !usersResponse.ok) throw new Error(t('page.clients.errors.fetchList'));
-
         if (personsResponse.ok) {
             const persons = await personsResponse.json();
             state.people = Array.isArray(persons) ? persons : [];
         } else {
+            const usersResponse = await apiFetch(`${API_BASE}/users`, { method: 'GET' });
+            if (usersResponse.status === 401) {
+                window.location.href = '/login.html';
+                return;
+            }
+            if (!usersResponse.ok) throw new Error(t('page.clients.errors.fetchList'));
             const users = await usersResponse.json();
             state.people = Array.isArray(users) ? users : [];
             console.warn('Persons API unavailable, falling back to legacy users view');
@@ -526,13 +549,6 @@ async function loadClients() {
         } else {
             state.charts = [];
             console.warn('Charts API unavailable, falling back to people-only view');
-        }
-
-        if (tagsResponse && tagsResponse.ok) {
-            const pool = await tagsResponse.json().catch(() => []);
-            state.apiTagPool = Array.isArray(pool) ? pool : [];
-        } else {
-            state.apiTagPool = [];
         }
 
         state.people = enrichPeopleFromCharts(state.people, state.charts);
@@ -550,10 +566,20 @@ async function loadClients() {
         }
 
         renderUsers();
+        loadTagPoolAfterFirstRender();
     } catch (error) {
         refs.loading.textContent = t('page.clients.errors.loadingWithMessage', { message: error.message });
         console.error(error);
     }
+}
+
+function loadTagPoolAfterFirstRender() {
+    scheduleAfterPaint(async () => {
+        const tagsResponse = await apiFetch(`${API_BASE}/charts/tags`, { method: 'GET' }).catch(() => null);
+        const pool = tagsResponse?.ok ? await tagsResponse.json().catch(() => []) : [];
+        state.apiTagPool = Array.isArray(pool) ? pool : [];
+        renderTagFilterOptions();
+    });
 }
 
 function setLibraryView(view) {
