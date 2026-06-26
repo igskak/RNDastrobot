@@ -28,9 +28,17 @@ from app.services.entitlements_service import PLAN_PRO, PLAN_STANDARD, normalize
 
 
 BILLING_PROVIDER_PADDLE = "paddle"
+BILLING_PROVIDER_STRIPE = "stripe"
 PAID_PLAN_CODES = {PLAN_STANDARD, PLAN_PRO}
 SUPPORTED_INTERVALS = {"monthly", "yearly"}
 ACCESS_STATUSES = {"active", "trialing", "past_due"}
+
+# Per-provider environment prefix for the price/variant id fallback lookup,
+# e.g. PADDLE_PRICE_PRO_MONTHLY / STRIPE_PRICE_PRO_MONTHLY.
+PRICE_ENV_PREFIXES = {
+    BILLING_PROVIDER_PADDLE: "PADDLE_PRICE",
+    BILLING_PROVIDER_STRIPE: "STRIPE_PRICE",
+}
 
 
 @dataclass(frozen=True)
@@ -218,7 +226,8 @@ def get_price_id(db: Session, *, provider: str, plan_code: str, interval: str) -
     if row:
         return row.provider_price_id
 
-    env_key = f"PADDLE_PRICE_{plan_code.upper()}_{interval.upper()}"
+    prefix = PRICE_ENV_PREFIXES.get(provider, f"{provider.upper()}_PRICE")
+    env_key = f"{prefix}_{plan_code.upper()}_{interval.upper()}"
     env_value = os.getenv(env_key, "").strip()
     if env_value:
         return env_value
