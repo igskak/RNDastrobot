@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const source = fs.readFileSync(path.join(__dirname, 'forecast-new.js'), 'utf8');
+const forecastCss = fs.readFileSync(path.join(__dirname, '../css/forecast-new.css'), 'utf8');
 
 let pass = 0;
 let fail = 0;
@@ -48,6 +49,13 @@ ok(
     /requiredSelectors\.every\(\(selector\) => dialog\.querySelector\(selector\)\)/.test(source)
         && source.includes('dialog?.remove();'),
     'a stale malformed panel dialog is rebuilt before use'
+);
+ok(
+    source.includes('function positionAddLayerMenu(menu, toggle)')
+        && source.includes("menu.classList.add('forecast-new-add-layer-menu--floating')")
+        && forecastCss.includes('.forecast-new-add-layer-menu--floating')
+        && forecastCss.includes('position: fixed;'),
+    'add-layer dropdown is positioned outside the scroll-clipped layer tabs'
 );
 
 console.log(`${pass} passed, ${fail} failed`);

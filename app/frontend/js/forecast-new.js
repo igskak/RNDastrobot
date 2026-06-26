@@ -1350,8 +1350,32 @@
     }
 
     function closeAddLayerMenu() {
-        refs.rightLayerTabs?.querySelector('[data-add-layer-menu]')?.classList.add('hidden');
+        const menu = refs.rightLayerTabs?.querySelector('[data-add-layer-menu]');
+        if (menu) {
+            menu.classList.add('hidden');
+            menu.classList.remove('forecast-new-add-layer-menu--floating');
+            menu.style.removeProperty('--forecast-new-add-layer-menu-top');
+            menu.style.removeProperty('--forecast-new-add-layer-menu-left');
+        }
         refs.rightLayerTabs?.querySelector('[data-add-layer-toggle]')?.setAttribute('aria-expanded', 'false');
+    }
+
+    function positionAddLayerMenu(menu, toggle) {
+        menu.classList.add('forecast-new-add-layer-menu--floating');
+        const toggleRect = toggle.getBoundingClientRect();
+        const menuRect = menu.getBoundingClientRect();
+        const viewportWidth = document.documentElement.clientWidth || window.innerWidth || 0;
+        const margin = 8;
+        const top = Math.min(
+            Math.max(toggleRect.bottom + 7, margin),
+            Math.max(margin, (window.innerHeight || 0) - menuRect.height - margin)
+        );
+        const left = Math.min(
+            Math.max(toggleRect.right - menuRect.width, margin),
+            Math.max(margin, viewportWidth - menuRect.width - margin)
+        );
+        menu.style.setProperty('--forecast-new-add-layer-menu-top', `${top}px`);
+        menu.style.setProperty('--forecast-new-add-layer-menu-left', `${left}px`);
     }
 
     function toggleAddLayerMenu() {
@@ -1361,7 +1385,12 @@
         const willOpen = menu.classList.contains('hidden');
         menu.classList.toggle('hidden', !willOpen);
         toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
-        if (willOpen) menu.querySelector('[data-add-layer-method]:not(:disabled)')?.focus({ preventScroll: true });
+        if (willOpen) {
+            positionAddLayerMenu(menu, toggle);
+            menu.querySelector('[data-add-layer-method]:not(:disabled)')?.focus({ preventScroll: true });
+        } else {
+            closeAddLayerMenu();
+        }
     }
 
     function initLayerPopovers() {
