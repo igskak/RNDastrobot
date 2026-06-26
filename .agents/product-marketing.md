@@ -86,7 +86,7 @@
 | Objection | Response |
 |-----------|----------|
 | "I already use Chronos / my astro-processor." | Steliara isn't trying to replace your calculations — it adds what they don't: the people you read for in one place, plus recorded, transcribed, and summarized consultations so nothing from a session is lost. Run it free for 14 days alongside what you use. |
-| "Is AI going to get the astrology wrong / replace my judgment?" ⚠️ | The assistant works from your chart data to save prep time; you stay the interpreter. Summaries capture what *you* said. |
+| "Is AI going to get the astrology wrong / replace my judgment?" | **AI will never read a chart for you. It just finds the facts faster: the aspects, the exact dates, where a planet sits. You stay the astrologer; it does the digging.** The assistant retrieves data and time windows from the chart; it does not interpret. Summaries capture what *you* said. This is the trust line — use it to disarm the objection, not the hero. |
 | "Will my clients' data and recordings be safe?" ⚠️ | (confirm storage/retention + consent story — recordings auto-expire policy in monetization plan.) |
 
 **Anti-persona:** Hobbyists who just want a free one-off chart; anyone wanting a consumer "read my horoscope" app; the Russia market.

@@ -35,6 +35,8 @@ Full positioning lives in [`.agents/product-marketing.md`](.agents/product-marke
 
 **Messaging rule:** never lead with "another astrologer workspace + AI" — Astrolium owns that sentence. Charts + CRM + Swiss-Ephemeris accuracy are table-stakes proof mentioned underneath the hero.
 
+**AI stance (trust line, not the hero):** *AI will never read a chart for you. It just finds the facts faster: the aspects, the exact dates, where a planet sits. You stay the astrologer; it does the digging.* This deliberately occupies the opposite pole from AI-astrology chatbots (Jenova, AstroSage AI) that try to *replace* interpretation, and disarms the #1 objection from a craft-protective audience. The assistant retrieves data and time windows from the chart; it does not interpret. Use it in objection-handling, the assistant/FAQ surfaces, and a dedicated content/ad angle — never as the hero.
+
 **Voice:** soft, warm, human. "practice" and "the people you read for", not "clients"/"CRM" in user-facing copy (in English ads "clients" is acceptable — it is the market's search word). No AI/business/enterprise jargon. No em dashes in copy.
 
 ---
