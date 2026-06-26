@@ -168,6 +168,7 @@
         applySettingsTimer: null,
         viewOverridesPersistTimer: null,
         persistTimer: null,
+        displayedMomentLoadTimer: null,
         rightPanelRenderFrame: null,
         adjacentPrefetchTimer: null,
         lastStepperAction: null,
@@ -1582,11 +1583,30 @@
     }
 
     async function loadDisplayedMomentLayers(options = {}) {
+        if (options.selectedOnly) {
+            await loadSelectedMomentLayer(options);
+            return;
+        }
         if (isSynastryMomentActive()) {
             await ensureSynastryLayerActive(options);
             return;
         }
         await loadActiveLayers(options);
+    }
+
+    function scheduleDisplayedMomentLayerLoad(options = {}) {
+        clearTimeout(state.displayedMomentLoadTimer);
+        const delay = Number.isFinite(Number(options.delay)) ? Number(options.delay) : 140;
+        const layerId = options.layerId || state.selectedRightLayerId;
+        state.displayedMomentLoadTimer = setTimeout(() => {
+            state.displayedMomentLoadTimer = null;
+            void loadDisplayedMomentLayers({
+                ...options,
+                layerId,
+                selectedOnly: true,
+                lightweight: true,
+            });
+        }, delay);
     }
 
     function readChartMoment(chart = {}) {
@@ -3374,7 +3394,7 @@
         updatePrognosticTimeMeta();
         setLightweightLoading(true);
         schedulePersist();
-        void loadDisplayedMomentLayers({ lightweight: true });
+        scheduleDisplayedMomentLayerLoad({ layerId: state.selectedRightLayerId });
     }
 
     function stepSelectedDateTimeByCustom(direction) {
@@ -3390,10 +3410,12 @@
         updatePrognosticTimeMeta();
         setLightweightLoading(true);
         schedulePersist();
-        void loadDisplayedMomentLayers({ lightweight: true });
+        scheduleDisplayedMomentLayerLoad({ layerId: state.selectedRightLayerId });
     }
 
     async function loadActiveLayers(options = {}) {
+        clearTimeout(state.displayedMomentLoadTimer);
+        state.displayedMomentLoadTimer = null;
         const seq = ++state.requestSeq;
         state.pendingRequestToken = seq;
         const activeInstances = [...state.activeLayers];
@@ -3452,6 +3474,48 @@
         } finally {
             if (seq === state.requestSeq) {
                 hideLoader();
+                setLightweightLoading(false);
+            }
+        }
+    }
+
+    async function loadSelectedMomentLayer(options = {}) {
+        const inst = options.layerId ? findLayerInstance(options.layerId) : selectedLayerInstance();
+        if (!inst || (!isMomentMethod(inst.method) && inst.method !== 'synastry_partner')) {
+            await loadActiveLayers(options);
+            return;
+        }
+        if (inst.method === 'synastry_partner' && !hasUsableSynastryPartner(layerConfigOf(inst))) return;
+
+        const seq = ++state.requestSeq;
+        state.pendingRequestToken = seq;
+        if (options.lightweight) setLightweightLoading(true);
+        const activeIds = state.activeLayers.map((layer) => layer.id);
+        state.layers = Object.fromEntries(activeIds
+            .filter((id) => state.layers?.[id])
+            .map((id) => [id, state.layers[id]]));
+        try {
+            const data = await fetchLayer(inst, { seq });
+            if (seq !== state.requestSeq) return;
+            state.layers = {
+                ...(state.layers || {}),
+                [inst.id]: data,
+            };
+            if (inst.method === 'transit') state.lastCalculatedTransitDateTime = state.selectedDateTime;
+            if (isMomentMethod(inst.method)) state.lastCalculatedPrognosticDate = splitTargetDatetime(getDisplayedMomentDateTime())[0];
+            renderWheel();
+            renderRightLayerTabs();
+            scheduleRightPanelRender();
+            renderNowBlocks();
+            schedulePersist();
+            scheduleAdjacentLayerPrefetch();
+        } catch (error) {
+            if (seq !== state.requestSeq) return;
+            if (isAbortError(error)) return;
+            console.error('Forecast New selected layer load failed:', error);
+            showError(error.message || 'Ошибка загрузки прогностики');
+        } finally {
+            if (seq === state.requestSeq) {
                 setLightweightLoading(false);
             }
         }
