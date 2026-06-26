@@ -10,6 +10,8 @@ from sqlalchemy.orm import Session
 from app.auth.dependencies import AuthContext, create_audit_event, require_auth
 from app.database.connection import get_db
 from app.services.billing_service import (
+    BILLING_PROVIDER_PADDLE,
+    BILLING_PROVIDER_STRIPE,
     PAID_PLAN_CODES,
     SUPPORTED_INTERVALS,
     get_billing_provider,
@@ -121,13 +123,21 @@ def get_subscription(
     return BillingSubscriptionResponse(**get_billing_summary(db, auth.astrologer))
 
 
-@router.post("/webhooks/billing/paddle", include_in_schema=False)
-async def paddle_webhook(request: Request, db: Session = Depends(get_db)):
+async def _handle_billing_webhook(request: Request, db: Session, expected_provider: str) -> Dict[str, Any]:
     provider = get_billing_provider()
-    if provider.provider != "paddle":
+    if provider.provider != expected_provider:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Billing provider is not enabled.")
 
     raw_body = await request.body()
     payload = provider.verify_webhook(raw_body, dict(request.headers))
-    result = process_billing_webhook(db, provider=provider, payload=payload)
-    return result
+    return process_billing_webhook(db, provider=provider, payload=payload)
+
+
+@router.post("/webhooks/billing/stripe", include_in_schema=False)
+async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
+    return await _handle_billing_webhook(request, db, BILLING_PROVIDER_STRIPE)
+
+
+@router.post("/webhooks/billing/paddle", include_in_schema=False)
+async def paddle_webhook(request: Request, db: Session = Depends(get_db)):
+    return await _handle_billing_webhook(request, db, BILLING_PROVIDER_PADDLE)
