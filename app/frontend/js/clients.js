@@ -20,6 +20,9 @@ const state = {
     expandedUserId: null,
     consultationsCache: {},
     callSessionsCache: {},
+    personTagIndex: new Map(),
+    renderRafId: 0,
+    searchRenderTimer: 0,
 };
 
 let toastTimer = null;
@@ -46,6 +49,7 @@ const editClientState = {
 const refs = {};
 let currentAstrologer = null;
 const HERO_SEEN_STORAGE_PREFIX = 'steliara.clients.hero-seen';
+let clientListMetaCache = new WeakMap();
 
 function scheduleAfterPaint(callback, timeout = 1200) {
     const task = () => {
@@ -60,6 +64,38 @@ function scheduleAfterPaint(callback, timeout = 1200) {
         return;
     }
     window.setTimeout(task, 0);
+}
+
+function resetClientListMetaCache() {
+    clientListMetaCache = new WeakMap();
+}
+
+function scheduleRenderUsers({ debounce = 0 } = {}) {
+    if (state.searchRenderTimer) {
+        window.clearTimeout(state.searchRenderTimer);
+        state.searchRenderTimer = 0;
+    }
+
+    if (debounce > 0) {
+        state.searchRenderTimer = window.setTimeout(() => {
+            state.searchRenderTimer = 0;
+            requestRenderUsersFrame();
+        }, debounce);
+        return;
+    }
+
+    requestRenderUsersFrame();
+}
+
+function requestRenderUsersFrame() {
+    if (state.renderRafId) return;
+    const scheduleFrame = typeof window.requestAnimationFrame === 'function'
+        ? window.requestAnimationFrame.bind(window)
+        : (callback) => window.setTimeout(callback, 16);
+    state.renderRafId = scheduleFrame(() => {
+        state.renderRafId = 0;
+        renderUsers();
+    });
 }
 
 function t(key, params) {
@@ -251,7 +287,7 @@ function cacheElements() {
 function bindEvents() {
     refs.searchInput.addEventListener('input', (event) => {
         state.searchTerm = event.target.value.trim().toLowerCase();
-        renderUsers();
+        scheduleRenderUsers({ debounce: 140 });
     });
 
     refs.libraryTabs.forEach((tab) => {
@@ -277,12 +313,12 @@ function bindEvents() {
 
     refs.tagFilterSelect?.addEventListener('change', (event) => {
         state.activeTag = normalizeTag(event.target.value);
-        renderUsers();
+        scheduleRenderUsers();
     });
 
     refs.sortSelect.addEventListener('change', (event) => {
         state.sortBy = event.target.value;
-        renderUsers();
+        scheduleRenderUsers();
     });
 
     refs.tbody.addEventListener('click', async (event) => {
@@ -400,7 +436,8 @@ function bindEvents() {
         renderProfileSummary();
         renderTagFilterOptions();
         syncLibraryChrome();
-        renderUsers();
+        resetClientListMetaCache();
+        scheduleRenderUsers();
         refreshEditDialogLocale();
     });
 
@@ -552,6 +589,7 @@ async function loadClients() {
         }
 
         state.people = enrichPeopleFromCharts(state.people, state.charts);
+        rebuildClientListIndexes();
         state.users = getActiveLibraryItems();
         renderTagFilterOptions();
         syncLibraryChrome();
@@ -593,11 +631,17 @@ function setLibraryView(view) {
     closeAllDropdowns();
     syncLibraryChrome();
     renderTagFilterOptions();
+    resetClientListMetaCache();
     renderUsers();
 }
 
 function getActiveLibraryItems() {
     return state.libraryView === 'people' ? state.people : state.charts;
+}
+
+function rebuildClientListIndexes() {
+    state.personTagIndex = buildPersonTagIndex();
+    resetClientListMetaCache();
 }
 
 function enrichPeopleFromCharts(people = [], charts = []) {
@@ -906,7 +950,7 @@ function renderChartTagFilters(chart) {
 }
 
 function renderChartProfileFilters(chart) {
-    const related = getChartRelatedProfiles(chart);
+    const related = getClientListItemMeta(chart).relatedProfiles;
     if (!related.length) {
         return escapeHtml(t('page.clients.table.noProfiles'));
     }
@@ -944,6 +988,51 @@ function getChartRelatedProfiles(chart) {
     return related;
 }
 
+function getClientListItemMeta(item) {
+    if (!item || typeof item !== 'object') {
+        return {
+            tags: [],
+            normalizedEffectiveTags: [],
+            relatedProfiles: [],
+            relatedProfileIds: new Set(),
+            searchBlob: '',
+        };
+    }
+    const cached = clientListMetaCache.get(item);
+    if (cached) return cached;
+
+    const tags = getUserTags(item);
+    const relatedProfiles = getChartRelatedProfiles(item);
+    const rawDate = item.birth_date || item.date;
+    const birthDate = rawDate ? formatDate(rawDate).toLowerCase() : '';
+    const effectiveTags = getEffectiveTags(item, state.personTagIndex);
+    const relatedText = relatedProfiles.map((profile) => profile.name).join(' ').toLowerCase();
+    const searchBlob = [
+        item.display_title,
+        item.display_name,
+        item.title,
+        item.first_name,
+        item.last_name,
+        item.email,
+        item.phone,
+        item.birth_place,
+        item.location_name,
+        birthDate,
+        tags.join(' '),
+        relatedText,
+    ].filter(Boolean).join(' ').toLowerCase();
+
+    const meta = {
+        tags,
+        normalizedEffectiveTags: effectiveTags.map(normalizeTag).filter(Boolean),
+        relatedProfiles,
+        relatedProfileIds: new Set(relatedProfiles.map((profile) => String(profile.id || '')).filter(Boolean)),
+        searchBlob,
+    };
+    clientListMetaCache.set(item, meta);
+    return meta;
+}
+
 function resolveProfileLabel(profile) {
     const explicitName = String(profile?.name || '').trim();
     if (explicitName) return explicitName;
@@ -977,35 +1066,15 @@ function filterUsers(users, searchTerm, activeTag = '', activeProfileId = '') {
     const normalizedProfileId = String(activeProfileId || '');
     if (!searchTerm && !normalizedTag && !normalizedProfileId) return [...users];
 
-    const personTagIndex = buildPersonTagIndex();
-
     return users.filter((user) => {
-        const tags = getUserTags(user);
-        // Transitive match: include tags of linked people (family tags).
-        const effectiveTags = getEffectiveTags(user, personTagIndex);
-        const matchesTag = !normalizedTag || effectiveTags.some((tag) => normalizeTag(tag) === normalizedTag);
+        const meta = getClientListItemMeta(user);
+        const matchesTag = !normalizedTag || meta.normalizedEffectiveTags.includes(normalizedTag);
         if (!matchesTag) return false;
-        const matchesProfile = !normalizedProfileId || getChartRelatedProfiles(user).some((profile) => String(profile.id || '') === normalizedProfileId);
+        const matchesProfile = !normalizedProfileId || meta.relatedProfileIds.has(normalizedProfileId);
         if (!matchesProfile) return false;
 
         if (!searchTerm) return true;
-
-        const name = [
-            user.display_title,
-            user.display_name,
-            user.title,
-            user.first_name,
-            user.last_name,
-            user.email,
-            user.phone,
-        ].filter(Boolean).join(' ').toLowerCase();
-        const place = (user.birth_place || user.location_name || '').toLowerCase();
-        const rawDate = user.birth_date || user.date;
-        const birthDate = rawDate ? formatDate(rawDate).toLowerCase() : '';
-        const tagsText = tags.join(' ').toLowerCase();
-        const relatedText = getChartRelatedProfiles(user).map((profile) => profile.name).join(' ').toLowerCase();
-
-        return name.includes(searchTerm) || place.includes(searchTerm) || birthDate.includes(searchTerm) || tagsText.includes(searchTerm) || relatedText.includes(searchTerm);
+        return meta.searchBlob.includes(searchTerm);
     });
 }
 
@@ -1077,13 +1146,13 @@ function applyTagFilter(tag) {
     if (refs.tagFilterSelect) {
         refs.tagFilterSelect.value = state.activeTag;
     }
-    renderUsers();
+    scheduleRenderUsers();
 }
 
 function applyProfileFilter(profileId) {
     const normalized = String(profileId || '');
     state.activeProfileId = state.activeProfileId === normalized ? '' : normalized;
-    renderUsers();
+    scheduleRenderUsers();
 }
 
 function sortUsers(users, sortBy) {
@@ -1447,6 +1516,7 @@ async function handleRenameChart(userId) {
                 ? { ...c, title: updated.title, display_title: updated.display_title }
                 : c
         );
+        rebuildClientListIndexes();
         state.users = getActiveLibraryItems();
         renderUsers();
         showToast(t('page.clients.messages.chartRenamed'), 'success');
@@ -1744,6 +1814,7 @@ async function handleEditClientSubmit(event) {
                 ? buildUpdatedUserRecord(user, updatedChartData, requestData)
                 : user
         ));
+        rebuildClientListIndexes();
         state.users = getActiveLibraryItems();
         renderUsers();
         closeEditClientDialog();
@@ -1915,6 +1986,7 @@ async function handleDelete(userId, button) {
 
         state.people = state.people.filter((user) => String(user.person_id || user.user_id) !== String(userId));
         state.charts = state.charts.filter((chart) => String(chart.chart_id || chart.user_id) !== String(userId));
+        rebuildClientListIndexes();
         state.users = getActiveLibraryItems();
 
         if (state.users.length === 0) {
@@ -2897,6 +2969,7 @@ async function submitNewChart() {
             return;
         }
         state.charts = [chart, ...state.charts];
+        rebuildClientListIndexes();
         state.users = getActiveLibraryItems();
         renderUsers();
         showToast(t('page.clients.newChart.successToast'), 'success');
