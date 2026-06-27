@@ -426,4 +426,21 @@
     .chat-widget-header {
         padding-left: 8px;
     }
+
+    /* Touch ergonomics: 16px input prevents iOS zoom-on-focus; 40px controls. */
+    .chat-input {
+        font-size: 16px;
+    }
+
+    .chat-send,
+    .chat-mic {
+        width: 40px;
+        height: 40px;
+    }
+
+    .chat-widget-icon,
+    .chat-widget-close {
+        width: 40px;
+        height: 40px;
+    }
 }

@@ -649,6 +649,7 @@
 
     function bindEvents() {
         initForecastNewActionsMenu();
+        initMobilePanelSwitch();
 
         // Solar year stepper — delegated via the regular stepper container
         document.addEventListener('click', (event) => {
@@ -1414,6 +1415,53 @@
                 setSynastryMode(btn.dataset.synastryMode);
             });
         });
+    }
+
+    // ── Mobile-only panel switcher (Natal ⇄ Forecast) ─────────────────────────
+    // On phones (≤640px) only one side panel is shown at a time; this toggles a
+    // body class that the mobile CSS uses to hide the other panel. Fully guarded
+    // so desktop is never affected: with no interaction (or no JS) no class is
+    // set and both panels simply stack, as in the existing ≤860px layout. When
+    // the viewport grows past 640px any class is cleared so the desktop layout
+    // never inherits a hidden panel.
+    function initMobilePanelSwitch() {
+        const switchEl = document.getElementById('forecastNewMobilePanelSwitch');
+        if (!switchEl) return;
+        const buttons = Array.from(switchEl.querySelectorAll('[data-mobile-panel]'));
+        const mq = window.matchMedia('(max-width: 640px)');
+
+        const setPanel = (panel) => {
+            const isProg = panel === 'prog';
+            document.body.classList.toggle('fn-mobile-panel-prog', isProg);
+            document.body.classList.toggle('fn-mobile-panel-natal', !isProg);
+            buttons.forEach((btn) => {
+                const active = btn.dataset.mobilePanel === panel;
+                btn.classList.toggle('is-active', active);
+                btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+        };
+
+        const syncToViewport = () => {
+            if (mq.matches) {
+                if (!document.body.classList.contains('fn-mobile-panel-prog')
+                    && !document.body.classList.contains('fn-mobile-panel-natal')) {
+                    setPanel('natal');
+                }
+            } else {
+                document.body.classList.remove('fn-mobile-panel-prog', 'fn-mobile-panel-natal');
+            }
+        };
+
+        buttons.forEach((btn) => {
+            btn.addEventListener('click', () => setPanel(btn.dataset.mobilePanel));
+        });
+
+        if (typeof mq.addEventListener === 'function') {
+            mq.addEventListener('change', syncToViewport);
+        } else if (typeof mq.addListener === 'function') {
+            mq.addListener(syncToViewport);
+        }
+        syncToViewport();
     }
 
     function setSynastryMode(mode) {

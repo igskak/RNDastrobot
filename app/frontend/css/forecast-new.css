@@ -3607,3 +3607,224 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
     opacity: 0.6;
     font-size: 11px;
 }
+
+/* ============================================================
+   MOBILE WORK SCREEN (phones, ≤640px) — ADDITIVE ONLY.
+   Desktop-first: every rule below is scoped to the phone tier and
+   must not change desktop/tablet (>640px) rendering. This block
+   builds on the existing ≤860px single-column collapse and only
+   tightens phone ergonomics + converts edge-anchored popovers to
+   native bottom sheets. See MOBILE_WORKSCREEN_PLAN.md.
+   ============================================================ */
+
+/* Mobile-only panel switcher (Natal ⇄ Forecast). Hidden by default so
+   desktop/tablet never render it; revealed only inside the ≤640px tier. */
+.forecast-new-mobile-panel-switch {
+    display: none;
+}
+
+@media (max-width: 640px) {
+    /* ---- Wheel hero: size to fit portrait & landscape without overflow.
+       Replaces the 64vh + 440px floor inherited from the ≤860px block. ---- */
+    .forecast-new-center {
+        min-height: auto;
+    }
+
+    .forecast-new-wheel-shell {
+        height: clamp(320px, 52vh, 520px);
+        min-height: 0;
+    }
+
+    /* The shared `page-arrive` entrance (styles.css) uses animation-fill-mode:both,
+       which leaves a non-none transform + filter:blur(0) on the header and layout
+       after it ends. A non-none transform/filter makes an element the containing
+       block for fixed descendants — which would anchor our fixed bottom sheets to
+       the (tall) content instead of the viewport, and disturb the sticky switcher.
+       Neutralize it on phones only so fixed/sticky resolve to the viewport. Desktop
+       keeps its entrance untouched (this is inside the ≤640px tier). */
+    .forecast-new-header,
+    .forecast-new-layout:not(.hidden) {
+        animation: none;
+        transform: none;
+        filter: none;
+    }
+
+    /* ---- Compact header (kept in flow; wraps into tidy rows) ---- */
+    .forecast-new-header {
+        padding: 6px 8px;
+        gap: 6px;
+        row-gap: 6px;
+    }
+
+    .forecast-new-client {
+        max-width: calc(100% - 96px);
+    }
+
+    .forecast-new-client h2 {
+        font-size: 15px;
+    }
+
+    /* Method-layer chips on their own full-width, horizontally scrollable row.
+       (No mask/clip here on purpose: a mask would create a containing block and
+       trap the fixed bottom-sheet popovers nested inside.) */
+    .forecast-new-layer-toggles {
+        order: 4;
+        flex-basis: 100%;
+        max-width: 100%;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 2px;
+    }
+
+    .forecast-new-layer-toggles::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* ---- Sticky panel switcher, pinned just under the wheel ---- */
+    .forecast-new-mobile-panel-switch {
+        display: flex;
+        order: -1; /* groups with the wheel (also order:-1); DOM order puts it right after */
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        gap: 4px;
+        margin: 6px 8px 0;
+        padding: 4px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: rgba(249, 247, 242, 0.94);
+        backdrop-filter: blur(12px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .forecast-new-mobile-panel-btn {
+        flex: 1;
+        min-height: 40px;
+        padding: 8px 12px;
+        border: none;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--text-secondary);
+        font-family: var(--font-ui);
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        cursor: pointer;
+        transition: background var(--transition), color var(--transition);
+    }
+
+    .forecast-new-mobile-panel-btn.is-active {
+        background: var(--accent);
+        color: #fff;
+        box-shadow: var(--shadow-sm);
+    }
+
+    /* Show one side panel at a time. JS sets the body class; with no JS no class
+       is set and BOTH panels stay stacked (the current ≤860px behavior) — so
+       reachability never depends on JS. */
+    body.fn-mobile-panel-natal #forecastNewProgPanel { display: none; }
+    body.fn-mobile-panel-prog  #forecastNewNatalPanel { display: none; }
+
+    /* Drop the desktop glass on side panels here (they are opaque, full-width on
+       phones) so any fixed-positioned descendant resolves to the viewport. */
+    .forecast-new-side-panel {
+        backdrop-filter: none;
+    }
+
+    /* ---- Moment (date / time / place) card: in-flow expander, not an overlay.
+       Avoids the .side-panel backdrop-filter fixed-trap and reads as a natural
+       disclosure that pushes content down. ---- */
+    .forecast-new-moment-card {
+        position: static;
+        margin: 6px 8px 2px;
+        border-radius: var(--radius-md);
+    }
+
+    /* ---- Wheel zoom / view / settings buttons: comfortable tap targets ---- */
+    .forecast-new-zoom-controls .zoom-btn {
+        width: 36px;
+        height: 36px;
+        min-height: 36px;
+        font-size: 16px;
+    }
+
+    /* ---- Datebar: keep clear of the fixed chat launcher (bottom-right, 44px) ---- */
+    .forecast-new-datebar {
+        bottom: 12px;
+        max-width: calc(100% - 24px);
+    }
+
+    /* ============ Bottom sheets ============
+       Edge-anchored desktop popovers/menus become native bottom sheets on phones.
+       All selectors are page-scoped and ≤640px only; the existing outside-click +
+       Escape handlers still dismiss them. Their ancestors carry no
+       transform/filter/backdrop-filter, so position:fixed resolves to the viewport. */
+    .forecast-new-page .settings-panel,
+    .forecast-new-layer-popover,
+    .forecast-new-add-layer-menu,
+    .forecast-new-add-layer-menu--floating,
+    .forecast-new-page .chart-actions-menu,
+    .forecast-new-page .forecast-nav-dropdown {
+        position: fixed;
+        inset: auto 0 0 0;
+        width: 100%;
+        max-width: 100%;
+        transform: none;
+        margin: 0;
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        max-height: 82vh;
+        overflow-y: auto;
+        box-shadow: 0 -18px 44px rgba(26, 22, 20, 0.22);
+        animation: forecastNewSheetUp 0.26s var(--motion-soft);
+        z-index: 1200;
+    }
+
+    /* Grabber handle on the larger sheets */
+    .forecast-new-page .settings-panel::before,
+    .forecast-new-layer-popover::before,
+    .forecast-new-add-layer-menu::before,
+    .forecast-new-page .chart-actions-menu::before {
+        content: "";
+        display: block;
+        flex: 0 0 auto;
+        width: 40px;
+        height: 4px;
+        margin: 0 auto 10px;
+        border-radius: 999px;
+        background: var(--border);
+    }
+
+    .forecast-new-page .settings-panel {
+        width: 100%;
+        padding: 12px 14px calc(14px + env(safe-area-inset-bottom));
+    }
+
+    .forecast-new-page .chart-actions-menu .chart-action-item {
+        display: flex;
+        align-items: center;
+        min-height: 44px;
+    }
+
+    @keyframes forecastNewSheetUp {
+        from { transform: translateY(100%); }
+        to   { transform: translateY(0); }
+    }
+
+    /* ---- Touch targets: panel tabs + planet matrix checkboxes ---- */
+    .forecast-new-tabs .panel-tab {
+        min-height: 44px;
+    }
+
+    .forecast-new-page .natal-matrix-table input {
+        width: 20px;
+        height: 20px;
+    }
+
+    .forecast-new-planets-table td {
+        padding-top: 9px;
+        padding-bottom: 9px;
+    }
+}
