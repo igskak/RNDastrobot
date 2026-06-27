@@ -7894,6 +7894,29 @@
         scheduleDisplayedMomentLayerLoad({ layerId: state.selectedRightLayerId });
     }
 
+    async function cmdEnsureMomentLayer(preferredMethod = 'transit') {
+        const selected = selectedLayerInstance();
+        if (selected && isMomentMethod(selected.method)) return selected;
+
+        const fallback = instancesOfMethod(preferredMethod)[0]
+            || state.activeLayers.find((inst) => isMomentMethod(inst.method));
+        if (fallback) {
+            state.selectedRightLayerId = fallback.id;
+            state.activeRightMethodTab = fallback.method;
+            applyConfigToScratch(fallback);
+            normalizeActiveLayers();
+            renderRightLayerTabs();
+            scheduleRightPanelRender();
+            syncControlsFromState();
+            schedulePersist();
+            return fallback;
+        }
+
+        await activateLayer(preferredMethod);
+        const created = selectedLayerInstance();
+        return created && isMomentMethod(created.method) ? created : null;
+    }
+
     async function cmdRestoreWorkspace(snapshot) {
         if (!snapshot) return { ok: false, error: { code: 'no_snapshot' } };
         state.activeLayers = Array.isArray(snapshot.activeLayers)
@@ -7923,19 +7946,39 @@
         const args = action.args || {};
         switch (action.name) {
             case 'set_transit_date': {
+                const target = await cmdEnsureMomentLayer('transit');
+                if (!target) {
+                    return {
+                        ok: false,
+                        error: {
+                            code: 'no_moment_layer',
+                            message: 'No transit/prognostic layer is available',
+                        },
+                    };
+                }
                 const [, currentTime] = splitTargetDatetime(
                     getDisplayedMomentDateTime() || state.selectedDateTime || '');
                 const time = args.time || currentTime || '00:00:00';
                 cmdApplyMoment(`${args.date}T${time}`);
-                return { ok: true, label: args.date };
+                return { ok: true, layerId: target.id, label: args.date };
             }
             case 'step_date': {
+                const target = await cmdEnsureMomentLayer('transit');
+                if (!target) {
+                    return {
+                        ok: false,
+                        error: {
+                            code: 'no_moment_layer',
+                            message: 'No transit/prognostic layer is available',
+                        },
+                    };
+                }
                 const dir = args.direction === 'backward' ? -1 : 1;
                 const unit = args.unit === 'week' ? 'day' : args.unit;
                 const amount = (args.unit === 'week' ? args.amount * 7 : args.amount) * dir;
                 const base = getDisplayedMomentDateTime() || state.selectedDateTime;
                 cmdApplyMoment(addDateTimeUnit(base, unit, amount));
-                return { ok: true };
+                return { ok: true, layerId: target.id };
             }
             case 'add_layer': {
                 await activateLayer(args.method);
