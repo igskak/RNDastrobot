@@ -13,7 +13,7 @@ This document consolidates what used to live in four separate files (`MONETIZATI
 **Locked founder constraints:**
 - Timeline: **24 months to $1M ARR**.
 - Funding: **grants + revenue only, no dilution** (the ~$640k profit at $1M is reinvested during the ramp, not taken).
-- Legal: **Czech s.r.o.** — incorporate early; it gates all EU grants and is clean for Paddle MoR.
+- Legal: **Czech s.r.o.** — incorporate early; it gates all EU grants and is clean for the Stripe MoR setup.
 - Team: founder + a part-time bizdev hire added at the M1→M2 boundary.
 - Audience: Ukrainian + English-speaking (international/diaspora) astrologers, **RU as a UI language, NOT a Russia-market play**.
 
@@ -113,12 +113,12 @@ Research-backed (RU sources strong; Western validated). Confidence noted. Verbat
 | **Base** | **15%** | **4%** | **~20,000** | **~120/mo** |
 | Bull | 22% | 3% | ~13,600 | ~90/mo |
 
-**Steady-state P&L at $1M:** Paddle MoR ~6%, variable COGS ~8%, fixed infra ~2% → **~84% gross margin (~$840k)**; after ~$200k/yr marketing → **~$640k contribution before team**. A genuinely profitable $1M business.
+**Steady-state P&L at $1M:** MoR fees (Stripe Managed Payments) ~6%* *(estimate — confirm the actual Stripe Managed Payments rate)*, variable COGS ~8%, fixed infra ~2% → **~84% gross margin (~$840k)**; after ~$200k/yr marketing → **~$640k contribution before team**. A genuinely profitable $1M business.
 
 **LTV:CAC:** gross-margin LTV ≈ $590; healthy 3:1 allows up to ~$195 CAC; blended target **$60–100** (school/influencer/referral-heavy) → 6:1–10:1.
 
 ### 4.4 Billing architecture (swap-friendly — eng spec)
-Entitlements already decouple `plan_code` → feature flags. Required: `billing_subscriptions` + `billing_events` (idempotency) tables; a `BillingProvider` interface + Paddle adapter (`create_checkout`, `create_portal_url`, `parse_webhook`, `redeem_credit`); `reconcile_subscription(...)` as the **only** writer of `plan_code`; enforce `plan_expires_at` + grace; **fix two security holes** (`DEFAULT_PLAN_CODE` pro→expired; `PATCH /me/plan` must stop being a free self-grant — only webhooks write standard/pro); signed+idempotent webhook; migration grandfathering current astrologers (solo→standard, keep pro; new signups → trial). Provider = Paddle (Merchant of Record), architecture stays swap-friendly.
+Entitlements already decouple `plan_code` → feature flags. Required: `billing_subscriptions` + `billing_events` (idempotency) tables; a `BillingProvider` interface + Stripe adapter (`create_checkout`, `create_portal_url`, `parse_webhook`, `redeem_credit`); `reconcile_subscription(...)` as the **only** writer of `plan_code`; enforce `plan_expires_at` + grace; **fix two security holes** (`DEFAULT_PLAN_CODE` pro→expired; `PATCH /me/plan` must stop being a free self-grant — only webhooks write standard/pro); signed+idempotent webhook; migration grandfathering current astrologers (solo→standard, keep pro; new signups → trial). **Provider = Stripe (Stripe Managed Payments, Merchant of Record); config-selected via `get_billing_provider()`, Paddle kept as an alternate adapter. The swap-friendly design already proved out in the Paddle→Stripe migration (migration 047, Stripe adapter + webhook route shipped).**
 
 ---
 
@@ -127,7 +127,7 @@ Entitlements already decouple `plan_code` → feature flags. Required: `billing_
 - **Why it matters:** the real cost of "give a month, get a month" is mostly **forgone revenue** (~$39 referrer free month), not COGS → effective referral CAC ≈ **$50–58**, beating paid CAC ($60–100). Real but modest advantage; consider a smaller fixed credit ($15–20) to blunt forgone-revenue cost, especially on Standard.
 - **Mechanics (double-sided):** referee → 21-day trial (vs 14) or 50% off first month; referrer → 1 month credit **only after the referee's first successful payment** (qualified conversion), never on trial signup.
 - **Abuse prevention:** reward only on first *paid* invoice; cap rewards/referrer/month; dedupe by payment fingerprint + email + IP; block self-referral.
-- **Data model:** `referral_codes`, `referrals` (status: pending/qualified/rewarded/void), `account_credits` (provider-agnostic ledger; only the BillingProvider adapter redeems — never store Paddle credit IDs in entitlements/referral tables).
+- **Data model:** `referral_codes`, `referrals` (status: pending/qualified/rewarded/void), `account_credits` (provider-agnostic ledger; only the BillingProvider adapter redeems — never store provider-specific credit IDs (Stripe/Paddle) in entitlements/referral tables).
 - **Viral surface:** AI session summary exported with subtle "made with Steliara" branding → every client deliverable is a marketing impression. In-app referral CTA after the first successful consultation (peak-satisfaction moment).
 - **Localized RU/UK/EN from day one** (invites, reward emails, dashboard).
 
@@ -167,8 +167,8 @@ Entitlements already decouple `plan_code` → feature flags. Required: `billing_
 | Q8 | 22–24 | ~3,000 | **$1M** | LATAM upside, retention/onboarding compounding |
 
 ### 6.4 Critical-path dependencies (in order)
-1. Register Czech s.r.o. (gates grants + Paddle).
-2. Ship billing MVP (two tiers + reverse-trial + Paddle) so you can charge the first 20.
+1. Register Czech s.r.o. (gates grants + Stripe MoR).
+2. Ship billing MVP (two tiers + reverse-trial + Stripe) so you can charge the first 20.
 3. Get 20 paid (M0) — proof.
 4. Apply for grant(s) using that proof.
 5. Deploy grant into PLG + referral engine.
@@ -229,7 +229,7 @@ Demand-gen for a visual audience that lives on IG. Angle off the hero (capture t
 ### 9.1 Live status (2026-06-25)
 - **GA4 + PostHog both live in prod** via `runtime-config.js` + `app/frontend/js/analytics.js` (`window.AstroAnalytics.track`), Consent Mode v2 + GDPR banner. GA4 Measurement ID `G-4G1GPY7RBE` (property 543015333). Verified: page_view + custom events reach GA4 realtime.
 - **Conversion event = `sign_up`** (login.js register success) — marked key event in GA4, imported into Google Ads as a Sign-up conversion (Primary, Active). *(Note: `trial_start` is NOT used — the prod event is `sign_up`.)*
-- Other events emitted: `login`, `begin_checkout`, `consultation_started`, `consultation_completed`. `purchase` still needs server-side Measurement Protocol from the Paddle webhook (follow-up).
+- Other events emitted: `login`, `begin_checkout`, `consultation_started`, `consultation_completed`. `purchase` still needs server-side Measurement Protocol from the Stripe webhook (follow-up).
 
 ### 9.2 North Star + funnel
 **NSM = Weekly Active Astrologers doing real client work** — distinct astrologer/week who did ≥1 value action (`chart.create`, `client.natal.open`, or `call_session.create`). Vanity logins excluded.
@@ -246,7 +246,7 @@ Server-side telemetry lives in `audit_events` (~70 actions already emitted — e
 | G2 | No UTM/referrer at signup | channel mix, "international demand by channel" | **P1** |
 | G3 | No `session_id` | sessions, session length, bounce | P2 |
 | G4 | No raw pageviews server-side | navigation/funnel, time-on-page | P2 (PostHog covers client-side) |
-| G5 | No billing events | trial→paid, MRR, ARR, churn, LTV:CAC | P2 (Paddle webhooks) |
+| G5 | No billing events | trial→paid, MRR, ARR, churn, LTV:CAC | P2 (Stripe webhooks) |
 G1 is a dependency of G2/G3 — ship the JSONB column first. P1 items are cheap and unblock the most grant-relevant story (channels).
 
 ### 9.4 Grant KPI framing (CzechInvest rubric)
@@ -276,7 +276,7 @@ RU / UK / EN must cover the **entire** monetization + marketing surface from lau
 1. **P0 outreach** — DM practicing astrologers in UA/RU Telegram/IG + line up 2–3 school conversations (assets: outreach templates — to draft via `cold-email`/`copywriting`).
 2. **White-glove onboard** each signup; capture verbatim + a testimonial.
 3. **Czech s.r.o. + CzechInvest pre-incubation consultation** (gates grants).
-4. **Billing MVP** (two tiers + reverse-trial + Paddle) so the first 20 can pay.
+4. **Billing MVP** (two tiers + reverse-trial + Stripe) so the first 20 can pay.
 5. In parallel: start P1 content/SEO (3 alternative pages) + 10 directory submissions.
 
 **Assets still to produce (offer):** outreach templates (RU/UK/EN), directory submission list + texts, 4-week content calendar, Meta/IG ad angles, conquest landing page, refreshed Google RSAs.

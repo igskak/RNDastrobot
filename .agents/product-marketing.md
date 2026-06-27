@@ -9,7 +9,7 @@
 **What it does:** Calculates natal charts and forecasts on the Swiss Ephemeris engine, keeps a profile for every person you read for (notes, recordings, charts), and runs video consultations with recording, transcription, and AI session summaries. A chat assistant answers questions fast from the chart data.
 **Product category:** Professional astrology practice software (chart calculation + practice management + consultations).
 **Product type:** SaaS (web app).
-**Business model:** Subscription. 14-day full-feature reverse trial (no card). Two sellable tiers: **Standard $24/mo** ($19 annual) and **Pro $39/mo** ($29 annual). Lapsed accounts go read-only (`expired`), not locked. Double-sided referral ("give a month, get a month"). Provider: Paddle (Merchant of Record).
+**Business model:** Subscription. 14-day full-feature reverse trial (no card). Two sellable tiers: **Standard $24/mo** ($19 annual) and **Pro $39/mo** ($29 annual). Lapsed accounts go read-only (`expired`), not locked. Double-sided referral ("give a month, get a month"). Provider: Stripe (Stripe Managed Payments, Merchant of Record); Paddle kept as an alternate adapter.
 
 ## Target Audience
 **Target companies:** Solo practitioners and small practices — not enterprises. Primarily Ukrainian + English-speaking (international/diaspora) astrologers; RU as a third UI language. **Not a Russia-market play.**
