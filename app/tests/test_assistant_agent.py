@@ -115,6 +115,7 @@ def _service_with_fake_transits(record):
     service.db = None
     service.default_timezone = "Europe/Kiev"
     service.default_anchor_date = date(2026, 6, 11)
+    service.default_workspace = None
 
     class _FakeTransits:
         def find_aspect_passes(self, **kwargs):
@@ -252,3 +253,28 @@ def test_chat_rejects_invalid_command_arg_and_emits_no_action(monkeypatch):
     assert result["actions"] == []
     assert result["tool_results"][0]["result"]["status"] == "error"
     assert result["tool_results"][0]["result"]["error"] == "bad_year"
+
+
+def test_chat_injects_workspace_context_for_grounding(monkeypatch):
+    service = _service_with_fake_transits({})
+    service.default_workspace = {
+        "wheelView": "single",
+        "layers": ["transit", "solar_return", "bogus"],  # bogus must be filtered out
+        "date": "2026-03-14",
+        "houseSystem": "K",
+    }
+    scripted = [_msg(content="Ок.")]
+    monkeypatch.setattr(svc, "is_openai_configured", lambda: True)
+    client = _FakeClient(scripted)
+    monkeypatch.setattr(svc, "get_openai_client", lambda: client)
+
+    service.chat(uuid4(), [{"role": "user", "content": "что активно?"}])
+
+    sent = client.chat.completions.calls[0]["messages"]
+    context = next(
+        m["content"] for m in sent
+        if m["role"] == "system" and "Current workspace state" in m["content"])
+    assert "wheel view: single" in context
+    assert "active layers: transit, solar_return" in context  # bogus filtered
+    assert "transit date: 2026-03-14" in context
+    assert "house system: K" in context

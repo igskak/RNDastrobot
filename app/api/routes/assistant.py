@@ -254,6 +254,14 @@ class ChatRequest(BaseModel):
         None, description="Date currently selected in the chart workspace.")
     conversation_id: Optional[UUID] = Field(
         None, description="Existing conversation to append to; omit to start a new one.")
+    workspace: Optional[dict] = Field(
+        None,
+        description=(
+            "Compact live-workspace summary (wheelView, layers, date, solarYear, "
+            "houseSystem) for grounding follow-up commands. Advisory only; the "
+            "server validates each field and never derives access from it."
+        ),
+    )
     messages: List[ChatMessage] = Field(..., min_length=1, max_length=MAX_CHAT_MESSAGES)
 
     @field_validator('timezone')
@@ -305,6 +313,7 @@ def chat(
         db_session=db,
         default_timezone=request.timezone,
         default_anchor_date=request.anchor_date,
+        default_workspace=request.workspace,
     )
     messages = [m.model_dump() for m in request.messages]
     try:

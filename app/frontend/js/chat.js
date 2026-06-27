@@ -34,6 +34,29 @@ function withLocaleHeaders(headers = {}) {
     return headers;
 }
 
+// Human labels for workspace actions returned by the agent. PR5 moves these to
+// the i18n catalogs; kept inline (RU) here so PR3 touches no catalog files.
+const ACTION_TEXT = {
+    set_transit_date: (a) => `дата транзита → ${a.args.date}${a.args.time ? ' ' + a.args.time : ''}`,
+    step_date: (a) => `сдвиг даты ${a.args.direction === 'backward' ? '−' : '+'}${a.args.amount} ${a.args.unit}`,
+    add_layer: (a) => `добавить слой «${a.args.method}»`,
+    build_solar: (a) => `соляр на ${a.args.year}`,
+    set_solar_year: (a) => `год соляра → ${a.args.year}`,
+    set_wheel_view: (a) => `вид колеса → ${a.args.view}`,
+    set_house_system: (a) => `система домов → ${a.args.system}`,
+    remove_layer: (a) => `убрать слой «${a.args.method || a.args.layer_id}»`,
+    clear_layers: () => 'убрать все слои',
+};
+
+function actionLabel(action) {
+    const fn = ACTION_TEXT[action?.name];
+    try {
+        return fn ? fn(action) : (action?.name || 'действие');
+    } catch {
+        return action?.name || 'действие';
+    }
+}
+
 class ChatWidget {
     constructor() {
         this.widget = document.getElementById('chatWidget');
@@ -430,6 +453,7 @@ class ChatWidget {
         this.isLoading = true;
         this.send.disabled = true;
         const loadingMsg = this.addLoadingMessage();
+        const workspace = this.buildWorkspaceSummary();
 
         try {
             const response = await fetch(`${API_BASE_URL}/assistant/chat`, {
@@ -440,6 +464,7 @@ class ChatWidget {
                     user_id: userId,
                     timezone,
                     ...(anchorDate ? { anchor_date: anchorDate } : {}),
+                    ...(workspace ? { workspace } : {}),
                     ...(this.conversationId ? { conversation_id: this.conversationId } : {}),
                     messages: this.history,
                 }),
@@ -453,8 +478,11 @@ class ChatWidget {
             const reply = data.reply || '';
             if (data.conversation_id) this.conversationId = data.conversation_id;
             loadingMsg.remove();
-            this.addMessage(reply, 'assistant');
-            this.history.push({ role: 'assistant', content: reply });
+            if (reply) {
+                this.addMessage(reply, 'assistant');
+                this.history.push({ role: 'assistant', content: reply });
+            }
+            this.handleActions(data.actions || []);
         } catch (error) {
             console.error('Assistant chat error:', error);
             loadingMsg.remove();
@@ -464,6 +492,117 @@ class ChatWidget {
             this.send.disabled = false;
             this.input.focus();
         }
+    }
+
+    // --- workspace actions (PR3) ----------------------------------------
+
+    // Compact, serializable snapshot for grounding follow-up commands on the
+    // server. Drops the heavy undo snapshot from describeState().
+    buildWorkspaceSummary() {
+        try {
+            const s = window.ForecastCommands?.describeState?.();
+            if (!s) return null;
+            return {
+                wheelView: s.wheelView,
+                houseSystem: s.houseSystem,
+                date: s.date,
+                solarYear: s.solarYear,
+                layers: Array.isArray(s.activeLayers) ? s.activeLayers.map((l) => l.method) : [],
+            };
+        } catch {
+            return null;
+        }
+    }
+
+    handleActions(actions) {
+        if (!Array.isArray(actions) || actions.length === 0) return;
+        if (!window.ForecastCommands) {
+            this.addActionNote(t('page.chart.chat.actionsUnavailable')
+                || 'Действия недоступны на этом экране.', { error: true });
+            return;
+        }
+        for (const action of actions) {
+            if (!action || !action.name) continue;
+            // Destructive commands wait for an explicit tap; reversible ones auto-apply.
+            if (action.confirm === 'confirm') {
+                this.renderConfirmAction(action);
+            } else {
+                void this.runAction(action);
+            }
+        }
+    }
+
+    async runAction(action) {
+        let result;
+        try {
+            result = await window.ForecastCommands.apply(action);
+        } catch (error) {
+            result = { ok: false, error: { message: String(error) } };
+        }
+        if (result && result.ok) {
+            // The workspace toast (with Undo) is shown by the facade's onApplied hook;
+            // here we just leave a compact record in the thread.
+            this.addActionNote(`✓ ${actionLabel(action)}`, { applied: true });
+        } else {
+            const code = result?.error?.code ? ` (${result.error.code})` : '';
+            this.addActionNote(`⚠ Не удалось: ${actionLabel(action)}${code}`, { error: true });
+        }
+    }
+
+    renderConfirmAction(action) {
+        const wrap = document.createElement('div');
+        wrap.className = 'chat-message assistant chat-action-confirm';
+        const content = document.createElement('div');
+        content.className = 'message-content';
+
+        const label = document.createElement('div');
+        label.textContent = `Подтвердите: ${actionLabel(action)}`;
+
+        const buttons = document.createElement('div');
+        buttons.className = 'chat-action-buttons';
+        buttons.style.cssText = 'display:flex;gap:8px;margin-top:8px';
+
+        const applyBtn = document.createElement('button');
+        applyBtn.type = 'button';
+        applyBtn.textContent = 'Применить';
+        applyBtn.style.cssText = 'border:0;border-radius:8px;padding:5px 12px;cursor:pointer;'
+            + 'background:#3b6cff;color:#fff;font:inherit';
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.textContent = 'Отмена';
+        cancelBtn.style.cssText = 'border:0;border-radius:8px;padding:5px 12px;cursor:pointer;'
+            + 'background:rgba(0,0,0,0.08);font:inherit';
+
+        applyBtn.addEventListener('click', async () => {
+            applyBtn.disabled = true;
+            cancelBtn.disabled = true;
+            await this.runAction(action);
+            wrap.remove();
+        });
+        cancelBtn.addEventListener('click', () => {
+            this.addActionNote(`Отменено: ${actionLabel(action)}`);
+            wrap.remove();
+        });
+
+        buttons.append(applyBtn, cancelBtn);
+        content.append(label, buttons);
+        wrap.appendChild(content);
+        this.messages.appendChild(wrap);
+        this.messages.scrollTop = this.messages.scrollHeight;
+    }
+
+    addActionNote(text, { applied = false, error = false } = {}) {
+        const div = document.createElement('div');
+        div.className = 'chat-message assistant chat-action-note';
+        const content = document.createElement('div');
+        content.className = 'message-content';
+        content.textContent = text;
+        content.style.cssText = `font-size:12px;opacity:0.9;${
+            error ? 'color:#c0392b;' : applied ? 'color:#1e7a46;' : ''}`;
+        div.appendChild(content);
+        this.messages.appendChild(div);
+        this.messages.scrollTop = this.messages.scrollHeight;
     }
 
     toggleRecording() {

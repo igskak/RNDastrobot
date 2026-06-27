@@ -397,6 +397,39 @@ def build_tools() -> List[Dict]:
     return build_query_tools() + build_command_tools()
 
 
+def _workspace_context_line(ws: Dict) -> str:
+    """A short, defensively-validated summary of the live workspace.
+
+    Fed to the model so follow-up commands resolve against current state
+    ("убери транзиты", "теперь синглом"). Every field is validated against the
+    command vocabularies, so client junk can neither bloat nor poison the prompt.
+    """
+    if not isinstance(ws, dict):
+        return ""
+    parts: List[str] = []
+    view = ws.get("wheelView") or ws.get("view")
+    if view in WHEEL_VIEWS:
+        parts.append(f"wheel view: {view}")
+    layers = ws.get("layers")
+    if isinstance(layers, list):
+        valid = [str(m) for m in layers if m in WORKSPACE_LAYER_METHODS]
+        parts.append("active layers: " + (", ".join(valid) if valid else "none"))
+    date_value = ws.get("date")
+    if isinstance(date_value, str) and _valid_date(date_value):
+        parts.append(f"transit date: {date_value}")
+    solar_year = ws.get("solarYear")
+    if isinstance(solar_year, int) and not isinstance(solar_year, bool) \
+            and SOLAR_YEAR_MIN <= solar_year <= SOLAR_YEAR_MAX:
+        parts.append(f"solar year: {solar_year}")
+    house = ws.get("houseSystem")
+    if house in HOUSE_SYSTEM_CODES:
+        parts.append(f"house system: {house}")
+    if not parts:
+        return ""
+    return ("Current workspace state (context for grounding commands; do not act "
+            "unless explicitly asked) — " + "; ".join(parts) + ".")
+
+
 class AstroAssistantService:
     def __init__(
         self,
@@ -404,10 +437,12 @@ class AstroAssistantService:
         *,
         default_timezone: str = "UTC",
         default_anchor_date: Optional[date_type] = None,
+        default_workspace: Optional[Dict] = None,
     ):
         self.db = db_session
         self.default_timezone = default_timezone
         self.default_anchor_date = default_anchor_date or date_type.today()
+        self.default_workspace = default_workspace
         self._transit_service: Optional[TransitService] = None
 
     def _transits(self) -> TransitService:
@@ -484,6 +519,11 @@ class AstroAssistantService:
         client = get_openai_client()
         tools = build_tools()
         convo: List[Dict] = [{"role": "system", "content": _SYSTEM_PROMPT}]
+        workspace = getattr(self, "default_workspace", None)
+        if workspace:
+            context_line = _workspace_context_line(workspace)
+            if context_line:
+                convo.append({"role": "system", "content": context_line})
         convo.extend({"role": m["role"], "content": m.get("content", "")} for m in messages)
 
         tool_results: List[Dict] = []
