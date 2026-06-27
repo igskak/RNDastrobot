@@ -3656,6 +3656,12 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
         row-gap: 6px;
     }
 
+    .forecast-new-header:has(.forecast-new-layer-popover:not(.hidden)),
+    .forecast-new-header:has(.forecast-new-add-layer-menu:not(.hidden)),
+    .forecast-new-header:has(.chart-actions-menu:not(.hidden)) {
+        z-index: 1300;
+    }
+
     .forecast-new-client {
         max-width: calc(100% - 96px);
     }
@@ -3681,6 +3687,31 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
 
     .forecast-new-layer-toggles::-webkit-scrollbar {
         display: none;
+    }
+
+    /* The visible phone layer UI is `rightLayerTabs`; the older header toggle
+       strip still owns the layer config dialogs. When one of those dialogs is
+       opened from the phone add-layer menu, expose only the fixed dialog, not
+       the hidden header chips. */
+    .forecast-new-layer-toggles:has(.forecast-new-layer-popover:not(.hidden)) {
+        display: block;
+        order: 0;
+        flex: 0 0 0;
+        flex-basis: 0;
+        width: 0;
+        height: 0;
+        max-width: 0;
+        padding: 0;
+        overflow: visible;
+    }
+
+    .forecast-new-layer-toggles:has(.forecast-new-layer-popover:not(.hidden)) .forecast-new-layer-chip {
+        display: none;
+    }
+
+    .forecast-new-layer-toggles:has(.forecast-new-layer-popover:not(.hidden)) .forecast-new-layer-pop {
+        position: static;
+        display: block;
     }
 
     /* ---- Sticky panel switcher, pinned just under the wheel ---- */
@@ -3779,7 +3810,7 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
         overflow-y: auto;
         box-shadow: 0 -18px 44px rgba(26, 22, 20, 0.22);
         animation: forecastNewSheetUp 0.26s var(--motion-soft);
-        z-index: 1200;
+        z-index: 1300;
     }
 
     /* Grabber handle on the larger sheets */

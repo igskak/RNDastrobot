@@ -1098,6 +1098,12 @@
 
         refs.forecastNewSettingsToggle?.addEventListener('click', (event) => {
             event.stopPropagation();
+            const willOpen = refs.forecastNewSettingsPanel?.classList.contains('hidden');
+            if (willOpen) {
+                closeBodyActionMenu();
+                closeAllLayerPopovers(null);
+                closeAddLayerMenu();
+            }
             refs.forecastNewSettingsPanel?.classList.toggle('hidden');
         });
         refs.compositeMethodSelect?.addEventListener('change', () => {
@@ -1169,7 +1175,10 @@
         refs.forecastNewZoomIn?.addEventListener('click', () => setViewport({ zoom: state.viewport.zoom * 1.18 }));
         refs.forecastNewZoomOut?.addEventListener('click', () => setViewport({ zoom: state.viewport.zoom / 1.18 }));
         document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape') closeBodyActionMenu();
+            if (event.key === 'Escape') {
+                closeBodyActionMenu();
+                closeSettingsPanel();
+            }
         });
         document.addEventListener('chart:body-contextmenu', (event) => {
             const detail = event?.detail || {};
@@ -1210,6 +1219,12 @@
         if (!toggle || !menu) return;
 
         const setOpen = (isOpen) => {
+            if (isOpen) {
+                closeSettingsPanel();
+                closeAllLayerPopovers(null);
+                closeAddLayerMenu();
+                closeBodyActionMenu();
+            }
             menu.classList.toggle('hidden', !isOpen);
             toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         };
@@ -1226,6 +1241,10 @@
         });
     }
 
+    function closeSettingsPanel() {
+        refs.forecastNewSettingsPanel?.classList.add('hidden');
+    }
+
     // ── Поповеры параметров слоёв (Дирекции / Соляр / Синастрия) ──────────────
     function getLayerPopover(layer) {
         return document.querySelector(`[data-layer-popover="${layer}"]`);
@@ -1240,6 +1259,9 @@
     function openLayerPopover(layer) {
         const pop = getLayerPopover(layer);
         if (!pop) return;
+        closeSettingsPanel();
+        closeAddLayerMenu();
+        closeBodyActionMenu();
         closeAllLayerPopovers(pop);
         pop.classList.remove('hidden');
         // Фокус на первый осмысленный контрол поповера
@@ -1384,6 +1406,11 @@
         const toggle = refs.rightLayerTabs?.querySelector('[data-add-layer-toggle]');
         if (!menu || !toggle) return;
         const willOpen = menu.classList.contains('hidden');
+        if (willOpen) {
+            closeSettingsPanel();
+            closeAllLayerPopovers(null);
+            closeBodyActionMenu();
+        }
         menu.classList.toggle('hidden', !willOpen);
         toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
         if (willOpen) {

@@ -37,13 +37,23 @@
 | D6 | **Touch ergonomics**: chat input `16px` (no iOS zoom) + chat buttons 40px (inside the existing chat 640 block); matrix checkbox cells, panel tabs, stepper segments ≥ 44px tappable; scroll-fade affordance on the layer-tab row. | "Super convenient": every control comfortably tappable; discoverable horizontal scroll. |
 | D7 | **Reuse existing i18n keys** for the switcher (`page.forecastNew.natalPanelTitle`, `page.chart.nav.forecast`). No new locale keys. | Keeps the i18n keyspace lean; both keys already exist in en/ru/uk. |
 | D8 | now:lunar / now:hours corner-exclusive reachability on phones = **follow-up**, not a blocker. | Corners hidden ≤860 already; blocks default to panel-tab hosts per code. Edge case dependent on a user's saved layout. |
+| D9 | **Layer config sheets remain DOM-owned by the hidden header toggle strip, but the strip becomes a zero-size visible host while a phone sheet is open.** | The real phone layer UI is `rightLayerTabs`; moving DOM would be riskier. CSS `:has(...)` exposes only the fixed sheet and keeps old header chips hidden. |
+| D10 | **Top-level mobile sheets are mutually exclusive, Escape closes settings, and header-owned sheets temporarily raise the header stacking context.** | Prevents settings from intercepting add-layer/menu taps, and keeps layer sheets above the sticky panel switcher and chat launcher. |
 
 ## Files touched
-- `app/frontend/css/forecast-new.css` — one trailing `@media (max-width:640px)` block + one base `display:none` rule for the switcher (inert on desktop).
+- `app/frontend/css/forecast-new.css` — one trailing `@media (max-width:640px)` block + one base `display:none` rule for the switcher (inert on desktop); phone-only layer-sheet host and stacking fixes.
 - `app/frontend/css/chat-widget.css` — additions inside the existing `@media (max-width:640px)` block only.
 - `app/frontend/forecast-new.html` — add the `.forecast-new-mobile-panel-switch` element (i18n labels, ARIA).
-- `app/frontend/js/forecast-new.js` — one guarded listener (toggle `fn-mobile-panel-prog`; clear it above 640).
+- `app/frontend/js/forecast-new.js` — one guarded listener (toggle `fn-mobile-panel-prog`; clear it above 640) plus shared overlay close behavior for settings/actions/layer sheets.
 - Rebuild bundles (`npm --prefix app run build:frontend`); commit regenerated `bundles/**` + `js/bundles/**` + the HTML version markers together.
+
+## Implementation follow-up — 2026-06-27
+
+- Found during live phone QA: adding Direction/Solar/Synastry from the mobile `+` menu added the layer, but the config sheet stayed invisible because its DOM lives under `.forecast-new-layer-toggles`, which is hidden in the current workspace header.
+- Found during live phone QA: opening settings and then opening add-layer left settings above the new sheet; Escape also did not close settings.
+- Found during live phone QA: once exposed, header-owned layer sheets could render under the sticky Natal/Forecast switcher and chat launcher because the header's own stacking context was lower than those fixed/sticky controls.
+- Implemented D9/D10 as additive mobile behavior: no new locale keys, no desktop layout changes, and no new framework/dependency.
+- Browser QA passed at 390x844, 641x844, and 1280x900: no horizontal overflow; phone shows one data panel at a time; 641px shows both stacked panels; 1280px keeps the three-column grid.
 
 ## Verification (Definition of Done)
 - `npm --prefix app run build:frontend` + `npm --prefix app run check:frontend-build` (clean diff).
