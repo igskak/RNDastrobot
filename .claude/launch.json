@@ -10,8 +10,8 @@
     {
       "name": "aurora-demo",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "--directory", "app/frontend"],
-      "port": 8777,
+      "runtimeArgs": ["-m", "http.server", "8799", "--directory", "app/frontend"],
+      "port": 8799,
       "autoPort": true
     }
   ]

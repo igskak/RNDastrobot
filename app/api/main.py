@@ -128,6 +128,12 @@ async def static_cache_headers(request: Request, call_next):
         "/consultation-join.html",
         "/pricing.html",
         "/terms.html",
+        "/cloud-astrology-software",
+        "/cloud-astrology-software.html",
+        "/astrologer-workspace",
+        "/astrologer-workspace.html",
+        "/astrology-practice-management",
+        "/astrology-practice-management.html",
     }
 
     if path in frontend_document_paths or path.startswith(("/client/", "/consultation/")):
@@ -397,6 +403,34 @@ async def terms_page():
     if os.path.exists(page_path):
         return FileResponse(page_path)
     raise HTTPException(status_code=404, detail="Terms page not found")
+
+
+def _serve_frontend_page(filename: str):
+    page_path = os.path.join(FRONTEND_PATH, filename)
+    if os.path.exists(page_path):
+        return FileResponse(page_path)
+    raise HTTPException(status_code=404, detail="Page not found")
+
+
+@app.get("/cloud-astrology-software")
+@app.get("/cloud-astrology-software.html")
+async def conquest_cloud_page():
+    """SEO conquest landing: cloud astrology software (desktop-switch)."""
+    return _serve_frontend_page("cloud-astrology-software.html")
+
+
+@app.get("/astrologer-workspace")
+@app.get("/astrologer-workspace.html")
+async def conquest_workspace_page():
+    """SEO conquest landing: astrologer workspace with recorded sessions."""
+    return _serve_frontend_page("astrologer-workspace.html")
+
+
+@app.get("/astrology-practice-management")
+@app.get("/astrology-practice-management.html")
+async def conquest_practice_page():
+    """SEO category landing: astrology practice management software."""
+    return _serve_frontend_page("astrology-practice-management.html")
 
 
 @app.get("/health")
