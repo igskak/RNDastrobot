@@ -1831,6 +1831,15 @@
         let panning = false;
         let startX = 0;
         let startY = 0;
+        let touchMode = null;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let pinchStartDistance = 0;
+        let pinchStartZoom = 1;
+        let pinchStartMidX = 0;
+        let pinchStartMidY = 0;
+        let pinchStartPanX = 0;
+        let pinchStartPanY = 0;
         shell.addEventListener('wheel', (event) => {
             event.preventDefault();
             setViewport({ zoom: state.viewport.zoom * (event.deltaY > 0 ? 0.96 : 1.04) });
@@ -1853,6 +1862,83 @@
             if (panning) schedulePersist();
             panning = false;
         });
+        const touchDistance = (a, b) => Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
+        const touchMidpoint = (a, b) => ({
+            x: (a.clientX + b.clientX) / 2,
+            y: (a.clientY + b.clientY) / 2,
+        });
+        const startPinch = (touches) => {
+            const first = touches[0];
+            const second = touches[1];
+            const mid = touchMidpoint(first, second);
+            touchMode = 'pinch';
+            pinchStartDistance = Math.max(1, touchDistance(first, second));
+            pinchStartZoom = state.viewport.zoom;
+            pinchStartMidX = mid.x;
+            pinchStartMidY = mid.y;
+            pinchStartPanX = state.viewport.panX;
+            pinchStartPanY = state.viewport.panY;
+        };
+        shell.addEventListener('touchstart', (event) => {
+            if (event.touches.length === 1) {
+                const touch = event.touches[0];
+                touchMode = 'pan';
+                touchStartX = touch.clientX;
+                touchStartY = touch.clientY;
+            } else if (event.touches.length >= 2) {
+                event.preventDefault();
+                startPinch(event.touches);
+            }
+        }, { passive: false });
+        shell.addEventListener('touchmove', (event) => {
+            if (event.touches.length >= 2) {
+                event.preventDefault();
+                const first = event.touches[0];
+                const second = event.touches[1];
+                if (touchMode !== 'pinch' || !pinchStartDistance) {
+                    startPinch(event.touches);
+                }
+                const mid = touchMidpoint(first, second);
+                const zoom = pinchStartZoom * (touchDistance(first, second) / pinchStartDistance);
+                setViewport({
+                    zoom,
+                    panX: pinchStartPanX + (mid.x - pinchStartMidX),
+                    panY: pinchStartPanY + (mid.y - pinchStartMidY),
+                }, { persist: false });
+                return;
+            }
+            if (event.touches.length === 1 && touchMode === 'pan') {
+                event.preventDefault();
+                const touch = event.touches[0];
+                const dx = touch.clientX - touchStartX;
+                const dy = touch.clientY - touchStartY;
+                touchStartX = touch.clientX;
+                touchStartY = touch.clientY;
+                setViewport({ panX: state.viewport.panX + dx, panY: state.viewport.panY + dy }, { persist: false });
+            }
+        }, { passive: false });
+        shell.addEventListener('touchend', (event) => {
+            if (event.touches.length >= 2) {
+                startPinch(event.touches);
+                return;
+            }
+            if (event.touches.length === 1) {
+                const touch = event.touches[0];
+                touchMode = 'pan';
+                touchStartX = touch.clientX;
+                touchStartY = touch.clientY;
+                schedulePersist();
+                return;
+            }
+            if (touchMode) schedulePersist();
+            touchMode = null;
+            pinchStartDistance = 0;
+        }, { passive: true });
+        shell.addEventListener('touchcancel', () => {
+            if (touchMode) schedulePersist();
+            touchMode = null;
+            pinchStartDistance = 0;
+        }, { passive: true });
     }
 
     function setViewport(next, options = {}) {

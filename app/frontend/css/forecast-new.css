@@ -3617,7 +3617,7 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
    native bottom sheets. See MOBILE_WORKSCREEN_PLAN.md.
    ============================================================ */
 
-/* Mobile-only panel switcher (Natal ⇄ Forecast). Hidden by default so
+/* Mobile-only panel switcher (Primary ⇄ Comparison). Hidden by default so
    desktop/tablet never render it; revealed only inside the ≤640px tier. */
 .forecast-new-mobile-panel-switch {
     display: none;

@@ -264,6 +264,10 @@
       "layersAria": "Шари прогностики",
       "backToClients": "До практики",
       "natalPanelTitle": "Натал",
+      "mobilePanels": {
+        "primary": "Основна",
+        "comparison": "Порівняння"
+      },
       "leftLayerAria": "Метод основної карти",
       "birthDateTimeLabel": "Дата народження / час",
       "dateTimeLabel": "Дата / час",

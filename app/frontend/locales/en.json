@@ -264,6 +264,10 @@
       "layersAria": "Forecast layers",
       "backToClients": "Back to practice",
       "natalPanelTitle": "Natal",
+      "mobilePanels": {
+        "primary": "Primary",
+        "comparison": "Comparison"
+      },
       "leftLayerAria": "Primary chart method",
       "birthDateTimeLabel": "Birth date / time",
       "dateTimeLabel": "Date / time",

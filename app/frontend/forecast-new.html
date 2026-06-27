@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecastNew.pageTitle">Forecast</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=643d3e43b73b">
-    <script>window.__APP_BUILD_ID__ = '643d3e43b73b';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=d8cbeb87c509">
+    <script>window.__APP_BUILD_ID__ = 'd8cbeb87c509';</script>
 </head>
 <body class="forecast-new-page workspace-compact forecast-workspace-compact">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -379,11 +379,11 @@
             </div>
         </section>
 
-        <!-- Mobile-only panel switcher (Natal ⇄ Forecast). CSS-hidden on desktop;
+        <!-- Mobile-only panel switcher (Primary ⇄ Comparison). CSS-hidden on desktop;
              shown only at ≤640px to surface one side panel at a time. -->
         <div class="forecast-new-mobile-panel-switch" id="forecastNewMobilePanelSwitch" role="group">
-            <button type="button" class="forecast-new-mobile-panel-btn is-active" data-mobile-panel="natal" aria-pressed="true" data-i18n="page.forecastNew.natalPanelTitle">Natal</button>
-            <button type="button" class="forecast-new-mobile-panel-btn" data-mobile-panel="prog" aria-pressed="false" data-i18n="page.chart.nav.forecast">Forecast</button>
+            <button type="button" class="forecast-new-mobile-panel-btn is-active" data-mobile-panel="natal" aria-pressed="true" data-i18n="page.forecastNew.mobilePanels.primary">Primary</button>
+            <button type="button" class="forecast-new-mobile-panel-btn" data-mobile-panel="prog" aria-pressed="false" data-i18n="page.forecastNew.mobilePanels.comparison">Comparison</button>
         </div>
 
         <aside class="side-panel right-panel forecast-new-side-panel" id="forecastNewProgPanel">
@@ -565,7 +565,7 @@
     </section>
 
     <script src="/runtime-config.js"></script>
-    <script src="/js/analytics.js?v=643d3e43b73b"></script>
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=643d3e43b73b"></script>
+    <script src="/js/analytics.js?v=d8cbeb87c509"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=d8cbeb87c509"></script>
 </body>
 </html>

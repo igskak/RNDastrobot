@@ -264,6 +264,10 @@
       "layersAria": "Слои прогностики",
       "backToClients": "К практике",
       "natalPanelTitle": "Натал",
+      "mobilePanels": {
+        "primary": "Основная",
+        "comparison": "Сравнение"
+      },
       "leftLayerAria": "Метод основной карты",
       "birthDateTimeLabel": "Дата рождения / время",
       "dateTimeLabel": "Дата / время",
