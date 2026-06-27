@@ -23,6 +23,7 @@ import '../js/forecast-new-panel-layout.js';
 import '../js/forecast-source-utils.js';
 import '../js/chart-source-panel.js';
 import '../js/save-chart-modal.js';
+import '../js/forecast-commands.js';
 import '../js/forecast-new.js';
 import '../js/forecast-nav-menu.js';
 import '../js/chat.js';

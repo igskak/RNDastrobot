@@ -7841,4 +7841,214 @@
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
     // ── End cold-start overlay ────────────────────────────────────────────────
+
+    // ── Command facade (PR1 — ASSISTANT_ACTIONS_IMPLEMENTATION_PLAN.md) ───────
+    // A narrow, curated surface for natural-language / voice "actions". chat.js
+    // (PR3) and a future command palette call window.ForecastCommands.apply();
+    // the agent only emits validated intents. We never expose raw internals —
+    // only this adapter, which routes each command through the SAME imperative
+    // functions the UI controls already use (so behavior/persistence match).
+    function cmdClone(value) {
+        return value == null ? value : JSON.parse(JSON.stringify(value));
+    }
+
+    // Serializable slice restored by the `restore_workspace` undo inverse.
+    function cmdSnapshot() {
+        return {
+            activeLayers: cmdClone(state.activeLayers),
+            selectedRightLayerId: state.selectedRightLayerId,
+            selectedDateTime: state.selectedDateTime,
+            timezone: state.timezone,
+            location: cmdClone(state.location),
+            solarYear: state.solarYear,
+            solarLocation: cmdClone(state.solarLocation),
+            synastryMode: state.synastryMode,
+            synastryPartnerId: state.synastryPartnerId,
+            synastryManual: cmdClone(state.synastryManual),
+        };
+    }
+
+    function cmdDescribeState() {
+        const [date, time] = splitTargetDatetime(state.selectedDateTime || '');
+        return {
+            date,
+            time,
+            datetime: state.selectedDateTime,
+            timezone: state.timezone,
+            solarYear: state.solarYear,
+            wheelView: state.wheelView,
+            houseSystem: state.pageSettings?.houseSystem || 'P',
+            activeLayers: state.activeLayers.map((l) => ({ id: l.id, method: l.method })),
+            selectedLayerId: state.selectedRightLayerId,
+            snapshot: cmdSnapshot(),
+        };
+    }
+
+    // Mirror the stepper's side-effect tail so a programmatic moment change
+    // refreshes controls, meta, persistence, and reloads the selected layer.
+    function cmdApplyMoment(value) {
+        applyDisplayedMomentDateTime(value);
+        syncControlsFromState();
+        updatePrognosticTimeMeta();
+        schedulePersist();
+        scheduleDisplayedMomentLayerLoad({ layerId: state.selectedRightLayerId });
+    }
+
+    async function cmdRestoreWorkspace(snapshot) {
+        if (!snapshot) return { ok: false, error: { code: 'no_snapshot' } };
+        state.activeLayers = Array.isArray(snapshot.activeLayers)
+            ? snapshot.activeLayers.map((l) => ({ ...l }))
+            : [];
+        state.selectedRightLayerId = snapshot.selectedRightLayerId
+            || state.activeLayers[0]?.id || '';
+        state.selectedDateTime = snapshot.selectedDateTime || state.selectedDateTime;
+        state.targetDatetime = state.selectedDateTime;
+        state.timezone = snapshot.timezone || state.timezone;
+        state.location = snapshot.location || state.location;
+        if (snapshot.solarYear != null) state.solarYear = snapshot.solarYear;
+        state.solarLocation = snapshot.solarLocation ?? state.solarLocation;
+        state.synastryMode = snapshot.synastryMode ?? state.synastryMode;
+        state.synastryPartnerId = snapshot.synastryPartnerId ?? state.synastryPartnerId;
+        state.synastryManual = snapshot.synastryManual ?? state.synastryManual;
+        normalizeActiveLayers();
+        syncControlsFromState();
+        renderRightLayerTabs();
+        scheduleRightPanelRender();
+        schedulePersist();
+        await loadActiveLayers();
+        return { ok: true };
+    }
+
+    async function cmdDispatch(action) {
+        const args = action.args || {};
+        switch (action.name) {
+            case 'set_transit_date': {
+                const [, currentTime] = splitTargetDatetime(
+                    getDisplayedMomentDateTime() || state.selectedDateTime || '');
+                const time = args.time || currentTime || '00:00:00';
+                cmdApplyMoment(`${args.date}T${time}`);
+                return { ok: true, label: args.date };
+            }
+            case 'step_date': {
+                const dir = args.direction === 'backward' ? -1 : 1;
+                const unit = args.unit === 'week' ? 'day' : args.unit;
+                const amount = (args.unit === 'week' ? args.amount * 7 : args.amount) * dir;
+                const base = getDisplayedMomentDateTime() || state.selectedDateTime;
+                cmdApplyMoment(addDateTimeUnit(base, unit, amount));
+                return { ok: true };
+            }
+            case 'add_layer': {
+                await activateLayer(args.method);
+                const inst = instancesOfMethod(args.method).slice(-1)[0];
+                return { ok: true, layerId: inst?.id, label: args.method };
+            }
+            case 'build_solar':
+            case 'set_solar_year': {
+                if (!hasActiveMethod('solar_return')) await activateLayer('solar_return');
+                await applySolarYear(args.year);
+                const inst = instancesOfMethod('solar_return').slice(-1)[0];
+                return { ok: true, layerId: inst?.id, label: String(args.year) };
+            }
+            case 'set_wheel_view': {
+                setWheelView(args.view);
+                return { ok: true, label: args.view };
+            }
+            case 'set_house_system': {
+                const code = normalizeHouseSystemCode(args.system);
+                state.pageSettings.houseSystem = code;
+                await updateHouseSystem(code);
+                syncControlsFromState();
+                return { ok: true, label: code };
+            }
+            case 'remove_layer': {
+                if (args.layer_id) await removeLayerInstance(args.layer_id);
+                else await deactivateMethod(args.method);
+                return { ok: true, label: args.layer_id || args.method };
+            }
+            case 'clear_layers': {
+                const methods = [...new Set(activeLayerMethods())];
+                for (const method of methods) {
+                    await deactivateMethod(method); // eslint-disable-line no-await-in-loop
+                }
+                return { ok: true };
+            }
+            case 'restore_workspace':
+                return cmdRestoreWorkspace(args.snapshot);
+            default:
+                return { ok: false, error: { code: 'unknown_command', message: action.name } };
+        }
+    }
+
+    // Minimal toast + Undo. PR5 moves the copy into the i18n catalogs and the
+    // styling into CSS; kept self-contained here so PR1 touches no templates.
+    const CMD_TOAST_LABELS = {
+        set_transit_date: 'Дата транзита изменена',
+        step_date: 'Дата сдвинута',
+        add_layer: 'Слой добавлен',
+        build_solar: 'Соляр построен',
+        set_solar_year: 'Год соляра изменён',
+        set_wheel_view: 'Вид колеса изменён',
+        set_house_system: 'Система домов изменена',
+        remove_layer: 'Слой удалён',
+        clear_layers: 'Слои очищены',
+    };
+    let cmdToastTimer = null;
+
+    function cmdToastElement() {
+        let el = document.getElementById('forecastCommandToast');
+        if (el) return el;
+        el = document.createElement('div');
+        el.id = 'forecastCommandToast';
+        el.setAttribute('role', 'status');
+        el.style.cssText = [
+            'position:fixed', 'left:50%', 'bottom:24px', 'transform:translateX(-50%)',
+            'z-index:1200', 'display:none', 'align-items:center', 'gap:12px',
+            'max-width:90vw', 'padding:10px 14px', 'border-radius:12px',
+            'background:rgba(20,22,28,0.92)', 'color:#fff',
+            'font:13px/1.35 -apple-system,system-ui,sans-serif',
+            'box-shadow:0 8px 24px rgba(0,0,0,0.25)',
+        ].join(';');
+        const text = document.createElement('span');
+        text.setAttribute('data-cmd-toast-text', '');
+        const undo = document.createElement('button');
+        undo.type = 'button';
+        undo.setAttribute('data-cmd-toast-undo', '');
+        undo.textContent = 'Отменить';
+        undo.style.cssText = 'border:0;background:rgba(255,255,255,0.16);color:#fff;'
+            + 'border-radius:8px;padding:5px 10px;cursor:pointer;font:inherit';
+        undo.addEventListener('click', async () => {
+            undo.disabled = true;
+            await window.ForecastCommands?.undo?.();
+            cmdHideToast();
+        });
+        el.append(text, undo);
+        document.body.appendChild(el);
+        return el;
+    }
+
+    function cmdHideToast() {
+        const el = document.getElementById('forecastCommandToast');
+        if (el) el.style.display = 'none';
+        clearTimeout(cmdToastTimer);
+    }
+
+    function cmdShowToast(applied) {
+        const el = cmdToastElement();
+        const base = CMD_TOAST_LABELS[applied.name] || 'Готово';
+        const label = applied.result?.label;
+        el.querySelector('[data-cmd-toast-text]').textContent = label ? `${base}: ${label}` : base;
+        const undo = el.querySelector('[data-cmd-toast-undo]');
+        undo.hidden = !applied.undoable;
+        undo.disabled = false;
+        el.style.display = 'flex';
+        clearTimeout(cmdToastTimer);
+        cmdToastTimer = setTimeout(cmdHideToast, 8000);
+    }
+
+    if (typeof window !== 'undefined' && window.ForecastCommandsKit) {
+        window.ForecastCommands = window.ForecastCommandsKit.createForecastCommands(
+            { describeState: cmdDescribeState, dispatch: cmdDispatch },
+            { onApplied: cmdShowToast },
+        );
+    }
 })();
