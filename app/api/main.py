@@ -96,11 +96,8 @@ if cors_origins:
 @app.middleware("http")
 async def head_as_get(request: Request, call_next):
     if request.method == "HEAD":
-        get_request = Request(
-            scope={**request.scope, "method": "GET"},
-            receive=request.receive,
-        )
-        response = await call_next(get_request)
+        request.scope["method"] = "GET"
+        response = await call_next(request)
         return Response(
             status_code=response.status_code,
             headers=dict(response.headers),
