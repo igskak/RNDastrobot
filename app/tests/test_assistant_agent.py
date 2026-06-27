@@ -13,9 +13,13 @@ import app.services.astro_assistant_service as svc
 from app.services.astro_assistant_service import (
     ASPECT_TYPE_NAMES,
     AstroAssistantService,
+    COMMAND_REGISTRY,
     NATAL_BODY_NAMES,
     TRANSIT_BODY_NAMES,
+    WORKSPACE_LAYER_METHODS,
     build_tools,
+    handle_command,
+    validate_command,
 )
 
 
@@ -44,16 +48,56 @@ class _FakeClient:
         self.chat = SimpleNamespace(completions=_FakeCompletions(scripted))
 
 
+def _tool_by_name(tools, name):
+    return next(t for t in tools if t["function"]["name"] == name)
+
+
 def test_build_tools_exposes_enums_and_hides_user_id():
     tools = build_tools()
-    assert len(tools) == 1
-    params = tools[0]["function"]["parameters"]
+    by_name = {t["function"]["name"] for t in tools}
+    aspect = _tool_by_name(tools, "find_aspect_passes")
+    params = aspect["function"]["parameters"]
     props = params["properties"]
     assert "user_id" not in props  # server-bound, never model-controlled
     assert set(props["transit_body"]["enum"]) == set(TRANSIT_BODY_NAMES)
     assert set(props["natal_body"]["enum"]) == set(NATAL_BODY_NAMES)
     assert set(props["aspect_type"]["enum"]) == set(ASPECT_TYPE_NAMES)
     assert params["required"] == ["transit_body", "natal_body", "aspect_type"]
+    # PR2: command tools sit alongside the query tool, generated from the registry.
+    assert set(COMMAND_REGISTRY).issubset(by_name)
+    assert "restore_workspace" not in by_name  # internal undo inverse is never exposed
+    add_layer = _tool_by_name(tools, "add_layer")
+    assert set(add_layer["function"]["parameters"]["properties"]["method"]["enum"]) \
+        == set(WORKSPACE_LAYER_METHODS)
+
+
+def test_validate_command_enforces_enums_and_ranges():
+    assert validate_command("set_wheel_view", {"view": "single"}) == ""
+    assert validate_command("set_wheel_view", {"view": "triple"}) == "bad_view"
+    assert validate_command("add_layer", {"method": "transit"}) == ""
+    assert validate_command("add_layer", {"method": "lunar"}) == "bad_method"
+    assert validate_command("set_solar_year", {"year": 2027}) == ""
+    assert validate_command("set_solar_year", {"year": 1700}) == "bad_year"
+    assert validate_command("set_solar_year", {"year": True}) == "bad_year"  # bool is not a year
+    assert validate_command("set_transit_date", {"date": "2026-03-14"}) == ""
+    assert validate_command("set_transit_date", {"date": "2026-02-30"}) == "bad_date"
+    assert validate_command("set_transit_date", {"date": "2026-03-14", "time": "25:00"}) == "bad_time"
+    assert validate_command("step_date", {"amount": 2, "unit": "week", "direction": "backward"}) == ""
+    assert validate_command("step_date", {"amount": 0, "unit": "day", "direction": "forward"}) == "bad_amount"
+    assert validate_command("remove_layer", {}) == "bad_target"
+    assert validate_command("remove_layer", {"layer_id": "transit-2"}) == ""
+
+
+def test_handle_command_emits_action_or_error():
+    receipt, action = handle_command("set_wheel_view", {"view": "single"})
+    assert receipt == {"status": "applied_clientside", "command": "set_wheel_view"}
+    assert action == {"name": "set_wheel_view", "args": {"view": "single"}, "confirm": "auto"}
+
+    receipt, action = handle_command("remove_layer", {"method": "transit"})
+    assert action["confirm"] == "confirm"  # destructive → client shows a confirm chip
+
+    receipt, action = handle_command("set_solar_year", {"year": 1700})
+    assert receipt["status"] == "error" and action is None  # invalid → no action emitted
 
 
 def test_assistant_defaults_to_compact_modern_model():
@@ -169,3 +213,42 @@ def test_explicit_next_contact_is_not_rewritten():
     assert captured["anchor_date"] == date(2028, 1, 15)
     assert captured["start_date"] is None
     assert captured["end_date"] is None
+
+
+def test_chat_emits_command_action_without_server_mutation(monkeypatch):
+    captured = {}
+    service = _service_with_fake_transits(captured)  # transit service must NOT be touched
+
+    scripted = [
+        _msg(tool_calls=[_tool_call(
+            "c1", "set_wheel_view", '{"view":"single"}')]),
+        _msg(content="Показал одиночную карту."),
+    ]
+    monkeypatch.setattr(svc, "is_openai_configured", lambda: True)
+    monkeypatch.setattr(svc, "get_openai_client", lambda: _FakeClient(scripted))
+
+    result = service.chat(uuid4(), [{"role": "user", "content": "покажи одиночную карту"}])
+
+    assert result["actions"] == [
+        {"name": "set_wheel_view", "args": {"view": "single"}, "confirm": "auto"}]
+    assert result["reply"] == "Показал одиночную карту."
+    assert result["tool_results"][0]["result"]["status"] == "applied_clientside"
+    assert captured == {}  # command never reached the deterministic transit service
+
+
+def test_chat_rejects_invalid_command_arg_and_emits_no_action(monkeypatch):
+    service = _service_with_fake_transits({})
+
+    scripted = [
+        _msg(tool_calls=[_tool_call(
+            "c1", "set_solar_year", '{"year":1700}')]),
+        _msg(content="Год вне диапазона."),
+    ]
+    monkeypatch.setattr(svc, "is_openai_configured", lambda: True)
+    monkeypatch.setattr(svc, "get_openai_client", lambda: _FakeClient(scripted))
+
+    result = service.chat(uuid4(), [{"role": "user", "content": "построй соляр на 1700"}])
+
+    assert result["actions"] == []
+    assert result["tool_results"][0]["result"]["status"] == "error"
+    assert result["tool_results"][0]["result"]["error"] == "bad_year"

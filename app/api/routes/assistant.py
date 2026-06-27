@@ -269,6 +269,9 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     reply: str
     tool_results: List[dict] = Field(default_factory=list)
+    # Workspace commands the client should apply (PR2). The server validates the
+    # model's intent but never executes it — workspace state lives in the browser.
+    actions: List[dict] = Field(default_factory=list)
     iterations: int
     max_iterations_reached: bool
     conversation_id: Optional[str] = None
@@ -313,6 +316,14 @@ def chat(
             detail="Assistant request failed",
         )
 
+    applied_actions = result.get("actions", []) or []
+    if applied_actions:
+        logger.info(
+            "assistant applied %d workspace action(s): %s",
+            len(applied_actions),
+            ",".join(a.get("name", "?") for a in applied_actions),
+        )
+
     # Persist the turn (history + cost/latency). Never fails the response.
     conv_id = log_turn(
         db,
@@ -328,6 +339,7 @@ def chat(
     return ChatResponse(
         reply=result.get("reply", ""),
         tool_results=result.get("tool_results", []),
+        actions=applied_actions,
         iterations=result.get("iterations", 0),
         max_iterations_reached=result.get("max_iterations_reached", False),
         conversation_id=str(conv_id) if conv_id else None,

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 from datetime import date as date_type
 from typing import Callable, Dict, List, Optional
@@ -40,6 +41,205 @@ ASPECT_TYPE_NAMES = frozenset({
     'Semisquare', 'Quintile', 'Binonagon', 'Sentagon', 'Tridecile',
     'Sesquiquadrate', 'Biquintile', 'Quincunx',
 })
+
+# ── Workspace command tools (PR2) ───────────────────────────────────────────
+# The agent can also DRIVE the workspace. These tools are NOT executed on the
+# server (workspace state lives in the browser): the loop validates the model's
+# intent against these vocabularies, returns a receipt so the model can confirm
+# in words, and emits a structured action for the client to apply. Vocabularies
+# mirror app/frontend/js/forecast-commands.js — drift here is a bug.
+WORKSPACE_LAYER_METHODS = (
+    'transit', 'progression', 'direction', 'solar_return', 'synastry_partner')
+WHEEL_VIEWS = ('multi', 'single')
+HOUSE_SYSTEM_CODES = ('P', 'K', 'O', 'R', 'C', 'E', 'W', 'X', 'H', 'T', 'B', 'M')
+STEP_UNITS = ('second', 'minute', 'hour', 'day', 'week', 'month', 'year')
+STEP_DIRECTIONS = ('forward', 'backward')
+SOLAR_YEAR_MIN, SOLAR_YEAR_MAX = 1900, 2100
+STEP_AMOUNT_MIN, STEP_AMOUNT_MAX = 1, 9999
+
+# confirm:'auto'    → client applies immediately (toast + undo).
+# confirm:'confirm' → client shows a confirm chip; for destructive commands only.
+COMMAND_REGISTRY = {
+    'set_transit_date': {'confirm': 'auto'},
+    'step_date': {'confirm': 'auto'},
+    'add_layer': {'confirm': 'auto'},
+    'build_solar': {'confirm': 'auto'},
+    'set_solar_year': {'confirm': 'auto'},
+    'set_wheel_view': {'confirm': 'auto'},
+    'set_house_system': {'confirm': 'auto'},
+    'remove_layer': {'confirm': 'confirm'},
+    'clear_layers': {'confirm': 'confirm'},
+}
+
+_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_TIME_RE = re.compile(r"^(\d{2}):(\d{2})(?::(\d{2}))?$")
+
+
+def _valid_date(value) -> bool:
+    if not isinstance(value, str) or not _DATE_RE.match(value):
+        return False
+    try:
+        date_type.fromisoformat(value)
+        return True
+    except ValueError:
+        return False
+
+
+def _valid_time(value) -> bool:
+    if not isinstance(value, str):
+        return False
+    m = _TIME_RE.match(value)
+    if not m:
+        return False
+    hh, mm = int(m.group(1)), int(m.group(2))
+    ss = int(m.group(3)) if m.group(3) else 0
+    return hh <= 23 and mm <= 59 and ss <= 59
+
+
+def _valid_int(value, lo: int, hi: int) -> bool:
+    if isinstance(value, bool):
+        return False
+    if isinstance(value, float) and not value.is_integer():
+        return False
+    try:
+        n = int(value)
+    except (TypeError, ValueError):
+        return False
+    return lo <= n <= hi
+
+
+def validate_command(name: str, args: Dict) -> str:
+    """Return '' if the command args are valid, else a machine error code."""
+    if name == 'set_transit_date':
+        if not _valid_date(args.get('date')):
+            return 'bad_date'
+        if args.get('time') is not None and not _valid_time(args.get('time')):
+            return 'bad_time'
+        return ''
+    if name == 'step_date':
+        if args.get('unit') not in STEP_UNITS:
+            return 'bad_unit'
+        if args.get('direction') not in STEP_DIRECTIONS:
+            return 'bad_direction'
+        if not _valid_int(args.get('amount'), STEP_AMOUNT_MIN, STEP_AMOUNT_MAX):
+            return 'bad_amount'
+        return ''
+    if name == 'add_layer':
+        if args.get('method') not in WORKSPACE_LAYER_METHODS:
+            return 'bad_method'
+        return ''
+    if name in ('build_solar', 'set_solar_year'):
+        if not _valid_int(args.get('year'), SOLAR_YEAR_MIN, SOLAR_YEAR_MAX):
+            return 'bad_year'
+        return ''
+    if name == 'set_wheel_view':
+        if args.get('view') not in WHEEL_VIEWS:
+            return 'bad_view'
+        return ''
+    if name == 'set_house_system':
+        if args.get('system') not in HOUSE_SYSTEM_CODES:
+            return 'bad_house_system'
+        return ''
+    if name == 'remove_layer':
+        if not args.get('layer_id') and args.get('method') not in WORKSPACE_LAYER_METHODS:
+            return 'bad_target'
+        return ''
+    if name == 'clear_layers':
+        return ''
+    return 'unknown_command'
+
+
+def _normalize_command_args(name: str, args: Dict) -> Dict:
+    """Echo only the validated, known args (never raw model junk)."""
+    if name == 'set_transit_date':
+        out = {'date': args['date']}
+        if args.get('time') is not None:
+            out['time'] = args['time']
+        return out
+    if name == 'step_date':
+        return {'amount': int(args['amount']), 'unit': args['unit'], 'direction': args['direction']}
+    if name == 'add_layer':
+        return {'method': args['method']}
+    if name in ('build_solar', 'set_solar_year'):
+        return {'year': int(args['year'])}
+    if name == 'set_wheel_view':
+        return {'view': args['view']}
+    if name == 'set_house_system':
+        return {'system': args['system']}
+    if name == 'remove_layer':
+        if args.get('layer_id'):
+            return {'layer_id': str(args['layer_id'])}
+        return {'method': args['method']}
+    return {}
+
+
+def handle_command(name: str, raw_args: Dict):
+    """Validate a workspace command. Returns (receipt, action|None).
+
+    The server NEVER executes commands — workspace state lives in the browser.
+    A valid command yields a structured action for the client and a synthetic
+    receipt so the model can confirm in words; an invalid one yields an error
+    receipt and no action.
+    """
+    meta = COMMAND_REGISTRY.get(name)
+    if meta is None:
+        return {'status': 'error', 'error': f'unknown_command:{name}'}, None
+    error = validate_command(name, raw_args or {})
+    if error:
+        return {'status': 'error', 'error': error}, None
+    action = {
+        'name': name,
+        'args': _normalize_command_args(name, raw_args or {}),
+        'confirm': meta['confirm'],
+    }
+    return {'status': 'applied_clientside', 'command': name}, action
+
+
+def build_command_tools() -> List[Dict]:
+    """Command tool schemas (client-applied). Enums mirror forecast-commands.js."""
+    methods = sorted(WORKSPACE_LAYER_METHODS)
+
+    def fn(name, description, properties, required=None):
+        schema = {'type': 'object', 'properties': properties, 'additionalProperties': False}
+        if required:
+            schema['required'] = required
+        return {'type': 'function', 'function': {
+            'name': name, 'description': description, 'parameters': schema}}
+
+    return [
+        fn('set_transit_date',
+           "Set the transit/prognostic date on the active chart's selected layer.",
+           {'date': {'type': 'string', 'description': 'YYYY-MM-DD'},
+            'time': {'type': 'string', 'description': 'HH:mm or HH:mm:ss (optional)'}},
+           ['date']),
+        fn('step_date',
+           'Move the current transit date forward or backward by N units.',
+           {'amount': {'type': 'integer', 'minimum': STEP_AMOUNT_MIN, 'maximum': STEP_AMOUNT_MAX},
+            'unit': {'type': 'string', 'enum': sorted(STEP_UNITS)},
+            'direction': {'type': 'string', 'enum': sorted(STEP_DIRECTIONS)}},
+           ['amount', 'unit', 'direction']),
+        fn('add_layer', 'Add a prognostic layer to the workspace.',
+           {'method': {'type': 'string', 'enum': methods}}, ['method']),
+        fn('build_solar', 'Build and show a solar return for a year.',
+           {'year': {'type': 'integer', 'minimum': SOLAR_YEAR_MIN, 'maximum': SOLAR_YEAR_MAX}},
+           ['year']),
+        fn('set_solar_year', 'Change the solar-return year.',
+           {'year': {'type': 'integer', 'minimum': SOLAR_YEAR_MIN, 'maximum': SOLAR_YEAR_MAX}},
+           ['year']),
+        fn('set_wheel_view',
+           'Switch the wheel between multi (natal + rings) and single (natal only).',
+           {'view': {'type': 'string', 'enum': sorted(WHEEL_VIEWS)}}, ['view']),
+        fn('set_house_system',
+           'Change the house system (single-letter Swiss Ephemeris code).',
+           {'system': {'type': 'string', 'enum': sorted(HOUSE_SYSTEM_CODES)}}, ['system']),
+        fn('remove_layer',
+           'Remove a prognostic layer by method (all instances) or layer_id (one). Destructive.',
+           {'method': {'type': 'string', 'enum': methods},
+            'layer_id': {'type': 'string'}}),
+        fn('clear_layers',
+           'Remove all prognostic layers, leaving the natal chart. Destructive.',
+           {}),
+    ]
 
 # Cost controls — hard requirements, not knobs (per plan review).
 MAX_TOOL_ITERATIONS = 5
@@ -110,6 +310,16 @@ times an aspect perfects, retrograde motion and stations — by calling the prov
 tools. You do NOT perform astronomy yourself and you NEVER invent dates, degrees, \
 or counts: every number must come from a tool result.
 
+You can also CHANGE the workspace by calling command tools (set_transit_date, \
+step_date, add_layer, build_solar, set_solar_year, set_wheel_view, set_house_system, \
+remove_layer, clear_layers). Command rules:
+- Call a command ONLY when the astrologer explicitly asks to change, build, add, move, \
+remove, or show something. A plain question must NEVER trigger a command — answer it \
+with a query tool or words instead.
+- After a command is accepted, confirm in one short phrase exactly what changed \
+(e.g. "Добавил транзиты на 14 марта"); never invent values the command did not set.
+- remove_layer and clear_layers are destructive — call them only on an explicit removal request.
+
 Rules:
 - The active chart is fixed by the system; do not ask which chart or pass any id.
 - Always state the time window the result covers, and whether the search auto-expanded.
@@ -144,8 +354,8 @@ motion, stations, and a brief caveat when materially relevant.
 - Reply in the astrologer's language."""
 
 
-def build_tools() -> List[Dict]:
-    """OpenAI tool schemas. Enums come from the shared vocabularies above."""
+def build_query_tools() -> List[Dict]:
+    """Deterministic, server-executed query tools. Enums come from shared vocab."""
     return [{
         "type": "function",
         "function": {
@@ -180,6 +390,11 @@ def build_tools() -> List[Dict]:
             },
         },
     }]
+
+
+def build_tools() -> List[Dict]:
+    """All tool schemas: deterministic query tools + workspace command tools."""
+    return build_query_tools() + build_command_tools()
 
 
 class AstroAssistantService:
@@ -272,6 +487,7 @@ class AstroAssistantService:
         convo.extend({"role": m["role"], "content": m.get("content", "")} for m in messages)
 
         tool_results: List[Dict] = []
+        actions: List[Dict] = []
         iterations = 0
         usage = _UsageAccumulator()
         started = time.perf_counter()
@@ -293,6 +509,7 @@ class AstroAssistantService:
                 return {
                     "reply": msg.content or "",
                     "tool_results": tool_results,
+                    "actions": actions,
                     "iterations": iterations,
                     "max_iterations_reached": False,
                     "metrics": usage.as_metrics(
@@ -315,12 +532,20 @@ class AstroAssistantService:
                 ],
             })
             for tc in msg.tool_calls:
+                name = tc.function.name
                 try:
                     args = json.loads(tc.function.arguments or "{}")
                 except json.JSONDecodeError:
                     args = {}
-                result = self._dispatch(tc.function.name, args, user_id)
-                tool_results.append({"name": tc.function.name, "arguments": args, "result": result})
+                # Command tools are applied by the client, not the server: validate
+                # the intent, collect the action, and hand the model a receipt.
+                if name in COMMAND_REGISTRY:
+                    result, action = handle_command(name, args)
+                    if action is not None:
+                        actions.append(action)
+                else:
+                    result = self._dispatch(name, args, user_id)
+                tool_results.append({"name": name, "arguments": args, "result": result})
                 convo.append({
                     "role": "tool",
                     "tool_call_id": tc.id,
@@ -339,6 +564,7 @@ class AstroAssistantService:
         return {
             "reply": final.choices[0].message.content or "",
             "tool_results": tool_results,
+            "actions": actions,
             "iterations": iterations,
             "max_iterations_reached": True,
             "metrics": usage.as_metrics(
