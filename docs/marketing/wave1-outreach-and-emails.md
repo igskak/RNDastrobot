@@ -4,20 +4,20 @@
 
 **How to use:** these are personal messages, not broadcasts. Send 1:1, edit the first line to be specific to the person (mention their channel/post). Keep it short. Always offer a real demo, not a link dump.
 
-> ⚠️ Pending decision: the exact founding perk below is written as "lifetime Standard at €15" (the proposed offer). Confirm before sending. Everything else is ready.
+> Founding offer (confirmed 2026-06): **today's pricing, locked for good before it goes up, limited to the first 100 astrologers.** No discount, no fake scale — honest scarcity + personal founder access. Prices: Standard $24/mo, Pro $39/mo.
 
 ---
 
 ## A. Founding-member offer (the hook reused everywhere)
 
 **EN**
-> I'm gathering a small first group of practicing astrologers to shape Steliara before the wider launch. Founding members get the full tool free for 14 days, then a lifetime founding price (Standard at €15/mo, locked forever), plus my personal help setting it up. In return I just ask for honest feedback and, if you like it, a short testimonial. Limited to the first cohort.
+> I'm opening Steliara to a first group of 100 practicing astrologers before the wider launch. Founding members get the full tool free for 14 days, then lock in today's price for good (Standard $24/mo, Pro $39/mo) before it goes up once the group fills. You also get my personal help setting up and a direct line to shape what we build. In return I just ask for honest feedback and, if you like it, a short testimonial.
 
 **RU**
-> Я собираю небольшую первую группу практикующих астрологов, чтобы вместе довести Steliara до ума перед широким запуском. Участники получают полный доступ бесплатно на 14 дней, потом пожизненную цену основателя (Standard €15/мес, закреплена навсегда) и мою личную помощь с настройкой. Взамен прошу честную обратную связь и, если понравится, короткий отзыв. Только для первой группы.
+> Я открываю Steliara для первой группы из 100 практикующих астрологов до широкого запуска. Участники получают полный доступ бесплатно на 14 дней, а затем закрепляют за собой сегодняшнюю цену навсегда (Standard $24/мес, Pro $39/мес) — после набора группы цена вырастет. Плюс моя личная помощь с настройкой и прямой канал, чтобы влиять на то, что мы делаем. Взамен прошу честную обратную связь и, если понравится, короткий отзыв.
 
 **UK**
-> Я збираю невелику першу групу практикуючих астрологів, щоб разом довести Steliara до ладу перед широким запуском. Учасники отримують повний доступ безкоштовно на 14 днів, далі довічну ціну засновника (Standard €15/міс, закріплена назавжди) та мою особисту допомогу з налаштуванням. Натомість прошу чесний відгук і, якщо сподобається, короткий відгук-цитату. Лише для першої групи.
+> Я відкриваю Steliara для першої групи зі 100 практикуючих астрологів до широкого запуску. Учасники отримують повний доступ безкоштовно на 14 днів, а потім закріплюють за собою сьогоднішню ціну назавжди (Standard $24/міс, Pro $39/міс) — після набору групи ціна зросте. Плюс моя особиста допомога з налаштуванням і прямий канал, щоб впливати на те, що ми робимо. Натомість прошу чесний відгук і, якщо сподобається, короткий відгук-цитату.
 
 ---
 
@@ -92,7 +92,7 @@ Goal: get them to *feel* the wedge, then offer the founding spot. Do it live, on
 3. **The consultation (the wedge).** Show a recorded session turning into a transcript and a short summary. "After the reading, it's already written up. Nothing to retype, nothing lost."
 4. **Ask the chart a data question.** e.g. "show transit Uranus conjunctions to natal Venus for the past and next 5 years." Dates come back in seconds. Say the trust line: **"The AI never reads the chart for you. It just finds the facts faster, the aspects and exact dates. You interpret, it digs."**
 5. **Works anywhere.** "It's in the browser, so the same on your Mac, your studio PC, or a borrowed laptop."
-6. **Offer.** "I'm taking a small founding group. Full access free for 14 days, then €15/mo locked forever, and I help you set up. Want in?"
+6. **Offer.** "I'm taking a founding group of 100. Full access free for 14 days, then you lock today's price for good ($24 Standard / $39 Pro) before it goes up, and I help you set up. Want in?"
 
 **RU (краткий конспект для себя):** 1) карта за минуту; 2) профиль человека — карты+заметки+записи вместе; 3) консультация → запись → расшифровка → сводка («после встречи уже всё записано»); 4) вопрос к данным карты (аспекты/даты за секунды) + фраза «ИИ не читает карту за вас, он быстрее находит факты, интерпретация ваша»; 5) работает в браузере на любом устройстве; 6) оффер основателя.
 
@@ -120,11 +120,11 @@ Tight, one action per email. Triggered off `sign_up` / trial timeline. RU / UK /
 
 ### E3 — Pre-expiry + founding offer (day 11–12)
 **EN** — *Subject: Your trial ends soon, a founding spot if you want it*
-> [name], your trial wraps up in a couple of days. If Steliara earned a place in your practice, I'd love you as a founding member: €15/mo locked forever, plus my direct help whenever you need it. Your charts and people stay exactly where they are. Want the founding price? Just reply "yes" and I'll sort it.
+> [name], your trial wraps up in a couple of days. If Steliara earned a place in your practice, I'd love you as a founding member: lock in today's price for good ($24 Standard / $39 Pro) before it goes up, plus my direct help whenever you need it. Your charts and people stay exactly where they are. Want the founding price? Just reply "yes" and I'll sort it.
 **RU** — *Тема: Триал скоро заканчивается — и место в первой группе, если захотите*
-> [Имя], ваш пробный период заканчивается через пару дней. Если Steliara заслужила место в вашей практике, буду рад видеть вас участником первой группы: €15/мес навсегда и моя прямая помощь, когда понадобится. Ваши карты и люди останутся на месте. Нужна цена основателя? Ответьте «да», и я всё оформлю.
+> [Имя], ваш пробный период заканчивается через пару дней. Если Steliara заслужила место в вашей практике, буду рад видеть вас участником первой группы: закрепите за собой сегодняшнюю цену навсегда ($24 Standard / $39 Pro), пока она не выросла, плюс моя прямая помощь, когда понадобится. Ваши карты и люди останутся на месте. Нужна цена основателя? Ответьте «да», и я всё оформлю.
 **UK** — *Тема: Пробний період скоро завершується — і місце в першій групі, якщо захочете*
-> [Імʼя], ваш пробний період завершується за кілька днів. Якщо Steliara заслужила місце у вашій практиці, буду радий бачити вас учасником першої групи: €15/міс назавжди і моя пряма допомога, коли знадобиться. Ваші карти й люди залишаться на місці. Потрібна ціна засновника? Відповідайте «так», і я все оформлю.
+> [Імʼя], ваш пробний період завершується за кілька днів. Якщо Steliara заслужила місце у вашій практиці, буду радий бачити вас учасником першої групи: закріпіть за собою сьогоднішню ціну назавжди ($24 Standard / $39 Pro), поки вона не зросла, плюс моя пряма допомога, коли знадобиться. Ваші карти й люди залишаться на місці. Потрібна ціна засновника? Відповідайте «так», і я все оформлю.
 
 ### E4 — Post-expiry win-back (a few days after expiry)
 **EN** — *Subject: Your charts are still here whenever you're ready*

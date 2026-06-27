@@ -267,7 +267,7 @@ RU / UK / EN must cover the **entire** monetization + marketing surface from lau
 **Open decisions:**
 - Trial length 14 vs 21 days (referral reward assumes 21 for referred users).
 - Annual discount exact %: 20 vs 26.
-- Founding-member offer: lifetime locked discount (e.g. Standard €15) for first cohort — confirm.
+- ~~Founding-member offer~~ **DECIDED (2026-06):** today's pricing ($24/$39) locked for good *before it goes up*, limited to the first **100 astrologers**, plus personal founder support. No discount (avoids a low anchor; keeps ARPU), no fabricated user base. Add a real discount only if the English price test shows resistance.
 - Grace period on past_due before `expired` (e.g. 7 days).
 - Recording retention window (90 days proposed).
 - Pricing response to Astrolium's Free/$11 anchor (hold vs adjust) — decide after the English price test.
