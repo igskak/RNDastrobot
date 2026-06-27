@@ -108,6 +108,7 @@ def test_assistant_defaults_to_compact_modern_model():
     assert "`Выход`" in svc._SYSTEM_PROMPT
     assert "`D` (direct) or `R` (retrograde)" in svc._SYSTEM_PROMPT
     assert "`Станция R/D`" in svc._SYSTEM_PROMPT
+    assert "Многослойный режим" in svc._SYSTEM_PROMPT
 
 
 def _service_with_fake_transits(record):
@@ -235,6 +236,43 @@ def test_chat_emits_command_action_without_server_mutation(monkeypatch):
     assert result["reply"] == "Показал одиночную карту."
     assert result["tool_results"][0]["result"]["status"] == "applied_clientside"
     assert captured == {}  # command never reached the deterministic transit service
+
+
+def test_chat_coerces_multi_layer_mode_to_wheel_view(monkeypatch):
+    service = _service_with_fake_transits({})
+
+    scripted = [
+        _msg(tool_calls=[_tool_call(
+            "c1", "add_layer", '{"method":"transit"}')]),
+        _msg(content="Добавил транзиты."),
+    ]
+    monkeypatch.setattr(svc, "is_openai_configured", lambda: True)
+    monkeypatch.setattr(svc, "get_openai_client", lambda: _FakeClient(scripted))
+
+    result = service.chat(uuid4(), [{"role": "user", "content": "Перейди в многослойный режим."}])
+
+    assert result["actions"] == [
+        {"name": "set_wheel_view", "args": {"view": "multi"}, "confirm": "auto"}]
+    assert result["reply"] == "Перешёл в многослойный режим."
+    assert result["tool_results"][0]["name"] == "add_layer"
+
+
+def test_chat_keeps_explicit_add_transit_layer(monkeypatch):
+    service = _service_with_fake_transits({})
+
+    scripted = [
+        _msg(tool_calls=[_tool_call(
+            "c1", "add_layer", '{"method":"transit"}')]),
+        _msg(content="Добавил транзиты."),
+    ]
+    monkeypatch.setattr(svc, "is_openai_configured", lambda: True)
+    monkeypatch.setattr(svc, "get_openai_client", lambda: _FakeClient(scripted))
+
+    result = service.chat(uuid4(), [{"role": "user", "content": "Добавь транзиты."}])
+
+    assert result["actions"] == [
+        {"name": "add_layer", "args": {"method": "transit"}, "confirm": "auto"}]
+    assert result["reply"] == "Добавил транзиты."
 
 
 def test_chat_rejects_invalid_command_arg_and_emits_no_action(monkeypatch):

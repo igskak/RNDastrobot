@@ -218,7 +218,10 @@ def build_command_tools() -> List[Dict]:
             'unit': {'type': 'string', 'enum': sorted(STEP_UNITS)},
             'direction': {'type': 'string', 'enum': sorted(STEP_DIRECTIONS)}},
            ['amount', 'unit', 'direction']),
-        fn('add_layer', 'Add a prognostic layer to the workspace.',
+        fn('add_layer',
+           'Add a named calculation layer (transit/progression/direction/solar/synastry) '
+           'only when the astrologer asks to add/build that method. Do not use for '
+           'multi-layer or multi-wheel display mode.',
            {'method': {'type': 'string', 'enum': methods}}, ['method']),
         fn('build_solar', 'Build and show a solar return for a year.',
            {'year': {'type': 'integer', 'minimum': SOLAR_YEAR_MIN, 'maximum': SOLAR_YEAR_MAX}},
@@ -227,7 +230,10 @@ def build_command_tools() -> List[Dict]:
            {'year': {'type': 'integer', 'minimum': SOLAR_YEAR_MIN, 'maximum': SOLAR_YEAR_MAX}},
            ['year']),
         fn('set_wheel_view',
-           'Switch the wheel between multi (natal + rings) and single (natal only).',
+           'Switch the wheel display between multi (natal + rings) and single '
+           '(natal only). Use this for "многослойный режим", "мультиколесо", '
+           '"multi-wheel/multi-layer mode", or "одиночный режим"; it is not '
+           'the same as adding a transit layer.',
            {'view': {'type': 'string', 'enum': sorted(WHEEL_VIEWS)}}, ['view']),
         fn('set_house_system',
            'Change the house system (single-letter Swiss Ephemeris code).',
@@ -247,12 +253,115 @@ REQUEST_TIMEOUT_S = 60.0
 MAX_COMPLETION_TOKENS = 300
 _MODEL = os.getenv("OPENAI_ASSISTANT_MODEL", "gpt-5.4-mini")
 
+_CYRILLIC_RE = re.compile(r"[а-яіїєґ]", re.IGNORECASE)
+_MULTI_WHEEL_INTENT_RE = re.compile(
+    r"("
+    r"многослойн\w*(?:\s+\w+){0,2}\s+режим"
+    r"|режим(?:\s+\w+){0,2}\s+многослойн\w*"
+    r"|мульти\s*кол[её]с\w*"
+    r"|много\s*кол[её]с\w*"
+    r"|многокольц\w*"
+    r"|multi[-\s]?(?:wheel|layer)(?:\s+mode)?"
+    r"|multi\s+mode"
+    r")",
+    re.IGNORECASE,
+)
+_SINGLE_WHEEL_INTENT_RE = re.compile(
+    r"("
+    r"одиночн\w*(?:\s+\w+){0,2}\s+режим"
+    r"|однослойн\w*(?:\s+\w+){0,2}\s+режим"
+    r"|режим(?:\s+\w+){0,2}\s+одиночн\w*"
+    r"|только\s+натал\w*"
+    r"|single[-\s]?(?:wheel|layer)?(?:\s+mode)?"
+    r")",
+    re.IGNORECASE,
+)
+_ADD_LAYER_VERB_RE = re.compile(
+    r"\b(add|build|create)\b|добав\w*|созда\w*|постро\w*",
+    re.IGNORECASE,
+)
+_LAYER_METHOD_INTENT_RE = re.compile(
+    r"\b(transit|progression|direction|solar|synastry)\b"
+    r"|транзит\w*|прогресс\w*|дирекц\w*|соляр\w*|солнечн\w*|синастр\w*",
+    re.IGNORECASE,
+)
+
 # Broad overview windows used only when the model omits period intent entirely.
 _FAST_TRANSIT_BODIES = frozenset({'Moon', 'Sun', 'Mercury', 'Venus', 'Mars'})
 _DEFAULT_OVERVIEW_YEARS = {
     'fast': 1,
     'slow': 10,
 }
+
+
+def _last_user_text(messages: List[Dict]) -> str:
+    for msg in reversed(messages or []):
+        if msg.get("role") == "user":
+            return str(msg.get("content") or "")
+    return ""
+
+
+def _requested_wheel_view(messages: List[Dict]) -> Optional[str]:
+    text = _last_user_text(messages)
+    if not text:
+        return None
+    if _MULTI_WHEEL_INTENT_RE.search(text):
+        return "multi"
+    if _SINGLE_WHEEL_INTENT_RE.search(text):
+        return "single"
+    return None
+
+
+def _explicit_layer_request(text: str) -> bool:
+    return bool(_ADD_LAYER_VERB_RE.search(text) and _LAYER_METHOD_INTENT_RE.search(text))
+
+
+def _wheel_view_action(view: str) -> Dict:
+    return {
+        "name": "set_wheel_view",
+        "args": {"view": view},
+        "confirm": COMMAND_REGISTRY["set_wheel_view"]["confirm"],
+    }
+
+
+def _wheel_view_reply(view: str, messages: List[Dict]) -> str:
+    text = _last_user_text(messages)
+    if not _CYRILLIC_RE.search(text):
+        return (
+            "Switched to multi-wheel mode."
+            if view == "multi"
+            else "Switched to single-wheel mode."
+        )
+    return (
+        "Перешёл в многослойный режим."
+        if view == "multi"
+        else "Перешёл в одиночный режим."
+    )
+
+
+def _coerce_wheel_view_actions(messages: List[Dict], actions: List[Dict]):
+    """Protect display-mode intents from being misrouted as layer creation."""
+    view = _requested_wheel_view(messages)
+    if view is None:
+        return actions, None
+    if any(
+        action.get("name") == "set_wheel_view"
+        and action.get("args", {}).get("view") == view
+        for action in actions
+    ):
+        return actions, None
+
+    keep_layers = _explicit_layer_request(_last_user_text(messages))
+    corrected = []
+    for action in actions:
+        name = action.get("name")
+        if name == "set_wheel_view":
+            continue
+        if name == "add_layer" and not keep_layers:
+            continue
+        corrected.append(action)
+    corrected.append(_wheel_view_action(view))
+    return corrected, view
 
 
 def _shift_years(value: date_type, years: int) -> date_type:
@@ -318,6 +427,11 @@ remove, or show something. A plain question must NEVER trigger a command — ans
 with a query tool or words instead.
 - After a command is accepted, confirm in one short phrase exactly what changed \
 (e.g. "Добавил транзиты на 14 марта"); never invent values the command did not set.
+- "Многослойный режим", "мультиколесо", "multi-wheel/multi-layer mode", or requests \
+to show rings/layers as a display mode mean set_wheel_view {"view":"multi"}, NOT add_layer. \
+"Одиночный режим", "только натал", or "single-wheel mode" mean set_wheel_view {"view":"single"}.
+- add_layer is only for an explicit request to add/build a named calculation method \
+such as transits, progressions, directions, solar return, or synastry.
 - remove_layer and clear_layers are destructive — call them only on an explicit removal request.
 
 Rules:
@@ -546,10 +660,16 @@ class AstroAssistantService:
             usage.add(getattr(response, "usage", None))
             msg = response.choices[0].message
             if not getattr(msg, "tool_calls", None):
+                final_actions, coerced_view = _coerce_wheel_view_actions(messages, actions)
+                reply = (
+                    _wheel_view_reply(coerced_view, messages)
+                    if coerced_view
+                    else (msg.content or "")
+                )
                 return {
-                    "reply": msg.content or "",
+                    "reply": reply,
                     "tool_results": tool_results,
-                    "actions": actions,
+                    "actions": final_actions,
                     "iterations": iterations,
                     "max_iterations_reached": False,
                     "metrics": usage.as_metrics(
@@ -601,10 +721,16 @@ class AstroAssistantService:
             timeout=REQUEST_TIMEOUT_S,
         )
         usage.add(getattr(final, "usage", None))
+        final_actions, coerced_view = _coerce_wheel_view_actions(messages, actions)
+        reply = (
+            _wheel_view_reply(coerced_view, messages)
+            if coerced_view
+            else (final.choices[0].message.content or "")
+        )
         return {
-            "reply": final.choices[0].message.content or "",
+            "reply": reply,
             "tool_results": tool_results,
-            "actions": actions,
+            "actions": final_actions,
             "iterations": iterations,
             "max_iterations_reached": True,
             "metrics": usage.as_metrics(
