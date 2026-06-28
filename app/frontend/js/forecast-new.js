@@ -7942,6 +7942,22 @@
         return { ok: true };
     }
 
+    // Fetch a saved chart (ChartResponse) by id for set_synastry_partner.
+    async function cmdFetchChartById(chartId) {
+        if (!chartId) return null;
+        try {
+            const headers = window.AstroAPI?.withLocaleHeaders
+                ? window.AstroAPI.withLocaleHeaders({}) : {};
+            const resp = await fetch(`${API_BASE}/charts/${encodeURIComponent(chartId)}`, {
+                credentials: 'include', headers,
+            });
+            if (!resp.ok) return null;
+            return await resp.json();
+        } catch (_) {
+            return null;
+        }
+    }
+
     async function cmdDispatch(action) {
         const args = action.args || {};
         switch (action.name) {
@@ -8002,6 +8018,20 @@
                 await updateHouseSystem(code);
                 syncControlsFromState();
                 return { ok: true, label: code };
+            }
+            case 'set_synastry_partner': {
+                const chart = await cmdFetchChartById(args.chart_id);
+                if (!chart || !(chart.date || chart.birth_date)) {
+                    return { ok: false, error: { code: 'chart_not_found' } };
+                }
+                // activateLayer selects (or creates) the synastry layer so
+                // applySavedSynastryPartnerChart writes to the right instance.
+                await activateLayer('synastry_partner');
+                await applySavedSynastryPartnerChart(chart);
+                const name = args.title || chart.display_title || chart.title
+                    || [chart.first_name, chart.last_name].filter(Boolean).join(' ')
+                    || String(args.chart_id).slice(0, 8);
+                return { ok: true, label: name };
             }
             case 'remove_layer': {
                 if (args.layer_id) await removeLayerInstance(args.layer_id);
