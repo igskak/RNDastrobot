@@ -120,6 +120,10 @@ class _FakeChartQuery:
     def __init__(self, rows, calls):
         self._rows, self._calls = rows, calls
 
+    def outerjoin(self, *a, **k):
+        self._calls["outerjoined"] = True
+        return self
+
     def filter(self, *a, **k):
         self._calls["filtered"] = True
         return self
@@ -161,6 +165,24 @@ def test_find_chart_returns_scoped_compact_matches():
     assert m["birth_date"] == "1990-06-26"
     assert m["birth_place"] == "Kyiv"
     assert calls["limit"] == 8 and calls["model"].__name__ == "User"
+
+
+def test_find_chart_matches_linked_profile_name():
+    # The chart row has no own name; the name lives on the linked profile (Person).
+    calls = {}
+    rows = [SimpleNamespace(
+        user_id=uuid4(), title=None, first_name=None, last_name=None,
+        birth_date=date(1988, 1, 2), birth_place="Lviv",
+        person=SimpleNamespace(display_name="Алёна Петрова", first_name=None, last_name=None))]
+    service = AstroAssistantService.__new__(AstroAssistantService)
+    service.db = _FakeChartDB(rows, calls)
+    service.astrologer_id = uuid4()
+
+    out = service._exec_find_chart(uuid4(), {"query": "Алёна"})
+
+    assert out["status"] == "ok" and out["count"] == 1
+    assert out["matches"][0]["title"] == "Алёна Петрова"  # falls back to profile name
+    assert calls.get("outerjoined") is True  # profile name is searched via the join
 
 
 def test_find_chart_requires_astrologer_and_query():

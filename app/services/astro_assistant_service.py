@@ -23,7 +23,7 @@ from loguru import logger
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from app.database.models import User
+from app.database.models import Person, User
 from app.services.openai_service import get_openai_client, is_openai_configured
 from app.services.transit_service import TransitService
 from app.utils.constants import PLANETS, SPECIAL_POINTS
@@ -664,8 +664,12 @@ class AstroAssistantService:
         raw_limit = args.get("limit")
         limit = raw_limit if isinstance(raw_limit, int) and 1 <= raw_limit <= 25 else 8
         pattern = f"%{query}%"
+        # Match the chart's own name fields AND the linked profile's (Person) name:
+        # astrologers refer to people by their profile, whose name often lives on
+        # the Person, not the chart row. Outer join keeps charts with no profile.
         rows = (
             self.db.query(User)
+            .outerjoin(Person, User.person_id == Person.person_id)
             .filter(
                 User.astrologer_id == astrologer_id,
                 or_(
@@ -673,6 +677,9 @@ class AstroAssistantService:
                     User.first_name.ilike(pattern),
                     User.last_name.ilike(pattern),
                     User.birth_place.ilike(pattern),
+                    Person.display_name.ilike(pattern),
+                    Person.first_name.ilike(pattern),
+                    Person.last_name.ilike(pattern),
                 ),
             )
             .order_by(User.created_at.desc())
@@ -682,9 +689,14 @@ class AstroAssistantService:
         matches = []
         for u in rows:
             name = " ".join(p for p in [u.first_name, u.last_name] if p).strip()
+            person = getattr(u, "person", None)
+            person_name = ""
+            if person is not None:
+                person_name = (person.display_name or "").strip() or " ".join(
+                    p for p in [person.first_name, person.last_name] if p).strip()
             matches.append({
                 "chart_id": str(u.user_id),
-                "title": u.title or name or str(u.user_id)[:8],
+                "title": u.title or name or person_name or str(u.user_id)[:8],
                 "birth_date": u.birth_date.isoformat() if u.birth_date else None,
                 "birth_place": u.birth_place or None,
             })
