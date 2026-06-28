@@ -878,7 +878,7 @@ function buildUserRow(user) {
                     ${summaryChips.length > 0 ? `<div class="client-summary-chips">${summaryChips.join('')}</div>` : ''}
                     <div class="client-card-quick-actions">
                         ${isChartsView ? '' : `<button class="client-quick-btn client-quick-btn-primary" type="button" data-action="open-chart" data-user-id="${escapeHtml(primaryChartId)}" ${primaryChartId ? '' : 'disabled'}>${openChartLabel}</button>`}
-                        <button class="client-quick-btn" type="button" data-action="open-forecast" data-user-id="${escapeHtml(forecastTargetId)}" ${forecastTargetId ? '' : 'disabled'}>
+                        <button class="client-quick-btn ${isChartsView ? 'client-quick-btn-workspace' : ''}" type="button" data-action="open-forecast" data-user-id="${escapeHtml(forecastTargetId)}" ${forecastTargetId ? '' : 'disabled'}>
                             ${forecastLabel}
                         </button>
                     </div>

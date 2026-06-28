@@ -898,6 +898,10 @@ select:focus {
         gap: 5px;
     }
 
+    .client-quick-btn-workspace {
+        display: none;
+    }
+
     .client-quick-btn {
         min-height: 40px;
         padding: 7px 10px;
