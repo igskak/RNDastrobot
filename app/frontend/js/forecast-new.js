@@ -6399,6 +6399,7 @@
     function renderPanelEditor() {
         if (!state.panelEditMode || !state.panelLayout) return;
         const editor = ensurePanelEditor();
+        const previousBodyScrollTop = editor.querySelector('.forecast-new-pe-body')?.scrollTop || 0;
         destroyEditorDnd(); // tear down stale Sortable instances before replacing innerHTML
         const mode = currentWheelMode();
         const modeLabel = mode === 'single'
@@ -6450,6 +6451,8 @@
         setPanelSaveState(state.panelSaveState);
         syncUndoButton();
         initEditorDnd();
+        const body = editor.querySelector('.forecast-new-pe-body');
+        if (body && previousBodyScrollTop > 0) body.scrollTop = previousBodyScrollTop;
     }
 
     // ---- drag-and-drop for the panel configurator (SortableJS) ----

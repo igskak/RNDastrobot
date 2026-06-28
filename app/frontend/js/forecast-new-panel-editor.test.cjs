@@ -46,6 +46,11 @@ ok(
     'click actions receive a stable dataset snapshot'
 );
 ok(
+    source.includes("const previousBodyScrollTop = editor.querySelector('.forecast-new-pe-body')?.scrollTop || 0;")
+        && source.includes("if (body && previousBodyScrollTop > 0) body.scrollTop = previousBodyScrollTop;"),
+    'panel editor preserves its scroll position after re-rendering'
+);
+ok(
     /requiredSelectors\.every\(\(selector\) => dialog\.querySelector\(selector\)\)/.test(source)
         && source.includes('dialog?.remove();'),
     'a stale malformed panel dialog is rebuilt before use'
