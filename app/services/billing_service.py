@@ -596,6 +596,25 @@ class StripeBillingProvider(BillingProvider):
             cancel_at_period_end = False
             items: List[Dict[str, Any]] = []
             discount = None
+        elif object_type == "invoice" or event_type.startswith("invoice."):
+            # Invoice events (e.g. invoice.payment_failed) carry an `invoice`
+            # object, not a subscription. Resolve the related subscription id so
+            # we can flag past_due on the EXISTING subscription. We never create
+            # a subscription from an invoice — plan_code stays None and the
+            # authoritative plan/period signal keeps coming from
+            # customer.subscription.* events. `subscription` is top-level pre-Basil
+            # and nested under parent.subscription_details in 2025-03-31.basil.
+            subscription_id = str(
+                obj.get("subscription")
+                or _nested(obj, "parent", "subscription_details", "subscription")
+                or ""
+            )
+            customer_id = str(obj.get("customer") or "")
+            metadata = obj.get("metadata") or {}
+            sub_status = "past_due" if event_type == "invoice.payment_failed" else None
+            cancel_at_period_end = False
+            items = []
+            discount = None
         else:  # customer.subscription.* — the subscription object itself
             subscription_id = str(obj.get("id") or "")
             customer_id = str(obj.get("customer") or "")
@@ -631,8 +650,15 @@ class StripeBillingProvider(BillingProvider):
             plan_code=plan_code,
             interval=self._interval_from_item(first_item) or metadata.get("interval"),
             status=_normalize_status(sub_status) if sub_status else None,
-            current_period_start=_parse_datetime(obj.get("current_period_start")),
-            current_period_end=_parse_datetime(obj.get("current_period_end")),
+            # 2025-03-31.basil moved current_period_* off the subscription and
+            # onto each item; read top-level first, fall back to the item so a
+            # future webhook API-version bump doesn't silently null the period.
+            current_period_start=_parse_datetime(
+                obj.get("current_period_start") or _nested(first_item, "current_period_start")
+            ),
+            current_period_end=_parse_datetime(
+                obj.get("current_period_end") or _nested(first_item, "current_period_end")
+            ),
             cancel_at_period_end=cancel_at_period_end,
             coupon_code=str(coupon_code) if coupon_code else None,
             raw_payload=payload,
@@ -665,8 +691,29 @@ def upsert_subscription_from_event(
             .first()
         )
         astrologer = customer.astrologer if customer else None
-    if not astrologer or not event.plan_code:
+    if not astrologer:
         return None
+
+    if not event.plan_code:
+        # Status-only event (e.g. invoice.payment_failed → past_due). Update the
+        # status on the EXISTING subscription without touching plan/period, and
+        # never create a new one. The plan/period stay owned by
+        # customer.subscription.* events.
+        if not event.status:
+            return None
+        subscription = (
+            db.query(BillingSubscription)
+            .filter(
+                BillingSubscription.provider == provider,
+                BillingSubscription.provider_subscription_id == event.subscription_id,
+            )
+            .first()
+        )
+        if not subscription:
+            return None
+        subscription.status = event.status
+        db.flush()
+        return subscription
 
     customer_row = None
     if event.customer_id:
