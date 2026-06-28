@@ -22,6 +22,9 @@ from app.database.models import (  # noqa: E402
     BillingEvent,
     BillingPriceMap,
     BillingSubscription,
+    CallSession,
+    CompositeChart,
+    Consultation,
     EmailVerificationToken,
     PasswordResetToken,
     User,
@@ -34,6 +37,12 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 def _prepare_sqlite_user_table():
     User.__table__.c.tags.type = JSON()
+    CompositeChart.__table__.c.partner_birth_data.type = JSON()
+    CompositeChart.__table__.c.chart_data.type = JSON()
+    CompositeChart.__table__.c.tags.type = JSON()
+    CallSession.__table__.c.transcript_segments.type = JSON()
+    CallSession.__table__.c.key_points.type = JSON()
+    CallSession.__table__.c.summary_json.type = JSON()
     BillingCustomer.__table__.c.raw_provider_payload.type = JSON()
     BillingSubscription.__table__.c.raw_provider_payload.type = JSON()
     BillingEvent.__table__.c.raw_payload.type = JSON()
@@ -55,6 +64,9 @@ def _override_get_db():
 def _db_setup(monkeypatch):
     _prepare_sqlite_user_table()
     for table in (
+        CallSession.__table__,
+        CompositeChart.__table__,
+        Consultation.__table__,
         AuditEvent.__table__,
         AuthSession.__table__,
         BillingEvent.__table__,
@@ -70,6 +82,9 @@ def _db_setup(monkeypatch):
 
     Astrologer.__table__.create(bind=engine, checkfirst=True)
     User.__table__.create(bind=engine, checkfirst=True)
+    Consultation.__table__.create(bind=engine, checkfirst=True)
+    CompositeChart.__table__.create(bind=engine, checkfirst=True)
+    CallSession.__table__.create(bind=engine, checkfirst=True)
     BillingCustomer.__table__.create(bind=engine, checkfirst=True)
     BillingPriceMap.__table__.create(bind=engine, checkfirst=True)
     BillingSubscription.__table__.create(bind=engine, checkfirst=True)

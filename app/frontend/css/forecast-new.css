@@ -24,6 +24,17 @@
     gap: 7px;
 }
 
+.forecast-new-header-actions .header-action-menu {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.forecast-new-panel-edit-btn .nav-btn-icon {
+    width: 16px;
+    height: 16px;
+}
+
 .forecast-new-page .forecast-view-tab[aria-current="page"] {
     display: none;
 }
@@ -3670,6 +3681,10 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
         font-size: 15px;
     }
 
+    .forecast-new-header-actions .forecast-view-tabs {
+        display: none;
+    }
+
     /* Method-layer chips on their own full-width, horizontally scrollable row.
        (No mask/clip here on purpose: a mask would create a containing block and
        trap the fixed bottom-sheet popovers nested inside.) */
@@ -3712,6 +3727,70 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
     .forecast-new-layer-toggles:has(.forecast-new-layer-popover:not(.hidden)) .forecast-new-layer-pop {
         position: static;
         display: block;
+    }
+
+    /* Keep the phone workspace toolbar to one compact row: chart context,
+       add-layer, panel editor, and actions. Table/timeline live in Actions. */
+    .forecast-new-header {
+        flex-wrap: nowrap;
+        align-items: center;
+    }
+
+    .forecast-new-client {
+        flex: 1 1 auto;
+        min-width: 0;
+        max-width: none;
+    }
+
+    .forecast-new-client h2 {
+        display: none;
+    }
+
+    .forecast-new-client p {
+        max-width: none;
+        font-size: 12px;
+        line-height: 1.2;
+    }
+
+    .forecast-new-right-layer-tabs {
+        order: 0;
+        flex: 0 0 auto;
+        flex-basis: auto;
+        width: auto;
+        max-width: min(42vw, 180px);
+        margin-left: auto;
+        justify-content: flex-end;
+    }
+
+    .forecast-new-right-layer-tab {
+        max-width: 96px;
+        min-height: 34px;
+    }
+
+    .forecast-new-add-layer--compact .forecast-new-add-layer-toggle {
+        width: 40px;
+        min-width: 40px;
+        height: 40px;
+        min-height: 40px;
+        font-size: 20px;
+    }
+
+    .forecast-new-header-actions {
+        flex: 0 0 auto;
+        margin-left: 0;
+    }
+
+    .forecast-new-header-actions .header-nav-btn {
+        width: 40px;
+        min-width: 40px;
+        height: 40px;
+        min-height: 40px;
+        justify-content: center;
+        padding: 0;
+    }
+
+    .forecast-new-header-actions .header-nav-btn > span {
+        display: none;
     }
 
     /* ---- Sticky panel switcher, pinned just under the wheel ---- */

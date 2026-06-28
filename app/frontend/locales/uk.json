@@ -266,7 +266,11 @@
       "natalPanelTitle": "Натал",
       "mobilePanels": {
         "primary": "Основна",
-        "comparison": "Порівняння"
+        "comparison": "Порівняння",
+        "multiChart": "Карта",
+        "multiLayers": "Шари",
+        "singleData": "Дані",
+        "singleAnalysis": "Аналіз"
       },
       "leftLayerAria": "Метод основної карти",
       "birthDateTimeLabel": "Дата народження / час",
@@ -895,6 +899,10 @@
         "micDenied": "Доступ до мікрофона заборонено. Дозвольте його в браузері, щоб диктувати.",
         "micUnavailable": "Голосове введення недоступне в цьому браузері.",
         "noChart": "Спершу відкрийте карту, потім запитайте тут.",
+        "voiceCommand": "Голосова команда",
+        "voiceCommandHint": "Говоріть. Натисніть мікрофон ще раз, щоб надіслати.",
+        "openVoiceResult": "Відкрити відповідь асистента",
+        "confirmInChat": "Підтвердження очікує в асистенті.",
         "placeholder": "Запитайте про цю карту…",
         "recording": "Запис {time}",
         "resize": "Змінити розмір асистента",

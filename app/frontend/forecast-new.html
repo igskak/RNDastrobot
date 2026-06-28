@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecastNew.pageTitle">Forecast</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=61d1c7dfdad9">
-    <script>window.__APP_BUILD_ID__ = '61d1c7dfdad9';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=6fd3c2d1c32f">
+    <script>window.__APP_BUILD_ID__ = '6fd3c2d1c32f';</script>
 </head>
 <body class="forecast-new-page workspace-compact forecast-workspace-compact">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -98,13 +98,14 @@
         </div>
         <div class="forecast-new-right-layer-tabs" id="rightLayerTabs"></div>
         <div class="header-nav-buttons forecast-new-header-actions">
-            <div class="forecast-view-tabs">
-                <a href="forecast-new.html" class="forecast-view-tab" aria-current="page" data-i18n="page.chart.nav.forecast"><i class="forecast-view-tab-icon" aria-hidden="true">◯</i></a>
-                <a href="forecast-tables.html" class="forecast-view-tab forecast-view-tab--multi-only" data-i18n="page.forecast.tabs.table"></a>
-                <a href="forecast-timeline.html" class="forecast-view-tab forecast-view-tab--multi-only" data-i18n="page.forecast.tabs.timeline"></a>
-            </div>
             <div class="header-action-menu">
-                <button type="button" class="header-nav-btn header-nav-btn--icon forecast-new-panel-edit-btn" id="forecastNewPanelEditToggle" data-i18n-title="page.forecastNew.panelEditor.toggle" data-i18n-aria-label="page.forecastNew.panelEditor.toggle" title="Настроить панели" aria-label="Настроить панели" aria-pressed="false">▦</button>
+                <button type="button" class="header-nav-btn header-nav-btn--icon forecast-new-panel-edit-btn" id="forecastNewPanelEditToggle" data-i18n-title="page.forecastNew.panelEditor.toggle" data-i18n-aria-label="page.forecastNew.panelEditor.toggle" title="Настроить панели" aria-label="Настроить панели" aria-pressed="false">
+                    <svg class="nav-btn-icon" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                        <rect x="2.5" y="3" width="5" height="12" rx="1.4"/>
+                        <rect x="10.5" y="3" width="5" height="12" rx="1.4"/>
+                        <path d="M4.5 6.5h1M12.5 6.5h1M4.5 9h1M12.5 9h1M4.5 11.5h1M12.5 11.5h1"/>
+                    </svg>
+                </button>
                 <button type="button" class="header-nav-btn header-nav-btn--icon" id="forecastNewActionsToggle" aria-haspopup="true" aria-expanded="false" data-i18n-aria-label="page.chart.actions.openMenu">
                     <svg class="nav-btn-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
                         <circle cx="7" cy="2.5" r="1"/>
@@ -115,7 +116,9 @@
                 </button>
                 <div class="chart-actions-menu hidden" id="forecastNewActionsMenu" role="menu">
                     <a href="/" class="chart-action-item chart-action-item--link" role="menuitem" data-i18n="page.chart.nav.home"></a>
-                    <button type="button" class="chart-action-item" id="openNatalTablesBtn" role="menuitem" data-i18n="page.chart.nav.tables"></button>
+                    <button type="button" class="chart-action-item" id="openNatalTablesBtn" role="menuitem" data-i18n="page.natalFull.title"></button>
+                    <a href="forecast-tables.html" class="chart-action-item chart-action-item--link forecast-view-tab--multi-only" role="menuitem" data-i18n="page.forecast.tabs.table"></a>
+                    <a href="forecast-timeline.html" class="chart-action-item chart-action-item--link forecast-view-tab--multi-only" role="menuitem" data-i18n="page.forecast.tabs.timeline"></a>
                     <button type="button" class="chart-action-item" id="openClientProfileBtn" role="menuitem" data-i18n="page.clientProfile.viewProfile"></button>
                     <a href="/account-settings.html" class="chart-action-item chart-action-item--link" role="menuitem" data-i18n="page.accountSettings.title"></a>
                 </div>
@@ -382,8 +385,8 @@
         <!-- Mobile-only panel switcher (Primary ⇄ Comparison). CSS-hidden on desktop;
              shown only at ≤640px to surface one side panel at a time. -->
         <div class="forecast-new-mobile-panel-switch" id="forecastNewMobilePanelSwitch" role="group">
-            <button type="button" class="forecast-new-mobile-panel-btn is-active" data-mobile-panel="natal" aria-pressed="true" data-i18n="page.forecastNew.mobilePanels.primary">Primary</button>
-            <button type="button" class="forecast-new-mobile-panel-btn" data-mobile-panel="prog" aria-pressed="false" data-i18n="page.forecastNew.mobilePanels.comparison">Comparison</button>
+            <button type="button" class="forecast-new-mobile-panel-btn is-active" data-mobile-panel="natal" aria-pressed="true" data-i18n="page.forecastNew.mobilePanels.multiChart">Chart</button>
+            <button type="button" class="forecast-new-mobile-panel-btn" data-mobile-panel="prog" aria-pressed="false" data-i18n="page.forecastNew.mobilePanels.multiLayers">Layers</button>
         </div>
 
         <aside class="side-panel right-panel forecast-new-side-panel" id="forecastNewProgPanel">
@@ -526,6 +529,15 @@
     <button type="button" id="chatToggle" class="chat-toggle" data-i18n-aria-label="page.chart.chat.toggle">
         <span aria-hidden="true">✦</span>
     </button>
+    <button type="button" id="chatVoiceCommand" class="chat-voice-command" aria-pressed="false" data-i18n-aria-label="page.chart.chat.voiceCommand">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3Z"/>
+            <path d="M19 11a7 7 0 0 1-14 0"/>
+            <path d="M12 18v3"/>
+            <path d="M9 21h6"/>
+        </svg>
+    </button>
+    <button type="button" id="chatVoiceMiniStatus" class="chat-voice-mini" hidden data-i18n-aria-label="page.chart.chat.openVoiceResult"></button>
     <section id="chatWidget" class="chat-widget" aria-labelledby="chatTitle">
         <button type="button" id="chatResizeHandle" class="chat-resize-handle"
                 data-i18n-aria-label="page.chart.chat.resize"></button>
@@ -565,7 +577,7 @@
     </section>
 
     <script src="/runtime-config.js"></script>
-    <script src="/js/analytics.js?v=61d1c7dfdad9"></script>
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=61d1c7dfdad9"></script>
+    <script src="/js/analytics.js?v=6fd3c2d1c32f"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=6fd3c2d1c32f"></script>
 </body>
 </html>

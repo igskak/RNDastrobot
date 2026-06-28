@@ -1188,6 +1188,7 @@
         bindWheelPanZoom();
 
         document.addEventListener('frontend:locale-changed', () => {
+            syncMobilePanelLabels();
             renderStaticNatal();
             renderRightPanel();
             renderWheel();
@@ -1482,6 +1483,7 @@
         buttons.forEach((btn) => {
             btn.addEventListener('click', () => setPanel(btn.dataset.mobilePanel));
         });
+        syncMobilePanelLabels();
 
         if (typeof mq.addEventListener === 'function') {
             mq.addEventListener('change', syncToViewport);
@@ -1489,6 +1491,26 @@
             mq.addListener(syncToViewport);
         }
         syncToViewport();
+    }
+
+    function syncMobilePanelLabels() {
+        const switchEl = document.getElementById('forecastNewMobilePanelSwitch');
+        if (!switchEl) return;
+        const single = state.wheelView === 'single';
+        const labels = {
+            natal: single
+                ? (t('page.forecastNew.mobilePanels.singleData') || 'Data')
+                : (t('page.forecastNew.mobilePanels.multiChart') || 'Chart'),
+            prog: single
+                ? (t('page.forecastNew.mobilePanels.singleAnalysis') || 'Analysis')
+                : (t('page.forecastNew.mobilePanels.multiLayers') || 'Layers'),
+        };
+        switchEl.querySelectorAll('[data-mobile-panel]').forEach((btn) => {
+            const label = labels[btn.dataset.mobilePanel];
+            if (!label) return;
+            btn.textContent = label;
+            btn.setAttribute('aria-label', label);
+        });
     }
 
     function setSynastryMode(mode) {
@@ -4116,6 +4138,7 @@
         document.body.classList.toggle('forecast-new-single-mode', isSingle);
         document.body.classList.toggle('forecast-new-multi-mode', !isSingle);
         document.body.classList.toggle('forecast-new-composite-mode', state.singleChartMode === 'composite');
+        syncMobilePanelLabels();
         syncRelationshipSwitch();
         refs.forecastNewProgPanel?.setAttribute('data-panel-mode', isSingle ? 'natal' : 'prognostic');
         // Rebuild chrome for the new mode's layout (panels.single vs panels.multi).
@@ -4616,11 +4639,10 @@
         }).join('');
         // Меню добавления показываем всегда: мульти-методы можно добавлять повторно.
         const allLayersActive = false;
-        const compact = state.activeLayers.length > 0;
         const addLayerLabel = t('page.chart.actions.addLayer');
         const addLayerMarkup = allLayersActive ? '' : `
-            <span class="forecast-new-add-layer${compact ? ' forecast-new-add-layer--compact' : ''}">
-                <button type="button" class="forecast-new-add-layer-toggle" data-add-layer-toggle aria-haspopup="menu" aria-expanded="false"${compact ? ` aria-label="${escapeHtml(addLayerLabel)}" title="${escapeHtml(addLayerLabel)}"` : ''}>${compact ? '+' : `+ ${addLayerLabel}`}</button>
+            <span class="forecast-new-add-layer forecast-new-add-layer--compact">
+                <button type="button" class="forecast-new-add-layer-toggle" data-add-layer-toggle aria-haspopup="menu" aria-expanded="false" aria-label="${escapeHtml(addLayerLabel)}" title="${escapeHtml(addLayerLabel)}">+</button>
                 <span class="forecast-new-add-layer-menu hidden" data-add-layer-menu role="menu">
                     ${layerButtons}
                 </span>

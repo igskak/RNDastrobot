@@ -68,6 +68,8 @@ class ChatWidget {
         this.input = document.getElementById('chatInput');
         this.send = document.getElementById('chatSend');
         this.mic = document.getElementById('chatMic');
+        this.voiceCommand = document.getElementById('chatVoiceCommand');
+        this.voiceMiniStatus = document.getElementById('chatVoiceMiniStatus');
         this.voiceStatus = document.getElementById('chatVoiceStatus');
         this.historyToggle = document.getElementById('chatHistoryToggle');
         this.newThreadBtn = document.getElementById('chatNewThread');
@@ -91,6 +93,8 @@ class ChatWidget {
         this.recordingTimer = null;
         this.recordingTicker = null;
         this.recordingStartedAt = null;
+        this.quickVoiceMode = false;
+        this.voiceMiniTimer = null;
         this.resizeObserver = null;
         this.recordedChunks = [];
         this.history = [];
@@ -103,6 +107,8 @@ class ChatWidget {
     init() {
         this.restoreSize();
         this.toggle.addEventListener('click', () => this.openPanel());
+        this.voiceCommand?.addEventListener('click', () => this.toggleVoiceCommand());
+        this.voiceMiniStatus?.addEventListener('click', () => this.openPanel({ focusInput: false }));
         this.closeBtn?.addEventListener('click', () => this.closePanel());
         this.send.addEventListener('click', () => this.sendMessage());
         this.mic?.addEventListener('click', () => this.toggleRecording());
@@ -203,11 +209,34 @@ class ChatWidget {
         } catch {}
     }
 
+    isMobile() {
+        return window.matchMedia?.('(max-width: 640px)').matches === true;
+    }
+
     setVoiceStatus(key = null, { recording = false, params } = {}) {
         if (!this.voiceStatus) return;
         this.voiceStatus.hidden = !key;
         this.voiceStatus.classList.toggle('recording', recording);
         this.voiceStatus.textContent = key ? t(key, params) : '';
+    }
+
+    setVoiceMiniStatus(keyOrText = '', { params, recording = false, timeoutMs = 0 } = {}) {
+        if (!this.voiceMiniStatus) return;
+        clearTimeout(this.voiceMiniTimer);
+        const key = String(keyOrText || '');
+        const isLocaleKey = /^(common|page|nav|errors)\./.test(key);
+        const text = key && isLocaleKey
+            ? t(keyOrText, params)
+            : keyOrText;
+        this.voiceMiniStatus.hidden = !text;
+        this.voiceMiniStatus.classList.toggle('recording', recording);
+        this.voiceMiniStatus.textContent = text || '';
+        if (timeoutMs > 0 && text) {
+            this.voiceMiniTimer = setTimeout(() => {
+                this.voiceMiniStatus.hidden = true;
+                this.voiceMiniStatus.classList.remove('recording');
+            }, timeoutMs);
+        }
     }
 
     updateRecordingStatus() {
@@ -218,12 +247,18 @@ class ChatWidget {
             recording: true,
             params: { time: `${minutes}:${seconds}` },
         });
+        if (this.quickVoiceMode) {
+            this.setVoiceMiniStatus('page.chart.chat.recording', {
+                recording: true,
+                params: { time: `${minutes}:${seconds}` },
+            });
+        }
     }
 
-    openPanel() {
+    openPanel({ focusInput = !this.isMobile() } = {}) {
         this.isOpen = true;
         this.widget.classList.add('open');
-        this.input.focus();
+        if (focusInput) this.input.focus({ preventScroll: true });
     }
 
     closePanel() {
@@ -468,7 +503,7 @@ class ChatWidget {
         }
     }
 
-    async sendMessage() {
+    async sendMessage({ refocus = !this.isMobile(), compactFeedback = false } = {}) {
         if (this.isRecording) {
             this.stopRecording({ sendAfterTranscription: true });
             return;
@@ -485,6 +520,9 @@ class ChatWidget {
 
         if (!userId) {
             this.addMessage(t('page.chart.chat.noChart'), 'assistant');
+            if (compactFeedback) {
+                this.setVoiceMiniStatus('page.chart.chat.noChart', { timeoutMs: 7000 });
+            }
             return;
         }
 
@@ -524,16 +562,22 @@ class ChatWidget {
             if (reply) {
                 this.addMessage(reply, 'assistant');
                 this.history.push({ role: 'assistant', content: reply });
+                if (compactFeedback) {
+                    this.setVoiceMiniStatus(reply, { timeoutMs: 10000 });
+                }
             }
-            this.handleActions(data.actions || []);
+            this.handleActions(data.actions || [], { compactFeedback });
         } catch (error) {
             console.error('Assistant chat error:', error);
             loadingMsg.remove();
             this.addMessage(t('page.chat.errors.assistantFallback'), 'assistant');
+            if (compactFeedback) {
+                this.setVoiceMiniStatus('page.chat.errors.assistantFallback', { timeoutMs: 7000 });
+            }
         } finally {
             this.isLoading = false;
             this.send.disabled = false;
-            this.input.focus();
+            if (refocus) this.input.focus({ preventScroll: true });
         }
     }
 
@@ -557,25 +601,25 @@ class ChatWidget {
         }
     }
 
-    handleActions(actions) {
+    handleActions(actions, { compactFeedback = false } = {}) {
         if (!Array.isArray(actions) || actions.length === 0) return;
         if (!window.ForecastCommands) {
             this.addActionNote(t('page.chart.chat.actionsUnavailable')
-                || 'Действия недоступны на этом экране.', { error: true });
+                || 'Действия недоступны на этом экране.', { error: true, compactFeedback });
             return;
         }
         for (const action of actions) {
             if (!action || !action.name) continue;
             // Destructive commands wait for an explicit tap; reversible ones auto-apply.
             if (action.confirm === 'confirm') {
-                this.renderConfirmAction(action);
+                this.renderConfirmAction(action, { compactFeedback });
             } else {
-                void this.runAction(action);
+                void this.runAction(action, { compactFeedback });
             }
         }
     }
 
-    async runAction(action) {
+    async runAction(action, { compactFeedback = false } = {}) {
         let result;
         try {
             result = await window.ForecastCommands.apply(action);
@@ -585,14 +629,14 @@ class ChatWidget {
         if (result && result.ok) {
             // The workspace toast (with Undo) is shown by the facade's onApplied hook;
             // here we just leave a compact record in the thread.
-            this.addActionNote(`✓ ${actionLabel(action)}`, { applied: true });
+            this.addActionNote(`✓ ${actionLabel(action)}`, { applied: true, compactFeedback });
         } else {
             const code = result?.error?.code ? ` (${result.error.code})` : '';
-            this.addActionNote(`⚠ Не удалось: ${actionLabel(action)}${code}`, { error: true });
+            this.addActionNote(`⚠ Не удалось: ${actionLabel(action)}${code}`, { error: true, compactFeedback });
         }
     }
 
-    renderConfirmAction(action) {
+    renderConfirmAction(action, { compactFeedback = false } = {}) {
         const wrap = document.createElement('div');
         wrap.className = 'chat-message assistant chat-action-confirm';
         const content = document.createElement('div');
@@ -633,9 +677,12 @@ class ChatWidget {
         wrap.appendChild(content);
         this.messages.appendChild(wrap);
         this.messages.scrollTop = this.messages.scrollHeight;
+        if (compactFeedback) {
+            this.setVoiceMiniStatus('page.chart.chat.confirmInChat', { timeoutMs: 9000 });
+        }
     }
 
-    addActionNote(text, { applied = false, error = false } = {}) {
+    addActionNote(text, { applied = false, error = false, compactFeedback = false } = {}) {
         const div = document.createElement('div');
         div.className = 'chat-message assistant chat-action-note';
         const content = document.createElement('div');
@@ -646,6 +693,9 @@ class ChatWidget {
         div.appendChild(content);
         this.messages.appendChild(div);
         this.messages.scrollTop = this.messages.scrollHeight;
+        if (compactFeedback) {
+            this.setVoiceMiniStatus(text, { timeoutMs: 8000 });
+        }
     }
 
     toggleRecording() {
@@ -656,21 +706,37 @@ class ChatWidget {
         }
     }
 
-    async startRecording() {
+    toggleVoiceCommand() {
+        if (this.isRecording) {
+            this.stopRecording({ sendAfterTranscription: true });
+            return;
+        }
+        if (this.isStartingRecording || this.isTranscribing || this.isLoading) return;
+        this.startRecording({ quick: true });
+    }
+
+    async startRecording({ quick = false } = {}) {
+        this.quickVoiceMode = quick;
         if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
-            this.addMessage(t('page.chart.chat.micUnavailable'), 'assistant');
+            if (quick) this.setVoiceMiniStatus('page.chart.chat.micUnavailable', { timeoutMs: 6000 });
+            else this.addMessage(t('page.chart.chat.micUnavailable'), 'assistant');
+            this.quickVoiceMode = false;
             return;
         }
 
         this.isStartingRecording = true;
         if (this.mic) this.mic.disabled = true;
+        if (this.voiceCommand) this.voiceCommand.disabled = true;
+        if (quick) this.setVoiceMiniStatus('page.chart.chat.voiceCommandHint', { timeoutMs: 3000 });
 
         try {
             let stream;
             try {
                 stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             } catch (error) {
-                this.addMessage(t('page.chart.chat.micDenied'), 'assistant');
+                if (quick) this.setVoiceMiniStatus('page.chart.chat.micDenied', { timeoutMs: 6000 });
+                else this.addMessage(t('page.chart.chat.micDenied'), 'assistant');
+                this.quickVoiceMode = false;
                 return;
             }
 
@@ -679,7 +745,9 @@ class ChatWidget {
                 this.mediaRecorder = new MediaRecorder(stream);
             } catch (error) {
                 stream.getTracks().forEach((track) => track.stop());
-                this.addMessage(t('page.chart.chat.micUnavailable'), 'assistant');
+                if (quick) this.setVoiceMiniStatus('page.chart.chat.micUnavailable', { timeoutMs: 6000 });
+                else this.addMessage(t('page.chart.chat.micUnavailable'), 'assistant');
+                this.quickVoiceMode = false;
                 return;
             }
 
@@ -693,8 +761,9 @@ class ChatWidget {
                 const type = this.mediaRecorder?.mimeType || 'audio/webm';
                 const blob = new Blob(this.recordedChunks, { type });
                 const sendAfterTranscription = this.sendAfterTranscription;
+                const quickVoiceMode = this.quickVoiceMode;
                 this.sendAfterTranscription = false;
-                this.transcribeBlob(blob, { sendAfterTranscription });
+                this.transcribeBlob(blob, { sendAfterTranscription, quick: quickVoiceMode });
             });
             this.mediaRecorder.addEventListener('error', () => {
                 clearTimeout(this.recordingTimer);
@@ -706,8 +775,12 @@ class ChatWidget {
                 this.isRecording = false;
                 this.mic?.classList.remove('recording');
                 this.mic?.setAttribute('aria-pressed', 'false');
+                this.voiceCommand?.classList.remove('recording');
+                this.voiceCommand?.setAttribute('aria-pressed', 'false');
                 this.setVoiceStatus();
-                this.addMessage(t('page.chart.chat.transcribeFailed'), 'assistant');
+                if (this.quickVoiceMode) this.setVoiceMiniStatus('page.chart.chat.transcribeFailed', { timeoutMs: 6000 });
+                else this.addMessage(t('page.chart.chat.transcribeFailed'), 'assistant');
+                this.quickVoiceMode = false;
             });
 
             this.mediaRecorder.start();
@@ -717,10 +790,16 @@ class ChatWidget {
             this.recordingTicker = setInterval(() => this.updateRecordingStatus(), 1_000);
             this.mic?.classList.add('recording');
             this.mic?.setAttribute('aria-pressed', 'true');
-            this.recordingTimer = setTimeout(() => this.stopRecording(), MAX_RECORDING_MS);
+            this.voiceCommand?.classList.add('recording');
+            this.voiceCommand?.setAttribute('aria-pressed', 'true');
+            this.recordingTimer = setTimeout(
+                () => this.stopRecording({ sendAfterTranscription: this.quickVoiceMode }),
+                MAX_RECORDING_MS,
+            );
         } finally {
             this.isStartingRecording = false;
             if (this.mic) this.mic.disabled = false;
+            if (this.voiceCommand) this.voiceCommand.disabled = false;
         }
     }
 
@@ -737,11 +816,18 @@ class ChatWidget {
         this.isRecording = false;
         this.mic?.classList.remove('recording');
         this.mic?.setAttribute('aria-pressed', 'false');
+        this.voiceCommand?.classList.remove('recording');
+        this.voiceCommand?.setAttribute('aria-pressed', 'false');
+        if (this.quickVoiceMode && sendAfterTranscription) {
+            this.setVoiceMiniStatus('page.chart.chat.transcribingAndSending');
+        }
     }
 
-    async transcribeBlob(blob, { sendAfterTranscription = false } = {}) {
+    async transcribeBlob(blob, { sendAfterTranscription = false, quick = false } = {}) {
         if (!blob || blob.size === 0) {
             this.setVoiceStatus();
+            if (quick) this.setVoiceMiniStatus('', {});
+            this.quickVoiceMode = false;
             return;
         }
 
@@ -757,7 +843,13 @@ class ChatWidget {
         this.setVoiceStatus(sendAfterTranscription
             ? 'page.chart.chat.transcribingAndSending'
             : 'page.chart.chat.transcribing');
+        if (quick) {
+            this.setVoiceMiniStatus(sendAfterTranscription
+                ? 'page.chart.chat.transcribingAndSending'
+                : 'page.chart.chat.transcribing');
+        }
         if (this.mic) this.mic.disabled = true;
+        if (this.voiceCommand) this.voiceCommand.disabled = true;
 
         try {
             const response = await fetch(`${API_BASE_URL}/assistant/transcribe`, {
@@ -777,19 +869,26 @@ class ChatWidget {
                 this.input.dispatchEvent(new Event('input'));
                 if (sendAfterTranscription) {
                     this.isTranscribing = false;
-                    await this.sendMessage();
+                    await this.sendMessage({ refocus: !quick && !this.isMobile(), compactFeedback: quick });
+                } else if (quick) {
+                    this.setVoiceMiniStatus(text, { timeoutMs: 8000 });
                 }
+            } else if (quick) {
+                this.setVoiceMiniStatus('page.chart.chat.transcribeFailed', { timeoutMs: 6000 });
             }
         } catch (error) {
             console.error('Transcription error:', error);
-            this.addMessage(t('page.chart.chat.transcribeFailed'), 'assistant');
+            if (quick) this.setVoiceMiniStatus('page.chart.chat.transcribeFailed', { timeoutMs: 6000 });
+            else this.addMessage(t('page.chart.chat.transcribeFailed'), 'assistant');
         } finally {
             this.isTranscribing = false;
             this.input.placeholder = previousPlaceholder;
             this.send.disabled = this.isLoading;
             if (this.mic) this.mic.disabled = false;
+            if (this.voiceCommand) this.voiceCommand.disabled = false;
             this.setVoiceStatus();
-            this.input.focus();
+            this.quickVoiceMode = false;
+            if (!quick && !this.isMobile()) this.input.focus({ preventScroll: true });
         }
     }
 }

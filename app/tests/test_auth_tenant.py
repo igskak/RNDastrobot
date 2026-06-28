@@ -22,7 +22,7 @@ from app.api.routes import natal as natal_route  # noqa: E402
 from app.api.routes import synastry as synastry_route  # noqa: E402
 from app.auth.security import hash_password, utcnow  # noqa: E402
 from app.database.connection import get_db  # noqa: E402
-from app.database.models import Astrologer, AuditEvent, AuthSession, BillingCustomer, BillingEvent, BillingPriceMap, BillingSubscription, CallSession, ClientRelationship, Consultation, EmailVerificationToken, PasswordResetToken, User  # noqa: E402
+from app.database.models import Astrologer, AuditEvent, AuthSession, BillingCustomer, BillingEvent, BillingPriceMap, BillingSubscription, CallSession, ClientRelationship, CompositeChart, Consultation, EmailVerificationToken, PasswordResetToken, User  # noqa: E402
 from app.services import billing_service  # noqa: E402
 
 
@@ -32,8 +32,12 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 def _prepare_sqlite_json_columns():
     User.__table__.c.tags.type = JSON()
+    CompositeChart.__table__.c.partner_birth_data.type = JSON()
+    CompositeChart.__table__.c.chart_data.type = JSON()
+    CompositeChart.__table__.c.tags.type = JSON()
     CallSession.__table__.c.transcript_segments.type = JSON()
     CallSession.__table__.c.key_points.type = JSON()
+    CallSession.__table__.c.summary_json.type = JSON()
     BillingCustomer.__table__.c.raw_provider_payload.type = JSON()
     BillingSubscription.__table__.c.raw_provider_payload.type = JSON()
     BillingEvent.__table__.c.raw_payload.type = JSON()
@@ -56,6 +60,7 @@ def _db_setup():
     _prepare_sqlite_json_columns()
     for table in (
         CallSession.__table__,
+        CompositeChart.__table__,
         BillingEvent.__table__,
         BillingSubscription.__table__,
         BillingPriceMap.__table__,
@@ -78,6 +83,7 @@ def _db_setup():
     BillingEvent.__table__.create(bind=engine, checkfirst=True)
     Consultation.__table__.create(bind=engine, checkfirst=True)
     ClientRelationship.__table__.create(bind=engine, checkfirst=True)
+    CompositeChart.__table__.create(bind=engine, checkfirst=True)
     CallSession.__table__.create(bind=engine, checkfirst=True)
     AuthSession.__table__.create(bind=engine, checkfirst=True)
     AuditEvent.__table__.create(bind=engine, checkfirst=True)

@@ -40,6 +40,9 @@
 | D9 | **Layer config sheets remain DOM-owned by the hidden header toggle strip, but the strip becomes a zero-size visible host while a phone sheet is open.** | The real phone layer UI is `rightLayerTabs`; moving DOM would be riskier. CSS `:has(...)` exposes only the fixed sheet and keeps old header chips hidden. |
 | D10 | **Top-level mobile sheets are mutually exclusive, Escape closes settings, and header-owned sheets temporarily raise the header stacking context.** | Prevents settings from intercepting add-layer/menu taps, and keeps layer sheets above the sticky panel switcher and chat launcher. |
 | D11 | **Touch pinch zoom on the wheel is implemented with touch events, separate from desktop mouse wheel/drag.** | Desktop behavior stays intact. On phones, one finger pans the chart and two fingers adjust `state.viewport.zoom`; persistence is deferred until the touch sequence ends to avoid storage churn while pinching. |
+| D12 | **Phone panel labels are mode-aware.** Multi-wheel uses `Chart / Layers`; single-wheel uses `Data / Analysis`. | `Primary / Comparison` is better than `Natal / Forecast`, but still wrong for mono-wheel. Mode-aware labels describe the panel function without implying that a comparison layer exists. |
+| D13 | **Workspace header actions collapse into one compact row.** `Table` and `Timeline` move under the existing actions menu; add-layer is icon-only `+`; panel settings gets a real icon. | The header was visually heavy on phones and wasted horizontal space. This keeps desktop-first structure while reducing the primary toolbar to scan-ready controls. |
+| D14 | **Voice command gets a standalone mic control with mini feedback.** The normal chat no longer autofocuses the text input on phones; quick voice records and sends without opening the large chat panel. | Mobile keyboard and full-height chat shifted the work screen away from the chart. Voice-first control lets the astrologer keep the chart visible while commands, confirmations, and results surface as compact status bubbles. |
 
 ## Files touched
 - `app/frontend/css/forecast-new.css` — one trailing `@media (max-width:640px)` block + one base `display:none` rule for the switcher (inert on desktop); phone-only layer-sheet host and stacking fixes.
@@ -62,6 +65,13 @@
 - Renamed the phone-only panel switcher from calculation labels (`Natal` / `Forecast`) to role labels (`Primary` / `Comparison`; RU `Основная` / `Сравнение`; UK `Основна` / `Порівняння`). Desktop panel titles remain unchanged.
 - Added phone touch gestures for the wheel: one-finger pan and two-finger pinch zoom. Existing desktop mouse wheel zoom and mouse drag remain unchanged.
 - Browser QA confirmed the mobile switcher renders via the new i18n keys at 390x844 and the wheel shell is present with `touch-action:none`. Synthetic pinch dispatch could not be completed through the in-app browser automation surface because that environment does not expose DOM event constructors; code path was verified by build/static checks and will be best manually smoke-tested on a physical touch device.
+
+## Implementation follow-up — 2026-06-28 (compact header + voice command)
+
+- Replaced the phone panel switcher copy with mode-aware labels: multi-wheel shows `Chart / Layers` (RU `Карта / Слои`), mono-wheel shows `Data / Analysis` (RU `Данные / Анализ`).
+- Moved `Table` and `Timeline` into the header actions menu, changed add-layer to an icon-only `+` on all breakpoints, and replaced the blank panel-settings square with an icon.
+- Added a standalone voice-command mic button next to the chat launcher. It records, transcribes, and submits a command without opening the full chat; confirmations and short responses are mirrored into a compact mini bubble.
+- Changed phone chat opening to avoid automatic text-input focus, preventing the iOS keyboard from immediately pushing the chart workspace.
 
 ## Verification (Definition of Done)
 - `npm --prefix app run build:frontend` + `npm --prefix app run check:frontend-build` (clean diff).

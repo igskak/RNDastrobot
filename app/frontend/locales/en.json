@@ -266,7 +266,11 @@
       "natalPanelTitle": "Natal",
       "mobilePanels": {
         "primary": "Primary",
-        "comparison": "Comparison"
+        "comparison": "Comparison",
+        "multiChart": "Chart",
+        "multiLayers": "Layers",
+        "singleData": "Data",
+        "singleAnalysis": "Analysis"
       },
       "leftLayerAria": "Primary chart method",
       "birthDateTimeLabel": "Birth date / time",
@@ -893,6 +897,10 @@
         "micDenied": "Microphone access was denied. Enable it in your browser to dictate.",
         "micUnavailable": "Voice input is not available in this browser.",
         "noChart": "Open a chart first, then ask about it here.",
+        "voiceCommand": "Voice command",
+        "voiceCommandHint": "Speak now. Tap the mic again to send.",
+        "openVoiceResult": "Open assistant result",
+        "confirmInChat": "Confirmation is waiting in the assistant.",
         "placeholder": "Ask about this chart…",
         "recording": "Recording {time}",
         "resize": "Resize assistant",
