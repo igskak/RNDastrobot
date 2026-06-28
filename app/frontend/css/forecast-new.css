@@ -3304,21 +3304,281 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
 @media (max-width: 720px) {
     #forecastNewPanelEditor {
         inset: 0;
+        height: 100vh;
+        height: 100dvh;
+        max-height: none;
         border-radius: 0;
     }
 
-    .forecast-new-pe-header,
-    .forecast-new-pe-workspaces {
-        align-items: flex-start;
-        flex-wrap: wrap;
+    .forecast-new-pe-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
+        gap: 10px;
+        padding: 18px 16px 12px;
+        flex: 0 0 auto;
+    }
+
+    .forecast-new-pe-header > div {
+        grid-column: 1 / -1;
+        min-width: 0;
+    }
+
+    .forecast-new-pe-header strong {
+        font-size: 28px;
+        line-height: 1.08;
+    }
+
+    .forecast-new-pe-header p {
+        margin-top: 8px;
+        font-size: 16px;
+        line-height: 1.38;
     }
 
     .forecast-new-pe-mode {
+        display: inline-flex;
+        min-height: 42px;
+        align-items: center;
+        justify-content: center;
+        margin-left: 0;
+        padding: 7px 13px;
+        line-height: 1.15;
+    }
+
+    .forecast-new-pe-close {
+        min-width: 92px;
+        min-height: 42px;
+        justify-self: end;
+    }
+
+    .forecast-new-pe-workspaces {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        align-items: start;
+        gap: 11px;
+        padding: 12px 16px;
+        flex: 0 0 auto;
+    }
+
+    .forecast-new-pe-workspace-list,
+    .forecast-new-pe-preset-list {
+        gap: 7px;
+    }
+
+    .forecast-new-pe-workspace-list {
+        flex-wrap: nowrap;
+        margin-bottom: -4px;
+        padding-bottom: 4px;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scrollbar-width: none;
+    }
+
+    .forecast-new-pe-workspace-list::-webkit-scrollbar {
+        display: none;
+    }
+
+    .forecast-new-pe-workspace,
+    .forecast-new-pe-preset,
+    .forecast-new-pe-secondary,
+    .forecast-new-pe-primary,
+    .forecast-new-pe-reset {
+        min-height: 42px;
+        padding: 8px 12px;
+        font-size: 14px;
+        line-height: 1.2;
+    }
+
+    .forecast-new-pe-workspace {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+
+    .forecast-new-pe-saved-workspaces {
+        padding: 10px;
+    }
+
+    .forecast-new-pe-saved-head {
+        flex-wrap: wrap;
+    }
+
+    .forecast-new-pe-save-preset {
+        min-height: 36px;
         margin-left: 0;
     }
 
+    .forecast-new-pe-kicker {
+        margin-bottom: 7px;
+        line-height: 1.25;
+    }
+
     .forecast-new-pe-body {
+        flex: 1 1 auto;
+        min-height: 0;
         grid-template-columns: 1fr;
+        gap: 14px;
+        padding: 14px 16px 18px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+    }
+
+    .forecast-new-pe-side,
+    .forecast-new-pe-corners {
+        min-height: auto;
+        padding: 12px;
+        border-radius: 14px;
+    }
+
+    .forecast-new-pe-side-head {
+        margin-bottom: 8px;
+        font-size: 21px;
+        line-height: 1.16;
+    }
+
+    .forecast-new-pe-corners .forecast-new-pe-side-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .forecast-new-pe-corner-count {
+        margin-left: 0;
+    }
+
+    .forecast-new-pe-corners-copy {
+        margin: 0 0 12px;
+        font-size: 14px;
+        line-height: 1.35;
+    }
+
+    .forecast-new-pe-corner-stage {
+        padding: 0;
+    }
+
+    .forecast-new-pe-corner-wheel {
+        display: none;
+    }
+
+    .forecast-new-pe-corners-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+    }
+
+    .forecast-new-pe-corner {
+        min-height: auto;
+        padding: 10px;
+        gap: 8px;
+    }
+
+    .forecast-new-pe-corner-label {
+        font-size: 13px;
+        line-height: 1.2;
+    }
+
+    .forecast-new-pe-tab {
+        margin-bottom: 10px;
+        padding: 10px;
+        border-radius: 12px;
+    }
+
+    .forecast-new-pe-tab-head {
+        display: grid;
+        grid-template-columns: 28px minmax(0, 1fr) 36px;
+        gap: 8px;
+    }
+
+    .forecast-new-pe-title {
+        width: 100%;
+        min-width: 0;
+        min-height: 44px;
+        padding: 9px 11px;
+        font-size: 16px;
+        line-height: 1.2;
+    }
+
+    .forecast-new-pe-blocks {
+        gap: 6px;
+        margin: 10px 0;
+    }
+
+    .forecast-new-pe-block {
+        min-height: 44px;
+        gap: 8px;
+        padding: 7px 9px;
+    }
+
+    .forecast-new-pe-block-label {
+        line-height: 1.25;
+    }
+
+    .forecast-new-pe-tab-grip,
+    .forecast-new-pe-block-grip {
+        display: inline-flex;
+        width: 28px;
+        min-height: 28px;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+
+    .forecast-new-pe-tab-remove,
+    .forecast-new-pe-block-remove,
+    .forecast-new-pe-preset-delete {
+        width: 36px;
+        height: 36px;
+        flex: 0 0 36px;
+    }
+
+    .forecast-new-pe-add-block,
+    .forecast-new-pe-add-tab,
+    .forecast-new-pe-corner-add,
+    .forecast-new-pe-clear-corners {
+        width: 100%;
+        min-height: 44px;
+        padding: 8px 11px;
+        font-size: 16px;
+        line-height: 1.2;
+    }
+
+    .forecast-new-pe-footer {
+        display: grid;
+        grid-template-columns: minmax(0, 0.88fr) minmax(140px, 1.12fr);
+        gap: 8px;
+        margin-top: 0;
+        padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+        flex: 0 0 auto;
+        background: rgba(255, 255, 255, 0.98);
+        box-shadow: 0 -12px 28px rgba(26, 22, 20, 0.1);
+    }
+
+    .forecast-new-pe-footer [data-pe-save-status],
+    .forecast-new-pe-footer [data-pe-undo-slot] {
+        grid-column: 1 / -1;
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .forecast-new-pe-footer [data-pe-save-status]:empty,
+    .forecast-new-pe-footer [data-pe-undo-slot]:empty {
+        display: none;
+    }
+
+    .forecast-new-pe-footer .forecast-new-pe-secondary,
+    .forecast-new-pe-footer .forecast-new-pe-reset {
+        width: 100%;
+        min-height: 44px;
+        padding: 8px 10px;
+        white-space: normal;
+    }
+
+    .forecast-new-pe-dialog {
+        padding: 14px;
+    }
+
+    .forecast-new-pe-dialog-card {
+        padding: 18px;
     }
 }
 
