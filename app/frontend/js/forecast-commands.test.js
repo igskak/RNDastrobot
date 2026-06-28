@@ -71,6 +71,9 @@ function makeAdapter(initial) {
     ok(validateAction({ name: 'set_house_system', args: { system: 'C' } }).ok, 'valid house system accepted');
     ok(validateAction({ name: 'remove_layer', args: { method: 'transit' } }).ok, 'remove_layer by method accepted');
     ok(validateAction({ name: 'remove_layer', args: { layer_id: 'transit-2' } }).ok, 'remove_layer by id accepted');
+    ok(validateAction({ name: 'set_synastry_partner', args: { chart_id: 'u-123' } }).ok, 'valid synastry partner accepted');
+    ok(!validateAction({ name: 'set_synastry_partner', args: {} }).ok, 'synastry partner without chart_id rejected');
+    ok(!validateAction({ name: 'set_synastry_partner', args: { chart_id: '  ' } }).ok, 'synastry partner blank chart_id rejected');
 
     // ── registry / confirm policy ────────────────────────────────────────────
     ok(REGISTRY.set_transit_date.confirm === 'auto', 'transit date auto-applies');
@@ -89,6 +92,9 @@ function makeAdapter(initial) {
     ok(invDate.name === 'set_transit_date' && invDate.args.date === '2026-06-27' && invDate.args.layer_id === 'transit-1', 'transit date inverse restores prior moment + layer');
     const invAdd = computeInverse({ name: 'add_layer', args: { method: 'direction' } }, before);
     ok(invAdd.name === 'restore_workspace', 'add_layer inverse is a workspace restore');
+    const invSyn = computeInverse({ name: 'set_synastry_partner', args: { chart_id: 'u-9' } }, before);
+    ok(invSyn.name === 'restore_workspace', 'synastry partner inverse is a workspace restore');
+    ok(REGISTRY.set_synastry_partner.confirm === 'auto', 'synastry partner auto-applies (reversible via undo)');
     const invHouse = computeInverse({ name: 'set_house_system', args: { system: 'K' } }, before);
     ok(invHouse.name === 'set_house_system' && invHouse.args.system === 'P', 'house system inverse restores prior system');
 

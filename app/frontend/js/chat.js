@@ -44,6 +44,7 @@ const ACTION_TEXT = {
     set_solar_year: (a) => `год соляра → ${a.args.year}`,
     set_wheel_view: (a) => `вид колеса → ${a.args.view}`,
     set_house_system: (a) => `система домов → ${a.args.system}`,
+    set_synastry_partner: (a) => `синастрия с ${a.args.title || 'партнёром'}`,
     remove_layer: (a) => `убрать слой «${a.args.method || a.args.layer_id}»`,
     clear_layers: () => 'убрать все слои',
 };

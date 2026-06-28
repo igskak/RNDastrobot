@@ -20,8 +20,10 @@ from typing import Callable, Dict, List, Optional
 from uuid import UUID
 
 from loguru import logger
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
+from app.database.models import User
 from app.services.openai_service import get_openai_client, is_openai_configured
 from app.services.transit_service import TransitService
 from app.utils.constants import PLANETS, SPECIAL_POINTS
@@ -67,6 +69,7 @@ COMMAND_REGISTRY = {
     'set_solar_year': {'confirm': 'auto'},
     'set_wheel_view': {'confirm': 'auto'},
     'set_house_system': {'confirm': 'auto'},
+    'set_synastry_partner': {'confirm': 'auto'},
     'remove_layer': {'confirm': 'confirm'},
     'clear_layers': {'confirm': 'confirm'},
 }
@@ -140,6 +143,11 @@ def validate_command(name: str, args: Dict) -> str:
         if args.get('system') not in HOUSE_SYSTEM_CODES:
             return 'bad_house_system'
         return ''
+    if name == 'set_synastry_partner':
+        chart_id = args.get('chart_id')
+        if not isinstance(chart_id, str) or not chart_id.strip():
+            return 'bad_chart_id'
+        return ''
     if name == 'remove_layer':
         if not args.get('layer_id') and args.get('method') not in WORKSPACE_LAYER_METHODS:
             return 'bad_target'
@@ -166,6 +174,12 @@ def _normalize_command_args(name: str, args: Dict) -> Dict:
         return {'view': args['view']}
     if name == 'set_house_system':
         return {'system': args['system']}
+    if name == 'set_synastry_partner':
+        out = {'chart_id': str(args['chart_id']).strip()}
+        title = args.get('title')
+        if isinstance(title, str) and title.strip():
+            out['title'] = title.strip()[:120]
+        return out
     if name == 'remove_layer':
         if args.get('layer_id'):
             return {'layer_id': str(args['layer_id'])}
@@ -238,6 +252,12 @@ def build_command_tools() -> List[Dict]:
         fn('set_house_system',
            'Change the house system (single-letter Swiss Ephemeris code).',
            {'system': {'type': 'string', 'enum': sorted(HOUSE_SYSTEM_CODES)}}, ['system']),
+        fn('set_synastry_partner',
+           'Build synastry with a saved chart. Resolve the name to a chart_id via '
+           'find_chart first; pass the chart title for display.',
+           {'chart_id': {'type': 'string', 'description': 'Saved chart id from find_chart.'},
+            'title': {'type': 'string', 'description': 'Partner display name (optional).'}},
+           ['chart_id']),
         fn('remove_layer',
            'Remove a prognostic layer by method (all instances) or layer_id (one). Destructive.',
            {'method': {'type': 'string', 'enum': methods},
@@ -421,7 +441,7 @@ or counts: every number must come from a tool result.
 
 You can also CHANGE the workspace by calling command tools (set_transit_date, \
 step_date, add_layer, build_solar, set_solar_year, set_wheel_view, set_house_system, \
-remove_layer, clear_layers). Command rules:
+set_synastry_partner, remove_layer, clear_layers). Command rules:
 - Call a command ONLY when the astrologer explicitly asks to change, build, add, move, \
 remove, or show something. A plain question must NEVER trigger a command — answer it \
 with a query tool or words instead.
@@ -432,6 +452,9 @@ to show rings/layers as a display mode mean set_wheel_view {"view":"multi"}, NOT
 "Одиночный режим", "только натал", or "single-wheel mode" mean set_wheel_view {"view":"single"}.
 - add_layer is only for an explicit request to add/build a named calculation method \
 such as transits, progressions, directions, solar return, or synastry.
+- To build synastry with a named person, first call find_chart to resolve the name \
+to a chart_id (if several match, ask which one; if none match, say so), then call \
+set_synastry_partner with that chart_id and the chart's title.
 - remove_layer and clear_layers are destructive — call them only on an explicit removal request.
 
 Rules:
@@ -503,6 +526,25 @@ def build_query_tools() -> List[Dict]:
                 "additionalProperties": False,
             },
         },
+    }, {
+        "type": "function",
+        "function": {
+            "name": "find_chart",
+            "description": (
+                "Search the astrologer's saved charts by name to resolve a person for "
+                "synastry. Returns candidates (chart_id, title, birth_date, birth_place). "
+                "If several match, ask which one; if none match, say so."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Name or part of a name."},
+                    "limit": {"type": "integer", "minimum": 1, "maximum": 25},
+                },
+                "required": ["query"],
+                "additionalProperties": False,
+            },
+        },
     }]
 
 
@@ -552,11 +594,15 @@ class AstroAssistantService:
         default_timezone: str = "UTC",
         default_anchor_date: Optional[date_type] = None,
         default_workspace: Optional[Dict] = None,
+        astrologer_id: Optional[UUID] = None,
     ):
         self.db = db_session
         self.default_timezone = default_timezone
         self.default_anchor_date = default_anchor_date or date_type.today()
         self.default_workspace = default_workspace
+        # Auth-bound owner of the saved charts find_chart may search; never a
+        # model-controlled argument (same boundary as the active chart user_id).
+        self.astrologer_id = astrologer_id
         self._transit_service: Optional[TransitService] = None
 
     def _transits(self) -> TransitService:
@@ -603,9 +649,51 @@ class AstroAssistantService:
             max_expansion_days=args.get("max_expansion_days"),
         )
 
+    def _exec_find_chart(self, user_id: UUID, args: Dict) -> Dict:
+        """Search the astrologer's saved charts by name (synastry grounding).
+
+        Scoped to the bound ``astrologer_id`` (never model-controlled), mirroring
+        the /charts list query. Returns compact candidates the model disambiguates.
+        """
+        astrologer_id = getattr(self, "astrologer_id", None)
+        if astrologer_id is None:
+            return {"status": "error", "error": "no_astrologer_context"}
+        query = (args.get("query") or "").strip()
+        if not query:
+            return {"status": "error", "error": "empty_query"}
+        raw_limit = args.get("limit")
+        limit = raw_limit if isinstance(raw_limit, int) and 1 <= raw_limit <= 25 else 8
+        pattern = f"%{query}%"
+        rows = (
+            self.db.query(User)
+            .filter(
+                User.astrologer_id == astrologer_id,
+                or_(
+                    User.title.ilike(pattern),
+                    User.first_name.ilike(pattern),
+                    User.last_name.ilike(pattern),
+                    User.birth_place.ilike(pattern),
+                ),
+            )
+            .order_by(User.created_at.desc())
+            .limit(limit)
+            .all()
+        )
+        matches = []
+        for u in rows:
+            name = " ".join(p for p in [u.first_name, u.last_name] if p).strip()
+            matches.append({
+                "chart_id": str(u.user_id),
+                "title": u.title or name or str(u.user_id)[:8],
+                "birth_date": u.birth_date.isoformat() if u.birth_date else None,
+                "birth_place": u.birth_place or None,
+            })
+        return {"status": "ok", "count": len(matches), "matches": matches}
+
     def _dispatch(self, name: str, args: Dict, user_id: UUID) -> Dict:
         handlers: Dict[str, Callable[[UUID, Dict], Dict]] = {
             "find_aspect_passes": self._exec_find_aspect_passes,
+            "find_chart": self._exec_find_chart,
         }
         handler = handlers.get(name)
         if handler is None:

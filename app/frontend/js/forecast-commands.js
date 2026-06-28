@@ -61,6 +61,7 @@
         set_solar_year:    { confirm: 'auto', reversible: true },
         set_wheel_view:    { confirm: 'auto', reversible: true },
         set_house_system:  { confirm: 'auto', reversible: true },
+        set_synastry_partner: { confirm: 'auto', reversible: true },
         remove_layer:      { confirm: 'confirm', reversible: true },
         clear_layers:      { confirm: 'confirm', reversible: true },
         restore_workspace: { confirm: 'auto', reversible: false, internal: true },
@@ -126,6 +127,12 @@
                 if (!HOUSE_SYSTEMS.includes(args.system)) return fail('bad_house_system', 'system must be one of: ' + HOUSE_SYSTEMS.join(', '));
                 return pass();
             }
+            case 'set_synastry_partner': {
+                if (typeof args.chart_id !== 'string' || !args.chart_id.trim()) {
+                    return fail('bad_chart_id', 'chart_id must be a non-empty string');
+                }
+                return pass();
+            }
             case 'remove_layer': {
                 if (!args.layer_id && !LAYER_METHODS.includes(args.method)) {
                     return fail('bad_target', 'remove_layer needs layer_id or a valid method');
@@ -162,6 +169,7 @@
             case 'set_solar_year':
             case 'build_solar':
             case 'add_layer':
+            case 'set_synastry_partner':
             case 'remove_layer':
             case 'clear_layers':
                 if (!before.snapshot) return null;

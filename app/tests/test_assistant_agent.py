@@ -66,6 +66,8 @@ def test_build_tools_exposes_enums_and_hides_user_id():
     # PR2: command tools sit alongside the query tool, generated from the registry.
     assert set(COMMAND_REGISTRY).issubset(by_name)
     assert "restore_workspace" not in by_name  # internal undo inverse is never exposed
+    assert "find_chart" in by_name  # PR4 grounding query tool
+    assert "set_synastry_partner" in by_name
     add_layer = _tool_by_name(tools, "add_layer")
     assert set(add_layer["function"]["parameters"]["properties"]["method"]["enum"]) \
         == set(WORKSPACE_LAYER_METHODS)
@@ -98,6 +100,76 @@ def test_handle_command_emits_action_or_error():
 
     receipt, action = handle_command("set_solar_year", {"year": 1700})
     assert receipt["status"] == "error" and action is None  # invalid → no action emitted
+
+
+def test_set_synastry_partner_command():
+    assert validate_command("set_synastry_partner", {"chart_id": "abc"}) == ""
+    assert validate_command("set_synastry_partner", {}) == "bad_chart_id"
+    assert validate_command("set_synastry_partner", {"chart_id": "   "}) == "bad_chart_id"
+    receipt, action = handle_command(
+        "set_synastry_partner", {"chart_id": " abc ", "title": "Алёна"})
+    assert receipt["status"] == "applied_clientside"
+    assert action == {
+        "name": "set_synastry_partner",
+        "args": {"chart_id": "abc", "title": "Алёна"},
+        "confirm": "auto",
+    }
+
+
+class _FakeChartQuery:
+    def __init__(self, rows, calls):
+        self._rows, self._calls = rows, calls
+
+    def filter(self, *a, **k):
+        self._calls["filtered"] = True
+        return self
+
+    def order_by(self, *a, **k):
+        return self
+
+    def limit(self, n):
+        self._calls["limit"] = n
+        return self
+
+    def all(self):
+        return self._rows
+
+
+class _FakeChartDB:
+    def __init__(self, rows, calls):
+        self._rows, self._calls = rows, calls
+
+    def query(self, model):
+        self._calls["model"] = model
+        return _FakeChartQuery(self._rows, self._calls)
+
+
+def test_find_chart_returns_scoped_compact_matches():
+    calls = {}
+    rows = [SimpleNamespace(
+        user_id=uuid4(), title=None, first_name="Алёна", last_name="К",
+        birth_date=date(1990, 6, 26), birth_place="Kyiv")]
+    service = AstroAssistantService.__new__(AstroAssistantService)
+    service.db = _FakeChartDB(rows, calls)
+    service.astrologer_id = uuid4()
+
+    out = service._exec_find_chart(uuid4(), {"query": "Алёна"})
+
+    assert out["status"] == "ok" and out["count"] == 1
+    m = out["matches"][0]
+    assert m["title"] == "Алёна К"
+    assert m["birth_date"] == "1990-06-26"
+    assert m["birth_place"] == "Kyiv"
+    assert calls["limit"] == 8 and calls["model"].__name__ == "User"
+
+
+def test_find_chart_requires_astrologer_and_query():
+    service = AstroAssistantService.__new__(AstroAssistantService)
+    service.db = None
+    service.astrologer_id = None
+    assert service._exec_find_chart(uuid4(), {"query": "x"})["status"] == "error"
+    service.astrologer_id = uuid4()
+    assert service._exec_find_chart(uuid4(), {"query": "  "})["status"] == "error"
 
 
 def test_assistant_defaults_to_compact_modern_model():

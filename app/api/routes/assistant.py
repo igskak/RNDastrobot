@@ -314,6 +314,7 @@ def chat(
         default_timezone=request.timezone,
         default_anchor_date=request.anchor_date,
         default_workspace=request.workspace,
+        astrologer_id=auth.astrologer.id,
     )
     messages = [m.model_dump() for m in request.messages]
     try:
