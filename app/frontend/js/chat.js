@@ -275,6 +275,47 @@ class ChatWidget {
         empty.className = 'chat-empty';
         empty.textContent = t('page.chart.chat.empty');
         this.messages.appendChild(empty);
+        this.renderSuggestions();
+    }
+
+    // Discoverability: tappable example commands shown in the empty state, so the
+    // astrologer learns the assistant can DRIVE the workspace, not just answer.
+    renderSuggestions() {
+        const phrases = [
+            t('page.chart.chat.suggestTransit'),
+            t('page.chart.chat.suggestSolar'),
+            t('page.chart.chat.suggestSingle'),
+        ].filter(Boolean);
+        if (!phrases.length) return;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'chat-suggestions';
+        wrap.id = 'chatSuggestions';
+
+        const title = document.createElement('div');
+        title.className = 'chat-suggestions-title';
+        title.textContent = t('page.chart.chat.suggestionsTitle');
+        wrap.appendChild(title);
+
+        const row = document.createElement('div');
+        row.className = 'chat-suggestions-row';
+        for (const phrase of phrases) {
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'chat-suggestion';
+            chip.textContent = phrase;
+            chip.addEventListener('click', () => {
+                this.input.value = phrase;
+                this.sendMessage();
+            });
+            row.appendChild(chip);
+        }
+        wrap.appendChild(row);
+        this.messages.appendChild(wrap);
+    }
+
+    clearSuggestions() {
+        document.getElementById('chatSuggestions')?.remove();
     }
 
     startNewThread() {
@@ -436,6 +477,7 @@ class ChatWidget {
         const message = this.input.value.trim();
         if (!message || this.isLoading || this.isTranscribing) return;
 
+        this.clearSuggestions();
         const { userId, timezone, anchorDate } = this.getActiveChartContext();
         this.addMessage(message, 'user');
         this.input.value = '';

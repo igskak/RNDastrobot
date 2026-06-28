@@ -882,6 +882,11 @@
         "openSchema": "Open chain diagram"
       },
       "chat": {
+        "actionsUnavailable": "Actions aren't available on this screen.",
+        "suggestionsTitle": "Try:",
+        "suggestTransit": "Add transits for today",
+        "suggestSolar": "Build the 2027 solar return",
+        "suggestSingle": "Show the single chart",
         "close": "Close assistant",
         "empty": "Ask about transits, aspect timings, retrogrades or stations for this chart.",
         "mic": "Record voice",
