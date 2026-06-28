@@ -223,6 +223,54 @@ async def runtime_config_js():
     )
 
 
+def _public_base_url() -> str:
+    """Canonical public origin for SEO files (sitemap/robots)."""
+    return (
+        os.getenv("FRONTEND_BASE_URL", "").strip()
+        or os.getenv("APP_BASE_URL", "").strip()
+        or "https://www.steliara.com"
+    ).rstrip("/")
+
+
+@app.get("/robots.txt")
+async def robots_txt():
+    """Crawler directives. Allow public pages, keep app internals out, point to sitemap."""
+    base = _public_base_url()
+    body = "\n".join([
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /api/",
+        "Disallow: /account-settings",
+        "Disallow: /client/",
+        "Disallow: /consultation/",
+        "Disallow: /call/",
+        f"Sitemap: {base}/sitemap.xml",
+        "",
+    ])
+    return Response(content=body, media_type="text/plain", headers={"Cache-Control": "public, max-age=86400"})
+
+
+@app.get("/sitemap.xml")
+async def sitemap_xml():
+    """Sitemap of public, indexable pages."""
+    base = _public_base_url()
+    paths = [
+        "/",
+        "/pricing.html",
+        "/cloud-astrology-software",
+        "/astrologer-workspace",
+        "/astrology-practice-management",
+        "/terms.html",
+    ]
+    urls = "".join(f"<url><loc>{base}{p}</loc></url>" for p in paths)
+    body = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        f"{urls}</urlset>"
+    )
+    return Response(content=body, media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
+
+
 @app.get("/")
 async def root(request: Request):
     """Root entrypoint.
