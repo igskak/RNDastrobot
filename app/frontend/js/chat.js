@@ -552,6 +552,19 @@ class ChatWidget {
             });
 
             if (!response.ok) {
+                if (response.status === 403) {
+                    let payload = null;
+                    try { payload = await response.json(); } catch { payload = null; }
+                    const code = payload?.error_code;
+                    if (code) {
+                        loadingMsg.remove();
+                        const reason = code === 'TRIAL_ENDED' ? 'trial_ended'
+                            : code === 'PLAN_LIMIT_REACHED' ? 'limit'
+                            : (payload?.detail?.feature || 'default');
+                        window.AstroPlan?.showUpgradeModal?.({ reason });
+                        return;
+                    }
+                }
                 throw new Error(t('page.chat.errors.sendFailed'));
             }
 
