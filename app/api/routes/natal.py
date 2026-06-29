@@ -44,7 +44,7 @@ from app.api.routes.call_session_utils import TERMINAL_CALL_SESSION_STATUSES
 from app.auth.dependencies import AuthContext, create_audit_event, ensure_client_access, require_auth
 from app.utils.ephemeris import get_ephemeris_path
 from app.services.geocoding_service import GeocodingTimeoutError, GeocodingServiceError
-from app.services.entitlements_service import assert_can_create_saved_chart, get_entitlements
+from app.services.entitlements_service import assert_account_writable, assert_can_create_saved_chart, get_entitlements
 from sqlalchemy import func as sa_func, case, and_
 import os
 from loguru import logger
@@ -149,6 +149,7 @@ def calculate_natal_chart(
     """
     try:
         if save_to_db:
+            assert_account_writable(auth.astrologer, plan_code=auth.effective_plan_code)
             assert_can_create_saved_chart(db, auth.astrologer, plan_code=auth.effective_plan_code)
 
         # Расчёт натальной карты

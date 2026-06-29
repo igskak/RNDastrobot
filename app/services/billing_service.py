@@ -25,7 +25,7 @@ from app.database.models import (
     BillingPriceMap,
     BillingSubscription,
 )
-from app.services.entitlements_service import PLAN_PRO, PLAN_STANDARD, normalize_plan_code
+from app.services.entitlements_service import PLAN_EXPIRED, PLAN_PRO, PLAN_STANDARD, normalize_plan_code
 
 
 BILLING_PROVIDER_PADDLE = "paddle"
@@ -221,7 +221,14 @@ def get_effective_plan_code(db: Session, astrologer: Astrologer) -> str:
     active_subscription = get_active_subscription(db, astrologer.id)
     if active_subscription and active_subscription.plan_code in PAID_PLAN_CODES:
         return active_subscription.plan_code
-    return normalize_plan_code(getattr(astrologer, "plan_code", None))
+    base_plan_code = normalize_plan_code(getattr(astrologer, "plan_code", None))
+    # No active paid subscription: enforce the trial deadline. A passed
+    # plan_expires_at (set at signup) drops the account to read-only. Accounts
+    # with no expiry (admin comps, legacy 'pro' default) never expire here.
+    expires_at = _as_utc(getattr(astrologer, "plan_expires_at", None))
+    if expires_at is not None and expires_at <= utcnow():
+        return PLAN_EXPIRED
+    return base_plan_code
 
 
 def get_billing_summary(db: Session, astrologer: Astrologer) -> Dict[str, Any]:
@@ -493,6 +500,23 @@ class StripeBillingProvider(BillingProvider):
         except urlerror.URLError as exc:
             raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Stripe API unavailable: {exc.reason}") from exc
 
+    def _resolve_promotion_code_id(self, code: str) -> Optional[str]:
+        """Resolve a customer-facing promotion code (e.g. ``FREEBETA``) to its
+        Stripe promotion code id (``promo_...``).
+
+        Checkout's ``discounts[].promotion_code`` requires the id, not the code
+        the customer typed. Returns ``None`` when no active matching code exists.
+        """
+        if not code:
+            return None
+        if code.startswith("promo_"):  # already an id — trust it as-is.
+            return code
+        query = urlencode({"code": code, "active": "true", "limit": 1})
+        response = self._api_request("GET", f"/v1/promotion_codes?{query}")
+        items = response.get("data") or []
+        first = items[0] if items and isinstance(items[0], dict) else {}
+        return str(first.get("id") or "") or None
+
     def create_checkout(self, db: Session, *, astrologer: Astrologer, plan_code: str, interval: str, coupon_code: Optional[str]) -> BillingCheckout:
         price_id = get_price_id(db, provider=self.provider, plan_code=plan_code, interval=interval)
         metadata: Dict[str, Any] = {
@@ -506,6 +530,9 @@ class StripeBillingProvider(BillingProvider):
             "mode": "subscription",
             "line_items": [{"price": price_id, "quantity": 1}],
             "managed_payments": {"enabled": True},
+            # Skip card entry when nothing is due now (e.g. a 100%-off promo),
+            # so fully comped beta users are not asked for a payment method.
+            "payment_method_collection": "if_required",
             "customer_email": astrologer.email,
             "client_reference_id": str(astrologer.id),
             "success_url": self._resolve_success_url(),
@@ -515,8 +542,21 @@ class StripeBillingProvider(BillingProvider):
             # webhooks carry astrologer_id/plan_code without a session lookup.
             "subscription_data": {"metadata": metadata},
         }
+        # Checkout's discounts[].promotion_code expects the promotion code *id*
+        # (promo_...), not the customer-facing code the user typed, so resolve it
+        # first. With no code, let the customer enter one on the Stripe Checkout
+        # page instead (discounts and allow_promotion_codes are mutually
+        # exclusive in Checkout).
         if coupon_code:
-            payload["discounts"] = [{"promotion_code": coupon_code.strip()}]
+            promotion_code_id = self._resolve_promotion_code_id(coupon_code.strip())
+            if not promotion_code_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="This promo code is not valid or has expired.",
+                )
+            payload["discounts"] = [{"promotion_code": promotion_code_id}]
+        else:
+            payload["allow_promotion_codes"] = True
 
         response = self._api_request("POST", "/v1/checkout/sessions", payload)
         checkout_url = response.get("url")

@@ -24,7 +24,7 @@ from app.models.schemas import (
 )
 from app.services.natal_chart_service import NatalChartService
 from app.services.synastry_service import SynastryService
-from app.services.entitlements_service import FEATURE_CLIENTS, assert_can_create_saved_chart, assert_feature_enabled
+from app.services.entitlements_service import FEATURE_CLIENTS, assert_account_writable, assert_can_create_saved_chart, assert_feature_enabled
 from app.utils.ephemeris import get_ephemeris_path
 
 
@@ -187,6 +187,7 @@ def create_related_person(
 ) -> RelatedPersonResponse:
     try:
         assert_feature_enabled(auth.astrologer, FEATURE_CLIENTS, plan_code=auth.effective_plan_code)
+        assert_account_writable(auth.astrologer, plan_code=auth.effective_plan_code)
         assert_can_create_saved_chart(db, auth.astrologer, plan_code=auth.effective_plan_code)
         ensure_client_access(db, request, auth, user_id, action="client.related_people.create")
 

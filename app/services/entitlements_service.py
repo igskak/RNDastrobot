@@ -14,7 +14,15 @@ PLAN_TRIAL = "trial"
 PLAN_SOLO = "solo"
 PLAN_STANDARD = "standard"
 PLAN_PRO = "pro"
+# Computed-only state: a trial whose plan_expires_at has passed with no active
+# paid subscription. Never stored on astrologers.plan_code (DB CHECK forbids it);
+# only returned by get_effective_plan_code so the account drops to read-only.
+PLAN_EXPIRED = "expired"
 DEFAULT_PLAN_CODE = PLAN_PRO
+
+# New accounts get a full-Pro trial for this many days, after which the account
+# becomes read-only (PLAN_EXPIRED) until a plan is purchased.
+TRIAL_PERIOD_DAYS = 14
 
 FEATURE_CLIENTS = "clients"
 FEATURE_CONSULTATIONS = "consultations"
@@ -48,9 +56,25 @@ class PlanDefinition:
 
 
 PLAN_DEFINITIONS: Dict[str, PlanDefinition] = {
+    # Trial is a full-Pro experience (everything on, no chart limit) for
+    # TRIAL_PERIOD_DAYS; expiry is enforced by get_effective_plan_code, not here.
     PLAN_TRIAL: PlanDefinition(
         plan_code=PLAN_TRIAL,
-        max_saved_charts=5,
+        max_saved_charts=None,
+        clients_enabled=True,
+        consultations_enabled=True,
+        calls_enabled=True,
+        recording_enabled=True,
+        transcription_enabled=True,
+        meeting_stats_enabled=True,
+    ),
+    # Read-only state after the trial ends. Read-gating flags (clients,
+    # consultations, meeting_stats) stay enabled so existing data remains
+    # viewable; live actions (calls/recording/transcription) are off and chart/
+    # profile creation is blocked via max_saved_charts=0 and assert_account_writable.
+    PLAN_EXPIRED: PlanDefinition(
+        plan_code=PLAN_EXPIRED,
+        max_saved_charts=0,
         clients_enabled=True,
         consultations_enabled=True,
         calls_enabled=False,
@@ -158,6 +182,33 @@ def assert_feature_enabled(astrologer: Astrologer, feature: str, *, plan_code: O
             "This feature is not available on your current plan.",
             feature=feature,
         ),
+    )
+
+
+READ_ONLY_PLAN_CODES = {PLAN_EXPIRED}
+
+
+def is_read_only_plan(plan_code: Optional[str]) -> bool:
+    return normalize_plan_code(plan_code) in READ_ONLY_PLAN_CODES
+
+
+def assert_account_writable(astrologer: Astrologer, *, plan_code: Optional[str] = None) -> None:
+    """Block create/save actions once the trial has ended (read-only state).
+
+    Reads stay allowed; this is only called on mutation/action endpoints
+    (chart & profile creation, assistant chat, etc.). The TRIAL_ENDED error code
+    lets the frontend surface the plan-selection popup.
+    """
+    code = normalize_plan_code(plan_code or getattr(astrologer, "plan_code", None))
+    if code not in READ_ONLY_PLAN_CODES:
+        return
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail={
+            "error_code": "TRIAL_ENDED",
+            "message": "Your free trial has ended. Choose a plan to keep creating.",
+            "detail": {"reason": "trial_ended"},
+        },
     )
 
 

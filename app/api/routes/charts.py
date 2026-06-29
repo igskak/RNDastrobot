@@ -16,7 +16,7 @@ from app.database.connection import get_db
 from app.database.models import Person, User, person_chart_links
 from app.database.repositories.user_repository import UserRepository
 from app.models.schemas import normalize_house_system_code, VALID_HOUSE_SYSTEMS
-from app.services.entitlements_service import assert_can_create_saved_chart
+from app.services.entitlements_service import assert_account_writable, assert_can_create_saved_chart
 from app.services.geocoding_service import GeocodingServiceError, GeocodingTimeoutError
 from app.services.natal_chart_service import NatalChartService
 from app.utils.ephemeris import get_ephemeris_path
@@ -362,6 +362,7 @@ def create_chart(
     auth: AuthContext = Depends(require_auth),
 ) -> ChartResponse:
     try:
+        assert_account_writable(auth.astrologer, plan_code=auth.effective_plan_code)
         assert_can_create_saved_chart(db, auth.astrologer, plan_code=auth.effective_plan_code)
         result = natal_service.calculate_natal_chart(
             birth_date=payload.date,
