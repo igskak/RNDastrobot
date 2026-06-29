@@ -34,6 +34,28 @@ function withLocaleHeaders(headers = {}) {
     return headers;
 }
 
+function canUsePlanFeature(feature, astrologer) {
+    if (!window.AstroPlan?.canUseFeature) return true;
+    return window.AstroPlan.canUseFeature(feature, astrologer);
+}
+
+function hideElementsById(ids) {
+    ids.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.hidden = true;
+        el.classList?.add('hidden');
+    });
+}
+
+function hideAssistantChrome() {
+    hideElementsById(['chatToggle', 'chatVoiceCommand', 'chatVoiceMiniStatus', 'chatWidget']);
+}
+
+function hideVoiceChrome() {
+    hideElementsById(['chatMic', 'chatVoiceCommand', 'chatVoiceMiniStatus', 'chatVoiceStatus']);
+}
+
 // Human labels for workspace actions returned by the agent. PR5 moves these to
 // the i18n catalogs; kept inline (RU) here so PR3 touches no catalog files.
 const ACTION_TEXT = {
@@ -59,7 +81,7 @@ function actionLabel(action) {
 }
 
 class ChatWidget {
-    constructor() {
+    constructor(astrologer = null) {
         this.widget = document.getElementById('chatWidget');
         this.toggle = document.getElementById('chatToggle');
         this.closeBtn = document.getElementById('chatClose');
@@ -80,6 +102,12 @@ class ChatWidget {
         if (!this.widget || !this.toggle || !this.messages || !this.input || !this.send) {
             this.enabled = false;
             return;
+        }
+
+        this.astrologer = astrologer || window.AstroAPI?.getCachedAstrologer?.() || null;
+        this.voiceEnabled = canUsePlanFeature('transcription', this.astrologer);
+        if (!this.voiceEnabled) {
+            hideVoiceChrome();
         }
 
         this.enabled = true;
@@ -107,11 +135,15 @@ class ChatWidget {
     init() {
         this.restoreSize();
         this.toggle.addEventListener('click', () => this.openPanel());
-        this.voiceCommand?.addEventListener('click', () => this.toggleVoiceCommand());
+        if (this.voiceEnabled) {
+            this.voiceCommand?.addEventListener('click', () => this.toggleVoiceCommand());
+        }
         this.voiceMiniStatus?.addEventListener('click', () => this.openPanel({ focusInput: false }));
         this.closeBtn?.addEventListener('click', () => this.closePanel());
         this.send.addEventListener('click', () => this.sendMessage());
-        this.mic?.addEventListener('click', () => this.toggleRecording());
+        if (this.voiceEnabled) {
+            this.mic?.addEventListener('click', () => this.toggleRecording());
+        }
         this.historyToggle?.addEventListener('click', () => this.toggleHistory());
         this.newThreadBtn?.addEventListener('click', () => this.startNewThread());
         this.resizeHandle?.addEventListener('pointerdown', (event) => this.startResize(event));
@@ -746,6 +778,7 @@ class ChatWidget {
     }
 
     toggleRecording() {
+        if (!this.voiceEnabled) return;
         if (this.isRecording) {
             this.stopRecording();
         } else if (!this.isStartingRecording) {
@@ -754,6 +787,7 @@ class ChatWidget {
     }
 
     toggleVoiceCommand() {
+        if (!this.voiceEnabled) return;
         if (this.isRecording) {
             this.stopRecording({ sendAfterTranscription: true });
             return;
@@ -763,6 +797,7 @@ class ChatWidget {
     }
 
     async startRecording({ quick = false } = {}) {
+        if (!this.voiceEnabled) return;
         this.quickVoiceMode = quick;
         if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
             if (quick) this.setVoiceMiniStatus('page.chart.chat.micUnavailable', { timeoutMs: 6000 });
@@ -871,6 +906,7 @@ class ChatWidget {
     }
 
     async transcribeBlob(blob, { sendAfterTranscription = false, quick = false } = {}) {
+        if (!this.voiceEnabled) return;
         if (!blob || blob.size === 0) {
             this.setVoiceStatus();
             if (quick) this.setVoiceMiniStatus('', {});
@@ -942,5 +978,11 @@ class ChatWidget {
 
 document.addEventListener('DOMContentLoaded', async () => {
     await waitForI18nReady();
-    window.chatWidget = new ChatWidget();
+    const astrologer = window.AstroAPI?.getCachedAstrologer?.()
+        || await window.AstroAPI?.getCurrentAstrologer?.();
+    if (!canUsePlanFeature('assistant', astrologer)) {
+        hideAssistantChrome();
+        return;
+    }
+    window.chatWidget = new ChatWidget(astrologer);
 });

@@ -17,6 +17,7 @@ os.environ.setdefault("SUPABASE_URL", "https://example.supabase.co")
 os.environ.setdefault("SUPABASE_JWT_AUDIENCE", "authenticated")
 
 from app.api.main import app  # noqa: E402
+from app.api.routes import assistant as assistant_route  # noqa: E402
 from app.api.routes import auth as auth_route  # noqa: E402
 from app.api.routes import natal as natal_route  # noqa: E402
 from app.api.routes import synastry as synastry_route  # noqa: E402
@@ -230,6 +231,7 @@ def test_me_includes_plan_entitlements_and_usage():
     assert payload["plan_code"] == "standard"
     assert payload["entitlements"]["calls_enabled"] is False
     assert payload["entitlements"]["clients_enabled"] is True
+    assert payload["entitlements"]["assistant_enabled"] is True
     assert payload["usage"]["saved_charts_count"] == 1
     assert payload["usage"]["max_saved_charts"] is None
 
@@ -490,6 +492,56 @@ def test_solo_plan_blocks_consultations():
     assert response.json()["error_code"] == "PLAN_FEATURE_LOCKED"
 
 
+def test_solo_plan_blocks_assistant_chat(monkeypatch):
+    astrologer = _create_astrologer("solo-assistant@example.com", "password123", plan_code="solo")
+    user = _create_user(astrologer.id)
+    monkeypatch.setattr(assistant_route, "is_openai_configured", lambda: True)
+
+    with TestClient(app) as client:
+        _login(client, "solo-assistant@example.com")
+        response = client.post(
+            "/api/v1/assistant/chat",
+            json={
+                "user_id": str(user.user_id),
+                "timezone": "UTC",
+                "messages": [{"role": "user", "content": "Find next Venus contact"}],
+            },
+        )
+
+    assert response.status_code == 403
+    assert response.json()["error_code"] == "PLAN_FEATURE_LOCKED"
+
+
+def test_solo_plan_allows_persisted_chart_creation(monkeypatch):
+    _create_astrologer("solo-chart-create@example.com", "password123", plan_code="solo")
+    called = {"value": False}
+
+    def _fake_calculate(*_args, **_kwargs):
+        called["value"] = True
+        raise RuntimeError("stop after the entitlement gate passes")
+
+    monkeypatch.setattr(natal_route.natal_service, "calculate_natal_chart", _fake_calculate)
+
+    payload = {
+        "first_name": "Solo",
+        "last_name": "Learner",
+        "date": "1990-01-01",
+        "time": "12:00:00",
+        "timezone": "UTC",
+        "place": "Kyiv",
+        "latitude": 50.45,
+        "longitude": 30.523,
+        "house_system": "P",
+    }
+
+    with TestClient(app) as client:
+        _login(client, "solo-chart-create@example.com")
+        response = client.post("/api/v1/natal/calculate", json=payload)
+
+    assert response.status_code != 403
+    assert called["value"] is True
+
+
 def test_solo_plan_allows_saved_charts_related_people_and_synastry(monkeypatch):
     astrologer = _create_astrologer("solo-synastry@example.com", "password123", plan_code="solo")
     user = _create_user(astrologer.id)
@@ -525,6 +577,7 @@ def test_solo_plan_allows_saved_charts_related_people_and_synastry(monkeypatch):
 
     assert me.status_code == 200
     assert me.json()["entitlements"]["clients_enabled"] is True
+    assert me.json()["entitlements"]["assistant_enabled"] is False
     assert me.json()["usage"]["max_saved_charts"] is None
     assert related.status_code == 200
     assert related.json() == []

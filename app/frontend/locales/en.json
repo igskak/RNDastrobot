@@ -536,9 +536,9 @@
         "expired": "Trial ended"
       },
       "descriptions": {
-        "trial": "Full Pro access for 14 days — unlimited charts, related people, synastry, calls, recordings, and transcription.",
-        "solo": "For learning and personal practice: unlimited saved charts, related people, and synastry. Calls, sessions, and meeting stats stay locked.",
-        "standard": "Unlimited saved charts and the full practice workflow without calls, recordings, or transcription.",
+        "trial": "Full Pro access for 14 days — unlimited charts, related people, synastry, assistant, calls, recordings, and transcription.",
+        "solo": "For learning and personal practice: unlimited saved charts, profiles, related people, and synastry. Calls, sessions, assistant, voice control, and meeting stats stay locked.",
+        "standard": "Unlimited saved charts and the full practice workflow without calls, recordings, or voice transcription.",
         "pro": "Full workspace access, including calls, recordings, transcription, and meeting intelligence."
       },
       "usage": {
@@ -555,6 +555,8 @@
           "limit": "You have reached the saved chart limit on your current plan. Choose a plan with more room to continue.",
           "calls": "Calls, recordings, and transcription are available on the Pro plan.",
           "consultations": "Sessions and consultation history are available on practice-oriented plans.",
+          "assistant": "The chart assistant is available on practice-oriented plans.",
+          "transcription": "Voice control and transcription are available on the Pro plan.",
           "trial_ended": "Your free trial has ended. Choose a plan to keep creating charts, profiles, calls, and chat. Your saved data stays available to view."
         },
         "choosePlan": "Switch to {plan}",
@@ -2404,7 +2406,7 @@
           },
           "solo": {
             "title": "Beginner",
-            "copy": "For learning astrology or starting your practice: save charts and build synastry.",
+            "copy": "For learning astrology or starting your practice: save charts, keep profiles, and build synastry.",
             "badge": "Charts and synastry"
           }
         },

@@ -362,9 +362,12 @@ function bindPageEvents() {
 
 function applyPlanUi() {
     if (refs.startCallBtn) {
-        refs.startCallBtn.disabled = !planCan('calls');
-        refs.startCallBtn.setAttribute('aria-disabled', planCan('calls') ? 'false' : 'true');
-        if (!planCan('calls')) {
+        const callsEnabled = planCan('calls');
+        refs.startCallBtn.classList.toggle('hidden', !callsEnabled);
+        refs.startCallBtn.hidden = !callsEnabled;
+        refs.startCallBtn.disabled = !callsEnabled;
+        refs.startCallBtn.setAttribute('aria-disabled', callsEnabled ? 'false' : 'true');
+        if (!callsEnabled) {
             refs.startCallBtn.title = t('page.plan.upgrade.callsLocked');
         }
     }

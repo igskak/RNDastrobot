@@ -21,6 +21,7 @@ from app.auth.security import utcnow  # noqa: E402
 from app.services.entitlements_service import (  # noqa: E402
     PLAN_EXPIRED,
     PLAN_PRO,
+    PLAN_SOLO,
     PLAN_TRIAL,
     assert_account_writable,
     get_entitlements,
@@ -40,7 +41,20 @@ def test_trial_entitlements_are_full_pro():
     assert ent["calls_enabled"] is True
     assert ent["recording_enabled"] is True
     assert ent["transcription_enabled"] is True
+    assert ent["assistant_enabled"] is True
     assert ent["max_saved_charts"] is None  # no chart limit on trial
+
+
+def test_solo_entitlements_keep_workspace_and_lock_communication_features():
+    ent = get_entitlements(_Astro(), plan_code=PLAN_SOLO)
+    assert ent["max_saved_charts"] is None
+    assert ent["clients_enabled"] is True
+    assert ent["consultations_enabled"] is False
+    assert ent["calls_enabled"] is False
+    assert ent["recording_enabled"] is False
+    assert ent["transcription_enabled"] is False
+    assert ent["meeting_stats_enabled"] is False
+    assert ent["assistant_enabled"] is False
 
 
 def test_expired_entitlements_are_read_only():
@@ -48,6 +62,7 @@ def test_expired_entitlements_are_read_only():
     # Live actions off.
     assert ent["calls_enabled"] is False
     assert ent["recording_enabled"] is False
+    assert ent["assistant_enabled"] is False
     # Reads still allowed via these flags.
     assert ent["clients_enabled"] is True
     assert ent["consultations_enabled"] is True

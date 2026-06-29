@@ -243,6 +243,7 @@
             recording: 'recording_enabled',
             transcription: 'transcription_enabled',
             meeting_stats: 'meeting_stats_enabled',
+            assistant: 'assistant_enabled',
         };
         const flag = flagByFeature[feature] || feature;
         return entitlements[flag] === true;

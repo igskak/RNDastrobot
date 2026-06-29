@@ -2184,10 +2184,10 @@ function buildDetailPanelHTML(user, consultations, callSessions = []) {
                 <button class="btn-new btn-sm btn-secondary" type="button" data-action="open-forecast" data-user-id="${userId}">${escapeHtml(t('page.chart.nav.forecast'))}</button>
                 ${consultationsEnabled ? `<button class="btn-new btn-sm btn-secondary" type="button" data-action="log-session" data-user-id="${userId}">${escapeHtml(t('page.clients.detail.logSession'))}</button>` : ''}
                 <button class="btn-new btn-sm btn-secondary" type="button" data-action="edit" data-user-id="${userId}">${escapeHtml(t('page.clients.actions.edit'))}</button>
-                <button class="btn-new btn-sm btn-call" type="button" data-action="start-call" data-user-id="${userId}" ${callsEnabled ? '' : 'disabled aria-disabled="true"'} title="${callsEnabled ? '' : escapeHtml(t('page.plan.upgrade.callsLocked'))}">
+                ${callsEnabled ? `<button class="btn-new btn-sm btn-call" type="button" data-action="start-call" data-user-id="${userId}">
                     <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><rect x="1" y="3" width="8" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M9 5.5l3-2v6l-3-2V5.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
                     ${escapeHtml(t('page.clientProfile.startCall'))}
-                </button>
+                </button>` : ''}
             </div>
             ${callSessionsHTML}
         </div>`;

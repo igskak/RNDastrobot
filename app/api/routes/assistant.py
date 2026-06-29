@@ -21,7 +21,12 @@ from loguru import logger
 from starlette.concurrency import run_in_threadpool
 
 from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
-from app.services.entitlements_service import assert_account_writable
+from app.services.entitlements_service import (
+    FEATURE_ASSISTANT,
+    FEATURE_TRANSCRIPTION,
+    assert_account_writable,
+    assert_feature_enabled,
+)
 from app.database.connection import get_db
 from app.services.astro_assistant_service import (
     ASPECT_TYPE_NAMES as _ASPECT_TYPES,
@@ -65,6 +70,10 @@ _AUDIO_EXTENSIONS = {
     'audio/wav': 'wav',
     'audio/x-wav': 'wav',
 }
+
+
+def assert_assistant_enabled(auth: AuthContext) -> None:
+    assert_feature_enabled(auth.astrologer, FEATURE_ASSISTANT, plan_code=auth.effective_plan_code)
 
 
 def validate_audio_upload(content_type: str, size_bytes: int) -> str:
@@ -208,6 +217,7 @@ def aspect_passes(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
+    assert_assistant_enabled(auth)
     try:
         ensure_client_access(
             db, http_request, auth, request.user_id, action="client.assistant.aspect_passes")
@@ -304,12 +314,13 @@ def chat(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
+    assert_assistant_enabled(auth)
+    assert_account_writable(auth.astrologer, plan_code=auth.effective_plan_code)
     if not is_openai_configured():
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Assistant is not configured",
         )
-    assert_account_writable(auth.astrologer, plan_code=auth.effective_plan_code)
     ensure_client_access(db, http_request, auth, request.user_id, action="client.assistant.chat")
     service = AstroAssistantService(
         db_session=db,
@@ -387,6 +398,7 @@ def list_threads(
     chart_user_id: Optional[UUID] = None,
     limit: int = 50,
 ):
+    assert_assistant_enabled(auth)
     limit = max(1, min(limit, 100))
     return {
         "conversations": list_conversations(
@@ -423,6 +435,7 @@ def get_thread(
     auth: AuthContext = Depends(require_auth),
     db: Session = Depends(get_db),
 ):
+    assert_assistant_enabled(auth)
     conv = get_conversation(
         db, astrologer_id=auth.astrologer.id, conversation_id=conversation_id)
     if conv is None:
@@ -440,6 +453,7 @@ def delete_thread(
     auth: AuthContext = Depends(require_auth),
     db: Session = Depends(get_db),
 ):
+    assert_assistant_enabled(auth)
     removed = delete_conversation(
         db, astrologer_id=auth.astrologer.id, conversation_id=conversation_id)
     if not removed:
@@ -462,6 +476,8 @@ async def transcribe(
     audio: UploadFile = File(...),
     auth: AuthContext = Depends(require_auth),
 ):
+    assert_assistant_enabled(auth)
+    assert_feature_enabled(auth.astrologer, FEATURE_TRANSCRIPTION, plan_code=auth.effective_plan_code)
     if not is_openai_configured():
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

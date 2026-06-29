@@ -191,6 +191,7 @@ test('AstroAPI exposes plan helper state from auth response', async () => {
                 entitlements: {
                     calls_enabled: false,
                     consultations_enabled: true,
+                    assistant_enabled: false,
                 },
                 usage: {
                     saved_charts_count: 5,
@@ -214,6 +215,7 @@ test('AstroAPI exposes plan helper state from auth response', async () => {
     assert.equal(me.plan_code, 'trial');
     assert.equal(api.canUseFeature('calls'), false);
     assert.equal(api.canUseFeature('consultations'), true);
+    assert.equal(api.canUseFeature('assistant'), false);
     assert.deepEqual(api.getSavedChartLimitState(), {
         current: 5,
         max: 5,

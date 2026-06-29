@@ -8,6 +8,7 @@ without a database.
 import asyncio
 from datetime import date
 from io import BytesIO
+from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
@@ -112,6 +113,13 @@ def _audio_upload(data: bytes, content_type: str = 'audio/webm') -> UploadFile:
     )
 
 
+def _auth(plan_code: str = 'pro'):
+    return SimpleNamespace(
+        astrologer=SimpleNamespace(plan_code=plan_code),
+        effective_plan_code=plan_code,
+    )
+
+
 def test_transcribe_endpoint_normalizes_filename(monkeypatch):
     captured = {}
     monkeypatch.setattr(assistant_routes, 'is_openai_configured', lambda: True)
@@ -121,7 +129,7 @@ def test_transcribe_endpoint_normalizes_filename(monkeypatch):
         return 'recognized text'
 
     monkeypatch.setattr(assistant_routes, 'transcribe_audio', fake_transcribe)
-    result = asyncio.run(assistant_routes.transcribe(_audio_upload(b'audio'), auth=None))
+    result = asyncio.run(assistant_routes.transcribe(_audio_upload(b'audio'), auth=_auth()))
 
     assert result == {'text': 'recognized text'}
     assert captured == {
@@ -137,7 +145,17 @@ def test_transcribe_endpoint_rejects_unsupported_type(monkeypatch):
     with pytest.raises(assistant_routes.HTTPException) as exc_info:
         asyncio.run(assistant_routes.transcribe(
             _audio_upload(b'audio', 'application/octet-stream'),
-            auth=None,
+            auth=_auth(),
         ))
 
     assert exc_info.value.status_code == 415
+
+
+def test_transcribe_endpoint_rejects_solo_plan_before_openai(monkeypatch):
+    monkeypatch.setattr(assistant_routes, 'is_openai_configured', lambda: True)
+
+    with pytest.raises(assistant_routes.HTTPException) as exc_info:
+        asyncio.run(assistant_routes.transcribe(_audio_upload(b'audio'), auth=_auth('solo')))
+
+    assert exc_info.value.status_code == 403
+    assert exc_info.value.detail["error_code"] == "PLAN_FEATURE_LOCKED"

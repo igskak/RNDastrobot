@@ -30,6 +30,7 @@ FEATURE_CALLS = "calls"
 FEATURE_RECORDING = "recording"
 FEATURE_TRANSCRIPTION = "transcription"
 FEATURE_MEETING_STATS = "meeting_stats"
+FEATURE_ASSISTANT = "assistant"
 
 
 @dataclass(frozen=True)
@@ -42,6 +43,7 @@ class PlanDefinition:
     recording_enabled: bool
     transcription_enabled: bool
     meeting_stats_enabled: bool
+    assistant_enabled: bool
 
     def as_entitlements(self) -> Dict[str, Any]:
         return {
@@ -52,6 +54,7 @@ class PlanDefinition:
             "recording_enabled": self.recording_enabled,
             "transcription_enabled": self.transcription_enabled,
             "meeting_stats_enabled": self.meeting_stats_enabled,
+            "assistant_enabled": self.assistant_enabled,
         }
 
 
@@ -67,6 +70,7 @@ PLAN_DEFINITIONS: Dict[str, PlanDefinition] = {
         recording_enabled=True,
         transcription_enabled=True,
         meeting_stats_enabled=True,
+        assistant_enabled=True,
     ),
     # Read-only state after the trial ends. Read-gating flags (clients,
     # consultations, meeting_stats) stay enabled so existing data remains
@@ -81,6 +85,7 @@ PLAN_DEFINITIONS: Dict[str, PlanDefinition] = {
         recording_enabled=False,
         transcription_enabled=False,
         meeting_stats_enabled=True,
+        assistant_enabled=False,
     ),
     PLAN_SOLO: PlanDefinition(
         plan_code=PLAN_SOLO,
@@ -91,6 +96,7 @@ PLAN_DEFINITIONS: Dict[str, PlanDefinition] = {
         recording_enabled=False,
         transcription_enabled=False,
         meeting_stats_enabled=False,
+        assistant_enabled=False,
     ),
     PLAN_STANDARD: PlanDefinition(
         plan_code=PLAN_STANDARD,
@@ -101,6 +107,7 @@ PLAN_DEFINITIONS: Dict[str, PlanDefinition] = {
         recording_enabled=False,
         transcription_enabled=False,
         meeting_stats_enabled=True,
+        assistant_enabled=True,
     ),
     PLAN_PRO: PlanDefinition(
         plan_code=PLAN_PRO,
@@ -111,6 +118,7 @@ PLAN_DEFINITIONS: Dict[str, PlanDefinition] = {
         recording_enabled=True,
         transcription_enabled=True,
         meeting_stats_enabled=True,
+        assistant_enabled=True,
     ),
 }
 
@@ -121,6 +129,7 @@ FEATURE_TO_FLAG = {
     FEATURE_RECORDING: "recording_enabled",
     FEATURE_TRANSCRIPTION: "transcription_enabled",
     FEATURE_MEETING_STATS: "meeting_stats_enabled",
+    FEATURE_ASSISTANT: "assistant_enabled",
 }
 
 
