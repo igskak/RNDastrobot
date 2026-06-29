@@ -55,6 +55,31 @@
         });
     }
 
+    // Maps a backend plan-gate error_code to the upgrade-modal reason key.
+    const PLAN_ERROR_REASONS = {
+        TRIAL_ENDED: 'trial_ended',
+        PLAN_LIMIT_REACHED: 'limit',
+    };
+
+    // When a 403 carries a plan-gate error_code, surface the plan-selection
+    // popup. Called from readErrorMessage so every API path that funnels errors
+    // through it (chart/profile creation, synastry, etc.) reacts automatically.
+    function maybeSurfacePlanModal(response, payload) {
+        if (!hasDocument || !payload || response?.status !== 403) return;
+        const code = payload.error_code;
+        if (!code) return;
+        let reason;
+        if (code === 'PLAN_FEATURE_LOCKED') {
+            reason = (payload.detail && payload.detail.feature) || 'default';
+        } else if (PLAN_ERROR_REASONS[code]) {
+            reason = PLAN_ERROR_REASONS[code];
+        } else {
+            return;
+        }
+        if (document.querySelector('.astro-plan-modal-backdrop')) return; // already open
+        showPlanUpgradeModal({ reason, astrologer: currentAstrologerCache });
+    }
+
     async function readErrorMessage(response, fallbackKey, fallbackText) {
         let payload = null;
 
@@ -63,6 +88,8 @@
         } catch (_error) {
             payload = null;
         }
+
+        maybeSurfacePlanModal(response, payload);
 
         if (payload && typeof payload.message === 'string' && payload.message.trim()) {
             return payload.message;
@@ -167,11 +194,24 @@
         return currentAstrologerCache;
     }
 
+    // Once per browser session, auto-open the plan popup when the trial has
+    // ended so an expired user is prompted to pick a plan on first load. The
+    // popup is closable — the rest of the app stays usable in read-only mode.
+    function maybePromptExpiredOnce(astrologer) {
+        if (!hasDocument || getPlanCode(astrologer) !== 'expired') return;
+        try {
+            if (root.sessionStorage?.getItem('astroExpiredPromptShown')) return;
+            root.sessionStorage?.setItem('astroExpiredPromptShown', '1');
+        } catch (_error) { /* storage unavailable — show anyway */ }
+        showPlanUpgradeModal({ reason: 'trial_ended', astrologer });
+    }
+
     async function requireAuth(options = {}) {
         const redirectTo = options.redirectTo || '/login.html';
         const me = await getCurrentAstrologer();
         if (me) {
             currentAstrologerCache = me;
+            maybePromptExpiredOnce(me);
             return me;
         }
         if (typeof window !== 'undefined' && redirectTo) {
