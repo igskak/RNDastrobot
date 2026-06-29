@@ -21,6 +21,7 @@ from loguru import logger
 from starlette.concurrency import run_in_threadpool
 
 from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
+from app.services.entitlements_service import assert_account_writable
 from app.database.connection import get_db
 from app.services.astro_assistant_service import (
     ASPECT_TYPE_NAMES as _ASPECT_TYPES,
@@ -308,6 +309,7 @@ def chat(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Assistant is not configured",
         )
+    assert_account_writable(auth.astrologer, plan_code=auth.effective_plan_code)
     ensure_client_access(db, http_request, auth, request.user_id, action="client.assistant.chat")
     service = AstroAssistantService(
         db_session=db,

@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import os
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
@@ -51,6 +51,7 @@ from app.services.entitlements_service import (
     PLAN_SOLO,
     PLAN_STANDARD,
     PLAN_TRIAL,
+    TRIAL_PERIOD_DAYS,
     get_entitlements,
     get_usage,
     normalize_plan_code,
@@ -253,6 +254,7 @@ class MeResponse(BaseModel):
     is_active: bool
     plan_code: str
     base_plan_code: str
+    plan_expires_at: Optional[str] = None
     entitlements: Dict[str, Any]
     usage: Dict[str, Any]
     billing: Dict[str, Any] = Field(default_factory=dict)
@@ -335,6 +337,15 @@ def _mark_email_verified(astrologer: Astrologer) -> None:
         astrologer.email_verified_at = utcnow()
 
 
+def _trial_expiry(plan_code: str) -> Optional[datetime]:
+    """New trial accounts get a TRIAL_PERIOD_DAYS window, after which the account
+    drops to read-only (PLAN_EXPIRED). Paid plans chosen at signup have no trial
+    deadline."""
+    if normalize_plan_code(plan_code) == PLAN_TRIAL:
+        return utcnow() + timedelta(days=TRIAL_PERIOD_DAYS)
+    return None
+
+
 def _build_me_response(db: Session, astrologer: Astrologer) -> MeResponse:
     base_plan_code = normalize_plan_code(getattr(astrologer, "plan_code", None))
     effective_plan_code = get_effective_plan_code(db, astrologer)
@@ -345,6 +356,7 @@ def _build_me_response(db: Session, astrologer: Astrologer) -> MeResponse:
         is_active=astrologer.is_active,
         plan_code=effective_plan_code,
         base_plan_code=base_plan_code,
+        plan_expires_at=astrologer.plan_expires_at.isoformat() if astrologer.plan_expires_at else None,
         entitlements=get_entitlements(astrologer, plan_code=effective_plan_code),
         usage=get_usage(db, astrologer, plan_code=effective_plan_code),
         billing=get_billing_summary(db, astrologer),
@@ -545,6 +557,7 @@ def register(
         is_active=True,
         email_verified_at=utcnow(),
         plan_code=payload.plan_code or PLAN_TRIAL,
+        plan_expires_at=_trial_expiry(payload.plan_code or PLAN_TRIAL),
     )
     db.add(astrologer)
     try:
@@ -954,6 +967,7 @@ def google_login(
             is_active=True,
             email_verified_at=utcnow(),
             plan_code=PLAN_TRIAL,
+            plan_expires_at=_trial_expiry(PLAN_TRIAL),
         )
         db.add(astrologer)
         db.flush()

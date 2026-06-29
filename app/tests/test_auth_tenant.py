@@ -95,7 +95,7 @@ def _db_setup():
     app.dependency_overrides.clear()
 
 
-def _create_astrologer(email: str, password: str, *, plan_code: str = "pro") -> Astrologer:
+def _create_astrologer(email: str, password: str, *, plan_code: str = "pro", plan_expires_at=None) -> Astrologer:
     db = TestingSessionLocal()
     astrologer = Astrologer(
         email=email,
@@ -104,6 +104,7 @@ def _create_astrologer(email: str, password: str, *, plan_code: str = "pro") -> 
         email_verified_at=utcnow(),
         is_active=True,
         plan_code=plan_code,
+        plan_expires_at=plan_expires_at,
     )
     db.add(astrologer)
     db.commit()
@@ -270,6 +271,7 @@ def test_authenticated_plan_update_is_disabled_in_production(monkeypatch):
 
 
 def test_billing_checkout_creates_paddle_checkout_with_coupon(monkeypatch):
+    monkeypatch.setenv("BILLING_PROVIDER", "paddle")
     _create_astrologer("checkout@example.com", "password123", plan_code="trial")
     _create_price_map(plan_code="pro", interval="monthly", price_id="pri_pro_month")
     captured = {}
@@ -299,6 +301,7 @@ def test_billing_checkout_creates_paddle_checkout_with_coupon(monkeypatch):
 
 
 def test_paddle_webhook_activates_paid_effective_plan_and_replay_is_idempotent(monkeypatch):
+    monkeypatch.setenv("BILLING_PROVIDER", "paddle")
     astrologer = _create_astrologer("webhook@example.com", "password123", plan_code="trial")
     _create_price_map(plan_code="pro", interval="monthly", price_id="pri_pro_month")
     secret = "whsec_test"
@@ -354,6 +357,7 @@ def test_paddle_webhook_activates_paid_effective_plan_and_replay_is_idempotent(m
 
 
 def test_paddle_webhook_rejects_invalid_signature(monkeypatch):
+    monkeypatch.setenv("BILLING_PROVIDER", "paddle")
     monkeypatch.setenv("PADDLE_WEBHOOK_SECRET", "whsec_test")
 
     with TestClient(app) as client:
@@ -366,8 +370,15 @@ def test_paddle_webhook_rejects_invalid_signature(monkeypatch):
     assert response.status_code == 401
 
 
-def test_trial_saved_chart_limit_blocks_new_persisted_chart(monkeypatch):
-    astrologer = _create_astrologer("trial@example.com", "password123", plan_code="trial")
+def test_expired_trial_blocks_new_persisted_chart(monkeypatch):
+    # Trial is now full-Pro with no chart limit; the paywall kicks in only once
+    # plan_expires_at has passed, dropping the account to read-only.
+    astrologer = _create_astrologer(
+        "expired@example.com",
+        "password123",
+        plan_code="trial",
+        plan_expires_at=utcnow() - timedelta(days=1),
+    )
     for _ in range(5):
         _create_user(astrologer.id)
 
@@ -380,8 +391,8 @@ def test_trial_saved_chart_limit_blocks_new_persisted_chart(monkeypatch):
     monkeypatch.setattr(natal_route.natal_service, "calculate_natal_chart", _fake_calculate)
 
     payload = {
-        "first_name": "Limit",
-        "last_name": "Reached",
+        "first_name": "Trial",
+        "last_name": "Ended",
         "date": "1990-01-01",
         "time": "12:00:00",
         "timezone": "UTC",
@@ -392,12 +403,53 @@ def test_trial_saved_chart_limit_blocks_new_persisted_chart(monkeypatch):
     }
 
     with TestClient(app) as client:
-        _login(client, "trial@example.com")
+        _login(client, "expired@example.com")
         response = client.post("/api/v1/natal/calculate", json=payload)
 
     assert response.status_code == 403
-    assert response.json()["error_code"] == "PLAN_LIMIT_REACHED"
+    assert response.json()["error_code"] == "TRIAL_ENDED"
     assert called["value"] is False
+
+
+def test_trial_allows_persisted_chart_beyond_old_limit(monkeypatch):
+    # Regression guard: the former 5-chart trial cap is gone — a trial account
+    # with many saved charts can still create another.
+    astrologer = _create_astrologer(
+        "trial-unlimited@example.com",
+        "password123",
+        plan_code="trial",
+        plan_expires_at=utcnow() + timedelta(days=7),
+    )
+    for _ in range(6):
+        _create_user(astrologer.id)
+
+    called = {"value": False}
+
+    def _fake_calculate(*_args, **_kwargs):
+        called["value"] = True
+        raise RuntimeError("stop after the entitlement gate passes")
+
+    monkeypatch.setattr(natal_route.natal_service, "calculate_natal_chart", _fake_calculate)
+
+    payload = {
+        "first_name": "Trial",
+        "last_name": "Unlimited",
+        "date": "1990-01-01",
+        "time": "12:00:00",
+        "timezone": "UTC",
+        "place": "Kyiv",
+        "latitude": 50.45,
+        "longitude": 30.523,
+        "house_system": "P",
+    }
+
+    with TestClient(app) as client:
+        _login(client, "trial-unlimited@example.com")
+        response = client.post("/api/v1/natal/calculate", json=payload)
+
+    # The entitlement gate let us through (no 403); calculation itself was reached.
+    assert response.status_code != 403
+    assert called["value"] is True
 
 
 def test_standard_plan_blocks_call_session_creation():

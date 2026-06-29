@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.auth.dependencies import AuthContext, create_audit_event, require_auth
 from app.database.connection import get_db
 from app.database.models import Person, User, person_chart_links
+from app.services.entitlements_service import assert_account_writable
 
 
 router = APIRouter(prefix="/persons", tags=["Persons"])
@@ -192,6 +193,7 @@ def create_person(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ) -> PersonResponse:
+    assert_account_writable(auth.astrologer, plan_code=auth.effective_plan_code)
     person = Person(
         astrologer_id=auth.astrologer.id,
         first_name=payload.first_name,
@@ -345,6 +347,7 @@ def link_chart_to_person(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
+    assert_account_writable(auth.astrologer, plan_code=auth.effective_plan_code)
     person = _get_person_or_404(db, auth.astrologer.id, person_id)
     _get_chart_for_astrologer(db, auth.astrologer.id, payload.chart_id)
 
