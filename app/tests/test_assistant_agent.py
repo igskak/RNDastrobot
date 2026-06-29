@@ -104,14 +104,49 @@ def test_handle_command_emits_action_or_error():
 
 def test_set_synastry_partner_command():
     assert validate_command("set_synastry_partner", {"chart_id": "abc"}) == ""
-    assert validate_command("set_synastry_partner", {}) == "bad_chart_id"
-    assert validate_command("set_synastry_partner", {"chart_id": "   "}) == "bad_chart_id"
+    assert validate_command("set_synastry_partner", {}) == "bad_synastry_source"
+    assert validate_command("set_synastry_partner", {"chart_id": "   "}) == "bad_synastry_source"
+    assert validate_command("set_synastry_partner", {
+        "manual": {
+            "name": "Kit",
+            "date": "1990-06-26",
+            "time": "18:15",
+            "timezone": "Europe/Kyiv",
+            "place": "Kharkiv",
+        },
+    }) == ""
+    assert validate_command("set_synastry_partner", {
+        "manual": {"date": "1990-06-26", "time": "18:15", "timezone": "Europe/Kyiv"}
+    }) == "bad_manual_location"
     receipt, action = handle_command(
         "set_synastry_partner", {"chart_id": " abc ", "title": "Алёна"})
     assert receipt["status"] == "applied_clientside"
     assert action == {
         "name": "set_synastry_partner",
         "args": {"chart_id": "abc", "title": "Алёна"},
+        "confirm": "auto",
+    }
+    receipt, action = handle_command("set_synastry_partner", {
+        "manual": {
+            "name": "Kit",
+            "date": "1990-06-26",
+            "time": "18:15",
+            "timezone": "Europe/Kyiv",
+            "place": "Kharkiv",
+        },
+    })
+    assert receipt["status"] == "applied_clientside"
+    assert action == {
+        "name": "set_synastry_partner",
+        "args": {
+            "manual": {
+                "name": "Kit",
+                "date": "1990-06-26",
+                "time": "18:15",
+                "timezone": "Europe/Kyiv",
+                "place": "Kharkiv",
+            },
+        },
         "confirm": "auto",
     }
 
@@ -394,6 +429,18 @@ def test_chat_injects_workspace_context_for_grounding(monkeypatch):
         "layers": ["transit", "solar_return", "bogus"],  # bogus must be filtered out
         "date": "2026-03-14",
         "houseSystem": "K",
+        "synastry": {
+            "active": True,
+            "mode": "manual",
+            "partnerName": "Kit",
+            "date": "1990-06-26",
+            "time": "18:15:00",
+            "place": "Kharkiv",
+            "aspectCount": 12,
+            "tightInterAspects": [
+                {"primary": "Sun", "aspect": "Square", "partner": "Moon", "orb": 1.2},
+            ],
+        },
     }
     scripted = [_msg(content="Ок.")]
     monkeypatch.setattr(svc, "is_openai_configured", lambda: True)
@@ -410,3 +457,6 @@ def test_chat_injects_workspace_context_for_grounding(monkeypatch):
     assert "active layers: transit, solar_return" in context  # bogus filtered
     assert "transit date: 2026-03-14" in context
     assert "house system: K" in context
+    assert "active synastry:" in context
+    assert "partner=Kit" in context
+    assert "Sun Square Moon orb 1.20" in context

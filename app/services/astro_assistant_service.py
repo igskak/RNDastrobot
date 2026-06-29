@@ -13,12 +13,14 @@ from __future__ import annotations
 
 import json
 import os
+import math
 import re
 import time
 from datetime import date as date_type
 from typing import Callable, Dict, List, Optional
 from uuid import UUID
 
+import pytz
 from loguru import logger
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -111,6 +113,48 @@ def _valid_int(value, lo: int, hi: int) -> bool:
     return lo <= n <= hi
 
 
+def _valid_timezone(value) -> bool:
+    if not isinstance(value, str) or not value.strip():
+        return False
+    try:
+        pytz.timezone(value.strip())
+        return True
+    except pytz.exceptions.UnknownTimeZoneError:
+        return False
+
+
+def _coerce_float(value):
+    if isinstance(value, bool) or value is None or value == "":
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if math.isfinite(number) else None
+
+
+def _validate_manual_synastry(value) -> str:
+    if not isinstance(value, dict):
+        return 'bad_manual'
+    if not _valid_date(value.get('date')):
+        return 'bad_manual_date'
+    if not _valid_time(value.get('time')):
+        return 'bad_manual_time'
+    if not _valid_timezone(value.get('timezone')):
+        return 'bad_manual_timezone'
+    lat = _coerce_float(value.get('latitude'))
+    lon = _coerce_float(value.get('longitude'))
+    has_coords = lat is not None and lon is not None and -90 <= lat <= 90 and -180 <= lon <= 180
+    place = value.get('place')
+    has_place = isinstance(place, str) and bool(place.strip())
+    if not has_place and not has_coords:
+        return 'bad_manual_location'
+    coord_supplied = value.get('latitude') not in (None, '') or value.get('longitude') not in (None, '')
+    if coord_supplied and not has_coords:
+        return 'bad_manual_location'
+    return ''
+
+
 def validate_command(name: str, args: Dict) -> str:
     """Return '' if the command args are valid, else a machine error code."""
     if name == 'set_transit_date':
@@ -145,8 +189,13 @@ def validate_command(name: str, args: Dict) -> str:
         return ''
     if name == 'set_synastry_partner':
         chart_id = args.get('chart_id')
-        if not isinstance(chart_id, str) or not chart_id.strip():
-            return 'bad_chart_id'
+        has_chart_id = isinstance(chart_id, str) and bool(chart_id.strip())
+        manual = args.get('manual')
+        has_manual = manual is not None
+        if has_chart_id == has_manual:
+            return 'bad_synastry_source'
+        if has_manual:
+            return _validate_manual_synastry(manual)
         return ''
     if name == 'remove_layer':
         if not args.get('layer_id') and args.get('method') not in WORKSPACE_LAYER_METHODS:
@@ -175,6 +224,27 @@ def _normalize_command_args(name: str, args: Dict) -> Dict:
     if name == 'set_house_system':
         return {'system': args['system']}
     if name == 'set_synastry_partner':
+        if args.get('manual') is not None:
+            manual = args['manual']
+            out_manual = {
+                'date': manual['date'],
+                'time': manual['time'],
+                'timezone': manual['timezone'].strip(),
+            }
+            for key, max_len in (
+                ('name', 120),
+                ('title', 120),
+                ('place', 180),
+            ):
+                value = manual.get(key)
+                if isinstance(value, str) and value.strip():
+                    out_manual[key] = value.strip()[:max_len]
+            lat = _coerce_float(manual.get('latitude'))
+            lon = _coerce_float(manual.get('longitude'))
+            if lat is not None and lon is not None:
+                out_manual['latitude'] = lat
+                out_manual['longitude'] = lon
+            return {'manual': out_manual}
         out = {'chart_id': str(args['chart_id']).strip()}
         title = args.get('title')
         if isinstance(title, str) and title.strip():
@@ -253,11 +323,27 @@ def build_command_tools() -> List[Dict]:
            'Change the house system (single-letter Swiss Ephemeris code).',
            {'system': {'type': 'string', 'enum': sorted(HOUSE_SYSTEM_CODES)}}, ['system']),
         fn('set_synastry_partner',
-           'Build synastry with a saved chart. Resolve the name to a chart_id via '
-           'find_chart first; pass the chart title for display.',
+           'Build synastry with a saved chart OR complete manually entered birth data. '
+           'Use chart_id after find_chart when the astrologer names an existing saved chart. '
+           'Use manual when the astrologer gives date, time, timezone, and place or coordinates.',
            {'chart_id': {'type': 'string', 'description': 'Saved chart id from find_chart.'},
-            'title': {'type': 'string', 'description': 'Partner display name (optional).'}},
-           ['chart_id']),
+            'title': {'type': 'string', 'description': 'Partner display name for saved chart (optional).'},
+            'manual': {
+                'type': 'object',
+                'description': 'Inline partner birth data for unsaved synastry.',
+                'properties': {
+                    'name': {'type': 'string', 'description': 'Partner display name (optional).'},
+                    'title': {'type': 'string', 'description': 'Chart title (optional).'},
+                    'date': {'type': 'string', 'description': 'YYYY-MM-DD'},
+                    'time': {'type': 'string', 'description': 'HH:mm or HH:mm:ss'},
+                    'timezone': {'type': 'string', 'description': 'IANA timezone, e.g. Europe/Kyiv'},
+                    'place': {'type': 'string', 'description': 'Birth place name (optional if coordinates given).'},
+                    'latitude': {'type': 'number', 'minimum': -90, 'maximum': 90},
+                    'longitude': {'type': 'number', 'minimum': -180, 'maximum': 180},
+                },
+                'required': ['date', 'time', 'timezone'],
+                'additionalProperties': False,
+            }}),
         fn('remove_layer',
            'Remove a prognostic layer by method (all instances) or layer_id (one). Destructive.',
            {'method': {'type': 'string', 'enum': methods},
@@ -455,6 +541,12 @@ such as transits, progressions, directions, solar return, or synastry.
 - To build synastry with a named person, first call find_chart to resolve the name \
 to a chart_id (if several match, ask which one; if none match, say so), then call \
 set_synastry_partner with that chart_id and the chart's title.
+- To build synastry from manually provided birth data, do NOT call find_chart first. \
+If date, time, timezone, and place/coordinates are complete, call set_synastry_partner \
+with manual. If any of those are missing, ask only for the missing birth data.
+- If the workspace context says an active synastry already exists, answer follow-up \
+questions about that synastry from the provided partner and inter-aspect context unless \
+the astrologer asks to change the partner.
 - remove_layer and clear_layers are destructive — call them only on an explicit removal request.
 
 Rules:
@@ -580,6 +672,44 @@ def _workspace_context_line(ws: Dict) -> str:
     house = ws.get("houseSystem")
     if house in HOUSE_SYSTEM_CODES:
         parts.append(f"house system: {house}")
+    synastry = ws.get("synastry")
+    if isinstance(synastry, dict) and synastry.get("active") is True:
+        syn_parts: List[str] = []
+        mode = synastry.get("mode")
+        if mode in ("db", "manual"):
+            syn_parts.append(f"source={mode}")
+        partner_name = synastry.get("partnerName")
+        if isinstance(partner_name, str) and partner_name.strip():
+            syn_parts.append(f"partner={partner_name.strip()[:120]}")
+        date_value = synastry.get("date")
+        if isinstance(date_value, str) and _valid_date(date_value):
+            birth = date_value
+            time_value = synastry.get("time")
+            if isinstance(time_value, str) and _valid_time(time_value):
+                birth += f" {time_value}"
+            syn_parts.append(f"birth={birth}")
+        place = synastry.get("place")
+        if isinstance(place, str) and place.strip():
+            syn_parts.append(f"place={place.strip()[:120]}")
+        aspect_count = synastry.get("aspectCount")
+        if isinstance(aspect_count, int) and aspect_count >= 0:
+            syn_parts.append(f"inter-aspects={aspect_count}")
+        tight_aspects = []
+        for item in synastry.get("tightInterAspects") or []:
+            if not isinstance(item, dict):
+                continue
+            primary = str(item.get("primary") or "")[:32]
+            aspect = str(item.get("aspect") or "")[:32]
+            partner = str(item.get("partner") or "")[:32]
+            orb = item.get("orb")
+            if primary and aspect and partner and isinstance(orb, (int, float)):
+                tight_aspects.append(f"{primary} {aspect} {partner} orb {float(orb):.2f}")
+            if len(tight_aspects) >= 8:
+                break
+        if tight_aspects:
+            syn_parts.append("tight=" + "; ".join(tight_aspects))
+        if syn_parts:
+            parts.append("active synastry: " + ", ".join(syn_parts))
     if not parts:
         return ""
     return ("Current workspace state (context for grounding commands; do not act "

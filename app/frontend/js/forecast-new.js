@@ -396,9 +396,20 @@
         const birth = chart.birth_data || chart.birthData || {};
         return chart.display_title
             || chart.title
+            || chart.person_display_name
             || [birth.first_name, birth.last_name].filter(Boolean).join(' ').trim()
             || [chart.first_name, chart.last_name].filter(Boolean).join(' ').trim()
             || fallback;
+    }
+
+    function chartOptionLabel(chart = {}, fallback = '') {
+        const birth = chart.birth_data || chart.birthData || {};
+        const date = chart.date || chart.birth_date || birth.date || '';
+        const place = chart.location_name || chart.birth_place || birth.place || '';
+        return chartDisplayTitle(chart)
+            || [date ? formatChartDate(date) : '', place].filter(Boolean).join(' · ')
+            || fallback
+            || t('common.notAvailable', null, 'Not available');
     }
 
     function selectedPanelTitle(method) {
@@ -788,8 +799,7 @@
                     if (!Array.from(select.options).some((opt) => opt.value === id)) {
                         const opt = document.createElement('option');
                         opt.value = id;
-                        opt.textContent = chart.display_title || chart.title
-                            || [chart.first_name, chart.last_name].filter(Boolean).join(' ') || id.slice(0, 8);
+                        opt.textContent = chartOptionLabel(chart);
                         select.appendChild(opt);
                     }
                     select.value = id;
@@ -1578,27 +1588,35 @@
         }
     }
 
-    async function applyManualSynastryPartner() {
-        const name = (refs.forecastNewSynastryManualName?.value || '').trim();
-        const date = refs.forecastNewSynastryManualDate?.value || '';
-        const time = refs.forecastNewSynastryManualTime?.value || '';
-        const timezone = refs.forecastNewSynastryManualTimezone?.value || '';
-        const place = (refs.forecastNewSynastryManualLocation?.value || '').trim();
-        const latRaw = refs.forecastNewSynastryManualLat?.value || '';
-        const lonRaw = refs.forecastNewSynastryManualLon?.value || '';
-        const hasCoords = latRaw !== '' && lonRaw !== '';
+    async function applyManualSynastryPartner(input = null) {
+        const manual = input && typeof input === 'object' && !('target' in input) ? input : null;
+        const hasValue = (value) => value !== null && value !== undefined && String(value).trim() !== '';
+        const name = (manual
+            ? (manual.name || manual.title || '')
+            : (refs.forecastNewSynastryManualName?.value || '')).trim();
+        const date = manual ? (manual.date || '') : (refs.forecastNewSynastryManualDate?.value || '');
+        const time = manual ? (manual.time || '') : (refs.forecastNewSynastryManualTime?.value || '');
+        const timezone = manual ? (manual.timezone || '') : (refs.forecastNewSynastryManualTimezone?.value || '');
+        const place = (manual
+            ? (manual.place || '')
+            : (refs.forecastNewSynastryManualLocation?.value || '')).trim();
+        const latRaw = manual ? manual.latitude : (refs.forecastNewSynastryManualLat?.value || '');
+        const lonRaw = manual ? manual.longitude : (refs.forecastNewSynastryManualLon?.value || '');
+        const latitude = hasValue(latRaw) ? Number(latRaw) : null;
+        const longitude = hasValue(lonRaw) ? Number(lonRaw) : null;
+        const hasCoords = Number.isFinite(latitude) && Number.isFinite(longitude);
 
         if (!date || !time) {
             showSynastryManualError('Укажите дату и время рождения партнёра.');
-            return;
+            return { ok: false, error: 'missing_datetime' };
         }
         if (!timezone) {
             showSynastryManualError('Выберите часовой пояс партнёра.');
-            return;
+            return { ok: false, error: 'missing_timezone' };
         }
         if (!place && !hasCoords) {
             showSynastryManualError('Укажите место рождения партнёра.');
-            return;
+            return { ok: false, error: 'missing_place' };
         }
         showSynastryManualError('');
 
@@ -1608,10 +1626,13 @@
             time: time.length === 5 ? `${time}:00` : time,
             timezone,
             place: place || null,
-            latitude: hasCoords ? Number(latRaw) : null,
-            longitude: hasCoords ? Number(lonRaw) : null,
+            latitude: hasCoords ? latitude : null,
+            longitude: hasCoords ? longitude : null,
         };
         state.synastryMode = 'manual';
+        state.synastryPartnerId = '';
+        setSynastryMode('manual');
+        syncSynastryManualControlsFromState();
         invalidateCompositeCache();
         // Партнёр поменялся — ensureSynastryLayerActive зафиксирует конфиг и сбросит кэш слоя.
         schedulePersist();
@@ -1620,6 +1641,7 @@
         if (state.singleChartMode === 'composite') {
             await enterCompositeMode();
         }
+        return { ok: true, label: name || t('page.forecastNew.resultViews.manualPartner') };
     }
 
     // cfg — снимок конфига синастрии слоя { mode, manual, partnerId }. По умолчанию
@@ -3564,10 +3586,7 @@
                 if (!Array.from(select.options).some((opt) => opt.value === String(id))) {
                     const opt = document.createElement('option');
                     opt.value = String(id);
-                    opt.textContent = chart.display_title || chart.title
-                        || chart.person_display_name
-                        || [chart.first_name, chart.last_name].filter(Boolean).join(' ')
-                        || String(id).slice(0, 8);
+                    opt.textContent = chartOptionLabel(chart);
                     select.appendChild(opt);
                 }
                 select.value = String(id);
@@ -3976,17 +3995,18 @@
         const select = refs.forecastNewSynastryPartnerSelect;
         if (!select) return;
         try {
-            const response = await fetch(`${API_BASE}/users`, { credentials: 'include' });
+            const response = await fetch(`${API_BASE}/charts`, { credentials: 'include' });
             if (!response.ok) return;
-            const users = await response.json();
+            const charts = await response.json();
             const currentId = String(state.userId || '');
-            const options = (Array.isArray(users) ? users : [])
-                .filter((user) => String(user.user_id) !== currentId)
-                .map((user) => {
-                    const name = [user.first_name, user.last_name].filter(Boolean).join(' ')
-                        || String(user.user_id).slice(0, 8);
-                    return `<option value="${user.user_id}">${name}</option>`;
+            const options = (Array.isArray(charts) ? charts : [])
+                .filter((chart) => String(chart.user_id) !== currentId)
+                .map((chart) => {
+                    const id = String(chart.user_id || chart.chart_id || '');
+                    if (!id) return '';
+                    return `<option value="${escapeHtml(id)}">${escapeHtml(chartOptionLabel(chart))}</option>`;
                 })
+                .filter(Boolean)
                 .join('');
             select.innerHTML = `<option value="">— партнёр —</option>${options}`;
             if (state.synastryPartnerId) select.value = state.synastryPartnerId;
@@ -4333,6 +4353,63 @@
             : (select && select.selectedIndex > 0 ? (select.options[select.selectedIndex]?.text || '') : '');
         const bd = layer?.raw?.partner_chart?.birth_data;
         return [partnerName, formatChartDate(bd?.date), bd?.place].filter(Boolean).join(' · ');
+    }
+
+    function buildAssistantSynastryContext() {
+        const inst = selectedRightMethod() === 'synastry_partner'
+            ? selectedLayerInstance()
+            : instancesOfMethod('synastry_partner')[0];
+        if (!inst && !hasUsableSynastryPartner()) return null;
+        const layer = (state.viewModel?.activePrognosticLayers || []).find((item) => item.id === inst?.id)
+            || (state.viewModel?.activePrognosticLayers || []).find((item) => item.method === 'synastry_partner')
+            || null;
+        const raw = layer?.raw || {};
+        const cfg = layerConfigOf(inst || 'synastry_partner');
+        const manual = cfg.mode === 'manual' ? (cfg.manual || state.synastryManual || {}) : {};
+        const bd = raw?.partner_chart?.birth_data || {};
+        const select = refs.forecastNewSynastryPartnerSelect;
+        const selectedLabel = select && select.selectedIndex > 0
+            ? (select.options[select.selectedIndex]?.text || '')
+            : '';
+        const partnerName = cfg.mode === 'manual'
+            ? (manual.name || manual.title || t('page.forecastNew.resultViews.manualPartner'))
+            : (inst?.config?.chartTitle
+                || selectedLabel
+                || [bd.first_name, bd.last_name].filter(Boolean).join(' ').trim()
+                || state.synastryManual?.name
+                || t('page.chart.nav.synastry'));
+        const rawAspects = Array.isArray(raw?.inter_aspects)
+            ? raw.inter_aspects
+            : (Array.isArray(layer?.aspects) ? layer.aspects.map((aspect) => ({
+                planet_1: aspect.planet_2 || aspect.right_planet,
+                planet_2: aspect.planet_1 || aspect.left_planet,
+                aspect_type: aspect.aspect_type,
+                orb: aspect.orb,
+            })) : []);
+        const tightInterAspects = rawAspects
+            .filter((aspect) => aspect && aspect.planet_1 && aspect.planet_2 && aspect.aspect_type)
+            .slice()
+            .sort((a, b) => Number(a.orb ?? 99) - Number(b.orb ?? 99))
+            .slice(0, 8)
+            .map((aspect) => ({
+                primary: String(aspect.planet_1),
+                partner: String(aspect.planet_2),
+                aspect: String(aspect.aspect_type),
+                orb: Number.isFinite(Number(aspect.orb)) ? Number(Number(aspect.orb).toFixed(2)) : null,
+            }))
+            .filter((aspect) => aspect.orb !== null);
+        return {
+            active: true,
+            mode: cfg.mode === 'manual' ? 'manual' : 'db',
+            partnerName,
+            partnerId: cfg.partnerId || null,
+            date: cfg.mode === 'manual' ? manual.date : (bd.date || state.synastryManual?.date || ''),
+            time: cfg.mode === 'manual' ? manual.time : (bd.time || state.synastryManual?.time || ''),
+            timezone: cfg.mode === 'manual' ? manual.timezone : (bd.timezone || state.synastryManual?.timezone || ''),
+            place: cfg.mode === 'manual' ? manual.place : (bd.place || state.synastryManual?.place || ''),
+            aspectCount: rawAspects.length,
+            tightInterAspects,
+        };
     }
 
     function normalizeCompositeMethod(method) {
@@ -6973,8 +7050,10 @@
         }
     }
 
-    function buildCurrentSourceChartPayload({ title, chartKind, tags, personId }) {
-        const [date, time] = splitTargetDatetime(state.natalSelectedDateTime);
+    function buildCurrentSourceChartPayload({ title, chartKind, date: overrideDate, time: overrideTime, tags, personId }) {
+        const [stateDate, stateTime] = splitTargetDatetime(state.natalSelectedDateTime);
+        const date = overrideDate || stateDate;
+        const time = overrideTime || stateTime;
         const location = state.natalLocation || {};
         const payload = {
             title,
@@ -7133,14 +7212,257 @@
     }
 
     // Right-panel save dispatcher. The button lives on the prognostic panel, so
-    // it should save whatever chart that panel shows. Today only solar has its
-    // own savable chart entity; other methods fall back to the natal source.
+    // it saves the currently selected right-layer source, never the left natal
+    // source. Solar and synastry have computed/special snapshots; moment layers
+    // save their selected date/time/place as a standalone event chart.
     async function saveRightPanelAsChart() {
         if (selectedRightMethod() === 'solar_return') {
             await saveSolarAsChart();
             return;
         }
+        if (selectedRightMethod() === 'synastry_partner') {
+            await saveSynastryPartnerAsChart();
+            return;
+        }
+        if (isMomentMethod(selectedRightMethod())) {
+            await saveRightMomentAsChart();
+            return;
+        }
         await saveCurrentSourceAsChart();
+    }
+
+    function nullableNumber(value) {
+        if (value === null || value === undefined || value === '') return null;
+        const number = Number(value);
+        return Number.isFinite(number) ? number : null;
+    }
+
+    function defaultRightMomentChartTitle(method, date) {
+        return [layerLabel(method), date ? formatChartDate(date) : '']
+            .filter(Boolean)
+            .join(' · ')
+            || defaultSourceChartTitle();
+    }
+
+    function rightMomentSnapshotFromSelectedLayer() {
+        const inst = selectedLayerInstance();
+        if (!inst || !isMomentMethod(inst.method)) return null;
+        const cfg = layerConfigOf(inst);
+        const [date, time] = splitTargetDatetime(cfg.datetime || state.selectedDateTime);
+        const location = cfg.location || state.location || {};
+        return {
+            title: cfg.chartTitle || defaultRightMomentChartTitle(inst.method, date),
+            chartKind: 'event',
+            date,
+            time: normalizeTime(time || '12:00:00'),
+            timezone: cfg.timezone || state.timezone || 'UTC',
+            locationName: location.name || '',
+            latitude: nullableNumber(location.latitude),
+            longitude: nullableNumber(location.longitude),
+            houseSystem: normalizeHouseSystemCode(state.pageSettings?.houseSystem || 'P'),
+            defaultPersons: [],
+        };
+    }
+
+    async function linkExtraPersonsToChart(chartId, personIds = []) {
+        const extraPersonIds = (personIds || []).slice(1);
+        for (const pid of extraPersonIds) {
+            try {
+                await apiPost(`/persons/${encodeURIComponent(pid)}/charts`, { chart_id: chartId });
+            } catch (linkErr) {
+                console.warn('Failed to link extra person to chart', pid, linkErr);
+            }
+        }
+    }
+
+    async function saveRightMomentAsChart() {
+        const snapshot = rightMomentSnapshotFromSelectedLayer();
+        if (!snapshot?.date || !snapshot?.time) {
+            window.showToast?.(
+                t('page.forecast.errors.dateRequired', null, 'Требуется указать дату'),
+                'warning',
+            );
+            return;
+        }
+        if (!snapshot.locationName && (snapshot.latitude === null || snapshot.longitude === null)) {
+            window.showToast?.(
+                t('page.clients.newChart.errors.placeRequired', null, 'Укажите место и выберите его из списка'),
+                'warning',
+            );
+            return;
+        }
+        const result = await window.SaveChartModal?.open({
+            defaultTitle: snapshot.title,
+            defaultDate: snapshot.date,
+            defaultTime: snapshot.time,
+            showTags: true,
+            showPerson: true,
+            defaultPersons: await resolveMainChartPersons(),
+        });
+        if (!result) return;
+        try {
+            const payload = {
+                title: result.title,
+                chart_kind: snapshot.chartKind,
+                date: result.date,
+                time: normalizeTime(result.time || snapshot.time || '12:00:00'),
+                timezone: snapshot.timezone || 'UTC',
+                location_name: snapshot.locationName || null,
+                latitude: snapshot.latitude,
+                longitude: snapshot.longitude,
+                house_system: snapshot.houseSystem,
+                tags: Array.isArray(result.tags) ? result.tags : [],
+            };
+            if (result.personId) payload.person_id = result.personId;
+            const saved = await apiPost('/charts', payload);
+            const newChartId = saved.chart_id || saved.user_id;
+            await linkExtraPersonsToChart(newChartId, result.personIds || []);
+            await applySavedChartMoment(saved);
+            window.showToast?.(
+                t('page.chart.actions.saveSourceChartSaved', null, 'Карта сохранена в библиотеку.'),
+                'success',
+            );
+        } catch (error) {
+            window.showToast?.(
+                t('page.chart.actions.saveSourceChartError', { error: error.message }, error.message),
+                'error',
+            );
+        }
+    }
+
+    function splitSynastryDisplayName(name) {
+        const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+        if (!parts.length) return { firstName: null, lastName: null };
+        return {
+            firstName: parts[0],
+            lastName: parts.slice(1).join(' ') || null,
+        };
+    }
+
+    function synastrySnapshotFromManual(manual = {}) {
+        const title = manual.title || manual.name || t('page.forecastNew.resultViews.manualPartner');
+        const split = splitSynastryDisplayName(manual.name || manual.title || '');
+        const latitude = manual.latitude === null || manual.latitude === undefined || manual.latitude === ''
+            ? null
+            : numberOrNull(manual.latitude);
+        const longitude = manual.longitude === null || manual.longitude === undefined || manual.longitude === ''
+            ? null
+            : numberOrNull(manual.longitude);
+        return {
+            title,
+            date: manual.date || '',
+            time: normalizeTime(manual.time || '12:00:00'),
+            timezone: manual.timezone || 'UTC',
+            locationName: manual.place || '',
+            latitude,
+            longitude,
+            houseSystem: state.pageSettings?.houseSystem || 'P',
+            firstName: split.firstName,
+            lastName: split.lastName,
+            defaultPersons: [],
+        };
+    }
+
+    function synastrySnapshotFromChart(chart = {}) {
+        const moment = readChartMoment(chart);
+        const title = chartDisplayTitle(chart, t('page.chart.nav.synastry'));
+        return {
+            title,
+            date: moment.date,
+            time: normalizeTime(moment.time || '12:00:00'),
+            timezone: moment.timezone || 'UTC',
+            locationName: moment.locationName || '',
+            latitude: moment.latitude,
+            longitude: moment.longitude,
+            houseSystem: normalizeHouseSystemCode(chart.house_system || chart.birth_data?.house_system || state.pageSettings?.houseSystem || 'P'),
+            firstName: chart.first_name || chart.birth_data?.first_name || null,
+            lastName: chart.last_name || chart.birth_data?.last_name || null,
+            defaultPersons: chart.person_id ? [{
+                id: chart.person_id,
+                name: chart.person_display_name
+                    || [chart.first_name, chart.last_name].filter(Boolean).join(' ').trim()
+                    || title,
+            }] : [],
+        };
+    }
+
+    async function resolveSynastryPartnerSnapshot() {
+        const inst = selectedLayerInstance();
+        const cfg = layerConfigOf(inst || 'synastry_partner');
+        if (cfg.mode === 'manual' && cfg.manual) {
+            return synastrySnapshotFromManual(cfg.manual);
+        }
+        const rawPartner = selectedViewModelLayer()?.raw?.partner_chart;
+        if (rawPartner?.birth_data?.date) {
+            return synastrySnapshotFromChart({
+                ...rawPartner.birth_data,
+                birth_data: rawPartner.birth_data,
+                title: inst?.config?.chartTitle || state.synastryManual?.name || '',
+                display_title: inst?.config?.chartTitle || state.synastryManual?.name || '',
+            });
+        }
+        if (cfg.partnerId) {
+            const chart = await cmdFetchChartById(cfg.partnerId);
+            if (chart) return synastrySnapshotFromChart(chart);
+        }
+        return null;
+    }
+
+    async function saveSynastryPartnerAsChart() {
+        const snapshot = await resolveSynastryPartnerSnapshot();
+        if (!snapshot?.date || !snapshot?.time) {
+            window.showToast?.(
+                t('page.forecastNew.synastry.notReady', null, 'Сначала рассчитайте синастрию'),
+                'warning',
+            );
+            return;
+        }
+        const result = await window.SaveChartModal?.open({
+            defaultTitle: snapshot.title || defaultSourceChartTitle(),
+            defaultDate: snapshot.date,
+            defaultTime: snapshot.time,
+            showTags: true,
+            showPerson: true,
+            defaultPersons: snapshot.defaultPersons || [],
+        });
+        if (!result) return;
+        try {
+            const payload = {
+                title: result.title,
+                chart_kind: 'birth',
+                date: result.date,
+                time: normalizeTime(result.time || snapshot.time || '12:00:00'),
+                timezone: snapshot.timezone || 'UTC',
+                location_name: snapshot.locationName || null,
+                latitude: snapshot.latitude,
+                longitude: snapshot.longitude,
+                house_system: normalizeHouseSystemCode(snapshot.houseSystem || state.pageSettings.houseSystem || 'P'),
+                tags: Array.isArray(result.tags) ? result.tags : [],
+            };
+            if (snapshot.firstName) payload.first_name = snapshot.firstName;
+            if (snapshot.lastName) payload.last_name = snapshot.lastName;
+            if (result.personId) payload.person_id = result.personId;
+            const saved = await apiPost('/charts', payload);
+            const newChartId = saved.chart_id || saved.user_id;
+            const extraPersonIds = (result.personIds || []).slice(1);
+            for (const pid of extraPersonIds) {
+                try {
+                    await apiPost(`/persons/${encodeURIComponent(pid)}/charts`, { chart_id: newChartId });
+                } catch (linkErr) {
+                    console.warn('Failed to link extra person to synastry chart', pid, linkErr);
+                }
+            }
+            await applySavedSynastryPartnerChart(saved);
+            window.showToast?.(
+                t('page.forecastNew.synastry.saved', null, 'Партнёр синастрии сохранён как карта'),
+                'success',
+            );
+        } catch (error) {
+            window.showToast?.(
+                t('page.chart.actions.saveSourceChartError', { error: error.message }, error.message),
+                'error',
+            );
+        }
     }
 
     // Save the currently displayed solar return as a standalone chart
@@ -7846,6 +8168,7 @@
             houseSystem: state.pageSettings?.houseSystem || 'P',
             activeLayers: state.activeLayers.map((l) => ({ id: l.id, method: l.method })),
             selectedLayerId: state.selectedRightLayerId,
+            synastry: buildAssistantSynastryContext(),
             snapshot: cmdSnapshot(),
         };
     }
@@ -7986,6 +8309,14 @@
                 return { ok: true, label: code };
             }
             case 'set_synastry_partner': {
+                if (args.manual) {
+                    await activateLayer('synastry_partner');
+                    const applied = await applyManualSynastryPartner(args.manual);
+                    if (!applied?.ok) {
+                        return { ok: false, error: { code: applied?.error || 'bad_manual_synastry' } };
+                    }
+                    return { ok: true, layerId: selectedLayerInstance()?.id, label: applied.label };
+                }
                 const chart = await cmdFetchChartById(args.chart_id);
                 if (!chart || !(chart.date || chart.birth_date)) {
                     return { ok: false, error: { code: 'chart_not_found' } };
@@ -7994,9 +8325,7 @@
                 // applySavedSynastryPartnerChart writes to the right instance.
                 await activateLayer('synastry_partner');
                 await applySavedSynastryPartnerChart(chart);
-                const name = args.title || chart.display_title || chart.title
-                    || [chart.first_name, chart.last_name].filter(Boolean).join(' ')
-                    || String(args.chart_id).slice(0, 8);
+                const name = args.title || chartOptionLabel(chart);
                 return { ok: true, label: name };
             }
             case 'remove_layer': {
@@ -8028,6 +8357,7 @@
         set_solar_year: 'Год соляра изменён',
         set_wheel_view: 'Вид колеса изменён',
         set_house_system: 'Система домов изменена',
+        set_synastry_partner: 'Синастрия построена',
         remove_layer: 'Слой удалён',
         clear_layers: 'Слои очищены',
     };

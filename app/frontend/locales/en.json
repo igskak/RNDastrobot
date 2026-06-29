@@ -336,7 +336,9 @@
         "timezoneOption": "Timezone",
         "locationPlaceholder": "Birth place",
         "locationAria": "Partner birth place",
-        "apply": "Apply"
+        "apply": "Apply",
+        "saved": "Synastry partner saved as a chart",
+        "notReady": "Calculate the synastry first"
       },
       "matrix": {
         "displayShort": "D",

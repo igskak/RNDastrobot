@@ -336,7 +336,9 @@
         "timezoneOption": "Часовой пояс",
         "locationPlaceholder": "Место рождения",
         "locationAria": "Место рождения партнёра",
-        "apply": "Применить"
+        "apply": "Применить",
+        "saved": "Партнёр синастрии сохранён как карта",
+        "notReady": "Сначала рассчитайте синастрию"
       },
       "matrix": {
         "displayShort": "П",

@@ -44,7 +44,7 @@ const ACTION_TEXT = {
     set_solar_year: (a) => `год соляра → ${a.args.year}`,
     set_wheel_view: (a) => `вид колеса → ${a.args.view}`,
     set_house_system: (a) => `система домов → ${a.args.system}`,
-    set_synastry_partner: (a) => `синастрия с ${a.args.title || 'партнёром'}`,
+    set_synastry_partner: (a) => `синастрия с ${a.args.title || a.args.manual?.name || a.args.manual?.title || 'партнёром'}`,
     remove_layer: (a) => `убрать слой «${a.args.method || a.args.layer_id}»`,
     clear_layers: () => 'убрать все слои',
 };
@@ -595,10 +595,44 @@ class ChatWidget {
                 date: s.date,
                 solarYear: s.solarYear,
                 layers: Array.isArray(s.activeLayers) ? s.activeLayers.map((l) => l.method) : [],
+                ...(s.synastry ? { synastry: this.normalizeSynastrySummary(s.synastry) } : {}),
             };
         } catch {
             return null;
         }
+    }
+
+    normalizeSynastrySummary(summary) {
+        if (!summary || typeof summary !== 'object' || summary.active !== true) return null;
+        const cleanString = (value, limit = 120) => {
+            const text = String(value || '').trim();
+            return text ? text.slice(0, limit) : '';
+        };
+        const out = {
+            active: true,
+            mode: summary.mode === 'manual' ? 'manual' : 'db',
+        };
+        for (const [from, to] of [
+            ['partnerName', 'partnerName'],
+            ['date', 'date'],
+            ['time', 'time'],
+            ['place', 'place'],
+            ['timezone', 'timezone'],
+        ]) {
+            const value = cleanString(summary[from]);
+            if (value) out[to] = value;
+        }
+        const aspectCount = Number(summary.aspectCount);
+        if (Number.isInteger(aspectCount) && aspectCount >= 0) out.aspectCount = aspectCount;
+        if (Array.isArray(summary.tightInterAspects)) {
+            out.tightInterAspects = summary.tightInterAspects.slice(0, 8).map((item) => ({
+                primary: cleanString(item?.primary, 32),
+                aspect: cleanString(item?.aspect, 32),
+                partner: cleanString(item?.partner, 32),
+                orb: Number.isFinite(Number(item?.orb)) ? Number(item.orb) : null,
+            })).filter((item) => item.primary && item.aspect && item.partner && item.orb !== null);
+        }
+        return out;
     }
 
     handleActions(actions, { compactFeedback = false } = {}) {
