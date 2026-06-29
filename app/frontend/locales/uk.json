@@ -994,6 +994,7 @@
       "nav": {
         "forecast": "Прогноз",
         "home": "На головну",
+        "natal": "Натал",
         "solar": "Соляр",
         "synastry": "Синастрія",
         "tables": "Таблиці",
@@ -1918,7 +1919,11 @@
         "solution": "Як допомагає",
         "benefits": "У практиці",
         "faq": "Питання",
-        "pricing": "Тарифи"
+        "pricing": "Тарифи",
+        "productPagesAria": "Сторінки продукту",
+        "cloudAstrology": "Хмарна астрологічна програма",
+        "astrologerWorkspace": "Робочий простір астролога",
+        "practiceManagement": "Керування практикою"
       },
       "cta": {
         "primary": "Створити карту",

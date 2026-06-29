@@ -62,6 +62,15 @@ ok(
         && forecastCss.includes('position: fixed;'),
     'add-layer dropdown is positioned outside the scroll-clipped layer tabs'
 );
+ok(
+    /if \(method === 'solar_return'\) \{\s*return buildSolarMomentMeta\(selectedViewModelLayer\(\)\?\.raw\?\.solar_info, \{ year: state\.solarYear \}\);\s*\}/.test(source),
+    'solar right-panel meta uses the full computed solar moment'
+);
+ok(
+    forecastCss.includes('.forecast-new-single-mode .forecast-new-header .forecast-new-header-actions')
+        && /\.forecast-new-single-mode \.forecast-new-header \.forecast-new-header-actions\s*\{\s*margin-left: auto;\s*\}/.test(forecastCss),
+    'single-wheel header actions stay aligned to the right when layer tabs are hidden'
+);
 
 console.log(`${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

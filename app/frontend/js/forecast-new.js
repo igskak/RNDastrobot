@@ -2287,7 +2287,7 @@
         const [solarDate, solarClock] = String(info.solar_datetime_local || '').split('T');
         const solarTime = (solarClock || '').slice(0, 5);
         const moment = [
-            [solarDate, solarTime].filter(Boolean).join(' '),
+            [solarDate ? formatChartDate(solarDate) : '', solarTime].filter(Boolean).join(' '),
             formatHeaderTimezone(info.timezone, { date: solarDate, time: solarTime }),
         ].filter(Boolean).join(' · ');
         return [resolvedYear, moment, locName].filter(Boolean).join(' · ');
@@ -2297,14 +2297,7 @@
         const method = selectedRightMethod();
 
         if (method === 'solar_return') {
-            const info = selectedViewModelLayer()?.raw?.solar_info || {};
-            const locationName = info?.location?.name
-                || state.solarLocation?.name
-                || state.location?.name
-                || '';
-            const [date, time] = String(info.solar_datetime_local || '').split('T');
-            const timezone = info.timezone || state.solarLocation?.timezone || state.timezone;
-            return buildPanelLocationMeta(locationName, timezone, { date, time });
+            return buildSolarMomentMeta(selectedViewModelLayer()?.raw?.solar_info, { year: state.solarYear });
         }
 
         const place = getMomentPlaceView();

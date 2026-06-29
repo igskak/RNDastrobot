@@ -992,6 +992,7 @@
       "nav": {
         "forecast": "Прогноз",
         "home": "На главную",
+        "natal": "Натал",
         "solar": "Соляр",
         "synastry": "Синастрия",
         "tables": "Таблицы",
@@ -1911,7 +1912,11 @@
         "solution": "Как помогает",
         "benefits": "В практике",
         "faq": "Вопросы",
-        "pricing": "Тарифы"
+        "pricing": "Тарифы",
+        "productPagesAria": "Страницы продукта",
+        "cloudAstrology": "Облачная астрологическая программа",
+        "astrologerWorkspace": "Рабочее пространство астролога",
+        "practiceManagement": "Управление практикой"
       },
       "cta": {
         "primary": "Создать карту",

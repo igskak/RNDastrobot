@@ -992,6 +992,7 @@
       "nav": {
         "forecast": "Forecast",
         "home": "Home",
+        "natal": "Natal",
         "solar": "Solar return",
         "synastry": "Synastry",
         "tables": "Tables",
@@ -1911,7 +1912,11 @@
         "solution": "How it helps",
         "benefits": "In practice",
         "faq": "Questions",
-        "pricing": "Pricing"
+        "pricing": "Pricing",
+        "productPagesAria": "Product pages",
+        "cloudAstrology": "Cloud astrology software",
+        "astrologerWorkspace": "Astrologer workspace",
+        "practiceManagement": "Practice management"
       },
       "cta": {
         "primary": "Create a chart",

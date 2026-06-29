@@ -2018,6 +2018,10 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     margin-left: 6px;
 }
 
+.forecast-new-single-mode .forecast-new-header .forecast-new-header-actions {
+    margin-left: auto;
+}
+
 .forecast-new-right-layer-tabs {
     position: relative;
     z-index: 120;
