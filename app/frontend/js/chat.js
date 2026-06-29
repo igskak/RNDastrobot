@@ -641,6 +641,7 @@ class ChatWidget {
                 solarYear: s.solarYear,
                 layers: Array.isArray(s.activeLayers) ? s.activeLayers.map((l) => l.method) : [],
                 ...(s.synastry ? { synastry: this.normalizeSynastrySummary(s.synastry) } : {}),
+                ...(s.resources ? { resources: this.normalizeWorkspaceResources(s.resources) } : {}),
             };
         } catch {
             return null;
@@ -659,13 +660,21 @@ class ChatWidget {
         };
         for (const [from, to] of [
             ['partnerName', 'partnerName'],
+            ['partnerId', 'partnerId'],
             ['date', 'date'],
             ['time', 'time'],
             ['place', 'place'],
             ['timezone', 'timezone'],
+            ['houseSystem', 'houseSystem'],
+            ['zodiac', 'zodiac'],
+            ['ayanamsha', 'ayanamsha'],
         ]) {
             const value = cleanString(summary[from]);
             if (value) out[to] = value;
+        }
+        for (const key of ['latitude', 'longitude']) {
+            const value = Number(summary[key]);
+            if (Number.isFinite(value)) out[key] = value;
         }
         const aspectCount = Number(summary.aspectCount);
         if (Number.isInteger(aspectCount) && aspectCount >= 0) out.aspectCount = aspectCount;
@@ -678,6 +687,84 @@ class ChatWidget {
             })).filter((item) => item.primary && item.aspect && item.partner && item.orb !== null);
         }
         return out;
+    }
+
+    normalizeWorkspaceResources(resources) {
+        if (!resources || typeof resources !== 'object') return null;
+        const cleanString = (value, limit = 140) => {
+            const text = String(value || '').trim();
+            return text ? text.slice(0, limit) : '';
+        };
+        const cleanNumber = (value) => {
+            const number = Number(value);
+            return Number.isFinite(number) ? number : null;
+        };
+        const cleanObject = (value, limit = 16) => {
+            if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+            const out = {};
+            Object.entries(value).slice(0, limit).forEach(([key, raw]) => {
+                if (raw === null || raw === undefined) return;
+                if (typeof raw === 'string') {
+                    const text = cleanString(raw, 180);
+                    if (text) out[key] = text;
+                } else if (typeof raw === 'number' || typeof raw === 'boolean') {
+                    out[key] = raw;
+                } else if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+                    const nested = cleanObject(raw, 8);
+                    if (nested && Object.keys(nested).length) out[key] = nested;
+                }
+            });
+            return out;
+        };
+        const cleanAspect = (aspect) => ({
+            primary: cleanString(aspect?.primary, 32),
+            aspect: cleanString(aspect?.aspect, 32),
+            target: cleanString(aspect?.target, 32),
+            orb: cleanNumber(aspect?.orb),
+            phase: cleanString(aspect?.phase, 24),
+        });
+        const cleanBody = (body) => ({
+            name: cleanString(body?.name, 32),
+            sign: cleanString(body?.sign, 24),
+            degree: cleanString(body?.degree, 32),
+            longitude: cleanNumber(body?.longitude),
+            house: cleanNumber(body?.house),
+            retrograde: body?.retrograde === true,
+        });
+        const activeChart = resources.activeChart && typeof resources.activeChart === 'object'
+            ? cleanObject(resources.activeChart, 20)
+            : null;
+        const layers = Array.isArray(resources.layers)
+            ? resources.layers.slice(0, 12).map((layer) => {
+                const result = layer?.result && typeof layer.result === 'object' ? layer.result : {};
+                return {
+                    id: cleanString(layer?.id, 80),
+                    method: cleanString(layer?.method, 40),
+                    selected: layer?.selected === true,
+                    ready: layer?.ready === true,
+                    label: cleanString(layer?.label, 80),
+                    config: cleanObject(layer?.config, 16),
+                    meta: cleanString(layer?.meta, 180),
+                    result: {
+                        aspectCount: cleanNumber(result.aspectCount),
+                        bodyCount: cleanNumber(result.bodyCount),
+                        tightAspects: Array.isArray(result.tightAspects)
+                            ? result.tightAspects.slice(0, 8).map(cleanAspect).filter((item) => item.primary && item.aspect && item.target)
+                            : [],
+                        keyBodies: Array.isArray(result.keyBodies)
+                            ? result.keyBodies.slice(0, 12).map(cleanBody).filter((item) => item.name)
+                            : [],
+                        target: cleanObject(result.target, 16),
+                    },
+                };
+            }).filter((layer) => layer.id && layer.method)
+            : [];
+        return {
+            ...(activeChart ? { activeChart } : {}),
+            selectedLayerId: cleanString(resources.selectedLayerId, 80),
+            selectedMethod: cleanString(resources.selectedMethod, 40),
+            layers,
+        };
     }
 
     handleActions(actions, { compactFeedback = false } = {}) {

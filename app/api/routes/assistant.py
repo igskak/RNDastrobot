@@ -88,6 +88,36 @@ def validate_audio_upload(content_type: str, size_bytes: int) -> str:
     return ''
 
 
+def merge_chat_history(persisted: List[dict], incoming: List[dict], limit: int = MAX_CHAT_MESSAGES) -> List[dict]:
+    """Merge stored thread messages with the browser-sent tail without duplicating overlap.
+
+    The browser normally sends its in-memory history, but long step-by-step work can
+    outlive that buffer. Server-side history keeps "исполняй следующий шаг" grounded
+    in the earlier calculations already saved for the conversation.
+    """
+    def clean(items: List[dict]) -> List[dict]:
+        return [
+            {"role": m.get("role"), "content": m.get("content", "") or ""}
+            for m in (items or [])
+            if m.get("role") in ("user", "assistant")
+        ]
+
+    base = clean(persisted)
+    tail = clean(incoming)
+    if not base:
+        return tail[-limit:]
+    if not tail:
+        return base[-limit:]
+
+    max_overlap = min(len(base), len(tail))
+    overlap = 0
+    for size in range(max_overlap, 0, -1):
+        if base[-size:] == tail[:size]:
+            overlap = size
+            break
+    return (base + tail[overlap:])[-limit:]
+
+
 class AspectPassesRequest(BaseModel):
     """Find when a transiting body forms an aspect to a natal object."""
 
@@ -330,6 +360,14 @@ def chat(
         astrologer_id=auth.astrologer.id,
     )
     messages = [m.model_dump() for m in request.messages]
+    if request.conversation_id:
+        conv = get_conversation(
+            db,
+            astrologer_id=auth.astrologer.id,
+            conversation_id=request.conversation_id,
+        )
+        if conv and conv.get("chart_user_id") == str(request.user_id):
+            messages = merge_chat_history(conv.get("messages", []), messages)
     try:
         result = service.chat(user_id=request.user_id, messages=messages)
     except Exception:

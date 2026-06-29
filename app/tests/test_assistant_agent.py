@@ -68,6 +68,12 @@ def test_build_tools_exposes_enums_and_hides_user_id():
     assert "restore_workspace" not in by_name  # internal undo inverse is never exposed
     assert "find_chart" in by_name  # PR4 grounding query tool
     assert "set_synastry_partner" in by_name
+    assert "calculate_progression" in by_name
+    assert "calculate_direction" in by_name
+    progression = _tool_by_name(tools, "calculate_progression")
+    assert set(progression["function"]["parameters"]["properties"]["chart_ref"]["enum"]) == {
+        "active_chart", "synastry_partner",
+    }
     add_layer = _tool_by_name(tools, "add_layer")
     assert set(add_layer["function"]["parameters"]["properties"]["method"]["enum"]) \
         == set(WORKSPACE_LAYER_METHODS)
@@ -433,12 +439,65 @@ def test_chat_injects_workspace_context_for_grounding(monkeypatch):
             "active": True,
             "mode": "manual",
             "partnerName": "Kit",
+            "partnerId": str(uuid4()),
             "date": "1990-06-26",
             "time": "18:15:00",
+            "timezone": "Europe/Kyiv",
             "place": "Kharkiv",
+            "latitude": 49.9935,
+            "longitude": 36.2304,
+            "houseSystem": "P",
             "aspectCount": 12,
             "tightInterAspects": [
                 {"primary": "Sun", "aspect": "Square", "partner": "Moon", "orb": 1.2},
+            ],
+        },
+        "resources": {
+            "activeChart": {
+                "chartId": str(uuid4()),
+                "source": "saved",
+                "title": "Client natal",
+                "date": "1990-06-26",
+                "time": "18:15:00",
+                "timezone": "Europe/Kyiv",
+                "place": "Kyiv",
+                "houseSystem": "P",
+                "zodiac": "tropical",
+            },
+            "selectedLayerId": "progression-1",
+            "layers": [
+                {
+                    "id": "progression-1",
+                    "method": "progression",
+                    "selected": True,
+                    "ready": True,
+                    "config": {
+                        "date": "2026-06-29",
+                        "time": "12:00:00",
+                        "timezone": "Europe/Kyiv",
+                    },
+                    "result": {
+                        "aspectCount": 5,
+                        "bodyCount": 14,
+                        "tightAspects": [
+                            {"primary": "Venus", "aspect": "Square", "target": "Mars", "orb": 0.4},
+                        ],
+                        "keyBodies": [
+                            {"name": "Sun", "degree": "12°00'", "house": 4},
+                        ],
+                    },
+                },
+                {
+                    "id": "direction-1",
+                    "method": "direction",
+                    "selected": False,
+                    "ready": False,
+                    "config": {
+                        "date": "2026-06-29",
+                        "directionType": "zodiacal",
+                    },
+                    "result": {"aspectCount": 0, "bodyCount": 0},
+                },
             ],
         },
     }
@@ -459,4 +518,106 @@ def test_chat_injects_workspace_context_for_grounding(monkeypatch):
     assert "house system: K" in context
     assert "active synastry:" in context
     assert "partner=Kit" in context
+    assert "partnerId=" in context
+    assert "timezone=Europe/Kyiv" in context
+    assert "coords=49.993500,36.230400" in context
     assert "Sun Square Moon orb 1.20" in context
+    assert "active chart resource:" in context
+    assert "title=Client natal" in context
+    assert "workspace layers resource selected=progression-1" in context
+    assert "progression, id=progression-1, selected, ready" in context
+    assert "Venus Square Mars orb 0.40" in context
+    assert "direction, id=direction-1, not_ready" in context
+
+
+def test_calculate_progression_for_active_chart_uses_bound_user():
+    active_user = uuid4()
+    captured = {}
+    service = _service_with_fake_transits({})
+
+    class _FakeProgressions:
+        def calculate_progression(self, **kwargs):
+            captured.update(kwargs)
+            return {
+                "progression_info": {"target_date": "2026-06-29"},
+                "birth_data": {"user_id": str(kwargs["user_id"])},
+                "progressed_planets": [{"name": "Venus", "longitude": 12.345678, "sign": "Aries"}],
+                "aspects_to_natal": [
+                    {"progressed_planet": "Venus", "natal_object": "Mars", "aspect_type": "Square", "orb": 0.4},
+                ],
+                "planet_ingresses": [],
+            }
+
+    service._progression_service = _FakeProgressions()
+
+    out = service._exec_calculate_progression(active_user, {
+        "chart_ref": "active_chart",
+        "target_date": "2026-06-29",
+    })
+
+    assert out["status"] == "ok"
+    assert out["chart_ref"] == "active_chart"
+    assert captured["user_id"] == active_user
+    assert captured["target_date"] == date(2026, 6, 29)
+    assert out["aspects_to_natal"][0] == {
+        "left": "Venus", "right": "Mars", "aspect": "Square", "orb": 0.4,
+    }
+
+
+def test_calculate_direction_can_use_manual_synastry_partner(monkeypatch):
+    service = _service_with_fake_transits({})
+    service.default_workspace = {
+        "synastry": {
+            "active": True,
+            "mode": "manual",
+            "partnerName": "Kit",
+            "date": "1990-06-26",
+            "time": "18:15:00",
+            "timezone": "Europe/Kyiv",
+            "place": "Kyiv",
+        },
+    }
+    inline_context = object()
+    monkeypatch.setattr(service, "_manual_synastry_context", lambda syn: inline_context)
+    captured = {}
+
+    class _FakeDirections:
+        def calculate_direction_from_context(self, context, **kwargs):
+            captured["context"] = context
+            captured.update(kwargs)
+            return {
+                "direction_info": {"target_date": "2026-06-29", "direction_type": "zodiacal"},
+                "birth_data": {"birth_date": "1990-06-26"},
+                "directed_planets": [{"name": "Sun", "longitude": 1.25, "sign": "Aries"}],
+                "directed_angles": [],
+                "directed_special_points": [],
+                "aspects_to_natal": [
+                    {"directed_object": "Sun", "natal_object": "Moon", "aspect_type": "Trine", "orb": 0.2},
+                ],
+                "planet_ingresses": [],
+                "house_cusp_ingresses": [],
+            }
+
+    service._direction_service = _FakeDirections()
+
+    out = service._exec_calculate_direction(uuid4(), {
+        "chart_ref": "synastry_partner",
+        "target_date": "2026-06-29",
+    })
+
+    assert out["status"] == "ok"
+    assert out["chart_ref"] == "synastry_partner"
+    assert captured["context"] is inline_context
+    assert captured["target_date"] == date(2026, 6, 29)
+
+
+def test_synastry_partner_source_reports_missing_context():
+    service = _service_with_fake_transits({})
+
+    out = service._dispatch("calculate_direction", {
+        "chart_ref": "synastry_partner",
+        "target_date": "2026-06-29",
+    }, uuid4())
+
+    assert out["status"] == "error"
+    assert out["error"] == "synastry_partner_missing:active_synastry"

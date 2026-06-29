@@ -72,8 +72,20 @@ function makeAdapter(initial) {
     ok(validateAction({ name: 'remove_layer', args: { method: 'transit' } }).ok, 'remove_layer by method accepted');
     ok(validateAction({ name: 'remove_layer', args: { layer_id: 'transit-2' } }).ok, 'remove_layer by id accepted');
     ok(validateAction({ name: 'set_synastry_partner', args: { chart_id: 'u-123' } }).ok, 'valid synastry partner accepted');
+    ok(validateAction({ name: 'set_synastry_partner', args: {
+        manual: {
+            name: 'Manual partner',
+            date: '1990-06-26',
+            time: '18:15:00',
+            timezone: 'Europe/Kyiv',
+            place: 'Kyiv',
+        },
+    } }).ok, 'valid manual synastry partner accepted');
     ok(!validateAction({ name: 'set_synastry_partner', args: {} }).ok, 'synastry partner without chart_id rejected');
     ok(!validateAction({ name: 'set_synastry_partner', args: { chart_id: '  ' } }).ok, 'synastry partner blank chart_id rejected');
+    ok(!validateAction({ name: 'set_synastry_partner', args: {
+        manual: { date: '1990-06-26', time: '18:15:00', timezone: 'Europe/Kyiv' },
+    } }).ok, 'manual synastry partner without location rejected');
 
     // ── registry / confirm policy ────────────────────────────────────────────
     ok(REGISTRY.set_transit_date.confirm === 'auto', 'transit date auto-applies');

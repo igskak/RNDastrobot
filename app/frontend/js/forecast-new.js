@@ -4355,16 +4355,134 @@
         return [partnerName, formatChartDate(bd?.date), bd?.place].filter(Boolean).join(' · ');
     }
 
-    function buildAssistantSynastryContext() {
-        const inst = selectedRightMethod() === 'synastry_partner'
+    function assistantCleanText(value, limit = 120) {
+        const text = String(value || '').trim();
+        return text ? text.slice(0, limit) : '';
+    }
+
+    function assistantSplitDatetime(value) {
+        const [date, time] = splitTargetDatetime(value || '');
+        return { date, time };
+    }
+
+    function assistantLocationSummary(location = {}) {
+        const out = {};
+        const name = assistantCleanText(location.name || location.place || location.locationName, 120);
+        if (name) out.name = name;
+        const lat = numberOrNull(location.latitude);
+        const lon = numberOrNull(location.longitude);
+        if (lat !== null && lon !== null) {
+            out.latitude = lat;
+            out.longitude = lon;
+        }
+        const timezone = assistantCleanText(location.timezone, 80);
+        if (timezone) out.timezone = timezone;
+        return Object.keys(out).length ? out : null;
+    }
+
+    function assistantAspectSummary(aspects, limit = 8) {
+        return (Array.isArray(aspects) ? aspects : [])
+            .filter((aspect) => aspect && (aspect.aspect_type || aspect.aspect))
+            .slice()
+            .sort((a, b) => Number(a.orb ?? 99) - Number(b.orb ?? 99))
+            .slice(0, limit)
+            .map((aspect) => ({
+                primary: assistantCleanText(
+                    aspect.left_planet || aspect.planet_1 || aspect.transit_planet
+                    || aspect.progressed_planet || aspect.directed_object || aspect.solar_planet,
+                    32,
+                ),
+                aspect: assistantCleanText(aspect.aspect_type || aspect.aspect, 32),
+                target: assistantCleanText(
+                    aspect.right_planet || aspect.planet_2 || aspect.natal_object,
+                    32,
+                ),
+                orb: Number.isFinite(Number(aspect.orb)) ? Number(Number(aspect.orb).toFixed(2)) : null,
+                phase: assistantCleanText(aspect.phase || aspect.aspect_phase, 24),
+            }))
+            .filter((aspect) => aspect.primary && aspect.aspect && aspect.target && aspect.orb !== null);
+    }
+
+    function assistantBodySummary(bodies, limit = 12) {
+        const preferred = new Set(['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'ASC', 'MC']);
+        const normalized = (Array.isArray(bodies) ? bodies : [])
+            .filter((body) => body && body.name && body.longitude !== null && body.longitude !== undefined);
+        return normalized
+            .slice()
+            .sort((a, b) => {
+                const ap = preferred.has(a.name) ? 0 : 1;
+                const bp = preferred.has(b.name) ? 0 : 1;
+                return ap - bp;
+            })
+            .slice(0, limit)
+            .map((body) => ({
+                name: assistantCleanText(body.name, 32),
+                sign: assistantCleanText(body.sign, 24),
+                degree: assistantCleanText(body.degree_in_sign_formatted, 32),
+                longitude: Number.isFinite(Number(body.longitude)) ? Number(Number(body.longitude).toFixed(4)) : null,
+                house: Number.isFinite(Number(body.house)) ? Number(body.house) : null,
+                retrograde: body.retrograde === true,
+            }));
+    }
+
+    function assistantLayerBodies(method, layer, raw) {
+        if (method === 'transit') return raw?.transit_planets || layer?.bodies || [];
+        if (method === 'progression') return raw?.progressed_planets || layer?.bodies || [];
+        if (method === 'direction') {
+            return [
+                ...(raw?.directed_planets || []),
+                ...(raw?.directed_angles || []),
+                ...(raw?.directed_special_points || []),
+            ];
+        }
+        if (method === 'solar_return') return raw?.planets || layer?.bodies || [];
+        if (method === 'synastry_partner') return raw?.partner_chart?.planets || layer?.bodies || [];
+        return layer?.bodies || [];
+    }
+
+    function assistantLayerAspects(method, layer, raw) {
+        if (method === 'synastry_partner') return raw?.inter_aspects || layer?.aspects || [];
+        return raw?.aspects_to_natal || raw?.aspects || layer?.aspects || [];
+    }
+
+    function assistantLayerConfig(inst) {
+        const cfg = layerConfigOf(inst);
+        if (isMomentMethod(inst.method)) {
+            const { date, time } = assistantSplitDatetime(cfg.datetime || state.selectedDateTime);
+            const out = {
+                date,
+                time,
+                timezone: cfg.timezone || state.timezone || 'UTC',
+            };
+            const location = assistantLocationSummary(cfg.location || state.location || {});
+            if (location) out.location = location;
+            if (inst.method === 'direction') {
+                out.directionType = normalizeDirectionType(cfg.directionType || state.directionType);
+            }
+            return out;
+        }
+        if (inst.method === 'solar_return') {
+            const out = { year: Number(cfg.year || state.solarYear) };
+            const location = assistantLocationSummary(cfg.location || {});
+            if (location) out.location = location;
+            return out;
+        }
+        if (inst.method === 'synastry_partner') {
+            return buildAssistantSynastryContextFor(inst) || { mode: cfg.mode || 'db' };
+        }
+        return {};
+    }
+
+    function buildAssistantSynastryContextFor(inst = null) {
+        const resolvedInst = inst || (selectedRightMethod() === 'synastry_partner'
             ? selectedLayerInstance()
-            : instancesOfMethod('synastry_partner')[0];
-        if (!inst && !hasUsableSynastryPartner()) return null;
-        const layer = (state.viewModel?.activePrognosticLayers || []).find((item) => item.id === inst?.id)
+            : instancesOfMethod('synastry_partner')[0]);
+        if (!resolvedInst && !hasUsableSynastryPartner()) return null;
+        const layer = (state.viewModel?.activePrognosticLayers || []).find((item) => item.id === resolvedInst?.id)
             || (state.viewModel?.activePrognosticLayers || []).find((item) => item.method === 'synastry_partner')
             || null;
         const raw = layer?.raw || {};
-        const cfg = layerConfigOf(inst || 'synastry_partner');
+        const cfg = layerConfigOf(resolvedInst || 'synastry_partner');
         const manual = cfg.mode === 'manual' ? (cfg.manual || state.synastryManual || {}) : {};
         const bd = raw?.partner_chart?.birth_data || {};
         const select = refs.forecastNewSynastryPartnerSelect;
@@ -4373,7 +4491,7 @@
             : '';
         const partnerName = cfg.mode === 'manual'
             ? (manual.name || manual.title || t('page.forecastNew.resultViews.manualPartner'))
-            : (inst?.config?.chartTitle
+            : (resolvedInst?.config?.chartTitle
                 || selectedLabel
                 || [bd.first_name, bd.last_name].filter(Boolean).join(' ').trim()
                 || state.synastryManual?.name
@@ -4407,8 +4525,84 @@
             time: cfg.mode === 'manual' ? manual.time : (bd.time || state.synastryManual?.time || ''),
             timezone: cfg.mode === 'manual' ? manual.timezone : (bd.timezone || state.synastryManual?.timezone || ''),
             place: cfg.mode === 'manual' ? manual.place : (bd.place || state.synastryManual?.place || ''),
+            latitude: cfg.mode === 'manual' ? manual.latitude : numberOrNull(bd.latitude),
+            longitude: cfg.mode === 'manual' ? manual.longitude : numberOrNull(bd.longitude),
+            houseSystem: cfg.mode === 'manual'
+                ? (manual.houseSystem || state.pageSettings?.houseSystem || 'P')
+                : (bd.house_system || state.pageSettings?.houseSystem || 'P'),
+            zodiac: cfg.mode === 'manual'
+                ? (manual.zodiac || state.natalData?.birth_data?.zodiac || 'tropical')
+                : (bd.zodiac || state.natalData?.birth_data?.zodiac || 'tropical'),
+            ayanamsha: cfg.mode === 'manual'
+                ? (manual.ayanamsha || state.natalData?.birth_data?.ayanamsha || null)
+                : (bd.ayanamsha || state.natalData?.birth_data?.ayanamsha || null),
             aspectCount: rawAspects.length,
             tightInterAspects,
+        };
+    }
+
+    function buildAssistantSynastryContext() {
+        return buildAssistantSynastryContextFor();
+    }
+
+    function buildAssistantActiveChartResource() {
+        const birth = state.natalData?.birth_data || {};
+        const [date, time] = splitTargetDatetime(state.natalSelectedDateTime || '');
+        const title = chartDisplayTitle(state.natalData || {}, t('page.chart.nav.natal'));
+        const out = {
+            chartId: state.userId || null,
+            source: state.userId && !isNatalEdited() ? 'saved' : 'inline',
+            title: assistantCleanText(title, 140),
+            date: birth.date || date || '',
+            time: birth.time || time || '',
+            timezone: state.natalTimezone || birth.timezone || 'UTC',
+            place: birth.place || state.natalLocation?.name || '',
+            latitude: numberOrNull(birth.latitude ?? state.natalLocation?.latitude),
+            longitude: numberOrNull(birth.longitude ?? state.natalLocation?.longitude),
+            houseSystem: normalizeHouseSystemCode(state.pageSettings?.houseSystem || birth.house_system || 'P'),
+            zodiac: birth.zodiac || 'tropical',
+            ayanamsha: birth.ayanamsha || null,
+            planetCount: Array.isArray(state.natalData?.planets) ? state.natalData.planets.length : 0,
+            aspectCount: Array.isArray(state.natalData?.aspects) ? state.natalData.aspects.length : 0,
+        };
+        return out;
+    }
+
+    function buildAssistantLayerResources() {
+        const vmLayers = state.viewModel?.activePrognosticLayers || [];
+        return state.activeLayers.map((inst) => {
+            const layer = vmLayers.find((item) => item.id === inst.id)
+                || vmLayers.find((item) => item.method === inst.method)
+                || null;
+            const raw = layer?.raw || state.layers?.[inst.id] || null;
+            const aspects = assistantLayerAspects(inst.method, layer, raw);
+            const bodies = assistantLayerBodies(inst.method, layer, raw);
+            return {
+                id: inst.id,
+                method: inst.method,
+                selected: inst.id === state.selectedRightLayerId,
+                ready: !!raw,
+                label: assistantCleanText(layer?.label || layerLabel(inst.method), 80),
+                config: assistantLayerConfig(inst),
+                meta: assistantCleanText(buildResultLayerMeta(inst.method, layer || { raw }) || '', 180),
+                result: {
+                    aspectCount: Array.isArray(aspects) ? aspects.length : 0,
+                    bodyCount: Array.isArray(bodies) ? bodies.length : 0,
+                    tightAspects: assistantAspectSummary(aspects),
+                    keyBodies: assistantBodySummary(bodies),
+                    target: raw?.transit_info || raw?.progression_info || raw?.direction_info
+                        || raw?.solar_info || null,
+                },
+            };
+        });
+    }
+
+    function buildAssistantWorkspaceResources() {
+        return {
+            activeChart: buildAssistantActiveChartResource(),
+            selectedLayerId: state.selectedRightLayerId || '',
+            selectedMethod: selectedRightMethod(),
+            layers: buildAssistantLayerResources(),
         };
     }
 
@@ -8169,6 +8363,7 @@
             activeLayers: state.activeLayers.map((l) => ({ id: l.id, method: l.method })),
             selectedLayerId: state.selectedRightLayerId,
             synastry: buildAssistantSynastryContext(),
+            resources: buildAssistantWorkspaceResources(),
             snapshot: cmdSnapshot(),
         };
     }

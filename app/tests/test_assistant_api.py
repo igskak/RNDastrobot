@@ -19,6 +19,7 @@ import app.api.routes.assistant as assistant_routes
 from app.api.routes.assistant import (
     AspectPassesRequest,
     MAX_AUDIO_BYTES,
+    merge_chat_history,
     validate_audio_upload,
 )
 
@@ -73,6 +74,34 @@ def test_window_mode_rejects_inverted_range():
 def test_max_expansion_days_bounded():
     with pytest.raises(ValidationError):
         AspectPassesRequest(**_base(max_expansion_days=999999))
+
+
+def test_merge_chat_history_appends_tail_without_duplicate_overlap():
+    persisted = [
+        {"role": "user", "content": "план"},
+        {"role": "assistant", "content": "шаг 1"},
+    ]
+    incoming = [
+        {"role": "assistant", "content": "шаг 1"},
+        {"role": "user", "content": "исполняй дальше"},
+    ]
+
+    assert merge_chat_history(persisted, incoming) == [
+        {"role": "user", "content": "план"},
+        {"role": "assistant", "content": "шаг 1"},
+        {"role": "user", "content": "исполняй дальше"},
+    ]
+
+
+def test_merge_chat_history_limits_merged_context():
+    persisted = [{"role": "user", "content": f"old {i}"} for i in range(4)]
+    incoming = [{"role": "user", "content": "new"}]
+
+    assert merge_chat_history(persisted, incoming, limit=3) == [
+        {"role": "user", "content": "old 2"},
+        {"role": "user", "content": "old 3"},
+        {"role": "user", "content": "new"},
+    ]
 
 
 def test_angle_and_node_targets_allowed():

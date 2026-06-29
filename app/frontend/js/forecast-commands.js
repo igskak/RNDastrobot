@@ -49,6 +49,28 @@
         return hh <= 23 && mm <= 59 && ss <= 59;
     }
 
+    function hasText(value) {
+        return typeof value === 'string' && value.trim().length > 0;
+    }
+
+    function isFiniteNumber(value) {
+        return value !== null && value !== '' && Number.isFinite(Number(value));
+    }
+
+    function validateManualSynastry(manual) {
+        if (!manual || typeof manual !== 'object') return fail('bad_manual_synastry', 'manual synastry data must be an object');
+        if (!isValidDate(manual.date)) return fail('bad_manual_date', 'manual date must be a valid YYYY-MM-DD');
+        if (!isValidTime(manual.time)) return fail('bad_manual_time', 'manual time must be a valid HH:mm[:ss]');
+        if (!hasText(manual.timezone)) return fail('bad_manual_timezone', 'manual timezone is required');
+        const hasCoords = isFiniteNumber(manual.latitude) && isFiniteNumber(manual.longitude)
+            && Number(manual.latitude) >= -90 && Number(manual.latitude) <= 90
+            && Number(manual.longitude) >= -180 && Number(manual.longitude) <= 180;
+        if (!hasText(manual.place) && !hasCoords) {
+            return fail('bad_manual_location', 'manual place or coordinates are required');
+        }
+        return pass();
+    }
+
     // ── Registry: per-command confirm policy + reversibility ────────────────
     // confirm:'auto'  → client applies immediately (toast + undo).
     // confirm:'confirm' → client renders a confirm chip; nothing mutates until tapped.
@@ -128,10 +150,12 @@
                 return pass();
             }
             case 'set_synastry_partner': {
-                if (typeof args.chart_id !== 'string' || !args.chart_id.trim()) {
-                    return fail('bad_chart_id', 'chart_id must be a non-empty string');
+                const hasChartId = typeof args.chart_id === 'string' && !!args.chart_id.trim();
+                const hasManual = args.manual != null;
+                if (hasChartId === hasManual) {
+                    return fail('bad_synastry_source', 'set_synastry_partner needs exactly one source');
                 }
-                return pass();
+                return hasManual ? validateManualSynastry(args.manual) : pass();
             }
             case 'remove_layer': {
                 if (!args.layer_id && !LAYER_METHODS.includes(args.method)) {
