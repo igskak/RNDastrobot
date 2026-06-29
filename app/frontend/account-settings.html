@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.accountSettings.title"></title>
-    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=143dbb4fa827">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=143dbb4fa827">
+    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=00ff0ff3b35a">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=00ff0ff3b35a">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '143dbb4fa827';</script>
+    <script>window.__APP_BUILD_ID__ = '00ff0ff3b35a';</script>
 </head>
 <body class="account-settings-page workspace-compact">
     <div class="page-loader" id="pageLoader">
@@ -337,13 +337,16 @@
                 </div>
                     </details>
 
-                    <section class="account-settings-card">
-                        <div class="account-settings-card-head account-settings-card-head--compact">
-                            <div>
+                    <details class="account-settings-card account-settings-card--details">
+                        <summary class="account-settings-card-summary">
+                            <span>
                                 <p class="account-settings-section-kicker" data-i18n="page.accountSettings.orbs.kicker"></p>
                                 <h2 class="account-settings-section-title" data-i18n="page.accountSettings.orbs.title"></h2>
                                 <p class="account-settings-section-copy" data-i18n="page.accountSettings.orbs.copy"></p>
-                            </div>
+                            </span>
+                            <span class="account-settings-disclosure-indicator" aria-hidden="true"></span>
+                        </summary>
+                        <div class="account-settings-details-body">
                             <div class="account-settings-orb-toolbar">
                                 <div class="account-settings-orb-strategy">
                                     <label
@@ -427,64 +430,67 @@
                                     data-i18n="page.accountSettings.orbs.actions.applyNatal"
                                 ></button>
                             </div>
+                            <p
+                                class="account-settings-section-copy account-settings-section-copy--subtle"
+                                id="accountOrbProfileHint"
+                                data-i18n="page.accountSettings.orbs.hints.natal"
+                            ></p>
+                            <p
+                                class="account-settings-section-copy account-settings-section-copy--subtle"
+                                data-i18n="page.accountSettings.orbs.pairStrategy.hint"
+                            ></p>
+                            <div
+                                class="account-settings-table-wrap account-settings-table-wrap--tight account-settings-orb-matrix-wrap"
+                                id="accountOrbMatrixPanel"
+                                role="tabpanel"
+                                aria-labelledby="accountOrbTabNatal"
+                            >
+                                <table class="account-settings-table account-settings-table--methodology" id="accountOrbsTable">
+                                    <thead>
+                                        <tr id="accountOrbsHeaderRow">
+                                            <th
+                                                class="account-settings-orb-corner"
+                                                data-i18n-title="page.accountSettings.orbs.matrix.cornerTitle"
+                                                data-i18n-aria-label="page.accountSettings.orbs.matrix.cornerTitle"
+                                            ></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="accountOrbsMatrixBody"></tbody>
+                                </table>
+                            </div>
                         </div>
-                        <p
-                            class="account-settings-section-copy account-settings-section-copy--subtle"
-                            id="accountOrbProfileHint"
-                            data-i18n="page.accountSettings.orbs.hints.natal"
-                        ></p>
-                        <p
-                            class="account-settings-section-copy account-settings-section-copy--subtle"
-                            data-i18n="page.accountSettings.orbs.pairStrategy.hint"
-                        ></p>
-                        <div
-                            class="account-settings-table-wrap account-settings-table-wrap--tight account-settings-orb-matrix-wrap"
-                            id="accountOrbMatrixPanel"
-                            role="tabpanel"
-                            aria-labelledby="accountOrbTabNatal"
-                        >
-                            <table class="account-settings-table account-settings-table--methodology" id="accountOrbsTable">
-                                <thead>
-                                    <tr id="accountOrbsHeaderRow">
-                                        <th
-                                            class="account-settings-orb-corner"
-                                            data-i18n-title="page.accountSettings.orbs.matrix.cornerTitle"
-                                            data-i18n-aria-label="page.accountSettings.orbs.matrix.cornerTitle"
-                                        ></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="accountOrbsMatrixBody"></tbody>
-                            </table>
-                        </div>
-                    </section>
+                    </details>
 
-                    <section class="account-settings-card">
-                        <div class="account-settings-card-head account-settings-card-head--compact">
-                            <div>
+                    <details class="account-settings-card account-settings-card--details">
+                        <summary class="account-settings-card-summary">
+                            <span>
                                 <p class="account-settings-section-kicker" data-i18n="page.accountSettings.dignities.kicker"></p>
                                 <h2 class="account-settings-section-title" data-i18n="page.accountSettings.dignities.title"></h2>
                                 <p class="account-settings-section-copy" data-i18n="page.accountSettings.dignities.copy"></p>
+                            </span>
+                            <span class="account-settings-disclosure-indicator" aria-hidden="true"></span>
+                        </summary>
+                        <div class="account-settings-details-body">
+                            <p
+                                class="account-settings-section-copy account-settings-section-copy--subtle"
+                                data-i18n="page.accountSettings.dignities.hint"
+                            ></p>
+                            <div class="account-settings-table-wrap account-settings-table-wrap--tight account-settings-dignities-wrap">
+                                <table class="account-settings-table account-settings-table--dignities">
+                                    <thead>
+                                        <tr>
+                                            <th data-i18n="page.accountSettings.dignities.columns.planet"></th>
+                                            <th data-i18n="astro.dignity.domicile"></th>
+                                            <th data-i18n="astro.dignity.detriment"></th>
+                                            <th data-i18n="astro.dignity.exaltation"></th>
+                                            <th data-i18n="astro.dignity.fall"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="accountDignitiesMatrixBody"></tbody>
+                                </table>
                             </div>
                         </div>
-                        <p
-                            class="account-settings-section-copy account-settings-section-copy--subtle"
-                            data-i18n="page.accountSettings.dignities.hint"
-                        ></p>
-                        <div class="account-settings-table-wrap account-settings-table-wrap--tight account-settings-dignities-wrap">
-                            <table class="account-settings-table account-settings-table--dignities">
-                                <thead>
-                                    <tr>
-                                        <th data-i18n="page.accountSettings.dignities.columns.planet"></th>
-                                        <th data-i18n="astro.dignity.domicile"></th>
-                                        <th data-i18n="astro.dignity.detriment"></th>
-                                        <th data-i18n="astro.dignity.exaltation"></th>
-                                        <th data-i18n="astro.dignity.fall"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="accountDignitiesMatrixBody"></tbody>
-                            </table>
-                        </div>
-                    </section>
+                    </details>
 
                     <section class="account-settings-card">
                         <div class="account-settings-card-head account-settings-card-head--compact">
@@ -659,9 +665,9 @@
 
     <div id="accountSettingsToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/account-settings.bundle.js?v=143dbb4fa827"></script>
+    <script type="module" src="js/bundles/account-settings.bundle.js?v=00ff0ff3b35a"></script>
     <script src="/runtime-config.js"></script>
-    <script src="js/analytics.js?v=143dbb4fa827"></script>
-    <script src="js/locale-switcher.js?v=143dbb4fa827"></script>
+    <script src="js/analytics.js?v=00ff0ff3b35a"></script>
+    <script src="js/locale-switcher.js?v=00ff0ff3b35a"></script>
 </body>
 </html>

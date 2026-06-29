@@ -432,6 +432,23 @@ body.account-settings-modal-open {
     display: none;
 }
 
+.account-settings-card-summary:focus-visible {
+    outline: 2px solid rgba(30, 58, 95, 0.28);
+    outline-offset: -4px;
+}
+
+.account-settings-details-body {
+    padding: 0 14px 14px;
+}
+
+.account-settings-details-body > .account-settings-orb-toolbar {
+    margin-bottom: 12px;
+}
+
+.account-settings-details-body > .account-settings-table-wrap--tight {
+    margin: 0;
+}
+
 .account-settings-section-title {
     margin: 0;
     font-family: var(--font-display);
@@ -1464,6 +1481,10 @@ body.account-settings-page.workspace-compact .account-settings-card {
     padding: var(--density-surface-padding);
 }
 
+body.account-settings-page.workspace-compact .account-settings-card--details {
+    padding: 0;
+}
+
 body.account-settings-page.workspace-compact .account-settings-toolbar--sidebar {
     grid-template-columns: minmax(0, 1fr) minmax(280px, 0.42fr);
     gap: 8px;
@@ -1504,6 +1525,10 @@ body.account-settings-page.workspace-compact .account-settings-card-summary {
     padding: 9px 10px;
 }
 
+body.account-settings-page.workspace-compact .account-settings-details-body {
+    padding: 0 10px 10px;
+}
+
 body.account-settings-page.workspace-compact .account-settings-section-title {
     font-size: 20px;
 }
@@ -1533,6 +1558,10 @@ body.account-settings-page.workspace-compact .account-settings-table-wrap {
 
 body.account-settings-page.workspace-compact .account-settings-table-wrap--tight {
     margin: 0 10px 10px;
+}
+
+body.account-settings-page.workspace-compact .account-settings-details-body > .account-settings-table-wrap--tight {
+    margin: 0;
 }
 
 body.account-settings-page.workspace-compact .account-settings-table th,
