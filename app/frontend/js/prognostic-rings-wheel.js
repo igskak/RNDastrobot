@@ -32,6 +32,10 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
         Semisquare: '∠',
         Sesquiquadrate: '⚼',
     };
+    const ASPECT_GLYPH_FONT_SIZE = 8;
+    const ASPECT_GLYPH_BACKDROP_RADIUS = 6;
+    const EXACT_ASPECT_THRESHOLD_RATIO = 0.25;
+    const EXACT_ASPECT_STROKE_MULTIPLIER = 1.45;
     const MAJOR_ASPECTS = new Set(['Conjunction', 'Opposition', 'Trine', 'Square', 'Sextile']);
     const DEFAULT_ASPECT_COLORS = {
         Conjunction: '#b45309',
@@ -92,6 +96,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             this.showPlanetStationary = false;
             this.showPlanetDegree = false;
             this.showAspectText = false;
+            this.highlightExactAspects = true;
             this.showDeclinationAspects = false;
             this.declinationAspects = [];
             this.minimumRingCount = 1;
@@ -178,6 +183,9 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             }
             if (Object.prototype.hasOwnProperty.call(options, 'showAspectText')) {
                 this.showAspectText = options.showAspectText === true;
+            }
+            if (Object.prototype.hasOwnProperty.call(options, 'highlightExactAspects')) {
+                this.highlightExactAspects = options.highlightExactAspects !== false;
             }
             if (Object.prototype.hasOwnProperty.call(options, 'showDeclinationAspects')) {
                 this.showDeclinationAspects = options.showDeclinationAspects === true;
@@ -730,10 +738,8 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                     };
                     const isMajor = MAJOR_ASPECTS.has(aspect.aspect_type);
                     const color = this.getAspectColor(aspect.aspect_type, aspect.harmonic_type);
-                    const baseThickness = Math.max(0.3, 1.5 - ((Number(aspect.orb) || 0) / 12) * 1.2);
-                    const thickness = aspect.aspect_type === 'Conjunction'
-                        ? baseThickness * 2
-                        : baseThickness;
+                    const exactAspect = this.isExactAspect(aspect);
+                    const thickness = this.getAspectStrokeWidth(aspect, exactAspect);
                     const aspectAttrs = {
                         'data-aspect': aspectKey,
                         'data-aspect-key': aspectKey,
@@ -744,6 +750,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                         'data-aspect-scope': isSynastryComparison ? 'inter' : 'prognostic',
                         'data-type': aspect.aspect_type,
                         'data-major': isMajor ? 'true' : 'false',
+                        'data-exact': exactAspect ? 'true' : 'false',
                         'data-conjunction-collapsed': geometry.collapsed ? 'true' : 'false',
                     };
 
@@ -754,7 +761,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                             r: this.conjunctionDisplay.dotRadius,
                             fill: color,
                             stroke: color,
-                            'stroke-width': aspect.aspect_type === 'Conjunction' ? 2.4 : 1.2,
+                            'stroke-width': exactAspect ? 3 : 2.4,
                             opacity: isMajor ? 0.82 : 0.55,
                             class: 'aspect-line aspect-dot',
                             ...aspectAttrs,
@@ -778,38 +785,12 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                     if (shouldDrawAspectGlyph) {
                         const glyph = ASPECT_SYMBOLS[aspect.aspect_type];
                         if (!glyph) return;
-                        const symbolGroup = this.el('g', {
-                            class: 'aspect-symbol-group',
-                            style: 'pointer-events: none;',
-                            ...aspectAttrs,
-                        });
-                        const symbolText = this.el('text', {
-                            x: geometry.midX,
-                            y: geometry.midY + 2.5,
-                            'text-anchor': 'middle',
-                            'font-size': 8,
-                            fill: color,
-                            class: 'aspect-symbol-text',
-                            style: 'pointer-events: none;',
-                        }, glyph);
-                        symbolGroup.appendChild(symbolText);
-                        this.layers.aspects.appendChild(symbolGroup);
-
-                        try {
-                            const bbox = symbolText.getBBox();
-                            const backdropRadius = Math.max(bbox.width, bbox.height) / 2 + 1.5;
-                            const backdrop = this.el('circle', {
-                                cx: bbox.x + bbox.width / 2,
-                                cy: bbox.y + bbox.height / 2,
-                                r: backdropRadius,
-                                fill: WHEEL_BG,
-                                opacity: 0.96,
-                                class: 'aspect-symbol-backdrop',
-                            });
-                            symbolGroup.insertBefore(backdrop, symbolText);
-                        } catch (error) {
-                            // Ignore bbox issues and keep the text visible even without backdrop.
-                        }
+                        this.layers.aspects.appendChild(this.createAspectSymbolGroup({
+                            aspectAttrs,
+                            geometry,
+                            color,
+                            glyph,
+                        }));
                     }
                 });
             });
@@ -897,10 +878,8 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                 };
                 const isMajor = MAJOR_ASPECTS.has(aspect.aspect_type);
                 const color = this.getAspectColor(aspect.aspect_type, aspect.harmonic_type);
-                const baseThickness = Math.max(0.3, 1.5 - ((Number(aspect.orb) || 0) / 12) * 1.2);
-                const thickness = aspect.aspect_type === 'Conjunction'
-                    ? baseThickness * 2
-                    : baseThickness;
+                const exactAspect = this.isExactAspect(aspect);
+                const thickness = this.getAspectStrokeWidth(aspect, exactAspect);
                 const aspectAttrs = {
                     'data-aspect': aspectKey,
                     'data-aspect-key': aspectKey,
@@ -910,6 +889,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                     'data-method-2': ring.method,
                     'data-type': aspect.aspect_type,
                     'data-major': isMajor ? 'true' : 'false',
+                    'data-exact': exactAspect ? 'true' : 'false',
                     'data-conjunction-collapsed': geometry.collapsed ? 'true' : 'false',
                 };
 
@@ -920,7 +900,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                         r: this.conjunctionDisplay.dotRadius,
                         fill: color,
                         stroke: color,
-                        'stroke-width': aspect.aspect_type === 'Conjunction' ? 2.4 : 1.2,
+                        'stroke-width': exactAspect ? 3 : 2.4,
                         opacity: isMajor ? 0.82 : 0.55,
                         class: 'aspect-line aspect-dot',
                         ...aspectAttrs,
@@ -944,38 +924,12 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                 if (!shouldDrawAspectGlyph) return;
                 const glyph = ASPECT_SYMBOLS[aspect.aspect_type];
                 if (!glyph) return;
-                const symbolGroup = this.el('g', {
-                    class: 'aspect-symbol-group',
-                    style: 'pointer-events: none;',
-                    ...aspectAttrs,
-                });
-                const symbolText = this.el('text', {
-                    x: geometry.midX,
-                    y: geometry.midY + 2.5,
-                    'text-anchor': 'middle',
-                    'font-size': 8,
-                    fill: color,
-                    class: 'aspect-symbol-text',
-                    style: 'pointer-events: none;',
-                }, glyph);
-                symbolGroup.appendChild(symbolText);
-                this.layers.aspects.appendChild(symbolGroup);
-
-                try {
-                    const bbox = symbolText.getBBox();
-                    const backdropRadius = Math.max(bbox.width, bbox.height) / 2 + 1.5;
-                    const backdrop = this.el('circle', {
-                        cx: bbox.x + bbox.width / 2,
-                        cy: bbox.y + bbox.height / 2,
-                        r: backdropRadius,
-                        fill: WHEEL_BG,
-                        opacity: 0.96,
-                        class: 'aspect-symbol-backdrop',
-                    });
-                    symbolGroup.insertBefore(backdrop, symbolText);
-                } catch (error) {
-                    // Ignore bbox issues and keep the text visible even without backdrop.
-                }
+                this.layers.aspects.appendChild(this.createAspectSymbolGroup({
+                    aspectAttrs,
+                    geometry,
+                    color,
+                    glyph,
+                }));
             });
         }
 
@@ -1220,6 +1174,45 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             return window.AstroPreferences?.getAspectColor
                 ? window.AstroPreferences.getAspectColor(aspectType, this.visualPreferences, harmonicType)
                 : (DEFAULT_ASPECT_COLORS[aspectType] || '#94a3b8');
+        }
+
+        shouldHighlightExactAspects() {
+            if (this.highlightExactAspects === false) return false;
+            return window.AstroPreferences?.shouldHighlightExactAspects
+                ? window.AstroPreferences.shouldHighlightExactAspects(this.visualPreferences)
+                : this.visualPreferences?.wheel?.highlight_exact_aspects !== false;
+        }
+
+        getAspectAllowedOrb(aspect = {}) {
+            const candidates = [
+                aspect.max_orb,
+                aspect.max_allowed_orb,
+                aspect.orb_used,
+                aspect.allowed_orb,
+                aspect.base_orb,
+            ];
+            for (const candidate of candidates) {
+                const value = Number(candidate);
+                if (Number.isFinite(value) && value > 0) return value;
+            }
+            return null;
+        }
+
+        isExactAspect(aspect = {}) {
+            if (!this.shouldHighlightExactAspects()) return false;
+            const orb = Number(aspect.orb ?? aspect.min_orb);
+            if (!Number.isFinite(orb) || orb < 0) return false;
+            const allowedOrb = this.getAspectAllowedOrb(aspect);
+            if (allowedOrb !== null) return orb <= allowedOrb * EXACT_ASPECT_THRESHOLD_RATIO;
+            return aspect.is_exact === true;
+        }
+
+        getAspectStrokeWidth(aspect = {}, exactAspect = this.isExactAspect(aspect)) {
+            const baseThickness = Math.max(0.3, 1.5 - ((Number(aspect.orb) || 0) / 12) * 1.2);
+            const thickness = aspect.aspect_type === 'Conjunction'
+                ? baseThickness * 2
+                : baseThickness;
+            return exactAspect ? thickness * EXACT_ASPECT_STROKE_MULTIPLIER : thickness;
         }
 
         getBodyColor(body, fallback) {
@@ -1864,6 +1857,33 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
 
         getLeaderLineEndPoint(anchorPoint, iconPoint, iconRadius, gap = 2) {
             return getPlanetLeaderLineEndPoint(anchorPoint, iconPoint, iconRadius, gap);
+        }
+
+        createAspectSymbolGroup({ aspectAttrs, geometry, color, glyph }) {
+            const symbolGroup = this.el('g', {
+                class: 'aspect-symbol-group',
+                style: 'pointer-events: none;',
+                ...aspectAttrs,
+            });
+            symbolGroup.appendChild(this.el('circle', {
+                cx: geometry.midX,
+                cy: geometry.midY,
+                r: ASPECT_GLYPH_BACKDROP_RADIUS,
+                fill: WHEEL_BG,
+                opacity: 0.96,
+                class: 'aspect-symbol-backdrop',
+                style: 'pointer-events: none;',
+            }));
+            symbolGroup.appendChild(this.el('text', {
+                x: geometry.midX,
+                y: geometry.midY + 2.5,
+                'text-anchor': 'middle',
+                'font-size': ASPECT_GLYPH_FONT_SIZE,
+                fill: color,
+                class: 'aspect-symbol-text',
+                style: 'pointer-events: none;',
+            }, glyph));
+            return symbolGroup;
         }
 
         el(tag, attrs = {}, text = null) {

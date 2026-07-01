@@ -225,6 +225,7 @@ class AspectInfo(BaseModel):
     right_rank: Optional[int] = Field(None, description="Позиция правой планеты в порядке аспектной сетки")
     aspect_type: str
     orb: float
+    max_orb: Optional[float] = Field(default=None, description="Допустимый орбис для пары")
     is_major: bool
     applying: Optional[bool] = Field(default=None, description="True = сходящийся, False = расходящийся")
     harmonic_type: Optional[str] = None
@@ -541,6 +542,7 @@ class SynastryAspectInfo(BaseModel):
     right_rank: Optional[int] = None
     aspect_type: str
     orb: float
+    max_orb: Optional[float] = None
     is_major: bool
     applying: Optional[bool] = None
     harmonic_type: Optional[str] = None
@@ -838,6 +840,7 @@ class SolarReturnNatalAspectInfo(BaseModel):
     natal_object_type: str
     aspect_type: str
     orb: float
+    max_allowed_orb: Optional[float] = None
     is_exact: bool = False
     is_major: bool
     harmonic_type: Optional[str] = None

@@ -752,6 +752,10 @@
           "copy": "Applies to angular cusp lines and their labels on wheels.",
           "label": "Black angular cusps"
         },
+        "exactAspectHighlight": {
+          "copy": "Aspects within 25% of the allowed orb are drawn slightly thicker.",
+          "label": "Highlight exact aspects"
+        },
         "columns": {
           "color": "Color",
           "element": "Element",

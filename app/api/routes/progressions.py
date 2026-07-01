@@ -93,6 +93,8 @@ class ProgressionAspectInfo(BaseModel):
     natal_object_type: str
     aspect_type: str
     orb: float
+    max_allowed_orb: Optional[float] = Field(default=None, description="Допустимый орбис для пары")
+    is_exact: bool = Field(default=False, description="Точный аспект (±15 минут дуги)")
     is_major: bool
     harmonic_type: Optional[str] = None
 

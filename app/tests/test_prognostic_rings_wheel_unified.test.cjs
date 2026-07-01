@@ -106,6 +106,70 @@ test('single-layer viewModel renders with 2-slot thickness regardless of options
     assert.ok(width < 100, `single ring must be slim (2-slot), got ${width}`);
 });
 
+test('aspect glyph renders with a backdrop under the icon', async () => {
+    const Wheel = await loadEngine();
+    const svg = makeSvg();
+    const wheel = new Wheel(svg);
+    wheel.render({
+        natalLayer: natalLayer({
+            bodies: [
+                { name: 'Sun', longitude: 10 },
+                { name: 'Moon', longitude: 130 },
+            ],
+            aspectBodies: [
+                { name: 'Sun', longitude: 10 },
+                { name: 'Moon', longitude: 130 },
+            ],
+            aspects: [
+                { planet_1: 'Sun', planet_2: 'Moon', aspect_type: 'Trine', orb: 1 },
+            ],
+        }),
+        activePrognosticLayers: [],
+    });
+
+    const group = svg.querySelector('.aspect-symbol-group');
+    assert.ok(group, 'major tight aspect should render a symbol group');
+    assert.equal(group.children[0].classList.contains('aspect-symbol-backdrop'), true);
+    assert.equal(group.children[1].classList.contains('aspect-symbol-text'), true);
+    assert.equal(group.children[0].getAttribute('cx'), group.children[1].getAttribute('x'));
+});
+
+test('exact aspects within 25 percent of allowed orb render thicker and can be disabled', async () => {
+    const Wheel = await loadEngine();
+    const renderLine = (options = {}) => {
+        const svg = makeSvg();
+        const wheel = new Wheel(svg);
+        wheel.setOptions(options);
+        wheel.render({
+            natalLayer: natalLayer({
+                bodies: [
+                    { name: 'Sun', longitude: 10 },
+                    { name: 'Moon', longitude: 130 },
+                ],
+                aspectBodies: [
+                    { name: 'Sun', longitude: 10 },
+                    { name: 'Moon', longitude: 130 },
+                ],
+                aspects: [
+                    { planet_1: 'Sun', planet_2: 'Moon', aspect_type: 'Trine', orb: 1, max_orb: 5 },
+                ],
+            }),
+            activePrognosticLayers: [],
+        });
+        return svg.querySelector('.aspect-line');
+    };
+
+    const exactLine = renderLine();
+    const disabledLine = renderLine({ highlightExactAspects: false });
+
+    assert.equal(exactLine.getAttribute('data-exact'), 'true');
+    assert.equal(disabledLine.getAttribute('data-exact'), 'false');
+    assert.ok(
+        Number(exactLine.getAttribute('stroke-width')) > Number(disabledLine.getAttribute('stroke-width')),
+        'exact aspect line should be thicker than the disabled baseline',
+    );
+});
+
 test('W4: setVisibleMethods(null) restores all rings', async () => {
     const Wheel = await loadEngine();
     const svg = makeSvg();
