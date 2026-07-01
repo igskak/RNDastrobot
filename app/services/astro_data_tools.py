@@ -24,12 +24,16 @@ from typing import Callable, Dict, List, Optional
 from uuid import UUID
 
 from app.services.dignity_service import DignityService
+from app.services.natal_chart_service import NatalChartService
 from app.services.preferences_runtime import CANONICAL_SIGNS
+
+# Sentinel so a real chart of None (no saved chart) is memoized, not re-fetched.
+_UNSET = object()
 
 # Facets implemented so far. Grows as chart-specific facets land; the tool-schema
 # enum and the route validation both read this so they can never drift from what
 # the assembler can actually produce.
-CHART_DATA_FACETS = ("sign_properties",)
+CHART_DATA_FACETS = ("sign_properties", "dignities")
 
 
 class ChartDataset:
@@ -57,6 +61,8 @@ class ChartDataset:
         self.house_system = house_system
         self._facets: Dict[str, Dict] = {}
         self._dignity: Optional[DignityService] = None
+        self._natal_svc: Optional[NatalChartService] = None
+        self._natal_chart_cache = _UNSET  # the active chart dict, fetched once/turn
 
     # --- lazy engine-service singletons (one per turn; avoids ref-table N+1) ---
     def _dignity_service(self) -> DignityService:
@@ -67,6 +73,22 @@ class ChartDataset:
                 default_house_system=self.house_system,
             )
         return self._dignity
+
+    def _natal_service(self) -> NatalChartService:
+        if self._natal_svc is None:
+            self._natal_svc = NatalChartService()
+        return self._natal_svc
+
+    def _natal_chart(self) -> Optional[Dict]:
+        """The active chart's saved objects (planets/houses), fetched ONCE per turn.
+
+        Shared by every chart-specific facet (dignities/speeds/stations/houses) so
+        they read one consistent snapshot. Returns None when no chart is saved.
+        """
+        if self._natal_chart_cache is _UNSET:
+            self._natal_chart_cache = self._natal_service().get_natal_chart_from_db(
+                self.user_id, self.db)
+        return self._natal_chart_cache
 
     # --- facet assembly --------------------------------------------------------
     def facet(self, name: str) -> Dict:
@@ -108,8 +130,31 @@ def _build_sign_properties(ds: ChartDataset) -> Dict:
     return {sign: svc.get_sign_properties(sign) for sign in CANONICAL_SIGNS}
 
 
+def _build_dignities(ds: ChartDataset) -> Dict:
+    """Chart-specific facet: each natal planet's sign, house, and essential dignity.
+
+    Reads the active chart's saved objects (server-computed at chart-creation
+    time). Empty/absent chart -> a clean empty result, never an error or a
+    fabricated placement.
+    """
+    chart = ds._natal_chart()
+    if not chart:
+        return {"planets": []}
+    planets = []
+    for p in chart.get("planets") or []:
+        planets.append({
+            "name": p.get("name"),
+            "sign": p.get("sign"),
+            "house": p.get("house"),
+            "dignity": p.get("dignity"),
+            "retrograde": p.get("retrograde"),
+        })
+    return {"planets": planets}
+
+
 _FACET_BUILDERS: Dict[str, Callable[[ChartDataset], Dict]] = {
     "sign_properties": _build_sign_properties,
+    "dignities": _build_dignities,
 }
 
 

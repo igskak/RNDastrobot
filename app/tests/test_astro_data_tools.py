@@ -83,3 +83,58 @@ def test_memoization_returns_same_object():
     first = ds.facet("sign_properties")
     second = ds.facet("sign_properties")
     assert first is second
+
+
+# ── chart-specific facets (dignities) ─────────────────────────────────────────
+_CHART = {
+    "planets": [
+        {"name": "Sun", "sign": "Leo", "house": 5, "dignity": "domicile",
+         "retrograde": False, "speed": 0.98},
+        {"name": "Mars", "sign": "Cancer", "house": 4, "dignity": "fall",
+         "retrograde": True, "speed": -0.12},
+    ],
+}
+
+
+class _FakeNatal:
+    def __init__(self, chart):
+        self.chart = chart
+        self.calls = 0
+
+    def get_natal_chart_from_db(self, user_id, db):
+        self.calls += 1
+        return self.chart
+
+
+def _patch_natal(monkeypatch, chart):
+    fake = _FakeNatal(chart)
+    monkeypatch.setattr(dt, "NatalChartService", lambda *a, **k: fake)
+    return fake
+
+
+def test_dignities_facet_reads_chart_placements(monkeypatch):
+    _patch_natal(monkeypatch, _CHART)
+    out = get_chart_data(_dataset(), "dignities")
+    assert out["status"] == "ok"
+    planets = out["data"]["planets"]
+    assert planets[0] == {"name": "Sun", "sign": "Leo", "house": 5,
+                          "dignity": "domicile", "retrograde": False}
+    assert planets[1]["dignity"] == "fall"
+    assert out["provenance"]["dataset"]
+
+
+def test_dignities_empty_chart_is_clean_not_error(monkeypatch):
+    _patch_natal(monkeypatch, None)  # no saved chart
+    out = get_chart_data(_dataset(), "dignities")
+    assert out["status"] == "ok"
+    assert out["data"] == {"planets": []}  # empty, never fabricated or error
+
+
+def test_natal_chart_fetched_once_per_turn(monkeypatch):
+    fake = _patch_natal(monkeypatch, _CHART)
+    ds = _dataset()
+    ds.facet("dignities")
+    ds.facet("dignities")  # memoized facet
+    # even a *different* chart-specific facet reuses the one fetched chart:
+    assert ds._natal_chart() is _CHART
+    assert fake.calls == 1  # get_natal_chart_from_db hit the DB exactly once
