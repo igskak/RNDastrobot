@@ -4855,57 +4855,94 @@
         renderRightPanel();
     }
 
+    function viewModelLayerForInstance(inst) {
+        const layers = state.viewModel?.activePrognosticLayers || [];
+        return layers.find((layer) => layer.id === inst?.id)
+            || layers.find((layer) => layer.method === inst?.method)
+            || null;
+    }
+
+    function formatLayerChipDateTime(value) {
+        const raw = String(value || '').trim();
+        if (!raw) return '';
+        const [date, time] = splitTargetDatetime(raw);
+        const shortTime = String(time || '').slice(0, 5);
+        return [date ? formatChartDate(date) : '', shortTime].filter(Boolean).join(' ');
+    }
+
+    function layerInstanceChipLabel(inst, ordinal) {
+        const cfg = layerConfigOf(inst);
+        const viewLayer = viewModelLayerForInstance(inst);
+
+        if (isMomentMethod(inst.method)) {
+            return formatLayerChipDateTime(cfg.datetime || state.selectedDateTime) || String(ordinal);
+        }
+
+        if (inst.method === 'solar_return') {
+            const solarDateTime = normalizeSolarDateTime(
+                viewLayer?.raw?.solar_info?.solar_datetime_local || cfg.datetime || ''
+            );
+            const year = cfg.year || viewLayer?.raw?.solar_info?.year || state.solarYear || '';
+            return formatLayerChipDateTime(solarDateTime) || String(year || ordinal);
+        }
+
+        if (inst.method === 'synastry_partner') {
+            const bd = viewLayer?.raw?.partner_chart?.birth_data || {};
+            const manual = cfg.manual || {};
+            const name = cfg.chartTitle
+                || manual.name
+                || [bd.first_name, bd.last_name].filter(Boolean).join(' ').trim();
+            return name || (bd.date ? formatChartDate(bd.date) : String(ordinal));
+        }
+
+        return String(ordinal);
+    }
+
     function renderRightLayerTabs() {
         if (!refs.rightLayerTabs) return;
         if (state.wheelView === 'single') {
+            refs.rightLayerTabs.classList.remove('is-dense');
             refs.rightLayerTabs.innerHTML = '';
             syncCompositeHeaderButton();
             return;
         }
         normalizeActiveLayers();
-        // Порядковый номер инстанса в рамках метода — для подписи «Транзит 2» при дублях.
-        const methodTotals = {};
-        state.activeLayers.forEach((l) => { methodTotals[l.method] = (methodTotals[l.method] || 0) + 1; });
-        const methodSeen = {};
-        const activeTabs = state.activeLayers.map((inst) => {
-            methodSeen[inst.method] = (methodSeen[inst.method] || 0) + 1;
-            const ordinal = methodSeen[inst.method];
-            const base = layerLabel(inst.method);
-            const label = methodTotals[inst.method] > 1 ? `${base} ${ordinal}` : base;
-            const isActive = inst.id === state.selectedRightLayerId;
+        refs.rightLayerTabs.classList.toggle('is-dense', state.activeLayers.length >= 3);
+        const addLayerLabel = t('page.chart.actions.addLayer');
+        const groupedLayers = LAYER_ORDER.map((method) => {
+            const instances = instancesOfMethod(method);
+            const canAdd = isMultiInstanceMethod(method) || instances.length === 0;
+            const label = layerLabel(method);
+            const addTitle = `${addLayerLabel}: ${label}`;
+            const methodControl = canAdd
+                ? `<button type="button" class="forecast-new-layer-method-action" data-add-layer-method="${method}" aria-label="${escapeHtml(addTitle)}" title="${escapeHtml(addTitle)}">
+                        <span class="forecast-new-layer-method-plus" aria-hidden="true">+</span>
+                        <span class="forecast-new-layer-method-name">${escapeHtml(label)}</span>
+                    </button>`
+                : `<span class="forecast-new-layer-method-action forecast-new-layer-method-action--locked">
+                        <span class="forecast-new-layer-method-name">${escapeHtml(label)}</span>
+                    </span>`;
+            const chips = instances.map((inst, index) => {
+                const chipLabel = layerInstanceChipLabel(inst, index + 1);
+                const chipTitle = `${label}: ${chipLabel}`;
+                const isActive = inst.id === state.selectedRightLayerId;
+                return `
+                    <span class="forecast-new-layer-instance-wrap ${isActive ? 'active' : ''}">
+                        <button type="button" class="forecast-new-layer-instance" data-right-layer="${escapeHtml(inst.id)}" title="${escapeHtml(chipTitle)}">
+                            <span class="forecast-new-layer-instance-label">${escapeHtml(chipLabel)}</span>
+                        </button>
+                        <button type="button" class="forecast-new-layer-instance-remove" data-remove-layer="${escapeHtml(inst.id)}" aria-label="Убрать слой ${escapeHtml(chipTitle)}" title="Убрать слой">−</button>
+                    </span>
+                `;
+            }).join('');
             return `
-            <button type="button" class="forecast-new-right-layer-tab ${isActive ? 'active' : ''}" data-right-layer="${escapeHtml(inst.id)}">
-                <span class="forecast-new-right-layer-label">${escapeHtml(label)}</span>
-                <span type="button" class="forecast-new-right-layer-remove" data-remove-layer="${escapeHtml(inst.id)}" aria-label="Убрать слой ${escapeHtml(label)}" title="Убрать слой">−</span>
-            </button>
-        `;
-        }).join('');
-        // Single-instance методы (соляр/синастрия) скрываются из меню, когда уже активны;
-        // multi-instance (транзит/прогрессия/дирекция) можно добавлять повторно.
-        const layerButtons = LAYER_ORDER.map((method) => {
-            const active = hasActiveMethod(method);
-            const disabled = active && !isMultiInstanceMethod(method);
-            return `
-                <button type="button" class="forecast-new-add-layer-item" data-add-layer-method="${method}" ${disabled ? 'disabled' : ''}>
-                    ${disabled ? '✓ ' : '+ '}${layerLabel(method)}
-                </button>
+                <span class="forecast-new-layer-group ${instances.length ? 'has-instances' : 'is-empty'}" data-layer-group="${method}">
+                    ${methodControl}
+                    ${chips ? `<span class="forecast-new-layer-instances">${chips}</span>` : ''}
+                </span>
             `;
         }).join('');
-        // Меню добавления показываем всегда: мульти-методы можно добавлять повторно.
-        const allLayersActive = false;
-        const addLayerLabel = t('page.chart.actions.addLayer');
-        const addLayerMarkup = allLayersActive ? '' : `
-            <span class="forecast-new-add-layer forecast-new-add-layer--compact">
-                <button type="button" class="forecast-new-add-layer-toggle" data-add-layer-toggle aria-haspopup="menu" aria-expanded="false" aria-label="${escapeHtml(addLayerLabel)}" title="${escapeHtml(addLayerLabel)}">+</button>
-                <span class="forecast-new-add-layer-menu hidden" data-add-layer-menu role="menu">
-                    ${layerButtons}
-                </span>
-            </span>
-        `;
-        refs.rightLayerTabs.innerHTML = `
-            ${activeTabs}
-            ${addLayerMarkup}
-        `;
+        refs.rightLayerTabs.innerHTML = groupedLayers;
         syncCompositeHeaderButton();
         syncRelationshipSwitch();
     }
