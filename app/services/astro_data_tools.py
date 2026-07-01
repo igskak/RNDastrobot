@@ -33,7 +33,7 @@ _UNSET = object()
 # Facets implemented so far. Grows as chart-specific facets land; the tool-schema
 # enum and the route validation both read this so they can never drift from what
 # the assembler can actually produce.
-CHART_DATA_FACETS = ("sign_properties", "dignities")
+CHART_DATA_FACETS = ("sign_properties", "dignities", "speeds")
 
 
 class ChartDataset:
@@ -152,9 +152,29 @@ def _build_dignities(ds: ChartDataset) -> Dict:
     return {"planets": planets}
 
 
+def _build_speeds(ds: ChartDataset) -> Dict:
+    """Chart-specific facet: each natal planet's speed and motion direction.
+
+    Reads the once-per-turn snapshot; empty/absent chart -> clean empty result.
+    """
+    chart = ds._natal_chart()
+    if not chart:
+        return {"planets": []}
+    planets = []
+    for p in chart.get("planets") or []:
+        planets.append({
+            "name": p.get("name"),
+            "speed": p.get("speed"),
+            "retrograde": p.get("retrograde"),
+            "motion": "retrograde" if p.get("retrograde") else "direct",
+        })
+    return {"planets": planets}
+
+
 _FACET_BUILDERS: Dict[str, Callable[[ChartDataset], Dict]] = {
     "sign_properties": _build_sign_properties,
     "dignities": _build_dignities,
+    "speeds": _build_speeds,
 }
 
 

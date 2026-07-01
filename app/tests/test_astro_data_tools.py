@@ -135,6 +135,23 @@ def test_natal_chart_fetched_once_per_turn(monkeypatch):
     ds = _dataset()
     ds.facet("dignities")
     ds.facet("dignities")  # memoized facet
-    # even a *different* chart-specific facet reuses the one fetched chart:
+    ds.facet("speeds")     # a DIFFERENT chart-specific facet reuses the same fetch
     assert ds._natal_chart() is _CHART
     assert fake.calls == 1  # get_natal_chart_from_db hit the DB exactly once
+
+
+def test_speeds_facet_reports_motion(monkeypatch):
+    _patch_natal(monkeypatch, _CHART)
+    out = get_chart_data(_dataset(), "speeds")
+    assert out["status"] == "ok"
+    planets = out["data"]["planets"]
+    assert planets[0] == {"name": "Sun", "speed": 0.98, "retrograde": False,
+                          "motion": "direct"}
+    assert planets[1]["motion"] == "retrograde"  # Mars retrograde -> motion label
+
+
+def test_speeds_empty_chart_is_clean(monkeypatch):
+    _patch_natal(monkeypatch, None)
+    out = get_chart_data(_dataset(), "speeds")
+    assert out["status"] == "ok"
+    assert out["data"] == {"planets": []}
