@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from typing import Dict, List
 
+from app.services.astro_data_tools import CHART_DATA_FACETS
 from app.services.astro_vocab import (
     ASPECT_TYPE_NAMES,
     CHART_REFS,
@@ -217,6 +218,29 @@ def build_query_tools() -> List[Dict]:
                     },
                 },
                 "required": ["target_date"],
+                "additionalProperties": False,
+            },
+        },
+    }, {
+        "type": "function",
+        "function": {
+            "name": "get_chart_data",
+            "description": (
+                "Return one facet of the active chart's technical data (Layer 1): "
+                "sign properties, essential dignities of the natal planets, planetary "
+                "speeds and motion, or house cusps and rulers. Every value is "
+                "engine-computed; narrate it, never invent."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "facet": {
+                        "type": "string",
+                        "enum": list(CHART_DATA_FACETS),
+                        "description": "Which technical-data facet to return.",
+                    },
+                },
+                "required": ["facet"],
                 "additionalProperties": False,
             },
         },

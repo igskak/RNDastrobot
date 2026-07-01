@@ -60,6 +60,7 @@ def _service_with_fake_transits(record):
     service.default_anchor_date = date(2026, 6, 11)
     service.default_workspace = None
     service.astrologer_id = None
+    service._chart_dataset = None  # __init__ is bypassed by __new__
 
     class _FakeTransits:
         def find_aspect_passes(self, **kwargs):
@@ -77,6 +78,8 @@ def _service_with_fake_transits(record):
 _EXPECTED_TOOLS = {
     # query tools
     "find_aspect_passes", "find_chart", "calculate_progression", "calculate_direction",
+    # Layer-1 technical data (chat-v2)
+    "get_chart_data",
     # command tools
     "set_transit_date", "step_date", "add_layer", "build_solar", "set_solar_year",
     "set_wheel_view", "set_house_system", "set_synastry_partner", "remove_layer",
@@ -84,7 +87,7 @@ _EXPECTED_TOOLS = {
 }
 
 
-def test_tool_roster_is_exactly_the_fourteen():
+def test_tool_roster_is_exactly_the_expected_set():
     names = {t["function"]["name"] for t in build_tools()}
     assert names == _EXPECTED_TOOLS, (
         f"tool roster drifted: missing={_EXPECTED_TOOLS - names}, "
@@ -138,6 +141,45 @@ def test_chat_raises_when_openai_not_configured(monkeypatch):
     monkeypatch.setattr(svc, "is_openai_configured", lambda: False)
     with pytest.raises(RuntimeError):
         service.chat(uuid4(), [{"role": "user", "content": "hi"}])
+
+
+def test_chat_dispatches_get_chart_data_layer1(monkeypatch):
+    """The Layer-1 tool is callable through the real agent loop, end to end.
+
+    Uses the sign_properties facet with db=None so it exercises DignityService's
+    fallback (no DB), proving dispatch + assembler + provenance wiring, not mocks.
+    """
+    service = _service_with_fake_transits({})
+    scripted = [
+        _msg(tool_calls=[_tool_call("c1", "get_chart_data", '{"facet":"sign_properties"}')]),
+        _msg(content="Aries: Fire, cardinal."),
+    ]
+    monkeypatch.setattr(svc, "is_openai_configured", lambda: True)
+    monkeypatch.setattr(svc, "get_openai_client", lambda: _FakeClient(scripted))
+
+    result = service.chat(uuid4(), [{"role": "user", "content": "sign properties?"}])
+
+    tr = result["tool_results"][0]
+    assert tr["name"] == "get_chart_data"
+    assert tr["result"]["status"] == "ok"
+    assert tr["result"]["facet"] == "sign_properties"
+    assert set(tr["result"]["data"]).issuperset({"Aries", "Libra"})  # all 12 signs keyed
+    assert tr["result"]["provenance"]["dataset"]  # provenance hash emitted
+
+
+def test_get_chart_data_dataset_reused_across_calls_in_one_turn(monkeypatch):
+    """Two get_chart_data calls in one turn share ONE frozen dataset instance."""
+    service = _service_with_fake_transits({})
+    scripted = [
+        _msg(tool_calls=[_tool_call("c1", "get_chart_data", '{"facet":"sign_properties"}')]),
+        _msg(tool_calls=[_tool_call("c2", "get_chart_data", '{"facet":"sign_properties"}')]),
+        _msg(content="done."),
+    ]
+    monkeypatch.setattr(svc, "is_openai_configured", lambda: True)
+    monkeypatch.setattr(svc, "get_openai_client", lambda: _FakeClient(scripted))
+
+    service.chat(uuid4(), [{"role": "user", "content": "twice"}])
+    assert service._chart_dataset is not None  # one dataset, memoized on the service
 
 
 # ── 3. ownership gate on chart_ref="synastry_partner" (tenant isolation) ───────

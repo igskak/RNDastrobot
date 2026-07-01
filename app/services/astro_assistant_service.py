@@ -29,6 +29,7 @@ from app.services.astro_commands import (
     validate_command,
     _normalize_command_args,
 )
+from app.services.astro_data_tools import ChartDataset, get_chart_data
 from app.services.astro_tool_schemas import (
     build_command_tools,
     build_query_tools,
@@ -658,6 +659,9 @@ class AstroAssistantService:
         self._transit_service: Optional[TransitService] = None
         self._progression_service: Optional[ProgressionService] = None
         self._direction_service: Optional[DirectionService] = None
+        # Per-turn frozen Layer-1 dataset (built once, reused across get_chart_data
+        # calls in the same turn so every facet reconciles to one provenance hash).
+        self._chart_dataset: Optional[ChartDataset] = None
 
     def _transits(self) -> TransitService:
         if self._transit_service is None:
@@ -957,12 +961,26 @@ class AstroAssistantService:
             )
         return self._compact_direction_result(result, chart_ref)
 
+    def _get_chart_dataset(self, user_id: UUID) -> ChartDataset:
+        """The per-turn frozen Layer-1 dataset for the active chart, built once."""
+        if self._chart_dataset is None:
+            self._chart_dataset = ChartDataset(
+                user_id=user_id,
+                astrologer_id=self.astrologer_id,
+                db=self.db,
+            )
+        return self._chart_dataset
+
+    def _exec_get_chart_data(self, user_id: UUID, args: Dict) -> Dict:
+        return get_chart_data(self._get_chart_dataset(user_id), args.get("facet"))
+
     def _dispatch(self, name: str, args: Dict, user_id: UUID) -> Dict:
         handlers: Dict[str, Callable[[UUID, Dict], Dict]] = {
             "find_aspect_passes": self._exec_find_aspect_passes,
             "find_chart": self._exec_find_chart,
             "calculate_progression": self._exec_calculate_progression,
             "calculate_direction": self._exec_calculate_direction,
+            "get_chart_data": self._exec_get_chart_data,
         }
         handler = handlers.get(name)
         if handler is None:

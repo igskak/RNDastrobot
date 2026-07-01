@@ -93,6 +93,12 @@ _CHART = {
         {"name": "Mars", "sign": "Cancer", "house": 4, "dignity": "fall",
          "retrograde": True, "speed": -0.12},
     ],
+    "houses": [
+        {"number": 1, "sign": "Aries", "degree_in_sign_formatted": "12°00'",
+         "ruler_planet": "Mars", "house_group": "angular", "planets_in_house": ["Sun"]},
+        {"number": 7, "sign": "Libra", "degree_in_sign_formatted": "12°00'",
+         "ruler_planet": "Venus", "house_group": "angular", "planets_in_house": []},
+    ],
 }
 
 
@@ -155,3 +161,20 @@ def test_speeds_empty_chart_is_clean(monkeypatch):
     out = get_chart_data(_dataset(), "speeds")
     assert out["status"] == "ok"
     assert out["data"] == {"planets": []}
+
+
+def test_houses_facet_reads_cusps(monkeypatch):
+    _patch_natal(monkeypatch, _CHART)
+    out = get_chart_data(_dataset(), "houses")
+    assert out["status"] == "ok"
+    houses = out["data"]["houses"]
+    assert houses[0] == {"number": 1, "sign": "Aries", "cusp_degree": "12°00'",
+                         "ruler": "Mars", "group": "angular", "planets_in_house": ["Sun"]}
+    assert houses[1]["ruler"] == "Venus"
+
+
+def test_houses_empty_chart_is_clean(monkeypatch):
+    _patch_natal(monkeypatch, None)
+    out = get_chart_data(_dataset(), "houses")
+    assert out["status"] == "ok"
+    assert out["data"] == {"houses": []}

@@ -33,7 +33,7 @@ _UNSET = object()
 # Facets implemented so far. Grows as chart-specific facets land; the tool-schema
 # enum and the route validation both read this so they can never drift from what
 # the assembler can actually produce.
-CHART_DATA_FACETS = ("sign_properties", "dignities", "speeds")
+CHART_DATA_FACETS = ("sign_properties", "dignities", "speeds", "houses")
 
 
 class ChartDataset:
@@ -171,10 +171,32 @@ def _build_speeds(ds: ChartDataset) -> Dict:
     return {"planets": planets}
 
 
+def _build_houses(ds: ChartDataset) -> Dict:
+    """Chart-specific facet: house cusps, sign on cusp, ruler, group, occupants.
+
+    Reads the once-per-turn snapshot; empty/absent chart -> clean empty result.
+    """
+    chart = ds._natal_chart()
+    if not chart:
+        return {"houses": []}
+    houses = []
+    for h in chart.get("houses") or []:
+        houses.append({
+            "number": h.get("number"),
+            "sign": h.get("sign"),
+            "cusp_degree": h.get("degree_in_sign_formatted"),
+            "ruler": h.get("ruler_planet"),
+            "group": h.get("house_group"),
+            "planets_in_house": h.get("planets_in_house") or [],
+        })
+    return {"houses": houses}
+
+
 _FACET_BUILDERS: Dict[str, Callable[[ChartDataset], Dict]] = {
     "sign_properties": _build_sign_properties,
     "dignities": _build_dignities,
     "speeds": _build_speeds,
+    "houses": _build_houses,
 }
 
 
