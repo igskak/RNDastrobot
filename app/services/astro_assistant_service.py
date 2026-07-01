@@ -29,6 +29,7 @@ from app.services.astro_commands import (
     validate_command,
     _normalize_command_args,
 )
+from app.services.astro_analysis import analyze as analyze_spec
 from app.services.astro_data_tools import ChartDataset, get_chart_data
 from app.services.astro_tool_schemas import (
     build_command_tools,
@@ -974,6 +975,10 @@ class AstroAssistantService:
     def _exec_get_chart_data(self, user_id: UUID, args: Dict) -> Dict:
         return get_chart_data(self._get_chart_dataset(user_id), args.get("facet"))
 
+    def _exec_analyze(self, user_id: UUID, args: Dict) -> Dict:
+        # The tool args ARE the analysis spec; the executor validates + runs it.
+        return analyze_spec(self._get_chart_dataset(user_id), args)
+
     def _dispatch(self, name: str, args: Dict, user_id: UUID) -> Dict:
         handlers: Dict[str, Callable[[UUID, Dict], Dict]] = {
             "find_aspect_passes": self._exec_find_aspect_passes,
@@ -981,6 +986,7 @@ class AstroAssistantService:
             "calculate_progression": self._exec_calculate_progression,
             "calculate_direction": self._exec_calculate_direction,
             "get_chart_data": self._exec_get_chart_data,
+            "analyze": self._exec_analyze,
         }
         handler = handlers.get(name)
         if handler is None:

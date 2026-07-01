@@ -78,8 +78,8 @@ def _service_with_fake_transits(record):
 _EXPECTED_TOOLS = {
     # query tools
     "find_aspect_passes", "find_chart", "calculate_progression", "calculate_direction",
-    # Layer-1 technical data (chat-v2)
-    "get_chart_data",
+    # Layer-1 technical data + Layer-2 analysis (chat-v2)
+    "get_chart_data", "analyze",
     # command tools
     "set_transit_date", "step_date", "add_layer", "build_solar", "set_solar_year",
     "set_wheel_view", "set_house_system", "set_synastry_partner", "remove_layer",
@@ -165,6 +165,41 @@ def test_chat_dispatches_get_chart_data_layer1(monkeypatch):
     assert tr["result"]["facet"] == "sign_properties"
     assert set(tr["result"]["data"]).issuperset({"Aries", "Libra"})  # all 12 signs keyed
     assert tr["result"]["provenance"]["dataset"]  # provenance hash emitted
+
+
+def test_chat_dispatches_analyze_layer2(monkeypatch):
+    """Layer-2 analyze() runs through the real loop: model spec -> SQLite -> cited rows."""
+    import app.services.astro_data_tools as dt
+    fake_chart = {"planets": [
+        {"name": "Sun", "sign": "Leo", "house": 5, "dignity": "domicile",
+         "speed": 0.98, "retrograde": False},
+        {"name": "Moon", "sign": "Cancer", "house": 4, "dignity": "domicile",
+         "speed": 13.2, "retrograde": False},
+    ]}
+
+    class _N:
+        def get_natal_chart_from_db(self, user_id, db):
+            return fake_chart
+
+    monkeypatch.setattr(dt, "NatalChartService", lambda *a, **k: _N())
+    service = _service_with_fake_transits({})
+    scripted = [
+        _msg(tool_calls=[_tool_call(
+            "c1", "analyze",
+            '{"op":"rank","over":"planets","sort":"speed","order":"desc","limit":1}')]),
+        _msg(content="Fastest: Moon."),
+    ]
+    monkeypatch.setattr(svc, "is_openai_configured", lambda: True)
+    monkeypatch.setattr(svc, "get_openai_client", lambda: _FakeClient(scripted))
+
+    result = service.chat(uuid4(), [{"role": "user", "content": "fastest planet?"}])
+
+    tr = result["tool_results"][0]
+    assert tr["name"] == "analyze"
+    assert tr["result"]["status"] == "ok"
+    assert tr["result"]["rows"][0]["name"] == "Moon"    # server-computed extreme
+    assert tr["result"]["rows"][0]["id"] == "r0"        # cited by id
+    assert tr["result"]["provenance"]["dataset"]
 
 
 def test_get_chart_data_dataset_reused_across_calls_in_one_turn(monkeypatch):

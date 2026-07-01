@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from typing import Dict, List
 
+from app.services.astro_analysis import ANALYSIS_OPS, ANALYSIS_TABLES
 from app.services.astro_data_tools import CHART_DATA_FACETS
 from app.services.astro_vocab import (
     ASPECT_TYPE_NAMES,
@@ -241,6 +242,37 @@ def build_query_tools() -> List[Dict]:
                     },
                 },
                 "required": ["facet"],
+                "additionalProperties": False,
+            },
+        },
+    }, {
+        "type": "function",
+        "function": {
+            "name": "analyze",
+            "description": (
+                "Run a deterministic data-science analysis over the active chart's "
+                "technical data (Layer 2). Emit a spec: op (count | rank | extreme), "
+                "over (a table, e.g. planets), optional filter (column=value), "
+                "group_by, sort, order, limit. The server computes the result and "
+                "returns rows with ids; you narrate and cite rows by id. Never "
+                "compute or invent the numbers yourself."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "op": {"type": "string", "enum": list(ANALYSIS_OPS)},
+                    "over": {"type": "string", "enum": sorted(ANALYSIS_TABLES)},
+                    "filter": {
+                        "type": "object",
+                        "description": "Equality filters as column: value.",
+                        "additionalProperties": True,
+                    },
+                    "group_by": {"type": "string", "description": "Column to group by (count op)."},
+                    "sort": {"type": "string", "description": "Column to sort by (rank/extreme ops)."},
+                    "order": {"type": "string", "enum": ["asc", "desc"]},
+                    "limit": {"type": "integer", "minimum": 1, "maximum": 50},
+                },
+                "required": ["op", "over"],
                 "additionalProperties": False,
             },
         },
