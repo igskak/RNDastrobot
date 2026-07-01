@@ -431,7 +431,7 @@
 
 .forecast-new-time-stepper-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
     align-items: center;
     border-bottom: 1px solid rgba(184, 147, 90, 0.14);
     background: rgba(255, 255, 255, 0.66);
@@ -470,14 +470,6 @@
     border-color: rgba(30, 58, 95, 0.28);
     background: var(--accent);
     color: #fff;
-}
-
-.forecast-new-time-stepper-save {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: calc(var(--forecast-new-panel-action-size) + 5px);
-    padding: 0 5px 0 0;
 }
 
 .forecast-new-time-action-btn,
@@ -559,6 +551,15 @@
 
 .forecast-new-custom-step-toggle {
     font-size: 14px;
+}
+
+.forecast-new-stepper-action,
+.forecast-new-custom-step-toggle {
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+    min-height: 28px;
+    font-size: 12px;
 }
 
 .forecast-new-custom-step-popover {
@@ -2551,6 +2552,10 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
         gap: 3px;
     }
 
+    .forecast-new-time-stepper-display {
+        flex: 0 1 auto;
+    }
+
     #natalBalancesView,
     #progBalancesView,
     #natalConfigsView,
@@ -2599,6 +2604,100 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
         height: 24px;
         min-height: 24px;
         opacity: 0.72;
+    }
+}
+
+@media (max-width: 520px) {
+    .forecast-new-layout {
+        --forecast-new-panel-action-size: 34px;
+        --forecast-new-panel-action-gap: 4px;
+        --forecast-new-panel-stepper-height: 40px;
+    }
+
+    .forecast-new-time-stepper {
+        gap: 2px;
+        padding: 2px 4px;
+    }
+
+    .forecast-new-time-stepper .forecast-new-time-stepper-actions {
+        padding-left: 3px;
+    }
+
+    .forecast-new-time-stepper-value,
+    .forecast-new-time-stepper-separator {
+        font-size: 10.5px;
+    }
+
+    .forecast-new-time-stepper-separator--major {
+        margin: 0 2px 0 1px;
+    }
+
+    .forecast-new-time-stepper-segment {
+        height: 22px;
+    }
+
+    .forecast-new-time-stepper-segment--hour {
+        min-width: 20px;
+    }
+
+    .forecast-new-time-stepper-segment--yearThousands,
+    .forecast-new-time-stepper-segment--yearHundreds,
+    .forecast-new-time-stepper-segment--yearTens,
+    .forecast-new-time-stepper-segment--yearOnes,
+    .forecast-new-time-stepper-segment--monthTens,
+    .forecast-new-time-stepper-segment--monthOnes,
+    .forecast-new-time-stepper-segment--dayTens,
+    .forecast-new-time-stepper-segment--dayOnes,
+    .forecast-new-time-stepper-segment--tenMinute,
+    .forecast-new-time-stepper-segment--minute,
+    .forecast-new-time-stepper-segment--tenSecond,
+    .forecast-new-time-stepper-segment--second {
+        min-width: 8px;
+    }
+}
+
+@media (max-width: 380px) {
+    .forecast-new-layout {
+        --forecast-new-panel-action-size: 30px;
+        --forecast-new-panel-action-gap: 3px;
+        --forecast-new-panel-stepper-height: 36px;
+    }
+
+    .forecast-new-time-stepper {
+        gap: 1px;
+        padding-inline: 3px;
+    }
+
+    .forecast-new-time-stepper .forecast-new-time-stepper-actions {
+        padding-left: 2px;
+    }
+
+    .forecast-new-time-stepper-value,
+    .forecast-new-time-stepper-separator {
+        font-size: 10px;
+    }
+
+    .forecast-new-time-stepper-segment {
+        height: 20px;
+    }
+
+    .forecast-new-time-stepper-segment--hour {
+        min-width: 18px;
+    }
+
+    .forecast-new-time-stepper-segment--yearThousands,
+    .forecast-new-time-stepper-segment--yearHundreds,
+    .forecast-new-time-stepper-segment--yearTens,
+    .forecast-new-time-stepper-segment--yearOnes,
+    .forecast-new-time-stepper-segment--monthTens,
+    .forecast-new-time-stepper-segment--monthOnes,
+    .forecast-new-time-stepper-segment--dayTens,
+    .forecast-new-time-stepper-segment--dayOnes,
+    .forecast-new-time-stepper-segment--tenMinute,
+    .forecast-new-time-stepper-segment--minute,
+    .forecast-new-time-stepper-segment--tenSecond,
+    .forecast-new-time-stepper-segment--second {
+        min-width: 7px;
     }
 }
 
@@ -2789,6 +2888,7 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
 
 .forecast-new-chart-library-actions {
     display: inline-flex;
+    flex: 0 0 auto;
     align-items: center;
     gap: 5px;
 }

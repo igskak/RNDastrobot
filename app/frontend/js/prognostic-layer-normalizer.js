@@ -20,6 +20,12 @@
             : [];
     }
 
+    function clonePlainObject(value) {
+        return value && typeof value === 'object' && !Array.isArray(value)
+            ? { ...value }
+            : null;
+    }
+
     function normalizeBodyName(name) {
         const rawName = String(name || '').trim();
         const root = typeof window !== 'undefined' ? window : globalThis;
@@ -172,8 +178,9 @@
         });
     }
 
-    function buildLayer({ method, bodies, aspectBodies, houses, aspects, raw, ringIndex }) {
+    function buildLayer({ method, bodies, aspectBodies, houses, aspects, raw, ringIndex, derivedSource }) {
         const normalizedMethod = normalizeMethod(method);
+        const source = derivedSource || raw || {};
         return {
             method: normalizedMethod,
             label: METHOD_META[normalizedMethod].label,
@@ -181,6 +188,11 @@
             aspectBodies: aspectBodies || bodies,
             houses,
             aspects,
+            aspect_configurations: cloneArray(source?.aspect_configurations),
+            stelliums: cloneArray(source?.stelliums),
+            balances: clonePlainObject(source?.balances),
+            cosmogram_pattern: clonePlainObject(source?.cosmogram_pattern),
+            planet_distribution: clonePlainObject(source?.planet_distribution),
             raw,
             ringIndex,
             style: {

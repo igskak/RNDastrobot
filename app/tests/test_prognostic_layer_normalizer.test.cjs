@@ -50,6 +50,26 @@ test('solar return layer normalizes solar bodies, houses, and natal aspects', ()
         houses: [{ number: 1, longitude: 10, sign: 'Aries', degree_in_sign: 10 }],
     };
     const solarHouses = [{ number: 1, longitude: 24, sign: 'Aries', degree_in_sign: 24 }];
+    const solarBalances = {
+        by_sign: {
+            element_balance: { Fire: 4, Earth: 2, Air: 3, Water: 1 },
+        },
+        by_house: {
+            house_group_balance: { angular: 5, succedent: 3, cadent: 2 },
+        },
+    };
+    const solarConfigurations = [{
+        type: 'T_Square',
+        planets_involved: ['Mars', 'Sun', 'Moon'],
+        aspects: [],
+    }];
+    const solarStelliums = [{
+        type: 'sign',
+        sign: 'Leo',
+        planets: ['Sun', 'Mercury', 'Venus'],
+        count: 3,
+    }];
+    const solarPattern = { pattern_type: 'Bucket', handle_planet: 'Mars' };
     const solarData = {
         planets: [{ name: 'Mars', longitude: 120, house: 4 }],
         houses: solarHouses,
@@ -62,6 +82,10 @@ test('solar return layer normalizes solar bodies, houses, and natal aspects', ()
                 is_major: true,
             },
         ],
+        balances: solarBalances,
+        aspect_configurations: solarConfigurations,
+        stelliums: solarStelliums,
+        cosmogram_pattern: solarPattern,
     };
 
     const viewModel = normalizer.buildViewModel(
@@ -78,6 +102,10 @@ test('solar return layer normalizes solar bodies, houses, and natal aspects', ()
     assert.equal(solarLayer.aspects[0].planet_1, 'Mars');
     assert.equal(solarLayer.aspects[0].planet_2, 'Sun');
     assert.equal(solarLayer.aspects[0].method, 'solar_return');
+    assert.deepEqual(solarLayer.balances, solarBalances);
+    assert.deepEqual(solarLayer.aspect_configurations, solarConfigurations);
+    assert.deepEqual(solarLayer.stelliums, solarStelliums);
+    assert.deepEqual(solarLayer.cosmogram_pattern, solarPattern);
 });
 
 test('synastry partner layer normalizes partner bodies, houses, and inter-aspects toward natal', () => {

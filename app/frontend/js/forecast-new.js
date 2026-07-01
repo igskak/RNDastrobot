@@ -3012,10 +3012,10 @@
                 planets: layer.bodies || [],
                 houses: layer.houses || [],
                 aspects: layer.aspects || [],
-                aspect_configurations: [],
-                stelliums: [],
-                balances: null,
-                cosmogram_pattern: null,
+                aspect_configurations: layer.aspect_configurations || [],
+                stelliums: layer.stelliums || [],
+                balances: layer.balances || null,
+                cosmogram_pattern: layer.cosmogram_pattern || null,
             }, { scope: 'prognostic' }));
         }
     }
@@ -5014,8 +5014,8 @@
             planets: layer.bodies || [],
             houses: layer.houses || [],
             aspects: layer.aspects || [],
-            aspect_configurations: [],
-            stelliums: [],
+            aspect_configurations: layer.aspect_configurations || [],
+            stelliums: layer.stelliums || [],
             balances: layer.balances || null,
             cosmogram_pattern: layer.cosmogram_pattern || null,
         }, { scope: 'prognostic' }));
