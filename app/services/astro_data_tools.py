@@ -106,6 +106,30 @@ class ChartDataset:
     def touched_facets(self) -> List[str]:
         return sorted(self._facets)
 
+    # --- tabular views (for the Layer-2 analyze executor) ----------------------
+    def table(self, name: str) -> List[Dict]:
+        """Return an analyzable table (list of flat rows) from the frozen chart.
+
+        Tables are the Layer-2 substrate: the analyze() executor loads one into
+        in-memory SQLite. Columns are fixed per table (see ANALYSIS_TABLES in
+        astro_analysis) so the SQL compiler can allowlist them. Unknown table or
+        absent chart -> empty list (analysis over nothing is a clean empty).
+        """
+        if name == "planets":
+            chart = self._natal_chart()
+            rows = []
+            for p in (chart or {}).get("planets") or []:
+                rows.append({
+                    "name": p.get("name"),
+                    "sign": p.get("sign"),
+                    "house": p.get("house"),
+                    "dignity": p.get("dignity"),
+                    "speed": p.get("speed"),
+                    "retrograde": 1 if p.get("retrograde") else 0,
+                })
+            return rows
+        return []
+
     def provenance_hash(self) -> str:
         """Stable short hash over the facets actually assembled this turn.
 
@@ -114,6 +138,13 @@ class ChartDataset:
         keys + canonical JSON.
         """
         payload = {name: self._facets[name] for name in self.touched_facets()}
+        # Include the analyzed chart content so analyze()-only turns (which read
+        # the natal chart, not a facet) still reconcile to a real provenance hash.
+        if self._natal_chart_cache is not _UNSET and self._natal_chart_cache is not None:
+            payload["_natal"] = {
+                "planets": self._natal_chart_cache.get("planets"),
+                "houses": self._natal_chart_cache.get("houses"),
+            }
         blob = json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str)
         return hashlib.sha256(blob.encode("utf-8")).hexdigest()[:12]
 
