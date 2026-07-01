@@ -244,7 +244,7 @@
 
     function appendPluto(root) {
         const glyph = append(root, createSvgElement('g', { transform: 'translate(12 12) scale(.76)' }));
-        addCircle(glyph, 50, 27, 14, { 'stroke-width': 5.5 });
+        addCircle(glyph, 50, 38, 16.5, { 'stroke-width': 5.5 });
         addPath(glyph, 'M 20 32 V 39 C 20 58 33 69 50 69 C 67 69 80 58 80 39 V 32', {
             'stroke-width': 5.5,
             'stroke-linecap': 'butt',
