@@ -13,150 +13,52 @@ from __future__ import annotations
 
 import json
 import os
-import math
 import re
 import time
 from datetime import date as date_type, time as time_type
 from typing import Callable, Dict, List, Optional, Tuple
 from uuid import UUID
 
-import pytz
 from loguru import logger
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.database.models import Person, User
+from app.services.astro_vocab import (
+    ASPECT_TYPE_NAMES,
+    CHART_REFS,
+    COMMAND_REGISTRY,
+    DIRECTION_TYPES,
+    HOUSE_SYSTEM_CODES,
+    NATAL_BODY_NAMES,
+    SOLAR_YEAR_MAX,
+    SOLAR_YEAR_MIN,
+    STEP_AMOUNT_MAX,
+    STEP_AMOUNT_MIN,
+    STEP_DIRECTIONS,
+    STEP_UNITS,
+    TRANSIT_BODY_NAMES,
+    WHEEL_VIEWS,
+    WORKSPACE_LAYER_METHODS,
+    _coerce_float,
+    _valid_date,
+    _valid_int,
+    _valid_time,
+    _valid_timezone,
+    _validate_manual_synastry,
+)
 from app.services.direction_service import DirectionService
 from app.services.natal_chart_service import NatalChartService
 from app.services.natal_context import NatalContext
 from app.services.openai_service import get_openai_client, is_openai_configured
 from app.services.progression_service import ProgressionService
 from app.services.transit_service import TransitService
-from app.utils.constants import PLANETS, SPECIAL_POINTS
 from app.utils.ephemeris import get_ephemeris_path
 
-# Deterministic vocabularies (single source for tool-schema enums AND the
-# route's request validation). Built from constants so they never drift.
-_PLANET_NAMES = frozenset(PLANETS.values())
-_ANGLE_NAMES = frozenset({'ASC', 'MC', 'IC', 'DSC', 'Vertex', 'AntiVertex'})
-TRANSIT_BODY_NAMES = _PLANET_NAMES | frozenset(
-    {'TrueNorthNode', 'TrueSouthNode', 'BlackMoon', 'WhiteMoon'})
-NATAL_BODY_NAMES = _PLANET_NAMES | frozenset(SPECIAL_POINTS.keys()) | _ANGLE_NAMES
-# Mirrors database/seeds/02_aspect_types.sql (ref_aspect_types).
-ASPECT_TYPE_NAMES = frozenset({
-    'Conjunction', 'Sextile', 'Square', 'Trine', 'Opposition',
-    'Vigintile', 'Semi_Nonagon', 'Semisextile', 'Decile', 'Nonagon',
-    'Semisquare', 'Quintile', 'Binonagon', 'Sentagon', 'Tridecile',
-    'Sesquiquadrate', 'Biquintile', 'Quincunx',
-})
-
-# ── Workspace command tools (PR2) ───────────────────────────────────────────
-# The agent can also DRIVE the workspace. These tools are NOT executed on the
-# server (workspace state lives in the browser): the loop validates the model's
-# intent against these vocabularies, returns a receipt so the model can confirm
-# in words, and emits a structured action for the client to apply. Vocabularies
-# mirror app/frontend/js/forecast-commands.js — drift here is a bug.
-WORKSPACE_LAYER_METHODS = (
-    'transit', 'progression', 'direction', 'solar_return', 'synastry_partner')
-WHEEL_VIEWS = ('multi', 'single')
-HOUSE_SYSTEM_CODES = ('P', 'K', 'O', 'R', 'C', 'E', 'W', 'X', 'H', 'T', 'B', 'M')
-STEP_UNITS = ('second', 'minute', 'hour', 'day', 'week', 'month', 'year')
-STEP_DIRECTIONS = ('forward', 'backward')
-SOLAR_YEAR_MIN, SOLAR_YEAR_MAX = 1900, 2100
-STEP_AMOUNT_MIN, STEP_AMOUNT_MAX = 1, 9999
-
-# confirm:'auto'    → client applies immediately (toast + undo).
-# confirm:'confirm' → client shows a confirm chip; for destructive commands only.
-COMMAND_REGISTRY = {
-    'set_transit_date': {'confirm': 'auto'},
-    'step_date': {'confirm': 'auto'},
-    'add_layer': {'confirm': 'auto'},
-    'build_solar': {'confirm': 'auto'},
-    'set_solar_year': {'confirm': 'auto'},
-    'set_wheel_view': {'confirm': 'auto'},
-    'set_house_system': {'confirm': 'auto'},
-    'set_synastry_partner': {'confirm': 'auto'},
-    'remove_layer': {'confirm': 'confirm'},
-    'clear_layers': {'confirm': 'confirm'},
-}
-
-_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-_TIME_RE = re.compile(r"^(\d{2}):(\d{2})(?::(\d{2}))?$")
-
-
-def _valid_date(value) -> bool:
-    if not isinstance(value, str) or not _DATE_RE.match(value):
-        return False
-    try:
-        date_type.fromisoformat(value)
-        return True
-    except ValueError:
-        return False
-
-
-def _valid_time(value) -> bool:
-    if not isinstance(value, str):
-        return False
-    m = _TIME_RE.match(value)
-    if not m:
-        return False
-    hh, mm = int(m.group(1)), int(m.group(2))
-    ss = int(m.group(3)) if m.group(3) else 0
-    return hh <= 23 and mm <= 59 and ss <= 59
-
-
-def _valid_int(value, lo: int, hi: int) -> bool:
-    if isinstance(value, bool):
-        return False
-    if isinstance(value, float) and not value.is_integer():
-        return False
-    try:
-        n = int(value)
-    except (TypeError, ValueError):
-        return False
-    return lo <= n <= hi
-
-
-def _valid_timezone(value) -> bool:
-    if not isinstance(value, str) or not value.strip():
-        return False
-    try:
-        pytz.timezone(value.strip())
-        return True
-    except pytz.exceptions.UnknownTimeZoneError:
-        return False
-
-
-def _coerce_float(value):
-    if isinstance(value, bool) or value is None or value == "":
-        return None
-    try:
-        number = float(value)
-    except (TypeError, ValueError):
-        return None
-    return number if math.isfinite(number) else None
-
-
-def _validate_manual_synastry(value) -> str:
-    if not isinstance(value, dict):
-        return 'bad_manual'
-    if not _valid_date(value.get('date')):
-        return 'bad_manual_date'
-    if not _valid_time(value.get('time')):
-        return 'bad_manual_time'
-    if not _valid_timezone(value.get('timezone')):
-        return 'bad_manual_timezone'
-    lat = _coerce_float(value.get('latitude'))
-    lon = _coerce_float(value.get('longitude'))
-    has_coords = lat is not None and lon is not None and -90 <= lat <= 90 and -180 <= lon <= 180
-    place = value.get('place')
-    has_place = isinstance(place, str) and bool(place.strip())
-    if not has_place and not has_coords:
-        return 'bad_manual_location'
-    coord_supplied = value.get('latitude') not in (None, '') or value.get('longitude') not in (None, '')
-    if coord_supplied and not has_coords:
-        return 'bad_manual_location'
-    return ''
+# Deterministic vocabularies (body/aspect/command enums), the command registry,
+# and the pure validators now live in app.services.astro_vocab and are imported
+# above. They are re-exported from this module for callers that still import them
+# here: the /assistant route and the test suite.
 
 
 def validate_command(name: str, args: Dict) -> str:
@@ -402,8 +304,6 @@ _DEFAULT_OVERVIEW_YEARS = {
     'fast': 1,
     'slow': 10,
 }
-CHART_REFS = ('active_chart', 'synastry_partner')
-DIRECTION_TYPES = ('solar_arc', 'zodiacal', 'symbolic', 'equatorial')
 _SUMMARY_ASPECT_LIMIT = 30
 _SUMMARY_OBJECT_LIMIT = 24
 _SUMMARY_INGRESS_LIMIT = 12
