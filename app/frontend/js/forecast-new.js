@@ -2792,6 +2792,7 @@
             abortAllInFlightLayerRequests();
             setNatalLightweightLoading(false);
             renderStaticNatal();
+            renderWheel();
             await loadActiveLayers({ lightweight: true });
         } catch (error) {
             setNatalLightweightLoading(false);
