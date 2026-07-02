@@ -18,14 +18,22 @@ from typing import Dict, List, Tuple
 
 # Injected into the system prompt so the model cites instead of retyping numbers.
 CITATION_RULE = (
-    "When you state a number that came from an analyze() result row, cite it as "
-    "{{row_id.field}} using that row's id and field name (for example "
-    "{{r0.speed}}); do NOT retype the number yourself. The server substitutes the "
-    "exact value. Numbers from other tools may be stated normally."
+    "Citation applies ONLY to numbers that came from an analyze() result row: cite "
+    "such a number as {{row_id.field}} using that row's id and field name (for "
+    "example {{r0.speed}}); do NOT retype it. The server substitutes the exact value. "
+    "Numbers from ANY OTHER tool (find_aspect_passes dates/orbs, progressions, "
+    "directions, get_chart_data) are NOT citable — state them directly as plain text. "
+    "Never write a {{...}} token unless an analyze() row with that exact id exists."
 )
 
 # {{ r0.speed }} — row id + field, tolerant of surrounding whitespace.
 _TOKEN_RE = re.compile(r"\{\{\s*(r\d+\.[A-Za-z_]\w*)\s*\}\}")
+
+
+def strip_citation_tokens(text: str) -> str:
+    """Remove any leftover {{row.field}} tokens (safety net when no analyze() rows
+    exist this turn — a stray token is a formatting slip, not a fabricated value)."""
+    return re.sub(r"\s*" + _TOKEN_RE.pattern + r"\s*", " ", text or "").strip()
 
 
 def build_citation_index(tool_results) -> Dict[str, object]:

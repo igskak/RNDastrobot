@@ -333,6 +333,25 @@ def test_unresolved_citation_is_refused(monkeypatch):
     assert "don't interpret" in res["reply"].lower() or "не интерпрет" in res["reply"].lower()
 
 
+def test_transit_turn_with_stray_token_is_not_false_blocked(monkeypatch):
+    """Regression for prod metric 154: a find_aspect_passes turn has no citable
+    analyze() rows, so a stray {{...}} token must be STRIPPED and the answer served,
+    never false-blocked as a fabricated citation."""
+    service = _service_with_fake_transits({})
+    monkeypatch.setattr(svc, "is_openai_configured", lambda: True)
+    scripted = [
+        _msg(tool_calls=[_tool_call(
+            "c1", "find_aspect_passes",
+            '{"transit_body":"Uranus","natal_body":"Moon","aspect_type":"Conjunction"}')]),
+        _msg(content="Uranus conjoins Moon around {{r0.date}}."),  # stray token, no analyze
+    ]
+    monkeypatch.setattr(svc, "get_openai_client", lambda: _FakeClient(scripted))
+    res = service.chat(uuid4(), [{"role": "user", "content": "uranus transits?"}])
+    assert res["guardrail"] == "ok"                 # NOT blocked_citation
+    assert "{{" not in res["reply"]                 # stray token stripped
+    assert "Uranus conjoins Moon" in res["reply"]   # the real answer is served
+
+
 def test_system_prompt_has_citation_rule():
     from app.services.astro_citation import CITATION_RULE
     assert CITATION_RULE in svc._SYSTEM_PROMPT

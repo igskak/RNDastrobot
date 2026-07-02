@@ -237,8 +237,10 @@ def test_find_chart_requires_astrologer_and_query():
 
 def test_assistant_defaults_to_compact_modern_model():
     assert svc._MODEL == "gpt-5.4-mini"
-    assert "at most 80 words" in svc._SYSTEM_PROMPT
-    assert "every `Точно` pass" in svc._SYSTEM_PROMPT
+    # Readability-first formatting (beta feedback): structure over the old 80-word cap.
+    assert "structure beats brevity" in svc._SYSTEM_PROMPT
+    assert "each `Точно` pass" in svc._SYSTEM_PROMPT
+    assert "on its OWN line" in svc._SYSTEM_PROMPT
     assert "`Вход`" in svc._SYSTEM_PROMPT
     assert "`Выход`" in svc._SYSTEM_PROMPT
     assert "`D` (direct) or `R` (retrograde)" in svc._SYSTEM_PROMPT
