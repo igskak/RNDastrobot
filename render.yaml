@@ -34,6 +34,8 @@ services:
       # Application Configuration
       - key: APP_ENV
         value: production
+      - key: ASSISTANT_JUDGE_ENABLED
+        value: "true"
       - key: DEBUG
         value: "False"
       - key: SECRET_KEY
