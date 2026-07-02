@@ -72,6 +72,25 @@ function makeReferenceChart() {
     };
 }
 
+function makeCycleChart() {
+    return {
+        planets: [
+            { name: 'Sun', sign: 'Gemini' },
+            { name: 'Moon', sign: 'Taurus' },
+            { name: 'Mercury', sign: 'Cancer' },
+            { name: 'Venus', sign: 'Aries' },
+            { name: 'Mars', sign: 'Gemini' },
+            { name: 'Saturn', sign: 'Cancer' },
+        ],
+        houses: [
+            { number: 1, sign: 'Aries', ruler_planet: 'Mars' },
+            { number: 4, sign: 'Cancer', ruler_planet: 'Moon' },
+            { number: 5, sign: 'Leo', ruler_planet: 'Sun' },
+            { number: 10, sign: 'Capricorn', ruler_planet: 'Saturn' },
+        ],
+    };
+}
+
 test('house dispositor scheme matches the astrologer reference chain labels', () => {
     const dispositorChains = setupDispositorChains();
     const { chains, housesByRuler } = dispositorChains.buildHouseDispositorScheme(
@@ -131,4 +150,102 @@ test('rendered compact section keeps house labels under the corresponding planet
     assert.match(text, /VI,VII/);
     assert.match(text, /X,XI/);
     assert.equal(container.querySelectorAll('.dispositor-compact-node').length >= 10, true);
+});
+
+test('rendered compact section always keeps visible arrow markers', () => {
+    const dispositorChains = setupDispositorChains();
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    dispositorChains.render(container, makeReferenceChart(), {
+        section: 'scheme',
+        showArrowDirection: false,
+    });
+
+    assert.ok(container.querySelector('.dispositor-compact-lines marker path'));
+    assert.ok(container.querySelector('.dispositor-compact-lines path[marker-end]'));
+});
+
+test('rendered compact section hides retrograde markers', () => {
+    const dispositorChains = setupDispositorChains();
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const chart = makeReferenceChart();
+    chart.planets = chart.planets.map((planet) => (
+        planet.name === 'Mercury' ? { ...planet, retrograde: true } : planet
+    ));
+
+    dispositorChains.render(container, chart, { section: 'scheme' });
+
+    assert.equal(container.querySelector('.dispositor-node-retro'), null);
+});
+
+test('rendered compact section uses readable rows for long cycles', () => {
+    const dispositorChains = setupDispositorChains();
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    dispositorChains.render(container, makeCycleChart(), { section: 'scheme' });
+
+    const cycleRow = container.querySelector('.dispositor-cycle-row');
+    assert.ok(cycleRow);
+    assert.equal(cycleRow.querySelectorAll('.dispositor-cycle-arrow').length, 4);
+    assert.equal(container.querySelector('.dispositor-cycle-table .dispositor-compact-lines'), null);
+});
+
+test('compact layout stacks multi-root groups without long diagonal connectors', () => {
+    const dispositorChains = setupDispositorChains();
+    const layout = dispositorChains.buildCompactLayout('Moon+Mercury+Uranus', [
+        {
+            finalKey: 'Moon+Mercury+Uranus',
+            steps: [{ planet: 'Sun' }, { planet: 'Mars' }, { planet: 'Mercury' }],
+        },
+        {
+            finalKey: 'Moon+Mercury+Uranus',
+            steps: [{ planet: 'Venus' }, { planet: 'Moon' }],
+        },
+        {
+            finalKey: 'Moon+Mercury+Uranus',
+            steps: [{ planet: 'Jupiter' }, { planet: 'Saturn' }, { planet: 'Uranus' }],
+        },
+    ]);
+    const maxConnectorLength = Math.max(...layout.edges.map((edge) => {
+        const [x1, y1, x2, y2] = edge.path.match(/-?\d+(?:\.\d+)?/g).map(Number);
+        return Math.hypot(x2 - x1, y2 - y1);
+    }));
+
+    assert.ok(layout.width <= 230);
+    assert.ok(maxConnectorLength <= 70);
+    assert.equal(layout.mutualEdges.length, 0);
+});
+
+test('compact layout routes long root cycles outside the node column', () => {
+    const dispositorChains = setupDispositorChains();
+    const layout = dispositorChains.buildCompactLayout('Moon+Mercury+Venus+Mars', [
+        {
+            finalKey: 'Moon+Mercury+Venus+Mars',
+            cycle: ['Mercury', 'Moon', 'Venus', 'Mars'],
+            steps: [{ planet: 'Saturn' }, { planet: 'Mercury' }, { planet: 'Moon' }, { planet: 'Venus' }, { planet: 'Mars' }],
+        },
+        {
+            finalKey: 'Moon+Mercury+Venus+Mars',
+            cycle: ['Mercury', 'Moon', 'Venus', 'Mars'],
+            steps: [{ planet: 'Sun' }, { planet: 'Mars' }, { planet: 'Mercury' }, { planet: 'Moon' }],
+        },
+    ]);
+    const segments = layout.edges.flatMap((edge) => {
+        const points = edge.path.match(/-?\d+(?:\.\d+)?/g).map(Number);
+        const pairs = [];
+        for (let index = 0; index < points.length - 2; index += 2) {
+            pairs.push({
+                dx: Math.abs(points[index + 2] - points[index]),
+                dy: Math.abs(points[index + 3] - points[index + 1]),
+            });
+        }
+        return pairs;
+    });
+
+    assert.ok(layout.width <= 230);
+    assert.equal(layout.mutualEdges.length, 0);
+    assert.equal(segments.some((segment) => segment.dx > 30 && segment.dy > 30), false);
 });

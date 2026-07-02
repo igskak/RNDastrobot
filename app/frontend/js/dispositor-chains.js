@@ -258,7 +258,6 @@
         return `
             <span class="dispositor-chain-node ${extraClass}" style="${escapeHtml(style)}" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}">
                 ${planetSymbol(step.planet, 15)}
-                ${step.retrograde ? '<span class="dispositor-node-retro">r</span>' : ''}
             </span>
         `;
     }
@@ -395,17 +394,115 @@
             node.sign ? signLabel(node.sign) : '',
             houseLabel ? `${t('common.house')} ${houseLabel}` : '',
         ].filter(Boolean).join(' · ');
+        const positionStyle = Number.isFinite(node.x) && Number.isFinite(node.y)
+            ? ` style="left:${node.x}px; top:${node.y}px;"`
+            : '';
         return `
             <span
                 class="dispositor-compact-node ${extraClass}"
-                style="left:${node.x}px; top:${node.y}px;"
+                ${positionStyle}
                 title="${escapeHtml(label)}"
                 aria-label="${escapeHtml(label)}"
             >
                 <span class="dispositor-compact-symbol">${planetSymbol(node.planet, 32)}</span>
-                ${node.retrograde ? '<span class="dispositor-node-retro">r</span>' : ''}
                 ${houseLabel ? `<span class="dispositor-house-label">${escapeHtml(houseLabel)}</span>` : ''}
             </span>
+        `;
+    }
+
+    function renderCompactStaticNode(planet, nodesByPlanet, housesByRuler, displayOptions, extraClass = '') {
+        const source = nodesByPlanet.get(planet) || { planet, sign: null };
+        return renderCompactNode(source, housesByRuler, displayOptions, `dispositor-compact-node--static ${extraClass}`.trim());
+    }
+
+    function renderCompactInlineArrow() {
+        return `
+            <svg class="dispositor-cycle-arrow" viewBox="0 0 34 14" aria-hidden="true" focusable="false">
+                <path d="M1,7 H26 M21,2 L26,7 L21,12"></path>
+            </svg>
+        `;
+    }
+
+    function getCycleOrderForGroup(finalKey, groupChains) {
+        const roots = finalKey && finalKey !== 'none' ? finalKey.split('+').filter(Boolean) : [];
+        if (roots.length <= 2) return [];
+        const rootSet = new Set(roots);
+        const sameRootSet = (items = []) => (
+            items.length === roots.length && items.every((planet) => rootSet.has(planet))
+        );
+        const cycle = groupChains.find((chain) => sameRootSet(chain.cycle || []))?.cycle;
+        return cycle ? [...cycle] : [];
+    }
+
+    function buildCompactNodeMap(groupChains) {
+        const nodesByPlanet = new Map();
+        groupChains.forEach((chain) => {
+            chain.steps.forEach((step) => {
+                if (!step?.planet) return;
+                const existing = nodesByPlanet.get(step.planet) || { planet: step.planet, sign: null };
+                nodesByPlanet.set(step.planet, {
+                    ...existing,
+                    sign: existing.sign || step.sign || null,
+                    retrograde: existing.retrograde || Boolean(step.retrograde),
+                });
+            });
+        });
+        return nodesByPlanet;
+    }
+
+    function renderCompactCycleGroup(finalKey, groupChains, housesByRuler, displayOptions) {
+        const cycleOrder = getCycleOrderForGroup(finalKey, groupChains);
+        const cycleSet = new Set(cycleOrder);
+        const nodesByPlanet = buildCompactNodeMap(groupChains);
+        const cycleRowPlanets = [...cycleOrder, cycleOrder[0]].filter(Boolean);
+        const branchRows = [];
+        const seenBranches = new Set();
+
+        groupChains.forEach((chain) => {
+            const targetIndex = chain.steps.findIndex((step) => cycleSet.has(step.planet));
+            if (targetIndex <= 0) return;
+            const rowPlanets = chain.steps.slice(0, targetIndex + 1).map((step) => step.planet);
+            const signature = rowPlanets.join('>');
+            if (seenBranches.has(signature)) return;
+            seenBranches.add(signature);
+            branchRows.push(rowPlanets);
+        });
+
+        return `
+            <section class="dispositor-compact-group" aria-label="${escapeHtml(t('page.chart.rulers.modalTitle'))}">
+                <div class="dispositor-cycle-table">
+                    <div class="dispositor-cycle-row">
+                        ${cycleRowPlanets.map((planet, index) => `
+                            ${index > 0 ? renderCompactInlineArrow() : ''}
+                            ${renderCompactStaticNode(
+                                planet,
+                                nodesByPlanet,
+                                housesByRuler,
+                                displayOptions,
+                                `dispositor-compact-node--main${index === cycleRowPlanets.length - 1 ? ' dispositor-compact-node--repeat' : ''}`,
+                            )}
+                        `).join('')}
+                    </div>
+                    ${branchRows.length ? `
+                        <div class="dispositor-cycle-branches">
+                            ${branchRows.map((rowPlanets) => `
+                                <div class="dispositor-cycle-branch-row">
+                                    ${rowPlanets.map((planet, index) => `
+                                        ${index > 0 ? renderCompactInlineArrow() : ''}
+                                        ${renderCompactStaticNode(
+                                            planet,
+                                            nodesByPlanet,
+                                            housesByRuler,
+                                            displayOptions,
+                                            cycleSet.has(planet) ? 'dispositor-compact-node--main' : '',
+                                        )}
+                                    `).join('')}
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            </section>
         `;
     }
 
@@ -440,12 +537,14 @@
         return `
             <div class="dispositor-compact-diagram">
                 ${sortedGroups.map(([key, groupChains], index) => {
+                    const cycleOrder = getCycleOrderForGroup(key, groupChains);
+                    if (cycleOrder.length > 2) {
+                        return renderCompactCycleGroup(key, groupChains, housesByRuler, displayOptions);
+                    }
                     const layout = buildCompactLayout(key, groupChains);
                     const markerRef = `url(#dispositorCompactArrow${index})`;
-                    const markerEnd = displayOptions.showArrowDirection ? ` marker-end="${markerRef}"` : '';
-                    const mutualMarkers = displayOptions.showArrowDirection
-                        ? ` marker-start="${markerRef}" marker-end="${markerRef}"`
-                        : '';
+                    const markerEnd = ` marker-end="${markerRef}"`;
+                    const mutualMarkers = ` marker-start="${markerRef}" marker-end="${markerRef}"`;
                     return `
                         <section class="dispositor-compact-group" aria-label="${escapeHtml(t('page.chart.rulers.modalTitle'))} ${index + 1}">
                             <div class="dispositor-compact-graph" style="--graph-width:${layout.width}px; --graph-height:${layout.height}px;">
@@ -544,6 +643,33 @@
             childrenByParent.set(parent, sortPlanets(children));
         });
 
+        let hasRootCycle = false;
+        const getCycleOrder = () => {
+            if (roots.length <= 2) return roots;
+            const sameRootSet = (items = []) => (
+                items.length === roots.length && items.every((planet) => rootSet.has(planet))
+            );
+            const chainCycle = groupChains.find((chain) => sameRootSet(chain.cycle || []))?.cycle;
+            if (chainCycle) {
+                hasRootCycle = true;
+                return [...chainCycle];
+            }
+
+            const nextByRoot = new Map(mutualEdges.map((edge) => [edge.child, edge.parent]));
+            hasRootCycle = mutualEdges.length >= roots.length - 1;
+            const ordered = [];
+            let current = roots[0];
+            while (current && rootSet.has(current) && !ordered.includes(current)) {
+                ordered.push(current);
+                current = nextByRoot.get(current);
+            }
+            roots.forEach((root) => {
+                if (!ordered.includes(root)) ordered.push(root);
+            });
+            return ordered;
+        };
+
+        const cycleOrder = getCycleOrder();
         const positions = new Map();
         const layoutTree = (root, side, rootX) => {
             let nextY = pad;
@@ -575,36 +701,51 @@
             return { rootPosition, height: nextY };
         };
 
+        const collectBranchPlanets = (root) => {
+            const branch = [];
+            const stack = [root];
+            const visited = new Set();
+            while (stack.length) {
+                const planet = stack.pop();
+                if (!planet || visited.has(planet)) continue;
+                visited.add(planet);
+                branch.push(planet);
+                (childrenByParent.get(planet) || []).forEach((child) => {
+                    if (!rootSet.has(child)) stack.push(child);
+                });
+            }
+            return branch;
+        };
+
+        const shiftBranch = (root, delta) => {
+            collectBranchPlanets(root).forEach((planet) => {
+                const position = positions.get(planet);
+                if (position) position.y += delta;
+            });
+        };
+
         if (roots.length === 2) {
             const leftRoot = roots[0];
             const rightRoot = roots[1];
             const left = layoutTree(leftRoot, -1, 0);
             const right = layoutTree(rightRoot, 1, cycleGap);
             const targetY = Math.max(left.rootPosition.y, right.rootPosition.y);
-            const shiftBranch = (root, delta) => {
-                const stack = [root];
-                const visited = new Set();
-                while (stack.length) {
-                    const planet = stack.pop();
-                    if (!planet || visited.has(planet)) continue;
-                    visited.add(planet);
-                    const position = positions.get(planet);
-                    if (position) position.y += delta;
-                    (childrenByParent.get(planet) || []).forEach((child) => {
-                        if (!rootSet.has(child)) stack.push(child);
-                    });
-                }
-            };
             shiftBranch(leftRoot, targetY - left.rootPosition.y);
             shiftBranch(rightRoot, targetY - right.rootPosition.y);
         } else {
-            roots.forEach((root, index) => {
-                const result = layoutTree(root, -1, index * (yGap * 2));
-                const offset = index === 0 ? 0 : index * (yGap * 2) - result.rootPosition.y;
-                if (!offset) return;
-                positions.forEach((position, planet) => {
-                    if (planet === root || (childrenByParent.get(root) || []).includes(planet)) position.y += offset;
-                });
+            let nextComponentY = pad;
+            cycleOrder.forEach((root, index) => {
+                layoutTree(root, -1, 0);
+                const branchPlanets = collectBranchPlanets(root);
+                const branchPositions = branchPlanets
+                    .map((planet) => positions.get(planet))
+                    .filter(Boolean);
+                if (!branchPositions.length) return;
+                const minBranchY = Math.min(...branchPositions.map((position) => position.y));
+                const maxBranchY = Math.max(...branchPositions.map((position) => position.y));
+                const delta = nextComponentY - minBranchY;
+                if (delta) shiftBranch(root, delta);
+                nextComponentY = maxBranchY + delta + (index === roots.length - 1 ? 0 : yGap);
             });
         }
 
@@ -639,8 +780,31 @@
             const endY = parent.y + 21;
             return { ...edge, path: `M${startX},${startY} L${endX},${endY}` };
         };
-        const connectorEdges = normalEdges.map(makePath).filter(Boolean);
-        const connectorMutualEdges = mutualEdges.map(makePath).filter(Boolean);
+        const makeCyclePath = (edge) => {
+            const child = nodeByPlanet.get(edge.child);
+            const parent = nodeByPlanet.get(edge.parent);
+            if (!child || !parent) return null;
+            const startX = Math.max(child.x, parent.x) + nodeWidth + 8;
+            const endX = startX;
+            const startY = child.y + 21;
+            const endY = parent.y + 21;
+            if (endY >= startY) {
+                return { ...edge, path: `M${startX},${startY} L${endX},${endY}` };
+            }
+            const sideX = startX + 14;
+            return { ...edge, path: `M${startX},${startY} L${sideX},${startY} L${sideX},${endY} L${endX},${endY}` };
+        };
+        const cycleEdges = roots.length > 2 && hasRootCycle
+            ? cycleOrder.map((child, index) => ({
+                child,
+                parent: cycleOrder[(index + 1) % cycleOrder.length],
+            })).filter((edge) => edge.child && edge.parent && edge.child !== edge.parent)
+            : [];
+        const connectorEdges = [
+            ...normalEdges.map(makePath).filter(Boolean),
+            ...cycleEdges.map(makeCyclePath).filter(Boolean),
+        ];
+        const connectorMutualEdges = roots.length > 2 && hasRootCycle ? [] : mutualEdges.map(makePath).filter(Boolean);
         const width = Math.max(220, Math.ceil(Math.max(...positionedNodes.map((node) => node.x + nodeWidth)) + pad));
         const height = Math.max(70, Math.ceil(Math.max(...positionedNodes.map((node) => node.y + nodeHeight)) + pad));
 
@@ -945,11 +1109,6 @@
                             </label>
                         `).join('')}
                     </div>
-                    <div class="dispositor-options-divider"></div>
-                    <label class="dispositor-option-row">
-                        <input type="checkbox" data-dispositor-option="showArrowDirection" ${displayOptions.showArrowDirection ? 'checked' : ''}>
-                        <span>${escapeHtml(t('page.chart.rulers.options.arrowDirection'))}</span>
-                    </label>
                     <label class="dispositor-option-row">
                         <input type="checkbox" data-dispositor-option="showHouseRulers" ${displayOptions.showHouseRulers ? 'checked' : ''}>
                         <span>${escapeHtml(t('page.chart.rulers.options.houseRulers'))}</span>

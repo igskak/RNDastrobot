@@ -2936,6 +2936,17 @@
         window.DispositorChains?.render?.(`${prefix}DispositorsContainer`, data, { section: 'scheme' });
     }
 
+    function buildLayerDispositorChartData(layer = {}) {
+        const raw = layer.raw && typeof layer.raw === 'object' ? layer.raw : {};
+        return {
+            ...raw,
+            planets: raw.planets || layer.bodies || [],
+            houses: raw.houses || layer.houses || [],
+            balances: raw.balances || layer.balances || null,
+            cosmogram_pattern: raw.cosmogram_pattern || layer.cosmogram_pattern || null,
+        };
+    }
+
     function renderMatrixEditor() {
         const bodies = window.AstroPreferences?.MATRIX_BODIES || [];
         const rows = getMatrixRowsForScope('prognostic');
@@ -5048,12 +5059,7 @@
             balances: layer.balances || null,
             cosmogram_pattern: layer.cosmogram_pattern || null,
         }, { scope: 'prognostic' }));
-        renderForecastNewDispositorBlocks('prog', {
-            planets: layer.bodies || [],
-            houses: layer.houses || [],
-            balances: layer.balances || null,
-            cosmogram_pattern: layer.cosmogram_pattern || null,
-        });
+        renderForecastNewDispositorBlocks('prog', buildLayerDispositorChartData(layer));
         renderInlineMatrixControls();
         applyInlineMatrixRowState();
         syncPrognosticHousesVisibility(layer.houses || []);
