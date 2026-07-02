@@ -210,3 +210,129 @@ def test_transit_aspect_dynamics_route_checks_client_access(monkeypatch):
         )
 
     assert response.status_code == 403
+
+
+def test_aspect_dynamics_route_uses_universal_service_for_progression(monkeypatch):
+    user_id = uuid4()
+    calls = {}
+
+    class FakeAspectDynamicsService:
+        def __init__(self, db_session, ephe_path=None):
+            calls["db_session"] = db_session
+            calls["ephe_path"] = ephe_path
+
+        @staticmethod
+        def request_cache_key(payload, *, astrologer_id):
+            calls["cache_payload"] = payload
+            calls["cache_astrologer_id"] = astrologer_id
+            return "cache-key"
+
+        def context_from_user_id(self, value):
+            calls.setdefault("contexts", []).append(value)
+            return object()
+
+        def calculate(self, **kwargs):
+            calls["calculate"] = kwargs
+            return {
+                "method": kwargs["method"],
+                "transit_body": kwargs["source_body"],
+                "natal_body": kwargs["target_body"],
+                "source_body": kwargs["source_body"],
+                "target_body": kwargs["target_body"],
+                "aspect_type": kwargs["aspect_type"],
+                "timezone": kwargs["timezone"],
+                "calc_version": "aspect_dynamics_v2",
+                "status": "ok",
+                "cache_hit": False,
+                "contacts": [],
+                "series": [],
+            }
+
+    monkeypatch.setattr(transits, "AspectDynamicsService", FakeAspectDynamicsService)
+    monkeypatch.setattr(transits, "ensure_client_access", lambda *args, **kwargs: calls.setdefault("access", args))
+
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/transits/aspect-dynamics",
+            json={
+                "user_id": str(user_id),
+                "method": "progression",
+                "source_body": "Moon",
+                "target_body": "Sun",
+                "aspect_type": "Trine",
+                "selected_date": "2026-06-29",
+                "selected_time": "12:00:00",
+                "timezone": "UTC",
+                "max_points": 240,
+            },
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["method"] == "progression"
+    assert body["source_body"] == "Moon"
+    assert calls["contexts"] == [user_id]
+    assert calls["calculate"]["method"] == "progression"
+    assert calls["calculate"]["max_points"] == 240
+    assert calls["calculate"]["cache_key"] == "cache-key"
+
+
+def test_aspect_dynamics_route_checks_partner_access_for_synastry(monkeypatch):
+    user_id = uuid4()
+    partner_id = uuid4()
+    accessed = []
+
+    class FakeAspectDynamicsService:
+        def __init__(self, db_session, ephe_path=None):
+            pass
+
+        @staticmethod
+        def request_cache_key(payload, *, astrologer_id):
+            return "cache-key"
+
+        def context_from_user_id(self, value):
+            return {"user_id": value}
+
+        def calculate(self, **kwargs):
+            return {
+                "method": "synastry_partner",
+                "transit_body": kwargs["source_body"],
+                "natal_body": kwargs["target_body"],
+                "source_body": kwargs["source_body"],
+                "target_body": kwargs["target_body"],
+                "aspect_type": kwargs["aspect_type"],
+                "timezone": kwargs["timezone"],
+                "calc_version": "aspect_dynamics_v2",
+                "status": "ok",
+                "cache_hit": False,
+                "contacts": [],
+                "series": [],
+            }
+
+    def fake_access(_db, _request, _auth, client_id, *, action):
+        accessed.append((client_id, action))
+
+    monkeypatch.setattr(transits, "AspectDynamicsService", FakeAspectDynamicsService)
+    monkeypatch.setattr(transits, "ensure_client_access", fake_access)
+
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/transits/aspect-dynamics",
+            json={
+                "user_id": str(user_id),
+                "partner": {"user_id": str(partner_id)},
+                "method": "synastry_partner",
+                "source_body": "Venus",
+                "target_body": "Mars",
+                "aspect_type": "Square",
+                "selected_date": "1990-02-03",
+                "selected_time": "04:05:00",
+                "timezone": "UTC",
+            },
+        )
+
+    assert response.status_code == 200
+    assert accessed == [
+        (user_id, "client.aspects.dynamics"),
+        (partner_id, "client.aspects.dynamics_partner"),
+    ]

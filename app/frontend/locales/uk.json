@@ -177,8 +177,10 @@
       "transit": "Транзити"
     },
     "minimize": "Згорнути",
+    "next": "Вперед",
     "minor": "Мінорні",
     "minorShort": "Мн",
+    "previous": "Назад",
     "month": {
       "long": {
         "april": "Квітень",
@@ -260,7 +262,10 @@
       },
       "aspectDynamics": {
         "loading": "Розраховуємо динаміку аспекту...",
-        "unsupportedLayer": "У цій версії динаміка аспекту доступна для транзитів.",
+        "toolbar": "Керування графіком",
+        "zoomIn": "Наблизити",
+        "zoomOut": "Віддалити",
+        "resetZoom": "Скинути масштаб",
         "legend": {
           "orb": "signed-орб",
           "selected": "вибрана дата",

@@ -18,10 +18,15 @@ function resetModal() {
         title: null,
         subtitle: null,
         closeButton: null,
+        toolbar: null,
         data: null,
         lastFocus: null,
         resizeObserver: null,
         fetchImpl: null,
+        basePayload: null,
+        requestSeq: 0,
+        responseCache: new Map(),
+        dragStart: null,
     });
 }
 
@@ -147,6 +152,9 @@ test('buildPayload maps transit aspect fields and selected datetime', () => {
 
     assert.deepEqual(payload, {
         user_id: 'chart-1',
+        method: 'transit',
+        source_body: 'Pluto',
+        target_body: 'Sun',
         transit_body: 'Pluto',
         natal_body: 'Sun',
         aspect_type: 'Trine',
@@ -157,14 +165,38 @@ test('buildPayload maps transit aspect fields and selected datetime', () => {
     });
 });
 
+test('buildPayload maps non-transit layer context and partner source', () => {
+    const payload = modal.buildPayload({
+        method: 'synastry_partner',
+        natalSource: { user_id: 'primary-1' },
+        partnerSource: { user_id: 'partner-1' },
+        timezone: 'UTC',
+        selectedDateTime: '1990-02-03T04:05:00',
+        aspect: {
+            planet_1: 'Venus',
+            planet_2: 'Mars',
+            aspect_type: 'Square',
+        },
+    });
+
+    assert.equal(payload.method, 'synastry_partner');
+    assert.equal(payload.user_id, 'primary-1');
+    assert.deepEqual(payload.partner, { user_id: 'partner-1' });
+    assert.equal(payload.source_body, 'Venus');
+    assert.equal(payload.target_body, 'Mars');
+    assert.equal(payload.selected_date, '1990-02-03');
+    assert.equal(payload.selected_time, '04:05:00');
+});
+
 test('forecast-new aspect clicks open dynamics modal without pinning', () => {
     const source = fs.readFileSync(path.join(__dirname, '../frontend/js/forecast-new.js'), 'utf8');
 
     assert.equal(source.includes('togglePinnedAspectKey'), false);
     assert.equal(source.includes('pinnedAspectKey'), false);
+    assert.match(source, /openNatalAspectDynamicsByKey\(key, row\?\.dataset\?\.aspectType\)/);
     assert.match(source, /openAspectDynamicsByKey\(key, row\?\.dataset\?\.aspectType\)/);
     assert.match(source, /openAspectDynamicsByKey\(key, cell\?\.dataset\?\.aspectType\)/);
-    assert.match(source, /openAspectDynamicsByKey\(key, line\?\.dataset\?\.aspectType \|\| line\?\.dataset\?\.type\)/);
+    assert.match(source, /openNatalAspectDynamicsByKey\(key, line\?\.dataset\?\.aspectType \|\| line\?\.dataset\?\.type\)/);
 });
 
 test('modal renders loading state while dynamics request is pending', async () => {
@@ -213,6 +245,7 @@ test('modal renders success summary from fetched dynamics data', async () => {
         assert.equal(url, '/api/v1/transits/aspect-dynamics');
         const payload = JSON.parse(options.body);
         assert.equal(payload.transit_body, 'Pluto');
+        assert.equal(payload.method, 'transit');
         return {
             ok: true,
             async json() {
@@ -229,5 +262,28 @@ test('modal renders success summary from fetched dynamics data', async () => {
     assert.match(document.querySelector('#aspectDynamicsTitle').textContent, /P tri S/);
     assert.match(document.querySelector('.aspect-dynamics-summary').textContent, /Closest approach/);
     assert.match(document.querySelector('.aspect-dynamics-summary').textContent, /Pass 1/);
+    modal.close();
+});
+
+test('toolbar range control requests a new graph window', async () => {
+    setupDom();
+    const payloads = [];
+    modal.setFetchImpl(async (_url, options) => {
+        payloads.push(JSON.parse(options.body));
+        return {
+            ok: true,
+            async json() {
+                return sampleResponse();
+            },
+        };
+    });
+
+    await modal.open(sampleOpenOptions);
+    document.querySelector('[data-aspect-dynamics-range="3650"]').click();
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.equal(payloads.length, 2);
+    assert.equal(payloads[1].contact_start, '2021-06-30');
+    assert.equal(payloads[1].contact_end, '2031-06-28');
     modal.close();
 });

@@ -6,9 +6,10 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 from pydantic import BaseModel, Field, field_validator, model_validator
 from datetime import date as date_type, time as time_type
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from app.services.transit_service import TransitService
+from app.services.aspect_dynamics_service import AspectDynamicsService
 from app.services.natal_chart_service import NatalChartService
 from app.services.natal_context import NatalContext
 from app.models.schemas import BirthDataInput
@@ -175,18 +176,103 @@ class TransitPeriodResponse(BaseModel):
     total_events: int
 
 
+class AspectDynamicsSourceInput(BaseModel):
+    """Источник карты для universal aspect dynamics."""
+
+    user_id: Optional[UUID] = Field(None, description="ID сохранённого клиента")
+    natal: Optional[BirthDataInput] = Field(
+        None,
+        description="Inline данные рождения",
+    )
+
+    @model_validator(mode='after')
+    def exactly_one_source(self):
+        if bool(self.user_id) == bool(self.natal):
+            raise ValueError(
+                "Укажите ровно один источник карты: `user_id` или `natal`"
+            )
+        return self
+
+
 class AspectDynamicsRequest(BaseModel):
-    """Входные данные для графика динамики одного транзитного аспекта."""
-    user_id: UUID = Field(..., description="ID пользователя с сохранённой натальной картой")
-    transit_body: str = Field(..., min_length=1, description="Транзитное тело")
-    natal_body: str = Field(..., min_length=1, description="Натальная цель")
+    """Входные данные для графика динамики одного аспекта.
+
+    Backward-compatible legacy fields:
+    - user_id + transit_body + natal_body still mean transit->natal.
+
+    Universal v2 fields:
+    - method: natal/transit/progression/direction/solar_return/synastry_partner
+    - source_body/target_body: left/right objects in the aspect
+    - natal: inline primary chart source
+    - partner: synastry partner source
+    """
+    user_id: Optional[UUID] = Field(
+        None,
+        description="ID основной сохранённой карты",
+    )
+    natal: Optional[BirthDataInput] = Field(
+        None,
+        description="Inline источник основной карты",
+    )
+    partner: Optional[AspectDynamicsSourceInput] = Field(
+        None,
+        description="Источник партнёра для синастрии",
+    )
+    method: Literal[
+        "natal",
+        "transit",
+        "progression",
+        "direction",
+        "solar_return",
+        "synastry_partner",
+    ] = Field("transit", description="Тип слоя/методики")
+    source_body: Optional[str] = Field(
+        None,
+        min_length=1,
+        description="Движущийся/левый объект аспекта",
+    )
+    target_body: Optional[str] = Field(
+        None,
+        min_length=1,
+        description="Целевой/правый объект аспекта",
+    )
+    transit_body: Optional[str] = Field(
+        None,
+        min_length=1,
+        description="Legacy alias для source_body",
+    )
+    natal_body: Optional[str] = Field(
+        None,
+        min_length=1,
+        description="Legacy alias для target_body",
+    )
     aspect_type: str = Field(..., min_length=1, description="Тип аспекта")
     selected_date: date_type = Field(..., description="Выбранная дата (YYYY-MM-DD)")
     selected_time: time_type = Field(..., description="Выбранное время (HH:MM:SS)")
     timezone: str = Field(..., description="Часовой пояс")
     contact_start: Optional[date_type] = Field(None, description="Опциональное начало окна")
     contact_end: Optional[date_type] = Field(None, description="Опциональный конец окна")
-    max_points: int = Field(320, ge=2, le=720, description="Максимум точек графика")
+    direction_type: Optional[
+        Literal["solar_arc", "zodiacal", "symbolic", "equatorial"]
+    ] = Field(
+        "zodiacal",
+        description="Тип дирекции для method=direction",
+    )
+    solar_year: Optional[int] = Field(
+        None,
+        ge=1900,
+        le=2100,
+        description="Год соляра",
+    )
+    solar_location_latitude: Optional[float] = Field(None, ge=-90, le=90)
+    solar_location_longitude: Optional[float] = Field(None, ge=-180, le=180)
+    solar_location_timezone: Optional[str] = Field(None)
+    max_points: int = Field(
+        320,
+        ge=2,
+        le=720,
+        description="Максимум точек графика",
+    )
 
     @field_validator('timezone')
     @classmethod
@@ -200,11 +286,54 @@ class AspectDynamicsRequest(BaseModel):
 
     @model_validator(mode='after')
     def validate_contact_window(self):
+        if bool(self.user_id) == bool(self.natal):
+            raise ValueError(
+                "Укажите ровно один источник основной карты: "
+                "`user_id` или `natal`"
+            )
+        if not (self.source_body or self.transit_body):
+            raise ValueError("source_body или transit_body обязательны")
+        if not (self.target_body or self.natal_body):
+            raise ValueError("target_body или natal_body обязательны")
+        if self.method == "synastry_partner" and self.partner is None:
+            raise ValueError("partner обязателен для method=synastry_partner")
         if bool(self.contact_start) != bool(self.contact_end):
-            raise ValueError("contact_start и contact_end должны быть указаны вместе")
-        if self.contact_start and self.contact_end and self.contact_end < self.contact_start:
+            raise ValueError(
+                "contact_start и contact_end должны быть указаны вместе"
+            )
+        if (
+            self.contact_start
+            and self.contact_end
+            and self.contact_end < self.contact_start
+        ):
             raise ValueError("contact_end должен быть >= contact_start")
         return self
+
+    @property
+    def resolved_source_body(self) -> str:
+        return self.source_body or self.transit_body or ""
+
+    @property
+    def resolved_target_body(self) -> str:
+        return self.target_body or self.natal_body or ""
+
+    @property
+    def is_legacy_transit_request(self) -> bool:
+        return (
+            self.method == "transit"
+            and self.natal is None
+            and self.partner is None
+            and self.source_body is None
+            and self.target_body is None
+            and self.user_id is not None
+            and self.transit_body is not None
+            and self.natal_body is not None
+            and self.direction_type in (None, "zodiacal")
+            and self.solar_year is None
+            and self.solar_location_latitude is None
+            and self.solar_location_longitude is None
+            and self.solar_location_timezone is None
+        )
 
 
 class AspectDynamicsPoint(BaseModel):
@@ -245,12 +374,16 @@ class AspectDynamicsContact(BaseModel):
 
 
 class AspectDynamicsResponse(BaseModel):
+    method: Optional[str] = None
     transit_body: str
     natal_body: str
+    source_body: Optional[str] = None
+    target_body: Optional[str] = None
     aspect_type: str
     timezone: str
     calc_version: str
     status: str
+    cache_hit: Optional[bool] = None
     exact_angle: Optional[float] = None
     orb_used: Optional[float] = None
     orb_source: Optional[str] = None
@@ -430,20 +563,83 @@ def calculate_aspect_dynamics(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
-    """Рассчитать график усиления/ослабления одного транзитного аспекта."""
+    """Рассчитать график усиления/ослабления одного аспекта."""
     try:
-        ensure_client_access(
-            db,
-            http_request,
-            auth,
-            request.user_id,
-            action="client.transits.aspect_dynamics",
+        if request.user_id:
+            ensure_client_access(
+                db,
+                http_request,
+                auth,
+                request.user_id,
+                action="client.aspects.dynamics",
+            )
+        if request.partner and request.partner.user_id:
+            ensure_client_access(
+                db,
+                http_request,
+                auth,
+                request.partner.user_id,
+                action="client.aspects.dynamics_partner",
+            )
+
+        if request.is_legacy_transit_request:
+            transit_service = TransitService(db_session=db, ephe_path=EPHE_PATH)
+            return transit_service.calculate_aspect_dynamics(
+                user_id=request.user_id,
+                transit_body=request.transit_body,
+                natal_body=request.natal_body,
+                aspect_type=request.aspect_type,
+                selected_date=request.selected_date,
+                selected_time=request.selected_time,
+                timezone=request.timezone,
+                contact_start=request.contact_start,
+                contact_end=request.contact_end,
+                max_points=request.max_points,
+            )
+
+        dynamics_service = AspectDynamicsService(db_session=db, ephe_path=EPHE_PATH)
+        if request.user_id:
+            primary_context = dynamics_service.context_from_user_id(request.user_id)
+        else:
+            primary_context = dynamics_service.context_from_birth_data(
+                request.natal,
+                astrologer_id=auth.astrologer.id,
+            )
+
+        partner_context = None
+        if request.partner:
+            if request.partner.user_id:
+                partner_context = dynamics_service.context_from_user_id(
+                    request.partner.user_id
+                )
+            else:
+                partner_context = dynamics_service.context_from_birth_data(
+                    request.partner.natal,
+                    astrologer_id=auth.astrologer.id,
+                )
+
+        payload_for_cache = request.model_dump(mode="json")
+        cache_key = AspectDynamicsService.request_cache_key(
+            payload_for_cache,
+            astrologer_id=auth.astrologer.id,
         )
-        transit_service = TransitService(db_session=db, ephe_path=EPHE_PATH)
-        return transit_service.calculate_aspect_dynamics(
-            user_id=request.user_id,
-            transit_body=request.transit_body,
-            natal_body=request.natal_body,
+        solar_location = None
+        if (
+            request.solar_location_latitude is not None
+            and request.solar_location_longitude is not None
+        ):
+            solar_location = {
+                "latitude": request.solar_location_latitude,
+                "longitude": request.solar_location_longitude,
+                "timezone": request.solar_location_timezone,
+            }
+
+        return dynamics_service.calculate(
+            method=request.method,
+            primary_context=primary_context,
+            partner_context=partner_context,
+            source_body=request.resolved_source_body,
+            target_body=request.resolved_target_body,
             aspect_type=request.aspect_type,
             selected_date=request.selected_date,
             selected_time=request.selected_time,
@@ -451,6 +647,10 @@ def calculate_aspect_dynamics(
             contact_start=request.contact_start,
             contact_end=request.contact_end,
             max_points=request.max_points,
+            direction_type=request.direction_type or "zodiacal",
+            solar_year=request.solar_year,
+            solar_location=solar_location,
+            cache_key=cache_key,
         )
     except HTTPException:
         raise

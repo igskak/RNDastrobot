@@ -4392,11 +4392,79 @@
         return null;
     }
 
+    function findNatalAspectForDynamics(aspectKey, aspectType) {
+        const natalLayer = state.viewModel?.natalLayer;
+        const aspect = findAspectInLayerForDynamics(natalLayer, aspectKey, aspectType);
+        return aspect ? { layer: natalLayer, aspect } : null;
+    }
+
     function layerInstanceForDynamics(layer) {
         if (!layer) return selectedLayerInstance();
         return findLayerInstance(layer.id)
             || instancesOfMethod(layer.method)[0]
             || selectedLayerInstance();
+    }
+
+    function solarDynamicsDateTime(layer, cfg) {
+        return normalizeSolarDateTime(layer?.raw?.solar_info?.solar_datetime_local)
+            || cfg?.datetime
+            || getDisplayedSolarDateTime();
+    }
+
+    function synastryDynamicsDateTime(layer, cfg) {
+        const manual = cfg?.mode === 'manual' ? (cfg.manual || state.synastryManual || {}) : {};
+        const bd = layer?.raw?.partner_chart?.birth_data || {};
+        const date = cfg?.mode === 'manual' ? manual.date : (bd.date || state.synastryManual?.date || '');
+        const time = cfg?.mode === 'manual' ? manual.time : (bd.time || state.synastryManual?.time || '12:00:00');
+        return date ? `${date}T${time || '12:00:00'}` : getDisplayedMomentDateTime();
+    }
+
+    function dynamicsOptionsForLayer(match, inst) {
+        const method = match.layer?.method || inst?.method || 'transit';
+        const cfg = layerConfigOf(inst || method);
+        const options = {
+            method,
+            natalSource: buildNatalSourcePayload(),
+            userId: state.userId,
+            timezone: cfg.timezone || state.timezone || state.natalTimezone || 'UTC',
+            selectedDateTime: cfg.datetime || state.selectedDateTime,
+            aspect: { ...match.aspect, method },
+        };
+        if (method === 'direction') {
+            options.directionType = normalizeDirectionType(cfg.directionType || state.directionType);
+        }
+        if (method === 'solar_return') {
+            options.selectedDateTime = solarDynamicsDateTime(match.layer, cfg);
+            options.timezone = cfg.location?.timezone || state.natalTimezone || state.timezone || 'UTC';
+            options.solarYear = cfg.year || state.solarYear || Number(String(options.selectedDateTime).slice(0, 4));
+            options.solarLocation = cfg.location || state.solarLocation || null;
+        }
+        if (method === 'synastry_partner') {
+            options.selectedDateTime = synastryDynamicsDateTime(match.layer, cfg);
+            options.timezone = cfg.manual?.timezone
+                || match.layer?.raw?.partner_chart?.birth_data?.timezone
+                || state.synastryManual?.timezone
+                || state.timezone
+                || 'UTC';
+            options.partnerSource = buildSynastryPartnerSource(cfg);
+        }
+        return options;
+    }
+
+    function openNatalAspectDynamicsByKey(aspectKey, aspectType) {
+        const match = findNatalAspectForDynamics(aspectKey, aspectType);
+        if (!match) {
+            window.showToast?.(t('page.forecastNew.aspectDynamics.errors.missingContext'), 'warning');
+            return;
+        }
+        window.ForecastAspectDynamicsModal?.open({
+            method: 'natal',
+            natalSource: buildNatalSourcePayload(),
+            userId: state.userId,
+            timezone: state.natalTimezone || state.timezone || 'UTC',
+            selectedDateTime: state.natalSelectedDateTime || state.selectedDateTime,
+            aspect: { ...match.aspect, method: 'natal' },
+        });
     }
 
     function openAspectDynamicsByKey(aspectKey, aspectType, layerId = null) {
@@ -4405,18 +4473,8 @@
             window.showToast?.(t('page.forecastNew.aspectDynamics.errors.missingContext'), 'warning');
             return;
         }
-        if (match.layer?.method !== 'transit') {
-            window.showToast?.(t('page.forecastNew.aspectDynamics.unsupportedLayer'), 'warning');
-            return;
-        }
         const inst = layerInstanceForDynamics(match.layer);
-        const cfg = layerConfigOf(inst || 'transit');
-        window.ForecastAspectDynamicsModal?.open({
-            userId: state.userId,
-            timezone: cfg.timezone || state.timezone || state.natalTimezone || 'UTC',
-            selectedDateTime: cfg.datetime || state.selectedDateTime,
-            aspect: match.aspect,
-        });
+        window.ForecastAspectDynamicsModal?.open(dynamicsOptionsForLayer(match, inst));
     }
 
     function buildResultLayerMeta(method, layer) {
@@ -5164,6 +5222,28 @@
     }
 
     function initAspectInteractions() {
+        const natalAspectsPane = document.getElementById('natalAspectsView');
+        if (natalAspectsPane) {
+            natalAspectsPane.addEventListener('click', (event) => {
+                if (!(event.target instanceof Element)) return;
+                const row = event.target.closest('tr[data-aspect-key]');
+                const key = row?.dataset?.aspectKey;
+                if (!key) return;
+                openNatalAspectDynamicsByKey(key, row?.dataset?.aspectType);
+            });
+        }
+
+        const natalGridPane = document.getElementById('natalGridView');
+        if (natalGridPane) {
+            natalGridPane.addEventListener('click', (event) => {
+                if (!(event.target instanceof Element)) return;
+                const cell = event.target.closest('td[data-aspect-key]');
+                const key = cell?.dataset?.aspectKey;
+                if (!key) return;
+                openNatalAspectDynamicsByKey(key, cell?.dataset?.aspectType);
+            });
+        }
+
         const aspectsPane = document.getElementById('progAspectsView');
         if (aspectsPane) {
             aspectsPane.addEventListener('mouseover', (event) => {
@@ -5233,7 +5313,17 @@
             const line = event.target.closest('.aspect-line');
             const key = line?.dataset?.aspectKey;
             if (!key) return;
-            openAspectDynamicsByKey(key, line?.dataset?.aspectType || line?.dataset?.type);
+            const method1 = line?.dataset?.method1;
+            const method2 = line?.dataset?.method2;
+            if (method1 === 'natal' && method2 === 'natal') {
+                openNatalAspectDynamicsByKey(key, line?.dataset?.aspectType || line?.dataset?.type);
+                return;
+            }
+            openAspectDynamicsByKey(
+                key,
+                line?.dataset?.aspectType || line?.dataset?.type,
+                method1 && method1 !== 'natal' ? method1 : null,
+            );
         });
 
         bindPlanetTableInteractions(document.getElementById('forecastNewNatalPanel'), 'natal');

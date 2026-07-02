@@ -177,8 +177,10 @@
       "transit": "Transits"
     },
     "minimize": "Minimize",
+    "next": "Next",
     "minor": "Minor",
     "minorShort": "m",
+    "previous": "Previous",
     "month": {
       "long": {
         "april": "April",
@@ -260,7 +262,10 @@
       },
       "aspectDynamics": {
         "loading": "Calculating aspect dynamics...",
-        "unsupportedLayer": "Aspect dynamics is available for transits in this version.",
+        "toolbar": "Chart controls",
+        "zoomIn": "Zoom in",
+        "zoomOut": "Zoom out",
+        "resetZoom": "Reset zoom",
         "legend": {
           "orb": "signed orb",
           "selected": "selected date",

@@ -29,7 +29,7 @@
     width: min(960px, calc(100vw - 32px));
     max-height: min(760px, calc(100vh - 32px));
     display: grid;
-    grid-template-rows: auto auto minmax(280px, 1fr) auto auto;
+    grid-template-rows: auto auto auto minmax(280px, 1fr) auto auto;
     overflow: hidden;
     border: 1px solid rgba(30, 58, 95, 0.14);
     border-radius: 14px;
@@ -110,6 +110,47 @@
     background: rgba(176, 125, 16, 0.08);
     border-color: rgba(176, 125, 16, 0.22);
     color: var(--warning);
+}
+
+.aspect-dynamics-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    padding: 10px 18px 0;
+}
+
+.aspect-dynamics-toolbar button {
+    min-width: 34px;
+    height: 30px;
+    border: 1px solid rgba(30, 58, 95, 0.14);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--text-primary);
+    font: 700 12px/1 system-ui, sans-serif;
+    cursor: pointer;
+}
+
+.aspect-dynamics-toolbar button:hover,
+.aspect-dynamics-toolbar button:focus-visible {
+    border-color: rgba(30, 58, 95, 0.32);
+    background: var(--accent-light);
+    color: var(--accent);
+}
+
+.aspect-dynamics-toolbar-divider {
+    width: 1px;
+    height: 22px;
+    margin: 0 2px;
+    background: rgba(30, 58, 95, 0.12);
+}
+
+.aspect-dynamics-range-label {
+    margin-left: auto;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
 }
 
 .aspect-dynamics-chart-wrap {
@@ -242,7 +283,7 @@
     .aspect-dynamics-dialog {
         width: 100%;
         max-height: calc(100vh - 20px);
-        grid-template-rows: auto auto minmax(260px, 1fr) auto auto;
+        grid-template-rows: auto auto auto minmax(260px, 1fr) auto auto;
         border-radius: 12px;
     }
 
@@ -257,6 +298,15 @@
     .aspect-dynamics-chart-wrap {
         min-height: 260px;
         padding: 12px 12px 4px;
+    }
+
+    .aspect-dynamics-toolbar {
+        padding: 9px 12px 0;
+    }
+
+    .aspect-dynamics-range-label {
+        width: 100%;
+        margin-left: 0;
     }
 
     .aspect-dynamics-canvas {

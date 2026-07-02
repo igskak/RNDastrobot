@@ -1,7 +1,7 @@
 /**
  * ForecastAspectDynamicsModal
  *
- * Opens a ZET-like signed-orb graph for one transit-to-natal aspect.
+ * Opens a ZET-like signed-orb graph for one aspect in forecast-new layers.
  * The browser receives graph-ready values from /transits/aspect-dynamics;
  * no astrological calculations are duplicated here.
  */
@@ -19,6 +19,8 @@
     'use strict';
 
     const DEFAULT_MAX_POINTS = 320;
+    const MIN_WINDOW_DAYS = 3;
+    const MAX_WINDOW_DAYS = 36525;
     const API_BASE = () => root.AstroAPI?.API_BASE_URL || '/api/v1';
 
     const state = {
@@ -30,10 +32,15 @@
         title: null,
         subtitle: null,
         closeButton: null,
+        toolbar: null,
         data: null,
         lastFocus: null,
         resizeObserver: null,
         fetchImpl: null,
+        basePayload: null,
+        requestSeq: 0,
+        responseCache: new Map(),
+        dragStart: null,
     };
 
     function tr(key, fallback, params) {
@@ -87,27 +94,60 @@
         };
     }
 
-    function aspectTransitBody(aspect) {
-        return aspect?.transit_planet || aspect?.planet_1 || aspect?.left_planet || '';
+    function aspectSourceBody(aspect) {
+        return aspect?.source_body
+            || aspect?.transit_planet
+            || aspect?.progressed_planet
+            || aspect?.directed_object
+            || aspect?.solar_planet
+            || aspect?.planet_1
+            || aspect?.left_planet
+            || '';
     }
 
-    function aspectNatalBody(aspect) {
-        return aspect?.natal_object || aspect?.planet_2 || aspect?.right_planet || '';
+    function aspectTargetBody(aspect) {
+        return aspect?.target_body
+            || aspect?.natal_object
+            || aspect?.planet_2
+            || aspect?.right_planet
+            || '';
+    }
+
+    function normalizeSource(source, fallbackUserId) {
+        if (source?.natal) return { natal: source.natal };
+        if (source?.user_id) return { user_id: source.user_id };
+        if (source?.userId) return { user_id: source.userId };
+        return fallbackUserId ? { user_id: fallbackUserId } : {};
     }
 
     function buildPayload(options = {}) {
         const aspect = options.aspect || {};
         const selected = splitSelectedDateTime(options.selectedDateTime);
+        const sourceBody = options.sourceBody || aspectSourceBody(aspect);
+        const targetBody = options.targetBody || aspectTargetBody(aspect);
+        const method = options.method || aspect.method || 'transit';
+        const source = normalizeSource(options.natalSource || options.source, options.userId);
         const payload = {
-            user_id: options.userId,
-            transit_body: aspectTransitBody(aspect),
-            natal_body: aspectNatalBody(aspect),
+            ...source,
+            method,
+            source_body: sourceBody,
+            target_body: targetBody,
+            transit_body: sourceBody,
+            natal_body: targetBody,
             aspect_type: aspect.aspect_type,
             selected_date: selected.date,
             selected_time: selected.time,
             timezone: options.timezone || 'UTC',
             max_points: options.maxPoints || DEFAULT_MAX_POINTS,
         };
+        if (options.partnerSource) payload.partner = normalizeSource(options.partnerSource);
+        if (options.directionType) payload.direction_type = options.directionType;
+        if (options.solarYear) payload.solar_year = Number(options.solarYear);
+        if (options.solarLocation?.latitude != null && options.solarLocation?.longitude != null) {
+            payload.solar_location_latitude = options.solarLocation.latitude;
+            payload.solar_location_longitude = options.solarLocation.longitude;
+            if (options.solarLocation.timezone) payload.solar_location_timezone = options.solarLocation.timezone;
+        }
         if (options.contactStart && options.contactEnd) {
             payload.contact_start = options.contactStart;
             payload.contact_end = options.contactEnd;
@@ -118,13 +158,177 @@
     function validatePayload(payload) {
         return Boolean(
             payload?.user_id
-            && payload?.transit_body
-            && payload?.natal_body
+            || payload?.natal
+        ) && Boolean(
+            payload?.source_body
+            && payload?.target_body
             && payload?.aspect_type
             && payload?.selected_date
             && payload?.selected_time
             && payload?.timezone
-        );
+        ) && (payload.method !== 'synastry_partner' || Boolean(payload.partner));
+    }
+
+    function stableJson(value) {
+        if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`;
+        if (value && typeof value === 'object') {
+            return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(',')}}`;
+        }
+        return JSON.stringify(value);
+    }
+
+    function payloadCacheKey(payload) {
+        return stableJson(payload);
+    }
+
+    function toDateOnly(ms) {
+        return new Date(ms).toISOString().slice(0, 10);
+    }
+
+    function msFromIso(value) {
+        const ms = new Date(value).getTime();
+        return Number.isFinite(ms) ? ms : null;
+    }
+
+    function dataWindowMs(data = state.data) {
+        const start = msFromIso(data?.effective_window?.start)
+            ?? msFromIso(data?.series?.[0]?.datetime);
+        const end = msFromIso(data?.effective_window?.end)
+            ?? msFromIso(data?.series?.[data?.series?.length - 1]?.datetime);
+        return Number.isFinite(start) && Number.isFinite(end) && end > start
+            ? { start, end }
+            : null;
+    }
+
+    function selectedMs(data = state.data) {
+        return msFromIso(data?.selected_point?.datetime)
+            ?? msFromIso(`${state.basePayload?.selected_date || ''}T${state.basePayload?.selected_time || '12:00:00'}`);
+    }
+
+    function windowPayload(startMs, endMs) {
+        const start = Math.min(startMs, endMs);
+        const end = Math.max(startMs, endMs);
+        return {
+            ...state.basePayload,
+            contact_start: toDateOnly(start),
+            contact_end: toDateOnly(end),
+        };
+    }
+
+    function clampWindow(startMs, endMs) {
+        const center = (startMs + endMs) / 2;
+        const minSpan = MIN_WINDOW_DAYS * 86400000;
+        const maxSpan = MAX_WINDOW_DAYS * 86400000;
+        let span = Math.max(minSpan, Math.min(Math.abs(endMs - startMs), maxSpan));
+        return {
+            start: center - span / 2,
+            end: center + span / 2,
+        };
+    }
+
+    async function fetchAndRender(payload, { keepStatus = false } = {}) {
+        const seq = ++state.requestSeq;
+        if (!keepStatus) renderLoading();
+        const key = payloadCacheKey(payload);
+        if (state.responseCache.has(key)) {
+            renderData(state.responseCache.get(key));
+            return state.data;
+        }
+        try {
+            const data = await postJson('/transits/aspect-dynamics', payload);
+            if (seq !== state.requestSeq) return null;
+            state.responseCache.set(key, data);
+            renderData(data);
+            return data;
+        } catch (error) {
+            if (seq !== state.requestSeq) return null;
+            renderError(error?.message || tr('page.forecastNew.aspectDynamics.errors.loadFailed', 'Could not load aspect dynamics.'));
+            return null;
+        }
+    }
+
+    function requestWindow(startMs, endMs) {
+        if (!state.basePayload) return;
+        const bounded = clampWindow(startMs, endMs);
+        void fetchAndRender(windowPayload(bounded.start, bounded.end));
+    }
+
+    function zoom(factor) {
+        const current = dataWindowMs();
+        if (!current) return;
+        const anchor = selectedMs() || ((current.start + current.end) / 2);
+        const span = (current.end - current.start) * factor;
+        const leftRatio = (anchor - current.start) / (current.end - current.start || 1);
+        requestWindow(anchor - span * leftRatio, anchor + span * (1 - leftRatio));
+    }
+
+    function pan(ratio) {
+        const current = dataWindowMs();
+        if (!current) return;
+        const shift = (current.end - current.start) * ratio;
+        requestWindow(current.start + shift, current.end + shift);
+    }
+
+    function preset(days) {
+        const anchor = selectedMs() || Date.now();
+        const span = Math.max(MIN_WINDOW_DAYS, Math.min(days, MAX_WINDOW_DAYS)) * 86400000;
+        requestWindow(anchor - span / 2, anchor + span / 2);
+    }
+
+    function updateRangeLabel(data = state.data) {
+        if (!state.toolbar) return;
+        const label = state.toolbar.querySelector('.aspect-dynamics-range-label');
+        const current = dataWindowMs(data);
+        if (!label || !current) return;
+        label.textContent = `${formatDateShort(current.start)} - ${formatDateShort(current.end)}`;
+    }
+
+    function onToolbarClick(event) {
+        const button = event.target.closest('button');
+        if (!button) return;
+        const zoomAction = button.dataset.aspectDynamicsZoom;
+        const panAction = button.dataset.aspectDynamicsPan;
+        const range = button.dataset.aspectDynamicsRange;
+        if (zoomAction === 'in') zoom(0.5);
+        else if (zoomAction === 'out') zoom(2);
+        else if (zoomAction === 'reset') void fetchAndRender(state.basePayload);
+        else if (panAction) pan(Number(panAction));
+        else if (range) preset(Number(range));
+    }
+
+    function onCanvasWheel(event) {
+        if (!state.data) return;
+        event.preventDefault();
+        zoom(event.deltaY < 0 ? 0.65 : 1.55);
+    }
+
+    function onCanvasPointerDown(event) {
+        if (!state.data) return;
+        state.dragStart = {
+            x: event.clientX,
+            window: dataWindowMs(),
+        };
+        state.canvas?.setPointerCapture?.(event.pointerId);
+    }
+
+    function onCanvasPointerUp(event) {
+        if (!state.dragStart?.window) {
+            state.dragStart = null;
+            return;
+        }
+        const drag = state.dragStart;
+        const width = Math.max(1, state.canvas?.clientWidth || 1);
+        const dx = event.clientX - drag.x;
+        const span = drag.window.end - drag.window.start;
+        const shift = -(dx / width) * span;
+        state.dragStart = null;
+        if (Math.abs(dx) > 4) {
+            requestWindow(drag.window.start + shift, drag.window.end + shift);
+        }
+    }
+
+    function onCanvasPointerCancel() {
+        state.dragStart = null;
     }
 
     function getFetch() {
@@ -174,6 +378,19 @@
                     <button type="button" class="aspect-dynamics-close" data-aspect-dynamics-close aria-label="${escapeAttr(tr('common.close', 'Close'))}">x</button>
                 </header>
                 <div class="aspect-dynamics-status" role="status"></div>
+                <div class="aspect-dynamics-toolbar" aria-label="${escapeAttr(tr('page.forecastNew.aspectDynamics.toolbar', 'Chart controls'))}">
+                    <button type="button" data-aspect-dynamics-pan="-0.5" title="${escapeAttr(tr('common.previous', 'Previous'))}">←</button>
+                    <button type="button" data-aspect-dynamics-zoom="in" title="${escapeAttr(tr('page.forecastNew.aspectDynamics.zoomIn', 'Zoom in'))}">+</button>
+                    <button type="button" data-aspect-dynamics-zoom="out" title="${escapeAttr(tr('page.forecastNew.aspectDynamics.zoomOut', 'Zoom out'))}">−</button>
+                    <button type="button" data-aspect-dynamics-pan="0.5" title="${escapeAttr(tr('common.next', 'Next'))}">→</button>
+                    <button type="button" data-aspect-dynamics-zoom="reset" title="${escapeAttr(tr('page.forecastNew.aspectDynamics.resetZoom', 'Reset zoom'))}">⟲</button>
+                    <span class="aspect-dynamics-toolbar-divider"></span>
+                    <button type="button" data-aspect-dynamics-range="30">1M</button>
+                    <button type="button" data-aspect-dynamics-range="365">1Y</button>
+                    <button type="button" data-aspect-dynamics-range="3650">10Y</button>
+                    <button type="button" data-aspect-dynamics-range="36525">100Y</button>
+                    <span class="aspect-dynamics-range-label"></span>
+                </div>
                 <div class="aspect-dynamics-chart-wrap">
                     <canvas class="aspect-dynamics-canvas" width="720" height="320"></canvas>
                 </div>
@@ -195,10 +412,16 @@
         state.title = overlay.querySelector('#aspectDynamicsTitle');
         state.subtitle = overlay.querySelector('.aspect-dynamics-subtitle');
         state.closeButton = overlay.querySelector('.aspect-dynamics-close');
+        state.toolbar = overlay.querySelector('.aspect-dynamics-toolbar');
 
         overlay.addEventListener('click', (event) => {
             if (event.target.closest('[data-aspect-dynamics-close]')) close();
         });
+        state.toolbar?.addEventListener('click', onToolbarClick);
+        state.canvas?.addEventListener('wheel', onCanvasWheel, { passive: false });
+        state.canvas?.addEventListener('pointerdown', onCanvasPointerDown);
+        state.canvas?.addEventListener('pointerup', onCanvasPointerUp);
+        state.canvas?.addEventListener('pointercancel', onCanvasPointerCancel);
 
         if (typeof ResizeObserver !== 'undefined') {
             state.resizeObserver = new ResizeObserver(() => drawChart());
@@ -314,6 +537,8 @@
             unknown_natal_body: tr('page.forecastNew.aspectDynamics.empty.unknownNatal', 'Natal object is not available.'),
             unknown_aspect_type: tr('page.forecastNew.aspectDynamics.empty.unknownAspect', 'Aspect type is not available.'),
             unsupported_transit_body: tr('page.forecastNew.aspectDynamics.empty.unsupportedTransit', 'Transit body is not supported.'),
+            unsupported_body: tr('page.forecastNew.aspectDynamics.empty.unsupportedTransit', 'Transit body is not supported.'),
+            missing_partner: tr('page.forecastNew.aspectDynamics.empty.noData', 'No aspect dynamics data.'),
         };
         return map[status] || tr('page.forecastNew.aspectDynamics.empty.noData', 'No aspect dynamics data.');
     }
@@ -330,6 +555,7 @@
             state.status.textContent = '';
         }
         renderSummary(data);
+        updateRangeLabel(data);
         drawChart();
     }
 
@@ -586,6 +812,8 @@
         const overlay = ensureModal();
         if (!overlay) return null;
         const payload = buildPayload(options);
+        state.basePayload = payload;
+        state.responseCache.clear();
         renderShell(payload);
         state.lastFocus = typeof document !== 'undefined' ? document.activeElement : null;
         setOpen(true);
@@ -595,15 +823,7 @@
             return null;
         }
 
-        renderLoading();
-        try {
-            const data = await postJson('/transits/aspect-dynamics', payload);
-            renderData(data);
-            return data;
-        } catch (error) {
-            renderError(error?.message || tr('page.forecastNew.aspectDynamics.errors.loadFailed', 'Could not load aspect dynamics.'));
-            return null;
-        }
+        return fetchAndRender(payload);
     }
 
     function setFetchImpl(fetchImpl) {
@@ -614,6 +834,7 @@
         buildPayload,
         close,
         drawChart,
+        fetchAndRender,
         open,
         renderData,
         setFetchImpl,
