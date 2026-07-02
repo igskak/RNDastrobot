@@ -285,6 +285,59 @@ def test_iteration_cap_exit_is_also_judged(monkeypatch):
     assert res["guardrail"] == "blocked"  # cap exit was gated + refused
 
 
+# ── structured citation (quote-by-reference) end-to-end ───────────────────────
+def _service_with_analyze_chart(monkeypatch):
+    import app.services.astro_data_tools as dt
+    fake_chart = {"planets": [
+        {"name": "Moon", "sign": "Cancer", "house": 4, "dignity": "domicile",
+         "speed": 13.2, "retrograde": False},
+        {"name": "Mars", "sign": "Aries", "house": 1, "dignity": "domicile",
+         "speed": 0.6, "retrograde": False},
+    ]}
+
+    class _N:
+        def get_natal_chart_from_db(self, user_id, db):
+            return fake_chart
+
+    monkeypatch.setattr(dt, "NatalChartService", lambda *a, **k: _N())
+    return _service_with_fake_transits({})
+
+
+def test_citation_is_substituted_by_server(monkeypatch):
+    service = _service_with_analyze_chart(monkeypatch)
+    monkeypatch.setattr(svc, "is_openai_configured", lambda: True)
+    scripted = [
+        _msg(tool_calls=[_tool_call(
+            "c1", "analyze",
+            '{"op":"rank","over":"planets","sort":"speed","order":"desc","limit":1}')]),
+        _msg(content="Fastest: {{r0.name}} at {{r0.speed}} deg/day."),
+    ]
+    monkeypatch.setattr(svc, "get_openai_client", lambda: _FakeClient(scripted))
+    res = service.chat(uuid4(), [{"role": "user", "content": "fastest?"}])
+    assert res["reply"] == "Fastest: Moon at 13.2 deg/day."  # server-rendered, not retyped
+    assert res["guardrail"] == "ok"
+
+
+def test_unresolved_citation_is_refused(monkeypatch):
+    service = _service_with_analyze_chart(monkeypatch)
+    monkeypatch.setattr(svc, "is_openai_configured", lambda: True)
+    scripted = [
+        _msg(tool_calls=[_tool_call(
+            "c1", "analyze",
+            '{"op":"rank","over":"planets","sort":"speed","order":"desc","limit":1}')]),
+        _msg(content="The value is {{r9.speed}}."),  # r9 was never produced
+    ]
+    monkeypatch.setattr(svc, "get_openai_client", lambda: _FakeClient(scripted))
+    res = service.chat(uuid4(), [{"role": "user", "content": "fastest?"}])
+    assert res["guardrail"] == "blocked_citation"       # fabrication caught
+    assert "don't interpret" in res["reply"].lower() or "не интерпрет" in res["reply"].lower()
+
+
+def test_system_prompt_has_citation_rule():
+    from app.services.astro_citation import CITATION_RULE
+    assert CITATION_RULE in svc._SYSTEM_PROMPT
+
+
 def test_get_chart_data_dataset_reused_across_calls_in_one_turn(monkeypatch):
     """Two get_chart_data calls in one turn share ONE frozen dataset instance."""
     service = _service_with_fake_transits({})

@@ -31,6 +31,11 @@ from app.services.astro_commands import (
 )
 from app.services.astro_analysis import analyze as analyze_spec
 from app.services.astro_boundary import NON_INTERPRETATION_RULES
+from app.services.astro_citation import (
+    CITATION_RULE,
+    build_citation_index,
+    render_citations,
+)
 from app.services.astro_data_tools import ChartDataset, get_chart_data
 from app.services.astro_judge import (
     VERDICT_ALLOW,
@@ -569,7 +574,7 @@ motion, stations, and a brief caveat when materially relevant.
   - Use at most 80 words unless more space is required to list every contact and pass.
 - Reply in the astrologer's language.
 
-""" + NON_INTERPRETATION_RULES
+""" + NON_INTERPRETATION_RULES + "\n\n" + CITATION_RULE
 
 
 def _workspace_context_line(ws: Dict) -> str:
@@ -1047,20 +1052,31 @@ class AstroAssistantService:
             logger.exception("assistant judge-regenerate failed")
             return None
 
-    def _finalize_reply(self, *, raw_reply, messages, actions, client, convo, usage):
+    def _finalize_reply(self, *, raw_reply, messages, actions, client, convo, usage,
+                        tool_results):
         """Single Layer-3 gate BOTH chat() exits call. Returns (actions, reply, guardrail).
 
-        A coerced wheel-view reply is our own fixed text, never judged. Otherwise,
-        when the judge is enabled: allow -> serve; block -> regenerate once ->
-        serve if clean else canned refusal; judge ERROR -> fail-closed SOFT
-        (heuristic screen: clean serves with a 'degraded' flag, tripped serves the
-        canned refusal). Off -> serve as-is (unchanged legacy behavior).
+        Order: coerce wheel-view (own text, unrendered/unjudged) -> render
+        structured citations (server substitutes {{row.field}}; an UNRESOLVED
+        reference is a fabrication -> refuse) -> judge (when enabled): allow serves;
+        block regenerates once then serves-if-clean else canned refusal; judge ERROR
+        = fail-closed SOFT (heuristic screen).
         """
         final_actions, coerced_view = _coerce_wheel_view_actions(messages, actions)
         if coerced_view:
             return final_actions, _wheel_view_reply(coerced_view, messages), "ok"
 
-        reply = raw_reply or ""
+        index = build_citation_index(tool_results)
+
+        def render(text):
+            """(rendered, ok): ok is False if the model cited a value we never produced."""
+            rendered, unresolved = render_citations(text or "", index)
+            return rendered, not unresolved
+
+        reply, ok = render(raw_reply)
+        if not ok:  # fabricated/unresolved citation
+            return final_actions, _refuse_and_redirect(messages), "blocked_citation"
+
         if not JUDGE_ENABLED:
             return final_actions, reply, "ok"
 
@@ -1076,15 +1092,17 @@ class AstroAssistantService:
         if verdict == VERDICT_ALLOW:
             return final_actions, reply, "ok"
 
-        # BLOCK -> regenerate once, then re-judge.
-        regen = self._regenerate_without_interpretation(client, convo, usage)
-        if regen:
-            try:
-                if classify_reply(regen, client=client, model=judge_model) == VERDICT_ALLOW:
-                    return final_actions, regen, "regenerated"
-            except Exception:
-                if not heuristic_interpretation(regen):
-                    return final_actions, regen, "regenerated_degraded"
+        # BLOCK -> regenerate once, render its citations, then re-judge.
+        regen_raw = self._regenerate_without_interpretation(client, convo, usage)
+        if regen_raw:
+            regen, regen_ok = render(regen_raw)
+            if regen_ok:
+                try:
+                    if classify_reply(regen, client=client, model=judge_model) == VERDICT_ALLOW:
+                        return final_actions, regen, "regenerated"
+                except Exception:
+                    if not heuristic_interpretation(regen):
+                        return final_actions, regen, "regenerated_degraded"
         return final_actions, _refuse_and_redirect(messages), "blocked"
 
     def chat(self, user_id: UUID, messages: List[Dict]) -> Dict:
@@ -1134,6 +1152,7 @@ class AstroAssistantService:
                     client=client,
                     convo=convo,
                     usage=usage,
+                    tool_results=tool_results,
                 )
                 return {
                     "reply": reply,
@@ -1198,6 +1217,7 @@ class AstroAssistantService:
             client=client,
             convo=convo,
             usage=usage,
+            tool_results=tool_results,
         )
         return {
             "reply": reply,
