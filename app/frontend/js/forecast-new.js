@@ -829,6 +829,12 @@
             const segmentEl = event.target.closest('[data-time-step-key]');
             if (!segmentEl) return;
 
+            if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                event.preventDefault();
+                focusAdjacentTimeStepperSegment(refs.forecastNewTimeStepper, segmentEl, event.key === 'ArrowRight' ? 1 : -1);
+                return;
+            }
+
             const directionByKey = {
                 ArrowUp: 1,
                 ArrowDown: -1,
@@ -920,6 +926,13 @@
             if (event.target.closest('.forecast-new-custom-step')) return;
             const segmentEl = event.target.closest('[data-time-step-key]');
             if (!segmentEl) return;
+
+            if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                event.preventDefault();
+                focusAdjacentTimeStepperSegment(refs.forecastNewNatalTimeStepper, segmentEl, event.key === 'ArrowRight' ? 1 : -1);
+                return;
+            }
+
             const directionByKey = { ArrowUp: 1, ArrowDown: -1, PageUp: 1, PageDown: -1 };
             const direction = directionByKey[event.key];
             if (!direction) return;
@@ -2349,6 +2362,15 @@
         }
         const separator = `<span class="forecast-new-time-stepper-separator" aria-hidden="true">${sep}</span>`;
         return `<span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--date" aria-label="${escapeHtml(ariaLabel)}">${order.join(separator)}</span>`;
+    }
+
+    function focusAdjacentTimeStepperSegment(root, currentSegmentEl, direction) {
+        if (!root || !currentSegmentEl) return;
+        const segments = Array.from(root.querySelectorAll('[data-time-step-key]'));
+        const currentIndex = segments.indexOf(currentSegmentEl);
+        if (currentIndex < 0) return;
+        const nextIndex = Math.min(Math.max(currentIndex + direction, 0), segments.length - 1);
+        segments[nextIndex]?.focus();
     }
 
     function renderTimeStepper() {
