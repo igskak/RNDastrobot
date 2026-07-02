@@ -584,3 +584,63 @@
         height: 40px;
     }
 }
+
+/* --- chat-v2 trust surfaces: provenance chip (D1) + refusal state (D2) --- */
+.chat-provenance {
+    margin-top: 6px;
+}
+
+.chat-provenance-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 28px;
+    padding: 3px 10px;
+    border: 1px solid var(--gold, #b8935a);
+    border-radius: 999px;
+    background: var(--gold-pale, #f5eddf);
+    color: var(--gold, #b8935a);
+    font-family: var(--font-ui, sans-serif);
+    font-size: 12px;
+    line-height: 1.2;
+    cursor: pointer;
+}
+
+.chat-provenance-chevron {
+    transition: transform 0.2s ease;
+}
+
+.chat-provenance-pill[aria-expanded="true"] .chat-provenance-chevron {
+    transform: rotate(180deg);
+}
+
+.chat-provenance-degraded {
+    color: var(--warning, #b07d10);
+    font-size: 11px;
+}
+
+.chat-provenance-detail {
+    margin-top: 4px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--bg-tertiary, #f0ede4);
+    color: var(--text-secondary, #5c554e);
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.chat-provenance-meta {
+    margin-top: 4px;
+    color: var(--text-muted, #9b9289);
+}
+
+/* Refusal is a NORMAL outcome: neutral/muted with an info glyph, never a warning. */
+.chat-message.refused .message-content {
+    color: var(--text-secondary, #5c554e);
+}
+
+.chat-message.refused .message-content::before {
+    content: "\24D8\00A0"; /* ⓘ + nbsp */
+    color: var(--text-muted, #9b9289);
+}

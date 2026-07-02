@@ -928,7 +928,10 @@
         "untitled": "Untitled chat",
         "delete": "Delete conversation",
         "deleteConfirm": "Delete this conversation? This cannot be undone.",
-        "loadFailed": "Could not load conversations."
+        "loadFailed": "Could not load conversations.",
+        "provenanceSummary": "traced to data · {count} tools ✓",
+        "provenanceDegraded": "checks limited",
+        "provenanceComputed": "dataset {hash} · every number server-computed"
       },
       "edit": {
         "errors": {

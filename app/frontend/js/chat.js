@@ -322,6 +322,87 @@ class ChatWidget {
         return messageDiv;
     }
 
+    // --- trust surfaces (chat-v2) ---------------------------------------
+    // Provenance chip (D1) + guardrail state (D2). Refusal is a NORMAL outcome,
+    // so it is styled neutral (info icon), never as a warning/error.
+    decorateAssistantTurn(messageEl, data) {
+        if (!messageEl || !data) return;
+        const guardrail = data.guardrail || 'ok';
+        if (guardrail.indexOf('blocked') === 0) {
+            messageEl.classList.add('refused');  // neutral refuse-and-redirect note
+        }
+        const chip = this.buildProvenanceChip(data.tool_results, guardrail);
+        if (chip) {
+            messageEl.querySelector('.message-content')?.appendChild(chip);
+        }
+    }
+
+    buildProvenanceChip(toolResults, guardrail) {
+        const withProv = (toolResults || []).filter(
+            (tr) => tr && tr.result && tr.result.provenance && tr.result.provenance.dataset);
+        const degraded = guardrail === 'degraded' || guardrail === 'regenerated_degraded';
+        if (!withProv.length && !degraded) return null;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'chat-provenance';
+
+        if (!withProv.length) {
+            const note = document.createElement('div');
+            note.className = 'chat-provenance-degraded';
+            note.textContent = t('page.chart.chat.provenanceDegraded');
+            wrap.appendChild(note);
+            return wrap;
+        }
+
+        const hash = withProv[withProv.length - 1].result.provenance.dataset;
+        const pill = document.createElement('button');
+        pill.type = 'button';
+        pill.className = 'chat-provenance-pill';
+        pill.setAttribute('aria-expanded', 'false');
+
+        const label = document.createElement('span');
+        label.className = 'chat-provenance-label';
+        label.textContent = t('page.chart.chat.provenanceSummary', { count: withProv.length });
+        pill.appendChild(label);
+
+        if (degraded) {
+            const warn = document.createElement('span');
+            warn.className = 'chat-provenance-degraded';
+            warn.textContent = t('page.chart.chat.provenanceDegraded');
+            pill.appendChild(warn);
+        }
+
+        const chevron = document.createElement('span');
+        chevron.className = 'chat-provenance-chevron';
+        chevron.setAttribute('aria-hidden', 'true');
+        chevron.textContent = '⌄';
+        pill.appendChild(chevron);
+
+        const detail = document.createElement('div');
+        detail.className = 'chat-provenance-detail';
+        detail.hidden = true;
+        for (const tr of withProv) {
+            const line = document.createElement('div');
+            line.className = 'chat-provenance-tool';
+            line.textContent = tr.name;
+            detail.appendChild(line);
+        }
+        const meta = document.createElement('div');
+        meta.className = 'chat-provenance-meta';
+        meta.textContent = t('page.chart.chat.provenanceComputed', { hash });
+        detail.appendChild(meta);
+
+        pill.addEventListener('click', () => {
+            const open = pill.getAttribute('aria-expanded') === 'true';
+            pill.setAttribute('aria-expanded', String(!open));
+            detail.hidden = open;
+        });
+
+        wrap.appendChild(pill);
+        wrap.appendChild(detail);
+        return wrap;
+    }
+
     addLoadingMessage() {
         const messageDiv = document.createElement('div');
         messageDiv.className = 'chat-message assistant loading';
@@ -605,7 +686,8 @@ class ChatWidget {
             if (data.conversation_id) this.conversationId = data.conversation_id;
             loadingMsg.remove();
             if (reply) {
-                this.addMessage(reply, 'assistant');
+                const assistantEl = this.addMessage(reply, 'assistant');
+                this.decorateAssistantTurn(assistantEl, data);
                 this.history.push({ role: 'assistant', content: reply });
                 if (compactFeedback) {
                     this.setVoiceMiniStatus(reply, { timeoutMs: 10000 });

@@ -930,7 +930,10 @@
         "untitled": "Без назви",
         "delete": "Видалити бесіду",
         "deleteConfirm": "Видалити цю бесіду? Дію не можна скасувати.",
-        "loadFailed": "Не вдалося завантажити бесіди."
+        "loadFailed": "Не вдалося завантажити бесіди.",
+        "provenanceSummary": "джерело — дані · інструментів: {count} ✓",
+        "provenanceDegraded": "перевірки обмежені",
+        "provenanceComputed": "набір {hash} · кожне число обчислено сервером"
       },
       "edit": {
         "errors": {
