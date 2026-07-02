@@ -32,6 +32,11 @@ from app.services.astro_commands import (
 from app.services.astro_analysis import analyze as analyze_spec
 from app.services.astro_boundary import NON_INTERPRETATION_RULES
 from app.services.astro_data_tools import ChartDataset, get_chart_data
+from app.services.astro_judge import (
+    VERDICT_ALLOW,
+    classify_reply,
+    heuristic_interpretation,
+)
 from app.services.model_config import model_for
 from app.services.astro_tool_schemas import (
     build_command_tools,
@@ -80,6 +85,11 @@ MAX_TOOL_ITERATIONS = 5
 REQUEST_TIMEOUT_S = 60.0
 MAX_COMPLETION_TOKENS = 300
 _MODEL = model_for("assistant")  # env OPENAI_ASSISTANT_MODEL, default gpt-5.4-mini
+
+# Layer-3 judge gate. Off by default so scripted-client tests see the raw loop;
+# prod turns it ON (blocking from day one) via env. Doubles as a kill-switch if
+# the judge misbehaves in beta.
+JUDGE_ENABLED = os.getenv("ASSISTANT_JUDGE_ENABLED", "false").lower() in ("1", "true", "yes")
 
 _CYRILLIC_RE = re.compile(r"[а-яіїєґ]", re.IGNORECASE)
 _MULTI_WHEEL_INTENT_RE = re.compile(
@@ -168,6 +178,15 @@ def _wheel_view_reply(view: str, messages: List[Dict]) -> str:
         if view == "multi"
         else "Перешёл в одиночный режим."
     )
+
+
+def _refuse_and_redirect(messages: List[Dict]) -> str:
+    """Canned Layer-3 refusal: decline meaning, offer the data. Astrologer's language."""
+    if _CYRILLIC_RE.search(_last_user_text(messages)):
+        return ("Я не интерпретирую значение конфигураций. Могу привести только данные "
+                "и расчёты — скажите, какие показатели показать.")
+    return ("I don't interpret what configurations mean. I can report the underlying "
+            "data and calculations — tell me which figures to show.")
 
 
 def _coerce_wheel_view_actions(messages: List[Dict], actions: List[Dict]):
@@ -1005,6 +1024,69 @@ class AstroAssistantService:
 
     # --- agent loop -----------------------------------------------------
 
+    def _regenerate_without_interpretation(self, client, convo, usage) -> Optional[str]:
+        """One more completion, nudged to report data only. None on error."""
+        nudge = {
+            "role": "system",
+            "content": ("Your previous answer was rejected for containing astrological "
+                        "interpretation. Re-answer using ONLY the data and calculations "
+                        "already gathered in this conversation. Report facts; if meaning "
+                        "is required, decline that part and give the underlying data."),
+        }
+        try:
+            resp = client.chat.completions.create(
+                model=_MODEL,
+                messages=convo + [nudge],
+                verbosity="low",
+                max_completion_tokens=MAX_COMPLETION_TOKENS,
+                timeout=REQUEST_TIMEOUT_S,
+            )
+            usage.add(getattr(resp, "usage", None))
+            return resp.choices[0].message.content or ""
+        except Exception:
+            logger.exception("assistant judge-regenerate failed")
+            return None
+
+    def _finalize_reply(self, *, raw_reply, messages, actions, client, convo, usage):
+        """Single Layer-3 gate BOTH chat() exits call. Returns (actions, reply, guardrail).
+
+        A coerced wheel-view reply is our own fixed text, never judged. Otherwise,
+        when the judge is enabled: allow -> serve; block -> regenerate once ->
+        serve if clean else canned refusal; judge ERROR -> fail-closed SOFT
+        (heuristic screen: clean serves with a 'degraded' flag, tripped serves the
+        canned refusal). Off -> serve as-is (unchanged legacy behavior).
+        """
+        final_actions, coerced_view = _coerce_wheel_view_actions(messages, actions)
+        if coerced_view:
+            return final_actions, _wheel_view_reply(coerced_view, messages), "ok"
+
+        reply = raw_reply or ""
+        if not JUDGE_ENABLED:
+            return final_actions, reply, "ok"
+
+        judge_model = model_for("judge")
+        try:
+            verdict = classify_reply(reply, client=client, model=judge_model)
+        except Exception:
+            logger.exception("assistant judge unavailable; fail-closed soft")
+            if heuristic_interpretation(reply):
+                return final_actions, _refuse_and_redirect(messages), "blocked_degraded"
+            return final_actions, reply, "degraded"
+
+        if verdict == VERDICT_ALLOW:
+            return final_actions, reply, "ok"
+
+        # BLOCK -> regenerate once, then re-judge.
+        regen = self._regenerate_without_interpretation(client, convo, usage)
+        if regen:
+            try:
+                if classify_reply(regen, client=client, model=judge_model) == VERDICT_ALLOW:
+                    return final_actions, regen, "regenerated"
+            except Exception:
+                if not heuristic_interpretation(regen):
+                    return final_actions, regen, "regenerated_degraded"
+        return final_actions, _refuse_and_redirect(messages), "blocked"
+
     def chat(self, user_id: UUID, messages: List[Dict]) -> Dict:
         """
         Run the function-calling loop for the active chart (user_id).
@@ -1045,11 +1127,13 @@ class AstroAssistantService:
             usage.add(getattr(response, "usage", None))
             msg = response.choices[0].message
             if not getattr(msg, "tool_calls", None):
-                final_actions, coerced_view = _coerce_wheel_view_actions(messages, actions)
-                reply = (
-                    _wheel_view_reply(coerced_view, messages)
-                    if coerced_view
-                    else (msg.content or "")
+                final_actions, reply, guardrail = self._finalize_reply(
+                    raw_reply=msg.content or "",
+                    messages=messages,
+                    actions=actions,
+                    client=client,
+                    convo=convo,
+                    usage=usage,
                 )
                 return {
                     "reply": reply,
@@ -1057,6 +1141,7 @@ class AstroAssistantService:
                     "actions": final_actions,
                     "iterations": iterations,
                     "max_iterations_reached": False,
+                    "guardrail": guardrail,
                     "metrics": usage.as_metrics(
                         iterations=iterations,
                         latency_ms=_elapsed_ms(started),
@@ -1106,11 +1191,13 @@ class AstroAssistantService:
             timeout=REQUEST_TIMEOUT_S,
         )
         usage.add(getattr(final, "usage", None))
-        final_actions, coerced_view = _coerce_wheel_view_actions(messages, actions)
-        reply = (
-            _wheel_view_reply(coerced_view, messages)
-            if coerced_view
-            else (final.choices[0].message.content or "")
+        final_actions, reply, guardrail = self._finalize_reply(
+            raw_reply=final.choices[0].message.content or "",
+            messages=messages,
+            actions=actions,
+            client=client,
+            convo=convo,
+            usage=usage,
         )
         return {
             "reply": reply,
@@ -1118,6 +1205,7 @@ class AstroAssistantService:
             "actions": final_actions,
             "iterations": iterations,
             "max_iterations_reached": True,
+            "guardrail": guardrail,
             "metrics": usage.as_metrics(
                 iterations=iterations,
                 latency_ms=_elapsed_ms(started),

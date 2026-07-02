@@ -213,6 +213,78 @@ def test_chat_dispatches_analyze_layer2(monkeypatch):
     assert tr["result"]["provenance"]["dataset"]
 
 
+# ── Layer-3 judge gate (finalize_reply) — enabled via monkeypatch ─────────────
+def _run_judge_chat(monkeypatch, scripted, classify):
+    service = _service_with_fake_transits({})
+    monkeypatch.setattr(svc, "JUDGE_ENABLED", True)
+    monkeypatch.setattr(svc, "is_openai_configured", lambda: True)
+    monkeypatch.setattr(svc, "get_openai_client", lambda: _FakeClient(scripted))
+    monkeypatch.setattr(svc, "classify_reply", classify)
+    return service.chat(uuid4(), [{"role": "user", "content": "q"}])
+
+
+def test_judge_allows_clean_reply(monkeypatch):
+    res = _run_judge_chat(
+        monkeypatch, [_msg(content="Mars square Saturn, orb 0.9°.")],
+        lambda reply, *, client, model: "allow")
+    assert res["reply"] == "Mars square Saturn, orb 0.9°."
+    assert res["guardrail"] == "ok"
+
+
+def test_judge_block_then_refuse(monkeypatch):
+    # final reply + regenerated reply, both judged BLOCK -> canned refusal.
+    res = _run_judge_chat(
+        monkeypatch, [_msg(content="This means conflict."), _msg(content="Still conflict.")],
+        lambda reply, *, client, model: "block")
+    assert res["guardrail"] == "blocked"
+    assert "don't interpret" in res["reply"].lower()
+
+
+def test_judge_block_then_regenerate_ok(monkeypatch):
+    calls = {"n": 0}
+
+    def classify(reply, *, client, model):
+        calls["n"] += 1
+        return "block" if calls["n"] == 1 else "allow"
+
+    res = _run_judge_chat(
+        monkeypatch, [_msg(content="bad interp"), _msg(content="Mars square Saturn 0.9°")],
+        classify)
+    assert res["reply"] == "Mars square Saturn 0.9°"
+    assert res["guardrail"] == "regenerated"
+
+
+def test_judge_error_soft_fail_serves_clean(monkeypatch):
+    def boom(reply, *, client, model):
+        raise RuntimeError("judge down")
+
+    res = _run_judge_chat(monkeypatch, [_msg(content="Mars square Saturn, orb 0.9°.")], boom)
+    assert res["reply"] == "Mars square Saturn, orb 0.9°."
+    assert res["guardrail"] == "degraded"  # served, flagged
+
+
+def test_judge_error_soft_fail_blocks_obvious_interpretation(monkeypatch):
+    def boom(reply, *, client, model):
+        raise RuntimeError("judge down")
+
+    res = _run_judge_chat(monkeypatch, [_msg(content="This indicates conflict.")], boom)
+    assert res["guardrail"] == "blocked_degraded"
+    assert "don't interpret" in res["reply"].lower()
+
+
+def test_iteration_cap_exit_is_also_judged(monkeypatch):
+    """The SECOND exit goes through the same gate — nothing escapes ungated."""
+    scripted = [
+        _msg(tool_calls=[_tool_call(
+            f"c{i}", "find_aspect_passes",
+            '{"transit_body":"Mars","natal_body":"Sun","aspect_type":"Square"}')])
+        for i in range(MAX_TOOL_ITERATIONS)
+    ] + [_msg(content="cap interp"), _msg(content="regen interp")]
+    res = _run_judge_chat(monkeypatch, scripted, lambda reply, *, client, model: "block")
+    assert res["max_iterations_reached"] is True
+    assert res["guardrail"] == "blocked"  # cap exit was gated + refused
+
+
 def test_get_chart_data_dataset_reused_across_calls_in_one_turn(monkeypatch):
     """Two get_chart_data calls in one turn share ONE frozen dataset instance."""
     service = _service_with_fake_transits({})
