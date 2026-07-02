@@ -33,7 +33,8 @@ class _FakeClient:
         if self._raises:
             raise RuntimeError("judge provider down")
         msg = SimpleNamespace(content=self._content)
-        return SimpleNamespace(choices=[SimpleNamespace(message=msg)])
+        usage = SimpleNamespace(prompt_tokens=7, completion_tokens=1, total_tokens=8)
+        return SimpleNamespace(choices=[SimpleNamespace(message=msg)], usage=usage)
 
     @property
     def chat(self):
@@ -70,6 +71,14 @@ def test_judge_uses_the_given_model():
     client = _FakeClient("ALLOW")
     classify_reply("x", client=client, model="judge-model-42")
     assert client.calls[0]["model"] == "judge-model-42"
+
+
+def test_classify_reply_folds_cost_into_usage():
+    from app.services.astro_assistant_service import _UsageAccumulator
+    usage = _UsageAccumulator()
+    classify_reply("x", client=_FakeClient("ALLOW"), model="m", usage=usage)
+    assert usage.calls == 1            # judge call counted
+    assert usage.total_tokens == 8     # judge tokens folded into the turn's metrics
 
 
 # ── heuristic screen vs the single-source seed examples ───────────────────────

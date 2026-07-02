@@ -69,15 +69,22 @@ def build_judge_messages(reply: str):
     ]
 
 
-def classify_reply(reply: str, *, client, model: str) -> str:
+def classify_reply(reply: str, *, client, model: str, usage=None) -> str:
     """Return VERDICT_ALLOW or VERDICT_BLOCK. Raises on transport/model error so
-    the caller can run the fail-closed-soft path (never swallow silently here)."""
+    the caller can run the fail-closed-soft path (never swallow silently here).
+
+    If a usage accumulator is passed, the judge call's tokens are folded into the
+    turn's metrics so per-turn cost accounts for the guardrail, not just the
+    assistant model.
+    """
     resp = client.chat.completions.create(
         model=model,
         messages=build_judge_messages(reply),
         verbosity="low",
         max_completion_tokens=4,
     )
+    if usage is not None:
+        usage.add(getattr(resp, "usage", None))
     text = (resp.choices[0].message.content or "").strip().upper()
     return VERDICT_BLOCK if text.startswith("BLOCK") else VERDICT_ALLOW
 

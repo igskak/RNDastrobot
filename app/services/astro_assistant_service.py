@@ -1082,7 +1082,7 @@ class AstroAssistantService:
 
         judge_model = model_for("judge")
         try:
-            verdict = classify_reply(reply, client=client, model=judge_model)
+            verdict = classify_reply(reply, client=client, model=judge_model, usage=usage)
         except Exception:
             logger.exception("assistant judge unavailable; fail-closed soft")
             if heuristic_interpretation(reply):
@@ -1098,7 +1098,7 @@ class AstroAssistantService:
             regen, regen_ok = render(regen_raw)
             if regen_ok:
                 try:
-                    if classify_reply(regen, client=client, model=judge_model) == VERDICT_ALLOW:
+                    if classify_reply(regen, client=client, model=judge_model, usage=usage) == VERDICT_ALLOW:
                         return final_actions, regen, "regenerated"
                 except Exception:
                     if not heuristic_interpretation(regen):
