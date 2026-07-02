@@ -13,349 +13,65 @@ from __future__ import annotations
 
 import json
 import os
-import math
 import re
 import time
 from datetime import date as date_type, time as time_type
 from typing import Callable, Dict, List, Optional, Tuple
 from uuid import UUID
 
-import pytz
 from loguru import logger
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.database.models import Person, User
+from app.services.astro_commands import (
+    handle_command,
+    validate_command,
+    _normalize_command_args,
+)
+from app.services.astro_analysis import analyze as analyze_spec
+from app.services.astro_data_tools import ChartDataset, get_chart_data
+from app.services.astro_tool_schemas import (
+    build_command_tools,
+    build_query_tools,
+    build_tools,
+)
+from app.services.astro_vocab import (
+    ASPECT_TYPE_NAMES,
+    CHART_REFS,
+    COMMAND_REGISTRY,
+    DIRECTION_TYPES,
+    HOUSE_SYSTEM_CODES,
+    NATAL_BODY_NAMES,
+    SOLAR_YEAR_MAX,
+    SOLAR_YEAR_MIN,
+    STEP_AMOUNT_MAX,
+    STEP_AMOUNT_MIN,
+    STEP_DIRECTIONS,
+    STEP_UNITS,
+    TRANSIT_BODY_NAMES,
+    WHEEL_VIEWS,
+    WORKSPACE_LAYER_METHODS,
+    _coerce_float,
+    _valid_date,
+    _valid_int,
+    _valid_time,
+    _valid_timezone,
+    _validate_manual_synastry,
+)
 from app.services.direction_service import DirectionService
 from app.services.natal_chart_service import NatalChartService
 from app.services.natal_context import NatalContext
 from app.services.openai_service import get_openai_client, is_openai_configured
 from app.services.progression_service import ProgressionService
 from app.services.transit_service import TransitService
-from app.utils.constants import PLANETS, SPECIAL_POINTS
 from app.utils.ephemeris import get_ephemeris_path
 
-# Deterministic vocabularies (single source for tool-schema enums AND the
-# route's request validation). Built from constants so they never drift.
-_PLANET_NAMES = frozenset(PLANETS.values())
-_ANGLE_NAMES = frozenset({'ASC', 'MC', 'IC', 'DSC', 'Vertex', 'AntiVertex'})
-TRANSIT_BODY_NAMES = _PLANET_NAMES | frozenset(
-    {'TrueNorthNode', 'TrueSouthNode', 'BlackMoon', 'WhiteMoon'})
-NATAL_BODY_NAMES = _PLANET_NAMES | frozenset(SPECIAL_POINTS.keys()) | _ANGLE_NAMES
-# Mirrors database/seeds/02_aspect_types.sql (ref_aspect_types).
-ASPECT_TYPE_NAMES = frozenset({
-    'Conjunction', 'Sextile', 'Square', 'Trine', 'Opposition',
-    'Vigintile', 'Semi_Nonagon', 'Semisextile', 'Decile', 'Nonagon',
-    'Semisquare', 'Quintile', 'Binonagon', 'Sentagon', 'Tridecile',
-    'Sesquiquadrate', 'Biquintile', 'Quincunx',
-})
+# Deterministic vocabularies (body/aspect/command enums), the command registry,
+# and the pure validators now live in app.services.astro_vocab and are imported
+# above. They are re-exported from this module for callers that still import them
+# here: the /assistant route and the test suite.
 
-# ── Workspace command tools (PR2) ───────────────────────────────────────────
-# The agent can also DRIVE the workspace. These tools are NOT executed on the
-# server (workspace state lives in the browser): the loop validates the model's
-# intent against these vocabularies, returns a receipt so the model can confirm
-# in words, and emits a structured action for the client to apply. Vocabularies
-# mirror app/frontend/js/forecast-commands.js — drift here is a bug.
-WORKSPACE_LAYER_METHODS = (
-    'transit', 'progression', 'direction', 'solar_return', 'synastry_partner')
-WHEEL_VIEWS = ('multi', 'single')
-HOUSE_SYSTEM_CODES = ('P', 'K', 'O', 'R', 'C', 'E', 'W', 'X', 'H', 'T', 'B', 'M')
-STEP_UNITS = ('second', 'minute', 'hour', 'day', 'week', 'month', 'year')
-STEP_DIRECTIONS = ('forward', 'backward')
-SOLAR_YEAR_MIN, SOLAR_YEAR_MAX = 1900, 2100
-STEP_AMOUNT_MIN, STEP_AMOUNT_MAX = 1, 9999
-
-# confirm:'auto'    → client applies immediately (toast + undo).
-# confirm:'confirm' → client shows a confirm chip; for destructive commands only.
-COMMAND_REGISTRY = {
-    'set_transit_date': {'confirm': 'auto'},
-    'step_date': {'confirm': 'auto'},
-    'add_layer': {'confirm': 'auto'},
-    'build_solar': {'confirm': 'auto'},
-    'set_solar_year': {'confirm': 'auto'},
-    'set_wheel_view': {'confirm': 'auto'},
-    'set_house_system': {'confirm': 'auto'},
-    'set_synastry_partner': {'confirm': 'auto'},
-    'remove_layer': {'confirm': 'confirm'},
-    'clear_layers': {'confirm': 'confirm'},
-}
-
-_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-_TIME_RE = re.compile(r"^(\d{2}):(\d{2})(?::(\d{2}))?$")
-
-
-def _valid_date(value) -> bool:
-    if not isinstance(value, str) or not _DATE_RE.match(value):
-        return False
-    try:
-        date_type.fromisoformat(value)
-        return True
-    except ValueError:
-        return False
-
-
-def _valid_time(value) -> bool:
-    if not isinstance(value, str):
-        return False
-    m = _TIME_RE.match(value)
-    if not m:
-        return False
-    hh, mm = int(m.group(1)), int(m.group(2))
-    ss = int(m.group(3)) if m.group(3) else 0
-    return hh <= 23 and mm <= 59 and ss <= 59
-
-
-def _valid_int(value, lo: int, hi: int) -> bool:
-    if isinstance(value, bool):
-        return False
-    if isinstance(value, float) and not value.is_integer():
-        return False
-    try:
-        n = int(value)
-    except (TypeError, ValueError):
-        return False
-    return lo <= n <= hi
-
-
-def _valid_timezone(value) -> bool:
-    if not isinstance(value, str) or not value.strip():
-        return False
-    try:
-        pytz.timezone(value.strip())
-        return True
-    except pytz.exceptions.UnknownTimeZoneError:
-        return False
-
-
-def _coerce_float(value):
-    if isinstance(value, bool) or value is None or value == "":
-        return None
-    try:
-        number = float(value)
-    except (TypeError, ValueError):
-        return None
-    return number if math.isfinite(number) else None
-
-
-def _validate_manual_synastry(value) -> str:
-    if not isinstance(value, dict):
-        return 'bad_manual'
-    if not _valid_date(value.get('date')):
-        return 'bad_manual_date'
-    if not _valid_time(value.get('time')):
-        return 'bad_manual_time'
-    if not _valid_timezone(value.get('timezone')):
-        return 'bad_manual_timezone'
-    lat = _coerce_float(value.get('latitude'))
-    lon = _coerce_float(value.get('longitude'))
-    has_coords = lat is not None and lon is not None and -90 <= lat <= 90 and -180 <= lon <= 180
-    place = value.get('place')
-    has_place = isinstance(place, str) and bool(place.strip())
-    if not has_place and not has_coords:
-        return 'bad_manual_location'
-    coord_supplied = value.get('latitude') not in (None, '') or value.get('longitude') not in (None, '')
-    if coord_supplied and not has_coords:
-        return 'bad_manual_location'
-    return ''
-
-
-def validate_command(name: str, args: Dict) -> str:
-    """Return '' if the command args are valid, else a machine error code."""
-    if name == 'set_transit_date':
-        if not _valid_date(args.get('date')):
-            return 'bad_date'
-        if args.get('time') is not None and not _valid_time(args.get('time')):
-            return 'bad_time'
-        return ''
-    if name == 'step_date':
-        if args.get('unit') not in STEP_UNITS:
-            return 'bad_unit'
-        if args.get('direction') not in STEP_DIRECTIONS:
-            return 'bad_direction'
-        if not _valid_int(args.get('amount'), STEP_AMOUNT_MIN, STEP_AMOUNT_MAX):
-            return 'bad_amount'
-        return ''
-    if name == 'add_layer':
-        if args.get('method') not in WORKSPACE_LAYER_METHODS:
-            return 'bad_method'
-        return ''
-    if name in ('build_solar', 'set_solar_year'):
-        if not _valid_int(args.get('year'), SOLAR_YEAR_MIN, SOLAR_YEAR_MAX):
-            return 'bad_year'
-        return ''
-    if name == 'set_wheel_view':
-        if args.get('view') not in WHEEL_VIEWS:
-            return 'bad_view'
-        return ''
-    if name == 'set_house_system':
-        if args.get('system') not in HOUSE_SYSTEM_CODES:
-            return 'bad_house_system'
-        return ''
-    if name == 'set_synastry_partner':
-        chart_id = args.get('chart_id')
-        has_chart_id = isinstance(chart_id, str) and bool(chart_id.strip())
-        manual = args.get('manual')
-        has_manual = manual is not None
-        if has_chart_id == has_manual:
-            return 'bad_synastry_source'
-        if has_manual:
-            return _validate_manual_synastry(manual)
-        return ''
-    if name == 'remove_layer':
-        if not args.get('layer_id') and args.get('method') not in WORKSPACE_LAYER_METHODS:
-            return 'bad_target'
-        return ''
-    if name == 'clear_layers':
-        return ''
-    return 'unknown_command'
-
-
-def _normalize_command_args(name: str, args: Dict) -> Dict:
-    """Echo only the validated, known args (never raw model junk)."""
-    if name == 'set_transit_date':
-        out = {'date': args['date']}
-        if args.get('time') is not None:
-            out['time'] = args['time']
-        return out
-    if name == 'step_date':
-        return {'amount': int(args['amount']), 'unit': args['unit'], 'direction': args['direction']}
-    if name == 'add_layer':
-        return {'method': args['method']}
-    if name in ('build_solar', 'set_solar_year'):
-        return {'year': int(args['year'])}
-    if name == 'set_wheel_view':
-        return {'view': args['view']}
-    if name == 'set_house_system':
-        return {'system': args['system']}
-    if name == 'set_synastry_partner':
-        if args.get('manual') is not None:
-            manual = args['manual']
-            out_manual = {
-                'date': manual['date'],
-                'time': manual['time'],
-                'timezone': manual['timezone'].strip(),
-            }
-            for key, max_len in (
-                ('name', 120),
-                ('title', 120),
-                ('place', 180),
-            ):
-                value = manual.get(key)
-                if isinstance(value, str) and value.strip():
-                    out_manual[key] = value.strip()[:max_len]
-            lat = _coerce_float(manual.get('latitude'))
-            lon = _coerce_float(manual.get('longitude'))
-            if lat is not None and lon is not None:
-                out_manual['latitude'] = lat
-                out_manual['longitude'] = lon
-            return {'manual': out_manual}
-        out = {'chart_id': str(args['chart_id']).strip()}
-        title = args.get('title')
-        if isinstance(title, str) and title.strip():
-            out['title'] = title.strip()[:120]
-        return out
-    if name == 'remove_layer':
-        if args.get('layer_id'):
-            return {'layer_id': str(args['layer_id'])}
-        return {'method': args['method']}
-    return {}
-
-
-def handle_command(name: str, raw_args: Dict):
-    """Validate a workspace command. Returns (receipt, action|None).
-
-    The server NEVER executes commands — workspace state lives in the browser.
-    A valid command yields a structured action for the client and a synthetic
-    receipt so the model can confirm in words; an invalid one yields an error
-    receipt and no action.
-    """
-    meta = COMMAND_REGISTRY.get(name)
-    if meta is None:
-        return {'status': 'error', 'error': f'unknown_command:{name}'}, None
-    error = validate_command(name, raw_args or {})
-    if error:
-        return {'status': 'error', 'error': error}, None
-    action = {
-        'name': name,
-        'args': _normalize_command_args(name, raw_args or {}),
-        'confirm': meta['confirm'],
-    }
-    return {'status': 'applied_clientside', 'command': name}, action
-
-
-def build_command_tools() -> List[Dict]:
-    """Command tool schemas (client-applied). Enums mirror forecast-commands.js."""
-    methods = sorted(WORKSPACE_LAYER_METHODS)
-
-    def fn(name, description, properties, required=None):
-        schema = {'type': 'object', 'properties': properties, 'additionalProperties': False}
-        if required:
-            schema['required'] = required
-        return {'type': 'function', 'function': {
-            'name': name, 'description': description, 'parameters': schema}}
-
-    return [
-        fn('set_transit_date',
-           "Set the transit/prognostic date on the active chart's selected layer.",
-           {'date': {'type': 'string', 'description': 'YYYY-MM-DD'},
-            'time': {'type': 'string', 'description': 'HH:mm or HH:mm:ss (optional)'}},
-           ['date']),
-        fn('step_date',
-           'Move the current transit date forward or backward by N units.',
-           {'amount': {'type': 'integer', 'minimum': STEP_AMOUNT_MIN, 'maximum': STEP_AMOUNT_MAX},
-            'unit': {'type': 'string', 'enum': sorted(STEP_UNITS)},
-            'direction': {'type': 'string', 'enum': sorted(STEP_DIRECTIONS)}},
-           ['amount', 'unit', 'direction']),
-        fn('add_layer',
-           'Add a named calculation layer (transit/progression/direction/solar/synastry) '
-           'only when the astrologer asks to add/build that method. Do not use for '
-           'multi-layer or multi-wheel display mode.',
-           {'method': {'type': 'string', 'enum': methods}}, ['method']),
-        fn('build_solar', 'Build and show a solar return for a year.',
-           {'year': {'type': 'integer', 'minimum': SOLAR_YEAR_MIN, 'maximum': SOLAR_YEAR_MAX}},
-           ['year']),
-        fn('set_solar_year', 'Change the solar-return year.',
-           {'year': {'type': 'integer', 'minimum': SOLAR_YEAR_MIN, 'maximum': SOLAR_YEAR_MAX}},
-           ['year']),
-        fn('set_wheel_view',
-           'Switch the wheel display between multi (natal + rings) and single '
-           '(natal only). Use this for "многослойный режим", "мультиколесо", '
-           '"multi-wheel/multi-layer mode", or "одиночный режим"; it is not '
-           'the same as adding a transit layer.',
-           {'view': {'type': 'string', 'enum': sorted(WHEEL_VIEWS)}}, ['view']),
-        fn('set_house_system',
-           'Change the house system (single-letter Swiss Ephemeris code).',
-           {'system': {'type': 'string', 'enum': sorted(HOUSE_SYSTEM_CODES)}}, ['system']),
-        fn('set_synastry_partner',
-           'Build synastry with a saved chart OR complete manually entered birth data. '
-           'Use chart_id after find_chart when the astrologer names an existing saved chart. '
-           'Use manual when the astrologer gives date, time, timezone, and place or coordinates.',
-           {'chart_id': {'type': 'string', 'description': 'Saved chart id from find_chart.'},
-            'title': {'type': 'string', 'description': 'Partner display name for saved chart (optional).'},
-            'manual': {
-                'type': 'object',
-                'description': 'Inline partner birth data for unsaved synastry.',
-                'properties': {
-                    'name': {'type': 'string', 'description': 'Partner display name (optional).'},
-                    'title': {'type': 'string', 'description': 'Chart title (optional).'},
-                    'date': {'type': 'string', 'description': 'YYYY-MM-DD'},
-                    'time': {'type': 'string', 'description': 'HH:mm or HH:mm:ss'},
-                    'timezone': {'type': 'string', 'description': 'IANA timezone, e.g. Europe/Kyiv'},
-                    'place': {'type': 'string', 'description': 'Birth place name (optional if coordinates given).'},
-                    'latitude': {'type': 'number', 'minimum': -90, 'maximum': 90},
-                    'longitude': {'type': 'number', 'minimum': -180, 'maximum': 180},
-                },
-                'required': ['date', 'time', 'timezone'],
-                'additionalProperties': False,
-            }}),
-        fn('remove_layer',
-           'Remove a prognostic layer by method (all instances) or layer_id (one). Destructive.',
-           {'method': {'type': 'string', 'enum': methods},
-            'layer_id': {'type': 'string'}}),
-        fn('clear_layers',
-           'Remove all prognostic layers, leaving the natal chart. Destructive.',
-           {}),
-    ]
 
 # Cost controls — hard requirements, not knobs (per plan review).
 MAX_TOOL_ITERATIONS = 5
@@ -402,8 +118,6 @@ _DEFAULT_OVERVIEW_YEARS = {
     'fast': 1,
     'slow': 10,
 }
-CHART_REFS = ('active_chart', 'synastry_partner')
-DIRECTION_TYPES = ('solar_arc', 'zodiacal', 'symbolic', 'equatorial')
 _SUMMARY_ASPECT_LIMIT = 30
 _SUMMARY_OBJECT_LIMIT = 24
 _SUMMARY_INGRESS_LIMIT = 12
@@ -835,127 +549,6 @@ motion, stations, and a brief caveat when materially relevant.
 - Reply in the astrologer's language."""
 
 
-def build_query_tools() -> List[Dict]:
-    """Deterministic, server-executed query tools. Enums come from shared vocab."""
-    return [{
-        "type": "function",
-        "function": {
-            "name": "find_aspect_passes",
-            "description": (
-                "Find when a transiting body forms an aspect to a natal object in "
-                "the active chart: enter/each exact crossing/leave, motion per pass, "
-                "and station dates. Orbs use the astrologer's configured settings."
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "transit_body": {"type": "string", "enum": sorted(TRANSIT_BODY_NAMES)},
-                    "natal_body": {"type": "string", "enum": sorted(NATAL_BODY_NAMES)},
-                    "aspect_type": {"type": "string", "enum": sorted(ASPECT_TYPE_NAMES)},
-                    "timezone": {
-                        "type": "string",
-                        "description": "IANA timezone; omit to use the chart's timezone.",
-                    },
-                    "mode": {
-                        "type": "string",
-                        "enum": ["next_contact", "window"],
-                        "description": "next_contact auto-expands forward; window uses an explicit range.",
-                    },
-                    "start_date": {"type": "string", "description": "YYYY-MM-DD (window mode)."},
-                    "end_date": {"type": "string", "description": "YYYY-MM-DD (window mode)."},
-                    "anchor_date": {"type": "string", "description": "YYYY-MM-DD (next_contact anchor)."},
-                    "max_expansion_days": {"type": "integer"},
-                },
-                "required": ["transit_body", "natal_body", "aspect_type"],
-                "additionalProperties": False,
-            },
-        },
-    }, {
-        "type": "function",
-        "function": {
-            "name": "find_chart",
-            "description": (
-                "Search the astrologer's saved charts by name to resolve a person for "
-                "synastry. Returns candidates (chart_id, title, birth_date, birth_place). "
-                "If several match, ask which one; if none match, say so."
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "query": {"type": "string", "description": "Name or part of a name."},
-                    "limit": {"type": "integer", "minimum": 1, "maximum": 25},
-                },
-                "required": ["query"],
-                "additionalProperties": False,
-            },
-        },
-    }, {
-        "type": "function",
-        "function": {
-            "name": "calculate_progression",
-            "description": (
-                "Calculate secondary progressions for the active chart or the active "
-                "synastry partner. Use synastry_partner when the astrologer asks about "
-                "the second chart/partner in the current synastry."
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "chart_ref": {
-                        "type": "string",
-                        "enum": list(CHART_REFS),
-                        "description": "active_chart or synastry_partner.",
-                    },
-                    "target_date": {"type": "string", "description": "YYYY-MM-DD"},
-                    "target_time": {
-                        "type": "string",
-                        "description": "HH:mm or HH:mm:ss (optional).",
-                    },
-                    "timezone": {
-                        "type": "string",
-                        "description": "IANA timezone; omit to use chart/workspace default.",
-                    },
-                },
-                "required": ["target_date"],
-                "additionalProperties": False,
-            },
-        },
-    }, {
-        "type": "function",
-        "function": {
-            "name": "calculate_direction",
-            "description": (
-                "Calculate directions/solar arcs for the active chart or the active "
-                "synastry partner. Use synastry_partner when the astrologer asks about "
-                "the second chart/partner in the current synastry."
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "chart_ref": {
-                        "type": "string",
-                        "enum": list(CHART_REFS),
-                        "description": "active_chart or synastry_partner.",
-                    },
-                    "target_date": {"type": "string", "description": "YYYY-MM-DD"},
-                    "direction_type": {
-                        "type": "string",
-                        "enum": list(DIRECTION_TYPES),
-                        "description": "solar_arc, zodiacal/symbolic, or equatorial.",
-                    },
-                },
-                "required": ["target_date"],
-                "additionalProperties": False,
-            },
-        },
-    }]
-
-
-def build_tools() -> List[Dict]:
-    """All tool schemas: deterministic query tools + workspace command tools."""
-    return build_query_tools() + build_command_tools()
-
-
 def _workspace_context_line(ws: Dict) -> str:
     """A short, defensively-validated summary of the live workspace.
 
@@ -1067,6 +660,9 @@ class AstroAssistantService:
         self._transit_service: Optional[TransitService] = None
         self._progression_service: Optional[ProgressionService] = None
         self._direction_service: Optional[DirectionService] = None
+        # Per-turn frozen Layer-1 dataset (built once, reused across get_chart_data
+        # calls in the same turn so every facet reconciles to one provenance hash).
+        self._chart_dataset: Optional[ChartDataset] = None
 
     def _transits(self) -> TransitService:
         if self._transit_service is None:
@@ -1366,12 +962,31 @@ class AstroAssistantService:
             )
         return self._compact_direction_result(result, chart_ref)
 
+    def _get_chart_dataset(self, user_id: UUID) -> ChartDataset:
+        """The per-turn frozen Layer-1 dataset for the active chart, built once."""
+        if self._chart_dataset is None:
+            self._chart_dataset = ChartDataset(
+                user_id=user_id,
+                astrologer_id=self.astrologer_id,
+                db=self.db,
+            )
+        return self._chart_dataset
+
+    def _exec_get_chart_data(self, user_id: UUID, args: Dict) -> Dict:
+        return get_chart_data(self._get_chart_dataset(user_id), args.get("facet"))
+
+    def _exec_analyze(self, user_id: UUID, args: Dict) -> Dict:
+        # The tool args ARE the analysis spec; the executor validates + runs it.
+        return analyze_spec(self._get_chart_dataset(user_id), args)
+
     def _dispatch(self, name: str, args: Dict, user_id: UUID) -> Dict:
         handlers: Dict[str, Callable[[UUID, Dict], Dict]] = {
             "find_aspect_passes": self._exec_find_aspect_passes,
             "find_chart": self._exec_find_chart,
             "calculate_progression": self._exec_calculate_progression,
             "calculate_direction": self._exec_calculate_direction,
+            "get_chart_data": self._exec_get_chart_data,
+            "analyze": self._exec_analyze,
         }
         handler = handlers.get(name)
         if handler is None:
