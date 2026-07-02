@@ -932,7 +932,9 @@
         "provenanceSummary": "источник — данные · инструментов: {count} ✓",
         "provenanceDegraded": "проверки ограничены",
         "provenanceComputed": "набор {hash} · каждое число вычислено сервером",
-        "contextLabel": "Контекст"
+        "contextLabel": "Контекст",
+        "correctionFlag": "Отметить ответ для исправления",
+        "correctionNote": "Что было не так? (необязательно)"
       },
       "edit": {
         "errors": {

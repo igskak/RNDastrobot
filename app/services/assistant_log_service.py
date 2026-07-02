@@ -73,8 +73,10 @@ def log_turn(
     guardrail: Optional[str] = None,
     tool_results: Optional[list] = None,
     workspace_manifest: Optional[Dict] = None,
-) -> Optional[UUID]:
-    """Persist one assistant turn. Returns the conversation id, or None on failure.
+) -> "tuple[Optional[UUID], Optional[int]]":
+    """Persist one assistant turn. Returns (conversation_id, metric_id), or
+    (None, None) on failure. The metric_id lets the client flag that turn for
+    correction.
 
     Writes are committed here so a caller's read-only request transaction does
     not need to. Failures are swallowed — the chat reply has already been
@@ -95,7 +97,7 @@ def log_turn(
             conversation_id=conv.id, role="assistant", content=assistant_reply or ""))
 
         m = metrics or {}
-        db.add(AssistantTurnMetric(
+        metric = AssistantTurnMetric(
             conversation_id=conv.id,
             astrologer_id=astrologer_id,
             model=m.get("model", "unknown"),
@@ -109,13 +111,14 @@ def log_turn(
             guardrail=guardrail,
             tool_results=tool_results,
             workspace_manifest=workspace_manifest,
-        ))
+        )
+        db.add(metric)
         db.commit()
-        return conv.id
+        return conv.id, metric.id
     except Exception:
         logger.exception("assistant turn logging failed")
         db.rollback()
-        return None
+        return None, None
 
 
 def flag_turn_correction(

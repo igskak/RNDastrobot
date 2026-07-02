@@ -331,9 +331,68 @@ class ChatWidget {
         if (guardrail.indexOf('blocked') === 0) {
             messageEl.classList.add('refused');  // neutral refuse-and-redirect note
         }
+        const content = messageEl.querySelector('.message-content');
         const chip = this.buildProvenanceChip(data.tool_results, guardrail);
-        if (chip) {
-            messageEl.querySelector('.message-content')?.appendChild(chip);
+        if (chip && content) content.appendChild(chip);
+        if (data.metric_id && content) {
+            content.appendChild(this.buildCorrectionControl(data.metric_id));
+        }
+    }
+
+    // Correction flag (D3): one-tap flag + optional one-line note, feeding the
+    // beta capture/tuning loop. Low friction so a busy astrologer actually uses it.
+    buildCorrectionControl(metricId) {
+        const wrap = document.createElement('div');
+        wrap.className = 'chat-correction';
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'chat-correction-flag';
+        btn.setAttribute('aria-pressed', 'false');
+        btn.setAttribute('aria-label', t('page.chart.chat.correctionFlag'));
+        btn.textContent = '⚑';
+
+        const note = document.createElement('input');
+        note.type = 'text';
+        note.className = 'chat-correction-note';
+        note.maxLength = 2000;
+        note.placeholder = t('page.chart.chat.correctionNote');
+        note.hidden = true;
+
+        let flagged = false;
+        btn.addEventListener('click', () => {
+            flagged = !flagged;
+            btn.setAttribute('aria-pressed', String(flagged));
+            note.hidden = !flagged;
+            if (flagged) {
+                this.postCorrection(metricId, '');
+                note.focus();
+            }
+        });
+
+        const submitNote = () => {
+            const text = note.value.trim();
+            if (flagged && text) this.postCorrection(metricId, text);
+        };
+        note.addEventListener('blur', submitNote);
+        note.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); submitNote(); note.blur(); }
+        });
+
+        wrap.append(btn, note);
+        return wrap;
+    }
+
+    async postCorrection(metricId, noteText) {
+        try {
+            await fetch(`${API_BASE_URL}/assistant/turns/${metricId}/correction`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: withLocaleHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify({ note: noteText || null }),
+            });
+        } catch (error) {
+            console.error('Assistant correction flag error:', error);
         }
     }
 

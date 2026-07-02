@@ -694,3 +694,44 @@
     font-size: 11px;
     line-height: 1.5;
 }
+
+/* Correction flag (D3): one-tap flag + optional note, low friction. */
+.chat-correction {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
+.chat-correction-flag {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0 8px;
+    border: 1px solid var(--border, #e0ddd7);
+    border-radius: 8px;
+    background: none;
+    color: var(--text-muted, #9b9289);
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.chat-correction-flag[aria-pressed="true"] {
+    color: var(--gold, #b8935a);
+    border-color: var(--gold, #b8935a);
+    background: var(--gold-pale, #f5eddf);
+}
+
+.chat-correction-note {
+    flex: 1;
+    min-width: 140px;
+    min-height: 32px;
+    padding: 4px 8px;
+    border: 1px solid var(--border, #e0ddd7);
+    border-radius: 8px;
+    background: var(--bg-secondary, #ffffff);
+    color: var(--text-primary, #1a1614);
+    font-family: var(--font-ui, sans-serif);
+    font-size: 12px;
+}

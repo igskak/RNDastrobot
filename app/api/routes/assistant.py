@@ -330,6 +330,8 @@ class ChatResponse(BaseModel):
     # Layer-3 gate outcome for this turn (client renders the trust/degraded state):
     # ok | regenerated | degraded | regenerated_degraded | blocked | blocked_degraded.
     guardrail: Optional[str] = None
+    # This turn's metric id — the handle the client uses to flag it for correction.
+    metric_id: Optional[int] = None
 
 
 @router.post(
@@ -391,7 +393,7 @@ def chat(
         )
 
     # Persist the turn (history + cost/latency). Never fails the response.
-    conv_id = log_turn(
+    conv_id, metric_id = log_turn(
         db,
         astrologer_id=auth.astrologer.id,
         chart_user_id=request.user_id,
@@ -414,6 +416,7 @@ def chat(
         conversation_id=str(conv_id) if conv_id else None,
         metrics=result.get("metrics"),
         guardrail=result.get("guardrail"),
+        metric_id=metric_id,
     )
 
 
