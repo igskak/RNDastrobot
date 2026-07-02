@@ -37,10 +37,11 @@ To compare models for a role, set the env var and re-run the live eval:
 RUN_LLM_EVALS=1 OPENAI_JUDGE_MODEL=<candidate> OPENAI_API_KEY=... .venv/bin/python -m pytest app/tests/eval -q
 ```
 
-Known finding (2026-07-02): gpt-5.4-mini with the current judge prompt LEAKS
-some subtle interpretations (e.g. "…is a hard aspect that brings tension",
-"…points to challenges in relationships"). Tune the judge prompt in
-`astro_judge` and/or try a stronger `OPENAI_JUDGE_MODEL`, re-running this eval
-until zero leaks before enabling the judge in prod.
+Finding + resolution (2026-07-02): the first judge prompt (bare rubric) LEAKED 8
+subtle interpretations on gpt-5.4-mini; sharpening it then OVER-blocked 3 factual
+data statements. A BALANCED few-shot prompt (interpretation examples to BLOCK +
+geometry/motion/ranking examples to ALLOW) converged to 20/20 — zero leaks, zero
+false-blocks — so the cheap mini judge is sufficient, validated not assumed. Re-run
+this eval after any judge-prompt or model change before enabling the judge in prod.
 Fixtures live in `app/services/astro_boundary.py` (single source shared with the
 system prompt and the judge) + `golden_charts.py` (analysis golden data).
