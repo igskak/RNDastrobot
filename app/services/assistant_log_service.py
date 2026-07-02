@@ -70,6 +70,9 @@ def log_turn(
     assistant_reply: str,
     metrics: Dict,
     max_iterations_reached: bool,
+    guardrail: Optional[str] = None,
+    tool_results: Optional[list] = None,
+    workspace_manifest: Optional[Dict] = None,
 ) -> Optional[UUID]:
     """Persist one assistant turn. Returns the conversation id, or None on failure.
 
@@ -103,6 +106,9 @@ def log_turn(
             completion_tokens=m.get("completion_tokens", 0),
             total_tokens=m.get("total_tokens", 0),
             max_iterations_reached=max_iterations_reached,
+            guardrail=guardrail,
+            tool_results=tool_results,
+            workspace_manifest=workspace_manifest,
         ))
         db.commit()
         return conv.id

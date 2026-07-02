@@ -1507,6 +1507,13 @@ class AssistantTurnMetric(Base):
     completion_tokens = Column(Integer, nullable=False, default=0)
     total_tokens = Column(Integer, nullable=False, default=0)
     max_iterations_reached = Column(Boolean, nullable=False, default=False)
+    # Chat-v2 beta capture (migration 048): the auditable payload behind each turn,
+    # plus the astrologer's in-chat correction signal that feeds rubric tuning.
+    guardrail = Column(String(40), nullable=True)          # Layer-3 gate outcome
+    tool_results = Column(JSON, nullable=True)             # deterministic tool payloads
+    workspace_manifest = Column(JSON, nullable=True)       # frozen context for the turn
+    correction_flag = Column(Boolean, nullable=False, default=False)
+    correction_note = Column(Text, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
     conversation = relationship("AssistantConversation", back_populates="turn_metrics")

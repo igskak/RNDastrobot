@@ -325,6 +325,9 @@ class ChatResponse(BaseModel):
     max_iterations_reached: bool
     conversation_id: Optional[str] = None
     metrics: Optional[dict] = None
+    # Layer-3 gate outcome for this turn (client renders the trust/degraded state):
+    # ok | regenerated | degraded | regenerated_degraded | blocked | blocked_degraded.
+    guardrail: Optional[str] = None
 
 
 @router.post(
@@ -395,6 +398,9 @@ def chat(
         assistant_reply=result.get("reply", ""),
         metrics=result.get("metrics") or {},
         max_iterations_reached=result.get("max_iterations_reached", False),
+        guardrail=result.get("guardrail"),
+        tool_results=result.get("tool_results") or [],
+        workspace_manifest=request.workspace,
     )
 
     return ChatResponse(
@@ -405,6 +411,7 @@ def chat(
         max_iterations_reached=result.get("max_iterations_reached", False),
         conversation_id=str(conv_id) if conv_id else None,
         metrics=result.get("metrics"),
+        guardrail=result.get("guardrail"),
     )
 
 

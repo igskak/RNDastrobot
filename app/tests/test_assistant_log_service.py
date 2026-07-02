@@ -74,6 +74,36 @@ def test_existing_thread_is_appended_and_moves_to_top():
     assert listed[0]["message_count"] == 4
 
 
+def test_turn_capture_is_persisted():
+    db = _session()
+    astrologer_id = uuid4()
+    chart = uuid4()
+    conv_id = log_turn(
+        db, astrologer_id=astrologer_id, chart_user_id=chart, conversation_id=None,
+        user_message="q", assistant_reply="a", metrics={"model": "m"},
+        max_iterations_reached=False,
+        guardrail="degraded",
+        tool_results=[{"name": "analyze", "result": {"rows": []}}],
+        workspace_manifest={"activeChart": {"chartId": "x"}},
+    )
+    m = db.query(AssistantTurnMetric).filter_by(conversation_id=conv_id).one()
+    assert m.guardrail == "degraded"
+    assert m.tool_results == [{"name": "analyze", "result": {"rows": []}}]
+    assert m.workspace_manifest == {"activeChart": {"chartId": "x"}}
+    assert m.correction_flag is False  # not yet corrected
+
+
+def test_capture_is_optional_backward_compatible():
+    """Existing callers omit capture args -> row still writes with NULL/defaults."""
+    db = _session()
+    astrologer_id = uuid4()
+    conv_id = _log(db, astrologer_id, uuid4())  # legacy call, no capture
+    m = db.query(AssistantTurnMetric).filter_by(conversation_id=conv_id).one()
+    assert m.guardrail is None
+    assert m.tool_results is None
+    assert m.correction_flag is False
+
+
 def test_thread_cannot_be_appended_from_another_chart():
     db = _session()
     astrologer_id = uuid4()
