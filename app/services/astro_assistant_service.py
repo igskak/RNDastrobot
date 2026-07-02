@@ -31,6 +31,7 @@ from app.services.astro_commands import (
 )
 from app.services.astro_analysis import analyze as analyze_spec
 from app.services.astro_data_tools import ChartDataset, get_chart_data
+from app.services.model_config import model_for
 from app.services.astro_tool_schemas import (
     build_command_tools,
     build_query_tools,
@@ -77,7 +78,7 @@ from app.utils.ephemeris import get_ephemeris_path
 MAX_TOOL_ITERATIONS = 5
 REQUEST_TIMEOUT_S = 60.0
 MAX_COMPLETION_TOKENS = 300
-_MODEL = os.getenv("OPENAI_ASSISTANT_MODEL", "gpt-5.4-mini")
+_MODEL = model_for("assistant")  # env OPENAI_ASSISTANT_MODEL, default gpt-5.4-mini
 
 _CYRILLIC_RE = re.compile(r"[а-яіїєґ]", re.IGNORECASE)
 _MULTI_WHEEL_INTENT_RE = re.compile(
