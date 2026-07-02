@@ -116,6 +116,79 @@ def test_opposition_branch_crossing():
     assert the_pass['orb'] < 0.05, f"opposition root not exact: orb={the_pass['orb']}"
 
 
+def test_dynamics_series_selected_point_is_zero_on_retrograde_exact_pass():
+    eng = _engine()
+    jd_R, lon_R, jd_D, lon_D = _find_retro_arc()
+    natal = (lon_R + lon_D) / 2.0
+    contacts = eng._scan_aspect_contacts(
+        transit_body='Uranus', natal_longitude=natal,
+        exact_angle=0.0, max_orb=5.0,
+        jd_start=jd_R - 260, jd_end=jd_D + 260, step_jd=0.25,
+    )
+    contact = contacts[0]
+    exact_jd = sorted(contact['passes'], key=lambda p: p['jd'])[1]['jd']
+    target = eng._select_aspect_target(exact_jd, 'Uranus', natal, 0.0)
+
+    selected = eng._format_aspect_dynamics_point(
+        exact_jd, 'UTC', 'Uranus', natal, 0.0, 5.0, target,
+    )
+    series = eng._build_aspect_dynamics_series(
+        contact['jd_enter'], contact['jd_leave'], 'UTC',
+        'Uranus', natal, 0.0, 5.0, target, 160,
+    )
+
+    assert abs(selected['signed_orb']) < 0.02
+    assert selected['abs_orb'] < 0.02
+    assert selected['strength'] > 0.99
+    assert len(series) == 160
+    assert any(p['in_orb'] for p in series)
+    assert min(abs(p['signed_orb']) for p in series if p['signed_orb'] is not None) < 0.15
+
+
+def test_dynamics_series_closest_approach_without_exact_crossing_stays_off_zero():
+    eng = _engine()
+    jd_R, lon_R, jd_D, _ = _find_retro_arc()
+    natal = lon_R + 0.5
+    contacts = eng._scan_aspect_contacts(
+        transit_body='Uranus', natal_longitude=natal,
+        exact_angle=0.0, max_orb=5.0,
+        jd_start=jd_R - 160, jd_end=jd_D + 15, step_jd=0.25,
+    )
+    contact = contacts[0]
+    assert len(contact['passes']) == 0
+    target = eng._select_aspect_target(contact['min_orb_jd'], 'Uranus', natal, 0.0)
+
+    selected = eng._format_aspect_dynamics_point(
+        contact['min_orb_jd'], 'UTC', 'Uranus', natal, 0.0, 5.0, target,
+    )
+    series = eng._build_aspect_dynamics_series(
+        contact['jd_enter'], contact['jd_leave'], 'UTC',
+        'Uranus', natal, 0.0, 5.0, target, 100,
+    )
+
+    assert 0.0 < selected['abs_orb'] < 1.0
+    assert abs(selected['signed_orb']) > 0.1
+    assert min(abs(p['signed_orb']) for p in series if p['signed_orb'] is not None) > 0.1
+
+
+def test_dynamics_opposition_selected_point_uses_180_branch():
+    eng = _engine()
+    _, _, jd_D, _ = _find_retro_arc()
+    jd_dir = jd_D + 120
+    lon_dir, speed_dir = _uranus(jd_dir)
+    assert speed_dir > 0
+    natal_opp = (lon_dir - 180.0) % 360.0
+    target = eng._select_aspect_target(jd_dir, 'Uranus', natal_opp, 180.0)
+
+    selected = eng._format_aspect_dynamics_point(
+        jd_dir, 'UTC', 'Uranus', natal_opp, 180.0, 5.0, target,
+    )
+
+    assert target == 180.0
+    assert abs(selected['signed_orb']) < 0.05
+    assert selected['abs_orb'] < 0.05
+
+
 def test_planet_longitude_fast_path_does_not_calculate_all_planets(monkeypatch):
     eng = _engine()
     expected, _ = _uranus(swe.julday(2026, 6, 11, 0.0))

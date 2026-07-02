@@ -258,6 +258,30 @@
         "orb": "Orb",
         "manualPartner": "Partner (manual)"
       },
+      "aspectDynamics": {
+        "loading": "Calculating aspect dynamics...",
+        "unsupportedLayer": "Aspect dynamics is available for transits in this version.",
+        "legend": {
+          "orb": "signed orb",
+          "selected": "selected date",
+          "exact": "exact aspect"
+        },
+        "closest": "Closest approach",
+        "pass": "Pass {number}",
+        "noExactPass": "No exact crossing",
+        "empty": {
+          "notInOrb": "The selected moment is outside the aspect orb.",
+          "unknownNatal": "Natal object is not available.",
+          "unknownAspect": "Aspect type is not available.",
+          "unsupportedTransit": "Transit body is not supported.",
+          "noData": "No aspect dynamics data."
+        },
+        "errors": {
+          "fetchUnavailable": "Network is unavailable.",
+          "loadFailed": "Could not load aspect dynamics.",
+          "missingContext": "Aspect context is incomplete."
+        }
+      },
       "pageTitle": "Forecast",
       "unknownClient": "",
       "loader": "Loading forecast",

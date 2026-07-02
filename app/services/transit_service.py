@@ -940,6 +940,7 @@ class TransitService:
     # ========================================================================
 
     CALC_VERSION = 'aspect_passes_v1'
+    DYNAMICS_CALC_VERSION = 'aspect_dynamics_v1'
 
     # Forward-scan caps (days) for next_contact auto-expansion, by transit body.
     _NEXT_CONTACT_CAP_DAYS: Dict[str, int] = {
@@ -957,6 +958,8 @@ class TransitService:
         'Mars': 0.5,
     }
     _DEFAULT_SCAN_STEP_DAYS = 1.0
+    _DEFAULT_DYNAMICS_POINTS = 320
+    _MAX_DYNAMICS_POINTS = 720
 
     @staticmethod
     def _wrap_pm180(value: float) -> float:
@@ -986,6 +989,111 @@ class TransitService:
         if sep is None:
             return None
         return self._wrap_pm180(sep - target)
+
+    def _aspect_targets(self, exact_angle: float) -> List[float]:
+        """Aspect sides for a signed residual: one side for 0/180, two otherwise."""
+        if exact_angle in (0.0, 180.0):
+            return [exact_angle]
+        return [exact_angle, -exact_angle]
+
+    def _select_aspect_target(
+        self, jd: float, transit_body: str, natal_longitude: float, exact_angle: float
+    ) -> float:
+        """Choose the aspect side closest to the selected moment."""
+        targets = self._aspect_targets(exact_angle)
+        if len(targets) == 1:
+            return targets[0]
+        scored = []
+        for target in targets:
+            residual = self._aspect_residual_at_jd(jd, transit_body, natal_longitude, target)
+            if residual is None:
+                continue
+            scored.append((abs(residual), target))
+        return min(scored, default=(0.0, targets[0]))[1]
+
+    def _signed_orb_at_jd(
+        self,
+        jd: float,
+        transit_body: str,
+        natal_longitude: float,
+        exact_angle: float,
+        target: Optional[float] = None,
+    ) -> Optional[float]:
+        """Signed aspect orb for graphing, where 0 is the exact aspect line."""
+        resolved_target = target
+        if resolved_target is None:
+            resolved_target = self._select_aspect_target(
+                jd, transit_body, natal_longitude, exact_angle
+            )
+        return self._aspect_residual_at_jd(
+            jd, transit_body, natal_longitude, resolved_target
+        )
+
+    def _format_aspect_dynamics_point(
+        self,
+        jd: float,
+        timezone: str,
+        transit_body: str,
+        natal_longitude: float,
+        exact_angle: float,
+        max_orb: float,
+        target: float,
+    ) -> Dict:
+        signed_orb = self._signed_orb_at_jd(
+            jd, transit_body, natal_longitude, exact_angle, target
+        )
+        abs_orb = self._aspect_deviation_at_jd(
+            jd, transit_body, natal_longitude, exact_angle
+        )
+        strength = 0.0
+        if max_orb > 0 and abs_orb != float('inf'):
+            strength = max(0.0, min(1.0, 1.0 - (abs_orb / max_orb)))
+        return {
+            'datetime': self._jd_to_iso(jd, timezone),
+            'julian_day': round(jd, 8),
+            'signed_orb': round(float(signed_orb), 6) if signed_orb is not None else None,
+            'abs_orb': round(float(abs_orb), 6) if abs_orb != float('inf') else None,
+            'strength': round(strength, 6),
+            'in_orb': abs_orb <= max_orb,
+        }
+
+    def _build_aspect_dynamics_series(
+        self,
+        jd_start: float,
+        jd_end: float,
+        timezone: str,
+        transit_body: str,
+        natal_longitude: float,
+        exact_angle: float,
+        max_orb: float,
+        target: float,
+        max_points: int,
+    ) -> List[Dict]:
+        """Sample signed aspect-orb values across the graph window."""
+        if jd_end < jd_start:
+            jd_start, jd_end = jd_end, jd_start
+        point_count = max(2, min(int(max_points), self._MAX_DYNAMICS_POINTS))
+        if abs(jd_end - jd_start) < 1e-9:
+            return [
+                self._format_aspect_dynamics_point(
+                    jd_start, timezone, transit_body, natal_longitude,
+                    exact_angle, max_orb, target,
+                )
+            ]
+
+        step = (jd_end - jd_start) / float(point_count - 1)
+        return [
+            self._format_aspect_dynamics_point(
+                jd_start + step * idx,
+                timezone,
+                transit_body,
+                natal_longitude,
+                exact_angle,
+                max_orb,
+                target,
+            )
+            for idx in range(point_count)
+        ]
 
     def _transit_speed_at_jd(
         self, jd: float, transit_body: str, h: float = 0.05
@@ -1267,6 +1375,148 @@ class TransitService:
             'window_cap_reached': window_cap_reached,
             'boundary_complete': boundary_complete,
             'contacts': contacts,
+        }
+
+    def calculate_aspect_dynamics(
+        self,
+        user_id: UUID,
+        transit_body: str,
+        natal_body: str,
+        aspect_type: str,
+        selected_date: date,
+        selected_time: time,
+        timezone: str,
+        *,
+        contact_start: Optional[date] = None,
+        contact_end: Optional[date] = None,
+        max_points: int = _DEFAULT_DYNAMICS_POINTS,
+    ) -> Dict:
+        """Return graph-ready signed-orb dynamics for one transit→natal aspect."""
+        context = self._build_context_from_user_id(user_id, apply_exclusions=False)
+        if context is None:
+            raise ValueError(f"Natal chart not found for user_id={user_id}")
+        self._active_zodiac = context.zodiac or 'tropical'
+        self._active_ayanamsha = context.ayanamsha or 'lahiri'
+
+        natal_obj = next(
+            (o for o in context.natal_data['all_objects'] if o['name'] == natal_body),
+            None,
+        )
+        aspect_type_obj = next(
+            (a for a in self._get_aspect_types() if a.aspect_type == aspect_type),
+            None,
+        )
+        base = {
+            'transit_body': transit_body,
+            'natal_body': natal_body,
+            'aspect_type': aspect_type,
+            'timezone': timezone,
+            'calc_version': self.DYNAMICS_CALC_VERSION,
+        }
+        if natal_obj is None:
+            return {**base, 'status': 'unknown_natal_body', 'contacts': [], 'series': []}
+        if aspect_type_obj is None:
+            return {**base, 'status': 'unknown_aspect_type', 'contacts': [], 'series': []}
+
+        _, selected_jd = TimeService.process_birth_time(selected_date, selected_time, timezone)
+        if self._get_transit_body_longitude(selected_jd, transit_body) is None:
+            return {**base, 'status': 'unsupported_transit_body', 'contacts': [], 'series': []}
+
+        natal_longitude = float(natal_obj['longitude'])
+        exact_angle = float(aspect_type_obj.exact_angle)
+        astrologer_id = context.astrologer_id
+        max_orb = self._calculate_allowed_orb(
+            astrologer_id, transit_body, natal_body, aspect_type
+        )
+        target = self._select_aspect_target(
+            selected_jd, transit_body, natal_longitude, exact_angle
+        )
+        selected_point = self._format_aspect_dynamics_point(
+            selected_jd, timezone, transit_body, natal_longitude,
+            exact_angle, max_orb, target,
+        )
+
+        base.update({
+            'exact_angle': exact_angle,
+            'orb_used': round(max_orb, 4),
+            'orb_source': 'astrologer_settings' if astrologer_id else 'default',
+            'target_angle': target,
+            'selected_point': selected_point,
+        })
+
+        step_jd = self._SCAN_STEP_DAYS.get(transit_body, self._DEFAULT_SCAN_STEP_DAYS)
+        requested_window = {
+            'selected': self._jd_to_iso(selected_jd, timezone),
+        }
+        if contact_start is not None and contact_end is not None:
+            _, jd_start = TimeService.process_birth_time(contact_start, time(0, 0), timezone)
+            _, jd_end = TimeService.process_birth_time(contact_end, time(23, 59, 59), timezone)
+            requested_window.update({
+                'start': contact_start.isoformat(),
+                'end': contact_end.isoformat(),
+            })
+        else:
+            cap_days = self._NEXT_CONTACT_CAP_DAYS.get(
+                transit_body, self._DEFAULT_NEXT_CONTACT_CAP_DAYS
+            )
+            jd_start = selected_jd - cap_days
+            jd_end = selected_jd + cap_days
+            requested_window['cap_days_each_side'] = cap_days
+
+        contacts_raw = self._scan_aspect_contacts(
+            transit_body, natal_longitude, exact_angle, max_orb,
+            jd_start, jd_end, step_jd,
+        )
+        contact_for_selected = next(
+            (
+                contact for contact in contacts_raw
+                if contact['jd_enter'] - 1e-7 <= selected_jd <= contact['jd_leave'] + 1e-7
+            ),
+            None,
+        )
+
+        if contact_for_selected is None:
+            graph_half_window = max(15.0, min(180.0, (jd_end - jd_start) / 12.0))
+            graph_start = max(jd_start, selected_jd - graph_half_window)
+            graph_end = min(jd_end, selected_jd + graph_half_window)
+            contacts = []
+            status = 'selected_not_in_orb'
+            boundary_complete = True
+        else:
+            duration = max(contact_for_selected['jd_leave'] - contact_for_selected['jd_enter'], 1.0)
+            padding = min(max(duration * 0.12, 3.0), 45.0)
+            graph_start = max(jd_start, contact_for_selected['jd_enter'] - padding)
+            graph_end = min(jd_end, contact_for_selected['jd_leave'] + padding)
+            contacts = [self._format_aspect_contact(contact_for_selected, timezone)]
+            status = 'ok'
+            boundary_complete = (
+                contact_for_selected['enter_complete']
+                and contact_for_selected['leave_complete']
+            )
+
+        series = self._build_aspect_dynamics_series(
+            graph_start,
+            graph_end,
+            timezone,
+            transit_body,
+            natal_longitude,
+            exact_angle,
+            max_orb,
+            target,
+            max_points,
+        )
+
+        return {
+            **base,
+            'status': status,
+            'requested_window': requested_window,
+            'effective_window': {
+                'start': self._jd_to_iso(graph_start, timezone),
+                'end': self._jd_to_iso(graph_end, timezone),
+            },
+            'boundary_complete': boundary_complete,
+            'contacts': contacts,
+            'series': series,
         }
 
     def _format_aspect_contact(self, contact: Dict, timezone: str) -> Dict:

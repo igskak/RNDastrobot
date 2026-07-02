@@ -175,6 +175,94 @@ class TransitPeriodResponse(BaseModel):
     total_events: int
 
 
+class AspectDynamicsRequest(BaseModel):
+    """Входные данные для графика динамики одного транзитного аспекта."""
+    user_id: UUID = Field(..., description="ID пользователя с сохранённой натальной картой")
+    transit_body: str = Field(..., min_length=1, description="Транзитное тело")
+    natal_body: str = Field(..., min_length=1, description="Натальная цель")
+    aspect_type: str = Field(..., min_length=1, description="Тип аспекта")
+    selected_date: date_type = Field(..., description="Выбранная дата (YYYY-MM-DD)")
+    selected_time: time_type = Field(..., description="Выбранное время (HH:MM:SS)")
+    timezone: str = Field(..., description="Часовой пояс")
+    contact_start: Optional[date_type] = Field(None, description="Опциональное начало окна")
+    contact_end: Optional[date_type] = Field(None, description="Опциональный конец окна")
+    max_points: int = Field(320, ge=2, le=720, description="Максимум точек графика")
+
+    @field_validator('timezone')
+    @classmethod
+    def validate_timezone(cls, v: str) -> str:
+        import pytz
+        try:
+            pytz.timezone(v)
+        except pytz.exceptions.UnknownTimeZoneError:
+            raise ValueError(f'Неизвестная временная зона: {v}')
+        return v
+
+    @model_validator(mode='after')
+    def validate_contact_window(self):
+        if bool(self.contact_start) != bool(self.contact_end):
+            raise ValueError("contact_start и contact_end должны быть указаны вместе")
+        if self.contact_start and self.contact_end and self.contact_end < self.contact_start:
+            raise ValueError("contact_end должен быть >= contact_start")
+        return self
+
+
+class AspectDynamicsPoint(BaseModel):
+    """Точка signed-orb графика."""
+    datetime: str
+    julian_day: float
+    signed_orb: Optional[float] = None
+    abs_orb: Optional[float] = None
+    strength: float
+    in_orb: bool
+
+
+class AspectDynamicsPass(BaseModel):
+    date: str
+    motion: str
+    orb: float
+
+
+class AspectDynamicsStation(BaseModel):
+    date: str
+    type: str
+
+
+class AspectDynamicsClosestApproach(BaseModel):
+    date: str
+    orb: float
+
+
+class AspectDynamicsContact(BaseModel):
+    enter: str
+    enter_complete: bool
+    leave: str
+    leave_complete: bool
+    exact_pass_count: int
+    passes: List[AspectDynamicsPass] = Field(default_factory=list)
+    stations: List[AspectDynamicsStation] = Field(default_factory=list)
+    closest_approach: AspectDynamicsClosestApproach
+
+
+class AspectDynamicsResponse(BaseModel):
+    transit_body: str
+    natal_body: str
+    aspect_type: str
+    timezone: str
+    calc_version: str
+    status: str
+    exact_angle: Optional[float] = None
+    orb_used: Optional[float] = None
+    orb_source: Optional[str] = None
+    target_angle: Optional[float] = None
+    selected_point: Optional[AspectDynamicsPoint] = None
+    requested_window: Optional[dict] = None
+    effective_window: Optional[dict] = None
+    boundary_complete: Optional[bool] = None
+    contacts: List[AspectDynamicsContact] = Field(default_factory=list)
+    series: List[AspectDynamicsPoint] = Field(default_factory=list)
+
+
 # === API Endpoints ===
 
 @router.post(
@@ -326,4 +414,54 @@ def find_transit_events(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Ошибка поиска транзитных событий: {str(e)}"
+        )
+
+
+@router.post(
+    "/transits/aspect-dynamics",
+    response_model=AspectDynamicsResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Динамика транзитного аспекта",
+    description="Возвращает signed-orb график одного транзитного аспекта к наталу",
+)
+def calculate_aspect_dynamics(
+    request: AspectDynamicsRequest,
+    http_request: Request,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+):
+    """Рассчитать график усиления/ослабления одного транзитного аспекта."""
+    try:
+        ensure_client_access(
+            db,
+            http_request,
+            auth,
+            request.user_id,
+            action="client.transits.aspect_dynamics",
+        )
+        transit_service = TransitService(db_session=db, ephe_path=EPHE_PATH)
+        return transit_service.calculate_aspect_dynamics(
+            user_id=request.user_id,
+            transit_body=request.transit_body,
+            natal_body=request.natal_body,
+            aspect_type=request.aspect_type,
+            selected_date=request.selected_date,
+            selected_time=request.selected_time,
+            timezone=request.timezone,
+            contact_start=request.contact_start,
+            contact_end=request.contact_end,
+            max_points=request.max_points,
+        )
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+    except Exception as e:
+        logger.exception(f"Error calculating transit aspect dynamics: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка расчёта динамики аспекта: {str(e)}",
         )

@@ -867,7 +867,7 @@ class ChartDataRenderer {
             const aspectKey = this.getAspectKey(a);
             const phaseLabel = this.showApplyingSeparating ? this.getApplyingSeparatingShortLabel(a) : '';
             return `
-                <tr data-aspect="${aspectKey || ''}" data-aspect-key="${aspectKey || ''}">
+                <tr data-aspect="${aspectKey || ''}" data-aspect-key="${aspectKey || ''}" data-aspect-type="${this.escapeHtml(a.aspect_type || '')}">
                     <td>${this.renderAspectPairCell(a)}</td>
                     <td class="aspect-phase-cell">${phaseLabel ? this.escapeHtml(phaseLabel) : '—'}</td>
                     <td class="mono">${a.orb.toFixed(2)}°</td>
@@ -927,7 +927,7 @@ class ChartDataRenderer {
                         const cls = aspect.harmonic_type === 'harmonious' ? 'grid-harmonious'
                                   : aspect.harmonic_type === 'tense' ? 'grid-tense'
                                   : 'grid-neutral';
-                        html += `<td class="${cls}" data-aspect-key="${aspectKey}" title="${this.aspectName(aspect.aspect_type)} ${aspect.orb.toFixed(1)}°"><span class="astro-symbol" style="color:${window.AstroPreferences?.getAspectColor ? window.AstroPreferences.getAspectColor(aspect.aspect_type, this.visualPreferences, aspect.harmonic_type) : '#9ca3af'}">${glyph}</span></td>`;
+                        html += `<td class="${cls}" data-aspect-key="${aspectKey}" data-aspect-type="${this.escapeHtml(aspect.aspect_type || '')}" title="${this.aspectName(aspect.aspect_type)} ${aspect.orb.toFixed(1)}°"><span class="astro-symbol" style="color:${window.AstroPreferences?.getAspectColor ? window.AstroPreferences.getAspectColor(aspect.aspect_type, this.visualPreferences, aspect.harmonic_type) : '#9ca3af'}">${glyph}</span></td>`;
                     } else {
                         html += '<td>–</td>';
                     }

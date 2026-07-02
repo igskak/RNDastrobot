@@ -1,0 +1,279 @@
+.aspect-dynamics-open {
+    overflow: hidden;
+}
+
+.aspect-dynamics-modal.hidden {
+    display: none;
+}
+
+.aspect-dynamics-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 3200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 22px;
+}
+
+.aspect-dynamics-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(20, 22, 28, 0.58);
+    backdrop-filter: blur(8px);
+}
+
+.aspect-dynamics-dialog {
+    position: relative;
+    z-index: 1;
+    width: min(960px, calc(100vw - 32px));
+    max-height: min(760px, calc(100vh - 32px));
+    display: grid;
+    grid-template-rows: auto auto minmax(280px, 1fr) auto auto;
+    overflow: hidden;
+    border: 1px solid rgba(30, 58, 95, 0.14);
+    border-radius: 14px;
+    background: #fffdf9;
+    box-shadow: 0 26px 70px rgba(20, 22, 28, 0.26);
+}
+
+.aspect-dynamics-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 36px;
+    gap: 14px;
+    align-items: start;
+    padding: 18px 18px 14px;
+    border-bottom: 1px solid rgba(30, 58, 95, 0.1);
+    background: linear-gradient(180deg, rgba(248, 246, 241, 0.96), rgba(255, 255, 255, 0.86));
+}
+
+.aspect-dynamics-heading {
+    min-width: 0;
+}
+
+.aspect-dynamics-heading h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 22px;
+    line-height: 1.12;
+    font-weight: 800;
+}
+
+.aspect-dynamics-subtitle {
+    margin: 6px 0 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+.aspect-dynamics-close {
+    width: 34px;
+    height: 34px;
+    border: 1px solid rgba(30, 58, 95, 0.12);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.88);
+    color: var(--text-secondary);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.aspect-dynamics-close:hover,
+.aspect-dynamics-close:focus-visible {
+    border-color: rgba(30, 58, 95, 0.26);
+    background: var(--accent-light);
+    color: var(--accent);
+}
+
+.aspect-dynamics-status {
+    margin: 14px 18px 0;
+    padding: 10px 12px;
+    border: 1px solid rgba(30, 58, 95, 0.12);
+    border-radius: 8px;
+    background: rgba(30, 58, 95, 0.06);
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.aspect-dynamics-status[hidden] {
+    display: none;
+}
+
+.aspect-dynamics-status--error {
+    border-color: rgba(184, 50, 50, 0.24);
+    background: rgba(184, 50, 50, 0.08);
+    color: var(--error);
+}
+
+.aspect-dynamics-status--empty {
+    background: rgba(176, 125, 16, 0.08);
+    border-color: rgba(176, 125, 16, 0.22);
+    color: var(--warning);
+}
+
+.aspect-dynamics-chart-wrap {
+    min-height: 280px;
+    padding: 14px 18px 6px;
+}
+
+.aspect-dynamics-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 280px;
+    border: 1px solid rgba(30, 58, 95, 0.1);
+    border-radius: 10px;
+    background: #fff;
+}
+
+.aspect-dynamics-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    align-items: center;
+    padding: 4px 18px 12px;
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.aspect-dynamics-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.aspect-dynamics-legend-line {
+    display: inline-block;
+    width: 24px;
+    height: 0;
+    border-top: 2px solid #1f63b5;
+}
+
+.aspect-dynamics-legend-line--selected {
+    border-color: #d03131;
+}
+
+.aspect-dynamics-legend-line--exact {
+    border-color: #8a8178;
+}
+
+.aspect-dynamics-summary {
+    max-height: 190px;
+    overflow: auto;
+    padding: 0 18px 18px;
+}
+
+.aspect-dynamics-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.aspect-dynamics-summary-grid div {
+    min-width: 0;
+    padding: 9px 10px;
+    border: 1px solid rgba(30, 58, 95, 0.1);
+    border-radius: 8px;
+    background: rgba(249, 247, 242, 0.7);
+}
+
+.aspect-dynamics-summary-grid span {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.aspect-dynamics-summary-grid b {
+    color: var(--text-primary);
+    font-size: 12px;
+    line-height: 1.35;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.aspect-dynamics-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 10px;
+}
+
+.aspect-dynamics-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    padding: 6px 8px;
+    border: 1px solid rgba(30, 58, 95, 0.1);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+.aspect-dynamics-chip b {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.aspect-dynamics-chip em {
+    color: var(--accent);
+    font-style: normal;
+    font-weight: 800;
+}
+
+.aspect-dynamics-summary-empty {
+    padding: 16px 0 4px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+@media (max-width: 760px) {
+    .aspect-dynamics-modal {
+        align-items: flex-end;
+        padding: 10px;
+    }
+
+    .aspect-dynamics-dialog {
+        width: 100%;
+        max-height: calc(100vh - 20px);
+        grid-template-rows: auto auto minmax(260px, 1fr) auto auto;
+        border-radius: 12px;
+    }
+
+    .aspect-dynamics-header {
+        padding: 15px 15px 12px;
+    }
+
+    .aspect-dynamics-heading h2 {
+        font-size: 19px;
+    }
+
+    .aspect-dynamics-chart-wrap {
+        min-height: 260px;
+        padding: 12px 12px 4px;
+    }
+
+    .aspect-dynamics-canvas {
+        min-height: 260px;
+    }
+
+    .aspect-dynamics-summary {
+        padding: 0 12px 14px;
+    }
+
+    .aspect-dynamics-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 440px) {
+    .aspect-dynamics-summary-grid {
+        grid-template-columns: 1fr;
+    }
+}
