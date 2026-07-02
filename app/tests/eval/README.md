@@ -9,9 +9,9 @@ and re-run to compare).
 | Suite | File | Needs a key? | Status |
 |-------|------|--------------|--------|
 | Analysis-correctness | `test_analysis_correctness.py` | no (deterministic) | ✅ built |
-| Interpretation-refusal | `test_interpretation_refusal.py` | yes (live judge) | ✅ built (key-gated) |
-| Faithfulness | — | yes (live turn) | ⏳ pending T4 structured citation |
-| Provenance | — | partial | ⏳ pending T4 |
+| Provenance | `test_provenance.py` | no (deterministic) | ✅ built |
+| Faithfulness | `test_faithfulness.py` | no (deterministic) | ✅ built |
+| Interpretation-refusal | `test_interpretation_refusal.py` | yes (live judge, opt-in) | ✅ built |
 
 ## Run
 
