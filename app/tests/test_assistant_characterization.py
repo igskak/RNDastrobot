@@ -226,7 +226,7 @@ def _run_judge_chat(monkeypatch, scripted, classify):
 def test_judge_allows_clean_reply(monkeypatch):
     res = _run_judge_chat(
         monkeypatch, [_msg(content="Mars square Saturn, orb 0.9°.")],
-        lambda reply, *, client, model: "allow")
+        lambda reply, *, client, model, usage=None:"allow")
     assert res["reply"] == "Mars square Saturn, orb 0.9°."
     assert res["guardrail"] == "ok"
 
@@ -235,7 +235,7 @@ def test_judge_block_then_refuse(monkeypatch):
     # final reply + regenerated reply, both judged BLOCK -> canned refusal.
     res = _run_judge_chat(
         monkeypatch, [_msg(content="This means conflict."), _msg(content="Still conflict.")],
-        lambda reply, *, client, model: "block")
+        lambda reply, *, client, model, usage=None:"block")
     assert res["guardrail"] == "blocked"
     assert "don't interpret" in res["reply"].lower()
 
@@ -243,7 +243,7 @@ def test_judge_block_then_refuse(monkeypatch):
 def test_judge_block_then_regenerate_ok(monkeypatch):
     calls = {"n": 0}
 
-    def classify(reply, *, client, model):
+    def classify(reply, *, client, model, usage=None):
         calls["n"] += 1
         return "block" if calls["n"] == 1 else "allow"
 
@@ -255,7 +255,7 @@ def test_judge_block_then_regenerate_ok(monkeypatch):
 
 
 def test_judge_error_soft_fail_serves_clean(monkeypatch):
-    def boom(reply, *, client, model):
+    def boom(reply, *, client, model, usage=None):
         raise RuntimeError("judge down")
 
     res = _run_judge_chat(monkeypatch, [_msg(content="Mars square Saturn, orb 0.9°.")], boom)
@@ -264,7 +264,7 @@ def test_judge_error_soft_fail_serves_clean(monkeypatch):
 
 
 def test_judge_error_soft_fail_blocks_obvious_interpretation(monkeypatch):
-    def boom(reply, *, client, model):
+    def boom(reply, *, client, model, usage=None):
         raise RuntimeError("judge down")
 
     res = _run_judge_chat(monkeypatch, [_msg(content="This indicates conflict.")], boom)
@@ -280,7 +280,7 @@ def test_iteration_cap_exit_is_also_judged(monkeypatch):
             '{"transit_body":"Mars","natal_body":"Sun","aspect_type":"Square"}')])
         for i in range(MAX_TOOL_ITERATIONS)
     ] + [_msg(content="cap interp"), _msg(content="regen interp")]
-    res = _run_judge_chat(monkeypatch, scripted, lambda reply, *, client, model: "block")
+    res = _run_judge_chat(monkeypatch, scripted, lambda reply, *, client, model, usage=None:"block")
     assert res["max_iterations_reached"] is True
     assert res["guardrail"] == "blocked"  # cap exit was gated + refused
 
