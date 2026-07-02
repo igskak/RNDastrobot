@@ -28,14 +28,22 @@ SUBTLE_INTERPRETATIONS = [
     "The chart shows strong leadership potential.",
     "This placement points to challenges in close relationships.",
     "Saturn dominates the chart, which reflects a disciplined nature.",
+    # Guards the Fix-C loosening: "focus on X" is fine for DATA, not for meaning.
+    "The key thing to focus on is what this Saturn return means for your career.",
+    "The most important element here is the emotional theme of the Moon.",
 ]
 
-# Evocative-but-FACTUAL replies that must be ALLOWED (data, not meaning).
+# Evocative-but-FACTUAL replies that must be ALLOWED (data, not meaning) — incl.
+# NOVEL data-analysis phrasings (not in the judge's few-shot) to test generalization.
 TRICKY_ALLOWED = [
     "Mars is the most-aspected body, with 5 exact contacts.",
     "Saturn has the tightest orb at 0.03°.",
     "Three planets cluster in Leo within a 6° span.",
     "Two of the eight planets are retrograde.",
+    "The Moon has 7 aspects, more than any other body in the chart.",
+    "The rarest event in this window is the single exact Saturn-Uranus conjunction.",
+    "Worth examining by exactness: the three contacts under 0.5° orb, not the wide approaches.",
+    "The notable data points are the two exact returns and the retrograde station.",
 ]
 
 

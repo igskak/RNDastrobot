@@ -352,34 +352,53 @@ class ChatWidget {
         btn.setAttribute('aria-label', t('page.chart.chat.correctionFlag'));
         btn.textContent = '⚑';
 
+        const form = document.createElement('div');
+        form.className = 'chat-correction-form';
+        form.hidden = true;
+
         const note = document.createElement('input');
         note.type = 'text';
         note.className = 'chat-correction-note';
         note.maxLength = 2000;
         note.placeholder = t('page.chart.chat.correctionNote');
-        note.hidden = true;
 
-        let flagged = false;
-        btn.addEventListener('click', () => {
-            flagged = !flagged;
-            btn.setAttribute('aria-pressed', String(flagged));
-            note.hidden = !flagged;
-            if (flagged) {
-                this.postCorrection(metricId, '');
-                note.focus();
-            }
-        });
+        const submit = document.createElement('button');
+        submit.type = 'button';
+        submit.className = 'chat-correction-submit';
+        submit.textContent = t('page.chart.chat.correctionSubmit');
 
-        const submitNote = () => {
-            const text = note.value.trim();
-            if (flagged && text) this.postCorrection(metricId, text);
+        form.append(note, submit);
+
+        // Replace the whole control with a visible confirmation so the astrologer
+        // sees the feedback was received (previously nothing happened -> felt broken).
+        const showThanks = () => {
+            wrap.textContent = '';
+            const thanks = document.createElement('div');
+            thanks.className = 'chat-correction-thanks';
+            thanks.setAttribute('role', 'status');
+            thanks.textContent = '✓ ' + t('page.chart.chat.correctionThanks');
+            wrap.appendChild(thanks);
         };
-        note.addEventListener('blur', submitNote);
+
+        const doSubmit = async () => {
+            submit.disabled = true;
+            note.disabled = true;
+            await this.postCorrection(metricId, note.value.trim());
+            showThanks();
+        };
+
+        btn.addEventListener('click', () => {
+            const open = btn.getAttribute('aria-pressed') === 'true';
+            btn.setAttribute('aria-pressed', String(!open));
+            form.hidden = open;
+            if (!open) note.focus();
+        });
+        submit.addEventListener('click', doSubmit);
         note.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') { e.preventDefault(); submitNote(); note.blur(); }
+            if (e.key === 'Enter') { e.preventDefault(); doSubmit(); }
         });
 
-        wrap.append(btn, note);
+        wrap.append(btn, form);
         return wrap;
     }
 

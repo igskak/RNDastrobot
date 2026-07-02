@@ -35,6 +35,7 @@ from app.services.astro_citation import (
     CITATION_RULE,
     build_citation_index,
     render_citations,
+    strip_citation_tokens,
 )
 from app.services.astro_data_tools import ChartDataset, get_chart_data
 from app.services.astro_judge import (
@@ -554,9 +555,10 @@ slower bodies. This is intentionally broad enough to show rare slow-planet conta
 contact never perfects, say it was a close approach without an exact aspect.
 - Structure aspect results for quick scanning, following the timeline hover format:
   - Start with one short heading naming the transit, aspect, natal object, and window.
-  - Render every contact as its own numbered block; never merge separate contacts.
-  - For every contact always show `Вход`, every `Точно` pass in chronological order, \
-and `Выход`. Mark each exact pass compactly as `D` (direct) or `R` (retrograde).
+  - Render every contact as its own numbered block, separated by a blank line; never merge separate contacts.
+  - For every contact put `Вход`, each `Точно` pass (chronological), and `Выход` each \
+on its OWN line so entry/exact/exit never run together. Mark each exact pass compactly \
+as `D` (direct) or `R` (retrograde).
   - If a contact has no exact pass, show `Точно: нет` and its closest approach.
   - Mark incomplete entry/exit boundaries when `enter_complete`/`leave_complete` is false.
   - Include `Станция R/D` only when a station occurs inside the contact and therefore \
@@ -565,13 +567,15 @@ explains repeated passes or a change of motion.
 to the exact pass; mention motion outside aspect results only when relevant to the question.
 - Ask one short clarifying question only when multiple materially different intents \
 remain after applying the rules above.
-- Keep the final answer extremely compact and information-dense:
+- Keep the final answer compact but READABLE — structure beats brevity:
   - Start directly with the result; no greeting, preamble, or conclusion.
   - Do not restate the question or explain that you used tools.
   - Avoid generic AI phrases, filler, advice, and ANY astrological interpretation.
-  - Prefer short headings and bullets. Include only the window, entry/exact/exit dates, \
-motion, stations, and a brief caveat when materially relevant.
-  - Use at most 80 words unless more space is required to list every contact and pass.
+  - Use short headings, bullet points, and line breaks so nothing runs together; put \
+each data point on its own line. Include the window, entry/exact/exit dates, motion, \
+stations, and a brief caveat when materially relevant.
+  - Do not sacrifice clarity to save words; use the space needed to list every contact \
+and pass legibly.
 - Reply in the astrologer's language.
 
 """ + NON_INTERPRETATION_RULES + "\n\n" + CITATION_RULE
@@ -1069,9 +1073,17 @@ class AstroAssistantService:
         index = build_citation_index(tool_results)
 
         def render(text):
-            """(rendered, ok): ok is False if the model cited a value we never produced."""
+            """(rendered, ok). ok=False ONLY for a true fabrication: the model cited an
+            analyze() row that does not exist (index non-empty + unresolved). When no
+            analyze rows exist this turn (e.g. transit/aspect answers, which are not
+            citable), a stray {{...}} token is a formatting slip -> strip and serve, never
+            false-block a valid answer."""
             rendered, unresolved = render_citations(text or "", index)
-            return rendered, not unresolved
+            if unresolved and index:
+                return rendered, False
+            if unresolved:
+                rendered = strip_citation_tokens(rendered)
+            return rendered, True
 
         reply, ok = render(raw_reply)
         if not ok:  # fabricated/unresolved citation

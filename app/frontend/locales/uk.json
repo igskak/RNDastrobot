@@ -961,7 +961,9 @@
         "contextLabel": "Контекст",
         "correctionFlag": "Позначити відповідь для виправлення",
         "correctionNote": "Що було не так? (необов’язково)",
-        "provenanceSummaryOne": "джерело — дані · 1 інструмент ✓"
+        "provenanceSummaryOne": "джерело — дані · 1 інструмент ✓",
+        "correctionSubmit": "Надіслати",
+        "correctionThanks": "Дякуємо за відгук — ми його врахуємо."
       },
       "edit": {
         "errors": {

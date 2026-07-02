@@ -723,6 +723,13 @@
     background: var(--gold-pale, #f5eddf);
 }
 
+.chat-correction-form {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
 .chat-correction-note {
     flex: 1;
     min-width: 140px;
@@ -732,6 +739,31 @@
     border-radius: 8px;
     background: var(--bg-secondary, #ffffff);
     color: var(--text-primary, #1a1614);
+    font-family: var(--font-ui, sans-serif);
+    font-size: 12px;
+}
+
+.chat-correction-submit {
+    min-height: 32px;
+    padding: 4px 12px;
+    border: 1px solid var(--accent, #1e3a5f);
+    border-radius: 8px;
+    background: var(--accent, #1e3a5f);
+    color: #ffffff;
+    font-family: var(--font-ui, sans-serif);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.chat-correction-submit:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+/* Visible confirmation so the astrologer knows the feedback was received. */
+.chat-correction-thanks {
+    margin-top: 6px;
+    color: var(--success, #2b7a4b);
     font-family: var(--font-ui, sans-serif);
     font-size: 12px;
 }

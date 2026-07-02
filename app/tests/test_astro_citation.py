@@ -4,7 +4,18 @@ Tests for structured citation (quote-by-reference).
 Every cited number must resolve to a server value; an unresolved reference must
 be reported so the caller refuses rather than serving a fabricated number.
 """
-from app.services.astro_citation import build_citation_index, render_citations
+from app.services.astro_citation import (
+    build_citation_index,
+    render_citations,
+    strip_citation_tokens,
+)
+
+
+def test_strip_citation_tokens_removes_stray_tokens():
+    # safety net for turns with no analyze() rows (a stray token is a formatting slip)
+    assert strip_citation_tokens("Uranus conj Moon on {{r0.date}}.") == "Uranus conj Moon on ."
+    assert strip_citation_tokens("no tokens here") == "no tokens here"
+    assert strip_citation_tokens("") == ""
 
 
 def _tool_results():
