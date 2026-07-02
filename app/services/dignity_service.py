@@ -10,6 +10,7 @@ from app.services.preferences_runtime import (
     OPPOSITE_SIGN_BY_SIGN,
     PreferencesRuntimeResolver,
 )
+from app.services.reference_data_cache import get_sign_properties
 
 
 class DignityService:
@@ -43,7 +44,7 @@ class DignityService:
     def _load_sign_properties(self) -> None:
         """Загрузить свойства знаков из БД в кэш или использовать fallback"""
         if self.db_session:
-            signs = self.db_session.query(RefSignProperties).all()
+            signs = get_sign_properties(self.db_session)
             self._sign_properties_cache = {
                 sign.sign: {
                     'element': sign.element,

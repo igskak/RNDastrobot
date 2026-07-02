@@ -23,6 +23,7 @@ from app.services.planet_characteristics_service import PlanetCharacteristicsSer
 from app.services.preferences_runtime import (
     PreferencesRuntimeResolver, DEFAULT_STATIONARY_THRESHOLD_PERCENT,
 )
+from app.services.reference_data_cache import get_aspect_types
 from app.services.natal_context import NatalContext
 from app.services.special_points_service import SpecialPointsService
 from app.utils.constants import (
@@ -562,7 +563,7 @@ class SolarReturnService:
         ]
 
     def _get_aspect_types(self) -> List[RefAspectType]:
-        return self.db.query(RefAspectType).all()
+        return get_aspect_types(self.db)
 
     def _calculate_prognostic_allowed_orb(self, astrologer_id: Optional[UUID], body_a: str, body_b: str, aspect_type: str) -> float:
         if astrologer_id:

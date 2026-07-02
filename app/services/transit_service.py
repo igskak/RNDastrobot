@@ -27,6 +27,7 @@ from app.services.planet_characteristics_service import PlanetCharacteristicsSer
 from app.services.preferences_runtime import (
     PreferencesRuntimeResolver, DEFAULT_STATIONARY_THRESHOLD_PERCENT,
 )
+from app.services.reference_data_cache import get_aspect_types, get_planet_orbs
 from app.services.natal_context import NatalContext
 from app.utils.constants import (
     get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds,
@@ -276,13 +277,13 @@ class TransitService:
     def _get_aspect_types(self) -> List[RefAspectType]:
         """Получить типы аспектов с кешированием"""
         if self._aspect_types_cache is None:
-            self._aspect_types_cache = self.db.query(RefAspectType).all()
+            self._aspect_types_cache = get_aspect_types(self.db)
         return self._aspect_types_cache
 
     def _get_planet_orbs(self) -> Dict[Tuple[str, str], float]:
         """Получить орбисы планет с кешированием"""
         if self._planet_orbs_cache is None:
-            orbs = self.db.query(RefPlanetOrb).all()
+            orbs = get_planet_orbs(self.db)
             self._planet_orbs_cache = {
                 (orb.planet, orb.aspect_type): float(orb.orb)
                 for orb in orbs
@@ -292,7 +293,7 @@ class TransitService:
     def _get_base_orbs(self) -> Dict[str, float]:
         """Получить base_orb для всех типов аспектов (с кэшированием)."""
         if not hasattr(self, '_base_orbs_cache'):
-            aspects = self.db.query(RefAspectType).all()
+            aspects = get_aspect_types(self.db)
             self._base_orbs_cache = {a.aspect_type: float(a.base_orb) for a in aspects}
         return self._base_orbs_cache
 

@@ -31,7 +31,7 @@ if os.getenv('APP_ENV') == 'production':
     logger.remove()  # Удаляем default handler
     logger.add(sys.stderr, level="WARNING")  # Только WARNING и выше
 
-from app.api.routes import auth, natal, transits, solar, progressions, directions, ingresses, places, consultations, alerts, preferences, call_sessions, synastry, charts, persons, assistant, billing, lunar, electional, composite, profections, antiscia, asteroids, dominants, fixed_stars, declination, client_memory
+from app.api.routes import auth, natal, transits, solar, progressions, directions, ingresses, places, consultations, alerts, preferences, call_sessions, synastry, charts, persons, assistant, billing, lunar, electional, composite, forecast, profections, antiscia, asteroids, dominants, fixed_stars, declination, client_memory
 from app.api.error_handlers import register_error_handlers
 from app.api.locale_dependency import locale_context_dependency
 from app.services.processing_pipeline import recover_stuck_sessions
@@ -176,6 +176,7 @@ app.include_router(billing.router, prefix="/api/v1", tags=["Billing"])
 app.include_router(lunar.router, prefix="/api/v1", tags=["Lunar"])
 app.include_router(electional.router, prefix="/api/v1", tags=["Electional"])
 app.include_router(composite.router, prefix="/api/v1", tags=["Composite"])
+app.include_router(forecast.router, prefix="/api/v1", tags=["Forecast"])
 app.include_router(profections.router, prefix="/api/v1", tags=["Profections"])
 app.include_router(antiscia.router, prefix="/api/v1", tags=["Antiscia"])
 app.include_router(asteroids.router, prefix="/api/v1", tags=["Asteroids"])

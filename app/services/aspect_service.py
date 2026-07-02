@@ -10,6 +10,7 @@ from app.database.models import (
     NatalPlanet, NatalSpecialPoint, Angle, NatalAspect, RefAspectType, RefPlanetOrb
 )
 from app.services.preferences_runtime import PreferencesRuntimeResolver
+from app.services.reference_data_cache import get_aspect_types, get_planet_orbs
 
 
 class AspectService:
@@ -161,7 +162,7 @@ class AspectService:
     def _get_aspect_types(self) -> List[RefAspectType]:
         """Отримати типи аспектів з кешуванням"""
         if self._aspect_types_cache is None:
-            self._aspect_types_cache = self.db.query(RefAspectType).all()
+            self._aspect_types_cache = get_aspect_types(self.db)
         return self._aspect_types_cache
 
     def _get_aspect_angles(self) -> Dict[str, float]:
@@ -181,7 +182,7 @@ class AspectService:
             Dict: Словарь {(planet, aspect_type): orb}
         """
         if self._planet_orbs_cache is None:
-            orbs = self.db.query(RefPlanetOrb).all()
+            orbs = get_planet_orbs(self.db)
             self._planet_orbs_cache = {
                 (orb.planet, orb.aspect_type): float(orb.orb)
                 for orb in orbs

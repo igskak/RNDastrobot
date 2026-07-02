@@ -11,6 +11,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 
 from app.database.models import AstrologerPreference, RefAspectType, RefPlanetOrb, RefSignProperties, User
+from app.services.reference_data_cache import get_aspect_types, get_planet_orbs, get_sign_properties
 from app.utils.constants import PROGNOSTIC_DEFAULT_ORB, PROGNOSTIC_MOON_ORB
 
 
@@ -431,12 +432,12 @@ class PreferencesRuntimeResolver:
 
     def _get_aspect_types(self) -> List[RefAspectType]:
         if self._aspect_types_cache is None:
-            self._aspect_types_cache = self.db.query(RefAspectType).order_by(RefAspectType.exact_angle.asc()).all()
+            self._aspect_types_cache = get_aspect_types(self.db)
         return self._aspect_types_cache
 
     def _get_planet_orbs(self) -> List[RefPlanetOrb]:
         if self._planet_orbs_cache is None:
-            self._planet_orbs_cache = self.db.query(RefPlanetOrb).all()
+            self._planet_orbs_cache = get_planet_orbs(self.db)
         return self._planet_orbs_cache
 
     def _get_default_methodology_cached(self) -> Dict[str, Any]:
@@ -445,9 +446,7 @@ class PreferencesRuntimeResolver:
                 'orbs': build_default_orb_settings(self._get_aspect_types(), self._get_planet_orbs()),
                 'balances': build_default_balance_settings(),
                 'stationary': build_default_stationary_settings(),
-                'dignities': build_default_dignity_settings(
-                    self.db.query(RefSignProperties).order_by(RefSignProperties.sign.asc()).all()
-                ),
+                'dignities': build_default_dignity_settings(get_sign_properties(self.db)),
             }
         return self._default_methodology_cache
 

@@ -10,14 +10,12 @@ from sqlalchemy.orm import Session
 
 from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
 from app.database.connection import get_db
-from app.services.dominants_service import DominantsService
-from app.services.natal_chart_service import NatalChartService
+from app.services.forecast_aux_service import ForecastAuxService
 from app.utils.ephemeris import get_ephemeris_path
 
 router = APIRouter()
 
 EPHE_PATH = get_ephemeris_path()
-_natal_service = NatalChartService(ephe_path=EPHE_PATH)
 
 
 @router.get(
@@ -33,13 +31,16 @@ def get_dominants(
     auth: AuthContext = Depends(require_auth),
 ) -> Dict[str, Any]:
     try:
-        ensure_client_access(db, request, auth, user_id, action="client.dominants")
-        chart = _natal_service.get_natal_chart_from_db(user_id, db)
-        if chart is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Natal chart not found")
-        return DominantsService.compute(chart, top_n=top_n)
+        user = ensure_client_access(db, request, auth, user_id, action="client.dominants")
+        return ForecastAuxService(db, ephe_path=EPHE_PATH).get_saved_block(
+            user,
+            "dominants",
+            options={"dominants_top_n": top_n},
+        )
     except HTTPException:
         raise
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
     except Exception as exc:
         logger.exception("Error computing dominants: {}", exc)
         raise HTTPException(

@@ -107,10 +107,10 @@ class UserRepository:
             query = query.filter(User.astrologer_id == astrologer_id)
 
         return query.options(
-            joinedload(User.planets),
-            joinedload(User.houses),
+            selectinload(User.planets),
+            selectinload(User.houses),
             joinedload(User.angles),
-            joinedload(User.special_points),
+            selectinload(User.special_points),
             selectinload(User.configurations).selectinload(NatalConfiguration.aspect_links),
             joinedload(User.fate_cross),
             # Аспекты, стеллиумы, распределение, паттерн

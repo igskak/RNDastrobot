@@ -12,7 +12,10 @@
         : '/api/v1';
     const NAVIGATION_STATE_KEY = 'astroNavigationState';
     const ACCOUNT_SETTINGS_RETURN_URL_KEY = 'accountSettingsReturnUrl';
+    const READ_CACHE_TTL_MS = 5 * 60 * 1000;
     let currentAstrologerCache = null;
+    const readCache = new Map();
+    const readInFlight = new Map();
 
     function getCurrentLocale() {
         return root?.FrontendI18n?.getLocale?.() || 'en';
@@ -52,6 +55,37 @@
             credentials: 'include',
             ...init,
             headers: init.headers || {},
+        });
+    }
+
+    async function cachedRead(cacheKey, options, loader) {
+        if (options?.force === true) {
+            readCache.delete(cacheKey);
+            readInFlight.delete(cacheKey);
+        }
+        const cached = readCache.get(cacheKey);
+        if (cached && Date.now() - cached.savedAt < READ_CACHE_TTL_MS) {
+            return cached.value;
+        }
+        if (readInFlight.has(cacheKey)) {
+            return readInFlight.get(cacheKey);
+        }
+        const request = loader().then((value) => {
+            readCache.set(cacheKey, { savedAt: Date.now(), value });
+            return value;
+        }).finally(() => {
+            readInFlight.delete(cacheKey);
+        });
+        readInFlight.set(cacheKey, request);
+        return request;
+    }
+
+    function invalidatePreferencesReadCache() {
+        [...readCache.keys()].forEach((key) => {
+            if (key.startsWith('preferences:')) readCache.delete(key);
+        });
+        [...readInFlight.keys()].forEach((key) => {
+            if (key.startsWith('preferences:')) readInFlight.delete(key);
         });
     }
 
@@ -496,15 +530,17 @@
     }
 
     async function getAccountPreferences(options = {}) {
-        const response = await apiFetch(`${API_BASE_URL}/preferences/account`, {
-            method: 'GET',
-            headers: withLocaleHeaders(),
-            signal: options.signal,
+        return cachedRead('preferences:account', options, async () => {
+            const response = await apiFetch(`${API_BASE_URL}/preferences/account`, {
+                method: 'GET',
+                headers: withLocaleHeaders(),
+                signal: options.signal,
+            });
+            if (!response.ok) {
+                throw new Error(await readErrorMessage(response, 'common.error', 'Failed to load account preferences'));
+            }
+            return response.json();
         });
-        if (!response.ok) {
-            throw new Error(await readErrorMessage(response, 'common.error', 'Failed to load account preferences'));
-        }
-        return response.json();
     }
 
     async function patchAccountPreferences(payload, options = {}) {
@@ -519,19 +555,22 @@
         if (!response.ok) {
             throw new Error(await readErrorMessage(response, 'common.error', 'Failed to update account preferences'));
         }
+        invalidatePreferencesReadCache();
         return response.json();
     }
 
     async function getPreferencesMetadata(options = {}) {
-        const response = await apiFetch(`${API_BASE_URL}/preferences/metadata`, {
-            method: 'GET',
-            headers: withLocaleHeaders(),
-            signal: options.signal,
+        return cachedRead('preferences:metadata', options, async () => {
+            const response = await apiFetch(`${API_BASE_URL}/preferences/metadata`, {
+                method: 'GET',
+                headers: withLocaleHeaders(),
+                signal: options.signal,
+            });
+            if (!response.ok) {
+                throw new Error(await readErrorMessage(response, 'common.error', 'Failed to load preferences metadata'));
+            }
+            return response.json();
         });
-        if (!response.ok) {
-            throw new Error(await readErrorMessage(response, 'common.error', 'Failed to load preferences metadata'));
-        }
-        return response.json();
     }
 
     async function createPreferenceRecalcJob(payload, options = {}) {
@@ -562,18 +601,21 @@
     }
 
     async function getResolvedPreferences(params, options = {}) {
-        const response = await apiFetch(
-            `${API_BASE_URL}/preferences/resolved${toQueryString(params)}`,
-            {
-                method: 'GET',
-                headers: withLocaleHeaders(),
-                signal: options.signal,
+        const query = toQueryString(params);
+        return cachedRead(`preferences:resolved:${query}`, options, async () => {
+            const response = await apiFetch(
+                `${API_BASE_URL}/preferences/resolved${query}`,
+                {
+                    method: 'GET',
+                    headers: withLocaleHeaders(),
+                    signal: options.signal,
+                }
+            );
+            if (!response.ok) {
+                throw new Error(await readErrorMessage(response, 'common.error', 'Failed to resolve preferences'));
             }
-        );
-        if (!response.ok) {
-            throw new Error(await readErrorMessage(response, 'common.error', 'Failed to resolve preferences'));
-        }
-        return response.json();
+            return response.json();
+        });
     }
 
     async function saveChartViewOverride(payload, options = {}) {
@@ -588,6 +630,7 @@
         if (!response.ok) {
             throw new Error(await readErrorMessage(response, 'common.error', 'Failed to save chart view override'));
         }
+        invalidatePreferencesReadCache();
         return response.json();
     }
 
@@ -603,6 +646,7 @@
         if (!response.ok) {
             throw new Error(await readErrorMessage(response, 'common.error', 'Failed to delete chart view override'));
         }
+        invalidatePreferencesReadCache();
         return response.json();
     }
 

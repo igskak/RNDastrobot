@@ -3,6 +3,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+import os
+from threading import RLock
+from time import monotonic
 from typing import Optional
 from uuid import UUID
 
@@ -27,6 +30,22 @@ RATE_LIMIT_WINDOW_SECONDS = 60
 RATE_LIMIT_MAX_PER_IP = 25
 LOCKOUT_WINDOW_MINUTES = 15
 LOCKOUT_MAX_FAILURES = 5
+READ_AUDIT_ROLLUP_SECONDS = int(os.getenv("AUDIT_READ_ROLLUP_SECONDS", "300") or "0")
+READ_AUDIT_ROLLUP_ACTIONS = {
+    "client.forecast_aux",
+    "client.profections",
+    "client.antiscia",
+    "client.asteroids",
+    "client.dominants",
+    "client.fixed_stars",
+    "client.transits.calculate",
+    "client.progressions.calculate",
+    "client.directions.calculate",
+    "preferences.account.get",
+    "preferences.resolved.get",
+}
+_read_audit_rollup: dict[tuple[str, str, str, str], float] = {}
+_read_audit_rollup_lock = RLock()
 
 
 @dataclass
@@ -67,6 +86,14 @@ def create_audit_event(
     if session_id is None:
         session_id = request.cookies.get(SESSION_COOKIE_NAME)
 
+    if _should_rollup_read_audit(
+        actor_id=actor_id,
+        action=action,
+        resource_id=resource_id,
+        result=result,
+    ):
+        return
+
     try:
         db.add(
             AuditEvent(
@@ -103,6 +130,35 @@ def create_audit_event(
     except Exception:
         # Analytics must never break business flow.
         pass
+
+
+def _should_rollup_read_audit(
+    *,
+    actor_id: Optional[UUID],
+    action: str,
+    resource_id: Optional[str],
+    result: str,
+) -> bool:
+    if READ_AUDIT_ROLLUP_SECONDS <= 0:
+        return False
+    if result != "success" or action not in READ_AUDIT_ROLLUP_ACTIONS:
+        return False
+    now = monotonic()
+    key = (str(actor_id or ""), action, str(resource_id or ""), result)
+    with _read_audit_rollup_lock:
+        expires_at = _read_audit_rollup.get(key)
+        if expires_at and expires_at > now:
+            return True
+        _read_audit_rollup[key] = now + READ_AUDIT_ROLLUP_SECONDS
+        if len(_read_audit_rollup) > 4096:
+            expired = [
+                item_key
+                for item_key, item_expires_at in _read_audit_rollup.items()
+                if item_expires_at <= now
+            ]
+            for item_key in expired[:1024]:
+                _read_audit_rollup.pop(item_key, None)
+    return False
 
 
 def _rate_limit_count(db: Session, *, ip: Optional[str], action_prefix: str, window_seconds: int) -> int:

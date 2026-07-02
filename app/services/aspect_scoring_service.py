@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.database.models import NatalAspect, RefPlanetOrb, RefAspectType, User
 from app.services.preferences_runtime import PreferencesRuntimeResolver
+from app.services.reference_data_cache import get_aspect_types, get_planet_orbs
 
 
 class AspectScoringService:
@@ -26,7 +27,7 @@ class AspectScoringService:
             Dict: Словарь {(planet, aspect_type): orb}
         """
         if self._planet_orbs_cache is None:
-            orbs = self.db.query(RefPlanetOrb).all()
+            orbs = get_planet_orbs(self.db)
             self._planet_orbs_cache = {
                 (orb.planet, orb.aspect_type): float(orb.orb)
                 for orb in orbs
@@ -68,9 +69,7 @@ class AspectScoringService:
 
         # Если орбис не найден, использовать базовый из ref_aspect_types
         if orb is None:
-            aspect = self.db.query(RefAspectType).filter(
-                RefAspectType.aspect_type == aspect_type
-            ).first()
+            aspect = next((row for row in get_aspect_types(self.db) if row.aspect_type == aspect_type), None)
             orb = float(aspect.base_orb) if aspect else 5.0
 
         return orb

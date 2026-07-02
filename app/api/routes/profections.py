@@ -11,14 +11,12 @@ from sqlalchemy.orm import Session
 
 from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
 from app.database.connection import get_db
-from app.services.natal_chart_service import NatalChartService
-from app.services.profections_service import ProfectionsService
+from app.services.forecast_aux_service import ForecastAuxService
 from app.utils.ephemeris import get_ephemeris_path
 
 router = APIRouter()
 
 EPHE_PATH = get_ephemeris_path()
-_natal_service = NatalChartService(ephe_path=EPHE_PATH)
 
 
 @router.get(
@@ -34,23 +32,10 @@ def get_profections(
     auth: AuthContext = Depends(require_auth),
 ) -> Dict[str, Any]:
     try:
-        ensure_client_access(db, request, auth, user_id, action="client.profections")
-        chart = _natal_service.get_natal_chart_from_db(user_id, db)
-        if chart is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Natal chart not found")
-
-        asc = (chart.get("angles") or {}).get("ASC") or {}
-        asc_sign = asc.get("sign")
-        birth_iso = (chart.get("birth_data") or {}).get("date")
-        if not asc_sign or not birth_iso:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Chart lacks ascendant sign or birth date",
-            )
-
-        return ProfectionsService.profections(
-            ascendant_sign=asc_sign,
-            birth_date=date.fromisoformat(birth_iso),
+        user = ensure_client_access(db, request, auth, user_id, action="client.profections")
+        return ForecastAuxService(db, ephe_path=EPHE_PATH).get_saved_block(
+            user,
+            "profections",
             target_date=at,
         )
     except HTTPException:

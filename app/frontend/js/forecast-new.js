@@ -158,6 +158,10 @@
         inFlight: {},
         inFlightByKey: {},
         inFlightById: {},
+        auxBlockCache: {},
+        auxBlockInFlight: {},
+        auxPendingBlocks: new Set(),
+        auxBlockTimer: null,
         wheel: null,
         natalRenderer: null,
         prognosticRenderer: null,
@@ -2811,6 +2815,7 @@
                 : state.natalData;
 
             state.cache = {};
+            invalidateAuxBlockCache();
             abortAllInFlightLayerRequests();
             setNatalLightweightLoading(false);
             renderStaticNatal();
@@ -3477,6 +3482,7 @@
             state.asteroidsData = null;
             state.dominantsData = null;
             state.fixstarsData = null;
+            invalidateAuxBlockCache();
             updateHeaderInfo();
             syncZodiacControlsFromNatal();
             renderStaticNatal();
@@ -3487,14 +3493,14 @@
         }
     }
 
-    async function onTargetDatetimeChange() {
+    function onTargetDatetimeChange() {
         const date = refs.targetDateInput?.value || splitTargetDatetime(getDisplayedMomentDateTime())[0];
         const time = refs.targetTimeInput?.value || '12:00:00';
         applyDisplayedMomentDateTime(`${date}T${normalizeTime(time)}`);
         state.lastStepperAction = null;
         syncControlsFromState();
         schedulePersist();
-        await loadDisplayedMomentLayers({ lightweight: true });
+        scheduleDisplayedMomentLayerLoad({ lightweight: true, delay: 180 });
     }
 
     // Apply a saved chart (date/time/place) as the prognostic moment of the active layer.
@@ -5605,6 +5611,137 @@
         if (layoutHasBlock('natal:fixstars')) renderFixstarsBlock();
     }
 
+    const AUX_BLOCK_API_KEY = {
+        profections: 'profections',
+        antiscia: 'antiscia',
+        asteroids: 'asteroids',
+        dominants: 'dominants',
+        fixstars: 'fixed_stars',
+    };
+
+    function invalidateAuxBlockCache() {
+        state.auxBlockCache = {};
+        state.auxBlockInFlight = {};
+        state.auxPendingBlocks = new Set();
+        clearTimeout(state.auxBlockTimer);
+        state.auxBlockTimer = null;
+    }
+
+    function auxBlockTargetDate() {
+        return splitTargetDatetime(getDisplayedMomentDateTime())[0];
+    }
+
+    function auxBlockCacheKey(block) {
+        const targetPart = block === 'profections' ? auxBlockTargetDate() : 'static';
+        return [natalCacheToken(), block, targetPart].join('|');
+    }
+
+    function getCachedAuxBlock(block) {
+        return state.auxBlockCache?.[auxBlockCacheKey(block)] || null;
+    }
+
+    function setCachedAuxBlock(block, data, cacheToken, targetDate) {
+        const key = [cacheToken, block, block === 'profections' ? targetDate : 'static'].join('|');
+        state.auxBlockCache[key] = data;
+    }
+
+    function auxBlockContainer(containerId) {
+        return document.getElementById(containerId)
+            || document.getElementById('forecastNewBlockStore')?.querySelector('#' + containerId);
+    }
+
+    function renderAuxBlock(opts) {
+        const { block, containerId, markup, emptyMarkup, loadingClass = 'forecast-new-list-loading' } = opts;
+        const el = auxBlockContainer(containerId);
+        if (!el) return;
+        if (!state.userId && !isNatalEdited()) {
+            el.innerHTML = emptyMarkup();
+            return;
+        }
+        const cached = getCachedAuxBlock(block);
+        if (cached) {
+            el.innerHTML = markup(cached);
+        } else if (!el.innerHTML.trim()) {
+            el.innerHTML = `<div class="${loadingClass}">${escapeHtml(t('common.loading') || '…')}</div>`;
+        }
+        scheduleAuxBlockFetch([block]);
+    }
+
+    function scheduleAuxBlockFetch(blocks) {
+        blocks.forEach((block) => {
+            if (AUX_BLOCK_API_KEY[block]) state.auxPendingBlocks.add(block);
+        });
+        clearTimeout(state.auxBlockTimer);
+        state.auxBlockTimer = setTimeout(flushAuxBlockFetch, 50);
+    }
+
+    async function flushAuxBlockFetch() {
+        const requested = [...state.auxPendingBlocks];
+        state.auxPendingBlocks.clear();
+        state.auxBlockTimer = null;
+        const blocks = requested.filter((block) => !getCachedAuxBlock(block));
+        if (blocks.length === 0) return;
+
+        const cacheToken = natalCacheToken();
+        const targetDate = auxBlockTargetDate();
+        const requestKey = [cacheToken, targetDate, blocks.slice().sort().join(',')].join('|');
+        if (state.auxBlockInFlight[requestKey]) return state.auxBlockInFlight[requestKey];
+
+        const request = apiPost('/forecast/aux', {
+            source: buildNatalSourcePayload(),
+            target_date: targetDate,
+            blocks: blocks.map((block) => AUX_BLOCK_API_KEY[block]),
+            options: {},
+        }).then((payload) => {
+            const responseBlocks = payload?.blocks || {};
+            const responseErrors = payload?.errors || {};
+            blocks.forEach((block) => {
+                const apiKey = AUX_BLOCK_API_KEY[block];
+                if (responseBlocks[apiKey]) {
+                    setCachedAuxBlock(block, responseBlocks[apiKey], cacheToken, targetDate);
+                    renderAuxBlockIfCurrent(block, responseBlocks[apiKey], cacheToken, targetDate);
+                } else if (responseErrors[apiKey]) {
+                    renderAuxBlockErrorIfCurrent(block, cacheToken, targetDate);
+                }
+            });
+        }).catch(() => {
+            blocks.forEach((block) => renderAuxBlockErrorIfCurrent(block, cacheToken, targetDate));
+        }).finally(() => {
+            delete state.auxBlockInFlight[requestKey];
+        });
+        state.auxBlockInFlight[requestKey] = request;
+        return request;
+    }
+
+    function renderAuxBlockIfCurrent(block, data, cacheToken, targetDate) {
+        const currentKey = auxBlockCacheKey(block);
+        const responseKey = [cacheToken, block, block === 'profections' ? targetDate : 'static'].join('|');
+        if (currentKey !== responseKey) return;
+        const renderers = {
+            profections: () => renderProfectionsBlock(),
+            antiscia: () => renderAntisciaBlock(),
+            asteroids: () => renderAsteroidsBlock(),
+            dominants: () => renderDominantsBlock(),
+            fixstars: () => renderFixstarsBlock(),
+        };
+        if (data && renderers[block]) renderers[block]();
+    }
+
+    function renderAuxBlockErrorIfCurrent(block, cacheToken, targetDate) {
+        const currentKey = auxBlockCacheKey(block);
+        const responseKey = [cacheToken, block, block === 'profections' ? targetDate : 'static'].join('|');
+        if (currentKey !== responseKey || getCachedAuxBlock(block)) return;
+        const containers = {
+            profections: 'natalProfectionsView',
+            antiscia: 'natalAntisciaView',
+            asteroids: 'natalAsteroidsView',
+            dominants: 'natalDominantsView',
+            fixstars: 'natalFixstarsView',
+        };
+        const el = auxBlockContainer(containers[block]);
+        if (el) el.innerHTML = `<div class="forecast-new-list-error">${escapeHtml(t('common.error') || 'Ошибка')}</div>`;
+    }
+
     function fixstarsBlockMarkup(data) {
         const contacts = data && Array.isArray(data.conjunctions) ? data.conjunctions : [];
         if (contacts.length === 0) {
@@ -5623,9 +5760,11 @@
     }
 
     function renderFixstarsBlock() {
-        return renderNatalAuxBlock({
-            containerId: 'natalFixstarsView', endpoint: '/fixed-stars',
-            cacheKey: 'fixstarsData', markup: fixstarsBlockMarkup,
+        return renderAuxBlock({
+            block: 'fixstars',
+            containerId: 'natalFixstarsView',
+            markup: fixstarsBlockMarkup,
+            emptyMarkup: () => `<div class="forecast-new-list-empty">${escapeHtml(t('page.forecastNew.profections.noSavedChart') || '—')}</div>`,
         });
     }
 
@@ -5753,46 +5892,28 @@
             </div>`;
     }
 
-    async function renderNatalAuxBlock(opts) {
-        const { containerId, endpoint, cacheKey, markup } = opts;
-        const el = document.getElementById(containerId)
-            || document.getElementById('forecastNewBlockStore')?.querySelector('#' + containerId);
-        if (!el) return;
-        if (!state.userId) {
-            el.innerHTML = `<div class="forecast-new-list-empty">${escapeHtml(t('page.forecastNew.profections.noSavedChart') || '—')}</div>`;
-            return;
-        }
-        const cache = state[cacheKey];
-        if (cache && cache.userId === state.userId) {
-            el.innerHTML = markup(cache.data);
-            return;
-        }
-        el.innerHTML = `<div class="forecast-new-list-loading">${escapeHtml(t('common.loading') || '…')}</div>`;
-        try {
-            const data = await apiGet(`${endpoint}?user_id=${encodeURIComponent(String(state.userId))}`);
-            state[cacheKey] = { userId: state.userId, data };
-            el.innerHTML = markup(data);
-        } catch (error) {
-            el.innerHTML = `<div class="forecast-new-list-error">${escapeHtml(t('common.error') || 'Ошибка')}</div>`;
-        }
-    }
-
     function renderAntisciaBlock() {
-        return renderNatalAuxBlock({
-            containerId: 'natalAntisciaView', endpoint: '/antiscia',
-            cacheKey: 'antisciaData', markup: antisciaBlockMarkup,
+        return renderAuxBlock({
+            block: 'antiscia',
+            containerId: 'natalAntisciaView',
+            markup: antisciaBlockMarkup,
+            emptyMarkup: () => `<div class="forecast-new-list-empty">${escapeHtml(t('page.forecastNew.profections.noSavedChart') || '—')}</div>`,
         });
     }
     function renderAsteroidsBlock() {
-        return renderNatalAuxBlock({
-            containerId: 'natalAsteroidsView', endpoint: '/asteroids',
-            cacheKey: 'asteroidsData', markup: asteroidsBlockMarkup,
+        return renderAuxBlock({
+            block: 'asteroids',
+            containerId: 'natalAsteroidsView',
+            markup: asteroidsBlockMarkup,
+            emptyMarkup: () => `<div class="forecast-new-list-empty">${escapeHtml(t('page.forecastNew.profections.noSavedChart') || '—')}</div>`,
         });
     }
     function renderDominantsBlock() {
-        return renderNatalAuxBlock({
-            containerId: 'natalDominantsView', endpoint: '/dominants',
-            cacheKey: 'dominantsData', markup: dominantsBlockMarkup,
+        return renderAuxBlock({
+            block: 'dominants',
+            containerId: 'natalDominantsView',
+            markup: dominantsBlockMarkup,
+            emptyMarkup: () => `<div class="forecast-new-list-empty">${escapeHtml(t('page.forecastNew.profections.noSavedChart') || '—')}</div>`,
         });
     }
 
@@ -5829,30 +5950,18 @@
             </div>`;
     }
 
-    async function renderProfectionsBlock() {
+    function renderProfectionsBlock() {
         const el = document.getElementById('natalProfectionsView')
             || document.getElementById('forecastNewBlockStore')?.querySelector('#natalProfectionsView');
         if (!el) return;
-        if (!state.userId) {
+        if (!state.userId && !isNatalEdited()) {
             el.innerHTML = `<div class="forecast-new-profections-empty">${escapeHtml(t('page.forecastNew.profections.noSavedChart') || '—')}</div>`;
             return;
         }
-        const targetDate = splitTargetDatetime(getDisplayedMomentDateTime())[0];
-        const fresh = state.profectionsData && state.profectionsDate === targetDate && state.profectionsUserId === state.userId;
-        if (fresh) {
-            el.innerHTML = profectionsBlockMarkup(state.profectionsData);
-            return;
-        }
-        el.innerHTML = `<div class="forecast-new-profections-loading">${escapeHtml(t('common.loading') || '…')}</div>`;
-        try {
-            const data = await apiGet(`/profections?user_id=${encodeURIComponent(String(state.userId))}&at=${encodeURIComponent(targetDate)}`);
-            state.profectionsData = data;
-            state.profectionsDate = targetDate;
-            state.profectionsUserId = state.userId;
-            el.innerHTML = profectionsBlockMarkup(data);
-        } catch (error) {
-            el.innerHTML = `<div class="forecast-new-profections-error">${escapeHtml(t('common.error') || 'Ошибка')}</div>`;
-        }
+        const cached = getCachedAuxBlock('profections');
+        if (cached) el.innerHTML = profectionsBlockMarkup(cached);
+        else if (!el.innerHTML.trim()) el.innerHTML = `<div class="forecast-new-profections-loading">${escapeHtml(t('common.loading') || '…')}</div>`;
+        scheduleAuxBlockFetch(['profections']);
     }
 
     function formatLunarMoment(iso) {

@@ -1,7 +1,7 @@
 """API endpoint for fixed stars and their conjunctions with a saved chart."""
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -10,27 +10,13 @@ from sqlalchemy.orm import Session
 
 from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
 from app.database.connection import get_db
-from app.services.fixed_stars_service import FixedStarsService, DEFAULT_STAR_ORB
-from app.services.natal_chart_service import NatalChartService
+from app.services.fixed_stars_service import DEFAULT_STAR_ORB
+from app.services.forecast_aux_service import ForecastAuxService
 from app.utils.ephemeris import get_ephemeris_path
 
 router = APIRouter()
 
 EPHE_PATH = get_ephemeris_path()
-_natal_service = NatalChartService(ephe_path=EPHE_PATH)
-_stars_service = FixedStarsService(ephe_path=EPHE_PATH)
-
-
-def _collect_objects(chart: Dict) -> List[Dict]:
-    objects: List[Dict] = []
-    for planet in chart.get("planets") or []:
-        if planet.get("longitude") is not None:
-            objects.append({"name": planet["name"], "longitude": float(planet["longitude"])})
-    for key in ("ASC", "MC", "DSC", "IC"):
-        angle = (chart.get("angles") or {}).get(key)
-        if angle and angle.get("longitude") is not None:
-            objects.append({"name": key, "longitude": float(angle["longitude"])})
-    return objects
 
 
 @router.get(
@@ -46,23 +32,16 @@ def get_fixed_stars(
     auth: AuthContext = Depends(require_auth),
 ) -> Dict[str, Any]:
     try:
-        ensure_client_access(db, request, auth, user_id, action="client.fixed_stars")
-        chart = _natal_service.get_natal_chart_from_db(user_id, db)
-        if chart is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Natal chart not found")
-
-        jd = (chart.get("birth_data") or {}).get("julian_day")
-        if jd is None:
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Chart lacks julian_day")
-
-        objects = _collect_objects(chart)
-        return {
-            "orb": orb,
-            "stars": _stars_service.star_positions(float(jd)),
-            "conjunctions": _stars_service.conjunctions(float(jd), objects, orb=orb),
-        }
+        user = ensure_client_access(db, request, auth, user_id, action="client.fixed_stars")
+        return ForecastAuxService(db, ephe_path=EPHE_PATH).get_saved_block(
+            user,
+            "fixed_stars",
+            options={"fixed_star_orb": orb},
+        )
     except HTTPException:
         raise
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
     except Exception as exc:
         logger.exception("Error computing fixed stars: {}", exc)
         raise HTTPException(

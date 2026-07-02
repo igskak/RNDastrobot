@@ -10,15 +10,12 @@ from sqlalchemy.orm import Session
 
 from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
 from app.database.connection import get_db
-from app.services.natal_chart_service import NatalChartService
-from app.services.swisseph_engine import SwissEphemerisEngine
+from app.services.forecast_aux_service import ForecastAuxService
 from app.utils.ephemeris import get_ephemeris_path
 
 router = APIRouter()
 
 EPHE_PATH = get_ephemeris_path()
-_natal_service = NatalChartService(ephe_path=EPHE_PATH)
-_engine = SwissEphemerisEngine(ephe_path=EPHE_PATH)
 
 
 @router.get(
@@ -33,28 +30,12 @@ def get_asteroids(
     auth: AuthContext = Depends(require_auth),
 ) -> Dict[str, Any]:
     try:
-        ensure_client_access(db, request, auth, user_id, action="client.asteroids")
-        chart = _natal_service.get_natal_chart_from_db(user_id, db)
-        if chart is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Natal chart not found")
-
-        birth = chart.get("birth_data") or {}
-        jd = birth.get("julian_day")
-        if jd is None:
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Chart lacks julian_day")
-
-        zodiac = birth.get("zodiac") or "tropical"
-        ayanamsha = birth.get("ayanamsha") or "lahiri"
-        asteroids = _engine.calculate_asteroids(float(jd), zodiac=zodiac, ayanamsha=ayanamsha)
-
-        houses = chart.get("houses") or []
-        if houses:
-            for a in asteroids:
-                a["house"] = _engine.get_planet_house(a["longitude"], houses)
-
-        return {"zodiac": zodiac, "asteroids": asteroids}
+        user = ensure_client_access(db, request, auth, user_id, action="client.asteroids")
+        return ForecastAuxService(db, ephe_path=EPHE_PATH).get_saved_block(user, "asteroids")
     except HTTPException:
         raise
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
     except Exception as exc:
         logger.exception("Error computing asteroids: {}", exc)
         raise HTTPException(
