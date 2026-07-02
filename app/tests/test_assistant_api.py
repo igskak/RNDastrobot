@@ -36,6 +36,14 @@ def _base(**overrides):
     return data
 
 
+def test_chat_response_carries_guardrail():
+    from app.api.routes.assistant import ChatResponse
+    r = ChatResponse(reply="x", iterations=1, max_iterations_reached=False, guardrail="blocked")
+    assert r.guardrail == "blocked"
+    # optional: legacy responses omit it
+    assert ChatResponse(reply="y", iterations=0, max_iterations_reached=False).guardrail is None
+
+
 def test_valid_next_contact_request():
     req = AspectPassesRequest(**_base())
     assert req.mode == 'next_contact'

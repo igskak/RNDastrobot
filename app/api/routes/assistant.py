@@ -36,6 +36,8 @@ from app.services.astro_assistant_service import (
 )
 from app.services.assistant_log_service import (
     delete_conversation,
+    export_turns,
+    flag_turn_correction,
     get_conversation,
     latest_user_message,
     list_conversations,
@@ -325,6 +327,9 @@ class ChatResponse(BaseModel):
     max_iterations_reached: bool
     conversation_id: Optional[str] = None
     metrics: Optional[dict] = None
+    # Layer-3 gate outcome for this turn (client renders the trust/degraded state):
+    # ok | regenerated | degraded | regenerated_degraded | blocked | blocked_degraded.
+    guardrail: Optional[str] = None
 
 
 @router.post(
@@ -395,6 +400,9 @@ def chat(
         assistant_reply=result.get("reply", ""),
         metrics=result.get("metrics") or {},
         max_iterations_reached=result.get("max_iterations_reached", False),
+        guardrail=result.get("guardrail"),
+        tool_results=result.get("tool_results") or [],
+        workspace_manifest=request.workspace,
     )
 
     return ChatResponse(
@@ -405,6 +413,7 @@ def chat(
         max_iterations_reached=result.get("max_iterations_reached", False),
         conversation_id=str(conv_id) if conv_id else None,
         metrics=result.get("metrics"),
+        guardrail=result.get("guardrail"),
     )
 
 
@@ -497,6 +506,59 @@ def delete_thread(
     if not removed:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
     return None
+
+
+class CorrectionRequest(BaseModel):
+    note: Optional[str] = Field(None, max_length=2000, description="Optional what-was-wrong note.")
+
+
+@router.post(
+    "/turns/{metric_id}/correction",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Flag an assistant turn as needing correction (beta tuning signal)",
+)
+def flag_correction(
+    metric_id: int,
+    body: CorrectionRequest,
+    auth: AuthContext = Depends(require_auth),
+    db: Session = Depends(get_db),
+):
+    assert_assistant_enabled(auth)
+    flagged = flag_turn_correction(
+        db, astrologer_id=auth.astrologer.id, metric_id=metric_id, note=body.note)
+    if not flagged:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Turn not found")
+    return None
+
+
+class ExportResponse(BaseModel):
+    turns: List[dict] = Field(default_factory=list)
+
+
+@router.get(
+    "/export",
+    response_model=ExportResponse,
+    summary="Export the astrologer's captured turns for tuning",
+    description=(
+        "Tenant-scoped export of captured turns (tool_results, workspace manifest, "
+        "guardrail outcome, correction flags) for the authenticated astrologer only."
+    ),
+)
+def export_captured_turns(
+    auth: AuthContext = Depends(require_auth),
+    db: Session = Depends(get_db),
+    corrections_only: bool = False,
+    limit: int = 1000,
+):
+    assert_assistant_enabled(auth)
+    return {
+        "turns": export_turns(
+            db,
+            astrologer_id=auth.astrologer.id,
+            corrections_only=corrections_only,
+            limit=limit,
+        )
+    }
 
 
 class TranscribeResponse(BaseModel):

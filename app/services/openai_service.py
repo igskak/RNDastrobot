@@ -26,9 +26,11 @@ if _LANGFUSE_ENABLED:
 else:
     from openai import OpenAI
 
+from app.services.model_config import model_for
+
 _API_KEY = os.getenv("OPENAI_API_KEY", "")
-_MODEL = os.getenv("OPENAI_SUMMARY_MODEL", "gpt-4.1")
-_TRANSCRIBE_MODEL = os.getenv("OPENAI_TRANSCRIBE_MODEL", "gpt-4o-transcribe")
+_MODEL = model_for("summary")           # env OPENAI_SUMMARY_MODEL, default gpt-4.1
+_TRANSCRIBE_MODEL = model_for("transcribe")  # env OPENAI_TRANSCRIBE_MODEL, default gpt-4o-transcribe
 
 # Shared client across OpenAI-backed services (summary, assistant, …).
 _SHARED_CLIENT: Optional[OpenAI] = None

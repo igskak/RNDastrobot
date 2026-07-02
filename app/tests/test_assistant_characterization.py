@@ -99,6 +99,17 @@ def test_tool_roster_is_exactly_the_expected_set():
 
 
 # ── 2. both chat() reply exit paths ───────────────────────────────────────────
+def test_system_prompt_forbids_interpretation_absolutely():
+    """The locked interpretation bug is fixed: the prompt now cites the single-source
+    rubric with an absolute refusal, and the old permissive phrasing is gone."""
+    from app.services.astro_boundary import NON_INTERPRETATION_RULES
+    assert NON_INTERPRETATION_RULES in svc._SYSTEM_PROMPT       # single source, embedded
+    assert "STRICT NON-INTERPRETATION" in svc._SYSTEM_PROMPT
+    assert "even when explicitly asked" in svc._SYSTEM_PROMPT
+    assert "interpretation not requested" not in svc._SYSTEM_PROMPT  # the bug is gone
+    assert "ANY astrological interpretation" in svc._SYSTEM_PROMPT
+
+
 def test_natural_finish_exit_returns_reply(monkeypatch):
     service = _service_with_fake_transits({})
     scripted = [_msg(content="done.")]
@@ -200,6 +211,131 @@ def test_chat_dispatches_analyze_layer2(monkeypatch):
     assert tr["result"]["rows"][0]["name"] == "Moon"    # server-computed extreme
     assert tr["result"]["rows"][0]["id"] == "r0"        # cited by id
     assert tr["result"]["provenance"]["dataset"]
+
+
+# ── Layer-3 judge gate (finalize_reply) — enabled via monkeypatch ─────────────
+def _run_judge_chat(monkeypatch, scripted, classify):
+    service = _service_with_fake_transits({})
+    monkeypatch.setattr(svc, "JUDGE_ENABLED", True)
+    monkeypatch.setattr(svc, "is_openai_configured", lambda: True)
+    monkeypatch.setattr(svc, "get_openai_client", lambda: _FakeClient(scripted))
+    monkeypatch.setattr(svc, "classify_reply", classify)
+    return service.chat(uuid4(), [{"role": "user", "content": "q"}])
+
+
+def test_judge_allows_clean_reply(monkeypatch):
+    res = _run_judge_chat(
+        monkeypatch, [_msg(content="Mars square Saturn, orb 0.9°.")],
+        lambda reply, *, client, model, usage=None:"allow")
+    assert res["reply"] == "Mars square Saturn, orb 0.9°."
+    assert res["guardrail"] == "ok"
+
+
+def test_judge_block_then_refuse(monkeypatch):
+    # final reply + regenerated reply, both judged BLOCK -> canned refusal.
+    res = _run_judge_chat(
+        monkeypatch, [_msg(content="This means conflict."), _msg(content="Still conflict.")],
+        lambda reply, *, client, model, usage=None:"block")
+    assert res["guardrail"] == "blocked"
+    assert "don't interpret" in res["reply"].lower()
+
+
+def test_judge_block_then_regenerate_ok(monkeypatch):
+    calls = {"n": 0}
+
+    def classify(reply, *, client, model, usage=None):
+        calls["n"] += 1
+        return "block" if calls["n"] == 1 else "allow"
+
+    res = _run_judge_chat(
+        monkeypatch, [_msg(content="bad interp"), _msg(content="Mars square Saturn 0.9°")],
+        classify)
+    assert res["reply"] == "Mars square Saturn 0.9°"
+    assert res["guardrail"] == "regenerated"
+
+
+def test_judge_error_soft_fail_serves_clean(monkeypatch):
+    def boom(reply, *, client, model, usage=None):
+        raise RuntimeError("judge down")
+
+    res = _run_judge_chat(monkeypatch, [_msg(content="Mars square Saturn, orb 0.9°.")], boom)
+    assert res["reply"] == "Mars square Saturn, orb 0.9°."
+    assert res["guardrail"] == "degraded"  # served, flagged
+
+
+def test_judge_error_soft_fail_blocks_obvious_interpretation(monkeypatch):
+    def boom(reply, *, client, model, usage=None):
+        raise RuntimeError("judge down")
+
+    res = _run_judge_chat(monkeypatch, [_msg(content="This indicates conflict.")], boom)
+    assert res["guardrail"] == "blocked_degraded"
+    assert "don't interpret" in res["reply"].lower()
+
+
+def test_iteration_cap_exit_is_also_judged(monkeypatch):
+    """The SECOND exit goes through the same gate — nothing escapes ungated."""
+    scripted = [
+        _msg(tool_calls=[_tool_call(
+            f"c{i}", "find_aspect_passes",
+            '{"transit_body":"Mars","natal_body":"Sun","aspect_type":"Square"}')])
+        for i in range(MAX_TOOL_ITERATIONS)
+    ] + [_msg(content="cap interp"), _msg(content="regen interp")]
+    res = _run_judge_chat(monkeypatch, scripted, lambda reply, *, client, model, usage=None:"block")
+    assert res["max_iterations_reached"] is True
+    assert res["guardrail"] == "blocked"  # cap exit was gated + refused
+
+
+# ── structured citation (quote-by-reference) end-to-end ───────────────────────
+def _service_with_analyze_chart(monkeypatch):
+    import app.services.astro_data_tools as dt
+    fake_chart = {"planets": [
+        {"name": "Moon", "sign": "Cancer", "house": 4, "dignity": "domicile",
+         "speed": 13.2, "retrograde": False},
+        {"name": "Mars", "sign": "Aries", "house": 1, "dignity": "domicile",
+         "speed": 0.6, "retrograde": False},
+    ]}
+
+    class _N:
+        def get_natal_chart_from_db(self, user_id, db):
+            return fake_chart
+
+    monkeypatch.setattr(dt, "NatalChartService", lambda *a, **k: _N())
+    return _service_with_fake_transits({})
+
+
+def test_citation_is_substituted_by_server(monkeypatch):
+    service = _service_with_analyze_chart(monkeypatch)
+    monkeypatch.setattr(svc, "is_openai_configured", lambda: True)
+    scripted = [
+        _msg(tool_calls=[_tool_call(
+            "c1", "analyze",
+            '{"op":"rank","over":"planets","sort":"speed","order":"desc","limit":1}')]),
+        _msg(content="Fastest: {{r0.name}} at {{r0.speed}} deg/day."),
+    ]
+    monkeypatch.setattr(svc, "get_openai_client", lambda: _FakeClient(scripted))
+    res = service.chat(uuid4(), [{"role": "user", "content": "fastest?"}])
+    assert res["reply"] == "Fastest: Moon at 13.2 deg/day."  # server-rendered, not retyped
+    assert res["guardrail"] == "ok"
+
+
+def test_unresolved_citation_is_refused(monkeypatch):
+    service = _service_with_analyze_chart(monkeypatch)
+    monkeypatch.setattr(svc, "is_openai_configured", lambda: True)
+    scripted = [
+        _msg(tool_calls=[_tool_call(
+            "c1", "analyze",
+            '{"op":"rank","over":"planets","sort":"speed","order":"desc","limit":1}')]),
+        _msg(content="The value is {{r9.speed}}."),  # r9 was never produced
+    ]
+    monkeypatch.setattr(svc, "get_openai_client", lambda: _FakeClient(scripted))
+    res = service.chat(uuid4(), [{"role": "user", "content": "fastest?"}])
+    assert res["guardrail"] == "blocked_citation"       # fabrication caught
+    assert "don't interpret" in res["reply"].lower() or "не интерпрет" in res["reply"].lower()
+
+
+def test_system_prompt_has_citation_rule():
+    from app.services.astro_citation import CITATION_RULE
+    assert CITATION_RULE in svc._SYSTEM_PROMPT
 
 
 def test_get_chart_data_dataset_reused_across_calls_in_one_turn(monkeypatch):

@@ -11,10 +11,17 @@ from app.database.models import (
     Base,
 )
 from app.services.assistant_log_service import (
+    export_turns,
+    flag_turn_correction,
     get_conversation,
     list_conversations,
     log_turn,
 )
+
+
+def _metric_id(db, conversation_id):
+    return db.query(AssistantTurnMetric).filter_by(
+        conversation_id=conversation_id).one().id
 
 
 def _session():
@@ -72,6 +79,87 @@ def test_existing_thread_is_appended_and_moves_to_top():
     listed = list_conversations(db, astrologer_id=astrologer_id, chart_user_id=chart_user_id)
     assert [item["id"] for item in listed] == [str(first_id), str(second_id)]
     assert listed[0]["message_count"] == 4
+
+
+def test_turn_capture_is_persisted():
+    db = _session()
+    astrologer_id = uuid4()
+    chart = uuid4()
+    conv_id = log_turn(
+        db, astrologer_id=astrologer_id, chart_user_id=chart, conversation_id=None,
+        user_message="q", assistant_reply="a", metrics={"model": "m"},
+        max_iterations_reached=False,
+        guardrail="degraded",
+        tool_results=[{"name": "analyze", "result": {"rows": []}}],
+        workspace_manifest={"activeChart": {"chartId": "x"}},
+    )
+    m = db.query(AssistantTurnMetric).filter_by(conversation_id=conv_id).one()
+    assert m.guardrail == "degraded"
+    assert m.tool_results == [{"name": "analyze", "result": {"rows": []}}]
+    assert m.workspace_manifest == {"activeChart": {"chartId": "x"}}
+    assert m.correction_flag is False  # not yet corrected
+
+
+def test_capture_is_optional_backward_compatible():
+    """Existing callers omit capture args -> row still writes with NULL/defaults."""
+    db = _session()
+    astrologer_id = uuid4()
+    conv_id = _log(db, astrologer_id, uuid4())  # legacy call, no capture
+    m = db.query(AssistantTurnMetric).filter_by(conversation_id=conv_id).one()
+    assert m.guardrail is None
+    assert m.tool_results is None
+    assert m.correction_flag is False
+
+
+def test_flag_turn_correction_by_owner():
+    db = _session()
+    astro = uuid4()
+    conv = _log(db, astro, uuid4())
+    mid = _metric_id(db, conv)
+    assert flag_turn_correction(db, astrologer_id=astro, metric_id=mid, note="wrong count") is True
+    m = db.query(AssistantTurnMetric).filter_by(id=mid).one()
+    assert m.correction_flag is True
+    assert m.correction_note == "wrong count"
+
+
+def test_flag_turn_correction_is_tenant_scoped():
+    """Astrologer B cannot flag astrologer A's turn (cross-tenant denied)."""
+    db = _session()
+    astro_a, astro_b = uuid4(), uuid4()
+    conv = _log(db, astro_a, uuid4())
+    mid = _metric_id(db, conv)
+    assert flag_turn_correction(db, astrologer_id=astro_b, metric_id=mid) is False
+    m = db.query(AssistantTurnMetric).filter_by(id=mid).one()
+    assert m.correction_flag is False  # A's turn untouched by B
+
+
+def test_export_is_tenant_scoped():
+    """Export returns ONLY the calling astrologer's turns."""
+    db = _session()
+    astro_a, astro_b = uuid4(), uuid4()
+    _log(db, astro_a, uuid4(), text="A1")
+    _log(db, astro_a, uuid4(), text="A2")
+    _log(db, astro_b, uuid4(), text="B1")
+
+    exported_a = export_turns(db, astrologer_id=astro_a)
+    assert len(exported_a) == 2
+    exported_b = export_turns(db, astrologer_id=astro_b)
+    assert len(exported_b) == 1
+    # no B data leaks into A's export
+    assert all(row["conversation_id"] for row in exported_a)
+
+
+def test_export_corrections_only_filters():
+    db = _session()
+    astro = uuid4()
+    c1 = _log(db, astro, uuid4(), text="q1")
+    _log(db, astro, uuid4(), text="q2")
+    flag_turn_correction(db, astrologer_id=astro, metric_id=_metric_id(db, c1))
+
+    assert len(export_turns(db, astrologer_id=astro)) == 2
+    flagged = export_turns(db, astrologer_id=astro, corrections_only=True)
+    assert len(flagged) == 1
+    assert flagged[0]["correction_flag"] is True
 
 
 def test_thread_cannot_be_appended_from_another_chart():
