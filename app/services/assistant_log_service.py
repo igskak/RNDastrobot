@@ -118,6 +118,74 @@ def log_turn(
         return None
 
 
+def flag_turn_correction(
+    db: Session,
+    *,
+    astrologer_id: UUID,
+    metric_id: int,
+    note: Optional[str] = None,
+) -> bool:
+    """Mark a captured turn as needing correction (feeds rubric tuning).
+
+    Tenant-scoped: the query is bound to ``astrologer_id``, so an astrologer can
+    only flag their OWN turn. A missing or cross-tenant metric returns False —
+    never raises, never touches another tenant's row.
+    """
+    m = (
+        db.query(AssistantTurnMetric)
+        .filter(
+            AssistantTurnMetric.id == metric_id,
+            AssistantTurnMetric.astrologer_id == astrologer_id,
+        )
+        .first()
+    )
+    if m is None:
+        return False
+    m.correction_flag = True
+    if note is not None:
+        m.correction_note = str(note)[:2000]
+    db.commit()
+    return True
+
+
+def export_turns(
+    db: Session,
+    *,
+    astrologer_id: UUID,
+    corrections_only: bool = False,
+    limit: int = 1000,
+) -> List[Dict]:
+    """Tenant-scoped export of captured turns for tuning.
+
+    Only the given astrologer's turns are ever returned (the astrologer_id filter
+    IS the access control — same boundary as the chart-ownership pattern). Set
+    corrections_only to export just the flagged turns.
+    """
+    q = db.query(AssistantTurnMetric).filter(
+        AssistantTurnMetric.astrologer_id == astrologer_id)
+    if corrections_only:
+        q = q.filter(AssistantTurnMetric.correction_flag.is_(True))
+    rows = (
+        q.order_by(AssistantTurnMetric.created_at.desc())
+        .limit(max(1, min(limit, 5000)))
+        .all()
+    )
+    return [
+        {
+            "metric_id": r.id,
+            "conversation_id": str(r.conversation_id),
+            "model": r.model,
+            "guardrail": r.guardrail,
+            "tool_results": r.tool_results,
+            "workspace_manifest": r.workspace_manifest,
+            "correction_flag": bool(r.correction_flag),
+            "correction_note": r.correction_note,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        }
+        for r in rows
+    ]
+
+
 def latest_user_message(messages: List[Dict]) -> str:
     """The newest user-authored message in the turn's history."""
     for m in reversed(messages):

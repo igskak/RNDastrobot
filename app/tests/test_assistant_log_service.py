@@ -11,10 +11,17 @@ from app.database.models import (
     Base,
 )
 from app.services.assistant_log_service import (
+    export_turns,
+    flag_turn_correction,
     get_conversation,
     list_conversations,
     log_turn,
 )
+
+
+def _metric_id(db, conversation_id):
+    return db.query(AssistantTurnMetric).filter_by(
+        conversation_id=conversation_id).one().id
 
 
 def _session():
@@ -102,6 +109,57 @@ def test_capture_is_optional_backward_compatible():
     assert m.guardrail is None
     assert m.tool_results is None
     assert m.correction_flag is False
+
+
+def test_flag_turn_correction_by_owner():
+    db = _session()
+    astro = uuid4()
+    conv = _log(db, astro, uuid4())
+    mid = _metric_id(db, conv)
+    assert flag_turn_correction(db, astrologer_id=astro, metric_id=mid, note="wrong count") is True
+    m = db.query(AssistantTurnMetric).filter_by(id=mid).one()
+    assert m.correction_flag is True
+    assert m.correction_note == "wrong count"
+
+
+def test_flag_turn_correction_is_tenant_scoped():
+    """Astrologer B cannot flag astrologer A's turn (cross-tenant denied)."""
+    db = _session()
+    astro_a, astro_b = uuid4(), uuid4()
+    conv = _log(db, astro_a, uuid4())
+    mid = _metric_id(db, conv)
+    assert flag_turn_correction(db, astrologer_id=astro_b, metric_id=mid) is False
+    m = db.query(AssistantTurnMetric).filter_by(id=mid).one()
+    assert m.correction_flag is False  # A's turn untouched by B
+
+
+def test_export_is_tenant_scoped():
+    """Export returns ONLY the calling astrologer's turns."""
+    db = _session()
+    astro_a, astro_b = uuid4(), uuid4()
+    _log(db, astro_a, uuid4(), text="A1")
+    _log(db, astro_a, uuid4(), text="A2")
+    _log(db, astro_b, uuid4(), text="B1")
+
+    exported_a = export_turns(db, astrologer_id=astro_a)
+    assert len(exported_a) == 2
+    exported_b = export_turns(db, astrologer_id=astro_b)
+    assert len(exported_b) == 1
+    # no B data leaks into A's export
+    assert all(row["conversation_id"] for row in exported_a)
+
+
+def test_export_corrections_only_filters():
+    db = _session()
+    astro = uuid4()
+    c1 = _log(db, astro, uuid4(), text="q1")
+    _log(db, astro, uuid4(), text="q2")
+    flag_turn_correction(db, astrologer_id=astro, metric_id=_metric_id(db, c1))
+
+    assert len(export_turns(db, astrologer_id=astro)) == 2
+    flagged = export_turns(db, astrologer_id=astro, corrections_only=True)
+    assert len(flagged) == 1
+    assert flagged[0]["correction_flag"] is True
 
 
 def test_thread_cannot_be_appended_from_another_chart():
