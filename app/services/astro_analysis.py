@@ -36,6 +36,10 @@ def _err(code: str) -> Dict:
     return {"status": "error", "error": code}
 
 
+def _valid_filter_value(value) -> bool:
+    return value is None or isinstance(value, (str, int, float, bool))
+
+
 def validate_spec(spec) -> str:
     """Return '' if the analysis spec is valid, else a machine error code.
 
@@ -56,6 +60,8 @@ def validate_spec(spec) -> str:
             return "bad_filter"
         if any(k not in cols for k in flt):
             return "bad_filter_field"
+        if any(not _valid_filter_value(v) for v in flt.values()):
+            return "bad_filter_value"
 
     group_by = spec.get("group_by")
     if group_by is not None and group_by not in cols:
