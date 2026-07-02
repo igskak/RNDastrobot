@@ -26,7 +26,7 @@ from app.auth.dependencies import (
     revoke_astrologer_sessions,
     revoke_session,
 )
-from app.analytics.attribution import read_attribution
+from app.analytics.attribution import AD_CLICK_KEYS, read_attribution
 from app.auth.mailer import send_email_verification_email, send_password_reset_email
 from app.auth.security import (
     email_verification_cooldown_seconds,
@@ -43,7 +43,7 @@ from app.auth.security import (
 )
 from app.auth.supabase import verify_supabase_token
 from app.database.connection import get_db
-from app.database.models import Astrologer, EmailVerificationToken, PasswordResetToken
+from app.database.models import AdConversion, Astrologer, EmailVerificationToken, PasswordResetToken
 from app.i18n.locale import normalize_locale
 from app.services.billing_service import get_billing_summary, get_effective_plan_code
 from app.services.entitlements_service import (
@@ -250,11 +250,17 @@ class PlanUpdateRequest(BaseModel):
 class MeResponse(BaseModel):
     id: str
     email: str
+    name: Optional[str] = None
     auth_provider: str
     is_active: bool
     plan_code: str
     base_plan_code: str
     plan_expires_at: Optional[str] = None
+    created_at: Optional[str] = None
+    # True only on the response that *created* the account (Google first sign-in),
+    # so the client fires the one-time signup conversion exactly once. Never set
+    # for plain logins or /me.
+    is_new_user: bool = False
     entitlements: Dict[str, Any]
     usage: Dict[str, Any]
     billing: Dict[str, Any] = Field(default_factory=dict)
@@ -346,17 +352,97 @@ def _trial_expiry(plan_code: str) -> Optional[datetime]:
     return None
 
 
-def _build_me_response(db: Session, astrologer: Astrologer) -> MeResponse:
+def _display_name(astrologer: Astrologer) -> Optional[str]:
+    parts = [getattr(astrologer, "first_name", None), getattr(astrologer, "last_name", None)]
+    name = " ".join(p.strip() for p in parts if p and p.strip())
+    return name or None
+
+
+def _oci_conversion_value() -> Optional[float]:
+    raw = os.getenv("OCI_CONVERSION_VALUE", "").strip()
+    if not raw:
+        return None
+    try:
+        return float(raw)
+    except ValueError:
+        return None
+
+
+def _record_signup_attribution(
+    db: Session,
+    request: Request,
+    astrologer: Astrologer,
+    *,
+    method: str,
+) -> None:
+    """Persist first-touch ad attribution on the astrologer and, when a Google
+    Ads click id is present, queue an offline-conversion (OCI) row.
+
+    Best-effort: analytics/attribution must never break the signup flow. Called
+    once per newly created account (email register + Google first sign-in).
+    """
+    try:
+        attribution = read_attribution(request) or {}
+
+        # First-touch: only stamp the account if not already attributed.
+        if attribution and getattr(astrologer, "signup_attribution", None) is None:
+            astrologer.signup_attribution = attribution
+            for key in AD_CLICK_KEYS:
+                if attribution.get(key):
+                    astrologer.signup_gclid = attribution[key]
+                    break
+
+        has_click_id = any(attribution.get(k) for k in AD_CLICK_KEYS)
+        if not has_click_id:
+            return
+
+        order_id = str(astrologer.id)  # one account == one registration conversion
+        exists = (
+            db.query(AdConversion.id)
+            .filter(AdConversion.order_id == order_id)
+            .first()
+        )
+        if exists:
+            return
+
+        db.add(
+            AdConversion(
+                astrologer_id=astrologer.id,
+                gclid=attribution.get("gclid"),
+                gbraid=attribution.get("gbraid"),
+                wbraid=attribution.get("wbraid"),
+                email=astrologer.email,
+                order_id=order_id,
+                conversion_time=utcnow(),
+                conversion_value=_oci_conversion_value(),
+                currency=os.getenv("OCI_CONVERSION_CURRENCY", "EUR").strip() or "EUR",
+                method=method,
+            )
+        )
+        db.flush()
+    except Exception as exc:  # pragma: no cover - best effort
+        logger.warning("Signup attribution capture failed for astrologer_id=%s: %s", astrologer.id, exc)
+
+
+def _build_me_response(
+    db: Session,
+    astrologer: Astrologer,
+    *,
+    is_new_user: bool = False,
+) -> MeResponse:
     base_plan_code = normalize_plan_code(getattr(astrologer, "plan_code", None))
     effective_plan_code = get_effective_plan_code(db, astrologer)
     return MeResponse(
         id=str(astrologer.id),
         email=astrologer.email,
+        name=_display_name(astrologer),
         auth_provider=astrologer.auth_provider,
         is_active=astrologer.is_active,
         plan_code=effective_plan_code,
         base_plan_code=base_plan_code,
         plan_expires_at=astrologer.plan_expires_at.isoformat() if astrologer.plan_expires_at else None,
+        created_at=astrologer.created_at.isoformat() if getattr(astrologer, "created_at", None) else None,
+        is_new_user=is_new_user,
         entitlements=get_entitlements(astrologer, plan_code=effective_plan_code),
         usage=get_usage(db, astrologer, plan_code=effective_plan_code),
         billing=get_billing_summary(db, astrologer),
@@ -578,6 +664,7 @@ def register(
             return _neutral_register_response()
         raise
 
+    _record_signup_attribution(db, request, astrologer, method="email")
     create_audit_event(
         db,
         request,
@@ -958,6 +1045,7 @@ def google_login(
         .first()
     )
 
+    is_new_user = astrologer is None
     if astrologer is None:
         astrologer = Astrologer(
             email=identity.email,
@@ -993,6 +1081,8 @@ def google_login(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is inactive")
 
     issue_session(response, db, request, astrologer)
+    if is_new_user:
+        _record_signup_attribution(db, request, astrologer, method="google")
     create_audit_event(
         db,
         request,
@@ -1001,8 +1091,10 @@ def google_login(
         resource_type="astrologer",
         resource_id=identity.email,
         result="success",
+        # First-touch campaign context belongs to the registration only.
+        properties=read_attribution(request) if is_new_user else None,
     )
-    return _build_me_response(db, astrologer)
+    return _build_me_response(db, astrologer, is_new_user=is_new_user)
 
 
 @router.get("/me", response_model=MeResponse)

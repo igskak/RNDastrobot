@@ -784,6 +784,13 @@
                 if (!response.ok) {
                     throw new Error(await readErrorMessage(response));
                 }
+                // Identify on THIS page so the anonymous session (carrying the ad
+                // attribution) merges into the astrologer's person before we
+                // navigate away.
+                const me = await response.json().catch(() => null);
+                if (me && typeof global.AstroAnalytics?.identify === 'function') {
+                    global.AstroAnalytics.identify(me);
+                }
                 if (typeof global.AstroAnalytics?.track === 'function') {
                     global.AstroAnalytics.track('login', { method: 'password' });
                 }
@@ -848,8 +855,13 @@
                     throw new Error(await readErrorMessage(response));
                 }
                 await response.json().catch(() => ({}));
-                if (typeof global.AstroAnalytics?.track === 'function') {
-                    global.AstroAnalytics.track('sign_up', { method: 'password', plan_code: values.planCode });
+                // Registration conversion (email path): PostHog user_signed_up +
+                // GA4 trial_start. The account isn't logged in yet, so this fires
+                // on the anonymous session that holds the ad attribution;
+                // identify() at first login merges it into the person. Deduped
+                // per-email so a re-submit can't double-count.
+                if (typeof global.AstroAnalytics?.signup === 'function') {
+                    global.AstroAnalytics.signup('email', { plan_code: values.planCode }, 'email:' + values.email);
                 }
                 state.lastVerificationEmail = '';
                 state.verificationResendCooldownUntil = 0;
@@ -1070,12 +1082,23 @@
                 if (!response.ok) {
                     throw new Error(await readErrorMessage(response));
                 }
+                const me = await response.json().catch(() => null);
                 await waitForBackendSession();
                 await clearSupabaseOAuthSession();
                 if (historyRef?.replaceState) {
                     historyRef.replaceState({}, documentRef?.title || '', '/login.html');
                 }
-                if (typeof global.AstroAnalytics?.track === 'function') {
+                // Identify on the callback page — the same PostHog instance that
+                // held the anonymous, gclid-tagged session — before redirecting,
+                // so ad attribution and the account merge into one person.
+                if (me && typeof global.AstroAnalytics?.identify === 'function') {
+                    global.AstroAnalytics.identify(me);
+                }
+                if (me && me.is_new_user && typeof global.AstroAnalytics?.signup === 'function') {
+                    // First Google sign-in == registration. The backend is
+                    // authoritative on new-vs-returning; dedupe by id as a guard.
+                    global.AstroAnalytics.signup('google', {}, 'id:' + me.id);
+                } else if (typeof global.AstroAnalytics?.track === 'function') {
                     global.AstroAnalytics.track('login', { method: 'google' });
                 }
                 redirect('/');

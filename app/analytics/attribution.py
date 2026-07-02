@@ -19,6 +19,9 @@ logger = logging.getLogger(__name__)
 ATTRIBUTION_COOKIE = "steliara_attribution"
 
 # Whitelisted keys only — never trust arbitrary cookie content into our log.
+# gclid/gbraid/wbraid are Google Ads click identifiers needed for offline
+# conversion import (OCI); they arrive in the landing URL and are persisted
+# client-side in the same cookie so they survive the OAuth redirect.
 _ALLOWED_KEYS = (
     "utm_source",
     "utm_medium",
@@ -27,7 +30,14 @@ _ALLOWED_KEYS = (
     "utm_content",
     "referrer",
     "landing_path",
+    "gclid",
+    "gbraid",
+    "wbraid",
 )
+
+# Subset of the above that identifies a paid ad click (used for OCI storage).
+AD_CLICK_KEYS = ("gclid", "gbraid", "wbraid")
+
 _MAX_VALUE_LEN = 512
 
 

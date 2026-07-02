@@ -197,6 +197,11 @@ class Astrologer(Base):
     google_sub = Column(String(255), unique=True)
     email_verified_at = Column(DateTime)
     is_active = Column(Boolean, nullable=False, default=True)
+    # First-touch ad attribution captured at signup (see analytics/attribution.py).
+    # signup_gclid is denormalised for quick lookups / offline-conversion joins;
+    # signup_attribution keeps the full utm/referrer/click-id snapshot.
+    signup_gclid = Column(String(512))
+    signup_attribution = Column(JSONB)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
@@ -210,12 +215,51 @@ class Astrologer(Base):
     preference_recalc_jobs = relationship("PreferenceRecalcJob", back_populates="astrologer", cascade="all, delete-orphan")
     billing_customers = relationship("BillingCustomer", back_populates="astrologer", cascade="all, delete-orphan")
     billing_subscriptions = relationship("BillingSubscription", back_populates="astrologer", cascade="all, delete-orphan")
+    ad_conversions = relationship("AdConversion", back_populates="astrologer", cascade="all, delete-orphan")
 
     __table_args__ = (
         CheckConstraint("auth_provider IN ('local', 'google')", name='valid_auth_provider'),
         CheckConstraint("plan_code IN ('trial', 'solo', 'standard', 'pro')", name='chk_astrologers_plan_code'),
         Index('idx_astrologers_google_sub', 'google_sub'),
         Index('idx_astrologers_plan_code', 'plan_code'),
+    )
+
+
+class AdConversion(Base):
+    """Offline conversion record for Google Ads Offline Conversion Import (OCI).
+
+    One row per registration that carried a Google Ads click id (gclid / gbraid /
+    wbraid). A background job uploads un-uploaded rows to Google Ads via
+    ConversionUploadService (or an operator downloads the CSV fallback). order_id
+    is the dedup key so a single registration counts as exactly one conversion.
+    """
+    __tablename__ = 'ad_conversions'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='CASCADE'), nullable=False)
+    # Exactly one of the click ids is normally set; keep all three for iOS /
+    # privacy traffic where gbraid/wbraid replace gclid.
+    gclid = Column(String(512))
+    gbraid = Column(String(512))
+    wbraid = Column(String(512))
+    email = Column(String(255))
+    # Unique registration id for dedup on the Ads side (defaults to the
+    # astrologer id — one account = one registration conversion).
+    order_id = Column(String(255), nullable=False, unique=True)
+    conversion_time = Column(DateTime(timezone=True), nullable=False)
+    conversion_value = Column(Numeric(12, 2))
+    currency = Column(String(3), nullable=False, default='EUR', server_default='EUR')
+    method = Column(String(16))  # 'google' | 'email'
+    uploaded = Column(Boolean, nullable=False, default=False, server_default='false')
+    uploaded_at = Column(DateTime(timezone=True))
+    upload_error = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+
+    astrologer = relationship("Astrologer", back_populates="ad_conversions")
+
+    __table_args__ = (
+        Index('idx_ad_conversions_pending', 'uploaded', 'created_at'),
+        Index('idx_ad_conversions_astrologer', 'astrologer_id'),
     )
 
 

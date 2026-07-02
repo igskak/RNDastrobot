@@ -238,16 +238,22 @@
             }
             var params = new URLSearchParams(window.location.search || '');
             var attr = {};
-            ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']
+            // utm_* + Google Ads click ids (gclid/gbraid/wbraid). The click ids
+            // must be captured on the FIRST landing: they're gone from the URL
+            // after the Google OAuth round-trip, but this cookie survives it and
+            // is read server-side at signup for offline conversion import.
+            ATTRIBUTION_PARAM_KEYS
                 .forEach(function (k) { if (params.get(k)) attr[k] = params.get(k); });
 
             var ref = document.referrer || '';
             if (ref && ref.indexOf(window.location.origin) !== 0) attr.referrer = ref;
             attr.landing_path = window.location.pathname || '/';
 
-            // Only persist if there's a real signal (campaign or external referrer).
+            // Only persist if there's a real signal (campaign, ad click, or
+            // external referrer) — never overwrite a first-touch on later visits.
             var hasSignal = Object.keys(attr).some(function (k) {
-                return k.indexOf('utm_') === 0 || k === 'referrer';
+                return k.indexOf('utm_') === 0 || k === 'referrer'
+                    || k === 'gclid' || k === 'gbraid' || k === 'wbraid';
             });
             if (hasSignal) {
                 setCookie('steliara_attribution', JSON.stringify(attr), 90);
@@ -260,6 +266,54 @@
             var raw = getCookie('steliara_attribution');
             if (raw) ph.register(JSON.parse(raw));   // rides on events once opted in
         });
+    }
+
+    // --- Attribution readback (for signup events + person $set_once) ----------
+    var ATTRIBUTION_PARAM_KEYS = [
+        'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
+        'gclid', 'gbraid', 'wbraid',
+    ];
+    function storedAttribution() {
+        var raw = getCookie('steliara_attribution');
+        if (!raw) return {};
+        try { return JSON.parse(raw) || {}; } catch (e) { return {}; }
+    }
+    // Campaign/click props to attach to conversion events.
+    function attributionEventProps() {
+        var a = storedAttribution();
+        var out = {};
+        ATTRIBUTION_PARAM_KEYS.forEach(function (k) { if (a[k]) out[k] = a[k]; });
+        return out;
+    }
+    // First-touch props to freeze on the person (never overwritten by PostHog).
+    function attributionSetOnce() {
+        var a = storedAttribution();
+        var out = {};
+        ATTRIBUTION_PARAM_KEYS.forEach(function (k) { if (a[k]) out['initial_' + k] = a[k]; });
+        return out;
+    }
+
+    // --- One-time signup conversion guard (per browser) -----------------------
+    // Keys are hashed so no raw email is written to localStorage.
+    function hashKey(s) {
+        var h = 5381;
+        for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
+        return 'k' + h.toString(36);
+    }
+    function markSignupFired(key) {
+        try {
+            var stored = window.localStorage.getItem('steliara_signup_fired');
+            var set = stored ? JSON.parse(stored) : [];
+            if (!Array.isArray(set)) set = [];
+            var hashed = hashKey(String(key));
+            if (set.indexOf(hashed) !== -1) return false;   // already fired
+            set.push(hashed);
+            if (set.length > 50) set = set.slice(-50);
+            window.localStorage.setItem('steliara_signup_fired', JSON.stringify(set));
+            return true;
+        } catch (e) {
+            return true;   // storage unavailable — don't block the conversion
+        }
     }
 
     // --- PH4: consent gating (GDPR) -------------------------------------------
@@ -383,16 +437,44 @@
             if (!astrologer || !astrologer.id || identified) return;
             identified = true;
             safe(function () {
+                // $set carries current identity (email/name close the "anonymous
+                // person" gap); $set_once freezes first-touch ad attribution so
+                // ad → signup stays joined even across the OAuth redirect.
                 window.posthog.identify(String(astrologer.id), {
+                    email: astrologer.email,
+                    name: astrologer.name,
                     plan_code: astrologer.plan_code,
                     preferred_locale: astrologer.preferred_locale,
                     auth_provider: astrologer.auth_provider,
                     created_at: astrologer.created_at,
-                });
+                }, attributionSetOnce());
                 if (astrologer.plan_code) {
                     window.posthog.group('plan', String(astrologer.plan_code));
                 }
             });
+        },
+        // Attribution props (gclid/utm) for callers building signup payloads.
+        getAttribution: function () {
+            return attributionEventProps();
+        },
+        // Fire the one-time registration conversion on BOTH sinks:
+        //   PostHog `user_signed_up`  +  GA4 `trial_start` (Google Ads import).
+        // Pass dedupeKey to guarantee at-most-once per browser for that key.
+        signup: function (method, extraProps, dedupeKey) {
+            if (dedupeKey && !markSignupFired(dedupeKey)) return;
+            var payload = Object.assign(
+                { method: method, screen: window.AstroAnalytics.screen, locale: currentLocale() },
+                attributionEventProps(),
+                extraProps || {}
+            );
+            safe(function () {
+                window.posthog.capture('user_signed_up', payload);
+            });
+            if (GA4_ID && window.gtag) {
+                safe(function () {
+                    window.gtag('event', 'trial_start', payload);
+                });
+            }
         },
         reset: function () {
             identified = false;
