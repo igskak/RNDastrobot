@@ -644,3 +644,53 @@
     content: "\24D8\00A0"; /* ⓘ + nbsp */
     color: var(--text-muted, #9b9289);
 }
+
+/* Context strip (D4): collapsed workspace manifest, calm/minimal chrome. */
+.chat-context-strip {
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--border, #e0ddd7);
+    background: var(--bg-tertiary, #f0ede4);
+}
+
+.chat-context-toggle {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    min-height: 24px;
+    padding: 2px 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    text-align: left;
+    color: var(--text-secondary, #5c554e);
+    font-family: var(--font-ui, sans-serif);
+    font-size: 12px;
+}
+
+.chat-context-line {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-muted, #9b9289);
+}
+
+.chat-context-chevron {
+    margin-left: auto;
+    transition: transform 0.2s ease;
+}
+
+.chat-context-toggle[aria-expanded="true"] .chat-context-chevron {
+    transform: rotate(180deg);
+}
+
+.chat-context-detail {
+    margin-top: 4px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: var(--bg-secondary, #ffffff);
+    color: var(--text-secondary, #5c554e);
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    font-size: 11px;
+    line-height: 1.5;
+}

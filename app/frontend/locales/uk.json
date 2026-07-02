@@ -933,7 +933,8 @@
         "loadFailed": "Не вдалося завантажити бесіди.",
         "provenanceSummary": "джерело — дані · інструментів: {count} ✓",
         "provenanceDegraded": "перевірки обмежені",
-        "provenanceComputed": "набір {hash} · кожне число обчислено сервером"
+        "provenanceComputed": "набір {hash} · кожне число обчислено сервером",
+        "contextLabel": "Контекст"
       },
       "edit": {
         "errors": {

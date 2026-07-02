@@ -931,7 +931,8 @@
         "loadFailed": "Could not load conversations.",
         "provenanceSummary": "traced to data · {count} tools ✓",
         "provenanceDegraded": "checks limited",
-        "provenanceComputed": "dataset {hash} · every number server-computed"
+        "provenanceComputed": "dataset {hash} · every number server-computed",
+        "contextLabel": "Context"
       },
       "edit": {
         "errors": {

@@ -403,6 +403,74 @@ class ChatWidget {
         return wrap;
     }
 
+    // Context strip (D4): collapsed one-line manifest of the workspace the
+    // assistant is grounded in, expandable to the layer/house detail. Refreshed
+    // after each turn since actions can change the workspace.
+    renderContextStrip() {
+        const summary = this.buildWorkspaceSummary();
+        let strip = this.contextStrip;
+        if (!strip) {
+            if (!this.messages || !this.messages.parentNode) return;
+            strip = document.createElement('div');
+            strip.className = 'chat-context-strip';
+            this.messages.parentNode.insertBefore(strip, this.messages);
+            this.contextStrip = strip;
+        }
+        strip.textContent = '';
+        if (!summary) { strip.hidden = true; return; }
+        strip.hidden = false;
+
+        const active = summary.resources && summary.resources.activeChart;
+        const title = (active && active.title) ? String(active.title) : '';
+        const layers = Array.isArray(summary.layers) ? summary.layers : [];
+        const bits = [];
+        if (title) bits.push(title);
+        if (layers.length) bits.push(layers.join(', '));
+        if (summary.houseSystem) bits.push(summary.houseSystem);
+        const line = bits.join(' · ');
+
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'chat-context-toggle';
+        toggle.setAttribute('aria-expanded', 'false');
+        const label = document.createElement('span');
+        label.className = 'chat-context-label';
+        label.textContent = '◈ ' + t('page.chart.chat.contextLabel');
+        const lineEl = document.createElement('span');
+        lineEl.className = 'chat-context-line';
+        lineEl.textContent = line ? ' — ' + line : '';
+        const chevron = document.createElement('span');
+        chevron.className = 'chat-context-chevron';
+        chevron.setAttribute('aria-hidden', 'true');
+        chevron.textContent = '⌄';
+        toggle.append(label, lineEl, chevron);
+
+        const detail = document.createElement('div');
+        detail.className = 'chat-context-detail';
+        detail.hidden = true;
+        const addRow = (text) => {
+            if (!text) return;
+            const row = document.createElement('div');
+            row.className = 'chat-context-row';
+            row.textContent = text;
+            detail.appendChild(row);
+        };
+        if (active) {
+            addRow([active.title, active.date, active.place].filter(Boolean).join(' · '));
+        }
+        for (const method of layers) addRow(method);
+        if (summary.date) addRow(summary.date);
+        if (summary.houseSystem) addRow(summary.houseSystem);
+
+        toggle.addEventListener('click', () => {
+            const open = toggle.getAttribute('aria-expanded') === 'true';
+            toggle.setAttribute('aria-expanded', String(!open));
+            detail.hidden = open;
+        });
+
+        strip.append(toggle, detail);
+    }
+
     addLoadingMessage() {
         const messageDiv = document.createElement('div');
         messageDiv.className = 'chat-message assistant loading';
@@ -705,6 +773,7 @@ class ChatWidget {
             this.isLoading = false;
             this.send.disabled = false;
             if (refocus) this.input.focus({ preventScroll: true });
+            this.renderContextStrip();  // refresh the manifest; actions may have changed it
         }
     }
 

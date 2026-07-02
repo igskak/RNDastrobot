@@ -931,7 +931,8 @@
         "loadFailed": "Не удалось загрузить беседы.",
         "provenanceSummary": "источник — данные · инструментов: {count} ✓",
         "provenanceDegraded": "проверки ограничены",
-        "provenanceComputed": "набор {hash} · каждое число вычислено сервером"
+        "provenanceComputed": "набор {hash} · каждое число вычислено сервером",
+        "contextLabel": "Контекст"
       },
       "edit": {
         "errors": {
