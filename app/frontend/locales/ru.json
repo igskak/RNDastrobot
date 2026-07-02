@@ -935,7 +935,9 @@
         "contextLabel": "Контекст",
         "correctionFlag": "Отметить ответ для исправления",
         "correctionNote": "Что было не так? (необязательно)",
-        "provenanceSummaryOne": "источник — данные · 1 инструмент ✓"
+        "provenanceSummaryOne": "источник — данные · 1 инструмент ✓",
+        "correctionSubmit": "Отправить",
+        "correctionThanks": "Спасибо за отзыв — мы его учтём."
       },
       "edit": {
         "errors": {

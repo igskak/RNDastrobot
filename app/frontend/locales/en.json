@@ -935,7 +935,9 @@
         "contextLabel": "Context",
         "correctionFlag": "Flag this answer for correction",
         "correctionNote": "What was wrong? (optional)",
-        "provenanceSummaryOne": "traced to data · 1 tool ✓"
+        "provenanceSummaryOne": "traced to data · 1 tool ✓",
+        "correctionSubmit": "Submit",
+        "correctionThanks": "Thank you for your feedback — we’ll take it into account."
       },
       "edit": {
         "errors": {
