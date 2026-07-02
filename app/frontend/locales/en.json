@@ -928,7 +928,14 @@
         "untitled": "Untitled chat",
         "delete": "Delete conversation",
         "deleteConfirm": "Delete this conversation? This cannot be undone.",
-        "loadFailed": "Could not load conversations."
+        "loadFailed": "Could not load conversations.",
+        "provenanceSummary": "traced to data · {count} tools ✓",
+        "provenanceDegraded": "checks limited",
+        "provenanceComputed": "dataset {hash} · every number server-computed",
+        "contextLabel": "Context",
+        "correctionFlag": "Flag this answer for correction",
+        "correctionNote": "What was wrong? (optional)",
+        "provenanceSummaryOne": "traced to data · 1 tool ✓"
       },
       "edit": {
         "errors": {

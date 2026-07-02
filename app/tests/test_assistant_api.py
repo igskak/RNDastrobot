@@ -44,6 +44,13 @@ def test_chat_response_carries_guardrail():
     assert ChatResponse(reply="y", iterations=0, max_iterations_reached=False).guardrail is None
 
 
+def test_chat_response_carries_metric_id():
+    from app.api.routes.assistant import ChatResponse
+    r = ChatResponse(reply="x", iterations=1, max_iterations_reached=False, metric_id=42)
+    assert r.metric_id == 42
+    assert ChatResponse(reply="y", iterations=0, max_iterations_reached=False).metric_id is None
+
+
 def test_valid_next_contact_request():
     req = AspectPassesRequest(**_base())
     assert req.mode == 'next_contact'

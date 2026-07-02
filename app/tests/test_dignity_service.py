@@ -8,6 +8,9 @@ class _FakeQuery:
     def __init__(self, rows):
         self._rows = rows
 
+    def order_by(self, *args, **kwargs):
+        return self  # reference_data_cache orders the sign rows; mock is a no-op
+
     def all(self):
         return self._rows
 

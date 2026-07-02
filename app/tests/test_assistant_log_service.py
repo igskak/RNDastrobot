@@ -38,7 +38,7 @@ def _session():
 
 
 def _log(db, astrologer_id, chart_user_id, conversation_id=None, text="Question"):
-    return log_turn(
+    conv_id, _ = log_turn(
         db,
         astrologer_id=astrologer_id,
         chart_user_id=chart_user_id,
@@ -48,6 +48,7 @@ def _log(db, astrologer_id, chart_user_id, conversation_id=None, text="Question"
         metrics={},
         max_iterations_reached=False,
     )
+    return conv_id
 
 
 def test_new_turn_is_saved_and_loaded():
@@ -85,7 +86,7 @@ def test_turn_capture_is_persisted():
     db = _session()
     astrologer_id = uuid4()
     chart = uuid4()
-    conv_id = log_turn(
+    conv_id, _ = log_turn(
         db, astrologer_id=astrologer_id, chart_user_id=chart, conversation_id=None,
         user_message="q", assistant_reply="a", metrics={"model": "m"},
         max_iterations_reached=False,
@@ -98,6 +99,16 @@ def test_turn_capture_is_persisted():
     assert m.tool_results == [{"name": "analyze", "result": {"rows": []}}]
     assert m.workspace_manifest == {"activeChart": {"chartId": "x"}}
     assert m.correction_flag is False  # not yet corrected
+
+
+def test_log_turn_returns_conversation_and_metric_ids():
+    db = _session()
+    conv_id, metric_id = log_turn(
+        db, astrologer_id=uuid4(), chart_user_id=uuid4(), conversation_id=None,
+        user_message="q", assistant_reply="a", metrics={}, max_iterations_reached=False)
+    assert conv_id is not None and metric_id is not None
+    m = db.query(AssistantTurnMetric).filter_by(id=metric_id).one()
+    assert m.conversation_id == conv_id  # the id points at THIS turn's metric
 
 
 def test_capture_is_optional_backward_compatible():

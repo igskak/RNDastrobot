@@ -322,6 +322,217 @@ class ChatWidget {
         return messageDiv;
     }
 
+    // --- trust surfaces (chat-v2) ---------------------------------------
+    // Provenance chip (D1) + guardrail state (D2). Refusal is a NORMAL outcome,
+    // so it is styled neutral (info icon), never as a warning/error.
+    decorateAssistantTurn(messageEl, data) {
+        if (!messageEl || !data) return;
+        const guardrail = data.guardrail || 'ok';
+        if (guardrail.indexOf('blocked') === 0) {
+            messageEl.classList.add('refused');  // neutral refuse-and-redirect note
+        }
+        const content = messageEl.querySelector('.message-content');
+        const chip = this.buildProvenanceChip(data.tool_results, guardrail);
+        if (chip && content) content.appendChild(chip);
+        if (data.metric_id && content) {
+            content.appendChild(this.buildCorrectionControl(data.metric_id));
+        }
+    }
+
+    // Correction flag (D3): one-tap flag + optional one-line note, feeding the
+    // beta capture/tuning loop. Low friction so a busy astrologer actually uses it.
+    buildCorrectionControl(metricId) {
+        const wrap = document.createElement('div');
+        wrap.className = 'chat-correction';
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'chat-correction-flag';
+        btn.setAttribute('aria-pressed', 'false');
+        btn.setAttribute('aria-label', t('page.chart.chat.correctionFlag'));
+        btn.textContent = '⚑';
+
+        const note = document.createElement('input');
+        note.type = 'text';
+        note.className = 'chat-correction-note';
+        note.maxLength = 2000;
+        note.placeholder = t('page.chart.chat.correctionNote');
+        note.hidden = true;
+
+        let flagged = false;
+        btn.addEventListener('click', () => {
+            flagged = !flagged;
+            btn.setAttribute('aria-pressed', String(flagged));
+            note.hidden = !flagged;
+            if (flagged) {
+                this.postCorrection(metricId, '');
+                note.focus();
+            }
+        });
+
+        const submitNote = () => {
+            const text = note.value.trim();
+            if (flagged && text) this.postCorrection(metricId, text);
+        };
+        note.addEventListener('blur', submitNote);
+        note.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); submitNote(); note.blur(); }
+        });
+
+        wrap.append(btn, note);
+        return wrap;
+    }
+
+    async postCorrection(metricId, noteText) {
+        try {
+            await fetch(`${API_BASE_URL}/assistant/turns/${metricId}/correction`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: withLocaleHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify({ note: noteText || null }),
+            });
+        } catch (error) {
+            console.error('Assistant correction flag error:', error);
+        }
+    }
+
+    buildProvenanceChip(toolResults, guardrail) {
+        const withProv = (toolResults || []).filter(
+            (tr) => tr && tr.result && tr.result.provenance && tr.result.provenance.dataset);
+        const degraded = guardrail === 'degraded' || guardrail === 'regenerated_degraded';
+        if (!withProv.length && !degraded) return null;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'chat-provenance';
+
+        if (!withProv.length) {
+            const note = document.createElement('div');
+            note.className = 'chat-provenance-degraded';
+            note.textContent = t('page.chart.chat.provenanceDegraded');
+            wrap.appendChild(note);
+            return wrap;
+        }
+
+        const hash = withProv[withProv.length - 1].result.provenance.dataset;
+        const pill = document.createElement('button');
+        pill.type = 'button';
+        pill.className = 'chat-provenance-pill';
+        pill.setAttribute('aria-expanded', 'false');
+
+        const label = document.createElement('span');
+        label.className = 'chat-provenance-label';
+        const summaryKey = withProv.length === 1
+            ? 'page.chart.chat.provenanceSummaryOne'
+            : 'page.chart.chat.provenanceSummary';
+        label.textContent = t(summaryKey, { count: withProv.length });
+        pill.appendChild(label);
+
+        if (degraded) {
+            const warn = document.createElement('span');
+            warn.className = 'chat-provenance-degraded';
+            warn.textContent = t('page.chart.chat.provenanceDegraded');
+            pill.appendChild(warn);
+        }
+
+        const chevron = document.createElement('span');
+        chevron.className = 'chat-provenance-chevron';
+        chevron.setAttribute('aria-hidden', 'true');
+        chevron.textContent = '⌄';
+        pill.appendChild(chevron);
+
+        const detail = document.createElement('div');
+        detail.className = 'chat-provenance-detail';
+        detail.hidden = true;
+        for (const tr of withProv) {
+            const line = document.createElement('div');
+            line.className = 'chat-provenance-tool';
+            line.textContent = tr.name;
+            detail.appendChild(line);
+        }
+        const meta = document.createElement('div');
+        meta.className = 'chat-provenance-meta';
+        meta.textContent = t('page.chart.chat.provenanceComputed', { hash });
+        detail.appendChild(meta);
+
+        pill.addEventListener('click', () => {
+            const open = pill.getAttribute('aria-expanded') === 'true';
+            pill.setAttribute('aria-expanded', String(!open));
+            detail.hidden = open;
+        });
+
+        wrap.appendChild(pill);
+        wrap.appendChild(detail);
+        return wrap;
+    }
+
+    // Context strip (D4): collapsed one-line manifest of the workspace the
+    // assistant is grounded in, expandable to the layer/house detail. Refreshed
+    // after each turn since actions can change the workspace.
+    renderContextStrip() {
+        const summary = this.buildWorkspaceSummary();
+        let strip = this.contextStrip;
+        if (!strip) {
+            if (!this.messages || !this.messages.parentNode) return;
+            strip = document.createElement('div');
+            strip.className = 'chat-context-strip';
+            this.messages.parentNode.insertBefore(strip, this.messages);
+            this.contextStrip = strip;
+        }
+        strip.textContent = '';
+        if (!summary) { strip.hidden = true; return; }
+        strip.hidden = false;
+
+        const active = summary.resources && summary.resources.activeChart;
+        const title = (active && active.title) ? String(active.title) : '';
+        const layers = Array.isArray(summary.layers) ? summary.layers : [];
+        const bits = [];
+        if (title) bits.push(title);
+        if (layers.length) bits.push(layers.join(', '));
+        if (summary.houseSystem) bits.push(summary.houseSystem);
+        const line = bits.join(' · ');
+
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'chat-context-toggle';
+        toggle.setAttribute('aria-expanded', 'false');
+        const label = document.createElement('span');
+        label.className = 'chat-context-label';
+        label.textContent = '◈ ' + t('page.chart.chat.contextLabel');
+        const lineEl = document.createElement('span');
+        lineEl.className = 'chat-context-line';
+        lineEl.textContent = line ? ' — ' + line : '';
+        const chevron = document.createElement('span');
+        chevron.className = 'chat-context-chevron';
+        chevron.setAttribute('aria-hidden', 'true');
+        chevron.textContent = '⌄';
+        toggle.append(label, lineEl, chevron);
+
+        const detail = document.createElement('div');
+        detail.className = 'chat-context-detail';
+        detail.hidden = true;
+        const addRow = (text) => {
+            if (!text) return;
+            const row = document.createElement('div');
+            row.className = 'chat-context-row';
+            row.textContent = text;
+            detail.appendChild(row);
+        };
+        if (active) {
+            addRow([active.title, active.date, active.place].filter(Boolean).join(' · '));
+        }
+        for (const method of layers) addRow(method);
+        if (summary.date) addRow(summary.date);
+        if (summary.houseSystem) addRow(summary.houseSystem);
+
+        toggle.addEventListener('click', () => {
+            const open = toggle.getAttribute('aria-expanded') === 'true';
+            toggle.setAttribute('aria-expanded', String(!open));
+            detail.hidden = open;
+        });
+
+        strip.append(toggle, detail);
+    }
+
     addLoadingMessage() {
         const messageDiv = document.createElement('div');
         messageDiv.className = 'chat-message assistant loading';
@@ -605,7 +816,8 @@ class ChatWidget {
             if (data.conversation_id) this.conversationId = data.conversation_id;
             loadingMsg.remove();
             if (reply) {
-                this.addMessage(reply, 'assistant');
+                const assistantEl = this.addMessage(reply, 'assistant');
+                this.decorateAssistantTurn(assistantEl, data);
                 this.history.push({ role: 'assistant', content: reply });
                 if (compactFeedback) {
                     this.setVoiceMiniStatus(reply, { timeoutMs: 10000 });
@@ -623,6 +835,7 @@ class ChatWidget {
             this.isLoading = false;
             this.send.disabled = false;
             if (refocus) this.input.focus({ preventScroll: true });
+            this.renderContextStrip();  // refresh the manifest; actions may have changed it
         }
     }
 

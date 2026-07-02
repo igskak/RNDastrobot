@@ -928,7 +928,14 @@
         "untitled": "Без названия",
         "delete": "Удалить беседу",
         "deleteConfirm": "Удалить эту беседу? Действие необратимо.",
-        "loadFailed": "Не удалось загрузить беседы."
+        "loadFailed": "Не удалось загрузить беседы.",
+        "provenanceSummary": "источник — данные · инструментов: {count} ✓",
+        "provenanceDegraded": "проверки ограничены",
+        "provenanceComputed": "набор {hash} · каждое число вычислено сервером",
+        "contextLabel": "Контекст",
+        "correctionFlag": "Отметить ответ для исправления",
+        "correctionNote": "Что было не так? (необязательно)",
+        "provenanceSummaryOne": "источник — данные · 1 инструмент ✓"
       },
       "edit": {
         "errors": {
