@@ -30,6 +30,7 @@ from app.services.astro_commands import (
     _normalize_command_args,
 )
 from app.services.astro_analysis import analyze as analyze_spec
+from app.services.astro_boundary import NON_INTERPRETATION_RULES
 from app.services.astro_data_tools import ChartDataset, get_chart_data
 from app.services.model_config import model_for
 from app.services.astro_tool_schemas import (
@@ -543,11 +544,13 @@ remain after applying the rules above.
 - Keep the final answer extremely compact and information-dense:
   - Start directly with the result; no greeting, preamble, or conclusion.
   - Do not restate the question or explain that you used tools.
-  - Avoid generic AI phrases, filler, advice, and interpretation not requested.
+  - Avoid generic AI phrases, filler, advice, and ANY astrological interpretation.
   - Prefer short headings and bullets. Include only the window, entry/exact/exit dates, \
 motion, stations, and a brief caveat when materially relevant.
   - Use at most 80 words unless more space is required to list every contact and pass.
-- Reply in the astrologer's language."""
+- Reply in the astrologer's language.
+
+""" + NON_INTERPRETATION_RULES
 
 
 def _workspace_context_line(ws: Dict) -> str:

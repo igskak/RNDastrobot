@@ -99,6 +99,17 @@ def test_tool_roster_is_exactly_the_expected_set():
 
 
 # ── 2. both chat() reply exit paths ───────────────────────────────────────────
+def test_system_prompt_forbids_interpretation_absolutely():
+    """The locked interpretation bug is fixed: the prompt now cites the single-source
+    rubric with an absolute refusal, and the old permissive phrasing is gone."""
+    from app.services.astro_boundary import NON_INTERPRETATION_RULES
+    assert NON_INTERPRETATION_RULES in svc._SYSTEM_PROMPT       # single source, embedded
+    assert "STRICT NON-INTERPRETATION" in svc._SYSTEM_PROMPT
+    assert "even when explicitly asked" in svc._SYSTEM_PROMPT
+    assert "interpretation not requested" not in svc._SYSTEM_PROMPT  # the bug is gone
+    assert "ANY astrological interpretation" in svc._SYSTEM_PROMPT
+
+
 def test_natural_finish_exit_returns_reply(monkeypatch):
     service = _service_with_fake_transits({})
     scripted = [_msg(content="done.")]
