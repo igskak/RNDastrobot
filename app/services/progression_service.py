@@ -589,6 +589,7 @@ class ProgressionService:
                     'natal_object_type': natal_obj['type'],
                     'aspect_type': aspect_type.aspect_type,
                     'orb': round(deviation, 4),
+                    'max_allowed_orb': max_orb,
                     'is_exact': deviation <= PROGNOSTIC_EXACT_ORB,
                     'is_major': aspect_type.class_ == 'major',
                     'harmonic_type': aspect_type.character,

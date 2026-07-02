@@ -752,6 +752,10 @@
           "copy": "Applies to angular cusp lines and their labels on wheels.",
           "label": "Black angular cusps"
         },
+        "exactAspectHighlight": {
+          "copy": "Aspects within 25% of the allowed orb are drawn slightly thicker.",
+          "label": "Highlight exact aspects"
+        },
         "columns": {
           "color": "Color",
           "element": "Element",
@@ -992,6 +996,7 @@
       "nav": {
         "forecast": "Forecast",
         "home": "Home",
+        "natal": "Natal",
         "solar": "Solar return",
         "synastry": "Synastry",
         "tables": "Tables",
@@ -1911,7 +1916,11 @@
         "solution": "How it helps",
         "benefits": "In practice",
         "faq": "Questions",
-        "pricing": "Pricing"
+        "pricing": "Pricing",
+        "productPagesAria": "Product pages",
+        "cloudAstrology": "Cloud astrology software",
+        "astrologerWorkspace": "Astrologer workspace",
+        "practiceManagement": "Practice management"
       },
       "cta": {
         "primary": "Create a chart",

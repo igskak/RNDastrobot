@@ -102,6 +102,11 @@ def test_injection_via_filter_field_is_rejected():
     assert analyze(_ds(), bad)["error"] == "bad_filter_field"
 
 
+def test_non_scalar_filter_value_is_rejected():
+    bad = {"op": "count", "over": "planets", "filter": {"name": {"$ne": "Sun"}}}
+    assert analyze(_ds(), bad)["error"] == "bad_filter_value"
+
+
 def test_injection_via_group_by_is_rejected():
     bad = {"op": "count", "over": "planets", "group_by": "sign); DROP TABLE t --"}
     assert analyze(_ds(), bad)["error"] == "bad_group_by"

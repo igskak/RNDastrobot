@@ -2935,7 +2935,7 @@ async function submitNewChart() {
         date: dateStr,
         time: timeStr,
         timezone,
-        location_name: newChartState.selectedCoords ? null : place,
+        location_name: place,
         latitude: newChartState.selectedCoords?.lat ?? null,
         longitude: newChartState.selectedCoords?.lon ?? null,
         title,

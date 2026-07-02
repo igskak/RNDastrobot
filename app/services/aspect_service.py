@@ -382,6 +382,7 @@ class AspectService:
                     'planet_2': obj2['name'],
                     'aspect_type': aspect_type.aspect_type,
                     'orb': deviation,  # Фактический орбис (отклонение от точного аспекта)
+                    'max_orb': max_orb,
                     'is_major': aspect_type.class_ == 'major',
                     'harmonic_type': aspect_type.character,
                     'applying': applying,

@@ -137,6 +137,20 @@ test('resolveVisualPreferences preserves black angular cusp setting', () => {
     assert.equal(preferences.shouldUseBlackAngularCusps({}), false);
 });
 
+test('resolveVisualPreferences preserves exact aspect highlight setting', () => {
+    const defaultVisual = preferences.resolveVisualPreferences({});
+    const disabledVisual = preferences.resolveVisualPreferences({
+        wheel: {
+            highlight_exact_aspects: false,
+        },
+    });
+
+    assert.equal(defaultVisual.wheel.highlight_exact_aspects, true);
+    assert.equal(preferences.shouldHighlightExactAspects(defaultVisual), true);
+    assert.equal(disabledVisual.wheel.highlight_exact_aspects, false);
+    assert.equal(preferences.shouldHighlightExactAspects(disabledVisual), false);
+});
+
 test('getPlanetColor resolves body override aliases', () => {
     const visual = preferences.resolveVisualPreferences({
         planet_colors: {

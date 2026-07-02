@@ -973,6 +973,10 @@
         if (angularCuspsToggle) {
             angularCuspsToggle.checked = resolvedVisual?.wheel?.angular_cusps_black === true;
         }
+        const exactAspectHighlightToggle = document.getElementById('accountExactAspectHighlightToggle');
+        if (exactAspectHighlightToggle) {
+            exactAspectHighlightToggle.checked = resolvedVisual?.wheel?.highlight_exact_aspects !== false;
+        }
 
         elementBody.innerHTML = Object.keys(elementPalette).map((element) => `
             <tr>
@@ -1236,6 +1240,7 @@
             },
             wheel: {
                 angular_cusps_black: document.getElementById('accountAngularCuspsBlackToggle')?.checked === true,
+                highlight_exact_aspects: document.getElementById('accountExactAspectHighlightToggle')?.checked !== false,
             },
             timezone_label_format: getTimezoneLabelFormatSelect()?.value || 'UTC',
             date_format: getDateFormatSelect()?.value || 'DD_MM_YYYY',

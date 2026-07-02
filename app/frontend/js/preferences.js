@@ -125,6 +125,7 @@
         },
         wheel: {
             angular_cusps_black: false,
+            highlight_exact_aspects: true,
         },
     };
 
@@ -604,6 +605,7 @@
             },
             wheel: {
                 angular_cusps_black: visual?.wheel?.angular_cusps_black === true,
+                highlight_exact_aspects: visual?.wheel?.highlight_exact_aspects !== false,
             },
             timezone_label_format: timezoneLabelFormat,
             date_format: dateFormat,
@@ -668,6 +670,11 @@
     function shouldUseBlackAngularCusps(visual = null) {
         const resolved = visual ? resolveVisualPreferences(visual) : accountVisualPreferences;
         return resolved?.wheel?.angular_cusps_black === true;
+    }
+
+    function shouldHighlightExactAspects(visual = null) {
+        const resolved = visual ? resolveVisualPreferences(visual) : accountVisualPreferences;
+        return resolved?.wheel?.highlight_exact_aspects !== false;
     }
 
     function shouldShowAspectText(viewSettings = {}) {
@@ -789,6 +796,7 @@
         getDateFormat,
         getDegreeFormat,
         shouldUseBlackAngularCusps,
+        shouldHighlightExactAspects,
         shouldShowAspectText,
         buildChartViewDraftKey,
         saveChartViewDraft,

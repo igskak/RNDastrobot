@@ -257,7 +257,8 @@
     // Глобальные state.solar*/synastry* — это «scratch» редактора ВЫБРАННОГО слоя.
     // Каждый инстанс хранит свой снимок в inst.config; fetch/cacheKey читают его.
     // transit/progression/direction несут «момент» (дата/время/место[/тип дирекции]);
-    // solar_return и synastry_partner — свой конфиг. Все методы конфигурируемы.
+    // solar_return хранит год/место и отображает рассчитанный момент соляра;
+    // synastry_partner — свой конфиг. Все методы конфигурируемы.
     function isMomentMethod(method) {
         return method === 'transit' || method === 'progression' || method === 'direction';
     }
@@ -295,6 +296,7 @@
         const cfg = ensureLayerConfig(inst);
         if (inst.method === 'solar_return') {
             cfg.year = state.solarYear;
+            cfg.datetime = cfg.datetime || getDisplayedSolarDateTime();
             cfg.location = state.solarLocation ? { ...state.solarLocation } : null;
         } else if (inst.method === 'synastry_partner') {
             cfg.mode = state.synastryMode;
@@ -494,7 +496,7 @@
 
         const natalData = window.AstroAPI?.getChartFromSession?.();
         if (!natalData) {
-            showColdStartOverlay();
+            redirectToChartLibrary();
             return;
         }
 
@@ -662,41 +664,6 @@
         initForecastNewActionsMenu();
         initMobilePanelSwitch();
 
-        // Solar year stepper — delegated via the regular stepper container
-        document.addEventListener('click', (event) => {
-            const btn = event.target.closest('[data-solar-year-step]');
-            if (!btn || !refs.forecastNewTimeStepper?.contains(btn)) return;
-            const delta = Number(btn.dataset.solarYearStep);
-            if (!delta) return;
-            const next = clamp(state.solarYear + delta, 1900, 2100);
-            if (next === state.solarYear) return;
-            state.solarYear = next;
-            // Sync both solar year inputs
-            syncSolarInputs();
-            updateSolarYearStepperValue();
-            // Зафиксировать год в выбранном слое соляра и сбросить его кэш.
-            commitSelectedLayerEdit();
-            if (hasActiveMethod('solar_return')) {
-                void loadActiveLayers({ lightweight: false });
-            }
-            // Update subtitle
-            if (refs.prognosticPanelMeta) refs.prognosticPanelMeta.textContent = buildPrognosticMomentSummary();
-            schedulePersist();
-        });
-
-        // Keyboard on solar year segment
-        document.addEventListener('keydown', (event) => {
-            const seg = event.target.closest('[data-solar-year-segment]');
-            if (!seg) return;
-            let delta = 0;
-            if (event.key === 'ArrowUp') delta = 1;
-            else if (event.key === 'ArrowDown') delta = -1;
-            else return;
-            event.preventDefault();
-            const btn = seg.querySelector(`[data-solar-year-step="${delta}"]`);
-            btn?.click();
-        });
-
         refs.openNatalTablesBtn?.addEventListener('click', () => {
             const chart = getActiveReportChartData();
             window.AstroAPI?.saveChartToSession?.(chart);
@@ -862,6 +829,12 @@
             const segmentEl = event.target.closest('[data-time-step-key]');
             if (!segmentEl) return;
 
+            if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                event.preventDefault();
+                focusAdjacentTimeStepperSegment(refs.forecastNewTimeStepper, segmentEl, event.key === 'ArrowRight' ? 1 : -1);
+                return;
+            }
+
             const directionByKey = {
                 ArrowUp: 1,
                 ArrowDown: -1,
@@ -953,6 +926,13 @@
             if (event.target.closest('.forecast-new-custom-step')) return;
             const segmentEl = event.target.closest('[data-time-step-key]');
             if (!segmentEl) return;
+
+            if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                event.preventDefault();
+                focusAdjacentTimeStepperSegment(refs.forecastNewNatalTimeStepper, segmentEl, event.key === 'ArrowRight' ? 1 : -1);
+                return;
+            }
+
             const directionByKey = { ArrowUp: 1, ArrowDown: -1, PageUp: 1, PageDown: -1 };
             const direction = directionByKey[event.key];
             if (!direction) return;
@@ -1662,7 +1642,31 @@
         return selectedRightMethod() === 'synastry_partner';
     }
 
+    function isSolarMomentActive() {
+        return selectedRightMethod() === 'solar_return';
+    }
+
+    function normalizeSolarDateTime(value) {
+        const raw = String(value || '').trim();
+        if (!raw) return '';
+        const [date, clock = ''] = raw.split('T');
+        if (!date) return '';
+        const time = String(clock || '').split(/[+\-Z]/)[0] || '12:00:00';
+        return `${date}T${normalizeTime(time || '12:00:00')}`;
+    }
+
+    function getDisplayedSolarDateTime() {
+        const infoDateTime = normalizeSolarDateTime(selectedViewModelLayer()?.raw?.solar_info?.solar_datetime_local);
+        if (infoDateTime) return infoDateTime;
+        const cfgDateTime = normalizeSolarDateTime(selectedLayerInstance()?.config?.datetime);
+        if (cfgDateTime) return cfgDateTime;
+        return `${state.solarYear || new Date().getFullYear()}-01-01T12:00:00`;
+    }
+
     function getDisplayedMomentDateTime() {
+        if (isSolarMomentActive()) {
+            return getDisplayedSolarDateTime();
+        }
         if (isSynastryMomentActive()) {
             const bd = selectedViewModelLayer()?.raw?.partner_chart?.birth_data;
             const date = state.synastryMode === 'manual'
@@ -1714,6 +1718,22 @@
     }
 
     function applyDisplayedMomentDateTime(value) {
+        if (isSolarMomentActive()) {
+            const [date] = splitTargetDatetime(value);
+            const nextYear = Number(String(date || '').slice(0, 4));
+            if (Number.isFinite(nextYear)) {
+                state.solarYear = Math.min(2100, Math.max(1900, Math.trunc(nextYear)));
+            }
+            const cfg = ensureLayerConfig(selectedLayerInstance());
+            if (cfg) {
+                cfg.year = state.solarYear;
+                cfg.datetime = value;
+                cfg.location = state.solarLocation ? { ...state.solarLocation } : null;
+            }
+            syncSolarInputs();
+            invalidateLayerById(selectedLayerInstance()?.id);
+            return;
+        }
         if (!isSynastryMomentActive()) {
             setSelectedDateTime(value);
             commitSelectedLayerEdit();
@@ -2084,8 +2104,14 @@
         state.solarYear = Number.isFinite(year)
             ? Math.min(2100, Math.max(1900, Math.trunc(year)))
             : new Date().getFullYear();
+        const cfg = ensureLayerConfig(selectedLayerInstance());
+        if (cfg && selectedRightMethod() === 'solar_return') {
+            cfg.year = state.solarYear;
+            cfg.datetime = `${state.solarYear}-01-01T12:00:00`;
+            cfg.location = state.solarLocation ? { ...state.solarLocation } : null;
+        }
         syncSolarInputs();
-        renderSolarYearStepper();
+        renderOrUpdateTimeStepper();
         schedulePersist();
         if (hasActiveMethod('solar_return')) {
             await loadActiveLayers({ lightweight: true });
@@ -2287,7 +2313,7 @@
         const [solarDate, solarClock] = String(info.solar_datetime_local || '').split('T');
         const solarTime = (solarClock || '').slice(0, 5);
         const moment = [
-            [solarDate, solarTime].filter(Boolean).join(' '),
+            [solarDate ? formatChartDate(solarDate) : '', solarTime].filter(Boolean).join(' '),
             formatHeaderTimezone(info.timezone, { date: solarDate, time: solarTime }),
         ].filter(Boolean).join(' · ');
         return [resolvedYear, moment, locName].filter(Boolean).join(' · ');
@@ -2297,14 +2323,7 @@
         const method = selectedRightMethod();
 
         if (method === 'solar_return') {
-            const info = selectedViewModelLayer()?.raw?.solar_info || {};
-            const locationName = info?.location?.name
-                || state.solarLocation?.name
-                || state.location?.name
-                || '';
-            const [date, time] = String(info.solar_datetime_local || '').split('T');
-            const timezone = info.timezone || state.solarLocation?.timezone || state.timezone;
-            return buildPanelLocationMeta(locationName, timezone, { date, time });
+            return buildSolarMomentMeta(selectedViewModelLayer()?.raw?.solar_info, { year: state.solarYear });
         }
 
         const place = getMomentPlaceView();
@@ -2343,6 +2362,15 @@
         }
         const separator = `<span class="forecast-new-time-stepper-separator" aria-hidden="true">${sep}</span>`;
         return `<span class="forecast-new-time-stepper-group forecast-new-time-stepper-group--date" aria-label="${escapeHtml(ariaLabel)}">${order.join(separator)}</span>`;
+    }
+
+    function focusAdjacentTimeStepperSegment(root, currentSegmentEl, direction) {
+        if (!root || !currentSegmentEl) return;
+        const segments = Array.from(root.querySelectorAll('[data-time-step-key]'));
+        const currentIndex = segments.indexOf(currentSegmentEl);
+        if (currentIndex < 0) return;
+        const nextIndex = Math.min(Math.max(currentIndex + direction, 0), segments.length - 1);
+        segments[nextIndex]?.focus();
     }
 
     function renderTimeStepper() {
@@ -2418,34 +2446,6 @@
             return;
         }
         updateTimeStepperValues(refs.forecastNewTimeStepper, getDisplayedMomentDateTime());
-    }
-
-    function renderSolarYearStepper() {
-        // Render a year-only stepper into the regular stepper slot (#forecastNewTimeStepper)
-        const container = refs.forecastNewTimeStepper;
-        if (!container) return;
-        container.innerHTML = `
-            <span class="forecast-new-time-stepper-display">
-                <span class="forecast-new-time-stepper-segment forecast-new-time-stepper-segment--yearOnes"
-                    data-solar-year-segment tabindex="0" role="spinbutton"
-                    aria-label="Год соляра" aria-valuetext="${state.solarYear}">
-                    <button type="button" class="forecast-new-time-stepper-btn forecast-new-time-stepper-btn--up"
-                        data-solar-year-step="1" aria-label="Следующий год"></button>
-                    <span class="forecast-new-time-stepper-value">${state.solarYear}</span>
-                    <button type="button" class="forecast-new-time-stepper-btn forecast-new-time-stepper-btn--down"
-                        data-solar-year-step="-1" aria-label="Предыдущий год"></button>
-                </span>
-            </span>
-        `;
-    }
-
-    function updateSolarYearStepperValue() {
-        const container = refs.forecastNewTimeStepper;
-        if (!container) return;
-        const valueEl = container.querySelector('[data-solar-year-segment] .forecast-new-time-stepper-value');
-        const segmentEl = container.querySelector('[data-solar-year-segment]');
-        if (valueEl) valueEl.textContent = String(state.solarYear);
-        if (segmentEl) segmentEl.setAttribute('aria-valuetext', String(state.solarYear));
     }
 
     function renderNatalTimeStepper() {
@@ -2814,6 +2814,7 @@
             abortAllInFlightLayerRequests();
             setNatalLightweightLoading(false);
             renderStaticNatal();
+            renderWheel();
             await loadActiveLayers({ lightweight: true });
         } catch (error) {
             setNatalLightweightLoading(false);
@@ -3034,10 +3035,10 @@
                 planets: layer.bodies || [],
                 houses: layer.houses || [],
                 aspects: layer.aspects || [],
-                aspect_configurations: [],
-                stelliums: [],
-                balances: null,
-                cosmogram_pattern: null,
+                aspect_configurations: layer.aspect_configurations || [],
+                stelliums: layer.stelliums || [],
+                balances: layer.balances || null,
+                cosmogram_pattern: layer.cosmogram_pattern || null,
             }, { scope: 'prognostic' }));
         }
     }
@@ -3851,9 +3852,14 @@
             if (method === 'solar_return') {
                 const solarCfg = layerConfigOf(layer);
                 const solarLoc = solarCfg.location;
+                const solarDateTime = options.targetDateTime || solarCfg.datetime || getDisplayedSolarDateTime();
+                const [solarDate] = splitTargetDatetime(solarDateTime);
+                const solarYear = Number(String(solarDate || '').slice(0, 4));
                 const solarBody = {
                     ...natalSource,
-                    year: solarCfg.year,
+                    year: Number.isFinite(Number(solarCfg.year))
+                        ? Number(solarCfg.year)
+                        : (Number.isFinite(solarYear) ? solarYear : state.solarYear),
                     save_to_db: false,
                 };
                 if (solarLoc?.latitude !== null && solarLoc?.latitude !== undefined) {
@@ -4872,57 +4878,94 @@
         renderRightPanel();
     }
 
+    function viewModelLayerForInstance(inst) {
+        const layers = state.viewModel?.activePrognosticLayers || [];
+        return layers.find((layer) => layer.id === inst?.id)
+            || layers.find((layer) => layer.method === inst?.method)
+            || null;
+    }
+
+    function formatLayerChipDateTime(value) {
+        const raw = String(value || '').trim();
+        if (!raw) return '';
+        const [date, time] = splitTargetDatetime(raw);
+        const shortTime = String(time || '').slice(0, 5);
+        return [date ? formatChartDate(date) : '', shortTime].filter(Boolean).join(' ');
+    }
+
+    function layerInstanceChipLabel(inst, ordinal) {
+        const cfg = layerConfigOf(inst);
+        const viewLayer = viewModelLayerForInstance(inst);
+
+        if (isMomentMethod(inst.method)) {
+            return formatLayerChipDateTime(cfg.datetime || state.selectedDateTime) || String(ordinal);
+        }
+
+        if (inst.method === 'solar_return') {
+            const solarDateTime = normalizeSolarDateTime(
+                viewLayer?.raw?.solar_info?.solar_datetime_local || cfg.datetime || ''
+            );
+            const year = cfg.year || viewLayer?.raw?.solar_info?.year || state.solarYear || '';
+            return formatLayerChipDateTime(solarDateTime) || String(year || ordinal);
+        }
+
+        if (inst.method === 'synastry_partner') {
+            const bd = viewLayer?.raw?.partner_chart?.birth_data || {};
+            const manual = cfg.manual || {};
+            const name = cfg.chartTitle
+                || manual.name
+                || [bd.first_name, bd.last_name].filter(Boolean).join(' ').trim();
+            return name || (bd.date ? formatChartDate(bd.date) : String(ordinal));
+        }
+
+        return String(ordinal);
+    }
+
     function renderRightLayerTabs() {
         if (!refs.rightLayerTabs) return;
         if (state.wheelView === 'single') {
+            refs.rightLayerTabs.classList.remove('is-dense');
             refs.rightLayerTabs.innerHTML = '';
             syncCompositeHeaderButton();
             return;
         }
         normalizeActiveLayers();
-        // Порядковый номер инстанса в рамках метода — для подписи «Транзит 2» при дублях.
-        const methodTotals = {};
-        state.activeLayers.forEach((l) => { methodTotals[l.method] = (methodTotals[l.method] || 0) + 1; });
-        const methodSeen = {};
-        const activeTabs = state.activeLayers.map((inst) => {
-            methodSeen[inst.method] = (methodSeen[inst.method] || 0) + 1;
-            const ordinal = methodSeen[inst.method];
-            const base = layerLabel(inst.method);
-            const label = methodTotals[inst.method] > 1 ? `${base} ${ordinal}` : base;
-            const isActive = inst.id === state.selectedRightLayerId;
+        refs.rightLayerTabs.classList.toggle('is-dense', state.activeLayers.length >= 3);
+        const addLayerLabel = t('page.chart.actions.addLayer');
+        const groupedLayers = LAYER_ORDER.map((method) => {
+            const instances = instancesOfMethod(method);
+            const canAdd = isMultiInstanceMethod(method) || instances.length === 0;
+            const label = layerLabel(method);
+            const addTitle = `${addLayerLabel}: ${label}`;
+            const methodControl = canAdd
+                ? `<button type="button" class="forecast-new-layer-method-action" data-add-layer-method="${method}" aria-label="${escapeHtml(addTitle)}" title="${escapeHtml(addTitle)}">
+                        <span class="forecast-new-layer-method-plus" aria-hidden="true">+</span>
+                        <span class="forecast-new-layer-method-name">${escapeHtml(label)}</span>
+                    </button>`
+                : `<span class="forecast-new-layer-method-action forecast-new-layer-method-action--locked">
+                        <span class="forecast-new-layer-method-name">${escapeHtml(label)}</span>
+                    </span>`;
+            const chips = instances.map((inst, index) => {
+                const chipLabel = layerInstanceChipLabel(inst, index + 1);
+                const chipTitle = `${label}: ${chipLabel}`;
+                const isActive = inst.id === state.selectedRightLayerId;
+                return `
+                    <span class="forecast-new-layer-instance-wrap ${isActive ? 'active' : ''}">
+                        <button type="button" class="forecast-new-layer-instance" data-right-layer="${escapeHtml(inst.id)}" title="${escapeHtml(chipTitle)}">
+                            <span class="forecast-new-layer-instance-label">${escapeHtml(chipLabel)}</span>
+                        </button>
+                        <button type="button" class="forecast-new-layer-instance-remove" data-remove-layer="${escapeHtml(inst.id)}" aria-label="Убрать слой ${escapeHtml(chipTitle)}" title="Убрать слой">−</button>
+                    </span>
+                `;
+            }).join('');
             return `
-            <button type="button" class="forecast-new-right-layer-tab ${isActive ? 'active' : ''}" data-right-layer="${escapeHtml(inst.id)}">
-                <span class="forecast-new-right-layer-label">${escapeHtml(label)}</span>
-                <span type="button" class="forecast-new-right-layer-remove" data-remove-layer="${escapeHtml(inst.id)}" aria-label="Убрать слой ${escapeHtml(label)}" title="Убрать слой">−</span>
-            </button>
-        `;
-        }).join('');
-        // Single-instance методы (соляр/синастрия) скрываются из меню, когда уже активны;
-        // multi-instance (транзит/прогрессия/дирекция) можно добавлять повторно.
-        const layerButtons = LAYER_ORDER.map((method) => {
-            const active = hasActiveMethod(method);
-            const disabled = active && !isMultiInstanceMethod(method);
-            return `
-                <button type="button" class="forecast-new-add-layer-item" data-add-layer-method="${method}" ${disabled ? 'disabled' : ''}>
-                    ${disabled ? '✓ ' : '+ '}${layerLabel(method)}
-                </button>
+                <span class="forecast-new-layer-group ${instances.length ? 'has-instances' : 'is-empty'}" data-layer-group="${method}">
+                    ${methodControl}
+                    ${chips ? `<span class="forecast-new-layer-instances">${chips}</span>` : ''}
+                </span>
             `;
         }).join('');
-        // Меню добавления показываем всегда: мульти-методы можно добавлять повторно.
-        const allLayersActive = false;
-        const addLayerLabel = t('page.chart.actions.addLayer');
-        const addLayerMarkup = allLayersActive ? '' : `
-            <span class="forecast-new-add-layer forecast-new-add-layer--compact">
-                <button type="button" class="forecast-new-add-layer-toggle" data-add-layer-toggle aria-haspopup="menu" aria-expanded="false" aria-label="${escapeHtml(addLayerLabel)}" title="${escapeHtml(addLayerLabel)}">+</button>
-                <span class="forecast-new-add-layer-menu hidden" data-add-layer-menu role="menu">
-                    ${layerButtons}
-                </span>
-            </span>
-        `;
-        refs.rightLayerTabs.innerHTML = `
-            ${activeTabs}
-            ${addLayerMarkup}
-        `;
+        refs.rightLayerTabs.innerHTML = groupedLayers;
         syncCompositeHeaderButton();
         syncRelationshipSwitch();
     }
@@ -4971,9 +5014,7 @@
         refs.prognosticPanelTitle.textContent = selectedPanelTitle(method);
         refs.prognosticPanelMeta.textContent = buildPrognosticMomentSummary();
         syncMomentCardLayout();
-        // Solar return: render year-only stepper into the regular stepper slot
-        if (method === 'solar_return') renderSolarYearStepper();
-        else renderOrUpdateTimeStepper();
+        renderOrUpdateTimeStepper();
         refs.targetDatetimeLabel.textContent = formatChartDateTimeLabel(getDisplayedMomentDateTime());
 
         if (!layer) {
@@ -4996,8 +5037,8 @@
             planets: layer.bodies || [],
             houses: layer.houses || [],
             aspects: layer.aspects || [],
-            aspect_configurations: [],
-            stelliums: [],
+            aspect_configurations: layer.aspect_configurations || [],
+            stelliums: layer.stelliums || [],
             balances: layer.balances || null,
             cosmogram_pattern: layer.cosmogram_pattern || null,
         }, { scope: 'prognostic' }));
@@ -7223,7 +7264,7 @@
             state.activeRightMethodTab = sel?.method || '';
         }
         // Synastry deep-link (from clients / client-profile / related-people): preselect
-        // the partner so the synastry_partner layer loads on cold open.
+        // the partner so the synastry_partner layer loads after the source chart is restored.
         const partner = params.get('partner');
         if (partner && layer === 'synastry_partner') {
             state.synastryPartnerId = String(partner);
@@ -8093,236 +8134,16 @@
 
     window.ForecastNewState = state;
 
-    // ─── Cold-start overlay ───────────────────────────────────────────────────
-    // Shown when forecast-new.html is opened without a natal chart in session.
-    // Two tabs: pick a saved client, or enter birth data manually.
-    // On selection → saveChartToSession → location.reload() (re-runs clean init).
-
-    function coldFetch(url, init) {
-        return fetch(url, { credentials: 'include', ...(init || {}) });
+    function redirectToChartLibrary() {
+        window.AstroAPI?.saveNavigationState?.({
+            sourceView: 'forecast-new',
+            sourceUrl: '/',
+            clientUserId: null,
+            partnerUserId: null,
+        });
+        window.showPageLoader?.();
+        window.location.replace('/');
     }
-
-    function showColdStartOverlay() {
-        const overlay = document.createElement('div');
-        overlay.id = 'coldStartOverlay';
-        overlay.innerHTML = `
-<style>
-#coldStartOverlay{position:fixed;inset:0;background:#0e0e16;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:40px 16px 24px;overflow-y:auto;font-family:inherit}
-#coldStartOverlay h2{color:#e8e6f0!important;font-size:1.25rem;margin:0 0 8px;text-align:center}
-#coldStartOverlay p{color:#9d9ab0!important;font-size:.875rem;margin:0 0 24px;text-align:center}
-.cold-tabs{display:flex;gap:8px;margin-bottom:20px}
-.cold-tab{padding:8px 20px;border-radius:8px;border:1px solid #2a2840;background:transparent;color:#9d9ab0!important;cursor:pointer;font-size:.875rem;transition:all .15s}
-.cold-tab.active{background:#6c5ce7;border-color:#6c5ce7;color:#fff!important}
-.cold-panel{width:100%;max-width:480px}
-.cold-panel.hidden{display:none}
-.cold-client-list{display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto}
-.cold-client-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:8px;border:1px solid #2a2840;background:#16151f;cursor:pointer;color:#e8e6f0!important;font-size:.875rem;transition:border-color .15s}
-.cold-client-item:hover{border-color:#6c5ce7}
-.cold-client-name{font-weight:500;color:#e8e6f0!important}
-.cold-client-meta{color:#9d9ab0!important;font-size:.8rem}
-.cold-status{color:#9d9ab0!important;font-size:.875rem;text-align:center;padding:16px 0}
-.cold-form{display:flex;flex-direction:column;gap:12px}
-.cold-form label{color:#9d9ab0!important;font-size:.8rem;margin-bottom:2px;display:block}
-.cold-form input,.cold-form select{width:100%;padding:9px 12px;border-radius:8px;border:1px solid #2a2840;background:#16151f;color:#e8e6f0!important;font-size:.875rem;box-sizing:border-box;outline:none}
-.cold-form input:focus,.cold-form select:focus{border-color:#6c5ce7}
-.cold-place-wrap{position:relative}
-.cold-suggestions{position:absolute;top:100%;left:0;right:0;z-index:10;background:#16151f;border:1px solid #2a2840;border-radius:8px;max-height:180px;overflow-y:auto;display:none}
-.cold-suggestions.visible{display:block}
-.cold-btn{padding:10px 20px;border-radius:8px;background:#6c5ce7;border:none;color:#fff!important;font-size:.875rem;cursor:pointer;width:100%;transition:opacity .15s}
-.cold-btn:disabled{opacity:.5;cursor:not-allowed}
-.cold-err{color:#ff6b6b!important;font-size:.8rem;text-align:center;min-height:20px}
-</style>
-<h2 data-cold-i18n="page.forecastNew.coldStart.title">Відкрити карту</h2>
-<p data-cold-i18n="page.forecastNew.coldStart.subtitle">Виберіть клієнта або введіть дані вручну</p>
-<div class="cold-tabs">
-  <button class="cold-tab active" id="coldTabClients">Клієнти</button>
-  <button class="cold-tab" id="coldTabManual">Вручну</button>
-</div>
-<div class="cold-panel" id="coldPanelClients">
-  <div class="cold-client-list" id="coldClientList">
-    <div class="cold-status" id="coldClientsStatus">Завантаження…</div>
-  </div>
-</div>
-<div class="cold-panel hidden" id="coldPanelManual">
-  <div class="cold-form" id="coldManualForm">
-    <div><label>Дата народження</label><input type="date" id="coldDate" required></div>
-    <div><label>Час народження</label><input type="time" id="coldTime" value="12:00" step="1"></div>
-    <div>
-      <label>Місце народження</label>
-      <div class="cold-place-wrap">
-        <input type="text" id="coldPlace" autocomplete="off" placeholder="Місто…">
-        <div class="cold-suggestions" id="coldSuggestions"></div>
-      </div>
-    </div>
-    <div><label>Часовий пояс</label><select id="coldTimezone"></select></div>
-    <input type="hidden" id="coldLat">
-    <input type="hidden" id="coldLon">
-    <div class="cold-err" id="coldManualErr"></div>
-    <button class="cold-btn" id="coldBuildBtn">Побудувати карту</button>
-  </div>
-</div>`;
-        document.body.appendChild(overlay);
-
-        // i18n labels (best-effort, silent on failure)
-        overlay.querySelectorAll('[data-cold-i18n]').forEach((el) => {
-            try {
-                const val = window.i18n?.t?.(el.dataset.coldI18n);
-                if (val && val !== el.dataset.coldI18n) el.textContent = val;
-            } catch (_) { /* ignore */ }
-        });
-
-        // Tab switching
-        const tabClients = overlay.querySelector('#coldTabClients');
-        const tabManual = overlay.querySelector('#coldTabManual');
-        const panelClients = overlay.querySelector('#coldPanelClients');
-        const panelManual = overlay.querySelector('#coldPanelManual');
-
-        tabClients.addEventListener('click', () => {
-            tabClients.classList.add('active'); tabManual.classList.remove('active');
-            panelClients.classList.remove('hidden'); panelManual.classList.add('hidden');
-        });
-        tabManual.addEventListener('click', () => {
-            tabManual.classList.add('active'); tabClients.classList.remove('active');
-            panelManual.classList.remove('hidden'); panelClients.classList.add('hidden');
-            initManualPanel();
-        });
-
-        // ── Tab: Clients ──────────────────────────────────────────────────────
-        const clientList = overlay.querySelector('#coldClientList');
-        const clientsStatus = overlay.querySelector('#coldClientsStatus');
-
-        coldFetch(`${API_BASE}/users`)
-            .then((r) => r.ok ? r.json() : Promise.reject(new Error('Помилка завантаження')))
-            .then((users) => {
-                if (!Array.isArray(users) || !users.length) {
-                    clientsStatus.textContent = 'Немає збережених клієнтів';
-                    return;
-                }
-                clientsStatus.remove();
-                users.forEach((u) => {
-                    const btn = document.createElement('button');
-                    btn.className = 'cold-client-item';
-                    const name = [u.first_name, u.last_name].filter(Boolean).join(' ') || '(без імені)';
-                    const meta = u.birth_date ? u.birth_date + (u.birth_place ? ' · ' + u.birth_place : '') : (u.birth_place || '');
-                    btn.innerHTML = `<span class="cold-client-name">${escapeHtml(name)}</span>${meta ? `<span class="cold-client-meta">${escapeHtml(meta)}</span>` : ''}`;
-                    btn.addEventListener('click', () => openClient(u.user_id, btn));
-                    clientList.appendChild(btn);
-                });
-            })
-            .catch((err) => { clientsStatus.textContent = err.message || 'Помилка'; });
-
-        async function openClient(userId, btn) {
-            btn.disabled = true;
-            btn.style.opacity = '0.6';
-            try {
-                const resp = await coldFetch(`${API_BASE}/natal/${encodeURIComponent(String(userId))}`);
-                if (!resp.ok) throw new Error('Не вдалося завантажити карту');
-                const natalData = await resp.json();
-                window.AstroAPI?.saveChartToSession?.(natalData);
-                window.AstroAPI?.saveFormData?.(window.AstroAPI.chartToFormData?.(natalData));
-                window.location.reload();
-            } catch (err) {
-                btn.disabled = false;
-                btn.style.opacity = '';
-                clientsStatus.textContent = err.message || 'Помилка';
-            }
-        }
-
-        // ── Tab: Manual entry ─────────────────────────────────────────────────
-        let manualPanelInited = false;
-        let coldPanel = null;
-
-        function initManualPanel() {
-            if (manualPanelInited) return;
-            manualPanelInited = true;
-
-            const tzSelect = overlay.querySelector('#coldTimezone');
-            window.Timezones?.populate?.(tzSelect);
-            const guessedTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-            tzSelect.value = guessedTz;
-
-            const placeInput = overlay.querySelector('#coldPlace');
-            const suggestions = overlay.querySelector('#coldSuggestions');
-            const latInput = overlay.querySelector('#coldLat');
-            const lonInput = overlay.querySelector('#coldLon');
-
-            coldPanel = new window.ChartSourcePanel.ChartSourcePanel({ mode: 'manual' }).attachDom({
-                dateInput: overlay.querySelector('#coldDate'),
-                timeInput: overlay.querySelector('#coldTime'),
-                timezoneInput: tzSelect,
-                locationInput: placeInput,
-                latitudeInput: latInput,
-                longitudeInput: lonInput,
-            });
-
-            // Place autocomplete
-            if (window.PlaceAutocomplete?.attach) {
-                window.PlaceAutocomplete.attach({
-                    input: placeInput,
-                    suggestions,
-                    onSelect(place) {
-                        const latitude = place.lat ?? place.latitude ?? null;
-                        const longitude = place.lon ?? place.longitude ?? null;
-                        const timezone = place.timezone
-                            || window.Timezones?.guess?.(place.displayName || place.shortName || placeInput.value)
-                            || null;
-                        coldPanel.update({
-                            location: {
-                                name: place.shortName || place.displayName || placeInput.value,
-                                latitude,
-                                longitude,
-                                sourceId: place.sourceId || place.source_id || null,
-                            },
-                            ...(timezone ? { timezone } : {}),
-                        });
-                        coldPanel.syncToDom();
-                        suggestions.classList.remove('visible');
-                    },
-                });
-            }
-
-            // Show/hide suggestions box
-            placeInput.addEventListener('input', () => {
-                suggestions.classList.toggle('visible', suggestions.children.length > 0);
-            });
-        }
-
-        const buildBtn = overlay.querySelector('#coldBuildBtn');
-        const manualErr = overlay.querySelector('#coldManualErr');
-
-        buildBtn.addEventListener('click', async () => {
-            manualErr.textContent = '';
-            const snapshot = coldPanel?.getSource?.() || {};
-            const payload = window.ChartSourcePanel?.buildSourcePayload?.(snapshot);
-            if (!payload?.natal?.date) {
-                manualErr.textContent = 'Введіть дату народження';
-                return;
-            }
-            buildBtn.disabled = true;
-            try {
-                const resp = await coldFetch(`${API_BASE}/natal/calculate?save_to_db=false`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload.natal),
-                });
-                if (!resp.ok) {
-                    const err = await resp.json().catch(() => ({}));
-                    throw new Error(err.detail || 'Помилка розрахунку');
-                }
-                const natalData = await resp.json();
-                window.AstroAPI?.saveChartToSession?.(natalData);
-                window.location.reload();
-            } catch (err) {
-                manualErr.textContent = err.message || 'Помилка';
-                buildBtn.disabled = false;
-            }
-        });
-    }
-
-    function escapeHtml(str) {
-        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-    // ── End cold-start overlay ────────────────────────────────────────────────
 
     // ── Command facade (PR1 — ASSISTANT_ACTIONS_IMPLEMENTATION_PLAN.md) ───────
     // A narrow, curated surface for natural-language / voice "actions". chat.js
