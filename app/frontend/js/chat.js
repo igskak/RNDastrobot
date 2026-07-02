@@ -421,7 +421,10 @@ class ChatWidget {
 
         const label = document.createElement('span');
         label.className = 'chat-provenance-label';
-        label.textContent = t('page.chart.chat.provenanceSummary', { count: withProv.length });
+        const summaryKey = withProv.length === 1
+            ? 'page.chart.chat.provenanceSummaryOne'
+            : 'page.chart.chat.provenanceSummary';
+        label.textContent = t(summaryKey, { count: withProv.length });
         pill.appendChild(label);
 
         if (degraded) {

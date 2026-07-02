@@ -934,7 +934,8 @@
         "provenanceComputed": "dataset {hash} · every number server-computed",
         "contextLabel": "Context",
         "correctionFlag": "Flag this answer for correction",
-        "correctionNote": "What was wrong? (optional)"
+        "correctionNote": "What was wrong? (optional)",
+        "provenanceSummaryOne": "traced to data · 1 tool ✓"
       },
       "edit": {
         "errors": {

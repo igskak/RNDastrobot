@@ -934,7 +934,8 @@
         "provenanceComputed": "набор {hash} · каждое число вычислено сервером",
         "contextLabel": "Контекст",
         "correctionFlag": "Отметить ответ для исправления",
-        "correctionNote": "Что было не так? (необязательно)"
+        "correctionNote": "Что было не так? (необязательно)",
+        "provenanceSummaryOne": "источник — данные · 1 инструмент ✓"
       },
       "edit": {
         "errors": {
