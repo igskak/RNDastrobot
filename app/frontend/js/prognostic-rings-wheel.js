@@ -775,8 +775,12 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                             opacity: isMajor ? 0.7 : 0.45,
                             class: 'aspect-line',
                             ...aspectAttrs,
-                        });
+                    });
                     this.layers.aspects.appendChild(aspectElement);
+                    this.layers.aspects.appendChild(this.createAspectHitElement({
+                        aspectAttrs,
+                        geometry,
+                    }));
 
                     const shouldDrawAspectGlyph = isMajor
                         && Number(aspect.orb) < 5
@@ -914,8 +918,12 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                         opacity: isMajor ? 0.7 : 0.45,
                         class: 'aspect-line',
                         ...aspectAttrs,
-                    });
+                });
                 this.layers.aspects.appendChild(aspectElement);
+                this.layers.aspects.appendChild(this.createAspectHitElement({
+                    aspectAttrs,
+                    geometry,
+                }));
 
                 const shouldDrawAspectGlyph = isMajor
                     && Number(aspect.orb) < 5
@@ -1884,6 +1892,37 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                 style: 'pointer-events: none;',
             }, glyph));
             return symbolGroup;
+        }
+
+        createAspectHitElement({ aspectAttrs, geometry }) {
+            if (geometry.drawDot) {
+                return this.el('circle', {
+                    cx: geometry.midX,
+                    cy: geometry.midY,
+                    r: this.conjunctionDisplay.dotRadius + 8,
+                    fill: 'transparent',
+                    stroke: 'transparent',
+                    'stroke-width': 1,
+                    class: 'aspect-line aspect-hit',
+                    style: 'pointer-events: all;',
+                    'aria-hidden': 'true',
+                    ...aspectAttrs,
+                });
+            }
+            return this.el('line', {
+                x1: geometry.x1,
+                y1: geometry.y1,
+                x2: geometry.x2,
+                y2: geometry.y2,
+                stroke: 'transparent',
+                'stroke-width': 14,
+                'stroke-linecap': 'round',
+                opacity: 0,
+                class: 'aspect-line aspect-hit',
+                style: 'pointer-events: stroke;',
+                'aria-hidden': 'true',
+                ...aspectAttrs,
+            });
         }
 
         el(tag, attrs = {}, text = null) {

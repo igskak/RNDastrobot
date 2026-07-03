@@ -56,7 +56,7 @@ class AspectDynamicsService:
 
     METHOD_DEFAULT_SPAN_DAYS = {
         "natal": 365.0,
-        "transit": 3650.0,
+        "transit": 730.0,
         "progression": 3650.0,
         "direction": 3650.0,
         "synastry_partner": 365.0,
@@ -1195,7 +1195,7 @@ class AspectDynamicsService:
         if method in {"natal", "synastry_partner"}:
             base = 0.25 if source_body in self.FAST_BODIES else 1.0
         elif method == "transit":
-            base = 0.25 if source_body in self.FAST_BODIES else 1.0
+            base = 0.25 if source_body in self.FAST_BODIES else 2.0
         elif method == "progression":
             base = 7.0
         elif method == "direction":

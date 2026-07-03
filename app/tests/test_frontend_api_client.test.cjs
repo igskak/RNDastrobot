@@ -113,6 +113,25 @@ test('AstroAPI.calculateNatalChart keeps backend compatibility for error payload
     );
 });
 
+test('AstroAPI.buildLoginRedirect preserves safe next target for protected pages', () => {
+    const api = loadApiModule({
+        location: {
+            hostname: 'example.com',
+            origin: 'https://example.com',
+            pathname: '/forecast-new.html',
+            search: '?layer=solar_return',
+            hash: '#wheel',
+        },
+    });
+
+    assert.equal(
+        api.buildLoginRedirect('/login.html'),
+        '/login.html?next=%2Fforecast-new.html%3Flayer%3Dsolar_return%23wheel'
+    );
+    assert.equal(api.buildLoginRedirect('/login.html?next=%2Fnew'), '/login.html?next=%2Fnew');
+    assert.equal(api.buildLoginRedirect('/not-login.html'), '/not-login.html');
+});
+
 test('AstroAPI.resolvePlaceTimezone requests timezone by source_id with locale headers', async () => {
     let captured = null;
 
