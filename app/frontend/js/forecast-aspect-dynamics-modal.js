@@ -21,12 +21,15 @@
     const DEFAULT_MAX_POINTS = 320;
     const MIN_WINDOW_DAYS = 3;
     const MAX_WINDOW_DAYS = 36525;
+    const CLIENT_CACHE_MAX_ITEMS = 24;
+    const DAY_MS = 86400000;
     const API_BASE = () => root.AstroAPI?.API_BASE_URL || '/api/v1';
 
     const state = {
         overlay: null,
         dialog: null,
         canvas: null,
+        overviewCanvas: null,
         chartWrap: null,
         status: null,
         summary: null,
@@ -34,6 +37,7 @@
         subtitle: null,
         closeButton: null,
         toolbar: null,
+        scrubber: null,
         data: null,
         lastFocus: null,
         resizeObserver: null,
@@ -42,6 +46,8 @@
         requestSeq: 0,
         responseCache: new Map(),
         dragStart: null,
+        pendingWindowTimer: null,
+        scrollDomain: null,
     };
 
     function tr(key, fallback, params) {
@@ -182,6 +188,15 @@
         return stableJson(payload);
     }
 
+    function setCachedResponse(key, data) {
+        if (!key) return;
+        state.responseCache.set(key, data);
+        while (state.responseCache.size > CLIENT_CACHE_MAX_ITEMS) {
+            const oldest = state.responseCache.keys().next().value;
+            state.responseCache.delete(oldest);
+        }
+    }
+
     function toDateOnly(ms) {
         return new Date(ms).toISOString().slice(0, 10);
     }
@@ -248,7 +263,7 @@
         try {
             const data = await postJson('/transits/aspect-dynamics', payload);
             if (seq !== state.requestSeq) return null;
-            state.responseCache.set(key, data);
+            setCachedResponse(key, data);
             renderData(data);
             return data;
         } catch (error) {
@@ -258,10 +273,35 @@
         }
     }
 
-    function requestWindow(startMs, endMs) {
+    function requestWindow(startMs, endMs, { debounce = false } = {}) {
         if (!state.basePayload) return;
         const bounded = clampWindow(startMs, endMs);
-        void fetchAndRender(windowPayload(bounded.start, bounded.end));
+        const run = () => {
+            state.pendingWindowTimer = null;
+            void fetchAndRender(windowPayload(bounded.start, bounded.end), { keepStatus: true });
+        };
+        if (!debounce) {
+            clearTimeout(state.pendingWindowTimer);
+            run();
+            return;
+        }
+        clearTimeout(state.pendingWindowTimer);
+        state.pendingWindowTimer = setTimeout(run, 140);
+    }
+
+    function chartPad() {
+        return { left: 42, right: 18, top: 20, bottom: 30 };
+    }
+
+    function elementInnerWidth(element, fallback) {
+        const raw = Number(element?.clientWidth || fallback || 0);
+        const styles = element && typeof root.getComputedStyle === 'function'
+            ? root.getComputedStyle(element)
+            : null;
+        const padding = styles
+            ? (parseFloat(styles.paddingLeft) || 0) + (parseFloat(styles.paddingRight) || 0)
+            : 0;
+        return Math.max(320, Math.floor(raw - padding));
     }
 
     function eventAnchorMs(event) {
@@ -270,23 +310,22 @@
         if (!current || !canvas || !event) return null;
         const rect = canvas.getBoundingClientRect();
         if (!rect.width) return null;
-        const padLeft = 54;
-        const padRight = 18;
-        const plotW = Math.max(1, rect.width - padLeft - padRight);
+        const pad = chartPad();
+        const plotW = Math.max(1, rect.width - pad.left - pad.right);
         const ratio = Math.max(
             0,
-            Math.min(1, (event.clientX - rect.left - padLeft) / plotW),
+            Math.min(1, (event.clientX - rect.left - pad.left) / plotW),
         );
         return current.start + ratio * (current.end - current.start);
     }
 
-    function zoom(factor, anchorMs = null) {
+    function zoom(factor, anchorMs = null, options = {}) {
         const current = dataWindowMs();
         if (!current) return;
         const anchor = anchorMs || selectedMs() || ((current.start + current.end) / 2);
         const span = (current.end - current.start) * factor;
         const leftRatio = (anchor - current.start) / (current.end - current.start || 1);
-        requestWindow(anchor - span * leftRatio, anchor + span * (1 - leftRatio));
+        requestWindow(anchor - span * leftRatio, anchor + span * (1 - leftRatio), options);
     }
 
     function pan(ratio) {
@@ -314,6 +353,58 @@
         ].filter(Boolean).join(' · ');
     }
 
+    function ensureScrollDomain(current) {
+        if (!current) return null;
+        const span = Math.max(MIN_WINDOW_DAYS * DAY_MS, current.end - current.start);
+        const center = (current.start + current.end) / 2;
+        const existing = state.scrollDomain;
+        const changedScale = existing?.windowSpan
+            ? Math.abs(existing.windowSpan - span) / Math.max(span, 1) > 0.25
+            : true;
+        if (!existing || changedScale || current.start < existing.start || current.end > existing.end) {
+            const anchor = selectedMs() || center;
+            const domainSpan = Math.max(span * 5, 3650 * DAY_MS);
+            const domainCenter = current.start < existing?.start || current.end > existing?.end
+                ? center
+                : anchor;
+            state.scrollDomain = {
+                start: domainCenter - domainSpan / 2,
+                end: domainCenter + domainSpan / 2,
+                windowSpan: span,
+            };
+        }
+        return state.scrollDomain;
+    }
+
+    function syncScrubber(data = state.data) {
+        if (!state.scrubber) return;
+        const current = dataWindowMs(data);
+        if (!current) {
+            state.scrubber.disabled = true;
+            state.scrubber.value = '500';
+            state.scrubber.style.removeProperty('--aspect-dynamics-scroll-pos');
+            return;
+        }
+        const domain = ensureScrollDomain(current);
+        if (!domain || domain.end <= domain.start) return;
+        const center = (current.start + current.end) / 2;
+        const ratio = Math.max(0, Math.min(1, (center - domain.start) / (domain.end - domain.start)));
+        state.scrubber.disabled = false;
+        state.scrubber.value = String(Math.round(ratio * 1000));
+        state.scrubber.style.setProperty('--aspect-dynamics-scroll-pos', `${ratio * 100}%`);
+    }
+
+    function onScrubberInput(event) {
+        const input = event.target;
+        const current = dataWindowMs();
+        const domain = ensureScrollDomain(current);
+        if (!current || !domain || domain.end <= domain.start) return;
+        const ratio = Math.max(0, Math.min(1, Number(input.value || 0) / 1000));
+        const span = current.end - current.start;
+        const center = domain.start + (domain.end - domain.start) * ratio;
+        requestWindow(center - span / 2, center + span / 2, { debounce: true });
+    }
+
     function onToolbarClick(event) {
         const button = event.target.closest('button');
         if (!button) return;
@@ -330,7 +421,7 @@
     function onCanvasWheel(event) {
         if (!state.data) return;
         event.preventDefault();
-        zoom(event.deltaY < 0 ? 0.65 : 1.55, eventAnchorMs(event));
+        zoom(event.deltaY < 0 ? 0.65 : 1.55, eventAnchorMs(event), { debounce: true });
     }
 
     function onCanvasPointerDown(event) {
@@ -359,6 +450,8 @@
     }
 
     function onCanvasPointerCancel() {
+        clearTimeout(state.pendingWindowTimer);
+        state.pendingWindowTimer = null;
         state.dragStart = null;
     }
 
@@ -425,6 +518,10 @@
                 <div class="aspect-dynamics-chart-wrap">
                     <canvas class="aspect-dynamics-canvas" width="720" height="320"></canvas>
                 </div>
+                <div class="aspect-dynamics-scroll-wrap">
+                    <canvas class="aspect-dynamics-overview-canvas" width="720" height="54" aria-hidden="true"></canvas>
+                    <input class="aspect-dynamics-scrollbar" type="range" min="0" max="1000" value="500" step="1" aria-label="${escapeAttr(tr('page.forecastNew.aspectDynamics.toolbar', 'Chart controls'))}">
+                </div>
                 <div class="aspect-dynamics-legend" aria-hidden="true">
                     <span><i class="aspect-dynamics-legend-line aspect-dynamics-legend-line--orb"></i>${escapeHtml(tr('page.forecastNew.aspectDynamics.legend.orb', 'signed orb'))}</span>
                     <span><i class="aspect-dynamics-legend-line aspect-dynamics-legend-line--selected"></i>${escapeHtml(tr('page.forecastNew.aspectDynamics.legend.selected', 'selected date'))}</span>
@@ -438,6 +535,7 @@
         state.overlay = overlay;
         state.dialog = overlay.querySelector('.aspect-dynamics-dialog');
         state.canvas = overlay.querySelector('.aspect-dynamics-canvas');
+        state.overviewCanvas = overlay.querySelector('.aspect-dynamics-overview-canvas');
         state.status = overlay.querySelector('.aspect-dynamics-status');
         state.summary = overlay.querySelector('.aspect-dynamics-summary');
         state.title = overlay.querySelector('#aspectDynamicsTitle');
@@ -445,6 +543,7 @@
         state.closeButton = overlay.querySelector('.aspect-dynamics-close');
         state.toolbar = overlay.querySelector('.aspect-dynamics-toolbar');
         state.chartWrap = overlay.querySelector('.aspect-dynamics-chart-wrap');
+        state.scrubber = overlay.querySelector('.aspect-dynamics-scrollbar');
 
         overlay.addEventListener('click', (event) => {
             if (event.target.closest('[data-aspect-dynamics-close]')) close();
@@ -454,6 +553,7 @@
         state.chartWrap?.addEventListener('pointerdown', onCanvasPointerDown);
         state.chartWrap?.addEventListener('pointerup', onCanvasPointerUp);
         state.chartWrap?.addEventListener('pointercancel', onCanvasPointerCancel);
+        state.scrubber?.addEventListener('input', onScrubberInput);
 
         if (typeof ResizeObserver !== 'undefined') {
             state.resizeObserver = new ResizeObserver(() => drawChart());
@@ -478,6 +578,8 @@
     }
 
     function close() {
+        clearTimeout(state.pendingWindowTimer);
+        state.pendingWindowTimer = null;
         setOpen(false);
         const focusTarget = state.lastFocus;
         state.lastFocus = null;
@@ -550,6 +652,7 @@
         state.status.className = 'aspect-dynamics-status';
         state.status.textContent = tr('page.forecastNew.aspectDynamics.loading', 'Calculating aspect dynamics...');
         state.summary.innerHTML = '';
+        syncScrubber(null);
         drawChart();
     }
 
@@ -559,6 +662,7 @@
         state.status.className = 'aspect-dynamics-status aspect-dynamics-status--error';
         state.status.textContent = message || tr('page.forecastNew.aspectDynamics.errors.loadFailed', 'Could not load aspect dynamics.');
         state.summary.innerHTML = '';
+        syncScrubber(null);
         drawChart();
     }
 
@@ -587,6 +691,7 @@
         }
         renderSummary(data);
         updateRangeLabel(data);
+        syncScrubber(data);
         drawChart();
     }
 
@@ -653,6 +758,12 @@
         return Number.isFinite(ms) ? ms : null;
     }
 
+    function graphSeries(data = state.data) {
+        return (data?.series || []).filter((point) => (
+            Number.isFinite(Number(point.signed_orb)) && pointMs(point) !== null
+        ));
+    }
+
     function drawChart() {
         const canvas = state.canvas;
         if (!canvas || typeof canvas.getContext !== 'function') return;
@@ -660,7 +771,7 @@
         if (!ctx) return;
 
         const wrap = canvas.parentElement;
-        const width = Math.max(320, Math.floor(wrap?.clientWidth || 720));
+        const width = elementInnerWidth(wrap, 720);
         const height = Math.max(280, Math.floor(wrap?.clientHeight || 320));
         const dpr = root.devicePixelRatio || 1;
         canvas.width = width * dpr;
@@ -674,16 +785,17 @@
         ctx.fillRect(0, 0, width, height);
 
         const data = state.data;
-        const series = (data?.series || []).filter((point) => Number.isFinite(Number(point.signed_orb)) && pointMs(point) !== null);
+        const series = graphSeries(data);
         if (series.length < 2) {
             ctx.fillStyle = '#8a8178';
             ctx.font = '13px system-ui, sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText(tr('page.forecastNew.aspectDynamics.empty.noData', 'No aspect dynamics data.'), width / 2, height / 2);
+            drawOverviewChart();
             return;
         }
 
-        const pad = { left: 54, right: 18, top: 22, bottom: 36 };
+        const pad = chartPad();
         const plotW = width - pad.left - pad.right;
         const plotH = height - pad.top - pad.bottom;
         const plotBottom = pad.top + plotH;
@@ -702,41 +814,15 @@
             const clamped = Math.max(-maxAbs, Math.min(maxAbs, value));
             return plotBottom - ((clamped + maxAbs) / (maxAbs * 2)) * plotH;
         };
-        const ticks = buildTimeTicks(minMs, maxMs, 6);
+        const ticks = buildCalendarTicks(minMs, maxMs);
 
-        ctx.strokeStyle = '#e7e1d8';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        for (let i = 0; i <= 4; i += 1) {
-            const y = pad.top + (plotH / 4) * i;
-            ctx.moveTo(pad.left, y);
-            ctx.lineTo(width - pad.right, y);
-        }
-        ctx.stroke();
-
-        ctx.strokeStyle = '#f1ece4';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ticks.forEach((tick) => {
-            const x = xOf(tick);
-            ctx.moveTo(x, pad.top);
-            ctx.lineTo(x, plotBottom);
-        });
-        ctx.stroke();
-
+        drawZetGrid(ctx, ticks, xOf, yOf, pad, width, plotBottom, plotH, maxAbs);
         drawRangeCaption(ctx, data, minMs, maxMs, pad, width);
-
-        ctx.fillStyle = '#7b736c';
-        ctx.font = '11px system-ui, sans-serif';
-        ctx.textAlign = 'right';
-        [-maxAbs, 0, maxAbs].forEach((value) => {
-            ctx.fillText(`${value.toFixed(1)}°`, pad.left - 8, yOf(value) + 4);
-        });
 
         if (orbUsed > 0) {
             ctx.save();
-            ctx.setLineDash([5, 5]);
-            ctx.strokeStyle = '#d4a74f';
+            ctx.setLineDash([3, 4]);
+            ctx.strokeStyle = '#cbbf9b';
             ctx.lineWidth = 1;
             [orbUsed, -orbUsed].forEach((value) => {
                 ctx.beginPath();
@@ -747,15 +833,19 @@
             ctx.restore();
         }
 
-        ctx.strokeStyle = '#a9a19a';
-        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = '#6f6f6f';
+        ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(pad.left, yOf(0));
         ctx.lineTo(width - pad.right, yOf(0));
         ctx.stroke();
 
-        ctx.strokeStyle = '#1f63b5';
-        ctx.lineWidth = 2.2;
+        drawZeroAxisTicks(ctx, ticks, xOf, yOf(0), pad, width, plotBottom, minMs, maxMs);
+
+        ctx.strokeStyle = '#3035a8';
+        ctx.lineWidth = 1.35;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
         ctx.beginPath();
         series.forEach((point, index) => {
             const x = xOf(pointMs(point));
@@ -767,7 +857,154 @@
 
         drawContactMarkers(ctx, data, xOf, yOf, pad, width, plotBottom);
         drawSelectedMarker(ctx, data?.selected_point, xOf, yOf, pad, width, plotBottom);
-        drawDateLabels(ctx, ticks, xOf, minMs, maxMs, pad, width, plotBottom);
+        drawScaleKey(ctx, minMs, maxMs, yOf, pad, width, plotBottom);
+        drawOverviewChart();
+    }
+
+    function drawZetGrid(ctx, ticks, xOf, yOf, pad, width, plotBottom, plotH, maxAbs) {
+        const right = width - pad.right;
+        ctx.save();
+        ctx.lineWidth = 1;
+        ctx.setLineDash([1, 3]);
+        ctx.strokeStyle = '#e1e1e1';
+        ctx.beginPath();
+        for (let i = 0; i <= 8; i += 1) {
+            const y = pad.top + (plotH / 8) * i;
+            ctx.moveTo(pad.left, y);
+            ctx.lineTo(right, y);
+        }
+        ctx.stroke();
+
+        ['minor', 'major'].forEach((weight) => {
+            ctx.beginPath();
+            ctx.strokeStyle = weight === 'major' ? '#d0d0d0' : '#ededed';
+            ticks.forEach((tick) => {
+                if ((weight === 'major') !== Boolean(tick.major)) return;
+                const x = xOf(tick.ms);
+                if (x < pad.left || x > right) return;
+                ctx.moveTo(x, pad.top);
+                ctx.lineTo(x, plotBottom);
+            });
+            ctx.stroke();
+        });
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#5b5b5b';
+        ctx.font = '11px system-ui, sans-serif';
+        ctx.textAlign = 'right';
+        [-maxAbs, -maxAbs / 2, 0, maxAbs / 2, maxAbs].forEach((value) => {
+            ctx.fillText(`${value.toFixed(Math.abs(value) >= 10 ? 0 : 1)}°`, pad.left - 7, yOf(value) + 4);
+        });
+        ctx.restore();
+    }
+
+    function drawZeroAxisTicks(ctx, ticks, xOf, axisY, pad, width, plotBottom, minMs, maxMs) {
+        const right = width - pad.right;
+        const spanMs = maxMs - minMs;
+        ctx.save();
+        ctx.strokeStyle = '#515151';
+        ctx.fillStyle = '#333333';
+        ctx.font = '10px system-ui, sans-serif';
+        ticks.forEach((tick) => {
+            const x = xOf(tick.ms);
+            if (x < pad.left || x > right) return;
+            const length = tick.major ? 7 : 5;
+            ctx.beginPath();
+            ctx.moveTo(x, axisY - length);
+            ctx.lineTo(x, axisY + length);
+            ctx.stroke();
+
+            const y = Math.min(plotBottom - 3, axisY + (tick.major ? 20 : 15));
+            ctx.textAlign = tick.ms <= minMs + 1 ? 'left' : (tick.ms >= maxMs - 1 ? 'right' : 'center');
+            ctx.fillText(tick.label || formatDateTick(tick.ms, spanMs), x, y);
+        });
+        ctx.restore();
+    }
+
+    function drawScaleKey(ctx, minMs, maxMs, yOf, pad, width, plotBottom) {
+        const spanMs = maxMs - minMs;
+        const scaleMs = pickScaleInterval(spanMs);
+        if (!Number.isFinite(scaleMs) || scaleMs <= 0) return;
+        const plotW = width - pad.left - pad.right;
+        const w = Math.max(32, Math.min(110, (scaleMs / spanMs) * plotW));
+        const x = Math.max(pad.left + 64, width - pad.right - w - 48);
+        const y = Math.max(pad.top + 42, plotBottom - 16);
+        const h = Math.max(12, Math.min(54, Math.abs(yOf(1) - yOf(0))));
+        ctx.save();
+        ctx.strokeStyle = '#25258f';
+        ctx.fillStyle = '#25258f';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(x, y - h);
+        ctx.lineTo(x, y);
+        ctx.lineTo(x + w, y);
+        ctx.stroke();
+        ctx.font = '10px system-ui, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText('1°', x - 5, y - h + 4);
+        ctx.textAlign = 'left';
+        ctx.fillText(formatSpanLabel(scaleMs), x + w + 5, y + 3);
+        ctx.restore();
+    }
+
+    function drawOverviewChart() {
+        const canvas = state.overviewCanvas;
+        if (!canvas || typeof canvas.getContext !== 'function') return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        const wrap = canvas.parentElement;
+        const width = elementInnerWidth(wrap, 720);
+        const height = Math.max(42, Math.floor(canvas.clientHeight || 54));
+        const dpr = root.devicePixelRatio || 1;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = '#fbfbfb';
+        ctx.fillRect(0, 0, width, height);
+
+        const series = graphSeries();
+        if (series.length < 2) return;
+        const pad = { left: 3, right: 3, top: 5, bottom: 5 };
+        const plotW = width - pad.left - pad.right;
+        const plotH = height - pad.top - pad.bottom;
+        const plotBottom = pad.top + plotH;
+        const times = series.map(pointMs);
+        const minMs = Math.min(...times);
+        const maxMs = Math.max(...times);
+        const maxAbs = Math.max(1, ...series.map((point) => Math.abs(Number(point.signed_orb))));
+        const xOf = (ms) => pad.left + ((ms - minMs) / (maxMs - minMs || 1)) * plotW;
+        const yOf = (value) => plotBottom - ((Math.max(-maxAbs, Math.min(maxAbs, value)) + maxAbs) / (maxAbs * 2)) * plotH;
+
+        ctx.strokeStyle = '#e0e0e0';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(pad.left, yOf(0));
+        ctx.lineTo(width - pad.right, yOf(0));
+        ctx.stroke();
+
+        ctx.strokeStyle = '#4a55bc';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        series.forEach((point, index) => {
+            const x = xOf(pointMs(point));
+            const y = yOf(Number(point.signed_orb));
+            if (index === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+
+        const selected = selectedMs();
+        if (selected && selected >= minMs && selected <= maxMs) {
+            const x = xOf(selected);
+            ctx.strokeStyle = '#d03131';
+            ctx.beginPath();
+            ctx.moveTo(x, pad.top);
+            ctx.lineTo(x, plotBottom);
+            ctx.stroke();
+        }
     }
 
     function drawContactMarkers(ctx, data, xOf, yOf, pad, width, plotBottom) {
@@ -848,22 +1085,6 @@
         ctx.restore();
     }
 
-    function drawDateLabels(ctx, ticks, xOf, minMs, maxMs, pad, width, plotBottom) {
-        const spanMs = maxMs - minMs;
-        ctx.save();
-        ctx.fillStyle = '#7b736c';
-        ctx.font = '11px system-ui, sans-serif';
-        ticks.forEach((tick, index) => {
-            const x = xOf(tick);
-            ctx.textAlign = index === 0
-                ? 'left'
-                : (index === ticks.length - 1 ? 'right' : 'center');
-            const boundedX = Math.max(pad.left, Math.min(width - pad.right, x));
-            ctx.fillText(formatDateTick(tick, spanMs), boundedX, plotBottom + 22);
-        });
-        ctx.restore();
-    }
-
     function buildTimeTicks(minMs, maxMs, targetCount = 6) {
         if (!Number.isFinite(minMs) || !Number.isFinite(maxMs) || maxMs <= minMs) {
             return [];
@@ -872,6 +1093,58 @@
         return Array.from({ length: count }, (_, index) => (
             minMs + ((maxMs - minMs) * index) / (count - 1)
         ));
+    }
+
+    function buildCalendarTicks(minMs, maxMs) {
+        const spanDays = Math.abs(maxMs - minMs) / DAY_MS;
+        if (spanDays <= 0) return [];
+        if (spanDays >= 365 * 5) {
+            const step = spanDays >= 365 * 80 ? 10 : (spanDays >= 365 * 25 ? 5 : 1);
+            const startYear = Math.floor(new Date(minMs).getUTCFullYear() / step) * step;
+            const endYear = new Date(maxMs).getUTCFullYear() + step;
+            const ticks = [];
+            for (let year = startYear; year <= endYear; year += step) {
+                const ms = Date.UTC(year, 0, 1);
+                if (ms >= minMs - DAY_MS && ms <= maxMs + DAY_MS) {
+                    ticks.push({ ms, label: String(year), major: true });
+                }
+            }
+            return ticks.length ? ticks : buildTimeTicks(minMs, maxMs, 6).map((ms) => ({ ms, label: formatDateTick(ms, maxMs - minMs), major: true }));
+        }
+        if (spanDays >= 90) {
+            const stepMonths = spanDays >= 365 * 2 ? 3 : 1;
+            const start = new Date(minMs);
+            let year = start.getUTCFullYear();
+            let month = Math.floor(start.getUTCMonth() / stepMonths) * stepMonths;
+            const ticks = [];
+            while (Date.UTC(year, month, 1) <= maxMs + 32 * DAY_MS) {
+                const ms = Date.UTC(year, month, 1);
+                const date = new Date(ms);
+                const monthIndex = date.getUTCMonth();
+                if (ms >= minMs - 32 * DAY_MS && ms <= maxMs + 32 * DAY_MS) {
+                    ticks.push({
+                        ms,
+                        label: monthIndex === 0 ? String(date.getUTCFullYear()) : String(monthIndex + 1),
+                        major: monthIndex === 0,
+                    });
+                }
+                month += stepMonths;
+                if (month >= 12) {
+                    year += Math.floor(month / 12);
+                    month %= 12;
+                }
+            }
+            return ticks;
+        }
+        const stepDays = spanDays >= 30 ? 7 : (spanDays >= 12 ? 2 : 1);
+        const startDay = Math.floor(minMs / DAY_MS) * DAY_MS;
+        const ticks = [];
+        for (let ms = startDay; ms <= maxMs + stepDays * DAY_MS; ms += stepDays * DAY_MS) {
+            if (ms >= minMs - DAY_MS && ms <= maxMs + DAY_MS) {
+                ticks.push({ ms, label: formatDateTick(ms, maxMs - minMs), major: ticks.length === 0 });
+            }
+        }
+        return ticks;
     }
 
     function formatDateTick(ms, spanMs) {
@@ -896,6 +1169,18 @@
         return `${Math.max(1, Math.round(days))}d`;
     }
 
+    function pickScaleInterval(spanMs) {
+        const days = Math.abs(spanMs) / DAY_MS;
+        if (days >= 365 * 80) return 365.2425 * 10 * DAY_MS;
+        if (days >= 365 * 25) return 365.2425 * 5 * DAY_MS;
+        if (days >= 365 * 5) return 365.2425 * DAY_MS;
+        if (days >= 365 * 2) return 91.3125 * DAY_MS;
+        if (days >= 120) return 30.4375 * DAY_MS;
+        if (days >= 30) return 7 * DAY_MS;
+        if (days >= 7) return DAY_MS;
+        return Math.max(DAY_MS / 4, spanMs / 8);
+    }
+
     function formatDateShort(ms) {
         const date = new Date(ms);
         if (Number.isNaN(date.getTime())) return '';
@@ -910,8 +1195,14 @@
         const overlay = ensureModal();
         if (!overlay) return null;
         const payload = buildPayload(options);
+        const nextBaseKey = payloadCacheKey(payload);
+        const previousBaseKey = state.basePayload ? payloadCacheKey(state.basePayload) : null;
         state.basePayload = payload;
-        state.responseCache.clear();
+        if (nextBaseKey !== previousBaseKey) {
+            state.scrollDomain = null;
+        }
+        clearTimeout(state.pendingWindowTimer);
+        state.pendingWindowTimer = null;
         renderShell(payload);
         state.lastFocus = typeof document !== 'undefined' ? document.activeElement : null;
         setOpen(true);

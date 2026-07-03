@@ -19,22 +19,26 @@
 .aspect-dynamics-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(20, 22, 28, 0.58);
-    backdrop-filter: blur(8px);
+    background: rgba(20, 22, 28, 0.42);
+    backdrop-filter: blur(4px);
 }
 
 .aspect-dynamics-dialog {
     position: relative;
     z-index: 1;
-    width: min(960px, calc(100vw - 32px));
-    max-height: min(760px, calc(100vh - 32px));
+    width: min(1120px, calc(100vw - 32px));
+    max-height: min(820px, calc(100vh - 32px));
     display: grid;
-    grid-template-rows: auto auto auto minmax(280px, 1fr) auto auto;
+    grid-template-rows: auto auto auto minmax(340px, 1fr) auto auto auto;
     overflow: hidden;
-    border: 1px solid rgba(30, 58, 95, 0.14);
-    border-radius: 14px;
-    background: #fffdf9;
-    box-shadow: 0 26px 70px rgba(20, 22, 28, 0.26);
+    border: 1px solid #cfcfcf;
+    border-radius: 8px;
+    background: #f7f7f7;
+    box-shadow: 0 18px 48px rgba(20, 22, 28, 0.24);
+}
+
+.aspect-dynamics-dialog:focus {
+    outline: none;
 }
 
 .aspect-dynamics-header {
@@ -42,9 +46,9 @@
     grid-template-columns: minmax(0, 1fr) 36px;
     gap: 14px;
     align-items: start;
-    padding: 18px 18px 14px;
-    border-bottom: 1px solid rgba(30, 58, 95, 0.1);
-    background: linear-gradient(180deg, rgba(248, 246, 241, 0.96), rgba(255, 255, 255, 0.86));
+    padding: 12px 14px 10px;
+    border-bottom: 1px solid #d9d9d9;
+    background: #f1f1f1;
 }
 
 .aspect-dynamics-heading {
@@ -54,26 +58,26 @@
 .aspect-dynamics-heading h2 {
     margin: 0;
     color: var(--text-primary);
-    font-size: 22px;
+    font-size: 18px;
     line-height: 1.12;
-    font-weight: 800;
+    font-weight: 750;
 }
 
 .aspect-dynamics-subtitle {
-    margin: 6px 0 0;
+    margin: 4px 0 0;
     color: var(--text-secondary);
-    font-size: 13px;
+    font-size: 12px;
     line-height: 1.35;
 }
 
 .aspect-dynamics-close {
-    width: 34px;
-    height: 34px;
-    border: 1px solid rgba(30, 58, 95, 0.12);
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.88);
+    width: 30px;
+    height: 30px;
+    border: 1px solid #c9c9c9;
+    border-radius: 6px;
+    background: #fff;
     color: var(--text-secondary);
-    font-size: 18px;
+    font-size: 17px;
     line-height: 1;
     cursor: pointer;
 }
@@ -86,18 +90,27 @@
 }
 
 .aspect-dynamics-status {
-    margin: 14px 18px 0;
-    padding: 10px 12px;
-    border: 1px solid rgba(30, 58, 95, 0.12);
-    border-radius: 8px;
-    background: rgba(30, 58, 95, 0.06);
+    margin: 8px 14px 0;
+    padding: 8px 10px;
+    min-height: 34px;
+    border: 1px solid #d7d7d7;
+    border-radius: 6px;
+    background: #fff;
     color: var(--text-secondary);
-    font-size: 13px;
+    font-size: 12px;
     line-height: 1.4;
 }
 
 .aspect-dynamics-status[hidden] {
-    display: none;
+    display: block;
+    visibility: hidden;
+    height: 0;
+    min-height: 0;
+    margin-top: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-width: 0;
+    overflow: hidden;
 }
 
 .aspect-dynamics-status--error {
@@ -115,17 +128,17 @@
 .aspect-dynamics-toolbar {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 5px;
     align-items: center;
-    padding: 10px 18px 0;
+    padding: 8px 14px 0;
 }
 
 .aspect-dynamics-toolbar button {
-    min-width: 34px;
-    height: 30px;
-    border: 1px solid rgba(30, 58, 95, 0.14);
-    border-radius: 8px;
-    background: #fff;
+    min-width: 32px;
+    height: 28px;
+    border: 1px solid #c9c9c9;
+    border-radius: 5px;
+    background: #ffffff;
     color: var(--text-primary);
     font: 700 12px/1 system-ui, sans-serif;
     cursor: pointer;
@@ -154,8 +167,10 @@
 }
 
 .aspect-dynamics-chart-wrap {
-    min-height: 280px;
-    padding: 14px 18px 6px;
+    min-width: 0;
+    min-height: 340px;
+    overflow: hidden;
+    padding: 10px 14px 4px;
     cursor: grab;
     touch-action: none;
 }
@@ -168,18 +183,48 @@
     display: block;
     width: 100%;
     height: 100%;
-    min-height: 280px;
-    border: 1px solid rgba(30, 58, 95, 0.1);
-    border-radius: 10px;
+    min-height: 340px;
+    border: 1px solid #cfcfcf;
+    border-radius: 2px;
     background: #fff;
+}
+
+.aspect-dynamics-scroll-wrap {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0 14px 6px;
+}
+
+.aspect-dynamics-overview-canvas {
+    display: block;
+    width: 100%;
+    height: 54px;
+    border: 1px solid #d4d4d4;
+    border-radius: 2px;
+    background: #fbfbfb;
+}
+
+.aspect-dynamics-scrollbar {
+    width: 100%;
+    height: 16px;
+    margin: 0;
+    accent-color: #1f2f9c;
+    cursor: ew-resize;
+}
+
+.aspect-dynamics-scrollbar:disabled {
+    cursor: default;
+    opacity: 0.55;
 }
 
 .aspect-dynamics-legend {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px 16px;
+    gap: 8px 14px;
     align-items: center;
-    padding: 4px 18px 12px;
+    padding: 2px 14px 8px;
     color: var(--text-secondary);
     font-size: 12px;
 }
@@ -206,9 +251,10 @@
 }
 
 .aspect-dynamics-summary {
+    min-height: 116px;
     max-height: 190px;
     overflow: auto;
-    padding: 0 18px 18px;
+    padding: 0 14px 14px;
 }
 
 .aspect-dynamics-summary-grid {
@@ -289,34 +335,38 @@
     .aspect-dynamics-dialog {
         width: 100%;
         max-height: calc(100vh - 20px);
-        grid-template-rows: auto auto auto minmax(260px, 1fr) auto auto;
-        border-radius: 12px;
+        grid-template-rows: auto auto auto minmax(280px, 1fr) auto auto auto;
+        border-radius: 8px;
     }
 
     .aspect-dynamics-header {
-        padding: 15px 15px 12px;
+        padding: 12px;
     }
 
     .aspect-dynamics-heading h2 {
-        font-size: 19px;
+        font-size: 17px;
     }
 
     .aspect-dynamics-chart-wrap {
-        min-height: 260px;
-        padding: 12px 12px 4px;
+        min-height: 280px;
+        padding: 10px 10px 4px;
+    }
+
+    .aspect-dynamics-canvas {
+        min-height: 280px;
+    }
+
+    .aspect-dynamics-scroll-wrap {
+        padding: 0 10px 6px;
     }
 
     .aspect-dynamics-toolbar {
-        padding: 9px 12px 0;
+        padding: 8px 10px 0;
     }
 
     .aspect-dynamics-range-label {
         width: 100%;
         margin-left: 0;
-    }
-
-    .aspect-dynamics-canvas {
-        min-height: 260px;
     }
 
     .aspect-dynamics-summary {

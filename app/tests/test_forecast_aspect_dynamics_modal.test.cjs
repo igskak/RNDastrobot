@@ -13,6 +13,7 @@ function resetModal() {
         overlay: null,
         dialog: null,
         canvas: null,
+        overviewCanvas: null,
         chartWrap: null,
         status: null,
         summary: null,
@@ -20,6 +21,7 @@ function resetModal() {
         subtitle: null,
         closeButton: null,
         toolbar: null,
+        scrubber: null,
         data: null,
         lastFocus: null,
         resizeObserver: null,
@@ -28,6 +30,8 @@ function resetModal() {
         requestSeq: 0,
         responseCache: new Map(),
         dragStart: null,
+        pendingWindowTimer: null,
+        scrollDomain: null,
     });
 }
 
@@ -191,6 +195,7 @@ test('buildPayload maps non-transit layer context and partner source', () => {
 
 test('forecast-new aspect clicks open dynamics modal without pinning', () => {
     const source = fs.readFileSync(path.join(__dirname, '../frontend/js/forecast-new.js'), 'utf8');
+    const wheelSource = fs.readFileSync(path.join(__dirname, '../frontend/js/prognostic-rings-wheel.js'), 'utf8');
 
     assert.equal(source.includes('togglePinnedAspectKey'), false);
     assert.equal(source.includes('pinnedAspectKey'), false);
@@ -199,6 +204,9 @@ test('forecast-new aspect clicks open dynamics modal without pinning', () => {
     assert.match(source, /#natalAspectsView tr\[data-aspect-key\]/);
     assert.match(source, /#natalGridView td\[data-aspect-key\]/);
     assert.match(source, /openWheelAspectDynamicsFromNode\(wheelNode\)/);
+    assert.match(wheelSource, /createAspectHitElement/);
+    assert.match(wheelSource, /class: 'aspect-line aspect-hit'/);
+    assert.match(wheelSource, /'stroke-width': 14/);
 });
 
 test('modal renders loading state while dynamics request is pending', async () => {
@@ -261,6 +269,8 @@ test('modal renders success summary from fetched dynamics data', async () => {
     const overlay = document.querySelector('.aspect-dynamics-modal');
     assert.ok(overlay);
     assert.equal(overlay.classList.contains('hidden'), false);
+    assert.ok(document.querySelector('.aspect-dynamics-overview-canvas'));
+    assert.equal(document.querySelector('.aspect-dynamics-scrollbar').disabled, false);
     assert.match(document.querySelector('#aspectDynamicsTitle').textContent, /P tri S/);
     assert.match(document.querySelector('.aspect-dynamics-summary').textContent, /Closest approach/);
     assert.match(document.querySelector('.aspect-dynamics-summary').textContent, /Pass 1/);
@@ -288,5 +298,31 @@ test('toolbar range control requests a new graph window', async () => {
     assert.equal(payloads[1].contact_start, '2021-06-30');
     assert.equal(payloads[1].contact_end, '2031-06-28');
     assert.equal(payloads[1].max_points, 720);
+    modal.close();
+});
+
+test('scrollbar scrub requests a shifted graph window', async () => {
+    setupDom();
+    const payloads = [];
+    modal.setFetchImpl(async (_url, options) => {
+        payloads.push(JSON.parse(options.body));
+        return {
+            ok: true,
+            async json() {
+                return sampleResponse();
+            },
+        };
+    });
+
+    await modal.open(sampleOpenOptions);
+    const input = document.querySelector('.aspect-dynamics-scrollbar');
+    input.value = '700';
+    input.dispatchEvent(new window.Event('input', { bubbles: true }));
+
+    await new Promise((resolve) => setTimeout(resolve, 180));
+    assert.equal(payloads.length, 2);
+    assert.equal(payloads[1].max_points, 320);
+    assert.ok(payloads[1].contact_start > '2027-01-01');
+    assert.ok(payloads[1].contact_end > payloads[1].contact_start);
     modal.close();
 });
