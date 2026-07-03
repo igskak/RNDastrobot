@@ -173,9 +173,11 @@
     padding: 10px 14px 4px;
     cursor: grab;
     touch-action: none;
+    user-select: none;
 }
 
-.aspect-dynamics-chart-wrap:active {
+.aspect-dynamics-chart-wrap:active,
+.aspect-dynamics-chart-wrap.is-dragging {
     cursor: grabbing;
 }
 

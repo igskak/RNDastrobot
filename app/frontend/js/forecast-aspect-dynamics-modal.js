@@ -24,6 +24,9 @@
     const MAX_WINDOW_DAYS = 36525;
     const CLIENT_CACHE_MAX_ITEMS = 24;
     const DAY_MS = 86400000;
+    const WINDOW_REQUEST_DEBOUNCE_MS = 110;
+    const WHEEL_REQUEST_DEBOUNCE_MS = 90;
+    const DRAG_ACTIVATION_PX = 4;
     const API_BASE = () => root.AstroAPI?.API_BASE_URL || '/api/v1';
 
     const state = {
@@ -47,6 +50,7 @@
         requestSeq: 0,
         responseCache: new Map(),
         dragStart: null,
+        interactionWindow: null,
         pendingWindowTimer: null,
         scrollDomain: null,
     };
@@ -207,7 +211,7 @@
         return Number.isFinite(ms) ? ms : null;
     }
 
-    function dataWindowMs(data = state.data) {
+    function committedDataWindowMs(data = state.data) {
         const start = msFromIso(data?.effective_window?.start)
             ?? msFromIso(data?.series?.[0]?.datetime);
         const end = msFromIso(data?.effective_window?.end)
@@ -215,6 +219,14 @@
         return Number.isFinite(start) && Number.isFinite(end) && end > start
             ? { start, end }
             : null;
+    }
+
+    function dataWindowMs(data = state.data) {
+        const active = state.interactionWindow;
+        if (Number.isFinite(active?.start) && Number.isFinite(active?.end) && active.end > active.start) {
+            return { start: active.start, end: active.end };
+        }
+        return committedDataWindowMs(data);
     }
 
     function selectedMs(data = state.data) {
@@ -329,9 +341,27 @@
         }
     }
 
-    function requestWindow(startMs, endMs, { debounce = false } = {}) {
+    function setInteractionWindow(window) {
+        if (!window) {
+            state.interactionWindow = null;
+            return;
+        }
+        state.interactionWindow = {
+            start: window.start,
+            end: window.end,
+        };
+        updateRangeLabel();
+        syncScrubber();
+        drawChart();
+    }
+
+    function requestWindow(startMs, endMs, { debounce = false, optimistic = false, debounceMs = WINDOW_REQUEST_DEBOUNCE_MS } = {}) {
         if (!state.basePayload) return;
         const bounded = clampWindow(startMs, endMs);
+        state.requestSeq += 1;
+        if (optimistic) {
+            setInteractionWindow(bounded);
+        }
         const run = () => {
             state.pendingWindowTimer = null;
             void fetchAndRender(windowPayload(bounded.start, bounded.end), { keepStatus: true });
@@ -342,7 +372,7 @@
             return;
         }
         clearTimeout(state.pendingWindowTimer);
-        state.pendingWindowTimer = setTimeout(run, 140);
+        state.pendingWindowTimer = setTimeout(run, debounceMs);
     }
 
     function chartPad() {
@@ -458,7 +488,7 @@
         const ratio = Math.max(0, Math.min(1, Number(input.value || 0) / 1000));
         const span = current.end - current.start;
         const center = domain.start + (domain.end - domain.start) * ratio;
-        requestWindow(center - span / 2, center + span / 2, { debounce: true });
+        requestWindow(center - span / 2, center + span / 2, { debounce: true, optimistic: true });
     }
 
     function onToolbarClick(event) {
@@ -477,31 +507,88 @@
     function onCanvasWheel(event) {
         if (!state.data) return;
         event.preventDefault();
-        zoom(event.deltaY < 0 ? 0.65 : 1.55, eventAnchorMs(event), { debounce: true });
+        const current = dataWindowMs();
+        if (!current) return;
+        const delta = normalizeWheelDelta(event);
+        if (!Number.isFinite(delta) || delta === 0) return;
+        if (event.ctrlKey || event.metaKey || event.altKey) {
+            zoom(Math.exp(delta * 0.0016), eventAnchorMs(event), {
+                debounce: true,
+                optimistic: true,
+                debounceMs: WHEEL_REQUEST_DEBOUNCE_MS,
+            });
+            return;
+        }
+        const width = Math.max(240, state.canvas?.clientWidth || state.chartWrap?.clientWidth || 720);
+        const ratio = Math.max(-0.45, Math.min(0.45, delta / width));
+        const span = current.end - current.start;
+        const shift = span * ratio;
+        requestWindow(current.start + shift, current.end + shift, {
+            debounce: true,
+            optimistic: true,
+            debounceMs: WHEEL_REQUEST_DEBOUNCE_MS,
+        });
+    }
+
+    function normalizeWheelDelta(event) {
+        const raw = Math.abs(Number(event.deltaX || 0)) > Math.abs(Number(event.deltaY || 0))
+            ? Number(event.deltaX || 0)
+            : Number(event.deltaY || 0);
+        if (event.deltaMode === 1) return raw * 16;
+        if (event.deltaMode === 2) return raw * Math.max(240, state.canvas?.clientWidth || 720);
+        return raw;
+    }
+
+    function dragWindowForEvent(event, drag = state.dragStart) {
+        if (!drag?.window) return null;
+        const width = Math.max(240, state.canvas?.clientWidth || state.chartWrap?.clientWidth || 720);
+        const dx = event.clientX - drag.x;
+        const span = drag.window.end - drag.window.start;
+        const shift = -(dx / width) * span;
+        return clampWindow(drag.window.start + shift, drag.window.end + shift);
     }
 
     function onCanvasPointerDown(event) {
         if (!state.data) return;
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
         state.dragStart = {
             x: event.clientX,
             window: dataWindowMs(),
+            moved: false,
         };
+        state.chartWrap?.classList.add('is-dragging');
         state.chartWrap?.setPointerCapture?.(event.pointerId);
+        event.preventDefault();
+    }
+
+    function onCanvasPointerMove(event) {
+        const drag = state.dragStart;
+        if (!drag?.window) return;
+        event.preventDefault();
+        const dx = event.clientX - drag.x;
+        if (!drag.moved && Math.abs(dx) < DRAG_ACTIVATION_PX) return;
+        drag.moved = true;
+        const next = dragWindowForEvent(event, drag);
+        if (!next) return;
+        requestWindow(next.start, next.end, {
+            debounce: true,
+            optimistic: true,
+        });
     }
 
     function onCanvasPointerUp(event) {
         if (!state.dragStart?.window) {
             state.dragStart = null;
+            state.chartWrap?.classList.remove('is-dragging');
             return;
         }
         const drag = state.dragStart;
-        const width = Math.max(1, state.canvas?.clientWidth || 1);
-        const dx = event.clientX - drag.x;
-        const span = drag.window.end - drag.window.start;
-        const shift = -(dx / width) * span;
+        const next = dragWindowForEvent(event, drag);
         state.dragStart = null;
-        if (Math.abs(dx) > 4) {
-            requestWindow(drag.window.start + shift, drag.window.end + shift);
+        state.chartWrap?.classList.remove('is-dragging');
+        state.chartWrap?.releasePointerCapture?.(event.pointerId);
+        if (next && (drag.moved || Math.abs(event.clientX - drag.x) > DRAG_ACTIVATION_PX)) {
+            requestWindow(next.start, next.end, { optimistic: true });
         }
     }
 
@@ -509,6 +596,7 @@
         clearTimeout(state.pendingWindowTimer);
         state.pendingWindowTimer = null;
         state.dragStart = null;
+        state.chartWrap?.classList.remove('is-dragging');
     }
 
     function getFetch() {
@@ -607,6 +695,7 @@
         state.toolbar?.addEventListener('click', onToolbarClick);
         state.chartWrap?.addEventListener('wheel', onCanvasWheel, { passive: false });
         state.chartWrap?.addEventListener('pointerdown', onCanvasPointerDown);
+        state.chartWrap?.addEventListener('pointermove', onCanvasPointerMove);
         state.chartWrap?.addEventListener('pointerup', onCanvasPointerUp);
         state.chartWrap?.addEventListener('pointercancel', onCanvasPointerCancel);
         state.scrubber?.addEventListener('input', onScrubberInput);
@@ -704,6 +793,7 @@
 
     function renderLoading() {
         state.data = null;
+        state.interactionWindow = null;
         state.status.hidden = false;
         state.status.className = 'aspect-dynamics-status';
         state.status.textContent = tr('page.forecastNew.aspectDynamics.loading', 'Calculating aspect dynamics...');
@@ -714,6 +804,7 @@
 
     function renderError(message) {
         state.data = null;
+        state.interactionWindow = null;
         state.status.hidden = false;
         state.status.className = 'aspect-dynamics-status aspect-dynamics-status--error';
         state.status.textContent = message || tr('page.forecastNew.aspectDynamics.errors.loadFailed', 'Could not load aspect dynamics.');
@@ -736,6 +827,7 @@
 
     function renderData(data) {
         state.data = data || null;
+        state.interactionWindow = null;
         const hasSeries = Array.isArray(data?.series) && data.series.length > 1;
         const isPreview = Boolean(data?.preview);
         if (isPreview && hasSeries) {
@@ -865,8 +957,11 @@
         const plotH = height - pad.top - pad.bottom;
         const plotBottom = pad.top + plotH;
         const times = series.map(pointMs);
-        const minMs = Math.min(...times);
-        const maxMs = Math.max(...times);
+        const seriesMinMs = Math.min(...times);
+        const seriesMaxMs = Math.max(...times);
+        const windowMs = dataWindowMs(data) || { start: seriesMinMs, end: seriesMaxMs };
+        const minMs = windowMs.start;
+        const maxMs = windowMs.end;
         const orbUsed = Math.abs(Number(data?.orb_used || 0));
         const maxSeriesAbs = Math.max(...series.map((point) => Math.abs(Number(point.signed_orb))));
         const maxAbs = Math.max(1, orbUsed, maxSeriesAbs) * 1.08;

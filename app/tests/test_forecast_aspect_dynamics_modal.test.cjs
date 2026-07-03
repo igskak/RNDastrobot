@@ -30,6 +30,7 @@ function resetModal() {
         requestSeq: 0,
         responseCache: new Map(),
         dragStart: null,
+        interactionWindow: null,
         pendingWindowTimer: null,
         scrollDomain: null,
     });
@@ -146,6 +147,26 @@ const sampleOpenOptions = {
         aspect_type: 'Trine',
     },
 };
+
+function dispatchDomEvent(target, type, props = {}) {
+    const event = new window.Event(type, { bubbles: true, cancelable: true });
+    Object.entries(props).forEach(([key, value]) => {
+        Object.defineProperty(event, key, { value, configurable: true });
+    });
+    target.dispatchEvent(event);
+    return event;
+}
+
+function dispatchPointer(target, type, props = {}) {
+    return dispatchDomEvent(target, type, {
+        pointerId: 1,
+        pointerType: 'mouse',
+        button: 0,
+        clientX: 0,
+        clientY: 0,
+        ...props,
+    });
+}
 
 test('buildPayload maps transit aspect fields and selected datetime', () => {
     const payload = modal.buildPayload({
@@ -422,5 +443,65 @@ test('scrollbar scrub requests a shifted graph window', async () => {
     assert.equal(payloads[2].max_points, 320);
     assert.ok(payloads[2].contact_start > '2027-01-01');
     assert.ok(payloads[2].contact_end > payloads[2].contact_start);
+    modal.close();
+});
+
+test('dragging the aspect chart pans the graph window', async () => {
+    setupDom();
+    const payloads = [];
+    modal.setFetchImpl(async (_url, options) => {
+        payloads.push(JSON.parse(options.body));
+        return {
+            ok: true,
+            async json() {
+                return sampleResponse();
+            },
+        };
+    });
+
+    await modal.open(sampleOpenOptions);
+    const wrap = document.querySelector('.aspect-dynamics-chart-wrap');
+    dispatchPointer(wrap, 'pointerdown', { clientX: 360 });
+    dispatchPointer(wrap, 'pointermove', { clientX: 260 });
+
+    assert.equal(modal._state.dragStart.moved, true);
+    assert.ok(modal._state.interactionWindow);
+    assert.ok(wrap.classList.contains('is-dragging'));
+
+    dispatchPointer(wrap, 'pointerup', { clientX: 260 });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    assert.equal(payloads.length, 3);
+    assert.equal(payloads[2].preview, false);
+    assert.ok(payloads[2].contact_start > '2026-06-01');
+    assert.ok(payloads[2].contact_end > payloads[2].contact_start);
+    assert.equal(wrap.classList.contains('is-dragging'), false);
+    modal.close();
+});
+
+test('wheel scroll pans the aspect chart smoothly before fetching', async () => {
+    setupDom();
+    const payloads = [];
+    modal.setFetchImpl(async (_url, options) => {
+        payloads.push(JSON.parse(options.body));
+        return {
+            ok: true,
+            async json() {
+                return sampleResponse();
+            },
+        };
+    });
+
+    await modal.open(sampleOpenOptions);
+    const wrap = document.querySelector('.aspect-dynamics-chart-wrap');
+    dispatchDomEvent(wrap, 'wheel', { deltaY: 90, deltaX: 0, deltaMode: 0 });
+
+    assert.ok(modal._state.interactionWindow);
+    assert.ok(modal._state.interactionWindow.start > new Date('2026-06-01T00:00:00Z').getTime());
+
+    await new Promise((resolve) => setTimeout(resolve, 140));
+    assert.equal(payloads.length, 3);
+    assert.equal(payloads[2].preview, false);
+    assert.ok(payloads[2].contact_start > '2026-06-01');
     modal.close();
 });
