@@ -215,6 +215,33 @@ function normalizeBodyName(name) {
     return RETRO_ALIASES[name] || name;
 }
 
+function normalizeAspectBodyName(name) {
+    return window.ChartDataRenderer?.ASPECT_NAME_ALIASES?.[name] || normalizeBodyName(name);
+}
+
+function getAspectBodyRank(name) {
+    return window.ChartDataRenderer?.ASPECT_SORT_RANK?.[normalizeAspectBodyName(name)] ?? 999;
+}
+
+function buildAspectKey(planetA, planetB) {
+    const left = normalizeAspectBodyName(planetA);
+    const right = normalizeAspectBodyName(planetB);
+    const leftRank = getAspectBodyRank(left);
+    const rightRank = getAspectBodyRank(right);
+
+    if (leftRank < rightRank) return `${left}-${right}`;
+    if (rightRank < leftRank) return `${right}-${left}`;
+    return left <= right ? `${left}-${right}` : `${right}-${left}`;
+}
+
+function getAspectKey(aspect) {
+    if (!aspect) return null;
+    const left = aspect.left_planet || aspect.planet_1;
+    const right = aspect.right_planet || aspect.planet_2;
+    if (!left || !right) return null;
+    return buildAspectKey(left, right);
+}
+
 function escapeHtml(value) {
     return String(value ?? '')
         .replace(/&/g, '&amp;')
@@ -448,6 +475,93 @@ function getNatalFullUserId() {
     return chartData?.user_id || window.AstroAPI?.getFormData?.()?.userId || null;
 }
 
+function numberOrUndefined(value) {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : undefined;
+}
+
+function buildNatalFullInlineSource() {
+    const birth = chartData?.birth_data || {};
+    if (!birth.date || !birth.time || !birth.timezone) return null;
+    const latitude = numberOrUndefined(birth.latitude);
+    const longitude = numberOrUndefined(birth.longitude);
+    if (!birth.place && (latitude === undefined || longitude === undefined)) return null;
+
+    return {
+        first_name: birth.first_name || undefined,
+        last_name: birth.last_name || undefined,
+        date: birth.date,
+        time: birth.time,
+        timezone: birth.timezone,
+        place: birth.place || undefined,
+        latitude,
+        longitude,
+        house_system: birth.house_system || 'P',
+        zodiac: birth.zodiac || 'tropical',
+        ayanamsha: birth.ayanamsha || 'lahiri',
+    };
+}
+
+function buildNatalFullSourcePayload() {
+    const userId = getNatalFullUserId();
+    if (userId) return { user_id: userId };
+    const natal = buildNatalFullInlineSource();
+    return natal ? { natal } : {};
+}
+
+function selectedNatalFullDateTime() {
+    const birth = chartData?.birth_data || {};
+    return birth.date ? `${birth.date}T${birth.time || '12:00:00'}` : '';
+}
+
+function findNatalFullAspect(aspectKey, aspectType) {
+    if (!aspectKey) return null;
+    const aspects = Array.isArray(chartData?.aspects) ? chartData.aspects : [];
+    return aspects.find((aspect) => (
+        getAspectKey(aspect) === aspectKey
+        && (!aspectType || aspect.aspect_type === aspectType)
+    )) || null;
+}
+
+function openNatalFullAspectDynamics(aspectKey, aspectType) {
+    const aspect = findNatalFullAspect(aspectKey, aspectType);
+    if (!aspect) {
+        window.showToast?.(t('page.forecastNew.aspectDynamics.errors.missingContext'), 'warning');
+        return;
+    }
+
+    window.ForecastAspectDynamicsModal?.open({
+        method: 'natal',
+        natalSource: buildNatalFullSourcePayload(),
+        userId: getNatalFullUserId(),
+        timezone: chartData?.birth_data?.timezone || 'UTC',
+        selectedDateTime: selectedNatalFullDateTime(),
+        aspect: { ...aspect, method: 'natal' },
+    });
+}
+
+function setupNatalAspectDynamicsHandlers() {
+    const section = document.getElementById('aspectsSection');
+    if (!section || section.dataset.aspectDynamicsReady === 'true') return;
+    section.dataset.aspectDynamicsReady = 'true';
+
+    section.addEventListener('click', (event) => {
+        if (!(event.target instanceof Element)) return;
+        const row = event.target.closest('tbody tr[data-aspect-key]');
+        if (!row) return;
+        openNatalFullAspectDynamics(row.dataset.aspectKey, row.dataset.aspectType);
+    });
+
+    section.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        if (!(event.target instanceof Element)) return;
+        const row = event.target.closest('tbody tr[data-aspect-key]');
+        if (!row) return;
+        event.preventDefault();
+        openNatalFullAspectDynamics(row.dataset.aspectKey, row.dataset.aspectType);
+    });
+}
+
 function configureNatalFullNavigation() {
     const navState = getNatalFullNavigationState();
     const currentUserId = getNatalFullUserId();
@@ -531,6 +645,7 @@ function renderFullChart(data) {
     renderNatalFullRulers(data);
     renderSpecialPoints(data.special_points || {});
     updateSectionCounts(data);
+    setupNatalAspectDynamicsHandlers();
     setupReportSections();
     setupReportShortcuts();
 }
@@ -1116,6 +1231,7 @@ function initAspectsSortHandlers() {
 
 function createAspectRow(aspect) {
     const tr = document.createElement('tr');
+    const aspectKey = getAspectKey(aspect);
 
     if (aspect.harmonic_type === 'harmonious') {
         tr.className = 'aspect-row-harmonious';
@@ -1123,6 +1239,12 @@ function createAspectRow(aspect) {
         tr.className = 'aspect-row-tense';
     } else {
         tr.className = 'aspect-row-neutral';
+    }
+    if (aspectKey) {
+        tr.classList.add('natal-aspect-dynamics-row');
+        tr.dataset.aspectKey = aspectKey;
+        tr.dataset.aspectType = aspect.aspect_type || '';
+        tr.tabIndex = 0;
     }
 
     const tdSymbol = document.createElement('td');

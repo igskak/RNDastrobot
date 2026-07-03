@@ -557,6 +557,16 @@
     background: rgba(240, 237, 228, 0.56);
 }
 
+.natal-aspect-dynamics-row {
+    cursor: pointer;
+}
+
+.natal-aspect-dynamics-row:focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: -2px;
+    background: rgba(235, 240, 247, 0.72);
+}
+
 .data-table tbody tr:last-child td {
     border-bottom: none;
 }

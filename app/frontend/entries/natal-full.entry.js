@@ -5,6 +5,8 @@ import '../js/locale-switcher.js';
 import '../js/api.js';
 import '../js/preferences.js';
 import '../js/symbols.js';
+import '../js/chart-data.js';
+import '../js/forecast-aspect-dynamics-modal.js';
 import '../js/dispositor-chains.js';
 import '../js/natal-full.js';
 import '../js/forecast-nav-menu.js';

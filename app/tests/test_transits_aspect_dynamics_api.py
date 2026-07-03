@@ -278,6 +278,73 @@ def test_aspect_dynamics_route_uses_universal_service_for_progression(monkeypatc
     assert calls["calculate"]["cache_key"] == "cache-key"
 
 
+def test_aspect_dynamics_route_uses_universal_service_for_natal(monkeypatch):
+    user_id = uuid4()
+    calls = {}
+
+    class FakeAspectDynamicsService:
+        def __init__(self, db_session, ephe_path=None):
+            calls["db_session"] = db_session
+            calls["ephe_path"] = ephe_path
+
+        @staticmethod
+        def request_cache_key(payload, *, astrologer_id):
+            calls["cache_payload"] = payload
+            calls["cache_astrologer_id"] = astrologer_id
+            return "cache-key"
+
+        def context_from_user_id(self, value):
+            calls["context"] = value
+            return object()
+
+        def calculate(self, **kwargs):
+            calls["calculate"] = kwargs
+            return {
+                "method": kwargs["method"],
+                "transit_body": kwargs["source_body"],
+                "natal_body": kwargs["target_body"],
+                "source_body": kwargs["source_body"],
+                "target_body": kwargs["target_body"],
+                "aspect_type": kwargs["aspect_type"],
+                "timezone": kwargs["timezone"],
+                "calc_version": "aspect_dynamics_v2",
+                "status": "ok",
+                "cache_hit": False,
+                "contacts": [],
+                "series": [],
+            }
+
+    monkeypatch.setattr(transits, "AspectDynamicsService", FakeAspectDynamicsService)
+    monkeypatch.setattr(transits, "ensure_client_access", lambda *args, **kwargs: calls.setdefault("access", args))
+
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/transits/aspect-dynamics",
+            json={
+                "user_id": str(user_id),
+                "method": "natal",
+                "source_body": "Moon",
+                "target_body": "Sun",
+                "aspect_type": "Trine",
+                "selected_date": "1990-06-26",
+                "selected_time": "14:30:00",
+                "timezone": "UTC",
+                "max_points": 240,
+            },
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["method"] == "natal"
+    assert body["source_body"] == "Moon"
+    assert body["target_body"] == "Sun"
+    assert calls["context"] == user_id
+    assert calls["access"][3] == user_id
+    assert calls["calculate"]["method"] == "natal"
+    assert calls["calculate"]["max_points"] == 240
+    assert calls["calculate"]["cache_key"] == "cache-key"
+
+
 def test_aspect_dynamics_route_passes_preview_to_universal_service(monkeypatch):
     user_id = uuid4()
     calls = {}
