@@ -13,6 +13,7 @@ function resetModal() {
         overlay: null,
         dialog: null,
         canvas: null,
+        chartWrap: null,
         status: null,
         summary: null,
         title: null,
@@ -193,10 +194,11 @@ test('forecast-new aspect clicks open dynamics modal without pinning', () => {
 
     assert.equal(source.includes('togglePinnedAspectKey'), false);
     assert.equal(source.includes('pinnedAspectKey'), false);
-    assert.match(source, /openNatalAspectDynamicsByKey\(key, row\?\.dataset\?\.aspectType\)/);
-    assert.match(source, /openAspectDynamicsByKey\(key, row\?\.dataset\?\.aspectType\)/);
-    assert.match(source, /openAspectDynamicsByKey\(key, cell\?\.dataset\?\.aspectType\)/);
-    assert.match(source, /openNatalAspectDynamicsByKey\(key, line\?\.dataset\?\.aspectType \|\| line\?\.dataset\?\.type\)/);
+    assert.match(source, /document\.addEventListener\('click', handleAspectDynamicsClick\)/);
+    assert.match(source, /\.aspect-symbol-group\[data-aspect-key\]/);
+    assert.match(source, /#natalAspectsView tr\[data-aspect-key\]/);
+    assert.match(source, /#natalGridView td\[data-aspect-key\]/);
+    assert.match(source, /openWheelAspectDynamicsFromNode\(wheelNode\)/);
 });
 
 test('modal renders loading state while dynamics request is pending', async () => {
@@ -285,5 +287,6 @@ test('toolbar range control requests a new graph window', async () => {
     assert.equal(payloads.length, 2);
     assert.equal(payloads[1].contact_start, '2021-06-30');
     assert.equal(payloads[1].contact_end, '2031-06-28');
+    assert.equal(payloads[1].max_points, 720);
     modal.close();
 });

@@ -156,6 +156,12 @@
 .aspect-dynamics-chart-wrap {
     min-height: 280px;
     padding: 14px 18px 6px;
+    cursor: grab;
+    touch-action: none;
+}
+
+.aspect-dynamics-chart-wrap:active {
+    cursor: grabbing;
 }
 
 .aspect-dynamics-canvas {

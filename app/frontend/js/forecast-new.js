@@ -4361,12 +4361,17 @@
             .join(' ');
     }
 
+    function aspectRendererForDynamics() {
+        return state.prognosticRenderer || state.natalRenderer || null;
+    }
+
     function aspectKeyForDynamics(aspect) {
-        if (!aspect || !state.prognosticRenderer?.getAspectKey) return null;
-        const normalized = state.prognosticRenderer.normalizeAspectForDisplay
-            ? state.prognosticRenderer.normalizeAspectForDisplay(aspect)
+        const renderer = aspectRendererForDynamics();
+        if (!aspect || !renderer?.getAspectKey) return null;
+        const normalized = renderer.normalizeAspectForDisplay
+            ? renderer.normalizeAspectForDisplay(aspect)
             : aspect;
-        return state.prognosticRenderer.getAspectKey(normalized);
+        return renderer.getAspectKey(normalized);
     }
 
     function findAspectInLayerForDynamics(layer, aspectKey, aspectType) {
@@ -4393,9 +4398,24 @@
     }
 
     function findNatalAspectForDynamics(aspectKey, aspectType) {
-        const natalLayer = state.viewModel?.natalLayer;
-        const aspect = findAspectInLayerForDynamics(natalLayer, aspectKey, aspectType);
-        return aspect ? { layer: natalLayer, aspect } : null;
+        const candidates = [
+            state.viewModel?.natalLayer,
+            activeBaseWheelData(),
+            state.natalRenderer?.chartData,
+            activeBaseChartData(),
+        ].filter(Boolean);
+        for (const layer of candidates) {
+            const aspect = findAspectInLayerForDynamics(layer, aspectKey, aspectType);
+            if (aspect) return { layer: state.viewModel?.natalLayer || layer, aspect };
+        }
+        const wheelAspect = state.wheel?.aspectLookupByKey?.[aspectKey];
+        if (wheelAspect && (!aspectType || wheelAspect.aspect_type === aspectType)) {
+            return {
+                layer: state.viewModel?.natalLayer || { id: 'natal', method: 'natal' },
+                aspect: wheelAspect,
+            };
+        }
+        return null;
     }
 
     function layerInstanceForDynamics(layer) {
@@ -4475,6 +4495,69 @@
         }
         const inst = layerInstanceForDynamics(match.layer);
         window.ForecastAspectDynamicsModal?.open(dynamicsOptionsForLayer(match, inst));
+    }
+
+    function aspectNodeFromEventTarget(target) {
+        if (!(target instanceof Element)) return null;
+        return target.closest(
+            '.aspect-line[data-aspect-key], '
+            + '.aspect-symbol-group[data-aspect-key], '
+            + '[data-aspect-key][data-method-1][data-method-2]'
+        );
+    }
+
+    function openWheelAspectDynamicsFromNode(node) {
+        const key = node?.dataset?.aspectKey;
+        if (!key) return false;
+        const method1 = node.dataset.method1;
+        const method2 = node.dataset.method2;
+        const aspectType = node.dataset.aspectType || node.dataset.type;
+        if (method1 === 'natal' && method2 === 'natal') {
+            openNatalAspectDynamicsByKey(key, aspectType);
+            return true;
+        }
+        openAspectDynamicsByKey(
+            key,
+            aspectType,
+            method1 && method1 !== 'natal' ? method1 : null,
+        );
+        return true;
+    }
+
+    function handleAspectDynamicsClick(event) {
+        if (!(event.target instanceof Element)) return;
+
+        const wheelNode = aspectNodeFromEventTarget(event.target);
+        if (wheelNode && refs.forecastNewWheel?.contains(wheelNode)) {
+            event.preventDefault();
+            openWheelAspectDynamicsFromNode(wheelNode);
+            return;
+        }
+
+        const natalNode = event.target.closest(
+            '#natalAspectsView tr[data-aspect-key], '
+            + '#natalGridView td[data-aspect-key]'
+        );
+        if (natalNode) {
+            event.preventDefault();
+            openNatalAspectDynamicsByKey(
+                natalNode.dataset.aspectKey,
+                natalNode.dataset.aspectType,
+            );
+            return;
+        }
+
+        const prognosticNode = event.target.closest(
+            '#progAspectsView tr[data-aspect-key], '
+            + '#progGridView td[data-aspect-key]'
+        );
+        if (prognosticNode) {
+            event.preventDefault();
+            openAspectDynamicsByKey(
+                prognosticNode.dataset.aspectKey,
+                prognosticNode.dataset.aspectType,
+            );
+        }
     }
 
     function buildResultLayerMeta(method, layer) {
@@ -5222,27 +5305,7 @@
     }
 
     function initAspectInteractions() {
-        const natalAspectsPane = document.getElementById('natalAspectsView');
-        if (natalAspectsPane) {
-            natalAspectsPane.addEventListener('click', (event) => {
-                if (!(event.target instanceof Element)) return;
-                const row = event.target.closest('tr[data-aspect-key]');
-                const key = row?.dataset?.aspectKey;
-                if (!key) return;
-                openNatalAspectDynamicsByKey(key, row?.dataset?.aspectType);
-            });
-        }
-
-        const natalGridPane = document.getElementById('natalGridView');
-        if (natalGridPane) {
-            natalGridPane.addEventListener('click', (event) => {
-                if (!(event.target instanceof Element)) return;
-                const cell = event.target.closest('td[data-aspect-key]');
-                const key = cell?.dataset?.aspectKey;
-                if (!key) return;
-                openNatalAspectDynamicsByKey(key, cell?.dataset?.aspectType);
-            });
-        }
+        document.addEventListener('click', handleAspectDynamicsClick);
 
         const aspectsPane = document.getElementById('progAspectsView');
         if (aspectsPane) {
@@ -5259,14 +5322,6 @@
                 if (!row) return;
                 if (row.contains(event.relatedTarget)) return;
                 setHoveredAspectKey(null);
-            });
-
-            aspectsPane.addEventListener('click', (event) => {
-                if (!(event.target instanceof Element)) return;
-                const row = event.target.closest('tr[data-aspect-key]');
-                const key = row?.dataset?.aspectKey;
-                if (!key) return;
-                openAspectDynamicsByKey(key, row?.dataset?.aspectType);
             });
         }
 
@@ -5286,14 +5341,6 @@
                 if (cell.contains(event.relatedTarget)) return;
                 setHoveredAspectKey(null);
             });
-
-            gridPane.addEventListener('click', (event) => {
-                if (!(event.target instanceof Element)) return;
-                const cell = event.target.closest('td[data-aspect-key]');
-                const key = cell?.dataset?.aspectKey;
-                if (!key) return;
-                openAspectDynamicsByKey(key, cell?.dataset?.aspectType);
-            });
         }
 
         document.addEventListener('chart:aspect-hover', (event) => {
@@ -5306,24 +5353,6 @@
             const key = event?.detail?.aspectKey || null;
             if (key && state.hoveredAspectKey && key !== state.hoveredAspectKey) return;
             setHoveredAspectKey(null);
-        });
-
-        refs.forecastNewWheel?.addEventListener('click', (event) => {
-            if (!(event.target instanceof Element)) return;
-            const line = event.target.closest('.aspect-line');
-            const key = line?.dataset?.aspectKey;
-            if (!key) return;
-            const method1 = line?.dataset?.method1;
-            const method2 = line?.dataset?.method2;
-            if (method1 === 'natal' && method2 === 'natal') {
-                openNatalAspectDynamicsByKey(key, line?.dataset?.aspectType || line?.dataset?.type);
-                return;
-            }
-            openAspectDynamicsByKey(
-                key,
-                line?.dataset?.aspectType || line?.dataset?.type,
-                method1 && method1 !== 'natal' ? method1 : null,
-            );
         });
 
         bindPlanetTableInteractions(document.getElementById('forecastNewNatalPanel'), 'natal');

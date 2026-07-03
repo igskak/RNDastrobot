@@ -27,6 +27,7 @@
         overlay: null,
         dialog: null,
         canvas: null,
+        chartWrap: null,
         status: null,
         summary: null,
         title: null,
@@ -210,9 +211,19 @@
         const end = Math.max(startMs, endMs);
         return {
             ...state.basePayload,
+            max_points: maxPointsForWindow(start, end),
             contact_start: toDateOnly(start),
             contact_end: toDateOnly(end),
         };
+    }
+
+    function maxPointsForWindow(startMs, endMs) {
+        const base = Number(state.basePayload?.max_points || DEFAULT_MAX_POINTS);
+        const days = Math.abs(endMs - startMs) / 86400000;
+        if (days >= 3650) return Math.max(base, 720);
+        if (days >= 365) return Math.max(base, 520);
+        if (days >= 60) return Math.max(base, 420);
+        return Math.max(base, 320);
     }
 
     function clampWindow(startMs, endMs) {
@@ -253,10 +264,26 @@
         void fetchAndRender(windowPayload(bounded.start, bounded.end));
     }
 
-    function zoom(factor) {
+    function eventAnchorMs(event) {
+        const current = dataWindowMs();
+        const canvas = state.canvas;
+        if (!current || !canvas || !event) return null;
+        const rect = canvas.getBoundingClientRect();
+        if (!rect.width) return null;
+        const padLeft = 54;
+        const padRight = 18;
+        const plotW = Math.max(1, rect.width - padLeft - padRight);
+        const ratio = Math.max(
+            0,
+            Math.min(1, (event.clientX - rect.left - padLeft) / plotW),
+        );
+        return current.start + ratio * (current.end - current.start);
+    }
+
+    function zoom(factor, anchorMs = null) {
         const current = dataWindowMs();
         if (!current) return;
-        const anchor = selectedMs() || ((current.start + current.end) / 2);
+        const anchor = anchorMs || selectedMs() || ((current.start + current.end) / 2);
         const span = (current.end - current.start) * factor;
         const leftRatio = (anchor - current.start) / (current.end - current.start || 1);
         requestWindow(anchor - span * leftRatio, anchor + span * (1 - leftRatio));
@@ -280,7 +307,11 @@
         const label = state.toolbar.querySelector('.aspect-dynamics-range-label');
         const current = dataWindowMs(data);
         if (!label || !current) return;
-        label.textContent = `${formatDateShort(current.start)} - ${formatDateShort(current.end)}`;
+        label.textContent = [
+            `${formatDateShort(current.start)} - ${formatDateShort(current.end)}`,
+            formatSpanLabel(current.end - current.start),
+            `${(data?.series || []).length} pts`,
+        ].filter(Boolean).join(' · ');
     }
 
     function onToolbarClick(event) {
@@ -299,7 +330,7 @@
     function onCanvasWheel(event) {
         if (!state.data) return;
         event.preventDefault();
-        zoom(event.deltaY < 0 ? 0.65 : 1.55);
+        zoom(event.deltaY < 0 ? 0.65 : 1.55, eventAnchorMs(event));
     }
 
     function onCanvasPointerDown(event) {
@@ -308,7 +339,7 @@
             x: event.clientX,
             window: dataWindowMs(),
         };
-        state.canvas?.setPointerCapture?.(event.pointerId);
+        state.chartWrap?.setPointerCapture?.(event.pointerId);
     }
 
     function onCanvasPointerUp(event) {
@@ -413,20 +444,20 @@
         state.subtitle = overlay.querySelector('.aspect-dynamics-subtitle');
         state.closeButton = overlay.querySelector('.aspect-dynamics-close');
         state.toolbar = overlay.querySelector('.aspect-dynamics-toolbar');
+        state.chartWrap = overlay.querySelector('.aspect-dynamics-chart-wrap');
 
         overlay.addEventListener('click', (event) => {
             if (event.target.closest('[data-aspect-dynamics-close]')) close();
         });
         state.toolbar?.addEventListener('click', onToolbarClick);
-        state.canvas?.addEventListener('wheel', onCanvasWheel, { passive: false });
-        state.canvas?.addEventListener('pointerdown', onCanvasPointerDown);
-        state.canvas?.addEventListener('pointerup', onCanvasPointerUp);
-        state.canvas?.addEventListener('pointercancel', onCanvasPointerCancel);
+        state.chartWrap?.addEventListener('wheel', onCanvasWheel, { passive: false });
+        state.chartWrap?.addEventListener('pointerdown', onCanvasPointerDown);
+        state.chartWrap?.addEventListener('pointerup', onCanvasPointerUp);
+        state.chartWrap?.addEventListener('pointercancel', onCanvasPointerCancel);
 
         if (typeof ResizeObserver !== 'undefined') {
             state.resizeObserver = new ResizeObserver(() => drawChart());
-            const chartWrap = overlay.querySelector('.aspect-dynamics-chart-wrap');
-            if (chartWrap) state.resizeObserver.observe(chartWrap);
+            if (state.chartWrap) state.resizeObserver.observe(state.chartWrap);
         } else if (typeof root.addEventListener === 'function') {
             root.addEventListener('resize', drawChart);
         }
@@ -671,6 +702,7 @@
             const clamped = Math.max(-maxAbs, Math.min(maxAbs, value));
             return plotBottom - ((clamped + maxAbs) / (maxAbs * 2)) * plotH;
         };
+        const ticks = buildTimeTicks(minMs, maxMs, 6);
 
         ctx.strokeStyle = '#e7e1d8';
         ctx.lineWidth = 1;
@@ -681,6 +713,18 @@
             ctx.lineTo(width - pad.right, y);
         }
         ctx.stroke();
+
+        ctx.strokeStyle = '#f1ece4';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ticks.forEach((tick) => {
+            const x = xOf(tick);
+            ctx.moveTo(x, pad.top);
+            ctx.lineTo(x, plotBottom);
+        });
+        ctx.stroke();
+
+        drawRangeCaption(ctx, data, minMs, maxMs, pad, width);
 
         ctx.fillStyle = '#7b736c';
         ctx.font = '11px system-ui, sans-serif';
@@ -723,7 +767,7 @@
 
         drawContactMarkers(ctx, data, xOf, yOf, pad, width, plotBottom);
         drawSelectedMarker(ctx, data?.selected_point, xOf, yOf, pad, width, plotBottom);
-        drawDateLabels(ctx, minMs, maxMs, pad, width, plotBottom);
+        drawDateLabels(ctx, ticks, xOf, minMs, maxMs, pad, width, plotBottom);
     }
 
     function drawContactMarkers(ctx, data, xOf, yOf, pad, width, plotBottom) {
@@ -787,15 +831,69 @@
         ctx.restore();
     }
 
-    function drawDateLabels(ctx, minMs, maxMs, pad, width, plotBottom) {
+    function drawRangeCaption(ctx, data, minMs, maxMs, pad, width) {
+        ctx.save();
+        ctx.fillStyle = '#4f4943';
+        ctx.font = '600 12px system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(
+            [
+                `${formatDateShort(minMs)} - ${formatDateShort(maxMs)}`,
+                formatSpanLabel(maxMs - minMs),
+                `${(data?.series || []).length} pts`,
+            ].filter(Boolean).join(' · '),
+            pad.left,
+            14,
+        );
+        ctx.restore();
+    }
+
+    function drawDateLabels(ctx, ticks, xOf, minMs, maxMs, pad, width, plotBottom) {
+        const spanMs = maxMs - minMs;
         ctx.save();
         ctx.fillStyle = '#7b736c';
         ctx.font = '11px system-ui, sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText(formatDateShort(minMs), pad.left, plotBottom + 22);
-        ctx.textAlign = 'right';
-        ctx.fillText(formatDateShort(maxMs), width - pad.right, plotBottom + 22);
+        ticks.forEach((tick, index) => {
+            const x = xOf(tick);
+            ctx.textAlign = index === 0
+                ? 'left'
+                : (index === ticks.length - 1 ? 'right' : 'center');
+            const boundedX = Math.max(pad.left, Math.min(width - pad.right, x));
+            ctx.fillText(formatDateTick(tick, spanMs), boundedX, plotBottom + 22);
+        });
         ctx.restore();
+    }
+
+    function buildTimeTicks(minMs, maxMs, targetCount = 6) {
+        if (!Number.isFinite(minMs) || !Number.isFinite(maxMs) || maxMs <= minMs) {
+            return [];
+        }
+        const count = Math.max(2, targetCount);
+        return Array.from({ length: count }, (_, index) => (
+            minMs + ((maxMs - minMs) * index) / (count - 1)
+        ));
+    }
+
+    function formatDateTick(ms, spanMs) {
+        const date = new Date(ms);
+        if (Number.isNaN(date.getTime())) return '';
+        const locale = root.FrontendI18n?.getLocale?.() || 'en';
+        const spanDays = Math.abs(spanMs) / 86400000;
+        if (spanDays >= 365 * 5) {
+            return new Intl.DateTimeFormat(locale, { year: 'numeric' }).format(date);
+        }
+        if (spanDays >= 120) {
+            return new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric' }).format(date);
+        }
+        return new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' }).format(date);
+    }
+
+    function formatSpanLabel(spanMs) {
+        const days = Math.abs(spanMs) / 86400000;
+        if (!Number.isFinite(days) || days <= 0) return '';
+        if (days >= 365 * 2) return `${(days / 365.2425).toFixed(days >= 3650 ? 0 : 1)}y`;
+        if (days >= 60) return `${Math.round(days / 30.4375)}mo`;
+        return `${Math.max(1, Math.round(days))}d`;
     }
 
     function formatDateShort(ms) {
