@@ -4509,8 +4509,8 @@
     function openWheelAspectDynamicsFromNode(node) {
         const key = node?.dataset?.aspectKey;
         if (!key) return false;
-        const method1 = node.dataset.method1;
-        const method2 = node.dataset.method2;
+        const method1 = node.getAttribute('data-method-1') || node.dataset.method1 || '';
+        const method2 = node.getAttribute('data-method-2') || node.dataset.method2 || '';
         const aspectType = node.dataset.aspectType || node.dataset.type;
         if (method1 === 'natal' && method2 === 'natal') {
             openNatalAspectDynamicsByKey(key, aspectType);
