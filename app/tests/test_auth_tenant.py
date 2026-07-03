@@ -2,7 +2,7 @@ import os
 import hashlib
 import hmac
 import json
-from datetime import date, timedelta, time as time_type
+from datetime import date, timedelta, time as time_type, timezone
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -216,6 +216,40 @@ def test_password_login_me_logout_flow():
 
         me_after = client.get("/api/v1/auth/me")
         assert me_after.status_code == 401
+
+
+def test_authenticated_request_refreshes_aging_session_cookie():
+    _create_astrologer("rolling@example.com", "password123")
+
+    with TestClient(app) as client:
+        _login(client, "rolling@example.com")
+        sid = client.cookies.get("astrobot_session")
+        assert sid
+
+        db = TestingSessionLocal()
+        try:
+            session = db.query(AuthSession).filter(AuthSession.session_id == sid).one()
+            session.expires_at = utcnow() + timedelta(hours=2)
+            db.commit()
+        finally:
+            db.close()
+
+        me = client.get("/api/v1/auth/me")
+
+    assert me.status_code == 200
+    set_cookie = me.headers.get("set-cookie", "")
+    assert "astrobot_session=" in set_cookie
+    assert "Max-Age=604800" in set_cookie
+
+    db = TestingSessionLocal()
+    try:
+        refreshed = db.query(AuthSession).filter(AuthSession.session_id == sid).one()
+        refreshed_expires_at = refreshed.expires_at
+        if refreshed_expires_at.tzinfo is None:
+            refreshed_expires_at = refreshed_expires_at.replace(tzinfo=timezone.utc)
+        assert refreshed_expires_at - utcnow() > timedelta(days=6)
+    finally:
+        db.close()
 
 
 def test_me_includes_plan_entitlements_and_usage():

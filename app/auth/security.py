@@ -24,6 +24,15 @@ def session_ttl() -> timedelta:
     return timedelta(hours=max(1, hours))
 
 
+def session_refresh_interval() -> timedelta:
+    raw = os.getenv("SESSION_REFRESH_INTERVAL_HOURS", "24").strip()
+    try:
+        hours = int(raw)
+    except ValueError:
+        hours = 24
+    return timedelta(hours=max(1, hours))
+
+
 def password_reset_ttl() -> timedelta:
     raw = os.getenv("PASSWORD_RESET_TTL_MINUTES", "30").strip()
     try:

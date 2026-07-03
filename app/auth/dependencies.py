@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 import os
 from threading import RLock
 from time import monotonic
@@ -18,6 +18,7 @@ from app.auth.security import (
     cookie_domain,
     cookie_secure,
     generate_session_id,
+    session_refresh_interval,
     session_ttl,
     utcnow,
 )
@@ -88,6 +89,49 @@ def _cookie_domain_for_request(request: Request) -> Optional[str]:
     if host == domain or host.endswith(f".{domain}"):
         return configured
     return None
+
+
+def _as_utc(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
+def _set_session_cookie(response: Response, request: Request, sid: str) -> None:
+    response.set_cookie(
+        key=SESSION_COOKIE_NAME,
+        value=sid,
+        httponly=True,
+        secure=cookie_secure(),
+        samesite="lax",
+        domain=_cookie_domain_for_request(request),
+        max_age=int(session_ttl().total_seconds()),
+        path="/",
+    )
+
+
+def _should_refresh_session(session: AuthSession, now: datetime) -> bool:
+    ttl = session_ttl()
+    refresh_interval = session_refresh_interval()
+    refresh_window = ttl - refresh_interval
+    if refresh_window <= timedelta(0):
+        refresh_window = ttl / 2
+    return _as_utc(session.expires_at) <= now + refresh_window
+
+
+def _refresh_session_if_needed(
+    response: Response,
+    request: Request,
+    db: Session,
+    session: AuthSession,
+    now: datetime,
+) -> None:
+    if not _should_refresh_session(session, now):
+        return
+
+    session.expires_at = now + session_ttl()
+    db.flush()
+    _set_session_cookie(response, request, session.session_id)
 
 
 def create_audit_event(
@@ -241,16 +285,8 @@ def issue_session(response: Response, db: Session, request: Request, astrologer:
     db.add(session)
     db.flush()
 
-    response.set_cookie(
-        key=SESSION_COOKIE_NAME,
-        value=sid,
-        httponly=True,
-        secure=cookie_secure(),
-        samesite="lax",
-        domain=_cookie_domain_for_request(request),
-        max_age=int(session_ttl().total_seconds()),
-        path="/",
-    )
+    _clear_request_session_cookie(response, request)
+    _set_session_cookie(response, request, sid)
     return session
 
 
@@ -263,6 +299,20 @@ def _delete_session_cookie(response: Response, domain: Optional[str]) -> None:
         domain=domain,
         path="/",
     )
+
+
+def _clear_request_session_cookie(response: Response, request: Request) -> None:
+    valid_domain = _cookie_domain_for_request(request)
+    domains: list[Optional[str]] = [valid_domain]
+    if valid_domain is not None:
+        domains.append(None)
+
+    seen: set[Optional[str]] = set()
+    for domain in domains:
+        if domain in seen:
+            continue
+        seen.add(domain)
+        _delete_session_cookie(response, domain)
 
 
 def clear_session_cookie(response: Response, request: Optional[Request] = None) -> None:
@@ -282,7 +332,7 @@ def clear_session_cookie(response: Response, request: Optional[Request] = None) 
         _delete_session_cookie(response, domain)
 
 
-def require_auth(request: Request, db: Session = Depends(get_db)) -> AuthContext:
+def require_auth(request: Request, response: Response, db: Session = Depends(get_db)) -> AuthContext:
     sid = request.cookies.get(SESSION_COOKIE_NAME)
     if not sid:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
@@ -307,6 +357,8 @@ def require_auth(request: Request, db: Session = Depends(get_db)) -> AuthContext
     )
     if not astrologer:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Astrologer account is inactive")
+
+    _refresh_session_if_needed(response, request, db, session, now)
 
     return AuthContext(
         astrologer=astrologer,
