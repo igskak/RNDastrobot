@@ -2383,6 +2383,12 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     transition: opacity 0.15s, stroke-width 0.15s;
 }
 
+.aspect-hit,
+.aspect-hit.forecast-new-aspect-focus {
+    opacity: 0 !important;
+    stroke-width: 14 !important;
+}
+
 .forecast-new-aspect-focus {
     opacity: 1 !important;
     stroke-width: 2.8 !important;

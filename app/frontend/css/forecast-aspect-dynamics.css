@@ -88,6 +88,7 @@
 .aspect-dynamics-status {
     margin: 14px 18px 0;
     padding: 10px 12px;
+    min-height: 40px;
     border: 1px solid rgba(30, 58, 95, 0.12);
     border-radius: 8px;
     background: rgba(30, 58, 95, 0.06);
@@ -97,7 +98,8 @@
 }
 
 .aspect-dynamics-status[hidden] {
-    display: none;
+    display: block;
+    visibility: hidden;
 }
 
 .aspect-dynamics-status--error {
@@ -206,6 +208,7 @@
 }
 
 .aspect-dynamics-summary {
+    min-height: 116px;
     max-height: 190px;
     overflow: auto;
     padding: 0 18px 18px;

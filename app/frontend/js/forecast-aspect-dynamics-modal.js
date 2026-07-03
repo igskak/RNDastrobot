@@ -42,6 +42,7 @@
         requestSeq: 0,
         responseCache: new Map(),
         dragStart: null,
+        pendingWindowTimer: null,
     };
 
     function tr(key, fallback, params) {
@@ -258,10 +259,20 @@
         }
     }
 
-    function requestWindow(startMs, endMs) {
+    function requestWindow(startMs, endMs, { debounce = false } = {}) {
         if (!state.basePayload) return;
         const bounded = clampWindow(startMs, endMs);
-        void fetchAndRender(windowPayload(bounded.start, bounded.end));
+        const run = () => {
+            state.pendingWindowTimer = null;
+            void fetchAndRender(windowPayload(bounded.start, bounded.end), { keepStatus: true });
+        };
+        if (!debounce) {
+            clearTimeout(state.pendingWindowTimer);
+            run();
+            return;
+        }
+        clearTimeout(state.pendingWindowTimer);
+        state.pendingWindowTimer = setTimeout(run, 140);
     }
 
     function eventAnchorMs(event) {
@@ -280,13 +291,13 @@
         return current.start + ratio * (current.end - current.start);
     }
 
-    function zoom(factor, anchorMs = null) {
+    function zoom(factor, anchorMs = null, options = {}) {
         const current = dataWindowMs();
         if (!current) return;
         const anchor = anchorMs || selectedMs() || ((current.start + current.end) / 2);
         const span = (current.end - current.start) * factor;
         const leftRatio = (anchor - current.start) / (current.end - current.start || 1);
-        requestWindow(anchor - span * leftRatio, anchor + span * (1 - leftRatio));
+        requestWindow(anchor - span * leftRatio, anchor + span * (1 - leftRatio), options);
     }
 
     function pan(ratio) {
@@ -330,7 +341,7 @@
     function onCanvasWheel(event) {
         if (!state.data) return;
         event.preventDefault();
-        zoom(event.deltaY < 0 ? 0.65 : 1.55, eventAnchorMs(event));
+        zoom(event.deltaY < 0 ? 0.65 : 1.55, eventAnchorMs(event), { debounce: true });
     }
 
     function onCanvasPointerDown(event) {
@@ -359,6 +370,8 @@
     }
 
     function onCanvasPointerCancel() {
+        clearTimeout(state.pendingWindowTimer);
+        state.pendingWindowTimer = null;
         state.dragStart = null;
     }
 
@@ -478,6 +491,8 @@
     }
 
     function close() {
+        clearTimeout(state.pendingWindowTimer);
+        state.pendingWindowTimer = null;
         setOpen(false);
         const focusTarget = state.lastFocus;
         state.lastFocus = null;
@@ -911,6 +926,8 @@
         if (!overlay) return null;
         const payload = buildPayload(options);
         state.basePayload = payload;
+        clearTimeout(state.pendingWindowTimer);
+        state.pendingWindowTimer = null;
         state.responseCache.clear();
         renderShell(payload);
         state.lastFocus = typeof document !== 'undefined' ? document.activeElement : null;

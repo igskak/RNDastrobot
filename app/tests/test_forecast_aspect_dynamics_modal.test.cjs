@@ -28,6 +28,7 @@ function resetModal() {
         requestSeq: 0,
         responseCache: new Map(),
         dragStart: null,
+        pendingWindowTimer: null,
     });
 }
 
@@ -191,6 +192,7 @@ test('buildPayload maps non-transit layer context and partner source', () => {
 
 test('forecast-new aspect clicks open dynamics modal without pinning', () => {
     const source = fs.readFileSync(path.join(__dirname, '../frontend/js/forecast-new.js'), 'utf8');
+    const wheelSource = fs.readFileSync(path.join(__dirname, '../frontend/js/prognostic-rings-wheel.js'), 'utf8');
 
     assert.equal(source.includes('togglePinnedAspectKey'), false);
     assert.equal(source.includes('pinnedAspectKey'), false);
@@ -199,6 +201,9 @@ test('forecast-new aspect clicks open dynamics modal without pinning', () => {
     assert.match(source, /#natalAspectsView tr\[data-aspect-key\]/);
     assert.match(source, /#natalGridView td\[data-aspect-key\]/);
     assert.match(source, /openWheelAspectDynamicsFromNode\(wheelNode\)/);
+    assert.match(wheelSource, /createAspectHitElement/);
+    assert.match(wheelSource, /class: 'aspect-line aspect-hit'/);
+    assert.match(wheelSource, /'stroke-width': 14/);
 });
 
 test('modal renders loading state while dynamics request is pending', async () => {
