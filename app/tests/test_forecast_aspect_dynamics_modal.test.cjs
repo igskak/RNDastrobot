@@ -96,8 +96,8 @@ function setupDom() {
     return dom;
 }
 
-function sampleResponse() {
-    return {
+function sampleResponse(overrides = {}) {
+    const base = {
         transit_body: 'Pluto',
         natal_body: 'Sun',
         aspect_type: 'Trine',
@@ -129,6 +129,10 @@ function sampleResponse() {
             { datetime: '2026-06-20T00:00:00+00:00', signed_orb: 0, abs_orb: 0 },
             { datetime: '2026-07-01T00:00:00+00:00', signed_orb: -3, abs_orb: 3 },
         ],
+    };
+    return {
+        ...base,
+        ...overrides,
     };
 }
 
@@ -251,21 +255,32 @@ test('modal renders error state when dynamics request fails', async () => {
 
 test('modal renders success summary from fetched dynamics data', async () => {
     setupDom();
+    const payloads = [];
     modal.setFetchImpl(async (url, options) => {
         assert.equal(url, '/api/v1/transits/aspect-dynamics');
         const payload = JSON.parse(options.body);
+        payloads.push(payload);
         assert.equal(payload.transit_body, 'Pluto');
         assert.equal(payload.method, 'transit');
         return {
             ok: true,
             async json() {
-                return sampleResponse();
+                return sampleResponse(payload.preview ? {
+                    preview: true,
+                    boundary_complete: false,
+                    contacts: [],
+                } : { preview: false });
             },
         };
     });
 
     await modal.open(sampleOpenOptions);
 
+    assert.equal(payloads.length, 2);
+    assert.equal(payloads[0].preview, true);
+    assert.equal(payloads[0].max_points, 96);
+    assert.equal(payloads[1].preview, false);
+    assert.equal(payloads[1].max_points, 320);
     const overlay = document.querySelector('.aspect-dynamics-modal');
     assert.ok(overlay);
     assert.equal(overlay.classList.contains('hidden'), false);
@@ -274,6 +289,87 @@ test('modal renders success summary from fetched dynamics data', async () => {
     assert.match(document.querySelector('#aspectDynamicsTitle').textContent, /P tri S/);
     assert.match(document.querySelector('.aspect-dynamics-summary').textContent, /Closest approach/);
     assert.match(document.querySelector('.aspect-dynamics-summary').textContent, /Pass 1/);
+    modal.close();
+});
+
+test('modal paints preview before full dynamics response resolves', async () => {
+    setupDom();
+    let resolveFull;
+    const fullResponse = new Promise((resolve) => {
+        resolveFull = resolve;
+    });
+    const payloads = [];
+    modal.setFetchImpl((_, options) => {
+        const payload = JSON.parse(options.body);
+        payloads.push(payload);
+        if (payload.preview) {
+            return Promise.resolve({
+                ok: true,
+                async json() {
+                    return sampleResponse({
+                        preview: true,
+                        boundary_complete: false,
+                        contacts: [],
+                    });
+                },
+            });
+        }
+        return fullResponse;
+    });
+
+    const openPromise = modal.open(sampleOpenOptions);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    assert.equal(payloads.length, 2);
+    assert.equal(payloads[0].preview, true);
+    assert.match(document.querySelector('.aspect-dynamics-summary').textContent, /Calculating aspect dynamics/);
+    assert.equal(modal._state.data.preview, true);
+
+    resolveFull({
+        ok: true,
+        async json() {
+            return sampleResponse({ preview: false });
+        },
+    });
+    await openPromise;
+
+    assert.equal(modal._state.data.preview, false);
+    assert.match(document.querySelector('.aspect-dynamics-summary').textContent, /Pass 1/);
+    modal.close();
+});
+
+test('modal keeps preview chart when full dynamics request fails', async () => {
+    setupDom();
+    modal.setFetchImpl(async (_, options) => {
+        const payload = JSON.parse(options.body);
+        if (payload.preview) {
+            return {
+                ok: true,
+                async json() {
+                    return sampleResponse({
+                        preview: true,
+                        boundary_complete: false,
+                        contacts: [],
+                    });
+                },
+            };
+        }
+        return {
+            ok: false,
+            status: 504,
+            async json() {
+                return { detail: 'Full dynamics timed out' };
+            },
+        };
+    });
+
+    const result = await modal.open(sampleOpenOptions);
+
+    assert.equal(result.preview, true);
+    assert.equal(modal._state.data.preview, true);
+    const status = document.querySelector('.aspect-dynamics-status');
+    assert.ok(status.classList.contains('aspect-dynamics-status--error'));
+    assert.equal(status.textContent, 'Full dynamics timed out');
     modal.close();
 });
 
@@ -294,10 +390,11 @@ test('toolbar range control requests a new graph window', async () => {
     document.querySelector('[data-aspect-dynamics-range="3650"]').click();
 
     await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(payloads.length, 2);
-    assert.equal(payloads[1].contact_start, '2021-06-30');
-    assert.equal(payloads[1].contact_end, '2031-06-28');
-    assert.equal(payloads[1].max_points, 720);
+    assert.equal(payloads.length, 3);
+    assert.equal(payloads[2].preview, false);
+    assert.equal(payloads[2].contact_start, '2021-06-30');
+    assert.equal(payloads[2].contact_end, '2031-06-28');
+    assert.equal(payloads[2].max_points, 720);
     modal.close();
 });
 
@@ -320,9 +417,10 @@ test('scrollbar scrub requests a shifted graph window', async () => {
     input.dispatchEvent(new window.Event('input', { bubbles: true }));
 
     await new Promise((resolve) => setTimeout(resolve, 180));
-    assert.equal(payloads.length, 2);
-    assert.equal(payloads[1].max_points, 320);
-    assert.ok(payloads[1].contact_start > '2027-01-01');
-    assert.ok(payloads[1].contact_end > payloads[1].contact_start);
+    assert.equal(payloads.length, 3);
+    assert.equal(payloads[2].preview, false);
+    assert.equal(payloads[2].max_points, 320);
+    assert.ok(payloads[2].contact_start > '2027-01-01');
+    assert.ok(payloads[2].contact_end > payloads[2].contact_start);
     modal.close();
 });

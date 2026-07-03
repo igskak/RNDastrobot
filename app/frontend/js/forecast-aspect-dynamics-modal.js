@@ -19,6 +19,7 @@
     'use strict';
 
     const DEFAULT_MAX_POINTS = 320;
+    const PREVIEW_MAX_POINTS = 96;
     const MIN_WINDOW_DAYS = 3;
     const MAX_WINDOW_DAYS = 36525;
     const CLIENT_CACHE_MAX_ITEMS = 24;
@@ -226,9 +227,23 @@
         const end = Math.max(startMs, endMs);
         return {
             ...state.basePayload,
+            preview: false,
             max_points: maxPointsForWindow(start, end),
             contact_start: toDateOnly(start),
             contact_end: toDateOnly(end),
+        };
+    }
+
+    function previewPayload(payload) {
+        const {
+            contact_start: _contactStart,
+            contact_end: _contactEnd,
+            ...base
+        } = payload || {};
+        return {
+            ...base,
+            preview: true,
+            max_points: Math.min(Number(base.max_points || DEFAULT_MAX_POINTS), PREVIEW_MAX_POINTS),
         };
     }
 
@@ -270,6 +285,47 @@
             if (seq !== state.requestSeq) return null;
             renderError(error?.message || tr('page.forecastNew.aspectDynamics.errors.loadFailed', 'Could not load aspect dynamics.'));
             return null;
+        }
+    }
+
+    async function fetchPreviewThenFull(payload) {
+        const seq = ++state.requestSeq;
+        renderLoading();
+        const previewRequest = previewPayload(payload);
+        const previewKey = payloadCacheKey(previewRequest);
+        const fullRequest = { ...payload, preview: false };
+        const fullKey = payloadCacheKey(fullRequest);
+        if (state.responseCache.has(fullKey)) {
+            renderData(state.responseCache.get(fullKey));
+            return state.data;
+        }
+        let previewData = null;
+        try {
+            previewData = state.responseCache.get(previewKey);
+            if (!previewData) {
+                previewData = await postJson('/transits/aspect-dynamics', previewRequest);
+                setCachedResponse(previewKey, previewData);
+            }
+        } catch (error) {
+            if (seq !== state.requestSeq) return null;
+            renderError(error?.message || tr('page.forecastNew.aspectDynamics.errors.loadFailed', 'Could not load aspect dynamics.'));
+            return null;
+        }
+        if (seq !== state.requestSeq) return null;
+        renderData(previewData);
+
+        try {
+            const fullData = await postJson('/transits/aspect-dynamics', fullRequest);
+            if (seq !== state.requestSeq) return null;
+            setCachedResponse(fullKey, fullData);
+            renderData(fullData);
+            return fullData;
+        } catch (error) {
+            if (seq !== state.requestSeq) return null;
+            state.status.hidden = false;
+            state.status.className = 'aspect-dynamics-status aspect-dynamics-status--error';
+            state.status.textContent = error?.message || tr('page.forecastNew.aspectDynamics.errors.loadFailed', 'Could not load aspect dynamics.');
+            return state.data;
         }
     }
 
@@ -413,7 +469,7 @@
         const range = button.dataset.aspectDynamicsRange;
         if (zoomAction === 'in') zoom(0.5);
         else if (zoomAction === 'out') zoom(2);
-        else if (zoomAction === 'reset') void fetchAndRender(state.basePayload);
+        else if (zoomAction === 'reset') void fetchAndRender({ ...state.basePayload, preview: false });
         else if (panAction) pan(Number(panAction));
         else if (range) preset(Number(range));
     }
@@ -681,7 +737,12 @@
     function renderData(data) {
         state.data = data || null;
         const hasSeries = Array.isArray(data?.series) && data.series.length > 1;
-        if (!data || data.status !== 'ok' || !hasSeries) {
+        const isPreview = Boolean(data?.preview);
+        if (isPreview && hasSeries) {
+            state.status.hidden = false;
+            state.status.className = 'aspect-dynamics-status';
+            state.status.textContent = tr('page.forecastNew.aspectDynamics.loading', 'Calculating aspect dynamics...');
+        } else if (!data || data.status !== 'ok' || !hasSeries) {
             state.status.hidden = false;
             state.status.className = 'aspect-dynamics-status aspect-dynamics-status--empty';
             state.status.textContent = statusMessage(data?.status);
@@ -721,6 +782,10 @@
     function renderSummary(data) {
         if (!state.summary) return;
         const contact = Array.isArray(data?.contacts) ? data.contacts[0] : null;
+        if (data?.preview && Array.isArray(data.series) && data.series.length > 1) {
+            state.summary.innerHTML = `<div class="aspect-dynamics-summary-empty">${escapeHtml(tr('page.forecastNew.aspectDynamics.loading', 'Calculating aspect dynamics...'))}</div>`;
+            return;
+        }
         if (!contact) {
             state.summary.innerHTML = `<div class="aspect-dynamics-summary-empty">${escapeHtml(statusMessage(data?.status))}</div>`;
             return;
@@ -1212,7 +1277,7 @@
             return null;
         }
 
-        return fetchAndRender(payload);
+        return fetchPreviewThenFull(payload);
     }
 
     function setFetchImpl(fetchImpl) {
@@ -1224,6 +1289,7 @@
         close,
         drawChart,
         fetchAndRender,
+        fetchPreviewThenFull,
         open,
         renderData,
         setFetchImpl,

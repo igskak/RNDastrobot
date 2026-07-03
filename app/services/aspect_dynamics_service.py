@@ -48,6 +48,7 @@ class AspectDynamicsService:
 
     CALC_VERSION = "aspect_dynamics_v2"
     DEFAULT_POINTS = 360
+    PREVIEW_POINTS = 96
     MAX_POINTS = 720
     MAX_SCAN_SAMPLES = 1600
     CACHE_TTL_SECONDS = 10 * 60
@@ -60,6 +61,13 @@ class AspectDynamicsService:
         "progression": 3650.0,
         "direction": 3650.0,
         "synastry_partner": 365.0,
+    }
+    METHOD_PREVIEW_SPAN_DAYS = {
+        "natal": 90.0,
+        "transit": 90.0,
+        "progression": 730.0,
+        "direction": 730.0,
+        "synastry_partner": 90.0,
     }
 
     FAST_BODIES = {
@@ -202,6 +210,7 @@ class AspectDynamicsService:
         partner_context: Optional[NatalContext] = None,
         solar_year: Optional[int] = None,
         solar_location: Optional[Dict[str, Any]] = None,
+        preview: bool = False,
         cache_key: Optional[str] = None,
     ) -> Dict:
         cached = self._cache_get(cache_key)
@@ -221,6 +230,7 @@ class AspectDynamicsService:
             "aspect_type": aspect_type,
             "timezone": timezone,
             "calc_version": self.CALC_VERSION,
+            "preview": bool(preview),
             "cache_hit": False,
         }
         if aspect_type_obj is None:
@@ -278,6 +288,7 @@ class AspectDynamicsService:
                 max_points=max_points,
                 solar_year=solar_year,
                 solar_location=solar_location,
+                preview=preview,
             )
             self._cache_set(cache_key, result)
             return result
@@ -322,6 +333,48 @@ class AspectDynamicsService:
             contact_start,
             contact_end,
         )
+        if preview:
+            graph_start, graph_end = self._preview_graph_window(
+                method,
+                source_body,
+                selected_jd,
+                window.jd_start,
+                window.jd_end,
+            )
+            series = self._build_series(
+                graph_start,
+                graph_end,
+                timezone,
+                provider,
+                exact_angle,
+                max_orb,
+                target_angle,
+                min(max_points, self.PREVIEW_POINTS),
+            )
+            result = {
+                **base,
+                "status": "ok"
+                if selected_point and selected_point["in_orb"]
+                else "selected_not_in_orb",
+                "exact_angle": exact_angle,
+                "orb_used": round(max_orb, 4),
+                "orb_source": "astrologer_settings"
+                if primary_context.astrologer_id
+                else "default",
+                "target_angle": target_angle,
+                "selected_point": selected_point,
+                "requested_window": {**window.requested, "preview": True},
+                "effective_window": {
+                    "start": self._jd_to_iso(graph_start, timezone),
+                    "end": self._jd_to_iso(graph_end, timezone),
+                },
+                "boundary_complete": False,
+                "contacts": [],
+                "series": series,
+            }
+            self._cache_set(cache_key, result)
+            return result
+
         step_jd = self._scan_step_days(
             method, source_body, window.jd_end - window.jd_start
         )
@@ -432,6 +485,7 @@ class AspectDynamicsService:
         max_points: int,
         solar_year: Optional[int],
         solar_location: Optional[Dict[str, Any]],
+        preview: bool,
     ) -> Dict:
         target_obj = self._context_object(primary_context, target_body)
         if target_obj is None:
@@ -448,6 +502,14 @@ class AspectDynamicsService:
             requested = {
                 "start": contact_start.isoformat(),
                 "end": contact_end.isoformat(),
+            }
+        elif preview:
+            start_year = selected_year - 1
+            end_year = selected_year + 1
+            requested = {
+                "selected_year": selected_year,
+                "cap_years_each_side": 1,
+                "preview": True,
             }
         else:
             start_year = selected_year - 6
@@ -504,7 +566,7 @@ class AspectDynamicsService:
                     target_angle,
                 )
             )
-        contacts = self._contacts_from_discrete_series(
+        contacts = [] if preview else self._contacts_from_discrete_series(
             series, max_orb, timezone
         )
         return {
@@ -524,7 +586,7 @@ class AspectDynamicsService:
                 "start": series[0]["datetime"] if series else None,
                 "end": series[-1]["datetime"] if series else None,
             },
-            "boundary_complete": True,
+            "boundary_complete": not preview,
             "contacts": contacts,
             "series": series,
         }
@@ -1186,6 +1248,23 @@ class AspectDynamicsService:
                 "selected": self._jd_to_iso(selected_jd, timezone),
                 "cap_days_each_side": span,
             },
+        )
+
+    def _preview_graph_window(
+        self,
+        method: str,
+        source_body: str,
+        selected_jd: float,
+        window_start: float,
+        window_end: float,
+    ) -> Tuple[float, float]:
+        span = self.METHOD_PREVIEW_SPAN_DAYS.get(method, 90.0)
+        if method == "transit" and source_body in self.FAST_BODIES:
+            span = 30.0
+        half_span = max(1.0, span) / 2.0
+        return (
+            max(window_start, selected_jd - half_span),
+            min(window_end, selected_jd + half_span),
         )
 
     def _scan_step_days(

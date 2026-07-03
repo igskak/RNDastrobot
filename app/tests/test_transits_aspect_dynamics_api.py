@@ -274,7 +274,73 @@ def test_aspect_dynamics_route_uses_universal_service_for_progression(monkeypatc
     assert calls["contexts"] == [user_id]
     assert calls["calculate"]["method"] == "progression"
     assert calls["calculate"]["max_points"] == 240
+    assert calls["calculate"]["preview"] is False
     assert calls["calculate"]["cache_key"] == "cache-key"
+
+
+def test_aspect_dynamics_route_passes_preview_to_universal_service(monkeypatch):
+    user_id = uuid4()
+    calls = {}
+
+    class FakeAspectDynamicsService:
+        def __init__(self, db_session, ephe_path=None):
+            calls["db_session"] = db_session
+            calls["ephe_path"] = ephe_path
+
+        @staticmethod
+        def request_cache_key(payload, *, astrologer_id):
+            calls["cache_payload"] = payload
+            return "cache-key"
+
+        def context_from_user_id(self, value):
+            calls["context"] = value
+            return object()
+
+        def calculate(self, **kwargs):
+            calls["calculate"] = kwargs
+            return {
+                "method": kwargs["method"],
+                "transit_body": kwargs["source_body"],
+                "natal_body": kwargs["target_body"],
+                "source_body": kwargs["source_body"],
+                "target_body": kwargs["target_body"],
+                "aspect_type": kwargs["aspect_type"],
+                "timezone": kwargs["timezone"],
+                "calc_version": "aspect_dynamics_v2",
+                "status": "ok",
+                "preview": kwargs["preview"],
+                "cache_hit": False,
+                "contacts": [],
+                "series": [],
+            }
+
+    monkeypatch.setattr(transits, "AspectDynamicsService", FakeAspectDynamicsService)
+    monkeypatch.setattr(transits, "ensure_client_access", lambda *args, **kwargs: None)
+
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/transits/aspect-dynamics",
+            json={
+                "user_id": str(user_id),
+                "transit_body": "Pluto",
+                "natal_body": "Sun",
+                "aspect_type": "Trine",
+                "selected_date": "2026-06-29",
+                "selected_time": "12:00:00",
+                "timezone": "UTC",
+                "preview": True,
+                "max_points": 96,
+            },
+        )
+
+    assert response.status_code == 200
+    assert response.json()["preview"] is True
+    assert calls["context"] == user_id
+    assert calls["cache_payload"]["preview"] is True
+    assert calls["calculate"]["source_body"] == "Pluto"
+    assert calls["calculate"]["target_body"] == "Sun"
+    assert calls["calculate"]["preview"] is True
+    assert calls["calculate"]["max_points"] == 96
 
 
 def test_aspect_dynamics_route_checks_partner_access_for_synastry(monkeypatch):

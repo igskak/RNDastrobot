@@ -273,6 +273,10 @@ class AspectDynamicsRequest(BaseModel):
         le=720,
         description="Максимум точек графика",
     )
+    preview: bool = Field(
+        False,
+        description="Быстрый предварительный график без полного поиска контактов",
+    )
 
     @field_validator('timezone')
     @classmethod
@@ -321,6 +325,7 @@ class AspectDynamicsRequest(BaseModel):
     def is_legacy_transit_request(self) -> bool:
         return (
             self.method == "transit"
+            and not self.preview
             and self.natal is None
             and self.partner is None
             and self.source_body is None
@@ -383,6 +388,7 @@ class AspectDynamicsResponse(BaseModel):
     timezone: str
     calc_version: str
     status: str
+    preview: Optional[bool] = None
     cache_hit: Optional[bool] = None
     exact_angle: Optional[float] = None
     orb_used: Optional[float] = None
@@ -650,6 +656,7 @@ def calculate_aspect_dynamics(
             direction_type=request.direction_type or "zodiacal",
             solar_year=request.solar_year,
             solar_location=solar_location,
+            preview=request.preview,
             cache_key=cache_key,
         )
     except HTTPException:
