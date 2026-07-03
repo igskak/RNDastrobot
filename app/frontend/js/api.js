@@ -249,9 +249,26 @@
             return me;
         }
         if (typeof window !== 'undefined' && redirectTo) {
-            window.location.href = redirectTo;
+            window.location.href = buildLoginRedirect(redirectTo);
         }
         return null;
+    }
+
+    function buildLoginRedirect(redirectTo) {
+        if (!hasWindow) return redirectTo;
+        try {
+            const url = new URL(redirectTo, window.location.origin);
+            if (url.origin !== window.location.origin) return redirectTo;
+            if (!/^\/login(?:\.html)?$/.test(url.pathname)) return redirectTo;
+            const current = `${window.location.pathname}${window.location.search || ''}${window.location.hash || ''}`;
+            if (!current || /^\/login(?:\.html)?(?:[?#]|$)/.test(current)) return `${url.pathname}${url.search}${url.hash}`;
+            if (!url.searchParams.has('next')) {
+                url.searchParams.set('next', current);
+            }
+            return `${url.pathname}${url.search}${url.hash}`;
+        } catch (_error) {
+            return redirectTo;
+        }
     }
 
     function getCachedAstrologer() {
@@ -1074,6 +1091,7 @@
         updateClientChart,
         getCurrentAstrologer,
         requireAuth,
+        buildLoginRedirect,
         getCachedAstrologer,
         getPlanCode,
         getEntitlements,

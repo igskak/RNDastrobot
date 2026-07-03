@@ -72,3 +72,32 @@ def test_e2e_legacy_local_account_can_login_without_verify():
             json={"email": "blocked-e2e@example.com", "password": "StrongPass123"},
         )
         assert login.status_code == 200
+
+
+def test_login_omits_mismatched_cookie_domain(monkeypatch):
+    astrologer = Astrologer(
+        email="domain-e2e@example.com",
+        password_hash=auth_route.hash_password("StrongPass123"),
+        auth_provider="local",
+        is_active=True,
+        email_verified_at=auth_route.utcnow(),
+    )
+    db = TestingSessionLocal()
+    db.add(astrologer)
+    db.commit()
+    db.close()
+
+    monkeypatch.setenv("COOKIE_DOMAIN", "www.steliara.com")
+    monkeypatch.setenv("COOKIE_SECURE", "true")
+
+    with TestClient(app, base_url="https://steliara.com") as client:
+        login = client.post(
+            "/api/v1/auth/login",
+            json={"email": "domain-e2e@example.com", "password": "StrongPass123"},
+        )
+
+    assert login.status_code == 200
+    set_cookie = login.headers.get("set-cookie", "")
+    assert "astrobot_session=" in set_cookie
+    assert "Domain=www.steliara.com" not in set_cookie
+    assert "Secure" in set_cookie

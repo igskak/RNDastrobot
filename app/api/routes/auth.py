@@ -988,7 +988,7 @@ def reset_password(
     reset_token.used_at = utcnow()
     revoke_astrologer_sessions(db, astrologer.id)
     cleanup_password_reset_tokens(db, astrologer_id=astrologer.id)
-    clear_session_cookie(response)
+    clear_session_cookie(response, request)
 
     create_audit_event(
         db,
@@ -1142,7 +1142,7 @@ def logout(
 ):
     sid = request.cookies.get("astrobot_session")
     revoke_session(db, sid)
-    clear_session_cookie(response)
+    clear_session_cookie(response, request)
     create_audit_event(
         db,
         request,

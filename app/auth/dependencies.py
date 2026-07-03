@@ -69,6 +69,27 @@ def get_client_ip(request: Request) -> Optional[str]:
     return request.client.host if request.client else None
 
 
+def _request_host(request: Request) -> str:
+    host = request.headers.get("host") or request.url.hostname or ""
+    if host.startswith("["):
+        return host.split("]", 1)[0].strip("[]").lower()
+    return host.split(":", 1)[0].strip().rstrip(".").lower()
+
+
+def _cookie_domain_for_request(request: Request) -> Optional[str]:
+    configured = cookie_domain()
+    if not configured:
+        return None
+
+    host = _request_host(request)
+    domain = configured.strip().lstrip(".").rstrip(".").lower()
+    if not host or host in {"localhost", "127.0.0.1", "::1"}:
+        return None
+    if host == domain or host.endswith(f".{domain}"):
+        return configured
+    return None
+
+
 def create_audit_event(
     db: Session,
     request: Request,
@@ -226,22 +247,39 @@ def issue_session(response: Response, db: Session, request: Request, astrologer:
         httponly=True,
         secure=cookie_secure(),
         samesite="lax",
-        domain=cookie_domain(),
+        domain=_cookie_domain_for_request(request),
         max_age=int(session_ttl().total_seconds()),
         path="/",
     )
     return session
 
 
-def clear_session_cookie(response: Response) -> None:
+def _delete_session_cookie(response: Response, domain: Optional[str]) -> None:
     response.delete_cookie(
         key=SESSION_COOKIE_NAME,
         httponly=True,
         secure=cookie_secure(),
         samesite="lax",
-        domain=cookie_domain(),
+        domain=domain,
         path="/",
     )
+
+
+def clear_session_cookie(response: Response, request: Optional[Request] = None) -> None:
+    valid_domain = _cookie_domain_for_request(request) if request is not None else cookie_domain()
+    configured_domain = cookie_domain()
+    domains: list[Optional[str]] = [valid_domain]
+    if configured_domain and configured_domain != valid_domain:
+        domains.append(configured_domain)
+    if valid_domain is not None:
+        domains.append(None)
+
+    seen: set[Optional[str]] = set()
+    for domain in domains:
+        if domain in seen:
+            continue
+        seen.add(domain)
+        _delete_session_cookie(response, domain)
 
 
 def require_auth(request: Request, db: Session = Depends(get_db)) -> AuthContext:

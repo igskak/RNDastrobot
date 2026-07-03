@@ -45,6 +45,14 @@ test('createAuthUiModel exposes key auth states', () => {
     assert.equal(invalidModel.invalidMessageKey, 'page.login.views.invalid.bodyInvalid');
 });
 
+test('post-auth redirect defaults to activation and rejects unsafe next targets', () => {
+    assert.equal(AstroLogin.getPostAuthRedirect({}), '/new');
+    assert.equal(AstroLogin.getPostAuthRedirect({ next: '/clients?tab=charts' }), '/clients?tab=charts');
+    assert.equal(AstroLogin.normalizeLocalRedirect('/login.html?next=/clients'), '');
+    assert.equal(AstroLogin.normalizeLocalRedirect('https://evil.example/'), '');
+    assert.equal(AstroLogin.parseAuthRoute('?next=%2Fforecast-new.html%3Flayer%3Dsolar_return').next, '/forecast-new.html?layer=solar_return');
+});
+
 test('createAuthUiModel exposes verification states', () => {
     const verifyCheckModel = AstroLogin.createAuthUiModel({
         view: 'verify-check-email',
@@ -190,7 +198,7 @@ test('authenticated users are redirected away from register mode', async () => {
 
     await app.init();
 
-    assert.equal(redirectedTo, '/');
+    assert.equal(redirectedTo, '/new');
 
     delete global.FrontendI18n;
 });
@@ -311,7 +319,7 @@ test('google oauth callback retries session lookup before failing', async () => 
     assert.deepEqual(waits, [300]);
     assert.deepEqual(googlePayload, { access_token: 'google-access-token' });
     assert.deepEqual(signOutCalls, [{ scope: 'local' }]);
-    assert.equal(redirectedTo, '/');
+    assert.equal(redirectedTo, '/new');
 
     delete global.FrontendI18n;
 });
@@ -396,7 +404,7 @@ test('google oauth callback exchanges auth code before polling session', async (
     assert.equal(authChecks, 2);
     assert.deepEqual(waits, [300]);
     assert.deepEqual(googlePayload, { access_token: 'google-access-token' });
-    assert.equal(redirectedTo, '/');
+    assert.equal(redirectedTo, '/new');
 
     delete global.FrontendI18n;
 });
@@ -477,7 +485,7 @@ test('google oauth callback tolerates slower supabase session hydration', async 
     assert.equal(authChecks, 2);
     assert.equal(waits.filter((ms) => ms === 300).length, 10);
     assert.deepEqual(googlePayload, { access_token: 'google-access-token' });
-    assert.equal(redirectedTo, '/');
+    assert.equal(redirectedTo, '/new');
 
     delete global.FrontendI18n;
 });

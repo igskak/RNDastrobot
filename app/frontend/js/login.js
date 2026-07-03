@@ -4,6 +4,7 @@
     const API_BASE = global.location && global.location.hostname === 'localhost'
         ? 'http://localhost:8000/api/v1'
         : '/api/v1';
+    const DEFAULT_POST_AUTH_REDIRECT = '/new';
 
     const VIEW_COPY = {
         login: {
@@ -92,6 +93,26 @@
         });
     }
 
+    function normalizeLocalRedirect(value) {
+        const candidate = String(value || '').trim();
+        if (!candidate) return '';
+        try {
+            const base = global.location?.origin || 'http://localhost';
+            const url = new URL(candidate, base);
+            if (url.origin !== base) return '';
+            const normalized = `${url.pathname}${url.search}${url.hash}`;
+            if (!normalized.startsWith('/') || normalized.startsWith('//')) return '';
+            if (/^\/login(?:\.html)?(?:[?#]|$)/.test(normalized)) return '';
+            return normalized;
+        } catch (_error) {
+            return '';
+        }
+    }
+
+    function getPostAuthRedirect(route = {}) {
+        return normalizeLocalRedirect(route.next) || DEFAULT_POST_AUTH_REDIRECT;
+    }
+
     function parseAuthRoute(search) {
         const params = new URLSearchParams(search || '');
         const token = (params.get('token') || '').trim();
@@ -101,7 +122,9 @@
             mode,
             token,
             locale,
+            next: normalizeLocalRedirect(params.get('next') || ''),
             oauthCallback: params.get('oauth') === 'callback',
+            oauthError: (params.get('error') || '').trim(),
         };
     }
 
@@ -794,7 +817,7 @@
                 if (typeof global.AstroAnalytics?.track === 'function') {
                     global.AstroAnalytics.track('login', { method: 'password' });
                 }
-                redirect('/');
+                redirect(getPostAuthRedirect(parseAuthRoute(locationRef?.search || '')));
             } catch (error) {
                 const mapped = mapAuthErrorToKey('login', error.message);
                 setStatus(mapped, 'error');
@@ -811,7 +834,9 @@
             setLoading('google');
             setStatus('page.login.status.googleRedirect', 'info');
             try {
-                const redirectTo = `${locationRef.origin}/login.html?oauth=callback`;
+                const route = parseAuthRoute(locationRef?.search || '');
+                const next = route.next ? `&next=${encodeURIComponent(route.next)}` : '';
+                const redirectTo = `${locationRef.origin}/login.html?oauth=callback${next}`;
                 const result = await state.supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: { redirectTo },
@@ -1073,6 +1098,9 @@
             setLoading('google');
             setStatus('page.login.status.completingGoogle', 'info');
             try {
+                if (route.oauthError) {
+                    throw new Error(route.oauthError);
+                }
                 const accessToken = await resolveSupabaseAccessTokenFromCallback();
                 const response = await apiFetch(`${API_BASE}/auth/google`, {
                     method: 'POST',
@@ -1101,7 +1129,7 @@
                 } else if (typeof global.AstroAnalytics?.track === 'function') {
                     global.AstroAnalytics.track('login', { method: 'google' });
                 }
-                redirect('/');
+                redirect(getPostAuthRedirect(route));
             } catch (error) {
                 setStatus(mapAuthErrorToKey('google', error.message), 'error');
                 setLoading('');
@@ -1148,7 +1176,7 @@
             }
             const me = await getCurrentAstrologer();
             if (me) {
-                redirect('/');
+                redirect(getPostAuthRedirect(route));
                 return true;
             }
             return false;
@@ -1331,6 +1359,7 @@
                             detectSessionInUrl: true,
                             persistSession: true,
                             autoRefreshToken: true,
+                            flowType: 'pkce',
                         },
                     }
                 );
@@ -1347,7 +1376,7 @@
                 await verifyEmailTokenByRoute();
             }
 
-            global.setInterval?.(() => {
+            const cooldownTimer = global.setInterval?.(() => {
                 if (state.view !== 'check-email' && state.view !== 'verify-check-email') {
                     return;
                 }
@@ -1355,6 +1384,7 @@
                 // always reaches zero and the button is re-enabled.
                 render();
             }, 1000);
+            cooldownTimer?.unref?.();
         }
 
         return {
@@ -1367,6 +1397,8 @@
             mapAuthErrorToKey,
             createCooldownLabel,
             validateRegistrationPayload,
+            normalizeLocalRedirect,
+            getPostAuthRedirect,
         };
     }
 
@@ -1376,6 +1408,8 @@
         mapAuthErrorToKey,
         createCooldownLabel,
         validateRegistrationPayload,
+        normalizeLocalRedirect,
+        getPostAuthRedirect,
         createAuthApp,
     };
 

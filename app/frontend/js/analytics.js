@@ -5,9 +5,9 @@
  * module bundle runs — mirrors the loading pattern of locale-switcher.js.
  *
  * Privacy posture (see plan "imperative-watching-mountain"):
- *   - Session replay is DISABLED.
- *   - All input fields and rendered text are masked, so client PII
- *     (birth dates/places, names, notes) never leaves the browser.
+ *   - Session replay is enabled only after consent.
+ *   - All input fields, rendered text, and element attributes are masked, so
+ *     client PII (birth dates/places, names, notes) never leaves the browser.
  *   - Only identified astrologers get person profiles.
  *
  * The public project key + EU host are injected at runtime via
@@ -103,6 +103,7 @@
             identify: noop,
             reset: noop,
             pageLeave: noop,
+            captureException: noop,
         };
         return;
     }
@@ -157,8 +158,8 @@
         autocapture: true,
         capture_pageview: true,
         capture_pageleave: true,
-        // --- Privacy: replay OFF, mask everything sensitive ------------------
-        disable_session_recording: true,
+        // --- Privacy: replay ON after consent, mask everything sensitive -----
+        disable_session_recording: false,
         mask_all_text: true,
         mask_all_element_attributes: true,
         // Don't create anonymous person profiles; only identified astrologers.
@@ -210,6 +211,76 @@
 
     function safe(fn) {
         try { return fn(); } catch (e) { /* swallow */ }
+    }
+
+    function scrubSensitiveText(value) {
+        var text = String(value || '');
+        SENSITIVE_URL_PARAMS.forEach(function (key) {
+            var re = new RegExp('([?&#]' + key + '=)[^&#\\s]+', 'gi');
+            text = text.replace(re, '$1redacted');
+        });
+        return text.length > 4000 ? text.slice(0, 4000) : text;
+    }
+
+    function normalizeException(error) {
+        var name = 'Error';
+        var message = 'Unknown frontend exception';
+        var stack = '';
+        if (error && typeof error === 'object') {
+            name = scrubSensitiveText(error.name || error.constructor?.name || name);
+            message = scrubSensitiveText(error.message || String(error));
+            stack = scrubSensitiveText(error.stack || '');
+        } else if (error !== undefined && error !== null) {
+            message = scrubSensitiveText(String(error));
+        }
+        var normalized = new Error(message);
+        normalized.name = name;
+        if (stack) normalized.stack = stack;
+        return normalized;
+    }
+
+    function captureException(error, props) {
+        var normalized = normalizeException(error);
+        var payload = Object.assign(
+            {
+                screen: window.AstroAnalytics?.screen || resolveScreen(),
+                locale: currentLocale(),
+                error_name: normalized.name,
+            },
+            props || {}
+        );
+        safe(function () {
+            if (typeof window.posthog.captureException === 'function') {
+                window.posthog.captureException(normalized, payload);
+                return;
+            }
+            window.posthog.capture('$exception', Object.assign({
+                '$exception_message': normalized.message,
+                '$exception_type': normalized.name,
+                '$exception_stack_trace_raw': normalized.stack || '',
+            }, payload));
+        });
+    }
+
+    function installExceptionHandlers() {
+        if (window.__steliaraExceptionHandlersInstalled) return;
+        window.__steliaraExceptionHandlersInstalled = true;
+        window.addEventListener('error', function (event) {
+            var target = event.target || event.srcElement;
+            var isResourceError = target && target !== window;
+            captureException(event.error || event.message || 'Window error', {
+                source: isResourceError ? 'resource_error' : 'window_error',
+                filename: scrubUrl(event.filename || target?.src || target?.href || ''),
+                lineno: event.lineno || undefined,
+                colno: event.colno || undefined,
+                tag_name: isResourceError && target?.tagName ? String(target.tagName).toLowerCase() : undefined,
+            });
+        }, true);
+        window.addEventListener('unhandledrejection', function (event) {
+            captureException(event.reason || 'Unhandled promise rejection', {
+                source: 'unhandledrejection',
+            });
+        });
     }
 
     // --- Cookies ---------------------------------------------------------------
@@ -324,24 +395,44 @@
     function setConsent(value) {
         try { window.localStorage.setItem(CONSENT_KEY, value); } catch (e) { /* ignore */ }
     }
+    function startSessionReplay(ph) {
+        safe(function () {
+            if (ph && typeof ph.startSessionRecording === 'function') ph.startSessionRecording();
+        });
+    }
+    function stopSessionReplay(ph) {
+        safe(function () {
+            if (ph && typeof ph.stopSessionRecording === 'function') ph.stopSessionRecording();
+        });
+    }
     function applyConsent(ph) {
         var state = getConsent();
-        if (state === 'granted') { safe(function () { ph.opt_in_capturing(); }); setGa4Consent(true); return; }
-        if (state === 'denied') { safe(function () { ph.opt_out_capturing(); }); setGa4Consent(false); return; }
+        if (state === 'granted') {
+            safe(function () { ph.opt_in_capturing(); });
+            startSessionReplay(ph);
+            setGa4Consent(true);
+            return;
+        }
+        if (state === 'denied') {
+            stopSessionReplay(ph);
+            safe(function () { ph.opt_out_capturing(); });
+            setGa4Consent(false);
+            return;
+        }
         renderConsentBanner(ph);              // undecided -> ask
     }
 
     var CONSENT_COPY = {
         en: {
-            text: 'We use privacy-friendly analytics to improve the product. No recordings; personal data is masked.',
+            text: 'We use privacy-friendly analytics and masked session replay to improve the product. Personal data is masked.',
             accept: 'Accept', decline: 'Decline',
         },
         ru: {
-            text: 'Мы используем аналитику без записи экрана, чтобы улучшать продукт. Персональные данные маскируются.',
+            text: 'Мы используем аналитику и маскированную запись сессий, чтобы улучшать продукт. Персональные данные маскируются.',
             accept: 'Принять', decline: 'Отклонить',
         },
         uk: {
-            text: 'Ми використовуємо аналітику без запису екрана, щоб покращувати продукт. Персональні дані маскуються.',
+            text: 'Ми використовуємо аналітику й замаскований запис сесій, щоб покращувати продукт. Персональні дані маскуються.',
             accept: 'Прийняти', decline: 'Відхилити',
         },
     };
@@ -386,6 +477,7 @@
             accept.addEventListener('click', function () {
                 setConsent('granted');
                 safe(function () { ph.opt_in_capturing(); });
+                startSessionReplay(ph);
                 setGa4Consent(true);
                 // Events before consent were dropped (not queued): re-identify the
                 // current astrologer and count this screen now that we're opted in.
@@ -401,6 +493,7 @@
             decline.addEventListener('click', function () {
                 setConsent('denied');
                 // Enforce opt-out explicitly — overrides any prior persisted opt-in.
+                stopSessionReplay(ph);
                 safe(function () { ph.opt_out_capturing(); });
                 setGa4Consent(false);
                 bar.remove();
@@ -483,7 +576,12 @@
         pageLeave: function () {
             safe(function () { window.posthog.capture('$pageleave'); });
         },
+        captureException: function (error, props) {
+            captureException(error, props);
+        },
     };
+
+    installExceptionHandlers();
 
     // Explicit screen_view so paths/time-on-screen read cleanly across the
     // 13-page multi-page app (in addition to PostHog's own $pageview).
