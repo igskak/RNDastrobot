@@ -571,8 +571,10 @@ def calculate_aspect_dynamics(
 ):
     """Рассчитать график усиления/ослабления одного аспекта."""
     try:
+        primary_user = None
+        partner_user = None
         if request.user_id:
-            ensure_client_access(
+            primary_user = ensure_client_access(
                 db,
                 http_request,
                 auth,
@@ -580,7 +582,7 @@ def calculate_aspect_dynamics(
                 action="client.aspects.dynamics",
             )
         if request.partner and request.partner.user_id:
-            ensure_client_access(
+            partner_user = ensure_client_access(
                 db,
                 http_request,
                 auth,
@@ -603,9 +605,18 @@ def calculate_aspect_dynamics(
                 max_points=request.max_points,
             )
 
+        payload_for_cache = request.model_dump(mode="json")
+        cache_key = AspectDynamicsService.request_cache_key(
+            payload_for_cache,
+            astrologer_id=auth.astrologer.id,
+        )
+        cached = getattr(AspectDynamicsService, "cached_response", lambda _key: None)(cache_key)
+        if cached is not None:
+            return cached
+
         dynamics_service = AspectDynamicsService(db_session=db, ephe_path=EPHE_PATH)
         if request.user_id:
-            primary_context = dynamics_service.context_from_user_id(request.user_id)
+            primary_context = dynamics_service.context_from_user(primary_user)
         else:
             primary_context = dynamics_service.context_from_birth_data(
                 request.natal,
@@ -615,20 +626,13 @@ def calculate_aspect_dynamics(
         partner_context = None
         if request.partner:
             if request.partner.user_id:
-                partner_context = dynamics_service.context_from_user_id(
-                    request.partner.user_id
-                )
+                partner_context = dynamics_service.context_from_user(partner_user)
             else:
                 partner_context = dynamics_service.context_from_birth_data(
                     request.partner.natal,
                     astrologer_id=auth.astrologer.id,
                 )
 
-        payload_for_cache = request.model_dump(mode="json")
-        cache_key = AspectDynamicsService.request_cache_key(
-            payload_for_cache,
-            astrologer_id=auth.astrologer.id,
-        )
         solar_location = None
         if (
             request.solar_location_latitude is not None

@@ -22,6 +22,7 @@ from app.services.direction_service import (
 )
 from app.services.natal_chart_service import NatalChartService
 from app.services.natal_context import NatalContext
+from app.services.natal_context_read_service import NatalContextReadService
 from app.services.preferences_runtime import PreferencesRuntimeResolver
 from app.services.reference_data_cache import get_aspect_types
 from app.services.solar_return_service import SolarReturnService
@@ -136,6 +137,10 @@ class AspectDynamicsService:
         while len(cls._CACHE) > cls.CACHE_MAX_ITEMS:
             cls._CACHE.popitem(last=False)
 
+    @classmethod
+    def cached_response(cls, key: Optional[str]) -> Optional[Dict]:
+        return cls._cache_get(key)
+
     @staticmethod
     def request_cache_key(
         payload: Dict[str, Any], *, astrologer_id: Optional[UUID]
@@ -151,20 +156,24 @@ class AspectDynamicsService:
     def context_from_user_id(
         self, user_id: UUID, *, apply_exclusions: bool = False
     ) -> NatalContext:
-        chart = self._natal_chart_service.get_natal_chart_from_db(
-            user_id, self.db
-        )
-        if chart is None:
+        from app.database.models import User
+
+        user = self.db.query(User).filter(User.user_id == user_id).first()
+        if user is None:
             raise ValueError(f"Natal chart not found for user_id={user_id}")
-        astrologer_id = self.preferences_runtime.get_astrologer_id_for_user(
-            user_id
-        )
+        return self.context_from_user(user, apply_exclusions=apply_exclusions)
+
+    def context_from_user(
+        self, user, *, apply_exclusions: bool = False
+    ) -> NatalContext:
+        chart = NatalContextReadService(self.db).get_aux_chart_for_user(user)
+        astrologer_id = getattr(user, "astrologer_id", None)
         context = NatalContext.from_inline(
             chart,
             astrologer_id=astrologer_id,
             apply_exclusions=apply_exclusions,
         )
-        context.user_id = user_id
+        context.user_id = user.user_id
         return context
 
     def context_from_birth_data(

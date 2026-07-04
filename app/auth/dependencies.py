@@ -40,6 +40,8 @@ READ_AUDIT_ROLLUP_ACTIONS = {
     "client.dominants",
     "client.fixed_stars",
     "client.transits.calculate",
+    "client.aspects.dynamics",
+    "client.aspects.dynamics_partner",
     "client.progressions.calculate",
     "client.directions.calculate",
     "preferences.account.get",

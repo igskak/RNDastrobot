@@ -105,6 +105,10 @@ def _ok_payload():
     }
 
 
+def _user_stub(user_id):
+    return type("UserStub", (), {"user_id": user_id, "astrologer_id": uuid4()})()
+
+
 def test_transit_aspect_dynamics_route_valid_request(monkeypatch):
     user_id = uuid4()
     calls = {}
@@ -119,7 +123,11 @@ def test_transit_aspect_dynamics_route_valid_request(monkeypatch):
             return _ok_payload()
 
     monkeypatch.setattr(transits, "TransitService", FakeTransitService)
-    monkeypatch.setattr(transits, "ensure_client_access", lambda *args, **kwargs: calls.setdefault("access", args))
+    def fake_access(*args, **kwargs):
+        calls.setdefault("access", args)
+        return _user_stub(args[3])
+
+    monkeypatch.setattr(transits, "ensure_client_access", fake_access)
 
     with TestClient(app) as client:
         response = client.post(
@@ -227,8 +235,8 @@ def test_aspect_dynamics_route_uses_universal_service_for_progression(monkeypatc
             calls["cache_astrologer_id"] = astrologer_id
             return "cache-key"
 
-        def context_from_user_id(self, value):
-            calls.setdefault("contexts", []).append(value)
+        def context_from_user(self, user):
+            calls.setdefault("contexts", []).append(user.user_id)
             return object()
 
         def calculate(self, **kwargs):
@@ -249,7 +257,11 @@ def test_aspect_dynamics_route_uses_universal_service_for_progression(monkeypatc
             }
 
     monkeypatch.setattr(transits, "AspectDynamicsService", FakeAspectDynamicsService)
-    monkeypatch.setattr(transits, "ensure_client_access", lambda *args, **kwargs: calls.setdefault("access", args))
+    def fake_access(*args, **kwargs):
+        calls.setdefault("access", args)
+        return _user_stub(args[3])
+
+    monkeypatch.setattr(transits, "ensure_client_access", fake_access)
 
     with TestClient(app) as client:
         response = client.post(
@@ -293,8 +305,8 @@ def test_aspect_dynamics_route_uses_universal_service_for_natal(monkeypatch):
             calls["cache_astrologer_id"] = astrologer_id
             return "cache-key"
 
-        def context_from_user_id(self, value):
-            calls["context"] = value
+        def context_from_user(self, user):
+            calls["context"] = user.user_id
             return object()
 
         def calculate(self, **kwargs):
@@ -315,7 +327,11 @@ def test_aspect_dynamics_route_uses_universal_service_for_natal(monkeypatch):
             }
 
     monkeypatch.setattr(transits, "AspectDynamicsService", FakeAspectDynamicsService)
-    monkeypatch.setattr(transits, "ensure_client_access", lambda *args, **kwargs: calls.setdefault("access", args))
+    def fake_access(*args, **kwargs):
+        calls.setdefault("access", args)
+        return _user_stub(args[3])
+
+    monkeypatch.setattr(transits, "ensure_client_access", fake_access)
 
     with TestClient(app) as client:
         response = client.post(
@@ -359,8 +375,8 @@ def test_aspect_dynamics_route_passes_preview_to_universal_service(monkeypatch):
             calls["cache_payload"] = payload
             return "cache-key"
 
-        def context_from_user_id(self, value):
-            calls["context"] = value
+        def context_from_user(self, user):
+            calls["context"] = user.user_id
             return object()
 
         def calculate(self, **kwargs):
@@ -382,7 +398,7 @@ def test_aspect_dynamics_route_passes_preview_to_universal_service(monkeypatch):
             }
 
     monkeypatch.setattr(transits, "AspectDynamicsService", FakeAspectDynamicsService)
-    monkeypatch.setattr(transits, "ensure_client_access", lambda *args, **kwargs: None)
+    monkeypatch.setattr(transits, "ensure_client_access", lambda *args, **kwargs: _user_stub(args[3]))
 
     with TestClient(app) as client:
         response = client.post(
@@ -410,6 +426,65 @@ def test_aspect_dynamics_route_passes_preview_to_universal_service(monkeypatch):
     assert calls["calculate"]["max_points"] == 96
 
 
+def test_aspect_dynamics_route_returns_cache_before_context_load(monkeypatch):
+    user_id = uuid4()
+    calls = {}
+
+    class FakeAspectDynamicsService:
+        @staticmethod
+        def request_cache_key(payload, *, astrologer_id):
+            calls["cache_payload"] = payload
+            return "cache-key"
+
+        @staticmethod
+        def cached_response(cache_key):
+            calls["cache_key"] = cache_key
+            return {
+                "method": "progression",
+                "transit_body": "Moon",
+                "natal_body": "Sun",
+                "source_body": "Moon",
+                "target_body": "Sun",
+                "aspect_type": "Trine",
+                "timezone": "UTC",
+                "calc_version": "aspect_dynamics_v2",
+                "status": "ok",
+                "cache_hit": True,
+                "contacts": [],
+                "series": [],
+            }
+
+        def __init__(self, *args, **kwargs):
+            raise AssertionError("service must not be constructed on cache hit")
+
+    def fake_access(*args, **kwargs):
+        calls["access"] = args
+        return _user_stub(args[3])
+
+    monkeypatch.setattr(transits, "AspectDynamicsService", FakeAspectDynamicsService)
+    monkeypatch.setattr(transits, "ensure_client_access", fake_access)
+
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/transits/aspect-dynamics",
+            json={
+                "user_id": str(user_id),
+                "method": "progression",
+                "source_body": "Moon",
+                "target_body": "Sun",
+                "aspect_type": "Trine",
+                "selected_date": "2026-06-29",
+                "selected_time": "12:00:00",
+                "timezone": "UTC",
+            },
+        )
+
+    assert response.status_code == 200
+    assert response.json()["cache_hit"] is True
+    assert calls["cache_key"] == "cache-key"
+    assert calls["access"][3] == user_id
+
+
 def test_aspect_dynamics_route_checks_partner_access_for_synastry(monkeypatch):
     user_id = uuid4()
     partner_id = uuid4()
@@ -423,8 +498,8 @@ def test_aspect_dynamics_route_checks_partner_access_for_synastry(monkeypatch):
         def request_cache_key(payload, *, astrologer_id):
             return "cache-key"
 
-        def context_from_user_id(self, value):
-            return {"user_id": value}
+        def context_from_user(self, user):
+            return {"user_id": user.user_id}
 
         def calculate(self, **kwargs):
             return {
@@ -444,6 +519,7 @@ def test_aspect_dynamics_route_checks_partner_access_for_synastry(monkeypatch):
 
     def fake_access(_db, _request, _auth, client_id, *, action):
         accessed.append((client_id, action))
+        return _user_stub(client_id)
 
     monkeypatch.setattr(transits, "AspectDynamicsService", FakeAspectDynamicsService)
     monkeypatch.setattr(transits, "ensure_client_access", fake_access)

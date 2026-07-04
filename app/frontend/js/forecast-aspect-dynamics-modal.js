@@ -51,6 +51,7 @@
         basePayload: null,
         requestSeq: 0,
         responseCache: new Map(),
+        responseInFlight: new Map(),
         dragStart: null,
         interactionWindow: null,
         defaultViewWindow: null,
@@ -316,7 +317,7 @@
             return state.data;
         }
         try {
-            const data = await postJson('/transits/aspect-dynamics', payload);
+            const data = await fetchAspectDynamics(payload, key);
             if (seq !== state.requestSeq) return null;
             setCachedResponse(key, data);
             renderData(data, { preserveViewport });
@@ -343,7 +344,7 @@
         try {
             previewData = state.responseCache.get(previewKey);
             if (!previewData) {
-                previewData = await postJson('/transits/aspect-dynamics', previewRequest);
+                previewData = await fetchAspectDynamics(previewRequest, previewKey);
                 setCachedResponse(previewKey, previewData);
             }
         } catch (error) {
@@ -355,7 +356,7 @@
         renderData(previewData);
 
         try {
-            const fullData = await postJson('/transits/aspect-dynamics', fullRequest);
+            const fullData = await fetchAspectDynamics(fullRequest, fullKey);
             if (seq !== state.requestSeq) return null;
             setCachedResponse(fullKey, fullData);
             renderData(fullData, { preserveViewport: true });
@@ -714,6 +715,18 @@
             throw new Error(message);
         }
         return response.json();
+    }
+
+    function fetchAspectDynamics(payload, key = payloadCacheKey(payload)) {
+        if (key && state.responseInFlight.has(key)) {
+            return state.responseInFlight.get(key);
+        }
+        const promise = postJson('/transits/aspect-dynamics', payload)
+            .finally(() => {
+                if (key) state.responseInFlight.delete(key);
+            });
+        if (key) state.responseInFlight.set(key, promise);
+        return promise;
     }
 
     function ensureModal() {
