@@ -20,6 +20,7 @@
 
     const DEFAULT_MAX_POINTS = 320;
     const PREVIEW_MAX_POINTS = 96;
+    const FULL_WINDOW_DAYS = 36525;
     const MIN_WINDOW_DAYS = 3;
     const MAX_WINDOW_DAYS = 36525;
     const CLIENT_CACHE_MAX_ITEMS = 24;
@@ -27,6 +28,7 @@
     const WINDOW_REQUEST_DEBOUNCE_MS = 110;
     const WHEEL_REQUEST_DEBOUNCE_MS = 90;
     const DRAG_ACTIVATION_PX = 4;
+    const WHEEL_ZOOM_SENSITIVITY = 0.00075;
     const API_BASE = () => root.AstroAPI?.API_BASE_URL || '/api/v1';
 
     const state = {
@@ -51,8 +53,12 @@
         responseCache: new Map(),
         dragStart: null,
         interactionWindow: null,
+        defaultViewWindow: null,
         pendingWindowTimer: null,
         scrollDomain: null,
+        isLoading: false,
+        hoverMs: null,
+        hoverFrame: null,
     };
 
     function tr(key, fallback, params) {
@@ -206,6 +212,12 @@
         return new Date(ms).toISOString().slice(0, 10);
     }
 
+    function startOfDayMs(ms) {
+        const date = new Date(ms);
+        if (Number.isNaN(date.getTime())) return ms;
+        return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+    }
+
     function msFromIso(value) {
         const ms = new Date(value).getTime();
         return Number.isFinite(ms) ? ms : null;
@@ -246,6 +258,22 @@
         };
     }
 
+    function fullWindowPayload(payload) {
+        const anchor = selectedMsForPayload(payload) || Date.now();
+        const halfSpan = (FULL_WINDOW_DAYS * DAY_MS) / 2;
+        return {
+            ...payload,
+            preview: false,
+            max_points: maxPointsForWindow(anchor - halfSpan, anchor + halfSpan),
+            contact_start: toDateOnly(startOfDayMs(anchor - halfSpan)),
+            contact_end: toDateOnly(startOfDayMs(anchor + halfSpan)),
+        };
+    }
+
+    function selectedMsForPayload(payload) {
+        return msFromIso(`${payload?.selected_date || ''}T${payload?.selected_time || '12:00:00'}`);
+    }
+
     function previewPayload(payload) {
         const {
             contact_start: _contactStart,
@@ -279,19 +307,19 @@
         };
     }
 
-    async function fetchAndRender(payload, { keepStatus = false } = {}) {
+    async function fetchAndRender(payload, { keepStatus = false, preserveViewport = false } = {}) {
         const seq = ++state.requestSeq;
         if (!keepStatus) renderLoading();
         const key = payloadCacheKey(payload);
         if (state.responseCache.has(key)) {
-            renderData(state.responseCache.get(key));
+            renderData(state.responseCache.get(key), { preserveViewport });
             return state.data;
         }
         try {
             const data = await postJson('/transits/aspect-dynamics', payload);
             if (seq !== state.requestSeq) return null;
             setCachedResponse(key, data);
-            renderData(data);
+            renderData(data, { preserveViewport });
             return data;
         } catch (error) {
             if (seq !== state.requestSeq) return null;
@@ -305,7 +333,7 @@
         renderLoading();
         const previewRequest = previewPayload(payload);
         const previewKey = payloadCacheKey(previewRequest);
-        const fullRequest = { ...payload, preview: false };
+        const fullRequest = fullWindowPayload(payload);
         const fullKey = payloadCacheKey(fullRequest);
         if (state.responseCache.has(fullKey)) {
             renderData(state.responseCache.get(fullKey));
@@ -330,13 +358,15 @@
             const fullData = await postJson('/transits/aspect-dynamics', fullRequest);
             if (seq !== state.requestSeq) return null;
             setCachedResponse(fullKey, fullData);
-            renderData(fullData);
+            renderData(fullData, { preserveViewport: true });
             return fullData;
         } catch (error) {
             if (seq !== state.requestSeq) return null;
+            state.isLoading = false;
             state.status.hidden = false;
             state.status.className = 'aspect-dynamics-status aspect-dynamics-status--error';
             state.status.textContent = error?.message || tr('page.forecastNew.aspectDynamics.errors.loadFailed', 'Could not load aspect dynamics.');
+            drawChart();
             return state.data;
         }
     }
@@ -355,16 +385,14 @@
         drawChart();
     }
 
-    function requestWindow(startMs, endMs, { debounce = false, optimistic = false, debounceMs = WINDOW_REQUEST_DEBOUNCE_MS } = {}) {
+    function requestWindow(startMs, endMs, { debounce = false, debounceMs = WINDOW_REQUEST_DEBOUNCE_MS } = {}) {
         if (!state.basePayload) return;
         const bounded = clampWindow(startMs, endMs);
-        state.requestSeq += 1;
-        if (optimistic) {
-            setInteractionWindow(bounded);
-        }
+        setInteractionWindow(bounded);
+        if (!shouldFetchWindow(bounded)) return;
         const run = () => {
             state.pendingWindowTimer = null;
-            void fetchAndRender(windowPayload(bounded.start, bounded.end), { keepStatus: true });
+            void fetchAndRender(expandedWindowPayload(bounded), { keepStatus: true, preserveViewport: true });
         };
         if (!debounce) {
             clearTimeout(state.pendingWindowTimer);
@@ -373,6 +401,26 @@
         }
         clearTimeout(state.pendingWindowTimer);
         state.pendingWindowTimer = setTimeout(run, debounceMs);
+    }
+
+    function loadedDataWindowMs(data = state.data) {
+        return committedDataWindowMs(data);
+    }
+
+    function shouldFetchWindow(window) {
+        const loaded = loadedDataWindowMs();
+        if (!loaded || !window) return true;
+        if (window.start >= loaded.start && window.end <= loaded.end) return false;
+        const span = loaded.end - loaded.start;
+        const margin = Math.max(DAY_MS, span * 0.03);
+        return window.start < loaded.start + margin || window.end > loaded.end - margin;
+    }
+
+    function expandedWindowPayload(window) {
+        const span = Math.max(MIN_WINDOW_DAYS * DAY_MS, window.end - window.start);
+        const center = (window.start + window.end) / 2;
+        const targetSpan = Math.min(MAX_WINDOW_DAYS * DAY_MS, Math.max(span * 4, 3650 * DAY_MS));
+        return windowPayload(center - targetSpan / 2, center + targetSpan / 2);
     }
 
     function chartPad() {
@@ -403,6 +451,39 @@
             Math.min(1, (event.clientX - rect.left - pad.left) / plotW),
         );
         return current.start + ratio * (current.end - current.start);
+    }
+
+    function scheduleHoverDraw() {
+        if (typeof root.requestAnimationFrame !== 'function') {
+            drawChart();
+            return;
+        }
+        if (state.hoverFrame) return;
+        state.hoverFrame = root.requestAnimationFrame(() => {
+            state.hoverFrame = null;
+            drawChart();
+        });
+    }
+
+    function cancelHoverDraw() {
+        if (state.hoverFrame && typeof root.cancelAnimationFrame === 'function') {
+            root.cancelAnimationFrame(state.hoverFrame);
+        }
+        state.hoverFrame = null;
+    }
+
+    function updateHoverMarker(event) {
+        const ms = eventAnchorMs(event);
+        if (!Number.isFinite(ms)) return;
+        if (Number.isFinite(state.hoverMs) && Math.abs(state.hoverMs - ms) < 1000) return;
+        state.hoverMs = ms;
+        scheduleHoverDraw();
+    }
+
+    function clearHoverMarker() {
+        if (!Number.isFinite(state.hoverMs)) return;
+        state.hoverMs = null;
+        scheduleHoverDraw();
     }
 
     function zoom(factor, anchorMs = null, options = {}) {
@@ -488,7 +569,7 @@
         const ratio = Math.max(0, Math.min(1, Number(input.value || 0) / 1000));
         const span = current.end - current.start;
         const center = domain.start + (domain.end - domain.start) * ratio;
-        requestWindow(center - span / 2, center + span / 2, { debounce: true, optimistic: true });
+        requestWindow(center - span / 2, center + span / 2, { debounce: true });
     }
 
     function onToolbarClick(event) {
@@ -499,7 +580,7 @@
         const range = button.dataset.aspectDynamicsRange;
         if (zoomAction === 'in') zoom(0.5);
         else if (zoomAction === 'out') zoom(2);
-        else if (zoomAction === 'reset') void fetchAndRender({ ...state.basePayload, preview: false });
+        else if (zoomAction === 'reset') resetViewWindow();
         else if (panAction) pan(Number(panAction));
         else if (range) preset(Number(range));
     }
@@ -507,25 +588,10 @@
     function onCanvasWheel(event) {
         if (!state.data) return;
         event.preventDefault();
-        const current = dataWindowMs();
-        if (!current) return;
         const delta = normalizeWheelDelta(event);
         if (!Number.isFinite(delta) || delta === 0) return;
-        if (event.ctrlKey || event.metaKey || event.altKey) {
-            zoom(Math.exp(delta * 0.0016), eventAnchorMs(event), {
-                debounce: true,
-                optimistic: true,
-                debounceMs: WHEEL_REQUEST_DEBOUNCE_MS,
-            });
-            return;
-        }
-        const width = Math.max(240, state.canvas?.clientWidth || state.chartWrap?.clientWidth || 720);
-        const ratio = Math.max(-0.45, Math.min(0.45, delta / width));
-        const span = current.end - current.start;
-        const shift = span * ratio;
-        requestWindow(current.start + shift, current.end + shift, {
+        zoom(Math.exp(delta * WHEEL_ZOOM_SENSITIVITY), eventAnchorMs(event), {
             debounce: true,
-            optimistic: true,
             debounceMs: WHEEL_REQUEST_DEBOUNCE_MS,
         });
     }
@@ -551,6 +617,7 @@
     function onCanvasPointerDown(event) {
         if (!state.data) return;
         if (event.pointerType === 'mouse' && event.button !== 0) return;
+        updateHoverMarker(event);
         state.dragStart = {
             x: event.clientX,
             window: dataWindowMs(),
@@ -563,17 +630,23 @@
 
     function onCanvasPointerMove(event) {
         const drag = state.dragStart;
-        if (!drag?.window) return;
+        if (!drag?.window) {
+            updateHoverMarker(event);
+            return;
+        }
         event.preventDefault();
         const dx = event.clientX - drag.x;
-        if (!drag.moved && Math.abs(dx) < DRAG_ACTIVATION_PX) return;
+        if (!drag.moved && Math.abs(dx) < DRAG_ACTIVATION_PX) {
+            updateHoverMarker(event);
+            return;
+        }
         drag.moved = true;
         const next = dragWindowForEvent(event, drag);
         if (!next) return;
         requestWindow(next.start, next.end, {
             debounce: true,
-            optimistic: true,
         });
+        updateHoverMarker(event);
     }
 
     function onCanvasPointerUp(event) {
@@ -588,8 +661,15 @@
         state.chartWrap?.classList.remove('is-dragging');
         state.chartWrap?.releasePointerCapture?.(event.pointerId);
         if (next && (drag.moved || Math.abs(event.clientX - drag.x) > DRAG_ACTIVATION_PX)) {
-            requestWindow(next.start, next.end, { optimistic: true });
+            requestWindow(next.start, next.end);
         }
+        updateHoverMarker(event);
+    }
+
+    function resetViewWindow() {
+        const next = state.defaultViewWindow || initialViewWindow(state.data) || loadedDataWindowMs();
+        if (!next) return;
+        setInteractionWindow(next);
     }
 
     function onCanvasPointerCancel() {
@@ -597,6 +677,12 @@
         state.pendingWindowTimer = null;
         state.dragStart = null;
         state.chartWrap?.classList.remove('is-dragging');
+        clearHoverMarker();
+    }
+
+    function onCanvasPointerLeave() {
+        if (state.dragStart?.window) return;
+        clearHoverMarker();
     }
 
     function getFetch() {
@@ -698,6 +784,7 @@
         state.chartWrap?.addEventListener('pointermove', onCanvasPointerMove);
         state.chartWrap?.addEventListener('pointerup', onCanvasPointerUp);
         state.chartWrap?.addEventListener('pointercancel', onCanvasPointerCancel);
+        state.chartWrap?.addEventListener('pointerleave', onCanvasPointerLeave);
         state.scrubber?.addEventListener('input', onScrubberInput);
 
         if (typeof ResizeObserver !== 'undefined') {
@@ -725,6 +812,8 @@
     function close() {
         clearTimeout(state.pendingWindowTimer);
         state.pendingWindowTimer = null;
+        cancelHoverDraw();
+        state.hoverMs = null;
         setOpen(false);
         const focusTarget = state.lastFocus;
         state.lastFocus = null;
@@ -794,9 +883,12 @@
     function renderLoading() {
         state.data = null;
         state.interactionWindow = null;
+        state.defaultViewWindow = null;
+        state.isLoading = true;
+        state.hoverMs = null;
         state.status.hidden = false;
         state.status.className = 'aspect-dynamics-status';
-        state.status.textContent = tr('page.forecastNew.aspectDynamics.loading', 'Calculating aspect dynamics...');
+        state.status.textContent = tr('page.forecastNew.aspectDynamics.loading', 'Loading chart...');
         state.summary.innerHTML = '';
         syncScrubber(null);
         drawChart();
@@ -805,6 +897,9 @@
     function renderError(message) {
         state.data = null;
         state.interactionWindow = null;
+        state.defaultViewWindow = null;
+        state.isLoading = false;
+        state.hoverMs = null;
         state.status.hidden = false;
         state.status.className = 'aspect-dynamics-status aspect-dynamics-status--error';
         state.status.textContent = message || tr('page.forecastNew.aspectDynamics.errors.loadFailed', 'Could not load aspect dynamics.');
@@ -825,15 +920,24 @@
         return map[status] || tr('page.forecastNew.aspectDynamics.empty.noData', 'No aspect dynamics data.');
     }
 
-    function renderData(data) {
+    function renderData(data, options = {}) {
+        const previousView = state.interactionWindow;
         state.data = data || null;
-        state.interactionWindow = null;
+        const initialView = initialViewWindow(data);
+        const loaded = committedDataWindowMs(data);
+        state.defaultViewWindow = initialView;
+        if (options.preserveViewport && previousView && loaded) {
+            state.interactionWindow = constrainWindowToLoaded(previousView.start, previousView.end, loaded);
+        } else {
+            state.interactionWindow = initialView;
+        }
         const hasSeries = Array.isArray(data?.series) && data.series.length > 1;
         const isPreview = Boolean(data?.preview);
-        if (isPreview && hasSeries) {
+        state.isLoading = isPreview;
+        if (isPreview) {
             state.status.hidden = false;
             state.status.className = 'aspect-dynamics-status';
-            state.status.textContent = tr('page.forecastNew.aspectDynamics.loading', 'Calculating aspect dynamics...');
+            state.status.textContent = tr('page.forecastNew.aspectDynamics.loading', 'Loading chart...');
         } else if (!data || data.status !== 'ok' || !hasSeries) {
             state.status.hidden = false;
             state.status.className = 'aspect-dynamics-status aspect-dynamics-status--empty';
@@ -846,6 +950,55 @@
         updateRangeLabel(data);
         syncScrubber(data);
         drawChart();
+    }
+
+    function initialViewWindow(data = state.data) {
+        const loaded = committedDataWindowMs(data);
+        if (!loaded) return null;
+        const selected = selectedMs(data);
+        const contact = Array.isArray(data?.contacts) ? data.contacts[0] : null;
+        const contactStart = msFromIso(contact?.enter);
+        const contactEnd = msFromIso(contact?.leave);
+        if (Number.isFinite(contactStart) && Number.isFinite(contactEnd) && contactEnd > contactStart) {
+            const contactSpan = contactEnd - contactStart;
+            const paddedSpan = Math.max(30 * DAY_MS, Math.min(730 * DAY_MS, contactSpan * 2.5));
+            const center = Number.isFinite(selected)
+                ? selected
+                : (contactStart + contactEnd) / 2;
+            return constrainWindowToLoaded(center - paddedSpan / 2, center + paddedSpan / 2, loaded);
+        }
+        if (Number.isFinite(selected)) {
+            const span = Math.min(loaded.end - loaded.start, defaultVisibleSpanDays(data) * DAY_MS);
+            return constrainWindowToLoaded(selected - span / 2, selected + span / 2, loaded);
+        }
+        return loaded;
+    }
+
+    function defaultVisibleSpanDays(data = state.data) {
+        const method = data?.method || state.basePayload?.method || 'transit';
+        return ({
+            natal: 365,
+            transit: 365,
+            progression: 3650,
+            direction: 3650,
+            solar_return: 365,
+            synastry_partner: 365,
+        })[method] || 365;
+    }
+
+    function constrainWindowToLoaded(start, end, loaded) {
+        const span = Math.min(Math.max(MIN_WINDOW_DAYS * DAY_MS, end - start), loaded.end - loaded.start);
+        let nextStart = start;
+        let nextEnd = start + span;
+        if (nextStart < loaded.start) {
+            nextStart = loaded.start;
+            nextEnd = nextStart + span;
+        }
+        if (nextEnd > loaded.end) {
+            nextEnd = loaded.end;
+            nextStart = nextEnd - span;
+        }
+        return { start: nextStart, end: nextEnd };
     }
 
     function formatDateTime(value) {
@@ -874,8 +1027,8 @@
     function renderSummary(data) {
         if (!state.summary) return;
         const contact = Array.isArray(data?.contacts) ? data.contacts[0] : null;
-        if (data?.preview && Array.isArray(data.series) && data.series.length > 1) {
-            state.summary.innerHTML = `<div class="aspect-dynamics-summary-empty">${escapeHtml(tr('page.forecastNew.aspectDynamics.loading', 'Calculating aspect dynamics...'))}</div>`;
+        if (state.isLoading && data?.preview) {
+            state.summary.innerHTML = `<div class="aspect-dynamics-summary-empty">${escapeHtml(tr('page.forecastNew.aspectDynamics.loading', 'Loading chart...'))}</div>`;
             return;
         }
         if (!contact) {
@@ -944,10 +1097,7 @@
         const data = state.data;
         const series = graphSeries(data);
         if (series.length < 2) {
-            ctx.fillStyle = '#8a8178';
-            ctx.font = '13px system-ui, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText(tr('page.forecastNew.aspectDynamics.empty.noData', 'No aspect dynamics data.'), width / 2, height / 2);
+            drawEmptyChartState(ctx, width, height);
             drawOverviewChart();
             return;
         }
@@ -1018,7 +1168,107 @@
         drawContactMarkers(ctx, data, xOf, yOf, pad, width, plotBottom);
         drawSelectedMarker(ctx, data?.selected_point, xOf, yOf, pad, width, plotBottom);
         drawScaleKey(ctx, minMs, maxMs, yOf, pad, width, plotBottom);
+        drawHoverMarker(ctx, state.hoverMs, xOf, yOf(0), pad, width, plotBottom, minMs, maxMs);
         drawOverviewChart();
+    }
+
+    function drawHoverMarker(ctx, hoverMs, xOf, axisY, pad, width, plotBottom, minMs, maxMs) {
+        if (!Number.isFinite(hoverMs) || hoverMs < minMs || hoverMs > maxMs) return;
+        const x = xOf(hoverMs);
+        if (x < pad.left || x > width - pad.right) return;
+        const label = formatHoverDateTime(hoverMs, maxMs - minMs);
+        const textWidth = typeof ctx.measureText === 'function'
+            ? ctx.measureText(label).width
+            : label.length * 6.5;
+        const boxW = Math.ceil(textWidth + 14);
+        const boxH = 22;
+        const boxX = Math.max(pad.left, Math.min(width - pad.right - boxW, x - boxW / 2));
+        const boxY = Math.max(pad.top + 8, Math.min(plotBottom - boxH - 4, axisY + 12));
+
+        ctx.save();
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = '#946b1f';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x, pad.top);
+        ctx.lineTo(x, plotBottom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#946b1f';
+        ctx.beginPath();
+        ctx.arc(x, axisY, 3.4, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.94)';
+        ctx.fillRect(boxX, boxY, boxW, boxH);
+        ctx.strokeStyle = '#c9a15c';
+        if (typeof ctx.strokeRect === 'function') {
+            ctx.strokeRect(boxX, boxY, boxW, boxH);
+        }
+        ctx.fillStyle = '#3b3020';
+        ctx.font = '11px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, boxX + boxW / 2, boxY + boxH / 2 + 0.5);
+        ctx.restore();
+    }
+
+    function drawEmptyChartState(ctx, width, height) {
+        const pad = chartPad();
+        const plotW = width - pad.left - pad.right;
+        const plotH = height - pad.top - pad.bottom;
+        const plotBottom = pad.top + plotH;
+        const fallbackSpan = Math.max(MIN_WINDOW_DAYS, defaultVisibleSpanDays()) * DAY_MS;
+        const anchor = selectedMs() || Date.now();
+        const windowMs = dataWindowMs()
+            || { start: anchor - fallbackSpan / 2, end: anchor + fallbackSpan / 2 };
+        const minMs = windowMs.start;
+        const maxMs = windowMs.end;
+        const maxAbs = 1;
+        const xOf = (ms) => pad.left + ((ms - minMs) / (maxMs - minMs || 1)) * plotW;
+        const yOf = (value) => plotBottom - ((value + maxAbs) / (maxAbs * 2)) * plotH;
+        const ticks = buildCalendarTicks(minMs, maxMs);
+
+        drawZetGrid(ctx, ticks, xOf, yOf, pad, width, plotBottom, plotH, maxAbs);
+        drawEmptyRangeCaption(ctx, minMs, maxMs, pad);
+
+        ctx.strokeStyle = '#6f6f6f';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(pad.left, yOf(0));
+        ctx.lineTo(width - pad.right, yOf(0));
+        ctx.stroke();
+        drawZeroAxisTicks(ctx, ticks, xOf, yOf(0), pad, width, plotBottom, minMs, maxMs);
+
+        ctx.save();
+        ctx.fillStyle = '#6f6b66';
+        ctx.font = '13px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(
+            state.isLoading
+                ? tr('page.forecastNew.aspectDynamics.loading', 'Loading chart...')
+                : statusMessage(state.data?.status),
+            width / 2,
+            Math.max(pad.top + 34, yOf(0) - 22),
+        );
+        ctx.restore();
+    }
+
+    function drawEmptyRangeCaption(ctx, minMs, maxMs, pad) {
+        ctx.save();
+        ctx.fillStyle = '#4f4943';
+        ctx.font = '600 12px system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(
+            [
+                `${formatDateShort(minMs)} - ${formatDateShort(maxMs)}`,
+                formatSpanLabel(maxMs - minMs),
+            ].filter(Boolean).join(' · '),
+            pad.left,
+            14,
+        );
+        ctx.restore();
     }
 
     function drawZetGrid(ctx, ticks, xOf, yOf, pad, width, plotBottom, plotH, maxAbs) {
@@ -1319,6 +1569,27 @@
             return new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric' }).format(date);
         }
         return new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' }).format(date);
+    }
+
+    function formatHoverDateTime(ms, spanMs) {
+        const date = new Date(ms);
+        if (Number.isNaN(date.getTime())) return '';
+        const locale = root.FrontendI18n?.getLocale?.() || 'en';
+        const options = Math.abs(spanMs) <= 60 * DAY_MS
+            ? {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+            }
+            : {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+            };
+        return new Intl.DateTimeFormat(locale, options).format(date);
     }
 
     function formatSpanLabel(spanMs) {

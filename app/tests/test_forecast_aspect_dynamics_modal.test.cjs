@@ -31,8 +31,12 @@ function resetModal() {
         responseCache: new Map(),
         dragStart: null,
         interactionWindow: null,
+        defaultViewWindow: null,
         pendingWindowTimer: null,
         scrollDomain: null,
+        isLoading: false,
+        hoverMs: null,
+        hoverFrame: null,
     });
 }
 
@@ -51,6 +55,10 @@ function setupDom() {
         setTransform() {},
         clearRect() {},
         fillRect() {},
+        strokeRect() {},
+        measureText(text) {
+            return { width: String(text || '').length * 6 };
+        },
         fillText() {},
         beginPath() {},
         moveTo() {},
@@ -74,7 +82,7 @@ function setupDom() {
                 'page.forecast.timeline.tooltip.enter': 'Enter',
                 'page.forecast.timeline.tooltip.leave': 'Leave',
                 'page.forecastNew.aspectDynamics.closest': 'Closest approach',
-                'page.forecastNew.aspectDynamics.loading': 'Calculating aspect dynamics...',
+                'page.forecastNew.aspectDynamics.loading': 'Loading chart...',
                 'page.forecastNew.aspectDynamics.legend.orb': 'signed orb',
                 'page.forecastNew.aspectDynamics.legend.selected': 'selected date',
                 'page.forecastNew.aspectDynamics.legend.exact': 'exact aspect',
@@ -135,6 +143,30 @@ function sampleResponse(overrides = {}) {
         ...base,
         ...overrides,
     };
+}
+
+function sampleResponseForPayload(payload = {}) {
+    if (!payload.contact_start || !payload.contact_end) {
+        return sampleResponse(payload.preview ? {
+            preview: true,
+            boundary_complete: false,
+            contacts: [],
+        } : { preview: false });
+    }
+    return sampleResponse({
+        preview: false,
+        effective_window: {
+            start: `${payload.contact_start}T00:00:00+00:00`,
+            end: `${payload.contact_end}T00:00:00+00:00`,
+        },
+        series: [
+            { datetime: `${payload.contact_start}T00:00:00+00:00`, signed_orb: 4, abs_orb: 4 },
+            { datetime: '2026-06-01T00:00:00+00:00', signed_orb: 3, abs_orb: 3 },
+            { datetime: '2026-06-20T00:00:00+00:00', signed_orb: 0, abs_orb: 0 },
+            { datetime: '2026-07-01T00:00:00+00:00', signed_orb: -3, abs_orb: 3 },
+            { datetime: `${payload.contact_end}T00:00:00+00:00`, signed_orb: -4, abs_orb: 4 },
+        ],
+    });
 }
 
 const sampleOpenOptions = {
@@ -244,7 +276,7 @@ test('modal renders loading state while dynamics request is pending', async () =
 
     const openPromise = modal.open(sampleOpenOptions);
 
-    assert.equal(document.querySelector('.aspect-dynamics-status').textContent, 'Calculating aspect dynamics...');
+    assert.equal(document.querySelector('.aspect-dynamics-status').textContent, 'Loading chart...');
     resolveFetch({
         ok: true,
         async json() {
@@ -286,11 +318,7 @@ test('modal renders success summary from fetched dynamics data', async () => {
         return {
             ok: true,
             async json() {
-                return sampleResponse(payload.preview ? {
-                    preview: true,
-                    boundary_complete: false,
-                    contacts: [],
-                } : { preview: false });
+                return sampleResponseForPayload(payload);
             },
         };
     });
@@ -301,7 +329,9 @@ test('modal renders success summary from fetched dynamics data', async () => {
     assert.equal(payloads[0].preview, true);
     assert.equal(payloads[0].max_points, 96);
     assert.equal(payloads[1].preview, false);
-    assert.equal(payloads[1].max_points, 320);
+    assert.equal(payloads[1].max_points, 720);
+    assert.ok(payloads[1].contact_start < '1977-01-01');
+    assert.ok(payloads[1].contact_end > '2076-01-01');
     const overlay = document.querySelector('.aspect-dynamics-modal');
     assert.ok(overlay);
     assert.equal(overlay.classList.contains('hidden'), false);
@@ -327,11 +357,7 @@ test('modal paints preview before full dynamics response resolves', async () => 
             return Promise.resolve({
                 ok: true,
                 async json() {
-                    return sampleResponse({
-                        preview: true,
-                        boundary_complete: false,
-                        contacts: [],
-                    });
+                    return sampleResponseForPayload(payload);
                 },
             });
         }
@@ -343,18 +369,21 @@ test('modal paints preview before full dynamics response resolves', async () => 
 
     assert.equal(payloads.length, 2);
     assert.equal(payloads[0].preview, true);
-    assert.match(document.querySelector('.aspect-dynamics-summary').textContent, /Calculating aspect dynamics/);
+    assert.match(document.querySelector('.aspect-dynamics-summary').textContent, /Loading chart/);
     assert.equal(modal._state.data.preview, true);
+    const previewWindow = { ...modal._state.interactionWindow };
 
     resolveFull({
         ok: true,
         async json() {
-            return sampleResponse({ preview: false });
+            return sampleResponseForPayload(JSON.parse(payloads[1] ? JSON.stringify(payloads[1]) : '{}'));
         },
     });
     await openPromise;
 
     assert.equal(modal._state.data.preview, false);
+    assert.equal(modal._state.interactionWindow.start, previewWindow.start);
+    assert.equal(modal._state.interactionWindow.end, previewWindow.end);
     assert.match(document.querySelector('.aspect-dynamics-summary').textContent, /Pass 1/);
     modal.close();
 });
@@ -367,11 +396,7 @@ test('modal keeps preview chart when full dynamics request fails', async () => {
             return {
                 ok: true,
                 async json() {
-                    return sampleResponse({
-                        preview: true,
-                        boundary_complete: false,
-                        contacts: [],
-                    });
+                    return sampleResponseForPayload(payload);
                 },
             };
         }
@@ -394,7 +419,7 @@ test('modal keeps preview chart when full dynamics request fails', async () => {
     modal.close();
 });
 
-test('toolbar range control requests a new graph window', async () => {
+test('toolbar range control uses the preloaded graph window', async () => {
     setupDom();
     const payloads = [];
     modal.setFetchImpl(async (_url, options) => {
@@ -402,7 +427,7 @@ test('toolbar range control requests a new graph window', async () => {
         return {
             ok: true,
             async json() {
-                return sampleResponse();
+                return sampleResponseForPayload(JSON.parse(options.body));
             },
         };
     });
@@ -411,15 +436,14 @@ test('toolbar range control requests a new graph window', async () => {
     document.querySelector('[data-aspect-dynamics-range="3650"]').click();
 
     await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(payloads.length, 3);
-    assert.equal(payloads[2].preview, false);
-    assert.equal(payloads[2].contact_start, '2021-06-30');
-    assert.equal(payloads[2].contact_end, '2031-06-28');
-    assert.equal(payloads[2].max_points, 720);
+    assert.equal(payloads.length, 2);
+    assert.ok(modal._state.interactionWindow);
+    assert.ok(modal._state.interactionWindow.start < new Date('2022-01-01T00:00:00Z').getTime());
+    assert.ok(modal._state.interactionWindow.end > new Date('2030-01-01T00:00:00Z').getTime());
     modal.close();
 });
 
-test('scrollbar scrub requests a shifted graph window', async () => {
+test('scrollbar scrub shifts the viewport without refetching inside loaded data', async () => {
     setupDom();
     const payloads = [];
     modal.setFetchImpl(async (_url, options) => {
@@ -427,7 +451,7 @@ test('scrollbar scrub requests a shifted graph window', async () => {
         return {
             ok: true,
             async json() {
-                return sampleResponse();
+                return sampleResponseForPayload(JSON.parse(options.body));
             },
         };
     });
@@ -438,11 +462,8 @@ test('scrollbar scrub requests a shifted graph window', async () => {
     input.dispatchEvent(new window.Event('input', { bubbles: true }));
 
     await new Promise((resolve) => setTimeout(resolve, 180));
-    assert.equal(payloads.length, 3);
-    assert.equal(payloads[2].preview, false);
-    assert.equal(payloads[2].max_points, 320);
-    assert.ok(payloads[2].contact_start > '2027-01-01');
-    assert.ok(payloads[2].contact_end > payloads[2].contact_start);
+    assert.equal(payloads.length, 2);
+    assert.ok(modal._state.interactionWindow.start > new Date('2027-01-01T00:00:00Z').getTime());
     modal.close();
 });
 
@@ -454,7 +475,7 @@ test('dragging the aspect chart pans the graph window', async () => {
         return {
             ok: true,
             async json() {
-                return sampleResponse();
+                return sampleResponseForPayload(JSON.parse(options.body));
             },
         };
     });
@@ -471,15 +492,12 @@ test('dragging the aspect chart pans the graph window', async () => {
     dispatchPointer(wrap, 'pointerup', { clientX: 260 });
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    assert.equal(payloads.length, 3);
-    assert.equal(payloads[2].preview, false);
-    assert.ok(payloads[2].contact_start > '2026-06-01');
-    assert.ok(payloads[2].contact_end > payloads[2].contact_start);
+    assert.equal(payloads.length, 2);
     assert.equal(wrap.classList.contains('is-dragging'), false);
     modal.close();
 });
 
-test('wheel scroll pans the aspect chart smoothly before fetching', async () => {
+test('wheel scroll zooms the aspect chart without refetching inside loaded data', async () => {
     setupDom();
     const payloads = [];
     modal.setFetchImpl(async (_url, options) => {
@@ -487,21 +505,60 @@ test('wheel scroll pans the aspect chart smoothly before fetching', async () => 
         return {
             ok: true,
             async json() {
-                return sampleResponse();
+                return sampleResponseForPayload(JSON.parse(options.body));
             },
         };
     });
 
     await modal.open(sampleOpenOptions);
     const wrap = document.querySelector('.aspect-dynamics-chart-wrap');
+    const before = modal._state.interactionWindow;
     dispatchDomEvent(wrap, 'wheel', { deltaY: 90, deltaX: 0, deltaMode: 0 });
 
-    assert.ok(modal._state.interactionWindow);
-    assert.ok(modal._state.interactionWindow.start > new Date('2026-06-01T00:00:00Z').getTime());
+    const after = modal._state.interactionWindow;
+    assert.ok(after);
+    assert.ok((after.end - after.start) > (before.end - before.start));
+    assert.ok(Math.abs(((after.start + after.end) / 2) - ((before.start + before.end) / 2)) < 3 * 86400000);
 
     await new Promise((resolve) => setTimeout(resolve, 140));
-    assert.equal(payloads.length, 3);
-    assert.equal(payloads[2].preview, false);
-    assert.ok(payloads[2].contact_start > '2026-06-01');
+    assert.equal(payloads.length, 2);
+    modal.close();
+});
+
+test('pointer hover marks the timeline date without requesting more data', async () => {
+    setupDom();
+    const payloads = [];
+    modal.setFetchImpl(async (_url, options) => {
+        payloads.push(JSON.parse(options.body));
+        return {
+            ok: true,
+            async json() {
+                return sampleResponseForPayload(JSON.parse(options.body));
+            },
+        };
+    });
+
+    await modal.open(sampleOpenOptions);
+    const canvas = document.querySelector('.aspect-dynamics-canvas');
+    canvas.getBoundingClientRect = () => ({
+        left: 0,
+        right: 720,
+        top: 0,
+        bottom: 320,
+        width: 720,
+        height: 320,
+    });
+    const wrap = document.querySelector('.aspect-dynamics-chart-wrap');
+    dispatchPointer(wrap, 'pointermove', { clientX: 360 });
+
+    assert.ok(Number.isFinite(modal._state.hoverMs));
+    assert.ok(modal._state.hoverMs > modal._state.interactionWindow.start);
+    assert.ok(modal._state.hoverMs < modal._state.interactionWindow.end);
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.equal(payloads.length, 2);
+
+    dispatchPointer(wrap, 'pointerleave', { clientX: 360 });
+    assert.equal(modal._state.hoverMs, null);
     modal.close();
 });

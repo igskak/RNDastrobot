@@ -261,7 +261,7 @@
         "manualPartner": "Partner (manual)"
       },
       "aspectDynamics": {
-        "loading": "Calculating aspect dynamics...",
+        "loading": "Loading chart...",
         "toolbar": "Chart controls",
         "zoomIn": "Zoom in",
         "zoomOut": "Zoom out",
