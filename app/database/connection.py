@@ -20,6 +20,20 @@ if os.getenv('APP_ENV') == 'production' or os.getenv('DEBUG', 'False').lower() !
     logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
 
 
+def _env_int(name: str, default: int, *, min_value: int) -> int:
+    raw = os.getenv(name)
+    if raw is None or raw == "":
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        logging.getLogger(__name__).warning(
+            "Invalid %s=%r; using default %s", name, raw, default
+        )
+        return default
+    return max(min_value, value)
+
+
 class DatabaseManager:
     """Менеджер подключения к базе данных"""
     
@@ -46,13 +60,20 @@ class DatabaseManager:
         if not database_url:
             raise ValueError("DATABASE_URL не найден в переменных окружения")
         
-        # Создаём engine с пулом соединений (переиспользуем TCP-коннекты)
+        pool_size = _env_int("DB_POOL_SIZE", 2, min_value=1)
+        max_overflow = _env_int("DB_MAX_OVERFLOW", 2, min_value=0)
+        pool_timeout = _env_int("DB_POOL_TIMEOUT", 10, min_value=1)
+        pool_recycle = _env_int("DB_POOL_RECYCLE", 300, min_value=60)
+
+        # Создаём engine с небольшим пулом: итоговый максимум =
+        # (pool_size + max_overflow) × workers × instances.
         self._engine = create_engine(
             database_url,
             poolclass=QueuePool,
-            pool_size=3,
-            max_overflow=5,
-            pool_recycle=600,      # Пересоздавать соединения каждые 10 мин
+            pool_size=pool_size,
+            max_overflow=max_overflow,
+            pool_timeout=pool_timeout,
+            pool_recycle=pool_recycle,
             pool_pre_ping=True,    # Проверка соединения перед использованием
             echo=False,
         )
@@ -157,4 +178,3 @@ def get_db_session() -> Session:
             session.close()
     """
     return db_manager.get_new_session()
-

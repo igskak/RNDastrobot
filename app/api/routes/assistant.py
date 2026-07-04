@@ -27,7 +27,7 @@ from app.services.entitlements_service import (
     assert_account_writable,
     assert_feature_enabled,
 )
-from app.database.connection import get_db
+from app.database.connection import db_manager, get_db
 from app.services.astro_assistant_service import (
     ASPECT_TYPE_NAMES as _ASPECT_TYPES,
     AstroAssistantService,
@@ -334,6 +334,72 @@ class ChatResponse(BaseModel):
     metric_id: Optional[int] = None
 
 
+def _commit_and_close_request_db(db: Session) -> None:
+    """Persist auth/audit reads, then release the request connection before LLM work."""
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
+
+
+def _run_assistant_chat_turn(
+    *,
+    user_id: UUID,
+    messages: List[dict],
+    timezone: str,
+    anchor_date: Optional[date_type],
+    workspace: Optional[dict],
+    astrologer_id: UUID,
+) -> dict:
+    db = db_manager.get_new_session()
+    try:
+        service = AstroAssistantService(
+            db_session=db,
+            default_timezone=timezone,
+            default_anchor_date=anchor_date,
+            default_workspace=workspace,
+            astrologer_id=astrologer_id,
+        )
+        return service.chat(user_id=user_id, messages=messages)
+    finally:
+        db.close()
+
+
+def _log_assistant_turn(
+    *,
+    astrologer_id: UUID,
+    chart_user_id: UUID,
+    conversation_id: Optional[UUID],
+    user_message: str,
+    assistant_reply: str,
+    metrics: dict,
+    max_iterations_reached: bool,
+    guardrail: Optional[str],
+    tool_results: List[dict],
+    workspace_manifest: Optional[dict],
+) -> "tuple[Optional[UUID], Optional[int]]":
+    db = db_manager.get_new_session()
+    try:
+        return log_turn(
+            db,
+            astrologer_id=astrologer_id,
+            chart_user_id=chart_user_id,
+            conversation_id=conversation_id,
+            user_message=user_message,
+            assistant_reply=assistant_reply,
+            metrics=metrics,
+            max_iterations_reached=max_iterations_reached,
+            guardrail=guardrail,
+            tool_results=tool_results,
+            workspace_manifest=workspace_manifest,
+        )
+    finally:
+        db.close()
+
+
 @router.post(
     "/chat",
     response_model=ChatResponse,
@@ -345,7 +411,7 @@ class ChatResponse(BaseModel):
         "and never controlled by the model."
     ),
 )
-def chat(
+async def chat(
     request: ChatRequest,
     http_request: Request,
     db: Session = Depends(get_db),
@@ -359,24 +425,29 @@ def chat(
             detail="Assistant is not configured",
         )
     ensure_client_access(db, http_request, auth, request.user_id, action="client.assistant.chat")
-    service = AstroAssistantService(
-        db_session=db,
-        default_timezone=request.timezone,
-        default_anchor_date=request.anchor_date,
-        default_workspace=request.workspace,
-        astrologer_id=auth.astrologer.id,
-    )
+    astrologer_id = auth.astrologer.id
     messages = [m.model_dump() for m in request.messages]
     if request.conversation_id:
         conv = get_conversation(
             db,
-            astrologer_id=auth.astrologer.id,
+            astrologer_id=astrologer_id,
             conversation_id=request.conversation_id,
         )
         if conv and conv.get("chart_user_id") == str(request.user_id):
             messages = merge_chat_history(conv.get("messages", []), messages)
+
+    _commit_and_close_request_db(db)
+
     try:
-        result = service.chat(user_id=request.user_id, messages=messages)
+        result = await run_in_threadpool(
+            _run_assistant_chat_turn,
+            user_id=request.user_id,
+            messages=messages,
+            timezone=request.timezone,
+            anchor_date=request.anchor_date,
+            workspace=request.workspace,
+            astrologer_id=astrologer_id,
+        )
     except Exception:
         logger.exception("assistant chat failed")
         raise HTTPException(
@@ -393,9 +464,8 @@ def chat(
         )
 
     # Persist the turn (history + cost/latency). Never fails the response.
-    conv_id, metric_id = log_turn(
-        db,
-        astrologer_id=auth.astrologer.id,
+    conv_id, metric_id = _log_assistant_turn(
+        astrologer_id=astrologer_id,
         chart_user_id=request.user_id,
         conversation_id=request.conversation_id,
         user_message=latest_user_message(messages),

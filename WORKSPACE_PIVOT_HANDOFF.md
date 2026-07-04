@@ -63,7 +63,7 @@
 ## 5. Как работать (операционка)
 
 - **Запуск стека**: `.claude/launch.json` → preview_start "steliara" (uvicorn :8000, отдаёт и API, и фронт; БД — живой Supabase из `.env`). Руками: `PYTHONPATH=$(pwd) .venv/bin/uvicorn app.api.main:app --host 127.0.0.1 --port 8000`.
-- **Дев-логин**: ico.trust@gmail.com / Skak26062022 (`POST /api/v1/auth/login`, cookie-сессия).
+- **Дев-логин**: используйте актуальный тестовый аккаунт из менеджера секретов или восстановление пароля через `/login.html`; не храните пароль в handoff-документах. `POST /api/v1/auth/login` использует cookie-сессию.
 - **Тестовый клиент**: `072e22a8-7d3b-460c-a93b-f502c30348a2` («Тест 2», 1990-02-01, Сан-Паулу); партнёры есть у `00330bbe-...` и `96e9bcd7-...`; есть созданный мной «Workspace Test».
 - **Открыть chart/forecast-new в браузере**: залогиниться fetch'ем, затем `sessionStorage.setItem('natalChart', JSON.stringify(await GET /api/v1/natal/{id}))` и навигация (без карты в сессии страницы редиректят).
 - **Тесты**: python — `.venv/bin/python -m pytest app/tests/...` (НЕ системный python); фронт — `node app/tests/<name>.test.cjs` (node:test; jsdom доступен).

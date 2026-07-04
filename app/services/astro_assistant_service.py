@@ -1011,6 +1011,24 @@ class AstroAssistantService:
         # The tool args ARE the analysis spec; the executor validates + runs it.
         return analyze_spec(self._get_chart_dataset(user_id), args)
 
+    def _release_db_after_tool(self, *, success: bool) -> None:
+        """Return the checked-out DB connection before the next model call."""
+        if self.db is None:
+            return
+        try:
+            if success:
+                self.db.commit()
+            else:
+                self.db.rollback()
+        except Exception:
+            logger.exception("assistant DB session release failed")
+            try:
+                self.db.rollback()
+            except Exception:
+                pass
+        finally:
+            self.db.close()
+
     def _dispatch(self, name: str, args: Dict, user_id: UUID) -> Dict:
         handlers: Dict[str, Callable[[UUID, Dict], Dict]] = {
             "find_aspect_passes": self._exec_find_aspect_passes,
@@ -1024,11 +1042,15 @@ class AstroAssistantService:
         if handler is None:
             return {"status": "error", "error": f"unknown_tool:{name}"}
         try:
-            return handler(user_id, args)
+            result = handler(user_id, args)
+            self._release_db_after_tool(success=True)
+            return result
         except ValueError as e:
+            self._release_db_after_tool(success=False)
             return {"status": "error", "error": str(e)}
         except Exception:
             logger.exception("assistant tool '%s' failed", name)
+            self._release_db_after_tool(success=False)
             return {"status": "error", "error": "tool_execution_failed"}
 
     # --- agent loop -----------------------------------------------------
