@@ -723,6 +723,39 @@
     background: var(--gold-pale, #f5eddf);
 }
 
+/* Like / dislike feedback pair. */
+.chat-feedback-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.chat-feedback-btn {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0 8px;
+    border: 1px solid var(--border, #e0ddd7);
+    border-radius: 8px;
+    background: none;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.chat-feedback-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.chat-feedback-like:hover {
+    border-color: var(--success, #2b7a4b);
+    background: rgba(43, 122, 75, 0.08);
+}
+
+.chat-feedback-dislike[aria-pressed="true"] {
+    border-color: var(--gold, #b8935a);
+    background: var(--gold-pale, #f5eddf);
+}
+
 .chat-correction-form {
     display: flex;
     align-items: center;

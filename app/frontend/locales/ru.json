@@ -966,7 +966,9 @@
         "correctionNote": "Что было не так? (необязательно)",
         "provenanceSummaryOne": "источник — данные · 1 инструмент ✓",
         "correctionSubmit": "Отправить",
-        "correctionThanks": "Спасибо за отзыв — мы его учтём."
+        "correctionThanks": "Спасибо за отзыв — мы его учтём.",
+        "feedbackLike": "Отметить ответ полезным",
+        "feedbackDislike": "Отметить ответ для исправления"
       },
       "edit": {
         "errors": {

@@ -16,6 +16,7 @@ from app.services.assistant_log_service import (
     get_conversation,
     list_conversations,
     log_turn,
+    set_turn_feedback,
 )
 
 
@@ -171,6 +172,43 @@ def test_export_corrections_only_filters():
     flagged = export_turns(db, astrologer_id=astro, corrections_only=True)
     assert len(flagged) == 1
     assert flagged[0]["correction_flag"] is True
+
+
+def test_feedback_like_records_positive_signal():
+    db = _session()
+    astro = uuid4()
+    mid = _metric_id(db, _log(db, astro, uuid4()))
+    assert set_turn_feedback(db, astrologer_id=astro, metric_id=mid, kind="like") is True
+    m = db.query(AssistantTurnMetric).filter_by(id=mid).one()
+    assert m.feedback == "like"
+    assert m.correction_flag is False  # a like is not a correction
+
+
+def test_feedback_dislike_also_flags_correction_with_note():
+    db = _session()
+    astro = uuid4()
+    mid = _metric_id(db, _log(db, astro, uuid4()))
+    assert set_turn_feedback(db, astrologer_id=astro, metric_id=mid,
+                             kind="dislike", note="wrong language") is True
+    m = db.query(AssistantTurnMetric).filter_by(id=mid).one()
+    assert m.feedback == "dislike"
+    assert m.correction_flag is True
+    assert m.correction_note == "wrong language"
+
+
+def test_feedback_is_tenant_scoped():
+    db = _session()
+    astro_a, astro_b = uuid4(), uuid4()
+    mid = _metric_id(db, _log(db, astro_a, uuid4()))
+    assert set_turn_feedback(db, astrologer_id=astro_b, metric_id=mid, kind="like") is False
+    assert db.query(AssistantTurnMetric).filter_by(id=mid).one().feedback is None
+
+
+def test_feedback_bad_kind_rejected():
+    db = _session()
+    astro = uuid4()
+    mid = _metric_id(db, _log(db, astro, uuid4()))
+    assert set_turn_feedback(db, astrologer_id=astro, metric_id=mid, kind="meh") is False
 
 
 def test_thread_cannot_be_appended_from_another_chart():
