@@ -357,6 +357,30 @@ def test_system_prompt_has_citation_rule():
     assert CITATION_RULE in svc._SYSTEM_PROMPT
 
 
+def test_locale_instruction_maps_codes():
+    assert "English" in svc._locale_instruction("en")
+    assert "Russian" in svc._locale_instruction("ru")
+    assert "Ukrainian" in svc._locale_instruction("uk")
+    assert svc._locale_instruction(None) is None
+    assert svc._locale_instruction("") is None
+
+
+def test_chat_injects_ui_locale_so_reply_matches_language(monkeypatch):
+    """Beta bug fix: an English UI must get an English reply. The UI locale is sent
+    as a system instruction; omitting locale (legacy) injects nothing."""
+    service = _service_with_fake_transits({})
+    monkeypatch.setattr(svc, "is_openai_configured", lambda: True)
+    client = _FakeClient([_msg(content="ok")])
+    monkeypatch.setattr(svc, "get_openai_client", lambda: client)
+
+    service.chat(uuid4(), [{"role": "user", "content": "which transits?"}], locale="en")
+
+    system = " ".join(m["content"] for m in client.chat.completions.calls[0]["messages"]
+                       if m["role"] == "system")
+    assert "interface language is English" in system
+    assert "Write your reply in English" in system
+
+
 def test_get_chart_data_dataset_reused_across_calls_in_one_turn(monkeypatch):
     """Two get_chart_data calls in one turn share ONE frozen dataset instance."""
     service = _service_with_fake_transits({})

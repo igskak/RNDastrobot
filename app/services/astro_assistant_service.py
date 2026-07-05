@@ -195,6 +195,26 @@ def _refuse_and_redirect(messages: List[Dict]) -> str:
             "data and calculations — tell me which figures to show.")
 
 
+_LOCALE_LANGUAGE = {"en": "English", "ru": "Russian", "uk": "Ukrainian"}
+
+
+def _locale_instruction(locale: Optional[str]) -> Optional[str]:
+    """A system nudge to reply in the astrologer's UI language by default.
+
+    Fixes the beta bug where the model replied in Russian to an English UI + English
+    question. The UI locale is authoritative; only switch if the latest message is
+    clearly in another language.
+    """
+    code = (locale or "").strip().lower()
+    if not code:
+        return None
+    label = _LOCALE_LANGUAGE.get(code, code)
+    return (f"The astrologer's interface language is {label}. Write your reply in "
+            f"{label} by default. Switch languages only if the astrologer's latest "
+            f"message is clearly written in a different language — then match that "
+            f"message's language.")
+
+
 def _coerce_wheel_view_actions(messages: List[Dict], actions: List[Dict]):
     """Protect display-mode intents from being misrouted as layer creation."""
     view = _requested_wheel_view(messages)
@@ -1139,11 +1159,12 @@ class AstroAssistantService:
                         return final_actions, regen, "regenerated_degraded"
         return final_actions, _refuse_and_redirect(messages), "blocked"
 
-    def chat(self, user_id: UUID, messages: List[Dict]) -> Dict:
+    def chat(self, user_id: UUID, messages: List[Dict], locale: Optional[str] = None) -> Dict:
         """
         Run the function-calling loop for the active chart (user_id).
 
         ``messages`` is the prior conversation as [{role, content}, …].
+        ``locale`` is the astrologer's UI language (en/ru/uk) so the reply matches it.
         Returns {reply, tool_results, iterations, max_iterations_reached}.
         """
         if not is_openai_configured():
@@ -1152,6 +1173,9 @@ class AstroAssistantService:
         client = get_openai_client()
         tools = build_tools()
         convo: List[Dict] = [{"role": "system", "content": _SYSTEM_PROMPT}]
+        locale_line = _locale_instruction(locale)
+        if locale_line:
+            convo.append({"role": "system", "content": locale_line})
         workspace = getattr(self, "default_workspace", None)
         if workspace:
             context_line = _workspace_context_line(workspace)

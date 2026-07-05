@@ -28,6 +28,7 @@ from app.services.entitlements_service import (
     assert_feature_enabled,
 )
 from app.database.connection import db_manager, get_db
+from app.i18n.context import get_current_locale
 from app.services.astro_assistant_service import (
     ASPECT_TYPE_NAMES as _ASPECT_TYPES,
     AstroAssistantService,
@@ -353,6 +354,7 @@ def _run_assistant_chat_turn(
     anchor_date: Optional[date_type],
     workspace: Optional[dict],
     astrologer_id: UUID,
+    locale: Optional[str] = None,
 ) -> dict:
     db = db_manager.get_new_session()
     try:
@@ -363,7 +365,7 @@ def _run_assistant_chat_turn(
             default_workspace=workspace,
             astrologer_id=astrologer_id,
         )
-        return service.chat(user_id=user_id, messages=messages)
+        return service.chat(user_id=user_id, messages=messages, locale=locale)
     finally:
         db.close()
 
@@ -438,6 +440,10 @@ async def chat(
 
     _commit_and_close_request_db(db)
 
+    # Resolve the UI locale here (request context is active) and pass it in so the
+    # reply matches the astrologer's interface language.
+    locale = get_current_locale()
+
     try:
         result = await run_in_threadpool(
             _run_assistant_chat_turn,
@@ -447,6 +453,7 @@ async def chat(
             anchor_date=request.anchor_date,
             workspace=request.workspace,
             astrologer_id=astrologer_id,
+            locale=locale,
         )
     except Exception:
         logger.exception("assistant chat failed")
