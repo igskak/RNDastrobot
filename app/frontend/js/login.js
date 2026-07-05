@@ -4,7 +4,11 @@
     const API_BASE = global.location && global.location.hostname === 'localhost'
         ? 'http://localhost:8000/api/v1'
         : '/api/v1';
-    const DEFAULT_POST_AUTH_REDIRECT = '/new';
+    // Send authenticated users to the app root. The "/" route serves the
+    // client base (clients.html) when a session cookie is present and the
+    // marketing landing (index.html) otherwise. "/new" is a dumb alias that
+    // always serves the landing, so it must NOT be the post-auth default.
+    const DEFAULT_POST_AUTH_REDIRECT = '/';
 
     const VIEW_COPY = {
         login: {
