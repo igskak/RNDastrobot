@@ -1558,6 +1558,7 @@ class AssistantTurnMetric(Base):
     workspace_manifest = Column(JSON, nullable=True)       # frozen context for the turn
     correction_flag = Column(Boolean, nullable=False, default=False)
     correction_note = Column(Text, nullable=True)
+    feedback = Column(String(16), nullable=True)  # 'like' | 'dislike' | None (migration 050)
     created_at = Column(DateTime, server_default=func.now())
 
     conversation = relationship("AssistantConversation", back_populates="turn_metrics")

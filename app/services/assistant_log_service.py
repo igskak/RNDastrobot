@@ -151,6 +151,44 @@ def flag_turn_correction(
     return True
 
 
+FEEDBACK_KINDS = ("like", "dislike")
+
+
+def set_turn_feedback(
+    db: Session,
+    *,
+    astrologer_id: UUID,
+    metric_id: int,
+    kind: str,
+    note: Optional[str] = None,
+) -> bool:
+    """Record like/dislike on a captured turn. Tenant-scoped (astrologer_id filter).
+
+    'like' is a positive signal; 'dislike' also sets correction_flag + note so it
+    flows into the existing correction/export path. Unknown kind or cross-tenant
+    metric -> False; never raises, never touches another tenant's row.
+    """
+    if kind not in FEEDBACK_KINDS:
+        return False
+    m = (
+        db.query(AssistantTurnMetric)
+        .filter(
+            AssistantTurnMetric.id == metric_id,
+            AssistantTurnMetric.astrologer_id == astrologer_id,
+        )
+        .first()
+    )
+    if m is None:
+        return False
+    m.feedback = kind
+    if kind == "dislike":
+        m.correction_flag = True
+        if note is not None:
+            m.correction_note = str(note)[:2000]
+    db.commit()
+    return True
+
+
 def export_turns(
     db: Session,
     *,
@@ -183,6 +221,7 @@ def export_turns(
             "workspace_manifest": r.workspace_manifest,
             "correction_flag": bool(r.correction_flag),
             "correction_note": r.correction_note,
+            "feedback": r.feedback,
             "created_at": r.created_at.isoformat() if r.created_at else None,
         }
         for r in rows

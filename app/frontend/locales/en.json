@@ -966,7 +966,9 @@
         "correctionNote": "What was wrong? (optional)",
         "provenanceSummaryOne": "traced to data · 1 tool ✓",
         "correctionSubmit": "Submit",
-        "correctionThanks": "Thank you for your feedback — we’ll take it into account."
+        "correctionThanks": "Thank you for your feedback — we’ll take it into account.",
+        "feedbackLike": "Mark this answer helpful",
+        "feedbackDislike": "Flag this answer for correction"
       },
       "edit": {
         "errors": {

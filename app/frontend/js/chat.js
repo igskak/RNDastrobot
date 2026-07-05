@@ -335,42 +335,17 @@ class ChatWidget {
         const chip = this.buildProvenanceChip(data.tool_results, guardrail);
         if (chip && content) content.appendChild(chip);
         if (data.metric_id && content) {
-            content.appendChild(this.buildCorrectionControl(data.metric_id));
+            content.appendChild(this.buildFeedbackControl(data.metric_id));
         }
     }
 
     // Correction flag (D3): one-tap flag + optional one-line note, feeding the
     // beta capture/tuning loop. Low friction so a busy astrologer actually uses it.
-    buildCorrectionControl(metricId) {
+    buildFeedbackControl(metricId) {
         const wrap = document.createElement('div');
-        wrap.className = 'chat-correction';
+        wrap.className = 'chat-correction chat-feedback';
 
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'chat-correction-flag';
-        btn.setAttribute('aria-pressed', 'false');
-        btn.setAttribute('aria-label', t('page.chart.chat.correctionFlag'));
-        btn.textContent = '⚑';
-
-        const form = document.createElement('div');
-        form.className = 'chat-correction-form';
-        form.hidden = true;
-
-        const note = document.createElement('input');
-        note.type = 'text';
-        note.className = 'chat-correction-note';
-        note.maxLength = 2000;
-        note.placeholder = t('page.chart.chat.correctionNote');
-
-        const submit = document.createElement('button');
-        submit.type = 'button';
-        submit.className = 'chat-correction-submit';
-        submit.textContent = t('page.chart.chat.correctionSubmit');
-
-        form.append(note, submit);
-
-        // Replace the whole control with a visible confirmation so the astrologer
-        // sees the feedback was received (previously nothing happened -> felt broken).
+        // Replace the whole control with a visible confirmation on any feedback.
         const showThanks = () => {
             wrap.textContent = '';
             const thanks = document.createElement('div');
@@ -380,38 +355,77 @@ class ChatWidget {
             wrap.appendChild(thanks);
         };
 
-        const doSubmit = async () => {
-            submit.disabled = true;
-            note.disabled = true;
-            await this.postCorrection(metricId, note.value.trim());
-            showThanks();
-        };
+        const like = document.createElement('button');
+        like.type = 'button';
+        like.className = 'chat-feedback-btn chat-feedback-like';
+        like.setAttribute('aria-label', t('page.chart.chat.feedbackLike'));
+        like.textContent = '👍';
 
-        btn.addEventListener('click', () => {
-            const open = btn.getAttribute('aria-pressed') === 'true';
-            btn.setAttribute('aria-pressed', String(!open));
+        const dislike = document.createElement('button');
+        dislike.type = 'button';
+        dislike.className = 'chat-feedback-btn chat-feedback-dislike';
+        dislike.setAttribute('aria-pressed', 'false');
+        dislike.setAttribute('aria-label', t('page.chart.chat.feedbackDislike'));
+        dislike.textContent = '👎';
+
+        const form = document.createElement('div');
+        form.className = 'chat-correction-form';
+        form.hidden = true;
+        const note = document.createElement('input');
+        note.type = 'text';
+        note.className = 'chat-correction-note';
+        note.maxLength = 2000;
+        note.placeholder = t('page.chart.chat.correctionNote');
+        const submit = document.createElement('button');
+        submit.type = 'button';
+        submit.className = 'chat-correction-submit';
+        submit.textContent = t('page.chart.chat.correctionSubmit');
+        form.append(note, submit);
+
+        // 👍 like: one tap -> record + thank-you (no note needed).
+        like.addEventListener('click', async () => {
+            like.disabled = true;
+            dislike.disabled = true;
+            await this.postFeedback(metricId, 'like');
+            showThanks();
+        });
+
+        // 👎 dislike: reveal the note + Submit (the correction flow).
+        dislike.addEventListener('click', () => {
+            const open = dislike.getAttribute('aria-pressed') === 'true';
+            dislike.setAttribute('aria-pressed', String(!open));
             form.hidden = open;
             if (!open) note.focus();
         });
+
+        const doSubmit = async () => {
+            submit.disabled = true;
+            note.disabled = true;
+            await this.postFeedback(metricId, 'dislike', note.value.trim());
+            showThanks();
+        };
         submit.addEventListener('click', doSubmit);
         note.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') { e.preventDefault(); doSubmit(); }
         });
 
-        wrap.append(btn, form);
+        const buttons = document.createElement('div');
+        buttons.className = 'chat-feedback-buttons';
+        buttons.append(like, dislike);
+        wrap.append(buttons, form);
         return wrap;
     }
 
-    async postCorrection(metricId, noteText) {
+    async postFeedback(metricId, kind, noteText) {
         try {
-            await fetch(`${API_BASE_URL}/assistant/turns/${metricId}/correction`, {
+            await fetch(`${API_BASE_URL}/assistant/turns/${metricId}/feedback`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: withLocaleHeaders({ 'Content-Type': 'application/json' }),
-                body: JSON.stringify({ note: noteText || null }),
+                body: JSON.stringify({ kind, ...(noteText ? { note: noteText } : {}) }),
             });
         } catch (error) {
-            console.error('Assistant correction flag error:', error);
+            console.error('Assistant feedback error:', error);
         }
     }
 

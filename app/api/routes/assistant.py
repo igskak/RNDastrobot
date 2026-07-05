@@ -42,6 +42,7 @@ from app.services.assistant_log_service import (
     latest_user_message,
     list_conversations,
     log_turn,
+    set_turn_feedback,
 )
 from app.services.openai_service import is_openai_configured, transcribe_audio
 from app.services.transit_service import TransitService
@@ -600,6 +601,38 @@ def flag_correction(
     flagged = flag_turn_correction(
         db, astrologer_id=auth.astrologer.id, metric_id=metric_id, note=body.note)
     if not flagged:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Turn not found")
+    return None
+
+
+class FeedbackRequest(BaseModel):
+    kind: str = Field(..., description="'like' or 'dislike'.")
+    note: Optional[str] = Field(None, max_length=2000, description="Optional note (dislike).")
+
+    @field_validator('kind')
+    @classmethod
+    def _validate_kind(cls, v: str) -> str:
+        if v not in ('like', 'dislike'):
+            raise ValueError("kind must be 'like' or 'dislike'")
+        return v
+
+
+@router.post(
+    "/turns/{metric_id}/feedback",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Record like/dislike on an assistant turn (beta signal)",
+)
+def record_feedback(
+    metric_id: int,
+    body: FeedbackRequest,
+    auth: AuthContext = Depends(require_auth),
+    db: Session = Depends(get_db),
+):
+    assert_assistant_enabled(auth)
+    ok = set_turn_feedback(
+        db, astrologer_id=auth.astrologer.id, metric_id=metric_id,
+        kind=body.kind, note=body.note)
+    if not ok:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Turn not found")
     return None
 

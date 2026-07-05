@@ -968,7 +968,9 @@
         "correctionNote": "Що було не так? (необов’язково)",
         "provenanceSummaryOne": "джерело — дані · 1 інструмент ✓",
         "correctionSubmit": "Надіслати",
-        "correctionThanks": "Дякуємо за відгук — ми його врахуємо."
+        "correctionThanks": "Дякуємо за відгук — ми його врахуємо.",
+        "feedbackLike": "Позначити відповідь корисною",
+        "feedbackDislike": "Позначити відповідь для виправлення"
       },
       "edit": {
         "errors": {
