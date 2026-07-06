@@ -132,6 +132,63 @@
     min-width: 0;
 }
 
+/* ── Profile action menu (edit / delete card) ───────────────────────────── */
+.profile-actions-menu {
+    position: relative;
+    display: inline-flex;
+}
+
+.profile-actions-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.profile-actions-dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    min-width: 168px;
+    background: #fff;
+    border: 1px solid rgba(30, 58, 95, 0.1);
+    border-radius: 10px;
+    box-shadow: 0 12px 30px rgba(18, 28, 45, 0.12);
+    overflow: hidden;
+    z-index: 30;
+}
+
+.profile-actions-dropdown.open {
+    display: block;
+}
+
+.profile-actions-dropdown .action-item {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    border: 0;
+    background: transparent;
+    color: var(--text-secondary);
+    text-align: left;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+}
+
+.profile-actions-dropdown .action-item:hover {
+    background: rgba(249, 247, 242, 0.92);
+}
+
+.profile-actions-dropdown .action-item.danger {
+    color: var(--error);
+}
+
+.profile-actions-dropdown .action-item.danger.confirming {
+    background: var(--error);
+    color: #fff;
+}
+
 /* ── Buttons (shared with clients page) ─────────────────────────────────── */
 
 .btn-new,

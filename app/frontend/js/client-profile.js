@@ -192,6 +192,11 @@ function cacheElements() {
     refs.openChartBtn   = document.getElementById('openChartBtn');
     refs.startCallBtn   = document.getElementById('startCallBtn');
     refs.editClientBtn  = document.getElementById('editClientBtn');
+    refs.profileActionsMenu     = document.getElementById('profileActionsMenu');
+    refs.profileActionsBtn      = document.getElementById('profileActionsBtn');
+    refs.profileActionsDropdown = document.getElementById('profileActionsDropdown');
+    refs.profileEditAction      = document.getElementById('profileEditAction');
+    refs.profileDeleteAction    = document.getElementById('profileDeleteAction');
 
     // Sections
     refs.profileContactList  = document.getElementById('profileContactList');
@@ -299,6 +304,22 @@ function bindPageEvents() {
         startCallSession();
     });
     refs.editClientBtn?.addEventListener('click', () => openEditClientDialog(userId));
+
+    refs.profileActionsBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleProfileActionsMenu();
+    });
+    refs.profileEditAction?.addEventListener('click', () => {
+        closeProfileActionsMenu();
+        openEditClientDialog(userId);
+    });
+    refs.profileDeleteAction?.addEventListener('click', () => deleteCard(refs.profileDeleteAction));
+    document.addEventListener('click', (e) => {
+        if (!refs.profileActionsMenu?.contains(e.target)) closeProfileActionsMenu();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeProfileActionsMenu();
+    });
     refs.logSessionBtn?.addEventListener('click', () => {
         if (!planCan('consultations')) {
             openPlanUpgrade('consultations');
@@ -1431,6 +1452,63 @@ async function deleteRelatedPerson(relatedUserId) {
         await loadProfile();
     } catch (err) {
         showToast(t('common.errorWithMessage', { message: err.message }), 'error');
+    }
+}
+
+/* ─── Profile action menu (edit / delete card) ───────────────────────────── */
+
+function toggleProfileActionsMenu() {
+    const open = refs.profileActionsDropdown?.classList.toggle('open');
+    refs.profileActionsBtn?.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function closeProfileActionsMenu() {
+    if (!refs.profileActionsDropdown?.classList.contains('open')) return;
+    refs.profileActionsDropdown.classList.remove('open');
+    refs.profileActionsBtn?.setAttribute('aria-expanded', 'false');
+    if (refs.profileDeleteAction) {
+        refs.profileDeleteAction.dataset.confirming = 'false';
+        refs.profileDeleteAction.classList.remove('confirming');
+        refs.profileDeleteAction.textContent = t('page.clients.actions.delete');
+    }
+}
+
+async function deleteCard(button) {
+    if (!userId || !button) return;
+
+    // Two-step confirm inside the menu, matching the clients list pattern.
+    if (button.dataset.confirming !== 'true') {
+        button.dataset.confirming = 'true';
+        button.classList.add('confirming');
+        button.textContent = t('page.clients.actions.confirmDelete');
+        showToast(t('page.clients.messages.confirmDeleteHint'), 'warning');
+        setTimeout(() => {
+            if (button.dataset.confirming !== 'true') return;
+            button.dataset.confirming = 'false';
+            button.classList.remove('confirming');
+            button.textContent = t('page.clients.actions.delete');
+        }, 4000);
+        return;
+    }
+
+    button.disabled = true;
+    try {
+        const res = await apiFetch(`${API_BASE}/charts/${encodeURIComponent(userId)}`, { method: 'DELETE' });
+        if (!res.ok) {
+            let message = t('page.clients.errors.deleteFailed');
+            try {
+                const payload = await res.json();
+                if (payload?.message?.trim()) message = payload.message;
+                else if (payload?.detail?.trim()) message = payload.detail;
+            } catch (_) { /* non-json response */ }
+            throw new Error(message);
+        }
+        showToast(t('page.clients.messages.deleted'), 'success');
+        window.location.href = '/';
+    } catch (err) {
+        button.disabled = false;
+        closeProfileActionsMenu();
+        showToast(err.message || t('page.clients.errors.deleteFailed'), 'error');
     }
 }
 
