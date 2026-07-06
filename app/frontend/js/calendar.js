@@ -251,6 +251,16 @@ function bindRefs() {
 }
 
 function bindEvents() {
+    // Back arrow is navigation ("previous page"), not "always home". Resolve from
+    // the referrer / navigation breadcrumb, excluding a self-referencing calendar URL.
+    const backLink = document.querySelector('.calendar-back');
+    if (backLink) {
+        backLink.href = window.AstroAPI?.resolveBackUrl?.({
+            excludePattern: /\/calendar(\.html)?(\?|#|$)/,
+            fallback: '/',
+        }) || '/';
+    }
+
     refs.logoutBtn?.addEventListener('click', async () => {
         await window.AstroAPI?.logout?.();
         window.location.href = '/login.html';

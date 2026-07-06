@@ -32,6 +32,33 @@
     gap: 10px;
 }
 
+.calendar-back {
+    align-self: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(30, 58, 95, 0.12);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.calendar-back:hover {
+    background: rgba(240, 237, 228, 0.92);
+    border-color: rgba(30, 58, 95, 0.2);
+    color: var(--text-primary);
+}
+
+.calendar-back:focus-visible {
+    outline: 3px solid rgba(30, 58, 95, 0.14);
+    outline-offset: 2px;
+}
+
 .logo {
     font-family: var(--font-display);
     font-size: 24px;

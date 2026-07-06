@@ -932,6 +932,35 @@
         return `${window.location.pathname}${window.location.search || ''}${window.location.hash || ''}` || '/';
     }
 
+    // Resolve a "back to the previous page" URL for a navigation (not undo) button.
+    // Prefers a same-origin document.referrer, then the navigation-state breadcrumb,
+    // then a fallback. `excludePattern` (RegExp) rejects referrer/sourceUrl values that
+    // point back at the current page type (e.g. a work-screen chart switch or a
+    // self-referencing profile), so "back" never loops on the same screen.
+    function resolveBackUrl({ excludePattern = null, fallback = '/' } = {}) {
+        const canTest = excludePattern && typeof excludePattern.test === 'function';
+        const isExcluded = (value) => Boolean(value) && canTest && excludePattern.test(value);
+
+        let referrerUrl = '';
+        if (hasWindow) {
+            try {
+                const referrer = window.document?.referrer ? new URL(window.document.referrer) : null;
+                if (referrer && referrer.origin === window.location.origin) {
+                    const path = `${referrer.pathname}${referrer.search || ''}${referrer.hash || ''}`;
+                    if (!isExcluded(path)) referrerUrl = path;
+                }
+            } catch (_error) {
+                referrerUrl = '';
+            }
+        }
+        if (referrerUrl) return referrerUrl;
+
+        const sourceUrl = getNavigationState().sourceUrl;
+        if (sourceUrl && !isExcluded(sourceUrl)) return sourceUrl;
+
+        return fallback || '/';
+    }
+
     function isAccountSettingsHref(href) {
         if (!href || href.startsWith('#') || href.startsWith('javascript:')) return false;
         try {
@@ -1132,6 +1161,7 @@
         saveNavigationState,
         patchNavigationState,
         clearNavigationState,
+        resolveBackUrl,
         saveAccountSettingsReturnUrl,
         getAccountSettingsReturnUrl,
         buildClientProfileUrl,

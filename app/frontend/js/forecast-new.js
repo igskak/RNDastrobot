@@ -455,7 +455,19 @@
 
     function getForecastBackUrl() {
         const navState = getForecastNavigationState();
-        return navState.sourceUrl || '/';
+        // The back button is navigation, not undo: it must return to the page the
+        // user entered the work screen from (clients / profile), never to a
+        // previously viewed chart. If sourceUrl was clobbered to a forecast-new
+        // URL by an in-workspace chart switch, ignore it and fall back to the
+        // client's profile (if known), then home.
+        const sourceUrl = navState.sourceUrl;
+        if (sourceUrl && !/\/forecast-new(\.html)?(\?|#|$)/.test(sourceUrl)) {
+            return sourceUrl;
+        }
+        if (state.userId) {
+            return `/client/${encodeURIComponent(String(state.userId))}`;
+        }
+        return '/';
     }
 
     function navigateFromForecast(targetUrl) {
@@ -7709,9 +7721,11 @@
                 : resp;
             window.AstroAPI?.saveChartToSession?.(resp);
             window.AstroAPI?.saveFormData?.(window.AstroAPI.chartToFormData?.(resp));
-            window.AstroAPI?.saveNavigationState?.({
-                sourceView: 'forecast-new',
-                sourceUrl: `/forecast-new.html${window.location.search || ''}`,
+            // Staying on the work screen (reload with a new natal): keep the origin
+            // sourceUrl so the back button still points at the entry page, not this
+            // chart. Only refresh the current-chart identity.
+            window.AstroAPI?.patchNavigationState?.({
+                currentView: 'forecast-new',
                 clientUserId: String(state.userId),
                 partnerUserId: null,
             });
