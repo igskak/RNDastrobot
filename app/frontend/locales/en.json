@@ -881,8 +881,8 @@
         "quadrantsTitle": "Quadrants",
         "succedent": "Succedent",
         "tabs": {
-          "house": "By house",
-          "sign": "By sign",
+          "house": "By houses",
+          "sign": "By signs",
           "title": "Balance type"
         },
         "upper": "Upper",
@@ -2214,8 +2214,8 @@
         "quadrants": "Quadrants:",
         "hemisphere": "Hemisphere:",
         "houseGroups": "House groups:",
-        "sign": "By sign",
-        "house": "By house",
+        "sign": "By signs",
+        "house": "By houses",
         "brahma": "Brahma",
         "vishnu": "Vishnu",
         "shiva": "Shiva",
