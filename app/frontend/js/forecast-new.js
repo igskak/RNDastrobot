@@ -4227,9 +4227,14 @@
     }
 
     function syncRelationshipSwitch() {
+        // Показываем переключатель только при реальном relationship-контексте:
+        // активный слой синастрии или режим композита. НЕ опираемся на scratch
+        // (state.synastryPartnerId/synastryManual) — он «прилипает» от прошлого
+        // выбора партнёра и не сбрасывается при переходе на соляр/транзит, из-за
+        // чего переключатель ложно всплывал на соляре (пропадал после захода в
+        // синастрию и обратно, когда scratch пере-синхронизировался со слоем).
         const hasRelationshipContext = hasActiveMethod('synastry_partner')
-            || state.singleChartMode === 'composite'
-            || hasUsableSynastryPartner();
+            || state.singleChartMode === 'composite';
         refs.forecastNewRelationshipSwitch?.classList.toggle('hidden', !hasRelationshipContext);
         const compositeActive = state.singleChartMode === 'composite';
         refs.forecastNewRelationshipSynastryBtn?.classList.toggle('is-active', !compositeActive);
