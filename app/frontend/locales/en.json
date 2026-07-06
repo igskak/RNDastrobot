@@ -1379,6 +1379,7 @@
       },
       "detail": {
         "openChart": "Open chart",
+        "actions": "Actions",
         "logSession": "Add session note",
         "startingCall": "Starting...",
         "callStartFailed": "Failed to create call session",

@@ -1386,6 +1386,7 @@
       },
       "detail": {
         "openChart": "Відкрити карту",
+        "actions": "Дії",
         "logSession": "Додати запис зустрічі",
         "startingCall": "Запускаємо...",
         "callStartFailed": "Не вдалося створити дзвінок",

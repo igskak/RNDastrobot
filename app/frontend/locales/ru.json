@@ -1379,6 +1379,7 @@
       },
       "detail": {
         "openChart": "Открыть карту",
+        "actions": "Действия",
         "logSession": "Добавить запись встречи",
         "startingCall": "Запускаем...",
         "callStartFailed": "Не удалось создать звонок",
