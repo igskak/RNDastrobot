@@ -138,11 +138,22 @@ def migration_status() -> list[tuple[str, str]]:
 
 
 def apply_all_pending() -> bool:
-    ok = True
+    """Apply every pending migration in filename order, stopping on the first
+    failure so a bad migration aborts the deploy instead of applying later ones
+    on top of a half-migrated schema.
+
+    Safe as a deploy step ONLY once the tracker reflects reality: historical
+    migrations applied before the ``schema_migrations`` table existed must be
+    baselined (recorded as applied) first, or they'll be reported pending and
+    replayed. See README / the ``migration_status`` note.
+    """
     for filename, state in migration_status():
-        if state == "pending":
-            ok = apply_migration(filename) and ok
-    return ok
+        if state != "pending":
+            continue
+        if not apply_migration(filename):
+            logger.error("Stopping: migration %s failed; later migrations skipped", filename)
+            return False
+    return True
 
 
 def main():

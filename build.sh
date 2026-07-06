@@ -10,6 +10,15 @@ echo "📦 Installing Python dependencies..."
 pip install --upgrade pip
 pip install -r app/requirements.txt
 
+# Apply any pending database migrations before serving the new code, so schema
+# and code can't drift (this is why the assistant feedback UI silently broke:
+# model shipped the `feedback` column but migration 050 was never applied).
+# Only migrations absent from the schema_migrations tracker run; the tracker was
+# baselined to the live DB, so pre-tracker historical migrations aren't replayed.
+# errexit above means a failed migration aborts the deploy instead of drifting.
+echo "🗄️  Applying pending database migrations..."
+PYTHONPATH="$(pwd)" python -m app.database.apply_migration --all
+
 # Install frontend build dependencies and regenerate versioned bundles/HTML markers
 echo "🧰 Installing frontend dependencies..."
 npm --prefix app ci

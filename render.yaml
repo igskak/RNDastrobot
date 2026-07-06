@@ -6,6 +6,10 @@ services:
     plan: free
     region: frankfurt
     branch: main
+    # build.sh applies pending DB migrations (see the migration step there) so
+    # schema and code can't drift. When this service moves off the free plan,
+    # prefer moving that step to a paid-only `preDeployCommand:` here — it runs
+    # after build, just before the new version serves, which is the cleaner phase.
     buildCommand: "./build.sh"
     startCommand: "./start.sh"
     envVars:
