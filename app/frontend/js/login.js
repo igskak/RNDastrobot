@@ -1096,6 +1096,42 @@
             render();
         }
 
+        // Best-effort finalization after the session cookie is already set.
+        // Every step is guarded: the login has succeeded server-side, so a
+        // failure here must never block the caller's redirect.
+        async function finalizeGoogleCallback(me) {
+            try {
+                await waitForBackendSession();
+            } catch (_error) {
+                // /auth/me not confirming yet (blocked/slow fetch, extension).
+                // The cookie is set regardless; navigate and let the destination
+                // route resolve the session.
+            }
+            try {
+                await clearSupabaseOAuthSession();
+            } catch (_error) { /* leaving the local Supabase session is harmless */ }
+            if (historyRef?.replaceState) {
+                try {
+                    historyRef.replaceState({}, documentRef?.title || '', '/login.html');
+                } catch (_error) { /* history may be unavailable — ignore */ }
+            }
+            // Identify on the callback page — the same PostHog instance that
+            // held the anonymous, gclid-tagged session — before redirecting,
+            // so ad attribution and the account merge into one person.
+            try {
+                if (me && typeof global.AstroAnalytics?.identify === 'function') {
+                    global.AstroAnalytics.identify(me);
+                }
+                if (me && me.is_new_user && typeof global.AstroAnalytics?.signup === 'function') {
+                    // First Google sign-in == registration. The backend is
+                    // authoritative on new-vs-returning; dedupe by id as a guard.
+                    global.AstroAnalytics.signup('google', {}, 'id:' + me.id);
+                } else if (typeof global.AstroAnalytics?.track === 'function') {
+                    global.AstroAnalytics.track('login', { method: 'google' });
+                }
+            } catch (_error) { /* analytics must never block the redirect */ }
+        }
+
         async function exchangeSupabaseSessionIfNeeded() {
             const route = parseAuthRoute(locationRef?.search || '');
             if (!route.oauthCallback || !state.supabaseClient) return;
@@ -1114,25 +1150,16 @@
                 if (!response.ok) {
                     throw new Error(await readErrorMessage(response));
                 }
+                // A 2xx here means the backend already issued the session cookie
+                // (POST /auth/google → issue_session). From this point the login
+                // has SUCCEEDED; nothing below is allowed to strand the user back
+                // on the login page. The session-readiness poll, Supabase cleanup
+                // and analytics are all best-effort — a failure in any of them
+                // (blocked fetch, extension, transient /auth/me hiccup) must still
+                // let the redirect fire, or the user sits on /login.html with a
+                // perfectly valid session. See finalizeGoogleCallback below.
                 const me = await response.json().catch(() => null);
-                await waitForBackendSession();
-                await clearSupabaseOAuthSession();
-                if (historyRef?.replaceState) {
-                    historyRef.replaceState({}, documentRef?.title || '', '/login.html');
-                }
-                // Identify on the callback page — the same PostHog instance that
-                // held the anonymous, gclid-tagged session — before redirecting,
-                // so ad attribution and the account merge into one person.
-                if (me && typeof global.AstroAnalytics?.identify === 'function') {
-                    global.AstroAnalytics.identify(me);
-                }
-                if (me && me.is_new_user && typeof global.AstroAnalytics?.signup === 'function') {
-                    // First Google sign-in == registration. The backend is
-                    // authoritative on new-vs-returning; dedupe by id as a guard.
-                    global.AstroAnalytics.signup('google', {}, 'id:' + me.id);
-                } else if (typeof global.AstroAnalytics?.track === 'function') {
-                    global.AstroAnalytics.track('login', { method: 'google' });
-                }
+                await finalizeGoogleCallback(me);
                 redirect(getPostAuthRedirect(route));
             } catch (error) {
                 setStatus(mapAuthErrorToKey('google', error.message), 'error');

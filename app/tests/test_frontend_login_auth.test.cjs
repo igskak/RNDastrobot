@@ -46,7 +46,7 @@ test('createAuthUiModel exposes key auth states', () => {
 });
 
 test('post-auth redirect defaults to activation and rejects unsafe next targets', () => {
-    assert.equal(AstroLogin.getPostAuthRedirect({}), '/new');
+    assert.equal(AstroLogin.getPostAuthRedirect({}), '/');
     assert.equal(AstroLogin.getPostAuthRedirect({ next: '/clients?tab=charts' }), '/clients?tab=charts');
     assert.equal(AstroLogin.normalizeLocalRedirect('/login.html?next=/clients'), '');
     assert.equal(AstroLogin.normalizeLocalRedirect('https://evil.example/'), '');
@@ -198,7 +198,7 @@ test('authenticated users are redirected away from register mode', async () => {
 
     await app.init();
 
-    assert.equal(redirectedTo, '/new');
+    assert.equal(redirectedTo, '/');
 
     delete global.FrontendI18n;
 });
@@ -319,7 +319,7 @@ test('google oauth callback retries session lookup before failing', async () => 
     assert.deepEqual(waits, [300]);
     assert.deepEqual(googlePayload, { access_token: 'google-access-token' });
     assert.deepEqual(signOutCalls, [{ scope: 'local' }]);
-    assert.equal(redirectedTo, '/new');
+    assert.equal(redirectedTo, '/');
 
     delete global.FrontendI18n;
 });
@@ -404,7 +404,7 @@ test('google oauth callback exchanges auth code before polling session', async (
     assert.equal(authChecks, 2);
     assert.deepEqual(waits, [300]);
     assert.deepEqual(googlePayload, { access_token: 'google-access-token' });
-    assert.equal(redirectedTo, '/new');
+    assert.equal(redirectedTo, '/');
 
     delete global.FrontendI18n;
 });
@@ -485,7 +485,86 @@ test('google oauth callback tolerates slower supabase session hydration', async 
     assert.equal(authChecks, 2);
     assert.equal(waits.filter((ms) => ms === 300).length, 10);
     assert.deepEqual(googlePayload, { access_token: 'google-access-token' });
-    assert.equal(redirectedTo, '/new');
+    assert.equal(redirectedTo, '/');
+
+    delete global.FrontendI18n;
+});
+
+test('google oauth callback redirects even when the session-readiness poll never confirms', async () => {
+    // Regression: POST /auth/google succeeding means the backend already issued
+    // the session cookie. If the follow-up /auth/me poll never confirms (blocked
+    // fetch, extension, transient hiccup — reproducible outside incognito), the
+    // user must still be sent into the app instead of being stranded on the
+    // login page with a perfectly valid session.
+    await installLocale('en');
+
+    let redirectedTo = null;
+    let authChecks = 0;
+    let googlePayload = null;
+    const waits = [];
+
+    const app = AstroLogin.createAuthApp({
+        document: {
+            title: 'Login',
+            body: { dataset: {} },
+            getElementById() { return null; },
+            querySelector() { return null; },
+            querySelectorAll() { return []; },
+            addEventListener() {},
+        },
+        history: {
+            replaceState() {},
+        },
+        location: {
+            search: '?oauth=callback',
+        },
+        fetchFn: async (url, init = {}) => {
+            if (String(url).endsWith('/auth/frontend-config')) {
+                return {
+                    ok: true,
+                    json: async () => ({
+                        supabase_url: 'https://example.supabase.co',
+                        supabase_anon_key: 'anon-key',
+                    }),
+                };
+            }
+            if (String(url).endsWith('/auth/google')) {
+                googlePayload = JSON.parse(init.body);
+                return {
+                    ok: true,
+                    json: async () => ({ email: 'astro@example.com' }),
+                };
+            }
+            throw new Error(`Unexpected fetch: ${url}`);
+        },
+        supabaseFactory: () => ({
+            auth: {
+                getSession: async () => ({
+                    data: { session: { access_token: 'google-access-token' } },
+                    error: null,
+                }),
+                signOut: async () => {},
+            },
+        }),
+        // /auth/me never confirms the session on the callback page.
+        getCurrentAstrologer: async () => {
+            authChecks += 1;
+            return null;
+        },
+        wait: async (ms) => {
+            waits.push(ms);
+        },
+        redirect: (href) => {
+            redirectedTo = href;
+        },
+    });
+
+    await app.init();
+
+    // The poll was attempted and exhausted, but the redirect still fired.
+    assert.ok(authChecks > 1);
+    assert.deepEqual(googlePayload, { access_token: 'google-access-token' });
+    assert.equal(redirectedTo, '/');
 
     delete global.FrontendI18n;
 });
