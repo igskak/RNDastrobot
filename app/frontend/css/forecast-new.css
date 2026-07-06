@@ -679,11 +679,15 @@
     padding: 0;
     border-radius: 6px;
     vertical-align: middle;
+    cursor: ns-resize;
+    user-select: none;
+    touch-action: pan-x;
 }
 
 .forecast-new-time-stepper-segment:hover,
 .forecast-new-time-stepper-segment:focus-within,
-.forecast-new-time-stepper-segment:focus-visible {
+.forecast-new-time-stepper-segment:focus-visible,
+.forecast-new-time-stepper-segment.is-spinning {
     background: rgba(30, 58, 95, 0.06);
 }
 

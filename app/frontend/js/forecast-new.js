@@ -74,6 +74,12 @@
         { key: 'tenSecond', label: '10с', title: 'Десятки секунд', unit: 'second', amount: 10 },
         { key: 'second', label: 'Сек', title: 'Секунды', unit: 'second', amount: 1 },
     ];
+    const TIME_STEPPER_SEGMENT_BY_KEY = new Map(TIME_STEPPER_SEGMENTS.map((segment) => [segment.key, segment]));
+    const TIME_STEPPER_WHEEL_DELTA_THRESHOLD = 48;
+    const TIME_STEPPER_WHEEL_MAX_STEPS = 3;
+    const TIME_STEPPER_SWIPE_STEP_PX = 22;
+    const TIME_STEPPER_SWIPE_AXIS_BIAS_PX = 6;
+    const TIME_STEPPER_WHEEL_DELTAS = new WeakMap();
     const CUSTOM_STEP_UNITS = [
         { value: 'second', label: 'секунд' },
         { value: 'minute', label: 'минут' },
@@ -827,7 +833,7 @@
             }
             const button = event.target.closest('[data-time-step-segment][data-time-step-direction]');
             if (!button) return;
-            const segment = TIME_STEPPER_SEGMENTS.find((item) => item.key === button.dataset.timeStepSegment);
+            const segment = TIME_STEPPER_SEGMENT_BY_KEY.get(button.dataset.timeStepSegment);
             if (!segment) return;
             stepSelectedDateTimeSegment(segment, Number(button.dataset.timeStepDirection));
         });
@@ -869,7 +875,7 @@
             const direction = directionByKey[event.key];
             if (!direction) return;
 
-            const segment = TIME_STEPPER_SEGMENTS.find((item) => item.key === segmentEl.dataset.timeStepKey);
+            const segment = TIME_STEPPER_SEGMENT_BY_KEY.get(segmentEl.dataset.timeStepKey);
             if (!segment) return;
             event.preventDefault();
             stepSelectedDateTimeSegment(segment, direction);
@@ -885,6 +891,7 @@
             if (!(event.target instanceof Element) || !event.target.closest('[data-custom-step-input]')) return;
             updateCustomStepFromControls();
         });
+        bindTimeStepperSpinInput(refs.forecastNewTimeStepper, stepSelectedDateTimeSegment);
         refs.prognosticMomentToggle?.addEventListener('click', (event) => {
             event.stopPropagation();
             toggleMomentEditor();
@@ -925,7 +932,7 @@
             }
             const button = event.target.closest('[data-time-step-segment][data-time-step-direction]');
             if (!button) return;
-            const segment = TIME_STEPPER_SEGMENTS.find((item) => item.key === button.dataset.timeStepSegment);
+            const segment = TIME_STEPPER_SEGMENT_BY_KEY.get(button.dataset.timeStepSegment);
             if (!segment) return;
             stepNatalDateTimeSegment(segment, Number(button.dataset.timeStepDirection));
         });
@@ -961,7 +968,7 @@
             const directionByKey = { ArrowUp: 1, ArrowDown: -1, PageUp: 1, PageDown: -1 };
             const direction = directionByKey[event.key];
             if (!direction) return;
-            const segment = TIME_STEPPER_SEGMENTS.find((item) => item.key === segmentEl.dataset.timeStepKey);
+            const segment = TIME_STEPPER_SEGMENT_BY_KEY.get(segmentEl.dataset.timeStepKey);
             if (!segment) return;
             event.preventDefault();
             stepNatalDateTimeSegment(segment, direction);
@@ -977,6 +984,7 @@
             if (!(event.target instanceof Element) || !event.target.closest('[data-custom-step-input]')) return;
             updateNatalCustomStepFromControls();
         });
+        bindTimeStepperSpinInput(refs.forecastNewNatalTimeStepper, stepNatalDateTimeSegment);
 
         ['natalTimezoneInput', 'natalLocationInput', 'natalLatitudeInput', 'natalLongitudeInput'].forEach((id) => {
             refs[id]?.addEventListener('change', async () => {
@@ -2415,6 +2423,135 @@
         segments[nextIndex]?.focus();
     }
 
+    function focusTimeStepperSegment(segmentEl) {
+        if (!segmentEl || typeof segmentEl.focus !== 'function') return;
+        try {
+            segmentEl.focus({ preventScroll: true });
+        } catch (_) {
+            segmentEl.focus();
+        }
+    }
+
+    function getTimeStepperSpinTarget(root, target) {
+        const targetEl = target instanceof Element ? target : target?.parentElement;
+        if (!root || !(targetEl instanceof Element)) return null;
+        if (targetEl.closest('.forecast-new-custom-step')) return null;
+        const segmentEl = targetEl.closest('[data-time-step-key]');
+        if (!segmentEl || !root.contains(segmentEl)) return null;
+        const segment = TIME_STEPPER_SEGMENT_BY_KEY.get(segmentEl.dataset.timeStepKey);
+        return segment ? { segmentEl, segment } : null;
+    }
+
+    function normalizeTimeStepperWheelDelta(event) {
+        const modeScale = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 120 : 1;
+        return event.deltaY * modeScale;
+    }
+
+    function stepTimeStepperSpinSegment(segmentEl, segment, stepHandler, direction, stepCount = 1) {
+        const count = Math.max(1, Math.trunc(Math.abs(Number(stepCount)) || 1));
+        focusTimeStepperSegment(segmentEl);
+        stepHandler(segment, direction, count);
+    }
+
+    function bindTimeStepperSpinInput(root, stepHandler) {
+        if (!root || typeof stepHandler !== 'function') return;
+        let touchState = null;
+
+        const clearTouchState = () => {
+            touchState?.segmentEl?.classList.remove('is-spinning');
+            touchState = null;
+        };
+
+        root.addEventListener('wheel', (event) => {
+            const target = getTimeStepperSpinTarget(root, event.target);
+            if (!target) return;
+            if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+            event.preventDefault();
+            event.stopPropagation();
+
+            const previousDelta = TIME_STEPPER_WHEEL_DELTAS.get(target.segmentEl) || 0;
+            const nextDelta = previousDelta + normalizeTimeStepperWheelDelta(event);
+            const rawSteps = Math.trunc(Math.abs(nextDelta) / TIME_STEPPER_WHEEL_DELTA_THRESHOLD);
+            if (!rawSteps) {
+                TIME_STEPPER_WHEEL_DELTAS.set(target.segmentEl, nextDelta);
+                return;
+            }
+
+            const sign = Math.sign(nextDelta);
+            const steps = Math.min(rawSteps, TIME_STEPPER_WHEEL_MAX_STEPS);
+            TIME_STEPPER_WHEEL_DELTAS.set(
+                target.segmentEl,
+                rawSteps > steps ? 0 : nextDelta - sign * steps * TIME_STEPPER_WHEEL_DELTA_THRESHOLD,
+            );
+            stepTimeStepperSpinSegment(target.segmentEl, target.segment, stepHandler, sign < 0 ? 1 : -1, steps);
+        }, { passive: false });
+
+        root.addEventListener('touchstart', (event) => {
+            if (event.touches.length !== 1) {
+                clearTouchState();
+                return;
+            }
+            const target = getTimeStepperSpinTarget(root, event.target);
+            if (!target) {
+                clearTouchState();
+                return;
+            }
+            const touch = event.touches[0];
+            touchState = {
+                ...target,
+                mode: 'pending',
+                startX: touch.clientX,
+                startY: touch.clientY,
+                lastY: touch.clientY,
+                accumulatedY: 0,
+            };
+        }, { passive: false });
+
+        root.addEventListener('touchmove', (event) => {
+            if (!touchState || event.touches.length !== 1) {
+                clearTouchState();
+                return;
+            }
+            const touch = event.touches[0];
+            if (touchState.mode === 'pending') {
+                const absX = Math.abs(touch.clientX - touchState.startX);
+                const absY = Math.abs(touch.clientY - touchState.startY);
+                if (Math.max(absX, absY) < TIME_STEPPER_SWIPE_STEP_PX) return;
+                if (absX > absY + TIME_STEPPER_SWIPE_AXIS_BIAS_PX) {
+                    touchState.mode = 'scroll';
+                    return;
+                }
+                if (absY <= absX + TIME_STEPPER_SWIPE_AXIS_BIAS_PX) return;
+                touchState.mode = 'spin';
+                touchState.lastY = touchState.startY;
+                touchState.accumulatedY = 0;
+                touchState.segmentEl.classList.add('is-spinning');
+                focusTimeStepperSegment(touchState.segmentEl);
+            }
+            if (touchState.mode !== 'spin') return;
+
+            event.preventDefault();
+            event.stopPropagation();
+            touchState.accumulatedY += touchState.lastY - touch.clientY;
+            touchState.lastY = touch.clientY;
+
+            const rawSteps = Math.trunc(Math.abs(touchState.accumulatedY) / TIME_STEPPER_SWIPE_STEP_PX);
+            if (!rawSteps) return;
+            const sign = Math.sign(touchState.accumulatedY);
+            const steps = Math.min(rawSteps, TIME_STEPPER_WHEEL_MAX_STEPS);
+            touchState.accumulatedY = rawSteps > steps
+                ? 0
+                : touchState.accumulatedY - sign * steps * TIME_STEPPER_SWIPE_STEP_PX;
+            stepTimeStepperSpinSegment(touchState.segmentEl, touchState.segment, stepHandler, sign > 0 ? 1 : -1, steps);
+        }, { passive: false });
+
+        root.addEventListener('touchend', (event) => {
+            if (touchState?.mode === 'spin') event.preventDefault();
+            clearTouchState();
+        }, { passive: false });
+        root.addEventListener('touchcancel', clearTouchState);
+    }
+
     function renderTimeStepper() {
         if (!refs.forecastNewTimeStepper) return;
         const values = getTimeStepperSegmentValues(getDisplayedMomentDateTime());
@@ -2608,9 +2745,10 @@
         }
     }
 
-    function stepNatalDateTimeSegment(segment, direction) {
+    function stepNatalDateTimeSegment(segment, direction, stepCount = 1) {
         const dir = direction >= 0 ? 1 : -1;
-        state.natalSelectedDateTime = addDateTimeUnit(state.natalSelectedDateTime, segment.unit, segment.amount * dir);
+        const count = Math.max(1, Math.trunc(Math.abs(Number(stepCount)) || 1));
+        state.natalSelectedDateTime = addDateTimeUnit(state.natalSelectedDateTime, segment.unit, segment.amount * dir * count);
         renderOrUpdateNatalTimeStepper();
         updateNatalMomentMeta();
         setNatalLightweightLoading(true);
@@ -3673,9 +3811,10 @@
         await loadDisplayedMomentLayers({ lightweight: true });
     }
 
-    function stepSelectedDateTimeSegment(segment, direction) {
+    function stepSelectedDateTimeSegment(segment, direction, stepCount = 1) {
         const dir = direction >= 0 ? 1 : -1;
-        applyDisplayedMomentDateTime(addDateTimeUnit(getDisplayedMomentDateTime(), segment.unit, segment.amount * dir));
+        const count = Math.max(1, Math.trunc(Math.abs(Number(stepCount)) || 1));
+        applyDisplayedMomentDateTime(addDateTimeUnit(getDisplayedMomentDateTime(), segment.unit, segment.amount * dir * count));
         state.lastStepperAction = { type: 'segment', segment, direction: dir };
         syncControlsFromState();
         updatePrognosticTimeMeta();

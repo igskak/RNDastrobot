@@ -74,6 +74,20 @@ ok(
     'solar right-panel uses the shared date/time stepper instead of a year-only stepper'
 );
 ok(
+    source.includes('function bindTimeStepperSpinInput(root, stepHandler)')
+        && source.includes("root.addEventListener('wheel', (event) => {")
+        && source.includes("root.addEventListener('touchmove', (event) => {")
+        && source.includes('TIME_STEPPER_WHEEL_DELTA_THRESHOLD')
+        && source.includes('TIME_STEPPER_SWIPE_STEP_PX'),
+    'date/time stepper digits support wheel and mobile swipe input'
+);
+ok(
+    forecastCss.includes('touch-action: pan-x;')
+        && forecastCss.includes('cursor: ns-resize;')
+        && forecastCss.includes('.forecast-new-time-stepper-segment.is-spinning'),
+    'date/time stepper segments expose a stable gesture surface'
+);
+ok(
     forecastCss.includes('.forecast-new-single-mode .forecast-new-header .forecast-new-header-actions')
         && /\.forecast-new-single-mode \.forecast-new-header \.forecast-new-header-actions\s*\{\s*margin-left: auto;\s*\}/.test(forecastCss),
     'single-wheel header actions stay aligned to the right when layer tabs are hidden'
