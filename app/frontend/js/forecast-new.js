@@ -677,9 +677,19 @@
         });
 
         refs.openClientProfileBtn?.addEventListener('click', () => {
-            if (!state.userId) return;
-            window.location.href = `/client/${encodeURIComponent(state.userId)}`;
+            goToClientProfile();
         });
+        if (refs.forecastNewTitle) {
+            refs.forecastNewTitle.addEventListener('click', () => {
+                goToClientProfile();
+            });
+            refs.forecastNewTitle.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    goToClientProfile();
+                }
+            });
+        }
         refs.forecastSavedChartsBtn?.addEventListener('click', (event) => {
             event.stopPropagation();
             window.AstroChartPicker?.open?.({
@@ -2273,11 +2283,27 @@
         });
     }
 
+    function goToClientProfile() {
+        if (!state.userId) return;
+        window.location.href = `/client/${encodeURIComponent(state.userId)}`;
+    }
+
     function updateHeaderInfo() {
         const birth = state.natalData?.birth_data || {};
         const name = [birth.first_name, birth.last_name].filter(Boolean).join(' ').trim();
         refs.forecastNewTitle.textContent = name;
         refs.forecastNewSubtitle.textContent = buildNatalHeaderSubtitle(birth);
+        const canOpenProfile = Boolean(state.userId);
+        refs.forecastNewTitle.classList.toggle('is-clickable', canOpenProfile);
+        if (canOpenProfile) {
+            refs.forecastNewTitle.setAttribute('role', 'link');
+            refs.forecastNewTitle.setAttribute('tabindex', '0');
+            refs.forecastNewTitle.setAttribute('title', t('page.clientProfile.viewProfile'));
+        } else {
+            refs.forecastNewTitle.removeAttribute('role');
+            refs.forecastNewTitle.removeAttribute('tabindex');
+            refs.forecastNewTitle.removeAttribute('title');
+        }
         updateNatalMomentMeta();
     }
 
