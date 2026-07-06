@@ -1291,6 +1291,16 @@
           "timezoneRequired": "Timezone is required"
         }
       },
+      "newProfile": {
+        "kicker": "New profile",
+        "title": "New profile",
+        "subtitle": "Add a person to your practice — birth details and contacts in one place.",
+        "submit": "Create profile",
+        "successToast": "Profile created",
+        "errors": {
+          "createFailed": "Failed to create profile"
+        }
+      },
       "noResults": "Nothing found yet",
       "noResultsHint": "Try a different name, place, tag, or sort order to find the profile you need.",
       "searchLabel": "Find a profile",
