@@ -151,6 +151,7 @@ function getNameCollator() {
 document.addEventListener('DOMContentLoaded', async () => {
     await waitForI18nReady();
     cacheElements();
+    configureProfileBackLink();
 
     if (!userId) {
         showError(t('page.clientProfile.errors.noId'));
@@ -176,6 +177,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     bindPageEvents();
     await loadProfile();
 });
+
+// The header back arrow is navigation ("previous page"), not "always home".
+// Resolve it from the referrer / navigation breadcrumb, excluding self-referencing
+// /client/... URLs so it never loops on another profile.
+function configureProfileBackLink() {
+    const backLink = document.querySelector('.profile-back');
+    if (!backLink) return;
+    backLink.href = window.AstroAPI?.resolveBackUrl?.({
+        excludePattern: /\/client\//,
+        fallback: '/',
+    }) || '/';
+}
 
 function cacheElements() {
     refs.toast           = document.getElementById('toast');
