@@ -35,6 +35,8 @@ const newChartState = {
 const editClientState = {
     autocompleteBound: false,
     isChartMode: false,
+    isCreateMode: false,
+    submitting: false,
     userId: null,
     loadedChartData: null,
     originalCoords: null,
@@ -1399,6 +1401,10 @@ function setEditDialogMode(isChartMode) {
     if (refs.editKicker) { refs.editKicker.setAttribute('data-i18n', kickerKey); refs.editKicker.textContent = t(kickerKey); }
     if (refs.editTitleEl) { refs.editTitleEl.setAttribute('data-i18n', titleKey); refs.editTitleEl.textContent = t(titleKey); }
     if (refs.editSubtitle) { refs.editSubtitle.setAttribute('data-i18n', subtitleKey); refs.editSubtitle.textContent = t(subtitleKey); }
+
+    // Reset submit label to the edit copy; create mode overrides it afterwards.
+    const submitText = refs.editSubmit?.querySelector('.btn-text');
+    if (submitText) { submitText.setAttribute('data-i18n', 'page.clients.edit.submit'); submitText.textContent = t('page.clients.edit.submit'); }
 }
 
 function personName(person) {
@@ -1525,6 +1531,52 @@ async function handleRenameChart(userId) {
     }
 }
 
+// Open the profile dialog in "create" mode — a fresh person + birth chart.
+// Reuses the edit dialog markup (name, birth data, place, timezone, contacts).
+function openNewClientDialog() {
+    if (!refs.editDialog) return;
+
+    refs.editForm?.reset();
+
+    editClientState.isCreateMode = true;
+    editClientState.userId = null;
+    editClientState.loadedChartData = null;
+    editClientState.originalCoords = null;
+    editClientState.selectedCoords = null;
+    editClientState.originalPlace = '';
+    editClientState.selectedPlaceLabel = '';
+
+    window.Timezones?.populate?.(refs.editTimezone);
+    refs.editTimezone.value = '';
+    refs.editTimezoneHint.textContent = '';
+    refs.editTimezoneHint.style.color = '';
+    refs.editError.classList.add('hidden');
+    refs.editError.textContent = '';
+    renderEditTagSuggestions();
+
+    setEditDialogMode(false);
+    applyCreateModeCopy();
+    renderEditPlaceHint('empty');
+    setEditClientSubmitting(false);
+
+    refs.editBackdrop.classList.remove('hidden');
+    refs.editDialog.classList.remove('hidden');
+    refs.editFirstName.focus();
+    document.body.style.overflow = 'hidden';
+}
+
+function applyCreateModeCopy() {
+    const apply = (el, key) => {
+        if (!el) return;
+        el.setAttribute('data-i18n', key);
+        el.textContent = t(key);
+    };
+    apply(refs.editKicker, 'page.clients.newProfile.kicker');
+    apply(refs.editTitleEl, 'page.clients.newProfile.title');
+    apply(refs.editSubtitle, 'page.clients.newProfile.subtitle');
+    apply(refs.editSubmit?.querySelector('.btn-text'), 'page.clients.newProfile.submit');
+}
+
 async function openEditChartDialog(userId) {
     if (!userId) return;
     try {
@@ -1595,6 +1647,7 @@ function closeEditClientDialog() {
     refs.editTimezoneHint.style.color = '';
     editClientState.userId = null;
     editClientState.loadedChartData = null;
+    editClientState.isCreateMode = false;
     setEditDialogMode(false);
     document.body.style.overflow = '';
 }
@@ -1724,7 +1777,17 @@ function renderEditPlaceHint(mode) {
 async function handleEditClientSubmit(event) {
     event.preventDefault();
 
+    // Guard against double submits (rapid double-click / Enter): a second
+    // click can already be queued before the button's disabled flag applies.
+    if (editClientState.submitting) return;
+
     if (!refs.editForm.reportValidity()) return;
+
+    if (editClientState.isCreateMode) {
+        await handleCreateClientSubmit();
+        return;
+    }
+
     if (!editClientState.userId) {
         refs.editError.textContent = t('page.clients.edit.errors.chartUnavailable');
         refs.editError.classList.remove('hidden');
@@ -1822,6 +1885,93 @@ async function handleEditClientSubmit(event) {
     } catch (error) {
         refs.editError.textContent = error.message || t('page.clients.edit.errors.saveFailed');
         refs.editError.classList.remove('hidden');
+    } finally {
+        setEditClientSubmitting(false);
+    }
+}
+
+// Create a new profile: a Person row (name + contacts) plus a linked birth
+// chart carrying the birth data. Both are needed so the profile shows up in
+// the people view (Person) and the chart library (User), correctly linked.
+async function handleCreateClientSubmit() {
+    const firstName = refs.editFirstName.value.trim();
+    const lastName = refs.editLastName.value.trim();
+    const place = refs.editPlaceInput.value.trim();
+    const date = AstroAPI.formatDate(refs.editDay.value, refs.editMonth.value, refs.editYear.value);
+    const time = AstroAPI.formatTime(refs.editHour.value, refs.editMinute.value);
+    const timezone = refs.editTimezone.value;
+    const tags = parseTagInput(refs.editTags?.value || '');
+    const notes = refs.editNotes?.value?.trim() || '';
+    const email = refs.editEmail?.value?.trim() || '';
+    const phone = refs.editPhone?.value?.trim() || '';
+    const messenger = refs.editMessenger?.value?.trim() || '';
+
+    const showError = (message) => {
+        refs.editError.textContent = message;
+        refs.editError.classList.remove('hidden');
+    };
+
+    if (!date) { showError(t('page.clients.newChart.errors.dateRequired')); return; }
+    if (!time) { showError(t('page.clients.newChart.errors.timeRequired')); return; }
+    if (!place) { showError(t('page.clients.newChart.errors.placeRequired')); return; }
+    if (!timezone) { showError(t('page.clients.newChart.errors.timezoneRequired')); return; }
+
+    const coords = resolveEditCoords(place);
+
+    refs.editError.classList.add('hidden');
+    refs.editError.textContent = '';
+    setEditClientSubmitting(true);
+
+    try {
+        const personResponse = await apiFetch(`${API_BASE}/persons`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                first_name: firstName,
+                last_name: lastName,
+                email,
+                phone,
+                messenger,
+                tags,
+                notes,
+            }),
+        });
+        if (!personResponse.ok) {
+            const detail = (await personResponse.json().catch(() => ({}))).detail;
+            throw new Error(detail || t('page.clients.newProfile.errors.createFailed'));
+        }
+        const person = await personResponse.json();
+
+        const chartResponse = await apiFetch(`${API_BASE}/charts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                date,
+                time,
+                timezone,
+                location_name: place,
+                latitude: coords?.lat ?? null,
+                longitude: coords?.lon ?? null,
+                first_name: firstName,
+                last_name: lastName,
+                tags,
+                notes,
+                person_id: person.person_id,
+                chart_kind: 'birth',
+            }),
+        });
+        if (!chartResponse.ok) {
+            // The person exists but its birth chart failed — surface it so the
+            // astrologer can retry the birth details via edit.
+            const detail = (await chartResponse.json().catch(() => ({}))).detail;
+            throw new Error(detail || t('page.clients.newProfile.errors.createFailed'));
+        }
+
+        closeEditClientDialog();
+        showToast(t('page.clients.newProfile.successToast'), 'success');
+        await loadClients();
+    } catch (error) {
+        showError(error.message || t('page.clients.newProfile.errors.createFailed'));
     } finally {
         setEditClientSubmitting(false);
     }
@@ -1937,6 +2087,12 @@ function normalizeLooseText(value) {
 }
 
 function setEditClientSubmitting(isSubmitting) {
+    editClientState.submitting = isSubmitting;
+
+    // Mute the whole dialog and float a blocking loader on top while the
+    // request is in flight, so nothing else in the form can be touched.
+    refs.editDialog?.classList.toggle('is-submitting', isSubmitting);
+
     if (!refs.editSubmit) return;
 
     refs.editSubmit.disabled = isSubmitting;
@@ -2858,7 +3014,7 @@ function handleNewItemClick() {
     if (state.libraryView === 'charts') {
         openNewChartDialog();
     } else {
-        window.location.href = '/new';
+        openNewClientDialog();
     }
 }
 

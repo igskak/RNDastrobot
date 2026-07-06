@@ -584,6 +584,40 @@ select:focus {
     display: none;
 }
 
+/* Blocking loader while a create/edit request is in flight. */
+.clients-dialog-loader {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 160;
+}
+
+.clients-dialog.is-submitting .clients-dialog-loader {
+    display: flex;
+}
+
+.clients-dialog.is-submitting .clients-dialog-card {
+    pointer-events: none;
+    opacity: 0.6;
+    filter: blur(1px);
+    transition: opacity 0.15s ease;
+}
+
+.clients-dialog-spinner {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 3px solid rgba(30, 58, 95, 0.16);
+    border-top-color: #1e3a5f;
+    animation: clients-dialog-spin 0.8s linear infinite;
+}
+
+@keyframes clients-dialog-spin {
+    to { transform: rotate(360deg); }
+}
+
 .clients-dialog-card {
     width: min(720px, 100%);
     max-height: min(88vh, 860px);
