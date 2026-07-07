@@ -99,6 +99,15 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             this.highlightExactAspects = true;
             this.showDeclinationAspects = false;
             this.declinationAspects = [];
+            this.fixedStarsData = null;
+            this.fixedStarsMode = 'none';
+            this.showFixedStarNames = false;
+            this.fixedStarDisplay = {
+                radius: OUTER_R + 5,
+                labelRadius: OUTER_R + 17,
+                dotRadius: 2.7,
+                hitRadius: 8,
+            };
             this.minimumRingCount = 1;
             this.alignSingleRingOuter = false;
             // W1 (Фаза W): маркеры углов ASC/MC/DSC/IC за кругом (паритет с ChartWheel).
@@ -195,6 +204,17 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                     ? options.declinationAspects.slice()
                     : [];
             }
+            if (Object.prototype.hasOwnProperty.call(options, 'fixedStarsData')) {
+                this.fixedStarsData = options.fixedStarsData || null;
+            }
+            if (Object.prototype.hasOwnProperty.call(options, 'fixedStarsMode')) {
+                this.fixedStarsMode = ['none', 'conjunctions', 'all'].includes(options.fixedStarsMode)
+                    ? options.fixedStarsMode
+                    : 'none';
+            }
+            if (Object.prototype.hasOwnProperty.call(options, 'showFixedStarNames')) {
+                this.showFixedStarNames = options.showFixedStarNames === true;
+            }
             if (Object.prototype.hasOwnProperty.call(options, 'minimumRingCount')) {
                 this.minimumRingCount = Math.max(1, Number(options.minimumRingCount) || 1);
             }
@@ -277,6 +297,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                 aspects: this.el('g', { id: 'prognostic-aspects' }),
                 bodies: this.el('g', { id: 'prognostic-bodies' }),
                 labels: this.el('g', { id: 'prognostic-labels' }),
+                stars: this.el('g', { id: 'prognostic-fixed-stars' }),
                 angles: this.el('g', { id: 'prognostic-angles' }),
             };
             Object.values(this.layers).forEach((layer) => fragment.appendChild(layer));
@@ -292,6 +313,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             this.drawAspects(rings);
             if (this.showDeclinationAspects) this.drawDeclinationAspects(rings);
             rings.forEach((ring) => this.drawBodies(ring));
+            this.drawFixedStars();
             this.drawAngleMarkers(rings);
             this.svg.replaceChildren(fragment);
             this.bindEvents();
@@ -676,6 +698,63 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                     }, degreeLabel));
                 }
                 this.layers.bodies.appendChild(group);
+            });
+        }
+
+        drawFixedStars() {
+            if (this.fixedStarsMode === 'none' || !this.layers.stars) return;
+            const stars = Array.isArray(this.fixedStarsData?.stars) ? this.fixedStarsData.stars : [];
+            if (!stars.length) return;
+
+            stars.forEach((star, index) => {
+                const longitude = Number(star?.longitude);
+                if (!Number.isFinite(longitude)) return;
+                const angle = this.longToAngle(longitude);
+                const point = this.polar(this.fixedStarDisplay.radius, angle);
+                const group = this.el('g', {
+                    class: 'fixed-star-group',
+                    'data-star-index': String(index),
+                    'data-star-name': String(star.name || ''),
+                });
+                group.appendChild(this.el('circle', {
+                    cx: point.x,
+                    cy: point.y,
+                    r: this.fixedStarDisplay.hitRadius,
+                    fill: 'transparent',
+                    class: 'fixed-star-hit',
+                }));
+                const magnitude = Number(star.magnitude);
+                const radius = Number.isFinite(magnitude)
+                    ? Math.max(2.1, Math.min(3.7, 3.5 - magnitude * 0.24))
+                    : this.fixedStarDisplay.dotRadius;
+                group.appendChild(this.el('circle', {
+                    cx: point.x,
+                    cy: point.y,
+                    r: radius.toFixed(2),
+                    fill: star.is_highlighted ? '#b45309' : '#374151',
+                    stroke: '#fffaf0',
+                    'stroke-width': 1.1,
+                    class: 'fixed-star-dot',
+                }));
+
+                if (this.showFixedStarNames) {
+                    const labelPoint = this.polar(this.fixedStarDisplay.labelRadius, angle);
+                    const relX = (labelPoint.x - C) / this.fixedStarDisplay.labelRadius;
+                    const anchor = Math.abs(relX) < 0.16 ? 'middle' : (relX > 0 ? 'start' : 'end');
+                    group.appendChild(this.el('text', {
+                        x: labelPoint.x + (anchor === 'start' ? 3 : anchor === 'end' ? -3 : 0),
+                        y: labelPoint.y + 3,
+                        'text-anchor': anchor,
+                        'font-size': '8.3',
+                        'font-weight': star.is_highlighted ? '700' : '500',
+                        fill: star.is_highlighted ? '#92400e' : '#374151',
+                        stroke: '#fffaf0',
+                        'stroke-width': '2.2',
+                        'paint-order': 'stroke',
+                        class: 'fixed-star-label',
+                    }, star.name || ''));
+                }
+                this.layers.stars.appendChild(group);
             });
         }
 
@@ -1477,6 +1556,12 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                 group.addEventListener('mousemove', (event) => this.onHouseCuspHover(event, true));
                 group.addEventListener('mouseleave', (event) => this.onHouseCuspHover(event, false));
             });
+
+            this.svg.querySelectorAll('.fixed-star-group').forEach((group) => {
+                group.addEventListener('mouseenter', (event) => this.onFixedStarHover(event, true));
+                group.addEventListener('mousemove', (event) => this.onFixedStarHover(event, true));
+                group.addEventListener('mouseleave', (event) => this.onFixedStarHover(event, false));
+            });
         }
 
         onPlanetHover(event, isEnter) {
@@ -1618,6 +1703,27 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             `, event);
         }
 
+        onFixedStarHover(event, isEnter) {
+            const group = event.currentTarget;
+            const dot = group?.querySelector?.('.fixed-star-dot');
+            if (!isEnter) {
+                if (dot) {
+                    dot.style.strokeWidth = '';
+                    dot.style.filter = '';
+                }
+                this.hideTooltip();
+                return;
+            }
+            const index = Number(group?.dataset?.starIndex);
+            const star = Array.isArray(this.fixedStarsData?.stars) ? this.fixedStarsData.stars[index] : null;
+            if (!star) return;
+            if (dot) {
+                dot.style.strokeWidth = '2';
+                dot.style.filter = 'drop-shadow(0 0 4px rgba(184, 147, 90, 0.58))';
+            }
+            this.showTooltip(this.getFixedStarTooltipHtml(star), event);
+        }
+
         setHoveredAspect(aspectKey) {
             this.clearHoveredAspect();
             if (!aspectKey) return;
@@ -1705,15 +1811,67 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             if (tooltip) tooltip.style.display = 'none';
         }
 
+        getFixedStarContactsForBody(bodyName, method = 'natal') {
+            if (method !== 'natal' || !bodyName) return [];
+            const normalizedName = this.normalizeAspectBodyName(bodyName);
+            return (this.fixedStarsData?.conjunctions || [])
+                .filter((contact) => this.normalizeAspectBodyName(contact?.object) === normalizedName)
+                .sort((a, b) => Number(a.orb || 0) - Number(b.orb || 0));
+        }
+
+        getFixedStarContactsForStar(starName) {
+            if (!starName) return [];
+            return (this.fixedStarsData?.conjunctions || [])
+                .filter((contact) => contact?.star === starName)
+                .sort((a, b) => Number(a.orb || 0) - Number(b.orb || 0));
+        }
+
+        getBodyFixedStarsLine(bodyName, method = 'natal') {
+            const contacts = this.getFixedStarContactsForBody(bodyName, method);
+            if (!contacts.length) return '';
+            const label = this.t('page.chart.tooltip.fixedStars');
+            const names = contacts.map((contact) => contact.star).filter(Boolean).join(', ');
+            return `<br>${this.escapeHtml(label && label !== 'page.chart.tooltip.fixedStars' ? label : 'Stars')}: ${this.escapeHtml(names)}`;
+        }
+
+        getFixedStarTooltipHtml(star) {
+            const position = star?.degree_in_sign_formatted && star?.sign
+                ? `${star.degree_in_sign_formatted} ${this.signName(star.sign)}`
+                : '';
+            const magnitude = star?.magnitude !== null && star?.magnitude !== undefined ? `m ${star.magnitude}` : '';
+            const nature = star?.nature || '';
+            const designation = star?.designation || '';
+            const contacts = this.getFixedStarContactsForStar(star?.name);
+            const contactLine = contacts.length
+                ? contacts.map((contact) => {
+                    const object = this.bodyName(contact.object);
+                    const objectPosition = contact.object_degree_in_sign_formatted && contact.object_sign
+                        ? `${contact.object_degree_in_sign_formatted} ${this.signName(contact.object_sign)}`
+                        : (contact.object_position || '');
+                    const orb = Number(contact.orb);
+                    const orbLabel = Number.isFinite(orb) ? `${orb.toFixed(2)}°` : '';
+                    return `${this.escapeHtml(object)} ${this.escapeHtml(objectPosition)}${orbLabel ? ` · ${this.escapeHtml(orbLabel)}` : ''}`.trim();
+                }).join('<br>')
+                : '';
+            return `
+                <strong>${this.escapeHtml(position || this.t('common.position'))}<br>${this.escapeHtml(star?.name || '')}</strong><br>
+                ${designation ? `${this.escapeHtml(designation)}<br>` : ''}
+                ${magnitude ? `${this.escapeHtml(magnitude)}<br>` : ''}
+                ${nature ? `${this.escapeHtml(nature)}<br>` : ''}
+                ${contactLine ? `<span class="fixed-star-tooltip-contact">${contactLine}</span>` : ''}
+            `;
+        }
+
         getPlanetTooltipHtml(body, method) {
             const symbol = Symbols?.planets?.[this.normalizeAspectBodyName(body.name)] || Symbols?.planets?.[body.name] || '';
             const house = body.house != null ? this.formatHouseLabel(body.house) : this.t('common.notAvailable');
             const methodLabel = this.methodLabel(method);
             const position = this.formatAstroCoordinate(body);
+            const fixedStarsLine = this.getBodyFixedStarsLine(body.name, method);
             return `
                 <strong>${this.escapeHtml(methodLabel)} · <span class="astro-symbol">${this.escapeHtml(symbol)}</span> ${this.escapeHtml(this.bodyName(body.name))}</strong><br>
                 ${position}<br>
-                ${this.escapeHtml(this.t('common.house'))}: ${this.escapeHtml(String(house))}${body.retrograde ? ' <span style="color:#dc2626">R</span>' : ''}
+                ${this.escapeHtml(this.t('common.house'))}: ${this.escapeHtml(String(house))}${body.retrograde ? ' <span style="color:#dc2626">R</span>' : ''}${fixedStarsLine}
             `;
         }
 

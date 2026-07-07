@@ -35,6 +35,8 @@ class ChartDataRenderer {
         this.showAspectText = false;
         this.showSpeedColumn = options.showSpeedColumn !== false;
         this.showHouseColumn = options.showHouseColumn !== false;
+        this.fixedStarsData = null;
+        this.showFixedStarBadges = false;
         this.houseNumberStyle = Symbols?.readSavedHouseNumberStyle?.() || 'arabic';
         this.visualPreferences = window.AstroPreferences?.getAccountVisualPreferences?.() || null;
         this.initAspectSortHeaders();
@@ -455,6 +457,14 @@ class ChartDataRenderer {
         }
     }
 
+    setFixedStarsData(data, options = {}) {
+        this.fixedStarsData = data || null;
+        this.showFixedStarBadges = options.showBadges === true && Boolean(data);
+        if (this.chartData) {
+            this.renderPlanets(this.chartData.planets);
+        }
+    }
+
     reRenderAspects() {
         if (this.chartData) {
             this.renderAspects(this.chartData.aspects);
@@ -502,6 +512,7 @@ class ChartDataRenderer {
             const position = this.formatAstroCoordinate(p);
             const planetIcon = this.createPlanetIconSVG(p);
             const speedChip = this.renderPlanetSpeedChip(p);
+            const fixedStarBadges = this.renderFixedStarBadges(p);
             const motionBadges = [
                 this.showStationary ? this.stationaryIndicatorHtml(p, 'planet-status-badge--small') : '',
                 this.retroIndicatorHtml(p.retrograde, 'retro-indicator--small')
@@ -524,6 +535,7 @@ class ChartDataRenderer {
                     <td class="mono">
                         <div class="planet-position-layout">
                             <div class="planet-position-main">${position}</div>
+                            ${fixedStarBadges}
                         </div>
                     </td>
                     ${this.showSpeedColumn ? `<td class="planet-speed-cell mono">${this.showSpeed ? speedChip : ''}</td>` : ''}
@@ -531,6 +543,68 @@ class ChartDataRenderer {
                 </tr>
             `;
         }).join('');
+    }
+
+    getFixedStarContactsForPlanet(planetName) {
+        if (!this.showFixedStarBadges || !planetName) return [];
+        const normalizedName = this.normalizeAspectBodyName(planetName);
+        return (this.fixedStarsData?.conjunctions || [])
+            .filter((contact) => this.normalizeAspectBodyName(contact?.object) === normalizedName)
+            .sort((a, b) => Number(a.orb || 0) - Number(b.orb || 0));
+    }
+
+    findFixedStarInfo(contact) {
+        const starName = contact?.star;
+        if (!starName) return contact?.star_info || null;
+        return contact?.star_info
+            || (this.fixedStarsData?.stars || []).find((star) => star?.name === starName)
+            || null;
+    }
+
+    fixedStarTooltipHtml(contact) {
+        const star = this.findFixedStarInfo(contact) || {};
+        const position = star.degree_in_sign_formatted && star.sign
+            ? `${star.degree_in_sign_formatted} ${this.signName(star.sign)}`
+            : (contact?.star_position || '');
+        const designation = star.designation || '';
+        const magnitude = star.magnitude !== null && star.magnitude !== undefined ? `m ${star.magnitude}` : '';
+        const nature = star.nature || contact?.nature || '';
+        const objectName = contact?.object ? this.planetName(contact.object) : '';
+        const objectPosition = contact?.object_degree_in_sign_formatted && contact?.object_sign
+            ? `${contact.object_degree_in_sign_formatted} ${this.signName(contact.object_sign)}`
+            : (contact?.object_position || '');
+        const orb = Number(contact?.orb);
+        const orbLabel = Number.isFinite(orb) ? `${orb.toFixed(2)}°` : '';
+        return `
+            <div class="fixed-star-tooltip-title">${this.escapeHtml(star.name || contact?.star || '')}</div>
+            ${position ? `<div>${this.escapeHtml(position)}</div>` : ''}
+            ${designation ? `<div>${this.escapeHtml(designation)}</div>` : ''}
+            ${magnitude ? `<div>${this.escapeHtml(magnitude)}</div>` : ''}
+            ${nature ? `<div>${this.escapeHtml(nature)}</div>` : ''}
+            ${objectName ? `<div class="fixed-star-tooltip-contact">${this.escapeHtml(objectName)} ${this.escapeHtml(objectPosition)}${orbLabel ? ` · ${this.escapeHtml(orbLabel)}` : ''}</div>` : ''}
+        `.trim();
+    }
+
+    renderFixedStarBadges(planet) {
+        const contacts = this.getFixedStarContactsForPlanet(planet?.name);
+        if (!contacts.length) return '';
+        return `
+            <div class="planet-fixed-stars" aria-label="${this.escapeHtml(this.t('page.chart.settings.fixedStars.title'))}">
+                ${contacts.map((contact) => {
+                    const label = contact?.star || '';
+                    const tooltip = this.fixedStarTooltipHtml(contact);
+                    return `
+                        <span
+                            class="fixed-star-badge"
+                            role="img"
+                            tabindex="0"
+                            aria-label="${this.escapeHtml(label)}"
+                            data-fixed-star-tooltip="${this.escapeHtml(tooltip)}"
+                        >✶</span>
+                    `;
+                }).join('')}
+            </div>
+        `;
     }
 
     renderPlanetSpeedChip(planet) {

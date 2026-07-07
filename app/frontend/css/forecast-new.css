@@ -1944,6 +1944,55 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
 .forecast-new-page .planet-position-layout {
     display: inline-flex;
     align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+
+.forecast-new-page .planet-position-main {
+    min-width: 0;
+}
+
+.forecast-new-page .planet-fixed-stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    flex: 0 0 auto;
+}
+
+.forecast-new-page .fixed-star-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    color: #a16207;
+    font-size: 11px;
+    line-height: 1;
+    cursor: help;
+}
+
+.forecast-new-page .fixed-star-badge:hover,
+.forecast-new-page .fixed-star-badge:focus-visible {
+    color: #78350f;
+    background: rgba(245, 158, 11, 0.14);
+    outline: none;
+}
+
+.forecast-new-fixstar-contact-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.forecast-new-fixstar-object {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    min-width: 16px;
+    height: 16px;
 }
 
 .forecast-new-page .planet-special-status-column {
@@ -2431,6 +2480,22 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     stroke-width: 1.4;
 }
 
+.fixed-star-group {
+    cursor: pointer;
+}
+
+.fixed-star-dot {
+    transition: filter 0.15s ease, stroke-width 0.15s ease, r 0.15s ease;
+}
+
+.fixed-star-hit {
+    pointer-events: all;
+}
+
+.fixed-star-label {
+    pointer-events: none;
+}
+
 .forecast-new-page .prognostic-body.matrix-hidden,
 .forecast-new-page .aspect-line.matrix-hidden,
 .forecast-new-page .aspect-symbol-group.matrix-hidden {
@@ -2462,6 +2527,22 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
 .chart-tooltip strong {
     font-size: 14px;
     color: var(--text-primary);
+}
+
+.forecast-new-fixed-star-tooltip {
+    position: fixed;
+}
+
+.fixed-star-tooltip-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.fixed-star-tooltip-contact {
+    display: block;
+    margin-top: 5px;
+    color: var(--text-secondary);
 }
 
 @media (max-width: 1180px) {
@@ -2884,6 +2965,45 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     padding: 0 6px;
     font-size: 16px;
     background: rgba(30, 58, 95, 0.07);
+}
+
+.forecast-new-page .fixed-stars-settings-panel {
+    display: grid;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.forecast-new-page .fixed-stars-settings-panel.hidden {
+    display: none;
+}
+
+.forecast-new-page .settings-mini-label {
+    display: grid;
+    gap: 4px;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.forecast-new-page .settings-mini-label.is-muted {
+    opacity: 0.55;
+}
+
+.forecast-new-page .fixed-stars-settings-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+}
+
+.forecast-new-page .fixed-stars-settings-grid input {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px 8px;
+    font: inherit;
+    color: var(--text-primary);
+    background: var(--bg-primary);
 }
 
 /* Reset local settings button in settings panel */

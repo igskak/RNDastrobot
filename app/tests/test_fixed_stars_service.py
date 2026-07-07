@@ -29,12 +29,20 @@ def test_regulus_in_leo_virgo_region(svc):
     assert pos["Regulus"]["sign"] in ("Leo", "Virgo")
 
 
+def test_named_catalog_filter_includes_achernar(svc):
+    names = {p["name"] for p in svc.star_positions(_jd(), filter_mode="named", max_magnitude=0.6)}
+    assert "Achernar" in names
+
+
 def test_conjunction_detected_within_orb(svc):
     jd = _jd()
     regulus = next(p for p in svc.star_positions(jd) if p["name"] == "Regulus")
     objs = [{"name": "Sun", "longitude": regulus["longitude"] + 0.3}]
     contacts = svc.conjunctions(jd, objs, orb=1.0)
     assert any(c["star"] == "Regulus" and c["object"] == "Sun" for c in contacts)
+    contact = next(c for c in contacts if c["star"] == "Regulus" and c["object"] == "Sun")
+    assert contact["star_info"]["name"] == "Regulus"
+    assert contact["object_position"]
 
 
 def test_orb_respected(svc):

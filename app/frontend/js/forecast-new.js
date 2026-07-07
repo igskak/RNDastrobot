@@ -150,6 +150,11 @@
             showWheelStationary: false,
             showWheelDegree: false,
             showDeclinationAspects: false,
+            fixedStarsMode: 'none',
+            fixedStarsShowNames: false,
+            fixedStarsFilter: 'named',
+            fixedStarsMagnitude: 2.0,
+            fixedStarsOrb: 1.0,
             angleAscDscBold: true,
             angleMcIcBold: true,
             houseNumberStyle: 'arabic',
@@ -642,6 +647,8 @@
             'houseNumberStyleSelect', 'houseLabelsOutsideToggle',
             'showTransitCuspsToggle', 'showProgressionCuspsToggle', 'showDirectionCuspsToggle',
             'showWheelStationaryToggle', 'showWheelDegreeToggle', 'showDeclinationAspectsToggle',
+            'fixedStarsModeSelect', 'fixedStarsOptions', 'fixedStarsShowNamesToggle',
+            'fixedStarsFilterSelect', 'fixedStarsMagnitudeInput', 'fixedStarsOrbInput',
             'angleAscDscBoldToggle', 'angleMcIcBoldToggle',
             'showSpeedToggle', 'showStationaryToggle',
             'forecastNewResetLocalBtn',
@@ -1172,6 +1179,11 @@
             refs.showWheelStationaryToggle,
             refs.showWheelDegreeToggle,
             refs.showDeclinationAspectsToggle,
+            refs.fixedStarsModeSelect,
+            refs.fixedStarsShowNamesToggle,
+            refs.fixedStarsFilterSelect,
+            refs.fixedStarsMagnitudeInput,
+            refs.fixedStarsOrbInput,
             refs.angleAscDscBoldToggle,
             refs.angleMcIcBoldToggle,
             refs.showSpeedToggle,
@@ -2087,6 +2099,12 @@
         if (refs.showWheelStationaryToggle) refs.showWheelStationaryToggle.checked = state.pageSettings.showWheelStationary === true;
         if (refs.showWheelDegreeToggle) refs.showWheelDegreeToggle.checked = state.pageSettings.showWheelDegree === true;
         if (refs.showDeclinationAspectsToggle) refs.showDeclinationAspectsToggle.checked = state.pageSettings.showDeclinationAspects === true;
+        if (refs.fixedStarsModeSelect) refs.fixedStarsModeSelect.value = normalizeFixedStarsMode(state.pageSettings.fixedStarsMode);
+        if (refs.fixedStarsShowNamesToggle) refs.fixedStarsShowNamesToggle.checked = state.pageSettings.fixedStarsShowNames === true;
+        if (refs.fixedStarsFilterSelect) refs.fixedStarsFilterSelect.value = normalizeFixedStarsFilter(state.pageSettings.fixedStarsFilter);
+        if (refs.fixedStarsMagnitudeInput) refs.fixedStarsMagnitudeInput.value = String(normalizeFixedStarsMagnitude(state.pageSettings.fixedStarsMagnitude));
+        if (refs.fixedStarsOrbInput) refs.fixedStarsOrbInput.value = String(normalizeFixedStarsOrb(state.pageSettings.fixedStarsOrb));
+        syncFixedStarsControlsVisibility();
         if (refs.angleAscDscBoldToggle) refs.angleAscDscBoldToggle.checked = state.pageSettings.angleAscDscBold !== false;
         if (refs.angleMcIcBoldToggle) refs.angleMcIcBoldToggle.checked = state.pageSettings.angleMcIcBold !== false;
         if (refs.showSpeedToggle) refs.showSpeedToggle.checked = state.pageSettings.showSpeed !== false;
@@ -2102,6 +2120,13 @@
         renderMatrixEditor();
         renderAspectTypeToggles();
         applyViewport();
+    }
+
+    function syncFixedStarsControlsVisibility() {
+        const enabled = normalizeFixedStarsMode(state.pageSettings.fixedStarsMode) !== 'none';
+        refs.fixedStarsOptions?.classList.toggle('hidden', !enabled);
+        const filter = normalizeFixedStarsFilter(state.pageSettings.fixedStarsFilter);
+        refs.fixedStarsMagnitudeInput?.closest('.settings-mini-label')?.classList.toggle('is-muted', filter !== 'brightness');
     }
 
     // Mirror state.solarYear / state.solarLocation into both solar editors:
@@ -3091,6 +3116,8 @@
             showAspectText: state.pageSettings.showAspectText === true,
         });
         state.natalRenderer?.render(filterChartDataForSidePanel(chartData, { scope: 'natal' }));
+        applyFixedStarsDataToRenderers();
+        ensureFixedStarsForDisplay();
         renderForecastNewDispositorBlocks('natal', chartData);
         renderInlineMatrixControls();
         applyInlineMatrixRowState();
@@ -3551,6 +3578,10 @@
             refs.aspectPhaseApplyingToggle?.checked === true ? 'applying' : null,
             refs.aspectPhaseSeparatingToggle?.checked === true ? 'separating' : null,
         ]);
+        const nextFixedStarsMode = normalizeFixedStarsMode(refs.fixedStarsModeSelect?.value || state.pageSettings.fixedStarsMode);
+        const nextFixedStarsFilter = normalizeFixedStarsFilter(refs.fixedStarsFilterSelect?.value || state.pageSettings.fixedStarsFilter);
+        const nextFixedStarsMagnitude = normalizeFixedStarsMagnitude(refs.fixedStarsMagnitudeInput?.value ?? state.pageSettings.fixedStarsMagnitude);
+        const nextFixedStarsOrb = normalizeFixedStarsOrb(refs.fixedStarsOrbInput?.value ?? state.pageSettings.fixedStarsOrb);
 
         state.pageSettings = {
             ...state.pageSettings,
@@ -3569,6 +3600,11 @@
             showWheelStationary: refs.showWheelStationaryToggle?.checked === true,
             showWheelDegree: refs.showWheelDegreeToggle?.checked === true,
             showDeclinationAspects: refs.showDeclinationAspectsToggle?.checked === true,
+            fixedStarsMode: nextFixedStarsMode,
+            fixedStarsShowNames: refs.fixedStarsShowNamesToggle?.checked === true,
+            fixedStarsFilter: nextFixedStarsFilter,
+            fixedStarsMagnitude: nextFixedStarsMagnitude,
+            fixedStarsOrb: nextFixedStarsOrb,
             angleAscDscBold: state.pageSettings.angleAscDscBold !== false,
             angleMcIcBold: state.pageSettings.angleMcIcBold !== false,
             houseNumberStyle: state.pageSettings.houseNumberStyle === 'roman' ? 'roman' : 'arabic',
@@ -3578,6 +3614,7 @@
             showDirectionCusps: refs.showDirectionCuspsToggle?.checked !== false,
         };
         state.compositeMethod = nextCompositeMethod;
+        syncFixedStarsControlsVisibility();
         window.AstroPreferences?.saveChartViewDraft?.({
             chart_kind: 'natal',
             chart_id: state.userId,
@@ -3614,6 +3651,11 @@
                 'showWheelStationary',
                 'showWheelDegree',
                 'showDeclinationAspects',
+                'fixedStarsMode',
+                'fixedStarsShowNames',
+                'fixedStarsFilter',
+                'fixedStarsMagnitude',
+                'fixedStarsOrb',
                 'angleAscDscBold',
                 'angleMcIcBold',
             ]);
@@ -3621,6 +3663,15 @@
                 renderWheel();
             }
             applyPanelSettingsChanges(previousSettings, state.pageSettings);
+            if (haveAnySettingsChanged(previousSettings, state.pageSettings, [
+                'fixedStarsMode',
+                'fixedStarsFilter',
+                'fixedStarsMagnitude',
+                'fixedStarsOrb',
+            ])) {
+                applyFixedStarsDataToRenderers();
+                ensureFixedStarsForDisplay();
+            }
         }
         schedulePersistViewOverrides();
         schedulePersist();
@@ -4317,6 +4368,9 @@
             showAspectText: state.pageSettings.showAspectText === true,
             showDeclinationAspects: state.pageSettings.showDeclinationAspects === true,
             declinationAspects: state.natalWheelData?.declination_aspects || [],
+            fixedStarsData: wheelFixedStarsPayload(),
+            fixedStarsMode: normalizeFixedStarsMode(state.pageSettings.fixedStarsMode),
+            showFixedStarNames: state.pageSettings.fixedStarsShowNames === true,
             angleAscDscBold: state.pageSettings.angleAscDscBold,
             angleMcIcBold: state.pageSettings.angleMcIcBold,
             // D6: «Одно колесо» = только натал в виде одиночной карты (внешний слот
@@ -5579,12 +5633,54 @@
         renderer.setHoveredAspect(activeAspectKey, { surface });
     }
 
+    function ensureFixedStarTableTooltip() {
+        let tooltip = document.body?.querySelector('.forecast-new-fixed-star-tooltip');
+        if (!tooltip) {
+            tooltip = document.createElement('div');
+            tooltip.className = 'chart-tooltip forecast-new-fixed-star-tooltip';
+            document.body.appendChild(tooltip);
+        }
+        return tooltip;
+    }
+
+    function moveFixedStarTableTooltip(event) {
+        const tooltip = ensureFixedStarTableTooltip();
+        if (!tooltip || !event) return;
+        let x = event.clientX + 14;
+        let y = event.clientY + 8;
+        const maxX = window.innerWidth - tooltip.offsetWidth - 8;
+        const maxY = window.innerHeight - tooltip.offsetHeight - 8;
+        x = Math.max(8, Math.min(x, Math.max(8, maxX)));
+        y = Math.max(8, Math.min(y, Math.max(8, maxY)));
+        tooltip.style.left = `${x}px`;
+        tooltip.style.top = `${y}px`;
+    }
+
+    function showFixedStarTableTooltip(badge, event) {
+        const tooltipHtml = badge?.dataset?.fixedStarTooltip;
+        if (!tooltipHtml) return;
+        const tooltip = ensureFixedStarTableTooltip();
+        tooltip.innerHTML = tooltipHtml;
+        tooltip.style.display = 'block';
+        moveFixedStarTableTooltip(event);
+    }
+
+    function hideFixedStarTableTooltip() {
+        const tooltip = document.body?.querySelector('.forecast-new-fixed-star-tooltip');
+        if (tooltip) tooltip.style.display = 'none';
+    }
+
     function bindPlanetTableInteractions(panel, scope) {
         if (!panel) return;
         const planetsPane = panel;
 
         planetsPane.addEventListener('mouseover', (event) => {
             if (!(event.target instanceof Element)) return;
+            const starBadge = event.target.closest('.fixed-star-badge');
+            if (starBadge) {
+                showFixedStarTableTooltip(starBadge, event);
+                return;
+            }
             const row = event.target.closest('tr[data-planet]');
             if (!row) return;
             const planetName = row.dataset.planet;
@@ -5592,8 +5688,18 @@
             hoverPlanetRow(planetName, method, row, true);
         });
 
+        planetsPane.addEventListener('mousemove', (event) => {
+            if (!(event.target instanceof Element)) return;
+            if (event.target.closest('.fixed-star-badge')) moveFixedStarTableTooltip(event);
+        });
+
         planetsPane.addEventListener('mouseout', (event) => {
             if (!(event.target instanceof Element)) return;
+            const starBadge = event.target.closest('.fixed-star-badge');
+            if (starBadge) {
+                if (!event.relatedTarget || !starBadge.contains(event.relatedTarget)) hideFixedStarTableTooltip();
+                return;
+            }
             const row = event.target.closest('tr[data-planet]');
             if (!row) return;
             if (row.contains(event.relatedTarget)) return;
@@ -5604,12 +5710,30 @@
         planetsPane.addEventListener('click', (event) => {
             if (!(event.target instanceof Element)) return;
             if (event.target.closest('.forecast-new-matrix-inline')) return;
+            if (event.target.closest('.fixed-star-badge')) {
+                event.stopPropagation();
+                return;
+            }
             const row = event.target.closest('tr[data-planet]');
             if (!row) return;
             event.stopPropagation();
             const planetName = row.dataset.planet;
             const method = scope === 'natal' ? 'natal' : selectedRightMethod();
             togglePlanetSelection(planetName, method, row, scope);
+        });
+
+        planetsPane.addEventListener('focusin', (event) => {
+            if (!(event.target instanceof Element)) return;
+            const starBadge = event.target.closest('.fixed-star-badge');
+            if (starBadge) showFixedStarTableTooltip(starBadge, {
+                clientX: starBadge.getBoundingClientRect().right,
+                clientY: starBadge.getBoundingClientRect().top,
+            });
+        });
+
+        planetsPane.addEventListener('focusout', (event) => {
+            if (!(event.target instanceof Element)) return;
+            if (event.target.closest('.fixed-star-badge')) hideFixedStarTableTooltip();
         });
     }
 
@@ -5983,17 +6107,37 @@
         return splitTargetDatetime(getDisplayedMomentDateTime())[0];
     }
 
-    function auxBlockCacheKey(block) {
+    function fixedStarsRequestOptions() {
+        const filter = normalizeFixedStarsFilter(state.pageSettings.fixedStarsFilter);
+        return {
+            fixed_star_orb: normalizeFixedStarsOrb(state.pageSettings.fixedStarsOrb),
+            fixed_star_filter: filter,
+            fixed_star_max_magnitude: filter === 'brightness'
+                ? normalizeFixedStarsMagnitude(state.pageSettings.fixedStarsMagnitude)
+                : null,
+        };
+    }
+
+    function auxBlockOptionKey(block) {
+        if (block !== 'fixstars') return 'default';
+        return JSON.stringify(fixedStarsRequestOptions());
+    }
+
+    function buildAuxBlockOptions(blocks) {
+        return blocks.includes('fixstars') ? fixedStarsRequestOptions() : {};
+    }
+
+    function auxBlockCacheKey(block, optionKey = auxBlockOptionKey(block)) {
         const targetPart = block === 'profections' ? auxBlockTargetDate() : 'static';
-        return [natalCacheToken(), block, targetPart].join('|');
+        return [natalCacheToken(), block, targetPart, optionKey].join('|');
     }
 
     function getCachedAuxBlock(block) {
         return state.auxBlockCache?.[auxBlockCacheKey(block)] || null;
     }
 
-    function setCachedAuxBlock(block, data, cacheToken, targetDate) {
-        const key = [cacheToken, block, block === 'profections' ? targetDate : 'static'].join('|');
+    function setCachedAuxBlock(block, data, cacheToken, targetDate, optionKey = auxBlockOptionKey(block)) {
+        const key = [cacheToken, block, block === 'profections' ? targetDate : 'static', optionKey].join('|');
         state.auxBlockCache[key] = data;
     }
 
@@ -6036,28 +6180,34 @@
 
         const cacheToken = natalCacheToken();
         const targetDate = auxBlockTargetDate();
-        const requestKey = [cacheToken, targetDate, blocks.slice().sort().join(',')].join('|');
+        const optionKeyByBlock = Object.fromEntries(blocks.map((block) => [block, auxBlockOptionKey(block)]));
+        const requestKey = [
+            cacheToken,
+            targetDate,
+            blocks.slice().sort().join(','),
+            JSON.stringify(optionKeyByBlock),
+        ].join('|');
         if (state.auxBlockInFlight[requestKey]) return state.auxBlockInFlight[requestKey];
 
         const request = apiPost('/forecast/aux', {
             source: buildNatalSourcePayload(),
             target_date: targetDate,
             blocks: blocks.map((block) => AUX_BLOCK_API_KEY[block]),
-            options: {},
+            options: buildAuxBlockOptions(blocks),
         }).then((payload) => {
             const responseBlocks = payload?.blocks || {};
             const responseErrors = payload?.errors || {};
             blocks.forEach((block) => {
                 const apiKey = AUX_BLOCK_API_KEY[block];
                 if (responseBlocks[apiKey]) {
-                    setCachedAuxBlock(block, responseBlocks[apiKey], cacheToken, targetDate);
-                    renderAuxBlockIfCurrent(block, responseBlocks[apiKey], cacheToken, targetDate);
+                    setCachedAuxBlock(block, responseBlocks[apiKey], cacheToken, targetDate, optionKeyByBlock[block]);
+                    renderAuxBlockIfCurrent(block, responseBlocks[apiKey], cacheToken, targetDate, optionKeyByBlock[block]);
                 } else if (responseErrors[apiKey]) {
-                    renderAuxBlockErrorIfCurrent(block, cacheToken, targetDate);
+                    renderAuxBlockErrorIfCurrent(block, cacheToken, targetDate, optionKeyByBlock[block]);
                 }
             });
         }).catch(() => {
-            blocks.forEach((block) => renderAuxBlockErrorIfCurrent(block, cacheToken, targetDate));
+            blocks.forEach((block) => renderAuxBlockErrorIfCurrent(block, cacheToken, targetDate, optionKeyByBlock[block]));
         }).finally(() => {
             delete state.auxBlockInFlight[requestKey];
         });
@@ -6065,9 +6215,9 @@
         return request;
     }
 
-    function renderAuxBlockIfCurrent(block, data, cacheToken, targetDate) {
+    function renderAuxBlockIfCurrent(block, data, cacheToken, targetDate, optionKey = auxBlockOptionKey(block)) {
         const currentKey = auxBlockCacheKey(block);
-        const responseKey = [cacheToken, block, block === 'profections' ? targetDate : 'static'].join('|');
+        const responseKey = [cacheToken, block, block === 'profections' ? targetDate : 'static', optionKey].join('|');
         if (currentKey !== responseKey) return;
         const renderers = {
             profections: () => renderProfectionsBlock(),
@@ -6077,11 +6227,15 @@
             fixstars: () => renderFixstarsBlock(),
         };
         if (data && renderers[block]) renderers[block]();
+        if (block === 'fixstars') {
+            applyFixedStarsDataToRenderers();
+            if (fixedStarsEnabled()) renderWheel();
+        }
     }
 
-    function renderAuxBlockErrorIfCurrent(block, cacheToken, targetDate) {
+    function renderAuxBlockErrorIfCurrent(block, cacheToken, targetDate, optionKey = auxBlockOptionKey(block)) {
         const currentKey = auxBlockCacheKey(block);
-        const responseKey = [cacheToken, block, block === 'profections' ? targetDate : 'static'].join('|');
+        const responseKey = [cacheToken, block, block === 'profections' ? targetDate : 'static', optionKey].join('|');
         if (currentKey !== responseKey || getCachedAuxBlock(block)) return;
         const containers = {
             profections: 'natalProfectionsView',
@@ -6094,6 +6248,54 @@
         if (el) el.innerHTML = `<div class="forecast-new-list-error">${escapeHtml(t('common.error') || 'Ошибка')}</div>`;
     }
 
+    function currentFixedStarsData() {
+        return getCachedAuxBlock('fixstars');
+    }
+
+    function wheelFixedStarsPayload() {
+        if (!fixedStarsEnabled()) return null;
+        const data = currentFixedStarsData();
+        if (!data) return null;
+        if (normalizeFixedStarsMode(state.pageSettings.fixedStarsMode) === 'conjunctions') {
+            const contactNames = new Set((data.conjunctions || []).map((contact) => contact?.star));
+            return {
+                ...data,
+                stars: (data.stars || []).filter((star) => contactNames.has(star?.name)),
+            };
+        }
+        return data;
+    }
+
+    function ensureFixedStarsForDisplay() {
+        if (!fixedStarsEnabled()) {
+            applyFixedStarsDataToRenderers();
+            return;
+        }
+        applyFixedStarsDataToRenderers();
+        scheduleAuxBlockFetch(['fixstars']);
+    }
+
+    function applyFixedStarsDataToRenderers() {
+        const data = fixedStarsEnabled() ? currentFixedStarsData() : null;
+        state.natalRenderer?.setFixedStarsData?.(data, { showBadges: fixedStarsEnabled() });
+    }
+
+    function fixedStarBlockIcon(name) {
+        const label = planetLabel(name);
+        if (window.Symbols?.getPlanetSymbolMarkup) {
+            return window.Symbols.getPlanetSymbolMarkup(name, { size: 15, title: label });
+        }
+        const symbol = window.Symbols?.getPlanetSymbol?.(name) || name?.[0] || '';
+        return `<span class="astro-symbol" title="${escapeHtml(label)}">${escapeHtml(symbol)}</span>`;
+    }
+
+    function fixedStarObjectPosition(contact) {
+        if (contact?.object_degree_in_sign_formatted && contact?.object_sign) {
+            return `${contact.object_degree_in_sign_formatted} ${signLabel(contact.object_sign)}`;
+        }
+        return contact?.object_position || '';
+    }
+
     function fixstarsBlockMarkup(data) {
         const contacts = data && Array.isArray(data.conjunctions) ? data.conjunctions : [];
         if (contacts.length === 0) {
@@ -6101,12 +6303,14 @@
         }
         const rows = contacts.map((c) => `
             <li class="forecast-new-list-row">
-                <span class="forecast-new-list-name">${escapeHtml(planetLabel(c.object))} · ${escapeHtml(c.star)}</span>
-                <span class="forecast-new-list-val">${escapeHtml(c.star_position || '')}</span>
-                <span class="forecast-new-list-val forecast-new-list-val--dim">${escapeHtml(c.nature || '')} · ${escapeHtml(String(c.orb))}°</span>
+                <span class="forecast-new-list-name forecast-new-fixstar-contact-name">
+                    <span class="forecast-new-fixstar-object">${fixedStarBlockIcon(c.object)}</span>
+                    <span>${escapeHtml(c.star)}</span>
+                </span>
+                <span class="forecast-new-list-val">${escapeHtml(fixedStarObjectPosition(c))}</span>
+                <span class="forecast-new-list-val forecast-new-list-val--dim">${escapeHtml(String(c.orb))}°</span>
             </li>`).join('');
         return `<div class="forecast-new-list forecast-new-fixstars">
-                <div class="forecast-new-list-subhead">${escapeHtml(t('page.forecastNew.fixstars.conjunctions') || 'Conjunctions')}</div>
                 <ul class="forecast-new-list-body">${rows}</ul>
             </div>`;
     }
@@ -7523,6 +7727,11 @@
             showWheelStationary: restored.pageSettings?.showWheelStationary === true,
             showWheelDegree: restored.pageSettings?.showWheelDegree === true,
             showDeclinationAspects: restored.pageSettings?.showDeclinationAspects === true,
+            fixedStarsMode: normalizeFixedStarsMode(restored.pageSettings?.fixedStarsMode),
+            fixedStarsShowNames: restored.pageSettings?.fixedStarsShowNames === true,
+            fixedStarsFilter: normalizeFixedStarsFilter(restored.pageSettings?.fixedStarsFilter),
+            fixedStarsMagnitude: normalizeFixedStarsMagnitude(restored.pageSettings?.fixedStarsMagnitude),
+            fixedStarsOrb: normalizeFixedStarsOrb(restored.pageSettings?.fixedStarsOrb),
             angleAscDscBold: restored.pageSettings?.angleAscDscBold !== false,
             angleMcIcBold: restored.pageSettings?.angleMcIcBold !== false,
         };
@@ -8571,6 +8780,33 @@
         const numeric = Number(value);
         if (!Number.isFinite(numeric)) return 1.2;
         return Math.min(1.7, Math.max(0.8, numeric));
+    }
+
+    function normalizeFixedStarsMode(value) {
+        const normalized = String(value || '').trim().toLowerCase();
+        return ['none', 'conjunctions', 'all'].includes(normalized) ? normalized : 'none';
+    }
+
+    function normalizeFixedStarsFilter(value) {
+        const normalized = String(value || '').trim().toLowerCase();
+        return ['named', 'brightness', 'highlighted', 'nebulae'].includes(normalized) ? normalized : 'named';
+    }
+
+    function normalizeFixedStarsMagnitude(value) {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return 2.0;
+        return Math.round(clamp(numeric, -2, 8) * 10) / 10;
+    }
+
+    function normalizeFixedStarsOrb(value) {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return 1.0;
+        return Math.round(clamp(numeric, 0, 3) * 100) / 100;
+    }
+
+    function fixedStarsEnabled() {
+        return normalizeFixedStarsMode(state.pageSettings.fixedStarsMode) !== 'none'
+            && state.singleChartMode !== 'composite';
     }
 
     function normalizeHouseSystemCode(value) {

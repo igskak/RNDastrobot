@@ -1082,6 +1082,20 @@
         "boldAngularCusps": "Show angular house cusps in bold",
         "showPlanetDegree": "Show planet degree on wheel",
         "showPlanetStationary": "Show stationary on wheel",
+        "fixedStars": {
+          "all": "Show all stars",
+          "brightness": "Minimum brightness",
+          "conjunctions": "In conjunction with bodies",
+          "filter": "Star filter",
+          "highlighted": "Highlighted",
+          "magnitude": "Magnitude",
+          "named": "Named",
+          "nebulae": "Nebulae",
+          "none": "Do not show",
+          "orb": "Orb",
+          "showNames": "Show star names",
+          "title": "Stars"
+        },
         "wheelOptions": "Wheel options",
         "tableOptions": "Table options",
         "showDeclinationAspects": "Parallels (declination)"
@@ -1104,6 +1118,9 @@
           "symbol": "Symbol",
           "speedHint": "Daily motion as % of average speed. Blue = near-stationary, red = fast."
         }
+      },
+      "tooltip": {
+        "fixedStars": "Stars"
       },
       "tabs": {
         "aspects": "Aspects",

@@ -145,8 +145,22 @@ class ForecastAuxService:
         if block == "dominants":
             return DominantsService.compute(chart, top_n=int(options.get("dominants_top_n") or 5))
         if block == "fixed_stars":
-            return self._compute_fixed_stars(chart, orb=float(options.get("fixed_star_orb") or DEFAULT_STAR_ORB))
+            return self._compute_fixed_stars(
+                chart,
+                orb=float(options.get("fixed_star_orb") or DEFAULT_STAR_ORB),
+                filter_mode=str(options.get("fixed_star_filter") or "highlighted"),
+                max_magnitude=self._optional_float(options.get("fixed_star_max_magnitude")),
+            )
         raise ForecastAuxBlockError(f"Unsupported aux block: {block}")
+
+    def _optional_float(self, value: Any) -> Optional[float]:
+        if value is None or value == "":
+            return None
+        try:
+            numeric = float(value)
+        except (TypeError, ValueError):
+            return None
+        return numeric if numeric == numeric else None
 
     def _compute_profections(self, chart: Dict[str, Any], *, target_date: Optional[date]) -> Dict[str, Any]:
         asc = (chart.get("angles") or {}).get("ASC") or {}
@@ -182,15 +196,29 @@ class ForecastAuxService:
                 asteroid["house"] = self.engine.get_planet_house(asteroid["longitude"], houses)
         return {"zodiac": zodiac, "asteroids": asteroids}
 
-    def _compute_fixed_stars(self, chart: Dict[str, Any], *, orb: float) -> Dict[str, Any]:
+    def _compute_fixed_stars(
+        self,
+        chart: Dict[str, Any],
+        *,
+        orb: float,
+        filter_mode: str,
+        max_magnitude: Optional[float],
+    ) -> Dict[str, Any]:
         jd = (chart.get("birth_data") or {}).get("julian_day")
         if jd is None:
             raise ForecastAuxBlockError("Chart lacks julian_day")
         objects = self._collect_objects(chart, include_special_points=False, angle_names=("ASC", "MC", "DSC", "IC"))
+        stars = self.stars_service.star_positions(
+            float(jd),
+            filter_mode=filter_mode,
+            max_magnitude=max_magnitude,
+        )
         return {
             "orb": orb,
-            "stars": self.stars_service.star_positions(float(jd)),
-            "conjunctions": self.stars_service.conjunctions(float(jd), objects, orb=orb),
+            "filter": filter_mode,
+            "max_magnitude": max_magnitude,
+            "stars": stars,
+            "conjunctions": self.stars_service.conjunctions(float(jd), objects, orb=orb, stars=stars),
         }
 
     def _collect_objects(

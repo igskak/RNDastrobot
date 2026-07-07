@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecastNew.pageTitle">Forecast</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=29c2c1e36981">
-    <script>window.__APP_BUILD_ID__ = '29c2c1e36981';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=fa4801921ae1">
+    <script>window.__APP_BUILD_ID__ = 'fa4801921ae1';</script>
 </head>
 <body class="forecast-new-page workspace-compact forecast-workspace-compact">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -366,6 +366,37 @@
                     </div>
                 </div>
                 <div class="settings-section">
+                    <label class="settings-label" for="fixedStarsModeSelect" data-i18n="page.chart.settings.fixedStars.title">Stars</label>
+                    <select id="fixedStarsModeSelect" class="settings-select">
+                        <option value="none" data-i18n="page.chart.settings.fixedStars.none">Do not show</option>
+                        <option value="conjunctions" data-i18n="page.chart.settings.fixedStars.conjunctions">In conjunction with bodies</option>
+                        <option value="all" data-i18n="page.chart.settings.fixedStars.all">Show all stars</option>
+                    </select>
+                    <div class="fixed-stars-settings-panel hidden" id="fixedStarsOptions">
+                        <label class="settings-check-option">
+                            <input type="checkbox" id="fixedStarsShowNamesToggle">
+                            <span data-i18n="page.chart.settings.fixedStars.showNames">Show star names</span>
+                        </label>
+                        <label class="settings-mini-label" for="fixedStarsFilterSelect" data-i18n="page.chart.settings.fixedStars.filter">Star filter</label>
+                        <select id="fixedStarsFilterSelect" class="settings-select">
+                            <option value="named" data-i18n="page.chart.settings.fixedStars.named">Named</option>
+                            <option value="brightness" data-i18n="page.chart.settings.fixedStars.brightness">Minimum brightness</option>
+                            <option value="highlighted" data-i18n="page.chart.settings.fixedStars.highlighted">Highlighted</option>
+                            <option value="nebulae" data-i18n="page.chart.settings.fixedStars.nebulae">Nebulae</option>
+                        </select>
+                        <div class="fixed-stars-settings-grid">
+                            <label class="settings-mini-label" for="fixedStarsMagnitudeInput">
+                                <span data-i18n="page.chart.settings.fixedStars.magnitude">Magnitude</span>
+                                <input type="number" id="fixedStarsMagnitudeInput" min="-2" max="8" step="0.1" value="2.0">
+                            </label>
+                            <label class="settings-mini-label" for="fixedStarsOrbInput">
+                                <span data-i18n="page.chart.settings.fixedStars.orb">Orb</span>
+                                <input type="number" id="fixedStarsOrbInput" min="0" max="3" step="0.1" value="1.0">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-section">
                     <label class="settings-label" data-i18n="page.chart.settings.tableOptions">Table options</label>
                     <div class="settings-check-stack">
                         <label class="settings-check-option">
@@ -573,7 +604,7 @@
     </section>
 
     <script src="/runtime-config.js"></script>
-    <script src="/js/analytics.js?v=29c2c1e36981"></script>
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=29c2c1e36981"></script>
+    <script src="/js/analytics.js?v=fa4801921ae1"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=fa4801921ae1"></script>
 </body>
 </html>
