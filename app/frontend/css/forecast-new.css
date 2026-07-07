@@ -1942,14 +1942,20 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
 }
 
 .forecast-new-page .planet-position-layout {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 4px;
+    width: 100%;
+    max-width: 100%;
     min-width: 0;
 }
 
 .forecast-new-page .planet-position-main {
+    flex: 1 1 auto;
     min-width: 0;
+    overflow: hidden;
+    text-overflow: clip;
+    white-space: nowrap;
 }
 
 .forecast-new-page .planet-fixed-stars {

@@ -673,6 +673,7 @@
             aspectSortHeadersSelector: '#natalAspectsView th.sortable[data-sort]',
             showSpeedColumn: true,
             showHouseColumn: false,
+            onPlanetsRendered: restoreInlineMatrixControlsAfterPlanetRender,
         });
         state.prognosticRenderer = new ChartDataRenderer({
             planetsTableId: 'progPlanetsTable',
@@ -685,6 +686,7 @@
             aspectSortHeadersSelector: '#progAspectsView th.sortable[data-sort]',
             showSpeedColumn: true,
             showHouseColumn: false,
+            onPlanetsRendered: restoreInlineMatrixControlsAfterPlanetRender,
         });
     }
 
@@ -3276,6 +3278,12 @@
             const body = matrixBodyKey(row.dataset.planet);
             row.insertAdjacentHTML('beforeend', matrixControlCells(body, prognosticRows, 'prognostic'));
         });
+    }
+
+    function restoreInlineMatrixControlsAfterPlanetRender() {
+        renderInlineMatrixControls();
+        applyInlineMatrixRowState();
+        syncMatrixCheckboxes();
     }
 
     function applyInlineMatrixRowState() {

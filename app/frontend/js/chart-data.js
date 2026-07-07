@@ -35,6 +35,9 @@ class ChartDataRenderer {
         this.showAspectText = false;
         this.showSpeedColumn = options.showSpeedColumn !== false;
         this.showHouseColumn = options.showHouseColumn !== false;
+        this.onPlanetsRendered = typeof options.onPlanetsRendered === 'function'
+            ? options.onPlanetsRendered
+            : null;
         this.fixedStarsData = null;
         this.showFixedStarBadges = false;
         this.houseNumberStyle = Symbols?.readSavedHouseNumberStyle?.() || 'arabic';
@@ -543,6 +546,7 @@ class ChartDataRenderer {
                 </tr>
             `;
         }).join('');
+        this.onPlanetsRendered?.(this);
     }
 
     getFixedStarContactsForPlanet(planetName) {
