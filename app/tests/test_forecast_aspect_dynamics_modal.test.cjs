@@ -29,6 +29,7 @@ function resetModal() {
         basePayload: null,
         requestSeq: 0,
         responseCache: new Map(),
+        responseInFlight: new Map(),
         dragStart: null,
         interactionWindow: null,
         defaultViewWindow: null,
@@ -36,7 +37,10 @@ function resetModal() {
         scrollDomain: null,
         isLoading: false,
         hoverMs: null,
+        hoverOrb: null,
         hoverFrame: null,
+        yScaleFactor: 1,
+        viewportTouched: false,
     });
 }
 
@@ -154,6 +158,11 @@ function sampleResponseForPayload(payload = {}) {
         } : { preview: false });
     }
     return sampleResponse({
+        method: payload.method || 'transit',
+        source_body: payload.source_body || payload.transit_body || 'Pluto',
+        target_body: payload.target_body || payload.natal_body || 'Sun',
+        transit_body: payload.transit_body || payload.source_body || 'Pluto',
+        natal_body: payload.natal_body || payload.target_body || 'Sun',
         preview: false,
         effective_window: {
             start: `${payload.contact_start}T00:00:00+00:00`,
@@ -167,6 +176,57 @@ function sampleResponseForPayload(payload = {}) {
             { datetime: `${payload.contact_end}T00:00:00+00:00`, signed_orb: -4, abs_orb: 4 },
         ],
     });
+}
+
+function multiContactResponseForPayload(payload = {}) {
+    const data = sampleResponseForPayload(payload);
+    if (!payload.contact_start || !payload.contact_end) return data;
+    return {
+        ...data,
+        contacts: [
+            {
+                enter: '2026-06-01T00:00:00+00:00',
+                leave: '2026-07-01T00:00:00+00:00',
+                passes: [{
+                    date: '2026-06-20T00:00:00+00:00',
+                    motion: 'direct',
+                    orb: 0,
+                }],
+                stations: [],
+                closest_approach: {
+                    date: '2026-06-20T00:00:00+00:00',
+                    orb: 0,
+                },
+            },
+            {
+                enter: '2027-06-01T00:00:00+00:00',
+                leave: '2027-07-01T00:00:00+00:00',
+                passes: [{
+                    date: '2027-06-20T00:00:00+00:00',
+                    motion: 'retrograde',
+                    orb: 0,
+                }],
+                stations: [{
+                    date: '2027-06-25T00:00:00+00:00',
+                    type: 'R',
+                }],
+                closest_approach: {
+                    date: '2027-06-20T00:00:00+00:00',
+                    orb: 0,
+                },
+            },
+        ],
+        series: [
+            { datetime: `${payload.contact_start}T00:00:00+00:00`, signed_orb: 4, abs_orb: 4 },
+            { datetime: '2026-06-01T00:00:00+00:00', signed_orb: 3, abs_orb: 3 },
+            { datetime: '2026-06-20T00:00:00+00:00', signed_orb: 0, abs_orb: 0 },
+            { datetime: '2026-07-01T00:00:00+00:00', signed_orb: -3, abs_orb: 3 },
+            { datetime: '2027-06-01T00:00:00+00:00', signed_orb: 3, abs_orb: 3 },
+            { datetime: '2027-06-20T00:00:00+00:00', signed_orb: 0, abs_orb: 0 },
+            { datetime: '2027-07-01T00:00:00+00:00', signed_orb: -3, abs_orb: 3 },
+            { datetime: `${payload.contact_end}T00:00:00+00:00`, signed_orb: -4, abs_orb: 4 },
+        ],
+    };
 }
 
 const sampleOpenOptions = {
@@ -198,6 +258,11 @@ function dispatchPointer(target, type, props = {}) {
         clientY: 0,
         ...props,
     });
+}
+
+function windowSpanDays() {
+    const window = modal._state.interactionWindow;
+    return (window.end - window.start) / 86400000;
 }
 
 test('buildPayload maps transit aspect fields and selected datetime', () => {
@@ -340,6 +405,43 @@ test('modal renders success summary from fetched dynamics data', async () => {
     assert.match(document.querySelector('#aspectDynamicsTitle').textContent, /P tri S/);
     assert.match(document.querySelector('.aspect-dynamics-summary').textContent, /Closest approach/);
     assert.match(document.querySelector('.aspect-dynamics-summary').textContent, /Pass 1/);
+    assert.ok(document.querySelector('.aspect-dynamics-summary-table'));
+    assert.equal(document.querySelector('.aspect-dynamics-summary-grid'), null);
+    modal.close();
+});
+
+test('modal uses slow and fast transit default viewport spans', async () => {
+    setupDom();
+    modal.setFetchImpl(async (_url, options) => ({
+        ok: true,
+        async json() {
+            return sampleResponseForPayload(JSON.parse(options.body));
+        },
+    }));
+
+    await modal.open(sampleOpenOptions);
+    const slowSpan = windowSpanDays();
+    assert.ok(slowSpan > 175 && slowSpan < 190);
+    modal.close();
+
+    setupDom();
+    modal.setFetchImpl(async (_url, options) => ({
+        ok: true,
+        async json() {
+            return sampleResponseForPayload(JSON.parse(options.body));
+        },
+    }));
+
+    await modal.open({
+        ...sampleOpenOptions,
+        aspect: {
+            transit_planet: 'Mars',
+            natal_object: 'Sun',
+            aspect_type: 'Trine',
+        },
+    });
+    const fastSpan = windowSpanDays();
+    assert.ok(fastSpan > 29 && fastSpan < 31);
     modal.close();
 });
 
@@ -382,9 +484,33 @@ test('modal paints preview before full dynamics response resolves', async () => 
     await openPromise;
 
     assert.equal(modal._state.data.preview, false);
-    assert.equal(modal._state.interactionWindow.start, previewWindow.start);
-    assert.equal(modal._state.interactionWindow.end, previewWindow.end);
+    assert.ok(modal._state.interactionWindow.start < previewWindow.start);
+    assert.ok(modal._state.interactionWindow.end > previewWindow.end);
     assert.match(document.querySelector('.aspect-dynamics-summary').textContent, /Pass 1/);
+    modal.close();
+});
+
+test('summary follows the currently visible aspect window', async () => {
+    setupDom();
+    modal.setFetchImpl(async (_url, options) => ({
+        ok: true,
+        async json() {
+            return multiContactResponseForPayload(JSON.parse(options.body));
+        },
+    }));
+
+    await modal.open(sampleOpenOptions);
+    let summary = document.querySelector('.aspect-dynamics-summary').textContent;
+    assert.match(summary, /2026/);
+    assert.doesNotMatch(summary, /2027/);
+
+    document.querySelector('[data-aspect-dynamics-range="3650"]').click();
+    summary = document.querySelector('.aspect-dynamics-summary').textContent;
+    assert.match(summary, /2026/);
+    assert.match(summary, /2027/);
+    assert.match(summary, /Pass 2/);
+    assert.match(summary, /retrograde/);
+    assert.equal(document.querySelectorAll('.aspect-dynamics-summary-table tbody tr').length, 2);
     modal.close();
 });
 
@@ -525,7 +651,26 @@ test('wheel scroll zooms the aspect chart without refetching inside loaded data'
     modal.close();
 });
 
-test('pointer hover marks the timeline date without requesting more data', async () => {
+test('toolbar y-axis controls adjust vertical scale without shifting the window', async () => {
+    setupDom();
+    modal.setFetchImpl(async (_url, options) => ({
+        ok: true,
+        async json() {
+            return sampleResponseForPayload(JSON.parse(options.body));
+        },
+    }));
+
+    await modal.open(sampleOpenOptions);
+    const before = { ...modal._state.interactionWindow };
+    document.querySelector('[data-aspect-dynamics-y-zoom="in"]').click();
+
+    assert.ok(modal._state.yScaleFactor < 1);
+    assert.equal(modal._state.interactionWindow.start, before.start);
+    assert.equal(modal._state.interactionWindow.end, before.end);
+    modal.close();
+});
+
+test('pointer hover marks the timeline date and signed orb without requesting more data', async () => {
     setupDom();
     const payloads = [];
     modal.setFetchImpl(async (_url, options) => {
@@ -549,16 +694,19 @@ test('pointer hover marks the timeline date without requesting more data', async
         height: 320,
     });
     const wrap = document.querySelector('.aspect-dynamics-chart-wrap');
-    dispatchPointer(wrap, 'pointermove', { clientX: 360 });
+    dispatchPointer(wrap, 'pointermove', { clientX: 360, clientY: 155 });
 
     assert.ok(Number.isFinite(modal._state.hoverMs));
     assert.ok(modal._state.hoverMs > modal._state.interactionWindow.start);
     assert.ok(modal._state.hoverMs < modal._state.interactionWindow.end);
+    assert.ok(Number.isFinite(modal._state.hoverOrb));
+    assert.ok(Math.abs(modal._state.hoverOrb) < 0.1);
 
     await new Promise((resolve) => setTimeout(resolve, 0));
     assert.equal(payloads.length, 2);
 
     dispatchPointer(wrap, 'pointerleave', { clientX: 360 });
     assert.equal(modal._state.hoverMs, null);
+    assert.equal(modal._state.hoverOrb, null);
     modal.close();
 });

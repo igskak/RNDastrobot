@@ -29,6 +29,28 @@
     const WHEEL_REQUEST_DEBOUNCE_MS = 90;
     const DRAG_ACTIVATION_PX = 4;
     const WHEEL_ZOOM_SENSITIVITY = 0.00075;
+    const FAST_TRANSIT_VIEW_DAYS = 30;
+    const SLOW_TRANSIT_VIEW_DAYS = 183;
+    const FAST_DAYS_PER_DEGREE = 1;
+    const SLOW_DAYS_PER_DEGREE = 10;
+    const MIN_Y_SCALE_FACTOR = 0.2;
+    const MAX_Y_SCALE_FACTOR = 8;
+    const SLOW_TRANSIT_BODIES = new Set([
+        'jupiter',
+        'saturn',
+        'uranus',
+        'neptune',
+        'pluto',
+        'chiron',
+        'proserpina',
+        'truenode',
+        'truenorthnode',
+        'northnode',
+        'meannode',
+        'southnode',
+        'blackmoon',
+        'whitemoon',
+    ]);
     const API_BASE = () => root.AstroAPI?.API_BASE_URL || '/api/v1';
 
     const state = {
@@ -59,7 +81,10 @@
         scrollDomain: null,
         isLoading: false,
         hoverMs: null,
+        hoverOrb: null,
         hoverFrame: null,
+        yScaleFactor: 1,
+        viewportTouched: false,
     };
 
     function tr(key, fallback, params) {
@@ -247,6 +272,39 @@
             ?? msFromIso(`${state.basePayload?.selected_date || ''}T${state.basePayload?.selected_time || '12:00:00'}`);
     }
 
+    function normalizeBodyKey(name) {
+        return String(root.Symbols?.normalizeBodyName?.(name) || name || '')
+            .replace(/[\s_-]+/g, '')
+            .toLowerCase();
+    }
+
+    function sourceBodyForScale(data = state.data) {
+        return data?.source_body
+            || data?.transit_body
+            || state.basePayload?.source_body
+            || state.basePayload?.transit_body
+            || '';
+    }
+
+    function isSlowTransitBody(name) {
+        return SLOW_TRANSIT_BODIES.has(normalizeBodyKey(name));
+    }
+
+    function defaultScaleProfile(data = state.data) {
+        const method = data?.method || state.basePayload?.method || 'transit';
+        if (method === 'progression' || method === 'direction') {
+            return { spanDays: 3650, daysPerDegree: 365.2425 };
+        }
+        if (method === 'transit') {
+            return isSlowTransitBody(sourceBodyForScale(data))
+                ? { spanDays: SLOW_TRANSIT_VIEW_DAYS, daysPerDegree: SLOW_DAYS_PER_DEGREE }
+                : { spanDays: FAST_TRANSIT_VIEW_DAYS, daysPerDegree: FAST_DAYS_PER_DEGREE };
+        }
+        if (method === 'solar_return') return { spanDays: 365, daysPerDegree: 30.4375 };
+        if (method === 'natal' || method === 'synastry_partner') return { spanDays: 365, daysPerDegree: 30.4375 };
+        return { spanDays: 365, daysPerDegree: 30.4375 };
+    }
+
     function windowPayload(startMs, endMs) {
         const start = Math.min(startMs, endMs);
         const end = Math.max(startMs, endMs);
@@ -359,7 +417,7 @@
             const fullData = await fetchAspectDynamics(fullRequest, fullKey);
             if (seq !== state.requestSeq) return null;
             setCachedResponse(fullKey, fullData);
-            renderData(fullData, { preserveViewport: true });
+            renderData(fullData, { preserveViewport: state.viewportTouched });
             return fullData;
         } catch (error) {
             if (seq !== state.requestSeq) return null;
@@ -382,12 +440,14 @@
             end: window.end,
         };
         updateRangeLabel();
+        renderSummary(state.data);
         syncScrubber();
         drawChart();
     }
 
     function requestWindow(startMs, endMs, { debounce = false, debounceMs = WINDOW_REQUEST_DEBOUNCE_MS } = {}) {
         if (!state.basePayload) return;
+        state.viewportTouched = true;
         const bounded = clampWindow(startMs, endMs);
         setInteractionWindow(bounded);
         if (!shouldFetchWindow(bounded)) return;
@@ -440,18 +500,32 @@
     }
 
     function eventAnchorMs(event) {
+        return eventAnchorPoint(event)?.ms ?? null;
+    }
+
+    function eventAnchorPoint(event) {
         const current = dataWindowMs();
         const canvas = state.canvas;
         if (!current || !canvas || !event) return null;
         const rect = canvas.getBoundingClientRect();
-        if (!rect.width) return null;
+        if (!rect.width || !rect.height) return null;
         const pad = chartPad();
         const plotW = Math.max(1, rect.width - pad.left - pad.right);
+        const plotH = Math.max(1, rect.height - pad.top - pad.bottom);
+        const plotBottom = pad.top + plotH;
         const ratio = Math.max(
             0,
             Math.min(1, (event.clientX - rect.left - pad.left) / plotW),
         );
-        return current.start + ratio * (current.end - current.start);
+        const y = Math.max(
+            pad.top,
+            Math.min(plotBottom, event.clientY - rect.top),
+        );
+        const maxAbs = scaledYAxisMaxAbs(state.data, current, plotW, plotH);
+        return {
+            ms: current.start + ratio * (current.end - current.start),
+            orb: ((plotBottom - y) / plotH) * maxAbs * 2 - maxAbs,
+        };
     }
 
     function scheduleHoverDraw() {
@@ -474,16 +548,23 @@
     }
 
     function updateHoverMarker(event) {
-        const ms = eventAnchorMs(event);
-        if (!Number.isFinite(ms)) return;
-        if (Number.isFinite(state.hoverMs) && Math.abs(state.hoverMs - ms) < 1000) return;
-        state.hoverMs = ms;
+        const point = eventAnchorPoint(event);
+        if (!point || !Number.isFinite(point.ms) || !Number.isFinite(point.orb)) return;
+        if (
+            Number.isFinite(state.hoverMs)
+            && Number.isFinite(state.hoverOrb)
+            && Math.abs(state.hoverMs - point.ms) < 1000
+            && Math.abs(state.hoverOrb - point.orb) < 0.01
+        ) return;
+        state.hoverMs = point.ms;
+        state.hoverOrb = point.orb;
         scheduleHoverDraw();
     }
 
     function clearHoverMarker() {
-        if (!Number.isFinite(state.hoverMs)) return;
+        if (!Number.isFinite(state.hoverMs) && !Number.isFinite(state.hoverOrb)) return;
         state.hoverMs = null;
+        state.hoverOrb = null;
         scheduleHoverDraw();
     }
 
@@ -494,6 +575,14 @@
         const span = (current.end - current.start) * factor;
         const leftRatio = (anchor - current.start) / (current.end - current.start || 1);
         requestWindow(anchor - span * leftRatio, anchor + span * (1 - leftRatio), options);
+    }
+
+    function zoomY(factor) {
+        const current = Number(state.yScaleFactor || 1);
+        state.yScaleFactor = Math.max(MIN_Y_SCALE_FACTOR, Math.min(MAX_Y_SCALE_FACTOR, current * factor));
+        state.viewportTouched = true;
+        updateRangeLabel();
+        drawChart();
     }
 
     function pan(ratio) {
@@ -577,11 +666,14 @@
         const button = event.target.closest('button');
         if (!button) return;
         const zoomAction = button.dataset.aspectDynamicsZoom;
+        const yZoomAction = button.dataset.aspectDynamicsYZoom;
         const panAction = button.dataset.aspectDynamicsPan;
         const range = button.dataset.aspectDynamicsRange;
         if (zoomAction === 'in') zoom(0.5);
         else if (zoomAction === 'out') zoom(2);
         else if (zoomAction === 'reset') resetViewWindow();
+        else if (yZoomAction === 'in') zoomY(0.75);
+        else if (yZoomAction === 'out') zoomY(1.3333333333);
         else if (panAction) pan(Number(panAction));
         else if (range) preset(Number(range));
     }
@@ -670,6 +762,8 @@
     function resetViewWindow() {
         const next = state.defaultViewWindow || initialViewWindow(state.data) || loadedDataWindowMs();
         if (!next) return;
+        state.yScaleFactor = 1;
+        state.viewportTouched = true;
         setInteractionWindow(next);
     }
 
@@ -747,8 +841,10 @@
                 <div class="aspect-dynamics-status" role="status"></div>
                 <div class="aspect-dynamics-toolbar" aria-label="${escapeAttr(tr('page.forecastNew.aspectDynamics.toolbar', 'Chart controls'))}">
                     <button type="button" data-aspect-dynamics-pan="-0.5" title="${escapeAttr(tr('common.previous', 'Previous'))}">←</button>
-                    <button type="button" data-aspect-dynamics-zoom="in" title="${escapeAttr(tr('page.forecastNew.aspectDynamics.zoomIn', 'Zoom in'))}">+</button>
-                    <button type="button" data-aspect-dynamics-zoom="out" title="${escapeAttr(tr('page.forecastNew.aspectDynamics.zoomOut', 'Zoom out'))}">−</button>
+                    <button type="button" data-aspect-dynamics-zoom="in" title="${escapeAttr(tr('page.forecastNew.aspectDynamics.zoomXIn', 'Zoom X axis in'))}">X+</button>
+                    <button type="button" data-aspect-dynamics-zoom="out" title="${escapeAttr(tr('page.forecastNew.aspectDynamics.zoomXOut', 'Zoom X axis out'))}">X−</button>
+                    <button type="button" data-aspect-dynamics-y-zoom="in" title="${escapeAttr(tr('page.forecastNew.aspectDynamics.zoomYIn', 'Zoom Y axis in'))}">Y+</button>
+                    <button type="button" data-aspect-dynamics-y-zoom="out" title="${escapeAttr(tr('page.forecastNew.aspectDynamics.zoomYOut', 'Zoom Y axis out'))}">Y−</button>
                     <button type="button" data-aspect-dynamics-pan="0.5" title="${escapeAttr(tr('common.next', 'Next'))}">→</button>
                     <button type="button" data-aspect-dynamics-zoom="reset" title="${escapeAttr(tr('page.forecastNew.aspectDynamics.resetZoom', 'Reset zoom'))}">⟲</button>
                     <span class="aspect-dynamics-toolbar-divider"></span>
@@ -827,6 +923,7 @@
         state.pendingWindowTimer = null;
         cancelHoverDraw();
         state.hoverMs = null;
+        state.hoverOrb = null;
         setOpen(false);
         const focusTarget = state.lastFocus;
         state.lastFocus = null;
@@ -899,6 +996,9 @@
         state.defaultViewWindow = null;
         state.isLoading = true;
         state.hoverMs = null;
+        state.hoverOrb = null;
+        state.yScaleFactor = 1;
+        state.viewportTouched = false;
         state.status.hidden = false;
         state.status.className = 'aspect-dynamics-status';
         state.status.textContent = tr('page.forecastNew.aspectDynamics.loading', 'Loading chart...');
@@ -913,6 +1013,9 @@
         state.defaultViewWindow = null;
         state.isLoading = false;
         state.hoverMs = null;
+        state.hoverOrb = null;
+        state.yScaleFactor = 1;
+        state.viewportTouched = false;
         state.status.hidden = false;
         state.status.className = 'aspect-dynamics-status aspect-dynamics-status--error';
         state.status.textContent = message || tr('page.forecastNew.aspectDynamics.errors.loadFailed', 'Could not load aspect dynamics.');
@@ -969,34 +1072,21 @@
         const loaded = committedDataWindowMs(data);
         if (!loaded) return null;
         const selected = selectedMs(data);
+        const span = Math.min(loaded.end - loaded.start, defaultVisibleSpanDays(data) * DAY_MS);
+        if (Number.isFinite(selected)) {
+            return constrainWindowToLoaded(selected - span / 2, selected + span / 2, loaded);
+        }
         const contact = Array.isArray(data?.contacts) ? data.contacts[0] : null;
         const contactStart = msFromIso(contact?.enter);
         const contactEnd = msFromIso(contact?.leave);
-        if (Number.isFinite(contactStart) && Number.isFinite(contactEnd) && contactEnd > contactStart) {
-            const contactSpan = contactEnd - contactStart;
-            const paddedSpan = Math.max(30 * DAY_MS, Math.min(730 * DAY_MS, contactSpan * 2.5));
-            const center = Number.isFinite(selected)
-                ? selected
-                : (contactStart + contactEnd) / 2;
-            return constrainWindowToLoaded(center - paddedSpan / 2, center + paddedSpan / 2, loaded);
-        }
-        if (Number.isFinite(selected)) {
-            const span = Math.min(loaded.end - loaded.start, defaultVisibleSpanDays(data) * DAY_MS);
-            return constrainWindowToLoaded(selected - span / 2, selected + span / 2, loaded);
-        }
-        return loaded;
+        const center = Number.isFinite(contactStart) && Number.isFinite(contactEnd) && contactEnd > contactStart
+            ? (contactStart + contactEnd) / 2
+            : (loaded.start + loaded.end) / 2;
+        return constrainWindowToLoaded(center - span / 2, center + span / 2, loaded);
     }
 
     function defaultVisibleSpanDays(data = state.data) {
-        const method = data?.method || state.basePayload?.method || 'transit';
-        return ({
-            natal: 365,
-            transit: 365,
-            progression: 3650,
-            direction: 3650,
-            solar_return: 365,
-            synastry_partner: 365,
-        })[method] || 365;
+        return defaultScaleProfile(data).spanDays;
     }
 
     function constrainWindowToLoaded(start, end, loaded) {
@@ -1037,42 +1127,131 @@
         return `${numeric.toFixed(2)}&deg;`;
     }
 
+    function isMsInWindow(ms, window) {
+        if (!Number.isFinite(ms) || !window) return false;
+        return ms >= window.start && ms <= window.end;
+    }
+
+    function contactBounds(contact) {
+        const enter = msFromIso(contact?.enter);
+        const leave = msFromIso(contact?.leave);
+        return {
+            enter,
+            leave,
+        };
+    }
+
+    function contactOverlapsWindow(contact, window) {
+        if (!window) return true;
+        const bounds = contactBounds(contact);
+        if (!Number.isFinite(bounds.enter) || !Number.isFinite(bounds.leave)) return false;
+        return bounds.leave >= window.start && bounds.enter <= window.end;
+    }
+
+    function visibleContacts(data = state.data, window = dataWindowMs(data)) {
+        return (Array.isArray(data?.contacts) ? data.contacts : [])
+            .filter((contact) => contactOverlapsWindow(contact, window))
+            .sort((a, b) => (msFromIso(a.enter) || 0) - (msFromIso(b.enter) || 0));
+    }
+
+    function visibleTimedItems(items, dateKey, window) {
+        return (Array.isArray(items) ? items : [])
+            .filter((item) => isMsInWindow(msFromIso(item?.[dateKey]), window))
+            .sort((a, b) => (msFromIso(a?.[dateKey]) || 0) - (msFromIso(b?.[dateKey]) || 0));
+    }
+
+    function visibleClosestForContact(data, contact, window) {
+        if (!contact) return null;
+        const bounds = contactBounds(contact);
+        const start = Math.max(window?.start ?? -Infinity, bounds.enter ?? -Infinity);
+        const end = Math.min(window?.end ?? Infinity, bounds.leave ?? Infinity);
+        const candidate = graphSeries(data).reduce((best, point) => {
+            const ms = pointMs(point);
+            if (!Number.isFinite(ms) || ms < start || ms > end) return best;
+            const orb = Number.isFinite(Number(point.abs_orb))
+                ? Math.abs(Number(point.abs_orb))
+                : Math.abs(Number(point.signed_orb));
+            if (!Number.isFinite(orb)) return best;
+            if (!best || orb < best.orb) {
+                return {
+                    date: point.datetime,
+                    orb,
+                };
+            }
+            return best;
+        }, null);
+        if (candidate) return candidate;
+        return contact.closest_approach || null;
+    }
+
     function renderSummary(data) {
         if (!state.summary) return;
-        const contact = Array.isArray(data?.contacts) ? data.contacts[0] : null;
         if (state.isLoading && data?.preview) {
             state.summary.innerHTML = `<div class="aspect-dynamics-summary-empty">${escapeHtml(tr('page.forecastNew.aspectDynamics.loading', 'Loading chart...'))}</div>`;
             return;
         }
-        if (!contact) {
-            state.summary.innerHTML = `<div class="aspect-dynamics-summary-empty">${escapeHtml(statusMessage(data?.status))}</div>`;
+        const window = dataWindowMs(data);
+        const contacts = visibleContacts(data, window);
+        if (!contacts.length) {
+            const message = data?.status === 'ok'
+                ? tr('page.forecastNew.aspectDynamics.empty.noVisibleContacts', 'No contacts in the visible range.')
+                : statusMessage(data?.status);
+            state.summary.innerHTML = `<div class="aspect-dynamics-summary-empty">${escapeHtml(message)}</div>`;
             return;
         }
-        const passes = Array.isArray(contact.passes) && contact.passes.length
-            ? contact.passes.map((pass, index) => `
-                <span class="aspect-dynamics-chip">
-                    ${escapeHtml(tr('page.forecastNew.aspectDynamics.pass', 'Pass {number}', { number: index + 1 }))}
-                    <b>${escapeHtml(formatDateTime(pass.date))}</b>
-                    <em>${escapeHtml(pass.motion || '')}</em>
-                </span>
-            `).join('')
-            : `<span class="aspect-dynamics-chip">${escapeHtml(tr('page.forecastNew.aspectDynamics.noExactPass', 'No exact crossing'))}</span>`;
-        const stations = Array.isArray(contact.stations) && contact.stations.length
-            ? contact.stations.map((station) => `
-                <span class="aspect-dynamics-chip">
-                    ${escapeHtml(station.type)}
-                    <b>${escapeHtml(formatDateTime(station.date))}</b>
-                </span>
-            `).join('')
-            : '';
+        let passNumber = 1;
+        const rows = contacts.map((contact) => {
+            const closest = visibleClosestForContact(data, contact, window);
+            const passes = visibleTimedItems(contact.passes, 'date', window);
+            const passList = passes.length
+                ? passes.map((pass) => {
+                    const html = `
+                        <span>
+                            <b>${escapeHtml(tr('page.forecastNew.aspectDynamics.pass', 'Pass {number}', { number: passNumber }))}</b>
+                            ${escapeHtml(formatDateTime(pass.date))}
+                            <em>${escapeHtml(pass.motion || '')}</em>
+                        </span>
+                    `;
+                    passNumber += 1;
+                    return html;
+                }).join('')
+                : `<span>${escapeHtml(tr('page.forecastNew.aspectDynamics.noExactPass', 'No exact crossing'))}</span>`;
+            const stations = visibleTimedItems(contact.stations, 'date', window)
+                .map((station) => `
+                    <span>
+                        <b>${escapeHtml(station.type)}</b>
+                        ${escapeHtml(formatDateTime(station.date))}
+                    </span>
+                `).join('');
+            return `
+                <tr>
+                    <td>${escapeHtml(formatDateTime(contact.enter))}</td>
+                    <td><div class="aspect-dynamics-summary-list">${passList}</div></td>
+                    <td>${escapeHtml(formatDateTime(contact.leave))}</td>
+                    <td><b>${formatOrb(closest?.orb)}</b><span>${escapeHtml(formatDateTime(closest?.date))}</span></td>
+                    <td><div class="aspect-dynamics-summary-list">${stations || `<span>${escapeHtml(tr('common.notAvailable', 'N/A'))}</span>`}</div></td>
+                </tr>
+            `;
+        }).join('');
         state.summary.innerHTML = `
-            <div class="aspect-dynamics-summary-grid">
-                <div><span>${escapeHtml(tr('page.forecast.timeline.tooltip.enter', 'Enter'))}</span><b>${escapeHtml(formatDateTime(contact.enter))}</b></div>
-                <div><span>${escapeHtml(tr('page.forecast.timeline.tooltip.leave', 'Leave'))}</span><b>${escapeHtml(formatDateTime(contact.leave))}</b></div>
-                <div><span>${escapeHtml(tr('page.forecastNew.aspectDynamics.closest', 'Closest approach'))}</span><b>${formatOrb(contact.closest_approach?.orb)} ${escapeHtml(formatDateTime(contact.closest_approach?.date))}</b></div>
-                <div><span>${escapeHtml(tr('common.orb', 'Orb'))}</span><b>${formatOrb(data?.orb_used)}</b></div>
+            <div class="aspect-dynamics-summary-meta">
+                <span>${escapeHtml(formatDateShort(window.start))} - ${escapeHtml(formatDateShort(window.end))}</span>
+                <span>${escapeHtml(tr('common.orb', 'Orb'))} <b>${formatOrb(data?.orb_used)}</b></span>
             </div>
-            <div class="aspect-dynamics-chip-row">${passes}${stations}</div>
+            <div class="aspect-dynamics-summary-table-wrap">
+                <table class="aspect-dynamics-summary-table">
+                    <thead>
+                        <tr>
+                            <th>${escapeHtml(tr('page.forecast.timeline.tooltip.enter', 'Enter'))}</th>
+                            <th>${escapeHtml(tr('page.forecastNew.aspectDynamics.summary.exact', 'Exact'))}</th>
+                            <th>${escapeHtml(tr('page.forecast.timeline.tooltip.leave', 'Leave'))}</th>
+                            <th>${escapeHtml(tr('page.forecastNew.aspectDynamics.closest', 'Closest approach'))}</th>
+                            <th>${escapeHtml(tr('page.forecastNew.aspectDynamics.summary.stations', 'Stations'))}</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
         `;
     }
 
@@ -1085,6 +1264,15 @@
         return (data?.series || []).filter((point) => (
             Number.isFinite(Number(point.signed_orb)) && pointMs(point) !== null
         ));
+    }
+
+    function scaledYAxisMaxAbs(data, window, plotW, plotH) {
+        const profile = defaultScaleProfile(data);
+        const spanDays = Math.max(MIN_WINDOW_DAYS, Math.abs((window.end - window.start) / DAY_MS));
+        const daysPerDegree = Math.max(0.05, Number(profile.daysPerDegree || 1));
+        const ratioAbs = (plotH * spanDays) / (Math.max(1, plotW) * daysPerDegree * 2);
+        const yScale = Math.max(MIN_Y_SCALE_FACTOR, Math.min(MAX_Y_SCALE_FACTOR, Number(state.yScaleFactor || 1)));
+        return Math.max(0.1, ratioAbs * yScale);
     }
 
     function drawChart() {
@@ -1125,9 +1313,7 @@
         const windowMs = dataWindowMs(data) || { start: seriesMinMs, end: seriesMaxMs };
         const minMs = windowMs.start;
         const maxMs = windowMs.end;
-        const orbUsed = Math.abs(Number(data?.orb_used || 0));
-        const maxSeriesAbs = Math.max(...series.map((point) => Math.abs(Number(point.signed_orb))));
-        const maxAbs = Math.max(1, orbUsed, maxSeriesAbs) * 1.08;
+        const maxAbs = scaledYAxisMaxAbs(data, windowMs, plotW, plotH);
 
         const xOf = (ms) => {
             if (maxMs === minMs) return pad.left;
@@ -1142,6 +1328,7 @@
         drawZetGrid(ctx, ticks, xOf, yOf, pad, width, plotBottom, plotH, maxAbs);
         drawRangeCaption(ctx, data, minMs, maxMs, pad, width);
 
+        const orbUsed = Math.abs(Number(data?.orb_used || 0));
         if (orbUsed > 0) {
             ctx.save();
             ctx.setLineDash([3, 4]);
@@ -1180,16 +1367,26 @@
 
         drawContactMarkers(ctx, data, xOf, yOf, pad, width, plotBottom);
         drawSelectedMarker(ctx, data?.selected_point, xOf, yOf, pad, width, plotBottom);
-        drawScaleKey(ctx, minMs, maxMs, yOf, pad, width, plotBottom);
-        drawHoverMarker(ctx, state.hoverMs, xOf, yOf(0), pad, width, plotBottom, minMs, maxMs);
+        drawScaleKey(ctx, minMs, maxMs, yOf, pad, width, plotBottom, maxAbs);
+        drawHoverMarker(ctx, state.hoverMs, state.hoverOrb, xOf, yOf, pad, width, plotBottom, minMs, maxMs);
         drawOverviewChart();
     }
 
-    function drawHoverMarker(ctx, hoverMs, xOf, axisY, pad, width, plotBottom, minMs, maxMs) {
+    function formatSignedOrbLabel(value) {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return '';
+        const prefix = numeric > 0 ? '+' : '';
+        return `${prefix}${numeric.toFixed(2)}°`;
+    }
+
+    function drawHoverMarker(ctx, hoverMs, hoverOrb, xOf, yOf, pad, width, plotBottom, minMs, maxMs) {
         if (!Number.isFinite(hoverMs) || hoverMs < minMs || hoverMs > maxMs) return;
         const x = xOf(hoverMs);
         if (x < pad.left || x > width - pad.right) return;
+        const axisY = yOf(0);
+        const orbY = Number.isFinite(hoverOrb) ? yOf(hoverOrb) : axisY;
         const label = formatHoverDateTime(hoverMs, maxMs - minMs);
+        const orbLabel = formatSignedOrbLabel(hoverOrb);
         const textWidth = typeof ctx.measureText === 'function'
             ? ctx.measureText(label).width
             : label.length * 6.5;
@@ -1197,6 +1394,13 @@
         const boxH = 22;
         const boxX = Math.max(pad.left, Math.min(width - pad.right - boxW, x - boxW / 2));
         const boxY = Math.max(pad.top + 8, Math.min(plotBottom - boxH - 4, axisY + 12));
+        const orbTextWidth = typeof ctx.measureText === 'function'
+            ? ctx.measureText(orbLabel).width
+            : orbLabel.length * 6.5;
+        const orbBoxW = Math.ceil(orbTextWidth + 12);
+        const orbBoxH = 20;
+        const orbBoxX = pad.left + 6;
+        const orbBoxY = Math.max(pad.top, Math.min(plotBottom - orbBoxH, orbY - orbBoxH / 2));
 
         ctx.save();
         ctx.setLineDash([4, 4]);
@@ -1206,12 +1410,35 @@
         ctx.moveTo(x, pad.top);
         ctx.lineTo(x, plotBottom);
         ctx.stroke();
+        if (Number.isFinite(hoverOrb)) {
+            ctx.beginPath();
+            ctx.moveTo(pad.left, orbY);
+            ctx.lineTo(width - pad.right, orbY);
+            ctx.stroke();
+        }
         ctx.setLineDash([]);
 
         ctx.fillStyle = '#946b1f';
         ctx.beginPath();
-        ctx.arc(x, axisY, 3.4, 0, Math.PI * 2);
+        ctx.arc(x, orbY, 3.4, 0, Math.PI * 2);
         ctx.fill();
+        ctx.beginPath();
+        ctx.arc(pad.left, orbY, 3.4, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (orbLabel) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
+            ctx.fillRect(orbBoxX, orbBoxY, orbBoxW, orbBoxH);
+            ctx.strokeStyle = '#c9a15c';
+            if (typeof ctx.strokeRect === 'function') {
+                ctx.strokeRect(orbBoxX, orbBoxY, orbBoxW, orbBoxH);
+            }
+            ctx.fillStyle = '#3b3020';
+            ctx.font = '11px system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(orbLabel, orbBoxX + orbBoxW / 2, orbBoxY + orbBoxH / 2 + 0.5);
+        }
 
         ctx.fillStyle = 'rgba(255, 255, 255, 0.94)';
         ctx.fillRect(boxX, boxY, boxW, boxH);
@@ -1344,15 +1571,17 @@
         ctx.restore();
     }
 
-    function drawScaleKey(ctx, minMs, maxMs, yOf, pad, width, plotBottom) {
+    function drawScaleKey(ctx, minMs, maxMs, yOf, pad, width, plotBottom, maxAbs) {
         const spanMs = maxMs - minMs;
-        const scaleMs = pickScaleInterval(spanMs);
-        if (!Number.isFinite(scaleMs) || scaleMs <= 0) return;
         const plotW = width - pad.left - pad.right;
-        const w = Math.max(32, Math.min(110, (scaleMs / spanMs) * plotW));
+        const scaleDegrees = maxAbs >= 1 ? 1 : 0.1;
+        const scaleYPx = Math.abs(yOf(scaleDegrees) - yOf(0));
+        const scaleMs = (scaleYPx / Math.max(1, plotW)) * spanMs;
+        if (!Number.isFinite(scaleMs) || scaleMs <= 0) return;
+        const w = Math.max(24, Math.min(130, (scaleMs / spanMs) * plotW));
         const x = Math.max(pad.left + 64, width - pad.right - w - 48);
         const y = Math.max(pad.top + 42, plotBottom - 16);
-        const h = Math.max(12, Math.min(54, Math.abs(yOf(1) - yOf(0))));
+        const h = Math.max(12, Math.min(54, scaleYPx));
         ctx.save();
         ctx.strokeStyle = '#25258f';
         ctx.fillStyle = '#25258f';
@@ -1364,7 +1593,7 @@
         ctx.stroke();
         ctx.font = '10px system-ui, sans-serif';
         ctx.textAlign = 'right';
-        ctx.fillText('1°', x - 5, y - h + 4);
+        ctx.fillText(`${scaleDegrees}°`, x - 5, y - h + 4);
         ctx.textAlign = 'left';
         ctx.fillText(formatSpanLabel(scaleMs), x + w + 5, y + 3);
         ctx.restore();
@@ -1431,35 +1660,39 @@
     }
 
     function drawContactMarkers(ctx, data, xOf, yOf, pad, width, plotBottom) {
-        const contact = Array.isArray(data?.contacts) ? data.contacts[0] : null;
-        if (!contact) return;
+        const contacts = visibleContacts(data);
+        if (!contacts.length) return;
         ctx.save();
         ctx.fillStyle = '#1e3a5f';
         ctx.strokeStyle = '#1e3a5f';
-        (contact.passes || []).forEach((pass) => {
-            const ms = new Date(pass.date).getTime();
-            if (!Number.isFinite(ms)) return;
-            const x = xOf(ms);
-            if (x < pad.left || x > width - pad.right) return;
-            ctx.beginPath();
-            ctx.arc(x, yOf(0), 4, 0, Math.PI * 2);
-            ctx.fill();
+        contacts.forEach((contact) => {
+            (contact.passes || []).forEach((pass) => {
+                const ms = new Date(pass.date).getTime();
+                if (!Number.isFinite(ms)) return;
+                const x = xOf(ms);
+                if (x < pad.left || x > width - pad.right) return;
+                ctx.beginPath();
+                ctx.arc(x, yOf(0), 4, 0, Math.PI * 2);
+                ctx.fill();
+            });
         });
         ctx.fillStyle = '#7a4f9f';
         ctx.font = '11px system-ui, sans-serif';
         ctx.textAlign = 'center';
-        (contact.stations || []).forEach((station) => {
-            const ms = new Date(station.date).getTime();
-            if (!Number.isFinite(ms)) return;
-            const x = xOf(ms);
-            if (x < pad.left || x > width - pad.right) return;
-            ctx.beginPath();
-            ctx.moveTo(x, pad.top + 5);
-            ctx.lineTo(x - 4, pad.top + 14);
-            ctx.lineTo(x + 4, pad.top + 14);
-            ctx.closePath();
-            ctx.fill();
-            ctx.fillText(station.type || '', x, pad.top + 28);
+        contacts.forEach((contact) => {
+            (contact.stations || []).forEach((station) => {
+                const ms = new Date(station.date).getTime();
+                if (!Number.isFinite(ms)) return;
+                const x = xOf(ms);
+                if (x < pad.left || x > width - pad.right) return;
+                ctx.beginPath();
+                ctx.moveTo(x, pad.top + 5);
+                ctx.lineTo(x - 4, pad.top + 14);
+                ctx.lineTo(x + 4, pad.top + 14);
+                ctx.closePath();
+                ctx.fill();
+                ctx.fillText(station.type || '', x, pad.top + 28);
+            });
         });
         ctx.restore();
     }
@@ -1611,18 +1844,6 @@
         if (days >= 365 * 2) return `${(days / 365.2425).toFixed(days >= 3650 ? 0 : 1)}y`;
         if (days >= 60) return `${Math.round(days / 30.4375)}mo`;
         return `${Math.max(1, Math.round(days))}d`;
-    }
-
-    function pickScaleInterval(spanMs) {
-        const days = Math.abs(spanMs) / DAY_MS;
-        if (days >= 365 * 80) return 365.2425 * 10 * DAY_MS;
-        if (days >= 365 * 25) return 365.2425 * 5 * DAY_MS;
-        if (days >= 365 * 5) return 365.2425 * DAY_MS;
-        if (days >= 365 * 2) return 91.3125 * DAY_MS;
-        if (days >= 120) return 30.4375 * DAY_MS;
-        if (days >= 30) return 7 * DAY_MS;
-        if (days >= 7) return DAY_MS;
-        return Math.max(DAY_MS / 4, spanMs / 8);
     }
 
     function formatDateShort(ms) {

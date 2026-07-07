@@ -263,8 +263,10 @@
       "aspectDynamics": {
         "loading": "Loading chart...",
         "toolbar": "Chart controls",
-        "zoomIn": "Zoom in",
-        "zoomOut": "Zoom out",
+        "zoomXIn": "Zoom X axis in",
+        "zoomXOut": "Zoom X axis out",
+        "zoomYIn": "Zoom Y axis in",
+        "zoomYOut": "Zoom Y axis out",
         "resetZoom": "Reset zoom",
         "legend": {
           "orb": "signed orb",
@@ -274,11 +276,16 @@
         "closest": "Closest approach",
         "pass": "Pass {number}",
         "noExactPass": "No exact crossing",
+        "summary": {
+          "exact": "Exact",
+          "stations": "Stations"
+        },
         "empty": {
           "notInOrb": "The selected moment is outside the aspect orb.",
           "unknownNatal": "Natal object is not available.",
           "unknownAspect": "Aspect type is not available.",
           "unsupportedTransit": "Transit body is not supported.",
+          "noVisibleContacts": "No contacts in the visible range.",
           "noData": "No aspect dynamics data."
         },
         "errors": {

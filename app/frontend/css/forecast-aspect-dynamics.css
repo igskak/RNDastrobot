@@ -253,70 +253,90 @@
 }
 
 .aspect-dynamics-summary {
-    min-height: 116px;
-    max-height: 190px;
+    min-height: 92px;
+    max-height: 168px;
     overflow: auto;
-    padding: 0 14px 14px;
+    padding: 0 14px 12px;
 }
 
-.aspect-dynamics-summary-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 8px;
+.aspect-dynamics-summary-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    align-items: center;
+    padding: 4px 0 6px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 700;
 }
 
-.aspect-dynamics-summary-grid div {
+.aspect-dynamics-summary-meta b {
+    color: var(--text-primary);
+}
+
+.aspect-dynamics-summary-table-wrap {
     min-width: 0;
-    padding: 9px 10px;
-    border: 1px solid rgba(30, 58, 95, 0.1);
-    border-radius: 8px;
-    background: rgba(249, 247, 242, 0.7);
+    overflow-x: auto;
+    border-top: 1px solid rgba(30, 58, 95, 0.12);
 }
 
-.aspect-dynamics-summary-grid span {
-    display: block;
-    margin-bottom: 4px;
+.aspect-dynamics-summary-table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+    color: var(--text-primary);
+    font-size: 11.5px;
+    line-height: 1.35;
+}
+
+.aspect-dynamics-summary-table th,
+.aspect-dynamics-summary-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(30, 58, 95, 0.08);
+    text-align: left;
+    vertical-align: top;
+}
+
+.aspect-dynamics-summary-table th {
     color: var(--text-muted);
     font-size: 10px;
     font-weight: 800;
     text-transform: uppercase;
+    white-space: nowrap;
 }
 
-.aspect-dynamics-summary-grid b {
-    color: var(--text-primary);
-    font-size: 12px;
-    line-height: 1.35;
-    font-weight: 700;
+.aspect-dynamics-summary-table td:nth-child(1),
+.aspect-dynamics-summary-table td:nth-child(3) {
+    white-space: nowrap;
+}
+
+.aspect-dynamics-summary-table td:nth-child(4) b {
+    display: inline-block;
+    min-width: 42px;
+    margin-right: 6px;
+    color: var(--accent);
+}
+
+.aspect-dynamics-summary-table td:nth-child(4) span {
+    color: var(--text-secondary);
+}
+
+.aspect-dynamics-summary-list {
+    display: grid;
+    gap: 3px;
+}
+
+.aspect-dynamics-summary-list span {
     overflow-wrap: anywhere;
 }
 
-.aspect-dynamics-chip-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 7px;
-    margin-top: 10px;
-}
-
-.aspect-dynamics-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    max-width: 100%;
-    padding: 6px 8px;
-    border: 1px solid rgba(30, 58, 95, 0.1);
-    border-radius: 999px;
-    background: #fff;
-    color: var(--text-secondary);
-    font-size: 12px;
-    line-height: 1.3;
-}
-
-.aspect-dynamics-chip b {
+.aspect-dynamics-summary-list b {
+    margin-right: 5px;
     color: var(--text-primary);
-    font-weight: 700;
 }
 
-.aspect-dynamics-chip em {
+.aspect-dynamics-summary-list em {
+    margin-left: 5px;
     color: var(--accent);
     font-style: normal;
     font-weight: 800;
@@ -373,15 +393,5 @@
 
     .aspect-dynamics-summary {
         padding: 0 12px 14px;
-    }
-
-    .aspect-dynamics-summary-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 440px) {
-    .aspect-dynamics-summary-grid {
-        grid-template-columns: 1fr;
     }
 }
