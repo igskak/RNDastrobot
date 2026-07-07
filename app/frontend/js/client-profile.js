@@ -1672,6 +1672,13 @@ function renderLinkedChartsList(charts) {
             </div>
             <div class="profile-linked-chart-actions">
                 ${c.link_source === 'm2m' ? `<button class="profile-icon-btn profile-icon-btn--danger" type="button" data-action="unlink-chart" data-chart-id="${escapeHtml(String(c.chart_id))}" aria-label="${escapeHtml(t('page.clientProfile.linkedCharts.unlink'))}" title="${escapeHtml(t('page.clientProfile.linkedCharts.unlink'))}"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 4.5h9M6 2.5h4l.5 2H5.5l.5-2ZM5 6.5v6m3-6v6m3-6v6M4.5 4.5l.6 9h5.8l.6-9" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></button>` : ''}
+                <div class="profile-actions-menu profile-linked-chart-menu">
+                    <button class="profile-icon-btn" type="button" data-action="chart-menu-toggle" aria-haspopup="menu" aria-expanded="false" aria-label="${escapeHtml(t('page.clients.table.actions'))}" title="${escapeHtml(t('page.clients.table.actions'))}"><svg width="14" height="4" viewBox="0 0 14 4" fill="none" aria-hidden="true"><circle cx="2" cy="2" r="1.4" fill="currentColor"/><circle cx="7" cy="2" r="1.4" fill="currentColor"/><circle cx="12" cy="2" r="1.4" fill="currentColor"/></svg></button>
+                    <div class="actions-dropdown profile-actions-dropdown" role="menu">
+                        <button class="action-item" type="button" role="menuitem" data-action="edit-chart" data-chart-id="${escapeHtml(String(c.chart_id))}">${escapeHtml(t('page.clients.actions.edit'))}</button>
+                        <button class="action-item danger" type="button" role="menuitem" data-action="delete-chart" data-chart-id="${escapeHtml(String(c.chart_id))}">${escapeHtml(t('page.clients.actions.delete'))}</button>
+                    </div>
+                </div>
             </div>
         </div>`;
     }).join('');
@@ -1680,6 +1687,32 @@ function renderLinkedChartsList(charts) {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
             unlinkChart(btn.dataset.chartId);
+        });
+    });
+
+    refs.linkedChartsList.querySelectorAll('[data-action="chart-menu-toggle"]').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const dropdown = btn.nextElementSibling;
+            const willOpen = !dropdown.classList.contains('open');
+            closeChartMenus();
+            dropdown.classList.toggle('open', willOpen);
+            btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        });
+    });
+
+    refs.linkedChartsList.querySelectorAll('[data-action="edit-chart"]').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeChartMenus();
+            openEditClientDialog(btn.dataset.chartId);
+        });
+    });
+
+    refs.linkedChartsList.querySelectorAll('[data-action="delete-chart"]').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteLinkedChart(btn.dataset.chartId, btn);
         });
     });
 
@@ -1693,6 +1726,69 @@ function renderLinkedChartsList(charts) {
             }
         });
     });
+}
+
+function closeChartMenus() {
+    refs.linkedChartsList?.querySelectorAll('.profile-linked-chart-menu .actions-dropdown.open').forEach((d) => {
+        d.classList.remove('open');
+        const btn = d.previousElementSibling;
+        btn?.setAttribute('aria-expanded', 'false');
+        const del = d.querySelector('[data-action="delete-chart"]');
+        if (del) {
+            del.dataset.confirming = 'false';
+            del.classList.remove('confirming');
+            del.textContent = t('page.clients.actions.delete');
+        }
+    });
+}
+
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.profile-linked-chart-menu')) closeChartMenus();
+});
+
+async function deleteLinkedChart(chartId, button) {
+    if (!chartId || !button) return;
+
+    // Two-step confirm inside the menu, matching the clients list pattern.
+    if (button.dataset.confirming !== 'true') {
+        button.dataset.confirming = 'true';
+        button.classList.add('confirming');
+        button.textContent = t('page.clients.actions.confirmDelete');
+        showToast(t('page.clients.messages.confirmDeleteHint'), 'warning');
+        setTimeout(() => {
+            if (button.dataset.confirming !== 'true') return;
+            button.dataset.confirming = 'false';
+            button.classList.remove('confirming');
+            button.textContent = t('page.clients.actions.delete');
+        }, 4000);
+        return;
+    }
+
+    button.disabled = true;
+    try {
+        const res = await apiFetch(`${API_BASE}/charts/${encodeURIComponent(chartId)}`, { method: 'DELETE' });
+        if (!res.ok) {
+            let message = t('page.clients.errors.deleteFailed');
+            try {
+                const payload = await res.json();
+                if (payload?.message?.trim()) message = payload.message;
+                else if (payload?.detail?.trim()) message = payload.detail;
+            } catch (_) { /* non-json response */ }
+            throw new Error(message);
+        }
+        showToast(t('page.clients.messages.deleted'), 'success');
+        // Deleting the profile's own chart makes this page invalid → back to list.
+        if (String(chartId) === String(userId)) {
+            window.location.href = '/';
+            return;
+        }
+        linkedChartIds.delete(String(chartId));
+        await loadAndRenderLinkedCharts(currentPersonId);
+    } catch (err) {
+        button.disabled = false;
+        closeChartMenus();
+        showToast(err.message || t('page.clients.errors.deleteFailed'), 'error');
+    }
 }
 
 function openLinkedChart(chartId) {
