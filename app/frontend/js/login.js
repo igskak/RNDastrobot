@@ -122,10 +122,12 @@
         const token = (params.get('token') || '').trim();
         const mode = (params.get('mode') || '').trim();
         const locale = (params.get('locale') || '').trim();
+        const plan = (params.get('plan') || '').trim().toLowerCase();
         return {
             mode,
             token,
             locale,
+            plan,
             next: normalizeLocalRedirect(params.get('next') || ''),
             oauthCallback: params.get('oauth') === 'callback',
             oauthError: (params.get('error') || '').trim(),
@@ -337,6 +339,10 @@
             showRegisterPassword: false,
             showRegisterConfirmPassword: false,
             registerCapsLock: false,
+            // Everyone registers as a professional (trial → full Pro) by default.
+            // The "solo" (beginner) plan is only reachable via a direct link
+            // carrying ?plan=solo, so it is not offered in the registration UI.
+            registerPlanCode: 'trial',
 
             statusText: '',
             statusTone: 'info',
@@ -637,7 +643,7 @@
                 confirmPassword: refs.registerPasswordConfirm?.value,
                 firstName: refs.registerFirstName?.value,
                 lastName: refs.registerLastName?.value,
-                planCode: refs.registerPlanCodeInputs?.find((input) => input.checked)?.value,
+                planCode: state.registerPlanCode,
             });
 
             setFieldError(refs.registerEmail, refs.registerEmailError, result.errors.email || '');
@@ -1313,7 +1319,6 @@
             refs.registerPasswordConfirm = documentRef.getElementById('registerPasswordConfirm');
             refs.registerFirstName = documentRef.getElementById('registerFirstName');
             refs.registerLastName = documentRef.getElementById('registerLastName');
-            refs.registerPlanCodeInputs = Array.from(documentRef.querySelectorAll('input[name="registerPlanCode"]'));
             refs.verifyResendEmail = documentRef.getElementById('verifyResendEmail');
 
             refs.loginEmailError = documentRef.getElementById('loginEmailError');
@@ -1351,6 +1356,9 @@
             const route = parseAuthRoute(locationRef?.search || '');
             state.resetToken = route.token;
             state.verificationToken = route.token;
+            // Solo/beginner accounts are only offered through a direct ?plan=solo
+            // invite link; every other visitor registers as a professional.
+            state.registerPlanCode = route.plan === 'solo' ? 'solo' : 'trial';
             state.view = route.mode === 'forgot'
                 ? 'forgot'
                 : route.mode === 'success'
