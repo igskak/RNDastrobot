@@ -449,6 +449,9 @@ class ChartDataRenderer {
         table.classList.toggle('planets-table--speed-hidden', !this.showSpeed);
         table.classList.toggle('planets-table--speed-column-hidden', !this.showSpeedColumn);
         table.classList.toggle('planets-table--house-column-hidden', !this.showHouseColumn);
+        // При отображении секунд координата длиннее — уплотняем колонки скорости и чекбоксов.
+        const degreeFormat = window.AstroPreferences?.getDegreeFormat?.() || 'DEGREES_ONLY';
+        table.classList.toggle('planets-table--seconds', degreeFormat === 'DEGREES_MINUTES_SECONDS');
     }
 
     setVisualPreferences(visualPreferences = {}) {
@@ -515,7 +518,7 @@ class ChartDataRenderer {
             const position = this.formatAstroCoordinate(p);
             const planetIcon = this.createPlanetIconSVG(p);
             const speedChip = this.renderPlanetSpeedChip(p);
-            const fixedStarBadges = this.renderFixedStarBadges(p);
+            const fixedStarBadge = this.renderFixedStarSymbolBadge(p);
             const motionBadges = [
                 this.showStationary ? this.stationaryIndicatorHtml(p, 'planet-status-badge--small') : '',
                 this.retroIndicatorHtml(p.retrograde, 'retro-indicator--small')
@@ -530,16 +533,16 @@ class ChartDataRenderer {
                 <tr id="row-${p.name}" data-planet="${p.name}">
                     <td class="symbol-cell">
                         <div class="planet-symbol-cell">
-                            ${planetIcon}
+                            <span class="planet-icon-wrap">
+                                ${planetIcon}
+                                ${fixedStarBadge}
+                            </span>
                             ${motionBadges ? `<span class="planet-motion-stack">${motionBadges}</span>` : ''}
                             <span class="planet-special-status-column" aria-hidden="true">${specialPositionBadges}</span>
                         </div>
                     </td>
                     <td class="mono">
-                        <div class="planet-position-layout">
-                            <div class="planet-position-main">${position}</div>
-                            ${fixedStarBadges}
-                        </div>
+                        <div class="planet-position-main">${position}</div>
                     </td>
                     ${this.showSpeedColumn ? `<td class="planet-speed-cell mono">${this.showSpeed ? speedChip : ''}</td>` : ''}
                     ${this.showHouseColumn ? `<td class="mono">${this.escapeHtml(this.formatHouseNumber(p.house))}</td>` : ''}
@@ -589,26 +592,47 @@ class ChartDataRenderer {
         `.trim();
     }
 
-    renderFixedStarBadges(planet) {
+    // Одна звёздочка справа сверху иконки тела; во всплывающей подсказке — все звёзды в соединении.
+    renderFixedStarSymbolBadge(planet) {
         const contacts = this.getFixedStarContactsForPlanet(planet?.name);
         if (!contacts.length) return '';
+        const tooltip = this.fixedStarSummaryTooltipHtml(contacts);
+        const title = this.t('page.chart.settings.fixedStars.title');
+        const label = contacts.length > 1 ? `${title} (${contacts.length})` : title;
         return `
-            <div class="planet-fixed-stars" aria-label="${this.escapeHtml(this.t('page.chart.settings.fixedStars.title'))}">
-                ${contacts.map((contact) => {
-                    const label = contact?.star || '';
-                    const tooltip = this.fixedStarTooltipHtml(contact);
-                    return `
-                        <span
-                            class="fixed-star-badge"
-                            role="img"
-                            tabindex="0"
-                            aria-label="${this.escapeHtml(label)}"
-                            data-fixed-star-tooltip="${this.escapeHtml(tooltip)}"
-                        >✶</span>
-                    `;
-                }).join('')}
-            </div>
+            <span
+                class="fixed-star-badge fixed-star-badge--icon"
+                role="img"
+                tabindex="0"
+                aria-label="${this.escapeHtml(label)}"
+                data-fixed-star-tooltip="${this.escapeHtml(tooltip)}"
+            >✶</span>
         `;
+    }
+
+    fixedStarSummaryTooltipHtml(contacts) {
+        if (contacts.length === 1) return this.fixedStarTooltipHtml(contacts[0]);
+        const title = this.t('page.chart.settings.fixedStars.title');
+        const rows = contacts.map((contact) => {
+            const star = this.findFixedStarInfo(contact) || {};
+            const name = star.name || contact?.star || '';
+            const position = star.degree_in_sign_formatted && star.sign
+                ? `${star.degree_in_sign_formatted} ${this.signName(star.sign)}`
+                : (contact?.star_position || '');
+            const orb = Number(contact?.orb);
+            const orbLabel = Number.isFinite(orb) ? `${orb.toFixed(2)}°` : '';
+            return `
+                <div class="fixed-star-tooltip-row">
+                    <span class="fixed-star-tooltip-star">✶ ${this.escapeHtml(name)}</span>
+                    ${position ? `<span class="fixed-star-tooltip-pos">${this.escapeHtml(position)}</span>` : ''}
+                    ${orbLabel ? `<span class="fixed-star-tooltip-orb">${this.escapeHtml(orbLabel)}</span>` : ''}
+                </div>
+            `;
+        }).join('');
+        return `
+            <div class="fixed-star-tooltip-title">${this.escapeHtml(title)}</div>
+            <div class="fixed-star-tooltip-list">${rows}</div>
+        `.trim();
     }
 
     renderPlanetSpeedChip(planet) {

@@ -1803,6 +1803,26 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
 .forecast-new-side-panel .forecast-new-speed-column { width: 27%; }
 .forecast-new-side-panel .forecast-new-matrix-column { width: 11%; }
 
+/* Режим Г°М'С": координата длиннее — отдаём ей место, уплотняя скорость и чекбоксы. */
+.forecast-new-side-panel .forecast-new-planets-table.planets-table--seconds .forecast-new-position-column { width: 38%; }
+.forecast-new-side-panel .forecast-new-planets-table.planets-table--seconds .forecast-new-speed-column { width: 18%; }
+.forecast-new-side-panel .forecast-new-planets-table.planets-table--seconds .forecast-new-matrix-column { width: 8%; }
+
+.forecast-new-planets-table.planets-table--seconds .planet-speed-cell {
+    padding-inline: 1px;
+}
+
+.forecast-new-planets-table.planets-table--seconds .planet-meta-chip {
+    padding-inline: 4px;
+}
+
+.forecast-new-planets-table.planets-table--seconds .forecast-new-matrix-inline-cell {
+    width: 20px;
+    min-width: 20px;
+    max-width: 20px;
+    padding-inline: 1px !important;
+}
+
 /* У houses знак забирает остаток */
 .forecast-new-side-panel .forecast-new-house-cusp-column  { width: 31%; }
 .forecast-new-side-panel .forecast-new-house-sign-column  { width: 39%; }
@@ -1958,10 +1978,11 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     white-space: nowrap;
 }
 
-.forecast-new-page .planet-fixed-stars {
+.forecast-new-page .planet-icon-wrap {
+    position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 2px;
+    justify-content: center;
     flex: 0 0 auto;
 }
 
@@ -1978,11 +1999,49 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     cursor: help;
 }
 
+/* Одна звёздочка в правом верхнем углу иконки тела, на уровне ретроградности. */
+.forecast-new-page .fixed-star-badge--icon {
+    position: absolute;
+    top: -4px;
+    right: -5px;
+    width: 12px;
+    height: 12px;
+    font-size: 10px;
+    z-index: 2;
+}
+
 .forecast-new-page .fixed-star-badge:hover,
 .forecast-new-page .fixed-star-badge:focus-visible {
     color: #78350f;
     background: rgba(245, 158, 11, 0.14);
     outline: none;
+}
+
+.forecast-new-fixed-star-tooltip .fixed-star-tooltip-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-top: 4px;
+}
+
+.forecast-new-fixed-star-tooltip .fixed-star-tooltip-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.forecast-new-fixed-star-tooltip .fixed-star-tooltip-star {
+    font-weight: 600;
+}
+
+.forecast-new-fixed-star-tooltip .fixed-star-tooltip-pos,
+.forecast-new-fixed-star-tooltip .fixed-star-tooltip-orb {
+    opacity: 0.75;
+}
+
+.forecast-new-fixed-star-tooltip .fixed-star-tooltip-orb {
+    margin-left: auto;
 }
 
 .forecast-new-fixstar-contact-name {
