@@ -2721,11 +2721,24 @@
     }
 
     function renderOrUpdateTimeStepper() {
+        // Соляр ещё считается на бэкенде — реального момента возврата Солнца нет.
+        // Показывать 01.01.YYYY 12:00 в степпере было бы враньём → лоадер.
+        if (isSolarMomentPending()) {
+            renderTimeStepperLoading();
+            return;
+        }
         if (!refs.forecastNewTimeStepper?.querySelector('[data-time-step-key]')) {
             renderTimeStepper();
             return;
         }
         updateTimeStepperValues(refs.forecastNewTimeStepper, getDisplayedMomentDateTime());
+    }
+
+    function renderTimeStepperLoading() {
+        if (!refs.forecastNewTimeStepper) return;
+        const label = t('page.forecastNew.solarCalculating', null, 'Рассчитываем соляр…');
+        refs.forecastNewTimeStepper.innerHTML =
+            `<span class="forecast-new-time-stepper-loading"><span class="forecast-new-meta-spinner" aria-hidden="true"></span>${escapeHtml(label)}</span>`;
     }
 
     function renderNatalTimeStepper() {
@@ -5783,6 +5796,7 @@
         syncMomentCardLayout();
         renderOrUpdateTimeStepper();
         refs.targetDatetimeLabel.textContent = solarPending ? '' : formatChartDateTimeLabel(getDisplayedMomentDateTime());
+        refs.forecastNewProgPanel?.classList.toggle('forecast-new-solar-pending', solarPending);
 
         if (!layer) {
             state.prognosticRenderer?.setHouseNumberStyle?.(state.pageSettings.houseNumberStyle);
