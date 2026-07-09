@@ -115,6 +115,10 @@
         compositeData: null,
         compositeChartData: null,
         compositeMeta: null,
+        // «Обмен карт» (аналог Swap в ZET): id прогностического инстанса
+        // (соляр/партнёр), временно повышенного в базовую карту. null = обычный
+        // натал как база. Эфемерное состояние вида — не персистится.
+        swapBaseLayerId: null,
         resultView: 'wheel',
         // Параметры новых слоёв (Path B шаг 2)
         solarYear: new Date().getFullYear(),
@@ -429,6 +433,10 @@
     }
 
     function selectedPanelTitle(method) {
+        // При свопе правая панель показывает понижённый натал (второстепенную карту).
+        if (isSwapActive() && selectedLayerInstance()?.id === state.swapBaseLayerId) {
+            return t('page.forecastNew.natalPanelTitle') || 'Натал';
+        }
         const inst = selectedLayerInstance();
         if (inst?.config?.chartTitle) return inst.config.chartTitle;
         if (method === 'synastry_partner') {
@@ -631,7 +639,7 @@
             'natalTimezoneInput', 'natalLocationInput', 'natalLocationSuggestions',
             'natalLatitudeInput', 'natalLongitudeInput',
             'forecastNewMatrixEditor', 'forecastNewSettingsMatrixEditor',
-            'forecastNewViewSingle', 'forecastNewViewMulti',
+            'forecastNewViewSingle', 'forecastNewViewMulti', 'forecastNewSwapCharts', 'forecastNewSwapChip',
             'forecastNewSolarYearInput', 'forecastNewSolarLocationInput', 'forecastNewSolarLocationSuggestions',
             'forecastNewSolarLat', 'forecastNewSolarLon', 'forecastNewSynastryPartnerSelect', 'forecastNewCompositeHeaderBtn',
             'momentSolarYearInput', 'momentSolarLocationInput', 'momentSolarLocationSuggestions',
@@ -1215,6 +1223,7 @@
 
         refs.forecastNewViewSingle?.addEventListener('click', () => setWheelView('single', { singleChartMode: 'natal' }));
         refs.forecastNewViewMulti?.addEventListener('click', () => setWheelView('multi'));
+        refs.forecastNewSwapCharts?.addEventListener('click', () => toggleSwap());
         syncWheelViewButtons();
         refs.forecastNewZoomIn?.addEventListener('click', () => setViewport({ zoom: state.viewport.zoom * 1.18 }));
         refs.forecastNewZoomOut?.addEventListener('click', () => setViewport({ zoom: state.viewport.zoom / 1.18 }));
@@ -1321,6 +1330,8 @@
         state.activeLayers = state.activeLayers.filter((l) => l && l.id && LAYER_ORDER.includes(l.method));
         sortActiveLayersInPlace();
         state.enabledLayers = state.activeLayers;
+        // Своп повышенного слоя больше нет в активных → снять своп.
+        reconcileSwapState();
         if (!selectedLayerInstance()) {
             state.selectedRightLayerId = state.activeLayers[0]?.id || '';
         }
@@ -2355,6 +2366,22 @@
     }
 
     function updateNatalMomentMeta() {
+        // При свопе базой стала повышенная карта (соляр/партнёр) — панель базы
+        // должна честно называться её именем, а не «Натал».
+        if (isSwapActive()) {
+            const inst = swappedLayerInstance();
+            const chart = activeBaseChartData();
+            const bd = chart?.birth_data || {};
+            if (refs.natalPanelTitle) {
+                refs.natalPanelTitle.textContent = t('page.forecastNew.swap.baseTitle', { chart: layerLabel(inst.method) });
+            }
+            const swapSummary = [formatChartDate(bd.date), bd.time, bd.place].filter(Boolean).join(' · ');
+            if (refs.natalPanelMeta) refs.natalPanelMeta.textContent = swapSummary;
+            if (refs.natalDatetimeLabel) {
+                refs.natalDatetimeLabel.textContent = [formatChartDate(bd.date), bd.time].filter(Boolean).join(' ');
+            }
+            return;
+        }
         const birth = state.natalData?.birth_data || {};
         if (refs.natalPanelTitle) {
             refs.natalPanelTitle.textContent = chartDisplayTitle(
@@ -3041,15 +3068,114 @@
     }
 
     function activeBaseChartData() {
+        if (isSwapActive()) {
+            return swapDataFor(swappedLayerInstance()) || state.natalData;
+        }
         return isCompositeSingleMode() ? state.compositeChartData : state.natalData;
     }
 
     function activeBaseWheelData() {
+        if (isSwapActive()) {
+            const swapped = swappedBaseChartData();
+            if (swapped) return swapped;
+        }
         return isCompositeSingleMode()
             ? (window.NatalWheelData?.prepareNatalWheelData
                 ? window.NatalWheelData.prepareNatalWheelData(state.compositeChartData, { houseSystem: state.pageSettings.houseSystem })
                 : state.compositeChartData)
             : state.natalWheelData;
+    }
+
+    // ── «Обмен карт» (Swap): повысить второстепенную карту в базу ────────────
+    // Только соляр/партнёр несут полную natal-образную карту (планеты, дома, углы,
+    // внутренние аспекты), поэтому своп доступен лишь для них (фаза 1).
+    function isSwappableInstance(inst) {
+        return !!inst && (inst.method === 'solar_return' || inst.method === 'synastry_partner');
+    }
+    function swappedLayerInstance() {
+        const inst = findLayerInstance(state.swapBaseLayerId);
+        return isSwappableInstance(inst) ? inst : null;
+    }
+    // natal-образная карта повышаемого слоя из его сырого ответа.
+    function swapDataFor(inst) {
+        const raw = inst && state.layers?.[inst.id];
+        if (!raw) return null;
+        if (inst.method === 'synastry_partner') {
+            return raw.partner_chart || raw.partnerChart || null;
+        }
+        return raw; // SolarReturnResponse уже natal-образный
+    }
+    function isSwapActive() {
+        if (state.singleChartMode === 'composite') return false;
+        const inst = swappedLayerInstance();
+        return !!inst && !!swapDataFor(inst);
+    }
+    function swappedBaseChartData() {
+        const data = swapDataFor(swappedLayerInstance());
+        if (!data) return null;
+        return window.NatalWheelData?.prepareNatalWheelData
+            ? window.NatalWheelData.prepareNatalWheelData(data, { houseSystem: state.pageSettings.houseSystem })
+            : data;
+    }
+    // Инстанс, с которым свопнемся по нажатию: выбранный (если он свопаемый и
+    // загружен), иначе первый свопаемый активный слой.
+    function currentSwapTarget() {
+        if (isSwapActive()) return swappedLayerInstance();
+        const sel = selectedLayerInstance();
+        if (isSwappableInstance(sel) && swapDataFor(sel)) return sel;
+        return state.activeLayers.find((l) => isSwappableInstance(l) && swapDataFor(l)) || null;
+    }
+    function toggleSwap() {
+        if (isSwapActive()) { setSwap(null); return; }
+        const target = currentSwapTarget();
+        if (target) setSwap(target.id);
+    }
+    function setSwap(layerId) {
+        state.swapBaseLayerId = layerId || null;
+        if (state.swapBaseLayerId) {
+            // При свопе фокусируем правую панель на понижённом наталке под вкладкой
+            // повышенного слоя (в свёрнутой view-model остаётся только он).
+            state.selectedRightLayerId = state.swapBaseLayerId;
+            state.activeRightMethodTab = selectedRightMethod();
+        }
+        syncSwapButton();
+        syncWheelViewButtons();
+        renderStaticNatal();
+        refreshViewModel();
+        renderWheel();
+        renderRightLayerTabs();
+        renderRightPanel();
+    }
+    // Сбросить своп, если повышенный слой исчез/стал невалидным (после мутаций слоёв).
+    function reconcileSwapState() {
+        if (state.swapBaseLayerId && !swappedLayerInstance()) {
+            state.swapBaseLayerId = null;
+        }
+    }
+    function syncSwapButton() {
+        reconcileSwapState();
+        const btn = refs.forecastNewSwapCharts;
+        const active = isSwapActive();
+        const target = active ? swappedLayerInstance() : currentSwapTarget();
+        const available = !!target && state.singleChartMode !== 'composite';
+        const chartLabel = target ? layerLabel(target.method) : '';
+        const natalLabel = t('page.forecastNew.natalPanelTitle') || 'Натал';
+        if (btn) {
+            btn.classList.toggle('is-active', active);
+            btn.disabled = !available;
+            btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+            btn.title = !available
+                ? (t('page.forecastNew.swap.unavailable') || 'Swap charts')
+                : active
+                    ? t('page.forecastNew.swap.active', { chart: chartLabel })
+                    : t('page.forecastNew.swap.hint', { natal: natalLabel, chart: chartLabel });
+        }
+        const chip = refs.forecastNewSwapChip;
+        if (chip) {
+            chip.classList.toggle('hidden', !active);
+            chip.hidden = !active;
+            if (active) chip.textContent = t('page.forecastNew.swap.chip', { chart: chartLabel });
+        }
     }
 
     function toggleCustomStepPopover() {
@@ -3221,15 +3347,35 @@
         schedulePersist();
     }
 
-    function refreshViewModel() {
+    // Единый источник view-model для колеса и панелей. Своп-ветка строит карту с
+    // повышенной базой и одним натал-кольцом; обычная — натал + прогностические
+    // кольца. Оба потребителя (refreshViewModel и renderWheel) идут через сюда,
+    // чтобы своп не «терялся» в одном из них.
+    function computeViewModel() {
         const baseData = activeBaseWheelData();
-        if (!baseData) return;
-        const rawViewModel = window.PrognosticLayerNormalizer.buildViewModel(
-            baseData,
-            state.layers || {},
-            { activeInstances: isCompositeSingleMode() ? [] : state.activeLayers },
-        );
-        state.viewModel = filterViewModelForSettings(rawViewModel);
+        if (!baseData) return null;
+        let rawViewModel;
+        if (isSwapActive()) {
+            const inst = swappedLayerInstance();
+            rawViewModel = window.PrognosticLayerNormalizer.buildSwapViewModel(
+                baseData,
+                state.natalWheelData,
+                state.layers?.[inst.id],
+                { id: inst.id, method: inst.method, label: layerLabel(inst.method), color: '#111111' },
+            );
+        } else {
+            rawViewModel = window.PrognosticLayerNormalizer.buildViewModel(
+                baseData,
+                state.layers || {},
+                { activeInstances: isCompositeSingleMode() ? [] : state.activeLayers },
+            );
+        }
+        return filterViewModelForSettings(rawViewModel);
+    }
+
+    function refreshViewModel() {
+        const viewModel = computeViewModel();
+        if (viewModel) state.viewModel = viewModel;
     }
 
     function updateRendererMatrixSensitiveData(renderer, chartData) {
@@ -4349,12 +4495,8 @@
     function renderWheel() {
         const baseData = activeBaseWheelData();
         if (!state.wheel || !baseData) return;
-        const rawViewModel = window.PrognosticLayerNormalizer.buildViewModel(
-            baseData,
-            state.layers || {},
-            { activeInstances: isCompositeSingleMode() ? [] : state.activeLayers },
-        );
-        const viewModel = filterViewModelForSettings(rawViewModel);
+        const viewModel = computeViewModel();
+        if (!viewModel) return;
         state.viewModel = viewModel;
         state.wheel.setOptions({
             houseSystem: state.pageSettings.houseSystem,
@@ -4413,6 +4555,7 @@
     function syncWheelViewButtons() {
         refs.forecastNewViewSingle?.classList.toggle('is-active', state.wheelView === 'single');
         refs.forecastNewViewMulti?.classList.toggle('is-active', state.wheelView !== 'single');
+        syncSwapButton();
     }
 
     function syncWorkspaceModePanels() {
@@ -5298,6 +5441,7 @@
     async function enterCompositeMode() {
         state.compositeMethod = normalizeCompositeMethod(state.compositeMethod || state.pageSettings.compositeMethod);
         state.pageSettings.compositeMethod = state.compositeMethod;
+        state.swapBaseLayerId = null; // композит несовместим со свопом карт
         state.singleChartMode = 'composite';
         state.wheelView = 'single';
         syncWorkspaceModePanels();
@@ -5428,6 +5572,7 @@
         refs.rightLayerTabs.innerHTML = groupedLayers;
         syncCompositeHeaderButton();
         syncRelationshipSwitch();
+        syncSwapButton();
     }
 
     function syncCompositeHeaderButton() {

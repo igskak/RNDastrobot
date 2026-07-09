@@ -261,12 +261,66 @@
         };
     }
 
+    /**
+     * Развернуть направление межкартных аспектов: в нормализованном слое
+     * planet_1/left = тело слоя (соляр/партнёр), planet_2/right = тело натала.
+     * После свопа натал становится кольцом (planet_1), а повышенная карта — базой
+     * (planet_2), поэтому меняем стороны местами. natal_object в движке — это
+     * «опорное» тело (теперь база), обновляем и его.
+     */
+    function flipInterAspects(aspects) {
+        return cloneArray(aspects).map((aspect) => {
+            const ringBody = aspect.planet_2 ?? aspect.right_planet ?? aspect.natal_object;
+            const baseBody = aspect.planet_1 ?? aspect.left_planet;
+            return {
+                ...aspect,
+                planet_1: ringBody,
+                planet_2: baseBody,
+                left_planet: ringBody,
+                right_planet: baseBody,
+                natal_object: baseBody,
+            };
+        });
+    }
+
+    /**
+     * «Обмен карт» (аналог кнопки Swap в ZET): повысить прогностический слой
+     * (соляр/партнёр) в базовый слот, а исходный натал понизить в единственное
+     * внешнее кольцо. Движок рисует natalLayer как опорное кольцо, поэтому базой
+     * (natalLayer, method 'natal') становится повышенная карта, а понижённый натал
+     * — прогностическим кольцом с method повышенного слоя (чтобы не считаться
+     * второй опорной картой). Межкартные аспекты — те же связи, развёрнутые по
+     * направлению.
+     *
+     * @param promotedData natal-образная карта повышенного слоя (соляр/партнёр)
+     * @param natalData     исходный натал (становится кольцом)
+     * @param layerRaw      сырой ответ слоя (источник его аспектов к наталу)
+     * @param ring          { id, method, label, color } понижённого натал-кольца
+     */
+    function buildSwapViewModel(promotedData, natalData, layerRaw, ring = {}) {
+        const method = normalizeMethod(ring.method);
+        const base = buildViewModel(promotedData, {}, { activeInstances: [] }).natalLayer;
+        const natalAsRing = buildViewModel(natalData, {}, { activeInstances: [] }).natalLayer;
+        const normalizedLayer = normalizeLayer(method, layerRaw || {}, 1);
+        natalAsRing.id = ring.id || 'natal-ring';
+        natalAsRing.method = method;
+        natalAsRing.label = ring.label || natalAsRing.label;
+        natalAsRing.ringIndex = 1;
+        natalAsRing.style = { color: ring.color || '#111111' };
+        natalAsRing.aspects = flipInterAspects(normalizedLayer.aspects);
+        natalAsRing.aspect_configurations = [];
+        natalAsRing.stelliums = [];
+        natalAsRing.swappedNatal = true;
+        return { natalLayer: base, activePrognosticLayers: [natalAsRing] };
+    }
+
     const api = {
         METHOD_ORDER,
         METHOD_META,
         normalizeMethod,
         normalizeLayer,
         buildViewModel,
+        buildSwapViewModel,
     };
 
     if (typeof window !== 'undefined') window.PrognosticLayerNormalizer = api;

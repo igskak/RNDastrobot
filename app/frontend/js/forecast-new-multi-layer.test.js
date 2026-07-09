@@ -174,5 +174,62 @@ function ok(cond, msg) { if (cond) { pass++; } else { fail++; console.log('FAIL:
         'wheel: per-method instanceIndex assigned');
 })();
 
+// --- swap: promote a secondary chart (solar/partner) to the base slot ---
+(() => {
+    const Norm = require('./prognostic-layer-normalizer.js');
+    // Solar return as the promoted chart; natal has one aspect between them.
+    const natal = {
+        planets: [{ name: 'Sun', longitude: 100 }, { name: 'Moon', longitude: 200 }],
+        houses: [{ house: 1, longitude: 0 }],
+        aspects: [{ planet_1: 'Sun', planet_2: 'Moon', aspect_type: 'trine', orb: 1 }],
+    };
+    const solarRaw = {
+        planets: [{ name: 'Sun', longitude: 105 }, { name: 'Mars', longitude: 300 }],
+        houses: [{ house: 1, longitude: 10 }],
+        aspects: [],
+        // solar's inter-aspects to natal: solar_planet ↔ natal_object
+        aspects_to_natal: [{ solar_planet: 'Mars', natal_object: 'Sun', aspect_type: 'square', orb: 2 }],
+    };
+    const promotedData = { planets: solarRaw.planets, houses: solarRaw.houses, aspects: solarRaw.aspects };
+
+    const vm = Norm.buildSwapViewModel(promotedData, natal, solarRaw, {
+        id: 'solar_return-1', method: 'solar_return', label: 'Соляр', color: '#111111',
+    });
+
+    ok(vm.natalLayer.method === 'natal', 'swap: promoted chart occupies the natal (reference) slot');
+    ok(vm.natalLayer.bodies.some((b) => b.name === 'Mars'),
+        'swap: base slot carries the promoted chart bodies (solar Mars)');
+    ok(vm.activePrognosticLayers.length === 1, 'swap: exactly one demoted natal ring');
+
+    const ring = vm.activePrognosticLayers[0];
+    ok(ring.method === 'solar_return', 'swap: natal ring carries the promoted method (drawn as a prognostic ring, not a second reference)');
+    ok(ring.id === 'solar_return-1', 'swap: ring keeps the promoted instance id (right panel/selection resolve)');
+    ok(ring.swappedNatal === true, 'swap: ring is flagged as the demoted natal');
+    ok(ring.bodies.some((b) => b.name === 'Moon'), 'swap: ring carries the original natal bodies');
+
+    // inter-aspect direction is flipped: ring(natal) = planet_1, base(solar) = planet_2
+    ok(ring.aspects.length === 1, 'swap: inter-aspect preserved');
+    const a = ring.aspects[0];
+    ok(a.planet_1 === 'Sun' && a.left_planet === 'Sun',
+        'swap: flipped aspect points from the natal ring body (Sun)');
+    ok(a.planet_2 === 'Mars' && a.right_planet === 'Mars',
+        'swap: flipped aspect points to the promoted base body (Mars)');
+    ok(a.natal_object === 'Mars', 'swap: natal_object now references the promoted base body');
+
+    // synastry variant: backend inter_aspects are planet_1=primary(natal), planet_2=partner.
+    const partnerRaw = {
+        inter_aspects: [{ planet_1: 'Sun', planet_2: 'Venus', aspect_type: 'conjunction', orb: 1 }],
+    };
+    const partnerData = { planets: [{ name: 'Venus', longitude: 50 }], houses: [], aspects: [] };
+    const vmSyn = Norm.buildSwapViewModel(partnerData, natal, partnerRaw, {
+        id: 'synastry_partner-1', method: 'synastry_partner', label: 'Партнёр',
+    });
+    const synAspect = vmSyn.activePrognosticLayers[0].aspects[0];
+    // normalizeSynastryPartner → planet_1=partner(Venus), planet_2=natal(Sun);
+    // after the swap flip → planet_1=natal(Sun, ring), planet_2=partner(Venus, base).
+    ok(synAspect.planet_1 === 'Sun' && synAspect.planet_2 === 'Venus',
+        'swap(synastry): flipped so natal(Sun) → partner(Venus)');
+})();
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

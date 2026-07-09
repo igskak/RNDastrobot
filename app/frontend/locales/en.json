@@ -561,6 +561,14 @@
       "fixstars": {
         "empty": "No conjunctions",
         "conjunctions": "Conjunctions"
+      },
+      "swap": {
+        "label": "Swap charts",
+        "hint": "Swap: {natal} ↔ {chart}",
+        "active": "Restore natal as the primary chart (currently primary: {chart})",
+        "unavailable": "Add a solar return or partner chart to swap the charts",
+        "chip": "Primary chart: {chart}",
+        "baseTitle": "{chart} (primary)"
       }
     },
     "plan": {
