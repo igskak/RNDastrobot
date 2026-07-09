@@ -356,7 +356,13 @@
     }
     // Инвалидировать кэш слоя по id и перезагрузить, если нужно.
     function invalidateLayerById(id) {
-        if (id) delete state.layers?.[id];
+        if (!id) return;
+        // Во время свопа НЕ удаляем данные повышенной карты: иначе swapDataFor()
+        // вернёт null, isSwapActive() на миг станет false и обе панели мигнут
+        // «несвопнутым» видом (мета без даты). Перезагрузка по ключу кэша всё равно
+        // заменит данные — старые показываем до прихода новых.
+        if (id === state.swapBaseLayerId && isSwapActive()) return;
+        delete state.layers?.[id];
     }
     // Зафиксировать scratch в выбранном слое и сбросить его кэш (после правки редактора).
     function commitSelectedLayerEdit() {
@@ -433,9 +439,10 @@
     }
 
     function selectedPanelTitle(method) {
-        // При свопе правая панель показывает понижённый натал (второстепенную карту).
-        if (isSwapActive() && selectedLayerInstance()?.id === state.swapBaseLayerId) {
-            return t('page.forecastNew.natalPanelTitle') || 'Натал';
+        // При свопе правая панель показывает понижённый натал (второстепенную карту) —
+        // называем её именем натальной карты, как левая панель до свопа.
+        if (isSwapDemotedNatalSelected()) {
+            return chartDisplayTitle(state.natalData, t('page.forecastNew.natalPanelTitle') || 'Натал');
         }
         const inst = selectedLayerInstance();
         if (inst?.config?.chartTitle) return inst.config.chartTitle;
@@ -635,6 +642,7 @@
             'stepModeSelect', 'stepBackward', 'stepForward', 'timezoneInput', 'locationInput',
             'latitudeInput', 'longitudeInput', 'locationSuggestions', 'targetDatetimeLabel', 'rightLayerTabs',
             'forecastNewNatalTimeStepper', 'natalMomentToggle', 'forecastNewNatalCard',
+            'forecastNewNatalStepperRow', 'forecastNewProgStepperRow',
             'natalDatetimeLabel', 'natalDateInput', 'natalTimeInput',
             'natalTimezoneInput', 'natalLocationInput', 'natalLocationSuggestions',
             'natalLatitudeInput', 'natalLongitudeInput',
@@ -1715,7 +1723,9 @@
     }
 
     function getDisplayedSolarDateTime() {
-        const infoDateTime = normalizeSolarDateTime(selectedViewModelLayer()?.raw?.solar_info?.solar_datetime_local);
+        const rawInfo = originalLayerRaw(selectedLayerInstance())?.solar_info
+            || selectedViewModelLayer()?.raw?.solar_info;
+        const infoDateTime = normalizeSolarDateTime(rawInfo?.solar_datetime_local);
         if (infoDateTime) return infoDateTime;
         const cfgDateTime = normalizeSolarDateTime(selectedLayerInstance()?.config?.datetime);
         if (cfgDateTime) return cfgDateTime;
@@ -1727,7 +1737,8 @@
             return getDisplayedSolarDateTime();
         }
         if (isSynastryMomentActive()) {
-            const bd = selectedViewModelLayer()?.raw?.partner_chart?.birth_data;
+            const bd = originalLayerRaw(selectedLayerInstance())?.partner_chart?.birth_data
+                || selectedViewModelLayer()?.raw?.partner_chart?.birth_data;
             const date = state.synastryMode === 'manual'
                 ? state.synastryManual?.date
                 : (bd?.date || state.synastryManual?.date);
@@ -2369,16 +2380,15 @@
         // При свопе базой стала повышенная карта (соляр/партнёр) — панель базы
         // должна честно называться её именем, а не «Натал».
         if (isSwapActive()) {
-            const inst = swappedLayerInstance();
-            const chart = activeBaseChartData();
-            const bd = chart?.birth_data || {};
+            const promoted = swapPromotedChartView(swappedLayerInstance());
             if (refs.natalPanelTitle) {
-                refs.natalPanelTitle.textContent = t('page.forecastNew.swap.baseTitle', { chart: layerLabel(inst.method) });
+                refs.natalPanelTitle.textContent = t('page.forecastNew.swap.baseTitle', { chart: promoted.title });
             }
-            const swapSummary = [formatChartDate(bd.date), bd.time, bd.place].filter(Boolean).join(' · ');
-            if (refs.natalPanelMeta) refs.natalPanelMeta.textContent = swapSummary;
+            if (refs.natalPanelMeta) refs.natalPanelMeta.textContent = promoted.summary;
+            // natalDatetimeLabel живёт в карточке-редакторе натала рядом с его
+            // инпутами — он всегда описывает натал, даже при свопе.
             if (refs.natalDatetimeLabel) {
-                refs.natalDatetimeLabel.textContent = [formatChartDate(bd.date), bd.time].filter(Boolean).join(' ');
+                refs.natalDatetimeLabel.textContent = formatChartDateTimeLabel(state.natalSelectedDateTime);
             }
             return;
         }
@@ -2399,6 +2409,8 @@
     }
 
     function updatePrognosticTimeMeta() {
+        // targetDatetimeLabel живёт в карточке момента, которая при свопе переезжает
+        // в левую панель (соляр) — она всегда описывает прогностический момент.
         if (refs.targetDatetimeLabel) refs.targetDatetimeLabel.textContent = formatChartDateTimeLabel(getDisplayedMomentDateTime());
         if (refs.prognosticPanelMeta) refs.prognosticPanelMeta.textContent = buildPrognosticMomentSummary();
     }
@@ -2424,10 +2436,15 @@
     }
 
     function buildPrognosticMomentSummary() {
+        // При свопе правая панель показывает понижённый натал — мета описывает его.
+        if (isSwapDemotedNatalSelected()) {
+            return buildNatalHeaderSubtitle(state.natalData?.birth_data || {});
+        }
         const method = selectedRightMethod();
 
         if (method === 'solar_return') {
-            return buildSolarMomentMeta(selectedViewModelLayer()?.raw?.solar_info, { year: state.solarYear });
+            const raw = originalLayerRaw(selectedLayerInstance()) || selectedViewModelLayer()?.raw;
+            return buildSolarMomentMeta(raw?.solar_info, { year: state.solarYear });
         }
 
         const place = getMomentPlaceView();
@@ -2439,6 +2456,12 @@
     }
 
     function toggleMomentEditor() {
+        // При свопе заголовок правой панели описывает натал — открываем его редактор
+        // (карточка натала при свопе перенесена в правую панель).
+        if (areSwapPanelControlsCrossed()) {
+            setNatalMomentEditorOpen(refs.forecastNewNatalCard?.classList.contains('hidden') !== false);
+            return;
+        }
         const isOpen = refs.forecastNewMomentCard?.classList.contains('hidden') !== false;
         setMomentEditorOpen(isOpen);
     }
@@ -2805,6 +2828,9 @@
         state.natalSelectedDateTime = addDateTimeUnit(state.natalSelectedDateTime, segment.unit, segment.amount * dir * count);
         renderOrUpdateNatalTimeStepper();
         updateNatalMomentMeta();
+        // При свопе натал показан в правой панели — её шапку обновляем сразу,
+        // не дожидаясь пересчёта (updateNatalMomentMeta пишет в левую панель).
+        if (areSwapPanelControlsCrossed()) updatePrognosticTimeMeta();
         setNatalLightweightLoading(true);
         void loadNatal({ lightweight: true });
     }
@@ -2819,6 +2845,7 @@
         renderOrUpdateNatalTimeStepper();
         setNatalCustomStepPopoverOpen(true);
         updateNatalMomentMeta();
+        if (areSwapPanelControlsCrossed()) updatePrognosticTimeMeta();
         setNatalLightweightLoading(true);
         void loadNatal({ lightweight: true });
     }
@@ -2828,6 +2855,8 @@
         state.natalSelectedDateTime = state.natalInitialDateTime;
         renderOrUpdateNatalTimeStepper();
         updateNatalMomentControls();
+        updateNatalMomentMeta();
+        if (areSwapPanelControlsCrossed()) updatePrognosticTimeMeta();
         setNatalLightweightLoading(true);
         void loadNatal({ lightweight: true });
     }
@@ -2842,6 +2871,12 @@
     }
 
     function toggleNatalMomentEditor() {
+        // При свопе заголовок левой панели описывает повышенную карту — открываем
+        // редактор её слоя (год/место соляра, партнёр), перенесённый в левую панель.
+        if (areSwapPanelControlsCrossed()) {
+            setMomentEditorOpen(refs.forecastNewMomentCard?.classList.contains('hidden') !== false);
+            return;
+        }
         const isOpen = refs.forecastNewNatalCard?.classList.contains('hidden') !== false;
         setNatalMomentEditorOpen(isOpen);
     }
@@ -3058,8 +3093,24 @@
         }
     }
 
+    // Индикатор загрузки показываем на панели, где реально видна грузящаяся карта.
+    // При свопе панели меняются ролями (натал справа, повышенная карта слева),
+    // поэтому цель инвертируется. На false гасим обе — на случай, если своп
+    // переключился между началом и концом загрузки.
+    function applyPanelLoading(chart, isLoading) {
+        if (!isLoading) {
+            refs.forecastNewNatalPanel?.classList.remove('forecast-new-loading');
+            refs.forecastNewProgPanel?.classList.remove('forecast-new-loading');
+            return;
+        }
+        const natalOnRight = areSwapPanelControlsCrossed();
+        const showOnLeft = chart === 'natal' ? !natalOnRight : natalOnRight;
+        const panel = showOnLeft ? refs.forecastNewNatalPanel : refs.forecastNewProgPanel;
+        panel?.classList.add('forecast-new-loading');
+    }
+
     function setNatalLightweightLoading(isLoading) {
-        refs.forecastNewNatalPanel?.classList.toggle('forecast-new-loading', isLoading);
+        applyPanelLoading('natal', isLoading);
         refs.forecastNewWheelShell?.classList.toggle('forecast-new-loading', isLoading);
     }
 
@@ -3110,6 +3161,82 @@
         const inst = swappedLayerInstance();
         return !!inst && !!swapDataFor(inst);
     }
+    // Оригинальный сырой ответ слоя. В своп-VM layer.raw заменён наталом, поэтому
+    // метаданные метода (solar_info / partner_chart) читаем только отсюда.
+    function originalLayerRaw(layerOrId) {
+        const id = typeof layerOrId === 'string' ? layerOrId : layerOrId?.id;
+        return (id && state.layers?.[id]) || null;
+    }
+    // Правая панель сейчас показывает понижённый натал под вкладкой повышенного слоя.
+    function isSwapDemotedNatalSelected() {
+        return isSwapActive() && state.selectedRightLayerId === state.swapBaseLayerId;
+    }
+    // Контролы панелей «перекрёстны»: натал показан справа, повышенная карта — слева.
+    // В single-режиме правая шапка скрыта CSS, перекрещивать нечего.
+    function areSwapPanelControlsCrossed() {
+        return state.wheelView !== 'single' && isSwapDemotedNatalSelected();
+    }
+    // Заголовок/мета повышенной карты для панели базы — с датой, временем, TZ и
+    // местом, как у обычной панели соляра/синастрии.
+    function swapPromotedChartView(inst) {
+        const raw = originalLayerRaw(inst) || {};
+        const cfg = inst?.config || {};
+        if (inst?.method === 'synastry_partner') {
+            const chart = raw.partner_chart || raw.partnerChart || {};
+            const bd = chart.birth_data || {};
+            const datetimeLabel = [formatChartDate(bd.date), bd.time].filter(Boolean).join(' ');
+            return {
+                title: cfg.chartTitle || chartDisplayTitle(chart, layerLabel(inst.method)),
+                summary: [
+                    datetimeLabel,
+                    buildPanelLocationMeta(bd.place, bd.timezone, { date: bd.date, time: bd.time }),
+                ].filter(Boolean).join(' · '),
+                datetimeLabel,
+            };
+        }
+        const info = raw.solar_info || {};
+        const [solarDate, solarClock] = String(info.solar_datetime_local || '').split('T');
+        const solarTime = String(solarClock || '').slice(0, 5);
+        return {
+            title: layerLabel(inst?.method),
+            summary: buildSolarMomentMeta(info, { year: cfg.year || info.year || state.solarYear }),
+            datetimeLabel: [solarDate ? formatChartDate(solarDate) : '', solarTime].filter(Boolean).join(' '),
+        };
+    }
+    // При свопе панели меняются ролями: слева — повышенная карта (соляр/партнёр),
+    // справа — понижённый натал. Контролы обеих карт (степпер + карточка-редактор)
+    // «перекрещиваются» между рядами, чтобы каждая панель несла контролы своей
+    // карты. Ни один степпер не прячется — левая панель сохраняет степпер соляра
+    // (его вычисленный момент). DOM-перенос сохраняет всех слушателей.
+    function syncSwapPanelControls() {
+        const natalStepper = refs.forecastNewNatalTimeStepper;
+        const progStepper = refs.forecastNewTimeStepper;
+        const leftRow = refs.forecastNewNatalStepperRow;
+        const rightRow = refs.forecastNewProgStepperRow;
+        if (!natalStepper || !leftRow || !rightRow) return;
+        const crossed = areSwapPanelControlsCrossed();
+        // Натальный степпер следует за наталом (слева обычно, справа при свопе),
+        // прогностический — за повышенной/выбранной картой (справа обычно, слева при свопе).
+        const natalRow = crossed ? rightRow : leftRow;
+        const progRow = crossed ? leftRow : rightRow;
+        if (natalStepper.parentElement !== natalRow) natalRow.appendChild(natalStepper);
+        if (progStepper && progStepper.parentElement !== progRow) progRow.appendChild(progStepper);
+        natalStepper.classList.remove('hidden');
+        progStepper?.classList.remove('hidden');
+        leftRow.classList.remove('hidden');
+        rightRow.classList.remove('hidden');
+        // Карточки-редакторы следуют за своими степперами (сразу после их ряда):
+        // редактор натала — под панелью с наталом, редактор слоя (год/место соляра,
+        // партнёр) — под панелью повышенной карты.
+        const natalCard = refs.forecastNewNatalCard;
+        const momentCard = refs.forecastNewMomentCard;
+        if (natalCard && natalCard.previousElementSibling !== natalRow) {
+            natalRow.insertAdjacentElement('afterend', natalCard);
+        }
+        if (momentCard && momentCard.previousElementSibling !== progRow) {
+            progRow.insertAdjacentElement('afterend', momentCard);
+        }
+    }
     function swappedBaseChartData() {
         const data = swapDataFor(swappedLayerInstance());
         if (!data) return null;
@@ -3141,6 +3268,7 @@
         syncSwapButton();
         syncWheelViewButtons();
         renderStaticNatal();
+        updateNatalMomentMeta();
         refreshViewModel();
         renderWheel();
         renderRightLayerTabs();
@@ -3150,6 +3278,8 @@
     function reconcileSwapState() {
         if (state.swapBaseLayerId && !swappedLayerInstance()) {
             state.swapBaseLayerId = null;
+            updateNatalMomentMeta();
+            syncSwapPanelControls();
         }
     }
     function syncSwapButton() {
@@ -3176,6 +3306,7 @@
             chip.hidden = !active;
             if (active) chip.textContent = t('page.forecastNew.swap.chip', { chart: chartLabel });
         }
+        syncSwapPanelControls();
     }
 
     function toggleCustomStepPopover() {
@@ -4813,14 +4944,15 @@
     }
 
     function solarDynamicsDateTime(layer, cfg) {
-        return normalizeSolarDateTime(layer?.raw?.solar_info?.solar_datetime_local)
+        const info = originalLayerRaw(layer)?.solar_info || layer?.raw?.solar_info;
+        return normalizeSolarDateTime(info?.solar_datetime_local)
             || cfg?.datetime
             || getDisplayedSolarDateTime();
     }
 
     function synastryDynamicsDateTime(layer, cfg) {
         const manual = cfg?.mode === 'manual' ? (cfg.manual || state.synastryManual || {}) : {};
-        const bd = layer?.raw?.partner_chart?.birth_data || {};
+        const bd = (originalLayerRaw(layer)?.partner_chart || layer?.raw?.partner_chart)?.birth_data || {};
         const date = cfg?.mode === 'manual' ? manual.date : (bd.date || state.synastryManual?.date || '');
         const time = cfg?.mode === 'manual' ? manual.time : (bd.time || state.synastryManual?.time || '12:00:00');
         return date ? `${date}T${time || '12:00:00'}` : getDisplayedMomentDateTime();
@@ -4948,11 +5080,12 @@
     }
 
     function buildResultLayerMeta(method, layer) {
+        const raw = originalLayerRaw(layer) || layer?.raw || {};
         if (method === 'solar_return') {
-            return buildSolarMomentMeta(layer?.raw?.solar_info, { year: state.solarYear });
+            return buildSolarMomentMeta(raw.solar_info, { year: state.solarYear });
         }
         if (method === 'synastry_partner') return buildSynastryLayerMeta(layer);
-        return buildLayerMeta(method, layer?.raw || {});
+        return buildLayerMeta(method, raw);
     }
 
     function buildSynastryLayerMeta(layer) {
@@ -4960,7 +5093,7 @@
         const partnerName = state.synastryMode === 'manual'
             ? (state.synastryManual?.name || t('page.forecastNew.resultViews.manualPartner'))
             : (select && select.selectedIndex > 0 ? (select.options[select.selectedIndex]?.text || '') : '');
-        const bd = layer?.raw?.partner_chart?.birth_data;
+        const bd = (originalLayerRaw(layer)?.partner_chart || layer?.raw?.partner_chart)?.birth_data;
         return [partnerName, formatChartDate(bd?.date), bd?.place].filter(Boolean).join(' · ');
     }
 
@@ -5183,7 +5316,7 @@
             const layer = vmLayers.find((item) => item.id === inst.id)
                 || vmLayers.find((item) => item.method === inst.method)
                 || null;
-            const raw = layer?.raw || state.layers?.[inst.id] || null;
+            const raw = originalLayerRaw(inst) || layer?.raw || null;
             const aspects = assistantLayerAspects(inst.method, layer, raw);
             const bodies = assistantLayerBodies(inst.method, layer, raw);
             return {
@@ -5506,15 +5639,14 @@
         }
 
         if (inst.method === 'solar_return') {
-            const solarDateTime = normalizeSolarDateTime(
-                viewLayer?.raw?.solar_info?.solar_datetime_local || cfg.datetime || ''
-            );
-            const year = cfg.year || viewLayer?.raw?.solar_info?.year || state.solarYear || '';
+            const info = originalLayerRaw(inst)?.solar_info || viewLayer?.raw?.solar_info;
+            const solarDateTime = normalizeSolarDateTime(info?.solar_datetime_local || cfg.datetime || '');
+            const year = cfg.year || info?.year || state.solarYear || '';
             return formatLayerChipDateTime(solarDateTime) || String(year || ordinal);
         }
 
         if (inst.method === 'synastry_partner') {
-            const bd = viewLayer?.raw?.partner_chart?.birth_data || {};
+            const bd = (originalLayerRaw(inst)?.partner_chart || viewLayer?.raw?.partner_chart)?.birth_data || {};
             const manual = cfg.manual || {};
             const name = cfg.chartTitle
                 || manual.name
@@ -5598,6 +5730,10 @@
 
     function renderRightPanel() {
         syncCompositeHeaderButton();
+        syncSwapPanelControls();
+        // При свопе левая панель описывает повышенную карту — обновляем её мету
+        // вместе с правой (данные слоя могли перезагрузиться, напр. сменился год соляра).
+        if (isSwapActive()) updateNatalMomentMeta();
         if (state.wheelView === 'single') {
             renderSingleNatalRightPanel();
             return;
@@ -5659,19 +5795,25 @@
     function renderSingleNatalRightPanel() {
         if (!refs.prognosticPanelTitle || !refs.prognosticPanelMeta) return;
         const activeChart = activeBaseChartData();
-        refs.prognosticPanelTitle.textContent = chartDisplayTitle(
-            activeChart,
-            isCompositeSingleMode()
-                ? (t('page.forecastNew.composite.calculate') || 'Композит')
-                : t('page.forecastNew.natalPanelTitle'),
-        );
+        // При свопе базой служит повышенная карта (соляр/партнёр) — её raw не несёт
+        // natal-образных title/birth_data, берём заголовок и дату из swap-виджета.
+        const promoted = isSwapActive() ? swapPromotedChartView(swappedLayerInstance()) : null;
+        refs.prognosticPanelTitle.textContent = promoted
+            ? t('page.forecastNew.swap.baseTitle', { chart: promoted.title })
+            : chartDisplayTitle(
+                activeChart,
+                isCompositeSingleMode()
+                    ? (t('page.forecastNew.composite.calculate') || 'Композит')
+                    : t('page.forecastNew.natalPanelTitle'),
+            );
         refs.prognosticPanelMeta.textContent = isCompositeSingleMode()
             ? (activeChart?.composite_meta || state.compositeMeta || '')
             : (refs.natalPanelMeta?.textContent || '');
         if (refs.forecastNewTimeStepper) refs.forecastNewTimeStepper.innerHTML = '';
         if (refs.targetDatetimeLabel) {
             const bd = activeChart?.birth_data || {};
-            refs.targetDatetimeLabel.textContent = [formatChartDate(bd.date), bd.time].filter(Boolean).join(' ')
+            refs.targetDatetimeLabel.textContent = promoted?.datetimeLabel
+                || [formatChartDate(bd.date), bd.time].filter(Boolean).join(' ')
                 || formatChartDateTimeLabel(state.natalSelectedDateTime);
         }
         // Single mode is natal-only. The natal* containers are filled by
@@ -8530,7 +8672,8 @@
     // solar moment (date/time/place differ from birth) so the user just confirms.
     // This only ADDS a new chart; it never touches the natal or other charts.
     async function saveSolarAsChart() {
-        const info = selectedViewModelLayer()?.raw?.solar_info;
+        const info = originalLayerRaw(selectedLayerInstance())?.solar_info
+            || selectedViewModelLayer()?.raw?.solar_info;
         if (!info || !info.solar_datetime_local) {
             window.showToast?.(
                 t('page.forecastNew.solar.notReady', null, 'Сначала рассчитайте соляр'),
@@ -8683,7 +8826,8 @@
 
     function setLightweightLoading(isLoading) {
         refs.forecastNewWheelShell?.classList.toggle('forecast-new-loading', isLoading);
-        refs.forecastNewProgPanel?.classList.toggle('forecast-new-loading', isLoading);
+        // Прогностический слой (соляр/транзит/…) при свопе показан слева — грузим там.
+        applyPanelLoading('prognostic', isLoading);
     }
 
     function ensureMatrixRows(rows) {
