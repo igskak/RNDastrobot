@@ -2411,8 +2411,32 @@
     function updatePrognosticTimeMeta() {
         // targetDatetimeLabel живёт в карточке момента, которая при свопе переезжает
         // в левую панель (соляр) — она всегда описывает прогностический момент.
-        if (refs.targetDatetimeLabel) refs.targetDatetimeLabel.textContent = formatChartDateTimeLabel(getDisplayedMomentDateTime());
-        if (refs.prognosticPanelMeta) refs.prognosticPanelMeta.textContent = buildPrognosticMomentSummary();
+        const pending = isSolarMomentPending();
+        if (refs.targetDatetimeLabel) {
+            refs.targetDatetimeLabel.textContent = pending ? '' : formatChartDateTimeLabel(getDisplayedMomentDateTime());
+        }
+        if (refs.prognosticPanelMeta) {
+            if (pending) setPanelMetaLoading(refs.prognosticPanelMeta);
+            else refs.prognosticPanelMeta.textContent = buildPrognosticMomentSummary();
+        }
+    }
+
+    // Соляр рассчитывается на бэкенде (момент возврата Солнца дрейфует от года к
+    // году), поэтому до ответа сервера нет реальной даты/времени соляра — показывать
+    // плейсхолдер 01.01 + место было бы враньём. Пока слой не посчитан — лоадер.
+    // При свопе правая панель показывает натал (не соляр) — там лоадер не нужен;
+    // solar_info читаем из оригинального ответа слоя, а не из подменённого swap-VM.
+    function isSolarMomentPending() {
+        if (isSwapDemotedNatalSelected()) return false;
+        return selectedRightMethod() === 'solar_return'
+            && !(originalLayerRaw(selectedLayerInstance())?.solar_info
+                || selectedViewModelLayer()?.raw?.solar_info);
+    }
+
+    function setPanelMetaLoading(el) {
+        if (!el) return;
+        const label = t('page.forecastNew.solarCalculating', null, 'Рассчитываем соляр…');
+        el.innerHTML = `<span class="forecast-new-meta-spinner" aria-hidden="true"></span>${escapeHtml(label)}`;
     }
 
     // Compact meta for a solar layer: year + the COMPUTED solar moment
@@ -5752,11 +5776,13 @@
         }
         const layer = state.viewModel?.activePrognosticLayers?.find((item) => item.id === state.selectedRightLayerId)
             || state.viewModel?.activePrognosticLayers?.find((item) => item.method === method);
+        const solarPending = isSolarMomentPending();
         refs.prognosticPanelTitle.textContent = selectedPanelTitle(method);
-        refs.prognosticPanelMeta.textContent = buildPrognosticMomentSummary();
+        if (solarPending) setPanelMetaLoading(refs.prognosticPanelMeta);
+        else refs.prognosticPanelMeta.textContent = buildPrognosticMomentSummary();
         syncMomentCardLayout();
         renderOrUpdateTimeStepper();
-        refs.targetDatetimeLabel.textContent = formatChartDateTimeLabel(getDisplayedMomentDateTime());
+        refs.targetDatetimeLabel.textContent = solarPending ? '' : formatChartDateTimeLabel(getDisplayedMomentDateTime());
 
         if (!layer) {
             state.prognosticRenderer?.setHouseNumberStyle?.(state.pageSettings.houseNumberStyle);
