@@ -266,6 +266,16 @@
             || layers.find((l) => l.method === selectedRightMethod())
             || null;
     }
+    // Слой view-model для ПРАВОЙ панели по выбранному id. При свопе свёрнутая VM
+    // содержит только понижённый натал-кольцо (id = повышенного слоя, method =
+    // повышенного метода). Fallback по методу здесь ЗАПРЕЩЁН: он мог бы отдать
+    // данные натала под заголовком другого слоя — источник «перемешанных данных».
+    function selectedPanelViewModelLayer() {
+        const layers = state.viewModel?.activePrognosticLayers || [];
+        return layers.find((l) => l.id === state.selectedRightLayerId)
+            || (isSwapActive() ? null : layers.find((l) => l.method === selectedRightMethod()))
+            || null;
+    }
     function sortActiveLayersInPlace() {
         // Стабильная сортировка по LAYER_ORDER; внутри метода порядок добавления.
         state.activeLayers.sort((a, b) => LAYER_ORDER.indexOf(a.method) - LAYER_ORDER.indexOf(b.method));
@@ -438,18 +448,56 @@
             || t('common.notAvailable', null, 'Not available');
     }
 
-    function selectedPanelTitle(method) {
-        // При свопе правая панель показывает понижённый натал (второстепенную карту) —
-        // называем её именем натальной карты, как левая панель до свопа.
-        if (isSwapDemotedNatalSelected()) {
-            return chartDisplayTitle(state.natalData, t('page.forecastNew.natalPanelTitle') || 'Натал');
-        }
-        const inst = selectedLayerInstance();
-        if (inst?.config?.chartTitle) return inst.config.chartTitle;
-        if (method === 'synastry_partner') {
-            return state.synastryManual?.name || layerLabel(method);
-        }
-        return layerLabel(method);
+    // ── Идентичность карты (заголовок/сводка/дата) — единый источник ──────────
+    // Хелперы форматирования для чистого модуля ForecastCardIdentity.
+    function cardIdentityHelpers() {
+        return {
+            t,
+            layerLabel,
+            formatChartDate,
+            formatChartDateTimeLabel,
+            buildPanelLocationMeta,
+            buildSolarMomentMeta,
+            chartDisplayTitle,
+        };
+    }
+    // Идентичность слоя строго из ЕГО инстанса: config инстанса + его сырой ответ.
+    // Никогда не читает глобальный scratch (state.synastryManual и т.п.) — это и
+    // была причина «неверных имён» партнёра при свопе/нескольких синастриях.
+    function layerCardIdentity(inst) {
+        return window.ForecastCardIdentity.buildLayerCardIdentity({
+            method: inst?.method,
+            config: inst?.config || {},
+            raw: originalLayerRaw(inst) || viewModelLayerForInstance(inst)?.raw || {},
+            solarYearFallback: state.solarYear,
+        }, cardIdentityHelpers());
+    }
+    function natalCardIdentity() {
+        return window.ForecastCardIdentity.buildNatalCardIdentity({
+            natalData: state.natalData || {},
+            natalSelectedDateTime: state.natalSelectedDateTime,
+            natalTimezone: state.natalTimezone,
+            natalLocationName: state.natalLocation?.name,
+            fallbackTitle: t('page.forecastNew.natalPanelTitle'),
+        }, cardIdentityHelpers());
+    }
+    // Роли панелей: единый источник «какая карта в какой панели» для левого
+    // (updateNatalMomentMeta) и правого (renderRightPanel) писателей ЗАГОЛОВКОВ и
+    // левой меты. crossed = isSwapActive(): при свопе база — повышенная карта, натал
+    // понижён вправо (в single правая панель идёт своим путём, но левый заголовок
+    // всё равно должен звать повышенную карту — как раньше по isSwapActive()).
+    // Правую МЕТУ панель считает сама (живой момент/соляр/сидерический зодиак),
+    // поэтому layerMeta здесь не считаем.
+    function panelRoles() {
+        const crossed = isSwapActive();
+        const layerInst = crossed ? swappedLayerInstance() : selectedLayerInstance();
+        return window.ForecastCardIdentity.computePanelRoles({
+            crossed,
+            natalIdentity: natalCardIdentity(),
+            layerIdentity: layerCardIdentity(layerInst),
+            layerMeta: null,
+            formatSwapBaseTitle: (name) => t('page.forecastNew.swap.baseTitle', { chart: name }),
+        });
     }
 
     function buildNatalHeaderSubtitle(birth = {}) {
@@ -1086,10 +1134,11 @@
 
             const button = event.target.closest('[data-right-layer]');
             if (!button) return;
-            state.selectedRightLayerId = button.dataset.rightLayer;
-            state.activeRightMethodTab = selectedRightMethod();
+            // Клик по вкладке другого слоя при активном свопе молча выходит из свопа.
+            setSelectedRightLayer(button.dataset.rightLayer);
             applyConfigToScratch(selectedLayerInstance());
             syncControlsFromState();
+            renderRightLayerTabs();
             renderRightPanel();
             schedulePersist();
         });
@@ -1114,8 +1163,7 @@
             const layerId = row.dataset.resultLayer;
             const inst = findLayerInstance(layerId);
             if (inst) {
-                state.selectedRightLayerId = layerId;
-                state.activeRightMethodTab = inst.method;
+                setSelectedRightLayer(layerId);
                 applyConfigToScratch(inst);
                 renderRightLayerTabs();
                 renderRightPanel();
@@ -1338,13 +1386,19 @@
         state.activeLayers = state.activeLayers.filter((l) => l && l.id && LAYER_ORDER.includes(l.method));
         sortActiveLayersInPlace();
         state.enabledLayers = state.activeLayers;
-        // Своп повышенного слоя больше нет в активных → снять своп.
-        reconcileSwapState();
+        // Повышенного слоя больше нет в активных → снять своп.
+        const swapCleared = reconcileSwapState();
         if (!selectedLayerInstance()) {
             state.selectedRightLayerId = state.activeLayers[0]?.id || '';
         }
         state.activeRightMethodTab = selectedRightMethod();
         syncLayerTogglesFromState();
+        if (swapCleared) {
+            // База вернулась к наталу — перерисовать её таблицы/колесо/view-model.
+            // renderStaticNatal/renderWheel не зовут normalizeActiveLayers → без рекурсии.
+            renderStaticNatal();
+            renderWheel();
+        }
     }
 
     async function activateLayer(method, { openConfig = false } = {}) {
@@ -1373,7 +1427,8 @@
             // Снимок scratch → конфиг нового инстанса.
             captureScratchToConfig(instance);
         }
-        state.selectedRightLayerId = instance.id;
+        // Добавление/переключение на слой выходит из свопа, если он был активен.
+        setSelectedRightLayer(instance.id);
         // Переключение на слой загружает его конфиг в редактор (scratch).
         applyConfigToScratch(instance);
         normalizeActiveLayers();
@@ -1713,6 +1768,13 @@
         return selectedRightMethod() === 'solar_return';
     }
 
+    // Соляр и синастрия несут СОБСТВЕННЫЙ момент (год соляра / рождение партнёра):
+    // его правка затрагивает только их слой. Моментные методы (транзит/прогрессия/
+    // дирекция) делят state.selectedDateTime, поэтому им нужна полная перезагрузка.
+    function momentChangeAffectsOnlySelectedLayer() {
+        return isSolarMomentActive() || isSynastryMomentActive();
+    }
+
     function normalizeSolarDateTime(value) {
         const raw = String(value || '').trim();
         if (!raw) return '';
@@ -1927,7 +1989,7 @@
             await activateLayer('synastry_partner', { openConfig: false });
             return;
         }
-        state.selectedRightLayerId = target.id;
+        setSelectedRightLayer(target.id);
         captureScratchToConfig(target);   // зафиксировать отредактированного партнёра в слое
         invalidateLayerById(target.id);   // партнёр изменился — сбросить кэш этого слоя
         normalizeActiveLayers();
@@ -2377,35 +2439,14 @@
     }
 
     function updateNatalMomentMeta() {
-        // При свопе базой стала повышенная карта (соляр/партнёр) — панель базы
-        // должна честно называться её именем, а не «Натал».
-        if (isSwapActive()) {
-            const promoted = swapPromotedChartView(swappedLayerInstance());
-            if (refs.natalPanelTitle) {
-                refs.natalPanelTitle.textContent = t('page.forecastNew.swap.baseTitle', { chart: promoted.title });
-            }
-            if (refs.natalPanelMeta) refs.natalPanelMeta.textContent = promoted.summary;
-            // natalDatetimeLabel живёт в карточке-редакторе натала рядом с его
-            // инпутами — он всегда описывает натал, даже при свопе.
-            if (refs.natalDatetimeLabel) {
-                refs.natalDatetimeLabel.textContent = formatChartDateTimeLabel(state.natalSelectedDateTime);
-            }
-            return;
+        // Левая панель = роль base из panelRoles(): натал, либо повышенная карта при
+        // свопе (заголовок/мета берутся из единой идентичности — не расходятся).
+        window.ForecastCardIdentity.applyPanelHeaderRoles(document, { left: panelRoles().left });
+        // natalDatetimeLabel живёт в карточке-редакторе натала рядом с его инпутами —
+        // он ВСЕГДА описывает натал, даже при свопе.
+        if (refs.natalDatetimeLabel) {
+            refs.natalDatetimeLabel.textContent = natalCardIdentity().datetimeLabel;
         }
-        const birth = state.natalData?.birth_data || {};
-        if (refs.natalPanelTitle) {
-            refs.natalPanelTitle.textContent = chartDisplayTitle(
-                state.natalData,
-                t('page.forecastNew.natalPanelTitle'),
-            );
-        }
-        const summary = buildPanelLocationMeta(
-            state.natalLocation?.name || birth.place || '',
-            state.natalTimezone || birth.timezone,
-            state.natalSelectedDateTime,
-        );
-        if (refs.natalPanelMeta) refs.natalPanelMeta.textContent = summary;
-        if (refs.natalDatetimeLabel) refs.natalDatetimeLabel.textContent = formatChartDateTimeLabel(state.natalSelectedDateTime);
     }
 
     function updatePrognosticTimeMeta() {
@@ -3214,31 +3255,9 @@
         return state.wheelView !== 'single' && isSwapDemotedNatalSelected();
     }
     // Заголовок/мета повышенной карты для панели базы — с датой, временем, TZ и
-    // местом, как у обычной панели соляра/синастрии.
+    // местом, как у обычной панели соляра/синастрии. Единый источник идентичности.
     function swapPromotedChartView(inst) {
-        const raw = originalLayerRaw(inst) || {};
-        const cfg = inst?.config || {};
-        if (inst?.method === 'synastry_partner') {
-            const chart = raw.partner_chart || raw.partnerChart || {};
-            const bd = chart.birth_data || {};
-            const datetimeLabel = [formatChartDate(bd.date), bd.time].filter(Boolean).join(' ');
-            return {
-                title: cfg.chartTitle || chartDisplayTitle(chart, layerLabel(inst.method)),
-                summary: [
-                    datetimeLabel,
-                    buildPanelLocationMeta(bd.place, bd.timezone, { date: bd.date, time: bd.time }),
-                ].filter(Boolean).join(' · '),
-                datetimeLabel,
-            };
-        }
-        const info = raw.solar_info || {};
-        const [solarDate, solarClock] = String(info.solar_datetime_local || '').split('T');
-        const solarTime = String(solarClock || '').slice(0, 5);
-        return {
-            title: layerLabel(inst?.method),
-            summary: buildSolarMomentMeta(info, { year: cfg.year || info.year || state.solarYear }),
-            datetimeLabel: [solarDate ? formatChartDate(solarDate) : '', solarTime].filter(Boolean).join(' '),
-        };
+        return layerCardIdentity(inst);
     }
     // При свопе панели меняются ролями: слева — повышенная карта (соляр/партнёр),
     // справа — понижённый натал. Контролы обеих карт (степпер + карточка-редактор)
@@ -3294,14 +3313,15 @@
         const target = currentSwapTarget();
         if (target) setSwap(target.id);
     }
-    function setSwap(layerId) {
-        state.swapBaseLayerId = layerId || null;
-        if (state.swapBaseLayerId) {
-            // При свопе фокусируем правую панель на понижённом наталке под вкладкой
-            // повышенного слоя (в свёрнутой view-model остаётся только он).
-            state.selectedRightLayerId = state.swapBaseLayerId;
-            state.activeRightMethodTab = selectedRightMethod();
-        }
+    // Обнулить только состояние свопа (без рендера). Разнесено с рендером, чтобы
+    // вызывать из reconcileSwapState/нормализации без риска рекурсии (см. ниже).
+    function clearSwapState() {
+        state.swapBaseLayerId = null;
+    }
+    // Единый хвост ре-рендера после ЛЮБОЙ смены состояния свопа (вкл/выкл). Тот же
+    // порядок, что был в setSwap — правая панель/вкладки идут последними, чтобы
+    // подхватить уже пересчитанную view-model.
+    function renderSwapExitTail() {
         syncSwapButton();
         syncWheelViewButtons();
         renderStaticNatal();
@@ -3311,13 +3331,40 @@
         renderRightLayerTabs();
         renderRightPanel();
     }
+    function setSwap(layerId) {
+        state.swapBaseLayerId = layerId || null;
+        if (state.swapBaseLayerId) {
+            // При свопе фокусируем правую панель на понижённом наталке под вкладкой
+            // повышенного слоя (в свёрнутой view-model остаётся только он).
+            state.selectedRightLayerId = state.swapBaseLayerId;
+            state.activeRightMethodTab = selectedRightMethod();
+        }
+        renderSwapExitTail();
+    }
+    // ЕДИНСТВЕННЫЙ мутатор выбранного правого слоя для интерактивных путей.
+    // Инвариант продукта: пока своп активен, selectedRightLayerId === swapBaseLayerId
+    // (правая панель ВСЕГДА показывает понижённый натал). Поэтому выбор любого
+    // другого слоя сначала молча выходит из свопа (auto-exit), а затем выделяет его —
+    // это убирает целый класс багов «перемешанных данных» при свопе.
+    function setSelectedRightLayer(id) {
+        const exitingSwap = !!state.swapBaseLayerId && id !== state.swapBaseLayerId;
+        if (exitingSwap) clearSwapState();
+        state.selectedRightLayerId = id || '';
+        state.activeRightMethodTab = selectedRightMethod();
+        if (exitingSwap) renderSwapExitTail();
+    }
     // Сбросить своп, если повышенный слой исчез/стал невалидным (после мутаций слоёв).
+    // Состояние-only + лёгкий апдейт шапки/контролов; ТЯЖЁЛЫЙ ре-рендер базы
+    // (колесо/таблицы/view-model) делает вызывающий по возвращённому флагу, иначе
+    // рекурсия через syncSwapButton → reconcileSwapState. Возвращает true, если снял.
     function reconcileSwapState() {
         if (state.swapBaseLayerId && !swappedLayerInstance()) {
             state.swapBaseLayerId = null;
             updateNatalMomentMeta();
             syncSwapPanelControls();
+            return true;
         }
+        return false;
     }
     function syncSwapButton() {
         reconcileSwapState();
@@ -3563,8 +3610,7 @@
             filterChartDataForSidePanel(activeBaseWheelData(), { scope: 'natal' })
         );
 
-        const layer = state.viewModel?.activePrognosticLayers?.find((item) => item.id === state.selectedRightLayerId)
-            || state.viewModel?.activePrognosticLayers?.find((item) => item.method === selectedRightMethod());
+        const layer = selectedPanelViewModelLayer();
         if (layer) {
             updateRendererMatrixSensitiveData(state.prognosticRenderer, filterChartDataForSidePanel({
                 planets: layer.bodies || [],
@@ -4097,6 +4143,9 @@
     async function applySavedChartToNatal(chart) {
         const moment = readChartMoment(chart);
         if (!moment.date) return;
+        // Натал заменяется целиком — своп (повышенная карта в базе, понижённый натал
+        // справа) теряет смысл. Выходим из свопа; loadNatal ниже перерисует базу.
+        if (state.swapBaseLayerId) { clearSwapState(); syncSwapButton(); }
         state.natalSelectedDateTime = `${moment.date}T${normalizeTime(moment.time || '12:00:00')}`;
         const tz = normalizeTimezoneValue(moment.timezone, moment.locationName);
         if (tz) state.natalTimezone = tz;
@@ -4141,6 +4190,13 @@
     async function applySavedSynastryPartnerChart(chart) {
         const moment = readChartMoment(chart);
         if (!moment.date) return;
+        // Замена партнёра ПОВЫШЕННОЙ карты: без выхода из свопа повышенная карта
+        // молча стала бы другим человеком под устаревшим свопом. (Своп на другом
+        // слое снимет сам мутатор выбора внутри ensureSynastryLayerActive.)
+        if (state.swapBaseLayerId && selectedLayerInstance()?.id === state.swapBaseLayerId) {
+            clearSwapState();
+            syncSwapButton();
+        }
         ensureLayerConfig(selectedLayerInstance()).chartTitle = chartDisplayTitle(chart);
         const id = chart?.user_id || chart?.chart_id || '';
         if (id) {
@@ -4181,7 +4237,12 @@
         applyDisplayedMomentDateTime(addStep(getDisplayedMomentDateTime(), state.stepMode, direction));
         syncControlsFromState();
         schedulePersist();
-        await loadDisplayedMomentLayers({ lightweight: true });
+        // Шаг соляра/синастрии трогает только их слой — грузим его одного, иначе
+        // стрелки степпера ждут полной перезагрузки всех слоёв.
+        await loadDisplayedMomentLayers({
+            lightweight: true,
+            selectedOnly: momentChangeAffectsOnlySelectedLayer(),
+        });
     }
 
     function stepSelectedDateTimeSegment(segment, direction, stepCount = 1) {
@@ -4280,7 +4341,17 @@
 
     async function loadSelectedMomentLayer(options = {}) {
         const inst = options.layerId ? findLayerInstance(options.layerId) : selectedLayerInstance();
-        if (!inst || (!isMomentMethod(inst.method) && inst.method !== 'synastry_partner')) {
+        // Соляр грузим ОДНИМ слоем, как транзит/синастрию: смена года соляра не
+        // затрагивает остальные слои. Раньше он падал в полный loadActiveLayers, и при
+        // свопе (где кэш повышенной карты намеренно не сбрасывается, см.
+        // invalidateLayerById) это включало ветку hasCompletePreviousLayers — колесо и
+        // панели не перерисовывались, пока не придут ВСЕ слои. Отсюда «медленный»
+        // левый степпер: шаг замирал на полный серверный расчёт соляра без обратной связи.
+        const singleLoadable = !!inst
+            && (isMomentMethod(inst.method)
+                || inst.method === 'synastry_partner'
+                || inst.method === 'solar_return');
+        if (!singleLoadable) {
             await loadActiveLayers(options);
             return;
         }
@@ -5629,7 +5700,7 @@
             await ensureSynastryLayerActive({ lightweight: true });
             const synastryLayer = instancesOfMethod('synastry_partner')[0];
             if (synastryLayer) {
-                state.selectedRightLayerId = synastryLayer.id;
+                setSelectedRightLayer(synastryLayer.id);
                 applyConfigToScratch(synastryLayer);
             }
         }
@@ -5654,8 +5725,11 @@
 
     function viewModelLayerForInstance(inst) {
         const layers = state.viewModel?.activePrognosticLayers || [];
+        // При свопе понижённый натал-кольцо несёт method повышенного слоя; исключаем
+        // его из fallback по методу, чтобы чип другого инстанса того же метода не
+        // «подцепил» данные натала.
         return layers.find((layer) => layer.id === inst?.id)
-            || layers.find((layer) => layer.method === inst?.method)
+            || layers.find((layer) => layer.method === inst?.method && !layer.swappedNatal)
             || null;
     }
 
@@ -5683,11 +5757,10 @@
         }
 
         if (inst.method === 'synastry_partner') {
-            const bd = (originalLayerRaw(inst)?.partner_chart || viewLayer?.raw?.partner_chart)?.birth_data || {};
-            const manual = cfg.manual || {};
-            const name = cfg.chartTitle
-                || manual.name
-                || [bd.first_name, bd.last_name].filter(Boolean).join(' ').trim();
+            const raw = originalLayerRaw(inst) || viewLayer?.raw || {};
+            // Единый источник имени партнёра (тот же, что у заголовков панелей).
+            const name = window.ForecastCardIdentity.synastryPartnerName({ config: cfg, raw }, cardIdentityHelpers());
+            const bd = (raw.partner_chart || raw.partnerChart)?.birth_data || {};
             return name || (bd.date ? formatChartDate(bd.date) : String(ordinal));
         }
 
@@ -5787,10 +5860,11 @@
             renderResultView();
             return;
         }
-        const layer = state.viewModel?.activePrognosticLayers?.find((item) => item.id === state.selectedRightLayerId)
-            || state.viewModel?.activePrognosticLayers?.find((item) => item.method === method);
+        const layer = selectedPanelViewModelLayer();
         const solarPending = isSolarMomentPending();
-        refs.prognosticPanelTitle.textContent = selectedPanelTitle(method);
+        // Заголовок правой панели — роль right из panelRoles() (при свопе это натал,
+        // иначе выбранный слой). Мету панель считает сама (живой момент/соляр/зодиак).
+        refs.prognosticPanelTitle.textContent = panelRoles().right.title;
         if (solarPending) setPanelMetaLoading(refs.prognosticPanelMeta);
         else refs.prognosticPanelMeta.textContent = buildPrognosticMomentSummary();
         syncMomentCardLayout();
@@ -8239,6 +8313,8 @@
     }
 
     function applyDeepLinkParams() {
+        // Своп эфемерен: любой вход по deep-link стартует без свопа.
+        state.swapBaseLayerId = null;
         const params = new URLSearchParams(window.location.search);
         const tab = params.get('tab');
         if (tab === 'biwheel') {
@@ -9196,6 +9272,8 @@
         return {
             activeLayers: cmdClone(state.activeLayers),
             selectedRightLayerId: state.selectedRightLayerId,
+            // Своп эфемерен, но undo/redo должны воспроизводить его точно.
+            swapBaseLayerId: state.swapBaseLayerId,
             selectedDateTime: state.selectedDateTime,
             timezone: state.timezone,
             location: cmdClone(state.location),
@@ -9242,8 +9320,7 @@
         const fallback = instancesOfMethod(preferredMethod)[0]
             || state.activeLayers.find((inst) => isMomentMethod(inst.method));
         if (fallback) {
-            state.selectedRightLayerId = fallback.id;
-            state.activeRightMethodTab = fallback.method;
+            setSelectedRightLayer(fallback.id);
             applyConfigToScratch(fallback);
             normalizeActiveLayers();
             renderRightLayerTabs();
@@ -9263,7 +9340,12 @@
         state.activeLayers = Array.isArray(snapshot.activeLayers)
             ? snapshot.activeLayers.map((l) => ({ ...l }))
             : [];
-        state.selectedRightLayerId = snapshot.selectedRightLayerId
+        // Восстановить своп до нормализации; инвариант: пока своп активен, правая
+        // панель приколота к понижённому наталу. normalizeActiveLayers() ниже
+        // снимет своп, если повышенного слоя больше нет.
+        state.swapBaseLayerId = snapshot.swapBaseLayerId || null;
+        state.selectedRightLayerId = state.swapBaseLayerId
+            || snapshot.selectedRightLayerId
             || state.activeLayers[0]?.id || '';
         state.selectedDateTime = snapshot.selectedDateTime || state.selectedDateTime;
         state.targetDatetime = state.selectedDateTime;
@@ -9275,6 +9357,9 @@
         state.synastryPartnerId = snapshot.synastryPartnerId ?? state.synastryPartnerId;
         state.synastryManual = snapshot.synastryManual ?? state.synastryManual;
         normalizeActiveLayers();
+        // База могла смениться (натал↔повышенная карта), поэтому перерисовываем её.
+        renderStaticNatal();
+        updateNatalMomentMeta();
         syncControlsFromState();
         renderRightLayerTabs();
         scheduleRightPanelRender();

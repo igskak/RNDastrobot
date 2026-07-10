@@ -63,7 +63,7 @@ ok(
     'add-layer dropdown is positioned outside the scroll-clipped layer tabs'
 );
 ok(
-    /if \(method === 'solar_return'\) \{\s*return buildSolarMomentMeta\(selectedViewModelLayer\(\)\?\.raw\?\.solar_info, \{ year: state\.solarYear \}\);\s*\}/.test(source),
+    /if \(method === 'solar_return'\) \{[\s\S]*?return buildSolarMomentMeta\(raw\?\.solar_info, \{ year: state\.solarYear \}\);\s*\}/.test(source),
     'solar right-panel meta uses the full computed solar moment'
 );
 ok(

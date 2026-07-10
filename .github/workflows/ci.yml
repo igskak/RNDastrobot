@@ -79,5 +79,19 @@ jobs:
             app/tests/test_frontend_timezones.test.cjs \
             app/tests/test_forecast_timeline_utils.test.cjs
 
+      # Forecast workspace tests are self-running scripts (process.exit on failure),
+      # not `node --test` suites — invoke each directly so a red assertion fails CI.
+      - name: Forecast workspace frontend tests
+        run: |
+          node app/frontend/js/forecast-new-card-identity.test.js
+          node app/frontend/js/forecast-new-multi-layer.test.js
+          node app/frontend/js/forecast-new-panel-layout.test.js
+          node app/frontend/js/forecast-new-panel-render.test.js
+          node app/frontend/js/forecast-new-panel-editor.test.cjs
+          node app/frontend/js/forecast-new-swap-invariants.test.cjs
+          node app/frontend/js/forecast-new-swap-roles.test.js
+          node app/frontend/js/forecast-new-composite-wheel.test.js
+          node app/frontend/js/forecast-commands.test.js
+
       - name: Python regression suite (incl e2e smoke)
         run: python -m pytest -q app/tests

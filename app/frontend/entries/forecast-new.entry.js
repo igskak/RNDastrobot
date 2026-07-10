@@ -17,6 +17,7 @@ import '../js/natal-wheel-data.js';
 import '../js/chart-data.js';
 import '../js/dispositor-chains.js';
 import '../js/prognostic-layer-normalizer.js';
+import '../js/forecast-new-card-identity.js';
 import '../js/prognostic-rings-wheel.js';
 import '../js/forecast-aspect-dynamics-modal.js';
 import '../js/forecast-new-state-storage.js';
