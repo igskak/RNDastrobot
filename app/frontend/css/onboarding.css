@@ -201,6 +201,27 @@
     bottom: 22px;
 }
 
+.onboarding-coachmark[data-kind="multi"]::before,
+.onboarding-coachmark[data-kind="layers"]::before,
+.onboarding-coachmark[data-kind="assistant"]::before {
+    content: "";
+    position: absolute;
+    top: -7px;
+    left: var(--onboarding-arrow-left, calc(50% - 7px));
+    width: 14px;
+    height: 14px;
+    background: #fffdf9;
+    border-top: 1px solid rgba(31, 57, 88, 0.14);
+    border-left: 1px solid rgba(31, 57, 88, 0.14);
+    transform: rotate(45deg);
+}
+
+.onboarding-coachmark[data-placement="above"]::before {
+    top: auto;
+    bottom: -7px;
+    transform: rotate(225deg);
+}
+
 .onboarding-complete-card {
     right: 18px;
     bottom: 18px;
@@ -261,6 +282,10 @@
         bottom: 82px;
         left: 12px;
         width: auto;
+    }
+
+    .onboarding-coachmark::before {
+        display: none;
     }
 }
 

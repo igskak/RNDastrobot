@@ -263,6 +263,16 @@
         "title": "Your forecast is already here",
         "text": "Today's transits are calculated over the natal chart. Change the date or method whenever you need."
       },
+      "multi": {
+        "title": "Switch between chart views",
+        "text": "The natal chart is open in single-wheel mode. Multi-wheel places forecast layers over the natal chart.",
+        "open": "Open multi-wheel"
+      },
+      "layers": {
+        "title": "Add the layers you need",
+        "text": "Turn on transits, progressions, directions, solar returns, and synastry — one at a time or several together.",
+        "continue": "Continue"
+      },
       "assistant": {
         "title": "Ask the chart data",
         "text": "The assistant finds aspects and exact dates. Interpretation stays with you.",

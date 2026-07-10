@@ -4786,7 +4786,6 @@
     }
 
     let onboardingNoticeShown = false;
-    let onboardingCoachmarkTimer = null;
 
     async function initForecastOnboarding(astrologer, natalData) {
         if (!window.AstroOnboarding) return;
@@ -4808,6 +4807,14 @@
             charts: natalData?.user_id ? [natalData] : [],
             surface: 'forecast',
         });
+        if (onboardingState?.eligible
+            && onboardingState.status === 'active'
+            && !onboardingState.completed_steps?.includes('forecast_ready')) {
+            state.wheelView = 'single';
+            state.singleChartMode = 'natal';
+            syncWorkspaceModePanels();
+            syncWheelViewButtons();
+        }
         renderForecastOnboarding(onboardingState);
     }
 
@@ -4844,16 +4851,33 @@
     function showForecastOnboardingNotice() {
         if (onboardingNoticeShown) return;
         onboardingNoticeShown = true;
+        showMultiWheelOnboardingCoachmark();
+    }
+
+    function showMultiWheelOnboardingCoachmark() {
         showOnboardingCoachmark({
-            kind: 'forecast',
-            titleKey: 'page.onboarding.forecast.title',
-            textKey: 'page.onboarding.forecast.text',
-            showPrimary: false,
+            kind: 'multi',
+            titleKey: 'page.onboarding.multi.title',
+            textKey: 'page.onboarding.multi.text',
+            primaryKey: 'page.onboarding.multi.open',
+            anchor: refs.forecastNewViewMulti,
+            onPrimary: () => {
+                setWheelView('multi');
+                showLayersOnboardingCoachmark();
+            },
         });
-        clearTimeout(onboardingCoachmarkTimer);
-        onboardingCoachmarkTimer = setTimeout(() => {
-            showAssistantOnboardingCoachmark();
-        }, 2200);
+    }
+
+    function showLayersOnboardingCoachmark() {
+        const mobile = window.matchMedia?.('(max-width: 720px)')?.matches;
+        showOnboardingCoachmark({
+            kind: 'layers',
+            titleKey: 'page.onboarding.layers.title',
+            textKey: 'page.onboarding.layers.text',
+            primaryKey: 'page.onboarding.layers.continue',
+            anchor: mobile ? refs.rightLayerTabs : document.querySelector('.forecast-new-layer-toggles'),
+            onPrimary: showAssistantOnboardingCoachmark,
+        });
     }
 
     function showAssistantOnboardingCoachmark() {
@@ -4863,11 +4887,28 @@
             kind: 'assistant',
             titleKey: 'page.onboarding.assistant.title',
             textKey: 'page.onboarding.assistant.text',
-            showPrimary: true,
+            primaryKey: 'page.onboarding.assistant.open',
+            anchor: document.getElementById('chatToggle'),
+            onPrimary: () => document.getElementById('chatToggle')?.click(),
         });
     }
 
-    function showOnboardingCoachmark({ kind, titleKey, textKey, showPrimary }) {
+    function positionOnboardingCoachmark(card, anchor) {
+        if (!anchor || window.matchMedia?.('(max-width: 720px)')?.matches) return;
+        const rect = anchor.getBoundingClientRect();
+        const width = card.offsetWidth || 360;
+        const left = Math.min(window.innerWidth - width - 16, Math.max(16, rect.left + (rect.width - width) / 2));
+        const below = rect.bottom + 12;
+        const fitsBelow = below + card.offsetHeight + 16 <= window.innerHeight;
+        card.style.left = `${left}px`;
+        card.style.top = `${fitsBelow ? below : Math.max(16, rect.top - card.offsetHeight - 12)}px`;
+        card.style.right = 'auto';
+        card.style.bottom = 'auto';
+        card.dataset.placement = fitsBelow ? 'below' : 'above';
+        card.style.setProperty('--onboarding-arrow-left', `${Math.min(width - 24, Math.max(24, rect.left + rect.width / 2 - left))}px`);
+    }
+
+    function showOnboardingCoachmark({ kind, titleKey, textKey, primaryKey, anchor, onPrimary }) {
         document.getElementById('onboardingCoachmark')?.remove();
         document.getElementById('onboardingDock')?.classList.add('is-collapsed');
         const card = document.createElement('aside');
@@ -4883,18 +4924,18 @@
             <p class="onboarding-coachmark-copy">${escapeHtml(t(textKey))}</p>
             <div class="onboarding-coachmark-actions">
                 <button class="onboarding-secondary" type="button" data-onboarding-dismiss>${escapeHtml(t('page.onboarding.dock.dismiss'))}</button>
-                ${showPrimary ? `<button class="onboarding-primary" type="button" data-onboarding-open-chat>${escapeHtml(t('page.onboarding.assistant.open'))}</button>` : ''}
+                <button class="onboarding-primary" type="button" data-onboarding-next>${escapeHtml(t(primaryKey))}</button>
             </div>`;
         card.querySelector('.onboarding-coachmark-close')?.addEventListener('click', () => card.remove());
         card.querySelector('[data-onboarding-dismiss]')?.addEventListener('click', () => {
             window.AstroOnboarding?.dismiss?.(`${kind}_coachmark`);
         });
-        card.querySelector('[data-onboarding-open-chat]')?.addEventListener('click', () => {
-            const toggle = document.getElementById('chatToggle');
+        card.querySelector('[data-onboarding-next]')?.addEventListener('click', () => {
             card.remove();
-            toggle?.click();
+            onPrimary?.();
         });
         document.body.appendChild(card);
+        requestAnimationFrame(() => positionOnboardingCoachmark(card, anchor));
     }
 
     function showOnboardingCompleteCard() {
@@ -4932,7 +4973,8 @@
             item.classList.toggle('is-complete', completed.has(item.dataset.step));
         });
         if (completed.has('forecast_ready') && !completed.has('assistant_answer') && !onboardingNoticeShown) {
-            showAssistantOnboardingCoachmark();
+            onboardingNoticeShown = true;
+            showMultiWheelOnboardingCoachmark();
         }
     }
 
