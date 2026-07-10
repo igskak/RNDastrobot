@@ -18,4 +18,22 @@ assert.doesNotMatch(
     'new chart creation must not drop location_name when autocomplete coordinates are selected'
 );
 
-console.log('2 passed, 0 failed');
+assert.match(
+    source,
+    /if \(profileMode === 'new'\)[\s\S]*?apiFetch\(`\$\{API_BASE\}\/persons`[\s\S]*?body\.person_id = createdPersonId/,
+    'new-profile mode creates a person and links the new chart to it'
+);
+
+assert.match(
+    source,
+    /if \(profileMode === 'existing' && !newChartState\.selectedPersonId\)[\s\S]*?existingRequired/,
+    'existing-profile mode requires an explicit profile selection'
+);
+
+assert.match(
+    source,
+    /const submitKey = mode === 'new'[\s\S]*?submitNew[\s\S]*?submitExisting[\s\S]*?newChart\.submit/,
+    'the submit label reflects all three profile modes'
+);
+
+console.log('5 passed, 0 failed');

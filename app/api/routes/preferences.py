@@ -62,7 +62,11 @@ def patch_account_preferences(
     auth: AuthContext = Depends(require_auth),
 ) -> AccountPreferencesResponse:
     service = PreferencesService(db)
-    updated = service.patch_account_preferences(auth.astrologer, payload.model_dump(exclude_none=True))
+    patch = payload.model_dump(exclude_none=True)
+    if payload.onboarding is not None:
+        # Persist JSON-native ISO timestamps and retain explicit nulls used by reset.
+        patch['onboarding'] = payload.onboarding.model_dump(mode='json')
+    updated = service.patch_account_preferences(auth.astrologer, patch)
     create_audit_event(
         db,
         request,

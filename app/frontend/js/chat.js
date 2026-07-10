@@ -592,7 +592,14 @@ class ChatWidget {
     // Discoverability: tappable example commands shown in the empty state, so the
     // astrologer learns the assistant can DRIVE the workspace, not just answer.
     renderSuggestions() {
+        const onboardingState = window.AstroOnboarding?.getState?.();
+        const onboardingPrompt = onboardingState?.eligible
+            && onboardingState.status === 'active'
+            && !onboardingState.completed_steps?.includes('assistant_answer')
+            ? t('page.onboarding.assistant.prompt')
+            : null;
         const phrases = [
+            onboardingPrompt,
             t('page.chart.chat.suggestTransit'),
             t('page.chart.chat.suggestSolar'),
             t('page.chart.chat.suggestSingle'),
@@ -855,6 +862,7 @@ class ChatWidget {
                 if (compactFeedback) {
                     this.setVoiceMiniStatus(reply, { timeoutMs: 10000 });
                 }
+                document.dispatchEvent(new CustomEvent('steliara:onboarding-assistant-answer'));
             }
             this.handleActions(data.actions || [], { compactFeedback });
         } catch (error) {
@@ -1318,4 +1326,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     window.chatWidget = new ChatWidget(astrologer);
+    if (window.AstroOnboarding?.CHANGE_EVENT) {
+        document.addEventListener(window.AstroOnboarding.CHANGE_EVENT, () => {
+            if (window.chatWidget?.history?.length === 0 && !window.chatWidget?.isLoading) {
+                window.chatWidget.clearMessages();
+            }
+        });
+    }
 });

@@ -30,6 +30,9 @@ const newChartState = {
     autocompleteBound: false,
     selectedCoords: null,
     selectedPlaceLabel: '',
+    profileMode: 'new',
+    selectedPersonId: null,
+    profileNameEdited: false,
 };
 
 const editClientState = {
@@ -181,6 +184,9 @@ function cacheElements() {
     refs.workspaceHero = document.getElementById('workspaceHero');
     refs.loading = document.getElementById('loading');
     refs.emptyState = document.getElementById('emptyState');
+    refs.onboardingWelcome = document.getElementById('onboardingWelcome');
+    refs.onboardingWelcomePrimary = document.getElementById('onboardingWelcomePrimary');
+    refs.onboardingWelcomeSkip = document.getElementById('onboardingWelcomeSkip');
     refs.noResultsState = document.getElementById('noResultsState');
     refs.tableWrap = document.getElementById('tableWrap');
     refs.tbody = document.getElementById('clientsBody');
@@ -276,6 +282,14 @@ function cacheElements() {
     refs.newChartSubmit = document.getElementById('newChartSubmit');
     refs.newChartError = document.getElementById('newChartError');
     refs.newChartTitle = document.getElementById('newChartTitle');
+    refs.newChartProfileModeInputs = Array.from(document.querySelectorAll('input[name="newChartProfileMode"]'));
+    refs.newChartNewProfileFields = document.getElementById('newChartNewProfileFields');
+    refs.newChartExistingProfileFields = document.getElementById('newChartExistingProfileFields');
+    refs.newChartNoProfileNote = document.getElementById('newChartNoProfileNote');
+    refs.newChartProfileName = document.getElementById('newChartProfileName');
+    refs.newChartProfileSearch = document.getElementById('newChartProfileSearch');
+    refs.newChartProfileResults = document.getElementById('newChartProfileResults');
+    refs.newChartSelectedProfile = document.getElementById('newChartSelectedProfile');
     refs.newChartDay = document.getElementById('newChartDay');
     refs.newChartMonth = document.getElementById('newChartMonth');
     refs.newChartYear = document.getElementById('newChartYear');
@@ -305,6 +319,26 @@ function bindEvents() {
     refs.newChartCancel?.addEventListener('click', closeNewChartDialog);
     refs.newChartBackdrop?.addEventListener('click', closeNewChartDialog);
     refs.newChartForm?.addEventListener('submit', (e) => { e.preventDefault(); submitNewChart(); });
+    refs.newChartProfileModeInputs?.forEach((input) => {
+        input.addEventListener('change', () => {
+            if (input.checked) setNewChartProfileMode(input.value);
+        });
+    });
+    refs.newChartTitle?.addEventListener('input', syncNewChartProfileNameFromTitle);
+    refs.newChartProfileName?.addEventListener('input', () => {
+        newChartState.profileNameEdited = true;
+    });
+    refs.newChartProfileSearch?.addEventListener('input', renderNewChartProfileResults);
+    refs.newChartProfileSearch?.addEventListener('focus', renderNewChartProfileResults);
+    refs.newChartProfileResults?.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-person-id]');
+        if (button) selectNewChartProfile(button.dataset.personId);
+    });
+    refs.newChartSelectedProfile?.addEventListener('click', (event) => {
+        if (!event.target.closest('[data-action="clear-new-chart-profile"]')) return;
+        clearNewChartSelectedProfile();
+        refs.newChartProfileSearch?.focus();
+    });
 
     document.addEventListener('click', (event) => {
         const newChartLink = event.target.closest('a[data-plan-new-chart-link="true"]');
@@ -441,6 +475,7 @@ function bindEvents() {
         resetClientListMetaCache();
         scheduleRenderUsers();
         refreshEditDialogLocale();
+        updateNewChartProfileUi();
     });
 
     if (refs.logoutBtn) {
@@ -452,6 +487,17 @@ function bindEvents() {
             }
         });
     }
+
+    refs.onboardingWelcomePrimary?.addEventListener('click', async () => {
+        await window.AstroOnboarding?.start?.('clients_welcome');
+        openNewChartDialog();
+    });
+    refs.onboardingWelcomeSkip?.addEventListener('click', () => {
+        window.AstroOnboarding?.dismiss?.('clients_welcome');
+    });
+    document.addEventListener('steliara:onboarding-state-changed', (event) => {
+        renderClientsOnboarding(event.detail);
+    });
 
     initEditClientDialog();
     initLogSessionDialog();
@@ -475,7 +521,72 @@ async function bootstrapPage() {
     applyHeroPlacement();
 
     await loadClients();
+    await initClientsOnboarding();
     scheduleSecondaryPanels();
+}
+
+async function initClientsOnboarding() {
+    if (!window.AstroOnboarding) return;
+    const onboardingState = await window.AstroOnboarding.init({
+        astrologer: currentAstrologer,
+        charts: state.charts,
+        surface: 'clients',
+    });
+    renderClientsOnboarding(onboardingState);
+}
+
+function ensureOnboardingDock() {
+    let dock = document.getElementById('onboardingDock');
+    if (dock) return dock;
+    dock = document.createElement('aside');
+    dock.id = 'onboardingDock';
+    dock.className = 'onboarding-dock';
+    dock.setAttribute('aria-live', 'polite');
+    dock.innerHTML = `
+        <div class="onboarding-dock-header">
+            <h2 class="onboarding-dock-title">${escapeHtml(t('page.onboarding.dock.title'))}</h2>
+            <button class="onboarding-dock-toggle" type="button" aria-expanded="true" aria-label="${escapeHtml(t('page.onboarding.dock.collapse'))}">−</button>
+        </div>
+        <div class="onboarding-dock-progress" aria-hidden="true"><span></span></div>
+        <ol class="onboarding-step-list">
+            ${window.AstroOnboarding.STEPS.map((step, index) => `<li class="onboarding-step" data-step="${step}" data-index="${index + 1}">${escapeHtml(t(`page.onboarding.dock.steps.${step}`))}</li>`).join('')}
+        </ol>
+        <div class="onboarding-dock-footer"><button class="onboarding-secondary" type="button" data-onboarding-dismiss>${escapeHtml(t('page.onboarding.dock.dismiss'))}</button></div>`;
+    dock.querySelector('.onboarding-dock-toggle')?.addEventListener('click', (event) => {
+        const collapsed = dock.classList.toggle('is-collapsed');
+        event.currentTarget.textContent = collapsed ? '+' : '−';
+        event.currentTarget.setAttribute('aria-expanded', String(!collapsed));
+        event.currentTarget.setAttribute('aria-label', t(collapsed ? 'page.onboarding.dock.expand' : 'page.onboarding.dock.collapse'));
+    });
+    dock.querySelector('[data-onboarding-dismiss]')?.addEventListener('click', () => {
+        window.AstroOnboarding?.dismiss?.('clients_dock');
+    });
+    document.body.appendChild(dock);
+    return dock;
+}
+
+function renderClientsOnboarding(onboardingState = window.AstroOnboarding?.getState?.()) {
+    if (!onboardingState || !refs.emptyState) return;
+    const showWelcome = onboardingState.eligible && state.charts.length === 0
+        && !['dismissed', 'completed'].includes(onboardingState.status);
+    refs.onboardingWelcome?.classList.toggle('onboarding-hidden', !showWelcome);
+    Array.from(refs.emptyState.children).forEach((child) => {
+        if (child !== refs.onboardingWelcome) child.classList.toggle('onboarding-hidden', showWelcome);
+    });
+
+    const showDock = onboardingState.eligible && state.charts.length > 0
+        && !['dismissed', 'completed'].includes(onboardingState.status);
+    const existingDock = document.getElementById('onboardingDock');
+    if (!showDock) {
+        existingDock?.remove();
+        return;
+    }
+    const dock = ensureOnboardingDock();
+    const completed = new Set(onboardingState.completed_steps || []);
+    dock.style.setProperty('--onboarding-progress', `${Math.round((completed.size / 3) * 100)}%`);
+    dock.querySelectorAll('[data-step]').forEach((item) => {
+        item.classList.toggle('is-complete', completed.has(item.dataset.step));
+    });
 }
 
 function scheduleSecondaryPanels() {
@@ -3023,9 +3134,13 @@ function openNewChartDialog() {
     refs.newChartForm?.reset();
     newChartState.selectedCoords = null;
     newChartState.selectedPlaceLabel = '';
+    newChartState.profileMode = 'new';
+    newChartState.selectedPersonId = null;
+    newChartState.profileNameEdited = false;
     refs.newChartError?.classList.add('hidden');
     refs.newChartError && (refs.newChartError.textContent = '');
     window.Timezones?.populate?.(refs.newChartTimezone);
+    updateNewChartProfileUi();
     refs.newChartBackdrop?.classList.remove('hidden');
     refs.newChartDialog.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
@@ -3037,6 +3152,129 @@ function closeNewChartDialog() {
     refs.newChartBackdrop?.classList.add('hidden');
     refs.newChartDialog?.classList.add('hidden');
     document.body.style.overflow = '';
+}
+
+function setNewChartProfileMode(mode) {
+    if (!['new', 'existing', 'none'].includes(mode)) return;
+    newChartState.profileMode = mode;
+    if (mode !== 'existing') {
+        newChartState.selectedPersonId = null;
+    }
+    updateNewChartProfileUi();
+    if (mode === 'existing') {
+        window.setTimeout(() => {
+            refs.newChartProfileSearch?.focus();
+            renderNewChartProfileResults();
+        }, 0);
+    }
+}
+
+function updateNewChartProfileUi() {
+    const mode = newChartState.profileMode || 'new';
+    refs.newChartProfileModeInputs?.forEach((input) => {
+        input.checked = input.value === mode;
+    });
+    refs.newChartNewProfileFields?.classList.toggle('hidden', mode !== 'new');
+    refs.newChartExistingProfileFields?.classList.toggle('hidden', mode !== 'existing');
+    refs.newChartNoProfileNote?.classList.toggle('hidden', mode !== 'none');
+
+    if (mode === 'new') syncNewChartProfileNameFromTitle();
+    if (mode === 'existing') renderNewChartSelectedProfile();
+
+    const submitKey = mode === 'new'
+        ? 'page.clients.newChart.profile.submitNew'
+        : mode === 'existing'
+            ? 'page.clients.newChart.profile.submitExisting'
+            : 'page.clients.newChart.submit';
+    const submitText = refs.newChartSubmit?.querySelector('.btn-text');
+    if (submitText) {
+        submitText.dataset.i18n = submitKey;
+        submitText.textContent = t(submitKey);
+    }
+}
+
+function syncNewChartProfileNameFromTitle() {
+    if (newChartState.profileNameEdited || !refs.newChartProfileName) return;
+    refs.newChartProfileName.value = refs.newChartTitle?.value?.trim() || '';
+}
+
+function getNewChartPerson(personId) {
+    return state.people.find((person) => String(person.person_id || person.user_id || '') === String(personId || '')) || null;
+}
+
+function getNewChartPersonName(person) {
+    return person?.display_name
+        || [person?.first_name, person?.last_name].filter(Boolean).join(' ')
+        || t('common.notAvailable');
+}
+
+function getNewChartPersonMeta(person) {
+    const parts = [];
+    if (person?.birth_date) parts.push(formatDate(person.birth_date));
+    if (person?.birth_place) parts.push(person.birth_place);
+    const chartCount = Number(person?.chart_count || 0);
+    parts.push(t('page.clients.people.chartCount', { count: chartCount }));
+    return parts.join(' · ');
+}
+
+function renderNewChartProfileResults() {
+    if (!refs.newChartProfileResults || newChartState.profileMode !== 'existing') return;
+    const query = normalizeLooseText(refs.newChartProfileSearch?.value || '');
+    const matches = state.people
+        .filter((person) => String(person.person_id || person.user_id || '') !== String(newChartState.selectedPersonId || ''))
+        .filter((person) => {
+            if (!query) return true;
+            return normalizeLooseText([
+                getNewChartPersonName(person),
+                person.birth_date,
+                person.birth_place,
+            ].filter(Boolean).join(' ')).includes(query);
+        })
+        .slice(0, 8);
+
+    if (!matches.length) {
+        refs.newChartProfileResults.innerHTML = `<p class="new-chart-profile-empty">${escapeHtml(t('page.clients.newChart.profile.noMatches'))}</p>`;
+    } else {
+        refs.newChartProfileResults.innerHTML = matches.map((person) => {
+            const id = String(person.person_id || person.user_id || '');
+            return `<button class="new-chart-profile-result" type="button" role="option" data-person-id="${escapeHtml(id)}">
+                <strong>${escapeHtml(getNewChartPersonName(person))}</strong>
+                <small>${escapeHtml(getNewChartPersonMeta(person))}</small>
+            </button>`;
+        }).join('');
+    }
+    refs.newChartProfileResults.classList.add('active');
+}
+
+function selectNewChartProfile(personId) {
+    if (!getNewChartPerson(personId)) return;
+    newChartState.selectedPersonId = String(personId);
+    if (refs.newChartProfileSearch) refs.newChartProfileSearch.value = '';
+    refs.newChartProfileResults?.classList.remove('active');
+    renderNewChartSelectedProfile();
+}
+
+function clearNewChartSelectedProfile() {
+    newChartState.selectedPersonId = null;
+    renderNewChartSelectedProfile();
+    renderNewChartProfileResults();
+}
+
+function renderNewChartSelectedProfile() {
+    if (!refs.newChartSelectedProfile) return;
+    const person = getNewChartPerson(newChartState.selectedPersonId);
+    refs.newChartSelectedProfile.classList.toggle('hidden', !person);
+    refs.newChartProfileSearch?.classList.toggle('hidden', Boolean(person));
+    if (!person) {
+        refs.newChartSelectedProfile.innerHTML = '';
+        return;
+    }
+    refs.newChartSelectedProfile.innerHTML = `
+        <span class="new-chart-selected-profile-copy">
+            <strong>${escapeHtml(getNewChartPersonName(person))}</strong>
+            <small>${escapeHtml(getNewChartPersonMeta(person))}</small>
+        </span>
+        <button class="new-chart-selected-profile-remove" type="button" data-action="clear-new-chart-profile" aria-label="${escapeHtml(t('common.delete'))}">×</button>`;
 }
 
 function bindNewChartAutocomplete() {
@@ -3072,6 +3310,8 @@ async function submitNewChart() {
     const place = refs.newChartPlace?.value?.trim();
     const timezone = refs.newChartTimezone?.value;
     const title = refs.newChartTitle?.value?.trim() || null;
+    const profileMode = newChartState.profileMode || 'new';
+    const profileName = refs.newChartProfileName?.value?.trim() || '';
 
     const showError = (msg) => {
         if (!refs.newChartError) return;
@@ -3083,6 +3323,16 @@ async function submitNewChart() {
     if (hour === '' || minute === '') { showError(t('page.clients.newChart.errors.timeRequired')); return; }
     if (!place) { showError(t('page.clients.newChart.errors.placeRequired')); return; }
     if (!timezone) { showError(t('page.clients.newChart.errors.timezoneRequired')); return; }
+    if (profileMode === 'new' && !profileName) {
+        showError(t('page.clients.newChart.profile.nameRequired'));
+        refs.newChartProfileName?.focus();
+        return;
+    }
+    if (profileMode === 'existing' && !newChartState.selectedPersonId) {
+        showError(t('page.clients.newChart.profile.existingRequired'));
+        refs.newChartProfileSearch?.focus();
+        return;
+    }
 
     const dateStr = `${String(year).padStart(4,'0')}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
     const timeStr = `${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}:00`;
@@ -3097,6 +3347,16 @@ async function submitNewChart() {
         title,
         chart_kind: 'birth',
     };
+    const selectedPerson = profileMode === 'existing'
+        ? getNewChartPerson(newChartState.selectedPersonId)
+        : null;
+    if (profileMode === 'new') {
+        body.first_name = profileName.slice(0, 100);
+    } else if (selectedPerson) {
+        body.first_name = String(selectedPerson.first_name || selectedPerson.display_name || '').slice(0, 100) || null;
+        body.last_name = selectedPerson.last_name || null;
+        body.person_id = selectedPerson.person_id;
+    }
     if (!body.location_name && (body.latitude === null || body.longitude === null)) {
         showError(t('page.clients.newChart.errors.placeRequired'));
         return;
@@ -3107,7 +3367,23 @@ async function submitNewChart() {
     refs.newChartSubmit.querySelector('.btn-loader')?.classList.remove('hidden');
     refs.newChartError?.classList.add('hidden');
 
+    let createdPersonId = null;
     try {
+        if (profileMode === 'new') {
+            const personRes = await apiFetch(`${API_BASE}/persons`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ display_name: profileName }),
+            });
+            if (!personRes.ok) {
+                const err = await personRes.json().catch(() => ({}));
+                throw new Error(err.detail || t('page.clients.newChart.profile.createFailed'));
+            }
+            const person = await personRes.json();
+            createdPersonId = person.person_id;
+            body.person_id = createdPersonId;
+        }
+
         const res = await apiFetch(`${API_BASE}/charts`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -3121,6 +3397,10 @@ async function submitNewChart() {
         const chartId = chart.chart_id || chart.user_id;
         closeNewChartDialog();
         if (chartId) {
+            if (window.AstroOnboarding?.isEligible?.()) {
+                await window.AstroOnboarding.start('chart_creation');
+                await window.AstroOnboarding.completeStep('profile_chart', 'chart_created');
+            }
             await openChart(chartId);
             return;
         }
@@ -3130,6 +3410,11 @@ async function submitNewChart() {
         renderUsers();
         showToast(t('page.clients.newChart.successToast'), 'success');
     } catch (err) {
+        if (createdPersonId) {
+            await apiFetch(`${API_BASE}/persons/${encodeURIComponent(createdPersonId)}`, {
+                method: 'DELETE',
+            }).catch(() => {});
+        }
         showError(err.message);
     } finally {
         refs.newChartSubmit.disabled = false;

@@ -1487,6 +1487,9 @@
     async function loadPreferences() {
         const me = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
         if (!me) return;
+        const onboardingResetSetting = document.getElementById('onboardingResetSetting');
+        const onboardingAvailable = ['trial', 'pro'].includes(String(me.plan_code || '').toLowerCase());
+        onboardingResetSetting?.classList.toggle('onboarding-hidden', !onboardingAvailable);
 
         const subtitle = document.getElementById('accountSettingsSubtitle');
         if (subtitle) {
@@ -1607,6 +1610,7 @@
         const resetConfirmCloseBtn = document.getElementById('accountSettingsResetConfirmClose');
         const resetConfirmCancelBtn = document.getElementById('accountSettingsResetConfirmCancel');
         const resetConfirmSubmitBtn = document.getElementById('accountSettingsResetConfirmSubmit');
+        const onboardingResetBtn = document.getElementById('onboardingResetBtn');
 
         saveBtn?.addEventListener('click', () => {
             savePreferences();
@@ -1626,6 +1630,17 @@
         resetConfirmSubmitBtn?.addEventListener('click', () => {
             closeResetConfirmDialog({ restoreFocus: false });
             restoreStandardDefaults();
+        });
+        onboardingResetBtn?.addEventListener('click', async () => {
+            onboardingResetBtn.disabled = true;
+            try {
+                await window.AstroOnboarding?.reset?.();
+                showToast(t('page.onboarding.settings.resetDone'), 'success');
+            } catch (error) {
+                showToast(error.message || t('page.accountSettings.toasts.saveFailed'), 'error');
+            } finally {
+                onboardingResetBtn.disabled = false;
+            }
         });
         document.querySelectorAll('[data-orb-profile-tab]').forEach((button) => {
             button.addEventListener('click', () => {

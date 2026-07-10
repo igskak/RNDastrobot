@@ -13,6 +13,7 @@ from app.services.preferences_runtime import PreferencesRuntimeResolver, normali
 
 
 PREFERENCE_VERSION = 1
+ONBOARDING_VERSION = 1
 VIEW_TYPES = ('natal', 'biwheel', 'forecast_new', 'solar')
 CHART_KINDS = ('natal', 'solar')
 DEFAULT_ENABLED_ASPECT_TYPES = [
@@ -98,6 +99,14 @@ def build_default_preferences(default_house_system: str = 'P') -> Dict[str, Any]
         },
         'chart_creation_defaults': {
             'house_system': normalize_house_system_code(default_house_system),
+        },
+        'onboarding': {
+            'version': ONBOARDING_VERSION,
+            'status': 'not_started',
+            'completed_steps': [],
+            'started_at': None,
+            'dismissed_at': None,
+            'completed_at': None,
         },
     }
 
@@ -192,6 +201,7 @@ class PreferencesService:
             methodology=defaults['methodology'],
             visual=defaults['visual'],
             chart_creation_defaults=defaults['chart_creation_defaults'],
+            onboarding=defaults['onboarding'],
         )
         self.db.add(record)
         self.db.flush()
@@ -218,6 +228,7 @@ class PreferencesService:
                     or default_house_system
                 ),
             },
+            'onboarding': deep_merge_dicts(defaults['onboarding'], record.onboarding or {}),
         }
         payload['chart_creation_defaults']['house_system'] = normalize_house_system_code(
             payload['chart_creation_defaults'].get('house_system') or astrologer.default_house_system
@@ -245,6 +256,7 @@ class PreferencesService:
             **(merged.get('chart_creation_defaults', {}) or {}),
             'house_system': house_system,
         }
+        record.onboarding = merged.get('onboarding') or build_default_preferences(house_system)['onboarding']
         self.runtime.invalidate(astrologer.id)
         self.db.flush()
         return self.get_account_preferences(astrologer)

@@ -2,8 +2,8 @@
 Pydantic модели для валидации данных API
 """
 from pydantic import BaseModel, Field, field_validator, model_validator
-from datetime import date as date_type, time as time_type
-from typing import Any, Optional, List, Dict
+from datetime import date as date_type, datetime, time as time_type
+from typing import Any, Dict, List, Literal, Optional
 from uuid import UUID
 
 VALID_HOUSE_SYSTEMS = ['P', 'K', 'O', 'R', 'C', 'E', 'W', 'X', 'H', 'T', 'B', 'M']
@@ -646,12 +646,34 @@ class ErrorResponse(BaseModel):
     error: Optional[str] = None
 
 
+OnboardingStatus = Literal['not_started', 'active', 'dismissed', 'completed']
+OnboardingStep = Literal['profile_chart', 'forecast_ready', 'assistant_answer']
+ONBOARDING_STEP_ORDER = ('profile_chart', 'forecast_ready', 'assistant_answer')
+
+
+class OnboardingPreferences(BaseModel):
+    """Versioned, account-synced onboarding progress."""
+    version: Literal[1] = 1
+    status: OnboardingStatus = 'not_started'
+    completed_steps: List[OnboardingStep] = Field(default_factory=list)
+    started_at: Optional[datetime] = None
+    dismissed_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+
+    @field_validator('completed_steps')
+    @classmethod
+    def normalize_completed_steps(cls, value: List[OnboardingStep]) -> List[OnboardingStep]:
+        completed = set(value or [])
+        return [step for step in ONBOARDING_STEP_ORDER if step in completed]
+
+
 class AccountPreferencesPatchRequest(BaseModel):
     """Partial update for astrologer-level preferences."""
     chart_defaults: Optional[Dict[str, Any]] = None
     methodology: Optional[Dict[str, Any]] = None
     visual: Optional[Dict[str, Any]] = None
     chart_creation_defaults: Optional[Dict[str, Any]] = None
+    onboarding: Optional[OnboardingPreferences] = None
 
 
 class AccountPreferencesResponse(BaseModel):
@@ -661,6 +683,7 @@ class AccountPreferencesResponse(BaseModel):
     methodology: Dict[str, Any]
     visual: Dict[str, Any]
     chart_creation_defaults: Dict[str, Any]
+    onboarding: OnboardingPreferences
     default_house_system: str
 
 

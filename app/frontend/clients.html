@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.clients.title"></title>
-    <link rel="stylesheet" href="bundles/clients.bundle.css?v=b893ab4d8341">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=b893ab4d8341">
+    <link rel="stylesheet" href="bundles/clients.bundle.css?v=f037d61c3358">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=f037d61c3358">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = 'b893ab4d8341';</script>
+    <script>window.__APP_BUILD_ID__ = 'f037d61c3358';</script>
     <style>
         /* Chip multi-select for linking people to a chart (edit dialog) */
         #editChartPersonWrap { position: relative; }
@@ -136,6 +136,15 @@
                         <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                         <span id="emptyStateNewBtnLabel" data-i18n="page.clients.createFirstCard"></span>
                     </button>
+                    <div id="onboardingWelcome" class="onboarding-welcome onboarding-hidden">
+                        <p class="onboarding-kicker" data-i18n="page.onboarding.welcome.kicker"></p>
+                        <h3 class="state-title" data-i18n="page.onboarding.welcome.title"></h3>
+                        <p class="state-copy" data-i18n="page.onboarding.welcome.text"></p>
+                        <div class="onboarding-actions">
+                            <button id="onboardingWelcomePrimary" class="btn-new state-cta" type="button" data-i18n="page.onboarding.welcome.primary"></button>
+                            <button id="onboardingWelcomeSkip" class="onboarding-secondary" type="button" data-i18n="page.onboarding.welcome.skip"></button>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="noResultsState" class="empty-state hidden">
@@ -436,6 +445,53 @@
                     <input id="newChartTitle" type="text" data-i18n-placeholder="page.clients.newChart.chartTitlePlaceholder">
                 </div>
 
+                <fieldset class="new-chart-profile-fieldset">
+                    <legend class="form-label" data-i18n="page.clients.newChart.profile.heading"></legend>
+                    <p class="new-chart-profile-intro" data-i18n="page.clients.newChart.profile.intro"></p>
+                    <div class="new-chart-profile-options">
+                        <label class="new-chart-profile-option">
+                            <input type="radio" name="newChartProfileMode" value="new" checked>
+                            <span class="new-chart-profile-option-icon" aria-hidden="true">＋</span>
+                            <span class="new-chart-profile-option-copy">
+                                <strong data-i18n="page.clients.newChart.profile.newTitle"></strong>
+                                <small data-i18n="page.clients.newChart.profile.newHint"></small>
+                            </span>
+                        </label>
+                        <label class="new-chart-profile-option">
+                            <input type="radio" name="newChartProfileMode" value="existing">
+                            <span class="new-chart-profile-option-icon" aria-hidden="true">⌕</span>
+                            <span class="new-chart-profile-option-copy">
+                                <strong data-i18n="page.clients.newChart.profile.existingTitle"></strong>
+                                <small data-i18n="page.clients.newChart.profile.existingHint"></small>
+                            </span>
+                        </label>
+                        <label class="new-chart-profile-option">
+                            <input type="radio" name="newChartProfileMode" value="none">
+                            <span class="new-chart-profile-option-icon" aria-hidden="true">○</span>
+                            <span class="new-chart-profile-option-copy">
+                                <strong data-i18n="page.clients.newChart.profile.noneTitle"></strong>
+                                <small data-i18n="page.clients.newChart.profile.noneHint"></small>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div id="newChartNewProfileFields" class="new-chart-profile-details">
+                        <label class="form-label" for="newChartProfileName" data-i18n="page.clients.newChart.profile.nameLabel"></label>
+                        <input id="newChartProfileName" type="text" data-i18n-placeholder="page.clients.newChart.profile.namePlaceholder">
+                    </div>
+
+                    <div id="newChartExistingProfileFields" class="new-chart-profile-details hidden">
+                        <label class="form-label" for="newChartProfileSearch" data-i18n="page.clients.newChart.profile.searchLabel"></label>
+                        <div class="new-chart-profile-search-wrap">
+                            <input id="newChartProfileSearch" type="search" autocomplete="off" data-i18n-placeholder="page.clients.newChart.profile.searchPlaceholder">
+                            <div id="newChartProfileResults" class="new-chart-profile-results" role="listbox"></div>
+                        </div>
+                        <div id="newChartSelectedProfile" class="new-chart-selected-profile hidden"></div>
+                    </div>
+
+                    <p id="newChartNoProfileNote" class="new-chart-profile-note hidden" data-i18n="page.clients.newChart.profile.noneNote"></p>
+                </fieldset>
+
                 <div class="form-group">
                     <label class="form-label" data-i18n="page.index.form.birthDate.label"></label>
                     <div class="date-inputs">
@@ -498,9 +554,9 @@
 
     <div id="toast" class="toast"></div>
 
-    <script type="module" src="js/bundles/clients.bundle.js?v=b893ab4d8341"></script>
+    <script type="module" src="js/bundles/clients.bundle.js?v=f037d61c3358"></script>
     <script src="/runtime-config.js"></script>
-    <script src="js/analytics.js?v=b893ab4d8341"></script>
-    <script src="js/locale-switcher.js?v=b893ab4d8341"></script>
+    <script src="js/analytics.js?v=f037d61c3358"></script>
+    <script src="js/locale-switcher.js?v=f037d61c3358"></script>
 </body>
 </html>

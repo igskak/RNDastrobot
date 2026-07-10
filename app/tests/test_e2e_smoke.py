@@ -38,3 +38,15 @@ def test_retired_pages_return_404() -> None:
         assert client.get("/chart.html").status_code == 404
         assert client.get("/solar.html").status_code == 404
         assert client.get("/synastry.html").status_code == 404
+
+
+def test_runtime_config_exposes_safe_onboarding_rollout(monkeypatch) -> None:
+    monkeypatch.setenv("ONBOARDING_V1_ENABLED", "true")
+    monkeypatch.setenv("ONBOARDING_V1_LAUNCHED_AT", "2026-07-10T00:00:00Z")
+
+    with TestClient(app) as client:
+        response = client.get("/runtime-config.js")
+
+    assert response.status_code == 200
+    assert '"onboardingV1Enabled": true' in response.text
+    assert '"onboardingV1LaunchedAt": "2026-07-10T00:00:00Z"' in response.text

@@ -1,4 +1,5 @@
 @import '../css/styles.css';
+@import '../css/onboarding.css';
 
 .clients-page {
     min-height: 100vh;
@@ -694,6 +695,220 @@ select:focus {
     grid-column: 1 / -1;
 }
 
+.new-chart-profile-fieldset {
+    grid-column: 1 / -1;
+    min-width: 0;
+    margin: 0 0 14px;
+    padding: 0;
+    border: 0;
+}
+
+.new-chart-profile-intro {
+    margin: 3px 0 10px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.new-chart-profile-options {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.new-chart-profile-option {
+    position: relative;
+    display: grid;
+    grid-template-columns: 26px minmax(0, 1fr);
+    gap: 8px;
+    align-items: start;
+    min-height: 76px;
+    padding: 11px;
+    border: 1px solid rgba(30, 58, 95, 0.12);
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.76);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: border-color var(--transition), background var(--transition), box-shadow var(--transition), transform var(--transition);
+}
+
+.new-chart-profile-option:hover {
+    border-color: rgba(30, 58, 95, 0.28);
+    background: #fff;
+    transform: translateY(-1px);
+}
+
+.new-chart-profile-option:has(input:checked) {
+    border-color: rgba(30, 58, 95, 0.72);
+    background: rgba(235, 240, 247, 0.88);
+    box-shadow: 0 0 0 2px rgba(30, 58, 95, 0.08);
+}
+
+.new-chart-profile-option:has(input:focus-visible) {
+    outline: 3px solid rgba(30, 58, 95, 0.14);
+    outline-offset: 2px;
+}
+
+.new-chart-profile-option input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.new-chart-profile-option-icon {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border: 1px solid rgba(30, 58, 95, 0.12);
+    border-radius: 50%;
+    background: rgba(249, 247, 242, 0.88);
+    color: var(--accent);
+    font-size: 16px;
+    line-height: 1;
+}
+
+.new-chart-profile-option:has(input:checked) .new-chart-profile-option-icon {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #fff;
+}
+
+.new-chart-profile-option-copy {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+}
+
+.new-chart-profile-option-copy strong {
+    font-size: 12px;
+    line-height: 1.25;
+}
+
+.new-chart-profile-option-copy small {
+    color: var(--text-secondary);
+    font-size: 10px;
+    line-height: 1.35;
+}
+
+.new-chart-profile-details,
+.new-chart-profile-note {
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid rgba(30, 58, 95, 0.08);
+    border-radius: 10px;
+    background: rgba(249, 247, 242, 0.72);
+}
+
+.new-chart-profile-details input {
+    width: 100%;
+}
+
+.new-chart-profile-search-wrap {
+    position: relative;
+}
+
+.new-chart-profile-results {
+    display: none;
+    max-height: 210px;
+    margin-top: 6px;
+    overflow: auto;
+    border: 1px solid rgba(30, 58, 95, 0.1);
+    border-radius: 9px;
+    background: #fff;
+    box-shadow: 0 12px 24px rgba(26, 22, 20, 0.1);
+}
+
+.new-chart-profile-results.active {
+    display: grid;
+}
+
+.new-chart-profile-result {
+    display: grid;
+    gap: 2px;
+    width: 100%;
+    padding: 9px 11px;
+    border: 0;
+    border-bottom: 1px solid rgba(30, 58, 95, 0.07);
+    background: transparent;
+    color: var(--text-primary);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.new-chart-profile-result:last-child {
+    border-bottom: 0;
+}
+
+.new-chart-profile-result:hover,
+.new-chart-profile-result:focus-visible {
+    outline: 0;
+    background: var(--accent-light);
+}
+
+.new-chart-profile-result strong {
+    font-size: 12px;
+}
+
+.new-chart-profile-result small {
+    color: var(--text-secondary);
+    font-size: 10px;
+}
+
+.new-chart-profile-empty {
+    padding: 11px;
+    color: var(--text-secondary);
+    font-size: 11px;
+}
+
+.new-chart-selected-profile {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+    margin-top: 8px;
+    padding: 8px 10px;
+    border: 1px solid rgba(30, 58, 95, 0.14);
+    border-radius: 9px;
+    background: #fff;
+}
+
+.new-chart-selected-profile-copy {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.new-chart-selected-profile-copy strong {
+    font-size: 12px;
+}
+
+.new-chart-selected-profile-copy small {
+    color: var(--text-secondary);
+    font-size: 10px;
+}
+
+.new-chart-selected-profile-remove {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid rgba(30, 58, 95, 0.1);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 17px;
+    cursor: pointer;
+}
+
+.new-chart-profile-note {
+    color: var(--text-secondary);
+    font-size: 11px;
+    line-height: 1.5;
+}
+
 .clients-dialog-actions {
     display: flex;
     justify-content: flex-end;
@@ -1041,6 +1256,16 @@ select:focus {
             rgba(255, 255, 255, 0.98);
         border-color: rgba(184, 147, 90, 0.28);
         box-shadow: 0 22px 48px rgba(18, 28, 45, 0.08);
+    }
+}
+
+@media (max-width: 640px) {
+    .new-chart-profile-options {
+        grid-template-columns: 1fr;
+    }
+
+    .new-chart-profile-option {
+        min-height: 0;
     }
 }
 

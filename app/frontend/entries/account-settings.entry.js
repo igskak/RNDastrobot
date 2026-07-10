@@ -4,6 +4,7 @@ import '../js/locale-formatters.js';
 import '../js/locale-switcher.js';
 import '../js/api.js';
 import '../js/preferences.js';
+import '../js/onboarding.js';
 import '../js/symbols.js';
 import '../js/planet-svg-icons.js';
 import '../js/account-settings.js';

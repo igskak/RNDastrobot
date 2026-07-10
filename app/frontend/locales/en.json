@@ -240,6 +240,48 @@
     }
   },
   "page": {
+    "onboarding": {
+      "welcome": {
+        "kicker": "Step 1 of 3",
+        "title": "Start with one person",
+        "text": "Create a profile and chart so forecasts, notes, and session history stay together.",
+        "primary": "Add your first client",
+        "skip": "Set up later"
+      },
+      "dock": {
+        "title": "Getting started",
+        "collapse": "Collapse introduction",
+        "expand": "Expand introduction",
+        "dismiss": "Hide",
+        "steps": {
+          "profile_chart": "Create a profile and chart",
+          "forecast_ready": "See a calculated forecast",
+          "assistant_answer": "Get an assistant answer"
+        }
+      },
+      "forecast": {
+        "title": "Your forecast is already here",
+        "text": "Today's transits are calculated over the natal chart. Change the date or method whenever you need."
+      },
+      "assistant": {
+        "title": "Ask the chart data",
+        "text": "The assistant finds aspects and exact dates. Interpretation stays with you.",
+        "open": "Open assistant",
+        "prompt": "Which exact aspects are active now, and when will they perfect?"
+      },
+      "complete": {
+        "title": "Your workflow is ready",
+        "text": "The profile, natal chart, current forecast, and assistant answers now live in one workspace.",
+        "extra": "During a consultation, Steliara can preserve the recording, transcript, and concise summary.",
+        "continue": "Continue working"
+      },
+      "settings": {
+        "title": "Product introduction",
+        "text": "Show the short guidance for the core workflow again.",
+        "reset": "Repeat introduction",
+        "resetDone": "Introduction enabled again"
+      }
+    },
     "forecastNew": {
       "resultViews": {
         "wheel": "Chart",
@@ -1338,6 +1380,27 @@
         "chartTitlePlaceholder": "Person, event… (optional)",
         "submit": "Save chart",
         "successToast": "Chart saved",
+        "profile": {
+          "heading": "Profile",
+          "intro": "Who does this chart belong to?",
+          "newTitle": "New profile",
+          "newHint": "For a new person",
+          "existingTitle": "Existing profile",
+          "existingHint": "Link to a client",
+          "noneTitle": "No profile",
+          "noneHint": "Event, test, or research",
+          "nameLabel": "Profile name",
+          "namePlaceholder": "Person's name",
+          "searchLabel": "Find a profile",
+          "searchPlaceholder": "Search by name, date, or place",
+          "noMatches": "No matching profiles found",
+          "noneNote": "The chart will remain standalone. You can link it to a profile later.",
+          "submitNew": "Create chart and profile",
+          "submitExisting": "Create and link chart",
+          "nameRequired": "Enter a profile name",
+          "existingRequired": "Select an existing profile",
+          "createFailed": "Failed to create profile"
+        },
         "errors": {
           "dateRequired": "Birth date is required",
           "timeRequired": "Birth time is required",

@@ -462,6 +462,7 @@ class AstrologerPreference(Base):
     methodology = Column(JSONB, nullable=False, default=dict, server_default='{}')
     visual = Column(JSONB, nullable=False, default=dict, server_default='{}')
     chart_creation_defaults = Column(JSONB, nullable=False, default=dict, server_default='{}')
+    onboarding = Column(JSONB, nullable=False, default=dict, server_default='{}')
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 

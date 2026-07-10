@@ -663,6 +663,7 @@
         bindPanelConfigurator();
         syncWorkspaceModePanels();
         await hydratePreferences();
+        await initForecastOnboarding(me, natalData);
         syncControlsFromState();
         renderStaticNatal();
         renderRightLayerTabs();
@@ -4327,6 +4328,7 @@
             renderNowBlocks();
             schedulePersist();
             scheduleAdjacentLayerPrefetch();
+            announceOnboardingForecastReady();
         } catch (error) {
             if (seq !== state.requestSeq) return;
             if (isAbortError(error)) return;
@@ -4380,6 +4382,7 @@
             renderNowBlocks();
             schedulePersist();
             scheduleAdjacentLayerPrefetch();
+            announceOnboardingForecastReady();
         } catch (error) {
             if (seq !== state.requestSeq) return;
             if (isAbortError(error)) return;
@@ -4772,6 +4775,166 @@
         state.wheel.render(viewModel);
         applyHoveredAspectFocus();
         renderResultView();
+    }
+
+    function announceOnboardingForecastReady() {
+        const transitReady = state.activeLayers.some((layer) => (
+            layer.method === 'transit' && state.layers?.[layer.id]
+        ));
+        if (!transitReady) return;
+        document.dispatchEvent(new CustomEvent('steliara:onboarding-forecast-ready'));
+    }
+
+    let onboardingNoticeShown = false;
+    let onboardingCoachmarkTimer = null;
+
+    async function initForecastOnboarding(astrologer, natalData) {
+        if (!window.AstroOnboarding) return;
+        document.addEventListener(window.AstroOnboarding.CHANGE_EVENT, (event) => {
+            renderForecastOnboarding(event.detail);
+        });
+        document.addEventListener('steliara:onboarding-forecast-ready', () => {
+            const current = window.AstroOnboarding?.getState?.();
+            if (!current?.eligible || current.completed_steps?.includes('forecast_ready')) return;
+            showForecastOnboardingNotice();
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape') return;
+            document.getElementById('onboardingCoachmark')?.remove();
+            document.getElementById('onboardingCompleteCard')?.remove();
+        });
+        const onboardingState = await window.AstroOnboarding.init({
+            astrologer,
+            charts: natalData?.user_id ? [natalData] : [],
+            surface: 'forecast',
+        });
+        renderForecastOnboarding(onboardingState);
+    }
+
+    function ensureForecastOnboardingDock() {
+        let dock = document.getElementById('onboardingDock');
+        if (dock) return dock;
+        dock = document.createElement('aside');
+        dock.id = 'onboardingDock';
+        dock.className = 'onboarding-dock';
+        dock.setAttribute('aria-live', 'polite');
+        dock.innerHTML = `
+            <div class="onboarding-dock-header">
+                <h2 class="onboarding-dock-title">${escapeHtml(t('page.onboarding.dock.title'))}</h2>
+                <button class="onboarding-dock-toggle" type="button" aria-expanded="true" aria-label="${escapeHtml(t('page.onboarding.dock.collapse'))}">−</button>
+            </div>
+            <div class="onboarding-dock-progress" aria-hidden="true"><span></span></div>
+            <ol class="onboarding-step-list">
+                ${window.AstroOnboarding.STEPS.map((step, index) => `<li class="onboarding-step" data-step="${step}" data-index="${index + 1}">${escapeHtml(t(`page.onboarding.dock.steps.${step}`))}</li>`).join('')}
+            </ol>
+            <div class="onboarding-dock-footer"><button class="onboarding-secondary" type="button" data-onboarding-dismiss>${escapeHtml(t('page.onboarding.dock.dismiss'))}</button></div>`;
+        dock.querySelector('.onboarding-dock-toggle')?.addEventListener('click', (event) => {
+            const collapsed = dock.classList.toggle('is-collapsed');
+            event.currentTarget.textContent = collapsed ? '+' : '−';
+            event.currentTarget.setAttribute('aria-expanded', String(!collapsed));
+            event.currentTarget.setAttribute('aria-label', t(collapsed ? 'page.onboarding.dock.expand' : 'page.onboarding.dock.collapse'));
+        });
+        dock.querySelector('[data-onboarding-dismiss]')?.addEventListener('click', () => {
+            window.AstroOnboarding?.dismiss?.('forecast_dock');
+        });
+        document.body.appendChild(dock);
+        return dock;
+    }
+
+    function showForecastOnboardingNotice() {
+        if (onboardingNoticeShown) return;
+        onboardingNoticeShown = true;
+        showOnboardingCoachmark({
+            kind: 'forecast',
+            titleKey: 'page.onboarding.forecast.title',
+            textKey: 'page.onboarding.forecast.text',
+            showPrimary: false,
+        });
+        clearTimeout(onboardingCoachmarkTimer);
+        onboardingCoachmarkTimer = setTimeout(() => {
+            showAssistantOnboardingCoachmark();
+        }, 2200);
+    }
+
+    function showAssistantOnboardingCoachmark() {
+        const current = window.AstroOnboarding?.getState?.();
+        if (!current?.eligible || current.completed_steps?.includes('assistant_answer')) return;
+        showOnboardingCoachmark({
+            kind: 'assistant',
+            titleKey: 'page.onboarding.assistant.title',
+            textKey: 'page.onboarding.assistant.text',
+            showPrimary: true,
+        });
+    }
+
+    function showOnboardingCoachmark({ kind, titleKey, textKey, showPrimary }) {
+        document.getElementById('onboardingCoachmark')?.remove();
+        document.getElementById('onboardingDock')?.classList.add('is-collapsed');
+        const card = document.createElement('aside');
+        card.id = 'onboardingCoachmark';
+        card.className = 'onboarding-coachmark';
+        card.dataset.kind = kind;
+        card.setAttribute('role', 'status');
+        card.innerHTML = `
+            <div class="onboarding-coachmark-head">
+                <h2 class="onboarding-coachmark-title">${escapeHtml(t(titleKey))}</h2>
+                <button class="onboarding-coachmark-close" type="button" aria-label="${escapeHtml(t('common.close'))}">×</button>
+            </div>
+            <p class="onboarding-coachmark-copy">${escapeHtml(t(textKey))}</p>
+            <div class="onboarding-coachmark-actions">
+                <button class="onboarding-secondary" type="button" data-onboarding-dismiss>${escapeHtml(t('page.onboarding.dock.dismiss'))}</button>
+                ${showPrimary ? `<button class="onboarding-primary" type="button" data-onboarding-open-chat>${escapeHtml(t('page.onboarding.assistant.open'))}</button>` : ''}
+            </div>`;
+        card.querySelector('.onboarding-coachmark-close')?.addEventListener('click', () => card.remove());
+        card.querySelector('[data-onboarding-dismiss]')?.addEventListener('click', () => {
+            window.AstroOnboarding?.dismiss?.(`${kind}_coachmark`);
+        });
+        card.querySelector('[data-onboarding-open-chat]')?.addEventListener('click', () => {
+            const toggle = document.getElementById('chatToggle');
+            card.remove();
+            toggle?.click();
+        });
+        document.body.appendChild(card);
+    }
+
+    function showOnboardingCompleteCard() {
+        if (document.getElementById('onboardingCompleteCard')) return;
+        document.getElementById('onboardingCoachmark')?.remove();
+        const card = document.createElement('aside');
+        card.id = 'onboardingCompleteCard';
+        card.className = 'onboarding-complete-card';
+        card.setAttribute('role', 'status');
+        card.innerHTML = `
+            <h2 class="onboarding-complete-title">${escapeHtml(t('page.onboarding.complete.title'))}</h2>
+            <p class="onboarding-complete-copy">${escapeHtml(t('page.onboarding.complete.text'))}</p>
+            <p class="onboarding-complete-extra">${escapeHtml(t('page.onboarding.complete.extra'))}</p>
+            <div class="onboarding-complete-actions"><button class="onboarding-primary" type="button">${escapeHtml(t('page.onboarding.complete.continue'))}</button></div>`;
+        card.querySelector('button')?.addEventListener('click', () => card.remove());
+        document.body.appendChild(card);
+        card.querySelector('button')?.focus({ preventScroll: true });
+    }
+
+    function renderForecastOnboarding(onboardingState = window.AstroOnboarding?.getState?.()) {
+        if (!onboardingState) return;
+        if (onboardingState.status === 'completed') {
+            document.getElementById('onboardingDock')?.remove();
+            showOnboardingCompleteCard();
+            return;
+        }
+        if (!onboardingState.eligible || onboardingState.status === 'dismissed') {
+            document.getElementById('onboardingDock')?.remove();
+            document.getElementById('onboardingCoachmark')?.remove();
+            return;
+        }
+        const dock = ensureForecastOnboardingDock();
+        const completed = new Set(onboardingState.completed_steps || []);
+        dock.style.setProperty('--onboarding-progress', `${Math.round((completed.size / 3) * 100)}%`);
+        dock.querySelectorAll('[data-step]').forEach((item) => {
+            item.classList.toggle('is-complete', completed.has(item.dataset.step));
+        });
+        if (completed.has('forecast_ready') && !completed.has('assistant_answer') && !onboardingNoticeShown) {
+            showAssistantOnboardingCoachmark();
+        }
     }
 
     function setWheelView(view, options = {}) {
