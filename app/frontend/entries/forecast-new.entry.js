@@ -18,6 +18,7 @@ import '../js/chart-data.js';
 import '../js/dispositor-chains.js';
 import '../js/prognostic-layer-normalizer.js';
 import '../js/forecast-new-card-identity.js';
+import '../js/forecast-new-deep-link.js';
 import '../js/prognostic-rings-wheel.js';
 import '../js/forecast-aspect-dynamics-modal.js';
 import '../js/forecast-new-state-storage.js';

@@ -8337,18 +8337,25 @@
             state.directionType = normalizeDirectionType(directionType);
         }
         const layer = params.get('layer');
+        const partner = params.get('partner');
         if (LAYER_ORDER.includes(layer)) {
-            // Транзит всегда присутствует; целевой слой добавляется (или совпадает с транзитом).
-            const methods = layer === 'transit' ? ['transit'] : ['transit', layer];
+            const entry = window.ForecastNewDeepLink?.resolveLayerEntry?.(layer, partner) || {
+                methods: layer === 'transit' ? ['transit'] : ['transit', layer],
+                wheelView: null,
+            };
+            const methods = entry.methods;
             state.activeLayers = methods.map((method) => ({ id: nextLayerInstanceId(method), method }));
             state.enabledLayers = state.activeLayers;
             const sel = state.activeLayers.find((l) => l.method === layer) || state.activeLayers[0];
             state.selectedRightLayerId = sel?.id || '';
             state.activeRightMethodTab = sel?.method || '';
+            if (entry.wheelView) {
+                state.wheelView = entry.wheelView;
+                state.singleChartMode = 'natal';
+            }
         }
         // Synastry deep-link (from clients / client-profile / related-people): preselect
         // the partner so the synastry_partner layer loads after the source chart is restored.
-        const partner = params.get('partner');
         if (partner && layer === 'synastry_partner') {
             state.synastryPartnerId = String(partner);
             state.synastryMode = 'db';
