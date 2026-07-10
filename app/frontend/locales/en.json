@@ -2482,6 +2482,7 @@
         "creatingAccount": "Creating account...",
         "goToRegister": "Create account",
         "noAccount": "Don't have an account?",
+        "haveAccount": "Already have an account?",
         "resendVerification": "Resend verification link",
         "sendingVerification": "Sending verification link..."
       },

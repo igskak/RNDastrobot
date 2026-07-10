@@ -2482,6 +2482,7 @@
         "creatingAccount": "Создаем аккаунт...",
         "goToRegister": "Создать аккаунт",
         "noAccount": "Нет аккаунта?",
+        "haveAccount": "Уже есть аккаунт?",
         "resendVerification": "Отправить ссылку повторно",
         "sendingVerification": "Отправляем ссылку подтверждения..."
       },

@@ -477,6 +477,28 @@
     font-size: 14px;
 }
 
+.register-login-cta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding: 12px 14px;
+    border: 1px solid rgba(30, 58, 95, 0.1);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.58);
+    color: rgba(92, 85, 78, 0.94);
+    font-size: 14px;
+}
+
+.register-login-btn {
+    width: auto;
+    min-width: 104px;
+    min-height: 42px;
+    padding: 9px 16px;
+    border-radius: 14px;
+}
+
 @media (max-width: 1080px) {
     .login-shell {
         max-width: 520px;
@@ -571,6 +593,10 @@
         margin-top: 16px;
         padding-top: 14px;
         border-top: 1px solid rgba(30, 58, 95, 0.1);
+    }
+
+    .register-login-cta {
+        margin-bottom: 16px;
     }
 
     .auth-back-link {

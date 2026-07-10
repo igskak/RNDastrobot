@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.login.meta.title"></title>
-    <link rel="stylesheet" href="bundles/login.bundle.css?v=cd7ea36fb6ac">
-    <script>window.__APP_BUILD_ID__ = 'cd7ea36fb6ac';</script>
+    <link rel="stylesheet" href="bundles/login.bundle.css?v=adf99c385ccd">
+    <script>window.__APP_BUILD_ID__ = 'adf99c385ccd';</script>
 </head>
 <body class="login-page">
     <main class="login-shell">
@@ -77,6 +77,11 @@
             </section>
 
             <section class="auth-view auth-view--form" data-view="register" hidden>
+                <div class="register-login-cta">
+                    <span data-i18n="page.login.actions.haveAccount"></span>
+                    <button class="btn btn-secondary register-login-btn" type="button" data-action="back-login" data-i18n="page.login.actions.signIn"></button>
+                </div>
+
                 <form id="registerForm" novalidate>
                     <div class="field-grid field-grid-2">
                         <div class="field">
@@ -157,7 +162,6 @@
                     <button id="registerSubmit" class="btn btn-primary" type="submit"></button>
                 </form>
 
-                <button class="link-btn auth-back-link" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
             </section>
 
             <section class="auth-view auth-view--status" data-view="verify-check-email" hidden>
@@ -299,7 +303,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/runtime-config.js"></script>
-    <script src="js/analytics.js?v=cd7ea36fb6ac"></script>
-    <script type="module" src="js/bundles/login.bundle.js?v=cd7ea36fb6ac"></script>
+    <script src="js/analytics.js?v=adf99c385ccd"></script>
+    <script type="module" src="js/bundles/login.bundle.js?v=adf99c385ccd"></script>
 </body>
 </html>
