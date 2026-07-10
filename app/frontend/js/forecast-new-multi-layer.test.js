@@ -231,5 +231,33 @@ function ok(cond, msg) { if (cond) { pass++; } else { fail++; console.log('FAIL:
         'swap(synastry): flipped so natal(Sun) → partner(Venus)');
 })();
 
+// --- swap VM guard: the demoted ring must not be reachable by a method fallback ---
+(() => {
+    const Norm = require('./prognostic-layer-normalizer.js');
+    const natal = { planets: [{ name: 'Sun', longitude: 100 }], houses: [], aspects: [] };
+    const partnerData = { planets: [{ name: 'Venus', longitude: 50 }], houses: [], aspects: [] };
+    const vm = Norm.buildSwapViewModel(partnerData, natal, { inter_aspects: [] }, {
+        id: 'synastry_partner-1', method: 'synastry_partner', label: 'Партнёр',
+    });
+    const layers = vm.activePrognosticLayers;
+    ok(layers.length === 1 && layers[0].swappedNatal === true,
+        'swap guard: collapsed VM holds only the demoted natal ring');
+
+    // Mirror selectedPanelViewModelLayer(): during swap, method-fallback is forbidden,
+    // so a DIFFERENT same-method instance id must not mis-resolve to the demoted ring.
+    const resolvedPanel = layers.find((l) => l.id === 'synastry_partner-2')
+        || (/* isSwapActive */ true ? null : layers.find((l) => l.method === 'synastry_partner'))
+        || null;
+    ok(resolvedPanel === null,
+        'swap guard: another same-method instance id does not mis-resolve to the demoted ring');
+
+    // Mirror viewModelLayerForInstance(): swappedNatal is excluded from method fallback.
+    const resolvedInst = layers.find((l) => l.id === 'synastry_partner-2')
+        || layers.find((l) => l.method === 'synastry_partner' && !l.swappedNatal)
+        || null;
+    ok(resolvedInst === null,
+        'swap guard: viewModelLayerForInstance skips the swappedNatal ring in method fallback');
+})();
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -302,6 +302,10 @@
         const base = buildViewModel(promotedData, {}, { activeInstances: [] }).natalLayer;
         const natalAsRing = buildViewModel(natalData, {}, { activeInstances: [] }).natalLayer;
         const normalizedLayer = normalizeLayer(method, layerRaw || {}, 1);
+        // Кольцо намеренно сохраняет id ПОВЫШЕННОГО слоя: выбор правой панели и
+        // подсветка вкладки завязаны на swapBaseLayerId (===selectedRightLayerId при
+        // свопе), поэтому поиск слоя по id всегда попадает в это кольцо. Флаг
+        // swappedNatal ниже однозначно отличает его от настоящего слоя метода.
         natalAsRing.id = ring.id || 'natal-ring';
         natalAsRing.method = method;
         natalAsRing.label = ring.label || natalAsRing.label;
