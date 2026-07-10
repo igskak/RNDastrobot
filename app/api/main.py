@@ -35,6 +35,7 @@ from app.api.routes import auth, natal, transits, solar, progressions, direction
 from app.api.error_handlers import register_error_handlers
 from app.api.locale_dependency import locale_context_dependency
 from app.services.processing_pipeline import recover_stuck_sessions
+from app.auth.site_mode import is_solo_request
 
 
 @asynccontextmanager
@@ -102,6 +103,23 @@ async def head_as_get(request: Request, call_next):
             status_code=response.status_code,
             headers=dict(response.headers),
         )
+    return await call_next(request)
+
+
+@app.middleware("http")
+async def isolate_solo_marketing_routes(request: Request, call_next):
+    """Keep the invite-only Solo hostname out of commercial acquisition pages."""
+    commercial_paths = {
+        "/pricing.html",
+        "/cloud-astrology-software",
+        "/cloud-astrology-software.html",
+        "/astrologer-workspace",
+        "/astrologer-workspace.html",
+        "/astrology-practice-management",
+        "/astrology-practice-management.html",
+    }
+    if is_solo_request(request) and request.url.path in commercial_paths:
+        return RedirectResponse(url="/", status_code=307)
     return await call_next(request)
 
 
@@ -288,6 +306,9 @@ async def root(request: Request):
         clients_path = os.path.join(FRONTEND_PATH, "clients.html")
         if os.path.exists(clients_path):
             return FileResponse(clients_path)
+
+    if is_solo_request(request):
+        return RedirectResponse(url="/login.html?mode=register", status_code=307)
 
     index_path = os.path.join(FRONTEND_PATH, "index.html")
     if os.path.exists(index_path):
