@@ -618,6 +618,131 @@ body.account-settings-modal-open {
     padding-right: 8px;
 }
 
+.account-settings-table--visual-palette {
+    display: block;
+    width: 100%;
+}
+
+.account-settings-table--visual-palette thead {
+    display: none;
+}
+
+.account-settings-table--visual-palette tbody {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 8px;
+}
+
+.account-settings-table--visual-palette tbody tr {
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: start;
+    align-items: center;
+    min-height: 48px;
+    border: 1px solid rgba(30, 58, 95, 0.08);
+    border-radius: 12px;
+    background: rgba(255, 252, 247, 0.68);
+}
+
+.account-settings-table--visual-palette tbody th[scope="row"],
+.account-settings-table--visual-palette tbody th[scope="row"].account-settings-icon-cell,
+.account-settings-table--visual-palette tbody td {
+    width: auto;
+    min-width: 0;
+    margin: 0;
+    padding: 7px 8px;
+    border: 0;
+    background: transparent;
+}
+
+.account-settings-table--visual-palette tbody th[scope="row"] {
+    display: flex;
+    align-items: center;
+    text-align: left;
+}
+
+.account-settings-table--visual-palette tbody th[scope="row"].account-settings-icon-cell {
+    justify-content: flex-start;
+}
+
+.account-settings-table--visual-palette tbody td {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.account-settings-table--visual-palette .account-settings-color-stack {
+    gap: 6px;
+}
+
+.account-settings-table--balance-weights {
+    display: block;
+    width: 100%;
+}
+
+.account-settings-table--balance-weights thead {
+    display: none;
+}
+
+.account-settings-table--balance-weights tbody {
+    display: grid;
+    gap: 8px;
+}
+
+.account-settings-table--balance-planets tbody {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.account-settings-table--balance-weights tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    min-height: 48px;
+    border: 1px solid rgba(30, 58, 95, 0.08);
+    border-radius: 12px;
+    background: rgba(255, 252, 247, 0.68);
+}
+
+.account-settings-table--balance-special tbody tr {
+    grid-template-columns: auto auto;
+    justify-content: start;
+}
+
+.account-settings-table--balance-weights tbody th[scope="row"],
+.account-settings-table--balance-weights tbody th[scope="row"].account-settings-icon-cell,
+.account-settings-table--balance-weights tbody td {
+    width: auto;
+    min-width: 0;
+    margin: 0;
+    padding: 7px 8px;
+    border: 0;
+    background: transparent;
+}
+
+.account-settings-table--balance-weights tbody th[scope="row"],
+.account-settings-table--balance-weights tbody td {
+    display: flex;
+    align-items: center;
+}
+
+.account-settings-table--balance-weights tbody th[scope="row"],
+.account-settings-table--balance-weights tbody td {
+    padding-left: 4px;
+    padding-right: 4px;
+}
+
+.account-settings-table--balance-weights .account-settings-compact-input {
+    width: 44px;
+    min-width: 44px;
+}
+
+.account-settings-table--balance-weights tbody th[scope="row"].account-settings-icon-cell {
+    justify-content: flex-start;
+}
+
+.account-settings-table--balance-weights tbody td {
+    justify-content: flex-end;
+}
+
 .account-settings-table--methodology thead th:first-child,
 .account-settings-table--methodology tbody th[scope="row"] {
     width: 56px;
@@ -834,6 +959,7 @@ body.account-settings-modal-open {
 }
 
 .account-settings-grid--compact-panels {
+    grid-template-columns: minmax(230px, 1.15fr) minmax(190px, 1fr);
     gap: 10px;
     align-items: start;
 }
@@ -842,6 +968,224 @@ body.account-settings-modal-open {
     display: grid;
     grid-template-columns: minmax(340px, 420px) minmax(0, 1fr);
     gap: 12px;
+}
+
+.account-settings-visual-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    min-height: 264px;
+    padding: 14px;
+    border: 1px solid rgba(30, 58, 95, 0.08);
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(255, 252, 247, 0.94), rgba(246, 241, 232, 0.9));
+}
+
+.account-settings-visual-preview .account-settings-mini-title {
+    align-self: flex-start;
+}
+
+.account-settings-wheel-preview {
+    --preview-aspect-conjunction: #f59e0b;
+    --preview-aspect-trine: #10b981;
+    --preview-aspect-square: #ef4444;
+    --preview-aspect-opposition: #8b5cf6;
+    --preview-aspect-sextile: #3b82f6;
+    --preview-body-sun: #ef4444;
+    --preview-body-moon: #3b82f6;
+    --preview-body-mercury: #f59e0b;
+    --preview-body-venus: #84cc16;
+    --preview-body-mars: #ef4444;
+    --preview-body-jupiter: #ef4444;
+    --preview-cusp: #8d6f54;
+    --preview-line-width: 2px;
+    --preview-size: clamp(196px, 17vw, 252px);
+    position: relative;
+    width: var(--preview-size);
+    aspect-ratio: 1;
+    border-radius: 999px;
+    background:
+        radial-gradient(circle, rgba(255, 255, 255, 0.84) 0 46%, transparent 47%),
+        conic-gradient(
+            from -90deg,
+            rgba(239, 68, 68, 0.1) 0 25%,
+            rgba(132, 204, 22, 0.1) 25% 50%,
+            rgba(245, 158, 11, 0.1) 50% 75%,
+            rgba(59, 130, 246, 0.1) 75% 100%
+        );
+    box-shadow: inset 0 0 0 1px rgba(30, 58, 95, 0.08), 0 12px 28px rgba(30, 58, 95, 0.1);
+}
+
+.account-settings-wheel-preview-ring,
+.account-settings-wheel-preview-cusp,
+.account-settings-wheel-preview-line,
+.account-settings-wheel-preview-sign,
+.account-settings-wheel-preview-body {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+}
+
+.account-settings-wheel-preview-ring {
+    transform: translate(-50%, -50%);
+    border-radius: 999px;
+    border: 1px solid rgba(30, 58, 95, 0.14);
+    pointer-events: none;
+}
+
+.account-settings-wheel-preview-ring--outer {
+    width: 88%;
+    height: 88%;
+}
+
+.account-settings-wheel-preview-ring--inner {
+    width: 52%;
+    height: 52%;
+    border-color: rgba(30, 58, 95, 0.09);
+}
+
+.account-settings-wheel-preview-cusp {
+    width: 43%;
+    height: 0;
+    border-top: 2px solid var(--preview-cusp);
+    opacity: 0.86;
+    transform-origin: left center;
+}
+
+.account-settings-wheel-preview-cusp--asc {
+    transform: rotate(0deg);
+}
+
+.account-settings-wheel-preview-cusp--mc {
+    transform: rotate(-88deg);
+}
+
+.account-settings-wheel-preview-line {
+    width: 56%;
+    height: 0;
+    border-top: var(--preview-line-width) solid var(--preview-line-color);
+    border-radius: 999px;
+    opacity: 0.74;
+    transform-origin: center;
+}
+
+.account-settings-wheel-preview-line--conjunction {
+    --preview-line-color: var(--preview-aspect-conjunction);
+    transform: translate(-50%, -50%) rotate(-8deg);
+}
+
+.account-settings-wheel-preview-line--trine {
+    --preview-line-color: var(--preview-aspect-trine);
+    transform: translate(-50%, -50%) rotate(48deg);
+}
+
+.account-settings-wheel-preview-line--square {
+    --preview-line-color: var(--preview-aspect-square);
+    transform: translate(-50%, -50%) rotate(93deg);
+}
+
+.account-settings-wheel-preview-line--opposition {
+    --preview-line-color: var(--preview-aspect-opposition);
+    transform: translate(-50%, -50%) rotate(138deg);
+}
+
+.account-settings-wheel-preview-line--sextile {
+    --preview-line-color: var(--preview-aspect-sextile);
+    transform: translate(-50%, -50%) rotate(188deg);
+}
+
+.account-settings-wheel-preview-sign,
+.account-settings-wheel-preview-body {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transform:
+        translate(-50%, -50%)
+        rotate(calc(var(--slot) * 30deg))
+        translateY(calc(var(--preview-size) * -0.4))
+        rotate(calc(var(--slot) * -30deg));
+    font-family: "Cormorant Garamond", serif;
+    line-height: 1;
+}
+
+.account-settings-wheel-preview-sign {
+    width: 18px;
+    height: 18px;
+    color: rgba(30, 58, 95, 0.54);
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.account-settings-wheel-preview-body {
+    width: 26px;
+    height: 26px;
+    transform:
+        translate(-50%, -50%)
+        rotate(calc(var(--slot) * 30deg + 15deg))
+        translateY(calc(var(--preview-size) * -0.275))
+        rotate(calc((var(--slot) * -30deg) - 15deg));
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: inset 0 0 0 1px rgba(30, 58, 95, 0.09);
+    font-size: 19px;
+    font-weight: 700;
+}
+
+.account-settings-wheel-preview-body--sun {
+    color: var(--preview-body-sun);
+}
+
+.account-settings-wheel-preview-body--moon {
+    color: var(--preview-body-moon);
+}
+
+.account-settings-wheel-preview-body--mercury {
+    color: var(--preview-body-mercury);
+}
+
+.account-settings-wheel-preview-body--venus {
+    color: var(--preview-body-venus);
+}
+
+.account-settings-wheel-preview-body--mars {
+    color: var(--preview-body-mars);
+}
+
+.account-settings-wheel-preview-body--jupiter {
+    color: var(--preview-body-jupiter);
+}
+
+.account-settings-visual-tabs {
+    width: 100%;
+    margin: 2px 0 10px;
+    justify-content: flex-start;
+}
+
+.account-settings-visual-tabs .account-settings-profile-tab {
+    flex: 0 1 auto;
+}
+
+.account-settings-visual-panels {
+    display: grid;
+    min-width: 0;
+}
+
+.account-settings-wheel-panel-body {
+    display: grid;
+    grid-template-columns: minmax(244px, 0.7fr) minmax(0, 1fr);
+    gap: 16px;
+    align-items: stretch;
+}
+
+.account-settings-wheel-options {
+    display: grid;
+    align-content: center;
+    gap: 10px;
+}
+
+.account-settings-visual-panels > .hidden {
+    display: none;
 }
 
 .account-settings-table-panel {
@@ -1353,6 +1697,22 @@ body.account-settings-modal-open {
     .account-settings-field-grid,
     .account-settings-toggle-grid {
         grid-template-columns: 1fr;
+    }
+
+    .account-settings-visual-preview {
+        min-height: 0;
+    }
+
+    .account-settings-wheel-panel-body {
+        grid-template-columns: 1fr;
+    }
+
+    .account-settings-wheel-preview {
+        --preview-size: min(252px, 72vw);
+    }
+
+    .account-settings-table--visual-palette tbody {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .account-settings-confirm-dialog {

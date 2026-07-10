@@ -2,6 +2,16 @@
     'use strict';
 
     const VIEW_IDS = ['natal', 'biwheel', 'solar'];
+    const VISUAL_PANEL_IDS = ['aspectColors', 'elementPalette', 'bodyOverrides', 'wheel'];
+    const PREVIEW_ASPECT_TYPES = ['Conjunction', 'Trine', 'Square', 'Opposition', 'Sextile'];
+    const PREVIEW_BODY_ELEMENTS = {
+        Sun: 'Fire',
+        Moon: 'Water',
+        Mercury: 'Air',
+        Venus: 'Earth',
+        Mars: 'Fire',
+        Jupiter: 'Fire',
+    };
     const DEFAULT_ASPECT_TYPES = window.AstroPreferences?.DEFAULT_ENABLED_ASPECT_TYPES || [
         'Conjunction',
         'Opposition',
@@ -39,6 +49,7 @@
     let pollTimer = null;
     let activeOrbProfile = 'natal';
     let activeOrbViewMode = 'default';
+    let activeVisualTab = 'aspectColors';
     let lastFocusedElementBeforeResetConfirm = null;
 
     function hidePageLoader() {
@@ -568,6 +579,65 @@
 
         panel?.classList.toggle('is-compact', activeOrbViewMode === 'compact');
         table?.classList.toggle('is-compact', activeOrbViewMode === 'compact');
+    }
+
+    function setActiveVisualTab(tabId) {
+        if (!VISUAL_PANEL_IDS.includes(tabId)) return;
+        activeVisualTab = tabId;
+        document.querySelectorAll('[data-visual-tab]').forEach((button) => {
+            const isActive = button.dataset.visualTab === activeVisualTab;
+            button.classList.toggle('is-active', isActive);
+            button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+        document.querySelectorAll('[data-visual-panel]').forEach((panel) => {
+            panel.classList.toggle('hidden', panel.dataset.visualPanel !== activeVisualTab);
+        });
+    }
+
+    function getCssToken(value) {
+        return String(value || '')
+            .trim()
+            .replace(/([a-z])([A-Z])/g, '$1-$2')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+    }
+
+    function setPreviewColor(preview, token, value, fallback = '#6b7280') {
+        const color = String(value || fallback).trim();
+        preview.style.setProperty(token, /^#[0-9a-f]{6}$/i.test(color) ? color : fallback);
+    }
+
+    function updateVisualPreview(visual = {}) {
+        const preview = document.getElementById('accountVisualWheelPreview');
+        if (!preview) return;
+
+        const resolvedVisual = resolveVisualPreferences(visual);
+        const elementPalette = resolvedVisual?.planet_colors?.element_palette || {};
+        const bodyOverrides = resolvedVisual?.planet_colors?.body_overrides || {};
+
+        PREVIEW_ASPECT_TYPES.forEach((aspectType) => {
+            const color = window.AstroPreferences?.getAspectColor
+                ? window.AstroPreferences.getAspectColor(aspectType, resolvedVisual)
+                : resolvedVisual?.aspect_colors?.[aspectType];
+            setPreviewColor(preview, `--preview-aspect-${getCssToken(aspectType)}`, color);
+        });
+
+        Object.entries(PREVIEW_BODY_ELEMENTS).forEach(([body, element]) => {
+            const color = bodyOverrides?.[body]
+                || elementPalette?.[element]
+                || getBodyDefaultDisplayColor(body, resolvedVisual);
+            setPreviewColor(preview, `--preview-body-${getCssToken(body)}`, color);
+        });
+
+        preview.style.setProperty(
+            '--preview-cusp',
+            resolvedVisual?.wheel?.angular_cusps_black === true ? '#111827' : '#8d6f54'
+        );
+        preview.style.setProperty(
+            '--preview-line-width',
+            resolvedVisual?.wheel?.highlight_exact_aspects === false ? '1.5px' : '2.5px'
+        );
     }
 
     function syncOrbMatrixFromDom() {
@@ -1120,6 +1190,7 @@
         renderBalanceWeights(normalized.methodology);
         renderAspectColors(normalized.visual);
         renderPlanetColors(normalized.visual);
+        updateVisualPreview(normalized.visual);
     }
 
     function readCheckedAspectTypes(viewId) {
@@ -1566,6 +1637,12 @@
                 setActiveOrbViewMode(button.dataset.orbViewMode || 'default');
             });
         });
+        document.querySelectorAll('[data-visual-tab]').forEach((button) => {
+            button.addEventListener('click', () => {
+                setActiveVisualTab(button.dataset.visualTab || 'aspectColors');
+            });
+        });
+        setActiveVisualTab(activeVisualTab);
         applyNatalOrbsBtn?.addEventListener('click', () => {
             if (activeOrbProfile === 'natal') return;
             syncOrbMatrixFromDom();
@@ -1612,6 +1689,7 @@
             input.dataset.bodyColorActive = 'true';
             const resetButton = bodyOverrideColorsBody.querySelector(`[data-clear-body-color-override="${input.dataset.bodyColorOverride}"]`);
             resetButton?.classList.remove('is-muted');
+            updateVisualPreview(collectVisual());
         });
         bodyOverrideColorsBody?.addEventListener('click', (event) => {
             const button = event.target.closest('[data-clear-body-color-override]');
@@ -1623,6 +1701,19 @@
             input.dataset.bodyColorActive = 'false';
             input.value = input.dataset.bodyColorDefault || '#6b7280';
             button.classList.add('is-muted');
+            updateVisualPreview(collectVisual());
+        });
+        document.addEventListener('input', (event) => {
+            const input = event.target;
+            if (!(input instanceof HTMLInputElement)) return;
+            if (!input.matches('[data-aspect-color], [data-element-color]')) return;
+            updateVisualPreview(collectVisual());
+        });
+        document.addEventListener('change', (event) => {
+            const input = event.target;
+            if (!(input instanceof HTMLInputElement)) return;
+            if (!input.matches('[data-aspect-color], [data-element-color], #accountAngularCuspsBlackToggle, #accountExactAspectHighlightToggle')) return;
+            updateVisualPreview(collectVisual());
         });
 
         try {

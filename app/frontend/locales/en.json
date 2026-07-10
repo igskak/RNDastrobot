@@ -755,6 +755,20 @@
         },
         "title": "Rulership scheme"
       },
+      "methodology": {
+        "balances": {
+          "columns": {
+            "planet": "Planet",
+            "point": "Point",
+            "weight": "Weight"
+          },
+          "copy": "Weights used for natal balance calculations. Saving these starts recalculation for saved natal and solar charts.",
+          "planetWeights": "Planet weights",
+          "specialPoints": "Special points",
+          "title": "Balances"
+        },
+        "kicker": "Methodology"
+      },
       "subtitle": "Set the defaults once, then let individual chart overrides change only what is necessary.",
       "stationary": {
         "copy": "Define when a planet should be marked as stationary by comparing its current speed to the average speed for that body.",
@@ -814,6 +828,13 @@
           "bodyOverrides": "Body overrides",
           "elementPalette": "Element palette",
           "wheel": "Wheel"
+        },
+        "preview": {
+          "ariaLabel": "Visual wheel preview",
+          "title": "Wheel preview"
+        },
+        "tabs": {
+          "ariaLabel": "Visual settings sections"
         },
         "title": "Visual palette"
       },

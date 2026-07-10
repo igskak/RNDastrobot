@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.accountSettings.title"></title>
-    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=e8afa69565f6">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=e8afa69565f6">
+    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=53272c2c7444">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=53272c2c7444">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = 'e8afa69565f6';</script>
+    <script>window.__APP_BUILD_ID__ = '53272c2c7444';</script>
 </head>
 <body class="account-settings-page workspace-compact">
     <div class="page-loader" id="pageLoader">
@@ -527,20 +527,20 @@
                         <section class="account-settings-card">
                             <div class="account-settings-card-head account-settings-card-head--compact">
                                 <div>
-                                    <p class="account-settings-section-kicker">Methodology</p>
-                                    <h2 class="account-settings-section-title">Balances</h2>
-                                    <p class="account-settings-section-copy">Weights used for natal balance calculations. Saving these starts a recalculation job for saved natal and solar charts.</p>
+                                    <p class="account-settings-section-kicker" data-i18n="page.accountSettings.methodology.kicker"></p>
+                                    <h2 class="account-settings-section-title" data-i18n="page.accountSettings.methodology.balances.title"></h2>
+                                    <p class="account-settings-section-copy" data-i18n="page.accountSettings.methodology.balances.copy"></p>
                                 </div>
                             </div>
                             <div class="account-settings-grid account-settings-grid--two account-settings-grid--compact-panels">
                                 <div class="account-settings-table-panel">
-                                    <p class="account-settings-mini-title">Planet weights</p>
+                                    <p class="account-settings-mini-title" data-i18n="page.accountSettings.methodology.balances.planetWeights"></p>
                                     <div class="account-settings-table-wrap account-settings-table-wrap--compact-panel">
-                                        <table class="account-settings-table account-settings-table--compact">
+                                        <table class="account-settings-table account-settings-table--compact account-settings-table--balance-weights account-settings-table--balance-planets">
                                             <thead>
                                                 <tr>
-                                                    <th>Planet</th>
-                                                    <th>Weight</th>
+                                                    <th data-i18n="page.accountSettings.methodology.balances.columns.planet"></th>
+                                                    <th data-i18n="page.accountSettings.methodology.balances.columns.weight"></th>
                                                 </tr>
                                             </thead>
                                             <tbody id="accountBalancePlanetWeightsBody"></tbody>
@@ -548,13 +548,13 @@
                                     </div>
                                 </div>
                                 <div class="account-settings-table-panel">
-                                    <p class="account-settings-mini-title">Special points</p>
+                                    <p class="account-settings-mini-title" data-i18n="page.accountSettings.methodology.balances.specialPoints"></p>
                                     <div class="account-settings-table-wrap account-settings-table-wrap--compact-panel">
-                                        <table class="account-settings-table account-settings-table--compact">
+                                        <table class="account-settings-table account-settings-table--compact account-settings-table--balance-weights account-settings-table--balance-special">
                                             <thead>
                                                 <tr>
-                                                    <th>Point</th>
-                                                    <th>Weight</th>
+                                                    <th data-i18n="page.accountSettings.methodology.balances.columns.point"></th>
+                                                    <th data-i18n="page.accountSettings.methodology.balances.columns.weight"></th>
                                                 </tr>
                                             </thead>
                                             <tbody id="accountBalanceSpecialWeightsBody"></tbody>
@@ -572,11 +572,49 @@
                                     <p class="account-settings-section-copy" data-i18n="page.accountSettings.visual.copy"></p>
                                 </div>
                             </div>
-                            <div class="account-settings-grid account-settings-grid--two account-settings-grid--compact-panels">
-                                <div class="account-settings-table-panel">
+                            <div
+                                class="account-settings-visual-tabs account-settings-profile-tabs"
+                                role="tablist"
+                                data-i18n-aria-label="page.accountSettings.visual.tabs.ariaLabel"
+                            >
+                                <button
+                                    type="button"
+                                    class="account-settings-profile-tab is-active"
+                                    data-visual-tab="aspectColors"
+                                    role="tab"
+                                    aria-selected="true"
+                                    data-i18n="page.accountSettings.visual.panels.aspectColors"
+                                ></button>
+                                <button
+                                    type="button"
+                                    class="account-settings-profile-tab"
+                                    data-visual-tab="elementPalette"
+                                    role="tab"
+                                    aria-selected="false"
+                                    data-i18n="page.accountSettings.visual.panels.elementPalette"
+                                ></button>
+                                <button
+                                    type="button"
+                                    class="account-settings-profile-tab"
+                                    data-visual-tab="bodyOverrides"
+                                    role="tab"
+                                    aria-selected="false"
+                                    data-i18n="page.accountSettings.visual.panels.bodyOverrides"
+                                ></button>
+                                <button
+                                    type="button"
+                                    class="account-settings-profile-tab"
+                                    data-visual-tab="wheel"
+                                    role="tab"
+                                    aria-selected="false"
+                                    data-i18n="page.accountSettings.visual.panels.wheel"
+                                ></button>
+                            </div>
+                            <div class="account-settings-visual-panels">
+                                <div class="account-settings-table-panel" data-visual-panel="aspectColors" role="tabpanel">
                                     <p class="account-settings-mini-title" data-i18n="page.accountSettings.visual.panels.aspectColors"></p>
                                     <div class="account-settings-table-wrap account-settings-table-wrap--compact-panel">
-                                        <table class="account-settings-table account-settings-table--compact">
+                                        <table class="account-settings-table account-settings-table--compact account-settings-table--visual-palette">
                                             <thead>
                                                 <tr>
                                                     <th data-i18n="page.accountSettings.tables.columns.aspect"></th>
@@ -587,10 +625,10 @@
                                         </table>
                                     </div>
                                 </div>
-                                <div class="account-settings-table-panel">
+                                <div class="account-settings-table-panel hidden" data-visual-panel="elementPalette" role="tabpanel">
                                     <p class="account-settings-mini-title" data-i18n="page.accountSettings.visual.panels.elementPalette"></p>
                                     <div class="account-settings-table-wrap account-settings-table-wrap--compact-panel">
-                                        <table class="account-settings-table account-settings-table--compact">
+                                        <table class="account-settings-table account-settings-table--compact account-settings-table--visual-palette">
                                             <thead>
                                                 <tr>
                                                     <th data-i18n="page.accountSettings.visual.columns.element"></th>
@@ -601,10 +639,10 @@
                                         </table>
                                     </div>
                                 </div>
-                                <div class="account-settings-table-panel">
+                                <div class="account-settings-table-panel hidden" data-visual-panel="bodyOverrides" role="tabpanel">
                                     <p class="account-settings-mini-title" data-i18n="page.accountSettings.visual.panels.bodyOverrides"></p>
                                     <div class="account-settings-table-wrap account-settings-table-wrap--compact-panel">
-                                        <table class="account-settings-table account-settings-table--compact">
+                                        <table class="account-settings-table account-settings-table--compact account-settings-table--visual-palette">
                                             <thead>
                                                 <tr>
                                                     <th data-i18n="page.accountSettings.matrix.columns.body"></th>
@@ -615,22 +653,63 @@
                                         </table>
                                     </div>
                                 </div>
-                                <div class="account-settings-table-panel">
+                                <div class="account-settings-table-panel account-settings-wheel-panel hidden" data-visual-panel="wheel" role="tabpanel">
                                     <p class="account-settings-mini-title" data-i18n="page.accountSettings.visual.panels.wheel"></p>
-                                    <label class="account-settings-option-toggle">
-                                        <span>
-                                            <span class="account-settings-row-title" data-i18n="page.accountSettings.visual.angularCuspsBlack.label"></span>
-                                            <span class="account-settings-toolbar-copy" data-i18n="page.accountSettings.visual.angularCuspsBlack.copy"></span>
-                                        </span>
-                                        <input type="checkbox" id="accountAngularCuspsBlackToggle">
-                                    </label>
-                                    <label class="account-settings-option-toggle">
-                                        <span>
-                                            <span class="account-settings-row-title" data-i18n="page.accountSettings.visual.exactAspectHighlight.label"></span>
-                                            <span class="account-settings-toolbar-copy" data-i18n="page.accountSettings.visual.exactAspectHighlight.copy"></span>
-                                        </span>
-                                        <input type="checkbox" id="accountExactAspectHighlightToggle">
-                                    </label>
+                                    <div class="account-settings-wheel-panel-body">
+                                        <div class="account-settings-visual-preview">
+                                            <p class="account-settings-mini-title" data-i18n="page.accountSettings.visual.preview.title"></p>
+                                            <div
+                                                class="account-settings-wheel-preview"
+                                                id="accountVisualWheelPreview"
+                                                role="img"
+                                                data-i18n-aria-label="page.accountSettings.visual.preview.ariaLabel"
+                                            >
+                                                <span class="account-settings-wheel-preview-ring account-settings-wheel-preview-ring--outer" aria-hidden="true"></span>
+                                                <span class="account-settings-wheel-preview-ring account-settings-wheel-preview-ring--inner" aria-hidden="true"></span>
+                                                <span class="account-settings-wheel-preview-cusp account-settings-wheel-preview-cusp--asc" aria-hidden="true"></span>
+                                                <span class="account-settings-wheel-preview-cusp account-settings-wheel-preview-cusp--mc" aria-hidden="true"></span>
+                                                <span class="account-settings-wheel-preview-line account-settings-wheel-preview-line--conjunction" aria-hidden="true"></span>
+                                                <span class="account-settings-wheel-preview-line account-settings-wheel-preview-line--trine" aria-hidden="true"></span>
+                                                <span class="account-settings-wheel-preview-line account-settings-wheel-preview-line--square" aria-hidden="true"></span>
+                                                <span class="account-settings-wheel-preview-line account-settings-wheel-preview-line--opposition" aria-hidden="true"></span>
+                                                <span class="account-settings-wheel-preview-line account-settings-wheel-preview-line--sextile" aria-hidden="true"></span>
+                                                <span class="account-settings-wheel-preview-sign" style="--slot: 0;" aria-hidden="true">♈</span>
+                                                <span class="account-settings-wheel-preview-sign" style="--slot: 1;" aria-hidden="true">♉</span>
+                                                <span class="account-settings-wheel-preview-sign" style="--slot: 2;" aria-hidden="true">♊</span>
+                                                <span class="account-settings-wheel-preview-sign" style="--slot: 3;" aria-hidden="true">♋</span>
+                                                <span class="account-settings-wheel-preview-sign" style="--slot: 4;" aria-hidden="true">♌</span>
+                                                <span class="account-settings-wheel-preview-sign" style="--slot: 5;" aria-hidden="true">♍</span>
+                                                <span class="account-settings-wheel-preview-sign" style="--slot: 6;" aria-hidden="true">♎</span>
+                                                <span class="account-settings-wheel-preview-sign" style="--slot: 7;" aria-hidden="true">♏</span>
+                                                <span class="account-settings-wheel-preview-sign" style="--slot: 8;" aria-hidden="true">♐</span>
+                                                <span class="account-settings-wheel-preview-sign" style="--slot: 9;" aria-hidden="true">♑</span>
+                                                <span class="account-settings-wheel-preview-sign" style="--slot: 10;" aria-hidden="true">♒</span>
+                                                <span class="account-settings-wheel-preview-sign" style="--slot: 11;" aria-hidden="true">♓</span>
+                                                <span class="account-settings-wheel-preview-body account-settings-wheel-preview-body--sun" style="--slot: 1;" aria-hidden="true">☉</span>
+                                                <span class="account-settings-wheel-preview-body account-settings-wheel-preview-body--moon" style="--slot: 3;" aria-hidden="true">☽</span>
+                                                <span class="account-settings-wheel-preview-body account-settings-wheel-preview-body--mercury" style="--slot: 5;" aria-hidden="true">☿</span>
+                                                <span class="account-settings-wheel-preview-body account-settings-wheel-preview-body--venus" style="--slot: 7;" aria-hidden="true">♀</span>
+                                                <span class="account-settings-wheel-preview-body account-settings-wheel-preview-body--mars" style="--slot: 9;" aria-hidden="true">♂</span>
+                                                <span class="account-settings-wheel-preview-body account-settings-wheel-preview-body--jupiter" style="--slot: 11;" aria-hidden="true">♃</span>
+                                            </div>
+                                        </div>
+                                        <div class="account-settings-wheel-options">
+                                            <label class="account-settings-option-toggle">
+                                                <span>
+                                                    <span class="account-settings-row-title" data-i18n="page.accountSettings.visual.angularCuspsBlack.label"></span>
+                                                    <span class="account-settings-toolbar-copy" data-i18n="page.accountSettings.visual.angularCuspsBlack.copy"></span>
+                                                </span>
+                                                <input type="checkbox" id="accountAngularCuspsBlackToggle">
+                                            </label>
+                                            <label class="account-settings-option-toggle">
+                                                <span>
+                                                    <span class="account-settings-row-title" data-i18n="page.accountSettings.visual.exactAspectHighlight.label"></span>
+                                                    <span class="account-settings-toolbar-copy" data-i18n="page.accountSettings.visual.exactAspectHighlight.copy"></span>
+                                                </span>
+                                                <input type="checkbox" id="accountExactAspectHighlightToggle">
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </section>
@@ -672,9 +751,9 @@
 
     <div id="accountSettingsToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/account-settings.bundle.js?v=e8afa69565f6"></script>
+    <script type="module" src="js/bundles/account-settings.bundle.js?v=53272c2c7444"></script>
     <script src="/runtime-config.js"></script>
-    <script src="js/analytics.js?v=e8afa69565f6"></script>
-    <script src="js/locale-switcher.js?v=e8afa69565f6"></script>
+    <script src="js/analytics.js?v=53272c2c7444"></script>
+    <script src="js/locale-switcher.js?v=53272c2c7444"></script>
 </body>
 </html>
