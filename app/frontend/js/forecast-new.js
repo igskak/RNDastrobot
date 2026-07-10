@@ -1135,6 +1135,9 @@
 
             const button = event.target.closest('[data-right-layer]');
             if (!button) return;
+            window.AstroOnboarding?.trackLearning?.('onboarding_control_used', {
+                control: 'layer_selector', milestone: 'layer_selected',
+            });
             // Клик по вкладке другого слоя при активном свопе молча выходит из свопа.
             setSelectedRightLayer(button.dataset.rightLayer);
             applyConfigToScratch(selectedLayerInstance());
@@ -1405,11 +1408,13 @@
     async function activateLayer(method, { openConfig = false } = {}) {
         if (!LAYER_ORDER.includes(method)) return;
         const existing = instancesOfMethod(method);
+        let added = false;
         let instance;
         if (!isMultiInstanceMethod(method) && existing.length) {
             // Single-instance метод уже активен — просто переключаемся на него.
             instance = existing[0];
         } else {
+            added = true;
             if (method === 'transit' && existing.length === 0) {
                 setSelectedDateTime(getLocalNowIso(state.timezone));
                 state.lastStepperAction = null;
@@ -1436,6 +1441,11 @@
         renderRightLayerTabs();
         scheduleRightPanelRender();
         if (openConfig) openLayerPopover(method);
+        if (added) {
+            document.dispatchEvent(new CustomEvent('steliara:onboarding-layer-added', {
+                detail: { method, layer_count: state.activeLayers.length },
+            }));
+        }
         schedulePersist();
         await loadActiveLayers();
     }
@@ -4109,6 +4119,7 @@
         syncControlsFromState();
         schedulePersist();
         scheduleDisplayedMomentLayerLoad({ lightweight: true, delay: 180 });
+        announceOnboardingDateChanged('date_input');
     }
 
     // Apply a saved chart (date/time/place) as the prognostic moment of the active layer.
@@ -4257,6 +4268,7 @@
         setLightweightLoading(true);
         schedulePersist();
         scheduleDisplayedMomentLayerLoad({ layerId: state.selectedRightLayerId });
+        announceOnboardingDateChanged('time_stepper');
     }
 
     function stepSelectedDateTimeByCustom(direction) {
@@ -4273,6 +4285,7 @@
         setLightweightLoading(true);
         schedulePersist();
         scheduleDisplayedMomentLayerLoad({ layerId: state.selectedRightLayerId });
+        announceOnboardingDateChanged('custom_stepper');
     }
 
     async function loadActiveLayers(options = {}) {
@@ -4797,6 +4810,25 @@
             if (!current?.eligible || current.completed_steps?.includes('forecast_ready')) return;
             showForecastOnboardingNotice();
         });
+        refs.forecastNewViewMulti?.addEventListener('click', () => {
+            window.AstroOnboarding?.trackLearning?.('onboarding_control_used', {
+                control: 'multi_wheel', milestone: 'multi_wheel_seen',
+            });
+            if (document.getElementById('onboardingCoachmark')?.dataset.kind === 'multi') {
+                showLayersOnboardingCoachmark();
+            }
+        });
+        document.addEventListener('steliara:onboarding-layer-added', (event) => {
+            const method = event.detail?.method || 'unknown';
+            window.AstroOnboarding?.trackLearning?.('onboarding_layer_added', {
+                milestone: 'layer_added', method,
+            }, { once: false });
+            if (document.getElementById('onboardingCoachmark')?.dataset.kind === 'layers') {
+                showMultipleLayersOnboardingCoachmark();
+                return;
+            }
+            showSessionMicroHint('multiple_layers', showMultipleLayersOnboardingCoachmark);
+        });
         document.addEventListener('keydown', (event) => {
             if (event.key !== 'Escape') return;
             document.getElementById('onboardingCoachmark')?.remove();
@@ -4859,12 +4891,7 @@
             kind: 'multi',
             titleKey: 'page.onboarding.multi.title',
             textKey: 'page.onboarding.multi.text',
-            primaryKey: 'page.onboarding.multi.open',
             anchor: refs.forecastNewViewMulti,
-            onPrimary: () => {
-                setWheelView('multi');
-                showLayersOnboardingCoachmark();
-            },
         });
     }
 
@@ -4874,9 +4901,49 @@
             kind: 'layers',
             titleKey: 'page.onboarding.layers.title',
             textKey: 'page.onboarding.layers.text',
-            primaryKey: 'page.onboarding.layers.continue',
             anchor: mobile ? refs.rightLayerTabs : document.querySelector('.forecast-new-layer-toggles'),
+        });
+    }
+
+    function showMultipleLayersOnboardingCoachmark() {
+        closeAllLayerPopovers(null);
+        closeAddLayerMenu();
+        showOnboardingCoachmark({
+            kind: 'multiple-layers',
+            titleKey: 'page.onboarding.multipleLayers.title',
+            textKey: 'page.onboarding.multipleLayers.text',
+            primaryKey: 'page.onboarding.layers.continue',
+            anchor: refs.rightLayerTabs,
             onPrimary: showAssistantOnboardingCoachmark,
+        });
+    }
+
+    function showSessionMicroHint(hint, render) {
+        const current = window.AstroOnboarding?.getState?.();
+        if (current?.eligible && current.status === 'active') return;
+        try {
+            const sessionKey = 'steliara.onboarding.micro_hint_shown';
+            if (sessionStorage.getItem(sessionKey)) return;
+            sessionStorage.setItem(sessionKey, hint);
+        } catch (_error) {
+            return;
+        }
+        render();
+    }
+
+    function announceOnboardingDateChanged(source) {
+        window.AstroOnboarding?.trackLearning?.('onboarding_control_used', {
+            control: 'forecast_date', milestone: 'date_changed', source,
+        });
+        showSessionMicroHint('forecast_date', () => {
+            showOnboardingCoachmark({
+                kind: 'date',
+                titleKey: 'page.onboarding.micro.date.title',
+                textKey: 'page.onboarding.micro.date.text',
+                primaryKey: 'page.onboarding.micro.gotIt',
+                anchor: refs.targetDateInput,
+                onPrimary: () => {},
+            });
         });
     }
 
@@ -4924,10 +4991,14 @@
             <p class="onboarding-coachmark-copy">${escapeHtml(t(textKey))}</p>
             <div class="onboarding-coachmark-actions">
                 <button class="onboarding-secondary" type="button" data-onboarding-dismiss>${escapeHtml(t('page.onboarding.dock.dismiss'))}</button>
-                <button class="onboarding-primary" type="button" data-onboarding-next>${escapeHtml(t(primaryKey))}</button>
+                ${primaryKey ? `<button class="onboarding-primary" type="button" data-onboarding-next>${escapeHtml(t(primaryKey))}</button>` : ''}
             </div>`;
-        card.querySelector('.onboarding-coachmark-close')?.addEventListener('click', () => card.remove());
+        card.querySelector('.onboarding-coachmark-close')?.addEventListener('click', () => {
+            window.AstroOnboarding?.trackLearning?.('onboarding_hint_skipped', { hint: kind });
+            card.remove();
+        });
         card.querySelector('[data-onboarding-dismiss]')?.addEventListener('click', () => {
+            card.remove();
             window.AstroOnboarding?.dismiss?.(`${kind}_coachmark`);
         });
         card.querySelector('[data-onboarding-next]')?.addEventListener('click', () => {

@@ -203,6 +203,8 @@
 
 .onboarding-coachmark[data-kind="multi"]::before,
 .onboarding-coachmark[data-kind="layers"]::before,
+.onboarding-coachmark[data-kind="multiple-layers"]::before,
+.onboarding-coachmark[data-kind="date"]::before,
 .onboarding-coachmark[data-kind="assistant"]::before {
     content: "";
     position: absolute;

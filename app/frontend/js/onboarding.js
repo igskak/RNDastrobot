@@ -140,6 +140,29 @@
         track('onboarding_shown');
     }
 
+    function trackLearning(event, properties = {}, { once = true } = {}) {
+        const allowed = new Set([
+            'onboarding_control_used',
+            'onboarding_layer_added',
+            'onboarding_prompt_used',
+            'onboarding_hint_skipped',
+            'onboarding_help_reopened',
+        ]);
+        if (!allowed.has(event)) return false;
+        const milestone = String(properties.milestone || properties.control || properties.hint || 'default');
+        if (once) {
+            try {
+                const key = `steliara.onboarding.learning:${event}:${milestone}`;
+                if (root.sessionStorage?.getItem(key) === '1') return false;
+                root.sessionStorage?.setItem(key, '1');
+            } catch (_error) {
+                // Analytics dedupe is best-effort.
+            }
+        }
+        track(event, properties);
+        return true;
+    }
+
     function announce() {
         root.document?.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: snapshot() }));
     }
@@ -301,6 +324,7 @@
         completeStep,
         dismiss,
         reset,
+        trackLearning,
         getState: snapshot,
         isEligible: () => eligible,
         isActive: () => eligible && state.status === 'active',

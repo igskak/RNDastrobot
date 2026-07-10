@@ -153,3 +153,20 @@ test('preference load failure hides onboarding without breaking initialization',
     assert.equal(state.initialized, true);
     assert.equal(state.eligible, false);
 });
+
+test('learning analytics deduplicate milestones without storing PII', async () => {
+    const harness = createHarness();
+    await harness.onboarding.init({
+        astrologer: { id: 'a', plan_code: 'pro', created_at: '2026-07-10T00:00:00Z' },
+        charts: [{ user_id: 'chart-1' }],
+        surface: 'forecast',
+    });
+    assert.equal(harness.onboarding.trackLearning('onboarding_control_used', {
+        control: 'multi_wheel', milestone: 'multi_wheel_seen',
+    }), true);
+    assert.equal(harness.onboarding.trackLearning('onboarding_control_used', {
+        control: 'multi_wheel', milestone: 'multi_wheel_seen',
+    }), false);
+    assert.equal(harness.onboarding.trackLearning('unknown_event', {}), false);
+    assert.equal(harness.events.filter((event) => event.name === 'onboarding_control_used').length, 1);
+});

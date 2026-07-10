@@ -273,11 +273,34 @@
         "text": "Turn on transits, progressions, directions, solar returns, and synastry — one at a time or several together.",
         "continue": "Continue"
       },
+      "multipleLayers": {
+        "title": "Layers work independently",
+        "text": "Select a layer in the panel and the wheel, tables, aspects, and assistant will switch to its data. You can keep several layers active together."
+      },
+      "micro": {
+        "gotIt": "Got it",
+        "date": {
+          "title": "Explore any moment",
+          "text": "The date recalculates the active layer. Other layers stay in place, making periods easy to compare in one workspace."
+        }
+      },
       "assistant": {
         "title": "Ask the chart data",
         "text": "The assistant finds aspects and exact dates. Interpretation stays with you.",
         "open": "Open assistant",
-        "prompt": "Which exact aspects are active now, and when will they perfect?"
+        "prompt": "Which exact aspects are active now, and when will they perfect?",
+        "contextual": {
+          "transitNow": "Which transits are most exact right now?",
+          "exactDates": "When will the active aspects become exact?",
+          "compareLayers": "Compare the active forecast layers and highlight what matters most.",
+          "progressionNow": "Which progressions are most significant now?",
+          "progressionTransit": "How are current transits activating the progressions?",
+          "directionNow": "Which directions are most significant now?",
+          "solarThemes": "What are the main themes of this solar return year?",
+          "solarTiming": "When are the solar return themes activated by transits?",
+          "synastryTight": "Which inter-chart aspects are the tightest here?",
+          "synastryDynamics": "Which relationship dynamic is strongest in this chart?"
+        }
       },
       "complete": {
         "title": "Everything is ready",

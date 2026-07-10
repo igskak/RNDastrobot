@@ -290,6 +290,9 @@ class ChatWidget {
     openPanel({ focusInput = !this.isMobile() } = {}) {
         this.isOpen = true;
         this.widget.classList.add('open');
+        window.AstroOnboarding?.trackLearning?.('onboarding_control_used', {
+            control: 'chat', milestone: 'chat_opened',
+        });
         if (focusInput) this.input.focus({ preventScroll: true });
     }
 
@@ -593,17 +596,31 @@ class ChatWidget {
     // astrologer learns the assistant can DRIVE the workspace, not just answer.
     renderSuggestions() {
         const onboardingState = window.AstroOnboarding?.getState?.();
-        const onboardingPrompt = onboardingState?.eligible
+        const onboardingActive = onboardingState?.eligible
             && onboardingState.status === 'active'
-            && !onboardingState.completed_steps?.includes('assistant_answer')
-            ? t('page.onboarding.assistant.prompt')
-            : null;
-        const phrases = [
-            onboardingPrompt,
-            t('page.chart.chat.suggestTransit'),
-            t('page.chart.chat.suggestSolar'),
-            t('page.chart.chat.suggestSingle'),
-        ].filter(Boolean);
+            && !onboardingState.completed_steps?.includes('assistant_answer');
+        let workspace = null;
+        try { workspace = window.ForecastCommands?.describeState?.() || null; } catch (_) { workspace = null; }
+        const method = String(workspace?.selectedMethod || workspace?.activeLayers?.[0]?.method || 'transit');
+        const contextualKeys = ({
+            progression: ['progressionNow', 'progressionTransit', 'exactDates'],
+            direction: ['directionNow', 'exactDates', 'compareLayers'],
+            solar_return: ['solarThemes', 'solarTiming', 'compareLayers'],
+            synastry_partner: ['synastryTight', 'synastryDynamics', 'exactDates'],
+            transit: ['transitNow', 'exactDates', 'compareLayers'],
+        })[method] || ['transitNow', 'exactDates', 'compareLayers'];
+        const contextual = contextualKeys.map((key) => ({
+            phrase: t(`page.onboarding.assistant.contextual.${key}`),
+            promptType: key,
+        }));
+        const suggestions = onboardingActive
+            ? contextual
+            : [
+                { phrase: t('page.chart.chat.suggestTransit'), promptType: 'default_transit' },
+                { phrase: t('page.chart.chat.suggestSolar'), promptType: 'default_solar' },
+                { phrase: t('page.chart.chat.suggestSingle'), promptType: 'default_single' },
+            ];
+        const phrases = suggestions.filter((item) => item.phrase);
         if (!phrases.length) return;
 
         const wrap = document.createElement('div');
@@ -617,12 +634,17 @@ class ChatWidget {
 
         const row = document.createElement('div');
         row.className = 'chat-suggestions-row';
-        for (const phrase of phrases) {
+        for (const { phrase, promptType } of phrases) {
             const chip = document.createElement('button');
             chip.type = 'button';
             chip.className = 'chat-suggestion';
             chip.textContent = phrase;
             chip.addEventListener('click', () => {
+                window.AstroOnboarding?.trackLearning?.('onboarding_prompt_used', {
+                    milestone: 'contextual_prompt',
+                    prompt_type: promptType,
+                    method,
+                }, { once: false });
                 this.input.value = phrase;
                 this.sendMessage();
             });

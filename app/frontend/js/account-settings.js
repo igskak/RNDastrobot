@@ -1635,6 +1635,9 @@
             onboardingResetBtn.disabled = true;
             try {
                 await window.AstroOnboarding?.reset?.();
+                window.AstroOnboarding?.trackLearning?.('onboarding_help_reopened', {
+                    milestone: 'manual_reset', source: 'account_settings',
+                }, { once: false });
                 showToast(t('page.onboarding.settings.resetDone'), 'success');
             } catch (error) {
                 showToast(error.message || t('page.accountSettings.toasts.saveFailed'), 'error');
