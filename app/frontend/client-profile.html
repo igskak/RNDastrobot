@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.clientProfile.title"></title>
-    <link rel="stylesheet" href="/bundles/client-profile.bundle.css?v=30bd43746453">
-    <link rel="stylesheet" href="/css/locale-switcher.css?v=30bd43746453">
+    <link rel="stylesheet" href="/bundles/client-profile.bundle.css?v=17c274076fbd">
+    <link rel="stylesheet" href="/css/locale-switcher.css?v=17c274076fbd">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '30bd43746453';</script>
+    <script>window.__APP_BUILD_ID__ = '17c274076fbd';</script>
 </head>
 <body class="profile-page workspace-compact">
     <div class="page-loader" id="pageLoader">
@@ -40,10 +40,6 @@
 
             <div class="profile-header-actions">
                 <button class="btn-new btn-sm" type="button" id="openChartBtn" data-i18n="page.clients.detail.openChart"></button>
-                <button class="btn-call btn-sm" type="button" id="startCallBtn">
-                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><rect x="1" y="3" width="8" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M9 5.5l3-2v6l-3-2V5.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
-                    <span data-i18n="page.clientProfile.startCall"></span>
-                </button>
                 <div class="profile-actions-menu" id="profileActionsMenu">
                     <button class="btn-logout btn-sm profile-actions-toggle" type="button" id="profileActionsBtn" aria-haspopup="menu" aria-expanded="false" data-i18n-aria-label="page.clients.table.actions">
                         <span data-i18n="page.clients.detail.actions"></span>
@@ -67,7 +63,7 @@
         <main id="profileMain" class="profile-main hidden">
 
             <!-- Row 1: Contact + Stats -->
-            <div class="profile-row profile-row-2col">
+            <div class="profile-row profile-row-2col" data-solo-profile-hidden>
 
                 <!-- Contact & Notes -->
                 <section class="profile-card">
@@ -114,7 +110,7 @@
                     </section>
 
                     <!-- Row 5: Consultation History -->
-                    <section class="profile-card profile-card-consultations">
+                    <section class="profile-card profile-card-consultations" data-solo-profile-hidden>
                         <div class="profile-card-header">
                             <h2 class="profile-card-title" data-i18n="page.clientProfile.sections.consultations"></h2>
                             <button class="btn-new btn-sm" type="button" id="logSessionBtn" data-i18n="page.clients.detail.logSession"></button>
@@ -135,7 +131,7 @@
 
                 </div>
 
-                <div class="profile-column profile-column-side">
+                <div class="profile-column profile-column-side" data-solo-profile-hidden>
 
                     <!-- Row 4: Key Insights -->
                     <section class="profile-card profile-card-insights" id="profileInsightsCard">
@@ -448,9 +444,9 @@
         </div>
     </section>
 
-    <script type="module" src="/js/bundles/client-profile.bundle.js?v=30bd43746453"></script>
+    <script type="module" src="/js/bundles/client-profile.bundle.js?v=17c274076fbd"></script>
     <script src="/runtime-config.js"></script>
-    <script src="/js/analytics.js?v=30bd43746453"></script>
-    <script src="/js/locale-switcher.js?v=30bd43746453"></script>
+    <script src="/js/analytics.js?v=17c274076fbd"></script>
+    <script src="/js/locale-switcher.js?v=17c274076fbd"></script>
 </body>
 </html>

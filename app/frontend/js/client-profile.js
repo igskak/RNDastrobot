@@ -203,7 +203,6 @@ function cacheElements() {
     refs.profileBirth   = document.getElementById('profileBirth');
     refs.profileTags    = document.getElementById('profileTags');
     refs.openChartBtn   = document.getElementById('openChartBtn');
-    refs.startCallBtn   = document.getElementById('startCallBtn');
     refs.editClientBtn  = document.getElementById('editClientBtn');
     refs.profileActionsMenu     = document.getElementById('profileActionsMenu');
     refs.profileActionsBtn      = document.getElementById('profileActionsBtn');
@@ -309,13 +308,6 @@ function bindPageEvents() {
     refs.linkChartCancel?.addEventListener('click', closeLinkChartDialog);
     refs.linkChartBackdrop?.addEventListener('click', closeLinkChartDialog);
     refs.linkChartSearch?.addEventListener('input', () => renderLinkChartPickerList());
-    refs.startCallBtn?.addEventListener('click', () => {
-        if (!planCan('calls')) {
-            openPlanUpgrade('calls');
-            return;
-        }
-        startCallSession();
-    });
     refs.editClientBtn?.addEventListener('click', () => openEditClientDialog(userId));
 
     refs.profileActionsBtn?.addEventListener('click', (e) => {
@@ -395,16 +387,11 @@ function bindPageEvents() {
 }
 
 function applyPlanUi() {
-    if (refs.startCallBtn) {
-        const callsEnabled = planCan('calls');
-        refs.startCallBtn.classList.toggle('hidden', !callsEnabled);
-        refs.startCallBtn.hidden = !callsEnabled;
-        refs.startCallBtn.disabled = !callsEnabled;
-        refs.startCallBtn.setAttribute('aria-disabled', callsEnabled ? 'false' : 'true');
-        if (!callsEnabled) {
-            refs.startCallBtn.title = t('page.plan.upgrade.callsLocked');
-        }
-    }
+    const isSolo = window.AstroAPI?.isSoloPlan?.(currentAstrologer) === true;
+    document.body.classList.toggle('is-solo-profile', isSolo);
+    document.querySelectorAll('[data-solo-profile-hidden]').forEach((section) => {
+        section.classList.toggle('hidden', isSolo);
+    });
     refs.logSessionBtn?.classList.toggle('hidden', !planCan('consultations'));
     refs.profileContactList?.closest('.profile-card')?.classList.toggle('hidden', !planCan('clients'));
     refs.profileStatsGrid?.closest('.profile-card')?.classList.toggle('hidden', !planCan('meeting_stats'));
@@ -470,7 +457,9 @@ function scheduleSecondaryProfileLoads() {
     scheduleAfterPaint(() => {
         loadProfileSecondaryData();
         loadAndRenderLinkedCharts(profileData?.user?.person_id);
-        loadClientMemory();
+        if (!window.AstroAPI?.isSoloPlan?.(currentAstrologer)) {
+            loadClientMemory();
+        }
     });
 }
 
