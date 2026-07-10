@@ -86,6 +86,13 @@ ok(bodyOf('applyDeepLinkParams').includes('state.swapBaseLayerId = null'),
     'deep-link entry starts without swap (ephemeral)');
 ok(bodyOf('applySavedChartToNatal').includes('clearSwapState()'),
     'replacing the natal chart exits swap');
+ok(!bodyOf('setWheelView').includes('clearSwapState()'),
+    'switching between multi and single wheel preserves the active swap');
+ok(bodyOf('areSwapPanelControlsCrossed').includes('isSwapDemotedNatalSelected()')
+    && !bodyOf('areSwapPanelControlsCrossed').includes("state.wheelView !== 'single'"),
+    'single-wheel swap keeps the promoted chart controls crossed into the visible left panel');
+ok(bodyOf('renderSingleNatalRightPanel').includes('if (promoted) renderOrUpdateTimeStepper()'),
+    'single-wheel swap renders the promoted chart date in its visible stepper');
 ok(bodyOf('reconcileSwapState').includes('return true') && bodyOf('reconcileSwapState').includes('return false'),
     'reconcileSwapState reports whether it cleared swap (caller rebuilds base)');
 
