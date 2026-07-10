@@ -3250,9 +3250,10 @@
         return isSwapActive() && state.selectedRightLayerId === state.swapBaseLayerId;
     }
     // Контролы панелей «перекрёстны»: натал показан справа, повышенная карта — слева.
-    // В single-режиме правая шапка скрыта CSS, перекрещивать нечего.
+    // В single-режиме правая панель скрыта, но контролы всё равно остаются
+    // перекрёстными: слева пользователь продолжает работать с повышенной картой.
     function areSwapPanelControlsCrossed() {
-        return state.wheelView !== 'single' && isSwapDemotedNatalSelected();
+        return isSwapDemotedNatalSelected();
     }
     // Заголовок/мета повышенной карты для панели базы — с датой, временем, TZ и
     // местом, как у обычной панели соляра/синастрии. Единый источник идентичности.
@@ -5923,7 +5924,8 @@
         refs.prognosticPanelMeta.textContent = isCompositeSingleMode()
             ? (activeChart?.composite_meta || state.compositeMeta || '')
             : (refs.natalPanelMeta?.textContent || '');
-        if (refs.forecastNewTimeStepper) refs.forecastNewTimeStepper.innerHTML = '';
+        if (promoted) renderOrUpdateTimeStepper();
+        else if (refs.forecastNewTimeStepper) refs.forecastNewTimeStepper.innerHTML = '';
         if (refs.targetDatetimeLabel) {
             const bd = activeChart?.birth_data || {};
             refs.targetDatetimeLabel.textContent = promoted?.datetimeLabel
