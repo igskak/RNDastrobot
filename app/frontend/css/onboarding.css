@@ -213,8 +213,7 @@
 }
 
 .onboarding-coachmark-copy,
-.onboarding-complete-copy,
-.onboarding-complete-extra {
+.onboarding-complete-copy {
     margin: 9px 0 0;
     color: var(--text-secondary, #5c554e);
     font-size: 13px;

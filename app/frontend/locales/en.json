@@ -270,10 +270,9 @@
         "prompt": "Which exact aspects are active now, and when will they perfect?"
       },
       "complete": {
-        "title": "Your workflow is ready",
-        "text": "The profile, natal chart, current forecast, and assistant answers now live in one workspace.",
-        "extra": "During a consultation, Steliara can preserve the recording, transcript, and concise summary.",
-        "continue": "Continue working"
+        "title": "Everything is ready",
+        "text": "The chart is saved to the profile, the forecast is calculated, and the assistant is already working with its data.",
+        "continue": "Continue the reading"
       },
       "settings": {
         "title": "Product introduction",

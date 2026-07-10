@@ -4907,7 +4907,6 @@
         card.innerHTML = `
             <h2 class="onboarding-complete-title">${escapeHtml(t('page.onboarding.complete.title'))}</h2>
             <p class="onboarding-complete-copy">${escapeHtml(t('page.onboarding.complete.text'))}</p>
-            <p class="onboarding-complete-extra">${escapeHtml(t('page.onboarding.complete.extra'))}</p>
             <div class="onboarding-complete-actions"><button class="onboarding-primary" type="button">${escapeHtml(t('page.onboarding.complete.continue'))}</button></div>`;
         card.querySelector('button')?.addEventListener('click', () => card.remove());
         document.body.appendChild(card);
