@@ -1768,6 +1768,13 @@
         return selectedRightMethod() === 'solar_return';
     }
 
+    // Соляр и синастрия несут СОБСТВЕННЫЙ момент (год соляра / рождение партнёра):
+    // его правка затрагивает только их слой. Моментные методы (транзит/прогрессия/
+    // дирекция) делят state.selectedDateTime, поэтому им нужна полная перезагрузка.
+    function momentChangeAffectsOnlySelectedLayer() {
+        return isSolarMomentActive() || isSynastryMomentActive();
+    }
+
     function normalizeSolarDateTime(value) {
         const raw = String(value || '').trim();
         if (!raw) return '';
@@ -4230,7 +4237,12 @@
         applyDisplayedMomentDateTime(addStep(getDisplayedMomentDateTime(), state.stepMode, direction));
         syncControlsFromState();
         schedulePersist();
-        await loadDisplayedMomentLayers({ lightweight: true });
+        // Шаг соляра/синастрии трогает только их слой — грузим его одного, иначе
+        // стрелки степпера ждут полной перезагрузки всех слоёв.
+        await loadDisplayedMomentLayers({
+            lightweight: true,
+            selectedOnly: momentChangeAffectsOnlySelectedLayer(),
+        });
     }
 
     function stepSelectedDateTimeSegment(segment, direction, stepCount = 1) {
@@ -4329,7 +4341,17 @@
 
     async function loadSelectedMomentLayer(options = {}) {
         const inst = options.layerId ? findLayerInstance(options.layerId) : selectedLayerInstance();
-        if (!inst || (!isMomentMethod(inst.method) && inst.method !== 'synastry_partner')) {
+        // Соляр грузим ОДНИМ слоем, как транзит/синастрию: смена года соляра не
+        // затрагивает остальные слои. Раньше он падал в полный loadActiveLayers, и при
+        // свопе (где кэш повышенной карты намеренно не сбрасывается, см.
+        // invalidateLayerById) это включало ветку hasCompletePreviousLayers — колесо и
+        // панели не перерисовывались, пока не придут ВСЕ слои. Отсюда «медленный»
+        // левый степпер: шаг замирал на полный серверный расчёт соляра без обратной связи.
+        const singleLoadable = !!inst
+            && (isMomentMethod(inst.method)
+                || inst.method === 'synastry_partner'
+                || inst.method === 'solar_return');
+        if (!singleLoadable) {
             await loadActiveLayers(options);
             return;
         }

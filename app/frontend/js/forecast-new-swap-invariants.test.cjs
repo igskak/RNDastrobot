@@ -17,7 +17,16 @@ function bodyOf(name) {
     // Grab a function body by brace matching from `function name(`.
     const start = source.indexOf(`function ${name}(`);
     if (start === -1) return '';
-    let i = source.indexOf('{', start);
+    // Skip the parameter list first — a default like `(options = {})` would
+    // otherwise be mistaken for the body's opening brace.
+    let p = source.indexOf('(', start);
+    let parens = 0;
+    for (; p < source.length; p++) {
+        if (source[p] === '(') parens++;
+        else if (source[p] === ')') { parens--; if (parens === 0) break; }
+    }
+    const i = source.indexOf('{', p);
+    if (i === -1) return '';
     let depth = 0;
     for (let j = i; j < source.length; j++) {
         if (source[j] === '{') depth++;
@@ -79,6 +88,17 @@ ok(bodyOf('applySavedChartToNatal').includes('clearSwapState()'),
     'replacing the natal chart exits swap');
 ok(bodyOf('reconcileSwapState').includes('return true') && bodyOf('reconcileSwapState').includes('return false'),
     'reconcileSwapState reports whether it cleared swap (caller rebuilds base)');
+
+// ── stepper responsiveness: a solar/synastry step loads ONLY its own layer ───
+// A full loadActiveLayers() would trip the hasCompletePreviousLayers branch while
+// swapped (the promoted layer's cache is deliberately kept), freezing the wheel
+// until every layer settles — the "slow left stepper in swap" report.
+ok(/function momentChangeAffectsOnlySelectedLayer\(\)/.test(source),
+    'momentChangeAffectsOnlySelectedLayer() names the single-layer condition');
+ok(bodyOf('loadSelectedMomentLayer').includes("'solar_return'"),
+    'solar is single-loadable (no full reload of every layer per step)');
+ok(bodyOf('stepTargetDatetime').includes('selectedOnly: momentChangeAffectsOnlySelectedLayer()'),
+    'stepper arrows load only the selected layer for solar/synastry');
 
 // ── only the whitelisted call sites assign selectedRightLayerId directly ─────
 // (single `=`, excluding `===` comparisons). Everything interactive goes via the
