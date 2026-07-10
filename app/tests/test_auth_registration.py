@@ -36,6 +36,7 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 
 def _prepare_sqlite_user_table():
+    Astrologer.__table__.c.signup_attribution.type = JSON()
     User.__table__.c.tags.type = JSON()
     CompositeChart.__table__.c.partner_birth_data.type = JSON()
     CompositeChart.__table__.c.chart_data.type = JSON()
@@ -161,14 +162,15 @@ def test_register_success_creates_verified_local_account_without_token(monkeypat
         db.close()
 
 
-def test_register_can_choose_solo_plan():
+def test_register_creates_solo_plan_only_on_allowlisted_host(monkeypatch):
+    monkeypatch.setenv("SOLO_REGISTRATION_HOSTS", "solo.example.com")
     with TestClient(app) as client:
         response = client.post(
             "/api/v1/auth/register",
+            headers={"host": "solo.example.com"},
             json={
                 "email": "solo-new@example.com",
                 "password": "StrongPass123",
-                "plan_code": "solo",
             },
         )
 
@@ -181,6 +183,45 @@ def test_register_can_choose_solo_plan():
         assert astrologer.plan_code == "solo"
     finally:
         db.close()
+
+
+def test_register_ignores_solo_plan_payload_on_commercial_host():
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/auth/register",
+            json={
+                "email": "commercial-new@example.com",
+                "password": "StrongPass123",
+                "plan_code": "solo",
+            },
+        )
+
+    assert response.status_code == 200
+
+    db = TestingSessionLocal()
+    try:
+        astrologer = db.query(Astrologer).filter(Astrologer.email == "commercial-new@example.com").first()
+        assert astrologer is not None
+        assert astrologer.plan_code == "trial"
+    finally:
+        db.close()
+
+
+def test_solo_frontend_config_and_entry_routes(monkeypatch):
+    monkeypatch.setenv("SOLO_REGISTRATION_HOSTS", "solo.example.com")
+    with TestClient(app, follow_redirects=False) as client:
+        config = client.get("/api/v1/auth/frontend-config", headers={"host": "solo.example.com"})
+        root = client.get("/", headers={"host": "solo.example.com"})
+        pricing = client.get("/pricing.html", headers={"host": "solo.example.com"})
+        commercial_root = client.get("/", headers={"host": "testserver"})
+
+    assert config.status_code == 200
+    assert config.json()["solo_mode"] is True
+    assert root.status_code == 307
+    assert root.headers["location"] == "/login.html?mode=register"
+    assert pricing.status_code == 307
+    assert pricing.headers["location"] == "/"
+    assert commercial_root.status_code == 200
 
 
 def test_register_rejects_paid_plan_selection():

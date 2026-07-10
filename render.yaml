@@ -52,6 +52,12 @@ services:
         value: "False"
       - key: SECRET_KEY
         generateValue: true
+      # Comma-separated exact hostnames that expose the invite-only Solo flow.
+      - key: SOLO_REGISTRATION_HOSTS
+        sync: false
+      # Canonical origin used in password-reset/auth emails for Solo users.
+      - key: SOLO_FRONTEND_BASE_URL
+        sync: false
       
       # Swiss Ephemeris Configuration
       # SWISSEPH_EPHE_PATH не задаём - код сам вычислит правильный путь

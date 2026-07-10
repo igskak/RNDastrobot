@@ -42,6 +42,7 @@ from app.auth.security import (
     verify_password,
 )
 from app.auth.supabase import verify_supabase_token
+from app.auth.site_mode import is_solo_request, solo_frontend_base_url
 from app.database.connection import get_db
 from app.database.models import AdConversion, Astrologer, EmailVerificationToken, PasswordResetToken
 from app.i18n.locale import normalize_locale
@@ -271,6 +272,7 @@ class FrontendAuthConfig(BaseModel):
     supabase_anon_key: Optional[str] = None
     password_reset_cooldown_seconds: int
     email_verification_cooldown_seconds: int
+    solo_mode: bool = False
 
 
 class GenericAuthResponse(BaseModel):
@@ -303,6 +305,8 @@ def _as_utc(value: datetime) -> datetime:
 
 
 def _build_auth_base_url(request: Request) -> str:
+    if is_solo_request(request):
+        return solo_frontend_base_url(request)
     return (
         os.getenv("FRONTEND_BASE_URL", "").strip()
         or os.getenv("APP_BASE_URL", "").strip()
@@ -602,12 +606,13 @@ def _neutral_resend_verification_response() -> GenericAuthResponse:
 
 
 @router.get("/frontend-config", response_model=FrontendAuthConfig)
-def get_frontend_auth_config():
+def get_frontend_auth_config(request: Request):
     return FrontendAuthConfig(
         supabase_url=os.getenv("SUPABASE_URL") or None,
         supabase_anon_key=os.getenv("SUPABASE_ANON_KEY") or None,
         password_reset_cooldown_seconds=password_reset_cooldown_seconds(),
         email_verification_cooldown_seconds=email_verification_cooldown_seconds(),
+        solo_mode=is_solo_request(request),
     )
 
 
@@ -633,6 +638,7 @@ def register(
         )
         return _neutral_register_response()
 
+    registration_plan = PLAN_SOLO if is_solo_request(request) else PLAN_TRIAL
     astrologer = Astrologer(
         email=email,
         first_name=payload.first_name,
@@ -642,8 +648,8 @@ def register(
         auth_provider="local",
         is_active=True,
         email_verified_at=utcnow(),
-        plan_code=payload.plan_code or PLAN_TRIAL,
-        plan_expires_at=_trial_expiry(payload.plan_code or PLAN_TRIAL),
+        plan_code=registration_plan,
+        plan_expires_at=_trial_expiry(registration_plan),
     )
     db.add(astrologer)
     try:
