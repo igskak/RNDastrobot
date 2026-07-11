@@ -4896,12 +4896,11 @@
     }
 
     function showLayersOnboardingCoachmark() {
-        const mobile = window.matchMedia?.('(max-width: 720px)')?.matches;
         showOnboardingCoachmark({
             kind: 'layers',
             titleKey: 'page.onboarding.layers.title',
             textKey: 'page.onboarding.layers.text',
-            anchor: mobile ? refs.rightLayerTabs : document.querySelector('.forecast-new-layer-toggles'),
+            anchor: document.querySelector('.forecast-new-layer-chip--transit'),
         });
     }
 
