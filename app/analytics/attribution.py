@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import logging
 from typing import Optional
+from urllib.parse import unquote
 
 from fastapi import Request
 
@@ -46,8 +47,13 @@ def read_attribution(request: Request) -> Optional[dict]:
     raw = request.cookies.get(ATTRIBUTION_COOKIE)
     if not raw:
         return None
+    # The client writes the cookie as encodeURIComponent(JSON.stringify(...)), so
+    # the value is percent-encoded JSON (e.g. "%7B%22gclid%22..."). Starlette does
+    # NOT percent-decode cookie values, so json.loads(raw) always raised and every
+    # signup lost its gclid. unquote() is idempotent on already-plain JSON (no '%'),
+    # so this is safe whether or not the value was encoded.
     try:
-        data = json.loads(raw)
+        data = json.loads(unquote(raw))
     except (ValueError, TypeError):
         return None
     if not isinstance(data, dict):
