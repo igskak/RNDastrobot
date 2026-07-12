@@ -28,7 +28,7 @@ class User(Base):
     __tablename__ = 'users'
     
     user_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='RESTRICT'), nullable=False)
+    astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='CASCADE'), nullable=False)
     first_name = Column(String(100))
     last_name = Column(String(100))
     title = Column(String(160))
