@@ -39,6 +39,15 @@ function natalLayer(extra) {
     return { method: 'natal', bodies: [], houses: [], aspects: [], angles: NATAL_ANGLES, ...extra };
 }
 
+function natalHouses() {
+    return Array.from({ length: 12 }, (_, index) => ({
+        number: index + 1,
+        longitude: index * 30,
+        sign: 'Aries',
+        degree_in_sign: 0,
+    }));
+}
+
 function transitLayer() {
     return { method: 'transit', bodies: [], houses: [], aspects: [], style: { color: '#1e3a5f' } };
 }
@@ -63,6 +72,25 @@ test('W1: showAngleMarkers renders ASC/MC/DSC/IC lines + labels from ring.angles
     assert.equal(svg.querySelectorAll('.angle-marker-line').length, 4);
     // маркеры принадлежат кольцу-носителю углов (натал)
     assert.equal(svg.querySelector('.angle-marker-label').getAttribute('data-method'), 'natal');
+});
+
+test('W1: outside house labels omit angular numbers when angle markers are shown', async () => {
+    const Wheel = await loadEngine();
+    const svg = makeSvg();
+    const wheel = new Wheel(svg);
+    wheel.setOptions({ showAngleMarkers: true, houseLabelsOutside: true });
+    wheel.render({ natalLayer: natalLayer({ houses: natalHouses() }), activePrognosticLayers: [] });
+
+    const labels = Array.from(svg.querySelectorAll('#prognostic-labels text'))
+        .map((node) => node.textContent)
+        .filter(Boolean);
+    assert.equal(svg.querySelectorAll('.angle-marker-label').length, 4);
+    assert.equal(labels.includes('1'), false);
+    assert.equal(labels.includes('4'), false);
+    assert.equal(labels.includes('7'), false);
+    assert.equal(labels.includes('10'), false);
+    assert.equal(labels.includes('2'), true);
+    assert.equal(labels.includes('12'), true);
 });
 
 test('W1: missing angles on all rings -> no markers, no crash', async () => {

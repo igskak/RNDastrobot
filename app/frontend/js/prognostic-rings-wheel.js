@@ -551,19 +551,22 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                     : longitude + 15;
                 if (useOutsideLabels) {
                     const outsideLabel = this.getOutsideHouseLabelGeometry(angle, ring.method);
-                    this.layers.labels.appendChild(this.el('text', {
-                        x: outsideLabel.x,
-                        y: outsideLabel.y,
-                        'text-anchor': outsideLabel.anchor,
-                        'dominant-baseline': 'middle',
-                        'font-size': ring.method === 'natal' ? 9.5 : 8.5,
-                        'font-weight': '500',
-                        fill: ring.method === 'natal' ? this.getHouseLabelColor(isAngular) : ring.color,
-                        stroke: '#fafafa',
-                        'stroke-width': '2.4',
-                        'stroke-linejoin': 'round',
-                        'paint-order': 'stroke',
-                    }, this.getDisplayedHouseLabel(house.number)));
+                    const labelText = this.getDisplayedHouseLabel(house.number, { outside: true });
+                    if (labelText) {
+                        this.layers.labels.appendChild(this.el('text', {
+                            x: outsideLabel.x,
+                            y: outsideLabel.y,
+                            'text-anchor': outsideLabel.anchor,
+                            'dominant-baseline': 'middle',
+                            'font-size': ring.method === 'natal' ? 9.5 : 8.5,
+                            'font-weight': '500',
+                            fill: ring.method === 'natal' ? this.getHouseLabelColor(isAngular) : ring.color,
+                            stroke: '#fafafa',
+                            'stroke-width': '2.4',
+                            'stroke-linejoin': 'round',
+                            'paint-order': 'stroke',
+                        }, labelText));
+                    }
                 } else {
                     const labelRadius = ring.inner + 9;
                     const labelPos = this.polar(labelRadius, this.longToAngle(midLong));
@@ -1468,8 +1471,12 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             return String(numeric);
         }
 
-        getDisplayedHouseLabel(number) {
+        getDisplayedHouseLabel(number, options = {}) {
             const numeric = Number(number) || 0;
+            const isAngular = [1, 4, 7, 10].includes(numeric);
+            if (options.outside === true && this.showAngleMarkers && isAngular) {
+                return '';
+            }
             // When outer angle markers (ASC/IC/DSC/MC) are drawn, keep the inner
             // angular-house labels numeric so the axis names are not duplicated
             // both outside the ring and on the cusps.
