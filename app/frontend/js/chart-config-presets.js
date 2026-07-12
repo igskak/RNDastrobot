@@ -175,7 +175,9 @@
         }
 
         const { row, saveBtn, pickerBtn, popover } = buildButtons();
-        container.prepend(row);
+        const settingsHeader = container.querySelector(':scope > .forecast-new-settings-head');
+        if (settingsHeader) settingsHeader.after(row);
+        else container.prepend(row);
 
         let popoverOpen = false;
         const setPopoverOpen = (open) => {

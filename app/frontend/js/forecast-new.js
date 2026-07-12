@@ -708,7 +708,7 @@
             'forecastNewSynastryManualTimezone', 'forecastNewSynastryManualLocation', 'forecastNewSynastryManualSuggestions',
             'forecastNewSynastryManualLat', 'forecastNewSynastryManualLon', 'forecastNewSynastryManualApply', 'forecastNewSynastryManualError',
             'forecastNewZoomIn', 'forecastNewZoomOut',
-            'forecastNewSettingsToggle', 'forecastNewSettingsPanel',
+            'forecastNewSettingsToggle', 'forecastNewSettingsPanel', 'forecastNewSettingsClose',
             'orientationSelect', 'houseSystemSelect', 'zodiacSelect', 'ayanamshaSelect', 'compositeMethodSettingsSection', 'compositeMethodSelect', 'iconScaleRange', 'iconScaleValue',
             'aspectScopeSelect', 'aspectTypeToggles',
             'aspectPhaseApplyingToggle', 'aspectPhaseSeparatingToggle',
@@ -1215,7 +1215,10 @@
                 closeAddLayerMenu();
             }
             refs.forecastNewSettingsPanel?.classList.toggle('hidden');
+            const isOpen = !refs.forecastNewSettingsPanel?.classList.contains('hidden');
+            refs.forecastNewSettingsToggle?.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         });
+        refs.forecastNewSettingsClose?.addEventListener('click', () => closeSettingsPanel());
         refs.compositeMethodSelect?.addEventListener('change', () => {
             scheduleApplySettings();
         });
@@ -1230,7 +1233,7 @@
         }
         document.addEventListener('click', () => {
             closeBodyActionMenu();
-            refs.forecastNewSettingsPanel?.classList.add('hidden');
+            closeSettingsPanel();
             setMomentEditorOpen(false);
             setCustomStepPopoverOpen(false);
             setNatalMomentEditorOpen(false);
@@ -1354,6 +1357,7 @@
 
     function closeSettingsPanel() {
         refs.forecastNewSettingsPanel?.classList.add('hidden');
+        refs.forecastNewSettingsToggle?.setAttribute('aria-expanded', 'false');
     }
 
     // ── Поповеры параметров слоёв (Дирекции / Соляр / Синастрия) ──────────────
