@@ -393,6 +393,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     chartData = await loadFreshNatalFullChartData(chartData);
+    window.AstroOnboarding?.trackFirstChartViewed?.(chartData?.user_id, {
+        source: 'natal_full',
+    });
     configureNatalFullNavigation();
     setupNatalFullActionsMenu();
 

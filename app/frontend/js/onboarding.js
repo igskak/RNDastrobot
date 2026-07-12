@@ -59,7 +59,7 @@
     }
 
     function getAstrologerKey() {
-        return String(context?.astrologer?.id || 'anonymous');
+        return String(context?.astrologer?.id || root.AstroAPI?.getCachedAstrologer?.()?.id || 'anonymous');
     }
 
     function pendingStorageKey() {
@@ -120,13 +120,31 @@
     }
 
     function track(event, properties = {}) {
+        const astrologer = context?.astrologer || root.AstroAPI?.getCachedAstrologer?.() || null;
         root.AstroAnalytics?.track?.(event, {
             version: VERSION,
-            plan_code: String(context?.astrologer?.plan_code || ''),
+            plan_code: String(astrologer?.plan_code || ''),
             surface: context?.surface || '',
             entry_state: context?.entryState || 'empty',
             ...properties,
         });
+    }
+
+    function trackFirstChartViewed(chartId, properties = {}) {
+        const id = String(chartId || '').trim();
+        if (!id) return false;
+        try {
+            const key = `steliara.onboarding.first_chart_viewed:${getAstrologerKey()}:${id}`;
+            if (root.localStorage?.getItem(key) === '1') return false;
+            root.localStorage?.setItem(key, '1');
+        } catch (_error) {
+            // If storage is unavailable, still emit the value event.
+        }
+        track('first_chart_viewed', {
+            chart_id: id,
+            ...properties,
+        });
+        return true;
     }
 
     function trackShownOnce() {
@@ -325,6 +343,7 @@
         dismiss,
         reset,
         trackLearning,
+        trackFirstChartViewed,
         getState: snapshot,
         isEligible: () => eligible,
         isActive: () => eligible && state.status === 'active',

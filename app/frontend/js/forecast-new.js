@@ -596,6 +596,9 @@
             })
             : natalData;
         state.userId = natalData.user_id || localStorage.getItem('currentUserId');
+        window.AstroOnboarding?.trackFirstChartViewed?.(state.userId, {
+            source: 'forecast_new',
+        });
         state.timezone = normalizeTimezoneValue(
             natalData.birth_data?.timezone,
             natalData.birth_data?.place,
@@ -4955,7 +4958,13 @@
             textKey: 'page.onboarding.assistant.text',
             primaryKey: 'page.onboarding.assistant.open',
             anchor: document.getElementById('chatToggle'),
-            onPrimary: () => document.getElementById('chatToggle')?.click(),
+            onPrimary: () => {
+                window.AstroAnalytics?.track?.('assistant_cta_clicked', {
+                    source: 'onboarding_coachmark',
+                    chart_id: state.userId ? String(state.userId) : undefined,
+                });
+                document.getElementById('chatToggle')?.click();
+            },
         });
     }
 
