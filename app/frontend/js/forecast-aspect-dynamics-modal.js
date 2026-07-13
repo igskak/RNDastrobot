@@ -79,6 +79,8 @@
         responseCache: new Map(),
         responseInFlight: new Map(),
         dragStart: null,
+        activePointers: new Map(),
+        pinchStart: null,
         interactionWindow: null,
         defaultViewWindow: null,
         pendingWindowTimer: null,
@@ -728,21 +730,86 @@
         return clampWindow(drag.window.start + shift, drag.window.end + shift);
     }
 
+    function pointerSnapshot(event) {
+        return { x: Number(event.clientX), y: Number(event.clientY) };
+    }
+
+    function pinchMetrics() {
+        const pointers = [...state.activePointers.values()].slice(0, 2);
+        if (pointers.length < 2) return null;
+        const [first, second] = pointers;
+        return {
+            distance: Math.hypot(second.x - first.x, second.y - first.y),
+            centerX: (first.x + second.x) / 2,
+        };
+    }
+
+    function startPinchGesture() {
+        const metrics = pinchMetrics();
+        const window = dataWindowMs();
+        if (!metrics || !window || metrics.distance < 8) return false;
+        const rect = state.chartWrap?.getBoundingClientRect?.() || { left: 0, width: 0 };
+        const width = Math.max(240, rect.width || state.chartWrap?.clientWidth || 720);
+        const ratio = Math.max(0, Math.min(1, (metrics.centerX - (rect.left || 0)) / width));
+        state.pinchStart = {
+            distance: metrics.distance,
+            anchorMs: window.start + ratio * (window.end - window.start),
+            rectLeft: rect.left || 0,
+            width,
+            windowSpan: window.end - window.start,
+        };
+        state.dragStart = null;
+        state.chartWrap?.classList.remove('is-dragging');
+        state.chartWrap?.classList.add('is-pinching');
+        return true;
+    }
+
+    function updatePinchGesture() {
+        const metrics = pinchMetrics();
+        const pinch = state.pinchStart;
+        const current = dataWindowMs();
+        if (!metrics || !pinch || !current || metrics.distance < 8) return false;
+        const gestureBase = state.pinchStart.windowSpan || (current.end - current.start);
+        const span = gestureBase * (pinch.distance / metrics.distance);
+        const ratio = Math.max(0, Math.min(1, (metrics.centerX - pinch.rectLeft) / pinch.width));
+        const boundedSpan = Math.max(MIN_WINDOW_DAYS * DAY_MS, Math.min(MAX_WINDOW_DAYS * DAY_MS, span));
+        requestWindow(
+            pinch.anchorMs - boundedSpan * ratio,
+            pinch.anchorMs + boundedSpan * (1 - ratio),
+            { debounce: true },
+        );
+        return true;
+    }
+
     function onCanvasPointerDown(event) {
         if (!state.data) return;
         if (event.pointerType === 'mouse' && event.button !== 0) return;
-        updateHoverMarker(event);
+        state.activePointers.set(event.pointerId, pointerSnapshot(event));
+        state.chartWrap?.setPointerCapture?.(event.pointerId);
+        if (state.activePointers.size >= 2) {
+            startPinchGesture();
+            event.preventDefault();
+            return;
+        }
+        if (event.pointerType === 'mouse') updateHoverMarker(event);
         state.dragStart = {
             x: event.clientX,
             window: dataWindowMs(),
             moved: false,
         };
         state.chartWrap?.classList.add('is-dragging');
-        state.chartWrap?.setPointerCapture?.(event.pointerId);
         event.preventDefault();
     }
 
     function onCanvasPointerMove(event) {
+        if (state.activePointers.has(event.pointerId)) {
+            state.activePointers.set(event.pointerId, pointerSnapshot(event));
+        }
+        if (state.activePointers.size >= 2 || state.pinchStart) {
+            event.preventDefault();
+            updatePinchGesture();
+            return;
+        }
         const drag = state.dragStart;
         if (!drag?.window) {
             updateHoverMarker(event);
@@ -764,6 +831,22 @@
     }
 
     function onCanvasPointerUp(event) {
+        const wasPinching = Boolean(state.pinchStart);
+        state.activePointers.delete(event.pointerId);
+        state.chartWrap?.releasePointerCapture?.(event.pointerId);
+        if (wasPinching) {
+            const finalWindow = dataWindowMs();
+            state.pinchStart = null;
+            state.chartWrap?.classList.remove('is-pinching');
+            if (finalWindow) requestWindow(finalWindow.start, finalWindow.end);
+            const remaining = [...state.activePointers.values()][0];
+            state.dragStart = remaining
+                ? { x: remaining.x, window: dataWindowMs(), moved: false }
+                : null;
+            if (!remaining) state.chartWrap?.classList.remove('is-dragging');
+            event.preventDefault();
+            return;
+        }
         if (!state.dragStart?.window) {
             state.dragStart = null;
             state.chartWrap?.classList.remove('is-dragging');
@@ -773,11 +856,10 @@
         const next = dragWindowForEvent(event, drag);
         state.dragStart = null;
         state.chartWrap?.classList.remove('is-dragging');
-        state.chartWrap?.releasePointerCapture?.(event.pointerId);
         if (next && (drag.moved || Math.abs(event.clientX - drag.x) > DRAG_ACTIVATION_PX)) {
             requestWindow(next.start, next.end);
         }
-        updateHoverMarker(event);
+        if (event.pointerType === 'mouse') updateHoverMarker(event);
     }
 
     function resetViewWindow() {
@@ -792,7 +874,10 @@
         clearTimeout(state.pendingWindowTimer);
         state.pendingWindowTimer = null;
         state.dragStart = null;
+        state.activePointers.clear();
+        state.pinchStart = null;
         state.chartWrap?.classList.remove('is-dragging');
+        state.chartWrap?.classList.remove('is-pinching');
         clearHoverMarker();
     }
 
@@ -861,18 +946,24 @@
                 </header>
                 <div class="aspect-dynamics-status" role="status"></div>
                 <div class="aspect-dynamics-toolbar" aria-label="${escapeAttr(tr('page.forecastNew.aspectDynamics.toolbar', 'Chart controls'))}">
-                    <button type="button" data-aspect-dynamics-pan="-0.5" title="${escapeAttr(tr('common.previous', 'Previous'))}">←</button>
-                    <button type="button" data-aspect-dynamics-zoom="in" title="${escapeAttr(tr('page.forecastNew.aspectDynamics.zoomXIn', 'Zoom X axis in'))}">X+</button>
-                    <button type="button" data-aspect-dynamics-zoom="out" title="${escapeAttr(tr('page.forecastNew.aspectDynamics.zoomXOut', 'Zoom X axis out'))}">X−</button>
-                    <button type="button" data-aspect-dynamics-y-zoom="in" title="${escapeAttr(tr('page.forecastNew.aspectDynamics.zoomYIn', 'Zoom Y axis in'))}">Y+</button>
-                    <button type="button" data-aspect-dynamics-y-zoom="out" title="${escapeAttr(tr('page.forecastNew.aspectDynamics.zoomYOut', 'Zoom Y axis out'))}">Y−</button>
-                    <button type="button" data-aspect-dynamics-pan="0.5" title="${escapeAttr(tr('common.next', 'Next'))}">→</button>
-                    <button type="button" data-aspect-dynamics-zoom="reset" title="${escapeAttr(tr('page.forecastNew.aspectDynamics.resetZoom', 'Reset zoom'))}">⟲</button>
+                    <div class="aspect-dynamics-toolbar-group">
+                        <button type="button" data-aspect-dynamics-pan="-0.5" title="${escapeAttr(tr('common.previous', 'Previous'))}">←</button>
+                        <button type="button" data-aspect-dynamics-zoom="in" title="${escapeAttr(tr('page.forecastNew.aspectDynamics.zoomXIn', 'Zoom X axis in'))}">X+</button>
+                        <button type="button" data-aspect-dynamics-zoom="out" title="${escapeAttr(tr('page.forecastNew.aspectDynamics.zoomXOut', 'Zoom X axis out'))}">X−</button>
+                        <button type="button" data-aspect-dynamics-pan="0.5" title="${escapeAttr(tr('common.next', 'Next'))}">→</button>
+                    </div>
+                    <div class="aspect-dynamics-toolbar-group aspect-dynamics-toolbar-group--secondary">
+                        <button type="button" data-aspect-dynamics-y-zoom="in" title="${escapeAttr(tr('page.forecastNew.aspectDynamics.zoomYIn', 'Zoom Y axis in'))}">Y+</button>
+                        <button type="button" data-aspect-dynamics-y-zoom="out" title="${escapeAttr(tr('page.forecastNew.aspectDynamics.zoomYOut', 'Zoom Y axis out'))}">Y−</button>
+                        <button type="button" data-aspect-dynamics-zoom="reset" title="${escapeAttr(tr('page.forecastNew.aspectDynamics.resetZoom', 'Reset zoom'))}">⟲</button>
+                    </div>
                     <span class="aspect-dynamics-toolbar-divider"></span>
-                    <button type="button" data-aspect-dynamics-range="30">1M</button>
-                    <button type="button" data-aspect-dynamics-range="365">1Y</button>
-                    <button type="button" data-aspect-dynamics-range="3650">10Y</button>
-                    <button type="button" data-aspect-dynamics-range="36525">100Y</button>
+                    <div class="aspect-dynamics-toolbar-group aspect-dynamics-toolbar-group--ranges">
+                        <button type="button" data-aspect-dynamics-range="30">1M</button>
+                        <button type="button" data-aspect-dynamics-range="365">1Y</button>
+                        <button type="button" data-aspect-dynamics-range="3650">10Y</button>
+                        <button type="button" data-aspect-dynamics-range="36525">100Y</button>
+                    </div>
                     <span class="aspect-dynamics-range-label"></span>
                 </div>
                 <div class="aspect-dynamics-chart-wrap">
@@ -945,6 +1036,10 @@
         cancelHoverDraw();
         state.hoverMs = null;
         state.hoverOrb = null;
+        state.dragStart = null;
+        state.activePointers.clear();
+        state.pinchStart = null;
+        state.chartWrap?.classList.remove('is-dragging', 'is-pinching');
         setOpen(false);
         const focusTarget = state.lastFocus;
         state.lastFocus = null;
@@ -1246,11 +1341,11 @@
                 `).join('');
             return `
                 <tr>
-                    <td>${escapeHtml(formatDateTime(contact.enter))}</td>
-                    <td><div class="aspect-dynamics-summary-list">${passList}</div></td>
-                    <td>${escapeHtml(formatDateTime(contact.leave))}</td>
-                    <td><b>${formatOrb(closest?.orb)}</b><span>${escapeHtml(formatDateTime(closest?.date))}</span></td>
-                    <td><div class="aspect-dynamics-summary-list">${stations || `<span>${escapeHtml(tr('common.notAvailable', 'N/A'))}</span>`}</div></td>
+                    <td data-label="${escapeAttr(tr('page.forecast.timeline.tooltip.enter', 'Enter'))}">${escapeHtml(formatDateTime(contact.enter))}</td>
+                    <td data-label="${escapeAttr(tr('page.forecastNew.aspectDynamics.summary.exact', 'Exact'))}"><div class="aspect-dynamics-summary-list">${passList}</div></td>
+                    <td data-label="${escapeAttr(tr('page.forecast.timeline.tooltip.leave', 'Leave'))}">${escapeHtml(formatDateTime(contact.leave))}</td>
+                    <td data-label="${escapeAttr(tr('page.forecastNew.aspectDynamics.closest', 'Closest approach'))}"><b>${formatOrb(closest?.orb)}</b><span>${escapeHtml(formatDateTime(closest?.date))}</span></td>
+                    <td data-label="${escapeAttr(tr('page.forecastNew.aspectDynamics.summary.stations', 'Stations'))}"><div class="aspect-dynamics-summary-list">${stations || `<span>${escapeHtml(tr('common.notAvailable', 'N/A'))}</span>`}</div></td>
                 </tr>
             `;
         }).join('');
@@ -1966,6 +2061,9 @@
         }
         clearTimeout(state.pendingWindowTimer);
         state.pendingWindowTimer = null;
+        state.dragStart = null;
+        state.activePointers.clear();
+        state.pinchStart = null;
         renderShell(payload);
         state.lastFocus = typeof document !== 'undefined' ? document.activeElement : null;
         setOpen(true);

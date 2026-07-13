@@ -31,6 +31,8 @@ function resetModal() {
         responseCache: new Map(),
         responseInFlight: new Map(),
         dragStart: null,
+        activePointers: new Map(),
+        pinchStart: null,
         interactionWindow: null,
         defaultViewWindow: null,
         pendingWindowTimer: null,
@@ -678,6 +680,52 @@ test('dragging the aspect chart pans the graph window', async () => {
 
     assert.equal(payloads.length, 3);
     assert.equal(wrap.classList.contains('is-dragging'), false);
+    modal.close();
+});
+
+test('two-finger pinch zooms around the gesture center without redundant fetch', async () => {
+    setupDom();
+    const payloads = [];
+    modal.setFetchImpl(async (_url, options) => {
+        const payload = JSON.parse(options.body);
+        payloads.push(payload);
+        return {
+            ok: true,
+            async json() {
+                return sampleResponseForPayload(payload);
+            },
+        };
+    });
+
+    await modal.open(sampleOpenOptions);
+    const wrap = document.querySelector('.aspect-dynamics-chart-wrap');
+    Object.defineProperty(wrap, 'clientWidth', { value: 720, configurable: true });
+    wrap.getBoundingClientRect = () => ({ left: 0, top: 0, width: 720, height: 320 });
+    const before = { ...modal._state.interactionWindow };
+
+    dispatchPointer(wrap, 'pointerdown', {
+        pointerId: 1, pointerType: 'touch', clientX: 240, clientY: 150,
+    });
+    dispatchPointer(wrap, 'pointerdown', {
+        pointerId: 2, pointerType: 'touch', clientX: 480, clientY: 150,
+    });
+    assert.ok(wrap.classList.contains('is-pinching'));
+    dispatchPointer(wrap, 'pointermove', {
+        pointerId: 2, pointerType: 'touch', clientX: 600, clientY: 150,
+    });
+
+    const after = modal._state.interactionWindow;
+    assert.ok((after.end - after.start) < (before.end - before.start));
+    dispatchPointer(wrap, 'pointerup', {
+        pointerId: 2, pointerType: 'touch', clientX: 600, clientY: 150,
+    });
+    dispatchPointer(wrap, 'pointerup', {
+        pointerId: 1, pointerType: 'touch', clientX: 240, clientY: 150,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    assert.equal(wrap.classList.contains('is-pinching'), false);
+    assert.equal(payloads.length, 2);
     modal.close();
 });
 
