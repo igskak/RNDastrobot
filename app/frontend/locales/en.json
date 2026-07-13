@@ -1694,6 +1694,7 @@
         "linkBtn": "Link chart from library",
         "empty": "No linked charts",
         "open": "Open",
+        "setPrimary": "Set as primary",
         "unlink": "Unlink",
         "linkedToast": "Chart linked to profile",
         "unlinkedToast": "Chart unlinked from profile",

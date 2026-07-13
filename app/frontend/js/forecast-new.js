@@ -95,6 +95,7 @@
         natalData: null,
         natalWheelData: null,
         userId: null,
+        personId: null,
         selectedDateTime: '',
         lastCalculatedTransitDateTime: '',
         lastCalculatedPrognosticDate: '',
@@ -538,8 +539,8 @@
         if (sourceUrl && !/\/forecast-new(\.html)?(\?|#|$)/.test(sourceUrl)) {
             return sourceUrl;
         }
-        if (state.userId) {
-            return `/client/${encodeURIComponent(String(state.userId))}`;
+        if (state.personId) {
+            return `/client/${encodeURIComponent(String(state.personId))}`;
         }
         return '/';
     }
@@ -549,6 +550,8 @@
         window.AstroAPI?.saveNavigationState?.({
             sourceView: 'forecast-new',
             sourceUrl: `/forecast-new.html${window.location.search || ''}`,
+            clientPersonId: state.personId || navState.clientPersonId || null,
+            clientChartId: state.userId ? String(state.userId) : (navState.clientChartId || navState.clientUserId),
             clientUserId: state.userId ? String(state.userId) : navState.clientUserId,
             partnerUserId: String(navState.clientUserId || '') === String(state.userId || '')
                 ? (navState.partnerUserId ? String(navState.partnerUserId) : null)
@@ -564,10 +567,12 @@
             refs.forecastNewBackBtn.href = getForecastBackUrl();
         }
         if (refs.openClientProfileBtn) {
-            refs.openClientProfileBtn.disabled = !state.userId;
+            refs.openClientProfileBtn.disabled = !state.personId;
         }
         window.AstroAPI?.patchNavigationState?.({
             currentView: 'forecast-new',
+            clientPersonId: state.personId || navState.clientPersonId || null,
+            clientChartId: state.userId ? String(state.userId) : (navState.clientChartId || navState.clientUserId),
             clientUserId: state.userId ? String(state.userId) : navState.clientUserId,
             partnerUserId: String(navState.clientUserId || '') === String(state.userId || '')
                 ? (navState.partnerUserId ? String(navState.partnerUserId) : null)
@@ -596,6 +601,7 @@
             })
             : natalData;
         state.userId = natalData.user_id || localStorage.getItem('currentUserId');
+        state.personId = natalData.person_id || getForecastNavigationState().clientPersonId || null;
         window.AstroOnboarding?.trackFirstChartViewed?.(state.userId, {
             source: 'forecast_new',
         });
@@ -2433,8 +2439,8 @@
     }
 
     function goToClientProfile() {
-        if (!state.userId) return;
-        window.location.href = `/client/${encodeURIComponent(state.userId)}`;
+        if (!state.personId) return;
+        window.location.href = `/client/${encodeURIComponent(state.personId)}`;
     }
 
     function updateHeaderInfo() {
@@ -2442,7 +2448,7 @@
         const name = [birth.first_name, birth.last_name].filter(Boolean).join(' ').trim();
         refs.forecastNewTitle.textContent = name;
         refs.forecastNewSubtitle.textContent = buildNatalHeaderSubtitle(birth);
-        const canOpenProfile = Boolean(state.userId);
+        const canOpenProfile = Boolean(state.personId);
         refs.forecastNewTitle.classList.toggle('is-clickable', canOpenProfile);
         if (canOpenProfile) {
             refs.forecastNewTitle.setAttribute('role', 'link');
@@ -4191,6 +4197,7 @@
             // Загруженная карта становится новым «сохранённым» наталом воркспейса:
             // isNatalEdited() → false, слои считаются по user_id, а не inline.
             state.userId = String(chart.user_id);
+            state.personId = chart.person_id ? String(chart.person_id) : null;
             state.natalInitialDateTime = state.natalSelectedDateTime;
             state.natalInitialSource = {
                 timezone: state.natalTimezone,
@@ -8801,6 +8808,7 @@
             }
             const resp = await apiGet(`/natal/${encodeURIComponent(String(saved.chart_id || saved.user_id))}`);
             state.userId = resp.user_id || saved.chart_id || saved.user_id;
+            state.personId = resp.person_id || saved.person_id || null;
             state.natalData = resp;
             state.natalWheelData = window.NatalWheelData?.prepareNatalWheelData
                 ? window.NatalWheelData.prepareNatalWheelData(resp, { houseSystem: resp.birth_data?.house_system || undefined })
@@ -8812,6 +8820,8 @@
             // chart. Only refresh the current-chart identity.
             window.AstroAPI?.patchNavigationState?.({
                 currentView: 'forecast-new',
+                clientPersonId: state.personId,
+                clientChartId: String(state.userId),
                 clientUserId: String(state.userId),
                 partnerUserId: null,
             });

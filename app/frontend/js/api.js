@@ -712,8 +712,8 @@
         return response.json();
     }
 
-    async function getRelatedPeople(userId, options = {}) {
-        const response = await apiFetch(`${API_BASE_URL}/users/${encodeURIComponent(String(userId))}/related-people`, {
+    async function getRelatedPeople(personId, options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/persons/${encodeURIComponent(String(personId))}/related-people`, {
             method: 'GET',
             headers: withLocaleHeaders(),
             signal: options.signal,
@@ -739,13 +739,18 @@
         return response.json();
     }
 
-    async function linkRelatedPerson(userId, payload, options = {}) {
-        const response = await apiFetch(`${API_BASE_URL}/users/${encodeURIComponent(String(userId))}/related-people`, {
+    async function linkRelatedPerson(personId, payload, options = {}) {
+        const normalizedPayload = {
+            related_person_id: payload?.related_person_id || payload?.related_user_id,
+            relation_label: payload?.relation_label || null,
+            notes: payload?.notes || null,
+        };
+        const response = await apiFetch(`${API_BASE_URL}/persons/${encodeURIComponent(String(personId))}/related-people`, {
             method: 'POST',
             headers: withLocaleHeaders({
                 'Content-Type': 'application/json',
             }),
-            body: JSON.stringify(payload || {}),
+            body: JSON.stringify(normalizedPayload),
             signal: options.signal,
         });
         if (!response.ok) {
@@ -754,8 +759,8 @@
         return response.json();
     }
 
-    async function deleteRelatedPerson(userId, relatedUserId, options = {}) {
-        const response = await apiFetch(`${API_BASE_URL}/users/${encodeURIComponent(String(userId))}/related-people/${encodeURIComponent(String(relatedUserId))}`, {
+    async function deleteRelatedPerson(personId, relatedPersonId, options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/persons/${encodeURIComponent(String(personId))}/related-people/${encodeURIComponent(String(relatedPersonId))}`, {
             method: 'DELETE',
             headers: withLocaleHeaders(),
             signal: options.signal,
@@ -987,8 +992,8 @@
         return window.sessionStorage.getItem(ACCOUNT_SETTINGS_RETURN_URL_KEY) || '';
     }
 
-    function buildClientProfileUrl(userId) {
-        return `/client/${encodeURIComponent(String(userId || ''))}`;
+    function buildClientProfileUrl(personId) {
+        return `/client/${encodeURIComponent(String(personId || ''))}`;
     }
 
     function buildSynastryUrl(clientUserId, partnerUserId) {
@@ -1011,6 +1016,10 @@
         saveNavigationState({
             sourceView: navMeta.sourceView || 'clients',
             sourceUrl: navMeta.sourceUrl || '/',
+            clientPersonId: navMeta.clientPersonId || null,
+            clientChartId: cid,
+            partnerPersonId: navMeta.partnerPersonId || null,
+            partnerChartId: pid,
             clientUserId: cid,
             partnerUserId: pid,
         });

@@ -49,16 +49,18 @@
     }
 
     async function fetchCandidateUsers() {
-        const response = await apiFetch(`${API_BASE}/users`, { method: 'GET' });
+        const response = await apiFetch(`${API_BASE}/persons`, { method: 'GET' });
         if (!response.ok) {
             throw new Error(t('page.clientProfile.related.loadCandidatesFailed'));
         }
         const payload = await response.json();
-        return Array.isArray(payload) ? payload : [];
+        return Array.isArray(payload)
+            ? payload.map((person) => ({ ...person, user_id: person.person_id }))
+            : [];
     }
 
     function buildRelatedPickerCandidates(users, { currentUserId, relatedPeople = [] } = {}) {
-        const existingIds = new Set((relatedPeople || []).map((person) => String(person.user_id || '')));
+        const existingIds = new Set((relatedPeople || []).map((person) => String(person.person_id || person.user_id || '')));
         return (Array.isArray(users) ? users : [])
             .filter((user) => {
                 const candidateId = String(user.user_id || '');
@@ -209,7 +211,7 @@
 
             try {
                 const payload = await root.AstroAPI.linkRelatedPerson(options.getCurrentUserId?.(), {
-                    related_user_id: state.selectedUserId,
+                    related_person_id: state.selectedUserId,
                     relation_label: refs.relationLabel?.value?.trim() || '',
                 });
                 close('linked');

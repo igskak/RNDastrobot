@@ -19,6 +19,7 @@ from app.models.schemas import normalize_house_system_code, VALID_HOUSE_SYSTEMS
 from app.services.entitlements_service import assert_account_writable, assert_can_create_saved_chart
 from app.services.geocoding_service import GeocodingServiceError, GeocodingTimeoutError
 from app.services.natal_chart_service import NatalChartService
+from app.services.person_profile_service import ensure_primary_chart
 from app.utils.ephemeris import get_ephemeris_path
 
 
@@ -383,8 +384,10 @@ def create_chart(
         user.title = payload.title
         user.chart_kind = payload.chart_kind
         if payload.person_id is not None:
-            _get_person_or_404(db, auth.astrologer.id, payload.person_id)
+            person = _get_person_or_404(db, auth.astrologer.id, payload.person_id)
             user.person_id = payload.person_id
+            if person.primary_chart_id is None:
+                person.primary_chart_id = user.user_id
         user.tags = payload.tags or []
         user.notes = payload.notes
         db.flush()
@@ -435,10 +438,19 @@ def update_chart(
     ensure_client_access(db, request, auth, chart_id, action="chart.update")
     user = _get_chart_or_404(db, auth.astrologer.id, chart_id)
     update = payload.model_dump(exclude_unset=True)
+    previous_person = user.person
+    next_person = None
     if "person_id" in update and update["person_id"] is not None:
-        _get_person_or_404(db, auth.astrologer.id, update["person_id"])
+        next_person = _get_person_or_404(db, auth.astrologer.id, update["person_id"])
     for field, value in update.items():
         setattr(user, field, value)
+    if next_person is not None and next_person.primary_chart_id is None:
+        next_person.primary_chart_id = user.user_id
+    if previous_person is not None and previous_person.person_id != user.person_id:
+        if previous_person.primary_chart_id == user.user_id:
+            previous_person.primary_chart_id = None
+            db.flush()
+            ensure_primary_chart(db, previous_person)
     db.flush()
     create_audit_event(
         db,
@@ -460,9 +472,14 @@ def delete_chart(
     auth: AuthContext = Depends(require_auth),
 ):
     ensure_client_access(db, request, auth, chart_id, action="chart.delete")
-    _get_chart_or_404(db, auth.astrologer.id, chart_id)  # ownership verified via astrologer_id
+    chart = _get_chart_or_404(db, auth.astrologer.id, chart_id)
+    person = chart.person
+    was_primary = person is not None and person.primary_chart_id == chart.user_id
     repo = UserRepository(db)
     repo.delete_user(chart_id)
+    if person is not None and was_primary:
+        person.primary_chart_id = None
+        ensure_primary_chart(db, person)
     create_audit_event(
         db,
         request,

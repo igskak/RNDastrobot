@@ -18,7 +18,8 @@ from sqlalchemy.orm import Session
 
 from app.auth.dependencies import AuthContext, require_auth
 from app.database.connection import get_db
-from app.database.models import ClientMemoryEntry, User
+from app.database.models import ClientMemoryEntry, Person, User
+from app.services.person_profile_service import list_person_memory
 from app.services.consultation_summary import MEMORY_CATEGORIES, MENTIONED_BY
 
 router = APIRouter()
@@ -32,6 +33,8 @@ def _serialize(e: ClientMemoryEntry) -> dict:
     return {
         "id": str(e.id),
         "call_session_id": str(e.call_session_id) if e.call_session_id else None,
+        "person_id": str(e.person_id) if e.person_id else None,
+        "chart_id": str(e.user_id) if e.user_id else None,
         "category": e.category,
         "text": e.text,
         "mentioned_by": e.mentioned_by,
@@ -60,6 +63,54 @@ def _validate_enums(category: Optional[str], mentioned_by: Optional[str]) -> Non
         raise HTTPException(status_code=422, detail=f"invalid mentioned_by: {mentioned_by}")
 
 
+def _person_or_404(db: Session, auth: AuthContext, person_id: UUID) -> Person:
+    person = db.query(Person).filter(
+        Person.person_id == person_id,
+        Person.astrologer_id == auth.astrologer.id,
+    ).first()
+    if person is None:
+        raise HTTPException(status_code=404, detail="Client profile not found")
+    return person
+
+
+@router.get("/persons/{person_id}/memory", summary="List a person's memory entries")
+def list_person_memory_entries(
+    person_id: UUID,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+):
+    person = _person_or_404(db, auth, person_id)
+    return {"entries": [_serialize(row) for row in list_person_memory(db, person)]}
+
+
+@router.post("/persons/{person_id}/memory", status_code=status.HTTP_201_CREATED, summary="Add a person's memory entry")
+def create_person_memory(
+    person_id: UUID,
+    payload: MemoryCreate,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(require_auth),
+):
+    person = _person_or_404(db, auth, person_id)
+    if not payload.text.strip():
+        raise HTTPException(status_code=422, detail="text is required")
+    _validate_enums(payload.category, payload.mentioned_by)
+    entry = ClientMemoryEntry(
+        call_session_id=None,
+        astrologer_id=auth.astrologer.id,
+        person_id=person.person_id,
+        user_id=person.primary_chart_id,
+        category=payload.category,
+        text=payload.text.strip(),
+        mentioned_by=payload.mentioned_by,
+        source="astrologer",
+        edited_at=_utcnow(),
+    )
+    db.add(entry)
+    db.commit()
+    db.refresh(entry)
+    return _serialize(entry)
+
+
 @router.get("/clients/{user_id}/memory", summary="List a client's memory entries (history)")
 def list_memory(
     user_id: UUID,
@@ -72,6 +123,10 @@ def list_memory(
     ).first()
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
+    if client.person_id is None:
+        raise HTTPException(status_code=404, detail="This chart has no client profile")
+    person = _person_or_404(db, auth, client.person_id)
+    return {"entries": [_serialize(row) for row in list_person_memory(db, person)]}
 
     rows = (
         db.query(ClientMemoryEntry)
@@ -98,6 +153,8 @@ def create_memory(
     ).first()
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
+    if client.person_id is None:
+        raise HTTPException(status_code=422, detail="A client profile is required")
     if not payload.text.strip():
         raise HTTPException(status_code=422, detail="text is required")
     _validate_enums(payload.category, payload.mentioned_by)
@@ -106,6 +163,7 @@ def create_memory(
         call_session_id=None,
         astrologer_id=auth.astrologer.id,
         user_id=user_id,
+        person_id=client.person_id,
         category=payload.category,
         text=payload.text.strip(),
         mentioned_by=payload.mentioned_by,

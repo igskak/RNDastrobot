@@ -2,29 +2,38 @@
 API эндпоинты для управления консультациями (CRM)
 """
 from fastapi import APIRouter, HTTPException, status, Depends, Query, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy.orm import Session
 from uuid import UUID
 from typing import Optional, List
 from datetime import datetime, timedelta
 
 from app.database.connection import get_db
-from app.database.models import User, Consultation
+from app.database.models import Person, User, Consultation
 from app.auth.dependencies import AuthContext, create_audit_event, require_auth
 from app.services.entitlements_service import FEATURE_CONSULTATIONS, assert_feature_enabled
+from app.services.person_profile_service import ensure_chart_person
 from loguru import logger
 
 router = APIRouter(prefix="/consultations")
 
 
 class ConsultationCreate(BaseModel):
-    user_id: UUID
+    person_id: Optional[UUID] = None
+    chart_id: Optional[UUID] = None
+    user_id: Optional[UUID] = None  # deprecated chart id
     consultation_type: str = Field(default="natal")
     scheduled_at: Optional[datetime] = None
     status: str = Field(default="planned")
     is_paid: bool = False
     duration_minutes: Optional[int] = None
     notes: Optional[str] = None
+
+    @model_validator(mode="after")
+    def require_person_or_legacy_chart(self):
+        if self.person_id is None and self.user_id is None:
+            raise ValueError("person_id is required")
+        return self
 
 
 class ConsultationUpdate(BaseModel):
@@ -45,6 +54,46 @@ def _ensure_consultation_access(db: Session, auth: AuthContext, consultation_id:
     return c
 
 
+def _resolve_person_and_chart(
+    db: Session,
+    auth: AuthContext,
+    *,
+    person_id: Optional[UUID],
+    chart_id: Optional[UUID],
+    legacy_user_id: Optional[UUID],
+) -> tuple[Person, Optional[User]]:
+    requested_chart_id = chart_id or legacy_user_id
+    chart = None
+    if requested_chart_id is not None:
+        chart = db.query(User).filter(
+            User.user_id == requested_chart_id,
+            User.astrologer_id == auth.astrologer.id,
+        ).first()
+        if chart is None:
+            raise HTTPException(status_code=404, detail="Chart not found")
+        if person_id is None and legacy_user_id is not None and chart.person_id is None:
+            logger.warning("Deprecated chart-based consultation write auto-created Person: chart_id={}", chart.user_id)
+            person_id = ensure_chart_person(db, chart).person_id
+        person_id = person_id or chart.person_id
+    if person_id is None:
+        raise HTTPException(status_code=422, detail="A client profile is required")
+    person = db.query(Person).filter(
+        Person.person_id == person_id,
+        Person.astrologer_id == auth.astrologer.id,
+    ).first()
+    if person is None:
+        raise HTTPException(status_code=404, detail="Client profile not found")
+    if chart is not None and chart.person_id != person.person_id:
+        raise HTTPException(status_code=422, detail="Chart is not owned by this client profile")
+    if chart is None and person.primary_chart_id is not None:
+        chart = db.query(User).filter(
+            User.user_id == person.primary_chart_id,
+            User.person_id == person.person_id,
+            User.astrologer_id == auth.astrologer.id,
+        ).first()
+    return person, chart
+
+
 @router.get(
     "",
     summary="Список консультаций",
@@ -52,6 +101,7 @@ def _ensure_consultation_access(db: Session, auth: AuthContext, consultation_id:
 )
 def list_consultations(
     request: Request,
+    person_id: Optional[UUID] = Query(None, description="Canonical client profile filter"),
     user_id: Optional[UUID] = Query(None, description="Фильтр по клиенту"),
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
@@ -62,14 +112,18 @@ def list_consultations(
             db.query(Consultation)
             .filter(Consultation.astrologer_id == auth.astrologer.id)
         )
-        if user_id:
+        if person_id:
+            q = q.filter(Consultation.person_id == person_id)
+        elif user_id:
             q = q.filter(Consultation.user_id == user_id)
         consultations = q.order_by(Consultation.scheduled_at.desc().nullslast()).all()
 
         return [
             {
                 "id": str(c.id),
-                "user_id": str(c.user_id),
+                "person_id": str(c.person_id) if c.person_id else None,
+                "chart_id": str(c.chart_id or c.user_id) if (c.chart_id or c.user_id) else None,
+                "user_id": str(c.user_id) if c.user_id else None,
                 "consultation_type": c.consultation_type,
                 "scheduled_at": c.scheduled_at.isoformat() if c.scheduled_at else None,
                 "completed_at": c.completed_at.isoformat() if c.completed_at else None,
@@ -106,8 +160,9 @@ def calendar_consultations(
     }
     try:
         q = (
-            db.query(Consultation, User)
-            .join(User, Consultation.user_id == User.user_id)
+            db.query(Consultation, Person, User)
+            .outerjoin(Person, Consultation.person_id == Person.person_id)
+            .outerjoin(User, Consultation.user_id == User.user_id)
             .filter(Consultation.astrologer_id == auth.astrologer.id)
             .filter(Consultation.scheduled_at.isnot(None))
         )
@@ -117,8 +172,13 @@ def calendar_consultations(
             q = q.filter(Consultation.scheduled_at <= end)
 
         events = []
-        for c, u in q.all():
-            client_name = f"{u.first_name or ''} {u.last_name or ''}".strip() or "Client"
+        for c, person, u in q.all():
+            client_name = (
+                (person.display_name if person else None)
+                or (f"{person.first_name or ''} {person.last_name or ''}".strip() if person else "")
+                or (f"{u.first_name or ''} {u.last_name or ''}".strip() if u else "")
+                or "Client"
+            )
             type_label = _TYPE_LABELS.get(c.consultation_type, c.consultation_type)
             duration = c.duration_minutes or 60
             end_dt = c.scheduled_at + timedelta(minutes=duration)
@@ -129,7 +189,9 @@ def calendar_consultations(
                 "start": c.scheduled_at.isoformat(),
                 "end": end_dt.isoformat(),
                 "extendedProps": {
-                    "userId": str(c.user_id),
+                    "personId": str(c.person_id) if c.person_id else None,
+                    "chartId": str(c.chart_id or c.user_id) if (c.chart_id or c.user_id) else None,
+                    "userId": str(c.user_id) if c.user_id else None,
                     "clientName": client_name,
                     "consultationType": c.consultation_type,
                     "status": c.status,
@@ -158,16 +220,18 @@ def create_consultation(
 ):
     assert_feature_enabled(auth.astrologer, FEATURE_CONSULTATIONS, plan_code=auth.effective_plan_code)
     try:
-        # Verify the client belongs to this astrologer
-        user = db.query(User).filter(
-            User.user_id == payload.user_id,
-            User.astrologer_id == auth.astrologer.id,
-        ).first()
-        if not user:
-            raise HTTPException(status_code=404, detail="Client not found")
+        person, chart = _resolve_person_and_chart(
+            db,
+            auth,
+            person_id=payload.person_id,
+            chart_id=payload.chart_id,
+            legacy_user_id=payload.user_id,
+        )
 
         consultation = Consultation(
-            user_id=payload.user_id,
+            person_id=person.person_id,
+            chart_id=chart.user_id if chart else None,
+            user_id=chart.user_id if chart else None,
             astrologer_id=auth.astrologer.id,
             consultation_type=payload.consultation_type,
             scheduled_at=payload.scheduled_at,
@@ -191,7 +255,9 @@ def create_consultation(
 
         return {
             "id": str(consultation.id),
-            "user_id": str(consultation.user_id),
+            "person_id": str(consultation.person_id),
+            "chart_id": str(consultation.chart_id) if consultation.chart_id else None,
+            "user_id": str(consultation.user_id) if consultation.user_id else None,
             "consultation_type": consultation.consultation_type,
             "scheduled_at": consultation.scheduled_at.isoformat() if consultation.scheduled_at else None,
             "completed_at": consultation.completed_at.isoformat() if consultation.completed_at else None,
@@ -243,7 +309,9 @@ def update_consultation(
 
         return {
             "id": str(c.id),
-            "user_id": str(c.user_id),
+            "person_id": str(c.person_id) if c.person_id else None,
+            "chart_id": str(c.chart_id or c.user_id) if (c.chart_id or c.user_id) else None,
+            "user_id": str(c.user_id) if c.user_id else None,
             "consultation_type": c.consultation_type,
             "scheduled_at": c.scheduled_at.isoformat() if c.scheduled_at else None,
             "completed_at": c.completed_at.isoformat() if c.completed_at else None,

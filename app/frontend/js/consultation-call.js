@@ -14,7 +14,8 @@
     // -------------------------------------------------------------------------
     const state = {
         sessionId: null,
-        userId: null,
+        personId: null,
+        chartId: null,
         joinUrl: null,
         room: null,
         micEnabled: true,
@@ -92,7 +93,8 @@
 
         const params = new URLSearchParams(window.location.search);
         state.sessionId = params.get('session_id');
-        state.userId    = params.get('user_id');
+        state.personId  = params.get('person_id');
+        state.chartId   = params.get('chart_id') || params.get('user_id');
         state.joinUrl   = params.get('join_url');
 
         if (!state.sessionId) {
@@ -158,15 +160,15 @@
             const res = await apiFetch(`${API_BASE}/call-sessions/${state.sessionId}`);
             if (!res.ok) return;
             const cs = await res.json();
+            state.personId = cs.person_id || state.personId;
+            state.chartId = cs.chart_id || cs.user_id || state.chartId;
 
             // Set client name in header
             if (cs.client_name) {
                 refs.callClientName.textContent = cs.client_name;
             }
-            if (refs.callEndedClientLink && state.userId) {
-                // chart.html retired — send to the client profile (forecast-new needs the
-                // chart in sessionStorage, which a bare ?user_id= link can't provide).
-                refs.callEndedClientLink.href = `/client/${encodeURIComponent(state.userId)}`;
+            if (refs.callEndedClientLink && state.personId) {
+                refs.callEndedClientLink.href = `/client/${encodeURIComponent(state.personId)}`;
             }
 
             // Reflect existing consent states

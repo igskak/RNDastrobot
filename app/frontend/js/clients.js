@@ -41,6 +41,7 @@ const editClientState = {
     isCreateMode: false,
     submitting: false,
     userId: null,
+    personId: null,
     loadedChartData: null,
     originalCoords: null,
     selectedCoords: null,
@@ -452,11 +453,7 @@ function bindEvents() {
                 return;
             }
             if (state.libraryView === 'people') {
-                if (row.dataset.primaryChartId) {
-                    openProfile(row.dataset.primaryChartId);
-                } else {
-                    showToast(t('page.clients.people.noPrimaryChart'), 'warning');
-                }
+                openProfile(row.dataset.userId);
                 return;
             }
             await toggleDetailPanel(row.dataset.userId);
@@ -521,8 +518,20 @@ async function bootstrapPage() {
     applyHeroPlacement();
 
     await loadClients();
+    await openRequestedChartRepair();
     await initClientsOnboarding();
     scheduleSecondaryPanels();
+}
+
+async function openRequestedChartRepair() {
+    const params = new URLSearchParams(window.location.search);
+    const chartId = params.get('linkChart') || params.get('editChart');
+    if (!chartId) return;
+    params.delete('linkChart');
+    params.delete('editChart');
+    const nextUrl = `${window.location.pathname}${params.size ? `?${params}` : ''}`;
+    window.history.replaceState({}, '', nextUrl);
+    await openEditChartDialog(chartId);
 }
 
 async function initClientsOnboarding() {
@@ -936,7 +945,7 @@ function buildUserRow(user) {
 
     const isChartsView = state.libraryView === 'charts';
     const userId = String(isChartsView ? (user.chart_id || user.user_id || '') : (user.person_id || user.user_id || ''));
-    const primaryChartId = String(user.primary_chart_id || user.user_id || '');
+    const primaryChartId = String(user.primary_chart_id || (isChartsView ? userId : ''));
     const forecastTargetId = isChartsView ? userId : primaryChartId;
     const name = isChartsView
         ? (user.display_title || user.title || [user.first_name, user.last_name].filter(Boolean).join(' ') || t('common.notAvailable'))
@@ -1034,8 +1043,8 @@ function buildUserRow(user) {
                         ? `<button class="action-item" type="button" data-action="rename" data-user-id="${escapeHtml(userId)}">${renameLabel}</button>
                            <button class="action-item" type="button" data-action="edit" data-user-id="${escapeHtml(userId)}">${editLabel}</button>`
                         : primaryChartId
-                            ? `<a class="action-item" href="/client/${escapeHtml(primaryChartId)}">${escapeHtml(t('page.clientProfile.viewProfile'))}</a>`
-                            : `<button class="action-item" type="button" data-action="open-profile-no-chart" disabled>${escapeHtml(t('page.clientProfile.viewProfile'))}</button>`
+                            ? `<a class="action-item" href="/client/${escapeHtml(userId)}">${escapeHtml(t('page.clientProfile.viewProfile'))}</a>`
+                            : `<a class="action-item" href="/client/${escapeHtml(userId)}">${escapeHtml(t('page.clientProfile.viewProfile'))}</a>`
                     }
                     <button class="action-item danger" type="button" data-action="delete" data-user-id="${escapeHtml(userId)}">${deleteLabel}</button>
                 </div>
@@ -1359,6 +1368,8 @@ async function openChart(userId) {
         AstroAPI.saveNavigationState?.({
             sourceView: 'clients',
             sourceUrl: '/',
+            clientPersonId: chartData.person_id || null,
+            clientChartId: String(userId),
             clientUserId: String(userId),
             partnerUserId: null,
         });
@@ -1381,6 +1392,8 @@ async function openForecastForUser(userId, { tab = 'biwheel', date, solarYear } 
         AstroAPI.saveNavigationState?.({
             sourceView: 'clients',
             sourceUrl: '/',
+            clientPersonId: chartData.person_id || null,
+            clientChartId: String(userId),
             clientUserId: String(userId),
             partnerUserId: null,
         });
@@ -1429,59 +1442,28 @@ function initEditClientDialog() {
     });
 }
 
-async function openEditClientDialog(userId) {
-    if (!userId) return;
+async function openEditClientDialog(personId) {
+    if (!personId) return;
 
     try {
-        const response = await apiFetch(`${API_BASE}/natal/${userId}`, { method: 'GET' });
+        const response = await apiFetch(`${API_BASE}/persons/${personId}`, { method: 'GET' });
         if (!response.ok) throw new Error(t('page.clients.edit.errors.loadFailed'));
-
-        const chartData = await response.json();
-        const formData = AstroAPI.chartToFormData(chartData);
-        const place = String(formData.place || '').trim();
-        const latitude = formData.latitude == null ? Number.NaN : Number(formData.latitude);
-        const longitude = formData.longitude == null ? Number.NaN : Number(formData.longitude);
-
-        editClientState.userId = String(chartData.user_id || userId);
-        editClientState.loadedChartData = chartData;
-        editClientState.originalCoords = {
-            lat: latitude,
-            lon: longitude,
-        };
-        editClientState.selectedCoords = {
-            lat: latitude,
-            lon: longitude,
-        };
-        editClientState.originalPlace = normalizeLooseText(place);
-        editClientState.selectedPlaceLabel = normalizeLooseText(place);
-
-        refs.editFirstName.value = formData.firstName || '';
-        refs.editLastName.value = formData.lastName || '';
-        refs.editDay.value = formData.day || '';
-        refs.editMonth.value = formData.month || '';
-        refs.editYear.value = formData.year || '';
-        refs.editHour.value = formData.hour || '';
-        refs.editMinute.value = formData.minute || '';
-        refs.editPlaceInput.value = place;
-
-        // CRM contact fields — pull from state.users (not from chart API)
-        const userRecord = state.users.find((u) => String(u.user_id) === String(userId));
-        if (refs.editEmail) refs.editEmail.value = userRecord?.email || '';
-        if (refs.editPhone) refs.editPhone.value = userRecord?.phone || '';
-        if (refs.editMessenger) refs.editMessenger.value = userRecord?.messenger || '';
-        if (refs.editTags) refs.editTags.value = Array.isArray(userRecord?.tags) ? userRecord.tags.join(', ') : '';
-        if (refs.editNotes) refs.editNotes.value = userRecord?.notes || '';
+        const person = await response.json();
+        editClientState.userId = null;
+        editClientState.personId = String(person.person_id || personId);
+        editClientState.loadedChartData = null;
+        refs.editFirstName.value = person.first_name || '';
+        refs.editLastName.value = person.last_name || '';
+        if (refs.editEmail) refs.editEmail.value = person.email || '';
+        if (refs.editPhone) refs.editPhone.value = person.phone || '';
+        if (refs.editMessenger) refs.editMessenger.value = person.messenger || '';
+        if (refs.editTags) refs.editTags.value = Array.isArray(person.tags) ? person.tags.join(', ') : '';
+        if (refs.editNotes) refs.editNotes.value = person.notes || '';
         renderEditTagSuggestions();
-
-        window.Timezones?.populate?.(refs.editTimezone);
-        refs.editTimezone.value = formData.timezone || '';
-        refs.editTimezoneHint.textContent = '';
-        refs.editTimezoneHint.style.color = '';
         refs.editError.classList.add('hidden');
         refs.editError.textContent = '';
 
-        setEditDialogMode(false);
-        renderEditPlaceHint('current');
+        setEditDialogMode(false, true);
         setEditClientSubmitting(false);
 
         refs.editBackdrop.classList.remove('hidden');
@@ -1493,7 +1475,7 @@ async function openEditClientDialog(userId) {
     }
 }
 
-function setEditDialogMode(isChartMode) {
+function setEditDialogMode(isChartMode, isPersonOnly = false) {
     editClientState.isChartMode = isChartMode;
     refs.editChartTitleGroup?.classList.toggle('hidden', !isChartMode);
     refs.editChartPersonGroup?.classList.toggle('hidden', !isChartMode);
@@ -1505,6 +1487,13 @@ function setEditDialogMode(isChartMode) {
     refs.editFullNameGroup?.classList.toggle('hidden', isChartMode);
     if (refs.editFirstName) refs.editFirstName.required = !isChartMode;
     if (refs.editLastName) refs.editLastName.required = !isChartMode;
+    if (isPersonOnly && refs.editLastName) refs.editLastName.required = false;
+    const chartGroups = [refs.editDay, refs.editHour, refs.editPlaceInput, refs.editTimezone]
+        .map((input) => input?.closest('.form-group'))
+        .filter(Boolean);
+    chartGroups.forEach((group) => group.classList.toggle('hidden', isPersonOnly));
+    [refs.editDay, refs.editMonth, refs.editYear, refs.editHour, refs.editMinute, refs.editPlaceInput, refs.editTimezone]
+        .forEach((input) => { if (input) input.required = !isPersonOnly; });
 
     const kickerKey = isChartMode ? 'page.clients.edit.chartMode.kicker' : 'page.clients.edit.kicker';
     const titleKey = isChartMode ? 'page.clients.edit.chartMode.title' : 'page.clients.edit.title';
@@ -1651,6 +1640,7 @@ function openNewClientDialog() {
 
     editClientState.isCreateMode = true;
     editClientState.userId = null;
+    editClientState.personId = null;
     editClientState.loadedChartData = null;
     editClientState.originalCoords = null;
     editClientState.selectedCoords = null;
@@ -1705,6 +1695,7 @@ async function openEditChartDialog(userId) {
         const longitude = formData.longitude == null ? Number.NaN : Number(formData.longitude);
 
         editClientState.userId = String(chartData.user_id || userId);
+        editClientState.personId = null;
         editClientState.loadedChartData = chartData;
         editClientState.originalCoords = { lat: latitude, lon: longitude };
         editClientState.selectedCoords = { lat: latitude, lon: longitude };
@@ -1757,6 +1748,7 @@ function closeEditClientDialog() {
     refs.editTimezoneHint.textContent = '';
     refs.editTimezoneHint.style.color = '';
     editClientState.userId = null;
+    editClientState.personId = null;
     editClientState.loadedChartData = null;
     editClientState.isCreateMode = false;
     setEditDialogMode(false);
@@ -1896,6 +1888,41 @@ async function handleEditClientSubmit(event) {
 
     if (editClientState.isCreateMode) {
         await handleCreateClientSubmit();
+        return;
+    }
+
+    if (editClientState.personId && !editClientState.isChartMode) {
+        const personPayload = {
+            first_name: refs.editFirstName.value.trim(),
+            last_name: refs.editLastName.value.trim(),
+            display_name: [refs.editFirstName.value.trim(), refs.editLastName.value.trim()].filter(Boolean).join(' '),
+            email: refs.editEmail?.value?.trim() || '',
+            phone: refs.editPhone?.value?.trim() || '',
+            messenger: refs.editMessenger?.value?.trim() || '',
+            tags: parseTagInput(refs.editTags?.value || ''),
+            notes: refs.editNotes?.value?.trim() || '',
+        };
+        setEditClientSubmitting(true);
+        try {
+            const response = await apiFetch(`${API_BASE}/persons/${encodeURIComponent(editClientState.personId)}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(personPayload),
+            });
+            if (!response.ok) throw new Error(t('page.clients.edit.errors.saveFailed'));
+            const updated = await response.json();
+            state.people = state.people.map((person) => String(person.person_id) === String(updated.person_id) ? updated : person);
+            rebuildClientListIndexes();
+            state.users = getActiveLibraryItems();
+            renderUsers();
+            closeEditClientDialog();
+            showToast(t('page.clients.messages.updated'), 'success');
+        } catch (error) {
+            refs.editError.textContent = error.message || t('page.clients.edit.errors.saveFailed');
+            refs.editError.classList.remove('hidden');
+        } finally {
+            setEditClientSubmitting(false);
+        }
         return;
     }
 
@@ -2339,7 +2366,7 @@ async function toggleDetailPanel(userId) {
         if (wasId === userId) return; // toggle off
     }
 
-    const user = state.users.find((u) => String(u.user_id) === userId);
+    const user = state.users.find((u) => String(u.person_id || u.user_id) === userId);
     if (!user) return;
 
     state.expandedUserId = userId;
@@ -2350,12 +2377,12 @@ async function toggleDetailPanel(userId) {
 
     const fetches = [];
     if (planCan('consultations') && !consultations) fetches.push(
-        apiFetch(`${API_BASE}/consultations?user_id=${userId}`)
+        apiFetch(`${API_BASE}/consultations?person_id=${userId}`)
             .then(r => r.ok ? r.json() : []).catch(() => [])
             .then(d => { consultations = d; state.consultationsCache[userId] = d; })
     );
     if (planCan('calls') && !callSessions) fetches.push(
-        apiFetch(`${API_BASE}/call-sessions?user_id=${userId}&include_non_terminal=true`)
+        apiFetch(`${API_BASE}/call-sessions?person_id=${userId}&include_non_terminal=true`)
             .then(r => r.ok ? r.json() : []).catch(() => [])
             .then(d => { callSessions = d; state.callSessionsCache[userId] = d; })
     );
@@ -2392,7 +2419,8 @@ async function refreshClientDetailPanel(userId) {
 }
 
 function buildDetailPanelHTML(user, consultations, callSessions = []) {
-    const userId = escapeHtml(String(user.user_id));
+    const personId = escapeHtml(String(user.person_id || user.user_id));
+    const chartId = escapeHtml(String(user.primary_chart_id || ''));
     const consultationsEnabled = planCan('consultations');
     const callsEnabled = planCan('calls');
     const clientsEnabled = planCan('clients');
@@ -2446,12 +2474,12 @@ function buildDetailPanelHTML(user, consultations, callSessions = []) {
             </div>
             ${lastSessionHTML || nextSessionHTML ? `<div class="detail-session-summary">${lastSessionHTML}${nextSessionHTML}</div>` : ''}
             <div class="detail-actions">
-                <a class="btn-new btn-sm" href="/client/${userId}">${escapeHtml(t('page.clientProfile.viewProfile'))}</a>
-                <button class="btn-new btn-sm btn-secondary" type="button" data-action="open-chart" data-user-id="${userId}">${escapeHtml(t('page.clients.detail.openChart'))}</button>
-                <button class="btn-new btn-sm btn-secondary" type="button" data-action="open-forecast" data-user-id="${userId}">${escapeHtml(t('page.chart.nav.forecast'))}</button>
-                ${consultationsEnabled ? `<button class="btn-new btn-sm btn-secondary" type="button" data-action="log-session" data-user-id="${userId}">${escapeHtml(t('page.clients.detail.logSession'))}</button>` : ''}
-                <button class="btn-new btn-sm btn-secondary" type="button" data-action="edit" data-user-id="${userId}">${escapeHtml(t('page.clients.actions.edit'))}</button>
-                ${callsEnabled ? `<button class="btn-new btn-sm btn-call" type="button" data-action="start-call" data-user-id="${userId}">
+                <a class="btn-new btn-sm" href="/client/${personId}">${escapeHtml(t('page.clientProfile.viewProfile'))}</a>
+                <button class="btn-new btn-sm btn-secondary" type="button" data-action="open-chart" data-user-id="${chartId}" ${chartId ? '' : 'disabled'}>${escapeHtml(t('page.clients.detail.openChart'))}</button>
+                <button class="btn-new btn-sm btn-secondary" type="button" data-action="open-forecast" data-user-id="${chartId}" ${chartId ? '' : 'disabled'}>${escapeHtml(t('page.chart.nav.forecast'))}</button>
+                ${consultationsEnabled ? `<button class="btn-new btn-sm btn-secondary" type="button" data-action="log-session" data-user-id="${personId}">${escapeHtml(t('page.clients.detail.logSession'))}</button>` : ''}
+                <button class="btn-new btn-sm btn-secondary" type="button" data-action="edit" data-user-id="${personId}">${escapeHtml(t('page.clients.actions.edit'))}</button>
+                ${callsEnabled ? `<button class="btn-new btn-sm btn-call" type="button" data-action="start-call" data-user-id="${personId}">
                     <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><rect x="1" y="3" width="8" height="7" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M9 5.5l3-2v6l-3-2V5.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
                     ${escapeHtml(t('page.clientProfile.startCall'))}
                 </button>` : ''}
@@ -2705,12 +2733,18 @@ async function retryProcessing(sessionId, btn) {
 
 /* ─── Start Call ──────────────────────────────────────────────────────── */
 
-async function startCallSession(userId) {
+function findPersonById(personId) {
+    return (state.people || []).find((person) => String(person.person_id || person.user_id) === String(personId));
+}
+
+async function startCallSession(personId) {
     if (!planCan('calls')) {
         openPlanUpgrade('calls');
         return;
     }
-    const btn = refs.tbody.querySelector(`button[data-action="start-call"][data-user-id="${userId}"]`);
+    const person = findPersonById(personId);
+    const chartId = person?.primary_chart_id || null;
+    const btn = refs.tbody.querySelector(`button[data-action="start-call"][data-user-id="${personId}"]`);
     if (btn) {
         btn.disabled = true;
         btn.textContent = 'Starting…';
@@ -2719,7 +2753,7 @@ async function startCallSession(userId) {
         const res = await apiFetch(`${API_BASE}/call-sessions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: userId }),
+            body: JSON.stringify({ person_id: personId, chart_id: chartId }),
         });
         if (!res.ok) {
             const data = await res.json().catch(() => ({}));
@@ -2727,7 +2761,7 @@ async function startCallSession(userId) {
         }
         const session = await res.json();
         const joinParam = session.join_url ? `&join_url=${encodeURIComponent(session.join_url)}` : '';
-        window.location.href = `/consultation-call.html?session_id=${session.id}&user_id=${userId}${joinParam}`;
+        window.location.href = `/consultation-call.html?session_id=${session.id}&person_id=${personId}${chartId ? `&chart_id=${chartId}` : ''}${joinParam}`;
     } catch (err) {
         showToast(err.message || t('page.clients.detail.callStartFailed'), 'error');
         if (btn) {
@@ -2739,7 +2773,7 @@ async function startCallSession(userId) {
 
 /* ─── Log Session Dialog ──────────────────────────────────────────────── */
 
-const logSessionState = { userId: null };
+const logSessionState = { personId: null, chartId: null };
 
 function initLogSessionDialog() {
     if (!refs.logSessionDialog) return;
@@ -2756,8 +2790,9 @@ function initLogSessionDialog() {
     });
 }
 
-function openLogSessionDialog(userId) {
-    logSessionState.userId = userId;
+function openLogSessionDialog(personId) {
+    logSessionState.personId = personId;
+    logSessionState.chartId = findPersonById(personId)?.primary_chart_id || null;
 
     // Reset form
     if (refs.logSessionForm) refs.logSessionForm.reset();
@@ -2781,7 +2816,8 @@ function openLogSessionDialog(userId) {
 function closeLogSessionDialog() {
     refs.logSessionBackdrop?.classList.add('hidden');
     refs.logSessionDialog?.classList.add('hidden');
-    logSessionState.userId = null;
+    logSessionState.personId = null;
+    logSessionState.chartId = null;
     document.body.style.overflow = '';
 }
 
@@ -2794,10 +2830,11 @@ function setLogSessionSubmitting(isSubmitting) {
 
 async function handleLogSessionSubmit(event) {
     event.preventDefault();
-    if (!logSessionState.userId) return;
+    if (!logSessionState.personId) return;
 
     const payload = {
-        user_id: logSessionState.userId,
+        person_id: logSessionState.personId,
+        chart_id: logSessionState.chartId,
         consultation_type: refs.logSessionType?.value || 'natal',
         status: refs.logSessionStatus?.value || 'completed',
         is_paid: refs.logSessionPaid?.checked || false,
@@ -2826,8 +2863,8 @@ async function handleLogSessionSubmit(event) {
         if (!res.ok) throw new Error(t('page.clients.consultation.errors.saveFailed'));
 
         // Invalidate cache and refresh detail panel
-        delete state.consultationsCache[logSessionState.userId];
-        const userId = logSessionState.userId;
+        delete state.consultationsCache[logSessionState.personId];
+        const userId = logSessionState.personId;
         closeLogSessionDialog();
         showToast(t('page.clients.consultation.messages.created'), 'success');
 

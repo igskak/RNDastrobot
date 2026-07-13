@@ -1,7 +1,7 @@
 """
 API эндпоинты для работы с натальными картами
 """
-from fastapi import APIRouter, HTTPException, status, Depends, Query, Request
+from fastapi import APIRouter, HTTPException, status, Depends, Query, Request, Response
 from sqlalchemy.orm import Session
 from uuid import UUID
 from typing import Optional
@@ -39,12 +39,13 @@ from app.services.natal_chart_service import NatalChartService
 from app.services.preferences_service import PreferencesService
 from app.database.connection import get_db
 from app.database.repositories.user_repository import UserRepository
-from app.database.models import User, Consultation, CallSession, SolarReturn, Progression, Direction
+from app.database.models import User, Person, Consultation, CallSession, SolarReturn, Progression, Direction
 from app.api.routes.call_session_utils import TERMINAL_CALL_SESSION_STATUSES
 from app.auth.dependencies import AuthContext, create_audit_event, ensure_client_access, require_auth
 from app.utils.ephemeris import get_ephemeris_path
 from app.services.geocoding_service import GeocodingTimeoutError, GeocodingServiceError
 from app.services.entitlements_service import assert_account_writable, assert_can_create_saved_chart, get_entitlements
+from app.services.person_profile_service import build_person_profile
 from sqlalchemy import func as sa_func, case, and_
 import os
 from loguru import logger
@@ -86,6 +87,7 @@ def build_natal_chart_response(chart_data: dict) -> NatalChartResponse:
 
     return NatalChartResponse(
         user_id=UUID(chart_data['user_id']) if chart_data.get('user_id') else None,
+        person_id=UUID(chart_data['person_id']) if chart_data.get('person_id') else None,
         title=chart_data.get('title'),
         display_title=chart_data.get('display_title'),
         birth_data=BirthDataOutput(**chart_data['birth_data']),
@@ -691,6 +693,7 @@ def reset_user_view_to_defaults(
 def get_user_profile(
     user_id: UUID,
     request: Request,
+    response: Response,
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(require_auth),
 ):
@@ -708,6 +711,66 @@ def get_user_profile(
         ).first()
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client not found")
+
+        if user.person_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="This chart is not linked to a client profile",
+            )
+        person = db.query(Person).filter(
+            Person.person_id == user.person_id,
+            Person.astrologer_id == auth.astrologer.id,
+        ).first()
+        if person is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client profile not found")
+
+        logger.warning(
+            "Deprecated chart-based profile endpoint used: chart_id={} person_id={}",
+            user.user_id,
+            person.person_id,
+        )
+        response.headers["Deprecation"] = "true"
+        response.headers["Sunset"] = "one compatibility release"
+        response.headers["Link"] = f'</api/v1/persons/{person.person_id}/profile>; rel="successor-version"'
+        canonical = build_person_profile(
+            db,
+            person,
+            consultations_enabled=consultations_enabled,
+            calls_enabled=calls_enabled,
+            meeting_stats_enabled=meeting_stats_enabled,
+        )
+        primary = canonical.get("primary_chart") or {}
+        person_data = canonical["person"]
+        canonical["user"] = {
+            "user_id": primary.get("chart_id"),
+            "person_id": person_data["person_id"],
+            "first_name": person_data.get("first_name") or primary.get("first_name"),
+            "last_name": person_data.get("last_name") or primary.get("last_name"),
+            "birth_date": primary.get("birth_date"),
+            "birth_time": primary.get("birth_time"),
+            "birth_place": primary.get("birth_place"),
+            "timezone": primary.get("timezone"),
+            "email": person_data.get("email"),
+            "phone": person_data.get("phone"),
+            "messenger": person_data.get("messenger"),
+            "tags": person_data.get("tags") or [],
+            "notes": person_data.get("notes"),
+            "created_at": person_data.get("created_at"),
+        }
+        canonical["solar_returns"] = [
+            {
+                "solar_id": item["id"],
+                "name": item.get("name"),
+                "year": item.get("year"),
+                "solar_datetime": item.get("datetime"),
+                "location_name": item.get("location_name"),
+                "created_at": item.get("created_at"),
+                "source_chart_id": item.get("source_chart_id"),
+            }
+            for item in canonical["saved_charts"]
+            if item.get("chart_type") == "solar_return"
+        ]
+        return canonical
 
         consultations = []
         if consultations_enabled:

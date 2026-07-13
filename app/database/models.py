@@ -64,7 +64,10 @@ class User(Base):
     progressions = relationship("Progression", back_populates="user", cascade="all, delete-orphan")
     directions = relationship("Direction", back_populates="user", cascade="all, delete-orphan")
     transit_events_cache = relationship("TransitEventsCache", back_populates="user", cascade="all, delete-orphan")
-    consultations = relationship("Consultation", back_populates="user", cascade="all, delete-orphan")
+    consultations = relationship(
+        "Consultation", back_populates="user", passive_deletes=True,
+        foreign_keys="Consultation.user_id",
+    )
     # Relationships для eager loading (оптимизация запросов)
     natal_aspects = relationship("NatalAspect", back_populates="user", cascade="all, delete-orphan")
     natal_stelliums = relationship("NatalStellium", back_populates="user", cascade="all, delete-orphan")
@@ -78,9 +81,12 @@ class User(Base):
     quadrant_balance = relationship("UserQuadrantBalance", back_populates="user", uselist=False, cascade="all, delete-orphan")
     house_group_balance = relationship("UserHouseGroupBalance", back_populates="user", uselist=False, cascade="all, delete-orphan")
     astrologer = relationship("Astrologer", back_populates="users")
-    person = relationship("Person", back_populates="charts")
+    person = relationship("Person", back_populates="charts", foreign_keys=[person_id])
     linked_persons = relationship("Person", secondary="person_chart_links", back_populates="linked_charts")
-    call_sessions = relationship("CallSession", back_populates="user", cascade="all, delete-orphan")
+    call_sessions = relationship(
+        "CallSession", back_populates="user", passive_deletes=True,
+        foreign_keys="CallSession.user_id",
+    )
 
     __table_args__ = (
         CheckConstraint('lat >= -90 AND lat <= 90', name='valid_latitude'),
@@ -103,6 +109,15 @@ class Person(Base):
 
     person_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='CASCADE'), nullable=False)
+    primary_chart_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            'users.user_id',
+            ondelete='SET NULL',
+            name='persons_primary_chart_id_fkey',
+            use_alter=True,
+        ),
+    )
     first_name = Column(String(100))
     last_name = Column(String(100))
     display_name = Column(String(200))
@@ -115,12 +130,14 @@ class Person(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     astrologer = relationship("Astrologer", back_populates="persons")
-    charts = relationship("User", back_populates="person")
+    charts = relationship("User", back_populates="person", foreign_keys="User.person_id")
     linked_charts = relationship("User", secondary="person_chart_links", back_populates="linked_persons")
+    primary_chart = relationship("User", foreign_keys=[primary_chart_id], post_update=True)
 
     __table_args__ = (
         Index('idx_persons_astrologer_name', 'astrologer_id', 'last_name', 'first_name'),
         Index('idx_persons_astrologer_created', 'astrologer_id', 'created_at'),
+        Index('idx_persons_primary_chart_id', 'primary_chart_id'),
     )
 
 
@@ -146,6 +163,33 @@ class ClientRelationship(Base):
         Index('idx_client_relationships_astrologer_user', 'astrologer_id', 'user_id'),
         Index('idx_client_relationships_astrologer_related', 'astrologer_id', 'related_user_id'),
         Index('uq_client_relationships_owner_pair', 'astrologer_id', 'user_id', 'related_user_id', unique=True),
+    )
+
+
+class PersonRelationship(Base):
+    """Directed relationship between two canonical client profiles."""
+    __tablename__ = 'person_relationships'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='CASCADE'), nullable=False)
+    person_id = Column(UUID(as_uuid=True), ForeignKey('persons.person_id', ondelete='CASCADE'), nullable=False)
+    related_person_id = Column(UUID(as_uuid=True), ForeignKey('persons.person_id', ondelete='CASCADE'), nullable=False)
+    relation_label = Column(String(100))
+    notes = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    person = relationship("Person", foreign_keys=[person_id])
+    related_person = relationship("Person", foreign_keys=[related_person_id])
+
+    __table_args__ = (
+        CheckConstraint('person_id <> related_person_id', name='person_relationship_not_self'),
+        UniqueConstraint(
+            'astrologer_id', 'person_id', 'related_person_id',
+            name='uq_person_relationship_owner_pair',
+        ),
+        Index('idx_person_relationships_owner', 'astrologer_id', 'person_id'),
+        Index('idx_person_relationships_related', 'astrologer_id', 'related_person_id'),
     )
 
 
@@ -1313,7 +1357,9 @@ class Consultation(Base):
     __tablename__ = 'consultations'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='SET NULL'), nullable=True)
+    person_id = Column(UUID(as_uuid=True), ForeignKey('persons.person_id', ondelete='SET NULL'))
+    chart_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='SET NULL'))
     astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='CASCADE'), nullable=False)
     consultation_type = Column(String(30), nullable=False, default='natal')
     scheduled_at = Column(DateTime(timezone=True))
@@ -1325,7 +1371,9 @@ class Consultation(Base):
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
-    user = relationship("User", back_populates="consultations")
+    user = relationship("User", back_populates="consultations", foreign_keys=[user_id])
+    person = relationship("Person", foreign_keys=[person_id])
+    chart = relationship("User", foreign_keys=[chart_id])
     astrologer = relationship("Astrologer")
 
     __table_args__ = (
@@ -1341,6 +1389,7 @@ class Consultation(Base):
         Index('idx_consultations_astrologer_id', 'astrologer_id'),
         Index('idx_consultations_scheduled', 'astrologer_id', 'scheduled_at'),
         Index('idx_consultations_status', 'astrologer_id', 'status'),
+        Index('idx_consultations_person_id', 'astrologer_id', 'person_id', 'scheduled_at'),
     )
 
 
@@ -1350,7 +1399,9 @@ class CallSession(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='CASCADE'), nullable=False)
-    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='SET NULL'), nullable=True)
+    person_id = Column(UUID(as_uuid=True), ForeignKey('persons.person_id', ondelete='SET NULL'))
+    chart_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='SET NULL'))
     # Optionally linked to a scheduled CRM consultation
     consultation_id = Column(UUID(as_uuid=True), ForeignKey('consultations.id', ondelete='SET NULL'), nullable=True)
 
@@ -1401,7 +1452,9 @@ class CallSession(Base):
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
-    user = relationship("User", back_populates="call_sessions")
+    user = relationship("User", back_populates="call_sessions", foreign_keys=[user_id])
+    person = relationship("Person", foreign_keys=[person_id])
+    chart = relationship("User", foreign_keys=[chart_id])
     astrologer = relationship("Astrologer", back_populates="call_sessions")
     consultation = relationship("Consultation")
 
@@ -1413,6 +1466,7 @@ class CallSession(Base):
         Index('idx_call_sessions_astrologer', 'astrologer_id'),
         Index('idx_call_sessions_user', 'user_id'),
         Index('idx_call_sessions_astrologer_user', 'astrologer_id', 'user_id', 'created_at'),
+        Index('idx_call_sessions_person_id', 'astrologer_id', 'person_id', 'created_at'),
         Index('idx_call_sessions_status', 'call_status'),
         Index('idx_call_sessions_token', 'client_join_token_hash'),
     )
@@ -1433,7 +1487,8 @@ class ConsultationTranscript(Base):
         nullable=False, unique=True,
     )
     astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='CASCADE'), nullable=False)
-    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='SET NULL'), nullable=True)
+    person_id = Column(UUID(as_uuid=True), ForeignKey('persons.person_id', ondelete='SET NULL'))
     transcript_text = Column(Text, nullable=False)
     transcript_segments = Column(JSONB)
     language = Column(String(8))
@@ -1441,6 +1496,7 @@ class ConsultationTranscript(Base):
 
     __table_args__ = (
         Index('idx_consultation_transcripts_tenant', 'astrologer_id', 'user_id', 'created_at'),
+        Index('idx_consultation_transcripts_person_id', 'astrologer_id', 'person_id', 'created_at'),
     )
 
 
@@ -1458,7 +1514,8 @@ class ClientMemoryEntry(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     call_session_id = Column(UUID(as_uuid=True), ForeignKey('call_sessions.id', ondelete='SET NULL'))
     astrologer_id = Column(UUID(as_uuid=True), ForeignKey('astrologers.id', ondelete='CASCADE'), nullable=False)
-    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='CASCADE'), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id', ondelete='SET NULL'), nullable=True)
+    person_id = Column(UUID(as_uuid=True), ForeignKey('persons.person_id', ondelete='SET NULL'))
     category = Column(String(32), nullable=False)
     text = Column(Text, nullable=False)
     mentioned_by = Column(String(16), nullable=False)
@@ -1471,6 +1528,7 @@ class ClientMemoryEntry(Base):
     __table_args__ = (
         CheckConstraint("source IN ('ai','astrologer')", name='chk_cme_source'),
         Index('idx_cme_tenant', 'astrologer_id', 'user_id', 'created_at'),
+        Index('idx_client_memory_person_id', 'astrologer_id', 'person_id', 'created_at'),
     )
 
 

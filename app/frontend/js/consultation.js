@@ -13,7 +13,7 @@ const KP_CATEGORY_ORDER = [
 
 const state = {
     sessionId: null,
-    userId: null,
+    personId: null,
     cs: null,
     reportDirty: false,
 };
@@ -93,7 +93,7 @@ async function init() {
 }
 
 function goBack() {
-    if (state.userId) window.location.href = `/client/${encodeURIComponent(state.userId)}`;
+    if (state.personId) window.location.href = `/client/${encodeURIComponent(state.personId)}`;
     else window.history.back();
 }
 
@@ -105,7 +105,7 @@ async function load() {
         if (res.status === 404) { renderError(t('page.consultation.notFound')); return; }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         state.cs = await res.json();
-        state.userId = state.cs.user_id;
+        state.personId = state.cs.person_id;
         // A consultation is an output document: render its labels in the language the
         // call was conducted in, not the astrologer's global UI locale. persist:false
         // so this never overwrites the astrologer's own language preference.

@@ -1,13 +1,15 @@
 /**
- * Client profile page — /client/{userId}
+ * Client profile page — /client/{personId}
  */
 
 const API_BASE = window.location.hostname === 'localhost'
     ? 'http://localhost:8000/api/v1'
     : '/api/v1';
 
-// Extract userId from URL: /client/{userId}
-const userId = window.location.pathname.split('/')[2] || '';
+// Canonical route id is personId. Legacy chart ids are resolved during load.
+const routeProfileId = window.location.pathname.split('/')[2] || '';
+let personId = routeProfileId;
+let primaryChartId = null;
 
 let profileData = null;   // full server response
 let relatedPeople = [];
@@ -23,7 +25,7 @@ const refs = {};
 const editClientState = {
     autocompleteBound: false,
     mode: 'edit-client',
-    userId: null,
+    personId: null,
     loadedChartData: null,
     originalCoords: null,
     selectedCoords: null,
@@ -31,7 +33,7 @@ const editClientState = {
     selectedPlaceLabel: '',
 };
 
-const logSessionState = { userId: null };
+const logSessionState = { personId: null, chartId: null };
 /* ─── i18n helper ──────────────────────────────────────────────────────── */
 
 function t(key, params) {
@@ -153,7 +155,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     cacheElements();
     configureProfileBackLink();
 
-    if (!userId) {
+    if (!routeProfileId) {
         showError(t('page.clientProfile.errors.noId'));
         return;
     }
@@ -308,7 +310,7 @@ function bindPageEvents() {
     refs.linkChartCancel?.addEventListener('click', closeLinkChartDialog);
     refs.linkChartBackdrop?.addEventListener('click', closeLinkChartDialog);
     refs.linkChartSearch?.addEventListener('input', () => renderLinkChartPickerList());
-    refs.editClientBtn?.addEventListener('click', () => openEditClientDialog(userId));
+    refs.editClientBtn?.addEventListener('click', () => openEditClientDialog(personId));
 
     refs.profileActionsBtn?.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -316,7 +318,7 @@ function bindPageEvents() {
     });
     refs.profileEditAction?.addEventListener('click', () => {
         closeProfileActionsMenu();
-        openEditClientDialog(userId);
+        openEditClientDialog(personId);
     });
     refs.profileDeleteAction?.addEventListener('click', () => deleteCard(refs.profileDeleteAction));
     document.addEventListener('click', (e) => {
@@ -330,7 +332,7 @@ function bindPageEvents() {
             openPlanUpgrade('consultations');
             return;
         }
-        openLogSessionDialog(userId);
+        openLogSessionDialog(personId, primaryChartId);
     });
     refs.addRelatedPersonBtn?.addEventListener('click', openCreateRelatedPersonDialog);
     refs.linkExistingPersonBtn?.addEventListener('click', openRelatedPickerDialog);
@@ -356,19 +358,19 @@ function bindPageEvents() {
     refs.relatedPeopleList?.addEventListener('click', async (e) => {
         const synastryBtn = e.target.closest('[data-action="open-synastry"]');
         if (synastryBtn) {
-            openSynastry(synastryBtn.dataset.relatedUserId);
+            openSynastry(synastryBtn.dataset.relatedPersonId, synastryBtn.dataset.relatedChartId);
             return;
         }
 
         const profileBtn = e.target.closest('[data-action="open-related-profile"]');
         if (profileBtn) {
-            window.location.href = `/client/${encodeURIComponent(profileBtn.dataset.relatedUserId)}`;
+            window.location.href = `/client/${encodeURIComponent(profileBtn.dataset.relatedPersonId)}`;
             return;
         }
 
         const deleteBtn = e.target.closest('[data-action="delete-related-person"]');
         if (deleteBtn) {
-            await deleteRelatedPerson(deleteBtn.dataset.relatedUserId);
+            await deleteRelatedPerson(deleteBtn.dataset.relatedPersonId);
         }
     });
 
@@ -405,13 +407,30 @@ function applyPlanUi() {
 
 async function loadProfile() {
     try {
-        const profileRes = await apiFetch(`${API_BASE}/users/${userId}/profile`);
+        let profileRes = await apiFetch(`${API_BASE}/persons/${encodeURIComponent(routeProfileId)}/profile`);
 
         if (profileRes.status === 401) { window.location.href = '/login.html'; return; }
-        if (profileRes.status === 404) { showError(t('page.clientProfile.errors.notFound')); return; }
+        if (profileRes.status === 404) {
+            const chartRes = await apiFetch(`${API_BASE}/charts/${encodeURIComponent(routeProfileId)}`);
+            if (chartRes.status === 401) { window.location.href = '/login.html'; return; }
+            if (chartRes.ok) {
+                const chart = await chartRes.json();
+                if (chart.person_id) {
+                    window.location.replace(`/client/${encodeURIComponent(chart.person_id)}`);
+                    return;
+                }
+                window.location.replace(`/?linkChart=${encodeURIComponent(routeProfileId)}`);
+                return;
+            }
+            showError(t('page.clientProfile.errors.notFound'));
+            return;
+        }
         if (!profileRes.ok) throw new Error(t('page.clientProfile.errors.loadFailed'));
 
         profileData = await profileRes.json();
+        personId = profileData?.person?.person_id || routeProfileId;
+        primaryChartId = profileData?.primary_chart?.chart_id || null;
+        profileData.user = normalizeCanonicalProfileUser(profileData);
         renderAll(profileData);
 
         refs.profileMain.classList.remove('hidden');
@@ -420,6 +439,27 @@ async function loadProfile() {
     } catch (err) {
         showError(err.message);
     }
+}
+
+function normalizeCanonicalProfileUser(data) {
+    const person = data?.person || {};
+    const chart = data?.primary_chart || {};
+    return {
+        user_id: chart.chart_id || null,
+        person_id: person.person_id || null,
+        first_name: person.first_name || person.display_name || chart.first_name || '',
+        last_name: person.last_name || chart.last_name || '',
+        birth_date: chart.birth_date || null,
+        birth_time: chart.birth_time || null,
+        birth_place: chart.birth_place || null,
+        timezone: chart.timezone || null,
+        email: person.email || '',
+        phone: person.phone || '',
+        messenger: person.messenger || '',
+        tags: person.tags || [],
+        notes: person.notes || '',
+        created_at: person.created_at || null,
+    };
 }
 
 function showError(msg) {
@@ -456,7 +496,7 @@ function renderDeferredSectionPlaceholders(data) {
 function scheduleSecondaryProfileLoads() {
     scheduleAfterPaint(() => {
         loadProfileSecondaryData();
-        loadAndRenderLinkedCharts(profileData?.user?.person_id);
+        loadAndRenderLinkedCharts(personId);
         if (!window.AstroAPI?.isSoloPlan?.(currentAstrologer)) {
             loadClientMemory();
         }
@@ -466,7 +506,7 @@ function scheduleSecondaryProfileLoads() {
 async function loadProfileSecondaryData() {
     try {
         const [relatedPeoplePayload, usersPayload, tagsPayload] = await Promise.all([
-            (window.AstroAPI?.getRelatedPeople?.(userId) || Promise.resolve([])).catch(() => []),
+            apiFetch(`${API_BASE}/persons/${encodeURIComponent(personId)}/related-people`).then((res) => (res.ok ? res.json() : [])).catch(() => []),
             apiFetch(`${API_BASE}/users`).then((res) => (res.ok ? res.json() : [])).catch(() => []),
             apiFetch(`${API_BASE}/charts/tags`).then((res) => (res.ok ? res.json() : [])).catch(() => []),
         ]);
@@ -489,7 +529,7 @@ async function loadClientMemory() {
     const empty = document.getElementById('clientMemoryEmpty');
     if (!list) return;
     try {
-        const res = await apiFetch(`${API_BASE}/clients/${userId}/memory`);
+        const res = await apiFetch(`${API_BASE}/persons/${encodeURIComponent(personId)}/memory`);
         if (!res.ok) throw new Error();
         const data = await res.json();
         const entries = data.entries || [];
@@ -562,6 +602,10 @@ function renderHeader(user) {
     if (user.birth_time) parts.push(user.birth_time.slice(0, 5));
     if (user.birth_place) parts.push(user.birth_place);
     refs.profileBirth.textContent = parts.join(' · ');
+    if (refs.openChartBtn) {
+        refs.openChartBtn.disabled = !primaryChartId;
+        refs.openChartBtn.setAttribute('aria-disabled', primaryChartId ? 'false' : 'true');
+    }
 
     refs.profileTags.innerHTML = '';
     if (Array.isArray(user.tags) && user.tags.length > 0) {
@@ -770,9 +814,9 @@ function renderRelatedPeople(items) {
                     ${person.relation_notes ? `<p class="profile-related-notes">${escapeHtml(person.relation_notes)}</p>` : ''}
                 </div>
                 <div class="profile-related-actions">
-                    <button class="btn-new btn-sm" type="button" data-action="open-synastry" data-related-user-id="${escapeHtml(person.user_id)}">${escapeHtml(t('page.clients.consultation.types.synastry'))}</button>
-                    <button class="btn-logout btn-sm" type="button" data-action="open-related-profile" data-related-user-id="${escapeHtml(person.user_id)}">${escapeHtml(t('page.clientProfile.profileAction'))}</button>
-                    <button class="profile-icon-btn profile-icon-btn--danger" type="button" data-action="delete-related-person" data-related-user-id="${escapeHtml(person.user_id)}" aria-label="${escapeHtml(t('page.clients.actions.delete'))}" title="${escapeHtml(t('page.clients.actions.delete'))}">
+                    <button class="btn-new btn-sm" type="button" data-action="open-synastry" data-related-person-id="${escapeHtml(person.person_id)}" data-related-chart-id="${escapeHtml(person.primary_chart_id || '')}" ${primaryChartId && person.primary_chart_id ? '' : 'disabled'}>${escapeHtml(t('page.clients.consultation.types.synastry'))}</button>
+                    <button class="btn-logout btn-sm" type="button" data-action="open-related-profile" data-related-person-id="${escapeHtml(person.person_id)}">${escapeHtml(t('page.clientProfile.profileAction'))}</button>
+                    <button class="profile-icon-btn profile-icon-btn--danger" type="button" data-action="delete-related-person" data-related-person-id="${escapeHtml(person.person_id)}" aria-label="${escapeHtml(t('page.clients.actions.delete'))}" title="${escapeHtml(t('page.clients.actions.delete'))}">
                         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 4.5h9M6 2.5h4l.5 2H5.5l.5-2ZM5 6.5v6m3-6v6m3-6v6M4.5 4.5l.6 9h5.8l.6-9" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </button>
                 </div>
@@ -803,7 +847,7 @@ function initRelatedPeoplePicker() {
             empty: refs.relatedPickerEmpty,
             submit: refs.relatedPickerSubmit,
         },
-        getCurrentUserId: () => userId,
+        getCurrentUserId: () => personId,
         getExistingRelatedPeople: () => relatedPeople,
         onLinked: async () => {
             showToast(t('page.clientProfile.related.linked'), 'success');
@@ -1105,7 +1149,7 @@ async function retryProcessing(sessionId, btn) {
 
 /* ─── Navigation actions ─────────────────────────────────────────────────── */
 
-async function openChart(chartId = userId) {
+async function openChart(chartId = primaryChartId) {
     if (!chartId) return;
     try {
         const res = await apiFetch(`${API_BASE}/natal/${encodeURIComponent(chartId)}`);
@@ -1115,7 +1159,9 @@ async function openChart(chartId = userId) {
         window.AstroAPI.saveFormData(window.AstroAPI.chartToFormData(chartData));
         window.AstroAPI.saveNavigationState?.({
             sourceView: 'client-profile',
-            sourceUrl: window.AstroAPI.buildClientProfileUrl?.(userId) || `/client/${encodeURIComponent(userId)}`,
+            sourceUrl: window.AstroAPI.buildClientProfileUrl?.(personId) || `/client/${encodeURIComponent(personId)}`,
+            clientPersonId: String(personId),
+            clientChartId: String(chartId),
             clientUserId: String(chartId),
             partnerUserId: null,
         });
@@ -1126,11 +1172,13 @@ async function openChart(chartId = userId) {
     }
 }
 
-function openSynastry(relatedUserId) {
-    if (!relatedUserId) return;
-    window.AstroAPI?.openForecastForSynastry?.(userId, relatedUserId, {
+function openSynastry(relatedPersonId, relatedChartId) {
+    if (!primaryChartId || !relatedChartId) return;
+    window.AstroAPI?.openForecastForSynastry?.(primaryChartId, relatedChartId, {
         sourceView: 'client-profile',
-        sourceUrl: window.AstroAPI.buildClientProfileUrl?.(userId) || `/client/${encodeURIComponent(userId)}`,
+        sourceUrl: window.AstroAPI.buildClientProfileUrl?.(personId) || `/client/${encodeURIComponent(personId)}`,
+        clientPersonId: personId,
+        partnerPersonId: relatedPersonId,
     });
 }
 
@@ -1146,7 +1194,7 @@ async function startCallSession() {
         const res = await apiFetch(`${API_BASE}/call-sessions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: userId }),
+            body: JSON.stringify({ person_id: personId, chart_id: primaryChartId }),
         });
         if (!res.ok) {
             const d = await res.json().catch(() => ({}));
@@ -1157,7 +1205,7 @@ async function startCallSession() {
             window.AstroAnalytics.track('consultation_started', {});
         }
         const joinParam = session.join_url ? `&join_url=${encodeURIComponent(session.join_url)}` : '';
-        window.location.href = `/consultation-call.html?session_id=${session.id}&user_id=${userId}${joinParam}`;
+        window.location.href = `/consultation-call.html?session_id=${session.id}&person_id=${personId}${primaryChartId ? `&chart_id=${primaryChartId}` : ''}${joinParam}`;
     } catch (err) {
         showToast(err.message || t('page.clients.detail.callStartFailed'), 'error');
         refs.startCallBtn.disabled = false;
@@ -1200,6 +1248,15 @@ function initEditClientDialog() {
 function setEditDialogMode(mode) {
     editClientState.mode = mode === 'create-related' ? 'create-related' : 'edit-client';
     refs.editRelationGroup?.classList.toggle('hidden', editClientState.mode !== 'create-related');
+    document.querySelectorAll('[data-profile-chart-fields]').forEach((group) => {
+        const visible = editClientState.mode === 'create-related';
+        group.classList.toggle('hidden', !visible);
+        group.querySelectorAll('input, select').forEach((input) => {
+            input.required = visible;
+        });
+    });
+    if (refs.editFirstName) refs.editFirstName.required = true;
+    if (refs.editLastName) refs.editLastName.required = editClientState.mode === 'create-related';
 
     if (refs.editTitle) {
         refs.editTitle.textContent = editClientState.mode === 'create-related'
@@ -1215,51 +1272,24 @@ function setEditDialogMode(mode) {
     }
 }
 
-async function openEditClientDialog(uid) {
-    if (!uid) return;
+async function openEditClientDialog(pid) {
+    if (!pid || !profileData?.person) return;
     try {
         setEditDialogMode('edit-client');
-        const res = await apiFetch(`${API_BASE}/natal/${uid}`);
-        if (!res.ok) throw new Error(t('page.clients.edit.errors.loadFailed'));
-
-        const chartData = await res.json();
-        const formData = window.AstroAPI.chartToFormData(chartData);
-        const place = String(formData.place || '').trim();
-        const latitude = formData.latitude == null ? Number.NaN : Number(formData.latitude);
-        const longitude = formData.longitude == null ? Number.NaN : Number(formData.longitude);
-
-        editClientState.userId = uid;
-        editClientState.loadedChartData = chartData;
-        editClientState.originalCoords = { lat: latitude, lon: longitude };
-        editClientState.selectedCoords = { lat: latitude, lon: longitude };
-        editClientState.originalPlace = normalizeLooseText(place);
-        editClientState.selectedPlaceLabel = normalizeLooseText(place);
-
-        refs.editFirstName.value = formData.firstName || '';
-        refs.editLastName.value  = formData.lastName || '';
-        refs.editDay.value       = formData.day || '';
-        refs.editMonth.value     = formData.month || '';
-        refs.editYear.value      = formData.year || '';
-        refs.editHour.value      = formData.hour || '';
-        refs.editMinute.value    = formData.minute || '';
-        refs.editPlaceInput.value = place;
-
-        const user = profileData?.user;
-        if (refs.editEmail)    refs.editEmail.value    = user?.email    || '';
-        if (refs.editPhone)    refs.editPhone.value    = user?.phone    || '';
-        if (refs.editMessenger) refs.editMessenger.value = user?.messenger || '';
-        if (refs.editTags)     refs.editTags.value     = Array.isArray(user?.tags) ? user.tags.join(', ') : '';
-        if (refs.editNotes)    refs.editNotes.value    = user?.notes    || '';
+        const person = profileData.person;
+        editClientState.personId = pid;
+        editClientState.loadedChartData = null;
+        refs.editFirstName.value = person.first_name || '';
+        refs.editLastName.value  = person.last_name || '';
+        if (refs.editEmail) refs.editEmail.value = person.email || '';
+        if (refs.editPhone) refs.editPhone.value = person.phone || '';
+        if (refs.editMessenger) refs.editMessenger.value = person.messenger || '';
+        if (refs.editTags) refs.editTags.value = Array.isArray(person.tags) ? person.tags.join(', ') : '';
+        if (refs.editNotes) refs.editNotes.value = person.notes || '';
         if (refs.editRelationLabel) refs.editRelationLabel.value = '';
         renderEditTagSuggestions();
-
-        window.Timezones?.populate?.(refs.editTimezone);
-        refs.editTimezone.value = formData.timezone || '';
-        refs.editTimezoneHint.textContent = '';
-        refs.editTimezoneHint.style.color = '';
         refs.editError.classList.add('hidden');
         refs.editError.textContent = '';
-        renderEditPlaceHint('current');
         setEditClientSubmitting(false);
 
         refs.editBackdrop.classList.remove('hidden');
@@ -1273,7 +1303,7 @@ async function openEditClientDialog(uid) {
 
 function openCreateRelatedPersonDialog() {
     setEditDialogMode('create-related');
-    editClientState.userId = null;
+    editClientState.personId = null;
     editClientState.loadedChartData = null;
     editClientState.originalCoords = null;
     editClientState.selectedCoords = null;
@@ -1302,7 +1332,7 @@ function closeEditClientDialog() {
     refs.editError?.classList.add('hidden');
     if (refs.editError) refs.editError.textContent = '';
     if (refs.editTimezoneHint) { refs.editTimezoneHint.textContent = ''; refs.editTimezoneHint.style.color = ''; }
-    editClientState.userId = null;
+    editClientState.personId = null;
     editClientState.loadedChartData = null;
     editClientState.mode = 'edit-client';
     document.body.style.overflow = '';
@@ -1372,7 +1402,7 @@ function renderEditPlaceHint(mode) {
 async function handleEditClientSubmit(e) {
     e.preventDefault();
     if (!refs.editForm.reportValidity()) return;
-    if (editClientState.mode !== 'create-related' && !editClientState.userId) {
+    if (editClientState.mode !== 'create-related' && !editClientState.personId) {
         refs.editError.textContent = t('page.clients.edit.errors.chartUnavailable');
         refs.editError.classList.remove('hidden');
         return;
@@ -1380,14 +1410,10 @@ async function handleEditClientSubmit(e) {
 
     const place = refs.editPlaceInput.value.trim();
     const tags = parseTagInput(refs.editTags?.value || '');
-    const requestData = {
+    const personRequest = {
         first_name: refs.editFirstName.value.trim(),
         last_name:  refs.editLastName.value.trim(),
-        date: window.AstroAPI.formatDate(refs.editDay.value, refs.editMonth.value, refs.editYear.value),
-        time: window.AstroAPI.formatTime(refs.editHour.value, refs.editMinute.value),
-        timezone: refs.editTimezone.value,
-        place,
-        house_system: editClientState.loadedChartData?.birth_data?.house_system || 'P',
+        display_name: [refs.editFirstName.value.trim(), refs.editLastName.value.trim()].filter(Boolean).join(' '),
         email:     refs.editEmail?.value?.trim() || '',
         phone:     refs.editPhone?.value?.trim() || '',
         messenger: refs.editMessenger?.value?.trim() || '',
@@ -1403,8 +1429,8 @@ async function handleEditClientSubmit(e) {
         && Number.isFinite(lat) && Number.isFinite(lon)
         && (normPlace === editClientState.selectedPlaceLabel || normPlace === editClientState.originalPlace)
     ) {
-        requestData.latitude = lat;
-        requestData.longitude = lon;
+        personRequest.latitude = lat;
+        personRequest.longitude = lon;
     }
 
     refs.editError.classList.add('hidden');
@@ -1414,12 +1440,61 @@ async function handleEditClientSubmit(e) {
     try {
         const submitMode = editClientState.mode;
         if (editClientState.mode === 'create-related') {
-            await window.AstroAPI.createRelatedPerson(userId, {
-                ...requestData,
-                relation_label: refs.editRelationLabel?.value?.trim() || '',
+            const personRes = await apiFetch(`${API_BASE}/persons`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(personRequest),
             });
+            if (!personRes.ok) throw new Error(t('page.clients.edit.errors.saveFailed'));
+            const createdPerson = await personRes.json();
+            let createdChartId = null;
+            try {
+                const chartPayload = {
+                    first_name: personRequest.first_name,
+                    last_name: personRequest.last_name,
+                    date: window.AstroAPI.formatDate(refs.editDay.value, refs.editMonth.value, refs.editYear.value),
+                    time: window.AstroAPI.formatTime(refs.editHour.value, refs.editMinute.value),
+                    timezone: refs.editTimezone.value,
+                    location_name: place,
+                    house_system: 'P',
+                    chart_kind: 'birth',
+                    person_id: createdPerson.person_id,
+                };
+                if (Number.isFinite(lat) && Number.isFinite(lon)) {
+                    chartPayload.latitude = lat;
+                    chartPayload.longitude = lon;
+                }
+                const chartRes = await apiFetch(`${API_BASE}/charts`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(chartPayload),
+                });
+                if (!chartRes.ok) throw new Error(t('page.clients.edit.errors.saveFailed'));
+                const createdChart = await chartRes.json();
+                createdChartId = createdChart.chart_id || createdChart.user_id || null;
+                const relationRes = await apiFetch(`${API_BASE}/persons/${encodeURIComponent(personId)}/related-people`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        related_person_id: createdPerson.person_id,
+                        relation_label: refs.editRelationLabel?.value?.trim() || null,
+                    }),
+                });
+                if (!relationRes.ok) throw new Error(t('page.clientProfile.related.linkFailed'));
+            } catch (error) {
+                if (createdChartId) {
+                    await apiFetch(`${API_BASE}/charts/${encodeURIComponent(createdChartId)}`, { method: 'DELETE' }).catch(() => {});
+                }
+                await apiFetch(`${API_BASE}/persons/${encodeURIComponent(createdPerson.person_id)}`, { method: 'DELETE' }).catch(() => {});
+                throw error;
+            }
         } else {
-            await window.AstroAPI.updateClientChart(editClientState.userId, requestData);
+            const res = await apiFetch(`${API_BASE}/persons/${encodeURIComponent(editClientState.personId)}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(personRequest),
+            });
+            if (!res.ok) throw new Error(t('page.clients.edit.errors.saveFailed'));
         }
         closeEditClientDialog();
         showToast(
@@ -1444,12 +1519,12 @@ function setEditClientSubmitting(v) {
     refs.editSubmit.querySelector('.btn-loader')?.classList.toggle('hidden', !v);
 }
 
-async function deleteRelatedPerson(relatedUserId) {
-    if (!relatedUserId) return;
+async function deleteRelatedPerson(relatedPersonId) {
+    if (!relatedPersonId) return;
     if (!window.confirm(t('page.clientProfile.related.confirmDelete'))) return;
 
     try {
-        await window.AstroAPI.deleteRelatedPerson(userId, relatedUserId);
+        await window.AstroAPI.deleteRelatedPerson(personId, relatedPersonId);
         showToast(t('page.clientProfile.related.deleted'), 'success');
         await loadProfile();
     } catch (err) {
@@ -1476,7 +1551,7 @@ function closeProfileActionsMenu() {
 }
 
 async function deleteCard(button) {
-    if (!userId || !button) return;
+    if (!personId || !button) return;
 
     // Two-step confirm inside the menu, matching the clients list pattern.
     if (button.dataset.confirming !== 'true') {
@@ -1495,7 +1570,7 @@ async function deleteCard(button) {
 
     button.disabled = true;
     try {
-        const res = await apiFetch(`${API_BASE}/charts/${encodeURIComponent(userId)}`, { method: 'DELETE' });
+        const res = await apiFetch(`${API_BASE}/persons/${encodeURIComponent(personId)}`, { method: 'DELETE' });
         if (!res.ok) {
             let message = t('page.clients.errors.deleteFailed');
             try {
@@ -1533,8 +1608,9 @@ function initLogSessionDialog() {
     });
 }
 
-function openLogSessionDialog(uid) {
-    logSessionState.userId = uid;
+function openLogSessionDialog(pid, chartId = null) {
+    logSessionState.personId = pid;
+    logSessionState.chartId = chartId;
     refs.logSessionForm?.reset();
     if (refs.logSessionStatus) refs.logSessionStatus.value = 'completed';
     if (refs.logSessionDate) {
@@ -1552,7 +1628,8 @@ function openLogSessionDialog(uid) {
 function closeLogSessionDialog() {
     refs.logSessionBackdrop?.classList.add('hidden');
     refs.logSessionDialog?.classList.add('hidden');
-    logSessionState.userId = null;
+    logSessionState.personId = null;
+    logSessionState.chartId = null;
     document.body.style.overflow = '';
 }
 
@@ -1565,10 +1642,11 @@ function setLogSessionSubmitting(v) {
 
 async function handleLogSessionSubmit(e) {
     e.preventDefault();
-    if (!logSessionState.userId) return;
+    if (!logSessionState.personId) return;
 
     const payload = {
-        user_id: logSessionState.userId,
+        person_id: logSessionState.personId,
+        chart_id: logSessionState.chartId,
         consultation_type: refs.logSessionType?.value || 'natal',
         status: refs.logSessionStatus?.value || 'completed',
         is_paid: refs.logSessionPaid?.checked || false,
@@ -1651,7 +1729,7 @@ function renderLinkedChartsList(charts) {
         const date = c.date ? formatDate(c.date) : '';
         const place = c.place || '';
         const meta = [date, place].filter(Boolean).join(' · ');
-        const isCurrentChart = String(c.chart_id) === String(userId);
+        const isCurrentChart = String(c.chart_id) === String(primaryChartId);
         const cls = `profile-linked-chart-item is-clickable${isCurrentChart ? ' is-current' : ''}`;
         const attrs = ` role="button" tabindex="0" data-action="open-linked-chart"`;
         return `<div class="${cls}" data-chart-id="${escapeHtml(String(c.chart_id))}"${attrs}>
@@ -1664,6 +1742,7 @@ function renderLinkedChartsList(charts) {
                 <div class="profile-actions-menu profile-linked-chart-menu">
                     <button class="profile-icon-btn" type="button" data-action="chart-menu-toggle" aria-haspopup="menu" aria-expanded="false" aria-label="${escapeHtml(t('page.clients.table.actions'))}" title="${escapeHtml(t('page.clients.table.actions'))}"><svg width="14" height="4" viewBox="0 0 14 4" fill="none" aria-hidden="true"><circle cx="2" cy="2" r="1.4" fill="currentColor"/><circle cx="7" cy="2" r="1.4" fill="currentColor"/><circle cx="12" cy="2" r="1.4" fill="currentColor"/></svg></button>
                     <div class="actions-dropdown profile-actions-dropdown" role="menu">
+                        ${c.link_source === 'fk' && !isCurrentChart ? `<button class="action-item" type="button" role="menuitem" data-action="set-primary-chart" data-chart-id="${escapeHtml(String(c.chart_id))}">${escapeHtml(t('page.clientProfile.linkedCharts.setPrimary'))}</button>` : ''}
                         <button class="action-item" type="button" role="menuitem" data-action="edit-chart" data-chart-id="${escapeHtml(String(c.chart_id))}">${escapeHtml(t('page.clients.actions.edit'))}</button>
                         <button class="action-item danger" type="button" role="menuitem" data-action="delete-chart" data-chart-id="${escapeHtml(String(c.chart_id))}">${escapeHtml(t('page.clients.actions.delete'))}</button>
                     </div>
@@ -1694,7 +1773,15 @@ function renderLinkedChartsList(charts) {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
             closeChartMenus();
-            openEditClientDialog(btn.dataset.chartId);
+            window.location.href = `/?editChart=${encodeURIComponent(btn.dataset.chartId)}`;
+        });
+    });
+
+    refs.linkedChartsList.querySelectorAll('[data-action="set-primary-chart"]').forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            closeChartMenus();
+            await setPrimaryChart(btn.dataset.chartId);
         });
     });
 
@@ -1766,13 +1853,8 @@ async function deleteLinkedChart(chartId, button) {
             throw new Error(message);
         }
         showToast(t('page.clients.messages.deleted'), 'success');
-        // Deleting the profile's own chart makes this page invalid → back to list.
-        if (String(chartId) === String(userId)) {
-            window.location.href = '/';
-            return;
-        }
         linkedChartIds.delete(String(chartId));
-        await loadAndRenderLinkedCharts(currentPersonId);
+        await loadProfile();
     } catch (err) {
         button.disabled = false;
         closeChartMenus();
@@ -1782,6 +1864,22 @@ async function deleteLinkedChart(chartId, button) {
 
 function openLinkedChart(chartId) {
     openChart(chartId);
+}
+
+async function setPrimaryChart(chartId) {
+    if (!personId || !chartId) return;
+    try {
+        const res = await apiFetch(`${API_BASE}/persons/${encodeURIComponent(personId)}/primary-chart`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chart_id: chartId }),
+        });
+        if (!res.ok) throw new Error(t('common.errorGeneric'));
+        await loadProfile();
+        showToast(t('page.clients.messages.updated'), 'success');
+    } catch (error) {
+        showToast(error.message || t('common.errorGeneric'), 'error');
+    }
 }
 
 async function unlinkChart(chartId) {

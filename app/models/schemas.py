@@ -467,6 +467,7 @@ class BalancesInfo(BaseModel):
 class NatalChartResponse(BaseModel):
     """Полный ответ с натальной картой"""
     user_id: Optional[UUID] = None
+    person_id: Optional[UUID] = None
     title: Optional[str] = None
     display_title: Optional[str] = None
     birth_data: BirthDataOutput

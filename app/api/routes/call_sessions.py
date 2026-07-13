@@ -13,17 +13,19 @@ from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query, Request, status
 from loguru import logger
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
+from sqlalchemy import inspect
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import AuthContext, create_audit_event, require_auth
 from app.database.connection import get_db
-from app.database.models import Astrologer, CallSession, Consultation, User
+from app.database.models import Astrologer, CallSession, Consultation, Person, User
 from app.api.routes.call_session_utils import TERMINAL_CALL_SESSION_STATUSES
 from app.services.livekit_service import livekit_service, EGRESS_FAILURE_STATUSES, EGRESS_COMPLETE_STATUS
 from app.services.storage_service import storage_service
 from app.services.processing_pipeline import run_post_call_pipeline
 from app.services.entitlements_service import FEATURE_CALLS, FEATURE_RECORDING, assert_feature_enabled
+from app.services.person_profile_service import ensure_chart_person
 
 router = APIRouter(prefix="/call-sessions")
 
@@ -62,7 +64,9 @@ def _serialize(cs: CallSession, join_url: Optional[str] = None, user=None) -> di
     d = {
         "client_name": client_name,
         "id": str(cs.id),
-        "user_id": str(cs.user_id),
+        "person_id": str(cs.person_id) if cs.person_id else None,
+        "chart_id": str(cs.chart_id or cs.user_id) if (cs.chart_id or cs.user_id) else None,
+        "user_id": str(cs.user_id) if cs.user_id else None,
         "astrologer_id": str(cs.astrologer_id),
         "consultation_id": str(cs.consultation_id) if cs.consultation_id else None,
         "livekit_room_name": cs.livekit_room_name,
@@ -99,8 +103,16 @@ def _serialize(cs: CallSession, join_url: Optional[str] = None, user=None) -> di
 # ---------------------------------------------------------------------------
 
 class CallSessionCreate(BaseModel):
-    user_id: UUID
+    person_id: Optional[UUID] = None
+    chart_id: Optional[UUID] = None
+    user_id: Optional[UUID] = None  # deprecated chart id
     consultation_id: Optional[UUID] = None
+
+    @model_validator(mode="after")
+    def require_person_or_legacy_chart(self):
+        if self.person_id is None and self.user_id is None:
+            raise ValueError("person_id is required")
+        return self
 
 
 class CallSessionList(BaseModel):
@@ -115,13 +127,39 @@ def create_call_session(
     auth: AuthContext = Depends(require_auth),
 ):
     assert_feature_enabled(auth.astrologer, FEATURE_CALLS, plan_code=auth.effective_plan_code)
-    # Verify client belongs to this astrologer
-    user = db.query(User).filter(
-        User.user_id == payload.user_id,
-        User.astrologer_id == auth.astrologer.id,
-    ).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Client not found")
+    requested_chart_id = payload.chart_id or payload.user_id
+    user = None
+    if requested_chart_id is not None:
+        user = db.query(User).filter(
+            User.user_id == requested_chart_id,
+            User.astrologer_id == auth.astrologer.id,
+        ).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="Chart not found")
+    persons_table_available = inspect(db.get_bind()).has_table("persons")
+    legacy_schema_without_persons = payload.user_id is not None and not persons_table_available
+    if payload.person_id is None and payload.user_id is not None and user is not None and user.person_id is None and persons_table_available:
+        logger.warning("Deprecated chart-based call write auto-created Person: chart_id={}", user.user_id)
+        ensure_chart_person(db, user)
+    person_id = payload.person_id or (user.person_id if user else None)
+    if person_id is None and not legacy_schema_without_persons:
+        raise HTTPException(status_code=422, detail="A client profile is required")
+    person = None
+    if person_id is not None:
+        person = db.query(Person).filter(
+            Person.person_id == person_id,
+            Person.astrologer_id == auth.astrologer.id,
+        ).first()
+        if person is None:
+            raise HTTPException(status_code=404, detail="Client profile not found")
+    if person is not None and user is not None and user.person_id != person.person_id:
+        raise HTTPException(status_code=422, detail="Chart is not owned by this client profile")
+    if user is None and person is not None and person.primary_chart_id:
+        user = db.query(User).filter(
+            User.user_id == person.primary_chart_id,
+            User.person_id == person.person_id,
+            User.astrologer_id == auth.astrologer.id,
+        ).first()
 
     # Optionally verify consultation ownership
     if payload.consultation_id:
@@ -139,7 +177,9 @@ def create_call_session(
 
     cs = CallSession(
         astrologer_id=auth.astrologer.id,
-        user_id=payload.user_id,
+        person_id=person.person_id if person else None,
+        chart_id=user.user_id if user else None,
+        user_id=user.user_id if user else None,
         consultation_id=payload.consultation_id,
         livekit_room_name=livekit_service.generate_room_name(str(UUID(int=0))),  # temp — refreshed after insert
         client_join_token_hash=token_hash,
@@ -170,6 +210,7 @@ def create_call_session(
 @router.get("", summary="List call sessions for a client or all sessions")
 def list_call_sessions(
     request: Request,
+    person_id: Optional[UUID] = None,
     user_id: Optional[UUID] = None,
     include_non_terminal: bool = Query(
         False,
@@ -180,7 +221,9 @@ def list_call_sessions(
 ):
     assert_feature_enabled(auth.astrologer, FEATURE_CALLS, plan_code=auth.effective_plan_code)
     q = db.query(CallSession).filter(CallSession.astrologer_id == auth.astrologer.id)
-    if user_id:
+    if person_id:
+        q = q.filter(CallSession.person_id == person_id)
+    elif user_id:
         q = q.filter(CallSession.user_id == user_id)
     if not include_non_terminal:
         q = q.filter(CallSession.call_status.in_(TERMINAL_CALL_SESSION_STATUSES))
@@ -197,8 +240,12 @@ def get_call_session(
 ):
     assert_feature_enabled(auth.astrologer, FEATURE_CALLS, plan_code=auth.effective_plan_code)
     cs = _ensure_session_access(db, auth, session_id)
-    user = db.query(User).filter(User.user_id == cs.user_id).first()
-    return _serialize(cs, user=user)
+    user = db.query(User).filter(User.user_id == cs.user_id).first() if cs.user_id else None
+    person = db.query(Person).filter(Person.person_id == cs.person_id).first() if cs.person_id else None
+    payload = _serialize(cs, user=user)
+    if person:
+        payload["client_name"] = person.display_name or f"{person.first_name or ''} {person.last_name or ''}".strip() or payload["client_name"]
+    return payload
 
 
 @router.post("/{session_id}/token", summary="Get astrologer LiveKit token")
@@ -296,16 +343,17 @@ async def start_recording(
         raise HTTPException(status_code=503, detail="Video call service not configured")
 
     astrologer = auth.astrologer
+    client_identity = cs.person_id or cs.user_id
     expected_storage_path = livekit_service.build_storage_path(
         call_session_id=str(cs.id),
         astrologer_id=str(astrologer.id),
-        user_id=str(cs.user_id),
+        user_id=str(client_identity),
     )
     egress_id = await livekit_service.start_audio_egress(
         room_name=cs.livekit_room_name,
         call_session_id=str(cs.id),
         astrologer_id=str(astrologer.id),
-        user_id=str(cs.user_id),
+        user_id=str(client_identity),
     )
 
     cs.livekit_egress_id = egress_id
@@ -487,6 +535,8 @@ def dev_simulate_summary(
     ).first()
     if not user:
         raise HTTPException(status_code=404, detail="Client not found")
+    if user.person_id is None:
+        raise HTTPException(status_code=422, detail="A client profile is required")
     if not payload.transcript.strip():
         raise HTTPException(status_code=422, detail="transcript is required")
 
@@ -498,6 +548,8 @@ def dev_simulate_summary(
     cs = CallSession(
         astrologer_id=auth.astrologer.id,
         user_id=user.user_id,
+        person_id=user.person_id,
+        chart_id=user.user_id,
         livekit_room_name=f"dev-{secrets.token_hex(8)}",
         call_status="processing",
         transcript_text=payload.transcript,
@@ -513,7 +565,7 @@ def dev_simulate_summary(
     try:
         result = _summarize_with_retry(
             transcript_text=payload.transcript, segments=[],
-            session_id=str(cs.id), client_id=str(cs.user_id),
+            session_id=str(cs.id), client_id=str(cs.person_id or cs.user_id),
             astrologer_name=astro_name, client_name=client_name,
         )
     except (SummaryValidationError, ValueError, RuntimeError) as e:
@@ -599,10 +651,13 @@ def client_join(payload: ClientJoinRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=503, detail="Video call service not configured")
 
     # Fetch names for display
-    user = db.query(User).filter(User.user_id == cs.user_id).first()
+    user = db.query(User).filter(User.user_id == cs.user_id).first() if cs.user_id else None
+    person = db.query(Person).filter(Person.person_id == cs.person_id).first() if cs.person_id else None
     astrologer = db.query(Astrologer).filter(Astrologer.id == cs.astrologer_id).first()
 
     client_name = payload.display_name
+    if not client_name and person:
+        client_name = person.display_name or f"{person.first_name or ''} {person.last_name or ''}".strip() or "Client"
     if not client_name and user:
         client_name = f"{user.first_name or ''} {user.last_name or ''}".strip() or "Client"
 
@@ -612,7 +667,7 @@ def client_join(payload: ClientJoinRequest, db: Session = Depends(get_db)):
 
     lk_token = livekit_service.generate_client_token(
         room_name=cs.livekit_room_name,
-        user_id=str(cs.user_id),
+        user_id=str(cs.person_id or cs.user_id),
         display_name=client_name or "Client",
     )
 

@@ -199,6 +199,32 @@ test('AstroAPI.updateClientChart sends PUT request with locale headers', async (
     assert.equal(captured.init.body, JSON.stringify(payload));
 });
 
+test('AstroAPI client profile and related people helpers use canonical person ids', async () => {
+    const calls = [];
+    global.fetch = async (url, init) => {
+        calls.push({ url, init });
+        return { ok: true, async json() { return []; } };
+    };
+    const api = loadApiModule({
+        location: { hostname: 'example.com' },
+        FrontendI18n: { getLocale() { return 'en'; } },
+    });
+
+    assert.equal(api.buildClientProfileUrl('person-42'), '/client/person-42');
+    await api.getRelatedPeople('person-42');
+    await api.linkRelatedPerson('person-42', { related_user_id: 'person-99', relation_label: 'Partner' });
+    await api.deleteRelatedPerson('person-42', 'person-99');
+
+    assert.equal(calls[0].url, '/api/v1/persons/person-42/related-people');
+    assert.equal(calls[1].url, '/api/v1/persons/person-42/related-people');
+    assert.deepEqual(JSON.parse(calls[1].init.body), {
+        related_person_id: 'person-99',
+        relation_label: 'Partner',
+        notes: null,
+    });
+    assert.equal(calls[2].url, '/api/v1/persons/person-42/related-people/person-99');
+});
+
 test('AstroAPI exposes plan helper state from auth response', async () => {
     global.fetch = async () => ({
         ok: true,

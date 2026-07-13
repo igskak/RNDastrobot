@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 
 from app.database.connection import get_db
 from app.database.models import (
-    CallSession, Astrologer, User, ConsultationTranscript, ClientMemoryEntry,
+    CallSession, Astrologer, Person, User, ConsultationTranscript, ClientMemoryEntry,
 )
 from app.services.storage_service import storage_service
 from app.services.transcription_service import transcription_service
@@ -81,8 +81,15 @@ def _process(db: Session, session_id: UUID) -> None:
             or "Astrologer"
         )
 
-    user = db.query(User).filter(User.user_id == cs.user_id).first()
-    if user:
+    person = db.query(Person).filter(Person.person_id == cs.person_id).first() if cs.person_id else None
+    user = db.query(User).filter(User.user_id == cs.user_id).first() if cs.user_id else None
+    if person:
+        client_name = (
+            person.display_name
+            or f"{person.first_name or ''} {person.last_name or ''}".strip()
+            or "Client"
+        )
+    elif user:
         client_name = (
             f"{user.first_name or ''} {user.last_name or ''}".strip()
             or "Client"
@@ -127,7 +134,7 @@ def _process(db: Session, session_id: UUID) -> None:
             transcript_text=transcript_text,
             segments=segments,
             session_id=str(cs.id),
-            client_id=str(cs.user_id),
+            client_id=str(cs.person_id or cs.user_id),
             astrologer_name=astrologer_name,
             client_name=client_name,
         )
@@ -165,6 +172,7 @@ def _store_immutable_transcript(db: Session, cs: CallSession, transcript_text: s
         call_session_id=cs.id,
         astrologer_id=cs.astrologer_id,
         user_id=cs.user_id,
+        person_id=cs.person_id,
         transcript_text=transcript_text,
         transcript_segments=segments,
     ))
@@ -208,6 +216,7 @@ def _append_ai_memory(db: Session, cs: CallSession, entries: list) -> None:
             call_session_id=cs.id,
             astrologer_id=cs.astrologer_id,
             user_id=cs.user_id,
+            person_id=cs.person_id,
             category=e.get("category", "other"),
             text=body,
             mentioned_by=e.get("mentioned_by", "both"),
