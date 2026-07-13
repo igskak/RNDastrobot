@@ -162,6 +162,29 @@ test('aspect glyph renders with a backdrop under the icon', async () => {
     assert.equal(group.children[0].getAttribute('cx'), group.children[1].getAttribute('x'));
 });
 
+test('house-specific cusp aspect endpoint renders an aspect line', async () => {
+    const Wheel = await loadEngine();
+    const svg = makeSvg();
+    const wheel = new Wheel(svg);
+    wheel.render({
+        natalLayer: natalLayer({
+            bodies: [{ name: 'Sun', longitude: 10 }],
+            aspectBodies: [
+                { name: 'Sun', longitude: 10 },
+                { name: 'Cusp1', longitude: 130, type: 'house_cusp', house_number: 1 },
+            ],
+            houses: [{ number: 1, longitude: 130 }],
+            aspects: [
+                { planet_1: 'Sun', planet_2: 'Cusp1', aspect_type: 'Trine', orb: 1 },
+            ],
+        }),
+        activePrognosticLayers: [],
+    });
+
+    const line = svg.querySelector('.aspect-line[data-planet-2="Cusp1"]');
+    assert.ok(line, 'aspect to Cusp1 should render against the specific house cusp anchor');
+});
+
 test('exact aspects within 25 percent of allowed orb render thicker and can be disabled', async () => {
     const Wheel = await loadEngine();
     const renderLine = (options = {}) => {

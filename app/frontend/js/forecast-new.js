@@ -3870,6 +3870,11 @@
             : String(name || '');
     }
 
+    function aspectEndpointKey(name) {
+        const rawName = String(name || '');
+        return /^Cusp([1-9]|1[0-2])$/.test(rawName) ? rawName : matrixBodyKey(rawName);
+    }
+
     function ensureBodyActionMenu() {
         let menu = document.body.querySelector('.forecast-new-body-action-menu[data-menu-scope="forecast-new"]');
         if (menu) return menu;
@@ -6756,10 +6761,10 @@
                 ?? aspect?.natal_object;
             return {
                 ...aspect,
-                planet_1: matrixBodyKey(planet1),
-                planet_2: matrixBodyKey(planet2),
-                left_planet: matrixBodyKey(aspect?.left_planet ?? planet1),
-                right_planet: matrixBodyKey(aspect?.right_planet ?? planet2),
+                planet_1: aspectEndpointKey(planet1),
+                planet_2: aspectEndpointKey(planet2),
+                left_planet: aspectEndpointKey(aspect?.left_planet ?? planet1),
+                right_planet: aspectEndpointKey(aspect?.right_planet ?? planet2),
             };
         });
     }
