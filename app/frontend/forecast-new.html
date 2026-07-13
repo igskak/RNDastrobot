@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecastNew.pageTitle">Forecast</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=5020a10edead">
-    <script>window.__APP_BUILD_ID__ = '5020a10edead';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=c7575e847240">
+    <script>window.__APP_BUILD_ID__ = 'c7575e847240';</script>
 </head>
 <body class="forecast-new-page workspace-compact forecast-workspace-compact">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -320,8 +320,8 @@
                     </select>
                 </div>
                 <div class="settings-section">
-                    <label class="settings-label" data-i18n="page.chart.settings.planetsAndPoints">Planets and points</label>
-                    <div class="natal-matrix-editor" id="forecastNewSettingsMatrixEditor"></div>
+                    <label class="settings-label" data-i18n="page.chart.settings.planetsAndPoints">Natal chart planets and points</label>
+                    <div class="natal-matrix-editor" id="forecastNewSettingsMatrixEditor" data-matrix-scope="natal"></div>
                 </div>
                 <div class="settings-section">
                     <label class="settings-label" data-i18n="page.accountSettings.fields.aspectTypes">Aspect types</label>
@@ -495,6 +495,28 @@
                         <input type="number" id="momentSolarLon" step="0.0001" placeholder="Lon">
                     </div>
                 </div>
+                <div data-moment-synastry class="hidden">
+                    <label data-i18n="page.forecastNew.synastry.headerManualTitle">Partner birth data</label>
+                    <p class="forecast-new-moment-card-hint" data-i18n="page.forecastNew.synastry.headerManualHint">Enter the second chart here or choose it from saved charts.</p>
+                    <input type="text" id="momentSynastryNameInput" class="forecast-new-moment-full" placeholder="Partner name" data-i18n-placeholder="page.forecastNew.synastry.namePlaceholder" autocomplete="off">
+                    <div class="forecast-new-native-datetime">
+                        <input type="date" id="momentSynastryDateInput" data-i18n-aria-label="page.forecastNew.synastry.dateAria" aria-label="Partner birth date">
+                        <input type="time" id="momentSynastryTimeInput" step="1" data-i18n-aria-label="page.forecastNew.synastry.timeAria" aria-label="Partner birth time">
+                    </div>
+                    <div class="forecast-new-location-grid">
+                        <select id="momentSynastryTimezoneInput" data-i18n-aria-label="page.forecastNew.synastry.timezoneAria" aria-label="Partner timezone">
+                            <option value="" data-i18n="page.forecastNew.synastry.timezoneOption">Timezone</option>
+                        </select>
+                        <div class="place-autocomplete-wrapper forecast-new-location-autocomplete">
+                            <input type="text" id="momentSynastryLocationInput" placeholder="Birth place" data-i18n-placeholder="page.forecastNew.synastry.locationPlaceholder" autocomplete="off" data-i18n-aria-label="page.forecastNew.synastry.locationAria" aria-label="Partner birth place">
+                            <div id="momentSynastryLocationSuggestions" class="place-suggestions"></div>
+                        </div>
+                        <input type="number" id="momentSynastryLatInput" step="0.0001" placeholder="Lat">
+                        <input type="number" id="momentSynastryLonInput" step="0.0001" placeholder="Lon">
+                    </div>
+                    <button type="button" class="forecast-new-synastry-apply forecast-new-moment-apply" id="momentSynastryApplyBtn" data-i18n="page.forecastNew.synastry.apply">Apply</button>
+                    <p class="forecast-new-synastry-manual-error hidden" id="momentSynastryError"></p>
+                </div>
             </div>
             <div class="panel-tabs forecast-new-tabs">
                 <button class="panel-tab active" data-panel-target="progPlanetsView" data-i18n="page.chart.tabs.planets">Планеты</button>
@@ -613,7 +635,7 @@
     </section>
 
     <script src="/runtime-config.js"></script>
-    <script src="/js/analytics.js?v=5020a10edead"></script>
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=5020a10edead"></script>
+    <script src="/js/analytics.js?v=c7575e847240"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=c7575e847240"></script>
 </body>
 </html>

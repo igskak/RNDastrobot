@@ -460,6 +460,11 @@
     min-width: 0;
 }
 
+.forecast-new-time-stepper.is-disabled {
+    color: rgba(92, 85, 78, 0.68);
+    cursor: default;
+}
+
 .forecast-new-relationship-switch {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -2169,6 +2174,26 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     font-size: 13px;
 }
 
+.forecast-new-moment-card-hint {
+    margin: 4px 0 8px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.forecast-new-moment-full {
+    width: 100%;
+    min-width: 0;
+    padding: 6px 8px;
+    font-size: 11px;
+}
+
+.forecast-new-moment-apply {
+    width: 100%;
+    margin-top: 7px;
+}
+
 .forecast-new-native-datetime {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -2467,6 +2492,16 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     font-size: 13px;
     letter-spacing: 0.01em;
     color: rgba(30, 58, 95, 0.62);
+}
+
+.forecast-new-time-stepper-disabled {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
 }
 
 .forecast-new-loading {

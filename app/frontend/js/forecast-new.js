@@ -665,6 +665,7 @@
         bindNatalLocationAutocomplete();
         bindSolarLocationAutocomplete();
         bindSynastryManualControls();
+        bindMomentSynastryControls();
         initLayerPopovers();
         initAspectInteractions();
         syncControlsFromState();
@@ -710,6 +711,9 @@
             'forecastNewSolarLat', 'forecastNewSolarLon', 'forecastNewSynastryPartnerSelect', 'forecastNewCompositeHeaderBtn',
             'momentSolarYearInput', 'momentSolarLocationInput', 'momentSolarLocationSuggestions',
             'momentSolarLat', 'momentSolarLon',
+            'momentSynastryNameInput', 'momentSynastryDateInput', 'momentSynastryTimeInput',
+            'momentSynastryTimezoneInput', 'momentSynastryLocationInput', 'momentSynastryLocationSuggestions',
+            'momentSynastryLatInput', 'momentSynastryLonInput', 'momentSynastryApplyBtn', 'momentSynastryError',
             'forecastNewSynastryManualName', 'forecastNewSynastryManualDate', 'forecastNewSynastryManualTime',
             'forecastNewSynastryManualTimezone', 'forecastNewSynastryManualLocation', 'forecastNewSynastryManualSuggestions',
             'forecastNewSynastryManualLat', 'forecastNewSynastryManualLon', 'forecastNewSynastryManualApply', 'forecastNewSynastryManualError',
@@ -1088,6 +1092,8 @@
         document.addEventListener('frontend:locale-changed', () => {
             populateTimezoneOptions();
             populateNatalTimezoneOptions();
+            if (refs.momentSynastryTimezoneInput) window.Timezones?.populate?.(refs.momentSynastryTimezoneInput);
+            if (refs.forecastNewSynastryManualTimezone) window.Timezones?.populate?.(refs.forecastNewSynastryManualTimezone);
             syncControlsFromState();
         });
 
@@ -1702,8 +1708,48 @@
         refs.forecastNewSynastryManualApply?.addEventListener('click', applyManualSynastryPartner);
     }
 
-    function showSynastryManualError(message) {
-        const el = refs.forecastNewSynastryManualError;
+    function bindMomentSynastryControls() {
+        if (refs.momentSynastryTimezoneInput) {
+            window.Timezones?.populate?.(refs.momentSynastryTimezoneInput);
+        }
+
+        if (window.PlaceAutocomplete && refs.momentSynastryLocationInput && refs.momentSynastryLocationSuggestions) {
+            window.PlaceAutocomplete.attach({
+                input: refs.momentSynastryLocationInput,
+                suggestions: refs.momentSynastryLocationSuggestions,
+                minChars: 2,
+                debounceMs: 350,
+                limit: 5,
+                getLabel: (item) => item.shortName || item.displayName,
+                onInput: () => {
+                    if (refs.momentSynastryLatInput) refs.momentSynastryLatInput.value = '';
+                    if (refs.momentSynastryLonInput) refs.momentSynastryLonInput.value = '';
+                },
+                onSelect: async (item) => {
+                    refs.momentSynastryLocationInput.value = item.shortName || item.displayName;
+                    const latitude = item.lat ?? item.latitude ?? null;
+                    const longitude = item.lon ?? item.longitude ?? null;
+                    if (refs.momentSynastryLatInput) refs.momentSynastryLatInput.value = latitude !== null ? String(latitude) : '';
+                    if (refs.momentSynastryLonInput) refs.momentSynastryLonInput.value = longitude !== null ? String(longitude) : '';
+                    if (refs.momentSynastryTimezoneInput && !refs.momentSynastryTimezoneInput.value) {
+                        let tz = null;
+                        if (item.sourceId && window.AstroAPI?.resolvePlaceTimezone) {
+                            try { tz = await window.AstroAPI.resolvePlaceTimezone(item.sourceId); } catch (_) { /* ignore */ }
+                        }
+                        tz = tz || window.Timezones?.guess?.(item.displayName || item.shortName) || null;
+                        if (tz) refs.momentSynastryTimezoneInput.value = tz;
+                    }
+                },
+            });
+        }
+
+        refs.momentSynastryApplyBtn?.addEventListener('click', () => {
+            void applyManualSynastryPartner(readMomentSynastryManualInput(), { errorTarget: 'moment' });
+        });
+    }
+
+    function showSynastryManualError(message, target = 'popover') {
+        const el = target === 'moment' ? refs.momentSynastryError : refs.forecastNewSynastryManualError;
         if (!el) return;
         if (message) {
             el.textContent = message;
@@ -1714,8 +1760,21 @@
         }
     }
 
-    async function applyManualSynastryPartner(input = null) {
+    function readMomentSynastryManualInput() {
+        return {
+            name: refs.momentSynastryNameInput?.value || '',
+            date: refs.momentSynastryDateInput?.value || '',
+            time: refs.momentSynastryTimeInput?.value || '',
+            timezone: refs.momentSynastryTimezoneInput?.value || '',
+            place: refs.momentSynastryLocationInput?.value || '',
+            latitude: refs.momentSynastryLatInput?.value || '',
+            longitude: refs.momentSynastryLonInput?.value || '',
+        };
+    }
+
+    async function applyManualSynastryPartner(input = null, options = {}) {
         const manual = input && typeof input === 'object' && !('target' in input) ? input : null;
+        const errorTarget = options.errorTarget || 'popover';
         const hasValue = (value) => value !== null && value !== undefined && String(value).trim() !== '';
         const name = (manual
             ? (manual.name || manual.title || '')
@@ -1733,18 +1792,19 @@
         const hasCoords = Number.isFinite(latitude) && Number.isFinite(longitude);
 
         if (!date || !time) {
-            showSynastryManualError('Укажите дату и время рождения партнёра.');
+            showSynastryManualError(t('page.forecastNew.synastry.errorDateTime'), errorTarget);
             return { ok: false, error: 'missing_datetime' };
         }
         if (!timezone) {
-            showSynastryManualError('Выберите часовой пояс партнёра.');
+            showSynastryManualError(t('page.forecastNew.synastry.errorTimezone'), errorTarget);
             return { ok: false, error: 'missing_timezone' };
         }
         if (!place && !hasCoords) {
-            showSynastryManualError('Укажите место рождения партнёра.');
+            showSynastryManualError(t('page.forecastNew.synastry.errorPlace'), errorTarget);
             return { ok: false, error: 'missing_place' };
         }
-        showSynastryManualError('');
+        showSynastryManualError('', errorTarget);
+        showSynastryManualError('', errorTarget === 'moment' ? 'popover' : 'moment');
 
         state.synastryManual = {
             name,
@@ -1763,6 +1823,7 @@
         // Партнёр поменялся — ensureSynastryLayerActive зафиксирует конфиг и сбросит кэш слоя.
         schedulePersist();
         closeLayerPopover('synastry_partner');
+        setMomentEditorOpen(false);
         await ensureSynastryLayerActive({ lightweight: false });
         if (state.singleChartMode === 'composite') {
             await enterCompositeMode();
@@ -1779,9 +1840,15 @@
         const c = cfg || synastryScratchConfig();
         if (c.mode === 'manual') {
             const m = c.manual;
-            return !!(m && m.date && m.time && m.timezone && (m.place || (m.latitude !== null && m.longitude !== null)));
+            return !!(m && m.date && m.time && m.timezone && (m.place || (Number.isFinite(Number(m.latitude)) && Number.isFinite(Number(m.longitude)))));
         }
         return !!c.partnerId;
+    }
+
+    function isSynastryPartnerMissing() {
+        if (!isSynastryMomentActive()) return false;
+        const inst = selectedLayerInstance();
+        return !hasUsableSynastryPartner(inst ? layerConfigOf(inst) : synastryScratchConfig());
     }
 
     function isSynastryMomentActive() {
@@ -1823,6 +1890,7 @@
             return getDisplayedSolarDateTime();
         }
         if (isSynastryMomentActive()) {
+            if (isSynastryPartnerMissing()) return '';
             const bd = originalLayerRaw(selectedLayerInstance())?.partner_chart?.birth_data
                 || selectedViewModelLayer()?.raw?.partner_chart?.birth_data;
             const date = state.synastryMode === 'manual'
@@ -1949,15 +2017,21 @@
     }
 
     function syncSynastryManualControlsFromState() {
-        const m = state.synastryManual;
-        if (!m) return;
+        const m = state.synastryManual || {};
         if (refs.forecastNewSynastryManualName) refs.forecastNewSynastryManualName.value = m.name || '';
         if (refs.forecastNewSynastryManualDate) refs.forecastNewSynastryManualDate.value = m.date || '';
         if (refs.forecastNewSynastryManualTime) refs.forecastNewSynastryManualTime.value = (m.time || '').slice(0, 8);
-        if (refs.forecastNewSynastryManualTimezone && m.timezone) refs.forecastNewSynastryManualTimezone.value = m.timezone;
+        if (refs.forecastNewSynastryManualTimezone) refs.forecastNewSynastryManualTimezone.value = m.timezone || '';
         if (refs.forecastNewSynastryManualLocation) refs.forecastNewSynastryManualLocation.value = m.place || '';
         if (refs.forecastNewSynastryManualLat) refs.forecastNewSynastryManualLat.value = m.latitude !== null && m.latitude !== undefined ? String(m.latitude) : '';
         if (refs.forecastNewSynastryManualLon) refs.forecastNewSynastryManualLon.value = m.longitude !== null && m.longitude !== undefined ? String(m.longitude) : '';
+        if (refs.momentSynastryNameInput) refs.momentSynastryNameInput.value = m.name || '';
+        if (refs.momentSynastryDateInput) refs.momentSynastryDateInput.value = m.date || '';
+        if (refs.momentSynastryTimeInput) refs.momentSynastryTimeInput.value = (m.time || '').slice(0, 8);
+        if (refs.momentSynastryTimezoneInput) refs.momentSynastryTimezoneInput.value = m.timezone || '';
+        if (refs.momentSynastryLocationInput) refs.momentSynastryLocationInput.value = m.place || '';
+        if (refs.momentSynastryLatInput) refs.momentSynastryLatInput.value = m.latitude !== null && m.latitude !== undefined ? String(m.latitude) : '';
+        if (refs.momentSynastryLonInput) refs.momentSynastryLonInput.value = m.longitude !== null && m.longitude !== undefined ? String(m.longitude) : '';
     }
 
     // Place/timezone shown in the moment card belong to the partner when synastry
@@ -1965,6 +2039,9 @@
     // to the transit moment (state.location / state.timezone).
     function getMomentPlaceView() {
         if (isSynastryMomentActive()) {
+            if (isSynastryPartnerMissing()) {
+                return { name: '', latitude: null, longitude: null, timezone: '' };
+            }
             if (state.synastryMode === 'manual' && state.synastryManual) {
                 const m = state.synastryManual;
                 return { name: m.place || '', latitude: m.latitude ?? null, longitude: m.longitude ?? null, timezone: m.timezone || '' };
@@ -2178,7 +2255,8 @@
     }
 
     function syncControlsFromState() {
-        const [date, time] = splitTargetDatetime(getDisplayedMomentDateTime());
+        const displayedMomentDateTime = getDisplayedMomentDateTime();
+        const [date, time] = displayedMomentDateTime ? splitTargetDatetime(displayedMomentDateTime) : ['', ''];
         if (refs.targetDateInput) refs.targetDateInput.value = date;
         if (refs.targetTimeInput) refs.targetTimeInput.value = time;
         renderOrUpdateTimeStepper();
@@ -2264,8 +2342,10 @@
         const card = refs.forecastNewMomentCard;
         if (!card) return;
         const isSolar = selectedRightMethod() === 'solar_return';
-        card.querySelector('[data-moment-transit]')?.classList.toggle('hidden', isSolar);
+        const isSynastry = selectedRightMethod() === 'synastry_partner';
+        card.querySelector('[data-moment-transit]')?.classList.toggle('hidden', isSolar || isSynastry);
         card.querySelector('[data-moment-solar]')?.classList.toggle('hidden', !isSolar);
+        card.querySelector('[data-moment-synastry]')?.classList.toggle('hidden', !isSynastry);
     }
 
     async function applySolarYear(rawYear) {
@@ -2478,7 +2558,7 @@
         // в левую панель (соляр) — она всегда описывает прогностический момент.
         const pending = isSolarMomentPending();
         if (refs.targetDatetimeLabel) {
-            refs.targetDatetimeLabel.textContent = pending ? '' : formatChartDateTimeLabel(getDisplayedMomentDateTime());
+            refs.targetDatetimeLabel.textContent = pending || isSynastryPartnerMissing() ? '' : formatChartDateTimeLabel(getDisplayedMomentDateTime());
         }
         if (refs.prognosticPanelMeta) {
             if (pending) setPanelMetaLoading(refs.prognosticPanelMeta);
@@ -2546,6 +2626,10 @@
             const [solarDate, solarClock] = String(info.solar_datetime_local || '').split('T');
             const solarTime = String(solarClock || '').slice(0, 5);
             return buildSolarPanelLocationMeta(info, { date: solarDate, time: solarTime });
+        }
+
+        if (method === 'synastry_partner' && isSynastryPartnerMissing()) {
+            return t('page.forecastNew.synastry.enterPrompt');
         }
 
         const place = getMomentPlaceView();
@@ -2732,6 +2816,8 @@
 
     function renderTimeStepper() {
         if (!refs.forecastNewTimeStepper) return;
+        refs.forecastNewTimeStepper.removeAttribute('aria-disabled');
+        refs.forecastNewTimeStepper.classList.remove('is-disabled');
         const values = getTimeStepperSegmentValues(getDisplayedMomentDateTime());
         const customStep = normalizeCustomStep(state.customStep);
         const customStepLabel = formatCustomStepLabel(customStep);
@@ -2804,6 +2890,10 @@
             renderTimeStepperLoading();
             return;
         }
+        if (isSynastryPartnerMissing()) {
+            renderTimeStepperDisabled(t('page.forecastNew.synastry.enterPrompt'));
+            return;
+        }
         if (!refs.forecastNewTimeStepper?.querySelector('[data-time-step-key]')) {
             renderTimeStepper();
             return;
@@ -2813,9 +2903,19 @@
 
     function renderTimeStepperLoading() {
         if (!refs.forecastNewTimeStepper) return;
+        refs.forecastNewTimeStepper.removeAttribute('aria-disabled');
+        refs.forecastNewTimeStepper.classList.remove('is-disabled');
         const label = t('page.forecastNew.solarCalculating', null, 'Рассчитываем соляр…');
         refs.forecastNewTimeStepper.innerHTML =
             `<span class="forecast-new-time-stepper-loading"><span class="forecast-new-meta-spinner" aria-hidden="true"></span>${escapeHtml(label)}</span>`;
+    }
+
+    function renderTimeStepperDisabled(label) {
+        if (!refs.forecastNewTimeStepper) return;
+        refs.forecastNewTimeStepper.setAttribute('aria-disabled', 'true');
+        refs.forecastNewTimeStepper.classList.add('is-disabled');
+        refs.forecastNewTimeStepper.innerHTML =
+            `<span class="forecast-new-time-stepper-disabled">${escapeHtml(label || t('page.forecastNew.synastry.enterPrompt'))}</span>`;
     }
 
     function renderNatalTimeStepper() {
@@ -3530,30 +3630,41 @@
         };
     }
 
-    function renderMatrixEditor() {
+    function renderMatrixEditorForScope(scope = 'prognostic') {
         const bodies = window.AstroPreferences?.MATRIX_BODIES || [];
-        const rows = getMatrixRowsForScope('prognostic');
-        const markup = `
+        const normalizedScope = scope === 'natal' ? 'natal' : 'prognostic';
+        const rows = getMatrixRowsForScope(normalizedScope);
+        return `
             <table class="natal-matrix-table forecast-new-matrix-table">
                 <thead><tr><th>Body</th><th>Display</th><th>Aspecting</th></tr></thead>
                 <tbody>
                     ${bodies.map((body) => {
+                        const key = matrixBodyKey(body);
                         const label = escapeHtml(planetName(body));
                         const symbol = Symbols?.getPlanetSymbolMarkup?.(body, { size: 18, title: planetName(body) })
                             || `<span class="astro-symbol">${escapeHtml(Symbols?.getPlanetSymbol?.(body) || '')}</span>`;
                         return `
                             <tr>
                                 <td><span class="natal-matrix-body natal-matrix-body--icon-only" title="${label}" aria-label="${label}">${symbol}</span></td>
-                                <td><input type="checkbox" data-matrix-scope="prognostic" data-matrix-body="${body}" data-matrix-field="display" ${rows?.[body]?.display !== false ? 'checked' : ''}></td>
-                                <td><input type="checkbox" data-matrix-scope="prognostic" data-matrix-body="${body}" data-matrix-field="aspecting" ${rows?.[body]?.aspecting !== false ? 'checked' : ''}></td>
+                                <td><input type="checkbox" data-matrix-scope="${escapeHtml(normalizedScope)}" data-matrix-body="${escapeHtml(key)}" data-matrix-field="display" ${rows?.[key]?.display !== false ? 'checked' : ''}></td>
+                                <td><input type="checkbox" data-matrix-scope="${escapeHtml(normalizedScope)}" data-matrix-body="${escapeHtml(key)}" data-matrix-field="aspecting" ${rows?.[key]?.aspecting !== false ? 'checked' : ''}></td>
                             </tr>
                         `;
                     }).join('')}
                 </tbody>
             </table>
         `;
-        [refs.forecastNewMatrixEditor, refs.forecastNewSettingsMatrixEditor].forEach((container) => {
-            if (container) container.innerHTML = markup;
+    }
+
+    function renderMatrixEditor() {
+        [
+            { container: refs.forecastNewMatrixEditor, fallbackScope: 'prognostic' },
+            { container: refs.forecastNewSettingsMatrixEditor, fallbackScope: 'natal' },
+        ].forEach(({ container, fallbackScope }) => {
+            if (!container) return;
+            const scope = container.dataset?.matrixScope || fallbackScope;
+            container.dataset.matrixScope = scope === 'natal' ? 'natal' : 'prognostic';
+            container.innerHTML = renderMatrixEditorForScope(scope);
         });
     }
 
@@ -4254,6 +4365,7 @@
                 select.value = String(id);
             }
             setSynastryMode('db');
+            syncSynastryManualControlsFromState();
         } else {
             state.synastryMode = 'manual';
             state.synastryPartnerId = '';
@@ -4667,13 +4779,7 @@
         setSynastryMode(state.synastryMode);
         const m = state.synastryManual;
         if (m) {
-            if (refs.forecastNewSynastryManualName) refs.forecastNewSynastryManualName.value = m.name || '';
-            if (refs.forecastNewSynastryManualDate) refs.forecastNewSynastryManualDate.value = m.date || '';
-            if (refs.forecastNewSynastryManualTime) refs.forecastNewSynastryManualTime.value = (m.time || '').slice(0, 5);
-            if (refs.forecastNewSynastryManualTimezone && m.timezone) refs.forecastNewSynastryManualTimezone.value = m.timezone;
-            if (refs.forecastNewSynastryManualLocation) refs.forecastNewSynastryManualLocation.value = m.place || '';
-            if (refs.forecastNewSynastryManualLat) refs.forecastNewSynastryManualLat.value = m.latitude !== null && m.latitude !== undefined ? String(m.latitude) : '';
-            if (refs.forecastNewSynastryManualLon) refs.forecastNewSynastryManualLon.value = m.longitude !== null && m.longitude !== undefined ? String(m.longitude) : '';
+            syncSynastryManualControlsFromState();
         }
     }
 
@@ -6176,7 +6282,7 @@
         else refs.prognosticPanelMeta.textContent = buildPrognosticMomentSummary();
         syncMomentCardLayout();
         renderOrUpdateTimeStepper();
-        refs.targetDatetimeLabel.textContent = solarPending ? '' : formatChartDateTimeLabel(getDisplayedMomentDateTime());
+        refs.targetDatetimeLabel.textContent = solarPending || isSynastryPartnerMissing() ? '' : formatChartDateTimeLabel(getDisplayedMomentDateTime());
         refs.forecastNewProgPanel?.classList.toggle('forecast-new-solar-pending', solarPending);
 
         if (!layer) {
