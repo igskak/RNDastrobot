@@ -49,7 +49,7 @@ function hideElementsById(ids) {
 }
 
 function hideAssistantChrome() {
-    hideElementsById(['chatToggle', 'chatVoiceCommand', 'chatVoiceMiniStatus', 'chatWidget']);
+    hideElementsById(['chatToggle', 'chatVoiceCommand', 'chatNotesToggle', 'chatVoiceMiniStatus', 'chatWidget']);
 }
 
 function hideVoiceChrome() {
@@ -67,6 +67,7 @@ const ACTION_TEXT = {
     set_wheel_view: (a) => `вид колеса → ${a.args.view}`,
     set_house_system: (a) => `система домов → ${a.args.system}`,
     set_synastry_partner: (a) => `синастрия с ${a.args.title || a.args.manual?.name || a.args.manual?.title || 'партнёром'}`,
+    add_client_note: () => t('page.clientNotes.actionLabel'),
     remove_layer: (a) => `убрать слой «${a.args.method || a.args.layer_id}»`,
     clear_layers: () => 'убрать все слои',
 };
@@ -84,15 +85,26 @@ class ChatWidget {
     constructor(astrologer = null) {
         this.widget = document.getElementById('chatWidget');
         this.toggle = document.getElementById('chatToggle');
+        this.notesToggle = document.getElementById('chatNotesToggle');
         this.closeBtn = document.getElementById('chatClose');
         this.resizeHandle = document.getElementById('chatResizeHandle');
         this.messages = document.getElementById('chatMessages');
         this.input = document.getElementById('chatInput');
+        this.inputRow = document.getElementById('chatInputRow');
         this.send = document.getElementById('chatSend');
         this.mic = document.getElementById('chatMic');
         this.voiceCommand = document.getElementById('chatVoiceCommand');
         this.voiceMiniStatus = document.getElementById('chatVoiceMiniStatus');
         this.voiceStatus = document.getElementById('chatVoiceStatus');
+        this.assistantTab = document.getElementById('chatAssistantTab');
+        this.notesTab = document.getElementById('chatNotesTab');
+        this.notesView = document.getElementById('chatNotesView');
+        this.noteForm = document.getElementById('chatNoteForm');
+        this.noteInput = document.getElementById('chatNoteInput');
+        this.noteSubmit = document.getElementById('chatNoteSubmit');
+        this.notesList = document.getElementById('chatNotesList');
+        this.notesEmpty = document.getElementById('chatNotesEmpty');
+        this.notesStatus = document.getElementById('chatNotesStatus');
         this.historyToggle = document.getElementById('chatHistoryToggle');
         this.newThreadBtn = document.getElementById('chatNewThread');
         this.historyPanel = document.getElementById('chatHistory');
@@ -128,6 +140,12 @@ class ChatWidget {
         this.history = [];
         this.conversationId = null;
         this.isHistoryOpen = false;
+        this.activeView = 'assistant';
+        this.notesSource = 'astrologer';
+        this.notesLoading = false;
+        this.notesEntries = [];
+        this.pendingInputOrigin = 'assistant_text';
+        this.lastTurnInputOrigin = 'assistant_text';
 
         this.init();
     }
@@ -135,6 +153,9 @@ class ChatWidget {
     init() {
         this.restoreSize();
         this.toggle.addEventListener('click', () => this.openPanel());
+        this.notesToggle?.addEventListener('click', () => this.openPanel({ view: 'notes', focusInput: false }));
+        this.assistantTab?.addEventListener('click', () => this.switchView('assistant'));
+        this.notesTab?.addEventListener('click', () => this.switchView('notes'));
         if (this.voiceEnabled) {
             this.voiceCommand?.addEventListener('click', () => this.toggleVoiceCommand());
         }
@@ -146,6 +167,13 @@ class ChatWidget {
         }
         this.historyToggle?.addEventListener('click', () => this.toggleHistory());
         this.newThreadBtn?.addEventListener('click', () => this.startNewThread());
+        this.noteForm?.addEventListener('submit', (event) => this.submitManualNote(event));
+        this.notesView?.querySelectorAll('[data-notes-source]').forEach((button) => {
+            button.addEventListener('click', () => this.setNotesSource(button.dataset.notesSource || 'astrologer'));
+        });
+        document.addEventListener('steliara:client-notes-changed', () => {
+            if (this.activeView === 'notes') this.loadNotes();
+        });
         this.resizeHandle?.addEventListener('pointerdown', (event) => this.startResize(event));
         this.resizeHandle?.addEventListener('keydown', (event) => this.resizeWithKeyboard(event));
 
@@ -165,6 +193,7 @@ class ChatWidget {
             this.resizeObserver = new ResizeObserver(() => this.saveSize());
             this.resizeObserver.observe(this.widget);
         }
+        this.switchView('assistant');
     }
 
     restoreSize() {
@@ -287,13 +316,14 @@ class ChatWidget {
         }
     }
 
-    openPanel({ focusInput = !this.isMobile() } = {}) {
+    openPanel({ focusInput = !this.isMobile(), view = 'assistant' } = {}) {
         this.isOpen = true;
         this.widget.classList.add('open');
+        this.switchView(view);
         window.AstroOnboarding?.trackLearning?.('onboarding_control_used', {
             control: 'chat', milestone: 'chat_opened',
         });
-        if (focusInput) this.input.focus({ preventScroll: true });
+        if (focusInput && this.activeView === 'assistant') this.input.focus({ preventScroll: true });
     }
 
     closePanel() {
@@ -301,6 +331,24 @@ class ChatWidget {
         this.isOpen = false;
         this.widget.classList.remove('open');
         this.closeHistory();
+    }
+
+    switchView(view = 'assistant') {
+        const next = view === 'notes' ? 'notes' : 'assistant';
+        this.activeView = next;
+        this.widget?.classList.toggle('notes-mode', next === 'notes');
+        if (this.notesView) this.notesView.hidden = next !== 'notes';
+        this.assistantTab?.classList.toggle('active', next === 'assistant');
+        this.notesTab?.classList.toggle('active', next === 'notes');
+        this.assistantTab?.setAttribute('aria-selected', String(next === 'assistant'));
+        this.notesTab?.setAttribute('aria-selected', String(next === 'notes'));
+        if (next === 'notes') {
+            this.closeHistory();
+            this.loadNotes();
+            this.noteInput?.focus({ preventScroll: true });
+        } else {
+            this.renderContextStrip();
+        }
     }
 
     getActiveChartContext() {
@@ -816,6 +864,9 @@ class ChatWidget {
 
         const message = this.input.value.trim();
         if (!message || this.isLoading || this.isTranscribing) return;
+        const inputOrigin = this.pendingInputOrigin || 'assistant_text';
+        this.lastTurnInputOrigin = inputOrigin;
+        this.pendingInputOrigin = 'assistant_text';
 
         this.clearSuggestions();
         const { userId, timezone, anchorDate } = this.getActiveChartContext();
@@ -886,7 +937,7 @@ class ChatWidget {
                 }
                 document.dispatchEvent(new CustomEvent('steliara:onboarding-assistant-answer'));
             }
-            this.handleActions(data.actions || [], { compactFeedback });
+            this.handleActions(data.actions || [], { compactFeedback, inputOrigin });
         } catch (error) {
             console.error('Assistant chat error:', error);
             loadingMsg.remove();
@@ -1043,7 +1094,7 @@ class ChatWidget {
         };
     }
 
-    handleActions(actions, { compactFeedback = false } = {}) {
+    handleActions(actions, { compactFeedback = false, inputOrigin = 'assistant_text' } = {}) {
         if (!Array.isArray(actions) || actions.length === 0) return;
         if (!window.ForecastCommands) {
             this.addActionNote(t('page.chart.chat.actionsUnavailable')
@@ -1056,25 +1107,37 @@ class ChatWidget {
             if (action.confirm === 'confirm') {
                 this.renderConfirmAction(action, { compactFeedback });
             } else {
-                void this.runAction(action, { compactFeedback });
+                void this.runAction(action, { compactFeedback, inputOrigin });
             }
         }
     }
 
-    async runAction(action, { compactFeedback = false } = {}) {
+    prepareClientAction(action, inputOrigin = 'assistant_text') {
+        if (action?.name !== 'add_client_note') return action;
+        return {
+            ...action,
+            args: {
+                ...(action.args || {}),
+                origin: inputOrigin === 'assistant_voice' ? 'assistant_voice' : 'assistant_text',
+            },
+        };
+    }
+
+    async runAction(action, { compactFeedback = false, inputOrigin = 'assistant_text' } = {}) {
         let result;
+        const actionToRun = this.prepareClientAction(action, inputOrigin);
         try {
-            result = await window.ForecastCommands.apply(action);
+            result = await window.ForecastCommands.apply(actionToRun);
         } catch (error) {
             result = { ok: false, error: { message: String(error) } };
         }
         if (result && result.ok) {
             // The workspace toast (with Undo) is shown by the facade's onApplied hook;
             // here we just leave a compact record in the thread.
-            this.addActionNote(`✓ ${actionLabel(action)}`, { applied: true, compactFeedback });
+            this.addActionNote(`✓ ${actionLabel(actionToRun)}`, { applied: true, compactFeedback });
         } else {
             const code = result?.error?.code ? ` (${result.error.code})` : '';
-            this.addActionNote(`⚠ Не удалось: ${actionLabel(action)}${code}`, { error: true, compactFeedback });
+            this.addActionNote(`${t('page.clientNotes.errors.actionFailed')} ${actionLabel(actionToRun)}${code}`, { error: true, compactFeedback });
         }
     }
 
@@ -1137,6 +1200,276 @@ class ChatWidget {
         this.messages.scrollTop = this.messages.scrollHeight;
         if (compactFeedback) {
             this.setVoiceMiniStatus(text, { timeoutMs: 8000 });
+        }
+    }
+
+    notesTarget() {
+        const { userId } = this.getActiveChartContext();
+        return userId ? { chartId: userId } : null;
+    }
+
+    noteContextSnapshot() {
+        let state = null;
+        try { state = window.ForecastCommands?.describeState?.() || null; } catch (_) { state = null; }
+        if (!state) return null;
+        const resources = state.resources || {};
+        const layers = Array.isArray(resources.layers) ? resources.layers : [];
+        const selected = layers.find((layer) => layer.id === state.selectedLayerId)
+            || layers.find((layer) => layer.selected)
+            || null;
+        const config = selected?.config || {};
+        const synastry = state.synastry?.active === true ? state.synastry : null;
+        return {
+            schema_version: 1,
+            method: selected?.method || resources.selectedMethod || 'natal',
+            selected_layer_id: state.selectedLayerId || '',
+            date: config.date || state.date || '',
+            time: config.time || state.time || '',
+            timezone: config.timezone || state.timezone || 'UTC',
+            wheel_view: state.wheelView || 'multi',
+            ...(synastry?.partnerId ? { partner_chart_id: synastry.partnerId } : {}),
+            ...(synastry?.partnerName ? { partner_name: synastry.partnerName } : {}),
+        };
+    }
+
+    newIdempotencyKey() {
+        if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+        return `note-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+
+    setNotesStatus(textOrKey = '', { error = false, params } = {}) {
+        if (!this.notesStatus) return;
+        const raw = String(textOrKey || '');
+        const isKey = /^(common|page|nav|errors)\./.test(raw);
+        const text = raw ? (isKey ? t(raw, params) : raw) : '';
+        this.notesStatus.hidden = !text;
+        this.notesStatus.classList.toggle('error', error);
+        this.notesStatus.textContent = text;
+    }
+
+    setNotesSource(source) {
+        const next = source === 'ai' ? 'ai' : 'astrologer';
+        if (this.notesSource === next) return;
+        this.notesSource = next;
+        this.notesView?.querySelectorAll('[data-notes-source]').forEach((button) => {
+            const active = button.dataset.notesSource === next;
+            button.classList.toggle('active', active);
+            button.setAttribute('aria-selected', String(active));
+        });
+        if (this.noteForm) this.noteForm.hidden = next !== 'astrologer';
+        this.loadNotes();
+    }
+
+    async loadNotes() {
+        if (!this.notesList || this.notesLoading) return;
+        const target = this.notesTarget();
+        this.notesList.textContent = '';
+        if (!target) {
+            if (this.notesEmpty) {
+                this.notesEmpty.hidden = false;
+                this.notesEmpty.textContent = t('page.clientNotes.errors.noTarget');
+            }
+            return;
+        }
+        this.notesLoading = true;
+        this.setNotesStatus('common.loading');
+        if (this.notesEmpty) this.notesEmpty.hidden = true;
+        try {
+            const data = await window.AstroAPI.getClientMemory(target, {
+                source: this.notesSource,
+                limit: 100,
+            });
+            this.notesEntries = data.entries || [];
+            this.renderNotesList();
+            this.setNotesStatus('');
+        } catch (error) {
+            this.notesEntries = [];
+            this.renderNotesList();
+            this.setNotesStatus(error.message || 'page.clientNotes.errors.loadFailed', { error: true });
+        } finally {
+            this.notesLoading = false;
+        }
+    }
+
+    renderNotesList() {
+        if (!this.notesList) return;
+        this.notesList.textContent = '';
+        const entries = this.notesEntries || [];
+        if (!entries.length) {
+            if (this.notesEmpty) {
+                this.notesEmpty.hidden = false;
+                this.notesEmpty.textContent = this.notesSource === 'ai'
+                    ? t('page.clientNotes.emptyConsultations')
+                    : t('page.clientNotes.emptyNotes');
+            }
+            return;
+        }
+        if (this.notesEmpty) this.notesEmpty.hidden = true;
+        for (const entry of entries) {
+            this.notesList.appendChild(this.buildNoteItem(entry));
+        }
+    }
+
+    noteContextChips(context = {}) {
+        const chips = [];
+        const method = context?.method;
+        if (method) chips.push(t(`page.clientNotes.method.${method}`));
+        const dateTime = [context?.date, context?.time].filter(Boolean).join(' ');
+        if (dateTime) chips.push(dateTime);
+        if (context?.timezone) chips.push(context.timezone);
+        if (context?.partner_name) chips.push(t('page.clientNotes.context.partner', { name: context.partner_name }));
+        return chips.filter(Boolean);
+    }
+
+    buildNoteItem(entry) {
+        const item = document.createElement('article');
+        item.className = 'chat-note-item';
+        item.dataset.noteId = entry.id;
+
+        const text = document.createElement('p');
+        text.className = 'chat-note-text';
+        text.textContent = entry.text || '';
+        item.appendChild(text);
+
+        const meta = document.createElement('div');
+        meta.className = 'chat-note-meta';
+        const source = document.createElement('span');
+        source.className = 'chat-note-chip';
+        source.textContent = entry.source === 'ai'
+            ? t('page.clientNotes.origin.consultation_ai')
+            : t(`page.clientNotes.origin.${entry.origin || 'manual'}`);
+        meta.appendChild(source);
+        if (entry.created_at) {
+            const created = document.createElement('span');
+            created.className = 'chat-note-chip';
+            created.textContent = this.formatThreadDate(entry.created_at);
+            meta.appendChild(created);
+        }
+        item.appendChild(meta);
+
+        const chips = this.noteContextChips(entry.context_snapshot || {});
+        if (chips.length) {
+            const context = document.createElement('div');
+            context.className = 'chat-note-context';
+            chips.forEach((chipText) => {
+                const chip = document.createElement('span');
+                chip.className = 'chat-note-chip';
+                chip.textContent = chipText;
+                context.appendChild(chip);
+            });
+            item.appendChild(context);
+        }
+
+        const actions = document.createElement('div');
+        actions.className = 'chat-note-actions';
+        if (entry.source === 'astrologer') {
+            const edit = document.createElement('button');
+            edit.type = 'button';
+            edit.className = 'chat-note-action';
+            edit.textContent = t('common.edit');
+            edit.addEventListener('click', () => this.editNoteInline(item, entry));
+            actions.appendChild(edit);
+        }
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'chat-note-action danger';
+        del.textContent = t('common.delete');
+        del.addEventListener('click', () => this.deleteNote(entry.id));
+        actions.appendChild(del);
+        item.appendChild(actions);
+        return item;
+    }
+
+    formatThreadDate(value) {
+        const when = value ? new Date(value) : null;
+        if (!when || Number.isNaN(when.getTime())) return '';
+        try {
+            return when.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        } catch {
+            return String(value).slice(0, 10);
+        }
+    }
+
+    editNoteInline(item, entry) {
+        item.textContent = '';
+        const textarea = document.createElement('textarea');
+        textarea.className = 'chat-note-edit';
+        textarea.value = entry.text || '';
+        const actions = document.createElement('div');
+        actions.className = 'chat-note-actions';
+        const save = document.createElement('button');
+        save.type = 'button';
+        save.className = 'chat-note-action';
+        save.textContent = t('common.save');
+        const cancel = document.createElement('button');
+        cancel.type = 'button';
+        cancel.className = 'chat-note-action';
+        cancel.textContent = t('common.cancel');
+        actions.append(save, cancel);
+        item.append(textarea, actions);
+        textarea.focus();
+        cancel.addEventListener('click', () => this.renderNotesList());
+        save.addEventListener('click', async () => {
+            const next = textarea.value.trim();
+            if (!next) return;
+            save.disabled = true;
+            try {
+                const updated = await window.AstroAPI.updateClientMemory(entry.id, { text: next });
+                this.notesEntries = this.notesEntries.map((row) => (row.id === entry.id ? updated : row));
+                this.renderNotesList();
+                this.setNotesStatus('page.clientNotes.toast.updated');
+                document.dispatchEvent(new CustomEvent('steliara:client-notes-changed'));
+            } catch (error) {
+                this.setNotesStatus(error.message || 'page.clientNotes.errors.saveFailed', { error: true });
+            } finally {
+                save.disabled = false;
+            }
+        });
+    }
+
+    async deleteNote(entryId) {
+        if (!entryId || !window.confirm(t('page.clientNotes.confirmDelete'))) return;
+        try {
+            await window.AstroAPI.deleteClientMemory(entryId);
+            this.notesEntries = this.notesEntries.filter((row) => row.id !== entryId);
+            this.renderNotesList();
+            this.setNotesStatus('page.clientNotes.toast.deleted');
+            document.dispatchEvent(new CustomEvent('steliara:client-notes-changed'));
+        } catch (error) {
+            this.setNotesStatus(error.message || 'page.clientNotes.errors.deleteFailed', { error: true });
+        }
+    }
+
+    async submitManualNote(event) {
+        event.preventDefault();
+        if (this.notesSource !== 'astrologer') return;
+        const text = this.noteInput?.value?.trim() || '';
+        if (!text) return;
+        const target = this.notesTarget();
+        if (!target) {
+            this.setNotesStatus('page.clientNotes.errors.noTarget', { error: true });
+            return;
+        }
+        this.noteSubmit.disabled = true;
+        this.setNotesStatus('');
+        try {
+            const entry = await window.AstroAPI.createClientMemory(target, {
+                text,
+                category: 'other',
+                mentioned_by: 'astrologer',
+                origin: 'manual',
+                idempotency_key: this.newIdempotencyKey(),
+                context_snapshot: this.noteContextSnapshot(),
+            });
+            this.noteInput.value = '';
+            this.notesEntries = [entry, ...this.notesEntries];
+            this.renderNotesList();
+            this.setNotesStatus('page.clientNotes.toast.added');
+            document.dispatchEvent(new CustomEvent('steliara:client-notes-changed', { detail: { entry } }));
+        } catch (error) {
+            this.setNotesStatus(error.message || 'page.clientNotes.errors.saveFailed', { error: true });
+        } finally {
+            this.noteSubmit.disabled = false;
         }
     }
 
@@ -1312,6 +1645,7 @@ class ChatWidget {
             if (text) {
                 // Keep mic-stop as review-first; send-stop submits after transcription.
                 this.input.value = this.input.value ? `${this.input.value} ${text}` : text;
+                this.pendingInputOrigin = 'assistant_voice';
                 this.input.dispatchEvent(new Event('input'));
                 if (sendAfterTranscription) {
                     this.isTranscribing = false;

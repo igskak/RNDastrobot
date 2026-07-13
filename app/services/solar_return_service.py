@@ -13,7 +13,7 @@ import swisseph as swe
 from sqlalchemy.orm import Session
 from loguru import logger
 
-from app.database.models import User, NatalPlanet, NatalSpecialPoint, Angle, SolarReturn, RefAspectType
+from app.database.models import User, NatalPlanet, NatalSpecialPoint, NatalHouse, Angle, SolarReturn, RefAspectType
 from app.services.swisseph_engine import SwissEphemerisEngine
 from app.services.time_service import TimeService
 from app.services.aspect_service import AspectService
@@ -557,6 +557,15 @@ class SolarReturnService:
             if angles.vertex_degree:
                 targets.append({'name': 'Vertex', 'longitude': float(angles.vertex_degree), 'type': 'angle', 'speed': 0.0})
 
+        houses = self.db.query(NatalHouse).filter(
+            NatalHouse.user_id == user_id
+        ).order_by(NatalHouse.house_number).all()
+        from app.services.natal_context import house_cusp_targets
+        targets.extend(house_cusp_targets([
+            {'number': house.house_number, 'longitude': float(house.cusp_degree)}
+            for house in houses
+        ]))
+
         return [
             target for target in targets
             if target['name'] not in PROGNOSTIC_EXCLUDED_NATAL_TARGETS
@@ -766,7 +775,11 @@ class SolarReturnService:
             astrologer_id = self.preferences_runtime.get_astrologer_id_for_user(user_id)
             payload['planets'] = self._enrich_motion_flags(payload.get('planets', []), astrologer_id=astrologer_id)
             changed = False
-            if 'aspects_to_natal' not in payload:
+            has_cusp_targets = any(
+                str(aspect.get('natal_object') or aspect.get('planet_2') or '').startswith('Cusp')
+                for aspect in (payload.get('aspects_to_natal') or [])
+            )
+            if 'aspects_to_natal' not in payload or not has_cusp_targets:
                 payload['aspects_to_natal'] = self._calculate_solar_to_natal_aspects(
                     astrologer_id, payload.get('planets', []), self._load_natal_aspect_targets(user_id),
                 )

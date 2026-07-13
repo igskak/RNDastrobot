@@ -99,6 +99,13 @@ def build_command_tools() -> List[Dict]:
                 'required': ['date', 'time', 'timezone'],
                 'additionalProperties': False,
             }}),
+        fn('add_client_note',
+           'Add one note to the active client profile only when the astrologer explicitly asks '
+           'to add/write/save a note. The note_text must be copied from the astrologer message '
+           'with only the command wrapper removed; do not summarize, correct, interpret, or add '
+           'context here.',
+           {'note_text': {'type': 'string', 'description': 'The exact note content to save.'}},
+           ['note_text']),
         fn('remove_layer',
            'Remove a prognostic layer by method (all instances) or layer_id (one). Destructive.',
            {'method': {'type': 'string', 'enum': methods},

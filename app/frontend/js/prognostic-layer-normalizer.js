@@ -52,6 +52,17 @@
                 bodiesByName.set(normalizedName, { ...body, name: normalizedName });
             }
         });
+        cloneArray(chartData?.houses).forEach((house) => {
+            const number = Number(house?.number);
+            if (!Number.isInteger(number) || number < 1 || number > 12 || house?.longitude == null) return;
+            const name = `Cusp${number}`;
+            bodiesByName.set(name, {
+                name,
+                longitude: Number(house.longitude),
+                type: 'house_cusp',
+                house_number: number,
+            });
+        });
         return [...bodiesByName.values()];
     }
 
@@ -250,7 +261,7 @@
                 bodies: cloneArray(natalData?.planets),
                 aspectBodies: collectAspectBodies(natalData),
                 houses: cloneArray(natalData?.houses),
-                aspects: cloneArray(natalData?.aspects),
+                aspects: [...cloneArray(natalData?.aspects), ...cloneArray(natalData?.cusp_aspects)],
                 // W3 (Фаза W): углы нужны единому движку для маркеров ASC/MC/DSC/IC
                 angles: natalData?.angles || null,
                 raw: natalData,

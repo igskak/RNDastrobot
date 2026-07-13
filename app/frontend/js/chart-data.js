@@ -50,6 +50,11 @@ class ChartDataRenderer {
     }
 
     planetName(name) {
+        const cuspHouse = this.getCuspHouseNumber(name);
+        if (cuspHouse) {
+            const house = Symbols?.formatHouseLabel?.(cuspHouse) || String(cuspHouse);
+            return this.t('page.chart.houseCusp', { house });
+        }
         const key = `astro.planet.${name}`;
         const translated = this.t(key);
         return translated === key ? (Symbols.getPlanetNameRu?.(name) || Symbols.planetNamesRu[name] || name) : translated;
@@ -75,8 +80,19 @@ class ChartDataRenderer {
     }
 
     getPlanetSymbolMarkup(name, options = {}) {
+        const cuspHouse = this.getCuspHouseNumber(name);
+        if (cuspHouse) {
+            const house = Symbols?.formatHouseLabel?.(cuspHouse) || String(cuspHouse);
+            const title = this.escapeHtml(options.title || this.planetName(name));
+            return `<span class="aspect-cusp-symbol" title="${title}" aria-label="${title}">${this.escapeHtml(house)}</span>`;
+        }
         return Symbols.getPlanetSymbolMarkup?.(name, options)
             || `<span class="astro-symbol" aria-hidden="true">${this.escapeHtml(this.getPlanetSymbol(name))}</span>`;
+    }
+
+    getCuspHouseNumber(name) {
+        const match = /^Cusp([1-9]|1[0-2])$/.exec(String(name || ''));
+        return match ? Number(match[1]) : null;
     }
 
     getAspectSymbol(name) {

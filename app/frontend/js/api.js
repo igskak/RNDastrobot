@@ -787,6 +787,69 @@
         return response.json();
     }
 
+    function clientMemoryBasePath(target = {}) {
+        if (target.personId) return `${API_BASE_URL}/persons/${encodeURIComponent(String(target.personId))}/memory`;
+        if (target.chartId || target.userId) {
+            return `${API_BASE_URL}/clients/${encodeURIComponent(String(target.chartId || target.userId))}/memory`;
+        }
+        throw new Error(t('page.clientNotes.errors.noTarget', null, 'No client profile is selected.'));
+    }
+
+    async function getClientMemory(target = {}, options = {}) {
+        const query = toQueryString({
+            source: options.source,
+            limit: options.limit,
+            cursor: options.cursor,
+        });
+        const response = await apiFetch(`${clientMemoryBasePath(target)}${query}`, {
+            method: 'GET',
+            headers: withLocaleHeaders(),
+            signal: options.signal,
+        });
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(response, 'page.clientNotes.errors.loadFailed', 'Failed to load notes'));
+        }
+        return response.json();
+    }
+
+    async function createClientMemory(target = {}, payload = {}, options = {}) {
+        const response = await apiFetch(clientMemoryBasePath(target), {
+            method: 'POST',
+            headers: withLocaleHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify(payload || {}),
+            signal: options.signal,
+        });
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(response, 'page.clientNotes.errors.saveFailed', 'Failed to save note'));
+        }
+        return response.json();
+    }
+
+    async function updateClientMemory(entryId, payload = {}, options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/memory/${encodeURIComponent(String(entryId))}`, {
+            method: 'PATCH',
+            headers: withLocaleHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify(payload || {}),
+            signal: options.signal,
+        });
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(response, 'page.clientNotes.errors.saveFailed', 'Failed to save note'));
+        }
+        return response.json();
+    }
+
+    async function deleteClientMemory(entryId, options = {}) {
+        const response = await apiFetch(`${API_BASE_URL}/memory/${encodeURIComponent(String(entryId))}`, {
+            method: 'DELETE',
+            headers: withLocaleHeaders(),
+            signal: options.signal,
+        });
+        if (!response.ok) {
+            throw new Error(await readErrorMessage(response, 'page.clientNotes.errors.deleteFailed', 'Failed to delete note'));
+        }
+        return response.json();
+    }
+
     /**
      * Форматирование даты для API
      * @param {number} day
@@ -1160,6 +1223,10 @@
         linkRelatedPerson,
         deleteRelatedPerson,
         getSynastry,
+        getClientMemory,
+        createClientMemory,
+        updateClientMemory,
+        deleteClientMemory,
         formatDate,
         formatTime,
         saveChartToSession,

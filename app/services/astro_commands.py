@@ -11,6 +11,8 @@ service re-exports these names for backward compatibility.
 """
 from __future__ import annotations
 
+import re
+import uuid
 from typing import Dict
 
 from app.services.astro_vocab import (
@@ -30,6 +32,51 @@ from app.services.astro_vocab import (
     _valid_time,
     _validate_manual_synastry,
 )
+
+_NOTE_INTENT_RE = re.compile(
+    r"("
+    r"(добав\w*|запиш\w*|сохран\w*|сохрани|внес\w*|помет\w*)"
+    r".{0,40}(заметк\w*|замітк\w*|нотатк\w*)"
+    r"|"
+    r"(add|write|save|append|record).{0,40}notes?"
+    r")",
+    re.IGNORECASE | re.DOTALL,
+)
+_NOTE_FRAME_RE = re.compile(
+    r"^\s*(?:"
+    r"(?:добав\w*|запиш\w*|сохран\w*|сохрани|внес\w*|помет\w*)"
+    r"(?:\s+\S+){0,5}?\s+(?:в\s+)?(?:заметк\w*|замітк\w*|нотатк\w*)"
+    r"|(?:add|write|save|append|record)(?:\s+\S+){0,5}?\s+(?:to\s+)?notes?"
+    r")\s*[:,—-]?\s*(?:что\s+|що\s+|that\s+)?",
+    re.IGNORECASE,
+)
+
+
+def _clean_note_text(value) -> str:
+    text = str(value or "").strip()
+    text = _NOTE_FRAME_RE.sub("", text).strip()
+    return re.sub(r"\s+", " ", text)
+
+
+def _compare_text(value) -> str:
+    return re.sub(r"\s+", " ", str(value or "").strip().casefold())
+
+
+def _validate_note_text_from_user(note_text: str, source_text: str) -> str:
+    cleaned = _clean_note_text(note_text)
+    source = str(source_text or "")
+    if not cleaned:
+        return "empty_note"
+    if len(cleaned) > 10000:
+        return "note_too_long"
+    if not _NOTE_INTENT_RE.search(source):
+        return "note_intent_missing"
+    source_cmp = _compare_text(source)
+    note_cmp = _compare_text(cleaned)
+    stripped_source_cmp = _compare_text(_clean_note_text(source))
+    if note_cmp not in source_cmp and note_cmp not in stripped_source_cmp:
+        return "note_text_not_from_user"
+    return ""
 
 
 def validate_command(name: str, args: Dict) -> str:
@@ -73,6 +120,13 @@ def validate_command(name: str, args: Dict) -> str:
             return 'bad_synastry_source'
         if has_manual:
             return _validate_manual_synastry(manual)
+        return ''
+    if name == 'add_client_note':
+        note_text = _clean_note_text(args.get('note_text'))
+        if not note_text:
+            return 'empty_note'
+        if len(note_text) > 10000:
+            return 'note_too_long'
         return ''
     if name == 'remove_layer':
         if not args.get('layer_id') and args.get('method') not in WORKSPACE_LAYER_METHODS:
@@ -127,6 +181,11 @@ def _normalize_command_args(name: str, args: Dict) -> Dict:
         if isinstance(title, str) and title.strip():
             out['title'] = title.strip()[:120]
         return out
+    if name == 'add_client_note':
+        return {
+            'note_text': _clean_note_text(args.get('note_text')),
+            'idempotency_key': str(uuid.uuid4()),
+        }
     if name == 'remove_layer':
         if args.get('layer_id'):
             return {'layer_id': str(args['layer_id'])}
@@ -134,7 +193,7 @@ def _normalize_command_args(name: str, args: Dict) -> Dict:
     return {}
 
 
-def handle_command(name: str, raw_args: Dict):
+def handle_command(name: str, raw_args: Dict, *, source_text: str = ""):
     """Validate a workspace command. Returns (receipt, action|None).
 
     The server NEVER executes commands — workspace state lives in the browser.
@@ -146,6 +205,8 @@ def handle_command(name: str, raw_args: Dict):
     if meta is None:
         return {'status': 'error', 'error': f'unknown_command:{name}'}, None
     error = validate_command(name, raw_args or {})
+    if not error and name == 'add_client_note':
+        error = _validate_note_text_from_user((raw_args or {}).get('note_text'), source_text)
     if error:
         return {'status': 'error', 'error': error}, None
     action = {

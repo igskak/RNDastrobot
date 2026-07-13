@@ -108,6 +108,50 @@ class AspectService:
         if filter_trivial:
             return self._filter_trivial_aspects(aspects)
         return aspects
+
+    def calculate_aspects_to_house_cusps(
+        self,
+        objects: List[Dict],
+        houses: List[Dict],
+        *,
+        astrologer_id: Optional[UUID] = None,
+        orb_profile: str = 'natal',
+    ) -> List[Dict]:
+        """Calculate body/point aspects to natal house cusps only.
+
+        Cusps are deliberately kept out of the normal object list so they never
+        participate in configurations or cusp-to-cusp aspect calculation.
+        """
+        aspect_types = self._get_aspect_types()
+        cusp_aspects: List[Dict] = []
+        cusp_objects = [
+            {
+                'name': f"Cusp{int(house['number'])}",
+                'longitude': float(house['longitude']),
+                'type': 'house_cusp',
+                'speed': 0.0,
+            }
+            for house in (houses or [])
+            if house.get('number') is not None and house.get('longitude') is not None
+        ]
+        for obj in objects or []:
+            if obj.get('type') == 'house_cusp':
+                continue
+            for cusp in cusp_objects:
+                aspect = self._calculate_aspect_between(
+                    obj,
+                    cusp,
+                    aspect_types,
+                    astrologer_id=astrologer_id,
+                    orb_profile=orb_profile,
+                )
+                if aspect:
+                    cusp_aspects.append({
+                        **aspect,
+                        'cusp_house': int(cusp['name'].replace('Cusp', '')),
+                        'cusp_longitude': cusp['longitude'],
+                    })
+        return cusp_aspects
     
     def _get_all_objects(self, user_id: UUID) -> List[Dict]:
         """

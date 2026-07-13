@@ -1263,6 +1263,14 @@ body.account-settings-modal-open {
     background: rgba(255, 252, 247, 0.72);
 }
 
+.account-settings-orb-cusp-short {
+    display: inline-block;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+
 .account-settings-orb-matrix-wrap {
     justify-content: flex-start;
     overflow-x: auto;

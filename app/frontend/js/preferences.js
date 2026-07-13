@@ -102,6 +102,7 @@
         'Quincunx',
     ];
     const ORB_PROFILE_IDS = ['natal', 'prognostic', 'synastry'];
+    const CUSP_ORB_BODY = 'Cusp';
     const DEFAULT_ORB_PAIR_STRATEGY = 'larger';
     const DEFAULT_PROGNOSTIC_ORB = 1;
     const DEFAULT_PROGNOSTIC_MOON_ORB = 3;
@@ -442,6 +443,9 @@
                 rows: ensureMatrixRows(viewSettings?.matrix?.rows),
                 prognostic_rows: ensureMatrixRows(viewSettings?.matrix?.prognostic_rows || viewSettings?.matrix?.rows),
                 natal_rows: ensureMatrixRows(viewSettings?.matrix?.natal_rows),
+                natal_cusps: Array.isArray(viewSettings?.matrix?.natal_cusps)
+                    ? [...viewSettings.matrix.natal_cusps]
+                    : [],
             },
             aspects: {
                 scope: viewSettings?.aspects?.scope || 'major',
@@ -524,11 +528,12 @@
     }
 
     function buildDefaultOrbProfileMatrix(aspectTypes = [], bodies = MATRIX_BODIES, profileId = 'natal') {
+        const orbBodies = [...new Set([...(bodies || []), CUSP_ORB_BODY])];
         return Object.fromEntries(
             (aspectTypes || []).map((aspect) => [
                 aspect.aspect_type,
                 Object.fromEntries(
-                    (bodies || []).map((body) => [
+                    orbBodies.map((body) => [
                         body,
                         profileId === 'prognostic' || profileId === 'synastry'
                             ? (body === 'Moon' ? DEFAULT_PROGNOSTIC_MOON_ORB : DEFAULT_PROGNOSTIC_ORB)
@@ -766,6 +771,7 @@
         DEFAULT_ELEMENT_PALETTE,
         DEFAULT_BODY_COLORS,
         ORB_PROFILE_IDS,
+        CUSP_ORB_BODY,
         DIGNITY_SIGNS,
         DEFAULT_ORB_PAIR_STRATEGY,
         DEFAULT_PROGNOSTIC_ORB,

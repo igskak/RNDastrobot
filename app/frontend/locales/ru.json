@@ -460,7 +460,10 @@
       },
       "matrix": {
         "displayShort": "П",
-        "aspectingShort": "А"
+        "aspectingShort": "А",
+        "natalCusps": "Натальные куспиды",
+        "cuspAria": "Куспид дома {house}: аспектация",
+        "alwaysDisplayed": "Всегда отображается"
       },
       "panelEditor": {
         "toggle": "Настроить панели",
@@ -813,6 +816,8 @@
         "showAspectText": "Показывать название аспекта текстом"
       },
       "orbs": {
+        "cuspsShort": "Кусп",
+        "cuspsTitle": "Куспиды",
         "actions": {
           "applyNatal": "Применить натальные орбы"
         },
@@ -1636,7 +1641,7 @@
         "relatedPeopleSubtitle": "Выберите человека для синастрии."
       },
       "sections": {
-        "contact": "Контакты и заметки",
+        "contact": "Контакты",
         "notes": "Заметки",
         "statistics": "Статистика",
         "relatedPeople": "Карты синастрий",
@@ -2771,6 +2776,51 @@
         "registerFailed": "Сейчас не удалось создать аккаунт.",
         "verifyFailed": "Сейчас не удалось подтвердить email.",
         "resendVerificationFailed": "Сейчас не удалось отправить ссылку подтверждения."
+      }
+    },
+    "clientNotes": {
+      "title": "Заметки",
+      "open": "Открыть заметки",
+      "dockTabs": "Ассистент и заметки",
+      "sourceTabs": "Источник заметок",
+      "actionLabel": "добавить заметку",
+      "tabs": {
+        "notes": "Заметки",
+        "consultations": "Из консультаций"
+      },
+      "placeholder": "Добавьте заметку в профиль клиента...",
+      "add": "Добавить",
+      "emptyNotes": "Заметок пока нет.",
+      "emptyConsultations": "Заметок из консультаций пока нет.",
+      "confirmDelete": "Удалить эту заметку?",
+      "origin": {
+        "manual": "Вручную",
+        "assistant_text": "Ассистент",
+        "assistant_voice": "Голос",
+        "consultation_ai": "Из консультации"
+      },
+      "context": {
+        "partner": "Партнёр: {name}"
+      },
+      "method": {
+        "natal": "Натал",
+        "transit": "Транзит",
+        "progression": "Прогрессия",
+        "direction": "Дирекция",
+        "solar_return": "Соляр",
+        "synastry_partner": "Синастрия"
+      },
+      "toast": {
+        "added": "Заметка добавлена",
+        "updated": "Заметка обновлена",
+        "deleted": "Заметка удалена"
+      },
+      "errors": {
+        "noTarget": "Сначала сохраните карту в профиль клиента.",
+        "loadFailed": "Не удалось загрузить заметки.",
+        "saveFailed": "Не удалось сохранить заметку.",
+        "deleteFailed": "Не удалось удалить заметку.",
+        "actionFailed": "Не удалось применить:"
       }
     },
     "consultation": {

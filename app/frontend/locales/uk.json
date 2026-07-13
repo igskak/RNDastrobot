@@ -460,7 +460,10 @@
       },
       "matrix": {
         "displayShort": "П",
-        "aspectingShort": "А"
+        "aspectingShort": "А",
+        "natalCusps": "Натальні куспіди",
+        "cuspAria": "Куспід дому {house}: аспектація",
+        "alwaysDisplayed": "Завжди відображається"
       },
       "panelEditor": {
         "toggle": "Налаштувати панелі",
@@ -813,6 +816,8 @@
         "showAspectText": "Показувати назву аспекту текстом"
       },
       "orbs": {
+        "cuspsShort": "Кусп",
+        "cuspsTitle": "Куспіди",
         "actions": {
           "applyNatal": "Застосувати натальні орбіси"
         },
@@ -1643,7 +1648,7 @@
         "relatedPeopleSubtitle": "Виберіть людину для синастрії."
       },
       "sections": {
-        "contact": "Контакти та нотатки",
+        "contact": "Контакти",
         "notes": "Нотатки",
         "statistics": "Статистика",
         "relatedPeople": "Карти синастрії",
@@ -2778,6 +2783,51 @@
         "registerFailed": "Зараз не вдалося створити акаунт.",
         "verifyFailed": "Зараз не вдалося підтвердити email.",
         "resendVerificationFailed": "Зараз не вдалося надіслати посилання підтвердження."
+      }
+    },
+    "clientNotes": {
+      "title": "Нотатки",
+      "open": "Відкрити нотатки",
+      "dockTabs": "Асистент і нотатки",
+      "sourceTabs": "Джерело нотаток",
+      "actionLabel": "додати нотатку",
+      "tabs": {
+        "notes": "Нотатки",
+        "consultations": "Із консультацій"
+      },
+      "placeholder": "Додайте нотатку до профілю клієнта...",
+      "add": "Додати",
+      "emptyNotes": "Нотаток поки немає.",
+      "emptyConsultations": "Нотаток із консультацій поки немає.",
+      "confirmDelete": "Видалити цю нотатку?",
+      "origin": {
+        "manual": "Вручну",
+        "assistant_text": "Асистент",
+        "assistant_voice": "Голос",
+        "consultation_ai": "Із консультації"
+      },
+      "context": {
+        "partner": "Партнер: {name}"
+      },
+      "method": {
+        "natal": "Натал",
+        "transit": "Транзит",
+        "progression": "Прогресія",
+        "direction": "Дирекція",
+        "solar_return": "Соляр",
+        "synastry_partner": "Синастрія"
+      },
+      "toast": {
+        "added": "Нотатку додано",
+        "updated": "Нотатку оновлено",
+        "deleted": "Нотатку видалено"
+      },
+      "errors": {
+        "noTarget": "Спочатку збережіть карту до профілю клієнта.",
+        "loadFailed": "Не вдалося завантажити нотатки.",
+        "saveFailed": "Не вдалося зберегти нотатку.",
+        "deleteFailed": "Не вдалося видалити нотатку.",
+        "actionFailed": "Не вдалося застосувати:"
       }
     },
     "consultation": {

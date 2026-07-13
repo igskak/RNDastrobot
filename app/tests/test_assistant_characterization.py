@@ -83,7 +83,7 @@ _EXPECTED_TOOLS = {
     # command tools
     "set_transit_date", "step_date", "add_layer", "build_solar", "set_solar_year",
     "set_wheel_view", "set_house_system", "set_synastry_partner", "remove_layer",
-    "clear_layers",
+    "clear_layers", "add_client_note",
 }
 
 

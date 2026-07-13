@@ -210,9 +210,7 @@
     function aspectMatchesPhaseFilter(aspect, filter = 'all') {
         const normalizedFilter = normalizeAspectPhaseFilter(filter);
         if (normalizedFilter.length === ASPECT_PHASE_VALUES.length) return true;
-        // Neither phase selected: treat as "no phase restriction" rather than
-        // hiding every aspect, mirroring the all-selected default.
-        if (normalizedFilter.length === 0) return true;
+        if (normalizedFilter.length === 0) return false;
         if (!aspectHasPhaseMetadata(aspect)) return true;
         return normalizedFilter.includes(getAspectPhaseState(aspect));
     }
@@ -223,6 +221,13 @@
 
         const enrichedChartData = enrichChartDataWithAspectPhases(chartData);
         if (normalizedFilter.length === ASPECT_PHASE_VALUES.length) return enrichedChartData;
+        if (normalizedFilter.length === 0) {
+            return {
+                ...enrichedChartData,
+                aspects: [],
+                aspect_configurations: [],
+            };
+        }
 
         const filteredAspects = (enrichedChartData.aspects || []).filter((aspect) => (
             aspectMatchesPhaseFilter(aspect, normalizedFilter)

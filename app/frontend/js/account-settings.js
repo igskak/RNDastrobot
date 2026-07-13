@@ -325,7 +325,7 @@
 
     function buildDefaultOrbMatrix(profileId = 'natal') {
         const aspectTypes = getMetadataAspectTypes();
-        const bodies = getMetadataBodies();
+        const bodies = [...getMetadataBodies(), window.AstroPreferences?.CUSP_ORB_BODY || 'Cusp'];
         if (window.AstroPreferences?.buildDefaultOrbProfileMatrix) {
             return window.AstroPreferences.buildDefaultOrbProfileMatrix(aspectTypes, bodies, profileId);
         }
@@ -774,7 +774,7 @@
         const tbody = document.getElementById('accountOrbsMatrixBody');
         if (!headerRow || !tbody) return;
 
-        const bodies = getMetadataBodies();
+        const bodies = [...getMetadataBodies(), window.AstroPreferences?.CUSP_ORB_BODY || 'Cusp'];
         const aspectTypes = getMetadataAspectTypes();
         const normalizedMethodology = normalizeMethodologySettings(methodology || getDefaultMethodology());
         const matrix = normalizedMethodology?.orbs?.profiles?.[activeOrbProfile]?.matrix || buildDefaultOrbMatrix(activeOrbProfile);
@@ -782,8 +782,12 @@
         headerRow.innerHTML = `
             <th class="account-settings-orb-corner"></th>
             ${bodies.map((body) => {
-                const label = escapeHtml(getBodyLabel(body));
-                const symbolMarkup = getBodySymbolMarkup(body, { size: 18, title: getBodyLabel(body) });
+                const isCusp = body === (window.AstroPreferences?.CUSP_ORB_BODY || 'Cusp');
+                const rawLabel = isCusp ? t('page.accountSettings.orbs.cuspsTitle') : getBodyLabel(body);
+                const label = escapeHtml(rawLabel);
+                const symbolMarkup = isCusp
+                    ? `<span class="account-settings-orb-cusp-short">${escapeHtml(t('page.accountSettings.orbs.cuspsShort'))}</span>`
+                    : getBodySymbolMarkup(body, { size: 18, title: rawLabel });
                 return `
                     <th>
                         <span class="account-settings-body account-settings-body--icon-only">

@@ -16,6 +16,7 @@ let relatedPeople = [];
 let tagSourceUsers = [];
 let apiTagPool = [];   // distinct tags across charts + persons (incl. family tags)
 let consultationFilter = 'all';
+let clientMemorySource = 'astrologer';
 let toastTimer = null;
 let relatedPeoplePicker = null;
 let currentAstrologer = null;
@@ -213,8 +214,13 @@ function cacheElements() {
 
     // Sections
     refs.profileContactList  = document.getElementById('profileContactList');
-    refs.profileNotesWrap    = document.getElementById('profileNotesWrap');
-    refs.profileNotes        = document.getElementById('profileNotes');
+    refs.clientMemoryTabs    = document.getElementById('clientMemoryTabs');
+    refs.clientMemoryForm    = document.getElementById('clientMemoryForm');
+    refs.clientMemoryInput   = document.getElementById('clientMemoryInput');
+    refs.clientMemorySubmit  = document.getElementById('clientMemorySubmit');
+    refs.clientMemoryStatus  = document.getElementById('clientMemoryStatus');
+    refs.clientMemoryList    = document.getElementById('clientMemoryList');
+    refs.clientMemoryEmpty   = document.getElementById('clientMemoryEmpty');
     refs.profileStatsGrid    = document.getElementById('profileStatsGrid');
     refs.profileInsightsCard = document.getElementById('profileInsightsCard');
     refs.profileInsightsList = document.getElementById('profileInsightsList');
@@ -257,7 +263,6 @@ function cacheElements() {
     refs.editTags       = document.getElementById('editTags');
     refs.editTagSuggestionsWrap = document.getElementById('editTagSuggestionsWrap');
     refs.editTagSuggestions = document.getElementById('editTagSuggestions');
-    refs.editNotes      = document.getElementById('editNotes');
     refs.editRelationGroup = document.getElementById('editRelationGroup');
     refs.editRelationLabel = document.getElementById('editRelationLabel');
 
@@ -344,6 +349,22 @@ function bindPageEvents() {
         );
         renderConsultations();
     });
+
+    refs.clientMemoryTabs?.addEventListener('click', (e) => {
+        const tab = e.target.closest('.profile-memory-tab[data-memory-source]');
+        if (!tab) return;
+        clientMemorySource = tab.dataset.memorySource === 'ai' ? 'ai' : 'astrologer';
+        refs.clientMemoryTabs.querySelectorAll('.profile-memory-tab').forEach((node) => {
+            const active = node === tab;
+            node.classList.toggle('active', active);
+            node.setAttribute('aria-selected', String(active));
+        });
+        refs.clientMemoryForm.hidden = clientMemorySource !== 'astrologer';
+        loadClientMemory();
+    });
+
+    refs.clientMemoryForm?.addEventListener('submit', submitClientMemory);
+    document.addEventListener('steliara:client-notes-changed', () => loadClientMemory());
 
     refs.recordingsList?.addEventListener('click', async (e) => {
         const retryBtn = e.target.closest('.cs-retry-btn[data-session-id]');
@@ -455,7 +476,6 @@ function normalizeCanonicalProfileUser(data) {
         phone: person.phone || '',
         messenger: person.messenger || '',
         tags: person.tags || [],
-        notes: person.notes || '',
         created_at: person.created_at || null,
     };
 }
@@ -518,69 +538,189 @@ async function loadProfileSecondaryData() {
     }
 }
 
-/* ─── Client history (consultation memory) ───────────────────────────────── */
+/* ─── Client notes (manual/assistant + consultation memory) ──────────────── */
 
-const MEM_CATEGORY_KEY = (c) => `page.consultation.memoryCategory.${c}`;
+function setClientMemoryStatus(keyOrText = '', { error = false } = {}) {
+    if (!refs.clientMemoryStatus) return;
+    const text = keyOrText ? t(keyOrText) : '';
+    refs.clientMemoryStatus.textContent = text;
+    refs.clientMemoryStatus.classList.toggle('hidden', !text);
+    refs.clientMemoryStatus.classList.toggle('profile-empty-error', error);
+}
+
+function clientMemoryContextChips(context = {}) {
+    const chips = [];
+    if (context.method) chips.push(t(`page.clientNotes.method.${context.method}`));
+    const dateTime = [context.date, context.time].filter(Boolean).join(' ');
+    if (dateTime) chips.push(dateTime);
+    if (context.timezone) chips.push(context.timezone);
+    if (context.partner_name) chips.push(t('page.clientNotes.context.partner', { name: context.partner_name }));
+    return chips.filter(Boolean);
+}
 
 async function loadClientMemory() {
-    const list = document.getElementById('clientMemoryList');
-    const empty = document.getElementById('clientMemoryEmpty');
-    if (!list) return;
+    if (!refs.clientMemoryList) return;
+    refs.clientMemoryList.innerHTML = `<p class="profile-empty">${escapeHtml(t('common.loading'))}</p>`;
+    refs.clientMemoryEmpty?.classList.add('hidden');
+    setClientMemoryStatus('');
     try {
-        const res = await apiFetch(`${API_BASE}/persons/${encodeURIComponent(personId)}/memory`);
-        if (!res.ok) throw new Error();
-        const data = await res.json();
-        const entries = data.entries || [];
-        if (!entries.length) {
-            list.innerHTML = '';
-            empty?.classList.remove('hidden');
-            return;
-        }
-        empty?.classList.add('hidden');
-        list.innerHTML = entries.map((e) => {
-            const catLabel = t(MEM_CATEGORY_KEY(e.category));
-            const cat = catLabel === MEM_CATEGORY_KEY(e.category) ? e.category : catLabel;
-            const prov = e.source === 'ai'
-                ? `<span class="mem-provenance is-ai">✦ ${escapeHtml(t('page.consultation.memory.aiSuggested'))}</span>`
-                : `<span class="mem-provenance">${escapeHtml(t('page.consultation.memory.byAstrologer'))}</span>`;
-            return `<div class="mem-item" data-id="${escapeHtml(e.id)}">
-                <div class="mem-item-head">
-                    <span class="mem-cat">${escapeHtml(cat)}</span>
-                    ${prov}
-                    <span class="mem-internal">${escapeHtml(t('page.consultation.memory.internal'))}</span>
-                </div>
-                <p class="mem-text">${escapeHtml(e.text)}</p>
-                <div class="mem-actions">
-                    <button class="mem-del-btn" data-mem-del="${escapeHtml(e.id)}">${escapeHtml(t('common.delete'))}</button>
-                </div>
-            </div>`;
-        }).join('');
-        list.querySelectorAll('[data-mem-del]').forEach((btn) => {
-            btn.addEventListener('click', () => deleteClientMemory(btn.dataset.memDel));
-        });
+        const data = await window.AstroAPI.getClientMemory(
+            { personId },
+            { source: clientMemorySource, limit: 100 },
+        );
+        renderClientMemoryEntries(data.entries || []);
     } catch (_) {
-        list.innerHTML = '';
-        empty?.classList.remove('hidden');
+        refs.clientMemoryList.innerHTML = '';
+        refs.clientMemoryEmpty.textContent = t('page.clientNotes.errors.loadFailed');
+        refs.clientMemoryEmpty?.classList.remove('hidden');
     }
 }
 
+function renderClientMemoryEntries(entries) {
+    if (!refs.clientMemoryList) return;
+    refs.clientMemoryList.innerHTML = '';
+    if (!entries.length) {
+        refs.clientMemoryEmpty.textContent = clientMemorySource === 'ai'
+            ? t('page.clientNotes.emptyConsultations')
+            : t('page.clientNotes.emptyNotes');
+        refs.clientMemoryEmpty?.classList.remove('hidden');
+        return;
+    }
+    refs.clientMemoryEmpty?.classList.add('hidden');
+    entries.forEach((entry) => refs.clientMemoryList.appendChild(buildClientMemoryItem(entry)));
+}
+
+function buildClientMemoryItem(entry) {
+    const item = document.createElement('article');
+    item.className = 'mem-item';
+    item.dataset.id = entry.id;
+
+    const head = document.createElement('div');
+    head.className = 'mem-item-head';
+    const origin = document.createElement('span');
+    origin.className = `mem-provenance${entry.source === 'ai' ? ' is-ai' : ''}`;
+    origin.textContent = entry.source === 'ai'
+        ? t('page.clientNotes.origin.consultation_ai')
+        : t(`page.clientNotes.origin.${entry.origin || 'manual'}`);
+    head.appendChild(origin);
+    if (entry.created_at) {
+        const date = document.createElement('span');
+        date.className = 'mem-cat';
+        date.textContent = formatDate(String(entry.created_at).slice(0, 10));
+        head.appendChild(date);
+    }
+    item.appendChild(head);
+
+    const text = document.createElement('p');
+    text.className = 'mem-text';
+    text.textContent = entry.text || '';
+    item.appendChild(text);
+
+    const chips = clientMemoryContextChips(entry.context_snapshot || {});
+    if (chips.length) {
+        const context = document.createElement('div');
+        context.className = 'mem-context';
+        chips.forEach((chipText) => {
+            const chip = document.createElement('span');
+            chip.className = 'mem-context-chip';
+            chip.textContent = chipText;
+            context.appendChild(chip);
+        });
+        item.appendChild(context);
+    }
+
+    const actions = document.createElement('div');
+    actions.className = 'mem-actions';
+    if (entry.source === 'astrologer') {
+        const edit = document.createElement('button');
+        edit.type = 'button';
+        edit.className = 'mem-del-btn';
+        edit.textContent = t('common.edit');
+        edit.addEventListener('click', () => editClientMemoryInline(item, entry));
+        actions.appendChild(edit);
+    }
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'mem-del-btn';
+    del.textContent = t('common.delete');
+    del.addEventListener('click', () => deleteClientMemory(entry.id));
+    actions.appendChild(del);
+    item.appendChild(actions);
+    return item;
+}
+
 function renderClientMemoryLoading() {
-    const list = document.getElementById('clientMemoryList');
-    const empty = document.getElementById('clientMemoryEmpty');
-    if (!list) return;
-    empty?.classList.add('hidden');
-    list.innerHTML = `<p class="profile-empty">${escapeHtml(t('common.loading'))}</p>`;
+    if (!refs.clientMemoryList) return;
+    refs.clientMemoryEmpty?.classList.add('hidden');
+    refs.clientMemoryList.innerHTML = `<p class="profile-empty">${escapeHtml(t('common.loading'))}</p>`;
+}
+
+function editClientMemoryInline(item, entry) {
+    item.innerHTML = '';
+    const input = document.createElement('textarea');
+    input.className = 'mem-edit-textarea';
+    input.value = entry.text || '';
+    const actions = document.createElement('div');
+    actions.className = 'mem-actions';
+    const save = document.createElement('button');
+    save.type = 'button';
+    save.className = 'mem-del-btn';
+    save.textContent = t('common.save');
+    const cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.className = 'mem-del-btn';
+    cancel.textContent = t('common.cancel');
+    actions.append(save, cancel);
+    item.append(input, actions);
+    input.focus();
+    cancel.addEventListener('click', loadClientMemory);
+    save.addEventListener('click', async () => {
+        const text = input.value.trim();
+        if (!text) return;
+        save.disabled = true;
+        try {
+            await window.AstroAPI.updateClientMemory(entry.id, { text });
+            showToast(t('page.clientNotes.toast.updated'), 'success');
+            loadClientMemory();
+        } catch (_) {
+            showToast(t('page.clientNotes.errors.saveFailed'), 'error');
+        } finally {
+            save.disabled = false;
+        }
+    });
+}
+
+async function submitClientMemory(event) {
+    event.preventDefault();
+    const text = refs.clientMemoryInput?.value?.trim() || '';
+    if (!text || clientMemorySource !== 'astrologer') return;
+    refs.clientMemorySubmit.disabled = true;
+    try {
+        await window.AstroAPI.createClientMemory({ personId }, {
+            text,
+            category: 'other',
+            mentioned_by: 'astrologer',
+            origin: 'manual',
+            idempotency_key: window.crypto?.randomUUID?.() || `profile-note-${Date.now()}`,
+        });
+        refs.clientMemoryInput.value = '';
+        showToast(t('page.clientNotes.toast.added'), 'success');
+        loadClientMemory();
+    } catch (_) {
+        showToast(t('page.clientNotes.errors.saveFailed'), 'error');
+    } finally {
+        refs.clientMemorySubmit.disabled = false;
+    }
 }
 
 async function deleteClientMemory(id) {
-    if (!confirm(t('page.consultation.memory.confirmDelete'))) return;
+    if (!confirm(t('page.clientNotes.confirmDelete'))) return;
     try {
-        const res = await apiFetch(`${API_BASE}/memory/${id}`, { method: 'DELETE' });
-        if (!res.ok) throw new Error();
-        showToast(t('page.consultation.memory.deleted'), 'success');
+        await window.AstroAPI.deleteClientMemory(id);
+        showToast(t('page.clientNotes.toast.deleted'), 'success');
         loadClientMemory();
     } catch (_) {
-        showToast(t('common.error'), 'error');
+        showToast(t('page.clientNotes.errors.deleteFailed'), 'error');
     }
 }
 
@@ -638,12 +778,6 @@ function renderContact(user) {
             `<p class="profile-empty">${escapeHtml(t('page.clients.crm.noContact'))}</p>`);
     }
 
-    if (user.notes) {
-        refs.profileNotes.textContent = user.notes;
-        refs.profileNotesWrap.classList.remove('hidden');
-    } else {
-        refs.profileNotesWrap.classList.add('hidden');
-    }
 }
 
 function getUserTags(user) {
@@ -1278,7 +1412,6 @@ async function openEditClientDialog(pid) {
         if (refs.editPhone) refs.editPhone.value = person.phone || '';
         if (refs.editMessenger) refs.editMessenger.value = person.messenger || '';
         if (refs.editTags) refs.editTags.value = Array.isArray(person.tags) ? person.tags.join(', ') : '';
-        if (refs.editNotes) refs.editNotes.value = person.notes || '';
         if (refs.editRelationLabel) refs.editRelationLabel.value = '';
         renderEditTagSuggestions();
         refs.editError.classList.add('hidden');
@@ -1411,7 +1544,6 @@ async function handleEditClientSubmit(e) {
         phone:     refs.editPhone?.value?.trim() || '',
         messenger: refs.editMessenger?.value?.trim() || '',
         tags,
-        notes: refs.editNotes?.value?.trim() || '',
     };
 
     const lat = Number(editClientState.selectedCoords?.lat);

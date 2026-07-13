@@ -105,6 +105,8 @@ def test_build_default_orb_settings_uses_fixed_prognostic_defaults():
     assert defaults["profiles"]["prognostic"]["matrix"]["Conjunction"]["Moon"] == 3.0
     assert defaults["profiles"]["prognostic"]["matrix"]["Square"]["Moon"] == 3.0
     assert defaults["profiles"]["prognostic"]["matrix"]["Square"]["Mars"] == 1.0
+    assert defaults["profiles"]["natal"]["matrix"]["Conjunction"]["Cusp"] == 8.0
+    assert defaults["profiles"]["prognostic"]["matrix"]["Conjunction"]["Cusp"] == 1.0
     assert defaults["profiles"]["synastry"]["matrix"] == defaults["profiles"]["prognostic"]["matrix"]
 
 

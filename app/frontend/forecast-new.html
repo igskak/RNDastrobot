@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecastNew.pageTitle">Forecast</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=8c65939281b4">
-    <script>window.__APP_BUILD_ID__ = '8c65939281b4';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=869da03a6a7a">
+    <script>window.__APP_BUILD_ID__ = '869da03a6a7a';</script>
 </head>
 <body class="forecast-new-page workspace-compact forecast-workspace-compact">
     <div class="page-loader forecast-new-loader" id="pageLoader">
@@ -596,6 +596,9 @@
             <path d="M9 21h6"/>
         </svg>
     </button>
+    <button type="button" id="chatNotesToggle" class="chat-notes-toggle" data-i18n-aria-label="page.clientNotes.open">
+        <span aria-hidden="true">•</span>
+    </button>
     <button type="button" id="chatVoiceMiniStatus" class="chat-voice-mini" hidden data-i18n-aria-label="page.chart.chat.openVoiceResult"></button>
     <section id="chatWidget" class="chat-widget" aria-labelledby="chatTitle">
         <button type="button" id="chatResizeHandle" class="chat-resize-handle"
@@ -614,6 +617,10 @@
                 <span aria-hidden="true">×</span>
             </button>
         </header>
+        <div class="chat-view-tabs" role="tablist" data-i18n-aria-label="page.clientNotes.dockTabs">
+            <button type="button" id="chatAssistantTab" class="chat-view-tab active" role="tab" aria-selected="true" data-chat-view="assistant" data-i18n="page.chart.chat.title"></button>
+            <button type="button" id="chatNotesTab" class="chat-view-tab" role="tab" aria-selected="false" data-chat-view="notes" data-i18n="page.clientNotes.title"></button>
+        </div>
         <div id="chatHistory" class="chat-history" hidden>
             <p class="chat-history-title" data-i18n="page.chart.chat.historyTitle"></p>
             <ul id="chatHistoryList" class="chat-history-list"></ul>
@@ -622,7 +629,7 @@
             <p class="chat-empty" data-i18n="page.chart.chat.empty"></p>
         </div>
         <div id="chatVoiceStatus" class="chat-voice-status" role="status" aria-live="polite" hidden></div>
-        <div class="chat-input-row">
+        <div id="chatInputRow" class="chat-input-row">
             <textarea id="chatInput" class="chat-input" rows="1"
                       data-i18n-placeholder="page.chart.chat.placeholder"></textarea>
             <button type="button" id="chatMic" class="chat-mic" aria-pressed="false"
@@ -633,10 +640,23 @@
                 <span aria-hidden="true">↑</span>
             </button>
         </div>
+        <div id="chatNotesView" class="chat-notes-view" hidden>
+            <div class="chat-notes-source-tabs" role="tablist" data-i18n-aria-label="page.clientNotes.sourceTabs">
+                <button type="button" class="chat-notes-source active" data-notes-source="astrologer" data-i18n="page.clientNotes.tabs.notes"></button>
+                <button type="button" class="chat-notes-source" data-notes-source="ai" data-i18n="page.clientNotes.tabs.consultations"></button>
+            </div>
+            <form id="chatNoteForm" class="chat-note-form">
+                <textarea id="chatNoteInput" class="chat-note-input" rows="2" data-i18n-placeholder="page.clientNotes.placeholder"></textarea>
+                <button type="submit" id="chatNoteSubmit" class="chat-note-submit" data-i18n="page.clientNotes.add"></button>
+            </form>
+            <p id="chatNotesStatus" class="chat-notes-status" role="status" aria-live="polite" hidden></p>
+            <div id="chatNotesList" class="chat-notes-list"></div>
+            <p id="chatNotesEmpty" class="chat-notes-empty" hidden></p>
+        </div>
     </section>
 
     <script src="/runtime-config.js"></script>
-    <script src="/js/analytics.js?v=8c65939281b4"></script>
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=8c65939281b4"></script>
+    <script src="/js/analytics.js?v=869da03a6a7a"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=869da03a6a7a"></script>
 </body>
 </html>

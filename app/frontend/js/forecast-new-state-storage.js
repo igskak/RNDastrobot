@@ -210,6 +210,9 @@
             rightTab: pickEnum(source.rightTab, VALID_TABS, 'Planets'),
             matrixSchemaVersion: Number(source.matrixSchemaVersion) === MATRIX_SCHEMA_VERSION ? MATRIX_SCHEMA_VERSION : 1,
             natalMatrixRows: source.natalMatrixRows && typeof source.natalMatrixRows === 'object' ? source.natalMatrixRows : {},
+            natalAspectingCusps: Array.isArray(source.natalAspectingCusps)
+                ? source.natalAspectingCusps.filter((house) => Number.isInteger(Number(house)) && Number(house) >= 1 && Number(house) <= 12).map(Number)
+                : [],
             matrixRows: source.matrixRows && typeof source.matrixRows === 'object' ? source.matrixRows : {},
             viewport: sanitizeViewport(source.viewport),
             pageSettings: source.pageSettings && typeof source.pageSettings === 'object' ? source.pageSettings : {},

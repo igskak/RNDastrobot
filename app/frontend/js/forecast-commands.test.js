@@ -38,6 +38,8 @@ function makeAdapter(initial) {
             if (action.name === 'set_solar_year') st.solarYear = action.args.year;
             if (action.name === 'set_transit_date') { st.date = action.args.date; if (action.args.time) st.time = action.args.time; }
             if (action.name === 'restore_workspace') st.restoredWith = action.args.snapshot;
+            if (action.name === 'add_client_note') return { ok: true, entry_id: 'note-1', label: action.args.note_text };
+            if (action.name === 'delete_client_note') { st.deletedNoteId = action.args.entry_id; return { ok: true }; }
             return { ok: true, label: action.name };
         },
     };
@@ -61,6 +63,7 @@ function makeAdapter(initial) {
     ok(!validateAction({ name: 'step_date', args: { unit: 'day', amount: 0, direction: 'forward' } }).ok, 'zero step amount rejected');
     ok(!validateAction({ name: 'step_date', args: { unit: 'day', amount: 2, direction: 'sideways' } }).ok, 'bad step direction rejected');
     ok(!validateAction({ name: 'remove_layer', args: {} }).ok, 'remove_layer without target rejected');
+    ok(!validateAction({ name: 'add_client_note', args: { note_text: '' } }).ok, 'empty note rejected');
 
     // ── validation: acceptances ─────────────────────────────────────────────
     ok(validateAction({ name: 'set_transit_date', args: { date: '2026-03-14' } }).ok, 'valid transit date accepted');
@@ -81,6 +84,7 @@ function makeAdapter(initial) {
             place: 'Kyiv',
         },
     } }).ok, 'valid manual synastry partner accepted');
+    ok(validateAction({ name: 'add_client_note', args: { note_text: 'Transit Mars aspects Moon' } }).ok, 'valid client note accepted');
     ok(!validateAction({ name: 'set_synastry_partner', args: {} }).ok, 'synastry partner without chart_id rejected');
     ok(!validateAction({ name: 'set_synastry_partner', args: { chart_id: '  ' } }).ok, 'synastry partner blank chart_id rejected');
     ok(!validateAction({ name: 'set_synastry_partner', args: {
@@ -89,6 +93,7 @@ function makeAdapter(initial) {
 
     // ── registry / confirm policy ────────────────────────────────────────────
     ok(REGISTRY.set_transit_date.confirm === 'auto', 'transit date auto-applies');
+    ok(REGISTRY.add_client_note.confirm === 'auto', 'client note auto-applies');
     ok(REGISTRY.remove_layer.confirm === 'confirm', 'remove_layer needs confirm');
     ok(REGISTRY.clear_layers.confirm === 'confirm', 'clear_layers needs confirm');
     ok(REGISTRY.restore_workspace.internal === true, 'restore_workspace is internal');
@@ -109,6 +114,12 @@ function makeAdapter(initial) {
     ok(REGISTRY.set_synastry_partner.confirm === 'auto', 'synastry partner auto-applies (reversible via undo)');
     const invHouse = computeInverse({ name: 'set_house_system', args: { system: 'K' } }, before);
     ok(invHouse.name === 'set_house_system' && invHouse.args.system === 'P', 'house system inverse restores prior system');
+    const invNote = computeInverse(
+        { name: 'add_client_note', args: { note_text: 'Transit Mars aspects Moon' } },
+        before,
+        { entry_id: 'note-1' },
+    );
+    ok(invNote.name === 'delete_client_note' && invNote.args.entry_id === 'note-1', 'client note inverse deletes created note');
 
     // ── apply: invalid action does not reach the adapter ─────────────────────
     {
@@ -142,6 +153,17 @@ function makeAdapter(initial) {
         const u = await cmds.undo();
         ok(u.ok && u.inverse.name === 'restore_workspace', 'add_layer undo dispatched restore_workspace');
         ok(a.st.restoredWith && a.st.restoredWith.token === 'snap@2026-06-27', 'restore used the pre-change snapshot');
+    }
+
+    // ── apply: client note can be undone via internal delete action ──────────
+    {
+        const a = makeAdapter();
+        const cmds = createForecastCommands(a);
+        const r = await cmds.apply({ name: 'add_client_note', args: { note_text: 'Transit Mars aspects Moon' } });
+        ok(r.ok && r.undoable, 'add_client_note applied + undoable');
+        const u = await cmds.undo();
+        ok(u.ok && u.inverse.name === 'delete_client_note', 'note undo dispatched delete_client_note');
+        ok(a.st.deletedNoteId === 'note-1', 'note undo deleted created entry');
     }
 
     // ── apply: onApplied UI hook fires but cannot break apply ────────────────

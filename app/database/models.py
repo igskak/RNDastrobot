@@ -1520,6 +1520,9 @@ class ClientMemoryEntry(Base):
     text = Column(Text, nullable=False)
     mentioned_by = Column(String(16), nullable=False)
     source = Column(String(16), nullable=False, default='ai')
+    origin = Column(String(32), nullable=False, default='manual', server_default='manual')
+    context_snapshot = Column(JSONB().with_variant(JSON(), "sqlite"))
+    idempotency_key = Column(UUID(as_uuid=True))
     reviewed_at = Column(DateTime)
     edited_at = Column(DateTime)
     deleted_at = Column(DateTime)
@@ -1527,8 +1530,13 @@ class ClientMemoryEntry(Base):
 
     __table_args__ = (
         CheckConstraint("source IN ('ai','astrologer')", name='chk_cme_source'),
+        CheckConstraint(
+            "origin IN ('manual','assistant_text','assistant_voice','consultation_ai')",
+            name='chk_cme_origin',
+        ),
         Index('idx_cme_tenant', 'astrologer_id', 'user_id', 'created_at'),
         Index('idx_client_memory_person_id', 'astrologer_id', 'person_id', 'created_at'),
+        Index('idx_cme_source_origin_created', 'astrologer_id', 'source', 'origin', 'created_at'),
     )
 
 

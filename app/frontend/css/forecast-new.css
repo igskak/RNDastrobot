@@ -1805,6 +1805,33 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     accent-color: var(--accent);
 }
 
+.forecast-new-matrix-table .forecast-new-cusp-matrix-divider th {
+    padding-top: 9px;
+    padding-bottom: 5px;
+    color: var(--text-secondary);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.forecast-new-matrix-table .forecast-new-matrix-fixed-display {
+    color: var(--text-secondary);
+    cursor: default;
+}
+
+.aspect-cusp-symbol {
+    display: inline-flex;
+    min-width: 1.15rem;
+    height: 1.15rem;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
 .forecast-new-matrix-col,
 .forecast-new-matrix-inline-cell {
     width: 26px;

@@ -221,6 +221,7 @@ def _append_ai_memory(db: Session, cs: CallSession, entries: list) -> None:
             text=body,
             mentioned_by=e.get("mentioned_by", "both"),
             source="ai",
+            origin="consultation_ai",
         ))
     db.commit()
     logger.info(f"Pipeline: {len(seen)} AI memory entries appended for session {cs.id}")

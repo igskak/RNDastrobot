@@ -523,7 +523,7 @@ or counts: every number must come from a tool result.
 
 You can also CHANGE the workspace by calling command tools (set_transit_date, \
 step_date, add_layer, build_solar, set_solar_year, set_wheel_view, set_house_system, \
-set_synastry_partner, remove_layer, clear_layers). Command rules:
+set_synastry_partner, add_client_note, remove_layer, clear_layers). Command rules:
 - Call a command ONLY when the astrologer explicitly asks to change, build, add, move, \
 remove, or show something. A plain question must NEVER trigger a command — answer it \
 with a query tool or words instead.
@@ -555,6 +555,10 @@ active synastry. If synastry_partner is in workspace context, do not ask for bir
 data again; use the partner id or manual birth data from workspace. If the tool says \
 synastry_partner_missing, ask for the exact missing partner birth data only.
 - remove_layer and clear_layers are destructive — call them only on an explicit removal request.
+- add_client_note is only for an explicit request to add/write/save a note. Put in note_text \
+only the astrologer's note content after removing the command wrapper ("add to notes that ..."). \
+Do not summarize, polish, interpret, add IDs, or add screen context; the client adds screen context \
+deterministically when it saves the note.
 
 Rules:
 - The active chart is fixed by the system; do not ask which chart or pass any id.
@@ -1247,8 +1251,15 @@ class AstroAssistantService:
                 # Command tools are applied by the client, not the server: validate
                 # the intent, collect the action, and hand the model a receipt.
                 if name in COMMAND_REGISTRY:
-                    result, action = handle_command(name, args)
-                    if action is not None:
+                    result, action = handle_command(name, args, source_text=_last_user_text(messages))
+                    if action is not None and not (
+                        action.get("name") == "add_client_note"
+                        and any(
+                            prev.get("name") == "add_client_note"
+                            and prev.get("args", {}).get("note_text") == action.get("args", {}).get("note_text")
+                            for prev in actions
+                        )
+                    ):
                         actions.append(action)
                 else:
                     result = self._dispatch(name, args, user_id)

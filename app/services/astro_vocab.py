@@ -56,6 +56,7 @@ COMMAND_REGISTRY = {
     'set_wheel_view': {'confirm': 'auto'},
     'set_house_system': {'confirm': 'auto'},
     'set_synastry_partner': {'confirm': 'auto'},
+    'add_client_note': {'confirm': 'auto'},
     'remove_layer': {'confirm': 'confirm'},
     'clear_layers': {'confirm': 'confirm'},
 }

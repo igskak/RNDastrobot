@@ -194,6 +194,7 @@ class NatalChartService:
         # Тривиальные фильтруем — как при сохранении в БД (_save_aspects) → паритет
         # с GET /natal/{user_id}. Нужна db_session (ref-данные типов аспектов).
         aspects = []
+        cusp_aspects = []
         if db_session is not None:
             aspect_objects = [
                 {
@@ -227,6 +228,12 @@ class NatalChartService:
                 filter_trivial=True,
                 astrologer_id=astrologer_id,
             )
+            cusp_aspects = AspectService(db_session).calculate_aspects_to_house_cusps(
+                aspect_objects,
+                houses,
+                astrologer_id=astrologer_id,
+                orb_profile='natal',
+            )
 
         # 9. Формируем результат
         result = {
@@ -251,6 +258,7 @@ class NatalChartService:
             'angles': angles,
             'special_points': special_points,
             'aspects': aspects,
+            'cusp_aspects': cusp_aspects,
             'configurations': configurations,
             # Деклинационные аспекты (параллели/контрпараллели) — планеты уже несут declination.
             'declination_aspects': DeclinationService.find_declination_aspects(planets),
@@ -1517,6 +1525,12 @@ class NatalChartService:
         )
 
         aspect_phase_service = AspectService(db_session)
+        result['cusp_aspects'] = aspect_phase_service.calculate_aspects_to_house_cusps(
+            phase_objects,
+            result.get('houses') or [],
+            astrologer_id=user.astrologer_id,
+            orb_profile='natal',
+        )
         raw_aspects = [
             {
                 'aspect_id': a.aspect_id,

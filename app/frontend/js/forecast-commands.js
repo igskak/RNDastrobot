@@ -84,9 +84,11 @@
         set_wheel_view:    { confirm: 'auto', reversible: true },
         set_house_system:  { confirm: 'auto', reversible: true },
         set_synastry_partner: { confirm: 'auto', reversible: true },
+        add_client_note:   { confirm: 'auto', reversible: true },
         remove_layer:      { confirm: 'confirm', reversible: true },
         clear_layers:      { confirm: 'confirm', reversible: true },
         restore_workspace: { confirm: 'auto', reversible: false, internal: true },
+        delete_client_note: { confirm: 'auto', reversible: false, internal: true },
     };
 
     const VOCAB = {
@@ -157,6 +159,17 @@
                 }
                 return hasManual ? validateManualSynastry(args.manual) : pass();
             }
+            case 'add_client_note': {
+                if (!hasText(args.note_text)) return fail('empty_note', 'note_text is required');
+                if (String(args.note_text).trim().length > 10000) return fail('note_too_long', 'note_text is too long');
+                if (args.idempotency_key != null && !hasText(args.idempotency_key)) {
+                    return fail('bad_idempotency_key', 'idempotency_key must be a string');
+                }
+                if (args.origin != null && !['assistant_text', 'assistant_voice', 'manual'].includes(args.origin)) {
+                    return fail('bad_origin', 'origin is invalid');
+                }
+                return pass();
+            }
             case 'remove_layer': {
                 if (!args.layer_id && !LAYER_METHODS.includes(args.method)) {
                     return fail('bad_target', 'remove_layer needs layer_id or a valid method');
@@ -174,7 +187,7 @@
     // Scalar commands restore the prior value surgically (cheap, no refetch
     // storm). Structural commands (layer set / solar) restore a workspace
     // snapshot captured before the change — robust against multi-instance edits.
-    function computeInverse(action, before) {
+    function computeInverse(action, before, result) {
         if (!before) return null;
         const name = action.name;
         const args = action.args || {};
@@ -198,6 +211,9 @@
             case 'clear_layers':
                 if (!before.snapshot) return null;
                 return { name: 'restore_workspace', args: { snapshot: before.snapshot } };
+            case 'add_client_note':
+                if (!result?.entry_id) return null;
+                return { name: 'delete_client_note', args: { entry_id: result.entry_id } };
             default:
                 return null;
         }
@@ -233,7 +249,7 @@
 
             let undoable = false;
             if (meta.reversible && before) {
-                const inverse = computeInverse(action, before);
+                const inverse = computeInverse(action, before, result);
                 if (inverse) {
                     undoStack.push(inverse);
                     while (undoStack.length > maxUndo) undoStack.shift();

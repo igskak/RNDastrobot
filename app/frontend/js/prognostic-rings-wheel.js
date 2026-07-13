@@ -1458,6 +1458,8 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
         }
 
         bodyName(name) {
+            const cuspMatch = /^Cusp([1-9]|1[0-2])$/.exec(String(name || ''));
+            if (cuspMatch) return this.houseLabel(Number(cuspMatch[1]));
             const key = `astro.planet.${name}`;
             const translated = window.FrontendI18n?.t?.(key);
             return translated && translated !== key ? translated : (Symbols?.getPlanetNameRu?.(name) || name);

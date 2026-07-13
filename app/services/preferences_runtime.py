@@ -104,6 +104,7 @@ DEFAULT_ASPECT_COLOR_BY_TYPE: Dict[str, str] = {
 
 DEFAULT_STATIONARY_THRESHOLD_PERCENT = 10.0
 ORB_PROFILE_IDS = ('natal', 'prognostic', 'synastry')
+CUSP_ORB_KEY = 'Cusp'
 DEFAULT_ORB_PAIR_STRATEGY = 'larger'
 ORB_PAIR_STRATEGY_ALIASES: Dict[str, str] = {
     'larger': 'larger',
@@ -139,7 +140,10 @@ def deep_merge_dicts(base: Dict[str, Any], overlay: Dict[str, Any]) -> Dict[str,
 def normalize_body_name(name: Optional[str]) -> Optional[str]:
     if not name:
         return name
-    return BODY_REVERSE_LOOKUP.get(str(name), str(name))
+    raw_name = str(name)
+    if raw_name.startswith(CUSP_ORB_KEY) and raw_name[len(CUSP_ORB_KEY):].isdigit():
+        return CUSP_ORB_KEY
+    return BODY_REVERSE_LOOKUP.get(raw_name, raw_name)
 
 
 def get_body_alias_candidates(name: Optional[str]) -> List[str]:
@@ -251,6 +255,10 @@ def build_default_orb_settings(
             prognostic_matrix[aspect_name][body] = (
                 float(PROGNOSTIC_MOON_ORB) if body == 'Moon' else float(PROGNOSTIC_DEFAULT_ORB)
             )
+        # House cusps share one compact orb column. Individual cusps remain
+        # separate aspect targets, but intentionally are not canonical bodies.
+        natal_matrix[aspect_name][CUSP_ORB_KEY] = base_orb
+        prognostic_matrix[aspect_name][CUSP_ORB_KEY] = float(PROGNOSTIC_DEFAULT_ORB)
 
     return {
         'version': 2,

@@ -460,7 +460,10 @@
       },
       "matrix": {
         "displayShort": "D",
-        "aspectingShort": "A"
+        "aspectingShort": "A",
+        "natalCusps": "Natal house cusps",
+        "cuspAria": "House {house} cusp: aspecting",
+        "alwaysDisplayed": "Always displayed"
       },
       "panelEditor": {
         "toggle": "Configure panels",
@@ -813,6 +816,8 @@
         "showAspectText": "Show aspect name as text"
       },
       "orbs": {
+        "cuspsShort": "Cusp",
+        "cuspsTitle": "House cusps",
         "actions": {
           "applyNatal": "Apply natal orbs"
         },
@@ -1636,7 +1641,7 @@
         "relatedPeopleSubtitle": "Choose a person for synastry."
       },
       "sections": {
-        "contact": "Contact & notes",
+        "contact": "Contact",
         "notes": "Notes",
         "statistics": "Statistics",
         "relatedPeople": "Synastry charts",
@@ -2771,6 +2776,51 @@
         "registerFailed": "Unable to create an account right now.",
         "verifyFailed": "Unable to verify your email right now.",
         "resendVerificationFailed": "Unable to resend verification right now."
+      }
+    },
+    "clientNotes": {
+      "title": "Notes",
+      "open": "Open notes",
+      "dockTabs": "Assistant and notes",
+      "sourceTabs": "Note source",
+      "actionLabel": "add note",
+      "tabs": {
+        "notes": "Notes",
+        "consultations": "From consultations"
+      },
+      "placeholder": "Add a note to this client profile...",
+      "add": "Add",
+      "emptyNotes": "No notes yet.",
+      "emptyConsultations": "No consultation notes yet.",
+      "confirmDelete": "Delete this note?",
+      "origin": {
+        "manual": "Manual",
+        "assistant_text": "Assistant",
+        "assistant_voice": "Voice",
+        "consultation_ai": "From consultation"
+      },
+      "context": {
+        "partner": "Partner: {name}"
+      },
+      "method": {
+        "natal": "Natal",
+        "transit": "Transit",
+        "progression": "Progression",
+        "direction": "Direction",
+        "solar_return": "Solar",
+        "synastry_partner": "Synastry"
+      },
+      "toast": {
+        "added": "Note added",
+        "updated": "Note updated",
+        "deleted": "Note deleted"
+      },
+      "errors": {
+        "noTarget": "Save this chart to a client profile before adding notes.",
+        "loadFailed": "Failed to load notes.",
+        "saveFailed": "Failed to save note.",
+        "deleteFailed": "Failed to delete note.",
+        "actionFailed": "Could not apply:"
       }
     },
     "consultation": {

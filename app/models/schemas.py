@@ -478,6 +478,10 @@ class NatalChartResponse(BaseModel):
     configurations: Optional[Dict[str, Dict]] = None
     # Новые поля из пункта 3.3 спецификации
     aspects: Optional[List[AspectInfo]] = None
+    cusp_aspects: Optional[List[AspectInfo]] = Field(
+        None,
+        description="Аспекты тел и точек к натальным куспидам домов",
+    )
     aspect_configurations: Optional[List[ConfigurationInfo]] = None
     declination_aspects: Optional[List[Dict[str, Any]]] = Field(None, description="Деклинационные аспекты: параллели/контрпараллели")
     stelliums: Optional[List[StelliumInfo]] = None

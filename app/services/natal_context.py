@@ -24,6 +24,20 @@ from uuid import UUID
 from app.utils.constants import PROGNOSTIC_EXCLUDED_NATAL_TARGETS
 
 
+def house_cusp_targets(houses: List[Dict]) -> List[Dict]:
+    """Represent natal cusps as aspect-only targets without making them bodies."""
+    return [
+        {
+            'name': f"Cusp{int(house['number'])}",
+            'longitude': float(house['longitude']),
+            'type': 'house_cusp',
+            'speed': 0.0,
+        }
+        for house in (houses or [])
+        if house.get('number') is not None and house.get('longitude') is not None
+    ]
+
+
 def _parse_iso_date(value) -> Optional[date_type]:
     if value is None or value == '':
         return None
@@ -76,7 +90,7 @@ def natal_data_from_calc_result(calc_result: Dict, *, apply_exclusions: bool = T
         if h.get('longitude') is not None
     ]
 
-    all_objects = natal_planets + natal_special_points + natal_angles
+    all_objects = natal_planets + natal_special_points + natal_angles + house_cusp_targets(natal_houses)
     if apply_exclusions:
         all_objects = [o for o in all_objects if o['name'] not in PROGNOSTIC_EXCLUDED_NATAL_TARGETS]
 
@@ -113,6 +127,7 @@ def aspect_targets_from_calc_result(calc_result: Dict) -> List[Dict]:
     vertex = angles_in.get('Vertex')
     if vertex and vertex.get('longitude') is not None:
         targets.append({'name': 'Vertex', 'longitude': float(vertex['longitude']), 'type': 'angle', 'speed': 0.0})
+    targets.extend(house_cusp_targets(calc_result.get('houses') or []))
     return [t for t in targets if t['name'] not in PROGNOSTIC_EXCLUDED_NATAL_TARGETS]
 
 

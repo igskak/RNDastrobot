@@ -259,7 +259,8 @@ class TransitService:
         ]
 
         # Фильтруем исключённые натальные цели для прогностики
-        all_objects = natal_planets + natal_special_points + natal_angles
+        from app.services.natal_context import house_cusp_targets
+        all_objects = natal_planets + natal_special_points + natal_angles + house_cusp_targets(natal_houses)
         if apply_exclusions:
             all_objects = [
                 o for o in all_objects

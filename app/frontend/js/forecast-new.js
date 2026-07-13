@@ -6,7 +6,7 @@
         : '/api/v1';
     const LAYER_ORDER = ['transit', 'progression', 'direction', 'solar_return', 'synastry_partner'];
     const DEFAULT_DIRECTION_TYPE = 'zodiacal';
-    const LAYER_CACHE_PREFIX = 'forecastNewLayerCache:';
+    const LAYER_CACHE_PREFIX = 'forecastNewLayerCache:v2:';
     const LAYER_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
     const DEFAULT_ASPECT_TYPES = window.AstroPreferences?.DEFAULT_ENABLED_ASPECT_TYPES || [
         'Conjunction', 'Opposition', 'Trine', 'Square', 'Sextile',
@@ -139,6 +139,7 @@
         leftTab: 'Planets',
         rightTab: 'Planets',
         natalMatrixRows: buildDefaultForecastNewMatrixRows(),
+        natalAspectingCusps: [],
         matrixRows: buildDefaultForecastNewMatrixRows(),
         pageSettings: {
             houseSystem: 'P',
@@ -1192,6 +1193,19 @@
 
         [refs.forecastNewMatrixEditor, refs.forecastNewSettingsMatrixEditor].forEach((editor) => {
             editor?.addEventListener('change', async (event) => {
+                const cuspInput = event.target instanceof Element
+                    ? event.target.closest('input[data-natal-cusp-aspecting]')
+                    : null;
+                if (cuspInput instanceof HTMLInputElement) {
+                    const houseNumber = Number(cuspInput.dataset.natalCuspAspecting);
+                    if (Number.isInteger(houseNumber) && houseNumber >= 1 && houseNumber <= 12) {
+                        const selected = new Set(state.natalAspectingCusps);
+                        cuspInput.checked ? selected.add(houseNumber) : selected.delete(houseNumber);
+                        state.natalAspectingCusps = [...selected].sort((a, b) => a - b);
+                        await applyMatrixRows();
+                    }
+                    return;
+                }
                 const input = event.target instanceof Element
                     ? event.target.closest('input[data-matrix-body][data-matrix-field]')
                     : null;
@@ -3634,6 +3648,20 @@
         const bodies = window.AstroPreferences?.MATRIX_BODIES || [];
         const normalizedScope = scope === 'natal' ? 'natal' : 'prognostic';
         const rows = getMatrixRowsForScope(normalizedScope);
+        const selectedCusps = new Set(state.natalAspectingCusps);
+        const cuspRows = normalizedScope === 'natal'
+            ? Array.from({ length: 12 }, (_, index) => index + 1).map((houseNumber) => {
+                const houseLabel = Symbols?.formatHouseLabel?.(houseNumber) || String(houseNumber);
+                const cuspLabel = t('page.forecastNew.matrix.cuspAria', { house: houseLabel });
+                return `
+                    <tr class="forecast-new-cusp-matrix-row">
+                        <td><span class="natal-matrix-body" title="${escapeHtml(cuspLabel)}" aria-label="${escapeHtml(cuspLabel)}">${escapeHtml(houseLabel)}</span></td>
+                        <td class="forecast-new-matrix-fixed-display" aria-label="${escapeHtml(t('page.forecastNew.matrix.alwaysDisplayed'))}">—</td>
+                        <td><input type="checkbox" data-natal-cusp-aspecting="${houseNumber}" ${selectedCusps.has(houseNumber) ? 'checked' : ''} aria-label="${escapeHtml(cuspLabel)}"></td>
+                    </tr>
+                `;
+            }).join('')
+            : '';
         return `
             <table class="natal-matrix-table forecast-new-matrix-table">
                 <thead><tr><th>Body</th><th>Display</th><th>Aspecting</th></tr></thead>
@@ -3651,6 +3679,7 @@
                             </tr>
                         `;
                     }).join('')}
+                    ${cuspRows ? `<tr class="forecast-new-cusp-matrix-divider"><th colspan="3">${escapeHtml(t('page.forecastNew.matrix.natalCusps'))}</th></tr>${cuspRows}` : ''}
                 </tbody>
             </table>
         `;
@@ -3967,6 +3996,7 @@
         state.natalMatrixRows = normalizeForecastNewMatrixRows(
             hasSplitMatrixPreferences ? (matrixSettings.natal_rows || state.natalMatrixRows) : state.natalMatrixRows
         );
+        state.natalAspectingCusps = normalizeNatalAspectingCusps(matrixSettings.natal_cusps);
         state.matrixRows = normalizeForecastNewMatrixRows(
             matrixSettings.prognostic_rows || matrixSettings.rows || state.matrixRows
         );
@@ -6734,6 +6764,38 @@
         });
     }
 
+    function normalizeNatalAspectingCusps(value) {
+        return [...new Set((Array.isArray(value) ? value : [])
+            .map((house) => Number(house))
+            .filter((house) => Number.isInteger(house) && house >= 1 && house <= 12))]
+            .sort((a, b) => a - b);
+    }
+
+    function cuspHouseFromBody(name) {
+        const match = /^Cusp([1-9]|1[0-2])$/.exec(String(name || ''));
+        return match ? Number(match[1]) : null;
+    }
+
+    function aspectsWithSelectedNatalCusps(chartData = {}) {
+        const selected = new Set(normalizeNatalAspectingCusps(state.natalAspectingCusps));
+        const combined = [
+            ...(Array.isArray(chartData?.aspects) ? chartData.aspects : []),
+            ...(Array.isArray(chartData?.cusp_aspects) ? chartData.cusp_aspects : []),
+        ];
+        const seen = new Set();
+        return combined.filter((aspect) => {
+            const first = aspect?.planet_1 ?? aspect?.left_planet ?? aspect?.transit_planet
+                ?? aspect?.progressed_planet ?? aspect?.directed_object;
+            const second = aspect?.planet_2 ?? aspect?.right_planet ?? aspect?.natal_object;
+            const cuspHouse = cuspHouseFromBody(first) || cuspHouseFromBody(second);
+            if (cuspHouse && !selected.has(cuspHouse)) return false;
+            const key = `${first}|${second}|${aspect?.aspect_type}|${Number(aspect?.orb)}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+    }
+
     function matrixRowsForSidePanel(scope = 'prognostic') {
         const rows = getMatrixRowsForScope(scope);
         return Object.fromEntries(Object.entries(rows).map(([body, config]) => [
@@ -6765,7 +6827,7 @@
         const scope = options.scope || 'prognostic';
         let filtered = {
             ...chartData,
-            aspects: normalizeForecastAspects(chartData.aspects || []),
+            aspects: normalizeForecastAspects(aspectsWithSelectedNatalCusps(chartData)),
         };
 
         filtered = window.AstroPreferences?.filterChartDataByViewPreferences
@@ -6792,7 +6854,7 @@
         const scope = options.scope || 'prognostic';
         let filtered = {
             ...chartData,
-            aspects: normalizeForecastAspects(chartData.aspects || []),
+            aspects: normalizeForecastAspects(aspectsWithSelectedNatalCusps(chartData)),
         };
 
         filtered = window.AstroPreferences?.filterChartDataByViewPreferences
@@ -8716,6 +8778,7 @@
         state.natalMatrixRows = normalizeForecastNewMatrixRows(
             hasSplitMatrixState ? (restored.natalMatrixRows || state.natalMatrixRows) : state.natalMatrixRows
         );
+        state.natalAspectingCusps = normalizeNatalAspectingCusps(restored.natalAspectingCusps);
         state.matrixRows = normalizeForecastNewMatrixRows(restored.matrixRows);
         state.viewport = restored.viewport || state.viewport;
         state.pageSettings = {
@@ -8804,6 +8867,7 @@
             state.natalMatrixRows = normalizeForecastNewMatrixRows(
                 hasSplitMatrixPreferences ? (matrixSettings.natal_rows || state.natalMatrixRows) : state.natalMatrixRows
             );
+            state.natalAspectingCusps = normalizeNatalAspectingCusps(matrixSettings.natal_cusps);
             state.matrixRows = normalizeForecastNewMatrixRows(
                 matrixSettings.prognostic_rows || matrixSettings.rows || state.matrixRows
             );
@@ -8851,6 +8915,7 @@
                 rows: ensureMatrixRows(state.matrixRows),
                 prognostic_rows: ensureMatrixRows(state.matrixRows),
                 natal_rows: ensureMatrixRows(state.natalMatrixRows),
+                natal_cusps: normalizeNatalAspectingCusps(state.natalAspectingCusps),
             },
             aspects: {
                 scope: state.pageSettings.aspectScope || 'major',
@@ -9526,6 +9591,7 @@
                 rightTab: state.rightTab,
                 matrixSchemaVersion: window.ForecastNewStateStorage?.MATRIX_SCHEMA_VERSION || 2,
                 natalMatrixRows: state.natalMatrixRows,
+                natalAspectingCusps: state.natalAspectingCusps,
                 matrixRows: state.matrixRows,
                 viewport: state.viewport,
                 pageSettings: state.pageSettings,
@@ -9999,6 +10065,96 @@
         }
     }
 
+    function cmdBuildClientNoteContext() {
+        const current = cmdDescribeState();
+        const resources = current.resources || {};
+        const layers = Array.isArray(resources.layers) ? resources.layers : [];
+        const selectedLayer = layers.find((layer) => layer.id === current.selectedLayerId)
+            || layers.find((layer) => layer.selected)
+            || null;
+        const config = selectedLayer?.config || {};
+        const synastry = current.synastry && current.synastry.active === true ? current.synastry : null;
+        return {
+            schema_version: 1,
+            method: selectedLayer?.method || resources.selectedMethod || 'natal',
+            selected_layer_id: current.selectedLayerId || '',
+            date: config.date || current.date || '',
+            time: config.time || current.time || '',
+            timezone: config.timezone || current.timezone || 'UTC',
+            wheel_view: current.wheelView || 'multi',
+            ...(synastry?.partnerId ? { partner_chart_id: synastry.partnerId } : {}),
+            ...(synastry?.partnerName ? { partner_name: synastry.partnerName } : {}),
+        };
+    }
+
+    async function cmdSaveClientNote(args = {}) {
+        const noteText = String(args.note_text || '').trim();
+        if (!noteText) return { ok: false, error: { code: 'empty_note' } };
+        if (!state.userId) {
+            return { ok: false, error: { code: 'no_active_chart' } };
+        }
+        const origin = args.origin === 'assistant_voice' ? 'assistant_voice'
+            : args.origin === 'manual' ? 'manual'
+                : 'assistant_text';
+        try {
+            const headers = window.AstroAPI?.withLocaleHeaders
+                ? window.AstroAPI.withLocaleHeaders({ 'Content-Type': 'application/json' })
+                : { 'Content-Type': 'application/json' };
+            const response = await fetch(`${API_BASE}/clients/${encodeURIComponent(String(state.userId))}/memory`, {
+                method: 'POST',
+                credentials: 'include',
+                headers,
+                body: JSON.stringify({
+                    text: noteText,
+                    category: 'other',
+                    mentioned_by: 'astrologer',
+                    origin,
+                    ...(args.idempotency_key ? { idempotency_key: args.idempotency_key } : {}),
+                    context_snapshot: cmdBuildClientNoteContext(),
+                }),
+            });
+            if (!response.ok) {
+                let payload = null;
+                try { payload = await response.json(); } catch (_) { payload = null; }
+                return {
+                    ok: false,
+                    error: {
+                        code: payload?.detail?.error_code || payload?.detail || 'note_save_failed',
+                        message: payload?.message || payload?.detail || 'Failed to save note',
+                    },
+                };
+            }
+            const entry = await response.json();
+            document.dispatchEvent(new CustomEvent('steliara:client-notes-changed', {
+                detail: { chartId: state.userId, personId: state.personId || entry.person_id || null, entry },
+            }));
+            return { ok: true, entry_id: entry.id, label: noteText };
+        } catch (error) {
+            return { ok: false, error: { code: 'note_save_failed', message: String(error?.message || error) } };
+        }
+    }
+
+    async function cmdDeleteClientNote(entryId) {
+        if (!entryId) return { ok: false, error: { code: 'missing_note_id' } };
+        try {
+            const headers = window.AstroAPI?.withLocaleHeaders
+                ? window.AstroAPI.withLocaleHeaders({})
+                : {};
+            const response = await fetch(`${API_BASE}/memory/${encodeURIComponent(String(entryId))}`, {
+                method: 'DELETE',
+                credentials: 'include',
+                headers,
+            });
+            if (!response.ok) return { ok: false, error: { code: 'note_undo_failed' } };
+            document.dispatchEvent(new CustomEvent('steliara:client-notes-changed', {
+                detail: { chartId: state.userId || null, personId: state.personId || null, deletedId: entryId },
+            }));
+            return { ok: true };
+        } catch (error) {
+            return { ok: false, error: { code: 'note_undo_failed', message: String(error?.message || error) } };
+        }
+    }
+
     async function cmdDispatch(action) {
         const args = action.args || {};
         switch (action.name) {
@@ -10080,6 +10236,8 @@
                 const name = args.title || chartOptionLabel(chart);
                 return { ok: true, label: name };
             }
+            case 'add_client_note':
+                return cmdSaveClientNote(args);
             case 'remove_layer': {
                 if (args.layer_id) await removeLayerInstance(args.layer_id);
                 else await deactivateMethod(args.method);
@@ -10094,6 +10252,8 @@
             }
             case 'restore_workspace':
                 return cmdRestoreWorkspace(args.snapshot);
+            case 'delete_client_note':
+                return cmdDeleteClientNote(args.entry_id);
             default:
                 return { ok: false, error: { code: 'unknown_command', message: action.name } };
         }
@@ -10110,6 +10270,7 @@
         set_wheel_view: 'Вид колеса изменён',
         set_house_system: 'Система домов изменена',
         set_synastry_partner: 'Синастрия построена',
+        add_client_note: t('page.clientNotes.toast.added'),
         remove_layer: 'Слой удалён',
         clear_layers: 'Слои очищены',
     };

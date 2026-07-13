@@ -320,6 +320,9 @@ def build_person_profile(
                 "text": item.text,
                 "mentioned_by": item.mentioned_by,
                 "source": item.source,
+                "origin": getattr(item, "origin", None) or ("consultation_ai" if item.source == "ai" else "manual"),
+                "context_snapshot": item.context_snapshot,
+                "edited": item.edited_at is not None,
                 "created_at": item.created_at.isoformat() if item.created_at else None,
             }
             for item in memory_entries

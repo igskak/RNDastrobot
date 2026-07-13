@@ -224,7 +224,6 @@ function cacheElements() {
     refs.editTags = document.getElementById('editTags');
     refs.editTagSuggestionsWrap = document.getElementById('editTagSuggestionsWrap');
     refs.editTagSuggestions = document.getElementById('editTagSuggestions');
-    refs.editNotes = document.getElementById('editNotes');
     // Log session dialog
     refs.logSessionBackdrop = document.getElementById('logSessionBackdrop');
     refs.logSessionDialog = document.getElementById('logSessionDialog');
@@ -1458,7 +1457,6 @@ async function openEditClientDialog(personId) {
         if (refs.editPhone) refs.editPhone.value = person.phone || '';
         if (refs.editMessenger) refs.editMessenger.value = person.messenger || '';
         if (refs.editTags) refs.editTags.value = Array.isArray(person.tags) ? person.tags.join(', ') : '';
-        if (refs.editNotes) refs.editNotes.value = person.notes || '';
         renderEditTagSuggestions();
         refs.editError.classList.add('hidden');
         refs.editError.textContent = '';
@@ -1713,7 +1711,6 @@ async function openEditChartDialog(userId) {
 
         if (refs.editChartTitle) refs.editChartTitle.value = chartMeta?.title || '';
         if (refs.editTags) refs.editTags.value = Array.isArray(chartMeta?.tags) ? chartMeta.tags.join(', ') : '';
-        if (refs.editNotes) refs.editNotes.value = chartMeta?.notes || '';
         renderEditTagSuggestions();
 
         initEditPersons(chartMeta?.person_id || null, chartMeta?.linked_person_ids || []);
@@ -1900,7 +1897,6 @@ async function handleEditClientSubmit(event) {
             phone: refs.editPhone?.value?.trim() || '',
             messenger: refs.editMessenger?.value?.trim() || '',
             tags: parseTagInput(refs.editTags?.value || ''),
-            notes: refs.editNotes?.value?.trim() || '',
         };
         setEditClientSubmitting(true);
         try {
@@ -1951,7 +1947,6 @@ async function handleEditClientSubmit(event) {
             messenger: refs.editMessenger?.value?.trim() || '',
         }),
         tags,
-        notes: refs.editNotes?.value?.trim() || '',
     };
 
     const resolvedCoords = resolveEditCoords(place);
@@ -2039,7 +2034,6 @@ async function handleCreateClientSubmit() {
     const time = AstroAPI.formatTime(refs.editHour.value, refs.editMinute.value);
     const timezone = refs.editTimezone.value;
     const tags = parseTagInput(refs.editTags?.value || '');
-    const notes = refs.editNotes?.value?.trim() || '';
     const email = refs.editEmail?.value?.trim() || '';
     const phone = refs.editPhone?.value?.trim() || '';
     const messenger = refs.editMessenger?.value?.trim() || '';
@@ -2071,7 +2065,6 @@ async function handleCreateClientSubmit() {
                 phone,
                 messenger,
                 tags,
-                notes,
             }),
         });
         if (!personResponse.ok) {
@@ -2093,7 +2086,6 @@ async function handleCreateClientSubmit() {
                 first_name: firstName,
                 last_name: lastName,
                 tags,
-                notes,
                 person_id: person.person_id,
                 chart_kind: 'birth',
             }),

@@ -64,8 +64,12 @@ def test_adapter_produces_internal_natal_shape():
         {'number': 1, 'longitude': 100.0},
         {'number': 2, 'longitude': 130.0},
     ]
-    # all_objects = planets + special_points + angles
-    assert len(data['all_objects']) == len(data['planets']) + len(data['special_points']) + len(data['angles'])
+    # Куспиды — отдельные aspect-only цели, но не планеты/точки матрицы.
+    cusp_targets = [obj for obj in data['all_objects'] if obj['type'] == 'house_cusp']
+    assert [obj['name'] for obj in cusp_targets] == ['Cusp1', 'Cusp2']
+    assert len(data['all_objects']) == (
+        len(data['planets']) + len(data['special_points']) + len(data['angles']) + len(data['houses'])
+    )
 
 
 def test_adapter_applies_prognostic_exclusions():
