@@ -75,3 +75,25 @@ def test_api_accepts_1200_points_and_keeps_default():
 def test_api_rejects_more_than_1200_points():
     with pytest.raises(ValidationError):
         AspectDynamicsRequest(**request_payload(max_points=1201))
+
+
+def test_contact_scan_reuses_neighboring_samples_for_motion_speed():
+    service = AspectDynamicsService.__new__(AspectDynamicsService)
+    calls = 0
+
+    def provider(jd):
+        nonlocal calls
+        calls += 1
+        return float(jd) + 20.0, 0.0
+
+    contacts = service._scan_contacts(
+        provider,
+        exact_angle=0.0,
+        max_orb=180.0,
+        jd_start=0.0,
+        jd_end=10.0,
+        step_jd=1.0,
+    )
+
+    assert contacts
+    assert calls == 11

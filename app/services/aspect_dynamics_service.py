@@ -1053,6 +1053,7 @@ class AspectDynamicsService:
         prev_longs: Optional[Tuple[float, float]] = None
         prev_res: Dict[float, Optional[float]] = {t: None for t in targets}
         prev_speed: Optional[float] = None
+        prev_speed_jd: Optional[float] = None
         jd = jd_start
         samples = 0
         while jd <= jd_end + 1e-9:
@@ -1065,16 +1066,24 @@ class AspectDynamicsService:
                 continue
             dev = self._deviation(longs, exact_angle)
             in_orb = dev <= max_orb
-            speed = self._residual_speed(
-                provider,
-                jd,
-                self._select_target_for_longitudes(longs, exact_angle),
-                step_jd,
-            )
             res = {
                 target: self._signed_residual(longs, target)
                 for target in targets
             }
+            speed = None
+            speed_jd = None
+            if prev_jd is not None and prev_longs is not None and jd > prev_jd:
+                motion_target = self._select_target_for_longitudes(
+                    longs, exact_angle
+                )
+                current_residual = self._signed_residual(longs, motion_target)
+                previous_residual = self._signed_residual(
+                    prev_longs, motion_target
+                )
+                speed = self._wrap_pm180(
+                    current_residual - previous_residual
+                ) / (jd - prev_jd)
+                speed_jd = 0.5 * (prev_jd + jd)
 
             if in_orb and cur is None:
                 if prev_jd is not None and prev_longs is not None:
@@ -1129,13 +1138,20 @@ class AspectDynamicsService:
                     )
                 if (
                     prev_speed is not None
+                    and speed is not None
+                    and prev_speed_jd is not None
+                    and speed_jd is not None
                     and prev_speed != 0.0
                     and (prev_speed < 0) != (speed < 0)
                 ):
                     cur["stations"].append(
                         {
                             "jd": self._bisect_speed_zero(
-                                provider, prev_jd, jd, exact_angle, step_jd
+                                provider,
+                                prev_speed_jd,
+                                speed_jd,
+                                exact_angle,
+                                step_jd,
                             ),
                             "type": "R"
                             if prev_speed > 0 and speed < 0
@@ -1154,7 +1170,9 @@ class AspectDynamicsService:
             prev_jd = jd
             prev_longs = longs
             prev_res = res
-            prev_speed = speed
+            if speed is not None:
+                prev_speed = speed
+                prev_speed_jd = speed_jd
             jd += step_jd
 
         if cur is not None:

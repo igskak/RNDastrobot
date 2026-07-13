@@ -408,6 +408,12 @@
             renderData(state.responseCache.get(fullKey));
             return state.data;
         }
+        // Start the expensive request immediately. Waiting for the preview first
+        // made cold loads pay both server and network latencies sequentially.
+        const fullPromise = fetchAspectDynamics(fullRequest, fullKey).then(
+            (data) => ({ data }),
+            (error) => ({ error }),
+        );
         let previewData = null;
         try {
             previewData = state.responseCache.get(previewKey);
@@ -425,7 +431,9 @@
         state.loadedPointBudget = Number(previewRequest.max_points) || null;
 
         try {
-            const fullData = await fetchAspectDynamics(fullRequest, fullKey);
+            const fullResult = await fullPromise;
+            if (fullResult.error) throw fullResult.error;
+            const fullData = fullResult.data;
             if (seq !== state.requestSeq) return null;
             setCachedResponse(fullKey, fullData);
             state.loadedPointBudget = Number(fullRequest.max_points) || null;

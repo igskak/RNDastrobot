@@ -393,14 +393,14 @@ test('modal renders success summary from fetched dynamics data', async () => {
     await modal.open(sampleOpenOptions);
 
     assert.equal(payloads.length, 2);
-    assert.equal(payloads[0].preview, true);
-    assert.equal(payloads[0].max_points, 96);
-    assert.equal(payloads[1].preview, false);
-    assert.equal(payloads[1].max_points, 360);
-    assert.ok(payloads[1].contact_start < '2026-06-29');
-    assert.ok(payloads[1].contact_end > '2026-06-29');
-    assert.ok(payloads[1].contact_start > '2025-01-01');
-    assert.ok(payloads[1].contact_end < '2028-01-01');
+    assert.equal(payloads[0].preview, false);
+    assert.equal(payloads[0].max_points, 360);
+    assert.equal(payloads[1].preview, true);
+    assert.equal(payloads[1].max_points, 96);
+    assert.ok(payloads[0].contact_start < '2026-06-29');
+    assert.ok(payloads[0].contact_end > '2026-06-29');
+    assert.ok(payloads[0].contact_start > '2025-01-01');
+    assert.ok(payloads[0].contact_end < '2028-01-01');
     const overlay = document.querySelector('.aspect-dynamics-modal');
     assert.ok(overlay);
     assert.equal(overlay.classList.contains('hidden'), false);
@@ -530,7 +530,8 @@ test('modal paints preview before full dynamics response resolves', async () => 
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     assert.equal(payloads.length, 2);
-    assert.equal(payloads[0].preview, true);
+    assert.equal(payloads[0].preview, false);
+    assert.equal(payloads[1].preview, true);
     assert.match(document.querySelector('.aspect-dynamics-summary').textContent, /Loading chart/);
     assert.equal(modal._state.data.preview, true);
     const previewWindow = { ...modal._state.interactionWindow };
@@ -538,7 +539,7 @@ test('modal paints preview before full dynamics response resolves', async () => 
     resolveFull({
         ok: true,
         async json() {
-            return sampleResponseForPayload(JSON.parse(payloads[1] ? JSON.stringify(payloads[1]) : '{}'));
+            return sampleResponseForPayload(payloads[0]);
         },
     });
     await openPromise;
@@ -547,6 +548,46 @@ test('modal paints preview before full dynamics response resolves', async () => 
     assert.ok(modal._state.interactionWindow.start < previewWindow.start);
     assert.ok(modal._state.interactionWindow.end > previewWindow.end);
     assert.match(document.querySelector('.aspect-dynamics-summary').textContent, /Pass 1/);
+    modal.close();
+});
+
+test('modal starts full dynamics request while preview is still pending', async () => {
+    setupDom();
+    let resolvePreview;
+    let resolveFull;
+    const previewResponse = new Promise((resolve) => { resolvePreview = resolve; });
+    const fullResponse = new Promise((resolve) => { resolveFull = resolve; });
+    const payloads = [];
+    modal.setFetchImpl((_, options) => {
+        const payload = JSON.parse(options.body);
+        payloads.push(payload);
+        return payload.preview ? previewResponse : fullResponse;
+    });
+
+    const openPromise = modal.open(sampleOpenOptions);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    assert.equal(payloads.length, 2);
+    assert.equal(payloads[0].preview, false);
+    assert.equal(payloads[1].preview, true);
+
+    resolvePreview({
+        ok: true,
+        async json() {
+            return sampleResponseForPayload(payloads[1]);
+        },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.equal(modal._state.data.preview, true);
+
+    resolveFull({
+        ok: true,
+        async json() {
+            return sampleResponseForPayload(payloads[0]);
+        },
+    });
+    await openPromise;
+    assert.equal(modal._state.data.preview, false);
     modal.close();
 });
 
