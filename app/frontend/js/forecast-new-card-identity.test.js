@@ -20,6 +20,7 @@ const helpers = {
     formatChartDateTimeLabel: (dt) => String(dt || '').replace('T', ' '),
     buildPanelLocationMeta: (name, tz) => [name, tz].filter(Boolean).join(' · '),
     buildSolarMomentMeta: (info, { year }) => [year, info.solar_datetime_local].filter(Boolean).join(' | '),
+    buildSolarPanelLocationMeta: (info) => [info?.location?.name, info?.timezone].filter(Boolean).join(' · '),
     chartDisplayTitle: (chart = {}, fallback = '') => {
         const b = chart.birth_data || {};
         return chart.display_title || chart.title || chart.person_display_name
@@ -51,7 +52,8 @@ const helpers = {
     // summary + datetimeLabel come from the loaded partner birth data.
     const full = ID.buildLayerCardIdentity({ method: 'synastry_partner', config: {}, raw }, helpers);
     eq(full.datetimeLabel, '1990-01-02 10:00', 'synastry: datetimeLabel from partner birth data');
-    ok(full.summary.includes('Kyiv') && full.summary.includes('+02:00'), 'synastry: summary carries partner place + tz');
+    eq(full.summary, 'Kyiv · +02:00', 'synastry: summary carries partner place + tz only');
+    ok(!full.summary.includes('1990-01-02') && !full.summary.includes('10:00'), 'synastry: summary excludes date/time for panel header');
 })();
 
 // ── REGRESSION: no global-scratch bleed across instances ─────────────────────
@@ -68,16 +70,17 @@ const helpers = {
 
 // ── solar identity ───────────────────────────────────────────────────────────
 (() => {
-    const raw = { solar_info: { solar_datetime_local: '2026-07-10T14:30:00', year: 2026 } };
+    const raw = { solar_info: { solar_datetime_local: '2026-07-10T14:30:00', year: 2026, timezone: '+02:00', location: { name: 'Porto' } } };
     const id = ID.buildLayerCardIdentity({ method: 'solar_return', config: {}, raw, solarYearFallback: 2025 }, helpers);
     eq(id.title, 'Соляр', 'solar: title is the method label');
     eq(id.datetimeLabel, '2026-07-10 14:30', 'solar: datetimeLabel from computed solar moment');
-    ok(id.summary.includes('2026') && id.summary.includes('2026-07-10T14:30:00'), 'solar: summary via buildSolarMomentMeta');
+    eq(id.summary, 'Porto · +02:00', 'solar: summary is location + tz only for panel header');
+    ok(!id.summary.includes('2026') && !id.summary.includes('14:30'), 'solar: summary excludes year/date/time for panel header');
 
-    // config.chartTitle overrides label; year fallback used when solar_info lacks year.
-    const id2 = ID.buildLayerCardIdentity({ method: 'solar_return', config: { chartTitle: 'My Solar' }, raw: { solar_info: { solar_datetime_local: '2030-01-01T00:00:00' } }, solarYearFallback: 2030 }, helpers);
+    // config.chartTitle overrides label.
+    const id2 = ID.buildLayerCardIdentity({ method: 'solar_return', config: { chartTitle: 'My Solar' }, raw: { solar_info: { solar_datetime_local: '2030-01-01T00:00:00', timezone: '+01:00', location: { name: 'Paris' } } }, solarYearFallback: 2030 }, helpers);
     eq(id2.title, 'My Solar', 'solar: config.chartTitle overrides label');
-    ok(id2.summary.includes('2030'), 'solar: year falls back to solarYearFallback');
+    eq(id2.summary, 'Paris · +01:00', 'solar: summary does not fall back to the year');
 })();
 
 // ── moment methods (transit): title only, live moment left to caller ─────────
@@ -101,6 +104,9 @@ const helpers = {
     eq(natal.datetimeLabel, '1990-09-11 08:15', 'natal: datetimeLabel formatted');
     eq(natal.summary, 'Kharkiv · +03:00', 'natal: base summary is location-only (place · tz)');
     eq(natal.momentSummary, '1990-09-11 08:15 · Kharkiv · +03:00', 'natal: momentSummary prepends datetime');
+
+    const roles = ID.computePanelRoles({ crossed: true, natalIdentity: natal, layerIdentity: { title: 'Layer', summary: 'Layer place' } });
+    eq(roles.right.meta, 'Kharkiv · +03:00', 'swap: demoted natal panel meta excludes date/time');
 
     // empty natal → fallback title.
     eq(ID.buildNatalCardIdentity({ natalData: {}, fallbackTitle: 'Натал' }, helpers).title, 'Натал', 'natal: empty → fallback title');

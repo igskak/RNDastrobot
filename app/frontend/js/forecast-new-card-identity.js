@@ -34,14 +34,14 @@
     }
 
     // {title, summary, datetimeLabel} для повышаемого/выбранного слоя.
-    // - synastry_partner: имя/дата/место партнёра из его конфига и загруженной карты.
-    // - solar_return: посчитанный сервером момент соляра (дрейфует от года к году).
+    // - synastry_partner: имя/место партнёра из его конфига и загруженной карты.
+    // - solar_return: шапка панели показывает место/TZ; сам момент живёт в степпере.
     // - моментные методы (transit/progression/direction): только заголовок; сводку
     //   и дату/время момента считает вызывающий (живой момент из степпера).
     function buildLayerCardIdentity({ method, config = {}, raw = {}, solarYearFallback } = {}, helpers = {}) {
         const {
             layerLabel, formatChartDate, formatChartDateTimeLabel,
-            buildPanelLocationMeta, buildSolarMomentMeta,
+            buildPanelLocationMeta, buildSolarPanelLocationMeta,
         } = helpers;
         const label = layerLabel ? layerLabel(method) : String(method || '');
         const fmtDate = (value) => (value ? (formatChartDate ? formatChartDate(value) : value) : '');
@@ -50,12 +50,9 @@
             const chart = raw.partner_chart || raw.partnerChart || {};
             const bd = chart.birth_data || {};
             const datetimeLabel = [fmtDate(bd.date), bd.time].filter(Boolean).join(' ');
-            const summary = [
-                datetimeLabel,
-                buildPanelLocationMeta
-                    ? buildPanelLocationMeta(bd.place, bd.timezone, { date: bd.date, time: bd.time })
-                    : '',
-            ].filter(Boolean).join(' · ');
+            const summary = buildPanelLocationMeta
+                ? buildPanelLocationMeta(bd.place, bd.timezone, { date: bd.date, time: bd.time })
+                : (bd.place || '');
             return {
                 title: synastryPartnerName({ config, raw }, helpers) || label,
                 summary,
@@ -67,10 +64,14 @@
             const info = raw.solar_info || {};
             const [solarDate, solarClock] = String(info.solar_datetime_local || '').split('T');
             const solarTime = String(solarClock || '').slice(0, 5);
-            const year = config.year || info.year || solarYearFallback;
+            const summary = buildSolarPanelLocationMeta
+                ? buildSolarPanelLocationMeta(info, { date: solarDate, time: solarTime })
+                : (buildPanelLocationMeta
+                    ? buildPanelLocationMeta(info?.location?.name, info.timezone, { date: solarDate, time: solarTime })
+                    : '');
             return {
                 title: config.chartTitle || label,
-                summary: buildSolarMomentMeta ? buildSolarMomentMeta(info, { year }) : '',
+                summary,
                 datetimeLabel: [fmtDate(solarDate), solarTime].filter(Boolean).join(' '),
             };
         }
@@ -85,9 +86,9 @@
     }
 
     // {title, summary, datetimeLabel} для натальной карты.
-    // summary — «место · TZ» (форма базовой левой панели, без даты — дата живёт в
-    // карточке-редакторе рядом). momentSummary — «дата время · место · TZ» (форма
-    // понижённого натала справа при свопе / подзаголовка шапки).
+    // summary — «место · TZ» (форма шапок боковых панелей, без даты — дата живёт в
+    // степпере/карточке-редакторе рядом). momentSummary остаётся для не-header
+    // потребителей, которым нужен полный момент.
     function buildNatalCardIdentity(input = {}, helpers = {}) {
         const {
             natalData = {}, natalSelectedDateTime, natalTimezone, natalLocationName, fallbackTitle,
@@ -126,7 +127,7 @@
             return {
                 crossed: true,
                 left: { kind: 'layer', title: wrap(lay.title || ''), meta: lay.summary || '' },
-                right: { kind: 'natal', title: nat.title || '', meta: nat.momentSummary || '' },
+                right: { kind: 'natal', title: nat.title || '', meta: nat.summary || '' },
             };
         }
         return {

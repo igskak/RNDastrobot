@@ -63,8 +63,12 @@ ok(
     'add-layer dropdown is positioned outside the scroll-clipped layer tabs'
 );
 ok(
-    /if \(method === 'solar_return'\) \{[\s\S]*?return buildSolarMomentMeta\(raw\?\.solar_info, \{ year: state\.solarYear \}\);\s*\}/.test(source),
-    'solar right-panel meta uses the full computed solar moment'
+    /function buildResultLayerMeta\(method, layer\) \{[\s\S]*?if \(method === 'solar_return'\) \{[\s\S]*?return buildSolarMomentMeta\(raw\.solar_info, \{ year: state\.solarYear \}\);\s*\}/.test(source),
+    'solar result meta uses the full computed solar moment'
+);
+ok(
+    /function buildPrognosticMomentSummary\(\) \{[\s\S]*?if \(isSwapDemotedNatalSelected\(\)\) \{[\s\S]*?return natalCardIdentity\(\)\.summary;[\s\S]*?if \(method === 'solar_return'\) \{[\s\S]*?return buildSolarPanelLocationMeta\(info, \{ date: solarDate, time: solarTime \}\);[\s\S]*?\}/.test(source),
+    'side panel header meta excludes date/time for demoted natal and solar'
 );
 ok(
     !source.includes('function renderSolarYearStepper')

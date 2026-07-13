@@ -458,7 +458,7 @@
             formatChartDate,
             formatChartDateTimeLabel,
             buildPanelLocationMeta,
-            buildSolarMomentMeta,
+            buildSolarPanelLocationMeta,
             chartDisplayTitle,
         };
     }
@@ -2504,7 +2504,7 @@
         el.innerHTML = `<span class="forecast-new-meta-spinner" aria-hidden="true"></span>${escapeHtml(label)}`;
     }
 
-    // Compact meta for a solar layer: year + the COMPUTED solar moment
+    // Compact meta for a solar layer in list/result surfaces: year + the COMPUTED solar moment
     // (date · time · TZ offset of the solar place) + location. The moment is
     // shown like every other method because it drifts from the birthday — the
     // Sun returns to its natal longitude ~6 h later each year.
@@ -2524,16 +2524,28 @@
         return [resolvedYear, moment, locName].filter(Boolean).join(' · ');
     }
 
+    function buildSolarPanelLocationMeta(solarInfo, datetimeOrOptions = {}) {
+        const info = solarInfo || {};
+        const locName = info?.location?.name
+            || state.solarLocation?.name
+            || state.location?.name
+            || '';
+        return buildPanelLocationMeta(locName, info.timezone, datetimeOrOptions);
+    }
+
     function buildPrognosticMomentSummary() {
-        // При свопе правая панель показывает понижённый натал — мета описывает его.
+        // При свопе правая панель показывает понижённый натал — дата остаётся в степпере.
         if (isSwapDemotedNatalSelected()) {
-            return buildNatalHeaderSubtitle(state.natalData?.birth_data || {});
+            return natalCardIdentity().summary;
         }
         const method = selectedRightMethod();
 
         if (method === 'solar_return') {
             const raw = originalLayerRaw(selectedLayerInstance()) || selectedViewModelLayer()?.raw;
-            return buildSolarMomentMeta(raw?.solar_info, { year: state.solarYear });
+            const info = raw?.solar_info || {};
+            const [solarDate, solarClock] = String(info.solar_datetime_local || '').split('T');
+            const solarTime = String(solarClock || '').slice(0, 5);
+            return buildSolarPanelLocationMeta(info, { date: solarDate, time: solarTime });
         }
 
         const place = getMomentPlaceView();

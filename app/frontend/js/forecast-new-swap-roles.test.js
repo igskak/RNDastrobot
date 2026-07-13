@@ -30,6 +30,7 @@ const helpers = {
     formatChartDateTimeLabel: (dt) => String(dt || '').replace('T', ' '),
     buildPanelLocationMeta: (name, tz) => [name, tz].filter(Boolean).join(' · '),
     buildSolarMomentMeta: (info, { year }) => [year, info.solar_datetime_local].filter(Boolean).join(' | '),
+    buildSolarPanelLocationMeta: (info) => [info?.location?.name, info?.timezone].filter(Boolean).join(' · '),
     chartDisplayTitle: (chart = {}, fallback = '') => {
         const b = chart.birth_data || {};
         return chart.display_title || chart.title || chart.person_display_name
@@ -81,17 +82,21 @@ function rolesFor({ crossed, layerIdentity, layerMeta }) {
     ID.applyPanelHeaderRoles(doc, roles);
 
     eq(text(doc, 'natalPanelTitle'), 'База: Пётр Партнёр', 'swap: promoted partner names the LEFT panel (base wrapper)');
-    ok(text(doc, 'natalPanelMeta').includes('1988-03-04') && text(doc, 'natalPanelMeta').includes('Львов'),
-        'swap: left meta carries the PARTNER birth data (not the client)');
+    eq(text(doc, 'natalPanelMeta'), 'Львов · +02:00',
+        'swap: left meta carries the PARTNER location/tz without date/time');
     eq(text(doc, 'prognosticPanelTitle'), 'Ирина Клиент', 'swap: demoted client names the RIGHT panel');
-    ok(text(doc, 'prognosticPanelMeta').includes('1990-09-11') && text(doc, 'prognosticPanelMeta').includes('Киев'),
-        'swap: right meta carries the CLIENT birth data (not the partner)');
+    eq(text(doc, 'prognosticPanelMeta'), 'Киев · +02:00',
+        'swap: right meta carries the CLIENT location/tz without date/time');
     eq(roles.left.kind, 'layer', 'swap: left role is the promoted layer');
     eq(roles.right.kind, 'natal', 'swap: right role is the demoted natal');
 
     // The two cards' data never bleed into each other's panel.
     ok(!text(doc, 'natalPanelMeta').includes('Киев'), 'swap: client place absent from the promoted panel');
     ok(!text(doc, 'prognosticPanelMeta').includes('Львов'), 'swap: partner place absent from the demoted panel');
+    ok(!text(doc, 'natalPanelMeta').includes('1988-03-04') && !text(doc, 'natalPanelMeta').includes('11:20'),
+        'swap: promoted partner panel meta excludes partner date/time');
+    ok(!text(doc, 'prognosticPanelMeta').includes('1990-09-11') && !text(doc, 'prognosticPanelMeta').includes('08:15'),
+        'swap: demoted natal panel meta excludes natal date/time');
 })();
 
 // ── (c) after AUTO-EXIT (crossed=false again): names return to their panels ──
@@ -134,13 +139,15 @@ function rolesFor({ crossed, layerIdentity, layerMeta }) {
     const doc = freshDoc();
     const solarId = ID.buildLayerCardIdentity({
         method: 'solar_return', config: { year: 2026 },
-        raw: { solar_info: { solar_datetime_local: '2026-09-11T14:02:00', year: 2026 } },
+        raw: { solar_info: { solar_datetime_local: '2026-09-11T14:02:00', year: 2026, timezone: '+02:00', location: { name: 'Porto' } } },
     }, helpers);
     ID.applyPanelHeaderRoles(doc, rolesFor({ crossed: true, layerIdentity: solarId }));
 
     eq(text(doc, 'natalPanelTitle'), 'База: Соляр', 'swap(solar): promoted solar names the LEFT panel');
-    ok(text(doc, 'natalPanelMeta').includes('2026-09-11T14:02:00'),
-        'swap(solar): left meta is the server-computed solar moment');
+    eq(text(doc, 'natalPanelMeta'), 'Porto · +02:00',
+        'swap(solar): left meta is the solar place/tz without date/time');
+    ok(!text(doc, 'natalPanelMeta').includes('2026') && !text(doc, 'natalPanelMeta').includes('14:02'),
+        'swap(solar): left meta excludes the server-computed solar moment');
     eq(text(doc, 'prognosticPanelTitle'), 'Ирина Клиент', 'swap(solar): client demoted to the RIGHT panel');
 })();
 
