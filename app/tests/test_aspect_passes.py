@@ -140,7 +140,7 @@ def test_dynamics_series_selected_point_is_zero_on_retrograde_exact_pass():
     assert abs(selected['signed_orb']) < 0.02
     assert selected['abs_orb'] < 0.02
     assert selected['strength'] > 0.99
-    assert len(series) == 160
+    assert 65 <= len(series) <= 160
     assert any(p['in_orb'] for p in series)
     assert min(abs(p['signed_orb']) for p in series if p['signed_orb'] is not None) < 0.15
 

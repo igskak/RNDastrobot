@@ -20,7 +20,10 @@
 
     const DEFAULT_MAX_POINTS = 320;
     const PREVIEW_MAX_POINTS = 96;
-    const FULL_WINDOW_DAYS = 36525;
+    const MIN_DETAIL_POINTS = 160;
+    const MAX_DETAIL_POINTS = 1200;
+    const PIXELS_PER_POINT = 2;
+    const RESIZE_REFETCH_THRESHOLD = 0.25;
     const MIN_WINDOW_DAYS = 3;
     const MAX_WINDOW_DAYS = 36525;
     const CLIENT_CACHE_MAX_ITEMS = 24;
@@ -51,6 +54,7 @@
         'blackmoon',
         'whitemoon',
     ]);
+    const FAST_DETAIL_BODIES = new Set(['moon', 'mercury', 'venus', 'mars']);
     const API_BASE = () => root.AstroAPI?.API_BASE_URL || '/api/v1';
 
     const state = {
@@ -85,6 +89,7 @@
         hoverFrame: null,
         yScaleFactor: 1,
         viewportTouched: false,
+        loadedPointBudget: null,
     };
 
     function tr(key, fallback, params) {
@@ -311,7 +316,7 @@
         return {
             ...state.basePayload,
             preview: false,
-            max_points: maxPointsForWindow(start, end),
+            max_points: detailPointBudget(),
             contact_start: toDateOnly(start),
             contact_end: toDateOnly(end),
         };
@@ -319,11 +324,11 @@
 
     function fullWindowPayload(payload) {
         const anchor = selectedMsForPayload(payload) || Date.now();
-        const halfSpan = (FULL_WINDOW_DAYS * DAY_MS) / 2;
+        const halfSpan = (defaultScaleProfile().spanDays * DAY_MS) / 2;
         return {
             ...payload,
             preview: false,
-            max_points: maxPointsForWindow(anchor - halfSpan, anchor + halfSpan),
+            max_points: detailPointBudget(),
             contact_start: toDateOnly(startOfDayMs(anchor - halfSpan)),
             contact_end: toDateOnly(startOfDayMs(anchor + halfSpan)),
         };
@@ -346,13 +351,13 @@
         };
     }
 
-    function maxPointsForWindow(startMs, endMs) {
-        const base = Number(state.basePayload?.max_points || DEFAULT_MAX_POINTS);
-        const days = Math.abs(endMs - startMs) / 86400000;
-        if (days >= 3650) return Math.max(base, 720);
-        if (days >= 365) return Math.max(base, 520);
-        if (days >= 60) return Math.max(base, 420);
-        return Math.max(base, 320);
+    function detailPointBudget(width = null, body = sourceBodyForScale()) {
+        const canvasWidth = Number(width) || elementInnerWidth(state.chartWrap || state.canvas?.parentElement, 720);
+        const motionFactor = FAST_DETAIL_BODIES.has(normalizeBodyKey(body)) ? 1.5 : 1;
+        return Math.max(
+            MIN_DETAIL_POINTS,
+            Math.min(MAX_DETAIL_POINTS, Math.ceil((canvasWidth / PIXELS_PER_POINT) * motionFactor)),
+        );
     }
 
     function clampWindow(startMs, endMs) {
@@ -371,6 +376,7 @@
         if (!keepStatus) renderLoading();
         const key = payloadCacheKey(payload);
         if (state.responseCache.has(key)) {
+            state.loadedPointBudget = Number(payload.max_points) || null;
             renderData(state.responseCache.get(key), { preserveViewport });
             return state.data;
         }
@@ -378,6 +384,7 @@
             const data = await fetchAspectDynamics(payload, key);
             if (seq !== state.requestSeq) return null;
             setCachedResponse(key, data);
+            state.loadedPointBudget = Number(payload.max_points) || null;
             renderData(data, { preserveViewport });
             return data;
         } catch (error) {
@@ -395,6 +402,7 @@
         const fullRequest = fullWindowPayload(payload);
         const fullKey = payloadCacheKey(fullRequest);
         if (state.responseCache.has(fullKey)) {
+            state.loadedPointBudget = Number(fullRequest.max_points) || null;
             renderData(state.responseCache.get(fullKey));
             return state.data;
         }
@@ -412,11 +420,13 @@
         }
         if (seq !== state.requestSeq) return null;
         renderData(previewData);
+        state.loadedPointBudget = Number(previewRequest.max_points) || null;
 
         try {
             const fullData = await fetchAspectDynamics(fullRequest, fullKey);
             if (seq !== state.requestSeq) return null;
             setCachedResponse(fullKey, fullData);
+            state.loadedPointBudget = Number(fullRequest.max_points) || null;
             renderData(fullData, { preserveViewport: state.viewportTouched });
             return fullData;
         } catch (error) {
@@ -471,17 +481,28 @@
     function shouldFetchWindow(window) {
         const loaded = loadedDataWindowMs();
         if (!loaded || !window) return true;
-        if (window.start >= loaded.start && window.end <= loaded.end) return false;
+        const desiredBudget = detailPointBudget();
+        const budget = Number(state.loadedPointBudget || 0);
+        const needsDetail = !budget || Math.abs(desiredBudget - budget) / Math.max(1, budget) > RESIZE_REFETCH_THRESHOLD;
+        if (window.start >= loaded.start && window.end <= loaded.end) return needsDetail;
         const span = loaded.end - loaded.start;
         const margin = Math.max(DAY_MS, span * 0.03);
         return window.start < loaded.start + margin || window.end > loaded.end - margin;
     }
 
     function expandedWindowPayload(window) {
-        const span = Math.max(MIN_WINDOW_DAYS * DAY_MS, window.end - window.start);
-        const center = (window.start + window.end) / 2;
-        const targetSpan = Math.min(MAX_WINDOW_DAYS * DAY_MS, Math.max(span * 4, 3650 * DAY_MS));
-        return windowPayload(center - targetSpan / 2, center + targetSpan / 2);
+        return windowPayload(window.start, window.end);
+    }
+
+    function handleChartResize() {
+        drawChart();
+        const current = dataWindowMs();
+        if (!current || !state.basePayload || state.isLoading) return;
+        const desired = detailPointBudget();
+        const loaded = Number(state.loadedPointBudget || 0);
+        if (!loaded || Math.abs(desired - loaded) / Math.max(1, loaded) > RESIZE_REFETCH_THRESHOLD) {
+            requestWindow(current.start, current.end, { debounce: true });
+        }
     }
 
     function chartPad() {
@@ -897,10 +918,10 @@
         state.scrubber?.addEventListener('input', onScrubberInput);
 
         if (typeof ResizeObserver !== 'undefined') {
-            state.resizeObserver = new ResizeObserver(() => drawChart());
+            state.resizeObserver = new ResizeObserver(handleChartResize);
             if (state.chartWrap) state.resizeObserver.observe(state.chartWrap);
         } else if (typeof root.addEventListener === 'function') {
-            root.addEventListener('resize', drawChart);
+            root.addEventListener('resize', handleChartResize);
         }
 
         return overlay;
@@ -1262,8 +1283,90 @@
 
     function graphSeries(data = state.data) {
         return (data?.series || []).filter((point) => (
-            Number.isFinite(Number(point.signed_orb)) && pointMs(point) !== null
+            point?.signed_orb != null
+            && Number.isFinite(Number(point.signed_orb))
+            && pointMs(point) !== null
         ));
+    }
+
+    function graphSegments(data = state.data) {
+        const segments = [];
+        let segment = [];
+        (data?.series || []).forEach((point) => {
+            const ms = pointMs(point);
+            const orb = point?.signed_orb == null ? NaN : Number(point.signed_orb);
+            const previous = segment[segment.length - 1];
+            const discontinuity = previous && Math.abs(orb - Number(previous.signed_orb)) > 180;
+            if (!Number.isFinite(orb) || ms === null || discontinuity) {
+                if (segment.length) segments.push(segment);
+                segment = [];
+            }
+            if (Number.isFinite(orb) && ms !== null) segment.push(point);
+        });
+        if (segment.length) segments.push(segment);
+        return segments;
+    }
+
+    function pchipTangents(points) {
+        const count = points.length;
+        if (count < 2) return [];
+        const h = [];
+        const slopes = [];
+        for (let i = 0; i < count - 1; i += 1) {
+            h.push(points[i + 1].x - points[i].x);
+            slopes.push((points[i + 1].y - points[i].y) / h[i]);
+        }
+        if (count === 2) return [slopes[0], slopes[0]];
+        const tangent = new Array(count).fill(0);
+        for (let i = 1; i < count - 1; i += 1) {
+            if (slopes[i - 1] === 0 || slopes[i] === 0 || Math.sign(slopes[i - 1]) !== Math.sign(slopes[i])) {
+                tangent[i] = 0;
+            } else {
+                const w1 = 2 * h[i] + h[i - 1];
+                const w2 = h[i] + 2 * h[i - 1];
+                tangent[i] = (w1 + w2) / ((w1 / slopes[i - 1]) + (w2 / slopes[i]));
+            }
+        }
+        const endpoint = (h0, h1, d0, d1) => {
+            let value = ((2 * h0 + h1) * d0 - h0 * d1) / (h0 + h1);
+            if (Math.sign(value) !== Math.sign(d0)) value = 0;
+            else if (Math.sign(d0) !== Math.sign(d1) && Math.abs(value) > Math.abs(3 * d0)) value = 3 * d0;
+            return value;
+        };
+        tangent[0] = endpoint(h[0], h[1], slopes[0], slopes[1]);
+        tangent[count - 1] = endpoint(
+            h[count - 2], h[count - 3], slopes[count - 2], slopes[count - 3],
+        );
+        return tangent;
+    }
+
+    function drawSmoothSegment(ctx, segment, xOf, yOf) {
+        const points = segment.map((point) => ({
+            x: xOf(pointMs(point)),
+            y: yOf(Number(point.signed_orb)),
+        })).filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y));
+        if (!points.length) return;
+        ctx.moveTo(points[0].x, points[0].y);
+        if (points.length === 1) return;
+        if (typeof ctx.bezierCurveTo !== 'function') {
+            points.slice(1).forEach((point) => ctx.lineTo(point.x, point.y));
+            return;
+        }
+        const tangents = pchipTangents(points);
+        for (let i = 0; i < points.length - 1; i += 1) {
+            const left = points[i];
+            const right = points[i + 1];
+            const h = right.x - left.x;
+            const low = Math.min(left.y, right.y);
+            const high = Math.max(left.y, right.y);
+            const control1Y = Math.max(low, Math.min(high, left.y + tangents[i] * h / 3));
+            const control2Y = Math.max(low, Math.min(high, right.y - tangents[i + 1] * h / 3));
+            ctx.bezierCurveTo(
+                left.x + h / 3, control1Y,
+                right.x - h / 3, control2Y,
+                right.x, right.y,
+            );
+        }
     }
 
     function scaledYAxisMaxAbs(data, window, plotW, plotH) {
@@ -1357,12 +1460,7 @@
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
         ctx.beginPath();
-        series.forEach((point, index) => {
-            const x = xOf(pointMs(point));
-            const y = yOf(Number(point.signed_orb));
-            if (index === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-        });
+        graphSegments(data).forEach((segment) => drawSmoothSegment(ctx, segment, xOf, yOf));
         ctx.stroke();
 
         drawContactMarkers(ctx, data, xOf, yOf, pad, width, plotBottom);
@@ -1894,6 +1992,12 @@
         renderData,
         setFetchImpl,
         splitSelectedDateTime,
+        _test: {
+            detailPointBudget,
+            graphSegments,
+            handleChartResize,
+            pchipTangents,
+        },
         _state: state,
     };
 });

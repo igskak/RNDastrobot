@@ -959,7 +959,9 @@ class TransitService:
     }
     _DEFAULT_SCAN_STEP_DAYS = 1.0
     _DEFAULT_DYNAMICS_POINTS = 320
-    _MAX_DYNAMICS_POINTS = 720
+    _MAX_DYNAMICS_POINTS = 1200
+    _ADAPTIVE_BASE_INTERVALS = 64
+    _ADAPTIVE_ERROR_DEGREES = 0.02
 
     @staticmethod
     def _wrap_pm180(value: float) -> float:
@@ -1068,8 +1070,9 @@ class TransitService:
         max_orb: float,
         target: float,
         max_points: int,
+        required_jds: Optional[List[float]] = None,
     ) -> List[Dict]:
-        """Sample signed aspect-orb values across the graph window."""
+        """Build a bounded, curvature-adaptive signed-orb series."""
         if jd_end < jd_start:
             jd_start, jd_end = jd_end, jd_start
         point_count = max(2, min(int(max_points), self._MAX_DYNAMICS_POINTS))
@@ -1081,19 +1084,90 @@ class TransitService:
                 )
             ]
 
-        step = (jd_end - jd_start) / float(point_count - 1)
-        return [
-            self._format_aspect_dynamics_point(
-                jd_start + step * idx,
-                timezone,
-                transit_body,
-                natal_longitude,
-                exact_angle,
-                max_orb,
-                target,
+        required = {
+            round(float(jd), 10)
+            for jd in (required_jds or [])
+            if jd_start <= float(jd) <= jd_end
+        }
+        required.update((round(jd_start, 10), round(jd_end, 10)))
+        if len(required) > point_count:
+            ordered_required = sorted(required)
+            required = {
+                ordered_required[
+                    round(
+                        idx * (len(ordered_required) - 1) / (point_count - 1)
+                    )
+                ]
+                for idx in range(point_count)
+            }
+        interval_count = min(self._ADAPTIVE_BASE_INTERVALS, point_count - 1)
+        points = {
+            round(jd_start + (jd_end - jd_start) * idx / interval_count, 10)
+            for idx in range(interval_count + 1)
+        }
+        points.update(required)
+        if len(points) > point_count:
+            optional = sorted(points - required)
+            keep = max(0, point_count - len(required))
+            stride = max(1, len(optional) / max(1, keep))
+            points = set(required)
+            points.update(
+                optional[min(len(optional) - 1, int(i * stride))]
+                for i in range(keep)
             )
-            for idx in range(point_count)
-        ]
+
+        cache: Dict[float, Dict] = {}
+
+        def formatted(jd: float) -> Dict:
+            key = round(jd, 10)
+            if key not in cache:
+                cache[key] = self._format_aspect_dynamics_point(
+                    jd, timezone, transit_body, natal_longitude,
+                    exact_angle, max_orb, target,
+                )
+            return cache[key]
+
+        min_step = self._adaptive_dynamics_min_step_days(transit_body)
+        while len(points) < point_count:
+            candidates = []
+            ordered = sorted(points)
+            for left, right in zip(ordered, ordered[1:]):
+                if right - left <= min_step:
+                    continue
+                middle = round((left + right) / 2.0, 10)
+                p0, pm, p1 = formatted(left), formatted(middle), formatted(right)
+                y0, ym, y1 = (
+                    p0.get('signed_orb'),
+                    pm.get('signed_orb'),
+                    p1.get('signed_orb'),
+                )
+                if not all(isinstance(v, (int, float)) for v in (y0, ym, y1)):
+                    continue
+                if max(abs(ym - y0), abs(y1 - ym), abs(y1 - y0)) > 180:
+                    continue
+                error = abs(ym - ((y0 + y1) / 2.0))
+                direction_change = (ym - y0) * (y1 - ym) < 0
+                zero_crossing = y0 * y1 < 0
+                if error > self._ADAPTIVE_ERROR_DEGREES or direction_change or zero_crossing:
+                    score = error + (1.0 if direction_change else 0.0)
+                    candidates.append((score, middle))
+            if not candidates:
+                break
+            candidates.sort(reverse=True)
+            for _, middle in candidates[:point_count - len(points)]:
+                points.add(middle)
+
+        return [formatted(jd) for jd in sorted(points)]
+
+    @staticmethod
+    def _adaptive_dynamics_min_step_days(transit_body: str) -> float:
+        if transit_body == 'Moon':
+            return 1.0 / 24.0
+        if transit_body in {'Sun', 'Mercury', 'Venus'}:
+            return 0.25
+        if transit_body == 'Mars':
+            return 0.5
+        return 1.0
 
     def _transit_speed_at_jd(
         self, jd: float, transit_body: str, h: float = 0.05
@@ -1504,6 +1578,16 @@ class TransitService:
             max_orb,
             target,
             max_points,
+            required_jds=[
+                jd for jd in (
+                    [graph_start, graph_end, selected_jd]
+                    + [value for contact in contacts_raw for value in (
+                        [contact['jd_enter'], contact['jd_leave']]
+                        + [item['jd'] for item in contact.get('passes', [])]
+                        + [item['jd'] for item in contact.get('stations', [])]
+                    )]
+                ) if graph_start <= jd <= graph_end
+            ],
         )
 
         return {

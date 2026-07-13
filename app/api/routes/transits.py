@@ -270,7 +270,7 @@ class AspectDynamicsRequest(BaseModel):
     max_points: int = Field(
         320,
         ge=2,
-        le=720,
+        le=1200,
         description="Максимум точек графика",
     )
     preview: bool = Field(

@@ -394,9 +394,11 @@ test('modal renders success summary from fetched dynamics data', async () => {
     assert.equal(payloads[0].preview, true);
     assert.equal(payloads[0].max_points, 96);
     assert.equal(payloads[1].preview, false);
-    assert.equal(payloads[1].max_points, 720);
-    assert.ok(payloads[1].contact_start < '1977-01-01');
-    assert.ok(payloads[1].contact_end > '2076-01-01');
+    assert.equal(payloads[1].max_points, 360);
+    assert.ok(payloads[1].contact_start < '2026-06-29');
+    assert.ok(payloads[1].contact_end > '2026-06-29');
+    assert.ok(payloads[1].contact_start > '2025-01-01');
+    assert.ok(payloads[1].contact_end < '2028-01-01');
     const overlay = document.querySelector('.aspect-dynamics-modal');
     assert.ok(overlay);
     assert.equal(overlay.classList.contains('hidden'), false);
@@ -443,6 +445,62 @@ test('modal uses slow and fast transit default viewport spans', async () => {
     const fastSpan = windowSpanDays();
     assert.ok(fastSpan > 29 && fastSpan < 31);
     modal.close();
+});
+
+test('detail budget follows canvas width and fast-body multiplier', () => {
+    setupDom();
+    assert.equal(modal._test.detailPointBudget(720, 'Pluto'), 360);
+    assert.equal(modal._test.detailPointBudget(720, 'Moon'), 540);
+    assert.equal(modal._test.detailPointBudget(200, 'Mars'), 160);
+    assert.equal(modal._test.detailPointBudget(2400, 'Moon'), 1200);
+});
+
+test('resize refetches only when point budget changes by more than 25 percent', async () => {
+    setupDom();
+    const payloads = [];
+    modal.setFetchImpl(async (_url, options) => {
+        const payload = JSON.parse(options.body);
+        payloads.push(payload);
+        return {
+            ok: true,
+            async json() {
+                return sampleResponseForPayload(payload);
+            },
+        };
+    });
+    await modal.open(sampleOpenOptions);
+    const wrap = document.querySelector('.aspect-dynamics-chart-wrap');
+    Object.defineProperty(wrap, 'clientWidth', { value: 1200, configurable: true });
+    modal._test.handleChartResize();
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    assert.equal(payloads.length, 3);
+    assert.equal(payloads[2].max_points, 600);
+    modal.close();
+});
+
+test('graph segments break at missing values and angular wrap', () => {
+    const data = {
+        series: [
+            { datetime: '2026-01-01T00:00:00Z', signed_orb: 10 },
+            { datetime: '2026-01-02T00:00:00Z', signed_orb: 12 },
+            { datetime: '2026-01-03T00:00:00Z', signed_orb: null },
+            { datetime: '2026-01-04T00:00:00Z', signed_orb: 179 },
+            { datetime: '2026-01-05T00:00:00Z', signed_orb: -179 },
+            { datetime: '2026-01-06T00:00:00Z', signed_orb: -170 },
+        ],
+    };
+    assert.deepEqual(modal._test.graphSegments(data).map((segment) => segment.length), [2, 1, 2]);
+});
+
+test('PCHIP tangents flatten local extrema and preserve monotone direction', () => {
+    const extrema = modal._test.pchipTangents([
+        { x: 0, y: 0 }, { x: 1, y: 2 }, { x: 2, y: 1 },
+    ]);
+    assert.equal(extrema[1], 0);
+    const monotone = modal._test.pchipTangents([
+        { x: 0, y: 0 }, { x: 1, y: 1 }, { x: 2, y: 3 },
+    ]);
+    assert.ok(monotone.every((value) => value >= 0));
 });
 
 test('modal paints preview before full dynamics response resolves', async () => {
@@ -545,7 +603,7 @@ test('modal keeps preview chart when full dynamics request fails', async () => {
     modal.close();
 });
 
-test('toolbar range control uses the preloaded graph window', async () => {
+test('toolbar range control fetches the selected visible window', async () => {
     setupDom();
     const payloads = [];
     modal.setFetchImpl(async (_url, options) => {
@@ -562,14 +620,14 @@ test('toolbar range control uses the preloaded graph window', async () => {
     document.querySelector('[data-aspect-dynamics-range="3650"]').click();
 
     await new Promise((resolve) => setTimeout(resolve, 0));
-    assert.equal(payloads.length, 2);
+    assert.equal(payloads.length, 3);
     assert.ok(modal._state.interactionWindow);
     assert.ok(modal._state.interactionWindow.start < new Date('2022-01-01T00:00:00Z').getTime());
     assert.ok(modal._state.interactionWindow.end > new Date('2030-01-01T00:00:00Z').getTime());
     modal.close();
 });
 
-test('scrollbar scrub shifts the viewport without refetching inside loaded data', async () => {
+test('scrollbar scrub fetches the shifted visible window after debounce', async () => {
     setupDom();
     const payloads = [];
     modal.setFetchImpl(async (_url, options) => {
@@ -588,7 +646,7 @@ test('scrollbar scrub shifts the viewport without refetching inside loaded data'
     input.dispatchEvent(new window.Event('input', { bubbles: true }));
 
     await new Promise((resolve) => setTimeout(resolve, 180));
-    assert.equal(payloads.length, 2);
+    assert.equal(payloads.length, 3);
     assert.ok(modal._state.interactionWindow.start > new Date('2027-01-01T00:00:00Z').getTime());
     modal.close();
 });
@@ -618,12 +676,12 @@ test('dragging the aspect chart pans the graph window', async () => {
     dispatchPointer(wrap, 'pointerup', { clientX: 260 });
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    assert.equal(payloads.length, 2);
+    assert.equal(payloads.length, 3);
     assert.equal(wrap.classList.contains('is-dragging'), false);
     modal.close();
 });
 
-test('wheel scroll zooms the aspect chart without refetching inside loaded data', async () => {
+test('wheel scroll zoom fetches the visible window after debounce', async () => {
     setupDom();
     const payloads = [];
     modal.setFetchImpl(async (_url, options) => {
@@ -647,7 +705,7 @@ test('wheel scroll zooms the aspect chart without refetching inside loaded data'
     assert.ok(Math.abs(((after.start + after.end) / 2) - ((before.start + before.end) / 2)) < 3 * 86400000);
 
     await new Promise((resolve) => setTimeout(resolve, 140));
-    assert.equal(payloads.length, 2);
+    assert.equal(payloads.length, 3);
     modal.close();
 });
 
