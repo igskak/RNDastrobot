@@ -7638,16 +7638,29 @@
         return `<div class="forecast-new-eclipses"><ul class="forecast-new-eclipse-list">${rows}</ul></div>`;
     }
 
+    function getEclipsePeriodContext() {
+        const selectedDate = splitTargetDatetime(state.selectedDateTime)[0];
+        const place = {
+            name: state.location?.name || '',
+            latitude: state.location?.latitude ?? null,
+            longitude: state.location?.longitude ?? null,
+            timezone: state.timezone || 'UTC',
+        };
+        return {
+            selectedDate,
+            place,
+            timezone: place.timezone || 'UTC',
+            key: [selectedDate, place.timezone || 'UTC', place.latitude, place.longitude].join('|'),
+        };
+    }
+
     async function renderEclipsesBlock() {
         const el = document.getElementById('nowEclipsesView')
             || document.getElementById('forecastNewBlockStore')?.querySelector('#nowEclipsesView');
         if (!el) return;
-        const selectedDate = splitTargetDatetime(getDisplayedMomentDateTime())[0];
-        const place = getMomentPlaceView();
+        const { selectedDate, place, timezone, key } = getEclipsePeriodContext();
         const startDate = shiftCalendarMonth(selectedDate, -1);
         const endDate = shiftCalendarMonth(selectedDate, 1);
-        const timezone = place.timezone || state.timezone || 'UTC';
-        const key = [selectedDate, timezone, place.latitude, place.longitude].join('|');
         if (state.eclipsePeriodData && state.eclipsePeriodKey === key) {
             el.innerHTML = eclipseBlockMarkup(state.eclipsePeriodData);
             return;
@@ -7665,12 +7678,7 @@
         if (place.name) params.set('location_name', place.name);
         try {
             const data = await apiGet(`/lunar/eclipses?${params.toString()}`);
-            if (key !== [
-                splitTargetDatetime(getDisplayedMomentDateTime())[0],
-                getMomentPlaceView().timezone || state.timezone || 'UTC',
-                getMomentPlaceView().latitude,
-                getMomentPlaceView().longitude,
-            ].join('|')) return;
+            if (key !== getEclipsePeriodContext().key) return;
             state.eclipsePeriodData = data;
             state.eclipsePeriodKey = key;
             el.innerHTML = eclipseBlockMarkup(data);
