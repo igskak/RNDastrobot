@@ -4088,6 +4088,7 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
 }
 
 .forecast-new-lunar,
+.forecast-new-eclipses,
 .forecast-new-hours,
 .forecast-new-profections {
     display: flex;
@@ -4180,6 +4181,48 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
     font-size: 11px;
 }
 
+.forecast-new-eclipse-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.forecast-new-eclipse {
+    padding: 7px 8px;
+    border: 1px solid rgba(176, 125, 16, 0.18);
+    border-radius: 8px;
+    background: rgba(176, 125, 16, 0.05);
+}
+
+.forecast-new-eclipse[data-visible="0"] {
+    border-color: rgba(30, 58, 95, 0.1);
+    background: rgba(30, 58, 95, 0.03);
+}
+
+.forecast-new-eclipse-head,
+.forecast-new-eclipse-maximum,
+.forecast-new-eclipse-meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.forecast-new-eclipse-type,
+.forecast-new-eclipse-maximum strong {
+    font-weight: 600;
+}
+
+.forecast-new-eclipse-class,
+.forecast-new-eclipse-meta,
+.forecast-new-eclipse-maximum {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
 .forecast-new-hours-head {
     display: flex;
     justify-content: space-between;
@@ -4229,6 +4272,9 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
     font-variant-numeric: tabular-nums;
 }
 
+.forecast-new-eclipses-loading,
+.forecast-new-eclipses-error,
+.forecast-new-eclipses-empty,
 .forecast-new-lunar-loading,
 .forecast-new-lunar-error,
 .forecast-new-hours-loading,

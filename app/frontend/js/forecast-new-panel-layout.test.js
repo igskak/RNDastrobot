@@ -14,11 +14,11 @@ const def = L.buildDefaultForecastNewLayout();
 ok(def.schema_version === 1, 'schema_version stamped');
 ok(def.panels.multi.left.length === L.VIEW_KEYS.length, 'multi.left has all catalog views');
 ok(def.panels.multi.left.every(t => t.blocks[0].source === 'natal'), 'multi.left all natal');
-ok(def.panels.multi.right.length === 9, 'multi.right has 9 prognostic tabs');
-ok(def.panels.multi.right.every(t => t.blocks[0].source === 'prog'), 'multi.right all prog');
+ok(def.panels.multi.right.length === 10, 'multi.right has 9 prognostic tabs and eclipses');
+ok(def.panels.multi.right.filter(t => t.blocks[0].view !== 'eclipses').every(t => t.blocks[0].source === 'prog'), 'multi.right chart tabs all prog');
 ok(def.panels.single.left.length === 5, 'single.left 5 (planets/aspects/grid/configs/stelliums)');
-ok(def.panels.single.right.length === 4, 'single.right 4 (houses/balances/jones/dispositors)');
-ok(def.panels.single.right.every(t => t.blocks[0].source === 'natal'), 'single all natal');
+ok(def.panels.single.right.length === 5, 'single.right has four natal tabs and eclipses');
+ok(def.panels.single.right.filter(t => t.blocks[0].view !== 'eclipses').every(t => t.blocks[0].source === 'natal'), 'single chart tabs all natal');
 
 // --- normalize is idempotent on the default ---
 ok(JSON.stringify(L.normalizeLayout(def)) === JSON.stringify(def), 'normalize(default) === default');
@@ -94,7 +94,7 @@ ok(mig.singleRight === def.panels.single.right.find(t => t.blocks[0].view === 'b
 
 // --- garbage falls back to default ---
 ok(L.normalizeLayout(null).panels.multi.left.length === L.VIEW_KEYS.length, 'null -> default');
-ok(L.normalizeLayout({ foo: 1 }).panels.single.right.length === 4, 'garbage -> default');
+ok(L.normalizeLayout({ foo: 1 }).panels.single.right.length === 5, 'garbage -> default');
 
 // ===================== corners (Option C) =====================
 
@@ -206,6 +206,13 @@ const lunarCorner = L.normalizeLayout({
 });
 ok(lunarCorner.panels.multi.corners.tl && lunarCorner.panels.multi.corners.tl.view === 'lunar', 'lunar lives in a corner');
 ok(L.CORNER_COMPACT_VIEWS.includes('lunar'), 'lunar offered as a compact corner widget');
+
+// --- "now" eclipses block ---
+ok(L.isNowView('eclipses'), 'eclipses is a now-view');
+ok(L.BLOCK_TARGET_MAP['now:eclipses'], 'now:eclipses is DOM-realizable');
+ok(L.BLOCK_TARGET_MAP['now:eclipses'].containerId === 'nowEclipsesView', 'now:eclipses -> nowEclipsesView container');
+ok(!L.BLOCK_TARGET_MAP['natal:eclipses'], 'no natal:eclipses pairing');
+ok(L.CORNER_COMPACT_VIEWS.includes('eclipses'), 'eclipses offered as a compact corner widget');
 
 // --- "now" hours block ---
 ok(L.isNowView('hours'), 'hours is a now-view');

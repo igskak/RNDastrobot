@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone as _tz
 from typing import Dict, List, Optional
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import swisseph as swe
 from loguru import logger
@@ -73,6 +74,15 @@ class LunarService:
         if ss == 60:
             ss = 59
         return datetime(y, m, d, hh, mm, ss, tzinfo=_tz.utc).isoformat()
+
+    @classmethod
+    def _jd_to_local_iso(cls, jd: float, timezone_name: str) -> str:
+        """Convert a Julian UT moment to the requested IANA timezone."""
+        try:
+            zone = ZoneInfo(timezone_name or "UTC")
+        except ZoneInfoNotFoundError:
+            zone = _tz.utc
+        return datetime.fromisoformat(cls._jd_to_iso(jd)).astimezone(zone).isoformat()
 
     def build_snapshot(self, at_utc: Optional[datetime] = None,
                        lunation_count: int = 4) -> Dict:
@@ -349,3 +359,183 @@ class LunarService:
         if ret & swe.ECL_PENUMBRAL:
             kinds.append("penumbral")
         return {"type": etype, "classes": kinds or ["partial"], "max_jd": max_jd}
+
+    # --- затмения в периоде --------------------------------------------
+
+    @staticmethod
+    def _eclipse_classes(flags: int) -> List[str]:
+        classes: List[str] = []
+        if flags & swe.ECL_TOTAL:
+            classes.append("total")
+        if flags & swe.ECL_ANNULAR:
+            classes.append("annular")
+        if getattr(swe, "ECL_ANNULAR_TOTAL", 0) and flags & swe.ECL_ANNULAR_TOTAL:
+            classes.append("hybrid")
+        if flags & swe.ECL_PARTIAL:
+            classes.append("partial")
+        if flags & swe.ECL_PENUMBRAL:
+            classes.append("penumbral")
+        return list(dict.fromkeys(classes)) or ["partial"]
+
+    @staticmethod
+    def _contact_or_default(values, index: int, default: float) -> float:
+        value = values[index] if len(values) > index else 0.0
+        return float(value) if value and value > 0 else default
+
+    def _local_solar_circumstances(
+        self,
+        max_jd: float,
+        longitude: float,
+        latitude: float,
+    ) -> Dict:
+        """Local visibility/circumstances for one known global solar eclipse."""
+        try:
+            flags, times, attr = swe.sol_eclipse_when_loc(
+                max_jd - 2.0,
+                (longitude, latitude, 0.0),
+                swe.FLG_SWIEPH,
+                False,
+            )
+        except Exception as exc:  # pragma: no cover - ephemeris dependent
+            logger.warning("local solar eclipse lookup failed: {}", str(exc))
+            return {"visible": False}
+        if abs(float(times[0]) - max_jd) > 2.0:
+            return {"visible": False}
+        return {
+            "visible": bool(flags & swe.ECL_VISIBLE),
+            "classes": self._eclipse_classes(flags),
+            "begin_jd": self._contact_or_default(times, 1, max_jd),
+            "max_jd": float(times[0]),
+            "end_jd": self._contact_or_default(times, 4, max_jd),
+            "magnitude": round(float(attr[0]), 4),
+            "obscuration": round(float(attr[2]), 4),
+            "altitude": round(float(attr[5]), 2),
+        }
+
+    def _local_lunar_circumstances(
+        self,
+        max_jd: float,
+        longitude: float,
+        latitude: float,
+    ) -> Dict:
+        """Local visibility/circumstances for one known global lunar eclipse."""
+        try:
+            flags, times, attr = swe.lun_eclipse_when_loc(
+                max_jd - 2.0,
+                (longitude, latitude, 0.0),
+                swe.FLG_SWIEPH,
+                False,
+            )
+        except Exception as exc:  # pragma: no cover - ephemeris dependent
+            logger.warning("local lunar eclipse lookup failed: {}", str(exc))
+            return {"visible": False}
+        if abs(float(times[0]) - max_jd) > 2.0:
+            return {"visible": False}
+        begin_jd = self._contact_or_default(times, 6, max_jd)
+        end_jd = self._contact_or_default(times, 7, max_jd)
+        return {
+            "visible": True,
+            "classes": self._eclipse_classes(flags),
+            "begin_jd": begin_jd,
+            "max_jd": float(times[0]),
+            "end_jd": end_jd,
+            "magnitude": round(float(attr[0]), 4),
+            "penumbral_magnitude": round(float(attr[1]), 4),
+            "altitude": round(float(attr[5]), 2),
+        }
+
+    def eclipses_in_period(
+        self,
+        start_utc: datetime,
+        end_utc: datetime,
+        *,
+        timezone_name: str = "UTC",
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+        location_name: Optional[str] = None,
+    ) -> Dict:
+        """Return every solar and lunar eclipse whose maximum is in a period.
+
+        Global circumstances are always returned.  When coordinates are supplied,
+        each event is additionally evaluated for local visibility and local contact
+        times at the chart location.
+        """
+        if start_utc.tzinfo is None:
+            start_utc = start_utc.replace(tzinfo=_tz.utc)
+        if end_utc.tzinfo is None:
+            end_utc = end_utc.replace(tzinfo=_tz.utc)
+        start_utc = start_utc.astimezone(_tz.utc)
+        end_utc = end_utc.astimezone(_tz.utc)
+        if end_utc < start_utc:
+            start_utc, end_utc = end_utc, start_utc
+
+        start_jd = self._to_jd(start_utc)
+        end_jd = self._to_jd(end_utc)
+        has_location = latitude is not None and longitude is not None
+        events: List[Dict] = []
+
+        def append_event(eclipse_type: str, flags: int, times) -> None:
+            max_jd = float(times[0])
+            if max_jd < start_jd - 1e-7 or max_jd > end_jd + 1e-7:
+                return
+            if eclipse_type == "solar":
+                begin_jd = self._contact_or_default(times, 2, max_jd)
+                end_event_jd = self._contact_or_default(times, 3, max_jd)
+                local = self._local_solar_circumstances(max_jd, longitude, latitude) if has_location else None
+            else:
+                begin_jd = self._contact_or_default(times, 6, max_jd)
+                end_event_jd = self._contact_or_default(times, 7, max_jd)
+                local = self._local_lunar_circumstances(max_jd, longitude, latitude) if has_location else None
+
+            moon_lon = self._lon(max_jd, swe.MOON)
+            event = {
+                "event_type": "eclipse",
+                "eclipse_type": eclipse_type,
+                "classes": self._eclipse_classes(flags),
+                "begin_at": self._jd_to_iso(begin_jd),
+                "max_at": self._jd_to_iso(max_jd),
+                "end_at": self._jd_to_iso(end_event_jd),
+                "begin_local": self._jd_to_local_iso(begin_jd, timezone_name),
+                "max_local": self._jd_to_local_iso(max_jd, timezone_name),
+                "end_local": self._jd_to_local_iso(end_event_jd, timezone_name),
+                "longitude": round(moon_lon, 4),
+                "sign": get_zodiac_sign(moon_lon),
+                "degree_in_sign": round(get_degree_in_sign(moon_lon), 4),
+                "local": local,
+            }
+            if local:
+                for key in ("begin_jd", "max_jd", "end_jd"):
+                    if key in local:
+                        stem = key.removesuffix("_jd")
+                        local[f"{stem}_at"] = self._jd_to_iso(local[key])
+                        local[f"{stem}_local"] = self._jd_to_local_iso(local[key], timezone_name)
+                        del local[key]
+            events.append(event)
+
+        for eclipse_type in ("solar", "lunar"):
+            cursor = start_jd - 40.0
+            while True:
+                if eclipse_type == "solar":
+                    flags, times = swe.sol_eclipse_when_glob(cursor, swe.FLG_SWIEPH, 0, False)
+                else:
+                    flags, times = swe.lun_eclipse_when(cursor, swe.FLG_SWIEPH, 0, False)
+                max_jd = float(times[0])
+                if max_jd > end_jd + 1e-7:
+                    break
+                append_event(eclipse_type, flags, times)
+                cursor = max_jd + 20.0
+
+        events.sort(key=lambda item: item["max_at"])
+        return {
+            "period_start": start_utc.isoformat(),
+            "period_end": end_utc.isoformat(),
+            "timezone": timezone_name or "UTC",
+            "location": {
+                "name": location_name or "",
+                "latitude": latitude,
+                "longitude": longitude,
+                "provided": has_location,
+            },
+            "events": events,
+            "count": len(events),
+        }

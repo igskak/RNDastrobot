@@ -6795,6 +6795,7 @@
 
     function renderNowBlocks() {
         if (layoutHasBlock('now:lunar')) renderLunarBlock();
+        if (layoutHasBlock('now:eclipses')) renderEclipsesBlock();
         if (layoutHasBlock('now:hours')) renderHoursBlock();
         if (layoutHasBlock('natal:profections')) renderProfectionsBlock();
         if (layoutHasBlock('natal:extraangles')) renderExtraAnglesBlock();
@@ -7320,6 +7321,98 @@
         }
     }
 
+    function shiftCalendarMonth(dateStr, delta) {
+        const match = String(dateStr || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (!match) return dateStr;
+        const sourceYear = Number(match[1]);
+        const sourceMonth = Number(match[2]) - 1;
+        const sourceDay = Number(match[3]);
+        const first = new Date(sourceYear, sourceMonth + delta, 1);
+        const lastDay = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+        const result = new Date(first.getFullYear(), first.getMonth(), Math.min(sourceDay, lastDay));
+        const year = result.getFullYear();
+        const month = String(result.getMonth() + 1).padStart(2, '0');
+        const day = String(result.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function eclipseBlockMarkup(data) {
+        const events = data?.events || [];
+        if (!events.length) {
+            return `<div class="forecast-new-eclipses-empty">${escapeHtml(t('page.forecastNew.eclipses.empty') || '—')}</div>`;
+        }
+        const rows = events.map((event) => {
+            const type = t(`page.forecastNew.eclipses.types.${event.eclipse_type}`) || event.eclipse_type;
+            const classes = (event.classes || [])
+                .map((value) => t(`page.forecastNew.eclipses.classes.${value}`) || value)
+                .join(', ');
+            const local = event.local;
+            const visibility = local == null
+                ? t('page.forecastNew.eclipses.locationUnavailable')
+                : local.visible
+                    ? t('page.forecastNew.eclipses.visible')
+                    : t('page.forecastNew.eclipses.notVisible');
+            const magnitude = local?.magnitude != null
+                ? `<span class="forecast-new-eclipse-magnitude">${escapeHtml(t('page.forecastNew.eclipses.magnitude'))}: ${Number(local.magnitude).toFixed(3)}</span>`
+                : '';
+            return `<li class="forecast-new-eclipse" data-visible="${local?.visible ? '1' : '0'}">
+                <div class="forecast-new-eclipse-head">
+                    <span class="forecast-new-eclipse-type">${escapeHtml(type)}</span>
+                    <span class="forecast-new-eclipse-class">${escapeHtml(classes)}</span>
+                </div>
+                <div class="forecast-new-eclipse-maximum">
+                    <span>${escapeHtml(t('page.forecastNew.eclipses.maximum'))}</span>
+                    <strong>${escapeHtml(formatChartDateTimeLabel(String(event.max_local || event.max_at).slice(0, 16)))}</strong>
+                </div>
+                <div class="forecast-new-eclipse-meta">
+                    <span>${escapeHtml(visibility)}</span>${magnitude}
+                </div>
+            </li>`;
+        }).join('');
+        return `<div class="forecast-new-eclipses"><ul class="forecast-new-eclipse-list">${rows}</ul></div>`;
+    }
+
+    async function renderEclipsesBlock() {
+        const el = document.getElementById('nowEclipsesView')
+            || document.getElementById('forecastNewBlockStore')?.querySelector('#nowEclipsesView');
+        if (!el) return;
+        const selectedDate = splitTargetDatetime(getDisplayedMomentDateTime())[0];
+        const place = getMomentPlaceView();
+        const startDate = shiftCalendarMonth(selectedDate, -1);
+        const endDate = shiftCalendarMonth(selectedDate, 1);
+        const timezone = place.timezone || state.timezone || 'UTC';
+        const key = [selectedDate, timezone, place.latitude, place.longitude].join('|');
+        if (state.eclipsePeriodData && state.eclipsePeriodKey === key) {
+            el.innerHTML = eclipseBlockMarkup(state.eclipsePeriodData);
+            return;
+        }
+        el.innerHTML = `<div class="forecast-new-eclipses-loading">${escapeHtml(t('common.loading') || '…')}</div>`;
+        const params = new URLSearchParams({
+            start_date: startDate,
+            end_date: endDate,
+            timezone,
+        });
+        if (place.latitude != null && place.longitude != null) {
+            params.set('latitude', String(place.latitude));
+            params.set('longitude', String(place.longitude));
+        }
+        if (place.name) params.set('location_name', place.name);
+        try {
+            const data = await apiGet(`/lunar/eclipses?${params.toString()}`);
+            if (key !== [
+                splitTargetDatetime(getDisplayedMomentDateTime())[0],
+                getMomentPlaceView().timezone || state.timezone || 'UTC',
+                getMomentPlaceView().latitude,
+                getMomentPlaceView().longitude,
+            ].join('|')) return;
+            state.eclipsePeriodData = data;
+            state.eclipsePeriodKey = key;
+            el.innerHTML = eclipseBlockMarkup(data);
+        } catch (error) {
+            el.innerHTML = `<div class="forecast-new-eclipses-error">${escapeHtml(t('common.error') || 'Ошибка')}</div>`;
+        }
+    }
+
     function planetLabel(name) {
         const key = `astro.planet.${name}`;
         const tr = t(key);
@@ -7515,7 +7608,7 @@
         aspects: ['aspects', 'configs', 'stelliums'],
         analysis: ['balances', 'jones', 'dispositors'],
         advanced: ['profections', 'extraangles', 'antiscia', 'asteroids', 'dominants', 'fixstars'],
-        now: ['lunar', 'hours'],
+        now: ['lunar', 'eclipses', 'hours'],
     };
 
     function findBlockLocation(mode, blockKey) {

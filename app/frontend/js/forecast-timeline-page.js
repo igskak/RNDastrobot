@@ -130,14 +130,26 @@
 
     function getFilteredEvents() {
         const events = state.periodData?.events || [];
-        if (refs.filterMajor?.checked) return events.filter((e) => e.is_major);
+        if (refs.filterMajor?.checked) return events.filter((e) => e.event_type === 'eclipse' || e.is_major);
         return events;
+    }
+
+    function eclipseToTimelineEvent(event) {
+        return {
+            ...event,
+            event_type: 'eclipse',
+            t_enter: event.local?.visible ? (event.local.begin_at || event.begin_at) : event.begin_at,
+            t_exact: event.max_at,
+            t_leave: event.local?.visible ? (event.local.end_at || event.end_at) : event.end_at,
+            is_major: true,
+        };
     }
 
     function renderActiveEventsSummary(events) {
         if (!refs.activeSummary) return;
         const now = new Date();
         const active = (events || []).filter((ev) => {
+            if (ev.event_type === 'eclipse') return false;
             const enter = new Date(ev.t_enter);
             const leave = new Date(ev.t_leave);
             return now >= enter && now <= leave;
@@ -194,7 +206,17 @@
         showState('loading');
         if (refs.calculate) refs.calculate.disabled = true;
         try {
-            state.periodData = await RD().ensureTransitPeriod(start, end);
+            const [periodData, eclipseData] = await Promise.all([
+                RD().ensureTransitPeriod(start, end),
+                RD().ensureEclipsePeriod(start, end),
+            ]);
+            state.periodData = {
+                ...periodData,
+                events: [
+                    ...(periodData?.events || []),
+                    ...(eclipseData?.events || []).map(eclipseToTimelineEvent),
+                ],
+            };
             showState('content');
             renderTimeline();
         } catch (err) {

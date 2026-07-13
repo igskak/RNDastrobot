@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime, timezone
 
 swe = pytest.importorskip("swisseph")
 
@@ -58,3 +59,31 @@ def test_void_of_course_shape(lunar):
     if not voc["is_void"]:
         assert voc["next_aspect"] is not None
         assert voc["next_aspect"]["body"]
+
+
+def test_eclipses_in_period_returns_exact_moments_and_local_visibility(lunar):
+    result = lunar.eclipses_in_period(
+        datetime(2026, 8, 1, tzinfo=timezone.utc),
+        datetime(2026, 8, 31, 23, 59, tzinfo=timezone.utc),
+        timezone_name="Europe/Prague",
+        latitude=50.0755,
+        longitude=14.4378,
+        location_name="Prague",
+    )
+
+    assert [event["eclipse_type"] for event in result["events"]] == ["solar", "lunar"]
+    assert result["location"]["provided"] is True
+    for event in result["events"]:
+        assert event["begin_at"] < event["max_at"] < event["end_at"]
+        assert event["max_local"].endswith(("+02:00", "+01:00"))
+        assert event["sign"]
+        assert isinstance(event["local"]["visible"], bool)
+
+
+def test_eclipses_in_period_without_coordinates_keeps_global_events(lunar):
+    result = lunar.eclipses_in_period(
+        datetime(2026, 8, 1, tzinfo=timezone.utc),
+        datetime(2026, 8, 31, 23, 59, tzinfo=timezone.utc),
+    )
+    assert result["count"] == 2
+    assert all(event["local"] is None for event in result["events"])

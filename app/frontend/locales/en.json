@@ -401,6 +401,7 @@
         "jones": "Jones cosmogram",
         "dispositors": "Dispositor scheme",
         "lunar": "Moon",
+        "eclipses": "Eclipses",
         "hours": "Hours",
         "profections": "Profections",
         "extraangles": "Additional angles",
@@ -557,6 +558,25 @@
         "eclipse": {
           "solar": "Solar eclipse",
           "lunar": "Lunar eclipse"
+        }
+      },
+      "eclipses": {
+        "empty": "No eclipses within one month before or after the selected date",
+        "maximum": "Maximum",
+        "magnitude": "Magnitude",
+        "visible": "Visible from chart location",
+        "notVisible": "Not visible from chart location",
+        "locationUnavailable": "Chart coordinates unavailable",
+        "types": {
+          "solar": "Solar eclipse",
+          "lunar": "Lunar eclipse"
+        },
+        "classes": {
+          "total": "total",
+          "annular": "annular",
+          "hybrid": "hybrid",
+          "partial": "partial",
+          "penumbral": "penumbral"
         }
       },
       "hours": {
@@ -2003,6 +2023,29 @@
         "ingresses": {
           "title": "Ingresses"
         },
+        "eclipses": {
+          "title": "Eclipses",
+          "maximum": "Maximum",
+          "kind": "Kind",
+          "class": "Type",
+          "position": "Position",
+          "visibility": "Visibility from chart location",
+          "magnitude": "Magnitude",
+          "visible": "Visible",
+          "notVisible": "Not visible",
+          "locationUnavailable": "Chart coordinates unavailable",
+          "types": {
+            "solar": "Solar eclipse",
+            "lunar": "Lunar eclipse"
+          },
+          "classes": {
+            "total": "total",
+            "annular": "annular",
+            "hybrid": "hybrid",
+            "partial": "partial",
+            "penumbral": "penumbral"
+          }
+        },
         "noAspects": "No aspects",
         "noData": "No data",
         "noEvents": "No events in range",
@@ -2015,6 +2058,25 @@
         "timeline": "Timeline"
       },
       "timeline": {
+        "eclipses": {
+          "maximum": "Maximum",
+          "class": "Type",
+          "visibility": "Visibility",
+          "visible": "visible from chart location",
+          "notVisible": "not visible from chart location",
+          "locationUnavailable": "chart coordinates unavailable",
+          "types": {
+            "solar": "Solar eclipse",
+            "lunar": "Lunar eclipse"
+          },
+          "classes": {
+            "total": "total",
+            "annular": "annular",
+            "hybrid": "hybrid",
+            "partial": "partial",
+            "penumbral": "penumbral"
+          }
+        },
         "activeNow": {
           "empty": "No exact hits near today",
           "exactDaysAgo": {

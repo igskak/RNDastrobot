@@ -34,12 +34,31 @@
         userId: null,
         timezone: 'UTC',
         natalData: null,
+        latitude: null,
+        longitude: null,
+        locationName: '',
     };
 
-    function configure({ userId, timezone, natalData } = {}) {
+    function configure({ userId, timezone, natalData, latitude, longitude, locationName } = {}) {
         if (userId !== undefined) ctx.userId = userId;
         if (timezone !== undefined) ctx.timezone = timezone || 'UTC';
         if (natalData !== undefined) ctx.natalData = natalData;
+        const birth = natalData?.birth_data || {};
+        if (latitude !== undefined || birth.latitude !== undefined) {
+            const value = latitude !== undefined ? latitude : birth.latitude;
+            ctx.latitude = value !== null && value !== '' && Number.isFinite(Number(value))
+                ? Number(value)
+                : null;
+        }
+        if (longitude !== undefined || birth.longitude !== undefined) {
+            const value = longitude !== undefined ? longitude : birth.longitude;
+            ctx.longitude = value !== null && value !== '' && Number.isFinite(Number(value))
+                ? Number(value)
+                : null;
+        }
+        if (locationName !== undefined || birth.place || birth.birth_place) {
+            ctx.locationName = locationName !== undefined ? locationName : (birth.place || birth.birth_place || '');
+        }
     }
 
     function getTimezone() {
@@ -83,6 +102,28 @@
             credentials: 'include',
             headers: apiHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+            let message = `HTTP ${response.status}`;
+            try {
+                const data = await response.json();
+                message = data?.detail || data?.message || message;
+            } catch {
+                message = await response.text().catch(() => message);
+            }
+            throw new Error(message);
+        }
+        return response.json();
+    }
+
+    async function apiGet(path, params = {}) {
+        const query = new URLSearchParams();
+        Object.entries(params).forEach(([key, value]) => {
+            if (value !== null && value !== undefined && value !== '') query.set(key, String(value));
+        });
+        const response = await fetch(`${API_BASE}${path}?${query.toString()}`, {
+            credentials: 'include',
+            headers: apiHeaders(),
         });
         if (!response.ok) {
             let message = `HTTP ${response.status}`;
@@ -268,6 +309,7 @@
     const transitPeriodCache = {};
     const combinedCache = {};
     const ingressSummaryCache = {};
+    const eclipsePeriodCache = {};
     let ingressSummaryData = null;
 
     function getTransitPeriodKey(startDate, endDate) {
@@ -280,6 +322,10 @@
 
     function getIngressSummaryKey(startDate, endDate, directionType) {
         return `ingress_summary|${INGRESS_SUMMARY_CACHE_VERSION}|${startDate}|${endDate}|${directionType || DEFAULT_DIRECTION_TYPE}`;
+    }
+
+    function getEclipsePeriodKey(startDate, endDate) {
+        return [startDate, endDate, getTimezone(), ctx.latitude, ctx.longitude].join('|');
     }
 
     // ─── Range / point data fetching ─────────────────────────
@@ -375,6 +421,22 @@
         });
         ingressSummaryCache[key] = data;
         ingressSummaryData = data;
+        return data;
+    }
+
+    async function ensureEclipsePeriod(startDate, endDate) {
+        if (!startDate || !endDate) throw new Error(t('page.forecast.errors.datesRequired'));
+        const key = getEclipsePeriodKey(startDate, endDate);
+        if (eclipsePeriodCache[key]) return eclipsePeriodCache[key];
+        const data = await apiGet('/lunar/eclipses', {
+            start_date: startDate,
+            end_date: endDate,
+            timezone: getTimezone(),
+            latitude: ctx.latitude,
+            longitude: ctx.longitude,
+            location_name: ctx.locationName,
+        });
+        eclipsePeriodCache[key] = data;
         return data;
     }
 
@@ -558,6 +620,7 @@
         ensureTransitPeriod,
         ensureCombined,
         ensureIngressSummary,
+        ensureEclipsePeriod,
         getIngressSummary,
         resolvePrognosticPeriod,
         // ingress summary helpers

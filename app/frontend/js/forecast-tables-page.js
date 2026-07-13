@@ -51,6 +51,8 @@
         refs.tableBody = document.getElementById('tableBody');
         refs.ingressSection = document.getElementById('ingressSection');
         refs.ingressBody = document.getElementById('ingressTableBody');
+        refs.eclipseSection = document.getElementById('eclipseSection');
+        refs.eclipseBody = document.getElementById('eclipseTableBody');
         refs.filterKind = document.getElementById('tableFilterKind');
         refs.filterStrength = document.getElementById('tableFilterStrength');
         refs.filterAspect = document.getElementById('tableFilterAspect');
@@ -508,6 +510,49 @@
         bindIngressHover(refs.ingressBody);
     }
 
+    function eclipseTypeLabel(type) {
+        return t(`page.forecast.table.eclipses.types.${type}`);
+    }
+
+    function eclipseClassLabel(value) {
+        return t(`page.forecast.table.eclipses.classes.${value}`);
+    }
+
+    function renderEclipseSection(data) {
+        const events = data?.events || [];
+        if (!refs.eclipseSection || !refs.eclipseBody) return;
+        if (!events.length) {
+            refs.eclipseSection.style.display = 'none';
+            refs.eclipseBody.innerHTML = '';
+            return;
+        }
+        refs.eclipseBody.innerHTML = events.map((event) => {
+            const local = event.local;
+            const maxMoment = event.max_local || event.max_at;
+            const localParts = String(maxMoment || '').match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/);
+            const maxLabel = localParts
+                ? `${window.LocaleFormatters?.formatDate?.(localParts[1]) || localParts[1]} ${localParts[2]}`
+                : maxMoment;
+            const visibility = local == null
+                ? t('page.forecast.table.eclipses.locationUnavailable')
+                : local.visible
+                    ? t('page.forecast.table.eclipses.visible')
+                    : t('page.forecast.table.eclipses.notVisible');
+            const classes = (event.classes || []).map(eclipseClassLabel).join(', ');
+            const position = `${Number(event.degree_in_sign || 0).toFixed(2)}° ${RD().formatSignLabel(event.sign)}`;
+            const magnitude = local?.magnitude != null ? Number(local.magnitude).toFixed(3) : '—';
+            return `<tr>
+                <td>${escapeHtml(maxLabel)}</td>
+                <td>${escapeHtml(eclipseTypeLabel(event.eclipse_type))}</td>
+                <td>${escapeHtml(classes)}</td>
+                <td>${escapeHtml(position)}</td>
+                <td>${escapeHtml(visibility)}</td>
+                <td>${escapeHtml(magnitude)}</td>
+            </tr>`;
+        }).join('');
+        refs.eclipseSection.style.display = '';
+    }
+
     // ─── Calculate ───────────────────────────────────────────
     async function calculate() {
         const start = refs.startDate.value;
@@ -518,9 +563,10 @@
         if (refs.calculate) refs.calculate.disabled = true;
         try {
             const rd = RD();
-            const [periodData, combinedData] = await Promise.all([
+            const [periodData, combinedData, eclipseData] = await Promise.all([
                 rd.ensureTransitPeriod(start, end),
                 rd.ensureCombined(targetDate, { directionType: state.directionType }),
+                rd.ensureEclipsePeriod(start, end),
             ]);
             try {
                 await rd.ensureIngressSummary(start, end, state.directionType);
@@ -534,6 +580,7 @@
             resetFilters();
             applyFiltersAndRender();
             renderIngressSection(ingressRows);
+            renderEclipseSection(eclipseData);
             showState('content');
         } catch (err) {
             console.error('Table load error:', err);

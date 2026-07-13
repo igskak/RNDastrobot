@@ -33,6 +33,7 @@
         'Sesquiquadrate': '#ec4899',
     };
     const DEFAULT_COLOR = '#9ca3af';
+    const ECLIPSE_COLORS = { solar: '#b07d10', lunar: '#6d5cae' };
     let visualPreferences = window.AstroPreferences?.getAccountVisualPreferences?.() || null;
 
     // ─── State ──────────────────────────────────────────
@@ -99,12 +100,16 @@
                 ? window.ForecastTimelineUtils.buildTimelineRowKey(ev)
                 : `${ev.transit_body}|${ev.aspect_type}|${ev.natal_body}`;
             if (!grouped.has(key)) {
+                const isEclipse = ev.event_type === 'eclipse';
                 const pSym = Symbols?.planets?.[ev.transit_body] || ev.transit_body;
                 const nSym = Symbols?.planets?.[ev.natal_body] || ev.natal_body;
                 const aSym = Symbols?.aspects?.[ev.aspect_type] || '';
+                const eclipseLabel = isEclipse
+                    ? t(`page.forecast.timeline.eclipses.types.${ev.eclipse_type}`)
+                    : '';
                 grouped.set(key, {
-                    label: `${pSym} ${aSym} ${nSym}`,
-                    color: getAspectColor(ev.aspect_type, ev.harmonic_type),
+                    label: isEclipse ? eclipseLabel : `${pSym} ${aSym} ${nSym}`,
+                    color: isEclipse ? ECLIPSE_COLORS[ev.eclipse_type] : getAspectColor(ev.aspect_type, ev.harmonic_type),
                     spans: [],
                     events: [],
                 });
@@ -121,6 +126,9 @@
         // Sort: slow planets first, then by first exact date
         const PLANET_ORDER = ['Pluto','Neptune','Uranus','Chiron','Saturn','Jupiter','TrueNorthNode','TrueSouthNode','BlackMoon','Proserpina','Mars','Venus','Mercury','Sun','Moon'];
         rows.sort((a, b) => {
+            const aEclipse = a.events[0].event_type === 'eclipse';
+            const bEclipse = b.events[0].event_type === 'eclipse';
+            if (aEclipse !== bEclipse) return aEclipse ? -1 : 1;
             const pa = PLANET_ORDER.indexOf(a.events[0].transit_body);
             const pb = PLANET_ORDER.indexOf(b.events[0].transit_body);
             if (pa !== pb) return pa - pb;
@@ -360,11 +368,12 @@
             const ev = si >= 0 ? row.events[si] : row.events[0];
             const exactDate = ev.t_exact ? ev.t_exact.split('T')[0] : null;
             if (exactDate && window.ForecastNavigation) {
-                window.ForecastNavigation.goToBiwheel(exactDate, {
+                const navigationOptions = ev.event_type === 'eclipse' ? {} : {
                     transitBody: ev.transit_body,
                     aspectType: ev.aspect_type,
                     natalBody: ev.natal_body,
-                });
+                };
+                window.ForecastNavigation.goToBiwheel(exactDate, navigationOptions);
             }
         }
     }
@@ -383,6 +392,28 @@
             const row = rows[rowIdx];
             const si = findSpanAt(row, mouseX);
             const ev = si >= 0 ? row.events[si] : row.events[0];
+            if (ev.event_type === 'eclipse') {
+                const classes = (ev.classes || [])
+                    .map((value) => t(`page.forecast.timeline.eclipses.classes.${value}`))
+                    .join(', ');
+                const visibility = ev.local == null
+                    ? t('page.forecast.timeline.eclipses.locationUnavailable')
+                    : ev.local.visible
+                        ? t('page.forecast.timeline.eclipses.visible')
+                        : t('page.forecast.timeline.eclipses.notVisible');
+                tooltip.innerHTML = `
+                    <div class="tt-title">${t(`page.forecast.timeline.eclipses.types.${ev.eclipse_type}`)}</div>
+                    <div class="tt-row"><span class="tt-label">${t('page.forecast.timeline.eclipses.class')}:</span> ${classes}</div>
+                    <div class="tt-row"><span class="tt-label">${t('page.forecast.timeline.tooltip.enter')}:</span> ${formatEclipseLocalMoment(ev.local?.visible ? ev.local.begin_local : ev.begin_local)}</div>
+                    <div class="tt-row"><span class="tt-label">${t('page.forecast.timeline.eclipses.maximum')}:</span> ${formatEclipseLocalMoment(ev.max_local)}</div>
+                    <div class="tt-row"><span class="tt-label">${t('page.forecast.timeline.tooltip.leave')}:</span> ${formatEclipseLocalMoment(ev.local?.visible ? ev.local.end_local : ev.end_local)}</div>
+                    <div class="tt-row"><span class="tt-label">${t('page.forecast.timeline.eclipses.visibility')}:</span> ${visibility}</div>
+                `;
+                tooltip.classList.add('visible');
+                tooltip.style.left = (e.clientX + 12) + 'px';
+                tooltip.style.top = (e.clientY - 20) + 'px';
+                return;
+            }
             const pSym = Symbols?.planets?.[ev.transit_body] || ev.transit_body;
             const nSym = Symbols?.planets?.[ev.natal_body] || ev.natal_body;
             const aSym = Symbols?.aspects?.[ev.aspect_type] || ev.aspect_type;
@@ -445,6 +476,13 @@
         return base;
     }
 
+    function formatEclipseLocalMoment(isoStr) {
+        const match = String(isoStr || '').match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/);
+        if (!match) return formatTimelineBoundDateTime(isoStr);
+        const dateLabel = window.LocaleFormatters?.formatDate?.(match[1]) || match[1];
+        return `${dateLabel} ${match[2]}`;
+    }
+
     function buildAllEntriesHtml(eventsList) {
         const sorted = [...(eventsList || [])].sort((a, b) => new Date(a.t_exact) - new Date(b.t_exact));
         return sorted.map((item, idx) => `
@@ -458,15 +496,21 @@
     function renderLegend() {
         const container = document.getElementById('timelineLegend');
         if (!container) return;
-        const usedAspects = [...new Set(events.map(e => e.aspect_type))];
-        container.innerHTML = usedAspects.map(a => {
+        const usedAspects = [...new Set(events.filter(e => e.event_type !== 'eclipse').map(e => e.aspect_type))];
+        const aspectItems = usedAspects.map(a => {
             const color = getAspectColor(a);
             const sym = Symbols?.aspects?.[a] || '';
             return `<div class="timeline-legend-item">
                 <span class="timeline-legend-color" style="background:${color}"></span>
                 ${sym} ${a}
             </div>`;
-        }).join('');
+        });
+        const eclipseTypes = [...new Set(events.filter(e => e.event_type === 'eclipse').map(e => e.eclipse_type))];
+        const eclipseItems = eclipseTypes.map(type => `<div class="timeline-legend-item">
+            <span class="timeline-legend-color" style="background:${ECLIPSE_COLORS[type] || DEFAULT_COLOR}"></span>
+            ${t(`page.forecast.timeline.eclipses.types.${type}`)}
+        </div>`);
+        container.innerHTML = [...eclipseItems, ...aspectItems].join('');
     }
 
     // ─── Export ──────────────────────────────────────────

@@ -78,6 +78,9 @@
     }
 
     function buildTimelineRowKey(ev) {
+        if (ev?.event_type === 'eclipse') {
+            return `eclipse|${ev?.eclipse_type || ''}|${ev?.t_exact || ''}`;
+        }
         return `${ev?.transit_body || ''}|${ev?.aspect_type || ''}|${ev?.natal_body || ''}`;
     }
 

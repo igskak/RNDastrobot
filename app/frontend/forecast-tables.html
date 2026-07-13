@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecast.tabs.table"></title>
-    <link rel="stylesheet" href="bundles/forecast-tables.bundle.css?v=54e26bbbf539">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=54e26bbbf539">
+    <link rel="stylesheet" href="bundles/forecast-tables.bundle.css?v=f03c569349df">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=f03c569349df">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '54e26bbbf539';</script>
+    <script>window.__APP_BUILD_ID__ = 'f03c569349df';</script>
 </head>
 <body class="chart-page forecast-range-page workspace-compact">
     <div class="page-loader" id="pageLoader">
@@ -130,12 +130,28 @@
                     <tbody id="ingressTableBody"></tbody>
                 </table>
             </div>
+            <div class="ingress-section eclipse-section" id="eclipseSection" style="display:none">
+                <div class="ingress-section-title" data-i18n="page.forecast.table.eclipses.title"></div>
+                <table class="forecast-table eclipse-table">
+                    <thead>
+                        <tr>
+                            <th data-i18n="page.forecast.table.eclipses.maximum"></th>
+                            <th data-i18n="page.forecast.table.eclipses.kind"></th>
+                            <th data-i18n="page.forecast.table.eclipses.class"></th>
+                            <th data-i18n="page.forecast.table.eclipses.position"></th>
+                            <th data-i18n="page.forecast.table.eclipses.visibility"></th>
+                            <th data-i18n="page.forecast.table.eclipses.magnitude"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="eclipseTableBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <script type="module" src="js/bundles/forecast-tables.bundle.js?v=54e26bbbf539"></script>
+    <script type="module" src="js/bundles/forecast-tables.bundle.js?v=f03c569349df"></script>
     <script src="/runtime-config.js"></script>
-    <script src="js/analytics.js?v=54e26bbbf539"></script>
-    <script src="js/locale-switcher.js?v=54e26bbbf539"></script>
+    <script src="js/analytics.js?v=f03c569349df"></script>
+    <script src="js/locale-switcher.js?v=f03c569349df"></script>
 </body>
 </html>
