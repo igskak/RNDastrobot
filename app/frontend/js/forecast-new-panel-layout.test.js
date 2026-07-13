@@ -183,29 +183,39 @@ ok(JSON.stringify(unknownWorkspace) === JSON.stringify(def), 'unknown workspace 
 
 // --- "now" source / lunar block ---
 ok(L.isNowView('lunar'), 'lunar is a now-view');
+ok(L.isNowView('voidmoon'), 'voidmoon is a now-view');
 ok(!L.isNowView('planets'), 'planets is not a now-view');
 ok(L.isValidView('lunar'), 'lunar is a valid view');
+ok(L.isValidView('voidmoon'), 'voidmoon is a valid view');
 ok(L.BLOCK_TARGET_MAP['now:lunar'], 'now:lunar is DOM-realizable');
 ok(L.BLOCK_TARGET_MAP['now:lunar'].containerId === 'nowLunarView', 'now:lunar -> nowLunarView container');
 ok(L.BLOCK_TARGET_MAP['now:lunar'].rendererKey === 'now', 'now:lunar owned by now renderer');
+ok(L.BLOCK_TARGET_MAP['now:voidmoon'], 'now:voidmoon is DOM-realizable');
+ok(L.BLOCK_TARGET_MAP['now:voidmoon'].containerId === 'nowVoidmoonView', 'now:voidmoon -> nowVoidmoonView container');
+ok(L.BLOCK_TARGET_MAP['now:voidmoon'].rendererKey === 'now', 'now:voidmoon owned by now renderer');
 ok(!L.BLOCK_TARGET_MAP['natal:lunar'], 'no natal:lunar pairing');
+ok(!L.BLOCK_TARGET_MAP['natal:voidmoon'], 'no natal:voidmoon pairing');
 ok(!L.BLOCK_TARGET_MAP['now:planets'], 'no now:planets pairing');
 const nowLayout = L.normalizeLayout({
   panels: {
-    multi: { left: [{ id: 'a', blocks: [{ source: 'prog', view: 'lunar' }] }], right: [], corners: L.emptyCorners() },
-    single: { left: [{ id: 'b', blocks: [{ source: 'prog', view: 'lunar' }] }], right: [], corners: L.emptyCorners() },
+    multi: { left: [{ id: 'a', blocks: [{ source: 'prog', view: 'lunar' }] }], right: [{ id: 'v', blocks: [{ source: 'prog', view: 'voidmoon' }] }], corners: L.emptyCorners() },
+    single: { left: [{ id: 'b', blocks: [{ source: 'prog', view: 'lunar' }] }], right: [{ id: 'sv', blocks: [{ source: 'prog', view: 'voidmoon' }] }], corners: L.emptyCorners() },
   },
 });
 ok(nowLayout.panels.multi.left[0].blocks[0].source === 'now', 'multi: lunar forced to source now');
+ok(nowLayout.panels.multi.right[0].blocks[0].source === 'now', 'multi: voidmoon forced to source now');
 ok(nowLayout.panels.single.left[0].blocks[0].source === 'now', 'single: lunar forced to source now (not natal)');
+ok(nowLayout.panels.single.right[0].blocks[0].source === 'now', 'single: voidmoon forced to source now (not natal)');
 const lunarCorner = L.normalizeLayout({
   panels: {
-    multi: { left: [], right: [], corners: { tl: { source: 'now', view: 'lunar' }, tr: null, bl: null, br: null } },
+    multi: { left: [], right: [], corners: { tl: { source: 'now', view: 'lunar' }, tr: { source: 'now', view: 'voidmoon' }, bl: null, br: null } },
     single: { left: [], right: [], corners: L.emptyCorners() },
   },
 });
 ok(lunarCorner.panels.multi.corners.tl && lunarCorner.panels.multi.corners.tl.view === 'lunar', 'lunar lives in a corner');
+ok(lunarCorner.panels.multi.corners.tr && lunarCorner.panels.multi.corners.tr.view === 'voidmoon', 'voidmoon lives in a corner');
 ok(L.CORNER_COMPACT_VIEWS.includes('lunar'), 'lunar offered as a compact corner widget');
+ok(L.CORNER_COMPACT_VIEWS.includes('voidmoon'), 'voidmoon offered as a compact corner widget');
 
 // --- "now" eclipses block ---
 ok(L.isNowView('eclipses'), 'eclipses is a now-view');

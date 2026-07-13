@@ -36,7 +36,7 @@
     // current instant (source 'now'). They are registered as explicit blocks
     // (NOT via the SOURCES x VIEW_KEYS cross product) so we never create bogus
     // pairings like now:planets or natal:lunar.
-    var NOW_VIEWS = ['lunar', 'eclipses', 'hours'];
+    var NOW_VIEWS = ['lunar', 'voidmoon', 'eclipses', 'hours'];
 
     // i18n keys for auto-titling a tab from its (first) block's view.
     var VIEW_I18N = {
@@ -56,6 +56,7 @@
         dominants: 'page.forecastNew.tabs.dominants',
         fixstars: 'page.forecastNew.tabs.fixstars',
         lunar: 'page.forecastNew.tabs.lunar',
+        voidmoon: 'page.forecastNew.tabs.voidmoon',
         eclipses: 'page.forecastNew.tabs.eclipses',
         hours: 'page.forecastNew.tabs.hours',
     };
@@ -67,8 +68,8 @@
     // corner, never both — corners share the per-mode block pool with panels).
     // Each corner holds 0 or 1 block. Order = visual reading order.
     var CORNER_KEYS = ['tl', 'tr', 'bl', 'br'];
-    var CORNER_RECOMMENDED_VIEWS = ['balances', 'configs', 'stelliums', 'jones', 'profections', 'extraangles', 'antiscia', 'asteroids', 'dominants', 'fixstars', 'lunar', 'eclipses', 'hours'];
-    var CORNER_COMPACT_VIEWS = ['planets', 'houses', 'aspects', 'lunar', 'eclipses', 'hours'];
+    var CORNER_RECOMMENDED_VIEWS = ['balances', 'configs', 'stelliums', 'jones', 'profections', 'extraangles', 'antiscia', 'asteroids', 'dominants', 'fixstars', 'lunar', 'voidmoon', 'eclipses', 'hours'];
+    var CORNER_COMPACT_VIEWS = ['planets', 'houses', 'aspects', 'lunar', 'voidmoon', 'eclipses', 'hours'];
     var CORNER_DISCOURAGED_VIEWS = ['grid', 'dispositors'];
 
     // Corner slot -> overlay host element id in forecast-new.html. The block's

@@ -6901,6 +6901,7 @@
 
     function renderNowBlocks() {
         if (layoutHasBlock('now:lunar')) renderLunarBlock();
+        if (layoutHasBlock('now:voidmoon')) renderVoidMoonBlock();
         if (layoutHasBlock('now:eclipses')) renderEclipsesBlock();
         if (layoutHasBlock('now:hours')) renderHoursBlock();
         if (layoutHasBlock('natal:profections')) renderProfectionsBlock();
@@ -7344,15 +7345,40 @@
         scheduleAuxBlockFetch(['profections']);
     }
 
-    function formatLunarMoment(iso) {
+    function formatLunarMoment(iso, options = {}) {
         if (!iso) return '';
         try {
             return new Date(iso).toLocaleString(undefined, {
-                day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
+                day: '2-digit',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: state.timezone || state.natalTimezone || undefined,
+                ...options,
             });
         } catch {
             return iso;
         }
+    }
+
+    function lunarAspectLabel(aspect) {
+        if (!aspect) return '';
+        const body = planetLabel(aspect.body || '');
+        const angle = Number.isFinite(Number(aspect.angle)) ? `${Math.round(Number(aspect.angle))}°` : '';
+        return [body, angle].filter(Boolean).join(' ');
+    }
+
+    function lunarVoidPeriod(voc) {
+        if (!voc) return null;
+        const startsAt = voc.starts_at || voc.last_aspect?.at || voc.start_aspect?.at || '';
+        const endsAt = voc.ends_at || voc.egress_at || '';
+        if (!startsAt || !endsAt) return null;
+        return {
+            active: voc.is_void === true || voc.status === 'active',
+            startsAt,
+            endsAt,
+            startAspect: voc.start_aspect || voc.last_aspect || null,
+        };
     }
 
     function lunarBlockMarkup(snapshot) {
@@ -7365,15 +7391,15 @@
         const phaseLabel = t(phaseKey) && t(phaseKey) !== phaseKey ? t(phaseKey) : (phase.phase_label || '');
         const illum = phase.illumination != null ? `${phase.illumination}%` : '';
 
+        const period = lunarVoidPeriod(voc);
         const vocLabel = voc.is_void
             ? (t('page.forecastNew.lunar.vocActive') || 'Без курса')
             : (t('page.forecastNew.lunar.vocInactive') || 'В курсе');
         let vocDetail = '';
-        if (voc.is_void && voc.egress_at) {
-            vocDetail = `${t('page.forecastNew.lunar.untilEgress') || 'до смены знака'} ${escapeHtml(formatLunarMoment(voc.egress_at))}`;
-        } else if (!voc.is_void && voc.next_aspect) {
-            const body = voc.next_aspect.body || '';
-            vocDetail = `${t('page.forecastNew.lunar.nextAspect') || 'след. аспект'} ${escapeHtml(body)} ${escapeHtml(formatLunarMoment(voc.next_aspect.at))}`;
+        if (period?.active) {
+            vocDetail = `${t('page.forecastNew.lunar.untilEgress') || 'до смены знака'} ${escapeHtml(formatLunarMoment(period.endsAt))}`;
+        } else if (period) {
+            vocDetail = `${t('page.forecastNew.lunar.nextVoid') || 'след. без курса'} ${escapeHtml(formatLunarMoment(period.startsAt))}`;
         }
 
         const lunations = (snapshot.lunations || []).slice(0, 3).map((e) => {
@@ -7404,27 +7430,99 @@
             </div>`;
     }
 
-    async function renderLunarBlock() {
-        const el = document.getElementById('nowLunarView')
-            || document.getElementById('forecastNewBlockStore')?.querySelector('#nowLunarView');
+    function voidMoonBlockMarkup(snapshot) {
+        const voc = snapshot?.void_of_course || {};
+        const period = lunarVoidPeriod(voc);
+        if (!period) {
+            return `<div class="forecast-new-voidmoon forecast-new-voidmoon-empty">${escapeHtml(t('page.forecastNew.voidmoon.empty') || '—')}</div>`;
+        }
+        const statusKey = period.active ? 'page.forecastNew.voidmoon.active' : 'page.forecastNew.voidmoon.upcoming';
+        const status = t(statusKey) || (period.active ? 'Луна без курса' : 'Следующий период');
+        const aspect = lunarAspectLabel(period.startAspect);
+        const aspectText = aspect
+            ? `<div class="forecast-new-voidmoon-aspect">${escapeHtml(t('page.forecastNew.voidmoon.afterAspect') || 'после аспекта')} ${escapeHtml(aspect)}</div>`
+            : '';
+        return `
+            <div class="forecast-new-voidmoon" data-void="${period.active ? '1' : '0'}">
+                <div class="forecast-new-voidmoon-head">
+                    <span class="forecast-new-voidmoon-title">${escapeHtml(t('page.forecastNew.voidmoon.title') || 'Луна без курса')}</span>
+                    <span class="forecast-new-voidmoon-status">${escapeHtml(status)}</span>
+                </div>
+                <div class="forecast-new-voidmoon-grid">
+                    <span>${escapeHtml(t('page.forecastNew.voidmoon.from') || 'от')}</span>
+                    <strong>${escapeHtml(formatLunarMoment(period.startsAt, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }))}</strong>
+                    <span>${escapeHtml(t('page.forecastNew.voidmoon.to') || 'до')}</span>
+                    <strong>${escapeHtml(formatLunarMoment(period.endsAt, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }))}</strong>
+                </div>
+                ${aspectText}
+            </div>`;
+    }
+
+    function lunarSnapshotFresh() {
+        const fetchedAt = Number(state.lunarSnapshotAt || 0);
+        if (!state.lunarSnapshot || !fetchedAt) return false;
+        const ttlMs = 10 * 60 * 1000;
+        return Date.now() - fetchedAt < ttlMs;
+    }
+
+    function scheduleLunarBoundaryRefresh(snapshot) {
+        clearTimeout(state.lunarBoundaryTimer);
+        state.lunarBoundaryTimer = null;
+        const voc = snapshot?.void_of_course || {};
+        const boundaries = [voc.starts_at, voc.ends_at, voc.egress_at]
+            .map((iso) => iso ? new Date(iso).getTime() : NaN)
+            .filter((time) => Number.isFinite(time) && time > Date.now());
+        const next = Math.min(...boundaries);
+        if (!Number.isFinite(next)) return;
+        const delay = Math.max(1000, Math.min(next - Date.now() + 1500, 10 * 60 * 1000));
+        state.lunarBoundaryTimer = setTimeout(() => {
+            state.lunarSnapshot = null;
+            state.lunarSnapshotAt = 0;
+            renderNowBlocks();
+        }, delay);
+    }
+
+    async function getLunarSnapshot() {
+        if (lunarSnapshotFresh()) return state.lunarSnapshot;
+        if (state.lunarSnapshotRequest) return state.lunarSnapshotRequest;
+        state.lunarSnapshotRequest = apiGet('/lunar/snapshot')
+            .then((snapshot) => {
+                state.lunarSnapshot = snapshot;
+                state.lunarSnapshotAt = Date.now();
+                scheduleLunarBoundaryRefresh(snapshot);
+                return snapshot;
+            })
+            .finally(() => {
+                state.lunarSnapshotRequest = null;
+            });
+        return state.lunarSnapshotRequest;
+    }
+
+    async function renderLunarSnapshotBlock(containerId, markup) {
+        const el = document.getElementById(containerId)
+            || document.getElementById('forecastNewBlockStore')?.querySelector('#' + containerId);
         if (!el) return;
-        // Cache for 10 minutes — the moment moves slowly relative to a session.
-        const fresh = state.lunarSnapshot && (Date.now() - state.lunarSnapshotAt) < 600000;
-        if (fresh) {
-            el.innerHTML = lunarBlockMarkup(state.lunarSnapshot);
+        if (lunarSnapshotFresh()) {
+            el.innerHTML = markup(state.lunarSnapshot);
             return;
         }
         if (!state.lunarSnapshot) {
             el.innerHTML = `<div class="forecast-new-lunar-loading">${escapeHtml(t('common.loading') || '…')}</div>`;
         }
         try {
-            const snapshot = await apiGet('/lunar/snapshot');
-            state.lunarSnapshot = snapshot;
-            state.lunarSnapshotAt = Date.now();
-            el.innerHTML = lunarBlockMarkup(snapshot);
+            const snapshot = await getLunarSnapshot();
+            el.innerHTML = markup(snapshot);
         } catch (error) {
             el.innerHTML = `<div class="forecast-new-lunar-error">${escapeHtml(t('common.error') || 'Ошибка')}</div>`;
         }
+    }
+
+    async function renderLunarBlock() {
+        return renderLunarSnapshotBlock('nowLunarView', lunarBlockMarkup);
+    }
+
+    async function renderVoidMoonBlock() {
+        return renderLunarSnapshotBlock('nowVoidmoonView', voidMoonBlockMarkup);
     }
 
     function shiftCalendarMonth(dateStr, delta) {
@@ -7714,7 +7812,7 @@
         aspects: ['aspects', 'configs', 'stelliums'],
         analysis: ['balances', 'jones', 'dispositors'],
         advanced: ['profections', 'extraangles', 'antiscia', 'asteroids', 'dominants', 'fixstars'],
-        now: ['lunar', 'eclipses', 'hours'],
+        now: ['lunar', 'voidmoon', 'eclipses', 'hours'],
     };
 
     function findBlockLocation(mode, blockKey) {

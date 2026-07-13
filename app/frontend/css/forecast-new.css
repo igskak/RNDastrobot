@@ -4123,6 +4123,7 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
 }
 
 .forecast-new-lunar,
+.forecast-new-voidmoon,
 .forecast-new-eclipses,
 .forecast-new-hours,
 .forecast-new-profections {
@@ -4196,8 +4197,65 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
 }
 
 .forecast-new-lunar-voc-detail,
+.forecast-new-voidmoon-aspect,
 .forecast-new-hours-lunarday {
     opacity: 0.7;
+}
+
+.forecast-new-voidmoon {
+    gap: 7px;
+}
+
+.forecast-new-voidmoon-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.forecast-new-voidmoon-title {
+    font-weight: 650;
+}
+
+.forecast-new-voidmoon-status {
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(30, 58, 95, 0.08);
+    color: var(--text-secondary, #5f6472);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.forecast-new-voidmoon[data-void="1"] .forecast-new-voidmoon-status {
+    background: rgba(143, 47, 47, 0.10);
+    color: #8f2f2f;
+}
+
+.forecast-new-voidmoon-grid {
+    display: grid;
+    grid-template-columns: minmax(20px, auto) minmax(0, 1fr);
+    gap: 4px 8px;
+    align-items: baseline;
+    font-size: 11px;
+}
+
+.forecast-new-voidmoon-grid span {
+    color: var(--text-secondary, #6f7380);
+    text-transform: lowercase;
+}
+
+.forecast-new-voidmoon-grid strong {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+    font-weight: 650;
+    text-align: right;
+}
+
+.forecast-new-voidmoon-aspect {
+    font-size: 11px;
 }
 
 .forecast-new-lunar-events,

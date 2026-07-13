@@ -98,10 +98,16 @@ class LunarService:
         voc = self.void_of_course(jd)
         voc_out = {
             "is_void": voc["is_void"],
-            "egress_jd": voc["egress_jd"],
-            "egress_at": self._jd_to_iso(voc["egress_jd"]),
+            "status": voc["status"],
+            "starts_jd": voc["starts_jd"],
+            "starts_at": self._jd_to_iso(voc["starts_jd"]),
+            "ends_jd": voc["ends_jd"],
+            "ends_at": self._jd_to_iso(voc["ends_jd"]),
+            # Backward-compatible names used by the existing Moon block.
+            "egress_jd": voc["ends_jd"],
+            "egress_at": self._jd_to_iso(voc["ends_jd"]),
         }
-        for k in ("next_aspect", "last_aspect"):
+        for k in ("next_aspect", "last_aspect", "start_aspect"):
             a = voc[k]
             voc_out[k] = None if not a else {
                 "body": a["body"], "angle": a["angle"],
@@ -179,14 +185,14 @@ class LunarService:
 
     def _next_sign_egress_jd(self, jd: float, max_days: float = 3.0) -> float:
         """Момент, когда Луна покидает текущий знак (входит в следующий)."""
-        start_sign = int(self._lon(jd, swe.MOON) // 30)
+        start_sign = self._moon_sign_index(jd)
         lo, hi = jd, jd + max_days
         # Грубый поиск смены знака.
         step = _DAY / 24.0  # шаг 1 час
         prev = jd
         t = jd + step
         while t <= hi:
-            if int(self._lon(t, swe.MOON) // 30) != start_sign:
+            if self._moon_sign_index(t) != start_sign:
                 lo, hi = prev, t
                 break
             prev = t
@@ -196,80 +202,154 @@ class LunarService:
         # Бисекция границы знака.
         for _ in range(40):
             mid = 0.5 * (lo + hi)
-            if int(self._lon(mid, swe.MOON) // 30) != start_sign:
+            if self._moon_sign_index(mid) != start_sign:
                 hi = mid
             else:
                 lo = mid
         return 0.5 * (lo + hi)
 
-    def _aspect_residual(self, jd: float, body: int, angle: float) -> float:
-        """Знаковый остаток (Moon-other - angle), свёрнутый в [-180,180]."""
+    def _previous_sign_ingress_jd(
+        self,
+        jd: float,
+        max_days: float = 3.0,
+    ) -> float:
+        """Момент, когда Луна вошла в текущий знак."""
+        start_sign = self._moon_sign_index(jd)
+        lo, hi = jd - max_days, jd
+        step = _DAY / 24.0
+        t = jd - step
+        prev = jd
+        while t >= lo:
+            if self._moon_sign_index(t) != start_sign:
+                lo, hi = t, prev
+                break
+            prev = t
+            t -= step
+        else:
+            return jd - max_days
+        for _ in range(40):
+            mid = 0.5 * (lo + hi)
+            if self._moon_sign_index(mid) == start_sign:
+                hi = mid
+            else:
+                lo = mid
+        return 0.5 * (lo + hi)
+
+    def _moon_sign_index(self, jd: float) -> int:
+        return int(self._lon(jd, swe.MOON) // 30) % 12
+
+    @staticmethod
+    def _aspect_orientations(angle: float) -> List[float]:
+        if angle in (0.0, 180.0):
+            return [angle]
+        return [angle, -angle]
+
+    def _aspect_residual(
+        self,
+        jd: float,
+        body: int,
+        orientation: float,
+    ) -> float:
+        """Signed residual for one oriented Moon-body aspect."""
         moon = self._lon(jd, swe.MOON)
         other = self._lon(jd, body)
-        return self._wrap_pm180((moon - other) - angle)
+        return self._wrap_pm180((moon - other) - orientation)
 
-    def _last_aspect_before(self, jd: float, egress_jd: float) -> Optional[Dict]:
-        """Последний точный мажорный аспект Луны до выхода из знака."""
+    def _bisect_aspect(
+        self,
+        lo: float,
+        hi: float,
+        body: int,
+        orientation: float,
+    ) -> float:
+        f_lo = self._aspect_residual(lo, body, orientation)
+        for _ in range(40):
+            mid = 0.5 * (lo + hi)
+            f_mid = self._aspect_residual(mid, body, orientation)
+            if (f_lo < 0) == (f_mid < 0):
+                lo, f_lo = mid, f_mid
+            else:
+                hi = mid
+        return 0.5 * (lo + hi)
+
+    def _aspects_between(self, start_jd: float, end_jd: float) -> List[Dict]:
+        """All exact major Moon aspects inside one sign interval."""
         step = _DAY / 24.0
-        best: Optional[Dict] = None
+        found: List[Dict] = []
         for body_id, body_name in _VOC_BODIES.items():
             for angle in _VOC_ANGLES:
-                prev_t = jd
-                prev_r = self._aspect_residual(jd, body_id, angle)
-                t = jd + step
-                while t <= egress_jd + 1e-9:
-                    r = self._aspect_residual(t, body_id, angle)
-                    if prev_r == 0.0:
-                        exact = prev_t
-                    elif prev_r != 0.0 and (prev_r < 0) != (r < 0):
-                        lo, hi = prev_t, t
-                        for _ in range(40):
-                            mid = 0.5 * (lo + hi)
-                            rm = self._aspect_residual(mid, body_id, angle)
-                            if (self._aspect_residual(lo, body_id, angle) < 0) == (rm < 0):
-                                lo = mid
-                            else:
-                                hi = mid
-                        exact = 0.5 * (lo + hi)
-                    else:
+                for orientation in self._aspect_orientations(angle):
+                    prev_t = start_jd
+                    prev_r = self._aspect_residual(
+                        start_jd,
+                        body_id,
+                        orientation,
+                    )
+                    t = start_jd + step
+                    while t <= end_jd + 1e-9:
+                        r = self._aspect_residual(t, body_id, orientation)
+                        crossed = prev_r == 0.0 or (
+                            (prev_r < 0) != (r < 0)
+                            and abs(prev_r - r) < 180.0
+                        )
+                        if not crossed:
+                            prev_t, prev_r = t, r
+                            t += step
+                            continue
+                        if prev_r == 0.0:
+                            exact = prev_t
+                        else:
+                            exact = self._bisect_aspect(
+                                prev_t,
+                                t,
+                                body_id,
+                                orientation,
+                            )
+                        if start_jd - 1e-8 <= exact <= end_jd + 1e-8:
+                            found.append({
+                                "jd": exact,
+                                "body": body_name,
+                                "angle": angle,
+                            })
                         prev_t, prev_r = t, r
                         t += step
-                        continue
-                    if best is None or exact > best["jd"]:
-                        best = {"jd": exact, "body": body_name, "angle": angle}
-                    prev_t, prev_r = t, r
-                    t += step
-        return best
+        found.sort(key=lambda item: item["jd"])
+        deduped: List[Dict] = []
+        for item in found:
+            duplicate = deduped and (
+                abs(item["jd"] - deduped[-1]["jd"]) < 1e-6
+                and item["body"] == deduped[-1]["body"]
+                and item["angle"] == deduped[-1]["angle"]
+            )
+            if not duplicate:
+                deduped.append(item)
+        return deduped
 
     def void_of_course(self, jd: float) -> Dict:
         """
         Текущее состояние VOC. Луна считается «без курса», если после момента jd
         и до выхода из знака она не образует ни одного точного мажорного аспекта.
         """
+        ingress_jd = self._previous_sign_ingress_jd(jd)
         egress_jd = self._next_sign_egress_jd(jd)
-        # Есть ли точный аспект в интервале (jd, egress)?
-        upcoming = None
-        step = _DAY / 24.0
-        for body_id, body_name in _VOC_BODIES.items():
-            for angle in _VOC_ANGLES:
-                prev_t, prev_r = jd, self._aspect_residual(jd, body_id, angle)
-                t = jd + step
-                while t <= egress_jd + 1e-9:
-                    r = self._aspect_residual(t, body_id, angle)
-                    crossed = prev_r == 0.0 or (prev_r != 0.0 and (prev_r < 0) != (r < 0))
-                    if crossed:
-                        if upcoming is None or prev_t < upcoming["jd"]:
-                            upcoming = {"jd": prev_t, "body": body_name, "angle": angle}
-                        break
-                    prev_t, prev_r = t, r
-                    t += step
-        is_voc = upcoming is None
-        last = self._last_aspect_before(jd - 3.0, jd) if is_voc else None
+        aspects = self._aspects_between(ingress_jd, egress_jd)
+        next_aspect = next(
+            (a for a in aspects if a["jd"] > jd + 1e-7),
+            None,
+        )
+        start_aspect = aspects[-1] if aspects else None
+        starts_jd = start_aspect["jd"] if start_aspect else ingress_jd
+        is_voc = jd >= starts_jd - 1e-7
+        last = start_aspect if is_voc else None
         return {
             "is_void": is_voc,
+            "status": "active" if is_voc else "upcoming",
+            "starts_jd": starts_jd,
+            "ends_jd": egress_jd,
             "egress_jd": egress_jd,
-            "next_aspect": upcoming,   # ближайший аспект (если есть) — конец VOC впереди
+            "next_aspect": next_aspect,
             "last_aspect": last,       # аспект, с которого начался текущий VOC
+            "start_aspect": start_aspect,
         }
 
     # --- лунации и затмения --------------------------------------------

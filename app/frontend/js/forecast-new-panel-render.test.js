@@ -199,6 +199,24 @@ function planelContains(doc, side, node) {
     ok(doc.querySelectorAll('#nowLunarView').length === 1, 'lunar: exactly one lunar node');
 })();
 
+// --- "now" voidmoon block re-homes into a corner ---
+(() => {
+    const doc = freshDoc();
+    const layout = L.normalizeLayout({
+        schema_version: 1,
+        panels: {
+            multi: { left: [], right: [], corners: { tl: { source: 'now', view: 'voidmoon' }, tr: null, bl: null, br: null } },
+            single: { left: [], right: [], corners: L.emptyCorners() },
+        },
+    });
+    L.renderPanelsToDom({ document: doc, layout, mode: 'multi', activeTab: {}, translate: t });
+    const host = doc.getElementById('forecastNewCornerTl');
+    ok(host.contains(doc.getElementById('nowVoidmoonView')), 'voidmoon: nowVoidmoonView re-homed into corner tl');
+    ok(!host.hidden, 'voidmoon: filled corner is visible');
+    ok(doc.getElementById('nowVoidmoonView').classList.contains('is-compact'), 'voidmoon: compact styling applied in corner');
+    ok(doc.querySelectorAll('#nowVoidmoonView').length === 1, 'voidmoon: exactly one node');
+})();
+
 // --- "now" hours block re-homes into a corner ---
 (() => {
     const doc = freshDoc();

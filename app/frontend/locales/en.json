@@ -400,6 +400,7 @@
         "jones": "Jones cosmogram",
         "dispositors": "Dispositor scheme",
         "lunar": "Moon",
+        "voidmoon": "Void Moon",
         "eclipses": "Eclipses",
         "hours": "Hours",
         "profections": "Profections",
@@ -557,6 +558,7 @@
         "vocActive": "Void of Course",
         "vocInactive": "In course",
         "untilEgress": "until sign egress",
+        "nextVoid": "next void",
         "nextAspect": "next aspect",
         "new_moon": "New Moon",
         "full_moon": "Full Moon",
@@ -564,6 +566,15 @@
           "solar": "Solar eclipse",
           "lunar": "Lunar eclipse"
         }
+      },
+      "voidmoon": {
+        "title": "Void of Course Moon",
+        "active": "Now",
+        "upcoming": "Next period",
+        "from": "from",
+        "to": "to",
+        "afterAspect": "after aspect",
+        "empty": "No period found"
       },
       "eclipses": {
         "empty": "No eclipses within one month before or after the selected date",

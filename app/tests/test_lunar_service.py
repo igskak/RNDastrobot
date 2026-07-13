@@ -55,10 +55,59 @@ def test_void_of_course_shape(lunar):
     voc = lunar.void_of_course(_jd(2026, 6, 16))
     assert isinstance(voc["is_void"], bool)
     assert voc["egress_jd"] > _jd(2026, 6, 16)
+    assert voc["starts_jd"] < voc["ends_jd"]
+    assert voc["status"] in {"active", "upcoming"}
+    if voc["start_aspect"] is not None:
+        assert voc["start_aspect"]["jd"] == pytest.approx(
+            voc["starts_jd"],
+            abs=1e-6,
+        )
     # Когда Луна не VOC, должен быть ближайший аспект до выхода из знака.
     if not voc["is_void"]:
         assert voc["next_aspect"] is not None
         assert voc["next_aspect"]["body"]
+
+
+def test_void_of_course_known_interval_july_2026(lunar):
+    inside = lunar.void_of_course(_jd(2026, 7, 12, 12.0))
+    assert inside["is_void"] is True
+    assert inside["status"] == "active"
+    assert inside["start_aspect"]["body"] == "Saturn"
+    assert inside["start_aspect"]["angle"] == 60.0
+
+    y, m, d, h = swe.revjul(inside["starts_jd"], swe.GREG_CAL)
+    assert (y, m, d) == (2026, 7, 11)
+    assert h == pytest.approx(22.19, abs=0.08)
+
+    y, m, d, h = swe.revjul(inside["ends_jd"], swe.GREG_CAL)
+    assert (y, m, d) == (2026, 7, 12)
+    assert h == pytest.approx(22.78, abs=0.08)
+
+
+def test_void_of_course_reports_upcoming_period_start(lunar):
+    before = lunar.void_of_course(_jd(2026, 7, 11, 12.0))
+    assert before["is_void"] is False
+    assert before["status"] == "upcoming"
+    assert before["next_aspect"] is not None
+    assert before["start_aspect"] is not None
+    assert before["starts_jd"] == pytest.approx(
+        before["start_aspect"]["jd"],
+        abs=1e-6,
+    )
+    assert before["starts_jd"] >= before["next_aspect"]["jd"]
+
+
+def test_lunar_snapshot_exposes_voidmoon_period_contract(lunar):
+    snapshot = lunar.build_snapshot(
+        datetime(2026, 7, 12, 12, tzinfo=timezone.utc),
+        lunation_count=1,
+    )
+    voc = snapshot["void_of_course"]
+    assert voc["status"] == "active"
+    assert voc["starts_at"] < voc["ends_at"]
+    assert voc["ends_at"] == voc["egress_at"]
+    assert voc["start_aspect"]["body"] == "Saturn"
+    assert voc["last_aspect"]["at"] == voc["starts_at"]
 
 
 def test_eclipses_in_period_returns_exact_moments_and_local_visibility(lunar):
