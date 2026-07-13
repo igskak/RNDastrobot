@@ -308,7 +308,6 @@
         "continue": "Continue the reading"
       },
       "settings": {
-        "title": "Product introduction",
         "text": "Show the short guidance for the core workflow again.",
         "reset": "Repeat introduction",
         "resetDone": "Introduction enabled again"
@@ -725,11 +724,9 @@
       "confirmReset": {
         "confirm": "Reset to defaults",
         "copy": "All user general settings will be reset to the standard defaults with no way to restore the previous state.",
-        "kicker": "Confirmation",
         "title": "Reset settings to defaults?"
       },
       "plan": {
-        "kicker": "Current plan",
         "portal": "Manage subscription",
         "billingFree": "Free plan without an active paid subscription.",
         "billingRenewsAt": "Subscription is active. Next renewal: {date}.",
@@ -761,7 +758,6 @@
           "degreesOnly": "Degrees only"
         },
         "houseSystem": "Default house system",
-        "kicker": "Chart creation",
         "timezoneLabelFormat": "Timezone label format",
         "timezoneLabelFormatCopy": "Affects UI labels only: `UTC+3` or `GMT+3`. Calculations and real timezone IDs do not change.",
         "timezoneLabelFormatOptions": {
@@ -780,10 +776,8 @@
         "orientation": "Orientation"
       },
       "heading": "General settings",
-      "kicker": "General",
       "limits": {
-        "copy": "`Orbs`, `balances`, aspect colors and planet colors stay out of this page for now and will come in a later pass.",
-        "kicker": "Not in this pass"
+        "copy": "`Orbs`, `balances`, aspect colors and planet colors stay out of this page for now and will come in a later pass."
       },
       "loading": "Loading general settings",
       "matrix": {
@@ -811,7 +805,6 @@
           "prognostic": "Prognostic orbs are used for transits, progressions, directions, and solar calculations.",
           "synastry": "Synastry orbs are used for cross-aspects between two charts. Narrow them to reduce the number of inter-chart aspects."
         },
-        "kicker": "Methodology",
         "matrix": {
           "cornerTitle": "Orb matrix by aspect and body"
         },
@@ -841,7 +834,6 @@
         },
         "copy": "Edit only domicile and exaltation. Detriment and fall are derived automatically from the same scheme and become part of the astrologer-wide methodology.",
         "hint": "Click a sign in `Domicile` to assign the primary ruler; click another body for the same sign to assign the co-ruler. Click an active value again to clear it.",
-        "kicker": "Methodology",
         "states": {
           "empty": "Not assigned",
           "primary": "Primary ruler",
@@ -860,13 +852,11 @@
           "planetWeights": "Planet weights",
           "specialPoints": "Special points",
           "title": "Balances"
-        },
-        "kicker": "Methodology"
+        }
       },
       "subtitle": "Set the defaults once, then let individual chart overrides change only what is necessary.",
       "stationary": {
         "copy": "Define when a planet should be marked as stationary by comparing its current speed to the average speed for that body.",
-        "kicker": "Methodology",
         "threshold": {
           "hint": "Percent of the average speed. `5` means a planet is stationary when it moves at 5% of its usual speed or slower.",
           "label": "Stationary threshold (%)"
@@ -877,12 +867,10 @@
       "tables": {
         "aspects": {
           "copy": "Each row is one aspect type. Turn it on only in the views where it should be enabled by default.",
-          "kicker": "Aspect matrix",
           "title": "Aspect types across all views"
         },
         "bodies": {
           "copy": "Use one wide matrix instead of three separate editors when you need to fine-tune body visibility and aspect participation.",
-          "kicker": "Bodies matrix",
           "title": "Bodies for all screens"
         },
         "columns": {
@@ -894,7 +882,6 @@
         },
         "defaults": {
           "copy": "The most-used defaults stay in one aligned matrix so you can compare all screens without scrolling through separate cards.",
-          "kicker": "Unified defaults",
           "title": "One matrix for natal, biwheel, and solar"
         },
         "notAvailable": "—"
@@ -916,7 +903,6 @@
           "type": "Type"
         },
         "copy": "Set one consistent palette for individual aspects, elements, and body overrides. These colors are reused the same way in natal and prognostic views.",
-        "kicker": "Visual",
         "panels": {
           "aspectColors": "Aspect colors",
           "bodyOverrides": "Body overrides",
@@ -943,23 +929,19 @@
       "views": {
         "biwheel": {
           "copy": "Controls how forecast bi-wheels and comparison views begin before local tweaks are applied.",
-          "kicker": "Biwheel",
           "title": "Inherited biwheel defaults"
         },
         "natal": {
           "copy": "Sets the default wheel orientation, aspect filters, and table behavior for natal work.",
-          "kicker": "Natal",
           "title": "Inherited natal defaults"
         },
         "solar": {
           "copy": "Keeps solar return screens consistent before a specific yearly chart needs its own override.",
-          "kicker": "Solar",
           "title": "Inherited solar defaults"
         }
       },
       "workflow": {
         "copy": "New charts inherit these settings first. View-level changes stay local, so you can keep the account baseline clean and predictable.",
-        "kicker": "Workflow",
         "title": "Compact and safe to manage"
       }
     },

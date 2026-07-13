@@ -204,7 +204,6 @@ function cacheElements() {
     refs.profileName    = document.getElementById('profileName');
     refs.profileBirth   = document.getElementById('profileBirth');
     refs.profileTags    = document.getElementById('profileTags');
-    refs.openChartBtn   = document.getElementById('openChartBtn');
     refs.editClientBtn  = document.getElementById('editClientBtn');
     refs.profileActionsMenu     = document.getElementById('profileActionsMenu');
     refs.profileActionsBtn      = document.getElementById('profileActionsBtn');
@@ -304,7 +303,6 @@ function cacheElements() {
 }
 
 function bindPageEvents() {
-    refs.openChartBtn?.addEventListener('click', openChart);
     refs.linkChartBtn?.addEventListener('click', openLinkChartDialog);
     refs.linkChartClose?.addEventListener('click', closeLinkChartDialog);
     refs.linkChartCancel?.addEventListener('click', closeLinkChartDialog);
@@ -602,11 +600,6 @@ function renderHeader(user) {
     if (user.birth_time) parts.push(user.birth_time.slice(0, 5));
     if (user.birth_place) parts.push(user.birth_place);
     refs.profileBirth.textContent = parts.join(' · ');
-    if (refs.openChartBtn) {
-        refs.openChartBtn.disabled = !primaryChartId;
-        refs.openChartBtn.setAttribute('aria-disabled', primaryChartId ? 'false' : 'true');
-    }
-
     refs.profileTags.innerHTML = '';
     if (Array.isArray(user.tags) && user.tags.length > 0) {
         user.tags.forEach((tag) => {

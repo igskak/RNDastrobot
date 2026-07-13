@@ -144,6 +144,10 @@
         const card = document.getElementById('accountPlanCard');
         if (!card) return;
 
+        const isSoloPlan = window.AstroAPI?.isSoloPlan?.(me) === true;
+        card.classList.toggle('hidden', isSoloPlan);
+        if (isSoloPlan) return;
+
         const planCode = getPlanCode(me);
         const title = document.getElementById('accountPlanTitle');
         const copy = document.getElementById('accountPlanCopy');
