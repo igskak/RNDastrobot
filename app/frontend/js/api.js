@@ -215,17 +215,74 @@
         return response.json();
     }
 
-    async function getCurrentAstrologer() {
-        const response = await apiFetch(`${API_BASE_URL}/auth/me`, {
-            method: 'GET',
-            headers: withLocaleHeaders(),
-        });
-        if (!response.ok) {
-            currentAstrologerCache = null;
-            return null;
+    // Resolving the session has three outcomes, and they must stay distinct.
+    // Only a 401/403 means "signed out" and may bounce the user to the login
+    // page. A network failure or a 5xx means "could not tell" — answering that
+    // with a redirect is a guess, and /login.html guesses the other way as soon
+    // as its own check succeeds, which hands the user back and forth forever.
+    async function resolveAuthState() {
+        for (let attempt = 0; attempt < AUTH_PROBE_ATTEMPTS; attempt += 1) {
+            let response;
+            try {
+                response = await apiFetch(`${API_BASE_URL}/auth/me`, {
+                    method: 'GET',
+                    headers: withLocaleHeaders(),
+                });
+            } catch (_error) {
+                continue; // network blip — retry, then report 'unknown'
+            }
+            if (response.ok) {
+                return { status: 'authenticated', astrologer: await response.json() };
+            }
+            if (response.status === 401 || response.status === 403) {
+                return { status: 'unauthenticated', astrologer: null };
+            }
+            // 5xx or another unexpected status: the session is not disproven.
         }
-        currentAstrologerCache = await response.json();
-        return currentAstrologerCache;
+        return { status: 'unknown', astrologer: null };
+    }
+
+    async function getCurrentAstrologer() {
+        const { status, astrologer } = await resolveAuthState();
+        if (status === 'authenticated') {
+            currentAstrologerCache = astrologer;
+            return currentAstrologerCache;
+        }
+        if (status === 'unauthenticated') {
+            currentAstrologerCache = null;
+        }
+        return null;
+    }
+
+    // Loop breaker shared with /login.html. Both sides decide where to send the
+    // user from the same /auth/me answer, so if that endpoint ever answers
+    // inconsistently they pass the user back and forth. Cap the hand-offs: once
+    // the cap is hit, login.js stops bouncing an apparently-valid session back
+    // into the app and shows the sign-in form instead.
+    const AUTH_BOUNCE_KEY = 'astroAuthBounce';
+    const MAX_AUTH_BOUNCES = 2;
+    const AUTH_PROBE_ATTEMPTS = 2;
+
+    function authBounceCount() {
+        try {
+            return Number(root.sessionStorage?.getItem(AUTH_BOUNCE_KEY)) || 0;
+        } catch (_error) {
+            return 0;
+        }
+    }
+
+    function noteAuthBounce() {
+        const count = authBounceCount() + 1;
+        try {
+            root.sessionStorage?.setItem(AUTH_BOUNCE_KEY, String(count));
+        } catch (_error) { /* storage unavailable — the cap simply won't engage */ }
+        return count;
+    }
+
+    function clearAuthBounces() {
+        try {
+            root.sessionStorage?.removeItem(AUTH_BOUNCE_KEY);
+        } catch (_error) { /* nothing to clear */ }
     }
 
     // Once per browser session, auto-open the plan popup when the trial has
@@ -242,13 +299,22 @@
 
     async function requireAuth(options = {}) {
         const redirectTo = options.redirectTo || '/login.html';
-        const me = await getCurrentAstrologer();
-        if (me) {
-            currentAstrologerCache = me;
-            maybePromptExpiredOnce(me);
-            return me;
+        const { status, astrologer } = await resolveAuthState();
+        if (status === 'authenticated') {
+            currentAstrologerCache = astrologer;
+            clearAuthBounces();
+            maybePromptExpiredOnce(astrologer);
+            return astrologer;
         }
-        if (typeof window !== 'undefined' && redirectTo) {
+        currentAstrologerCache = null;
+        // 'unknown': /auth/me could not be reached or failed server-side. The
+        // user may well be signed in, so stay put rather than bounce them to a
+        // login page that would bounce them straight back.
+        if (status === 'unknown') {
+            return null;
+        }
+        if (hasWindow && redirectTo) {
+            noteAuthBounce();
             window.location.href = buildLoginRedirect(redirectTo);
         }
         return null;
@@ -1191,8 +1257,12 @@
         getNatalChart,
         updateClientChart,
         getCurrentAstrologer,
+        resolveAuthState,
         requireAuth,
         buildLoginRedirect,
+        authBounceCount,
+        noteAuthBounce,
+        clearAuthBounces,
         getCachedAstrologer,
         getPlanCode,
         getEntitlements,

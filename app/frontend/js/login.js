@@ -4,6 +4,10 @@
     const API_BASE = global.location && global.location.hostname === 'localhost'
         ? 'http://localhost:8000/api/v1'
         : '/api/v1';
+    // How many times the app and this page may hand an unresolved session back
+    // and forth before we stop and show the sign-in form. Must match api.js.
+    const MAX_AUTH_BOUNCES = 2;
+
     // Send authenticated users to the app root. The "/" route serves the
     // client base (clients.html) when a session cookie is present and the
     // marketing landing (index.html) otherwise. "/new" is a dumb alias that
@@ -307,6 +311,13 @@
         const fetchFn = options.fetchFn || (global.fetch ? global.fetch.bind(global) : null);
         const supabaseFactory = options.supabaseFactory || global.supabase?.createClient;
         const getCurrentAstrologer = options.getCurrentAstrologer || global.AstroAPI?.getCurrentAstrologer?.bind(global.AstroAPI);
+        // Loop breaker, shared with api.js requireAuth (see AUTH_BOUNCE_KEY there).
+        const authBounceCount = options.authBounceCount
+            || global.AstroAPI?.authBounceCount?.bind(global.AstroAPI)
+            || (() => 0);
+        const clearAuthBounces = options.clearAuthBounces
+            || global.AstroAPI?.clearAuthBounces?.bind(global.AstroAPI)
+            || (() => {});
         const wait = typeof options.wait === 'function'
             ? options.wait
             : (ms) => new Promise((resolve) => {
@@ -1213,11 +1224,21 @@
                 return false;
             }
             const me = await getCurrentAstrologer();
-            if (me) {
-                redirect(getPostAuthRedirect(route));
-                return true;
+            if (!me) {
+                // Signed out (or unverifiable): the sign-in form is the right
+                // place to be, so the hand-off chain ends here.
+                clearAuthBounces();
+                return false;
             }
-            return false;
+            // The session looks valid from here, yet the page that sent us here
+            // concluded it wasn't. Sending the user back restarts the ping-pong,
+            // so after a couple of hand-offs stop and let them sign in by hand.
+            if (authBounceCount() >= MAX_AUTH_BOUNCES) {
+                clearAuthBounces();
+                return false;
+            }
+            redirect(getPostAuthRedirect(route));
+            return true;
         }
 
         function bindEvents() {
@@ -1432,6 +1453,7 @@
             init,
             render,
             setView,
+            maybeRedirectAuthenticatedUser,
             parseAuthRoute,
             createAuthUiModel,
             mapAuthErrorToKey,
