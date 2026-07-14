@@ -964,7 +964,6 @@ function buildUserRow(user) {
     const editLabel = escapeHtml(t('page.clients.actions.edit'));
     const renameLabel = escapeHtml(t('page.clients.actions.rename'));
     const deleteLabel = escapeHtml(t('page.clients.actions.delete'));
-    const openChartLabel = escapeHtml(t('page.clients.detail.openChart'));
     const forecastLabel = escapeHtml(isChartsView ? t('page.clients.charts.openWorkspace') : t('page.chart.nav.forecast'));
     const upcomingCount = Number(user.upcoming_count || 0);
     const unpaidCount = Number(user.unpaid_count || 0);
@@ -998,7 +997,6 @@ function buildUserRow(user) {
                     ${isChartsView ? '' : renderPersonChips(user)}
                     ${summaryChips.length > 0 ? `<div class="client-summary-chips">${summaryChips.join('')}</div>` : ''}
                     <div class="client-card-quick-actions">
-                        ${isChartsView ? '' : `<button class="client-quick-btn client-quick-btn-primary" type="button" data-action="open-chart" data-user-id="${escapeHtml(primaryChartId)}" ${primaryChartId ? '' : 'disabled'}>${openChartLabel}</button>`}
                         <button class="client-quick-btn ${isChartsView ? 'client-quick-btn-workspace' : ''}" type="button" data-action="open-forecast" data-user-id="${escapeHtml(forecastTargetId)}" ${forecastTargetId ? '' : 'disabled'}>
                             ${forecastLabel}
                         </button>
@@ -2467,7 +2465,6 @@ function buildDetailPanelHTML(user, consultations, callSessions = []) {
             ${lastSessionHTML || nextSessionHTML ? `<div class="detail-session-summary">${lastSessionHTML}${nextSessionHTML}</div>` : ''}
             <div class="detail-actions">
                 <a class="btn-new btn-sm" href="/client/${personId}">${escapeHtml(t('page.clientProfile.viewProfile'))}</a>
-                <button class="btn-new btn-sm btn-secondary" type="button" data-action="open-chart" data-user-id="${chartId}" ${chartId ? '' : 'disabled'}>${escapeHtml(t('page.clients.detail.openChart'))}</button>
                 <button class="btn-new btn-sm btn-secondary" type="button" data-action="open-forecast" data-user-id="${chartId}" ${chartId ? '' : 'disabled'}>${escapeHtml(t('page.chart.nav.forecast'))}</button>
                 ${consultationsEnabled ? `<button class="btn-new btn-sm btn-secondary" type="button" data-action="log-session" data-user-id="${personId}">${escapeHtml(t('page.clients.detail.logSession'))}</button>` : ''}
                 <button class="btn-new btn-sm btn-secondary" type="button" data-action="edit" data-user-id="${personId}">${escapeHtml(t('page.clients.actions.edit'))}</button>
