@@ -1,0 +1,36 @@
+name: Mirror to GitLab
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: mirror-to-gitlab-main
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.GITLAB_MIRROR_SSH_KEY }}" > ~/.ssh/gitlab_mirror_key
+          chmod 600 ~/.ssh/gitlab_mirror_key
+          ssh-keyscan gitlab.com >> ~/.ssh/known_hosts
+
+      - name: Mirror main to GitLab
+        env:
+          GIT_SSH_COMMAND: ssh -i ~/.ssh/gitlab_mirror_key -o IdentitiesOnly=yes
+        run: |
+          git remote add gitlab git@gitlab.com:igorskak/RNDastro.git
+          git push gitlab HEAD:main
