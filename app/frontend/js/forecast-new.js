@@ -589,10 +589,26 @@
         const me = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
         if (!me) return;
 
-        const natalData = window.AstroAPI?.getChartFromSession?.();
+        let natalData = window.AstroAPI?.getChartFromSession?.();
         if (!natalData) {
             redirectToChartLibrary();
             return;
+        }
+
+        // Older session snapshots predate cusp_aspects. Refresh only those
+        // snapshots so the cusp controls have actual aspect data to filter.
+        const natalUserId = natalData.user_id || localStorage.getItem('currentUserId');
+        if (
+            natalUserId
+            && !Array.isArray(natalData.cusp_aspects)
+            && window.AstroAPI?.getNatalChart
+        ) {
+            try {
+                natalData = await window.AstroAPI.getNatalChart(natalUserId);
+                window.AstroAPI.saveChartToSession?.(natalData);
+            } catch (error) {
+                console.warn('Could not refresh natal cusp aspects:', error);
+            }
         }
 
         state.natalData = natalData;
@@ -3056,6 +3072,7 @@
         state.natalSelectedDateTime = addDateTimeUnit(state.natalSelectedDateTime, segment.unit, segment.amount * dir * count);
         renderOrUpdateNatalTimeStepper();
         updateNatalMomentMeta();
+        renderNowBlocks();
         // При свопе натал показан в правой панели — её шапку обновляем сразу,
         // не дожидаясь пересчёта (updateNatalMomentMeta пишет в левую панель).
         if (areSwapPanelControlsCrossed()) updatePrognosticTimeMeta();
@@ -3073,6 +3090,7 @@
         renderOrUpdateNatalTimeStepper();
         setNatalCustomStepPopoverOpen(true);
         updateNatalMomentMeta();
+        renderNowBlocks();
         if (areSwapPanelControlsCrossed()) updatePrognosticTimeMeta();
         setNatalLightweightLoading(true);
         void loadNatal({ lightweight: true });
@@ -3084,6 +3102,7 @@
         renderOrUpdateNatalTimeStepper();
         updateNatalMomentControls();
         updateNatalMomentMeta();
+        renderNowBlocks();
         if (areSwapPanelControlsCrossed()) updatePrognosticTimeMeta();
         setNatalLightweightLoading(true);
         void loadNatal({ lightweight: true });
@@ -3270,6 +3289,7 @@
         state.natalSelectedDateTime = `${date}T${normalizeTime(time)}`;
         renderNatalTimeStepper();
         updateNatalMomentMeta();
+        renderNowBlocks();
         await loadNatal({ lightweight: true });
     }
 
@@ -4422,6 +4442,7 @@
     async function stepTargetDatetime(direction) {
         applyDisplayedMomentDateTime(addStep(getDisplayedMomentDateTime(), state.stepMode, direction));
         syncControlsFromState();
+        renderNowBlocks();
         schedulePersist();
         // Шаг соляра/синастрии трогает только их слой — грузим его одного, иначе
         // стрелки степпера ждут полной перезагрузки всех слоёв.
@@ -4438,6 +4459,7 @@
         state.lastStepperAction = { type: 'segment', segment, direction: dir };
         syncControlsFromState();
         updatePrognosticTimeMeta();
+        renderNowBlocks();
         setLightweightLoading(true);
         schedulePersist();
         scheduleDisplayedMomentLayerLoad({ layerId: state.selectedRightLayerId });
@@ -4455,6 +4477,7 @@
         syncControlsFromState();
         setCustomStepPopoverOpen(true);
         updatePrognosticTimeMeta();
+        renderNowBlocks();
         setLightweightLoading(true);
         schedulePersist();
         scheduleDisplayedMomentLayerLoad({ layerId: state.selectedRightLayerId });
@@ -6696,7 +6719,15 @@
     }
 
     function getMatrixRowsForScope(scope = 'prognostic') {
-        return normalizeForecastNewMatrixRows(scope === 'natal' ? state.natalMatrixRows : state.matrixRows);
+        const rows = normalizeForecastNewMatrixRows(scope === 'natal' ? state.natalMatrixRows : state.matrixRows);
+        if (scope !== 'natal') return rows;
+        if (window.AstroPreferences?.withCuspsAvailableForAspecting) {
+            return window.AstroPreferences.withCuspsAvailableForAspecting(rows);
+        }
+        return {
+            ...rows,
+            Cusp: { display: true, aspecting: true },
+        };
     }
 
     function setMatrixRowsForScope(scope = 'prognostic', rows = {}) {
@@ -7643,23 +7674,58 @@
         return `<div class="forecast-new-eclipses"><ul class="forecast-new-eclipse-list">${rows}</ul></div>`;
     }
 
+    function getEclipseSourceContext() {
+        if (currentWheelMode() === 'single' && state.singleChartMode === 'natal') {
+            return {
+                source: 'natal',
+                datetime: state.natalSelectedDateTime || state.natalInitialDateTime,
+                place: {
+                    name: state.natalLocation?.name || '',
+                    latitude: state.natalLocation?.latitude ?? null,
+                    longitude: state.natalLocation?.longitude ?? null,
+                    timezone: state.natalTimezone || 'UTC',
+                },
+            };
+        }
+
+        const solarInfo = isSolarMomentActive()
+            ? (originalLayerRaw(selectedLayerInstance())?.solar_info
+                || selectedViewModelLayer()?.raw?.solar_info)
+            : null;
+        const momentPlace = solarInfo
+            ? {
+                name: solarInfo.location?.name || state.solarLocation?.name || '',
+                latitude: solarInfo.location?.latitude ?? state.solarLocation?.latitude ?? null,
+                longitude: solarInfo.location?.longitude ?? state.solarLocation?.longitude ?? null,
+                timezone: solarInfo.timezone || state.solarLocation?.timezone || state.timezone || 'UTC',
+            }
+            : getMomentPlaceView();
+        return {
+            source: currentWheelMode() === 'single' ? state.singleChartMode : (selectedRightMethod() || 'forecast'),
+            datetime: getDisplayedMomentDateTime() || state.selectedDateTime,
+            place: {
+                name: momentPlace?.name || '',
+                latitude: momentPlace?.latitude ?? null,
+                longitude: momentPlace?.longitude ?? null,
+                timezone: momentPlace?.timezone || state.timezone || 'UTC',
+            },
+        };
+    }
+
     function getEclipsePeriodContext() {
-        const selectedDate = splitTargetDatetime(state.selectedDateTime)[0];
+        const sourceContext = getEclipseSourceContext();
+        const selectedDate = splitTargetDatetime(sourceContext.datetime)[0];
         const startDate = shiftCalendarMonth(selectedDate, -1);
         const endDate = shiftCalendarMonth(selectedDate, 1);
-        const place = {
-            name: state.location?.name || '',
-            latitude: state.location?.latitude ?? null,
-            longitude: state.location?.longitude ?? null,
-            timezone: state.timezone || 'UTC',
-        };
+        const place = sourceContext.place;
         return {
+            source: sourceContext.source,
             selectedDate,
             startDate,
             endDate,
             place,
             timezone: place.timezone || 'UTC',
-            key: [selectedDate, startDate, endDate, place.timezone || 'UTC', place.latitude, place.longitude].join('|'),
+            key: [sourceContext.source, selectedDate, startDate, endDate, place.timezone || 'UTC', place.latitude, place.longitude].join('|'),
         };
     }
 
@@ -9611,7 +9677,7 @@
                 leftTab: state.leftTab,
                 rightTab: state.rightTab,
                 matrixSchemaVersion: window.ForecastNewStateStorage?.MATRIX_SCHEMA_VERSION || 2,
-                natalMatrixRows: state.natalMatrixRows,
+            natalMatrixRows: getMatrixRowsForScope('natal'),
                 natalAspectingCusps: state.natalAspectingCusps,
                 matrixRows: state.matrixRows,
                 viewport: state.viewport,

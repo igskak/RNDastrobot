@@ -62,3 +62,22 @@ test('cusp matrix rows control specific cusp aspect endpoints through shared Cus
     });
     assert.deepEqual(filtered.aspects.map((aspect) => aspect.planet_2), ['Moon']);
 });
+
+test('specific natal cusp controls override a stale shared Cusp gate', () => {
+    const source = read('frontend/js/forecast-new.js');
+    const rows = preferences.withCuspsAvailableForAspecting({
+        Cusp: { display: true, aspecting: false },
+    });
+
+    assert.deepEqual(rows.Cusp, { display: true, aspecting: true });
+    const filtered = preferences.filterChartDataByViewPreferences({
+        aspects: [{ planet_1: 'Sun', planet_2: 'Cusp7', aspect_type: 'Trine', orb: 1 }],
+    }, {
+        matrixRows: rows,
+        aspectScope: 'major',
+        enabledAspectTypes: ['Trine'],
+    });
+    assert.equal(filtered.aspects.length, 1);
+    assert.match(source, /withCuspsAvailableForAspecting\(rows\)/);
+    assert.match(source, /natalMatrixRows: getMatrixRowsForScope\('natal'\)/);
+});

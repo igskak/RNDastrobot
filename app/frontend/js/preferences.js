@@ -204,6 +204,12 @@
         return ensured;
     }
 
+    function withCuspsAvailableForAspecting(rows = {}) {
+        const ensured = ensureMatrixRows(rows);
+        ensured[CUSP_ORB_BODY] = { display: true, aspecting: true };
+        return ensured;
+    }
+
     function getHiddenBodiesFromMatrix(rows = {}) {
         return Object.entries(ensureMatrixRows(rows))
             .filter(([, cfg]) => cfg?.display === false)
@@ -784,6 +790,7 @@
         buildSparseDiff,
         buildDefaultOrbProfileMatrix,
         ensureMatrixRows,
+        withCuspsAvailableForAspecting,
         normalizeMatrixBodyName,
         normalizeEnabledAspectTypes,
         getAspectFamilyTypes,
