@@ -105,6 +105,7 @@ def build_natal_chart_response(chart_data: dict) -> NatalChartResponse:
         },
         configurations=chart_data.get('configurations'),
         aspects=[AspectInfo(**a) for a in chart_data['aspects']] if chart_data.get('aspects') else None,
+        cusp_aspects=[AspectInfo(**a) for a in chart_data['cusp_aspects']] if chart_data.get('cusp_aspects') else None,
         aspect_configurations=[ConfigurationInfo(**c) for c in chart_data['aspect_configurations']] if chart_data.get('aspect_configurations') else None,
         declination_aspects=chart_data.get('declination_aspects'),
         stelliums=[StelliumInfo(**s) for s in chart_data['stelliums']] if chart_data.get('stelliums') else None,

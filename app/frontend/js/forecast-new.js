@@ -7919,6 +7919,12 @@
             : (t('page.forecastNew.panelEditor.comparisonChart') || 'Карта сравнения');
     }
 
+    function editorBlockSource(source, view, mode = currentWheelMode()) {
+        const rawSource = source || 'natal';
+        if (window.ForecastNewPanelLayout?.isNowView?.(view)) return 'now';
+        return mode === 'single' ? 'natal' : rawSource;
+    }
+
     function setPanelSaveState(next) {
         state.panelSaveState = next;
         const status = document.querySelector('[data-pe-save-status]');
@@ -8081,7 +8087,8 @@
             }
             case 'add-block':
                 {
-                const blockKey = `${mode === 'single' ? 'natal' : (ds.source || 'natal')}:${ds.view}`;
+                const source = editorBlockSource(ds.source, ds.view, mode);
+                const blockKey = `${source}:${ds.view}`;
                 const location = findBlockLocation(mode, blockKey);
                 if (location && (location.side !== side || location.tab.id !== tabId)) {
                     const from = `${panelSideLabel(location.side, mode)} · ${window.ForecastNewPanelLayout.autoTabTitle(location.tab, t)}`;
@@ -8095,7 +8102,6 @@
                 mutateLayout((l) => {
                     const tab = findTab(l, mode, side, tabId);
                     if (!tab) return;
-                    const source = mode === 'single' ? 'natal' : (ds.source || 'natal');
                     // Move-on-add: a block lives in exactly one place, so detach
                     // it from any current home before appending it here.
                     removeBlockFromMode(l, mode, source + ':' + ds.view);
@@ -8114,7 +8120,7 @@
                 break;
             case 'set-corner':
                 {
-                const source = mode === 'single' ? 'natal' : (ds.source || 'natal');
+                const source = editorBlockSource(ds.source, ds.view, mode);
                 const blockKey = `${source}:${ds.view}`;
                 const location = findBlockLocation(mode, blockKey);
                 const existing = state.panelLayout.panels[mode].corners?.[ds.corner];
@@ -10285,7 +10291,7 @@
         set_wheel_view: 'Вид колеса изменён',
         set_house_system: 'Система домов изменена',
         set_synastry_partner: 'Синастрия построена',
-        add_client_note: t('page.clientNotes.toast.added'),
+        add_client_note: 'page.clientNotes.toast.added',
         remove_layer: 'Слой удалён',
         clear_layers: 'Слои очищены',
     };
@@ -10331,7 +10337,8 @@
 
     function cmdShowToast(applied) {
         const el = cmdToastElement();
-        const base = CMD_TOAST_LABELS[applied.name] || 'Готово';
+        const baseKey = CMD_TOAST_LABELS[applied.name];
+        const base = applied.name === 'add_client_note' ? t(baseKey) : (baseKey || 'Готово');
         const label = applied.result?.label;
         el.querySelector('[data-cmd-toast-text]').textContent = label ? `${base}: ${label}` : base;
         const undo = el.querySelector('[data-cmd-toast-undo]');

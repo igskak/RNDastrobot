@@ -66,6 +66,9 @@ def _chart_payload(user_id=None):
             {"planet_1": "Sun", "planet_2": "TrueNorthNode", "aspect_type": "Conjunction", "orb": 1.0, "is_major": True, "harmonic_type": "neutral"},
             {"planet_1": "Moon", "planet_2": "Saturn", "aspect_type": "Trine", "orb": 2.0, "is_major": True, "harmonic_type": "harmonious"},
         ],
+        "cusp_aspects": [
+            {"planet_1": "Sun", "planet_2": "Cusp1", "aspect_type": "Conjunction", "orb": 0.5, "is_major": True, "harmonic_type": "neutral"},
+        ],
         "aspect_configurations": [],
         "stelliums": [],
         "planet_distribution": None,
@@ -104,6 +107,7 @@ def test_post_natal_calculate_includes_karmic_analysis(client, monkeypatch):
     assert response.status_code == 200
     payload = response.json()
     assert "karmic_analysis" in payload
+    assert payload["cusp_aspects"][0]["planet_2"] == "Cusp1"
     assert set(payload["karmic_analysis"].keys()) == {
         "nodes",
         "saturn_analysis",
@@ -129,6 +133,7 @@ def test_get_natal_by_user_id_includes_karmic_analysis(client, monkeypatch):
     assert response.status_code == 200
     payload = response.json()
     assert "karmic_analysis" in payload
+    assert payload["cusp_aspects"][0]["planet_2"] == "Cusp1"
     assert "north_node" in payload["karmic_analysis"]["nodes"]
     assert "south_node" in payload["karmic_analysis"]["nodes"]
     assert isinstance(payload["karmic_analysis"]["karmic_support"]["harmonic_trines"], list)

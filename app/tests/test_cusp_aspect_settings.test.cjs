@@ -25,6 +25,15 @@ test('cusp aspect endpoints stay house-specific for wheel rendering', () => {
     assert.doesNotMatch(source, /planet_2: matrixBodyKey\(planet2\)/);
 });
 
+test('panel editor preserves now source when adding eclipse widgets in single mode', () => {
+    const source = read('frontend/js/forecast-new.js');
+
+    assert.match(source, /function editorBlockSource\(source, view, mode = currentWheelMode\(\)\)/);
+    assert.match(source, /isNowView\?\.\(view\)\) return 'now'/);
+    assert.match(source, /const source = editorBlockSource\(ds\.source, ds\.view, mode\)/);
+    assert.doesNotMatch(source, /const blockKey = `\\$\\{mode === 'single' \\? 'natal'/);
+});
+
 test('orb settings add one compact cusp column with localized hover text', () => {
     const source = read('frontend/js/account-settings.js');
     const ru = JSON.parse(read('frontend/locales/ru.json'));
