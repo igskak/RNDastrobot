@@ -153,7 +153,13 @@ class ChatWidget {
     init() {
         this.restoreSize();
         this.toggle.addEventListener('click', () => this.openPanel());
-        this.notesToggle?.addEventListener('click', () => this.openPanel({ view: 'notes', focusInput: false }));
+        this.notesToggle?.addEventListener('click', () => {
+            if (this.isOpen && this.activeView === 'notes') {
+                this.closePanel();
+                return;
+            }
+            this.openPanel({ view: 'notes', focusInput: false });
+        });
         this.assistantTab?.addEventListener('click', () => this.switchView('assistant'));
         this.notesTab?.addEventListener('click', () => this.switchView('notes'));
         if (this.voiceEnabled) {
@@ -345,7 +351,7 @@ class ChatWidget {
         if (next === 'notes') {
             this.closeHistory();
             this.loadNotes();
-            this.noteInput?.focus({ preventScroll: true });
+            if (!this.isMobile()) this.noteInput?.focus({ preventScroll: true });
         } else {
             this.renderContextStrip();
         }
