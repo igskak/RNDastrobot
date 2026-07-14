@@ -7645,6 +7645,8 @@
 
     function getEclipsePeriodContext() {
         const selectedDate = splitTargetDatetime(state.selectedDateTime)[0];
+        const startDate = shiftCalendarMonth(selectedDate, -1);
+        const endDate = shiftCalendarMonth(selectedDate, 1);
         const place = {
             name: state.location?.name || '',
             latitude: state.location?.latitude ?? null,
@@ -7653,9 +7655,11 @@
         };
         return {
             selectedDate,
+            startDate,
+            endDate,
             place,
             timezone: place.timezone || 'UTC',
-            key: [selectedDate, place.timezone || 'UTC', place.latitude, place.longitude].join('|'),
+            key: [selectedDate, startDate, endDate, place.timezone || 'UTC', place.latitude, place.longitude].join('|'),
         };
     }
 
@@ -7663,9 +7667,7 @@
         const el = document.getElementById('nowEclipsesView')
             || document.getElementById('forecastNewBlockStore')?.querySelector('#nowEclipsesView');
         if (!el) return;
-        const { selectedDate, place, timezone, key } = getEclipsePeriodContext();
-        const startDate = shiftCalendarMonth(selectedDate, -1);
-        const endDate = shiftCalendarMonth(selectedDate, 1);
+        const { startDate, endDate, place, timezone, key } = getEclipsePeriodContext();
         if (state.eclipsePeriodData && state.eclipsePeriodKey === key) {
             el.innerHTML = eclipseBlockMarkup(state.eclipsePeriodData);
             return;

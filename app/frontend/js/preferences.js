@@ -176,9 +176,15 @@
         return Object.keys(diff).length ? diff : undefined;
     }
 
+    function normalizeMatrixBodyName(name) {
+        const raw = String(name || '');
+        if (/^Cusp([1-9]|1[0-2])$/.test(raw)) return CUSP_ORB_BODY;
+        return BODY_NAME_ALIASES[raw] || raw;
+    }
+
     function ensureMatrixRows(rows = {}) {
         const ensured = {};
-        MATRIX_BODIES.forEach((body) => {
+        [...MATRIX_BODIES, CUSP_ORB_BODY].forEach((body) => {
             const display = rows?.[body]?.display !== false;
             ensured[body] = {
                 display,
@@ -186,9 +192,10 @@
             };
         });
         Object.keys(rows || {}).forEach((body) => {
-            if (!ensured[body]) {
+            const normalized = normalizeMatrixBodyName(body);
+            if (normalized !== body || !ensured[normalized]) {
                 const display = rows?.[body]?.display !== false;
-                ensured[body] = {
+                ensured[normalized] = {
                     display,
                     aspecting: display && rows?.[body]?.aspecting !== false,
                 };
@@ -214,10 +221,6 @@
             };
         });
         return rows;
-    }
-
-    function normalizeMatrixBodyName(name) {
-        return BODY_NAME_ALIASES[String(name || '')] || name;
     }
 
     function getKnownAspectTypes(availableAspectTypes = []) {
