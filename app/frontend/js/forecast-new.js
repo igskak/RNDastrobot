@@ -6977,6 +6977,52 @@
         });
         syncHoveredAspectToActiveSurface?.();
         renderNowBlocks();
+        bindCornerScrollHints();
+    }
+
+    // Corner widgets scroll under a fade mask instead of hard-clipping; the
+    // has-scroll-* classes drive the fades and must track content, scroll
+    // position, and box size — all of which change asynchronously (lazy block
+    // fetches, date stepping, pane resize).
+    function updateCornerScrollHint(el) {
+        const below = el.scrollHeight - el.clientHeight - el.scrollTop > 3;
+        const above = el.scrollTop > 3;
+        el.classList.toggle('has-scroll-below', below);
+        el.classList.toggle('has-scroll-above', above);
+    }
+
+    let cornerScrollHintObserversBound = false;
+    function bindCornerScrollHints() {
+        const PL = window.ForecastNewPanelLayout;
+        if (!PL) return;
+        const hosts = Object.values(PL.CORNER_CONTAINER_IDS)
+            .map((id) => document.getElementById(id))
+            .filter(Boolean);
+        const refresh = () => hosts.forEach((host) => {
+            const el = host.querySelector('.is-compact');
+            if (!el) return;
+            if (!el.dataset.cornerScrollHint) {
+                el.dataset.cornerScrollHint = '1';
+                el.addEventListener('scroll', () => updateCornerScrollHint(el), { passive: true });
+            }
+            updateCornerScrollHint(el);
+        });
+        refresh();
+        if (cornerScrollHintObserversBound || !hosts.length) return;
+        cornerScrollHintObserversBound = true;
+        let hintRaf = 0;
+        const schedule = () => {
+            cancelAnimationFrame(hintRaf);
+            hintRaf = requestAnimationFrame(refresh);
+        };
+        if (typeof MutationObserver === 'function') {
+            const observer = new MutationObserver(schedule);
+            hosts.forEach((host) => observer.observe(host, { childList: true, subtree: true }));
+        }
+        if (typeof ResizeObserver === 'function') {
+            const observer = new ResizeObserver(schedule);
+            hosts.forEach((host) => observer.observe(host));
+        }
     }
 
     // True when the current mode's layout places the given now-view anywhere
@@ -7810,6 +7856,17 @@
             </div>`;
     }
 
+    // In a corner the 24-hour list scrolls under a fade; without this the widget
+    // opens on hour 1 and the current hour sits below the fold.
+    function scrollHoursCurrentIntoView(el) {
+        if (!el.closest('.forecast-new-corner')) return;
+        const row = el.querySelector('.forecast-new-hours-row.is-current');
+        if (!row) return;
+        const elRect = el.getBoundingClientRect();
+        const rowRect = row.getBoundingClientRect();
+        el.scrollTop += (rowRect.top - elRect.top) - (el.clientHeight - rowRect.height) / 2;
+    }
+
     async function renderHoursBlock() {
         const el = document.getElementById('nowHoursView')
             || document.getElementById('forecastNewBlockStore')?.querySelector('#nowHoursView');
@@ -7824,6 +7881,7 @@
             && state.hoursDataLat === lat && state.hoursDataLon === lon;
         if (fresh) {
             el.innerHTML = hoursBlockMarkup(state.hoursData);
+            scrollHoursCurrentIntoView(el);
             return;
         }
         if (!state.hoursData) {
@@ -7836,6 +7894,7 @@
             state.hoursDataLat = lat;
             state.hoursDataLon = lon;
             el.innerHTML = hoursBlockMarkup(data);
+            scrollHoursCurrentIntoView(el);
         } catch (error) {
             el.innerHTML = `<div class="forecast-new-hours-error">${escapeHtml(t('common.error') || 'Ошибка')}</div>`;
         }

@@ -1211,16 +1211,24 @@
     position: absolute;
     z-index: 35;
     max-width: 220px;
-    max-height: 42%;
     overflow: hidden;
     pointer-events: none;
     display: flex;
 }
 .forecast-new-corner[hidden] { display: none; }
-.forecast-new-corner-tl { top: 14px; left: 14px; align-items: flex-start; justify-content: flex-start; }
-.forecast-new-corner-tr { top: 14px; right: 72px; align-items: flex-start; justify-content: flex-end; } /* clear zoom controls */
-.forecast-new-corner-bl { bottom: 64px; left: 14px; align-items: flex-end; justify-content: flex-start; } /* offset up to clear datebar */
-.forecast-new-corner-br { bottom: 64px; right: 14px; align-items: flex-end; justify-content: flex-end; }
+/* Per-corner height budgets keep widget content on its own side of the wheel's
+   horizontal axis, so long lists scroll instead of crawling over ASC/DSC.
+   A definite height (not max-height) lets the child's max-height:100% resolve,
+   which is what makes the inner overflow actually scrollable; the host paints
+   nothing and is click-through, so the extra empty area is inert. */
+.forecast-new-corner-tl { top: 14px; left: 14px; height: calc(50% - 44px); align-items: flex-start; justify-content: flex-start; }
+.forecast-new-corner-tr { top: 14px; right: 72px; height: calc(50% - 44px); align-items: flex-start; justify-content: flex-end; } /* clear zoom controls */
+.forecast-new-corner-bl { bottom: 64px; left: 14px; height: calc(50% - 94px); align-items: flex-end; justify-content: flex-start; } /* offset up to clear datebar */
+.forecast-new-corner-br { bottom: 64px; right: 14px; height: calc(50% - 94px); align-items: flex-end; justify-content: flex-end; }
+/* Bottom corners anchor content to the host's bottom edge; keep the edit-mode
+   toolbar next to the content instead of floating at the empty host top. */
+.forecast-new-corner-bl .forecast-new-corner-toolbar,
+.forecast-new-corner-br .forecast-new-corner-toolbar { top: auto; bottom: 4px; }
 
 /* The re-homed block container is intentionally just typography over the wheel:
    no card surface, border, or shadow. */
@@ -1246,6 +1254,47 @@
 }
 .forecast-new-corner > .is-compact::-webkit-scrollbar {
     display: none;
+}
+/* Scroll affordance: fade the clipped edge (classes managed from JS) and
+   surface a thin scrollbar while the pointer is over the widget. */
+.forecast-new-corner > .is-compact.has-scroll-below {
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent 100%);
+}
+.forecast-new-corner > .is-compact.has-scroll-above {
+    -webkit-mask-image: linear-gradient(to top, #000 calc(100% - 26px), transparent 100%);
+    mask-image: linear-gradient(to top, #000 calc(100% - 26px), transparent 100%);
+}
+.forecast-new-corner > .is-compact.has-scroll-above.has-scroll-below {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 26px, #000 calc(100% - 26px), transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 26px, #000 calc(100% - 26px), transparent 100%);
+}
+.forecast-new-corner > .is-compact:hover {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(57, 52, 48, 0.32) transparent;
+}
+.forecast-new-corner > .is-compact:hover::-webkit-scrollbar {
+    display: block;
+    width: 5px;
+    height: 5px;
+}
+.forecast-new-corner > .is-compact:hover::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(57, 52, 48, 0.3);
+}
+.forecast-new-corner > .is-compact:hover::-webkit-scrollbar-track {
+    background: transparent;
+}
+/* Dense matrix/graph views keep their full data in a corner, just drawn at a
+   smaller scale (zoom affects layout, so max-width compensates to keep the
+   visual footprint at the regular 220px corner budget). */
+.forecast-new-corner > .is-compact[data-corner-view="grid"] {
+    zoom: 0.6;
+    max-width: calc(220px / 0.6);
+}
+.forecast-new-corner > .is-compact[data-corner-view="dispositors"] {
+    zoom: 0.7;
+    max-width: calc(220px / 0.7);
 }
 .forecast-new-corner > .is-compact table,
 .forecast-new-corner > .is-compact thead,
@@ -4296,9 +4345,16 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
 }
 
 .forecast-new-lunar-event {
-    display: flex;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0 8px;
+    align-items: baseline;
     font-size: 11px;
+}
+
+.forecast-new-lunar-event-when {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
 }
 
 .forecast-new-eclipse-list {
@@ -4328,7 +4384,15 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: 8px;
+    gap: 2px 8px;
+    /* Narrow corners: drop whole label/value pairs to the next line instead of
+       letting the two columns wrap word-by-word into each other. */
+    flex-wrap: wrap;
+}
+
+.forecast-new-eclipse-maximum strong,
+.forecast-new-eclipse-magnitude {
+    white-space: nowrap;
 }
 
 .forecast-new-eclipse-type,

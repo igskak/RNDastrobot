@@ -465,6 +465,13 @@
     function autoTabTitle(tab, translate) {
         if (tab.title) return tab.title;
         var firstView = tab.blocks && tab.blocks[0] ? tab.blocks[0].view : null;
+        if (!firstView && typeof translate === 'function') {
+            // Tab whose blocks all moved elsewhere (e.g. into a corner widget):
+            // label it honestly instead of the meaningless "Tab" placeholder.
+            var emptyKey = 'page.forecastNew.panelEditor.emptyTab';
+            var emptyLabel = translate(emptyKey);
+            if (emptyLabel && emptyLabel !== emptyKey) return emptyLabel;
+        }
         var i18nKey = firstView ? VIEW_I18N[firstView] : null;
         if (i18nKey && typeof translate === 'function') {
             var t = translate(i18nKey);

@@ -505,6 +505,7 @@
         "widgetMovedFrom": "Widget added, block moved from “{location}”",
         "widgetAdded": "Widget added",
         "widgetReplaceCopy": "The current widget in this position will be replaced.",
+        "emptyTab": "Empty",
         "widgetDenseWarning": "This block may be difficult to read in compact form.",
         "replace": "Replace",
         "instructions": "Drag tabs and blocks between areas. Changes save automatically.",
