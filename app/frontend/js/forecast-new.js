@@ -1,6 +1,56 @@
 (function() {
     'use strict';
 
+    // C1 (Фаза 3): тяжёлые по требованию модули грузятся динамическим import() —
+    // esbuild выделяет их в отдельные чанки, убирая из eager-бандла. Каждый
+    // загрузчик идемпотентен (import() кэширует модуль). Модули — IIFE, вешают
+    // свой API на window при выполнении, так что await достаточно перед вызовом.
+    let _aspectDynamicsPromise = null;
+    function ensureAspectDynamicsModal() {
+        if (!_aspectDynamicsPromise) {
+            _aspectDynamicsPromise = import('./forecast-aspect-dynamics-modal.js')
+                .catch((error) => { _aspectDynamicsPromise = null; throw error; });
+        }
+        return _aspectDynamicsPromise;
+    }
+    let _saveChartModalPromise = null;
+    function ensureSaveChartModal() {
+        if (!_saveChartModalPromise) {
+            _saveChartModalPromise = import('./save-chart-modal.js')
+                .catch((error) => { _saveChartModalPromise = null; throw error; });
+        }
+        return _saveChartModalPromise;
+    }
+    let _sortablePromise = null;
+    function ensureSortable() {
+        if (window.Sortable) return Promise.resolve();
+        if (!_sortablePromise) {
+            _sortablePromise = import('sortablejs')
+                .then((mod) => { window.Sortable = mod.default || mod.Sortable || mod; })
+                .catch((error) => { _sortablePromise = null; throw error; });
+        }
+        return _sortablePromise;
+    }
+    // Открыть модалку аспект-динамики, догрузив её чанк по требованию.
+    async function openAspectDynamicsModal(options) {
+        try {
+            await ensureAspectDynamicsModal();
+        } catch (_) {
+            window.showToast?.(t('page.forecastNew.aspectDynamics.errors.missingContext'), 'error');
+            return;
+        }
+        window.ForecastAspectDynamicsModal?.open(options);
+    }
+    // Открыть модалку сохранения карты, догрузив её чанк по требованию.
+    async function openSaveChartModal(options) {
+        try {
+            await ensureSaveChartModal();
+        } catch (_) {
+            return null;
+        }
+        return window.SaveChartModal?.open(options);
+    }
+
     const API_BASE = window.location.hostname === 'localhost'
         ? 'http://localhost:8000/api/v1'
         : '/api/v1';
@@ -5642,7 +5692,7 @@
             window.showToast?.(t('page.forecastNew.aspectDynamics.errors.missingContext'), 'warning');
             return;
         }
-        window.ForecastAspectDynamicsModal?.open({
+        openAspectDynamicsModal({
             method: 'natal',
             natalSource: buildNatalSourcePayload(),
             userId: state.userId,
@@ -5659,7 +5709,7 @@
             return;
         }
         const inst = layerInstanceForDynamics(match.layer);
-        window.ForecastAspectDynamicsModal?.open(dynamicsOptionsForLayer(match, inst));
+        openAspectDynamicsModal(dynamicsOptionsForLayer(match, inst));
     }
 
     function aspectNodeFromEventTarget(target) {
@@ -8783,8 +8833,17 @@
         state._editorSortables = [];
     }
 
-    function initEditorDnd() {
-        if (!window.Sortable) return;
+    async function initEditorDnd() {
+        // C1 (Фаза 3): SortableJS нужен только в конфигураторе панелей — грузим его
+        // чанк при первом входе в edit-mode, а не в eager-бандле.
+        if (!window.Sortable) {
+            try {
+                await ensureSortable();
+            } catch (_) {
+                return; // без DnD конфигуратор остаётся рабочим (кнопки-стрелки)
+            }
+        }
+        if (!state.panelEditMode) return; // edit-mode закрыли, пока грузился чанк
         destroyEditorDnd();
         const editor = document.getElementById('forecastNewPanelEditor');
         if (!editor) return;
@@ -9347,7 +9406,7 @@
             window.showToast?.(t('page.forecastNew.composite.noPartner') || 'Сначала выберите партнёра', 'warning');
             return;
         }
-        const result = await window.SaveChartModal?.open({
+        const result = await openSaveChartModal({
             defaultTitle: defaultSourceChartTitle(),
             defaultDate: state.compositeChartData.birth_data?.date || splitTargetDatetime(state.natalSelectedDateTime)[0],
             defaultTime: state.compositeChartData.birth_data?.time || splitTargetDatetime(state.natalSelectedDateTime)[1],
@@ -9423,7 +9482,7 @@
             await saveCompositeChart();
             return;
         }
-        const result = await window.SaveChartModal?.open({
+        const result = await openSaveChartModal({
             defaultTitle: defaultSourceChartTitle(),
             defaultDate: splitTargetDatetime(state.natalSelectedDateTime)[0],
             defaultTime: splitTargetDatetime(state.natalSelectedDateTime)[1],
@@ -9561,7 +9620,7 @@
             );
             return;
         }
-        const result = await window.SaveChartModal?.open({
+        const result = await openSaveChartModal({
             defaultTitle: snapshot.title,
             defaultDate: snapshot.date,
             defaultTime: snapshot.time,
@@ -9687,7 +9746,7 @@
             );
             return;
         }
-        const result = await window.SaveChartModal?.open({
+        const result = await openSaveChartModal({
             defaultTitle: snapshot.title || defaultSourceChartTitle(),
             defaultDate: snapshot.date,
             defaultTime: snapshot.time,
@@ -9752,7 +9811,7 @@
         const [solarDate, solarClock] = String(info.solar_datetime_local).split('T');
         // Strip the TZ offset/Z suffix from the clock part → bare HH:MM:SS.
         const solarTime = String(solarClock || '').split(/[+\-Z]/)[0].slice(0, 8);
-        const result = await window.SaveChartModal?.open({
+        const result = await openSaveChartModal({
             defaultTitle: defaultSolarChartTitle(info),
             defaultDate: solarDate,
             defaultTime: solarTime,

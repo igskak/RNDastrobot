@@ -56,6 +56,8 @@ const cssEntryPoints = {
   'consultation-call': path.join(frontendRoot, 'entries-css', 'consultation-call.entry.css'),
   'consultation-join': path.join(frontendRoot, 'entries-css', 'consultation-join.entry.css'),
   consultation: path.join(frontendRoot, 'entries-css', 'consultation.entry.css'),
+  // C3 (Фаза 3): ленивый бандл виджета чата (не входит в критический CSS страниц).
+  'chat-widget': path.join(frontendRoot, 'entries-css', 'chat-widget.entry.css'),
 };
 
 function pageEntryName(page) {

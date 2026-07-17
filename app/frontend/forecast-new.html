@@ -4,8 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecastNew.pageTitle">Forecast</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=3aa3919d7df8">
-    <script>window.__APP_BUILD_ID__ = '3aa3919d7df8';</script>
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=58cedaf53717">
+    <!-- C2 (Фаза 3): символьные глифы (знаки/аспекты) появляются на колесе сразу;
+         font-display:block делает их невидимыми до загрузки шрифта, поэтому прелоадим
+         woff2-сабсеты (десятки КБ вместо 1.2 МБ ttf). crossorigin обязателен для шрифтов. -->
+    <link rel="preload" href="/fonts/NotoSansSymbols.subset.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/NotoSansSymbols2.subset.woff2" as="font" type="font/woff2" crossorigin>
+    <script>window.__APP_BUILD_ID__ = '58cedaf53717';</script>
     <!-- A3 (Фаза 1): каталог локали грузится i18n.js в рантайме и это первый await
          bootstrap. Прогреваем HTTP-кэш нужной локали сразу из <head> (immutable-кэш в
          проде → i18n.js переиспользует ответ). Локаль резолвим тем же приоритетом, что
@@ -42,15 +47,16 @@
          них только распарсив bundle.js (двухходовый водопад HTML→entry→chunks). Блок
          генерируется build-скриптом из esbuild metafile; править вручную не нужно. -->
     <!-- modulepreload:forecast-new:start -->
-    <link rel="modulepreload" href="/js/bundles/chunks/chunk-2N23K522.js">
-    <link rel="modulepreload" href="/js/bundles/chunks/chunk-5PXUWQMU.js">
-    <link rel="modulepreload" href="/js/bundles/chunks/chunk-6QU56ZKB.js">
-    <link rel="modulepreload" href="/js/bundles/chunks/chunk-BI736Q2H.js">
+    <link rel="modulepreload" href="/js/bundles/chunks/chunk-6WUMBF2I.js">
     <link rel="modulepreload" href="/js/bundles/chunks/chunk-DWCL6BXC.js">
+    <link rel="modulepreload" href="/js/bundles/chunks/chunk-FINH6RT4.js">
+    <link rel="modulepreload" href="/js/bundles/chunks/chunk-HX7TNMQQ.js">
+    <link rel="modulepreload" href="/js/bundles/chunks/chunk-IZUYVIPG.js">
+    <link rel="modulepreload" href="/js/bundles/chunks/chunk-KQCZKO5G.js">
+    <link rel="modulepreload" href="/js/bundles/chunks/chunk-MTRUVDHY.js">
     <link rel="modulepreload" href="/js/bundles/chunks/chunk-MZ7NETWD.js">
     <link rel="modulepreload" href="/js/bundles/chunks/chunk-NEFTZ6D5.js">
-    <link rel="modulepreload" href="/js/bundles/chunks/chunk-PAM4LDSK.js">
-    <link rel="modulepreload" href="/js/bundles/chunks/chunk-SBWUV4NM.js">
+    <link rel="modulepreload" href="/js/bundles/chunks/chunk-OYFB3LUY.js">
     <link rel="modulepreload" href="/js/bundles/chunks/chunk-SYPQTWEU.js">
     <link rel="modulepreload" href="/js/bundles/chunks/chunk-XCJV446S.js">
     <!-- modulepreload:forecast-new:end -->
@@ -707,7 +713,7 @@
          поэтому window.__RUNTIME_CONFIG__ (runtime-config.js) готов до analytics.js и до
          модуля приложения. -->
     <script defer src="/runtime-config.js"></script>
-    <script defer src="/js/analytics.js?v=3aa3919d7df8"></script>
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=3aa3919d7df8"></script>
+    <script defer src="/js/analytics.js?v=58cedaf53717"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=58cedaf53717"></script>
 </body>
 </html>
