@@ -17,6 +17,7 @@ from app.database.connection import get_db
 from app.auth.dependencies import AuthContext, ensure_client_access, require_auth
 from app.services.solar_return_service import SolarReturnService
 from app.services.natal_chart_service import NatalChartService
+from app.services.natal_chart_cache import calculate_natal_chart_cached
 from app.services.natal_context import NatalContext
 from app.utils.ephemeris import get_ephemeris_path
 
@@ -65,7 +66,9 @@ def calculate_solar_return(
     # --- Inline-натал (ephemeral) ---
     if request.natal is not None:
         try:
-            calc_result = NatalChartService(ephe_path=EPHE_PATH).calculate_natal_chart(
+            calc_result = calculate_natal_chart_cached(
+                NatalChartService(ephe_path=EPHE_PATH),
+                db_session=db,
                 birth_date=request.natal.date,
                 birth_time=request.natal.time,
                 timezone=request.natal.timezone,
@@ -74,8 +77,6 @@ def calculate_solar_return(
                 latitude=request.natal.latitude,
                 longitude=request.natal.longitude,
                 house_system=request.natal.house_system,
-                save_to_db=False,
-                db_session=db,
             )
         except ValueError as e:
             raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))

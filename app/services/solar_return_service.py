@@ -25,6 +25,7 @@ from app.services.preferences_runtime import (
 )
 from app.services.reference_data_cache import get_aspect_types
 from app.services.natal_context import NatalContext
+from app.services.natal_payload_cache import NatalPayloadCache
 from app.services.special_points_service import SpecialPointsService
 from app.utils.constants import (
     PROGNOSTIC_DEFAULT_ORB,
@@ -444,7 +445,7 @@ class SolarReturnService:
             birth_lat=float(user.lat),
             birth_lon=float(user.lon),
             birth_timezone=user.timezone,
-            natal_aspect_targets=self._load_natal_aspect_targets(user_id),
+            natal_aspect_targets=self._load_natal_aspect_targets(user_id, user=user),
         )
 
     @staticmethod
@@ -521,7 +522,15 @@ class SolarReturnService:
             'aspects_to_natal': aspects_to_natal,
         }
 
-    def _load_natal_aspect_targets(self, user_id: UUID) -> List[Dict]:
+    def _load_natal_aspect_targets(self, user_id: UUID, user=None) -> List[Dict]:
+        # D2 (Фаза 4): 4 запроса на натальные цели кэшируются по версии карты;
+        # ключ есть только когда передан user (горячий путь _build_context).
+        cache_key = NatalPayloadCache.make_key(user, "aspect_targets") if user is not None else None
+        if cache_key is not None:
+            cached = NatalPayloadCache.get(cache_key)
+            if cached is not None:
+                return cached
+
         planets = self.db.query(NatalPlanet).filter(NatalPlanet.user_id == user_id).all()
         targets: List[Dict] = [
             {
@@ -566,10 +575,13 @@ class SolarReturnService:
             for house in houses
         ]))
 
-        return [
+        result = [
             target for target in targets
             if target['name'] not in PROGNOSTIC_EXCLUDED_NATAL_TARGETS
         ]
+        if cache_key is not None:
+            NatalPayloadCache.set(cache_key, result)
+        return result
 
     def _get_aspect_types(self) -> List[RefAspectType]:
         return get_aspect_types(self.db)

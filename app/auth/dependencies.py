@@ -340,25 +340,36 @@ def require_auth(request: Request, response: Response, db: Session = Depends(get
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
 
     now = utcnow()
-    session = (
-        db.query(AuthSession)
+    # D1 (Фаза 4): сессия и астролог грузятся одним joined-запросом вместо двух —
+    # это горячий путь (каждый авторизованный запрос). Различаем «нет сессии» и
+    # «астролог неактивен», выполнив проверку сессии отдельным лёгким запросом
+    # только когда join ничего не вернул.
+    row = (
+        db.query(AuthSession, Astrologer)
+        .join(Astrologer, Astrologer.id == AuthSession.astrologer_id)
         .filter(
             AuthSession.session_id == sid,
             AuthSession.revoked_at.is_(None),
             AuthSession.expires_at > now,
+            Astrologer.is_active.is_(True),
         )
         .first()
     )
-    if not session:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session expired or invalid")
-
-    astrologer = (
-        db.query(Astrologer)
-        .filter(Astrologer.id == session.astrologer_id, Astrologer.is_active.is_(True))
-        .first()
-    )
-    if not astrologer:
+    if row is None:
+        session_exists = (
+            db.query(AuthSession.session_id)
+            .filter(
+                AuthSession.session_id == sid,
+                AuthSession.revoked_at.is_(None),
+                AuthSession.expires_at > now,
+            )
+            .first()
+        )
+        if not session_exists:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session expired or invalid")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Astrologer account is inactive")
+
+    session, astrologer = row
 
     _refresh_session_if_needed(response, request, db, session, now)
 

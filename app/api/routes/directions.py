@@ -10,6 +10,7 @@ from typing import List, Optional, Literal
 
 from app.services.direction_service import DirectionService
 from app.services.natal_chart_service import NatalChartService
+from app.services.natal_chart_cache import calculate_natal_chart_cached
 from app.services.natal_context import NatalContext
 from app.models.schemas import BirthDataInput
 from app.database.connection import get_db
@@ -208,7 +209,9 @@ def calculate_direction(
     # --- Inline-натал (ephemeral) ---
     if request.natal is not None:
         try:
-            calc_result = NatalChartService(ephe_path=EPHE_PATH).calculate_natal_chart(
+            calc_result = calculate_natal_chart_cached(
+                NatalChartService(ephe_path=EPHE_PATH),
+                db_session=db,
                 birth_date=request.natal.date,
                 birth_time=request.natal.time,
                 timezone=request.natal.timezone,
@@ -217,8 +220,6 @@ def calculate_direction(
                 latitude=request.natal.latitude,
                 longitude=request.natal.longitude,
                 house_system=request.natal.house_system,
-                save_to_db=False,
-                db_session=db,
             )
         except ValueError as e:
             raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))

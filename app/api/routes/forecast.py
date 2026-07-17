@@ -14,6 +14,7 @@ from app.database.connection import get_db
 from app.models.schemas import BirthDataInput
 from app.services.forecast_aux_service import ForecastAuxBlockError, ForecastAuxService
 from app.services.natal_chart_service import NatalChartService
+from app.services.natal_chart_cache import calculate_natal_chart_cached
 from app.utils.ephemeris import get_ephemeris_path
 
 
@@ -68,7 +69,9 @@ def get_forecast_aux_blocks(
             )
 
         natal_service = NatalChartService(ephe_path=EPHE_PATH)
-        calc_result = natal_service.calculate_natal_chart(
+        calc_result = calculate_natal_chart_cached(
+            natal_service,
+            db_session=db,
             birth_date=payload.source.natal.date,
             birth_time=payload.source.natal.time,
             timezone=payload.source.natal.timezone,
@@ -77,8 +80,6 @@ def get_forecast_aux_blocks(
             latitude=payload.source.natal.latitude,
             longitude=payload.source.natal.longitude,
             house_system=payload.source.natal.house_system,
-            save_to_db=False,
-            db_session=db,
         )
         return service.get_blocks_for_chart(
             calc_result,

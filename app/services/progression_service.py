@@ -25,6 +25,7 @@ from app.services.preferences_runtime import (
 )
 from app.services.reference_data_cache import get_aspect_types, get_planet_orbs
 from app.services.natal_context import NatalContext
+from app.services.natal_payload_cache import NatalPayloadCache
 from app.utils.constants import (
     get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds,
     PROGNOSTIC_EXCLUDED_NATAL_TARGETS, PROGNOSTIC_EXACT_ORB,
@@ -247,7 +248,7 @@ class ProgressionService:
         user = self.db.query(User).filter(User.user_id == user_id).first()
         if not user:
             raise ValueError(f"User not found: {user_id}")
-        natal_data = self._load_natal_data(user_id)
+        natal_data = self._load_natal_data(user_id, user=user)
         astrologer_id = self.preferences_runtime.get_astrologer_id_for_user(user_id)
         birth_data = {
             'user_id': str(user.user_id),
@@ -327,8 +328,16 @@ class ProgressionService:
             planet['stationary_type'] = stationary_type
         return planets
 
-    def _load_natal_data(self, user_id: UUID) -> Dict:
+    def _load_natal_data(self, user_id: UUID, user=None) -> Dict:
         """Загрузить натальные данные из БД"""
+        # D2 (Фаза 4): кэш по версии карты (updated_at). Ключ доступен только когда
+        # передан user (из _build_context_from_user_id); иначе читаем напрямую.
+        cache_key = NatalPayloadCache.make_key(user) if user is not None else None
+        if cache_key is not None:
+            cached = NatalPayloadCache.get(cache_key)
+            if cached is not None:
+                return cached
+
         # Планеты
         planets = self.db.query(NatalPlanet).filter(NatalPlanet.user_id == user_id).all()
         natal_planets = [
@@ -377,13 +386,16 @@ class ProgressionService:
             if o['name'] not in PROGNOSTIC_EXCLUDED_NATAL_TARGETS
         ]
 
-        return {
+        payload = {
             'planets': natal_planets,
             'special_points': natal_special_points,
             'angles': natal_angles,
             'houses': natal_houses,
             'all_objects': all_objects,
         }
+        if cache_key is not None:
+            NatalPayloadCache.set(cache_key, payload)
+        return payload
 
     def _get_aspect_types(self) -> List[RefAspectType]:
         """Получить типы аспектов с кешированием"""
