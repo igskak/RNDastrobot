@@ -92,6 +92,56 @@ async function buildVersionForPage(page, source) {
   return hashExistingFiles(files);
 }
 
+// C4: транзитивное замыкание чанков, которые статически импортирует entry-бандл.
+// Браузеру эти чанки нужны в любом случае; modulepreload лишь сообщает о них раньше,
+// убирая водопад HTML→entry→chunks. Пути в metafile — относительно корня проекта
+// (app/frontend/js/bundles/...), приводим их к URL /js/bundles/... .
+function collectEntryChunks(metafile, entryName) {
+  const outputs = metafile?.outputs || {};
+  const entryOutputPath = Object.keys(outputs).find((outPath) => {
+    const info = outputs[outPath];
+    return info?.entryPoint && outPath.endsWith(`js/bundles/${entryName}.bundle.js`);
+  });
+  if (!entryOutputPath) return [];
+
+  const chunkUrls = new Set();
+  const visited = new Set();
+  const visit = (outPath) => {
+    if (visited.has(outPath)) return;
+    visited.add(outPath);
+    const info = outputs[outPath];
+    if (!info) return;
+    for (const imported of info.imports || []) {
+      if (imported.kind !== 'import-statement') continue;
+      const importPath = imported.path;
+      const chunkMatch = importPath.match(/js\/bundles\/(chunks\/[^"']+\.js)$/);
+      if (chunkMatch) chunkUrls.add(`/js/bundles/${chunkMatch[1]}`);
+      visit(importPath);
+    }
+  };
+  visit(entryOutputPath);
+  // Детерминированный порядок → стабильный вывод между сборками (check:frontend-build).
+  return [...chunkUrls].sort();
+}
+
+function injectModulePreload(source, page, chunkUrls) {
+  const entryName = pageEntryName(page);
+  const startMarker = `<!-- modulepreload:${entryName}:start -->`;
+  const endMarker = `<!-- modulepreload:${entryName}:end -->`;
+  const startIndex = source.indexOf(startMarker);
+  const endIndex = source.indexOf(endMarker);
+  if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) return source;
+
+  const indentMatch = source.slice(0, startIndex).match(/([ \t]*)$/);
+  const indent = indentMatch ? indentMatch[1] : '';
+  const links = chunkUrls
+    .map((url) => `\n${indent}<link rel="modulepreload" href="${url}">`)
+    .join('');
+  const before = source.slice(0, startIndex + startMarker.length);
+  const after = source.slice(endIndex);
+  return `${before}${links}\n${indent}${after}`;
+}
+
 function rewriteHtmlBuildMarkers(source, buildId, page) {
   const entryName = pageEntryName(page);
   const escapedEntryName = entryName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -108,14 +158,17 @@ function rewriteHtmlBuildMarkers(source, buildId, page) {
     .replace(assetPattern, `$1?v=${buildId}`);
 }
 
-async function syncHtmlBuildMarkers() {
+async function syncHtmlBuildMarkers(metafile) {
   const updatedPages = [];
 
   for (const page of htmlPages) {
     const htmlPath = path.join(frontendRoot, page);
     const current = await readFile(htmlPath, 'utf8');
     const pageBuildId = process.env.FRONTEND_BUILD_ID || await buildVersionForPage(page, current);
-    const next = rewriteHtmlBuildMarkers(current, pageBuildId, page);
+    let next = rewriteHtmlBuildMarkers(current, pageBuildId, page);
+    // C4: modulepreload инжектится только на страницы с маркер-блоком (no-op иначе).
+    const chunkUrls = collectEntryChunks(metafile, pageEntryName(page));
+    next = injectModulePreload(next, page, chunkUrls);
 
     if (next !== current) {
       await writeFile(htmlPath, next, 'utf8');
@@ -131,7 +184,7 @@ await rm(cssOutdir, { recursive: true, force: true });
 await mkdir(jsOutdir, { recursive: true });
 await mkdir(cssOutdir, { recursive: true });
 
-await build({
+const jsBuildResult = await build({
   entryPoints: jsEntryPoints,
   outdir: jsOutdir,
   bundle: true,
@@ -143,6 +196,7 @@ await build({
   legalComments: 'none',
   charset: 'utf8',
   logLevel: 'info',
+  metafile: true,
   entryNames: '[name].bundle',
   chunkNames: 'chunks/[name]-[hash]',
 });
@@ -163,7 +217,7 @@ await build({
 console.log(`Built frontend JS bundles into ${jsOutdir}`);
 console.log(`Built frontend CSS bundles into ${cssOutdir}`);
 
-const updatedPages = await syncHtmlBuildMarkers();
+const updatedPages = await syncHtmlBuildMarkers(jsBuildResult.metafile);
 console.log(`Frontend build id: ${process.env.FRONTEND_BUILD_ID || 'content-hash'}`);
 if (updatedPages.length) {
   console.log(`Updated HTML asset markers: ${updatedPages.join(', ')}`);

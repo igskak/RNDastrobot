@@ -584,9 +584,15 @@
     document.addEventListener('DOMContentLoaded', async () => {
         window.addEventListener('pagehide', flushPendingPersistence);
         window.addEventListener('beforeunload', flushPendingPersistence);
-        await waitForI18nReady();
+        // Фаза 1 (первый рендер): каталог локали и /auth/me — независимые сетевые
+        // операции. Стартуем их параллельно, а не последовательным await-чейном,
+        // чтобы гейт первого рендера ждал max(i18n, auth), а не их сумму.
+        const i18nReady = waitForI18nReady();
+        const authReady = Promise.resolve(
+            window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' })
+        );
         cacheElements();
-        const me = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
+        const me = await authReady;
         if (!me) return;
 
         let natalData = window.AstroAPI?.getChartFromSession?.();
@@ -671,7 +677,10 @@
         });
         applyConfigToScratch(selectedLayerInstance());
         syncLayerControlInputs();
-        void populateSynastryPartnerOptions();
+        // A4: список партнёров для синастрии (GET /charts) грузим лениво — при первом
+        // открытии поповера/входе в режим синастрии, а не в bootstrap. Слой синастрии
+        // рендерится из сохранённого config без этого списка (он нужен только для
+        // смены партнёра в дропдауне).
         populateTimezoneOptions();
         populateNatalTimezoneOptions();
         initRenderers();
@@ -689,17 +698,51 @@
         initPanelLayout();
         bindPanelConfigurator();
         syncWorkspaceModePanels();
-        await hydratePreferences();
-        await initForecastOnboarding(me, natalData);
+
+        // Префы гидрируем в фоне: серверный расчёт слоёв (fetchLayer) от них не зависит
+        // — орбисы/скоуп сервер читает из БД, а клиентский фильтр применяется уже при
+        // рендере. На тёплом старте нужные настройки уже восстановлены из localStorage
+        // (hydrateState), поэтому первый рендер натала корректен ещё до ответа сервера.
+        const preferencesReady = hydratePreferences();
+
+        // Гейт первого рендера = i18n + auth. Натал уже лежит в sessionStorage, поэтому
+        // показываем карту (колесо + таблицы) сразу, а слои доезжают в «затемнённом»
+        // состоянии через партиальную ветку loadActiveLayers. Это ~1 RTT вместо прежней
+        // цепочки i18n→auth→prefs→onboarding→transits за полноэкранным лоадером (A1/A2).
+        await i18nReady;
         syncControlsFromState();
         renderStaticNatal();
         renderRightLayerTabs();
-        if (state.singleChartMode === 'composite') {
+        const isComposite = state.singleChartMode === 'composite';
+        if (!isComposite) {
+            // Пустые state.layers → buildViewModel отдаёт натал-only колесо (без пустых
+            // колец). Композит из sessionStorage мгновенно показать нельзя — там держим
+            // лоадер до расчёта, как раньше.
+            renderWheel();
+            showLayout();
+            hideLoader();
+            setLightweightLoading(true);
+        }
+
+        // Финализация после гидрации префов и онбординга. Онбординг уходит с пути первого
+        // рендера (A6), но применяется ДО загрузки слоёв: он может переключить вид на
+        // «одно колесо» для новых пользователей (гейт натала натал-only при любом виде,
+        // так что вспышки нет). Порядок prefs→onboarding сохраняем как раньше.
+        await preferencesReady;
+        try {
+            await initForecastOnboarding(me, natalData);
+        } catch (error) {
+            console.warn('Forecast onboarding init failed:', error);
+        }
+        syncControlsFromState();
+        renderStaticNatal();
+        renderRightLayerTabs();
+        if (isComposite) {
             await enterCompositeMode();
             showLayout();
             hideLoader();
         } else {
-            await loadActiveLayers({ waitForComplete: true });
+            await loadActiveLayers({ lightweight: true });
         }
     });
 
@@ -1416,6 +1459,8 @@
     function openLayerPopover(layer) {
         const pop = getLayerPopover(layer);
         if (!pop) return;
+        // A4: список партнёров нужен только когда пользователь открывает конфиг синастрии.
+        if (layer === 'synastry_partner') ensureSynastryPartnerOptions();
         closeSettingsPanel();
         closeAddLayerMenu();
         closeBodyActionMenu();
@@ -1456,6 +1501,8 @@
 
     async function activateLayer(method, { openConfig = false } = {}) {
         if (!LAYER_ORDER.includes(method)) return;
+        // A4: активация слоя синастрии (в т.ч. программная) должна подтянуть список партнёров.
+        if (method === 'synastry_partner') ensureSynastryPartnerOptions();
         const existing = instancesOfMethod(method);
         let added = false;
         let instance;
@@ -4384,7 +4431,9 @@
                 longitude: state.natalLocation.longitude,
             };
             configureForecastNavigation();
-            void populateSynastryPartnerOptions();
+            // Рабочий натал сменился → «сам себя» в фильтре другой; перезагружаем список,
+            // но только если он уже был загружен (иначе останется ленивым до первого показа).
+            if (synastryPartnerOptionsPromise) ensureSynastryPartnerOptions({ force: true });
         }
         syncControlsFromState();
         updateNatalMomentMeta();
@@ -4842,6 +4891,24 @@
     }
 
     /** Список партнёров для синастрии: все сохранённые клиенты, кроме текущего. */
+    // A4: мемоизированная ленивая загрузка списка партнёров. Первый вызов при открытии
+    // поповера/входе в режим синастрии выполняет один GET /charts; повторные — no-op.
+    // { force: true } перезагружает список (например, после смены рабочего натала —
+    // меняется исключение «сам себя»).
+    let synastryPartnerOptionsPromise = null;
+    function ensureSynastryPartnerOptions(options = {}) {
+        if (options.force) synastryPartnerOptionsPromise = null;
+        if (!synastryPartnerOptionsPromise) {
+            synastryPartnerOptionsPromise = populateSynastryPartnerOptions()
+                .catch((error) => {
+                    // Дать следующему вызову шанс повторить, если загрузка не удалась.
+                    synastryPartnerOptionsPromise = null;
+                    console.warn('Synastry partner options load failed:', error);
+                });
+        }
+        return synastryPartnerOptionsPromise;
+    }
+
     async function populateSynastryPartnerOptions() {
         const select = refs.forecastNewSynastryPartnerSelect;
         if (!select) return;
@@ -6151,6 +6218,7 @@
     }
 
     async function enterCompositeMode() {
+        ensureSynastryPartnerOptions();
         state.compositeMethod = normalizeCompositeMethod(state.compositeMethod || state.pageSettings.compositeMethod);
         state.pageSettings.compositeMethod = state.compositeMethod;
         state.swapBaseLayerId = null; // композит несовместим со свопом карт
@@ -6165,6 +6233,7 @@
     }
 
     async function enterSynastryMode() {
+        ensureSynastryPartnerOptions();
         state.singleChartMode = 'natal';
         state.wheelView = 'multi';
         if (hasUsableSynastryPartner()) {
