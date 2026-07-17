@@ -7,8 +7,9 @@
 
 @font-face {
     font-family: 'Astronomicon Local';
-    src: url('../fonts/Astronomicon.ttf') format('truetype');
-    font-display: swap;
+    src: url('../fonts/Astronomicon.subset.woff2') format('woff2'),
+         url('../fonts/Astronomicon.ttf') format('truetype');
+    font-display: block;
 }
 
 body.quick-open-active {
@@ -260,14 +261,16 @@ body.quick-open-active {
 
 @font-face {
     font-family: 'Noto Sans Symbols Local';
-    src: url('../fonts/NotoSansSymbols.ttf') format('truetype');
-    font-display: swap;
+    src: url('../fonts/NotoSansSymbols.subset.woff2') format('woff2'),
+         url('../fonts/NotoSansSymbols.ttf') format('truetype');
+    font-display: block;
 }
 
 @font-face {
     font-family: 'Noto Sans Symbols 2 Local';
-    src: url('../fonts/NotoSansSymbols2.ttf') format('truetype');
-    font-display: swap;
+    src: url('../fonts/NotoSansSymbols2.subset.woff2') format('woff2'),
+         url('../fonts/NotoSansSymbols2.ttf') format('truetype');
+    font-display: block;
 }
 
 :root {

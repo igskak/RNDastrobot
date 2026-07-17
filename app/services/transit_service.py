@@ -29,6 +29,7 @@ from app.services.preferences_runtime import (
 )
 from app.services.reference_data_cache import get_aspect_types, get_planet_orbs
 from app.services.natal_context import NatalContext
+from app.services.natal_payload_cache import NatalPayloadCache
 from app.utils.constants import (
     get_zodiac_sign, get_degree_in_sign, format_degree_minutes_seconds,
     PROGNOSTIC_EXCLUDED_NATAL_TARGETS, PROGNOSTIC_EXACT_ORB, PROGNOSTIC_DEFAULT_ORB,
@@ -218,6 +219,14 @@ class TransitService:
         if not user:
             return None
 
+        # D2 (Фаза 4): натальные строки меняются только при пересчёте карты, который
+        # бампает users.updated_at. Кэшируем результат по (user, apply_exclusions) —
+        # экономит 4 запроса на каждый шаг даты × слой.
+        cache_key = NatalPayloadCache.make_key(user, f"excl={apply_exclusions}")
+        cached = NatalPayloadCache.get(cache_key)
+        if cached is not None:
+            return cached
+
         # Загружаем планеты
         planets = self.db.query(NatalPlanet).filter(NatalPlanet.user_id == user_id).all()
         natal_planets = [
@@ -267,13 +276,15 @@ class TransitService:
                 if o['name'] not in PROGNOSTIC_EXCLUDED_NATAL_TARGETS
             ]
 
-        return {
+        payload = {
             'planets': natal_planets,
             'special_points': natal_special_points,
             'angles': natal_angles,
             'houses': natal_houses,
             'all_objects': all_objects,
         }
+        NatalPayloadCache.set(cache_key, payload)
+        return payload
 
     def _get_aspect_types(self) -> List[RefAspectType]:
         """Получить типы аспектов с кешированием"""

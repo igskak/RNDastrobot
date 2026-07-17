@@ -4,4 +4,6 @@
 @import '../css/forecast-new.css';
 @import '../css/forecast-aspect-dynamics.css';
 @import '../css/forecast-nav-menu.css';
-@import '../css/chat-widget.css';
+/* C3 (Фаза 3): chat-widget.css (~22 КБ) вынесен в отдельный ленивый бандл
+   (bundles/chat-widget.bundle.css) — грузится вместе с ленивым chat.js, чат
+   скрыт до его монтирования, поэтому FOUC нет. */

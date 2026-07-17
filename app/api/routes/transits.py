@@ -11,6 +11,7 @@ from typing import List, Literal, Optional
 from app.services.transit_service import TransitService
 from app.services.aspect_dynamics_service import AspectDynamicsService
 from app.services.natal_chart_service import NatalChartService
+from app.services.natal_chart_cache import calculate_natal_chart_cached
 from app.services.natal_context import NatalContext
 from app.models.schemas import BirthDataInput
 from app.database.connection import get_db
@@ -431,7 +432,9 @@ def calculate_transits(
     if request.natal is not None:
         try:
             natal_service = NatalChartService(ephe_path=EPHE_PATH)
-            calc_result = natal_service.calculate_natal_chart(
+            calc_result = calculate_natal_chart_cached(
+                natal_service,
+                db_session=db,
                 birth_date=request.natal.date,
                 birth_time=request.natal.time,
                 timezone=request.natal.timezone,
@@ -440,8 +443,6 @@ def calculate_transits(
                 latitude=request.natal.latitude,
                 longitude=request.natal.longitude,
                 house_system=request.natal.house_system,
-                save_to_db=False,
-                db_session=db,
             )
         except ValueError as e:
             # Плохие inline-данные (геокод/дата/место) — это ошибка ввода, не 404

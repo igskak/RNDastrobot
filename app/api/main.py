@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, RedirectResponse, Response
 import os
 import sys
+import time
 import logging
 from typing import List
 from urllib.parse import urlencode
@@ -92,6 +93,21 @@ if cors_origins:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+
+@app.middleware("http")
+async def server_timing(request: Request, call_next):
+    """D4 (Фаза 4): отдаём Server-Timing с полным временем обработки запроса —
+    дешёвый замер TTFB слоя до/после кэшей (DevTools → Timing → Server Timing).
+    Только для API, чтобы не шуметь на статике."""
+    start = time.perf_counter()
+    response = await call_next(request)
+    if request.url.path.startswith("/api/"):
+        duration_ms = (time.perf_counter() - start) * 1000.0
+        existing = response.headers.get("Server-Timing")
+        header = f"total;dur={duration_ms:.1f}"
+        response.headers["Server-Timing"] = f"{existing}, {header}" if existing else header
+    return response
 
 
 @app.middleware("http")

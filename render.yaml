@@ -26,10 +26,13 @@ services:
         value: postgres
       - key: DB_PASSWORD
         sync: false
+      # D4 (Фаза 4): sync-эндпоинты держат соединение на всё время swisseph-расчёта;
+      # при N активных слоях × шаг даты + вторая вкладка пул 2+2 исчерпывался
+      # (pool_timeout). 3+5 даёт запас без риска для лимитов Supabase.
       - key: DB_POOL_SIZE
-        value: "2"
+        value: "3"
       - key: DB_MAX_OVERFLOW
-        value: "2"
+        value: "5"
       - key: DB_POOL_TIMEOUT
         value: "10"
       - key: DB_POOL_RECYCLE

@@ -1679,7 +1679,7 @@ class ChatWidget {
     }
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initChatWidget() {
     await waitForI18nReady();
     const astrologer = window.AstroAPI?.getCachedAstrologer?.()
         || await window.AstroAPI?.getCurrentAstrologer?.();
@@ -1695,4 +1695,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     }
-});
+}
+
+// Фаза 3: chat.js грузится лениво (requestIdleCallback), обычно уже ПОСЛЕ
+// DOMContentLoaded — тогда событие не сработает. Инициализируем сразу, если DOM
+// готов; иначе ждём событие. Guard против повторного импорта.
+if (!window.__chatWidgetInit) {
+    window.__chatWidgetInit = true;
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initChatWidget, { once: true });
+    } else {
+        initChatWidget();
+    }
+}

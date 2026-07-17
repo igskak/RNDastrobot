@@ -1,0 +1,3 @@
+/* C3 (Фаза 3): ленивый CSS-бандл виджета чата. Подгружается из
+   entries/forecast-new.entry.js вместе с ленивым chat.js. */
+@import '../css/chat-widget.css';
