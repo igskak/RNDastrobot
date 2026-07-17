@@ -285,10 +285,12 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             });
         }
 
-        render(viewModel) {
-            this.viewModel = viewModel;
-            this.aspectLookupByKey = {};
-            this.svg.setAttribute('viewBox', `${-VIEW_PADDING} ${-VIEW_PADDING} ${SIZE + VIEW_PADDING * 2} ${SIZE + VIEW_PADDING * 2}`);
+        // B1 (Фаза 2): 8 слоёв-контейнеров создаются один раз и переиспользуются между
+        // рендерами. Порядок = порядок отрисовки (z-index в SVG), поэтому создаём их в том
+        // же порядке, что раньше собирался фрагмент. Пересоздаём только если сменился
+        // svg-хост (движок переиспользуется на новом элементе).
+        ensureLayers() {
+            if (this.layers && this.layersHost === this.svg) return;
             const fragment = document.createDocumentFragment();
             this.layers = {
                 background: this.el('g', { id: 'prognostic-bg' }),
@@ -301,9 +303,47 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                 angles: this.el('g', { id: 'prognostic-angles' }),
             };
             Object.values(this.layers).forEach((layer) => fragment.appendChild(layer));
+            this.svg.replaceChildren(fragment);
+            this.layersHost = this.svg;
+            this._staticKey = null; // форсируем перерисовку статики на первом рендере
+        }
 
-            this.drawBackground();
-            this.drawZodiac();
+        // Ключ статических слоёв (фон + зодиак). Оба зависят только от ориентации и, для
+        // 'asc', от долготы натального ASC (longToAngle). На шаге даты они не меняются →
+        // глифы знаков и фон не пересоздаются (меньше churn, знаки не «прыгают»).
+        computeStaticKey() {
+            const referenceLayer = this.viewModel?.natalLayer || this.viewModel?.activePrognosticLayers?.[0];
+            const reference = this.orientation === 'asc'
+                ? (referenceLayer?.raw?.angles?.ASC?.longitude ?? 0)
+                : 0;
+            return `${this.orientation}|${reference}`;
+        }
+
+        render(viewModel) {
+            this.viewModel = viewModel;
+            this.aspectLookupByKey = {};
+            this.svg.setAttribute('viewBox', `${-VIEW_PADDING} ${-VIEW_PADDING} ${SIZE + VIEW_PADDING * 2} ${SIZE + VIEW_PADDING * 2}`);
+            this.ensureLayers();
+
+            // Статические слои перерисовываем только при смене staticKey; на шаге даты
+            // они остаются в DOM нетронутыми.
+            const staticKey = this.computeStaticKey();
+            if (staticKey !== this._staticKey) {
+                this._staticKey = staticKey;
+                this.layers.background.replaceChildren();
+                this.layers.zodiac.replaceChildren();
+                this.drawBackground();
+                this.drawZodiac();
+            }
+
+            // Динамические слои (позиции меняются каждый шаг) очищаем и перерисовываем.
+            this.layers.houses.replaceChildren();
+            this.layers.aspects.replaceChildren();
+            this.layers.bodies.replaceChildren();
+            this.layers.labels.replaceChildren();
+            this.layers.stars.replaceChildren();
+            this.layers.angles.replaceChildren();
+
             const rings = this.buildRings(viewModel);
             this.rings = rings;
             this.bodyColorByName = this.buildBodyColorMap(rings);
@@ -315,7 +355,9 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             rings.forEach((ring) => this.drawBodies(ring));
             this.drawFixedStars();
             this.drawAngleMarkers(rings);
-            this.svg.replaceChildren(fragment);
+            // Интерактивные элементы (.prognostic-body/.aspect-line/.house-cusp-group/
+            // .fixed-star-group) живут только в динамических слоях, которые полностью
+            // пересобираются, поэтому per-element bindEvents не создаёт дублей слушателей.
             this.bindEvents();
             this.applyMatrixVisibilityToDom();
         }
