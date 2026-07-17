@@ -293,3 +293,71 @@ test('W4: legacy minimumRingCount behavior preserved when no filter is applied',
     const width = wheel.rings[0].outer - wheel.rings[0].inner;
     assert.ok(width < 100, `legacy 2-slot width expected, got ${width}`);
 });
+
+// ── Фаза 2 (B1): постоянные слои-контейнеры + staticKey-гейт зодиака ──────────
+function natalWithSun() {
+    return natalLayer({
+        houses: natalHouses(),
+        bodies: [{ name: 'Sun', longitude: 10, sign: 'Aries', degree_in_sign: 10 }],
+    });
+}
+
+test('B1: the 8 layer groups are created once and reused across renders', async () => {
+    const Wheel = await loadEngine();
+    const svg = makeSvg();
+    const wheel = new Wheel(svg);
+    const vm = { natalLayer: natalWithSun(), activePrognosticLayers: [transitLayer()] };
+    wheel.render(vm);
+    const ids = ['prognostic-bg', 'prognostic-zodiac', 'prognostic-houses', 'prognostic-aspects',
+        'prognostic-bodies', 'prognostic-labels', 'prognostic-fixed-stars', 'prognostic-angles'];
+    const first = ids.map((id) => svg.querySelector('#' + id));
+    first.forEach((g, i) => assert.ok(g, `${ids[i]} group should exist`));
+    wheel.render(vm);
+    const second = ids.map((id) => svg.querySelector('#' + id));
+    // Тот же самый DOM-узел (===), а не пересозданный, для всех 8 групп + порядок сохранён.
+    first.forEach((g, i) => assert.equal(second[i], g, `${ids[i]} group must be reused, not recreated`));
+    assert.equal(svg.querySelectorAll('[id^="prognostic-"]').length, 8, 'no duplicate groups');
+});
+
+test('B1: zodiac is NOT rebuilt across renders when orientation is unchanged', async () => {
+    const Wheel = await loadEngine();
+    const svg = makeSvg();
+    const wheel = new Wheel(svg);
+    const vm = { natalLayer: natalWithSun(), activePrognosticLayers: [] };
+    wheel.render(vm);
+    const zodiac = svg.querySelector('#prognostic-zodiac');
+    const signTextBefore = zodiac.querySelector('.sign-symbol-text');
+    assert.ok(signTextBefore, 'zodiac should render sign glyphs');
+    wheel.render(vm);
+    const signTextAfter = svg.querySelector('#prognostic-zodiac .sign-symbol-text');
+    // Тот же самый узел глифа знака → зодиак не пересоздавался (глифы не «прыгают»).
+    assert.equal(signTextAfter, signTextBefore, 'zodiac glyphs must persist across a same-orientation re-render');
+});
+
+test('B1: zodiac IS rebuilt when orientation (staticKey) changes', async () => {
+    const Wheel = await loadEngine();
+    const svg = makeSvg();
+    const wheel = new Wheel(svg);
+    const vm = { natalLayer: natalWithSun(), activePrognosticLayers: [] };
+    wheel.render(vm);
+    const signTextBefore = svg.querySelector('#prognostic-zodiac .sign-symbol-text');
+    wheel.setOptions({ orientation: 'asc' });
+    wheel.render(vm);
+    const signTextAfter = svg.querySelector('#prognostic-zodiac .sign-symbol-text');
+    assert.ok(signTextAfter, 'zodiac still present after orientation change');
+    assert.notEqual(signTextAfter, signTextBefore, 'zodiac must be rebuilt when orientation changes');
+});
+
+test('B1: dynamic layers (bodies) are rebuilt each render', async () => {
+    const Wheel = await loadEngine();
+    const svg = makeSvg();
+    const wheel = new Wheel(svg);
+    const vm = { natalLayer: natalWithSun(), activePrognosticLayers: [] };
+    wheel.render(vm);
+    const bodyBefore = svg.querySelector('#prognostic-bodies .prognostic-body');
+    assert.ok(bodyBefore, 'a body should render');
+    wheel.render(vm);
+    const bodyAfter = svg.querySelector('#prognostic-bodies .prognostic-body');
+    assert.ok(bodyAfter, 'a body should render on re-render');
+    assert.notEqual(bodyAfter, bodyBefore, 'body nodes are recreated each render (positions change per step)');
+});

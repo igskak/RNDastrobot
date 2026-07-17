@@ -584,9 +584,15 @@
     document.addEventListener('DOMContentLoaded', async () => {
         window.addEventListener('pagehide', flushPendingPersistence);
         window.addEventListener('beforeunload', flushPendingPersistence);
-        await waitForI18nReady();
+        // Фаза 1 (первый рендер): каталог локали и /auth/me — независимые сетевые
+        // операции. Стартуем их параллельно, а не последовательным await-чейном,
+        // чтобы гейт первого рендера ждал max(i18n, auth), а не их сумму.
+        const i18nReady = waitForI18nReady();
+        const authReady = Promise.resolve(
+            window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' })
+        );
         cacheElements();
-        const me = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
+        const me = await authReady;
         if (!me) return;
 
         let natalData = window.AstroAPI?.getChartFromSession?.();
@@ -671,7 +677,10 @@
         });
         applyConfigToScratch(selectedLayerInstance());
         syncLayerControlInputs();
-        void populateSynastryPartnerOptions();
+        // A4: список партнёров для синастрии (GET /charts) грузим лениво — при первом
+        // открытии поповера/входе в режим синастрии, а не в bootstrap. Слой синастрии
+        // рендерится из сохранённого config без этого списка (он нужен только для
+        // смены партнёра в дропдауне).
         populateTimezoneOptions();
         populateNatalTimezoneOptions();
         initRenderers();
@@ -689,17 +698,51 @@
         initPanelLayout();
         bindPanelConfigurator();
         syncWorkspaceModePanels();
-        await hydratePreferences();
-        await initForecastOnboarding(me, natalData);
+
+        // Префы гидрируем в фоне: серверный расчёт слоёв (fetchLayer) от них не зависит
+        // — орбисы/скоуп сервер читает из БД, а клиентский фильтр применяется уже при
+        // рендере. На тёплом старте нужные настройки уже восстановлены из localStorage
+        // (hydrateState), поэтому первый рендер натала корректен ещё до ответа сервера.
+        const preferencesReady = hydratePreferences();
+
+        // Гейт первого рендера = i18n + auth. Натал уже лежит в sessionStorage, поэтому
+        // показываем карту (колесо + таблицы) сразу, а слои доезжают в «затемнённом»
+        // состоянии через партиальную ветку loadActiveLayers. Это ~1 RTT вместо прежней
+        // цепочки i18n→auth→prefs→onboarding→transits за полноэкранным лоадером (A1/A2).
+        await i18nReady;
         syncControlsFromState();
         renderStaticNatal();
         renderRightLayerTabs();
-        if (state.singleChartMode === 'composite') {
+        const isComposite = state.singleChartMode === 'composite';
+        if (!isComposite) {
+            // Пустые state.layers → buildViewModel отдаёт натал-only колесо (без пустых
+            // колец). Композит из sessionStorage мгновенно показать нельзя — там держим
+            // лоадер до расчёта, как раньше.
+            renderWheel();
+            showLayout();
+            hideLoader();
+            setLightweightLoading(true);
+        }
+
+        // Финализация после гидрации префов и онбординга. Онбординг уходит с пути первого
+        // рендера (A6), но применяется ДО загрузки слоёв: он может переключить вид на
+        // «одно колесо» для новых пользователей (гейт натала натал-only при любом виде,
+        // так что вспышки нет). Порядок prefs→onboarding сохраняем как раньше.
+        await preferencesReady;
+        try {
+            await initForecastOnboarding(me, natalData);
+        } catch (error) {
+            console.warn('Forecast onboarding init failed:', error);
+        }
+        syncControlsFromState();
+        renderStaticNatal();
+        renderRightLayerTabs();
+        if (isComposite) {
             await enterCompositeMode();
             showLayout();
             hideLoader();
         } else {
-            await loadActiveLayers({ waitForComplete: true });
+            await loadActiveLayers({ lightweight: true });
         }
     });
 
@@ -1416,6 +1459,8 @@
     function openLayerPopover(layer) {
         const pop = getLayerPopover(layer);
         if (!pop) return;
+        // A4: список партнёров нужен только когда пользователь открывает конфиг синастрии.
+        if (layer === 'synastry_partner') ensureSynastryPartnerOptions();
         closeSettingsPanel();
         closeAddLayerMenu();
         closeBodyActionMenu();
@@ -1456,6 +1501,8 @@
 
     async function activateLayer(method, { openConfig = false } = {}) {
         if (!LAYER_ORDER.includes(method)) return;
+        // A4: активация слоя синастрии (в т.ч. программная) должна подтянуть список партнёров.
+        if (method === 'synastry_partner') ensureSynastryPartnerOptions();
         const existing = instancesOfMethod(method);
         let added = false;
         let instance;
@@ -4384,7 +4431,9 @@
                 longitude: state.natalLocation.longitude,
             };
             configureForecastNavigation();
-            void populateSynastryPartnerOptions();
+            // Рабочий натал сменился → «сам себя» в фильтре другой; перезагружаем список,
+            // но только если он уже был загружен (иначе останется ленивым до первого показа).
+            if (synastryPartnerOptionsPromise) ensureSynastryPartnerOptions({ force: true });
         }
         syncControlsFromState();
         updateNatalMomentMeta();
@@ -4842,6 +4891,24 @@
     }
 
     /** Список партнёров для синастрии: все сохранённые клиенты, кроме текущего. */
+    // A4: мемоизированная ленивая загрузка списка партнёров. Первый вызов при открытии
+    // поповера/входе в режим синастрии выполняет один GET /charts; повторные — no-op.
+    // { force: true } перезагружает список (например, после смены рабочего натала —
+    // меняется исключение «сам себя»).
+    let synastryPartnerOptionsPromise = null;
+    function ensureSynastryPartnerOptions(options = {}) {
+        if (options.force) synastryPartnerOptionsPromise = null;
+        if (!synastryPartnerOptionsPromise) {
+            synastryPartnerOptionsPromise = populateSynastryPartnerOptions()
+                .catch((error) => {
+                    // Дать следующему вызову шанс повторить, если загрузка не удалась.
+                    synastryPartnerOptionsPromise = null;
+                    console.warn('Synastry partner options load failed:', error);
+                });
+        }
+        return synastryPartnerOptionsPromise;
+    }
+
     async function populateSynastryPartnerOptions() {
         const select = refs.forecastNewSynastryPartnerSelect;
         if (!select) return;
@@ -6151,6 +6218,7 @@
     }
 
     async function enterCompositeMode() {
+        ensureSynastryPartnerOptions();
         state.compositeMethod = normalizeCompositeMethod(state.compositeMethod || state.pageSettings.compositeMethod);
         state.pageSettings.compositeMethod = state.compositeMethod;
         state.swapBaseLayerId = null; // композит несовместим со свопом карт
@@ -6165,6 +6233,7 @@
     }
 
     async function enterSynastryMode() {
+        ensureSynastryPartnerOptions();
         state.singleChartMode = 'natal';
         state.wheelView = 'multi';
         if (hasUsableSynastryPartner()) {
@@ -6966,6 +7035,21 @@
     // Rebuild BOTH panels from the current layout. Delegates the DOM work to the
     // pure (jsdom-testable) module so cross-panel moves never clobber: it detaches
     // every block div to a hidden store, then re-homes per side in one pass.
+    // B2: сигнатура chrome панелей. renderPanelsToDom строит вкладки/панели/угловые
+    // хосты из panels[mode] и подписей (autoTabTitle → локаль). Активная вкладка в
+    // сигнатуру НЕ входит — она синкается классами отдельно (дёшево).
+    let _lastPanelSignature = null;
+    function panelLayoutSignature() {
+        const mode = currentWheelMode();
+        const locale = window.FrontendI18n?.getLocale?.() || '';
+        const panels = state.panelLayout?.panels?.[mode] || null;
+        return JSON.stringify({ mode, locale, panels });
+    }
+
+    function invalidatePanelChrome() {
+        _lastPanelSignature = null;
+    }
+
     function renderPanels() {
         if (!state.panelLayout || !window.ForecastNewPanelLayout) return;
         window.ForecastNewPanelLayout.renderPanelsToDom({
@@ -6975,6 +7059,7 @@
             activeTab: state.activeTab,
             translate: t,
         });
+        _lastPanelSignature = panelLayoutSignature();
         syncHoveredAspectToActiveSurface?.();
         renderNowBlocks();
         bindCornerScrollHints();
@@ -7041,6 +7126,22 @@
             const b = corners[k];
             return b && `${b.source}:${b.view}` === blockKey;
         });
+    }
+
+    // B3 (Фаза 2): renderNowBlocks зовётся до 3× за шаг даты, и каждый блок безусловно
+    // переписывал innerHTML даже при неизменном контенте — сброс скролла/fade угловых
+    // виджетов и лишний reflow. Пишем в DOM только если сгенерированный html отличается
+    // от последнего записанного (ключ — сама строка, включает локаль и данные). Кэш —
+    // WeakMap по элементу; renderPanelsToDom лишь перемещает контейнеры (identity +
+    // контент сохраняются), поэтому кэш остаётся консистентным, если ВСЕ записи блока
+    // идут через этот хелпер.
+    const _blockHtmlCache = new WeakMap();
+    function setBlockHtmlIfChanged(el, html) {
+        if (!el) return false;
+        if (_blockHtmlCache.get(el) === html) return false;
+        el.innerHTML = html;
+        _blockHtmlCache.set(el, html);
+        return true;
     }
 
     function renderNowBlocks() {
@@ -7120,14 +7221,14 @@
         const el = auxBlockContainer(containerId);
         if (!el) return;
         if (!state.userId && !isNatalEdited()) {
-            el.innerHTML = emptyMarkup();
+            setBlockHtmlIfChanged(el, emptyMarkup());
             return;
         }
         const cached = getCachedAuxBlock(block);
         if (cached) {
-            el.innerHTML = markup(cached);
+            setBlockHtmlIfChanged(el, markup(cached));
         } else if (!el.innerHTML.trim()) {
-            el.innerHTML = `<div class="${loadingClass}">${escapeHtml(t('common.loading') || '…')}</div>`;
+            setBlockHtmlIfChanged(el, `<div class="${loadingClass}">${escapeHtml(t('common.loading') || '…')}</div>`);
         }
         scheduleAuxBlockFetch([block]);
     }
@@ -7214,7 +7315,7 @@
             fixstars: 'natalFixstarsView',
         };
         const el = auxBlockContainer(containers[block]);
-        if (el) el.innerHTML = `<div class="forecast-new-list-error">${escapeHtml(t('common.error') || 'Ошибка')}</div>`;
+        if (el) setBlockHtmlIfChanged(el, `<div class="forecast-new-list-error">${escapeHtml(t('common.error') || 'Ошибка')}</div>`);
     }
 
     function currentFixedStarsData() {
@@ -7336,7 +7437,7 @@
         const el = document.getElementById('natalExtraanglesView')
             || document.getElementById('forecastNewBlockStore')?.querySelector('#natalExtraanglesView');
         if (!el) return;
-        el.innerHTML = extraAnglesBlockMarkup(state.natalData || state.natalWheelData || {});
+        setBlockHtmlIfChanged(el, extraAnglesBlockMarkup(state.natalData || state.natalWheelData || {}));
     }
 
     function antisciaBlockMarkup(data) {
@@ -7480,12 +7581,12 @@
             || document.getElementById('forecastNewBlockStore')?.querySelector('#natalProfectionsView');
         if (!el) return;
         if (!state.userId && !isNatalEdited()) {
-            el.innerHTML = `<div class="forecast-new-profections-empty">${escapeHtml(t('page.forecastNew.profections.noSavedChart') || '—')}</div>`;
+            setBlockHtmlIfChanged(el, `<div class="forecast-new-profections-empty">${escapeHtml(t('page.forecastNew.profections.noSavedChart') || '—')}</div>`);
             return;
         }
         const cached = getCachedAuxBlock('profections');
-        if (cached) el.innerHTML = profectionsBlockMarkup(cached);
-        else if (!el.innerHTML.trim()) el.innerHTML = `<div class="forecast-new-profections-loading">${escapeHtml(t('common.loading') || '…')}</div>`;
+        if (cached) setBlockHtmlIfChanged(el, profectionsBlockMarkup(cached));
+        else if (!el.innerHTML.trim()) setBlockHtmlIfChanged(el, `<div class="forecast-new-profections-loading">${escapeHtml(t('common.loading') || '…')}</div>`);
         scheduleAuxBlockFetch(['profections']);
     }
 
@@ -7647,17 +7748,17 @@
             || document.getElementById('forecastNewBlockStore')?.querySelector('#' + containerId);
         if (!el) return;
         if (lunarSnapshotFresh()) {
-            el.innerHTML = markup(state.lunarSnapshot);
+            setBlockHtmlIfChanged(el, markup(state.lunarSnapshot));
             return;
         }
         if (!state.lunarSnapshot) {
-            el.innerHTML = `<div class="forecast-new-lunar-loading">${escapeHtml(t('common.loading') || '…')}</div>`;
+            setBlockHtmlIfChanged(el, `<div class="forecast-new-lunar-loading">${escapeHtml(t('common.loading') || '…')}</div>`);
         }
         try {
             const snapshot = await getLunarSnapshot();
-            el.innerHTML = markup(snapshot);
+            setBlockHtmlIfChanged(el, markup(snapshot));
         } catch (error) {
-            el.innerHTML = `<div class="forecast-new-lunar-error">${escapeHtml(t('common.error') || 'Ошибка')}</div>`;
+            setBlockHtmlIfChanged(el, `<div class="forecast-new-lunar-error">${escapeHtml(t('common.error') || 'Ошибка')}</div>`);
         }
     }
 
@@ -7781,10 +7882,10 @@
         if (!el) return;
         const { startDate, endDate, place, timezone, key } = getEclipsePeriodContext();
         if (state.eclipsePeriodData && state.eclipsePeriodKey === key) {
-            el.innerHTML = eclipseBlockMarkup(state.eclipsePeriodData);
+            setBlockHtmlIfChanged(el, eclipseBlockMarkup(state.eclipsePeriodData));
             return;
         }
-        el.innerHTML = `<div class="forecast-new-eclipses-loading">${escapeHtml(t('common.loading') || '…')}</div>`;
+        setBlockHtmlIfChanged(el, `<div class="forecast-new-eclipses-loading">${escapeHtml(t('common.loading') || '…')}</div>`);
         const params = new URLSearchParams({
             start_date: startDate,
             end_date: endDate,
@@ -7800,9 +7901,9 @@
             if (key !== getEclipsePeriodContext().key) return;
             state.eclipsePeriodData = data;
             state.eclipsePeriodKey = key;
-            el.innerHTML = eclipseBlockMarkup(data);
+            setBlockHtmlIfChanged(el, eclipseBlockMarkup(data));
         } catch (error) {
-            el.innerHTML = `<div class="forecast-new-eclipses-error">${escapeHtml(t('common.error') || 'Ошибка')}</div>`;
+            setBlockHtmlIfChanged(el, `<div class="forecast-new-eclipses-error">${escapeHtml(t('common.error') || 'Ошибка')}</div>`);
         }
     }
 
@@ -7874,18 +7975,19 @@
         const lat = state.location?.latitude;
         const lon = state.location?.longitude;
         if (lat == null || lon == null) {
-            el.innerHTML = `<div class="forecast-new-hours-empty">${escapeHtml(t('page.forecastNew.hours.noLocation') || '—')}</div>`;
+            setBlockHtmlIfChanged(el, `<div class="forecast-new-hours-empty">${escapeHtml(t('page.forecastNew.hours.noLocation') || '—')}</div>`);
             return;
         }
         const fresh = state.hoursData && (Date.now() - state.hoursDataAt) < 600000
             && state.hoursDataLat === lat && state.hoursDataLon === lon;
         if (fresh) {
-            el.innerHTML = hoursBlockMarkup(state.hoursData);
-            scrollHoursCurrentIntoView(el);
+            // Скроллим к текущему часу только если контент реально перерисовали, иначе
+            // повторный рендер сбрасывал бы позицию скролла виджета (B3).
+            if (setBlockHtmlIfChanged(el, hoursBlockMarkup(state.hoursData))) scrollHoursCurrentIntoView(el);
             return;
         }
         if (!state.hoursData) {
-            el.innerHTML = `<div class="forecast-new-hours-loading">${escapeHtml(t('common.loading') || '…')}</div>`;
+            setBlockHtmlIfChanged(el, `<div class="forecast-new-hours-loading">${escapeHtml(t('common.loading') || '…')}</div>`);
         }
         try {
             const data = await apiGet(`/electional/planetary-hours?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`);
@@ -7893,18 +7995,16 @@
             state.hoursDataAt = Date.now();
             state.hoursDataLat = lat;
             state.hoursDataLon = lon;
-            el.innerHTML = hoursBlockMarkup(data);
-            scrollHoursCurrentIntoView(el);
+            if (setBlockHtmlIfChanged(el, hoursBlockMarkup(data))) scrollHoursCurrentIntoView(el);
         } catch (error) {
-            el.innerHTML = `<div class="forecast-new-hours-error">${escapeHtml(t('common.error') || 'Ошибка')}</div>`;
+            setBlockHtmlIfChanged(el, `<div class="forecast-new-hours-error">${escapeHtml(t('common.error') || 'Ошибка')}</div>`);
         }
     }
 
-    // Activate a tab without rebuilding chrome (used on tab click).
-    function activatePanelTab(side, tabId) {
+    // Toggle active-tab classes for one side against existing chrome (no rebuild).
+    function applyActivePanelTabClasses(side, tabId) {
         const panel = document.getElementById(PANEL_SIDE_IDS[side]);
         if (!panel || !tabId) return;
-        state.activeTab[activeTabStateKey(side)] = tabId;
         panel.querySelectorAll('.panel-tabs .panel-tab').forEach((node) =>
             node.classList.toggle('active', node.dataset.tabId === tabId));
         panel.querySelectorAll('.panel-content [data-tab-id]').forEach((node) =>
@@ -7915,12 +8015,35 @@
             const inOverflow = !!overflow.querySelector(`.forecast-new-tabs-overflow-item[data-tab-id="${tabId}"]`);
             overflow.classList.toggle('is-active', inOverflow);
         }
+    }
+
+    // Activate a tab without rebuilding chrome (used on tab click).
+    function activatePanelTab(side, tabId) {
+        if (!document.getElementById(PANEL_SIDE_IDS[side]) || !tabId) return;
+        state.activeTab[activeTabStateKey(side)] = tabId;
+        applyActivePanelTabClasses(side, tabId);
         closeTabsOverflowMenus();
     }
 
-    // Back-compat alias retained at call sites; rebuilds chrome from layout.
+    // B2 (Фаза 2): на шаге даты раскладка панелей не меняется, но activateSavedTabs
+    // ранее каждый раз пересобирал весь chrome (tabsBar.innerHTML='', пересоздание
+    // кнопок/overflow/панелей, перенос контейнеров). Мемоизируем по сигнатуре
+    // (mode + локаль + panels[mode]); при совпадении только синхронизируем активные
+    // вкладки (без закрытия overflow-меню) и перерисовываем now-блоки. Структурные
+    // изменения раскладки идут через renderPanels() напрямую (всегда полный ребилд).
     function activateSavedTabs() {
-        renderPanels();
+        if (!state.panelLayout || !window.ForecastNewPanelLayout) return;
+        const signature = panelLayoutSignature();
+        if (signature !== _lastPanelSignature) {
+            renderPanels();
+            return;
+        }
+        ['left', 'right'].forEach((side) => {
+            applyActivePanelTabClasses(side, state.activeTab[activeTabStateKey(side)]);
+        });
+        syncHoveredAspectToActiveSurface?.();
+        renderNowBlocks();
+        bindCornerScrollHints();
     }
 
     // Initialize panelLayout/activeTab from defaults, migrating legacy localStorage
@@ -8759,6 +8882,9 @@
     function togglePanelEditMode(force) {
         const next = typeof force === 'boolean' ? force : !state.panelEditMode;
         state.panelEditMode = next;
+        // B2: вход/выход из редактора — форсируем полный ребилд chrome на следующем
+        // activateSavedTabs (защита от любого дрейфа разметки во время редактирования).
+        invalidatePanelChrome();
         document.body.classList.toggle('forecast-new-panel-edit', next);
         const toggle = document.getElementById('forecastNewPanelEditToggle');
         if (toggle) toggle.setAttribute('aria-pressed', next ? 'true' : 'false');
