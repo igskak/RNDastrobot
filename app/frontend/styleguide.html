@@ -102,11 +102,11 @@
     <h2 class="sg-h">Input <span class="sg-code">.ui-input</span></h2>
     <div class="sg-row" style="max-width:360px;display:block;">
       <div class="ui-field" style="margin-bottom:var(--space-4);">
-        <label class="ui-label">Birth city</label>
-        <input class="ui-input" type="text" value="Москва">
+        <label class="ui-label">Місто народження</label>
+        <input class="ui-input" type="text" value="Київ">
       </div>
       <div class="ui-field">
-        <label class="ui-label">Email</label>
+        <label class="ui-label">Ел. пошта</label>
         <input class="ui-input" type="text" placeholder="name@example.com">
       </div>
     </div>
@@ -116,8 +116,8 @@
   <section class="sg-section">
     <h2 class="sg-h">Card <span class="sg-code">.ui-card</span></h2>
     <div class="ui-card" style="max-width:320px;">
-      <p style="font-weight:600;margin:0 0 var(--space-1);font-size:var(--font-size-label);">Анна Петрова</p>
-      <p style="margin:0;color:var(--text-secondary);font-size:var(--font-size-caption);">14.03.1990 · Москва · Placidus</p>
+      <p style="font-weight:600;margin:0 0 var(--space-1);font-size:var(--font-size-label);">Олена Коваленко</p>
+      <p style="margin:0;color:var(--text-secondary);font-size:var(--font-size-caption);">14.03.1990 · Київ · Placidus</p>
     </div>
   </section>
 
@@ -126,10 +126,10 @@
     <h2 class="sg-h">Table <span class="sg-code">.ui-table.ui-table--rows</span></h2>
     <div class="ui-card" style="padding:0;overflow:hidden;">
       <table class="ui-table ui-table--rows">
-        <thead><tr><th>Имя</th><th>Дата рождения</th><th>Место</th></tr></thead>
+        <thead><tr><th>Ім'я</th><th>Дата народження</th><th>Місце</th></tr></thead>
         <tbody>
-          <tr><td>Анна Петрова</td><td>14.03.1990</td><td>Москва</td></tr>
-          <tr><td>Дмитрий Соколов</td><td>02.11.1985</td><td>Санкт-Петербург</td></tr>
+          <tr><td>Олена Коваленко</td><td>14.03.1990</td><td>Київ</td></tr>
+          <tr><td>Андрій Мельник</td><td>02.11.1985</td><td>Львів</td></tr>
         </tbody>
       </table>
     </div>
@@ -140,11 +140,11 @@
     <h2 class="sg-h">Settings row + toggle <span class="sg-code">.ui-settings-row · .ui-toggle</span></h2>
     <div class="ui-card" style="padding:0 var(--space-4);max-width:460px;">
       <div class="ui-settings-row">
-        <div><div class="ui-settings-row__label">Email notifications</div></div>
+        <div><div class="ui-settings-row__label">Сповіщення на пошту</div></div>
         <button class="ui-toggle" aria-checked="true" aria-label="toggle"></button>
       </div>
       <div class="ui-settings-row">
-        <div><div class="ui-settings-row__label">House system</div><div class="ui-settings-row__hint">Used for all new charts</div></div>
+        <div><div class="ui-settings-row__label">Система домів</div><div class="ui-settings-row__hint">Застосовується до всіх нових карт</div></div>
         <button class="ui-toggle" aria-checked="false" aria-label="toggle"></button>
       </div>
     </div>
@@ -156,9 +156,9 @@
     <div class="ui-card" style="max-width:380px;">
       <div class="ui-empty-state">
         <div class="ui-empty-state__icon">✦</div>
-        <div class="ui-empty-state__title">Инсайтов пока нет</div>
-        <p class="ui-empty-state__text">Они извлекаются из записей звонков после обработки ИИ.</p>
-        <button class="ui-btn ui-btn--secondary ui-btn--sm">Записать консультацию</button>
+        <div class="ui-empty-state__title">Інсайтів поки немає</div>
+        <p class="ui-empty-state__text">Вони формуються із записів дзвінків після обробки ШІ.</p>
+        <button class="ui-btn ui-btn--secondary ui-btn--sm">Записати консультацію</button>
       </div>
     </div>
   </section>
@@ -168,11 +168,11 @@
     <h2 class="sg-h">Dialog <span class="sg-code">.ui-dialog</span></h2>
     <div style="background:var(--bg-tertiary);border-radius:var(--radius-lg);padding:var(--space-6);display:flex;justify-content:center;">
       <div class="ui-dialog">
-        <div class="ui-dialog__title">Удалить профиль?</div>
-        <p class="ui-dialog__body">Это действие нельзя отменить. Все карты и записи будут удалены.</p>
+        <div class="ui-dialog__title">Видалити профіль?</div>
+        <p class="ui-dialog__body">Цю дію не можна скасувати. Усі карти та записи буде видалено.</p>
         <div class="ui-dialog__actions">
-          <button class="ui-btn ui-btn--ghost">Отмена</button>
-          <button class="ui-btn ui-btn--danger">Удалить</button>
+          <button class="ui-btn ui-btn--ghost">Скасувати</button>
+          <button class="ui-btn ui-btn--danger">Видалити</button>
         </div>
       </div>
     </div>
