@@ -392,6 +392,15 @@ async def account_settings_page():
     raise HTTPException(status_code=404, detail="Account settings page not found")
 
 
+@app.get("/styleguide.html")
+async def styleguide_page():
+    """Design-kit styleguide — internal dev reference (noindex)."""
+    styleguide_path = os.path.join(FRONTEND_PATH, "styleguide.html")
+    if os.path.exists(styleguide_path):
+        return FileResponse(styleguide_path)
+    raise HTTPException(status_code=404, detail="Styleguide page not found")
+
+
 @app.get("/natal-full.html")
 async def natal_full_page():
     """Страница полной натальной карты (табличный вид)"""
