@@ -3,10 +3,7 @@
 .login-page {
     min-height: 100vh;
     margin: 0;
-    background:
-        radial-gradient(circle at top left, rgba(184, 147, 90, 0.22), transparent 28%),
-        radial-gradient(circle at 85% 18%, rgba(30, 58, 95, 0.12), transparent 24%),
-        linear-gradient(180deg, #fcfaf5 0%, #f6f1e7 100%);
+    background: var(--bg-primary);
     color: var(--text-primary);
 }
 
@@ -38,13 +35,10 @@
     align-self: center;
     width: 100%;
     padding: 30px;
-    border-radius: 34px;
-    background: rgba(255, 255, 255, 0.88);
-    border: 1px solid rgba(30, 58, 95, 0.08);
-    box-shadow:
-        0 30px 84px rgba(18, 28, 45, 0.12),
-        inset 0 1px 0 rgba(255, 255, 255, 0.72);
-    backdrop-filter: blur(18px);
+    border-radius: var(--radius-xl);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
 }
 
 .login-card-frame,
@@ -60,22 +54,14 @@
     border: 1px solid rgba(184, 147, 90, 0.16);
 }
 
+/* Decorative floating glow removed for the flat/calm treatment. */
 .login-card-glow {
-    width: 220px;
-    height: 220px;
-    top: -76px;
-    right: -48px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(30, 58, 95, 0.13), transparent 68%);
+    display: none;
 }
 
+/* Decorative floating orbit ring removed for the flat/calm treatment. */
 .login-card-orbit {
-    width: 124px;
-    height: 124px;
-    top: 22px;
-    right: 18px;
-    border-radius: 50%;
-    border: 1px solid rgba(184, 147, 90, 0.16);
+    display: none;
 }
 
 .login-header,
@@ -381,9 +367,12 @@
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #1e3a5f, #2e5a8d);
+    background: var(--accent);
     color: #ffffff;
-    box-shadow: 0 14px 28px rgba(30, 58, 95, 0.22);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--accent-hover);
 }
 
 .btn-secondary {
