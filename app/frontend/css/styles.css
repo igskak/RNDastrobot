@@ -5,6 +5,9 @@
 /* Google Fonts: DM Sans (UI) + Cormorant Garamond (display) — must be first */
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
 
+/* Steliara UI kit — shared flat components (.ui-*). See css/design-kit.css + /styleguide.html */
+@import 'design-kit.css';
+
 @font-face {
     font-family: 'Astronomicon Local';
     src: url('../fonts/Astronomicon.subset.woff2') format('woff2'),

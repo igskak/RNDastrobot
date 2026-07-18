@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecastNew.pageTitle">Forecast</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=7e8e6bbc3aeb">
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=1a483c80fffd">
     <!-- C2 (Фаза 3): символьные глифы (знаки/аспекты) появляются на колесе сразу;
          font-display:block делает их невидимыми до загрузки шрифта, поэтому прелоадим
          woff2-сабсеты (десятки КБ вместо 1.2 МБ ttf). crossorigin обязателен для шрифтов. -->
     <link rel="preload" href="/fonts/NotoSansSymbols.subset.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/fonts/NotoSansSymbols2.subset.woff2" as="font" type="font/woff2" crossorigin>
-    <script>window.__APP_BUILD_ID__ = '7e8e6bbc3aeb';</script>
+    <script>window.__APP_BUILD_ID__ = '1a483c80fffd';</script>
     <!-- A3 (Фаза 1): каталог локали грузится i18n.js в рантайме и это первый await
          bootstrap. Прогреваем HTTP-кэш нужной локали сразу из <head> (immutable-кэш в
          проде → i18n.js переиспользует ответ). Локаль резолвим тем же приоритетом, что
@@ -713,7 +713,7 @@
          поэтому window.__RUNTIME_CONFIG__ (runtime-config.js) готов до analytics.js и до
          модуля приложения. -->
     <script defer src="/runtime-config.js"></script>
-    <script defer src="/js/analytics.js?v=7e8e6bbc3aeb"></script>
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=7e8e6bbc3aeb"></script>
+    <script defer src="/js/analytics.js?v=1a483c80fffd"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=1a483c80fffd"></script>
 </body>
 </html>

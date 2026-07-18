@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Steliara UI kit — styleguide</title>
+<!-- Raw styles.css (tokens) which @imports design-kit.css (.ui-* components) -->
+<link rel="stylesheet" href="css/styles.css">
+<style>
+  /* styleguide chrome only — not part of the kit */
+  body { background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-ui); }
+  .sg-wrap { max-width: 960px; margin: 0 auto; padding: var(--space-7) var(--space-5) var(--space-8); }
+  .sg-title { font-family: var(--font-display); font-size: var(--font-size-h1); font-weight: 500; margin: 0 0 var(--space-2); }
+  .sg-lede { font-size: var(--font-size-body); color: var(--text-secondary); margin: 0 0 var(--space-7); max-width: 60ch; }
+  .sg-section { margin-bottom: var(--space-8); }
+  .sg-h { font-family: var(--font-display); font-size: var(--font-size-h2); font-weight: 500; margin: 0 0 var(--space-2); padding-bottom: var(--space-3); border-bottom: 1px solid var(--border); }
+  .sg-note { font-size: var(--font-size-caption); color: var(--text-muted); margin: 0 0 var(--space-4); }
+  .sg-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; margin-bottom: var(--space-4); }
+  .sg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: var(--space-3); }
+  .sg-swatch { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; font-size: var(--font-size-caption); }
+  .sg-swatch .chip { height: 54px; }
+  .sg-swatch .meta { padding: 6px 8px; background: var(--bg-secondary); }
+  .sg-swatch .meta code { font-size: 11px; color: var(--text-muted); }
+  .sg-space { display: flex; align-items: flex-end; gap: var(--space-3); }
+  .sg-space div { text-align: center; font-size: 11px; color: var(--text-muted); }
+  .sg-space .bar { background: var(--accent); border-radius: 3px 3px 0 0; width: 100%; }
+  .sg-type p { margin: 0 0 var(--space-3); }
+  .sg-code { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="sg-wrap">
+  <p class="sg-code" style="margin-bottom:var(--space-3);">apply with <b>.ui-*</b> classes · flat treatment · tokens from styles.css</p>
+  <h1 class="sg-title">Steliara UI kit</h1>
+  <p class="sg-lede">Shared flat components + tokens. Use these <code class="sg-code">.ui-*</code> classes instead of hand-rolling styles so every page reads as one system. Namespaced so it coexists safely with existing classes. Source: <code class="sg-code">css/design-kit.css</code>.</p>
+
+  <!-- COLORS -->
+  <section class="sg-section">
+    <h2 class="sg-h">Color tokens</h2>
+    <div class="sg-grid">
+      <div class="sg-swatch"><div class="chip" style="background:var(--bg-primary)"></div><div class="meta">bg-primary<br><code>#F9F7F2</code></div></div>
+      <div class="sg-swatch"><div class="chip" style="background:var(--bg-secondary)"></div><div class="meta">bg-secondary<br><code>#FFFFFF</code></div></div>
+      <div class="sg-swatch"><div class="chip" style="background:var(--bg-tertiary)"></div><div class="meta">bg-tertiary<br><code>#F0EDE4</code></div></div>
+      <div class="sg-swatch"><div class="chip" style="background:var(--accent)"></div><div class="meta">accent (navy)<br><code>#1E3A5F</code></div></div>
+      <div class="sg-swatch"><div class="chip" style="background:var(--accent-light)"></div><div class="meta">accent-light<br><code>#EBF0F7</code></div></div>
+      <div class="sg-swatch"><div class="chip" style="background:var(--gold)"></div><div class="meta">gold<br><code>#B8935A</code></div></div>
+      <div class="sg-swatch"><div class="chip" style="background:var(--text-muted)"></div><div class="meta">text-muted<br><code>#7A6F63</code></div></div>
+      <div class="sg-swatch"><div class="chip" style="background:var(--success)"></div><div class="meta">success<br><code>#2B7A4B</code></div></div>
+      <div class="sg-swatch"><div class="chip" style="background:var(--error)"></div><div class="meta">error<br><code>#B83232</code></div></div>
+    </div>
+  </section>
+
+  <!-- SPACING -->
+  <section class="sg-section">
+    <h2 class="sg-h">Spacing scale</h2>
+    <p class="sg-note">4px base. Use <code class="sg-code">--space-1 … --space-8</code> for page margins/padding/gaps.</p>
+    <div class="sg-space">
+      <div><div class="bar" style="height:4px"></div>1 · 4</div>
+      <div><div class="bar" style="height:8px"></div>2 · 8</div>
+      <div><div class="bar" style="height:12px"></div>3 · 12</div>
+      <div><div class="bar" style="height:16px"></div>4 · 16</div>
+      <div><div class="bar" style="height:24px"></div>5 · 24</div>
+      <div><div class="bar" style="height:32px"></div>6 · 32</div>
+      <div><div class="bar" style="height:48px"></div>7 · 48</div>
+      <div><div class="bar" style="height:64px"></div>8 · 64</div>
+    </div>
+  </section>
+
+  <!-- TYPE -->
+  <section class="sg-section">
+    <h2 class="sg-h">Type scale</h2>
+    <p class="sg-note">6 steps. Cormorant (display) only at h2/h1; DM Sans for h3 and below.</p>
+    <div class="sg-type">
+      <p style="font-family:var(--font-display);font-size:var(--font-size-h1);font-weight:500;line-height:1.05;">h1 · 40 · Cormorant <span class="sg-code">--font-size-h1</span></p>
+      <p style="font-family:var(--font-display);font-size:var(--font-size-h2);font-weight:500;">h2 · 28 · Cormorant <span class="sg-code">--font-size-h2</span></p>
+      <p style="font-size:var(--font-size-h3);font-weight:600;">h3 · 20 · DM Sans <span class="sg-code">--font-size-h3</span></p>
+      <p style="font-size:var(--font-size-body);">body · 16 · DM Sans <span class="sg-code">--font-size-body</span></p>
+      <p style="font-size:var(--font-size-label);color:var(--text-secondary);">label · 14 · DM Sans <span class="sg-code">--font-size-label</span></p>
+      <p style="font-size:var(--font-size-caption);color:var(--text-muted);">caption · 12 · DM Sans <span class="sg-code">--font-size-caption</span></p>
+    </div>
+  </section>
+
+  <!-- BUTTONS -->
+  <section class="sg-section">
+    <h2 class="sg-h">Buttons <span class="sg-code">.ui-btn</span></h2>
+    <div class="sg-row">
+      <button class="ui-btn ui-btn--primary">Primary</button>
+      <button class="ui-btn ui-btn--secondary">Secondary</button>
+      <button class="ui-btn ui-btn--ghost">Ghost</button>
+      <button class="ui-btn ui-btn--danger">Danger</button>
+      <button class="ui-btn ui-btn--primary" disabled>Disabled</button>
+    </div>
+    <div class="sg-row">
+      <button class="ui-btn ui-btn--sm ui-btn--primary">Small primary</button>
+      <button class="ui-btn ui-btn--sm ui-btn--secondary">Small secondary</button>
+    </div>
+  </section>
+
+  <!-- INPUT -->
+  <section class="sg-section">
+    <h2 class="sg-h">Input <span class="sg-code">.ui-input</span></h2>
+    <div class="sg-row" style="max-width:360px;display:block;">
+      <div class="ui-field" style="margin-bottom:var(--space-4);">
+        <label class="ui-label">Birth city</label>
+        <input class="ui-input" type="text" value="Москва">
+      </div>
+      <div class="ui-field">
+        <label class="ui-label">Email</label>
+        <input class="ui-input" type="text" placeholder="name@example.com">
+      </div>
+    </div>
+  </section>
+
+  <!-- CARD -->
+  <section class="sg-section">
+    <h2 class="sg-h">Card <span class="sg-code">.ui-card</span></h2>
+    <div class="ui-card" style="max-width:320px;">
+      <p style="font-weight:600;margin:0 0 var(--space-1);font-size:var(--font-size-label);">Анна Петрова</p>
+      <p style="margin:0;color:var(--text-secondary);font-size:var(--font-size-caption);">14.03.1990 · Москва · Placidus</p>
+    </div>
+  </section>
+
+  <!-- TABLE -->
+  <section class="sg-section">
+    <h2 class="sg-h">Table <span class="sg-code">.ui-table.ui-table--rows</span></h2>
+    <div class="ui-card" style="padding:0;overflow:hidden;">
+      <table class="ui-table ui-table--rows">
+        <thead><tr><th>Имя</th><th>Дата рождения</th><th>Место</th></tr></thead>
+        <tbody>
+          <tr><td>Анна Петрова</td><td>14.03.1990</td><td>Москва</td></tr>
+          <tr><td>Дмитрий Соколов</td><td>02.11.1985</td><td>Санкт-Петербург</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SETTINGS ROW + TOGGLE -->
+  <section class="sg-section">
+    <h2 class="sg-h">Settings row + toggle <span class="sg-code">.ui-settings-row · .ui-toggle</span></h2>
+    <div class="ui-card" style="padding:0 var(--space-4);max-width:460px;">
+      <div class="ui-settings-row">
+        <div><div class="ui-settings-row__label">Email notifications</div></div>
+        <button class="ui-toggle" aria-checked="true" aria-label="toggle"></button>
+      </div>
+      <div class="ui-settings-row">
+        <div><div class="ui-settings-row__label">House system</div><div class="ui-settings-row__hint">Used for all new charts</div></div>
+        <button class="ui-toggle" aria-checked="false" aria-label="toggle"></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- EMPTY STATE -->
+  <section class="sg-section">
+    <h2 class="sg-h">Empty state <span class="sg-code">.ui-empty-state</span></h2>
+    <div class="ui-card" style="max-width:380px;">
+      <div class="ui-empty-state">
+        <div class="ui-empty-state__icon">✦</div>
+        <div class="ui-empty-state__title">Инсайтов пока нет</div>
+        <p class="ui-empty-state__text">Они извлекаются из записей звонков после обработки ИИ.</p>
+        <button class="ui-btn ui-btn--secondary ui-btn--sm">Записать консультацию</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- DIALOG -->
+  <section class="sg-section">
+    <h2 class="sg-h">Dialog <span class="sg-code">.ui-dialog</span></h2>
+    <div style="background:var(--bg-tertiary);border-radius:var(--radius-lg);padding:var(--space-6);display:flex;justify-content:center;">
+      <div class="ui-dialog">
+        <div class="ui-dialog__title">Удалить профиль?</div>
+        <p class="ui-dialog__body">Это действие нельзя отменить. Все карты и записи будут удалены.</p>
+        <div class="ui-dialog__actions">
+          <button class="ui-btn ui-btn--ghost">Отмена</button>
+          <button class="ui-btn ui-btn--danger">Удалить</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

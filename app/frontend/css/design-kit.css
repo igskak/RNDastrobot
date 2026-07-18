@@ -1,0 +1,165 @@
+/* ============================================================
+   Steliara UI kit — shared flat components
+   ------------------------------------------------------------
+   Canonical, flat-treatment building blocks. Apply these classes
+   instead of hand-rolling styles, so every page reads as one system.
+
+   Namespaced `.ui-*` so the kit coexists safely with existing scattered
+   classes (.btn-new, .account-settings-btn, login's .btn-primary, etc.)
+   — adding this file changes nothing until an element opts in with a
+   `.ui-*` class.
+
+   Uses the design tokens from styles.css (:root). Flat treatment:
+   solid fills (no gradients), soft neutral shadows, hairline borders,
+   accent used sparingly. See docs/design/ + docs/plans/design-system-foundation.md.
+   ============================================================ */
+
+/* ---- Buttons: one system (primary / secondary / ghost), one height ---- */
+.ui-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    height: 40px;
+    padding: 0 var(--space-4);
+    font-family: var(--font-ui);
+    font-size: var(--font-size-label);
+    font-weight: 500;
+    line-height: 1;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    background: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background var(--transition), border-color var(--transition), color var(--transition);
+}
+.ui-btn--sm { height: 32px; padding: 0 var(--space-3); font-size: var(--font-size-caption); }
+.ui-btn--block { width: 100%; }
+.ui-btn--primary { background: var(--accent); color: #fff; }
+.ui-btn--primary:hover:not(:disabled) { background: var(--accent-hover); }
+.ui-btn--secondary { background: var(--bg-secondary); color: var(--accent); border-color: var(--accent); }
+.ui-btn--secondary:hover:not(:disabled) { background: var(--accent-light); }
+.ui-btn--ghost { background: none; color: var(--text-secondary); }
+.ui-btn--ghost:hover:not(:disabled) { background: var(--bg-tertiary); color: var(--text-primary); }
+.ui-btn--danger { background: var(--error); color: #fff; }
+.ui-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.ui-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---- Inputs: one treatment, visible label ---- */
+.ui-field { display: flex; flex-direction: column; gap: var(--space-2); }
+.ui-label {
+    font-size: var(--font-size-label);
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+.ui-input {
+    width: 100%;
+    height: 40px;
+    padding: 0 var(--space-3);
+    font-family: var(--font-ui);
+    font-size: var(--font-size-body);
+    color: var(--text-primary);
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+.ui-input::placeholder { color: var(--text-muted); }
+.ui-input:focus { outline: none; border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--accent-light); }
+.ui-input[aria-invalid="true"] { border-color: var(--error); }
+textarea.ui-input { height: auto; min-height: 88px; padding: var(--space-3); resize: vertical; }
+
+/* ---- Card: one surface ---- */
+.ui-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: var(--space-5);
+}
+
+/* ---- Table: contacts-style rows, hover affordance, hairline dividers ---- */
+.ui-table { width: 100%; border-collapse: collapse; }
+.ui-table th {
+    text-align: left;
+    font-size: var(--font-size-caption);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    font-weight: 500;
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border);
+}
+.ui-table td {
+    font-size: var(--font-size-label);
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+.ui-table tbody tr:last-child td { border-bottom: none; }
+.ui-table tbody tr { transition: background var(--transition); }
+.ui-table--rows tbody tr:hover td { background: var(--bg-hover); }
+
+/* ---- Settings row: label left, control right, consistent height ---- */
+.ui-settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    min-height: 52px;
+    padding: var(--space-2) var(--space-4);
+    border-bottom: 1px solid var(--border);
+}
+.ui-settings-row:last-child { border-bottom: none; }
+.ui-settings-row__label { font-size: var(--font-size-label); color: var(--text-primary); }
+.ui-settings-row__hint { font-size: var(--font-size-caption); color: var(--text-muted); margin-top: 2px; }
+
+/* ---- Toggle switch (settings) ---- */
+.ui-toggle {
+    width: 40px; height: 22px; flex-shrink: 0;
+    border: none; border-radius: 12px;
+    background: var(--border);
+    position: relative; cursor: pointer;
+    transition: background var(--transition);
+}
+.ui-toggle[aria-checked="true"] { background: var(--accent); }
+.ui-toggle::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #fff; box-shadow: var(--shadow-sm);
+    transition: left var(--transition);
+}
+.ui-toggle[aria-checked="true"]::after { left: 20px; }
+.ui-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---- Empty state: icon + title + copy + CTA ---- */
+.ui-empty-state { text-align: center; padding: var(--space-6) var(--space-4); }
+.ui-empty-state__icon {
+    width: 40px; height: 40px; margin: 0 auto var(--space-3);
+    border-radius: 50%;
+    background: var(--accent-light); color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+}
+.ui-empty-state__title { font-size: var(--font-size-label); font-weight: 600; margin: 0 0 var(--space-1); }
+.ui-empty-state__text { font-size: var(--font-size-caption); color: var(--text-muted); margin: 0 auto var(--space-4); max-width: 44ch; }
+
+/* ---- Dialog: one modal shell ---- */
+.ui-dialog-backdrop {
+    position: fixed; inset: 0; z-index: 1000;
+    background: rgba(26, 22, 20, 0.35);
+    display: flex; align-items: center; justify-content: center;
+    padding: var(--space-4);
+}
+.ui-dialog {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-5);
+    max-width: 400px; width: 100%;
+}
+.ui-dialog__title { font-family: var(--font-display); font-size: var(--font-size-h3); font-weight: 500; margin: 0 0 var(--space-2); }
+.ui-dialog__body { font-size: var(--font-size-body); color: var(--text-secondary); margin: 0 0 var(--space-4); }
+.ui-dialog__actions { display: flex; justify-content: flex-end; gap: var(--space-2); }
