@@ -1252,6 +1252,12 @@
     backdrop-filter: none;
     scrollbar-width: none;
 }
+.forecast-new-corner > .is-compact,
+.forecast-new-corner > .is-compact * {
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+}
 .forecast-new-corner > .is-compact::-webkit-scrollbar {
     display: none;
 }
