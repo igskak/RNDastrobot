@@ -1492,9 +1492,22 @@
         await loop();
     }
 
-    async function loadPreferences() {
-        const me = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
-        if (!me) return;
+    async function loadPreferences(i18nReady) {
+        // auth, метаданные и префы гейтятся только сессионной кукой — стартуем разом,
+        // параллельно каталогу локали. Раньше: i18n→auth→(metadata+prefs) цепочкой.
+        const authReady = Promise.resolve(
+            window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' })
+        );
+        const dataReady = Promise.all([
+            window.AstroAPI.getPreferencesMetadata?.(),
+            window.AstroAPI.getAccountPreferences(),
+        ]);
+        const me = await authReady;
+        if (!me) { dataReady.catch(() => {}); return; }
+
+        // Перед первым t()-рендером (подзаголовок/план) убеждаемся, что локаль готова.
+        await Promise.resolve(i18nReady);
+
         const onboardingResetSetting = document.getElementById('onboardingResetSetting');
         const onboardingAvailable = ['trial', 'pro'].includes(String(me.plan_code || '').toLowerCase());
         onboardingResetSetting?.classList.toggle('onboarding-hidden', !onboardingAvailable);
@@ -1507,10 +1520,7 @@
         }
         renderAccountPlan(me);
 
-        const [metadata, preferences] = await Promise.all([
-            window.AstroAPI.getPreferencesMetadata?.(),
-            window.AstroAPI.getAccountPreferences(),
-        ]);
+        const [metadata, preferences] = await dataReady;
         preferencesMetadata = metadata || null;
         populateForm(preferences, { updateBaseline: true });
 
@@ -1743,8 +1753,8 @@
         });
 
         try {
-            await window.FrontendI18n?.ready?.catch?.(() => {});
-            await loadPreferences();
+            const i18nReady = Promise.resolve(window.FrontendI18n?.ready).catch(() => {});
+            await loadPreferences(i18nReady);
             document.addEventListener('frontend:locale-changed', () => {
                 if (accountPreferences) {
                     populateForm(accountPreferences);

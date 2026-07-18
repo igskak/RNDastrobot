@@ -173,11 +173,15 @@ function apiFetch(url, init = {}) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-    await waitForI18nReady();
+document.addEventListener('DOMContentLoaded', () => {
+    // Первый рендер: каталог локали (сеть) не зависит от данных страницы. Не
+    // блокируем bootstrap ожиданием i18n — прокидываем промис внутрь и ждём его
+    // ровно перед первым t()-рендером. Так data-фетчи идут параллельно локали
+    // (раньше цепочка locale→auth→prefs→charts давала ~2.3с до первого рендера).
+    const i18nReady = waitForI18nReady();
     cacheElements();
     bindEvents();
-    bootstrapPage();
+    bootstrapPage(i18nReady);
 });
 
 function cacheElements() {
@@ -499,27 +503,45 @@ function bindEvents() {
     initLogSessionDialog();
 }
 
-async function bootstrapPage() {
-    currentAstrologer = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
+async function bootstrapPage(i18nReady) {
+    // Все сетевые операции гейтятся сессионной кукой, а не ответами друг друга,
+    // поэтому стартуем их разом: auth, префы и список (charts+persons). Критический
+    // путь становится max(запросов) вместо суммы. requireAuth сам редиректит на
+    // /login.html, если сессии нет — параллельные фетчи в этом случае просто
+    // отбрасываются (хармлесс 401), до рендера дело не доходит.
+    const authReady = Promise.resolve(
+        window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' })
+    );
+    const prefsReady = loadAccountPreferences();
+    const chartsResponse = apiFetch(`${API_BASE}/charts`, { method: 'GET' });
+    const personsResponse = apiFetch(`${API_BASE}/persons`, { method: 'GET' });
+
+    currentAstrologer = await authReady;
     if (!currentAstrologer) return;
     applyPlanUi();
 
-    if (window.AstroAPI?.getAccountPreferences) {
-        try {
-            window.accountPreferencesCache = await window.AstroAPI.getAccountPreferences();
-            window.AstroPreferences?.setAccountVisualPreferences?.(window.accountPreferencesCache?.visual || {});
-        } catch (error) {
-            console.warn('Clients account preferences fallback to defaults:', error);
-        }
-    }
-
+    // Текстовый UI (сводка профиля, кнопки) — только после локали и префов
+    // (цвета/визуал берутся из префов). Данные списка при этом уже в полёте.
+    await Promise.all([Promise.resolve(i18nReady), prefsReady]);
     renderProfileSummary();
     applyHeroPlacement();
 
-    await loadClients();
+    await loadClients({ chartsResponse, personsResponse });
     await openRequestedChartRepair();
     await initClientsOnboarding();
     scheduleSecondaryPanels();
+}
+
+// Префы аккаунта: вынесено из bootstrapPage, чтобы фетч можно было запускать
+// параллельно с auth/локалью/списком. Семантика идентична прежней (кэш + визуал).
+async function loadAccountPreferences() {
+    if (!window.AstroAPI?.getAccountPreferences) return;
+    try {
+        window.accountPreferencesCache = await window.AstroAPI.getAccountPreferences();
+        window.AstroPreferences?.setAccountVisualPreferences?.(window.accountPreferencesCache?.visual || {});
+    } catch (error) {
+        console.warn('Clients account preferences fallback to defaults:', error);
+    }
 }
 
 async function openRequestedChartRepair() {
@@ -669,7 +691,7 @@ function setHeroSeenFlag() {
     }
 }
 
-async function loadClients() {
+async function loadClients(prefetched = null) {
     refs.loading.textContent = t('common.loading');
     refs.loading.classList.remove('hidden');
     refs.emptyState.classList.add('hidden');
@@ -677,9 +699,12 @@ async function loadClients() {
     refs.tableWrap.classList.add('hidden');
 
     try {
+        // Ответы могли быть запрошены заранее (в bootstrap — параллельно auth и
+        // локали). Обновление после правок зовёт loadClients() без аргументов —
+        // тогда фетчим свежие данные прямо здесь.
         const [chartsResponse, personsResponse] = await Promise.all([
-            apiFetch(`${API_BASE}/charts`, { method: 'GET' }),
-            apiFetch(`${API_BASE}/persons`, { method: 'GET' }),
+            prefetched?.chartsResponse ?? apiFetch(`${API_BASE}/charts`, { method: 'GET' }),
+            prefetched?.personsResponse ?? apiFetch(`${API_BASE}/persons`, { method: 'GET' }),
         ]);
         if (chartsResponse.status === 401 || personsResponse.status === 401) {
             window.location.href = '/login.html';

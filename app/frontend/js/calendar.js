@@ -287,8 +287,11 @@ function bindEvents() {
     });
 }
 
-async function bootstrapPage() {
-    currentAstrologer = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
+async function bootstrapPage(i18nReady) {
+    const authReady = Promise.resolve(
+        window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' })
+    );
+    currentAstrologer = await authReady;
 
     if (currentAstrologer) {
         const label = [currentAstrologer.first_name, currentAstrologer.last_name]
@@ -296,6 +299,9 @@ async function bootstrapPage() {
         if (refs.welcomeLabel) refs.welcomeLabel.textContent = label;
     }
 
+    // initCalendar использует t() для кнопок — ждём локаль (calendar и так
+    // переинициализируется на frontend:locale-changed, но избегаем двойного рендера).
+    await Promise.resolve(i18nReady);
     initCalendar();
 
     if (window.AstroAPI?.hidePageLoader) {
@@ -306,9 +312,10 @@ async function bootstrapPage() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-    await window.FrontendI18n?.ready?.catch?.(() => {});
+document.addEventListener('DOMContentLoaded', () => {
+    // Каталог локали и auth независимы — стартуем параллельно, а не цепочкой.
+    const i18nReady = Promise.resolve(window.FrontendI18n?.ready).catch(() => {});
     bindRefs();
     bindEvents();
-    await bootstrapPage();
+    bootstrapPage(i18nReady);
 });

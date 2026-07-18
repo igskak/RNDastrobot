@@ -363,36 +363,42 @@ function renderHouseRulerGroups(house, planetToHouse = {}) {
     }).join('');
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-    await waitForI18nReady();
+document.addEventListener('DOMContentLoaded', () => {
+    const i18nReady = waitForI18nReady();
+    bootstrapNatalFull(i18nReady);
+});
 
-    const me = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
-    if (!me) return;
+async function bootstrapNatalFull(i18nReady) {
+    // auth, префы, локаль и свежий расчёт натала независимы — стартуем разом.
+    const authReady = Promise.resolve(
+        window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' })
+    );
+    const prefsReady = loadAccountPreferences();
 
-    if (window.AstroAPI?.getAccountPreferences) {
-        try {
-            window.accountPreferencesCache = await window.AstroAPI.getAccountPreferences();
-            window.AstroPreferences?.setAccountVisualPreferences?.(window.accountPreferencesCache?.visual || {});
-        } catch (error) {
-            console.warn('Natal Full account preferences fallback to defaults:', error);
-        }
-    }
-
+    // Данные карты лежат в sessionStorage — парсим синхронно и запускаем свежий
+    // (тяжёлый серверный) расчёт натала параллельно auth/локали/префам. Функция
+    // сама обрабатывает ошибки и не реджектит, поэтому ранний старт безопасен.
     const storedData = sessionStorage.getItem('natalChart');
     if (!storedData) {
         window.location.href = '/';
         return;
     }
-
+    let parsedChartData;
     try {
-        chartData = JSON.parse(storedData);
+        parsedChartData = JSON.parse(storedData);
     } catch (error) {
         console.warn('Natal Full invalid session chart data:', error);
         window.location.href = '/';
         return;
     }
+    const freshChartReady = loadFreshNatalFullChartData(parsedChartData);
 
-    chartData = await loadFreshNatalFullChartData(chartData);
+    const me = await authReady;
+    if (!me) return;
+
+    await Promise.all([Promise.resolve(i18nReady), prefsReady]);
+
+    chartData = await freshChartReady;
     window.AstroOnboarding?.trackFirstChartViewed?.(chartData?.user_id, {
         source: 'natal_full',
     });
@@ -410,7 +416,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.FrontendI18nUi.applyI18n(document);
         }
     });
-});
+}
+
+// Префы аккаунта — вынесено, чтобы фетч шёл параллельно auth/локали/расчёту.
+async function loadAccountPreferences() {
+    if (!window.AstroAPI?.getAccountPreferences) return;
+    try {
+        window.accountPreferencesCache = await window.AstroAPI.getAccountPreferences();
+        window.AstroPreferences?.setAccountVisualPreferences?.(window.accountPreferencesCache?.visual || {});
+    } catch (error) {
+        console.warn('Natal Full account preferences fallback to defaults:', error);
+    }
+}
 
 function captureNatalFullViewState() {
     return {
