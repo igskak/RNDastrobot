@@ -151,35 +151,52 @@ function getNameCollator() {
 
 /* ─── Bootstrap ─────────────────────────────────────────────────────────── */
 
-document.addEventListener('DOMContentLoaded', async () => {
-    await waitForI18nReady();
+document.addEventListener('DOMContentLoaded', () => {
+    // Локаль (сеть) грузим параллельно с auth/префами/профилем, а не последовательно.
+    const i18nReady = waitForI18nReady();
     cacheElements();
     configureProfileBackLink();
 
     if (!routeProfileId) {
-        showError(t('page.clientProfile.errors.noId'));
+        Promise.resolve(i18nReady).finally(() => showError(t('page.clientProfile.errors.noId')));
         return;
     }
 
-    currentAstrologer = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
+    bootstrapProfile(i18nReady);
+});
+
+async function bootstrapProfile(i18nReady) {
+    // auth, префы и сам профиль зависят только от сессионной куки — стартуем разом.
+    const authReady = Promise.resolve(
+        window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' })
+    );
+    const prefsReady = loadAccountPreferences();
+    const profileResponse = apiFetch(`${API_BASE}/persons/${encodeURIComponent(routeProfileId)}/profile`);
+
+    currentAstrologer = await authReady;
     if (!currentAstrologer) return;
     applyPlanUi();
-
-    if (window.AstroAPI?.getAccountPreferences) {
-        try {
-            window.accountPreferencesCache = await window.AstroAPI.getAccountPreferences();
-            window.AstroPreferences?.setAccountVisualPreferences?.(window.accountPreferencesCache?.visual || {});
-        } catch (error) {
-            console.warn('Client profile account preferences fallback to defaults:', error);
-        }
-    }
 
     initEditClientDialog();
     initLogSessionDialog();
     initRelatedPeoplePicker();
     bindPageEvents();
-    await loadProfile();
-});
+
+    // Рендер ждёт локаль + префы (визуал), но профиль уже в полёте.
+    await Promise.all([Promise.resolve(i18nReady), prefsReady]);
+    await loadProfile({ profileResponse });
+}
+
+// Префы аккаунта — вынесено, чтобы фетч шёл параллельно auth/локали/профилю.
+async function loadAccountPreferences() {
+    if (!window.AstroAPI?.getAccountPreferences) return;
+    try {
+        window.accountPreferencesCache = await window.AstroAPI.getAccountPreferences();
+        window.AstroPreferences?.setAccountVisualPreferences?.(window.accountPreferencesCache?.visual || {});
+    } catch (error) {
+        console.warn('Client profile account preferences fallback to defaults:', error);
+    }
+}
 
 // The header back arrow is navigation ("previous page"), not "always home".
 // Resolve it from the referrer / navigation breadcrumb, excluding self-referencing
@@ -424,9 +441,11 @@ function applyPlanUi() {
 
 /* ─── Load & render ─────────────────────────────────────────────────────── */
 
-async function loadProfile() {
+async function loadProfile(prefetched = null) {
     try {
-        let profileRes = await apiFetch(`${API_BASE}/persons/${encodeURIComponent(routeProfileId)}/profile`);
+        // Ответ мог быть запрошен заранее в bootstrap (параллельно auth/локали);
+        // рефреши после правок зовут loadProfile() без аргументов → фетч здесь.
+        let profileRes = await (prefetched?.profileResponse ?? apiFetch(`${API_BASE}/persons/${encodeURIComponent(routeProfileId)}/profile`));
 
         if (profileRes.status === 401) { window.location.href = '/login.html'; return; }
         if (profileRes.status === 404) {

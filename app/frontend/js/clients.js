@@ -173,11 +173,15 @@ function apiFetch(url, init = {}) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-    await waitForI18nReady();
+document.addEventListener('DOMContentLoaded', () => {
+    // Первый рендер: каталог локали (сеть) не зависит от данных страницы. Не
+    // блокируем bootstrap ожиданием i18n — прокидываем промис внутрь и ждём его
+    // ровно перед первым t()-рендером. Так data-фетчи идут параллельно локали
+    // (раньше цепочка locale→auth→prefs→charts давала ~2.3с до первого рендера).
+    const i18nReady = waitForI18nReady();
     cacheElements();
     bindEvents();
-    bootstrapPage();
+    bootstrapPage(i18nReady);
 });
 
 function cacheElements() {
@@ -499,27 +503,48 @@ function bindEvents() {
     initLogSessionDialog();
 }
 
-async function bootstrapPage() {
-    currentAstrologer = await window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' });
+async function bootstrapPage(i18nReady) {
+    // Все сетевые операции гейтятся сессионной кукой, а не ответами друг друга,
+    // поэтому стартуем их разом: auth, префы и список (charts+persons). Критический
+    // путь становится max(запросов) вместо суммы. requireAuth сам редиректит на
+    // /login.html, если сессии нет — параллельные фетчи в этом случае просто
+    // отбрасываются (хармлесс 401), до рендера дело не доходит.
+    const authReady = Promise.resolve(
+        window.AstroAPI?.requireAuth?.({ redirectTo: '/login.html' })
+    );
+    const prefsReady = loadAccountPreferences();
+    const chartsResponse = apiFetch(`${API_BASE}/charts`, { method: 'GET' });
+    const personsResponse = apiFetch(`${API_BASE}/persons`, { method: 'GET' });
+
+    currentAstrologer = await authReady;
     if (!currentAstrologer) return;
     applyPlanUi();
 
-    if (window.AstroAPI?.getAccountPreferences) {
-        try {
-            window.accountPreferencesCache = await window.AstroAPI.getAccountPreferences();
-            window.AstroPreferences?.setAccountVisualPreferences?.(window.accountPreferencesCache?.visual || {});
-        } catch (error) {
-            console.warn('Clients account preferences fallback to defaults:', error);
-        }
-    }
-
+    // Текстовый UI (сводка профиля, кнопки) — только после локали и префов
+    // (цвета/визуал берутся из префов). Данные списка при этом уже в полёте.
+    await Promise.all([Promise.resolve(i18nReady), prefsReady]);
     renderProfileSummary();
     applyHeroPlacement();
 
-    await loadClients();
+    await loadClients({ chartsResponse, personsResponse });
+    // Первый осмысленный рендер готов (таблица/пустое состояние) — снимаем лоадер
+    // здесь, а не на DOMContentLoaded, чтобы не обнажать полупустую страницу.
+    window.AstroAPI?.hidePageLoader?.();
     await openRequestedChartRepair();
     await initClientsOnboarding();
     scheduleSecondaryPanels();
+}
+
+// Префы аккаунта: вынесено из bootstrapPage, чтобы фетч можно было запускать
+// параллельно с auth/локалью/списком. Семантика идентична прежней (кэш + визуал).
+async function loadAccountPreferences() {
+    if (!window.AstroAPI?.getAccountPreferences) return;
+    try {
+        window.accountPreferencesCache = await window.AstroAPI.getAccountPreferences();
+        window.AstroPreferences?.setAccountVisualPreferences?.(window.accountPreferencesCache?.visual || {});
+    } catch (error) {
+        console.warn('Clients account preferences fallback to defaults:', error);
+    }
 }
 
 async function openRequestedChartRepair() {
@@ -669,7 +694,7 @@ function setHeroSeenFlag() {
     }
 }
 
-async function loadClients() {
+async function loadClients(prefetched = null) {
     refs.loading.textContent = t('common.loading');
     refs.loading.classList.remove('hidden');
     refs.emptyState.classList.add('hidden');
@@ -677,9 +702,12 @@ async function loadClients() {
     refs.tableWrap.classList.add('hidden');
 
     try {
+        // Ответы могли быть запрошены заранее (в bootstrap — параллельно auth и
+        // локали). Обновление после правок зовёт loadClients() без аргументов —
+        // тогда фетчим свежие данные прямо здесь.
         const [chartsResponse, personsResponse] = await Promise.all([
-            apiFetch(`${API_BASE}/charts`, { method: 'GET' }),
-            apiFetch(`${API_BASE}/persons`, { method: 'GET' }),
+            prefetched?.chartsResponse ?? apiFetch(`${API_BASE}/charts`, { method: 'GET' }),
+            prefetched?.personsResponse ?? apiFetch(`${API_BASE}/persons`, { method: 'GET' }),
         ]);
         if (chartsResponse.status === 401 || personsResponse.status === 401) {
             window.location.href = '/login.html';
@@ -890,22 +918,66 @@ function renderUsers() {
     const sorted = sortUsers(filtered, state.sortBy);
     state.filteredUsers = sorted;
 
-    refs.tbody.innerHTML = '';
-
     if (state.users.length > 0 && sorted.length === 0) {
+        reconcileUserRows([]);
         refs.tableWrap.classList.add('hidden');
         refs.noResultsState.classList.remove('hidden');
     } else {
         refs.noResultsState.classList.add('hidden');
-
-        for (const user of sorted) {
-            refs.tbody.appendChild(buildUserRow(user));
-        }
-
+        reconcileUserRows(sorted);
         refs.tableWrap.classList.remove('hidden');
     }
 
     updateCounters();
+}
+
+// Keyed-реконсиляция строк таблицы. Раньше каждый ввод/фильтр/сортировка делали
+// tbody.innerHTML='' + пересборку всех строк — это перерисовывало неизменившиеся
+// строки (визуальный «дребезг»), сбрасывало скролл и фокус. Теперь строки
+// сопоставляются по data-row-key: неизменившиеся (по outerHTML) переиспользуются
+// как есть (нулевая перерисовка), изменившиеся заменяются, лишние удаляются, а
+// порядок правится точечными insertBefore. Обработчики делегированы, поэтому
+// переиспользование узлов их не ломает.
+function reconcileUserRows(users) {
+    const tbody = refs.tbody;
+
+    // Раскрытые detail-панели не переживают ре-рендер (как и при старом ребилде) —
+    // убираем их и сбрасываем флаг, чтобы устаревший id не завис.
+    tbody.querySelectorAll('.client-detail-row').forEach((row) => row.remove());
+    if (state.expandedUserId) state.expandedUserId = null;
+
+    const existing = new Map();
+    for (const row of Array.from(tbody.children)) {
+        if (row.dataset && row.dataset.rowKey) existing.set(row.dataset.rowKey, row);
+    }
+
+    const ordered = [];
+    const keep = new Set();
+    for (const user of users) {
+        const nextRow = buildUserRow(user);
+        const key = nextRow.dataset.rowKey;
+        const prevRow = existing.get(key);
+        if (prevRow && prevRow.outerHTML === nextRow.outerHTML) {
+            ordered.push(prevRow); // контент не изменился → переиспользуем DOM-узел
+            keep.add(key);
+        } else {
+            ordered.push(nextRow); // новая или изменившаяся строка → свежий узел
+        }
+    }
+
+    // Удаляем всё, что не переиспользуется (отфильтрованные + заменённые старые узлы).
+    for (const [key, row] of existing) {
+        if (!keep.has(key)) row.remove();
+    }
+
+    // Расставляем узлы в нужном порядке: insertBefore перемещает уже вставленные
+    // узлы и вставляет новые/заменённые (пропускаем, если узел уже на месте).
+    let anchor = null;
+    for (const node of ordered) {
+        const target = anchor ? anchor.nextSibling : tbody.firstChild;
+        if (node !== target) tbody.insertBefore(node, target);
+        anchor = node;
+    }
 }
 
 function renderTagFilterOptions() {
@@ -986,6 +1058,9 @@ function buildUserRow(user) {
     }
 
     tr.dataset.userId = userId;
+    // Стабильный ключ строки для keyed-реконсиляции в renderUsers (см. reconcileUserRows).
+    // Префикс вида — чтобы ключи Charts/People не пересекались при переключении таба.
+    tr.dataset.rowKey = `${state.libraryView}:${userId}`;
     if (!isChartsView && primaryChartId) {
         tr.dataset.primaryChartId = primaryChartId;
     }
