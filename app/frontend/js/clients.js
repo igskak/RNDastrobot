@@ -527,6 +527,9 @@ async function bootstrapPage(i18nReady) {
     applyHeroPlacement();
 
     await loadClients({ chartsResponse, personsResponse });
+    // Первый осмысленный рендер готов (таблица/пустое состояние) — снимаем лоадер
+    // здесь, а не на DOMContentLoaded, чтобы не обнажать полупустую страницу.
+    window.AstroAPI?.hidePageLoader?.();
     await openRequestedChartRepair();
     await initClientsOnboarding();
     scheduleSecondaryPanels();

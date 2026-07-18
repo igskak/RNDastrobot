@@ -407,6 +407,8 @@ async function bootstrapNatalFull(i18nReady) {
 
     renderFullChart(chartData);
     setupLegendToggle();
+    // Карта и отчёт отрендерены — снимаем лоадер (страница помечена data-defer-loader).
+    window.AstroAPI?.hidePageLoader?.();
     document.addEventListener('frontend:locale-changed', () => {
         if (!chartData) return;
         const viewState = captureNatalFullViewState();

@@ -1225,6 +1225,16 @@
             if (document.body?.classList?.contains('chart-page') || document.body?.classList?.contains('forecast-new-page')) {
                 return;
             }
+            // Страницы с асинхронным bootstrap (список/профиль/настройки/календарь/
+            // натал) сами прячут лоадер после первого осмысленного рендера — иначе
+            // лоадер снимался на DOMContentLoaded (~250мс), обнажая полупустую
+            // страницу до готовности данных (~1с) и давая «вспышку». Для них держим
+            // только safety-net: если bootstrap упадёт раньше времени, лоадер всё
+            // равно уйдёт и не «залипнет».
+            if (document.body?.hasAttribute('data-defer-loader')) {
+                setTimeout(() => hidePageLoader(), 8000);
+                return;
+            }
             // Небольшая задержка чтобы дать JS-рендерингу отработать
             requestAnimationFrame(() => hidePageLoader());
         });
