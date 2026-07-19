@@ -913,8 +913,8 @@ function renderStats(stats) {
 
     refs.profileStatsGrid.innerHTML = rows.map((r) => `
         <div class="profile-stat-row">
-            <span class="profile-stat-label">${escapeHtml(r.label)}</span>
             <span class="profile-stat-value">${escapeHtml(String(r.value))}</span>
+            <span class="profile-stat-label">${escapeHtml(r.label)}</span>
         </div>`).join('');
 }
 

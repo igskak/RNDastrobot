@@ -2805,7 +2805,7 @@
         "notes": "Notes",
         "consultations": "From consultations"
       },
-      "placeholder": "Add a note to this client profile...",
+      "placeholder": "Add a note to this person’s profile...",
       "add": "Add",
       "emptyNotes": "No notes yet.",
       "emptyConsultations": "No consultation notes yet.",
