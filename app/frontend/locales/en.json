@@ -739,7 +739,23 @@
       "actions": {
         "reload": "Reload",
         "restore": "Reset settings to defaults",
-        "save": "Save general settings"
+        "save": "Save general settings",
+        "saveShort": "Save",
+        "discard": "Discard"
+      },
+      "tabs": {
+        "ariaLabel": "Settings sections",
+        "chart": "Chart settings",
+        "formats": "Formats",
+        "billing": "Billing & plan",
+        "account": "Account"
+      },
+      "groups": {
+        "display": "Display"
+      },
+      "savebar": {
+        "unsaved": "Unsaved changes",
+        "saved": "✓ Saved"
       },
       "badge": "Saved once, inherited everywhere",
       "confirmReset": {

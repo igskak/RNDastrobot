@@ -44,6 +44,8 @@
 
     let accountPreferences = null;
     let persistedMethodologyBaseline = null;
+    let formBaseline = null;
+    let activeSettingsTab = 'chart';
     let preferencesMetadata = null;
     let toastTimer = null;
     let pollTimer = null;
@@ -1073,7 +1075,7 @@
                     <th scope="row" class="account-settings-icon-cell">
                         <span class="account-settings-body account-settings-body--icon-only">
                             <span class="account-settings-body-badge account-settings-orb-glyph" title="${escapeHtml(getBodyLabel(body))}" aria-label="${escapeHtml(getBodyLabel(body))}" role="img" tabindex="0">
-                                <span class="astro-symbol" aria-hidden="true">${escapeHtml(getBodySymbol(body))}</span>
+                                ${getBodySymbolMarkup(body, { size: 18, title: getBodyLabel(body) })}
                             </span>
                         </span>
                     </th>
@@ -1199,6 +1201,13 @@
         renderAspectColors(normalized.visual);
         renderPlanetColors(normalized.visual);
         updateVisualPreview(normalized.visual);
+
+        // Snapshot the clean form state once the DOM (incl. matrices) is fully
+        // populated, so the dirty-state save bar compares against it.
+        if (updateBaseline) {
+            formBaseline = deepClone(collectPayload());
+        }
+        refreshDirtyState();
     }
 
     function readCheckedAspectTypes(viewId) {
@@ -1383,6 +1392,34 @@
             return;
         }
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function setActiveSettingsTab(tabId) {
+        activeSettingsTab = tabId;
+        document.querySelectorAll('[data-settings-tab]').forEach((button) => {
+            const isActive = button.dataset.settingsTab === tabId;
+            button.classList.toggle('is-active', isActive);
+            button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+        document.querySelectorAll('[data-settings-panel]').forEach((panel) => {
+            panel.classList.toggle('hidden', panel.dataset.settingsPanel !== tabId);
+        });
+    }
+
+    // Dirty-state save bar: compare the live form against the clean baseline
+    // snapshot; show Save/Discard only when something changed, "✓ saved" when clean.
+    function refreshDirtyState() {
+        if (!formBaseline) return;
+        const saveBar = document.getElementById('accountSettingsSaveBar');
+        const savedIndicator = document.getElementById('accountSettingsSavedIndicator');
+        let dirty;
+        try {
+            dirty = !deepEqual(formBaseline, collectPayload());
+        } catch (_error) {
+            dirty = true;
+        }
+        if (saveBar) saveBar.classList.toggle('hidden', !dirty);
+        if (savedIndicator) savedIndicator.hidden = dirty;
     }
 
     async function refreshCurrentChartSnapshot() {
@@ -1629,9 +1666,27 @@
         const resetConfirmCancelBtn = document.getElementById('accountSettingsResetConfirmCancel');
         const resetConfirmSubmitBtn = document.getElementById('accountSettingsResetConfirmSubmit');
         const onboardingResetBtn = document.getElementById('onboardingResetBtn');
+        const discardBtn = document.getElementById('accountSettingsDiscardBtn');
+
+        document.querySelectorAll('[data-settings-tab]').forEach((button) => {
+            button.addEventListener('click', () => {
+                setActiveSettingsTab(button.dataset.settingsTab || 'chart');
+            });
+        });
+        setActiveSettingsTab(activeSettingsTab);
+
+        // Dirty-state tracking: any control change re-evaluates the save bar.
+        document.addEventListener('input', refreshDirtyState);
+        document.addEventListener('change', refreshDirtyState);
 
         saveBtn?.addEventListener('click', () => {
             savePreferences();
+        });
+        discardBtn?.addEventListener('click', () => {
+            if (accountPreferences) {
+                populateForm(accountPreferences, { updateBaseline: true });
+            }
+            renderJobStatus(null);
         });
         restoreBtn?.addEventListener('click', () => {
             openResetConfirmDialog();
