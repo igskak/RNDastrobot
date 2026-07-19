@@ -12,7 +12,7 @@
 .calendar-shell {
     max-width: 1240px;
     margin: 0 auto;
-    padding: 12px 18px 28px;
+    padding: 56px 18px 28px; /* top clears the fixed burger nav (app-nav.js) */
     display: flex;
     flex-direction: column;
 }

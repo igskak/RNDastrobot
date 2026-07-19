@@ -4,14 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.calendar.meta.title"></title>
-    <link rel="stylesheet" href="bundles/calendar.bundle.css?v=9865e7be347f">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=9865e7be347f">
+    <link rel="stylesheet" href="bundles/calendar.bundle.css?v=254508b2f2bb">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=254508b2f2bb">
+    <link rel="stylesheet" href="css/app-nav.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <!-- FullCalendar (includes daygrid, timegrid, interaction) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css">
-    <script>window.__APP_BUILD_ID__ = '9865e7be347f';</script>
+    <script>window.__APP_BUILD_ID__ = '254508b2f2bb';</script>
 </head>
 <body class="calendar-page workspace-compact" data-defer-loader>
     <div class="page-loader" id="pageLoader">
@@ -20,44 +21,10 @@
     </div>
 
     <div class="calendar-shell">
-        <header class="clients-header">
-            <div class="clients-brand-block">
-                <a href="/" class="calendar-back" data-i18n-aria-label="common.back" data-i18n-title="common.back" aria-label="Back" title="Back">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                        <path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </a>
-                <a href="/" class="logo">
-                    <svg class="logo-mark" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="14" cy="14" r="12.5" stroke="#1E3A5F" stroke-width="1.25"/>
-                        <circle cx="14" cy="14" r="7.5" stroke="#B8935A" stroke-width="0.8" stroke-dasharray="2.5 3"/>
-                        <circle cx="14" cy="14" r="2.2" fill="#1E3A5F"/>
-                        <circle cx="14" cy="2.2" r="1.3" fill="#B8935A"/>
-                        <circle cx="24.1" cy="8" r="1.3" fill="#B8935A" opacity="0.65"/>
-                        <circle cx="24.1" cy="20" r="1.3" fill="#B8935A" opacity="0.45"/>
-                        <circle cx="14" cy="25.8" r="1.3" fill="#B8935A" opacity="0.8"/>
-                        <circle cx="3.9" cy="20" r="1.3" fill="#B8935A" opacity="0.55"/>
-                        <circle cx="3.9" cy="8" r="1.3" fill="#B8935A" opacity="0.7"/>
-                    </svg>
-                    <span data-i18n="common.brandName"></span>
-                </a>
-                <p class="clients-brand-subtitle" data-i18n="page.clients.hero.eyebrow"></p>
-            </div>
-
-            <div class="clients-header-actions">
-                <div class="header-account-pill">
-                    <span class="header-account-label" data-i18n="page.clients.profile.label"></span>
-                    <span id="welcomeLabel" class="header-account-value"></span>
-                </div>
-                <a href="/" class="btn-logout">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                        <path d="M5 2H2.5A1.5 1.5 0 0 0 1 3.5v7A1.5 1.5 0 0 0 2.5 12H5M9 10l3-3-3-3M12 7H5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <span data-i18n="page.calendar.nav.clients"></span>
-                </a>
-                <button id="logoutBtn" class="btn-logout" type="button" data-i18n="page.clients.actions.logout"></button>
-            </div>
-        </header>
+        <!-- Old top-bar chrome replaced by the shared burger nav (js/app-nav.js).
+             #welcomeLabel is kept (hidden) so calendar.js can populate it and the
+             burger drawer reads the account email from it. -->
+        <span id="welcomeLabel" class="header-account-value" hidden></span>
 
         <main>
             <div class="calendar-card">
@@ -184,9 +151,10 @@
 
     <!-- FullCalendar from CDN (includes daygrid, timegrid, interaction plugins) -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-    <script type="module" src="js/bundles/calendar.bundle.js?v=9865e7be347f"></script>
+    <script type="module" src="js/bundles/calendar.bundle.js?v=254508b2f2bb"></script>
     <script src="/runtime-config.js"></script>
-    <script src="js/analytics.js?v=9865e7be347f"></script>
-    <script src="js/locale-switcher.js?v=9865e7be347f"></script>
+    <script src="js/analytics.js?v=254508b2f2bb"></script>
+    <script src="js/locale-switcher.js?v=254508b2f2bb"></script>
+    <script src="js/app-nav.js"></script>
 </body>
 </html>
