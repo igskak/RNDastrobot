@@ -766,13 +766,12 @@
         const isComposite = state.singleChartMode === 'composite';
         if (!isComposite) {
             // Пустые state.layers → buildViewModel отдаёт натал-only колесо (без пустых
-            // колец). Композит из sessionStorage мгновенно показать нельзя — там держим
-            // лоадер до расчёта, как раньше.
+            // колец). Композит из sessionStorage мгновенно показать нельзя — там колесо
+            // остаётся пустым (с угловым спиннером) до расчёта.
             renderWheel();
             showLayout();
-            hideLoader();
-            setLightweightLoading(true);
         }
+        setLightweightLoading(true);
 
         // Финализация после гидрации префов и онбординга. Онбординг уходит с пути первого
         // рендера (A6), но применяется ДО загрузки слоёв: он может переключить вид на
@@ -790,7 +789,7 @@
         if (isComposite) {
             await enterCompositeMode();
             showLayout();
-            hideLoader();
+            setLightweightLoading(false);
         } else {
             await loadActiveLayers({ lightweight: true });
         }
@@ -798,7 +797,7 @@
 
     function cacheElements() {
         [
-            'pageLoader', 'forecastNewLayout', 'forecastNewError', 'forecastNewErrorMsg',
+            'forecastNewLayout', 'forecastNewError', 'forecastNewErrorMsg',
             'forecastNewBackBtn', 'forecastNewTitle', 'forecastNewSubtitle', 'openNatalTablesBtn',
             'openClientProfileBtn', 'saveSourceChartBtn', 'saveNatalChartBtn', 'forecastNewActionsToggle', 'forecastNewActionsMenu',
             'forecastNewDirectionTypeSelect',
@@ -4600,7 +4599,6 @@
         let hasRenderedPartial = false;
         const hasCompletePreviousLayers = instancesToLoad.length > 0
             && instancesToLoad.every((inst) => state.layers?.[inst.id]);
-        if (options.showLoader) showLoader();
         if (options.lightweight) setLightweightLoading(true);
         state.layers = Object.fromEntries(activeIds
             .filter((id) => state.layers?.[id])
@@ -4644,7 +4642,6 @@
             showError(error.message || 'Ошибка загрузки прогностики');
         } finally {
             if (seq === state.requestSeq) {
-                hideLoader();
                 setLightweightLoading(false);
             }
         }
@@ -9929,16 +9926,6 @@
             },
         });
         if (payload) localStorage.setItem(key, JSON.stringify(payload));
-    }
-
-    function showLoader() {
-        refs.pageLoader?.classList.remove('fade-out');
-    }
-
-    function hideLoader() {
-        if (!refs.pageLoader) return;
-        refs.pageLoader.classList.add('fade-out');
-        setTimeout(() => refs.pageLoader?.remove(), 460);
     }
 
     function showLayout() {

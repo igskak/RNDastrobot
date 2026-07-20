@@ -14,10 +14,6 @@
     animation: none;
 }
 
-.forecast-new-loader {
-    background: rgba(249, 247, 242, 0.96);
-}
-
 .forecast-new-header {
     position: relative;
     z-index: 20;
