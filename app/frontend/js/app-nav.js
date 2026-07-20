@@ -53,6 +53,15 @@
         burger.setAttribute('aria-expanded', 'false');
         burger.innerHTML = '<span></span><span></span><span></span>';
 
+        // Sticky top bar in the flow — content sits below it (never covered),
+        // burger left-aligned with the page content.
+        var bar = document.createElement('div');
+        bar.className = 'app-nav-bar';
+        var barInner = document.createElement('div');
+        barInner.className = 'app-nav-bar-inner';
+        barInner.appendChild(burger);
+        bar.appendChild(barInner);
+
         var scrim = document.createElement('div');
         scrim.className = 'app-nav-scrim';
 
@@ -60,7 +69,7 @@
         drawer.className = 'app-nav-drawer';
         drawer.setAttribute('role', 'navigation');
 
-        document.body.appendChild(burger);
+        document.body.insertBefore(bar, document.body.firstChild);
         document.body.appendChild(scrim);
         document.body.appendChild(drawer);
         mounted = true;

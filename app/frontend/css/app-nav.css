@@ -10,14 +10,29 @@
    its old top-bar chrome.
    ============================================================ */
 
-/* Burger button — fixed top-left */
-.app-nav-burger {
-    position: fixed;
-    top: var(--space-3);
-    left: var(--space-3);
+/* Top bar — sticky, in the flow (content flows below it, never covered).
+   The inner container matches the page's content width so the burger is
+   left-aligned with the page. Pages can tune --app-nav-max / --app-nav-pad. */
+.app-nav-bar {
+    position: sticky;
+    top: 0;
     z-index: 60;
+    width: 100%;
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border);
+}
+.app-nav-bar-inner {
+    max-width: var(--app-nav-max, 1240px);
+    margin: 0 auto;
+    padding: 10px var(--app-nav-pad, 18px);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+.app-nav-burger {
     width: 40px;
     height: 40px;
+    flex-shrink: 0;
     display: inline-flex;
     flex-direction: column;
     align-items: center;
@@ -27,7 +42,6 @@
     border-radius: var(--radius-sm);
     background: var(--bg-secondary);
     cursor: pointer;
-    box-shadow: var(--shadow-sm);
     transition: background var(--transition);
 }
 .app-nav-burger:hover { background: var(--bg-hover); }

@@ -17,6 +17,7 @@
             'interpretations-page',
             'login-page',
             'calendar-page', // burger nav (app-nav.js) provides the language switch
+            'clients-page',
         ];
 
         return !hiddenOnPages.some((className) => body.classList.contains(className));

@@ -148,7 +148,7 @@ function rewriteHtmlBuildMarkers(source, buildId, page) {
   const entryName = pageEntryName(page);
   const escapedEntryName = entryName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const assetPattern = new RegExp(
-    `((?:/)?(?:bundles/${escapedEntryName}\\.bundle\\.css|js/bundles/${escapedEntryName}\\.bundle\\.js|css/locale-switcher\\.css|js/locale-switcher\\.js|js/analytics\\.js))\\?v=[^"' ]+`,
+    `((?:/)?(?:bundles/${escapedEntryName}\\.bundle\\.css|js/bundles/${escapedEntryName}\\.bundle\\.js|css/locale-switcher\\.css|js/locale-switcher\\.js|js/analytics\\.js|css/app-nav\\.css|js/app-nav\\.js))\\?v=[^"' ]+`,
     'g',
   );
 

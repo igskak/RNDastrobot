@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecastNew.pageTitle">Forecast</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=d518fc17d6fe">
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=67c3ba25583b">
     <!-- C2 (Фаза 3): символьные глифы (знаки/аспекты) появляются на колесе сразу;
          font-display:block делает их невидимыми до загрузки шрифта, поэтому прелоадим
          woff2-сабсеты (десятки КБ вместо 1.2 МБ ttf). crossorigin обязателен для шрифтов. -->
     <link rel="preload" href="/fonts/NotoSansSymbols.subset.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/fonts/NotoSansSymbols2.subset.woff2" as="font" type="font/woff2" crossorigin>
-    <script>window.__APP_BUILD_ID__ = 'd518fc17d6fe';</script>
+    <script>window.__APP_BUILD_ID__ = '67c3ba25583b';</script>
     <!-- A3 (Фаза 1): каталог локали грузится i18n.js в рантайме и это первый await
          bootstrap. Прогреваем HTTP-кэш нужной локали сразу из <head> (immutable-кэш в
          проде → i18n.js переиспользует ответ). Локаль резолвим тем же приоритетом, что
@@ -50,10 +50,10 @@
     <link rel="modulepreload" href="/js/bundles/chunks/chunk-6WUMBF2I.js">
     <link rel="modulepreload" href="/js/bundles/chunks/chunk-DWCL6BXC.js">
     <link rel="modulepreload" href="/js/bundles/chunks/chunk-FINH6RT4.js">
-    <link rel="modulepreload" href="/js/bundles/chunks/chunk-HMK6S532.js">
     <link rel="modulepreload" href="/js/bundles/chunks/chunk-HX7TNMQQ.js">
     <link rel="modulepreload" href="/js/bundles/chunks/chunk-IZUYVIPG.js">
     <link rel="modulepreload" href="/js/bundles/chunks/chunk-MTRUVDHY.js">
+    <link rel="modulepreload" href="/js/bundles/chunks/chunk-N2I5AW2C.js">
     <link rel="modulepreload" href="/js/bundles/chunks/chunk-NEFTZ6D5.js">
     <link rel="modulepreload" href="/js/bundles/chunks/chunk-OYFB3LUY.js">
     <link rel="modulepreload" href="/js/bundles/chunks/chunk-SYGUD2QR.js">
@@ -713,7 +713,7 @@
          поэтому window.__RUNTIME_CONFIG__ (runtime-config.js) готов до analytics.js и до
          модуля приложения. -->
     <script defer src="/runtime-config.js"></script>
-    <script defer src="/js/analytics.js?v=d518fc17d6fe"></script>
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=d518fc17d6fe"></script>
+    <script defer src="/js/analytics.js?v=67c3ba25583b"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=67c3ba25583b"></script>
 </body>
 </html>
