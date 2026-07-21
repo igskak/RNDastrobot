@@ -124,7 +124,7 @@ async function load() {
 function renderError(msg) {
     document.getElementById('pageLoader')?.classList.add('hidden');
     document.getElementById('consultRoot').innerHTML =
-        `<div class="consult-card"><p class="consult-empty">${escapeHtml(msg)}</p></div>`;
+        `<div class="ui-card"><p class="consult-empty">${escapeHtml(msg)}</p></div>`;
 }
 
 function render() {
@@ -154,7 +154,7 @@ function render() {
     let sideHtml = '';
 
     if (cs.call_status === 'summary_failed') {
-        primaryHtml += `<div class="consult-card consult-card-status">
+        primaryHtml += `<div class="ui-card consult-card-status">
             <p class="consult-empty">${escapeHtml(t('page.consultation.summaryFailed'))}</p>
             ${cs.summary_error ? `<p class="consult-empty">${escapeHtml(cs.summary_error)}</p>` : ''}
         </div>`;
@@ -169,7 +169,7 @@ function render() {
     }
 
     // Client memory (history) — always show, it's client-level
-    sideHtml += `<div class="consult-card consult-card-memory">
+    sideHtml += `<div class="ui-card consult-card-memory">
         <div class="consult-card-title"><span>${escapeHtml(t('page.consultation.memory.title'))}</span></div>
         <div id="memList" class="mem-list"><div class="consult-loading"><span class="consult-spinner"></span></div></div>
     </div>`;
@@ -185,13 +185,13 @@ function render() {
 }
 
 function renderLegacy(cs) {
-    let h = `<div class="consult-card consult-card-summary"><div class="consult-card-title"><span>${escapeHtml(t('page.consultation.summary.title'))}</span></div>`;
+    let h = `<div class="ui-card consult-card-summary"><div class="consult-card-title"><span>${escapeHtml(t('page.consultation.summary.title'))}</span></div>`;
     h += cs.summary_text
         ? `<p class="consult-text">${escapeHtml(cs.summary_text)}</p>`
         : `<p class="consult-empty">${escapeHtml(t('page.consultation.legacy'))}</p>`;
     h += `</div>`;
     if (cs.client_facing_summary) {
-        h += `<div class="consult-card consult-card-report"><div class="consult-card-title"><span>${escapeHtml(t('page.consultation.report.title'))}</span></div>
+        h += `<div class="ui-card consult-card-report"><div class="consult-card-title"><span>${escapeHtml(t('page.consultation.report.title'))}</span></div>
             <p class="consult-text">${escapeHtml(cs.client_facing_summary)}</p></div>`;
     }
     return h;
@@ -199,7 +199,7 @@ function renderLegacy(cs) {
 
 function renderInternalSummary(sj) {
     const ss = sj.session_summary || {};
-    return `<div class="consult-card consult-card-summary">
+    return `<div class="ui-card consult-card-summary">
         <div class="consult-card-title"><span>${escapeHtml(t('page.consultation.summary.title'))}</span></div>
         <p class="consult-text">${escapeHtml(ss.brief || '')}</p>
         ${ss.detailed ? `<details><summary class="consult-detail-toggle">${escapeHtml(t('page.consultation.summary.showDetailed'))}</summary>
@@ -214,15 +214,15 @@ function renderClientReport(cs, sj) {
     const sharedNote = cs.client_report_shared_at
         ? `<span class="consult-shared-note">${escapeHtml(t('page.consultation.report.sharedAt'))} ${escapeHtml(formatConsultDateTime(`${cs.client_report_shared_at}Z`))}</span>`
         : '';
-    return `<div class="consult-card consult-card-report">
+    return `<div class="ui-card consult-card-report">
         <div class="consult-card-title">
             <span>${escapeHtml(t('page.consultation.report.title'))}</span>
             <span class="consult-review-badge">${escapeHtml(t('page.consultation.report.reviewRequired'))}</span>
         </div>
         <textarea class="consult-report-area" id="reportArea">${escapeHtml(text)}</textarea>
         <div class="consult-report-actions">
-            <button class="btn-new" id="saveReportBtn" disabled>${escapeHtml(t('page.consultation.report.save'))}</button>
-            <button class="btn-new btn-ghost" id="copyReportBtn">${escapeHtml(t('page.consultation.report.copy'))}</button>
+            <button class="ui-btn ui-btn--primary ui-btn--sm" id="saveReportBtn" disabled>${escapeHtml(t('page.consultation.report.save'))}</button>
+            <button class="ui-btn ui-btn--secondary ui-btn--sm" id="copyReportBtn">${escapeHtml(t('page.consultation.report.copy'))}</button>
             <span id="reportStatus"></span>
             ${sharedNote}
         </div>
@@ -244,7 +244,7 @@ function renderKeyPoints(points) {
             <ul class="consult-kp-list">${items}</ul>
         </div>`;
     });
-    return `<div class="consult-card consult-card-keypoints">
+    return `<div class="ui-card consult-card-keypoints">
         <div class="consult-card-title"><span>${escapeHtml(t('page.consultation.keyPoints.title'))}</span></div>
         ${groups}
     </div>`;
@@ -252,9 +252,9 @@ function renderKeyPoints(points) {
 
 function renderOpenQuestions(items) {
     if (!items.length) {
-        return `<div class="consult-card consult-card-questions">
+        return `<div class="ui-card consult-card-questions">
             <div class="consult-card-title"><span>${escapeHtml(t('page.consultation.openQuestions.title'))}</span></div>
-            <p class="consult-empty">${escapeHtml(t('page.consultation.openQuestions.none'))}</p>
+            <div class="ui-empty-state"><div class="ui-empty-state__icon" aria-hidden="true">?</div><p class="ui-empty-state__text">${escapeHtml(t('page.consultation.openQuestions.none'))}</p></div>
         </div>`;
     }
     const lis = items.map((o) =>
@@ -262,7 +262,7 @@ function renderOpenQuestions(items) {
             <div class="consult-oq-reason">${escapeHtml(enumLabel('openQuestionReason', o.reason))} · ${escapeHtml(enumLabel('mentionedBy', o.mentioned_by))}</div>
         </li>`
     ).join('');
-    return `<div class="consult-card consult-card-questions">
+    return `<div class="ui-card consult-card-questions">
         <div class="consult-card-title"><span>${escapeHtml(t('page.consultation.openQuestions.title'))}</span></div>
         <ul class="consult-oq-list">${lis}</ul>
     </div>`;
@@ -326,7 +326,7 @@ async function loadMemory() {
 function renderMemory(entries) {
     const box = document.getElementById('memList');
     if (!entries.length) {
-        box.innerHTML = `<p class="consult-empty">${escapeHtml(t('page.consultation.memory.empty'))}</p>`;
+        box.innerHTML = `<div class="ui-empty-state"><div class="ui-empty-state__icon" aria-hidden="true">✎</div><p class="ui-empty-state__text">${escapeHtml(t('page.consultation.memory.empty'))}</p></div>`;
         return;
     }
     box.innerHTML = entries.map((e) => {

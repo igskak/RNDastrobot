@@ -34,11 +34,9 @@
     padding: 2px 7px; border-radius: 8px; background: rgba(30,58,95,0.1); color: var(--accent);
 }
 
-.consult-card {
-    background: rgba(255, 255, 255, 0.74); border: 1px solid rgba(30, 58, 95, 0.08);
-    border-radius: 10px; padding: 10px 12px; box-shadow: var(--density-surface-shadow); margin-bottom: 0;
-    min-width: 0;
-}
+/* Cards use the shared flat .ui-card surface; keep the review screen's
+   compact padding (the kit's default 24px is too roomy for this dense grid). */
+#consultRoot .ui-card { padding: 10px 12px; min-width: 0; }
 
 .consult-detail-grid {
     display: grid;
@@ -112,14 +110,9 @@
 .consult-empty { font-size: 13px; color: var(--text-muted); font-style: italic; margin: 0; }
 .consult-loading { display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 13px; padding: 20px 0; justify-content: center; }
 #consultRoot > .consult-loading,
-#consultRoot > .consult-card:not(.consult-card-summary):not(.consult-card-report):not(.consult-card-status):not(.consult-card-keypoints):not(.consult-card-questions):not(.consult-card-memory) { width: 100%; }
+#consultRoot > .ui-card:not(.consult-card-summary):not(.consult-card-report):not(.consult-card-status):not(.consult-card-keypoints):not(.consult-card-questions):not(.consult-card-memory) { width: 100%; }
 .hidden { display: none !important; }
 
-.btn-new { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 34px; padding: 7px 13px; border-radius: 10px; font-size: 13px; font-weight: 600; font-family: var(--font-ui); border: 0; background: linear-gradient(135deg, #1e3a5f, #2e5a8d); color: #fff; cursor: pointer; box-shadow: 0 10px 24px rgba(30,58,95,0.18); text-decoration: none; }
-.btn-new:hover { transform: translateY(-1px); }
-.btn-new:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-.btn-ghost { background: rgba(255,255,255,0.7); border: 1px solid rgba(30,58,95,0.14); color: var(--text-secondary); }
-.btn-ghost:hover { background: rgba(240,237,228,0.92); color: var(--text-primary); }
 
 .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(12px); padding: 10px 20px; border-radius: 999px; font-size: 13px; font-weight: 600; background: var(--text-primary); color: #fff; box-shadow: var(--shadow-lg); opacity: 0; transition: opacity 0.22s ease, transform 0.22s ease; pointer-events: none; z-index: 999; }
 .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -145,7 +138,7 @@
         width: 100%;
     }
 
-    .consult-card {
+    #consultRoot .ui-card {
         padding: 9px;
     }
 
