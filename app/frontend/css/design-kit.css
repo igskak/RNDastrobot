@@ -47,6 +47,45 @@
 .ui-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .ui-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+/* ---- Segmented control: one selected among equals ----
+   The canonical "which one is active" pattern for date presets (1д/1м/1г),
+   view switchers (Прогноз/Таблицы/Таймлайн), toggles (Помісячно/Раз на рік).
+   Active = a light raised pill on a tinted track — NOT a navy fill (navy fill
+   stays for primary action buttons, so the accent means "act", not "selected").
+   Mark the active item with .is-selected OR [aria-selected="true"]/[aria-pressed="true"].
+   Keep any existing JS-hook class (e.g. .preset-btn) alongside .ui-segmented__item. */
+.ui-segmented {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+}
+.ui-segmented__item {
+    border: none;
+    background: none;
+    font-family: var(--font-ui);
+    font-size: var(--font-size-label);
+    font-weight: 500;
+    color: var(--text-secondary);
+    padding: 6px 14px;
+    border-radius: calc(var(--radius-md) - 3px);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background var(--transition), color var(--transition);
+}
+.ui-segmented__item:hover:not(.is-selected):not([aria-selected="true"]):not([aria-pressed="true"]) {
+    color: var(--text-primary);
+}
+.ui-segmented__item.is-selected,
+.ui-segmented__item[aria-selected="true"],
+.ui-segmented__item[aria-pressed="true"] {
+    background: var(--bg-secondary);
+    color: var(--accent);
+    box-shadow: var(--shadow-sm);
+}
+.ui-segmented__item:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
 /* ---- Inputs: one treatment, visible label ---- */
 .ui-field { display: flex; flex-direction: column; gap: var(--space-2); }
 .ui-label {

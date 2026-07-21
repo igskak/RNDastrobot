@@ -97,6 +97,28 @@
     </div>
   </section>
 
+  <!-- SEGMENTED -->
+  <section class="sg-section">
+    <h2 class="sg-h">Segmented control <span class="sg-code">.ui-segmented</span></h2>
+    <p class="sg-note">One selected among equals: date presets, view switchers, toggles. Active = light pill on a tinted track (navy fill is reserved for primary buttons). Mark active with <code class="sg-code">.is-selected</code> or <code class="sg-code">[aria-selected="true"]</code>. Keep any JS-hook class (e.g. <code class="sg-code">.preset-btn</code>) alongside <code class="sg-code">.ui-segmented__item</code>.</p>
+    <div class="sg-row">
+      <div class="ui-segmented" role="tablist">
+        <button class="ui-segmented__item" role="tab">1д</button>
+        <button class="ui-segmented__item" role="tab">1м</button>
+        <button class="ui-segmented__item is-selected" role="tab" aria-selected="true">3м</button>
+        <button class="ui-segmented__item" role="tab">6м</button>
+        <button class="ui-segmented__item" role="tab">1р</button>
+      </div>
+    </div>
+    <div class="sg-row">
+      <div class="ui-segmented" role="tablist">
+        <button class="ui-segmented__item is-selected" role="tab" aria-selected="true">Прогноз</button>
+        <button class="ui-segmented__item" role="tab">Таблиці</button>
+        <button class="ui-segmented__item" role="tab">Таймлайн</button>
+      </div>
+    </div>
+  </section>
+
   <!-- INPUT -->
   <section class="sg-section">
     <h2 class="sg-h">Input <span class="sg-code">.ui-input</span></h2>
