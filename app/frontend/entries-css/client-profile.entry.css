@@ -249,7 +249,7 @@
 }
 
 /* quiet inline stats strip (bare — no card chrome) */
-.profile-card.profile-kpis {
+.ui-card.profile-kpis {
     background: none;
     border: 0;
     box-shadow: none;
@@ -320,15 +320,9 @@ body.is-solo-profile .profile-column { display: contents; }
 }
 
 /* ── Cards ──────────────────────────────────────────────────────────────── */
-
-.profile-card {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: var(--space-4);
-    box-shadow: var(--shadow-sm);
-    min-width: 0;
-}
+/* Card surface comes from the shared .ui-card kit class. Keep min-width:0 so
+   grid children can shrink (the kit doesn't set it). */
+.ui-card { min-width: 0; }
 
 .profile-card-title {
     font-family: var(--font-ui);
@@ -437,44 +431,13 @@ body.is-solo-profile .profile-column { display: contents; }
 
 .profile-insights-empty { font-size: var(--font-size-label); color: var(--text-muted); font-style: italic; margin: 0; }
 
-/* ── Segmented tabs (consultation filter + notes source) ────────────────── */
-
-.profile-filter-tabs,
-.profile-memory-tabs {
-    display: inline-flex;
-    gap: 4px;
-    padding: 3px;
-    background: var(--bg-tertiary);
-    border-radius: var(--radius-sm);
-    flex-wrap: wrap;
-}
-
-.profile-filter-tabs { margin-bottom: var(--space-3); }
-
-.profile-filter-tab,
-.profile-memory-tab {
-    min-height: 26px;
-    border: 0;
-    background: none;
-    cursor: pointer;
-    font: inherit;
-    font-size: var(--font-size-caption);
-    font-weight: 500;
-    color: var(--text-secondary);
-    padding: 4px var(--space-3);
-    border-radius: 6px;
-    transition: background var(--transition), color var(--transition);
-}
-
-.profile-filter-tab:hover,
-.profile-memory-tab:hover { color: var(--text-primary); }
-
-.profile-filter-tab.active,
-.profile-memory-tab.active {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    box-shadow: var(--shadow-sm);
-}
+/* ── Segmented tabs (consultation filter + notes source) ──────────────────
+   Surface + active state come from the shared .ui-segmented kit. The
+   .profile-filter-tab / .profile-memory-tab classes stay only as JS hooks;
+   .ui-segmented lets the group wrap to a second row on the narrow columns. */
+.ui-segmented.profile-filter-tabs,
+.ui-segmented.profile-memory-tabs { flex-wrap: wrap; }
+.ui-segmented.profile-filter-tabs { margin-bottom: var(--space-3); }
 
 /* ── Consultation rows ──────────────────────────────────────────────────── */
 

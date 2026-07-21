@@ -238,6 +238,7 @@ function cacheElements() {
     refs.clientMemoryStatus  = document.getElementById('clientMemoryStatus');
     refs.clientMemoryList    = document.getElementById('clientMemoryList');
     refs.clientMemoryEmpty   = document.getElementById('clientMemoryEmpty');
+    refs.clientMemoryEmptyText = document.getElementById('clientMemoryEmptyText');
     refs.profileStatsGrid    = document.getElementById('profileStatsGrid');
     refs.profileInsightsCard = document.getElementById('profileInsightsCard');
     refs.profileInsightsList = document.getElementById('profileInsightsList');
@@ -361,9 +362,11 @@ function bindPageEvents() {
         const tab = e.target.closest('.profile-filter-tab[data-filter]');
         if (!tab) return;
         consultationFilter = tab.dataset.filter;
-        refs.filterTabs.querySelectorAll('.profile-filter-tab').forEach((t) =>
-            t.classList.toggle('active', t === tab)
-        );
+        refs.filterTabs.querySelectorAll('.profile-filter-tab').forEach((t) => {
+            const active = t === tab;
+            t.classList.toggle('is-selected', active);
+            t.setAttribute('aria-selected', String(active));
+        });
         renderConsultations();
     });
 
@@ -373,7 +376,7 @@ function bindPageEvents() {
         clientMemorySource = tab.dataset.memorySource === 'ai' ? 'ai' : 'astrologer';
         refs.clientMemoryTabs.querySelectorAll('.profile-memory-tab').forEach((node) => {
             const active = node === tab;
-            node.classList.toggle('active', active);
+            node.classList.toggle('is-selected', active);
             node.setAttribute('aria-selected', String(active));
         });
         refs.clientMemoryForm.hidden = clientMemorySource !== 'astrologer';
@@ -431,12 +434,12 @@ function applyPlanUi() {
         section.classList.toggle('hidden', isSolo);
     });
     refs.logSessionBtn?.classList.toggle('hidden', !planCan('consultations'));
-    refs.profileContactList?.closest('.profile-card')?.classList.toggle('hidden', !planCan('clients'));
-    refs.profileStatsGrid?.closest('.profile-card')?.classList.toggle('hidden', !planCan('meeting_stats'));
+    refs.profileContactList?.closest('.ui-card')?.classList.toggle('hidden', !planCan('clients'));
+    refs.profileStatsGrid?.closest('.ui-card')?.classList.toggle('hidden', !planCan('meeting_stats'));
     refs.profileInsightsCard?.classList.toggle('hidden', !planCan('calls'));
-    refs.relatedPeopleList?.closest('.profile-card')?.classList.toggle('hidden', !planCan('clients'));
-    refs.consultationsList?.closest('.profile-card')?.classList.toggle('hidden', !planCan('consultations'));
-    refs.recordingsList?.closest('.profile-card')?.classList.toggle('hidden', !planCan('calls'));
+    refs.relatedPeopleList?.closest('.ui-card')?.classList.toggle('hidden', !planCan('clients'));
+    refs.consultationsList?.closest('.ui-card')?.classList.toggle('hidden', !planCan('consultations'));
+    refs.recordingsList?.closest('.ui-card')?.classList.toggle('hidden', !planCan('calls'));
 }
 
 /* ─── Load & render ─────────────────────────────────────────────────────── */
@@ -590,7 +593,7 @@ async function loadClientMemory() {
         renderClientMemoryEntries(data.entries || []);
     } catch (_) {
         refs.clientMemoryList.innerHTML = '';
-        refs.clientMemoryEmpty.textContent = t('page.clientNotes.errors.loadFailed');
+        if (refs.clientMemoryEmptyText) refs.clientMemoryEmptyText.textContent = t('page.clientNotes.errors.loadFailed');
         refs.clientMemoryEmpty?.classList.remove('hidden');
     }
 }
@@ -599,9 +602,11 @@ function renderClientMemoryEntries(entries) {
     if (!refs.clientMemoryList) return;
     refs.clientMemoryList.innerHTML = '';
     if (!entries.length) {
-        refs.clientMemoryEmpty.textContent = clientMemorySource === 'ai'
-            ? t('page.clientNotes.emptyConsultations')
-            : t('page.clientNotes.emptyNotes');
+        if (refs.clientMemoryEmptyText) {
+            refs.clientMemoryEmptyText.textContent = clientMemorySource === 'ai'
+                ? t('page.clientNotes.emptyConsultations')
+                : t('page.clientNotes.emptyNotes');
+        }
         refs.clientMemoryEmpty?.classList.remove('hidden');
         return;
     }
@@ -960,8 +965,8 @@ function renderRelatedPeople(items) {
                     ${person.relation_notes ? `<p class="profile-related-notes">${escapeHtml(person.relation_notes)}</p>` : ''}
                 </div>
                 <div class="profile-related-actions">
-                    <button class="btn-new btn-sm" type="button" data-action="open-synastry" data-related-person-id="${escapeHtml(person.person_id)}" data-related-chart-id="${escapeHtml(person.primary_chart_id || '')}" ${primaryChartId && person.primary_chart_id ? '' : 'disabled'}>${escapeHtml(t('page.clients.consultation.types.synastry'))}</button>
-                    <button class="btn-logout btn-sm" type="button" data-action="open-related-profile" data-related-person-id="${escapeHtml(person.person_id)}">${escapeHtml(t('page.clientProfile.profileAction'))}</button>
+                    <button class="ui-btn ui-btn--primary ui-btn--sm" type="button" data-action="open-synastry" data-related-person-id="${escapeHtml(person.person_id)}" data-related-chart-id="${escapeHtml(person.primary_chart_id || '')}" ${primaryChartId && person.primary_chart_id ? '' : 'disabled'}>${escapeHtml(t('page.clients.consultation.types.synastry'))}</button>
+                    <button class="ui-btn ui-btn--secondary ui-btn--sm" type="button" data-action="open-related-profile" data-related-person-id="${escapeHtml(person.person_id)}">${escapeHtml(t('page.clientProfile.profileAction'))}</button>
                     <button class="profile-icon-btn profile-icon-btn--danger" type="button" data-action="delete-related-person" data-related-person-id="${escapeHtml(person.person_id)}" aria-label="${escapeHtml(t('page.clients.actions.delete'))}" title="${escapeHtml(t('page.clients.actions.delete'))}">
                         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 4.5h9M6 2.5h4l.5 2H5.5l.5-2ZM5 6.5v6m3-6v6m3-6v6M4.5 4.5l.6 9h5.8l.6-9" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </button>
@@ -1152,7 +1157,7 @@ function pollProcessingSession(sessionId, panel, rowEl) {
         attempts++;
         if (attempts > MAX_ATTEMPTS) {
             clearInterval(timer);
-            panel.innerHTML = `<div class="cs-panel-error">Processing timed out. <button class="btn-new btn-sm cs-retry-btn" data-session-id="${escapeHtml(sessionId)}">Retry</button></div>`;
+            panel.innerHTML = `<div class="cs-panel-error">Processing timed out. <button class="ui-btn ui-btn--primary ui-btn--sm cs-retry-btn" data-session-id="${escapeHtml(sessionId)}">Retry</button></div>`;
             return;
         }
         try {
@@ -1187,7 +1192,7 @@ function buildRecordingPanelHTML(cs, audioUrl, sessionId) {
         return `<div class="cs-panel-inner">
             <p class="cs-panel-error">${escapeHtml(t('page.clientProfile.recordings.failed'))}</p>
             ${errMsg}
-            <button class="btn-new btn-sm cs-retry-btn" data-session-id="${escapeHtml(sessionId)}">${escapeHtml(t('page.clientProfile.recordings.retry'))}</button>
+            <button class="ui-btn ui-btn--primary ui-btn--sm cs-retry-btn" data-session-id="${escapeHtml(sessionId)}">${escapeHtml(t('page.clientProfile.recordings.retry'))}</button>
         </div>`;
     }
 
@@ -1204,7 +1209,7 @@ function buildRecordingPanelHTML(cs, audioUrl, sessionId) {
     if (cs?.call_status === 'summary_failed') {
         // Transcript succeeded but the summary failed §10 — show note + retry, keep transcript below.
         html += `<p class="cs-panel-error">${escapeHtml(t('page.clientProfile.recordings.summaryFailed'))}</p>
-            <button class="btn-new btn-sm cs-retry-btn" data-session-id="${escapeHtml(sessionId)}">${escapeHtml(t('page.clientProfile.recordings.retry'))}</button>`;
+            <button class="ui-btn ui-btn--primary ui-btn--sm cs-retry-btn" data-session-id="${escapeHtml(sessionId)}">${escapeHtml(t('page.clientProfile.recordings.retry'))}</button>`;
     } else if (sj) {
         // v1 contract — brief recap + categorized key points + a link to the full review page.
         const brief = sj.session_summary?.brief || '';
@@ -1222,7 +1227,7 @@ function buildRecordingPanelHTML(cs, audioUrl, sessionId) {
                 <ul class="cs-key-points-list">${items}</ul>
             </div>`;
         }
-        html += `<a class="btn-new btn-sm" href="/consultation/${encodeURIComponent(sessionId)}">${escapeHtml(t('page.clientProfile.recordings.reviewShare'))} →</a>`;
+        html += `<a class="ui-btn ui-btn--primary ui-btn--sm" href="/consultation/${encodeURIComponent(sessionId)}">${escapeHtml(t('page.clientProfile.recordings.reviewShare'))} →</a>`;
     } else {
         // Legacy pre-v1 rows: render the old shape so historical sessions still display.
         if (cs?.summary_text) {
@@ -2096,7 +2101,7 @@ function renderLinkChartPickerList() {
                 <span class="profile-picker-item-title">${escapeHtml(c.display_title)}</span>
                 ${meta ? `<span class="profile-picker-item-meta">${escapeHtml(meta)}</span>` : ''}
             </div>
-            <button class="btn-new btn-sm" type="button" ${already ? 'disabled' : ''} data-action="link-chart" data-chart-id="${escapeHtml(chartId)}">
+            <button class="ui-btn ui-btn--primary ui-btn--sm" type="button" ${already ? 'disabled' : ''} data-action="link-chart" data-chart-id="${escapeHtml(chartId)}">
                 ${already ? escapeHtml(t('page.clientProfile.linkedCharts.alreadyLinked')) : escapeHtml(t('page.clientProfile.linkedCharts.linkAction'))}
             </button>
         </div>`;
