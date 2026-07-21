@@ -368,6 +368,11 @@ select:disabled {
     padding-left: 32px;
 }
 
+/* Search field adopts the .ui-input kit treatment; keep room for the leading icon. */
+.search-input--icon {
+    padding-left: 34px;
+}
+
 .search-input::placeholder {
     color: rgba(92, 85, 78, 0.68);
 }

@@ -1072,7 +1072,7 @@ function buildUserRow(user) {
                     ${isChartsView ? '' : renderPersonChips(user)}
                     ${summaryChips.length > 0 ? `<div class="client-summary-chips">${summaryChips.join('')}</div>` : ''}
                     <div class="client-card-quick-actions">
-                        <button class="client-quick-btn ${isChartsView ? 'client-quick-btn-workspace' : ''}" type="button" data-action="open-forecast" data-user-id="${escapeHtml(forecastTargetId)}" ${forecastTargetId ? '' : 'disabled'}>
+                        <button class="ui-btn ui-btn--secondary ui-btn--sm${isChartsView ? ' client-quick-btn-workspace' : ''}" type="button" data-action="open-forecast" data-user-id="${escapeHtml(forecastTargetId)}" ${forecastTargetId ? '' : 'disabled'}>
                             ${forecastLabel}
                         </button>
                     </div>

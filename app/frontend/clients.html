@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.clients.title"></title>
-    <link rel="stylesheet" href="bundles/clients.bundle.css?v=ea075e50d9b6">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=ea075e50d9b6">
-    <link rel="stylesheet" href="css/app-nav.css?v=ea075e50d9b6">
+    <link rel="stylesheet" href="bundles/clients.bundle.css?v=c632488a1e1c">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=c632488a1e1c">
+    <link rel="stylesheet" href="css/app-nav.css?v=c632488a1e1c">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = 'ea075e50d9b6';</script>
+    <script>window.__APP_BUILD_ID__ = 'c632488a1e1c';</script>
     <style>
         /* Chip multi-select for linking people to a chart (edit dialog) */
         #editChartPersonWrap { position: relative; }
@@ -61,7 +61,7 @@
                     </div>
 
                     <div class="clients-card-actions">
-                        <button id="newItemBtn" class="btn-new" type="button">
+                        <button id="newItemBtn" class="ui-btn ui-btn--primary" type="button">
                             <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                             <span id="newItemBtnLabel" data-i18n="page.clients.newCard"></span>
                         </button>
@@ -74,20 +74,20 @@
                         <label class="toolbar-label" for="searchInput" data-i18n="page.clients.searchLabel"></label>
                         <div class="search-input-wrap">
                             <svg class="search-icon" width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 10.5L13 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-                            <input id="searchInput" class="search-input" type="search" data-i18n-placeholder="page.clients.searchPlaceholder" data-i18n-aria-label="page.clients.searchAriaLabel">
+                            <input id="searchInput" class="ui-input search-input--icon" type="search" data-i18n-placeholder="page.clients.searchPlaceholder" data-i18n-aria-label="page.clients.searchAriaLabel">
                         </div>
                     </div>
 
                     <div class="toolbar-field toolbar-field-tag">
                         <label class="toolbar-label" for="tagFilterSelect" data-i18n="page.clients.tagFilter.label"></label>
-                        <select id="tagFilterSelect" data-i18n-aria-label="page.clients.tagFilter.ariaLabel">
+                        <select id="tagFilterSelect" class="ui-input" data-i18n-aria-label="page.clients.tagFilter.ariaLabel">
                             <option value="" data-i18n="page.clients.tagFilter.all"></option>
                         </select>
                     </div>
 
                     <div class="toolbar-field toolbar-field-sort">
                         <label class="toolbar-label" for="sortSelect" data-i18n="page.clients.sortLabel"></label>
-                        <select id="sortSelect" data-i18n-aria-label="page.clients.sortAriaLabel">
+                        <select id="sortSelect" class="ui-input" data-i18n-aria-label="page.clients.sortAriaLabel">
                             <option value="created_desc" data-i18n="page.clients.sort.createdDesc"></option>
                             <option value="created_asc" data-i18n="page.clients.sort.createdAsc"></option>
                             <option value="name_asc" data-i18n="page.clients.sort.nameAsc"></option>
@@ -106,7 +106,7 @@
                     <svg class="empty-state-icon" width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true"><rect x="10" y="12" width="36" height="32" rx="4" stroke="currentColor" stroke-width="1.5"/><line x1="10" y1="20" x2="46" y2="20" stroke="currentColor" stroke-width="1.5"/><line x1="18" y1="12" x2="18" y2="20" stroke="currentColor" stroke-width="1.5"/><line x1="38" y1="12" x2="38" y2="20" stroke="currentColor" stroke-width="1.5"/><line x1="18" y1="29" x2="38" y2="29" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="18" y1="36" x2="31" y2="36" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     <h3 class="state-title" data-i18n="page.clients.empty"></h3>
                     <p class="state-copy" data-i18n="page.clients.emptyHint"></p>
-                    <button id="emptyStateNewBtn" class="btn-new state-cta" type="button">
+                    <button id="emptyStateNewBtn" class="ui-btn ui-btn--primary state-cta" type="button">
                         <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                         <span id="emptyStateNewBtnLabel" data-i18n="page.clients.createFirstCard"></span>
                     </button>
@@ -115,7 +115,7 @@
                         <h3 class="state-title" data-i18n="page.onboarding.welcome.title"></h3>
                         <p class="state-copy" data-i18n="page.onboarding.welcome.text"></p>
                         <div class="onboarding-actions">
-                            <button id="onboardingWelcomePrimary" class="btn-new state-cta" type="button" data-i18n="page.onboarding.welcome.primary"></button>
+                            <button id="onboardingWelcomePrimary" class="ui-btn ui-btn--primary state-cta" type="button" data-i18n="page.onboarding.welcome.primary"></button>
                             <button id="onboardingWelcomeSkip" class="onboarding-secondary" type="button" data-i18n="page.onboarding.welcome.skip"></button>
                         </div>
                     </div>
@@ -523,10 +523,10 @@
 
     <div id="toast" class="toast"></div>
 
-    <script type="module" src="js/bundles/clients.bundle.js?v=ea075e50d9b6"></script>
+    <script type="module" src="js/bundles/clients.bundle.js?v=c632488a1e1c"></script>
     <script src="/runtime-config.js"></script>
-    <script src="js/analytics.js?v=ea075e50d9b6"></script>
-    <script src="js/locale-switcher.js?v=ea075e50d9b6"></script>
-    <script src="js/app-nav.js?v=ea075e50d9b6"></script>
+    <script src="js/analytics.js?v=c632488a1e1c"></script>
+    <script src="js/locale-switcher.js?v=c632488a1e1c"></script>
+    <script src="js/app-nav.js?v=c632488a1e1c"></script>
 </body>
 </html>

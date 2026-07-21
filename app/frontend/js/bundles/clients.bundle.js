@@ -23,7 +23,7 @@ import{a as rt}from"./chunks/chunk-MTRUVDHY.js";import"./chunks/chunk-DWCL6BXC.j
                     ${a?"":xt(e)}
                     ${H.length>0?`<div class="client-summary-chips">${H.join("")}</div>`:""}
                     <div class="client-card-quick-actions">
-                        <button class="client-quick-btn ${a?"client-quick-btn-workspace":""}" type="button" data-action="open-forecast" data-user-id="${u(o)}" ${o?"":"disabled"}>
+                        <button class="ui-btn ui-btn--secondary ui-btn--sm${a?" client-quick-btn-workspace":""}" type="button" data-action="open-forecast" data-user-id="${u(o)}" ${o?"":"disabled"}>
                             ${x}
                         </button>
                     </div>
