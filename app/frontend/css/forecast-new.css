@@ -131,7 +131,7 @@
     background: rgba(255, 255, 255, 0.74);
     color: var(--text-secondary);
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
     transition: transform var(--transition), border-color var(--transition), background var(--transition), color var(--transition);
 }
@@ -199,7 +199,7 @@
 
 .forecast-new-pop-label {
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.02em;
     text-transform: uppercase;
     color: var(--text-secondary);
@@ -242,7 +242,7 @@
     background: transparent;
     color: var(--text-secondary);
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
 }
 
@@ -275,7 +275,7 @@
     background: #1e3a5f;
     color: #fff;
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
 }
 
@@ -336,7 +336,7 @@
     background: rgba(255, 255, 255, 0.68);
     color: var(--text-secondary);
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
     transition: background var(--transition), border-color var(--transition), color var(--transition);
 }
@@ -393,7 +393,7 @@
     background: transparent;
     color: var(--text-primary);
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 600;
     text-align: left;
     cursor: pointer;
 }
@@ -535,7 +535,7 @@
     color: rgba(30, 58, 95, 0.78);
     font: inherit;
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1;
     cursor: pointer;
     box-shadow: 0 1px 2px rgba(30, 58, 95, 0.04);
@@ -631,7 +631,7 @@
     gap: 2px;
     color: var(--text-secondary);
     font-size: 7px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: none;
 }
@@ -655,7 +655,7 @@
     color: var(--text-primary);
     font: inherit;
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 600;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
@@ -677,7 +677,7 @@
     background: rgba(255, 255, 255, 0.96);
     color: var(--accent);
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1;
     cursor: pointer;
     transition: background var(--transition), border-color var(--transition), color var(--transition), transform var(--transition);
@@ -853,7 +853,7 @@
     margin: 0;
     font-family: var(--font-ui);
     font-size: 13px;
-    font-weight: 800;
+    font-weight: 600;
     line-height: 1.2;
     letter-spacing: 0;
     color: var(--text-primary);
@@ -977,7 +977,7 @@
     min-width: 0;
     padding: 4px 0;
     font-size: 13px;
-    font-weight: 800;
+    font-weight: 600;
 }
 
 .forecast-new-tabs-overflow-toggle[aria-expanded="true"] {
@@ -1053,7 +1053,7 @@
 #progConfigurationsContainer > h3 {
     margin: 0 0 6px !important;
     font-size: 12px !important;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.25;
     color: var(--text-secondary);
 }
@@ -1110,7 +1110,7 @@
     background: rgba(30, 58, 95, 0.08);
     color: var(--accent);
     font-size: 9px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.03em;
     white-space: nowrap;
 }
@@ -1180,7 +1180,7 @@
     background: transparent;
     color: rgba(44, 39, 35, 0.72);
     font-size: 12px;
-    font-weight: 800;
+    font-weight: 600;
     cursor: pointer;
     transition: background var(--transition), color var(--transition), box-shadow var(--transition);
 }
@@ -1338,7 +1338,7 @@
 .forecast-new-corner > .is-compact th {
     color: rgba(92, 85, 78, 0.72);
     font-size: 9px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.05em;
     text-transform: uppercase;
 }
@@ -1470,7 +1470,7 @@ body.forecast-new-panel-edit .forecast-new-corner:focus-within .forecast-new-cor
     flex: 1;
     overflow: hidden;
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -1543,7 +1543,7 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     background: rgba(30, 58, 95, 0.08);
     color: var(--accent);
     font-size: 11px;
-    font-weight: 800;
+    font-weight: 600;
 }
 
 .forecast-new-result-table {
@@ -1567,7 +1567,7 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     background: rgba(255, 255, 255, 0.94);
     color: var(--text-secondary);
     font-size: 11px;
-    font-weight: 800;
+    font-weight: 600;
     text-transform: uppercase;
 }
 
@@ -1585,7 +1585,7 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    font-weight: 800;
+    font-weight: 600;
 }
 
 .forecast-new-result-layer-dot {
@@ -1888,7 +1888,7 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     padding-bottom: 5px;
     color: var(--text-secondary);
     font-size: 0.68rem;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
 }
@@ -1906,7 +1906,7 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     justify-content: center;
     color: var(--text-primary);
     font-size: 0.68rem;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1;
 }
 
@@ -2266,7 +2266,7 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
 .forecast-new-moment-card label {
     display: block;
     font-size: 11px;
-    font-weight: 800;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--text-muted);
@@ -2393,7 +2393,7 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     background: rgba(255, 251, 244, 0.84);
     color: var(--accent);
     font-size: 10px;
-    font-weight: 800;
+    font-weight: 600;
     line-height: 1;
     white-space: nowrap;
     cursor: pointer;
@@ -2554,7 +2554,7 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
 .forecast-new-side-panel .balance-title {
     margin-bottom: 6px;
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.2;
     color: var(--text-secondary);
 }
@@ -2605,7 +2605,7 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     min-height: 28px;
     color: var(--text-secondary);
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     white-space: nowrap;
 }
 
@@ -2693,7 +2693,7 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     margin: 0 0 6px;
     color: var(--text-secondary);
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.2;
     text-align: center;
 }
@@ -2709,7 +2709,7 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     min-width: 30px;
     min-height: 30px;
     padding: 0;
-    font-weight: 800;
+    font-weight: 600;
     color: var(--text-muted);
 }
 
@@ -2810,7 +2810,7 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
 
 .fixed-star-tooltip-title {
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-primary);
 }
 
@@ -3122,7 +3122,7 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     border-bottom: 1px solid rgba(205, 193, 171, 0.58);
     font-family: var(--font-ui);
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.08em;
     line-height: 1.2;
     text-transform: uppercase;
@@ -3141,7 +3141,7 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
 .forecast-new-page .settings-label {
     margin: 0;
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.12em;
     color: rgba(93, 86, 77, 0.8);
 }
@@ -3169,7 +3169,7 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.9);
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 600;
     text-align: center;
     color: var(--text-primary);
 }
@@ -3485,7 +3485,7 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
     border-radius: 999px;
     background: var(--accent-light);
     color: var(--accent);
-    font-weight: 700;
+    font-weight: 600;
 }
 
 .forecast-new-pe-workspaces {
@@ -3502,7 +3502,7 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
     margin-bottom: 6px;
     color: var(--text-muted);
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
 }
@@ -3543,7 +3543,7 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
     color: var(--accent);
     font: inherit;
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
 }
 
@@ -3678,7 +3678,7 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
 
 .forecast-new-pe-corner-label {
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     opacity: 0.6;
 }
 
@@ -3704,7 +3704,7 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
 .forecast-new-pe-side-head {
     margin-bottom: 9px;
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 600;
 }
 
 .forecast-new-pe-tab {
@@ -3780,7 +3780,7 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
     color: var(--accent);
     font: inherit;
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
 }
 
@@ -4328,7 +4328,7 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
     background: rgba(30, 58, 95, 0.08);
     color: var(--text-secondary, #5f6472);
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.02em;
     text-transform: uppercase;
 }
@@ -4551,7 +4551,7 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
 
 .forecast-new-retro {
     color: #8f2f2f;
-    font-weight: 700;
+    font-weight: 600;
 }
 
 .forecast-new-antiscia-contacts {
@@ -5062,7 +5062,7 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
     border-radius: 8px;
     background: var(--accent-light);
     color: var(--accent);
-    font-weight: 700;
+    font-weight: 600;
     text-align: center;
 }
 

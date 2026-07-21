@@ -677,7 +677,7 @@
     top: -4px;
     right: -6px;
     font-size: 7px;
-    font-weight: 700;
+    font-weight: 600;
     color: #dc2626;
     background: white;
     padding: 1px 2px;
@@ -1360,7 +1360,7 @@
     background: rgba(30, 58, 95, 0.08);
     color: var(--accent);
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.06em;
     white-space: nowrap;
 }
@@ -1389,7 +1389,7 @@
 
 .chart-page .config-apex-label {
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1;
     color: var(--accent);
     opacity: 0.82;
@@ -1425,7 +1425,7 @@
 .chart-page .config-aspect-glyph {
     color: var(--config-aspect-color, var(--accent));
     font-size: 15px;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1;
 }
 
@@ -1452,7 +1452,7 @@
 
 .chart-page .config-point-tooltip-title {
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--accent);
@@ -1793,7 +1793,7 @@
 
     .chart-page .settings-label {
         font-size: 10px;
-        font-weight: 700;
+        font-weight: 600;
         margin-bottom: 8px;
         color: var(--text-muted);
     }
@@ -1922,7 +1922,7 @@
     padding-bottom: 8px;
     font-family: var(--font-ui);
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.08em;
     line-height: 1.2;
     text-transform: uppercase;
@@ -1941,7 +1941,7 @@
 .chart-page .settings-label {
     margin: 0;
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.12em;
     color: rgba(93, 86, 77, 0.8);
 }
@@ -1966,7 +1966,7 @@
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.9);
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 600;
     text-align: center;
 }
 

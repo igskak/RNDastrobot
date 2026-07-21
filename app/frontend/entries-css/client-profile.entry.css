@@ -522,7 +522,7 @@ body.is-solo-profile .profile-column { display: contents; }
     max-width: 220px;
 }
 
-.session-paid { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; margin-left: auto; }
+.session-paid { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 999px; margin-left: auto; }
 .badge-paid { background: rgba(43, 122, 75, 0.12); color: var(--success); }
 .badge-unpaid { background: rgba(184, 50, 50, 0.10); color: var(--error); }
 
@@ -564,7 +564,7 @@ body.is-solo-profile .profile-column { display: contents; }
 
 .cs-date    { color: var(--text-secondary); flex: 1; }
 .cs-duration { color: var(--text-muted); font-size: var(--font-size-caption); min-width: 60px; }
-.cs-status  { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 7px; border-radius: 6px; }
+.cs-status  { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 7px; border-radius: 6px; }
 
 .cs-status--created    { background: var(--accent-light); color: var(--accent); }
 .cs-status--active     { background: var(--gold-pale); color: #7a5c28; }
@@ -589,7 +589,7 @@ body.is-solo-profile .profile-column { display: contents; }
 .cs-panel-loading { padding: var(--space-4); display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-size: var(--font-size-label); }
 .cs-panel-error { color: var(--error); font-size: var(--font-size-label); margin: 0; }
 .cs-panel-empty { color: var(--text-muted); font-size: var(--font-size-label); margin: 0; font-style: italic; }
-.cs-section-title { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin: 0 0 6px; }
+.cs-section-title { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin: 0 0 6px; }
 .cs-audio-player { width: 100%; height: 36px; accent-color: var(--accent); }
 .cs-summary-text { font-size: var(--font-size-label); color: var(--text-secondary); line-height: 1.5; margin: 0; white-space: pre-wrap; }
 .cs-key-points-list { margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 4px; }
@@ -599,7 +599,7 @@ body.is-solo-profile .profile-column { display: contents; }
 .cs-transcript-toggle::-webkit-details-marker { display: none; }
 .cs-transcript { margin-top: 8px; display: flex; flex-direction: column; gap: 5px; }
 .cs-segment { display: flex; gap: 8px; font-size: var(--font-size-caption); }
-.cs-seg-speaker { font-weight: 700; min-width: 76px; flex-shrink: 0; }
+.cs-seg-speaker { font-weight: 600; min-width: 76px; flex-shrink: 0; }
 .cs-seg--astrologer .cs-seg-speaker { color: var(--accent); }
 .cs-seg--client .cs-seg-speaker { color: var(--gold); }
 .cs-seg-text { color: var(--text-secondary); line-height: 1.5; }
@@ -642,7 +642,7 @@ body.is-solo-profile .profile-column { display: contents; }
 .mem-list { display: flex; flex-direction: column; gap: var(--space-2); }
 .mem-item { padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-primary); }
 .mem-item-head { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; flex-wrap: wrap; }
-.mem-cat { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 7px; border-radius: 6px; background: var(--accent-light); color: var(--accent); }
+.mem-cat { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 7px; border-radius: 6px; background: var(--accent-light); color: var(--accent); }
 .mem-provenance { font-size: 10px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 4px; }
 .mem-provenance.is-ai { color: #7a5c28; }
 .mem-internal { font-size: 10px; color: var(--text-muted); font-style: italic; margin-left: auto; }
@@ -680,7 +680,7 @@ body.is-solo-profile .profile-column { display: contents; }
     padding: 1px 6px;
     border-radius: 999px;
     font-size: 9px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     background: var(--accent-light);
@@ -765,7 +765,7 @@ body.is-solo-profile .profile-column { display: contents; }
 
 .clients-dialog-kicker {
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--gold);
@@ -829,7 +829,7 @@ body.is-solo-profile .profile-column { display: contents; }
 
 .form-label {
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--text-secondary);
@@ -897,7 +897,7 @@ body.is-solo-profile .profile-column { display: contents; }
 
 .form-divider-label {
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--text-muted);
@@ -911,7 +911,7 @@ body.is-solo-profile .profile-column { display: contents; }
 
 .tag-suggestions-label {
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--text-muted);

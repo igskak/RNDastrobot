@@ -41,7 +41,7 @@
 .solar-form-grid label > span,
 .solar-coords-display {
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--text-secondary);
@@ -98,7 +98,7 @@
     background: rgba(255, 255, 255, 0.72);
     color: var(--text-secondary);
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -367,7 +367,7 @@
     border-radius: 999px;
     background: rgba(245, 243, 238, 0.86);
     color: var(--accent);
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
 }
 
@@ -402,7 +402,7 @@
 
 .settings-label {
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--text-secondary);
@@ -538,7 +538,7 @@
     border-bottom: 1px solid rgba(205, 193, 171, 0.58);
     font-family: var(--font-ui);
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.08em;
     line-height: 1.2;
     text-transform: uppercase;
@@ -557,7 +557,7 @@
 .solar-page .settings-label {
     margin: 0;
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.12em;
     color: rgba(93, 86, 77, 0.8);
 }
@@ -586,7 +586,7 @@
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.9);
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 600;
     text-align: center;
     color: var(--text-primary);
 }

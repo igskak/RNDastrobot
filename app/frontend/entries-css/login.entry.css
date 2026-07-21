@@ -26,7 +26,7 @@
 .login-kicker {
     margin: 0;
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.2em;
     text-transform: uppercase;
 }
@@ -78,7 +78,7 @@
 .login-brand {
     margin: 0 0 8px;
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.22em;
     text-transform: uppercase;
     color: rgba(92, 85, 78, 0.95);
@@ -267,7 +267,7 @@
 
 .plan-choice-title {
     font-size: 15px;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-primary);
 }
 
@@ -287,7 +287,7 @@
     background: rgba(184, 147, 90, 0.16);
     color: #76562d;
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 600;
 }
 
 .password-input-wrap {
@@ -332,7 +332,7 @@
     margin: 0;
     font-size: 13px;
     line-height: 1.35;
-    font-weight: 700;
+    font-weight: 600;
     color: #7a4f00;
 }
 
@@ -350,7 +350,7 @@
     border-radius: 18px;
     padding: 13px 16px;
     font-size: 15px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
     transition: transform 0.16s ease, opacity 0.16s ease, box-shadow 0.16s ease, background 0.16s ease, border-color 0.16s ease;
 }

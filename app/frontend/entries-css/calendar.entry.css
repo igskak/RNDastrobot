@@ -81,7 +81,7 @@
 .clients-brand-subtitle,
 .header-account-label {
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.18em;
     text-transform: uppercase;
 }
@@ -190,7 +190,7 @@
 .calendar-kicker {
     margin: 0;
     font-size: 9px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: rgba(30, 58, 95, 0.74);
@@ -273,7 +273,7 @@
 
 .fc .fc-col-header-cell-cushion {
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--text-muted);
