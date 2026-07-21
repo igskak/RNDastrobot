@@ -1,4 +1,8 @@
 .forecast-new-page {
+    /* Grace period before any loading affordance (corner spinner, panel dim)
+       becomes visible. Loads that finish faster than this show nothing at all,
+       which kills the boot-time loader "blink". */
+    --fn-loading-grace: 420ms;
     display: flex;
     flex-direction: column;
     height: 100vh;
@@ -2615,6 +2619,10 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
 
 .forecast-new-side-panel.forecast-new-loading {
     opacity: 0.72;
+    /* Hold the dim back by a grace period so quick (warm-start / cached) loads
+       never flash it — only a genuinely slow layer fetch ever fades the panel
+       down. On completion the class drops and the panel eases back to full. */
+    transition-delay: var(--fn-loading-grace);
 }
 
 .forecast-new-wheel-shell.forecast-new-loading {
@@ -2633,8 +2641,30 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     border-radius: 50%;
     background: rgba(255, 253, 248, 0.82);
     box-shadow: 0 10px 22px rgba(30, 58, 95, 0.14);
-    animation: pl-spin 0.8s linear infinite;
+    /* The spinner keeps turning, but stays invisible until the grace period
+       elapses and then eases in — so it appears only when a load is actually
+       slow, and never blinks on fast loads (the pseudo is gone before it shows). */
+    opacity: 0;
+    animation:
+        pl-spin 0.8s linear infinite,
+        fn-loading-appear 0.34s ease var(--fn-loading-grace) forwards;
     pointer-events: none;
+}
+
+/* First-paint reveal: the freshly drawn wheel fades in gently instead of
+   popping out of the empty shell. One-shot — showLayout() adds the class once
+   and keeps it, so date-step re-renders inside the same shell never replay it. */
+.forecast-new-wheel-shell.forecast-new-revealed {
+    animation: fn-wheel-reveal 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes fn-wheel-reveal {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes fn-loading-appear {
+    to { opacity: 1; }
 }
 
 .settings-check-grid {

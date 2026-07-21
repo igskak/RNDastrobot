@@ -9936,6 +9936,11 @@
     function showLayout() {
         refs.forecastNewLayout?.classList.remove('hidden');
         refs.forecastNewError?.classList.add('hidden');
+        // Soft one-time reveal of the freshly drawn wheel (gentle fade instead of
+        // a hard pop out of the empty shell). The class is idempotent — added on
+        // the first render and kept, so date-step re-renders in the same shell
+        // never replay the animation. See .forecast-new-revealed in forecast-new.css.
+        refs.forecastNewWheelShell?.classList.add('forecast-new-revealed');
     }
 
     function showError(message) {
