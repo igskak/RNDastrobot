@@ -12,6 +12,13 @@
         linear-gradient(180deg, #fbf8f2 0%, #f1eadf 100%);
 }
 
+/* chat-widget.css is intentionally loaded in idle time. Keep its raw HTML out
+   of the first paint until both the lazy stylesheet and module are ready; in
+   particular, an unstyled microphone SVG otherwise expands into a black FOUC. */
+.forecast-new-page [data-chat-lazy] {
+    display: none !important;
+}
+
 .forecast-new-page .forecast-new-panel,
 .forecast-new-page .forecast-new-side-panel,
 .forecast-new-page .forecast-new-wheel-shell {

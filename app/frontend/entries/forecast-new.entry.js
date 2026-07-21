@@ -34,19 +34,35 @@ import '../js/forecast-nav-menu.js';
 // Чат не нужен для первого рендера рабочего экрана — грузим его чанк в простое,
 // после интерактива. chat.js сам инициализируется, учитывая readyState.
 function loadStylesheetOnce(href) {
-  if (typeof document === 'undefined') return;
-  if (document.querySelector(`link[data-lazy-css="${href}"]`)) return;
-  const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href = href;
-  link.setAttribute('data-lazy-css', href);
-  document.head.appendChild(link);
+  if (typeof document === 'undefined') return Promise.resolve();
+  const existing = document.querySelector(`link[data-lazy-css="${href}"]`);
+  if (existing?.sheet) return Promise.resolve();
+
+  return new Promise((resolve, reject) => {
+    const link = existing || document.createElement('link');
+    link.addEventListener('load', resolve, { once: true });
+    link.addEventListener('error', reject, { once: true });
+    if (existing) return;
+    link.rel = 'stylesheet';
+    link.href = href;
+    link.setAttribute('data-lazy-css', href);
+    document.head.appendChild(link);
+  });
 }
-const loadChat = () => {
+const loadChat = async () => {
   // C3: стили чата — из ленивого бандла; ?v= из build id для инвалидации кэша.
   const version = window.__APP_BUILD_ID__ ? `?v=${window.__APP_BUILD_ID__}` : '';
-  loadStylesheetOnce(`/bundles/chat-widget.bundle.css${version}`);
-  import('../js/chat.js');
+  try {
+    await loadStylesheetOnce(`/bundles/chat-widget.bundle.css${version}`);
+    await import('../js/chat.js');
+    document.querySelectorAll('[data-chat-lazy]').forEach((element) => {
+      element.removeAttribute('data-chat-lazy');
+    });
+  } catch (error) {
+    // Leave the guarded markup hidden if either lazy asset fails. A later page
+    // load can retry without exposing a broken, unstyled chat UI.
+    console.error('Failed to load forecast chat', error);
+  }
 };
 if (typeof window !== 'undefined') {
   if (typeof window.requestIdleCallback === 'function') {
