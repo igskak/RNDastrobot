@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.login.meta.title"></title>
-    <link rel="stylesheet" href="bundles/login.bundle.css?v=ee485012a1ef">
-    <script>window.__APP_BUILD_ID__ = 'ee485012a1ef';</script>
+    <link rel="stylesheet" href="bundles/login.bundle.css?v=8ea9bc6f984b">
+    <script>window.__APP_BUILD_ID__ = '8ea9bc6f984b';</script>
 </head>
 <body class="login-page">
     <main class="login-shell">
@@ -25,10 +25,11 @@
 
             <section class="auth-view auth-view--form" data-view="login">
                 <form id="passwordLoginForm" novalidate>
-                    <div class="field">
-                        <label for="email" data-i18n="page.login.fields.email.label"></label>
+                    <div class="ui-field">
+                        <label class="ui-label" for="email" data-i18n="page.login.fields.email.label"></label>
                         <input
                             id="email"
+                            class="ui-input"
                             name="email"
                             type="email"
                             required
@@ -39,14 +40,15 @@
                         <p id="loginEmailError" class="field-error" role="alert" hidden></p>
                     </div>
 
-                    <div class="field">
+                    <div class="ui-field">
                         <div class="field-label-row">
-                            <label for="password" data-i18n="page.login.fields.password.label"></label>
+                            <label class="ui-label" for="password" data-i18n="page.login.fields.password.label"></label>
                             <button id="showForgotBtn" class="link-btn" type="button" data-i18n="page.login.actions.forgotPassword"></button>
                         </div>
                         <div class="password-input-wrap">
                             <input
                                 id="password"
+                                class="ui-input"
                                 name="password"
                                 type="password"
                                 required
@@ -60,14 +62,14 @@
                         <p id="loginCapsHint" class="field-hint" data-i18n="page.login.hints.capsLock" hidden></p>
                     </div>
 
-                    <button id="passwordLoginSubmit" class="btn btn-primary" type="submit"></button>
+                    <button id="passwordLoginSubmit" class="ui-btn ui-btn--primary ui-btn--block" type="submit"></button>
                 </form>
 
                 <div class="login-secondary-auth">
                     <div class="login-divider" aria-hidden="true">
                         <span data-i18n="page.login.divider"></span>
                     </div>
-                    <button id="googleLoginBtn" class="btn btn-google" type="button"></button>
+                    <button id="googleLoginBtn" class="ui-btn ui-btn--block btn-google" type="button"></button>
                 </div>
 
                 <div class="switch-auth-cta">
@@ -79,15 +81,16 @@
             <section class="auth-view auth-view--form" data-view="register" hidden>
                 <div class="register-login-cta">
                     <span data-i18n="page.login.actions.haveAccount"></span>
-                    <button class="btn btn-secondary register-login-btn" type="button" data-action="back-login" data-i18n="page.login.actions.signIn"></button>
+                    <button class="ui-btn ui-btn--secondary ui-btn--block register-login-btn" type="button" data-action="back-login" data-i18n="page.login.actions.signIn"></button>
                 </div>
 
                 <form id="registerForm" novalidate>
                     <div class="field-grid field-grid-2">
-                        <div class="field">
-                            <label for="registerFirstName" data-i18n="page.login.fields.firstName.label"></label>
+                        <div class="ui-field">
+                            <label class="ui-label" for="registerFirstName" data-i18n="page.login.fields.firstName.label"></label>
                             <input
                                 id="registerFirstName"
+                                class="ui-input"
                                 name="registerFirstName"
                                 type="text"
                                 autocomplete="given-name"
@@ -96,10 +99,11 @@
                             >
                             <p id="registerFirstNameError" class="field-error" role="alert" hidden></p>
                         </div>
-                        <div class="field">
-                            <label for="registerLastName" data-i18n="page.login.fields.lastName.label"></label>
+                        <div class="ui-field">
+                            <label class="ui-label" for="registerLastName" data-i18n="page.login.fields.lastName.label"></label>
                             <input
                                 id="registerLastName"
+                                class="ui-input"
                                 name="registerLastName"
                                 type="text"
                                 autocomplete="family-name"
@@ -110,10 +114,11 @@
                         </div>
                     </div>
 
-                    <div class="field">
-                        <label for="registerEmail" data-i18n="page.login.fields.email.label"></label>
+                    <div class="ui-field">
+                        <label class="ui-label" for="registerEmail" data-i18n="page.login.fields.email.label"></label>
                         <input
                             id="registerEmail"
+                            class="ui-input"
                             name="registerEmail"
                             type="email"
                             required
@@ -124,11 +129,12 @@
                         <p id="registerEmailError" class="field-error" role="alert" hidden></p>
                     </div>
 
-                    <div class="field">
-                        <label for="registerPassword" data-i18n="page.login.fields.password.label"></label>
+                    <div class="ui-field">
+                        <label class="ui-label" for="registerPassword" data-i18n="page.login.fields.password.label"></label>
                         <div class="password-input-wrap">
                             <input
                                 id="registerPassword"
+                                class="ui-input"
                                 name="registerPassword"
                                 type="password"
                                 required
@@ -142,11 +148,12 @@
                         <p id="registerCapsHint" class="field-hint" data-i18n="page.login.hints.capsLock" hidden></p>
                     </div>
 
-                    <div class="field">
-                        <label for="registerPasswordConfirm" data-i18n="page.login.fields.confirmPassword.label"></label>
+                    <div class="ui-field">
+                        <label class="ui-label" for="registerPasswordConfirm" data-i18n="page.login.fields.confirmPassword.label"></label>
                         <div class="password-input-wrap">
                             <input
                                 id="registerPasswordConfirm"
+                                class="ui-input"
                                 name="registerPasswordConfirm"
                                 type="password"
                                 required
@@ -159,7 +166,7 @@
                         <p id="registerPasswordConfirmError" class="field-error" role="alert" hidden></p>
                     </div>
 
-                    <button id="registerSubmit" class="btn btn-primary" type="submit"></button>
+                    <button id="registerSubmit" class="ui-btn ui-btn--primary ui-btn--block" type="submit"></button>
                 </form>
 
             </section>
@@ -171,7 +178,7 @@
                     <p class="delivery-warning-text" data-i18n="page.login.hints.emailDeliverySpam"></p>
                 </div>
                 <div class="stack-actions">
-                    <button id="resendVerificationBtn" class="btn btn-secondary" type="button"></button>
+                    <button id="resendVerificationBtn" class="ui-btn ui-btn--secondary ui-btn--block" type="button"></button>
                     <button class="link-btn auth-back-link" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
                 </div>
             </section>
@@ -182,16 +189,17 @@
 
             <section class="auth-view auth-view--status" data-view="verify-success" hidden>
                 <p class="view-message" data-i18n="page.login.views.verifySuccess.body"></p>
-                <button class="btn btn-primary" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
+                <button class="ui-btn ui-btn--primary ui-btn--block" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
             </section>
 
             <section class="auth-view auth-view--warning" data-view="verify-invalid" hidden>
                 <p id="verifyInvalidBody" class="view-message"></p>
                 <form id="verifyResendForm" novalidate>
-                    <div class="field">
-                        <label for="verifyResendEmail" data-i18n="page.login.fields.email.label"></label>
+                    <div class="ui-field">
+                        <label class="ui-label" for="verifyResendEmail" data-i18n="page.login.fields.email.label"></label>
                         <input
                             id="verifyResendEmail"
+                            class="ui-input"
                             name="verifyResendEmail"
                             type="email"
                             required
@@ -201,7 +209,7 @@
                         >
                         <p id="verifyResendEmailError" class="field-error" role="alert" hidden></p>
                     </div>
-                    <button id="verifyResendSubmit" class="btn btn-secondary" type="submit"></button>
+                    <button id="verifyResendSubmit" class="ui-btn ui-btn--secondary ui-btn--block" type="submit"></button>
                 </form>
                 <div class="stack-actions compact">
                     <button class="link-btn" id="openRegisterFromVerifyBtn" type="button" data-i18n="page.login.actions.goToRegister"></button>
@@ -211,10 +219,11 @@
 
             <section class="auth-view auth-view--form" data-view="forgot" hidden>
                 <form id="forgotPasswordForm" novalidate>
-                    <div class="field">
-                        <label for="forgotEmail" data-i18n="page.login.fields.email.label"></label>
+                    <div class="ui-field">
+                        <label class="ui-label" for="forgotEmail" data-i18n="page.login.fields.email.label"></label>
                         <input
                             id="forgotEmail"
+                            class="ui-input"
                             name="forgotEmail"
                             type="email"
                             required
@@ -225,7 +234,7 @@
                         <p id="forgotEmailError" class="field-error" role="alert" hidden></p>
                     </div>
 
-                    <button id="forgotPasswordSubmit" class="btn btn-primary" type="submit"></button>
+                    <button id="forgotPasswordSubmit" class="ui-btn ui-btn--primary ui-btn--block" type="submit"></button>
                 </form>
 
                 <button class="link-btn auth-back-link" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
@@ -238,18 +247,19 @@
                     <p class="delivery-warning-text" data-i18n="page.login.hints.emailDeliverySpam"></p>
                 </div>
                 <div class="stack-actions">
-                    <button id="resendResetLinkBtn" class="btn btn-secondary" type="button"></button>
+                    <button id="resendResetLinkBtn" class="ui-btn ui-btn--secondary ui-btn--block" type="button"></button>
                     <button class="link-btn auth-back-link" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
                 </div>
             </section>
 
             <section class="auth-view auth-view--form" data-view="reset" hidden>
                 <form id="resetPasswordForm" novalidate>
-                    <div class="field">
-                        <label for="resetPassword" data-i18n="page.login.fields.newPassword.label"></label>
+                    <div class="ui-field">
+                        <label class="ui-label" for="resetPassword" data-i18n="page.login.fields.newPassword.label"></label>
                         <div class="password-input-wrap">
                             <input
                                 id="resetPassword"
+                                class="ui-input"
                                 name="resetPassword"
                                 type="password"
                                 required
@@ -263,11 +273,12 @@
                         <p id="resetCapsHint" class="field-hint" data-i18n="page.login.hints.capsLock" hidden></p>
                     </div>
 
-                    <div class="field">
-                        <label for="resetPasswordConfirm" data-i18n="page.login.fields.confirmPassword.label"></label>
+                    <div class="ui-field">
+                        <label class="ui-label" for="resetPasswordConfirm" data-i18n="page.login.fields.confirmPassword.label"></label>
                         <div class="password-input-wrap">
                             <input
                                 id="resetPasswordConfirm"
+                                class="ui-input"
                                 name="resetPasswordConfirm"
                                 type="password"
                                 required
@@ -280,7 +291,7 @@
                         <p id="resetPasswordConfirmError" class="field-error" role="alert" hidden></p>
                     </div>
 
-                    <button id="resetPasswordSubmit" class="btn btn-primary" type="submit"></button>
+                    <button id="resetPasswordSubmit" class="ui-btn ui-btn--primary ui-btn--block" type="submit"></button>
                 </form>
 
                 <button class="link-btn auth-back-link" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
@@ -288,13 +299,13 @@
 
             <section class="auth-view auth-view--status" data-view="reset-success" hidden>
                 <p class="view-message" data-i18n="page.login.views.success.body"></p>
-                <button class="btn btn-primary" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
+                <button class="ui-btn ui-btn--primary ui-btn--block" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
             </section>
 
             <section class="auth-view auth-view--warning" data-view="reset-invalid" hidden>
                 <p id="resetInvalidBody" class="view-message"></p>
                 <div class="stack-actions">
-                    <button class="btn btn-secondary" type="button" data-action="open-forgot" data-i18n="page.login.actions.requestNewLink"></button>
+                    <button class="ui-btn ui-btn--secondary ui-btn--block" type="button" data-action="open-forgot" data-i18n="page.login.actions.requestNewLink"></button>
                     <button class="link-btn auth-back-link" type="button" data-action="back-login" data-i18n="page.login.actions.backToSignIn"></button>
                 </div>
             </section>
@@ -303,7 +314,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/runtime-config.js"></script>
-    <script src="js/analytics.js?v=ee485012a1ef"></script>
-    <script type="module" src="js/bundles/login.bundle.js?v=ee485012a1ef"></script>
+    <script src="js/analytics.js?v=8ea9bc6f984b"></script>
+    <script type="module" src="js/bundles/login.bundle.js?v=8ea9bc6f984b"></script>
 </body>
 </html>
