@@ -120,11 +120,11 @@
         if (unit === 'days') end.setDate(end.getDate() + value);
         else end.setMonth(end.getMonth() + value);
         refs.endDate.value = fmtDate(end);
-        document.querySelectorAll('#datePresets .preset-btn').forEach((b) => {
+        document.querySelectorAll('#datePresets .ui-segmented__item').forEach((b) => {
             const months = b.dataset.months ? parseInt(b.dataset.months, 10) : null;
             const days = b.dataset.days ? parseInt(b.dataset.days, 10) : null;
             const matches = unit === 'days' ? days === value : months === value;
-            b.classList.toggle('active', matches);
+            b.classList.toggle('is-selected', matches);
         });
     }
 
@@ -235,7 +235,7 @@
         refs.filterMajor?.addEventListener('change', () => {
             if (state.periodData) renderTimeline();
         });
-        document.querySelectorAll('#datePresets .preset-btn').forEach((btn) => {
+        document.querySelectorAll('#datePresets .ui-segmented__item').forEach((btn) => {
             btn.addEventListener('click', () => {
                 const months = btn.dataset.months ? parseInt(btn.dataset.months, 10) : null;
                 const days = btn.dataset.days ? parseInt(btn.dataset.days, 10) : null;
