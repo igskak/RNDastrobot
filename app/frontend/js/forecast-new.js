@@ -645,6 +645,11 @@
         const me = await authReady;
         if (!me) return;
 
+        // Surface the account email into the hidden #welcomeLabel that the shared
+        // burger drawer (js/app-nav.js) reads to show who is signed in.
+        const navEmailLabel = document.getElementById('welcomeLabel');
+        if (navEmailLabel && me.email) navEmailLabel.textContent = me.email;
+
         let natalData = window.AstroAPI?.getChartFromSession?.();
         if (!natalData) {
             redirectToChartLibrary();

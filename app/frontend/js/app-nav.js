@@ -53,15 +53,6 @@
         burger.setAttribute('aria-expanded', 'false');
         burger.innerHTML = '<span></span><span></span><span></span>';
 
-        // Sticky top bar in the flow — content sits below it (never covered),
-        // burger left-aligned with the page content.
-        var bar = document.createElement('div');
-        bar.className = 'app-nav-bar';
-        var barInner = document.createElement('div');
-        barInner.className = 'app-nav-bar-inner';
-        barInner.appendChild(burger);
-        bar.appendChild(barInner);
-
         var scrim = document.createElement('div');
         scrim.className = 'app-nav-scrim';
 
@@ -69,7 +60,25 @@
         drawer.className = 'app-nav-drawer';
         drawer.setAttribute('role', 'navigation');
 
-        document.body.insertBefore(bar, document.body.firstChild);
+        // A page can host the burger inside its own chrome (e.g. the forecast-new
+        // workspace toolbar) by placing an element with [data-app-nav-slot]: the
+        // burger mounts there and no standalone bar is created, so a full-height /
+        // single-row workspace never gains a second header row. Default (no slot):
+        // the burger lives in app-nav's own sticky top bar (calendar, clients, …).
+        var slot = document.querySelector('[data-app-nav-slot]');
+        if (slot) {
+            slot.appendChild(burger);
+        } else {
+            // Sticky top bar in the flow — content sits below it (never covered),
+            // burger left-aligned with the page content.
+            var bar = document.createElement('div');
+            bar.className = 'app-nav-bar';
+            var barInner = document.createElement('div');
+            barInner.className = 'app-nav-bar-inner';
+            barInner.appendChild(burger);
+            bar.appendChild(barInner);
+            document.body.insertBefore(bar, document.body.firstChild);
+        }
         document.body.appendChild(scrim);
         document.body.appendChild(drawer);
         mounted = true;

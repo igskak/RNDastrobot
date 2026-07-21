@@ -20,6 +20,33 @@
     gap: 7px;
 }
 
+/* Shared app-nav burger hosted inside the workspace toolbar (via
+   [data-app-nav-slot]) rather than app-nav's standalone bar — keeps this
+   full-height screen to one row. Sized to match the compact header buttons
+   (← / header-nav-btn) instead of the default 40px chrome-bar burger. */
+.forecast-new-nav-slot {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+.forecast-new-nav-slot .app-nav-burger {
+    width: 28px;
+    height: 28px;
+    gap: 3px;
+    border-radius: 7px;
+    background: rgba(240, 237, 228, 0.8);
+    border: 1px solid var(--border);
+}
+.forecast-new-nav-slot .app-nav-burger span {
+    width: 15px;
+}
+.forecast-new-nav-slot .app-nav-burger:hover {
+    background: var(--bg-secondary);
+}
+.forecast-new-nav-slot .app-nav-burger:hover span {
+    background: var(--accent);
+}
+
 .forecast-new-header-actions .header-action-menu {
     display: inline-flex;
     align-items: center;

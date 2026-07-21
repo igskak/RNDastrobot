@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecastNew.pageTitle">Forecast</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=98964903d60b">
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=f6a63c969aac">
+    <link rel="stylesheet" href="/css/app-nav.css?v=f6a63c969aac">
     <!-- C2 (Фаза 3): символьные глифы (знаки/аспекты) появляются на колесе сразу;
          font-display:block делает их невидимыми до загрузки шрифта, поэтому прелоадим
          woff2-сабсеты (десятки КБ вместо 1.2 МБ ttf). crossorigin обязателен для шрифтов. -->
     <link rel="preload" href="/fonts/NotoSansSymbols.subset.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/fonts/NotoSansSymbols2.subset.woff2" as="font" type="font/woff2" crossorigin>
-    <script>window.__APP_BUILD_ID__ = '98964903d60b';</script>
+    <script>window.__APP_BUILD_ID__ = 'f6a63c969aac';</script>
     <!-- A3 (Фаза 1): каталог локали грузится i18n.js в рантайме и это первый await
          bootstrap. Прогреваем HTTP-кэш нужной локали сразу из <head> (immutable-кэш в
          проде → i18n.js переиспользует ответ). Локаль резолвим тем же приоритетом, что
@@ -62,7 +63,15 @@
     <!-- modulepreload:forecast-new:end -->
 </head>
 <body class="forecast-new-page workspace-compact forecast-workspace-compact">
+    <!-- Kept (hidden) so the shared burger drawer (js/app-nav.js) can read the
+         account email; forecast-new.js populates it once auth resolves. -->
+    <span id="welcomeLabel" class="header-account-value" hidden style="display:none"></span>
     <header class="chart-header-compact forecast-new-header">
+        <!-- Shared app nav (Practice · Calendar · Settings + language + logout)
+             mounts its burger INTO this slot instead of a standalone top bar, so
+             this full-height workspace stays one row. See js/app-nav.js
+             ([data-app-nav-slot]) + .forecast-new-nav-slot in forecast-new.css. -->
+        <span class="forecast-new-nav-slot" data-app-nav-slot></span>
         <a href="/" class="back-btn-compact" id="forecastNewBackBtn" data-i18n-aria-label="common.back" data-i18n-title="common.back" aria-label="Back" title="Back">←</a>
         <div class="birth-info-compact forecast-new-client">
             <h2 id="forecastNewTitle" data-i18n="page.forecastNew.pageTitle">Forecast</h2>
@@ -163,13 +172,14 @@
                     </svg>
                     <span data-i18n="page.chart.actions.label"></span>
                 </button>
+                <!-- Navigation (Home/Practice, Account settings) moved into the
+                     shared burger drawer; the ⋮ menu keeps only chart-specific
+                     destinations. See docs/plans/design-system-foundation.md. -->
                 <div class="chart-actions-menu hidden" id="forecastNewActionsMenu" role="menu">
-                    <a href="/" class="chart-action-item chart-action-item--link" role="menuitem" data-i18n="page.chart.nav.home"></a>
                     <button type="button" class="chart-action-item" id="openNatalTablesBtn" role="menuitem" data-i18n="page.natalFull.title"></button>
                     <a href="forecast-tables.html" class="chart-action-item chart-action-item--link forecast-view-tab--multi-only" role="menuitem" data-i18n="page.forecast.tabs.table"></a>
                     <a href="forecast-timeline.html" class="chart-action-item chart-action-item--link forecast-view-tab--multi-only" role="menuitem" data-i18n="page.forecast.tabs.timeline"></a>
                     <button type="button" class="chart-action-item" id="openClientProfileBtn" role="menuitem" data-i18n="page.clientProfile.viewProfile"></button>
-                    <a href="/account-settings.html" class="chart-action-item chart-action-item--link" role="menuitem" data-i18n="page.accountSettings.title"></a>
                 </div>
             </div>
         </div>
@@ -177,7 +187,7 @@
 
     <div class="profile-error hidden" id="forecastNewError">
         <p id="forecastNewErrorMsg"></p>
-        <a href="/" class="btn-logout" data-i18n="page.forecastNew.backToClients">Back to clients</a>
+        <a href="/" class="ui-btn ui-btn--secondary" data-i18n="page.forecastNew.backToClients">Back to clients</a>
     </div>
 
     <main class="forecast-new-layout" id="forecastNewLayout">
@@ -708,7 +718,8 @@
          поэтому window.__RUNTIME_CONFIG__ (runtime-config.js) готов до analytics.js и до
          модуля приложения. -->
     <script defer src="/runtime-config.js"></script>
-    <script defer src="/js/analytics.js?v=98964903d60b"></script>
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=98964903d60b"></script>
+    <script defer src="/js/analytics.js?v=f6a63c969aac"></script>
+    <script defer src="/js/app-nav.js?v=f6a63c969aac"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=f6a63c969aac"></script>
 </body>
 </html>
