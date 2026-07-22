@@ -126,13 +126,31 @@ Authenticated pages share one slide-out nav (`app/frontend/css/app-nav.css` +
 `js/app-nav.js`), self-mounting via the `locale-switcher.js` injection pattern.
 
 - **Hidden by default**, slides out on a burger button that sits **on the same level as
-  page content** (sticky top bar, not a floating overlay), dismisses on overlay / esc /
-  click-away.
+  page content**, dismisses on overlay / esc / click-away.
+- Pages that already have a page header mount the burger into
+  `<span class="app-nav-slot" data-app-nav-slot>` so there is exactly one chrome row.
+  Practice has no page header and therefore keeps app-nav's standalone sticky bar.
 - **Contents:** Practice · Calendar · Settings, plus — moved out of page headers — the
   **language switcher**, **account email**, and **logout**.
+- The drawer is the only language switcher on authenticated work pages. Do not load the
+  standalone `locale-switcher.js` there.
 - Replaces the old per-page top-bar pills. No Consultations item (no such page yet).
 - `app-nav.css` / `app-nav.js` are versioned by the build's asset-hash pass — reference
   them with `?v=` so cache-busting works (they're served `immutable`, 1yr).
+
+### Back navigation
+
+- Practice is the only authenticated work page without a back button.
+- Calendar and Settings return to the recorded source, with Practice as fallback.
+- Detail and analysis pages return to their parent/source using the shared navigation
+  state. Back controls are semantic links; browser history is not the primary contract.
+
+### Regression discipline
+
+- A visual pass must not silently remove actions. Inventory interactive ids, hrefs,
+  navigation state, and keyboard behavior before restructuring a header or menu.
+- Decorative gradients are not part of the flat system. Functional masks, data
+  visualizations, and loading shimmers are exempt when the gradient carries behavior.
 
 ---
 

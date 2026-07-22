@@ -22,7 +22,7 @@ test('frontend html pages keep local asset versions aligned with __APP_BUILD_ID_
         const buildId = buildIdMatch[1];
         assert.ok(buildId.length > 0, `${page} has an empty __APP_BUILD_ID__`);
 
-        const localAssetMatches = html.match(/(?:bundles\/[^"'?]+\.bundle\.css|js\/bundles\/[^"'?]+\.bundle\.js|css\/locale-switcher\.css|js\/locale-switcher\.js)\?v=([^"' ]+)/g) || [];
+        const localAssetMatches = html.match(/(?:bundles\/[^"'?]+\.bundle\.css|js\/bundles\/[^"'?]+\.bundle\.js|css\/(?:locale-switcher|app-nav)\.css|js\/(?:locale-switcher|app-nav)\.js)\?v=([^"' ]+)/g) || [];
         assert.ok(localAssetMatches.length > 0, `${page} does not reference any versioned local assets`);
 
         for (const asset of localAssetMatches) {

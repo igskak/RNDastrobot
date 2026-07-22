@@ -7,9 +7,7 @@
     flex-direction: column;
     height: 100vh;
     overflow: hidden;
-    background:
-        radial-gradient(circle at 12% 8%, rgba(184, 147, 90, 0.08), transparent 22%),
-        linear-gradient(180deg, #fbf8f2 0%, #f1eadf 100%);
+    background: var(--bg-primary);
 }
 
 /* chat-widget.css is intentionally loaded in idle time. Keep its raw HTML out
@@ -64,16 +62,34 @@
     gap: 4px;
 }
 
+.chart-action-item[aria-disabled="true"] {
+    color: var(--text-muted);
+    cursor: not-allowed;
+    opacity: 0.62;
+}
+
+.chart-action-item[aria-disabled="true"]:hover {
+    background: transparent;
+    color: var(--text-muted);
+}
+
+.chart-action-disabled-hint {
+    margin: var(--space-1) var(--space-2) var(--space-2);
+    color: var(--text-muted);
+    font-size: var(--font-size-caption);
+    line-height: 1.35;
+}
+
+.chart-action-disabled-hint.hidden {
+    display: none;
+}
+
 .forecast-new-panel-edit-btn .nav-btn-icon {
     width: 16px;
     height: 16px;
 }
 
 .forecast-new-page .forecast-view-tab[aria-current="page"] {
-    display: none;
-}
-
-.forecast-new-single-mode .forecast-view-tab--multi-only {
     display: none;
 }
 
@@ -849,7 +865,7 @@
     min-height: var(--forecast-new-panel-head-height);
     padding: 4px 6px;
     border-bottom: 1px solid rgba(184, 147, 90, 0.14);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(249, 247, 242, 0.36));
+    background: var(--bg-secondary);
 }
 
 .forecast-new-side-title-row {
@@ -1165,7 +1181,7 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    background: linear-gradient(180deg, #fbf9f4 0%, #f5f1e8 100%);
+    background: var(--bg-primary);
 }
 
 .forecast-new-result-switch {
@@ -2256,7 +2272,7 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
 }
 
 .forecast-new-matrix-row-aspecting-off {
-    background: linear-gradient(90deg, rgba(184, 147, 90, 0.08), transparent 70%);
+    background: var(--bg-tertiary);
 }
 
 .forecast-new-moment-card {
@@ -3658,7 +3674,7 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
     height: 92px;
     border: 1px solid rgba(184, 147, 90, 0.32);
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,255,255,.94) 0 34%, rgba(235,240,247,.72) 35% 36%, transparent 37%);
+    background: var(--accent-light);
     color: rgba(30, 58, 95, 0.46);
     font-size: 36px;
     transform: translate(-50%, -50%);
@@ -5018,7 +5034,7 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
     padding: 12px 12px 10px 14px;
     border-bottom: 1px solid rgba(184, 147, 90, 0.2);
     border-radius: 16px 16px 0 0;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(249, 247, 242, 0.97));
+    background: var(--bg-secondary);
     backdrop-filter: blur(18px);
 }
 

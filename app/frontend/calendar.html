@@ -4,15 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.calendar.meta.title"></title>
-    <link rel="stylesheet" href="bundles/calendar.bundle.css?v=a3ac9fe972d4">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=a3ac9fe972d4">
-    <link rel="stylesheet" href="css/app-nav.css?v=a3ac9fe972d4">
+    <link rel="stylesheet" href="bundles/calendar.bundle.css?v=007b543a47a2">
+    <link rel="stylesheet" href="css/app-nav.css?v=007b543a47a2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <!-- FullCalendar (includes daygrid, timegrid, interaction) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css">
-    <script>window.__APP_BUILD_ID__ = 'a3ac9fe972d4';</script>
+    <script>window.__APP_BUILD_ID__ = '007b543a47a2';</script>
 </head>
 <body class="calendar-page workspace-compact" data-defer-loader>
     <div class="page-loader" id="pageLoader">
@@ -26,14 +25,18 @@
              burger drawer reads the account email from it. -->
         <span id="welcomeLabel" class="header-account-value" hidden style="display:none"></span>
 
+        <header class="calendar-page-header">
+            <span class="app-nav-slot" data-app-nav-slot></span>
+            <a href="/" class="calendar-back ui-btn ui-btn--ghost ui-btn--sm" data-i18n-aria-label="common.back" data-i18n-title="common.back">←</a>
+            <div class="calendar-card-heading">
+                <p class="calendar-kicker" data-i18n="page.calendar.header.kicker"></p>
+                <h1 class="calendar-title" data-i18n="page.calendar.header.title"></h1>
+                <p class="calendar-subtitle" data-i18n="page.calendar.header.subtitle"></p>
+            </div>
+        </header>
+
         <main>
             <div class="calendar-card">
-                <div class="calendar-card-heading">
-                    <p class="calendar-kicker" data-i18n="page.calendar.header.kicker"></p>
-                    <h2 class="calendar-title" data-i18n="page.calendar.header.title"></h2>
-                    <p class="calendar-subtitle" data-i18n="page.calendar.header.subtitle"></p>
-                </div>
-
                 <div id="calendar"></div>
 
                 <div class="calendar-legend">
@@ -50,7 +53,7 @@
                         <span data-i18n="page.calendar.legend.noShow"></span>
                     </span>
                     <span class="legend-item">
-                        <span class="legend-dot" style="background:#9B9289"></span>
+                        <span class="legend-dot" style="background:var(--text-muted)"></span>
                         <span data-i18n="page.calendar.legend.cancelled"></span>
                     </span>
                 </div>
@@ -151,10 +154,9 @@
 
     <!-- FullCalendar from CDN (includes daygrid, timegrid, interaction plugins) -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
-    <script type="module" src="js/bundles/calendar.bundle.js?v=a3ac9fe972d4"></script>
+    <script type="module" src="js/bundles/calendar.bundle.js?v=007b543a47a2"></script>
     <script src="/runtime-config.js"></script>
-    <script src="js/analytics.js?v=a3ac9fe972d4"></script>
-    <script src="js/locale-switcher.js?v=a3ac9fe972d4"></script>
-    <script src="js/app-nav.js?v=a3ac9fe972d4"></script>
+    <script src="js/analytics.js?v=007b543a47a2"></script>
+    <script src="js/app-nav.js?v=007b543a47a2"></script>
 </body>
 </html>

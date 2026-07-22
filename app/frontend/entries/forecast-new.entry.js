@@ -5,7 +5,6 @@
 import '../js/i18n.js';
 import '../js/i18n-ui.js';
 import '../js/locale-formatters.js';
-import '../js/locale-switcher.js';
 import '../js/api.js';
 import '../js/quick-open-popover.js';
 import '../js/chart-picker.js';
@@ -26,6 +25,7 @@ import '../js/prognostic-rings-wheel.js';
 import '../js/forecast-new-state-storage.js';
 import '../js/forecast-new-panel-layout.js';
 import '../js/forecast-source-utils.js';
+import '../js/forecast-range-actions.js';
 import '../js/chart-source-panel.js';
 import '../js/forecast-commands.js';
 import '../js/forecast-new.js';

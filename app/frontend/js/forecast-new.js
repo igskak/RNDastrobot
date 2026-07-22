@@ -1486,12 +1486,24 @@
             event.stopPropagation();
             setOpen(menu.classList.contains('hidden'));
         });
-        menu.addEventListener('click', () => setOpen(false));
-        menu.addEventListener('click', (event) => event.stopPropagation());
+        menu.addEventListener('click', (event) => {
+            if (window.ForecastRangeActions?.isDisabledTarget(event.target)) {
+                event.preventDefault();
+                event.stopPropagation();
+                return;
+            }
+            setOpen(false);
+            event.stopPropagation();
+        });
         document.addEventListener('click', () => setOpen(false));
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') setOpen(false);
         });
+        syncForecastRangeActions();
+    }
+
+    function syncForecastRangeActions() {
+        window.ForecastRangeActions?.sync(document, state.wheelView === 'single');
     }
 
     function closeSettingsPanel() {
@@ -5392,6 +5404,7 @@
         document.body.classList.toggle('forecast-new-single-mode', isSingle);
         document.body.classList.toggle('forecast-new-multi-mode', !isSingle);
         document.body.classList.toggle('forecast-new-composite-mode', state.singleChartMode === 'composite');
+        syncForecastRangeActions();
         syncMobilePanelLabels();
         syncRelationshipSwitch();
         refs.forecastNewProgPanel?.setAttribute('data-panel-mode', isSingle ? 'natal' : 'prognostic');

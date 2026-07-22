@@ -3,10 +3,7 @@
 
 .clients-page {
     min-height: 100vh;
-    background:
-        radial-gradient(circle at 10% 10%, rgba(184, 147, 90, 0.14), transparent 20%),
-        radial-gradient(circle at 90% 14%, rgba(30, 58, 95, 0.1), transparent 22%),
-        linear-gradient(180deg, #fbf8f2 0%, #f6f1e7 100%);
+    background: var(--bg-primary);
 }
 
 .clients-shell {
@@ -129,7 +126,7 @@
 
 .btn-new {
     border: 0;
-    background: linear-gradient(135deg, #1e3a5f, #2e5a8d);
+    background: var(--accent);
     color: #fff;
     box-shadow: 0 14px 28px rgba(30, 58, 95, 0.2);
 }
@@ -286,7 +283,7 @@ select:focus-visible,
     min-width: 0;
     padding: 16px 16px 14px;
     border-radius: 22px;
-    background: linear-gradient(180deg, rgba(249, 247, 242, 0.96), rgba(255, 255, 255, 0.82));
+    background: var(--bg-secondary);
     border: 1px solid rgba(30, 58, 95, 0.08);
 }
 
@@ -475,7 +472,7 @@ select:focus {
     width: 38px;
     height: 38px;
     border-radius: 50%;
-    background: linear-gradient(135deg, rgba(30, 58, 95, 0.14), rgba(184, 147, 90, 0.26));
+    background: var(--accent-light);
     color: #17304f;
     display: inline-flex;
     align-items: center;
@@ -631,9 +628,7 @@ select:focus {
     padding: 26px 26px 22px;
     border: 1px solid rgba(184, 147, 90, 0.24);
     border-radius: 28px;
-    background:
-        radial-gradient(circle at top right, rgba(245, 237, 223, 0.9), transparent 32%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(249, 247, 242, 0.98));
+    background: var(--bg-secondary);
     box-shadow: 0 30px 60px rgba(26, 22, 20, 0.18);
 }
 
@@ -1047,9 +1042,7 @@ select:focus {
         padding: 9px;
         border: 1px solid rgba(30, 58, 95, 0.08);
         border-radius: 10px;
-        background:
-            linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(249, 247, 242, 0.94)),
-            rgba(255, 255, 255, 0.92);
+        background: var(--bg-secondary);
         box-shadow: var(--density-surface-shadow);
     }
 
@@ -1058,9 +1051,7 @@ select:focus {
     }
 
     .clients-table tbody tr:hover {
-        background:
-            linear-gradient(180deg, rgba(255, 255, 255, 1), rgba(245, 237, 223, 0.92)),
-            rgba(255, 255, 255, 0.96);
+        background: var(--bg-primary);
         transform: translateY(-1px);
     }
 
@@ -1177,14 +1168,14 @@ select:focus {
     }
 
     .client-quick-btn-primary {
-        background: linear-gradient(135deg, #1e3a5f, #2e5a8d);
+        background: var(--accent);
         color: #fff;
         border-color: transparent;
         box-shadow: 0 12px 24px rgba(30, 58, 95, 0.18);
     }
 
     .client-quick-btn-primary:hover {
-        background: linear-gradient(135deg, #224268, #34679f);
+        background: var(--accent-hover);
     }
 
     .client-fact {
@@ -1249,16 +1240,12 @@ select:focus {
         padding: 10px;
         border-radius: 10px;
         border: 1px solid rgba(184, 147, 90, 0.18);
-        background:
-            linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(249, 247, 242, 0.96)),
-            rgba(255, 255, 255, 0.96);
+        background: var(--bg-secondary);
         box-shadow: 0 18px 36px rgba(18, 28, 45, 0.06);
     }
 
     tr[data-user-id]:has(+ .client-detail-row) {
-        background:
-            linear-gradient(180deg, rgba(255, 255, 255, 1), rgba(245, 237, 223, 0.96)),
-            rgba(255, 255, 255, 0.98);
+        background: var(--bg-primary);
         border-color: rgba(184, 147, 90, 0.28);
         box-shadow: 0 22px 48px rgba(18, 28, 45, 0.08);
     }
@@ -1391,7 +1378,7 @@ select:focus {
 
 .alerts-panel {
     padding: 10px;
-    background: linear-gradient(135deg, rgba(184, 147, 90, 0.06), rgba(30, 58, 95, 0.04));
+    background: var(--bg-secondary);
     border: 1px solid rgba(184, 147, 90, 0.15);
     border-radius: 10px;
     display: flex;
@@ -1552,7 +1539,7 @@ select:focus {
 
 .mini-cal {
     padding: 10px;
-    background: linear-gradient(145deg, rgba(255,255,255,0.88), rgba(249,247,242,0.82));
+    background: var(--bg-secondary);
     border: 1px solid rgba(30, 58, 95, 0.09);
     border-radius: 10px;
     box-shadow: var(--shadow-sm);
