@@ -72,6 +72,7 @@
     border-radius: calc(var(--radius-md) - 3px);
     cursor: pointer;
     white-space: nowrap;
+    text-decoration: none; /* anchor-based tabs (e.g. «Вид») sit in the kit without underline */
     transition: background var(--transition), color var(--transition);
 }
 .ui-segmented__item:hover:not(.is-selected):not([aria-selected="true"]):not([aria-pressed="true"]) {
