@@ -127,9 +127,10 @@ Authenticated pages share one slide-out nav (`app/frontend/css/app-nav.css` +
 
 - **Hidden by default**, slides out on a burger button that sits **on the same level as
   page content**, dismisses on overlay / esc / click-away.
-- Pages that already have a page header mount the burger into
+- Every authenticated work page mounts the burger into its existing page header via
   `<span class="app-nav-slot" data-app-nav-slot>` so there is exactly one chrome row.
-  Practice has no page header and therefore keeps app-nav's standalone sticky bar.
+  On Practice, the slot lives in the library header; its only navigation exception is
+  that it has no back button.
 - **Contents:** Practice · Calendar · Settings, plus — moved out of page headers — the
   **language switcher**, **account email**, and **logout**.
 - The drawer is the only language switcher on authenticated work pages. Do not load the

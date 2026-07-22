@@ -30,15 +30,15 @@ test('authenticated work pages use app-nav without a standalone locale switcher'
     }
 });
 
-test('Practice alone uses the standalone nav bar and has no back control', () => {
+test('every work page embeds the burger, while Practice alone has no back control', () => {
     const practice = read('clients.html');
-    assert.doesNotMatch(practice, /data-app-nav-slot/);
+    assert.equal((practice.match(/<span[^>]+data-app-nav-slot[^>]*>/g) || []).length, 1);
     assert.doesNotMatch(practice, /class="[^"]*\bclients-back\b/);
 
     for (const [page, backHook] of Object.entries(pages)) {
-        if (!backHook) continue;
         const html = read(page);
         assert.equal((html.match(/<span[^>]+data-app-nav-slot[^>]*>/g) || []).length, 1, `${page} must host one embedded burger`);
+        if (!backHook) continue;
         assert.ok(html.includes(backHook), `${page} must keep its back control`);
     }
 });
