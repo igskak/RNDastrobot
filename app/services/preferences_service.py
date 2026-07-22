@@ -123,18 +123,14 @@ def _extract_global_chart_defaults(chart_defaults: Dict[str, Any]) -> Dict[str, 
 
     The full per-view-type payload is preserved so that any setting changed on
     one chart propagates to other charts of the same type. Cross-view fallbacks
-    are layered on top for select visual options (orientation, house styling,
-    show_aspect_text) so views inherit shared chrome from the natal defaults.
+    are layered on top for shared visual options (orientation and house styling)
+    so views inherit shared chrome from the natal defaults. Type-specific table
+    options remain untouched.
     Top-level non-view keys (e.g. ``saved_configurations``) are passed through.
     """
     chart_defaults = chart_defaults or {}
     natal = chart_defaults.get('natal') or {}
     natal_view = natal.get('view_options') or {}
-
-    show_aspect_text = _first_present(*(
-        ((chart_defaults.get(view_type) or {}).get('table_options') or {}).get('show_aspect_text')
-        for view_type in VIEW_TYPES
-    ))
 
     result: Dict[str, Any] = {}
     for key, value in chart_defaults.items():
@@ -157,10 +153,6 @@ def _extract_global_chart_defaults(chart_defaults: Dict[str, Any]) -> Dict[str, 
                 merged_view_options[key] = value
         if merged_view_options:
             view_data['view_options'] = merged_view_options
-        if show_aspect_text is not None:
-            table_options = dict(view_data.get('table_options') or {})
-            table_options['show_aspect_text'] = bool(show_aspect_text)
-            view_data['table_options'] = table_options
         result[view_type] = view_data
     return result
 

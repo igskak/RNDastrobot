@@ -602,6 +602,25 @@
         return timezone || null;
     }
 
+    async function reverseGeocode(latitude, longitude, options = {}) {
+        const lat = Number(latitude);
+        const lon = Number(longitude);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+        const locale = root.FrontendI18n?.getLocale?.() || 'en';
+        const params = new URLSearchParams({
+            lat: String(lat),
+            lon: String(lon),
+            language: String(locale).split('-', 1)[0],
+        });
+        const response = await apiFetch(`${API_BASE_URL}/places/reverse?${params.toString()}`, {
+            method: 'GET',
+            headers: withLocaleHeaders(),
+            signal: options.signal,
+        });
+        if (!response.ok) return null;
+        return response.json();
+    }
+
     function toQueryString(params = {}) {
         const search = new URLSearchParams();
         Object.entries(params).forEach(([key, value]) => {
@@ -1287,6 +1306,7 @@
         showPlanUpgradeModal,
         logout,
         resolvePlaceTimezone,
+        reverseGeocode,
         getAccountPreferences,
         patchAccountPreferences,
         getPreferencesMetadata,

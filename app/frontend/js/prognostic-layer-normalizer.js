@@ -39,7 +39,7 @@
             || rawName;
     }
 
-    function collectAspectBodies(chartData = {}) {
+    function collectDrawableBodies(chartData = {}) {
         const bodiesByName = new Map();
         [
             ...cloneArray(chartData?.planets),
@@ -52,6 +52,13 @@
                 bodiesByName.set(normalizedName, { ...body, name: normalizedName });
             }
         });
+        return [...bodiesByName.values()];
+    }
+
+    function collectAspectBodies(chartData = {}) {
+        const bodiesByName = new Map(
+            collectDrawableBodies(chartData).map((body) => [body.name, body]),
+        );
         cloneArray(chartData?.houses).forEach((house) => {
             const number = Number(house?.number);
             if (!Number.isInteger(number) || number < 1 || number > 12 || house?.longitude == null) return;
@@ -169,7 +176,8 @@
 
     function normalizeSynastryPartner(data, ringIndex = 1) {
         const partnerChart = data?.partner_chart || data?.partnerChart || data?.chart || data || {};
-        const bodies = collectAspectBodies(partnerChart);
+        const bodies = collectDrawableBodies(partnerChart);
+        const aspectBodies = collectAspectBodies(partnerChart);
         const aspects = cloneArray(data?.inter_aspects || data?.aspects).map((aspect) => ({
             ...aspect,
             planet_1: aspect.planet_2 || aspect.right_planet,
@@ -181,7 +189,7 @@
         return buildLayer({
             method: 'synastry_partner',
             bodies,
-            aspectBodies: bodies,
+            aspectBodies,
             houses: cloneArray(partnerChart?.houses),
             aspects,
             raw: data,

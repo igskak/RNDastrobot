@@ -112,6 +112,7 @@ class GeocodingService:
     """Качественный геокодинг-слой с дедупликацией и ранжированием."""
 
     BASE_URL = "https://nominatim.openstreetmap.org/search"
+    REVERSE_URL = "https://nominatim.openstreetmap.org/reverse"
     CITY_TYPES = {"city", "town", "village", "municipality", "hamlet"}
     EXACT_CACHE_ONLY_KEYS = {"киев", "київ", "kyiv", "kiev"}
 
@@ -122,6 +123,7 @@ class GeocodingService:
         self._timeout_seconds = 8.0
         self._autocomplete_cache = _BoundedTTLCache(maxsize=2000, ttl_seconds=60 * 60 * 24)
         self._geocode_cache = _BoundedTTLCache(maxsize=1000, ttl_seconds=60 * 60 * 24)
+        self._reverse_cache = _BoundedTTLCache(maxsize=2000, ttl_seconds=60 * 60 * 24)
 
     def _rate_limit(self) -> None:
         # TODO: limiter process-local. При multi-worker лимит Nominatim может нарушаться суммарно.
@@ -369,6 +371,31 @@ class GeocodingService:
             body = response.read().decode("utf-8")
             payload = json.loads(body)
             return payload if isinstance(payload, list) else []
+
+    def _fetch_reverse_raw(self, latitude: float, longitude: float, language: str) -> Dict[str, Any]:
+        params = urlencode(
+            {
+                "format": "jsonv2",
+                "lat": latitude,
+                "lon": longitude,
+                "addressdetails": 1,
+                "namedetails": 1,
+                "zoom": 10,
+            }
+        )
+        request = Request(
+            f"{self.REVERSE_URL}?{params}",
+            headers={
+                "User-Agent": "swisseph-natal-chart/2.0",
+                "Accept": "application/json",
+                "Accept-Language": self._normalize_language(language),
+            },
+        )
+        with urlopen(request, timeout=self._timeout_seconds) as response:
+            if response.status != 200:
+                raise GeocodingServiceError(f"Nominatim API error: HTTP {response.status}")
+            payload = json.loads(response.read().decode("utf-8"))
+            return payload if isinstance(payload, dict) else {}
 
     def _autocomplete_local_db(
         self,
@@ -690,6 +717,57 @@ class GeocodingService:
         resolved = (float(best["lat"]), float(best["lon"]), str(best["display_name"]))
         self._geocode_cache.set(place_lower, resolved)
         return resolved
+
+    def reverse_geocode(
+        self,
+        latitude: float,
+        longitude: float,
+        language: str = "en",
+    ) -> Dict[str, Any]:
+        """Resolve device coordinates to an autocomplete-compatible place."""
+        lat = float(latitude)
+        lon = float(longitude)
+        lang = self._normalize_language(language)
+        cache_key = f"{lat:.4f}|{lon:.4f}|{lang}"
+        cached = self._reverse_cache.get(cache_key)
+        if cached is not None:
+            return dict(cached)
+
+        last_error: Optional[Exception] = None
+        for attempt in range(self._max_retries):
+            self._rate_limit()
+            try:
+                raw = self._fetch_reverse_raw(lat, lon, lang)
+                short_name = self._extract_short_name(raw)
+                display_name = self._build_display_name_external(raw)
+                if not short_name:
+                    short_name = display_name.split(",", 1)[0].strip()
+                if not display_name:
+                    display_name = short_name
+                if not short_name or not display_name:
+                    raise GeocodingServiceError("Reverse geocoding returned no place name")
+
+                resolved = {
+                    "short_name": short_name,
+                    "display_name": display_name,
+                    "lat": lat,
+                    "lon": lon,
+                    "source_id": None,
+                }
+                self._reverse_cache.set(cache_key, dict(resolved))
+                return resolved
+            except socket.timeout as exc:
+                last_error = exc
+                time.sleep(2 ** attempt)
+            except (HTTPError, URLError, json.JSONDecodeError) as exc:
+                last_error = exc
+                time.sleep(2 ** attempt)
+
+        if isinstance(last_error, socket.timeout):
+            raise GeocodingTimeoutError("Превышено время ожидания при обратном геокодировании")
+        if isinstance(last_error, GeocodingServiceError):
+            raise last_error
+        raise GeocodingServiceError("Сервис обратного геокодирования временно недоступен")
 
     def resolve_timezone_by_source(
         self,

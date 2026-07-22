@@ -265,8 +265,8 @@
       },
       "multi": {
         "title": "Switch between chart views",
-        "text": "The natal chart is open in single-wheel mode. Multi-wheel places forecast layers over the natal chart.",
-        "open": "Open multi-wheel"
+        "text": "The natal chart is open as a single chart. A double chart places forecast layers over the natal chart.",
+        "open": "Open double chart"
       },
       "layers": {
         "title": "Add the layers you need",
@@ -275,7 +275,7 @@
       },
       "multipleLayers": {
         "title": "Layers work independently",
-        "text": "Select a layer in the panel and the wheel, tables, aspects, and assistant will switch to its data. You can keep several layers active together."
+        "text": "Select a layer in the panel and the chart, tables, aspects, and assistant will switch to its data. You can keep several layers active together."
       },
       "micro": {
         "gotIt": "Got it",
@@ -326,7 +326,7 @@
         "emptyAspects": "No aspects in active layers for the current filters.",
         "layer": "Layer",
         "source": "Source",
-        "bodies": "Bodies",
+        "bodies": "Planets and houses",
         "aspectsCount": "Aspects",
         "aspect": "Aspect",
         "phase": "Phase",
@@ -357,7 +357,7 @@
           "notInOrb": "The selected moment is outside the aspect orb.",
           "unknownNatal": "Natal object is not available.",
           "unknownAspect": "Aspect type is not available.",
-          "unsupportedTransit": "Transit body is not supported.",
+          "unsupportedTransit": "This transit chart element is not supported.",
           "noVisibleContacts": "No contacts in the visible range.",
           "noData": "No aspect dynamics data."
         },
@@ -411,8 +411,8 @@
         "fixstars": "Stars"
       },
       "view": {
-        "single": "Single wheel",
-        "multi": "Multi-wheel"
+        "single": "Single chart",
+        "multi": "Double chart"
       },
       "settings": {
         "cuspCircles": "Cusp circles",
@@ -491,7 +491,7 @@
         "cornerTr": "Top right",
         "cornerBl": "Bottom left",
         "cornerBr": "Bottom right",
-        "cornersCopy": "Pin up to four compact indicators next to the wheel.",
+        "cornersCopy": "Pin up to four compact indicators next to the chart.",
         "addWidget": "Add widget",
         "replaceWidget": "Replace widget",
         "clearWidgets": "Clear all widgets",
@@ -585,7 +585,7 @@
         "maximum": "Maximum",
         "magnitude": "Magnitude",
         "visible": "Visible from chart location",
-        "notVisible": "Not visible from chart location",
+        "notVisible": "Not observable from the chart location",
         "locationUnavailable": "Chart coordinates unavailable",
         "types": {
           "solar": "Solar eclipse",
@@ -808,8 +808,8 @@
         "aspectTypes": "Aspect types",
         "aspectTypesHint": "Pick the exact aspect set each view should start with.",
         "extras": "Extra options",
-        "matrixCopy": "Open only when you need to tune which bodies stay visible and aspecting by default.",
-        "matrixTitle": "Bodies matrix",
+      "matrixCopy": "Open only when you need to tune which planets and houses stay visible and aspecting by default.",
+      "matrixTitle": "Planets and houses matrix",
         "orientation": "Orientation"
       },
       "heading": "General settings",
@@ -819,9 +819,10 @@
       "loading": "Loading general settings",
       "matrix": {
         "columns": {
-          "aspecting": "Aspecting",
-          "body": "Body",
-          "display": "Display"
+          "aspecting": "Aspect",
+          "body": "Planets and houses",
+          "display": "Show",
+          "bodyAria": "Planets and houses"
         }
       },
       "options": {
@@ -838,18 +839,18 @@
         "actions": {
           "applyNatal": "Apply natal orbs"
         },
-        "copy": "Keep separate natal and prognostic orb presets in one compact matrix. Prognostic applies to transits, progressions, directions, and solar.",
+        "copy": "The prognostic profile is used for transits, progressions, directions, and solar returns.",
         "hints": {
           "natal": "Natal orbs are used for natal aspect calculations.",
           "prognostic": "Prognostic orbs are used for transits, progressions, directions, and solar calculations.",
           "synastry": "Synastry orbs are used for cross-aspects between two charts. Narrow them to reduce the number of inter-chart aspects."
         },
         "matrix": {
-          "cornerTitle": "Orb matrix by aspect and body"
+          "cornerTitle": "Orb matrix by aspect and element"
         },
         "pairStrategy": {
           "average": "Average",
-          "hint": "When two bodies have different orb values, choose whether aspects use the larger, smaller, or average orb.",
+          "hint": "Natal orbs are used to calculate natal aspects. When two elements have different orb values, choose whether aspects use the larger, smaller, or average orb.",
           "label": "Orb used in aspects",
           "larger": "Larger",
           "smaller": "Smaller"
@@ -872,13 +873,13 @@
           "planet": "Planet"
         },
         "copy": "Edit only domicile and exaltation. Detriment and fall are derived automatically from the same scheme and become part of the astrologer-wide methodology.",
-        "hint": "Click a sign in `Domicile` to assign the primary ruler; click another body for the same sign to assign the co-ruler. Click an active value again to clear it.",
+        "hint": "Edit domicile and exaltation; detriment and fall are determined automatically as the opposite signs",
         "states": {
           "empty": "Not assigned",
           "primary": "Primary ruler",
           "secondary": "Co-ruler"
         },
-        "title": "Rulership scheme"
+        "title": "Rulership table"
       },
       "methodology": {
         "balances": {
@@ -887,75 +888,76 @@
             "point": "Point",
             "weight": "Weight"
           },
-          "copy": "Weights used for natal balance calculations. Saving these starts recalculation for saved natal and solar charts.",
-          "planetWeights": "Planet weights",
+          "copy": "Coefficients for calculating integrated chart indicators by signs and houses",
+          "planetWeights": "Planets",
           "specialPoints": "Special points",
           "title": "Balances"
         }
       },
       "subtitle": "Set the defaults once, then let individual chart overrides change only what is necessary.",
       "stationary": {
-        "copy": "Define when a planet should be marked as stationary by comparing its current speed to the average speed for that body.",
+      "copy": "Define when a planet should be marked as stationary by comparing its current speed with its average speed.",
         "threshold": {
-          "hint": "Percent of the average speed. `5` means a planet is stationary when it moves at 5% of its usual speed or slower.",
+          "hint": "Percentage of average speed. A value of 5 means a planet is stationary when it moves at 5% of its normal speed or slower.",
           "label": "Stationary threshold (%)"
         },
-        "title": "Stationary logic"
+        "title": "Stationarity settings"
       },
       "subtitleWithEmail": "Signed in as {email}. Set the defaults once, then let individual chart overrides change only what is necessary.",
       "tables": {
         "aspects": {
           "copy": "Each row is one aspect type. Turn it on only in the views where it should be enabled by default.",
-          "title": "Aspect types across all views"
+          "title": "Aspects for all screens"
         },
         "bodies": {
-          "copy": "Use one wide matrix instead of three separate editors when you need to fine-tune body visibility and aspect participation.",
-          "title": "Bodies for all screens"
+        "copy": "Fine-tune planet and house visibility and aspect participation.",
+          "title": "Chart elements for all screens"
         },
         "columns": {
           "aspect": "Aspect",
-          "biwheel": "Biwheel",
+        "biwheel": "Double chart",
           "natal": "Natal",
           "setting": "Setting",
-          "solar": "Solar"
+          "solar": "Solar",
+          "single": "Single chart",
+          "double": "Double chart"
         },
         "defaults": {
           "copy": "The most-used defaults stay in one aligned matrix so you can compare all screens without scrolling through separate cards.",
-          "title": "One matrix for natal, biwheel, and solar"
+          "title": "Display settings"
         },
         "notAvailable": "—"
       },
       "title": "General settings",
       "visual": {
         "angularCuspsBlack": {
-          "copy": "Applies to angular cusp lines and their labels on wheels.",
-          "label": "Black angular cusps"
+          "label": "Highlight angular house cusps in black"
         },
         "exactAspectHighlight": {
-          "copy": "Aspects within 25% of the allowed orb are drawn slightly thicker.",
           "label": "Highlight exact aspects"
         },
         "columns": {
           "color": "Color",
           "element": "Element",
           "override": "Override",
-          "type": "Type"
+          "type": "Type",
+          "planet": "Planet",
+          "housePoint": "House / angle"
         },
-        "copy": "Set one consistent palette for individual aspects, elements, and body overrides. These colors are reused the same way in natal and prognostic views.",
         "panels": {
           "aspectColors": "Aspect colors",
-          "bodyOverrides": "Body overrides",
+        "bodyOverrides": "Planets",
           "elementPalette": "Element palette",
-          "wheel": "Wheel"
-        },
-        "preview": {
-          "ariaLabel": "Visual wheel preview",
-          "title": "Wheel preview"
+        "wheel": "Houses",
+          "aspects": "Aspects",
+          "elements": "Elements",
+          "planets": "Planets",
+          "houses": "Houses"
         },
         "tabs": {
           "ariaLabel": "Visual settings sections"
         },
-        "title": "Visual palette"
+        "title": "Color settings"
       },
       "toasts": {
         "loadFailed": "Failed to load general settings",
@@ -967,11 +969,11 @@
       },
       "views": {
         "biwheel": {
-          "copy": "Controls how forecast bi-wheels and comparison views begin before local tweaks are applied.",
-          "title": "Inherited biwheel defaults"
+        "copy": "Controls how double charts and comparison views begin before local tweaks are applied.",
+        "title": "Inherited double-chart defaults"
         },
         "natal": {
-          "copy": "Sets the default wheel orientation, aspect filters, and table behavior for natal work.",
+        "copy": "Sets the default chart orientation, aspect filters, and table behavior for natal work.",
           "title": "Inherited natal defaults"
         },
         "solar": {
@@ -1210,13 +1212,13 @@
         "houseLabels": {
           "arabic": "Arabic house numbers",
           "label": "House numbering",
-          "outside": "Show cusps outside the wheel",
+          "outside": "Show cusps outside the chart",
           "roman": "Roman house numbers"
         },
         "orientation": {
           "aries": "Aries 0°",
           "asc": "Ascendant (ASC)",
-          "label": "Wheel orientation"
+          "label": "Chart orientation"
         },
         "iconSize": "Icon size",
         "planetSize": "Planet size",
@@ -1225,12 +1227,12 @@
         "boldAscDsc": "Make ASC and DSC bold",
         "boldMcIc": "Make MC and IC bold",
         "boldAngularCusps": "Show angular house cusps in bold",
-        "showPlanetDegree": "Show planet degree on wheel",
-        "showPlanetStationary": "Show stationary on wheel",
+        "showPlanetDegree": "Show planet degree on chart",
+        "showPlanetStationary": "Show stationary state on chart",
         "fixedStars": {
           "all": "Show all stars",
           "brightness": "Minimum brightness",
-          "conjunctions": "In conjunction with bodies",
+          "conjunctions": "In conjunction with planets and houses",
           "filter": "Star filter",
           "highlighted": "Highlighted",
           "magnitude": "Magnitude",
@@ -1241,7 +1243,7 @@
           "showNames": "Show star names",
           "title": "Stars"
         },
-        "wheelOptions": "Wheel options",
+        "wheelOptions": "Chart options",
         "tableOptions": "Table options",
         "showDeclinationAspects": "Parallels (declination)"
       },
@@ -1479,6 +1481,13 @@
           "timeRequired": "Birth time is required",
           "placeRequired": "Enter a place and select it from the list",
           "timezoneRequired": "Timezone is required"
+        },
+        "now": {
+          "action": "Now",
+          "locating": "Finding the current location…",
+          "currentLocation": "Current location",
+          "locationReady": "Date, time, and location filled",
+          "locationUnavailable": "Date and time filled. Location could not be determined."
         }
       },
       "newProfile": {
@@ -1810,8 +1819,8 @@
       },
       "metrics": {
         "interAspects": "Inter-chart aspects",
-        "clientOverlay": "Primary profile bodies in partner houses",
-        "partnerOverlay": "Partner bodies in primary profile houses"
+        "clientOverlay": "Primary profile planets in partner houses",
+        "partnerOverlay": "Partner planets in primary profile houses"
       },
       "overlays": {
         "clientInPartner": "Primary profile in partner houses",
@@ -1832,7 +1841,7 @@
       "compare": {
         "clientOnly": "Showing the primary natal chart.",
         "partnerOnly": "Showing the partner natal chart.",
-        "overlayHint": "The natal chart and partner chart are shown in one wheel."
+        "overlayHint": "The natal chart and partner chart are shown in one chart."
       },
       "errors": {
         "missingParams": "Two profiles are required for synastry.",
@@ -1844,13 +1853,13 @@
         "clearFocus": "Clear selection",
         "collapseAspects": "Collapse aspects table",
         "collapseIngresses": "Collapse ingresses table",
-        "empty": "No bi-wheel data",
+        "empty": "No double-chart data",
         "mobileFilters": {
           "close": "Hide legend",
           "open": "Legend"
         },
         "natalButton": "Natal",
-        "natalButtonHint": "Hold to peek, tap to pin natal wheel",
+        "natalButtonHint": "Hold to peek, tap to pin the natal chart",
         "legend": {
           "directionType": "Direction type",
           "directions": "Directions",
@@ -1955,7 +1964,7 @@
           "editSetup": "Edit setup",
           "hideSetup": "Hide setup"
         },
-        "biwheelReady": "Bi-wheel is ready for {date}. Use it when you need the chart view for a specific moment.",
+        "biwheelReady": "The double chart is ready for {date}. Use it for a chart view of a specific moment.",
         "chips": {
           "mode": "View",
           "status": "Status",
@@ -2073,11 +2082,11 @@
         "noRowsByFilters": "No rows match filters"
       },
       "tabs": {
-        "biwheel": "Bi-wheel",
+        "biwheel": "Double chart",
         "solar": "Solar return",
         "table": "Table",
         "timeline": "Timeline",
-        "multiViewRequired": "Switch to multi-view to open range tables or timeline."
+        "multiViewRequired": "Switch to double-chart mode to open range tables or timeline."
       },
       "timeline": {
         "eclipses": {
@@ -2085,7 +2094,7 @@
           "class": "Type",
           "visibility": "Visibility",
           "visible": "visible from chart location",
-          "notVisible": "not visible from chart location",
+          "notVisible": "Not observable from the chart location",
           "locationUnavailable": "chart coordinates unavailable",
           "types": {
             "solar": "Solar eclipse",
@@ -2112,7 +2121,7 @@
           "exactToday": "Exact today",
           "title": "Active now"
         },
-        "clickHint": "Click any event bar to jump to that date in Biwheel",
+        "clickHint": "Click any event bar to jump to that date in the double chart",
         "empty": "No timeline events",
         "eventCount": "{shown} shown / {total} total",
         "loading": "Loading timeline...",
@@ -2532,7 +2541,7 @@
       "loading": "Loading chart...",
       "nav": {
         "legend": "Legend",
-        "wheel": "Wheel"
+        "wheel": "Chart"
       },
       "report": {
         "cards": {

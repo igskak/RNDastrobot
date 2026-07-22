@@ -1,17 +1,8 @@
 (function () {
     'use strict';
 
-    const VIEW_IDS = ['natal', 'biwheel', 'solar'];
-    const VISUAL_PANEL_IDS = ['aspectColors', 'elementPalette', 'bodyOverrides', 'wheel'];
-    const PREVIEW_ASPECT_TYPES = ['Conjunction', 'Trine', 'Square', 'Opposition', 'Sextile'];
-    const PREVIEW_BODY_ELEMENTS = {
-        Sun: 'Fire',
-        Moon: 'Water',
-        Mercury: 'Air',
-        Venus: 'Earth',
-        Mars: 'Fire',
-        Jupiter: 'Fire',
-    };
+    const VIEW_IDS = ['single', 'double'];
+    const VISUAL_PANEL_IDS = ['aspects', 'elements', 'planets', 'houses'];
     const DEFAULT_ASPECT_TYPES = window.AstroPreferences?.DEFAULT_ENABLED_ASPECT_TYPES || [
         'Conjunction',
         'Opposition',
@@ -41,6 +32,7 @@
         'BlackMoon', 'WhiteMoon', 'PartOfFortune',
         'ASC', 'DSC', 'MC', 'IC', 'Vertex', 'AntiVertex',
     ]);
+    const HOUSE_COLOR_BODIES = new Set(['ASC', 'DSC', 'MC', 'IC', 'Vertex', 'AntiVertex']);
 
     let accountPreferences = null;
     let persistedMethodologyBaseline = null;
@@ -51,7 +43,7 @@
     let pollTimer = null;
     let activeOrbProfile = 'natal';
     let activeOrbViewMode = 'default';
-    let activeVisualTab = 'aspectColors';
+    let activeVisualTab = 'aspects';
     let lastFocusedElementBeforeResetConfirm = null;
 
     function hidePageLoader() {
@@ -144,9 +136,16 @@
 
     function renderAccountPlan(me) {
         const card = document.getElementById('accountPlanCard');
+        const isSoloPlan = window.AstroAPI?.isSoloPlan?.(me) === true;
+        const billingTab = document.querySelector('[data-settings-tab="billing"]');
+        const billingPanel = document.querySelector('[data-settings-panel="billing"]');
+        if (billingTab) billingTab.hidden = isSoloPlan;
+        if (billingPanel) billingPanel.hidden = isSoloPlan;
+        if (isSoloPlan && activeSettingsTab === 'billing') {
+            setActiveSettingsTab('chart');
+        }
         if (!card) return;
 
-        const isSoloPlan = window.AstroAPI?.isSoloPlan?.(me) === true;
         card.classList.toggle('hidden', isSoloPlan);
         if (isSoloPlan) return;
 
@@ -269,6 +268,23 @@
     function deepClone(value) {
         if (value === null || value === undefined) return value;
         return JSON.parse(JSON.stringify(value));
+    }
+
+    function deepMerge(base, patch) {
+        if (window.AccountSettingsModel?.deepMerge) {
+            return window.AccountSettingsModel.deepMerge(base, patch);
+        }
+        const output = base && typeof base === 'object' && !Array.isArray(base)
+            ? deepClone(base)
+            : {};
+        Object.entries(patch || {}).forEach(([key, value]) => {
+            if (value && typeof value === 'object' && !Array.isArray(value)) {
+                output[key] = deepMerge(output[key], value);
+                return;
+            }
+            output[key] = deepClone(value);
+        });
+        return output;
     }
 
     function normalizeViewSettings(viewSettings = {}) {
@@ -400,33 +416,19 @@
     }
 
     function getViewDom(viewId) {
-        if (viewId === 'natal') {
+        if (viewId === 'single') {
             return {
-                orientation: document.getElementById('natalOrientationSelect'),
-                aspectScope: document.getElementById('natalAspectScopeSelect'),
-                showApplyingSeparating: document.getElementById('natalShowApplyingSeparating'),
-                showSpeed: document.getElementById('natalShowSpeed'),
-                showStationary: document.getElementById('natalShowStationary'),
-                showAspectText: document.getElementById('natalShowAspectText'),
-            };
-        }
-        if (viewId === 'biwheel') {
-            return {
-                orientation: document.getElementById('biwheelOrientationSelectAccount'),
-                aspectScope: document.getElementById('biwheelAspectScopeSelectAccount'),
-                showApplyingSeparating: null,
-                showSpeed: null,
-                showStationary: null,
-                showAspectText: document.getElementById('biwheelShowAspectTextAccount'),
+                showApplyingSeparating: document.getElementById('singleShowApplyingSeparating'),
+                showSpeed: document.getElementById('singleShowSpeed'),
+                showStationary: document.getElementById('singleShowStationary'),
+                showAspectText: document.getElementById('singleShowAspectText'),
             };
         }
         return {
-            orientation: document.getElementById('solarOrientationSelectAccount'),
-            aspectScope: document.getElementById('solarAspectScopeSelectAccount'),
-            showApplyingSeparating: document.getElementById('solarShowApplyingSeparatingAccount'),
-            showSpeed: document.getElementById('solarShowSpeedAccount'),
-            showStationary: document.getElementById('solarShowStationaryAccount'),
-            showAspectText: document.getElementById('solarShowAspectTextAccount'),
+            showApplyingSeparating: document.getElementById('doubleShowApplyingSeparating'),
+            showSpeed: document.getElementById('doubleShowSpeed'),
+            showStationary: document.getElementById('doubleShowStationary'),
+            showAspectText: document.getElementById('doubleShowAspectText'),
         };
     }
 
@@ -598,52 +600,6 @@
         document.querySelectorAll('[data-visual-panel]').forEach((panel) => {
             panel.classList.toggle('hidden', panel.dataset.visualPanel !== activeVisualTab);
         });
-    }
-
-    function getCssToken(value) {
-        return String(value || '')
-            .trim()
-            .replace(/([a-z])([A-Z])/g, '$1-$2')
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/^-+|-+$/g, '');
-    }
-
-    function setPreviewColor(preview, token, value, fallback = '#6b7280') {
-        const color = String(value || fallback).trim();
-        preview.style.setProperty(token, /^#[0-9a-f]{6}$/i.test(color) ? color : fallback);
-    }
-
-    function updateVisualPreview(visual = {}) {
-        const preview = document.getElementById('accountVisualWheelPreview');
-        if (!preview) return;
-
-        const resolvedVisual = resolveVisualPreferences(visual);
-        const elementPalette = resolvedVisual?.planet_colors?.element_palette || {};
-        const bodyOverrides = resolvedVisual?.planet_colors?.body_overrides || {};
-
-        PREVIEW_ASPECT_TYPES.forEach((aspectType) => {
-            const color = window.AstroPreferences?.getAspectColor
-                ? window.AstroPreferences.getAspectColor(aspectType, resolvedVisual)
-                : resolvedVisual?.aspect_colors?.[aspectType];
-            setPreviewColor(preview, `--preview-aspect-${getCssToken(aspectType)}`, color);
-        });
-
-        Object.entries(PREVIEW_BODY_ELEMENTS).forEach(([body, element]) => {
-            const color = bodyOverrides?.[body]
-                || elementPalette?.[element]
-                || getBodyDefaultDisplayColor(body, resolvedVisual);
-            setPreviewColor(preview, `--preview-body-${getCssToken(body)}`, color);
-        });
-
-        preview.style.setProperty(
-            '--preview-cusp',
-            resolvedVisual?.wheel?.angular_cusps_black === true ? '#111827' : '#8d6f54'
-        );
-        preview.style.setProperty(
-            '--preview-line-width',
-            resolvedVisual?.wheel?.highlight_exact_aspects === false ? '1.5px' : '2.5px'
-        );
     }
 
     function syncOrbMatrixFromDom() {
@@ -1043,8 +999,9 @@
 
     function renderPlanetColors(visual = {}) {
         const elementBody = document.getElementById('accountElementPaletteBody');
-        const overridesBody = document.getElementById('accountBodyOverrideColorsBody');
-        if (!elementBody || !overridesBody) return;
+        const planetOverridesBody = document.getElementById('accountPlanetOverrideColorsBody');
+        const houseOverridesBody = document.getElementById('accountHouseOverrideColorsBody');
+        if (!elementBody || !planetOverridesBody || !houseOverridesBody) return;
 
         const resolvedVisual = resolveVisualPreferences(visual);
         const elementPalette = resolvedVisual?.planet_colors?.element_palette || {};
@@ -1065,7 +1022,7 @@
             </tr>
         `).join('');
 
-        overridesBody.innerHTML = getMetadataBodies().map((body) => {
+        const renderOverrides = (bodies) => bodies.map((body) => {
             const defaultDisplayColor = getBodyDefaultDisplayColor(body, resolvedVisual);
             const isOverrideActive = Boolean(bodyOverrides?.[body]);
             const displayedColor = bodyOverrides?.[body] || defaultDisplayColor;
@@ -1102,9 +1059,14 @@
                 </tr>
             `;
         }).join('');
+
+        const bodies = getMetadataBodies();
+        planetOverridesBody.innerHTML = renderOverrides(bodies.filter((body) => !HOUSE_COLOR_BODIES.has(body)));
+        houseOverridesBody.innerHTML = renderOverrides(bodies.filter((body) => HOUSE_COLOR_BODIES.has(body)));
     }
 
     function populateForm(preferences, { updateBaseline = false } = {}) {
+        const rawChartDefaults = preferences?.chart_defaults || {};
         const normalized = {
             ...getDefaultAccountPreferences(),
             ...(preferences || {}),
@@ -1133,10 +1095,20 @@
             houseSystemSelect.value = normalized.chart_creation_defaults.house_system || 'P';
         }
         const globalViewOptions = normalized.chart_defaults.natal?.view_options || {};
-        const globalTableOptions = normalized.chart_defaults.natal?.table_options || {};
+        const globalAspects = normalized.chart_defaults.natal?.aspects || {};
+        const uiChartDefaults = window.AccountSettingsModel?.buildUiChartDefaults
+            ? window.AccountSettingsModel.buildUiChartDefaults(rawChartDefaults, normalizeViewSettings)
+            : {
+                single: normalized.chart_defaults.natal,
+                double: normalized.chart_defaults.forecast_new,
+            };
         const orientationSelect = document.getElementById('accountOrientationSelect');
         if (orientationSelect) {
             orientationSelect.value = globalViewOptions.orientation === 'asc' ? 'asc' : 'aries';
+        }
+        const aspectScopeSelect = document.getElementById('accountAspectScopeSelect');
+        if (aspectScopeSelect) {
+            aspectScopeSelect.value = ['major', 'minor'].includes(globalAspects.scope) ? globalAspects.scope : 'all';
         }
         const houseNumberStyleSelect = document.getElementById('accountHouseNumberStyleSelect');
         if (houseNumberStyleSelect) {
@@ -1145,10 +1117,6 @@
         const houseLabelsOutsideToggle = document.getElementById('accountHouseLabelsOutsideToggle');
         if (houseLabelsOutsideToggle) {
             houseLabelsOutsideToggle.checked = globalViewOptions.house_labels_outside === true;
-        }
-        const showAspectTextToggle = document.getElementById('accountShowAspectTextToggle');
-        if (showAspectTextToggle) {
-            showAspectTextToggle.checked = globalTableOptions.show_aspect_text === true;
         }
         const angularCuspsBoldToggle = document.getElementById('accountAngularCuspsBoldToggle');
         if (angularCuspsBoldToggle) {
@@ -1183,24 +1151,21 @@
         }
 
         VIEW_IDS.forEach((viewId) => {
-            const view = normalized.chart_defaults[viewId];
+            const view = uiChartDefaults[viewId];
             const dom = getViewDom(viewId);
-            if (dom.orientation) dom.orientation.value = view.view_options?.orientation === 'asc' ? 'asc' : 'aries';
-            if (dom.aspectScope) dom.aspectScope.value = view.aspects?.scope || (viewId === 'biwheel' ? 'major' : 'all');
             if (dom.showApplyingSeparating) dom.showApplyingSeparating.checked = view.aspects?.show_applying_separating === true;
             if (dom.showSpeed) dom.showSpeed.checked = view.table_options?.show_speed !== false;
             if (dom.showStationary) dom.showStationary.checked = view.table_options?.show_stationary !== false;
             if (dom.showAspectText) dom.showAspectText.checked = view.table_options?.show_aspect_text === true;
         });
 
-        renderAspectTypesMatrix(normalized.chart_defaults);
-        renderBodiesMatrix(normalized.chart_defaults);
+        renderAspectTypesMatrix(uiChartDefaults);
+        renderBodiesMatrix(uiChartDefaults);
         renderOrbsMatrix(normalized.methodology);
         renderDignitiesMatrix(normalized.methodology);
         renderBalanceWeights(normalized.methodology);
         renderAspectColors(normalized.visual);
         renderPlanetColors(normalized.visual);
-        updateVisualPreview(normalized.visual);
 
         // Snapshot the clean form state once the DOM (incl. matrices) is fully
         // populated, so the dirty-state save bar compares against it.
@@ -1241,7 +1206,6 @@
                 rows: readMatrixRows(viewId),
             },
             aspects: {
-                scope: dom.aspectScope?.value || (viewId === 'biwheel' ? 'major' : 'all'),
                 enabled_types: readCheckedAspectTypes(viewId),
                 show_applying_separating: dom.showApplyingSeparating?.checked === true,
             },
@@ -1249,9 +1213,6 @@
                 show_speed: dom.showSpeed ? dom.showSpeed.checked !== false : true,
                 show_stationary: dom.showStationary ? dom.showStationary.checked !== false : true,
                 show_aspect_text: dom.showAspectText?.checked === true,
-            },
-            view_options: {
-                orientation: dom.orientation?.value === 'asc' ? 'asc' : 'aries',
             },
         };
     }
@@ -1338,13 +1299,14 @@
 
     function collectGlobalViewSettings() {
         const orientation = document.getElementById('accountOrientationSelect')?.value === 'asc' ? 'asc' : 'aries';
+        const aspectScopeValue = document.getElementById('accountAspectScopeSelect')?.value;
+        const aspectScope = ['major', 'minor'].includes(aspectScopeValue) ? aspectScopeValue : 'all';
         const houseNumberStyle = document.getElementById('accountHouseNumberStyleSelect')?.value === 'roman' ? 'roman' : 'arabic';
         const houseLabelsOutside = document.getElementById('accountHouseLabelsOutsideToggle')?.checked === true;
-        const showAspectText = document.getElementById('accountShowAspectTextToggle')?.checked === true;
         const angularCuspsBold = document.getElementById('accountAngularCuspsBoldToggle')?.checked !== false;
         return {
-            table_options: {
-                show_aspect_text: showAspectText,
+            aspects: {
+                scope: aspectScope,
             },
             view_options: {
                 orientation,
@@ -1358,16 +1320,28 @@
 
     function collectPayload() {
         const globalViewSettings = collectGlobalViewSettings();
+        const singleViewSettings = collectViewSettings('single');
+        const doubleViewSettings = collectViewSettings('double');
+        const existingChartDefaults = accountPreferences?.chart_defaults
+            || getDefaultAccountPreferences().chart_defaults;
+        const chartDefaults = window.AccountSettingsModel?.buildTechnicalChartDefaults
+            ? window.AccountSettingsModel.buildTechnicalChartDefaults(
+                existingChartDefaults,
+                globalViewSettings,
+                singleViewSettings,
+                doubleViewSettings,
+            )
+            : {
+                natal: deepMerge(deepMerge(existingChartDefaults.natal, globalViewSettings), singleViewSettings),
+                solar: deepMerge(deepMerge(existingChartDefaults.solar, globalViewSettings), singleViewSettings),
+                biwheel: deepMerge(deepMerge(existingChartDefaults.biwheel, globalViewSettings), doubleViewSettings),
+                forecast_new: deepMerge(deepMerge(existingChartDefaults.forecast_new, globalViewSettings), doubleViewSettings),
+            };
         return {
             chart_creation_defaults: {
                 house_system: document.getElementById('accountHouseSystemSelect')?.value || 'P',
             },
-            chart_defaults: {
-                natal: deepClone(globalViewSettings),
-                biwheel: deepClone(globalViewSettings),
-                forecast_new: deepClone(globalViewSettings),
-                solar: deepClone(globalViewSettings),
-            },
+            chart_defaults: chartDefaults,
             methodology: collectMethodology(),
             visual: collectVisual(),
         };
@@ -1395,6 +1369,8 @@
     }
 
     function setActiveSettingsTab(tabId) {
+        const requestedTab = document.querySelector(`[data-settings-tab="${tabId}"]`);
+        if (!requestedTab || requestedTab.hidden) tabId = 'chart';
         activeSettingsTab = tabId;
         document.querySelectorAll('[data-settings-tab]').forEach((button) => {
             const isActive = button.dataset.settingsTab === tabId;
@@ -1659,7 +1635,7 @@
         const applyNatalOrbsBtn = document.getElementById('accountApplyNatalOrbsBtn');
         const orbMatrixBody = document.getElementById('accountOrbsMatrixBody');
         const dignityMatrixBody = document.getElementById('accountDignitiesMatrixBody');
-        const bodyOverrideColorsBody = document.getElementById('accountBodyOverrideColorsBody');
+        const bodyOverrideColorBodies = Array.from(document.querySelectorAll('#accountPlanetOverrideColorsBody, #accountHouseOverrideColorsBody'));
         const resetConfirmDialog = document.getElementById('accountSettingsResetConfirmDialog');
         const resetConfirmBackdrop = document.getElementById('accountSettingsResetConfirmBackdrop');
         const resetConfirmCloseBtn = document.getElementById('accountSettingsResetConfirmClose');
@@ -1730,7 +1706,7 @@
         });
         document.querySelectorAll('[data-visual-tab]').forEach((button) => {
             button.addEventListener('click', () => {
-                setActiveVisualTab(button.dataset.visualTab || 'aspectColors');
+                setActiveVisualTab(button.dataset.visualTab || 'aspects');
             });
         });
         setActiveVisualTab(activeVisualTab);
@@ -1773,38 +1749,26 @@
 
             renderDignitiesMatrix(accountPreferences?.methodology || ensureMethodologyState());
         });
-        bodyOverrideColorsBody?.addEventListener('input', (event) => {
-            const input = event.target;
-            if (!(input instanceof HTMLInputElement)) return;
-            if (!input.dataset.bodyColorOverride) return;
-            input.dataset.bodyColorActive = 'true';
-            const resetButton = bodyOverrideColorsBody.querySelector(`[data-clear-body-color-override="${input.dataset.bodyColorOverride}"]`);
-            resetButton?.classList.remove('is-muted');
-            updateVisualPreview(collectVisual());
-        });
-        bodyOverrideColorsBody?.addEventListener('click', (event) => {
-            const button = event.target.closest('[data-clear-body-color-override]');
-            if (!(button instanceof HTMLElement)) return;
-            const body = button.dataset.clearBodyColorOverride;
-            if (!body) return;
-            const input = bodyOverrideColorsBody.querySelector(`[data-body-color-override="${body}"]`);
-            if (!(input instanceof HTMLInputElement)) return;
-            input.dataset.bodyColorActive = 'false';
-            input.value = input.dataset.bodyColorDefault || '#6b7280';
-            button.classList.add('is-muted');
-            updateVisualPreview(collectVisual());
-        });
-        document.addEventListener('input', (event) => {
-            const input = event.target;
-            if (!(input instanceof HTMLInputElement)) return;
-            if (!input.matches('[data-aspect-color], [data-element-color]')) return;
-            updateVisualPreview(collectVisual());
-        });
-        document.addEventListener('change', (event) => {
-            const input = event.target;
-            if (!(input instanceof HTMLInputElement)) return;
-            if (!input.matches('[data-aspect-color], [data-element-color], #accountAngularCuspsBlackToggle, #accountExactAspectHighlightToggle')) return;
-            updateVisualPreview(collectVisual());
+        bodyOverrideColorBodies.forEach((bodyOverrideColorsBody) => {
+            bodyOverrideColorsBody.addEventListener('input', (event) => {
+                const input = event.target;
+                if (!(input instanceof HTMLInputElement) || !input.dataset.bodyColorOverride) return;
+                input.dataset.bodyColorActive = 'true';
+                const resetButton = bodyOverrideColorsBody.querySelector(`[data-clear-body-color-override="${input.dataset.bodyColorOverride}"]`);
+                resetButton?.classList.remove('is-muted');
+            });
+            bodyOverrideColorsBody.addEventListener('click', (event) => {
+                const button = event.target.closest('[data-clear-body-color-override]');
+                if (!(button instanceof HTMLElement)) return;
+                const body = button.dataset.clearBodyColorOverride;
+                if (!body) return;
+                const input = bodyOverrideColorsBody.querySelector(`[data-body-color-override="${body}"]`);
+                if (!(input instanceof HTMLInputElement)) return;
+                input.dataset.bodyColorActive = 'false';
+                input.value = input.dataset.bodyColorDefault || '#6b7280';
+                button.classList.add('is-muted');
+                refreshDirtyState();
+            });
         });
 
         try {

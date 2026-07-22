@@ -1,5 +1,13 @@
 from app.services import geocoding_service as geocoding_module
-from app.services.geocoding_service import GeocodingService, _BoundedTTLCache
+import socket
+
+import pytest
+
+from app.services.geocoding_service import (
+    GeocodingService,
+    GeocodingTimeoutError,
+    _BoundedTTLCache,
+)
 
 
 def _city_item(name: str, display: str, lat: float, lon: float, source_id: str):
@@ -196,3 +204,51 @@ def test_resolve_timezone_by_source_ignores_non_geoname():
     service = GeocodingService()
     timezone = service.resolve_timezone_by_source("cache:kyiv", db_session=object())
     assert timezone is None
+
+
+def test_reverse_geocode_normalizes_and_caches_by_rounded_coordinates(monkeypatch):
+    service = GeocodingService()
+    calls = {"count": 0}
+    monkeypatch.setattr(service, "_rate_limit", lambda: None)
+
+    def fake_fetch(latitude, longitude, language):
+        calls["count"] += 1
+        assert language == "ru"
+        return {
+            "display_name": "Мадрид, Сообщество Мадрид, Испания",
+            "address": {
+                "city": "Мадрид",
+                "state": "Сообщество Мадрид",
+                "country": "Испания",
+            },
+        }
+
+    monkeypatch.setattr(service, "_fetch_reverse_raw", fake_fetch)
+
+    first = service.reverse_geocode(40.416775, -3.703790, language="ru-RU")
+    second = service.reverse_geocode(40.416779, -3.703789, language="ru")
+
+    assert first == second
+    assert first == {
+        "short_name": "Мадрид",
+        "display_name": "Мадрид, Сообщество Мадрид, Испания",
+        "lat": 40.416775,
+        "lon": -3.70379,
+        "source_id": None,
+    }
+    assert calls["count"] == 1
+
+
+def test_reverse_geocode_maps_repeated_socket_timeout(monkeypatch):
+    service = GeocodingService()
+    service._max_retries = 2
+    monkeypatch.setattr(service, "_rate_limit", lambda: None)
+    monkeypatch.setattr(geocoding_module.time, "sleep", lambda _seconds: None)
+
+    def timeout(*_args):
+        raise socket.timeout()
+
+    monkeypatch.setattr(service, "_fetch_reverse_raw", timeout)
+
+    with pytest.raises(GeocodingTimeoutError):
+        service.reverse_geocode(50.45, 30.52, language="uk")

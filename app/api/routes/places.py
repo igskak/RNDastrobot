@@ -17,6 +17,18 @@ router = APIRouter(prefix="/places", tags=["Places"])
 geocoding_service = GeocodingService()
 
 
+def _geocoding_http_error(exc: Exception) -> HTTPException:
+    if isinstance(exc, GeocodingTimeoutError):
+        return HTTPException(
+            status_code=status.HTTP_408_REQUEST_TIMEOUT,
+            detail=f"Таймаут геокодирования: {exc}",
+        )
+    return HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail=f"Ошибка сервиса геокодирования: {exc}",
+    )
+
+
 @router.get(
     "/autocomplete",
     status_code=status.HTTP_200_OK,
@@ -46,16 +58,27 @@ def autocomplete_places(
                 for item in results
             ],
         }
-    except GeocodingTimeoutError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_408_REQUEST_TIMEOUT,
-            detail=f"Таймаут геокодирования: {exc}",
-        ) from exc
-    except GeocodingServiceError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Ошибка сервиса геокодирования: {exc}",
-        ) from exc
+    except (GeocodingTimeoutError, GeocodingServiceError) as exc:
+        raise _geocoding_http_error(exc) from exc
+
+
+@router.get(
+    "/reverse",
+    status_code=status.HTTP_200_OK,
+    summary="Определить населённый пункт по координатам",
+    description="Возвращает совместимое с автокомплитом место для координат устройства",
+)
+def reverse_place(
+    lat: float = Query(..., ge=-90, le=90, description="Широта"),
+    lon: float = Query(..., ge=-180, le=180, description="Долгота"),
+    language: Optional[str] = Query(None, description="Язык ответа (например, ru, uk, en)"),
+    accept_language: Optional[str] = Header(None, alias="Accept-Language"),
+):
+    try:
+        locale = language or accept_language or "en"
+        return geocoding_service.reverse_geocode(lat, lon, language=locale)
+    except (GeocodingTimeoutError, GeocodingServiceError) as exc:
+        raise _geocoding_http_error(exc) from exc
 
 
 @router.get(

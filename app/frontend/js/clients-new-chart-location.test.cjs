@@ -36,4 +36,22 @@ assert.match(
     'the submit label reflects all three profile modes'
 );
 
-console.log('5 passed, 0 failed');
+assert.match(
+    source,
+    /const now = new Date\(\);[\s\S]*?now\.getDate\(\)[\s\S]*?now\.getMonth\(\)[\s\S]*?now\.getFullYear\(\)[\s\S]*?now\.getHours\(\)[\s\S]*?now\.getMinutes\(\)/,
+    'now action fills every date and time field from one Date snapshot'
+);
+
+assert.match(
+    source,
+    /getCurrentPosition\(resolve, reject, \{[\s\S]*?timeout: 8000,[\s\S]*?maximumAge: 300000/,
+    'now action requests a bounded, reusable device position'
+);
+
+assert.match(
+    source,
+    /reverseGeocode\?\.\(lat, lon\)[\s\S]*?currentLocation[\s\S]*?selectedCoords = \{ lat, lon \}/,
+    'device coordinates are preserved when reverse geocoding needs a localized fallback'
+);
+
+console.log('8 passed, 0 failed');

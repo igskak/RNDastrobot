@@ -703,6 +703,25 @@ select:focus {
     border: 0;
 }
 
+.new-chart-now-action {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+}
+
+.new-chart-now-status {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: var(--font-size-caption);
+    line-height: 1.35;
+}
+
+.new-chart-now-status.is-error {
+    color: var(--error);
+}
+
 .new-chart-profile-intro {
     margin: 3px 0 10px;
     color: var(--text-secondary);

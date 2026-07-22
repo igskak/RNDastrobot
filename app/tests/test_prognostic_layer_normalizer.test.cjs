@@ -148,6 +148,28 @@ test('synastry partner layer normalizes partner bodies, houses, and inter-aspect
     assert.equal(partnerLayer.aspects[0].method, 'synastry_partner');
 });
 
+test('synastry keeps cusps as aspect targets without rendering them as planet bodies', () => {
+    const viewModel = normalizer.buildViewModel(
+        { planets: [], houses: [] },
+        {
+            synastry_partner: {
+                partner_chart: {
+                    planets: [{ name: 'Moon', longitude: 12 }],
+                    houses: [{ number: 1, longitude: 18 }],
+                },
+                inter_aspects: [{ planet_1: 'Sun', planet_2: 'Cusp1', aspect: 'conjunction' }],
+            },
+        },
+        { activeMethods: ['synastry_partner'] },
+    );
+    const layer = viewModel.activePrognosticLayers[0];
+
+    assert.deepEqual(layer.bodies.map((body) => body.name), ['Moon']);
+    assert.equal(layer.bodies.some((body) => body.type === 'house_cusp'), false);
+    assert.equal(layer.aspectBodies.some((body) => body.name === 'Cusp1'), true);
+    assert.equal(layer.aspects[0].planet_1, 'Cusp1');
+});
+
 test('synastry partner layer deduplicates prepared special points by canonical body name', () => {
     const viewModel = normalizer.buildViewModel(
         { planets: [{ name: 'Sun', longitude: 95 }], aspects: [], houses: [] },

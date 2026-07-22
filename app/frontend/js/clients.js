@@ -33,6 +33,7 @@ const newChartState = {
     profileMode: 'new',
     selectedPersonId: null,
     profileNameEdited: false,
+    locating: false,
 };
 
 const editClientState = {
@@ -285,6 +286,8 @@ function cacheElements() {
     refs.newChartCancel = document.getElementById('newChartCancel');
     refs.newChartSubmit = document.getElementById('newChartSubmit');
     refs.newChartError = document.getElementById('newChartError');
+    refs.newChartNow = document.getElementById('newChartNow');
+    refs.newChartNowStatus = document.getElementById('newChartNowStatus');
     refs.newChartTitle = document.getElementById('newChartTitle');
     refs.newChartProfileModeInputs = Array.from(document.querySelectorAll('input[name="newChartProfileMode"]'));
     refs.newChartNewProfileFields = document.getElementById('newChartNewProfileFields');
@@ -323,6 +326,7 @@ function bindEvents() {
     refs.newChartCancel?.addEventListener('click', closeNewChartDialog);
     refs.newChartBackdrop?.addEventListener('click', closeNewChartDialog);
     refs.newChartForm?.addEventListener('submit', (e) => { e.preventDefault(); submitNewChart(); });
+    refs.newChartNow?.addEventListener('click', fillNewChartNow);
     refs.newChartProfileModeInputs?.forEach((input) => {
         input.addEventListener('change', () => {
             if (input.checked) setNewChartProfileMode(input.value);
@@ -3238,6 +3242,12 @@ function openNewChartDialog() {
     newChartState.profileMode = 'new';
     newChartState.selectedPersonId = null;
     newChartState.profileNameEdited = false;
+    newChartState.locating = false;
+    if (refs.newChartNow) {
+        refs.newChartNow.disabled = false;
+        refs.newChartNow.removeAttribute('aria-busy');
+    }
+    setNewChartNowStatus('');
     refs.newChartError?.classList.add('hidden');
     refs.newChartError && (refs.newChartError.textContent = '');
     window.Timezones?.populate?.(refs.newChartTimezone);
@@ -3247,6 +3257,79 @@ function openNewChartDialog() {
     document.body.style.overflow = 'hidden';
     bindNewChartAutocomplete();
     refs.newChartDay?.focus();
+}
+
+function setNewChartNowStatus(message, tone = '') {
+    if (!refs.newChartNowStatus) return;
+    refs.newChartNowStatus.textContent = message;
+    refs.newChartNowStatus.classList.toggle('hidden', !message);
+    refs.newChartNowStatus.classList.toggle('is-error', tone === 'error');
+}
+
+function getDeviceTimezone() {
+    try {
+        return Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    } catch (_error) {
+        return '';
+    }
+}
+
+function requestDevicePosition() {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation?.getCurrentPosition) {
+            reject(new Error('geolocation-unavailable'));
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: false,
+            timeout: 8000,
+            maximumAge: 300000,
+        });
+    });
+}
+
+async function fillNewChartNow() {
+    if (newChartState.locating) return;
+
+    const now = new Date();
+    if (refs.newChartDay) refs.newChartDay.value = String(now.getDate()).padStart(2, '0');
+    if (refs.newChartMonth) refs.newChartMonth.value = String(now.getMonth() + 1).padStart(2, '0');
+    if (refs.newChartYear) refs.newChartYear.value = String(now.getFullYear());
+    if (refs.newChartHour) refs.newChartHour.value = String(now.getHours()).padStart(2, '0');
+    if (refs.newChartMinute) refs.newChartMinute.value = String(now.getMinutes()).padStart(2, '0');
+
+    const timezone = getDeviceTimezone();
+    if (timezone && refs.newChartTimezone) refs.newChartTimezone.value = timezone;
+
+    newChartState.locating = true;
+    if (refs.newChartNow) refs.newChartNow.disabled = true;
+    refs.newChartNow?.setAttribute('aria-busy', 'true');
+    setNewChartNowStatus(t('page.clients.newChart.now.locating'));
+
+    try {
+        const position = await requestDevicePosition();
+        const lat = Number(position?.coords?.latitude);
+        const lon = Number(position?.coords?.longitude);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) throw new TypeError();
+
+        let place = null;
+        try {
+            place = await window.AstroAPI?.reverseGeocode?.(lat, lon);
+        } catch (_error) {
+            place = null;
+        }
+        const placeLabel = String(place?.short_name || place?.display_name || t('page.clients.newChart.now.currentLocation')).trim();
+        newChartState.selectedCoords = { lat, lon };
+        newChartState.selectedPlaceLabel = placeLabel;
+        if (refs.newChartPlace) refs.newChartPlace.value = placeLabel;
+        setNewChartNowStatus(t('page.clients.newChart.now.locationReady'));
+    } catch (_error) {
+        setNewChartNowStatus(t('page.clients.newChart.now.locationUnavailable'), 'error');
+    } finally {
+        newChartState.locating = false;
+        if (refs.newChartNow) refs.newChartNow.disabled = false;
+        refs.newChartNow?.removeAttribute('aria-busy');
+    }
 }
 
 function closeNewChartDialog() {

@@ -166,6 +166,38 @@ test('AstroAPI.resolvePlaceTimezone requests timezone by source_id with locale h
     assert.equal(captured.init.headers['X-Locale'], 'en');
 });
 
+test('AstroAPI.reverseGeocode requests a localized place for device coordinates', async () => {
+    let captured = null;
+    global.fetch = async (url, init) => {
+        captured = { url, init };
+        return {
+            ok: true,
+            async json() {
+                return {
+                    short_name: 'Madrid',
+                    display_name: 'Madrid, Spain',
+                    lat: 40.4168,
+                    lon: -3.7038,
+                    source_id: null,
+                };
+            },
+        };
+    };
+
+    const api = loadApiModule({
+        location: { hostname: 'localhost' },
+        FrontendI18n: { getLocale: () => 'es-ES' },
+    });
+    const result = await api.reverseGeocode(40.4168, -3.7038);
+
+    assert.equal(result.short_name, 'Madrid');
+    assert.equal(
+        captured.url,
+        'http://localhost:8000/api/v1/places/reverse?lat=40.4168&lon=-3.7038&language=es'
+    );
+    assert.equal(captured.init.headers['Accept-Language'], 'es-ES');
+});
+
 test('AstroAPI.updateClientChart sends PUT request with locale headers', async () => {
     let captured = null;
 

@@ -826,7 +826,6 @@ body.account-settings-modal-open {
 .account-settings-inline-toggle input,
 .account-settings-matrix-toggle input {
     margin: 0;
-    accent-color: #1e3a5f;
 }
 
 .account-settings-option-toggle {
@@ -855,7 +854,6 @@ body.account-settings-modal-open {
     width: 16px;
     height: 16px;
     margin: 0;
-    accent-color: #1e3a5f;
 }
 
 .account-settings-empty-cell {
@@ -998,192 +996,6 @@ body.account-settings-modal-open {
     gap: 12px;
 }
 
-.account-settings-visual-preview {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    min-height: 264px;
-    padding: 14px;
-    border: 1px solid rgba(30, 58, 95, 0.08);
-    border-radius: 16px;
-    background: var(--bg-primary);
-}
-
-.account-settings-visual-preview .account-settings-mini-title {
-    align-self: flex-start;
-}
-
-.account-settings-wheel-preview {
-    --preview-aspect-conjunction: #f59e0b;
-    --preview-aspect-trine: #10b981;
-    --preview-aspect-square: #ef4444;
-    --preview-aspect-opposition: #8b5cf6;
-    --preview-aspect-sextile: #3b82f6;
-    --preview-body-sun: #ef4444;
-    --preview-body-moon: #3b82f6;
-    --preview-body-mercury: #f59e0b;
-    --preview-body-venus: #84cc16;
-    --preview-body-mars: #ef4444;
-    --preview-body-jupiter: #ef4444;
-    --preview-cusp: #8d6f54;
-    --preview-line-width: 2px;
-    --preview-size: clamp(196px, 17vw, 252px);
-    position: relative;
-    width: var(--preview-size);
-    aspect-ratio: 1;
-    border-radius: 999px;
-    background:
-        radial-gradient(circle, rgba(255, 255, 255, 0.84) 0 46%, transparent 47%),
-        conic-gradient(
-            from -90deg,
-            rgba(239, 68, 68, 0.1) 0 25%,
-            rgba(132, 204, 22, 0.1) 25% 50%,
-            rgba(245, 158, 11, 0.1) 50% 75%,
-            rgba(59, 130, 246, 0.1) 75% 100%
-        );
-    box-shadow: inset 0 0 0 1px rgba(30, 58, 95, 0.08), 0 12px 28px rgba(30, 58, 95, 0.1);
-}
-
-.account-settings-wheel-preview-ring,
-.account-settings-wheel-preview-cusp,
-.account-settings-wheel-preview-line,
-.account-settings-wheel-preview-sign,
-.account-settings-wheel-preview-body {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-}
-
-.account-settings-wheel-preview-ring {
-    transform: translate(-50%, -50%);
-    border-radius: 999px;
-    border: 1px solid rgba(30, 58, 95, 0.14);
-    pointer-events: none;
-}
-
-.account-settings-wheel-preview-ring--outer {
-    width: 88%;
-    height: 88%;
-}
-
-.account-settings-wheel-preview-ring--inner {
-    width: 52%;
-    height: 52%;
-    border-color: rgba(30, 58, 95, 0.09);
-}
-
-.account-settings-wheel-preview-cusp {
-    width: 43%;
-    height: 0;
-    border-top: 2px solid var(--preview-cusp);
-    opacity: 0.86;
-    transform-origin: left center;
-}
-
-.account-settings-wheel-preview-cusp--asc {
-    transform: rotate(0deg);
-}
-
-.account-settings-wheel-preview-cusp--mc {
-    transform: rotate(-88deg);
-}
-
-.account-settings-wheel-preview-line {
-    width: 56%;
-    height: 0;
-    border-top: var(--preview-line-width) solid var(--preview-line-color);
-    border-radius: 999px;
-    opacity: 0.74;
-    transform-origin: center;
-}
-
-.account-settings-wheel-preview-line--conjunction {
-    --preview-line-color: var(--preview-aspect-conjunction);
-    transform: translate(-50%, -50%) rotate(-8deg);
-}
-
-.account-settings-wheel-preview-line--trine {
-    --preview-line-color: var(--preview-aspect-trine);
-    transform: translate(-50%, -50%) rotate(48deg);
-}
-
-.account-settings-wheel-preview-line--square {
-    --preview-line-color: var(--preview-aspect-square);
-    transform: translate(-50%, -50%) rotate(93deg);
-}
-
-.account-settings-wheel-preview-line--opposition {
-    --preview-line-color: var(--preview-aspect-opposition);
-    transform: translate(-50%, -50%) rotate(138deg);
-}
-
-.account-settings-wheel-preview-line--sextile {
-    --preview-line-color: var(--preview-aspect-sextile);
-    transform: translate(-50%, -50%) rotate(188deg);
-}
-
-.account-settings-wheel-preview-sign,
-.account-settings-wheel-preview-body {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transform:
-        translate(-50%, -50%)
-        rotate(calc(var(--slot) * 30deg))
-        translateY(calc(var(--preview-size) * -0.4))
-        rotate(calc(var(--slot) * -30deg));
-    font-family: "Cormorant Garamond", serif;
-    line-height: 1;
-}
-
-.account-settings-wheel-preview-sign {
-    width: 18px;
-    height: 18px;
-    color: rgba(30, 58, 95, 0.54);
-    font-size: 17px;
-    font-weight: 600;
-}
-
-.account-settings-wheel-preview-body {
-    width: 26px;
-    height: 26px;
-    transform:
-        translate(-50%, -50%)
-        rotate(calc(var(--slot) * 30deg + 15deg))
-        translateY(calc(var(--preview-size) * -0.275))
-        rotate(calc((var(--slot) * -30deg) - 15deg));
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.88);
-    box-shadow: inset 0 0 0 1px rgba(30, 58, 95, 0.09);
-    font-size: 19px;
-    font-weight: 600;
-}
-
-.account-settings-wheel-preview-body--sun {
-    color: var(--preview-body-sun);
-}
-
-.account-settings-wheel-preview-body--moon {
-    color: var(--preview-body-moon);
-}
-
-.account-settings-wheel-preview-body--mercury {
-    color: var(--preview-body-mercury);
-}
-
-.account-settings-wheel-preview-body--venus {
-    color: var(--preview-body-venus);
-}
-
-.account-settings-wheel-preview-body--mars {
-    color: var(--preview-body-mars);
-}
-
-.account-settings-wheel-preview-body--jupiter {
-    color: var(--preview-body-jupiter);
-}
-
 .account-settings-visual-tabs {
     width: 100%;
     margin: 2px 0 10px;
@@ -1197,19 +1009,6 @@ body.account-settings-modal-open {
 .account-settings-visual-panels {
     display: grid;
     min-width: 0;
-}
-
-.account-settings-wheel-panel-body {
-    display: grid;
-    grid-template-columns: minmax(244px, 0.7fr) minmax(0, 1fr);
-    gap: 16px;
-    align-items: stretch;
-}
-
-.account-settings-wheel-options {
-    display: grid;
-    align-content: center;
-    gap: 10px;
 }
 
 .account-settings-visual-panels > .hidden {
@@ -1738,18 +1537,6 @@ body.account-settings-modal-open {
         grid-template-columns: 1fr;
     }
 
-    .account-settings-visual-preview {
-        min-height: 0;
-    }
-
-    .account-settings-wheel-panel-body {
-        grid-template-columns: 1fr;
-    }
-
-    .account-settings-wheel-preview {
-        --preview-size: min(252px, 72vw);
-    }
-
     .account-settings-table--visual-palette tbody {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -2118,5 +1905,260 @@ body.account-settings-page.workspace-compact .account-settings-confirm-actions {
     body.account-settings-page.workspace-compact .account-settings-confirm-card {
         padding: 16px 14px;
         border-radius: 12px;
+    }
+}
+
+/* Final cascade for the two-type settings layout. */
+.account-settings-tab[hidden],
+.account-settings-panel[hidden] {
+    display: none;
+}
+
+.account-settings-table-wrap {
+    justify-content: flex-start;
+    max-width: 100%;
+}
+
+.account-settings-table--settings {
+    width: min(100%, 680px);
+    min-width: 440px;
+    margin-inline: auto;
+}
+
+.account-settings-table--aspect-types {
+    width: min(100%, 620px);
+    min-width: 420px;
+    margin-inline: auto;
+}
+
+.account-settings-table--bodies {
+    width: min(100%, 760px);
+    min-width: 560px;
+    margin-inline: auto;
+}
+
+.account-settings-table--bodies thead th:first-child,
+.account-settings-table--bodies tbody th[scope="row"] {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    background: var(--bg-primary);
+    box-shadow: 1px 0 0 var(--border);
+}
+
+.account-settings-profile-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.account-settings-profile-tab,
+body.account-settings-page.workspace-compact .account-settings-profile-tab,
+.account-settings-visual-tabs .account-settings-profile-tab {
+    flex: 0 0 auto;
+    min-width: max-content;
+    white-space: nowrap;
+}
+
+.account-settings-profile-tab.is-active {
+    border-color: var(--border);
+    background: var(--bg-secondary);
+    color: var(--accent);
+    box-shadow: var(--shadow-sm);
+}
+
+.account-settings-orb-strategy {
+    flex: 1 1 100%;
+    grid-template-columns: minmax(150px, 190px) minmax(0, 1fr);
+    align-items: end;
+}
+
+.account-settings-orb-strategy .account-settings-label,
+.account-settings-orb-strategy .account-settings-select {
+    grid-column: 1;
+}
+
+.account-settings-orb-strategy .account-settings-section-copy {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: end;
+    margin: 0;
+}
+
+.account-settings-inline-toggle input[type="checkbox"],
+.account-settings-matrix-toggle input[type="checkbox"],
+.account-settings-aspect-cell input[type="checkbox"],
+.account-settings-option-toggle input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    box-sizing: border-box;
+    width: 18px;
+    height: 18px;
+    min-height: 18px;
+    padding: 0;
+    flex: 0 0 18px;
+    margin: 0;
+    border: 1px solid var(--border-focus);
+    border-radius: var(--radius-xs);
+    background: var(--bg-secondary);
+    cursor: pointer;
+}
+
+.account-settings-inline-toggle input[type="checkbox"]:checked,
+.account-settings-matrix-toggle input[type="checkbox"]:checked,
+.account-settings-aspect-cell input[type="checkbox"]:checked,
+.account-settings-option-toggle input[type="checkbox"]:checked {
+    border-color: var(--accent);
+    background: var(--accent);
+    box-shadow: inset 0 0 0 3px var(--bg-secondary);
+}
+
+.account-settings-inline-toggle input[type="checkbox"]:focus-visible,
+.account-settings-matrix-toggle input[type="checkbox"]:focus-visible,
+.account-settings-aspect-cell input[type="checkbox"]:focus-visible,
+.account-settings-option-toggle input[type="checkbox"]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.account-settings-option-toggle--compact {
+    margin-top: var(--space-2);
+}
+
+.account-settings-stationary-input {
+    width: 84px;
+}
+
+.account-settings-switch {
+    min-height: 22px;
+}
+
+.account-settings-table--methodology.is-compact {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+.account-settings-table--methodology.is-compact thead th,
+.account-settings-table--methodology.is-compact tbody th[scope="row"],
+.account-settings-table--methodology.is-compact tbody td {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.account-settings-table--methodology.is-compact thead th:first-child,
+.account-settings-table--methodology.is-compact tbody th[scope="row"] {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+}
+
+.account-settings-table--methodology.is-compact .account-settings-orb-input,
+body.account-settings-page.workspace-compact .account-settings-table--methodology.is-compact .account-settings-orb-input {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    min-height: 32px;
+    padding: 0 2px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    font-size: var(--font-size-caption);
+}
+
+@media (max-width: 720px) {
+    .account-settings-shell {
+        width: calc(100% - var(--space-3));
+    }
+
+    .account-settings-tabs {
+        width: 100%;
+        margin-inline: 0;
+        padding-inline: var(--space-2);
+        scrollbar-width: thin;
+    }
+
+    .account-settings-title {
+        font-size: 24px;
+    }
+
+    .account-settings-badge {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .account-settings-card,
+    body.account-settings-page.workspace-compact .account-settings-card {
+        padding: var(--space-2);
+    }
+
+    .ui-settings-row {
+        min-height: 44px;
+        padding: var(--space-1) var(--space-2);
+    }
+
+    .ui-settings-row .account-settings-select {
+        min-width: 132px;
+        max-width: 54%;
+    }
+
+    .account-settings-table--settings,
+    .account-settings-table--aspect-types {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .account-settings-table--settings th,
+    .account-settings-table--settings td,
+    .account-settings-table--aspect-types th,
+    .account-settings-table--aspect-types td,
+    body.account-settings-page.workspace-compact .account-settings-table--settings th,
+    body.account-settings-page.workspace-compact .account-settings-table--settings td,
+    body.account-settings-page.workspace-compact .account-settings-table--aspect-types th,
+    body.account-settings-page.workspace-compact .account-settings-table--aspect-types td {
+        padding: var(--space-1);
+    }
+
+    .account-settings-table--settings tbody th[scope="row"] {
+        width: 42%;
+    }
+
+    .account-settings-inline-toggle,
+    .account-settings-aspect-cell,
+    .account-settings-matrix-toggle,
+    body.account-settings-page.workspace-compact .account-settings-inline-toggle,
+    body.account-settings-page.workspace-compact .account-settings-aspect-cell,
+    body.account-settings-page.workspace-compact .account-settings-matrix-toggle {
+        min-height: 32px;
+        border-radius: var(--radius-sm);
+    }
+
+    .account-settings-orb-strategy {
+        grid-template-columns: 1fr;
+    }
+
+    .account-settings-orb-strategy .account-settings-label,
+    .account-settings-orb-strategy .account-settings-select,
+    .account-settings-orb-strategy .account-settings-section-copy {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    body.account-settings-page.workspace-compact .account-settings-profile-tab {
+        width: auto;
+        min-height: var(--density-control-height);
+        height: var(--density-control-height);
+    }
+
+    body.account-settings-page.workspace-compact .account-settings-orb-input,
+    body.account-settings-page.workspace-compact .account-settings-compact-input {
+        min-height: 32px;
+        height: 32px;
     }
 }
