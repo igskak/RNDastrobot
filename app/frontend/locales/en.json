@@ -2076,7 +2076,8 @@
         "biwheel": "Bi-wheel",
         "solar": "Solar return",
         "table": "Table",
-        "timeline": "Timeline"
+        "timeline": "Timeline",
+        "multiViewRequired": "Switch to multi-view to open range tables or timeline."
       },
       "timeline": {
         "eclipses": {

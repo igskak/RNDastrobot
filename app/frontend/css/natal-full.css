@@ -3,10 +3,7 @@
    ============================================ */
 
 .natal-full-page {
-    background:
-        radial-gradient(circle at 10% 10%, rgba(184, 147, 90, 0.14), transparent 20%),
-        radial-gradient(circle at 88% 14%, rgba(30, 58, 95, 0.08), transparent 24%),
-        linear-gradient(180deg, #fbf8f2 0%, #f5f1e8 100%);
+    background: var(--bg-primary);
     min-height: 100vh;
     color: var(--text-primary);
 }
@@ -146,9 +143,7 @@
    Summary Bar (Compact Key Info)
    ============================================ */
 .summary-bar {
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(249, 247, 242, 0.94)),
-        linear-gradient(90deg, rgba(184, 147, 90, 0.06), rgba(30, 58, 95, 0.03));
+    background: var(--bg-secondary);
     border-bottom: 1px solid rgba(30, 58, 95, 0.08);
     padding: 14px 20px;
 }
@@ -222,9 +217,7 @@
     gap: 8px;
     padding: 24px 24px 22px;
     border-radius: 28px;
-    background:
-        linear-gradient(145deg, rgba(255, 255, 255, 0.88), rgba(245, 237, 223, 0.72)),
-        rgba(255, 255, 255, 0.82);
+    background: var(--bg-secondary);
     border: 1px solid rgba(30, 58, 95, 0.08);
     box-shadow: 0 20px 54px rgba(26, 22, 20, 0.08);
 }
@@ -875,7 +868,7 @@
 }
 
 .config-card {
-    background: linear-gradient(180deg, rgba(240, 237, 228, 0.7), rgba(255, 255, 255, 0.96));
+    background: var(--bg-secondary);
     border: 1px solid rgba(30, 58, 95, 0.08);
     border-radius: var(--radius-sm);
     padding: 14px 16px;
@@ -978,7 +971,7 @@
     align-items: center;
     min-width: 0;
     padding: 14px;
-    background: linear-gradient(180deg, rgba(240, 237, 228, 0.7), rgba(255, 255, 255, 0.96));
+    background: var(--bg-secondary);
     border: 1px solid rgba(30, 58, 95, 0.08);
     border-radius: var(--radius-sm);
 }

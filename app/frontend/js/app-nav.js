@@ -35,9 +35,21 @@
     }
 
     function accountEmail() {
+        var astrologer = global.AstroAPI && global.AstroAPI.getCachedAstrologer && global.AstroAPI.getCachedAstrologer();
+        var cached = astrologer && (astrologer.email || [astrologer.first_name, astrologer.last_name].filter(Boolean).join(' '));
+        if (cached) return String(cached).trim();
         var el = document.getElementById('welcomeLabel');
         var v = el && (el.textContent || '').trim();
         return v || '';
+    }
+
+    function escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
     var mounted = false;
@@ -64,7 +76,7 @@
         // workspace toolbar) by placing an element with [data-app-nav-slot]: the
         // burger mounts there and no standalone bar is created, so a full-height /
         // single-row workspace never gains a second header row. Default (no slot):
-        // the burger lives in app-nav's own sticky top bar (calendar, clients, …).
+        // the burger lives in app-nav's own sticky top bar (Practice).
         var slot = document.querySelector('[data-app-nav-slot]');
         if (slot) {
             slot.appendChild(burger);
@@ -103,7 +115,7 @@
                 '<nav class="app-nav-list">' + navHtml + '</nav>' +
                 '<div class="app-nav-foot">' +
                     '<div class="app-nav-lang">' + langHtml + '</div>' +
-                    (email ? '<div class="app-nav-account"><span class="avatar">' + initial + '</span><span class="email">' + email + '</span></div>' : '') +
+                    (email ? '<div class="app-nav-account"><span class="avatar">' + escapeHtml(initial) + '</span><span class="email">' + escapeHtml(email) + '</span></div>' : '') +
                     '<button type="button" class="app-nav-logout"><span class="ico" aria-hidden="true">⏻</span>' + L.logout + '</button>' +
                 '</div>';
         }
@@ -118,6 +130,7 @@
             drawer.classList.remove('is-open');
             scrim.classList.remove('is-open');
             burger.setAttribute('aria-expanded', 'false');
+            burger.focus();
         }
 
         burger.addEventListener('click', function () {
