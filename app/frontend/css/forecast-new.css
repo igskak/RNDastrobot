@@ -3273,6 +3273,27 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     padding-inline: 6px;
 }
 
+/* Aspect filters are generated as icon-only controls. The desktop auto-fit grid
+   produces five cramped columns on phones, so give each touch target enough
+   room for both its native checkbox and the aspect glyph. */
+@media (max-width: 520px) {
+    .forecast-new-page .settings-check-grid--compact {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--space-2);
+    }
+
+    .forecast-new-page .settings-check-grid--compact .settings-check-option--pill {
+        min-height: 40px;
+        padding-inline: var(--space-3);
+    }
+}
+
+@media (max-width: 340px) {
+    .forecast-new-page .settings-check-grid--compact {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 .forecast-new-page .settings-check-option--pill input {
     position: static;
     width: 16px;

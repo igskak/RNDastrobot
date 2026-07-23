@@ -88,6 +88,14 @@ test('client profile keeps the start-call control and its realtime contract', ()
     assert.match(js, /call-sessions/, 'the start-call endpoint must remain intact');
 });
 
+test('forecast aspect filters keep mobile-sized touch targets', () => {
+    const css = fs.readFileSync(path.join(frontendDir, 'css', 'forecast-new.css'), 'utf8');
+
+    assert.match(css, /@media \(max-width: 520px\)[\s\S]*settings-check-grid--compact[\s\S]*repeat\(3, minmax\(0, 1fr\)\)/);
+    assert.match(css, /settings-check-option--pill[\s\S]*min-height: 40px/);
+    assert.match(css, /@media \(max-width: 340px\)[\s\S]*repeat\(2, minmax\(0, 1fr\)\)/);
+});
+
 test('Pricing CTAs and Terms anchors keep their navigation contracts while using the kit', () => {
     const pricing = read('pricing.html');
     const terms = read('terms.html');
