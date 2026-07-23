@@ -1,43 +1,16 @@
-/* ── Forecast view tab strip (Колесо | Таблиця | Таймлайн) ────────────────── */
-.forecast-view-tabs {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    background: var(--bg-secondary, rgba(0,0,0,0.06));
-    border-radius: 7px;
-    padding: 2px;
-}
+/* View-switcher surface and items come from the shared .ui-segmented kit.
+   Legacy classes remain as stable page hooks and for the wheel glyph only. */
 .forecast-view-tab {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    min-height: 24px;
-    padding: 4px 9px;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    color: var(--text-secondary, #6b7280);
-    text-decoration: none;
-    white-space: nowrap;
-    transition: color .15s, background .15s;
-    line-height: 1;
-}
-.forecast-view-tab:hover {
-    color: var(--text-primary, #1f2937);
-    background: var(--bg-primary, rgba(0,0,0,0.04));
-}
-.forecast-view-tab[aria-current="page"] {
-    background: var(--bg-primary, #fff);
-    color: var(--text-primary, #1f2937);
-    font-weight: 500;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.13);
+    gap: var(--space-1);
+    padding-inline: var(--space-2);
+    font-size: var(--font-size-caption);
 }
 .forecast-view-tab-icon {
     opacity: 0.65;
     font-style: normal;
     font-size: 0.9em;
-}
-.forecast-view-tab[aria-current="page"] .forecast-view-tab-icon {
-    opacity: 1;
 }
 
 /* Forecast navigation dropdown (caret next to the Forecast header button) */

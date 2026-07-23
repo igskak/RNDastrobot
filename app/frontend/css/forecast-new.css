@@ -89,10 +89,6 @@
     height: 16px;
 }
 
-.forecast-new-page .forecast-view-tab[aria-current="page"] {
-    display: none;
-}
-
 .forecast-new-client {
     min-width: 170px;
     max-width: min(30vw, 360px);
@@ -4731,10 +4727,6 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
 
     .forecast-new-client h2 {
         font-size: 15px;
-    }
-
-    .forecast-new-header-actions .forecast-view-tabs {
-        display: none;
     }
 
     /* Method-layer chips on their own full-width, horizontally scrollable row.
