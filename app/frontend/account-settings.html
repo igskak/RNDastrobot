@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.accountSettings.title"></title>
-    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=c39ac3d398af">
-    <link rel="stylesheet" href="css/app-nav.css?v=c39ac3d398af">
+    <link rel="stylesheet" href="bundles/account-settings.bundle.css?v=debdc3d9e441">
+    <link rel="stylesheet" href="css/app-nav.css?v=debdc3d9e441">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = 'c39ac3d398af';</script>
+    <script>window.__APP_BUILD_ID__ = 'debdc3d9e441';</script>
 </head>
 <body class="account-settings-page workspace-compact" data-defer-loader>
     <div class="page-loader" id="pageLoader">
@@ -32,17 +32,17 @@
         </header>
 
         <nav class="account-settings-tabs" role="tablist" data-i18n-aria-label="page.accountSettings.tabs.ariaLabel">
-            <button type="button" class="account-settings-tab is-active" data-settings-tab="chart" role="tab" aria-selected="true" data-i18n="page.accountSettings.tabs.chart"></button>
-            <button type="button" class="account-settings-tab" data-settings-tab="formats" role="tab" aria-selected="false" data-i18n="page.accountSettings.tabs.formats"></button>
-            <button type="button" class="account-settings-tab" data-settings-tab="billing" role="tab" aria-selected="false" data-i18n="page.accountSettings.tabs.billing" hidden></button>
-            <button type="button" class="account-settings-tab" data-settings-tab="account" role="tab" aria-selected="false" data-i18n="page.accountSettings.tabs.account"></button>
+            <button type="button" class="account-settings-tab is-active" id="accountSettingsTabChart" data-settings-tab="chart" role="tab" aria-selected="true" aria-controls="accountSettingsPanelChart" tabindex="0" data-i18n="page.accountSettings.tabs.chart"></button>
+            <button type="button" class="account-settings-tab" id="accountSettingsTabFormats" data-settings-tab="formats" role="tab" aria-selected="false" aria-controls="accountSettingsPanelFormats" tabindex="-1" data-i18n="page.accountSettings.tabs.formats"></button>
+            <button type="button" class="account-settings-tab" id="accountSettingsTabBilling" data-settings-tab="billing" role="tab" aria-selected="false" aria-controls="accountSettingsPanelBilling" tabindex="-1" data-i18n="page.accountSettings.tabs.billing" hidden></button>
+            <button type="button" class="account-settings-tab" id="accountSettingsTabAccount" data-settings-tab="account" role="tab" aria-selected="false" aria-controls="accountSettingsPanelAccount" tabindex="-1" data-i18n="page.accountSettings.tabs.account"></button>
         </nav>
 
         <div class="account-settings-status hidden" id="methodologyJobStatus" role="status" aria-live="polite"></div>
 
         <main class="account-settings-content">
             <!-- ============ Tab 1 · Настройки карты ============ -->
-            <section class="account-settings-panel" data-settings-panel="chart" role="tabpanel">
+            <section class="account-settings-panel" id="accountSettingsPanelChart" data-settings-panel="chart" role="tabpanel" aria-labelledby="accountSettingsTabChart">
                 <section class="account-settings-card">
                     <div class="account-settings-card-head account-settings-card-head--compact">
                         <h2 class="account-settings-section-title" data-i18n="page.accountSettings.groups.display"></h2>
@@ -541,7 +541,7 @@
             </section>
 
             <!-- ============ Tab 2 · Форматы ============ -->
-            <section class="account-settings-panel hidden" data-settings-panel="formats" role="tabpanel">
+            <section class="account-settings-panel hidden" id="accountSettingsPanelFormats" data-settings-panel="formats" role="tabpanel" aria-labelledby="accountSettingsTabFormats" hidden>
                 <section class="account-settings-card">
                     <div class="account-settings-card-head account-settings-card-head--compact">
                         <div>
@@ -588,7 +588,7 @@
             </section>
 
             <!-- ============ Tab 3 · Оплата и план ============ -->
-            <section class="account-settings-panel hidden" data-settings-panel="billing" role="tabpanel" hidden>
+            <section class="account-settings-panel hidden" id="accountSettingsPanelBilling" data-settings-panel="billing" role="tabpanel" aria-labelledby="accountSettingsTabBilling" hidden>
                 <section class="account-plan-card" id="accountPlanCard" aria-labelledby="accountPlanTitle">
                     <div class="account-plan-row">
                         <h2 class="account-plan-title" id="accountPlanTitle"></h2>
@@ -601,7 +601,7 @@
             </section>
 
             <!-- ============ Tab 4 · Аккаунт ============ -->
-            <section class="account-settings-panel hidden" data-settings-panel="account" role="tabpanel">
+            <section class="account-settings-panel hidden" id="accountSettingsPanelAccount" data-settings-panel="account" role="tabpanel" aria-labelledby="accountSettingsTabAccount" hidden>
                 <section class="account-settings-card">
                     <div class="account-settings-card-head account-settings-card-head--compact">
                         <div>
@@ -664,9 +664,9 @@
 
     <div id="accountSettingsToast" class="toast"></div>
 
-    <script type="module" src="js/bundles/account-settings.bundle.js?v=c39ac3d398af"></script>
+    <script type="module" src="js/bundles/account-settings.bundle.js?v=debdc3d9e441"></script>
     <script src="/runtime-config.js"></script>
-    <script src="js/analytics.js?v=c39ac3d398af"></script>
-    <script src="js/app-nav.js?v=c39ac3d398af"></script>
+    <script src="js/analytics.js?v=debdc3d9e441"></script>
+    <script src="js/app-nav.js?v=debdc3d9e441"></script>
 </body>
 </html>

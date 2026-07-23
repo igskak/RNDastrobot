@@ -939,9 +939,37 @@ input:focus, select:focus {
 
 a:focus-visible,
 button:focus-visible,
-summary:focus-visible {
+summary:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible {
     outline: 2px solid var(--border-focus);
     outline-offset: 3px;
+}
+
+/* Shared interaction baseline: keyboard focus stays unmistakable, while users
+   who request less motion are never forced through decorative transitions. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+@media (pointer: coarse) {
+    button,
+    [role="button"],
+    [role="tab"],
+    input[type="checkbox"],
+    input[type="radio"] {
+        touch-action: manipulation;
+    }
 }
 
 input::placeholder {

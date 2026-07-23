@@ -140,9 +140,12 @@
         const billingTab = document.querySelector('[data-settings-tab="billing"]');
         const billingPanel = document.querySelector('[data-settings-panel="billing"]');
         if (billingTab) billingTab.hidden = isSoloPlan;
-        if (billingPanel) billingPanel.hidden = isSoloPlan;
         if (isSoloPlan && activeSettingsTab === 'billing') {
             setActiveSettingsTab('chart');
+        } else if (billingPanel) {
+            // Keep inactive panels out of both the visual and accessibility trees
+            // after the plan availability changes.
+            setActiveSettingsTab(activeSettingsTab);
         }
         if (!card) return;
 
@@ -1376,9 +1379,13 @@
             const isActive = button.dataset.settingsTab === tabId;
             button.classList.toggle('is-active', isActive);
             button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            button.tabIndex = isActive ? 0 : -1;
         });
         document.querySelectorAll('[data-settings-panel]').forEach((panel) => {
-            panel.classList.toggle('hidden', panel.dataset.settingsPanel !== tabId);
+            const isActive = panel.dataset.settingsPanel === tabId;
+            panel.classList.toggle('hidden', !isActive);
+            panel.hidden = !isActive;
+            panel.setAttribute('aria-hidden', isActive ? 'false' : 'true');
         });
     }
 
@@ -1647,6 +1654,22 @@
         document.querySelectorAll('[data-settings-tab]').forEach((button) => {
             button.addEventListener('click', () => {
                 setActiveSettingsTab(button.dataset.settingsTab || 'chart');
+            });
+            button.addEventListener('keydown', (event) => {
+                if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+                const tabs = Array.from(document.querySelectorAll('[data-settings-tab]'))
+                    .filter((tab) => !tab.hidden);
+                if (!tabs.length) return;
+                event.preventDefault();
+                const currentIndex = tabs.indexOf(button);
+                const nextIndex = event.key === 'Home'
+                    ? 0
+                    : event.key === 'End'
+                        ? tabs.length - 1
+                        : (currentIndex + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+                const nextTab = tabs[nextIndex];
+                setActiveSettingsTab(nextTab.dataset.settingsTab || 'chart');
+                nextTab.focus();
             });
         });
         setActiveSettingsTab(activeSettingsTab);

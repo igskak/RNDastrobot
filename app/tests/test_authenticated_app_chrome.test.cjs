@@ -145,6 +145,29 @@ test('natal report tables become labelled cards on phones without losing fields'
     }
 });
 
+test('settings tabs keep panels and keyboard navigation accessible', () => {
+    const html = read('account-settings.html');
+    const js = fs.readFileSync(path.join(frontendDir, 'js', 'account-settings.js'), 'utf8');
+    const css = fs.readFileSync(path.join(frontendDir, 'css', 'account-settings.css'), 'utf8');
+
+    assert.match(html, /id="accountSettingsTabChart"[\s\S]*aria-controls="accountSettingsPanelChart"/);
+    assert.match(html, /id="accountSettingsPanelFormats"[\s\S]*role="tabpanel"[\s\S]*hidden/);
+    assert.match(js, /panel\.hidden = !isActive/);
+    assert.match(js, /\['ArrowLeft', 'ArrowRight', 'Home', 'End'\]/);
+    assert.match(css, /Mobile settings retain a clear save affordance/);
+    assert.match(css, /account-settings-savebar__actions[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+});
+
+test('login and shared controls retain flat and accessible interaction states', () => {
+    const loginCss = fs.readFileSync(path.join(frontendDir, 'entries-css', 'login.entry.css'), 'utf8');
+    const sharedCss = fs.readFileSync(path.join(frontendDir, 'css', 'styles.css'), 'utf8');
+
+    assert.match(loginCss, /\.plan-choice-card:has\(input:checked\)[\s\S]*background: var\(--accent-light\)/);
+    assert.doesNotMatch(loginCss, /plan-choice-card:has\(input:checked\)[\s\S]{0,240}linear-gradient/);
+    assert.match(sharedCss, /@media \(prefers-reduced-motion: reduce\)/);
+    assert.match(sharedCss, /\[role="tab"\]:focus-visible/);
+});
+
 test('Pricing CTAs and Terms anchors keep their navigation contracts while using the kit', () => {
     const pricing = read('pricing.html');
     const terms = read('terms.html');

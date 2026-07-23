@@ -1908,6 +1908,38 @@ body.account-settings-page.workspace-compact .account-settings-confirm-actions {
     }
 }
 
+/* Mobile settings retain a clear save affordance without covering the last row. */
+@media (max-width: 720px) {
+    .account-settings-tabs {
+        top: 58px;
+        padding-bottom: var(--space-1);
+        background: var(--bg-primary);
+    }
+
+    .account-settings-savebar {
+        bottom: var(--space-2);
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--space-2);
+        width: calc(100% - var(--space-3));
+        padding: var(--space-2);
+    }
+
+    .account-settings-savebar__actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .account-settings-savebar .ui-btn {
+        width: 100%;
+        min-height: var(--density-touch-target);
+    }
+
+    .account-settings-content {
+        padding-bottom: calc(var(--space-7) + var(--density-touch-target));
+    }
+}
+
 /* Final cascade for the two-type settings layout. */
 .account-settings-tab[hidden],
 .account-settings-panel[hidden] {
