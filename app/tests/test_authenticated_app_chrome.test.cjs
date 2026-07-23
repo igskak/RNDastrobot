@@ -77,6 +77,17 @@ test('migrated work surfaces retain their kit contracts and critical hooks', () 
     }
 });
 
+test('client profile keeps the start-call control and its realtime contract', () => {
+    const html = read('client-profile.html');
+    const js = fs.readFileSync(path.join(frontendDir, 'js', 'client-profile.js'), 'utf8');
+
+    assert.match(html, /id="startCallBtn"/);
+    assert.match(html, /ui-btn ui-btn--primary ui-btn--sm/);
+    assert.match(js, /refs\.startCallBtn\s*=\s*document\.getElementById\('startCallBtn'\)/);
+    assert.match(js, /refs\.startCallBtn\?\.addEventListener\('click', startCallSession\)/);
+    assert.match(js, /call-sessions/, 'the start-call endpoint must remain intact');
+});
+
 test('Pricing CTAs and Terms anchors keep their navigation contracts while using the kit', () => {
     const pricing = read('pricing.html');
     const terms = read('terms.html');

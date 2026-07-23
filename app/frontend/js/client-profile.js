@@ -228,6 +228,7 @@ function cacheElements() {
     refs.profileActionsDropdown = document.getElementById('profileActionsDropdown');
     refs.profileEditAction      = document.getElementById('profileEditAction');
     refs.profileDeleteAction    = document.getElementById('profileDeleteAction');
+    refs.startCallBtn           = document.getElementById('startCallBtn');
 
     // Sections
     refs.profileContactList  = document.getElementById('profileContactList');
@@ -355,6 +356,7 @@ function bindPageEvents() {
         }
         openLogSessionDialog(personId, primaryChartId);
     });
+    refs.startCallBtn?.addEventListener('click', startCallSession);
     refs.addRelatedPersonBtn?.addEventListener('click', openCreateRelatedPersonDialog);
     refs.linkExistingPersonBtn?.addEventListener('click', openRelatedPickerDialog);
 
@@ -434,6 +436,7 @@ function applyPlanUi() {
         section.classList.toggle('hidden', isSolo);
     });
     refs.logSessionBtn?.classList.toggle('hidden', !planCan('consultations'));
+    refs.startCallBtn?.classList.toggle('hidden', !planCan('calls'));
     refs.profileContactList?.closest('.ui-card')?.classList.toggle('hidden', !planCan('clients'));
     refs.profileStatsGrid?.closest('.ui-card')?.classList.toggle('hidden', !planCan('meeting_stats'));
     refs.profileInsightsCard?.classList.toggle('hidden', !planCan('calls'));
