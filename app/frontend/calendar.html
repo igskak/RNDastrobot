@@ -36,7 +36,7 @@
         </header>
 
         <main>
-            <div class="calendar-card">
+            <div class="calendar-card ui-card">
                 <div id="calendar"></div>
 
                 <div class="calendar-legend">
@@ -66,9 +66,9 @@
     </div>
 
     <!-- Log Session Dialog -->
-    <div id="logSessionBackdrop" class="clients-dialog-backdrop hidden"></div>
+    <div id="logSessionBackdrop" class="clients-dialog-backdrop ui-dialog-backdrop hidden"></div>
     <section id="logSessionDialog" class="clients-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="logSessionTitle">
-        <form id="logSessionForm" class="clients-dialog-card">
+        <form id="logSessionForm" class="clients-dialog-card ui-dialog">
             <div class="clients-dialog-header">
                 <div>
                     <p class="clients-dialog-kicker" data-i18n="page.clients.consultation.kicker"></p>
@@ -141,8 +141,8 @@
             <div id="logSessionError" class="error-message hidden"></div>
 
             <div class="clients-dialog-actions">
-                <button id="logSessionCancel" class="btn-logout clients-dialog-cancel" type="button" data-i18n="common.cancel"></button>
-                <button id="logSessionSubmit" class="btn-new clients-dialog-submit" type="submit">
+                <button id="logSessionCancel" class="btn-logout clients-dialog-cancel ui-btn ui-btn--secondary" type="button" data-i18n="common.cancel"></button>
+                <button id="logSessionSubmit" class="btn-new clients-dialog-submit ui-btn ui-btn--primary" type="submit">
                     <span class="btn-text" data-i18n="page.clients.consultation.submit"></span>
                     <span class="btn-loader hidden" data-i18n="page.clients.consultation.submitting"></span>
                 </button>
