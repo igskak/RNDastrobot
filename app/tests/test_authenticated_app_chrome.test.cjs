@@ -58,3 +58,17 @@ test('Calendar restores the semantic back link used by its navigation resolver',
     assert.match(js, /querySelector\('\.calendar-back'\)/);
     assert.match(js, /resolveBackUrl/);
 });
+
+test('forecast range pages use the shared segmented kit for view navigation', () => {
+    const destinations = ['forecast-new.html', 'forecast-tables.html', 'forecast-timeline.html'];
+
+    for (const page of ['forecast-tables.html', 'forecast-timeline.html']) {
+        const html = read(page);
+        assert.match(html, /class="forecast-view-tabs ui-segmented"/);
+        assert.equal((html.match(/class="forecast-view-tab ui-segmented__item/g) || []).length, 3);
+        for (const destination of destinations) {
+            assert.match(html, new RegExp(`href="${destination.replace('.', '\\.')}`));
+        }
+        assert.equal((html.match(/ui-segmented__item is-selected" aria-current="page"/g) || []).length, 1);
+    }
+});
