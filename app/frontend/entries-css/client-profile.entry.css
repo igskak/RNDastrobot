@@ -927,6 +927,41 @@ body.is-solo-profile .profile-column { display: contents; }
 .clients-dialog-cancel { min-height: 40px; padding: 8px 16px; }
 .clients-dialog-submit { min-height: 40px; padding: 8px 20px; }
 
+@media (max-width: 640px) {
+    /* Reuse the same full-height editor behaviour as Practice. */
+    .clients-dialog {
+        align-items: stretch;
+        overflow-y: auto;
+        padding: 0;
+    }
+
+    .clients-dialog-card {
+        min-height: 100%;
+        border-radius: 0;
+        padding: var(--space-4);
+    }
+
+    .clients-dialog-grid .name-inputs,
+    .clients-dialog-grid .time-inputs {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .clients-dialog-grid .date-inputs {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .clients-dialog-grid .time-separator { display: none; }
+
+    .clients-dialog-actions {
+        position: sticky;
+        bottom: 0;
+        padding-top: var(--space-3);
+        background: var(--bg-secondary);
+    }
+}
+
 .error-message {
     font-size: 13px;
     color: var(--error);

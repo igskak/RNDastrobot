@@ -115,6 +115,19 @@ test('forecast aspect filters keep mobile-sized touch targets', () => {
     assert.match(css, /@media \(max-width: 340px\)[\s\S]*repeat\(2, minmax\(0, 1fr\)\)/);
 });
 
+test('Practice and profile editors use mobile-first form geometry', () => {
+    const clientsCss = fs.readFileSync(path.join(frontendDir, 'entries-css', 'clients.entry.css'), 'utf8');
+    const profileCss = fs.readFileSync(path.join(frontendDir, 'entries-css', 'client-profile.entry.css'), 'utf8');
+
+    for (const css of [clientsCss, profileCss]) {
+        assert.match(css, /@media \(max-width: 640px\)[\s\S]*\.clients-dialog[\s\S]*align-items: stretch/);
+        assert.match(css, /date-inputs[\s\S]*repeat\(3, minmax\(0, 1fr\)\)/);
+        assert.match(css, /time-separator\s*\{\s*display: none/);
+    }
+    assert.match(clientsCss, /toolbar-field-search[\s\S]*grid-column: 1 \/ -1/);
+    assert.match(clientsCss, /client-fact \{[\s\S]*flex-direction: column/);
+});
+
 test('Pricing CTAs and Terms anchors keep their navigation contracts while using the kit', () => {
     const pricing = read('pricing.html');
     const terms = read('terms.html');
