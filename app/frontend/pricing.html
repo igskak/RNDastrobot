@@ -6,35 +6,12 @@
     <title data-i18n="page.pricing.meta.title">Pricing — Steliara</title>
     <meta name="description" content="Steliara pricing — a professional workspace for astrologers. Monthly and annual plans, with a free trial.">
     <link rel="stylesheet" href="css/locale-switcher.css">
+    <link rel="stylesheet" href="css/styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
     <script>window.__APP_BUILD_ID__ = 'pricing-1';</script>
     <style>
-        :root {
-            --bg-primary:    #F9F7F2;
-            --bg-secondary:  #FFFFFF;
-            --bg-tertiary:   #F0EDE4;
-            --text-primary:   #1A1614;
-            --text-secondary: #5C554E;
-            --text-muted:     #9B9289;
-            --accent:         #1E3A5F;
-            --accent-hover:   #2E4E7A;
-            --accent-light:   #EBF0F7;
-            --gold:           #B8935A;
-            --gold-pale:      #F5EDDF;
-            --success:        #2B7A4B;
-            --border:         #E0DDD7;
-            --shadow-sm: 0 1px 3px rgba(26,22,20,0.05), 0 1px 2px rgba(26,22,20,0.03);
-            --shadow-md: 0 4px 16px rgba(26,22,20,0.08), 0 2px 6px rgba(26,22,20,0.04);
-            --shadow-lg: 0 12px 32px rgba(26,22,20,0.10), 0 4px 12px rgba(26,22,20,0.06);
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --radius-xl: 24px;
-            --transition: 0.2s ease;
-            --font-ui:      'DM Sans', system-ui, -apple-system, sans-serif;
-            --font-display: 'Cormorant Garamond', Georgia, serif;
-        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: var(--font-ui);
@@ -43,7 +20,7 @@
             line-height: 1.55;
             -webkit-font-smoothing: antialiased;
         }
-        .shell { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+        .shell { max-width: 1080px; margin: 0 auto; padding: 0 var(--space-5); }
 
         header.header {
             display: flex; align-items: center; justify-content: space-between;
@@ -140,7 +117,7 @@
                 <a href="pricing.html" data-i18n="page.pricing.nav.pricing">Pricing</a>
             </nav>
             <div class="landing-header-actions">
-                <a href="login.html" class="nav-cta index-header-link-primary" data-i18n="page.pricing.nav.signin">Sign in</a>
+                <a href="login.html" class="nav-cta index-header-link-primary ui-btn ui-btn--primary" data-i18n="page.pricing.nav.signin">Sign in</a>
             </div>
         </header>
 
@@ -149,14 +126,14 @@
             <h1 data-i18n="page.pricing.hero.title">A calm workspace for your astrology practice</h1>
             <p data-i18n="page.pricing.hero.text">Generate charts, keep every client&rsquo;s history in one place, and get fast answers from the data during a session. Pick a plan and start with a free trial.</p>
 
-            <div class="billing-toggle" role="group" aria-label="Billing period">
-                <button id="monthlyBtn" class="active" type="button" data-i18n="page.pricing.billing.monthly">Monthly</button>
-                <button id="annualBtn" type="button"><span data-i18n="page.pricing.billing.annual">Annual</span> <span class="save-badge" data-i18n="page.pricing.billing.save">save ~17%</span></button>
+            <div class="billing-toggle ui-segmented" role="group" aria-label="Billing period">
+                <button id="monthlyBtn" class="active ui-segmented__item" type="button" data-i18n="page.pricing.billing.monthly">Monthly</button>
+                <button id="annualBtn" class="ui-segmented__item" type="button"><span data-i18n="page.pricing.billing.annual">Annual</span> <span class="save-badge" data-i18n="page.pricing.billing.save">save ~17%</span></button>
             </div>
         </section>
 
         <section class="plans">
-            <article class="plan">
+            <article class="plan ui-card">
                 <h2 data-i18n="page.pricing.plans.practitioner.name">Practitioner</h2>
                 <p class="tagline" data-i18n="page.pricing.plans.practitioner.tagline">Everything one astrologer needs to run a focused practice.</p>
                 <div class="price">
@@ -164,7 +141,7 @@
                     <span class="period" data-i18n="page.pricing.period">/ month</span>
                 </div>
                 <p class="price-sub" data-sub-monthly="page.pricing.plans.practitioner.subMonthly" data-sub-annual="page.pricing.plans.practitioner.subAnnual" data-i18n="page.pricing.plans.practitioner.subMonthly">Billed monthly.</p>
-                <a class="btn btn-ghost" href="login.html" data-i18n="page.pricing.plans.practitioner.cta">Start free trial</a>
+                <a class="btn btn-ghost ui-btn ui-btn--secondary ui-btn--block" href="login.html" data-i18n="page.pricing.plans.practitioner.cta">Start free trial</a>
                 <ul class="features">
                     <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="#2B7A4B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-i18n="page.pricing.plans.practitioner.f1">Precise natal &amp; transit charts (Swiss Ephemeris)</span></li>
                     <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="#2B7A4B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-i18n="page.pricing.plans.practitioner.f2">Unlimited client profiles, notes &amp; recordings</span></li>
@@ -174,7 +151,7 @@
                 </ul>
             </article>
 
-            <article class="plan featured">
+            <article class="plan featured ui-card">
                 <span class="plan-tag" data-i18n="page.pricing.plans.studio.tag">Most popular</span>
                 <h2 data-i18n="page.pricing.plans.studio.name">Studio</h2>
                 <p class="tagline" data-i18n="page.pricing.plans.studio.tagline">For a busy practice that lives in the data every day.</p>
@@ -183,7 +160,7 @@
                     <span class="period" data-i18n="page.pricing.period">/ month</span>
                 </div>
                 <p class="price-sub" data-sub-monthly="page.pricing.plans.studio.subMonthly" data-sub-annual="page.pricing.plans.studio.subAnnual" data-i18n="page.pricing.plans.studio.subMonthly">Billed monthly.</p>
-                <a class="btn btn-primary" href="login.html" data-i18n="page.pricing.plans.studio.cta">Start free trial</a>
+                <a class="btn btn-primary ui-btn ui-btn--primary ui-btn--block" href="login.html" data-i18n="page.pricing.plans.studio.cta">Start free trial</a>
                 <ul class="features">
                     <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="#2B7A4B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-i18n="page.pricing.plans.studio.f1">Everything in Practitioner</span></li>
                     <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="#2B7A4B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-i18n="page.pricing.plans.studio.f2">Fast answers from chart data during sessions</span></li>

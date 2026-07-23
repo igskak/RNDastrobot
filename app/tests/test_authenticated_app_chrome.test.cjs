@@ -59,6 +59,39 @@ test('Calendar restores the semantic back link used by its navigation resolver',
     assert.match(js, /resolveBackUrl/);
 });
 
+test('migrated work surfaces retain their kit contracts and critical hooks', () => {
+    const practice = read('clients.html');
+    const calendar = read('calendar.html');
+    const call = read('consultation-call.html');
+    const join = read('consultation-join.html');
+
+    assert.match(practice, /clients-table ui-table ui-table--rows/);
+    assert.match(practice, /clients-dialog-card ui-dialog/);
+    assert.match(practice, /empty-state ui-empty-state/);
+    assert.match(calendar, /calendar-card ui-card/);
+    assert.match(calendar, /clients-dialog-card ui-dialog/);
+
+    for (const [html, hooks] of [[call, ['callShell', 'btnToggleMic', 'btnToggleCam', 'btnEndCall', 'consentModal']], [join, ['joinLobby', 'callShell', 'lobbyBtnMic', 'lobbyBtnCam', 'btnJoinCall', 'btnLeaveCall', 'consentModal']]]) {
+        for (const hook of hooks) assert.match(html, new RegExp(`id="${hook}"`));
+        assert.match(html, /ui-dialog|ui-card/);
+    }
+});
+
+test('Pricing CTAs and Terms anchors keep their navigation contracts while using the kit', () => {
+    const pricing = read('pricing.html');
+    const terms = read('terms.html');
+
+    assert.match(pricing, /id="monthlyBtn" class="active ui-segmented__item"/);
+    assert.match(pricing, /href="login\.html"[^>]*page\.pricing\.plans\.practitioner\.cta/);
+    assert.match(pricing, /href="login\.html"[^>]*page\.pricing\.plans\.studio\.cta/);
+    assert.doesNotMatch(pricing, /linear-gradient/);
+    for (const anchor of ['terms', 'privacy', 'refund', 'contact']) {
+        assert.match(terms, new RegExp(`href="#${anchor}"`));
+        assert.match(terms, new RegExp(`id="${anchor}"`));
+    }
+    assert.match(terms, /doc ui-card/);
+});
+
 test('forecast range pages use the shared segmented kit for view navigation', () => {
     const destinations = ['forecast-new.html', 'forecast-tables.html', 'forecast-timeline.html'];
 
