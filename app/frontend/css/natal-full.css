@@ -1486,3 +1486,123 @@ body.natal-full-page.workspace-compact .balance-group {
         padding: 7px 8px;
     }
 }
+
+/* Phone report tables: retain every field, but present each record as a readable
+   labelled card instead of asking the reader to pan across a wide data grid. */
+@media (max-width: 640px) {
+    body.natal-full-page.workspace-compact #aspectsSection .table-wrapper,
+    body.natal-full-page.workspace-compact #planetsSection .table-wrapper,
+    body.natal-full-page.workspace-compact #housesSection .table-wrapper {
+        overflow: visible;
+    }
+
+    body.natal-full-page.workspace-compact .aspects-table,
+    body.natal-full-page.workspace-compact .planets-table,
+    body.natal-full-page.workspace-compact .houses-table,
+    body.natal-full-page.workspace-compact .aspects-table tbody,
+    body.natal-full-page.workspace-compact .planets-table tbody,
+    body.natal-full-page.workspace-compact .houses-table tbody {
+        display: block;
+        width: 100%;
+    }
+
+    body.natal-full-page.workspace-compact .aspects-table thead,
+    body.natal-full-page.workspace-compact .planets-table thead,
+    body.natal-full-page.workspace-compact .houses-table thead {
+        display: none;
+    }
+
+    body.natal-full-page.workspace-compact .aspects-table tbody,
+    body.natal-full-page.workspace-compact .planets-table tbody,
+    body.natal-full-page.workspace-compact .houses-table tbody {
+        display: grid;
+        gap: 8px;
+    }
+
+    body.natal-full-page.workspace-compact .aspects-table tbody tr,
+    body.natal-full-page.workspace-compact .planets-table tbody tr,
+    body.natal-full-page.workspace-compact .houses-table tbody tr {
+        display: grid;
+        gap: 5px;
+        padding: 10px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--bg-primary);
+        box-shadow: var(--density-surface-shadow);
+    }
+
+    body.natal-full-page.workspace-compact .aspects-table tbody td,
+    body.natal-full-page.workspace-compact .planets-table tbody td,
+    body.natal-full-page.workspace-compact .houses-table tbody td {
+        display: grid;
+        grid-template-columns: minmax(88px, 0.8fr) minmax(0, 1.2fr);
+        align-items: baseline;
+        gap: 8px;
+        min-width: 0;
+        padding: 2px 0;
+        border: 0;
+        text-align: right;
+    }
+
+    body.natal-full-page.workspace-compact .aspects-table tbody td::before,
+    body.natal-full-page.workspace-compact .planets-table tbody td::before,
+    body.natal-full-page.workspace-compact .houses-table tbody td::before {
+        content: attr(data-label);
+        color: var(--text-secondary);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        line-height: 1.25;
+        text-align: left;
+        text-transform: uppercase;
+    }
+
+    body.natal-full-page.workspace-compact .aspects-table tbody td > *,
+    body.natal-full-page.workspace-compact .planets-table tbody td > *,
+    body.natal-full-page.workspace-compact .houses-table tbody td > * {
+        justify-self: end;
+        min-width: 0;
+    }
+
+    body.natal-full-page.workspace-compact .planets-table .planet-cell {
+        justify-content: flex-end;
+    }
+
+    body.natal-full-page.workspace-compact .planets-table .features-cell,
+    body.natal-full-page.workspace-compact .houses-table .house-ruler-stack-cell {
+        align-items: start;
+        text-align: left;
+    }
+
+    body.natal-full-page.workspace-compact .aspects-table tbody tr {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    body.natal-full-page.workspace-compact .aspects-table tbody td {
+        grid-template-columns: 1fr;
+        gap: 2px;
+        text-align: left;
+    }
+
+    body.natal-full-page.workspace-compact .aspects-table tbody td::before {
+        font-size: 9px;
+    }
+
+    body.natal-full-page.workspace-compact .aspects-table tbody td > * {
+        justify-self: start;
+    }
+
+    body.natal-full-page.workspace-compact .aspects-table tbody td:nth-child(2) {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    body.natal-full-page.workspace-compact .aspects-table tbody td[colspan] {
+        display: block;
+        text-align: left;
+    }
+
+    body.natal-full-page.workspace-compact .aspects-table tbody td[colspan]::before {
+        content: none;
+    }
+}

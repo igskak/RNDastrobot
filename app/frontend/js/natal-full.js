@@ -988,6 +988,7 @@ function createPlanetRow(planet) {
     const tr = document.createElement('tr');
 
     const tdName = document.createElement('td');
+    tdName.dataset.label = t('page.natalFull.table.planets.planet');
     tdName.innerHTML = `<span class="planet-cell">
         ${getPlanetSymbolMarkup(planet.name, { size: 18, title: getPlanetName(planet.name) })}
         <span class="planet-name">${getPlanetName(planet.name)}</span>${retroIndicatorHtml(Boolean(planet.retrograde), 'retro-indicator--small')}
@@ -996,15 +997,18 @@ function createPlanetRow(planet) {
 
     const tdPos = document.createElement('td');
     tdPos.className = 'position-cell';
+    tdPos.dataset.label = t('page.natalFull.table.planets.position');
     tdPos.innerHTML = formatAstroCoordinate(planet);
     tr.appendChild(tdPos);
 
     const tdHouse = document.createElement('td');
     tdHouse.className = [1, 4, 7, 10].includes(planet.house) ? 'angular-house' : '';
+    tdHouse.dataset.label = t('page.natalFull.table.planets.house');
     tdHouse.textContent = formatHouseNumber(planet.house) || EMPTY;
     tr.appendChild(tdHouse);
 
     const tdDignity = document.createElement('td');
+    tdDignity.dataset.label = t('page.natalFull.table.planets.dignity');
     if (planet.dignity && planet.dignity !== 'neutral') {
         const code = DIGNITY_CODES[planet.dignity] || planet.dignity[0].toUpperCase();
         tdDignity.innerHTML = `<span class="dignity-badge dignity-${planet.dignity}">${code}</span>`;
@@ -1014,6 +1018,7 @@ function createPlanetRow(planet) {
     tr.appendChild(tdDignity);
 
     const tdHarmony = document.createElement('td');
+    tdHarmony.dataset.label = t('page.natalFull.table.planets.aspects');
     if (planet.aspect_harmony) {
         const harmonyLabels = {
             harmonious: { text: '✓', class: 'harmony-good', title: t('page.natalFull.legend.harmony.good') },
@@ -1028,6 +1033,7 @@ function createPlanetRow(planet) {
     tr.appendChild(tdHarmony);
 
     const tdMove = document.createElement('td');
+    tdMove.dataset.label = t('page.natalFull.table.planets.motion');
     if (planet.is_stationary) {
         tdMove.innerHTML = '<span class="move-badge move-s">S</span>';
     } else if (planet.retrograde) {
@@ -1039,6 +1045,7 @@ function createPlanetRow(planet) {
 
     const tdSpeed = document.createElement('td');
     tdSpeed.className = 'speed-cell';
+    tdSpeed.dataset.label = t('page.natalFull.table.planets.speed');
     const speedPct = planet.speed_percent;
 
     if ((speedPct === undefined || speedPct === null) && planet.speed !== undefined) {
@@ -1059,6 +1066,7 @@ function createPlanetRow(planet) {
 
     const tdKarma = document.createElement('td');
     tdKarma.className = 'karma-cell';
+    tdKarma.dataset.label = t('page.natalFull.table.planets.karma');
     const minus = planet.karmic_minus_score || 0;
     const plus = planet.karmic_plus_score || 0;
     const total = planet.karmic_score;
@@ -1079,6 +1087,7 @@ function createPlanetRow(planet) {
 
     const tdFeatures = document.createElement('td');
     tdFeatures.className = 'features-cell';
+    tdFeatures.dataset.label = t('page.natalFull.table.planets.features');
     const features = [];
 
     if (planet.critical_degrees?.length > 0) {
@@ -1116,6 +1125,7 @@ function createPlanetRow(planet) {
 
     const tdRuled = document.createElement('td');
     tdRuled.className = 'ruled-houses';
+    tdRuled.dataset.label = t('page.natalFull.table.planets.ruler');
     tdRuled.textContent = planet.ruled_houses?.length > 0
         ? formatHouseList(planet.ruled_houses, ',')
         : EMPTY;
@@ -1142,25 +1152,30 @@ function renderHousesTable(houses, planets) {
 
         const tdNum = document.createElement('td');
         tdNum.className = [1, 4, 7, 10].includes(house.number) ? 'angular-house' : '';
+        tdNum.dataset.label = t('page.natalFull.table.houses.house');
         tdNum.textContent = formatHouseNumber(house.number) || EMPTY;
         tr.appendChild(tdNum);
 
         const tdSign = document.createElement('td');
         tdSign.className = 'position-cell';
+        tdSign.dataset.label = t('page.natalFull.table.houses.sign');
         tdSign.innerHTML = formatAstroCoordinate(house);
         tr.appendChild(tdSign);
 
         const tdRuler = document.createElement('td');
         tdRuler.className = 'house-ruler-stack-cell';
+        tdRuler.dataset.label = t('page.natalFull.table.houses.ruler');
         tdRuler.innerHTML = renderHouseRulerGroups(house, planetToHouse);
         tr.appendChild(tdRuler);
 
         const tdRulerHouse = document.createElement('td');
+        tdRulerHouse.dataset.label = t('page.natalFull.table.houses.rulerIn');
         const rulerHouse = house.ruler_in_house || planetToHouse[normalizeBodyName(house.ruler_planet)];
         tdRulerHouse.textContent = formatHouseNumber(rulerHouse) || EMPTY;
         tr.appendChild(tdRulerHouse);
 
         const tdIncluded = document.createElement('td');
+        tdIncluded.dataset.label = t('page.natalFull.table.houses.included');
         if (house.included_sign) {
             tdIncluded.textContent = getSignName(house.included_sign);
             tdIncluded.className = 'included-sign';
@@ -1170,6 +1185,7 @@ function renderHousesTable(houses, planets) {
         tr.appendChild(tdIncluded);
 
         const tdPlanets = document.createElement('td');
+        tdPlanets.dataset.label = t('page.natalFull.table.houses.planets');
         const housePlanets = house.planets_in_house || planetsByHouse[house.number] || [];
         if (housePlanets.length > 0) {
             const shortNames = housePlanets.map((p) => formatPlanetNameWithRetro(p, {
@@ -1271,15 +1287,18 @@ function createAspectRow(aspect) {
 
     const tdSymbol = document.createElement('td');
     tdSymbol.className = 'aspect-symbol';
+    tdSymbol.dataset.label = t('page.natalFull.table.aspects.type');
     tdSymbol.innerHTML = `${getAspectSymbol(aspect.aspect_type)} <span class="aspect-name">${getAspectName(aspect.aspect_type)}</span>`;
     tr.appendChild(tdSymbol);
 
     const tdPlanets = document.createElement('td');
+    tdPlanets.dataset.label = t('page.natalFull.table.aspects.aspect');
     tdPlanets.innerHTML = `${formatPlanetNameWithRetro(aspect.planet_1, { markerClass: 'retro-indicator--micro' })} - ${formatPlanetNameWithRetro(aspect.planet_2, { markerClass: 'retro-indicator--micro' })}`;
     tr.appendChild(tdPlanets);
 
     const tdOrb = document.createElement('td');
     tdOrb.className = 'aspect-orb';
+    tdOrb.dataset.label = t('page.natalFull.table.aspects.orb');
     const orbStr = `${aspect.orb.toFixed(1)}°`;
     const partile = aspect.is_partile ? '<span class="partile-badge">⭐</span>' : '';
     tdOrb.innerHTML = orbStr + partile;

@@ -128,6 +128,23 @@ test('Practice and profile editors use mobile-first form geometry', () => {
     assert.match(clientsCss, /client-fact \{[\s\S]*flex-direction: column/);
 });
 
+test('natal report tables become labelled cards on phones without losing fields', () => {
+    const css = fs.readFileSync(path.join(frontendDir, 'css', 'natal-full.css'), 'utf8');
+    const js = fs.readFileSync(path.join(frontendDir, 'js', 'natal-full.js'), 'utf8');
+
+    assert.match(css, /Phone report tables[\s\S]*@media \(max-width: 640px\)/);
+    assert.match(css, /\.planets-table thead[\s\S]*display: none/);
+    assert.match(css, /\.planets-table tbody tr[\s\S]*border-radius: 10px/);
+    assert.match(css, /content: attr\(data-label\)/);
+    for (const key of [
+        'page.natalFull.table.planets.planet',
+        'page.natalFull.table.houses.house',
+        'page.natalFull.table.aspects.type',
+    ]) {
+        assert.match(js, new RegExp(`dataset\\.label = t\\('${key.replace(/\./g, '\\.')}'\\)`));
+    }
+});
+
 test('Pricing CTAs and Terms anchors keep their navigation contracts while using the kit', () => {
     const pricing = read('pricing.html');
     const terms = read('terms.html');
