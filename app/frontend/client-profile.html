@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.clientProfile.title"></title>
-    <link rel="stylesheet" href="/bundles/client-profile.bundle.css?v=eb0b334e5eaf">
-    <link rel="stylesheet" href="/css/app-nav.css?v=eb0b334e5eaf">
+    <link rel="stylesheet" href="/bundles/client-profile.bundle.css?v=2f774ecefc3d">
+    <link rel="stylesheet" href="/css/app-nav.css?v=2f774ecefc3d">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = 'eb0b334e5eaf';</script>
+    <script>window.__APP_BUILD_ID__ = '2f774ecefc3d';</script>
 </head>
 <body class="profile-page workspace-compact" data-defer-loader>
     <div class="page-loader" id="pageLoader">
@@ -66,6 +66,16 @@
             <!-- Stats: quiet inline reference strip -->
             <section class="ui-card profile-kpis" data-solo-profile-hidden data-i18n-aria-label="page.clientProfile.sections.statistics">
                 <div class="profile-stats-grid" id="profileStatsGrid"></div>
+            </section>
+
+            <!-- Charts are the primary reference for this person, before notes and sessions. -->
+            <section class="ui-card profile-card-linked profile-card-linked--priority hidden" id="linkedChartsCard">
+                <div class="profile-card-header">
+                    <h2 class="profile-card-title" data-i18n="page.clientProfile.linkedCharts.title"></h2>
+                    <button class="ui-btn ui-btn--primary ui-btn--sm" type="button" id="linkChartBtn" data-i18n="page.clientProfile.linkedCharts.linkBtn"></button>
+                </div>
+                <p class="profile-empty hidden" id="linkedChartsEmpty" data-i18n="page.clientProfile.linkedCharts.empty"></p>
+                <div class="profile-linked-charts-list" id="linkedChartsList"></div>
             </section>
 
             <div class="profile-detail-grid">
@@ -167,16 +177,6 @@
                         </div>
                         <p class="profile-empty hidden" id="relatedPeopleEmpty" data-i18n="page.clientProfile.related.empty"></p>
                         <div class="profile-related-list" id="relatedPeopleList"></div>
-                    </section>
-
-                    <!-- Linked charts (person context) -->
-                    <section class="ui-card profile-card-linked hidden" id="linkedChartsCard">
-                        <div class="profile-card-header">
-                            <h2 class="profile-card-title" data-i18n="page.clientProfile.linkedCharts.title"></h2>
-                            <button class="ui-btn ui-btn--primary ui-btn--sm" type="button" id="linkChartBtn" data-i18n="page.clientProfile.linkedCharts.linkBtn"></button>
-                        </div>
-                        <p class="profile-empty hidden" id="linkedChartsEmpty" data-i18n="page.clientProfile.linkedCharts.empty"></p>
-                        <div class="profile-linked-charts-list" id="linkedChartsList"></div>
                     </section>
 
                 </div>
@@ -453,9 +453,9 @@
         </div>
     </section>
 
-    <script type="module" src="/js/bundles/client-profile.bundle.js?v=eb0b334e5eaf"></script>
+    <script type="module" src="/js/bundles/client-profile.bundle.js?v=2f774ecefc3d"></script>
     <script src="/runtime-config.js"></script>
-    <script src="/js/analytics.js?v=eb0b334e5eaf"></script>
-    <script src="/js/app-nav.js?v=eb0b334e5eaf"></script>
+    <script src="/js/analytics.js?v=2f774ecefc3d"></script>
+    <script src="/js/app-nav.js?v=2f774ecefc3d"></script>
 </body>
 </html>

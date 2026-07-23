@@ -648,6 +648,16 @@
     background: rgba(249, 247, 242, 0.58);
 }
 
+/* Once the sheet is open, its controls are the only active chat controls.
+   This prevents the persistent voice/assistant dock from sitting on top of
+   the composer on narrow screens. */
+body:has(.chat-widget.open) .chat-toggle,
+body:has(.chat-widget.open) .chat-voice-command,
+body:has(.chat-widget.open) .chat-voice-mini {
+    opacity: 0;
+    pointer-events: none;
+}
+
 .chat-input {
     width: 100%;
     min-height: 34px;
@@ -812,6 +822,18 @@
     .chat-mic {
         width: 48px;
         height: 48px;
+    }
+
+    .chat-input-row {
+        grid-template-columns: minmax(0, 1fr) 48px 40px;
+        gap: 6px;
+        padding: 8px;
+    }
+
+    .chat-input {
+        min-width: 0;
+        min-height: 40px;
+        padding: 9px 10px;
     }
 
     .chat-widget-icon,

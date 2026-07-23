@@ -1021,7 +1021,6 @@ function buildUserRow(user) {
     const isChartsView = state.libraryView === 'charts';
     const userId = String(isChartsView ? (user.chart_id || user.user_id || '') : (user.person_id || user.user_id || ''));
     const primaryChartId = String(user.primary_chart_id || (isChartsView ? userId : ''));
-    const forecastTargetId = isChartsView ? userId : primaryChartId;
     const name = isChartsView
         ? (user.display_title || user.title || [user.first_name, user.last_name].filter(Boolean).join(' ') || t('common.notAvailable'))
         : (user.display_name || [user.first_name, user.last_name].filter(Boolean).join(' ') || t('common.notAvailable'));
@@ -1037,10 +1036,10 @@ function buildUserRow(user) {
     const labelTags = escapeHtml(t('page.clients.table.tags'));
     const labelCreated = escapeHtml(t(isChartsView ? 'page.clients.table.profiles' : 'page.clients.table.created'));
     const labelActions = escapeHtml(t('page.clients.table.actions'));
+    const openChartLabel = escapeHtml(t('page.clients.detail.openChart'));
     const editLabel = escapeHtml(t('page.clients.actions.edit'));
     const renameLabel = escapeHtml(t('page.clients.actions.rename'));
     const deleteLabel = escapeHtml(t('page.clients.actions.delete'));
-    const forecastLabel = escapeHtml(isChartsView ? t('page.clients.charts.openWorkspace') : t('page.chart.nav.forecast'));
     const upcomingCount = Number(user.upcoming_count || 0);
     const unpaidCount = Number(user.unpaid_count || 0);
     const summaryChips = [];
@@ -1074,12 +1073,9 @@ function buildUserRow(user) {
                 <div class="client-name-stack">
                     <strong class="client-name-text">${escapeHtml(name)}</strong>
                     ${isChartsView ? '' : renderPersonChips(user)}
+                    <span class="client-mobile-meta">${escapeHtml([dateValue, place].filter(Boolean).join(' · '))}</span>
+                    ${isChartsView ? `<div class="client-mobile-tags">${renderChartTagFilters(user)}</div>` : ''}
                     ${summaryChips.length > 0 ? `<div class="client-summary-chips">${summaryChips.join('')}</div>` : ''}
-                    <div class="client-card-quick-actions">
-                        <button class="ui-btn ui-btn--secondary ui-btn--sm${isChartsView ? ' client-quick-btn-workspace' : ''}" type="button" data-action="open-forecast" data-user-id="${escapeHtml(forecastTargetId)}" ${forecastTargetId ? '' : 'disabled'}>
-                            ${forecastLabel}
-                        </button>
-                    </div>
                 </div>
             </div>
         </td>
@@ -1111,6 +1107,9 @@ function buildUserRow(user) {
         </td>
         <td class="client-cell client-cell-actions" data-label="${labelActions}">
             <div class="row-actions">
+                <button class="client-open-chart" type="button" data-action="open-chart" data-user-id="${escapeHtml(isChartsView ? userId : primaryChartId)}" aria-label="${openChartLabel}" title="${openChartLabel}" ${isChartsView || primaryChartId ? '' : 'disabled'}>
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5.2" stroke="currentColor" stroke-width="1.35"/><circle cx="8" cy="8" r="1.65" stroke="currentColor" stroke-width="1.35"/><path d="M8 1.5v1.25M8 13.25v1.25M1.5 8h1.25M13.25 8h1.25" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg>
+                </button>
                 <button class="btn-actions" type="button" data-action="toggle-menu" data-user-id="${escapeHtml(userId)}" aria-label="${escapeHtml(t('page.clients.table.actions'))}" aria-haspopup="menu" aria-expanded="false">
                     <svg width="14" height="4" viewBox="0 0 14 4" fill="none"><circle cx="2" cy="2" r="1.4" fill="currentColor"/><circle cx="7" cy="2" r="1.4" fill="currentColor"/><circle cx="12" cy="2" r="1.4" fill="currentColor"/></svg>
                 </button>

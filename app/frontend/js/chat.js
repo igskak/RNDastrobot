@@ -49,7 +49,7 @@ function hideElementsById(ids) {
 }
 
 function hideAssistantChrome() {
-    hideElementsById(['chatToggle', 'chatVoiceCommand', 'chatNotesToggle', 'chatVoiceMiniStatus', 'chatWidget']);
+    hideElementsById(['chatToggle', 'chatVoiceCommand', 'chatVoiceMiniStatus', 'chatWidget']);
 }
 
 function hideVoiceChrome() {
@@ -85,7 +85,6 @@ class ChatWidget {
     constructor(astrologer = null) {
         this.widget = document.getElementById('chatWidget');
         this.toggle = document.getElementById('chatToggle');
-        this.notesToggle = document.getElementById('chatNotesToggle');
         this.closeBtn = document.getElementById('chatClose');
         this.resizeHandle = document.getElementById('chatResizeHandle');
         this.messages = document.getElementById('chatMessages');
@@ -153,13 +152,6 @@ class ChatWidget {
     init() {
         this.restoreSize();
         this.toggle.addEventListener('click', () => this.openPanel());
-        this.notesToggle?.addEventListener('click', () => {
-            if (this.isOpen && this.activeView === 'notes') {
-                this.closePanel();
-                return;
-            }
-            this.openPanel({ view: 'notes', focusInput: false });
-        });
         this.assistantTab?.addEventListener('click', () => this.switchView('assistant'));
         this.notesTab?.addEventListener('click', () => this.switchView('notes'));
         if (this.voiceEnabled) {

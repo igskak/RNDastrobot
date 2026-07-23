@@ -168,6 +168,35 @@ test('login and shared controls retain flat and accessible interaction states', 
     assert.match(sharedCss, /\[role="tab"\]:focus-visible/);
 });
 
+test('profile charts lead the workspace while mobile libraries stay compact', () => {
+    const profile = read('client-profile.html');
+    const profileJs = fs.readFileSync(path.join(frontendDir, 'js', 'client-profile.js'), 'utf8');
+    const profileCss = fs.readFileSync(path.join(frontendDir, 'entries-css', 'client-profile.entry.css'), 'utf8');
+    const clientsJs = fs.readFileSync(path.join(frontendDir, 'js', 'clients.js'), 'utf8');
+    const clientsCss = fs.readFileSync(path.join(frontendDir, 'entries-css', 'clients.entry.css'), 'utf8');
+
+    assert.ok(profile.indexOf('profile-card-linked--priority') < profile.indexOf('profile-detail-grid'));
+    assert.match(profileJs, /const meta = \[date, time, place\]\.filter\(Boolean\)\.join\(' · '\)/);
+    assert.match(profileCss, /\.profile-header-actions[\s\S]*grid-template-columns: minmax\(0, 1fr\) auto var\(--density-touch-target\)/);
+    assert.match(clientsJs, /class="client-open-chart"[\s\S]*data-action="open-chart"/);
+    assert.match(clientsJs, /class="client-mobile-meta"/);
+    assert.doesNotMatch(clientsJs, /client-card-quick-actions[\s\S]{0,260}open-forecast/);
+    assert.match(clientsCss, /\.client-cell-birth,[\s\S]*display: none !important/);
+    assert.match(clientsCss, /\.client-mobile-meta[\s\S]*white-space: nowrap/);
+});
+
+test('forecast chat keeps notes inside the sheet and avoids mobile composer overlap', () => {
+    const forecast = read('forecast-new.html');
+    const chatJs = fs.readFileSync(path.join(frontendDir, 'js', 'chat.js'), 'utf8');
+    const chatCss = fs.readFileSync(path.join(frontendDir, 'css', 'chat-widget.css'), 'utf8');
+
+    assert.doesNotMatch(forecast, /id="chatNotesToggle"/);
+    assert.match(forecast, /id="chatNotesTab"/);
+    assert.doesNotMatch(chatJs, /chatNotesToggle/);
+    assert.match(chatCss, /body:has\(\.chat-widget\.open\) \.chat-toggle/);
+    assert.match(chatCss, /grid-template-columns: minmax\(0, 1fr\) 48px 40px/);
+});
+
 test('Pricing CTAs and Terms anchors keep their navigation contracts while using the kit', () => {
     const pricing = read('pricing.html');
     const terms = read('terms.html');

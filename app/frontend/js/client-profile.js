@@ -1879,8 +1879,9 @@ function renderLinkedChartsList(charts) {
     refs.linkedChartsEmpty?.classList.add('hidden');
     refs.linkedChartsList.innerHTML = charts.map((c) => {
         const date = c.date ? formatDate(c.date) : '';
+        const time = c.time ? String(c.time).slice(0, 5) : '';
         const place = c.place || '';
-        const meta = [date, place].filter(Boolean).join(' · ');
+        const meta = [date, time, place].filter(Boolean).join(' · ');
         const isCurrentChart = String(c.chart_id) === String(primaryChartId);
         const cls = `profile-linked-chart-item is-clickable${isCurrentChart ? ' is-current' : ''}`;
         const attrs = ` role="button" tabindex="0" data-action="open-linked-chart"`;

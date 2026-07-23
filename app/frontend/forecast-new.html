@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.forecastNew.pageTitle">Forecast</title>
-    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=73c7f82913a2">
-    <link rel="stylesheet" href="/css/app-nav.css?v=73c7f82913a2">
+    <link rel="stylesheet" href="/bundles/forecast-new.bundle.css?v=d16cc8163b4f">
+    <link rel="stylesheet" href="/css/app-nav.css?v=d16cc8163b4f">
     <!-- C2 (Фаза 3): символьные глифы (знаки/аспекты) появляются на колесе сразу;
          font-display:block делает их невидимыми до загрузки шрифта, поэтому прелоадим
          woff2-сабсеты (десятки КБ вместо 1.2 МБ ttf). crossorigin обязателен для шрифтов. -->
     <link rel="preload" href="/fonts/NotoSansSymbols.subset.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/fonts/NotoSansSymbols2.subset.woff2" as="font" type="font/woff2" crossorigin>
-    <script>window.__APP_BUILD_ID__ = '73c7f82913a2';</script>
+    <script>window.__APP_BUILD_ID__ = 'd16cc8163b4f';</script>
     <!-- A3 (Фаза 1): каталог локали грузится i18n.js в рантайме и это первый await
          bootstrap. Прогреваем HTTP-кэш нужной локали сразу из <head> (immutable-кэш в
          проде → i18n.js переиспользует ответ). Локаль резолвим тем же приоритетом, что
@@ -655,9 +655,6 @@
             <path d="M9 21h6"/>
         </svg>
     </button>
-    <button type="button" id="chatNotesToggle" class="chat-notes-toggle" data-chat-lazy data-i18n-aria-label="page.clientNotes.open">
-        <span aria-hidden="true">•</span>
-    </button>
     <button type="button" id="chatVoiceMiniStatus" class="chat-voice-mini" data-chat-lazy hidden data-i18n-aria-label="page.chart.chat.openVoiceResult"></button>
     <section id="chatWidget" class="chat-widget" data-chat-lazy aria-labelledby="chatTitle">
         <button type="button" id="chatResizeHandle" class="chat-resize-handle"
@@ -718,8 +715,8 @@
          поэтому window.__RUNTIME_CONFIG__ (runtime-config.js) готов до analytics.js и до
          модуля приложения. -->
     <script defer src="/runtime-config.js"></script>
-    <script defer src="/js/analytics.js?v=73c7f82913a2"></script>
-    <script defer src="/js/app-nav.js?v=73c7f82913a2"></script>
-    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=73c7f82913a2"></script>
+    <script defer src="/js/analytics.js?v=d16cc8163b4f"></script>
+    <script defer src="/js/app-nav.js?v=d16cc8163b4f"></script>
+    <script type="module" src="/js/bundles/forecast-new.bundle.js?v=d16cc8163b4f"></script>
 </body>
 </html>

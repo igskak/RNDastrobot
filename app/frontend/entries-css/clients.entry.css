@@ -464,7 +464,9 @@ select:focus {
 
 .client-summary-chips,
 .client-card-quick-actions,
-.client-fact-label {
+.client-fact-label,
+.client-mobile-meta,
+.client-mobile-tags {
     display: none;
 }
 
@@ -491,7 +493,25 @@ select:focus {
     position: relative;
     display: flex;
     justify-content: flex-end;
+    align-items: center;
+    gap: var(--space-1);
 }
+
+.client-open-chart {
+    width: 28px;
+    height: 28px;
+    display: inline-grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
+    color: var(--accent);
+    cursor: pointer;
+}
+
+.client-open-chart:hover:not(:disabled) { background: var(--accent-light); border-color: var(--border-focus); }
+.client-open-chart:disabled { opacity: 0.42; cursor: not-allowed; }
 
 .btn-actions {
     width: 28px;
@@ -1323,11 +1343,7 @@ select:focus {
     }
 
     .clients-table tbody tr {
-        grid-template-areas:
-            "name actions"
-            "birth birth"
-            "place place"
-            "created created";
+        grid-template-areas: "name actions";
     }
 
     .clients-dialog {
@@ -1404,8 +1420,8 @@ select:focus {
     }
 
     .clients-table tbody tr {
-        gap: var(--space-3);
-        margin-bottom: var(--space-3);
+        gap: var(--space-2);
+        margin-bottom: var(--space-2);
         padding: var(--space-3);
         border-color: var(--border);
         border-radius: var(--radius-md);
@@ -1420,6 +1436,46 @@ select:focus {
 
     .client-fact-label { font-size: var(--font-size-caption); }
     .client-fact-value { font-size: var(--font-size-label); color: var(--text-secondary); }
+
+    .client-cell-birth,
+    .client-cell-place,
+    .client-cell-created {
+        display: none !important;
+    }
+
+    .client-mobile-meta {
+        display: block;
+        overflow: hidden;
+        color: var(--text-secondary);
+        font-size: var(--font-size-caption);
+        line-height: 1.35;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .client-mobile-tags,
+    .client-mobile-tags .client-inline-chips {
+        display: flex;
+        align-items: center;
+        gap: var(--space-1);
+        min-width: 0;
+    }
+
+    .client-mobile-tags .client-inline-chip {
+        min-height: 24px;
+        padding: 2px var(--space-2);
+        font-size: var(--font-size-caption);
+    }
+
+    .client-summary-chips { gap: var(--space-1); }
+    .client-summary-chip { min-height: 22px; padding: 2px var(--space-2); }
+
+    .client-open-chart,
+    .btn-actions {
+        width: var(--density-touch-target);
+        height: var(--density-touch-target);
+        opacity: 1;
+    }
 
     .client-card-quick-actions .ui-btn {
         min-height: 36px;

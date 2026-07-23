@@ -308,11 +308,48 @@ body.is-solo-profile .profile-column { display: contents; }
 }
 
 @media (max-width: 640px) {
+    .profile-shell {
+        padding: var(--space-2) var(--space-2) var(--space-5);
+    }
+
+    .profile-header {
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: var(--space-2);
+        padding: var(--space-3);
+    }
+
+    .profile-identity {
+        min-width: min(100%, 160px);
+        align-items: flex-start;
+        flex-direction: column;
+        gap: var(--space-1);
+    }
+
+    .profile-header-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto var(--density-touch-target);
+        width: 100%;
+    }
+
+    .profile-header-actions .ui-btn,
+    .profile-actions-toggle {
+        min-height: var(--density-touch-target);
+        height: var(--density-touch-target);
+    }
+
+    .profile-actions-toggle {
+        width: var(--density-touch-target);
+    }
+
     .profile-related-card { flex-direction: column; align-items: flex-start; }
     .profile-related-actions { justify-content: flex-start; }
     .profile-related-header-actions { width: 100%; }
     .profile-linked-chart-item { align-items: flex-start; flex-direction: column; }
     .profile-linked-chart-actions { justify-content: flex-start; }
+    .profile-card-linked--priority { padding: var(--space-3); }
+    .profile-linked-chart-info { flex-wrap: wrap; gap: var(--space-1); }
+    .profile-linked-chart-meta::before { margin-right: var(--space-1); }
     .session-notes { flex: 1 1 100%; max-width: 100%; white-space: normal; }
     .cs-row { flex-wrap: wrap; }
     .cs-date { flex: 1 1 100%; }
@@ -345,6 +382,16 @@ body.is-solo-profile .profile-column { display: contents; }
 }
 
 .profile-card-header .profile-card-title { margin-bottom: 0; }
+
+/* The person's charts are the first reference surface, kept deliberately
+   compact so notes and sessions remain within reach below. */
+.profile-card-linked--priority {
+    padding-block: var(--space-3);
+}
+
+.profile-card-linked--priority .profile-card-header {
+    margin-bottom: var(--space-2);
+}
 
 /* ── Linked charts ──────────────────────────────────────────────────────── */
 
