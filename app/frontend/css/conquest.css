@@ -99,7 +99,13 @@ footer.site a { color: var(--text-secondary); text-decoration: none; margin: 0 1
 footer.site a:hover { color: var(--accent); }
 
 @media (max-width: 760px) {
+  .shell { padding: 0 var(--space-4, 16px); }
+  header.header { flex-wrap: wrap; gap: 12px; padding: 16px 0; }
+  .header-actions { margin-left: auto; }
+  .nav-links { order: 3; display: flex; width: 100%; gap: 16px; overflow-x: auto; }
+  .nav-links a { flex: 0 0 auto; margin-left: 0; }
   .hero h1 { font-size: 2.3rem; }
-  .nav-links { display: none; }
   .section h2, .faq h2, .cta-band h2 { font-size: 1.6rem; }
+  .compare { display: block; overflow-x: auto; }
+  .compare th, .compare td { min-width: 148px; padding: 12px; }
 }

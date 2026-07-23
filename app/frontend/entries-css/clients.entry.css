@@ -186,12 +186,11 @@ select:focus-visible,
 }
 
 .clients-card {
-    background: rgba(255, 255, 255, 0.88);
+    background: var(--bg-secondary);
     border-radius: 12px;
     padding: 12px;
     box-shadow: var(--density-surface-shadow);
-    border: 1px solid rgba(30, 58, 95, 0.08);
-    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
 }
 
 .clients-card-top {
@@ -587,8 +586,7 @@ select:focus {
 .clients-dialog-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(17, 24, 39, 0.36);
-    backdrop-filter: blur(6px);
+    background: rgba(26, 22, 20, 0.35);
     z-index: 140;
 }
 
@@ -599,7 +597,7 @@ select:focus {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px;
+    padding: var(--space-4);
 }
 
 .clients-dialog.hidden,
@@ -645,11 +643,11 @@ select:focus {
     width: min(720px, 100%);
     max-height: min(88vh, 860px);
     overflow: auto;
-    padding: 26px 26px 22px;
-    border: 1px solid rgba(184, 147, 90, 0.24);
-    border-radius: 28px;
+    padding: var(--space-5);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
     background: var(--bg-secondary);
-    box-shadow: 0 30px 60px rgba(26, 22, 20, 0.18);
+    box-shadow: var(--shadow-lg);
 }
 
 .clients-dialog-header {
@@ -690,8 +688,8 @@ select:focus {
     height: 40px;
     flex-shrink: 0;
     border: 1px solid var(--border);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.78);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
     color: var(--text-secondary);
     font-size: 24px;
     line-height: 1;
@@ -1867,8 +1865,8 @@ select:focus {
     min-height: 26px;
     padding: 4px 8px;
     border: 1px solid rgba(30, 58, 95, 0.12);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.78);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
     color: var(--text-secondary);
     font-family: var(--font-ui);
     font-size: 11px;
@@ -1879,8 +1877,8 @@ select:focus {
 
 .tag-suggestion:hover,
 .tag-suggestion:focus-visible {
-    background: var(--gold-pale);
-    border-color: rgba(184, 147, 90, 0.35);
+    background: var(--bg-tertiary);
+    border-color: var(--border);
     color: var(--text-primary);
     outline: none;
     transform: translateY(-1px);

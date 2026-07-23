@@ -730,18 +730,13 @@ body.is-solo-profile .profile-column { display: contents; }
 .profile-empty-error { color: var(--error); }
 .hidden { display: none !important; }
 
-/* ============================================================
-   Dialogs — kept as-is (shared structure with clients.html;
-   out of scope this pass). Buttons inside inherit the flat
-   .btn-new / .btn-logout treatment above.
-   ============================================================ */
+/* Dialogs share the flat surface rules used by Practice. */
 
 .clients-dialog-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(26, 22, 20, 0.38);
+    background: rgba(26, 22, 20, 0.35);
     z-index: 900;
-    backdrop-filter: blur(2px);
 }
 
 .clients-dialog {
@@ -760,10 +755,10 @@ body.is-solo-profile .profile-column { display: contents; }
 .clients-dialog-card {
     background: var(--bg-secondary);
     border-radius: var(--radius-lg);
-    padding: 28px;
+    padding: var(--space-5);
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: var(--space-4);
 }
 
 .clients-dialog-header {

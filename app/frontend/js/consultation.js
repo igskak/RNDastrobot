@@ -341,7 +341,7 @@ function renderMemory(entries) {
             </div>
             <p class="mem-text">${escapeHtml(e.text)}</p>
             <div class="mem-actions">
-                <button class="mem-edit-btn" data-act="edit">${escapeHtml(t('common.edit'))}</button>
+                <button class="ui-btn ui-btn--secondary ui-btn--sm" data-act="edit">${escapeHtml(t('common.edit'))}</button>
                 <button class="compact-icon-btn compact-icon-btn--danger" data-act="del" aria-label="${escapeHtml(t('common.delete'))}" title="${escapeHtml(t('common.delete'))}">
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 4.5h9M6 2.5h4l.5 2H5.5l.5-2ZM5 6.5v6m3-6v6m3-6v6M4.5 4.5l.6 9h5.8l.6-9" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </button>
@@ -362,8 +362,8 @@ function startEdit(item, id) {
     const actions = item.querySelector('.mem-actions');
     p.outerHTML = `<textarea class="mem-edit-area">${escapeHtml(current)}</textarea>`;
     actions.innerHTML = `
-        <button class="mem-edit-btn" data-act="savee">${escapeHtml(t('common.save'))}</button>
-        <button class="mem-del-btn" data-act="cancel">${escapeHtml(t('common.cancel'))}</button>`;
+        <button class="ui-btn ui-btn--primary ui-btn--sm" data-act="savee">${escapeHtml(t('common.save'))}</button>
+        <button class="ui-btn ui-btn--ghost ui-btn--sm" data-act="cancel">${escapeHtml(t('common.cancel'))}</button>`;
     actions.querySelector('[data-act="savee"]').addEventListener('click', async () => {
         const txt = item.querySelector('.mem-edit-area').value.trim();
         if (!txt) return;

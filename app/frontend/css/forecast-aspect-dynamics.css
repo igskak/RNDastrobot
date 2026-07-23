@@ -13,14 +13,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 22px;
+    padding: var(--space-4);
 }
 
 .aspect-dynamics-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(20, 22, 28, 0.42);
-    backdrop-filter: blur(4px);
+    background: rgba(26, 22, 20, 0.35);
 }
 
 .aspect-dynamics-dialog {
@@ -31,10 +30,10 @@
     display: grid;
     grid-template-rows: auto auto auto minmax(340px, 1fr) auto auto auto;
     overflow: hidden;
-    border: 1px solid rgba(30, 58, 95, 0.14);
-    border-radius: 16px;
-    background: var(--bg-primary, #f9f7f2);
-    box-shadow: 0 24px 64px rgba(20, 22, 28, 0.24);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--bg-secondary);
+    box-shadow: var(--shadow-lg);
 }
 
 .aspect-dynamics-dialog:focus {
@@ -47,8 +46,8 @@
     gap: 14px;
     align-items: start;
     padding: 12px 14px 10px;
-    border-bottom: 1px solid rgba(30, 58, 95, 0.1);
-    background: rgba(255, 255, 255, 0.88);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
 }
 
 .aspect-dynamics-heading {
@@ -370,8 +369,8 @@
         border-right: 0;
         border-bottom: 0;
         border-left: 0;
-        border-radius: 20px 20px 0 0;
-        box-shadow: 0 -12px 40px rgba(20, 22, 28, 0.2);
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        box-shadow: 0 -4px 16px rgba(26, 22, 20, 0.08);
     }
 
     .aspect-dynamics-header {

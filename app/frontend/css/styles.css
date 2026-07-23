@@ -36,8 +36,7 @@ body.quick-open-active {
 .quick-open-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(26, 22, 20, 0.32);
-    backdrop-filter: blur(8px);
+    background: rgba(26, 22, 20, 0.35);
 }
 
 .quick-open-dialog {
@@ -48,10 +47,10 @@ body.quick-open-active {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border: 1px solid rgba(184, 147, 90, 0.22);
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.96);
-    box-shadow: 0 24px 56px rgba(26, 22, 20, 0.18);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--bg-secondary);
+    box-shadow: var(--shadow-lg);
 }
 
 .quick-open-head {
@@ -59,9 +58,9 @@ body.quick-open-active {
     grid-template-columns: minmax(0, 1fr) 34px;
     gap: 12px;
     align-items: start;
-    padding: 18px 18px 14px;
-    border-bottom: 1px solid rgba(30, 58, 95, 0.08);
-    background: linear-gradient(180deg, rgba(249, 247, 242, 0.82), rgba(255, 255, 255, 0.72));
+    padding: var(--space-4);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
 }
 
 .quick-open-title {
@@ -450,8 +449,8 @@ body::selection {
 
 .workspace-compact .clients-dialog-card {
     padding: 16px;
-    border-radius: 14px;
-    box-shadow: 0 18px 42px rgba(26, 22, 20, 0.15);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
 }
 
 .workspace-compact .clients-dialog-header {
@@ -3448,22 +3447,19 @@ input[type="number"] {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(18, 20, 24, 0.42);
-    backdrop-filter: blur(8px);
-    padding: 24px;
+    background: rgba(26, 22, 20, 0.35);
+    padding: var(--space-4);
 }
 
 .dispositor-modal {
     width: min(960px, 100%);
     max-height: min(86vh, 820px);
     overflow: auto;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 24px;
-    background:
-        radial-gradient(circle at 18% 12%, rgba(184, 147, 90, 0.12), transparent 26%),
-        linear-gradient(180deg, #fbf8f2 0%, #f2ede3 100%);
-    box-shadow: 0 28px 90px rgba(18, 20, 24, 0.32);
-    padding: 24px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--bg-secondary);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-5);
 }
 
 .dispositor-modal-head {
