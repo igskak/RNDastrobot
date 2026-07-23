@@ -511,3 +511,96 @@
     transition: background 0.15s;
 }
 .btn-secondary:hover { background: rgba(255,255,255,0.13); }
+
+/* Flat consultation shell. Video stays dark because it is media, while every
+   surrounding work surface uses the shared light kit and tokenized states. */
+.call-page,
+.join-page,
+.page-loader,
+.call-error-overlay,
+.join-error-screen,
+.call-ended-panel,
+.call-ended-screen {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.call-error-box,
+.join-error-box,
+.call-ended-box {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: var(--space-5);
+}
+
+.call-error-title,
+.join-error-title,
+.call-ended-title,
+.modal-title { color: var(--text-primary); }
+.call-error-body,
+.join-error-msg,
+.call-ended-duration,
+.call-ended-note,
+.modal-body { color: var(--text-secondary); }
+.pl-text { color: var(--text-muted); }
+
+.call-shell { background: var(--bg-primary); }
+.call-header,
+.call-controls {
+    background: var(--bg-secondary);
+    border-color: var(--border);
+    backdrop-filter: none;
+}
+.call-back-link,
+.call-client-name,
+.call-astrologer-name-text,
+.call-status-badge,
+.call-timer { color: var(--text-secondary); }
+.call-back-link:hover { color: var(--text-primary); }
+.call-copy-link-btn,
+.call-ctrl-btn {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+}
+.call-copy-link-btn:hover,
+.call-ctrl-btn:hover { background: var(--accent-light); color: var(--accent); }
+.call-ctrl-btn--off { background: var(--bg-primary); color: var(--text-muted); }
+.call-ctrl-btn--active { background: var(--accent-light); color: var(--accent); }
+.call-ctrl-btn--record { background: var(--gold-pale); color: var(--text-primary); }
+.call-ctrl-btn--record-stop,
+.call-ctrl-btn--end { background: var(--bg-secondary); color: var(--error); border-color: var(--error); }
+
+.modal-overlay { background: rgba(26, 22, 20, 0.35); backdrop-filter: none; }
+.modal-box {
+    background: var(--bg-secondary);
+    border-color: var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-5);
+}
+.modal-body--note { color: var(--text-muted); }
+.call-page .btn-secondary.ui-btn,
+.join-page .btn-secondary.ui-btn {
+    background: var(--bg-secondary);
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+@media (max-width: 520px) {
+    .call-header { padding: var(--space-2) var(--space-3); }
+    .call-header-center { display: none; }
+    .call-controls { padding: var(--space-2); }
+    .call-controls-left,
+    .call-controls-center,
+    .call-controls-right { gap: var(--space-1); }
+    .call-ctrl-btn { min-width: 44px; padding: var(--space-2); }
+    .call-ctrl-btn span { display: none; }
+    .call-video-local { width: 120px; height: 80px; bottom: var(--space-3); right: var(--space-3); }
+    .modal-actions,
+    .call-ended-actions { flex-direction: column-reverse; }
+    .modal-actions .ui-btn,
+    .call-ended-actions .ui-btn { width: 100%; }
+}

@@ -77,6 +77,25 @@ test('migrated work surfaces retain their kit contracts and critical hooks', () 
     }
 });
 
+test('consultation and profile dialogs use the flat kit without changing realtime hooks', () => {
+    const profile = read('client-profile.html');
+    const call = read('consultation-call.html');
+    const join = read('consultation-join.html');
+    const callCss = fs.readFileSync(path.join(frontendDir, 'entries-css', 'consultation-call.entry.css'), 'utf8');
+    const joinCss = fs.readFileSync(path.join(frontendDir, 'entries-css', 'consultation-join.entry.css'), 'utf8');
+
+    assert.equal((profile.match(/clients-dialog-backdrop ui-dialog-backdrop/g) || []).length, 4);
+    assert.equal((profile.match(/clients-dialog-card[^\"]*ui-dialog/g) || []).length, 4);
+    for (const html of [call, join]) {
+        assert.match(html, /modal-box ui-dialog/);
+        assert.match(html, /call-ended-box ui-card/);
+        assert.match(html, /id="consentModal"/);
+    }
+    assert.match(callCss, /Flat consultation shell/);
+    assert.match(callCss, /@media \(max-width: 520px\)/);
+    assert.match(joinCss, /\.join-lobby-box[\s\S]*background: var\(--bg-secondary\)/);
+});
+
 test('client profile keeps the start-call control and its realtime contract', () => {
     const html = read('client-profile.html');
     const js = fs.readFileSync(path.join(frontendDir, 'js', 'client-profile.js'), 'utf8');

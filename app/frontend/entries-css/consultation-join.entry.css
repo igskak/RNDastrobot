@@ -124,3 +124,32 @@
     color: rgba(232, 228, 220, 0.35);
     border-color: rgba(255,255,255,0.06);
 }
+
+.join-lobby {
+    background: var(--bg-primary);
+    padding: var(--space-4);
+}
+.join-lobby-box {
+    align-items: stretch;
+    gap: var(--space-4);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: var(--space-5);
+}
+.join-brand { justify-content: center; }
+.join-brand-name,
+.join-lobby-title { color: var(--text-primary); }
+.join-lobby-subtitle { color: var(--text-secondary); }
+.join-preview-wrap { background: var(--bg-tertiary); border-color: var(--border); border-radius: var(--radius-md); }
+.join-preview-no-cam { color: var(--text-muted); }
+.join-device-btn { background: var(--bg-secondary); border-color: var(--border); color: var(--text-secondary); border-radius: var(--radius-sm); }
+.join-device-btn:hover { background: var(--accent-light); color: var(--accent); }
+.join-device-btn--off { background: var(--bg-primary); color: var(--text-muted); border-color: var(--border); }
+
+@media (max-width: 520px) {
+    .join-lobby { align-items: flex-start; overflow: auto; }
+    .join-lobby-box { padding: var(--space-4); }
+    .join-device-row { gap: var(--space-2); }
+}
