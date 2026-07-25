@@ -808,8 +808,8 @@
         "aspectTypes": "Aspect types",
         "aspectTypesHint": "Pick the exact aspect set each view should start with.",
         "extras": "Extra options",
-      "matrixCopy": "Open only when you need to tune which planets and houses stay visible and aspecting by default.",
-      "matrixTitle": "Planets and houses matrix",
+        "matrixCopy": "Open only when you need to tune which planets and houses stay visible and aspecting by default.",
+        "matrixTitle": "Planets and houses matrix",
         "orientation": "Orientation"
       },
       "heading": "General settings",
@@ -896,7 +896,7 @@
       },
       "subtitle": "Set the defaults once, then let individual chart overrides change only what is necessary.",
       "stationary": {
-      "copy": "Define when a planet should be marked as stationary by comparing its current speed with its average speed.",
+        "copy": "Define when a planet should be marked as stationary by comparing its current speed with its average speed.",
         "threshold": {
           "hint": "Percentage of average speed. A value of 5 means a planet is stationary when it moves at 5% of its normal speed or slower.",
           "label": "Stationary threshold (%)"
@@ -910,12 +910,12 @@
           "title": "Aspects for all screens"
         },
         "bodies": {
-        "copy": "Fine-tune planet and house visibility and aspect participation.",
+          "copy": "Fine-tune planet and house visibility and aspect participation.",
           "title": "Chart elements for all screens"
         },
         "columns": {
           "aspect": "Aspect",
-        "biwheel": "Double chart",
+          "biwheel": "Double chart",
           "natal": "Natal",
           "setting": "Setting",
           "solar": "Solar",
@@ -946,9 +946,9 @@
         },
         "panels": {
           "aspectColors": "Aspect colors",
-        "bodyOverrides": "Planets",
+          "bodyOverrides": "Planets",
           "elementPalette": "Element palette",
-        "wheel": "Houses",
+          "wheel": "Houses",
           "aspects": "Aspects",
           "elements": "Elements",
           "planets": "Planets",
@@ -969,11 +969,11 @@
       },
       "views": {
         "biwheel": {
-        "copy": "Controls how double charts and comparison views begin before local tweaks are applied.",
-        "title": "Inherited double-chart defaults"
+          "copy": "Controls how double charts and comparison views begin before local tweaks are applied.",
+          "title": "Inherited double-chart defaults"
         },
         "natal": {
-        "copy": "Sets the default chart orientation, aspect filters, and table behavior for natal work.",
+          "copy": "Sets the default chart orientation, aspect filters, and table behavior for natal work.",
           "title": "Inherited natal defaults"
         },
         "solar": {
@@ -2207,30 +2207,28 @@
       "title": "Steliara, astrologer workspace",
       "logo": "Steliara",
       "nav": {
-        "solution": "How it helps",
-        "benefits": "In practice",
         "faq": "Questions",
         "pricing": "Pricing",
         "productPagesAria": "Product pages",
         "cloudAstrology": "Cloud astrology software",
         "astrologerWorkspace": "Astrologer workspace",
-        "practiceManagement": "Practice management"
+        "practiceManagement": "Practice management",
+        "product": "Product",
+        "consultations": "Consultations"
       },
       "cta": {
-        "primary": "Create a chart",
-        "secondary": "See what it does"
+        "primary": "Start free",
+        "secondary": "See how it works"
       },
       "hero": {
-        "kicker": "For careful astrological practice",
-        "title": "Everything about every person you read for, in one place",
-        "text": "Charts, notes, and recorded consultations stay together. Before a meeting you don't rebuild the story from memory. It is already here.",
+        "kicker": "An astrologer’s workspace",
+        "title": "Your whole practice in one system",
+        "text": "Everything the work needs, from casting a chart to recording a consultation. No switching between programs.",
         "proof": {
-          "accuracy": "Calculations based on Swiss Ephemeris",
-          "workspace": "Sessions recorded, transcribed and summarized",
-          "assistant": "Data-aware chat answers in seconds",
-          "platform": "Works on Mac, Windows and any browser"
+          "accuracy": "Swiss Ephemeris calculations",
+          "platform": "Mac, Windows and the browser"
         },
-        "trialNote": "Free 14-day trial. No card needed."
+        "trialNote": "14-day trial. No card required."
       },
       "preview": {
         "title": "Practice profile",
@@ -2285,117 +2283,6 @@
           "value": "Answers from data"
         }
       },
-      "socialProof": {
-        "lead": "Not another calculator. A place where your practice can gather: people, charts, observations, conversations, and quick answers from astrological data.",
-        "itemOne": "Professional house systems and settings",
-        "itemTwo": "Recordings, transcripts and notes in one profile",
-        "itemThree": "Simpler than the old desktop programs"
-      },
-      "problem": {
-        "kicker": "What gets in the way",
-        "title": "In practice, knowledge is not what gets lost. Context is.",
-        "text": "Before a meeting, you often need to remember which chart was open, what was discussed before, which periods mattered, where the notes are, and what needs checking.",
-        "cards": {
-          "fragmented": {
-            "title": "Everything lives in different places",
-            "text": "Charts in one tool, notes in another, recordings elsewhere, important dates in messages. Returning to a person quickly becomes difficult."
-          },
-          "prep": {
-            "title": "Too much manual searching",
-            "text": "A simple question such as a transit Uranus conjunction to natal Venus can become several minutes of manual period checking."
-          },
-          "trust": {
-            "title": "Continuity is hard to hold",
-            "text": "When this is not the first meeting, past themes matter. Without one shared space, they are easy to lose."
-          }
-        }
-      },
-      "solution": {
-        "kicker": "How Steliara helps",
-        "title": "Everything connected to a person and their charts stays within reach.",
-        "text": "Create a profile, build charts, save notes and recordings, move between related materials, and ask the chat questions from the data. For example: “show transit Uranus conjunctions to natal Venus for the past and next 5 years.” You get the periods in seconds.",
-        "steps": {
-          "calculate": {
-            "title": "Create a chart without extra steps",
-            "text": "Date, time, place, timezone, coordinates, and house system move through one clear flow."
-          },
-          "read": {
-            "title": "Keep the story nearby",
-            "text": "A profile keeps charts, notes, recorded consultations with transcripts and summaries, and important points together."
-          },
-          "prepare": {
-            "title": "Ask the chart data",
-            "text": "The chat helps find periods, aspects, and repeating themes that would otherwise take manual searching."
-          }
-        }
-      },
-      "benefits": {
-        "kicker": "What changes in practice",
-        "title": "Less sorting through material. More presence in the work itself.",
-        "cards": {
-          "depth": {
-            "title": "The picture is easier to hold",
-            "text": "Charts, periods, and notes can be read together instead of as separate fragments."
-          },
-          "speed": {
-            "title": "Return to a person faster",
-            "text": "Before a meeting, see previous themes, recordings, charts, and important points quickly."
-          },
-          "memory": {
-            "title": "Important details stay together",
-            "text": "Your practice depends less on random files, screenshots, and memory of where things are."
-          },
-          "confidence": {
-            "title": "The conversation feels calmer",
-            "text": "When the material is gathered, it is easier to speak clearly without technical searching."
-          }
-        }
-      },
-      "features": {
-        "kicker": "Capabilities",
-        "title": "Tools that support a living practice",
-        "items": {
-          "ephemeris": {
-            "title": "Accurate calculations",
-            "text": "Natal and forecast calculations are based on Swiss Ephemeris."
-          },
-          "forecast": {
-            "title": "Forecast periods",
-            "text": "Transits, progressions, directions, and solar returns are easier to view beside the chart and profile history."
-          },
-          "clients": {
-            "title": "People profiles with recorded sessions",
-            "text": "Charts, notes, recorded consultations with transcripts and summaries, and key moments stay together, so context is easy to recover."
-          },
-          "assistant": {
-            "title": "Chat with chart data",
-            "text": "Ask about periods, aspects, and repetitions instead of looking them up manually across tables."
-          }
-        }
-      },
-      "testimonials": {
-        "kicker": "How it feels in use",
-        "title": "Less returning to search. More returning to the person.",
-        "items": {
-          "one": {
-            "quote": "“Before a meeting I can quickly see what we discussed, which charts I opened, and which periods mattered.”",
-            "author": "Practicing astrologer"
-          },
-          "two": {
-            "quote": "“The most valuable part is not rebuilding context from scratch. I open the profile and remember why the person came.”",
-            "author": "Consulting astrologer"
-          },
-          "three": {
-            "quote": "“I ask the chat about specific placements and find the dates faster than checking tables by hand.”",
-            "author": "Astrology teacher"
-          }
-        }
-      },
-      "formIntro": {
-        "kicker": "Start with a chart",
-        "title": "Create the first chart and see how the workspace is arranged.",
-        "text": "Enter birth data. After calculation, the chart opens as part of a future profile you can return to."
-      },
       "faq": {
         "kicker": "Questions",
         "title": "A short explanation of how it works",
@@ -2444,19 +2331,114 @@
       },
       "finalCta": {
         "kicker": "First step",
-        "title": "Start with one chart and one profile.",
-        "text": "See how much easier it is to return to a person when the chart, notes, and important context are nearby."
+        "title": "Open a chart and see how it feels.",
+        "text": "One profile, one chart. See how everything ends up within reach.",
+        "trialNote": "14-day trial, no card required."
       },
       "a11y": {
         "navigation": "Landing navigation",
         "proofPoints": "Key capabilities",
         "previewTabs": "Workspace preview modes",
         "productPreview": "Workspace preview",
-        "trustIndicators": "Key capabilities"
+        "trustIndicators": "Key capabilities",
+        "pillars": "What Steliara is made of"
       },
       "auth": {
         "signIn": "Sign in",
         "signUp": "Start practice"
+      },
+      "common": {
+        "beta": "beta"
+      },
+      "pillars": {
+        "charts": {
+          "title": "Charts and forecast",
+          "text": "The chart and all its data on one screen: houses, aspects, transits, progressions, directions, solar return, synastry."
+        },
+        "people": {
+          "title": "People",
+          "text": "A profile per person: their charts, your notes and the full history of your sessions."
+        },
+        "consultations": {
+          "title": "Consultations",
+          "text": "Video calls inside Steliara, with recording and transcription."
+        },
+        "assistant": {
+          "title": "Assistant",
+          "text": "Short session summaries and answers drawn from the chart’s data."
+        }
+      },
+      "gap": {
+        "kicker": "Why this exists",
+        "title": "Calculations in one program, people in another.",
+        "text": "Steliara joins the two: depth of calculation and a workspace for the practice itself.",
+        "cards": {
+          "engines": {
+            "title": "Chart engines calculate",
+            "text": "The powerful programs were built as calculators: there is no room in them for the person, the notes or the history."
+          },
+          "apps": {
+            "title": "Light apps are simpler",
+            "text": "Convenient modern apps usually give up depth of calculation and configuration."
+          },
+          "manual": {
+            "title": "You join it up by hand",
+            "text": "You end up keeping several programs open and carrying the context between them yourself."
+          }
+        }
+      },
+      "craft": {
+        "kicker": "The working screen",
+        "title": "The chart and all its data, in front of you at once.",
+        "text": "We are astrologers ourselves, and we fight for every needless click. The screen is built so you find what you need by looking, not by hunting through menus.",
+        "items": {
+          "oneScreen": {
+            "title": "One screen",
+            "text": "Chart, positions, houses, aspects and forecast, with no switching between tabs."
+          },
+          "layers": {
+            "title": "Layers at hand",
+            "text": "Transits, progressions, directions, solar return and synastry turn on with a single tap."
+          },
+          "custom": {
+            "title": "Shaped to you",
+            "text": "Panels, data and appearance persist between sessions. Everyone assembles the tool the way that suits them."
+          }
+        }
+      },
+      "assistant": {
+        "kicker": "Chat over chart data",
+        "title": "Ask, and get an answer from the chart.",
+        "text": "The chat works from the real calculations. Ask about transiting Uranus conjunct natal Venus over the past and next five years and you get exact periods. Or ask it to show something on screen, and it will.",
+        "note": "The chat finds the data. The interpretation stays yours."
+      },
+      "people": {
+        "kicker": "Person profile",
+        "title": "Charts, notes and history, in one profile.",
+        "text": "Every person has a profile: their charts, your notes and everything you have already discussed. Before a session, open the profile and the context is in front of you again."
+      },
+      "consultations": {
+        "kicker": "Consultations",
+        "title": "Video calls with recording and transcription.",
+        "text": "Hold the consultation inside Steliara. The conversation is recorded and transcribed, and a short summary is saved to the person’s profile. Nothing has to be reconstructed from memory before the next session."
+      },
+      "foundation": {
+        "kicker": "What it is built on",
+        "title": "Precision you can rely on.",
+        "items": {
+          "ephemeris": {
+            "title": "Swiss Ephemeris",
+            "text": "Calculations run on the Swiss Ephemeris."
+          },
+          "settings": {
+            "title": "The full set of settings",
+            "text": "House systems, tropical and sidereal zodiac, ayanamshas, orb and aspect configuration."
+          },
+          "platform": {
+            "title": "Works everywhere",
+            "text": "Mac, Windows and any browser. Nothing to install."
+          }
+        }
       }
     },
     "natalFull": {

@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.index.title"></title>
-    <link rel="stylesheet" href="bundles/index.bundle.css?v=8bbde2315e52">
-    <link rel="stylesheet" href="css/locale-switcher.css?v=8bbde2315e52">
+    <link rel="stylesheet" href="bundles/index.bundle.css?v=72150c534dfc">
+    <link rel="stylesheet" href="css/locale-switcher.css?v=72150c534dfc">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <script>window.__APP_BUILD_ID__ = '8bbde2315e52';</script>
+    <script>window.__APP_BUILD_ID__ = '72150c534dfc';</script>
 </head>
 <body class="index-page">
     <div class="page-loader" id="pageLoader">
@@ -34,8 +34,8 @@
                 <span data-i18n="common.brandName"></span>
             </a>
             <nav class="landing-nav" data-i18n-aria-label="page.index.a11y.navigation">
-                <a href="#solution" data-i18n="page.index.nav.solution"></a>
-                <a href="#benefits" data-i18n="page.index.nav.benefits"></a>
+                <a href="#craft" data-i18n="page.index.nav.product"></a>
+                <a href="#consultations" data-i18n="page.index.nav.consultations"></a>
                 <a href="pricing.html" data-i18n="page.index.nav.pricing"></a>
                 <a href="#faq" data-i18n="page.index.nav.faq"></a>
             </nav>
@@ -52,15 +52,13 @@
                     <h1 id="landingHeroTitle" class="landing-hero-title" data-i18n="page.index.hero.title"></h1>
                     <p class="landing-hero-text" data-i18n="page.index.hero.text"></p>
                     <div class="landing-hero-actions">
-                        <a href="#birthDataForm" class="landing-primary-cta" data-i18n="page.index.cta.primary"></a>
-                        <a href="#problem" class="landing-secondary-cta" data-i18n="page.index.cta.secondary"></a>
+                        <a href="login.html?mode=register" class="landing-primary-cta" data-i18n="page.index.cta.primary"></a>
+                        <a href="#craft" class="landing-secondary-cta" data-i18n="page.index.cta.secondary"></a>
                     </div>
                     <p class="landing-hero-trial" data-i18n="page.index.hero.trialNote"></p>
                     <div class="landing-proof-strip" data-i18n-aria-label="page.index.a11y.proofPoints">
                         <span data-i18n="page.index.hero.proof.accuracy"></span>
-                        <span data-i18n="page.index.hero.proof.workspace"></span>
                         <span data-i18n="page.index.hero.proof.platform"></span>
-                        <span data-i18n="page.index.hero.proof.assistant"></span>
                     </div>
                 </div>
 
@@ -145,272 +143,97 @@
                 </aside>
             </section>
 
-            <section class="landing-social-proof" data-i18n-aria-label="page.index.a11y.trustIndicators">
-                <p data-i18n="page.index.socialProof.lead"></p>
-                <div class="landing-social-proof-grid">
-                    <span data-i18n="page.index.socialProof.itemOne"></span>
-                    <span data-i18n="page.index.socialProof.itemTwo"></span>
-                    <span data-i18n="page.index.socialProof.itemThree"></span>
-                </div>
-            </section>
-
-            <section id="problem" class="landing-section landing-problem" aria-labelledby="problemTitle">
-                <div class="landing-section-intro">
-                    <p class="landing-kicker" data-i18n="page.index.problem.kicker"></p>
-                    <h2 id="problemTitle" data-i18n="page.index.problem.title"></h2>
-                    <p data-i18n="page.index.problem.text"></p>
-                </div>
-                <div class="landing-card-grid landing-card-grid-3">
-                    <article class="landing-card">
-                        <h3 data-i18n="page.index.problem.cards.fragmented.title"></h3>
-                        <p data-i18n="page.index.problem.cards.fragmented.text"></p>
-                    </article>
-                    <article class="landing-card">
-                        <h3 data-i18n="page.index.problem.cards.prep.title"></h3>
-                        <p data-i18n="page.index.problem.cards.prep.text"></p>
-                    </article>
-                    <article class="landing-card">
-                        <h3 data-i18n="page.index.problem.cards.trust.title"></h3>
-                        <p data-i18n="page.index.problem.cards.trust.text"></p>
-                    </article>
-                </div>
-            </section>
-
-            <section id="solution" class="landing-section landing-solution" aria-labelledby="solutionTitle">
-                <div class="landing-section-intro">
-                    <p class="landing-kicker" data-i18n="page.index.solution.kicker"></p>
-                    <h2 id="solutionTitle" data-i18n="page.index.solution.title"></h2>
-                    <p data-i18n="page.index.solution.text"></p>
-                </div>
-                <div class="landing-workflow">
-                    <div>
-                        <span>01</span>
-                        <h3 data-i18n="page.index.solution.steps.calculate.title"></h3>
-                        <p data-i18n="page.index.solution.steps.calculate.text"></p>
-                    </div>
-                    <div>
-                        <span>02</span>
-                        <h3 data-i18n="page.index.solution.steps.read.title"></h3>
-                        <p data-i18n="page.index.solution.steps.read.text"></p>
-                    </div>
-                    <div>
-                        <span>03</span>
-                        <h3 data-i18n="page.index.solution.steps.prepare.title"></h3>
-                        <p data-i18n="page.index.solution.steps.prepare.text"></p>
-                    </div>
-                </div>
-            </section>
-
-            <section id="benefits" class="landing-section" aria-labelledby="benefitsTitle">
-                <div class="landing-section-intro">
-                    <p class="landing-kicker" data-i18n="page.index.benefits.kicker"></p>
-                    <h2 id="benefitsTitle" data-i18n="page.index.benefits.title"></h2>
-                </div>
+            <section class="landing-section landing-pillars" data-i18n-aria-label="page.index.a11y.pillars">
                 <div class="landing-card-grid landing-card-grid-4">
                     <article class="landing-card">
-                        <h3 data-i18n="page.index.benefits.cards.depth.title"></h3>
-                        <p data-i18n="page.index.benefits.cards.depth.text"></p>
+                        <h3 data-i18n="page.index.pillars.charts.title"></h3>
+                        <p data-i18n="page.index.pillars.charts.text"></p>
                     </article>
                     <article class="landing-card">
-                        <h3 data-i18n="page.index.benefits.cards.speed.title"></h3>
-                        <p data-i18n="page.index.benefits.cards.speed.text"></p>
+                        <h3 data-i18n="page.index.pillars.people.title"></h3>
+                        <p data-i18n="page.index.pillars.people.text"></p>
                     </article>
                     <article class="landing-card">
-                        <h3 data-i18n="page.index.benefits.cards.memory.title"></h3>
-                        <p data-i18n="page.index.benefits.cards.memory.text"></p>
+                        <h3 data-i18n="page.index.pillars.consultations.title"></h3>
+                        <p data-i18n="page.index.pillars.consultations.text"></p>
                     </article>
                     <article class="landing-card">
-                        <h3 data-i18n="page.index.benefits.cards.confidence.title"></h3>
-                        <p data-i18n="page.index.benefits.cards.confidence.text"></p>
+                        <h3><span data-i18n="page.index.pillars.assistant.title"></span> <span class="landing-badge" data-i18n="page.index.common.beta"></span></h3>
+                        <p data-i18n="page.index.pillars.assistant.text"></p>
                     </article>
                 </div>
             </section>
 
-            <section class="landing-section landing-features" aria-labelledby="featuresTitle">
+            <section id="gap" class="landing-section landing-problem" aria-labelledby="gapTitle">
                 <div class="landing-section-intro">
-                    <p class="landing-kicker" data-i18n="page.index.features.kicker"></p>
-                    <h2 id="featuresTitle" data-i18n="page.index.features.title"></h2>
-                </div>
-                <div class="landing-feature-list">
-                    <div><strong data-i18n="page.index.features.items.ephemeris.title"></strong><span data-i18n="page.index.features.items.ephemeris.text"></span></div>
-                    <div><strong data-i18n="page.index.features.items.forecast.title"></strong><span data-i18n="page.index.features.items.forecast.text"></span></div>
-                    <div><strong data-i18n="page.index.features.items.clients.title"></strong><span data-i18n="page.index.features.items.clients.text"></span></div>
-                    <div><strong data-i18n="page.index.features.items.assistant.title"></strong><span data-i18n="page.index.features.items.assistant.text"></span></div>
-                </div>
-            </section>
-
-            <section class="landing-section landing-testimonials" aria-labelledby="testimonialsTitle">
-                <div class="landing-section-intro">
-                    <p class="landing-kicker" data-i18n="page.index.testimonials.kicker"></p>
-                    <h2 id="testimonialsTitle" data-i18n="page.index.testimonials.title"></h2>
+                    <p class="landing-kicker" data-i18n="page.index.gap.kicker"></p>
+                    <h2 id="gapTitle" data-i18n="page.index.gap.title"></h2>
+                    <p data-i18n="page.index.gap.text"></p>
                 </div>
                 <div class="landing-card-grid landing-card-grid-3">
-                    <blockquote class="landing-quote">
-                        <p data-i18n="page.index.testimonials.items.one.quote"></p>
-                        <cite data-i18n="page.index.testimonials.items.one.author"></cite>
-                    </blockquote>
-                    <blockquote class="landing-quote">
-                        <p data-i18n="page.index.testimonials.items.two.quote"></p>
-                        <cite data-i18n="page.index.testimonials.items.two.author"></cite>
-                    </blockquote>
-                    <blockquote class="landing-quote">
-                        <p data-i18n="page.index.testimonials.items.three.quote"></p>
-                        <cite data-i18n="page.index.testimonials.items.three.author"></cite>
-                    </blockquote>
+                    <article class="landing-card">
+                        <h3 data-i18n="page.index.gap.cards.engines.title"></h3>
+                        <p data-i18n="page.index.gap.cards.engines.text"></p>
+                    </article>
+                    <article class="landing-card">
+                        <h3 data-i18n="page.index.gap.cards.apps.title"></h3>
+                        <p data-i18n="page.index.gap.cards.apps.text"></p>
+                    </article>
+                    <article class="landing-card">
+                        <h3 data-i18n="page.index.gap.cards.manual.title"></h3>
+                        <p data-i18n="page.index.gap.cards.manual.text"></p>
+                    </article>
                 </div>
             </section>
 
-            <section class="form-container landing-form-section" aria-labelledby="formTitle">
+            <section id="craft" class="landing-section landing-solution" aria-labelledby="craftTitle">
                 <div class="landing-section-intro">
-                    <p class="landing-kicker" data-i18n="page.index.formIntro.kicker"></p>
-                    <h2 id="formTitle" data-i18n="page.index.formIntro.title"></h2>
-                    <p data-i18n="page.index.formIntro.text"></p>
+                    <p class="landing-kicker" data-i18n="page.index.craft.kicker"></p>
+                    <h2 id="craftTitle" data-i18n="page.index.craft.title"></h2>
+                    <p data-i18n="page.index.craft.text"></p>
                 </div>
-            <form id="birthDataForm" class="birth-form">
-                <section class="form-section" aria-labelledby="identitySectionTitle">
-                    <div class="form-section-heading">
-                        <h2 id="identitySectionTitle" class="form-section-title" data-i18n="page.index.form.sections.identity.title"></h2>
-                        <p class="form-section-copy" data-i18n="page.index.form.sections.identity.copy"></p>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" data-i18n="page.index.form.fullName.label"></label>
-                        <div class="name-inputs">
-                            <input type="text" id="firstName" data-i18n-placeholder="page.index.form.fullName.firstNamePlaceholder" required>
-                            <input type="text" id="lastName" data-i18n-placeholder="page.index.form.fullName.lastNamePlaceholder" required>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="form-section" aria-labelledby="birthSectionTitle">
-                    <div class="form-section-heading">
-                        <h2 id="birthSectionTitle" class="form-section-title" data-i18n="page.index.form.sections.birth.title"></h2>
-                        <p class="form-section-copy" data-i18n="page.index.form.sections.birth.copy"></p>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" data-i18n="page.index.form.birthDate.label"></label>
-                        <div class="date-inputs">
-                            <input type="number" id="birthDay" min="1" max="31" data-i18n-placeholder="page.index.form.birthDate.dayPlaceholder" required>
-                            <select id="birthMonth" required>
-                                <option value="" data-i18n="page.index.form.birthDate.monthPlaceholder"></option>
-                                <option value="01" data-i18n="common.month.long.january"></option>
-                                <option value="02" data-i18n="common.month.long.february"></option>
-                                <option value="03" data-i18n="common.month.long.march"></option>
-                                <option value="04" data-i18n="common.month.long.april"></option>
-                                <option value="05" data-i18n="common.month.long.may"></option>
-                                <option value="06" data-i18n="common.month.long.june"></option>
-                                <option value="07" data-i18n="common.month.long.july"></option>
-                                <option value="08" data-i18n="common.month.long.august"></option>
-                                <option value="09" data-i18n="common.month.long.september"></option>
-                                <option value="10" data-i18n="common.month.long.october"></option>
-                                <option value="11" data-i18n="common.month.long.november"></option>
-                                <option value="12" data-i18n="common.month.long.december"></option>
-                            </select>
-                            <input type="number" id="birthYear" min="1900" max="2100" data-i18n-placeholder="page.index.form.birthDate.yearPlaceholder" required>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" data-i18n="page.index.form.birthTime.label"></label>
-                        <div class="time-inputs">
-                            <input type="number" id="birthHour" min="0" max="23" data-i18n-placeholder="page.index.form.birthTime.hoursPlaceholder" required>
-                            <span class="time-separator">:</span>
-                            <input type="number" id="birthMinute" min="0" max="59" data-i18n-placeholder="page.index.form.birthTime.minutesPlaceholder" required>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="form-section" aria-labelledby="locationSectionTitle">
-                    <div class="form-section-heading">
-                        <h2 id="locationSectionTitle" class="form-section-title" data-i18n="page.index.form.sections.location.title"></h2>
-                        <p class="form-section-copy" data-i18n="page.index.form.sections.location.copy"></p>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" data-i18n="page.index.form.birthPlace.label"></label>
-                        <div class="place-autocomplete-wrapper">
-                            <input type="text" id="birthPlace" class="place-input" data-i18n-placeholder="page.index.form.birthPlace.placeholder" required autocomplete="off">
-                            <div id="birthPlaceSuggestions" class="place-suggestions"></div>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" data-i18n="page.index.form.timezone.label"></label>
-                        <select id="timezone" required>
-                            <option value="" data-i18n="page.index.form.timezone.placeholder"></option>
-                        </select>
-                        <span id="timezoneHint" class="hint"></span>
-                    </div>
-                </section>
-
-                <details class="advanced-fields" id="advancedFields">
-                    <summary class="advanced-fields-summary">
-                            <span class="advanced-fields-summary-copy">
-                                <span class="advanced-fields-title" data-i18n="page.index.form.advanced.toggle"></span>
-                                <span class="advanced-fields-copy" data-i18n="page.index.form.advanced.copy"></span>
-                            </span>
-                        <span class="advanced-fields-chevron" aria-hidden="true">+</span>
-                    </summary>
-
-                    <div class="advanced-fields-content">
-                        <div id="coordsContainer" class="coords-display">
-                            <div class="coords-row">
-                                <label class="coords-label" data-i18n="page.index.form.coordinates.label"></label>
-                                <div class="coords-inputs">
-                                    <div class="coord-input-group">
-                                        <input type="text" id="latDeg" class="coord-num" placeholder="48" maxlength="3">°
-                                        <input type="text" id="latMin" class="coord-num" placeholder="52" maxlength="2">'
-                                        <input type="text" id="latSec" class="coord-num coord-sec" placeholder="00.00" maxlength="5">"
-                                        <select id="latDir" class="coord-dir">
-                                            <option value="N" data-i18n="common.direction.northShort"></option>
-                                            <option value="S" data-i18n="common.direction.southShort"></option>
-                                        </select>
-                                    </div>
-                                    <div class="coord-input-group">
-                                        <input type="text" id="lonDeg" class="coord-num" placeholder="2" maxlength="3">°
-                                        <input type="text" id="lonMin" class="coord-num" placeholder="20" maxlength="2">'
-                                        <input type="text" id="lonSec" class="coord-num coord-sec" placeholder="00.00" maxlength="5">"
-                                        <select id="lonDir" class="coord-dir">
-                                            <option value="E" data-i18n="common.direction.eastShort"></option>
-                                            <option value="W" data-i18n="common.direction.westShort"></option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <span class="hint" id="coordsHint" data-i18n="page.index.form.coordinates.hint"></span>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label" data-i18n="page.index.form.houseSystem.label"></label>
-                            <select id="houseSystem">
-                                <option value="P" selected data-i18n="astro.houseSystem.placidus"></option>
-                                <option value="K" data-i18n="astro.houseSystem.koch"></option>
-                                <option value="W" data-i18n="astro.houseSystem.wholeSign"></option>
-                                <option value="E" data-i18n="astro.houseSystem.equal"></option>
-                                <option value="R" data-i18n="astro.houseSystem.regiomontanus"></option>
-                                <option value="C" data-i18n="astro.houseSystem.campanus"></option>
-                            </select>
-                        </div>
-                    </div>
-                </details>
-
-                <div class="form-summary-card">
-                    <p class="form-summary-title" data-i18n="page.index.form.summary.title"></p>
-                    <div class="form-summary-list">
-                        <div id="summaryBirthItem" class="form-summary-item"><span class="form-summary-dot"></span><span data-i18n="page.index.form.summary.birth"></span></div>
-                        <div id="summaryPlaceItem" class="form-summary-item"><span class="form-summary-dot"></span><span data-i18n="page.index.form.summary.place"></span></div>
-                        <div id="summaryTimezoneItem" class="form-summary-item"><span class="form-summary-dot"></span><span data-i18n="page.index.form.summary.timezone"></span></div>
-                    </div>
+                <div class="landing-feature-list">
+                    <div><strong data-i18n="page.index.craft.items.oneScreen.title"></strong><span data-i18n="page.index.craft.items.oneScreen.text"></span></div>
+                    <div><strong data-i18n="page.index.craft.items.layers.title"></strong><span data-i18n="page.index.craft.items.layers.text"></span></div>
+                    <div><strong data-i18n="page.index.craft.items.custom.title"></strong><span data-i18n="page.index.craft.items.custom.text"></span></div>
                 </div>
-                <p class="submit-note" data-i18n="page.index.form.ctaNote"></p>
-                <button type="submit" class="submit-btn" id="submitBtn">
-                    <span class="btn-text"><span data-i18n="page.index.form.submit.idle"></span></span>
-                    <span class="btn-loader hidden" data-i18n="page.index.form.submit.loading"></span>
-                </button>
+            </section>
 
-                <div id="errorMessage" class="error-message hidden"></div>
-            </form>
+            <section id="assistant" class="landing-section landing-features" aria-labelledby="assistantTitle">
+                <div class="landing-section-intro">
+                    <p class="landing-kicker"><span data-i18n="page.index.assistant.kicker"></span> <span class="landing-badge" data-i18n="page.index.common.beta"></span></p>
+                    <h2 id="assistantTitle" data-i18n="page.index.assistant.title"></h2>
+                    <p data-i18n="page.index.assistant.text"></p>
+                    <p class="landing-section-note" data-i18n="page.index.assistant.note"></p>
+                </div>
+            </section>
+
+            <section id="people" class="landing-section" aria-labelledby="peopleTitle">
+                <div class="landing-section-intro">
+                    <p class="landing-kicker" data-i18n="page.index.people.kicker"></p>
+                    <h2 id="peopleTitle" data-i18n="page.index.people.title"></h2>
+                    <p data-i18n="page.index.people.text"></p>
+                </div>
+            </section>
+
+            <section id="consultations" class="landing-section" aria-labelledby="consultationsTitle">
+                <div class="landing-section-intro">
+                    <p class="landing-kicker" data-i18n="page.index.consultations.kicker"></p>
+                    <h2 id="consultationsTitle" data-i18n="page.index.consultations.title"></h2>
+                    <p data-i18n="page.index.consultations.text"></p>
+                </div>
+            </section>
+
+            <section id="foundation" class="landing-section landing-features" aria-labelledby="foundationTitle">
+                <div class="landing-section-intro">
+                    <p class="landing-kicker" data-i18n="page.index.foundation.kicker"></p>
+                    <h2 id="foundationTitle" data-i18n="page.index.foundation.title"></h2>
+                </div>
+                <div class="landing-feature-list">
+                    <div><strong data-i18n="page.index.foundation.items.ephemeris.title"></strong><span data-i18n="page.index.foundation.items.ephemeris.text"></span></div>
+                    <div><strong data-i18n="page.index.foundation.items.settings.title"></strong><span data-i18n="page.index.foundation.items.settings.text"></span></div>
+                    <div><strong data-i18n="page.index.foundation.items.platform.title"></strong><span data-i18n="page.index.foundation.items.platform.text"></span></div>
+                </div>
             </section>
 
             <section id="faq" class="landing-section landing-faq" aria-labelledby="faqTitle">
@@ -436,7 +259,8 @@
                 <p class="landing-kicker" data-i18n="page.index.finalCta.kicker"></p>
                 <h2 id="finalCtaTitle" data-i18n="page.index.finalCta.title"></h2>
                 <p data-i18n="page.index.finalCta.text"></p>
-                <a href="#birthDataForm" class="landing-primary-cta" data-i18n="page.index.cta.primary"></a>
+                <a href="login.html?mode=register" class="landing-primary-cta" data-i18n="page.index.cta.primary"></a>
+                <p class="landing-hero-trial" data-i18n="page.index.finalCta.trialNote"></p>
             </section>
         </main>
 
@@ -456,9 +280,9 @@
         </footer>
     </div>
 
-    <script type="module" src="js/bundles/index.bundle.js?v=8bbde2315e52"></script>
+    <script type="module" src="js/bundles/index.bundle.js?v=72150c534dfc"></script>
     <script src="/runtime-config.js"></script>
-    <script src="js/analytics.js?v=8bbde2315e52"></script>
-    <script src="js/locale-switcher.js?v=8bbde2315e52"></script>
+    <script src="js/analytics.js?v=72150c534dfc"></script>
+    <script src="js/locale-switcher.js?v=72150c534dfc"></script>
 </body>
 </html>

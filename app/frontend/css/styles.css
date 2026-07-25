@@ -2052,6 +2052,34 @@ input[type="number"] {
     grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+/* The landing header is sticky, so an in-page anchor (#craft, #consultations, #faq)
+   would otherwise scroll its heading underneath the bar. Offset the jump target. */
+.landing-main > section[id] {
+    scroll-margin-top: 88px;
+}
+
+/* "бета" chip next to a pillar/section label — flags a first-iteration feature
+   so the page never over-promises what is still being built. */
+.landing-badge {
+    display: inline-block;
+    font-family: var(--font-ui);
+    font-size: var(--font-size-caption);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 1px var(--space-2);
+    vertical-align: middle;
+}
+
+.landing-section-note {
+    font-size: var(--font-size-label);
+    color: var(--text-muted);
+}
+
 .landing-card,
 .landing-quote {
     padding: 20px;
@@ -2230,6 +2258,19 @@ input[type="number"] {
 
 .landing-final-cta p {
     max-width: 640px;
+}
+
+/* The final CTA sits on the navy fill, but `.landing-final-cta > p:not(.landing-kicker)`
+   above carries higher specificity (0,2,1) than the white `.landing-final-cta p` (0,1,1),
+   so the body copy was rendering in dark ink on navy. Match that specificity here (and
+   win on order) so every paragraph on the navy block stays legible. */
+.landing-final-cta > p:not(.landing-kicker) {
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.landing-final-cta > p.landing-hero-trial:not(.landing-kicker) {
+    color: rgba(255, 255, 255, 0.72);
+    margin-top: 14px;
 }
 
 .landing-final-cta .landing-primary-cta {
