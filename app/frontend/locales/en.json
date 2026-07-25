@@ -3094,6 +3094,7 @@
       "endConfirm": "End the consultation? The call will close for both parties.",
       "error": {
         "title": "Session not found",
+        "connectionTitle": "Could not connect to the call",
         "body": "Unable to load this call session.",
         "noSession": "No call session specified. Please start the call from the profile page.",
         "tokenFailed": "Could not get call token",

@@ -55,6 +55,14 @@ services:
         value: "False"
       - key: SECRET_KEY
         generateValue: true
+      # LiveKit is a separate, publicly reachable signaling service. These
+      # values must point to the same LiveKit project and must not be checked in.
+      - key: LIVEKIT_URL
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false
       # Comma-separated exact hostnames that expose the invite-only Solo flow.
       - key: SOLO_REGISTRATION_HOSTS
         sync: false

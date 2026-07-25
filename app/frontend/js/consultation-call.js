@@ -98,14 +98,17 @@
         state.joinUrl   = params.get('join_url');
 
         if (!state.sessionId) {
-            showError(t('page.call.error.noSession'));
+            showError(t('page.call.error.noSession'), t('page.call.error.title'));
             return;
         }
 
         try {
             await connectToRoom();
         } catch (err) {
-            showError(err.message || t('page.call.error.connectFailed'));
+            showError(
+                err.message || t('page.call.error.connectFailed'),
+                err.callErrorTitle || t('page.call.error.connectionTitle'),
+            );
         }
     }
 
@@ -114,7 +117,11 @@
         const res = await apiFetch(`${API_BASE}/call-sessions/${state.sessionId}/token`, { method: 'POST' });
         if (!res.ok) {
             const data = await res.json().catch(() => ({}));
-            throw new Error(data.detail || t('page.call.error.tokenFailed'));
+            const error = new Error(data.detail || t('page.call.error.tokenFailed'));
+            error.callErrorTitle = res.status === 404
+                ? t('page.call.error.title')
+                : t('page.call.error.connectionTitle');
+            throw error;
         }
         const data = await res.json();
 
@@ -563,8 +570,9 @@
         el.hidden = true;
     }
 
-    function showError(msg) {
+    function showError(msg, title = t('page.call.error.connectionTitle')) {
         hide(refs.pageLoader);
+        refs.callErrorOverlay.querySelector('.call-error-title').textContent = title;
         refs.callErrorMsg.textContent = msg;
         show(refs.callErrorOverlay);
     }
