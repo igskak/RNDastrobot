@@ -449,6 +449,10 @@
     margin-top: 18px;
 }
 
+.login-secondary-auth--register {
+    margin-top: 0;
+}
+
 .stack-actions {
     display: grid;
     gap: 12px;

@@ -2625,6 +2625,7 @@
       "heading": "Безпечний вхід",
       "subheading": "Увійдіть через Google або за допомогою email і пароля.",
       "divider": "або увійдіть через Google",
+      "dividerOr": "або",
       "hints": {
         "capsLock": "Увімкнено Caps Lock.",
         "emailDeliverySpamTitle": "Важливо",

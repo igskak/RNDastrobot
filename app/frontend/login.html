@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.login.meta.title"></title>
-    <link rel="stylesheet" href="bundles/login.bundle.css?v=fb141d37a18c">
-    <script>window.__APP_BUILD_ID__ = 'fb141d37a18c';</script>
+    <link rel="stylesheet" href="bundles/login.bundle.css?v=bdbae73671c1">
+    <script>window.__APP_BUILD_ID__ = 'bdbae73671c1';</script>
 </head>
 <body class="login-page">
     <main class="login-shell">
@@ -82,6 +82,13 @@
                 <div class="register-login-cta">
                     <span data-i18n="page.login.actions.haveAccount"></span>
                     <button class="ui-btn ui-btn--secondary ui-btn--block register-login-btn" type="button" data-action="back-login" data-i18n="page.login.actions.signIn"></button>
+                </div>
+
+                <div class="login-secondary-auth login-secondary-auth--register">
+                    <button id="googleRegisterBtn" class="ui-btn ui-btn--block btn-google" type="button"></button>
+                    <div class="login-divider" aria-hidden="true">
+                        <span data-i18n="page.login.dividerOr"></span>
+                    </div>
                 </div>
 
                 <form id="registerForm" novalidate>
@@ -314,7 +321,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/runtime-config.js"></script>
-    <script src="js/analytics.js?v=fb141d37a18c"></script>
-    <script type="module" src="js/bundles/login.bundle.js?v=fb141d37a18c"></script>
+    <script src="js/analytics.js?v=bdbae73671c1"></script>
+    <script type="module" src="js/bundles/login.bundle.js?v=bdbae73671c1"></script>
 </body>
 </html>
