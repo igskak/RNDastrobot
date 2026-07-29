@@ -310,6 +310,29 @@ async def sitemap_xml():
     return Response(content=body, media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
 
 
+@app.get("/google{token}.html", include_in_schema=False)
+async def google_site_verification(token: str):
+    """Serve Google Search Console's HTML-file verification token.
+
+    Search Console asks you to host a file named `google<token>.html` whose body
+    is `google-site-verification: google<token>.html`. Set GOOGLE_SITE_VERIFICATION
+    to that full filename and this route answers it; anything else 404s.
+
+    The path is deliberately prefixed with `google` so it cannot shadow the real
+    page routes (/index.html, /login.html, ...) declared further down this module.
+    Preferred alternative: verify a Domain property via a DNS TXT record, which
+    needs no deploy and covers www/non-www at once.
+    """
+    expected = os.getenv("GOOGLE_SITE_VERIFICATION", "").strip()
+    if not expected or expected != f"google{token}.html":
+        raise HTTPException(status_code=404, detail="Not found")
+    return Response(
+        content=f"google-site-verification: {expected}",
+        media_type="text/html",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
+
+
 @app.get("/")
 async def root(request: Request):
     """Root entrypoint.

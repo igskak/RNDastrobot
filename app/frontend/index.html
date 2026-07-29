@@ -3,7 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="page.index.title"></title>
+    <!-- Crawler-facing SEO: the text content here is the English default that
+         Google indexes; data-i18n localizes it in the browser for ru/uk users.
+         Keep the fallback text in sync with page.index.title in locales/en.json. -->
+    <title data-i18n="page.index.title">Steliara — Astrology Software for Your Whole Practice</title>
+    <meta name="description" content="Charts, the people you read for, and your recorded consultations in one place. Steliara is a browser workspace for practicing astrologers. Free 14-day trial.">
+    <link rel="canonical" href="https://www.steliara.com/">
+    <meta property="og:title" content="Steliara — Astrology Software for Your Whole Practice">
+    <meta property="og:description" content="Charts, the people you read for, and your recorded consultations in one place. A browser workspace for practicing astrologers.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.steliara.com/">
+    <meta property="og:site_name" content="Steliara">
+    <meta name="twitter:card" content="summary_large_image">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Steliara","url":"https://www.steliara.com/","applicationCategory":"BusinessApplication","operatingSystem":"Web, macOS, Windows","offers":{"@type":"Offer","price":"24","priceCurrency":"USD"},"description":"Browser workspace for practicing astrologers: charts, the people you read for, and recorded, transcribed, summarized consultations in one place."}
+    </script>
     <link rel="stylesheet" href="bundles/index.bundle.css?v=72150c534dfc">
     <link rel="stylesheet" href="css/locale-switcher.css?v=72150c534dfc">
     <link rel="preconnect" href="https://fonts.googleapis.com">

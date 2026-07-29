@@ -49,6 +49,28 @@
         window.gtag('js', new Date());
         window.gtag('config', GA4_ID);
     }
+    // GA4 treats these event parameters as campaign attribution and lets them
+    // OVERRIDE the session's real traffic source. Our product events legitimately
+    // carry props like `source: 'forecast_new'` (onboarding step origin), which
+    // GA4 then reported as an acquisition channel — polluting every source/medium
+    // report with internal screen names. Rename them before mirroring to gtag so
+    // the value survives for analysis but never touches attribution.
+    var GA4_RESERVED_ATTRIBUTION_PARAMS = [
+        'source', 'medium', 'campaign', 'term', 'content',
+        'campaign_id', 'source_platform', 'creative_format', 'marketing_tactic',
+    ];
+    function ga4SafeParams(payload) {
+        if (!payload) return payload;
+        var out = {};
+        Object.keys(payload).forEach(function (key) {
+            var safeKey = GA4_RESERVED_ATTRIBUTION_PARAMS.indexOf(key) === -1
+                ? key
+                : 'event_' + key;
+            out[safeKey] = payload[key];
+        });
+        return out;
+    }
+
     function setGa4Consent(granted) {
         if (!GA4_ID) return;
         initGa4();
@@ -522,7 +544,7 @@
             // and PostHog's $-prefixed internal events (invalid GA4 names).
             if (GA4_ID && window.gtag && event !== 'screen_view' && event.charAt(0) !== '$') {
                 safe(function () {
-                    window.gtag('event', event, payload);
+                    window.gtag('event', event, ga4SafeParams(payload));
                 });
             }
         },
@@ -565,7 +587,7 @@
             });
             if (GA4_ID && window.gtag) {
                 safe(function () {
-                    window.gtag('event', 'trial_start', payload);
+                    window.gtag('event', 'trial_start', ga4SafeParams(payload));
                 });
             }
         },

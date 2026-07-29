@@ -182,6 +182,16 @@ function scanHtmlFile(filePath, source, allowlist) {
         const rawText = textMatch[1].replace(/\s+/g, ' ').trim();
         if (!rawText || !containsHumanText(rawText)) continue;
 
+        // Text inside an element that declares data-i18n is a localization
+        // fallback, not a hardcoded string — FrontendI18n overwrites it at
+        // runtime. We keep a real literal there so crawlers and no-JS clients
+        // still see copy (an empty <title> is what Google was indexing before).
+        const tagStart = htmlForTextNodes.lastIndexOf('<', textMatch.index);
+        const openingTag = tagStart === -1
+            ? ''
+            : htmlForTextNodes.slice(tagStart, textMatch.index + 1);
+        if (/\bdata-i18n\s*=/.test(openingTag)) continue;
+
         const violation = {
             file: filePath,
             line: lineNumberAt(source, textMatch.index),
