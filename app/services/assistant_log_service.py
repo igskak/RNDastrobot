@@ -73,6 +73,8 @@ def log_turn(
     guardrail: Optional[str] = None,
     tool_results: Optional[list] = None,
     workspace_manifest: Optional[Dict] = None,
+    methodology_hash: Optional[str] = None,
+    resolved_settings: Optional[Dict] = None,
 ) -> "tuple[Optional[UUID], Optional[int]]":
     """Persist one assistant turn. Returns (conversation_id, metric_id), or
     (None, None) on failure. The metric_id lets the client flag that turn for
@@ -111,6 +113,8 @@ def log_turn(
             guardrail=guardrail,
             tool_results=tool_results,
             workspace_manifest=workspace_manifest,
+            methodology_hash=methodology_hash,
+            resolved_settings=resolved_settings,
         )
         db.add(metric)
         db.commit()

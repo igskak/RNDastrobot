@@ -383,6 +383,8 @@ def _log_assistant_turn(
     guardrail: Optional[str],
     tool_results: List[dict],
     workspace_manifest: Optional[dict],
+    methodology_hash: Optional[str] = None,
+    resolved_settings: Optional[dict] = None,
 ) -> "tuple[Optional[UUID], Optional[int]]":
     db = db_manager.get_new_session()
     try:
@@ -398,6 +400,8 @@ def _log_assistant_turn(
             guardrail=guardrail,
             tool_results=tool_results,
             workspace_manifest=workspace_manifest,
+            methodology_hash=methodology_hash,
+            resolved_settings=resolved_settings,
         )
     finally:
         db.close()
@@ -483,6 +487,8 @@ async def chat(
         guardrail=result.get("guardrail"),
         tool_results=result.get("tool_results") or [],
         workspace_manifest=request.workspace,
+        methodology_hash=(result.get("methodology") or {}).get("methodology_hash"),
+        resolved_settings=(result.get("methodology") or {}).get("resolved_settings"),
     )
 
     return ChatResponse(

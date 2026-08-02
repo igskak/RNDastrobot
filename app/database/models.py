@@ -1626,6 +1626,11 @@ class AssistantTurnMetric(Base):
     correction_flag = Column(Boolean, nullable=False, default=False)
     correction_note = Column(Text, nullable=True)
     feedback = Column(Text, nullable=True)  # 'like' | 'dislike' | None (migration 050 created TEXT)
+    # Methodology provenance (migration 055): which settings produced these
+    # numbers, so a past answer stays reproducible after the astrologer edits
+    # their orbs or dignities.
+    methodology_hash = Column(Text, nullable=True)
+    resolved_settings = Column(JSON, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
     conversation = relationship("AssistantConversation", back_populates="turn_metrics")

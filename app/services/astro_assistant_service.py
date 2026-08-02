@@ -43,6 +43,10 @@ from app.services.astro_judge import (
     classify_reply,
     heuristic_interpretation,
 )
+from app.services.astro_provenance import (
+    attach_provenance,
+    build_methodology_provenance,
+)
 from app.services.model_config import model_for
 from app.services.astro_tool_schemas import (
     build_command_tools,
@@ -76,6 +80,7 @@ from app.services.direction_service import DirectionService
 from app.services.natal_chart_service import NatalChartService
 from app.services.natal_context import NatalContext
 from app.services.openai_service import get_openai_client, is_openai_configured
+from app.services.preferences_runtime import PreferencesRuntimeResolver
 from app.services.progression_service import ProgressionService
 from app.services.transit_service import TransitService
 from app.utils.ephemeris import get_ephemeris_path
@@ -719,6 +724,10 @@ class AstroAssistantService:
         # Per-turn frozen Layer-1 dataset (built once, reused across get_chart_data
         # calls in the same turn so every facet reconciles to one provenance hash).
         self._chart_dataset: Optional[ChartDataset] = None
+        # Per-turn methodology fingerprint (migration 055). Resolved once at the
+        # top of chat() — before any model call — then stamped onto every tool
+        # result and persisted with the turn.
+        self._methodology: Optional[Dict] = None
 
     def _transits(self) -> TransitService:
         if self._transit_service is None:
@@ -1066,7 +1075,7 @@ class AstroAssistantService:
         if handler is None:
             return {"status": "error", "error": f"unknown_tool:{name}"}
         try:
-            result = handler(user_id, args)
+            result = attach_provenance(handler(user_id, args), self._methodology)
             self._release_db_after_tool(success=True)
             return result
         except ValueError as e:
@@ -1174,6 +1183,13 @@ class AstroAssistantService:
         if not is_openai_configured():
             raise RuntimeError("OPENAI_API_KEY not configured")
 
+        # Methodology fingerprint FIRST, then hand the connection back: this
+        # touches the DB, and holding a pooled connection across the model calls
+        # below is what exhausted the Supabase pool once already.
+        self._methodology = build_methodology_provenance(
+            PreferencesRuntimeResolver(self.db), user_id)
+        self._release_db_after_tool(success=True)
+
         client = get_openai_client()
         tools = build_tools()
         convo: List[Dict] = [{"role": "system", "content": _SYSTEM_PROMPT}]
@@ -1223,6 +1239,7 @@ class AstroAssistantService:
                     "iterations": iterations,
                     "max_iterations_reached": False,
                     "guardrail": guardrail,
+                    "methodology": self._methodology,
                     "metrics": usage.as_metrics(
                         iterations=iterations,
                         latency_ms=_elapsed_ms(started),
@@ -1295,6 +1312,7 @@ class AstroAssistantService:
             "iterations": iterations,
             "max_iterations_reached": True,
             "guardrail": guardrail,
+            "methodology": self._methodology,
             "metrics": usage.as_metrics(
                 iterations=iterations,
                 latency_ms=_elapsed_ms(started),
