@@ -112,6 +112,9 @@ def build_methodology_provenance(
         return {
             "methodology_hash": methodology_hash,
             "resolved_settings": {
+                # Short form for display. Given only the full sha256, a reply
+                # quotes all 64 characters into the astrologer's scope line.
+                "methodology_version": (methodology_hash or "")[:12] or None,
                 "orb_profile": orb_profile,
                 "orb_source": "astrologer_settings" if astrologer_id else "default",
                 "stationary_threshold_percent": threshold,

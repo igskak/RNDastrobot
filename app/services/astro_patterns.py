@@ -451,6 +451,26 @@ def rank_events(events: Sequence[Dict], segments: Sequence[Dict] = (),
     return rows
 
 
+# How many full records travel with the findings. Enough to write a supporting
+# section, few enough not to swamp the payload with a 400-event survey.
+_EVIDENCE_LIMIT = 12
+
+
+def _supporting_events(events: Sequence[Dict], ranking: Sequence[Dict]) -> List[Dict]:
+    """The highest-ranked records, in full, so findings can actually be cited.
+
+    Ranked order rather than chronological: these are the ones a reply is most
+    likely to detail, and a caller that needs the rest can survey directly.
+    """
+    by_id = {e.get("event_id"): e for e in events or []}
+    out = []
+    for row in ranking[:_EVIDENCE_LIMIT]:
+        event = by_id.get(row.get("event_id"))
+        if event:
+            out.append(event)
+    return out
+
+
 # --- assembly ----------------------------------------------------------------
 
 def discover(events: Sequence[Dict], segments: Sequence[Dict] = (),
@@ -574,6 +594,14 @@ def discover(events: Sequence[Dict], segments: Sequence[Dict] = (),
         "outliers": outliers,
         "statistics": stats,
         "ranking": ranking,
+        # The records behind the findings. Without them evidence_ids point at
+        # nothing the reader can see, and a caller told to report contact detail
+        # will invent the dates — observed on the first live run, where the model
+        # wrote eight fully-formed enter/exact/leave records out of thin air.
+        # Bounded to the top of the ranking so the payload stays usable; the
+        # count of omitted records is stated rather than left implicit.
+        "supporting_events": _supporting_events(events, ranking),
+        "supporting_events_omitted": max(0, len(events) - _EVIDENCE_LIMIT),
         "technical_notes": notes,
         "warnings": [],
     }

@@ -238,12 +238,17 @@ def test_find_chart_requires_astrologer_and_query():
 def test_assistant_defaults_to_compact_modern_model():
     assert svc._MODEL == "gpt-5.4-mini"
     # Readability-first formatting (beta feedback): structure over the old 80-word cap.
-    assert "structure beats brevity" in svc._SYSTEM_PROMPT
+    # Case-insensitive: the §13 rewrite moved the rule into the OUTPUT section, and
+    # the rule is what matters, not where its sentence begins.
+    assert "structure beats brevity" in svc._SYSTEM_PROMPT.lower()
+    # The per-contact form survives the rewrite — it is now scoped to a single
+    # named contact rather than imposed on every answer.
     assert "each `Точно` pass" in svc._SYSTEM_PROMPT
-    assert "on its OWN line" in svc._SYSTEM_PROMPT
+    assert "on its own line" in svc._SYSTEM_PROMPT.lower()
     assert "`Вход`" in svc._SYSTEM_PROMPT
     assert "`Выход`" in svc._SYSTEM_PROMPT
-    assert "`D` (direct) or `R` (retrograde)" in svc._SYSTEM_PROMPT
+    # Motion marking survives; the §13 rewrite states it more tersely.
+    assert "marked `D` or `R`" in svc._SYSTEM_PROMPT
     assert "`Станция R/D`" in svc._SYSTEM_PROMPT
     assert "Многослойный режим" in svc._SYSTEM_PROMPT
 

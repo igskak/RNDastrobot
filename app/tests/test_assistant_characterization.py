@@ -117,7 +117,11 @@ def test_system_prompt_forbids_interpretation_absolutely():
     assert "STRICT NON-INTERPRETATION" in svc._SYSTEM_PROMPT
     assert "even when explicitly asked" in svc._SYSTEM_PROMPT
     assert "interpretation not requested" not in svc._SYSTEM_PROMPT  # the bug is gone
-    assert "ANY astrological interpretation" in svc._SYSTEM_PROMPT
+    # The ban itself, not an echo of it: the §13 rewrite dropped a redundant
+    # restatement in the formatting rules, and the single-source rubric above
+    # carries the guarantee.
+    assert "Never interpret any astrological configuration" in svc._SYSTEM_PROMPT
+    assert "never what it means" in svc._SYSTEM_PROMPT
 
 
 def test_natural_finish_exit_returns_reply(monkeypatch):
