@@ -139,3 +139,51 @@ def test_narrative_model_role_defaults_to_the_assistant_model():
     with a model upgrade."""
     from app.services.model_config import model_for
     assert model_for("narrative") == model_for("assistant")
+
+
+def test_reasoning_stage_gets_a_far_larger_token_ceiling():
+    """Reasoning tokens bill from the SAME completion budget and are emitted
+    BEFORE any content, so reusing the plain ceiling yields no answer at all.
+    Measured live on a real findings payload: at 1800 the model spent all 1800
+    on reasoning, hit finish_reason=length and returned an empty string; at 8000
+    it reasoned for 267 and wrote the whole report."""
+    import importlib
+    import os
+
+    original = dict(os.environ)
+    try:
+        os.environ.pop("ASSISTANT_NARRATIVE_TOKENS", None)
+
+        os.environ["ASSISTANT_NARRATIVE_REASONING"] = ""
+        plain = importlib.reload(nar).MAX_NARRATIVE_TOKENS
+
+        os.environ["ASSISTANT_NARRATIVE_REASONING"] = "medium"
+        reasoning = importlib.reload(nar).MAX_NARRATIVE_TOKENS
+
+        assert plain == 1800
+        assert reasoning >= 8000, "a reasoning stage starves at the plain ceiling"
+    finally:
+        os.environ.clear()
+        os.environ.update(original)
+        importlib.reload(nar)
+
+
+def test_reasoning_effort_replaces_verbosity_not_joins_it():
+    """A reasoning parameter sent to a plain chat model is rejected outright, and
+    verbosity is not the knob a reasoning model takes."""
+    import importlib
+    import os
+
+    original = dict(os.environ)
+    try:
+        os.environ["ASSISTANT_NARRATIVE_REASONING"] = "medium"
+        mod = importlib.reload(nar)
+        client = _FakeClient()
+        mod.narrate(client=client, user_question="q",
+                    tool_results=[{"name": "discover_patterns", "result": {}}])
+        assert client.captured["reasoning_effort"] == "medium"
+        assert "verbosity" not in client.captured
+    finally:
+        os.environ.clear()
+        os.environ.update(original)
+        importlib.reload(nar)

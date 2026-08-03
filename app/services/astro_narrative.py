@@ -33,7 +33,19 @@ _ANALYTICAL_TOOLS = frozenset({
     "discover_patterns", "survey_transits", "intersect_forecast_windows",
 })
 
-MAX_NARRATIVE_TOKENS = int(os.getenv("ASSISTANT_NARRATIVE_TOKENS", "1800"))
+# §7.2 puts this stage on a reasoning model at medium effort. Empty string means
+# "plain chat model", which is what the default assistant model wants — a
+# reasoning parameter sent to a non-reasoning model is rejected outright.
+NARRATIVE_REASONING_EFFORT = os.getenv("ASSISTANT_NARRATIVE_REASONING", "").strip()
+
+# Reasoning tokens are billed from the SAME completion budget and are emitted
+# BEFORE any content, so a reasoning stage needs a far larger ceiling than a
+# plain one. Measured on this payload: at 1800 the model spent all 1800 on
+# reasoning, hit finish_reason=length and returned an EMPTY string; at 8000 it
+# reasoned for 267 and wrote the whole report. Reusing the plain ceiling here is
+# not a degraded answer, it is no answer at all.
+_DEFAULT_TOKENS = "8000" if NARRATIVE_REASONING_EFFORT else "1800"
+MAX_NARRATIVE_TOKENS = int(os.getenv("ASSISTANT_NARRATIVE_TOKENS", _DEFAULT_TOKENS))
 
 _SYSTEM = """\
 You are the Narrative Analyst for a professional astrologer's data assistant.
@@ -120,13 +132,20 @@ def narrate(
             + "\n\nValidated findings and records:\n" + _payload(tool_results)
         ),
     })
+    # A reasoning model spends part of the budget thinking before it writes, so
+    # the ceiling has to cover both or the report gets cut mid-sentence.
+    extra: Dict = {}
+    if NARRATIVE_REASONING_EFFORT:
+        extra["reasoning_effort"] = NARRATIVE_REASONING_EFFORT
+    else:
+        extra["verbosity"] = "low"
     try:
         response = client.chat.completions.create(
             model=model_for("narrative"),
             messages=messages,
-            verbosity="low",
             max_completion_tokens=MAX_NARRATIVE_TOKENS,
             timeout=timeout,
+            **extra,
         )
         if usage is not None:
             usage.add(getattr(response, "usage", None))
