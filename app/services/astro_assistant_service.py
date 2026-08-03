@@ -37,6 +37,7 @@ from app.services.astro_citation import (
     render_citations,
     strip_citation_tokens,
 )
+from app.services.aspect_dynamics_service import AspectDynamicsService
 from app.services.astro_data_tools import ChartDataset, get_chart_data
 from app.services.astro_judge import (
     VERDICT_ALLOW,
@@ -1027,6 +1028,76 @@ class AstroAssistantService:
             )
         return self._compact_direction_result(result, chart_ref)
 
+    def _exec_find_symbolic_aspect_passes(self, user_id: UUID, args: Dict) -> Dict:
+        """Symbolic aspect windows — the engine already computed these, unexposed.
+
+        AspectDynamicsService scans progressed/directed longitude over time and
+        returns the same contact shape as the transit tool. ``series`` (hundreds
+        of orb samples for the UI curve) is dropped: it is unusable as text and
+        would swamp the completion budget.
+        """
+        method = args.get("method")
+        if method not in ("progression", "direction"):
+            raise ValueError("bad_method")
+        direction_type = args.get("direction_type") or "zodiacal"
+        if direction_type not in DIRECTION_TYPES:
+            raise ValueError("bad_direction_type")
+
+        service = AspectDynamicsService(
+            db_session=self.db, ephe_path=get_ephemeris_path())
+        context = service.context_from_user_id(user_id)
+        result = service.calculate(
+            method=method,
+            primary_context=context,
+            source_body=args["source_body"],
+            target_body=args["target_body"],
+            aspect_type=args["aspect_type"],
+            selected_date=self.default_anchor_date,
+            # Midday anchor: the symbolic scan step is days, and midnight sits on
+            # a DST boundary in some zones.
+            selected_time=time_type(12, 0),
+            timezone=self.default_timezone,
+            contact_start=_parse_tool_date(args["contact_start"]) if args.get("contact_start") else None,
+            contact_end=_parse_tool_date(args["contact_end"]) if args.get("contact_end") else None,
+            direction_type=direction_type,
+        )
+        out = {k: v for k, v in result.items() if k != "series"}
+        # The engine's `status` describes the ANCHOR date, not the window: it
+        # returns selected_not_in_orb whenever the anchor happens to sit outside
+        # the orb, even with contacts found in the window. Left bare, the model
+        # reads that as "nothing found" and reports no contacts while holding
+        # several. An explicit count removes the ambiguity.
+        out["contact_count"] = len(out.get("contacts") or [])
+        return out
+
+    def _exec_survey_symbolic_ingresses(self, user_id: UUID, args: Dict) -> Dict:
+        """Progression + direction ingresses over a period.
+
+        PeriodIngressSummaryService opens its own DB session and closes it in a
+        finally, so it does not leak into the assistant's pool discipline.
+
+        Imported lazily: that module pulls in db_manager, which builds a
+        DatabaseManager at import time and raises without DATABASE_URL. A
+        top-level import would make this whole service un-importable in any
+        context that has no database configured.
+        """
+        from app.services.period_ingress_summary_service import PeriodIngressSummaryService
+
+        direction_type = args.get("direction_type") or "zodiacal"
+        if direction_type not in DIRECTION_TYPES:
+            raise ValueError("bad_direction_type")
+        start = _parse_tool_date(args.get("start_date"))
+        end = _parse_tool_date(args.get("end_date"))
+        if end < start:
+            raise ValueError("bad_window")
+        return PeriodIngressSummaryService().calculate_period_summary(
+            user_id=user_id,
+            start_date=start,
+            end_date=end,
+            timezone=self.default_timezone,
+            direction_type=direction_type,
+        )
+
     def _get_chart_dataset(self, user_id: UUID) -> ChartDataset:
         """The per-turn frozen Layer-1 dataset for the active chart, built once."""
         if self._chart_dataset is None:
@@ -1070,6 +1141,8 @@ class AstroAssistantService:
             "calculate_direction": self._exec_calculate_direction,
             "get_chart_data": self._exec_get_chart_data,
             "analyze": self._exec_analyze,
+            "find_symbolic_aspect_passes": self._exec_find_symbolic_aspect_passes,
+            "survey_symbolic_ingresses": self._exec_survey_symbolic_ingresses,
         }
         handler = handlers.get(name)
         if handler is None:

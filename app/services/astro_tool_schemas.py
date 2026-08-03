@@ -262,6 +262,70 @@ def build_query_tools() -> List[Dict]:
     }, {
         "type": "function",
         "function": {
+            "name": "find_symbolic_aspect_passes",
+            "description": (
+                "Find WHEN a progressed or directed body forms an aspect to a natal "
+                "object: enter / each exact crossing / leave, motion per pass and "
+                "stations. The symbolic counterpart of find_aspect_passes. "
+                "calculate_progression and calculate_direction return a SNAPSHOT on "
+                "one date and cannot answer a 'when' question — use this instead for "
+                "'when does progressed Moon square natal Saturn'. Read contact_count "
+                "and contacts to decide whether anything was found: the status field "
+                "describes the currently selected date, NOT the searched window, so "
+                "'selected_not_in_orb' is normal alongside contacts."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "method": {"type": "string", "enum": ["progression", "direction"]},
+                    "source_body": {"type": "string", "enum": sorted(TRANSIT_BODY_NAMES)},
+                    "target_body": {"type": "string", "enum": sorted(NATAL_BODY_NAMES)},
+                    "aspect_type": {"type": "string", "enum": sorted(ASPECT_TYPE_NAMES)},
+                    "contact_start": {
+                        "type": "string",
+                        "description": "YYYY-MM-DD. Omit for a wide window around the active date.",
+                    },
+                    "contact_end": {"type": "string", "description": "YYYY-MM-DD."},
+                    "direction_type": {
+                        "type": "string",
+                        "enum": list(DIRECTION_TYPES),
+                        "description": "Only meaningful when method=direction.",
+                    },
+                },
+                "required": ["method", "source_body", "target_body", "aspect_type"],
+                "additionalProperties": False,
+            },
+        },
+    }, {
+        "type": "function",
+        "function": {
+            "name": "survey_symbolic_ingresses",
+            "description": (
+                "List progression AND direction ingresses over a period: when a "
+                "progressed or directed body changes sign or house, and when a "
+                "directed house cusp changes sign. Every row carries the dates one "
+                "degree before the boundary, exact on it, and one degree after. Use "
+                "for 'when does my progressed Sun change sign' or a period overview "
+                "of symbolic movement."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "start_date": {"type": "string", "description": "YYYY-MM-DD"},
+                    "end_date": {"type": "string", "description": "YYYY-MM-DD"},
+                    "direction_type": {
+                        "type": "string",
+                        "enum": list(DIRECTION_TYPES),
+                        "description": "Direction method used for the direction rows.",
+                    },
+                },
+                "required": ["start_date", "end_date"],
+                "additionalProperties": False,
+            },
+        },
+    }, {
+        "type": "function",
+        "function": {
             "name": "analyze",
             "description": (
                 "Run a deterministic data-science analysis over the active chart's "

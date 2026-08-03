@@ -80,6 +80,9 @@ _EXPECTED_TOOLS = {
     "find_aspect_passes", "find_chart", "calculate_progression", "calculate_direction",
     # Layer-1 technical data + Layer-2 analysis (chat-v2)
     "get_chart_data", "analyze",
+    # Symbolic windows + ingresses: engine services that already existed but were
+    # reachable only from HTTP routes, never by the assistant (slice-1 PR8).
+    "find_symbolic_aspect_passes", "survey_symbolic_ingresses",
     # command tools
     "set_transit_date", "step_date", "add_layer", "build_solar", "set_solar_year",
     "set_wheel_view", "set_house_system", "set_synastry_partner", "remove_layer",
