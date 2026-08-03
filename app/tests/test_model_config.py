@@ -32,4 +32,7 @@ def test_unknown_role_raises():
 
 
 def test_known_roles_lists_the_live_agents():
-    assert set(known_roles()) == {"assistant", "judge", "summary", "transcribe"}
+    # "narrative" joins for the §16 Narrative Analyst stage; it ships behind
+    # ASSISTANT_NARRATIVE_ENABLED, so the role exists before the stage is on.
+    assert set(known_roles()) == {
+        "assistant", "judge", "narrative", "summary", "transcribe"}

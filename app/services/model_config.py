@@ -27,6 +27,12 @@ from typing import Dict, Tuple
 _MODELS: Dict[str, Tuple[str, str]] = {
     "assistant": ("OPENAI_ASSISTANT_MODEL", "gpt-5.4-mini"),
     "judge": ("OPENAI_JUDGE_MODEL", "gpt-5.4-mini"),
+    # Narrative Analyst (spec §16). Same default as the assistant on purpose, so
+    # enabling the stage changes ONE variable — whether narration is isolated
+    # from tool selection — instead of confounding it with a model change.
+    # §7.1 assigns this role the strongest reasoning model; point the env var
+    # there once the stage has shown it earns its cost.
+    "narrative": ("OPENAI_NARRATIVE_MODEL", "gpt-5.4-mini"),
     "summary": ("OPENAI_SUMMARY_MODEL", "gpt-4.1"),
     "transcribe": ("OPENAI_TRANSCRIBE_MODEL", "gpt-4o-transcribe"),
 }

@@ -1,0 +1,141 @@
+"""§16 Narrative Analyst — the writing stage, isolated from tool selection."""
+import app.services.astro_narrative as nar
+from app.services.astro_narrative import _SYSTEM, is_analytical_turn, narrate
+
+
+def _flat(text):
+    """Prose in the prompt is hard-wrapped; assert on meaning, not line breaks."""
+    return " ".join(text.split())
+
+
+FLAT = _flat(_SYSTEM)
+
+
+class _FakeClient:
+    def __init__(self, content="написанный отчёт", explode=False):
+        self._content = content
+        self._explode = explode
+        self.captured = None
+
+        class _Completions:
+            def create(inner, **kw):
+                self.captured = kw
+                if self._explode:
+                    raise RuntimeError("upstream down")
+                return type("R", (), {
+                    "choices": [type("C", (), {
+                        "message": type("M", (), {"content": self._content})()})()],
+                    "usage": None,
+                })()
+
+        self.chat = type("Chat", (), {"completions": _Completions()})()
+
+
+# --- when the stage applies ----------------------------------------------------
+
+def test_only_analytical_turns_are_narrated():
+    """A lookup has nothing to narrate and must not pay for a second completion."""
+    assert is_analytical_turn([{"name": "discover_patterns"}])
+    assert is_analytical_turn([{"name": "survey_transits"}])
+    assert is_analytical_turn([{"name": "intersect_forecast_windows"}])
+    assert not is_analytical_turn([{"name": "get_chart_data"}])
+    assert not is_analytical_turn([{"name": "find_aspect_passes"}])
+    assert not is_analytical_turn([])
+
+
+def test_stage_is_off_by_default():
+    """§13 alone already produced structure-first prose in live runs, so this
+    ships dark and earns its cost on evidence."""
+    import os
+    assert os.getenv("ASSISTANT_NARRATIVE_ENABLED") in (None, "", "false")
+    assert nar.NARRATIVE_ENABLED is False
+
+
+# --- isolation is the point ----------------------------------------------------
+
+def test_narrator_gets_no_tools():
+    """It cannot call anything, so it cannot misreport a call."""
+    client = _FakeClient()
+    narrate(client=client, tool_results=[{"name": "discover_patterns", "result": {"a": 1}}],
+            user_question="что важного?")
+    assert "tools" not in client.captured
+    assert "tool_choice" not in client.captured
+
+
+def test_only_analytical_results_reach_the_narrator():
+    """Its context should be findings, not the whole tool transcript."""
+    client = _FakeClient()
+    narrate(client=client, user_question="q", tool_results=[
+        {"name": "discover_patterns", "result": {"marker": "KEEP"}},
+        {"name": "get_chart_data", "result": {"marker": "DROP"}},
+    ])
+    payload = client.captured["messages"][-1]["content"]
+    assert "KEEP" in payload
+    assert "DROP" not in payload
+
+
+def test_user_question_travels_with_the_findings():
+    client = _FakeClient()
+    narrate(client=client, user_question="Что важного за два года?",
+            tool_results=[{"name": "discover_patterns", "result": {}}])
+    assert "Что важного за два года?" in client.captured["messages"][-1]["content"]
+
+
+def test_locale_line_is_forwarded():
+    client = _FakeClient()
+    narrate(client=client, user_question="q", locale_line="Reply in Russian.",
+            tool_results=[{"name": "discover_patterns", "result": {}}])
+    systems = [m["content"] for m in client.captured["messages"] if m["role"] == "system"]
+    assert any("Reply in Russian." in s for s in systems)
+
+
+# --- failure must not cost the turn --------------------------------------------
+
+def test_failure_returns_none_so_the_tool_stage_answer_survives():
+    """The caller already holds a serviceable answer; a narration failure must
+    degrade to it rather than losing the astrologer's turn."""
+    client = _FakeClient(explode=True)
+    assert narrate(client=client, user_question="q",
+                   tool_results=[{"name": "discover_patterns", "result": {}}]) is None
+
+
+def test_empty_output_is_treated_as_failure():
+    client = _FakeClient(content="   ")
+    assert narrate(client=client, user_question="q",
+                   tool_results=[{"name": "discover_patterns", "result": {}}]) is None
+
+
+# --- the prompt itself ----------------------------------------------------------
+
+def test_prompt_forbids_creating_facts():
+    assert "do NOT calculate astrology" in FLAT
+    assert "do NOT create new findings" in FLAT
+    assert "Report ONLY numbers present in the data you were given" in FLAT
+    assert "never continue a series by analogy" in FLAT
+
+
+def test_prompt_demands_structure_before_aspects():
+    assert "Begin with the STRUCTURE of the data, not a list of aspects" in FLAT
+    assert "one short paragraph of PROSE" in FLAT
+
+
+def test_prompt_carries_the_boundary_rubric():
+    from app.services.astro_boundary import NON_INTERPRETATION_RULES
+    assert NON_INTERPRETATION_RULES in _SYSTEM
+
+
+def test_prompt_states_the_no_pattern_case():
+    assert "distributed without a dominant cluster" in FLAT
+
+
+def test_prompt_fixes_the_two_cosmetic_warts_seen_live():
+    assert "never a full hash" in FLAT
+    assert 'rather than writing "not specified"' in FLAT
+    assert "write every heading in the astrologer's language" in FLAT
+
+
+def test_narrative_model_role_defaults_to_the_assistant_model():
+    """Enabling the stage must change ONE variable — isolation — not confound it
+    with a model upgrade."""
+    from app.services.model_config import model_for
+    assert model_for("narrative") == model_for("assistant")

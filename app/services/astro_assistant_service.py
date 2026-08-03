@@ -41,6 +41,11 @@ from app.services.astro_citation import (
 from app.services.aspect_dynamics_service import AspectDynamicsService
 from app.services.astro_data_tools import ChartDataset, get_chart_data
 from app.services.astro_intervals import intersect_windows
+from app.services.astro_narrative import (
+    NARRATIVE_ENABLED,
+    is_analytical_turn,
+    narrate,
+)
 from app.services.astro_patterns import discover
 from app.services.astro_judge import (
     VERDICT_ALLOW,
@@ -1762,8 +1767,24 @@ class AstroAssistantService:
             usage.add(getattr(response, "usage", None))
             msg = response.choices[0].message
             if not getattr(msg, "tool_calls", None):
+                raw = msg.content or ""
+                narrated = False
+                # §16: hand a broad analytical answer to a writer that holds the
+                # findings and no tools. Only when findings exist — a lookup has
+                # nothing to narrate and must not pay for a second completion.
+                if NARRATIVE_ENABLED and is_analytical_turn(tool_results):
+                    written = narrate(
+                        client=client,
+                        tool_results=tool_results,
+                        user_question=_last_user_text(messages),
+                        locale_line=locale_line,
+                        usage=usage,
+                        timeout=REQUEST_TIMEOUT_S,
+                    )
+                    if written:
+                        raw, narrated = written, True
                 final_actions, reply, guardrail = self._finalize_reply(
-                    raw_reply=msg.content or "",
+                    raw_reply=raw,
                     messages=messages,
                     actions=actions,
                     client=client,
@@ -1778,6 +1799,7 @@ class AstroAssistantService:
                     "iterations": iterations,
                     "max_iterations_reached": False,
                     "guardrail": guardrail,
+                    "narrated": narrated,
                     "methodology": self._methodology,
                     "unsupported_dates": unsupported_dates(reply, tool_results),
                     "metrics": usage.as_metrics(
