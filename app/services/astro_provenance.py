@@ -23,6 +23,8 @@ number auditable today.
 """
 from __future__ import annotations
 
+import json
+import re
 from typing import Any, Dict, Optional
 from uuid import UUID
 
@@ -120,6 +122,34 @@ def build_methodology_provenance(
     except Exception:
         logger.exception("methodology provenance resolution failed")
         return {"methodology_hash": None, "resolved_settings": None}
+
+
+# Digit lookarounds, not \b: engine values are full timestamps like
+# 2027-06-30T08:00:00+02:00, and a trailing \b fails against the "T" — which
+# would make every engine date look ungrounded and flag every reply.
+_ISO_DATE_RE = re.compile(r"(?<!\d)(\d{4}-\d{2}-\d{2})(?!\d)")
+
+
+def unsupported_dates(reply: str, tool_results: Any) -> list:
+    """ISO dates asserted in the reply that appear nowhere in the tool results.
+
+    A cheap deterministic grounding check for the one case where a fabricated
+    number is both likely and unambiguous: the model writing an ISO date it did
+    not receive. Restricted to ISO on purpose — if the model writes 2027-03-20 it
+    is almost certainly copying an engine value, so a mismatch is meaningful,
+    whereas "март 2027" could be a fair rendering of a real date and flagging it
+    would be noise.
+
+    Reports only. Blocking on this before knowing its false-positive rate would
+    trade a rare fabrication for a common wrongly-refused answer, and the beta has
+    already been bitten once by a guardrail that fired on valid replies.
+    """
+    claimed = set(_ISO_DATE_RE.findall(reply or ""))
+    if not claimed:
+        return []
+    grounded = set(_ISO_DATE_RE.findall(
+        json.dumps(tool_results or [], ensure_ascii=False, default=str)))
+    return sorted(claimed - grounded)
 
 
 def attach_provenance(result: Any, provenance: Optional[Dict[str, Any]]) -> Any:

@@ -50,6 +50,7 @@ from app.services.astro_judge import (
 from app.services.astro_provenance import (
     attach_provenance,
     build_methodology_provenance,
+    unsupported_dates,
 )
 from app.services.astro_profiles import (
     DEFAULT_ASPECT_TYPES,
@@ -106,7 +107,14 @@ from app.utils.ephemeris import get_ephemeris_path
 # Cost controls — hard requirements, not knobs (per plan review).
 MAX_TOOL_ITERATIONS = 5
 REQUEST_TIMEOUT_S = 60.0
+# Compact stages: short confirmations and anything that is not the final answer.
 MAX_COMPLETION_TOKENS = 300
+# The answering stage. 300 tokens cannot hold the analytical report format — an
+# overview, cluster structure, a monthly table and a ranked top-10 — so a survey
+# that took real compute came back truncated to a fragment of what was measured.
+# This is a CEILING, not a target: tool-selection turns emit almost no content
+# and are billed on actual usage, so raising it costs nothing on those turns.
+MAX_ANSWER_TOKENS = int(os.getenv("ASSISTANT_MAX_ANSWER_TOKENS", "1800"))
 _MODEL = model_for("assistant")  # env OPENAI_ASSISTANT_MODEL, default gpt-5.4-mini
 
 # Layer-3 judge gate. Off by default so scripted-client tests see the raw loop;
@@ -238,6 +246,66 @@ def _last_user_text(messages: List[Dict]) -> str:
         if msg.get("role") == "user":
             return str(msg.get("content") or "")
     return ""
+
+
+# A bare agreement carries no content of its own — everything it means lives in
+# the assistant's previous turn. Deterministic rather than routed through a
+# model: it is a string check, and spending a completion on it would add latency
+# and a failure mode to something a regex answers exactly.
+_AFFIRMATIVE_RE = re.compile(
+    r"^\W*("
+    r"да|давай(те)?|ага|угу|хорошо|ладно|окей|ок|поехали|начинай|начинайте|"
+    r"продолжай|продолжайте|продолжим|дальше|валяй|"
+    r"yes|yeah|yep|ok|okay|sure|go|go ahead|do it|start|continue|proceed"
+    r")\W*$",
+    re.IGNORECASE,
+)
+
+# An assistant turn that ended by offering to do something. Only then can a bare
+# "да" be a confirmation rather than an answer to some other question.
+_OFFER_RE = re.compile(
+    r"(могу\s|хотите|если хотите|начать с|предлага|показать\?|"
+    r"shall i|would you like|i can |want me to|should i )",
+    re.IGNORECASE,
+)
+
+
+def _is_affirmative(text: str) -> bool:
+    return bool(_AFFIRMATIVE_RE.match((text or "").strip()))
+
+
+def _pending_offer(messages: List[Dict]) -> Optional[str]:
+    """The assistant's own proposal that a bare agreement would be accepting.
+
+    Fixes an observed beta failure: the assistant offered slow-planet transits
+    for a stated window, the astrologer replied "Давай", and the assistant
+    answered as though the conversation had just started — refusing, because the
+    bare word carried no analytical request on its own.
+    """
+    if not messages or not _is_affirmative(_last_user_text(messages)):
+        return None
+    for msg in reversed(messages[:-1]):
+        role = msg.get("role")
+        if role == "assistant":
+            content = str(msg.get("content") or "")
+            return content if _OFFER_RE.search(content) else None
+        if role == "user":
+            return None      # two user turns running: nothing was offered between
+    return None
+
+
+def _continuation_instruction(messages: List[Dict]) -> Optional[str]:
+    offer = _pending_offer(messages)
+    if not offer:
+        return None
+    return (
+        "The astrologer's latest message is a bare agreement to the proposal you "
+        'made in your previous turn:\n\n"' + offer.strip()[:600] + '"\n\n'
+        "Execute that proposal now using the tools. Do not re-ask for parameters "
+        "you already stated, do not ask which figures they want, and do not treat "
+        "this as a new open-ended request. If the proposal named a period, bodies "
+        "or a method, use exactly those."
+    )
 
 
 def _requested_wheel_view(messages: List[Dict]) -> Optional[str]:
@@ -1496,7 +1564,7 @@ class AstroAssistantService:
                 model=_MODEL,
                 messages=convo + [nudge],
                 verbosity="low",
-                max_completion_tokens=MAX_COMPLETION_TOKENS,
+                max_completion_tokens=MAX_ANSWER_TOKENS,
                 timeout=REQUEST_TIMEOUT_S,
             )
             usage.add(getattr(resp, "usage", None))
@@ -1595,6 +1663,9 @@ class AstroAssistantService:
             context_line = _workspace_context_line(workspace)
             if context_line:
                 convo.append({"role": "system", "content": context_line})
+        continuation = _continuation_instruction(messages)
+        if continuation:
+            convo.append({"role": "system", "content": continuation})
         convo.extend({"role": m["role"], "content": m.get("content", "")} for m in messages)
 
         tool_results: List[Dict] = []
@@ -1611,7 +1682,7 @@ class AstroAssistantService:
                 tools=tools,
                 tool_choice="auto",
                 verbosity="low",
-                max_completion_tokens=MAX_COMPLETION_TOKENS,
+                max_completion_tokens=MAX_ANSWER_TOKENS,
                 timeout=REQUEST_TIMEOUT_S,
             )
             usage.add(getattr(response, "usage", None))
@@ -1634,6 +1705,7 @@ class AstroAssistantService:
                     "max_iterations_reached": False,
                     "guardrail": guardrail,
                     "methodology": self._methodology,
+                    "unsupported_dates": unsupported_dates(reply, tool_results),
                     "metrics": usage.as_metrics(
                         iterations=iterations,
                         latency_ms=_elapsed_ms(started),
@@ -1686,7 +1758,7 @@ class AstroAssistantService:
             model=_MODEL,
             messages=convo,
             verbosity="low",
-            max_completion_tokens=MAX_COMPLETION_TOKENS,
+            max_completion_tokens=MAX_ANSWER_TOKENS,
             timeout=REQUEST_TIMEOUT_S,
         )
         usage.add(getattr(final, "usage", None))
@@ -1707,6 +1779,7 @@ class AstroAssistantService:
             "max_iterations_reached": True,
             "guardrail": guardrail,
             "methodology": self._methodology,
+            "unsupported_dates": unsupported_dates(reply, tool_results),
             "metrics": usage.as_metrics(
                 iterations=iterations,
                 latency_ms=_elapsed_ms(started),
