@@ -86,6 +86,8 @@ _EXPECTED_TOOLS = {
     # Bulk transit survey — the one call that replaces dozens of one-pair calls
     # for a period question (slice-1 PR2).
     "survey_transits",
+    # Sweep-line overlap: when several contacts are active at once (PR3).
+    "intersect_forecast_windows",
     # command tools
     "set_transit_date", "step_date", "add_layer", "build_solar", "set_solar_year",
     "set_wheel_view", "set_house_system", "set_synastry_partner", "remove_layer",

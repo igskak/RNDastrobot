@@ -322,6 +322,65 @@ def build_query_tools() -> List[Dict]:
     }, {
         "type": "function",
         "function": {
+            "name": "intersect_forecast_windows",
+            "description": (
+                "Find WHEN several transit contacts are active at the same time. "
+                "Use for 'когда одновременно', 'что накладывается', 'самые "
+                "насыщенные периоды', 'densest periods', or a named pair such as "
+                "'когда Уран и Плутон одновременно аспектируют карту'. Takes the "
+                "same survey arguments as survey_transits (it surveys, then "
+                "intersects — no need to call survey_transits first) plus the "
+                "overlap criteria. Returns timeline segments that are split "
+                "wherever the active set changes, each carrying its event ids, "
+                "the contributing bodies and both a raw contact count and an "
+                "axis-collapsed target count."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "start_date": {"type": "string", "description": "YYYY-MM-DD"},
+                    "end_date": {"type": "string", "description": "YYYY-MM-DD"},
+                    "profile": {"type": "string", "enum": sorted(TRANSIT_BODY_PROFILES)},
+                    "transit_bodies": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": sorted(TRANSIT_BODY_NAMES)},
+                    },
+                    "target_profile": {
+                        "type": "string", "enum": sorted(NATAL_TARGET_PROFILES)},
+                    "natal_targets": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": sorted(NATAL_BODY_NAMES)},
+                    },
+                    "aspect_types": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": sorted(ASPECT_TYPE_NAMES)},
+                    },
+                    "min_contacts": {
+                        "type": "integer", "minimum": 1,
+                        "description": "How many contacts must overlap. Default 2.",
+                    },
+                    "min_bodies": {
+                        "type": "integer", "minimum": 1,
+                        "description": "How many DISTINCT transiting bodies. Default 1.",
+                    },
+                    "bodies": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": sorted(TRANSIT_BODY_NAMES)},
+                        "description": (
+                            "Every one of these must be active in a segment. Use for "
+                            "'when are Uranus AND Pluto both active' — a different "
+                            "question from 'when do any two contacts overlap'."
+                        ),
+                    },
+                    "timezone": {"type": "string"},
+                },
+                "required": ["start_date", "end_date"],
+                "additionalProperties": False,
+            },
+        },
+    }, {
+        "type": "function",
+        "function": {
             "name": "find_symbolic_aspect_passes",
             "description": (
                 "Find WHEN a progressed or directed body forms an aspect to a natal "

@@ -40,6 +40,7 @@ from app.services.astro_citation import (
 )
 from app.services.aspect_dynamics_service import AspectDynamicsService
 from app.services.astro_data_tools import ChartDataset, get_chart_data
+from app.services.astro_intervals import intersect_windows
 from app.services.astro_judge import (
     VERDICT_ALLOW,
     classify_reply,
@@ -811,6 +812,9 @@ class AstroAssistantService:
         self._chart_dataset: Optional[ChartDataset] = None
         # House/rulership lookup for survey enrichment, built once per turn.
         self._natal_lookup: Optional[Dict] = None
+        # Survey results by parameter set, so survey+intersect in one turn
+        # computes once.
+        self._survey_memo: Dict[str, Dict] = {}
         # Per-turn methodology fingerprint (migration 055). Resolved once at the
         # top of chat() — before any model call — then stamped onto every tool
         # result and persisted with the turn.
@@ -1265,6 +1269,57 @@ class AstroAssistantService:
             "calc_version": SURVEY_CALC_VERSION,
         }
 
+    def _survey_cached(self, user_id: UUID, args: Dict) -> Dict:
+        """Run a survey once per (turn, parameter set)."""
+        key = json.dumps({
+            "start": args.get("start_date"), "end": args.get("end_date"),
+            "profile": args.get("profile"), "target_profile": args.get("target_profile"),
+            "transit_bodies": args.get("transit_bodies"),
+            "natal_targets": args.get("natal_targets"),
+            "aspect_types": args.get("aspect_types"),
+            "timezone": args.get("timezone"),
+        }, sort_keys=True, default=str)
+        if key not in self._survey_memo:
+            self._survey_memo[key] = self._exec_survey_transits(user_id, args)
+        return self._survey_memo[key]
+
+    def _exec_intersect_forecast_windows(self, user_id: UUID, args: Dict) -> Dict:
+        """When several transit contacts are active at once.
+
+        There is no survey store yet, so this re-runs the survey from the same
+        parameters rather than referencing a survey_id the server cannot resolve.
+        A per-turn memo makes the common sequence — survey_transits then
+        intersect over the same window — cost one computation, and the discovery
+        cache absorbs the rest.
+        """
+        survey = self._survey_cached(user_id, args)
+        if survey.get("status") != "ok":
+            return survey
+
+        raw_contacts = args.get("min_contacts")
+        min_contacts = raw_contacts if isinstance(raw_contacts, int) and raw_contacts > 0 else 2
+        raw_bodies = args.get("min_bodies")
+        min_bodies = raw_bodies if isinstance(raw_bodies, int) and raw_bodies > 0 else 1
+        required = args.get("bodies") or []
+        for name in required:
+            if name not in TRANSIT_BODY_NAMES:
+                raise ValueError(f"bad_transit_body:{name}")
+
+        result = intersect_windows(
+            survey["events"],
+            min_contacts=min_contacts,
+            min_bodies=min_bodies,
+            bodies=required,
+        )
+        result["survey_id"] = survey["survey_id"]
+        result["requested_window"] = survey["requested_window"]
+        result["profile"] = survey["profile"]
+        # A capped survey means the sweep saw a subset, and the "densest period"
+        # of a subset is not the densest period.
+        if survey.get("truncated"):
+            result.setdefault("warnings", []).append("survey_truncated")
+        return result
+
     def _exec_find_symbolic_aspect_passes(self, user_id: UUID, args: Dict) -> Dict:
         """Symbolic aspect windows — the engine already computed these, unexposed.
 
@@ -1381,6 +1436,7 @@ class AstroAssistantService:
             "find_symbolic_aspect_passes": self._exec_find_symbolic_aspect_passes,
             "survey_symbolic_ingresses": self._exec_survey_symbolic_ingresses,
             "survey_transits": self._exec_survey_transits,
+            "intersect_forecast_windows": self._exec_intersect_forecast_windows,
         }
         handler = handlers.get(name)
         if handler is None:
