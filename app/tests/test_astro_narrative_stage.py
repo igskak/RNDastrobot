@@ -134,11 +134,14 @@ def test_prompt_fixes_the_two_cosmetic_warts_seen_live():
     assert "write every heading in the astrologer's language" in FLAT
 
 
-def test_narrative_model_role_defaults_to_the_assistant_model():
-    """Enabling the stage must change ONE variable — isolation — not confound it
-    with a model upgrade."""
+def test_narrative_defaults_to_the_measured_winner():
+    """The flag is the only gate, so the default has to be the configuration that
+    actually won: pointing it at the assistant model would mean flipping the flag
+    alone buys the weakest variant tried (see the comparison in model_config)."""
     from app.services.model_config import model_for
-    assert model_for("narrative") == model_for("assistant")
+    assert model_for("narrative") == "gpt-5.6-luna"
+    assert model_for("narrative") != model_for("assistant")
+    assert nar.NARRATIVE_REASONING_EFFORT == "low"
 
 
 def test_reasoning_stage_gets_a_far_larger_token_ceiling():

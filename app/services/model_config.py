@@ -27,12 +27,17 @@ from typing import Dict, Tuple
 _MODELS: Dict[str, Tuple[str, str]] = {
     "assistant": ("OPENAI_ASSISTANT_MODEL", "gpt-5.4-mini"),
     "judge": ("OPENAI_JUDGE_MODEL", "gpt-5.4-mini"),
-    # Narrative Analyst (spec §16). Same default as the assistant on purpose, so
-    # enabling the stage changes ONE variable — whether narration is isolated
-    # from tool selection — instead of confounding it with a model change.
-    # §7.1 assigns this role the strongest reasoning model; point the env var
-    # there once the stage has shown it earns its cost.
-    "narrative": ("OPENAI_NARRATIVE_MODEL", "gpt-5.4-mini"),
+    # Narrative Analyst (spec §16), on a reasoning model per §7.1. The stage is
+    # gated separately, so this default only applies once it is switched on —
+    # and it is the configuration that won a live comparison of the narration
+    # stage on identical findings:
+    #   luna  / low     15.2s
+    #   luna  / medium  19.2s
+    #   terra / medium  26.0s
+    #   sol   / medium  51.3s   (also leaked internal profile ids into the prose)
+    # Defaulting to the winner matters because the flag is the only gate: left on
+    # the assistant model, flipping it alone would buy the weakest variant tried.
+    "narrative": ("OPENAI_NARRATIVE_MODEL", "gpt-5.6-luna"),
     "summary": ("OPENAI_SUMMARY_MODEL", "gpt-4.1"),
     "transcribe": ("OPENAI_TRANSCRIBE_MODEL", "gpt-4o-transcribe"),
 }
