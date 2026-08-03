@@ -11,6 +11,7 @@ the client via openai_service.get_openai_client.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -47,6 +48,14 @@ from app.services.astro_judge import (
 from app.services.astro_provenance import (
     attach_provenance,
     build_methodology_provenance,
+)
+from app.services.astro_profiles import (
+    DEFAULT_ASPECT_TYPES,
+    DEFAULT_TARGET_PROFILE,
+    DEFAULT_TRANSIT_PROFILE,
+    axis_group_for,
+    resolve_natal_targets,
+    resolve_transit_bodies,
 )
 from app.services.model_config import model_for
 from app.services.astro_tool_schemas import (
@@ -145,6 +154,81 @@ _DEFAULT_OVERVIEW_YEARS = {
 _SUMMARY_ASPECT_LIMIT = 30
 _SUMMARY_OBJECT_LIMIT = 24
 _SUMMARY_INGRESS_LIMIT = 12
+
+# A broad survey can legitimately return hundreds of contacts. Cap the payload so
+# one call cannot blow the context window, and report the cut instead of quietly
+# handing back a shortened survey that reads as complete.
+MAX_SURVEY_EVENTS = 400
+SURVEY_CALC_VERSION = "survey_transits_v1"
+
+
+def _build_survey_event(
+    *,
+    chart_key: str,
+    transit_body: str,
+    natal_body: str,
+    aspect_type: str,
+    contact: Dict,
+    orb_used,
+    target_house,
+    transit_body_natal,
+) -> Dict:
+    """One refined contact as a survey event.
+
+    ``event_id`` is derived from the contact's identity, not its position in the
+    list, so the same survey run twice yields the same ids — which the citation
+    and full-table layers depend on.
+    """
+    enter = contact.get("enter") or ""
+    event_id = hashlib.sha1(
+        f"{chart_key}|{transit_body}|{natal_body}|{aspect_type}|{enter}".encode("utf-8")
+    ).hexdigest()[:12]
+    passes = contact.get("passes") or []
+    return {
+        "event_id": event_id,
+        "transit_body": transit_body,
+        "natal_body": natal_body,
+        "target_type": "angle" if axis_group_for(natal_body) else "object",
+        "target_natal_house": target_house,
+        "aspect_type": aspect_type,
+        "axis_group": axis_group_for(natal_body),
+        # Where the transiting body sits natally, and what it rules — the two
+        # facts the full aspect formula needs beyond the contact itself.
+        "transit_body_natal_house": (
+            transit_body_natal["house"] if transit_body_natal else None),
+        "transit_body_ruled_houses": (
+            transit_body_natal.get("ruled_houses") if transit_body_natal else None),
+        "enter": enter,
+        "enter_complete": contact.get("enter_complete"),
+        "leave": contact.get("leave"),
+        "leave_complete": contact.get("leave_complete"),
+        "passes": passes,
+        "exact_pass_count": contact.get("exact_pass_count", len(passes)),
+        "stations": contact.get("stations") or [],
+        "closest_approach": contact.get("closest_approach"),
+        "orb_used": orb_used,
+    }
+
+
+def _monthly_summary(events: List[Dict]) -> List[Dict]:
+    """Exact passes per calendar month.
+
+    Counts exact passes rather than events: an event can span many months, so
+    counting it once at its start would hide where the activity actually lands.
+    A contact that never perfects is counted at its closest approach, otherwise
+    a whole in-orb period would vanish from the distribution.
+    """
+    buckets: Dict[str, int] = {}
+    for event in events:
+        dates = [p.get("date") for p in event.get("passes") or [] if p.get("date")]
+        if not dates:
+            closest = (event.get("closest_approach") or {}).get("date")
+            dates = [closest] if closest else []
+        for value in dates:
+            month = str(value)[:7]
+            if len(month) == 7:
+                buckets[month] = buckets.get(month, 0) + 1
+    return [{"month": m, "exact_passes": n} for m, n in sorted(buckets.items())]
 
 
 def _last_user_text(messages: List[Dict]) -> str:
@@ -725,6 +809,8 @@ class AstroAssistantService:
         # Per-turn frozen Layer-1 dataset (built once, reused across get_chart_data
         # calls in the same turn so every facet reconciles to one provenance hash).
         self._chart_dataset: Optional[ChartDataset] = None
+        # House/rulership lookup for survey enrichment, built once per turn.
+        self._natal_lookup: Optional[Dict] = None
         # Per-turn methodology fingerprint (migration 055). Resolved once at the
         # top of chat() — before any model call — then stamped onto every tool
         # result and persisted with the turn.
@@ -1028,6 +1114,157 @@ class AstroAssistantService:
             )
         return self._compact_direction_result(result, chart_ref)
 
+    def _natal_index(self, user_id: UUID) -> Dict:
+        """House + rulership lookup for survey enrichment, built once per turn.
+
+        Reuses the frozen per-turn chart dataset, so a survey adds no chart reads
+        on top of whatever the turn already did.
+        """
+        if self._natal_lookup is None:
+            ds = self._get_chart_dataset(user_id)
+            planets = {p["name"]: p for p in ds.facet("planet_roles").get("planets") or []}
+            # Angles define houses rather than sitting in them: the ASC IS the
+            # first cusp. Hardcoding beats looking it up and getting 12 or 1
+            # depending on rounding at the cusp.
+            angle_houses = {"ASC": 1, "IC": 4, "DSC": 7, "MC": 10}
+            points = {
+                p["name"]: p.get("house")
+                for p in ds.facet("angles_and_points").get("points") or []
+            }
+            self._natal_lookup = {
+                "planets": planets, "angle_houses": angle_houses, "points": points}
+        return self._natal_lookup
+
+    def _target_natal_house(self, natal_index: Dict, natal_body: str):
+        if natal_body in natal_index["angle_houses"]:
+            return natal_index["angle_houses"][natal_body]
+        planet = natal_index["planets"].get(natal_body)
+        if planet:
+            return planet["house"]["effective_value"]
+        return natal_index["points"].get(natal_body)
+
+    def _exec_survey_transits(self, user_id: UUID, args: Dict) -> Dict:
+        """Bulk transit survey: one call covers many bodies, targets and aspects.
+
+        Hybrid by design. find_transit_events is a fast cached 6-hour grid scan,
+        but its t_exact is the sampled minimum rather than a root, and a
+        retrograde loop collapses into one approximate crossing. So it serves as
+        DISCOVERY only — which (body, target, aspect) triples make contact at all
+        — and every triple it finds is then re-run through find_aspect_passes,
+        which does real root finding and returns each exact pass plus stations.
+        The grid-derived t_exact never leaves this method.
+
+        This is what makes "все транзиты высших планет на два года" one tool call
+        instead of dozens of one-pair calls that exhaust the iteration budget
+        long before covering the ground.
+        """
+        transit_bodies = resolve_transit_bodies(
+            args.get("profile"), args.get("transit_bodies"))
+        natal_targets = resolve_natal_targets(
+            args.get("target_profile"), args.get("natal_targets"))
+        aspect_types = tuple(args.get("aspect_types") or DEFAULT_ASPECT_TYPES)
+
+        for name in transit_bodies:
+            if name not in TRANSIT_BODY_NAMES:
+                raise ValueError(f"bad_transit_body:{name}")
+        for name in natal_targets:
+            if name not in NATAL_BODY_NAMES:
+                raise ValueError(f"bad_natal_body:{name}")
+        for name in aspect_types:
+            if name not in ASPECT_TYPE_NAMES:
+                raise ValueError(f"bad_aspect_type:{name}")
+
+        start = _parse_tool_date(args.get("start_date"))
+        end = _parse_tool_date(args.get("end_date"))
+        if end < start:
+            raise ValueError("bad_window")
+        timezone = args.get("timezone") or self.default_timezone
+
+        transits = self._transits()
+
+        # --- discovery ---------------------------------------------------
+        discovered = transits.find_transit_events(
+            user_id=user_id,
+            start_date=start,
+            end_date=end,
+            timezone=timezone,
+            transit_bodies=list(transit_bodies),
+            natal_bodies=list(natal_targets),
+            aspect_types=list(aspect_types),
+        )
+        triples = sorted({
+            (e["transit_body"], e["natal_body"], e["aspect_type"])
+            for e in discovered or []
+        })
+
+        # --- refinement ---------------------------------------------------
+        natal_index = self._natal_index(user_id)
+        chart_key = str(user_id)
+        events: List[Dict] = []
+        warnings: List[str] = []
+
+        for transit_body, natal_body, aspect_type in triples:
+            refined = transits.find_aspect_passes(
+                user_id=user_id,
+                transit_body=transit_body,
+                natal_body=natal_body,
+                aspect_type=aspect_type,
+                timezone=timezone,
+                start_date=start,
+                end_date=end,
+            )
+            if refined.get("status") != "ok":
+                continue
+            transit_natal = natal_index["planets"].get(transit_body)
+            for contact in refined.get("contacts") or []:
+                events.append(_build_survey_event(
+                    chart_key=chart_key,
+                    transit_body=transit_body,
+                    natal_body=natal_body,
+                    aspect_type=aspect_type,
+                    contact=contact,
+                    orb_used=refined.get("orb_used"),
+                    target_house=self._target_natal_house(natal_index, natal_body),
+                    transit_body_natal=transit_natal,
+                ))
+
+        events.sort(key=lambda e: (e["enter"], e["event_id"]))
+        if len(events) > MAX_SURVEY_EVENTS:
+            # Deterministic truncation (earliest first) and say so loudly — a
+            # silently shortened survey reads as a complete one.
+            warnings.append(
+                f"truncated_to_{MAX_SURVEY_EVENTS}_events_of_{len(events)}")
+            events = events[:MAX_SURVEY_EVENTS]
+
+        return {
+            "status": "ok",
+            "survey_id": "ts_" + hashlib.sha1(
+                f"{chart_key}|{start}|{end}|{transit_bodies}|{natal_targets}|{aspect_types}"
+                .encode("utf-8")).hexdigest()[:12],
+            "profile": {
+                "transit": args.get("profile") or (
+                    None if args.get("transit_bodies") else DEFAULT_TRANSIT_PROFILE),
+                "target": args.get("target_profile") or (
+                    None if args.get("natal_targets") else DEFAULT_TARGET_PROFILE),
+                "transit_bodies": list(transit_bodies),
+                "natal_targets": list(natal_targets),
+                "aspect_types": list(aspect_types),
+            },
+            "requested_window": {"start": start.isoformat(), "end": end.isoformat()},
+            "timezone": timezone,
+            "events": events,
+            "monthly_summary": _monthly_summary(events),
+            "summary": {
+                "event_count": len(events),
+                "exact_pass_count": sum(e["exact_pass_count"] for e in events),
+                "unique_targets": len({e["natal_body"] for e in events}),
+                "unique_bodies": len({e["transit_body"] for e in events}),
+            },
+            "truncated": bool(warnings),
+            "warnings": warnings,
+            "calc_version": SURVEY_CALC_VERSION,
+        }
+
     def _exec_find_symbolic_aspect_passes(self, user_id: UUID, args: Dict) -> Dict:
         """Symbolic aspect windows — the engine already computed these, unexposed.
 
@@ -1143,6 +1380,7 @@ class AstroAssistantService:
             "analyze": self._exec_analyze,
             "find_symbolic_aspect_passes": self._exec_find_symbolic_aspect_passes,
             "survey_symbolic_ingresses": self._exec_survey_symbolic_ingresses,
+            "survey_transits": self._exec_survey_transits,
         }
         handler = handlers.get(name)
         if handler is None:

@@ -16,6 +16,7 @@ from typing import Dict, List
 
 from app.services.astro_analysis import ANALYSIS_OPS, ANALYSIS_TABLES
 from app.services.astro_data_tools import CHART_DATA_FACETS
+from app.services.astro_profiles import NATAL_TARGET_PROFILES, TRANSIT_BODY_PROFILES
 from app.services.astro_vocab import (
     ASPECT_TYPE_NAMES,
     CHART_REFS,
@@ -256,6 +257,65 @@ def build_query_tools() -> List[Dict]:
                     },
                 },
                 "required": ["facet"],
+                "additionalProperties": False,
+            },
+        },
+    }, {
+        "type": "function",
+        "function": {
+            "name": "survey_transits",
+            "description": (
+                "Scan a PERIOD for transit contacts across MANY bodies and natal "
+                "targets in one call. Use this for any broad or undirected forecast "
+                "request — 'транзиты на год', 'что важного в ближайшие два года', "
+                "'все аспекты высших планет', 'обзор', 'на что обратить внимание' — "
+                "and whenever the astrologer names no specific pair. Do NOT emulate "
+                "it with repeated find_aspect_passes calls: that exhausts the tool "
+                "budget long before covering the bodies, and silently answers about "
+                "one planet when the astrologer asked about the period. "
+                "Omit profile and target_profile to get the product defaults: "
+                "outer planets (Uranus, Neptune, Pluto, Chiron) against the ten "
+                "planets, the four angles, both nodes and Lilith. Use "
+                "profile='slow_planets' to add Jupiter and Saturn, or "
+                "profile='all_planets' for the full set. Returns one event per "
+                "contact with enter/exact passes/leave, stations, the transiting "
+                "body's natal house and ruled houses, axis grouping, plus a monthly "
+                "distribution. find_aspect_passes stays the right tool for ONE "
+                "named pair and aspect."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "start_date": {"type": "string", "description": "YYYY-MM-DD"},
+                    "end_date": {"type": "string", "description": "YYYY-MM-DD"},
+                    "profile": {
+                        "type": "string",
+                        "enum": sorted(TRANSIT_BODY_PROFILES),
+                        "description": "Which transiting bodies. Default outer_planets.",
+                    },
+                    "transit_bodies": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": sorted(TRANSIT_BODY_NAMES)},
+                        "description": "Explicit bodies; overrides profile.",
+                    },
+                    "target_profile": {
+                        "type": "string",
+                        "enum": sorted(NATAL_TARGET_PROFILES),
+                        "description": "Which natal targets. Default broad_default_v1.",
+                    },
+                    "natal_targets": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": sorted(NATAL_BODY_NAMES)},
+                        "description": "Explicit targets; overrides target_profile.",
+                    },
+                    "aspect_types": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": sorted(ASPECT_TYPE_NAMES)},
+                        "description": "Default: the five Ptolemaic aspects.",
+                    },
+                    "timezone": {"type": "string", "description": "IANA; omit for the chart's."},
+                },
+                "required": ["start_date", "end_date"],
                 "additionalProperties": False,
             },
         },

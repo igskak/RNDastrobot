@@ -83,6 +83,9 @@ _EXPECTED_TOOLS = {
     # Symbolic windows + ingresses: engine services that already existed but were
     # reachable only from HTTP routes, never by the assistant (slice-1 PR8).
     "find_symbolic_aspect_passes", "survey_symbolic_ingresses",
+    # Bulk transit survey — the one call that replaces dozens of one-pair calls
+    # for a period question (slice-1 PR2).
+    "survey_transits",
     # command tools
     "set_transit_date", "step_date", "add_layer", "build_solar", "set_solar_year",
     "set_wheel_view", "set_house_system", "set_synastry_partner", "remove_layer",
