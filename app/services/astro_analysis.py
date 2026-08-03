@@ -25,6 +25,11 @@ from typing import Dict, List, Optional, Tuple
 # column names drawn from here, so a spec can't inject SQL via a field name.
 ANALYSIS_TABLES: Dict[str, Tuple[str, ...]] = {
     "planets": ("name", "sign", "house", "dignity", "speed", "retrograde"),
+    # The natal aspect network. Makes "most-aspected body" a count+group_by and
+    # "tightest orbs" a rank — both unexpressible before this table existed.
+    "natal_aspects": ("left", "right", "aspect", "orb", "is_major",
+                      "harmonic_type", "is_partile", "applying"),
+    "houses": ("number", "sign", "ruler", "group", "planet_count"),
 }
 
 ANALYSIS_OPS = ("count", "rank", "extreme")

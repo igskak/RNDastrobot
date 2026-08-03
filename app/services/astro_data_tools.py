@@ -23,6 +23,7 @@ import json
 from typing import Callable, Dict, List, Optional
 from uuid import UUID
 
+from app.services.astro_provenance import overridable
 from app.services.dignity_service import DignityService
 from app.services.natal_chart_service import NatalChartService
 from app.services.preferences_runtime import CANONICAL_SIGNS
@@ -33,7 +34,14 @@ _UNSET = object()
 # Facets implemented so far. Grows as chart-specific facets land; the tool-schema
 # enum and the route validation both read this so they can never drift from what
 # the assembler can actually produce.
-CHART_DATA_FACETS = ("sign_properties", "dignities", "speeds", "houses")
+CHART_DATA_FACETS = (
+    "sign_properties", "dignities", "speeds", "houses",
+    # Slice-1 additions: the chart is loaded whole every turn, but the model
+    # could previously see 5 planet fields and zero aspects. These surface the
+    # structure an analyst actually reasons over.
+    "natal_aspects", "angles_and_points", "planet_roles", "house_details",
+    "configurations",
+)
 
 
 class ChartDataset:
@@ -126,6 +134,33 @@ class ChartDataset:
                     "dignity": p.get("dignity"),
                     "speed": p.get("speed"),
                     "retrograde": 1 if p.get("retrograde") else 0,
+                })
+            return rows
+        if name == "natal_aspects":
+            # Booleans are stored 0/1: SQLite has no bool type, and a filter of
+            # {"is_major": 1} must match what the compiler binds.
+            rows = []
+            for a in self.facet("natal_aspects").get("aspects") or []:
+                rows.append({
+                    "left": a.get("left"),
+                    "right": a.get("right"),
+                    "aspect": a.get("aspect"),
+                    "orb": a.get("orb"),
+                    "is_major": 1 if a.get("is_major") else 0,
+                    "harmonic_type": a.get("harmonic_type"),
+                    "is_partile": 1 if a.get("is_partile") else 0,
+                    "applying": 1 if a.get("applying") else 0,
+                })
+            return rows
+        if name == "houses":
+            rows = []
+            for h in self.facet("house_details").get("houses") or []:
+                rows.append({
+                    "number": h.get("number"),
+                    "sign": h.get("sign"),
+                    "ruler": h.get("ruler"),
+                    "group": h.get("group"),
+                    "planet_count": len(h.get("planets_in_house") or []),
                 })
             return rows
         return []
@@ -223,11 +258,148 @@ def _build_houses(ds: ChartDataset) -> Dict:
     return {"houses": houses}
 
 
+def _build_natal_aspects(ds: ChartDataset) -> Dict:
+    """Chart-specific facet: the natal aspect network.
+
+    Already loaded with every chart (a real chart carries ~90 rows) but never
+    exposed, so "which body is most-aspected" was unanswerable. Sorted by orb
+    ascending: tightest first is the order an analyst scans in.
+    """
+    chart = ds._natal_chart()
+    if not chart:
+        return {"aspects": []}
+    rows = []
+    for a in chart.get("aspects") or []:
+        rows.append({
+            "left": a.get("left_planet") or a.get("planet_1"),
+            "right": a.get("right_planet") or a.get("planet_2"),
+            "aspect": a.get("aspect_type"),
+            "orb": round(float(a["orb"]), 4) if a.get("orb") is not None else None,
+            "is_major": a.get("is_major"),
+            "harmonic_type": a.get("harmonic_type"),
+            "is_partile": bool(a.get("is_partile")),
+            "applying": a.get("applying"),
+        })
+    rows.sort(key=lambda r: r["orb"] if r["orb"] is not None else 99)
+    return {"aspects": rows}
+
+
+def _build_angles_and_points(ds: ChartDataset) -> Dict:
+    """Chart-specific facet: angles (ASC/MC/IC/DSC/Vertex) and special points.
+
+    Both are valid natal targets for transit search, but the model had no way to
+    read their positions. Angles carry no house (they define the houses).
+    """
+    chart = ds._natal_chart()
+    if not chart:
+        return {"angles": [], "points": []}
+    angles = [
+        {
+            "name": a.get("name"),
+            "sign": a.get("sign"),
+            "degree": a.get("degree_in_sign_formatted"),
+            "longitude": round(float(a["longitude"]), 6) if a.get("longitude") is not None else None,
+        }
+        for a in (chart.get("angles") or {}).values()
+    ]
+    points = [
+        {
+            "name": p.get("name"),
+            "sign": p.get("sign"),
+            "degree": p.get("degree_in_sign_formatted"),
+            "longitude": round(float(p["longitude"]), 6) if p.get("longitude") is not None else None,
+            "house": p.get("house"),
+        }
+        for p in (chart.get("special_points") or {}).values()
+    ]
+    return {"angles": angles, "points": points}
+
+
+def _build_planet_roles(ds: ChartDataset) -> Dict:
+    """Chart-specific facet: each planet's structural role in the chart.
+
+    House is emitted through the computed/effective override shape: an astrologer
+    may treat a planet as belonging to another house for their working method,
+    and the computed value must survive that (see astro_provenance.overridable).
+    """
+    chart = ds._natal_chart()
+    if not chart:
+        return {"planets": []}
+    planets = []
+    for p in chart.get("planets") or []:
+        planets.append({
+            "name": p.get("name"),
+            "house": overridable("natal_house", p.get("house")),
+            "ruled_houses": p.get("ruled_houses") or [],
+            "special_roles": p.get("special_roles") or [],
+            "is_elevated": bool(p.get("is_elevated")),
+            "is_peregrine": bool(p.get("is_peregrine")),
+            "sun_relation": p.get("sun_relation"),
+            "strength_score": p.get("strength_score"),
+        })
+    return {"planets": planets}
+
+
+def _build_house_details(ds: ChartDataset) -> Dict:
+    """Chart-specific facet: houses with rulership detail.
+
+    Wider than the ``houses`` facet: adds co-rulers (which carry the
+    intercepted-sign rulers), the ruler's own house, significator and the
+    included sign — the fields a rulership argument needs.
+    """
+    chart = ds._natal_chart()
+    if not chart:
+        return {"houses": []}
+    houses = []
+    for h in chart.get("houses") or []:
+        houses.append({
+            "number": h.get("number"),
+            "sign": h.get("sign"),
+            "cusp_degree": h.get("degree_in_sign_formatted"),
+            "ruler": h.get("ruler_planet"),
+            "co_rulers": h.get("co_rulers") or [],
+            "ruler_in_house": h.get("ruler_in_house"),
+            "group": h.get("house_group"),
+            "significator": h.get("significator"),
+            "included_sign": h.get("included_sign"),
+            "planets_in_house": h.get("planets_in_house") or [],
+        })
+    return {"houses": houses}
+
+
+def _build_configurations(ds: ChartDataset) -> Dict:
+    """Chart-specific facet: detected aspect configurations (T-square, grand trine…).
+
+    The per-configuration aspect detail is dropped: it duplicates the
+    natal_aspects facet and would bloat the payload. Type, members, apex and the
+    engine's strength score are what identifies a configuration.
+    """
+    chart = ds._natal_chart()
+    if not chart:
+        return {"configurations": []}
+    return {
+        "configurations": [
+            {
+                "type": c.get("type"),
+                "planets_involved": c.get("planets_involved") or [],
+                "apex_planet": c.get("apex_planet"),
+                "strength_score": c.get("strength_score"),
+            }
+            for c in (chart.get("aspect_configurations") or [])
+        ]
+    }
+
+
 _FACET_BUILDERS: Dict[str, Callable[[ChartDataset], Dict]] = {
     "sign_properties": _build_sign_properties,
     "dignities": _build_dignities,
     "speeds": _build_speeds,
     "houses": _build_houses,
+    "natal_aspects": _build_natal_aspects,
+    "angles_and_points": _build_angles_and_points,
+    "planet_roles": _build_planet_roles,
+    "house_details": _build_house_details,
+    "configurations": _build_configurations,
 }
 
 

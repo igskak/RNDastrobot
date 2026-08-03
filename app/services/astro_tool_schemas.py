@@ -234,10 +234,17 @@ def build_query_tools() -> List[Dict]:
         "function": {
             "name": "get_chart_data",
             "description": (
-                "Return one facet of the active chart's technical data (Layer 1): "
-                "sign properties, essential dignities of the natal planets, planetary "
-                "speeds and motion, or house cusps and rulers. Every value is "
-                "engine-computed; narrate it, never invent."
+                "Return one facet of the active chart's technical data (Layer 1). "
+                "Available facets: sign_properties (element/mode/rulers per sign); "
+                "dignities (each natal planet's sign, house, essential dignity); "
+                "speeds (speed and motion); houses (cusps and rulers); "
+                "natal_aspects (the full natal aspect network with orbs, sorted "
+                "tightest first); angles_and_points (ASC/MC/IC/DSC/Vertex and the "
+                "nodes, Lilith, Fortune); planet_roles (ruled houses, chart-ruler "
+                "and other roles, elevation, peregrine, strength); house_details "
+                "(rulers, co-rulers, ruler's house, significator, occupants); "
+                "configurations (T-squares, grand trines and other detected "
+                "patterns). Every value is engine-computed; narrate it, never invent."
             ),
             "parameters": {
                 "type": "object",
@@ -259,10 +266,14 @@ def build_query_tools() -> List[Dict]:
             "description": (
                 "Run a deterministic data-science analysis over the active chart's "
                 "technical data (Layer 2). Emit a spec: op (count | rank | extreme), "
-                "over (a table, e.g. planets), optional filter (column=value), "
-                "group_by, sort, order, limit. The server computes the result and "
-                "returns rows with ids; you narrate and cite rows by id. Never "
-                "compute or invent the numbers yourself."
+                "over (one of: planets, natal_aspects, houses), optional filter "
+                "(column=value), group_by, sort, order, limit. The server computes "
+                "the result and returns rows with ids; you narrate and cite rows by "
+                "id. Use this for objective structure questions — most-aspected "
+                "body (count over natal_aspects grouped by left), tightest orbs "
+                "(rank over natal_aspects sorted by orb ascending), busiest house "
+                "(extreme over houses sorted by planet_count). Never compute or "
+                "invent the numbers yourself."
             ),
             "parameters": {
                 "type": "object",
