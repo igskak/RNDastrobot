@@ -41,6 +41,7 @@ from app.services.astro_citation import (
 from app.services.aspect_dynamics_service import AspectDynamicsService
 from app.services.astro_data_tools import ChartDataset, get_chart_data
 from app.services.astro_intervals import intersect_windows
+from app.services.astro_patterns import discover
 from app.services.astro_judge import (
     VERDICT_ALLOW,
     classify_reply,
@@ -1320,6 +1321,31 @@ class AstroAssistantService:
             result.setdefault("warnings", []).append("survey_truncated")
         return result
 
+    def _exec_discover_patterns(self, user_id: UUID, args: Dict) -> Dict:
+        """Objective structure of a forecast period — computed, not narrated.
+
+        Surveys, sweeps for overlaps, then measures: clusters, quiet gaps,
+        repeated targets, axis activation, multi-body convergence, graph hubs,
+        outliers, statistics and a ranked list. Every finding carries the event
+        ids it rests on, so the reply cites records instead of asserting.
+
+        Separate from survey_transits because raw events remain the right answer
+        to a narrow question; this answers "what is notable in this period".
+        """
+        survey = self._survey_cached(user_id, args)
+        if survey.get("status") != "ok":
+            return survey
+
+        overlaps = intersect_windows(survey["events"], min_contacts=2)
+        result = discover(survey["events"], overlaps.get("segments") or [])
+        result["survey_id"] = survey["survey_id"]
+        result["requested_window"] = survey["requested_window"]
+        result["profile"] = survey["profile"]
+        if survey.get("truncated"):
+            # Findings over a capped survey describe the cap, not the period.
+            result.setdefault("warnings", []).append("survey_truncated")
+        return result
+
     def _exec_find_symbolic_aspect_passes(self, user_id: UUID, args: Dict) -> Dict:
         """Symbolic aspect windows — the engine already computed these, unexposed.
 
@@ -1437,6 +1463,7 @@ class AstroAssistantService:
             "survey_symbolic_ingresses": self._exec_survey_symbolic_ingresses,
             "survey_transits": self._exec_survey_transits,
             "intersect_forecast_windows": self._exec_intersect_forecast_windows,
+            "discover_patterns": self._exec_discover_patterns,
         }
         handler = handlers.get(name)
         if handler is None:

@@ -322,6 +322,53 @@ def build_query_tools() -> List[Dict]:
     }, {
         "type": "function",
         "function": {
+            "name": "discover_patterns",
+            "description": (
+                "Measure the objective STRUCTURE of a forecast period and return "
+                "evidence-backed findings. Use when the astrologer asks what is "
+                "notable, important, worth examining, or wants an analytical "
+                "overview rather than a list — 'ключевые особенности', 'на что "
+                "обратить внимание', 'проанализируй период', 'что здесь "
+                "выделяется'. Takes the same survey arguments as survey_transits "
+                "and does the survey itself. Returns: time clusters and quiet "
+                "gaps, most repeated natal targets and houses, axis activations, "
+                "targets reached by several different bodies, aspect-graph hubs "
+                "and components, outliers (long windows, partile contacts, triple "
+                "passes, stations), full statistics, and a ranked list using the "
+                "versioned technical_priority_v1 profile with every metric shown. "
+                "Each finding carries evidence_ids — cite those records; never "
+                "add figures of your own. This reports WHAT IS MEASURABLE, never "
+                "what it means."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "start_date": {"type": "string", "description": "YYYY-MM-DD"},
+                    "end_date": {"type": "string", "description": "YYYY-MM-DD"},
+                    "profile": {"type": "string", "enum": sorted(TRANSIT_BODY_PROFILES)},
+                    "transit_bodies": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": sorted(TRANSIT_BODY_NAMES)},
+                    },
+                    "target_profile": {
+                        "type": "string", "enum": sorted(NATAL_TARGET_PROFILES)},
+                    "natal_targets": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": sorted(NATAL_BODY_NAMES)},
+                    },
+                    "aspect_types": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": sorted(ASPECT_TYPE_NAMES)},
+                    },
+                    "timezone": {"type": "string"},
+                },
+                "required": ["start_date", "end_date"],
+                "additionalProperties": False,
+            },
+        },
+    }, {
+        "type": "function",
+        "function": {
             "name": "intersect_forecast_windows",
             "description": (
                 "Find WHEN several transit contacts are active at the same time. "

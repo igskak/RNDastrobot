@@ -88,6 +88,8 @@ _EXPECTED_TOOLS = {
     "survey_transits",
     # Sweep-line overlap: when several contacts are active at once (PR3).
     "intersect_forecast_windows",
+    # Deterministic pattern discovery over a survey (PR5).
+    "discover_patterns",
     # command tools
     "set_transit_date", "step_date", "add_layer", "build_solar", "set_solar_year",
     "set_wheel_view", "set_house_system", "set_synastry_partner", "remove_layer",
