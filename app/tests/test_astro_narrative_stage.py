@@ -43,12 +43,17 @@ def test_only_analytical_turns_are_narrated():
     assert not is_analytical_turn([])
 
 
-def test_stage_is_off_by_default():
-    """§13 alone already produced structure-first prose in live runs, so this
-    ships dark and earns its cost on evidence."""
+def test_stage_is_off_in_code_and_enabled_explicitly():
+    """The code default stays off so tests and local runs never pay for the extra
+    completion; production opts in through render.yaml. That split is what lets
+    the stage be switched off in prod without a code change."""
     import os
+    from pathlib import Path
+
     assert os.getenv("ASSISTANT_NARRATIVE_ENABLED") in (None, "", "false")
     assert nar.NARRATIVE_ENABLED is False
+    render = Path("render.yaml").read_text()
+    assert "ASSISTANT_NARRATIVE_ENABLED" in render
 
 
 # --- isolation is the point ----------------------------------------------------

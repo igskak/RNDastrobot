@@ -51,6 +51,15 @@ services:
         value: production
       - key: ASSISTANT_JUDGE_ENABLED
         value: "true"
+      # Narrative Analyst (spec §16): the writing stage, isolated from tool
+      # selection. Off in code, on here — quality first, tuning once the beta
+      # reacts. Costs about +16s on a broad turn (13.5s -> 29.2s); gunicorn
+      # allows 120s and the browser sets no fetch timeout, so the headroom is
+      # real. Model and effort defaults were picked by measurement, not by tier
+      # name (see model_config). Flip to "false" to fall back to the
+      # master-prompt answer with no code change.
+      - key: ASSISTANT_NARRATIVE_ENABLED
+        value: "true"
       - key: DEBUG
         value: "False"
       - key: SECRET_KEY
