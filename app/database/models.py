@@ -1631,6 +1631,11 @@ class AssistantTurnMetric(Base):
     # their orbs or dignities.
     methodology_hash = Column(Text, nullable=True)
     resolved_settings = Column(JSON, nullable=True)
+    # Quality signals (migration 057): what the turn actually did, so §26 rates
+    # can be computed instead of guessed.
+    unsupported_dates = Column(JSON, nullable=True)
+    tools_used = Column(JSON, nullable=True)
+    narrated = Column(Boolean, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
     conversation = relationship("AssistantConversation", back_populates="turn_metrics")

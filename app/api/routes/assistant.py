@@ -387,6 +387,9 @@ def _log_assistant_turn(
     workspace_manifest: Optional[dict],
     methodology_hash: Optional[str] = None,
     resolved_settings: Optional[dict] = None,
+    unsupported_dates: Optional[list] = None,
+    tools_used: Optional[list] = None,
+    narrated: Optional[bool] = None,
 ) -> "tuple[Optional[UUID], Optional[int]]":
     db = db_manager.get_new_session()
     try:
@@ -404,6 +407,9 @@ def _log_assistant_turn(
             workspace_manifest=workspace_manifest,
             methodology_hash=methodology_hash,
             resolved_settings=resolved_settings,
+            unsupported_dates=unsupported_dates,
+            tools_used=tools_used,
+            narrated=narrated,
         )
     finally:
         db.close()
@@ -492,6 +498,9 @@ async def chat(
         workspace_manifest=request.workspace,
         methodology_hash=(result.get("methodology") or {}).get("methodology_hash"),
         resolved_settings=(result.get("methodology") or {}).get("resolved_settings"),
+        unsupported_dates=result.get("unsupported_dates") or [],
+        tools_used=[t.get("name") for t in (result.get("tool_results") or [])],
+        narrated=result.get("narrated"),
     )
 
     return ChatResponse(
