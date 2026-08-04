@@ -514,7 +514,9 @@ def build_query_tools() -> List[Dict]:
             "description": (
                 "Run a deterministic data-science analysis over the active chart's "
                 "technical data (Layer 2). Emit a spec: op (count | rank | extreme), "
-                "over (one of: planets, natal_aspects, houses), optional filter "
+                "over (planets, natal_aspects, houses, configurations, and — after a "
+                "survey has run this turn — transit_events, time_segments, "
+                "pattern_findings), optional filter "
                 "(column=value), group_by, sort, order, limit. The server computes "
                 "the result and returns rows with ids; you narrate and cite rows by "
                 "id. Use this for objective structure questions — most-aspected "
@@ -527,6 +529,20 @@ def build_query_tools() -> List[Dict]:
                 "type": "object",
                 "properties": {
                     "op": {"type": "string", "enum": list(ANALYSIS_OPS)},
+                    "aggregate": {
+                        "type": "string",
+                        "enum": ["sum", "avg", "min", "max"],
+                        "description": "For op=aggregate; the column is `sort`.",
+                    },
+                    "bucket": {
+                        "type": "string",
+                        "enum": ["day", "month", "year"],
+                        "description": "For op=bucket_time. Default month.",
+                    },
+                    "time_column": {
+                        "type": "string",
+                        "description": "For op=bucket_time; defaults to the table's start column.",
+                    },
                     "over": {"type": "string", "enum": sorted(ANALYSIS_TABLES)},
                     "filter": {
                         "type": "object",

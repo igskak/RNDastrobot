@@ -1385,6 +1385,8 @@ class AstroAssistantService:
                 ))
 
         events.sort(key=lambda e: (e["enter"], e["event_id"]))
+        # Make the survey queryable by analyze() for the rest of the turn.
+        self._get_chart_dataset(user_id).forecast_events = events
         if len(events) > MAX_SURVEY_EVENTS:
             # Deterministic truncation (earliest first) and say so loudly — a
             # silently shortened survey reads as a complete one.
@@ -1508,6 +1510,7 @@ class AstroAssistantService:
             min_bodies=min_bodies,
             bodies=required,
         )
+        self._get_chart_dataset(user_id).forecast_segments = result.get("segments") or []
         result["survey_id"] = survey["survey_id"]
         result["requested_window"] = survey["requested_window"]
         result["profile"] = survey["profile"]
@@ -1534,6 +1537,10 @@ class AstroAssistantService:
 
         overlaps = intersect_windows(survey["events"], min_contacts=2)
         result = discover(survey["events"], overlaps.get("segments") or [])
+        dataset = self._get_chart_dataset(user_id)
+        dataset.forecast_events = survey["events"]
+        dataset.forecast_segments = overlaps.get("segments") or []
+        dataset.forecast_findings = result.get("patterns") or []
         result["survey_id"] = survey["survey_id"]
         result["requested_window"] = survey["requested_window"]
         result["profile"] = survey["profile"]

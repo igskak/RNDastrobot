@@ -44,6 +44,54 @@ CHART_DATA_FACETS = (
 )
 
 
+def _event_row(event: Dict) -> Dict:
+    """Flatten one survey event into analysable columns.
+
+    Nested structures (passes, stations, the overridable house block) collapse to
+    the scalars a query can filter and rank on; the full record stays available
+    through the survey itself.
+    """
+    passes = event.get("passes") or []
+    orbs = [p.get("orb") for p in passes if isinstance(p.get("orb"), (int, float))]
+    closest = (event.get("closest_approach") or {}).get("orb")
+    house = event.get("target_natal_house")
+    return {
+        "event_id": event.get("event_id"),
+        "transit_body": event.get("transit_body"),
+        "natal_body": event.get("natal_body"),
+        "aspect_type": event.get("aspect_type"),
+        "target_type": event.get("target_type"),
+        "target_natal_house": house.get("effective_value") if isinstance(house, dict) else house,
+        "axis_group": event.get("axis_group"),
+        "enter": event.get("enter"),
+        "leave": event.get("leave"),
+        "exact_pass_count": event.get("exact_pass_count", len(passes)),
+        "station_count": len(event.get("stations") or []),
+        "min_orb": min(orbs) if orbs else (closest if isinstance(closest, (int, float)) else None),
+        "duration_days": _duration_days(event.get("enter"), event.get("leave")),
+    }
+
+
+def _duration_days(enter, leave):
+    from datetime import datetime
+
+    def _parse(value):
+        if not isinstance(value, str) or not value:
+            return None
+        try:
+            return datetime.fromisoformat(value)
+        except ValueError:
+            try:
+                return datetime.fromisoformat(value[:10])
+            except ValueError:
+                return None
+
+    start, end = _parse(enter), _parse(leave)
+    if start is None or end is None:
+        return None
+    return round((end - start).total_seconds() / 86400.0, 2)
+
+
 class ChartDataset:
     """Per-turn frozen Layer-1 dataset. Assemble lazily, hash what was touched.
 
@@ -68,6 +116,13 @@ class ChartDataset:
         self.db = db
         self.house_system = house_system
         self._facets: Dict[str, Dict] = {}
+        # Forecast data attached by the turn once a survey has run, so analyze
+        # can query events and segments alongside the natal tables. Held on the
+        # dataset rather than passed around so one turn analyses one consistent
+        # snapshot.
+        self.forecast_events: List[Dict] = []
+        self.forecast_segments: List[Dict] = []
+        self.forecast_findings: List[Dict] = []
         self._dignity: Optional[DignityService] = None
         self._natal_svc: Optional[NatalChartService] = None
         self._natal_chart_cache = _UNSET  # the active chart dict, fetched once/turn
@@ -163,6 +218,40 @@ class ChartDataset:
                     "planet_count": len(h.get("planets_in_house") or []),
                 })
             return rows
+        if name == "configurations":
+            return [
+                {
+                    "type": c.get("type"),
+                    "apex_planet": c.get("apex_planet"),
+                    "planet_count": len(c.get("planets_involved") or []),
+                    "strength_score": c.get("strength_score"),
+                }
+                for c in self.facet("configurations").get("configurations") or []
+            ]
+        # Forecast tables come from the turn's survey rather than the chart, so
+        # they stay empty until one has run. Empty is a clean answer here: asking
+        # about transit events before surveying is a question with no data, not
+        # an error.
+        if name == "transit_events":
+            return [_event_row(e) for e in self.forecast_events]
+        if name == "time_segments":
+            return [
+                {
+                    "start": s.get("start"), "end": s.get("end"),
+                    "contact_count": s.get("contact_count"),
+                    "unique_target_count": s.get("unique_target_count"),
+                    "unique_body_count": s.get("unique_body_count"),
+                }
+                for s in self.forecast_segments
+            ]
+        if name == "pattern_findings":
+            return [
+                {
+                    "finding_id": f.get("finding_id"), "type": f.get("type"),
+                    "evidence_count": len(f.get("evidence_ids") or []),
+                }
+                for f in self.forecast_findings
+            ]
         return []
 
     def provenance_hash(self) -> str:
