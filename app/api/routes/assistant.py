@@ -356,6 +356,7 @@ def _run_assistant_chat_turn(
     workspace: Optional[dict],
     astrologer_id: UUID,
     locale: Optional[str] = None,
+    conversation_id: Optional[UUID] = None,
 ) -> dict:
     db = db_manager.get_new_session()
     try:
@@ -365,6 +366,7 @@ def _run_assistant_chat_turn(
             default_anchor_date=anchor_date,
             default_workspace=workspace,
             astrologer_id=astrologer_id,
+            conversation_id=conversation_id,
         )
         return service.chat(user_id=user_id, messages=messages, locale=locale)
     finally:
@@ -459,6 +461,7 @@ async def chat(
             workspace=request.workspace,
             astrologer_id=astrologer_id,
             locale=locale,
+            conversation_id=request.conversation_id,
         )
     except Exception:
         logger.exception("assistant chat failed")

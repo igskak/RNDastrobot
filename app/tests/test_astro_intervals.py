@@ -204,13 +204,14 @@ def test_empty_input_is_a_clean_result():
 
 # --- the schema the model reads ----------------------------------------------
 
-def test_tool_takes_survey_arguments_so_no_survey_id_is_needed():
-    """There is no survey store yet; a survey_id parameter would be a promise
-    the server cannot keep."""
+def test_tool_can_reference_a_stored_survey_or_take_its_parameters():
+    """Surveys persist now (§22.2), so survey_id is a real reference rather than
+    a promise the server cannot keep. Chart identifiers stay forbidden: those are
+    server-bound and must never come from the model."""
     props = _tool()["parameters"]["properties"]
-    assert "survey_id" not in props
+    assert "survey_id" in props
     assert {"start_date", "end_date"} <= set(props)
-    assert not {"user_id", "chart_id"} & set(props)
+    assert not {"user_id", "chart_id", "astrologer_id"} & set(props)
 
 
 def test_description_names_the_questions_it_answers():

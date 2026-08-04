@@ -47,6 +47,7 @@ from app.services.astro_narrative import (
     narrate,
 )
 from app.services.astro_patterns import discover
+from app.services.assistant_survey_store import load_survey, save_survey
 from app.services.astro_judge import (
     VERDICT_ALLOW,
     classify_reply,
@@ -944,6 +945,7 @@ class AstroAssistantService:
         default_anchor_date: Optional[date_type] = None,
         default_workspace: Optional[Dict] = None,
         astrologer_id: Optional[UUID] = None,
+        conversation_id: Optional[UUID] = None,
     ):
         self.db = db_session
         self.default_timezone = default_timezone
@@ -952,6 +954,8 @@ class AstroAssistantService:
         # Auth-bound owner of the saved charts find_chart may search; never a
         # model-controlled argument (same boundary as the active chart user_id).
         self.astrologer_id = astrologer_id
+        # Scopes a persisted survey to the thread it was produced in.
+        self.conversation_id = conversation_id
         self._transit_service: Optional[TransitService] = None
         self._progression_service: Optional[ProgressionService] = None
         self._direction_service: Optional[DirectionService] = None
@@ -1388,7 +1392,7 @@ class AstroAssistantService:
                 f"truncated_to_{MAX_SURVEY_EVENTS}_events_of_{len(events)}")
             events = events[:MAX_SURVEY_EVENTS]
 
-        return {
+        result = {
             "status": "ok",
             "survey_id": "ts_" + hashlib.sha1(
                 f"{chart_key}|{start}|{end}|{transit_bodies}|{natal_targets}|{aspect_types}"
@@ -1417,8 +1421,53 @@ class AstroAssistantService:
             "calc_version": SURVEY_CALC_VERSION,
         }
 
+        # Persist so a follow-up can reference this exact dataset by id instead
+        # of recomputing it. Best-effort: an answer that is already correct must
+        # not be lost because storage hiccuped.
+        if self.astrologer_id is not None:
+            save_survey(
+                self.db,
+                survey_id=result["survey_id"],
+                astrologer_id=self.astrologer_id,
+                chart_user_id=user_id,
+                conversation_id=self.conversation_id,
+                parameters={
+                    "profile": result["profile"],
+                    "requested_window": result["requested_window"],
+                    "timezone": timezone,
+                },
+                events=events,
+                summary=result["summary"],
+                methodology_hash=(self._methodology or {}).get("methodology_hash"),
+                truncated=result["truncated"],
+            )
+        return result
+
     def _survey_cached(self, user_id: UUID, args: Dict) -> Dict:
-        """Run a survey once per (turn, parameter set)."""
+        """Resolve a survey: by stored id, from this turn's memo, or compute it.
+
+        An explicit ``survey_id`` does more than skip the scan — it guarantees a
+        follow-up describes the SAME events, where a recomputation could quietly
+        differ if the astrologer changed their orbs in between.
+        """
+        requested = args.get("survey_id")
+        if requested:
+            stored = load_survey(
+                self.db, survey_id=str(requested),
+                astrologer_id=self.astrologer_id, chart_user_id=user_id)
+            if stored is None:
+                raise ValueError(f"unknown_survey_id:{requested}")
+            parameters = stored.get("parameters") or {}
+            return {
+                "status": "ok",
+                "survey_id": stored["survey_id"],
+                "profile": parameters.get("profile", {}),
+                "requested_window": parameters.get("requested_window", {}),
+                "events": stored.get("events") or [],
+                "summary": stored.get("summary") or {},
+                "truncated": stored.get("truncated", False),
+                "from_store": True,
+            }
         key = json.dumps({
             "start": args.get("start_date"), "end": args.get("end_date"),
             "profile": args.get("profile"), "target_profile": args.get("target_profile"),

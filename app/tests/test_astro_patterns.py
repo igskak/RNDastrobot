@@ -381,8 +381,11 @@ def test_tool_description_binds_the_boundary_and_citation_rules():
 
 
 def test_tool_takes_no_chart_identifier():
+    """Chart identifiers are server-bound. survey_id is different: it references
+    a stored survey and is tenant-checked on load, so the model may pass it."""
     props = _tool()["parameters"]["properties"]
-    assert not {"user_id", "chart_id", "survey_id"} & set(props)
+    assert not {"user_id", "chart_id", "astrologer_id"} & set(props)
+    assert "survey_id" in props
 
 
 def test_profiles_are_versioned():

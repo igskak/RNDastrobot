@@ -286,6 +286,12 @@ def build_query_tools() -> List[Dict]:
             "parameters": {
                 "type": "object",
                 "properties": {
+                    "survey_id": {
+                        "type": "string",
+                        "description": (
+                            "Reuse a survey already computed in this conversation. Skips the scan AND guarantees you describe the same events; without it a recomputation can differ if settings changed."
+                        ),
+                    },
                     "start_date": {"type": "string", "description": "YYYY-MM-DD"},
                     "end_date": {"type": "string", "description": "YYYY-MM-DD"},
                     "profile": {
@@ -343,6 +349,12 @@ def build_query_tools() -> List[Dict]:
             "parameters": {
                 "type": "object",
                 "properties": {
+                    "survey_id": {
+                        "type": "string",
+                        "description": (
+                            "Reuse a survey already computed in this conversation. Skips the scan AND guarantees you describe the same events; without it a recomputation can differ if settings changed."
+                        ),
+                    },
                     "start_date": {"type": "string", "description": "YYYY-MM-DD"},
                     "end_date": {"type": "string", "description": "YYYY-MM-DD"},
                     "profile": {"type": "string", "enum": sorted(TRANSIT_BODY_PROFILES)},
@@ -385,6 +397,12 @@ def build_query_tools() -> List[Dict]:
             "parameters": {
                 "type": "object",
                 "properties": {
+                    "survey_id": {
+                        "type": "string",
+                        "description": (
+                            "Reuse a survey already computed in this conversation. Skips the scan AND guarantees you describe the same events; without it a recomputation can differ if settings changed."
+                        ),
+                    },
                     "start_date": {"type": "string", "description": "YYYY-MM-DD"},
                     "end_date": {"type": "string", "description": "YYYY-MM-DD"},
                     "profile": {"type": "string", "enum": sorted(TRANSIT_BODY_PROFILES)},

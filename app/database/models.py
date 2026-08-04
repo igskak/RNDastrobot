@@ -1638,3 +1638,40 @@ class AssistantTurnMetric(Base):
     __table_args__ = (
         Index('idx_assistant_metrics_astrologer', 'astrologer_id', 'created_at'),
     )
+
+
+class AssistantSurvey(Base):
+    """A persisted forecast survey (migration 056).
+
+    Surveys are expensive and used to live only inside the turn that produced
+    them, so the intersection and pattern tools re-ran the whole scan instead of
+    referencing one, and a returning astrologer could not reopen the dataset.
+    Storing the events makes a survey_id mean something across turns.
+    """
+    __tablename__ = 'assistant_surveys'
+
+    survey_id = Column(Text, primary_key=True)
+    astrologer_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey('astrologers.id', ondelete='CASCADE'),
+        nullable=False,
+    )
+    chart_user_id = Column(UUID(as_uuid=True), nullable=False)
+    conversation_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey('assistant_conversations.id', ondelete='CASCADE'),
+        nullable=True,
+    )
+    kind = Column(Text, nullable=False, default='transit_survey')
+    parameters = Column(JSON, nullable=False, default=dict)
+    events = Column(JSON, nullable=False, default=list)
+    summary = Column(JSON, nullable=True)
+    methodology_hash = Column(Text, nullable=True)
+    event_count = Column(Integer, nullable=False, default=0)
+    truncated = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, server_default=func.now())
+
+    __table_args__ = (
+        Index('idx_assistant_surveys_owner',
+              'astrologer_id', 'chart_user_id', 'created_at'),
+    )
