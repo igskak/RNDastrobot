@@ -13,14 +13,21 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/conquest.css?v=1">
+    <link rel="stylesheet" href="css/conquest.css?v=2">
     <script type="application/ld+json">
-    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Steliara","applicationCategory":"BusinessApplication","operatingSystem":"Web, macOS, Windows","offers":{"@type":"Offer","price":"24","priceCurrency":"USD"},"description":"Practice management software for working astrologers: charts, the people you read for, and recorded, transcribed, summarized consultations in one place."}
+    {"@context":"https://schema.org","@type":"Organization","name":"Steliara","url":"https://www.steliara.com/","description":"Steliara makes practice management software for professional astrologers, combining Swiss Ephemeris chart calculation, profiles for the people you read for, and recorded, transcribed and summarized video consultations."}
+    </script>
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Steliara","url":"https://www.steliara.com/astrology-practice-management","applicationCategory":"BusinessApplication","operatingSystem":"Web, macOS, Windows","description":"Practice management software for working astrologers: charts, the people you read for, and recorded, transcribed, summarized consultations in one place.","featureList":["Natal and transit charts calculated on the Swiss Ephemeris","A profile per person you read for, with notes, charts and past sessions","Video consultations recorded in the app","Automatic transcript and summary of every consultation","A chat assistant that answers factual questions from the chart data"],"offers":[{"@type":"Offer","name":"Practitioner","price":"24","priceCurrency":"USD","description":"Per month, billed monthly. $20/month billed annually."},{"@type":"Offer","name":"Studio","price":"39","priceCurrency":"USD","description":"Per month, billed monthly. $32/month billed annually."}]}
     </script>
     <script type="application/ld+json">
     {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+      {"@type":"Question","name":"What is astrology practice management software?","acceptedAnswer":{"@type":"Answer","text":"Astrology practice management software keeps a working astrologer's whole practice in one place: chart calculation, a profile for every person they read for, and a record of each consultation. It differs from a chart calculator, which computes charts accurately but has no memory of the people or the sessions."}},
+      {"@type":"Question","name":"Is there astrology software that records and transcribes consultations?","acceptedAnswer":{"@type":"Answer","text":"Yes. Steliara runs the video consultation in the app, records it, transcribes it, and leaves a short summary attached to that person's profile. Most astrology tools stop at charts and a client list, so astrologers usually bolt a separate recorder or transcription service onto their chart software."}},
       {"@type":"Question","name":"Will it interpret the chart for me?","acceptedAnswer":{"@type":"Answer","text":"No, that is your craft. The assistant retrieves data and dates faster so you can focus on the reading."}},
-      {"@type":"Question","name":"Can I keep recordings of my consultations?","acceptedAnswer":{"@type":"Answer","text":"Yes, with a transcript and a short summary of each session."}},
+      {"@type":"Question","name":"Can I keep recordings of my consultations?","acceptedAnswer":{"@type":"Answer","text":"Yes, with a transcript and a short summary of each session, stored on that person's profile."}},
+      {"@type":"Question","name":"How much does Steliara cost?","acceptedAnswer":{"@type":"Answer","text":"Practitioner is $24 per month, or $20 per month billed annually. Studio is $39 per month, or $32 per month billed annually. Every account starts with a 14-day full-feature trial and no card is required."}},
+      {"@type":"Question","name":"Does it work on a Mac?","acceptedAnswer":{"@type":"Answer","text":"Yes. Steliara runs in the browser, so it works the same on macOS, Windows, or any other machine, with nothing to install."}},
       {"@type":"Question","name":"Is there a free trial?","acceptedAnswer":{"@type":"Answer","text":"Yes, 14 days, full features, no card."}}
     ]}
     </script>
@@ -40,6 +47,7 @@
             </a>
             <nav class="nav-links">
                 <a href="/cloud-astrology-software">Cloud software</a>
+                <a href="/astrologer-workspace">Recorded sessions</a>
                 <a href="/pricing.html">Pricing</a>
             </nav>
             <div class="header-actions">
@@ -57,6 +65,14 @@
                 <a class="btn-ghost" href="/pricing.html">See pricing</a>
             </div>
             <p class="trial-note">Free 14-day trial. No card needed.</p>
+        </section>
+
+        <section class="section">
+            <h2>What is astrology practice management software?</h2>
+            <div class="answer">
+                <p>Astrology practice management software keeps a working astrologer's whole practice in one place: chart calculation, a profile for every person they read for, and a record of each consultation. It differs from a chart calculator, which computes charts accurately but has no memory of the people or the sessions.</p>
+            </div>
+            <p>Steliara is that second kind of tool. Charts run on the Swiss Ephemeris with an orb table tuned with a practising astrologer, every person you read for has a profile that holds their notes and history, and the consultation itself is recorded, transcribed, and summarized inside the app.</p>
         </section>
 
         <section class="section">
@@ -79,13 +95,54 @@
         </section>
 
         <section class="section">
+            <h2>How the usual setups compare</h2>
+            <div class="answer">
+                <p>Most astrologers run one of three setups: a chart program on its own, a chart program plus a general CRM and a video call, or a single workspace that covers all of it. Only the third keeps what was actually said in the consultation.</p>
+            </div>
+            <table class="compare">
+                <thead><tr><th></th><th>Chart software alone</th><th>Chart software + CRM + Zoom</th><th>Steliara</th></tr></thead>
+                <tbody>
+                    <tr><td>Chart calculation</td><td>Yes</td><td>Yes</td><td>Yes, Swiss Ephemeris</td></tr>
+                    <tr><td>Profile per person you read for</td><td>No</td><td>Yes, but separate from the charts</td><td>Yes, with charts attached</td></tr>
+                    <tr><td>Runs the consultation</td><td>No</td><td>In a separate video app</td><td>In the same place</td></tr>
+                    <tr><td>Records the consultation</td><td>No</td><td>Only if you set it up yourself</td><td>Yes</td></tr>
+                    <tr><td>Transcript and summary</td><td>No</td><td>Needs a third tool</td><td>Yes, automatically</td></tr>
+                    <tr><td>Tools to keep in sync</td><td>One</td><td>Three or more</td><td>One</td></tr>
+                    <tr><td>Platform</td><td>Often Windows-only desktop</td><td>Mixed</td><td>Any browser, Mac or Windows</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="section">
+            <h2>What it costs</h2>
+            <div class="answer">
+                <p>Two paid plans, billed per astrologer. Every account starts on a 14-day trial with every feature unlocked and no card required. When a trial ends without a subscription the account goes read-only rather than locking you out of your own data.</p>
+            </div>
+            <div class="price-strip">
+                <div class="plan">
+                    <p class="plan-name">Practitioner</p>
+                    <p class="plan-price">$24<span> / month</span></p>
+                    <p class="plan-note">$20 per month billed annually. Charts, unlimited people profiles, notes, recordings, forecast timeline.</p>
+                </div>
+                <div class="plan">
+                    <p class="plan-name">Studio</p>
+                    <p class="plan-price">$39<span> / month</span></p>
+                    <p class="plan-note">$32 per month billed annually. Everything in Practitioner, plus consultation summaries and fast answers from chart data during sessions.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
             <p class="trust">AI will never read a chart for you. It just finds the facts faster: the aspects, the exact dates, where a planet sits. You stay the astrologer.</p>
         </section>
 
         <section class="faq">
             <h2>Questions</h2>
+            <details><summary>Is there astrology software that records and transcribes consultations?</summary><p>Yes. Steliara runs the video consultation in the app, records it, transcribes it, and leaves a short summary attached to that person's profile. Most astrology tools stop at charts and a client list, so astrologers usually bolt a separate recorder or transcription service onto their chart software.</p></details>
             <details><summary>Will it interpret the chart for me?</summary><p>No, that is your craft. The assistant retrieves data and dates faster so you can focus on the reading.</p></details>
-            <details><summary>Can I keep recordings of my consultations?</summary><p>Yes, with a transcript and a short summary of each session.</p></details>
+            <details><summary>Can I keep recordings of my consultations?</summary><p>Yes, with a transcript and a short summary of each session, stored on that person's profile.</p></details>
+            <details><summary>How much does Steliara cost?</summary><p>Practitioner is $24 per month, or $20 per month billed annually. Studio is $39 per month, or $32 per month billed annually. Every account starts with a 14-day full-feature trial and no card is required.</p></details>
+            <details><summary>Does it work on a Mac?</summary><p>Yes. Steliara runs in the browser, so it works the same on macOS, Windows, or any other machine, with nothing to install.</p></details>
             <details><summary>Is there a free trial?</summary><p>Yes, 14 days, full features, no card.</p></details>
         </section>
 
@@ -93,6 +150,7 @@
             <h2>Your whole practice, in one place</h2>
             <p>Charts, the people you read for, and recorded consultations.</p>
             <a class="btn-primary" href="/login.html?mode=register">Start free, no card needed</a>
+            <p class="updated">Last updated 6 August 2026.</p>
         </section>
 
         <footer class="site">

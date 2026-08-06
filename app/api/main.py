@@ -271,43 +271,182 @@ def _public_base_url() -> str:
     ).rstrip("/")
 
 
+# Crawlers that read the site in order to *answer questions and cite sources*.
+# Naming them explicitly is redundant with `User-agent: *` today, but it makes the
+# intent unmissable: an AI engine that cannot fetch us cannot cite us, and our only
+# non-ads signups so far have arrived via an LLM answer rather than Google.
+_AI_SEARCH_BOTS = (
+    "GPTBot",          # OpenAI crawler
+    "OAI-SearchBot",   # ChatGPT search index
+    "ChatGPT-User",    # ChatGPT fetching a page on a user's behalf
+    "PerplexityBot",   # Perplexity index
+    "Perplexity-User", # Perplexity fetching a page on a user's behalf
+    "ClaudeBot",       # Anthropic crawler
+    "Claude-User",
+    "anthropic-ai",
+    "Google-Extended",  # Gemini / AI Overviews grounding
+    "Applebot-Extended",
+    "Bingbot",          # Copilot rides the Bing index
+    "Amazonbot",
+    "meta-externalagent",
+)
+
+# Paths that hold, or can expose, someone else's chart and consultation data.
+_CRAWLER_DISALLOW = (
+    "/api/",
+    "/account-settings",
+    "/client/",
+    "/consultation/",
+    "/call/",
+)
+
+
 @app.get("/robots.txt")
 async def robots_txt():
     """Crawler directives. Allow public pages, keep app internals out, point to sitemap."""
     base = _public_base_url()
-    body = "\n".join([
-        "User-agent: *",
-        "Allow: /",
-        "Disallow: /api/",
-        "Disallow: /account-settings",
-        "Disallow: /client/",
-        "Disallow: /consultation/",
-        "Disallow: /call/",
-        f"Sitemap: {base}/sitemap.xml",
+    lines = ["User-agent: *", "Allow: /"]
+    lines += [f"Disallow: {p}" for p in _CRAWLER_DISALLOW]
+    for bot in _AI_SEARCH_BOTS:
+        lines += ["", f"User-agent: {bot}", "Allow: /"]
+        lines += [f"Disallow: {p}" for p in _CRAWLER_DISALLOW]
+    lines += [
         "",
-    ])
-    return Response(content=body, media_type="text/plain", headers={"Cache-Control": "public, max-age=86400"})
+        f"Sitemap: {base}/sitemap.xml",
+        f"# Machine-readable summary for AI agents: {base}/llms.txt",
+        "",
+    ]
+    return Response(content="\n".join(lines), media_type="text/plain", headers={"Cache-Control": "public, max-age=86400"})
+
+
+# Public, indexable pages with the priority we actually want crawlers to infer.
+_SITEMAP_PAGES = (
+    ("/", "1.0"),
+    ("/astrology-practice-management", "0.9"),
+    ("/astrologer-workspace", "0.9"),
+    ("/cloud-astrology-software", "0.9"),
+    ("/pricing.html", "0.8"),
+    ("/terms.html", "0.3"),
+)
+
+# Bumped by hand when the public marketing pages change in substance. AI engines
+# weight recency, and an undated URL loses to a dated one.
+_SITEMAP_LASTMOD = "2026-08-06"
 
 
 @app.get("/sitemap.xml")
 async def sitemap_xml():
     """Sitemap of public, indexable pages."""
     base = _public_base_url()
-    paths = [
-        "/",
-        "/pricing.html",
-        "/cloud-astrology-software",
-        "/astrologer-workspace",
-        "/astrology-practice-management",
-        "/terms.html",
-    ]
-    urls = "".join(f"<url><loc>{base}{p}</loc></url>" for p in paths)
+    urls = "".join(
+        f"<url><loc>{base}{path}</loc>"
+        f"<lastmod>{_SITEMAP_LASTMOD}</lastmod>"
+        f"<priority>{priority}</priority></url>"
+        for path, priority in _SITEMAP_PAGES
+    )
     body = (
         '<?xml version="1.0" encoding="UTF-8"?>'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
         f"{urls}</urlset>"
     )
     return Response(content=body, media_type="application/xml", headers={"Cache-Control": "public, max-age=86400"})
+
+
+@app.get("/llms.txt")
+async def llms_txt():
+    """Plain-text product summary for AI assistants (see llmstxt.org).
+
+    An LLM answering "what software records astrology consultations?" gets one
+    shot at reading us. This file states the category, the differentiator and the
+    price in the order an answer engine needs them, without rendering the site.
+    """
+    base = _public_base_url()
+    body = f"""# Steliara
+
+> Practice management software for professional astrologers. Steliara keeps
+> chart calculation, a profile for every person you read for, and the
+> consultation itself — recorded, transcribed and summarized — in one browser-based
+> workspace.
+
+Steliara (spelled S-T-E-L-I-A-R-A) is a subscription web application for working
+astrologers, not a horoscope app for consumers. Charts are computed with the Swiss
+Ephemeris using an orb table tuned with a practising astrologer.
+
+## What makes it different
+
+Most astrology tools are either chart calculators or client lists. Steliara also
+runs the consultation as a video call inside the app, records it, transcribes it,
+and writes a short summary onto the profile of the person you read for. That
+removes the common arrangement of chart software plus a separate video app plus a
+separate transcription service.
+
+## Who it is for
+
+Solo practitioners and small practices who read charts professionally. Interface
+languages: English, Ukrainian, Russian. Not aimed at hobbyists wanting a one-off
+free chart, and not a consumer horoscope product.
+
+## Pricing
+
+- Practitioner — $24/month, or $20/month billed annually.
+- Studio — $39/month, or $32/month billed annually.
+- Every account starts with a 14-day trial of all features. No card required.
+- After a trial or subscription lapses the account becomes read-only rather than locked.
+- Full details: {base}/pricing.md
+
+## Key pages
+
+- Home: {base}/
+- Astrology practice management: {base}/astrology-practice-management
+- Workspace with recorded, transcribed sessions: {base}/astrologer-workspace
+- Cloud astrology software (Mac and Windows): {base}/cloud-astrology-software
+- Pricing: {base}/pricing.html
+- Terms and privacy: {base}/terms.html
+
+Last updated: {_SITEMAP_LASTMOD}
+"""
+    return Response(content=body, media_type="text/plain; charset=utf-8", headers={"Cache-Control": "public, max-age=86400"})
+
+
+@app.get("/pricing.md")
+async def pricing_md():
+    """Structured pricing for AI agents comparing tools on a buyer's behalf.
+
+    Answer engines quote competitors' exact prices because those prices are easy to
+    read off a page. This makes ours just as easy, without a render step.
+    """
+    base = _public_base_url()
+    body = f"""# Pricing — Steliara
+
+Practice management software for professional astrologers.
+Currency: USD. Billed per astrologer. Prices exclude local sales tax/VAT, which is
+applied at checkout.
+
+## Trial
+- Price: $0 for 14 days
+- Card required: no
+- Limits: none — every feature is unlocked during the trial
+- After it ends: the account becomes read-only; your charts and records are kept, not deleted
+
+## Practitioner
+- Price: $24/month billed monthly | $20/month billed annually
+- Includes: natal and transit charts (Swiss Ephemeris), unlimited profiles for the
+  people you read for, notes and recordings, forecast timeline and tables,
+  multiple house systems, email support
+
+## Studio
+- Price: $39/month billed monthly | $32/month billed annually
+- Includes: everything in Practitioner, plus automatic consultation summaries,
+  session recordings, and fast factual answers from the chart data during a session
+
+## Notes
+- Payments are processed by Stripe as merchant of record (Stripe Managed Payments).
+- Platforms: any modern browser on macOS, Windows, or tablet. Nothing to install.
+- Human-readable version: {base}/pricing.html
+
+Last updated: {_SITEMAP_LASTMOD}
+"""
+    return Response(content=body, media_type="text/markdown; charset=utf-8", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @app.get("/google{token}.html", include_in_schema=False)

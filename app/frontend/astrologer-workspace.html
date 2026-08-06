@@ -13,14 +13,20 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/conquest.css?v=1">
+    <link rel="stylesheet" href="css/conquest.css?v=2">
     <script type="application/ld+json">
-    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Steliara","applicationCategory":"BusinessApplication","operatingSystem":"Web, macOS, Windows","offers":{"@type":"Offer","price":"24","priceCurrency":"USD"},"description":"Astrologer workspace that records, transcribes and summarizes client consultations, with charts and client profiles in one place."}
+    {"@context":"https://schema.org","@type":"Organization","name":"Steliara","url":"https://www.steliara.com/","description":"Steliara makes practice management software for professional astrologers, combining Swiss Ephemeris chart calculation, profiles for the people you read for, and recorded, transcribed and summarized video consultations."}
+    </script>
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Steliara","url":"https://www.steliara.com/astrologer-workspace","applicationCategory":"BusinessApplication","operatingSystem":"Web, macOS, Windows","description":"Astrologer workspace that records, transcribes and summarizes client consultations, with charts and client profiles in one place.","featureList":["Video consultations run and recorded inside the workspace","Automatic transcript of every consultation","A short written summary of each session, saved to the person's profile","Natal and transit charts calculated on the Swiss Ephemeris","A profile per person you read for, with notes, charts and past sessions"],"offers":[{"@type":"Offer","name":"Practitioner","price":"24","priceCurrency":"USD","description":"Per month, billed monthly. $20/month billed annually."},{"@type":"Offer","name":"Studio","price":"39","priceCurrency":"USD","description":"Per month, billed monthly. $32/month billed annually."}]}
     </script>
     <script type="application/ld+json">
     {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+      {"@type":"Question","name":"Is there astrology software that records and transcribes client consultations?","acceptedAnswer":{"@type":"Answer","text":"Yes. Steliara runs the consultation as a video call inside the workspace, records it, produces a transcript, and writes a short summary onto that person's profile. This replaces the usual arrangement of a chart program plus a separate video app plus a separate transcription service."}},
       {"@type":"Question","name":"Does it record client consultations?","acceptedAnswer":{"@type":"Answer","text":"Yes. Run the session in Steliara and it records, transcribes, and leaves you a short summary."}},
+      {"@type":"Question","name":"Do I still need Zoom and a transcription tool?","acceptedAnswer":{"@type":"Answer","text":"No. The call, the recording, the transcript and the summary all happen in Steliara, and the result is attached to the profile of the person you read for, next to their charts and your notes."}},
       {"@type":"Question","name":"Will the AI interpret the chart for me?","acceptedAnswer":{"@type":"Answer","text":"No. That is your craft. The assistant finds facts in the chart faster, such as aspects and exact date windows, while you interpret."}},
+      {"@type":"Question","name":"How much does Steliara cost?","acceptedAnswer":{"@type":"Answer","text":"Practitioner is $24 per month, or $20 per month billed annually. Studio is $39 per month, or $32 per month billed annually. Every account starts with a 14-day full-feature trial and no card is required."}},
       {"@type":"Question","name":"Is there a free trial?","acceptedAnswer":{"@type":"Answer","text":"Yes, 14 days with full features and no card."}}
     ]}
     </script>
@@ -39,6 +45,7 @@
                 <span>Steliara</span>
             </a>
             <nav class="nav-links">
+                <a href="/astrology-practice-management">Practice tools</a>
                 <a href="/cloud-astrology-software">Cloud software</a>
                 <a href="/pricing.html">Pricing</a>
             </nav>
@@ -57,6 +64,14 @@
                 <a class="btn-ghost" href="/pricing.html">See pricing</a>
             </div>
             <p class="trial-note">Free 14-day trial. No card needed.</p>
+        </section>
+
+        <section class="section">
+            <h2>Is there astrology software that records and transcribes consultations?</h2>
+            <div class="answer">
+                <p>Yes. Steliara runs the consultation as a video call inside the workspace, records it, produces a transcript, and writes a short summary onto that person's profile. This replaces the usual arrangement of a chart program plus a separate video app plus a separate transcription service.</p>
+            </div>
+            <p>Astrologers already know sessions need recording: the standard advice to a client is to record on their phone, because they will only remember a fraction of a two-hour reading. What was missing was the recording the <em>astrologer</em> keeps, filed against the right person, searchable later.</p>
         </section>
 
         <section class="section">
@@ -88,12 +103,33 @@
         </section>
 
         <section class="section">
+            <h2>What it costs</h2>
+            <div class="answer">
+                <p>Two paid plans, billed per astrologer. Recorded consultations with transcripts are included, so there is no separate transcription bill on top. Every account starts on a 14-day trial with every feature unlocked and no card required.</p>
+            </div>
+            <div class="price-strip">
+                <div class="plan">
+                    <p class="plan-name">Practitioner</p>
+                    <p class="plan-price">$24<span> / month</span></p>
+                    <p class="plan-note">$20 per month billed annually. Charts, unlimited people profiles, notes, recordings, forecast timeline.</p>
+                </div>
+                <div class="plan">
+                    <p class="plan-name">Studio</p>
+                    <p class="plan-price">$39<span> / month</span></p>
+                    <p class="plan-note">$32 per month billed annually. Everything in Practitioner, plus consultation summaries and fast answers from chart data during sessions.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
             <p class="trust">AI will never read a chart for you. It just finds the facts faster: the aspects, the exact dates, where a planet sits. You stay the astrologer.</p>
         </section>
 
         <section class="faq">
             <h2>Questions</h2>
             <details><summary>Does it record client consultations?</summary><p>Yes. Run the session in Steliara and it records, transcribes, and leaves you a short summary.</p></details>
+            <details><summary>Do I still need Zoom and a transcription tool?</summary><p>No. The call, the recording, the transcript and the summary all happen in Steliara, and the result is attached to the profile of the person you read for, next to their charts and your notes.</p></details>
+            <details><summary>How much does Steliara cost?</summary><p>Practitioner is $24 per month, or $20 per month billed annually. Studio is $39 per month, or $32 per month billed annually. Every account starts with a 14-day full-feature trial and no card is required.</p></details>
             <details><summary>Will the AI interpret the chart for me?</summary><p>No. That is your craft. The assistant finds facts in the chart faster, such as aspects and exact date windows, while you interpret.</p></details>
             <details><summary>Is there a free trial?</summary><p>Yes, 14 days with full features and no card.</p></details>
         </section>
@@ -102,6 +138,7 @@
             <h2>Capture the consultation, not just the chart</h2>
             <p>Everything about every person you read for, in one place.</p>
             <a class="btn-primary" href="/login.html?mode=register">Start free, no card needed</a>
+            <p class="updated">Last updated 6 August 2026.</p>
         </section>
 
         <footer class="site">

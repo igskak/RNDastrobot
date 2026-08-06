@@ -13,15 +13,20 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/conquest.css?v=1">
+    <link rel="stylesheet" href="css/conquest.css?v=2">
     <script type="application/ld+json">
-    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Steliara","applicationCategory":"BusinessApplication","operatingSystem":"Web, macOS, Windows","offers":{"@type":"Offer","price":"24","priceCurrency":"USD"},"description":"Cloud workspace for practicing astrologers: charts, the people you read for, and recorded, transcribed, summarized consultations in one place."}
+    {"@context":"https://schema.org","@type":"Organization","name":"Steliara","url":"https://www.steliara.com/","description":"Steliara makes practice management software for professional astrologers, combining Swiss Ephemeris chart calculation, profiles for the people you read for, and recorded, transcribed and summarized video consultations."}
+    </script>
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Steliara","url":"https://www.steliara.com/cloud-astrology-software","applicationCategory":"BusinessApplication","operatingSystem":"Web, macOS, Windows","description":"Cloud workspace for practicing astrologers: charts, the people you read for, and recorded, transcribed, summarized consultations in one place.","featureList":["Browser-based, runs on macOS and Windows with nothing to install","Natal and transit charts calculated on the Swiss Ephemeris","A profile per person you read for, with notes, charts and past sessions","Video consultations recorded, transcribed and summarized in the app"],"offers":[{"@type":"Offer","name":"Practitioner","price":"24","priceCurrency":"USD","description":"Per month, billed monthly. $20/month billed annually."},{"@type":"Offer","name":"Studio","price":"39","priceCurrency":"USD","description":"Per month, billed monthly. $32/month billed annually."}]}
     </script>
     <script type="application/ld+json">
     {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+      {"@type":"Question","name":"What is cloud astrology software?","acceptedAnswer":{"@type":"Answer","text":"Cloud astrology software runs in a web browser instead of being installed on one computer, so charts and client records live in your account rather than on a single machine. It works the same on macOS and Windows, updates itself, and is reachable from any device you sign in on."}},
       {"@type":"Question","name":"Can I use it on a Mac?","acceptedAnswer":{"@type":"Answer","text":"Yes. Steliara runs in any browser, the same on Mac, Windows, or a borrowed laptop. Nothing to install."}},
       {"@type":"Question","name":"Do I lose my charts if I switch?","acceptedAnswer":{"@type":"Answer","text":"No. Your charts and the people you read for live in your account and stay there."}},
-      {"@type":"Question","name":"Is the calculation accurate?","acceptedAnswer":{"@type":"Answer","text":"Yes. Calculations are based on Swiss Ephemeris with a professional orb setup."}}
+      {"@type":"Question","name":"Is the calculation accurate?","acceptedAnswer":{"@type":"Answer","text":"Yes. Calculations are based on Swiss Ephemeris with a professional orb setup."}},
+      {"@type":"Question","name":"How much does Steliara cost?","acceptedAnswer":{"@type":"Answer","text":"Practitioner is $24 per month, or $20 per month billed annually. Studio is $39 per month, or $32 per month billed annually. Every account starts with a 14-day full-feature trial and no card is required."}}
     ]}
     </script>
 </head>
@@ -40,6 +45,7 @@
             </a>
             <nav class="nav-links">
                 <a href="/astrology-practice-management">Practice tools</a>
+                <a href="/astrologer-workspace">Recorded sessions</a>
                 <a href="/pricing.html">Pricing</a>
             </nav>
             <div class="header-actions">
@@ -57,6 +63,14 @@
                 <a class="btn-ghost" href="/pricing.html">See pricing</a>
             </div>
             <p class="trial-note">Free 14-day trial. No card needed.</p>
+        </section>
+
+        <section class="section">
+            <h2>What is cloud astrology software?</h2>
+            <div class="answer">
+                <p>Cloud astrology software runs in a web browser instead of being installed on one computer, so charts and client records live in your account rather than on a single machine. It works the same on macOS and Windows, updates itself, and is reachable from any device you sign in on.</p>
+            </div>
+            <p>Steliara is a cloud tool of this kind, built for professional practice rather than one-off charts: Swiss Ephemeris calculation, a profile for every person you read for, and consultations recorded and summarized in the same place.</p>
         </section>
 
         <section class="section">
@@ -92,6 +106,25 @@
         </section>
 
         <section class="section">
+            <h2>What it costs</h2>
+            <div class="answer">
+                <p>Two paid plans, billed per astrologer, with no perpetual licence and no per-machine install. Every account starts on a 14-day trial with every feature unlocked and no card required.</p>
+            </div>
+            <div class="price-strip">
+                <div class="plan">
+                    <p class="plan-name">Practitioner</p>
+                    <p class="plan-price">$24<span> / month</span></p>
+                    <p class="plan-note">$20 per month billed annually. Charts, unlimited people profiles, notes, recordings, forecast timeline.</p>
+                </div>
+                <div class="plan">
+                    <p class="plan-name">Studio</p>
+                    <p class="plan-price">$39<span> / month</span></p>
+                    <p class="plan-note">$32 per month billed annually. Everything in Practitioner, plus consultation summaries and fast answers from chart data during sessions.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
             <p class="trust">AI will never read a chart for you. It just finds the facts faster: the aspects, the exact dates, where a planet sits. You stay the astrologer.</p>
         </section>
 
@@ -100,12 +133,14 @@
             <details><summary>Can I use it on a Mac?</summary><p>Yes. Steliara runs in any browser, the same on Mac, Windows, or a borrowed laptop. Nothing to install.</p></details>
             <details><summary>Do I lose my charts if I switch?</summary><p>No. Your charts and the people you read for live in your account and stay there.</p></details>
             <details><summary>Is the calculation accurate?</summary><p>Yes. Calculations are based on Swiss Ephemeris with a professional orb setup.</p></details>
+            <details><summary>How much does Steliara cost?</summary><p>Practitioner is $24 per month, or $20 per month billed annually. Studio is $39 per month, or $32 per month billed annually. Every account starts with a 14-day full-feature trial and no card is required.</p></details>
         </section>
 
         <section class="cta-band">
             <h2>Run your practice from anywhere</h2>
             <p>Charts, the people you read for, and recorded consultations in one place.</p>
             <a class="btn-primary" href="/login.html?mode=register">Start free, no card needed</a>
+            <p class="updated">Last updated 6 August 2026.</p>
         </section>
 
         <footer class="site">
