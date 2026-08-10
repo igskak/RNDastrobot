@@ -1058,3 +1058,134 @@ body:has(.chat-widget.open) .chat-voice-mini {
     font-family: var(--font-ui, sans-serif);
     font-size: 12px;
 }
+
+/* --- tables and charts in a message (PR7c) -------------------------------
+   Scoped inside .message-content so the answer text keeps its own rhythm. The
+   table scrolls horizontally on its own rather than widening the chat column,
+   which on a narrow panel is the difference between usable and unreadable. */
+
+.chat-table {
+    margin-top: 8px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    padding-top: 8px;
+}
+
+.chat-table-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chat-table-open {
+    background: none;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    border-radius: 6px;
+    padding: 3px 9px;
+    font: inherit;
+    font-size: 0.85em;
+    cursor: pointer;
+    color: inherit;
+}
+
+.chat-table-open:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.chat-table-csv {
+    font-size: 0.8em;
+    opacity: 0.75;
+    text-decoration: none;
+    color: inherit;
+    border-bottom: 1px dotted currentColor;
+}
+
+.chat-table-body {
+    margin-top: 8px;
+}
+
+.chat-table-loading {
+    font-size: 0.85em;
+    opacity: 0.7;
+    padding: 6px 0;
+}
+
+/* The scroller, not the table, owns the overflow: a wide table must not push
+   the chat panel wider than its container. */
+.chat-table-scroll {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+.chat-table-scroll table {
+    border-collapse: collapse;
+    font-size: 0.8em;
+    white-space: nowrap;
+}
+
+.chat-table-scroll th,
+.chat-table-scroll td {
+    padding: 3px 8px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    text-align: left;
+}
+
+.chat-table-scroll td.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.chat-table-scroll th.sortable {
+    cursor: pointer;
+    user-select: none;
+    font-weight: 600;
+}
+
+.chat-table-scroll th.sort-asc::after { content: ' ↑'; opacity: 0.6; }
+.chat-table-scroll th.sort-desc::after { content: ' ↓'; opacity: 0.6; }
+
+.chat-table-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    font-size: 0.8em;
+}
+
+.chat-table-nav button {
+    background: none;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    border-radius: 4px;
+    padding: 1px 7px;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+}
+
+.chat-table-nav button:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.chat-chart {
+    margin: 10px 0 4px;
+}
+
+.chat-chart svg {
+    display: block;
+    max-width: 100%;
+}
+
+/* Colour carries category only, never valuation: nothing here may read as
+   "good" or "bad" about a transit (spec §17). */
+.chat-chart .chart-bar { fill: var(--accent, #1e3a5f); opacity: 0.55; }
+.chat-chart .chart-exact { fill: var(--accent, #1e3a5f); }
+.chat-chart .chart-line { fill: none; stroke: var(--accent, #1e3a5f); stroke-width: 1.4; }
+.chat-chart .chart-edge { stroke: var(--accent, #1e3a5f); opacity: 0.35; }
+.chat-chart .chart-label { font-size: 9px; fill: currentColor; opacity: 0.85; }
+.chat-chart .chart-value { font-size: 9px; fill: currentColor; opacity: 0.6; }
+
+.chat-chart figcaption {
+    font-size: 0.78em;
+    opacity: 0.7;
+    margin-top: 2px;
+}

@@ -90,6 +90,7 @@ jobs:
           node app/frontend/js/forecast-new-panel-editor.test.cjs
           node app/frontend/js/forecast-new-swap-invariants.test.cjs
           node app/frontend/js/forecast-new-swap-roles.test.js
+          node app/frontend/js/chat-visuals.test.js
           node app/frontend/js/forecast-new-composite-wheel.test.js
           node app/frontend/js/forecast-commands.test.js
 

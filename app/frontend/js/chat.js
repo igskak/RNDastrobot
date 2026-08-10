@@ -381,6 +381,7 @@ class ChatWidget {
             messageEl.classList.add('refused');  // neutral refuse-and-redirect note
         }
         const content = messageEl.querySelector('.message-content');
+        this.appendVisuals(content, data.tool_results);
         const chip = this.buildProvenanceChip(data.tool_results, guardrail);
         if (chip && content) content.appendChild(chip);
         if (data.metric_id && content) {
@@ -476,6 +477,363 @@ class ChatWidget {
         } catch (error) {
             console.error('Assistant feedback error:', error);
         }
+    }
+
+    // --- tables and charts (PR7c) ---------------------------------------
+    // Everything here is built with createElement/createElementNS and
+    // textContent. addMessage deliberately uses textContent rather than
+    // innerHTML, and rendering server data must not be the hole that undoes it:
+    // a natal body name or a chart label reaching innerHTML would be an
+    // injection path straight through the assistant.
+
+    appendVisuals(container, toolResults) {
+        if (!container || !Array.isArray(toolResults)) return;
+        for (const call of toolResults) {
+            const result = call && call.result;
+            if (!result || result.status !== 'ok') continue;
+            if (call.name === 'create_astro_visualization' && result.chart) {
+                const chart = this.buildChart(result.chart);
+                if (chart) container.appendChild(chart);
+            }
+            if (call.name === 'open_full_analysis_table' && result.table_available) {
+                container.appendChild(this.buildTableLauncher(result));
+            }
+        }
+    }
+
+    // --- full table ------------------------------------------------------
+
+    buildTableLauncher(descriptor) {
+        const wrap = document.createElement('div');
+        wrap.className = 'chat-table';
+
+        const bar = document.createElement('div');
+        bar.className = 'chat-table-bar';
+
+        const open = document.createElement('button');
+        open.type = 'button';
+        open.className = 'chat-table-open';
+        open.textContent = t('page.chart.chat.showTable', { count: descriptor.row_count })
+            || `Показать таблицу (${descriptor.row_count})`;
+
+        const csv = document.createElement('a');
+        csv.className = 'chat-table-csv';
+        csv.textContent = 'CSV';
+        csv.href = `${API_BASE_URL}/assistant/surveys/${encodeURIComponent(descriptor.survey_id)}/table.csv`;
+        csv.setAttribute('download', `${descriptor.survey_id}.csv`);
+
+        bar.append(open, csv);
+        wrap.appendChild(bar);
+
+        const body = document.createElement('div');
+        body.className = 'chat-table-body';
+        body.hidden = true;
+        wrap.appendChild(body);
+
+        const state = { page: 1, sort: descriptor.default_sort, order: 'asc', loaded: false };
+        open.addEventListener('click', async () => {
+            if (!body.hidden) { body.hidden = true; return; }
+            body.hidden = false;
+            if (!state.loaded) await this.loadTablePage(descriptor, body, state);
+        });
+        return wrap;
+    }
+
+    async loadTablePage(descriptor, body, state) {
+        body.textContent = '';
+        const loading = document.createElement('div');
+        loading.className = 'chat-table-loading';
+        loading.textContent = '…';
+        body.appendChild(loading);
+        try {
+            const url = new URL(
+                `${API_BASE_URL}/assistant/surveys/${encodeURIComponent(descriptor.survey_id)}/table`,
+                window.location.origin);
+            url.searchParams.set('page', String(state.page));
+            url.searchParams.set('sort', state.sort);
+            url.searchParams.set('order', state.order);
+            const response = await fetch(url.toString(), {
+                credentials: 'include', headers: withLocaleHeaders(),
+            });
+            if (!response.ok) throw new Error('table failed');
+            const data = await response.json();
+            state.loaded = true;
+            body.textContent = '';
+            body.appendChild(this.buildTableElement(data, descriptor, body, state));
+        } catch (error) {
+            console.error('Assistant table error:', error);
+            body.textContent = '';
+            const failed = document.createElement('div');
+            failed.className = 'chat-table-loading';
+            failed.textContent = t('page.chat.errors.sendFailed') || 'Не удалось загрузить таблицу';
+            body.appendChild(failed);
+        }
+    }
+
+    buildTableElement(data, descriptor, body, state) {
+        const frame = document.createElement('div');
+
+        const scroller = document.createElement('div');
+        scroller.className = 'chat-table-scroll';
+        const table = document.createElement('table');
+
+        const head = document.createElement('thead');
+        const headRow = document.createElement('tr');
+        for (const column of data.columns) {
+            const cell = document.createElement('th');
+            cell.textContent = column.label;
+            cell.className = 'sortable';
+            if (column.key === data.sort) {
+                cell.classList.add(data.order === 'desc' ? 'sort-desc' : 'sort-asc');
+            }
+            cell.addEventListener('click', () => {
+                // Re-sorting resets to page 1: staying on page 7 of a different
+                // ordering shows rows the astrologer never asked to see.
+                state.order = (state.sort === column.key && state.order === 'asc') ? 'desc' : 'asc';
+                state.sort = column.key;
+                state.page = 1;
+                this.loadTablePage(descriptor, body, state);
+            });
+            headRow.appendChild(cell);
+        }
+        head.appendChild(headRow);
+        table.appendChild(head);
+
+        const tbody = document.createElement('tbody');
+        for (const row of data.rows) {
+            const tr = document.createElement('tr');
+            for (const column of data.columns) {
+                const td = document.createElement('td');
+                const value = row[column.key];
+                td.textContent = (value === null || value === undefined) ? '—' : String(value);
+                if (column.type === 'number') td.className = 'num';
+                tr.appendChild(td);
+            }
+            tbody.appendChild(tr);
+        }
+        table.appendChild(tbody);
+        scroller.appendChild(table);
+        frame.appendChild(scroller);
+
+        if (data.page_count > 1) {
+            const nav = document.createElement('div');
+            nav.className = 'chat-table-nav';
+            const prev = document.createElement('button');
+            prev.type = 'button';
+            prev.textContent = '‹';
+            prev.disabled = data.page <= 1;
+            prev.addEventListener('click', () => {
+                state.page = Math.max(1, data.page - 1);
+                this.loadTablePage(descriptor, body, state);
+            });
+            const label = document.createElement('span');
+            label.textContent = `${data.page} / ${data.page_count} · ${data.total_rows}`;
+            const next = document.createElement('button');
+            next.type = 'button';
+            next.textContent = '›';
+            next.disabled = data.page >= data.page_count;
+            next.addEventListener('click', () => {
+                state.page = Math.min(data.page_count, data.page + 1);
+                this.loadTablePage(descriptor, body, state);
+            });
+            nav.append(prev, label, next);
+            frame.appendChild(nav);
+        }
+        return frame;
+    }
+
+    // --- charts ----------------------------------------------------------
+
+    buildChart(chart) {
+        const wrap = document.createElement('figure');
+        wrap.className = 'chat-chart';
+
+        let svg = null;
+        if (chart.type === 'aspect_timeline') svg = this.drawTimeline(chart.series);
+        else if (chart.type === 'orb_line') svg = this.drawOrbLine(chart.series);
+        else if (chart.type === 'network') svg = this.drawNetwork(chart.series);
+        else svg = this.drawBars(chart.series);          // heatmap + bar share a shape
+        if (!svg) return null;
+
+        // The alt text is the accessible description AND the fallback for
+        // anyone the SVG fails for, so it is a caption, not an attribute alone.
+        svg.setAttribute('role', 'img');
+        const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+        title.textContent = chart.alt || chart.title || '';
+        svg.insertBefore(title, svg.firstChild);
+        wrap.appendChild(svg);
+
+        const caption = document.createElement('figcaption');
+        caption.textContent = chart.alt || chart.title || '';
+        wrap.appendChild(caption);
+        return wrap;
+    }
+
+    static svg(name, attrs) {
+        const node = document.createElementNS('http://www.w3.org/2000/svg', name);
+        for (const [key, value] of Object.entries(attrs || {})) {
+            node.setAttribute(key, String(value));
+        }
+        return node;
+    }
+
+    drawBars(series) {
+        if (!Array.isArray(series) || !series.length) return null;
+        const S = ChatWidget.svg;
+        const rowH = 20;
+        const labelW = 96;
+        const width = 420;
+        const height = series.length * rowH + 8;
+        const max = Math.max(...series.map((b) => Number(b.value) || 0), 1);
+        const svg = S('svg', { viewBox: `0 0 ${width} ${height}`, width: '100%', height });
+
+        series.forEach((bucket, i) => {
+            const y = i * rowH + 4;
+            const label = S('text', { x: 0, y: y + 12, class: 'chart-label' });
+            label.textContent = String(bucket.bucket);
+            svg.appendChild(label);
+
+            const barW = Math.max(1, ((Number(bucket.value) || 0) / max) * (width - labelW - 34));
+            svg.appendChild(S('rect', {
+                x: labelW, y: y + 3, width: barW, height: rowH - 9,
+                rx: 2, class: 'chart-bar',
+            }));
+            const value = S('text', { x: labelW + barW + 6, y: y + 12, class: 'chart-value' });
+            value.textContent = String(bucket.value);
+            svg.appendChild(value);
+        });
+        return svg;
+    }
+
+    drawTimeline(series) {
+        if (!Array.isArray(series) || !series.length) return null;
+        const S = ChatWidget.svg;
+        const times = [];
+        for (const item of series) {
+            const start = Date.parse(item.start);
+            const end = Date.parse(item.end);
+            if (Number.isFinite(start)) times.push(start);
+            if (Number.isFinite(end)) times.push(end);
+        }
+        if (!times.length) return null;
+        const min = Math.min(...times);
+        const max = Math.max(...times);
+        const span = Math.max(1, max - min);
+
+        const rowH = 18;
+        const labelW = 150;
+        const width = 460;
+        const height = series.length * rowH + 8;
+        const svg = S('svg', { viewBox: `0 0 ${width} ${height}`, width: '100%', height });
+        const scale = (ms) => labelW + ((ms - min) / span) * (width - labelW - 8);
+
+        series.forEach((item, i) => {
+            const y = i * rowH + 4;
+            const label = S('text', { x: 0, y: y + 11, class: 'chart-label' });
+            label.textContent = item.label;
+            svg.appendChild(label);
+
+            const start = Date.parse(item.start);
+            const end = Date.parse(item.end);
+            if (!Number.isFinite(start) || !Number.isFinite(end)) return;
+            const x = scale(start);
+            svg.appendChild(S('rect', {
+                x, y: y + 3, width: Math.max(2, scale(end) - x), height: rowH - 8,
+                rx: 2, class: 'chart-bar',
+            }));
+            // Exact passes are the thing an astrologer looks for; mark each.
+            for (const exact of item.exact || []) {
+                const at = Date.parse(exact);
+                if (!Number.isFinite(at)) continue;
+                svg.appendChild(S('circle', {
+                    cx: scale(at), cy: y + (rowH - 8) / 2 + 3, r: 2.5, class: 'chart-exact',
+                }));
+            }
+        });
+        return svg;
+    }
+
+    drawOrbLine(series) {
+        if (!Array.isArray(series) || series.length < 2) return null;
+        const S = ChatWidget.svg;
+        const xs = series.map((p) => Date.parse(p.x)).filter(Number.isFinite);
+        if (xs.length < 2) return null;
+        const minX = Math.min(...xs);
+        const spanX = Math.max(1, Math.max(...xs) - minX);
+        const maxY = Math.max(...series.map((p) => Number(p.y) || 0), 0.1);
+
+        const width = 460;
+        const height = 140;
+        const pad = 24;
+        const svg = S('svg', { viewBox: `0 0 ${width} ${height}`, width: '100%', height });
+
+        // Orb 0 is the tightest, so the axis is inverted: exact sits at the top,
+        // which is how an astrologer reads "closest".
+        const px = (ms) => pad + ((ms - minX) / spanX) * (width - pad * 2);
+        const py = (orb) => pad + (orb / maxY) * (height - pad * 2);
+
+        const points = series
+            .map((p) => [Date.parse(p.x), Number(p.y)])
+            .filter(([x, y]) => Number.isFinite(x) && Number.isFinite(y))
+            .map(([x, y]) => `${px(x).toFixed(1)},${py(y).toFixed(1)}`)
+            .join(' ');
+        svg.appendChild(S('polyline', { points, class: 'chart-line' }));
+
+        for (const point of series) {
+            const x = Date.parse(point.x);
+            const y = Number(point.y);
+            if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+            const dot = S('circle', { cx: px(x), cy: py(y), r: 2.5, class: 'chart-exact' });
+            const tip = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+            tip.textContent = `${point.label} · ${y}`;
+            dot.appendChild(tip);
+            svg.appendChild(dot);
+        }
+        return svg;
+    }
+
+    drawNetwork(graph) {
+        if (!graph || !Array.isArray(graph.nodes) || !graph.nodes.length) return null;
+        const S = ChatWidget.svg;
+        // Bipartite layout: transiting bodies left, natal targets right. A force
+        // layout would look better and would need a solver in the bundle; the
+        // two columns say the same thing about who connects to whom.
+        const left = graph.nodes.filter((n) => n.kind === 'transit');
+        const right = graph.nodes.filter((n) => n.kind !== 'transit');
+        const rows = Math.max(left.length, right.length);
+        const rowH = 22;
+        const width = 420;
+        const height = rows * rowH + 12;
+        const leftX = 70;
+        const rightX = width - 70;
+        const svg = S('svg', { viewBox: `0 0 ${width} ${height}`, width: '100%', height });
+
+        const place = (list, x, anchor) => {
+            const map = new Map();
+            list.forEach((node, i) => {
+                const y = i * rowH + 14;
+                map.set(node.id, y);
+                const label = S('text', { x, y: y + 4, class: 'chart-label', 'text-anchor': anchor });
+                label.textContent = node.label;
+                svg.appendChild(label);
+            });
+            return map;
+        };
+        const leftY = place(left, leftX - 8, 'end');
+        const rightY = place(right, rightX + 8, 'start');
+
+        const maxWeight = Math.max(...(graph.edges || []).map((e) => e.weight || 1), 1);
+        for (const edge of graph.edges || []) {
+            const y1 = leftY.get(edge.source);
+            const y2 = rightY.get(edge.target);
+            if (y1 === undefined || y2 === undefined) continue;
+            svg.appendChild(S('line', {
+                x1: leftX, y1, x2: rightX, y2,
+                class: 'chart-edge',
+                'stroke-width': (0.6 + (edge.weight / maxWeight) * 1.8).toFixed(2),
+            }));
+        }
+        return svg;
     }
 
     buildProvenanceChip(toolResults, guardrail) {
