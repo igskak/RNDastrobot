@@ -159,7 +159,8 @@
 .aes-chip.tense { background: rgba(184, 50, 50, 0.08); border-color: rgba(184, 50, 50, 0.18); }
 .aes-chip.neutral { background: rgba(30, 58, 95, 0.08); border-color: rgba(30, 58, 95, 0.16); }
 .aes-chip.minor { background: rgba(155, 146, 137, 0.08); border-color: rgba(155, 146, 137, 0.18); }
-.aes-planets { font-weight: 600; }
+.aes-planets { display: inline-flex; align-items: center; gap: 3px; font-weight: 600; }
+.aes-planets .planet-icon-svg { display: inline-flex; align-items: center; }
 .aes-exact { font-size: 0.7rem; color: var(--text-secondary); margin-top: 1px; }
 .aes-empty { font-size: 0.8rem; color: var(--text-secondary); padding: 2px 0; }
 

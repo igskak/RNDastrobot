@@ -133,10 +133,9 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             };
             this.aspectLookupByKey = {};
             this.conjunctionDisplay = {
-                dotOrbThreshold: 2,
-                dotRadius: 3.6,
-                collapseThreshold: 9,
-                minLineLength: 14,
+                // Насколько глубоко «скобка» соединения заходит внутрь круга
+                // от границы аспектного кольца (см. resolveAspectLineGeometry).
+                apexDepth: 16,
             };
             this.suppressPlanetClickUntil = 0;
             this.aspectNameAliases = {
@@ -875,41 +874,20 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                         'data-type': aspect.aspect_type,
                         'data-major': isMajor ? 'true' : 'false',
                         'data-exact': exactAspect ? 'true' : 'false',
-                        'data-conjunction-collapsed': geometry.collapsed ? 'true' : 'false',
+                        'data-conjunction-bracket': geometry.bracket ? 'true' : 'false',
                     };
 
-                    const aspectElement = geometry.drawDot
-                        ? this.el('circle', {
-                            cx: geometry.midX,
-                            cy: geometry.midY,
-                            r: this.conjunctionDisplay.dotRadius,
-                            fill: color,
-                            stroke: color,
-                            'stroke-width': exactAspect ? 3 : 2.4,
-                            opacity: isMajor ? 0.82 : 0.55,
-                            class: 'aspect-line aspect-dot',
-                            ...aspectAttrs,
-                        })
-                        : this.el('line', {
-                            x1: geometry.x1, y1: geometry.y1, x2: geometry.x2, y2: geometry.y2,
-                            stroke: color,
-                            'stroke-width': thickness,
-                            'stroke-dasharray': isMajor ? 'none' : '3,2',
-                            'stroke-linecap': aspect.aspect_type === 'Conjunction' ? 'round' : 'butt',
-                            opacity: isMajor ? 0.7 : 0.45,
-                            class: 'aspect-line',
-                            ...aspectAttrs,
-                    });
-                    this.layers.aspects.appendChild(aspectElement);
+                    this.layers.aspects.appendChild(this.createAspectShape({
+                        geometry, color, thickness, isMajor, exactAspect, aspectAttrs,
+                    }));
                     this.layers.aspects.appendChild(this.createAspectHitElement({
                         aspectAttrs,
                         geometry,
                     }));
+                    this.createAspectEndpoints({ geometry, color, isMajor })
+                        .forEach((node) => this.layers.aspects.appendChild(node));
 
-                    const shouldDrawAspectGlyph = isMajor
-                        && Number(aspect.orb) < 5
-                        && !geometry.drawDot
-                        && (aspect.aspect_type !== 'Conjunction' || geometry.collapsed);
+                    const shouldDrawAspectGlyph = isMajor && Number(aspect.orb) < 5;
                     if (shouldDrawAspectGlyph) {
                         const glyph = ASPECT_SYMBOLS[aspect.aspect_type];
                         if (!glyph) return;
@@ -1018,41 +996,18 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                     'data-type': aspect.aspect_type,
                     'data-major': isMajor ? 'true' : 'false',
                     'data-exact': exactAspect ? 'true' : 'false',
-                    'data-conjunction-collapsed': geometry.collapsed ? 'true' : 'false',
+                    'data-conjunction-bracket': geometry.bracket ? 'true' : 'false',
                 };
 
-                const aspectElement = geometry.drawDot
-                    ? this.el('circle', {
-                        cx: geometry.midX,
-                        cy: geometry.midY,
-                        r: this.conjunctionDisplay.dotRadius,
-                        fill: color,
-                        stroke: color,
-                        'stroke-width': exactAspect ? 3 : 2.4,
-                        opacity: isMajor ? 0.82 : 0.55,
-                        class: 'aspect-line aspect-dot',
-                        ...aspectAttrs,
-                    })
-                    : this.el('line', {
-                        x1: geometry.x1, y1: geometry.y1, x2: geometry.x2, y2: geometry.y2,
-                        stroke: color,
-                        'stroke-width': thickness,
-                        'stroke-dasharray': isMajor ? 'none' : '3,2',
-                        'stroke-linecap': aspect.aspect_type === 'Conjunction' ? 'round' : 'butt',
-                        opacity: isMajor ? 0.7 : 0.45,
-                        class: 'aspect-line',
-                        ...aspectAttrs,
-                });
-                this.layers.aspects.appendChild(aspectElement);
+                this.layers.aspects.appendChild(this.createAspectShape({
+                    geometry, color, thickness, isMajor, exactAspect, aspectAttrs,
+                }));
                 this.layers.aspects.appendChild(this.createAspectHitElement({
                     aspectAttrs,
                     geometry,
                 }));
 
-                const shouldDrawAspectGlyph = isMajor
-                    && Number(aspect.orb) < 5
-                    && !geometry.drawDot
-                    && (aspect.aspect_type !== 'Conjunction' || geometry.collapsed);
+                const shouldDrawAspectGlyph = isMajor && Number(aspect.orb) < 5;
                 if (!shouldDrawAspectGlyph) return;
                 const glyph = ASPECT_SYMBOLS[aspect.aspect_type];
                 if (!glyph) return;
@@ -1213,11 +1168,17 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             return row.display !== false && row.aspecting !== false;
         }
 
+        // Кольцо партнёра в синастрии — это НАТАЛЬНАЯ карта другого человека,
+        // а не прогностический слой. Раньше оно гейтилось прогностической
+        // матрицей тел: выключенная для транзитов планета (скажем, Венера)
+        // молча выпадала и из синастрии — вместе со всеми её аспектами.
+        static NATAL_MATRIX_METHODS = new Set(['natal', 'synastry_partner']);
+
         getMatrixRow(name, method = 'prognostic') {
             const normalized = window.AstroPreferences?.normalizeMatrixBodyName
                 ? window.AstroPreferences.normalizeMatrixBodyName(name)
                 : this.normalizeBodyName(name);
-            const scopedRows = method === 'natal'
+            const scopedRows = PrognosticRingsWheel.NATAL_MATRIX_METHODS.has(method)
                 ? (this.natalMatrixRows || {})
                 : (this.prognosticMatrixRows || this.matrixRows || {});
             return scopedRows?.[normalized] || { display: true, aspecting: true };
@@ -1259,47 +1220,48 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             return natalRing?.inner || FIRST_RING_INNER_R;
         }
 
-        resolveAspectLineGeometry({ x1, y1, x2, y2, angle1, angle2, aspectType, orb }) {
+        /** Сдвинуть точку к центру круга на `inset` — так метка уходит из-под кольца тел. */
+        insetTowardCenter(x, y, inset) {
+            const dx = x - C;
+            const dy = y - C;
+            const radius = Math.hypot(dx, dy);
+            if (!radius || !inset) return { x, y };
+            const scale = Math.max(0, radius - inset) / radius;
+            return { x: C + dx * scale, y: C + dy * scale };
+        }
+
+        resolveAspectLineGeometry({ x1, y1, x2, y2, aspectType }) {
+            const rawLength = Math.hypot(x2 - x1, y2 - y1);
             const midX = (x1 + x2) / 2;
             const midY = (y1 + y2) / 2;
-            const rawLength = Math.hypot(x2 - x1, y2 - y1);
-            const numericOrb = Number(orb);
-            const shouldDrawDot = aspectType === 'Conjunction'
-                && Number.isFinite(numericOrb)
-                && numericOrb <= this.conjunctionDisplay.dotOrbThreshold;
 
-            if (aspectType !== 'Conjunction' || rawLength >= this.conjunctionDisplay.collapseThreshold) {
-                return {
-                    x1,
-                    y1,
-                    x2,
-                    y2,
-                    midX,
-                    midY,
-                    rawLength,
-                    drawDot: shouldDrawDot,
-                    collapsed: shouldDrawDot,
-                };
+            if (aspectType !== 'Conjunction') {
+                return { x1, y1, x2, y2, midX, midY, rawLength, bracket: false };
             }
 
-            const avgCos = Math.cos(angle1) + Math.cos(angle2);
-            const avgSin = Math.sin(angle1) + Math.sin(angle2);
-            const avgNorm = Math.hypot(avgCos, avgSin) || 1;
-            const tangentX = -avgSin / avgNorm;
-            const tangentY = avgCos / avgNorm;
-            const halfLength = this.conjunctionDisplay.minLineLength / 2;
-
+            // Соединение почти совпадает по долготе: хорда вырождается в точку
+            // на границе кольца и целиком уходит под глифы планет. Рисуем его
+            // «скобкой» — от одного тела внутрь круга и обратно ко второму.
+            // Концы остаются НА своих телах, поэтому метка читается как их
+            // связь, а не как оторвавшийся штрих где-то рядом.
+            const apex = this.insetTowardCenter(midX, midY, this.conjunctionDisplay.apexDepth);
             return {
-                x1: midX - tangentX * halfLength,
-                y1: midY - tangentY * halfLength,
-                x2: midX + tangentX * halfLength,
-                y2: midY + tangentY * halfLength,
-                midX,
-                midY,
+                x1,
+                y1,
+                x2,
+                y2,
+                apexX: apex.x,
+                apexY: apex.y,
+                midX: apex.x,
+                midY: apex.y,
                 rawLength,
-                drawDot: shouldDrawDot,
-                collapsed: true,
+                bracket: true,
             };
+        }
+
+        /** `d` для аспектной «скобки» соединения. */
+        aspectBracketPath(geometry) {
+            return `M ${geometry.x1} ${geometry.y1} L ${geometry.apexX} ${geometry.apexY} L ${geometry.x2} ${geometry.y2}`;
         }
 
         getAspectColor(aspectType, harmonicType = null) {
@@ -1638,7 +1600,7 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             });
 
             this.svg.querySelectorAll('.aspect-line').forEach((line) => {
-                const matches = line.dataset.planet1 === planetName || line.dataset.planet2 === planetName;
+                const matches = this.aspectLineBodies(line).includes(planetName);
                 if (!matches) return;
                 line.style.opacity = isEnter ? '1' : '';
                 line.style.strokeWidth = isEnter ? '3' : '';
@@ -1775,6 +1737,19 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             this.showTooltip(this.getFixedStarTooltipHtml(star), event);
         }
 
+        /**
+         * Тела аспектной линии.
+         *
+         * ВАЖНО: атрибут `data-planet-1` НЕ превращается в `dataset.planet1` —
+         * дефис перед цифрой в camelCase не сворачивается, ключ остаётся
+         * `dataset['planet-1']`. Читаем через getAttribute, иначе получаем
+         * молчаливый undefined и подсветка не срабатывает.
+         */
+        aspectLineBodies(line) {
+            if (!line) return [];
+            return [line.getAttribute('data-planet-1'), line.getAttribute('data-planet-2')].filter(Boolean);
+        }
+
         setHoveredAspect(aspectKey) {
             this.clearHoveredAspect();
             if (!aspectKey) return;
@@ -1785,12 +1760,42 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             });
 
             const line = this.svg.querySelector(`.aspect-line[data-aspect-key="${escaped}"]`);
-            const bodies = [line?.dataset.planet1, line?.dataset.planet2].filter(Boolean);
+            const bodies = this.aspectLineBodies(line);
             bodies.forEach((bodyName) => {
                 this.svg.querySelectorAll(`.prognostic-body[data-planet="${this.escapeAttribute(bodyName)}"]`).forEach((group) => {
                     group.classList.add('forecast-new-planet-focus');
                 });
                 document.querySelectorAll(`tr[data-planet="${this.escapeAttribute(bodyName)}"]`).forEach((row) => {
+                    row.classList.add('active-row');
+                });
+            });
+        }
+
+        /**
+         * Подсветка аспектной конфигурации (или стеллиума) целиком: все её
+         * аспектные линии плюс участвующие тела. Стеллиум приходит без
+         * аспектов — тогда подсвечиваются только тела.
+         */
+        setHoveredConfiguration({ aspectKeys = [], planets = [] } = {}) {
+            this.clearHoveredAspect();
+            const bodies = new Set(
+                planets.map((name) => this.normalizeBodyName(name)).filter(Boolean)
+            );
+
+            aspectKeys.filter(Boolean).forEach((aspectKey) => {
+                const escaped = this.escapeAttribute(aspectKey);
+                this.svg.querySelectorAll(`.aspect-line[data-aspect-key="${escaped}"]`).forEach((line) => {
+                    line.classList.add('forecast-new-aspect-focus');
+                    this.aspectLineBodies(line).forEach((name) => bodies.add(name));
+                });
+            });
+
+            bodies.forEach((bodyName) => {
+                const escaped = this.escapeAttribute(bodyName);
+                this.svg.querySelectorAll(`.prognostic-body[data-planet="${escaped}"]`).forEach((group) => {
+                    group.classList.add('forecast-new-planet-focus');
+                });
+                document.querySelectorAll(`tr[data-planet="${escaped}"]`).forEach((row) => {
                     row.classList.add('active-row');
                 });
             });
@@ -2103,26 +2108,57 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
             return symbolGroup;
         }
 
-        createAspectHitElement({ aspectAttrs, geometry }) {
-            if (geometry.drawDot) {
-                return this.el('circle', {
-                    cx: geometry.midX,
-                    cy: geometry.midY,
-                    r: this.conjunctionDisplay.dotRadius + 8,
-                    fill: 'transparent',
-                    stroke: 'transparent',
-                    'stroke-width': 1,
-                    class: 'aspect-line aspect-hit',
-                    style: 'pointer-events: all;',
-                    'aria-hidden': 'true',
-                    ...aspectAttrs,
+        /** Сама аспектная фигура: прямая линия, а у соединения — «скобка». */
+        createAspectShape({ geometry, color, thickness, isMajor, aspectAttrs }) {
+            const shared = {
+                stroke: color,
+                'stroke-width': thickness,
+                'stroke-dasharray': isMajor ? 'none' : '3,2',
+                opacity: isMajor ? 0.7 : 0.45,
+                class: 'aspect-line',
+                ...aspectAttrs,
+            };
+            if (geometry.bracket) {
+                return this.el('path', {
+                    d: this.aspectBracketPath(geometry),
+                    fill: 'none',
+                    'stroke-linecap': 'round',
+                    'stroke-linejoin': 'round',
+                    ...shared,
                 });
             }
             return this.el('line', {
-                x1: geometry.x1,
-                y1: geometry.y1,
-                x2: geometry.x2,
-                y2: geometry.y2,
+                x1: geometry.x1, y1: geometry.y1, x2: geometry.x2, y2: geometry.y2,
+                'stroke-linecap': 'butt',
+                ...shared,
+            });
+        }
+
+        /**
+         * Точка на «внешнем» конце межкартовой аспектной линии.
+         *
+         * Линии рисуются по границе НАТАЛЬНОГО кольца: натальный конец совпадает
+         * с якорной точкой своего тела, а конец второй карты упирается в пустоту —
+         * отсюда «точка видна только с одной стороны».
+         */
+        createAspectEndpoints({ geometry, color, isMajor }) {
+            if (!geometry) return [];
+            return [this.el('circle', {
+                cx: geometry.x1,
+                cy: geometry.y1,
+                r: 1.8,
+                fill: 'none',
+                stroke: color,
+                'stroke-width': 1,
+                opacity: isMajor ? 0.7 : 0.45,
+                class: 'aspect-endpoint',
+                'aria-hidden': 'true',
+                style: 'pointer-events: none;',
+            })];
+        }
+
+        createAspectHitElement({ aspectAttrs, geometry }) {
+            const shared = {
                 stroke: 'transparent',
                 'stroke-width': 14,
                 'stroke-linecap': 'round',
@@ -2131,6 +2167,21 @@ import { appendPlanetLeaderAnnotation, getPlanetLeaderLineEndPoint } from './whe
                 style: 'pointer-events: stroke;',
                 'aria-hidden': 'true',
                 ...aspectAttrs,
+            };
+            if (geometry.bracket) {
+                return this.el('path', {
+                    d: this.aspectBracketPath(geometry),
+                    fill: 'none',
+                    'stroke-linejoin': 'round',
+                    ...shared,
+                });
+            }
+            return this.el('line', {
+                x1: geometry.x1,
+                y1: geometry.y1,
+                x2: geometry.x2,
+                y2: geometry.y2,
+                ...shared,
             });
         }
 

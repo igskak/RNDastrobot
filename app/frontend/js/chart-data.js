@@ -994,6 +994,15 @@ class ChartDataRenderer {
         }).join('');
     }
 
+    // Заголовок ячейки аспектной сетки: глиф тела и значок ретроградности
+    // держатся вплотную друг к другу — SVG-глиф несёт много пустого поля,
+    // поэтому значок прижимаем к нему отрицательным отступом (см. .aspect-grid-body).
+    renderGridHeaderBody(planet) {
+        const symbol = this.getPlanetSymbolMarkup(planet.name, { size: 15, title: this.planetName(planet.name) });
+        const retro = this.retroIndicatorHtml(planet.retrograde, 'retro-indicator--micro');
+        return `<span class="aspect-grid-body">${symbol}${retro}</span>`;
+    }
+
     /**
      * Треугольная сетка аспектов (Aspect Grid) — профессиональный стандарт
      * Включает все точки с которыми строятся аспекты
@@ -1026,13 +1035,13 @@ class ChartDataRenderer {
         // Заголовок
         html += '<tr><th></th>';
         filtered.forEach(p => {
-            html += `<th title="${this.planetName(p.name)}">${this.getPlanetSymbolMarkup(p.name, { size: 15, title: this.planetName(p.name) })}${this.retroIndicatorHtml(p.retrograde, 'retro-indicator--micro')}</th>`;
+            html += `<th title="${this.planetName(p.name)}">${this.renderGridHeaderBody(p)}</th>`;
         });
         html += '</tr>';
 
         // Строки (треугольная матрица)
         filtered.forEach((rowPlanet, rowIdx) => {
-            html += `<tr><th title="${this.planetName(rowPlanet.name)}">${this.getPlanetSymbolMarkup(rowPlanet.name, { size: 15, title: this.planetName(rowPlanet.name) })}${this.retroIndicatorHtml(rowPlanet.retrograde, 'retro-indicator--micro')}</th>`;
+            html += `<tr><th title="${this.planetName(rowPlanet.name)}">${this.renderGridHeaderBody(rowPlanet)}</th>`;
 
             filtered.forEach((colPlanet, colIdx) => {
                 if (colIdx >= rowIdx) {
@@ -1151,15 +1160,10 @@ class ChartDataRenderer {
                     class="config-card config-card--compact"
                     data-config-planets="${this.escapeHtml((c.planets_involved || []).join('|'))}"
                     data-config-aspect-keys="${this.escapeHtml((c.aspects || []).map((aspect) => this.getAspectKey(aspect)).filter(Boolean).join('|'))}"
-                    data-compact-value="${Math.round(c.strength_score || 0)}"
-                    title="${this.escapeHtml(`${this.formatConfigType(c.type)} · ${this.t('page.chart.configurations.strengthShort', { value: Math.round(c.strength_score || 0) })}`)}"
+                    title="${this.escapeHtml(this.formatConfigType(c.type))}"
                 >
                     <div class="config-card-head">
-                        <h4>
-                            ${Symbols.configIcons[c.type] || '◆'}
-                            ${this.formatConfigType(c.type)}
-                        </h4>
-                        <span class="config-strength-badge" data-compact-value="${Math.round(c.strength_score || 0)}">${this.t('page.chart.configurations.strengthShort', { value: Math.round(c.strength_score || 0) })}</span>
+                        <h4>${this.escapeHtml(this.formatConfigType(c.type))}</h4>
                     </div>
                     <div class="config-planets config-planets--compact">
                         ${c.apex_planet ? `

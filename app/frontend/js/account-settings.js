@@ -196,12 +196,20 @@
         return translateOrFallback(`astro.planet.${body}`, window.Symbols?.getPlanetNameRu?.(body) || body);
     }
 
+    // Палитра приходит с ключами стихий на английском (Fire/Earth/Air/Water) —
+    // в интерфейсе показываем переведённое название.
+    function getElementLabel(element) {
+        return translateOrFallback(`astro.element.${element}`, element);
+    }
+
     function getBodySymbol(body) {
         return window.Symbols?.getPlanetSymbol?.(body) || String(body || '').slice(0, 2) || '•';
     }
 
+    // Все иконки тел в настройках лежат в круглом сером бейдже, поэтому
+    // просим оптическое центрирование глифа (см. planet-svg-icons.js).
     function getBodySymbolMarkup(body, options = {}) {
-        return window.Symbols?.getPlanetSymbolMarkup?.(body, options)
+        return window.Symbols?.getPlanetSymbolMarkup?.(body, { opticalCenter: true, ...options })
             || `<span class="astro-symbol" aria-hidden="true">${escapeHtml(getBodySymbol(body))}</span>`;
     }
 
@@ -1018,12 +1026,15 @@
             exactAspectHighlightToggle.checked = resolvedVisual?.wheel?.highlight_exact_aspects !== false;
         }
 
-        elementBody.innerHTML = Object.keys(elementPalette).map((element) => `
+        elementBody.innerHTML = Object.keys(elementPalette).map((element) => {
+            const label = getElementLabel(element);
+            return `
             <tr>
-                <th scope="row">${escapeHtml(element)}</th>
-                <td><input type="color" class="account-settings-color-input account-settings-swatch-input" value="${escapeHtml(elementPalette[element])}" data-element-color="${element}" aria-label="${escapeHtml(element)}"></td>
+                <th scope="row">${escapeHtml(label)}</th>
+                <td><input type="color" class="account-settings-color-input account-settings-swatch-input" value="${escapeHtml(elementPalette[element])}" data-element-color="${element}" aria-label="${escapeHtml(label)}"></td>
             </tr>
-        `).join('');
+        `;
+        }).join('');
 
         const renderOverrides = (bodies) => bodies.map((body) => {
             const defaultDisplayColor = getBodyDefaultDisplayColor(body, resolvedVisual);

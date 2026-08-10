@@ -191,10 +191,25 @@ class SynastryService:
         )
 
     def _collect_chart_objects(self, chart_data: Dict, *, include_angles: bool) -> List[Dict]:
+        """Тела карты для интер-аспектов: планеты + спецточки + (опционально) углы.
+
+        Тело может лежать сразу в двух секциях карты — Vertex/AntiVertex приходят
+        и в `special_points`, и в `angles`. Без дедупликации такое тело попадало
+        в список дважды, и каждый его контакт с партнёром считался и рисовался
+        по два раза. Побеждает первое вхождение (планета → спецточка → угол).
+        """
         objects: List[Dict] = []
+        seen_names = set()
+
+        def add(candidate: Dict) -> None:
+            name = candidate.get('name')
+            if not name or name in seen_names:
+                return
+            seen_names.add(name)
+            objects.append(candidate)
 
         for planet in chart_data.get('planets') or []:
-            objects.append({
+            add({
                 'name': planet['name'],
                 'longitude': float(planet['longitude']),
                 'type': 'planet',
@@ -206,7 +221,7 @@ class SynastryService:
             })
 
         for point in (chart_data.get('special_points') or {}).values():
-            objects.append({
+            add({
                 'name': point['name'],
                 'longitude': float(point['longitude']),
                 'type': 'special_point',
@@ -221,7 +236,7 @@ class SynastryService:
             for angle in (chart_data.get('angles') or {}).values():
                 if angle.get('longitude') is None:
                     continue
-                objects.append({
+                add({
                     'name': angle['name'],
                     'longitude': float(angle['longitude']),
                     'type': 'angle',

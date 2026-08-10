@@ -245,6 +245,7 @@ function getPlanetSymbolMarkup(name, options = {}) {
             color: options.color,
             title,
             className: options.className,
+            opticalCenter: options.opticalCenter === true,
         });
         return `<span class="${escapeHtml(wrapperClass)}">${svgMarkup}</span>`;
     }

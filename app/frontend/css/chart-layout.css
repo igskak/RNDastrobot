@@ -1137,13 +1137,16 @@
     width: 100%;
 }
 
+/* Одна строка справа от глифа, чуть ниже центра — как в forecast-new. */
 .chart-page .planet-motion-stack {
     display: inline-flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    justify-content: center;
-    gap: 0;
-    margin-left: -6px;
+    justify-content: flex-start;
+    align-self: flex-end;
+    gap: 2px;
+    margin-left: -4px;
+    margin-bottom: 1px;
     line-height: 1;
 }
 

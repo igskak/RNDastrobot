@@ -594,6 +594,9 @@
                     el.classList.add('active');
                     el.classList.remove('is-compact'); // shed corner-compact styling when back in a panel
                     delete el.dataset.cornerView;
+                    // Consumers bind interactions above both panels and corners,
+                    // so the block itself has to say which chart it belongs to.
+                    el.dataset.blockSource = block.source;
                     if (showHeaders) {
                         var wrap = doc.createElement('div');
                         wrap.className = 'forecast-new-block';
@@ -629,6 +632,7 @@
                     if (el) {
                         el.classList.add('active', 'is-compact');
                         el.dataset.cornerView = block.view;
+                        el.dataset.blockSource = block.source;
                         var toolbar = doc.createElement('div');
                         toolbar.className = 'forecast-new-corner-toolbar';
                         var title = doc.createElement('span');

@@ -1101,6 +1101,17 @@
     display: contents;
 }
 
+/* Наведение на конфигурацию: карточка отзывается, фигура подсвечивается на карте. */
+.forecast-new-page .config-card {
+    cursor: default;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.forecast-new-page .config-card--hovered {
+    background: rgba(184, 147, 90, 0.12);
+    box-shadow: inset 0 0 0 1px rgba(184, 147, 90, 0.38);
+}
+
 .forecast-new-side-panel .config-card h4 {
     display: block;
     min-width: 0;
@@ -1519,11 +1530,12 @@ body.forecast-new-panel-edit .forecast-new-corner:focus-within .forecast-new-cor
 .forecast-new-corner > .is-compact[data-corner-view="houses"] td:nth-child(n+3) {
     display: none;
 }
-.forecast-new-corner > .is-compact[data-corner-view="aspects"] tbody tr:nth-child(n+7),
-.forecast-new-corner > .is-compact[data-corner-view="configs"] > *:nth-child(n+7),
-.forecast-new-corner > .is-compact[data-corner-view="stelliums"] > *:nth-child(n+7) {
-    display: none;
-}
+/* Раньше здесь стояло `tr:nth-child(n+7) { display: none }` для аспектов,
+   конфигураций и стеллиумов — виджет молча показывал только 6 первых строк,
+   без всякого признака, что список обрезан, и докрутить до остальных было
+   нельзя (scrollHeight совпадал с clientHeight, поэтому и подсказка-затухание
+   не появлялась). Список показываем целиком: высоту ограничивает бюджет угла
+   (.forecast-new-corner), а .is-compact уже умеет скроллиться с затуханием. */
 
 /* Edit-mode affordance: outline the corner drop targets even when empty. */
 body.forecast-new-panel-edit .forecast-new-corner {
@@ -2128,13 +2140,17 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     width: 100%;
 }
 
+/* Стационарность и ретроградность — в одну строку справа от глифа и чуть
+   ниже его центра, а не столбиком (фидбек пп. 4 и 18). */
 .forecast-new-page .planet-motion-stack {
     display: inline-flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    justify-content: center;
-    gap: 0;
-    margin-left: -6px;
+    justify-content: flex-start;
+    align-self: flex-end;
+    gap: 2px;
+    margin-left: -4px;
+    margin-bottom: 1px;
     line-height: 1;
 }
 
@@ -2231,6 +2247,14 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     align-items: center;
     gap: 6px;
     min-width: 0;
+}
+
+/* Название звезды усекаем, а не даём ему наехать на координаты соседней колонки. */
+.forecast-new-fixstar-contact-name > span:last-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .forecast-new-fixstar-object {
@@ -2788,11 +2812,11 @@ body.forecast-new-panel-edit .forecast-new-corner[hidden] { display: flex; }
     stroke-width: 2.8 !important;
 }
 
-.forecast-new-planet-focus .planet-circle {
-    stroke: rgba(184, 147, 90, 0.62);
-    stroke-width: 2.6;
-    fill: rgba(245, 237, 223, 0.28);
-}
+/* Кольца вокруг глифа при наведении на аспект НЕТ намеренно. Правило
+   `.forecast-new-planet-focus .planet-circle` существовало с апреля, но из-за
+   бага с data-planet-1 класс никогда не вешался; когда баг починили, обводка
+   всплыла и оказалась лишней. Подсветка тела остаётся только выноской и
+   якорной точкой — этого хватает и для аспекта, и для конфигурации. */
 
 .forecast-new-planet-focus .planet-leader-line {
     opacity: 0.9 !important;
@@ -4604,14 +4628,24 @@ body.forecast-new-panel-edit .forecast-new-side-panel {
 
 .forecast-new-list-row {
     display: grid;
-    grid-template-columns: 1fr auto auto;
+    /* minmax(0, …) + min-width:0 ниже: длинное имя (звёзды на Linux/Chrome)
+       иначе раздвигает колонку сверх ячейки и наезжает на координаты. */
+    grid-template-columns: minmax(0, 1fr) auto auto;
     gap: 10px;
     align-items: baseline;
+}
+
+.forecast-new-list-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .forecast-new-list-val {
     font-variant-numeric: tabular-nums;
     text-align: right;
+    white-space: nowrap;
 }
 
 .forecast-new-list-val--dim {

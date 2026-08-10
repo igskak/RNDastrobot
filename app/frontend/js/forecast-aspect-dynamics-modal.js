@@ -1095,18 +1095,47 @@
             : (root.Symbols?.aspectNamesRu?.[name] || name);
     }
 
-    function aspectTitle(payload) {
-        const transitSymbol = root.Symbols?.getPlanetSymbol?.(payload.transit_body) || payload.transit_body;
-        const natalSymbol = root.Symbols?.getPlanetSymbol?.(payload.natal_body) || payload.natal_body;
+    // Глиф тела берём из того же источника, что и колесо (AstroGlyphs через
+    // Symbols.getPlanetSymbolMarkup), иначе часть тел — например Плутон —
+    // рисуется старым шрифтовым символом, не совпадающим с картой.
+    function bodyGlyphMarkup(name) {
+        const normalized = root.Symbols?.normalizeBodyName?.(name) || name;
+        if (root.Symbols?.getPlanetSymbolMarkup) {
+            return root.Symbols.getPlanetSymbolMarkup(normalized, { size: 22, title: bodyLabel(name) });
+        }
+        return escapeHtml(root.Symbols?.getPlanetSymbol?.(normalized) || name || '');
+    }
+
+    function aspectTitleHtml(payload) {
         const aspectSymbol = root.Symbols?.getAspectDisplay?.(payload.aspect_type)
             || root.Symbols?.aspects?.[payload.aspect_type]
             || payload.aspect_type;
-        return `${transitSymbol} ${aspectSymbol} ${natalSymbol}`;
+        return [
+            bodyGlyphMarkup(payload.transit_body),
+            `<span class="astro-symbol aspect-dynamics-title-aspect">${escapeHtml(aspectSymbol || '')}</span>`,
+            bodyGlyphMarkup(payload.natal_body),
+        ].join('');
+    }
+
+    function motionLabel(motion) {
+        const normalized = String(motion || '').trim().toLowerCase();
+        if (!normalized) return '';
+        if (normalized === 'direct' || normalized === 'retrograde') {
+            return tr(`page.forecastNew.aspectDynamics.motion.${normalized}`, normalized);
+        }
+        return normalized;
+    }
+
+    function stationLabel(type) {
+        const normalized = String(type || '').trim().toUpperCase();
+        if (normalized === 'R') return tr('page.forecastNew.aspectDynamics.station.retrograde', 'retrograde');
+        if (normalized === 'D') return tr('page.forecastNew.aspectDynamics.station.direct', 'direct');
+        return String(type || '');
     }
 
     function renderShell(payload) {
         if (!state.title || !state.subtitle) return;
-        state.title.textContent = aspectTitle(payload);
+        state.title.innerHTML = aspectTitleHtml(payload);
         state.subtitle.textContent = [
             bodyLabel(payload.transit_body),
             aspectLabel(payload.aspect_type),
@@ -1333,7 +1362,7 @@
                         <span>
                             <b>${escapeHtml(tr('page.forecastNew.aspectDynamics.pass', 'Pass {number}', { number: passNumber }))}</b>
                             ${escapeHtml(formatDateTime(pass.date))}
-                            <em>${escapeHtml(pass.motion || '')}</em>
+                            <em>${escapeHtml(motionLabel(pass.motion))}</em>
                         </span>
                     `;
                     passNumber += 1;
@@ -1343,7 +1372,7 @@
             const stations = visibleTimedItems(contact.stations, 'date', window)
                 .map((station) => `
                     <span>
-                        <b>${escapeHtml(station.type)}</b>
+                        <b>${escapeHtml(stationLabel(station.type))}</b>
                         ${escapeHtml(formatDateTime(station.date))}
                     </span>
                 `).join('');

@@ -6606,10 +6606,61 @@
             setHoveredAspectKey(null);
         });
 
-        bindPlanetTableInteractions(document.getElementById('forecastNewNatalPanel'), 'natal');
-        bindPlanetTableInteractions(document.getElementById('forecastNewProgPanel'), 'prog');
-        bindHouseTableInteractions(document.getElementById('forecastNewNatalPanel'), 'natal');
-        bindHouseTableInteractions(document.getElementById('forecastNewProgPanel'), 'prog');
+        // Bound above BOTH side panels and the chart corners: a block re-homed
+        // into a corner keeps its hover, star tooltips and row selection.
+        const workspace = document.getElementById('forecastNewLayout') || document.body;
+        bindPlanetTableInteractions(workspace);
+        bindHouseTableInteractions(workspace);
+        bindConfigurationHover(workspace);
+    }
+
+    // Наведение на карточку конфигурации подсвечивает её на карте: аспектные
+    // линии фигуры и участвующие тела. Стеллиум приходит без аспектов —
+    // подсвечиваются только тела.
+    function bindConfigurationHover(root) {
+        if (!root) return;
+
+        root.addEventListener('mouseover', (event) => {
+            if (!(event.target instanceof Element)) return;
+            const card = event.target.closest('.config-card');
+            if (!card) return;
+            hoverConfigurationCard(card);
+        });
+
+        root.addEventListener('mouseout', (event) => {
+            if (!(event.target instanceof Element)) return;
+            const card = event.target.closest('.config-card');
+            if (!card) return;
+            if (card.contains(event.relatedTarget)) return;
+            clearConfigurationHover();
+        });
+    }
+
+    function hoverConfigurationCard(card) {
+        const split = (value) => String(value || '').split('|').filter(Boolean);
+        const aspectKeys = split(card.dataset.configAspectKeys);
+        const planets = split(card.dataset.configPlanets);
+        if (!aspectKeys.length && !planets.length) return;
+        clearConfigurationHover();
+        card.classList.add('config-card--hovered');
+        state.wheel?.setHoveredConfiguration?.({ aspectKeys, planets });
+    }
+
+    function clearConfigurationHover() {
+        document.querySelectorAll('.config-card--hovered')
+            .forEach((card) => card.classList.remove('config-card--hovered'));
+        state.wheel?.clearHoveredAspect?.();
+    }
+
+    // Which chart a row belongs to, resolved from the block container the row
+    // sits in (panel-layout stamps data-block-source on every placed block).
+    function blockScopeOf(node) {
+        const source = node?.closest?.('[data-block-source]')?.dataset?.blockSource;
+        return source === 'prog' ? 'prog' : 'natal';
+    }
+
+    function methodForScope(scope) {
+        return scope === 'prog' ? selectedRightMethod() : 'natal';
     }
 
     function setHoveredAspectKey(aspectKey) {
@@ -6685,7 +6736,7 @@
         if (tooltip) tooltip.style.display = 'none';
     }
 
-    function bindPlanetTableInteractions(panel, scope) {
+    function bindPlanetTableInteractions(panel) {
         if (!panel) return;
         const planetsPane = panel;
 
@@ -6699,8 +6750,7 @@
             const row = event.target.closest('tr[data-planet]');
             if (!row) return;
             const planetName = row.dataset.planet;
-            const method = scope === 'natal' ? 'natal' : selectedRightMethod();
-            hoverPlanetRow(planetName, method, row, true);
+            hoverPlanetRow(planetName, methodForScope(blockScopeOf(row)), row, true);
         });
 
         planetsPane.addEventListener('mousemove', (event) => {
@@ -6733,8 +6783,8 @@
             if (!row) return;
             event.stopPropagation();
             const planetName = row.dataset.planet;
-            const method = scope === 'natal' ? 'natal' : selectedRightMethod();
-            togglePlanetSelection(planetName, method, row, scope);
+            const scope = blockScopeOf(row);
+            togglePlanetSelection(planetName, methodForScope(scope), row, scope);
         });
 
         planetsPane.addEventListener('focusin', (event) => {
@@ -6752,7 +6802,7 @@
         });
     }
 
-    function bindHouseTableInteractions(panel, scope) {
+    function bindHouseTableInteractions(panel) {
         if (!panel) return;
 
         panel.addEventListener('mouseover', (event) => {
@@ -6761,8 +6811,7 @@
             if (!row) return;
             const houseNumber = Number(String(row.id).replace('row-house-', ''));
             if (!Number.isFinite(houseNumber)) return;
-            const method = scope === 'natal' ? 'natal' : selectedRightMethod();
-            hoverHouseRow(houseNumber, method, row);
+            hoverHouseRow(houseNumber, methodForScope(blockScopeOf(row)), row);
         });
 
         panel.addEventListener('mouseout', (event) => {
@@ -7465,6 +7514,19 @@
         return `${deg}° ${signLabel(point.sign)}`;
     }
 
+    // Координата в том же виде, что в таблице планет: ГГ° <глиф знака> ММ'
+    // (формат градусов берётся из настроек аккаунта). Возвращает HTML.
+    function coordinateHtml(point) {
+        if (!point) return '';
+        if (window.LocaleFormatters?.formatAstroCoordinate) {
+            return window.LocaleFormatters.formatAstroCoordinate(point, {
+                signSymbol: window.Symbols?.signs?.[point.sign],
+                signClass: 'astro-symbol',
+            });
+        }
+        return escapeHtml(pointShort(point));
+    }
+
     function anglePointShort(point) {
         if (!point) return '';
         if (Number.isFinite(Number(point.degree_in_sign)) && point.sign) return pointShort(point);
@@ -7538,7 +7600,7 @@
         const rows = list.map((a) => `
             <li class="forecast-new-list-row">
                 <span class="forecast-new-list-name">${escapeHtml(planetLabel(a.name))}${a.retrograde ? ' <span class="forecast-new-retro">R</span>' : ''}</span>
-                <span class="forecast-new-list-val">${escapeHtml(`${Math.floor(a.degree_in_sign || 0)}° ${signLabel(a.sign)}`)}</span>
+                <span class="forecast-new-list-val">${coordinateHtml(a)}</span>
                 <span class="forecast-new-list-val forecast-new-list-val--dim">${a.house ? escapeHtml(t('page.forecastNew.asteroids.house', { house: a.house }) || `${a.house}`) : ''}</span>
             </li>`).join('');
         return `<div class="forecast-new-list forecast-new-asteroids"><ul class="forecast-new-list-body">${rows}</ul></div>`;
@@ -8332,11 +8394,27 @@
         return dialog;
     }
 
+    // A tab that just lost its last block is dropped outright — an empty tab
+    // labelled "Пусто" is dead weight in the tab bar. Only tabs touched by the
+    // current mutation are pruned, so a deliberately empty tab freshly created
+    // in the editor survives until the user fills or deletes it.
+    function pruneEmptiedTabs(layout, mode, emptiedTabIds) {
+        if (!emptiedTabIds || emptiedTabIds.size === 0) return;
+        ['left', 'right'].forEach((side) => {
+            layout.panels[mode][side] = (layout.panels[mode][side] || [])
+                .filter((tab) => tab.blocks.length > 0 || !emptiedTabIds.has(tab.id));
+        });
+    }
+
     // Remove a blockKey from every tab in the mode (used before re-placing it).
     function removeBlockFromMode(layout, mode, blockKey) {
+        const emptied = new Set();
         ['left', 'right'].forEach((side) => (layout.panels[mode][side] || []).forEach((tab) => {
+            const before = tab.blocks.length;
             tab.blocks = tab.blocks.filter((b) => (b.source + ':' + b.view) !== blockKey);
+            if (before > 0 && tab.blocks.length === 0) emptied.add(tab.id);
         }));
+        pruneEmptiedTabs(layout, mode, emptied);
         // A block lives in exactly one slot — panel tab OR corner. Clear corners too.
         const corners = layout.panels[mode].corners;
         if (corners) {
@@ -8349,13 +8427,27 @@
 
     function restoreCornerBlockToPanel(layout, mode, pos) {
         const block = layout.panels[mode].corners?.[pos];
-        if (!block) return;
+        if (!block) return null;
         const side = mode === 'single' || block.source === 'natal' ? 'left' : 'right';
         const tabs = layout.panels[mode][side];
         const matchingTab = tabs.find((tab) => tab.blocks.some((item) => item.view === block.view));
         if (matchingTab) matchingTab.blocks.push(block);
         else tabs.push({ id: window.ForecastNewPanelLayout.makeTabId(), title: null, blocks: [block] });
         layout.panels[mode].corners[pos] = null;
+        return block;
+    }
+
+    // Закрытый виджет не исчезает — блок возвращается в боковую панель.
+    // Без явного сообщения это выглядит как «данные пропали».
+    function announceCornerReturn(block, mode) {
+        if (!block) return;
+        const home = findBlockLocation(mode, `${block.source}:${block.view}`);
+        if (!home) return;
+        const location = blockLocationLabel(home, mode);
+        const message = t('page.forecastNew.panelEditor.widgetReturnedTo', { location })
+            || `Виджет убран, блок вернулся в «${location}»`;
+        announceUndo(message);
+        window.showToast?.(message, 'info');
     }
 
     function mutateLayout(fn, { skipUndo, skipEditorRender } = {}) {
@@ -8403,8 +8495,11 @@
                 const source = editorBlockSource(ds.source, ds.view, mode);
                 const blockKey = `${source}:${ds.view}`;
                 const location = findBlockLocation(mode, blockKey);
-                if (location && (location.side !== side || location.tab.id !== tabId)) {
-                    const from = `${panelSideLabel(location.side, mode)} · ${window.ForecastNewPanelLayout.autoTabTitle(location.tab, t)}`;
+                // location.tab is absent when the block currently sits in a chart
+                // corner — ask about that home too instead of blowing up.
+                const isSameTab = Boolean(location?.tab) && location.side === side && location.tab.id === tabId;
+                if (location && !isSameTab) {
+                    const from = blockLocationLabel(location, mode);
                     const accepted = await showPanelDialog({
                         title: t('page.forecastNew.panelEditor.moveBlockTitle') || 'Переместить блок?',
                         copy: (t('page.forecastNew.panelEditor.moveBlockCopy', { location: from }) || `Блок уже находится в «${from}». Переместить его сюда?`),
@@ -8429,6 +8524,7 @@
                     const tab = findTab(l, mode, side, tabId);
                     if (!tab) return;
                     tab.blocks = tab.blocks.filter((b) => (b.source + ':' + b.view) !== ds.blockkey);
+                    if (tab.blocks.length === 0) pruneEmptiedTabs(l, mode, new Set([tab.id]));
                 });
                 break;
             case 'set-corner':
@@ -8460,12 +8556,14 @@
                     : (t('page.forecastNew.panelEditor.widgetAdded') || 'Виджет добавлен'));
                 break;
                 }
-            case 'clear-corner':
+            case 'clear-corner': {
+                let restored = null;
                 mutateLayout((l) => {
-                    const pos = ds.corner;
-                    restoreCornerBlockToPanel(l, mode, pos);
+                    restored = restoreCornerBlockToPanel(l, mode, ds.corner);
                 });
+                announceCornerReturn(restored, mode);
                 break;
+            }
             case 'clear-corners':
                 mutateLayout((l) => {
                     (PL.CORNER_KEYS || ['tl', 'tr', 'bl', 'br']).forEach((pos) => restoreCornerBlockToPanel(l, mode, pos));
@@ -8984,9 +9082,11 @@
             if (!remove) return;
             event.stopPropagation();
             const mode = currentWheelMode();
+            let restored = null;
             mutateLayout((layout) => {
-                restoreCornerBlockToPanel(layout, mode, remove.dataset.cornerRemove);
+                restored = restoreCornerBlockToPanel(layout, mode, remove.dataset.cornerRemove);
             });
+            announceCornerReturn(restored, mode);
         });
     }
 

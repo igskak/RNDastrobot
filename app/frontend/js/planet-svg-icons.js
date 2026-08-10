@@ -79,6 +79,63 @@
         AntiVertex: 1.12,
     };
 
+    // Оптический центр глифа внутри квадрата 100×100.
+    //
+    // Шрифтовые символы сидят на базовой линии (FONT_GLYPH_Y ≈ 56), поэтому
+    // их «чернила» оказываются на 10–16 единиц ВЫШЕ центра квадрата. На карте
+    // это незаметно, а в круглом бейдже (настройки, профили орбисов, палитры,
+    // веса балансов) иконка явно уезжает вверх. Конкретный шрифт из стека
+    // зависит от ОС, поэтому меряем реальные метрики через canvas и кэшируем.
+    const OPTICAL_CENTER_OFFSETS = new Map();
+    // Векторные глифы: центр посчитан по геометрии самой отрисовки.
+    const VECTOR_OPTICAL_CENTER_Y = {
+        Pluto: 55.1,
+        MC: 48,
+        IC: 48,
+        Vertex: 48,
+    };
+    let glyphMeasureContext;
+
+    function measureFontGlyphCenterY(name, symbol) {
+        if (!symbol) return null;
+        if (glyphMeasureContext === undefined) {
+            try {
+                glyphMeasureContext = document.createElement('canvas').getContext('2d');
+            } catch (error) {
+                glyphMeasureContext = null;
+            }
+        }
+        if (!glyphMeasureContext) return null;
+
+        const glyphScale = FONT_GLYPH_SCALE[name] || 0.9;
+        const baseline = FONT_GLYPH_Y[name] || 57;
+        glyphMeasureContext.font = `400 ${(76 * glyphScale).toFixed(2)}px ${ASTRO_FONT_STACK}`;
+        const metrics = glyphMeasureContext.measureText(symbol);
+        const ascent = Number(metrics.actualBoundingBoxAscent);
+        const descent = Number(metrics.actualBoundingBoxDescent);
+        if (!Number.isFinite(ascent) || !Number.isFinite(descent)) return null;
+        return baseline - (ascent - descent) / 2;
+    }
+
+    function opticalCenterOffsetY(name, symbol) {
+        if (OPTICAL_CENTER_OFFSETS.has(name)) return OPTICAL_CENTER_OFFSETS.get(name);
+
+        let centerY = null;
+        if (FONT_BASED_PLANETS.has(name)) {
+            centerY = measureFontGlyphCenterY(name, symbol);
+        } else if (VECTOR_OPTICAL_CENTER_Y[name] !== undefined) {
+            centerY = VECTOR_OPTICAL_CENTER_Y[name];
+        }
+        const offset = Number.isFinite(centerY) ? 50 - centerY : 0;
+
+        // До загрузки веб-шрифтов метрики принадлежат подменному шрифту —
+        // такой замер не кэшируем, чтобы не зафиксировать неверный сдвиг.
+        if (typeof document === 'undefined' || document.fonts?.status !== 'loading') {
+            OPTICAL_CENTER_OFFSETS.set(name, offset);
+        }
+        return offset;
+    }
+
     function createSvgElement(tag, attrs = {}) {
         const element = document.createElementNS(SVG_NS, tag);
         Object.entries(attrs).forEach(([key, value]) => {
@@ -455,15 +512,26 @@
             svg.appendChild(title);
         }
 
+        // opticalCenter: подтягиваем глиф к центру квадрата — нужно там, где
+        // иконка лежит в круглом бейдже и любой перекос сразу виден.
+        const host = options.opticalCenter
+            ? append(svg, createSvgElement('g', { class: 'planet-symbol-optical' }))
+            : svg;
+
         const builder = PLANET_ICON_BUILDERS[name];
+        const symbol = options.symbol || window.Symbols?.planets?.[name] || String(name || '').charAt(0) || '?';
         if (FONT_BASED_PLANETS.has(name)) {
-            appendFontBasedGlyph(svg, name, options);
+            appendFontBasedGlyph(host, name, options);
         } else if (builder) {
-            const root = append(svg, createSvgElement('g', { class: 'planet-symbol-art' }));
+            const root = append(host, createSvgElement('g', { class: 'planet-symbol-art' }));
             builder(root);
         } else {
-            const symbol = options.symbol || window.Symbols?.planets?.[name] || String(name || '').charAt(0) || '?';
-            appendFallbackText(svg, symbol);
+            appendFallbackText(host, symbol);
+        }
+
+        if (options.opticalCenter) {
+            const offsetY = opticalCenterOffsetY(name, symbol);
+            if (offsetY) host.setAttribute('transform', `translate(0 ${offsetY.toFixed(2)})`);
         }
 
         return svg;
