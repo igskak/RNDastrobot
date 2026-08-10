@@ -49,6 +49,7 @@ from app.services.astro_narrative import (
 from app.services.astro_patterns import discover
 from app.services.assistant_survey_store import load_survey, save_survey
 from app.services.assistant_table_service import describe_table
+from app.services.assistant_visualization import build_visualization
 from app.services.astro_judge import (
     VERDICT_ALLOW,
     classify_reply,
@@ -1498,6 +1499,25 @@ class AstroAssistantService:
         descriptor["truncated"] = survey.get("truncated", False)
         return descriptor
 
+    def _exec_create_astro_visualization(self, user_id: UUID, args: Dict) -> Dict:
+        """Build a chart from a declarative spec (spec §9.8).
+
+        The model supplies a type and which field to group by; the server
+        validates both against the dataset and builds the series. Nothing
+        executable crosses the boundary, and a chart can only plot data the
+        answer is also drawing on.
+        """
+        survey = self._survey_cached(user_id, args)
+        if survey.get("status") != "ok":
+            return survey
+        result = build_visualization(
+            {"type": args.get("type"), "group_by": args.get("group_by"),
+             "title": args.get("title")},
+            survey["events"])
+        if result.get("status") == "ok":
+            result["survey_id"] = survey["survey_id"]
+        return result
+
     def _exec_intersect_forecast_windows(self, user_id: UUID, args: Dict) -> Dict:
         """When several transit contacts are active at once.
 
@@ -1684,6 +1704,7 @@ class AstroAssistantService:
             "intersect_forecast_windows": self._exec_intersect_forecast_windows,
             "discover_patterns": self._exec_discover_patterns,
             "open_full_analysis_table": self._exec_open_full_analysis_table,
+            "create_astro_visualization": self._exec_create_astro_visualization,
         }
         handler = handlers.get(name)
         if handler is None:

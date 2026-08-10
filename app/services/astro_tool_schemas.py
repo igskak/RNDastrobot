@@ -17,6 +17,7 @@ from typing import Dict, List
 from app.services.astro_analysis import ANALYSIS_OPS, ANALYSIS_TABLES
 from app.services.astro_data_tools import CHART_DATA_FACETS
 from app.services.astro_profiles import NATAL_TARGET_PROFILES, TRANSIT_BODY_PROFILES
+from app.services.assistant_visualization import CHART_TYPES, GROUPABLE_FIELDS
 from app.services.astro_vocab import (
     ASPECT_TYPE_NAMES,
     CHART_REFS,
@@ -375,6 +376,47 @@ def build_query_tools() -> List[Dict]:
                     "timezone": {"type": "string"},
                 },
                 "required": ["start_date", "end_date"],
+                "additionalProperties": False,
+            },
+        },
+    }, {
+        "type": "function",
+        "function": {
+            "name": "create_astro_visualization",
+            "description": (
+                "Draw a chart of survey data. Provide a declarative spec — a "
+                "type and, for bar charts, a field to group by. You do NOT write "
+                "code or markup. Types: aspect_timeline (contact windows with "
+                "exact passes), monthly_heatmap (density per month), orb_line "
+                "(minimum orb over time), bar (counts by a field), network "
+                "(bodies and targets as a graph). Create one when the astrologer "
+                "asks for a chart, or when a period has enough events that a "
+                "picture genuinely beats a list. Do NOT chart fewer than four "
+                "rows, do not duplicate a small table with a chart, and never "
+                "encode favourable or unfavourable meaning in it."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "type": {"type": "string", "enum": sorted(CHART_TYPES)},
+                    "group_by": {
+                        "type": "string",
+                        "enum": list(GROUPABLE_FIELDS),
+                        "description": "Required for type=bar.",
+                    },
+                    "title": {"type": "string"},
+                    "survey_id": {
+                        "type": "string",
+                        "description": "A survey already computed in this conversation.",
+                    },
+                    "start_date": {"type": "string", "description": "YYYY-MM-DD"},
+                    "end_date": {"type": "string", "description": "YYYY-MM-DD"},
+                    "profile": {"type": "string", "enum": sorted(TRANSIT_BODY_PROFILES)},
+                    "target_profile": {
+                        "type": "string", "enum": sorted(NATAL_TARGET_PROFILES)},
+                    "timezone": {"type": "string"},
+                },
+                "required": ["type"],
                 "additionalProperties": False,
             },
         },

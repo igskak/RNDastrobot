@@ -93,6 +93,8 @@ _EXPECTED_TOOLS = {
     # Full analysis table over a persisted survey (PR7a) — returns a descriptor,
     # the browser pages the rows.
     "open_full_analysis_table",
+    # Declarative charts (PR7b): the model sends a type and a field, never code.
+    "create_astro_visualization",
     # command tools
     "set_transit_date", "step_date", "add_layer", "build_solar", "set_solar_year",
     "set_wheel_view", "set_house_system", "set_synastry_partner", "remove_layer",
