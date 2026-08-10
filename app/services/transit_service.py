@@ -1615,25 +1615,50 @@ class TransitService:
             'series': series,
         }
 
+    @staticmethod
+    def _dedupe_jd_items(items: List[Dict], tolerance: float = 1.0 / 1440.0) -> List[Dict]:
+        """Drop duplicate roots landing within a minute of each other.
+
+        Every aspect except conjunction and opposition is scanned on BOTH sides
+        (+angle and -angle), and a single crossing can register on both branches,
+        yielding two identical passes. Observed in production: Pluto square Sun
+        reported exact_pass_count=2 for one crossing, both stamped
+        2027-01-03T07:49:44+01:00.
+
+        That count is not cosmetic — it feeds the ranking profile, the monthly
+        distribution, the survey statistics and the full table, so a duplicate
+        inflates all of them. aspect_dynamics_service already guarded against
+        this; transit_service did not, and the same tolerance is used here so the
+        two services cannot disagree about how many times an aspect perfected.
+        """
+        out: List[Dict] = []
+        for item in sorted(items, key=lambda value: value['jd']):
+            if out and abs(float(out[-1]['jd']) - float(item['jd'])) <= tolerance:
+                continue
+            out.append(item)
+        return out
+
     def _format_aspect_contact(self, contact: Dict, timezone: str) -> Dict:
         """Format an internal contact (JD-based) into an API-facing dict."""
+        passes = self._dedupe_jd_items(contact['passes'])
+        stations = self._dedupe_jd_items(contact['stations'])
         return {
             'enter': self._jd_to_iso(contact['jd_enter'], timezone),
             'enter_complete': contact['enter_complete'],
             'leave': self._jd_to_iso(contact['jd_leave'], timezone),
             'leave_complete': contact['leave_complete'],
-            'exact_pass_count': len(contact['passes']),
+            'exact_pass_count': len(passes),
             'passes': [
                 {
                     'date': self._jd_to_iso(p['jd'], timezone),
                     'motion': p['motion'],
                     'orb': round(p['orb'], 4),
                 }
-                for p in sorted(contact['passes'], key=lambda p: p['jd'])
+                for p in passes
             ],
             'stations': [
                 {'date': self._jd_to_iso(s['jd'], timezone), 'type': s['type']}
-                for s in sorted(contact['stations'], key=lambda s: s['jd'])
+                for s in stations
             ],
             'closest_approach': {
                 'orb': round(contact['min_orb'], 4),

@@ -48,6 +48,7 @@ from app.services.astro_narrative import (
 )
 from app.services.astro_patterns import discover
 from app.services.assistant_survey_store import load_survey, save_survey
+from app.services.assistant_table_service import describe_table
 from app.services.astro_judge import (
     VERDICT_ALLOW,
     classify_reply,
@@ -1482,6 +1483,21 @@ class AstroAssistantService:
             self._survey_memo[key] = self._exec_survey_transits(user_id, args)
         return self._survey_memo[key]
 
+    def _exec_open_full_analysis_table(self, user_id: UUID, args: Dict) -> Dict:
+        """Offer the full table for a survey (spec §9.9).
+
+        Returns a descriptor, never rows. The model does not need rows to say a
+        table exists, and a 400-event survey would swamp the completion budget;
+        the browser pages the endpoint instead.
+        """
+        survey = self._survey_cached(user_id, args)
+        if survey.get("status") != "ok":
+            return survey
+        descriptor = describe_table(survey["events"], survey["survey_id"])
+        descriptor["requested_window"] = survey.get("requested_window", {})
+        descriptor["truncated"] = survey.get("truncated", False)
+        return descriptor
+
     def _exec_intersect_forecast_windows(self, user_id: UUID, args: Dict) -> Dict:
         """When several transit contacts are active at once.
 
@@ -1667,6 +1683,7 @@ class AstroAssistantService:
             "survey_transits": self._exec_survey_transits,
             "intersect_forecast_windows": self._exec_intersect_forecast_windows,
             "discover_patterns": self._exec_discover_patterns,
+            "open_full_analysis_table": self._exec_open_full_analysis_table,
         }
         handler = handlers.get(name)
         if handler is None:

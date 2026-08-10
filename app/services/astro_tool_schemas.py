@@ -381,6 +381,41 @@ def build_query_tools() -> List[Dict]:
     }, {
         "type": "function",
         "function": {
+            "name": "open_full_analysis_table",
+            "description": (
+                "Offer the astrologer the full, sortable, filterable table of a "
+                "survey's events, with CSV export. Use when they ask for the full "
+                "list, a table, everything, or to export — 'покажи все', 'полная "
+                "таблица', 'выгрузи'. Takes the same survey arguments as "
+                "survey_transits, or a survey_id from one already run this "
+                "conversation. Returns a DESCRIPTOR, not the rows: the client "
+                "renders the table and pages it. Say the table is available and "
+                "how many rows it holds; do not attempt to reproduce it in text."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "survey_id": {
+                        "type": "string",
+                        "description": "A survey already computed in this conversation.",
+                    },
+                    "start_date": {"type": "string", "description": "YYYY-MM-DD"},
+                    "end_date": {"type": "string", "description": "YYYY-MM-DD"},
+                    "profile": {"type": "string", "enum": sorted(TRANSIT_BODY_PROFILES)},
+                    "target_profile": {
+                        "type": "string", "enum": sorted(NATAL_TARGET_PROFILES)},
+                    "aspect_types": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": sorted(ASPECT_TYPE_NAMES)},
+                    },
+                    "timezone": {"type": "string"},
+                },
+                "additionalProperties": False,
+            },
+        },
+    }, {
+        "type": "function",
+        "function": {
             "name": "intersect_forecast_windows",
             "description": (
                 "Find WHEN several transit contacts are active at the same time. "

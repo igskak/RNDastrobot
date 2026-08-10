@@ -14,7 +14,7 @@ from typing import List, Optional
 from uuid import UUID
 
 import pytz
-from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, UploadFile, status
 from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy.orm import Session
 from loguru import logger
@@ -45,6 +45,8 @@ from app.services.assistant_log_service import (
     log_turn,
     set_turn_feedback,
 )
+from app.services import assistant_table_service as table_service
+from app.services.assistant_survey_store import load_survey
 from app.services.openai_service import is_openai_configured, transcribe_audio
 from app.services.transit_service import TransitService
 from app.utils.ephemeris import get_ephemeris_path
@@ -605,6 +607,108 @@ def delete_thread(
     if not removed:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
     return None
+
+
+class SurveyTableResponse(BaseModel):
+    survey_id: str
+    columns: List[dict]
+    rows: List[dict]
+    page: int
+    page_size: int
+    page_count: int
+    total_rows: int
+    unfiltered_rows: int
+    sort: str
+    order: str
+    filters: dict
+
+
+@router.get(
+    "/surveys/{survey_id}/table",
+    response_model=SurveyTableResponse,
+    summary="One page of a survey's full analysis table",
+    description=(
+        "Pages, sorts and filters a persisted survey. The model never carries "
+        "these rows — a 400-event survey would swamp a completion — so the "
+        "browser fetches them here instead."
+    ),
+)
+def survey_table(
+    survey_id: str,
+    http_request: Request,
+    auth: AuthContext = Depends(require_auth),
+    db: Session = Depends(get_db),
+    page: int = 1,
+    page_size: int = 25,
+    sort: str = table_service.DEFAULT_SORT,
+    order: str = "asc",
+    transit_body: Optional[str] = None,
+    natal_body: Optional[str] = None,
+    aspect_type: Optional[str] = None,
+):
+    assert_assistant_enabled(auth)
+    filters = {
+        key: value for key, value in (
+            ("transit_body", transit_body),
+            ("natal_body", natal_body),
+            ("aspect_type", aspect_type),
+        ) if value
+    }
+    error = table_service.validate_query(
+        sort=sort, filters=filters, page_size=page_size)
+    if error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
+
+    # Tenant scope lives in the store: a survey_id is a hash of its parameters
+    # and therefore guessable, so ownership is checked on read, not assumed.
+    survey = load_survey(db, survey_id=survey_id, astrologer_id=auth.astrologer.id)
+    if survey is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Survey not found")
+
+    table = table_service.build_table(
+        survey["events"], sort=sort, order=(order if order in ("asc", "desc") else "asc"),
+        filters=filters, page=max(1, page), page_size=page_size)
+    return {"survey_id": survey_id, **table}
+
+
+@router.get(
+    "/surveys/{survey_id}/table.csv",
+    summary="Export a survey's full analysis table as CSV",
+)
+def survey_table_csv(
+    survey_id: str,
+    auth: AuthContext = Depends(require_auth),
+    db: Session = Depends(get_db),
+    sort: str = table_service.DEFAULT_SORT,
+    order: str = "asc",
+    transit_body: Optional[str] = None,
+    natal_body: Optional[str] = None,
+    aspect_type: Optional[str] = None,
+):
+    assert_assistant_enabled(auth)
+    filters = {
+        key: value for key, value in (
+            ("transit_body", transit_body),
+            ("natal_body", natal_body),
+            ("aspect_type", aspect_type),
+        ) if value
+    }
+    error = table_service.validate_query(sort=sort, filters=filters, page_size=None)
+    if error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
+
+    survey = load_survey(db, survey_id=survey_id, astrologer_id=auth.astrologer.id)
+    if survey is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Survey not found")
+
+    body = table_service.to_csv(
+        survey["events"], sort=sort,
+        order=(order if order in ("asc", "desc") else "asc"), filters=filters)
+    return Response(
+        content=body,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{survey_id}.csv"'},
+    )
 
 
 class CorrectionRequest(BaseModel):

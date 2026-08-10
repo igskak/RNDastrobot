@@ -90,6 +90,9 @@ _EXPECTED_TOOLS = {
     "intersect_forecast_windows",
     # Deterministic pattern discovery over a survey (PR5).
     "discover_patterns",
+    # Full analysis table over a persisted survey (PR7a) — returns a descriptor,
+    # the browser pages the rows.
+    "open_full_analysis_table",
     # command tools
     "set_transit_date", "step_date", "add_layer", "build_solar", "set_solar_year",
     "set_wheel_view", "set_house_system", "set_synastry_partner", "remove_layer",
