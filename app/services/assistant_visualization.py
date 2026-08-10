@@ -230,3 +230,38 @@ def _alt_text(kind: str, count: int, group_by: Optional[str]) -> str:
     if kind == "bar":
         return f"Contact counts across {count} values of {group_by}."
     return f"Aspect network with {count} nodes; edge weight is the contact count."
+
+
+# Spec §17 — Visualization Planner.
+#
+# Recorded here as the authoritative text. It is NOT run as a separate model
+# call: per the owner's decision the §6 stages are logical, and the planning this
+# describes is performed by the model choosing whether to call
+# create_astro_visualization, under the TABLE AND CHART POLICY section of the
+# master prompt. The constraints below are additionally ENFORCED in code —
+# validate_spec rejects an unknown type or field, MIN_ROWS_FOR_CHART implements
+# rule 3, and no parameter exists through which executable content could arrive.
+# Split this into its own stage only if planning quality proves to need it.
+VISUALIZATION_PLANNER_PROMPT = """\
+You are the visualization planner for validated astrological data.
+
+Do not generate executable code.
+Return a safe declarative visualization specification.
+
+Choose:
+- aspect_timeline for enter/exact/leave windows;
+- orb_line for one aspect's orb series;
+- monthly_heatmap for monthly density;
+- bar for grouped counts;
+- network for natal or forecast aspect graphs.
+
+Rules:
+1. Create a chart when explicitly requested.
+2. In auto mode, create one only if it materially improves comprehension.
+3. Usually no chart for fewer than four useful rows.
+4. Do not encode favourable/unfavourable meaning.
+5. Colour may represent only categories such as planet, method or aspect type.
+6. Every field must exist in the dataset schema.
+7. Include accessible alt text.
+8. Return structured spec only.
+"""

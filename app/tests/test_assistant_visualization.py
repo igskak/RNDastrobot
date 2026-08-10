@@ -178,3 +178,59 @@ def test_unplottable_data_is_an_error_not_an_empty_chart():
     events = [_event(f"e{i}", "Pluto", "Sun", None, None) for i in range(5)]
     out = build_visualization({"type": "aspect_timeline"}, events)
     assert out["error"] == "no_plottable_data"
+
+
+# --- §10.2 conditional policy lives in the master prompt --------------------------
+
+def test_master_prompt_carries_the_table_and_chart_policy():
+    import app.services.astro_assistant_service as svc
+    prompt = svc._SYSTEM_PROMPT
+    assert "TABLE AND CHART POLICY" in prompt
+    assert "A simple lookup gets text" in prompt
+    assert "Do NOT chart fewer than four useful rows" in prompt
+    assert "One chart, not a gallery" in prompt
+
+
+def test_prompt_forbids_describing_a_chart_that_was_not_drawn():
+    """A declined chart is an answer, not a licence to narrate an imaginary one."""
+    import app.services.astro_assistant_service as svc
+    prompt = " ".join(svc._SYSTEM_PROMPT.split())
+    assert "Never describe a chart that was not drawn" in prompt
+    assert "never refer to a table or chart the tools did not return" in prompt
+
+
+def test_prompt_forbids_valuation_in_a_visualization():
+    import app.services.astro_assistant_service as svc
+    prompt = " ".join(svc._SYSTEM_PROMPT.split())
+    assert "Never encode favourable or unfavourable meaning in a visualization" in prompt
+
+
+def test_narrative_prompt_knows_about_tables_and_charts():
+    from app.services.astro_narrative import _SYSTEM
+    flat = " ".join(_SYSTEM.split())
+    assert "full-table descriptor" in flat
+    assert "Never retype a table's contents" in flat
+    assert "never mention a table or chart that is not in the results" in flat
+
+
+# --- §17 and §18 are recorded, and their guarantees are enforced in code ----------
+
+def test_spec_prompts_are_recorded_verbatim():
+    """Kept as authoritative text so nothing drifts, even though neither runs as
+    a separate model call."""
+    from app.services.assistant_visualization import VISUALIZATION_PLANNER_PROMPT
+    from app.services.astro_narrative import REPORT_RENDERER_PROMPT
+    assert "Do not generate executable code" in VISUALIZATION_PLANNER_PROMPT
+    assert "Include accessible alt text" in VISUALIZATION_PLANNER_PROMPT
+    assert "Do not change numbers" in REPORT_RENDERER_PROMPT
+    assert "Never expose internal chain-of-thought" in REPORT_RENDERER_PROMPT
+
+
+def test_planner_rules_are_enforced_not_merely_requested():
+    """Rules 3, 6 and 8 of §17 are code, not politeness: a model can ignore a
+    prompt, it cannot ignore a validator."""
+    assert validate_spec({"type": "orb_line"}, row_count=3) == "too_few_rows_for_a_chart"
+    assert validate_spec({"type": "bar", "group_by": "nope"},
+                         row_count=10) == "bad_group_by"
+    props = _tool()["parameters"]["properties"]
+    assert not {"code", "script", "expression"} & set(props)
